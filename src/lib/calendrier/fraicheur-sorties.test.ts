@@ -274,6 +274,48 @@ function cloture(): { lecteurs: Set<string>; porteurs: Set<string> } {
 
 const { lecteurs: LECTEURS, porteurs: PORTEURS } = cloture();
 
+/**
+ * Les points d'entrée de la réparation : ce qui RÉÉCRIT les lignes du
+ * calendrier. Une fonction qui en appelle un, directement ou par transitivité,
+ * répare.
+ */
+const RACINES_DE_REPARATION = [
+  "assurerCalendrierAJour",
+  "regenererSansInvalider",
+  "genererCalendrier",
+] as const;
+
+/**
+ * [2026-10-13, revue.] La clôture des RÉPARATRICES, par nom, sur tout `src/`
+ * — la même technique que les lecteurs. La première rédaction de la garde
+ * « aucun layout ne répare » ne cherchait que les appels écrits dans
+ * `layout.tsx` : `await assurerCalendrierAJour(etablissementId);` ajouté en
+ * tête de `chargerSidebarCounts`, que le layout appelle, laissait la garde
+ * verte. Deux homonymes se confondent, ce qui ne peut qu'ajouter des
+ * réparatrices — l'erreur se fait du côté qui fait tomber la garde.
+ */
+function clotureReparatrices(): Set<string> {
+  const fonctions = [...fichiersSources("src/lib"), ...fichiersSources("src/app")]
+    .flatMap((f) => fonctionsDe(arbre(f)));
+  const reparatrices = new Set<string>(RACINES_DE_REPARATION);
+  let change = true;
+  while (change) {
+    change = false;
+    for (const { nom, faits } of fonctions) {
+      if (
+        !reparatrices.has(nom) &&
+        [...faits.appels].some((a) => reparatrices.has(a))
+      ) {
+        reparatrices.add(nom);
+        change = true;
+      }
+    }
+  }
+  return reparatrices;
+}
+
+const REPARATRICES = clotureReparatrices();
+
 /** Les sorties qui lisent le calendrier, avec ce qu'elles en disent. */
 function sorties(): { chemin: string; lit: string[]; dit: boolean }[] {
   const resultat: { chemin: string; lit: string[]; dit: boolean }[] = [];
@@ -480,6 +522,25 @@ function repareDAbord(sf: ts.SourceFile): string | null {
   ) {
     return "la réparation n'est pas une instruction autonome au premier niveau";
   }
+  // [2026-10-13, revue.] Le premier `await` ne suffit pas : une lecture
+  // LANCÉE sans `await` avant la réparation (`const p = lecteur(…)`, attendue
+  // plus bas) tourne en même temps qu'elle et passait au vert. Aucun appel à
+  // un lecteur, attendu ou non, ni aucune requête directe sur `Verification`
+  // ne doit précéder la réparation dans le corps de la page.
+  const avant = corps.statements.slice(
+    0,
+    corps.statements.indexOf(premiere.parent),
+  );
+  for (const st of avant) {
+    const faits = faitsDe(st);
+    const lus = [
+      ...(faits.litLaTable ? ["Verification (requête directe)"] : []),
+      ...[...faits.appels].filter((a) => LECTEURS.has(a)),
+    ];
+    if (lus.length > 0) {
+      return `lecture lancée avant la réparation : ${lus.join(", ")}`;
+    }
+  }
   return null;
 }
 
@@ -496,15 +557,27 @@ describe("la réparation à l'affichage : une fois, avant de lire", () => {
     ).toBeGreaterThanOrEqual(1);
   });
 
-  it("aucun layout ne répare : il tournerait EN PARALLÈLE de la page", () => {
+  it("la clôture des réparatrices remonte au-delà des racines — sinon elle ne prouve rien", () => {
+    // Borne basse : les appelants connus de la réparation.
+    for (const f of ["regenererApresMutation"]) {
+      expect(REPARATRICES.has(f), f).toBe(true);
+    }
+    // Borne haute : ce que le layout appelle aujourd'hui ne répare pas.
+    for (const f of ["chargerSidebarCounts", "fraicheurCalendrier", "requireUser"]) {
+      expect(REPARATRICES.has(f), f).toBe(false);
+    }
+  });
+
+  it("aucun layout ne répare, même par une fonction qu'il appelle : il tournerait EN PARALLÈLE de la page", () => {
     const fautifs = rendus
       .filter((f) => /[\\/](layout|template)\.tsx?$/.test(f))
       .flatMap((f) =>
-        APPELS_DE_REPARATION.filter((fn) => appels(arbre(f), fn) > 0).map(
-          (fn) => `${f.slice(RACINE.length + 1)} → ${fn}`,
-        ),
+        [...faitsDe(arbre(f)).appels]
+          .filter((fn) => REPARATRICES.has(fn))
+          .map((fn) => `${f.slice(RACINE.length + 1)} → ${fn}`),
       );
-    expect(fautifs).toEqual([]);
+    expect(fautifs, `Ces layouts réparent le calendrier :\n  ${fautifs.join("\n  ")}`)
+      .toEqual([]);
   });
 
   it("aucun rendu ne répare deux fois", () => {

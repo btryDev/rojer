@@ -2278,8 +2278,16 @@ tomber entre deux passages.
 > parallèle, et un layout n'arrête pas la page (documentation de Next 16.3.5) ;
 > la page lirait les anciennes lignes pendant leur réécriture.
 > `fraicheur-sorties.test.ts` tient les deux : toute page qui lit une échéance
-> dit son âge, et la réparation reste hors des layouts, une fois par rendu,
-> avant les lectures. **Reste** : ~~la pastille « en retard » de la barre
+> dit son âge, et ~~la réparation reste hors des layouts, une fois par rendu,
+> avant les lectures~~ [2026-10-13, revue : la garde ne voyait que les appels
+> écrits dans `layout.tsx` — une réparation glissée dans `chargerSidebarCounts`
+> la laissait verte —, et seulement le premier `await` de la page — une
+> lecture lancée sans `await` avant la réparation passait. Elle tient
+> désormais : aucun layout n'appelle une fonction qui répare, directement ou
+> par transitivité (clôture par nom sur `src/`, depuis `assurerCalendrierAJour`,
+> `regenererSansInvalider` et `genererCalendrier`) ; une page répare au plus
+> une fois, par un `await` autonome qui est son premier, et aucun appel à un
+> lecteur du calendrier, attendu ou non, ne le précède]. **Reste** : ~~la pastille « en retard » de la barre
 > latérale (rendue par le layout) peut garder l'ancien compte jusqu'à
 > l'ouverture du tableau de bord ou du calendrier ;~~ [2026-10-13, rayé, même
 > lot : sur un calendrier qui n'est pas à jour, `chargerSidebarCounts` ne rend

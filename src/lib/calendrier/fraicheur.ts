@@ -67,6 +67,7 @@
 // (`docs/chantiers-ouverts.md` § 15, rayé). Ce module, lui, se tait toujours
 // sur `a_jour`, et c'est toujours juste.
 
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { SCEAU_CALENDRIER } from "./version-moteur";
@@ -139,8 +140,14 @@ export async function fraicheurDepuisRepere(
  * la moins affirmative, celle qui ne fait pas passer un vide pour un état sain.
  *
  * Hors session (serveur MCP), voir `getFraicheurCalendrier`.
+ *
+ * [2026-10-13, revue.] Mémoïsée par `cache()` de React, comme `requireUser` :
+ * le layout (pastille de la barre latérale) et la page la lisent dans le même
+ * rendu, et chacun refaisait sa requête pour le même repère. Portée à la
+ * requête, jamais au module ; hors rendu (tests, route hors dispatcher), la
+ * fonction s'exécute sans mémoïsation.
  */
-export async function fraicheurCalendrier(
+export const fraicheurCalendrier = cache(async function fraicheurCalendrier(
   etablissementId: string,
 ): Promise<FraicheurCalendrier> {
   const user = await requireUser();
@@ -155,7 +162,7 @@ export async function fraicheurCalendrier(
     // les dossiers sains — qui sont le cas courant.
     prisma.verification.count({ where: { etablissementId } }),
   );
-}
+});
 
 /**
  * Vrai quand ce que le dossier montre ne peut pas être présenté comme un état
