@@ -42,6 +42,7 @@ const bundle = (
     etablissementId: "etab-1",
     aujourdhui: AUJOURDHUI,
     prochainesVerifs: lignes,
+    demandesAssureurHorsListe: [],
     echeances: { verifsEnRetardSansEcheance },
   }) as unknown as DashboardBundle;
 
@@ -141,5 +142,39 @@ describe("widget « Prochaines échéances » — D1 (a), la ligne retenue par p
       <WidgetProchainesEcheances bundle={bundle([echue])} variant="liste" />,
     ).container.textContent ?? "";
     expect(due).toContain("Dépassé");
+  });
+});
+
+describe("widget « Prochaines échéances » — une demande d'assureur à planifier est NOMMÉE", () => {
+  /**
+   * CONTRÔLE VISUEL DU 2026-10-13. La thermographie du dossier semé, demandée
+   * par l'assureur et à planifier, n'apparaissait sur aucun widget : cinq
+   * échéances datées la poussaient hors de la liste. Décision de la
+   * propriétaire : elle doit apparaître — nommée, avec son marquage.
+   */
+  const assureur = {
+    ...ligne("thermo", "2026-09-01", "a_planifier"),
+    libelleObligation: "Thermographie infrarouge",
+    prescription: { source: "demande_assureur" },
+  };
+
+  it.each(["liste", "timeline"])("variante %s : le libellé et le marquage sous la liste", (variant) => {
+    const b = {
+      ...bundle([1, 2, 3, 4, 5].map((n) => ligne(`d${n}`, `2026-10-0${n}`))),
+      demandesAssureurHorsListe: [assureur],
+    } as unknown as DashboardBundle;
+    const { container } = render(<WidgetProchainesEcheances bundle={b} variant={variant} />);
+    const texte = container.textContent ?? "";
+    expect(texte).toContain("à la demande de votre assureur");
+    expect(texte).toContain("Thermographie infrarouge");
+    expect(texte).toContain("Engagement d'assurance");
+    expect(container.querySelector('a[href="/etablissements/etab-1/verifications/thermo"]')).not.toBeNull();
+  });
+
+  it("rien quand aucune demande n'est hors liste", () => {
+    const { container } = render(
+      <WidgetProchainesEcheances bundle={bundle([ligne("v1", "2026-10-01")])} variant="liste" />,
+    );
+    expect(container.textContent).not.toContain("à la demande de votre assureur");
   });
 });

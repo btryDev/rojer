@@ -95,6 +95,7 @@ describe("tableau de bord : prochaines échéances", () => {
       aujourdhui: AUJOURDHUI,
       prochainesVerifs: [verif(obligationId)],
       prochaineEcheance: null,
+      demandesAssureurHorsListe: [],
       echeances: { verifsEnRetardSansEcheance: 0 },
     }) as unknown as DashboardBundle;
 

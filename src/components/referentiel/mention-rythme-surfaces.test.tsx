@@ -91,6 +91,7 @@ const bundle = (rythmeRetenu: MentionRythme | null) =>
     aujourdhui: AUJOURDHUI,
     prochainesVerifs: [verif(rythmeRetenu)],
     prochaineEcheance: verif(rythmeRetenu),
+    demandesAssureurHorsListe: [],
     echeances: { verifsEnRetardSansEcheance: 0 },
     evenementsSemaine: [
       {

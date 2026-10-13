@@ -146,6 +146,44 @@ function MentionRetardsSansDate({ n }: { n: number }) {
   );
 }
 
+/**
+ * Les demandes d'assureur À PLANIFIER que les cinq lignes ne montrent pas —
+ * NOMMÉES, pas comptées (contrôle visuel du 2026-10-13, décision de la
+ * propriétaire : elles doivent apparaître). Sans date, elles passent derrière
+ * toute échéance datée ; un « 1 à planifier » ne dirait pas laquelle, et la
+ * seule qui comptait dans le dossier semé — une thermographie — restait
+ * invisible. Chacune porte son marquage contractuel (ADR-032).
+ */
+function MentionDemandesAssureur({
+  lignes,
+  etablissementId,
+}: {
+  lignes: DashboardBundle["demandesAssureurHorsListe"];
+  etablissementId: string;
+}) {
+  if (lignes.length === 0) return null;
+  return (
+    <div className="mt-2 flex flex-col gap-1.5 border-t border-[color:var(--board-slate-line)] pt-2.5">
+      <p className="m-0 text-[11.5px] leading-[1.5] text-[color:var(--board-slate-soft)]">
+        Hors de ces cinq, à planifier à la demande de votre assureur :
+      </p>
+      <ul className="m-0 flex list-none flex-col gap-1 p-0">
+        {lignes.map((v) => (
+          <li key={v.id}>
+            <LienProvenance
+              href={`/etablissements/${etablissementId}/verifications/${v.id}`}
+              className="flex items-center gap-1.5 text-[12.5px] font-medium text-[color:var(--board-ink)] hover:underline"
+            >
+              <span className="truncate">{v.libelleObligation}</span>
+              <MentionContractuelle />
+            </LienProvenance>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export function WidgetProchainesEcheances({
   bundle,
   variant,
@@ -155,6 +193,7 @@ export function WidgetProchainesEcheances({
 }) {
   const { prochainesVerifs, etablissementId, aujourdhui } = bundle;
   const horsListe = retardsSansDateHorsListe(bundle);
+  const assureurHorsListe = bundle.demandesAssureurHorsListe;
 
   if (prochainesVerifs.length === 0) {
     return (
@@ -181,6 +220,10 @@ export function WidgetProchainesEcheances({
           aujourdhui={aujourdhui}
         />
         <MentionRetardsSansDate n={horsListe} />
+        <MentionDemandesAssureur
+          lignes={assureurHorsListe}
+          etablissementId={etablissementId}
+        />
       </BentoCell>
     );
   }
@@ -290,6 +333,10 @@ export function WidgetProchainesEcheances({
         })}
       </ul>
       <MentionRetardsSansDate n={horsListe} />
+      <MentionDemandesAssureur
+        lignes={assureurHorsListe}
+        etablissementId={etablissementId}
+      />
     </BentoCell>
   );
 }

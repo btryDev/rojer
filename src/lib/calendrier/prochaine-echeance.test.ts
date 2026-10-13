@@ -148,3 +148,38 @@ describe("echeancesDuTableauDeBord — la prudence dans le choix de la carte (D2
     expect(echeancesDuTableauDeBord(lignes, NOW).prochaineEcheance?.id).toBe("prescrite");
   });
 });
+
+describe("echeancesDuTableauDeBord — les demandes d'assureur à planifier hors des cinq", () => {
+  // Contrôle visuel du 2026-10-13 : la thermographie (demande d'assureur,
+  // à planifier) passait derrière cinq échéances datées et disparaissait.
+  const assureur = (id: string, statut = "a_planifier", archiveLe?: string) => ({
+    ...ligne(id, "2026-08-01", { statut, archiveLe }),
+    prescription: { source: "demande_assureur" } as { source: string } | null,
+  });
+  const datees = [1, 2, 3, 4, 5].map((n) => ({
+    ...ligne(`d${n}`, `2026-10-0${n}`),
+    prescription: null as { source: string } | null,
+  }));
+
+  it("la demande coupée par les cinq est rendue, nommée", () => {
+    const r = echeancesDuTableauDeBord([...datees, assureur("thermo")], NOW);
+    expect(r.prochainesVerifs.map((l) => l.id)).not.toContain("thermo");
+    expect(r.demandesAssureurHorsListe.map((l) => l.id)).toEqual(["thermo"]);
+  });
+
+  it("déjà dans les cinq : pas répétée", () => {
+    const r = echeancesDuTableauDeBord([datees[0], assureur("thermo")], NOW);
+    expect(r.prochainesVerifs.map((l) => l.id)).toContain("thermo");
+    expect(r.demandesAssureurHorsListe).toEqual([]);
+  });
+
+  it("une ligne légale à planifier n'y entre pas, ni une demande archivée ou datée", () => {
+    const legale = { ...ligne("legale", "2026-08-01", { statut: "a_planifier" }), prescription: null };
+    const datee = { ...assureur("datee", "planifiee"), datePrevue: jour("2026-12-01") };
+    const r = echeancesDuTableauDeBord(
+      [...datees, legale, datee, assureur("archivee", "a_planifier", "2026-09-01")],
+      NOW,
+    );
+    expect(r.demandesAssureurHorsListe).toEqual([]);
+  });
+});
