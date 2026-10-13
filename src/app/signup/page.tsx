@@ -1,4 +1,3 @@
-import { headers } from "next/headers";
 import Link from "next/link";
 import { cheminDeRetour } from "@/lib/auth/chemin-de-retour";
 import { SignupForm } from "./SignupForm";
@@ -14,10 +13,6 @@ export default async function SignupPage({
 }) {
   const { next: nextBrut } = await searchParams;
   const next = nextBrut === undefined ? undefined : cheminDeRetour(nextBrut);
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "";
-  const proto = h.get("x-forwarded-proto") ?? "http";
-  const origin = host ? `${proto}://${host}` : "";
 
   return (
     // Même enveloppe que /login : colonne étroite centrée sur le canvas. Cf.
@@ -36,7 +31,7 @@ export default async function SignupPage({
         </p>
 
         <div className="carte-board mt-7 px-7 py-6 sm:px-8">
-          <SignupForm next={cheminDeRetour(next)} origin={origin} />
+          <SignupForm next={cheminDeRetour(next)} />
         </div>
 
         <p className="m-0 mt-6 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">

@@ -6,6 +6,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { publicAppUrl, refusUrlPublique } from "@/lib/email";
 import { createClient } from "@/lib/supabase/server";
 import { cheminDeRetour } from "./chemin-de-retour";
 
@@ -23,6 +24,13 @@ export type AuthActionState = {
   error?: string;
   message?: string;
 };
+
+// Les liens de confirmation et de réinitialisation partent par mail : leur
+// adresse de retour se prend au serveur, jamais au formulaire, qu'un POST forgé
+// remplit à sa guise (audit du 2026-10-13, C3). Sans adresse publique connue
+// en production, on refuse d'envoyer plutôt que d'envoyer un lien faux.
+const ENVOI_IMPOSSIBLE =
+  "L'adresse publique de l'application n'est pas configurée sur ce serveur : aucun e-mail ne peut partir. Prévenez l'équipe Rojer.";
 
 export async function signInAction(
   _prev: AuthActionState,
@@ -58,14 +66,12 @@ export async function signUpAction(
     return { error: parsed.error.issues[0]?.message ?? "Champs invalides" };
   }
 
+  if (refusUrlPublique()) return { error: ENVOI_IMPOSSIBLE };
   const supabase = await createClient();
-  const origin = (formData.get("origin") as string) || "";
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
-    options: {
-      emailRedirectTo: origin ? `${origin}/auth/callback` : undefined,
-    },
+    options: { emailRedirectTo: `${publicAppUrl()}/auth/callback` },
   });
   if (error) {
     return { error: error.message };
@@ -94,10 +100,10 @@ export async function requestPasswordResetAction(
     return { error: parsed.error.issues[0]?.message ?? "Adresse invalide" };
   }
 
+  if (refusUrlPublique()) return { error: ENVOI_IMPOSSIBLE };
   const supabase = await createClient();
-  const origin = (formData.get("origin") as string) || "";
   await supabase.auth.resetPasswordForEmail(parsed.data, {
-    redirectTo: origin ? `${origin}/auth/reinitialisation` : undefined,
+    redirectTo: `${publicAppUrl()}/auth/reinitialisation`,
   });
 
   // Réponse identique que le compte existe ou non : pas d'énumération
