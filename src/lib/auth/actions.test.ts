@@ -94,8 +94,8 @@ describe("liens envoyés par mail : l'origine vient du serveur (C3)", () => {
     });
   });
 
-  it("mot de passe oublié", async () => {
-    vi.stubEnv("PUBLIC_APP_URL", "https://app.rojer.fr");
+  it("mot de passe oublié, adresse publique posée avec un « / » final", async () => {
+    vi.stubEnv("PUBLIC_APP_URL", "https://app.rojer.fr/");
     await requestPasswordResetAction({}, formulaire({ email: "a@exemple.fr", ...forge }));
     expect(h.auth.resetPasswordForEmail.mock.calls[0][1]).toEqual({
       redirectTo: "https://app.rojer.fr/auth/reinitialisation",
