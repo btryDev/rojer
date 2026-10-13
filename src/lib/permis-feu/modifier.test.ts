@@ -236,6 +236,19 @@ describe("les liens de signature en vol (relecture indépendante du 2026-10-12)"
     expect(db.jetons[0].revoqueLe).toBeNull();
   });
 
+  // La zone est hors de l'empreinte (`hash-objet.ts`, que le faux ci-dessus
+  // reproduit) : la changer seule ne révoque pas le lien envoyé.
+  it("changer la zone seule ne révoque rien : elle est hors de l'empreinte", async () => {
+    db.permis.push(permisEnBase());
+    await modifier(saisie());
+    db.jetons.push(jeton());
+
+    expect((await modifier(saisie({ batimentId: "zone-2" }))).status).toBe("success");
+
+    expect(db.permis[0].batimentId).toBe("zone-2");
+    expect(db.jetons[0].revoqueLe).toBeNull();
+  });
+
   it("le verrou de la ligne est pris AVANT de compter les signatures", async () => {
     db.permis.push(permisEnBase());
 
