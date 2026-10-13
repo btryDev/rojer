@@ -224,10 +224,11 @@ toutes hors cadre. La définition de la cible est écrite à l'ADR-031
 annuelle du gaz (`GZ 15`) n'est servie qu'à l'ERP 1-4 qui déclare un appareil
 de cuisson ; un commerce chauffé au gaz sans cuisine ne la reçoit pas.]
 
-**Trois dettes sans blocage, et non encodées : les hôtels.** `perimetre` veut
+~~**Trois dettes sans blocage, et non encodées : les hôtels.** `perimetre` veut
 dire « encodable, hors cible ». `PO 7` est chiffré (deux séances par an) et le
 modèle sait le porter. Ne pas l'encoder est un choix de priorité, pas une
-impossibilité — à confirmer, le produit SERVANT les hôtels (ADR-031).
+impossibilité — à confirmer, le produit SERVANT les hôtels (ADR-031).~~
+[2026-10-13 : CLOS — encodées (`lot/docs-maj`, d147fb7d), voir ci-dessus.]
 
 **Les réserves : 98 → 89.** Dix-neuf se disaient « corrigées » ou « levées ».
 Relues une à une : sept entièrement closes d'après le lot, trois de plus
@@ -658,7 +659,9 @@ bord, 19 sur la carte de zone, « 22 datées · 5 à planifier » au calendrier,
 > **Les quatre écrans le disent depuis le 2026-09-03**, et depuis le 2026-09-04
 > ils le disent chacun une fois : les phrases se répétaient d'un écran à l'autre
 > et deux fois sur `/calendrier`. **Ce qui reste ouvert, et qui n'est pas la
-> même chose** : les quatre comptes divergeaient aussi dans leurs MOTS —
+> même chose** [2026-10-13, vérifié dans le code : CLOS — `LIBELLE_ETAT`
+> (`lib/calendrier/etats.ts`) et `vocabulaire-etats.test.ts` existent ; la
+> phrase décrit la correction, elle n'annonce plus rien d'ouvert] : les quatre comptes divergeaient aussi dans leurs MOTS —
 > « DÉPASSÉES », « à traiter », « EN RETARD », « 5 dépassées » pour un seul
 > état. Le mot vit désormais dans `LIBELLE_ETAT` (`lib/calendrier/etats`), avec
 > la couleur qui y vivait déjà, et `vocabulaire-etats.test.ts` refuse qu'un
@@ -947,9 +950,13 @@ que le corpus en porte :
 | Livre III — 5ᵉ catégorie | 59 | **`integral`** |
 | Livre II — catégories 1 à 4 | **18** | `articles_cites` |
 
-**Plus l'établissement est grand, plus la couverture est mince — et rien ne le
-dit au dirigeant.** Un restaurant de 3ᵉ catégorie voit un dossier qui a l'air
-complet.
+**Plus l'établissement est grand, plus la couverture est mince — ~~et rien ne le
+dit au dirigeant.~~ ~~Un restaurant de 3ᵉ catégorie voit un dossier qui a l'air
+complet.~~** [2026-10-13, vérifié dans le code : l'axe `categorie_erp` de
+`perimetre/couverture.ts` déclare le manque à tout ERP hors
+`CATEGORIES_COUVERTES` — « Cet établissement relève de la … catégorie » —, sur
+la page « Ce que Rojer ne couvre pas ». Le dénominateur ci-dessous reste à
+mesurer.]
 
 **Réserve** : le dénominateur du Livre II n'est pas établi. On sait qu'on en cite
 dix-huit articles, on ne sait pas combien il en compte. Le mesurer est le premier
@@ -1012,7 +1019,11 @@ l'argument pour ne jamais retirer une question sans ouvrir son texte :
   est l'article 101 ». Bloqué, lui : pas d'attribut de parc annexe, et un
   débiteur — « le gestionnaire » — que le modèle ne connaît pas.
 
-Les deux sont au corpus en `obligation_manquante`, aucune n'est encodée : une
+~~Les deux sont au corpus en `obligation_manquante`, aucune n'est encodée~~
+[2026-10-13, vérifié dans le code : `GH 61 § 5` a été encodé le 2026-09-04
+(`incendie-igh-charge-calorifique-quinquennale`), puis retiré le 2026-10-07
+avec tout l'IGH ; `GH 61` est `non_couvert`. L'art. 78-1 est classé HORS
+CADRE le 2026-10-13.] : une
 obligation ne s'encode pas en effet de bord d'une question à laquelle elle ne
 répond pas.
 
@@ -2295,8 +2306,11 @@ dossier tant que la variable n'est pas mise à jour.
 
 ### Ce que ça n'a pas réglé, et qui reste ouvert
 
-Une base propre pour les tests : ni preview, ni local peuplé. `docs/rgpd.md` et
-le § 5 disent déjà qu'aucun seed n'amorce une base vide, si bien qu'un contrôle
+Une base propre pour les tests : ni preview, ni local peuplé. ~~`docs/rgpd.md` et
+le § 5 disent déjà qu'aucun seed n'amorce une base vide~~ [2026-10-13, vérifié dans le code :
+faux depuis le 2026-09-03 — le § 5 dit le contraire, `scripts/seed-dossier-complet.ts`
+crée un dossier sur une base vide et migrée ; reste que personne ne l'a lancé
+pour un contrôle visuel], si bien qu'un contrôle
 visuel sur données réalistes n'existe nulle part ailleurs qu'en production.
 C'est le vrai manque ; les previews n'étaient qu'une façon coûteuse de le
 contourner.
@@ -2439,7 +2453,8 @@ lot 6.
 > « ECS » ne dit pas où est le point. (2) L'article 1er de l'arrêté de 1978
 > (champ, installations neuves ou existantes) n'est pas ouvert. (3) Le relevé
 > hebdomadaire du tableau de bord reste un seuil du produit, plus serré que le
-> mensuel de l'annexe 2 — déjà dit dans `dashboard/obligations.ts`. (4) La
+> mensuel de l'annexe 2 — déjà dit dans `dashboard/obligations.ts` [2026-10-13 :
+> un constat, pas une tâche]. (4) La
 > ~~phrase « entre 25 et 45 °C » de la page ne cite aucune source~~ — retirée
 > le même jour. (5) Le jeu de données `scripts/seed-dossier-complet.ts` pose
 > 55 °C en sortie d'un ballon de 300 L et 50 °C minimum à un mitigeur : deux
@@ -2527,6 +2542,7 @@ bloquante pour la branche :
 6. **« Formations liées aux risques du poste »** regroupe aussi des
    attestations médicales et une autorisation, qui ne sont pas des
    formations. Titre validé par la propriétaire ; signalé par la relecture.
+   [2026-10-13 : CLOS — tranché par la propriétaire, rien à faire.]
 7. **Un engin déclaré et un « non » à la conduite.** Un chariot ou une nacelle
    actif, avec « non » à `q-conduite-engins` : le tableau de bord suit le
    DUERP et se tait, et rien ne relève la contradiction. Ce n'est pas faux en
