@@ -1625,8 +1625,8 @@ export const obligationsIncendie: Obligation[] = [
         reference:
           "Arrêté du 25 juin 1980, art. PO 7 (instruction et entraînement du personnel)",
         article: "PO 7",
-        url: "https://www.legifrance.gouv.fr/codes/section_lc/JORFTEXT000000290033/LEGISCTA000020374775/",
-        note: "« Le personnel doit participer deux fois par an à des séances d'instruction et d'entraînement de façon compatible avec les conditions d'exploitation, compte tenu, le cas échéant, de son rythme saisonnier. » Version en vigueur depuis le 30 octobre 2011, relue par l'API Légifrance le 2026-09-27 (C51), texte inchangé.",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024770976",
+        note: "« Le personnel doit participer deux fois par an à des séances d'instruction et d'entraînement de façon compatible avec les conditions d'exploitation, compte tenu, le cas échéant, de son rythme saisonnier. » Version en vigueur depuis le 30 octobre 2011, relue par l'API Légifrance le 2026-09-27 (C51) et le 2026-10-13, texte inchangé.",
         versionConstatee: "2011-10-30",
       },
       {
@@ -1634,8 +1634,8 @@ export const obligationsIncendie: Obligation[] = [
         reference:
           "Arrêté du 25 juin 1980, art. PO 12 (hôtels existants)",
         article: "PO 12",
-        url: "https://www.legifrance.gouv.fr/codes/section_lc/JORFTEXT000000290033/LEGISCTA000020374775/",
-        note: "« Les dispositions des articles PE 27 (§ 5) et PO 7 sont applicables. » Relevé en première main le 2026-08-26. PO 7 vaut donc pour les hôtels existants.",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024771138",
+        note: "« Les dispositions des articles PE 27 (§ 5) et PO 7 sont applicables. » Relevé en première main le 2026-08-26, relu par l'API Légifrance le 2026-10-13 (bac à sable). PO 7 vaut donc pour les hôtels existants.",
         versionConstatee: "2011-10-30",
       },
       {

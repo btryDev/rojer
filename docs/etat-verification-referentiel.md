@@ -133,7 +133,7 @@ repose sur un texte que personne n'a ouvert.
 | `equipement_sous_pression` | 1 | 1 | 1 | · | · | · | · | · | 1 / 1 — 100 % | 0 / 1 | 2026-09-01 |
 | `formation_securite` | 11 | 32 | 1 | 10 | · | · | · | · | 11 / 11 — 100 % | 0 / 32 | 2026-08-31 → 2026-09-27 |
 | `froid` | 8 | 16 | 8 | · | · | · | · | · | 8 / 8 — 100 % | 16 / 16 | 2026-08-26 → 2026-09-27 |
-| `incendie` | 45 | 95 | 31 | 13 | 1 | · | · | · | 44 / 45 — 98 % | 4 / 95 | 2026-08-26 → 2026-10-07 |
+| `incendie` | 45 | 95 | 31 | 13 | 1 | · | · | · | 44 / 45 — 98 % | 4 / 95 | 2026-08-26 → 2026-10-13 |
 | `information_travailleurs` | 2 | 2 | · | 2 | · | · | · | · | 2 / 2 — 100 % | 0 / 2 | 2026-08-31 → 2026-09-26 |
 | `levage` | 11 | 30 | 10 | 1 | · | · | · | · | 11 / 11 — 100 % | 0 / 30 | 2026-08-26 → 2026-09-02 |
 | `locaux_sociaux` | 4 | 4 | 2 | 2 | · | · | · | · | 4 / 4 — 100 % | 0 / 4 | 2026-08-31 → 2026-09-26 |
@@ -157,7 +157,7 @@ Aucun domaine n'est entièrement dépourvu de verbatim.
 |  | obl. | réf. | 5 | 4 | 3 | 2 | 1 | 0 | vérifiées à la source | sans ancre | lu entre |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `equipement` | 90 | 179 | 56 | 33 | 1 | · | · | · | 89 / 90 — 99 % | 22 / 179 | 2026-08-26 → 2026-10-07 |
-| `etablissement` | 72 | 139 | 28 | 42 | 2 | · | · | · | 70 / 72 — 97 % | 0 / 139 | 2026-08-26 → 2026-10-07 |
+| `etablissement` | 72 | 139 | 28 | 42 | 2 | · | · | · | 70 / 72 — 97 % | 0 / 139 | 2026-08-26 → 2026-10-13 |
 | `salarie` | 14 | 33 | · | 13 | · | 1 | · | · | 13 / 14 — 93 % | 1 / 33 | 2026-08-27 → 2026-10-07 |
 
 Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, mesuré au plancher — **5** première main, **4** agent + verbatim, **3** lu sans verbatim, **2** indirect, **1** sans trace, **0** non rattaché.
@@ -168,7 +168,7 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 
 | date de lecture | références | part | obligations concernées |
 | --- | --- | --- | --- |
-| 2026-08-26 | 28 | 8 % | 27 |
+| 2026-08-26 | 26 | 7 % | 26 |
 | 2026-08-27 | 7 | 2 % | 4 |
 | 2026-08-31 | 59 | 17 % | 29 |
 | 2026-09-01 | 120 | 34 % | 75 |
@@ -178,8 +178,9 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 | 2026-09-26 | 26 | 7 % | 21 |
 | 2026-09-27 | 37 | 11 % | 35 |
 | 2026-10-07 | 33 | 9 % | 22 |
+| 2026-10-13 | 2 | 1 % | 1 |
 
-351 des 351 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-10-07.
+351 des 351 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-10-13.
 
 Ces dates ne sont pas un âge : elles disent quand quelqu'un a ouvert le
 texte, pas depuis quand la version lue est en vigueur. Une lecture d'hier
@@ -305,7 +306,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `incendie-erp-5-sommeil-consigne-chambres` | incendie | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
 | `incendie-erp-5-sommeil-plans-affiches` | incendie | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
 | `incendie-erp-alarme-verification-hebdomadaire` | incendie | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-04 |
-| `incendie-hotel-po-instruction-personnel-semestrielle` | incendie | etablissement | 3 | 5 · première main | 4 · agent + verbatim | 0 / 3 | 2026-08-26 → 2026-09-26 |
+| `incendie-hotel-po-instruction-personnel-semestrielle` | incendie | etablissement | 3 | 5 · première main | 4 · agent + verbatim | 0 / 3 | 2026-09-26 → 2026-10-13 |
 | `incendie-registre-securite` | incendie | etablissement | 10 | 5 · première main | 4 · agent + verbatim | 0 / 10 | 2026-08-31 → 2026-09-26 |
 | `incendie-travail-alarme-entretien-verification` | incendie | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
 | `incendie-travail-alarme-sonore` | incendie | etablissement | 4 | 5 · première main | 4 · agent + verbatim | 0 / 4 | 2026-09-01 → 2026-09-27 |
@@ -543,8 +544,8 @@ refaire pour la contredire.
 | `incendie-erp-5-sommeil-consigne-chambres` | fondement | Arrêté du 25 juin 1980, art. PE 33 § 2 | PE 33 | arrete-1980-livre-3 | retenu | 2026-09-01 | agent_verbatim | — | ✓ | 2011-11-04 | 2011-11-04 | 4 · agent + verbatim | ancrée |
 | `incendie-erp-5-sommeil-plans-affiches` | fondement | Arrêté du 25 juin 1980, art. PE 35 | PE 35 | arrete-1980-livre-3 | retenu | 2026-09-01 | agent_verbatim | — | ✓ | 1990-08-27 | 1990-08-27 | 4 · agent + verbatim | ancrée |
 | `incendie-erp-5-instruction-personnel` | fondement | Arrêté du 25 juin 1980, art. PE 27 § 5 (instruction et entraînement du personnel) | PE 27 | arrete-1980-livre-3 | retenu | 2026-09-26 | agent_verbatim | ✓ | ✓ | 2026-05-01 | 2026-05-01 | 4 · agent + verbatim | ancrée |
-| `incendie-hotel-po-instruction-personnel-semestrielle` | fondement | Arrêté du 25 juin 1980, art. PO 7 (instruction et entraînement du personnel) | PO 7 | arrete-1980-livre-3 | retenu | 2026-08-26 | premiere_main | — | ✓ | 2011-10-30 | 2011-10-30 | 5 · première main | ancrée |
-| `incendie-hotel-po-instruction-personnel-semestrielle` | contexte 1 | Arrêté du 25 juin 1980, art. PO 12 (hôtels existants) | PO 12 | arrete-1980-livre-3 | retenu | 2026-08-26 | premiere_main | — | ✓ | 2011-10-30 | 2011-10-30 | 5 · première main | ancrée |
+| `incendie-hotel-po-instruction-personnel-semestrielle` | fondement | Arrêté du 25 juin 1980, art. PO 7 (instruction et entraînement du personnel) | PO 7 | arrete-1980-livre-3 | retenu | 2026-10-13 | api_legifrance | — | ✓ | 2011-10-30 | 2011-10-30 | 5 · première main | ancrée |
+| `incendie-hotel-po-instruction-personnel-semestrielle` | contexte 1 | Arrêté du 25 juin 1980, art. PO 12 (hôtels existants) | PO 12 | arrete-1980-livre-3 | retenu | 2026-10-13 | api_legifrance | — | ✓ | 2011-10-30 | 2011-10-30 | 5 · première main | ancrée |
 | `incendie-hotel-po-instruction-personnel-semestrielle` | contexte 2 | Arrêté du 25 juin 1980, art. PE 27 § 5 (instruction et entraînement du personnel) | PE 27 | arrete-1980-livre-3 | retenu | 2026-09-26 | agent_verbatim | ✓ | ✓ | 2026-05-01 | 2026-05-01 | 4 · agent + verbatim | ancrée |
 | `incendie-erp-5-consignes-affichees` | fondement | Arrêté du 25 juin 1980, art. PE 27 § 4 (consignes affichées) | PE 27 | arrete-1980-livre-3 | retenu | 2026-09-26 | agent_verbatim | ✓ | ✓ | 2026-05-01 | 2026-05-01 | 4 · agent + verbatim | ancrée |
 | `incendie-erp-visite-commission-cat1-2-triennale` | fondement | Arrêté du 25 juin 1980, art. GE 4 § 1 (visites périodiques des quatre premières catégories) | GE 4 | arrete-1980-livre-2 | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2015-01-01 | 2015-01-01 | 5 · première main | ancrée |
