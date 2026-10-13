@@ -3,7 +3,7 @@ import {
   nombreDePersonnesADemander,
 } from "@/lib/matching/personnes-presentes";
 import { z } from "zod";
-import { depuisCleJourCivil } from "@/lib/dates";
+import { depuisCleJourCivil, estJourCivilReel } from "@/lib/dates";
 import { TYPES_ERP_A_SOMMEIL_PLAUSIBLE } from "@/lib/referentiels/types-communs";
 
 // Enums reflétant le schéma Prisma. Si on ajoute une valeur côté Prisma,
@@ -221,6 +221,7 @@ const dateCivileOptionnelle = z
     z
       .string()
       .regex(DATE_FMT, "Format attendu : AAAA-MM-JJ")
+      .refine(estJourCivilReel, "Cette date n'existe pas")
       .transform((v) => depuisCleJourCivil(v)),
   ])
   .optional();

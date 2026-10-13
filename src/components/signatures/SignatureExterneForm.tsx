@@ -99,7 +99,7 @@ export function SignatureExterneForm({
         />
         <p className="text-[0.78rem] text-[color:var(--muted-foreground)]">
           Code à 6 chiffres reçu dans l&apos;email. Valable 10 minutes, 3 essais
-          maximum. Lien expire le{" "}
+          au total sur ce lien, nouveaux codes compris. Lien expire le{" "}
           {expireLe.toLocaleDateString("fr-FR", {
             day: "2-digit",
             month: "long",

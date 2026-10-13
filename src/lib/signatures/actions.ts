@@ -5,14 +5,16 @@ import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
-import { formaterDateFr } from "@/lib/dates";
+import { formaterDateFr, formaterHeureFr } from "@/lib/dates";
 import { z } from "zod";
 import { emettreAccessToken } from "@/lib/access-tokens/emission";
 import { envoyerMailAcces, urlAccesPourToken } from "@/lib/access-tokens/mail";
 import { envoiEnService } from "@/lib/email";
 import {
   consommerJeton,
+  rendreEnvoiOtp,
   renouvelerOtp,
+  reserverEnvoiOtp,
   reserverEssaiOtp,
   revoquerOtpEpuise,
   verifierAccessToken,
@@ -72,6 +74,22 @@ const MESSAGE_RENVOI_HORS_SERVICE =
  * `prestataireId` non plus : aucun appelant ne le passait, et rien ne
  * vérifiait qu'il appartenait à l'établissement.
  */
+/**
+ * La fonction déclarée du signataire : imprimée sur la preuve de signature et
+ * dans le bloc des documents. Une seule règle pour ses trois portes — la
+ * demande, la signature par lien (page publique, ASVS V2.2.1 : elle n'avait
+ * ni borne ni filtre) et la signature en compte connecté : 120 caractères au
+ * plus, aucun caractère de contrôle (ni saut de ligne, ni rien qui fabrique
+ * des lignes dans un document).
+ */
+const roleSignataireSchema = z
+  .string({ error: "Fonction du signataire invalide." })
+  .trim()
+  .max(120, { error: "Fonction du signataire trop longue (120 caractères au plus)." })
+  .regex(/^[^\p{Cc}]*$/u, {
+    error: "La fonction du signataire ne doit pas contenir de saut de ligne.",
+  });
+
 const demandeSignatureSchema = z.object({
   etablissementId: z.string().min(1).max(100),
   objetType: z.enum(ObjetSignable),
@@ -90,12 +108,7 @@ const demandeSignatureSchema = z.object({
     .regex(/^[^\p{Cc}]*$/u, {
       error: "Le nom du signataire ne doit pas contenir de saut de ligne.",
     }),
-  signataireRole: z
-    .string()
-    .trim()
-    .max(120)
-    .regex(/^[^\p{Cc}]*$/u)
-    .optional(),
+  signataireRole: roleSignataireSchema.optional(),
   // La partie au nom de laquelle le destinataire signera (2026-10-12) :
   // choisie ici, par le demandeur, et non par le signataire. Requise pour un
   // acte co-signé, refusée ailleurs (`partieRecevable`).
@@ -216,7 +229,18 @@ export async function poserSignatureAvecToken(
   formData: FormData,
 ): Promise<PoserSignatureState> {
   const otp = (formData.get("otp") ?? "").toString().trim();
-  const signataireRole = (formData.get("signataireRole") ?? "").toString().trim();
+  // La fonction se valide AVANT le jeton et le code : un refus ici ne
+  // consomme aucun essai, et rien n'est écrit (ASVS V2.2.1, 2026-10-13).
+  const role = roleSignataireSchema.safeParse(
+    (formData.get("signataireRole") ?? "").toString(),
+  );
+  if (!role.success) {
+    return {
+      status: "error",
+      message: role.error.issues[0]?.message ?? "Fonction du signataire invalide.",
+    };
+  }
+  const signataireRole = role.data;
 
   const res = await verifierAccessToken(tokenClair);
   if (!res.ok) {
@@ -430,9 +454,15 @@ export async function poserSignatureAvecToken(
  * à une adresse fournie par l'appelant — un tiers qui aurait intercepté le
  * lien ne peut pas se faire adresser le code ailleurs.
  *
- * Le délai minimal entre deux envois (`renvoiOtpAutorise`) évite d'en faire
- * un outil de saturation de boîte mail et de remise à zéro illimitée du
- * compteur d'essais.
+ * Trois bornes, et la dernière est celle qui compte pour la sécurité :
+ *  - le délai minimal entre deux envois sur un lien (`renvoiOtpAutorise`,
+ *    60 s), rendu sûr sous concurrence par l'écriture conditionnelle de
+ *    `renouvelerOtp` ;
+ *  - cinq envois par heure et par ADRESSE (ADR-006), réservés en base
+ *    (`reserverEnvoiOtp`) : ce qui protège la boîte du destinataire ;
+ *  - trois essais par LIEN, nouveaux codes compris : un renvoi ne les remet
+ *    plus à trois (2026-10-13). C'est ce qui borne le nombre total de codes
+ *    éprouvables, quelle que soit la cadence des renvois.
  */
 export type RenvoiOtpState =
   | { status: "idle" }
@@ -484,11 +514,37 @@ export async function renvoyerCodeOtp(
   // L'URL avant le renouvellement (2026-10-12, audit B7) : sans adresse
   // publique en production, `publicAppUrl` lève avant d'invalider l'ancien code.
   const urlAcces = urlAccesPourToken(tokenClair);
+
+  // Le plafond de l'ADR-006 — cinq envois par heure et par adresse —, réservé
+  // en base AVANT de toucher au code : refusé, le code précédent reste celui
+  // qui signe (ASVS V6.6.3, 2026-10-13).
+  const envoi = await reserverEnvoiOtp(token.emailDestinataire, maintenant);
+  if (!envoi.ok) {
+    return {
+      status: "error",
+      message:
+        `Cinq codes ont déjà été envoyés à cette adresse dans l'heure. ` +
+        `Vous pourrez en demander un nouveau à ${formaterHeureFr(envoi.possibleLe)}. ` +
+        `Le dernier code reçu reste valable jusqu'à son expiration.`,
+    };
+  }
+
   const otp = generateOtp();
-  await renouvelerOtp(token.id, {
+  const renouvele = await renouvelerOtp(token.id, {
     otpHash: hashOtp(otp),
     otpExpireLe: otpExpirationDate(maintenant),
+    otpExpireLeLu: token.otpExpireLe,
   });
+  if (!renouvele) {
+    // Un autre renvoi sur ce lien l'a devancé (double clic, deux onglets) :
+    // son code part, celui-ci non, et sa place au plafond est rendue.
+    await rendreEnvoiOtp(token.emailDestinataire);
+    return {
+      status: "error",
+      message:
+        "Un code vient d'être envoyé. Patientez une minute avant d'en demander un autre.",
+    };
+  }
 
   await envoyerMailAcces({
     to: token.emailDestinataire,
@@ -502,9 +558,14 @@ export async function renvoyerCodeOtp(
     expireLe: token.expireLe,
   });
 
+  // Les essais ne sont pas remis à trois (`renouvelerOtp`) : la phrase dit ce
+  // qui reste sur le lien, pour que le signataire ne compte pas sur trois.
+  const restants = token.otpEssaisRestants;
   return {
     status: "success",
-    message: `Un nouveau code vient d'être envoyé à ${token.emailDestinataire}.`,
+    message:
+      `Un nouveau code vient d'être envoyé à ${token.emailDestinataire}. ` +
+      `Il vous reste ${restants} essai${restants > 1 ? "s" : ""} sur ce lien.`,
   };
 }
 
@@ -537,6 +598,11 @@ export async function signerEnCompteConnecte(params: {
 > {
   const user = await requireUser();
   await assertEtablissementOwnership(params.etablissementId);
+  // Même règle que les deux autres portes. Aucun écran ne passe de fonction
+  // ici : seul un appel forgé est refusé, d'où l'exception plutôt qu'une
+  // raison de plus dans le retour.
+  const role =
+    params.role === undefined ? undefined : roleSignataireSchema.parse(params.role);
 
   // Même garde que pour le signataire externe : un objet clos ou annulé ne
   // se signe plus, par personne.
@@ -589,7 +655,7 @@ export async function signerEnCompteConnecte(params: {
           partie,
           signataireNom: user.email ?? "Utilisateur",
           signataireEmail: user.email ?? "",
-          signataireRole: params.role ?? null,
+          signataireRole: role || null,
           userId: user.id,
           hashDocument: h.hash,
           nomDocument: h.nomDocument,

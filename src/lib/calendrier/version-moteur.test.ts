@@ -384,7 +384,14 @@ const RELEVE = {
   // permis. NON : fonction AJOUTÉE, appelée par deux pages seulement, aucune
   // fonction existante n'est touchée — la régénération n'écrit rien d'autre.
   // ~~005b4fafbfab216a~~.
-  empreinte: "7d1d30ef2861a9a2",
+  // Recopiée SANS incrément le 2026-10-13 (`lot/securite-owasp-1013-asvs-
+  // validation`, ASVS V2.2.1) : `dates/index.ts` gagne `estJourCivilReel`
+  // (remonté de `prestataires/schema.ts`), `estSaisieDateHeureReelle` et
+  // `formaterHeureFr` ; `rapports/schema.ts` refuse une date de rapport qui
+  // n'existe pas. NON : fonctions AJOUTÉES, aucune existante touchée ; le
+  // refus vaut à la SAISIE, la régénération ne relit pas ce schéma.
+  // ~~7d1d30ef2861a9a2~~.
+  empreinte: "4943db84e624fce1",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

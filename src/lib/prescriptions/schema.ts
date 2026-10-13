@@ -10,7 +10,7 @@ import {
   prescriptionRenforce,
 } from "@/lib/matching/prescriptions";
 import { SOURCES_PRESCRIPTION } from "./sources";
-import { cleJourCivil } from "@/lib/dates";
+import { cleJourCivil, estJourCivilReel } from "@/lib/dates";
 
 /**
  * Validation d'une prescription particulière (ADR-035).
@@ -51,7 +51,10 @@ const vide = (v: unknown) =>
 
 const dateCivile = z.preprocess(
   vide,
-  z.string().regex(DATE_FMT, "Format attendu : AAAA-MM-JJ"),
+  z
+    .string()
+    .regex(DATE_FMT, "Format attendu : AAAA-MM-JJ")
+    .refine(estJourCivilReel, "Cette date n'existe pas"),
 );
 
 
@@ -68,7 +71,14 @@ const base = z.object({
     (v) => typeof v === "string" && v <= cleJourCivil(new Date()),
     "Un acte ne peut pas être daté dans le futur : c'est la date portée sur la pièce.",
   ),
-  dateFin: z.preprocess(vide, z.string().regex(DATE_FMT).optional()),
+  dateFin: z.preprocess(
+    vide,
+    z
+      .string()
+      .regex(DATE_FMT, "Format attendu : AAAA-MM-JJ")
+      .refine(estJourCivilReel, "Cette date n'existe pas")
+      .optional(),
+  ),
   periodicite: z
     .enum(PERIODICITES)
     .refine((p) => p !== "autre", "Une prescription doit porter une échéance"),

@@ -220,11 +220,19 @@ export async function renommerUnite(
 ): Promise<void> {
   const { duerpId } = await requireUnite(uniteId);
 
-  const nom = nouveauNom.trim();
-  if (!nom) return;
+  // La borne de la création (`uniteSchema`), et non une seconde : un point
+  // d'entrée réseau qui écrivait un nom d'un mégaoctet là où l'ajout en
+  // refuse cent un (ASVS V2.2.1, 2026-10-13). Le vide reste sans effet, comme
+  // avant ; tout autre refus lève — l'écran borne déjà la saisie, seul un
+  // appel forgé l'atteint.
+  if (typeof nouveauNom === "string" && !nouveauNom.trim()) return;
+  const parsed = uniteSchema.shape.nom.safeParse(nouveauNom);
+  if (!parsed.success) {
+    throw new Error("Nom d'unité de travail invalide (100 caractères au plus).");
+  }
   await prisma.uniteTravail.update({
     where: { id: uniteId },
-    data: { nom },
+    data: { nom: parsed.data },
   });
   revalidatePath(`/duerp/${duerpId}/unites`);
 }
@@ -235,6 +243,20 @@ export async function supprimerUnite(uniteId: string): Promise<void> {
   await prisma.uniteTravail.delete({ where: { id: uniteId } });
   revalidatePath(`/duerp/${duerpId}/unites`);
 }
+
+/**
+ * La justification est reprise telle quelle dans le DUERP généré : quelques
+ * phrases, retours à la ligne compris. Même borne que les autres textes libres
+ * d'une fiche (description de prescription, d'établissement) ; sans elle, un
+ * appel forgé écrivait un mégaoctet dans un document conservé quarante ans
+ * (ASVS V2.2.1, 2026-10-13).
+ */
+const JUSTIFICATION_AUCUN_RISQUE_MAX = 1000;
+const justificationAucunRisqueSchema = z
+  .string()
+  .trim()
+  .max(JUSTIFICATION_AUCUN_RISQUE_MAX)
+  .nullable();
 
 /**
  * Déclare « aucun risque significatif identifié » pour une unité. Requiert une
@@ -248,7 +270,13 @@ export async function declarerAucunRisque(
 ): Promise<void> {
   const { duerpId } = await requireUnite(uniteId);
 
-  const justif = justification?.trim() || null;
+  const parsed = justificationAucunRisqueSchema.safeParse(justification);
+  if (!parsed.success) {
+    throw new Error(
+      `Justification invalide (${JUSTIFICATION_AUCUN_RISQUE_MAX} caractères au plus).`,
+    );
+  }
+  const justif = parsed.data || null;
   await prisma.uniteTravail.update({
     where: { id: uniteId },
     data: { aucunRisqueJustif: justif },

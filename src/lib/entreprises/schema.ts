@@ -9,6 +9,10 @@ import { EFFECTIF_MAX } from "@/lib/etablissements/schema";
  */
 export const MESSAGE_REFUS_EFFECTIF_ENTREPRISE = `Rojer prend en charge les structures jusqu'à ${EFFECTIF_MAX} salariés dans l'entreprise, tous établissements confondus.`;
 
+/** `Entreprise.effectif` est un `Int` Prisma, soit un `integer` Postgres
+ *  (int4) : au-delà, l'écriture échoue. */
+const EFFECTIF_COLONNE_MAX = 2_147_483_647;
+
 const siretRegex = /^\d{14}$/;
 const nafRegex = /^\d{2}\.?\d{2}[A-Z]?$/;
 
@@ -37,9 +41,20 @@ export const entrepriseSchema = z.object({
     z.coerce
       .number({ message: "Indiquez l'effectif de l'entreprise" })
       .int("Effectif entier")
-      .min(0, "L'effectif ne peut pas être négatif"),
+      .min(0, "L'effectif ne peut pas être négatif")
+      // La borne de la COLONNE, pas celle du produit (ASVS V2.2.1,
+      // 2026-10-13) : 10^12 passait le schéma, puis Postgres le refusait en
+      // erreur 500. Les cinquante salariés de l'ADR-031 ne valent qu'à la
+      // création (`entrepriseCreationSchema`) ; une entreprise existante qui
+      // les dépasse reste modifiable.
+      .max(EFFECTIF_COLONNE_MAX, "Effectif hors limites"),
   ),
-  adresse: z.string().trim().min(1, "L'adresse est obligatoire"),
+  // Même borne que l'adresse d'un établissement et que celle du parcours.
+  adresse: z
+    .string()
+    .trim()
+    .min(1, "L'adresse est obligatoire")
+    .max(300, "300 caractères maximum"),
 });
 
 export type EntrepriseInput = z.infer<typeof entrepriseSchema>;

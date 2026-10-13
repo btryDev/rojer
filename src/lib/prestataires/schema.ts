@@ -1,4 +1,4 @@
-import { depuisCleJourCivil, joursCivilsEntre } from "@/lib/dates";
+import { depuisCleJourCivil, estJourCivilReel, joursCivilsEntre } from "@/lib/dates";
 import { z } from "zod";
 import { DomainePrestataire } from "@prisma/client";
 
@@ -63,18 +63,6 @@ const optionalTrimmed = (max = 200) =>
     (v) => (typeof v === "string" ? v.trim() || undefined : v),
     z.string().max(max).optional(),
   );
-
-/** « AAAA-MM-JJ » désigne-t-il un jour qui existe ? « 2026-02-30 » et
- *  « 2026-13-45 » passent le format et ne sont pas des dates : sans ce
- *  contrôle, le premier devenait le 1er mars et le second faisait lever une
- *  RangeError à la comparaison (contre-lecture du 2026-09-27). */
-export function estJourCivilReel(cle: string): boolean {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(cle);
-  if (!m) return false;
-  const [annee, mois, jour] = [Number(m[1]), Number(m[2]), Number(m[3])];
-  if (mois < 1 || mois > 12 || jour < 1) return false;
-  return jour <= new Date(Date.UTC(annee, mois, 0)).getUTCDate();
-}
 
 const optionalDate = z.preprocess(
   (v) => (v === "" || v === null ? undefined : v),

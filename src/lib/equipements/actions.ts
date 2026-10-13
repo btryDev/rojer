@@ -19,6 +19,7 @@ import {
   equipementSchema,
   normaliserFormDataEquipement,
   normaliserTriEtat,
+  preRemplissageSchema,
   serialiserCaracteristiques,
   type ChampTriEtat,
 } from "./schema";
@@ -378,11 +379,17 @@ export async function creerEquipementsDepuisPreRemplissage(
   entrees: { categorie: CategorieEquipement; libelle: string }[],
 ): Promise<{ created: number; avertissement?: string }> {
   await assertEtablissementOwnership(etablissementId);
-  if (entrees.length === 0) return { created: 0 };
+  // Le tableau vient du client : borné et validé avant toute écriture
+  // (`preRemplissageSchema`, ASVS V2.2.1). Un refus n'écrit rien.
+  const parsed = preRemplissageSchema.safeParse(entrees);
+  if (!parsed.success) {
+    return { created: 0, avertissement: "Sélection invalide : aucun équipement ajouté." };
+  }
+  if (parsed.data.length === 0) return { created: 0 };
 
   const batiment = await batimentParDefaut(etablissementId);
   const result = await prisma.equipement.createMany({
-    data: entrees.map((e) => ({
+    data: parsed.data.map((e) => ({
       etablissementId,
       batimentId: batiment.id,
       categorie: e.categorie,
@@ -391,7 +398,7 @@ export async function creerEquipementsDepuisPreRemplissage(
   });
   await constaterEpiDeclare(
     etablissementId,
-    entrees.map((e) => e.categorie),
+    parsed.data.map((e) => e.categorie),
   );
 
   const regen = await regenererCalendrier(etablissementId);

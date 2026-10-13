@@ -193,8 +193,15 @@ const ADMISES: { fichier: string; ligne: string; motif: string }[] = [
   },
   {
     fichier: "src/lib/signatures/actions.ts",
-    ligne: "message: `Un nouveau code vient d'être envoyé à ${token.emailDestinataire}.`,",
+    ligne: "`Un nouveau code vient d'être envoyé à ${token.emailDestinataire}. ` +",
     motif: "Rendu après `envoyerMailAcces`, qui a réussi.",
+  },
+  {
+    fichier: "src/lib/signatures/actions.ts",
+    ligne: "\"Un code vient d'être envoyé. Patientez une minute avant d'en demander un autre.\",",
+    motif:
+      "Renvoi devancé par un autre sur le même lien (`renouvelerOtp` rendu `false`), " +
+      "contrôlé APRÈS le refus d'envoi hors service : c'est l'autre renvoi qui a écrit le code et l'envoie.",
   },
   {
     fichier: "src/components/signatures/DemanderSignatureForm.tsx",

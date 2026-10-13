@@ -50,6 +50,7 @@ export function DeclarerAucunRisqueForm({
         value={valeur}
         onChange={(e) => setValeur(e.target.value)}
         placeholder="Justification libre (quelques mots)"
+        maxLength={1000}
         rows={3}
         className="champ-board"
       />

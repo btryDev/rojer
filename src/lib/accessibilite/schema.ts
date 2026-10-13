@@ -1,4 +1,4 @@
-import { depuisCleJourCivil } from "@/lib/dates";
+import { depuisCleJourCivil, estJourCivilReel } from "@/lib/dates";
 import { z } from "zod";
 import {
   HandicapAccessible,
@@ -54,6 +54,7 @@ const optionalDate = z.preprocess(
   z
     .string()
     .regex(DATE_FMT, "Format attendu : AAAA-MM-JJ")
+    .refine(estJourCivilReel, "Cette date n'existe pas")
     .nullable()
     .transform((v) => (v ? depuisCleJourCivil(v) : null)),
 );

@@ -10,11 +10,8 @@ import {
   mentionUrssaf,
   messageExpiration,
 } from "./vigilance";
-import {
-  erreursDatesAttestation,
-  estJourCivilReel,
-  remiseAttestationSchema,
-} from "./schema";
+import { erreursDatesAttestation, remiseAttestationSchema } from "./schema";
+import { estJourCivilReel } from "@/lib/dates";
 
 /**
  * Les fichiers d'une surface qui s'affiche où un nom donné apparaît.
