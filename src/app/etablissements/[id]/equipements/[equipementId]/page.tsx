@@ -60,6 +60,8 @@ import {
 import { avecProvenance, lireProvenance } from "@/lib/navigation/provenance";
 import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
 import { retenueParPrudence } from "@/lib/calendrier/prudence";
+import { fraicheurCalendrier, phraseFraicheur } from "@/lib/calendrier/fraicheur";
+import { AvertissementFraicheur } from "@/components/calendrier/AvertissementFraicheur";
 
 // Le délai d'une ligne se dit en jours plutôt qu'en date (`libelleDelai`,
 // `lib/equipements/fiche`) : un retard d'un jour et un retard de six mois
@@ -99,7 +101,13 @@ export default async function EquipementDetailPage({
   const maintenant = new Date();
 
   // D26 : la prudence du dossier, la même que le bandeau et le calendrier.
-  const marques = await marquesAConfirmerDuRendu(id);
+  // Et l'âge des lignes que cette fiche lit sans les réparer — ouverte par
+  // lien direct, elle passe avant le tableau de bord et le calendrier, seuls
+  // à réparer (`regeneration-sure.ts`, `docs/chantiers-ouverts.md` § 12).
+  const [marques, fraicheur] = await Promise.all([
+    marquesAConfirmerDuRendu(id),
+    fraicheurCalendrier(id),
+  ]);
   const aFaire = lignesAFaire(
     eq,
     base,
@@ -400,6 +408,7 @@ export default async function EquipementDetailPage({
         />
       }
     >
+      <AvertissementFraicheur phrase={phraseFraicheur(fraicheur)} />
       <CorpsFiche
         principal={
           <>

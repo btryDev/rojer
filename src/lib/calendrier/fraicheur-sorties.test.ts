@@ -39,12 +39,24 @@ const SURFACES = ["src/app", "src/lib/pdf", "src/lib/mcp"] as const;
  * `getDashboardData` y est parce que ses compteurs `verifsEnRetard` et
  * `actionsEnRetard` sont exactement ce qui vaut « À jour » à l'écran quand ils
  * valent zéro — le défaut d'origine.
+ *
+ * [2026-10-13, lot « calendrier périmé par lien direct ».] Les trois derniers
+ * manquaient, et c'est le défaut n° 3 du tri des chantiers : chacun rend des
+ * lignes de vérification AVEC leur échéance ou leur état du jour — le parc
+ * (« N en retard » par appareil), la fiche d'un appareil (rendez-vous de tête,
+ * « à faire »), la fiche d'une échéance. Ouvertes par lien direct, ces pages
+ * passaient avant toute réparation et ne disaient rien. Le critère est le même
+ * que pour les autres : la fonction rend une échéance calculée, pas seulement
+ * un libellé ou un compte de cascade (état des lieux : commit 56f3c2b2).
  */
 const LECTEURS_DU_CALENDRIER = [
   "listerVerifications",
   "construireDossierConformiteData",
   "construireRegistreData",
   "getDashboardData",
+  "etatVerificationsParEquipement",
+  "getFicheEquipement",
+  "getVerification",
 ] as const;
 
 /**
@@ -210,6 +222,89 @@ describe("toute sortie qui lit le calendrier en dit l'âge", () => {
       "src/lib/mcp/tools.ts",
     ]) {
       expect(parChemin.get(chemin)?.dit, chemin).toBe(true);
+    }
+  });
+});
+
+/**
+ * LA RÉPARATION RESTE OÙ ELLE EST — une fois par requête, avant les lectures.
+ *
+ * Le lot du 2026-10-13 a d'abord cherché à réparer depuis le layout
+ * d'établissement, pour que toute page ouverte par lien direct soit à jour.
+ * Ce n'est pas sûr, et la documentation de Next 16.3.5 le dit en deux
+ * phrases : « layouts and pages are rendered in parallel »
+ * (`getting-started/fetching-data`), et un layout « does not stop [route
+ * segments] from running » (`guides/authentication`). La page lirait les
+ * anciennes lignes pendant que le layout les réécrit — c'est la raison que
+ * `regeneration-sure.ts` donnait déjà (revue du 2026-09-14). Les pages qui ne
+ * réparent pas DISENT donc l'âge (bloc précédent) ; celles-ci tiennent la
+ * réparation à sa place.
+ */
+describe("la réparation à l'affichage : une fois, avant de lire", () => {
+  const APPELS_DE_REPARATION = [
+    "assurerCalendrierAJour",
+    "regenererSansInvalider",
+  ] as const;
+
+  function appels(source: string, fn: string): number {
+    return (source.match(new RegExp(`(?<![\\w.])${fn}\\s*\\(`, "g")) ?? [])
+      .length;
+  }
+
+  const rendus = fichiersSources("src/app").filter((f) =>
+    /[\\/](page|layout|template)\.tsx?$/.test(f),
+  );
+
+  it("trouve des layouts et des pages qui réparent — sinon rien n'est prouvé", () => {
+    expect(rendus.some((f) => /[\\/]layout\.tsx?$/.test(f))).toBe(true);
+    expect(
+      rendus.filter((f) =>
+        appels(readFileSync(f, "utf8"), "assurerCalendrierAJour") > 0,
+      ).length,
+    ).toBeGreaterThanOrEqual(1);
+  });
+
+  it("aucun layout ne répare : il tournerait EN PARALLÈLE de la page", () => {
+    const fautifs = rendus
+      .filter((f) => /[\\/](layout|template)\.tsx?$/.test(f))
+      .flatMap((f) => {
+        const source = readFileSync(f, "utf8");
+        return APPELS_DE_REPARATION.filter((fn) => appels(source, fn) > 0).map(
+          (fn) => `${f.slice(RACINE.length + 1)} → ${fn}`,
+        );
+      });
+    expect(fautifs).toEqual([]);
+  });
+
+  it("aucun rendu ne répare deux fois", () => {
+    const doubles = rendus.flatMap((f) => {
+      const source = readFileSync(f, "utf8");
+      const n = APPELS_DE_REPARATION.reduce((s, fn) => s + appels(source, fn), 0);
+      return n > 1 ? [`${f.slice(RACINE.length + 1)} (${n} appels)`] : [];
+    });
+    expect(doubles).toEqual([]);
+  });
+
+  it("une page exemptée parce qu'elle répare répare bien, AVANT sa première lecture", () => {
+    // L'exemption « régénère avant de lire » se vérifie, comme celle par
+    // délégation : si la page cessait de réparer, ou réparait dans le même
+    // `Promise.all` que ses lectures, elle servirait des lignes périmées sans
+    // le dire tout en restant exemptée.
+    const reparatrices = Object.entries(EXEMPTES).filter(([, motif]) =>
+      motif.includes("régénère"),
+    );
+    expect(reparatrices.length).toBeGreaterThanOrEqual(1);
+    for (const [chemin] of reparatrices) {
+      const source = readFileSync(join(RACINE, chemin), "utf8");
+      const reparation = source.search(/(?<![\w.])assurerCalendrierAJour\s*\(/);
+      expect(reparation, `${chemin} ne répare plus`).toBeGreaterThanOrEqual(0);
+      const lectures = LECTEURS_DU_CALENDRIER.map((f) =>
+        source.search(new RegExp(`\\b${f}\\s*\\(`)),
+      ).filter((i) => i >= 0);
+      expect(
+        reparation < Math.min(...lectures),
+        `${chemin} lit le calendrier avant de le réparer`,
+      ).toBe(true);
     }
   });
 });

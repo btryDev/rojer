@@ -33,6 +33,8 @@ import {
 } from "@/lib/equipements/hors-referentiel";
 import { avecProvenance, origineDepuis } from "@/lib/navigation/provenance";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
+import { fraicheurCalendrier, phraseFraicheur } from "@/lib/calendrier/fraicheur";
+import { AvertissementFraicheur } from "@/components/calendrier/AvertissementFraicheur";
 
 export default async function EquipementsPage({
   params,
@@ -72,7 +74,7 @@ export default async function EquipementsPage({
     batimentFiltre ? { batiment: batimentFiltre } : {},
   );
 
-  const [equipements, etatsVerifs, sansEcheance] = await Promise.all([
+  const [equipements, etatsVerifs, sansEcheance, fraicheur] = await Promise.all([
     listerEquipementsDeLEtablissement(id),
     // Le parc ne disait rien de son état de vérification : on lisait un
     // inventaire, pas une situation.
@@ -82,6 +84,11 @@ export default async function EquipementsPage({
     // jour — c'est-à-dire comme une réponse alors que personne n'en a
     // donné (cf. `hors-referentiel.ts`).
     equipementsSansEcheance(id),
+    // Ouverte par lien direct, cette page lit des lignes qu'elle ne répare
+    // pas : la réparation vit au tableau de bord et au calendrier
+    // (`regeneration-sure.ts`). Elle dit donc leur âge — une lecture du
+    // repère, aucune écriture (`docs/chantiers-ouverts.md` § 12).
+    fraicheurCalendrier(id),
   ]);
 
   const equipementsAffiches = restreindreAuBatiment(equipements, batimentFiltre);
@@ -204,6 +211,8 @@ export default async function EquipementsPage({
       />
 
       <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
+        <AvertissementFraicheur phrase={phraseFraicheur(fraicheur)} />
+
         {/* Bandeau de continuité wizard → équipements (éphémère : le
             paramètre disparaît à la navigation suivante). */}
         {bienvenue === "1" && (

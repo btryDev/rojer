@@ -2252,19 +2252,38 @@ jour au plus, déclenchée dans l'heure prévue — suffisant pour ce besoin
 ### À faire sans attendre les alertes
 
 Trois lecteurs contournent la réparation et servent en silence un dossier
-périmé : ~~le **serveur MCP**, le **registre PDF**, et~~ une page ouverte par lien
-direct avant le tableau de bord ou le calendrier.
+périmé : ~~le **serveur MCP**, le **registre PDF**, et~~ ~~une page ouverte par lien
+direct avant le tableau de bord ou le calendrier.~~
 
 > **[2026-10-12 — rayé en partie.]** Le serveur MCP signale la fraîcheur depuis
 > `87f5e830` (2026-09-20, `avecFraicheur`, `mcp/tools.ts`), le registre PDF
 > depuis `87f5e830` puis `fd7d4a94` (2026-10-12 : la phrase dès que le
-> calendrier n'est pas à jour). **La page ouverte par lien direct reste
+> calendrier n'est pas à jour). ~~**La page ouverte par lien direct reste
 > ouverte** : hors tableau de bord, calendrier, « Préparer un contrôle », ZIP,
-> PDF et MCP, aucun écran ne lit `fraicheur.ts`. Le moins coûteux : qu'ils
+> PDF et MCP, aucun écran ne lit `fraicheur.ts`.~~ Le moins coûteux : qu'ils
 **signalent** un calendrier non recalculé (une lecture du repère, aucune
 écriture) plutôt que de le servir comme juste. La tâche quotidienne, une fois
 en place, rend ce cas rare sans le rendre impossible — un déploiement peut
 tomber entre deux passages.
+
+> **[2026-10-13 — rayé, lot `calendrier-lien-direct`, après `56f3c2b2`.]**
+> L'état des lieux (message de `56f3c2b2`) a trouvé **trois** pages qui
+> rendent l'échéance de lignes `Verification` sans les réparer ni le dire : le
+> parc (`equipements`), la fiche d'un appareil, la fiche d'une échéance. Elles
+> **signalent** désormais (`fraicheurCalendrier` + `AvertissementFraicheur`,
+> l'habit de « Préparer un contrôle »). Les autres pages du dossier lisent
+> `Verification` sans échéance (libellé, compte de cascade, preuves) ou ne la
+> lisent pas — « États permanents » et « Quand ça arrive » lisent le moteur.
+> **Réparer depuis le layout a été écarté** : Next rend layout et page en
+> parallèle, et un layout n'arrête pas la page (documentation de Next 16.3.5) ;
+> la page lirait les anciennes lignes pendant leur réécriture.
+> `fraicheur-sorties.test.ts` tient les deux : toute page qui lit une échéance
+> dit son âge, et la réparation reste hors des layouts, une fois par rendu,
+> avant les lectures. **Reste** : la pastille « en retard » de la barre
+> latérale (rendue par le layout) peut garder l'ancien compte jusqu'à
+> l'ouverture du tableau de bord ou du calendrier ; la fiche d'une action née
+> d'une échéance sans rapport prend `datePrevue` pour date de constat, sans
+> phrase.
 
 ### Limite qui reste
 

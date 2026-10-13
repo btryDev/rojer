@@ -24,6 +24,11 @@
 // fermé, que l'appelant affiche. La réparation reste là où elle est : aux deux
 // pages d'entrée, qui la font pour tout le monde.
 //
+// [2026-10-13] Trois écrans de plus le lisent : le parc, la fiche d'un
+// appareil et la fiche d'une échéance, qu'un lien direct ouvre avant toute
+// réparation (`docs/chantiers-ouverts.md` § 12). La phrase s'y pose par
+// `AvertissementFraicheur`, le même habit que « Préparer un contrôle ».
+//
 // LE REPÈRE SUFFIT À TROIS CAS SUR QUATRE. `referentielVersionCalendrier`
 // (`prisma/schema.prisma`) vaut le sceau du moteur qui a réconcilié pour la
 // dernière fois. Il est vide à la création, effacé par `marquerCalendrierPerime`
