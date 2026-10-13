@@ -19,7 +19,7 @@ describe("ReferenceDetaillee — une référence du dossier de relecture (revue,
     const lignes = textes(r!);
     expect(lignes[0]).toContain("R. 4227-37");
     expect(lignes[1]).toBe(pourHelvetica(texteProvenance(releveDe(r!)!, r!)));
-    expect(lignes[1]).toMatch(/^corpus : retenu · lecture : /);
+    expect(lignes[1]).toMatch(/^corpus\u00a0: retenu · lecture\u00a0: /);
   });
 
   // Toutes les références du référentiel ont un relevé aujourd'hui : le cas se

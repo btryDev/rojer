@@ -19,17 +19,22 @@ import {
  * combine deux logiques et que la ligne doit les laisser lire :
  *   - `regime` — les régimes positifs (travail, ERP, IGH, habitation), en OU :
  *     un seul suffit. Ils s'impriment séparés par « ou ».
- *   - `et` — tout le reste (régimes exclus, seuils, faits déclarés), en ET avec
- *     les régimes. Chacun s'imprime précédé de « ; et ».
+ *   - `et` — les critères positifs (seuils, faits déclarés), en ET avec les
+ *     régimes. Chacun s'imprime précédé de « ; et ».
+ *   - `hors` — les régimes exclus (« hors ERP »), en ET eux aussi, imprimés
+ *     comme `et`. Ils sont distingués parce qu'ils ne retiennent RIEN : sans
+ *     régime positif ni critère positif, `matchTypologie` n'a aucune raison à
+ *     donner et écarte la ligne (garde-fou « raisons.length === 0 »).
  * Jusqu'au 2026-10-13 (revue de `lot/dossier-relecture-2`, C4), un seul « · »
  * servait aux deux : « Travail · ERP · IGH · Habitation » et « Travail ·
  * effectif d'au moins 50 » se lisaient pareil.
  */
-type Bout = { genre: "regime" | "et"; texte: string };
+type Bout = { genre: "regime" | "et" | "hors"; texte: string };
 type RenduCritere = (t: TypologieApplication) => Bout | null;
 
 const regime = (texte: string): Bout => ({ genre: "regime", texte });
 const et = (texte: string): Bout => ({ genre: "et", texte });
+const hors = (texte: string): Bout => ({ genre: "hors", texte });
 
 /** « a », « a ou b », « a, b ou c ». */
 function ou(l: readonly string[]): string {
@@ -54,12 +59,11 @@ const RENDU_ERP: { [K in keyof Required<ErpRestreint>]: (e: ErpRestreint) => str
       ? `de ${ou(e.categories.map((c) => LABEL_CATEGORIE_ERP[c].split(" (")[0].replace(/ catégorie$/, "")))} catégorie`
       : null,
   types: (e) => (e.types?.length ? `de type ${ou(e.types)}` : null),
-  // Ne mord que sur un type connu ; sans type déclaré, la ligne est retenue
-  // et le dit (`matchTypologie`, 3 bis bis).
-  typesExclus: (e) =>
-    e.typesExclus?.length
-      ? `sauf type ${ou(e.typesExclus)} (type non déclaré : à confirmer)`
-      : null,
+  // ~~« (type non déclaré : à confirmer) »~~ [2026-10-13, seconde revue, C-b :
+  // le cas existe dans `matchTypologie` (3 bis bis), pas en base — CHECK
+  // `Etablissement_erp_type_categorie_requis`, migration 20260927180000. La
+  // légende le dit une fois.]
+  typesExclus: (e) => (e.typesExclus?.length ? `sauf type ${ou(e.typesExclus)}` : null),
 };
 
 /**
@@ -85,10 +89,10 @@ const RENDU_ERP: { [K in keyof Required<ErpRestreint>]: (e: ErpRestreint) => str
  */
 const RENDU_CRITERE: { [K in keyof Required<TypologieApplication>]: RenduCritere } = {
   travail: (t) =>
-    t.travail === true ? regime("Travail") : t.travail === false ? et("hors Travail") : null,
+    t.travail === true ? regime("Travail") : t.travail === false ? hors("hors Travail") : null,
   erp: (t) => {
     if (t.erp === true) return regime("ERP");
-    if (t.erp === false) return et("hors ERP");
+    if (t.erp === false) return hors("hors ERP");
     if (!t.erp) return null;
     const e = t.erp;
     const p = (Object.keys(RENDU_ERP) as (keyof ErpRestreint)[])
@@ -98,14 +102,14 @@ const RENDU_CRITERE: { [K in keyof Required<TypologieApplication>]: RenduCritere
   },
   igh: (t) => {
     if (t.igh === true) return regime("IGH");
-    if (t.igh === false) return et("hors IGH");
+    if (t.igh === false) return hors("hors IGH");
     if (!t.igh) return null;
     // `evaluerIgh` : classe non déclarée → retenue « à confirmer ».
     return regime(`IGH de classe ${ou(t.igh.classes)} (classe non déclarée : à confirmer)`);
   },
   habitation: (t) => {
     if (t.habitation === true) return regime("Habitation");
-    if (t.habitation === false) return et("hors habitation");
+    if (t.habitation === false) return hors("hors habitation");
     if (!t.habitation) return null;
     // `evaluerHabitation` : famille non déclarée → retenue « à confirmer ».
     return regime(
@@ -113,13 +117,15 @@ const RENDU_CRITERE: { [K in keyof Required<TypologieApplication>]: RenduCritere
     );
   },
   // `evaluerLocauxSommeil`. `true` : hors des types où le sommeil est
-  // plausible, jamais retenue, même sur un « oui » ; dans ces types, ou sans
-  // type déclaré, le silence retient « à confirmer ». `false` : un allègement,
-  // il exige le « non » déclaré, et ne lit pas le type.
+  // plausible, jamais retenue, même sur un « oui » ; dans ces types, le
+  // silence retient « à confirmer ». `false` : un allègement, il exige le
+  // « non » déclaré, et ne lit pas le type. ~~« ou de type non déclaré »~~
+  // [2026-10-13, seconde revue, C-b : cas interdit en base, dit une fois dans
+  // la légende.]
   locauxSommeilPublic: (t) =>
     t.locauxSommeilPublic === true
       ? et(
-          `locaux à sommeil pour le public, seulement en ERP de type ${ou(TYPES_ERP_A_SOMMEIL_PLAUSIBLE)} ou de type non déclaré — tout autre type : jamais, même sur un « oui » (${SANS_REPONSE})`,
+          `locaux à sommeil pour le public, seulement en ERP de type ${ou(TYPES_ERP_A_SOMMEIL_PLAUSIBLE)} — tout autre type : jamais, même sur un « oui » (${SANS_REPONSE})`,
         )
       : t.locauxSommeilPublic === false
         ? et("sans locaux à sommeil pour le public, « non » déclaré (sans réponse : écartée)")
@@ -158,9 +164,11 @@ const RENDU_CRITERE: { [K in keyof Required<TypologieApplication>]: RenduCritere
     const seuil = `au moins ${t.personnesPresentesMin} personnes habituellement présentes`;
     const indetermine =
       "ERP sans nombre de personnes déclaré, que sa catégorie et son effectif ne placent pas au-dessus : à confirmer";
+    // La parenthèse sur les matières ne vaut que SOUS le seuil : au-dessus,
+    // la ligne est due, matières ou non (revue, R-b).
     return t.champR422734
       ? et(
-          `${seuil} OU matières R. 4227-22 déclarées « oui » (matières ${SANS_REPONSE} ; ${indetermine})`,
+          `${seuil} OU matières R. 4227-22 déclarées « oui » (sous le seuil, matières ${SANS_REPONSE} ; ${indetermine})`,
         )
       : et(`${seuil} (${indetermine})`);
   },
@@ -169,15 +177,19 @@ const RENDU_CRITERE: { [K in keyof Required<TypologieApplication>]: RenduCritere
       ? et(`matières R. 4227-22 déclarées « oui » (${SANS_REPONSE})`)
       : null,
   // Le moteur ne retient la ligne que hors du champ ÉTABLI : seuil non
-  // atteint ET matières déclarées « non » ; sans l'une des deux réponses, elle
-  // est écartée — c'est la consigne qui est retenue, « à confirmer ».
+  // atteint ET matières déclarées « non ». ~~« une réponse manque : écartée »~~
+  // [2026-10-13, seconde revue, C-a : faux pour un établissement de travail
+  // seul, dont l'effectif EST le total — sans nombre déclaré et matières
+  // « non », la ligne y est retenue. Ce qui l'écarte : les matières sans
+  // réponse, ou un ERP sans nombre déclaré (`evaluerPersonnesPresentes`,
+  // « indetermine »).]
   horsChampR422734: (t) => {
     if (!t.horsChampR422734) return null;
     if (t.personnesPresentesMin === undefined) {
       return et("hors champ de R. 4227-34 sans seuil écrit : jamais retenue");
     }
     return et(
-      `hors champ de R. 4227-34, établi : moins de ${t.personnesPresentesMin} personnes habituellement présentes ET matières R. 4227-22 déclarées « non » (une réponse manque : écartée, la consigne est retenue)`,
+      `hors champ de R. 4227-34, établi : moins de ${t.personnesPresentesMin} personnes habituellement présentes ET matières R. 4227-22 déclarées « non » (matières sans réponse, ou ERP sans nombre de personnes déclaré : écartée, la consigne est retenue)`,
     );
   },
 };
@@ -197,7 +209,16 @@ export const CRITERES_TYPOLOGIE = Object.keys(
 
 /** La légende des séparateurs : une seule phrase, pour la grille et le dossier. */
 export const LEGENDE_REGIME =
-  "Régime visé : « ou » sépare les régimes, dont un seul suffit (Travail ou ERP) ; « ; et » ajoute une condition qui doit être remplie en plus. « À confirmer » : la ligne est retenue tant que la fiche ne répond pas à la question dont elle dépend.";
+  "Régime visé : « ou » sépare les régimes, dont un seul suffit (Travail ou ERP) ; « ; et » ajoute une condition qui doit être remplie en plus. La catégorie, le type, la classe ou la famille écrits après un régime restreignent EN PLUS : un établissement de ce régime qui n'y répond pas est écarté, même s'il relève aussi d'un autre régime de la ligne. Le type et la catégorie d'ERP sont toujours renseignés (exigés en base). « À confirmer » : la ligne est retenue tant que la fiche ne répond pas à la question dont elle dépend.";
+
+/**
+ * Ce que la ligne dit quand rien ne peut la retenir : sans régime positif ni
+ * critère positif, `matchTypologie` n'a aucune raison et écarte (garde-fou
+ * « raisons.length === 0 »). « Tous régimes » disait l'inverse jusqu'au
+ * 2026-10-13 (seconde revue, C-d). Aucune obligation du référentiel n'est
+ * dans ce cas ; un test le tient.
+ */
+export const JAMAIS_RETENUE = "aucun régime ni critère positif — jamais retenue";
 
 /** Le régime auquel l'obligation s'applique, en une ligne lisible. */
 export function texteTypologie(t: TypologieApplication): string {
@@ -205,8 +226,9 @@ export function texteTypologie(t: TypologieApplication): string {
     (b): b is Bout => b !== null,
   );
   const regimes = bouts.filter((b) => b.genre === "regime").map((b) => b.texte);
-  const ets = bouts.filter((b) => b.genre === "et").map((b) => b.texte);
-  if (regimes.length === 0 && ets.length === 0) return "Tous régimes";
+  const ets = bouts.filter((b) => b.genre !== "regime").map((b) => b.texte);
+  const positifs = bouts.filter((b) => b.genre !== "hors").length;
+  if (positifs === 0) return ets.length ? `${ets.join(" ; et ")} — ${JAMAIS_RETENUE}` : JAMAIS_RETENUE;
   const tete = regimes.length ? [regimes.join(" ou ")] : [];
   return [...tete, ...ets].join(" ; et ");
 }
@@ -305,6 +327,9 @@ const SUBSTITUTIONS: [RegExp, string][] = [
   // Un guillemet ne se retrouve jamais seul en début ou en fin de ligne.
   [/« /g, "«\u00a0"],
   [/ »/g, "\u00a0»"],
+  // Ni un « ; » ni un « : » en début de ligne (2026-10-13, seconde revue,
+  // R-c) : la ligne « Régime » en compte plusieurs par entrée.
+  [/ ([;:])/g, "\u00a0$1"],
 ];
 
 export function pourHelvetica(s: string): string {

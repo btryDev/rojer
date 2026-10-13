@@ -820,8 +820,7 @@ function DossierDetaille({ genereLe }: { genereLe: string }) {
                 · par {o.realisateurs.map((r) => LABEL_REALISATEUR[r]).join(" ou ")}
               </Text>
               <Text style={[s.small, { marginTop: 1 }]}>
-                Régime : {t(texteTypologie(o.typologies))} · Condition :{" "}
-                {conditionsTexte(o)}
+                {t(`Régime : ${texteTypologie(o.typologies)} · Condition : ${conditionsTexte(o)}`)}
               </Text>
               {o.rythmeRetenu && (
                 <Text style={[s.small, { marginTop: 1 }]}>

@@ -1,15 +1,20 @@
 import { describe, expect, it } from "vitest";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
-import { LIBELLE_ACTIVITE } from "@/lib/matching/engine";
+import { LIBELLE_ACTIVITE, matchTypologie } from "@/lib/matching/engine";
+import type { EtablissementMatching } from "@/lib/matching/types";
 import { CORPUS } from "@/lib/referentiels/corpus";
 import type { ArticleDepouille } from "@/lib/referentiels/corpus/types";
 import {
+  TYPES_ERP,
   TYPES_ERP_A_SOMMEIL_PLAUSIBLE,
   type TypologieApplication,
 } from "@/lib/referentiels/types-communs";
 import {
   CRITERES_TYPOLOGIE,
+  JAMAIS_RETENUE,
   LECTURE_LISIBLE,
+  LEGENDE_REGIME,
+  pourHelvetica,
   releveDe,
   STATUT_LISIBLE,
   texteProvenance,
@@ -37,7 +42,9 @@ describe("texteTypologie — la ligne « Régime » de la grille de relecture", 
     expect(ligne).not.toMatch(/au moins \d+ personnes/);
     expect(ligne).toContain(`moins de ${t.personnesPresentesMin} personnes habituellement présentes`);
     expect(ligne).toContain("matières R. 4227-22 déclarées « non »");
-    expect(ligne).toContain("une réponse manque : écartée");
+    expect(ligne).toContain(
+      "matières sans réponse, ou ERP sans nombre de personnes déclaré : écartée, la consigne est retenue",
+    );
     expect(ligne).not.toContain("à confirmer");
   });
 
@@ -48,18 +55,18 @@ describe("texteTypologie — la ligne « Régime » de la grille de relecture", 
     expect(ligne).toContain(
       `au moins ${t.personnesPresentesMin} personnes habituellement présentes OU matières R. 4227-22 déclarées « oui »`,
     );
-    expect(ligne).toContain("matières sans réponse : à confirmer");
+    expect(ligne).toContain("sous le seuil, matières sans réponse : à confirmer");
     expect(ligne).toContain("ERP sans nombre de personnes déclaré");
     expect(ligne).toMatch(/ERP sans nombre de personnes déclaré[^;)]*: à confirmer/);
   });
 
-  it("exclusion par type : « sauf type O », jamais « de type O » ; type non déclaré → à confirmer", () => {
+  it("exclusion par type : « sauf type O », jamais « de type O », sans parler d'un type non déclaré (C-b)", () => {
     const t = typo("incendie-erp-5-instruction-personnel");
     expect(t.erp).toEqual({ categories: ["N5"], typesExclus: ["O"] });
     const ligne = texteTypologie(t);
     expect(ligne).toContain("sauf type O");
     expect(ligne).not.toMatch(/de type O\b/);
-    expect(ligne).toContain("type non déclaré : à confirmer");
+    expect(ligne).not.toContain("non déclaré");
   });
 
   it("restriction par type : « de type O », sans « sauf »", () => {
@@ -177,9 +184,9 @@ describe("texteTypologie — la ligne « Régime » de la grille de relecture", 
   });
 
   it("les critères sans obligation porteuse aujourd'hui ont aussi leur phrase", () => {
-    expect(texteTypologie({ travail: false })).toBe("hors Travail");
-    expect(texteTypologie({ igh: false })).toBe("hors IGH");
-    expect(texteTypologie({ habitation: false })).toBe("hors habitation");
+    expect(texteTypologie({ travail: false })).toBe(`hors Travail — ${JAMAIS_RETENUE}`);
+    expect(texteTypologie({ igh: false })).toBe(`hors IGH — ${JAMAIS_RETENUE}`);
+    expect(texteTypologie({ habitation: false })).toBe(`hors habitation — ${JAMAIS_RETENUE}`);
     expect(texteTypologie({ habitation: { familles: ["DEUXIEME"] } })).toBe(
       "Habitation de famille DEUXIEME (famille non déclarée : à confirmer)",
     );
@@ -187,7 +194,7 @@ describe("texteTypologie — la ligne « Régime » de la grille de relecture", 
     expect(texteTypologie({ champR422734: true })).toBe(
       "matières R. 4227-22 déclarées « oui » (sans réponse : à confirmer)",
     );
-    expect(texteTypologie({})).toBe("Tous régimes");
+    expect(texteTypologie({})).toBe(JAMAIS_RETENUE);
   });
 });
 
@@ -265,5 +272,154 @@ describe("texteProvenance — la ligne sous chaque référence du dossier détai
       );
     });
     expect(fautives.map((r) => r.article)).toEqual([]);
+  });
+});
+
+// -----------------------------------------------------------------------------
+// Le texte contre le moteur (seconde revue, C-c). Chaque phrase qui nomme une
+// issue — retenue, écartée, à confirmer — est confrontée à `matchTypologie`
+// sur l'établissement du cas : le fragment doit être dans la ligne, ET le
+// moteur doit rendre l'issue que le fragment annonce. Les cas sont ceux des
+// sondes de la revue (`evaluerObligation` sur les vraies obligations).
+// -----------------------------------------------------------------------------
+
+const ETAB = {
+  id: "e",
+  effectifSurSite: 8,
+  effectifEntreprise: 8,
+  estEtablissementTravail: true,
+  estERP: false,
+  estIGH: false,
+  estHabitation: false,
+  typeErp: null,
+  categorieErp: null,
+  classeIgh: null,
+  familleHabitation: null,
+  personnesPresentesHabituellement: null,
+  manipuleMatieresR422722: null,
+  comporteLocauxSommeilPublic: null,
+  manutentionManuelle: null,
+  travailSurEcran: null,
+  operationsElectriques: null,
+  conduiteEngins: null,
+  expositionCMR: null,
+  epiPresents: null,
+  ssiCategorieAouB: null,
+} as unknown as EtablissementMatching;
+
+type Issue = "retenue" | "écartée" | "à confirmer";
+type Patch = Record<string, unknown>;
+
+function issue(t: TypologieApplication, patch: Patch): Issue {
+  const r = matchTypologie(t, { ...ETAB, ...patch } as EtablissementMatching);
+  if (!r.ok) return "écartée";
+  return r.sansReponse?.length || r.effectifAConfirmer ? "à confirmer" : "retenue";
+}
+
+const ERP = (categorieErp: string, typeErp: string): Patch => ({ estERP: true, categorieErp, typeErp });
+
+const CONSIGNE = "incendie-travail-consigne-affichee";
+const INSTRUCTIONS = "incendie-travail-instructions-evacuation";
+const SOMMEIL = "incendie-erp-visite-commission-cat4-r-avec-hebergement-triennale";
+const SANS_SOMMEIL = "incendie-erp-visite-commission-cat4-r-sans-hebergement-quinquennale";
+const PE4 = "incendie-erp-pe4-entretien-installations-techniques";
+const MANUT = "formation-securite-etablissement-manutention";
+const SSI = "incendie-erp-desenfumage-triennale-mecanique-ssi";
+const RI = "prevention-etablissement-reglement-interieur";
+
+// [obligation, cas, établissement, issue, fragment de la ligne qui la dit]
+const CAS: [string, string, Patch, Issue, string][] = [
+  [SOMMEIL, "type R, « oui »", { ...ERP("N4", "R"), comporteLocauxSommeilPublic: true }, "retenue", "seulement en ERP de type"],
+  [SOMMEIL, "type R, silence", { ...ERP("N4", "R"), comporteLocauxSommeilPublic: null }, "à confirmer", "(sans réponse : à confirmer)"],
+  [SOMMEIL, "type R, « non »", { ...ERP("N4", "R"), comporteLocauxSommeilPublic: false }, "écartée", "seulement en ERP de type"],
+  [SOMMEIL, "type N, « oui »", { ...ERP("N4", "N"), comporteLocauxSommeilPublic: true }, "écartée", "tout autre type : jamais, même sur un « oui »"],
+  [SANS_SOMMEIL, "type R, « non »", { ...ERP("N4", "R"), comporteLocauxSommeilPublic: false }, "retenue", "« non » déclaré"],
+  [SANS_SOMMEIL, "type R, silence", { ...ERP("N4", "R"), comporteLocauxSommeilPublic: null }, "écartée", "(sans réponse : écartée)"],
+  [PE4, "5ᵉ type O", ERP("N5", "O"), "écartée", "sauf type O"],
+  [PE4, "5ᵉ type N", ERP("N5", "N"), "retenue", "ERP de 5ᵉ catégorie"],
+  ["incendie-erp-visite-commission-cat4-quinquennale", "4ᵉ type U", ERP("N4", "U"), "écartée", "de type L, M"],
+  ["elec-erp-presence-personne-qualifiee", "ERP de 5ᵉ : la catégorie restreint en plus", ERP("N5", "N"), "écartée", "de 1ʳᵉ ou 2ᵉ catégorie"],
+  [MANUT, "« oui »", { manutentionManuelle: true }, "retenue", "manutention manuelle"],
+  [MANUT, "« non »", { manutentionManuelle: false }, "écartée", "« non » : écartée"],
+  [MANUT, "silence", { manutentionManuelle: null }, "à confirmer", "sans réponse : à confirmer"],
+  [SSI, "ERP 3ᵉ, SSI « oui »", { ...ERP("N3", "N"), ssiCategorieAouB: true }, "retenue", "catégorie A ou B"],
+  [SSI, "ERP 3ᵉ, SSI « non »", { ...ERP("N3", "N"), ssiCategorieAouB: false }, "écartée", "« non » : écartée"],
+  [SSI, "ERP 3ᵉ, SSI silence", { ...ERP("N3", "N"), ssiCategorieAouB: null }, "à confirmer", "sans réponse : à confirmer"],
+  [RI, "entreprise 55, site 8", { effectifEntreprise: 55 }, "retenue", "effectif de l'entreprise d'au moins 50"],
+  [RI, "entreprise 30, site 55", { effectifEntreprise: 30, effectifSurSite: 55 }, "à confirmer", "entreprise sous le seuil mais site au-dessus : à confirmer"],
+  [RI, "entreprise 30, site 30", { effectifEntreprise: 30, effectifSurSite: 30 }, "écartée", "effectif de l'entreprise d'au moins 50"],
+  ["locaux-etablissement-emplacement-restauration", "site 49", { effectifSurSite: 49 }, "retenue", "d'au plus 49"],
+  ["locaux-etablissement-emplacement-restauration", "site 50", { effectifSurSite: 50 }, "écartée", "d'au plus 49"],
+  ["locaux-etablissement-local-restauration", "site 49", { effectifSurSite: 49 }, "écartée", "d'au moins 50"],
+  [CONSIGNE, "travail seul 8, matières silence", {}, "à confirmer", "sous le seuil, matières sans réponse : à confirmer"],
+  [CONSIGNE, "travail seul 8, matières « non »", { manipuleMatieresR422722: false }, "écartée", "OU matières R. 4227-22 déclarées « oui »"],
+  [CONSIGNE, "travail seul 8, matières « oui »", { manipuleMatieresR422722: true }, "retenue", "OU matières R. 4227-22 déclarées « oui »"],
+  [CONSIGNE, "travail seul 60, matières silence : au-dessus, due", { effectifSurSite: 60, effectifEntreprise: 60 }, "retenue", "au moins 51 personnes"],
+  [CONSIGNE, "ERP 5ᵉ sans nombre, matières « non »", { ...ERP("N5", "N"), manipuleMatieresR422722: false }, "à confirmer", "ERP sans nombre de personnes déclaré, que sa catégorie et son effectif ne placent pas au-dessus : à confirmer"],
+  [CONSIGNE, "ERP 3ᵉ sans nombre, matières « non » : la catégorie place au-dessus", { ...ERP("N3", "N"), manipuleMatieresR422722: false }, "retenue", "que sa catégorie et son effectif ne placent pas au-dessus"],
+  [INSTRUCTIONS, "travail seul 8 sans nombre, matières « non »", { manipuleMatieresR422722: false }, "retenue", "moins de 51 personnes habituellement présentes ET matières R. 4227-22 déclarées « non »"],
+  [INSTRUCTIONS, "travail seul 8, matières silence", {}, "écartée", "(matières sans réponse, ou ERP sans nombre de personnes déclaré : écartée"],
+  [INSTRUCTIONS, "ERP 5ᵉ sans nombre, matières « non »", { ...ERP("N5", "N"), manipuleMatieresR422722: false }, "écartée", "ou ERP sans nombre de personnes déclaré : écartée"],
+  [INSTRUCTIONS, "ERP 5ᵉ, 30 déclarées, matières « non »", { ...ERP("N5", "N"), personnesPresentesHabituellement: 30, manipuleMatieresR422722: false }, "retenue", "moins de 51 personnes"],
+  [INSTRUCTIONS, "travail seul 60, matières « non »", { effectifSurSite: 60, effectifEntreprise: 60, manipuleMatieresR422722: false }, "écartée", "moins de 51 personnes"],
+];
+
+describe("texteTypologie contre matchTypologie — l'issue que la phrase annonce est celle du moteur", () => {
+  it.each(CAS)("%s — %s", (id, _cas, patch, attendue, fragment) => {
+    expect(texteTypologie(typo(id))).toContain(fragment);
+    expect(issue(typo(id), patch)).toBe(attendue);
+  });
+
+  it("locaux à sommeil : la phrase cite EXACTEMENT les types de la constante, qui seuls retiennent sur un « oui »", () => {
+    const ligne = texteTypologie(typo(SOMMEIL));
+    const m = /seulement en ERP de type (.+?) — tout autre type/.exec(ligne);
+    expect(m).not.toBeNull();
+    const cites = m![1].split(/, | ou /);
+    expect([...cites].sort()).toEqual([...TYPES_ERP_A_SOMMEIL_PLAUSIBLE].sort());
+    for (const type of TYPES_ERP) {
+      const plausible = (TYPES_ERP_A_SOMMEIL_PLAUSIBLE as readonly string[]).includes(type);
+      expect(
+        issue({ erp: true, locauxSommeilPublic: true }, { ...ERP("N5", type), comporteLocauxSommeilPublic: true }),
+        type,
+      ).toBe(plausible ? "retenue" : "écartée");
+    }
+  });
+
+  it("aucun régime ni critère positif : « jamais retenue », et le moteur écarte (C-d)", () => {
+    for (const t of [{}, { travail: false }, { erp: false, igh: false }] as TypologieApplication[]) {
+      expect(texteTypologie(t)).toContain(JAMAIS_RETENUE);
+      for (const patch of [{}, ERP("N5", "N"), { ...ERP("N5", "N"), estEtablissementTravail: false }]) {
+        expect(issue(t, patch)).toBe("écartée");
+      }
+    }
+    // Aucune obligation du référentiel n'est dans ce cas.
+    expect(
+      obligationsConformite
+        .filter((o) => texteTypologie(o.typologies).includes(JAMAIS_RETENUE))
+        .map((o) => o.id),
+    ).toEqual([]);
+  });
+});
+
+describe("pourHelvetica — ponctuation haute (seconde revue, R-c)", () => {
+  it("met une espace insécable avant « ; » et « : », jamais une espace sécable", () => {
+    expect(pourHelvetica("Travail ; et effectif : 50")).toBe("Travail ; et effectif : 50");
+    expect(pourHelvetica(texteTypologie(typo(RI)))).not.toMatch(/ [;:]/);
+  });
+});
+
+describe("LEGENDE_REGIME — ce que la légende doit dire (seconde revue, R-a et C-b)", () => {
+  it("les séparateurs, la restriction EN PLUS du régime, le type et la catégorie exigés en base, « à confirmer »", () => {
+    expect(LEGENDE_REGIME).toContain("« ou » sépare les régimes, dont un seul suffit");
+    expect(LEGENDE_REGIME).toContain("« ; et » ajoute une condition");
+    expect(LEGENDE_REGIME).toContain("La catégorie, le type, la classe ou la famille écrits après un régime restreignent EN PLUS");
+    expect(LEGENDE_REGIME).toContain("même s'il relève aussi d'un autre régime de la ligne");
+    expect(LEGENDE_REGIME).toContain("Le type et la catégorie d'ERP sont toujours renseignés (exigés en base)");
+    // La restriction en plus, dite par la légende, est celle du moteur : un
+    // employeur en ERP de 5ᵉ n'a pas une ligne bornée aux 1ʳᵉ et 2ᵉ catégories
+    // par sa seule qualité d'employeur (bloc 1 bis de `matchTypologie`).
+    const t = { travail: true, erp: { categories: ["N1", "N2"] } } as TypologieApplication;
+    expect(issue(t, {})).toBe("retenue");
+    expect(issue(t, ERP("N5", "N"))).toBe("écartée");
   });
 });
