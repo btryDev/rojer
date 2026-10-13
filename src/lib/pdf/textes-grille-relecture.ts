@@ -4,7 +4,10 @@
 
 import { LIBELLE_ACTIVITE } from "@/lib/matching/engine";
 import { indexArticlesParRef } from "@/lib/referentiels/corpus";
-import type { ArticleDepouille } from "@/lib/referentiels/corpus/types";
+import type {
+  ArticleDepouille,
+  SourceLecture,
+} from "@/lib/referentiels/corpus/types";
 import type { TypologieApplication } from "@/lib/referentiels/types-communs";
 
 /**
@@ -141,4 +144,54 @@ const INDEX_ARTICLES = indexArticlesParRef();
 
 export function releveDe(r: { article?: string }): ArticleDepouille | undefined {
   return r.article ? INDEX_ARTICLES.get(r.article)?.article : undefined;
+}
+
+/**
+ * Comment l'article a été lu, en clair. Partagé avec
+ * `scripts/export-relecture.ts` (colonne `lecture`), d'où il vient : une
+ * seule table.
+ */
+export const LECTURE_LISIBLE: Record<SourceLecture, string> = {
+  premiere_main: "première main",
+  agent_verbatim: "agent (verbatim non recoupé)",
+  api_legifrance: "API Légifrance (verbatim recomparé par script)",
+  indirect: "indirect — ne peut pas fonder",
+};
+
+/** Le sort de l'article au corpus, en clair. Un statut neuf fait échouer `tsc`. */
+export const STATUT_LISIBLE: Record<ArticleDepouille["statut"], string> = {
+  retenu: "retenu",
+  sans_objet: "sans objet",
+  obligation_manquante: "obligation manquante",
+  non_couvert: "non couvert",
+  hors_perimetre: "hors périmètre",
+  norme: "norme lue",
+  non_depouille: "non dépouillé",
+};
+
+/**
+ * La ligne de provenance imprimée sous une référence du dossier détaillé :
+ * statut au corpus, mode de lecture, date de lecture — et la version lue au
+ * corpus quand ce n'est pas celle que la référence dit avoir constatée.
+ *
+ * Ajoutée par 47ccf91d (2026-09-28, jamais intégré), refaite le 2026-10-13 sur
+ * le format actuel : la ligne en gras au-dessus porte déjà la « version
+ * constatée » de la référence ; la répéter quand le corpus dit la même chose
+ * n'apprend rien au relecteur, l'écart entre les deux, lui, est à relire.
+ *
+ * Le silence est dit : un mode de lecture non noté s'imprime comme tel.
+ */
+export function texteProvenance(
+  a: ArticleDepouille,
+  r: { versionConstatee?: string },
+): string {
+  const bouts = [`corpus : ${STATUT_LISIBLE[a.statut]}`];
+  bouts.push(
+    a.lecture ? `lecture : ${LECTURE_LISIBLE[a.lecture]}` : "mode de lecture non noté",
+  );
+  if (a.luLe) bouts.push(`lu le ${a.luLe}`);
+  if (a.versionEnVigueur && a.versionEnVigueur !== r.versionConstatee) {
+    bouts.push(`version lue au corpus ${a.versionEnVigueur}`);
+  }
+  return bouts.join(" · ");
 }

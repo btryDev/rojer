@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { indexArticlesParRef } from "@/lib/referentiels/corpus";
+import type { ArticleDepouille } from "@/lib/referentiels/corpus/types";
 import type { TypologieApplication } from "@/lib/referentiels/types-communs";
 import {
   CRITERES_TYPOLOGIE,
+  LECTURE_LISIBLE,
   releveDe,
+  STATUT_LISIBLE,
+  texteProvenance,
   texteTypologie,
 } from "./textes-grille-relecture";
 
@@ -88,5 +92,49 @@ describe("releveDe — le relevé imprimé sous chaque référence", () => {
 
   it("une référence sans clé d'article n'a pas de relevé", () => {
     expect(releveDe({})).toBeUndefined();
+  });
+});
+
+describe("texteProvenance — la ligne sous chaque référence du dossier détaillé", () => {
+  const base = {
+    ref: "R. 0000-0",
+    statut: "retenu",
+    obligations: [],
+  } as unknown as ArticleDepouille;
+
+  it("dit le statut, la lecture et la date de lecture", () => {
+    const a = { ...base, lecture: "premiere_main", luLe: "2026-09-03" } as ArticleDepouille;
+    expect(texteProvenance(a, {})).toBe(
+      "corpus : retenu · lecture : première main · lu le 2026-09-03",
+    );
+  });
+
+  it("dit le silence : un mode de lecture non noté s'imprime comme tel", () => {
+    expect(texteProvenance(base, {})).toBe("corpus : retenu · mode de lecture non noté");
+  });
+
+  it("ne répète pas la version constatée, mais imprime l'écart avec le corpus", () => {
+    const a = { ...base, versionEnVigueur: "2011-11-10" } as ArticleDepouille;
+    expect(texteProvenance(a, { versionConstatee: "2011-11-10" })).not.toContain("version");
+    expect(texteProvenance(a, { versionConstatee: "2008-05-01" })).toContain(
+      "version lue au corpus 2011-11-10",
+    );
+    expect(texteProvenance(a, {})).toContain("version lue au corpus 2011-11-10");
+  });
+
+  it("chaque référence citée qui a un relevé reçoit sa ligne, avec le statut et la lecture du corpus", () => {
+    const refs = obligationsConformite.flatMap((o) => o.referencesLegales);
+    const avecReleve = refs.filter((r) => releveDe(r) !== undefined);
+    expect(avecReleve.length).toBeGreaterThan(0);
+    const fautives = avecReleve.filter((r) => {
+      const a = releveDe(r)!;
+      const ligne = texteProvenance(a, r);
+      return (
+        !ligne.startsWith(`corpus : ${STATUT_LISIBLE[a.statut]}`) ||
+        (a.lecture !== undefined && !ligne.includes(LECTURE_LISIBLE[a.lecture])) ||
+        (a.luLe !== undefined && !ligne.includes(a.luLe))
+      );
+    });
+    expect(fautives.map((r) => r.article)).toEqual([]);
   });
 });

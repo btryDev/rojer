@@ -75,7 +75,11 @@ import {
   PERIODICITE_EN_JOURS,
   type CategorieEquipement,
 } from "@/lib/referentiels/types-communs";
-import { releveDe, texteTypologie } from "@/lib/pdf/textes-grille-relecture";
+import {
+  releveDe,
+  texteProvenance,
+  texteTypologie,
+} from "@/lib/pdf/textes-grille-relecture";
 import {
   DESCRIPTION_CATEGORIE,
   LABEL_CATEGORIE_EQUIPEMENT,
@@ -813,7 +817,7 @@ function DossierDetaille({ genereLe }: { genereLe: string }) {
           </Text>
           <Text style={{ marginTop: 6 }}>
             {t(
-              "Sous chaque référence, deux mentions reviennent souvent et il faut les lire pour ce qu'elles sont. « Dépouillé, aucun extrait relevé » : quelqu'un a ouvert l'article et l'a classé, sans en recopier le texte — le relecteur doit donc l'ouvrir lui-même, et c'est le cas le plus fréquent du référentiel. « Aucune version constatée » : la date de la version lue n'a pas été notée, donc rien ne dit que l'article n'a pas changé depuis. Ces deux silences sont affichés plutôt que masqués : ils bornent ce que cette relecture peut établir.",
+              "Sous chaque référence, deux mentions reviennent souvent et il faut les lire pour ce qu'elles sont. « Dépouillé, aucun extrait relevé » : quelqu'un a ouvert l'article et l'a classé, sans en recopier le texte — le relecteur doit donc l'ouvrir lui-même, et c'est le cas le plus fréquent du référentiel. « Aucune version constatée » : la date de la version lue n'a pas été notée, donc rien ne dit que l'article n'a pas changé depuis. Ces deux silences sont affichés plutôt que masqués : ils bornent ce que cette relecture peut établir. Sous la référence, une ligne en petit corps dit la provenance de ce qui suit : le sort de l'article au corpus (« retenu » s'il fonde une obligation), la façon dont il a été lu, la date de lecture, et la version lue au corpus quand elle n'est pas celle que la référence dit avoir constatée.",
             )}
           </Text>
         </View>
@@ -860,6 +864,11 @@ function DossierDetaille({ genereLe }: { genereLe: string }) {
                         ? ` — version constatée ${r.versionConstatee}`
                         : " — aucune version constatée"}
                     </Text>
+                    {releve && (
+                      <Text style={[s.small, { fontSize: 7 }]}>
+                        {t(texteProvenance(releve, r))}
+                      </Text>
+                    )}
                     {releve?.prescrit && (
                       <Text style={s.small}>{t(releve.prescrit)}</Text>
                     )}
