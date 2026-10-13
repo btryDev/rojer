@@ -24,6 +24,8 @@ const { prismaMock } = vi.hoisted(() => ({
     // `findFirst` : les marques « à confirmer » (`marquesAConfirmerDuDossier`), rien par défaut.
     etablissement: { findUnique: vi.fn(), findFirst: vi.fn().mockResolvedValue(null) },
     verification: { count: vi.fn(), findMany: vi.fn() },
+    // Le parc (`getParcEquipements`, axe `inventaire`) : vide par défaut.
+    equipement: { findMany: vi.fn().mockResolvedValue([]) },
   },
 }));
 

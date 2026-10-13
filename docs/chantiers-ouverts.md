@@ -2468,19 +2468,32 @@ rien : à supprimer, pas à fusionner.
 > entièrement RETIRÉ (équipements désactivés parce qu'ils portent une preuve)
 > ne lit pas « rien au registre », puisque le registre imprime leurs rapports.
 >
-> **Le serveur MCP n'est pas couvert.** L'entrée d'origine le citait parmi les
+> ~~**Le serveur MCP n'est pas couvert.** L'entrée d'origine le citait parmi les
 > sorties ; `mcp/tools.ts` rend toujours « Aucune vérification ne correspond à
 > ces critères. » sur une liste vide, sans le fait. Il passe par ses propres
 > requêtes (`ctx.scope`, sans `requireUser`), et ce lot s'est borné aux pièces
-> remises à un tiers — ZIP, deux PDF, « Préparer un contrôle ». Reste ouvert.
+> remises à un tiers — ZIP, deux PDF, « Préparer un contrôle ». Reste ouvert.~~
 >
-> **[2026-10-12 — vérifié, toujours ouvert, NON RAYÉ.]** Ce qui a bougé :
+> ~~**[2026-10-12 — vérifié, toujours ouvert, NON RAYÉ.]** Ce qui a bougé :
 > `e26c9bb7` (2026-09-26, après cette note) distingue la liste filtrée
 > (« Aucune vérification ne correspond à ces critères. ») de la liste entière
 > (« Le calendrier ne contient aucune vérification. »), et la fiche MCP donne
 > « Équipements déclarés : N » depuis le 2026-08-12. Ce qui manque : l'axe
 > `inventaire` de `perimetre/couverture.ts` n'est lu par aucun fichier de
-> `src/lib/mcp/`, et un parc entièrement retiré y compte comme déclaré.
+> `src/lib/mcp/`, et un parc entièrement retiré y compte comme déclaré.~~
+>
+> **[2026-10-13 — CLOS par `lot/mcp-inventaire`, dans le commit de la correction.]** Le serveur lit
+> l'axe par la fonction des écrans : `couvertureDeLInventaire(parc)`
+> (`perimetre/couverture.ts`), l'axe appelé seul sur le modèle de
+> `couvertureDuRegime`, le parc collecté à la portée du jeton
+> (`getParcEquipements`, partition par `estAppareilRetire`). `verifications`,
+> `equipements` et `fiche_etablissement` portent en tête motif et conséquence
+> de l'axe, liste vide ou non, filtrée ou non. Un parc entièrement retiré
+> compte comme non déclaré, avec la phrase des retirés ; la fiche donne
+> « Équipements déclarés en service : N (M retiré(s) du parc) », l'en-tête
+> d'`equipements` distingue de même. `plan_actions` et `etat_duerp` ne sont
+> pas touchés : ils ne rendent ni échéance d'obligation ni équipement. Tests
+> dans `mcp/tools.test.ts`, chacun éprouvé par une mutation.
 
 ~~Relevé le 2026-09-20 par la contre-lecture du lot « fraîcheur des sorties ».~~
 
