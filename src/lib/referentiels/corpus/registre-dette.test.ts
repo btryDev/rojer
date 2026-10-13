@@ -74,7 +74,10 @@ describe("registre de dette — les obligations manquantes", () => {
       evenement: [1, 0],
       // [5, 6] → [11, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : `GZ 13`, `GZ 14`, `CO 61`,
       // `AS 10`, `GC 18`, arrêté 2018-02-23 art. 26 § 3.
-      categorie_equipement: [11, 0],
+      // [11, 0] → [7, 0] le 2026-10-13 (décision de la propriétaire) : `GZ 13`,
+      // `GZ 14`, `AS 10` et l'arrêté 2018-02-23 art. 26 § 3 annoncés
+      // (`non_couvert`). Restent HORS CADRE `CO 61`, `GC 18`.
+      categorie_equipement: [7, 0],
       // 4 → 1 le 2026-09-27 (C45) : `R. 4227-23`, `R. 4227-24` et l'art. 8 de
       // l'arrêté du 10 septembre 2021 passent `non_couvert`, annoncés.
       // [1, 2] → [3, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : `MS 71`, arrêté 1986 art. 60.
@@ -109,7 +112,10 @@ describe("registre de dette — les obligations manquantes", () => {
       // cible ; `PO 1 § 3`, `PO 7`, `PO 12` y entrent aussi et passent de
       // `perimetre` à `a_trancher` — à classer selon la grille C45, rien ne
       // s'encode. 3 + 1 + 3 = 7.
-      a_trancher: [7, 0],
+      // [7, 0] → [4, 0] le 2026-10-13 (décision de la propriétaire) : les trois
+      // hôtels encodés (`retenu`). `R. 4544-11` est classé HORS CADRE et reste
+      // ici, avec les trois du 2026-09-27.
+      a_trancher: [4, 0],
       // [0, 3] → [0, 0] le 2026-10-12 : les trois hôtels, voir `a_trancher`.
       perimetre: [0, 0],
     });
@@ -123,8 +129,13 @@ describe("registre de dette — les obligations manquantes", () => {
     // `R. 4323-89`) − 0 = 30. Le total ne bouge pas (30) : c'est une mesure,
     // pas une dette nouvelle. Les quinze entrées sont OUVERTES, à évaluer
     // selon la grille C45 (encoder / annoncer / hors cadre).
-    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(30);
-    expect(manquantes.length).toBe(30);
+    // 30 → 23 le 2026-10-13 (décision de la propriétaire, grille C45 sur les
+    // quinze) : 30 − 3 encodés (`PO 1 § 3`, `PO 7`, `PO 12`) − 4 annoncés
+    // (`GZ 13`, `GZ 14`, `AS 10`, arrêté 2018-02-23 art. 26 § 3) = 23. Les
+    // huit autres sont HORS CADRE et restent ici : 15 + 8 = 23, le § 7 de
+    // `docs/couverture-declaree-du-produit.md`.
+    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(23);
+    expect(manquantes.length).toBe(23);
   });
 });
 

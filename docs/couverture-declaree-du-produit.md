@@ -152,7 +152,7 @@ sixième `??` recopié.
 C'est la limite la plus importante de ce document, et la raison directe du
 retrait de la carte.
 
-~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ Les 66 articles (2026-10-07, l'IGH, les équipements sous pression et le stockage de matières dangereuses en partie retirés) ci-dessous sont ceux que le dépouillement a lus, qui imposent
+~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ ~~Les 66 articles (2026-10-07, l'IGH, les équipements sous pression et le stockage de matières dangereuses en partie retirés)~~ Les 70 articles (2026-10-13, quatre manques de la cible redéfinie annoncés) ci-dessous sont ceux que le dépouillement a lus, qui imposent
 quelque chose à un exploitant, et que le référentiel ne porte pas. **Rien ne les
 restreint aux établissements que leur chapitre vise** — sauf les vingt-cinq
 annoncés le 2026-09-27, que la page « Ce que Rojer ne couvre pas » projette au
@@ -258,9 +258,17 @@ Puis six articles avec le retrait de quatre lignes `stockage-dangereux-*`
 adresse : l'aide de la catégorie « Stockage de matières dangereuses » du
 formulaire d'équipement.
 
+**Le mouvement du 2026-10-13 : 66 + 4 − 0 = 70.** `GZ 13`, `GZ 14`, `AS 10` et
+`Arrêté 23-02-2018 art. 26 § 3` passent d'`obligation_manquante` à
+`non_couvert`, adresse `ADRESSE_MANQUES_ANNONCES` : quatre des quinze manques
+entrés dans la cible le 2026-10-12, annoncés par décision de la propriétaire
+du 2026-10-13 (§ 8). Aucun article ne quitte la liste : les trois du chapitre
+hôtels qui sont encodés le même jour n'y figuraient pas, ils étaient
+`obligation_manquante`.
+
 ---
 
-## 3. Les 66 articles lus et non portés
+## 3. Les 70 articles lus et non portés
 
 ~~Cinq familles~~ ~~Neuf familles (compte refait le 2026-09-26)~~ Dix-huit familles (compte refait le 2026-09-27, C45), une dixième étant sortie de la liste le 2026-09-01 (voir
 ci-dessous). Les motifs sont ceux du corpus, cités et non réécrits : ils ont
@@ -313,7 +321,15 @@ pas été ouvert.
 > contrôle biennal des installations techniques, annuel pour l'électricité et la
 > détection, et deux séances d'instruction du personnel par an. Un très petit
 > hôtel est exactement le genre de TPE que le produit sait servir par ailleurs —
-> le manque est un choix, pas une impossibilité.
+> ~~le manque est un choix, pas une impossibilité~~.
+>
+> [2026-10-13 : les périodicités du chapitre sont portées, décision de la
+> propriétaire — le biennal de PO 1 § 3
+> (`incendie-hotel-po-controle-biennal-installations`) et les deux séances
+> annuelles de PO 7 et PO 12
+> (`incendie-hotel-po-instruction-personnel-semestrielle`) ; l'annuel
+> électrique l'était depuis le 2026-08-26. Les dix articles ci-dessus
+> n'écrivent aucun rythme et restent non couverts.]
 
 `PO 13` porte son propre motif, et c'est le plus intéressant du lot :
 
@@ -522,6 +538,29 @@ recopiés ici. Entre parenthèses : à quel dossier la page les montre.
   2026-10-07 `R. 4323-1` (employeur), entré avec le retrait de
   `esp-personnel-formation` — voir sa famille ci-dessous.
 - **Boissons** (employeur) — `R. 4225-3`.
+
+### ANNONCÉS LE 2026-10-13 — deux familles, quatre articles
+
+Même adresse, même page, même règle : décision de la propriétaire du
+2026-10-13 sur les quinze manques entrés dans la cible le 2026-10-12 (§ 8).
+Leurs motifs sont ceux du corpus, complétés d'une note datée.
+
+- **Installations de gaz** — `GZ 13` (vérification par une personne ou un
+  organisme agréé avant la première utilisation d'une installation neuve ou
+  modifiée) et `GZ 14` (entretien des installations et appareils, signalisation
+  de l'organe de coupure), aux ERP des quatre premières catégories ;
+  `Arrêté 23-02-2018 art. 26 § 3` (entretien au moins décennal des
+  installations collectives de gaz), aux dossiers qui déclarent le régime
+  d'habitation.
+- **Escaliers mécaniques et trottoirs roulants** (ERP des quatre premières
+  catégories) — `AS 10`.
+
+Un trou reste, et il est nommé ici plutôt qu'à l'écran : la vérification
+annuelle des installations de gaz de GZ 15 n'est servie qu'à l'ERP qui
+déclare un appareil de cuisson (`cuisson-gaz-installations-annuelle`). Un
+commerce de 1ʳᵉ à 4ᵉ catégorie chauffé au gaz sans cuisine ne la reçoit pas ;
+le combler suppose une catégorie d'équipement « installation de gaz », donc
+une migration. Non décidé.
 
 ### Plan de prévention, information de l'inspection du travail — 1 article (2026-09-27)
 
@@ -784,7 +823,11 @@ cette liste et les `obligation_manquante` qui touchent la cible.~~
 [2026-10-12 : plus vrai depuis que la cible est redéfinie — quinze manques
 entrent dans la cible sans avoir été classés, voir § 8. Le test tient
 désormais que ce § 7 et le § 8, disjoints, font ensemble les
-`obligation_manquante` qui touchent la cible.]
+`obligation_manquante` qui touchent la cible.] [2026-10-13 : le § 8 est
+classé, décision de la propriétaire ; huit de ses quinze lignes rejoignent
+cette liste (~~quinze~~ **vingt-trois**). Le test tient de nouveau l'égalité
+entre ce § 7 seul et les `obligation_manquante` qui touchent la cible, et
+vérifie que chaque ligne du § 8 a reçu un sort.]
 
 | Article | Motif, en une ligne |
 |---|---|
@@ -803,10 +846,18 @@ désormais que ce § 7 et le § 8, disjoints, font ensemble les
 | `R. 4223-4` | Niveaux d'éclairement minimaux : un résultat que le dirigeant ne mesure pas ; une case serait une fausse preuve. |
 | `R. 4434-9` | Vérification de l'efficacité des mesures de prévention du bruit : son champ tient à `R. 4434-1` à `R. 4434-8`, non lus ; l'annoncer serait affirmer. |
 | `Arrêté 1993-03-05 art. 2` | Vérification annuelle des centrifugeuses et engins de terrassement : quasi jamais dans la cible, et « centrifugeuse » n'est pas défini. |
+| `CO 61` | Inspection quinquennale des tribunes télescopiques de plus d'un mètre : aucun des trois secteurs n'en exploite. *(2026-10-13)* |
+| `GC 18` | Nettoyage semestriel du conduit d'un module de cuisson temporaire : cuisine mobile ou d'événement, que le modèle ne sait pas décrire ; quasi jamais dans la cible. *(2026-10-13)* |
+| `MS 71` | Communications radio des secours, ERP de plus d'un niveau de sous-sol et de plus de 100 m² en sous-sol : quasi jamais dans la cible. *(2026-10-13)* |
+| `Arrêté 1986-01-31 art. 60` | VMC d'habitation secourue par un groupe électrogène : rare, et le texte ne nomme pas le débiteur. *(2026-10-13)* |
+| `Arrêté 1986-01-31 art. 78-1` | Boxes de stockage d'un parc de stationnement couvert : l'obligation pèse sur le gestionnaire du parc, pas sur l'employeur. *(2026-10-13)* |
+| `Arrêté 1986-01-31 art. 102` | Transformations de l'immeuble d'habitation : l'obligation pèse sur le propriétaire et naît d'un événement que le produit n'observe pas. *(2026-10-13)* |
+| `R. 4323-89` | Travail sur cordes : dans la cible, c'est l'entreprise extérieure qui l'exerce, et la co-activité est déjà servie. *(2026-10-13)* |
+| `R. 4544-11` | Habilitation spécifique aux travaux sous tension : la cible n'en fait pas exécuter par ses salariés ; une entreprise spécialisée intervient. *(2026-10-13)* |
 
 ---
 
-## 8. À évaluer — entrés dans la cible le 2026-10-12
+## 8. Classés le 2026-10-13 — entrés dans la cible le 2026-10-12
 
 La propriétaire a tranché le 2026-10-12 : la cible est ce que l'onboarding ne
 refuse pas — au plus cinquante travailleurs, pas d'ERP en IGH (ADR-031). Elle
@@ -815,26 +866,34 @@ quinze `obligation_manquante` qui étaient « hors cible » y entrent toutes :
 aucune ne vise seulement plus de cinquante travailleurs ou un ERP en IGH.
 Cible : 15 + 15 − 0 = **30** ; total inchangé (30).
 
-**Elles sont OUVERTES, et non classées.** Aucune n'a passé la grille C45
+~~**Elles sont OUVERTES, et non classées.** Aucune n'a passé la grille C45
 (encoder / annoncer / hors cadre) : elles ne sont ni annoncées, ni sous la
 clause générale du § 7. Rien ne s'encode d'office — l'encodage est terminé ;
 les trois hôtels passent de `perimetre` à `a_trancher` pour le dire. La
-cause de chaque ligne est celle du corpus, inchangée sauf pour eux.
+cause de chaque ligne est celle du corpus, inchangée sauf pour eux.~~
 
-| Article | Ce qui la met dans la cible | Cause au corpus |
+**[2026-10-13 : CLASSÉES, décision de la propriétaire.]** Trois encodées —
+le chapitre hôtels, seule exception à « encodage terminé » : un petit hôtel est
+en plein dans la cible, le déclencheur (type O) est déjà demandé, et les deux
+lignes suivent un patron existant (`PE 4 § 2`, `PE 27 § 5`). Quatre annoncées
+(§ 3, « Annoncés le 2026-10-13 »). Huit hors cadre (§ 7). Obligations
+manquantes : 30 − 3 − 4 = **23**, toutes dans la cible et toutes au § 7 ;
+`non_couvert` 66 + 4 = 70 ; référentiel 174 + 2 = 176.
+
+| Article | Ce qui la met dans la cible | Sort au 2026-10-13 |
 |---|---|---|
-| `PO 1 § 3 — contrôle biennal des installations techniques` | Hôtel (type O), toutes catégories | `a_trancher` (était perimetre) |
-| `PO 7` | Hôtel (type O) | `a_trancher` (était perimetre) |
-| `PO 12` | Hôtel (type O) | `a_trancher` (était perimetre) |
-| `GZ 13` | ERP des quatre premières catégories | `categorie_equipement` |
-| `GZ 14` | ERP des quatre premières catégories | `categorie_equipement` |
-| `CO 61` | ERP des quatre premières catégories | `categorie_equipement` |
-| `AS 10` | ERP des quatre premières catégories | `categorie_equipement` |
-| `GC 18` | ERP des quatre premières catégories | `categorie_equipement` |
-| `MS 71` | ERP des quatre premières catégories | `attribut_etablissement` |
-| `Arrêté 23-02-2018 art. 26 § 3` | Habitation collective | `categorie_equipement` |
-| `Arrêté 1986-01-31 art. 60` | Habitation | `attribut_etablissement` |
-| `Arrêté 1986-01-31 art. 78-1` | Habitation | `destinataire` |
-| `Arrêté 1986-01-31 art. 102` | Habitation | `evenement` |
-| `R. 4544-11` | Employeur, travaux sous tension | `a_trancher` |
-| `R. 4323-89` | Employeur, travail sur cordes | `activite_exercee` |
+| `PO 1 § 3 — contrôle biennal des installations techniques` | Hôtel (type O), 5ᵉ catégorie | Encodé : `incendie-hotel-po-controle-biennal-installations` |
+| `PO 7` | Hôtel (type O), 5ᵉ catégorie | Encodé : `incendie-hotel-po-instruction-personnel-semestrielle` |
+| `PO 12` | Hôtel (type O), 5ᵉ catégorie | Encodé : même ligne que PO 7 |
+| `GZ 13` | ERP des quatre premières catégories | Annoncé — Installations de gaz |
+| `GZ 14` | ERP des quatre premières catégories | Annoncé — Installations de gaz |
+| `CO 61` | ERP des quatre premières catégories | Hors cadre (§ 7) |
+| `AS 10` | ERP des quatre premières catégories | Annoncé — Escaliers mécaniques et trottoirs roulants |
+| `GC 18` | ERP des quatre premières catégories | Hors cadre (§ 7) |
+| `MS 71` | ERP des quatre premières catégories | Hors cadre (§ 7) |
+| `Arrêté 23-02-2018 art. 26 § 3` | Habitation collective | Annoncé — Installations de gaz |
+| `Arrêté 1986-01-31 art. 60` | Habitation | Hors cadre (§ 7) |
+| `Arrêté 1986-01-31 art. 78-1` | Habitation | Hors cadre (§ 7) |
+| `Arrêté 1986-01-31 art. 102` | Habitation | Hors cadre (§ 7) |
+| `R. 4544-11` | Employeur, travaux sous tension | Hors cadre (§ 7) |
+| `R. 4323-89` | Employeur, travail sur cordes | Hors cadre (§ 7) |

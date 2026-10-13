@@ -234,7 +234,16 @@ export const obligationsIncendie: Obligation[] = [
     // catégories relèvent du Livre II et de ses propres articles de
     // vérification. Les deux fragments qui citent le même article portent la
     // même restriction (`electricite.ts`, `cuisson-hotte.ts`).
-    typologies: { erp: { categories: ["N5"] } },
+    //
+    // ~~`{ categories: ["N5"] }`~~ — 2026-10-13 : l'hôtel (type O) sort de
+    // cette ligne. `PO 1 § 3` lui impose le même acte — contrôler l'ensemble
+    // des installations techniques par un technicien compétent — tous les
+    // DEUX ans, et `PO 8 § 1` l'applique « en complément » de PE 4 : deux
+    // lignes donneraient deux rendez-vous, à deux et trois ans, pour un seul
+    // contrôle. `incendie-hotel-po-controle-biennal-installations` porte les
+    // deux textes au rythme le plus court. `typesExclus` retient le type
+    // inconnu : une exclusion invérifiable ne s'applique pas.
+    typologies: { erp: { categories: ["N5"], typesExclus: ["O"] } },
     porteur: "etablissement",
     equipementsEnContexte: [
       "INSTALLATION_ELECTRIQUE",
@@ -247,6 +256,68 @@ export const obligationsIncendie: Obligation[] = [
     ],
     notesInternes:
       "Porteur établissement (ADR-022) — c'est l'obligation qui a motivé le chantier.\n\nVersion relue sur Légifrance le 2026-08-27 : PE 4 est en vigueur dans sa rédaction du 2026-07-01 (arrêté du 1er décembre 2025). Le § 2 disait « En cours d'exploitation » ; il dit désormais « Tous les trois ans AU PLUS ». La périodicité triennale est donc écrite dans le texte, elle n'est plus déduite.\n\nChamp d'application, par renvoi : PE 2 § 3, dans sa version du 2026-01-01 (même arrêté), maintient « PE 4, PE 10 B, PE 24 § 1, PE 26 § 1 et PE 27 » pour les établissements recevant au plus 19 personnes. La rédaction antérieure ne maintenait que « PE 4 § 2 et § 3 ». Le champ s'est donc élargi, et l'argument tient a fortiori : l'obligation atteint les établissements qui ont le MOINS déclaré, ceux-là mêmes chez qui une décomposition par installation ne produirait aucune ligne.\n\n`equipementsEnContexte` n'est pas un déclencheur : ce sont les installations que le texte cite (« chauffage, éclairage, installations électriques, appareils de cuisson, circuits d'extraction, ascenseurs, moyens de secours »), affichées pour aider le dirigeant à voir ce qui est visé chez lui. Le texte finit par « etc. » — l'interface accompagne la liste de la mention « non limitative », et il ne faut pas la refermer.\n\nCe que cette ligne ne fait PAS : elle ne lève aucune des neuf sur-applications du Livre II — six ici, trois dans `electricite.ts`. Leurs notes annoncent « à reprendre lorsque le référentiel saura porter PE 4 § 2 » — le référentiel le sait désormais, mais savoir le porter n'est que la moitié de la condition. L'autre moitié est un point de droit, article par article : le Code du travail fonde-t-il chacune d'elles indépendamment du classement ERP ? Tant que cette relecture n'est pas faite sur Légifrance, retirer les lignes détruirait chez l'utilisateur des échéances dont on n'a pas établi qu'elles ne sont pas dues. Voir la note commune de ces neuf lignes.\n\nLe chapeau neuf de PE 4 (installations de gaz neuves ou modifiées, renvoi à PE 10 B, applicable au 2026-07-01) n'est pas encodé ici : c'est une vérification à la construction ou après travaux, pas une échéance récurrente. À instruire à part.",
+  },
+  {
+    id: "incendie-hotel-po-controle-biennal-installations",
+    domaine: "incendie",
+    libelle:
+      "Contrôle de l'ensemble des installations techniques tous les deux ans (hôtel de 5ᵉ catégorie)",
+    description:
+      "Dans un hôtel de 5ᵉ catégorie, l'ensemble des installations techniques est contrôlé par un technicien compétent tous les deux ans. Les installations électriques et les systèmes de détection incendie sont contrôlés chaque année, et font l'objet de leurs propres lignes ; le contrôle des ascenseurs relève d'autres dispositions. Ce contrôle tient lieu, pour l'hôtel, de l'entretien et de la vérification que tout établissement de 5ᵉ catégorie doit faire au moins tous les trois ans : le rythme de deux ans est le plus court des deux. L'obligation porte sur l'ensemble, avec une liste que le texte laisse ouverte : elle est due même si aucun équipement n'est déclaré dans l'outil.",
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. PO 1 § 3 (règles spécifiques aux hôtels)",
+        // La clé de l'entrée de corpus propre au volet biennal, et non « PO 1 »
+        // dont l'entrée nomme le volet annuel électrique.
+        article: "PO 1 § 3 — contrôle biennal des installations techniques",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024770707",
+        note: "« § 3. L'ensemble des installations techniques doit être contrôlé par un technicien compétent tous les deux ans, à l'exception des installations électriques et des systèmes de détection incendie qui doivent être contrôlés annuellement. Le contrôle des ascenseurs relève des dispositions particulières précisées dans le cadre de l'article AS 9 du règlement. » Version en vigueur depuis le 30 octobre 2011, relue par l'API Légifrance le 2026-10-07 (C60).",
+        versionConstatee: "2011-10-30",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. PO 8 § 1 (extension aux hôtels existants)",
+        article: "PO 8",
+        url: "https://www.legifrance.gouv.fr/codes/section_lc/JORFTEXT000000290033/LEGISCTA000020374775/",
+        note: "« § 1. Les prescriptions définies dans la présente section sont applicables en complément des articles PE 4, PE 24, PE 26, PE 27, PE 32, PE 36, PO 1 (§ 3) et PO 5. » Relu par l'API Légifrance le 2026-10-07 (C60). PO 1 § 3 vaut donc pour tous les hôtels, existants compris.",
+        versionConstatee: "2011-10-30",
+      },
+      {
+        source: "ARRETE",
+        reference: "Arrêté du 25 juin 1980, art. PE 4 § 2",
+        article: "PE 4",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024760269",
+        versionConstatee: "2026-07-01",
+      },
+    ],
+    periodicite: "biennale",
+    nature: "echeance_recurrente",
+    pieceAttendue: null,
+    // Ceux de PE 4 § 2, dont cette ligne tient lieu pour l'hôtel : PO 1 § 3
+    // dit « technicien compétent », mais la ligne triennale exige déjà une
+    // personne qualifiée ou un organisme agréé (l'intersection, voir sa note).
+    // Prendre ici l'exigence la plus basse ferait de l'hôtel le seul ERP de
+    // 5ᵉ catégorie où un gaz se vérifie par une personne seulement compétente.
+    realisateurs: ["personne_qualifiee", "organisme_agree"],
+    criticite: 5,
+    transmet: [],
+    typologies: { erp: { categories: ["N5"], types: ["O"] } },
+    porteur: "etablissement",
+    // La liste de PE 4 § 2, moins ce que PO 1 § 3 met à un autre rythme ou
+    // sous d'autres dispositions : l'électricité (annuelle,
+    // `incendie-hotel-po-controle-annuel-electricite`) et l'ascenseur.
+    equipementsEnContexte: [
+      "ALARME_INCENDIE",
+      "DESENFUMAGE",
+      "APPAREIL_CUISSON_ERP",
+      "EXTINCTEUR",
+      "RIA",
+    ],
+    notesInternes:
+      "Créée le 2026-10-13, décision de la propriétaire : l'hôtel entre dans la cible redéfinie le 2026-10-12 (ce que l'onboarding ne refuse pas), et le chapitre PO est le seul de ses manques à être encodé — exception assumée à « encodage terminé ». Le corpus portait PO 1 § 3 en `obligation_manquante` avec ce motif : « le référentiel ne sait pas porter \"l'ensemble\" ». Il le sait depuis l'ADR-022 : c'est exactement ce que fait `incendie-erp-pe4-entretien-installations-techniques`.\n\nUNE LIGNE, ET NON DEUX. PO 8 § 1 applique PO 1 § 3 « en complément » de PE 4 : l'hôtel doit les deux. Mais les deux textes nomment le même acte — contrôler l'ensemble des installations techniques par un technicien compétent — à deux rythmes, trois ans au plus et deux ans. Le contrôle biennal satisfait le triennal ; deux lignes donneraient deux rendez-vous pour un contrôle. La ligne triennale exclut donc le type O (`typesExclus`), et celle-ci cite les deux textes. Même raisonnement que la ligne CCH des ascenseurs, à laquelle AS 9 a été ajouté en contexte plutôt qu'en seconde ligne.\n\nCE QUE LE BIENNAL N'EMPORTE PAS. Le texte en excepte l'électricité et la détection incendie (annuelles) et renvoie l'ascenseur à AS 9. L'électricité a sa ligne depuis le 2026-08-26 ; la détection est servie par `incendie-erp-ssi-annuelle` ; l'ascenseur reste suivi par les lignes du CCH — le préventeur borne AS 9 aux N1–N4 (C64), Rojer le suit.\n\nRELECTURE : PO 1 et PO 8 relus par l'API Légifrance le 2026-10-07 (C60), en vigueur depuis le 2011-10-30, texte inchangé. Non relus de nouveau pour cette ligne.",
   },
   // ---------------------------------------------------------------------------
   // Travail (Code du travail) — consignes, exercices, moyens de lutte
@@ -1521,10 +1592,64 @@ export const obligationsIncendie: Obligation[] = [
     realisateurs: ["exploitant"],
     criticite: 4,
     transmet: [],
-    typologies: { erp: { categories: ["N5"] } },
+    // ~~`{ categories: ["N5"] }`~~ — 2026-10-13 : l'hôtel (type O) sort de
+    // cette ligne. `PO 7` donne à ce même acte un rythme — deux séances
+    // d'instruction et d'entraînement par an — et `PO 12` l'applique aux
+    // hôtels existants avec `PE 27 § 5`. Un état permanent et une échéance
+    // semestrielle sur le même acte feraient deux lignes pour une formation :
+    // `incendie-hotel-po-instruction-personnel-semestrielle` porte les trois
+    // textes.
+    typologies: { erp: { categories: ["N5"], typesExclus: ["O"] } },
     porteur: "etablissement",
     notesInternes:
       "LA SEULE OBLIGATION MANQUANTE QUE RIEN NE BLOQUAIT (registre de dette, `cause: \"libre\"`). Le corpus la portait depuis le 2026-08-26 avec ce blocage : « l'article n'écrit aucune périodicité, et en inventer une serait décider à la place du texte ». L'argument était juste et il est devenu sans objet : depuis l'ADR-026 le référentiel porte cinquante états permanents sans rythme. Une obligation sans périodicité n'est pas une obligation qu'on ne sait pas écrire.\n\nAUCUN RYTHME, ET IL NE FAUT PAS LUI EN PRÊTER. Le § 2 du même article dit que l'information du personnel sur le signal d'alarme « peut être complétée par des exercices périodiques d'évacuation » — FACULTATIF, et à ne pas confondre avec l'exercice semestriel de `R. 4227-39`, que le Code du travail n'impose qu'au-delà de cinquante personnes. Un restaurant de six salariés doit CETTE ligne et pas l'autre.\n\n`pieceAttendue: null` : le texte fait instruire et entraîner, il ne demande ni registre ni attestation.\n\nUNE SUR-APPLICATION CONNUE : un ERP de 5ᵉ catégorie peut n'avoir aucun personnel (une salle mise à disposition, que le § 1 du même article organise). La ligne lui est présentée quand même ; la typologie ne sait pas conjuguer « ERP de 5ᵉ catégorie ET employeur » (les régimes positifs forment une disjonction), et l'écran des états permanents n'a pas de « sans objet ».\n\nCriticité 4, celle de `incendie-travail-exercice-semestriel` : c'est ce qui décide, le jour d'un feu, de ce que fait la personne qui est là.\n\nGN 10, OUVERT LE 2026-09-21 : le règlement « ne s'applique pas aux établissements existants », sauf administratif, contrôles, vérifications et entretien — et cette obligation n'est rien de tout cela. Elle est pourtant servie à TOUT ERP de 5ᵉ catégorie : le moteur ne lit pas `dateAutorisationOuverture`. ~~« la date d'entrée en vigueur du paragraphe n'est pas relevée »~~ — RELEVÉE le 2026-09-21 : le paragraphe figure dans PE 27 depuis sa création par l'arrêté du 22 juin 1990, en vigueur le 27 AOÛT 1990 (six versions de l'article lues sur Légifrance). ~~La sur-application ne touche donc que les établissements ouverts avant cette date et jamais modifiés — une minorité, que le produit ne sait pas reconnaître.~~ [2026-09-26 : c'est une LECTURE — `GN 10` ne date pas l'« existant » ; voir C23 du journal.] Sur-application VISIBLE et assumée ~~, écrite dans la description que le dirigeant lit~~ [2026-09-26 : la description ne conclut plus ; elle cite `GN 10`, ses deux paragraphes, et la date du type PE] ; la décision de la borner est au dossier des décisions (A6). Voir `corpus/arrete-1980-livre-1.ts`, entrée GN 10.",
+  },
+
+  {
+    id: "incendie-hotel-po-instruction-personnel-semestrielle",
+    domaine: "incendie",
+    libelle:
+      "Séances d'instruction et d'entraînement du personnel, deux fois par an (hôtel de 5ᵉ catégorie)",
+    description:
+      "Dans un hôtel de 5ᵉ catégorie, le personnel participe deux fois par an à des séances d'instruction et d'entraînement, de façon compatible avec les conditions d'exploitation et, le cas échéant, avec le rythme saisonnier de l'hôtel. Ces séances portent sur ce que tout établissement de 5ᵉ catégorie doit à son personnel : être instruit sur les conduites à tenir en cas d'incendie et entraîné à la manœuvre des moyens de secours. Le texte vaut pour les hôtels existants comme pour les hôtels neufs.",
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. PO 7 (instruction et entraînement du personnel)",
+        article: "PO 7",
+        url: "https://www.legifrance.gouv.fr/codes/section_lc/JORFTEXT000000290033/LEGISCTA000020374775/",
+        note: "« Le personnel doit participer deux fois par an à des séances d'instruction et d'entraînement de façon compatible avec les conditions d'exploitation, compte tenu, le cas échéant, de son rythme saisonnier. » Version en vigueur depuis le 30 octobre 2011, relue par l'API Légifrance le 2026-09-27 (C51), texte inchangé.",
+        versionConstatee: "2011-10-30",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. PO 12 (hôtels existants)",
+        article: "PO 12",
+        url: "https://www.legifrance.gouv.fr/codes/section_lc/JORFTEXT000000290033/LEGISCTA000020374775/",
+        note: "« Les dispositions des articles PE 27 (§ 5) et PO 7 sont applicables. » Relevé en première main le 2026-08-26. PO 7 vaut donc pour les hôtels existants.",
+        versionConstatee: "2011-10-30",
+      },
+      {
+        source: "ARRETE",
+        reference: "Arrêté du 25 juin 1980, art. PE 27 § 5 (instruction et entraînement du personnel)",
+        article: "PE 27",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024766984",
+        note: "« Le personnel doit être instruit sur les conduites à tenir en cas d'incendie et être entraîné à la manœuvre des moyens de secours. » Version en vigueur depuis le 1er mai 2026, modifiée par l'arrêté du 4 février 2026, art. 1. Paragraphe relevé lettre à lettre le 2026-09-21.",
+        versionConstatee: "2026-05-01",
+      },
+    ],
+    periodicite: "semestrielle",
+    nature: "echeance_recurrente",
+    pieceAttendue: null,
+    realisateurs: ["exploitant"],
+    criticite: 4,
+    transmet: [],
+    typologies: { erp: { categories: ["N5"], types: ["O"] } },
+    porteur: "etablissement",
+    notesInternes:
+      "Créée le 2026-10-13, décision de la propriétaire (voir `incendie-hotel-po-controle-biennal-installations`). Le corpus portait PO 7 et PO 12 en `obligation_manquante` au motif que « l'obligation ne porte sur aucun équipement » — levé depuis l'ADR-022, comme pour PE 27 § 5.\n\nUNE LIGNE, ET NON DEUX. PO 12 applique ensemble PE 27 § 5 et PO 7. Le premier fait instruire et entraîner le personnel sans rythme ; le second donne à ce même acte deux séances par an. Un état permanent et une échéance semestrielle sur la même formation feraient deux lignes pour un acte : `incendie-erp-5-instruction-personnel` exclut donc le type O (`typesExclus`), et celle-ci cite les trois textes. L'état permanent n'apporte rien que la séance datée ne prouve mieux.\n\nRYTHME SAISONNIER. « Compte tenu, le cas échéant, de son rythme saisonnier » module le moment des séances, pas leur nombre : deux par an. Un hôtel fermé six mois les place dans sa saison ; le calendrier ne le sait pas et propose un semestre glissant. Sens d'erreur : une date à déplacer, visible.\n\nÀ NE PAS CONFONDRE avec l'exercice semestriel de `R. 4227-39` (Code du travail, au-delà de cinquante personnes) : un exercice d'évacuation n'est pas une séance d'instruction. Un hôtel qui franchit le seuil doit les deux.",
   },
 
   {

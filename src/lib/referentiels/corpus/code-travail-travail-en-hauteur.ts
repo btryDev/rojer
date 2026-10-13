@@ -636,8 +636,10 @@ export const CODE_TRAVAIL_TRAVAIL_EN_HAUTEUR: Corpus = {
       statut: "obligation_manquante",
       cause: "activite_exercee",
       // ~~false~~ → true le 2026-10-12 : la cible est ce que l'onboarding ne
-      // refuse pas (≤ 50 travailleurs, pas d'ERP en IGH ; ADR-031). Ouverte, à
-      // évaluer selon la grille C45 (encoder / annoncer / hors cadre).
+      // refuse pas (≤ 50 travailleurs, pas d'ERP en IGH ; ADR-031). ~~Ouverte, à évaluer selon la grille C45~~ —
+      // 2026-10-13 : HORS CADRE, décision de la propriétaire ; couverte par la
+      // clause générale des mentions légales (§ 7 de
+      // `docs/couverture-declaree-du-produit.md`).
       toucheLaCible: true,
       motif:
         "Deux obligations distinctes que le référentiel ne porte pas, dans un même article.\n\n1. LA FORMATION DU 6°, nominative, porteur SALARIÉ (ADR-023), nature état permanent, périodicité `autre` — `R. 4323-3` dit « aussi souvent que nécessaire », sans chiffre. Elle a une particularité que n'a pas celle de `R. 4323-69` : elle porte aussi sur les PROCÉDURES DE SAUVETAGE, ce qui la rattache à l'organisation des secours et non seulement au maniement du matériel.\n\n2. LA NOTE DE CALCUL DES ANCRAGES DU 1°, document établi par l'employeur ou une personne compétente, porteur établissement ou équipement selon que les ancrages sont ceux du bâtiment ou d'une installation mobile, nature état permanent, périodicité `autre`. Elle est le pendant de la notice de `R. 4323-61` pour les cordes.\n\nLES SIX CONDITIONS SONT CUMULATIVES : le texte écrit « est conditionnée au respect des conditions suivantes », et manquer une seule rend l'usage des cordes irrégulier. Le 5° — « le travail est programmé et supervisé de telle sorte qu'un secours puisse être immédiatement porté » — n'est pas une formalité de rédaction : c'est l'obligation d'organisation qui interdit le travail sur cordes en solitaire.",

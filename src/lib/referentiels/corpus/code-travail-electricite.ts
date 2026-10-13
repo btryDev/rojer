@@ -77,8 +77,10 @@ export const CODE_TRAVAIL_ELECTRICITE: Corpus = {
       statut: "obligation_manquante",
       cause: "a_trancher",
       // ~~false~~ → true le 2026-10-12 : la cible est ce que l'onboarding ne
-      // refuse pas (≤ 50 travailleurs, pas d'ERP en IGH ; ADR-031). Ouverte, à
-      // évaluer selon la grille C45 (encoder / annoncer / hors cadre).
+      // refuse pas (≤ 50 travailleurs, pas d'ERP en IGH ; ADR-031). ~~Ouverte, à évaluer selon la grille C45~~ —
+      // 2026-10-13 : HORS CADRE, décision de la propriétaire ; couverte par la
+      // clause générale des mentions légales (§ 7 de
+      // `docs/couverture-declaree-du-produit.md`).
       toucheLaCible: true,
       motif:
         "DEUX obligations d'employeur, distinctes de l'habilitation ordinaire de R. 4544-10 que le référentiel porte déjà, et aucune des deux n'est encodée.\n\n(1) L'habilitation SPÉCIFIQUE aux travaux sous tension : elle suppose un document d'un organisme de formation agréé, et sa validité est subordonnée à une attestation médicale distincte de celle de R. 4544-11-1 — celle-ci vise le travail sous tension, celle-là le voisinage.\n\n(2) Le II, que personne n'avait relevé : « L'employeur s'assure avant toute formation que les travailleurs qui suivent la formation mentionnée au I ont les capacités et les compétences et expérience professionnelles requises dans le domaine des opérations d'ordre électrique. » C'est une vérification préalable à la charge de l'employeur, antérieure à la formation elle-même.\n\nDEUX CHIFFRES À NE PAS REPRENDRE. Les quatre ans du III sont la durée d'agrément des ORGANISMES de formation, accordée par le ministre : ils pèsent sur l'organisme, pas sur l'exploitant, et n'ont rien à faire au référentiel. Et le I renvoie aux normes de R. 4544-3 pour la délivrance, le maintien et le renouvellement — c'est le renvoi exact qui avait produit le « triennal » NF C 18-510 que ce dépôt a déjà retiré. Aucune périodicité ne se dérive de ce renvoi : une norme n'est pas une source opposable ici.",

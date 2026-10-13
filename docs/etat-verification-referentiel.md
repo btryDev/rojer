@@ -4,8 +4,8 @@
      écraserait la correction, et un test compare déjà ce fichier au rendu
      du script. Pour le mettre à jour : pnpm verification --ecrire -->
 
-**Généré le** : 2026-10-12
-**Référentiel** : `2026-10-12.1`
+**Généré le** : 2026-10-13
+**Référentiel** : `2026-10-13.1`
 **Régénérer** : `pnpm verification --ecrire`
 
 Ce document répond à une question, et à une seule : **de quoi le
@@ -83,20 +83,20 @@ repose sur un texte que personne n'a ouvert.
 
 ## 2. Où en est-on
 
-**174 obligations**, **345 références** — 98 obligations en citent plus d'une.
+**176 obligations**, **351 références** — 100 obligations en citent plus d'une.
 
 | degré | obligations (au plancher) | part | dont fondements | références | part |
 | --- | --- | --- | --- | --- | --- |
-| 5 · lu à la source, verbatim relevé | 83 | 48 % | 89 | 203 | 59 % |
-| 4 · lu à la source par un agent, verbatim rapporté | 87 | 50 % | 85 | 137 | 40 % |
-| 3 · lu et daté, aucun verbatim | 3 | 2 % | 0 | 4 | 1 % |
+| 5 · lu à la source, verbatim relevé | 83 | 47 % | 89 | 205 | 58 % |
+| 4 · lu à la source par un agent, verbatim rapporté | 87 | 49 % | 85 | 138 | 39 % |
+| 3 · lu et daté, aucun verbatim | 5 | 3 % | 2 | 7 | 2 % |
 | 2 · lu ailleurs qu'à la source | 1 | 1 % | 0 | 1 | 0 % |
 | 1 · au corpus, aucune trace de lecture | 0 | 0 % | 0 | 0 | 0 % |
 | 0 · rien à ouvrir | 0 | 0 % | 0 | 0 | 0 % |
 
-**170 obligations sur 174 (98 %)** reposent, jusqu'à leur dernière référence de contexte, sur des textes lus à la source avec verbatim relevé.
+**170 obligations sur 176 (97 %)** reposent, jusqu'à leur dernière référence de contexte, sur des textes lus à la source avec verbatim relevé.
 
-**3 obligations (2 %)** citent au moins un texte ouvert et daté dont rien n'a été relevé. Ce n'est pas une lecture à refaire : c'est une lecture qu'on ne peut ni contrôler ni contredire sans rouvrir Légifrance.
+**5 obligations (3 %)** citent au moins un texte ouvert et daté dont rien n'a été relevé. Ce n'est pas une lecture à refaire : c'est une lecture qu'on ne peut ni contrôler ni contredire sans rouvrir Légifrance.
 
 **9 obligations sont mieux vérifiées sur leur fondement que sur l'ensemble de leurs références** — leur point faible est une référence de contexte, celle que le dossier de relecture replie dans un « + N réf. » : `elec-travail-consignation-registre`, `elec-travail-habilitation-personnel`, `elec-salarie-habilitation`, `elec-salarie-attestation-medicale-voisinage`, `elec-travail-rapport-quadriennal`, `incendie-erp-pe4-entretien-installations-techniques`, `incendie-travail-alarme-sonore`, `incendie-registre-securite`, `sante-travail-etablissement-adhesion-spst`.
 
@@ -108,11 +108,11 @@ repose sur un texte que personne n'a ouvert.
 
 | ancrage | références | part |
 | --- | --- | --- |
-| ancrée | 321 | 93 % |
+| ancrée | 327 | 93 % |
 | divergente | 1 | 0 % |
 | jamais constatée | 23 | 7 % |
 
-**9 obligations sur 174 (5 %) ne portent aucune version constatée, sur aucune de leurs références.** Le jour où l'un de leurs textes est modifié, rien dans le dépôt ne pourra le signaler : l'absence de repère se lit comme « à vérifier », jamais comme « à jour ».
+**9 obligations sur 176 (5 %) ne portent aucune version constatée, sur aucune de leurs références.** Le jour où l'un de leurs textes est modifié, rien dans le dépôt ne pourra le signaler : l'absence de repère se lit comme « à vérifier », jamais comme « à jour ».
 
 **1 obligation déclare une version que le corpus contredit** : `incendie-hotel-po-controle-annuel-electricite`. À trancher, pas à relire.
 
@@ -133,7 +133,7 @@ repose sur un texte que personne n'a ouvert.
 | `equipement_sous_pression` | 1 | 1 | 1 | · | · | · | · | · | 1 / 1 — 100 % | 0 / 1 | 2026-09-01 |
 | `formation_securite` | 11 | 32 | 1 | 10 | · | · | · | · | 11 / 11 — 100 % | 0 / 32 | 2026-08-31 → 2026-09-27 |
 | `froid` | 8 | 16 | 8 | · | · | · | · | · | 8 / 8 — 100 % | 16 / 16 | 2026-08-26 → 2026-09-27 |
-| `incendie` | 43 | 89 | 30 | 12 | 1 | · | · | · | 42 / 43 — 98 % | 4 / 89 | 2026-08-26 → 2026-10-07 |
+| `incendie` | 45 | 95 | 30 | 12 | 3 | · | · | · | 42 / 45 — 93 % | 4 / 95 | 2026-08-26 → 2026-10-07 |
 | `information_travailleurs` | 2 | 2 | · | 2 | · | · | · | · | 2 / 2 — 100 % | 0 / 2 | 2026-08-31 → 2026-09-26 |
 | `levage` | 11 | 30 | 10 | 1 | · | · | · | · | 11 / 11 — 100 % | 0 / 30 | 2026-08-26 → 2026-09-02 |
 | `locaux_sociaux` | 4 | 4 | 2 | 2 | · | · | · | · | 4 / 4 — 100 % | 0 / 4 | 2026-08-31 → 2026-09-26 |
@@ -157,7 +157,7 @@ Aucun domaine n'est entièrement dépourvu de verbatim.
 |  | obl. | réf. | 5 | 4 | 3 | 2 | 1 | 0 | vérifiées à la source | sans ancre | lu entre |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `equipement` | 90 | 179 | 56 | 33 | 1 | · | · | · | 89 / 90 — 99 % | 22 / 179 | 2026-08-26 → 2026-10-07 |
-| `etablissement` | 70 | 133 | 27 | 41 | 2 | · | · | · | 68 / 70 — 97 % | 0 / 133 | 2026-08-26 → 2026-10-07 |
+| `etablissement` | 72 | 139 | 27 | 41 | 4 | · | · | · | 68 / 72 — 94 % | 0 / 139 | 2026-08-26 → 2026-10-07 |
 | `salarie` | 14 | 33 | · | 13 | · | 1 | · | · | 13 / 14 — 93 % | 1 / 33 | 2026-08-27 → 2026-10-07 |
 
 Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, mesuré au plancher — **5** première main, **4** agent + verbatim, **3** lu sans verbatim, **2** indirect, **1** sans trace, **0** non rattaché.
@@ -168,18 +168,18 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 
 | date de lecture | références | part | obligations concernées |
 | --- | --- | --- | --- |
-| 2026-08-26 | 25 | 7 % | 25 |
+| 2026-08-26 | 28 | 8 % | 27 |
 | 2026-08-27 | 7 | 2 % | 4 |
 | 2026-08-31 | 59 | 17 % | 29 |
-| 2026-09-01 | 120 | 35 % | 75 |
+| 2026-09-01 | 120 | 34 % | 75 |
 | 2026-09-02 | 18 | 5 % | 15 |
 | 2026-09-04 | 20 | 6 % | 7 |
 | 2026-09-20 | 3 | 1 % | 2 |
-| 2026-09-26 | 25 | 7 % | 20 |
-| 2026-09-27 | 36 | 10 % | 34 |
-| 2026-10-07 | 32 | 9 % | 21 |
+| 2026-09-26 | 26 | 7 % | 21 |
+| 2026-09-27 | 37 | 11 % | 35 |
+| 2026-10-07 | 33 | 9 % | 22 |
 
-345 des 345 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-10-07.
+351 des 351 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-10-07.
 
 Ces dates ne sont pas un âge : elles disent quand quelqu'un a ouvert le
 texte, pas depuis quand la version lue est en vigueur. Une lecture d'hier
@@ -195,11 +195,11 @@ que rien ne cite n'apparaît donc dans aucun degré ci-dessus — et le prendre
 pour du travail restant est exactement l'erreur qui a failli faire relancer
 une relecture déjà faite.
 
-**342 articles dépouillés ne sont cités par aucune obligation**, répartis sur 50 corpus.
+**339 articles dépouillés ne sont cités par aucune obligation**, répartis sur 50 corpus.
 
 | corpus | articles non cités | sur | lus |
 | --- | --- | --- | --- |
-| `arrete-1980-livre-3` | 49 | 59 | 2026-08-26 → 2026-09-27 |
+| `arrete-1980-livre-3` | 46 | 59 | 2026-08-26 → 2026-09-27 |
 | `code-travail-travail-en-hauteur` | 33 | 33 | 2026-09-01 → 2026-09-27 |
 | `code-travail-plan-prevention` | 16 | 16 | 2026-09-02 → 2026-09-27 |
 | `inrs-documentaire` | 15 | 16 | 2026-09-03 → 2026-09-26 |
@@ -256,13 +256,15 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 
 ---
 
-## 8. Les 174 obligations
+## 8. Les 176 obligations
 
 | obligation | domaine | porteur | réf. | fondement | plancher | sans ancre | lu |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `elec-salarie-habilitation` | electricite | salarie | 2 | 4 · agent + verbatim | 2 · indirect | 1 / 2 | 2026-09-01 → 2026-10-07 |
 | `elec-travail-habilitation-personnel` | electricite | equipement | 2 | 4 · agent + verbatim | 3 · lu sans verbatim | 1 / 2 | 2026-08-26 → 2026-09-01 |
 | `incendie-erp-pe4-entretien-installations-techniques` | incendie | etablissement | 3 | 5 · première main | 3 · lu sans verbatim | 0 / 3 | 2026-08-26 → 2026-09-27 |
+| `incendie-hotel-po-controle-biennal-installations` | incendie | etablissement | 3 | 3 · lu sans verbatim | 3 · lu sans verbatim | 0 / 3 | 2026-08-26 → 2026-10-07 |
+| `incendie-hotel-po-instruction-personnel-semestrielle` | incendie | etablissement | 3 | 3 · lu sans verbatim | 3 · lu sans verbatim | 0 / 3 | 2026-08-26 → 2026-09-26 |
 | `sante-travail-etablissement-adhesion-spst` | sante_travail | etablissement | 3 | 4 · agent + verbatim | 3 · lu sans verbatim | 0 / 3 | 2026-08-31 |
 | `aeration-erp-chauffage-ventilation-annuelle` | aeration | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 → 2026-09-27 |
 | `aeration-erp-filtres-visite-periodique` | aeration | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-04 |
@@ -440,7 +442,7 @@ demande le plus de travail.
 
 ---
 
-## 9. Les 345 références, une par une
+## 9. Les 351 références, une par une
 
 `prescrit` et `verbatim` sont les deux champs du corpus qui rendent une
 lecture relisible : ce que l'article impose, en une phrase, et la phrase
@@ -476,6 +478,9 @@ refaire pour la contredire.
 | `incendie-erp-pe4-entretien-installations-techniques` | fondement | Arrêté du 25 juin 1980, art. PE 4 § 2 | PE 4 | arrete-1980-livre-3 | retenu | 2026-09-27 | premiere_main | — | ✓ | 2026-07-01 | 2026-07-01 | 5 · première main | ancrée |
 | `incendie-erp-pe4-entretien-installations-techniques` | contexte 1 | Arrêté du 25 juin 1980, art. PE 2 § 3 | PE 2 | arrete-1980-livre-3 | sans_objet | 2026-09-01 | premiere_main | ✓ | ✓ | 2026-01-01 | 2026-01-01 | 5 · première main | ancrée |
 | `incendie-erp-pe4-entretien-installations-techniques` | contexte 2 | Arrêté du 1er décembre 2025 modifiant le règlement de sécurité ERP (applicable au 1er juillet 2026) | Arrêté 2025-12-01 | arretes-modificatifs-erp | retenu | 2026-08-26 | premiere_main | ✓ | — | 2026-07-01 | 2026-07-01 | 3 · lu sans verbatim | ancrée |
+| `incendie-hotel-po-controle-biennal-installations` | fondement | Arrêté du 25 juin 1980, art. PO 1 § 3 (règles spécifiques aux hôtels) | PO 1 § 3 — contrôle biennal des installations techniques | arrete-1980-livre-3 | retenu | 2026-08-26 | premiere_main | — | — | 2011-10-30 | 2011-10-30 | 3 · lu sans verbatim | ancrée |
+| `incendie-hotel-po-controle-biennal-installations` | contexte 1 | Arrêté du 25 juin 1980, art. PO 8 § 1 (extension aux hôtels existants) | PO 8 | arrete-1980-livre-3 | retenu | 2026-10-07 | api_legifrance | ✓ | ✓ | 2011-10-30 | 2011-10-30 | 5 · première main | ancrée |
+| `incendie-hotel-po-controle-biennal-installations` | contexte 2 | Arrêté du 25 juin 1980, art. PE 4 § 2 | PE 4 | arrete-1980-livre-3 | retenu | 2026-09-27 | premiere_main | — | ✓ | 2026-07-01 | 2026-07-01 | 5 · première main | ancrée |
 | `incendie-travail-moyens-lutte` | fondement | R. 4227-28 | R. 4227-28 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `incendie-travail-moyens-lutte` | contexte 1 | R. 4227-29 | R. 4227-29 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `incendie-travail-moyens-lutte` | contexte 2 | NF S 61-919 (août 2001), § 5.1.1 (maintenance annuelle par la personne compétente) | NF S 61-919 § 5.1.1 | normes | norme | 2026-10-07 | premiere_main | ✓ | ✓ | 2001-08-20 | — | 5 · première main | jamais constatée |
@@ -538,6 +543,9 @@ refaire pour la contredire.
 | `incendie-erp-5-sommeil-consigne-chambres` | fondement | Arrêté du 25 juin 1980, art. PE 33 § 2 | PE 33 | arrete-1980-livre-3 | retenu | 2026-09-01 | agent_verbatim | — | ✓ | 2011-11-04 | 2011-11-04 | 4 · agent + verbatim | ancrée |
 | `incendie-erp-5-sommeil-plans-affiches` | fondement | Arrêté du 25 juin 1980, art. PE 35 | PE 35 | arrete-1980-livre-3 | retenu | 2026-09-01 | agent_verbatim | — | ✓ | 1990-08-27 | 1990-08-27 | 4 · agent + verbatim | ancrée |
 | `incendie-erp-5-instruction-personnel` | fondement | Arrêté du 25 juin 1980, art. PE 27 § 5 (instruction et entraînement du personnel) | PE 27 | arrete-1980-livre-3 | retenu | 2026-09-26 | agent_verbatim | ✓ | ✓ | 2026-05-01 | 2026-05-01 | 4 · agent + verbatim | ancrée |
+| `incendie-hotel-po-instruction-personnel-semestrielle` | fondement | Arrêté du 25 juin 1980, art. PO 7 (instruction et entraînement du personnel) | PO 7 | arrete-1980-livre-3 | retenu | 2026-08-26 | premiere_main | — | — | 2011-10-30 | 2011-10-30 | 3 · lu sans verbatim | ancrée |
+| `incendie-hotel-po-instruction-personnel-semestrielle` | contexte 1 | Arrêté du 25 juin 1980, art. PO 12 (hôtels existants) | PO 12 | arrete-1980-livre-3 | retenu | 2026-08-26 | premiere_main | — | — | 2011-10-30 | 2011-10-30 | 3 · lu sans verbatim | ancrée |
+| `incendie-hotel-po-instruction-personnel-semestrielle` | contexte 2 | Arrêté du 25 juin 1980, art. PE 27 § 5 (instruction et entraînement du personnel) | PE 27 | arrete-1980-livre-3 | retenu | 2026-09-26 | agent_verbatim | ✓ | ✓ | 2026-05-01 | 2026-05-01 | 4 · agent + verbatim | ancrée |
 | `incendie-erp-5-consignes-affichees` | fondement | Arrêté du 25 juin 1980, art. PE 27 § 4 (consignes affichées) | PE 27 | arrete-1980-livre-3 | retenu | 2026-09-26 | agent_verbatim | ✓ | ✓ | 2026-05-01 | 2026-05-01 | 4 · agent + verbatim | ancrée |
 | `incendie-erp-visite-commission-cat1-2-triennale` | fondement | Arrêté du 25 juin 1980, art. GE 4 § 1 (visites périodiques des quatre premières catégories) | GE 4 | arrete-1980-livre-2 | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2015-01-01 | 2015-01-01 | 5 · première main | ancrée |
 | `incendie-erp-visite-commission-cat1-2-triennale` | contexte 1 | CCH, art. R. 143-41 (visites périodiques de la commission) | CCH R. 143-41 | cch-registre-securite | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2021-07-01 | 2021-07-01 | 5 · première main | ancrée |

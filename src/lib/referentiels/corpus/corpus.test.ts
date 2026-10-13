@@ -645,15 +645,15 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // motif qui l'y retenait — « aucun attribut pour le déclencher sans
       // sur-appliquer » — décrivait une sur-application MUETTE, que la
       // périodicité rend visible et corrigeable par une réponse « non ».
-      "PO 1 § 3 — contrôle biennal des installations techniques",
-      "PO 7",
+      // ~~"PO 1 § 3 — contrôle biennal des installations techniques"~~ — encodé le 2026-10-13 (`incendie-hotel-po-controle-biennal-installations`), décision de la propriétaire.
+      // ~~"PO 7"~~ — encodé le 2026-10-13 (`incendie-hotel-po-instruction-personnel-semestrielle`), décision de la propriétaire.
       // PO 12 réimporte PO 7 dans le régime des établissements EXISTANTS
       // (« Les dispositions des articles PE 27 (§ 5) et PO 7 sont
       // applicables »). Ajouté le 2026-08-26 : la relecture a montré que le
       // champ « à construire ou à modifier » de la section 1 ne cantonne pas
       // ces périodicités — PO 8 § 1 fait de même pour PO 1 § 3. Même blocage
       // que PO 7 : aucun équipement porteur.
-      "PO 12",
+      // ~~"PO 12"~~ — encodé le 2026-10-13, même ligne que PO 7.
       // ── Lot D (traçabilité), 2026-09-01 : GZ 13 et GZ 14, entrés au corpus
       // parce que GZ 15 s'ouvre sur « Elles » et qu'on est allé chercher
       // l'antécédent. Il n'était pas là — voir la réserve de GZ 15 —, mais les
@@ -666,7 +666,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // vérification de l'installation, par une personne ou un organisme
       // agréé », avec rapport conforme à GE 9 et visa au registre de sécurité.
       // Préalable à la mise en service, pas une périodicité.
-      "GZ 13",
+      // ~~"GZ 13"~~ — 2026-10-13 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »), décision de la propriétaire.
       // GZ 14 § 1 : l'entretien et le maintien en l'état des installations de
       // gaz « incombent à l'exploitant ». État permanent, du même genre que le
       // « maintenus en bon état » de R. 4227-29 — que le référentiel porte
@@ -677,7 +677,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // `APPAREIL_CUISSON_ERP` sous-appliquerait, une installation de gaz
       // alimentant aussi un chauffage ou une production d'eau chaude. C'est le
       // blocage déjà nommé pour l'arrêté du 23 février 2018, art. 26 § 3.
-      "GZ 14",
+      // ~~"GZ 14"~~ — 2026-10-13 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »), décision de la propriétaire.
       // GH 61 A QUITTÉ CETTE LISTE LE 2026-09-04, ET C'EST LE POINT DU LOT.
       // Il y était entré la veille en `obligation_manquante` avec cette
       // observation : « c'est la première entrée de cette liste que rien ne
@@ -724,7 +724,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // réalisateurs. C'est le manque le plus proche de la cible — un escalier
       // mécanique se rencontre en centre commercial, type M. Ne surtout pas
       // l'accrocher à `ASCENSEUR` : AS 9 et AS 10 ne coïncident sur rien.
-      "AS 10",
+      // ~~"AS 10"~~ — 2026-10-13 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »), décision de la propriétaire.
       // GC 18 h) : nettoyage du conduit d'extraction d'un module ou conteneur
       // spécialisé de cuisson, avant chaque mise en place et au moins tous les
       // six mois. L'accrocher à `HOTTE_PRO` doublerait la fréquence du ramonage
@@ -783,7 +783,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // de l'arrêté du 8 octobre 1987, R. 4224-17) et demandée par aucun. Le
       // lot A ne crée pas d'obligation : le manque est nommé, pas comblé.
       // ~~"R. 4222-21"~~ — encodée le 2026-09-20 (`aeration-etablissement-consigne-utilisation`).
-      "Arrêté 23-02-2018 art. 26 § 3",
+      // ~~"Arrêté 23-02-2018 art. 26 § 3"~~ — 2026-10-13 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »), décision de la propriétaire.
       // Les trois suivantes entrent avec le lot 7, et la liste s'allonge pour
       // la raison qu'elle s'allonge toujours ici : on a lu quatre textes de
       // plus. Aucune n'est un défaut d'encodage, chacune dit ce qui la bloque.

@@ -39,7 +39,8 @@
 
 import { ADRESSE_MANQUES_ANNONCES } from "@/lib/referentiels/corpus/adresses";
 import type { Corpus } from "@/lib/referentiels/corpus/types";
-import { nonPorte } from "./non-couverture";
+import { nonPorte, porte } from "./non-couverture";
+import type { CategorieErp } from "@/lib/referentiels/types-communs";
 
 /** Les faits du dossier qui décident de ce qui peut le concerner. */
 export type FaitsManquesAnnonces = {
@@ -47,6 +48,14 @@ export type FaitsManquesAnnonces = {
   travail: boolean;
   /** `Etablissement.epiPresents` : `null` = pas de réponse, jamais « non ». */
   epiPresents: boolean | null;
+  /**
+   * `Etablissement.categorieErp` si l'établissement reçoit du public, `null`
+   * sinon (2026-10-13). La base rend impossible un ERP sans catégorie
+   * (`Etablissement_erp_type_categorie_requis`).
+   */
+  categorieErp: CategorieErp | null;
+  /** `Etablissement.estHabitation` (2026-10-13). */
+  habitation: boolean;
 };
 
 /**
@@ -59,7 +68,11 @@ type Condition =
   /** Un employeur : le Code du travail, quatrième partie. */
   | "travail"
   /** Un employeur qui n'a pas répondu « non » aux équipements de protection. */
-  | "travail_epi";
+  | "travail_epi"
+  /** Un ERP des quatre premières catégories : le livre II du règlement de sécurité. */
+  | "erp_1_4"
+  /** Un dossier qui déclare le régime d'habitation. */
+  | "habitation";
 
 function concerne(c: Condition, f: FaitsManquesAnnonces): boolean {
   switch (c) {
@@ -69,6 +82,10 @@ function concerne(c: Condition, f: FaitsManquesAnnonces): boolean {
       return f.travail;
     case "travail_epi":
       return f.travail && f.epiPresents !== false;
+    case "erp_1_4":
+      return f.categorieErp !== null && f.categorieErp !== "N5";
+    case "habitation":
+      return f.habitation;
   }
 }
 
@@ -81,7 +98,9 @@ export type CleDomaine =
   | "document_unique"
   | "bruit"
   | "formation"
-  | "boissons";
+  | "boissons"
+  | "gaz"
+  | "escaliers_mecaniques";
 
 type Domaine = {
   titre: string;
@@ -126,6 +145,16 @@ const DOMAINES: Record<CleDomaine, Domaine> = {
     titre: "Boissons",
     phrase: `Rojer ne suit pas ${nonPorte("la mise à disposition gratuite d'une boisson non alcoolisée")} lorsque des conditions particulières de travail conduisent à se désaltérer fréquemment, ni la liste des postes de travail concernés.`,
   },
+  // 2026-10-13 : décision de la propriétaire sur les quinze manques entrés
+  // dans la cible le 2026-10-12. Les articles disent chacun ce qu'ils ne
+  // suivent pas : ils ne visent pas les mêmes dossiers.
+  gaz: {
+    titre: "Installations de gaz",
+  },
+  escaliers_mecaniques: {
+    titre: "Escaliers mécaniques et trottoirs roulants",
+    phrase: `Rojer ne suit pas ${nonPorte("la vérification annuelle des escaliers mécaniques et des trottoirs roulants")} par une personne ou un organisme agréé, ni ${nonPorte("l'examen des chaînes et crémaillères au milieu de l'année")}, ni ${nonPorte("la vérification de l'escalier mécanique avant sa remise en service après une transformation importante")}.`,
+  },
 };
 
 type Annonce = {
@@ -142,7 +171,8 @@ type Annonce = {
 };
 
 /**
- * Les vingt-cinq articles annoncés, par référence.
+ * Les ~~vingt-cinq~~ vingt-neuf articles annoncés, par référence (2026-10-13 :
+ * + 4, `GZ 13`, `GZ 14`, `AS 10`, arrêté du 23 février 2018 art. 26 § 3).
  *
  * LA CLÉ EST LA RÉFÉRENCE DU CORPUS, ET RIEN N'EST RECOPIÉ D'AUTRE : ni
  * intitulé, ni texte. `manques-annonces.test.ts` tient l'égalité entre ces
@@ -204,6 +234,24 @@ export const ANNONCES: Readonly<Record<string, Annonce>> = {
     condition: "travail",
     phrase: `Rojer ne suit pas ${nonPorte("l'information des travailleurs chargés de l'utilisation ou de la maintenance des équipements de travail")} : conditions d'utilisation, consignes de la notice du fabricant, conduite à tenir face aux situations anormales prévisibles.`,
   },
+  // 2026-10-13 : décision de la propriétaire (grille C45 sur les quinze
+  // manques entrés dans la cible le 2026-10-12).
+  "GZ 13": {
+    domaine: "gaz",
+    condition: "erp_1_4",
+    phrase: `Rojer ne suit pas ${nonPorte("la vérification d'une installation de gaz neuve ou modifiée avant sa mise en service")}, par une personne ou un organisme agréé, avant toute utilisation du gaz.`,
+  },
+  "GZ 14": {
+    domaine: "gaz",
+    condition: "erp_1_4",
+    phrase: `Rojer ne suit pas ${nonPorte("l'entretien des installations et appareils à gaz et de leurs conduits d'évacuation")}, ni ${nonPorte("la signalisation de l'organe de coupure de branchement du gaz")}. Il suit ${porte("la vérification annuelle des installations de gaz")} lorsqu'un appareil de cuisson est déclaré au parc.`,
+  },
+  "Arrêté 23-02-2018 art. 26 § 3": {
+    domaine: "gaz",
+    condition: "habitation",
+    phrase: `Rojer ne suit pas ${nonPorte("l'entretien des installations collectives de gaz situées entre l'organe de coupure générale et les compteurs individuels")}, que le texte fait faire au moins tous les dix ans dans les bâtiments collectifs.`,
+  },
+  "AS 10": { domaine: "escaliers_mecaniques", condition: "erp_1_4" },
 };
 
 export type ArticleAnnonce = {
