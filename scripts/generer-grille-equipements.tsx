@@ -477,6 +477,87 @@ function PageRemarques({
   );
 }
 
+/**
+ * « Nos propositions de passage au niveau audit » — en tête du document, quand
+ * `--propositions-audit` est passé (2026-10-13, demande de la propriétaire :
+ * la liste à part, au début, lisible par le préventeur). Le motif, qui n'est
+ * plus imprimé dans la grille depuis le 2026-10-09, l'est ici : c'est
+ * l'argument soumis. Les obligations déjà au niveau audit suivent, pour
+ * rappel.
+ */
+const P = {
+  obligation: "34%",
+  fondement: "24%",
+  motif: "42%",
+} as const;
+
+function PagePropositions({
+  propositions,
+  genereLe,
+}: {
+  propositions: Propositions;
+  genereLe: string;
+}) {
+  // Les propositions fermes d'abord, celles « À discuter » ensuite : le
+  // relecteur lit en premier ce que nous soutenons.
+  const aDiscuter = (o: Obligation) =>
+    /^À discuter/.test(propositions.get(o.id)!.motif);
+  const proposees = obligationsConformite
+    .filter((o) => propositions.has(o.id))
+    .sort((a, b) => Number(aDiscuter(a)) - Number(aDiscuter(b)));
+  const dejaAudit = obligationsConformite.filter((o) => estNiveauAudit(o));
+  const ligne = (o: Obligation, motif: string) => (
+    <View key={o.id} style={s.row} wrap={false}>
+      <View style={[cell, { width: P.obligation }]}>
+        <Text style={s.td}>{t(o.libelle)}</Text>
+        <Text style={[s.small, { marginTop: 1 }]}>
+          {LABEL_DOMAINE[o.domaine]} · {LIBELLE_NATURE[o.nature]}
+        </Text>
+      </View>
+      <Text style={[s.td, cell, { width: P.fondement }]}>
+        {t(texteReference(o.referencesLegales[0]))}
+      </Text>
+      <Text style={[s.td, { width: P.motif }]}>{t(motif)}</Text>
+    </View>
+  );
+  const entete = (troisieme: string) => (
+    <View style={s.thead}>
+      <Text style={[s.th, cell, { width: P.obligation }]}>Obligation</Text>
+      <Text style={[s.th, cell, { width: P.fondement }]}>Fondement</Text>
+      <Text style={[s.th, { width: P.motif }]}>{troisieme}</Text>
+    </View>
+  );
+  return (
+    <Page size="A4" orientation="landscape" style={stylePage}>
+      <Text style={{ fontSize: 10, color: BOARD.ardoiseMoyenne }}>
+        Rojer — référentiel de conformité {REFERENTIEL_VERSION}
+      </Text>
+      <Text style={[s.h1, { marginTop: 4 }]}>
+        Nos propositions de passage au niveau audit
+      </Text>
+      <Text style={{ fontSize: 10, color: BOARD.ardoiseMoyenne }}>
+        {proposees.length} propositions · {dejaAudit.length} obligations déjà
+        au niveau audit · document généré le {genereLe}
+      </Text>
+      <Text style={[s.small, { marginTop: 6 }]}>
+        {t(
+          "Le niveau audit garde une obligation au référentiel, avec sa source, sans la suivre au quotidien : pas d'échéance au calendrier, pas de ligne au tableau de bord. Elle reste nommée sur la page « Ce que Rojer ne couvre pas ». Ce n'est pas un retrait. Les lignes ci-dessous sont des propositions : rien n'est encore décidé. Dans la grille qui suit, elles portent la mention « Audit », comme celles qui y sont déjà.",
+        )}
+      </Text>
+      {entete("Pourquoi nous le proposons")}
+      {proposees.map((o) => ligne(o, propositions.get(o.id)!.motif))}
+      {dejaAudit.length > 0 && (
+        <View wrap={false}>
+          <Text style={s.h2}>Déjà au niveau audit (décision du 2026-10-08)</Text>
+          {entete("Statut")}
+          {dejaAudit.map((o) => ligne(o, "Décidé — suivi hors du quotidien"))}
+        </View>
+      )}
+      <PiedDePage />
+    </Page>
+  );
+}
+
 function GrilleDocument({
   genereLe,
   propositions,
@@ -497,6 +578,9 @@ function GrilleDocument({
       title="Rojer — grille de relecture du référentiel"
       author="Rojer"
     >
+      {propositions.size > 0 && (
+        <PagePropositions propositions={propositions} genereLe={genereLe} />
+      )}
       {annexe && <PageRemarques annexe={annexe} genereLe={genereLe} />}
 
       {/* Récapitulatif */}
