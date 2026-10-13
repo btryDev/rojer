@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
+import ts from "typescript";
 import {
   AIDE_MATIERES,
   LIEN_TABLEAU_CLP,
   QUESTION_MATIERES,
+  RENVOI_AIDE_MATIERES,
 } from "@/lib/etablissements/questions";
 import { RELANCES } from "@/lib/etablissements/relance";
 import { PHRASE_SANS_REPONSE } from "@/lib/matching/sans-reponse";
@@ -51,9 +53,25 @@ const SRC = (f: string) => readFileSync(join(process.cwd(), f), "utf8");
  * Le fichier privé de ses commentaires — c'est ce qui reste qui s'affiche.
  * Sans cette coupe, le commentaire qui EXPLIQUE la correction ferait passer
  * les tests pour la correction elle-même.
+ *
+ * ~~Deux expressions régulières (`/\*…*\/`, puis `//` en début de ligne).~~
+ * [2026-10-13, revue de `e6ba53d9` : elles coupaient À L'INTÉRIEUR d'une
+ * chaîne contenant « /* » — un motif de glob, une URL —, et tout le code
+ * jusqu'au prochain « *\/ » disparaissait du balayage, recopie comprise.
+ * Le retrait passe désormais par l'arbre syntaxique de TypeScript : le
+ * compilateur sait ce qui est chaîne, JSX ou commentaire.]
  */
-const sansCommentaires = (source: string) =>
-  source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+const IMPRIMEUR = ts.createPrinter({ removeComments: true });
+const sansCommentaires = (source: string, nom = "f.tsx") =>
+  IMPRIMEUR.printFile(
+    ts.createSourceFile(
+      nom,
+      source,
+      ts.ScriptTarget.Latest,
+      true,
+      nom.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+    ),
+  );
 
 /** Le texte visible d'un rendu HTML : balises ôtées, entités rendues, blancs réduits. */
 function texte(html: string): string {
@@ -70,6 +88,16 @@ const reduire = (s: string) => s.replace(/\s+/g, " ");
 
 const AIDE = AIDE_MATIERES.join(" ");
 const RELANCE = RELANCES.matieres_r4227_22;
+
+/** Un fragment propre à chaque paragraphe de l'aide, et au renvoi de la relance. */
+const FRAGMENTS_DE_L_AIDE = [
+  "dans un losange bordé de rouge",
+  "dont l'état physique peut provoquer",
+  "à vérifier sur l'étiquette ou la fiche de données de sécurité",
+  "les signes ci-dessus aident à les repérer",
+  "ce seuil suffit à les rendre dues",
+  "détaillés sous la question, sur la fiche",
+];
 
 // ── Les surfaces, rendues ─────────────────────────────────────────────
 
@@ -106,15 +134,28 @@ const SURFACES_RENDUES: [string, string][] = [
   ["parcours de création (StepTypologie)", HTML_PARCOURS],
   ["relance de la checklist (OnboardingChecklist)", HTML_CHECKLIST],
 ];
+/**
+ * Les surfaces qui portent l'aide ENTIÈRE. ~~La checklist aussi.~~
+ * [2026-10-13, revue de `e6ba53d9` : la relance ne garde que le premier
+ * paragraphe et renvoie à la fiche — testé à part, ci-dessous.]
+ */
+const SURFACES_AIDE_ENTIERE = SURFACES_RENDUES.slice(0, 2);
 
 describe("la question des matières : un seul texte, identique partout", () => {
   it.each(SURFACES_RENDUES)("%s affiche le libellé", (_, html) => {
     expect(texte(html)).toContain(QUESTION_MATIERES);
   });
 
-  it.each(SURFACES_RENDUES)("%s affiche l'aide entière, paragraphe par paragraphe", (_, html) => {
+  it.each(SURFACES_AIDE_ENTIERE)("%s affiche l'aide entière, paragraphe par paragraphe", (_, html) => {
     const t = texte(html);
     for (const p of AIDE_MATIERES) expect(t, p.slice(0, 50)).toContain(p);
+  });
+
+  it("la relance affiche le premier paragraphe de l'aide, puis le renvoi à la fiche — et pas le reste", () => {
+    const t = texte(HTML_CHECKLIST);
+    expect(t).toContain(AIDE_MATIERES[0]);
+    expect(t).toContain(RENVOI_AIDE_MATIERES);
+    for (const p of AIDE_MATIERES.slice(1)) expect(t, p.slice(0, 50)).not.toContain(p);
   });
 
   it.each(SURFACES_RENDUES)("%s affiche le lien vers le tableau CLP de l'INERIS", (_, html) => {
@@ -127,9 +168,10 @@ describe("la question des matières : un seul texte, identique partout", () => {
     expect(HTML_FICHE).toMatch(/<div id="manipuleMatieresR422722-aide"/);
   });
 
-  it("la relance : son titre EST la question, sa raison EST l'aide, son lien EST celui de l'aide", () => {
+  it("la relance : son titre EST la question, sa raison EST le premier paragraphe et le renvoi, son lien EST celui de l'aide", () => {
     expect(RELANCE.titre).toBe(QUESTION_MATIERES);
-    expect(RELANCE.pourquoi).toBe(AIDE);
+    // ~~`toBe(AIDE)`~~ [2026-10-13, revue : forme courte].
+    expect(RELANCE.pourquoi).toBe(`${AIDE_MATIERES[0]} ${RENVOI_AIDE_MATIERES}`);
     expect(RELANCE.lien).toEqual(LIEN_TABLEAU_CLP);
   });
 
@@ -152,11 +194,14 @@ describe("la question des matières : un seul texte, identique partout", () => {
       "bombe qui explose",
       "flamme sur un cercle",
       "flamme au-dessus d'un cercle",
+      "pas seulement stocke-t-on",
+      "clp-info.ineris.fr",
+      ...FRAGMENTS_DE_L_AIDE,
+      // Les anciens libellés.
       "pas seulement stockent",
       "Manipulez-vous",
       "manipulez des matières",
       "Matières classées explosives",
-      "clp-info.ineris.fr",
     ];
     const DEFINITION = "src/lib/etablissements/questions.ts";
     const fichiers: string[] = [];
@@ -174,10 +219,32 @@ describe("la question des matières : un seul texte, identique partout", () => {
     for (const f of fichiers) {
       const rel = relative(process.cwd(), f);
       if (rel === DEFINITION) continue;
-      const code = sansCommentaires(readFileSync(f, "utf8"));
+      const brut = readFileSync(f, "utf8");
+      // L'impression de l'arbre coûte : seuls les fichiers dont le texte brut
+      // contient un fragment y passent. Retirer des commentaires ne fait
+      // qu'ôter du texte, donc ce tri ne laisse rien échapper.
+      if (!FRAGMENTS.some((frag) => brut.includes(frag))) continue;
+      const code = sansCommentaires(brut, f);
       for (const frag of FRAGMENTS) if (code.includes(frag)) copies.push(`${rel} : « ${frag} »`);
     }
     expect(copies).toEqual([]);
+  });
+
+  it("chaque paragraphe de l'aide a son fragment dans le balayage", () => {
+    // Sans quoi un paragraphe recopié ailleurs passerait inaperçu (revue de
+    // `e6ba53d9`, mutant M4 : le cinquième recopié dans `guide/chez-vous.ts`).
+    for (const p of AIDE_MATIERES) {
+      expect(FRAGMENTS_DE_L_AIDE.some((frag) => p.includes(frag)), p.slice(0, 50)).toBe(true);
+    }
+  });
+
+  it("le retrait des commentaires ne mange pas une chaîne qui contient « /* »", () => {
+    // La garde du balayage lui-même : l'ancien retrait par expression
+    // régulière rendait ici `const a = "x` puis rien.
+    const source = 'const a = "src/*.ts";\nconst b = "copie";\n/* vrai commentaire */\n';
+    const code = sansCommentaires(source, "f.ts");
+    expect(code).toContain('"copie"');
+    expect(code).not.toContain("vrai commentaire");
   });
 });
 
@@ -203,8 +270,24 @@ describe("l'aide : exemples, références, lien", () => {
     expect(QUESTION_MATIERES).toContain("« extrêmement inflammable »");
   });
 
+  it("la bombe n'est attachée qu'aux codes qui la portent : H200 à H204, pas H205", () => {
+    // INERIS, p. 1 : « Expl. 1.5 — Pas de pictogramme — H205 » (revue de
+    // `e6ba53d9`). Un produit H205 ne montre pas la bombe ; l'annoncer sous
+    // elle enverrait chercher un signe absent de l'étiquette.
+    expect(AIDE).toContain("la bombe qui explose, un produit explosif (H200 à H204)");
+    expect(AIDE).not.toContain("H205");
+  });
+
   it("la question garde « utilisés, pas seulement stockés »", () => {
-    expect(QUESTION_MATIERES).toMatch(/utilisent-ils \(pas seulement stockent-ils\)/);
+    // ~~`/utilisent-ils \(pas seulement stockent-ils\)/`~~ [2026-10-13, revue].
+    expect(QUESTION_MATIERES).toMatch(/utilise-t-on \(pas seulement stocke-t-on\)/);
+  });
+
+  it("la question porte sur l'établissement, pas sur l'auteur du geste", () => {
+    // R. 4227-34 vise l'établissement « où sont manipulées et mises en œuvre »
+    // les matières, quel que soit qui les manipule (revue de `e6ba53d9`).
+    expect(QUESTION_MATIERES).toMatch(/^Dans l'établissement, /);
+    expect(QUESTION_MATIERES).not.toMatch(/salarié|travailleur|personnel/i);
   });
 
   it("l'aide cite R. 4227-22 et R. 4227-34", () => {

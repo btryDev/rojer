@@ -16,7 +16,13 @@
 
 import type { QuestionSansReponse } from "@/lib/matching/types";
 import { faitParChamp, intituleDuFait, type ChampFaitActivite } from "./faits-activite";
-import { AIDE_MATIERES, AIDE_SSI, LIEN_TABLEAU_CLP, QUESTION_MATIERES } from "./questions";
+import {
+  AIDE_MATIERES,
+  AIDE_SSI,
+  LIEN_TABLEAU_CLP,
+  QUESTION_MATIERES,
+  RENVOI_AIDE_MATIERES,
+} from "./questions";
 
 export type QuestionOuiNon =
   | "matieres_r4227_22"
@@ -81,11 +87,14 @@ export const RELANCES: Record<QuestionSansReponse, Relance> = {
     // extrêmement inflammables, manipulées et mises en œuvre chez vous. […] »~~
     // [2026-10-13, `lot/question-matieres`, décision de la propriétaire : la
     // question est reformulée pour se répondre étiquette en main. Le titre EST
-    // la question, comme pour les faits d'activité, et la raison est l'aide de
+    // la question, comme pour les faits d'activité, ~~et la raison est l'aide de
     // la fiche, mot pour mot — elle dit déjà ce que vaut le silence, le
-    // rappel la doublerait.]
+    // rappel la doublerait~~ [même jour, revue de `e6ba53d9` : les cinq
+    // paragraphes faisaient environ 1 400 signes dans une étape de checklist.
+    // La raison garde le premier — les signes de l'étiquette — et renvoie au
+    // reste, que la fiche affiche en entier ; le lien suit].]
     titre: QUESTION_MATIERES,
-    pourquoi: AIDE_MATIERES.join(" "),
+    pourquoi: `${AIDE_MATIERES[0]} ${RENVOI_AIDE_MATIERES}`,
     lien: LIEN_TABLEAU_CLP,
   },
   // ~~`chiffons_impregnes`~~ — retirée le 2026-10-08 avec la question
