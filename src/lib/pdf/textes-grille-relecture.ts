@@ -3,6 +3,8 @@
 // testés : le script rend un PDF dès qu'on l'importe.
 
 import { LIBELLE_ACTIVITE } from "@/lib/matching/engine";
+import { indexArticlesParRef } from "@/lib/referentiels/corpus";
+import type { ArticleDepouille } from "@/lib/referentiels/corpus/types";
 import type { TypologieApplication } from "@/lib/referentiels/types-communs";
 
 /**
@@ -121,4 +123,22 @@ export function texteTypologie(t: TypologieApplication): string {
     (b): b is string => b !== null,
   );
   return bouts.length ? bouts.join(" · ") : "Tous régimes";
+}
+
+/**
+ * Ce que le corpus a relevé pour une référence — par l'index canonique,
+ * `indexArticlesParRef()`, jamais par une boucle locale.
+ *
+ * Un même article figure parfois dans deux corpus. La boucle que le script
+ * portait jusqu'au 2026-10-13 gardait le DERNIER ; le reste du dépôt
+ * (`scripts/export-relecture.ts`, la mesure de vérification) garde le premier
+ * DÉPOUILLÉ. R. 4226-19, L. 4711-5 et R. 4121-4 imprimaient donc dans le
+ * dossier un autre relevé que celui des autres lectures — pour R. 4121-4,
+ * sans citation, quand l'index en a une. Correctif écrit le 2026-09-28
+ * (47ccf91d), jamais intégré.
+ */
+const INDEX_ARTICLES = indexArticlesParRef();
+
+export function releveDe(r: { article?: string }): ArticleDepouille | undefined {
+  return r.article ? INDEX_ARTICLES.get(r.article)?.article : undefined;
 }

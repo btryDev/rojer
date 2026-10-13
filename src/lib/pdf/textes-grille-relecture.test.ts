@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
+import { indexArticlesParRef } from "@/lib/referentiels/corpus";
 import type { TypologieApplication } from "@/lib/referentiels/types-communs";
-import { CRITERES_TYPOLOGIE, texteTypologie } from "./textes-grille-relecture";
+import {
+  CRITERES_TYPOLOGIE,
+  releveDe,
+  texteTypologie,
+} from "./textes-grille-relecture";
 
 describe("texteTypologie — la ligne « Régime » de la grille de relecture", () => {
   it("instructions d'évacuation (R. 4227-37 al. 2) : la ligne dit « moins de 51 », jamais « au moins 51 »", () => {
@@ -60,5 +65,28 @@ describe("texteTypologie — la ligne « Régime » de la grille de relecture", 
     );
     expect(texteTypologie({ horsChampR422734: true })).toContain("hors champ de R. 4227-34");
     expect(texteTypologie({ champR422734: true })).toBe("ou matières R. 4227-22");
+  });
+});
+
+describe("releveDe — le relevé imprimé sous chaque référence", () => {
+  // L'identité est exigée sur TOUTES les références citées, sans liste
+  // recopiée ; R. 4121-4 est nommé parce que c'est le doublon dont le relevé
+  // change à l'impression (citation présente ou absente).
+  it("est celui de l'index canonique, pour toute référence citée — doublons de corpus compris", () => {
+    const index = indexArticlesParRef();
+    const refs = obligationsConformite.flatMap((o) => o.referencesLegales);
+    const ecarts = refs
+      .filter((r) => releveDe(r) !== (r.article ? index.get(r.article)?.article : undefined))
+      .map((r) => r.article);
+    expect(ecarts).toEqual([]);
+    // R. 4121-4 figure dans deux corpus ; le dernier n'a pas de citation, le
+    // premier dépouillé en a une.
+    const r41214 = refs.find((r) => r.article === "R. 4121-4");
+    expect(r41214).toBeDefined();
+    expect(releveDe(r41214!)?.citationCle).toBeTruthy();
+  });
+
+  it("une référence sans clé d'article n'a pas de relevé", () => {
+    expect(releveDe({})).toBeUndefined();
   });
 });

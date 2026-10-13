@@ -67,7 +67,6 @@ import {
   type ConditionApplication,
   type Obligation,
 } from "@/lib/referentiels/conformite/types";
-import { CORPUS } from "@/lib/referentiels/corpus";
 import { mentionRythmeRetenu } from "@/lib/referentiels/conformite/mention-rythme";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import { libelleRythme } from "@/lib/referentiels/conformite/renvoi-aux-normes";
@@ -76,7 +75,7 @@ import {
   PERIODICITE_EN_JOURS,
   type CategorieEquipement,
 } from "@/lib/referentiels/types-communs";
-import { texteTypologie } from "@/lib/pdf/textes-grille-relecture";
+import { releveDe, texteTypologie } from "@/lib/pdf/textes-grille-relecture";
 import {
   DESCRIPTION_CATEGORIE,
   LABEL_CATEGORIE_EQUIPEMENT,
@@ -273,20 +272,10 @@ function parDomaine(obligations: Obligation[]): Map<string, Obligation[]> {
  * personne n'a dépouillé n'a rien à montrer, et l'absence est dite plutôt que
  * masquée.
  */
-const RELEVE_PAR_ARTICLE = new Map<
-  string,
-  { prescrit?: string; citationCle?: string; version?: string; statut: string }
->();
-for (const corpus of CORPUS) {
-  for (const a of corpus.articles) {
-    RELEVE_PAR_ARTICLE.set(a.ref, {
-      prescrit: a.prescrit,
-      citationCle: a.citationCle,
-      version: a.versionEnVigueur,
-      statut: a.statut,
-    });
-  }
-}
+// La recherche passe par l'index canonique, `indexArticlesParRef()` : voir
+// `releveDe` (`src/lib/pdf/textes-grille-relecture.ts`). La boucle locale qui
+// tenait lieu d'index ici gardait le dernier corpus, le dépôt le premier
+// dépouillé (2026-10-13).
 
 const OBLIGATIONS_ETABLISSEMENT = obligationsConformite.filter(
   (o) => !estPorteeParEquipement(o) && !estPorteeParSalarie(o),
@@ -862,9 +851,7 @@ function DossierDetaille({ genereLe }: { genereLe: string }) {
                 <Text style={[s.td, { marginTop: 4 }]}>{t(o.description)}</Text>
               )}
               {o.referencesLegales.map((r, i) => {
-                const releve = r.article
-                  ? RELEVE_PAR_ARTICLE.get(r.article)
-                  : undefined;
+                const releve = releveDe(r);
                 return (
                   <View key={i} style={{ marginTop: 4 }}>
                     <Text style={[s.small, { fontFamily: "Helvetica-Bold" }]}>
