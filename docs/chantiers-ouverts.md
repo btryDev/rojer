@@ -583,11 +583,23 @@ constat qui ne rejoint pas cette liste se perd** — c'est la leçon du § 7.
   elles désignent la même relation.
   [2026-10-13, contrôle visuel (session de l'autre Mac) : `next build` + `next start` en local, `main` à 4f6de986, base Docker locale, dossier « Le Comptoir des Halles » déjà semé — DÉFAUT CONFIRMÉ ; la page Zones emploie aussi le retour.]
   [2026-10-13 : permis de feu, plan de prévention et Zones passent au fil
-  d'Ariane (`lot/controle-visuel-1310`, rojer-outils-34). RESTE, après le
+  d'Ariane (`lot/controle-visuel-1310`, rojer-outils-34). ~~RESTE, après le
   lancement : huit pages d'entrée portent encore « ← Établissement » en dur —
   actions, équipe, DUERP, modifier, états permanents, prescriptions, « quand
   ça arrive », prestataires (ADR-014 : sur une page d'entrée, le lien vers
-  l'établissement dit où la page vit).]
+  l'établissement dit où la page vit).~~]
+  [2026-10-13 : **CLOS** (`lot/fil-ariane-entrees`, commit qui porte cette
+  rature). Les huit passent au `FilAriane` partagé, dernier maillon pris dans
+  `LABEL_ITEM`. Le balayage en a trouvé **trois de plus**, que la liste
+  ignorait parce qu'elles ne portaient pas d'`ArrowLeft` : le calendrier, le
+  registre de sécurité et « Ce que Rojer ne couvre pas » disaient le même
+  retour par un `ChevronRight` retourné (`rotate-180`). Les onze sont
+  converties. `FilAriane.test.tsx` balaie désormais toutes les pages d'entrée
+  (21, borne basse) et refuse flèche, chevron gauche ou retourné, « ← » en
+  texte et `<Link>` écrit à la main vers l'établissement — éprouvé en
+  remettant l'ancien `/quand-ca-arrive` et l'ancien `/calendrier` : 4 échecs.
+  Hors règle, laissé tel quel : `equipe/risques` porte « ← Équipe — … » vers
+  `/equipe`, un sous-écran et non une page d'entrée.]
 
 - ~~**`SupprimerEtablissementButton` n'est monté sur aucun écran**, donc il
   n'existe aucun endroit d'où supprimer un établissement.~~ **RÉSOLU le
