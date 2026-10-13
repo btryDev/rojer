@@ -87,7 +87,11 @@ import {
 } from "@/components/ui-kit";
 import { avecProvenance, lireProvenance } from "@/lib/navigation/provenance";
 import { listSignatures } from "@/lib/signatures/queries";
-import { fraicheurCalendrier, phraseFraicheur } from "@/lib/calendrier/fraicheur";
+import {
+  fraicheurCalendrier,
+  phraseFraicheur,
+  SUJET_UNE_ECHEANCE,
+} from "@/lib/calendrier/fraicheur";
 import { AvertissementFraicheur } from "@/components/calendrier/AvertissementFraicheur";
 
 // Les dates sont formatées et comparées dans le fuseau de référence du
@@ -388,7 +392,6 @@ export default async function VerificationDetailPage({
 
   return (
     <EcranFiche provenance={provenance} canonique={calendrier}>
-      <AvertissementFraicheur phrase={phraseFraicheur(fraicheur)} />
       <HeroFiche
         // Pas de tuile-date sans date arrêtée : la tuile est un rendez-vous
         // posé, et poser la date de génération y donnait à lire un jour où
@@ -476,6 +479,12 @@ export default async function VerificationDetailPage({
             </Link>
           ) : null
         }
+      />
+      {/* Sous le titre de la fiche, comme sur « Préparer un contrôle » ; la
+          fiche montre UNE échéance, la phrase la nomme ainsi. */}
+      <AvertissementFraicheur
+        phrase={phraseFraicheur(fraicheur, SUJET_UNE_ECHEANCE)}
+        hrefCalendrier={calendrier.href}
       />
 
       {marque ? (

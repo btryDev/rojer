@@ -176,7 +176,11 @@ export function calendrierIncertain(f: FraicheurCalendrier): boolean {
  * Le verbe est au constat, et chaque phrase nomme le geste qui la lève, parce
  * qu'un avertissement sans issue ne fait qu'inquiéter.
  */
-export function phraseFraicheur(f: FraicheurCalendrier): string | null {
+export function phraseFraicheur(
+  f: FraicheurCalendrier,
+  sujet?: SujetFraicheur,
+): string | null {
+  if (sujet) return phraseDEcran(f, sujet);
   switch (f.etat) {
     case "a_jour":
       return null;
@@ -198,6 +202,69 @@ export function phraseFraicheur(f: FraicheurCalendrier): string | null {
         "Le référentiel a évolué depuis le dernier calcul du calendrier : les " +
         "échéances ci-dessous sont celles d'avant cette évolution. Ouvrez le " +
         "tableau de bord ou le calendrier pour les recalculer."
+      );
+  }
+}
+
+/**
+ * Ce qu'un ÉCRAN montre du calendrier, pour que la phrase le nomme.
+ *
+ * « Les échéances ci-dessous » est juste pour une liste d'échéances — un PDF,
+ * le ZIP, « Préparer un contrôle ». Il est faux sur la fiche d'UNE échéance, et
+ * sur le parc, qui ne montre que des compteurs (revue du 2026-10-13). Le sujet
+ * porte son nombre, pour l'accord ; les phrases sont tournées pour qu'aucun
+ * genre n'ait à s'accorder.
+ */
+export type SujetFraicheur = { texte: string; pluriel: boolean };
+
+/** La fiche d'une échéance. */
+export const SUJET_UNE_ECHEANCE: SujetFraicheur = {
+  texte: "Cette échéance",
+  pluriel: false,
+};
+/** La fiche d'un appareil. */
+export const SUJET_ECHEANCES_DE_L_APPAREIL: SujetFraicheur = {
+  texte: "Les échéances de cet appareil",
+  pluriel: true,
+};
+/** Une fiche du registre de sécurité alimentée par le calendrier. */
+export const SUJET_VERIFICATIONS_DE_LA_FICHE: SujetFraicheur = {
+  texte: "Les vérifications reprises sur cette fiche",
+  pluriel: true,
+};
+/** Le parc, qui compte les retards par appareil. */
+export const SUJET_COMPTEURS_DU_PARC: SujetFraicheur = {
+  texte: "Les compteurs de vérification de cet écran",
+  pluriel: true,
+};
+
+function phraseDEcran(
+  f: FraicheurCalendrier,
+  { texte, pluriel }: SujetFraicheur,
+): string | null {
+  const geste =
+    "Ouvrez le tableau de bord ou le calendrier pour le recalculer.";
+  switch (f.etat) {
+    case "a_jour":
+      return null;
+    case "jamais_genere":
+      return (
+        "Le calendrier des vérifications n'a pas encore été calculé pour ce " +
+        "dossier : l'absence d'échéance ici ne veut pas dire qu'il n'y en a " +
+        "pas. " +
+        geste
+      );
+    case "echec_regeneration":
+      return (
+        "Le dernier calcul du calendrier des vérifications n'a pas abouti. " +
+        `${texte} ${pluriel ? "peuvent" : "peut"} ne pas être à jour. ` +
+        geste
+      );
+    case "perime":
+      return (
+        "Le référentiel a évolué depuis le dernier calcul du calendrier. " +
+        `${texte} ${pluriel ? "datent" : "date"} d'avant cette évolution. ` +
+        geste
       );
   }
 }

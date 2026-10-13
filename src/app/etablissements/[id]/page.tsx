@@ -70,8 +70,6 @@ export default async function EtablissementPage({
 }) {
   const { id } = await params;
   const { batiment } = await searchParams;
-  const etab = await getEtablissement(id);
-  if (!etab) notFound();
 
   // Le tableau de bord est la porte d'entrée — la connexion et « Reprendre mon
   // dossier » y mènent. Il lisait ce qui était en base, sans jamais le
@@ -80,7 +78,15 @@ export default async function EtablissementPage({
   // changement de référentiel s'y affichaient faux tant que personne n'ouvrait
   // la page Calendrier. Même réparation qu'elle, AVANT la première lecture —
   // la charge par bâtiment, juste en dessous, lit déjà les lignes.
+  // [2026-10-13] Avant TOUT autre `await`, y compris `getEtablissement` : la
+  // garde de `fraicheur-sorties.test.ts` l'exige, parce qu'elle ne sait pas
+  // dire quelle lecture touche aux lignes. Sans risque de tenancy : la
+  // réparation lit le repère sous `requireUser` et filtre sur le propriétaire
+  // (`calendrierDesynchronise`) — un identifiant étranger ne régénère rien et
+  // tombe au `notFound` juste après.
   await assurerCalendrierAJour(id);
+  const etab = await getEtablissement(id);
+  if (!etab) notFound();
 
   // Date de référence unique, figée côté serveur : tous les blocs qui
   // calculent un « dans N jours » partent de la même valeur, ce qui évite les

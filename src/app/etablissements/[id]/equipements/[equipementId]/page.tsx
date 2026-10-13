@@ -60,7 +60,11 @@ import {
 import { avecProvenance, lireProvenance } from "@/lib/navigation/provenance";
 import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
 import { retenueParPrudence } from "@/lib/calendrier/prudence";
-import { fraicheurCalendrier, phraseFraicheur } from "@/lib/calendrier/fraicheur";
+import {
+  fraicheurCalendrier,
+  phraseFraicheur,
+  SUJET_ECHEANCES_DE_L_APPAREIL,
+} from "@/lib/calendrier/fraicheur";
 import { AvertissementFraicheur } from "@/components/calendrier/AvertissementFraicheur";
 
 // Le délai d'une ligne se dit en jours plutôt qu'en date (`libelleDelai`,
@@ -277,6 +281,7 @@ export default async function EquipementDetailPage({
       provenance={provenance}
       canonique={parc}
       bandeau={
+        <>
         <HeroEquipement
           categorie={eq.categorie}
           date={tete?.date ?? null}
@@ -406,9 +411,15 @@ export default async function EquipementDetailPage({
             </>
           }
         />
+        {/* Sous le titre de la fiche, comme sur « Préparer un contrôle ». */}
+        <AvertissementFraicheur
+          phrase={phraseFraicheur(fraicheur, SUJET_ECHEANCES_DE_L_APPAREIL)}
+          hrefCalendrier={`${base}/calendrier`}
+          className="mt-4"
+        />
+        </>
       }
     >
-      <AvertissementFraicheur phrase={phraseFraicheur(fraicheur)} />
       <CorpsFiche
         principal={
           <>

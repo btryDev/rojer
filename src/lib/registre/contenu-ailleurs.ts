@@ -143,6 +143,14 @@ const PARTIES_INVENTAIRE = new Set(["2.1", "2.2"]);
 const PARTIES_VERIFICATIONS = new Set(["3.1", "3.2"]);
 
 /**
+ * Vrai si la fiche de cette partie montre des lignes du calendrier — dont
+ * l'âge doit alors se dire (`fraicheurCalendrier`, 2026-10-13).
+ */
+export function partieLueAuCalendrier(partieId: string): boolean {
+  return PARTIES_VERIFICATIONS.has(partieId);
+}
+
+/**
  * Ce que porte une fiche tenue ailleurs, ou `null` si aucune ne la tient.
  *
  * `null` aussi quand la section ne déclare aucune catégorie d'équipement :

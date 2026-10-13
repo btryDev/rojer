@@ -33,7 +33,11 @@ import {
 } from "@/lib/equipements/hors-referentiel";
 import { avecProvenance, origineDepuis } from "@/lib/navigation/provenance";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
-import { fraicheurCalendrier, phraseFraicheur } from "@/lib/calendrier/fraicheur";
+import {
+  fraicheurCalendrier,
+  phraseFraicheur,
+  SUJET_COMPTEURS_DU_PARC,
+} from "@/lib/calendrier/fraicheur";
 import { AvertissementFraicheur } from "@/components/calendrier/AvertissementFraicheur";
 
 export default async function EquipementsPage({
@@ -211,7 +215,13 @@ export default async function EquipementsPage({
       />
 
       <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
-        <AvertissementFraicheur phrase={phraseFraicheur(fraicheur)} />
+        {/* Sous le bandeau qui titre l'écran, comme sur « Préparer un
+            contrôle ». Le parc ne montre que des compteurs : la phrase les
+            nomme, pas « les échéances ci-dessous ». */}
+        <AvertissementFraicheur
+          phrase={phraseFraicheur(fraicheur, SUJET_COMPTEURS_DU_PARC)}
+          hrefCalendrier={`${base}/calendrier`}
+        />
 
         {/* Bandeau de continuité wizard → équipements (éphémère : le
             paramètre disparaît à la navigation suivante). */}
