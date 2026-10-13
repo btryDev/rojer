@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ESPACE_UNITE, formaterMesure, formaterNombreFr } from "./mesures";
 
-const NBSP = " ";
+const NBSP = "\u00A0";
 
 describe("formaterNombreFr", () => {
   it("rend une virgule décimale, jamais un point", () => {
@@ -14,11 +14,19 @@ describe("formaterNombreFr", () => {
     const r = formaterNombreFr(1000);
     expect(r.replace(/\D/g, "")).toBe("1000");
     expect(r).not.toContain(" ");
-    expect(r).toMatch(/^1[  ]000$/);
+    expect(r).toMatch(/^1[\u00A0\u202F]000$/);
   });
 
   it("sans décimale demandée, arrondit à l'entier", () => {
     expect(formaterNombreFr(67.4)).toBe("67");
+  });
+
+  it("un seuil au demi-degré garde sa décimale avec (0, 1), sans en ajouter à l'entier", () => {
+    // Revue du 2026-10-13 : « 55,5 » rendu « 56 » à côté d'un relevé de 55,8.
+    expect(formaterNombreFr(55.5, 0, 1)).toBe("55,5");
+    expect(formaterNombreFr(24.5, 0, 1)).toBe("24,5");
+    expect(formaterNombreFr(55, 0, 1)).toBe("55");
+    expect(formaterMesure(25.5, "°C", 0, 1)).toBe(`25,5${NBSP}°C`);
   });
 });
 

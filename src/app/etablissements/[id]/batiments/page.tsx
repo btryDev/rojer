@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { FilAriane } from "@/components/navigation/FilAriane";
 import { WhyCard } from "@/components/ui-kit";
 import { BatimentsManager } from "@/components/batiments/BatimentsManager";

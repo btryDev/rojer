@@ -115,10 +115,12 @@ export function echeancesDuTableauDeBord<
     // derrière toutes les échéances datées dans `cinqProchaines` : dès qu'un
     // dossier en a cinq, elle sortait du tableau de bord sans que rien ne la
     // nomme (contrôle visuel du 2026-10-13 : la thermographie du dossier semé
-    // n'apparaissait sur aucun widget). Elle n'est pas « en retard » — elle
-    // n'a pas de date —, mais elle attend un geste du dirigeant, et la
-    // propriétaire a tranché qu'elle doit apparaître : le widget la NOMME
-    // sous la liste, sans prendre la place d'une échéance datée.
+    // n'apparaissait sur aucun widget). Elle n'a pas d'échéance connue — elle
+    // peut pourtant être comptée en retard (`estVerificationEnRetard`, date
+    // d'origine passée) —, et elle attend un geste du dirigeant : la
+    // propriétaire a tranché qu'elle doit apparaître. Le widget la NOMME sous
+    // la liste, sans prendre la place d'une échéance datée, et la retire du
+    // compte « en retard, sans échéance connue » pour ne pas la dire deux fois.
     demandesAssureurHorsListe: lignes.filter(
       (l) =>
         estEcheanceContractuelle(l) &&

@@ -649,7 +649,7 @@ export async function GET(
       "────────────────────────────────────────────────────────────",
       ...carnetSan.pointsReleve.flatMap((pt) => [
         `${pt.nom}${pt.localisation ? ` — ${pt.localisation}` : ""}`,
-        `  Type : ${pt.typeReseau} · seuil ${pt.typeReseau === "EFS" ? "max" : "min"} ${formaterMesure(pt.seuilMinCelsius, "°C")}`,
+        `  Type : ${pt.typeReseau} · seuil ${pt.typeReseau === "EFS" ? "max" : "min"} ${formaterMesure(pt.seuilMinCelsius, "°C", 0, 1)}`,
         `  10 derniers relevés :`,
         ...pt.releves.map(
           (r) =>

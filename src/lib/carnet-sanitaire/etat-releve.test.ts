@@ -52,7 +52,7 @@ describe("etatDernierReleve", () => {
 
 describe("libelleReleveAncien — un fait, pas un verdict", () => {
   it("dit l'âge du relevé", () => {
-    expect(libelleReleveAncien(70)).toBe("Dernier relevé il y a 70 jours");
+    expect(libelleReleveAncien(70)).toBe("Relevé vieux de 70 jours");
   });
 
   it("ne dit ni retard ni conformité", () => {

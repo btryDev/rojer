@@ -22,17 +22,24 @@
  */
 
 /** Espace insécable entre un nombre et son unité. */
-export const ESPACE_UNITE = " ";
+export const ESPACE_UNITE = "\u00A0";
 
 /**
- * Un nombre à la française. `decimales` fixe le nombre de chiffres après la
- * virgule (aucun par défaut) : 53 avec une décimale rend « 53,0 », ce qui dit
- * la précision du relevé au lieu de la perdre.
+ * Un nombre à la française. `decimales` est le nombre MINIMAL de chiffres
+ * après la virgule (aucun par défaut) : 53 avec une décimale rend « 53,0 », ce
+ * qui dit la précision du relevé au lieu de la perdre. `decimalesMax` (égal à
+ * `decimales` par défaut) borne le maximum : un seuil saisi au demi-degré
+ * s'écrit avec `(0, 1)`, « 55 » ou « 55,5 » — jamais arrondi à « 56 »
+ * (revue du 2026-10-13).
  */
-export function formaterNombreFr(valeur: number, decimales = 0): string {
+export function formaterNombreFr(
+  valeur: number,
+  decimales = 0,
+  decimalesMax = decimales,
+): string {
   return new Intl.NumberFormat("fr-FR", {
     minimumFractionDigits: decimales,
-    maximumFractionDigits: decimales,
+    maximumFractionDigits: Math.max(decimales, decimalesMax),
   }).format(valeur);
 }
 
@@ -41,6 +48,7 @@ export function formaterMesure(
   valeur: number,
   unite: "°C" | "%" | "UFC/L",
   decimales = 0,
+  decimalesMax = decimales,
 ): string {
-  return `${formaterNombreFr(valeur, decimales)}${ESPACE_UNITE}${unite}`;
+  return `${formaterNombreFr(valeur, decimales, decimalesMax)}${ESPACE_UNITE}${unite}`;
 }

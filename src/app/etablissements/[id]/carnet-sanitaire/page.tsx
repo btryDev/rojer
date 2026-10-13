@@ -247,7 +247,7 @@ export default async function CarnetSanitairePage({
                           {p.localisation && ` · ${p.localisation}`}
                           {" · seuil "}
                           {p.typeReseau === "EFS" ? "max" : "min"}{" "}
-                          {formaterMesure(p.seuilMinCelsius, "°C")}
+                          {formaterMesure(p.seuilMinCelsius, "°C", 0, 1)}
                         </p>
                         {/* Qui a relevé, et quand. Le formulaire demande ce
                             nom depuis toujours ; jusqu'au 2026-08-28 son seul
@@ -279,8 +279,11 @@ export default async function CarnetSanitairePage({
                             <p
                               className="m-0 font-mono text-[22px] font-semibold tabular-nums"
                               style={{
+                                // L'écart reste visible sur un relevé ancien :
+                                // c'est un fait de cette mesure, que la
+                                // pastille d'âge ne doit pas effacer.
                                 color:
-                                  etat.nature === "horsPlage"
+                                  dernier?.conforme === false
                                     ? "var(--board-signal-ink)"
                                     : "var(--board-ink)",
                               }}

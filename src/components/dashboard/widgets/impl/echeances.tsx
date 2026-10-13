@@ -120,18 +120,23 @@ function classifier(
  * du board, sous le même filtre de zone que la liste (`bundle.echeances`).
  */
 function retardsSansDateHorsListe(bundle: DashboardBundle): number {
-  const { prochainesVerifs, aujourdhui } = bundle;
-  const listes = prochainesVerifs.filter(
-    // Même compte que l'agrégat (`compterEtatCalendrier`), qui ne compte plus
-    // les lignes retenues par prudence (D1 (a)) : sans ce filtre, la
-    // soustraction retirerait des lignes que l'agrégat n'a pas comptées.
-    (v) =>
-      estVerificationEnRetard(v, aujourdhui) &&
-      // C64 : ni la prudence ni la visite de la commission ne comptent.
-      !horsDesComptesDeLExploitant(v) &&
-      !aUnRendezVous(v, aujourdhui),
-  ).length;
-  return Math.max(0, bundle.echeances.verifsEnRetardSansEcheance - listes);
+  const { prochainesVerifs, demandesAssureurHorsListe, aujourdhui } = bundle;
+  // Même compte que l'agrégat (`compterEtatCalendrier`), qui ne compte plus
+  // les lignes retenues par prudence (D1 (a)) : sans ce filtre, la
+  // soustraction retirerait des lignes que l'agrégat n'a pas comptées.
+  const compteeParLAgregat = (v: DashboardBundle["prochainesVerifs"][number]) =>
+    estVerificationEnRetard(v, aujourdhui) &&
+    // C64 : ni la prudence ni la visite de la commission ne comptent.
+    !horsDesComptesDeLExploitant(v) &&
+    !aUnRendezVous(v, aujourdhui);
+  const listes = prochainesVerifs.filter(compteeParLAgregat).length;
+  // Une demande d'assureur NOMMÉE sous la liste (`MentionDemandesAssureur`)
+  // n'est pas comptée une seconde fois ici : la même thermographie sortait
+  // en « 1 vérification en retard, sans échéance connue » ET en « à planifier
+  // à la demande de votre assureur » — deux phrases, deux états, une ligne
+  // (revue du 2026-10-13).
+  const nommees = demandesAssureurHorsListe.filter(compteeParLAgregat).length;
+  return Math.max(0, bundle.echeances.verifsEnRetardSansEcheance - listes - nommees);
 }
 
 /** La mention, sous la liste — rien quand tout est listé. */

@@ -152,7 +152,7 @@ export function AjoutReleveForm({
             id={`seuil-${sfx}`}
             className="m-0 mt-1.5 text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
           >
-            Seuil {typeReseau === "EFS" ? "max" : "min"} : {formaterMesure(seuilMinCelsius, "°C")}
+            Seuil {typeReseau === "EFS" ? "max" : "min"} : {formaterMesure(seuilMinCelsius, "°C", 0, 1)}
           </p>
         </div>
       </div>

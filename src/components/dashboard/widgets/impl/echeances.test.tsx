@@ -171,6 +171,20 @@ describe("widget « Prochaines échéances » — une demande d'assureur à plan
     expect(container.querySelector('a[href="/etablissements/etab-1/verifications/thermo"]')).not.toBeNull();
   });
 
+  it("la demande nommée et en retard n'est pas comptée une seconde fois", () => {
+    // Revue du 2026-10-13 : en production, l'agrégat compte la thermographie
+    // (date d'origine passée, sans échéance) parmi les retards sans date. La
+    // fixture le reproduit : 1 au compteur, et la ligne hors des cinq.
+    const b = {
+      ...bundle([1, 2, 3, 4, 5].map((n) => ligne(`d${n}`, `2026-10-0${n}`)), 1),
+      demandesAssureurHorsListe: [assureur],
+    } as unknown as DashboardBundle;
+    const { container } = render(<WidgetProchainesEcheances bundle={b} variant="liste" />);
+    const texte = container.textContent ?? "";
+    expect(texte).toContain("Thermographie infrarouge");
+    expect(texte).not.toContain("en retard, sans échéance connue");
+  });
+
   it("rien quand aucune demande n'est hors liste", () => {
     const { container } = render(
       <WidgetProchainesEcheances bundle={bundle([ligne("v1", "2026-10-01")])} variant="liste" />,

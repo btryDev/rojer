@@ -20,7 +20,9 @@
  *
  *   - `sansReleve` — aucun relevé : rien à dire, et on le dit.
  *   - `ancien`     — le dernier relevé a plus d'un mois. On dit un FAIT, son
- *                    âge ; ni vert, ni « en retard », ni « non conforme ».
+ *                    âge ; ni vert, ni « en retard », ni « non conforme ». La
+ *                    valeur garde l'encre d'écart si elle tombait du mauvais
+ *                    côté du seuil : c'est un fait de cette mesure-là.
  *   - `dansLaPlage` / `horsPlage` — un relevé de moins d'un mois, lu contre le
  *                    seuil du point.
  *
@@ -69,7 +71,11 @@ export function etatDernierReleve(
   return { nature: dernier.conforme ? "dansLaPlage" : "horsPlage" };
 }
 
-/** Le libellé d'un relevé ancien : son âge, rien d'autre. */
+/**
+ * Le libellé d'un relevé ancien : son âge, rien d'autre. Pas « Dernier relevé
+ * il y a… » : la carte écrit déjà « Dernier relevé le 04/08/2026 » juste à
+ * côté (revue du 2026-10-13).
+ */
 export function libelleReleveAncien(joursDepuis: number): string {
-  return `Dernier relevé il y a ${joursDepuis} jours`;
+  return `Relevé vieux de ${joursDepuis} jours`;
 }

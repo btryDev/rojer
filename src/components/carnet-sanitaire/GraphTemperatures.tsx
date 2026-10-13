@@ -160,7 +160,7 @@ export function GraphTemperatures({
           fill="var(--board-signal-ink)"
           fontFamily="var(--font-mono), monospace"
         >
-          {formaterMesure(seuilMinCelsius, "°C")}
+          {formaterMesure(seuilMinCelsius, "°C", 0, 1)}
         </text>
 
         {/* Axe vertical temperatures indicatives */}
