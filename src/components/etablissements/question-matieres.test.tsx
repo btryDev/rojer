@@ -161,6 +161,20 @@ describe("la question des matières : un seul texte, identique partout", () => {
     for (const p of AIDE_MATIERES.slice(1)) expect(t, p.slice(0, 50)).not.toContain(p);
   });
 
+  it("la relance, seule à l'écran, n'exclut pas un produit H250", () => {
+    // Revue de `8ffc560a` : la relance n'affiche que le § 1. Il finissait par
+    // « Une flamme seule, sans cette mention, ne suffit pas. » et ne nommait
+    // pas H250 — flamme seule, mention « S'enflamme spontanément au contact
+    // de l'air » —, que le § 2 fait pourtant entrer : son détenteur lisait
+    // « non ». Le texte affiché doit nommer H250 parmi les mentions qui
+    // suffisent, et ne plus exclure toute flamme sans « extrêmement
+    // inflammable ».
+    const t = texte(HTML_CHECKLIST);
+    expect(t).toContain("« S'enflamme spontanément au contact de l'air » (H250)");
+    expect(t).toContain("Une flamme seule, sans l'une de ces mentions, ne suffit pas.");
+    expect(t).not.toContain("sans cette mention, ne suffit pas");
+  });
+
   it.each(SURFACES_RENDUES)("%s affiche le lien vers le tableau CLP de l'INERIS", (_, html) => {
     expect(html).toContain(`href="${LIEN_TABLEAU_CLP.url}"`);
     expect(texte(html)).toContain(LIEN_TABLEAU_CLP.libelle);
@@ -275,12 +289,19 @@ describe("l'aide : exemples, références, lien", () => {
   });
 
   it("une flamme seule ne suffit pas, et l'aide le dit", () => {
-    expect(AIDE).toContain("Une flamme seule, sans cette mention, ne suffit pas.");
+    // ~~"Une flamme seule, sans cette mention, ne suffit pas."~~ [2026-10-13,
+    // revue de `8ffc560a` : la phrase excluait H250, que le § 2 fait entrer].
+    expect(AIDE).toContain("Une flamme seule, sans l'une de ces mentions, ne suffit pas.");
   });
 
   // ~~« les pictogrammes sont décrits en mots » (flamme sur un cercle, bombe
   // qui explose)~~ [2026-10-13, décision de la propriétaire : « on respecte la
   // loi » — R. 4227-34 ne vise que les matières INFLAMMABLES de R. 4227-22].
+  it("l'aide dit « s'enflammer instantanément », comme R. 4227-22 et le libellé, pas « prendre feu » (R. 4227-24)", () => {
+    expect(AIDE).toContain("peuvent s'enflammer instantanément");
+    expect(AIDE).not.toMatch(/prendre feu/);
+  });
+
   it("le libellé vise la mention « extrêmement inflammable » et l'inflammation instantanée", () => {
     expect(QUESTION_MATIERES).toContain("une flamme et la mention « extrêmement inflammable »");
     expect(QUESTION_MATIERES).toContain("peuvent s'enflammer instantanément");

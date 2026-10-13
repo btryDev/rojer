@@ -74,8 +74,12 @@ export const AIDE_SSI =
  * à H205~~ H200 à H204 — [2026-10-13, revue : H205, « Expl. 1.5 », est
  * explosif mais SANS pictogramme, INERIS p. 1 ; la bombe ne le signale donc
  * pas]) sont lus dans le tableau CLP de l'INERIS (2025), relu le 2026-10-13.
- * D'où la tournure de l'aide : les signes « aident à repérer » les classes de
- * l'article, ils n'en sont pas la définition.
+ * ~~D'où la tournure de l'aide : les signes « aident à repérer » les classes de
+ * l'article, ils n'en sont pas la définition.~~ [2026-10-13, revue de
+ * `8ffc560a` : périmé — cette tournure a quitté l'aide avec le § 4 réécrit.
+ * L'aide actuelle (`AIDE_MATIERES`) donne au § 1 les mentions à chercher sur
+ * l'étiquette (H220, H222, H224, H250), au § 2 l'état physique, et au § 4 ce
+ * que nomme `R. 4227-22` et ce que vise `R. 4227-34`.]
  *
  * [2026-10-13, décision de la propriétaire sur le point 2 de la revue de
  * `e6ba53d9` : « on respecte la loi ». `R. 4227-34` vise les établissements où
@@ -97,8 +101,11 @@ export const AIDE_SSI =
  * suffit pas. »~~
  * ~~aide § 2 : « La question vise aussi les matières dont l'état physique peut
  * provoquer une explosion ou une inflammation instantanée. »~~
- * ~~aide § 3 : « … bouteilles de gaz (propane, butane), oxygène, acétylène,
- * … »~~
+ * ~~aide § 3 : « Exemples courants, à vérifier sur l'étiquette ou la fiche
+ * de données de sécurité : bouteilles de gaz (propane, butane), oxygène,
+ * acétylène, aérosols étiquetés « extrêmement inflammable », certains
+ * solvants. »~~ [2026-10-13, revue de `8ffc560a` : recopié en entier depuis
+ * `8ffc560a~1`, la rature l'abrégeait.]
  * ~~aide § 4 : « Ces classes de produits — explosives, comburantes ou
  * extrêmement inflammables — sont celles que nomme l'art. R. 4227-22 du Code
  * du travail ; les signes ci-dessus aident à les repérer. La question porte
@@ -111,6 +118,21 @@ export const AIDE_SSI =
  * CLP de l'INERIS (2025), p. 2, le 2026-10-13. Il est donné « par exemple » :
  * le texte parle d'un « état physique », pas d'une classe CLP, et aucune table
  * de correspondance ne les rapproche.]
+ *
+ * [2026-10-13, revue de `8ffc560a`. Deux corrections de l'aide, anciens
+ * textes rayés :
+ * ~~aide § 1 : « Sur l'étiquette, la mention « extrêmement inflammable »
+ * accompagne une flamme dans un losange bordé de rouge : gaz (H220), aérosol
+ * (H222), liquide (H224). Une flamme seule, sans cette mention, ne suffit
+ * pas. »~~ La relance de la checklist n'affiche que ce § 1 : un détenteur
+ * d'un produit H250, flamme seule, y lisait « non », alors que le § 2 le fait
+ * entrer. H250 passe au § 1, qui se suffit à lui-même ; le § 2 y renvoie.
+ * ~~aide § 2 : « La question vise aussi les matières qui, dans l'état où
+ * elles se trouvent, peuvent prendre feu instantanément — par exemple un
+ * produit dont l'étiquette porte « S'enflamme spontanément au contact de
+ * l'air » (H250). »~~ « Prendre feu instantanément » est la tournure de
+ * `R. 4227-24`, hors du champ de la question ; `R. 4227-22` et le libellé
+ * disent « inflammation instantanée », « s'enflammer instantanément ».]
  *
  * ~~« Vos salariés utilisent-ils (pas seulement stockent-ils) … »~~ [2026-10-13,
  * revue de `e6ba53d9` : la formule restreignait le champ — `R. 4227-34` vise
@@ -133,8 +155,8 @@ export const QUESTION_MATIERES =
 
 /** L'aide de la question, paragraphe par paragraphe, dans l'ordre affiché. */
 export const AIDE_MATIERES: readonly string[] = [
-  "Sur l'étiquette, la mention « extrêmement inflammable » accompagne une flamme dans un losange bordé de rouge : gaz (H220), aérosol (H222), liquide (H224). Une flamme seule, sans cette mention, ne suffit pas.",
-  "La question vise aussi les matières qui, dans l'état où elles se trouvent, peuvent prendre feu instantanément — par exemple un produit dont l'étiquette porte « S'enflamme spontanément au contact de l'air » (H250).",
+  "Sur l'étiquette, une flamme dans un losange bordé de rouge, avec la mention « extrêmement inflammable » — gaz (H220), aérosol (H222), liquide (H224) — ou la mention « S'enflamme spontanément au contact de l'air » (H250). Une flamme seule, sans l'une de ces mentions, ne suffit pas.",
+  "La question vise aussi les matières qui, dans l'état où elles se trouvent, peuvent s'enflammer instantanément : la mention H250 ci-dessus en est un exemple.",
   "Exemples courants, à vérifier sur l'étiquette ou la fiche de données de sécurité : bouteilles de gaz (propane, butane), acétylène, aérosols étiquetés « extrêmement inflammable », certains solvants.",
   "L'art. R. 4227-22 du Code du travail nomme les matières explosives, comburantes ou extrêmement inflammables. L'art. R. 4227-34 ne vise, parmi elles, que les matières inflammables, dans les établissements où elles sont « manipulées et mises en œuvre ». Les explosifs et les comburants n'entrent donc pas dans cette question, et les matières inflammables non plus quand on se contente de les entreposer sans les mettre en œuvre. Ces cas relèvent des art. R. 4227-22 à R. 4227-25, que Rojer ne suit pas et qu'il signale sur la page « Ce que Rojer ne couvre pas ».",
   "Si oui, l'alarme sonore, la consigne incendie et les exercices semestriels sont dus quel que soit l'effectif (art. R. 4227-34, R. 4227-37 et R. 4227-39 du Code du travail). Si non, ces lignes sont retirées, sauf là où plus de cinquante personnes sont habituellement présentes : ce seuil suffit à les rendre dues. Tant que la question n'a pas de réponse, elles s'affichent « à confirmer ».",
