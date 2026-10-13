@@ -380,6 +380,31 @@ export async function creerEquipementsDepuisPreRemplissage(
   await assertEtablissementOwnership(etablissementId);
   if (entrees.length === 0) return { created: 0 };
 
+  // LA PORTE DES RÉPONSES EXIGÉES TIENT AUSSI ICI (reprise des suites du lot 3,
+  // 2026-10-13). Le pré-remplissage ne propose aucune catégorie dont une réponse
+  // est exigée (`suggererEquipements` sondé sur 288 contextes : neuf catégories,
+  // aucune avec une question exigée dans aucun des 16 régimes essayés),
+  // mais cette action est un point d'entrée serveur : un POST forgé y créait un
+  // appareil sans les réponses que `creerEquipement` exige. Le refus lit ce qui
+  // fait foi, `questionsExigeesPour` dans le régime de l'établissement — D29
+  // pour le levage, la décision du 2026-10-08 pour le désenfumage d'un ERP des
+  // quatre premières catégories —, et non la seule liste de D29. Une ligne
+  // créée ici n'a aucune caractéristique : toute question exigée y manque.
+  // Refusé en bloc, avant toute écriture.
+  const regime = await regimeDe(etablissementId);
+  const exigees = [
+    ...new Set(
+      entrees
+        .map((e) => e.categorie)
+        .filter((c) => questionsExigeesPour(c, regime).length > 0),
+    ),
+  ];
+  if (exigees.length > 0) {
+    throw new Error(
+      `Le pré-remplissage ne crée pas d'appareil dont une réponse est exigée (${exigees.join(", ")}) : déclarez-le par le formulaire d'équipement.`,
+    );
+  }
+
   const batiment = await batimentParDefaut(etablissementId);
   const result = await prisma.equipement.createMany({
     data: entrees.map((e) => ({

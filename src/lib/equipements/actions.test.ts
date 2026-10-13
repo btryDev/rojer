@@ -13,6 +13,8 @@ const h = vi.hoisted(() => {
     nbTraces: 0,
     supprimesPhysiquement: [] as string[],
     crees: [] as Record<string, unknown>[],
+    /** Lignes reçues par `createMany`, pour prouver qu'un refus n'écrit rien. */
+    creesEnLot: [] as unknown[],
     /** La réponse à « Fournissez-vous des EPI ? », et l'ordre des écritures. */
     etablissement: { id: "etab-1", epiPresents: false as boolean | null },
     journal: [] as string[],
@@ -49,9 +51,10 @@ const h = vi.hoisted(() => {
         db.crees.push(data);
         return { id: "eq-nouveau" };
       },
-      createMany: async ({ data }: { data: unknown[] }) => ({
-        count: data.length,
-      }),
+      createMany: async ({ data }: { data: unknown[] }) => {
+        db.creesEnLot.push(...data);
+        return { count: data.length };
+      },
     },
     verification: {
       count: async () => db.nbTraces,
@@ -124,6 +127,7 @@ beforeEach(() => {
   h.db.nbTraces = 0;
   h.db.supprimesPhysiquement = [];
   h.db.crees = [];
+  h.db.creesEnLot = [];
   h.db.etablissement = { id: "etab-1", epiPresents: false };
   h.db.journal = [];
   h.db.regime = { estERP: false, typeErp: null, categorieErp: null, ssiCategorieAouB: null };
@@ -470,5 +474,51 @@ describe("décision du 2026-10-08 : « désenfumage mécanique » exigé là où
     expect((h.db.equipements[0] as { caracteristiques?: unknown }).caracteristiques).toEqual({
       estDesenfumageMecanique: true,
     });
+  });
+});
+
+describe("pré-remplissage : la porte des réponses exigées tient aussi pour un appel forgé (reprise des suites du lot 3)", () => {
+  // `suggererEquipements` ne propose aucune catégorie à réponse exigée ;
+  // l'action serveur, elle, reçoit ce qu'on lui poste. Le refus lit
+  // `questionsExigeesPour` dans le régime de l'établissement, comme
+  // `creerEquipement`. Éprouvé en retirant le refus.
+  it("levage : refusé en bloc, rien n'est écrit, l'appartenance est contrôlée d'abord", async () => {
+    const [levage] = CATEGORIES_A_REPONSE_EXIGEE;
+    await expect(
+      creerEquipementsDepuisPreRemplissage("etab-1", [
+        { categorie: "EXTINCTEUR", libelle: "Extincteur" },
+        { categorie: levage, libelle: "Palan" },
+      ]),
+    ).rejects.toThrow(levage);
+    expect(h.db.creesEnLot).toHaveLength(0);
+    expect(h.genererCalendrier).not.toHaveBeenCalled();
+    expect(h.assertOwnership).toHaveBeenCalledWith("etab-1");
+  });
+
+  it("désenfumage dans un ERP N3 (décision du 2026-10-08) : refusé, rien n'est écrit", async () => {
+    h.db.regime = { estERP: true, typeErp: "M", categorieErp: "N3", ssiCategorieAouB: null };
+    await expect(
+      creerEquipementsDepuisPreRemplissage("etab-1", [
+        { categorie: "DESENFUMAGE", libelle: "Désenfumage" },
+      ]),
+    ).rejects.toThrow("DESENFUMAGE");
+    expect(h.db.creesEnLot).toHaveLength(0);
+  });
+
+  it("désenfumage là où la question est facultative : créé, comme par le formulaire", async () => {
+    const r = await creerEquipementsDepuisPreRemplissage("etab-1", [
+      { categorie: "DESENFUMAGE", libelle: "Désenfumage" },
+    ]);
+    expect(r.created).toBe(1);
+    expect(h.db.creesEnLot).toHaveLength(1);
+  });
+
+  it("ce que le pré-remplissage propose est créé", async () => {
+    const r = await creerEquipementsDepuisPreRemplissage("etab-1", [
+      { categorie: "EXTINCTEUR", libelle: "Extincteur" },
+      { categorie: "BAES", libelle: "BAES" },
+    ]);
+    expect(r.created).toBe(2);
+    expect(h.db.creesEnLot).toHaveLength(2);
   });
 });
