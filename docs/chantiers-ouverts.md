@@ -600,6 +600,22 @@ constat qui ne rejoint pas cette liste se perd** — c'est la leçon du § 7.
   remettant l'ancien `/quand-ca-arrive` et l'ancien `/calendrier` : 4 échecs.
   Hors règle, laissé tel quel : `equipe/risques` porte « ← Équipe — … » vers
   `/equipe`, un sous-écran et non une page d'entrée.]
+  [2026-10-13, revue de `784bb428` — deux phrases de la rature ci-dessus et
+  du message de commit étaient inexactes. (1) « Toutes les pages d'entrée » :
+  une douzième passait, `/equipements`, qui délègue son en-tête à
+  `BandeauParc` (bouton rond `ChevronLeft` « Retour à Mon établissement ») —
+  convertie à son tour, et la garde lit désormais les bandeaux délégués (les
+  composants importés par une page d'entrée qui portent le `<h1>`). (2)
+  « Espacement conservé » : faux pour les huit pages de la liste, où l'écart
+  entre le lien et le titre passe de 10 px (`mt-2.5`) à 6 px (`mb-1.5` du
+  fil), comme sur les quatre pages de `26040e90` ; il n'est conservé (12 px)
+  que sur le calendrier, le registre et le périmètre. La garde a été
+  réécrite sur l'arbre syntaxique (commentaires retirés par
+  `ts.createPrinter`) : elle ne dépend plus de l'ordre des attributs ni du
+  nom de la variable, attrape `&larr;`, et ne prend plus un
+  `group-open:rotate-180` ni un commentaire de fin de ligne pour un retour.
+  Le fil tronque désormais la raison sociale (`min-w-0 truncate`) ; la
+  charte porte une ligne « Fil d'Ariane » au barème.]
 
 - ~~**`SupprimerEtablissementButton` n'est monté sur aucun écran**, donc il
   n'existe aucun endroit d'où supprimer un établissement.~~ **RÉSOLU le

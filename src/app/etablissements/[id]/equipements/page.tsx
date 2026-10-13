@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { EmptyState } from "@/components/layout/EmptyState";
 import { BandeauParc } from "@/components/equipements/BandeauParc";
+import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
 import {
   CarteCategorie,
   urgenceCategorie,
@@ -180,7 +181,10 @@ export default async function EquipementsPage({
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
       <BandeauParc
-        hrefRetour={base}
+        crumbs={[
+          { href: base, label: etab.raisonDisplay },
+          { label: LABEL_ITEM.equipements },
+        ]}
         hrefCalendrier={`${base}/calendrier`}
         enRetard={compteurs.enRetard}
         proches={compteurs.proches}
