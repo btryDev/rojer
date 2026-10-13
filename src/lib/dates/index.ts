@@ -204,6 +204,43 @@ export function depuisCleJourCivil(cle: string): Date {
 }
 
 /**
+ * « AAAA-MM-JJ » désigne-t-il un jour qui existe ?
+ *
+ * Le motif seul ne le dit pas : « 2026-02-30 » et « 2026-13-45 » le passent, et
+ * `depuisCleJourCivil` les reconstruit sans rien dire en 2026-03-02 et
+ * 2027-02-14. C'est la règle de tout schéma de saisie de date (ASVS V2.2.1,
+ * 2026-10-13) : un `.regex()` de date est toujours suivi de ce prédicat —
+ * `validation-entrees.test.ts` en relève l'emploi dans les sources.
+ *
+ * Arithmétique pure sur les composantes : le dernier jour du mois se lit par
+ * `Date.UTC(annee, mois, 0)`, qui ne dépend d'aucun fuseau.
+ *
+ * (Né dans `prestataires/schema.ts` à la contre-lecture du 2026-09-27, pour
+ * les seules dates de l'attestation de vigilance ; remonté ici le 2026-10-13
+ * pour servir à tous.)
+ */
+export function estJourCivilReel(cle: string): boolean {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(cle);
+  if (!m) return false;
+  const [annee, mois, jour] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  if (mois < 1 || mois > 12 || jour < 1) return false;
+  return jour <= new Date(Date.UTC(annee, mois, 0)).getUTCDate();
+}
+
+/**
+ * Pendant d'`estJourCivilReel` pour une saisie `datetime-local` : la forme
+ * exacte que lit `depuisSaisieDateHeure` (sans secondes), un jour réel, une
+ * heure de 00 à 23 et une minute de 00 à 59. Une saisie refusée ici aurait
+ * fait lever `depuisSaisieDateHeure` (forme à secondes) ou été reportée en
+ * silence (« T25:00 » devient le lendemain).
+ */
+export function estSaisieDateHeureReelle(valeur: string): boolean {
+  const m = /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})$/.exec(valeur);
+  if (!m) return false;
+  return estJourCivilReel(m[1]) && Number(m[2]) <= 23 && Number(m[3]) <= 59;
+}
+
+/**
  * Instant d'une saisie `<input type="datetime-local">` (« AAAA-MM-JJTHH:MM »),
  * ancré sur l'heure de Paris.
  *
@@ -413,4 +450,11 @@ export function formaterDateHeureFr(d: Date): string {
   // `Intl` intercale « à » entre date et heure selon les versions d'ICU :
   // on normalise pour que la sortie soit stable et testable.
   return FMT_DATE_HEURE.format(d).replace(/,?\s+à\s+/, " ").replace(/,\s+/, " ");
+}
+
+/** « 14:05 », heure de Paris. Pour une échéance du jour même — la fin d'un
+ *  plafond horaire —, où la date n'apprend rien. */
+export function formaterHeureFr(d: Date): string {
+  const c = composantesCiviles(d);
+  return `${String(c.heure).padStart(2, "0")}:${String(c.minute).padStart(2, "0")}`;
 }

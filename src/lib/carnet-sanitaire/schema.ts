@@ -1,4 +1,4 @@
-import { cleJourCivil, depuisCleJourCivil } from "@/lib/dates";
+import { cleJourCivil, depuisCleJourCivil, estJourCivilReel } from "@/lib/dates";
 import { z } from "zod";
 import { TypeReseauEau } from "@prisma/client";
 
@@ -68,6 +68,7 @@ const dateFaitAccompli = (message: string) =>
   z
     .string()
     .regex(DATE_FMT, "Format attendu : AAAA-MM-JJ")
+    .refine(estJourCivilReel, "Cette date n'existe pas")
     .transform((v) => depuisCleJourCivil(v))
     .refine((d) => !Number.isNaN(d.getTime()), "Date invalide")
     .refine((d) => cleJourCivil(d) <= cleJourCivil(new Date()), message);

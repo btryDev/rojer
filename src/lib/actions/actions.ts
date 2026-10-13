@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { estJourCivilReel } from "@/lib/dates";
 import { requireMesure, requireRisque } from "@/lib/auth/scope";
 import { tousRisquesConnus } from "@/lib/referentiels";
 import { statutUIVersAction } from "./mapping";
@@ -101,9 +102,13 @@ const mesureCustomSchema = z.object({
   libelle: z.string().trim().min(1, "Libellé requis").max(300),
   type: z.enum(TYPES_ACTION),
   statut: z.enum(STATUTS_DUERP),
+  // Un jour réel avant `new Date(v)` (ASVS V2.2.1, 2026-10-13) : « n'importe
+  // quoi » faisait une date invalide refusée en 500 par Prisma, et
+  // « 2026-04-31 » devenait le 1er mai.
   echeance: z
     .string()
     .trim()
+    .refine(estJourCivilReel, "Cette date n'existe pas")
     .optional()
     .or(z.literal("").transform(() => undefined))
     .transform((v) => (v ? new Date(v) : undefined)),
@@ -159,6 +164,7 @@ const patchSchema = z.object({
   type: z.enum(TYPES_ACTION).optional(),
   echeance: z
     .string()
+    .refine(estJourCivilReel, "Cette date n'existe pas")
     .optional()
     .or(z.literal("").transform(() => null))
     .transform((v) =>

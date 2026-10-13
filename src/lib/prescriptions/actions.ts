@@ -5,7 +5,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
-import { cleJourCivil, depuisCleJourCivil } from "@/lib/dates";
+import { cleJourCivil, depuisCleJourCivil, estJourCivilReel } from "@/lib/dates";
 import { validerPrescription } from "./schema";
 import { compterLignesAvecPreuve } from "./preuves";
 import { chargerLignesVisees } from "./lecture-preuves";
@@ -118,10 +118,12 @@ export async function leverPrescription(
 
   const brut = formData.get("dateFin");
   const dateFin = typeof brut === "string" ? brut.trim() : "";
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateFin)) {
+  // Un jour réel, pas seulement un motif : « 2026-13-45 » passait le motif
+  // et s'enregistrait comme le 2027-02-14 (ASVS V2.2.1, 2026-10-13).
+  if (!estJourCivilReel(dateFin)) {
     return {
       status: "error",
-      message: "Date de levée attendue au format AAAA-MM-JJ.",
+      message: "Date de levée invalide : un jour qui existe, au format AAAA-MM-JJ.",
     };
   }
 

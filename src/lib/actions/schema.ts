@@ -1,4 +1,4 @@
-import { depuisCleJourCivil } from "@/lib/dates";
+import { depuisCleJourCivil, estJourCivilReel } from "@/lib/dates";
 import { z } from "zod";
 import type { TypeAction } from "@prisma/client";
 
@@ -84,6 +84,7 @@ export const actionVerificationSchema = z.object({
     z
       .string()
       .regex(DATE_FMT, "Format attendu : AAAA-MM-JJ")
+      .refine(estJourCivilReel, "Cette date n'existe pas")
       .optional()
       .transform((v) => (v ? depuisCleJourCivil(v) : undefined)),
   ),

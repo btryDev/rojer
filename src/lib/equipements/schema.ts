@@ -1,4 +1,4 @@
-import { depuisCleJourCivil } from "@/lib/dates";
+import { depuisCleJourCivil, estJourCivilReel } from "@/lib/dates";
 import { z } from "zod";
 import { CATEGORIES_EQUIPEMENT } from "@/lib/referentiels/types-communs";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
@@ -337,6 +337,7 @@ export const equipementSchema = z
       z
         .string()
         .regex(DATE_FMT, "Format attendu : AAAA-MM-JJ")
+        .refine(estJourCivilReel, "Cette date n'existe pas")
         .optional()
         .transform((v) => (v ? depuisCleJourCivil(v) : undefined)),
     ),
@@ -348,6 +349,7 @@ export const equipementSchema = z
       z
         .string()
         .regex(DATE_FMT, "Format attendu : AAAA-MM-JJ")
+        .refine(estJourCivilReel, "Cette date n'existe pas")
         .optional()
         .transform((v) => (v ? depuisCleJourCivil(v) : undefined)),
     ),
@@ -469,6 +471,31 @@ export const equipementSchema = z
   });
 
 export type EquipementInput = z.infer<typeof equipementSchema>;
+
+/**
+ * Les entrées de `creerEquipementsDepuisPreRemplissage` (ASVS V2.2.1,
+ * 2026-10-13). Le tableau venait du client sans aucune borne : 5 000 appareils
+ * créés en un appel, un libellé d'un mégaoctet.
+ *
+ * LA BORNE VIENT DE L'ÉCRAN. `PreRemplissagePanel` n'envoie que des
+ * suggestions cochées, et `suggererEquipements` en produit au plus une par
+ * catégorie (il déduplique par catégorie). Une liste légitime compte donc au
+ * plus autant d'entrées qu'il y a de catégories, sans doublon — tout le reste
+ * est un appel forgé. Catégorie et libellé reprennent les règles de la saisie
+ * à la main (`equipementSchema`), et non une seconde version.
+ */
+export const preRemplissageSchema = z
+  .array(
+    z.object({
+      categorie: equipementSchema.shape.categorie,
+      libelle: equipementSchema.shape.libelle,
+    }),
+  )
+  .max(CATEGORIES_EQUIPEMENT.length)
+  .refine(
+    (entrees) => new Set(entrees.map((e) => e.categorie)).size === entrees.length,
+    "Une catégorie au plus une fois",
+  );
 
 /**
  * Normalise un `FormData` de formulaire d'équipement avant validation Zod.

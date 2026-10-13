@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { DUREES_SURVEILLANCE_MINUTES, IDS_MESURES_COURANTES } from "./referentiel";
-import { depuisSaisieDateHeure } from "@/lib/dates";
+import { depuisSaisieDateHeure, estSaisieDateHeureReelle } from "@/lib/dates";
 import { NatureTravauxPointChaud } from "@prisma/client";
 
 const DATETIME_FMT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/;
@@ -71,12 +71,14 @@ export const permisFeuSchema = z
     dateDebut: z
       .string()
       .regex(DATETIME_FMT, "Format attendu : AAAA-MM-JJTHH:MM")
+      .refine(estSaisieDateHeureReelle, "Cette date ou cette heure n'existe pas")
       // Ancré sur Europe/Paris : `new Date(v)` sur une chaîne sans offset suit
       // le fuseau du serveur (ADR-011).
       .transform((v) => depuisSaisieDateHeure(v)),
     dateFin: z
       .string()
       .regex(DATETIME_FMT, "Format attendu : AAAA-MM-JJTHH:MM")
+      .refine(estSaisieDateHeureReelle, "Cette date ou cette heure n'existe pas")
       // Ancré sur Europe/Paris : `new Date(v)` sur une chaîne sans offset suit
       // le fuseau du serveur (ADR-011).
       .transform((v) => depuisSaisieDateHeure(v)),
