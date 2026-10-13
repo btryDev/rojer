@@ -576,6 +576,12 @@ constat qui ne rejoint pas cette liste se perd** — c'est la leçon du § 7.
   d'Ariane sur `/carnet-sanitaire`. L'ADR-014 sépare les deux assertions ; ici
   elles désignent la même relation.
   [2026-10-13, contrôle visuel (session de l'autre Mac) : `next build` + `next start` en local, `main` à 4f6de986, base Docker locale, dossier « Le Comptoir des Halles » déjà semé — DÉFAUT CONFIRMÉ ; la page Zones emploie aussi le retour.]
+  [2026-10-13 : permis de feu, plan de prévention et Zones passent au fil
+  d'Ariane (`lot/controle-visuel-1310`, rojer-outils-34). RESTE, après le
+  lancement : huit pages d'entrée portent encore « ← Établissement » en dur —
+  actions, équipe, DUERP, modifier, états permanents, prescriptions, « quand
+  ça arrive », prestataires (ADR-014 : sur une page d'entrée, le lien vers
+  l'établissement dit où la page vit).]
 
 - ~~**`SupprimerEtablissementButton` n'est monté sur aucun écran**, donc il
   n'existe aucun endroit d'où supprimer un établissement.~~ **RÉSOLU le
