@@ -369,3 +369,23 @@ export function texteOuVisible(o: Obligation): string {
   }
   return libelles.join(" · ");
 }
+
+/**
+ * La légende des écrans, pour un lecteur qui ne connaît pas l'application
+ * (2026-10-13, demande de la propriétaire). Exhaustive au compilateur sur les
+ * surfaces ; les deux entrées « porteur » suivent `texteOuVisible`.
+ */
+export const LEGENDE_SURFACE: Record<Surface, string> = {
+  calendrier:
+    "les échéances datées (vérifications, contrôles), avec les retards et ce qui arrive dans les 30 jours.",
+  etats_permanents:
+    "ce qui doit exister en permanence, sans date (affichages, consignes, documents à détenir) ; le dirigeant le coche.",
+  faits: "ce qui se déclenche à un événement (embauche, panne, travaux).",
+  fiche_salarie: "les titres et visites dus à une personne, datés depuis son entrée.",
+  niveau_audit: "les obligations nommées et sourcées, mais non suivies au quotidien.",
+};
+
+export const LEGENDE_PORTEURS: ReadonlyArray<readonly [string, string]> = [
+  ["fiche de l'équipement", "les échéances propres à un appareil déclaré."],
+  ["Équipe (titres déclarés par salarié)", "les titres que le dirigeant déclare pour chaque salarié."],
+];

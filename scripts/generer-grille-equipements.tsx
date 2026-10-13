@@ -80,9 +80,13 @@ import {
 import {
   LEGENDE_REGIME,
   pourHelvetica as t,
+  LEGENDE_PORTEURS,
+  LEGENDE_SURFACE,
+  LIBELLE_SURFACE,
   texteOuVisible,
   texteTypologie,
 } from "@/lib/pdf/textes-grille-relecture";
+import { SURFACES } from "@/lib/surfaces/obligations-sans-surface";
 import { ReferenceDetaillee } from "@/lib/pdf/ReferenceDetaillee";
 import {
   DESCRIPTION_CATEGORIE,
@@ -653,6 +657,20 @@ function PagePropositions({
               : `Ce sont des propositions, rien n'est décidé : ${fermes.length} lignes que nous proposons de passer au niveau audit, à valider ou non.`,
           )}
         </Text>
+      </View>
+
+      {/* 2026-10-13 : la légende des écrans nommés par « Visible : … ». */}
+      <View style={[BOARD_PDF.carte, { marginTop: 4 }]} wrap={false}>
+        <Text style={BOARD_PDF.eyebrow}>Où le dirigeant voit une obligation</Text>
+        {[
+          ...SURFACES.map((s2) => [LIBELLE_SURFACE[s2], LEGENDE_SURFACE[s2]] as const),
+          ...LEGENDE_PORTEURS,
+        ].map(([nom, explication]) => (
+          <Text key={nom} style={{ fontSize: 9.5, lineHeight: 1.5, marginTop: 4, color: BOARD.ardoiseEncre }}>
+            <Text style={{ fontFamily: "Helvetica-Bold", color: BOARD.bleuEncre }}>{t(nom)}</Text>
+            {t(` — ${explication}`)}
+          </Text>
+        ))}
       </View>
 
       {dejaAudit.length > 0 && (
