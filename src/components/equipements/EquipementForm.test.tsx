@@ -102,3 +102,78 @@ describe("EquipementForm : « désenfumage mécanique » exigé en ERP des quatr
     expect(n5.required).toBe(false);
   });
 });
+
+describe("EquipementForm : l'aide au-dessus des questions exigées du levage (reprise des suites du lot 3)", () => {
+  // Un appareil ancien ne s'enregistre plus sans ces réponses : la fiche dit
+  // pourquoi, avec les rythmes de l'art. 23 et les mots « manuel » /
+  // « motorisé » du 2026-10-08. Éprouvé en retirant le paragraphe, puis en
+  // retirant la garde sur la catégorie.
+  const rendre = (categorie: string, regime = REGIME_TRAVAIL) =>
+    render(
+      <EquipementForm
+        action={action}
+        libelleSubmit="Enregistrer"
+        estERP={regime.estERP}
+        valeursInitiales={{ categorie: categorie as typeof LEVAGE }}
+        questionsExigees={questionsExigeesParCategorie(regime)}
+      />,
+    ).container;
+
+  const net = (t: string | null | undefined) => (t ?? "").replace(/\s+/g, " ").trim();
+
+  // Revue du 2026-10-13 (C1) : des sous-chaînes isolées laissaient passer un
+  // rythme rattaché à la mauvaise condition (« trois mois s'il est
+  // motorisé… »). Chaque puce se vérifie en entier, rythme ET condition.
+  // Éprouvé en remettant ce mutant. Les segments sont ceux de l'art. 23 et du
+  // III de l'art. 20 (corpus `arrete-2004-03-01-levage.ts`) ; on ne compte
+  // pas les puces, on exige que chacune de ces règles y soit, mot pour mot.
+  it("levage : chaque rythme de l'art. 23 se lit avec sa condition entière", () => {
+    const aide = rendre(LEVAGE).querySelector("#aide-reponses-exigees");
+    expect(net(aide?.textContent)).toContain("(arrêté du 1er mars 2004, art. 23)");
+    expect(net(aide?.textContent)).toContain("y compris pour un appareil déjà enregistré");
+    const puces = [...(aide?.querySelectorAll("li") ?? [])].map((li) => net(li.textContent));
+    for (const regle of [
+      "tous les douze mois en principe ;",
+      "tous les six mois s'il figure à la liste de l'art. 20-II ;",
+      "tous les six mois s'il est manuel et n'est pas conçu spécialement pour lever des personnes (art. 20-III) ;",
+      "tous les six mois s'il est motorisé et sert au transport de personnes ou à élever un poste de travail ;",
+      "tous les trois mois s'il est manuel et sert à élever un poste de travail.",
+    ]) {
+      expect(puces, regle).toContain(regle);
+    }
+    // BORNE HAUTE (revue du 2026-10-13) : la boucle ci-dessus exige que
+    // chaque règle soit là, elle ne voit pas une puce de trop qui dirait le
+    // contraire. Deux rattachements que l'art. 23 et le III de l'art. 20
+    // excluent, quelle que soit la puce qui les porterait : trois mois pour
+    // un appareil motorisé (le b) ne vise que la force humaine), et six mois
+    // pour un appareil manuel sans la réserve « non conçus spécialement pour
+    // lever des personnes ». Éprouvé en ajoutant une puce
+    // « tous les trois mois s'il est motorisé … ».
+    for (const puce of puces) {
+      if (puce.includes("trois mois")) expect(puce, puce).not.toContain("motorisé");
+      if (puce.includes("six mois") && puce.includes("manuel")) {
+        expect(puce, puce).toContain("n'est pas conçu spécialement pour lever des personnes");
+      }
+    }
+  });
+
+  // C2 : l'aide de la question « manuel » (7f8a6433) disait « six mois » sans
+  // la condition de l'art. 20-III. Elle se corrige avec l'aide ci-dessus.
+  it("levage : l'aide de la question « manuel » rend la condition de l'art. 20-III", () => {
+    const aide = net(rendre(LEVAGE).querySelector("#estMuParForceHumaine-aide")?.textContent);
+    expect(aide).toContain(
+      "Si oui, la vérification générale a lieu tous les trois mois s'il sert à élever un poste de travail ; sinon, tous les six mois s'il n'est pas conçu spécialement pour lever des personnes (arrêté du 1er mars 2004, art. 20-III et 23).",
+    );
+  });
+
+  it("une autre catégorie : aucune aide", () => {
+    expect(rendre("EXTINCTEUR").querySelector("#aide-reponses-exigees")).toBeNull();
+  });
+
+  it("désenfumage d'un ERP N3, dont la réponse est exigée : pas l'aide du levage", () => {
+    const n3 = { estERP: true, typeErp: "M" as const, categorieErp: "N3" as const, ssiCategorieAouB: null };
+    // Le cas n'a de sens que si la question y est bien exigée.
+    expect(questionsExigeesPour("DESENFUMAGE", n3)).toContain("estDesenfumageMecanique");
+    expect(rendre("DESENFUMAGE", n3).querySelector("#aide-reponses-exigees")).toBeNull();
+  });
+});

@@ -13,6 +13,12 @@ const h = vi.hoisted(() => {
     nbTraces: 0,
     supprimesPhysiquement: [] as string[],
     crees: [] as Record<string, unknown>[],
+    /** Lignes reçues par `createMany`, pour prouver qu'un refus n'écrit rien. */
+    creesEnLot: [] as unknown[],
+    /** Les UPDATE reçus par le faux `$executeRaw`, tels qu'émis. */
+    requetes: [] as { sql: string; valeurs: unknown[] }[],
+    /** Une écriture concurrente, jouée APRÈS la lecture de l'appareil. */
+    apresLecture: null as null | (() => void),
     /** La réponse à « Fournissez-vous des EPI ? », et l'ordre des écritures. */
     etablissement: { id: "etab-1", epiPresents: false as boolean | null },
     journal: [] as string[],
@@ -26,8 +32,14 @@ const h = vi.hoisted(() => {
 
   const prisma = {
     equipement: {
-      findUnique: async ({ where }: { where: { id: string } }) =>
-        db.equipements.find((e) => e.id === where.id) ?? null,
+      // Une PHOTO, comme la base en rend une : la modifier après coup ne
+      // change pas ce que l'appelant a lu.
+      findUnique: async ({ where }: { where: { id: string } }) => {
+        const e = db.equipements.find((x) => x.id === where.id);
+        const photo = e ? structuredClone(e) : null;
+        db.apresLecture?.();
+        return photo;
+      },
       update: async ({
         where,
         data,
@@ -49,9 +61,35 @@ const h = vi.hoisted(() => {
         db.crees.push(data);
         return { id: "eq-nouveau" };
       },
-      createMany: async ({ data }: { data: unknown[] }) => ({
-        count: data.length,
-      }),
+      createMany: async ({ data }: { data: unknown[] }) => {
+        db.creesEnLot.push(...data);
+        return { count: data.length };
+      },
+    },
+    // Le faux `$executeRaw` applique la fusion CLÉ À CLÉ que la base applique
+    // à un `jsonb_set` d'une seule ligne. Il reproduit cette sémantique, il ne
+    // la démontre pas : ce que le test prouve, c'est que l'action la délègue
+    // à la base au lieu de fusionner tout l'objet elle-même (même limite que
+    // `activites/actions.test.ts`).
+    $executeRaw: async (strings: TemplateStringsArray, ...valeurs: unknown[]) => {
+      db.requetes.push({ sql: strings.join("?"), valeurs });
+      const [cle, valeur, id, etablissementId] = valeurs as [string, boolean, string, string];
+      // La garde « actif » (revue du 2026-10-13, R2) n'est appliquée que si le
+      // SQL la porte : le faux joue ce que la requête dit, pas ce qu'on espère.
+      const exigeActif = /"actif"\s*=\s*true/.test(strings.join("?"));
+      const e = db.equipements.find(
+        (x) =>
+          x.id === id &&
+          x.etablissementId === etablissementId &&
+          (!exigeActif || x.actif === true),
+      ) as (Record<string, unknown> & { caracteristiques?: unknown }) | undefined;
+      if (!e) return 0;
+      const base =
+        e.caracteristiques !== null && typeof e.caracteristiques === "object" && !Array.isArray(e.caracteristiques)
+          ? (e.caracteristiques as Record<string, unknown>)
+          : {};
+      e.caracteristiques = { ...base, [cle]: valeur };
+      return 1;
     },
     verification: {
       count: async () => db.nbTraces,
@@ -124,6 +162,9 @@ beforeEach(() => {
   h.db.nbTraces = 0;
   h.db.supprimesPhysiquement = [];
   h.db.crees = [];
+  h.db.creesEnLot = [];
+  h.db.requetes = [];
+  h.db.apresLecture = null;
   h.db.etablissement = { id: "etab-1", epiPresents: false };
   h.db.journal = [];
   h.db.regime = { estERP: false, typeErp: null, categorieErp: null, ssiCategorieAouB: null };
@@ -398,6 +439,77 @@ describe("repondreQuestionEquipement : la relance d'un appareil muet (D29 (a))",
   });
 });
 
+describe("relance d'un appareil muet : une clé écrite par la base (reprise des suites du lot 3)", () => {
+  // La fusion lecture-puis-écriture de tout l'objet JSON écrasait une
+  // écriture concurrente. Éprouvé en remettant la fusion naïve
+  // (`equipement.update` avec `{ ...avant, [champ]: reponse }`).
+  const LEVAGE = CATEGORIES_A_REPONSE_EXIGEE[0];
+  const [champ, autre] = questionsExigeesPour(LEVAGE, REGIME_TRAVAIL);
+  const reponse = (v: string) => {
+    const fd = new FormData();
+    fd.set("reponse", v);
+    return fd;
+  };
+  beforeEach(() => {
+    Object.assign(h.db.equipements[0], {
+      etablissementId: "etab-1",
+      categorie: LEVAGE,
+      caracteristiques: { notes: "garder" },
+    });
+  });
+
+  it("deux réponses simultanées : celle écrite entre la lecture et l'écriture survit", async () => {
+    // La seconde relance du même appareil, répondue pendant que la première
+    // est entre sa lecture et son écriture.
+    h.db.apresLecture = () => {
+      const e = h.db.equipements[0] as { caracteristiques?: Record<string, unknown> };
+      e.caracteristiques = { ...(e.caracteristiques ?? {}), [autre]: true };
+    };
+    const r = await repondreQuestionEquipement("eq-1", champ, { status: "idle" }, reponse("non"));
+    expect(r.status).toBe("success");
+    expect((h.db.equipements[0] as { caracteristiques?: unknown }).caracteristiques).toEqual({
+      notes: "garder",
+      [autre]: true,
+      [champ]: false,
+    });
+  });
+
+  it("lie la clé, le booléen et les deux identifiants, sans les concaténer dans le SQL", async () => {
+    await repondreQuestionEquipement("eq-1", champ, { status: "idle" }, reponse("oui"));
+    expect(h.db.requetes).toHaveLength(1);
+    const [{ sql, valeurs }] = h.db.requetes;
+    expect(valeurs).toEqual([champ, true, "eq-1", "etab-1"]);
+    expect(sql).not.toContain(champ);
+    expect(sql).toContain("jsonb_set");
+    expect(sql).toContain("\"updatedAt\" = NOW() AT TIME ZONE 'UTC'");
+  });
+
+  it("aucune ligne touchée : l'erreur est dite, rien n'est régénéré", async () => {
+    h.db.apresLecture = () => {
+      h.db.equipements = [];
+    };
+    const r = await repondreQuestionEquipement("eq-1", champ, { status: "idle" }, reponse("oui"));
+    expect(r.status).toBe("error");
+    expect(h.genererCalendrier).not.toHaveBeenCalled();
+  });
+
+  // Revue du 2026-10-13, R2 : la garde `estAppareilRetire` lit la photo ;
+  // un retrait entre la lecture et l'écriture passait. Éprouvé en retirant
+  // `AND "actif" = true` du WHERE.
+  it("appareil retiré entre la lecture et l'écriture : zéro ligne, l'erreur est dite, rien n'est écrit ni régénéré", async () => {
+    h.db.apresLecture = () => {
+      h.db.equipements[0].actif = false;
+    };
+    const r = await repondreQuestionEquipement("eq-1", champ, { status: "idle" }, reponse("oui"));
+    expect(r.status).toBe("error");
+    expect((r as { message?: string }).message).toContain("retiré du parc");
+    expect((h.db.equipements[0] as { caracteristiques?: unknown }).caracteristiques).toEqual({
+      notes: "garder",
+    });
+    expect(h.genererCalendrier).not.toHaveBeenCalled();
+  });
+});
+
 describe("un EPI déclaré contredit un « non » aux EPI (relecture indépendante du 2026-10-12, B2)", () => {
   function epi(categorie: string): FormData {
     const fd = new FormData();
@@ -517,5 +629,76 @@ describe("décision du 2026-10-13 : « groupe électrogène » exigé pour une i
     expect((h.db.equipements[0] as { caracteristiques?: unknown }).caracteristiques).toEqual({
       aGroupeElectrogene: false,
     });
+  });
+});
+
+describe("pré-remplissage : la porte des réponses exigées tient aussi pour un appel forgé (reprise des suites du lot 3)", () => {
+  // `suggererEquipements` ne propose aucune catégorie à réponse exigée ;
+  // l'action serveur, elle, reçoit ce qu'on lui poste. Le refus lit
+  // `questionsExigeesPour` dans le régime de l'établissement, comme
+  // `creerEquipement`. Éprouvé en retirant le refus.
+  it("levage : refusé en bloc, rien n'est écrit, l'appartenance est contrôlée d'abord", async () => {
+    const [levage] = CATEGORIES_A_REPONSE_EXIGEE;
+    await expect(
+      creerEquipementsDepuisPreRemplissage("etab-1", [
+        { categorie: "EXTINCTEUR", libelle: "Extincteur" },
+        { categorie: levage, libelle: "Palan" },
+      ]),
+    ).rejects.toThrow(levage);
+    expect(h.db.creesEnLot).toHaveLength(0);
+    expect(h.genererCalendrier).not.toHaveBeenCalled();
+    expect(h.assertOwnership).toHaveBeenCalledWith("etab-1");
+  });
+
+  it("désenfumage dans un ERP N3 (décision du 2026-10-08) : refusé, rien n'est écrit", async () => {
+    h.db.regime = { estERP: true, typeErp: "M", categorieErp: "N3", ssiCategorieAouB: null };
+    await expect(
+      creerEquipementsDepuisPreRemplissage("etab-1", [
+        { categorie: "DESENFUMAGE", libelle: "Désenfumage" },
+      ]),
+    ).rejects.toThrow("DESENFUMAGE");
+    expect(h.db.creesEnLot).toHaveLength(0);
+  });
+
+  it("désenfumage là où la question est facultative : créé, comme par le formulaire", async () => {
+    const r = await creerEquipementsDepuisPreRemplissage("etab-1", [
+      { categorie: "DESENFUMAGE", libelle: "Désenfumage" },
+    ]);
+    expect(r.created).toBe(1);
+    expect(h.db.creesEnLot).toHaveLength(1);
+  });
+
+  it("ce que le pré-remplissage propose est créé", async () => {
+    const r = await creerEquipementsDepuisPreRemplissage("etab-1", [
+      { categorie: "EXTINCTEUR", libelle: "Extincteur" },
+      { categorie: "BAES", libelle: "BAES" },
+    ]);
+    expect(r.created).toBe(2);
+    expect(h.db.creesEnLot).toHaveLength(2);
+  });
+
+  // Revue du 2026-10-13, R1 : une catégorie forgée n'atteint ni le cache de
+  // `questionsExigeesPour` ni la base. Éprouvé en retirant le filtre sur
+  // `CATEGORIES_EQUIPEMENT`.
+  it("catégorie inconnue : refusée en bloc, avant de lire le régime, rien n'est écrit", async () => {
+    let regimeLu = false;
+    const lire = h.prisma.etablissement.findUnique;
+    h.prisma.etablissement.findUnique = async () => {
+      regimeLu = true;
+      return h.db.regime;
+    };
+    try {
+      await expect(
+        creerEquipementsDepuisPreRemplissage("etab-1", [
+          { categorie: "EXTINCTEUR", libelle: "Extincteur" },
+          { categorie: "PAS_UNE_CATEGORIE" as never, libelle: "Forgé" },
+        ]),
+      ).rejects.toThrow("PAS_UNE_CATEGORIE");
+    } finally {
+      h.prisma.etablissement.findUnique = lire;
+    }
+    expect(regimeLu).toBe(false);
+    expect(h.db.creesEnLot).toHaveLength(0);
+    expect(h.genererCalendrier).not.toHaveBeenCalled();
   });
 });
