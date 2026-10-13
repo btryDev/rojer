@@ -315,7 +315,7 @@ async function deposerRapportLabo(
 > {
   const fichier = formData.get("rapport");
   if (!(fichier instanceof File) || fichier.size === 0) return { ok: true, rapport: null };
-  const val = validerFichier(fichier);
+  const val = await validerFichier(fichier);
   if (!val.ok) return { ok: false, message: val.erreur };
   // Rapport de laboratoire joint, mais pas de stockage configuré : refus
   // avec le motif exact, avant toute écriture (2026-09-27).

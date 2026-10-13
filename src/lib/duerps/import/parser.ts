@@ -1,4 +1,6 @@
+import { inflateRawSync } from "node:zlib";
 import * as XLSX from "xlsx";
+import { lireEnTeteLocal, lireRepertoireCentral } from "@/lib/fichiers/repertoire-zip";
 
 /**
  * Parseur de DUERP Excel / CSV.
@@ -268,6 +270,15 @@ function lireClasseur(buffer: ArrayBuffer | Buffer | Uint8Array): XLSX.WorkBook 
   // sentinelle qui dit que le fichier dépasse (cf. `LIGNES_MAX_IMPORT`).
   const options = { sheetRows: LIGNES_MAX_IMPORT + 2 };
   const octets = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+  // La borne de taille décompressée, AVANT SheetJS. Un CSV précédé d'un BOM
+  // est lu en texte sans ce BOM : si ce qui suit est une archive, SheetJS la
+  // décompresse aussi — on contrôle donc ce qu'il verra.
+  const bom = octets[0] === 0xef && octets[1] === 0xbb && octets[2] === 0xbf;
+  const contenu = bom ? octets.subarray(3) : octets;
+  if (routeVersZip(contenu)) {
+    const refus = controlerArchive(contenu);
+    if (refus) throw new RefusArchive(refus);
+  }
   const zip = octets[0] === 0x50 && octets[1] === 0x4b;
   const ole = octets[0] === 0xd0 && octets[1] === 0xcf && octets[2] === 0x11;
   if (!zip && !ole) {
@@ -285,6 +296,118 @@ function lireClasseur(buffer: ArrayBuffer | Buffer | Uint8Array): XLSX.WorkBook 
     }
   }
   return XLSX.read(buffer, { type: "buffer", ...options });
+}
+
+/**
+ * La taille, une fois décompressé, d'un classeur zip (.xlsx, .ods, .xlsb)
+ * qu'on accepte de confier à SheetJS — toutes entrées comprises.
+ *
+ * `LIGNES_MAX_IMPORT` ne suffit pas : SheetJS décompresse TOUTE l'archive
+ * avant de lire une cellule. Un .xlsx de 4,31 Mo portant 158 Mo de XML faisait
+ * monter le tas de 98 à 465 Mo, borne de lignes comprise (audit ASVS du
+ * 2026-10-13, V5.2.3).
+ *
+ * 20 Mo : un classeur de 5 000 lignes — la borne — à huit colonnes de texte
+ * long en occupe 3,7 Mo en .xlsx et 6,6 Mo en .ods, mesuré le 2026-10-13. La
+ * marge est de trois à cinq fois, et quatre fois la taille brute admise
+ * (`TAILLE_MAX_IMPORT_OCTETS`, 5 Mo) : une image incompressible jointe au
+ * classeur passe.
+ */
+export const TAILLE_DECOMPRESSEE_MAX_IMPORT = 20 * 1024 * 1024;
+
+/**
+ * Le nombre d'entrées d'un classeur zip. Un .xlsx d'Excel en compte une
+ * dizaine, quelques dizaines avec des images, des thèmes, plusieurs feuilles ;
+ * un .ods, six. Mille laisse plus d'un ordre de grandeur, et borne le travail
+ * de la vérification ci-dessous (une décompression par entrée).
+ */
+export const ENTREES_ZIP_MAX_IMPORT = 1000;
+
+/**
+ * Les octets que SheetJS (`readSync`, xlsx 0.20.3) envoie à sa lecture zip :
+ * `P K` puis deux octets inférieurs à 9. La même condition, ni plus large ni
+ * plus étroite — seuls ces fichiers-là sont décompressés.
+ *
+ * Les autres formats n'ont pas besoin de cette borne, et la taille brute de
+ * 5 Mo (`TAILLE_MAX_IMPORT_OCTETS`) suffit à les tenir :
+ *   - le .xls est un conteneur OLE (CFB) : des secteurs lus tels quels, sans
+ *     compression — ce qui est en mémoire est de l'ordre de ce qui a été
+ *     déposé ; un .xlsx chiffré dans un CFB est refusé par SheetJS ;
+ *   - le CSV et les autres textes (HTML, SYLK, DIF…) sont lus caractère par
+ *     caractère : aucun facteur d'expansion, et `sheetRows` borne les
+ *     cellules construites.
+ */
+function routeVersZip(o: Uint8Array): boolean {
+  return o.length >= 4 && o[0] === 0x50 && o[1] === 0x4b && o[2] < 0x09 && o[3] < 0x09;
+}
+
+class RefusArchive extends Error {}
+
+const MESSAGE_ILLISIBLE =
+  "Fichier illisible : il n'a pas pu être ouvert comme un tableur. Vérifiez qu'il s'agit bien d'un fichier Excel (.xlsx / .xls) ou CSV, et qu'il s'ouvre dans votre tableur.";
+
+const MESSAGE_TROP_DECOMPRESSE = `Fichier refusé : une fois décompressé, ce classeur dépasse ${TAILLE_DECOMPRESSEE_MAX_IMPORT / 1024 / 1024} Mo. Rien n'a été importé — un DUERP en occupe quelques centaines de kilo-octets. Enregistrez-le à nouveau depuis votre tableur, sans images ni feuilles inutiles, ou exportez-le en CSV.`;
+
+/**
+ * Contrôle un classeur zip avant SheetJS ; rend le motif du refus, ou `null`.
+ *
+ * 1. LES TAILLES DÉCLARÉES, sans rien décompresser : le répertoire central
+ *    (`lireRepertoireCentral`) donne le nombre d'entrées et la taille
+ *    décompressée annoncée de chacune. Refus au-delà des bornes.
+ * 2. LES TAILLES RÉELLES, parce que les déclarées peuvent mentir : SheetJS
+ *    n'en tient aucun compte et décompresse chaque flux jusqu'à sa fin. On
+ *    décompresse donc chaque entrée là où SheetJS la lira (en-tête LOCAL,
+ *    méthode locale), avec `maxOutputLength` réglé sur ce qui reste du budget :
+ *    zlib s'arrête à la borne, et la mémoire tenue ne dépasse jamais
+ *    `TAILLE_DECOMPRESSEE_MAX_IMPORT` — la sortie est relâchée entrée par
+ *    entrée. Une entrée citée deux fois par le répertoire est comptée deux
+ *    fois, comme SheetJS la décompresse deux fois.
+ *
+ * L'en-tête local porte aussi une taille déclarée, que SheetJS utilise pour
+ * ALLOUER son tampon de sortie : elle est bornée de même.
+ *
+ * LIMITE QUI RESTE. Le contrôle repose sur zlib, la lecture sur l'inflateur
+ * JavaScript de SheetJS. Pour un flux deflate valide, les deux rendent les
+ * mêmes octets ; un flux que zlib rejette est refusé ici. Un flux invalide
+ * pour zlib mais accepté par SheetJS ne passe donc pas — l'écart inverse
+ * (valide pour zlib, lu plus long par SheetJS) supposerait un défaut de
+ * l'inflateur de SheetJS, que ce contrôle ne couvre pas.
+ */
+function controlerArchive(octets: Uint8Array): string | null {
+  const entrees = lireRepertoireCentral(octets);
+  if (!entrees) return MESSAGE_ILLISIBLE;
+  if (entrees.length > ENTREES_ZIP_MAX_IMPORT) {
+    return `Fichier refusé : ce classeur contient plus de ${ENTREES_ZIP_MAX_IMPORT} éléments internes, quand un tableur ordinaire en compte quelques dizaines. Rien n'a été importé. Enregistrez-le à nouveau depuis votre tableur, ou exportez-le en CSV.`;
+  }
+  let declaree = 0;
+  for (const e of entrees) declaree += e.tailleDecompressee;
+  if (declaree > TAILLE_DECOMPRESSEE_MAX_IMPORT) return MESSAGE_TROP_DECOMPRESSE;
+
+  let reelle = 0;
+  for (const e of entrees) {
+    const local = lireEnTeteLocal(octets, e.decalageLocal);
+    if (!local) return MESSAGE_ILLISIBLE;
+    const reste = TAILLE_DECOMPRESSEE_MAX_IMPORT - reelle;
+    if (local.tailleDecompressee > reste) return MESSAGE_TROP_DECOMPRESSE;
+    if (local.methode === 0) {
+      // Stockée : SheetJS en prend une tranche du fichier, sans expansion.
+      reelle += Math.min(local.tailleCompressee, octets.length - local.debutDonnees);
+    } else if (local.methode === 8) {
+      try {
+        reelle += inflateRawSync(octets.subarray(local.debutDonnees), {
+          maxOutputLength: Math.max(reste, 1),
+        }).length;
+      } catch (err) {
+        return (err as { code?: string }).code === "ERR_BUFFER_TOO_LARGE"
+          ? MESSAGE_TROP_DECOMPRESSE
+          : MESSAGE_ILLISIBLE;
+      }
+    } else {
+      return MESSAGE_ILLISIBLE; // SheetJS ne lit que stockée ou deflate.
+    }
+    if (reelle > TAILLE_DECOMPRESSEE_MAX_IMPORT) return MESSAGE_TROP_DECOMPRESSE;
+  }
+  return null;
 }
 
 /**
@@ -354,10 +477,8 @@ export function parserFichierDuerp(
   let wb: XLSX.WorkBook;
   try {
     wb = lireClasseur(buffer);
-  } catch {
-    return refusFichier(
-      "Fichier illisible : il n'a pas pu être ouvert comme un tableur. Vérifiez qu'il s'agit bien d'un fichier Excel (.xlsx / .xls) ou CSV, et qu'il s'ouvre dans votre tableur.",
-    );
+  } catch (err) {
+    return refusFichier(err instanceof RefusArchive ? err.message : MESSAGE_ILLISIBLE);
   }
   const firstSheetName = wb.SheetNames[0];
   if (!firstSheetName) return refusFichier("Fichier vide");

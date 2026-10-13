@@ -123,7 +123,7 @@ export async function uploadRapport(
       fieldErrors: { fichier: ["Sélectionnez un fichier à uploader"] },
     };
   }
-  const val = validerFichier(fichier);
+  const val = await validerFichier(fichier);
   if (!val.ok) {
     return {
       status: "error",
