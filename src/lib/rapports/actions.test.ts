@@ -375,9 +375,14 @@ describe("uploadRapport — un rapport réalisé : la ligne se recalcule sur lui
     const original = verification.updateMany;
     verification.updateMany = () => Promise.resolve({ count: 0 });
 
-    const res = await deposer("conforme", "2026-06-01");
-
-    verification.updateMany = original;
+    // Restauré en `finally` : un remplacement qui survit à un échec fausse
+    // les tests suivants du fichier (revue du 2026-10-13).
+    let res: Awaited<ReturnType<typeof deposer>>;
+    try {
+      res = await deposer("conforme", "2026-06-01");
+    } finally {
+      verification.updateMany = original;
+    }
     expect(res.status).toBe("error");
     expect(res.status === "error" && res.message).toMatch(/modifiée/);
     expect(rapports()).toEqual([]);
@@ -830,9 +835,11 @@ describe("supprimerRapport — la ligne se recalcule sur ce qui reste (ADR-036)"
     const original = verification.updateMany;
     verification.updateMany = () => Promise.resolve({ count: 0 });
 
-    await expect(supprimerRapport("rap-1")).rejects.toThrow("Cette échéance a été modifiée");
-
-    verification.updateMany = original;
+    try {
+      await expect(supprimerRapport("rap-1")).rejects.toThrow("Cette échéance a été modifiée");
+    } finally {
+      verification.updateMany = original;
+    }
     expect(rapports().map((r) => r.id)).toEqual(["rap-1"]);
     expect(ligne().datePrevue).toEqual(d("2027-06-01"));
   });
@@ -848,9 +855,14 @@ describe("supprimerRapport — la ligne se recalcule sur ce qui reste (ADR-036)"
     rv.findUnique = async () => null;
     const avant = { ...ligne(), rapports: [...rapports()] };
 
-    await retirer("rap-1");
-
-    rv.findUnique = lecture;
+    // Restauré en `finally` : sans lui, un échec ici laissait la relecture
+    // à `null` pour tout le reste du fichier — et le test de périmètre de
+    // `supprimerRapport` passait défaut réinjecté (revue du 2026-10-13).
+    try {
+      await retirer("rap-1");
+    } finally {
+      rv.findUnique = lecture;
+    }
     expect(ligne()).toEqual(avant);
   });
 });
