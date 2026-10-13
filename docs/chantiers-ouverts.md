@@ -209,10 +209,20 @@ ERP des quatre premières catégories, quatre d'habitation, deux d'activité
 (`R. 4544-11`, `R. 4323-89`) ; aucune ne vise seulement plus de cinquante
 travailleurs ou un ERP en IGH. Cible 15 → **30** (15 + 15 − 0), hors cible
 15 → 0, total 30 inchangé. Les trois hôtels passent de `perimetre` à
-`a_trancher` : rien ne s'encode. Les quinze sont OUVERTES, à évaluer selon la
-grille C45 (encoder / annoncer / hors cadre), listées au § 8 de
+`a_trancher` : rien ne s'encode. ~~Les quinze sont OUVERTES, à évaluer selon la
+grille C45 (encoder / annoncer / hors cadre),~~ listées au § 8 de
 `couverture-declaree-du-produit.md` ; `registre-dette.test.ts` et
 `doc-couverture.test.ts` portent le mouvement.]
+[**CLASSÉES le 2026-10-13** par la propriétaire (`lot/docs-maj`) : trois
+encodées — le chapitre hôtels, exception à « encodage terminé »
+(`incendie-hotel-po-controle-biennal-installations`,
+`incendie-hotel-po-instruction-personnel-semestrielle`, référentiel
+`2026-10-13.1`, 174 + 2 = 176) ; quatre annoncées (`GZ 13`, `GZ 14`, `AS 10`,
+arrêté 2018-02-23 art. 26 § 3) ; huit hors cadre (§ 7). Manquantes 30 → 23,
+toutes hors cadre. La définition de la cible est écrite à l'ADR-031
+(amendement du 2026-10-12). Reste ouvert, non décidé : la vérification
+annuelle du gaz (`GZ 15`) n'est servie qu'à l'ERP 1-4 qui déclare un appareil
+de cuisson ; un commerce chauffé au gaz sans cuisine ne la reçoit pas.]
 
 **Trois dettes sans blocage, et non encodées : les hôtels.** `perimetre` veut
 dire « encodable, hors cible ». `PO 7` est chiffré (deux séances par an) et le

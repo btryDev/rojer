@@ -103,3 +103,31 @@ Un refus est plus dur à découvrir qu'un bandeau : la personne refusée ne
 reviendra pas dire qu'elle l'a été à tort. La liste des régimes refusés est donc
 un objet à relire — pas une constante qu'on augmente au fil des cas gênants.
 Chaque ajout à cette liste passe par une décision, comme celui-ci.
+
+## Amendement du 2026-10-12 — la cible, c'est ce que la porte laisse entrer
+
+Décision de la propriétaire du 2026-10-12, appliquée le 2026-10-13. La
+question « quelle est la cible ? » restait listée ouverte
+(`docs/chantiers-ouverts.md` § 3 bis) alors que cette ADR y répondait déjà :
+**la cible du produit est ce que l'onboarding ne refuse pas** — au plus
+cinquante travailleurs (sur le site comme dans l'entreprise, décision du
+2026-09-26), et pas d'ERP situé dans un IGH. Au sens large : les TPE/PME.
+
+Trois notions, à ne pas confondre :
+
+| Notion | Ce qu'elle dit | Où elle vit |
+|---|---|---|
+| **Refusé** | La porte ne crée pas le dossier | `refusAlEntree()`, `perimetre/exclusions.ts` — trois refus |
+| **Cible** | Tout le reste : le dossier se crée, et ce qui lui manque se déclare | Le registre de dette du corpus (`toucheLaCible`) se mesure sur elle |
+| **Couvert entièrement** | Ce que le produit sert sans manque déclaré | `CATEGORIES_COUVERTES` (`perimetre/couverture.ts`), aujourd'hui `["N5"]` |
+
+Un ERP de 3ᵉ catégorie, un hôtel ou un immeuble d'habitation sont donc
+**dans la cible** sans être couverts entièrement : ils sont acceptés, et le
+produit leur dit ce qu'il ne suit pas.
+
+Conséquence au corpus (2026-10-12) : les quinze `obligation_manquante` dites
+« hors cible » sous l'ancienne lecture (`CATEGORIES_COUVERTES`) y sont entrées.
+La propriétaire les a classées le 2026-10-13 selon la grille C45 : trois
+encodées (le chapitre hôtels, PO 1 § 3, PO 7, PO 12), quatre annoncées (GZ 13,
+GZ 14, AS 10, arrêté du 23 février 2018 art. 26 § 3), huit hors cadre —
+`docs/couverture-declaree-du-produit.md` § 7 et § 8.
