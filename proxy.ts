@@ -1,11 +1,12 @@
-// ADR-005 : middleware d'auth Supabase. Le matcher exclut les assets statiques
-// et les routes internes Next. La logique (refresh session + redirect si
-// non connecté hors whitelist) vit dans src/lib/supabase/middleware.ts.
+// ADR-005 : garde d'auth (convention `proxy` de Next 16, ex-`middleware`,
+// runtime Node imposé). Le matcher exclut les assets statiques et les routes
+// internes Next. La logique (refresh session + redirect si non connecté hors
+// whitelist) vit dans src/lib/supabase/middleware.ts.
 
 import type { NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   return updateSession(request);
 }
 

@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { cheminPublic, refreshTokenPerime } from "./middleware";
 
 /**
- * Chemins que le middleware laisse passer sans session Supabase.
+ * Chemins que le proxy (`proxy.ts`, ex-`middleware.ts`) laisse passer sans
+ * session Supabase.
  *
  * Cette liste est à double tranchant et mérite d'être tenue par des tests
  * plutôt que par la relecture :
@@ -90,7 +91,7 @@ describe("chemins publics", () => {
 });
 
 /**
- * Le middleware efface les cookies de session sur cette erreur-là, et
+ * Le proxy efface les cookies de session sur cette erreur-là, et
  * seulement sur celle-là. Se tromper de côté coûte cher dans les deux sens :
  * trop laxiste, on déconnecte un utilisateur valide au premier hoquet réseau ;
  * trop strict, le navigateur rejoue indéfiniment un jeton mort et l'écran

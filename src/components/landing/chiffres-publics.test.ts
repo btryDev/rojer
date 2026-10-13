@@ -13,7 +13,7 @@ import { Cadran } from "./Cadran";
 import { Etapes } from "./Etapes";
 
 /**
- * La page d'accueil est **publique** — `middleware.ts` laisse passer `/` sans
+ * La page d'accueil est **publique** — `proxy.ts` laisse passer `/` sans
  * session. Les chiffres qu'elle affiche sont donc lus par des prospects, pas
  * par des utilisateurs connectés qui pourraient recouper.
  *

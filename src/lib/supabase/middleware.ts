@@ -1,6 +1,7 @@
-// Middleware helper : rafraîchit la session Supabase à chaque requête et
+// Helper du proxy : rafraîchit la session Supabase à chaque requête et
 // redirige vers /login si aucun user et que la route n'est pas whitelistée.
-// Appelé depuis middleware.ts à la racine.
+// Appelé depuis proxy.ts à la racine (ex-middleware.ts, renommé pour Next 16).
+// Le fichier garde son nom : il disparaîtra avec Supabase Auth.
 
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
@@ -26,7 +27,7 @@ const PUBLIC_PREFIXES = [
   // authentification — secret d'URL ou jeton porteur OAuth — et doivent
   // répondre à des clients qui n'ont pas de session Supabase par
   // construction : ce sont des programmes, pas des navigateurs. Sans cette
-  // exception, le middleware leur renvoie une redirection vers /login et le
+  // exception, le proxy leur renvoie une redirection vers /login et le
   // serveur n'est jamais atteint. Les laisser passer ici ne les ouvre pas :
   // c'est leur propre garde qui décide, et elle refuse par défaut.
   "/api/mcp",
