@@ -63,23 +63,19 @@ Sources : `src/lib/referentiels/corpus/code-travail-matieres-inflammables.ts`,
 H220/H222 (https://environnement.brussels/media/20620/download) ; INERIS,
 tableau CLP 2025.
 
-### 2. Installation frigorifique — « voir les limites » (grille du 30/09, p. 24, 29, 30)
-
-Faut-il sortir la catégorie du périmètre, ou revoir son bornage ? Ses deux
-voisines de la même annotation (protection respiratoire, gilet de
-sauvetage) sont passées au niveau audit le 2026-10-08 (ADR-042) ; celle-ci
-reste. Détail : `docs/journal-des-verifications.md`, C66, « Écarts ouverts ».
-
-### 3. Levage « manuel / automatique / semi-automatique »
-
-Que change pour lui cette distinction, au-delà de ce que Rojer demande déjà
-(mû par la force humaine, levage de personnes, chariot ou gerbeur,
-accessoires) ? Les libellés « manuel » / « motorisé » ont été posés le
-2026-10-08 (commit 7f8a6433) : à lui faire confirmer qu'ils répondent à sa
-remarque. Détail : journal, C66.
-
 ## Réglées
 
+- ~~Installation frigorifique — « voir les limites » (grille du 30/09, p. 24,
+  29, 30) : sortir la catégorie du périmètre ou revoir son bornage ?~~ —
+  2026-10-13 : tranché par la propriétaire, « on respecte le périmètre » : le
+  froid y reste (contrôle d'étanchéité des fluides frigorigènes, sécurité des
+  équipements, `.claude/CLAUDE.md` § Périmètre). Rien ne change.
+- ~~Levage « manuel / automatique / semi-automatique » : que change la
+  distinction ?~~ — 2026-10-13 : tranché par la propriétaire, son commentaire
+  est appliqué depuis le 2026-10-08 (commit 7f8a6433) : l'utilisateur dit si
+  l'appareil est manuel (mû par la seule force humaine employée directement)
+  ou motorisé — l'automatique et le semi-automatique sont motorisés —, et les
+  rythmes de l'arrêté du 1er mars 2004 (art. 20-III et 23) en découlent.
 - ~~`PO 1 § 3` applique-t-il AS 9 aux hôtels de 5ᵉ catégorie ?~~ —
   2026-10-08 : sa note « AS9 applicable qu'au ERP N1 à N4 » est suivie
   (décision de la propriétaire : « on respecte les décisions de Julien »).
