@@ -20,6 +20,7 @@ import {
 import { cleJourCivil, formaterDateCourteFr } from "@/lib/dates";
 import { BoutonRetirer } from "@/components/carnet-sanitaire/BoutonRetirer";
 import { ENJEU_CARNET, quiEstVise } from "@/components/carnet-sanitaire/textes";
+import { formaterMesure, formaterNombreFr } from "@/lib/rendu/mesures";
 import {
   supprimerAnalyseLegionelle,
   supprimerPointReleve,
@@ -241,7 +242,7 @@ export default async function CarnetSanitairePage({
                           {p.localisation && ` · ${p.localisation}`}
                           {" · seuil "}
                           {p.typeReseau === "EFS" ? "max" : "min"}{" "}
-                          {p.seuilMinCelsius}°C
+                          {formaterMesure(p.seuilMinCelsius, "°C")}
                         </p>
                         {/* Qui a relevé, et quand. Le formulaire demande ce
                             nom depuis toujours ; jusqu'au 2026-08-28 son seul
@@ -278,7 +279,7 @@ export default async function CarnetSanitairePage({
                                   : "var(--board-signal-ink)",
                               }}
                             >
-                              {tempActuelle.toFixed(1)}°
+                              {formaterMesure(tempActuelle, "°C", 1)}
                             </p>
                             <StatusPill
                               charte="board"
@@ -324,7 +325,7 @@ export default async function CarnetSanitairePage({
                               className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[12.5px] text-[color:var(--board-slate-ink)]"
                             >
                               <span className="font-mono tabular-nums">
-                                {formatDate(r.dateReleve)} · {r.temperatureCelsius.toFixed(1)} °C
+                                {formatDate(r.dateReleve)} · {formaterMesure(r.temperatureCelsius, "°C", 1)}
                               </span>
                               <AjoutReleveForm
                                 etablissementId={id}
@@ -451,8 +452,15 @@ export default async function CarnetSanitairePage({
                           }}
                         >
                           {/* nombre, pas une date : séparateurs de milliers */}
-                          {a.valeurUfcParL.toLocaleString("fr-FR")}
-                          <span className="ml-1 text-[11px] font-medium text-[color:var(--board-slate-mid)]">
+                          {formaterNombreFr(a.valeurUfcParL)}
+                          {/* L'espace est dans le TEXTE, insécable : une
+                              marge CSS (`ml-1`) la montrait sans l'écrire, et
+                              « 320UFC/L » ressortait à la copie comme à la
+                              lecture d'écran (contrôle visuel du 2026-10-13).
+                              Littérale et non `ESPACE_UNITE` : le balayage des
+                              espaces avalées ne lit que les littéraux. */}
+                          {"\u00A0"}
+                          <span className="text-[11px] font-medium text-[color:var(--board-slate-mid)]">
                             UFC/L
                           </span>
                         </p>
@@ -469,8 +477,8 @@ export default async function CarnetSanitairePage({
                         }
                         label={
                           {
-                            sous_limite: `< ${SEUIL_LEGIONELLE_UFC_PAR_L} UFC/L`,
-                            limite_atteinte: `≥ ${SEUIL_LEGIONELLE_UFC_PAR_L} UFC/L — action`,
+                            sous_limite: `< ${formaterMesure(SEUIL_LEGIONELLE_UFC_PAR_L, "UFC/L")}`,
+                            limite_atteinte: `≥ ${formaterMesure(SEUIL_LEGIONELLE_UFC_PAR_L, "UFC/L")} — action`,
                             sans_valeur: "Valeur non saisie",
                           }[resultatAnalyse(a.valeurUfcParL)]
                         }
