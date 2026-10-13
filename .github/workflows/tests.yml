@@ -48,12 +48,17 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       # Les types (audit du 2026-10-13) : vitest transpile sans vérifier les
-      # types, et rien d'autre ne les contrôlait avant `next build`.
-      # `pnpm lint` n'est PAS lancé ici : `eslint` sort 3 erreurs sur main
-      # (react-hooks/set-state-in-effect, trois formulaires du carnet
-      # sanitaire) ; il entrera quand elles seront corrigées.
+      # types, et rien d'autre ne les contrôlait avant `next build`. Le
+      # client Prisma qu'ils lisent est généré au postinstall, juste au-dessus.
       - name: Vérifier les types
         run: pnpm exec tsc --noEmit
+
+      # Le lint (même audit) : entré quand les 3 erreurs
+      # react-hooks/set-state-in-effect du carnet sanitaire ont été corrigées.
+      # Il échoue sur une erreur, pas sur un avertissement — les deux
+      # navigations `window.location` restantes sont voulues.
+      - name: Lancer le lint
+        run: pnpm lint
 
       - name: Lancer la suite
         run: pnpm vitest run --maxWorkers=2
