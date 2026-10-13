@@ -388,7 +388,11 @@ export const obligationsConformite: Obligation[] = [
 // `equipement_propriete_non_infirmee` sur `etablissementASsiCategorieAouB`,
 // posée à chaque désenfumage. Il entre à l'empreinte par `typologies` et
 // `conditions`. Aucune obligation n'entre ni ne sort : 174 + 0 − 0 = 174.
-export const REFERENTIEL_VERSION = "2026-10-12.2";
+// `2026-10-13.1` (décision de la propriétaire, hôtels) : deux lignes N5 type O
+// — le contrôle biennal de PO 1 § 3 et les deux séances annuelles de PO 7 —,
+// et le type O exclu des lignes de PE 4 § 2 et PE 27 § 5 qu'elles remplacent
+// pour l'hôtel. 174 + 2 − 0 = 176 ; 173 suivies au quotidien.
+export const REFERENTIEL_VERSION = "2026-10-13.1";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

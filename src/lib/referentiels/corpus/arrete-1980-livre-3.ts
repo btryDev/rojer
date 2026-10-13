@@ -106,6 +106,9 @@ export const CORPUS_PE: Corpus = {
         // L'obligation portée par l'établissement (ADR-022), qui prend le § 2
         // pour ce qu'il dit : l'ensemble des installations techniques.
         "incendie-erp-pe4-entretien-installations-techniques",
+        // 2026-10-13 : le § 2 à l'hôtel (type O), au rythme de PO 1 § 3 —
+        // deux ans plutôt que trois ; la ligne triennale exclut le type O.
+        "incendie-hotel-po-controle-biennal-installations",
         // Le § 1, encodé le 2026-09-01 avec l'attribut « locaux à sommeil ».
         "incendie-erp-5-sommeil-contrat-entretien-sdi",
         // Une seule entrée, et c'est le résultat du chantier, pas une
@@ -374,7 +377,12 @@ export const CORPUS_PE: Corpus = {
       citationCle:
         "§ 4. Des consignes précises, affichées bien en vue, doivent indiquer : - le numéro d'appel des sapeurs-pompiers ; - l'adresse du centre de secours le plus proche ; - les dispositions immédiates à prendre en cas de sinistre. § 5. Le personnel doit être instruit sur les conduites à tenir en cas d'incendie et être entraîné à la manœuvre des moyens de secours.",
       statut: "retenu",
-      obligations: ["incendie-erp-5-instruction-personnel", "incendie-erp-5-consignes-affichees"],
+      obligations: [
+        "incendie-erp-5-instruction-personnel",
+        "incendie-erp-5-consignes-affichees",
+        // 2026-10-13 : le § 5 à l'hôtel, avec PO 7 et PO 12.
+        "incendie-hotel-po-instruction-personnel-semestrielle",
+      ],
       reserve:
         "QUATRE PARAGRAPHES RESTENT DEHORS — ET LE PREMIER ÉTAT DE CETTE RÉSERVE EN OUBLIAIT UN. Écrite le 2026-09-21 au matin, elle disait « trois paragraphes », § 1 à § 3 : j'avais demandé à l'outil de lecture les « § 1 à § 5 », et il a répondu dans le cadre que je lui donnais. L'article en compte SIX ; la contre-lecture l'a vu, et je l'ai vérifié en demandant cette fois « combien de paragraphes, et lequel est le dernier ». Ne jamais souffler à une lecture la structure qu'on en attend.\n\n(1) LE § 6, LE PLAN D'INTERVENTION, relevé lettre à lettre le 2026-09-21 : « A l'entrée de chaque établissement, un plan schématique doit être apposé pour faciliter l'intervention des sapeurs-pompiers. Ce plan dit plan d'intervention doit représenter au minimum le sous-sol, le rez-de-chaussée, chaque étage ou l'étage courant de l'établissement. Doivent y figurer, outre les dégagements et les cloisonnements principaux, l'emplacement : des divers locaux techniques et autres locaux à risques particuliers ; des dispositifs et commandes de sécurité ; des organes de coupure des fluides ; des organes de coupure des sources d'énergie ; des moyens d'extinction fixes et d'alarme. » C'est un écrit affiché, sans seuil — de la même espèce que le § 4, que le référentiel porte. NON ENCODÉ. ~~« l'arrêté du 4 février 2026, que personne n'a ouvert »~~ : OUVERT le 2026-09-21 (JORFTEXT000053886207, trois articles) — il ne touche QUE le § 1 (la dérogation des dix-neuf personnes, et les lettres a) et b)). Le § 6 n'en vient pas. Ce qui le retient est `GN 10`, ouvert le même jour : le règlement « ne s'applique pas aux établissements existants » hors administratif, contrôles, vérifications et entretien, et un plan à apposer n'est rien de cela. ~~« Les § 4 et § 5 sont des actes d'exploitation, encodés sans distinction de date comme PE 4 § 2 »~~ — l'argument ne tenait pas : `PE 4 § 2` EST un entretien, donc excepté par GN 10 ; les § 4 et § 5 ne le sont pas, et ils sur-appliquent aux établissements anciens, ce que leur description dit désormais. N'en pas ajouter un troisième tant que la propriétaire n'a pas tranché la classe entière (dossier des décisions, A6) : le plan d'intervention coûte un relevé des locaux, pas une affiche.\n\nLES DATES, RELEVÉES LE 2026-09-21 (six versions de l'article lues sur les pages de section datées) — et elles changent tout pour le § 6. PE 27 est créé par l'arrêté du 22 juin 1990, en vigueur le 27 août 1990, et compte six paragraphes depuis l'origine. Les § 4 et § 5 y sont depuis ce jour-là (rédaction actuelle depuis le 16 mai 2010, arrêté du 11 décembre 2009 — « le plus proche », « les conduites »). Le § 6, LUI, NE VISAIT JUSQU'AU 31 DÉCEMBRE 2025 QUE « les établissements implantés en étage ou en sous-sol ». C'est l'article 12 de l'arrêté du 1er décembre 2025 (NOR INTE2529354A, en vigueur le 1er janvier 2026) qui écrit « A l'entrée de chaque établissement » ; son article 13 ne prévoit rien pour les établissements existants, donc `GN 10` joue à plein. Un ERP de 5ᵉ catégorie de plain-pied ouvert avant 2026 n'est pas tenu au plan d'intervention. L'encoder pour tous aurait sur-appliqué à la quasi-totalité du parc : le refus d'encoder était juste, et il l'est désormais pour une raison datée.\n\n(2) LE § 2, L'ALARME, relevé lettre à lettre : c) « Le personnel de l'établissement doit être informé de la caractéristique du signal sonore d'alarme générale. Cette information peut être complétée par des exercices périodiques d'évacuation » ; e) « Le système d'alarme doit être maintenu en bon état de fonctionnement. » Deux obligations sans condition. Le c) est un acte envers le personnel, voisin du § 5 sans s'y confondre ; le e) est à rapprocher de `incendie-erp-ssi-annuelle` (MS 73), seule ligne d'alarme que le référentiel porte pour la 5ᵉ catégorie, et qui suppose une alarme DÉCLARÉE au parc. Ni l'un ni l'autre n'est encodé.\n\n(3) LE § 1, LA PRÉSENCE PERMANENTE : « Un membre du personnel ou un responsable au moins doit être présent en permanence lorsque l'établissement est ouvert au public. » Deux dérogations — les établissements recevant moins de vingt personnes sans locaux à sommeil ; ceux qui limitent l'accès à dix-neuf personnes et respectent un cahier des charges ministériel — et une convention de surveillance par les utilisateurs. À lire en entier avant d'écrire une ligne.\n\n(4) LE § 3, L'ALERTE : liaison avec les sapeurs-pompiers « par tout moyen de communication conforme à l'article MS 70 », atténuée pour les établissements sans locaux à sommeil.\n\nLECTURE : la page propre de l'article ne rend qu'une table des matières (piège n° 2 du journal) ; tout vient de la page de SECTION, interrogée paragraphe par paragraphe.",
       historique:
@@ -516,6 +524,8 @@ export const CORPUS_PE: Corpus = {
       statut: "retenu",
       obligations: [
         "incendie-hotel-po-controle-annuel-electricite",
+        // Le volet biennal du § 3 (2026-10-13) a son entrée à part, « PO 1 § 3
+        // — contrôle biennal des installations techniques », qui le nomme.
         // ~~2026-10-07 (C60) : le renvoi du § 3 à AS 9 pour les ascenseurs —
         // `ascenseur-hotel-5-verification-quinquennale-as9`,
         // `ascenseur-hotel-5-verification-remise-en-service-as9`~~ — 2026-10-08
@@ -538,44 +548,28 @@ export const CORPUS_PE: Corpus = {
       luLe: "2026-08-26",
       lecture: "premiere_main",
       historique:
-        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : versionEnVigueur 2018-01-01 → 2011-10-30 : la version en vigueur date du 30 octobre 2011 (arrêté du 26 octobre 2011, lien MODIFICATION « (V) ») ; l'API ne connaît aucune version du 1er janvier 2018 pour cet article. Texte inchangé.",
-      statut: "obligation_manquante",
-      // ~~perimetre~~ → a_trancher le 2026-10-12 : la cible est ce que
-      // l'onboarding ne refuse pas (≤ 50 travailleurs, pas d'ERP en IGH), et
-      // l'hôtel y entre. Rien ne s'encode (encodage terminé) : à classer selon
-      // la grille C45 — encoder, annoncer ou hors cadre —, par la propriétaire.
-      cause: "a_trancher",
-      // ~~false~~ → true le 2026-10-12 : la cible est ce que l'onboarding ne
-      // refuse pas (≤ 50 travailleurs, pas d'ERP en IGH ; ADR-031). Ouverte, à
-      // évaluer selon la grille C45 (encoder / annoncer / hors cadre).
-      toucheLaCible: true,
-      motif:
-        "« L'ensemble des installations techniques doit être contrôlé par un technicien compétent tous les deux ans. » Le référentiel ne sait pas porter « l'ensemble » : une obligation s'accroche à des catégories d'équipement énumérées, et énumérer reviendrait à décider à la place du texte ce qu'est une installation technique d'hôtel. Deux catégories plausibles — VMC et installation frigorifique — portent déjà une obligation BIENNALE valant pour tous les ERP : une ligne supplémentaire y ferait doublon. Cinquième occurrence du motif PE 4 § 2. Les ascenseurs sont explicitement exclus par le renvoi à AS 9.",
-      bloquePar:
-        "~~porteur-d-echeance-hors-equipement~~ — LEVÉ depuis le 2026-08-27 : l'ADR-022 a donné à l'établissement le rôle de porteur, et `PE 4 § 2` s'en sert. Ce qui retient cette ligne n'est plus technique : elle vise les HÔTELS (chapitre PO), hors de la cible du produit — d'où `cause: \"perimetre\"`. Rayé le 2026-09-20 ; la raison de non-encodage était restée écrite trois semaines après avoir cessé d'être vraie (règle 11 de `CLAUDE.md`). [2026-10-12 : ~~hors de la cible du produit~~ — la cible est désormais ce que l'onboarding ne refuse pas, et un hôtel de cinquante travailleurs au plus y entre. La cause passe de `perimetre` à `a_trancher` : la ligne rejoint les manques à classer selon la grille C45, sans être encodée.]",
+        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : versionEnVigueur 2018-01-01 → 2011-10-30 : la version en vigueur date du 30 octobre 2011 (arrêté du 26 octobre 2011, lien MODIFICATION « (V) ») ; l'API ne connaît aucune version du 1er janvier 2018 pour cet article. Texte inchangé.\n\n2026-10-13 — ENCODÉE, décision de la propriétaire : l'hôtel entre dans la cible redéfinie le 2026-10-12, et le chapitre PO est le seul de ses manques à être encodé (exception à « encodage terminé »). Portée par `incendie-hotel-po-controle-biennal-installations`. L'entrée quand elle était `obligation_manquante` (2026-08-26 → 2026-10-13), cause `a_trancher` (`perimetre` jusqu'au 2026-10-12) : ~~« L'ensemble des installations techniques doit être contrôlé par un technicien compétent tous les deux ans. » Le référentiel ne sait pas porter « l'ensemble » : une obligation s'accroche à des catégories d'équipement énumérées, et énumérer reviendrait à décider à la place du texte ce qu'est une installation technique d'hôtel. Deux catégories plausibles — VMC et installation frigorifique — portent déjà une obligation BIENNALE valant pour tous les ERP : une ligne supplémentaire y ferait doublon. Cinquième occurrence du motif PE 4 § 2. Les ascenseurs sont explicitement exclus par le renvoi à AS 9.~~ — Son blocage : ~~porteur-d-echeance-hors-equipement — LEVÉ depuis le 2026-08-27 : l'ADR-022 a donné à l'établissement le rôle de porteur, et `PE 4 § 2` s'en sert. Ce qui retient cette ligne n'est plus technique : elle vise les HÔTELS (chapitre PO), hors de la cible du produit — d'où `cause: \"perimetre\"`. Rayé le 2026-09-20 ; la raison de non-encodage était restée écrite trois semaines après avoir cessé d'être vraie (règle 11 de `CLAUDE.md`). [2026-10-12 : ~~hors de la cible du produit~~ — la cible est désormais ce que l'onboarding ne refuse pas, et un hôtel de cinquante travailleurs au plus y entre. La cause passe de `perimetre` à `a_trancher` : la ligne rejoint les manques à classer selon la grille C45, sans être encodée.]~~",
+      // 2026-10-13, revue : la citation, encore vraie, ne vivait plus que barrée dans `historique`.
+      citationCle:
+        "« L'ensemble des installations techniques doit être contrôlé par un technicien compétent tous les deux ans, à l'exception des installations électriques et des systèmes de détection incendie qui doivent être contrôlés annuellement. »",
+      statut: "retenu",
+      obligations: ["incendie-hotel-po-controle-biennal-installations"],
     },
     {
       ref: "PO 7",
       intitule: "Instruction et entraînement du personnel, deux fois par an",
       versionEnVigueur: "2011-10-30",
-      luLe: "2026-08-26",
-      lecture: "premiere_main",
+      // ~~luLe: "2026-08-26", lecture: "premiere_main"~~ — relu le 2026-10-13
+      // par l'API (LEGIARTI000024770976).
+      luLe: "2026-10-13",
+      lecture: "api_legifrance",
       historique:
-        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : versionEnVigueur 2018-01-01 → 2011-10-30 : la version en vigueur date du 30 octobre 2011 (arrêté du 26 octobre 2011, lien MODIFICATION « (V) ») ; l'API ne connaît aucune version du 1er janvier 2018 pour cet article. Texte inchangé.",
-      statut: "obligation_manquante",
-      // ~~perimetre~~ → a_trancher le 2026-10-12 : la cible est ce que
-      // l'onboarding ne refuse pas (≤ 50 travailleurs, pas d'ERP en IGH), et
-      // l'hôtel y entre. Rien ne s'encode (encodage terminé) : à classer selon
-      // la grille C45 — encoder, annoncer ou hors cadre —, par la propriétaire.
-      cause: "a_trancher",
-      // ~~false~~ → true le 2026-10-12 : la cible est ce que l'onboarding ne
-      // refuse pas (≤ 50 travailleurs, pas d'ERP en IGH ; ADR-031). Ouverte, à
-      // évaluer selon la grille C45 (encoder / annoncer / hors cadre).
-      toucheLaCible: true,
-      motif:
-        "« Le personnel doit participer deux fois par an à des séances d'instruction et d'entraînement de façon compatible avec les conditions d'exploitation, compte tenu, le cas échéant, de son rythme saisonnier. » Périodicité chiffrée, donc encodable — mais l'obligation ne porte sur AUCUN équipement, et toute obligation du référentiel s'accroche aujourd'hui à une catégorie d'équipement. C'est le même blocage que PE 27 § 5 et R. 4544-11-1. Verbatim relevé en première main le 2026-08-26.",
-      bloquePar:
-        "~~porteur-d-echeance-hors-equipement~~ — LEVÉ depuis le 2026-08-27 : l'ADR-022 a donné à l'établissement le rôle de porteur, et `PE 4 § 2` s'en sert. Ce qui retient cette ligne n'est plus technique : elle vise les HÔTELS (chapitre PO), hors de la cible du produit — d'où `cause: \"perimetre\"`. Rayé le 2026-09-20 ; la raison de non-encodage était restée écrite trois semaines après avoir cessé d'être vraie (règle 11 de `CLAUDE.md`). [2026-10-12 : ~~hors de la cible du produit~~ — la cible est désormais ce que l'onboarding ne refuse pas, et un hôtel de cinquante travailleurs au plus y entre. La cause passe de `perimetre` à `a_trancher` : la ligne rejoint les manques à classer selon la grille C45, sans être encodée.]",
+        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : versionEnVigueur 2018-01-01 → 2011-10-30 : la version en vigueur date du 30 octobre 2011 (arrêté du 26 octobre 2011, lien MODIFICATION « (V) ») ; l'API ne connaît aucune version du 1er janvier 2018 pour cet article. Texte inchangé.\n\n2026-10-13 — ENCODÉE, décision de la propriétaire : l'hôtel entre dans la cible redéfinie le 2026-10-12, et le chapitre PO est le seul de ses manques à être encodé (exception à « encodage terminé »). Portée par `incendie-hotel-po-instruction-personnel-semestrielle`. L'entrée quand elle était `obligation_manquante` (2026-08-26 → 2026-10-13), cause `a_trancher` (`perimetre` jusqu'au 2026-10-12) : ~~« Le personnel doit participer deux fois par an à des séances d'instruction et d'entraînement de façon compatible avec les conditions d'exploitation, compte tenu, le cas échéant, de son rythme saisonnier. » Périodicité chiffrée, donc encodable — mais l'obligation ne porte sur AUCUN équipement, et toute obligation du référentiel s'accroche aujourd'hui à une catégorie d'équipement. C'est le même blocage que PE 27 § 5 et R. 4544-11-1. Verbatim relevé en première main le 2026-08-26.~~ — Son blocage : ~~porteur-d-echeance-hors-equipement — LEVÉ depuis le 2026-08-27 : l'ADR-022 a donné à l'établissement le rôle de porteur, et `PE 4 § 2` s'en sert. Ce qui retient cette ligne n'est plus technique : elle vise les HÔTELS (chapitre PO), hors de la cible du produit — d'où `cause: \"perimetre\"`. Rayé le 2026-09-20 ; la raison de non-encodage était restée écrite trois semaines après avoir cessé d'être vraie (règle 11 de `CLAUDE.md`). [2026-10-12 : ~~hors de la cible du produit~~ — la cible est désormais ce que l'onboarding ne refuse pas, et un hôtel de cinquante travailleurs au plus y entre. La cause passe de `perimetre` à `a_trancher` : la ligne rejoint les manques à classer selon la grille C45, sans être encodée.]~~\n\n2026-10-13 — relu par l'API Légifrance (pnpm legifrance:verifier, environnement BAC À SABLE, égalité avec la production non vérifiée) : citation, version en vigueur (2011-10-30) — OK. Rapport : docs/revues/verification-legifrance-2026-10-13-selection.md.",
+      // 2026-10-13, revue : la citation, encore vraie, ne vivait plus que barrée dans `historique`.
+      citationCle:
+        "« Le personnel doit participer deux fois par an à des séances d'instruction et d'entraînement de façon compatible avec les conditions d'exploitation, compte tenu, le cas échéant, de son rythme saisonnier. »",
+      statut: "retenu",
+      obligations: ["incendie-hotel-po-instruction-personnel-semestrielle"],
     },
     {
       ref: "PO 2",
@@ -585,7 +579,7 @@ export const CORPUS_PE: Corpus = {
       lecture: "agent_verbatim",
       statut: "non_couvert",
       motif:
-        "Chapitre IV — règles spécifiques aux hôtels (type O), établissements de 5ᵉ catégorie. PO 1 § 3 et PO 7 portent les périodicités chiffrées du chapitre IV — PE 37 en porte une autre, la visite quinquennale de commission : contrôle biennal des installations techniques, annuel pour l'électricité et la détection, et deux séances d'instruction du personnel par an. Un très petit hôtel est exactement le genre de TPE que le produit sait servir par ailleurs — le manque est un choix, pas une impossibilité.",
+        "Chapitre IV — règles spécifiques aux hôtels (type O), établissements de 5ᵉ catégorie. PO 1 § 3 et PO 7 portent les périodicités chiffrées du chapitre IV — PE 37 en porte une autre, la visite quinquennale de commission : contrôle biennal des installations techniques, annuel pour l'électricité et la détection, et deux séances d'instruction du personnel par an. Un très petit hôtel est exactement le genre de TPE que le produit sait servir par ailleurs — ~~le manque est un choix, pas une impossibilité~~. [2026-10-13 : les périodicités du chapitre sont portées — le biennal de PO 1 § 3 (`incendie-hotel-po-controle-biennal-installations`) et les deux séances de PO 7 (`incendie-hotel-po-instruction-personnel-semestrielle`), décision de la propriétaire ; l'annuel électrique l'était depuis le 2026-08-26. Cet article-ci, qui n'écrit aucun rythme, reste non couvert.]",
       declareA:
         "docs/couverture-declaree-du-produit.md — NOTE INTERNE, pas une annonce à l'exploitant. Cet article a été nommé à l'écran, sur le tableau de bord de chaque établissement, du 2026-08-28 au soir du même jour ; la surface a été retirée par décision produit — déclarer ce que le produit ne couvre pas suppose d'avoir tranché ce qu'il couvre. Le document dit l'histoire et ce qu'il faudrait pour rendre l'annonce propre au dossier : un rattachement article → `Etablissement.typeErp`.",
     },
@@ -597,7 +591,7 @@ export const CORPUS_PE: Corpus = {
       lecture: "agent_verbatim",
       statut: "non_couvert",
       motif:
-        "Chapitre IV — règles spécifiques aux hôtels (type O), établissements de 5ᵉ catégorie. PO 1 § 3 et PO 7 portent les périodicités chiffrées du chapitre IV — PE 37 en porte une autre, la visite quinquennale de commission : contrôle biennal des installations techniques, annuel pour l'électricité et la détection, et deux séances d'instruction du personnel par an. Un très petit hôtel est exactement le genre de TPE que le produit sait servir par ailleurs — le manque est un choix, pas une impossibilité.",
+        "Chapitre IV — règles spécifiques aux hôtels (type O), établissements de 5ᵉ catégorie. PO 1 § 3 et PO 7 portent les périodicités chiffrées du chapitre IV — PE 37 en porte une autre, la visite quinquennale de commission : contrôle biennal des installations techniques, annuel pour l'électricité et la détection, et deux séances d'instruction du personnel par an. Un très petit hôtel est exactement le genre de TPE que le produit sait servir par ailleurs — ~~le manque est un choix, pas une impossibilité~~. [2026-10-13 : les périodicités du chapitre sont portées — le biennal de PO 1 § 3 (`incendie-hotel-po-controle-biennal-installations`) et les deux séances de PO 7 (`incendie-hotel-po-instruction-personnel-semestrielle`), décision de la propriétaire ; l'annuel électrique l'était depuis le 2026-08-26. Cet article-ci, qui n'écrit aucun rythme, reste non couvert.]",
       declareA:
         "docs/couverture-declaree-du-produit.md — NOTE INTERNE, pas une annonce à l'exploitant. Cet article a été nommé à l'écran, sur le tableau de bord de chaque établissement, du 2026-08-28 au soir du même jour ; la surface a été retirée par décision produit — déclarer ce que le produit ne couvre pas suppose d'avoir tranché ce qu'il couvre. Le document dit l'histoire et ce qu'il faudrait pour rendre l'annonce propre au dossier : un rattachement article → `Etablissement.typeErp`.",
     },
@@ -609,7 +603,7 @@ export const CORPUS_PE: Corpus = {
       lecture: "agent_verbatim",
       statut: "non_couvert",
       motif:
-        "Chapitre IV — règles spécifiques aux hôtels (type O), établissements de 5ᵉ catégorie. PO 1 § 3 et PO 7 portent les périodicités chiffrées du chapitre IV — PE 37 en porte une autre, la visite quinquennale de commission : contrôle biennal des installations techniques, annuel pour l'électricité et la détection, et deux séances d'instruction du personnel par an. Un très petit hôtel est exactement le genre de TPE que le produit sait servir par ailleurs — le manque est un choix, pas une impossibilité.",
+        "Chapitre IV — règles spécifiques aux hôtels (type O), établissements de 5ᵉ catégorie. PO 1 § 3 et PO 7 portent les périodicités chiffrées du chapitre IV — PE 37 en porte une autre, la visite quinquennale de commission : contrôle biennal des installations techniques, annuel pour l'électricité et la détection, et deux séances d'instruction du personnel par an. Un très petit hôtel est exactement le genre de TPE que le produit sait servir par ailleurs — ~~le manque est un choix, pas une impossibilité~~. [2026-10-13 : les périodicités du chapitre sont portées — le biennal de PO 1 § 3 (`incendie-hotel-po-controle-biennal-installations`) et les deux séances de PO 7 (`incendie-hotel-po-instruction-personnel-semestrielle`), décision de la propriétaire ; l'annuel électrique l'était depuis le 2026-08-26. Cet article-ci, qui n'écrit aucun rythme, reste non couvert.]",
       declareA:
         "docs/couverture-declaree-du-produit.md — NOTE INTERNE, pas une annonce à l'exploitant. Cet article a été nommé à l'écran, sur le tableau de bord de chaque établissement, du 2026-08-28 au soir du même jour ; la surface a été retirée par décision produit — déclarer ce que le produit ne couvre pas suppose d'avoir tranché ce qu'il couvre. Le document dit l'histoire et ce qu'il faudrait pour rendre l'annonce propre au dossier : un rattachement article → `Etablissement.typeErp`.",
     },
@@ -621,7 +615,7 @@ export const CORPUS_PE: Corpus = {
       lecture: "agent_verbatim",
       statut: "non_couvert",
       motif:
-        "Chapitre IV — règles spécifiques aux hôtels (type O), établissements de 5ᵉ catégorie. PO 1 § 3 et PO 7 portent les périodicités chiffrées du chapitre IV — PE 37 en porte une autre, la visite quinquennale de commission : contrôle biennal des installations techniques, annuel pour l'électricité et la détection, et deux séances d'instruction du personnel par an. Un très petit hôtel est exactement le genre de TPE que le produit sait servir par ailleurs — le manque est un choix, pas une impossibilité.",
+        "Chapitre IV — règles spécifiques aux hôtels (type O), établissements de 5ᵉ catégorie. PO 1 § 3 et PO 7 portent les périodicités chiffrées du chapitre IV — PE 37 en porte une autre, la visite quinquennale de commission : contrôle biennal des installations techniques, annuel pour l'électricité et la détection, et deux séances d'instruction du personnel par an. Un très petit hôtel est exactement le genre de TPE que le produit sait servir par ailleurs — ~~le manque est un choix, pas une impossibilité~~. [2026-10-13 : les périodicités du chapitre sont portées — le biennal de PO 1 § 3 (`incendie-hotel-po-controle-biennal-installations`) et les deux séances de PO 7 (`incendie-hotel-po-instruction-personnel-semestrielle`), décision de la propriétaire ; l'annuel électrique l'était depuis le 2026-08-26. Cet article-ci, qui n'écrit aucun rythme, reste non couvert.]",
       declareA:
         "docs/couverture-declaree-du-produit.md — NOTE INTERNE, pas une annonce à l'exploitant. Cet article a été nommé à l'écran, sur le tableau de bord de chaque établissement, du 2026-08-28 au soir du même jour ; la surface a été retirée par décision produit — déclarer ce que le produit ne couvre pas suppose d'avoir tranché ce qu'il couvre. Le document dit l'histoire et ce qu'il faudrait pour rendre l'annonce propre au dossier : un rattachement article → `Etablissement.typeErp`.",
     },
@@ -633,7 +627,7 @@ export const CORPUS_PE: Corpus = {
       lecture: "agent_verbatim",
       statut: "non_couvert",
       motif:
-        "Chapitre IV — règles spécifiques aux hôtels (type O), établissements de 5ᵉ catégorie. PO 1 § 3 et PO 7 portent les périodicités chiffrées du chapitre IV — PE 37 en porte une autre, la visite quinquennale de commission : contrôle biennal des installations techniques, annuel pour l'électricité et la détection, et deux séances d'instruction du personnel par an. Un très petit hôtel est exactement le genre de TPE que le produit sait servir par ailleurs — le manque est un choix, pas une impossibilité.",
+        "Chapitre IV — règles spécifiques aux hôtels (type O), établissements de 5ᵉ catégorie. PO 1 § 3 et PO 7 portent les périodicités chiffrées du chapitre IV — PE 37 en porte une autre, la visite quinquennale de commission : contrôle biennal des installations techniques, annuel pour l'électricité et la détection, et deux séances d'instruction du personnel par an. Un très petit hôtel est exactement le genre de TPE que le produit sait servir par ailleurs — ~~le manque est un choix, pas une impossibilité~~. [2026-10-13 : les périodicités du chapitre sont portées — le biennal de PO 1 § 3 (`incendie-hotel-po-controle-biennal-installations`) et les deux séances de PO 7 (`incendie-hotel-po-instruction-personnel-semestrielle`), décision de la propriétaire ; l'annuel électrique l'était depuis le 2026-08-26. Cet article-ci, qui n'écrit aucun rythme, reste non couvert.]",
       declareA:
         "docs/couverture-declaree-du-produit.md — NOTE INTERNE, pas une annonce à l'exploitant. Cet article a été nommé à l'écran, sur le tableau de bord de chaque établissement, du 2026-08-28 au soir du même jour ; la surface a été retirée par décision produit — déclarer ce que le produit ne couvre pas suppose d'avoir tranché ce qu'il couvre. Le document dit l'histoire et ce qu'il faudrait pour rendre l'annonce propre au dossier : un rattachement article → `Etablissement.typeErp`.",
     },
@@ -649,6 +643,8 @@ export const CORPUS_PE: Corpus = {
       statut: "retenu",
       obligations: [
         "incendie-hotel-po-controle-annuel-electricite",
+        // 2026-10-13 : PO 1 § 3 réimporté, volet biennal.
+        "incendie-hotel-po-controle-biennal-installations",
         // ~~2026-10-07 (C60) : PO 1 (§ 3) réimporté, renvoi à AS 9 compris —
         // les deux lignes `ascenseur-hotel-5-*-as9`~~ — 2026-10-08 (C64) :
         // supprimées avant d'avoir été servies (réserve ci-dessous).
@@ -668,7 +664,7 @@ export const CORPUS_PE: Corpus = {
       lecture: "agent_verbatim",
       statut: "non_couvert",
       motif:
-        "Chapitre IV — règles spécifiques aux hôtels (type O), établissements de 5ᵉ catégorie. PO 1 § 3 et PO 7 portent les périodicités chiffrées du chapitre IV — PE 37 en porte une autre, la visite quinquennale de commission : contrôle biennal des installations techniques, annuel pour l'électricité et la détection, et deux séances d'instruction du personnel par an. Un très petit hôtel est exactement le genre de TPE que le produit sait servir par ailleurs — le manque est un choix, pas une impossibilité.",
+        "Chapitre IV — règles spécifiques aux hôtels (type O), établissements de 5ᵉ catégorie. PO 1 § 3 et PO 7 portent les périodicités chiffrées du chapitre IV — PE 37 en porte une autre, la visite quinquennale de commission : contrôle biennal des installations techniques, annuel pour l'électricité et la détection, et deux séances d'instruction du personnel par an. Un très petit hôtel est exactement le genre de TPE que le produit sait servir par ailleurs — ~~le manque est un choix, pas une impossibilité~~. [2026-10-13 : les périodicités du chapitre sont portées — le biennal de PO 1 § 3 (`incendie-hotel-po-controle-biennal-installations`) et les deux séances de PO 7 (`incendie-hotel-po-instruction-personnel-semestrielle`), décision de la propriétaire ; l'annuel électrique l'était depuis le 2026-08-26. Cet article-ci, qui n'écrit aucun rythme, reste non couvert.]",
       declareA:
         "docs/couverture-declaree-du-produit.md — NOTE INTERNE, pas une annonce à l'exploitant. Cet article a été nommé à l'écran, sur le tableau de bord de chaque établissement, du 2026-08-28 au soir du même jour ; la surface a été retirée par décision produit — déclarer ce que le produit ne couvre pas suppose d'avoir tranché ce qu'il couvre. Le document dit l'histoire et ce qu'il faudrait pour rendre l'annonce propre au dossier : un rattachement article → `Etablissement.typeErp`.",
     },
@@ -680,7 +676,7 @@ export const CORPUS_PE: Corpus = {
       lecture: "agent_verbatim",
       statut: "non_couvert",
       motif:
-        "Chapitre IV — règles spécifiques aux hôtels (type O), établissements de 5ᵉ catégorie. PO 1 § 3 et PO 7 portent les périodicités chiffrées du chapitre IV — PE 37 en porte une autre, la visite quinquennale de commission : contrôle biennal des installations techniques, annuel pour l'électricité et la détection, et deux séances d'instruction du personnel par an. Un très petit hôtel est exactement le genre de TPE que le produit sait servir par ailleurs — le manque est un choix, pas une impossibilité.",
+        "Chapitre IV — règles spécifiques aux hôtels (type O), établissements de 5ᵉ catégorie. PO 1 § 3 et PO 7 portent les périodicités chiffrées du chapitre IV — PE 37 en porte une autre, la visite quinquennale de commission : contrôle biennal des installations techniques, annuel pour l'électricité et la détection, et deux séances d'instruction du personnel par an. Un très petit hôtel est exactement le genre de TPE que le produit sait servir par ailleurs — ~~le manque est un choix, pas une impossibilité~~. [2026-10-13 : les périodicités du chapitre sont portées — le biennal de PO 1 § 3 (`incendie-hotel-po-controle-biennal-installations`) et les deux séances de PO 7 (`incendie-hotel-po-instruction-personnel-semestrielle`), décision de la propriétaire ; l'annuel électrique l'était depuis le 2026-08-26. Cet article-ci, qui n'écrit aucun rythme, reste non couvert.]",
       declareA:
         "docs/couverture-declaree-du-produit.md — NOTE INTERNE, pas une annonce à l'exploitant. Cet article a été nommé à l'écran, sur le tableau de bord de chaque établissement, du 2026-08-28 au soir du même jour ; la surface a été retirée par décision produit — déclarer ce que le produit ne couvre pas suppose d'avoir tranché ce qu'il couvre. Le document dit l'histoire et ce qu'il faudrait pour rendre l'annonce propre au dossier : un rattachement article → `Etablissement.typeErp`.",
     },
@@ -692,7 +688,7 @@ export const CORPUS_PE: Corpus = {
       lecture: "agent_verbatim",
       statut: "non_couvert",
       motif:
-        "Chapitre IV — règles spécifiques aux hôtels (type O), établissements de 5ᵉ catégorie. PO 1 § 3 et PO 7 portent les périodicités chiffrées du chapitre IV — PE 37 en porte une autre, la visite quinquennale de commission : contrôle biennal des installations techniques, annuel pour l'électricité et la détection, et deux séances d'instruction du personnel par an. Un très petit hôtel est exactement le genre de TPE que le produit sait servir par ailleurs — le manque est un choix, pas une impossibilité.",
+        "Chapitre IV — règles spécifiques aux hôtels (type O), établissements de 5ᵉ catégorie. PO 1 § 3 et PO 7 portent les périodicités chiffrées du chapitre IV — PE 37 en porte une autre, la visite quinquennale de commission : contrôle biennal des installations techniques, annuel pour l'électricité et la détection, et deux séances d'instruction du personnel par an. Un très petit hôtel est exactement le genre de TPE que le produit sait servir par ailleurs — ~~le manque est un choix, pas une impossibilité~~. [2026-10-13 : les périodicités du chapitre sont portées — le biennal de PO 1 § 3 (`incendie-hotel-po-controle-biennal-installations`) et les deux séances de PO 7 (`incendie-hotel-po-instruction-personnel-semestrielle`), décision de la propriétaire ; l'annuel électrique l'était depuis le 2026-08-26. Cet article-ci, qui n'écrit aucun rythme, reste non couvert.]",
       declareA:
         "docs/couverture-declaree-du-produit.md — NOTE INTERNE, pas une annonce à l'exploitant. Cet article a été nommé à l'écran, sur le tableau de bord de chaque établissement, du 2026-08-28 au soir du même jour ; la surface a été retirée par décision produit — déclarer ce que le produit ne couvre pas suppose d'avoir tranché ce qu'il couvre. Le document dit l'histoire et ce qu'il faudrait pour rendre l'annonce propre au dossier : un rattachement article → `Etablissement.typeErp`.",
     },
@@ -700,22 +696,17 @@ export const CORPUS_PE: Corpus = {
       ref: "PO 12",
       intitule: "Extension de l'instruction du personnel aux hôtels existants",
       versionEnVigueur: "2011-10-30",
-      luLe: "2026-08-26",
-      lecture: "premiere_main",
-      statut: "obligation_manquante",
-      // ~~perimetre~~ → a_trancher le 2026-10-12 : la cible est ce que
-      // l'onboarding ne refuse pas (≤ 50 travailleurs, pas d'ERP en IGH), et
-      // l'hôtel y entre. Rien ne s'encode (encodage terminé) : à classer selon
-      // la grille C45 — encoder, annoncer ou hors cadre —, par la propriétaire.
-      cause: "a_trancher",
-      // ~~false~~ → true le 2026-10-12 : la cible est ce que l'onboarding ne
-      // refuse pas (≤ 50 travailleurs, pas d'ERP en IGH ; ADR-031). Ouverte, à
-      // évaluer selon la grille C45 (encoder / annoncer / hors cadre).
-      toucheLaCible: true,
-      motif:
-        "« Les dispositions des articles PE 27 (§ 5) et PO 7 sont applicables. » Symétrique de PO 8 § 1 pour la formation : PO 7 — deux séances d'instruction et d'entraînement du personnel par an — est réimporté nommément dans le régime des établissements EXISTANTS. La périodicité vaut donc pour tous les hôtels, pas seulement les neufs. Même blocage que PO 7 lui-même : l'obligation ne porte sur aucun équipement.",
-      bloquePar:
-        "~~porteur-d-echeance-hors-equipement~~ — LEVÉ depuis le 2026-08-27 : l'ADR-022 a donné à l'établissement le rôle de porteur, et `PE 4 § 2` s'en sert. Ce qui retient cette ligne n'est plus technique : elle vise les HÔTELS (chapitre PO), hors de la cible du produit — d'où `cause: \"perimetre\"`. Rayé le 2026-09-20 ; la raison de non-encodage était restée écrite trois semaines après avoir cessé d'être vraie (règle 11 de `CLAUDE.md`). [2026-10-12 : ~~hors de la cible du produit~~ — la cible est désormais ce que l'onboarding ne refuse pas, et un hôtel de cinquante travailleurs au plus y entre. La cause passe de `perimetre` à `a_trancher` : la ligne rejoint les manques à classer selon la grille C45, sans être encodée.]",
+      // ~~luLe: "2026-08-26", lecture: "premiere_main"~~ — relu le 2026-10-13
+      // par l'API (LEGIARTI000024771138).
+      luLe: "2026-10-13",
+      lecture: "api_legifrance",
+      // 2026-10-13, revue : la citation, encore vraie, ne vivait plus que barrée dans `historique`.
+      citationCle:
+        "« Les dispositions des articles PE 27 (§ 5) et PO 7 sont applicables. »",
+      statut: "retenu",
+      obligations: ["incendie-hotel-po-instruction-personnel-semestrielle"],
+      historique:
+        "2026-10-13 — ENCODÉE, décision de la propriétaire : l'hôtel entre dans la cible redéfinie le 2026-10-12, et le chapitre PO est le seul de ses manques à être encodé (exception à « encodage terminé »). Portée par `incendie-hotel-po-instruction-personnel-semestrielle`. L'entrée quand elle était `obligation_manquante` (2026-08-26 → 2026-10-13), cause `a_trancher` (`perimetre` jusqu'au 2026-10-12) : ~~« Les dispositions des articles PE 27 (§ 5) et PO 7 sont applicables. » Symétrique de PO 8 § 1 pour la formation : PO 7 — deux séances d'instruction et d'entraînement du personnel par an — est réimporté nommément dans le régime des établissements EXISTANTS. La périodicité vaut donc pour tous les hôtels, pas seulement les neufs. Même blocage que PO 7 lui-même : l'obligation ne porte sur aucun équipement.~~ — Son blocage : ~~porteur-d-echeance-hors-equipement — LEVÉ depuis le 2026-08-27 : l'ADR-022 a donné à l'établissement le rôle de porteur, et `PE 4 § 2` s'en sert. Ce qui retient cette ligne n'est plus technique : elle vise les HÔTELS (chapitre PO), hors de la cible du produit — d'où `cause: \"perimetre\"`. Rayé le 2026-09-20 ; la raison de non-encodage était restée écrite trois semaines après avoir cessé d'être vraie (règle 11 de `CLAUDE.md`). [2026-10-12 : ~~hors de la cible du produit~~ — la cible est désormais ce que l'onboarding ne refuse pas, et un hôtel de cinquante travailleurs au plus y entre. La cause passe de `perimetre` à `a_trancher` : la ligne rejoint les manques à classer selon la grille C45, sans être encodée.]~~\n\n2026-10-13 — relu par l'API Légifrance (pnpm legifrance:verifier, environnement BAC À SABLE, égalité avec la production non vérifiée) : citation, version en vigueur (2011-10-30) — OK. Rapport : docs/revues/verification-legifrance-2026-10-13-selection.md.",
     },
     {
       ref: "PO 13",
@@ -736,7 +727,7 @@ export const CORPUS_PE: Corpus = {
       lecture: "agent_verbatim",
       statut: "non_couvert",
       motif:
-        "Chapitre IV — règles spécifiques aux hôtels (type O), établissements de 5ᵉ catégorie. PO 1 § 3 et PO 7 portent les périodicités chiffrées du chapitre IV — PE 37 en porte une autre, la visite quinquennale de commission : contrôle biennal des installations techniques, annuel pour l'électricité et la détection, et deux séances d'instruction du personnel par an. Un très petit hôtel est exactement le genre de TPE que le produit sait servir par ailleurs — le manque est un choix, pas une impossibilité.",
+        "Chapitre IV — règles spécifiques aux hôtels (type O), établissements de 5ᵉ catégorie. PO 1 § 3 et PO 7 portent les périodicités chiffrées du chapitre IV — PE 37 en porte une autre, la visite quinquennale de commission : contrôle biennal des installations techniques, annuel pour l'électricité et la détection, et deux séances d'instruction du personnel par an. Un très petit hôtel est exactement le genre de TPE que le produit sait servir par ailleurs — ~~le manque est un choix, pas une impossibilité~~. [2026-10-13 : les périodicités du chapitre sont portées — le biennal de PO 1 § 3 (`incendie-hotel-po-controle-biennal-installations`) et les deux séances de PO 7 (`incendie-hotel-po-instruction-personnel-semestrielle`), décision de la propriétaire ; l'annuel électrique l'était depuis le 2026-08-26. Cet article-ci, qui n'écrit aucun rythme, reste non couvert.]",
       declareA:
         "docs/couverture-declaree-du-produit.md — NOTE INTERNE, pas une annonce à l'exploitant. Cet article a été nommé à l'écran, sur le tableau de bord de chaque établissement, du 2026-08-28 au soir du même jour ; la surface a été retirée par décision produit — déclarer ce que le produit ne couvre pas suppose d'avoir tranché ce qu'il couvre. Le document dit l'histoire et ce qu'il faudrait pour rendre l'annonce propre au dossier : un rattachement article → `Etablissement.typeErp`.",
     },

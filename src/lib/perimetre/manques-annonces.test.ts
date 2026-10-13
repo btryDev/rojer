@@ -23,9 +23,24 @@ function adressees(): string[] {
 const refsProjetees = (f: FaitsManquesAnnonces) =>
   manquesAnnoncesDuDossier(CORPUS, f).flatMap((d) => d.articles.map((a) => a.ref));
 
+// ERP de 3ᵉ catégorie et habitation (2026-10-13) : le dossier qui n'a rien
+// écarté, pour que la borne haute ci-dessous voie aussi les annonces du livre
+// II et de l'habitation.
 const EMPLOYEUR: FaitsManquesAnnonces = {
   travail: true,
   epiPresents: null,
+  categorieErp: "N3",
+  habitation: true,
+  operationsElectriques: null,
+};
+
+/** Un restaurant de 5ᵉ catégorie, sans habitation : le cas le plus courant de la cible. */
+const RESTAURANT_N5: FaitsManquesAnnonces = {
+  travail: true,
+  epiPresents: null,
+  categorieErp: "N5",
+  habitation: false,
+  operationsElectriques: null,
 };
 
 describe("l'adresse mène quelque part (C45)", () => {
@@ -80,7 +95,7 @@ describe("n'annonce à un dossier que ce qui peut le concerner", () => {
 
   it("le cocontractant étranger est annoncé à tout dossier : aucun fait déclaré ne l'exclut (M4)", () => {
     // Un annuaire de prestataires vide est un silence, pas un « non ».
-    expect(refsProjetees({ travail: false, epiPresents: null })).toEqual(
+    expect(refsProjetees({ travail: false, epiPresents: null, categorieErp: null, habitation: false, operationsElectriques: null })).toEqual(
       expect.arrayContaining(["D. 8222-7", "L. 8222-1", "D. 8222-5"]),
     );
   });
@@ -93,7 +108,7 @@ describe("n'annonce à un dossier que ce qui peut le concerner", () => {
   });
 
   it("sans travailleur, rien du Code du travail — l'eau et la vigilance restent", () => {
-    const f = { travail: false, epiPresents: null };
+    const f = { travail: false, epiPresents: null, categorieErp: null, habitation: false, operationsElectriques: null };
     const refs = refsProjetees(f);
     expect(refs).not.toContain("R. 4227-22");
     expect(refs).not.toContain("R. 4323-63");
@@ -108,13 +123,13 @@ describe("n'annonce à un dossier que ce qui peut le concerner", () => {
     );
     expect(rubrique?.titre).toBe("Risque chimique");
     expect(rubrique?.articles.map((a) => a.ref).sort()).toEqual(["R. 4412-11", "R. 4412-17"]);
-    const sansTravailleur = refsProjetees({ travail: false, epiPresents: null });
+    const sansTravailleur = refsProjetees({ travail: false, epiPresents: null, categorieErp: null, habitation: false, operationsElectriques: null });
     expect(sansTravailleur).not.toContain("R. 4412-11");
     expect(sansTravailleur).not.toContain("R. 4412-17");
   });
 
   it("un domaine sans article pour ce dossier n'est pas rendu", () => {
-    const f = { travail: false, epiPresents: null };
+    const f = { travail: false, epiPresents: null, categorieErp: null, habitation: false, operationsElectriques: null };
     const cles = manquesAnnoncesDuDossier(CORPUS, f).map((d) => d.cle);
     expect(cles).not.toContain("formation");
     for (const d of manquesAnnoncesDuDossier(CORPUS, f)) {
@@ -142,6 +157,51 @@ describe("n'annonce à un dossier que ce qui peut le concerner", () => {
     );
     expect(refs).not.toContain("R. 4227-22");
     expect(refs).toContain("R. 4227-23");
+  });
+});
+
+describe("2026-10-13 : le gaz et les escaliers mécaniques ne visent que leurs dossiers", () => {
+  const GAZ_ERP = ["GZ 13", "GZ 14"];
+
+  it("un ERP des quatre premières catégories lit le gaz et les escaliers mécaniques", () => {
+    expect(refsProjetees({ ...RESTAURANT_N5, categorieErp: "N4" })).toEqual(
+      expect.arrayContaining([...GAZ_ERP, "AS 10"]),
+    );
+  });
+
+  it("un ERP de 5ᵉ catégorie ne les lit pas — le livre II ne le vise pas", () => {
+    const refs = refsProjetees(RESTAURANT_N5);
+    for (const ref of [...GAZ_ERP, "AS 10"]) expect(refs).not.toContain(ref);
+  });
+
+  it("un établissement qui ne reçoit pas de public ne les lit pas", () => {
+    const refs = refsProjetees({ ...RESTAURANT_N5, categorieErp: null });
+    for (const ref of [...GAZ_ERP, "AS 10"]) expect(refs).not.toContain(ref);
+  });
+
+  it("le gaz collectif et l'immeuble d'habitation ne vont qu'au régime d'habitation", () => {
+    for (const ref of [
+      "Arrêté 23-02-2018 art. 26 § 3",
+      "Arrêté 1986-01-31 art. 78-1",
+      "Arrêté 1986-01-31 art. 102",
+    ]) {
+      expect(refsProjetees(RESTAURANT_N5), ref).not.toContain(ref);
+      expect(refsProjetees({ ...RESTAURANT_N5, habitation: true }), ref).toContain(ref);
+    }
+  });
+});
+
+describe("2026-10-13 : les travaux sous tension, annoncés sauf « non » aux opérations électriques", () => {
+  it("le silence ne retire rien, « oui » l'annonce, « non » le retire", () => {
+    expect(refsProjetees(RESTAURANT_N5)).toContain("R. 4544-11");
+    expect(refsProjetees({ ...RESTAURANT_N5, operationsElectriques: true })).toContain("R. 4544-11");
+    expect(refsProjetees({ ...RESTAURANT_N5, operationsElectriques: false })).not.toContain("R. 4544-11");
+  });
+
+  it("sans travailleur, rien", () => {
+    expect(
+      refsProjetees({ ...RESTAURANT_N5, travail: false, operationsElectriques: true }),
+    ).not.toContain("R. 4544-11");
   });
 });
 

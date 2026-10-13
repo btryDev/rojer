@@ -71,10 +71,14 @@ describe("registre de dette — les obligations manquantes", () => {
       // `L. 8222-5`, passe en `a_trancher` — ce qui la retient est la décision
       // sur le module de vigilance, plus l'absence de surface.
       // [0, 1] → [1, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : arrêté 1986 art. 102.
-      evenement: [1, 0],
+      // [1, 0] → [0, 0] le 2026-10-13 : arrêté 1986 art. 102 annoncé (`non_couvert`).
+      evenement: [0, 0],
       // [5, 6] → [11, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : `GZ 13`, `GZ 14`, `CO 61`,
       // `AS 10`, `GC 18`, arrêté 2018-02-23 art. 26 § 3.
-      categorie_equipement: [11, 0],
+      // [11, 0] → [7, 0] le 2026-10-13 (décision de la propriétaire) : `GZ 13`,
+      // `GZ 14`, `AS 10` et l'arrêté 2018-02-23 art. 26 § 3 annoncés
+      // (`non_couvert`). Restent HORS CADRE `CO 61`, `GC 18`.
+      categorie_equipement: [7, 0],
       // 4 → 1 le 2026-09-27 (C45) : `R. 4227-23`, `R. 4227-24` et l'art. 8 de
       // l'arrêté du 10 septembre 2021 passent `non_couvert`, annoncés.
       // [1, 2] → [3, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : `MS 71`, arrêté 1986 art. 60.
@@ -82,7 +86,8 @@ describe("registre de dette — les obligations manquantes", () => {
       // 5 → 0 le 2026-09-27 (C45) : `R. 1321-60` et les art. 4, 9, 10, 12 de
       // l'arrêté du 10 septembre 2021, annoncés (`non_couvert`).
       // [0, 1] → [1, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : arrêté 1986 art. 78-1.
-      destinataire: [1, 0],
+      // [1, 0] → [0, 0] le 2026-10-13 : arrêté 1986 art. 78-1 annoncé (`non_couvert`).
+      destinataire: [0, 0],
       // 6 → 4 le 2026-09-27 (C45) : `R. 4227-26` encodé (retenu), `R. 4225-3`
       // annoncé. Restent quatre HORS CADRE (`R. 4323-61`, `-69`, arrêté 1993
       // art. 8 et annexe III).
@@ -109,7 +114,12 @@ describe("registre de dette — les obligations manquantes", () => {
       // cible ; `PO 1 § 3`, `PO 7`, `PO 12` y entrent aussi et passent de
       // `perimetre` à `a_trancher` — à classer selon la grille C45, rien ne
       // s'encode. 3 + 1 + 3 = 7.
-      a_trancher: [7, 0],
+      // [7, 0] → [4, 0] le 2026-10-13 (décision de la propriétaire) : les trois
+      // hôtels encodés (`retenu`). `R. 4544-11` est classé HORS CADRE et reste
+      // ici, avec les trois du 2026-09-27.
+      // [4, 0] → [3, 0] le même jour : `R. 4544-11` annoncé (`non_couvert`),
+      // décision de la propriétaire (« hors cadre et on l'annonce »).
+      a_trancher: [3, 0],
       // [0, 3] → [0, 0] le 2026-10-12 : les trois hôtels, voir `a_trancher`.
       perimetre: [0, 0],
     });
@@ -121,10 +131,19 @@ describe("registre de dette — les obligations manquantes", () => {
     // `CATEGORIES_COUVERTES = ["N5"]`. 15 + 3 hôtels + 6 ERP des quatre
     // premières catégories + 4 habitation + 2 activités (`R. 4544-11`,
     // `R. 4323-89`) − 0 = 30. Le total ne bouge pas (30) : c'est une mesure,
-    // pas une dette nouvelle. Les quinze entrées sont OUVERTES, à évaluer
-    // selon la grille C45 (encoder / annoncer / hors cadre).
-    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(30);
-    expect(manquantes.length).toBe(30);
+    // pas une dette nouvelle. ~~Les quinze entrées sont OUVERTES, à évaluer
+    // selon la grille C45 (encoder / annoncer / hors cadre).~~ [Classées le
+    // 2026-10-13, ci-dessous.]
+    // 30 → 23 le 2026-10-13 (décision de la propriétaire, grille C45 sur les
+    // quinze) : 30 − 3 encodés (`PO 1 § 3`, `PO 7`, `PO 12`) − 4 annoncés
+    // (`GZ 13`, `GZ 14`, `AS 10`, arrêté 2018-02-23 art. 26 § 3) = 23. Les
+    // huit autres sont HORS CADRE et restent ici : 15 + 8 = 23, le § 7 de
+    // `docs/couverture-declaree-du-produit.md`.
+    // 23 → 21 le même jour, après revue : arrêté 1986 art. 78-1 et 102,
+    // d'abord classés hors cadre, sont annoncés (décision de la propriétaire).
+    // 21 → 20 : `R. 4544-11` annoncé, même décision.
+    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(20);
+    expect(manquantes.length).toBe(20);
   });
 });
 

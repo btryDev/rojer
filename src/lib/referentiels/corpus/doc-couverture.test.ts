@@ -16,6 +16,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { CORPUS, articlesNonCouverts } from "./index";
+import { ADRESSE_MANQUES_ANNONCES } from "./adresses";
 
 const CHEMIN = "docs/couverture-declaree-du-produit.md";
 
@@ -33,9 +34,10 @@ const HORS_CADRE = "## 7. Hors cadre — couvert par la clause générale des me
 /**
  * La section des manques entrés dans la cible le 2026-10-12, quand elle a cessé
  * d'être `CATEGORIES_COUVERTES` pour devenir ce que l'onboarding ne refuse pas.
- * Ouverts, non classés : ni hors cadre, ni annoncés.
+ * ~~Ouverts, non classés : ni hors cadre, ni annoncés.~~ Classés le
+ * 2026-10-13 par la propriétaire : encodés, annoncés ou hors cadre.
  */
-const A_EVALUER = "## 8. À évaluer — entrés dans la cible le 2026-10-12";
+const A_EVALUER = "## 8. Classés le 2026-10-13 — entrés dans la cible le 2026-10-12";
 
 /** Le document sans ses sections hors cadre et à évaluer, et chacune seule. */
 function decoupe(doc: string): { avant: string; horsCadre: string; aEvaluer: string } {
@@ -57,6 +59,11 @@ function decoupe(doc: string): { avant: string; horsCadre: string; aEvaluer: str
  * « PE 3 » est un préfixe de « PE 30 », et une recherche par sous-chaîne
  * tiendrait le second pour une citation du premier.
  */
+/** Les références de la première colonne d'un tableau du document. */
+function refsDuTableau(section: string): string[] {
+  return [...section.matchAll(/^\| `([^`]+)` \|/gm)].map((m) => m[1]);
+}
+
 function citeLaRef(doc: string, ref: string): boolean {
   return doc.includes(`\`${ref}\``);
 }
@@ -128,30 +135,47 @@ describe(`${CHEMIN} — la liste ne se périme pas en silence`, () => {
     ).toBe(true);
   });
 
-  it("C45 — hors cadre et à évaluer, disjoints, listent exactement les obligations manquantes qui touchent la cible", () => {
+  it("C45 — la section hors cadre liste exactement les obligations manquantes qui touchent la cible", () => {
     // ~~La section hors cadre seule~~ jusqu'au 2026-10-12 : la cible redéfinie
-    // (ce que l'onboarding ne refuse pas) y a fait entrer quinze manques que
-    // la grille C45 n'a pas encore classés. Ils vivent au § 8, pas au § 7 :
-    // les y mettre les déclarerait hors cadre sans décision.
+    // (ce que l'onboarding ne refuse pas) y avait fait entrer quinze manques
+    // non classés, tenus au § 8. ~~Hors cadre et à évaluer, disjoints~~ — le
+    // 2026-10-13, la propriétaire les a classés : l'égalité revient au § 7 seul.
     // Décision de la propriétaire du 2026-09-27 : sur les quarante-deux, quinze
     // relèvent de la clause générale des mentions légales, et restent
     // `obligation_manquante`. La liste du document et celle du corpus ne
     // doivent diverger dans aucun sens : un article encodé ou annoncé depuis
     // qui y resterait promettrait une exclusion qui n'est plus ; un manque
     // de la cible entré depuis et absent d'ici ne serait couvert par rien.
-    const { horsCadre, aEvaluer } = decoupe(documentCouverture());
+    const { horsCadre } = decoupe(documentCouverture());
     expect(horsCadre, `${CHEMIN} n'a plus de section « ${HORS_CADRE} ».`).not.toBe("");
-    expect(aEvaluer, `${CHEMIN} n'a plus de section « ${A_EVALUER} ».`).not.toBe("");
-    const refs = (section: string) =>
-      [...section.matchAll(/^\| `([^`]+)` \|/gm)].map((m) => m[1]);
-    const dansLesDeux = refs(horsCadre).filter((r) => refs(aEvaluer).includes(r));
-    expect(dansLesDeux, "Un manque ne peut pas être à la fois hors cadre et à évaluer.").toEqual([]);
-    const listees = [...refs(horsCadre), ...refs(aEvaluer)].sort();
     const duCorpus = CORPUS.flatMap((c) =>
       c.articles.flatMap((a) =>
         a.statut === "obligation_manquante" && a.toucheLaCible ? [a.ref] : [],
       ),
     ).sort();
-    expect(listees).toEqual(duCorpus);
+    expect(refsDuTableau(horsCadre).sort()).toEqual(duCorpus);
+  });
+
+  it("2026-10-13 — chaque ligne du § 8 a reçu un sort que le corpus porte", () => {
+    // Le § 8 dit, ligne par ligne, ce que la décision du 2026-10-13 a fait de
+    // chaque manque. La garde lit le sort dans le CORPUS, pas dans la colonne
+    // du document : encodé (`retenu`), annoncé (`non_couvert` à l'adresse de
+    // la page) ou hors cadre (au § 7). Une ligne qui n'aurait aucun des trois
+    // serait un manque de la cible resté ouvert, ce que la décision a fermé.
+    const { horsCadre, aEvaluer } = decoupe(documentCouverture());
+    expect(aEvaluer, `${CHEMIN} n'a plus de section « ${A_EVALUER} ».`).not.toBe("");
+    const auSeptieme = new Set(refsDuTableau(horsCadre));
+    const statut = new Map(
+      CORPUS.flatMap((c) => c.articles.map((a) => [a.ref, a] as const)),
+    );
+    const sansSort = refsDuTableau(aEvaluer).filter((ref) => {
+      const a = statut.get(ref);
+      if (!a) return true;
+      if (a.statut === "retenu") return false;
+      if (a.statut === "non_couvert" && a.declareA === ADRESSE_MANQUES_ANNONCES) return false;
+      return !auSeptieme.has(ref);
+    });
+    expect(sansSort).toEqual([]);
+    expect(refsDuTableau(aEvaluer)).toHaveLength(15);
   });
 });
