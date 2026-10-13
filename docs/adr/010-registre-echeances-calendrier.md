@@ -67,7 +67,11 @@ injectée), conformément au principe zéro-IA / déterminisme.
   `SEUIL_RELEVE_CARNET_JOURS` = 7 j) — trop fréquent pour un calendrier
   mensuel,~~ [2026-10-13 : rythme MENSUEL, celui de l'arrêté du 1er février
   2010 (annexe 2) ; la constante de 7 jours est retirée, `releveAncien` fait
-  foi] suivi par le module et la matrice d'obligations.
+  foi] suivi par le module et la matrice d'obligations. [2026-10-13 : le
+  seul motif de l'exclusion — la fréquence — est tombé avec la rature
+  ci-dessus. L'exclusion est maintenue en l'état, son motif est À
+  REPRENDRE : une ligne de calendrier par point de relevé mensuel n'a pas
+  été instruite.]
 - **Formation du personnel d'accueil (accessibilité)** et **maintenance
   des équipements d'accessibilité** : pas de périodicité légale unique
   vérifiable → pas d'échéance inventée (règle n°6 du projet).

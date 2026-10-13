@@ -578,9 +578,10 @@ export async function getModulesMatrice(
   // confondues — un seul point relevé cette semaine suffisait à faire
   // passer la ligne au vert alors que dix autres n'avaient pas été mesurés
   // depuis un an. La pastille n'établissait pas le fait qu'elle prétendait
-  // établir. On retient donc le point **le plus en retard**, et on compte à
-  // part ceux qui n'ont jamais été relevés (leur ancienneté n'est pas
-  // mesurable : elle ne peut pas entrer dans un maximum).
+  // établir. On compte donc les points dont le dernier relevé est ANCIEN
+  // (un seul suffit à refuser la pastille — c'est juger sur le point le plus
+  // en retard), et à part ceux qui n'ont jamais été relevés (leur ancienneté
+  // n'est pas mesurable : elle ne peut entrer dans aucun des deux comptes).
   let nbPointsReleveAncien = 0;
   let nbPointsJamaisReleves = 0;
   let nbPoints = 0;
