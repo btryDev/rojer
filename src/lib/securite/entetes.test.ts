@@ -33,6 +33,15 @@ describe("entetesSecurite", () => {
     expect(valeur("Strict-Transport-Security")).toMatch(/^max-age=\d{8,}/);
   });
 
+  it("HSTS couvre les sous-domaines de l'hôte, sans engager la liste preload", () => {
+    // ASVS 5.0.0 V3.4.1, clause L2 (audit du 2026-10-13).
+    const hsts = (valeur("Strict-Transport-Security") ?? "")
+      .split(";")
+      .map((d) => d.trim().toLowerCase());
+    expect(hsts).toContain("includesubdomains");
+    expect(hsts).not.toContain("preload");
+  });
+
   it("Permissions-Policy coupe caméra, micro, géolocalisation, garde le presse-papiers", () => {
     const pp = valeur("Permissions-Policy") ?? "";
     for (const f of ["camera=()", "microphone=()", "geolocation=()"]) {
