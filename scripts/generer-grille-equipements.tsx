@@ -80,6 +80,7 @@ import {
 import {
   LEGENDE_REGIME,
   pourHelvetica as t,
+  texteOuVisible,
   texteTypologie,
 } from "@/lib/pdf/textes-grille-relecture";
 import { ReferenceDetaillee } from "@/lib/pdf/ReferenceDetaillee";
@@ -329,6 +330,11 @@ function LigneObligation({
           criticité {o.criticite}/5 · {LABEL_DOMAINE[o.domaine]} ·{" "}
           {LIBELLE_NATURE[o.nature]}
         </Text>
+        {/* 2026-10-13 : où le dirigeant la voit, lu dans `surfacesDe` — une
+            ligne courte sous le libellé plutôt qu'une colonne de plus. */}
+        <Text style={[s.small, { marginTop: 1, color: BOARD.bleuEncre }]}>
+          {t(`Visible : ${texteOuVisible(o)}`)}
+        </Text>
       </View>
       <View style={[cell, { width: C.periodicite }]}>
         <Text style={s.td}>{libelleRythme(o)}</Text>
@@ -557,6 +563,9 @@ function CarteProposition({ o, motif }: { o: Obligation; motif: string }) {
       </Text>
       <Text style={{ fontSize: 10.5, lineHeight: 1.55, marginTop: 6, color: BOARD.ardoiseEncre }}>
         {t(motif)}
+      </Text>
+      <Text style={{ fontSize: 9, marginTop: 6, color: BOARD.bleuEncre }}>
+        {t(`Aujourd'hui visible : ${texteOuVisible(o)}`)}
       </Text>
     </View>
   );

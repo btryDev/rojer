@@ -13,6 +13,9 @@ import {
   TYPES_ERP_A_SOMMEIL_PLAUSIBLE,
   type TypologieApplication,
 } from "@/lib/referentiels/types-communs";
+import { surfacesDe, type Surface } from "@/lib/surfaces/obligations-sans-surface";
+import { porteurDe } from "@/lib/referentiels/conformite";
+import type { Obligation } from "@/lib/referentiels/conformite/types";
 
 /**
  * Un bout de la ligne « Régime ». Deux genres, parce que `matchTypologie`
@@ -334,4 +337,35 @@ const SUBSTITUTIONS: [RegExp, string][] = [
 
 export function pourHelvetica(s: string): string {
   return SUBSTITUTIONS.reduce((acc, [re, rep]) => acc.replace(re, rep), s);
+}
+
+/**
+ * Où le dirigeant voit une obligation — 2026-10-13, demande de la propriétaire.
+ * Lu dans `surfacesDe` (src/lib/surfaces), qui appelle les règles mêmes du
+ * moteur : jamais redit ici. La table est exhaustive au compilateur — une
+ * surface neuve sans libellé ne compile pas.
+ */
+export const LIBELLE_SURFACE: Record<Surface, string> = {
+  calendrier: "Calendrier",
+  etats_permanents: "Ce qui doit être en place",
+  faits: "Quand ça arrive",
+  niveau_audit: "Ce que Rojer ne couvre pas (niveau audit)",
+  fiche_salarie: "Fiche salarié",
+};
+
+export function texteOuVisible(o: Obligation): string {
+  const surfaces = surfacesDe(o);
+  const libelles = surfaces.map((s) => LIBELLE_SURFACE[s]);
+  // Une obligation portée par un appareil se lit aussi sur sa fiche — sauf au
+  // niveau audit, où le moteur ne la rend jamais applicable.
+  if (porteurDe(o) === "equipement" && !surfaces.includes("niveau_audit")) {
+    libelles.push("fiche de l'équipement");
+  }
+  // Un titre porté par un salarié se déclare et se lit sur Équipe, qu'il ait
+  // ou non une surface datée (les titres « sous condition » n'en ont pas :
+  // le produit ne sait pas qui y est soumis — ADR-043 (b)).
+  if (porteurDe(o) === "salarie" && !surfaces.includes("niveau_audit")) {
+    libelles.push("Équipe (titres déclarés par salarié)");
+  }
+  return libelles.join(" · ");
 }

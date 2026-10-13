@@ -13,13 +13,16 @@ import {
   CRITERES_TYPOLOGIE,
   JAMAIS_RETENUE,
   LECTURE_LISIBLE,
+  LIBELLE_SURFACE,
   LEGENDE_REGIME,
   pourHelvetica,
   releveDe,
   STATUT_LISIBLE,
+  texteOuVisible,
   texteProvenance,
   texteTypologie,
 } from "./textes-grille-relecture";
+import { surfacesDe } from "@/lib/surfaces/obligations-sans-surface";
 
 /** La typologie d'une obligation réelle du référentiel — absente, le test tombe. */
 function typo(id: string): TypologieApplication {
@@ -421,5 +424,36 @@ describe("LEGENDE_REGIME — ce que la légende doit dire (seconde revue, R-a et
     const t = { travail: true, erp: { categories: ["N1", "N2"] } } as TypologieApplication;
     expect(issue(t, {})).toBe("retenue");
     expect(issue(t, ERP("N5", "N"))).toBe("écartée");
+  });
+});
+
+describe("« Visible » : où le dirigeant voit l'obligation (2026-10-13)", () => {
+  // Lu dans `surfacesDe` : le test confronte le texte aux surfaces calculées,
+  // sans les redire, puis vérifie trois cas connus du référentiel.
+  it("chaque obligation dit au moins une surface, et chaque surface calculée est nommée", () => {
+    for (const o of obligationsConformite) {
+      const texte = texteOuVisible(o);
+      expect(texte.length, o.id).toBeGreaterThan(0);
+      for (const s of surfacesDe(o)) expect(texte, o.id).toContain(LIBELLE_SURFACE[s]);
+    }
+  });
+
+  it("une échéance d'appareil : calendrier et fiche de l'équipement", () => {
+    const o = obligationsConformite.find((x) => x.id === "incendie-erp-ssi-annuelle")!;
+    expect(texteOuVisible(o)).toBe("Calendrier · fiche de l'équipement");
+  });
+
+  it("un état permanent d'établissement : « Ce qui doit être en place », sans fiche d'équipement", () => {
+    const o = obligationsConformite.find(
+      (x) => x.id === "sante-travail-etablissement-fiche-entreprise",
+    )!;
+    expect(texteOuVisible(o)).toBe("Ce qui doit être en place");
+  });
+
+  it("une obligation au niveau audit : seulement la page « Ce que Rojer ne couvre pas »", () => {
+    const o = obligationsConformite.find(
+      (x) => x.id === "incendie-travail-chiffons-impregnes-recipients-clos",
+    )!;
+    expect(texteOuVisible(o)).toBe("Ce que Rojer ne couvre pas (niveau audit)");
   });
 });
