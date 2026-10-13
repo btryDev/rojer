@@ -75,8 +75,8 @@ import {
   CATEGORIES_EQUIPEMENT,
   PERIODICITE_EN_JOURS,
   type CategorieEquipement,
-  type TypologieApplication,
 } from "@/lib/referentiels/types-communs";
+import { texteTypologie } from "@/lib/pdf/textes-grille-relecture";
 import {
   DESCRIPTION_CATEGORIE,
   LABEL_CATEGORIE_EQUIPEMENT,
@@ -150,28 +150,9 @@ function texteReference(r: { source: string; reference: string }): string {
   return ref.toLowerCase().startsWith(premierMot) ? ref : `${libelle}, ${ref}`;
 }
 
-/** Le régime auquel l'obligation s'applique, en une ligne lisible. */
-function texteTypologie(t: TypologieApplication): string {
-  const bouts: string[] = [];
-  if (t.travail === true) bouts.push("Travail");
-  if (t.erp === true) bouts.push("ERP");
-  else if (t.erp && typeof t.erp === "object") {
-    const p: string[] = [];
-    if (t.erp.categories?.length) p.push(`cat. ${t.erp.categories.join(", ")}`);
-    if (t.erp.types?.length) p.push(`type ${t.erp.types.join(", ")}`);
-    bouts.push(`ERP${p.length ? ` (${p.join(" ; ")})` : ""}`);
-  } else if (t.erp === false) bouts.push("hors ERP");
-  if (t.igh === true) bouts.push("IGH");
-  else if (t.igh && typeof t.igh === "object")
-    bouts.push(`IGH (${t.igh.classes.join(", ")})`);
-  if (t.habitation === true) bouts.push("Habitation");
-  if (t.effectifMin !== undefined) bouts.push(`effectif d'au moins ${t.effectifMin}`);
-  if (t.effectifMax !== undefined) bouts.push(`effectif d'au plus ${t.effectifMax}`);
-  if (t.personnesPresentesMin !== undefined)
-    bouts.push(`au moins ${t.personnesPresentesMin} personnes présentes`);
-  if (t.champR422734) bouts.push("ou matières R. 4227-22");
-  return bouts.length ? bouts.join(" · ") : "Tous régimes";
-}
+// La ligne « Régime » (`texteTypologie`) vit dans
+// `src/lib/pdf/textes-grille-relecture.ts`, où le compilateur tient qu'elle
+// rend chaque critère de `TypologieApplication` (2026-10-13).
 
 /** La condition portée par une propriété de l'équipement, en clair. */
 /**
