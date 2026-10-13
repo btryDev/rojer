@@ -552,12 +552,17 @@ constat qui ne rejoint pas cette liste se perd** — c'est la leçon du § 7.
   « À jour sur une zone à zéro équipement », corrigé le 2026-09-04 — et cette
   famille-là a déjà sa forme de correction : trois états fermés dont un
   `sansObjet` évalué avant tout comptage (`lib/batiments/etat-charge.ts`).
+  [2026-10-13, contrôle visuel (session de l'autre Mac) : `next build` + `next start` en local, `main` à 4f6de986, base Docker locale, dossier « Le Comptoir des Halles » déjà semé — DÉFAUT CONFIRMÉ : relevé du 04/08/2026, soit 70 jours, et
+  la pastille verte « Dans la plage » sur les trois points.]
 
 - **Trois écritures d'une même unité sur une seule carte** (`/carnet-sanitaire`,
   « Retour de boucle ») : `SEUIL MIN 50°C`, la valeur `55.0°`, l'axe
   `60°/50°/45°`, et `100%` sans espace. Le français écrit « 55,0 °C » et
   « 100 % » — et le produit écrit « 5 % » et « 80 % » ailleurs : la convention
   existe, elle n'est pas tenue ici.
+  [2026-10-13, contrôle visuel (session de l'autre Mac) : `next build` + `next start` en local, `main` à 4f6de986, base Docker locale, dossier « Le Comptoir des Halles » déjà semé — DÉFAUT CONFIRMÉ : « 53.0° », « 55.0° », « 60.0° »,
+  « 67% dans la plage », « 100% dans la plage », « 320UFC/L »,
+  « SEUIL MIN 50°C », axes en « 50° ».]
 
 - ~~**La même statistique écrite de deux façons** : « 80 % des incendies »
   (`permis-feu/page.tsx:120`) contre « 80% des incendies »
@@ -570,6 +575,7 @@ constat qui ne rejoint pas cette liste se perd** — c'est la leçon du § 7.
   (« ← LE COMPTOIR DES HALLES ») sur `/permis-feu` et `/plan-prevention`, fil
   d'Ariane sur `/carnet-sanitaire`. L'ADR-014 sépare les deux assertions ; ici
   elles désignent la même relation.
+  [2026-10-13, contrôle visuel (session de l'autre Mac) : `next build` + `next start` en local, `main` à 4f6de986, base Docker locale, dossier « Le Comptoir des Halles » déjà semé — DÉFAUT CONFIRMÉ ; la page Zones emploie aussi le retour.]
 
 - ~~**`SupprimerEtablissementButton` n'est monté sur aucun écran**, donc il
   n'existe aucun endroit d'où supprimer un établissement.~~ **RÉSOLU le
@@ -642,6 +648,14 @@ gauche. Sur la page de vente. Demi-correction, pas correction.
 > de blanc (`globals.css:682`), calculée sur le pire fond pour tenir 4,5:1. Il
 > reste 12 % de transparence : c'est un chiffre, pas un jugement, et seul un
 > regard à la bonne position de défilement dit si ça suffit.
+>
+> [2026-10-13, contrôle visuel (session de l'autre Mac) : `next build` + `next start` en local, `main` à 4f6de986, base Docker locale, dossier « Le Comptoir des Halles » déjà semé — ~~reste à confirmer à l'œil~~ 88 % VU (calculé
+> `color(srgb 1 1 1 / 0.88)`). **DÉFAUT NEUF** : le CSS compilé ne garde que
+> `-webkit-backdrop-filter` pour `.lp-nav` et `.lp-nav--ilot` ; la propriété
+> standard `backdrop-filter` disparaît au build, Chrome calcule `none`, donc
+> aucun flou — le titre blanc « Concentrez-vous » se lit net à travers l'îlot
+> sur la bande noire. La règle `.lp-nav` porte aussi des `blur()saturate()`
+> vides. À corriger.]
 
 ~~**`/equipements` tranche une ambiguïté du mauvais côté.** Sous les compteurs :
 « Les chiffres ci-dessus et les familles ci-dessous portent sur tout
@@ -715,14 +729,31 @@ bord, 19 sur la carte de zone, « 22 datées · 5 à planifier » au calendrier,
   que la ligne a de la place.~~ **TRAITÉ, reste à confirmer à l'œil** —
   `echeances.tsx:154` et `:288`. Qu'elle existe dans le code ne dit pas qu'elle
   s'affiche là où on la cherche.
-- **TOUJOURS OUVERT, non vérifié.** Le guide reste à « étape 4 sur 6 » alors que
-  l'étape 5 paraît satisfaite ; un bouton primaire y est indiscernable d'un choix
+  [2026-10-13, contrôle visuel (session de l'autre Mac) : `next build` + `next start` en local, `main` à 4f6de986, base Docker locale, dossier « Le Comptoir des Halles » déjà semé — PAS VUE dans un widget. Sur la fiche de la vérification, la
+  pastille est là (ambre, « Origine : demande de votre assureur »). Mais la
+  seule ligne d'assurance du dossier (thermographie, `a_planifier`) n'entre ni
+  dans les cinq lignes d'« À faire », où d'autres sont plus en retard, ni dans
+  « Prochaines échéances », qui la range « sans échéance connue ». Le code de
+  rendu existe et n'est jamais atteint avec ces données : **une demande
+  d'assureur à planifier n'apparaît sur aucun widget du tableau de bord.** À
+  trancher : est-ce voulu ?]
+- **TOUJOURS OUVERT, non vérifié.** ~~Le guide reste à « étape 4 sur 6 » alors que
+  l'étape 5 paraît satisfaite~~ ; un bouton primaire y est indiscernable d'un choix
   déjà fait.
+  [2026-10-13, contrôle visuel (session de l'autre Mac) : `next build` + `next start` en local, `main` à 4f6de986, base Docker locale, dossier « Le Comptoir des Halles » déjà semé — le compteur est JUSTE : le guide a onze étapes, pas six
+  (« Étape 9 sur 11 », les huit premières faites et barrées). **DÉFAUT
+  CONFIRMÉ** sur le bouton : aux questions 9 à 11 sans réponse, « Oui » est noir
+  plein et « Non » cerné, ce qui se lit comme un choix déjà fait.]
 - **TOUJOURS OUVERT, non vérifié — et il ne se mesure pas en `next dev`.** Le
   héros de la page d'accueil reste un aplat noir ~4 s avant que la photo arrive.
   Pas cassé, lent — sur la première image d'une page de vente. À juger sur un
   `next build`, faute de quoi on relèvera la compilation à la demande comme un
   défaut de produit.
+  [2026-10-13, contrôle visuel (session de l'autre Mac) : `next build` + `next start` en local, `main` à 4f6de986, base Docker locale, dossier « Le Comptoir des Halles » déjà semé — NON REPRODUIT en local : onglet au premier plan, cache
+  d'images vidé, rechargement forcé ; TTFB 161 ms, image de 48 Ko reçue à
+  285 ms, affichage (LCP) à 324 ms, préchargement présent. Réserve : localhost
+  n'a pas de latence réseau, à confirmer en prod. Le cadre est peint
+  `--board-ink` tant que l'image manque — d'où du noir si elle tarde.]
 
 ### Et un fait de conception, découvert en le cherchant
 
@@ -746,8 +777,19 @@ rien sur une correction de charte. S'y ajoutent tout l'onboarding, le refus de l
 > établissements et affiche A4) et `/plan-actions` (fiche d'action). Une
 > quinzaine de constats en sont sortis, dont plusieurs déjà corrigés depuis.
 >
-> **Réellement jamais ouverts, et c'est tout ce qui reste :** `/permis-feu`,
-> `/plan-prevention`, `/carnet-sanitaire`.
+> ~~**Réellement jamais ouverts, et c'est tout ce qui reste :** `/permis-feu`,
+> `/plan-prevention`, `/carnet-sanitaire`.~~
+>
+> [2026-10-13, contrôle visuel (session de l'autre Mac) : `next build` + `next start` en local, `main` à 4f6de986, base Docker locale, dossier « Le Comptoir des Halles » déjà semé — CLOS. VUS avec des données : `/permis-feu` (PF-001 « En
+> attente de signatures »), `/plan-prevention` (PP-001 « Inspection commune
+> faite »), `/carnet-sanitaire` (3 points, 18 relevés, 1 analyse). Le refus de
+> la 4ᵉ zone s'affiche (« Un établissement compte 3 zones au plus… ») ; le
+> formulaire de prescription revient à ses valeurs par défaut après
+> l'enregistrement (prescription de test créée puis supprimée, vérifié en base).
+> L'onboarding s'ouvre et rend bien son étape 1 sur 3, sans avoir été parcouru
+> jusqu'à la création. **Constat neuf** : `/onboarding` s'ouvre sans
+> redirection pour un compte qui a déjà une entreprise — à vérifier dans le
+> code avant d'en faire un défaut.]
 
 ### Comment la session s'ouvre, et pourquoi ça ne s'improvise pas
 
