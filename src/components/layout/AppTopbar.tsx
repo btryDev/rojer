@@ -15,10 +15,9 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-export type Crumb = {
-  href?: string;
-  label: string;
-};
+import { FilAriane, type Crumb } from "@/components/navigation/FilAriane";
+
+export type { Crumb };
 
 export function AppTopbar({
   title,
@@ -88,49 +87,7 @@ export function AppTopbar({
           </nav>
         ) : null}
 
-        {crumbs && crumbs.length > 0 ? (
-          <nav
-            aria-label="Fil d'Ariane"
-            className="mb-1.5 flex items-center text-[12.5px] text-[color:var(--board-slate-mid)]"
-          >
-            {crumbs.map((c, i) => {
-              const last = i === crumbs.length - 1;
-              return (
-                <span key={i} className="flex items-center">
-                  {c.href && !last ? (
-                    <Link
-                      href={c.href}
-                      className="transition-colors hover:text-[color:var(--board-ink)]"
-                    >
-                      {c.label}
-                    </Link>
-                  ) : (
-                    <strong
-                      className={
-                        last
-                          ? "font-medium text-[color:var(--board-ink)]"
-                          : "font-normal"
-                      }
-                    >
-                      {c.label}
-                    </strong>
-                  )}
-                  {!last ? (
-                    /* Le chevron est une graduation, pas du texte : il porte
-                       l'ardoise claire plutôt qu'une opacité, qui fabriquait
-                       un gris hors famille. */
-                    <span
-                      aria-hidden
-                      className="mx-1.5 text-[color:var(--board-slate)]"
-                    >
-                      ›
-                    </span>
-                  ) : null}
-                </span>
-              );
-            })}
-          </nav>
-        ) : null}
+        {crumbs && crumbs.length > 0 ? <FilAriane crumbs={crumbs} /> : null}
 
         <h1 className="board-titre m-0 text-[clamp(22px,2.2vw,27px)]">
           {title}

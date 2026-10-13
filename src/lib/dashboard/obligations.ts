@@ -63,12 +63,13 @@ export type ModulesMatrice = {
     /** Points de relevé **actifs**. */
     nbPoints: number;
     /** Points actifs jamais relevés : leur ancienneté n'est pas mesurable,
-     *  ils ne peuvent donc pas entrer dans le maximum ci-dessous — mais ils
+     *  ils ne peuvent donc pas entrer dans le compte ci-dessous — mais ils
      *  interdisent de conclure que le carnet est tenu. */
     nbPointsJamaisReleves: number;
-    /** Jours écoulés depuis le relevé du point **le plus en retard** parmi
-     *  les points actifs déjà relevés ; null si aucun ne l'a été. */
-    jourPointLePlusEnRetard: number | null;
+    /** Points actifs dont le dernier relevé a plus d'un mois — le rythme
+     *  écrit (`releveAncien`, le prédicat de la page du carnet). Remplace
+     *  `jourPointLePlusEnRetard`, lu contre 7 jours (2026-10-13). */
+    nbPointsReleveAncien: number;
     /** Jours depuis la dernière analyse légionelles, null si aucune. */
     jourDerniereAnalyse: number | null;
   };
@@ -102,18 +103,24 @@ export type EntreeMatrice = {
 export const SEUIL_REGISTRE_JOURS = 365;
 
 /**
- * Relevé de température ECS : seuil d'affichage **retenu par le produit**,
- * pas une périodicité recopiée d'un texte.
+ * ~~Relevé de température ECS : seuil d'affichage **retenu par le produit**,
+ * pas une périodicité recopiée d'un texte.~~
  *
- * Le commentaire précédent attribuait ce rythme hebdomadaire à l'arrêté du
+ * ~~Le commentaire précédent attribuait ce rythme hebdomadaire à l'arrêté du
  * 1er février 2010, ce que ce texte ne dit pas : il prescrit une mesure
  * mensuelle de la température aux points d'usage représentatifs. Le rythme
  * hebdomadaire relève de la bonne pratique d'exploitation. La valeur est
  * conservée telle quelle (elle n'a pas été tranchée sur source primaire),
  * mais elle n'est plus présentée comme une exigence réglementaire — règle
- * n°6 du projet : ne jamais attribuer à un texte ce qu'il n'écrit pas.
+ * n°6 du projet : ne jamais attribuer à un texte ce qu'il n'écrit pas.~~
+ *
+ * [2026-10-13] `SEUIL_RELEVE_CARNET_JOURS = 7` RETIRÉE. Le rythme écrit
+ * l'emporte : l'arrêté du 1er février 2010 (annexe 2) prescrit la mesure de
+ * température « 1 fois par mois », et la page du carnet comptait déjà au mois.
+ * Un relevé de huit jours passait la ligne « Carnet sanitaire » en « à faire »
+ * — un manquement que le droit ne fait pas. La ligne lit désormais le même
+ * prédicat que la carte du point (`releveAncien`, via `nbPointsReleveAncien`).
  */
-export const SEUIL_RELEVE_CARNET_JOURS = 7;
 
 /**
  * Analyse légionelles : seuil d'affichage annuel. L'arrêté du 1er février
@@ -204,9 +211,7 @@ function lignesModules(
         oui(
           m.carnetSanitaire.nbPoints > 0 &&
             m.carnetSanitaire.nbPointsJamaisReleves === 0 &&
-            m.carnetSanitaire.jourPointLePlusEnRetard !== null &&
-            m.carnetSanitaire.jourPointLePlusEnRetard <=
-              SEUIL_RELEVE_CARNET_JOURS,
+            m.carnetSanitaire.nbPointsReleveAncien === 0,
         ),
         oui(
           m.carnetSanitaire.jourDerniereAnalyse !== null &&

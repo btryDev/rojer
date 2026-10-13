@@ -201,7 +201,7 @@ export const ARRETE_2010_02_01_LEGIONELLES: Corpus = {
       citationCle:
         "Point(s) d'usage à risque le(s) plus représentatif(s) du réseau ou à défaut le(s) point(s) d'usage le(s) plus éloigné(s) de la production d'eau chaude sanitaire. Analyses de légionelles : 1 fois par an. Température de l'eau : 1 fois par mois.",
       statut: "non_couvert",
-      motif: "Les deux seuls rythmes de l'arrêté pour un ERP ordinaire : un mois pour la température, un an pour les légionelles. Le module retient 365 jours pour l'analyse — conforme — et 7 jours pour le relevé, plus serré que le texte et présenté comme tel. Non encodés au référentiel pour la raison dite à l'article 3.",
+      motif: "Les deux seuls rythmes de l'arrêté pour un ERP ordinaire : un mois pour la température, un an pour les légionelles. Le module retient 365 jours pour l'analyse — conforme — ~~et 7 jours pour le relevé, plus serré que le texte et présenté comme tel~~ [2026-10-13 : et UN MOIS pour le relevé, le rythme de cette annexe — la page du carnet et le tableau de bord lisent le même prédicat, `releveAncien` ; les 7 jours de `SEUIL_RELEVE_CARNET_JOURS` sont retirés, décision de la propriétaire]. Non encodés au référentiel pour la raison dite à l'article 3.",
       declareA: "src/app/etablissements/[id]/carnet-sanitaire/page.tsx — le paragraphe « Êtes-vous concerné ? » cite le champ de l'arrêté (art. 1er et 2) et dit ce que Rojer fait : rien tant qu'aucun carnet n'est ouvert, puis un rappel de l'analyse suivante à un an",
     },
     {

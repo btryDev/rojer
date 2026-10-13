@@ -34,6 +34,7 @@ import {
   joursCivilsEntre,
 } from "@/lib/dates";
 import { estActionEnRetard } from "@/lib/dates/retard";
+import { releveAncien } from "@/lib/carnet-sanitaire/etat-releve";
 import {
   aUnRendezVous,
   classerVerification,
@@ -577,10 +578,11 @@ export async function getModulesMatrice(
   // confondues — un seul point relevé cette semaine suffisait à faire
   // passer la ligne au vert alors que dix autres n'avaient pas été mesurés
   // depuis un an. La pastille n'établissait pas le fait qu'elle prétendait
-  // établir. On retient donc le point **le plus en retard**, et on compte à
-  // part ceux qui n'ont jamais été relevés (leur ancienneté n'est pas
-  // mesurable : elle ne peut pas entrer dans un maximum).
-  let jourPointLePlusEnRetard: number | null = null;
+  // établir. On compte donc les points dont le dernier relevé est ANCIEN
+  // (un seul suffit à refuser la pastille — c'est juger sur le point le plus
+  // en retard), et à part ceux qui n'ont jamais été relevés (leur ancienneté
+  // n'est pas mesurable : elle ne peut entrer dans aucun des deux comptes).
+  let nbPointsReleveAncien = 0;
   let nbPointsJamaisReleves = 0;
   let nbPoints = 0;
   if (carnet) {
@@ -610,10 +612,9 @@ export async function getModulesMatrice(
         nbPointsJamaisReleves += 1;
         continue;
       }
-      const jours = Math.max(0, joursCivilsEntre(dernier, now));
-      if (jourPointLePlusEnRetard === null || jours > jourPointLePlusEnRetard) {
-        jourPointLePlusEnRetard = jours;
-      }
+      // Le même prédicat que la carte du point : au-delà d'un mois, le
+      // rythme écrit (2026-10-13 — la ligne lisait 7 jours).
+      if (releveAncien(dernier, now)) nbPointsReleveAncien += 1;
     }
   }
   const derniereAnalyse = carnet?.analyses[0]?.dateAnalyse ?? null;
@@ -634,7 +635,7 @@ export async function getModulesMatrice(
       existe: carnet !== null,
       nbPoints,
       nbPointsJamaisReleves,
-      jourPointLePlusEnRetard,
+      nbPointsReleveAncien,
       jourDerniereAnalyse: derniereAnalyse
         ? Math.max(0, joursCivilsEntre(derniereAnalyse, now))
         : null,

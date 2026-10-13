@@ -1,5 +1,7 @@
+import { redirect } from "next/navigation";
 import { WizardShell } from "@/components/onboarding/WizardShell";
 import { requireUser } from "@/lib/auth/require-user";
+import { getOptionalUserEtablissement } from "@/lib/auth/scope";
 
 /**
  * Parcours de mise en place — wizard mono-page (client component) qui
@@ -19,5 +21,13 @@ import { requireUser } from "@/lib/auth/require-user";
  */
 export default async function OnboardingPage() {
   const user = await requireUser();
+  // Un compte = une entreprise (ADR-005, ADR-028) : le parcours ne se joue
+  // qu'une fois. L'action d'enregistrement le refusait déjà
+  // (`finaliserOnboarding`), mais seulement APRÈS les trois étapes — le
+  // dirigeant remplissait tout pour être renvoyé à son dossier (contrôle
+  // visuel du 2026-10-13). La même garde, à l'ouverture. Les établissements
+  // suivants naissent de `/etablissements/nouveau`.
+  const existant = await getOptionalUserEtablissement();
+  if (existant) redirect(`/etablissements/${existant.id}`);
   return <WizardShell email={user.email} />;
 }

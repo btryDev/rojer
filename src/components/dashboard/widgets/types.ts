@@ -277,6 +277,14 @@ export type DashboardBundle = {
    * « à planifier » précédaient une vraie échéance. `null` = aucune.
    */
   prochaineEcheance: VerificationLite | null;
+  /**
+   * Les demandes d'assureur à planifier (sans échéance connue) que
+   * `prochainesVerifs` a coupées : le widget « Prochaines échéances » les
+   * nomme sous sa liste (`echeancesDuTableauDeBord`, contrôle visuel du
+   * 2026-10-13). Requis : facultatif, une projection qui l'oublierait la
+   * ferait disparaître du board en silence — le défaut même qu'il corrige.
+   */
+  demandesAssureurHorsListe: VerificationLite[];
   rapportsRecents: RapportLite[];
   nbVerifs: number;
   nbRapports: number;

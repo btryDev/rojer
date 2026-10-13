@@ -47,13 +47,13 @@ avant affectation (fait, `7ab800e3`).
 **Périmètre annoncé** — refus à l'onboarding sans lien vers ce qui est exclu ; hôtel, U, X en 5ᵉ non prévenus des chapitres PO/PU/PX ; dossier PDF, ZIP et MCP sans niveau audit ni articles annoncés ; MCP 7 obligations sur 46 pour le bureau (D4).
 
 ## 3. Peut attendre
-Slug d'accessibilité en double ; SIRET en double ; portées « dépôt »/« consultation » jamais émises ; statut du permis non contrôlé côté serveur ; « À jour » carnet à 7 jours (texte : mensuel) ; dates futures acceptées ; plan d'actions PDF « aucune action » avec 3 levées ; titre « registre incendie » pour tous ; filtres du registre à 3 domaines ; organisme facultatif ; 4ᵉ refus implicite (0 salarié) ; somme des effectifs des sites ; code mort `deduction-erp.ts` ; motif « première version » ; titre redéclaré écrasé sans historique ; export RGPD sans calendrier ni actions liées ; conservation des sortis sans durée ; notes « locaux à sommeil » périmées sur deux obligations électriques (rebranchement).
+Slug d'accessibilité en double ; SIRET en double ; portées « dépôt »/« consultation » jamais émises ; statut du permis non contrôlé côté serveur ; ~~« À jour » carnet à 7 jours (texte : mensuel)~~ [2026-10-13 : clos, `lot/controle-visuel-1310` — mensuel, prédicat `releveAncien`] ; dates futures acceptées ; plan d'actions PDF « aucune action » avec 3 levées ; titre « registre incendie » pour tous ; filtres du registre à 3 domaines ; organisme facultatif ; 4ᵉ refus implicite (0 salarié) ; somme des effectifs des sites ; code mort `deduction-erp.ts` ; motif « première version » ; titre redéclaré écrasé sans historique ; export RGPD sans calendrier ni actions liées ; conservation des sortis sans durée ; notes « locaux à sommeil » périmées sur deux obligations électriques (rebranchement).
 
 ## 4. Décisions qui reviennent à la propriétaire
 1. Kbis semestriel (après Légifrance) ; RC Pro sous la vigilance ou à part.
 2. Contre-signature (§ 10) : horodatage tiers ; ce que voit le porteur du lien avant le code ; portées dépôt/consultation : faire ou retirer.
 3. Accessibilité : déposer les pièces de l'art. 1er ou annoncer qu'elles restent hors Rojer ; attestation annuelle de formation (1ʳᵉ–4ᵉ cat.).
-4. Carnet : une analyse ≥ 1000 UFC/L crée-t-elle une action ? seuil 7 jours ou mensuel.
+4. Carnet : une analyse ≥ 1000 UFC/L crée-t-elle une action ? ~~seuil 7 jours ou mensuel~~ [2026-10-13 : mensuel, tranché par la propriétaire].
 5. DUERP : figer (stocker) le PDF d'une version ; l'absence de DUERP compte-t-elle au score ; une mesure « en place » est-elle une action levée ; forme du signal « écart majeur sans action ».
 6. Tableau de bord : aligner bandeau, rail et indice sur ADR-043 (d).
 7. Contrôle : sens de « À jour » ; documents obligatoires dérivés du référentiel ou titre reformulé ; niveau audit et articles annoncés dans PDF/ZIP/MCP ; D4 ; D5.
@@ -103,7 +103,7 @@ réécrit plus haut : « clos » dit ce qui est fait, « en partie » ce qui res
 
 ### Peut attendre
 
-Clos : slug d'accessibilité en double (`64cdbdd6`) ; SIRET en double (`955227d2`) ; statut du permis contrôlé côté serveur (`766419ef`) ; dates futures au carnet (`630855ed`) ; plan d'actions PDF « aucune action » sous trois levées (`ee862c23`). Ouverts : portées dépôt/consultation, « À jour » carnet à 7 jours, titre « registre incendie », filtres du registre, organisme facultatif, 4ᵉ refus, somme des effectifs, code mort `deduction-erp.ts`, motif « première version », titre redéclaré, export RGPD, conservation des sortis, notes « locaux à sommeil ».
+Clos : slug d'accessibilité en double (`64cdbdd6`) ; SIRET en double (`955227d2`) ; statut du permis contrôlé côté serveur (`766419ef`) ; dates futures au carnet (`630855ed`) ; plan d'actions PDF « aucune action » sous trois levées (`ee862c23`). Ouverts : portées dépôt/consultation, ~~« À jour » carnet à 7 jours~~ [2026-10-13 : clos, `lot/controle-visuel-1310`], titre « registre incendie », filtres du registre, organisme facultatif, 4ᵉ refus, somme des effectifs, code mort `deduction-erp.ts`, motif « première version », titre redéclaré, export RGPD, conservation des sortis, notes « locaux à sommeil ».
 
 ### Hors liste, fermé en passant
 

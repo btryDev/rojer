@@ -52,9 +52,9 @@ describe("joindreFichiers", () => {
     expect(c).toEqual({ deposes: 4, inclus: 3, manquants: 1 });
     const noms = Object.keys(zip.files).filter((n) => !n.endsWith("/")).sort();
     expect(noms).toEqual([
-      "Rapports/2026-09-15_Tableau__lectrique_TGBT_rapport__lec.pdf",
+      "Rapports/2026-09-15_Tableau_electrique_TGBT_rapport_elec.pdf",
       "Rapports/2026-09-15_passwd",
-      "Rapports/bbbbbb22_2026-09-15_Tableau__lectrique_TGBT_rapport__lec.pdf",
+      "Rapports/bbbbbb22_2026-09-15_Tableau_electrique_TGBT_rapport_elec.pdf",
     ].sort());
     expect(await zip.file("Rapports/2026-09-15_passwd")!.async("string")).toBe("C");
     // Aucune entrée ne sort du dossier.

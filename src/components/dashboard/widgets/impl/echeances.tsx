@@ -120,18 +120,23 @@ function classifier(
  * du board, sous le même filtre de zone que la liste (`bundle.echeances`).
  */
 function retardsSansDateHorsListe(bundle: DashboardBundle): number {
-  const { prochainesVerifs, aujourdhui } = bundle;
-  const listes = prochainesVerifs.filter(
-    // Même compte que l'agrégat (`compterEtatCalendrier`), qui ne compte plus
-    // les lignes retenues par prudence (D1 (a)) : sans ce filtre, la
-    // soustraction retirerait des lignes que l'agrégat n'a pas comptées.
-    (v) =>
-      estVerificationEnRetard(v, aujourdhui) &&
-      // C64 : ni la prudence ni la visite de la commission ne comptent.
-      !horsDesComptesDeLExploitant(v) &&
-      !aUnRendezVous(v, aujourdhui),
-  ).length;
-  return Math.max(0, bundle.echeances.verifsEnRetardSansEcheance - listes);
+  const { prochainesVerifs, demandesAssureurHorsListe, aujourdhui } = bundle;
+  // Même compte que l'agrégat (`compterEtatCalendrier`), qui ne compte plus
+  // les lignes retenues par prudence (D1 (a)) : sans ce filtre, la
+  // soustraction retirerait des lignes que l'agrégat n'a pas comptées.
+  const compteeParLAgregat = (v: DashboardBundle["prochainesVerifs"][number]) =>
+    estVerificationEnRetard(v, aujourdhui) &&
+    // C64 : ni la prudence ni la visite de la commission ne comptent.
+    !horsDesComptesDeLExploitant(v) &&
+    !aUnRendezVous(v, aujourdhui);
+  const listes = prochainesVerifs.filter(compteeParLAgregat).length;
+  // Une demande d'assureur NOMMÉE sous la liste (`MentionDemandesAssureur`)
+  // n'est pas comptée une seconde fois ici : la même thermographie sortait
+  // en « 1 vérification en retard, sans échéance connue » ET en « à planifier
+  // à la demande de votre assureur » — deux phrases, deux états, une ligne
+  // (revue du 2026-10-13).
+  const nommees = demandesAssureurHorsListe.filter(compteeParLAgregat).length;
+  return Math.max(0, bundle.echeances.verifsEnRetardSansEcheance - listes - nommees);
 }
 
 /** La mention, sous la liste — rien quand tout est listé. */
@@ -146,6 +151,44 @@ function MentionRetardsSansDate({ n }: { n: number }) {
   );
 }
 
+/**
+ * Les demandes d'assureur À PLANIFIER que les cinq lignes ne montrent pas —
+ * NOMMÉES, pas comptées (contrôle visuel du 2026-10-13, décision de la
+ * propriétaire : elles doivent apparaître). Sans date, elles passent derrière
+ * toute échéance datée ; un « 1 à planifier » ne dirait pas laquelle, et la
+ * seule qui comptait dans le dossier semé — une thermographie — restait
+ * invisible. Chacune porte son marquage contractuel (ADR-032).
+ */
+function MentionDemandesAssureur({
+  lignes,
+  etablissementId,
+}: {
+  lignes: DashboardBundle["demandesAssureurHorsListe"];
+  etablissementId: string;
+}) {
+  if (lignes.length === 0) return null;
+  return (
+    <div className="mt-2 flex flex-col gap-1.5 border-t border-[color:var(--board-slate-line)] pt-2.5">
+      <p className="m-0 text-[11.5px] leading-[1.5] text-[color:var(--board-slate-soft)]">
+        Hors de ces cinq, à planifier à la demande de votre assureur :
+      </p>
+      <ul className="m-0 flex list-none flex-col gap-1 p-0">
+        {lignes.map((v) => (
+          <li key={v.id}>
+            <LienProvenance
+              href={`/etablissements/${etablissementId}/verifications/${v.id}`}
+              className="flex items-center gap-1.5 text-[12.5px] font-medium text-[color:var(--board-ink)] hover:underline"
+            >
+              <span className="truncate">{v.libelleObligation}</span>
+              <MentionContractuelle />
+            </LienProvenance>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export function WidgetProchainesEcheances({
   bundle,
   variant,
@@ -155,6 +198,7 @@ export function WidgetProchainesEcheances({
 }) {
   const { prochainesVerifs, etablissementId, aujourdhui } = bundle;
   const horsListe = retardsSansDateHorsListe(bundle);
+  const assureurHorsListe = bundle.demandesAssureurHorsListe;
 
   if (prochainesVerifs.length === 0) {
     return (
@@ -181,6 +225,10 @@ export function WidgetProchainesEcheances({
           aujourdhui={aujourdhui}
         />
         <MentionRetardsSansDate n={horsListe} />
+        <MentionDemandesAssureur
+          lignes={assureurHorsListe}
+          etablissementId={etablissementId}
+        />
       </BentoCell>
     );
   }
@@ -290,6 +338,10 @@ export function WidgetProchainesEcheances({
         })}
       </ul>
       <MentionRetardsSansDate n={horsListe} />
+      <MentionDemandesAssureur
+        lignes={assureurHorsListe}
+        etablissementId={etablissementId}
+      />
     </BentoCell>
   );
 }

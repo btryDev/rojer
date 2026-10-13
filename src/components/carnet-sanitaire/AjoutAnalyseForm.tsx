@@ -10,6 +10,7 @@ import {
 } from "@/lib/carnet-sanitaire/actions";
 import { SEUIL_LEGIONELLE_UFC_PAR_L } from "@/lib/carnet-sanitaire/schema";
 import { cleJourCivil } from "@/lib/dates";
+import { formaterMesure } from "@/lib/rendu/mesures";
 
 /**
  * Enregistrer une analyse de légionelles — ou, `analyse` présent, corriger
@@ -144,7 +145,7 @@ export function AjoutAnalyseForm({
           className="m-0 mt-1.5 text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
         >
           Limite de qualité en <em>Legionella pneumophila</em> :{" "}
-          {SEUIL_LEGIONELLE_UFC_PAR_L}{" "}UFC/L aux points d&apos;usage à risque
+          {formaterMesure(SEUIL_LEGIONELLE_UFC_PAR_L, "UFC/L")}{" "}aux points d&apos;usage à risque
           (arrêté du 1er février 2010, art. 4). À partir de cette valeur, le
           même article
           demande des mesures correctives sans délai, puis des analyses pour

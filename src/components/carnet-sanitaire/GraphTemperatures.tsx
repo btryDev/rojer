@@ -1,5 +1,6 @@
 import type { ReleveTemperature } from "@prisma/client";
 import { formaterJourMoisFr } from "@/lib/dates";
+import { formaterMesure } from "@/lib/rendu/mesures";
 
 /**
  * Graph SVG simple de l'évolution des températures pour un point de
@@ -61,7 +62,9 @@ export function GraphTemperatures({
   const tMax = Math.max(...temps, seuilMinCelsius + 10);
   const span = Math.max(5, tMax - tMin);
 
-  const padL = 36;
+  // 44 et non 36 : les graduations portent leur unité (« 65 °C », six
+  // signes en chasse fixe), plus le seul degré (« 65° »).
+  const padL = 44;
   const padR = 12;
   const padT = 12;
   const padB = 24;
@@ -110,7 +113,7 @@ export function GraphTemperatures({
                 : "text-[color:var(--board-signal-ink)]")
           }
         >
-          {pourcent}% dans la plage
+          {formaterMesure(pourcent, "%")} dans la plage
         </p>
       </div>
       <svg
@@ -157,7 +160,7 @@ export function GraphTemperatures({
           fill="var(--board-signal-ink)"
           fontFamily="var(--font-mono), monospace"
         >
-          {seuilMinCelsius}°
+          {formaterMesure(seuilMinCelsius, "°C", 0, 1)}
         </text>
 
         {/* Axe vertical temperatures indicatives */}
@@ -171,7 +174,7 @@ export function GraphTemperatures({
             fill="var(--board-slate-soft)"
             fontFamily="var(--font-mono), monospace"
           >
-            {t}°
+            {formaterMesure(t, "°C")}
           </text>
         ))}
 

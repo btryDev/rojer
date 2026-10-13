@@ -63,6 +63,8 @@ import {
 } from "@/lib/pdf/readme-controle";
 import { attestationUrssafPresente } from "@/lib/prestataires/vigilance";
 import { resultatAnalyse } from "@/lib/carnet-sanitaire/schema";
+import { formaterMesure } from "@/lib/rendu/mesures";
+import { lignesPointDeReleve, NB_RELEVES_DU_DOSSIER } from "@/lib/carnet-sanitaire/export";
 import { registreAuDossier } from "@/lib/accessibilite/publication";
 
 /** Les dates de l'attestation d'un prestataire, telles que le ZIP les écrit. */
@@ -622,7 +624,7 @@ export async function GET(
           // (docs/rgpd.md § 2.5).
           releves: {
             orderBy: { dateReleve: "desc" },
-            take: 10,
+            take: NB_RELEVES_DU_DOSSIER,
             select: {
               dateReleve: true,
               temperatureCelsius: true,
@@ -646,21 +648,12 @@ export async function GET(
       "",
       `Points de relevé actifs : ${carnetSan.pointsReleve.length}`,
       "────────────────────────────────────────────────────────────",
-      ...carnetSan.pointsReleve.flatMap((pt) => [
-        `${pt.nom}${pt.localisation ? ` — ${pt.localisation}` : ""}`,
-        `  Type : ${pt.typeReseau} · seuil ${pt.typeReseau === "EFS" ? "max" : "min"} ${pt.seuilMinCelsius}°C`,
-        `  10 derniers relevés :`,
-        ...pt.releves.map(
-          (r) =>
-            `    ${formaterDateFr(r.dateReleve)} · ${r.temperatureCelsius.toFixed(1)}°C · ${r.conforme ? "au seuil du point" : "HORS du seuil du point"}`,
-        ),
-        "",
-      ]),
+      ...carnetSan.pointsReleve.flatMap((pt) => [...lignesPointDeReleve(pt), ""]),
       "",
       `Analyses légionelles récentes (${carnetSan.analyses.length}) :`,
       "────────────────────────────────────────────────────────────",
       ...carnetSan.analyses.flatMap((a) => [
-        `  ${formaterDateFr(a.dateAnalyse)} · ${a.valeurUfcParL ?? "—"} UFC/L · ${{ sous_limite: "sous la limite de qualité (< 1 000 UFC/L)", limite_atteinte: "LIMITE DE QUALITÉ ATTEINTE (≥ 1 000 UFC/L)", sans_valeur: "valeur non saisie" }[resultatAnalyse(a.valeurUfcParL)]}${a.laboratoire ? ` · ${a.laboratoire}` : ""}`,
+        `  ${formaterDateFr(a.dateAnalyse)} · ${a.valeurUfcParL === null ? "—" : formaterMesure(a.valeurUfcParL, "UFC/L")} · ${{ sous_limite: "sous la limite de qualité (< 1 000 UFC/L)", limite_atteinte: "LIMITE DE QUALITÉ ATTEINTE (≥ 1 000 UFC/L)", sans_valeur: "valeur non saisie" }[resultatAnalyse(a.valeurUfcParL)]}${a.laboratoire ? ` · ${a.laboratoire}` : ""}`,
         a.commentaire ? `    ${a.commentaire}` : "",
       ]),
       "",

@@ -14,6 +14,7 @@
 import { aUnRendezVous, classerVerification, cinqProchaines } from "./etats";
 import type { VerificationDatee } from "@/lib/dates/retard";
 import { retenueParSaMarque } from "./prudence";
+import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
 
 /** Les seuls états qu'une échéance connue non réalisée peut porter. */
 export type RegistreEcheanceConnue = "enRetard" | "proche" | "lointain";
@@ -93,15 +94,40 @@ export function prochaineEcheanceConnue<T extends VerificationDatee>(
  */
 export function echeancesDuTableauDeBord<
   T extends VerificationDatee & {
+    id: string;
     aConfirmer?: readonly string[];
     prescriptionId: string | null;
+    prescription?: { source: string } | null;
   },
 >(
   lignes: T[],
   now: Date,
-): { prochainesVerifs: T[]; prochaineEcheance: T | null } {
+): {
+  prochainesVerifs: T[];
+  prochaineEcheance: T | null;
+  demandesAssureurHorsListe: T[];
+} {
+  const prochainesVerifs = cinqProchaines(lignes, now);
+  const listees = new Set(prochainesVerifs.map((l) => l.id));
   return {
-    prochainesVerifs: cinqProchaines(lignes, now),
+    prochainesVerifs,
+    // Une demande d'assureur À PLANIFIER (aucune échéance connue) passe
+    // derrière toutes les échéances datées dans `cinqProchaines` : dès qu'un
+    // dossier en a cinq, elle sortait du tableau de bord sans que rien ne la
+    // nomme (contrôle visuel du 2026-10-13 : la thermographie du dossier semé
+    // n'apparaissait sur aucun widget). Elle n'a pas d'échéance connue — elle
+    // peut pourtant être comptée en retard (`estVerificationEnRetard`, date
+    // d'origine passée) —, et elle attend un geste du dirigeant : la
+    // propriétaire a tranché qu'elle doit apparaître. Le widget la NOMME sous
+    // la liste, sans prendre la place d'une échéance datée, et la retire du
+    // compte « en retard, sans échéance connue » pour ne pas la dire deux fois.
+    demandesAssureurHorsListe: lignes.filter(
+      (l) =>
+        estEcheanceContractuelle(l) &&
+        !aUnRendezVous(l, now) &&
+        l.archiveLe == null &&
+        !listees.has(l.id),
+    ),
     // D26 (audit du 2026-10-12) : une ligne retenue par prudence n'est pas
     // « la prochaine échéance » — sa date passée passait devant un vrai
     // rendez-vous. Même règle que la vue du parc (`repartirParEquipement`).

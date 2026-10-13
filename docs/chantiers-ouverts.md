@@ -545,7 +545,7 @@ constat qui ne rejoint pas cette liste se perd** — c'est la leçon du § 7.
   débloque un plan en `inspection_faite` reste non dit — cet état n'est
   toujours écrit par rien, et son sens est une décision.]
 
-- **Le carnet sanitaire affiche du vert sur une donnée de 34 jours** : « Dans la
+- ~~**Le carnet sanitaire affiche du vert sur une donnée de 34 jours**~~ — **CLOS LE 2026-10-13** : « Dans la
   plage » et « 100% dans la plage » sur un relevé du 4 août, sans que rien ne
   dise quand le suivant est dû ni que le suivi a cessé. Le vert porte sur la
   dernière valeur mesurée, il se lit comme un état courant. Même famille que
@@ -554,8 +554,12 @@ constat qui ne rejoint pas cette liste se perd** — c'est la leçon du § 7.
   `sansObjet` évalué avant tout comptage (`lib/batiments/etat-charge.ts`).
   [2026-10-13, contrôle visuel (session de l'autre Mac) : `next build` + `next start` en local, `main` à 4f6de986, base Docker locale, dossier « Le Comptoir des Halles » déjà semé — DÉFAUT CONFIRMÉ : relevé du 04/08/2026, soit 70 jours, et
   la pastille verte « Dans la plage » sur les trois points.]
+  [2026-10-13 : CLOS, `16a0d7f0` (`lib/carnet-sanitaire/etat-releve.ts`, trois
+  états fermés, l'âge évalué avant le seuil ; un mois, le rythme de l'annexe 2),
+  puis `dc8a23f7` (le tableau de bord lit le même prédicat, les 7 jours sont
+  retirés) — contrôle de l'autre Mac sur `de6ce44c` : CORRIGÉ VU.]
 
-- **Trois écritures d'une même unité sur une seule carte** (`/carnet-sanitaire`,
+- ~~**Trois écritures d'une même unité sur une seule carte**~~ — **CLOS LE 2026-10-13** (`/carnet-sanitaire`,
   « Retour de boucle ») : `SEUIL MIN 50°C`, la valeur `55.0°`, l'axe
   `60°/50°/45°`, et `100%` sans espace. Le français écrit « 55,0 °C » et
   « 100 % » — et le produit écrit « 5 % » et « 80 % » ailleurs : la convention
@@ -563,6 +567,8 @@ constat qui ne rejoint pas cette liste se perd** — c'est la leçon du § 7.
   [2026-10-13, contrôle visuel (session de l'autre Mac) : `next build` + `next start` en local, `main` à 4f6de986, base Docker locale, dossier « Le Comptoir des Halles » déjà semé — DÉFAUT CONFIRMÉ : « 53.0° », « 55.0° », « 60.0° »,
   « 67% dans la plage », « 100% dans la plage », « 320UFC/L »,
   « SEUIL MIN 50°C », axes en « 50° ».]
+  [2026-10-13 : CLOS, `a047adcd` (`lib/rendu/mesures.ts`, page, graphique,
+  formulaires et ZIP), seuils au demi-degré dans `de6ce44c` — contrôle de l'autre Mac sur `de6ce44c` : CORRIGÉ VU.]
 
 - ~~**La même statistique écrite de deux façons** : « 80 % des incendies »
   (`permis-feu/page.tsx:120`) contre « 80% des incendies »
@@ -571,7 +577,7 @@ constat qui ne rejoint pas cette liste se perd** — c'est la leçon du § 7.
   chiffre de l'INRS ; « des incendies » ne se lit plus nulle part dans `src`.
   Rayé le 2026-10-12.
 
-- **Deux idiomes de navigation pour trois registres frères** : retour
+- ~~**Deux idiomes de navigation pour trois registres frères**~~ — **CLOS LE 2026-10-13 pour les trois registres** (`26040e90`, contrôle de l'autre Mac sur `de6ce44c` : CORRIGÉ VU) : retour
   (« ← LE COMPTOIR DES HALLES ») sur `/permis-feu` et `/plan-prevention`, fil
   d'Ariane sur `/carnet-sanitaire`. L'ADR-014 sépare les deux assertions ; ici
   elles désignent la même relation.
@@ -662,6 +668,11 @@ gauche. Sur la page de vente. Demi-correction, pas correction.
 > aucun flou — le titre blanc « Concentrez-vous » se lit net à travers l'îlot
 > sur la bande noire. La règle `.lp-nav` porte aussi des `blur()saturate()`
 > vides. À corriger.]
+>
+> [2026-10-13 : ~~DÉFAUT NEUF~~ CLOS, `3a0e2bdc` — seule la propriété standard
+> est écrite, le compilateur ajoute `-webkit-` ; `globals-css.test.ts` compile
+> le fichier et exige les deux sorties. Les `blur()saturate()` sont la forme
+> minifiée valide de `blur(0px) saturate(100%)`, pas un défaut — contrôle de l'autre Mac sur `de6ce44c` : CORRIGÉ VU.]
 
 ~~**`/equipements` tranche une ambiguïté du mauvais côté.** Sous les compteurs :
 « Les chiffres ci-dessus et les familles ci-dessous portent sur tout
@@ -743,6 +754,10 @@ bord, 19 sur la carte de zone, « 22 datées · 5 à planifier » au calendrier,
   rendu existe et n'est jamais atteint avec ces données : **une demande
   d'assureur à planifier n'apparaît sur aucun widget du tableau de bord.** À
   trancher : est-ce voulu ?]
+  [2026-10-13 : tranché par la propriétaire — non voulu. CLOS, `12434087` : le
+  widget « Prochaines échéances » NOMME sous sa liste les demandes d'assureur à
+  planifier qu'il a coupées, avec leur marquage ; `de6ce44c` les retire du
+  compte « en retard, sans échéance connue » — contrôle de l'autre Mac sur `de6ce44c` : CORRIGÉ VU.]
 - **TOUJOURS OUVERT, non vérifié.** ~~Le guide reste à « étape 4 sur 6 » alors que
   l'étape 5 paraît satisfaite~~ ; un bouton primaire y est indiscernable d'un choix
   déjà fait.
@@ -750,6 +765,8 @@ bord, 19 sur la carte de zone, « 22 datées · 5 à planifier » au calendrier,
   (« Étape 9 sur 11 », les huit premières faites et barrées). **DÉFAUT
   CONFIRMÉ** sur le bouton : aux questions 9 à 11 sans réponse, « Oui » est noir
   plein et « Non » cerné, ce qui se lit comme un choix déjà fait.]
+  [2026-10-13 : ~~DÉFAUT CONFIRMÉ sur le bouton~~ CLOS, `60b91c54` — « Oui » et
+  « Non » au même poids tant que rien n'est répondu — contrôle de l'autre Mac sur `de6ce44c` : CORRIGÉ VU.]
 - **TOUJOURS OUVERT, non vérifié — et il ne se mesure pas en `next dev`.** Le
   héros de la page d'accueil reste un aplat noir ~4 s avant que la photo arrive.
   Pas cassé, lent — sur la première image d'une page de vente. À juger sur un
@@ -796,6 +813,9 @@ rien sur une correction de charte. S'y ajoutent tout l'onboarding, le refus de l
 > jusqu'à la création. **Constat neuf** : `/onboarding` s'ouvre sans
 > redirection pour un compte qui a déjà une entreprise — à vérifier dans le
 > code avant d'en faire un défaut.]
+>
+> [2026-10-13 : vérifié — l'action finale redirigeait déjà, la page non. CLOS,
+> `55352c86` : la même garde à l'ouverture — contrôle de l'autre Mac sur `de6ce44c` : CORRIGÉ VU.]
 
 ### Comment la session s'ouvre, et pourquoi ça ne s'improvise pas
 
