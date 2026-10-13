@@ -55,7 +55,14 @@ describe("connexion : le champ `next` ne mène que dans l'application (C1)", () 
   });
 
   it("ne suit pas une adresse externe", async () => {
-    for (const next of ["https://evil.tld", "//evil.tld", "/\\evil.tld"]) {
+    for (const next of [
+      "https://evil.tld",
+      "//evil.tld",
+      "/\\evil.tld",
+      "/.//evil.tld",
+      "/a/..//evil.tld",
+      "/%2e//evil.tld",
+    ]) {
       const cible = await cibleDeRedirection(
         signInAction({}, formulaire({ ...identifiants, next })),
       );

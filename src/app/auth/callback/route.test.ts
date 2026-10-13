@@ -34,7 +34,15 @@ describe("callback d'authentification", () => {
   });
 
   it("ne quitte jamais l'origine", async () => {
-    for (const next of ["@evil.tld", "//evil.tld", "/\\evil.tld", ".evil.tld"]) {
+    for (const next of [
+      "@evil.tld",
+      "//evil.tld",
+      "/\\evil.tld",
+      ".evil.tld",
+      "/.//evil.tld",
+      "/..//evil.tld",
+      "/%2e%2e//evil.tld",
+    ]) {
       const url = new URL(
         await destination(`code=c&next=${encodeURIComponent(next)}`),
       );

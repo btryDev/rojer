@@ -39,6 +39,15 @@ describe("chemin de retour après connexion", () => {
       "/\n/evil.tld",
       "/entreprises\u0000",
       "/\u007f",
+      // Segments point : la résolution d'URL les retire et FABRIQUE un « // »
+      // que la chaîne brute ne contenait pas (revue du lot, bloquant).
+      "/.//evil.tld",
+      "/..//evil.tld",
+      "/a/..//evil.tld",
+      "/%2e//evil.tld",
+      "/%2e%2e//evil.tld",
+      "/.///evil.tld",
+      `/${"a".repeat(2048)}`,
     ]) {
       expect(cheminDeRetour(v), JSON.stringify(v)).toBe(
         CHEMIN_DE_RETOUR_PAR_DEFAUT,
