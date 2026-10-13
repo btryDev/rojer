@@ -24,7 +24,7 @@ publics font 256 bits et sont stockés hachés. L'OTP est comparé à temps
 constant. On ne trouve ni SQL non sûr, ni `dangerouslySetInnerHTML`, ni secret
 commité. Les fichiers déposés sont servis en `sandbox` avec `nosniff`.
 
-Les risques réels tiennent à ce qui *entoure* le code. Douze tables sont
+Les risques réels tiennent à ce qui *entoure* le code. Treize tables sont
 peut-être lisibles avec la clé publique. La version de Next.js est en retard.
 Le dépôt est public et `main` n'est pas protégée. Côté conformité, il manque les
 mentions légales et la procédure de notification d'une violation.
@@ -70,25 +70,34 @@ mentions légales et la procédure de notification d'une violation.
 
 ### Maintenant, indépendants de la bascule
 
-**S1 — RLS absente sur 12 tables de `public`. Critique si l'API Data de Supabase
+**S1 — RLS absente sur 13 tables de `public`. Critique si l'API Data de Supabase
 est exposée.**
-Le schéma compte 30 tables, dont 18 seulement reçoivent
-`ENABLE ROW LEVEL SECURITY`. Les 12 restantes sont `Batiment`,
+Le schéma compte 31 tables vivantes, autant que de `model` dans
+`schema.prisma`. 18 seulement reçoivent `ENABLE ROW LEVEL SECURITY`, toutes dans
+les migrations d'avril. Les 13 autres sont `Batiment`,
 `DeclarationEtatPermanent`, `Duerp`, `DuerpVersion`, `Entreprise`,
-`FicheRegistre`, `PiecePrestataire`, `PrescriptionParticuliere`, `Risque`,
-`Salarie`, `TitreSalarie` et `UniteTravail`. Une 31ᵉ, `Mesure`, a été créée
-sans RLS puis supprimée par une migration, et ne compte plus. Une première
-contre-vérification l'avait comptée à tort, en comparant les `CREATE TABLE`
-sans retrancher les `DROP TABLE`. L'ADR-005 (§ 7) affirme
-qu'une migration `enable_rls_deny_all` est « déjà en place » ; elle n'existe pas
-dans `prisma/migrations`. Si les rôles `anon` et `authenticated` gardent leurs
-droits par défaut sur `public`, la clé publishable, présente dans le bundle JS,
-suffit à lire ces tables, voire à y écrire, pour tous les comptes.
+`FicheRegistre`, `PhaseDangereuse`, `PiecePrestataire`,
+`PrescriptionParticuliere`, `Risque`, `Salarie`, `TitreSalarie` et
+`UniteTravail`. Ce compte a été mesuré en appliquant les migrations sur une base
+locale jetable (`relrowsecurity`).
+
+Deux relevés au grep s'étaient trompés, chacun dans un sens :
+- `Mesure`, créée sans RLS, a été supprimée par un `DROP TABLE`, et ne compte
+  plus ;
+- `PhaseDangereuse`, créée par `CREATE TABLE IF NOT EXISTS`, échappait à un
+  relevé fait sur `CREATE TABLE "`.
+
+L'ADR-005 (§ 7) affirme qu'une migration `enable_rls_deny_all` est « déjà en
+place » ; elle n'existe pas dans `prisma/migrations`. Si les rôles `anon` et
+`authenticated` gardent leurs droits par défaut sur `public`, la clé
+publishable, présente dans le bundle JS, suffit à lire ces tables, voire à y
+écrire, pour tous les comptes. Il en va de même pour `_prisma_migrations`, que
+la base jetable laissait lisible par `anon`.
 *Non vérifié en production* : la requête de contrôle a été refusée par le
 garde-fou de session.
 → Vérifier dans le tableau de bord Supabase : le Security Advisor, les schémas
 exposés et les GRANT de `anon`. → Écrire une migration additive qui active la
-RLS sur les 12 tables, retire les droits de `anon` et `authenticated` sur
+RLS sur les 13 tables, retire les droits de `anon` et `authenticated` sur
 `public` là où ces rôles existent (ils n'existent ni en local ni chez Clever
 Cloud), avec un test qui exige que chaque `CREATE TABLE` ait son
 `ENABLE RLS`. Prisma n'est pas affecté, puisque le rôle propriétaire contourne
