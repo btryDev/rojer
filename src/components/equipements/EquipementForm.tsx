@@ -636,11 +636,16 @@ export function EquipementForm({
 // ~~`valeur` et `onChange`~~ — retirés le 2026-10-12 : ils ne servaient qu'à la
 // question du SSI A/B du désenfumage, montrée après « mécanique : Oui » et
 // passée depuis sur la fiche de l'établissement.
-function QuestionTriEtat({
+// Exportée le 2026-10-13 : le panneau de pré-remplissage pose les questions
+// exigées « au même format que le formulaire » (décision de la propriétaire,
+// option 2). `nom` y distingue la question d'une catégorie de celle d'une
+// autre ; ici, il vaut le champ.
+export function QuestionTriEtat({
   champ,
   defaut,
   erreur,
   exigee = false,
+  nom = champ,
 }: {
   champ: ChampTriEtat;
   defaut: string;
@@ -648,24 +653,26 @@ function QuestionTriEtat({
   /** D29 (a) : « Je ne sais pas encore » n'est pas offert, et aucune réponse
    *  n'est présélectionnée — le serveur refuse l'absence (comme A2). */
   exigee?: boolean;
+  /** `id` et `name` du `<select>` ; le champ par défaut. */
+  nom?: string;
 }) {
   const { question, aide } = QUESTIONS_TRI_ETAT[champ];
   return (
     <div>
       <label
         className="label-board mb-1 text-[14px] text-[color:var(--board-ink)]"
-        htmlFor={champ}
+        htmlFor={nom}
       >
         {question}
         {exigee ? " *" : ""}
       </label>
-      <Aide id={`${champ}-aide`}>{aide}</Aide>
+      <Aide id={`${nom}-aide`}>{aide}</Aide>
       <select
-        id={champ}
-        name={champ}
+        id={nom}
+        name={nom}
         defaultValue={defaut}
         className="champ-board mt-2 sm:w-64"
-        aria-describedby={`${champ}-aide`}
+        aria-describedby={`${nom}-aide`}
         aria-invalid={Boolean(erreur)}
         required={exigee}
       >

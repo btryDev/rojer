@@ -377,27 +377,45 @@ export async function supprimerEquipement(
  * Deux refus, en bloc et avant toute écriture (reprise des suites du lot 3,
  * 2026-10-13) : une catégorie qui n'est pas dans `CATEGORIES_EQUIPEMENT`, et
  * une catégorie dont une réponse est exigée dans le régime de l'établissement
- * (`questionsExigeesPour`) — celle-là se déclare par le formulaire, qui pose
+ * (`questionsExigeesPour`) — ~~celle-là se déclare par le formulaire, qui pose
  * la question. L'écran n'envoie ni l'une ni l'autre : seul un POST forgé les
- * fait lever.
+ * fait lever.~~ [2026-10-13, `lot/conditions-equipement`, décision de la
+ * propriétaire (option 2) : le panneau POSE les questions exigées des
+ * catégories qu'il suggère, et l'action accepte leurs réponses dans
+ * `caracteristiques` — champ exigé pour cette catégorie dans ce régime, valeur
+ * booléenne stricte, rien d'autre. Ce qui manque reste refusé en bloc ; une
+ * clé ou une valeur hors de ce cadre aussi.]
  */
 export async function creerEquipementsDepuisPreRemplissage(
   etablissementId: string,
-  entrees: { categorie: CategorieEquipement; libelle: string }[],
+  entrees: {
+    categorie: CategorieEquipement;
+    libelle: string;
+    /** Les seules réponses aux questions exigées, posées par le panneau. */
+    caracteristiques?: Partial<Record<ChampTriEtat, boolean>>;
+  }[],
 ): Promise<{ created: number; avertissement?: string }> {
   await assertEtablissementOwnership(etablissementId);
   if (entrees.length === 0) return { created: 0 };
 
   // LA PORTE DES RÉPONSES EXIGÉES TIENT AUSSI ICI (reprise des suites du lot 3,
-  // 2026-10-13). Le pré-remplissage ne propose aucune catégorie dont une réponse
+  // 2026-10-13). ~~Le pré-remplissage ne propose aucune catégorie dont une réponse
   // est exigée (`suggererEquipements` sondé sur 288 contextes : neuf catégories,
-  // aucune avec une question exigée dans aucun des 16 régimes essayés),
-  // mais cette action est un point d'entrée serveur : un POST forgé y créait un
+  // aucune avec une question exigée dans aucun des 16 régimes essayés),~~
+  // [Rayé le 2026-10-13 (`lot/conditions-equipement`) : faux depuis que la
+  // réponse au groupe électrogène est exigée en ERP — `suggererEquipements`
+  // propose l'installation électrique à tout ERP. Le panneau pose donc la
+  // question (`PreRemplissagePanel`), et `components/equipements/PreRemplissagePanel.questions.test.tsx`
+  // vérifie, contexte par contexte, que toute catégorie suggérée à question
+  // exigée a sa question dans le panneau.]
+  // Mais cette action est un point d'entrée serveur : un POST forgé y créait un
   // appareil sans les réponses que `creerEquipement` exige. Le refus lit ce qui
   // fait foi, `questionsExigeesPour` dans le régime de l'établissement — D29
   // pour le levage, la décision du 2026-10-08 pour le désenfumage d'un ERP des
-  // quatre premières catégories —, et non la seule liste de D29. Une ligne
-  // créée ici n'a aucune caractéristique : toute question exigée y manque.
+  // quatre premières catégories —, et non la seule liste de D29. ~~Une ligne
+  // créée ici n'a aucune caractéristique : toute question exigée y manque.~~
+  // [2026-10-13 : elle porte désormais les réponses que le panneau a posées,
+  // et seulement elles ; ce qui manque est refusé.]
   // Refusé en bloc, avant toute écriture.
   //
   // La catégorie d'abord (revue du 2026-10-13, R1) : le type ne tient rien à
@@ -416,16 +434,37 @@ export async function creerEquipementsDepuisPreRemplissage(
     );
   }
   const regime = await regimeDe(etablissementId);
-  const exigees = [
+  // Les réponses fournies (2026-10-13) : un objet simple, dont chaque clé est
+  // une question EXIGÉE pour cette catégorie dans ce régime, et chaque valeur
+  // un booléen. Rien d'autre n'entre dans le JSON de l'appareil par ici.
+  const horsCadre = entrees.filter((e) => {
+    const c = e.caracteristiques;
+    if (c === undefined) return false;
+    if (c === null || typeof c !== "object" || Array.isArray(c)) return true;
+    const exigeesIci: readonly string[] = questionsExigeesPour(e.categorie, regime);
+    return Object.entries(c).some(
+      ([cle, v]) => !exigeesIci.includes(cle) || typeof v !== "boolean",
+    );
+  });
+  if (horsCadre.length > 0) {
+    throw new Error(
+      `Réponses refusées (${[...new Set(horsCadre.map((e) => e.categorie))].join(", ")}) : le pré-remplissage n'accepte que « oui » ou « non » aux questions exigées. Rien n'a été créé.`,
+    );
+  }
+  const manquantes = [
     ...new Set(
       entrees
-        .map((e) => e.categorie)
-        .filter((c) => questionsExigeesPour(c, regime).length > 0),
+        .filter((e) =>
+          questionsExigeesPour(e.categorie, regime).some(
+            (champ) => typeof e.caracteristiques?.[champ] !== "boolean",
+          ),
+        )
+        .map((e) => e.categorie),
     ),
   ];
-  if (exigees.length > 0) {
+  if (manquantes.length > 0) {
     throw new Error(
-      `Le pré-remplissage ne crée pas d'appareil dont une réponse est exigée (${exigees.join(", ")}) : déclarez-le par le formulaire d'équipement.`,
+      `Le pré-remplissage ne crée pas d'appareil sans les réponses exigées (${manquantes.join(", ")}) : répondez oui ou non à la question posée à côté de la case. Rien n'a été créé.`,
     );
   }
 
@@ -436,6 +475,9 @@ export async function creerEquipementsDepuisPreRemplissage(
       batimentId: batiment.id,
       categorie: e.categorie,
       libelle: e.libelle,
+      ...(e.caracteristiques && Object.keys(e.caracteristiques).length > 0
+        ? { caracteristiques: e.caracteristiques as Prisma.InputJsonValue }
+        : {}),
     })),
   });
   await constaterEpiDeclare(

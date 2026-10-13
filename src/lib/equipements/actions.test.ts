@@ -702,3 +702,103 @@ describe("pré-remplissage : la porte des réponses exigées tient aussi pour un
     expect(h.genererCalendrier).not.toHaveBeenCalled();
   });
 });
+
+describe("pré-remplissage : le panneau pose la question exigée, l'action en reçoit la réponse (option 2, 2026-10-13)", () => {
+  // Décision de la propriétaire : le panneau pose `aGroupeElectrogene` à côté
+  // de l'installation électrique d'un ERP. L'action accepte la réponse — champ
+  // exigé pour cette catégorie dans ce régime, booléen strict, rien d'autre —
+  // et refuse toujours ce qui manque.
+  const ERP_N3 = { estERP: true, typeErp: "N", categorieErp: "N3", ssiCategorieAouB: null };
+  const GE = ["elec-erp-groupe-electrogene-annuel", "elec-erp-groupe-electrogene-quinzaine"];
+  const lignesGe = async (cree: unknown) => {
+    const { determineObligationsApplicables } = await import("@/lib/matching/engine");
+    const c = cree as { caracteristiques?: Record<string, unknown> };
+    return determineObligationsApplicables(
+      {
+        id: "etab-1", effectifSurSite: 8, effectifEntreprise: 8, estEtablissementTravail: true,
+        estERP: true, estIGH: false, estHabitation: false, typeErp: "N", categorieErp: "N3",
+        classeIgh: null, familleHabitation: null, personnesPresentesHabituellement: null,
+        manipuleMatieresR422722: null, comporteLocauxSommeilPublic: null, manutentionManuelle: null,
+        travailSurEcran: null, operationsElectriques: null, conduiteEngins: null, expositionCMR: null,
+        epiPresents: null, ssiCategorieAouB: null,
+      },
+      [{ id: "e", libelle: "TGBT", categorie: "INSTALLATION_ELECTRIQUE", caracteristiques: c.caracteristiques ?? null }],
+    )
+      .map((a) => a.obligation.id)
+      .filter((id) => GE.includes(id))
+      .sort();
+  };
+
+  it("ERP, installation électrique et « oui » : créée avec `aGroupeElectrogene: true`, puis les deux lignes", async () => {
+    h.db.regime = ERP_N3;
+    const r = await creerEquipementsDepuisPreRemplissage("etab-1", [
+      { categorie: "INSTALLATION_ELECTRIQUE", libelle: "TGBT", caracteristiques: { aGroupeElectrogene: true } },
+      { categorie: "EXTINCTEUR", libelle: "Extincteur" },
+    ]);
+    expect(r.created).toBe(2);
+    const [elec, ext] = h.db.creesEnLot as { caracteristiques?: unknown }[];
+    expect(elec.caracteristiques).toEqual({ aGroupeElectrogene: true });
+    expect(ext).not.toHaveProperty("caracteristiques");
+    expect(await lignesGe(elec)).toEqual(GE);
+  });
+
+  it("« non » : créée avec `aGroupeElectrogene: false`, aucune ligne", async () => {
+    h.db.regime = ERP_N3;
+    await creerEquipementsDepuisPreRemplissage("etab-1", [
+      { categorie: "INSTALLATION_ELECTRIQUE", libelle: "TGBT", caracteristiques: { aGroupeElectrogene: false } },
+    ]);
+    const [elec] = h.db.creesEnLot as { caracteristiques?: unknown }[];
+    expect(elec.caracteristiques).toEqual({ aGroupeElectrogene: false });
+    expect(await lignesGe(elec)).toEqual([]);
+  });
+
+  it("réponse manquante : refusé en bloc, rien n'est écrit", async () => {
+    h.db.regime = ERP_N3;
+    await expect(
+      creerEquipementsDepuisPreRemplissage("etab-1", [
+        { categorie: "EXTINCTEUR", libelle: "Extincteur" },
+        { categorie: "INSTALLATION_ELECTRIQUE", libelle: "TGBT", caracteristiques: {} },
+      ]),
+    ).rejects.toThrow("INSTALLATION_ELECTRIQUE");
+    expect(h.db.creesEnLot).toHaveLength(0);
+    expect(h.genererCalendrier).not.toHaveBeenCalled();
+  });
+
+  it("POST forgé sans réponse, ou avec une réponse hors cadre : refusé, rien n'est écrit", async () => {
+    h.db.regime = ERP_N3;
+    const forges: unknown[] = [
+      undefined,
+      { aGroupeElectrogene: "oui" },
+      { aGroupeElectrogene: true, estVmcGaz: true },
+      { aGroupeElectrogene: true, notes: "texte libre" },
+      ["aGroupeElectrogene"],
+      null,
+    ];
+    for (const caracteristiques of forges) {
+      await expect(
+        creerEquipementsDepuisPreRemplissage("etab-1", [
+          {
+            categorie: "INSTALLATION_ELECTRIQUE",
+            libelle: "TGBT",
+            ...(caracteristiques === undefined ? {} : { caracteristiques: caracteristiques as never }),
+          },
+        ]),
+        JSON.stringify(caracteristiques),
+      ).rejects.toThrow("INSTALLATION_ELECTRIQUE");
+    }
+    expect(h.db.creesEnLot).toHaveLength(0);
+  });
+
+  it("hors ERP : pas de question — créée sans réponse, et une réponse fournie est refusée", async () => {
+    const r = await creerEquipementsDepuisPreRemplissage("etab-1", [
+      { categorie: "INSTALLATION_ELECTRIQUE", libelle: "TGBT" },
+    ]);
+    expect(r.created).toBe(1);
+    expect(h.db.creesEnLot[0]).not.toHaveProperty("caracteristiques");
+    await expect(
+      creerEquipementsDepuisPreRemplissage("etab-1", [
+        { categorie: "INSTALLATION_ELECTRIQUE", libelle: "TGBT", caracteristiques: { aGroupeElectrogene: true } },
+      ]),
+    ).rejects.toThrow("INSTALLATION_ELECTRIQUE");
+  });
+});
