@@ -301,6 +301,41 @@ Les points B11 à B16 viennent de l'audit infra du même jour.
 
 ## Corrigé sur `lot/securite-owasp-1013`
 
-Voir les commits de la branche : S1, S2, S3, la partie fichier de S4, S5 et S6.
-Le reste n'est volontairement pas corrigé ici : S7 et B1 à B10 attendent la
-bascule, R1 et R2 la propriétaire, et C1 à C7 relèvent d'une autre branche.
+Trois sous-branches sont parties de `origin/main` puis ont été fusionnées ici.
+
+| Constat | Commit | Ce qui change | Preuve |
+|---|---|---|---|
+| S2 | `e5d52827` | `next` et `eslint-config-next` passent de 16.3.5 à 16.3.8 | `pnpm audit --prod` : 84 → 77 |
+| S3 | `d83fae3c` | `shadcn` passe en `devDependencies` | 77 → 10, plus aucun critique |
+| S4 (fichier) | `48a25a02` | `.github/dependabot.yml` : npm hebdomadaire, actions mensuel | — |
+| S1 | `3a6655a9`, `4e3e5c15` | Migration `20261013120000_rls_tables_restantes` : RLS sur les 13 tables, REVOKE gardé pour `anon` et `authenticated`. Test `migrations-rls.test.ts`. | Base jetable qui imite Supabase : `anon` lisait `Salarie` avant, il reçoit `permission denied` après. Sans les rôles, la migration passe. |
+| S5 | `78adfd1a` | Import borné à 5 000 lignes : un dépassement est refusé en entier, jamais tronqué en silence. Un fichier illisible donne une erreur d'utilisateur. | Tas mémoire à 1 M de lignes : 874 Mo → 68 Mo |
+| S6 | `ed3676da` | `requireUser()` en tête de `uploadRapport` | Test : sans session, ni les champs, ni le fichier, ni la base ne sont lus |
+
+Chaque nouveau test a été éprouvé en retirant la protection qu'il garde.
+
+**Ce qui reste ouvert après ces corrections :**
+- Les 10 avis restants de `pnpm audit --prod` sont tous transitifs : sharp,
+  browserslist, source-map-js, baseline-browser-mapping et @babel/core arrivent
+  par next ; ws par supabase-js ; deepmerge-ts par prisma ; fflate par
+  @react-pdf. Ils n'ont pas reçu d'`overrides`, c'est une rustine qu'on
+  n'applique pas : Dependabot proposera les montées amont.
+- `sheetRows` ne borne ni la décompression ni les colonnes. Un zip très
+  compressé de 5 Mo pèse encore à la décompression, avec 531 Mo de rss mesurés
+  sur 172 Mo de XML. Fermer ce point demande de borner la taille décompressée
+  avant `XLSX.read`.
+- Next reçoit le corps d'une Server Action avant de l'appeler : S6 supprime le
+  traitement, pas la réception.
+- `uploadRapport` lit encore la vérification avant d'en contrôler la propriété.
+  Un utilisateur connecté peut ainsi apprendre qu'un identifiant existe.
+- Une fonction créée plus tard dans `public` serait exécutable par `anon` (droit
+  `EXECUTE` accordé à `PUBLIC`). Il n'en existe aucune aujourd'hui.
+- `verifierIntegriteSignature` est publique et hache jusqu'à 20 Mo par appel
+  (cf. B14).
+- L'ADR-005 § 7 cite une migration `enable_rls_deny_all` qui n'existe pas. Il
+  n'est pas corrigé ici, parce que `lot/audit-1013-auth` modifie le même
+  fichier.
+
+Le reste n'est volontairement pas corrigé ici : S7 et B1 à B16 attendent la
+bascule, R1 et R2 attendent la propriétaire, et C1 à C7 relèvent d'une autre
+branche.
