@@ -1,4 +1,5 @@
 import { libererFichiers } from "@/lib/suppression/fichiers";
+import { segmentCleStockage } from "@/lib/storage/noms";
 
 /**
  * Organisation des clés de stockage pour les pièces justificatives d'un
@@ -20,7 +21,7 @@ export function clePiecePrestataire(
   type: TypePiecePrestataire,
   nomFichier: string,
 ): string {
-  const safe = nomFichier.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 200);
+  const safe = segmentCleStockage(nomFichier);
   return `prestataires/${etablissementId}/${prestataireId}/${PREFIX[type]}-${Date.now()}-${safe}`;
 }
 

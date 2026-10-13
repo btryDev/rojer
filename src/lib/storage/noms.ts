@@ -78,3 +78,24 @@ export function nomDossierArchive(nom: string | null | undefined, defaut: string
   const brut = (nom ?? "").normalize("NFC").trim().replace(/\s+/g, "_");
   return nomEntreeArchive(brut, defaut);
 }
+
+/**
+ * Le nom d'origine d'une pièce, réduit à un segment de clé de stockage.
+ *
+ * Une seule fonction pour toutes les clés qui portent le nom du fichier
+ * (rapports, pièces de prestataire) : elles en avaient chacune une copie.
+ *
+ * Les pilotes refusent toute clé qui contient « .. » (`local.ts`,
+ * `supabase.ts`) — c'est leur garde contre la remontée d'arborescence, et elle
+ * reste entière. L'assainissement gardait pourtant les points consécutifs du
+ * nom d'origine : « rapport..pdf », banal quand un nom est tapé à la main,
+ * donnait une clé refusée, et le dépôt échouait (audit du 2026-10-13). Une
+ * suite de points devient un seul point : la clé ne peut plus porter « .. »,
+ * et l'extension survit.
+ */
+export function segmentCleStockage(nomFichier: string): string {
+  return nomFichier
+    .replace(CARACTERES_INTERDITS, "_")
+    .replace(/\.{2,}/g, ".")
+    .slice(0, 200);
+}

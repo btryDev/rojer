@@ -9,6 +9,7 @@ import { LocalFileStorage } from "./local";
 import { SupabaseFileStorage, type ClientStockage } from "./supabase";
 import { StockageNonConfigure } from "./erreurs";
 import { diagnostic, formeDeLaCle, nettoyer, refusDeLaCle } from "./cle-service";
+import { segmentCleStockage } from "./noms";
 import type { FileStorage } from "./types";
 
 export type { FileStorage, StorageKey } from "./types";
@@ -136,7 +137,6 @@ export function cleRapport(
   rapportId: string,
   nomFichier: string,
 ): string {
-  // Nettoyage basique du nom : uniquement alphanum, point, tiret, underscore.
-  const safe = nomFichier.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 200);
+  const safe = segmentCleStockage(nomFichier);
   return `rapports/${etablissementId}/${rapportId}-${safe}`;
 }
