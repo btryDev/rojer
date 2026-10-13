@@ -25,7 +25,7 @@ inflammable » (R12) ↔ H220 (gaz inflammable cat. 1) et H222 (aérosol
 inflammable cat. 1) — tableau de Bruxelles-Environnement ; H224 (liquide
 inflammable cat. 1) par la même logique, non trouvé noir sur blanc.
 Comburant ↔ pictogramme flamme sur un cercle (H270-H272) ; explosif ↔ bombe
-qui explose (H200-H205). À la lettre, un aérosol étiqueté H222 — laques,
+qui explose (H200 à H204 ; H205 n'a pas de pictogramme). À la lettre, un aérosol étiqueté H222 — laques,
 déodorants, dégrippants, bombes de peinture — entre dans `R. 4227-22`.
 
 Aucune source de prévention trouvée (INRS « Coiffure — risques », guides de
@@ -47,6 +47,16 @@ aérosols H222 dans la journée (salon, commerce) suffit-il à faire entrer
 l'établissement dans `R. 4227-34`, ou le texte vise-t-il un usage de type
 procédé (soudure, peinture au pistolet, atelier) ? Selon la réponse, les
 aérosols restent ou sortent des exemples de la question.
+
+**Complément du 2026-10-13 — comburants et explosifs.** `R. 4227-34` vise les
+« matières **inflammables** mentionnées à l'article R. 4227-22 ». Parmi les
+trois classes de `R. 4227-22` (explosives, comburantes, extrêmement
+inflammables), seules les extrêmement inflammables — plus les matières
+susceptibles d'« inflammation instantanée » — sont des matières inflammables.
+**Décision de la propriétaire : on suit la lettre** ; les comburants
+(oxygène) et les explosifs sortent de la question. **Question** : partagez-vous
+cette lecture, ou l'administration rattache-t-elle aussi les comburants et
+les explosifs à `R. 4227-34` ?
 
 Sources : `src/lib/referentiels/corpus/code-travail-matieres-inflammables.ts`,
 `code-travail-incendie.ts` ; Bruxelles-Environnement, correspondance R12 ↔
