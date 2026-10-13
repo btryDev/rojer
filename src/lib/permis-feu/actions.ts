@@ -2,11 +2,12 @@
 
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { resoudreBatimentOptionnel } from "@/lib/batiments/queries";
 import { resoudrePrestataireOptionnel } from "@/lib/prestataires/queries";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
+import { requireUser } from "@/lib/auth/require-user";
 import { NatureTravauxPointChaud } from "@prisma/client";
 import type { StatutPermisFeu } from "@prisma/client";
 import { NATURES_TRAVAUX, permisFeuSchema, type PermisFeuInput } from "./schema";
@@ -148,6 +149,26 @@ export async function creerPermisFeu(
 }
 
 /**
+ * Le permis, lu DANS le périmètre du compte connecté — ou 404.
+ *
+ * Les actions lisaient le permis par son seul `id`, puis vérifiaient son
+ * établissement : un id absent rendait une réponse (rien, ou « Permis
+ * introuvable »), le permis d'un autre client une autre (404). L'écart
+ * suffisait à sonder l'existence d'un permis chez autrui (audit du
+ * 2026-10-13). La lecture porte désormais le périmètre, et les deux cas
+ * tombent sur le même `notFound()` — celui des helpers de `auth/scope`.
+ */
+async function permisDuCompte(permisFeuId: string) {
+  const user = await requireUser();
+  const permis = await prisma.permisFeu.findFirst({
+    where: { id: permisFeuId, etablissement: { entreprise: { userId: user.id } } },
+    select: { etablissementId: true, statut: true, numero: true },
+  });
+  if (!permis) notFound();
+  return permis;
+}
+
+/**
  * Corriger un permis (audit du 2026-10-12, constat 4) — même règle que le plan
  * de prévention (`verrou-contenu.ts`) : sans signature tout se corrige, avec
  * les validations de la création ; signé, seule la zone (hors empreinte) se
@@ -166,12 +187,7 @@ export async function modifierPermisFeu(
   _prev: PermisFeuActionState,
   formData: FormData,
 ): Promise<PermisFeuActionState> {
-  const permis = await prisma.permisFeu.findUnique({
-    where: { id: permisFeuId },
-    select: { etablissementId: true, statut: true, numero: true },
-  });
-  if (!permis) return { status: "error", message: "Permis introuvable" };
-  await assertEtablissementOwnership(permis.etablissementId);
+  const permis = await permisDuCompte(permisFeuId);
   const etablissementId = permis.etablissementId;
   if (!statutPermisSignable(permis.statut)) {
     return { status: "error", message: "Ce permis est terminé ou annulé : il ne se modifie plus." };
@@ -283,13 +299,8 @@ const TRANSITIONS_CHANTIER = {
 async function franchir(
   permisFeuId: string,
   vers: keyof typeof TRANSITIONS_CHANTIER,
-): Promise<{ etablissementId: string; fait: boolean } | null> {
-  const permis = await prisma.permisFeu.findUnique({
-    where: { id: permisFeuId },
-    select: { etablissementId: true },
-  });
-  if (!permis) return null;
-  await assertEtablissementOwnership(permis.etablissementId);
+): Promise<{ etablissementId: string; fait: boolean }> {
+  const permis = await permisDuCompte(permisFeuId);
   const r = await prisma.permisFeu.updateMany({
     where: {
       id: permisFeuId,
@@ -308,7 +319,7 @@ export async function marquerEnCours(permisFeuId: string): Promise<void> {
 
 export async function marquerTermine(permisFeuId: string): Promise<void> {
   const r = await franchir(permisFeuId, "termine");
-  if (!r?.fait) return;
+  if (!r.fait) return;
   // Un permis terminé ne se signe plus (`etat-signable.ts`) : ses liens
   // encore ouverts tombent avec lui.
   await revoquerLiensEnVol({
@@ -320,12 +331,7 @@ export async function marquerTermine(permisFeuId: string): Promise<void> {
 }
 
 export async function supprimerPermisFeu(permisFeuId: string): Promise<void> {
-  const permis = await prisma.permisFeu.findUnique({
-    where: { id: permisFeuId },
-    select: { etablissementId: true, statut: true },
-  });
-  if (!permis) return;
-  await assertEtablissementOwnership(permis.etablissementId);
+  const permis = await permisDuCompte(permisFeuId);
   // On ne supprime pas un permis déjà signé : on l'annule à la place pour
   // conserver la piste d'audit. LE STATUT NE LE DISAIT PAS : un permis est
   // créé en `attente_signatures` et y reste ~~une fois signé, rien n'écrivant

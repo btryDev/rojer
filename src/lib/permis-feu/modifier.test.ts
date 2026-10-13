@@ -31,7 +31,14 @@ vi.mock("@/lib/prisma", () => {
         return data;
       }),
       findUnique: vi.fn(async ({ where }: { where: Ligne }) => db.permis.find((p) => correspond(p, where)) ?? null),
-      findFirst: vi.fn(async ({ where }: { where: Ligne }) => db.permis.find((p) => correspond(p, where)) ?? null),
+      // Même convention que le prestataire ci-dessous : la portée par le compte
+      // (`etablissement: { entreprise: { userId } }`) est celle du compte du
+      // test ; le cloisonnement est éprouvé par `perimetre.test.ts`.
+      findFirst: vi.fn(async ({ where }: { where: Ligne }) => {
+        const reste = { ...where };
+        delete reste.etablissement;
+        return db.permis.find((p) => correspond(p, reste)) ?? null;
+      }),
       updateMany: vi.fn(async ({ where, data }: { where: Ligne; data: Ligne }) => {
         const t = db.permis.filter((x) => correspond(x, where));
         t.forEach((p) => Object.assign(p, data));
