@@ -166,10 +166,15 @@ describe("2026-10-13 : le gaz et les escaliers mécaniques ne visent que leurs d
     for (const ref of [...GAZ_ERP, "AS 10"]) expect(refs).not.toContain(ref);
   });
 
-  it("le gaz collectif de l'habitation ne va qu'au régime d'habitation", () => {
-    const ref = "Arrêté 23-02-2018 art. 26 § 3";
-    expect(refsProjetees(RESTAURANT_N5)).not.toContain(ref);
-    expect(refsProjetees({ ...RESTAURANT_N5, habitation: true })).toContain(ref);
+  it("le gaz collectif et l'immeuble d'habitation ne vont qu'au régime d'habitation", () => {
+    for (const ref of [
+      "Arrêté 23-02-2018 art. 26 § 3",
+      "Arrêté 1986-01-31 art. 78-1",
+      "Arrêté 1986-01-31 art. 102",
+    ]) {
+      expect(refsProjetees(RESTAURANT_N5), ref).not.toContain(ref);
+      expect(refsProjetees({ ...RESTAURANT_N5, habitation: true }), ref).toContain(ref);
+    }
   });
 });
 

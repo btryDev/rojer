@@ -951,8 +951,8 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // plus une sur-application visible mais du bruit ; et l'article ne nomme
       // aucun débiteur, étant écrit à la voix passive.
       "Arrêté 1986-01-31 art. 60",
-      "Arrêté 1986-01-31 art. 78-1",
-      "Arrêté 1986-01-31 art. 102",
+      // ~~"Arrêté 1986-01-31 art. 78-1"~~ — 2026-10-13 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »), décision de la propriétaire après revue.
+      // ~~"Arrêté 1986-01-31 art. 102"~~ — 2026-10-13 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »), décision de la propriétaire après revue.
       // ── Lot machines, 2026-09-02 : la branche HORS LEVAGE de R. 4323-23.
       // Bloc contigu ajouté en fin de liste, comme le lot D1 et pour la même
       // raison — le lot B supprime cette liste exhaustive, un bloc d'un seul

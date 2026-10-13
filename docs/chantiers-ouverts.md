@@ -209,7 +209,8 @@ ERP des quatre premières catégories, quatre d'habitation, deux d'activité
 (`R. 4544-11`, `R. 4323-89`) ; aucune ne vise seulement plus de cinquante
 travailleurs ou un ERP en IGH. Cible 15 → **30** (15 + 15 − 0), hors cible
 15 → 0, total 30 inchangé. Les trois hôtels passent de `perimetre` à
-`a_trancher` : rien ne s'encode. ~~Les quinze sont OUVERTES, à évaluer selon la
+`a_trancher` : ~~rien ne s'encode~~ [2026-10-13 : les hôtels sont encodés,
+voir ci-dessous]. ~~Les quinze sont OUVERTES, à évaluer selon la
 grille C45 (encoder / annoncer / hors cadre),~~ listées au § 8 de
 `couverture-declaree-du-produit.md` ; `registre-dette.test.ts` et
 `doc-couverture.test.ts` portent le mouvement.]
@@ -217,9 +218,13 @@ grille C45 (encoder / annoncer / hors cadre),~~ listées au § 8 de
 encodées — le chapitre hôtels, exception à « encodage terminé »
 (`incendie-hotel-po-controle-biennal-installations`,
 `incendie-hotel-po-instruction-personnel-semestrielle`, référentiel
-`2026-10-13.1`, 174 + 2 = 176) ; quatre annoncées (`GZ 13`, `GZ 14`, `AS 10`,
-arrêté 2018-02-23 art. 26 § 3) ; huit hors cadre (§ 7). Manquantes 30 → 23,
-toutes hors cadre. La définition de la cible est écrite à l'ADR-031
+`2026-10-13.1`, 174 + 2 = 176) ; ~~quatre~~ six annoncées (`GZ 13`, `GZ 14`, `AS 10`,
+arrêté 2018-02-23 art. 26 § 3 ; puis, après revue, arrêté 1986 art. 78-1 et
+102) ; ~~huit~~ six hors cadre (§ 7). Manquantes 30 → ~~23~~ 21, toutes hors
+cadre ; `non_couvert` 66 → 72. La revue indépendante du même jour a aussi fait
+déclarer la succession de la ligne triennale vers la biennale (l'hôtel garde
+sa rangée et son dernier rapport) et corriger la description de la biennale :
+le contrôle électrique annuel n'apparaît que si l'installation est déclarée. La définition de la cible est écrite à l'ADR-031
 (amendement du 2026-10-12). Reste ouvert, non décidé : la vérification
 annuelle du gaz (`GZ 15`) n'est servie qu'à l'ERP 1-4 qui déclare un appareil
 de cuisson ; un commerce chauffé au gaz sans cuisine ne la reçoit pas.]

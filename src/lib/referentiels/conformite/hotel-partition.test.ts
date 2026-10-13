@@ -10,8 +10,10 @@ import { CATEGORIES_ERP, TYPES_ERP } from "../types-communs";
  * doit à un autre rythme : le contrôle de l'ensemble des installations
  * techniques (PE 4 § 2, trois ans au plus ; PO 1 § 3, deux ans) et
  * l'instruction du personnel (PE 27 § 5, sans rythme ; PO 7, deux séances par
- * an). PO 8 § 1 et PO 12 les appliquent « en complément » : l'hôtel doit les
- * deux textes, mais un seul contrôle et une seule formation. La ligne générale
+ * an). Aux hôtels existants, PO 8 § 1 applique sa section « en complément
+ * des articles PE 4, […] PO 1 (§ 3) », qui restent donc dus, et PO 12 rend
+ * applicables PE 27 § 5 et PO 7 : l'hôtel doit les deux textes de chaque
+ * paire, mais un seul contrôle et une seule formation. La ligne générale
  * exclut le type O, la ligne de l'hôtel ne vise que lui.
  *
  * Le test tient la partition sur ce que reçoit l'établissement, pour chacun

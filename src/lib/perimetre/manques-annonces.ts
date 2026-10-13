@@ -100,7 +100,8 @@ export type CleDomaine =
   | "formation"
   | "boissons"
   | "gaz"
-  | "escaliers_mecaniques";
+  | "escaliers_mecaniques"
+  | "habitation";
 
 type Domaine = {
   titre: string;
@@ -151,6 +152,9 @@ const DOMAINES: Record<CleDomaine, Domaine> = {
   gaz: {
     titre: "Installations de gaz",
   },
+  habitation: {
+    titre: "Immeuble d'habitation",
+  },
   escaliers_mecaniques: {
     titre: "Escaliers mécaniques et trottoirs roulants",
     phrase: `Rojer ne suit pas ${nonPorte("la vérification annuelle des escaliers mécaniques et des trottoirs roulants")} par une personne ou un organisme agréé, ni ${nonPorte("l'examen des chaînes et crémaillères au milieu de l'année")}, ni ${nonPorte("la vérification de l'escalier mécanique avant sa remise en service après une transformation importante")}.`,
@@ -171,8 +175,10 @@ type Annonce = {
 };
 
 /**
- * Les ~~vingt-cinq~~ vingt-neuf articles annoncés, par référence (2026-10-13 :
- * + 4, `GZ 13`, `GZ 14`, `AS 10`, arrêté du 23 février 2018 art. 26 § 3).
+ * Les ~~vingt-cinq~~ ~~vingt-neuf~~ trente et un articles annoncés, par
+ * référence (2026-10-13 : + 4, `GZ 13`, `GZ 14`, `AS 10`, arrêté du
+ * 23 février 2018 art. 26 § 3 ; puis + 2 après revue, arrêté du 31 janvier
+ * 1986 art. 78-1 et 102).
  *
  * LA CLÉ EST LA RÉFÉRENCE DU CORPUS, ET RIEN N'EST RECOPIÉ D'AUTRE : ni
  * intitulé, ni texte. `manques-annonces.test.ts` tient l'égalité entre ces
@@ -244,7 +250,7 @@ export const ANNONCES: Readonly<Record<string, Annonce>> = {
   "GZ 14": {
     domaine: "gaz",
     condition: "erp_1_4",
-    phrase: `Rojer ne suit pas ${nonPorte("l'entretien des installations et appareils à gaz et de leurs conduits d'évacuation")}, ni ${nonPorte("la signalisation de l'organe de coupure de branchement du gaz")}. Il suit ${porte("la vérification annuelle des installations de gaz")} lorsqu'un appareil de cuisson est déclaré au parc.`,
+    phrase: `Rojer ne suit pas ${nonPorte("l'entretien des installations et appareils à gaz et de leurs conduits d'évacuation")}, ni ${nonPorte("l'accès et la signalisation de l'organe de coupure de branchement du gaz")}. Il suit ${porte("la vérification annuelle des installations de gaz")} lorsqu'un appareil de cuisson est déclaré au parc.`,
   },
   "Arrêté 23-02-2018 art. 26 § 3": {
     domaine: "gaz",
@@ -252,6 +258,18 @@ export const ANNONCES: Readonly<Record<string, Annonce>> = {
     phrase: `Rojer ne suit pas ${nonPorte("l'entretien des installations collectives de gaz situées entre l'organe de coupure générale et les compteurs individuels")}, que le texte fait faire au moins tous les dix ans dans les bâtiments collectifs.`,
   },
   "AS 10": { domaine: "escaliers_mecaniques", condition: "erp_1_4" },
+  // 2026-10-13, après revue : classés hors cadre puis annoncés, décision de
+  // la propriétaire.
+  "Arrêté 1986-01-31 art. 78-1": {
+    domaine: "habitation",
+    condition: "habitation",
+    phrase: `Rojer ne suit pas ${nonPorte("le contrôle visuel des boxes de stockage d'un parc de stationnement couvert annexe")}, que le gestionnaire du parc fait au moins une fois par an et à chaque changement d'utilisateur.`,
+  },
+  "Arrêté 1986-01-31 art. 102": {
+    domaine: "habitation",
+    condition: "habitation",
+    phrase: `Rojer ne suit pas ${nonPorte("la vérification que les transformations de l'immeuble ne diminuent pas la réaction et la résistance au feu")}, à la charge du propriétaire, ni ${nonPorte("l'identification des places de stationnement utilisées par des personnes non résidentes")}.`,
+  },
 };
 
 export type ArticleAnnonce = {

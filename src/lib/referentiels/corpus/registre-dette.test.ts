@@ -71,7 +71,8 @@ describe("registre de dette — les obligations manquantes", () => {
       // `L. 8222-5`, passe en `a_trancher` — ce qui la retient est la décision
       // sur le module de vigilance, plus l'absence de surface.
       // [0, 1] → [1, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : arrêté 1986 art. 102.
-      evenement: [1, 0],
+      // [1, 0] → [0, 0] le 2026-10-13 : arrêté 1986 art. 102 annoncé (`non_couvert`).
+      evenement: [0, 0],
       // [5, 6] → [11, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : `GZ 13`, `GZ 14`, `CO 61`,
       // `AS 10`, `GC 18`, arrêté 2018-02-23 art. 26 § 3.
       // [11, 0] → [7, 0] le 2026-10-13 (décision de la propriétaire) : `GZ 13`,
@@ -85,7 +86,8 @@ describe("registre de dette — les obligations manquantes", () => {
       // 5 → 0 le 2026-09-27 (C45) : `R. 1321-60` et les art. 4, 9, 10, 12 de
       // l'arrêté du 10 septembre 2021, annoncés (`non_couvert`).
       // [0, 1] → [1, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : arrêté 1986 art. 78-1.
-      destinataire: [1, 0],
+      // [1, 0] → [0, 0] le 2026-10-13 : arrêté 1986 art. 78-1 annoncé (`non_couvert`).
+      destinataire: [0, 0],
       // 6 → 4 le 2026-09-27 (C45) : `R. 4227-26` encodé (retenu), `R. 4225-3`
       // annoncé. Restent quatre HORS CADRE (`R. 4323-61`, `-69`, arrêté 1993
       // art. 8 et annexe III).
@@ -127,15 +129,18 @@ describe("registre de dette — les obligations manquantes", () => {
     // `CATEGORIES_COUVERTES = ["N5"]`. 15 + 3 hôtels + 6 ERP des quatre
     // premières catégories + 4 habitation + 2 activités (`R. 4544-11`,
     // `R. 4323-89`) − 0 = 30. Le total ne bouge pas (30) : c'est une mesure,
-    // pas une dette nouvelle. Les quinze entrées sont OUVERTES, à évaluer
-    // selon la grille C45 (encoder / annoncer / hors cadre).
+    // pas une dette nouvelle. ~~Les quinze entrées sont OUVERTES, à évaluer
+    // selon la grille C45 (encoder / annoncer / hors cadre).~~ [Classées le
+    // 2026-10-13, ci-dessous.]
     // 30 → 23 le 2026-10-13 (décision de la propriétaire, grille C45 sur les
     // quinze) : 30 − 3 encodés (`PO 1 § 3`, `PO 7`, `PO 12`) − 4 annoncés
     // (`GZ 13`, `GZ 14`, `AS 10`, arrêté 2018-02-23 art. 26 § 3) = 23. Les
     // huit autres sont HORS CADRE et restent ici : 15 + 8 = 23, le § 7 de
     // `docs/couverture-declaree-du-produit.md`.
-    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(23);
-    expect(manquantes.length).toBe(23);
+    // 23 → 21 le même jour, après revue : arrêté 1986 art. 78-1 et 102,
+    // d'abord classés hors cadre, sont annoncés (décision de la propriétaire).
+    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(21);
+    expect(manquantes.length).toBe(21);
   });
 });
 
