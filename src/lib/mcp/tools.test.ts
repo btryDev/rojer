@@ -972,7 +972,7 @@ describe("le serveur dit qu'aucun équipement n'est déclaré (§ 15)", () => {
       await outil(nom).executer(ctx, {});
     }
     const portees = prismaMock.equipement.findMany.mock.calls.map(
-      ([args]: [{ where: unknown }]) => args.where,
+      (appel) => (appel[0] as { where: unknown }).where,
     );
     expect(portees.length).toBeGreaterThan(0);
     for (const where of portees) {
