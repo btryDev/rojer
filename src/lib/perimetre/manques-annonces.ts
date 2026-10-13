@@ -56,6 +56,8 @@ export type FaitsManquesAnnonces = {
   categorieErp: CategorieErp | null;
   /** `Etablissement.estHabitation` (2026-10-13). */
   habitation: boolean;
+  /** `Etablissement.operationsElectriques` (ADR-041) : `null` = pas de réponse, jamais « non » (2026-10-13). */
+  operationsElectriques: boolean | null;
 };
 
 /**
@@ -72,7 +74,9 @@ type Condition =
   /** Un ERP des quatre premières catégories : le livre II du règlement de sécurité. */
   | "erp_1_4"
   /** Un dossier qui déclare le régime d'habitation. */
-  | "habitation";
+  | "habitation"
+  /** Un employeur qui n'a pas répondu « non » aux opérations électriques. */
+  | "travail_electricite";
 
 function concerne(c: Condition, f: FaitsManquesAnnonces): boolean {
   switch (c) {
@@ -86,6 +90,8 @@ function concerne(c: Condition, f: FaitsManquesAnnonces): boolean {
       return f.categorieErp !== null && f.categorieErp !== "N5";
     case "habitation":
       return f.habitation;
+    case "travail_electricite":
+      return f.travail && f.operationsElectriques !== false;
   }
 }
 
@@ -101,7 +107,8 @@ export type CleDomaine =
   | "boissons"
   | "gaz"
   | "escaliers_mecaniques"
-  | "habitation";
+  | "habitation"
+  | "electricite";
 
 type Domaine = {
   titre: string;
@@ -155,6 +162,9 @@ const DOMAINES: Record<CleDomaine, Domaine> = {
   habitation: {
     titre: "Immeuble d'habitation",
   },
+  electricite: {
+    titre: "Électricité",
+  },
   escaliers_mecaniques: {
     titre: "Escaliers mécaniques et trottoirs roulants",
     phrase: `Rojer ne suit pas ${nonPorte("la vérification annuelle des escaliers mécaniques et des trottoirs roulants")} par une personne ou un organisme agréé, ni ${nonPorte("l'examen des chaînes et crémaillères au milieu de l'année")}, ni ${nonPorte("la vérification de l'escalier mécanique avant sa remise en service après une transformation importante")}.`,
@@ -178,7 +188,7 @@ type Annonce = {
  * Les ~~vingt-cinq~~ ~~vingt-neuf~~ trente et un articles annoncés, par
  * référence (2026-10-13 : + 4, `GZ 13`, `GZ 14`, `AS 10`, arrêté du
  * 23 février 2018 art. 26 § 3 ; puis + 2 après revue, arrêté du 31 janvier
- * 1986 art. 78-1 et 102).
+ * 1986 art. 78-1 et 102 ; puis + 1, `R. 4544-11` : trente-deux).
  *
  * LA CLÉ EST LA RÉFÉRENCE DU CORPUS, ET RIEN N'EST RECOPIÉ D'AUTRE : ni
  * intitulé, ni texte. `manques-annonces.test.ts` tient l'égalité entre ces
@@ -269,6 +279,12 @@ export const ANNONCES: Readonly<Record<string, Annonce>> = {
     domaine: "habitation",
     condition: "habitation",
     phrase: `Rojer ne suit pas ${nonPorte("la vérification que les transformations de l'immeuble ne diminuent pas la réaction et la résistance au feu")}, à la charge du propriétaire, ni ${nonPorte("l'identification des places de stationnement utilisées par des personnes non résidentes")}.`,
+  },
+  // 2026-10-13 : « hors cadre et on l'annonce », décision de la propriétaire.
+  "R. 4544-11": {
+    domaine: "electricite",
+    condition: "travail_electricite",
+    phrase: `Rojer ne suit pas ${nonPorte("l'habilitation spécifique aux travaux sous tension")}, délivrée par l'employeur après un document d'un organisme de formation agréé, et dont la validité est subordonnée à une attestation médicale propre à ces travaux.`,
   },
 };
 

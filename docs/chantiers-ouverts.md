@@ -220,8 +220,8 @@ encodées — le chapitre hôtels, exception à « encodage terminé »
 `incendie-hotel-po-instruction-personnel-semestrielle`, référentiel
 `2026-10-13.1`, 174 + 2 = 176) ; ~~quatre~~ six annoncées (`GZ 13`, `GZ 14`, `AS 10`,
 arrêté 2018-02-23 art. 26 § 3 ; puis, après revue, arrêté 1986 art. 78-1 et
-102) ; ~~huit~~ six hors cadre (§ 7). Manquantes 30 → ~~23~~ 21, toutes hors
-cadre ; `non_couvert` 66 → 72. La revue indépendante du même jour a aussi fait
+102, puis `R. 4544-11`) ; ~~huit~~ ~~six~~ cinq hors cadre (§ 7). Manquantes
+30 → ~~23~~ ~~21~~ 20, toutes hors cadre ; `non_couvert` 66 → 73. La revue indépendante du même jour a aussi fait
 déclarer la succession de la ligne triennale vers la biennale (l'hôtel garde
 sa rangée et son dernier rapport) et corriger la description de la biennale :
 le contrôle électrique annuel n'apparaît que si l'installation est déclarée. La définition de la cible est écrite à l'ADR-031

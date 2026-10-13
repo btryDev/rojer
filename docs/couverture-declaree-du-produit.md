@@ -152,7 +152,7 @@ sixième `??` recopié.
 C'est la limite la plus importante de ce document, et la raison directe du
 retrait de la carte.
 
-~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ ~~Les 66 articles (2026-10-07, l'IGH, les équipements sous pression et le stockage de matières dangereuses en partie retirés)~~ ~~Les 70 articles (2026-10-13, quatre manques de la cible redéfinie annoncés)~~ Les 72 articles (2026-10-13, six manques de la cible redéfinie annoncés) ci-dessous sont ceux que le dépouillement a lus, qui imposent
+~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ ~~Les 66 articles (2026-10-07, l'IGH, les équipements sous pression et le stockage de matières dangereuses en partie retirés)~~ ~~Les 70 articles (2026-10-13, quatre manques de la cible redéfinie annoncés)~~ ~~Les 72 articles (2026-10-13, six manques de la cible redéfinie annoncés)~~ Les 73 articles (2026-10-13, sept manques de la cible redéfinie annoncés) ci-dessous sont ceux que le dépouillement a lus, qui imposent
 quelque chose à un exploitant, et que le référentiel ne porte pas. **Rien ne les
 restreint aux établissements que leur chapitre vise** — sauf les vingt-cinq
 annoncés le 2026-09-27, que la page « Ce que Rojer ne couvre pas » projette au
@@ -266,11 +266,12 @@ du 2026-10-13 (§ 8). Aucun article ne quitte la liste : les trois du chapitre
 hôtels qui sont encodés le même jour n'y figuraient pas, ils étaient
 `obligation_manquante`. **Puis 70 + 2 − 0 = 72**, le même jour après la revue
 indépendante : `Arrêté 1986-01-31 art. 78-1` et `Arrêté 1986-01-31 art. 102`,
-d'abord classés hors cadre, sont annoncés.
+d'abord classés hors cadre, sont annoncés. **Puis 72 + 1 − 0 = 73** : `R. 4544-11`,
+annoncé par décision de la propriétaire (« hors cadre et on l'annonce »).
 
 ---
 
-## 3. Les 72 articles lus et non portés
+## 3. Les 73 articles lus et non portés
 
 ~~Cinq familles~~ ~~Neuf familles (compte refait le 2026-09-26)~~ Dix-huit familles (compte refait le 2026-09-27, C45), une dixième étant sortie de la liste le 2026-09-01 (voir
 ci-dessous). Les motifs sont ceux du corpus, cités et non réécrits : ils ont
@@ -541,7 +542,7 @@ recopiés ici. Entre parenthèses : à quel dossier la page les montre.
   `esp-personnel-formation` — voir sa famille ci-dessous.
 - **Boissons** (employeur) — `R. 4225-3`.
 
-### ANNONCÉS LE 2026-10-13 — trois familles, six articles
+### ANNONCÉS LE 2026-10-13 — quatre familles, sept articles
 
 Même adresse, même page, même règle : décision de la propriétaire du
 2026-10-13 sur les quinze manques entrés dans la cible le 2026-10-12 (§ 8).
@@ -561,6 +562,10 @@ Leurs motifs sont ceux du corpus, complétés d'une note datée.
   (contrôle visuel annuel des boxes de stockage d'un parc couvert annexe, par
   son gestionnaire) et `Arrêté 1986-01-31 art. 102` (transformations de
   l'immeuble, places des non-résidents, à la charge du propriétaire).
+- **Électricité** (employeur qui n'a pas répondu « non » aux opérations
+  électriques) — `R. 4544-11`, l'habilitation spécifique aux travaux sous
+  tension. La question vise toutes les opérations électriques : l'annonce peut
+  atteindre un dossier qui ne fait pas de travaux sous tension.
 
 Un trou reste, et il est nommé ici plutôt qu'à l'écran : la vérification
 annuelle des installations de gaz de GZ 15 n'est servie qu'à l'ERP qui
@@ -835,7 +840,8 @@ classé, décision de la propriétaire ; huit de ses quinze lignes rejoignent
 cette liste (~~quinze~~ ~~vingt-trois~~ **vingt et une** : deux des huit,
 78-1 et 102 de l'arrêté de 1986, en sont ressorties le même jour, annoncées
 après la revue indépendante ; leurs lignes sont retirées du tableau, l'égalité
-avec le corpus l'exige, et le § 8 dit leur sort). Le test tient de nouveau l'égalité
+avec le corpus l'exige, et le § 8 dit leur sort ; puis **vingt** : `R. 4544-11`
+en sort aussi, annoncé). Le test tient de nouveau l'égalité
 entre ce § 7 seul et les `obligation_manquante` qui touchent la cible, et
 vérifie que chaque ligne du § 8 a reçu un sort.]
 
@@ -861,7 +867,6 @@ vérifie que chaque ligne du § 8 a reçu un sort.]
 | `MS 71` | Communications radio des secours, ERP de plus d'un niveau de sous-sol et de plus de 100 m² en sous-sol : quasi jamais dans la cible. *(2026-10-13)* |
 | `Arrêté 1986-01-31 art. 60` | VMC d'habitation secourue par un groupe électrogène : rare, et le texte ne nomme pas le débiteur. *(2026-10-13)* |
 | `R. 4323-89` | Travail sur cordes : ~~dans la cible, c'est l'entreprise extérieure qui l'exerce~~ le corpus le dit exercé, dans les trois secteurs cibles, par une entreprise extérieure — auquel cas il relève de la co-activité, déjà servie ; le produit ne sait pas qui l'exerce (déclencheur d'activité manquant). *(2026-10-13, motif corrigé après revue)* |
-| `R. 4544-11` | Habilitation spécifique aux travaux sous tension : ~~la cible n'en fait pas exécuter par ses salariés ; une entreprise spécialisée intervient~~ le produit ne distingue pas les travaux sous tension des autres opérations électriques, et le texte renvoie le maintien de l'habilitation aux normes sans durée propre (motif du corpus). *(2026-10-13, motif corrigé après revue)* |
 
 ---
 
@@ -888,8 +893,10 @@ lignes suivent un patron existant (`PE 4 § 2`, `PE 27 § 5`). Quatre annoncées
 manquantes : 30 − 3 − 4 = ~~**23**~~, toutes dans la cible et toutes au § 7 ;
 `non_couvert` 66 + 4 = ~~70~~ ; référentiel 174 + 2 = 176. [Le même jour,
 après la revue indépendante : 78-1 et 102 de l'arrêté de 1986 passent de hors
-cadre à annoncés. Six annoncées, six hors cadre ; manquantes 23 − 2 = **21** ;
-`non_couvert` 70 + 2 = **72**.]
+cadre à annoncés. Six annoncées, six hors cadre ; manquantes 23 − 2 = ~~21~~ ;
+`non_couvert` 70 + 2 = ~~72~~. Puis `R. 4544-11`, « hors cadre et on
+l'annonce » : sept annoncées, cinq hors cadre ; manquantes **20** ;
+`non_couvert` **73**.]
 
 | Article | Ce qui la met dans la cible | Cause au corpus le 2026-10-12 | Sort au 2026-10-13 |
 |---|---|---|---|
@@ -906,5 +913,5 @@ cadre à annoncés. Six annoncées, six hors cadre ; manquantes 23 − 2 = **21*
 | `Arrêté 1986-01-31 art. 60` | Habitation | `attribut_etablissement` | Hors cadre (§ 7) |
 | `Arrêté 1986-01-31 art. 78-1` | Habitation | `destinataire` | ~~Hors cadre (§ 7)~~ Annoncé — Immeuble d'habitation (après revue) |
 | `Arrêté 1986-01-31 art. 102` | Habitation | `evenement` | ~~Hors cadre (§ 7)~~ Annoncé — Immeuble d'habitation (après revue) |
-| `R. 4544-11` | Employeur, travaux sous tension | `a_trancher` | Hors cadre (§ 7) |
+| `R. 4544-11` | Employeur, travaux sous tension | `a_trancher` | ~~Hors cadre (§ 7)~~ Annoncé — Électricité |
 | `R. 4323-89` | Employeur, travail sur cordes | `activite_exercee` | Hors cadre (§ 7) |

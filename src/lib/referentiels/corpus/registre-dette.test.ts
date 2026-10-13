@@ -117,7 +117,9 @@ describe("registre de dette — les obligations manquantes", () => {
       // [7, 0] → [4, 0] le 2026-10-13 (décision de la propriétaire) : les trois
       // hôtels encodés (`retenu`). `R. 4544-11` est classé HORS CADRE et reste
       // ici, avec les trois du 2026-09-27.
-      a_trancher: [4, 0],
+      // [4, 0] → [3, 0] le même jour : `R. 4544-11` annoncé (`non_couvert`),
+      // décision de la propriétaire (« hors cadre et on l'annonce »).
+      a_trancher: [3, 0],
       // [0, 3] → [0, 0] le 2026-10-12 : les trois hôtels, voir `a_trancher`.
       perimetre: [0, 0],
     });
@@ -139,8 +141,9 @@ describe("registre de dette — les obligations manquantes", () => {
     // `docs/couverture-declaree-du-produit.md`.
     // 23 → 21 le même jour, après revue : arrêté 1986 art. 78-1 et 102,
     // d'abord classés hors cadre, sont annoncés (décision de la propriétaire).
-    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(21);
-    expect(manquantes.length).toBe(21);
+    // 21 → 20 : `R. 4544-11` annoncé, même décision.
+    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(20);
+    expect(manquantes.length).toBe(20);
   });
 });
 

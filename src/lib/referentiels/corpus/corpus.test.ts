@@ -770,7 +770,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // le renouvellement : c'est le renvoi qui avait produit le « triennal »
       // NF C 18-510 déjà retiré de ce dépôt. Encoder supposerait de trancher ce
       // qu'il vaut, et ce n'est pas un choix technique.
-      "R. 4544-11",
+      // ~~"R. 4544-11"~~ — 2026-10-13 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »), décision de la propriétaire.
       // R. 4222-21 entre le 2026-09-01 avec le recalage des fondements (lot A),
       // et il y entre par le chemin inverse de tous les autres : non parce
       // qu'on a lu un texte de plus, mais parce qu'on a RETIRÉ la seule

@@ -31,6 +31,7 @@ const EMPLOYEUR: FaitsManquesAnnonces = {
   epiPresents: null,
   categorieErp: "N3",
   habitation: true,
+  operationsElectriques: null,
 };
 
 /** Un restaurant de 5ᵉ catégorie, sans habitation : le cas le plus courant de la cible. */
@@ -39,6 +40,7 @@ const RESTAURANT_N5: FaitsManquesAnnonces = {
   epiPresents: null,
   categorieErp: "N5",
   habitation: false,
+  operationsElectriques: null,
 };
 
 describe("l'adresse mène quelque part (C45)", () => {
@@ -93,7 +95,7 @@ describe("n'annonce à un dossier que ce qui peut le concerner", () => {
 
   it("le cocontractant étranger est annoncé à tout dossier : aucun fait déclaré ne l'exclut (M4)", () => {
     // Un annuaire de prestataires vide est un silence, pas un « non ».
-    expect(refsProjetees({ travail: false, epiPresents: null, categorieErp: null, habitation: false })).toEqual(
+    expect(refsProjetees({ travail: false, epiPresents: null, categorieErp: null, habitation: false, operationsElectriques: null })).toEqual(
       expect.arrayContaining(["D. 8222-7", "L. 8222-1", "D. 8222-5"]),
     );
   });
@@ -106,7 +108,7 @@ describe("n'annonce à un dossier que ce qui peut le concerner", () => {
   });
 
   it("sans travailleur, rien du Code du travail — l'eau et la vigilance restent", () => {
-    const f = { travail: false, epiPresents: null, categorieErp: null, habitation: false };
+    const f = { travail: false, epiPresents: null, categorieErp: null, habitation: false, operationsElectriques: null };
     const refs = refsProjetees(f);
     expect(refs).not.toContain("R. 4227-22");
     expect(refs).not.toContain("R. 4323-63");
@@ -116,7 +118,7 @@ describe("n'annonce à un dossier que ce qui peut le concerner", () => {
   });
 
   it("un domaine sans article pour ce dossier n'est pas rendu", () => {
-    const f = { travail: false, epiPresents: null, categorieErp: null, habitation: false };
+    const f = { travail: false, epiPresents: null, categorieErp: null, habitation: false, operationsElectriques: null };
     const cles = manquesAnnoncesDuDossier(CORPUS, f).map((d) => d.cle);
     expect(cles).not.toContain("formation");
     for (const d of manquesAnnoncesDuDossier(CORPUS, f)) {
@@ -175,6 +177,20 @@ describe("2026-10-13 : le gaz et les escaliers mécaniques ne visent que leurs d
       expect(refsProjetees(RESTAURANT_N5), ref).not.toContain(ref);
       expect(refsProjetees({ ...RESTAURANT_N5, habitation: true }), ref).toContain(ref);
     }
+  });
+});
+
+describe("2026-10-13 : les travaux sous tension, annoncés sauf « non » aux opérations électriques", () => {
+  it("le silence ne retire rien, « oui » l'annonce, « non » le retire", () => {
+    expect(refsProjetees(RESTAURANT_N5)).toContain("R. 4544-11");
+    expect(refsProjetees({ ...RESTAURANT_N5, operationsElectriques: true })).toContain("R. 4544-11");
+    expect(refsProjetees({ ...RESTAURANT_N5, operationsElectriques: false })).not.toContain("R. 4544-11");
+  });
+
+  it("sans travailleur, rien", () => {
+    expect(
+      refsProjetees({ ...RESTAURANT_N5, travail: false, operationsElectriques: true }),
+    ).not.toContain("R. 4544-11");
   });
 });
 

@@ -128,7 +128,7 @@ produit leur dit ce qu'il ne suit pas.
 Conséquence au corpus (2026-10-12) : les quinze `obligation_manquante` dites
 « hors cible » sous l'ancienne lecture (`CATEGORIES_COUVERTES`) y sont entrées.
 La propriétaire les a classées le 2026-10-13 selon la grille C45 : trois
-encodées (le chapitre hôtels, PO 1 § 3, PO 7, PO 12), ~~quatre~~ six annoncées
-(GZ 13, GZ 14, AS 10, arrêté du 23 février 2018 art. 26 § 3 ; puis, après la
-revue indépendante du même jour, arrêté du 31 janvier 1986 art. 78-1 et 102),
-~~huit~~ six hors cadre — `docs/couverture-declaree-du-produit.md` § 7 et § 8.
+encodées (le chapitre hôtels, PO 1 § 3, PO 7, PO 12), ~~quatre~~ ~~six~~ sept
+annoncées (GZ 13, GZ 14, AS 10, arrêté du 23 février 2018 art. 26 § 3 ; puis,
+après la revue indépendante du même jour, arrêté du 31 janvier 1986 art. 78-1
+et 102, et R. 4544-11), ~~huit~~ ~~six~~ cinq hors cadre — `docs/couverture-declaree-du-produit.md` § 7 et § 8.

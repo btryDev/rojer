@@ -173,8 +173,8 @@ export async function faitsDeCouverture(
 }
 
 /**
- * Les faits que `manques-annonces.ts` projette (C45) : ~~deux~~ quatre depuis
- * le 2026-10-13 (catégorie d'ERP et régime d'habitation), et aucun déduit. Rend `null` si l'établissement n'appartient pas à l'utilisateur —
+ * Les faits que `manques-annonces.ts` projette (C45) : ~~deux~~ ~~quatre~~ cinq depuis
+ * le 2026-10-13 (catégorie d'ERP, régime d'habitation, opérations électriques), et aucun déduit. Rend `null` si l'établissement n'appartient pas à l'utilisateur —
  * jamais un jeu de faits par défaut, qui annoncerait à un dossier introuvable.
  */
 export async function faitsManquesAnnonces(
@@ -189,6 +189,7 @@ export async function faitsManquesAnnonces(
       estERP: true,
       categorieErp: true,
       estHabitation: true,
+      operationsElectriques: true,
     },
   });
   if (!etab) return null;
@@ -197,5 +198,6 @@ export async function faitsManquesAnnonces(
     epiPresents: etab.epiPresents,
     categorieErp: etab.estERP ? etab.categorieErp : null,
     habitation: etab.estHabitation,
+    operationsElectriques: etab.operationsElectriques,
   };
 }

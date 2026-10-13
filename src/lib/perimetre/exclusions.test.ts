@@ -176,6 +176,7 @@ describe("les exclusions déclarées projettent le corpus", () => {
       epiPresents: null,
       categorieErp: "N3",
       habitation: true,
+      operationsElectriques: null,
     }).flatMap((d) => d.articles.map((a) => a.ref));
     expect(annonces.length).toBeGreaterThan(0);
     expect(annonces.filter((ref) => projetes.has(ref))).toEqual([]);
