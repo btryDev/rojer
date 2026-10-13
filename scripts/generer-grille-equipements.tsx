@@ -596,7 +596,9 @@ function TitrePartie({
   explication: string;
 }) {
   return (
-    <View style={{ marginTop: 20, marginBottom: 10 }} wrap={false}>
+    // `minPresenceAhead` : le titre ne reste pas seul en bas de page, il
+    // part avec sa première carte.
+    <View style={{ marginTop: 20, marginBottom: 10 }} wrap={false} minPresenceAhead={110}>
       <Text style={BOARD_PDF.eyebrow}>{t(sousTitre)}</Text>
       <Text style={{ fontSize: 16, fontFamily: "Helvetica-Bold", color: BOARD.encre, marginTop: 4 }}>
         {t(titre)}
