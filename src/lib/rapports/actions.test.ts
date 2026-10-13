@@ -50,6 +50,11 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/lib/auth/scope", () => ({
   assertEtablissementOwnership: vi.fn(async () => ({ id: "user-1" })),
 }));
+// `uploadRapport` exige la session dès l'entrée (audit OWASP du 2026-10-13,
+// S6) ; le refus sans session est tenu par `upload-sans-session.test.ts`.
+vi.mock("@/lib/auth/require-user", () => ({
+  requireUser: vi.fn(async () => ({ id: "user-1", email: null })),
+}));
 vi.mock("@/lib/calendrier/regeneration-sure", async () => ({
   regenererApresMutation: (await h).regenerer,
 }));

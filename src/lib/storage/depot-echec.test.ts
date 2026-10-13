@@ -30,6 +30,7 @@ vi.mock("@/lib/prisma", () => ({ prisma: h.prisma }));
 vi.mock("@/lib/auth/scope", () => ({
   assertEtablissementOwnership: vi.fn(async () => ({ id: "u1" })),
 }));
+vi.mock("@/lib/auth/require-user", () => ({ requireUser: vi.fn(async () => ({ id: "u1" })) }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/calendrier/regeneration-sure", () => ({ regenererApresMutation: vi.fn() }));
 vi.mock("@/lib/storage", async (original) => ({
