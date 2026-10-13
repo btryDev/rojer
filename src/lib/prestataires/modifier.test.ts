@@ -54,7 +54,7 @@ import { clePiecePrestataire } from "./storage";
 import { MESSAGE_SIRET_EN_DOUBLE } from "./siret-en-double";
 
 const pdf = () =>
-  new File([new Uint8Array([37, 80, 68, 70])], "nouvelle.pdf", { type: "application/pdf" });
+  new File([new TextEncoder().encode("%PDF-1.7\n")], "nouvelle.pdf", { type: "application/pdf" });
 
 function saisie(champs: Record<string, string | File> = {}): FormData {
   const fd = new FormData();

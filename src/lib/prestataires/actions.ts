@@ -103,7 +103,7 @@ async function deposerPieces(
     const fichier = formData.get(piece.champ);
     if (!(fichier instanceof File) || fichier.size === 0) continue;
 
-    const val = validerFichier(fichier);
+    const val = await validerFichier(fichier);
     let erreur: string | null = null;
     if (!val.ok) erreur = val.erreur;
     else if (!storage) erreur = MESSAGE_DEPOT_NON_CONFIGURE;

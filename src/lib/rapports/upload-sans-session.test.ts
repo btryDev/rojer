@@ -95,7 +95,7 @@ function formulaireEspion() {
   fd.set("organismeVerif", "Bureau X");
   fd.set("resultat", "conforme");
   fd.set("commentaires", "");
-  fd.set("fichier", new File([new Uint8Array([37, 80, 68, 70])], "r.pdf", { type: "application/pdf" }));
+  fd.set("fichier", new File([new TextEncoder().encode("%PDF-1.7\n")], "r.pdf", { type: "application/pdf" }));
   const get = fd.get.bind(fd);
   fd.get = (nom: string) => {
     h.appels.push(`formData.get(${nom})`);

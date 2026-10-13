@@ -176,7 +176,7 @@ function formulaire(resultat: string, dateRapport: string): FormData {
   fd.set("resultat", resultat);
   fd.set("organismeVerif", "");
   fd.set("commentaires", "");
-  fd.set("fichier", new File([new Uint8Array([1, 2, 3])], "rapport.pdf", { type: "application/pdf" }));
+  fd.set("fichier", new File([new TextEncoder().encode("%PDF-1.7\n")], "rapport.pdf", { type: "application/pdf" }));
   return fd;
 }
 
