@@ -67,13 +67,16 @@ export const MESSAGE_REGEN_ECHEC =
  * tour à la visite suivante. Une preview lit, elle ne répare pas — elle écrit
  * toujours sur les gestes explicites (revue du 2026-09-14).
  *
- * LE PARTAGE EST CONFIRMÉ, ET LES PREVIEWS SONT ABANDONNÉES (2026-09-18).
- * `DATABASE_URL` porte la portée « Production, Preview, and Development » au
- * projet Vercel : une preview lisait bien les vrais dossiers. La propriétaire a
- * décidé de ne plus en déployer — on éprouve en local, puis on regarde la
- * production (`docs/chantiers-ouverts.md` § 13). La garde reste : elle coûte une
- * ligne et couvre le jour où une preview repartirait, par réglage ou par
- * accident. Elle ne se retire qu'avec une base propre pour les previews.
+ * LE PARTAGE A ÉTÉ CONFIRMÉ, PUIS COUPÉ (2026-09-18, 2026-09-19).
+ * Le 2026-09-18, `DATABASE_URL` portait la portée « Production, Preview, and
+ * Development » au projet Vercel : une preview lisait bien les vrais dossiers.
+ * La propriétaire a décidé de ne plus en déployer — on éprouve en local, puis
+ * on regarde la production (`docs/chantiers-ouverts.md` § 13). Depuis le
+ * 2026-09-19, `DATABASE_URL` et `DIRECT_URL` ne sont plus portées que par
+ * l'environnement Production (même document, « FAIT le 2026-09-19 ») : une
+ * preview n'atteint plus la base. La garde reste : elle coûte une ligne et
+ * couvre le jour où une preview repartirait avec une base, par réglage ou par
+ * accident.
  */
 export async function assurerCalendrierAJour(
   etablissementId: string,
