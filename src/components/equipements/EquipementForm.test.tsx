@@ -102,3 +102,47 @@ describe("EquipementForm : « désenfumage mécanique » exigé en ERP des quatr
     expect(n5.required).toBe(false);
   });
 });
+
+describe("EquipementForm : l'aide au-dessus des questions exigées du levage (reprise des suites du lot 3)", () => {
+  // Un appareil ancien ne s'enregistre plus sans ces réponses : la fiche dit
+  // pourquoi, avec les rythmes de l'art. 23 et les mots « manuel » /
+  // « motorisé » du 2026-10-08. Éprouvé en retirant le paragraphe, puis en
+  // retirant la garde sur la catégorie.
+  const rendre = (categorie: string, regime = REGIME_TRAVAIL) =>
+    render(
+      <EquipementForm
+        action={action}
+        libelleSubmit="Enregistrer"
+        estERP={regime.estERP}
+        valeursInitiales={{ categorie: categorie as typeof LEVAGE }}
+        questionsExigees={questionsExigeesParCategorie(regime)}
+      />,
+    ).container;
+
+  it("levage : l'aide dit les trois rythmes de l'art. 23, avec « manuel » et « motorisé »", () => {
+    const texte = rendre(LEVAGE).querySelector("#aide-reponses-exigees")?.textContent ?? "";
+    for (const attendu of [
+      "art. 23",
+      "douze mois",
+      "six mois",
+      "trois mois",
+      "manuel",
+      "motorisé",
+      "art. 20-II",
+      "déjà enregistré",
+    ]) {
+      expect(texte, attendu).toContain(attendu);
+    }
+  });
+
+  it("une autre catégorie : aucune aide", () => {
+    expect(rendre("EXTINCTEUR").querySelector("#aide-reponses-exigees")).toBeNull();
+  });
+
+  it("désenfumage d'un ERP N3, dont la réponse est exigée : pas l'aide du levage", () => {
+    const n3 = { estERP: true, typeErp: "M" as const, categorieErp: "N3" as const, ssiCategorieAouB: null };
+    // Le cas n'a de sens que si la question y est bien exigée.
+    expect(questionsExigeesPour("DESENFUMAGE", n3)).toContain("estDesenfumageMecanique");
+    expect(rendre("DESENFUMAGE", n3).querySelector("#aide-reponses-exigees")).toBeNull();
+  });
+});

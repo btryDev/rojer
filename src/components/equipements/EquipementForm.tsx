@@ -502,6 +502,30 @@ export function EquipementForm({
               />
             )}
 
+            {/* Reprise des suites du lot 3 (2026-10-13) : un appareil de levage
+                déjà enregistré sans ces réponses ne s'enregistre plus sans
+                elles — la ligne dit pourquoi, au-dessus des questions. Le
+                texte suit l'art. 23 de l'arrêté du 1er mars 2004 (corpus
+                `arrete-2004-03-01-levage.ts`) et les mots « manuel » /
+                « motorisé » posés le 2026-10-08 avec le préventeur (7f8a6433).
+                Levage seulement : le désenfumage, l'autre catégorie dont une
+                réponse peut être exigée (décision du 2026-10-08), relève de
+                DF 10 § 3, que son aide dit déjà. */}
+            {categorie === "EQUIPEMENT_LEVAGE" &&
+              (questionsExigees[categorie] ?? []).length > 0 && (
+                <Aide id="aide-reponses-exigees">
+                  La vérification générale périodique de cet appareil a lieu
+                  tous les douze mois — tous les six mois s&apos;il est manuel,
+                  s&apos;il figure à la liste de l&apos;art. 20-II, ou
+                  s&apos;il est motorisé et sert au transport de personnes ou à
+                  élever un poste de travail ; tous les trois mois s&apos;il
+                  est manuel et sert à élever un poste de travail (arrêté du
+                  1er mars 2004, art. 23). Les réponses marquées d&apos;un
+                  astérisque en décident : elles sont donc exigées, y compris
+                  pour un appareil déjà enregistré, et la fiche ne
+                  s&apos;enregistre plus sans elles.
+                </Aide>
+              )}
             {questions.map(({ champ }) => (
               <QuestionTriEtat
                 key={champ}
