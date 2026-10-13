@@ -256,9 +256,9 @@ un critère de recette.
   `shadcn/tailwind.css`. Avec pnpm, CC n'installe pas les devDependencies par
   défaut. Or le `postinstall` (`prisma generate`) et le build ont besoin de
   prisma, typescript, tailwindcss, @tailwindcss/postcss et shadcn. Poser
-  `CC_NODE_DEV_DEPENDENCIES=install`, ou déplacer ces paquets. `engines.node`
-  est une plage (`>=22 <25`) et passe avant `CC_NODE_VERSION` : vérifier au
-  premier déploiement la version que CC en retient.
+  `CC_NODE_DEV_DEPENDENCIES=install`, ou déplacer ces paquets. `engines.node` n'existe pas encore dans `package.json` : `lot/audit-1013-robustesse`
+  l'ajoute en plage (`>=22 <25`). Chez CC, il passe avant `CC_NODE_VERSION` :
+  vérifier au premier déploiement la version retenue.
 
 Les points B11 à B16 viennent de l'audit infra du même jour.
 
@@ -307,7 +307,7 @@ Trois sous-branches sont parties de `origin/main` puis ont été fusionnées ici
 |---|---|---|---|
 | S2 | `e5d52827` | `next` et `eslint-config-next` passent de 16.3.5 à 16.3.8 | `pnpm audit --prod` : 84 → 77 |
 | S3 | `d83fae3c` | `shadcn` passe en `devDependencies` | 77 → 10, plus aucun critique |
-| S4 (fichier) | `48a25a02` | `.github/dependabot.yml` : npm hebdomadaire, actions mensuel | — |
+| S4 (fichier) | `48a25a02` | `.github/dependabot.yml` : npm hebdomadaire, actions mensuel. Les branches `dependabot/*` ne déclenchent pas de preview Vercel : le build lance `migrate deploy`, et la preview n'a pas de base. | — |
 | S1 | `3a6655a9`, `4e3e5c15` | Migration `20261013120000_rls_tables_restantes` : RLS sur les 13 tables, REVOKE gardé pour `anon` et `authenticated`. Test `migrations-rls.test.ts`. | Base jetable qui imite Supabase : `anon` lisait `Salarie` avant, il reçoit `permission denied` après. Sans les rôles, la migration passe. |
 | S5 | `78adfd1a` | Import borné à 5 000 lignes : un dépassement est refusé en entier, jamais tronqué en silence. Un fichier illisible donne une erreur d'utilisateur. | Tas mémoire à 1 M de lignes : 874 Mo → 68 Mo |
 | S6 | `ed3676da` | `requireUser()` en tête de `uploadRapport` | Test : sans session, ni les champs, ni le fichier, ni la base ne sont lus |
@@ -333,6 +333,19 @@ Chaque nouveau test a été éprouvé en retirant la protection qu'il garde.
   gardant un seul `requireUser()` en tête.
 - Une fonction créée plus tard dans `public` serait exécutable par `anon` (droit
   `EXECUTE` accordé à `PUBLIC`). Il n'en existe aucune aujourd'hui.
+- Le test RLS ne voit pas un nom de table sans guillemets
+  (`CREATE TABLE nonquotee`), que Prisma n'écrit jamais. Il ne tient pas non
+  plus le bloc `REVOKE` : le retirer ne ferait échouer aucun test.
+- Le message « plus de 5000 lignes après l'en-tête » est inexact quand l'en-tête
+  n'est pas en ligne 1 : `sheetRows` compte depuis le haut de la feuille. Un
+  classeur pré-quadrillé au-delà de 5 000 lignes est refusé même s'il est
+  presque vide. C'est voulu, et le message le dit.
+- `xlsx`, installé depuis une URL, n'est suivi ni par Dependabot ni par
+  `pnpm audit`.
+- Avant de fusionner, vérifier en prod que les 31 tables appartiennent bien au
+  rôle des migrations. Sinon `ENABLE RLS` échoue, et `migrate deploy` avec :
+  `SELECT relname, pg_get_userbyid(relowner) FROM pg_class WHERE relnamespace
+  = 'public'::regnamespace AND relkind = 'r';` (lecture seule).
 - `verifierIntegriteSignature` est publique et hache jusqu'à 20 Mo par appel
   (cf. B14).
 - L'ADR-005 § 7 cite une migration `enable_rls_deny_all` qui n'existe pas. Il

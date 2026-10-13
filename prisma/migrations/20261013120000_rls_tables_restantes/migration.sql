@@ -34,7 +34,10 @@ ALTER TABLE "UniteTravail" ENABLE ROW LEVEL SECURITY;
 -- 2) Seconde ceinture : retirer à `anon` et `authenticated` tout droit sur
 --    `public`, existant et à venir. La RLS ne protège que les tables où l'on
 --    pense à l'activer ; la révocation couvre aussi celles qu'on oubliera,
---    `_prisma_migrations` comprise, ainsi que séquences et fonctions.
+--    `_prisma_migrations` comprise, et les séquences. Pour les fonctions, elle
+--    ne retire que les droits accordés nommément : PostgreSQL donne EXECUTE à
+--    PUBLIC sur toute fonction, et `anon` en hérite. Aucune fonction n'existe
+--    dans `public` aujourd'hui ; en créer une demandera son propre REVOKE.
 --
 --    Gardée par `pg_roles` : ces rôles n'existent que chez Supabase. Ni la base
 --    locale (Docker), ni la CI, ni Clever Cloud (bascule prévue) ne les ont ;
