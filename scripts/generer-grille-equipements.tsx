@@ -191,8 +191,7 @@ function conditionsTexte(o: Obligation): string {
   const parts = (o.conditions ?? []).map(texteCondition);
   // 2026-10-13 : une obligation d'établissement peut naître d'un appareil
   // déclaré (`siEquipementDeclare`) — la grille le taisait.
-  const si = (o as { siEquipementDeclare?: readonly CategorieEquipement[] })
-    .siEquipementDeclare;
+  const si = o.siEquipementDeclare;
   if (si?.length) {
     parts.push(
       `si déclaré au parc : ${si.map((c) => LABEL_CATEGORIE_EQUIPEMENT[c]).join(" ou ")}`,
@@ -498,21 +497,7 @@ function PageRemarques({
   );
 }
 
-/**
- * « Nos propositions de passage au niveau audit » — en tête du document, quand
- * `--propositions-audit` est passé (2026-10-13, demande de la propriétaire :
- * la liste à part, au début, lisible par le préventeur). Le motif, qui n'est
- * plus imprimé dans la grille depuis le 2026-10-09, l'est ici : c'est
- * l'argument soumis. Les obligations déjà au niveau audit suivent, pour
- * rappel.
- */
-/**
- * 2026-10-13, retour de la propriétaire : la première version était un
- * tableau dense à trois colonnes, « étouffant pour un humain ». Une carte par
- * proposition, en portrait, avec de l'air : le titre, la référence courte, le
- * motif en une phrase. Deux parties — ce que nous proposons, ce que nous
- * voulons discuter —, puis le rappel de ce qui est déjà décidé.
- */
+/** La référence courte d'une obligation : son article, sinon sa référence. */
 function referenceCourte(o: Obligation): string {
   const r = o.referencesLegales[0];
   return r.article ?? r.reference;
@@ -610,6 +595,44 @@ function TitrePartie({
   );
 }
 
+/**
+ * La légende des écrans nommés par « Visible : … » (2026-10-13). En page 1
+ * dans tous les cas : dans la page des propositions quand elle existe, sinon
+ * dans le récapitulatif — revue du 2026-10-13, A2 : elle n'était rendue
+ * qu'avec des propositions, et un document sans l'option nommait des écrans
+ * sans jamais les expliquer.
+ */
+function LegendeEcrans() {
+  return (
+    <View style={[BOARD_PDF.carte, { marginTop: 4 }]} wrap={false}>
+      <Text style={BOARD_PDF.eyebrow}>Où le dirigeant voit une obligation</Text>
+      {[
+        ...SURFACES.map((s2) => [LIBELLE_SURFACE[s2], LEGENDE_SURFACE[s2]] as const),
+        ...LEGENDE_PORTEURS,
+      ].map(([nom, explication]) => (
+        <Text key={nom} style={{ fontSize: 9.5, lineHeight: 1.5, marginTop: 4, color: BOARD.ardoiseEncre }}>
+          <Text style={{ fontFamily: "Helvetica-Bold", color: BOARD.bleuEncre }}>{t(nom)}</Text>
+          {t(` — ${explication}`)}
+        </Text>
+      ))}
+    </View>
+  );
+}
+
+/**
+ * « Nos propositions de passage au niveau audit » — en tête du document, quand
+ * `--propositions-audit` est passé (2026-10-13, demande de la propriétaire :
+ * la liste à part, au début, lisible par le préventeur). Le motif, qui n'est
+ * plus imprimé dans la grille depuis le 2026-10-09, l'est ici : c'est
+ * l'argument soumis. Les obligations déjà au niveau audit suivent, pour
+ * rappel.
+ *
+ * 2026-10-13, retour de la propriétaire : la première version était un
+ * tableau dense à trois colonnes, « étouffant pour un humain ». Une carte par
+ * proposition, en portrait, avec de l'air : le titre, la référence courte, le
+ * motif en une phrase. Deux parties — ce que nous proposons, ce que nous
+ * voulons discuter —, puis le rappel de ce qui est déjà décidé.
+ */
 function PagePropositions({
   propositions,
   genereLe,
@@ -661,24 +684,12 @@ function PagePropositions({
         </Text>
       </View>
 
-      {/* 2026-10-13 : la légende des écrans nommés par « Visible : … ». */}
-      <View style={[BOARD_PDF.carte, { marginTop: 4 }]} wrap={false}>
-        <Text style={BOARD_PDF.eyebrow}>Où le dirigeant voit une obligation</Text>
-        {[
-          ...SURFACES.map((s2) => [LIBELLE_SURFACE[s2], LEGENDE_SURFACE[s2]] as const),
-          ...LEGENDE_PORTEURS,
-        ].map(([nom, explication]) => (
-          <Text key={nom} style={{ fontSize: 9.5, lineHeight: 1.5, marginTop: 4, color: BOARD.ardoiseEncre }}>
-            <Text style={{ fontFamily: "Helvetica-Bold", color: BOARD.bleuEncre }}>{t(nom)}</Text>
-            {t(` — ${explication}`)}
-          </Text>
-        ))}
-      </View>
+      <LegendeEcrans />
 
       {dejaAudit.length > 0 && (
         <View wrap={false}>
           <TitrePartie
-            sousTitre={`${dejaAudit.length} obligations`}
+            sousTitre="Rappel"
             titre={`Déjà au niveau audit (${dejaAudit.length})`}
             explication="Décidé le 8 octobre 2026, sur vos remarques."
           />
@@ -708,14 +719,14 @@ function PagePropositions({
 
       {ouvertes.length > 0 && (
         <>
-      <TitrePartie
-        sousTitre={`${ouvertes.length} questions`}
-        titre="À discuter avec vous"
-        explication="Nous hésitons : votre avis tranchera."
-      />
-      {ouvertes.map((o) => (
-        <CarteProposition key={o.id} o={o} motif={sansPrefixe(motifDe(o))} />
-      ))}
+          <TitrePartie
+            sousTitre={`${ouvertes.length} questions`}
+            titre="À discuter avec vous"
+            explication="Nous hésitons : votre avis tranchera."
+          />
+          {ouvertes.map((o) => (
+            <CarteProposition key={o.id} o={o} motif={sansPrefixe(motifDe(o))} />
+          ))}
         </>
       )}
 
@@ -800,7 +811,10 @@ function GrilleDocument({
           </Text>
         </View>
 
-        <Text style={s.h2}>Récapitulatif par porteur</Text>
+        {propositions.size === 0 && <LegendeEcrans />}
+
+        {/* Le titre part avec son tableau : la légende l'aurait laissé seul en bas de page. */}
+        <Text style={s.h2} minPresenceAhead={80}>Récapitulatif par porteur</Text>
         <View style={s.thead}>
           <Text style={[s.th, cell, { width: "22%" }]}>Porteur</Text>
           <Text style={[s.th, cell, { width: "8%" }]}>Obligations</Text>

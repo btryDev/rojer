@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { obligationsConformite } from "@/lib/referentiels/conformite";
+import { obligationsConformite, porteurDe } from "@/lib/referentiels/conformite";
 import { LIBELLE_ACTIVITE, matchTypologie } from "@/lib/matching/engine";
 import type { EtablissementMatching } from "@/lib/matching/types";
 import { CORPUS } from "@/lib/referentiels/corpus";
@@ -23,6 +23,7 @@ import {
   texteTypologie,
 } from "./textes-grille-relecture";
 import { surfacesDe } from "@/lib/surfaces/obligations-sans-surface";
+import { releveDeLaPage } from "@/lib/quand-ca-arrive/lignes";
 
 /** La typologie d'une obligation réelle du référentiel — absente, le test tombe. */
 function typo(id: string): TypologieApplication {
@@ -434,8 +435,55 @@ describe("« Visible » : où le dirigeant voit l'obligation (2026-10-13)", () =
     for (const o of obligationsConformite) {
       const texte = texteOuVisible(o);
       expect(texte.length, o.id).toBeGreaterThan(0);
-      for (const s of surfacesDe(o)) expect(texte, o.id).toContain(LIBELLE_SURFACE[s]);
+      for (const s of surfacesDe(o)) {
+        // « Quand ça arrive » ne retient que l'établissement (revue A1).
+        if (s === "faits" && !releveDeLaPage(o)) continue;
+        expect(texte, o.id).toContain(LIBELLE_SURFACE[s]);
+      }
     }
+  });
+
+  const parId = (id: string) => {
+    const o = obligationsConformite.find((x) => x.id === id);
+    if (!o) throw new Error(`obligation absente du référentiel : ${id}`);
+    return o;
+  };
+
+  // Revue du 2026-10-13, A1 : la page « Quand ça arrive » ne montre que le
+  // porteur établissement. Une événementielle d'appareil ou de salarié se lit
+  // sur sa fiche.
+  it("« Quand ça arrive » seulement si la page retient l'obligation", () => {
+    for (const o of obligationsConformite) {
+      expect(texteOuVisible(o).includes(LIBELLE_SURFACE.faits), o.id).toBe(releveDeLaPage(o));
+    }
+    expect(texteOuVisible(parId("ascenseur-erp-verification-remise-en-service-as9"))).toBe(
+      "fiche de l'équipement",
+    );
+    expect(texteOuVisible(parId("froid-controle-etancheite-apres-modification"))).toBe(
+      "fiche de l'équipement",
+    );
+    expect(texteOuVisible(parId("formation-securite-salarie-accueil"))).toBe(
+      "Fiche salarié · Équipe (titres déclarés par salarié)",
+    );
+    expect(texteOuVisible(parId("conduite-salarie-formation"))).toBe(
+      "Équipe (titres déclarés par salarié)",
+    );
+  });
+
+  // A4 : au niveau audit, le moteur ne rend jamais l'obligation applicable,
+  // donc la fiche de l'appareil ne la montre pas.
+  it("une obligation d'équipement au niveau audit n'est pas sur la fiche de l'équipement", () => {
+    const o = parId("epi-verification-generale-periodique-respiratoire");
+    expect(porteurDe(o)).toBe("equipement");
+    expect(texteOuVisible(o)).toBe("Ce que Rojer ne couvre pas (niveau audit)");
+    expect(texteOuVisible(o)).not.toContain("fiche de l'équipement");
+  });
+
+  // A5 : un titre qui a une surface datée se lit aussi sur Équipe.
+  it("une obligation salarié avec une surface affiche aussi Équipe", () => {
+    const o = parId("sante-travail-salarie-vip");
+    expect(surfacesDe(o).length).toBeGreaterThan(0);
+    expect(texteOuVisible(o)).toContain("Équipe");
   });
 
   it("une échéance d'appareil : calendrier et fiche de l'équipement", () => {

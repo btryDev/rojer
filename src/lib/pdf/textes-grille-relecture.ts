@@ -16,6 +16,7 @@ import {
 import { surfacesDe, type Surface } from "@/lib/surfaces/obligations-sans-surface";
 import { porteurDe } from "@/lib/referentiels/conformite";
 import type { Obligation } from "@/lib/referentiels/conformite/types";
+import { releveDeLaPage } from "@/lib/quand-ca-arrive/lignes";
 
 /**
  * Un bout de la ligne « Régime ». Deux genres, parce que `matchTypologie`
@@ -355,7 +356,14 @@ export const LIBELLE_SURFACE: Record<Surface, string> = {
 
 export function texteOuVisible(o: Obligation): string {
   const surfaces = surfacesDe(o);
-  const libelles = surfaces.map((s) => LIBELLE_SURFACE[s]);
+  // `faits` compte une obligation événementielle de TOUT porteur ; la page
+  // « Quand ça arrive » ne retient que celles de l'établissement
+  // (`releveDeLaPage`, appelée, jamais redite). Une événementielle d'appareil
+  // ou de salarié se lit sur sa fiche, nommée plus bas — revue du 2026-10-13,
+  // A1 : quatre lignes annonçaient une page qui ne les montre pas.
+  const libelles = surfaces
+    .filter((s) => s !== "faits" || releveDeLaPage(o))
+    .map((s) => LIBELLE_SURFACE[s]);
   // Une obligation portée par un appareil se lit aussi sur sa fiche — sauf au
   // niveau audit, où le moteur ne la rend jamais applicable.
   if (porteurDe(o) === "equipement" && !surfaces.includes("niveau_audit")) {
@@ -377,15 +385,16 @@ export function texteOuVisible(o: Obligation): string {
  */
 export const LEGENDE_SURFACE: Record<Surface, string> = {
   calendrier:
-    "les échéances datées (vérifications, contrôles), avec les retards et ce qui arrive dans les 30 jours.",
+    "les échéances datées (vérifications, contrôles), toutes listées ; les retards et ce qui arrive dans les 30 jours y sont signalés.",
   etats_permanents:
-    "ce qui doit exister en permanence, sans date (affichages, consignes, documents à détenir) ; le dirigeant le coche.",
-  faits: "ce qui se déclenche à un événement (embauche, panne, travaux).",
-  fiche_salarie: "les titres et visites dus à une personne, datés depuis son entrée.",
+    "ce qui doit exister en permanence, sans date (affichages, consignes, documents à détenir), que le dirigeant déclare « en place » ; et ce qui revient sans rythme écrit, qu'il déclare « fait le … ».",
+  faits: "ce qui se déclenche à un événement pour l'établissement (embauche, accident du travail, épisode de chaleur intense, aménagement important).",
+  fiche_salarie:
+    "les titres et visites qui manquent à une personne : dus à l'entrée, datés depuis son entrée, ou appelés par un titre qu'elle détient, avec leur délai.",
   niveau_audit: "les obligations nommées et sourcées, mais non suivies au quotidien.",
 };
 
 export const LEGENDE_PORTEURS: ReadonlyArray<readonly [string, string]> = [
-  ["fiche de l'équipement", "les échéances propres à un appareil déclaré."],
+  ["fiche de l'équipement", "ce qui s'applique à un appareil déclaré."],
   ["Équipe (titres déclarés par salarié)", "les titres que le dirigeant déclare pour chaque salarié."],
 ];
