@@ -6,13 +6,13 @@ const h = vi.hoisted(() => ({
   }),
   auth: {
     signInWithPassword: vi.fn(async () => ({ error: null })),
-    signUp: vi.fn(async (_: unknown) => ({
+    signUp: vi.fn<(creds: unknown) => Promise<unknown>>(async () => ({
       data: { session: null },
       error: null,
     })),
-    resetPasswordForEmail: vi.fn(async (_e: string, _o: unknown) => ({
-      error: null,
-    })),
+    resetPasswordForEmail: vi.fn<
+      (email: string, options: unknown) => Promise<unknown>
+    >(async () => ({ error: null })),
   },
 }));
 

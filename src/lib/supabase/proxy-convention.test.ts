@@ -20,8 +20,8 @@ describe("convention proxy de Next 16", () => {
   });
 
   it("exporte `proxy` et un matcher", async () => {
-    const module = await import(join(RACINE, "proxy.ts"));
-    expect(typeof module.proxy).toBe("function");
-    expect(module.config.matcher).toHaveLength(1);
+    const garde = await import(join(RACINE, "proxy.ts"));
+    expect(typeof garde.proxy).toBe("function");
+    expect(garde.config.matcher).toHaveLength(1);
   });
 });
