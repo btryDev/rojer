@@ -77,6 +77,41 @@ export const AIDE_SSI =
  * D'où la tournure de l'aide : les signes « aident à repérer » les classes de
  * l'article, ils n'en sont pas la définition.
  *
+ * [2026-10-13, décision de la propriétaire sur le point 2 de la revue de
+ * `e6ba53d9` : « on respecte la loi ». `R. 4227-34` vise les établissements où
+ * sont « manipulées et mises en œuvre des matières INFLAMMABLES mentionnées à
+ * l'article R. 4227-22 ». Parmi ce que nomme `R. 4227-22`, seules sont
+ * inflammables les substances « extrêmement inflammables » (H220, H222, H224)
+ * et les matières « dans un état physique susceptible d'engendrer des risques
+ * […] d'inflammation instantanée ». Les comburants et les explosifs ne sont
+ * pas des matières inflammables : ils SORTENT de la question et de l'aide.
+ * Ancien texte, rayé :
+ * ~~libellé : « Dans l'établissement, utilise-t-on (pas seulement
+ * stocke-t-on) des produits dont l'étiquette porte la flamme sur un cercle, la
+ * bombe qui explose ou la mention « extrêmement inflammable » ? »~~
+ * ~~aide § 1 : « Sur l'étiquette, dans un losange bordé de rouge : la flamme
+ * au-dessus d'un cercle signale un produit comburant (mentions de danger H270,
+ * H271, H272) ; la bombe qui explose, un produit explosif (H200 à H204). La
+ * mention « extrêmement inflammable » accompagne une flamme seule : gaz (H220),
+ * aérosol (H222), liquide (H224). Une flamme seule, sans cette mention, ne
+ * suffit pas. »~~
+ * ~~aide § 2 : « La question vise aussi les matières dont l'état physique peut
+ * provoquer une explosion ou une inflammation instantanée. »~~
+ * ~~aide § 3 : « … bouteilles de gaz (propane, butane), oxygène, acétylène,
+ * … »~~
+ * ~~aide § 4 : « Ces classes de produits — explosives, comburantes ou
+ * extrêmement inflammables — sont celles que nomme l'art. R. 4227-22 du Code
+ * du travail ; les signes ci-dessus aident à les repérer. La question porte
+ * sur leur usage : l'art. R. 4227-34 vise les établissements où elles sont
+ * « manipulées et mises en œuvre ». Les entreposer sans les mettre en œuvre
+ * ne relève pas de cette question — d'autres articles de la même section le
+ * visent, que Rojer ne suit pas. »~~
+ * L'exemple du § 2 — H250, « S'enflamme spontanément au contact de l'air »,
+ * liquides et solides pyrophoriques de catégorie 1 — est lu dans le tableau
+ * CLP de l'INERIS (2025), p. 2, le 2026-10-13. Il est donné « par exemple » :
+ * le texte parle d'un « état physique », pas d'une classe CLP, et aucune table
+ * de correspondance ne les rapproche.]
+ *
  * ~~« Vos salariés utilisent-ils (pas seulement stockent-ils) … »~~ [2026-10-13,
  * revue de `e6ba53d9` : la formule restreignait le champ — `R. 4227-34` vise
  * l'établissement « où sont manipulées et mises en œuvre » les matières, quel
@@ -94,14 +129,14 @@ export const AIDE_SSI =
  * d'ici. `question-matieres.test.tsx` le vérifie surface par surface.
  */
 export const QUESTION_MATIERES =
-  "Dans l'établissement, utilise-t-on (pas seulement stocke-t-on) des produits dont l'étiquette porte la flamme sur un cercle, la bombe qui explose ou la mention « extrêmement inflammable » ?";
+  "Dans l'établissement, utilise-t-on (pas seulement stocke-t-on) des produits dont l'étiquette porte une flamme et la mention « extrêmement inflammable », ou des matières qui peuvent s'enflammer instantanément ?";
 
 /** L'aide de la question, paragraphe par paragraphe, dans l'ordre affiché. */
 export const AIDE_MATIERES: readonly string[] = [
-  "Sur l'étiquette, dans un losange bordé de rouge : la flamme au-dessus d'un cercle signale un produit comburant (mentions de danger H270, H271, H272) ; la bombe qui explose, un produit explosif (H200 à H204). La mention « extrêmement inflammable » accompagne une flamme seule : gaz (H220), aérosol (H222), liquide (H224). Une flamme seule, sans cette mention, ne suffit pas.",
-  "La question vise aussi les matières dont l'état physique peut provoquer une explosion ou une inflammation instantanée.",
-  "Exemples courants, à vérifier sur l'étiquette ou la fiche de données de sécurité : bouteilles de gaz (propane, butane), oxygène, acétylène, aérosols étiquetés « extrêmement inflammable », certains solvants.",
-  "Ces classes de produits — explosives, comburantes ou extrêmement inflammables — sont celles que nomme l'art. R. 4227-22 du Code du travail ; les signes ci-dessus aident à les repérer. La question porte sur leur usage : l'art. R. 4227-34 vise les établissements où elles sont « manipulées et mises en œuvre ». Les entreposer sans les mettre en œuvre ne relève pas de cette question — d'autres articles de la même section le visent, que Rojer ne suit pas.",
+  "Sur l'étiquette, la mention « extrêmement inflammable » accompagne une flamme dans un losange bordé de rouge : gaz (H220), aérosol (H222), liquide (H224). Une flamme seule, sans cette mention, ne suffit pas.",
+  "La question vise aussi les matières qui, dans l'état où elles se trouvent, peuvent prendre feu instantanément — par exemple un produit dont l'étiquette porte « S'enflamme spontanément au contact de l'air » (H250).",
+  "Exemples courants, à vérifier sur l'étiquette ou la fiche de données de sécurité : bouteilles de gaz (propane, butane), acétylène, aérosols étiquetés « extrêmement inflammable », certains solvants.",
+  "L'art. R. 4227-22 du Code du travail nomme les matières explosives, comburantes ou extrêmement inflammables. L'art. R. 4227-34 ne vise, parmi elles, que les matières inflammables, dans les établissements où elles sont « manipulées et mises en œuvre ». Les explosifs et les comburants n'entrent donc pas dans cette question, et les matières inflammables non plus quand on se contente de les entreposer sans les mettre en œuvre. Ces cas relèvent des art. R. 4227-22 à R. 4227-25, que Rojer ne suit pas et qu'il signale sur la page « Ce que Rojer ne couvre pas ».",
   "Si oui, l'alarme sonore, la consigne incendie et les exercices semestriels sont dus quel que soit l'effectif (art. R. 4227-34, R. 4227-37 et R. 4227-39 du Code du travail). Si non, ces lignes sont retirées, sauf là où plus de cinquante personnes sont habituellement présentes : ce seuil suffit à les rendre dues. Tant que la question n'a pas de réponse, elles s'affichent « à confirmer ».",
 ];
 

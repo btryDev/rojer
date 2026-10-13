@@ -92,9 +92,12 @@ const RELANCE = RELANCES.matieres_r4227_22;
 /** Un fragment propre à chaque paragraphe de l'aide, et au renvoi de la relance. */
 const FRAGMENTS_DE_L_AIDE = [
   "dans un losange bordé de rouge",
-  "dont l'état physique peut provoquer",
+  // ~~"dont l'état physique peut provoquer"~~, ~~"les signes ci-dessus aident
+  // à les repérer"~~ [2026-10-13 : paragraphes 2 et 4 réécrits, décision de la
+  // propriétaire sur les matières inflammables].
+  "dans l'état où elles se trouvent",
   "à vérifier sur l'étiquette ou la fiche de données de sécurité",
-  "les signes ci-dessus aident à les repérer",
+  "que Rojer ne suit pas et qu'il signale",
   "ce seuil suffit à les rendre dues",
   "détaillés sous la question, sur la fiche",
 ];
@@ -249,10 +252,11 @@ describe("la question des matières : un seul texte, identique partout", () => {
 });
 
 describe("l'aide : exemples, références, lien", () => {
+  // ~~« oxygène »~~ [2026-10-13, décision de la propriétaire : un comburant
+  // n'est pas une matière inflammable, R. 4227-34 ne le vise pas].
   it.each([
     "propane",
     "butane",
-    "oxygène",
     "acétylène",
     "aérosols",
     "solvants",
@@ -260,22 +264,39 @@ describe("l'aide : exemples, références, lien", () => {
     expect(AIDE).toContain(exemple);
   });
 
-  it.each(["H220", "H222", "H224", "H270", "H200"])("le code %s y est", (code) => {
+  // ~~"H270", "H200"~~ [2026-10-13, même décision : comburants et explosifs
+  // sortent de l'aide].
+  it.each(["H220", "H222", "H224", "H250"])("le code %s y est", (code) => {
     expect(AIDE).toContain(code);
   });
 
-  it("les pictogrammes sont décrits en mots, et la mention aussi", () => {
-    expect(QUESTION_MATIERES).toContain("la flamme sur un cercle");
-    expect(QUESTION_MATIERES).toContain("la bombe qui explose");
-    expect(QUESTION_MATIERES).toContain("« extrêmement inflammable »");
+  it("H250 est cité avec sa mention exacte (INERIS, p. 2)", () => {
+    expect(AIDE).toContain("« S'enflamme spontanément au contact de l'air » (H250)");
   });
 
-  it("la bombe n'est attachée qu'aux codes qui la portent : H200 à H204, pas H205", () => {
-    // INERIS, p. 1 : « Expl. 1.5 — Pas de pictogramme — H205 » (revue de
-    // `e6ba53d9`). Un produit H205 ne montre pas la bombe ; l'annoncer sous
-    // elle enverrait chercher un signe absent de l'étiquette.
-    expect(AIDE).toContain("la bombe qui explose, un produit explosif (H200 à H204)");
-    expect(AIDE).not.toContain("H205");
+  it("une flamme seule ne suffit pas, et l'aide le dit", () => {
+    expect(AIDE).toContain("Une flamme seule, sans cette mention, ne suffit pas.");
+  });
+
+  // ~~« les pictogrammes sont décrits en mots » (flamme sur un cercle, bombe
+  // qui explose)~~ [2026-10-13, décision de la propriétaire : « on respecte la
+  // loi » — R. 4227-34 ne vise que les matières INFLAMMABLES de R. 4227-22].
+  it("le libellé vise la mention « extrêmement inflammable » et l'inflammation instantanée", () => {
+    expect(QUESTION_MATIERES).toContain("une flamme et la mention « extrêmement inflammable »");
+    expect(QUESTION_MATIERES).toContain("peuvent s'enflammer instantanément");
+  });
+
+  it("ni comburant, ni oxygène, ni explosif, ni la bombe ne sont un critère du libellé", () => {
+    expect(QUESTION_MATIERES).not.toMatch(/comburant|oxygène|explosi|bombe|cercle/i);
+  });
+
+  it("l'aide ne les donne pas comme critère : ni pictogramme, ni code, ni exemple", () => {
+    expect(AIDE).not.toMatch(/oxygène|bombe|cercle|H20\d|H27\d/i);
+    // Comburants et explosifs ne sont nommés que dans le paragraphe des
+    // articles, celui qui dit qu'ils n'entrent pas dans la question.
+    const nomment = AIDE_MATIERES.filter((p) => /comburant|explosi/i.test(p));
+    expect(nomment).toHaveLength(1);
+    expect(nomment[0]).toContain("Les explosifs et les comburants n'entrent donc pas dans cette question");
   });
 
   it("la question garde « utilisés, pas seulement stockés »", () => {
@@ -336,15 +357,33 @@ describe("la question nomme l'article qu'elle sert", () => {
     for (const p of avecCondition) expect(p).toContain("R. 4227-34");
   });
 
-  it("là où elle cite R. 4227-22, l'aide nomme les classes de produits, jamais la condition", () => {
+  it("là où elle cite R. 4227-22, l'aide ne lui prête jamais la condition de R. 4227-34", () => {
     // C'est la garde d'origine, affinée : citer R. 4227-22 SUR LA CONDITION
     // faisait répondre « non » à un établissement qui ne fait qu'entreposer.
+    // ~~Chaque citation devait nommer les classes~~ [2026-10-13 : l'aide cite
+    // aussi « R. 4227-22 à R. 4227-25 » pour ce que Rojer ne suit pas ; la
+    // garde porte sur la condition, et les classes sont exigées ci-dessous].
     const avec22 = propositions.filter((p) => p.includes("R. 4227-22"));
     expect(avec22.length).toBeGreaterThan(0);
-    for (const p of avec22) {
-      expect(p).toContain("explosives, comburantes ou extrêmement inflammables");
-      expect(p).not.toMatch(/manipul|mises? en œuvre|entrepos|stock/);
-    }
+    for (const p of avec22) expect(p).not.toContain("manipulées et mises en œuvre");
+  });
+
+  it("R. 4227-22 nomme aussi les explosifs et les comburants, et l'aide le dit", () => {
+    expect(propositions).toContain(
+      "L'art. R. 4227-22 du Code du travail nomme les matières explosives, comburantes ou extrêmement inflammables",
+    );
+  });
+
+  it("R. 4227-34 ne vise que les matières inflammables, et l'aide le dit", () => {
+    const p34 = propositions.filter((p) => p.includes("R. 4227-34") && p.includes("manipulées et mises en œuvre"));
+    expect(p34).toHaveLength(1);
+    expect(p34[0]).toMatch(/ne vise, parmi elles, que les matières inflammables/);
+  });
+
+  it("le reste relève de R. 4227-22 à R. 4227-25, que Rojer ne suit pas et signale", () => {
+    expect(AIDE).toContain(
+      "Ces cas relèvent des art. R. 4227-22 à R. 4227-25, que Rojer ne suit pas et qu'il signale sur la page « Ce que Rojer ne couvre pas ».",
+    );
   });
 
   it("elle dit au dirigeant ce que la question ne couvre pas", () => {

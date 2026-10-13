@@ -55,8 +55,12 @@ couvre pas », domaine « Matières explosives et inflammables », à tout
 
 [2026-10-13, `lot/question-matieres` : les MOTS de la question ont changé, pas
 son champ. Décision de la propriétaire : elle reste posée à tout employeur et
-se répond désormais étiquette en main (flamme sur un cercle, bombe qui explose,
-mention « extrêmement inflammable »), texte unique dans
+se répond désormais étiquette en main (~~flamme sur un cercle, bombe qui explose,~~
+mention « extrêmement inflammable » [même jour, décision de la propriétaire sur
+le point 2 de la revue, « on respecte la loi » : `R. 4227-34` ne vise que les
+matières INFLAMMABLES de `R. 4227-22` ; comburants et explosifs sortent de la
+question, qui garde la mention « extrêmement inflammable » et les matières
+pouvant s'enflammer instantanément]), texte unique dans
 `etablissements/questions.ts`. L'entreposage reste hors de la question~~, et ce
 paragraphe reste ouvert~~ [même jour, revue : voir ci-dessus, il ne l'est
 plus]. **Seul reste ouvert** : des aérosols pulvérisés dans la journée
