@@ -472,3 +472,50 @@ describe("décision du 2026-10-08 : « désenfumage mécanique » exigé là où
     });
   });
 });
+
+describe("décision du 2026-10-13 : « groupe électrogène » exigé pour une installation électrique en ERP", () => {
+  // Les deux lignes d'EL 18 § 4 ne naissent que d'un « oui » : la réponse est
+  // exigée là où elle décide, pour qu'il n'y ait plus de silence. Éprouvé en
+  // retirant l'entrée de `QUESTIONS_EXIGEES_PAR_DECISION`.
+  function installation(groupe?: string) {
+    const fd = new FormData();
+    fd.set("libelle", "TGBT");
+    fd.set("categorie", "INSTALLATION_ELECTRIQUE");
+    if (groupe !== undefined) fd.set("aGroupeElectrogene", groupe);
+    return fd;
+  }
+
+  it("ERP N5 : sans réponse, refusé et rien n'est créé ; avec « non », créé", async () => {
+    h.db.regime = { estERP: true, typeErp: "N", categorieErp: "N5", ssiCategorieAouB: null };
+    const r = await creerEquipement("etab-1", { status: "idle" }, installation());
+    expect(r.status).toBe("error");
+    expect(Object.keys((r as { fieldErrors?: object }).fieldErrors ?? {})).toEqual(["aGroupeElectrogene"]);
+    expect(h.db.crees).toHaveLength(0);
+    await expect(creerEquipement("etab-1", { status: "idle" }, installation("non"))).rejects.toThrow("NEXT_REDIRECT");
+    expect(h.db.crees).toHaveLength(1);
+  });
+
+  it("ERP N3 : « Je ne sais pas encore » (valeur vide) est refusé à la modification", async () => {
+    h.db.regime = { estERP: true, typeErp: "N", categorieErp: "N3", ssiCategorieAouB: null };
+    Object.assign(h.db.equipements[0], { categorie: "INSTALLATION_ELECTRIQUE", caracteristiques: null });
+    const r = await modifierEquipement("eq-1", { status: "idle" }, installation(""));
+    expect(r.status).toBe("error");
+    expect(Object.keys((r as { fieldErrors?: object }).fieldErrors ?? {})).toEqual(["aGroupeElectrogene"]);
+  });
+
+  it("hors ERP : la question reste facultative", async () => {
+    await expect(creerEquipement("etab-1", { status: "idle" }, installation())).rejects.toThrow("NEXT_REDIRECT");
+  });
+
+  it("la relance du tableau de bord accepte la question en ERP", async () => {
+    h.db.regime = { estERP: true, typeErp: "N", categorieErp: "N2", ssiCategorieAouB: null };
+    Object.assign(h.db.equipements[0], { categorie: "INSTALLATION_ELECTRIQUE", caracteristiques: null });
+    const fd = new FormData();
+    fd.set("reponse", "non");
+    const r = await repondreQuestionEquipement("eq-1", "aGroupeElectrogene", { status: "idle" }, fd);
+    expect(r.status).toBe("success");
+    expect((h.db.equipements[0] as { caracteristiques?: unknown }).caracteristiques).toEqual({
+      aGroupeElectrogene: false,
+    });
+  });
+});

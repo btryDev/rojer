@@ -94,7 +94,10 @@ const QUESTIONS_TRI_ETAT: Record<
   // états, ~~« Je ne sais pas encore » garde les deux lignes d'EL 18 § 4 ; seul
   // un « non » choisi les retire~~ [2026-10-13, décision de la propriétaire :
   // seul un « oui » fait naître les deux lignes ; « Non » et « Je ne sais pas
-  // encore » n'en donnent aucune — un groupe électrogène est un appareil].
+  // encore » n'en donnent aucune — ~~un groupe électrogène est un appareil~~
+  // (motif remplacé le même jour : en ERP la réponse est EXIGÉE,
+  // `QUESTIONS_EXIGEES_PAR_DECISION`, donc il n'y a plus de silence ; le
+  // formulaire n'y offre plus « Je ne sais pas encore »)].
   aGroupeElectrogene: {
     question: "Un groupe électrogène de sécurité est-il présent ?",
     aide: AIDE_GROUPE_ELECTROGENE,

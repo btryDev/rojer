@@ -13,7 +13,7 @@ import { FAMILLES_ESP } from "./esp";
  *
  * Les propriétés qui alimentent les conditions d'obligations du référentiel
  * (cf. `src/lib/referentiels/conformite/`) sont :
- *   - `aGroupeElectrogene`          → ERP, art. EL 18 § 4, ses deux périodicités (niveaux tous les quinze jours, essai mensuel ; ~~EL 20~~, installations temporaires, cité à tort — corrigé le 2026-09-27). Trois états depuis le 2026-09-27 (C41) : ~~seul un « non » explicite éteint les deux lignes~~ [2026-10-13, décision de la propriétaire : seul un « oui » les fait naître, condition `booleenne` — la question reste à trois états, comme `estDesenfumageMecanique`].
+ *   - `aGroupeElectrogene`          → ERP, art. EL 18 § 4, ses deux périodicités (niveaux tous les quinze jours, essai mensuel ; ~~EL 20~~, installations temporaires, cité à tort — corrigé le 2026-09-27). Trois états depuis le 2026-09-27 (C41) : ~~seul un « non » explicite éteint les deux lignes~~ [2026-10-13, décision de la propriétaire : seul un « oui » les fait naître, condition `booleenne` — la question reste à trois états, comme `estDesenfumageMecanique`, et sa réponse est EXIGÉE en ERP (`QUESTIONS_EXIGEES_PAR_DECISION`)].
  *   - `estLocalPollutionSpecifique` → travail, arrêté 08-10-1987 art. 4 § 2
  *   - `aSystemeDeRecyclage`         → travail, arrêté 08-10-1987 art. 4 b)
  *     (contrôle semestriel des gaines de recyclage, en SUS de l'annuel)
@@ -111,12 +111,19 @@ import { FAMILLES_ESP } from "./esp";
  * criticité élevée, en « opt-out » [2026-10-13 : pas toutes — `estDesenfumageMecanique`
  * (2026-10-07) et `aGroupeElectrogene` (2026-10-13, décision de la propriétaire)
  * gouvernent un opt-in ; le trois-états y garde la différence entre « Non » et
- * « pas encore répondu » à l'écran, sans rien ajouter au calendrier] : elles restent applicables tant que le
+ * « pas encore répondu » à l'écran, sans rien ajouter au calendrier ; là où la
+ * réponse décide d'une ligne, elle est EXIGÉE (`QUESTIONS_EXIGEES_PAR_DECISION`)] : elles restent applicables tant que le
  * dirigeant n'a pas répondu « non ». Une case à cocher ne convient donc pas —
  * elle ne distingue pas « j'ai répondu non » de « je n'ai pas encore répondu »,
  * et le silence d'un formulaire éteindrait une obligation vitale. Elles sont
  * modélisées en **trois états** : `true` (oui), `false` (non), `undefined`
- * (pas encore répondu, l'obligation reste affichée).
+ * ~~(pas encore répondu, l'obligation reste affichée)~~ [rayé le 2026-10-13 :
+ * faux pour les questions qui gouvernent un opt-in — `estDesenfumageMecanique`,
+ * `aGroupeElectrogene` — et pour les lignes STRICTES des couples (`infirmee`
+ * contre `booleenne`, `enum_differente` contre `enum_egale`), dont la ligne
+ * spécifique n'apparaît pas au silence. `undefined` veut dire « pas encore
+ * répondu » ; ce que le calendrier en fait dépend de la forme de la condition
+ * (`ConditionApplication`), pas du trois-états].
  */
 
 const DATE_FMT = /^\d{4}-\d{2}-\d{2}$/;

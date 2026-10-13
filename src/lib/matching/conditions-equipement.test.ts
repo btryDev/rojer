@@ -10,17 +10,22 @@ import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
  *
  * 1. Le groupe électrogène de sécurité (EL 18 § 4) : les deux lignes ne
  *    naissent que d'un « oui » déclaré sur l'installation électrique. Le
- *    silence et le « non » n'en donnent aucune — un groupe électrogène est un
- *    appareil, une propriété d'équipement absente dit qu'il n'y en a pas.
- * 2. L'annuelle des alimentations de secours de signalisation (arrêté du
- *    4 novembre 1993, art. 15 et 7) : due seulement si une signalisation
- *    alimentée est déclarée — `siEquipementDeclare` : ALARME_INCENDIE, BAES.
+ *    silence et le « non » n'en donnent aucune — ~~un groupe électrogène est un
+ *    appareil, une propriété d'équipement absente dit qu'il n'y en a pas~~
+ *    [motif rayé le 2026-10-13 : la réponse est exigée en ERP,
+ *    `equipements/reponses-exigees.test.ts`].
+ * 2. ~~L'annuelle~~ [2026-10-13, seconde décision : les deux lignes de
+ *    l'article 7, annuelle et présence] des alimentations de secours de
+ *    signalisation (arrêté du 4 novembre 1993, art. 15 et 7) : due seulement
+ *    si une signalisation alimentée est déclarée — `siEquipementDeclare` :
+ *    ALARME_INCENDIE, BAES ~~.~~, ASCENSEUR (art. 6, « signal d'appel »).
  *
  * Tout passe par `determineObligationsApplicables` : c'est le calendrier que
  * ces règles changent, pas une donnée du référentiel.
  */
 
 const ALIM = "signalisation-etablissement-alimentations-secours-annuelle";
+const PRESENCE = "signalisation-etablissement-alimentation-secours-presence";
 const GE = [
   "elec-erp-groupe-electrogene-annuel",
   "elec-erp-groupe-electrogene-quinzaine",
@@ -65,9 +70,9 @@ const appareil = (
   caracteristiques: EquipementMatching["caracteristiques"] = null,
 ): EquipementMatching => ({ id, libelle: id, categorie, caracteristiques });
 
-describe("alimentations de secours de signalisation — sur un appareil alimenté déclaré", () => {
+for (const ID of [ALIM, PRESENCE]) describe(`${ID} — sur un appareil alimenté déclaré`, () => {
   const lignes = (e: EtablissementMatching, eqs: EquipementMatching[]) =>
-    determineObligationsApplicables(e, eqs).filter((a) => a.obligation.id === ALIM);
+    determineObligationsApplicables(e, eqs).filter((a) => a.obligation.id === ID);
 
   it("bureau de six salariés sans aucun appareil : la ligne n'existe pas", () => {
     expect(lignes(BUREAU, [])).toHaveLength(0);
@@ -77,11 +82,18 @@ describe("alimentations de secours de signalisation — sur un appareil aliment�
     const l = lignes(BUREAU, [appareil("BAES")]);
     expect(l).toHaveLength(1);
     expect(l[0].porteur).toBe("etablissement");
-    expect(l[0].obligation.periodicite).toBe("annuelle");
   });
 
   it("une alarme incendie déclarée : la ligne existe", () => {
     expect(lignes(BUREAU, [appareil("ALARME_INCENDIE")])).toHaveLength(1);
+  });
+
+  it("un ascenseur déclaré : la ligne existe (art. 6, « signal d'appel », 2026-10-13)", () => {
+    expect(lignes(BUREAU, [appareil("ASCENSEUR")])).toHaveLength(1);
+  });
+
+  it("un appareil AUTRE ne la fait pas naître (le faux négatif écrit dans les notes)", () => {
+    expect(lignes(BUREAU, [appareil("AUTRE")])).toHaveLength(0);
   });
 
   it("trois BAES et une alarme : toujours UNE ligne", () => {
@@ -96,9 +108,9 @@ describe("alimentations de secours de signalisation — sur un appareil aliment�
   });
 
   it("aucune autre catégorie du parc ne la fait naître", () => {
-    const declencheuses = new Set<CategorieEquipement>(["ALARME_INCENDIE", "BAES"]);
+    const declencheuses = new Set<CategorieEquipement>(["ALARME_INCENDIE", "BAES", "ASCENSEUR"]);
     const autres = CATEGORIES_EQUIPEMENT.filter((c) => !declencheuses.has(c));
-    // Borne basse : le parc a bien d'autres catégories que les deux.
+    // Borne basse : le parc a bien d'autres catégories que les trois.
     expect(autres.length).toBeGreaterThan(0);
     const fautives = autres.filter((c) => lignes(BUREAU, [appareil(c)]).length > 0);
     expect(fautives).toEqual([]);
@@ -108,6 +120,13 @@ describe("alimentations de secours de signalisation — sur un appareil aliment�
     expect(lignes(ERP_N3, [])).toHaveLength(0);
     expect(lignes(ERP_N3, [appareil("BAES")])).toHaveLength(1);
   });
+});
+
+it("l'annuelle garde son rythme annuel", () => {
+  const l = determineObligationsApplicables(BUREAU, [appareil("BAES")]).find(
+    (a) => a.obligation.id === ALIM,
+  );
+  expect(l?.obligation.periodicite).toBe("annuelle");
 });
 
 describe("groupe électrogène de sécurité — sur un « oui » déclaré seulement", () => {

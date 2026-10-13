@@ -73,9 +73,11 @@ describe("aide de la question groupe électrogène", () => {
     // encore » » : vrai sous `non_infirmee`, faux sous `booleenne`.
     expect(AIDE_GROUPE_ELECTROGENE).not.toMatch(/« Oui » ou « Je ne sais pas encore »/);
     expect(AIDE_GROUPE_ELECTROGENE).not.toMatch(/laissez/i);
-    expect(AIDE_GROUPE_ELECTROGENE).toContain(
-      "Avec « Non » ou « Je ne sais pas encore », aucune des deux n'est suivie.",
-    );
+    // ~~« Avec « Non » ou « Je ne sais pas encore », aucune des deux n'est
+    // suivie. »~~ — 2026-10-13, seconde décision : la réponse est exigée en
+    // ERP, l'aide le dit et ne présente plus le silence comme une réponse.
+    expect(AIDE_GROUPE_ELECTROGENE).toContain("la réponse y est exigée");
+    expect(AIDE_GROUPE_ELECTROGENE).toContain("Avec « Non », aucune des deux n'est suivie.");
   });
 
   it("nomme les trois réponses par les libellés mêmes du menu", () => {

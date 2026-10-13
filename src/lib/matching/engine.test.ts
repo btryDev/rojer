@@ -553,8 +553,9 @@ describe("moteur matching — typologie habitation", () => {
 
 // 2026-10-13, décision de la propriétaire : ~~le silence n'éteint rien~~ —
 // la question reste à trois états, mais seul un « oui » fait naître les deux
-// lignes d'EL 18 § 4 (`booleenne` à `true`). Un groupe électrogène est un
-// appareil : propriété absente = l'appareil ne l'a pas.
+// lignes d'EL 18 § 4 (`booleenne` à `true`). ~~Un groupe électrogène est un
+// appareil : propriété absente = l'appareil ne l'a pas.~~ [Motif rayé le
+// 2026-10-13 : la réponse est EXIGÉE en ERP (`reponses-exigees.ts`).]
 describe("moteur matching — groupe électrogène en trois états (C41)", () => {
   const GE = [
     "elec-erp-groupe-electrogene-annuel",
@@ -1452,8 +1453,10 @@ describe("moteur matching — aucun établissement existant ne perd une obligati
       // « oui ». Aucun équipement en base ne peut donc rien perdre.
       "aeration-travail-recyclage-semestriel",
       // 2026-10-13, décision de la propriétaire : les deux lignes d'EL 18 § 4
-      // ne sont servies que sur un « oui » (`booleenne` à `true`) — un groupe
-      // électrogène est un appareil, le dirigeant sait s'il en a un.
+      // ne sont servies que sur un « oui » (`booleenne` à `true`) — ~~un groupe
+      // électrogène est un appareil, le dirigeant sait s'il en a un~~ [motif
+      // rayé le 2026-10-13 : la réponse est EXIGÉE en ERP, il n'y a plus de
+      // silence (`QUESTIONS_EXIGEES_PAR_DECISION`)].
       "elec-erp-groupe-electrogene-annuel",
       "elec-erp-groupe-electrogene-quinzaine",
       // ~~"esp-inspection-periodique-generateur-vapeur"~~ — retirée le

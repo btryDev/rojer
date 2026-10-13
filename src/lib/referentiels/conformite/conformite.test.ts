@@ -901,12 +901,17 @@ describe("référentiel conformité — non-régression des obligations critique
     // avec sa jumelle, ci-dessous].
     // 2026-10-13, décision de la propriétaire (référentiel `2026-10-13.2`) :
     // les deux lignes d'EL 18 § 4 ne sont servies que sur un « oui » déclaré
-    // (`booleenne` à `true`). Lignes DÉJÀ PUBLIÉES qui s'éteignent au silence,
-    // en connaissance de cause : un groupe électrogène de sécurité est un
-    // appareil, le dirigeant sait s'il en a un, et une propriété d'équipement
-    // absente dit « cet appareil ne l'a pas » (règle du non-renseigné,
-    // `.claude/CLAUDE.md`). Le C41 servait deux échéances (quinzaine et mois)
-    // à toute installation électrique d'ERP sans réponse.
+    // (`booleenne` à `true`). Lignes DÉJÀ PUBLIÉES qui s'éteindraient au
+    // silence, ~~en connaissance de cause : un groupe électrogène de sécurité
+    // est un appareil, le dirigeant sait s'il en a un, et une propriété
+    // d'équipement absente dit « cet appareil ne l'a pas » (règle du
+    // non-renseigné, `.claude/CLAUDE.md`)~~ [motif rayé le 2026-10-13, seconde
+    // décision du jour] — mais la réponse est EXIGÉE pour une installation
+    // électrique en ERP (`QUESTIONS_EXIGEES_PAR_DECISION`), là où ces deux
+    // lignes décident : il n'y a donc plus de silence, comme pour la
+    // triennale du désenfumage mécanique ci-dessous. Le C41 servait deux
+    // échéances (quinzaine et mois) à toute installation électrique d'ERP sans
+    // réponse.
     "elec-erp-groupe-electrogene-annuel",
     "elec-erp-groupe-electrogene-quinzaine",
     // ~~"levage-vgp-trimestrielle-force-humaine"~~ — retirée le 2026-09-28
@@ -1844,7 +1849,14 @@ describe("référentiel conformité — version et empreinte", () => {
     // reçoit `siEquipementDeclare: ["ALARME_INCENDIE", "BAES"]` (art. 7 de
     // l'arrêté du 4 novembre 1993). 176 + 0 − 0 = 176, deux conditions
     // changées ; empreinte relevée en appelant `empreinteReferentiel()`.
-    { version: "2026-10-13.2", empreinte: "176-a0fd14fb84a3b2bb" },
+    // ~~176-a0fd14fb84a3b2bb~~ : empreinte avant la revue du même jour,
+    // jamais servie — ligne réécrite le 2026-10-13 (version non servie),
+    // seconde décision de la propriétaire : `ASCENSEUR` s'ajoute à
+    // `siEquipementDeclare` de l'annuelle (art. 6, « signal d'appel »), et la
+    // ligne sœur `signalisation-etablissement-alimentation-secours-presence`
+    // prend la même condition. 176 + 0 − 0 = 176, trois conditions changées
+    // depuis `2026-10-13.1` ; relevée en appelant `empreinteReferentiel()`.
+    { version: "2026-10-13.2", empreinte: "176-30ae167af322fc9e" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

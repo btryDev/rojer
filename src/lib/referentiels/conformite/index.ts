@@ -401,7 +401,14 @@ export const obligationsConformite: Obligation[] = [
 // (2) `signalisation-etablissement-alimentations-secours-annuelle` reçoit
 // `siEquipementDeclare: ["ALARME_INCENDIE", "BAES"]` : due seulement si une
 // signalisation alimentée est déclarée (arrêté du 4 novembre 1993, art. 7).
-// Un bureau de six salariés sans appareil passe de 45 à 44 lignes.
+// ~~Un bureau de six salariés sans appareil passe de 45 à 44 lignes.~~
+// [Même version, non servie, seconde décision du 2026-10-13 : `ASCENSEUR`
+// s'ajoute à la liste (art. 6, « signal d'appel »), et (3) la ligne de
+// présence `signalisation-etablissement-alimentation-secours-presence` prend
+// la même condition. 176 + 0 − 0 = 176, trois conditions changées. Un bureau
+// de six salariés sans appareil passe de 45 à 43 lignes. La réponse au
+// groupe électrogène devient exigée en ERP (`reponses-exigees.ts`), hors
+// référentiel.]
 export const REFERENTIEL_VERSION = "2026-10-13.2";
 
 /**
