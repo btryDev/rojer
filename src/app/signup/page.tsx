@@ -31,7 +31,7 @@ export default async function SignupPage({
         </p>
 
         <div className="carte-board mt-7 px-7 py-6 sm:px-8">
-          <SignupForm next={cheminDeRetour(next)} />
+          <SignupForm />
         </div>
 
         <p className="m-0 mt-6 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">

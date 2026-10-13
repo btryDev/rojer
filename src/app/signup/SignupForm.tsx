@@ -7,13 +7,11 @@ import { signUpAction, type AuthActionState } from "@/lib/auth/actions";
 
 const initialState: AuthActionState = {};
 
-export function SignupForm({ next }: { next: string }) {
+export function SignupForm() {
   const [state, action, pending] = useActionState(signUpAction, initialState);
 
   return (
     <form action={action} className="flex flex-col gap-5">
-      <input type="hidden" name="next" value={next} />
-
       <ChampBoard
         id="email"
         name="email"
