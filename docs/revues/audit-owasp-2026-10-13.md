@@ -244,7 +244,12 @@ un critère de recette.
 - **B16 — Variables.** Reporter `DATABASE_URL`, `DIRECT_URL`, `STORAGE_*`,
   `PUBLIC_APP_URL`, `MCP_*` et `EMAIL_DRIVER`. Les `NEXT_PUBLIC_*` sont figées au
   build. Builder avant tout `prune --prod` : `globals.css` importe
-  `shadcn/tailwind.css`.
+  `shadcn/tailwind.css`. Avec pnpm, CC n'installe pas les devDependencies par
+  défaut. Or le `postinstall` (`prisma generate`) et le build ont besoin de
+  prisma, typescript, tailwindcss, @tailwindcss/postcss et shadcn. Poser
+  `CC_NODE_DEV_DEPENDENCIES=install`, ou déplacer ces paquets. `engines.node`
+  est une plage (`>=22 <25`) et passe avant `CC_NODE_VERSION` : vérifier au
+  premier déploiement la version que CC en retient.
 
 Les points B11 à B16 viennent de l'audit infra du même jour.
 
