@@ -34,11 +34,15 @@ function defautCotation(
 }
 
 /**
- * Ajoute un risque du référentiel à une unité si pas déjà présent,
- * le retire sinon. Les mesures saisies sont conservées tant que le risque
- * reste (suppression cascade) ; en cas de désélection, tout est perdu.
+ * Retient un risque du référentiel pour une unité — AJOUT SEUL (relecture
+ * indépendante du 2026-10-12). ~~Ajoute un risque du référentiel à une unité
+ * si pas déjà présent, le retire sinon.~~ La bascule supprimait le risque, sa
+ * cotation et ses actions — levées comprises — sans confirmation, depuis un
+ * onglet resté sur la liste quand le risque était déjà retenu ailleurs. Un
+ * risque déjà retenu ne bouge pas ; le retirer est un geste nommé et
+ * confirmé, « Retirer ce risque » (`supprimerRisque`), sur le risque retenu.
  */
-export async function toggleRisqueReferentiel(
+export async function ajouterRisqueReferentiel(
   uniteId: string,
   referentielId: string,
 ): Promise<void> {
@@ -46,11 +50,10 @@ export async function toggleRisqueReferentiel(
 
   const existant = await prisma.risque.findUnique({
     where: { uniteId_referentielId: { uniteId, referentielId } },
+    select: { id: true },
   });
 
-  if (existant) {
-    await prisma.risque.delete({ where: { id: existant.id } });
-  } else {
+  if (!existant) {
     const ref = tousRisquesConnus().get(referentielId);
     if (!ref) throw new Error(`Risque référentiel inconnu : ${referentielId}`);
     const cot = defautCotation(ref);

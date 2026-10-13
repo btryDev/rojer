@@ -14,14 +14,14 @@
 // moyenner un retard sur une liste coupée).
 
 import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
-import { retenueParPrudence } from "@/lib/calendrier/prudence";
+import { registrePrudent, retenueParPrudence } from "@/lib/calendrier/prudence";
 import { couvertureDuDossier } from "@/lib/perimetre/faits";
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { compterActions } from "@/lib/actions/queries";
 import { computeVigilance } from "@/lib/prestataires/vigilance";
-import { chargerTransmissions } from "./transmissions";
+import { chargerTransmissions, titresDusEnRetard } from "./transmissions";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
 import {
@@ -262,10 +262,8 @@ export async function listerEvenementsFenetre(
         date: lec.date,
         // D1 (a) : une échéance passée que seul le silence de la fiche
         // retient n'est pas une alerte — l'attention, comme « à planifier ».
-        tone:
-          lec.registre === "enRetard" && prudence(v)
-            ? "warn"
-            : TON_REGISTRE[lec.registre],
+        // Lu sur le registre prudent (D26), plus redit ici.
+        tone: TON_REGISTRE[registrePrudent(lec.registre, v, prudence)],
         sansEcheance: !aUnRendezVous(v, now),
         type: typeDeVerification(v),
         contractuelle: estEcheanceContractuelle(v),
@@ -679,6 +677,14 @@ export type DashboardData = {
      *  s'entendait dire « Plan d'actions : rien en place ». */
     actionsTotal: number;
   };
+  /**
+   * Les titres dus à l'entrée qui manquent EN RETARD (ADR-043, décision (d)),
+   * lus sur les comptes des cartes (`titresDusEnRetard`). Hors des compteurs
+   * et du score (ADR-043 § 3 (a)) : le bandeau les NOMME à côté de
+   * « Dépassées », pour ne pas dire « rien de dépassé » au-dessus d'une carte
+   * en retard (audit du 2026-10-12).
+   */
+  titresDusEnRetard: number;
   duerp: {
     existe: boolean;
     duerpId: string | null;
@@ -957,6 +963,7 @@ export const getDashboardData = cache(async function getDashboardData(
       actionsLeveesRecemment: compteursActions.leveesRecemment,
       actionsTotal,
     },
+    titresDusEnRetard: titresDusEnRetard(transmissions),
     duerp: {
       existe: etatDuerp.ouvert,
       duerpId: duerp?.id ?? null,

@@ -55,6 +55,10 @@ export type ContenuPlanASigner = {
   dateDebut: Date;
   dateFin: Date;
   dureeHeuresEstimee: number | null;
+  // R. 4512-7, 1°, seconde phrase (2026-10-12) : la révision notée, hors
+  // empreinte, montrée au signataire.
+  heuresPrevisiblesRevisees: number | null;
+  heuresPrevisiblesReviseesLe: Date | null;
   lieux: string;
   naturesTravaux: string;
   travauxDangereux: boolean;
@@ -149,6 +153,8 @@ export async function contenuASigner(
         dateDebut: true,
         dateFin: true,
         dureeHeuresEstimee: true,
+        heuresPrevisiblesRevisees: true,
+        heuresPrevisiblesReviseesLe: true,
         lieux: true,
         naturesTravaux: true,
         travauxDangereux: true,

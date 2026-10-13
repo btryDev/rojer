@@ -40,6 +40,7 @@ function etabHabitation(
     conduiteEngins: null,
     expositionCMR: null,
     epiPresents: null,
+    ssiCategorieAouB: null,
     ...over,
   };
 }

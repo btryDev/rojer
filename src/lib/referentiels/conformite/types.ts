@@ -985,8 +985,18 @@ type ObligationCommune = {
    * - `reste` : ce que le texte dit du reste, en une phrase, quand `vise` est
    *   posé. Au référentiel plutôt qu'au composant : la phrase est propre à
    *   l'obligation (contre-relecture, remarque 1).
+   * - `exception` : les régimes où le texte avance le délai, en une phrase,
+   *   quand le produit ne sait pas qui en relève (2026-10-12, correction
+   *   « faux à l'écran » 5) : la VIP du travailleur de nuit ou mineur est due
+   *   AVANT l'affectation (`R. 4624-18`), et le suivi renforcé commence par un
+   *   examen préalable (`R. 4624-24`). La fiche datait trois mois pour tous.
    */
-  premierDelaiFonde?: { article: string; vise?: string; reste?: string };
+  premierDelaiFonde?: {
+    article: string;
+    vise?: string;
+    reste?: string;
+    exception?: string;
+  };
   /**
    * Le régime temporel que le texte impose (ADR-026). **Requis, et c'est le
    * point** — même raisonnement que `transmet` et `pieceMedicale` : optionnel,

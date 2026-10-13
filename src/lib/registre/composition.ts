@@ -86,16 +86,25 @@ export function evaluerSection(
   let aConfirmer: string[] = [];
 
   if (section.typologies) {
-    // Un tableau se lit en OU : la première typologie qui matche emporte la
-    // fiche, et ce sont ses raisons que l'on montre. Inutile d'accumuler
-    // celles des autres branches — le lecteur veut savoir pourquoi la fiche
-    // est là, pas l'inventaire de tous les fondements possibles.
+    // Un tableau se lit en OU : une typologie qui matche emporte la fiche, et
+    // ce sont ses raisons que l'on montre. Inutile d'accumuler celles des
+    // autres branches — le lecteur veut savoir pourquoi la fiche est là, pas
+    // l'inventaire de tous les fondements possibles.
+    //
+    // UNE BRANCHE CERTAINE AVANT UNE BRANCHE PRUDENTE (audit du 2026-10-12).
+    // ~~La première qui matche~~ : un ERP de travail muet sur les personnes
+    // présentes matchait d'abord la branche travail des exercices, retenue
+    // « à confirmer », et la fiche se lisait incertaine alors que `{ erp: true }`
+    // (R. 143-44 5°) la rend due sans condition. La prudente ne sert que si
+    // aucune autre ne tient.
     const typologies = Array.isArray(section.typologies)
       ? section.typologies
       : [section.typologies];
-    const matchee = typologies
+    const matchees = typologies
       .map((t) => matchTypologie(t, etab))
-      .find((r) => r.ok);
+      .filter((r) => r.ok);
+    const matchee =
+      matchees.find((r) => phrasesAConfirmer(r).length === 0) ?? matchees[0];
     if (!matchee || !matchee.ok) return null;
     raisons.push(...matchee.raisons);
     aConfirmer = phrasesAConfirmer(matchee);

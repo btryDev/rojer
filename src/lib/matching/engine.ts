@@ -50,6 +50,7 @@ import {
   type ObligationPorteeParEquipement,
 } from "@/lib/referentiels/conformite/types";
 import type {
+  ActiviteDeclaree,
   CategorieEquipement,
   FamilleHabitation,
   TypologieApplication,
@@ -318,17 +319,26 @@ type EvalLocauxSommeil =
  *
  * `null` (critère absent de l'obligation) ⇒ cette fonction ne se prononce pas.
  */
-const LIBELLE_ACTIVITE: Record<NonNullable<TypologieApplication["activite"]>, string> = {
+/**
+ * Les faits déclarés sur la fiche que lit cet évaluateur : les faits
+ * d'activité, et — depuis le 2026-10-12 — la présence d'un SSI de catégorie A
+ * ou B (DF 10 § 3), qui suit la même règle et passe donc par la même
+ * fonction plutôt que par une seconde qui la redirait.
+ */
+type FaitDeclare = ActiviteDeclaree | "ssiCategorieAouB";
+
+const LIBELLE_ACTIVITE: Record<FaitDeclare, string> = {
   manutentionManuelle: "manutention manuelle de charges",
   travailSurEcran: "travail habituel sur écran",
   operationsElectriques: "opérations sur les installations électriques ou dans leur voisinage",
   conduiteEngins: "conduite d'équipements de travail mobiles automoteurs ou servant au levage",
   expositionCMR: "exposition à des agents cancérogènes, mutagènes ou toxiques pour la reproduction",
   epiPresents: "port d'équipements de protection individuelle",
+  ssiCategorieAouB: "présence d'un système de sécurité incendie de catégorie A ou B",
 };
 
 function evaluerActivite(
-  critere: TypologieApplication["activite"],
+  critere: FaitDeclare | undefined,
   etab: EtablissementMatching,
 ): EvalLocauxSommeil | null {
   if (critere === undefined) return null;
@@ -801,6 +811,18 @@ export function matchTypologie(
     if (!activite.ok) return { ok: false };
     raisons.push(activite.raison);
     if (activite.sansReponse) sansReponse.push(activite.sansReponse);
+  }
+
+  // 3 sexies. SSI de catégorie A ou B, DF 10 § 3 (ET) — 2026-10-12. Le même
+  // évaluateur que les faits d'activité : la règle est la même.
+  const ssi = evaluerActivite(
+    t.ssiCategorieAouB ? "ssiCategorieAouB" : undefined,
+    etab,
+  );
+  if (ssi !== null) {
+    if (!ssi.ok) return { ok: false };
+    raisons.push(ssi.raison);
+    if (ssi.sansReponse) sansReponse.push(ssi.sansReponse);
   }
 
   // Si aucune contrainte de typologie n'a été posée ET aucune raison n'a

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { requireEtablissement } from "@/lib/auth/scope";
+import { requireUser } from "@/lib/auth/require-user";
 import {
   computeVigilance,
   ventilerVigilance,
@@ -25,9 +26,48 @@ export async function getPrestataire(
   const { etablissement } = await requireEtablissement(etablissementId);
   const prestataire = await prisma.prestataire.findFirst({
     where: { id: prestataireId, etablissementId: etablissement.id },
+    // Les pièces remplacées (2026-10-12), la plus récemment remplacée d'abord.
+    include: {
+      piecesPrecedentes: {
+        orderBy: { remplaceeLe: "desc" },
+        select: {
+          id: true,
+          type: true,
+          fichierNom: true,
+          deposeeLe: true,
+          valableJusquA: true,
+          remplaceeLe: true,
+        },
+      },
+    },
   });
   if (!prestataire) return null;
   return { ...prestataire, vigilance: computeVigilance(prestataire) };
+}
+
+/**
+ * Le prestataire de l'annuaire qu'une saisie désigne, s'il est de CET
+ * établissement (relecture indépendante du 2026-10-12). Le plan de prévention
+ * et le permis de feu écrivaient `prestataireId` tel que le formulaire
+ * l'envoyait : un identifiant de l'annuaire d'un autre client s'y
+ * rattachait. Même patron que `resoudreBatimentOptionnel` : la portée est
+ * portée par le `where`, même si les appelants ont déjà établi la propriété.
+ */
+export async function resoudrePrestataireOptionnel(
+  etablissementId: string,
+  prestataireId: string | null | undefined,
+): Promise<{ ok: true; id: string | null } | { ok: false }> {
+  if (!prestataireId) return { ok: true, id: null };
+  const user = await requireUser();
+  const p = await prisma.prestataire.findFirst({
+    where: {
+      id: prestataireId,
+      etablissementId,
+      etablissement: { entreprise: { userId: user.id } },
+    },
+    select: { id: true },
+  });
+  return p ? { ok: true, id: p.id } : { ok: false };
 }
 
 /**

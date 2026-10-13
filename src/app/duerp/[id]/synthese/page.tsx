@@ -13,6 +13,7 @@ import {
 import { CHAMP_ETAT, ENCRE_ETAT } from "@/lib/calendrier/etats";
 import { evaluerCouverture } from "@/lib/duerps/couverture";
 import { construireEtapes } from "@/lib/duerps/etapes";
+import { etatEtapeTransverses } from "@/lib/transverses/etat";
 import { getDuerp } from "@/lib/duerps/queries";
 import { construireSynthese } from "@/lib/duerps/synthese";
 import { LABEL_TYPE_MESURE } from "@/lib/mesures/labels";
@@ -50,7 +51,7 @@ export default async function SynthesePage({
     secteurOk: Boolean(duerp.referentielSecteurId),
     unitesOk,
     risquesOk,
-    transversesOk: duerp.transversesRepondues,
+    transverses: etatEtapeTransverses(duerp),
     activitesPosees: activitesDuSecteur(duerp.referentielSecteurId).length > 0,
   });
 
@@ -652,6 +653,7 @@ export default async function SynthesePage({
           <CreerVersionForm
             duerpId={id}
             aucunRisqueNonCote={synthese.nbRisquesNonCotes === 0}
+            soumisMajAnnuelle={etatDuerp.soumisMajAnnuelle}
           />
         </div>
       </section>

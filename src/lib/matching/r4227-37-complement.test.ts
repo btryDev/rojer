@@ -44,6 +44,7 @@ const e = (over: Partial<EtablissementMatching>): EtablissementMatching => ({
   conduiteEngins: null,
   expositionCMR: null,
   epiPresents: null,
+  ssiCategorieAouB: null,
   ...over,
 });
 const ids = (x: EtablissementMatching) =>

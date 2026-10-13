@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { buttonVariants } from "@/components/ui/button";
 import {
   CarteFiche,
   ChampFiche,
@@ -12,7 +14,13 @@ import { lireProvenance } from "@/lib/navigation/provenance";
 import { VigilancePiecePill } from "@/components/prestataires/VigilancePills";
 import { SupprimerPrestataireButton } from "@/components/prestataires/SupprimerPrestataireButton";
 import { getPrestataire } from "@/lib/prestataires/queries";
-import { PIECES, urlPiece, type TypePiece } from "@/lib/prestataires/pieces";
+import {
+  LIBELLE_PIECE,
+  PIECES,
+  urlPiece,
+  urlPiecePrecedente,
+  type TypePiece,
+} from "@/lib/prestataires/pieces";
 
 const LIBELLES_PIECES: [TypePiece, string][] = [
   ["urssaf", "Ouvrir l'attestation URSSAF"],
@@ -136,10 +144,21 @@ export default async function PrestataireDetailPage({
                     ))}
                   </div>
                 </div>
-                <SupprimerPrestataireButton
-                  etablissementId={id}
-                  prestataireId={p.id}
-                />
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* La fiche se corrige (2026-10-12) : nouvelle attestation,
+                      RC Pro, Kbis, contacts. Avant, seules les deux dates
+                      de remise et d'émission se saisissaient après coup. */}
+                  <Link
+                    href={`/etablissements/${id}/prestataires/${p.id}/modifier`}
+                    className={buttonVariants({ variant: "boardClair", size: "boardSm" })}
+                  >
+                    Modifier
+                  </Link>
+                  <SupprimerPrestataireButton
+                    etablissementId={id}
+                    prestataireId={p.id}
+                  />
+                </div>
               </div>
             </section>
 
@@ -221,6 +240,36 @@ export default async function PrestataireDetailPage({
                     ),
                   )}
                 </ul>
+              )}
+
+              {/* LES PIÈCES PRÉCÉDENTES (2026-10-12). L'attestation d'un
+                  semestre passé est la seule preuve que la vigilance a été
+                  faite à ce moment-là ; remplacée, elle reste ici, lisible par
+                  la même vérification d'appartenance que les pièces en cours. */}
+              {p.piecesPrecedentes.length > 0 && (
+                <div className="mt-4">
+                  <p className="board-eyebrow m-0 text-[9.5px] tracking-[0.14em] text-[color:var(--board-slate-soft)]">
+                    Pièces précédentes
+                  </p>
+                  <ul className="m-0 mt-1.5 flex list-none flex-col gap-1 p-0">
+                    {p.piecesPrecedentes.map((pp) => (
+                      <li key={pp.id} className="text-[12px] leading-[1.45] text-[color:var(--board-slate-mid)]">
+                        <a
+                          href={urlPiecePrecedente(p.id, pp.id)}
+                          target="_blank"
+                          rel="noopener"
+                          className="font-medium text-[color:var(--board-blue-ink)] underline-offset-2 hover:underline"
+                        >
+                          {LIBELLE_PIECE[pp.type as TypePiece] ?? pp.type}
+                          {pp.fichierNom ? ` — ${pp.fichierNom}` : ""}
+                        </a>
+                        {pp.deposeeLe ? ` · déposée le ${formatDate(pp.deposeeLe)}` : ""}
+                        {pp.valableJusquA ? ` · valable jusqu'au ${formatDate(pp.valableJusquA)}` : ""}
+                        {` · remplacée le ${formatDate(pp.remplaceeLe)}`}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
 
               {/* Retiré le 2026-09-27 (décision B2, journal C43) : la phrase

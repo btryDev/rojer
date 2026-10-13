@@ -100,3 +100,126 @@ describe("parserFichierDuerp", () => {
     ).toHaveLength(2);
   });
 });
+
+// Audit du 2026-10-12. Un CSV en UTF-8 sans BOM — celui de LibreOffice, de
+// Google Sheets, de Numbers — ne s'importait pas ; avec BOM ou en
+// Windows-1252 il passait. Et une colonne de mesures à mettre en œuvre était
+// lue comme des mesures en place.
+describe("parserFichierDuerp — encodage d'un CSV", () => {
+  const csv =
+    "Unité de travail;Risque;Gravité;Probabilité;Maîtrise;Mesures existantes\n" +
+    "Cuisine;Brûlure;3;2;2;Gants\n";
+  const attendu = {
+    uniteTravail: "Cuisine",
+    libelleRisque: "Brûlure",
+    mesuresExistantes: ["Gants"],
+  };
+
+  it("UTF-8 sans BOM", () => {
+    const res = parserFichierDuerp(Buffer.from(csv, "utf8"));
+    expect(res.erreurs).toHaveLength(0);
+    expect(res.lignes[0]).toMatchObject(attendu);
+  });
+
+  it("UTF-8 avec BOM", () => {
+    const res = parserFichierDuerp(
+      Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), Buffer.from(csv, "utf8")]),
+    );
+    expect(res.erreurs).toHaveLength(0);
+    expect(res.lignes[0]).toMatchObject(attendu);
+  });
+
+  it("Windows-1252", () => {
+    const res = parserFichierDuerp(Buffer.from(csv, "latin1"));
+    expect(res.erreurs).toHaveLength(0);
+    expect(res.lignes[0]).toMatchObject(attendu);
+  });
+});
+
+describe("parserFichierDuerp — colonnes de mesures et de cotation", () => {
+  const base = {
+    "Unité de travail": "Cuisine",
+    "Gravité": 3,
+    "Probabilité": 2,
+    "Maîtrise": 2,
+  };
+
+  it("« Mesures à mettre en œuvre » n'est jamais lue comme des mesures en place", () => {
+    const res = parserFichierDuerp(
+      excel([{ ...base, Risque: "Brûlure", "Mesures à mettre en œuvre": "Hotte" }]),
+    );
+    expect(res.mappingDetecte.mesures).toBeNull();
+    expect(res.mappingDetecte.mesuresPrevues).toBe("Mesures à mettre en œuvre");
+    expect(res.lignes[0].mesuresExistantes).toEqual([]);
+    expect(res.lignes[0].mesuresPrevues).toEqual(["Hotte"]);
+  });
+
+  it("« Mesures de prévention proposées » à côté des mesures existantes", () => {
+    const res = parserFichierDuerp(
+      excel([
+        {
+          ...base,
+          Risque: "Brûlure",
+          "Mesures de prévention proposées": "Hotte",
+          "Mesures existantes": "Gants",
+        },
+      ]),
+    );
+    expect(res.lignes[0].mesuresExistantes).toEqual(["Gants"]);
+    expect(res.lignes[0].mesuresPrevues).toEqual(["Hotte"]);
+  });
+
+  it("deux colonnes à venir : la seconde n'est pas lue comme des mesures en place", () => {
+    const res = parserFichierDuerp(
+      excel([
+        {
+          ...base,
+          Risque: "Brûlure",
+          "Mesures proposées": "Hotte",
+          "Mesures à prévoir": "Former l'équipe",
+        },
+      ]),
+    );
+    expect(res.mappingDetecte.mesures).toBeNull();
+    expect(res.lignes[0].mesuresExistantes).toEqual([]);
+  });
+
+  // Relecture indépendante du 2026-10-12 : « à mettre en place » n'était pas
+  // un marqueur ; seule, la colonne devenait des mesures EN PLACE, et à côté
+  // des mesures existantes elle n'était pas importée.
+  it.each(["Mesures à mettre en place", "Actions à mettre en place", "Mesures à planifier"])(
+    "« %s » seule n'est jamais lue comme des mesures en place",
+    (colonne) => {
+      const res = parserFichierDuerp(excel([{ ...base, Risque: "Brûlure", [colonne]: "Hotte" }]));
+      expect(res.mappingDetecte.mesures).toBeNull();
+      expect(res.mappingDetecte.mesuresPrevues).toBe(colonne);
+      expect(res.lignes[0].mesuresExistantes).toEqual([]);
+      expect(res.lignes[0].mesuresPrevues).toEqual(["Hotte"]);
+    },
+  );
+
+  it("« Mesures existantes » et « Mesures à mettre en place » : les deux colonnes s'importent", () => {
+    const res = parserFichierDuerp(
+      excel([
+        {
+          ...base,
+          Risque: "Brûlure",
+          "Mesures existantes": "Gants",
+          "Mesures à mettre en place": "Hotte",
+        },
+      ]),
+    );
+    expect(res.mappingDetecte.mesures).toBe("Mesures existantes");
+    expect(res.mappingDetecte.mesuresPrevues).toBe("Mesures à mettre en place");
+    expect(res.lignes[0].mesuresExistantes).toEqual(["Gants"]);
+    expect(res.lignes[0].mesuresPrevues).toEqual(["Hotte"]);
+  });
+
+  it("« Niveau de risque » n'est pas le libellé du risque", () => {
+    const res = parserFichierDuerp(
+      excel([{ ...base, "Niveau de risque": "Élevé", "Risques identifiés": "Brûlure" }]),
+    );
+    expect(res.mappingDetecte.libelleRisque).toBe("Risques identifiés");
+    expect(res.lignes[0].libelleRisque).toBe("Brûlure");
+  });
+});

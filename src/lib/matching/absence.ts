@@ -197,6 +197,14 @@ export const POLITIQUE_ABSENCE = {
     sens: "retient_a_confirmer",
     question: "epi_presents",
   },
+  // DF 10 § 3, posé sur la fiche le 2026-10-12 : la règle du non-renseigné,
+  // sans aménagement — la triennale du désenfumage mécanique est retenue
+  // « à confirmer » au silence, retirée sur un « non ».
+  ssiCategorieAouB: {
+    valeurs: [true, false],
+    sens: "retient_a_confirmer",
+    question: "ssi_categorie_ab",
+  },
 } as const satisfies {
   [K in AttributNullable]: PolitiqueAbsence<
     NonNullable<EtablissementMatching[K]>

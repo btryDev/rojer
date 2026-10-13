@@ -132,6 +132,15 @@ export type EtablissementMatching = {
   conduiteEngins: boolean | null;
   expositionCMR: boolean | null;
   epiPresents: boolean | null;
+  /**
+   * L'établissement dispose-t-il d'un système de sécurité incendie de
+   * catégorie A ou B (arrêté du 25 juin 1980, DF 10 § 3) ? Posé sur la fiche
+   * depuis le 2026-10-12 (décision de la propriétaire du 2026-10-08), au lieu
+   * d'une question par désenfumage. Même règle du non-renseigné : `null`
+   * retient la triennale du désenfumage mécanique « à confirmer », seul un
+   * « non » la retire. Requis, pour la même raison que les champs ci-dessus.
+   */
+  ssiCategorieAouB: boolean | null;
 };
 
 export type EquipementMatching = {
@@ -199,6 +208,7 @@ export type QuestionSansReponse =
   | "conduite_engins"
   | "exposition_cmr"
   | "epi_presents"
+  | "ssi_categorie_ab"
   | "locaux_sommeil_public"
   | "matieres_r4227_22"
   | "type_erp"

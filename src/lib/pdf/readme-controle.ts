@@ -11,6 +11,7 @@
 
 import { MENTION_POUR_INFORMATION } from "@/lib/referentiels/conformite/initiative";
 import type { CompteFichiers } from "@/lib/controle/fichiers-zip";
+import { NB_ANALYSES_DU_DOSSIER, PIECES_ZIP } from "@/lib/controle/pieces-zip";
 import { MARQUAGE_CONTRACTUEL } from "@/lib/prescriptions/sources";
 import {
   R4512_7_1_SEUIL,
@@ -121,6 +122,9 @@ export function genererReadme(args: {
   piecesPrestatairesManquantes: number;
   /** Pièces de prestataires RÉELLEMENT mises au ZIP, par type. */
   piecesPrestataires: { attestation: number; rcPro: number; kbis: number };
+  /** Pièces de prestataire REMPLACÉES jointes au ZIP (`Pieces_precedentes/`,
+   *  2026-10-12). Absent = aucune. */
+  piecesPrestatairesPrecedentes?: number;
   /** Fichiers des rapports de vérification : déposés, mis au ZIP, non récupérés. */
   rapportsZip?: CompteFichiers;
   /** Rapports de lignes de salarié, écartés du ZIP (documents nominatifs) ;
@@ -191,18 +195,18 @@ export function genererReadme(args: {
     " CONTENU DU DOSSIER",
     "────────────────────────────────────────────────────────────",
     "",
-    ligne("01_Dossier_conformite.pdf", "Synthèse globale (à présenter en premier)", "Non inclus"),
+    ligne(PIECES_ZIP.dossier, "Synthèse globale (à présenter en premier)", "Non inclus"),
     args.aDuerpPdf
       ? ` 02_DUERP_v${args.duerpNumeroVersion}.pdf           Document unique d'évaluation des risques`
       : args.duerpNumeroVersion !== null
-        ? ` 02_DUERP_v${args.duerpNumeroVersion}.pdf           ${absent("02_DUERP", "Non inclus")}`
+        ? ` 02_DUERP_v${args.duerpNumeroVersion}.pdf           ${absent(PIECES_ZIP.duerp, "Non inclus")}`
         : !args.duerpLu
-          ? ` 02_DUERP.pdf                  ${absent("02_DUERP", "Non inclus — lecture des versions en échec")}`
+          ? ` 02_DUERP.pdf                  ${absent(PIECES_ZIP.duerp, "Non inclus — lecture des versions en échec")}`
           : " 02_DUERP.pdf                  Non inclus (aucune version validée)",
     // ~~« Rapports de vérifications périodiques »~~ : le registre porte
     // l'INDEX des rapports ; leurs fichiers sont dans Rapports/ (2026-09-27).
-    ligne("03_Registre_securite.pdf", "Registre des vérifications, index des rapports", "Non inclus"),
-    ligneFichiers("Rapports/", "fichier(s) de rapport de vérification", "Aucun rapport déposé", args.rapportsZip),
+    ligne(PIECES_ZIP.registre, "Registre des vérifications, index des rapports", "Non inclus"),
+    ligneFichiers(PIECES_ZIP.rapports, "fichier(s) de rapport de vérification", "Aucun rapport déposé", args.rapportsZip),
     ...(args.rapportsSalariesEcartes === null
       ? ["   Les rapports déposés sur le titre d'un salarié ne sont jamais joints :", "   documents nominatifs, conservés dans l'application."]
       : args.rapportsSalariesEcartes !== undefined && args.rapportsSalariesEcartes > 0
@@ -211,19 +215,29 @@ export function genererReadme(args: {
             "   documents nominatifs, conservés dans l'application.",
           ]
         : []),
-    ligne("04_Plan_actions.pdf", "Actions ouvertes puis en cours, chacune par échéance puis criticité", "Non inclus"),
+    ligne(PIECES_ZIP.plan, "Actions ouvertes puis en cours, chacune par échéance puis criticité", "Non inclus"),
     // Tous sur `zip.files` (contre-lecture du 2026-09-26 : 05 à 08 et
     // Prestataires/ restaient calculés sur des compteurs).
-    ligne("05_Accessibilite_URL.txt", "URL publique du registre d'accessibilité", "Non inclus (registre non publié)"),
-    ligne("06_Permis_de_feu.txt", `${args.nbPermisFeu} permis sur 12 mois (INRS ED 6030)`, "Aucun permis émis sur 12 mois"),
-    ligne("07_Plans_de_prevention.txt", `${args.nbPlansPrevention} plan(s) (art. R. 4512-6 CT)`, "Aucun plan actif"),
-    ligne("08_Carnet_sanitaire.txt", "Relevés ECS + analyses légionelles (arrêté 01-02-2010)", "Non configuré"),
+    // ~~« Non inclus (registre non publié) »~~ pour tout absent : un registre
+    // publié dont l'établissement n'est plus un ERP s'annonçait « non publié »
+    // (relecture indépendante du 2026-10-12). Même ordre que
+    // `registreAuDossier` ; l'adresse publique absente passe par `echecs`.
+    ligne(
+      PIECES_ZIP.accessibilite,
+      "URL publique du registre d'accessibilité",
+      args.regime.estERP
+        ? "Non inclus (registre non publié)"
+        : "Non applicable (l'établissement n'est pas un ERP)",
+    ),
+    ligne(PIECES_ZIP.permisFeu, `${args.nbPermisFeu} permis sur 12 mois (INRS ED 6030)`, "Aucun permis émis sur 12 mois"),
+    ligne(PIECES_ZIP.plansPrevention, `${args.nbPlansPrevention} plan(s) (art. R. 4512-6 CT)`, "Aucun plan actif"),
+    ligne(PIECES_ZIP.carnet, "Relevés ECS + analyses légionelles (arrêté 01-02-2010)", "Non configuré"),
     ...(args.analysesZip && args.analysesZip.deposes > 0
-      ? [ligneFichiers("08_Carnet_sanitaire_analyses/", "rapport(s) de laboratoire (5 dernières analyses)", "", args.analysesZip)]
+      ? [ligneFichiers(PIECES_ZIP.analyses, `rapport(s) de laboratoire (${NB_ANALYSES_DU_DOSSIER} dernières analyses)`, "", args.analysesZip)]
       : []),
     (() => {
-      if (args.echecs.has("Prestataires/"))
-        return ` Prestataires/                 ${absent("Prestataires/", "Non inclus")}`;
+      if (args.echecs.has(PIECES_ZIP.prestataires))
+        return ` Prestataires/                 ${absent(PIECES_ZIP.prestataires, "Non inclus")}`;
       if (args.nbPrestataires === 0) return " Prestataires/                 Aucun prestataire déclaré";
       const pp = args.piecesPrestataires;
       // Les types RÉELLEMENT présents, et eux seuls (contre-lecture du
@@ -233,6 +247,9 @@ export function genererReadme(args: {
         pp.attestation > 0 ? `${pp.attestation} attestation(s) de vigilance` : null,
         pp.rcPro > 0 ? `${pp.rcPro} attestation(s) RC Pro` : null,
         pp.kbis > 0 ? `${pp.kbis} Kbis` : null,
+        (args.piecesPrestatairesPrecedentes ?? 0) > 0
+          ? `${args.piecesPrestatairesPrecedentes} pièce(s) précédente(s) remplacée(s)`
+          : null,
       ].filter(Boolean);
       const manquantes =
         args.piecesPrestatairesManquantes > 0
@@ -259,7 +276,7 @@ export function genererReadme(args: {
     // aucun texte ne les porte (contre-lecture du 2026-09-26).
     " [ ] Dossier de conformité lu en entier (conseil de Rojer)",
     ligneDuerp(args.etatDuerp, args.duerpLu),
-    ligneVerifsEnRetard(args.retards, args.presents.has("01_Dossier_conformite.pdf")),
+    ligneVerifsEnRetard(args.retards, args.presents.has(PIECES_ZIP.dossier)),
     " [ ] Plan d'actions : chaque écart majeur a une date d'échéance (conseil de Rojer)",
     // Relus sur Légifrance le 2026-09-26 (journal C34). ~~« < 6 mois »~~ sans
     // le seuil : R. 8222-1 ne rend la vérification obligatoire qu'à partir de

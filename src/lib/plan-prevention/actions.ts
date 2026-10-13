@@ -5,15 +5,28 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { resoudreBatimentOptionnel } from "@/lib/batiments/queries";
+import { resoudrePrestataireOptionnel } from "@/lib/prestataires/queries";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { lireDateDeclaree } from "@/lib/traces/date-declaree";
+import { z } from "zod";
 import {
+  diagnostiquerPlan,
   ligneSchema,
   planPreventionSchema,
   type LigneInput,
+  type PlanPreventionInput,
 } from "./schema";
 import { nextNumeroPlan } from "./queries";
 import { porteUneTraceDeSignature } from "@/lib/signatures/trace";
+import { statutPlanSignable } from "@/lib/signatures/etat-signable";
+import {
+  compterSignatures,
+  MOTIF_CONTENU_MODIFIE,
+  motifContenuScelle,
+  porteUnChampScelle,
+  verrouillerObjetSigne,
+} from "@/lib/signatures/verrou-contenu";
+import { calculerHashObjet } from "@/lib/signatures/hash-objet";
 import { revoquerLiensEnVol } from "@/lib/access-tokens/revocation";
 
 export type PlanActionState =
@@ -94,17 +107,13 @@ function extrairePhases(formData: FormData): unknown[] {
   return out;
 }
 
-export async function creerPlanPrevention(
-  etablissementId: string,
-  _prev: PlanActionState,
-  formData: FormData,
-): Promise<PlanActionState> {
-  await assertEtablissementOwnership(etablissementId);
-
-  const lignes = extraireLignes(formData);
-  const phases = extrairePhases(formData);
-
-  const parsed = planPreventionSchema.safeParse({
+/**
+ * La saisie du formulaire, validée — UNE lecture pour la création et la
+ * modification (2026-10-12) : l'écran « Modifier » réutilise le formulaire
+ * de création, et le serveur reprend les mêmes validations.
+ */
+function lirePlanPrevention(formData: FormData) {
+  return planPreventionSchema.safeParse({
     prestataireId: formData.get("prestataireId"),
     entrepriseExterieureRaison: formData.get("entrepriseExterieureRaison"),
     entrepriseExterieureSiret: formData.get("entrepriseExterieureSiret"),
@@ -122,15 +131,79 @@ export async function creerPlanPrevention(
     travauxDangereux: formData.get("travauxDangereux") === "on",
     inspectionDate: formData.get("inspectionDate"),
     inspectionParticipants: formData.get("inspectionParticipants"),
-    lignes,
+    lignes: extraireLignes(formData),
     // Les cinq rubriques de `R. 4512-8` — cf. `contenu-r4512-8.ts`.
-    phases,
+    phases: extrairePhases(formData),
     adaptationMateriels: formData.get("adaptationMateriels"),
     instructionsTravailleurs: formData.get("instructionsTravailleurs"),
     organisationSecours: formData.get("organisationSecours"),
     participationCroisee: formData.get("participationCroisee"),
   });
+}
 
+/** Les colonnes du plan tirées d'une saisie valide (hors lignes et phases). */
+function colonnesPlan(d: PlanPreventionInput) {
+  return {
+    prestataireId: d.prestataireId ?? null,
+    entrepriseExterieureRaison: d.entrepriseExterieureRaison,
+    entrepriseExterieureSiret: d.entrepriseExterieureSiret ?? null,
+    efChefNom: d.efChefNom,
+    efChefEmail: d.efChefEmail,
+    efEffectifIntervenant: d.efEffectifIntervenant,
+    euChefNom: d.euChefNom,
+    euChefFonction: d.euChefFonction ?? null,
+    dateDebut: d.dateDebut,
+    dateFin: d.dateFin,
+    dureeHeuresEstimee: d.dureeHeuresEstimee ?? null,
+    lieux: d.lieux,
+    naturesTravaux: d.naturesTravaux,
+    travauxDangereux: d.travauxDangereux,
+    inspectionDate: d.inspectionDate ?? null,
+    inspectionParticipants: d.inspectionParticipants ?? null,
+    adaptationMateriels: d.adaptationMateriels ?? null,
+    instructionsTravailleurs: d.instructionsTravailleurs ?? null,
+    organisationSecours: d.organisationSecours ?? null,
+    participationCroisee: d.participationCroisee ?? null,
+  };
+}
+
+const phasesACreer = (d: PlanPreventionInput) =>
+  d.phases.map((f, ordre) => ({
+    id: `pha_${randomUUID()}`,
+    ordre,
+    phase: f.phase,
+    moyensPrevention: f.moyensPrevention,
+  }));
+
+const lignesACreer = (d: PlanPreventionInput) =>
+  d.lignes.map((l, ordre) => ({
+    id: `lig_${randomUUID()}`,
+    ordre,
+    risque: l.risque,
+    mesureEntrepriseUtilisatrice: l.mesureEntrepriseUtilisatrice,
+    mesureEntrepriseExterieure: l.mesureEntrepriseExterieure,
+  }));
+
+const PRESTATAIRE_INTROUVABLE: PlanActionState = {
+  status: "error",
+  message: "Prestataire introuvable",
+  fieldErrors: { prestataireId: ["Prestataire introuvable dans votre annuaire"] },
+};
+
+const ZONE_INTROUVABLE: PlanActionState = {
+  status: "error",
+  message: "Zone introuvable",
+  fieldErrors: { batimentId: ["Zone introuvable"] },
+};
+
+export async function creerPlanPrevention(
+  etablissementId: string,
+  _prev: PlanActionState,
+  formData: FormData,
+): Promise<PlanActionState> {
+  await assertEtablissementOwnership(etablissementId);
+
+  const parsed = lirePlanPrevention(formData);
   if (!parsed.success) {
     return {
       status: "error",
@@ -143,13 +216,12 @@ export async function creerPlanPrevention(
     etablissementId,
     parsed.data.batimentId,
   );
-  if (!batiment.ok) {
-    return {
-      status: "error",
-      message: "Zone introuvable",
-      fieldErrors: { batimentId: ["Zone introuvable"] },
-    };
-  }
+  if (!batiment.ok) return ZONE_INTROUVABLE;
+  const prestataire = await resoudrePrestataireOptionnel(
+    etablissementId,
+    parsed.data.prestataireId,
+  );
+  if (!prestataire.ok) return PRESTATAIRE_INTROUVABLE;
 
   const numero = await nextNumeroPlan(etablissementId);
   const id = `pp_${randomUUID()}`;
@@ -159,51 +231,143 @@ export async function creerPlanPrevention(
       id,
       etablissementId,
       numero,
-      prestataireId: parsed.data.prestataireId,
-      entrepriseExterieureRaison: parsed.data.entrepriseExterieureRaison,
-      entrepriseExterieureSiret: parsed.data.entrepriseExterieureSiret,
-      efChefNom: parsed.data.efChefNom,
-      efChefEmail: parsed.data.efChefEmail,
-      efEffectifIntervenant: parsed.data.efEffectifIntervenant,
-      euChefNom: parsed.data.euChefNom,
-      euChefFonction: parsed.data.euChefFonction,
-      dateDebut: parsed.data.dateDebut,
-      dateFin: parsed.data.dateFin,
-      dureeHeuresEstimee: parsed.data.dureeHeuresEstimee,
-      lieux: parsed.data.lieux,
+      ...colonnesPlan(parsed.data),
       batimentId: batiment.id,
-      naturesTravaux: parsed.data.naturesTravaux,
-      travauxDangereux: parsed.data.travauxDangereux,
-      inspectionDate: parsed.data.inspectionDate,
-      inspectionParticipants: parsed.data.inspectionParticipants,
-      adaptationMateriels: parsed.data.adaptationMateriels,
-      instructionsTravailleurs: parsed.data.instructionsTravailleurs,
-      organisationSecours: parsed.data.organisationSecours,
-      participationCroisee: parsed.data.participationCroisee,
       statut: "attente_signatures",
-      phasesDangereuses: {
-        create: parsed.data.phases.map((f, ordre) => ({
-          id: `pha_${randomUUID()}`,
-          ordre,
-          phase: f.phase,
-          moyensPrevention: f.moyensPrevention,
-        })),
-      },
-      lignes: {
-        create: parsed.data.lignes.map((l, ordre) => ({
-          id: `lig_${randomUUID()}`,
-          ordre,
-          risque: l.risque,
-          mesureEntrepriseUtilisatrice: l.mesureEntrepriseUtilisatrice,
-          mesureEntrepriseExterieure: l.mesureEntrepriseExterieure,
-        })),
-      },
+      phasesDangereuses: { create: phasesACreer(parsed.data) },
+      lignes: { create: lignesACreer(parsed.data) },
     },
   });
 
   revalidatePath(`/etablissements/${etablissementId}/plan-prevention`);
   return { status: "success", planId: id, numero };
 }
+
+/**
+ * Corriger un plan (audit du 2026-10-12, constat 1). Le plan ne se modifiait
+ * pas : créé sans date d'inspection commune, il ne pouvait jamais l'enregistrer
+ * et restait en alerte au calendrier jusqu'à sa clôture.
+ *
+ * La règle de `verrou-contenu.ts` : tant qu'aucune signature n'existe, tout se
+ * corrige, avec les validations de la création ; dès qu'une signature existe,
+ * seul ce qui est hors de l'empreinte (`hash-objet.ts`) se modifie — la zone.
+ * Le reste n'est pas réécrit en silence : une saisie qui le porte quand même
+ * est refusée, avec la phrase que l'écran affiche.
+ *
+ * Compter les signatures puis écrire se fait SOUS LE VERROU DE LA LIGNE, dans
+ * une transaction (relecture indépendante du 2026-10-12) : une signature posée
+ * entre les deux laissait réécrire ce qu'elle venait de sceller. Et si
+ * l'empreinte change, les liens de signature en vol sont révoqués dans la même
+ * transaction : sans cela, l'entreprise extérieure lisait une version sur la
+ * page du lien et en signait une autre, l'empreinte étant calculée au code.
+ *
+ * Un plan clos ou annulé ne se modifie plus, comme il ne se signe plus. Le
+ * calendrier lit le plan en direct (`sourcePlansPrevention`) : rien à
+ * régénérer, la création n'en régénère pas non plus.
+ */
+export async function modifierPlanPrevention(
+  planId: string,
+  _prev: PlanActionState,
+  formData: FormData,
+): Promise<PlanActionState> {
+  const plan = await prisma.planPrevention.findUnique({
+    where: { id: planId },
+    select: { etablissementId: true, statut: true, numero: true, inspectionDate: true },
+  });
+  if (!plan) return { status: "error", message: "Plan introuvable" };
+  await assertEtablissementOwnership(plan.etablissementId);
+  const etablissementId = plan.etablissementId;
+  if (!statutPlanSignable(plan.statut)) {
+    return { status: "error", message: "Ce plan est clos ou annulé : il ne se modifie plus." };
+  }
+
+  // LES LECTURES DE PROPRIÉTÉ AVANT LA TRANSACTION (relecture finale du
+  // 2026-10-12, B1) : `resoudreBatimentOptionnel` et `resoudrePrestataireOptionnel`
+  // lisent par le client global, pas par `tx`. Appelées dans la transaction,
+  // elles attendaient une connexion que la transaction tient — et la prod est
+  // en `connection_limit=1` : l'action échouait au délai de transaction. Elles
+  // n'ont pas besoin du verrou (elles vérifient l'appartenance d'une zone et
+  // d'un prestataire, pas l'état du plan).
+  const parsed = lirePlanPrevention(formData);
+  const batiment = await resoudreBatimentOptionnel(
+    etablissementId,
+    parsed.success ? parsed.data.batimentId : lireChampOptionnel(formData.get("batimentId")),
+  );
+  if (!batiment.ok) return ZONE_INTROUVABLE;
+  const prestataire = parsed.success
+    ? await resoudrePrestataireOptionnel(etablissementId, parsed.data.prestataireId)
+    : null;
+  if (prestataire && !prestataire.ok) return PRESTATAIRE_INTROUVABLE;
+
+  const resultat = await prisma.$transaction(async (tx): Promise<PlanActionState | null> => {
+    await verrouillerObjetSigne(tx, "plan_prevention", planId);
+    // Le statut relu SOUS LE VERROU (relecture finale, R1) : une annulation
+    // glissée entre la première lecture et le verrou ne laisse pas modifier
+    // un plan annulé.
+    const statut = await tx.planPrevention.findUnique({
+      where: { id: planId },
+      select: { statut: true },
+    });
+    if (!statut || !statutPlanSignable(statut.statut)) {
+      return { status: "error", message: "Ce plan est clos ou annulé : il ne se modifie plus." };
+    }
+    const scelle = motifContenuScelle(
+      "plan",
+      await compterSignatures("plan_prevention", planId, etablissementId, tx),
+      plan.inspectionDate === null,
+    );
+    if (scelle) {
+      if (porteUnChampScelle(formData)) return { status: "error", message: scelle };
+      await tx.planPrevention.updateMany({
+        where: { id: planId, etablissementId },
+        data: { batimentId: batiment.id },
+      });
+      return null;
+    }
+    if (!parsed.success) {
+      return {
+        status: "error",
+        message: "Formulaire invalide",
+        fieldErrors: parsed.error.flatten().fieldErrors,
+      };
+    }
+    const avant = await calculerHashObjet("plan_prevention", planId, etablissementId, tx);
+    await tx.planPrevention.update({
+      where: { id: planId, etablissementId },
+      data: {
+        ...colonnesPlan(parsed.data),
+        batimentId: batiment.id,
+        // Remplacées en bloc : l'ordre est celui de la saisie, et c'est lui
+        // que l'empreinte lit.
+        phasesDangereuses: { deleteMany: {}, create: phasesACreer(parsed.data) },
+        lignes: { deleteMany: {}, create: lignesACreer(parsed.data) },
+      },
+    });
+    const apres = await calculerHashObjet("plan_prevention", planId, etablissementId, tx);
+    if (!avant.ok || !apres.ok || avant.hash !== apres.hash) {
+      await revoquerLiensEnVol(
+        {
+          etablissementId,
+          objetType: "plan_prevention",
+          objetId: planId,
+          motif: MOTIF_CONTENU_MODIFIE.plan,
+        },
+        tx,
+      );
+    }
+    return null;
+  });
+  if (resultat) return resultat;
+
+  revalidatePath(`/etablissements/${etablissementId}/plan-prevention`);
+  revalidatePath(`/etablissements/${etablissementId}/plan-prevention/${planId}`);
+  return { status: "success", planId, numero: plan.numero };
+}
+
+function lireChampOptionnel(v: FormDataEntryValue | null): string | undefined {
+  return typeof v === "string" && v.trim() ? v : undefined;
+}
+
 
 export async function cloturerPlan(planId: string): Promise<void> {
   const plan = await prisma.planPrevention.findUnique({
@@ -236,8 +400,9 @@ export async function supprimerPlan(planId: string): Promise<void> {
   await assertEtablissementOwnership(plan.etablissementId);
   const etabId = plan.etablissementId;
   // LE STATUT NE DIT PAS SI LE PLAN A ÉTÉ SIGNÉ. `attente_signatures` est
-  // l'état de création ET celui où les signatures se recueillent, et rien
-  // n'écrit jamais `valide` : s'y fier effaçait des plans signés, laissant
+  // l'état de création ET celui où les signatures se recueillent, ~~et rien
+  // n'écrit jamais `valide`~~ [2026-10-12 : `valide` n'est écrit qu'à la
+  // seconde signature, `validerSiCoSigne`] : s'y fier effaçait des plans signés, laissant
   // leurs signatures orphelines. Un plan ne s'efface que VIERGE — ni
   // signature, ni lien émis (`porteUneTraceDeSignature`) ; sinon il passe
   // « annulé » et rien n'est détruit.
@@ -302,5 +467,96 @@ export async function noterInformationInspection(
   revalidatePath(
     `/etablissements/${plan.etablissementId}/plan-prevention/${planId}`,
   );
+  return { status: "success" };
+}
+
+const heuresSchema = z.coerce
+  .number({ error: "Nombre d'heures attendu" })
+  .int("Nombre d'heures entier attendu")
+  .min(1, "Au moins 1 heure")
+  .max(99999, "99 999 heures au plus");
+
+/**
+ * Note le nombre d'heures prévisible revu en cours de chantier — R. 4512-7,
+ * 1°, seconde phrase (2026-10-12). Le diagnostic en tire l'écrit dès 400 h
+ * (`seuil400EnCours`).
+ *
+ * - Propriétaire de l'établissement seulement ; plan clos ou annulé : refusé.
+ * - Un entier de 1 à 99 999, et la date où il a été revu, jamais future —
+ *   les deux sont requis : un nombre sans date ne dit pas quand l'obligation
+ *   est née.
+ * - La dernière valeur seulement. ~~Mais une révision à la baisse ne retire
+ *   jamais une obligation déjà née : si les 400 h ont été notées, une valeur
+ *   inférieure est refusée.~~ [2026-10-12, relecture indépendante : refusée
+ *   SANS EXCEPTION, une faute de frappe (4000 pour 400… ou 450 pour 45) ne se
+ *   corrigeait plus, et le ZIP disait « Plan écrit obligatoire » pour
+ *   toujours. Et la date était réécrite à chaque saisie.] Désormais :
+ *   - la date retenue est la PREMIÈRE où 400 h ou plus ont été notées, et elle
+ *     ne bouge plus tant que la valeur reste à 400 ou au-dessus — c'est le
+ *     jour où l'obligation est née ;
+ *   - une valeur sous 400, une fois les 400 h notées, reste refusée comme
+ *     révision — une révision à la baisse ne retire pas l'obligation née —,
+ *     et n'est acceptée que comme CORRECTION DE SAISIE déclarée (case
+ *     « Je corrige une erreur de saisie »), qui remplace valeur et date.
+ *   L'estimation initiale, elle, n'est pas touchée.
+ * - Hors de l'empreinte de signature : se note sur un plan signé.
+ * - Sans migration : la colonne de date porte la première date ≥ 400 h dès
+ *   qu'elles sont atteintes, la date de la révision sinon.
+ */
+export async function noterHeuresRevisees(
+  planId: string,
+  _prev: TraceInspectionState,
+  formData: FormData,
+): Promise<TraceInspectionState> {
+  const plan = await prisma.planPrevention.findUnique({
+    where: { id: planId },
+    select: {
+      etablissementId: true,
+      statut: true,
+      heuresPrevisiblesRevisees: true,
+      heuresPrevisiblesReviseesLe: true,
+    },
+  });
+  if (!plan) return { status: "error", message: "Plan introuvable" };
+  await assertEtablissementOwnership(plan.etablissementId);
+  if (!statutPlanSignable(plan.statut)) {
+    return { status: "error", message: "Ce plan est clos ou annulé : il ne se modifie plus." };
+  }
+
+  const heures = heuresSchema.safeParse(formData.get("heuresPrevisiblesRevisees"));
+  if (!heures.success) {
+    return { status: "error", message: heures.error.issues[0]?.message ?? "Nombre d'heures invalide" };
+  }
+  const le = lireDateDeclaree(formData.get("heuresPrevisiblesReviseesLe"), new Date());
+  if (!le.ok) return { status: "error", message: le.message };
+  if (!le.date) return { status: "error", message: "Date de la révision requise" };
+  const correction = formData.get("correctionSaisie") === "on";
+
+  const deja = diagnostiquerPlan({
+    dureeHeuresEstimee: null,
+    travauxDangereux: false,
+    heuresPrevisiblesRevisees: plan.heuresPrevisiblesRevisees,
+    heuresPrevisiblesReviseesLe: plan.heuresPrevisiblesReviseesLe,
+  });
+  if (deja.seuil400EnCours && heures.data < 400 && !correction) {
+    return {
+      status: "error",
+      message:
+        "Les 400 heures ont déjà été notées : l'écrit est dû depuis, et une révision à la baisse ne le retire pas. " +
+        "S'il s'agissait d'une erreur de saisie, cochez « Je corrige une erreur de saisie ».",
+    };
+  }
+  // La première date où 400 h ont été notées reste celle de l'obligation.
+  const garderLaDate = deja.seuil400EnCours && heures.data >= 400 && !correction;
+
+  await prisma.planPrevention.updateMany({
+    where: { id: planId, etablissementId: plan.etablissementId },
+    data: {
+      heuresPrevisiblesRevisees: heures.data,
+      heuresPrevisiblesReviseesLe: garderLaDate ? plan.heuresPrevisiblesReviseesLe : le.date,
+    },
+  });
+  revalidatePath(`/etablissements/${plan.etablissementId}/plan-prevention`);
+  revalidatePath(`/etablissements/${plan.etablissementId}/plan-prevention/${planId}`);
   return { status: "success" };
 }

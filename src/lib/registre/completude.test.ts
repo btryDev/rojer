@@ -4,10 +4,43 @@ import { alimentationDeLaPartie } from "./alimentation";
 import {
   bilanDuRegistre,
   completudeDeLaFiche,
+  completudesDuRegistre,
   libelleCompletude,
   tonCompletude,
   type Completude,
 } from "./completude";
+
+describe("completudesDuRegistre — un seul calcul pour l'écran, le PDF et « Préparer un contrôle » (2026-10-12)", () => {
+  // Une partie sans écran d'alimentation, une fiche-journal réelle du
+  // catalogue, sans aucune ligne : c'est le « Aucune ligne consignée » que
+  // l'écran du registre comptait pendant que « Préparer un contrôle » disait
+  // le registre « À jour ».
+  const registre = {
+    parties: [
+      {
+        id: "partie-sans-alimentation",
+        titre: "Partie",
+        sections: [{ section: { id: "service-securite-personnes-designees" } }],
+      },
+    ],
+    contenus: {},
+  } as never;
+
+  it("un journal sans ligne compte comme une fiche à remplir", () => {
+    const c = completudesDuRegistre(registre, "/etablissements/e1");
+    expect(c.get("service-securite-personnes-designees")?.forme).toBe("journal");
+    expect(bilanDuRegistre([...c.values()]).aRemplir).toBe(1);
+  });
+
+  it("une ligne consignée la fait passer en « faite »", () => {
+    const rempli = {
+      ...(registre as object),
+      contenus: { "service-securite-personnes-designees": { lignes: [{}] } },
+    } as never;
+    const c = completudesDuRegistre(rempli, "/etablissements/e1");
+    expect(bilanDuRegistre([...c.values()]).aRemplir).toBe(0);
+  });
+});
 
 const FORMULAIRE: FormeSaisie = {
   forme: "formulaire",

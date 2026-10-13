@@ -92,6 +92,7 @@ function etab(site: number, entreprise: number) {
     conduiteEngins: null,
     expositionCMR: null,
     epiPresents: null,
+    ssiCategorieAouB: null,
   };
 }
 
@@ -146,6 +147,7 @@ describe("la consigne « fiche de l'entreprise » porte son lien", () => {
         conduiteEngins: null,
         expositionCMR: null,
         epiPresents: null,
+        ssiCategorieAouB: null,
       },
       duerp: null,
       equipements: { nbSansObligation: 0, nbEquipements: 1, nbRetires: 0 },

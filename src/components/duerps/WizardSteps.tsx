@@ -6,6 +6,12 @@ export type Etape = {
   href: string;
   atteinte: boolean;
   actuelle?: boolean;
+  /**
+   * Ce qui manque pour que l'étape soit faite, et où le faire. Posé
+   * aujourd'hui par la seule étape « Questions transverses », calculée
+   * depuis le 2026-10-12 (`construireEtapes`).
+   */
+  signal?: { texte: string; href: string };
 };
 
 /**
@@ -115,6 +121,15 @@ export function WizardSteps({ etapes }: { etapes: Etape[] }) {
                   {e.libelle}
                 </p>
               </Link>
+              {/* Hors du lien de l'étape : deux ancres ne s'imbriquent pas. */}
+              {e.signal && (
+                <Link
+                  href={e.signal.href}
+                  className="mt-1.5 inline-block text-[12.5px] leading-[1.4] text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline"
+                >
+                  {e.signal.texte} →
+                </Link>
+              )}
             </li>
           );
         })}

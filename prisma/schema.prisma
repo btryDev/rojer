@@ -72,10 +72,10 @@ model Etablissement {
   effectifSurSite Int
 
   // Régimes — cf. ADR-004
-  estEtablissementTravail Boolean       @default(true)
-  estERP                  Boolean       @default(false)
-  estIGH                  Boolean       @default(false)
-  estHabitation           Boolean       @default(false)
+  estEtablissementTravail Boolean            @default(true)
+  estERP                  Boolean            @default(false)
+  estIGH                  Boolean            @default(false)
+  estHabitation           Boolean            @default(false)
   // Nullables en colonne, mais un ERP porte TOUJOURS les deux : contrainte
   // CHECK `Etablissement_erp_type_categorie_requis` (migration 20260927180000),
   // que Prisma ne sait pas exprimer ici. Le moteur écarte sur leur absence
@@ -115,6 +115,17 @@ model Etablissement {
   // desservir des chambres qui existent. Cf. migration 20260901180000.
   comporteLocauxSommeilPublic Boolean?
 
+  // L'établissement dispose-t-il d'un système de sécurité incendie de
+  // catégorie A ou B ? Lu par la triennale du désenfumage mécanique
+  // (arrêté du 25 juin 1980, DF 10 § 3 : « Lorsque existent une installation
+  // de désenfumage mécanique et un système de sécurité incendie de catégorie
+  // A ou B »), ERP des quatre premières catégories. Posé une fois sur la
+  // fiche (décision de la propriétaire du 2026-10-08), au lieu d'une fois par
+  // désenfumage. `null` = pas encore répondu : le moteur retient la ligne
+  // « à confirmer », seul un « non » la retire (ADR-022). Migration
+  // 20261012140000, qui reprend les réponses déjà données au désenfumage.
+  ssiCategorieAouB Boolean?
+
   batiments                        Batiment[]
   // Champ d'application de R. 4227-34 CT (alarme sonore → consigne R. 4227-37
   // → exercices semestriels R. 4227-39) : « plus de cinquante personnes
@@ -141,7 +152,7 @@ model Etablissement {
   // Question posée une fois, à trois états. `null` = « je ne sais pas » ou pas
   // encore répondu : l'état permanent s'affiche (règle du non-renseigné) ;
   // `false` le retire.~~ Cf. migration 20260927140000.
-  chiffonsImpregnes                Boolean?
+  chiffonsImpregnes Boolean?
 
   // Les faits d'activité qui rendent dues des formations ou un suivi
   // (ADR-041, `etablissements/faits-activite.ts`). Même régime que
@@ -151,11 +162,11 @@ model Etablissement {
   // questions transverses q-charges, q-ecran, q-operations-electriques,
   // q-conduite-engins), il n'en est pas la source. Repris des DUERP existants
   // par la migration 20261008150000.
-  manutentionManuelle              Boolean?
-  travailSurEcran                  Boolean?
-  operationsElectriques            Boolean?
-  conduiteEngins                   Boolean?
-  expositionCMR                    Boolean?
+  manutentionManuelle   Boolean?
+  travailSurEcran       Boolean?
+  operationsElectriques Boolean?
+  conduiteEngins        Boolean?
+  expositionCMR         Boolean?
 
   // Renseignements portés par la fiche « Renseignements généraux » du registre
   // de sécurité (CCH R. 143-44). Ils vivent ici et non dans `FicheRegistre` :
@@ -191,9 +202,9 @@ model Etablissement {
   // Lire avant d'encoder : aucune obligation, aucune périodicité ici.
   // Le détail est un texte libre exprès ; figer un enum de nomenclature
   // maintenant trancherait par accident une question qu'on n'a pas instruite.
-  epiPresents               Boolean?
-  epiPresentsDetail         String?
-  aDemandesAssureur         Boolean?
+  epiPresents       Boolean?
+  epiPresentsDetail String?
+  aDemandesAssureur Boolean?
 
   duerps                     Duerp[]
   equipements                Equipement[]
@@ -389,6 +400,15 @@ model Duerp {
   versions                      DuerpVersion[]
   unites                        UniteTravail[]
   referentielSecteurId          String?
+  // INERTE DEPUIS LE 2026-10-12 — décision de la propriétaire
+  // (chantiers-ouverts § 17.5) : l'étape « Questions transverses » est
+  // CALCULÉE sur les réponses (`etatEtapeTransverses`, `transverses/etat.ts`),
+  // plus stockée. La colonne disait « Terminer a été cliqué un jour » et
+  // restait vraie sur les DUERP validés avant l'ADR-038, alors que deux
+  // questions y étaient neuves et sans réponse. Plus aucun code ne la lit ni
+  // ne l'écrit (`validerTransverses` est retirée). Gardée sans migration : la
+  // retirer serait une migration destructive pour rien. Ne pas la relire sans
+  // rouvrir la décision.
   transversesRepondues          Boolean        @default(false)
   // Réponses aux questions d'activités que le référentiel sectoriel retenu ne
   // couvre pas (ADR-020). Forme : `Record<string, boolean>`, la clé étant l'id
@@ -419,15 +439,15 @@ model Duerp {
 }
 
 model DuerpVersion {
-  id        String   @id @default(cuid())
-  duerpId   String
+  id              String    @id @default(cuid())
+  duerpId         String
   // Restrict — cf. bloc de conservation 40 ans ci-dessus.
-  duerp     Duerp    @relation(fields: [duerpId], references: [id], onDelete: Restrict)
-  numero    Int
-  snapshot  Json
-  pdfUrl    String?
-  motif     String?
-  createdAt DateTime @default(now())
+  duerp           Duerp     @relation(fields: [duerpId], references: [id], onDelete: Restrict)
+  numero          Int
+  snapshot        Json
+  pdfUrl          String?
+  motif           String?
+  createdAt       DateTime  @default(now())
   // L. 4121-3-1, VI, CT (C45) : « transmis par l'employeur à chaque mise à
   // jour au service de prévention et de santé au travail auquel il adhère ».
   // Trace facultative, déclarée par l'employeur : Rojer ne transmet rien.
@@ -666,8 +686,8 @@ model Verification {
   // d'un contrôle vit sur `RapportVerification.dateRapport` ; la colonne
   // `dateRealisee` qui le dupliquait est partie au lot N5, migration
   // `20260913120000_ligne_ouverte_retrait_date_realisee`.
-  datePrevue   DateTime
-  statut       StatutVerification @default(a_planifier)
+  datePrevue DateTime
+  statut     StatutVerification @default(a_planifier)
 
   // Date à laquelle l'obligation a cessé de s'appliquer à cette ligne, qu'on
   // ne pouvait pas supprimer parce qu'elle porte une preuve (ADR-034, qui
@@ -889,7 +909,7 @@ model RapportVerification {
   verificationId  String
   verification    Verification  @relation(fields: [verificationId], references: [id], onDelete: Cascade)
 
-  dateRapport    DateTime
+  dateRapport     DateTime
   // L'échéance que ce rapport honorait : la `datePrevue` de la ligne au moment
   // du dépôt (ADR-034). La ligne, elle, roule sur l'échéance suivante et ne
   // garde que celle-là — c'est donc ici, et seulement ici, que survit la date
@@ -897,9 +917,9 @@ model RapportVerification {
   // « une rangée par occurrence » si un besoin le justifie un jour (§ 5).
   // `null` pour les rapports déposés avant le lot N2, qui l'écrit.
   echeanceHonoree DateTime?
-  organismeVerif String?
-  resultat       ResultatVerification
-  commentaires   String?
+  organismeVerif  String?
+  resultat        ResultatVerification
+  commentaires    String?
 
   fichierCle         String
   fichierNomOriginal String
@@ -1055,9 +1075,12 @@ model Prestataire {
   // feu ou un plan de prévention — ce sont des pièces de traçabilité. Elles
   // conservent leur snapshot texte (prestataireRaison, entrepriseExterieureRaison)
   // et perdent seulement le lien vers la fiche.
-  permisFeu       PermisFeu[]
-  plansPrevention PlanPrevention[]
-  accessTokens    AccessToken[]
+  permisFeu         PermisFeu[]
+  plansPrevention   PlanPrevention[]
+  accessTokens      AccessToken[]
+  // Les pièces REMPLACÉES (2026-10-12) : la fiche ne porte que la pièce en
+  // cours, une colonne par type ; l'ancienne s'inscrit ici au remplacement.
+  piecesPrecedentes PiecePrestataire[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1070,6 +1093,32 @@ model Prestataire {
   @@unique([etablissementId, siret])
   @@index([etablissementId])
   @@index([etablissementId, raisonSociale])
+}
+
+/// Une pièce de prestataire REMPLACÉE — attestation URSSAF, RC Pro, Kbis
+/// (2026-10-12, migration additive). L'attestation d'un semestre passé est la
+/// seule preuve que la vigilance de L. 8222-1 a été faite à ce moment-là ; au
+/// remplacement, la pièce n'est plus libérée du stockage, elle s'inscrit ici.
+/// Listée sur la fiche, jointe au ZIP de contrôle, et purgée avec le reste
+/// (`suppression/fichiers.ts`, `CLES_STOCKEES`). La pièce EN COURS reste sur
+/// les colonnes de `Prestataire`.
+model PiecePrestataire {
+  id            String      @id @default(cuid())
+  prestataireId String
+  prestataire   Prestataire @relation(fields: [prestataireId], references: [id], onDelete: Cascade)
+  /// `urssaf` | `rcpro` | `kbis` — `TypePiecePrestataire`.
+  type          String
+  fichierCle    String
+  fichierNom    String?
+  /// Lue dans la clé écrite au dépôt (`clePiecePrestataire`) ; `null` si elle
+  /// ne s'y lit pas.
+  deposeeLe     DateTime?
+  /// La validité que la fiche portait pour cette pièce au remplacement :
+  /// URSSAF et RC Pro ; `null` pour le Kbis, ou si rien n'était saisi.
+  valableJusquA DateTime?
+  remplaceeLe   DateTime    @default(now())
+
+  @@index([prestataireId])
 }
 
 enum DomainePrestataire {
@@ -1126,6 +1175,17 @@ model Signature {
   signataireRole  String?
   userId          String? @db.Uuid // non-null si compte_connecte
 
+  // La partie AU NOM DE LAQUELLE la signature est donnée (audit du
+  // 2026-10-12). Les fiches attribuaient une signature à une partie en
+  // comparant son adresse à celle du chef de l'entreprise extérieure : deux
+  // signatures de la même personne, ou un lien envoyé à une autre adresse,
+  // rendaient « co-signé » avec le bloc du donneur d'ordre vide. La partie
+  // vient du jeton (choisie par le demandeur, jamais par le signataire) ou du
+  // compte connecté (toujours l'entreprise utilisatrice). Nullable : le
+  // rapport de vérification ne la renseigne pas, et une signature d'avant le
+  // 2026-10-12 n'en a pas — elle n'est attribuée à personne plutôt qu'à tort.
+  partie PartieSignataire?
+
   hashDocument String // SHA-256 hex (64 car.)
   nomDocument  String?
 
@@ -1138,8 +1198,21 @@ model Signature {
 
   createdAt DateTime @default(now())
 
+  // Une partie signe une fois : deux liens envoyés à la même partie ne
+  // produisent pas deux signatures, même posés au même instant. Les `NULL` ne
+  // se comparent pas — le rapport de vérification et l'historique n'y sont
+  // pas soumis.
+  @@unique([objetType, objetId, partie])
   @@index([etablissementId, objetType, objetId])
   @@index([userId])
+}
+
+/// Les deux parties d'un acte co-signé, dans les mots des fiches du plan de
+/// prévention. Pour le permis de feu, le donneur d'ordre (le site) signe en
+/// `entreprise_utilisatrice`, le prestataire en `entreprise_exterieure`.
+enum PartieSignataire {
+  entreprise_utilisatrice
+  entreprise_exterieure
 }
 
 enum ObjetSignable {
@@ -1176,6 +1249,9 @@ model AccessToken {
 
   emailDestinataire String
   nomDestinataire   String?
+  // Pour un jeton de signature d'un plan ou d'un permis : la partie que le
+  // demandeur invite à signer. Recopiée sur la `Signature` (2026-10-12).
+  partie            PartieSignataire?
 
   otpHash           String?
   otpEssaisRestants Int       @default(3)
@@ -1453,6 +1529,17 @@ model PlanPrevention {
   // facultative, déclarée ; aucun délai n'est affiché, le texte n'en fixe pas.
   inspectionTravailInformeeLe DateTime?
 
+  // R. 4512-7, 1°, seconde phrase : « Il en est de même dès lors qu'il
+  // apparaît, en cours d'exécution des travaux, que le nombre d'heures de
+  // travail doit atteindre 400 heures » (2026-10-12). Le nombre d'heures
+  // prévisible revu en cours de chantier, et la date où il l'a été — la
+  // dernière valeur seulement. Hors de l'empreinte de signature, comme
+  // `inspectionTravailInformeeLe` : un fait constaté après l'accord, qui ne
+  // réécrit pas ce que les parties ont signé. `dureeHeuresEstimee` reste
+  // l'estimation initiale.
+  heuresPrevisiblesRevisees   Int?
+  heuresPrevisiblesReviseesLe DateTime?
+
   // ── Contenu minimal du plan — art. R. 4512-8 ────────────────────────
   // « Les mesures prévues par le plan de prévention comportent AU MOINS les
   // dispositions suivantes », suivi de cinq rubriques. Le modèle n'en portait
@@ -1507,7 +1594,6 @@ model LignePlanPrevention {
 /**
  * Le 1° de R. 4512-8 : « La définition des phases d'activité dangereuses et
  * des moyens de prévention spécifiques correspondants. »
- *
  * `moyensPrevention` est nullable comme les mesures d'une `LignePlanPrevention`
  * — une phase nommée sans son moyen se voit à l'écran (« À compléter ») là où
  * un champ obligatoire aurait fait écrire n'importe quoi pour pouvoir

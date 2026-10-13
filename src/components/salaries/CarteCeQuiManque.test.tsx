@@ -68,6 +68,12 @@ describe("la carte de ce qui manque", () => {
     expect(html).not.toContain("R. 4624-16");
   });
 
+  it("dit que la VIP est due avant l'affectation pour la nuit, les mineurs et le suivi renforcé", () => {
+    const html = rendre("2026-01-05");
+    expect(html).toContain("avant l'affectation sur le poste (R. 4624-18)");
+    expect(html).toContain("(R. 4624-24)");
+  });
+
   it("ne rend rien quand rien ne manque", () => {
     expect(
       renderToStaticMarkup(<CarteCeQuiManque manques={[]} now={NOW} lienModifier="/m" />),

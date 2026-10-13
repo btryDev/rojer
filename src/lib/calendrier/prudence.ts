@@ -23,7 +23,7 @@ import {
 } from "@/lib/dates/retard";
 import type { MarqueAConfirmer } from "@/lib/matching/marques";
 import { estLignePourInformation } from "@/lib/referentiels/conformite/initiative";
-import { statutAffiche, type StatutPeint } from "./etats";
+import { statutAffiche, type RegistreLigne, type StatutPeint } from "./etats";
 
 /**
  * Ce que la prudence lit d'une ligne. `prescriptionId` est REQUIS, et non
@@ -149,13 +149,22 @@ export function statutAffichePrudent(
 }
 
 /**
- * Un statut déjà peint, prudence comprise : pour les surfaces qui peignent une
- * LECTURE (`statutDeLaLecture`) plutôt qu'une ligne.
+ * Le registre d'une ligne ou d'une lecture, prudence comprise : « à
+ * confirmer » là où la date seule dirait « en retard » (D26, audit du
+ * 2026-10-12). C'est la règle du bandeau (`repartirVerifications`, D1 (a)),
+ * posée sur le registre et non plus sur la seule pastille : l'en-tête rouge
+ * des mois, la règle de l'année, le mois déplié à l'arrivée, les tuiles par
+ * équipement et la fiche d'un appareil lisaient `registre === "enRetard"`, et
+ * comptaient en retard ce que le bandeau ne comptait plus.
+ *
+ * ~~`statutPeintPrudent`~~, qui ne corrigeait que la pastille d'une lecture,
+ * est partie avec ce registre : `statutDeLaLecture` peint « à confirmer »
+ * depuis lui.
  */
-export function statutPeintPrudent(
-  statut: StatutPeint,
+export function registrePrudent<R extends RegistreLigne>(
+  registre: R,
   v: LignePrudence,
   prudence: RetenueParPrudence,
-): StatutPeint {
-  return statut === "en_retard" && prudence(v) ? "a_confirmer" : statut;
+): R | "aConfirmer" {
+  return registre === "enRetard" && prudence(v) ? "aConfirmer" : registre;
 }

@@ -45,10 +45,10 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 import {
   ajouterRisqueCustom,
+  ajouterRisqueReferentiel,
   enregistrerCotation,
   modifierRisqueCustom,
   supprimerRisque,
-  toggleRisqueReferentiel,
 } from "./actions";
 
 const USER = { id: "user-legitime", email: "dirigeant@exemple.fr" };
@@ -94,9 +94,9 @@ beforeEach(() => {
 });
 
 describe("actions sur les risques — identifiant d'un autre client", () => {
-  it("toggleRisqueReferentiel refuse et n'écrit rien", async () => {
+  it("ajouterRisqueReferentiel refuse et n'écrit rien", async () => {
     await expect(
-      toggleRisqueReferentiel("unite-autre-client", "chute_plain_pied"),
+      ajouterRisqueReferentiel("unite-autre-client", "chute_plain_pied"),
     ).rejects.toSatisfy(estNotFound);
     aucuneEcriture();
   });

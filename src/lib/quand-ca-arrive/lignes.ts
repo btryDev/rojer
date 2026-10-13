@@ -30,6 +30,7 @@ import {
   type ObligationApplicable,
 } from "@/lib/matching";
 import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
+import { phrasesAConfirmer } from "@/lib/matching/marques";
 import { estDeclencheeParUnFait } from "@/lib/etats-permanents/regle";
 import {
   porteurDe,
@@ -58,6 +59,14 @@ export type LigneQuandCaArrive = {
    * contre-lecture du 2026-09-26).
    */
   description: string | null;
+  /**
+   * Les phrases « à confirmer » de la ligne (`phrasesAConfirmer`), vide si la
+   * fiche a répondu. Audit du 2026-10-12 : la page ignorait `sansReponse`, et
+   * un dossier muet sur le travail sur écran lisait « Former au travail sur
+   * écran » affirmé comme dû, quand le calendrier, le registre et l'écran des
+   * états permanents le disent « à confirmer » (D1).
+   */
+  aConfirmer: string[];
 };
 
 export type GroupeQuandCaArrive = {
@@ -116,6 +125,7 @@ export function lignesDepuis(
       pieceAttendue: o.pieceAttendue,
       articles: o.referencesLegales.map((r) => r.article ?? r.reference),
       description: memeTexte(o.description ?? "", o.faitGenerateur) ? null : (o.description ?? null),
+      aConfirmer: phrasesAConfirmer(app),
     });
   }
   return lignes;

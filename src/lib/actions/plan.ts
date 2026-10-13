@@ -1,14 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireAction, requireVerification } from "@/lib/auth/scope";
-import { estActionEnRetard } from "@/lib/dates/retard";
-import {
-  actionVerificationSchema,
-  cloturerActionSchema,
-  modifierActionSchema,
-} from "./schema";
+import { estActionEnRetard, estActionOuverte } from "@/lib/dates/retard";
+import { actionVerificationSchema, cloturerActionSchema } from "./schema";
 import { assertOrigineActionValide } from "./origine";
 
 /**
@@ -17,8 +14,13 @@ import { assertOrigineActionValide } from "./origine";
  * Ces actions complètent `src/lib/actions/actions.ts` (qui gère les
  * mesures DUERP via le wizard) en couvrant les parcours :
  *   - création d'une action corrective depuis une vérification (écart)
- *   - modification d'une action (statut, échéance, responsable, type)
- *   - clôture d'une action avec justificatif obligatoire
+ *   - ~~modification d'une action (statut, échéance, responsable, type)~~
+ *     [2026-10-12 : `modifierActionPlan` prenait un patch que nul écran
+ *     n'envoyait ; il reprend désormais le formulaire et le schéma de la
+ *     création, et le statut ne se change plus que par un geste nommé]
+ *   - modification d'une action ouverte (le formulaire de création, prérempli)
+ *   - clôture d'une action avec justificatif obligatoire, réouverture
+ *   - abandon d'une action qui ne vient pas du DUERP
  *   - suppression
  *
  * Les actions DUERP existantes (rattachées à un `Risque`) restent éditables
@@ -47,14 +49,10 @@ function revalidateAction(etablissementId: string): void {
   revalidatePath(`/etablissements/${etablissementId}/calendrier`);
 }
 
-export async function creerActionDepuisVerification(
-  verificationId: string,
-  _prev: ActionPlanState,
-  formData: FormData,
-): Promise<ActionPlanState> {
-  const { verification: verif } = await requireVerification(verificationId);
-
-  const parsed = actionVerificationSchema.safeParse({
+/** Le formulaire d'une action, lu par la création et par la correction :
+ *  une seule lecture, un seul schéma. */
+function lireFormulaireAction(formData: FormData) {
+  return actionVerificationSchema.safeParse({
     libelle: formData.get("libelle"),
     description: formData.get("description"),
     type: formData.get("type"),
@@ -62,6 +60,16 @@ export async function creerActionDepuisVerification(
     echeance: formData.get("echeance"),
     responsable: formData.get("responsable"),
   });
+}
+
+export async function creerActionDepuisVerification(
+  verificationId: string,
+  _prev: ActionPlanState,
+  formData: FormData,
+): Promise<ActionPlanState> {
+  const { verification: verif } = await requireVerification(verificationId);
+
+  const parsed = lireFormulaireAction(formData);
   if (!parsed.success) {
     return {
       status: "error",
@@ -103,20 +111,68 @@ export async function creerActionDepuisVerification(
   return { status: "success", actionId: a.id };
 }
 
+/**
+ * Corriger une action du plan : le formulaire de la création, prérempli, et le
+ * même schéma (`actionVerificationSchema`). Jusqu'au 2026-10-12 la fonction
+ * existait sans écran — une action mal saisie ne se corrigeait qu'en la
+ * supprimant (audit du 2026-10-12).
+ *
+ * Deux refus, chacun dit à l'écran :
+ *   - une mesure du DUERP se corrige dans le DUERP, où elle a été saisie : sa
+ *     création n'est pas ce formulaire, et son libellé peut venir du
+ *     référentiel (`referentielMesureId`) ;
+ *   - une action levée ou abandonnée se rouvre d'abord. Corriger le libellé
+ *     d'une action levée réécrirait ce que son justificatif atteste.
+ *
+ * Un champ vidé redevient `null` : le schéma rend `undefined` pour un champ
+ * vide, ce qui à la création veut dire « pas de valeur » et, à une mise à
+ * jour Prisma, « ne touche pas ».
+ */
 export async function modifierActionPlan(
   actionId: string,
-  patch: Parameters<typeof modifierActionSchema.safeParse>[0],
-): Promise<void> {
-  const { etablissementId } = await requireAction(actionId);
+  _prev: ActionPlanState,
+  formData: FormData,
+): Promise<ActionPlanState> {
+  const { action: existante, etablissementId } = await requireAction(actionId);
 
-  const parsed = modifierActionSchema.safeParse(patch);
-  if (!parsed.success) throw new Error("Patch invalide");
+  if (existante.risqueId) {
+    return {
+      status: "error",
+      message:
+        "Cette action est une mesure du DUERP : elle se corrige depuis le risque, dans le DUERP.",
+    };
+  }
+  if (!estActionOuverte(existante)) {
+    return {
+      status: "error",
+      message: "Rouvrez l'action avant de la corriger.",
+    };
+  }
+
+  const parsed = lireFormulaireAction(formData);
+  if (!parsed.success) {
+    return {
+      status: "error",
+      message: "Formulaire invalide",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
 
   await prisma.action.update({
     where: { id: actionId },
-    data: parsed.data,
+    data: {
+      libelle: parsed.data.libelle,
+      description: parsed.data.description ?? null,
+      type: parsed.data.type,
+      criticite: parsed.data.criticite ?? null,
+      echeance: parsed.data.echeance ?? null,
+      responsable: parsed.data.responsable ?? null,
+    },
   });
+
   revalidateAction(etablissementId);
+  revalidatePath(`/etablissements/${etablissementId}/actions/${actionId}`);
+  redirect(`/etablissements/${etablissementId}/actions/${actionId}`);
 }
 
 export async function cloturerAction(
@@ -174,8 +230,16 @@ export async function cloturerAction(
   return { status: "success", actionId };
 }
 
+/**
+ * Rouvrir une action levée ou abandonnée — une clôture faite par erreur ne se
+ * défaisait pas (audit du 2026-10-12). Le justificatif, sa date et le rapport
+ * choisi partent : une action rouverte n'est plus levée, et garder la preuve
+ * d'une levée qui n'a plus cours la ferait lire comme telle. L'écran le dit
+ * avant le geste.
+ */
 export async function rouvrirAction(actionId: string): Promise<void> {
-  const { etablissementId } = await requireAction(actionId);
+  const { action, etablissementId } = await requireAction(actionId);
+  if (estActionOuverte(action)) return;
 
   await prisma.action.update({
     where: { id: actionId },
@@ -187,6 +251,32 @@ export async function rouvrirAction(actionId: string): Promise<void> {
     },
   });
   revalidateAction(etablissementId);
+  revalidatePath(`/etablissements/${etablissementId}/actions/${actionId}`);
+}
+
+/**
+ * Abandonner une action ouverte : elle sort du plan (ni retard, ni compte des
+ * ouvertes) et reste au dossier. Le statut existait au modèle sans qu'aucun
+ * écran ne l'atteigne ; il ne passait que par le patch de
+ * `modifierActionPlan`, que rien n'appelait.
+ *
+ * Refusé pour une mesure du DUERP : la version figée ne connaît que « en
+ * place » et « prévue » (`snapshot-builder.ts`), et y imprimerait une mesure
+ * abandonnée comme prévue.
+ */
+export async function abandonnerAction(actionId: string): Promise<void> {
+  const { action, etablissementId } = await requireAction(actionId);
+  if (action.risqueId) {
+    throw new Error("Une mesure du DUERP ne s'abandonne pas depuis le plan d'actions");
+  }
+  if (!estActionOuverte(action)) return;
+
+  await prisma.action.update({
+    where: { id: actionId },
+    data: { statut: "abandonnee" },
+  });
+  revalidateAction(etablissementId);
+  revalidatePath(`/etablissements/${etablissementId}/actions/${actionId}`);
 }
 
 export async function supprimerActionPlan(actionId: string): Promise<void> {

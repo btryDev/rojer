@@ -19,6 +19,11 @@ import {
   type EtatEcheance,
   type LectureCalendrier,
 } from "./etats";
+import {
+  registrePrudent,
+  type LignePrudence,
+  type RetenueParPrudence,
+} from "./prudence";
 
 /** Un mois de la règle. Les quatre compteurs sont exclusifs entre eux. */
 export type MoisRegle = {
@@ -49,8 +54,11 @@ export type MoisRegle = {
   sansDate?: number;
 };
 
-/** Une vérification telle que la page la lit : sa dernière réalisation jointe. */
-type VerificationLue = VerificationDatee & { derniereRealisation: Date | null };
+/** Une vérification telle que la page la lit : sa dernière réalisation jointe,
+ *  et ce que la prudence lit d'elle (D26). */
+type VerificationLue = VerificationDatee & {
+  derniereRealisation: Date | null;
+} & LignePrudence;
 
 /** Une ligne de la liste mensuelle. */
 export type LigneMois<V extends VerificationLue> =
@@ -60,6 +68,8 @@ export type LigneMois<V extends VerificationLue> =
       v: V;
       // Le registre d'une LECTURE, pas d'une ligne : `archivee` en est
       // exclu par construction (`lecturesCalendrier` n'en produit aucune).
+      // Prudence comprise (D26) : « à confirmer » là où la date seule dirait
+      // « en retard » (`registrePrudent`).
       registre: LectureCalendrier["registre"];
       lecture: LectureCalendrier["lecture"];
     }
@@ -97,6 +107,13 @@ export function lignesDuCalendrier<V extends VerificationLue>(
   verifs: V[],
   autres: EcheanceCalendrier[],
   now: Date,
+  /**
+   * **Requise** (D26, audit du 2026-10-12) : le prédicat du dossier, tiré de
+   * ses marques (`retenueParPrudence`). Le registre de chaque lecture le lit,
+   * et avec lui l'en-tête rouge des mois, la règle et le mois déplié à
+   * l'arrivée — qui comptaient en retard ce que le bandeau ne comptait plus.
+   */
+  prudence: RetenueParPrudence,
 ): LigneMois<V>[] {
   return [
     ...verifs.flatMap((v) =>
@@ -104,7 +121,7 @@ export function lignesDuCalendrier<V extends VerificationLue>(
         genre: "verif" as const,
         date: lec.date,
         v,
-        registre: lec.registre,
+        registre: registrePrudent(lec.registre, v, prudence),
         lecture: lec.lecture,
       })),
     ),
@@ -156,9 +173,14 @@ export function rangerParMois<L extends { date: Date }>(
 export function etatDeLaLigne<V extends VerificationLue>(
   l: LigneMois<V>,
   now: Date,
-): EtatEcheance {
+): EtatEcheance | null {
   // Le ton, jamais la date seule : calculé au rangement (`etatAutreEcheance`).
   if (l.genre !== "verif") return l.etat;
+  // D26 : une échéance retenue par prudence n'a pas d'état de barre — ni
+  // rouge, qu'elle n'est pas, ni un autre, qu'elle n'a pas. Comme sur les
+  // barres du tableau de bord (`repartirParMois`), elle ne s'y pose pas ; la
+  // liste du mois la montre, marquée « à confirmer ».
+  if (l.registre === "aConfirmer") return null;
   // « À planifier » (donc à date future — le classifieur a déjà rangé les
   // dates passées en retard) est écarté des barres par `estDatable` ; si la
   // ligne arrive quand même ici, sa date de génération se classe comme une
@@ -220,7 +242,8 @@ export function regleDeLAnnee<V extends VerificationLue>(
         if (l.genre === "verif" && l.registre === "enRetard") retardSansDate += 1;
         continue;
       }
-      compte[etatDeLaLigne(l, now)] += 1;
+      const etat = etatDeLaLigne(l, now);
+      if (etat !== null) compte[etat] += 1;
     }
     return {
       cle,

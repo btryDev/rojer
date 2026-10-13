@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { rapprocher, type PersonneDeclaree } from "./transmissions";
+import { rapprocher, titresDusEnRetard, type PersonneDeclaree } from "./transmissions";
 import { ceQuiManqueALaPersonne } from "@/lib/salaries/du-a-la-personne";
 import { phraseTitre } from "@/components/salaries/CarteTitresDuDuerp";
 import {
@@ -818,5 +818,29 @@ describe("un manque en retard compte comme un retard (décision du 2026-10-12, o
     // Entrée récente : rien n'est encore en retard.
     const cles = recos(verifsEnRetard("2026-07-01", 6), "2026-08-20");
     expect(cles).not.toContain("titres-dus-non-declares");
+  });
+});
+
+describe("titresDusEnRetard — ce que le bandeau nomme (audit du 2026-10-12)", () => {
+  const compte = (titre: string, enRetard: number) => ({
+    titre,
+    libelleTitre: titre,
+    sansLeTitre: enRetard + 1,
+    enRetard,
+    nonDatees: 0,
+    plusAncienRetard: enRetard > 0 ? new Date("2026-07-01") : null,
+  });
+
+  it("somme les retards des cartes, un titre nommé deux fois compté une fois", () => {
+    expect(
+      titresDusEnRetard({
+        domainesSansPrestataire: [],
+        obligationsSupposantUnePersonne: [
+          { id: "o1", libelle: "o1", parPersonne: [compte("formation", 2)] },
+          { id: "o2", libelle: "o2", parPersonne: [compte("formation", 2)] },
+        ],
+        titresDusNonDeclares: [compte("vip", 1), compte("autre", 0)],
+      }),
+    ).toBe(3);
   });
 });

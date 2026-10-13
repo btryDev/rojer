@@ -545,6 +545,21 @@ export type TypologieApplication = {
    * `matching/absence.ts` dit pour chacun ce que vaut son silence.
    */
   activite?: ActiviteDeclaree;
+  /**
+   * L'obligation ne vaut que si l'établissement dispose d'un système de
+   * sécurité incendie de catégorie A ou B (arrêté du 25 juin 1980, DF 10
+   * § 3). Évalué sur `Etablissement.ssiCategorieAouB`, posé sur la fiche,
+   * avec la même règle du non-renseigné qu'`activite` et par le même
+   * évaluateur : seul un « non » déclaré retire la ligne, le silence la
+   * retient « à confirmer ».
+   *
+   * Un critère à part et non une valeur d'`activite` : un SSI n'est pas un
+   * fait d'activité, et `activite` nourrit le registre des faits
+   * (`faits-activite.ts`) et ses questions d'Équipe. 2026-10-12, décision de
+   * la propriétaire du 2026-10-08 — la question était posée sur chaque
+   * désenfumage, faute pour le moteur de lire un autre appareil.
+   */
+  ssiCategorieAouB?: true;
   effectifMin?: number;
   effectifMax?: number;
   /**
@@ -680,3 +695,21 @@ export const CATEGORIES_EQUIPEMENT = [
 ] as const;
 
 export type CategorieEquipement = (typeof CATEGORIES_EQUIPEMENT)[number];
+
+/**
+ * Les catégories d'équipements de protection individuelle : la famille `EPI`
+ * et les trois catégories vérifiables qui en ont été scindées (2026-09-04).
+ * Déclarer un équipement de l'une d'elles, c'est déclarer qu'on fournit des
+ * EPI — la réponse à `epiPresents` (relecture indépendante du 2026-10-12,
+ * `equipements/actions.ts`).
+ */
+export const CATEGORIES_EPI = [
+  "EPI",
+  "EPI_ANTICHUTE",
+  "EPI_RESPIRATOIRE",
+  "EPI_GILET_SAUVETAGE",
+] as const satisfies readonly CategorieEquipement[];
+
+export function estCategorieEpi(c: string): boolean {
+  return (CATEGORIES_EPI as readonly string[]).includes(c);
+}

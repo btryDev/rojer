@@ -22,12 +22,18 @@ import {
   serialiserCaracteristiques,
   type ChampTriEtat,
 } from "./schema";
-import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
+import {
+  estCategorieEpi,
+  type CategorieEquipement,
+} from "@/lib/referentiels/types-communs";
 import {
   questionsExigeesPour,
+  REGIME_TRAVAIL,
   reponsesExigeesManquantes,
+  type RegimeExigence,
 } from "./reponses-exigees";
 import type { ReponseParametrage } from "@/lib/etablissements/parametrage";
+import { MESSAGE_APPAREIL_RETIRE, estAppareilRetire } from "./retrait";
 
 /**
  * Toute mutation d'équipement invalide le calendrier de vérifications : on
@@ -60,13 +66,56 @@ async function regenererCalendrier(
   return ok ? { ok: true } : { ok: false, message: MESSAGE_REGEN_ECHEC };
 }
 
-async function resoudreEtablissementId(equipementId: string): Promise<string> {
+/**
+ * Un équipement de protection individuelle déclaré contredit un « non » (ou un
+ * silence) à « Fournissez-vous des équipements de protection individuelle ? »
+ * (relecture indépendante du 2026-10-12, audit B2). Le « non » laissait
+ * `R. 4323-105` retiré alors qu'un harnais était déclaré, et `AIDE_EPI`
+ * invite justement à les déclarer un par un. La déclaration vaut « oui » :
+ * `epiPresents` passe à vrai, AVANT la régénération que l'appelant fait déjà.
+ * Une seule règle, `estCategorieEpi`.
+ */
+async function constaterEpiDeclare(
+  etablissementId: string,
+  categories: readonly string[],
+): Promise<void> {
+  if (!categories.some(estCategorieEpi)) return;
+  await prisma.etablissement.updateMany({
+    where: {
+      id: etablissementId,
+      OR: [{ epiPresents: false }, { epiPresents: null }],
+    },
+    data: { epiPresents: true },
+  });
+}
+
+/**
+ * Ce que l'exigence des réponses lit de l'établissement (`RegimeExigence`) :
+ * le régime ERP et la réponse au SSI A/B (DF 10 § 3, décision du
+ * 2026-10-08). Lu après le contrôle d'appartenance.
+ */
+async function regimeDe(etablissementId: string): Promise<RegimeExigence> {
+  const r = await prisma.etablissement.findUnique({
+    where: { id: etablissementId },
+    select: { estERP: true, typeErp: true, categorieErp: true, ssiCategorieAouB: true },
+  });
+  return r ?? REGIME_TRAVAIL;
+}
+
+/**
+ * L'établissement de l'appareil, pour le contrôle d'appartenance, et son état
+ * de service : un appareil retiré du parc n'accepte plus aucune écriture
+ * (`retrait.ts`, décision du 2026-10-12).
+ */
+async function resoudreAppareil(
+  equipementId: string,
+): Promise<{ etablissementId: string; actif: boolean }> {
   const eq = await prisma.equipement.findUnique({
     where: { id: equipementId },
-    select: { etablissementId: true },
+    select: { etablissementId: true, actif: true },
   });
   if (!eq) throw new Error("Équipement introuvable");
-  return eq.etablissementId;
+  return eq;
 }
 
 export type EquipementActionState =
@@ -92,7 +141,7 @@ export async function creerEquipement(
       fieldErrors: parsed.error.flatten().fieldErrors,
     };
   }
-  const exigees = reponsesExigeesManquantes(parsed.data);
+  const exigees = reponsesExigeesManquantes(parsed.data, await regimeDe(etablissementId));
   if (exigees) {
     return { status: "error", message: "Formulaire invalide", fieldErrors: exigees };
   }
@@ -128,13 +177,15 @@ export async function creerEquipement(
       caracteristiques: (caracs ?? undefined) as Prisma.InputJsonValue | undefined,
     },
   });
+  await constaterEpiDeclare(etablissementId, [parsed.data.categorie]);
 
   const regen = await regenererCalendrier(etablissementId);
 
   // Les trois chemins qui régénèrent le calendrier l'invalident : la
   // régénération vient de réécrire des dates, et `/calendrier` servait son
-  // rendu précédent. Le retrait et la réactivation le faisaient déjà, la
-  // création, la modification et le pré-remplissage non.
+  // rendu précédent. Le retrait ~~et la réactivation~~ le faisait déjà, la
+  // création, la modification et le pré-remplissage non. [2026-10-12 : la
+  // réactivation n'existe plus, le retrait est définitif (`retrait.ts`).]
   revalidatePath(`/etablissements/${etablissementId}`);
   revalidatePath(`/etablissements/${etablissementId}/equipements`);
   revalidatePath(`/etablissements/${etablissementId}/calendrier`);
@@ -151,8 +202,13 @@ export async function modifierEquipement(
   _prev: EquipementActionState,
   formData: FormData,
 ): Promise<EquipementActionState> {
-  const etablissementId = await resoudreEtablissementId(id);
-  await assertEtablissementOwnership(etablissementId);
+  const appareil = await resoudreAppareil(id);
+  await assertEtablissementOwnership(appareil.etablissementId);
+  // L'appartenance d'abord, le refus ensuite : on ne dit rien d'un appareil
+  // qui n'est pas à soi.
+  if (estAppareilRetire(appareil)) {
+    return { status: "error", message: MESSAGE_APPAREIL_RETIRE };
+  }
 
   const parsed = equipementSchema.safeParse(normaliserFormDataEquipement(formData));
   if (!parsed.success) {
@@ -162,7 +218,7 @@ export async function modifierEquipement(
       fieldErrors: parsed.error.flatten().fieldErrors,
     };
   }
-  const exigees = reponsesExigeesManquantes(parsed.data);
+  const exigees = reponsesExigeesManquantes(parsed.data, await regimeDe(appareil.etablissementId));
   if (exigees) {
     return { status: "error", message: "Formulaire invalide", fieldErrors: exigees };
   }
@@ -173,7 +229,10 @@ export async function modifierEquipement(
   // appartenir au même établissement.
   if (parsed.data.batimentId) {
     const cible = await prisma.batiment.findFirst({
-      where: { id: parsed.data.batimentId, etablissementId },
+      where: {
+        id: parsed.data.batimentId,
+        etablissementId: appareil.etablissementId,
+      },
       select: { id: true },
     });
     if (!cible) {
@@ -198,6 +257,7 @@ export async function modifierEquipement(
     },
   });
 
+  await constaterEpiDeclare(eq.etablissementId, [parsed.data.categorie]);
   const regen = await regenererCalendrier(eq.etablissementId);
 
   revalidatePath(`/etablissements/${eq.etablissementId}`);
@@ -236,12 +296,23 @@ export type SuppressionEquipementResult =
  *  - sinon → **désactivation** (`actif = false`). L'équipement sort des
  *    listes et du matching — il ne génère donc plus d'obligation — mais son
  *    historique reste consultable et opposable.
+ *
+ * Dans les deux cas le retrait est DÉFINITIF (décision du 2026-10-12) : un
+ * appareil retiré est en lecture seule et ne se remet plus en service
+ * (`retrait.ts`).
  */
 export async function supprimerEquipement(
   id: string,
 ): Promise<SuppressionEquipementResult> {
-  const etablissementId = await resoudreEtablissementId(id);
+  const appareil = await resoudreAppareil(id);
+  const { etablissementId } = appareil;
   await assertEtablissementOwnership(etablissementId);
+  // Déjà retiré : le retrait est définitif, il ne se rejoue pas. Sans ce
+  // refus, un appareil retiré dont le dernier rapport aurait été retiré
+  // ensuite repasserait par la branche « aucune trace » et serait détruit.
+  if (estAppareilRetire(appareil)) {
+    return { statut: "erreur", message: MESSAGE_APPAREIL_RETIRE };
+  }
 
   // Une seule requête : y a-t-il au moins une vérification porteuse de trace ?
   // La définition partagée d'une preuve (`portantUnePreuve`), jamais recopiée :
@@ -276,7 +347,9 @@ export async function supprimerEquipement(
         "travail fait conserver les documents des vérifications et contrôles " +
         "« des cinq dernières années et, en tout état de cause, ceux des deux " +
         "derniers contrôles ou vérifications ». " +
-        "Il n'apparaît plus dans vos listes et ne génère plus d'échéance.",
+        "Il n'apparaît plus dans vos listes et ne génère plus d'échéance ; " +
+        "sa fiche reste consultable, sans modification possible. S'il " +
+        "revient, déclarez-le comme un nouvel appareil.",
     };
   }
 
@@ -292,28 +365,6 @@ export async function supprimerEquipement(
     return { statut: "erreur", message: regen.message };
   }
   return resultat;
-}
-
-/**
- * Remet en service un équipement désactivé. Les obligations correspondantes
- * réapparaissent au calendrier, et les lignes de suivi archivées rouvrent : la
- * régénération remet leur `archiveLe` à `null` (ADR-034, N3). Le libellé, lui,
- * n'a jamais changé — c'est un préfixe texte qui portait l'archivage jusqu'au
- * N3, et il a disparu.
- */
-export async function reactiverEquipement(
-  id: string,
-): Promise<{ ok: true } | { ok: false; message: string }> {
-  const etablissementId = await resoudreEtablissementId(id);
-  await assertEtablissementOwnership(etablissementId);
-
-  await prisma.equipement.update({ where: { id }, data: { actif: true } });
-  const regen = await regenererCalendrier(etablissementId);
-
-  revalidatePath(`/etablissements/${etablissementId}`);
-  revalidatePath(`/etablissements/${etablissementId}/equipements`);
-  revalidatePath(`/etablissements/${etablissementId}/calendrier`);
-  return regen.ok ? { ok: true } : { ok: false, message: regen.message };
 }
 
 /**
@@ -338,6 +389,10 @@ export async function creerEquipementsDepuisPreRemplissage(
       libelle: e.libelle,
     })),
   });
+  await constaterEpiDeclare(
+    etablissementId,
+    entrees.map((e) => e.categorie),
+  );
 
   const regen = await regenererCalendrier(etablissementId);
 
@@ -366,16 +421,24 @@ export async function repondreQuestionEquipement(
 ): Promise<ReponseParametrage> {
   const eq = await prisma.equipement.findUnique({
     where: { id: equipementId },
-    select: { etablissementId: true, categorie: true, caracteristiques: true },
+    select: {
+      etablissementId: true,
+      actif: true,
+      categorie: true,
+      caracteristiques: true,
+    },
   });
   if (!eq) return { status: "error", message: "Équipement introuvable." };
   await assertEtablissementOwnership(eq.etablissementId);
+  if (estAppareilRetire(eq)) {
+    return { status: "error", message: MESSAGE_APPAREIL_RETIRE };
+  }
 
   // Seule une question que la décision exige pour CETTE catégorie : l'action
   // n'écrit pas n'importe quelle clé qu'on lui poste.
   if (
     !(CHAMPS_TRI_ETAT as readonly string[]).includes(champ) ||
-    !questionsExigeesPour(eq.categorie as CategorieEquipement).includes(champ)
+    !questionsExigeesPour(eq.categorie as CategorieEquipement, await regimeDe(eq.etablissementId)).includes(champ)
   ) {
     return { status: "error", message: "Question inconnue pour cet appareil." };
   }

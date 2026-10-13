@@ -52,6 +52,7 @@ const bureau = (effectif: number): EtablissementMatching => ({
   conduiteEngins: null,
   expositionCMR: null,
   epiPresents: null,
+  ssiCategorieAouB: null,
 });
 
 describe("figureSurLEcranEnPlace — la même réponse que l'écran (2026-09-15)", () => {

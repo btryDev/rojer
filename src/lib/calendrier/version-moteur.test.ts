@@ -124,6 +124,40 @@ function estHorsReleve(chemin: string): boolean {
  */
 const RELEVE = {
   version: 6,
+  // Recalculée SANS incrément le 2026-10-12 à la réunion de
+  // `lot/polir-relecture` (EPI déclaré, `6a4d02a8f770c62b`) et de
+  // `lot/suites-0810` (SSI A/B, libellés, rythme en clair,
+  // `a1418967cc88cc4f`) : chacune recopiait sans incrément, avec son motif
+  // ci-dessous ; leur réunion ne change rien d'autre. ~~6a4d02a8f770c62b~~.
+  // Recopiée SANS incrément le 2026-10-12 (relecture indépendante, B2) :
+  // `referentiels/types-communs.ts` exporte `CATEGORIES_EPI` et
+  // `estCategorieEpi`, lus par la seule `equipements/actions.ts` pour faire
+  // passer `epiPresents` à vrai quand un EPI est déclaré. NON, la
+  // régénération n'écrit pas autrement : ni le générateur, ni le
+  // réconciliateur, ni le moteur ne les appellent ; c'est la RÉPONSE écrite
+  // sur l'établissement qui change ensuite le calendrier, par la règle
+  // existante. ~~e0d35b3f39ef01c3~~.
+  // Recopiée SANS incrément le 2026-10-12 (`lot/suites-0810`, SSI A/B sur la
+  // fiche) : `matching/engine.ts` lit le critère `ssiCategorieAouB` par
+  // l'évaluateur des faits d'activité, `absence.ts` et `projection.ts`
+  // portent l'attribut. NON, au sens de cette question : ce qui change les
+  // lignes est une DONNÉE du référentiel (la triennale DF 10 § 3 change de
+  // condition), et elle déplace l'empreinte (`2026-10-12.2`), donc le sceau —
+  // chaque dossier sera réconcilié à sa prochaine ouverture. Précédent :
+  // ADR-041 (C65). ~~25373a159ab4f97b~~.
+  // Recopiée SANS incrément le 2026-10-12 (`lot/suites-0810`, libellés des
+  // obligations retirées) : `OBLIGATIONS_RETIREES` gagne un `libelle` par
+  // entrée, lu par `libelleObligationRetiree` (page des prescriptions) ; le
+  // motif d'une prescription non retenue dit son rythme en clair. NON : le
+  // générateur ne lit d'une obligation retirée que `absorbePar` et `porteur`,
+  // inchangés. ~~6688d9fbaa6ff949~~.
+  // Recopiée SANS incrément le 2026-10-12 (`lot/suites-0810`, suite de C62) :
+  // `LABEL_PERIODICITE` sort de `labels.ts` vers le module feuille
+  // `label-periodicite.ts`, que `matching/prescriptions.ts` lit pour dire en
+  // clair le rythme de son motif de surcharge (« toutes les 6 semaines » au
+  // lieu de « six_semaines »). NON, la régénération n'écrit pas autrement :
+  // `surcharge.raison` rejoint `raisons`, qu'aucune colonne ne stocke ; la
+  // périodicité écrite reste `surcharge.periodicite`. ~~e0d35b3f39ef01c3~~.
   // Recopiée SANS incrément le 2026-10-12 (ADR-043, ce qui manque à une
   // personne) : `mention-rythme.ts` exporte `delaiEnPhrase` (« 3 mois »),
   // lu par la seule fiche salarié. NON, la régénération n'écrit pas
@@ -344,7 +378,13 @@ const RELEVE = {
   // ~~4b75258a15263110~~.
   // ~~ff1c3cda346da10d~~ (C66) ; ~~34b84ee9a3627974~~ (ADR-041, main) ;
   // ~~9ea22cc6ca8d74f9~~ (ADR-042, sa branche).
-  empreinte: "005b4fafbfab216a",
+  // Recopiée SANS incrément le 2026-10-12 (`lot/polir-plans-permis-signatures`) :
+  // `dates/index.ts` gagne `versSaisieDateHeure`, la réciproque de
+  // `depuisSaisieDateHeure` qui remplit les écrans « Modifier » du plan et du
+  // permis. NON : fonction AJOUTÉE, appelée par deux pages seulement, aucune
+  // fonction existante n'est touchée — la régénération n'écrit rien d'autre.
+  // ~~005b4fafbfab216a~~.
+  empreinte: "7d1d30ef2861a9a2",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

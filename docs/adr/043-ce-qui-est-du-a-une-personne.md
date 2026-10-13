@@ -1,7 +1,7 @@
 # ADR-043 — Ce qui est dû à une personne se lit sur sa fiche, depuis son entrée
 
-- **Statut** : **EN COURS sur sa branche le 2026-10-12** (`lot/du-a-la-personne`),
-  non fusionnée. Périmètre et trois décisions validés par la propriétaire le
+- **Statut** : ~~**EN COURS sur sa branche le 2026-10-12** (`lot/du-a-la-personne`),
+  non fusionnée.~~ **FUSIONNÉE le 2026-10-12** — PR #20, `4f6de986`. Périmètre et trois décisions validés par la propriétaire le
   2026-10-12 (« ok vas-y avec tes recommandations »).
 - **Amende** : l'ADR-023 (le salarié porte ses titres) sur un point — un titre
   **dû à tout l'effectif** et jamais déclaré se montre comme dû, daté depuis
@@ -98,9 +98,14 @@ Mesuré le 2026-10-12, en lisant le code de `main` (54cbb45f) :
   indépendante du 2026-10-12, R1) : `R. 4624-18` (travailleur de nuit, moins
   de dix-huit ans… — visite préalable) et l'examen d'aptitude du suivi
   renforcé (`R. 4624-24`), pour une personne dont le titre n'est pas encore
-  déclaré. La fiche annonce les trois mois du régime général : pour ces
+  déclaré. ~~La fiche annonce les trois mois du régime général : pour ces
   personnes, c'est PLUS TARD que le texte. Sens permissif, assumé faute de
-  savoir qui relève de ces régimes (ADR-023) ; la VIP adaptée et le suivi
+  savoir qui relève de ces régimes (ADR-023) ;~~ [2026-10-12, décision de la
+  propriétaire « corriger ce qui est faux à l'écran » : la carte date toujours
+  les trois mois du régime général — Rojer ne sait pas qui relève de ces
+  régimes (ADR-023) —, mais elle dit désormais, au référentiel
+  (`premierDelaiFonde.exception`), que la visite est due AVANT l'affectation
+  pour ces personnes.] la VIP adaptée et le suivi
   renforcé, une fois déclarés, écartent la VIP.
 - **La formation à la sécurité n'est datée qu'en son volet « accident ou
   sinistre »** (relecture C1) : c'est le seul que `R. 4141-20` date.

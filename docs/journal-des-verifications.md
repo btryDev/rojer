@@ -4827,10 +4827,15 @@ relecture du 05/10, lecture retenue par la propriétaire : l'annuelle reste, la
 triennale s'y ajoute. Dit dans les `notesInternes` de la triennale et dans sa
 description.
 
-**Contourné, pas résolu.** Le moteur n'évalue que l'appareil déclencheur : la
+~~**Contourné, pas résolu.** Le moteur n'évalue que l'appareil déclencheur : la
 présence d'un SSI A/B se demande au désenfumage, pas à l'alarme. La réponse se
 donne donc deux fois et rien ne vérifie qu'elles concordent ; un test le fixe
-comme limite assumée.
+comme limite assumée.~~ [2026-10-12, `lot/suites-0810` : la présence d'un SSI
+A/B est sur la fiche de l'établissement (`Etablissement.ssiCategorieAouB`,
+migration additive `20261012140000`, décision de la propriétaire du
+2026-10-08) ; le désenfumage ne la pose plus, le test « limite assumée » est
+inversé. La question de l'alarme (MS 73 § 2) reste par appareil : elle se
+donne encore deux fois, fiche et alarme, sans contrôle de concordance.]
 
 **Restent dehors (réserve `MS 73`).** Les sprinkleurs, soumis à la même
 triennale, sans catégorie d'équipement ; « par une personne ou un organisme
@@ -5077,12 +5082,18 @@ triennale SSI en `booleenne` → « 1 failed | 16 passed (17) » et, dans
     `_REVISION` en `ReferenceLegale & { source: "NORME"; article: string }`
     pour que `RythmeRetenu.reference` se resserre ; le champ `norme` ne peut
     être retiré qu'avec les trois `norme:` de ce fichier.
-  - `corpus/code-travail-risque-chimique.ts` : R. 4412-11 et R. 4412-17 ne
+  - ~~`corpus/code-travail-risque-chimique.ts` : R. 4412-11 et R. 4412-17 ne
     peuvent entrer dans `ANNONCES` que si leur `declareA` devient
     `ADRESSE_MANQUES_ANNONCES` (le test des deux sens l'exige) ; l'aide du
-    stockage cesserait alors d'être leur adresse.
-  - `OBLIGATIONS_RETIREES` : un libellé et un motif courts, écrits pour le
-    dirigeant, remplaceraient la lecture du motif de relecteur (date, tête).
+    stockage cesserait alors d'être leur adresse.~~ [2026-10-12,
+    `lot/suites-0810` : fait — rubrique « Risque chimique », décision de la
+    propriétaire du 2026-10-08.]
+  - `OBLIGATIONS_RETIREES` : ~~un libellé et~~ un motif court~~s~~, écrit~~s~~ pour le
+    dirigeant, remplacerai~~en~~t la lecture du motif de relecteur (date~~, tête~~).
+    [2026-10-12, `lot/suites-0810` : le libellé est fait — champ `libelle`
+    requis, relevé dans l'historique du dépôt pour les vingt retraits. Le
+    motif court ne l'est pas : la propriétaire a validé « libellés lisibles »
+    (2026-10-08) ; la date de retrait se lit toujours en tête du motif.]
 
 ### C62 · 2026-10-07 — Fusion des corrections de la revue (C60 + C61) : dernière passe
 
@@ -5115,18 +5126,27 @@ triennale SSI en `booleenne` → « 1 failed | 16 passed (17) » et, dans
     (`LABEL_PERIODICITE`). Commentaire « types seulement » de
     `renvoi-aux-normes.ts` barré.
 - **Ce qui reste ouvert, et qui le porte** :
-  - `R. 4412-11` et `R. 4412-17` dans `ANNONCES` — **en attente de la
+  - ~~`R. 4412-11` et `R. 4412-17` dans `ANNONCES` — **en attente de la
     propriétaire** : la rubrique de non-couverture où les annoncer est à
     choisir (leur `declareA` devrait devenir `ADRESSE_MANQUES_ANNONCES`, et
-    l'aide du stockage cesserait d'être leur adresse).
-  - `OBLIGATIONS_RETIREES` : un libellé et un motif courts, écrits pour le
-    dirigeant — **à faire**, passe de code suivante.
-  - Le motif de surcharge écrit par le moteur (`matching/prescriptions.ts`,
+    l'aide du stockage cesserait d'être leur adresse).~~ [2026-10-12, `lot/suites-0810` : la propriétaire a choisi
+    « une rubrique « Risque chimique » » le 2026-10-08 ; faite, `declareA`
+    passé à `ADRESSE_MANQUES_ANNONCES`, condition « travail ».]
+  - `OBLIGATIONS_RETIREES` : ~~un libellé et~~ un motif court~~s~~, écrit~~s~~ pour le
+    dirigeant — **à faire**, passe de code suivante. [2026-10-12,
+    `lot/suites-0810` : libellé fait (`ObligationRetiree.libelle`, lu par
+    `libelleObligationRetiree` ; l'identifiant brut ne s'affiche plus). Le
+    motif court reste ouvert — rien ne l'a décidé.]
+  - ~~Le motif de surcharge écrit par le moteur (`matching/prescriptions.ts`,
     « Périodicité portée à « semestrielle » ») garde le code brut —
     **à faire** : `LABEL_PERIODICITE` vit dans `calendrier/labels.ts`, dont
     l'import de type vers `echeances.ts` fait entrer Prisma dans la fermeture
     du passage à blanc (`passage-a-blanc.test.ts`, qui suit aussi les
-    `import type`) ; il faut d'abord sortir la table dans un module feuille.
+    `import type`) ; il faut d'abord sortir la table dans un module feuille.~~
+    [2026-10-12, `lot/suites-0810` : table sortie dans
+    `calendrier/label-periodicite.ts`, réexportée par `labels.ts` ; le motif
+    dit « toutes les 6 semaines » (test dans `matching/prescriptions.test.ts`).
+    Moteur recopié sans incrément — la raison n'est stockée nulle part.]
   - Les décisions de la synthèse de la revue (1, 2, 4 à 14) restent à la
     propriétaire ; la décision 3 (widgets) est faite par C61, exigée par
     l'ADR-039 § 5.
@@ -5166,7 +5186,10 @@ triennale SSI en `booleenne` → « 1 failed | 16 passed (17) » et, dans
   - L'alternative recommandée (grâce pour tout « à planifier », déclaration
     d'équipement comprise) — **à la propriétaire**.
   - Le serveur MCP dit « à planifier » sans le délai — **à faire** si
-    l'assistant doit le citer.
+    l'assistant doit le citer. [2026-10-12, C68 : toujours ouvert — le
+    serveur classe la ligne par `delaiDeGrace` (`mcp/queries.ts` lit
+    `graceJusquAu`), aucun outil n'en écrit la date ; la question n'a pas été
+    tranchée.]
 
 ### C64 · 2026-10-08 — « On respecte les décisions de Julien » : commission pour information, AS 9, ESP, formation stockage
 
@@ -5424,11 +5447,19 @@ triennale SSI en `booleenne` → « 1 failed | 16 passed (17) » et, dans
     audit, ADR-042 — reste l'installation frigorifique]) — sortir ces catégories du
     périmètre ou revoir leur bornage ? ; PO 1 § 3 — son renvoi applique-t-il
     AS 9 aux hôtels de 5ᵉ catégorie (lignes retirées en C64 sur sa note
-    « AS9 applicable qu'au ERP N1 à N4 ») ? ; la formation au risque
-    chimique fondée sur L. 4141-2 (lecture de Rojer, C64) — la valide-t-il ?
-    ; l'édition de la NF S 61-919 qu'il applique (Rojer a lu celle d'août
-    2001, fournie par lui) ; le texte de la NF C 18-510 (paragraphe et
-    édition du recyclage triennal, que Rojer n'a pas lus).
+    « AS9 applicable qu'au ERP N1 à N4 ») ? ; ~~la formation au risque
+    chimique fondée sur L. 4141-2 (lecture de Rojer, C64) — la valide-t-il ?~~
+    [2026-10-12 : réglé par la propriétaire — la règle du préventeur « rythme
+    vague → au moins annuel » (ADR-039, qui cite L. 4141-2) la fonde. Vérifié
+    sur Légifrance le 12/10 : L. 4141-2 « répétée périodiquement » ;
+    R. 4412-88 limité aux CMR ; R. 4141-15 2° « manipulation ou utilisation de
+    produits chimiques ».]
+    ; ~~l'édition de la NF S 61-919 qu'il applique (Rojer a lu celle d'août
+    2001, fournie par lui)~~ [2026-10-12 : réglé par la propriétaire — on
+    retient l'édition d'août 2001 fournie par le préventeur] ; ~~le texte de la
+    NF C 18-510 (paragraphe et édition du recyclage triennal, que Rojer n'a pas
+    lus)~~ [2026-10-12 : réglé par la propriétaire — on retient le recyclage de
+    3 ans tel que le préventeur l'a relevé].
   - **Comptes de la passe** : 171 + 1 − 0 = 172 (88 / 70 / 14) ; empreinte
     `172-ea7623eb617ce82` ; moteur inchangé (`ff1c3cda346da10d`, aucun module
     relevé touché).
@@ -5549,6 +5580,56 @@ ce lot sert **`2026-10-08.4`**.]
   → `1d73fe41eeb7c14c`, recopié sans incrément : chacun des deux lots
   recopiait sans incrément avec son motif, la réunion n'ajoute rien. Entrée
   C65, que `main` avait posée après la Partie 3, replacée entre C64 et C66.
+
+### C68 · 2026-10-12 — Suites de la relecture du préventeur décidées le 2026-10-08
+
+- **Quand · par quoi** : 2026-10-12, branche `lot/suites-0810` (base
+  `lot/polir-integration`, `ed8b248e`). Décisions de la propriétaire du
+  2026-10-08 (« ok pour tes recos », points 5, 9, 11 et 13 de la liste de ce
+  jour ; décisions 4, 9 et 13 de la synthèse de revue) et restes de C62/C63.
+  Aucun texte rouvert : DF 10 § 3, MS 73 § 2, R. 4412-11 et R. 4412-17 sont
+  au corpus. Confronté aux annotations du préventeur : le SSI A/B et la
+  fusion des extincteurs, il n'en parle pas (choix de produit, sans conflit) ;
+  « elle s'y ajoute » (DF 10 § 3) — la réponse exigée le renforce ; la
+  rubrique « Risque chimique » suit son exclusion du stockage (« à exclure
+  sauf 3 derniers points »).
+- **Ce qui en sort** :
+  - **SSI A ou B sur la fiche** — migration additive `20261012140000`
+    (`Etablissement.ssiCategorieAouB`, reprise des réponses données au
+    désenfumage, le « oui » primant), critère de typologie
+    `ssiCategorieAouB` évalué par l'évaluateur des faits d'activité (seul un
+    « non » retire, le silence retient « à confirmer », marque
+    `ssi_categorie_ab`), lu par `incendie-erp-desenfumage-triennale-mecanique-ssi`
+    à la place de la condition sur le désenfumage ; question posée sur la
+    fiche aux ERP N1 à N4 (liste confrontée au référentiel), relance oui/non.
+    Référentiel `2026-10-12.2`, `174-12f96465dba4ff5d`, 174 + 0 − 0 = 174.
+    La question de l'alarme (MS 73 § 2, `incendie-erp-ssi-triennale`) reste
+    par appareil : sa note ne dit pas attendre ce champ, et la décision ne
+    visait que le désenfumage (« au lieu d'une par désenfumage »). Les deux
+    réponses, fiche et alarme, ne sont toujours pas rapprochées.
+  - **Désenfumage mécanique : réponse exigée** (« comme D29 pour le
+    levage ») — `QUESTIONS_EXIGEES_PAR_DECISION`, exigée là où « oui » fait
+    servir une ligne que le silence ne sert pas (ERP N1 à N4, sauf « non »
+    au SSI A/B) ; porte au serveur, formulaire, relance.
+  - **Rubrique « Risque chimique »** de « Ce que Rojer ne couvre pas » :
+    R. 4412-11 et R. 4412-17 passent à `ADRESSE_MANQUES_ANNONCES`, condition
+    « travail ».
+  - **Libellés des obligations retirées** (`ObligationRetiree.libelle`,
+    relevés dans l'historique) ; **rythme en clair** dans les motifs du
+    moteur (`calendrier/label-periodicite.ts`, module feuille).
+  - Moteur recopié sans incrément à chaque pas (`a1418967cc88cc4f` au
+    dernier) : raisons non stockées, ou empreinte du référentiel déplacée.
+- **Ce qui reste ouvert, et qui le porte** :
+  - **Fusion des visites d'extincteurs** — « fusionner plus tard » (décision
+    du 2026-10-08), aucune règle écrite depuis. L'année 5 et la maintenance
+    approfondie née avec la révision sont sans objet depuis C66 (ligne
+    retirée) ; l'année 10 garde deux lignes, l'annuelle et la décennale
+    (ERP : MS 38 § 4 ; travail : NF S 61-919). **À la propriétaire** : la
+    règle de fusion.
+  - **Délai de grâce dans le MCP** (C63) — le serveur lit `graceJusquAu`
+    pour classer la ligne, il ne dit pas la date. Question non tranchée,
+    **à la propriétaire**.
+  - Le motif court des obligations retirées (C61/C62) : rien ne l'a décidé.
 
 ## Partie 2 — Registre des constats en suspens
 

@@ -102,6 +102,7 @@ describe("les fichiers stockés qu'une suppression emporte", () => {
       rapportVerification: table("RapportVerification"),
       prestataire: table("Prestataire"),
       analyseLegionelle: table("AnalyseLegionelle"),
+      piecePrestataire: table("PiecePrestataire"),
     };
     const cles = await clesDesEtablissements(tx as never, ["e"]);
     const attendues = Object.entries(CLES_STOCKEES).flatMap(([m, cs]) =>

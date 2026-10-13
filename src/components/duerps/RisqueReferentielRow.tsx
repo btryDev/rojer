@@ -1,40 +1,40 @@
 "use client";
 
 import { useTransition } from "react";
-import { toggleRisqueReferentiel } from "@/lib/risques/actions";
+import { ajouterRisqueReferentiel } from "@/lib/risques/actions";
 
 type Props = {
   uniteId: string;
   referentielId: string;
   libelle: string;
   description?: string;
-  selectionne: boolean;
 };
 
-export function RisqueToggleRow({
+/**
+ * Un risque du référentiel À ENVISAGER : la case le retient, et rien d'autre
+ * (relecture indépendante du 2026-10-12). ~~`RisqueToggleRow`~~ basculait :
+ * cochée, la case retirait le risque et ses actions sans demander. Retirer un
+ * risque retenu se fait sur le risque, « Retirer ce risque », confirmé.
+ */
+export function RisqueReferentielRow({
   uniteId,
   referentielId,
   libelle,
   description,
-  selectionne,
 }: Props) {
   const [pending, startTransition] = useTransition();
 
   return (
     <label
-      className={`flex cursor-pointer items-start gap-3 rounded-[16px] border p-3 transition-colors ${
-        selectionne
-          ? "border-[color:var(--board-ink)] bg-[color:var(--board-slate-pale)]"
-          : "border-[color:var(--board-slate-line)] hover:bg-[color:var(--board-slate-pale)]"
-      } ${pending ? "opacity-60" : ""}`}
+      className={`flex cursor-pointer items-start gap-3 rounded-[16px] border border-[color:var(--board-slate-line)] p-3 transition-colors hover:bg-[color:var(--board-slate-pale)] ${pending ? "opacity-60" : ""}`}
     >
       <input
         type="checkbox"
-        checked={selectionne}
+        checked={pending}
         disabled={pending}
         onChange={() => {
           startTransition(async () => {
-            await toggleRisqueReferentiel(uniteId, referentielId);
+            await ajouterRisqueReferentiel(uniteId, referentielId);
           });
         }}
         className="mt-1 accent-[color:var(--board-ink)]"

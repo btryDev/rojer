@@ -249,6 +249,18 @@ describe("contre-lecture du 2026-09-26 : ce que le README affirmait sans l'avoir
     expect(lignePrestataires).not.toContain("RC Pro");
   });
 
+  it("3. les pièces remplacées jointes s'annoncent, et seulement si elles y sont (2026-10-12)", () => {
+    const avec = plat({
+      ...base,
+      nbPrestataires: 1,
+      piecesPrestataires: { attestation: 1, rcPro: 0, kbis: 0 },
+      piecesPrestatairesPrecedentes: 2,
+    });
+    expect(avec).toContain("1 attestation(s) de vigilance, 2 pièce(s) précédente(s) remplacée(s) — 1 prestataire(s)");
+    const sans = plat({ ...base, nbPrestataires: 1, piecesPrestataires: { attestation: 1, rcPro: 0, kbis: 0 } });
+    expect(sans).not.toContain("précédente");
+  });
+
   it("3. 05 à 08 suivent aussi ce que le ZIP contient", () => {
     const t = plat({ ...base, nbPermisFeu: 2 });
     // Compteur à 2, fichier absent : le README ne l'annonce pas.
@@ -300,5 +312,19 @@ describe("contre-lecture du 2026-09-26 : ce que le README affirmait sans l'avoir
   it("F5. une brique 05-08 dont la lecture échoue est dite « Non incluse », pas un 500", () => {
     const t = plat({ ...base, echecs: new Map([["06_Permis_de_feu.txt", "la lecture a échoué"]]) });
     expect(t).toMatch(/06_Permis_de_feu\.txt Non inclus — la lecture a échoué/);
+  });
+});
+
+// Relecture indépendante du 2026-10-12 : un registre publié puis repassé
+// non-ERP s'annonçait « non publié ».
+describe("le README dit pourquoi le registre d'accessibilité manque", () => {
+  it("établissement non ERP : non applicable, pas « non publié »", () => {
+    const t = genererReadme({ ...base, regime: { estERP: false, estIGH: false } });
+    expect(t).toContain("Non applicable (l'établissement n'est pas un ERP)");
+    expect(t).not.toContain("registre non publié");
+  });
+
+  it("ERP au registre non publié : non publié", () => {
+    expect(genererReadme(base)).toContain("Non inclus (registre non publié)");
   });
 });

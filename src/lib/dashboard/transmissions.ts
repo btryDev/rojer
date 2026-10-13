@@ -90,6 +90,24 @@ export type Transmissions = {
   titresDusNonDeclares: CompteParPersonne[];
 };
 
+/**
+ * Combien de titres dus à l'entrée manquent EN RETARD (ADR-043), lus sur les
+ * comptes que portent les cartes du tableau de bord — pas sur une seconde
+ * règle. Un même titre peut être nommé par deux transmissions : compté une
+ * fois. C'est le nombre que le bandeau nomme à côté de « Dépassées », qui ne
+ * le compte pas (ADR-043 § 3 (a) ; audit du 2026-10-12).
+ */
+export function titresDusEnRetard(t: Transmissions): number {
+  const parTitre = new Map<string, number>();
+  for (const c of [
+    ...t.obligationsSupposantUnePersonne.flatMap((o) => o.parPersonne ?? []),
+    ...t.titresDusNonDeclares,
+  ]) {
+    parTitre.set(c.titre, c.enRetard);
+  }
+  return [...parTitre.values()].reduce((n, k) => n + k, 0);
+}
+
 export const AUCUNE_TRANSMISSION: Transmissions = {
   domainesSansPrestataire: [],
   obligationsSupposantUnePersonne: [],
@@ -401,6 +419,7 @@ export async function chargerTransmissions(
       conduiteEngins: etab.conduiteEngins,
       expositionCMR: etab.expositionCMR,
       epiPresents: etab.epiPresents,
+      ssiCategorieAouB: etab.ssiCategorieAouB,
     },
     etab.equipements.map((eq) => ({
       id: eq.id,

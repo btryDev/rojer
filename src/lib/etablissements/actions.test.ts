@@ -30,6 +30,8 @@ const h = vi.hoisted(() => {
       dateAutorisationOuverture: null as Date | null,
       dateCertificatConformite: null as Date | null,
       comporteLocauxSommeilPublic: null as boolean | null,
+      epiPresents: null as boolean | null,
+      epiPresentsDetail: null as string | null,
     },
     nbVersionsDuerp: 0,
     supprimes: [] as string[],
@@ -71,6 +73,10 @@ const h = vi.hoisted(() => {
     },
     analyseLegionelle: {
       findMany: async () => [{ rapportCle: "leg/analyse.pdf" }],
+    },
+    // Une pièce de prestataire remplacée (2026-10-12) : elle part aussi.
+    piecePrestataire: {
+      findMany: async () => [{ fichierCle: "presta/urssaf-ancienne.pdf" }],
     },
     // Transaction sans isolation : le corps reçoit le même client. Suffisant
     // pour l'ordre des écritures, qui est ce que ces tests regardent.
@@ -152,6 +158,8 @@ beforeEach(() => {
   h.db.etablissement.dateAutorisationOuverture = null;
   h.db.etablissement.dateCertificatConformite = null;
   h.db.etablissement.effectifSurSite = 5;
+  h.db.etablissement.epiPresents = null;
+  h.db.etablissement.epiPresentsDetail = null;
   h.db.nbVersionsDuerp = 0;
   h.db.supprimes = [];
   h.db.crees = [];
@@ -340,6 +348,7 @@ describe("supprimerEtablissement — les fichiers stockés partent avec (2026-09
   const TOUTES = [
     "leg/analyse.pdf",
     "presta/kbis.pdf",
+    "presta/urssaf-ancienne.pdf",
     "presta/urssaf.pdf",
     "rap/1.pdf",
     "rap/2.pdf",
@@ -380,7 +389,7 @@ describe("supprimerEtablissement — les fichiers stockés partent avec (2026-09
     const erreur = vi.spyOn(console, "error").mockImplementation(() => {});
     await expect(supprimerEtablissement("etab-1")).rejects.toThrow("NEXT_REDIRECT");
     expect(h.db.supprimes).toEqual(["etab-1"]);
-    expect(erreur.mock.calls.filter((c) => String(c[0]).includes("fichier non libéré"))).toHaveLength(5);
+    expect(erreur.mock.calls.filter((c) => String(c[0]).includes("fichier non libéré"))).toHaveLength(TOUTES.length);
     erreur.mockRestore();
   });
 });
@@ -474,6 +483,57 @@ describe("modifierEtablissement — la réponse sur le sommeil suit le type (202
     );
     expect(res.status).toBe("error");
     expect(h.db.etablissement.comporteLocauxSommeilPublic).toBeNull();
+  });
+});
+
+describe("modifierEtablissement — la présence d'EPI se corrige à la fiche (2026-10-12, audit B2)", () => {
+  // La checklist pose la question et s'efface une fois répondue : un « non »
+  // ne se corrigeait plus nulle part, et la consigne d'utilisation de
+  // R. 4323-105 (ADR-041) restait retirée. La fiche la corrige, régénère le
+  // calendrier comme après les matières, et applique la règle du détail.
+  it("un « non » repassé à « oui » s'écrit, avec son détail, et régénère le calendrier", async () => {
+    h.db.etablissement.epiPresents = false;
+    const res = await modifierEtablissement(
+      "etab-1",
+      { status: "idle" },
+      formulaire({ epiPresents: "oui", epiPresentsDetail: "  gants anti-coupure " }),
+    );
+    expect(res.status).toBe("success");
+    expect(h.db.etablissement.epiPresents).toBe(true);
+    expect(h.db.etablissement.epiPresentsDetail).toBe("gants anti-coupure");
+    expect(h.genererCalendrier).toHaveBeenCalledWith("etab-1");
+  });
+
+  it("un « non » efface le détail laissé par un « oui »", async () => {
+    h.db.etablissement.epiPresents = true;
+    h.db.etablissement.epiPresentsDetail = "harnais";
+    await modifierEtablissement(
+      "etab-1",
+      { status: "idle" },
+      formulaire({ epiPresents: "non", epiPresentsDetail: "harnais" }),
+    );
+    expect(h.db.etablissement.epiPresents).toBe(false);
+    expect(h.db.etablissement.epiPresentsDetail).toBeNull();
+  });
+
+  it("un formulaire qui ne pose pas la question n'écrit rien", async () => {
+    // La fiche de création ne la pose pas : le champ absent ne vaut pas « je
+    // ne sais pas encore ».
+    h.db.etablissement.epiPresents = false;
+    h.db.etablissement.epiPresentsDetail = null;
+    await modifierEtablissement("etab-1", { status: "idle" }, formulaire());
+    expect(h.db.etablissement.epiPresents).toBe(false);
+    expect(h.genererCalendrier).not.toHaveBeenCalled();
+  });
+
+  it("le détail est borné comme à la checklist", async () => {
+    h.db.etablissement.epiPresents = true;
+    const res = await modifierEtablissement(
+      "etab-1",
+      { status: "idle" },
+      formulaire({ epiPresents: "oui", epiPresentsDetail: "x".repeat(1001) }),
+    );
+    expect(res.status).toBe("error");
   });
 });
 

@@ -24,12 +24,17 @@ import {
   CartePhotos,
 } from "@/components/equipements/PiecesEquipement";
 import { SupprimerEquipementButton } from "@/components/equipements/SupprimerEquipementButton";
+import {
+  MESSAGE_APPAREIL_RETIRE,
+  estAppareilRetire,
+} from "@/lib/equipements/retrait";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   getFicheEquipement,
   lignesAFaire,
   lignesHistoire,
+  obligationsApplicablesALAppareil,
   obligationsDeclencheesParUnFait,
   libelleDelai,
   obligationsDeLEquipement,
@@ -53,6 +58,8 @@ import {
   formaterMoisAnneeFr,
 } from "@/lib/dates";
 import { avecProvenance, lireProvenance } from "@/lib/navigation/provenance";
+import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
+import { retenueParPrudence } from "@/lib/calendrier/prudence";
 
 // Le délai d'une ligne se dit en jours plutôt qu'en date (`libelleDelai`,
 // `lib/equipements/fiche`) : un retard d'un jour et un retard de six mois
@@ -75,6 +82,11 @@ export default async function EquipementDetailPage({
   // mono-bâtiment ne paie pas la complexité du multi.
   const multiBatiments = eq.etablissement._count.batiments > 1;
 
+  // RETIRÉ DU PARC = LECTURE SEULE (décision du 2026-10-12) : la fiche et ses
+  // rapports restent lisibles, aucun bouton d'écriture ne se pose. Le serveur
+  // refuse de toute façon (`retrait.ts`) ; l'écran ne fait que ne pas proposer.
+  const retire = estAppareilRetire(eq);
+
   const base = `/etablissements/${id}`;
   const provenance = lireProvenance(de, id);
   const parc = { href: `${base}/equipements`, label: "Équipements" };
@@ -86,7 +98,14 @@ export default async function EquipementDetailPage({
   // séparés par un `await` peuvent tomber de part et d'autre de minuit.
   const maintenant = new Date();
 
-  const aFaire = lignesAFaire(eq, base, maintenant);
+  // D26 : la prudence du dossier, la même que le bandeau et le calendrier.
+  const marques = await marquesAConfirmerDuRendu(id);
+  const aFaire = lignesAFaire(
+    eq,
+    base,
+    maintenant,
+    retenueParPrudence(marques.parObligation),
+  );
   // Plus d'horloge : l'historique ne classe plus, il constate. Depuis que
   // l'archivage prend le pas dans `classerVerification`, cette liste teste le
   // FAIT (`estRealisee`) et non l'état du jour.
@@ -102,17 +121,16 @@ export default async function EquipementDetailPage({
   // POURQUOI LE COMPTE DU BANDEAU CHANGE. La pastille « N obligations » se
   // calculait sur les seules obligations qui ont produit une ligne de suivi.
   // Le corps de la fiche en nomme désormais d'autres, et « un en-tête ne doit
-  // jamais contredire ce qu'il coiffe » (charte, § 5). Le dédoublonnage n'a
-  // aujourd'hui rien à retirer — une événementielle ne peut pas avoir de
-  // `Verification` — mais il coûte une ligne et évite le double compte le jour
-  // où une prescription particulière en engendrera une.
-  const idsAvecSuivi = new Set(obligations.map((o) => o.id));
-  const obligationsCitees = [
-    ...obligations,
-    ...declenchees
-      .filter((d) => !idsAvecSuivi.has(d.obligation.id))
-      .map((d) => d.obligation),
-  ];
+  // jamais contredire ce qu'il coiffe » (charte, § 5). ~~Le dédoublonnage n'a
+  // aujourd'hui rien à retirer~~ [2026-10-12, audit : l'union « lignes de
+  // suivi + événementielles » laissait dehors les états permanents de
+  // l'appareil — ni ligne, ni fait déclencheur —, si bien qu'une porte
+  // automatique en ERP annonçait 2 obligations sur 4. La pastille et le
+  // panneau « ? » lisent désormais le MOTEUR, toutes natures, comme la carte
+  // des événementielles dont c'est la source (`obligationsApplicablesALAppareil`).]
+  const obligationsCitees = obligationsApplicablesALAppareil(eq).map(
+    (a) => a.obligation,
+  );
 
   const caracteristiques = caracteristiquesLisibles(
     eq.categorie,
@@ -127,10 +145,12 @@ export default async function EquipementDetailPage({
   // range en tête, le daté d'abord). Le chercher parmi les seules lignes
   // datées faisait annoncer « attendue dans 182 jours » à côté de la
   // pastille « 1 vérification en retard » (relecture du lot C, 2026-09-14).
+  // D26 : une échéance « à confirmer » n'est pas le rendez-vous de tête — sa
+  // date passée y annonçait « attendue depuis N jours ».
   const tete =
     aFaire[0]?.etat === "enRetard"
       ? aFaire[0]
-      : (aFaire.find((l) => l.date !== null) ?? null);
+      : (aFaire.find((l) => l.date !== null && l.etat !== "aConfirmer") ?? null);
   // Une ligne sans rendez-vous n'est pas « à planifier » : si elle est seule
   // ouverte, la tuile le dit (limite 1, 2026-09-15).
   const etatTete: RegistreLigne =
@@ -365,14 +385,16 @@ export default async function EquipementDetailPage({
                   </>
                 )}
               </AideEcran>
-              <Link
-                href={`${base}/equipements/${equipementId}/modifier`}
-                className={cn(
-                  buttonVariants({ variant: "boardClair", size: "board" }),
-                )}
-              >
-                Modifier
-              </Link>
+              {retire ? null : (
+                <Link
+                  href={`${base}/equipements/${equipementId}/modifier`}
+                  className={cn(
+                    buttonVariants({ variant: "boardClair", size: "board" }),
+                  )}
+                >
+                  Modifier
+                </Link>
+              )}
             </>
           }
         />
@@ -384,12 +406,14 @@ export default async function EquipementDetailPage({
             <CarteFiche
               titreFort="L'appareil"
               droite={
-                <Link
-                  href={`${base}/equipements/${equipementId}/modifier`}
-                  className="text-[12.5px] font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
-                >
-                  Modifier →
-                </Link>
+                retire ? undefined : (
+                  <Link
+                    href={`${base}/equipements/${equipementId}/modifier`}
+                    className="text-[12.5px] font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
+                  >
+                    Modifier →
+                  </Link>
+                )
               }
               corpsClassName="px-7 pb-7 pt-5 sm:px-8"
             >
@@ -649,21 +673,33 @@ export default async function EquipementDetailPage({
               )}
             </CarteFiche>
 
-            <div className="flex flex-wrap items-center justify-between gap-4 rounded-[22px] border border-dashed border-[color:var(--board-slate)] px-6 py-5">
-              <div className="min-w-[200px] flex-1">
+            {retire ? (
+              <div className="rounded-[22px] border border-dashed border-[color:var(--board-slate)] px-6 py-5">
                 <p className="m-0 text-[13.5px] font-semibold text-[color:var(--board-ink)]">
-                  Cet équipement n&apos;est plus là&nbsp;?
+                  Retiré du parc · lecture seule
                 </p>
                 <p className="m-0 mt-1 text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-                  Le retirer supprime ses vérifications à venir. Ses rapports et
-                  ses actions restent au dossier.
+                  {MESSAGE_APPAREIL_RETIRE}
                 </p>
               </div>
-              <SupprimerEquipementButton
-                id={eq.id}
-                redirectTo={(provenance ?? parc).href}
-              />
-            </div>
+            ) : (
+              <div className="flex flex-wrap items-center justify-between gap-4 rounded-[22px] border border-dashed border-[color:var(--board-slate)] px-6 py-5">
+                <div className="min-w-[200px] flex-1">
+                  <p className="m-0 text-[13.5px] font-semibold text-[color:var(--board-ink)]">
+                    Cet équipement n&apos;est plus là&nbsp;?
+                  </p>
+                  <p className="m-0 mt-1 text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+                    Le retrait est définitif&nbsp;: ses vérifications à venir
+                    disparaissent, ses rapports et ses actions restent au
+                    dossier.
+                  </p>
+                </div>
+                <SupprimerEquipementButton
+                  id={eq.id}
+                  redirectTo={(provenance ?? parc).href}
+                />
+              </div>
+            )}
           </>
         }
       />

@@ -69,10 +69,9 @@ import { composerRegistreDeLEtablissement } from "@/lib/registre/queries";
 import { saisiePourSection } from "@/lib/registre/champs";
 import { contenuTenuAilleursDepuis } from "@/lib/registre/contenu-ailleurs";
 import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
-import { alimentationDeLaPartie } from "@/lib/registre/alimentation";
 import {
   bilanDuRegistre,
-  completudeDeLaFiche,
+  completudesDuRegistre,
   libelleCompletude,
   tonCompletude,
   type Completude,
@@ -369,18 +368,19 @@ export async function construireRegistreData(
     ? await listerEquipementsDeLEtablissement(etablissementId)
     : [];
 
-  const completudes: Completude[] = [];
+  // Le calcul de l'écran du registre et de « Préparer un contrôle »
+  // (`completudesDuRegistre`, 2026-10-12) : le PDF n'en tient plus un second.
+  const completudes = completudesDuRegistre(
+    registre,
+    `/etablissements/${etablissementId}`,
+  );
   const parties: PartiePdf[] = (registre?.parties ?? []).map((partie) => ({
     id: partie.id,
     titre: partie.titre,
     fiches: partie.sections.map((due) => {
       const saisie = saisiePourSection(due.section.id);
       const contenu = registre?.contenus[due.section.id];
-      const completude = completudeDeLaFiche(
-        saisie,
-        contenu ?? {},
-        alimentationDeLaPartie(partie.id, `/etablissements/${etablissementId}`),
-      );
+      const completude = completudes.get(due.section.id)!;
       // Le parc et le calendrier sont lus une seule fois pour les
       // quarante-neuf fiches : une lecture par fiche ferait soixante-deux
       // requêtes pour un document.
@@ -393,7 +393,6 @@ export async function construireRegistreData(
         now,
         retenueParPrudence(marques.parObligation),
       );
-      completudes.push(completude);
       return ficheDuPdf(
         due,
         saisie,
@@ -416,7 +415,7 @@ export async function construireRegistreData(
     inventaire: couverture ? faitInventaire(couverture) : null,
     calendrier: fraicheur,
     parties,
-    bilan: bilanDuRegistre(completudes),
+    bilan: bilanDuRegistre([...completudes.values()]),
     rapports: lignesRapports,
     verifsEnAttente,
   };

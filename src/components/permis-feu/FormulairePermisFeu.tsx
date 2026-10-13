@@ -8,6 +8,7 @@ import { ChampBoard, SectionChamps } from "@/components/ui-kit";
 import { ChampBatiment } from "@/components/batiments/ChampBatiment";
 import {
   creerPermisFeu,
+  modifierPermisFeu,
   type PermisFeuActionState,
 } from "@/lib/permis-feu/actions";
 import { NATURES_TRAVAUX, LABEL_NATURE } from "@/lib/permis-feu/schema";
@@ -53,18 +54,55 @@ const CHAMPS_AVEC_ERREUR_RENDUE = new Set([
   "mesuresValidees", "naturesTravaux", "prestataireContact", "prestataireEmail", "prestataireRaison",
 ]);
 
+/**
+ * Un permis rouvert par l'écran « Modifier » (2026-10-12) — dates déjà mises
+ * en saisie par le serveur, en heure de Paris.
+ */
+export type PermisEdite = {
+  id: string;
+  prestataireId: string | null;
+  prestataireRaison: string;
+  prestataireContact: string;
+  prestataireEmail: string;
+  donneurOrdreNom: string;
+  donneurOrdreFonction: string | null;
+  /** « AAAA-MM-JJTHH:MM » */
+  dateDebut: string;
+  dateFin: string;
+  batimentId: string | null;
+  lieu: string;
+  naturesTravaux: string[];
+  descriptionTravaux: string;
+  mesuresValidees: string[];
+  mesuresNotes: string | null;
+  dureeSurveillanceMinutes: number;
+};
+
 export function FormulairePermisFeu({
   etablissementId,
   prestataires,
   batiments = [],
+  permis,
+  scelle = null,
+  avisLiens = null,
 }: {
   etablissementId: string;
   prestataires: PrestataireLite[];
   /** Rendu seulement à partir de deux (ADR-019). */
   batiments?: { id: string; nom: string }[];
+  /** Présent : le formulaire corrige ce permis au lieu d'en créer un. */
+  permis?: PermisEdite;
+  /** Le motif qui scelle le contenu (`motifContenuScelle`) : ce qu'une
+   *  signature couvre est rendu non modifiable, seule la zone reste ouverte. */
+  scelle?: string | null;
+  /** Des liens de signature attendent une réponse (`avisLiensEnVol`) : changer
+   *  le contenu les annule, et l'écran le dit avant l'envoi. */
+  avisLiens?: string | null;
 }) {
   const router = useRouter();
-  const boundAction = creerPermisFeu.bind(null, etablissementId);
+  const boundAction = permis
+    ? modifierPermisFeu.bind(null, permis.id)
+    : creerPermisFeu.bind(null, etablissementId);
   const [state, formAction, pending] = useActionState<
     PermisFeuActionState,
     FormData
@@ -72,6 +110,10 @@ export function FormulairePermisFeu({
 
   const [prestataireChoisi, setPrestataireChoisi] =
     useState<PrestataireLite | null>(null);
+  // Distinct du prestataire choisi : un permis rouvert garde son rattachement
+  // à l'annuaire sans que la fiche de l'annuaire réécrive ce qu'il porte.
+  const [prestataireId, setPrestataireId] = useState(permis?.prestataireId ?? "");
+  const valeur = (v: string | null | undefined) => v ?? "";
 
   useEffect(() => {
     if (state.status === "success") {
@@ -91,6 +133,33 @@ export function FormulairePermisFeu({
 
   return (
     <form action={formAction} className="flex flex-col gap-9">
+      {/* UN PERMIS SIGNÉ NE SE RÉÉCRIT PAS EN SILENCE (2026-10-12) — même
+          règle que le plan de prévention : ce que l'empreinte couvre est
+          désactivé, l'écran dit pourquoi, la zone reste ouverte. */}
+      {scelle && (
+        <section className="rounded-[22px] bg-[color:var(--board-slate-pale)] px-6 py-5">
+          <p className="m-0 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-ink)]">
+            {scelle}
+          </p>
+          <div className="mt-4">
+            <ChampBatiment
+              charte="board"
+              batiments={batiments}
+              defaultValue={permis?.batimentId}
+              erreur={err("batimentId")}
+            />
+          </div>
+        </section>
+      )}
+      {!scelle && avisLiens && (
+        <p className="m-0 max-w-[66ch] rounded-[22px] bg-[color:var(--board-slate-pale)] px-6 py-5 text-[13.5px] leading-[1.6] text-[color:var(--board-ink)]">
+          {avisLiens}
+        </p>
+      )}
+      <fieldset
+        disabled={Boolean(scelle)}
+        className="m-0 flex min-w-0 flex-col gap-9 border-0 p-0"
+      >
       {/* Les sections ne sont plus numérotées : la numérotation ne se garde
           que si l'ordre porte une information, et on remplit ces champs
           dans l'ordre qu'on veut. */}
@@ -108,7 +177,10 @@ export function FormulairePermisFeu({
                     key={p.id}
                     type="button"
                     aria-pressed={actif}
-                    onClick={() => setPrestataireChoisi(actif ? null : p)}
+                    onClick={() => {
+                      setPrestataireChoisi(actif ? null : p);
+                      setPrestataireId(actif ? "" : p.id);
+                    }}
                     className={
                       `${PILULE} ` +
                       (actif
@@ -130,7 +202,7 @@ export function FormulairePermisFeu({
         <input
           type="hidden"
           name="prestataireId"
-          value={prestataireChoisi?.id ?? ""}
+          value={prestataireId}
         />
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -140,7 +212,7 @@ export function FormulairePermisFeu({
             label="Raison sociale"
             requis
             maxLength={200}
-            defaultValue={prestataireChoisi?.raisonSociale ?? ""}
+            defaultValue={prestataireChoisi?.raisonSociale ?? valeur(permis?.prestataireRaison)}
             key={prestataireChoisi?.id ?? "libre"}
             erreur={err("prestataireRaison")}
           />
@@ -150,7 +222,7 @@ export function FormulairePermisFeu({
             label="Nom du technicien"
             requis
             maxLength={200}
-            defaultValue={prestataireChoisi?.contactNom ?? ""}
+            defaultValue={prestataireChoisi?.contactNom ?? valeur(permis?.prestataireContact)}
             key={`contact-${prestataireChoisi?.id ?? "libre"}`}
             erreur={err("prestataireContact")}
           />
@@ -164,7 +236,7 @@ export function FormulairePermisFeu({
           requis
           maxLength={200}
           placeholder="jean.dupond@entreprise.fr"
-          defaultValue={prestataireChoisi?.contactEmail ?? ""}
+          defaultValue={prestataireChoisi?.contactEmail ?? valeur(permis?.prestataireEmail)}
           key={`email-${prestataireChoisi?.id ?? "libre"}`}
           erreur={err("prestataireEmail")}
           aide="Enregistrée sur le permis, avec le nom du technicien."
@@ -178,6 +250,7 @@ export function FormulairePermisFeu({
             name="donneurOrdreNom"
             label="Nom et prénom"
             requis
+            defaultValue={valeur(permis?.donneurOrdreNom)}
             maxLength={200}
             erreur={err("donneurOrdreNom")}
           />
@@ -185,6 +258,7 @@ export function FormulairePermisFeu({
             id="donneurOrdreFonction"
             name="donneurOrdreFonction"
             label="Fonction"
+            defaultValue={valeur(permis?.donneurOrdreFonction)}
             maxLength={120}
             placeholder="Ex : Gérant, Responsable technique…"
           />
@@ -201,6 +275,7 @@ export function FormulairePermisFeu({
             name="dateDebut"
             type="datetime-local"
             label="Début des travaux"
+            defaultValue={valeur(permis?.dateDebut)}
             requis
             erreur={err("dateDebut")}
           />
@@ -209,21 +284,26 @@ export function FormulairePermisFeu({
             name="dateFin"
             type="datetime-local"
             label="Fin des travaux"
+            defaultValue={valeur(permis?.dateFin)}
             requis
             erreur={err("dateFin")}
           />
         </div>
 
-        <ChampBatiment
-          charte="board"
-          batiments={batiments}
-          erreur={err("batimentId")}
-        />
+        {!scelle && (
+          <ChampBatiment
+            charte="board"
+            batiments={batiments}
+            defaultValue={permis?.batimentId}
+            erreur={err("batimentId")}
+          />
+        )}
 
         <ChampBoard
           id="lieu"
           name="lieu"
           label="Lieu précis"
+          defaultValue={valeur(permis?.lieu)}
           requis
           maxLength={500}
           placeholder="Ex : Sous-sol, local technique nord, près de la chaudière"
@@ -239,6 +319,7 @@ export function FormulairePermisFeu({
                   type="checkbox"
                   name="naturesTravaux"
                   value={n}
+                  defaultChecked={permis?.naturesTravaux.includes(n)}
                   className="sr-only"
                 />
                 {LABEL_NATURE[n]}
@@ -260,6 +341,7 @@ export function FormulairePermisFeu({
             id="descriptionTravaux"
             name="descriptionTravaux"
             required
+            defaultValue={valeur(permis?.descriptionTravaux)}
             rows={4}
             maxLength={4000}
             minLength={10}
@@ -311,6 +393,7 @@ export function FormulairePermisFeu({
                       type="checkbox"
                       name="mesuresValidees"
                       value={m.id}
+                      defaultChecked={permis?.mesuresValidees.includes(m.id)}
                       className="mt-0.5 size-4 flex-none accent-[color:var(--board-ink)]"
                     />
                     <span className="min-w-0 flex-1">
@@ -356,7 +439,7 @@ export function FormulairePermisFeu({
                   type="radio"
                   name="dureeSurveillanceMinutes"
                   value={mn}
-                  defaultChecked={mn === 120}
+                  defaultChecked={mn === (permis?.dureeSurveillanceMinutes ?? 120)}
                   className="sr-only"
                 />
                 {mn / 60}h{" "}
@@ -383,6 +466,7 @@ export function FormulairePermisFeu({
           <textarea
             id="mesuresNotes"
             name="mesuresNotes"
+            defaultValue={valeur(permis?.mesuresNotes)}
             rows={3}
             maxLength={2000}
             className="champ-board min-h-[84px] resize-y"
@@ -390,6 +474,8 @@ export function FormulairePermisFeu({
           />
         </div>
       </SectionChamps>
+
+      </fieldset>
 
       {/* Le message général ne se masque plus dès qu'il y a des erreurs de
           champ : un champ sans `err()` rendu (durée, fonction, notes…)
@@ -414,10 +500,16 @@ export function FormulairePermisFeu({
 
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="board" size="board" type="submit" disabled={pending}>
-          {pending ? "Création…" : "Créer le permis et demander les signatures"}
+          {permis
+            ? pending
+              ? "Enregistrement…"
+              : "Enregistrer les modifications"
+            : pending
+              ? "Création…"
+              : "Créer le permis et demander les signatures"}
         </Button>
         <Link
-          href={`/etablissements/${etablissementId}/permis-feu`}
+          href={`/etablissements/${etablissementId}/permis-feu${permis ? `/${permis.id}` : ""}`}
           className={buttonVariants({ variant: "boardClair", size: "board" })}
         >
           Annuler

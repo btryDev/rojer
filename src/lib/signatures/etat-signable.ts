@@ -27,9 +27,10 @@ import type {
  * autres statuts se signent, comme avant.
  *
  * Permis de feu : `termine` (l'équivalent de « clos ») et `annule` ne se
- * signent plus. **`en_cours` reste signable, délibérément** : rien n'empêche
+ * signent plus. **`en_cours` reste signable, délibérément** : ~~rien n'empêche
  * aujourd'hui de démarrer des travaux avant d'avoir recueilli les deux
- * signatures, et refuser la signature à ce moment-là empêcherait de
+ * signatures~~ [2026-10-12 : `marquerEnCours` ne part plus que de `valide`,
+ * mais un permis démarré avant ce jour peut manquer d'une signature], et refuser la signature à ce moment-là empêcherait de
  * régulariser un permis que le chantier a devancé. La règle « on ne démarre
  * pas sans signatures » est une question de produit, pas de sécurité.
  *

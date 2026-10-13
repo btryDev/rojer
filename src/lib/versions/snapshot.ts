@@ -137,4 +137,36 @@ export type DuerpSnapshot = {
    * le contrat, il est vérifié par `snapshot-compat.test.ts`.
    */
   couverture?: CouvertureSnapshot;
+  /**
+   * Les expositions que le dirigeant a déclarées ABSENTES à la validation : les
+   * questions transverses et les faits d'activité répondus « non » (décision de
+   * la propriétaire du 2026-10-12, `chantiers-ouverts.md` § 17.2). Le snapshot
+   * figeait les risques, pas les refus : un DUERP parti chez un tiers ne disait
+   * pas « aucun salarié ne conduit d'engin ». Seuls les « non » y entrent — un
+   * silence n'est pas un refus (ADR-022), il n'est donc pas gravé ici.
+   *
+   * Optionnel, pour la raison de `couverture` : une version validée avant le
+   * champ ne dit rien des expositions écartées, et son document régénéré non
+   * plus. Absent ne veut pas dire « rien n'a été écarté ». Lu par
+   * `expositionsAbsentesSnapshot`, et par elle seule.
+   */
+  expositionsDeclareesAbsentes?: ExpositionAbsenteSnapshot[];
+};
+
+/**
+ * Une question répondue « non » au moment de figer. La question est
+ * **recopiée** (ADR-020, point 3) : son intitulé sera relu, reformulé, peut-être
+ * retiré ; le document doit citer celle qui a été posée ce jour-là.
+ */
+export type ExpositionAbsenteSnapshot = {
+  /** L'identifiant de la question (`q-…`) ou le champ du fait. Traçabilité, jamais imprimé. */
+  id: string;
+  /** Le texte de la question, tel qu'il était affiché au dirigeant. */
+  question: string;
+  /**
+   * La réponse donnée, écrite plutôt que sous-entendue par le nom de la liste :
+   * un snapshot se relit seul, quarante ans plus tard. Le lecteur n'imprime
+   * qu'un `false`.
+   */
+  reponse: false;
 };

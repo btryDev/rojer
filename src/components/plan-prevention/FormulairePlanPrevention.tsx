@@ -8,6 +8,7 @@ import { ChampBoard, LegalBadge, SectionChamps } from "@/components/ui-kit";
 import { ChampBatiment } from "@/components/batiments/ChampBatiment";
 import {
   creerPlanPrevention,
+  modifierPlanPrevention,
   type PlanActionState,
 } from "@/lib/plan-prevention/actions";
 import { diagnostiquerPlan } from "@/lib/plan-prevention/schema";
@@ -17,6 +18,7 @@ import {
   URL_R4512_8,
 } from "@/lib/plan-prevention/contenu-r4512-8";
 import {
+  AIDE_DUREE_HEURES,
   CHAPITRE_R4512,
   CONSTAT_R4512_1,
   CONSTAT_R4512_9,
@@ -48,9 +50,10 @@ type PrestataireLite = {
  * jour à la frappe. React réconcilie alors par POSITION — retirer le rang 0 de
  * trois rangs conserve les nœuds 0 et 1 avec le texte qu'ils portaient et
  * démonte le 2. L'utilisateur clique « Retirer » sur la PREMIÈRE phase et perd
- * la TROISIÈME, la première restant sous ses yeux. Sur un formulaire dont le
+ * la TROISIÈME, la première restant sous ses yeux. ~~Sur un formulaire dont le
  * produit n'offre aucun chemin d'édition, ce qui est perdu là ne se rattrape
- * jamais.
+ * jamais.~~ [2026-10-12 : le plan se modifie désormais, tant qu'aucune
+ * signature ne le scelle — ce formulaire sert aux deux.]
  *
  * Une clé stable par rang, et la valeur tenue par l'état : le nœud suit la
  * donnée au lieu de suivre son rang.
@@ -104,18 +107,65 @@ const PILULE_RETENUE =
 /** Le textarea du board : mêmes jetons que `.champ-board`, hauteur libre. */
 const TEXTAREA = "champ-board resize-y";
 
+/**
+ * Un plan rouvert par l'écran « Modifier » (2026-10-12) : les valeurs telles
+ * que le formulaire les affiche — dates déjà mises en saisie par le serveur,
+ * en heure de Paris.
+ */
+export type PlanEdite = {
+  id: string;
+  prestataireId: string | null;
+  entrepriseExterieureRaison: string;
+  entrepriseExterieureSiret: string | null;
+  efChefNom: string;
+  efChefEmail: string;
+  efEffectifIntervenant: number;
+  euChefNom: string;
+  euChefFonction: string | null;
+  /** « AAAA-MM-JJTHH:MM » */
+  dateDebut: string;
+  dateFin: string;
+  dureeHeuresEstimee: number | null;
+  lieux: string;
+  batimentId: string | null;
+  naturesTravaux: string;
+  travauxDangereux: boolean;
+  /** « AAAA-MM-JJ » */
+  inspectionDate: string | null;
+  inspectionParticipants: string | null;
+  lignes: Omit<LigneState, "cle">[];
+  phases: Omit<PhaseState, "cle">[];
+  adaptationMateriels: string | null;
+  instructionsTravailleurs: string | null;
+  organisationSecours: string | null;
+  participationCroisee: string | null;
+};
+
 export function FormulairePlanPrevention({
   etablissementId,
   prestataires,
   batiments = [],
+  plan,
+  scelle = null,
+  avisLiens = null,
 }: {
   etablissementId: string;
   prestataires: PrestataireLite[];
   /** Rendu seulement à partir de deux (ADR-019). */
   batiments?: { id: string; nom: string }[];
+  /** Présent : le formulaire corrige ce plan au lieu d'en créer un. */
+  plan?: PlanEdite;
+  /** Le motif qui scelle le contenu (`motifContenuScelle`) : ce qu'une
+   *  signature couvre est rendu non modifiable, seule la zone reste ouverte. */
+  scelle?: string | null;
+  /** Des liens de signature attendent une réponse (`avisLiensEnVol`) : changer
+   *  le contenu les annule, et l'écran le dit avant l'envoi. */
+  avisLiens?: string | null;
 }) {
   const router = useRouter();
-  const boundAction = creerPlanPrevention.bind(null, etablissementId);
+  const boundAction = plan
+    ? modifierPlanPrevention.bind(null, plan.id)
+    : creerPlanPrevention.bind(null, etablissementId);
   const [state, formAction, pending] = useActionState<
     PlanActionState,
     FormData
@@ -123,26 +173,44 @@ export function FormulairePlanPrevention({
 
   const [prestataireChoisi, setPrestataireChoisi] =
     useState<PrestataireLite | null>(null);
+  // Distinct du prestataire choisi : un plan rouvert garde son rattachement à
+  // l'annuaire sans que la fiche de l'annuaire réécrive ce qu'il porte.
+  const [prestataireId, setPrestataireId] = useState(plan?.prestataireId ?? "");
 
-  const [dureeHeures, setDureeHeures] = useState<number | null>(null);
-  const [travauxDangereux, setTravauxDangereux] = useState(false);
+  const [dureeHeures, setDureeHeures] = useState<number | null>(
+    plan?.dureeHeuresEstimee ?? null,
+  );
+  const [travauxDangereux, setTravauxDangereux] = useState(
+    plan?.travauxDangereux ?? false,
+  );
   const diagnostic = useMemo(
     () => diagnostiquerPlan({ dureeHeuresEstimee: dureeHeures, travauxDangereux }),
     [dureeHeures, travauxDangereux],
   );
 
-  const [lignes, setLignes] = useState<LigneState[]>(() => [
-    {
-      cle: nouvelleCle(),
-      risque: "",
-      mesureEntrepriseUtilisatrice: "",
-      mesureEntrepriseExterieure: "",
-    },
-  ]);
+  const [lignes, setLignes] = useState<LigneState[]>(() =>
+    plan && plan.lignes.length > 0
+      ? plan.lignes.map((l) => ({ cle: nouvelleCle(), ...l }))
+      : [
+          {
+            cle: nouvelleCle(),
+            risque: "",
+            mesureEntrepriseUtilisatrice: "",
+            mesureEntrepriseExterieure: "",
+          },
+        ],
+  );
 
-  const [phases, setPhases] = useState<PhaseState[]>(() => [
-    { cle: nouvelleCle(), phase: "", moyensPrevention: "" },
-  ]);
+  const [phases, setPhases] = useState<PhaseState[]>(() =>
+    plan && plan.phases.length > 0
+      ? plan.phases.map((f) => ({ cle: nouvelleCle(), ...f }))
+      : [{ cle: nouvelleCle(), phase: "", moyensPrevention: "" }],
+  );
+
+  // Un champ texte d'un plan rouvert : la valeur choisie dans l'annuaire
+  // l'emporte, sinon celle que le plan porte.
+  const valeur = (v: string | number | null | undefined) =>
+    v == null ? "" : String(v);
 
   useEffect(() => {
     if (state.status === "success") {
@@ -192,6 +260,33 @@ export function FormulairePlanPrevention({
 
   return (
     <form action={formAction} className="flex flex-col gap-9">
+      {/* UN PLAN SIGNÉ NE SE RÉÉCRIT PAS EN SILENCE (2026-10-12). Ce que
+          l'empreinte couvre est désactivé — donc ni modifiable ni envoyé —,
+          et l'écran dit pourquoi ; la zone, hors empreinte, reste ouverte. */}
+      {scelle && (
+        <section className="rounded-[22px] bg-[color:var(--board-slate-pale)] px-6 py-5">
+          <p className="m-0 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-ink)]">
+            {scelle}
+          </p>
+          <div className="mt-4">
+            <ChampBatiment
+              charte="board"
+              batiments={batiments}
+              defaultValue={plan?.batimentId}
+              erreur={err("batimentId")}
+            />
+          </div>
+        </section>
+      )}
+      {!scelle && avisLiens && (
+        <p className="m-0 max-w-[66ch] rounded-[22px] bg-[color:var(--board-slate-pale)] px-6 py-5 text-[13.5px] leading-[1.6] text-[color:var(--board-ink)]">
+          {avisLiens}
+        </p>
+      )}
+      <fieldset
+        disabled={Boolean(scelle)}
+        className="m-0 flex min-w-0 flex-col gap-9 border-0 p-0"
+      >
       {/* Le diagnostic reste sur un creux ardoise, quelle que soit sa
           conclusion : « plan écrit obligatoire » dit ce que la loi impose,
           pas où en est le dossier — ce n'est pas une échéance, et le board
@@ -275,7 +370,10 @@ export function FormulairePlanPrevention({
                     key={p.id}
                     type="button"
                     aria-pressed={actif}
-                    onClick={() => setPrestataireChoisi(actif ? null : p)}
+                    onClick={() => {
+                      setPrestataireChoisi(actif ? null : p);
+                      setPrestataireId(actif ? "" : p.id);
+                    }}
                     className={
                       `${PILULE} ` +
                       (actif
@@ -294,7 +392,7 @@ export function FormulairePlanPrevention({
         <input
           type="hidden"
           name="prestataireId"
-          value={prestataireChoisi?.id ?? ""}
+          value={prestataireId}
         />
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -304,7 +402,7 @@ export function FormulairePlanPrevention({
             label="Raison sociale"
             requis
             maxLength={200}
-            defaultValue={prestataireChoisi?.raisonSociale ?? ""}
+            defaultValue={prestataireChoisi?.raisonSociale ?? valeur(plan?.entrepriseExterieureRaison)}
             key={prestataireChoisi?.id ?? "libre"}
             erreur={err("entrepriseExterieureRaison")}
           />
@@ -314,7 +412,7 @@ export function FormulairePlanPrevention({
             label="SIRET"
             inputMode="numeric"
             maxLength={17}
-            defaultValue={prestataireChoisi?.siret ?? ""}
+            defaultValue={prestataireChoisi?.siret ?? valeur(plan?.entrepriseExterieureSiret)}
             key={`siret-${prestataireChoisi?.id ?? "libre"}`}
             erreur={err("entrepriseExterieureSiret")}
           />
@@ -327,7 +425,7 @@ export function FormulairePlanPrevention({
             label="Chef d'entreprise extérieure"
             requis
             maxLength={200}
-            defaultValue={prestataireChoisi?.contactNom ?? ""}
+            defaultValue={prestataireChoisi?.contactNom ?? valeur(plan?.efChefNom)}
             key={`ef-${prestataireChoisi?.id ?? "libre"}`}
             erreur={err("efChefNom")}
           />
@@ -338,7 +436,7 @@ export function FormulairePlanPrevention({
             label="Email"
             requis
             maxLength={200}
-            defaultValue={prestataireChoisi?.contactEmail ?? ""}
+            defaultValue={prestataireChoisi?.contactEmail ?? valeur(plan?.efChefEmail)}
             key={`emailef-${prestataireChoisi?.id ?? "libre"}`}
             erreur={err("efChefEmail")}
           />
@@ -355,7 +453,7 @@ export function FormulairePlanPrevention({
           type="text"
           inputMode="numeric"
           maxLength={4}
-          defaultValue={1}
+          defaultValue={plan?.efEffectifIntervenant ?? 1}
           className="max-w-[220px]"
           erreur={err("efEffectifIntervenant")}
         />
@@ -371,6 +469,7 @@ export function FormulairePlanPrevention({
             name="euChefNom"
             label="Nom du chef d'entreprise"
             requis
+            defaultValue={valeur(plan?.euChefNom)}
             maxLength={200}
             erreur={err("euChefNom")}
           />
@@ -378,6 +477,7 @@ export function FormulairePlanPrevention({
             id="euChefFonction"
             name="euChefFonction"
             label="Fonction"
+            defaultValue={valeur(plan?.euChefFonction)}
             maxLength={120}
             placeholder="Ex : Gérant, Directeur d'établissement…"
             erreur={err("euChefFonction")}
@@ -392,6 +492,7 @@ export function FormulairePlanPrevention({
             name="dateDebut"
             type="datetime-local"
             label="Début"
+            defaultValue={valeur(plan?.dateDebut)}
             requis
             erreur={err("dateDebut")}
           />
@@ -400,6 +501,7 @@ export function FormulairePlanPrevention({
             name="dateFin"
             type="datetime-local"
             label="Fin"
+            defaultValue={valeur(plan?.dateFin)}
             requis
             erreur={err("dateFin")}
           />
@@ -409,6 +511,7 @@ export function FormulairePlanPrevention({
           id="dureeHeuresEstimee"
           name="dureeHeuresEstimee"
           label="Durée totale estimée (heures)"
+          defaultValue={valeur(plan?.dureeHeuresEstimee)}
           type="text"
           inputMode="numeric"
           maxLength={5}
@@ -418,10 +521,12 @@ export function FormulairePlanPrevention({
           // entreprises sous-traitantes auxquelles elles peuvent faire
           // appel », et le seuil se déclenche aussi « dès lors qu'il apparaît,
           // en cours d'exécution des travaux, que le nombre d'heures doit
-          // atteindre 400 heures ». Le module ne recalcule rien après
+          // atteindre 400 heures ». ~~Le module ne recalcule rien après
           // validation — c'est une limite, et l'aide la nomme plutôt que de
-          // la taire.
-          aide="Seuil R. 4512-7 : l'écrit est obligatoire dès 400 h atteintes sur une période d'au plus 12 mois. Comptez les heures de tous les intervenants, sous-traitants de l'entreprise extérieure compris. Le seuil vaut aussi s'il apparaît en cours de chantier que les 400 h seront atteintes : Rojer ne refait pas ce diagnostic après validation du plan."
+          // la taire.~~ [2026-10-12 : la fiche du plan note les heures
+          // prévisibles revues en cours de chantier, et le diagnostic en tire
+          // l'écrit (`seuil400EnCours`) ; l'aide le dit.]
+          aide={AIDE_DUREE_HEURES}
           erreur={err("dureeHeuresEstimee")}
           onChange={(e) => {
             const n = Number.parseInt(e.target.value, 10);
@@ -460,17 +565,21 @@ export function FormulairePlanPrevention({
           </span>
         </label>
 
-        <ChampBatiment
-          charte="board"
-          batiments={batiments}
-          erreur={err("batimentId")}
-          aide="La zone principale de l'opération ; détaillez les lieux ci-dessous si elle en traverse plusieurs."
-        />
+        {!scelle && (
+          <ChampBatiment
+            charte="board"
+            batiments={batiments}
+            defaultValue={plan?.batimentId}
+            erreur={err("batimentId")}
+            aide="La zone principale de l'opération ; détaillez les lieux ci-dessous si elle en traverse plusieurs."
+          />
+        )}
 
         <ChampBoard
           id="lieux"
           name="lieux"
           label="Lieux d'intervention"
+          defaultValue={valeur(plan?.lieux)}
           requis
           maxLength={1000}
           placeholder="Ex : toiture, local technique sous-sol, chaufferie"
@@ -485,6 +594,7 @@ export function FormulairePlanPrevention({
             id="naturesTravaux"
             name="naturesTravaux"
             required
+            defaultValue={valeur(plan?.naturesTravaux)}
             rows={4}
             maxLength={4000}
             className={`${TEXTAREA} min-h-[104px]`}
@@ -515,6 +625,7 @@ export function FormulairePlanPrevention({
             name="inspectionDate"
             type="date"
             label="Date de l'inspection"
+            defaultValue={valeur(plan?.inspectionDate)}
             erreur={err("inspectionDate")}
           />
           <div>
@@ -524,6 +635,7 @@ export function FormulairePlanPrevention({
             <textarea
               id="inspectionParticipants"
               name="inspectionParticipants"
+              defaultValue={valeur(plan?.inspectionParticipants)}
               rows={2}
               maxLength={2000}
               className={`${TEXTAREA} min-h-[72px]`}
@@ -754,6 +866,7 @@ export function FormulairePlanPrevention({
               <textarea
                 id={r.name}
                 name={r.name}
+                defaultValue={valeur(plan?.[r.name])}
                 rows={r.rows}
                 maxLength={4000}
                 className={`${TEXTAREA} min-h-[88px]`}
@@ -807,6 +920,8 @@ export function FormulairePlanPrevention({
         ))}
       </SectionChamps>
 
+      </fieldset>
+
       {state.status === "error" && !state.fieldErrors && (
         <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
           {state.message}
@@ -815,10 +930,16 @@ export function FormulairePlanPrevention({
 
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="board" size="board" type="submit" disabled={pending}>
-          {pending ? "Création…" : "Créer le plan et demander les signatures"}
+          {plan
+            ? pending
+              ? "Enregistrement…"
+              : "Enregistrer les modifications"
+            : pending
+              ? "Création…"
+              : "Créer le plan et demander les signatures"}
         </Button>
         <Link
-          href={`/etablissements/${etablissementId}/plan-prevention`}
+          href={`/etablissements/${etablissementId}/plan-prevention${plan ? `/${plan.id}` : ""}`}
           className={buttonVariants({ variant: "boardClair", size: "board" })}
         >
           Annuler

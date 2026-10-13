@@ -79,7 +79,7 @@ export function origineDeLAction(a: {
 
 export async function getAction(id: string) {
   const user = await requireUser();
-  return prisma.action.findFirst({
+  const action = await prisma.action.findFirst({
     where: { id, etablissement: { entreprise: { userId: user.id } } },
     include: {
       risque: {
@@ -99,6 +99,23 @@ export async function getAction(id: string) {
       },
     },
   });
+  if (!action) return null;
+
+  // Le rapport choisi comme justificatif de clôture (`cloturerAction`). La
+  // colonne `leveeRapportId` n'a pas de relation Prisma : on le relit, borné à
+  // l'établissement de l'action comme à l'écriture. Il était enregistré et
+  // affiché nulle part (audit du 2026-10-12). `null` alors que l'id est posé :
+  // le rapport a été supprimé depuis, et la fiche le dit.
+  const leveeRapport = action.leveeRapportId
+    ? await prisma.rapportVerification.findFirst({
+        where: {
+          id: action.leveeRapportId,
+          etablissementId: action.etablissementId,
+        },
+        select: { id: true, dateRapport: true, fichierNomOriginal: true },
+      })
+    : null;
+  return { ...action, leveeRapport };
 }
 
 /**

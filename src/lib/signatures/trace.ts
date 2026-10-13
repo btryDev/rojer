@@ -12,8 +12,10 @@ import type { ObjetSignable } from "@prisma/client";
  *
  * `supprimerPlan` et `supprimerPermisFeu` effaçaient l'objet dès qu'il était en
  * `brouillon` ou en `attente_signatures`. Or `attente_signatures` est l'état de
- * CRÉATION des deux objets, et celui où les signatures se recueillent : aucun
- * code n'écrit jamais `valide`. Un plan signé par l'entreprise extérieure
+ * CRÉATION des deux objets, et celui où les signatures se recueillent : ~~aucun
+ * code n'écrit jamais `valide`~~ [2026-10-12 : `validerSiCoSigne` l'écrit
+ * quand les deux parties ont signé ; une seule signature laisse l'objet en
+ * attente, et la règle ci-dessous reste vraie]. Un plan signé par l'entreprise extérieure
  * restait donc en `attente_signatures` et s'effaçait d'un clic. `Signature.
  * objetId` n'a pas de clé étrangère : la signature survivait, orpheline, et
  * `/verifier/<id>` répondait « document introuvable » à qui la contrôlait.

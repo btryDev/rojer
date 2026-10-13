@@ -18,6 +18,7 @@ import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import {
   etablissementCreationSchema,
   etablissementSchema,
+  reponseEpiCoherente,
   reponseSommeilSuivantLeType,
 } from "./schema";
 
@@ -66,6 +67,13 @@ const CHAMPS_STRUCTURANTS = [
   // ici laisserait la réponse sans effet visible jusqu'à la prochaine
   // modification d'un autre champ.
   "comporteLocauxSommeilPublic",
+  // Depuis l'ADR-041, la présence d'EPI conditionne la consigne d'utilisation
+  // (R. 4323-105) ; la fiche la corrige depuis le 2026-10-12 (audit B2), et la
+  // checklist régénérait déjà après sa réponse.
+  "epiPresents",
+  // DF 10 § 3 (2026-10-12) : la réponse retire ou fixe la triennale du
+  // désenfumage mécanique.
+  "ssiCategorieAouB",
 ] as const;
 
 type ChampStructurant = (typeof CHAMPS_STRUCTURANTS)[number];
@@ -137,6 +145,17 @@ function normaliserFormData(fd: FormData): Record<string, unknown> {
     ...(raw.comporteLocauxSommeilPublic === undefined
       ? {}
       : { comporteLocauxSommeilPublic: raw.comporteLocauxSommeilPublic }),
+    // Même protection : la fiche de création ne pose pas la question des EPI,
+    // et un champ non posté ne doit rien écrire.
+    ...(raw.epiPresents === undefined ? {} : { epiPresents: raw.epiPresents }),
+    ...(raw.epiPresentsDetail === undefined
+      ? {}
+      : { epiPresentsDetail: raw.epiPresentsDetail }),
+    // Même protection : la question n'est rendue qu'aux ERP des quatre
+    // premières catégories ; ailleurs, rien n'est posté et rien ne s'écrit.
+    ...(raw.ssiCategorieAouB === undefined
+      ? {}
+      : { ssiCategorieAouB: raw.ssiCategorieAouB }),
   };
 }
 
@@ -280,21 +299,24 @@ export async function modifierEtablissement(
       personnesPresentesHabituellement: true,
       manipuleMatieresR422722: true,
       comporteLocauxSommeilPublic: true,
+      epiPresents: true,
+      ssiCategorieAouB: true,
     },
   });
   if (!avant) {
     return { status: "error", message: "Établissement introuvable" };
   }
 
+  const donnees = reponseEpiCoherente(reponseSommeilSuivantLeType(parsed.data));
   const etab = await prisma.etablissement.update({
     where: { id },
-    data: reponseSommeilSuivantLeType(parsed.data),
+    data: donnees,
   });
 
   revalidatePath(`/entreprises/${etab.entrepriseId}`);
   revalidatePath(`/etablissements/${id}`);
 
-  if (typologieAChange(avant, reponseSommeilSuivantLeType(parsed.data))) {
+  if (typologieAChange(avant, donnees)) {
     // Le garde est celui de `calendrier/regeneration-sure`, comme partout
     // ailleurs. Il était ici recopié à la main — c'est en migrant les six
     // appels qui n'en avaient AUCUN qu'on a vu que deux autres en avaient un,

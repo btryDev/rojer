@@ -5,7 +5,7 @@
      du script. Pour le mettre à jour : pnpm verification --ecrire -->
 
 **Généré le** : 2026-10-12
-**Référentiel** : `2026-10-12.1`
+**Référentiel** : `2026-10-12.2`
 **Régénérer** : `pnpm verification --ecrire`
 
 Ce document répond à une question, et à une seule : **de quoi le

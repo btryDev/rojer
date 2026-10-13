@@ -16,7 +16,8 @@ import { ETAT_PLAN } from "@/lib/plan-prevention/etats";
 import { listPlansPrevention } from "@/lib/plan-prevention/queries";
 import type { RegistreLigne } from "@/lib/calendrier/etats";
 import { etatPlanPrevention } from "@/lib/calendrier/echeances";
-import { formaterDateCourteFr } from "@/lib/dates";
+import { formaterDateCourteFr, formaterDateFr } from "@/lib/dates";
+import { ligneHeuresRevisees } from "@/lib/plan-prevention/annonces-plan";
 
 export const metadata = {
   title: "Plans de prévention",
@@ -148,6 +149,15 @@ export default async function PlanPreventionListePage({
                           {formaterDateCourteFr(p.dateFin)}
                           {p.dureeHeuresEstimee
                             ? ` · ${p.dureeHeuresEstimee} h`
+                            : ""}
+                          {/* La révision en cours de chantier (R. 4512-7,
+                              1°, 2026-10-12), dans les mots de la fiche. */}
+                          {p.heuresPrevisiblesRevisees != null &&
+                          p.heuresPrevisiblesReviseesLe
+                            ? ` · ${ligneHeuresRevisees(
+                                p.heuresPrevisiblesRevisees,
+                                formaterDateFr(p.heuresPrevisiblesReviseesLe),
+                              )}`
                             : ""}
                         </span>
                       </>

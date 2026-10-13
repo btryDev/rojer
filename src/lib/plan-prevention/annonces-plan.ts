@@ -76,6 +76,33 @@ export const R4512_7_1_SEUIL =
   "égal au moins à 400 heures sur une période inférieure ou égale à douze mois";
 export const R4512_7_2_LISTE = "travaux dangereux figurant sur une liste fixée";
 export const R4512_7_2_DUREE = "Quelle que soit la durée prévisible de l'opération";
+/**
+ * La seconde phrase du 1° — le seuil atteint EN COURS de chantier
+ * (2026-10-12). Confrontée au verbatim du corpus par `annonces-plan.test.ts`.
+ */
+export const R4512_7_1_EN_COURS =
+  "Il en est de même dès lors qu'il apparaît, en cours d'exécution des travaux, que le nombre d'heures de travail doit atteindre 400 heures";
+
+/**
+ * Le fait noté, tel que la fiche, la raison du diagnostic, la page du lien et
+ * le ZIP l'écrivent — une seule forme.
+ */
+export function ligneHeuresRevisees(heures: number, leTexte: string): string {
+  // À 400 h et au-delà, la date gardée est la PREMIÈRE où elles ont été
+  // notées (`noterHeuresRevisees`, 2026-10-12), pas celle de la dernière
+  // révision : la phrase dit laquelle.
+  return heures >= 400
+    ? `Heures prévisibles revues : ${heures} h, seuil de 400 h noté le ${leTexte}`
+    : `Heures prévisibles revues le ${leTexte} : ${heures} h`;
+}
+
+/** Constat sur le produit : ce que Rojer tient, et ce qu'il ne compte pas. */
+export const CONSTAT_HEURES_REVISEES =
+  "Rojer ne compte pas les heures réalisées : il garde le nombre d'heures prévisible que vous notez.";
+
+/** L'aide de saisie de la durée, au formulaire du plan. */
+export const AIDE_DUREE_HEURES =
+  "Seuil R. 4512-7 : l'écrit est obligatoire dès 400 h atteintes sur une période d'au plus 12 mois. Comptez les heures de tous les intervenants, sous-traitants de l'entreprise extérieure compris. Si, en cours de chantier, il apparaît que les 400 h seront atteintes, notez-le sur la fiche du plan : Rojer en tire l'obligation d'écrit.";
 
 const minuscule = (t: string) => t.charAt(0).toLowerCase() + t.slice(1);
 

@@ -50,6 +50,7 @@ function bureau(over: Partial<EtablissementMatching> = {}): EtablissementMatchin
     conduiteEngins: true,
     expositionCMR: true,
     epiPresents: true,
+    ssiCategorieAouB: null,
     ...over,
   };
 }

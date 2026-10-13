@@ -20,10 +20,14 @@ import {
  * Le bouton vit désormais en pied de fiche, dans un encadré qui dit sa
  * conséquence avant le clic : « retirer » n'est pas « supprimer », et
  * l'écran ne doit pas laisser croire qu'on efface une preuve.
+ *
+ * LE RETRAIT EST DÉFINITIF (décision de la propriétaire, 2026-10-12) : plus
+ * de remise dans le parc. La confirmation le dit avant le clic, avec ce qui
+ * reste — l'archive, les rapports au registre — et ce qui ne se fera plus.
  */
 export function SupprimerEquipementButton({
   id,
-  label = "Retirer",
+  label = "Retirer définitivement du parc",
   redirectTo,
 }: {
   id: string;
@@ -60,12 +64,16 @@ export function SupprimerEquipementButton({
         disabled={pending}
         onClick={() =>
           demander({
-            titre: "Retirer cet équipement du parc ?",
+            titre: "Retirer définitivement cet appareil du parc ?",
+            // Les deux issues de `supprimerEquipement`, dites ensemble :
+            // l'action seule sait s'il porte une trace.
             detail:
-              "Il sortira du calendrier et ne générera plus d'échéance. Ses " +
-              "rapports de vérification et ses actions correctives restent au " +
-              "dossier.",
-            agir: "Retirer l'équipement",
+              "Il sortira du calendrier et ne générera plus d'échéance. S'il " +
+              "porte des rapports ou des actions, il passe en archive : ses " +
+              "rapports restent au registre, mais il ne pourra plus être " +
+              "modifié ni remis en service. Sinon, il est supprimé. S'il " +
+              "revient, déclarez-le comme un nouvel appareil.",
+            agir: "Retirer définitivement",
             alors: retirer,
           })
         }

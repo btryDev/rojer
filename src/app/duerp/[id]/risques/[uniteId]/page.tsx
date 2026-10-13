@@ -4,7 +4,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { AjouterRisqueCustomForm } from "@/components/duerps/AjouterRisqueCustomForm";
 import { DeclarerAucunRisqueForm } from "@/components/duerps/DeclarerAucunRisqueForm";
 import { ModifierRisqueCustomButton } from "@/components/duerps/ModifierRisqueCustomButton";
-import { RisqueToggleRow } from "@/components/duerps/RisqueToggleRow";
+import { RisqueReferentielRow } from "@/components/duerps/RisqueReferentielRow";
 import { SupprimerRisqueButton } from "@/components/duerps/SupprimerRisqueButton";
 import { MentionHorsReferentiel } from "@/components/duerps/MentionHorsReferentiel";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
@@ -424,15 +424,20 @@ export default async function RisquesUnitePage({
                     </Link>
                   )}
                   {!r.referentielId && (
-                    <>
-                      <ModifierRisqueCustomButton
-                        id={r.id}
-                        libelle={r.libelle}
-                        description={r.description}
-                      />
-                      <SupprimerRisqueButton id={r.id} />
-                    </>
+                    <ModifierRisqueCustomButton
+                      id={r.id}
+                      libelle={r.libelle}
+                      description={r.description}
+                    />
                   )}
+                  {/* Retenu par erreur, un risque du référentiel se retire
+                      ici, confirmé (2026-10-12) : la liste ne fait qu'ajouter. */}
+                  <SupprimerRisqueButton
+                    id={r.id}
+                    referentiel={Boolean(r.referentielId)}
+                    nbActions={r.actions.length}
+                    nbLevees={r.actions.filter((a) => a.statut === "levee").length}
+                  />
                 </div>
               </li>
               );
@@ -461,12 +466,11 @@ export default async function RisquesUnitePage({
               if (!ref) return null;
               return (
                 <li key={refId} className="px-7 py-4 sm:px-8">
-                  <RisqueToggleRow
+                  <RisqueReferentielRow
                     uniteId={uniteId}
                     referentielId={refId}
                     libelle={ref.libelle}
                     description={ref.description}
-                    selectionne={false}
                   />
                 </li>
               );

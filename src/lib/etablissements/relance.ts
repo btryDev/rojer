@@ -16,6 +16,7 @@
 
 import type { QuestionSansReponse } from "@/lib/matching/types";
 import { faitParChamp, intituleDuFait, type ChampFaitActivite } from "./faits-activite";
+import { AIDE_SSI } from "./questions";
 
 export type QuestionOuiNon =
   | "matieres_r4227_22"
@@ -25,14 +26,16 @@ export type QuestionOuiNon =
   | "operations_electriques"
   | "conduite_engins"
   | "exposition_cmr"
-  | "epi_presents";
+  | "epi_presents"
+  | "ssi_categorie_ab";
 
 /** Les colonnes d'`Etablissement` qu'une relance oui/non écrit. */
 export type ChampOuiNon =
   | "manipuleMatieresR422722"
   | "comporteLocauxSommeilPublic"
   | ChampFaitActivite
-  | "epiPresents";
+  | "epiPresents"
+  | "ssiCategorieAouB";
 
 export type Relance = {
   titre: string;
@@ -100,6 +103,16 @@ export const RELANCES: Record<QuestionSansReponse, Relance> = {
     // texte reprend celui de l'étape.
     titre: "Dire si vous fournissez des équipements de protection",
     pourquoi: `Gants, chaussures de sécurité, lunettes, protections auditives… Si oui, l'employeur élabore une consigne d'utilisation de ces équipements (art. R. 4323-105 du Code du travail). ${RAPPEL}`,
+  },
+  // DF 10 § 3 (2026-10-12) : la question de la fiche, relancée tant que son
+  // silence retient la triennale d'un désenfumage mécanique.
+  ssi_categorie_ab: {
+    mode: "oui_non",
+    question: "ssi_categorie_ab",
+    champ: "ssiCategorieAouB",
+    titre: "Dire si votre établissement dispose d'un système de sécurité incendie de catégorie A ou B",
+    // L'aide dit déjà ce que vaut le silence : le rappel la doublerait.
+    pourquoi: AIDE_SSI,
   },
   personnes_presentes: {
     mode: "fiche",

@@ -4,6 +4,10 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import {
+  MESSAGE_APPAREIL_RETIRE,
+  estAppareilRetire,
+} from "@/lib/equipements/retrait";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import {
   cleRapport,
@@ -123,12 +127,22 @@ export async function uploadRapport(
       etablissementId: true,
       salarieId: true,
       archiveLe: true,
+      equipement: { select: { actif: true } },
     },
   });
   if (!verif) {
     return { status: "error", message: "Vérification introuvable" };
   }
   await assertEtablissementOwnership(verif.etablissementId);
+
+  // UN APPAREIL RETIRÉ DU PARC NE REÇOIT PLUS DE RAPPORT (décision du
+  // 2026-10-12, `equipements/retrait.ts`). La régénération archive ses lignes
+  // porteuses de trace, et la garde suivante refuse alors le dépôt ; mais une
+  // régénération ratée au retrait laisse des lignes ouvertes. La règle tient
+  // sur l'appareil, pas sur l'état de la ligne.
+  if (verif.equipement && estAppareilRetire(verif.equipement)) {
+    return { status: "error", message: MESSAGE_APPAREIL_RETIRE };
+  }
 
   // UNE OBLIGATION QUI NE S'APPLIQUE PLUS NE REÇOIT PAS DE RAPPORT (ADR-034).
   // Le dépôt ferait ROULER la ligne — date suivante, statut « planifiée » —
@@ -322,10 +336,19 @@ export async function supprimerRapport(rapportId: string): Promise<void> {
       etablissementId: true,
       verificationId: true,
       fichierCle: true,
+      verification: { select: { equipement: { select: { actif: true } } } },
     },
   });
   if (!rap) return;
   await assertEtablissementOwnership(rap.etablissementId);
+  // L'ARCHIVE D'UN APPAREIL RETIRÉ EST EN LECTURE SEULE (décision du
+  // 2026-10-12, `equipements/retrait.ts`) : ses rapports sont la preuve au
+  // registre, ils ne se suppriment plus. L'écran n'offre pas le bouton ; le
+  // refus tient ici pour un appel direct.
+  const equipement = rap.verification?.equipement;
+  if (equipement && estAppareilRetire(equipement)) {
+    throw new Error(MESSAGE_APPAREIL_RETIRE);
+  }
 
   await prisma.$transaction(async (tx) => {
     // LA LIGNE EST VERROUILLÉE AVANT TOUTE LECTURE, et c'est ce qui rend le

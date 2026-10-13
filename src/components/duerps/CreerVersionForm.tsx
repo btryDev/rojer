@@ -6,6 +6,7 @@ import { ChampBoard } from "@/components/ui-kit";
 import { creerVersion } from "@/lib/versions/actions";
 import {
   MOTIFS_VERSION,
+  motifsProposes,
   type MotifVersion,
   type VersionActionState,
 } from "@/lib/versions/motifs";
@@ -14,9 +15,14 @@ import { TRANSMISSION_DUERP_SPST } from "@/lib/referentiels/conformite/textes-du
 export function CreerVersionForm({
   duerpId,
   aucunRisqueNonCote,
+  soumisMajAnnuelle,
 }: {
   duerpId: string;
   aucunRisqueNonCote: boolean;
+  /** Lu dans `evaluerEtatDuerp` par la page, qui dit aussi le doute (C37) :
+   *  le 1° de R. 4121-2 n'est proposé qu'à une entreprise d'au moins onze
+   *  salariés. */
+  soumisMajAnnuelle: boolean;
 }) {
   const action = creerVersion.bind(null, duerpId);
   const [state, formAction, pending] = useActionState<
@@ -48,8 +54,8 @@ export function CreerVersionForm({
 
       <fieldset className="space-y-2">
         <legend className="sr-only">Motif de mise à jour</legend>
-        {(Object.entries(MOTIFS_VERSION) as [MotifVersion, string][]).map(
-          ([cle, libelle]) => {
+        {motifsProposes(soumisMajAnnuelle).map((cle) => {
+            const libelle = MOTIFS_VERSION[cle];
             const id = `motif-${cle}`;
             const checked = motifCle === cle;
             return (
@@ -77,8 +83,7 @@ export function CreerVersionForm({
                 </span>
               </label>
             );
-          },
-        )}
+          })}
       </fieldset>
 
       <ChampBoard

@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { buttonVariants } from "@/components/ui/button";
 import { ETAT_PLAN } from "@/lib/plan-prevention/etats";
 import { lireProvenance } from "@/lib/navigation/provenance";
 import {
@@ -9,13 +11,19 @@ import {
   HeroFiche,
   LegalBadge,
   PastilleFiche,
-  SignatureBlock,
   TitreSection,
   type FaitFiche,
 } from "@/components/ui-kit";
 import { DemanderSignatureForm } from "@/components/signatures/DemanderSignatureForm";
+import {
+  SceauSignature,
+  SignaturesSansPartie,
+} from "@/components/signatures/SignaturesParties";
+import { repartirSignatures } from "@/lib/signatures/parties";
+import { SignerDepuisMonCompte } from "@/components/signatures/SignerDepuisMonCompte";
 import { InformationInspectionForm } from "@/components/plan-prevention/InformationInspectionForm";
 import { statutPlanSignable } from "@/lib/signatures/etat-signable";
+import { INSPECTION_SUR_PLAN_SIGNE } from "@/lib/signatures/verrou-contenu";
 import {
   BoutonCloturer,
   BoutonSupprimerPlan,
@@ -28,8 +36,12 @@ import {
   URL_R4512_8,
   rubriquesManquantes,
 } from "@/lib/plan-prevention/contenu-r4512-8";
+import { HeuresReviseesForm } from "@/components/plan-prevention/HeuresReviseesForm";
 import {
   CHAPITRE_R4512,
+  CONSTAT_HEURES_REVISEES,
+  R4512_7_1_EN_COURS,
+  ligneHeuresRevisees,
   CONSTAT_R4512_1,
   CONSTAT_R4512_9,
   CONSTAT_R4512_11,
@@ -56,6 +68,7 @@ import {
   cleJourCivil,
   FUSEAU_REFERENCE,
   formaterDateCourteFr,
+  formaterDateFr,
   formaterDateLongueFr,
 } from "@/lib/dates";
 
@@ -88,10 +101,9 @@ export default async function PlanPreventionDetailPage({
   const plan = await getPlanPrevention(id, planId);
   if (!plan) notFound();
 
-  const diag = diagnostiquerPlan({
-    dureeHeuresEstimee: plan.dureeHeuresEstimee,
-    travauxDangereux: plan.travauxDangereux,
-  });
+  // Le plan entier, révision en cours de chantier comprise : le diagnostic lit
+  // les champs dont il a besoin (`diagnostiquerPlan`), comme le ZIP.
+  const diag = diagnostiquerPlan(plan);
 
   // Les cinq rubriques de `R. 4512-8`, et celles que CE plan ne porte pas.
   // Le calcul vit dans `contenu-r4512-8.ts` : la fiche et le ZIP de contrôle
@@ -108,12 +120,13 @@ export default async function PlanPreventionDetailPage({
   // Clos ou annulé : aucune demande de signature ne part plus d'ici. Le
   // serveur la refuserait de toute façon (`etat-signable.ts`).
   const planSignable = statutPlanSignable(plan.statut);
-  const signatureEU = plan.signatures.find(
-    (s) => s.signataireEmail !== plan.efChefEmail,
-  );
-  const signatureEF = plan.signatures.find(
-    (s) => s.signataireEmail === plan.efChefEmail,
-  );
+  // La partie est un fait enregistré, pas une déduction de l'adresse
+  // (`repartirSignatures`, 2026-10-12) : la fiche comparait l'adresse du
+  // signataire à `efChefEmail`, et toute autre adresse valait « entreprise
+  // utilisatrice ».
+  const signatures = repartirSignatures("plan_prevention", plan.signatures);
+  const signatureEU = signatures.parPartie.entreprise_utilisatrice;
+  const signatureEF = signatures.parPartie.entreprise_exterieure;
 
   const aujourdhui = new Date();
   // Annulé : ardoise, comme la tuile « Annulé » de la liste (voir la fiche du
@@ -234,6 +247,29 @@ export default async function PlanPreventionDetailPage({
                 />
               </CarteFiche>
             )}
+            {/* R. 4512-7, 1°, seconde phrase (2026-10-12) : le seuil vaut aussi
+                quand il apparaît en cours de chantier. Hors empreinte : se
+                note sur un plan signé. */}
+            <CarteFiche titre="Heures prévisibles en cours de chantier">
+              <p className="m-0 text-[14px] leading-[1.6]">
+                {plan.heuresPrevisiblesRevisees != null && plan.heuresPrevisiblesReviseesLe
+                  ? `${ligneHeuresRevisees(
+                      plan.heuresPrevisiblesRevisees,
+                      formaterDateFr(plan.heuresPrevisiblesReviseesLe),
+                    )}.`
+                  : "Aucune révision notée."}
+              </p>
+              <p className="m-0 mt-2 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                Art. R. 4512-7, 1° : « {R4512_7_1_EN_COURS} ». {CONSTAT_HEURES_REVISEES}
+              </p>
+              {planSignable && (
+                <HeuresReviseesForm
+                  planId={plan.id}
+                  dejaNotees={plan.heuresPrevisiblesRevisees !== null}
+                />
+              )}
+            </CarteFiche>
+
             <CarteFiche titre="Nature des travaux">
               <p className="m-0 whitespace-pre-wrap text-[14.5px] leading-[1.6]">
                 {plan.naturesTravaux}
@@ -278,6 +314,11 @@ export default async function PlanPreventionDetailPage({
                 <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                   Aucune date d&apos;inspection commune enregistrée.{" "}
                   {PHRASE_R4512_2}
+                  {/* Signé, le plan ne la prend plus (B5) : la fiche dit la
+                      même issue que l'écran « Modifier ». */}
+                  {planSignable && plan.signatures.length > 0 && (
+                    <> {INSPECTION_SUR_PLAN_SIGNE}</>
+                  )}
                 </p>
               )}
             </CarteFiche>
@@ -480,6 +521,16 @@ export default async function PlanPreventionDetailPage({
         cote={
           <CarteFiche titre="Cycle de vie">
             <div className="flex flex-wrap items-center gap-3">
+              {/* Corriger la saisie (2026-10-12) : tant que le plan vit. Signé,
+                  l'écran de modification dit ce qui reste ouvert. */}
+              {planSignable && (
+                <Link
+                  href={`/etablissements/${id}/plan-prevention/${plan.id}/modifier`}
+                  className={buttonVariants({ variant: "boardClair", size: "board" })}
+                >
+                  Modifier
+                </Link>
+              )}
               {(plan.statut === "valide" ||
                 plan.statut === "attente_signatures") && (
                 <BoutonCloturer planId={plan.id} />
@@ -506,27 +557,25 @@ export default async function PlanPreventionDetailPage({
             Entreprise utilisatrice · {plan.euChefNom}
           </p>
           {signatureEU ? (
-            <SignatureBlock
-              charte="board"
-              signataireNom={signatureEU.signataireNom}
-              signataireRole={signatureEU.signataireRole}
-              signataireEmail={signatureEU.signataireEmail}
-              horodatageIso={signatureEU.horodatageIso}
-              methode={signatureEU.methode}
-              hashDocument={signatureEU.hashDocument}
-              nomDocument={signatureEU.nomDocument}
-              signatureId={signatureEU.id}
-              verifierHref={`/verifier/${signatureEU.id}`}
-            />
+            <SceauSignature s={signatureEU} />
           ) : (
             <BlocCreux>
               {planSignable ? (
-                <DemanderSignatureForm
-                  etablissementId={id}
-                  objetType="plan_prevention"
-                  objetId={plan.id}
-                  nomDefaut={plan.euChefNom}
-                />
+                <div className="flex flex-col items-start gap-3">
+                  <SignerDepuisMonCompte
+                    etablissementId={id}
+                    objetType="plan_prevention"
+                    objetId={plan.id}
+                    auNomDe="l'entreprise utilisatrice"
+                  />
+                  <DemanderSignatureForm
+                    etablissementId={id}
+                    objetType="plan_prevention"
+                    objetId={plan.id}
+                    nomDefaut={plan.euChefNom}
+                    partie="entreprise_utilisatrice"
+                  />
+                </div>
               ) : (
                 <p className="m-0 text-[13.5px] text-[color:var(--board-slate-mid)]">
                   Plus de signature à recueillir : le document est clos ou annulé.
@@ -541,18 +590,7 @@ export default async function PlanPreventionDetailPage({
             Entreprise extérieure · {plan.efChefNom}
           </p>
           {signatureEF ? (
-            <SignatureBlock
-              charte="board"
-              signataireNom={signatureEF.signataireNom}
-              signataireRole={signatureEF.signataireRole}
-              signataireEmail={signatureEF.signataireEmail}
-              horodatageIso={signatureEF.horodatageIso}
-              methode={signatureEF.methode}
-              hashDocument={signatureEF.hashDocument}
-              nomDocument={signatureEF.nomDocument}
-              signatureId={signatureEF.id}
-              verifierHref={`/verifier/${signatureEF.id}`}
-            />
+            <SceauSignature s={signatureEF} />
           ) : (
             <BlocCreux>
               {planSignable ? (
@@ -562,6 +600,7 @@ export default async function PlanPreventionDetailPage({
                   objetId={plan.id}
                   emailDefaut={plan.efChefEmail}
                   nomDefaut={plan.efChefNom}
+                  partie="entreprise_exterieure"
                 />
               ) : (
                 <p className="m-0 text-[13.5px] text-[color:var(--board-slate-mid)]">
@@ -572,6 +611,8 @@ export default async function PlanPreventionDetailPage({
           )}
         </div>
       </div>
+
+      <SignaturesSansPartie signatures={signatures.sansPartie} />
 
       <div className="pt-2">
         <LegalBadge

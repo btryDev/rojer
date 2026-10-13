@@ -25,13 +25,15 @@ export function clePiecePrestataire(
 }
 
 /**
- * Supprime best-effort les 3 pièces d'un prestataire si elles existent.
- * Appelée quand on supprime le prestataire lui-même.
+ * Supprime best-effort les 3 pièces d'un prestataire si elles existent, et
+ * ses pièces précédentes (`PiecePrestataire`, 2026-10-12). Appelée quand on
+ * supprime le prestataire lui-même.
  */
 export async function deletePiecesPrestataire(prestataire: {
   attestationUrssafCle?: string | null;
   assuranceRcProCle?: string | null;
   kbisCle?: string | null;
+  piecesPrecedentes?: { fichierCle: string }[];
 }): Promise<void> {
   // Par `libererFichiers` : aucune clé, aucun appel ; un stockage non
   // configuré ou en panne est journalisé sans faire échouer la suppression du
@@ -41,6 +43,7 @@ export async function deletePiecesPrestataire(prestataire: {
       prestataire.attestationUrssafCle,
       prestataire.assuranceRcProCle,
       prestataire.kbisCle,
+      ...(prestataire.piecesPrecedentes ?? []).map((p) => p.fichierCle),
     ].filter((c): c is string => typeof c === "string" && c.length > 0),
     "prestataires/suppression",
   );

@@ -27,8 +27,37 @@ import {
   type FondementDocument,
 } from "./documents-obligatoires";
 import { CORPUS } from "./corpus";
+import { obligationsConformite } from "./conformite";
+import { estNiveauAudit } from "./conformite/niveau-audit";
+import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
 
 const JOUR_CIVIL = /^\d{4}-\d{2}-\d{2}$/;
+
+describe("vérifications d'EPI — la promesse d'échéance suit le niveau des obligations (audit du 2026-10-12)", () => {
+  // La phrase disait que Rojer pose l'échéance des douze mois pour le
+  // respiratoire et le gilet, passés au niveau audit par l'ADR-042. Dérivé du
+  // référentiel : chaque vérification générale périodique de l'arrêté du
+  // 19 mars 1993 annonce son échéance si elle est servie, et seulement alors.
+  const doc = documentsNonProduits().find((d) => d.id === "verifications-epi")!;
+  const ouLeTrouver = "ouLeTrouver" in doc ? String(doc.ouLeTrouver) : "";
+  const [avantPromesse] = ouLeTrouver.split("pose l'échéance");
+  const vgp = obligationsConformite.filter((o) =>
+    o.id.startsWith("epi-verification-generale-periodique"),
+  );
+
+  it("couvre au moins une obligation servie et une au niveau audit", () => {
+    expect(vgp.some((o) => !estNiveauAudit(o))).toBe(true);
+    expect(vgp.some((o) => estNiveauAudit(o))).toBe(true);
+  });
+
+  it.each(vgp.map((o) => [o.id, o] as const))("%s", (_id, o) => {
+    for (const cat of o.categoriesEquipement ?? []) {
+      const libelle = LABEL_CATEGORIE_EQUIPEMENT[cat];
+      if (estNiveauAudit(o)) expect(avantPromesse).not.toContain(libelle);
+      else expect(avantPromesse).toContain(libelle);
+    }
+  });
+});
 
 const tousLesFondements = (): { doc: string; f: FondementDocument }[] =>
   DOCUMENTS_OBLIGATOIRES.flatMap((d) =>

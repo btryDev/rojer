@@ -1,4 +1,4 @@
-import { depuisCleJourCivil } from "@/lib/dates";
+import { cleJourCivil, depuisCleJourCivil } from "@/lib/dates";
 import { z } from "zod";
 import { TypeReseauEau } from "@prisma/client";
 
@@ -56,12 +56,27 @@ export const pointReleveSchema = z.object({
   seuilMinCelsius: z.coerce.number().min(0).max(100).default(50),
 });
 
-export const releveTemperatureSchema = z.object({
-  pointReleveId: z.string().min(1),
-  dateReleve: z
+/**
+ * Une date de relevé ou d'analyse : un fait accompli, donc jamais dans le
+ * futur (2026-10-12, audit des modules). « 2062 » au lieu de « 2026 » passait,
+ * et repoussait d'autant l'analyse suivante au calendrier et la fraîcheur du
+ * carnet au tableau de bord. Même borne, en jour civil de Paris (ADR-011), que
+ * la date d'un rapport (`rapports/schema.ts`) ou d'un acte
+ * (`prescriptions/schema.ts`).
+ */
+const dateFaitAccompli = (message: string) =>
+  z
     .string()
     .regex(DATE_FMT, "Format attendu : AAAA-MM-JJ")
-    .transform((v) => depuisCleJourCivil(v)),
+    .transform((v) => depuisCleJourCivil(v))
+    .refine((d) => !Number.isNaN(d.getTime()), "Date invalide")
+    .refine((d) => cleJourCivil(d) <= cleJourCivil(new Date()), message);
+
+export const releveTemperatureSchema = z.object({
+  pointReleveId: z.string().min(1),
+  dateReleve: dateFaitAccompli(
+    "Un relevé ne peut pas être daté dans le futur : c'est le jour de la mesure.",
+  ),
   temperatureCelsius: z.coerce.number().min(0).max(100),
   operateur: z.preprocess(
     (v) => (typeof v === "string" ? v.trim() || undefined : v),
@@ -74,10 +89,9 @@ export const releveTemperatureSchema = z.object({
 });
 
 export const analyseLegionelleSchema = z.object({
-  dateAnalyse: z
-    .string()
-    .regex(DATE_FMT, "Format attendu : AAAA-MM-JJ")
-    .transform((v) => depuisCleJourCivil(v)),
+  dateAnalyse: dateFaitAccompli(
+    "Une analyse ne peut pas être datée dans le futur : c'est le jour du prélèvement.",
+  ),
   laboratoire: z.preprocess(
     (v) => (typeof v === "string" ? v.trim() || undefined : v),
     z.string().max(200).optional(),

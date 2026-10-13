@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ETAT_PERMIS, libellePastillePermis } from "./etats";
+import { ETAT_PERMIS, libellePastillePermis, titreSignaturesPermis } from "./etats";
 
 /**
  * Le défaut que ce fichier ferme, et qu'il a fallu corriger deux fois.
@@ -67,6 +67,13 @@ describe("libellePastillePermis", () => {
       ETAT_PERMIS.en_cours.mot,
     );
     expect(libellePastillePermis("annule", 1)).toBe(ETAT_PERMIS.annule.mot);
+  });
+
+  it("le titre de la section et la pastille disent le même décompte (2026-10-12)", () => {
+    for (const n of [1, 2]) {
+      expect(titreSignaturesPermis(n)).toBe(libellePastillePermis("attente_signatures", n));
+    }
+    expect(titreSignaturesPermis(0)).toBe("Permis co-signé et valide");
   });
 
   it("nomme les six statuts de l'enum", () => {

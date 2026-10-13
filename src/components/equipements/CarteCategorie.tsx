@@ -161,9 +161,14 @@ export function urgenceCategorie(appareils: AppareilListe[]): number {
     const e = a.resume.etat;
     // « Pour information » (C64) ne fait rien remonter : ce n'est pas un
     // état de l'exploitant — et la visite de la commission n'est portée par
-    // aucun appareil.
+    // aucun appareil. « À confirmer » (D26) non plus : la vue du parc lit sa
+    // prudence elle-même et ne produit jamais ce registre.
     const rang =
-      e === "aPlanifier" ? 1.5 : e === "pourInformation" ? 0 : PRIORITE_ETAT[e];
+      e === "aPlanifier"
+        ? 1.5
+        : e === "pourInformation" || e === "aConfirmer"
+          ? 0
+          : PRIORITE_ETAT[e];
     return Math.max(max, rang);
   }, 0);
 }

@@ -380,7 +380,15 @@ export const obligationsConformite: Obligation[] = [
 // `Salarie.entreLe` par `salaries/du-a-la-personne.ts`. Le générateur des
 // titres ne lit pas le champ : aucune ligne ne change, la réconciliation
 // rend un calendrier identique. 174 + 0 − 0 = 174.
-export const REFERENTIEL_VERSION = "2026-10-12.1";
+// `2026-10-12.2` (`lot/suites-0810`, décision de la propriétaire du
+// 2026-10-08, point 9) : `incendie-erp-desenfumage-triennale-mecanique-ssi`
+// lit la présence d'un SSI de catégorie A ou B sur la fiche de
+// l'établissement — critère de typologie `ssiCategorieAouB` (seul un « non »
+// retire, le silence retient « à confirmer ») — au lieu de la condition
+// `equipement_propriete_non_infirmee` sur `etablissementASsiCategorieAouB`,
+// posée à chaque désenfumage. Il entre à l'empreinte par `typologies` et
+// `conditions`. Aucune obligation n'entre ni ne sort : 174 + 0 − 0 = 174.
+export const REFERENTIEL_VERSION = "2026-10-12.2";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.
@@ -406,6 +414,17 @@ export const REFERENTIEL_VERSION = "2026-10-12.1";
  * `null` = retiré sans remplaçant.
  */
 export type ObligationRetiree = {
+  /**
+   * Le libellé que l'obligation portait au référentiel quand elle a été
+   * retirée — relevé dans l'historique (le fichier d'avant le retrait), jamais
+   * réécrit. C'est ce que lit le dirigeant quand une prescription vise encore
+   * cet identifiant et qu'aucune ligne de son calendrier n'en garde le libellé
+   * (2026-10-12, `lot/suites-0810`, suite de C61/C62 : le libellé se déduisait
+   * jusque-là de la tête du `motif`, écrit pour le relecteur — et
+   * l'identifiant brut s'affichait quand le motif commençait par sa date).
+   * Requis : un retrait sans libellé ne compile pas.
+   */
+  libelle: string;
   /** L'obligation qui reprend le contenu, ou `null` si personne ne le reprend. */
   absorbePar: string | null;
   /**
@@ -429,6 +448,7 @@ export const OBLIGATIONS_RETIREES: Record<string, ObligationRetiree> = {
   // la colonne `referentielVersion`, mais nulle part sous une forme qui
   // empêche le réemploi de l'id. Le registre naissait donc avec un trou connu.
   "aeration-hotte-pro-annuelle": {
+    libelle: "Ramonage et vérification annuelle des hottes et conduits d'extraction (grandes cuisines ERP)",
     absorbePar: null,
     porteur: "equipement",
     motif:
@@ -436,18 +456,21 @@ export const OBLIGATIONS_RETIREES: Record<string, ObligationRetiree> = {
   },
   // ADR-022 — fragments absorbés par l'obligation portée par l'établissement.
   "elec-erp-cat5-quinquennale": {
+    libelle: "Vérification triennale des installations électriques (ERP 5ᵉ catégorie)",
     absorbePar: "incendie-erp-pe4-entretien-installations-techniques",
     porteur: "equipement",
     motif:
       "Retiré le 2026-08-27. Fragment « installations électriques » de PE 4 § 2, sans fondement propre. L'obligation absorbante porte l'article entier et vit en domaine `incendie` : un utilisateur qui filtre sur « électricité » ne l'y trouvera plus.",
   },
   "cuisson-gaz-installations-triennale": {
+    libelle: "Vérification triennale des installations de gaz combustible (ERP 5ᵉ catégorie)",
     absorbePar: "incendie-erp-pe4-entretien-installations-techniques",
     porteur: "equipement",
     motif:
       "Retiré le 2026-08-27. Fragment « installations de gaz » de PE 4 § 2, sans fondement propre. À ne pas confondre avec `cuisson-gaz-installations-annuelle`, qui vit toujours et régit les ERP de 1ʳᵉ à 4ᵉ catégorie sur GZ 15.",
   },
   "aeration-travail-entretien-annuel": {
+    libelle: "Contrôle périodique annuel des installations d'aération (travail)",
     absorbePar: "aeration-controle-installations-r4222-20",
     porteur: "equipement",
     motif:
@@ -455,6 +478,7 @@ export const OBLIGATIONS_RETIREES: Record<string, ObligationRetiree> = {
   },
   // GE 4 § 1 — la ligne unique a éclaté en six quand le tableau a pu être lu.
   "incendie-erp-cat1-4-visite-commission": {
+    libelle: "Visite périodique de la commission de sécurité (ERP 1ʳᵉ à 4ᵉ catégorie)",
     absorbePar: "incendie-erp-visite-commission-cat1-2-triennale",
     porteur: "etablissement",
     motif:
@@ -467,78 +491,91 @@ export const OBLIGATIONS_RETIREES: Record<string, ObligationRetiree> = {
   // supprimée (`generateur.ts`, boucle des lignes non générées). Rien n'est
   // repris ailleurs : `absorbePar` est `null`.
   "elec-igh-annuelle": {
+    libelle: "Vérification annuelle des installations électriques (IGH)",
     absorbePar: null,
     porteur: "equipement",
     motif:
       "Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a noté sur la grille que l'IGH n'est pas traité par Rojer : la vérification annuelle des installations électriques d'un IGH (arrêté du 30 décembre 2011, art. GH 5) incombe au PROPRIÉTAIRE de l'immeuble, pas à l'employeur locataire que le produit sert. Aucun absorbant : le régime IGH sort du référentiel, et la page « Ce que Rojer ne couvre pas » (axe `igh`) le dit. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
   },
   "incendie-igh-moyens-secours-annuelle": {
+    libelle: "Vérification annuelle des moyens de secours et SSI (IGH)",
     absorbePar: null,
     porteur: "equipement",
     motif:
       "Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Annotée « IGH non traité » sur chacune des pages de la grille où elle paraissait (alarme, extincteurs, désenfumage) : la vérification annuelle des moyens de secours et du SSI d'un IGH (GH 5) incombe au propriétaire de l'immeuble. Aucun absorbant ; la page « Ce que Rojer ne couvre pas » (axe `igh`) annonce le régime comme non traité. Les lignes qui portaient une trace sont archivées, les autres supprimées.",
   },
   "incendie-igh-charge-calorifique-quinquennale": {
+    libelle: "Rapport de vérification de la charge calorifique (occupant d'un IGH)",
     absorbePar: null,
     porteur: "etablissement",
     motif:
       "Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Annotée « non traité » par le préventeur. C'était la seule ligne IGH dont l'OCCUPANT est le débiteur (GH 61 § 5, rapport quinquennal de conformité de la charge calorifique par organisme agréé) : la retirer est une décision de périmètre, pas une lecture du texte, qui continue de l'imposer. La page « Ce que Rojer ne couvre pas » (axe `igh`) le dit nommément à l'occupant. Aucun absorbant ; la ligne d'établissement est archivée si elle porte une trace, supprimée sinon.",
   },
   "esp-declaration-mise-en-service": {
+    libelle: "Déclaration et contrôle de mise en service (équipement sous pression)",
     absorbePar: null,
     porteur: "equipement",
     motif:
       "Déclaration et contrôle de mise en service (arrêté du 20 novembre 2017, art. 7 à 11). Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Équipement sous pression » de la grille : il demande d'exclure ces lignes, sauf la requalification décennale des compresseurs. Seule `esp-requalification-decennale` reste au domaine ; elle ne reprend pas ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
   },
   "esp-inspection-periodique": {
+    libelle: "Inspection périodique (équipement sous pression)",
     absorbePar: null,
     porteur: "equipement",
     motif:
       "Inspection périodique quadriennale (arrêté du 20 novembre 2017, art. 15). Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Équipement sous pression » de la grille : il demande d'exclure ces lignes, sauf la requalification décennale des compresseurs. Seule `esp-requalification-decennale` reste au domaine ; elle ne reprend pas ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
   },
   "esp-inspection-periodique-generateur-vapeur": {
+    libelle: "Inspection périodique biennale (générateur de vapeur)",
     absorbePar: null,
     porteur: "equipement",
     motif:
       "Inspection périodique biennale des générateurs de vapeur (arrêté du 20 novembre 2017, art. 15, I). Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Équipement sous pression » de la grille : il demande d'exclure ces lignes, sauf la requalification décennale des compresseurs. Seule `esp-requalification-decennale` reste au domaine ; elle ne reprend pas ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
   },
   "esp-dossier-suivi": {
+    libelle: "Tenue du dossier de suivi (équipement sous pression)",
     absorbePar: null,
     porteur: "equipement",
     motif:
       "Tenue du dossier de suivi (arrêté du 20 novembre 2017, art. 6) — état permanent. Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Équipement sous pression » de la grille : il demande d'exclure ces lignes, sauf la requalification décennale des compresseurs. Seule `esp-requalification-decennale` reste au domaine ; elle ne reprend pas ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
   },
   "esp-intervention-reparation": {
+    libelle: "Contrôle après intervention notable (équipement sous pression)",
     absorbePar: null,
     porteur: "equipement",
     motif:
       "Contrôle après intervention notable (arrêté du 20 novembre 2017, art. 26 à 28) — événementielle. Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Équipement sous pression » de la grille : il demande d'exclure ces lignes, sauf la requalification décennale des compresseurs. Seule `esp-requalification-decennale` reste au domaine ; elle ne reprend pas ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
   },
   "esp-personnel-formation": {
+    libelle: "Formation et information des opérateurs (équipement sous pression)",
     absorbePar: null,
     porteur: "equipement",
     motif:
       "Formation et information des opérateurs (Code du travail, R. 4323-1 à R. 4323-5) — état permanent. Le Code du travail continue de s'appliquer à tout équipement de travail : c'est la ligne propre aux ESP qui sort, pas l'article. Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Équipement sous pression » de la grille : il demande d'exclure ces lignes, sauf la requalification décennale des compresseurs. Seule `esp-requalification-decennale` reste au domaine ; elle ne reprend pas ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
   },
   "stockage-dangereux-declaration-icpe": {
+    libelle: "Vérification du régime ICPE applicable (stockage matières dangereuses)",
     absorbePar: null,
     porteur: "equipement",
     motif:
       "Vérification du régime ICPE applicable (C. env., L. 512-1, L. 512-7, L. 512-8) — obligation ponctuelle, seule inscrite au registre des obligations sans surface, qui se vide. Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Stockage de matières dangereuses » de la grille : « à exclure sauf 3 derniers points » — restent les fiches de données de sécurité, la formation du personnel et la signalisation des aires de stockage. Aucune d'elles ne reprend ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
   },
   "stockage-dangereux-retention": {
+    libelle: "Capacité de rétention (stockage liquides dangereux)",
     absorbePar: null,
     porteur: "equipement",
     motif:
       "Capacité de rétention (R. 4412-11, R. 4412-17 ; arrêté du 1er juin 2015, art. 22) — état permanent. Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Stockage de matières dangereuses » de la grille : « à exclure sauf 3 derniers points » — restent les fiches de données de sécurité, la formation du personnel et la signalisation des aires de stockage. Aucune d'elles ne reprend ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
   },
   "stockage-dangereux-verification-etancheite": {
+    libelle: "Vérification régulière de l'état du stockage (rétention, fuites)",
     absorbePar: null,
     porteur: "equipement",
     motif:
       "Vérification régulière de l'état du stockage (R. 4412-11, 2°) — échéance récurrente sans rythme écrit. Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Stockage de matières dangereuses » de la grille : « à exclure sauf 3 derniers points » — restent les fiches de données de sécurité, la formation du personnel et la signalisation des aires de stockage. Aucune d'elles ne reprend ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
   },
   "stockage-dangereux-ventilation-locaux": {
+    libelle: "Ventilation des locaux de stockage et contrôle annuel",
     absorbePar: null,
     porteur: "equipement",
     motif:
@@ -550,6 +587,7 @@ export const OBLIGATIONS_RETIREES: Record<string, ObligationRetiree> = {
   // celui-ci inscrit ici : le report d'échéance équipement → établissement
   // n'est servi qu'à une obligation retirée (`succession-porteurs.test.ts`).
   "stockage-dangereux-formation-personnel": {
+    libelle: "Formation du personnel manipulant des matières dangereuses",
     absorbePar: "stockage-dangereux-etablissement-formation-personnel",
     porteur: "equipement",
     motif:
@@ -557,6 +595,7 @@ export const OBLIGATIONS_RETIREES: Record<string, ObligationRetiree> = {
   },
   // 2026-10-08 (C66, item 4) — « on s'en tient à ce que dit Julien ».
   "incendie-travail-extincteurs-maintenance-approfondie": {
+    libelle: "Maintenance additionnelle approfondie de l'extincteur, à 5 et 15 ans (travail ; eau, mousse, poudre)",
     absorbePar: null,
     porteur: "equipement",
     motif:

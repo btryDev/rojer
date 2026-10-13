@@ -64,6 +64,9 @@ export default async function ModifierEtablissementPage({
               typeErp: etab.typeErp,
               categorieErp: etab.categorieErp,
               comporteLocauxSommeilPublic: etab.comporteLocauxSommeilPublic,
+              epiPresents: etab.epiPresents,
+              epiPresentsDetail: etab.epiPresentsDetail,
+              ssiCategorieAouB: etab.ssiCategorieAouB,
               natureActivite: etab.natureActivite,
               effectifPublicAdmis: etab.effectifPublicAdmis,
               // `<input type="date">` attend une clé de jour civil. La produire

@@ -2,13 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { QuestionTransverseRow } from "@/components/duerps/QuestionTransverseRow";
-import { ValiderTransversesButton } from "@/components/duerps/ValiderTransversesButton";
 import { WizardSteps } from "@/components/duerps/WizardSteps";
 import { activitesDuSecteur } from "@/lib/activites/reponses";
 import { construireEtapes } from "@/lib/duerps/etapes";
 import { getDuerp } from "@/lib/duerps/queries";
 import { risquesTransverses } from "@/lib/referentiels";
 import {
+  etatEtapeTransverses,
   repondreAuxQuestionsTransverses,
   risquesTransversesActifs,
 } from "@/lib/transverses/etat";
@@ -44,7 +44,9 @@ export default async function TransversesPage({
     secteurOk: Boolean(duerp.referentielSecteurId),
     unitesOk,
     risquesOk,
-    transversesOk: duerp.transversesRepondues,
+    // Calculée, plus stockée (2026-10-12, chantiers-ouverts § 17.5) : la même
+    // règle que les lignes ci-dessous, appliquée au DUERP entier.
+    transverses: etatEtapeTransverses(duerp),
     activitesPosees: activitesDuSecteur(duerp.referentielSecteurId).length > 0,
   });
 
@@ -128,10 +130,16 @@ export default async function TransversesPage({
         >
           ← Risques
         </Link>
-        <ValiderTransversesButton
-          duerpId={id}
-          hrefSuivant={`/duerp/${id}/synthese`}
-        />
+        {/* Un lien, plus une validation : l'étape se calcule sur les
+            réponses (2026-10-12), cliquer « Terminer » ne la coche plus.
+            `ValiderTransversesButton` et `validerTransverses` sont retirés —
+            ils n'écrivaient plus que la colonne inerte. */}
+        <Link
+          href={`/duerp/${id}/synthese`}
+          className={buttonVariants({ variant: "board", size: "board" })}
+        >
+          Terminer — aller à la synthèse →
+        </Link>
       </div>
     </div>
   );

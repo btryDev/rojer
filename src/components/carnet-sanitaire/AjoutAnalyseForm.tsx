@@ -1,33 +1,71 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ChampBoard, EvidenceDropzone, StatusPill } from "@/components/ui-kit";
 import {
   ajouterAnalyseLegionelle,
+  modifierAnalyseLegionelle,
   type CarnetActionState,
 } from "@/lib/carnet-sanitaire/actions";
 import { SEUIL_LEGIONELLE_UFC_PAR_L } from "@/lib/carnet-sanitaire/schema";
 import { cleJourCivil } from "@/lib/dates";
 
+/**
+ * Enregistrer une analyse de légionelles — ou, `analyse` présent, corriger
+ * celle-ci (2026-10-12) : le même formulaire, pré-rempli, appelle
+ * `modifierAnalyseLegionelle`.
+ */
 export function AjoutAnalyseForm({
   etablissementId,
+  analyse,
 }: {
   etablissementId: string;
+  analyse?: {
+    id: string;
+    /** « AAAA-MM-JJ ». */
+    dateAnalyse: string;
+    laboratoire: string | null;
+    valeurUfcParL: number | null;
+    commentaire: string | null;
+    rapportNom: string | null;
+  };
 }) {
-  const boundAction = ajouterAnalyseLegionelle.bind(null, etablissementId);
+  const boundAction = analyse
+    ? modifierAnalyseLegionelle.bind(null, etablissementId, analyse.id)
+    : ajouterAnalyseLegionelle.bind(null, etablissementId);
   const [state, formAction, pending] = useActionState<
     CarnetActionState,
     FormData
   >(boundAction, { status: "idle" });
   const [ouvert, setOuvert] = useState(false);
-  const [valeur, setValeur] = useState<string>("");
+  const valeurInitiale =
+    analyse?.valeurUfcParL !== null && analyse?.valeurUfcParL !== undefined
+      ? String(analyse.valeurUfcParL)
+      : "";
+  const [valeur, setValeur] = useState<string>(valeurInitiale);
+  // Une correction faite referme le formulaire : la carte montre le résultat.
+  useEffect(() => {
+    if (analyse && state.status === "success") setOuvert(false);
+  }, [analyse, state]);
+  const err = (champ: string) =>
+    state.status === "error" ? state.fieldErrors?.[champ]?.[0] : undefined;
+  // Un identifiant par formulaire : la saisie et chaque correction coexistent.
+  const sfx = analyse ? `-${analyse.id}` : "";
 
   const ufcNum = valeur ? parseInt(valeur, 10) : null;
   const sousLeSeuil = ufcNum !== null && ufcNum < SEUIL_LEGIONELLE_UFC_PAR_L;
 
   if (!ouvert) {
-    return (
+    return analyse ? (
+      <button
+        type="button"
+        onClick={() => setOuvert(true)}
+        className="text-[12px] font-medium text-[color:var(--board-slate-mid)] underline-offset-2 transition-colors hover:text-[color:var(--board-ink)] hover:underline"
+      >
+        Modifier
+      </button>
+    ) : (
       <button
         type="button"
         onClick={() => setOuvert(true)}
@@ -50,29 +88,32 @@ export function AjoutAnalyseForm({
     >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <ChampBoard
-          id="dateAnalyse"
+          id={`dateAnalyse${sfx}`}
           name="dateAnalyse"
           label="Date de l'analyse"
           requis
           type="date"
-          defaultValue={today}
+          max={today}
+          defaultValue={analyse?.dateAnalyse ?? today}
+          erreur={err("dateAnalyse")}
         />
         <ChampBoard
-          id="laboratoire"
+          id={`laboratoire${sfx}`}
           name="laboratoire"
           label="Laboratoire"
           maxLength={200}
+          defaultValue={analyse?.laboratoire ?? undefined}
           placeholder="Ex : Eurofins, Inovalys"
         />
       </div>
 
       <div>
-        <label className="label-board" htmlFor="valeurUfcParL">
+        <label className="label-board" htmlFor={`valeurUfcParL${sfx}`}>
           Résultat (UFC/L de Legionella pneumophila)
         </label>
         <div className="flex items-center gap-3">
           <input
-            id="valeurUfcParL"
+            id={`valeurUfcParL${sfx}`}
             name="valeurUfcParL"
             type="number"
             min={0}
@@ -80,7 +121,7 @@ export function AjoutAnalyseForm({
             onChange={(e) => setValeur(e.target.value)}
             placeholder="0"
             className="champ-board max-w-[180px] text-center text-[20px] font-semibold tabular-nums"
-            aria-describedby="valeurUfcParL-aide"
+            aria-describedby={`valeurUfcParL-aide${sfx}`}
           />
           {/* Le libellé nomme le seuil, pas un verdict : c'est déjà ce que
               disait le papier, et le board le garde tel quel. */}
@@ -99,7 +140,7 @@ export function AjoutAnalyseForm({
           )}
         </div>
         <p
-          id="valeurUfcParL-aide"
+          id={`valeurUfcParL-aide${sfx}`}
           className="m-0 mt-1.5 text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
         >
           Limite de qualité en <em>Legionella pneumophila</em> :{" "}
@@ -118,23 +159,30 @@ export function AjoutAnalyseForm({
           label="Rapport d'analyse PDF"
           hint="Fichier fourni par le laboratoire"
         />
+        {analyse?.rapportNom && (
+          <p className="m-0 mt-1.5 text-[11.5px] leading-[1.45] text-[color:var(--board-slate-soft)]">
+            Rapport actuel : {analyse.rapportNom}. Un nouveau fichier le
+            remplace, et l&apos;ancien n&apos;est pas conservé.
+          </p>
+        )}
       </div>
 
       <div>
-        <label className="label-board" htmlFor="commentaire">
+        <label className="label-board" htmlFor={`commentaire${sfx}`}>
           Commentaire / mesures correctives
         </label>
         <textarea
-          id="commentaire"
+          id={`commentaire${sfx}`}
           name="commentaire"
           rows={3}
           maxLength={2000}
+          defaultValue={analyse?.commentaire ?? undefined}
           className="champ-board min-h-[84px] resize-y"
           placeholder="Ex : Choc thermique programmé le JJ/MM, prélèvement de contrôle à 2 semaines"
         />
       </div>
 
-      {state.status === "error" && (
+      {state.status === "error" && !state.fieldErrors?.dateAnalyse && (
         <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
           {state.message}
         </p>
@@ -142,13 +190,17 @@ export function AjoutAnalyseForm({
 
       <div className="flex items-center gap-3">
         <Button type="submit" variant="board" size="boardSm" disabled={pending}>
-          {pending ? "Enregistrement…" : "Enregistrer l'analyse"}
+          {pending
+            ? "Enregistrement…"
+            : analyse
+              ? "Enregistrer la correction"
+              : "Enregistrer l'analyse"}
         </Button>
         <button
           type="button"
           onClick={() => {
             setOuvert(false);
-            setValeur("");
+            setValeur(valeurInitiale);
           }}
           className="text-[12.5px] font-medium text-[color:var(--board-slate-mid)] transition-colors hover:text-[color:var(--board-ink)]"
         >

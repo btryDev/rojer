@@ -1,11 +1,12 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ChampBoard } from "@/components/ui-kit";
 import { ChampBatiment } from "@/components/batiments/ChampBatiment";
 import {
   creerPointReleve,
+  modifierPointReleve,
   type CarnetActionState,
 } from "@/lib/carnet-sanitaire/actions";
 import {
@@ -34,21 +35,50 @@ const AIDE_SEUIL_TEMPERATURE =
 export function AjoutPointReleveForm({
   etablissementId,
   batiments = [],
+  point,
 }: {
   etablissementId: string;
   /** Rendu seulement à partir de deux (ADR-019). */
   batiments?: { id: string; nom: string }[];
+  /** Présent : corriger ce point (2026-10-12). Le type et le seuil
+   *  recalculent la plage de tous ses relevés (`modifierPointReleve`). */
+  point?: {
+    id: string;
+    nom: string;
+    localisation: string | null;
+    batimentId: string | null;
+    typeReseau: TypeReseauEau;
+    seuilMinCelsius: number;
+  };
 }) {
-  const boundAction = creerPointReleve.bind(null, etablissementId);
+  const boundAction = point
+    ? modifierPointReleve.bind(null, etablissementId, point.id)
+    : creerPointReleve.bind(null, etablissementId);
   const [state, formAction, pending] = useActionState<
     CarnetActionState,
     FormData
   >(boundAction, { status: "idle" });
-  const [type, setType] = useState<TypeReseauEau>("ECS");
+  const [type, setType] = useState<TypeReseauEau>(point?.typeReseau ?? "ECS");
   const [ouvert, setOuvert] = useState(false);
+  // Une correction faite referme le formulaire : la carte montre le résultat.
+  useEffect(() => {
+    if (point && state.status === "success") setOuvert(false);
+  }, [point, state]);
+  const err = (champ: string) =>
+    state.status === "error" ? state.fieldErrors?.[champ]?.[0] : undefined;
+  // Un formulaire de correction par point : ses identifiants ne se répètent pas.
+  const sfx = point ? `-${point.id}` : "";
 
   if (!ouvert) {
-    return (
+    return point ? (
+      <button
+        type="button"
+        onClick={() => setOuvert(true)}
+        className="text-[12px] font-medium text-[color:var(--board-slate-mid)] underline-offset-2 transition-colors hover:text-[color:var(--board-ink)] hover:underline"
+      >
+        Modifier le point
+      </button>
+    ) : (
       <button
         type="button"
         onClick={() => setOuvert(true)}
@@ -68,16 +98,19 @@ export function AjoutPointReleveForm({
       className="flex flex-col gap-4 rounded-[22px] bg-[color:var(--board-slate-pale)] p-5"
     >
       <ChampBoard
-        id="nom"
+        id={`nom${sfx}`}
         name="nom"
         label="Nom du point"
         requis
         maxLength={200}
+        defaultValue={point?.nom}
+        erreur={err("nom")}
         placeholder="Ex : Évier cuisine, Douche vestiaire, Lavabo salle 1…"
       />
       <ChampBatiment
         charte="board"
         batiments={batiments}
+        defaultValue={point?.batimentId}
         erreur={
           state.status === "error"
             ? state.fieldErrors?.batimentId?.[0]
@@ -85,20 +118,21 @@ export function AjoutPointReleveForm({
         }
       />
       <ChampBoard
-        id="localisation"
+        id={`localisation${sfx}`}
         name="localisation"
         label="Localisation (facultatif)"
         maxLength={200}
+        defaultValue={point?.localisation ?? undefined}
         placeholder="Ex : RDC, local plonge, 2e étage"
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-[2fr_1fr]">
         <div>
-          <label className="label-board" htmlFor="typeReseau">
+          <label className="label-board" htmlFor={`typeReseau${sfx}`}>
             Type de réseau *
           </label>
           <select
-            id="typeReseau"
+            id={`typeReseau${sfx}`}
             name="typeReseau"
             value={type}
             onChange={(e) => setType(e.target.value as TypeReseauEau)}
@@ -112,13 +146,16 @@ export function AjoutPointReleveForm({
           </select>
         </div>
         <ChampBoard
-          id="seuilMinCelsius"
+          id={`seuilMinCelsius${sfx}`}
           name="seuilMinCelsius"
           label={`Seuil ${type === "EFS" ? "max" : "min"} (°C)`}
           type="number"
           step="0.5"
-          defaultValue={SEUIL_DEFAUT[type]}
+          defaultValue={
+            point && type === point.typeReseau ? point.seuilMinCelsius : SEUIL_DEFAUT[type]
+          }
           key={`seuil-${type}`}
+          erreur={err("seuilMinCelsius")}
           aide={AIDE_SEUIL_TEMPERATURE}
         />
       </div>
@@ -131,7 +168,7 @@ export function AjoutPointReleveForm({
 
       <div className="flex items-center gap-3">
         <Button type="submit" variant="board" size="boardSm" disabled={pending}>
-          {pending ? "Ajout…" : "Ajouter le point"}
+          {pending ? "Enregistrement…" : point ? "Enregistrer le point" : "Ajouter le point"}
         </Button>
         <button
           type="button"

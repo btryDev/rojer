@@ -1471,19 +1471,26 @@ export function reconcilierCalendrier(
     // garde son libellé tel que le référentiel l'a écrit.
     if (!porteUneTrace) {
       // CE QUE CETTE SUPPRESSION LAISSE PASSER, et il vaut mieux l'écrire que
-      // le redécouvrir : désactiver puis réactiver un appareil BLANCHIT le
+      // le redécouvrir : ~~désactiver puis réactiver un appareil BLANCHIT le
       // retard accumulé sur ses lignes sans preuve. La ligne est supprimée à la
       // désactivation, recréée à la réactivation, et son ORIGINE DE SUIVI
       // repart de la réactivation (`suiviDepuis` neuf) — donc un « à
       // planifier » repart de zéro. L'ADR-036 § 8 l'écrit comme limite : ni
-      // aggravée ni fermée par la bascule.
+      // aggravée ni fermée par la bascule.~~
+      // [2026-10-12 : LIMITE FERMÉE PAR DÉCISION — plus de réactivation. La
+      // propriétaire a rendu le retrait définitif : `reactiverEquipement` et
+      // son chemin sont supprimés, un appareil retiré est en lecture seule
+      // (`equipements/retrait.ts`), et un appareil qui revient se déclare
+      // comme un NOUVEL appareil, dont le suivi part, à bon droit, de sa
+      // déclaration. La suppression ci-dessous ne laisse plus rien passer.]
       //
-      // Ce n'est pas un trou ouvert par le porteur : il existait déjà pour le
+      // ~~Ce n'est pas un trou ouvert par le porteur : il existait déjà pour le
       // parc d'un seul appareil, où le retrait rend l'obligation inapplicable
       // et emporte la ligne par le même chemin. Le lot 2 l'élargit au parc
-      // multiple, il ne l'invente pas. Le refermer voudrait dire archiver une
-      // ligne qui n'atteste de rien, contre la règle — établie et éprouvée —
-      // qu'une ligne sans preuve « ne dit plus rien et disparaît ».
+      // multiple, il ne l'invente pas.~~ Le refermer autrement aurait voulu
+      // dire archiver une ligne qui n'atteste de rien, contre la règle —
+      // établie et éprouvée — qu'une ligne sans preuve « ne dit plus rien et
+      // disparaît ».
       plan.aSupprimer.push(ex.id);
     } else if (ex.archiveLe == null) {
       plan.aArchiver.push({ id: ex.id });

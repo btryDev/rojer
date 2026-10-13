@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import type { AccessToken } from "@prisma/client";
+import type { AccessToken, Prisma } from "@prisma/client";
 import { OTP_ESSAIS_MAX } from "@/lib/signatures/otp";
 import { hashToken } from "./token";
 
@@ -39,28 +39,62 @@ export async function verifierAccessToken(
 }
 
 /**
- * Décrémente le compteur d'essais OTP (anti bruteforce). Révoque le token
- * si le compteur atteint 0.
+ * Réserve un essai de code AVANT de le comparer — et c'est tout le correctif.
+ *
+ * ~~`decrementOtpEssais`~~ (retiré le 2026-10-12) décrémentait APRÈS une
+ * comparaison faite sur le compteur lu au début de la requête, et ne
+ * révoquait qu'au passage exact à 0. Dix soumissions parallèles lisaient
+ * toutes « 3 essais », comparaient toutes leur code, puis décrémentaient :
+ * dix codes éprouvés pour trois promis, et la limite d'un code à six chiffres
+ * se contournait en tirant en rafale (audit du 2026-10-12).
+ *
+ * La décrémentation est donc CONDITIONNELLE ET ATOMIQUE : une seule écriture
+ * `otpEssaisRestants > 0` → `- 1`, que la base sérialise. Une requête qui ne
+ * l'obtient pas ne compare rien. Le bon code consomme lui aussi son essai :
+ * c'est le prix d'une borne qui tient, et il ne coûte rien — le lien est
+ * consommé dans la foulée.
+ *
+ * `restants` est relu après coup pour le message ; sous concurrence il peut
+ * être plus bas que ce que cette requête a laissé, jamais plus haut.
  */
-export async function decrementOtpEssais(accessTokenId: string): Promise<{
-  restants: number;
-  revoque: boolean;
-}> {
-  const t = await prisma.accessToken.update({
-    where: { id: accessTokenId },
+export async function reserverEssaiOtp(
+  accessTokenId: string,
+): Promise<{ ok: true; restants: number } | { ok: false }> {
+  const r = await prisma.accessToken.updateMany({
+    where: {
+      id: accessTokenId,
+      otpEssaisRestants: { gt: 0 },
+      revoqueLe: null,
+      utiliseLe: null,
+    },
     data: { otpEssaisRestants: { decrement: 1 } },
+  });
+  if (r.count !== 1) return { ok: false };
+  const t = await prisma.accessToken.findUnique({
+    where: { id: accessTokenId },
     select: { otpEssaisRestants: true },
   });
-  const restants = Math.max(0, t.otpEssaisRestants);
-  let revoque = false;
-  if (restants === 0) {
-    await prisma.accessToken.update({
-      where: { id: accessTokenId },
-      data: { revoqueLe: new Date(), revoqueMotif: "OTP épuisé (3 essais)" },
-    });
-    revoque = true;
-  }
-  return { restants, revoque };
+  return { ok: true, restants: Math.max(0, t?.otpEssaisRestants ?? 0) };
+}
+
+/**
+ * Révoque un lien dont le dernier essai vient d'échouer. Conditionnelle :
+ * un lien consommé entre-temps par le bon code garde sa trace « utilisé », et
+ * une révocation antérieure garde son motif.
+ */
+export async function revoquerOtpEpuise(accessTokenId: string): Promise<void> {
+  await prisma.accessToken.updateMany({
+    where: {
+      id: accessTokenId,
+      otpEssaisRestants: { lte: 0 },
+      revoqueLe: null,
+      utiliseLe: null,
+    },
+    data: {
+      revoqueLe: new Date(),
+      revoqueMotif: `OTP épuisé (${OTP_ESSAIS_MAX} essais)`,
+    },
+  });
 }
 
 /**
@@ -89,19 +123,28 @@ export async function renouvelerOtp(
 }
 
 /**
- * Marque un token comme consommé après usage validant (signature posée ou
- * rapport déposé).
+ * Consomme un jeton à usage unique — le pendant atomique de la réservation.
+ *
+ * ~~`marquerUtilise`~~ (retiré le 2026-10-12) écrivait `utiliseLe` sans
+ * condition, APRÈS la création de la signature : deux soumissions
+ * simultanées du bon code passaient toutes deux `verifierAccessToken` et
+ * posaient deux signatures. La consommation porte désormais la condition
+ * `utiliseLe IS NULL AND revoqueLe IS NULL`, et elle se fait dans la même
+ * transaction que la signature, AVANT elle : une seule requête l'obtient, la
+ * seconde ne crée rien. Rend `false` si le jeton n'était plus consommable.
  */
-export async function marquerUtilise(
+export async function consommerJeton(
+  client: Prisma.TransactionClient,
   accessTokenId: string,
   meta: { ip?: string; userAgent?: string },
-): Promise<void> {
-  await prisma.accessToken.update({
-    where: { id: accessTokenId },
+): Promise<boolean> {
+  const r = await client.accessToken.updateMany({
+    where: { id: accessTokenId, utiliseLe: null, revoqueLe: null },
     data: {
       utiliseLe: new Date(),
       derniereUtilisationIp: meta.ip,
       derniereUtilisationUserAgent: meta.userAgent?.slice(0, 500),
     },
   });
+  return r.count === 1;
 }

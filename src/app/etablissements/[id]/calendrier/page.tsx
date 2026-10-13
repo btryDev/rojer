@@ -13,8 +13,8 @@ import type { MentionRythme } from "@/lib/referentiels/conformite/mention-rythme
 import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
 import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
 import {
+  registrePrudent,
   retenueParPrudence,
-  statutPeintPrudent,
 } from "@/lib/calendrier/prudence";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
 import {
@@ -69,6 +69,7 @@ import {
   avecMentionFin,
   lecturesCalendrier,
   type EtatEcheance,
+  type LectureCalendrier,
   type RegistreLigne,
 } from "@/lib/calendrier/etats";
 import {
@@ -397,7 +398,15 @@ export default async function CalendrierPage({
   // une opération en cours se range à sa date en jeu, pas à son début
   // (`lignesDuCalendrier`, 2026-09-15). Le rangement vit dans
   // `lib/calendrier/regle-annee`, où il est testé.
-  const lignes = lignesDuCalendrier(verifsVisibles, autresVisibles, aujourdhui);
+  // La prudence y entre (D26) : le registre de chaque lecture dit « à
+  // confirmer » là où le bandeau ne compte plus de retard — l'en-tête rouge
+  // des mois, la règle et le mois déplié à l'arrivée lisent ce registre.
+  const lignes = lignesDuCalendrier(
+    verifsVisibles,
+    autresVisibles,
+    aujourdhui,
+    prudence,
+  );
   const parMois = rangerParMois(lignes);
   const moisTries = [...parMois.entries()].sort(([a], [b]) =>
     a.localeCompare(b),
@@ -480,7 +489,39 @@ export default async function CalendrierPage({
     // Même dépli que la liste mensuelle : un cycle soldé pose le fait au
     // jour du fait ET le rendez-vous suivant à sa date — sans quoi la
     // carte de l'appareil peignait sa prochaine échéance en vert.
-    for (const lec of lecturesCalendrier(v, aujourdhui)) {
+    const o = obligationParId(v.obligationId);
+    const occurrence = (
+      lec: LectureCalendrier,
+      mois: number,
+    ): OccurrenceEquipement => ({
+      // Deux lectures d'une même ligne peuvent cohabiter dans
+      // l'année : la clé porte la lecture pour rester unique.
+      id: `${v.id}:${lec.lecture}`,
+      href: `/etablissements/${id}/verifications/${v.id}`,
+      mois,
+      jour: FMT_JOUR.format(lec.date),
+      moisCourt: FMT_MOIS_COURT.format(lec.date),
+      titre: v.libelleObligation,
+      meta:
+        LABEL_PERIODICITE[v.periodicite] +
+        (o ? ` · ${LABEL_DOMAINE[o.domaine]}` : ""),
+      contractuelle: estEcheanceContractuelle(v),
+      rythmeRetenu: mentionRythmeDeVerification(v),
+      aConfirmer:
+        marquesAConfirmer.parObligation.get(v.obligationId)?.phrases ?? [],
+      etat: lec.registre,
+      // Même règle que la liste mensuelle : le rendez-vous suivant est
+      // planifié, le fait porte le résultat de son rapport (ADR-034).
+      // D1 (a) : « à confirmer », pas « en retard », sur une ligne que
+      // seul le silence de la fiche retient — lu sur le registre (D26).
+      statut: statutDeLaLecture(lec, v),
+    });
+    for (const lecBrute of lecturesCalendrier(v, aujourdhui)) {
+      // D26 : le même registre que la liste mensuelle, prudence comprise.
+      const lec = {
+        ...lecBrute,
+        registre: registrePrudent(lecBrute.registre, v, prudence),
+      };
       if (lec.registre === "aPlanifier") {
         e.aPlanifier += 1;
         continue;
@@ -489,6 +530,17 @@ export default async function CalendrierPage({
       // dans aucune pilule de la vue par porteur ; la liste mensuelle la
       // montre, peinte « Pour information ».
       if (lec.registre === "pourInformation") continue;
+      // D26 : retenue par prudence, l'échéance ne compte dans aucune pilule,
+      // ne peint aucune case et n'est pas « la prochaine » de l'appareil —
+      // comme au bandeau et sur la vue du parc. Le tiroir de son mois la
+      // liste, marquée « à confirmer ».
+      if (lec.registre === "aConfirmer") {
+        const c = composantesCiviles(lec.date);
+        if (c.annee === anneeCourante) {
+          e.occurrences.push(occurrence(lec, c.mois));
+        }
+        continue;
+      }
       const etat = lec.registre;
       // SANS ÉCHÉANCE CONNUE, EN RETARD : elle compte, et n'occupe aucune
       // date (`aUnRendezVous`). Posée sur sa date de génération, elle peignait
@@ -525,30 +577,7 @@ export default async function CalendrierPage({
         if (!actuel || PRIORITE_ETAT[etat] > PRIORITE_ETAT[actuel])
           e.mois[i] = etat;
 
-        const o = obligationParId(v.obligationId);
-        e.occurrences.push({
-          // Deux lectures d'une même ligne peuvent cohabiter dans
-          // l'année : la clé porte la lecture pour rester unique.
-          id: `${v.id}:${lec.lecture}`,
-          href: `/etablissements/${id}/verifications/${v.id}`,
-          mois: c.mois,
-          jour: FMT_JOUR.format(lec.date),
-          moisCourt: FMT_MOIS_COURT.format(lec.date),
-          titre: v.libelleObligation,
-          meta:
-            LABEL_PERIODICITE[v.periodicite] +
-            (o ? ` · ${LABEL_DOMAINE[o.domaine]}` : ""),
-          contractuelle: estEcheanceContractuelle(v),
-          rythmeRetenu: mentionRythmeDeVerification(v),
-          aConfirmer:
-            marquesAConfirmer.parObligation.get(v.obligationId)?.phrases ?? [],
-          etat,
-          // Même règle que la liste mensuelle : le rendez-vous suivant est
-          // planifié, le fait porte le résultat de son rapport (ADR-034).
-          // D1 (a) : « à confirmer », pas « en retard », sur une ligne que
-          // seul le silence de la fiche retient.
-          statut: statutPeintPrudent(statutDeLaLecture(lec, v), v, prudence),
-        });
+        e.occurrences.push(occurrence(lec, c.mois));
       }
     }
   }
@@ -1272,11 +1301,10 @@ export default async function CalendrierPage({
                                 // « fait le 1er juin » affichait « En retard »
                                 // dès que l'échéance suivante était passée.
                                 <BadgeStatut
-                                  statut={statutPeintPrudent(
-                                    statutDeLaLecture(ligne, v),
-                                    v,
-                                    prudence,
-                                  )}
+                                  // D26 : « à confirmer » vient du registre de
+                                  // la ligne (`registrePrudent`), comme
+                                  // l'en-tête du mois qui la compte.
+                                  statut={statutDeLaLecture(ligne, v)}
                                 />
                               }
                               registre={ligne.registre}

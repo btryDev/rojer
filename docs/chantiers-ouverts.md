@@ -45,27 +45,38 @@ permanents en découlent que le référentiel ne porte pas.
 question posée au dirigeant — l'élargir à l'entreposage ferait entrer dans les
 obligations de `R. 4227-34` des établissements que ce texte-là ne vise pas.
 
-## 2. La date de remise de l'attestation de vigilance
+## ~~2. La date de remise de l'attestation de vigilance~~ — CLOS LE 2026-09-27, RAYÉ LE 2026-10-12
 
-**Recommandé par le lot du 2026-09-02, non fait** : c'est un champ, donc une
-migration.
+> **Clos par la décision B2** (`2c5672b2`, `801d2f74`, migration
+> `20260927130000_prestataire_dates_attestation_vigilance`) : deux colonnes
+> nullables, `attestationUrssafRemiseLe` et `attestationUrssafEmiseLe`.
+> `echeanceAttestationUrssaf` compte six mois depuis la remise saisie,
+> `emiseMoinsDeSixMoisAvantRemise` compare l'émission à la remise ; vide, l'écran
+> dit « non renseignée », jamais « à jour ». `updatedAt` ne sert plus qu'à
+> aggraver (`prestataires/vigilance.ts`). La question « remise ou émission » est
+> tranchée par les deux : la remise pilote l'échéance, l'émission l'ancienneté.
+> Reste écrit au corpus (`D. 8222-5`) : une remise tardive décale la grille, la
+> date de conclusion n'étant pas au modèle.
 
-`opposabiliteUrssaf()` compte les six mois de `D. 8222-5` depuis
+~~**Recommandé par le lot du 2026-09-02, non fait** : c'est un champ, donc une
+migration.~~
+
+~~`opposabiliteUrssaf()` compte les six mois de `D. 8222-5` depuis
 `prestataire.updatedAt`. Ce n'est pas un décalage borné, c'est **une remise à
 zéro à chaque écriture** : la fiche d'un prestataire actif est retouchée plus
 souvent que tous les six mois, donc la borne n'arrive jamais. L'écran reste vert
-indéfiniment, et rien dans le calcul ne peut le rattraper.
+indéfiniment, et rien dans le calcul ne peut le rattraper.~~
 
-Depuis le 2026-09-02, l'écran **le dit** — c'est le palliatif, pas le remède.
+~~Depuis le 2026-09-02, l'écran **le dit** — c'est le palliatif, pas le remède.~~
 
-La même migration servirait la seconde exigence de `D. 8222-5`, aujourd'hui
+~~La même migration servirait la seconde exigence de `D. 8222-5`, aujourd'hui
 impossible à porter : l'attestation doit **dater de moins de six mois** à la
 remise, et le produit ne stocke qu'une fin de validité, jamais une date
 d'émission. Un `DateTime?` nullable suffit, la borne actuelle servant de repli
-tant qu'il est vide.
+tant qu'il est vide.~~
 
-**À trancher avec** : est-ce la date de remise ou la date d'émission qui pilote
-quoi. Les deux sont exigées et ne servent pas la même règle.
+~~**À trancher avec** : est-ce la date de remise ou la date d'émission qui pilote
+quoi. Les deux sont exigées et ne servent pas la même règle.~~
 
 ---
 
@@ -184,8 +195,24 @@ il n'est pas « la moitié du problème ».
 `toucheLaCible` suit `CATEGORIES_COUVERTES = ["N5"]` : le gaz d'un restaurant de
 4ᵉ catégorie (`GZ 13`, `GZ 14`) est compté HORS cible. L'ADR-031 écrit pourtant
 qu'un restaurant de huit salariés en 3ᵉ catégorie « reste dans la cible ». Les
-deux définitions cohabitent dans le dépôt ; la réponse appartient à la
-propriétaire (lot 6b), et elle déplacerait quatre lignes de colonne.
+deux définitions cohabitent dans le dépôt ; ~~la réponse appartient à la
+propriétaire (lot 6b), et elle déplacerait quatre lignes de colonne.~~
+[**TRANCHÉ le 2026-10-12** par la propriétaire : la cible est ce que
+l'onboarding ne refuse pas — au plus cinquante travailleurs, pas d'ERP en IGH
+(ADR-031) ; au sens large, TPE/PME. Le restaurant de 4ᵉ catégorie EST dans la
+cible. ~~Reste à faire : aligner `toucheLaCible` sur cette définition plutôt que
+sur `CATEGORIES_COUVERTES`, ce qui déplace les quatre lignes annoncées ici.~~]
+[**FAIT le 2026-10-12** (`lot/docs-maj`) — et ce ne sont pas quatre lignes,
+c'est quinze. Mesuré en appelant le corpus : les quinze manquantes « hors
+cible » l'étaient toutes au titre de l'ancienne définition — trois hôtels, six
+ERP des quatre premières catégories, quatre d'habitation, deux d'activité
+(`R. 4544-11`, `R. 4323-89`) ; aucune ne vise seulement plus de cinquante
+travailleurs ou un ERP en IGH. Cible 15 → **30** (15 + 15 − 0), hors cible
+15 → 0, total 30 inchangé. Les trois hôtels passent de `perimetre` à
+`a_trancher` : rien ne s'encode. Les quinze sont OUVERTES, à évaluer selon la
+grille C45 (encoder / annoncer / hors cadre), listées au § 8 de
+`couverture-declaree-du-produit.md` ; `registre-dette.test.ts` et
+`doc-couverture.test.ts` portent le mouvement.]
 
 **Trois dettes sans blocage, et non encodées : les hôtels.** `perimetre` veut
 dire « encodable, hors cible ». `PO 7` est chiffré (deux séances par an) et le
@@ -218,6 +245,16 @@ choisir « ne pas lire les articles ».
 est un ensemble fermé de quatre motifs, et **aucun ne dit « RH non-SST »**.
 `L. 8221-5` a dû être classé `sans_objet`, qui dit autre chose. Son commentaire
 prévoit qu'une exclusion « se discute et s'ajoute là ».
+
+> **[2026-10-12 — NON RAYÉ, À MOITIÉ CHANGÉ.]** Le « hors du périmètre déclaré »
+> ne tient plus : depuis C45 (2026-09-27), `L. 8222-1`, `D. 8222-5` et
+> `D. 8222-7` sont `non_couvert` et nommés sur la page « Ce que Rojer ne couvre
+> pas », domaine « Vigilance à l'égard des cocontractants », à tout dossier.
+> Le reste est intact : la décision B1 (`decisions-en-attente-2026-09-20.md`)
+> n'est pas prise — le corpus l'écrit encore pour `D. 8222-5` (« périmètre non
+> tranché ») et `L. 8222-5` (« attend toujours la décision B1 ») —, et
+> `EXCLUSIONS` (`corpus/perimetre.ts`) a toujours ses quatre motifs, sans
+> « RH non-SST ». L'audit du 2026-10-12 (§ 5) le classait clos : il ne l'est pas.
 
 ~~**Le type ERP `J` n'existe pas dans l'enum**, et `R` n'est pas subdivisé en
 `R(1)` / `R(2)`. Un EHPAD ne peut pas se déclarer pour ce qu'il est.~~ Origine
@@ -434,10 +471,15 @@ en tête du fichier.
   > plans (§ 6 bis, états morts). Et le 4° ne se pré-remplit pas : aucun champ
   > d'`Etablissement` ne décrit le dispositif de secours, `R. 4224-16` est
   > détenu par le dirigeant et pas par la base.
-- **Le seuil des 400 heures ne se recalcule pas en cours d'exécution**, alors que
+- ~~**Le seuil des 400 heures ne se recalcule pas en cours d'exécution**, alors que
   `R. 4512-7` le déclenche « dès lors qu'il apparaît » qu'elles seront atteintes.
   Depuis le 2026-09-02, l'aide de saisie le dit au dirigeant ; le module ne le
-  fait toujours pas.
+  fait toujours pas.~~ **FAIT le 2026-10-12** (`lot/polir-plans-permis-signatures`) :
+  la fiche note les heures prévisibles revues et leur date
+  (`heuresPrevisiblesRevisees`, migration additive `20261012130000`, hors
+  empreinte), `diagnostiquerPlan` en tire `seuil400EnCours` ; liste, ZIP et page
+  du lien les montrent. Restent des DÉCISIONS : le nouvel accord après
+  franchissement, la fenêtre de douze mois.
 - **Comptes de test en production — à la main de la propriétaire, pas à
   supprimer d'office.** Un compte de contrôle visuel (`contact+…@`, adresse gardée hors du dépôt public) et « Bistrot de la
   Verification SARL » (identifiant gardé hors du dépôt public) sont **gardés
@@ -482,6 +524,10 @@ constat qui ne rejoint pas cette liste se perd** — c'est la leçon du § 7.
   que la branche `en_cours` du permis, elle, explique son attente. Un titre qui
   promet un cycle et ne propose que le geste destructif.
   (`plan-prevention/[planId]/page.tsx:236`, `permis-feu/[permisFeuId]/page.tsx:266`)
+  [2026-10-12 : la carte offre aussi « Modifier » tant que l'objet vit ; le
+  permis passe « valide » à la seconde signature, d'où « Démarrer ». Ce qui
+  débloque un plan en `inspection_faite` reste non dit — cet état n'est
+  toujours écrit par rien, et son sens est une décision.]
 
 - **Le carnet sanitaire affiche du vert sur une donnée de 34 jours** : « Dans la
   plage » et « 100% dans la plage » sur un relevé du 4 août, sans que rien ne
@@ -497,9 +543,12 @@ constat qui ne rejoint pas cette liste se perd** — c'est la leçon du § 7.
   « 100 % » — et le produit écrit « 5 % » et « 80 % » ailleurs : la convention
   existe, elle n'est pas tenue ici.
 
-- **La même statistique écrite de deux façons** : « 80 % des incendies »
+- ~~**La même statistique écrite de deux façons** : « 80 % des incendies »
   (`permis-feu/page.tsx:120`) contre « 80% des incendies »
-  (`lib/permis-feu/referentiel.ts:140`).
+  (`lib/permis-feu/referentiel.ts:140`).~~ **DISPARU le 2026-09-26** (C32,
+  `2fbd230d` puis `153232ea`) : le « 80 % » sans source est remplacé par le
+  chiffre de l'INRS ; « des incendies » ne se lit plus nulle part dans `src`.
+  Rayé le 2026-10-12.
 
 - **Deux idiomes de navigation pour trois registres frères** : retour
   (« ← LE COMPTOIR DES HALLES ») sur `/permis-feu` et `/plan-prevention`, fil
@@ -1344,7 +1393,9 @@ ce dépôt-là, sous aucun prétexte.**
   ouvre des données d'entreprise sans mot de passe : c'est la surface la plus
   exposée du produit.
 - **L'ordre de bataille.** Ce chantier suppose un chemin de modification d'un plan,
-  qui n'existe pas non plus (§ 6 bis). Les deux se tiennent : une contre-signature
+  ~~qui n'existe pas non plus (§ 6 bis)~~ [2026-10-12 : il existe — « Modifier »
+  sur le plan et le permis ; signés, ils ne modifient que la zone, et la
+  révocation datée reste à faire ici]. Les deux se tiennent : une contre-signature
   sans modification possible n'a rien à corriger, et une modification sans
   révocation des signatures est précisément le défaut qu'on cherche à éviter.
 
@@ -1974,11 +2025,17 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
   (zéro legs en production, mesuré le 2026-09-19 par le contrôle de santé sur
   toutes les lignes, générées ou non), sans effet sur ce que la régénération écrit ;
   l'ADR est « terminée », la puce 036 du `CLAUDE.md` dit la bascule au présent.
-- **Désactiver puis réactiver un appareil efface le retard de ses lignes sans
+- ~~**Désactiver puis réactiver un appareil efface le retard de ses lignes sans
   preuve** : supprimées à la désactivation, recréées à la réactivation depuis la
   mise en service ou maintenant (`generateur.ts`, « CE QUE CETTE SUPPRESSION
   LAISSE PASSER »). Écrit dans le code, non corrigé : le fermer voudrait
-  archiver une ligne qui n'atteste de rien. **Le salarié n'est pas concerné** :
+  archiver une ligne qui n'atteste de rien.~~ **Fermé par décision le
+  2026-10-12 (`lot/polir-relecture`) : plus de réactivation.** La propriétaire
+  a rendu le retrait définitif : `reactiverEquipement` est supprimée, un
+  appareil retiré est en lecture seule (modifier, répondre à une question,
+  retirer à nouveau, déposer un rapport : refusés côté serveur,
+  `equipements/retrait.ts`), et un appareil qui revient se déclare comme un
+  nouvel appareil. **Le salarié n'est pas concerné** :
   sa ligne sans trace, supprimée au départ, est recréée à la réactivation avec
   la date du titre, donc en retard si le titre est échu — aucun retard n'est
   effacé (rejoué à la relecture du 2026-09-17, test dans
@@ -2100,8 +2157,15 @@ jour au plus, déclenchée dans l'heure prévue — suffisant pour ce besoin
 ### À faire sans attendre les alertes
 
 Trois lecteurs contournent la réparation et servent en silence un dossier
-périmé : le **serveur MCP**, le **registre PDF**, et une page ouverte par lien
-direct avant le tableau de bord ou le calendrier. Le moins coûteux : qu'ils
+périmé : ~~le **serveur MCP**, le **registre PDF**, et~~ une page ouverte par lien
+direct avant le tableau de bord ou le calendrier.
+
+> **[2026-10-12 — rayé en partie.]** Le serveur MCP signale la fraîcheur depuis
+> `87f5e830` (2026-09-20, `avecFraicheur`, `mcp/tools.ts`), le registre PDF
+> depuis `87f5e830` puis `fd7d4a94` (2026-10-12 : la phrase dès que le
+> calendrier n'est pas à jour). **La page ouverte par lien direct reste
+> ouverte** : hors tableau de bord, calendrier, « Préparer un contrôle », ZIP,
+> PDF et MCP, aucun écran ne lit `fraicheur.ts`. Le moins coûteux : qu'ils
 **signalent** un calendrier non recalculé (une lecture du repère, aucune
 écriture) plutôt que de le servir comme juste. La tâche quotidienne, une fois
 en place, rend ce cas rare sans le rendre impossible — un déploiement peut
@@ -2311,6 +2375,14 @@ rien : à supprimer, pas à fusionner.
 > ces critères. » sur une liste vide, sans le fait. Il passe par ses propres
 > requêtes (`ctx.scope`, sans `requireUser`), et ce lot s'est borné aux pièces
 > remises à un tiers — ZIP, deux PDF, « Préparer un contrôle ». Reste ouvert.
+>
+> **[2026-10-12 — vérifié, toujours ouvert, NON RAYÉ.]** Ce qui a bougé :
+> `e26c9bb7` (2026-09-26, après cette note) distingue la liste filtrée
+> (« Aucune vérification ne correspond à ces critères. ») de la liste entière
+> (« Le calendrier ne contient aucune vérification. »), et la fiche MCP donne
+> « Équipements déclarés : N » depuis le 2026-08-12. Ce qui manque : l'axe
+> `inventaire` de `perimetre/couverture.ts` n'est lu par aucun fichier de
+> `src/lib/mcp/`, et un parc entièrement retiré y compte comme déclaré.
 
 ~~Relevé le 2026-09-20 par la contre-lecture du lot « fraîcheur des sorties ».~~
 
@@ -2414,11 +2486,18 @@ bloquante pour la branche :
 
 1. **Migration prod** `20261005120000_duerp_reponses_transverses` (additive,
    une colonne `JSONB` nullable) : à appliquer par la propriétaire au merge.
-2. **Les « non » transverses n'entrent pas dans le document imprimé.** Le
+2. ~~**Les « non » transverses n'entrent pas dans le document imprimé.** Le
    snapshot d'une version fige les risques, pas les refus. Un DUERP qui part
    chez un tiers ne dit donc pas « le dirigeant a déclaré qu'aucun salarié ne
    conduit d'engin ». À décider : l'imprimer, comme les activités de
-   l'ADR-020, ou non.
+   l'ADR-020, ou non.~~ **[2026-10-12, `lot/duerp-non-imprimes`]** Décidé
+   par la propriétaire le 2026-10-12 : imprimé. Le snapshot grave
+   `expositionsDeclareesAbsentes` (questions transverses et faits d'activité
+   répondus « non », texte de la question recopié —
+   `versions/expositions-absentes.ts`) ; la méthode du PDF porte la section
+   « Expositions examinées et déclarées absentes ». Le silence n'y entre pas ;
+   un « non » dont le risque reste au document non plus. Une version d'avant
+   le champ s'imprime sans la section.
 3. **Gestes et postures, écran, chimique** : la question ou le risque existe
    au DUERP, l'obligation est portée par l'établissement, aucun titre n'est au
    catalogue. Les y faire entrer relève du filtre à trois conditions, article
@@ -2427,10 +2506,20 @@ bloquante pour la branche :
    ses titres sur toutes les fiches, avec « si elle est concernée, déclarez son
    titre ». Le refus nominatif demanderait de stocker l'exposition d'une
    personne — une donnée à instruire au regard du RGPD avant d'être un champ.
-5. **L'étape « questions transverses » reste cochée** sur les DUERP validés
+5. ~~**L'étape « questions transverses » reste cochée** sur les DUERP validés
    avant l'ADR-038 (`transversesRepondues`), alors que deux questions y sont
    neuves et sans réponse. Seule la fiche salarié le signale. Rouvrir l'étape
-   changerait l'avancement de tous les dossiers existants : à décider.
+   changerait l'avancement de tous les dossiers existants : à décider.~~
+   [2026-10-12, `lot/etape-transverses-calculee` — décision de la
+   propriétaire : l'étape est **calculée**, plus stockée
+   (`etatEtapeTransverses`, `transverses/etat.ts`) — faite quand chaque
+   question a une réponse, oui ou non, le silence n'en étant pas une. Sinon
+   le fil d'étapes affiche ~~« N question(s) nouvelle(s) à répondre → »~~
+   « N questions sans réponse → » (`signalQuestionsARepondre`, 2026-10-12), vers
+   la première question sans réponse de `/duerp/[id]/transverses`, seul écran
+   qui les pose toutes. `transversesRepondues` est inerte (commentaire daté au
+   schéma, sans migration) ; `validerTransverses` et son bouton sont retirés.
+   Prod sans clients : le changement d'avancement est accepté.]
 6. **« Formations liées aux risques du poste »** regroupe aussi des
    attestations médicales et une autorisation, qui ne sont pas des
    formations. Titre validé par la propriétaire ; signalé par la relecture.

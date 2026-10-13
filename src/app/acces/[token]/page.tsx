@@ -17,6 +17,7 @@ import {
   RUBRIQUES_R4512_8,
   texteRubrique,
 } from "@/lib/plan-prevention/contenu-r4512-8";
+import { ligneHeuresRevisees } from "@/lib/plan-prevention/annonces-plan";
 import { LABEL_NATURE } from "@/lib/permis-feu/schema";
 import { mesureParId, surListeAnterieure } from "@/lib/permis-feu/referentiel";
 
@@ -261,6 +262,19 @@ function detailPlan(c: ContenuPlanASigner, raisonSocialeEU: string) {
             {periode(c.dateDebut, c.dateFin)}
             {c.dureeHeuresEstimee != null ? ` · ${c.dureeHeuresEstimee} h estimées` : ""}
           </dd>
+          {/* R. 4512-7, 1°, seconde phrase (2026-10-12) : la révision notée en
+              cours de chantier, dans les mots de la fiche. */}
+          {c.heuresPrevisiblesRevisees != null && c.heuresPrevisiblesReviseesLe ? (
+            <>
+              <dt className="text-[color:var(--muted-foreground)]">En cours de chantier</dt>
+              <dd className="m-0">
+                {ligneHeuresRevisees(
+                  c.heuresPrevisiblesRevisees,
+                  formaterDateFr(c.heuresPrevisiblesReviseesLe),
+                )}
+              </dd>
+            </>
+          ) : null}
           <dt className="text-[color:var(--muted-foreground)]">Lieux</dt>
           <dd className="m-0 whitespace-pre-wrap">{c.lieux}</dd>
           <dt className="text-[color:var(--muted-foreground)]">Nature des travaux</dt>

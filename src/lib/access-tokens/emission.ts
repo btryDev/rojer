@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { objetAppartientAEtablissement } from "@/lib/signatures/appartenance";
-import { ScopeAccessToken } from "@prisma/client";
+import { PartieSignataire, ScopeAccessToken } from "@prisma/client";
 import {
   expirationFromNow,
   generateToken,
@@ -81,6 +81,8 @@ export const emissionSchema = z.object({
     .regex(SANS_CONTROLE)
     .optional(),
   prestataireId: z.string().min(1).max(100).optional(),
+  // La partie invitée à signer (2026-10-12), recopiée sur la signature.
+  partie: z.enum(PartieSignataire).optional(),
   sujetMail: z.string().trim().min(1).max(200).regex(SANS_CONTROLE),
   messageMail: z.string().trim().min(1).max(2000),
 });
@@ -141,6 +143,7 @@ export type EmissionTokenParams = {
   emailDestinataire: string;
   nomDestinataire?: string;
   prestataireId?: string;
+  partie?: PartieSignataire;
   sujetMail: string;
   messageMail: string;
 };
@@ -218,6 +221,10 @@ export async function emettreAccessToken(
   }
 
   const token = generateToken();
+  // L'URL avant toute écriture (2026-10-12, audit B7) : en production sans
+  // adresse publique, `publicAppUrl` lève — avant qu'un jeton soit créé pour
+  // un lien qui pointerait vers localhost.
+  const urlAcces = urlAccesPourToken(token);
   const tokenHash = hashToken(token);
   const ttl = ttlHoursFor(params.scope);
   // Horloge lue une seule fois : l'expiration du lien et celle du code
@@ -245,6 +252,7 @@ export async function emettreAccessToken(
       objetType: params.objetType,
       objetId: params.objetId,
       prestataireId: params.prestataireId,
+      partie: params.partie,
       emailDestinataire: params.emailDestinataire,
       nomDestinataire: params.nomDestinataire,
       otpHash,
@@ -254,7 +262,6 @@ export async function emettreAccessToken(
     },
   });
 
-  const urlAcces = urlAccesPourToken(token);
   await envoyerMailAcces({
     to: params.emailDestinataire,
     nom: params.nomDestinataire,

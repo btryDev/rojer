@@ -5,7 +5,7 @@ const progression = {
   secteurOk: true,
   unitesOk: true,
   risquesOk: true,
-  transversesOk: true,
+  transverses: { faite: true, sansReponse: [] },
   activitesPosees: false,
 };
 
@@ -50,10 +50,33 @@ describe("construireEtapes — étape périmètre", () => {
       secteurOk: true,
       unitesOk: true,
       risquesOk: true,
-      transversesOk: true,
+      transverses: { faite: true, sansReponse: [] },
       activitesPosees: true,
     });
     expect(etapes.find((e) => e.id === "unites")?.atteinte).toBe(true);
     expect(etapes.find((e) => e.id === "synthese")?.atteinte).toBe(true);
+  });
+});
+
+// Relecture indépendante du 2026-10-12 : la synthèse était verrouillée par
+// l'étape transverses (« À venir », non cliquable) sur un DUERP déjà validé
+// dont une question est sans réponse.
+describe("construireEtapes — la synthèse n'attend pas les questions transverses", () => {
+  const sansReponse = {
+    ...progression,
+    transverses: { faite: false, sansReponse: ["q-routier"] },
+  };
+
+  it("une question sans réponse : la synthèse reste atteignable, l'étape transverses garde son signal", () => {
+    const etapes = construireEtapes("d1", "synthese", sansReponse);
+    expect(etapes.find((e) => e.id === "synthese")?.atteinte).toBe(true);
+    expect(etapes.find((e) => e.id === "transverses")?.signal?.texte).toBe(
+      "1 question sans réponse",
+    );
+  });
+
+  it("sans unité, la synthèse reste à venir", () => {
+    const etapes = construireEtapes("d1", "unites", { ...sansReponse, unitesOk: false });
+    expect(etapes.find((e) => e.id === "synthese")?.atteinte).toBe(false);
   });
 });

@@ -13,6 +13,15 @@ const h = vi.hoisted(() => {
     nbTraces: 0,
     supprimesPhysiquement: [] as string[],
     crees: [] as Record<string, unknown>[],
+    /** La réponse à « Fournissez-vous des EPI ? », et l'ordre des écritures. */
+    etablissement: { id: "etab-1", epiPresents: false as boolean | null },
+    journal: [] as string[],
+    regime: {
+      estERP: false,
+      typeErp: null as string | null,
+      categorieErp: null as string | null,
+      ssiCategorieAouB: null as boolean | null,
+    },
   };
 
   const prisma = {
@@ -47,6 +56,26 @@ const h = vi.hoisted(() => {
     verification: {
       count: async () => db.nbTraces,
     },
+    etablissement: {
+      updateMany: async ({
+        where,
+        data,
+      }: {
+        where: { id: string; OR: { epiPresents: boolean | null }[] };
+        data: { epiPresents: boolean };
+      }) => {
+        const e = db.etablissement;
+        const vise =
+          e.id === where.id && where.OR.some((c) => c.epiPresents === e.epiPresents);
+        if (vise) {
+          e.epiPresents = data.epiPresents;
+          db.journal.push("epiPresents");
+        }
+        return { count: vise ? 1 : 0 };
+      },
+      // Le régime que l'exigence des réponses lit (2026-10-12).
+      findUnique: async () => db.regime,
+    },
   };
 
   return {
@@ -80,23 +109,30 @@ vi.mock("@/lib/calendrier/reconciliation", () => ({
 
 const {
   creerEquipement,
+  creerEquipementsDepuisPreRemplissage,
   modifierEquipement,
-  reactiverEquipement,
   repondreQuestionEquipement,
   supprimerEquipement,
 } = await import("./actions");
-const { questionsExigeesPour, CATEGORIES_A_REPONSE_EXIGEE } = await import(
+const { questionsExigeesPour, CATEGORIES_A_REPONSE_EXIGEE, REGIME_TRAVAIL } = await import(
   "./reponses-exigees"
 );
+const { MESSAGE_APPAREIL_RETIRE } = await import("./retrait");
 
 beforeEach(() => {
   h.db.equipements = [{ id: "eq-1", etablissementId: "etab-1", actif: true }];
   h.db.nbTraces = 0;
   h.db.supprimesPhysiquement = [];
   h.db.crees = [];
+  h.db.etablissement = { id: "etab-1", epiPresents: false };
+  h.db.journal = [];
+  h.db.regime = { estERP: false, typeErp: null, categorieErp: null, ssiCategorieAouB: null };
   h.assertOwnership.mockClear();
   h.genererCalendrier.mockClear();
-  h.genererCalendrier.mockImplementation(async () => ({}));
+  h.genererCalendrier.mockImplementation(async () => {
+    h.db.journal.push("régénération");
+    return {};
+  });
   h.marquerCalendrierPerime.mockClear();
 });
 
@@ -180,15 +216,51 @@ describe("supprimerEquipement", () => {
   });
 });
 
-describe("reactiverEquipement", () => {
-  it("remet l'équipement en service et régénère les obligations", async () => {
+describe("un appareil retiré du parc est en lecture seule (décision du 2026-10-12)", () => {
+  // Plus de réactivation : le retrait est définitif, et toute écriture sur
+  // l'appareil retiré est refusée avec la même phrase (`retrait.ts`).
+  beforeEach(() => {
     h.db.equipements[0].actif = false;
+  });
+  const formulaire = () => {
+    const fd = new FormData();
+    fd.set("libelle", "Extincteur");
+    fd.set("categorie", "EXTINCTEUR");
+    return fd;
+  };
 
-    const res = await reactiverEquipement("eq-1");
+  it("modifier : refusé, rien n'est écrit, rien n'est régénéré", async () => {
+    const r = await modifierEquipement("eq-1", { status: "idle" }, formulaire());
+    expect(r).toEqual({ status: "error", message: MESSAGE_APPAREIL_RETIRE });
+    expect(h.db.equipements[0]).not.toHaveProperty("libelle");
+    expect(h.genererCalendrier).not.toHaveBeenCalled();
+    // L'appartenance est contrôlée avant le refus.
+    expect(h.assertOwnership).toHaveBeenCalledWith("etab-1");
+  });
 
-    expect(res).toEqual({ ok: true });
-    expect(h.db.equipements[0].actif).toBe(true);
-    expect(h.genererCalendrier).toHaveBeenCalledWith("etab-1");
+  it("répondre à une question : refusé", async () => {
+    Object.assign(h.db.equipements[0], {
+      categorie: CATEGORIES_A_REPONSE_EXIGEE[0],
+      caracteristiques: {},
+    });
+    const [champ] = questionsExigeesPour(CATEGORIES_A_REPONSE_EXIGEE[0], REGIME_TRAVAIL);
+    const fd = new FormData();
+    fd.set("reponse", "non");
+    const r = await repondreQuestionEquipement("eq-1", champ, { status: "idle" }, fd);
+    expect(r).toEqual({ status: "error", message: MESSAGE_APPAREIL_RETIRE });
+    expect(h.db.equipements[0]).toMatchObject({ caracteristiques: {} });
+  });
+
+  it("retirer à nouveau : refusé, même sans trace — l'appareil n'est jamais détruit après coup", async () => {
+    h.db.nbTraces = 0;
+    const r = await supprimerEquipement("eq-1");
+    expect(r).toEqual({ statut: "erreur", message: MESSAGE_APPAREIL_RETIRE });
+    expect(h.db.supprimesPhysiquement).toEqual([]);
+  });
+
+  it("la phrase dit l'issue : lecture seule, pas de remise en service, un nouvel appareil s'il revient", () => {
+    expect(MESSAGE_APPAREIL_RETIRE).toContain("ne peut plus être modifié ni remis en service");
+    expect(MESSAGE_APPAREIL_RETIRE).toContain("nouvel appareil");
   });
 });
 
@@ -232,7 +304,7 @@ describe("D29 (a) : les réponses exigées d'un appareil de levage", () => {
   // dérivation (`questionsExigeesPour`), pas d'une liste. Éprouvé en retirant
   // la porte (`reponsesExigeesManquantes`) des deux actions.
   const LEVAGE = CATEGORIES_A_REPONSE_EXIGEE[0];
-  const exigees = questionsExigeesPour(LEVAGE);
+  const exigees = questionsExigeesPour(LEVAGE, REGIME_TRAVAIL);
   function formulaire(reponses: Record<string, string>, categorie: string = LEVAGE) {
     const fd = new FormData();
     fd.set("libelle", "Palan");
@@ -279,7 +351,7 @@ describe("D29 (a) : les réponses exigées d'un appareil de levage", () => {
 
 describe("repondreQuestionEquipement : la relance d'un appareil muet (D29 (a))", () => {
   const LEVAGE = CATEGORIES_A_REPONSE_EXIGEE[0];
-  const [champ] = questionsExigeesPour(LEVAGE);
+  const [champ] = questionsExigeesPour(LEVAGE, REGIME_TRAVAIL);
   const reponse = (v: string) => {
     const fd = new FormData();
     fd.set("reponse", v);
@@ -323,5 +395,80 @@ describe("repondreQuestionEquipement : la relance d'un appareil muet (D29 (a))",
     });
     const r = await repondreQuestionEquipement("eq-1", champ, { status: "idle" }, reponse("oui"));
     expect(r.status).toBe("success_avec_avertissement");
+  });
+});
+
+describe("un EPI déclaré contredit un « non » aux EPI (relecture indépendante du 2026-10-12, B2)", () => {
+  function epi(categorie: string): FormData {
+    const fd = new FormData();
+    fd.set("libelle", "Harnais");
+    fd.set("categorie", categorie);
+    return fd;
+  }
+
+  it("déclarer un EPI fait passer la réponse à « oui », AVANT la régénération", async () => {
+    await expect(creerEquipement("etab-1", { status: "idle" }, epi("EPI"))).rejects.toThrow("NEXT_REDIRECT");
+
+    expect(h.db.etablissement.epiPresents).toBe(true);
+    expect(h.db.journal).toEqual(["epiPresents", "régénération"]);
+  });
+
+  it("une réponse muette aussi : la déclaration vaut « oui »", async () => {
+    h.db.etablissement.epiPresents = null;
+    await modifierEquipement("eq-1", { status: "idle" }, epi("EPI"));
+    expect(h.db.etablissement.epiPresents).toBe(true);
+  });
+
+  it("le pré-remplissage, de même", async () => {
+    await creerEquipementsDepuisPreRemplissage("etab-1", [
+      { categorie: "EXTINCTEUR", libelle: "Extincteur" },
+      { categorie: "EPI", libelle: "Gants" },
+    ]);
+    expect(h.db.etablissement.epiPresents).toBe(true);
+  });
+
+  it("un équipement qui n'est pas un EPI ne touche pas à la réponse", async () => {
+    await modifierEquipement("eq-1", { status: "idle" }, epi("EXTINCTEUR"));
+    expect(h.db.etablissement.epiPresents).toBe(false);
+    expect(h.db.journal).toEqual(["régénération"]);
+  });
+});
+
+describe("décision du 2026-10-08 : « désenfumage mécanique » exigé là où il fait naître DF 10 § 3", () => {
+  // La porte est au serveur, et elle lit le régime de l'établissement.
+  // Éprouvé en retirant l'entrée de `QUESTIONS_EXIGEES_PAR_DECISION`.
+  function desenfumage(mecanique?: string) {
+    const fd = new FormData();
+    fd.set("libelle", "Désenfumage");
+    fd.set("categorie", "DESENFUMAGE");
+    if (mecanique !== undefined) fd.set("estDesenfumageMecanique", mecanique);
+    return fd;
+  }
+
+  it("ERP N3 : sans réponse, refusé et rien n'est créé ; avec, créé", async () => {
+    h.db.regime = { estERP: true, typeErp: "M", categorieErp: "N3", ssiCategorieAouB: null };
+    const r = await creerEquipement("etab-1", { status: "idle" }, desenfumage());
+    expect(r.status).toBe("error");
+    expect(Object.keys((r as { fieldErrors?: object }).fieldErrors ?? {})).toEqual(["estDesenfumageMecanique"]);
+    expect(h.db.crees).toHaveLength(0);
+    await expect(creerEquipement("etab-1", { status: "idle" }, desenfumage("non"))).rejects.toThrow("NEXT_REDIRECT");
+    expect(h.db.crees).toHaveLength(1);
+  });
+
+  it("ERP N5 : la question reste facultative", async () => {
+    h.db.regime = { estERP: true, typeErp: "M", categorieErp: "N5", ssiCategorieAouB: null };
+    await expect(creerEquipement("etab-1", { status: "idle" }, desenfumage())).rejects.toThrow("NEXT_REDIRECT");
+  });
+
+  it("la relance du tableau de bord accepte la question là où elle est exigée", async () => {
+    h.db.regime = { estERP: true, typeErp: "M", categorieErp: "N2", ssiCategorieAouB: null };
+    Object.assign(h.db.equipements[0], { categorie: "DESENFUMAGE", caracteristiques: null });
+    const fd = new FormData();
+    fd.set("reponse", "oui");
+    const r = await repondreQuestionEquipement("eq-1", "estDesenfumageMecanique", { status: "idle" }, fd);
+    expect(r.status).toBe("success");
+    expect((h.db.equipements[0] as { caracteristiques?: unknown }).caracteristiques).toEqual({
+      estDesenfumageMecanique: true,
+    });
   });
 });

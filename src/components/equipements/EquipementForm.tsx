@@ -211,13 +211,16 @@ const QUESTIONS_TRI_ETAT: Record<
     // d'un SSI de catégorie A ou B » — plus restrictive que le code, qui sert
     // la triennale tant que la question SSI n'a pas reçu « Non »
     // (`equipement_propriete_non_infirmee`).
-    aide: "Un désenfumage mécanique évacue les fumées par des ventilateurs ; un désenfumage naturel, par des ouvrants, exutoires ou trappes en façade ou en toiture. Avec « Oui », le calendrier ajoute une vérification tous les trois ans par un organisme agréé (règlement de sécurité, art. DF 10 § 3 — établissements des quatre premières catégories), sauf si vous répondez « Non » à la question sur le système de sécurité incendie qui s'affiche alors ; la vérification annuelle reste. Tant que vous n'avez pas répondu « Oui », elle n'apparaît pas.",
+    // [2026-10-12 : la question du SSI A/B est passée sur la fiche de
+    // l'établissement (décision de la propriétaire du 2026-10-08) ; l'aide le
+    // dit.]
+    aide: "Un désenfumage mécanique évacue les fumées par des ventilateurs ; un désenfumage naturel, par des ouvrants, exutoires ou trappes en façade ou en toiture. Avec « Oui », le calendrier ajoute une vérification tous les trois ans par un organisme agréé (règlement de sécurité, art. DF 10 § 3 — établissements des quatre premières catégories), sauf si la fiche de l'établissement répond « Non » à la question du système de sécurité incendie de catégorie A ou B ; la vérification annuelle reste. Tant que vous n'avez pas répondu « Oui », elle n'apparaît pas.",
   },
-  etablissementASsiCategorieAouB: {
-    question:
-      "L'établissement dispose-t-il d'un système de sécurité incendie (SSI) de catégorie A ou B ?",
-    aide: "La vérification tous les trois ans du désenfumage dépend des deux installations à la fois (art. DF 10 § 3) : la question est donc posée ici, même si votre SSI a sa propre fiche — répondez de la même façon. Pour un désenfumage mécanique, « Oui » ou « Je ne sais pas encore » fait apparaître la vérification triennale au calendrier ; « Non » la retire.",
-  },
+  // ~~`etablissementASsiCategorieAouB`~~ — 2026-10-12 : la question est sur la
+  // fiche de l'établissement (`Etablissement.ssiCategorieAouB`), posée une fois
+  // au lieu d'une fois par désenfumage. Les réponses déjà données ont été
+  // reprises par la migration 20261012140000 ; la clé reste, inerte, dans le
+  // JSON des appareils jusqu'à leur prochaine modification.
 };
 
 type Props = {
@@ -276,26 +279,11 @@ export function EquipementForm({
   // Questions à trois états applicables à la catégorie sélectionnée.
   const questions = questionsTriEtatPour(categorie, estERP);
 
-  // DF 10 § 3 (lot 4, revue du 2026-10-07) : la question du SSI A ou B ne
-  // décide de rien tant que le désenfumage n'est pas déclaré mécanique — la
-  // triennale exige les deux. Elle n'est donc montrée qu'après un « Oui ».
-  // Masquée, sa valeur part quand même, en champ caché : le serveur l'accepte
-  // toujours, et une réponse déjà donnée ne s'efface pas parce qu'on a changé
-  // l'autre.
-  // Lue comme les autres questions à trois états (`valeursInitiales?.[champ]`) :
-  // la page les repasse en bloc (`reponsesTriEtat`).
-  const champMecanique: ChampTriEtat = "estDesenfumageMecanique";
-  const [desenfumageMecanique, setDesenfumageMecanique] = useState(
-    valeurTriEtat(valeursInitiales?.[champMecanique]),
-  );
-  // La réponse SSI est tenue en état, contrôlée : masquée, c'est elle qui part
-  // en champ caché, et reposée, c'est elle qui revient. [2026-10-07, C62 :
-  // le champ caché renvoyait `valeursInitiales` — un « non » donné pendant la
-  // saisie se perdait si l'on repassait le mécanique à « je ne sais pas ».]
-  const champSsi: ChampTriEtat = "etablissementASsiCategorieAouB";
-  const [ssiAouB, setSsiAouB] = useState(
-    valeurTriEtat(valeursInitiales?.[champSsi]),
-  );
+  // ~~DF 10 § 3 (lot 4, revue du 2026-10-07) : la question du SSI A ou B
+  // n'était montrée qu'après « mécanique : Oui », sa valeur tenue en état et
+  // envoyée en champ caché une fois masquée (C62).~~ [2026-10-12 : la question
+  // est passée sur la fiche de l'établissement ; le désenfumage ne pose plus
+  // que « mécanique ».]
   const afficherCaracteristiques =
     estAeration || estEsp || questions.length > 0;
 
@@ -514,32 +502,15 @@ export function EquipementForm({
               />
             )}
 
-            {questions.map(({ champ }) =>
-              champ === champSsi && desenfumageMecanique !== "oui" ? (
-                <input
-                  key={champ}
-                  type="hidden"
-                  name={champ}
-                  value={ssiAouB}
-                />
-              ) : (
-                <QuestionTriEtat
-                  key={champ}
-                  champ={champ}
-                  defaut={valeurTriEtat(valeursInitiales?.[champ])}
-                  valeur={champ === champSsi ? ssiAouB : undefined}
-                  erreur={err(champ)}
-                  exigee={(questionsExigees[categorie] ?? []).includes(champ)}
-                  onChange={
-                    champ === champMecanique
-                      ? setDesenfumageMecanique
-                      : champ === champSsi
-                        ? setSsiAouB
-                        : undefined
-                  }
-                />
-              ),
-            )}
+            {questions.map(({ champ }) => (
+              <QuestionTriEtat
+                key={champ}
+                champ={champ}
+                defaut={valeurTriEtat(valeursInitiales?.[champ])}
+                erreur={err(champ)}
+                exigee={(questionsExigees[categorie] ?? []).includes(champ)}
+              />
+            ))}
           </div>
         </section>
       )}
@@ -595,22 +566,18 @@ export function EquipementForm({
  * répondu, et cette nuance décide ici du maintien d'une obligation
  * réglementaire de criticité élevée.
  */
+// ~~`valeur` et `onChange`~~ — retirés le 2026-10-12 : ils ne servaient qu'à la
+// question du SSI A/B du désenfumage, montrée après « mécanique : Oui » et
+// passée depuis sur la fiche de l'établissement.
 function QuestionTriEtat({
   champ,
   defaut,
   erreur,
   exigee = false,
-  onChange,
-  valeur,
 }: {
   champ: ChampTriEtat;
   defaut: string;
-  /** La valeur, quand le formulaire la tient (champ contrôlé) ; sinon
-   *  `defaut` sert de valeur initiale et le `<select>` se tient seul. */
-  valeur?: string;
   erreur?: string;
-  /** La valeur choisie, pour une question dont dépend l'affichage d'une autre. */
-  onChange?: (valeur: string) => void;
   /** D29 (a) : « Je ne sais pas encore » n'est pas offert, et aucune réponse
    *  n'est présélectionnée — le serveur refuse l'absence (comme A2). */
   exigee?: boolean;
@@ -629,8 +596,7 @@ function QuestionTriEtat({
       <select
         id={champ}
         name={champ}
-        {...(valeur !== undefined ? { value: valeur } : { defaultValue: defaut })}
-        onChange={onChange ? (e) => onChange(e.currentTarget.value) : undefined}
+        defaultValue={defaut}
         className="champ-board mt-2 sm:w-64"
         aria-describedby={`${champ}-aide`}
         aria-invalid={Boolean(erreur)}

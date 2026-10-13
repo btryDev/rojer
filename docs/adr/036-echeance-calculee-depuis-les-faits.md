@@ -476,10 +476,12 @@ d'un aller-retour ; dans le doute, l'incertitude ne réduit jamais la couverture
 
 ## 8. Les limites, écrites pour ne pas les redécouvrir
 
-- **Désactiver puis réactiver un appareil remet l'origine à zéro pour une ligne
+- ~~**Désactiver puis réactiver un appareil remet l'origine à zéro pour une ligne
   sans trace** : elle est supprimée, puis recréée. Le trou existe déjà
   (`generateur.ts`, « CE QUE CETTE SUPPRESSION LAISSE PASSER ») ; il n'est ni
-  aggravé ni fermé. Le fermer voudrait archiver une ligne qui n'atteste de rien.
+  aggravé ni fermé. Le fermer voudrait archiver une ligne qui n'atteste de rien.~~
+  [2026-10-12 : fermé par décision — plus de réactivation d'un appareil
+  (`equipements/retrait.ts`, `chantiers-ouverts.md` § 11).]
 - **Une ligne absorbante neuve ne reprend pas l'origine des lignes absorbées.**
   Elle reprend leur réalisation (règle 3), pas leur ancienneté de suivi.
 - **L'origine est le seul fait de « premier cycle » hors mise en service.** Une
