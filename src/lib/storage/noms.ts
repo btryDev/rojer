@@ -19,6 +19,32 @@
 
 const CARACTERES_INTERDITS = /[^a-zA-Z0-9._-]/g;
 
+/** Les ligatures que la décomposition Unicode ne sépare pas. */
+const LIGATURES: Record<string, string> = {
+  œ: "oe",
+  Œ: "OE",
+  æ: "ae",
+  Æ: "AE",
+  ß: "ss",
+};
+
+/**
+ * Les lettres accentuées TRANSLITTÉRÉES (é → e) avant le filtre du jeu sûr.
+ *
+ * Le filtre remplaçait chaque lettre accentuée par « _ » : le dossier d'un
+ * prestataire « Sécurité Incendie Ouest » sortait du ZIP en
+ * « S_curit__Incendie_Ouest » (contrôle visuel du 2026-10-13). Garder les
+ * accents tels quels n'est pas sûr — l'encodage des noms d'entrée de ZIP est
+ * mal lu par plusieurs outils de décompression encore répandus ; la lettre de
+ * base, elle, se lit partout.
+ */
+function translitterer(nom: string): string {
+  return nom
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .replace(/[œŒæÆß]/g, (c) => LIGATURES[c] ?? c);
+}
+
 /**
  * Nom sûr pour une entrée d'archive : ni séparateur de chemin, ni segment
  * de remontée, ni nom vide.
@@ -28,7 +54,7 @@ export function nomEntreeArchive(nom: string | null | undefined, defaut: string)
   // On ne garde que le dernier segment : `dossier/piece.pdf` est un chemin,
   // pas un nom de fichier.
   const dernierSegment = brut.split(/[/\\]/).pop() ?? "";
-  const nettoye = dernierSegment
+  const nettoye = translitterer(dernierSegment)
     .replace(CARACTERES_INTERDITS, "_")
     // `..`, `...` et leurs variantes ne désignent aucun fichier réel : seuls
     // des points en tête restent une remontée une fois le reste nettoyé.

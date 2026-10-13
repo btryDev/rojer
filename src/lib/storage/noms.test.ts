@@ -31,7 +31,17 @@ describe("nomEntreeArchive", () => {
 
   it("remplace les caractères hors jeu sûr sans toucher au point d'extension", () => {
     expect(nomEntreeArchive("Kbis Société & Cie.pdf", "Kbis.pdf")).toBe(
-      "Kbis_Société_&_Cie.pdf".replace(/[^a-zA-Z0-9._-]/g, "_"),
+      "Kbis_Societe___Cie.pdf",
+    );
+  });
+
+  it("translittère les lettres accentuées au lieu de les remplacer par « _ »", () => {
+    // Contrôle visuel du 2026-10-13 : « V_rif__lec_Atlantique ».
+    expect(nomEntreeArchive("Vérif'Élec Atlantique.pdf", "x.pdf")).toBe(
+      "Verif_Elec_Atlantique.pdf",
+    );
+    expect(nomEntreeArchive("Cœur Ægir Straße.pdf", "x.pdf")).toBe(
+      "Coeur_AEgir_Strasse.pdf",
     );
   });
 
@@ -45,6 +55,12 @@ describe("nomDossierArchive", () => {
   it("remplace les espaces par des soulignés", () => {
     expect(nomDossierArchive("Ascenseurs du Nord", "Prestataire")).toBe(
       "Ascenseurs_du_Nord",
+    );
+  });
+
+  it("garde la lettre de base des raisons sociales accentuées", () => {
+    expect(nomDossierArchive("Sécurité Incendie Ouest", "Prestataire")).toBe(
+      "Securite_Incendie_Ouest",
     );
   });
 
