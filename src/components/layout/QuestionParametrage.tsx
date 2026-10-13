@@ -106,7 +106,14 @@ export function QuestionParametrage({
             value="oui"
             disabled={pending}
             onClick={() => setChoix("oui")}
-            className={buttonVariants({ variant: "board", size: "boardSm" })}
+            // Même poids pour « Oui » et « Non » tant que rien n'est répondu :
+            // l'un plein, l'autre cerné se lisait comme un choix déjà fait
+            // (contrôle visuel du 2026-10-13). Seul « Enregistrer », qui
+            // valide le détail ouvert par « Oui », est l'action principale.
+            className={buttonVariants({
+              variant: detailSiOui ? "board" : "boardClair",
+              size: "boardSm",
+            })}
           >
             {detailSiOui ? "Enregistrer" : labelOui}
           </button>
