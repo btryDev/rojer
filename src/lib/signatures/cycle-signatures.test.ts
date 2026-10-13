@@ -148,7 +148,11 @@ async function sansRedirection(p: Promise<unknown>): Promise<void> {
 }
 
 function plan(id: string, etablissementId: string, statut: string): Ligne {
-  return { id, etablissementId, statut, numero: 1 };
+  // La relation jusqu'au compte : les actions du permis de feu lisent dans le
+  // périmètre du compte (`etablissement: { entreprise: { userId } }`, audit du
+  // 2026-10-13), et `correspond` la traverse.
+  const userId = etablissementId === "etab-a-moi" ? "user-1" : "user-voisin";
+  return { id, etablissementId, statut, numero: 1, etablissement: { entreprise: { userId } } };
 }
 
 function signature(objetType: string, objetId: string, etablissementId: string): Ligne {
