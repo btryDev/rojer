@@ -231,15 +231,28 @@ describe("refus de périmètre — création seulement", () => {
     ).toBe(true);
   });
 
-  it("refuse un ERP situé dans un IGH", () => {
-    const res = etablissementCreationSchema.safeParse({
-      ...base,
-      estERP: true,
-      typeErp: "M",
-      categorieErp: "N5",
-      estIGH: true,
-    });
+  // Un seul axe varie : la fixture est un ERP ACCEPTÉ, auquel on ajoute l'IGH.
+  // L'ancienne (type M, 5ᵉ catégorie) était refusée pour une autre raison — le
+  // nombre de personnes présentes, exigé d'un ERP sous les deux bornes —, et
+  // ce test restait vert quand on retirait la règle (vérification ASVS du
+  // 2026-10-13, mutation M8).
+  const erpAccepte = {
+    ...base,
+    estERP: true,
+    typeErp: "M",
+    categorieErp: "N3",
+  };
+
+  it("la fixture du refus IGH est acceptée sans l'IGH", () => {
+    expect(etablissementCreationSchema.safeParse(erpAccepte).success).toBe(true);
+  });
+
+  it("refuse un ERP situé dans un IGH — et pour cette seule raison", () => {
+    const res = etablissementCreationSchema.safeParse({ ...erpAccepte, estIGH: true });
     expect(res.success).toBe(false);
+    if (!res.success) {
+      expect(res.error.issues.map((i) => i.path.join("."))).toEqual(["estIGH"]);
+    }
   });
 
   it("accepte un IGH qui n'est pas un ERP", () => {

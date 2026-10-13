@@ -29,6 +29,18 @@ describe("la création d'un permis de feu (contre-lecture du 2026-09-26)", () =>
     expect(erreurs({ ...base, mesuresValidees: ["zone-degagee-5m"] })).toHaveProperty("mesuresValidees");
   });
 
+  // Un seul axe varie : `base` est accepté, seule la fin bouge (vérification
+  // ASVS du 2026-10-13 : aucun test ne tenait cette règle).
+  it("refuse une fin avant le début — et pour cette seule raison", () => {
+    expect(erreurs({ ...base, dateFin: "2026-10-01T07:59" })).toEqual({
+      dateFin: ["La date de fin doit être après la date de début."],
+    });
+  });
+
+  it("refuse une fin égale au début : un permis dure", () => {
+    expect(Object.keys(erreurs({ ...base, dateFin: base.dateDebut }))).toEqual(["dateFin"]);
+  });
+
   it("refuse trente minutes de surveillance, que « 2 h au moins » cochée laissait passer", () => {
     expect(erreurs({ ...base, dureeSurveillanceMinutes: "30" })).toHaveProperty("dureeSurveillanceMinutes");
   });
