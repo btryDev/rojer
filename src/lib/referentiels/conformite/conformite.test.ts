@@ -1856,7 +1856,12 @@ describe("référentiel conformité — version et empreinte", () => {
     // ligne sœur `signalisation-etablissement-alimentation-secours-presence`
     // prend la même condition. 176 + 0 − 0 = 176, trois conditions changées
     // depuis `2026-10-13.1` ; relevée en appelant `empreinteReferentiel()`.
-    { version: "2026-10-13.2", empreinte: "176-30ae167af322fc9e" },
+    // ~~176-30ae167af322fc9e~~ : empreinte avant la seconde revue du même
+    // jour, jamais servie — ligne réécrite le 2026-10-13 (version non
+    // servie) : `ASCENSEUR` entre aussi en `equipementsEnContexte` des deux
+    // lignes d'alimentation de secours de signalisation, et leurs notes le
+    // disent. 176 + 0 − 0 = 176 ; relevée en appelant `empreinteReferentiel()`.
+    { version: "2026-10-13.2", empreinte: "176-c32c2c8896d2d0ca" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

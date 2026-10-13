@@ -17,6 +17,7 @@ import {
 import {
   CHAMPS_TRI_ETAT,
   equipementSchema,
+  libelleEquipementSchema,
   normaliserFormDataEquipement,
   normaliserTriEtat,
   serialiserCaracteristiques,
@@ -118,6 +119,12 @@ async function resoudreAppareil(
   if (!eq) throw new Error("Équipement introuvable");
   return eq;
 }
+
+/** Le retour du pré-remplissage : le motif de `EquipementActionState`, un
+ *  refus se RETOURNE (revue du 2026-10-13). */
+export type ResultatPreRemplissage =
+  | { status: "success"; created: number; avertissement?: string }
+  | { status: "error"; message: string };
 
 export type EquipementActionState =
   | { status: "idle" }
@@ -385,6 +392,13 @@ export async function supprimerEquipement(
  * `caracteristiques` — champ exigé pour cette catégorie dans ce régime, valeur
  * booléenne stricte, rien d'autre. Ce qui manque reste refusé en bloc ; une
  * clé ou une valeur hors de ce cadre aussi.]
+ *
+ * ~~Les refus lèvent une exception.~~ [Rayé le 2026-10-13 (revue de
+ * `lot/conditions-equipement`) : Next masque en production le message d'une
+ * exception levée par une action serveur, et le panneau affichait alors un
+ * texte générique à la place du refus. Les refus RETOURNENT
+ * `{ status: "error", message }`, le motif de `EquipementActionState` ; seul
+ * le contrôle d'appartenance lève encore, comme partout.]
  */
 export async function creerEquipementsDepuisPreRemplissage(
   etablissementId: string,
@@ -394,9 +408,9 @@ export async function creerEquipementsDepuisPreRemplissage(
     /** Les seules réponses aux questions exigées, posées par le panneau. */
     caracteristiques?: Partial<Record<ChampTriEtat, boolean>>;
   }[],
-): Promise<{ created: number; avertissement?: string }> {
+): Promise<ResultatPreRemplissage> {
   await assertEtablissementOwnership(etablissementId);
-  if (entrees.length === 0) return { created: 0 };
+  if (entrees.length === 0) return { status: "success", created: 0 };
 
   // LA PORTE DES RÉPONSES EXIGÉES TIENT AUSSI ICI (reprise des suites du lot 3,
   // 2026-10-13). ~~Le pré-remplissage ne propose aucune catégorie dont une réponse
@@ -429,14 +443,28 @@ export async function creerEquipementsDepuisPreRemplissage(
     ),
   ];
   if (inconnues.length > 0) {
-    throw new Error(
-      `Catégorie d'équipement inconnue (${inconnues.join(", ")}) : rien n'a été créé.`,
-    );
+    return {
+      status: "error",
+      message: `Catégorie d'équipement inconnue (${inconnues.join(", ")}) : rien n'a été créé.`,
+    };
+  }
+  // Le libellé (revue du 2026-10-13) : la règle de la création manuelle,
+  // `libelleEquipementSchema`, jamais recopiée — chaîne, rognée, 1 à 200.
+  const libelles = entrees.map((e) => libelleEquipementSchema.safeParse(e.libelle));
+  if (libelles.some((r) => !r.success)) {
+    return {
+      status: "error",
+      message:
+        "Libellé refusé : il doit être un texte de 1 à 200 caractères. Rien n'a été créé.",
+    };
   }
   const regime = await regimeDe(etablissementId);
   // Les réponses fournies (2026-10-13) : un objet simple, dont chaque clé est
   // une question EXIGÉE pour cette catégorie dans ce régime, et chaque valeur
   // un booléen. Rien d'autre n'entre dans le JSON de l'appareil par ici.
+  // Les lectures ne voient que les clés PROPRES (`Object.hasOwn`, revue du
+  // 2026-10-13) : une valeur portée par le prototype passait la porte des
+  // manquantes sans être écrite, et l'appareil naissait muet.
   const horsCadre = entrees.filter((e) => {
     const c = e.caracteristiques;
     if (c === undefined) return false;
@@ -447,34 +475,41 @@ export async function creerEquipementsDepuisPreRemplissage(
     );
   });
   if (horsCadre.length > 0) {
-    throw new Error(
-      `Réponses refusées (${[...new Set(horsCadre.map((e) => e.categorie))].join(", ")}) : le pré-remplissage n'accepte que « oui » ou « non » aux questions exigées. Rien n'a été créé.`,
-    );
+    return {
+      status: "error",
+      message: `Réponses refusées (${[...new Set(horsCadre.map((e) => e.categorie))].join(", ")}) : le pré-remplissage n'accepte que « oui » ou « non » aux questions exigées. Rien n'a été créé.`,
+    };
   }
   const manquantes = [
     ...new Set(
       entrees
         .filter((e) =>
           questionsExigeesPour(e.categorie, regime).some(
-            (champ) => typeof e.caracteristiques?.[champ] !== "boolean",
+            (champ) =>
+              !(
+                e.caracteristiques &&
+                Object.hasOwn(e.caracteristiques, champ) &&
+                typeof e.caracteristiques[champ] === "boolean"
+              ),
           ),
         )
         .map((e) => e.categorie),
     ),
   ];
   if (manquantes.length > 0) {
-    throw new Error(
-      `Le pré-remplissage ne crée pas d'appareil sans les réponses exigées (${manquantes.join(", ")}) : répondez oui ou non à la question posée à côté de la case. Rien n'a été créé.`,
-    );
+    return {
+      status: "error",
+      message: `Le pré-remplissage ne crée pas d'appareil sans les réponses exigées (${manquantes.join(", ")}) : répondez oui ou non à la question posée à côté de la case. Rien n'a été créé.`,
+    };
   }
 
   const batiment = await batimentParDefaut(etablissementId);
   const result = await prisma.equipement.createMany({
-    data: entrees.map((e) => ({
+    data: entrees.map((e, i) => ({
       etablissementId,
       batimentId: batiment.id,
       categorie: e.categorie,
-      libelle: e.libelle,
+      libelle: libelles[i].data as string,
       ...(e.caracteristiques && Object.keys(e.caracteristiques).length > 0
         ? { caracteristiques: e.caracteristiques as Prisma.InputJsonValue }
         : {}),
@@ -491,6 +526,7 @@ export async function creerEquipementsDepuisPreRemplissage(
   revalidatePath(`/etablissements/${etablissementId}/equipements`);
   revalidatePath(`/etablissements/${etablissementId}/calendrier`);
   return {
+    status: "success",
     created: result.count,
     ...(regen.ok ? {} : { avertissement: regen.message }),
   };

@@ -45,6 +45,11 @@ export function PreRemplissagePanel({
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
+  // Les catégories cochées dont la question est restée sans réponse au
+  // dernier envoi : leur champ porte l'erreur (`aria-invalid`, message lié).
+  const [sansReponse, setSansReponse] = useState<ReadonlySet<CategorieEquipement>>(
+    () => new Set(),
+  );
   const formRef = useRef<HTMLFormElement>(null);
 
   if (suggestions.length === 0) return null;
@@ -60,7 +65,7 @@ export function PreRemplissagePanel({
 
   const valider = () => {
     const fd = formRef.current ? new FormData(formRef.current) : new FormData();
-    const manque: string[] = [];
+    const manque: CategorieEquipement[] = [];
     const entrees = suggestions
       .filter((s) => selection.has(s.categorie))
       .map((s) => {
@@ -70,7 +75,7 @@ export function PreRemplissagePanel({
           const v = fd.get(nomQuestionPanneau(s.categorie, champ));
           if (v === "oui") caracteristiques[champ] = true;
           else if (v === "non") caracteristiques[champ] = false;
-          else manque.push(LABEL_CATEGORIE_EQUIPEMENT[s.categorie]);
+          else manque.push(s.categorie);
         }
         return {
           categorie: s.categorie,
@@ -79,6 +84,7 @@ export function PreRemplissagePanel({
         };
       });
 
+    setSansReponse(new Set(manque));
     if (entrees.length === 0) {
       setErreur(null);
       setMessage("Aucune catégorie sélectionnée.");
@@ -87,7 +93,9 @@ export function PreRemplissagePanel({
     if (manque.length > 0) {
       setMessage(null);
       setErreur(
-        `Répondez oui ou non à la question posée pour : ${[...new Set(manque)].join(", ")}.`,
+        `Répondez oui ou non à la question posée pour : ${[...new Set(manque)]
+          .map((c) => LABEL_CATEGORIE_EQUIPEMENT[c])
+          .join(", ")}.`,
       );
       return;
     }
@@ -99,6 +107,14 @@ export function PreRemplissagePanel({
           etablissementId,
           entrees,
         );
+        // Un refus du serveur se RETOURNE (revue du 2026-10-13) : son message
+        // arrive tel quel, là où une exception aurait été masquée par Next en
+        // production.
+        if (res.status === "error") {
+          setMessage(null);
+          setErreur(res.message);
+          return;
+        }
         setMessage(
           res.created > 0
             ? `${res.created} équipement${res.created > 1 ? "s" : ""} ajouté${
@@ -106,9 +122,12 @@ export function PreRemplissagePanel({
               }. Pensez à les affiner si besoin.`
             : "Aucun équipement ajouté.",
         );
-      } catch (e) {
+      } catch {
         setMessage(null);
-        setErreur(e instanceof Error ? e.message : "La création a échoué.");
+        // ~~`e.message`~~ (rayé le 2026-10-13) : en production, Next remplace
+        // le message d'une exception d'action serveur ; les refus attendus
+        // arrivent désormais par le retour, ci-dessus. Reste l'imprévu.
+        setErreur("La création a échoué. Rien n'a été créé ; réessayez.");
       }
     });
   };
@@ -135,6 +154,13 @@ export function PreRemplissagePanel({
           valider();
         }}
       >
+        {/* L'astérisque se lit (revue du 2026-10-13) : la légende n'est
+            posée que si une question l'est. */}
+        {suggestions.some((s) => (questionsExigees[s.categorie] ?? []).length > 0) && (
+          <p className="m-0 text-[12px] text-[color:var(--board-slate-mid)]">
+            * réponse requise pour créer la fiche cochée
+          </p>
+        )}
         <ul className="m-0 flex list-none flex-col gap-3 p-0">
           {suggestions.map((s) => {
             const coche = selection.has(s.categorie);
@@ -154,7 +180,10 @@ export function PreRemplissagePanel({
                     htmlFor={`pre-${s.categorie}`}
                     className="min-w-0 flex-1 cursor-pointer"
                   >
-                    <p className="m-0 text-[14px] font-semibold leading-[1.35] text-[color:var(--board-ink)]">
+                    <p
+                      id={`pre-${s.categorie}-titre`}
+                      className="m-0 text-[14px] font-semibold leading-[1.35] text-[color:var(--board-ink)]"
+                    >
                       {LABEL_CATEGORIE_EQUIPEMENT[s.categorie]}
                     </p>
                     <p className="m-0 mt-1 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
@@ -165,9 +194,15 @@ export function PreRemplissagePanel({
                 </div>
                 {/* La question exigée, au format du formulaire : oui ou non,
                     sans présélection. Requise seulement si la case est
-                    cochée — une catégorie décochée n'est pas envoyée. */}
+                    cochée — une catégorie décochée n'est pas envoyée.
+                    Groupe nommé par la catégorie (revue du 2026-10-13) : la
+                    question seule ne dit pas de quel appareil elle parle. */}
                 {questions.length > 0 && (
-                  <div className="ml-7 flex flex-col gap-3">
+                  <div
+                    role="group"
+                    aria-labelledby={`pre-${s.categorie}-titre`}
+                    className="ml-7 flex flex-col gap-3"
+                  >
                     {questions.map((champ) => (
                       <QuestionTriEtat
                         key={champ}
@@ -175,6 +210,11 @@ export function PreRemplissagePanel({
                         nom={nomQuestionPanneau(s.categorie, champ)}
                         defaut=""
                         exigee={coche}
+                        erreur={
+                          coche && sansReponse.has(s.categorie)
+                            ? "Répondez oui ou non."
+                            : undefined
+                        }
                       />
                     ))}
                   </div>

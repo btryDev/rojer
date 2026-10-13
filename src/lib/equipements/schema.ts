@@ -326,13 +326,21 @@ export function valeurTriEtat(v: boolean | undefined | null): string {
   return "";
 }
 
+/**
+ * La règle du libellé d'un appareil : chaîne, non vide une fois rognée, au
+ * plus 200 caractères. Partagée par le formulaire (`equipementSchema`) et par
+ * le pré-remplissage (`creerEquipementsDepuisPreRemplissage`, revue du
+ * 2026-10-13) — une seule règle, deux points d'entrée.
+ */
+export const libelleEquipementSchema = z
+  .string()
+  .trim()
+  .min(1, "Libellé requis")
+  .max(200, "Libellé trop long");
+
 export const equipementSchema = z
   .object({
-    libelle: z
-      .string()
-      .trim()
-      .min(1, "Libellé requis")
-      .max(200, "Libellé trop long"),
+    libelle: libelleEquipementSchema,
     categorie: z.enum(CATEGORIES_EQUIPEMENT),
     // ADR-019 : le bâtiment où se trouve l'équipement. Optionnel au niveau
     // du formulaire — absent, l'action prend le bâtiment principal — mais

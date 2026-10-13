@@ -639,12 +639,12 @@ describe("pré-remplissage : la porte des réponses exigées tient aussi pour un
   // `creerEquipement`. Éprouvé en retirant le refus.
   it("levage : refusé en bloc, rien n'est écrit, l'appartenance est contrôlée d'abord", async () => {
     const [levage] = CATEGORIES_A_REPONSE_EXIGEE;
-    await expect(
-      creerEquipementsDepuisPreRemplissage("etab-1", [
+    expect(
+      await creerEquipementsDepuisPreRemplissage("etab-1", [
         { categorie: "EXTINCTEUR", libelle: "Extincteur" },
         { categorie: levage, libelle: "Palan" },
       ]),
-    ).rejects.toThrow(levage);
+    ).toEqual({ status: "error", message: expect.stringContaining(levage) });
     expect(h.db.creesEnLot).toHaveLength(0);
     expect(h.genererCalendrier).not.toHaveBeenCalled();
     expect(h.assertOwnership).toHaveBeenCalledWith("etab-1");
@@ -652,11 +652,11 @@ describe("pré-remplissage : la porte des réponses exigées tient aussi pour un
 
   it("désenfumage dans un ERP N3 (décision du 2026-10-08) : refusé, rien n'est écrit", async () => {
     h.db.regime = { estERP: true, typeErp: "M", categorieErp: "N3", ssiCategorieAouB: null };
-    await expect(
-      creerEquipementsDepuisPreRemplissage("etab-1", [
+    expect(
+      await creerEquipementsDepuisPreRemplissage("etab-1", [
         { categorie: "DESENFUMAGE", libelle: "Désenfumage" },
       ]),
-    ).rejects.toThrow("DESENFUMAGE");
+    ).toEqual({ status: "error", message: expect.stringContaining("DESENFUMAGE") });
     expect(h.db.creesEnLot).toHaveLength(0);
   });
 
@@ -664,7 +664,7 @@ describe("pré-remplissage : la porte des réponses exigées tient aussi pour un
     const r = await creerEquipementsDepuisPreRemplissage("etab-1", [
       { categorie: "DESENFUMAGE", libelle: "Désenfumage" },
     ]);
-    expect(r.created).toBe(1);
+    expect(r).toMatchObject({ status: "success", created: 1 });
     expect(h.db.creesEnLot).toHaveLength(1);
   });
 
@@ -673,7 +673,7 @@ describe("pré-remplissage : la porte des réponses exigées tient aussi pour un
       { categorie: "EXTINCTEUR", libelle: "Extincteur" },
       { categorie: "BAES", libelle: "BAES" },
     ]);
-    expect(r.created).toBe(2);
+    expect(r).toMatchObject({ status: "success", created: 2 });
     expect(h.db.creesEnLot).toHaveLength(2);
   });
 
@@ -688,12 +688,12 @@ describe("pré-remplissage : la porte des réponses exigées tient aussi pour un
       return h.db.regime;
     };
     try {
-      await expect(
-        creerEquipementsDepuisPreRemplissage("etab-1", [
+      expect(
+        await creerEquipementsDepuisPreRemplissage("etab-1", [
           { categorie: "EXTINCTEUR", libelle: "Extincteur" },
           { categorie: "PAS_UNE_CATEGORIE" as never, libelle: "Forgé" },
         ]),
-      ).rejects.toThrow("PAS_UNE_CATEGORIE");
+      ).toEqual({ status: "error", message: expect.stringContaining("PAS_UNE_CATEGORIE") });
     } finally {
       h.prisma.etablissement.findUnique = lire;
     }
@@ -735,7 +735,7 @@ describe("pré-remplissage : le panneau pose la question exigée, l'action en re
       { categorie: "INSTALLATION_ELECTRIQUE", libelle: "TGBT", caracteristiques: { aGroupeElectrogene: true } },
       { categorie: "EXTINCTEUR", libelle: "Extincteur" },
     ]);
-    expect(r.created).toBe(2);
+    expect(r).toMatchObject({ status: "success", created: 2 });
     const [elec, ext] = h.db.creesEnLot as { caracteristiques?: unknown }[];
     expect(elec.caracteristiques).toEqual({ aGroupeElectrogene: true });
     expect(ext).not.toHaveProperty("caracteristiques");
@@ -754,12 +754,12 @@ describe("pré-remplissage : le panneau pose la question exigée, l'action en re
 
   it("réponse manquante : refusé en bloc, rien n'est écrit", async () => {
     h.db.regime = ERP_N3;
-    await expect(
-      creerEquipementsDepuisPreRemplissage("etab-1", [
+    expect(
+      await creerEquipementsDepuisPreRemplissage("etab-1", [
         { categorie: "EXTINCTEUR", libelle: "Extincteur" },
         { categorie: "INSTALLATION_ELECTRIQUE", libelle: "TGBT", caracteristiques: {} },
       ]),
-    ).rejects.toThrow("INSTALLATION_ELECTRIQUE");
+    ).toEqual({ status: "error", message: expect.stringContaining("INSTALLATION_ELECTRIQUE") });
     expect(h.db.creesEnLot).toHaveLength(0);
     expect(h.genererCalendrier).not.toHaveBeenCalled();
   });
@@ -775,8 +775,8 @@ describe("pré-remplissage : le panneau pose la question exigée, l'action en re
       null,
     ];
     for (const caracteristiques of forges) {
-      await expect(
-        creerEquipementsDepuisPreRemplissage("etab-1", [
+      expect(
+        await creerEquipementsDepuisPreRemplissage("etab-1", [
           {
             categorie: "INSTALLATION_ELECTRIQUE",
             libelle: "TGBT",
@@ -784,21 +784,66 @@ describe("pré-remplissage : le panneau pose la question exigée, l'action en re
           },
         ]),
         JSON.stringify(caracteristiques),
-      ).rejects.toThrow("INSTALLATION_ELECTRIQUE");
+      ).toEqual({ status: "error", message: expect.stringContaining("INSTALLATION_ELECTRIQUE") });
     }
     expect(h.db.creesEnLot).toHaveLength(0);
+  });
+
+  // Revue du 2026-10-13 : la réponse se lit sur les clés PROPRES. Un objet
+  // dont le PROTOTYPE porte `aGroupeElectrogene: true` passait la porte des
+  // manquantes (lecture par `?.[champ]`) sans rien écrire : l'appareil
+  // naissait muet. Éprouvé en remettant la lecture par `?.[champ]`.
+  it("une réponse portée par le prototype n'est pas une réponse : refusé, rien n'est écrit", async () => {
+    h.db.regime = ERP_N3;
+    const herite = Object.create({ aGroupeElectrogene: true }) as Record<string, boolean>;
+    expect(herite.aGroupeElectrogene).toBe(true);
+    expect(
+      await creerEquipementsDepuisPreRemplissage("etab-1", [
+        { categorie: "INSTALLATION_ELECTRIQUE", libelle: "TGBT", caracteristiques: herite },
+      ]),
+    ).toEqual({ status: "error", message: expect.stringContaining("INSTALLATION_ELECTRIQUE") });
+    expect(h.db.creesEnLot).toHaveLength(0);
+    expect(h.genererCalendrier).not.toHaveBeenCalled();
+  });
+
+  // Revue du 2026-10-13 : le libellé suit la règle de la création manuelle
+  // (`libelleEquipementSchema`), et un refus se RETOURNE — Next masque en
+  // production le message d'une exception levée par une action serveur.
+  it("libellé hors règle (vide, trop long, pas une chaîne) : refusé sans exception, rien n'est écrit", async () => {
+    for (const libelle of ["   ", "x".repeat(201), 42 as never, null as never]) {
+      expect(
+        await creerEquipementsDepuisPreRemplissage("etab-1", [
+          { categorie: "EXTINCTEUR", libelle: "Extincteur" },
+          { categorie: "BAES", libelle },
+        ]),
+        JSON.stringify(libelle),
+      ).toEqual({ status: "error", message: expect.stringContaining("Libellé") });
+    }
+    expect(h.db.creesEnLot).toHaveLength(0);
+  });
+
+  it("le libellé écrit est le libellé rogné, et 200 caractères passent", async () => {
+    const r = await creerEquipementsDepuisPreRemplissage("etab-1", [
+      { categorie: "EXTINCTEUR", libelle: "  Extincteur  " },
+      { categorie: "BAES", libelle: "b".repeat(200) },
+    ]);
+    expect(r).toMatchObject({ status: "success", created: 2 });
+    expect((h.db.creesEnLot as { libelle: string }[]).map((e) => e.libelle)).toEqual([
+      "Extincteur",
+      "b".repeat(200),
+    ]);
   });
 
   it("hors ERP : pas de question — créée sans réponse, et une réponse fournie est refusée", async () => {
     const r = await creerEquipementsDepuisPreRemplissage("etab-1", [
       { categorie: "INSTALLATION_ELECTRIQUE", libelle: "TGBT" },
     ]);
-    expect(r.created).toBe(1);
+    expect(r).toMatchObject({ status: "success", created: 1 });
     expect(h.db.creesEnLot[0]).not.toHaveProperty("caracteristiques");
-    await expect(
-      creerEquipementsDepuisPreRemplissage("etab-1", [
+    expect(
+      await creerEquipementsDepuisPreRemplissage("etab-1", [
         { categorie: "INSTALLATION_ELECTRIQUE", libelle: "TGBT", caracteristiques: { aGroupeElectrogene: true } },
       ]),
-    ).rejects.toThrow("INSTALLATION_ELECTRIQUE");
+    ).toEqual({ status: "error", message: expect.stringContaining("INSTALLATION_ELECTRIQUE") });
   });
 });

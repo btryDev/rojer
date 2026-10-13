@@ -32,10 +32,10 @@ const CASE_A_COCHER =
   "mt-0.5 size-4 flex-none rounded border-[color:var(--board-slate)] accent-[color:var(--board-ink)]";
 
 /** Le message de validation, à l'encre du signal. */
-function Erreur({ message }: { message?: string }) {
+function Erreur({ message, id }: { message?: string; id?: string }) {
   if (!message) return null;
   return (
-    <p className="m-0 mt-1.5 text-[12.5px] text-[color:var(--board-signal-ink)]">
+    <p id={id} className="m-0 mt-1.5 text-[12.5px] text-[color:var(--board-signal-ink)]">
       {message}
     </p>
   );
@@ -672,7 +672,9 @@ export function QuestionTriEtat({
         name={nom}
         defaultValue={defaut}
         className="champ-board mt-2 sm:w-64"
-        aria-describedby={`${nom}-aide`}
+        // Le message d'erreur est lié au champ (revue du 2026-10-13) : un
+        // lecteur d'écran l'annonce avec la question, pas seulement l'aide.
+        aria-describedby={erreur ? `${nom}-aide ${nom}-erreur` : `${nom}-aide`}
         aria-invalid={Boolean(erreur)}
         required={exigee}
       >
@@ -695,7 +697,7 @@ export function QuestionTriEtat({
           ))
         )}
       </select>
-      <Erreur message={erreur} />
+      <Erreur id={`${nom}-erreur`} message={erreur} />
     </div>
   );
 }

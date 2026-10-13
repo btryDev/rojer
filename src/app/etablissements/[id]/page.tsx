@@ -366,11 +366,15 @@ export default async function EtablissementPage({
   // le rythme de sa VGP : le moteur retient le rythme le plus court, et la
   // question se répond ici, appareil par appareil. ~~Les appareils nés du
   // pré-remplissage, sans caractéristiques, arrivent tous par ici.~~
-  // [2026-10-13, reprise des suites du lot 3 : faux — le pré-remplissage ne
+  // [2026-10-13, reprise des suites du lot 3 : faux — ~~le pré-remplissage ne
   // propose aucune catégorie dont une réponse est exigée (vérifié en appelant
   // `suggererEquipements` sur 288 contextes, puis `questionsExigeesPour` sur
-  // 16 régimes : zéro), et `creerEquipementsDepuisPreRemplissage` refuse
-  // désormais un POST forgé qui en porterait une. Arrivent ici les appareils
+  // 16 régimes : zéro), et~~ [rayé le 2026-10-13 (`lot/conditions-equipement`,
+  // ed036f18) : faux depuis que la réponse au groupe électrogène est exigée
+  // en ERP — le pré-remplissage propose l'installation électrique à tout ERP,
+  // et son panneau POSE la question (`PreRemplissagePanel`)]
+  // `creerEquipementsDepuisPreRemplissage` refuse un appareil créé sans les
+  // réponses exigées, POST forgé compris. Arrivent ici les appareils
   // enregistrés avant que leur réponse ne soit exigée.]
   // [2026-10-12 : et un désenfumage d'ERP des quatre premières catégories
   // muet sur « mécanique » — la décision du 2026-10-08 rend la réponse
