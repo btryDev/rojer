@@ -628,7 +628,9 @@ function PagePropositions({
         </Text>
         <Text style={{ fontSize: 10.5, lineHeight: 1.55, marginTop: 5, color: BOARD.ardoiseEncre, fontFamily: "Helvetica-Bold" }}>
           {t(
-            `Ce sont des propositions, rien n'est décidé : ${fermes.length} que nous soutenons, ${ouvertes.length} sur lesquelles votre avis tranchera.`,
+            ouvertes.length > 0
+              ? `Ce sont des propositions, rien n'est décidé : ${fermes.length} que nous soutenons, ${ouvertes.length} sur lesquelles votre avis tranchera.`
+              : `Ce sont des propositions, rien n'est décidé : ${fermes.length} lignes que nous proposons de passer au niveau audit, à valider ou non.`,
           )}
         </Text>
       </View>
@@ -664,6 +666,8 @@ function PagePropositions({
         <CarteProposition key={o.id} o={o} motif={motifDe(o)} />
       ))}
 
+      {ouvertes.length > 0 && (
+        <>
       <TitrePartie
         sousTitre={`${ouvertes.length} questions`}
         titre="À discuter avec vous"
@@ -672,6 +676,8 @@ function PagePropositions({
       {ouvertes.map((o) => (
         <CarteProposition key={o.id} o={o} motif={sansPrefixe(motifDe(o))} />
       ))}
+        </>
+      )}
 
       <PiedDePage />
     </Page>
