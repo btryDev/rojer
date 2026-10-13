@@ -1,0 +1,25 @@
+# Mises à jour de dépendances (constat d'audit OWASP A06 : composants vulnérables).
+# npm couvre pnpm-lock.yaml. Les actions de la CI sont épinglées par SHA :
+# Dependabot met à jour le SHA et le commentaire de version.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      next:
+        patterns:
+          - next
+          - eslint-config-next
+          - "@next/*"
+      minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
