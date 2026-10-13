@@ -124,6 +124,7 @@ beforeEach(() => {
   });
   prismaMock.verification.count.mockReset().mockResolvedValue(0);
   prismaMock.verification.findMany.mockReset().mockResolvedValue([]);
+  prismaMock.equipement.findMany.mockReset().mockResolvedValue([]);
 });
 
 describe("subscriptions/listen — la cause des 300 s", () => {
@@ -259,9 +260,11 @@ describe("établissement introuvable (MCP_ETABLISSEMENT_ID supprimé)", () => {
     expect(r.result?.content?.[0]?.text).toContain(
       "Établissement introuvable pour ce connecteur",
     );
-    // Une seule lecture — le nom — et le calendrier n'est pas interrogé.
+    // Une seule lecture — le nom — : ni le calendrier ni le parc (axe
+    // `inventaire`, § 15) ne sont interrogés.
     expect(prismaMock.etablissement.findUnique).toHaveBeenCalledTimes(1);
     expect(prismaMock.verification.findMany).not.toHaveBeenCalled();
+    expect(prismaMock.equipement.findMany).not.toHaveBeenCalled();
   });
 });
 

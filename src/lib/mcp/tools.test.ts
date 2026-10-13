@@ -121,6 +121,7 @@ describe("le serveur dit quand le calendrier n'est pas à jour", () => {
         codeNaf: "56.10A",
         effectif: 8,
       },
+      equipements: [],
       _count: { equipements: 0, verifications: 0, actions: 0 },
     };
   }
@@ -179,6 +180,7 @@ describe("portée des lectures", () => {
         codeNaf: "56.10A",
         effectif: 8,
       },
+      equipements: [],
       _count: { equipements: 4, verifications: 12, actions: 3 },
     });
 
@@ -642,6 +644,7 @@ describe("provenance de la réponse", () => {
       codeNaf: "47.25Z",
       effectif: 2,
     },
+    equipements: [],
     _count: { equipements: 13, verifications: 43, actions: 21 },
   };
 
@@ -875,31 +878,38 @@ describe("le serveur dit qu'aucun équipement n'est déclaré (§ 15)", () => {
     verifications: [],
   });
 
-  /** Une fiche lisible : la fiche et le nom passent par `findUnique`. */
-  const fiche = {
-    raisonDisplay: "Le Comptoir",
-    adresse: "1 rue des Lilas, 75011 Paris",
-    codeNaf: "56.10A",
-    effectifSurSite: 3,
-    estEtablissementTravail: true,
-    estERP: false,
-    estIGH: false,
-    estHabitation: false,
-    typeErp: null,
-    categorieErp: null,
-    referentielVersionCalendrier: SCEAU_CALENDRIER,
-    entreprise: { raisonSociale: "Comptoir SAS", siret: null, codeNaf: "56.10A", effectif: 3 },
-    _count: { verifications: 0, actions: 0 },
-  };
-
-  beforeEach(() => {
-    prismaMock.etablissement.findUnique.mockResolvedValue(fiche);
-  });
+  /**
+   * Pose le parc d'un scénario aux DEUX endroits où le serveur le lit : la
+   * liste des équipements (`equipements`, `verifications`) et la fiche, qui
+   * compte le parc en service et liste les retirés dans sa propre requête.
+   * La fiche et le nom passent tous deux par `findUnique`.
+   */
+  function parc(appareils: ReturnType<typeof appareil>[]) {
+    prismaMock.equipement.findMany.mockResolvedValue(appareils);
+    prismaMock.etablissement.findUnique.mockResolvedValue({
+      raisonDisplay: "Le Comptoir",
+      adresse: "1 rue des Lilas, 75011 Paris",
+      codeNaf: "56.10A",
+      effectifSurSite: 3,
+      estEtablissementTravail: true,
+      estERP: false,
+      estIGH: false,
+      estHabitation: false,
+      typeErp: null,
+      categorieErp: null,
+      referentielVersionCalendrier: SCEAU_CALENDRIER,
+      entreprise: { raisonSociale: "Comptoir SAS", siret: null, codeNaf: "56.10A", effectif: 3 },
+      equipements: appareils.filter((a) => !a.actif).map((_, i) => ({ id: `retire-${i}` })),
+      _count: { equipements: appareils.filter((a) => a.actif).length, verifications: 0, actions: 0 },
+    });
+  }
 
   const sansRien = couvertureDeLInventaire({ nbEquipements: 0, nbRetires: 0 })!;
   const toutRetire = couvertureDeLInventaire({ nbEquipements: 0, nbRetires: 1 })!;
+  const lignes = (t: string) => t.split("\n");
 
   it("dossier sans équipement : chaque outil du parc porte la phrase de l'axe, avant le contenu", async () => {
+    parc([]);
     // Une obligation d'établissement au calendrier : la liste n'est PAS vide,
     // et elle tait pourtant tout ce qu'un équipement porterait.
     prismaMock.verification.findMany.mockResolvedValue([
@@ -925,58 +935,78 @@ describe("le serveur dit qu'aucun équipement n'est déclaré (§ 15)", () => {
     expect(filtree).toContain(sansRien.motif);
   });
 
-  it("dossier avec un équipement actif : aucune phrase d'inventaire", async () => {
-    prismaMock.equipement.findMany.mockResolvedValue([appareil(true)]);
+  it("dossier avec un équipement actif : aucune phrase d'inventaire, aucun retiré annoncé", async () => {
+    parc([appareil(true)]);
     for (const nom of OUTILS_DU_PARC) {
       const texte = await outil(nom).executer(ctx, {});
       expect(texte, nom).not.toContain(sansRien.motif);
       expect(texte, nom).not.toContain(toutRetire.motif);
+      // Pas de « (0 retiré(s) du parc) » : sans retiré, rien n'en est dit.
+      expect(texte, nom).not.toContain("retiré(s) du parc");
     }
     const ficheTexte = await outil("fiche_etablissement").executer(ctx, {});
-    expect(ficheTexte).toContain("Équipements déclarés en service : 1");
+    expect(lignes(ficheTexte)).toContain("Équipements déclarés en service : 1");
+    const liste = await outil("equipements").executer(ctx, {});
+    expect(lignes(liste)).toContain("1 équipement(s) déclaré(s).");
   });
 
   it("un appareil actif à côté d'un retiré suffit : pas de phrase", async () => {
-    prismaMock.equipement.findMany.mockResolvedValue([appareil(true), appareil(false)]);
-    const texte = await outil("equipements").executer(ctx, {});
-    expect(texte).not.toContain(toutRetire.motif);
-    expect(texte).toContain("1 équipement(s) déclaré(s) en service, 1 retiré(s) du parc.");
+    parc([appareil(true), appareil(false)]);
+    for (const nom of OUTILS_DU_PARC) {
+      const texte = await outil(nom).executer(ctx, {});
+      expect(texte, nom).not.toContain(toutRetire.motif);
+    }
+    const liste = await outil("equipements").executer(ctx, {});
+    expect(lignes(liste)).toContain("1 équipement(s) déclaré(s) en service, 1 retiré(s) du parc.");
+    const ficheTexte = await outil("fiche_etablissement").executer(ctx, {});
+    expect(lignes(ficheTexte)).toContain("Équipements déclarés en service : 1 (1 retiré(s) du parc)");
   });
 
   it("parc entièrement retiré : compte comme non déclaré, avec la phrase des retirés", async () => {
-    prismaMock.equipement.findMany.mockResolvedValue([appareil(false)]);
+    parc([appareil(false)]);
     for (const nom of OUTILS_DU_PARC) {
       const texte = await outil(nom).executer(ctx, {});
       expect(texte, nom).toContain(toutRetire.motif);
       expect(texte, nom).toContain(toutRetire.consequence);
     }
     const ficheTexte = await outil("fiche_etablissement").executer(ctx, {});
-    expect(ficheTexte).toContain("Équipements déclarés en service : 0 (1 retiré(s) du parc)");
+    expect(lignes(ficheTexte)).toContain("Équipements déclarés en service : 0 (1 retiré(s) du parc)");
     const liste = await outil("equipements").executer(ctx, {});
-    expect(liste).toContain("0 équipement(s) déclaré(s) en service, 1 retiré(s) du parc.");
+    expect(lignes(liste)).toContain("0 équipement(s) déclaré(s) en service, 1 retiré(s) du parc.");
     expect(liste).toContain("Ancien extincteur — extincteur · retiré du parc");
   });
 
-  it("tenancy : le parc est lu sur l'établissement du jeton, et sur lui seul", async () => {
+  it("tenancy : chaque lecture du parc porte l'établissement du jeton, et lui seul", async () => {
     await getParcEquipements(ETABLISSEMENT_ID);
     expect(prismaMock.equipement.findMany).toHaveBeenCalledWith({
       where: { etablissementId: ETABLISSEMENT_ID },
       select: { actif: true },
     });
 
+    parc([appareil(true), appareil(false)]);
     prismaMock.equipement.findMany.mockClear();
+    prismaMock.etablissement.findUnique.mockClear();
     for (const nom of OUTILS_DU_PARC) {
       // Un client qui glisse un autre établissement est refusé par le schéma
       // strict ; l'outil, lui, ne lit que la portée du contexte.
       expect(outil(nom).schema.safeParse({ etablissementId: AUTRE_ETABLISSEMENT }).success).toBe(false);
       await outil(nom).executer(ctx, {});
     }
-    const portees = prismaMock.equipement.findMany.mock.calls.map(
+    // TOUTES les clauses `where` qui lisent le parc — la liste des équipements,
+    // et la fiche qui le compte dans sa propre requête —, pas un échantillon.
+    const parEquipement = prismaMock.equipement.findMany.mock.calls.map(
       (appel) => (appel[0] as { where: unknown }).where,
     );
-    expect(portees.length).toBeGreaterThan(0);
-    for (const where of portees) {
+    const parEtablissement = prismaMock.etablissement.findUnique.mock.calls.map(
+      (appel) => (appel[0] as { where: unknown }).where,
+    );
+    expect(parEquipement.length).toBeGreaterThan(0);
+    expect(parEtablissement.length).toBeGreaterThan(0);
+    for (const where of parEquipement) {
       expect(where).toEqual({ etablissementId: ETABLISSEMENT_ID });
+    }
+    for (const where of parEtablissement) {
+      expect(where).toEqual({ id: ETABLISSEMENT_ID });
     }
   });
 });

@@ -179,6 +179,7 @@ describe("outils servis", () => {
         codeNaf: "56.10A",
         effectif: 8,
       },
+      equipements: [],
       _count: { equipements: 4, verifications: 12, actions: 3 },
     });
 

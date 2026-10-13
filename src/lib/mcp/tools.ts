@@ -36,6 +36,8 @@ import {
   getFicheEtablissement,
   getFraicheurCalendrier,
   getParcEquipements,
+  parcDeLaFiche,
+  parcDepuis,
   listerActions,
   listerEquipements,
   listerVerifications,
@@ -314,13 +316,12 @@ const outilFiche: OutilMcp<SchemaVide> = {
     "Identité de l'établissement suivi : raison sociale, adresse, régimes réglementaires (travail, ERP, IGH, habitation), effectifs, et volume du dossier (équipements, vérifications, actions). À appeler en premier pour savoir de quel établissement on parle.",
   schema: SCHEMA_VIDE,
   executer: async (ctx) => {
-    const [fiche, inventaire] = await Promise.all([
-      getFicheEtablissement(ctx.scope.etablissementId),
-      lireInventaire(ctx.scope.etablissementId),
-    ]);
+    const fiche = await getFicheEtablissement(ctx.scope.etablissementId);
     // Déjà filtré par `avecEtablissement` ; si l'établissement disparaît
     // entre les deux lectures, même réponse, même marquage.
     if (!fiche) throw new ErreurOutilMcp(MESSAGE_ETABLISSEMENT_INTROUVABLE);
+    // Le parc vient de la fiche elle-même : une lecture, pas deux.
+    const inventaire = inventaireDe(parcDeLaFiche(fiche));
     return avecInventaire(inventaire, formaterFiche(fiche, inventaire.parc));
   },
 };
@@ -423,7 +424,7 @@ export const LIBELLE_CATEGORIE: Record<string, string> = {
 
 const categorieLisible = (c: string) => LIBELLE_CATEGORIE[c] ?? c.toLowerCase();
 
-function formaterEquipements(equipements: EquipementLu[]): string {
+function formaterEquipements(equipements: EquipementLu[], parc: FaitParc): string {
   if (equipements.length === 0) {
     return "Aucun équipement déclaré pour cet établissement.";
   }
@@ -459,10 +460,9 @@ function formaterEquipements(equipements: EquipementLu[]): string {
 
   // Un appareil retiré n'est pas compté comme déclaré (§ 15, axe `inventaire`) :
   // il reste listé, ses preuves existent, mais à part.
-  const retires = equipements.filter(estAppareilRetire).length;
   const entete =
-    retires > 0
-      ? `${equipements.length - retires} équipement(s) déclaré(s) en service, ${retires} retiré(s) du parc.`
+    parc.nbRetires > 0
+      ? `${parc.nbEquipements} équipement(s) déclaré(s) en service, ${parc.nbRetires} retiré(s) du parc.`
       : `${equipements.length} équipement(s) déclaré(s).`;
   return [entete, "", ...lignes].join("\n");
 }
@@ -564,16 +564,16 @@ const outilEquipements: OutilMcp<SchemaVide> = {
     "Équipements déclarés de l'établissement (extincteurs, installation électrique, blocs de secours, ventilation, ascenseur…) avec leur catégorie, leur localisation, leur date de mise en service, et le nombre de vérifications en retard ou à planifier pour chacun. À appeler pour savoir de quel matériel dispose l'établissement.",
   schema: SCHEMA_VIDE,
   executer: async (ctx) => {
-    const [equipements, inventaire] = await Promise.all([
-      listerEquipements(ctx.scope.etablissementId, ctx.now),
-      lireInventaire(ctx.scope.etablissementId),
-    ]);
+    const equipements = await listerEquipements(ctx.scope.etablissementId, ctx.now);
+    // Le parc se déduit de la liste rendue : ni seconde lecture, ni écart
+    // possible entre ce qui est listé et ce que la phrase affirme.
+    const inventaire = inventaireDe(parcDepuis(equipements));
     // Liste vide ET fait d'inventaire : la phrase de l'axe dit déjà « aucun
     // équipement n'est déclaré », la répéter dessous n'ajouterait rien.
     if (equipements.length === 0 && inventaire.manque) {
       return phraseInventaire(inventaire.manque);
     }
-    return avecInventaire(inventaire, formaterEquipements(equipements));
+    return avecInventaire(inventaire, formaterEquipements(equipements, inventaire.parc));
   },
 };
 
@@ -637,7 +637,10 @@ type InventaireLu = { parc: FaitParc; manque: ManqueCouverture | null };
  * fichier ne collecte que le parc, à la portée du jeton.
  */
 async function lireInventaire(etablissementId: string): Promise<InventaireLu> {
-  const parc = await getParcEquipements(etablissementId);
+  return inventaireDe(await getParcEquipements(etablissementId));
+}
+
+function inventaireDe(parc: FaitParc): InventaireLu {
   return { parc, manque: couvertureDeLInventaire(parc) };
 }
 
