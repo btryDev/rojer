@@ -66,6 +66,27 @@ describe("chemins publics", () => {
       expect(cheminPublic(p)).toBe(false);
     }
   });
+
+  it("compare par segment entier, pas par début de chaîne", () => {
+    // Audit du 2026-10-13, C7 : `startsWith("/auth")` ouvrait `/authorisations`,
+    // `startsWith("/signe")` ouvrait `/signets`. Une route ajoutée demain sous
+    // un de ces noms serait publique sans que personne l'ait décidé.
+    for (const p of [
+      "/authorisations",
+      "/signets",
+      "/acces-admin",
+      "/verifiers",
+      "/loginx",
+      "/signup-admin",
+      "/accessibilite-interne",
+      "/api/mcpx",
+      "/api/accessibilites",
+      "/_nextx",
+      "/.well-knownx",
+    ]) {
+      expect(cheminPublic(p), p).toBe(false);
+    }
+  });
 });
 
 /**

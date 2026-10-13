@@ -32,12 +32,18 @@ const PUBLIC_PREFIXES = [
   "/api/mcp",
   // Découverte OAuth (RFC 9728) : document public par nature, lu par un
   // client *avant* qu'il ait le moindre jeton.
-  "/.well-known/",
+  "/.well-known",
 ];
 
+// Un préfixe s'entend par segment entier : `/auth` ouvre `/auth` et
+// `/auth/callback`, jamais `/authorisations` (audit du 2026-10-13, C7). Une
+// comparaison par début de chaîne rendait publique, sans que personne l'ait
+// décidé, toute route future dont le nom commencerait comme une route ouverte.
 function isPublicPath(pathname: string): boolean {
   if (pathname === "/") return true;
-  return PUBLIC_PREFIXES.some((p) => pathname.startsWith(p));
+  return PUBLIC_PREFIXES.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`),
+  );
 }
 
 /** Exporté pour les tests — la règle mérite d'être vérifiée directement. */
