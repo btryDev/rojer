@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
+import { useOuvertureFormulaire } from "./useOuvertureFormulaire";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ChampBoard, EvidenceDropzone, StatusPill } from "@/components/ui-kit";
 import {
@@ -39,16 +40,13 @@ export function AjoutAnalyseForm({
     CarnetActionState,
     FormData
   >(boundAction, { status: "idle" });
-  const [ouvert, setOuvert] = useState(false);
   const valeurInitiale =
     analyse?.valeurUfcParL !== null && analyse?.valeurUfcParL !== undefined
       ? String(analyse.valeurUfcParL)
       : "";
   const [valeur, setValeur] = useState<string>(valeurInitiale);
   // Une correction faite referme le formulaire : la carte montre le résultat.
-  useEffect(() => {
-    if (analyse && state.status === "success") setOuvert(false);
-  }, [analyse, state]);
+  const [ouvert, setOuvert] = useOuvertureFormulaire(state, Boolean(analyse));
   const err = (champ: string) =>
     state.status === "error" ? state.fieldErrors?.[champ]?.[0] : undefined;
   // Un identifiant par formulaire : la saisie et chaque correction coexistent.
