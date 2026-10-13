@@ -7,8 +7,10 @@ Chaque point encore ouvert du document a été lu et annoté sur place
 et datés (règle 11). Les défauts ont été revérifiés dans le code du jour
 (`main` à `8f48889e`).
 
-**50 points ouverts avant tri → 5 défauts, 11 décisions, 7 projets, 27 constats
-rayés ou annotés** (dont 5 déjà faits ou corrigés, rayés).
+**50 points ouverts avant tri → 5 défauts, ~~11~~ 13 décisions, 7 projets, ~~27~~ 25 constats
+rayés ou annotés** (dont 5 déjà faits ou corrigés, rayés). [Relu le même jour :
+les comptes de test en production et le stockage Vercel au-dessus du quota
+passent de constat à décision — ils se règlent avant les premiers clients.]
 
 ### Défauts réels
 
@@ -66,6 +68,12 @@ rayés ou annotés** (dont 5 déjà faits ou corrigés, rayés).
     ([§ 14](#14-laudit-du-2026-09-19-est-fusionné--ce-quil-laisse-ouvert)).
 11. **Engin déclaré et « non » à la conduite** : relever la contradiction ou
     non ([§ 17](#17-les-titres-que-le-duerp-rend-dus--ce-que-ladr-038-laisse-ouvert-2026-10-05), point 7).
+12. **Comptes de test en production**, dont le compte de seed créé par erreur
+    le 2026-09-03 dans l'authentification Supabase de production : les
+    garder ou les supprimer avant les premiers clients ([§ 6](#6-plus-petit-mais-mesuré)).
+13. **Stockage Vercel au-dessus du quota** (24,7 Go pour 10 inclus, offre
+    Hobby) : raccourcir la rétention des déploiements annulés, en erreur et de
+    pré-production ([§ 13](#13-les-previews-vercel-sont-abandonnées--2026-09-18)).
 
 ### Feuille de route
 
@@ -622,8 +630,9 @@ en tête du fichier.
   n'avait pas le droit de la traiter. **Tout lot qui approche l'auth doit porter
   cette interdiction explicitement**, l'auth vivant chez Supabase et non en base
   (ADR-005) : un `.env` qui pointe une base locale peut parfaitement écrire dans
-  l'auth de production. [2026-10-13, tri : constat, pas une tâche — à la main
-  de la propriétaire, rien n'en dépend.]
+  l'auth de production. [2026-10-13, tri : ~~constat, pas une tâche — à la main
+  de la propriétaire, rien n'en dépend~~ DÉCISION ATTENDUE — un compte créé
+  par erreur dans l'auth de production se règle avant les premiers clients.]
 
 ---
 
@@ -2573,8 +2582,9 @@ expirent. Raccourcir la rétention des déploiements annulés, en erreur et de
 pré-production le ferait plus vite, sans toucher à la production — c'est une
 décision de la propriétaire, pas faite ici. Au même relevé, la mémoire
 provisionnée des fonctions est à 250 Go-h sur 360 : à surveiller, pas encore
-un dépassement. [2026-10-13, tri : constat, pas une tâche — à surveiller ;
-l'arrêt des previews le fait redescendre seul.]
+un dépassement. [2026-10-13, tri : ~~constat, pas une tâche — à surveiller ;
+l'arrêt des previews le fait redescendre seul~~ DÉCISION ATTENDUE pour le
+stockage (dépassement de quota en offre Hobby) ; la mémoire reste un constat.]
 
 ---
 
