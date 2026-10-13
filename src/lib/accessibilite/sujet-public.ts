@@ -18,7 +18,7 @@
 // ait à penser à l'y inscrire — c'est le seul mode sous lequel une liste ne se
 // périme pas. Et que ces répertoires soient bien PUBLICS n'est pas affirmé
 // ici : `sujet-public.test.ts` le demande à `cheminPublic`, la règle même du
-// middleware, plutôt que de recopier `PUBLIC_PREFIXES`.
+// proxy, plutôt que de recopier `PUBLIC_PREFIXES`.
 //
 // LES COMMENTAIRES SONT EXCLUS, comme dans `corpus/citations-ecran.ts` et pour
 // la même raison : un commentaire qui parle de l'entreprise raconte une

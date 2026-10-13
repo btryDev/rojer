@@ -72,6 +72,14 @@ describe("publicAppUrl — pas de localhost en production (audit du 2026-10-12, 
     expect(m.publicAppUrl()).toBe("https://app.exemple.test");
   });
 
+  it("sans « / » final : chaque appelant ajoute le sien", async () => {
+    // Tous les appelants écrivent `${publicAppUrl()}/…` : une variable posée
+    // avec un « / » final donnait `//auth/callback` dans les liens envoyés.
+    vi.stubEnv("PUBLIC_APP_URL", "https://app.exemple.test//");
+    const m = await charger();
+    expect(m.publicAppUrl()).toBe("https://app.exemple.test");
+  });
+
   it("en développement, le repli sur localhost reste", async () => {
     vi.stubEnv("NODE_ENV", "development");
     vi.stubEnv("PUBLIC_APP_URL", "");

@@ -84,7 +84,7 @@ Moyen. L'auth est un couloir central, mais :
 1. Deps `@supabase/ssr` + `@supabase/supabase-js` ; vars `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` dans `.env.example`.
 2. Prisma : `Entreprise.userId String?` + `@@index([userId])` ; migration DDL via Supabase MCP.
 3. Clients `src/lib/supabase/{client,server,middleware}.ts`.
-4. `middleware.ts` racine avec whitelist + refresh session.
+4. `middleware.ts` racine avec whitelist + refresh session. [2026-10-13 : renommé `src/proxy.ts`, export `proxy` — convention de Next 16, l'ancienne est dépréciée ; dans `src/`, au niveau de `app/`, seul emplacement où le build le détecte (un `proxy.ts` racine est ignoré en silence) ; le helper `src/lib/supabase/middleware.ts` garde son nom. La whitelist se compare désormais par segment entier.]
 5. Helper `src/lib/auth/require-user.ts`.
 6. Pages `/login`, `/signup`, `/auth/callback` + server actions `signIn`, `signUp`, `signOut`.
 7. Scoping par `userId` : tous les reads/writes d'`Entreprise` et descendants. Création d'entreprise rattachée au user courant.

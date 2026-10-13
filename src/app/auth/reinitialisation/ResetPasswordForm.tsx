@@ -34,7 +34,7 @@ export function ResetPasswordForm() {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) setStatus("ready");
     });
-    // Même traitement que côté serveur (middleware, require-user) : un refresh
+    // Même traitement que côté serveur (proxy, require-user) : un refresh
     // token périmé fait rejeter getSession — on le traite comme « pas de
     // session » au lieu de laisser la promesse rejeter sans handler.
     supabase.auth
@@ -79,7 +79,7 @@ export function ResetPasswordForm() {
       return;
     }
     // Session déjà posée dans les cookies : navigation complète pour que le
-    // middleware et les Server Components la voient.
+    // proxy et les Server Components la voient.
     window.location.assign("/entreprises");
   }
 
