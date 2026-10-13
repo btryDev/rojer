@@ -1,7 +1,9 @@
 #!/usr/bin/env tsx
 //
-// Grille de RELECTURE du référentiel : les 116 obligations, sans exception,
-// rangées par ce qui les déclenche.
+// Grille de RELECTURE du référentiel : ~~les 116 obligations~~ toutes les
+// obligations [2026-10-13 : 176 au référentiel 2026-10-13.1 ; le compte n'est
+// plus écrit ici, l'en-tête du PDF l'imprime, calculé sur
+// `obligationsConformite`], sans exception, rangées par ce qui les déclenche.
 //
 // Trois parties, une par porteur (ADR-022, ADR-023) :
 //   1. par catégorie d'équipement — ce qu'un appareil déclaré fait naître ;
@@ -76,10 +78,11 @@ import {
   type CategorieEquipement,
 } from "@/lib/referentiels/types-communs";
 import {
-  releveDe,
-  texteProvenance,
+  LEGENDE_REGIME,
+  pourHelvetica as t,
   texteTypologie,
 } from "@/lib/pdf/textes-grille-relecture";
+import { ReferenceDetaillee } from "@/lib/pdf/ReferenceDetaillee";
 import {
   DESCRIPTION_CATEGORIE,
   LABEL_CATEGORIE_EQUIPEMENT,
@@ -109,37 +112,9 @@ const LABEL_SOURCE: Record<string, string> = {
   NORME: "Norme",
 };
 
-/**
- * Helvetica — la police de base d'un PDF, celle qu'aucun lecteur n'a besoin
- * d'embarquer — ne porte ni exposants ni indices. Le référentiel écrit
- * « 1ʳᵉ à 4ᵉ catégorie » et « CO₂ » ; sans cette table, le PDF imprimait
- * « 1³l à 4l catégorie », c'est-à-dire un texte faux. On rend donc la forme
- * plate, qui se lit, plutôt qu'une forme savante qui ne s'imprime pas.
- */
-const SUBSTITUTIONS: [RegExp, string][] = [
-  // Helvetica, dans l'encodage WinAnsi que react-pdf utilise, ne porte ni `≥`
-  // ni `≤` : ils sortaient remplacés par un glyphe faux, sans erreur. Le
-  // document destiné à un relecteur affichait « e 51 personnes présentes ».
-  // Les seuils s'écrivent donc en toutes lettres à la source ; ces deux lignes
-  // sont le filet pour les occurrences qui échapperaient.
-  [/≥\s*/g, "au moins "],
-  [/≤\s*/g, "au plus "],
-  [/ʳᵉ/g, "re"],
-  [/ᵉʳ/g, "er"],
-  [/ᵉ/g, "e"],
-  [/₀/g, "0"],
-  [/₁/g, "1"],
-  [/₂/g, "2"],
-  [/₃/g, "3"],
-  [/₄/g, "4"],
-  // Un guillemet ne se retrouve jamais seul en début ou en fin de ligne.
-  [/« /g, "«\u00a0"],
-  [/ »/g, "\u00a0»"],
-];
-
-function t(s: string): string {
-  return SUBSTITUTIONS.reduce((acc, [re, rep]) => acc.replace(re, rep), s);
-}
+// `t` (la table SUBSTITUTIONS) vit dans `src/lib/pdf/textes-grille-relecture.ts`
+// sous le nom `pourHelvetica` depuis le 2026-10-13 : le bloc de référence du
+// dossier, extrait pour être testé, en a besoin.
 
 /**
  * Le texte fondateur, cité comme on le citerait à l'écrit. La source n'est
@@ -368,7 +343,7 @@ function LigneObligation({
         {o.realisateurs.map((r) => LABEL_REALISATEUR[r]).join(" ou ")}
       </Text>
       <Text style={[s.td, cell, { width: C.regime }]}>
-        {texteTypologie(o.typologies)}
+        {t(texteTypologie(o.typologies))}
       </Text>
       <Text style={[s.td, cell, { width: C.condition }]}>
         {conditionsTexte(o)}
@@ -553,6 +528,7 @@ function GrilleDocument({
             l&apos;absence d&apos;une obligation n&apos;emporte aucune
             conclusion. Rojer calcule, il n&apos;avise pas.
           </Text>
+          <Text style={{ marginTop: 6 }}>{t(LEGENDE_REGIME)}</Text>
           <Text style={{ marginTop: 6 }}>
             Colonne{" "}
             <Text style={{ fontFamily: "Helvetica-Bold", color: BOARD.ambreEncre }}>
@@ -820,6 +796,7 @@ function DossierDetaille({ genereLe }: { genereLe: string }) {
               "Sous chaque référence, deux mentions reviennent souvent et il faut les lire pour ce qu'elles sont. « Dépouillé, aucun extrait relevé » : quelqu'un a ouvert l'article et l'a classé, sans en recopier le texte — le relecteur doit donc l'ouvrir lui-même, et c'est le cas le plus fréquent du référentiel. « Aucune version constatée » : la date de la version lue n'a pas été notée, donc rien ne dit que l'article n'a pas changé depuis. Ces deux silences sont affichés plutôt que masqués : ils bornent ce que cette relecture peut établir. Sous la référence, une ligne en petit corps dit la provenance de ce qui suit : le sort de l'article au corpus (« retenu » s'il fonde une obligation), la façon dont il a été lu, la date de lecture, et la version lue au corpus quand elle n'est pas celle que la référence dit avoir constatée.",
             )}
           </Text>
+          <Text style={{ marginTop: 6 }}>{t(LEGENDE_REGIME)}</Text>
         </View>
         <PiedDePage document="dossier de relecture détaillé ·" />
       </Page>
@@ -843,7 +820,7 @@ function DossierDetaille({ genereLe }: { genereLe: string }) {
                 · par {o.realisateurs.map((r) => LABEL_REALISATEUR[r]).join(" ou ")}
               </Text>
               <Text style={[s.small, { marginTop: 1 }]}>
-                Régime : {texteTypologie(o.typologies)} · Condition :{" "}
+                Régime : {t(texteTypologie(o.typologies))} · Condition :{" "}
                 {conditionsTexte(o)}
               </Text>
               {o.rythmeRetenu && (
@@ -854,42 +831,9 @@ function DossierDetaille({ genereLe }: { genereLe: string }) {
               {o.description && (
                 <Text style={[s.td, { marginTop: 4 }]}>{t(o.description)}</Text>
               )}
-              {o.referencesLegales.map((r, i) => {
-                const releve = releveDe(r);
-                return (
-                  <View key={i} style={{ marginTop: 4 }}>
-                    <Text style={[s.small, { fontFamily: "Helvetica-Bold" }]}>
-                      {t(r.reference)}
-                      {r.versionConstatee
-                        ? ` — version constatée ${r.versionConstatee}`
-                        : " — aucune version constatée"}
-                    </Text>
-                    {releve && (
-                      <Text style={[s.small, { fontSize: 7 }]}>
-                        {t(texteProvenance(releve, r))}
-                      </Text>
-                    )}
-                    {releve?.prescrit && (
-                      <Text style={s.small}>{t(releve.prescrit)}</Text>
-                    )}
-                    {releve?.citationCle && (
-                      <Text style={[s.small, { fontFamily: "Helvetica-Oblique" }]}>
-                        « {t(releve.citationCle)} »
-                      </Text>
-                    )}
-                    {!releve && (
-                      <Text style={s.small}>
-                        {t("Absent du corpus — jamais dépouillé.")}
-                      </Text>
-                    )}
-                    {releve && !releve.prescrit && !releve.citationCle && (
-                      <Text style={s.small}>
-                        {t("Dépouillé, aucun extrait relevé — texte à ouvrir.")}
-                      </Text>
-                    )}
-                  </View>
-                );
-              })}
+              {o.referencesLegales.map((r, i) => (
+                <ReferenceDetaillee key={i} r={r} />
+              ))}
               {o.notesInternes && (
                 <Text style={[s.small, { marginTop: 4 }]}>
                   {t(o.notesInternes)}

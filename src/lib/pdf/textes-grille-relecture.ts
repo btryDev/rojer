@@ -3,18 +3,64 @@
 // testés : le script rend un PDF dès qu'on l'importe.
 
 import { LIBELLE_ACTIVITE } from "@/lib/matching/engine";
+import { LABEL_CATEGORIE_ERP } from "@/lib/etablissements/labels";
 import { indexArticlesParRef } from "@/lib/referentiels/corpus";
 import type {
   ArticleDepouille,
   SourceLecture,
 } from "@/lib/referentiels/corpus/types";
-import type { TypologieApplication } from "@/lib/referentiels/types-communs";
+import {
+  TYPES_ERP_A_SOMMEIL_PLAUSIBLE,
+  type TypologieApplication,
+} from "@/lib/referentiels/types-communs";
 
 /**
- * Un critère de `TypologieApplication`, rendu en un bout de phrase — ou
- * `null` quand il est absent, ou qu'un autre critère le rend avec lui.
+ * Un bout de la ligne « Régime ». Deux genres, parce que `matchTypologie`
+ * combine deux logiques et que la ligne doit les laisser lire :
+ *   - `regime` — les régimes positifs (travail, ERP, IGH, habitation), en OU :
+ *     un seul suffit. Ils s'impriment séparés par « ou ».
+ *   - `et` — tout le reste (régimes exclus, seuils, faits déclarés), en ET avec
+ *     les régimes. Chacun s'imprime précédé de « ; et ».
+ * Jusqu'au 2026-10-13 (revue de `lot/dossier-relecture-2`, C4), un seul « · »
+ * servait aux deux : « Travail · ERP · IGH · Habitation » et « Travail ·
+ * effectif d'au moins 50 » se lisaient pareil.
  */
-type RenduCritere = (t: TypologieApplication) => string | null;
+type Bout = { genre: "regime" | "et"; texte: string };
+type RenduCritere = (t: TypologieApplication) => Bout | null;
+
+const regime = (texte: string): Bout => ({ genre: "regime", texte });
+const et = (texte: string): Bout => ({ genre: "et", texte });
+
+/** « a », « a ou b », « a, b ou c ». */
+function ou(l: readonly string[]): string {
+  return l.length <= 1 ? l.join("") : `${l.slice(0, -1).join(", ")} ou ${l[l.length - 1]}`;
+}
+
+const SANS_REPONSE = "sans réponse : à confirmer";
+
+type ErpRestreint = Exclude<TypologieApplication["erp"], boolean | undefined>;
+
+/**
+ * Les restrictions d'un régime ERP, une par sous-clé — même garde du
+ * compilateur que la table des critères (revue, R3).
+ */
+const RENDU_ERP: { [K in keyof Required<ErpRestreint>]: (e: ErpRestreint) => string | null } = {
+  // « 5ᵉ catégorie », les mots du moteur (`LIBELLE_CATEGORIE_ERP`,
+  // `personnes-presentes.ts`) et de la fiche, pas « N5 ». Lus dans le libellé
+  // de la fiche, sans sa parenthèse : exporter celui du moteur déplaçait le
+  // sceau du calendrier pour un affichage.
+  categories: (e) =>
+    e.categories?.length
+      ? `de ${ou(e.categories.map((c) => LABEL_CATEGORIE_ERP[c].split(" (")[0].replace(/ catégorie$/, "")))} catégorie`
+      : null,
+  types: (e) => (e.types?.length ? `de type ${ou(e.types)}` : null),
+  // Ne mord que sur un type connu ; sans type déclaré, la ligne est retenue
+  // et le dit (`matchTypologie`, 3 bis bis).
+  typesExclus: (e) =>
+    e.typesExclus?.length
+      ? `sauf type ${ou(e.typesExclus)} (type non déclaré : à confirmer)`
+      : null,
+};
 
 /**
  * UNE ENTRÉE PAR CLÉ DU TYPE, et le compilateur le tient : `Required<…>`
@@ -31,87 +77,116 @@ type RenduCritere = (t: TypologieApplication) => string | null;
  * personnes présentes » sur une ligne qui ne vaut que SOUS ce seuil. Correctif
  * déjà écrit le 2026-09-28 (47ccf91d), jamais intégré.
  *
+ * CHAQUE PHRASE DIT CE QUE LE MOTEUR FAIT, silence compris — `matchTypologie`
+ * et ses évaluateurs (`engine.ts`), relus critère par critère le 2026-10-13
+ * (revue, B1 et C1 à C3). Les tests tiennent le sens de chacune.
+ *
  * L'ordre des clés est l'ordre d'impression.
  */
 const RENDU_CRITERE: { [K in keyof Required<TypologieApplication>]: RenduCritere } = {
   travail: (t) =>
-    t.travail === true ? "Travail" : t.travail === false ? "hors Travail" : null,
+    t.travail === true ? regime("Travail") : t.travail === false ? et("hors Travail") : null,
   erp: (t) => {
-    if (t.erp === true) return "ERP";
-    if (t.erp === false) return "hors ERP";
+    if (t.erp === true) return regime("ERP");
+    if (t.erp === false) return et("hors ERP");
     if (!t.erp) return null;
-    const p: string[] = [];
-    if (t.erp.categories?.length) p.push(`cat. ${t.erp.categories.join(", ")}`);
-    if (t.erp.types?.length) p.push(`type ${t.erp.types.join(", ")}`);
-    // Ne mord que sur un type connu : un ERP sans type déclaré n'est pas exclu
-    // (`matchTypologie`).
-    if (t.erp.typesExclus?.length) p.push(`sauf type ${t.erp.typesExclus.join(", ")}`);
-    return `ERP${p.length ? ` (${p.join(" ; ")})` : ""}`;
+    const e = t.erp;
+    const p = (Object.keys(RENDU_ERP) as (keyof ErpRestreint)[])
+      .map((k) => RENDU_ERP[k](e))
+      .filter((b): b is string => b !== null);
+    return regime(["ERP", ...p].join(" "));
   },
   igh: (t) => {
-    if (t.igh === true) return "IGH";
-    if (t.igh === false) return "hors IGH";
+    if (t.igh === true) return regime("IGH");
+    if (t.igh === false) return et("hors IGH");
     if (!t.igh) return null;
-    return `IGH (${t.igh.classes.join(", ")})`;
+    // `evaluerIgh` : classe non déclarée → retenue « à confirmer ».
+    return regime(`IGH de classe ${ou(t.igh.classes)} (classe non déclarée : à confirmer)`);
   },
   habitation: (t) => {
-    if (t.habitation === true) return "Habitation";
-    if (t.habitation === false) return "hors habitation";
+    if (t.habitation === true) return regime("Habitation");
+    if (t.habitation === false) return et("hors habitation");
     if (!t.habitation) return null;
-    return `Habitation (${t.habitation.familles.join(", ")})`;
+    // `evaluerHabitation` : famille non déclarée → retenue « à confirmer ».
+    return regime(
+      `Habitation de famille ${ou(t.habitation.familles)} (famille non déclarée : à confirmer)`,
+    );
   },
-  // Les deux sens n'ont pas le même comportement face au silence
-  // (`TypologieApplication.locauxSommeilPublic`) : la ligne le dit.
+  // `evaluerLocauxSommeil`. `true` : hors des types où le sommeil est
+  // plausible, jamais retenue, même sur un « oui » ; dans ces types, ou sans
+  // type déclaré, le silence retient « à confirmer ». `false` : un allègement,
+  // il exige le « non » déclaré, et ne lit pas le type.
   locauxSommeilPublic: (t) =>
     t.locauxSommeilPublic === true
-      ? "avec locaux à sommeil pour le public (sans réponse : à confirmer)"
+      ? et(
+          `locaux à sommeil pour le public, seulement en ERP de type ${ou(TYPES_ERP_A_SOMMEIL_PLAUSIBLE)} ou de type non déclaré — tout autre type : jamais, même sur un « oui » (${SANS_REPONSE})`,
+        )
       : t.locauxSommeilPublic === false
-        ? "sans locaux à sommeil pour le public, déclaré « non »"
+        ? et("sans locaux à sommeil pour le public, « non » déclaré (sans réponse : écartée)")
         : null,
+  // `evaluerActivite` : seul un « non » déclaré écarte.
   activite: (t) =>
     t.activite
-      ? `${LIBELLE_ACTIVITE[t.activite]} (sans réponse : à confirmer)`
+      ? et(`${LIBELLE_ACTIVITE[t.activite]} (« non » : écartée ; ${SANS_REPONSE})`)
       : null,
   ssiCategorieAouB: (t) =>
     t.ssiCategorieAouB
-      ? `${LIBELLE_ACTIVITE.ssiCategorieAouB} (sans réponse : à confirmer)`
+      ? et(`${LIBELLE_ACTIVITE.ssiCategorieAouB} (« non » : écartée ; ${SANS_REPONSE})`)
       : null,
-  effectifMin: (t) =>
-    t.effectifMin !== undefined
-      ? `effectif d'au moins ${t.effectifMin}${maille(t)}`
-      : null,
+  // `evaluerEffectif` : à l'entreprise, un seuil BAS atteint par le site
+  // seul est retenu par prudence ; un plafond se lit sans prudence.
+  effectifMin: (t) => {
+    if (t.effectifMin === undefined) return null;
+    if (t.effectifMaille === "entreprise") {
+      return et(
+        `effectif de l'entreprise d'au moins ${t.effectifMin} (entreprise sous le seuil mais site au-dessus : à confirmer)`,
+      );
+    }
+    return et(`effectif ${effectifDe(t)}d'au moins ${t.effectifMin}`);
+  },
   effectifMax: (t) =>
     t.effectifMax !== undefined
-      ? `effectif d'au plus ${t.effectifMax}${maille(t)}`
+      ? et(`effectif ${effectifDe(t)}d'au plus ${t.effectifMax}`)
       : null,
   // Rendue avec le seuil qu'elle qualifie ; seule, elle ne dit rien.
   effectifMaille: () => null,
+  // Champ de R. 4227-34 (`matchTypologie`, 3 bis). Le seuil et la branche
+  // matières forment UNE condition, disjonctive : elle s'imprime d'un tenant.
+  // Le complément (`horsChampR422734`) lit le même seuil dans l'autre sens.
   personnesPresentesMin: (t) => {
-    if (t.personnesPresentesMin === undefined) return null;
-    // Le complément lit le même seuil dans l'autre sens.
-    if (t.horsChampR422734) return null;
-    return `au moins ${t.personnesPresentesMin} personnes présentes`;
+    if (t.personnesPresentesMin === undefined || t.horsChampR422734) return null;
+    const seuil = `au moins ${t.personnesPresentesMin} personnes habituellement présentes`;
+    const indetermine =
+      "ERP sans nombre de personnes déclaré, que sa catégorie et son effectif ne placent pas au-dessus : à confirmer";
+    return t.champR422734
+      ? et(
+          `${seuil} OU matières R. 4227-22 déclarées « oui » (matières ${SANS_REPONSE} ; ${indetermine})`,
+        )
+      : et(`${seuil} (${indetermine})`);
   },
   champR422734: (t) =>
-    t.champR422734 && !t.horsChampR422734 ? "ou matières R. 4227-22" : null,
+    t.champR422734 && t.personnesPresentesMin === undefined && !t.horsChampR422734
+      ? et(`matières R. 4227-22 déclarées « oui » (${SANS_REPONSE})`)
+      : null,
   // Le moteur ne retient la ligne que hors du champ ÉTABLI : seuil non
-  // atteint ET matières déclarées « non » ; sans l'une des deux réponses,
-  // c'est la consigne qui est retenue, « à confirmer » (`matchTypologie`).
+  // atteint ET matières déclarées « non » ; sans l'une des deux réponses, elle
+  // est écartée — c'est la consigne qui est retenue, « à confirmer ».
   horsChampR422734: (t) => {
     if (!t.horsChampR422734) return null;
-    const seuil =
-      t.personnesPresentesMin !== undefined
-        ? `moins de ${t.personnesPresentesMin} personnes présentes`
-        : "seuil de personnes présentes non atteint";
-    return `hors champ de R. 4227-34 : ${seuil} ET matières R. 4227-22 déclarées « non », les deux établis`;
+    if (t.personnesPresentesMin === undefined) {
+      return et("hors champ de R. 4227-34 sans seuil écrit : jamais retenue");
+    }
+    return et(
+      `hors champ de R. 4227-34, établi : moins de ${t.personnesPresentesMin} personnes habituellement présentes ET matières R. 4227-22 déclarées « non » (une réponse manque : écartée, la consigne est retenue)`,
+    );
   },
 };
 
-function maille(t: TypologieApplication): string {
+function effectifDe(t: TypologieApplication): string {
   return t.effectifMaille === "entreprise"
-    ? " (compté à l'entreprise)"
+    ? "de l'entreprise "
     : t.effectifMaille === "etablissement"
-      ? " (compté à l'établissement)"
+      ? "de l'établissement "
       : "";
 }
 
@@ -120,12 +195,20 @@ export const CRITERES_TYPOLOGIE = Object.keys(
   RENDU_CRITERE,
 ) as (keyof TypologieApplication)[];
 
+/** La légende des séparateurs : une seule phrase, pour la grille et le dossier. */
+export const LEGENDE_REGIME =
+  "Régime visé : « ou » sépare les régimes, dont un seul suffit (Travail ou ERP) ; « ; et » ajoute une condition qui doit être remplie en plus. « À confirmer » : la ligne est retenue tant que la fiche ne répond pas à la question dont elle dépend.";
+
 /** Le régime auquel l'obligation s'applique, en une ligne lisible. */
 export function texteTypologie(t: TypologieApplication): string {
   const bouts = CRITERES_TYPOLOGIE.map((k) => RENDU_CRITERE[k](t)).filter(
-    (b): b is string => b !== null,
+    (b): b is Bout => b !== null,
   );
-  return bouts.length ? bouts.join(" · ") : "Tous régimes";
+  const regimes = bouts.filter((b) => b.genre === "regime").map((b) => b.texte);
+  const ets = bouts.filter((b) => b.genre === "et").map((b) => b.texte);
+  if (regimes.length === 0 && ets.length === 0) return "Tous régimes";
+  const tete = regimes.length ? [regimes.join(" ou ")] : [];
+  return [...tete, ...ets].join(" ; et ");
 }
 
 /**
@@ -194,4 +277,36 @@ export function texteProvenance(
     bouts.push(`version lue au corpus ${a.versionEnVigueur}`);
   }
   return bouts.join(" · ");
+}
+
+/**
+ * Helvetica — la police de base d'un PDF, celle qu'aucun lecteur n'a besoin
+ * d'embarquer — ne porte ni exposants ni indices. Le référentiel écrit
+ * « 1ʳᵉ à 4ᵉ catégorie » et « CO₂ » ; sans cette table, le PDF imprimait
+ * « 1³l à 4l catégorie », c'est-à-dire un texte faux. On rend donc la forme
+ * plate, qui se lit, plutôt qu'une forme savante qui ne s'imprime pas.
+ */
+const SUBSTITUTIONS: [RegExp, string][] = [
+  // Helvetica, dans l'encodage WinAnsi que react-pdf utilise, ne porte ni `≥`
+  // ni `≤` : ils sortaient remplacés par un glyphe faux, sans erreur. Le
+  // document destiné à un relecteur affichait « e 51 personnes présentes ».
+  // Les seuils s'écrivent donc en toutes lettres à la source ; ces deux lignes
+  // sont le filet pour les occurrences qui échapperaient.
+  [/≥\s*/g, "au moins "],
+  [/≤\s*/g, "au plus "],
+  [/ʳᵉ/g, "re"],
+  [/ᵉʳ/g, "er"],
+  [/ᵉ/g, "e"],
+  [/₀/g, "0"],
+  [/₁/g, "1"],
+  [/₂/g, "2"],
+  [/₃/g, "3"],
+  [/₄/g, "4"],
+  // Un guillemet ne se retrouve jamais seul en début ou en fin de ligne.
+  [/« /g, "«\u00a0"],
+  [/ »/g, "\u00a0»"],
+];
+
+export function pourHelvetica(s: string): string {
+  return SUBSTITUTIONS.reduce((acc, [re, rep]) => acc.replace(re, rep), s);
 }
