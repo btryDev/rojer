@@ -358,13 +358,13 @@ const MESSAGE_TROP_DECOMPRESSE = `Fichier refusé : une fois décompressé, ce c
  *    n'en tient aucun compte et décompresse chaque flux jusqu'à sa fin. On
  *    décompresse donc chaque entrée là où SheetJS la lira (en-tête LOCAL,
  *    méthode locale), avec `maxOutputLength` réglé sur ce qui reste du budget :
- *    zlib s'arrête à la borne, et la mémoire tenue ne dépasse jamais
- *    `TAILLE_DECOMPRESSEE_MAX_IMPORT` — la sortie est relâchée entrée par
+ *    zlib s'arrête à la borne ; la sortie du contrôle est relâchée entrée par
  *    entrée. Une entrée citée deux fois par le répertoire est comptée deux
  *    fois, comme SheetJS la décompresse deux fois.
  *
  * L'en-tête local porte aussi une taille déclarée, que SheetJS utilise pour
- * ALLOUER son tampon de sortie : elle est bornée de même.
+ * ALLOUER son tampon de sortie, et qu'il garde entrée après entrée : leur
+ * SOMME est bornée de même, indépendamment des tailles réelles.
  *
  * LIMITE QUI RESTE. Le contrôle repose sur zlib, la lecture sur l'inflateur
  * JavaScript de SheetJS. Pour un flux deflate valide, les deux rendent les
@@ -384,11 +384,16 @@ function controlerArchive(octets: Uint8Array): string | null {
   if (declaree > TAILLE_DECOMPRESSEE_MAX_IMPORT) return MESSAGE_TROP_DECOMPRESSE;
 
   let reelle = 0;
+  let allouee = 0;
   for (const e of entrees) {
     const local = lireEnTeteLocal(octets, e.decalageLocal);
     if (!local) return MESSAGE_ILLISIBLE;
+    // SheetJS alloue, pour CHAQUE entrée, un tampon de la taille locale
+    // déclarée et le garde : c'est la SOMME de ces tailles qui est bornée, pas
+    // chacune contre le reste du budget réel (revue du 2026-10-13, C1).
+    allouee += local.tailleDecompressee;
+    if (allouee > TAILLE_DECOMPRESSEE_MAX_IMPORT) return MESSAGE_TROP_DECOMPRESSE;
     const reste = TAILLE_DECOMPRESSEE_MAX_IMPORT - reelle;
-    if (local.tailleDecompressee > reste) return MESSAGE_TROP_DECOMPRESSE;
     if (local.methode === 0) {
       // Stockée : SheetJS en prend une tranche du fichier, sans expansion.
       reelle += Math.min(local.tailleCompressee, octets.length - local.debutDonnees);

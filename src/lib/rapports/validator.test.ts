@@ -130,6 +130,20 @@ describe("validerFichier — le type déclaré doit être confirmé par le nom e
     expect(res.ok).toBe(false);
   });
 
+  it("accepte un PDF dont l'en-tête suit un BOM ou des blancs, et un JPEG en .jfif ou .jpe", async () => {
+    const bom = new Uint8Array([0xef, 0xbb, 0xbf, 0x0a, 0x20, ...PDF]);
+    expect((await validerFichier(fichier(bom, "rapport.pdf", "application/pdf"))).ok).toBe(true);
+    for (const nom of ["photo.jfif", "photo.JPE"]) {
+      expect((await validerFichier(fichier(JPEG, nom, "image/jpeg"))).ok, nom).toBe(true);
+    }
+  });
+
+  it("refuse un HTML qui cite %PDF- après une balise (polyglotte)", async () => {
+    const poly = new TextEncoder().encode("<html><script>alert(1)</script>%PDF-1.7\n");
+    const res = await validerFichier(fichier(poly, "facture.pdf", "application/pdf"));
+    expect(res.ok).toBe(false);
+  });
+
   it("refuse un .docx dont seul l'en-tête zip est présent", async () => {
     const res = await validerFichier(
       fichier(new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0, 0, 0, 0]), "rapport.docx", DOCX_MIME),

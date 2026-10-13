@@ -525,7 +525,7 @@ export async function renvoyerCodeOtp(
       message:
         `Cinq codes ont déjà été envoyés à cette adresse dans l'heure. ` +
         `Vous pourrez en demander un nouveau à ${formaterHeureFr(envoi.possibleLe)}. ` +
-        `Le dernier code reçu reste valable jusqu'à son expiration.`,
+        `Si le dernier code reçu n'a pas encore expiré, vous pouvez toujours l'utiliser.`,
     };
   }
 

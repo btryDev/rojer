@@ -84,6 +84,23 @@ describe("parserFichierDuerp — taille décompressée bornée avant SheetJS", (
     expect(lectures.n).toBe(0);
   });
 
+  it("refuse une archive dont les en-têtes LOCAUX gonflent la taille, même si chacun tient sous la borne", async () => {
+    // SheetJS alloue un tampon de la taille locale déclarée pour CHAQUE entrée :
+    // c'est leur SOMME qui doit tenir sous la borne (revue du 2026-10-13, C1).
+    const buf = Buffer.from(await classeurGonfle(10));
+    let entetes = 0;
+    for (let p = 0; p + 26 <= buf.length; p++) {
+      if (buf.readUInt32LE(p) === 0x04034b50) {
+        buf.writeUInt32LE(TAILLE_DECOMPRESSEE_MAX_IMPORT - 512 * 1024, p + 22);
+        entetes++;
+      }
+    }
+    expect(entetes).toBeGreaterThan(1);
+    lectures.n = 0;
+    expect(erreurDeFichier(parserFichierDuerp(buf))).toMatch(/décompressé/);
+    expect(lectures.n).toBe(0);
+  });
+
   it("refuse une archive de plus d'entrées que la borne, sans l'ouvrir", async () => {
     const zip = new JSZip();
     for (let i = 0; i <= ENTREES_ZIP_MAX_IMPORT; i++) zip.file(`xl/media/f${i}.xml`, "<a/>");

@@ -1218,6 +1218,52 @@ Nouveaux critères, issus de cette vérification :
 6. **Exigences documentaires**, une fois les propositions validées par la propriétaire. Les décisions écrites qui contredisent le code se corrigent en même temps.
 7. **Bascule** : la recette vérifie B1 à B31. Les écarts DISPARAÎT ne sont clos qu'une fois leur critère vérifié sur la nouvelle pile.
 
-## Corrections en cours
+## Corrections faites sur `lot/securite-owasp-1013`
 
-À compléter.
+Les écarts classés MAINTENANT sont corrigés ci-dessous. Font exception ceux qu'une autre branche traite déjà (redirection, origine des liens d'e-mail, oracle d'existence, pages d'erreur) et ceux qui attendent une décision de la propriétaire. La méthode est la même partout, sauf exceptions dites dans la colonne Preuve : on écrit le test d'abord, rouge sur le code d'origine, puis la correction, puis une mutation qui fait retomber le test. Une relecture indépendante a suivi ; ses corrections sont listées à la fin de cette section.
+
+| Exigence | Commit | Ce qui change | Preuve |
+|---|---|---|---|
+| V8.4.1 (E-1) | `3a6655a9`, `4e3e5c15` | RLS sur les 13 tables, droits `anon`/`authenticated` retirés (si ces rôles existent) | sur une base qui imite Supabase, `anon` lisait et modifiait `Entreprise` ; après la migration, `permission denied` |
+| V15.2.1 | `e5d52827`, `d83fae3c`, `48a25a02` | `next` 16.3.8, `shadcn` en devDependencies, Dependabot | `pnpm audit --prod` : 84 → 10, plus aucun avis critique |
+| V5.2.3 (E-3) | `78adfd1a`, `40c2bdc4`, relecture | Import : 5 000 lignes au plus. Taille décompressée bornée avant SheetJS (20 Mo, 1 000 entrées), sur trois mesures : les tailles du répertoire central, la décompression réelle, et la somme des tailles des en-têtes locaux, que SheetJS alloue | bombe de 4,31 Mo : pic de RSS de 484 Mo → 109 Mo, refus en 1 ms (mesure de l'agent) ; contournement par les en-têtes locaux relevé à la relecture, puis attrapé par test |
+| V5.2.2 | `6fdd4737`, relecture | Type déclaré, extension et octets magiques concordants, pour les trois dépôts. Un BOM ou des blancs peuvent précéder `%PDF-` ; `.jfif` et `.jpe` sont acceptés | HTML déclaré PDF, exécutable déclaré PNG et HTML polyglotte qui cite `%PDF-` : refusés, sans écriture |
+| V5.2.1 | `ed3676da` | Session exigée avant la lecture du fichier dans `uploadRapport` | sans session, rien n'est lu |
+| V2.2.1 | `baa8cfa7`, `c7f9d964` | Bornes zod sur les six entrées libres ; jour civil réel sur 18 champs de date, dans 13 schémas, plus `leverPrescription` ; rôle du signataire borné | 17 mutations, toutes attrapées |
+| V6.6.3, ADR-006 | `c7f9d964` | Au plus 5 codes par heure et par adresse, réservés en base par des écritures conditionnelles ; un renvoi ne remet plus les 3 essais | rafales concurrentes bornées sur un faux client en mémoire ; l'atomicité en Postgres repose sur un raisonnement (`UPDATE … WHERE envois < n` sous READ COMMITTED), pas sur un essai |
+| V3.2.1 | `877edd98` | La CSP `sandbox; frame-ancestors 'none'` des fichiers est fusionnée dans la configuration, et n'est plus écrasée | `next start` : vérifié sur les 4 routes de fichiers |
+| V3.4.1 | `6db5d0d1` | HSTS `includeSubDomains`, sans `preload` | test, rouge avant correction |
+| V14.3.2 | `f0fd5c16` | PDF de version de DUERP en `no-store`, et test de classe sur toutes les routes | mutation |
+| V12.3.1, V12.3.2 | `c523dbf0` | `.env.example` en `sslmode=require` | aucun test : c'est un modèle. L'écart n'est pas corrigé tant que les vraies variables restent inchangées |
+| Gardes de test (§ 41) | `a75e7e06`, `56dacd63` | Portée des helpers, lectures élargies (48 → 67), inventaire des routes, ids enfants, hasard sûr, fixtures IGH et permis de feu | les mutations M2, M3, M5, M8, M9, R1, H1 à H4, F1 et F2 font désormais tomber un test |
+
+Ce qui reste ouvert après ces corrections :
+
+- **PDF ouverts dans le navigateur sous `sandbox`.** La relecture a mesuré Chrome 155 et Firefox 157 : l'affichage est identique au pixel, et le téléchargement fonctionne. Restent à essayer : Safari, iOS et l'impression.
+- **Faux refus possibles au dépôt.** Deux cas légitimes peuvent encore être refusés : un DOCX sans `word/document.xml` (rare) et un fichier sans extension.
+- **Gardes statiques.** La relecture a démontré des faux négatifs : une lecture précédée d'une requête sans rapport qui porte `userId` passe ; un helper d'appartenance appelé sur un autre id passe aussi. Elles bornent les régressions courantes, elles ne prouvent pas l'isolation.
+- **`QuotaEnvoiOtp`** : aucune purge, et l'empreinte SHA-256 de l'adresse n'est pas salée (donnée pseudonyme). La durée de conservation est à écrire dans `docs/rgpd.md`. Cinq demandes de signature envoyées à la même personne dans l'heure lui ferment les renvois pendant une heure.
+- **Envoi initial d'un code.** Il est compté dans le plafond de 5 par heure, mais seul le renvoi est bloqué par ce plafond.
+- **Réponses MCP.** Elles n'ont pas de `Cache-Control`. C'est à trancher.
+- **Gestes de la propriétaire** :
+  - vérifier la RLS et le propriétaire des tables en production ;
+  - faire tourner `MCP_CLE` ;
+  - ajouter `sslmode` aux variables de Vercel ;
+  - protéger `main` ;
+  - activer les alertes Dependabot.
+- **Décisions documentaires** : toutes les propositions de la section « Exigences documentaires » restent à valider.
+- **Migrations à appliquer en production à la fusion** : `20261013120000_rls_tables_restantes` et `20261013200000_quota_envoi_otp`.
+
+### Fusion avec `integration/audit-1013`
+
+Il y a deux conflits textuels : `src/lib/rapports/actions.ts` et son test. Deux tests deviennent rouges sans conflit : `upload-sans-session` et `depot-type-confirme`. La cause est la même : leurs faux Prisma ne répondent qu'à `verification.findUnique`, alors que l'autre branche lit par `findFirst` dans le périmètre du compte.
+
+La relecture a vérifié cette résolution :
+- un seul `const user = await requireUser()` en tête de `uploadRapport` ;
+- l'import du côté `integration` ;
+- les faux Prisma qui répondent à `findUnique` comme à `findFirst` ;
+- dans `upload-sans-session`, attendre `prisma.verification.findFirst`.
+
+Avec elle, `tsc` passe à 0, et les tests `tenancy-*`, `rapports`, `storage` et `equipements` sont verts.
+
+**Avant de fusionner dans `main` :** vérifier en production que les 31 tables appartiennent bien au rôle de `DIRECT_URL` (`select tablename, tableowner from pg_tables where schemaname='public'`). Sinon `ENABLE ROW LEVEL SECURITY` échoue, la migration est marquée en échec (P3009) et tous les builds suivants bloquent.

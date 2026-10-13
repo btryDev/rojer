@@ -70,6 +70,28 @@ type Format = {
 const commencePar = (signature: readonly number[]) => (octets: Uint8Array) =>
   octets.length >= signature.length && signature.every((b, i) => octets[i] === b);
 
+/**
+ * Les octets de tête lus pour reconnaître un format. Un PDF peut voir son
+ * en-tête `%PDF-` précédé d'un BOM ou de blancs (certains générateurs web) ;
+ * les lecteurs l'acceptent dans le premier kilo-octet.
+ */
+const OCTETS_DE_TETE = 1024;
+
+/** BOM UTF-8, blancs et NUL : seuls octets tolérés avant une signature. */
+const PREFIXE_TOLERE = new Set([0xef, 0xbb, 0xbf, 0x09, 0x0a, 0x0d, 0x20, 0x00]);
+
+/**
+ * La signature ouvre-t-elle le fichier, à un préfixe de BOM ou de blancs
+ * près ? Pas « n'importe où dans le premier Ko » : un HTML qui citerait
+ * `%PDF-` après une balise passerait alors pour un PDF (polyglotte).
+ */
+const commenceAuPrefixePres = (signature: readonly number[]) => (octets: Uint8Array) => {
+  let debut = 0;
+  const limite = Math.min(octets.length, OCTETS_DE_TETE);
+  while (debut < limite && PREFIXE_TOLERE.has(octets[debut])) debut++;
+  return commencePar(signature)(octets.subarray(debut));
+};
+
 function estUnDocumentWord(octets: Uint8Array): boolean {
   if (!commeUneArchiveZip(octets)) return false;
   const noms = new Set(lireRepertoireCentral(octets)?.map((e) => e.nom) ?? []);
@@ -81,7 +103,7 @@ const FORMATS: Record<MimeAutorise, Format> = {
     libelle: "PDF",
     extensions: [".pdf"],
     lireTout: false,
-    contenu: commencePar([0x25, 0x50, 0x44, 0x46, 0x2d]), // %PDF-
+    contenu: commenceAuPrefixePres([0x25, 0x50, 0x44, 0x46, 0x2d]), // %PDF-
   },
   "image/png": {
     libelle: "PNG",
@@ -91,7 +113,8 @@ const FORMATS: Record<MimeAutorise, Format> = {
   },
   "image/jpeg": {
     libelle: "JPEG",
-    extensions: [".jpg", ".jpeg"],
+    // .jfif et .jpe : ce que propose le sélecteur de Windows pour image/jpeg.
+    extensions: [".jpg", ".jpeg", ".jfif", ".jpe"],
     lireTout: false,
     contenu: commencePar([0xff, 0xd8, 0xff]),
   },
@@ -133,7 +156,7 @@ export async function validerFichier(
     };
   }
   const octets = new Uint8Array(
-    await (format.lireTout ? fichier : fichier.slice(0, 16)).arrayBuffer(),
+    await (format.lireTout ? fichier : fichier.slice(0, OCTETS_DE_TETE)).arrayBuffer(),
   );
   if (!format.contenu(octets)) {
     return {
