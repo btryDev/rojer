@@ -21,6 +21,13 @@
 
 export const TAILLE_MAX_IMPORT_OCTETS = 5 * 1024 * 1024;
 
+/**
+ * La même borne, en mégaoctets, pour l'écran et le message de refus : l'écran
+ * d'import annonçait « max 20 Mo » quand le serveur refusait au-delà de 5
+ * (audit du 2026-10-13). Le texte se dérive d'ici, il ne s'écrit plus.
+ */
+export const TAILLE_MAX_IMPORT_MO = TAILLE_MAX_IMPORT_OCTETS / (1024 * 1024);
+
 /** Les types qu'un navigateur envoie pour un tableur. */
 export const MIME_IMPORT = [
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // xlsx
@@ -47,7 +54,7 @@ export function validerFichierImport(fichier: File | null): ResultatFormatImport
   if (fichier.size > TAILLE_MAX_IMPORT_OCTETS) {
     return {
       ok: false,
-      erreur: `Fichier trop volumineux (max ${TAILLE_MAX_IMPORT_OCTETS / 1024 / 1024} Mo). Un DUERP tient en quelques dizaines de kilo-octets.`,
+      erreur: `Fichier trop volumineux (max ${TAILLE_MAX_IMPORT_MO} Mo). Un DUERP tient en quelques dizaines de kilo-octets.`,
     };
   }
   const nom = fichier.name.toLowerCase();
