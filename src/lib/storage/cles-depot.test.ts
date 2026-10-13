@@ -16,6 +16,7 @@ import path from "node:path";
 import { cleRapport } from "./index";
 import { clePiecePrestataire } from "@/lib/prestataires/storage";
 import { LocalFileStorage } from "./local";
+import { segmentCleStockage } from "./noms";
 import { SupabaseFileStorage, type BucketStockage, type ClientStockage } from "./supabase";
 
 const NOMS = ["rapport..pdf", "..", "...pdf", "a...b..pdf", "../../etc/passwd", "..\\..\\x.pdf"];
@@ -55,6 +56,21 @@ describe.each(CONSTRUCTEURS)("%s", (_nom, cle) => {
   it("garde l'extension et le nom lisible", () => {
     expect(cle("rapport..pdf")).toMatch(/rapport\.pdf$/);
     expect(cle("rapport final.pdf")).toMatch(/rapport_final\.pdf$/);
+  });
+
+  // Revue du 2026-10-13 : même politique que `nomEntreeArchive`.
+  it("garde l'extension quand le nom est tronqué", () => {
+    for (const nom of ["a".repeat(199) + "..pdf", "b".repeat(500) + ".pdf", "c".repeat(196) + "...pdf"]) {
+      const k = cle(nom);
+      expect(k, nom).toMatch(/[abc]\.pdf$/);
+      expect(k, nom).not.toContain("..");
+      expect(segmentCleStockage(nom).length, nom).toBeLessThanOrEqual(200);
+    }
+  });
+
+  it("translittère les lettres accentuées au lieu de les remplacer par « _ »", () => {
+    expect(cle("Vérif'Élec Atlantique.pdf")).toMatch(/Verif_Elec_Atlantique\.pdf$/);
+    expect(cle("Sœur Æther.pdf")).toMatch(/Soeur_AEther\.pdf$/);
   });
 });
 
