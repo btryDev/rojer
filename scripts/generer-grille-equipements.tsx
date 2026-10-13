@@ -485,11 +485,50 @@ function PageRemarques({
  * l'argument soumis. Les obligations déjà au niveau audit suivent, pour
  * rappel.
  */
-const P = {
-  obligation: "34%",
-  fondement: "24%",
-  motif: "42%",
-} as const;
+/**
+ * 2026-10-13, retour de la propriétaire : la première version était un
+ * tableau dense à trois colonnes, « étouffant pour un humain ». Une carte par
+ * proposition, en portrait, avec de l'air : le titre, la référence courte, le
+ * motif en une phrase. Deux parties — ce que nous proposons, ce que nous
+ * voulons discuter —, puis le rappel de ce qui est déjà décidé.
+ */
+function referenceCourte(o: Obligation): string {
+  const r = o.referencesLegales[0];
+  return r.article ?? r.reference;
+}
+
+function CarteProposition({ o, motif }: { o: Obligation; motif: string }) {
+  return (
+    <View
+      wrap={false}
+      style={{
+        marginBottom: 14,
+        paddingBottom: 12,
+        borderBottomWidth: 0.5,
+        borderBottomColor: "#d9dde3",
+      }}
+    >
+      <Text style={{ fontSize: 12.5, fontFamily: "Helvetica-Bold", lineHeight: 1.35 }}>
+        {t(o.libelle)}
+      </Text>
+      <Text style={{ fontSize: 9.5, color: BOARD.ardoiseMoyenne, marginTop: 3 }}>
+        {t(`${referenceCourte(o)} · ${LABEL_DOMAINE[o.domaine]}`)}
+      </Text>
+      <Text style={{ fontSize: 11, lineHeight: 1.5, marginTop: 6 }}>{t(motif)}</Text>
+    </View>
+  );
+}
+
+function TitrePartie({ titre, sousTitre }: { titre: string; sousTitre: string }) {
+  return (
+    <View style={{ marginTop: 22, marginBottom: 12 }}>
+      <Text style={{ fontSize: 15, fontFamily: "Helvetica-Bold" }}>{t(titre)}</Text>
+      <Text style={{ fontSize: 10, color: BOARD.ardoiseMoyenne, marginTop: 3 }}>
+        {t(sousTitre)}
+      </Text>
+    </View>
+  );
+}
 
 function PagePropositions({
   propositions,
@@ -498,59 +537,63 @@ function PagePropositions({
   propositions: Propositions;
   genereLe: string;
 }) {
-  // Les propositions fermes d'abord, celles « À discuter » ensuite : le
-  // relecteur lit en premier ce que nous soutenons.
-  const aDiscuter = (o: Obligation) =>
-    /^À discuter/.test(propositions.get(o.id)!.motif);
-  const proposees = obligationsConformite
-    .filter((o) => propositions.has(o.id))
-    .sort((a, b) => Number(aDiscuter(a)) - Number(aDiscuter(b)));
+  const motifDe = (o: Obligation) => propositions.get(o.id)!.motif;
+  const aDiscuter = (o: Obligation) => /^À discuter\s*:/.test(motifDe(o));
+  const sansPrefixe = (m: string) => {
+    const r = m.replace(/^À discuter\s*:\s*/, "");
+    return r.charAt(0).toUpperCase() + r.slice(1);
+  };
+  const toutes = obligationsConformite.filter((o) => propositions.has(o.id));
+  const fermes = toutes.filter((o) => !aDiscuter(o));
+  const ouvertes = toutes.filter(aDiscuter);
   const dejaAudit = obligationsConformite.filter((o) => estNiveauAudit(o));
-  const ligne = (o: Obligation, motif: string) => (
-    <View key={o.id} style={s.row} wrap={false}>
-      <View style={[cell, { width: P.obligation }]}>
-        <Text style={s.td}>{t(o.libelle)}</Text>
-        <Text style={[s.small, { marginTop: 1 }]}>
-          {LABEL_DOMAINE[o.domaine]} · {LIBELLE_NATURE[o.nature]}
-        </Text>
-      </View>
-      <Text style={[s.td, cell, { width: P.fondement }]}>
-        {t(texteReference(o.referencesLegales[0]))}
-      </Text>
-      <Text style={[s.td, { width: P.motif }]}>{t(motif)}</Text>
-    </View>
-  );
-  const entete = (troisieme: string) => (
-    <View style={s.thead}>
-      <Text style={[s.th, cell, { width: P.obligation }]}>Obligation</Text>
-      <Text style={[s.th, cell, { width: P.fondement }]}>Fondement</Text>
-      <Text style={[s.th, { width: P.motif }]}>{troisieme}</Text>
-    </View>
-  );
+  const pagePortrait = { ...stylePage, paddingHorizontal: 56, paddingTop: 48 };
   return (
-    <Page size="A4" orientation="landscape" style={stylePage}>
+    <Page size="A4" style={pagePortrait}>
       <Text style={{ fontSize: 10, color: BOARD.ardoiseMoyenne }}>
-        Rojer — référentiel de conformité {REFERENTIEL_VERSION}
+        Rojer — référentiel {REFERENTIEL_VERSION} · {genereLe}
       </Text>
-      <Text style={[s.h1, { marginTop: 4 }]}>
-        Nos propositions de passage au niveau audit
+      <Text style={{ fontSize: 22, fontFamily: "Helvetica-Bold", marginTop: 8 }}>
+        Passer des obligations au niveau audit
       </Text>
-      <Text style={{ fontSize: 10, color: BOARD.ardoiseMoyenne }}>
-        {proposees.length} propositions · {dejaAudit.length} obligations déjà
-        au niveau audit · document généré le {genereLe}
-      </Text>
-      <Text style={[s.small, { marginTop: 6 }]}>
+      <Text style={{ fontSize: 11, lineHeight: 1.55, marginTop: 10 }}>
         {t(
-          "Le niveau audit garde une obligation au référentiel, avec sa source, sans la suivre au quotidien : pas d'échéance au calendrier, pas de ligne au tableau de bord. Elle reste nommée sur la page « Ce que Rojer ne couvre pas ». Ce n'est pas un retrait. Les lignes ci-dessous sont des propositions : rien n'est encore décidé. Dans la grille qui suit, elles portent la mention « Audit », comme celles qui y sont déjà.",
+          "Le niveau audit garde une obligation dans le référentiel, avec sa source, mais ne la suit plus au quotidien : pas d'échéance au calendrier, pas de ligne au tableau de bord. Elle reste nommée sur la page « Ce que Rojer ne couvre pas ». Rien n'est retiré.",
         )}
       </Text>
-      {entete("Pourquoi nous le proposons")}
-      {proposees.map((o) => ligne(o, propositions.get(o.id)!.motif))}
+      <Text style={{ fontSize: 11, lineHeight: 1.55, marginTop: 6 }}>
+        {t(
+          `Ce qui suit est une proposition, rien n'est décidé. ${fermes.length} lignes que nous proposons de passer au niveau audit, ${ouvertes.length} sur lesquelles nous voulons votre avis.`,
+        )}
+      </Text>
+
+      <TitrePartie
+        titre={`Nous proposons (${fermes.length})`}
+        sousTitre="Ce sont des documents faits une fois ou des exigences d'installation, que le dirigeant n'a pas à piloter."
+      />
+      {fermes.map((o) => (
+        <CarteProposition key={o.id} o={o} motif={motifDe(o)} />
+      ))}
+
+      <TitrePartie
+        titre={`À discuter avec vous (${ouvertes.length})`}
+        sousTitre="Nous hésitons : votre avis tranchera."
+      />
+      {ouvertes.map((o) => (
+        <CarteProposition key={o.id} o={o} motif={sansPrefixe(motifDe(o))} />
+      ))}
+
       {dejaAudit.length > 0 && (
         <View wrap={false}>
-          <Text style={s.h2}>Déjà au niveau audit (décision du 2026-10-08)</Text>
-          {entete("Statut")}
-          {dejaAudit.map((o) => ligne(o, "Décidé — suivi hors du quotidien"))}
+          <TitrePartie
+            titre={`Déjà au niveau audit (${dejaAudit.length})`}
+            sousTitre="Décidé le 8 octobre 2026, pour rappel."
+          />
+          {dejaAudit.map((o) => (
+            <Text key={o.id} style={{ fontSize: 11, lineHeight: 1.6 }}>
+              {t(`·  ${o.libelle} — ${referenceCourte(o)}`)}
+            </Text>
+          ))}
         </View>
       )}
       <PiedDePage />
