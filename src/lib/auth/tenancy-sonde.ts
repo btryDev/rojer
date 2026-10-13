@@ -130,6 +130,9 @@ export type Fonction = { nom: string; exportee: boolean; corps: string };
  * commentaires et chaînes exclus. Découpées sur TOUTE déclaration : un helper
  * privé placé après une fonction exportée n'est pas absorbé dans son corps.
  *
+ * `export default function` compris : c'est la forme des pages, que
+ * `lecturesAvantAppartenance` balaie aussi.
+ *
  * NE VOIT PAS : les méthodes d'objet ou de classe, `const f = function`, les
  * fonctions génériques `const f = async <T>(`. Le corps de la dernière fonction
  * s'étend jusqu'à la fin du fichier.
@@ -138,7 +141,7 @@ export function fonctions(source: string): Fonction[] {
   const src = sansCommentairesNiChaines(source);
   const decl = [
     ...src.matchAll(
-      /^(export )?(?:async )?function (\w+)\(|^(export )?const (\w+) = (?:async )?\(/gm,
+      /^(export (?:default )?)?(?:async )?function (\w+)\(|^(export )?const (\w+) = (?:async )?\(/gm,
     ),
   ];
   return decl.map((m, i) => ({
@@ -367,4 +370,145 @@ export function ecrituresExposees(): EcritureExposee[] {
     }
   }
   return out;
+}
+
+// ─── Lecture par identifiant avant le contrôle d'appartenance ───────────────
+//
+// Ce qui suit ne sert qu'à `tenancy-oracle.test.ts`.
+
+/** `[a, b)` : le texte entre la parenthèse ouvrante `ouvre` et sa fermante. */
+function equilibre(src: string, ouvre: number, o: string, f: string): string {
+  let n = 0;
+  for (let i = ouvre; i < src.length; i++) {
+    if (src[i] === o) n++;
+    else if (src[i] === f && --n === 0) return src.slice(ouvre, i + 1);
+  }
+  return src.slice(ouvre);
+}
+
+/**
+ * Le `where` d'un appel Prisma dont `ouvre` est la parenthèse ouvrante, ou
+ * `null` s'il n'est pas un littéral d'objet (`where: scope`, `{ where }`) —
+ * auquel cas il n'est pas jugé.
+ */
+function whereLitteral(corps: string, ouvre: number): string | null {
+  const args = equilibre(corps, ouvre, "(", ")");
+  const m = /\bwhere\s*:\s*\{/.exec(args);
+  if (!m) return null;
+  return equilibre(args, m.index + m[0].length - 1, "{", "}");
+}
+
+const LECTURE_UNITAIRE = /\b\w+\.(\w+)\.(findUnique|findFirst)(?:OrThrow)?\(/g;
+
+type Evenement = { pos: number; quoi: "lecture_nue" | "appartenance"; libelle: string };
+
+/**
+ * Les événements d'une fonction, dans l'ordre du source :
+ *
+ *  - `lecture_nue` : un `findUnique`/`findFirst` dont le `where` littéral ne
+ *    porte pas `userId` — ou l'appel d'une fonction du MÊME fichier qui en fait
+ *    une avant tout contrôle (`resoudreAppareil` lisait pour ses appelants) ;
+ *  - `appartenance` : une lecture dont le `where` porte `userId`, l'appel d'un
+ *    helper `require…`/`assert…` de `scope.ts`, de `portee(`, ou d'une
+ *    fonction du même fichier qui commence par l'un d'eux (`permisDuCompte`).
+ */
+function evenements(
+  mod: Map<string, Fonction>,
+  fn: Fonction,
+  vus: Set<string>,
+): Evenement[] {
+  const out: Evenement[] = [];
+  for (const m of fn.corps.matchAll(LECTURE_UNITAIRE)) {
+    const where = whereLitteral(fn.corps, m.index + m[0].length - 1);
+    if (where === null) continue;
+    out.push({
+      pos: m.index,
+      // Une lecture bornée au compte EST un contrôle : ce qu'elle ne trouve
+      // pas est absent ou étranger, indistinctement.
+      quoi: /\buserId\b/.test(where) ? "appartenance" : "lecture_nue",
+      libelle: `${m[1]}.${m[2]}`,
+    });
+  }
+  for (const h of [...helpersDAppartenance(), "portee"]) {
+    for (const m of fn.corps.matchAll(new RegExp(`(?<![\\w$.])${h}\\(`, "g"))) {
+      out.push({ pos: m.index, quoi: "appartenance", libelle: h });
+    }
+  }
+  for (const autre of mod.values()) {
+    if (autre.nom === fn.nom || vus.has(autre.nom)) continue;
+    const appels = [...fn.corps.matchAll(new RegExp(`(?<![\\w$.])${autre.nom}\\(`, "g"))];
+    if (appels.length === 0) continue;
+    const siens = evenements(mod, autre, new Set([...vus, fn.nom]));
+    const premier = siens.sort((a, b) => a.pos - b.pos)[0];
+    if (!premier) continue;
+    for (const a of appels) {
+      out.push({
+        pos: a.index,
+        quoi: premier.quoi,
+        libelle: `${autre.nom} → ${premier.libelle}`,
+      });
+    }
+  }
+  return out.sort((a, b) => a.pos - b.pos);
+}
+
+/**
+ * La fonction lit une ligne SANS la borner au compte, PUIS contrôle
+ * l'appartenance : le libellé de la première lecture nue, ou `null`.
+ *
+ * C'est la forme exacte de l'oracle d'existence (audit du 2026-10-13) : la
+ * lecture par identifiant seul distingue « n'existe pas » (une réponse) de
+ * « existe chez un autre client » (le 404 du contrôle qui suit). Une lecture
+ * nue APRÈS le contrôle — la relecture sous verrou d'une ligne déjà bornée —
+ * ne dit plus rien : elle n'est pas relevée.
+ */
+export function lectureAvantAppartenance(
+  mod: Map<string, Fonction>,
+  fn: Fonction,
+): string | null {
+  const ev = evenements(mod, fn, new Set());
+  const controle = ev.findIndex((e) => e.quoi === "appartenance");
+  if (controle <= 0) return null;
+  const nue = ev.slice(0, controle).find((e) => e.quoi === "lecture_nue");
+  return nue ? nue.libelle : null;
+}
+
+export type LectureAvantAppartenance = {
+  /** `lib/x/actions.ts:nom` ou `app/api/…/route.ts:GET` */
+  cle: string;
+  lecture: string;
+};
+
+/**
+ * Tout le code serveur de `src` (tests exclus) : server actions, route
+ * handlers, pages, helpers. La règle ne se déclenche que si un contrôle
+ * d'appartenance SUIT la lecture : l'univers peut donc être large sans crier
+ * sur ce qui n'est pas du compte (la page publique d'un jeton ne contrôle
+ * aucune appartenance, et n'est pas relevée).
+ */
+export function lecturesAvantAppartenance(): {
+  examinees: number;
+  fautives: LectureAvantAppartenance[];
+} {
+  const fichiers = execSync(
+    `find "${SRC()}" \\( -name "*.ts" -o -name "*.tsx" \\) -not -name "*.test.ts" -not -name "*.test.tsx"`,
+  )
+    .toString()
+    .trim()
+    .split("\n");
+  let examinees = 0;
+  const fautives: LectureAvantAppartenance[] = [];
+  for (const fichier of fichiers) {
+    const source = readFileSync(fichier, "utf8");
+    if (!/\.(findUnique|findFirst)/.test(source)) continue;
+    const fns = fonctions(source);
+    const mod = new Map(fns.map((f) => [f.nom, f]));
+    for (const fn of fns) {
+      if (LECTURE_UNITAIRE.test(fn.corps)) examinees++;
+      LECTURE_UNITAIRE.lastIndex = 0;
+      const lecture = lectureAvantAppartenance(mod, fn);
+      if (lecture) fautives.push({ cle: `${relatif(fichier)}:${fn.nom}`, lecture });
+    }
+  }
+  return { examinees, fautives };
 }
