@@ -39,7 +39,8 @@
 
 import { ADRESSE_MANQUES_ANNONCES } from "@/lib/referentiels/corpus/adresses";
 import type { Corpus } from "@/lib/referentiels/corpus/types";
-import { nonPorte } from "./non-couverture";
+import { nonPorte, porte } from "./non-couverture";
+import type { CategorieErp } from "@/lib/referentiels/types-communs";
 
 /** Les faits du dossier qui décident de ce qui peut le concerner. */
 export type FaitsManquesAnnonces = {
@@ -47,6 +48,16 @@ export type FaitsManquesAnnonces = {
   travail: boolean;
   /** `Etablissement.epiPresents` : `null` = pas de réponse, jamais « non ». */
   epiPresents: boolean | null;
+  /**
+   * `Etablissement.categorieErp` si l'établissement reçoit du public, `null`
+   * sinon (2026-10-13). La base rend impossible un ERP sans catégorie
+   * (`Etablissement_erp_type_categorie_requis`).
+   */
+  categorieErp: CategorieErp | null;
+  /** `Etablissement.estHabitation` (2026-10-13). */
+  habitation: boolean;
+  /** `Etablissement.operationsElectriques` (ADR-041) : `null` = pas de réponse, jamais « non » (2026-10-13). */
+  operationsElectriques: boolean | null;
 };
 
 /**
@@ -59,7 +70,13 @@ type Condition =
   /** Un employeur : le Code du travail, quatrième partie. */
   | "travail"
   /** Un employeur qui n'a pas répondu « non » aux équipements de protection. */
-  | "travail_epi";
+  | "travail_epi"
+  /** Un ERP des quatre premières catégories : le livre II du règlement de sécurité. */
+  | "erp_1_4"
+  /** Un dossier qui déclare le régime d'habitation. */
+  | "habitation"
+  /** Un employeur qui n'a pas répondu « non » aux opérations électriques. */
+  | "travail_electricite";
 
 function concerne(c: Condition, f: FaitsManquesAnnonces): boolean {
   switch (c) {
@@ -69,6 +86,12 @@ function concerne(c: Condition, f: FaitsManquesAnnonces): boolean {
       return f.travail;
     case "travail_epi":
       return f.travail && f.epiPresents !== false;
+    case "erp_1_4":
+      return f.categorieErp !== null && f.categorieErp !== "N5";
+    case "habitation":
+      return f.habitation;
+    case "travail_electricite":
+      return f.travail && f.operationsElectriques !== false;
   }
 }
 
@@ -82,7 +105,11 @@ export type CleDomaine =
   | "bruit"
   | "formation"
   | "boissons"
-  | "risque_chimique";
+  | "risque_chimique"
+  | "gaz"
+  | "escaliers_mecaniques"
+  | "habitation"
+  | "electricite";
 
 type Domaine = {
   titre: string;
@@ -138,6 +165,22 @@ const DOMAINES: Record<CleDomaine, Domaine> = {
     titre: "Risque chimique",
     phrase: `Rojer ne suit pas ${nonPorte("les mesures de prévention du risque d'exposition aux agents chimiques dangereux")} que l'employeur définit et applique, ni ${nonPorte("les mesures contre le débordement, les éclaboussures et le déversement par rupture des parois des récipients de produits chimiques")}.`,
   },
+  // 2026-10-13 : décision de la propriétaire sur les quinze manques entrés
+  // dans la cible le 2026-10-12. Les articles disent chacun ce qu'ils ne
+  // suivent pas : ils ne visent pas les mêmes dossiers.
+  gaz: {
+    titre: "Installations de gaz",
+  },
+  habitation: {
+    titre: "Immeuble d'habitation",
+  },
+  electricite: {
+    titre: "Électricité",
+  },
+  escaliers_mecaniques: {
+    titre: "Escaliers mécaniques et trottoirs roulants",
+    phrase: `Rojer ne suit pas ${nonPorte("la vérification annuelle des escaliers mécaniques et des trottoirs roulants")} par une personne ou un organisme agréé, ni ${nonPorte("l'examen des chaînes et crémaillères au milieu de l'année")}, ni ${nonPorte("la vérification de l'escalier mécanique avant sa remise en service après une transformation importante")}.`,
+  },
 };
 
 type Annonce = {
@@ -156,6 +199,12 @@ type Annonce = {
 /**
  * Les articles annoncés, par référence (vingt-cinq au 2026-09-27, vingt-huit
  * au 2026-10-12 : `R. 4323-1` le 2026-10-07, `R. 4412-11` et `R. 4412-17`).
+ * 2026-10-13 : + 4, `GZ 13`, `GZ 14`, `AS 10`, arrêté du 23 février 2018
+ * art. 26 § 3 ; puis + 2 après revue, arrêté du 31 janvier 1986 art. 78-1 et
+ * 102 ; puis + 1, `R. 4544-11`. Trente-cinq à la réunion avec `main` —
+ * compté en appelant (`Object.keys(ANNONCES).length`), jamais au grep. [La
+ * branche disait « trente-trois » : elle ne voyait pas les deux du risque
+ * chimique, entrés sur `main` par `lot/suites-0810`.]
  *
  * LA CLÉ EST LA RÉFÉRENCE DU CORPUS, ET RIEN N'EST RECOPIÉ D'AUTRE : ni
  * intitulé, ni texte. `manques-annonces.test.ts` tient l'égalité entre ces
@@ -221,6 +270,42 @@ export const ANNONCES: Readonly<Record<string, Annonce>> = {
     domaine: "formation",
     condition: "travail",
     phrase: `Rojer ne suit pas ${nonPorte("l'information des travailleurs chargés de l'utilisation ou de la maintenance des équipements de travail")} : conditions d'utilisation, consignes de la notice du fabricant, conduite à tenir face aux situations anormales prévisibles.`,
+  },
+  // 2026-10-13 : décision de la propriétaire (grille C45 sur les quinze
+  // manques entrés dans la cible le 2026-10-12).
+  "GZ 13": {
+    domaine: "gaz",
+    condition: "erp_1_4",
+    phrase: `Rojer ne suit pas ${nonPorte("la vérification d'une installation de gaz neuve ou modifiée avant sa mise en service")}, par une personne ou un organisme agréé, avant toute utilisation du gaz.`,
+  },
+  "GZ 14": {
+    domaine: "gaz",
+    condition: "erp_1_4",
+    phrase: `Rojer ne suit pas ${nonPorte("l'entretien des installations et appareils à gaz et de leurs conduits d'évacuation")}, ni ${nonPorte("l'accès et la signalisation de l'organe de coupure de branchement du gaz")}. Il suit ${porte("la vérification annuelle des installations de gaz")} lorsqu'un appareil de cuisson est déclaré au parc.`,
+  },
+  "Arrêté 23-02-2018 art. 26 § 3": {
+    domaine: "gaz",
+    condition: "habitation",
+    phrase: `Rojer ne suit pas ${nonPorte("l'entretien des installations collectives de gaz situées entre l'organe de coupure générale et les compteurs individuels")}, que le texte fait faire au moins tous les dix ans dans les bâtiments collectifs.`,
+  },
+  "AS 10": { domaine: "escaliers_mecaniques", condition: "erp_1_4" },
+  // 2026-10-13, après revue : classés hors cadre puis annoncés, décision de
+  // la propriétaire.
+  "Arrêté 1986-01-31 art. 78-1": {
+    domaine: "habitation",
+    condition: "habitation",
+    phrase: `Rojer ne suit pas ${nonPorte("le contrôle visuel des boxes de stockage d'un parc de stationnement couvert annexe")}, que le gestionnaire du parc fait au moins une fois par an et à chaque changement d'utilisateur.`,
+  },
+  "Arrêté 1986-01-31 art. 102": {
+    domaine: "habitation",
+    condition: "habitation",
+    phrase: `Rojer ne suit pas ${nonPorte("la vérification que les transformations de l'immeuble ne diminuent pas la réaction et la résistance au feu")}, à la charge du propriétaire, ni ${nonPorte("l'identification des places de stationnement utilisées par des personnes non résidentes")} pour une durée inférieure à trente jours consécutifs.`,
+  },
+  // 2026-10-13 : « hors cadre et on l'annonce », décision de la propriétaire.
+  "R. 4544-11": {
+    domaine: "electricite",
+    condition: "travail_electricite",
+    phrase: `Rojer ne suit pas ${nonPorte("l'habilitation spécifique aux travaux sous tension")}, délivrée par l'employeur après un document d'un organisme de formation agréé, et dont la validité est subordonnée à une attestation médicale propre à ces travaux.`,
   },
 };
 

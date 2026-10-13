@@ -209,15 +209,31 @@ ERP des quatre premières catégories, quatre d'habitation, deux d'activité
 (`R. 4544-11`, `R. 4323-89`) ; aucune ne vise seulement plus de cinquante
 travailleurs ou un ERP en IGH. Cible 15 → **30** (15 + 15 − 0), hors cible
 15 → 0, total 30 inchangé. Les trois hôtels passent de `perimetre` à
-`a_trancher` : rien ne s'encode. Les quinze sont OUVERTES, à évaluer selon la
-grille C45 (encoder / annoncer / hors cadre), listées au § 8 de
+`a_trancher` : ~~rien ne s'encode~~ [2026-10-13 : les hôtels sont encodés,
+voir ci-dessous]. ~~Les quinze sont OUVERTES, à évaluer selon la
+grille C45 (encoder / annoncer / hors cadre),~~ listées au § 8 de
 `couverture-declaree-du-produit.md` ; `registre-dette.test.ts` et
 `doc-couverture.test.ts` portent le mouvement.]
+[**CLASSÉES le 2026-10-13** par la propriétaire (`lot/docs-maj`) : trois
+encodées — le chapitre hôtels, exception à « encodage terminé »
+(`incendie-hotel-po-controle-biennal-installations`,
+`incendie-hotel-po-instruction-personnel-semestrielle`, référentiel
+`2026-10-13.1`, 174 + 2 = 176) ; ~~quatre~~ ~~six~~ sept annoncées (`GZ 13`, `GZ 14`, `AS 10`,
+arrêté 2018-02-23 art. 26 § 3 ; puis, après revue, arrêté 1986 art. 78-1 et
+102, puis `R. 4544-11`) ; ~~huit~~ ~~six~~ cinq hors cadre (§ 7). Manquantes
+30 → ~~23~~ ~~21~~ 20, toutes hors cadre ; `non_couvert` 66 → 73. La revue indépendante du même jour a aussi fait
+déclarer la succession de la ligne triennale vers la biennale (l'hôtel garde
+sa rangée et son dernier rapport) et corriger la description de la biennale :
+le contrôle électrique annuel n'apparaît que si l'installation est déclarée. La définition de la cible est écrite à l'ADR-031
+(amendement du 2026-10-12). Reste ouvert, non décidé : la vérification
+annuelle du gaz (`GZ 15`) n'est servie qu'à l'ERP 1-4 qui déclare un appareil
+de cuisson ; un commerce chauffé au gaz sans cuisine ne la reçoit pas.]
 
-**Trois dettes sans blocage, et non encodées : les hôtels.** `perimetre` veut
+~~**Trois dettes sans blocage, et non encodées : les hôtels.** `perimetre` veut
 dire « encodable, hors cible ». `PO 7` est chiffré (deux séances par an) et le
 modèle sait le porter. Ne pas l'encoder est un choix de priorité, pas une
-impossibilité — à confirmer, le produit SERVANT les hôtels (ADR-031).
+impossibilité — à confirmer, le produit SERVANT les hôtels (ADR-031).~~
+[2026-10-13 : CLOS — encodées (`lot/docs-maj`, d147fb7d), voir ci-dessus.]
 
 **Les réserves : 98 → 89.** Dix-neuf se disaient « corrigées » ou « levées ».
 Relues une à une : sept entièrement closes d'après le lot, trois de plus
@@ -536,12 +552,17 @@ constat qui ne rejoint pas cette liste se perd** — c'est la leçon du § 7.
   « À jour sur une zone à zéro équipement », corrigé le 2026-09-04 — et cette
   famille-là a déjà sa forme de correction : trois états fermés dont un
   `sansObjet` évalué avant tout comptage (`lib/batiments/etat-charge.ts`).
+  [2026-10-13, contrôle visuel (session de l'autre Mac) : `next build` + `next start` en local, `main` à 4f6de986, base Docker locale, dossier « Le Comptoir des Halles » déjà semé — DÉFAUT CONFIRMÉ : relevé du 04/08/2026, soit 70 jours, et
+  la pastille verte « Dans la plage » sur les trois points.]
 
 - **Trois écritures d'une même unité sur une seule carte** (`/carnet-sanitaire`,
   « Retour de boucle ») : `SEUIL MIN 50°C`, la valeur `55.0°`, l'axe
   `60°/50°/45°`, et `100%` sans espace. Le français écrit « 55,0 °C » et
   « 100 % » — et le produit écrit « 5 % » et « 80 % » ailleurs : la convention
   existe, elle n'est pas tenue ici.
+  [2026-10-13, contrôle visuel (session de l'autre Mac) : `next build` + `next start` en local, `main` à 4f6de986, base Docker locale, dossier « Le Comptoir des Halles » déjà semé — DÉFAUT CONFIRMÉ : « 53.0° », « 55.0° », « 60.0° »,
+  « 67% dans la plage », « 100% dans la plage », « 320UFC/L »,
+  « SEUIL MIN 50°C », axes en « 50° ».]
 
 - ~~**La même statistique écrite de deux façons** : « 80 % des incendies »
   (`permis-feu/page.tsx:120`) contre « 80% des incendies »
@@ -554,6 +575,13 @@ constat qui ne rejoint pas cette liste se perd** — c'est la leçon du § 7.
   (« ← LE COMPTOIR DES HALLES ») sur `/permis-feu` et `/plan-prevention`, fil
   d'Ariane sur `/carnet-sanitaire`. L'ADR-014 sépare les deux assertions ; ici
   elles désignent la même relation.
+  [2026-10-13, contrôle visuel (session de l'autre Mac) : `next build` + `next start` en local, `main` à 4f6de986, base Docker locale, dossier « Le Comptoir des Halles » déjà semé — DÉFAUT CONFIRMÉ ; la page Zones emploie aussi le retour.]
+  [2026-10-13 : permis de feu, plan de prévention et Zones passent au fil
+  d'Ariane (`lot/controle-visuel-1310`, rojer-outils-34). RESTE, après le
+  lancement : huit pages d'entrée portent encore « ← Établissement » en dur —
+  actions, équipe, DUERP, modifier, états permanents, prescriptions, « quand
+  ça arrive », prestataires (ADR-014 : sur une page d'entrée, le lien vers
+  l'établissement dit où la page vit).]
 
 - ~~**`SupprimerEtablissementButton` n'est monté sur aucun écran**, donc il
   n'existe aucun endroit d'où supprimer un établissement.~~ **RÉSOLU le
@@ -626,6 +654,14 @@ gauche. Sur la page de vente. Demi-correction, pas correction.
 > de blanc (`globals.css:682`), calculée sur le pire fond pour tenir 4,5:1. Il
 > reste 12 % de transparence : c'est un chiffre, pas un jugement, et seul un
 > regard à la bonne position de défilement dit si ça suffit.
+>
+> [2026-10-13, contrôle visuel (session de l'autre Mac) : `next build` + `next start` en local, `main` à 4f6de986, base Docker locale, dossier « Le Comptoir des Halles » déjà semé — ~~reste à confirmer à l'œil~~ 88 % VU (calculé
+> `color(srgb 1 1 1 / 0.88)`). **DÉFAUT NEUF** : le CSS compilé ne garde que
+> `-webkit-backdrop-filter` pour `.lp-nav` et `.lp-nav--ilot` ; la propriété
+> standard `backdrop-filter` disparaît au build, Chrome calcule `none`, donc
+> aucun flou — le titre blanc « Concentrez-vous » se lit net à travers l'îlot
+> sur la bande noire. La règle `.lp-nav` porte aussi des `blur()saturate()`
+> vides. À corriger.]
 
 ~~**`/equipements` tranche une ambiguïté du mauvais côté.** Sous les compteurs :
 « Les chiffres ci-dessus et les familles ci-dessous portent sur tout
@@ -648,7 +684,9 @@ bord, 19 sur la carte de zone, « 22 datées · 5 à planifier » au calendrier,
 > **Les quatre écrans le disent depuis le 2026-09-03**, et depuis le 2026-09-04
 > ils le disent chacun une fois : les phrases se répétaient d'un écran à l'autre
 > et deux fois sur `/calendrier`. **Ce qui reste ouvert, et qui n'est pas la
-> même chose** : les quatre comptes divergeaient aussi dans leurs MOTS —
+> même chose** [2026-10-13, vérifié dans le code : CLOS — `LIBELLE_ETAT`
+> (`lib/calendrier/etats.ts`) et `vocabulaire-etats.test.ts` existent ; la
+> phrase décrit la correction, elle n'annonce plus rien d'ouvert] : les quatre comptes divergeaient aussi dans leurs MOTS —
 > « DÉPASSÉES », « à traiter », « EN RETARD », « 5 dépassées » pour un seul
 > état. Le mot vit désormais dans `LIBELLE_ETAT` (`lib/calendrier/etats`), avec
 > la couleur qui y vivait déjà, et `vocabulaire-etats.test.ts` refuse qu'un
@@ -697,14 +735,31 @@ bord, 19 sur la carte de zone, « 22 datées · 5 à planifier » au calendrier,
   que la ligne a de la place.~~ **TRAITÉ, reste à confirmer à l'œil** —
   `echeances.tsx:154` et `:288`. Qu'elle existe dans le code ne dit pas qu'elle
   s'affiche là où on la cherche.
-- **TOUJOURS OUVERT, non vérifié.** Le guide reste à « étape 4 sur 6 » alors que
-  l'étape 5 paraît satisfaite ; un bouton primaire y est indiscernable d'un choix
+  [2026-10-13, contrôle visuel (session de l'autre Mac) : `next build` + `next start` en local, `main` à 4f6de986, base Docker locale, dossier « Le Comptoir des Halles » déjà semé — PAS VUE dans un widget. Sur la fiche de la vérification, la
+  pastille est là (ambre, « Origine : demande de votre assureur »). Mais la
+  seule ligne d'assurance du dossier (thermographie, `a_planifier`) n'entre ni
+  dans les cinq lignes d'« À faire », où d'autres sont plus en retard, ni dans
+  « Prochaines échéances », qui la range « sans échéance connue ». Le code de
+  rendu existe et n'est jamais atteint avec ces données : **une demande
+  d'assureur à planifier n'apparaît sur aucun widget du tableau de bord.** À
+  trancher : est-ce voulu ?]
+- **TOUJOURS OUVERT, non vérifié.** ~~Le guide reste à « étape 4 sur 6 » alors que
+  l'étape 5 paraît satisfaite~~ ; un bouton primaire y est indiscernable d'un choix
   déjà fait.
+  [2026-10-13, contrôle visuel (session de l'autre Mac) : `next build` + `next start` en local, `main` à 4f6de986, base Docker locale, dossier « Le Comptoir des Halles » déjà semé — le compteur est JUSTE : le guide a onze étapes, pas six
+  (« Étape 9 sur 11 », les huit premières faites et barrées). **DÉFAUT
+  CONFIRMÉ** sur le bouton : aux questions 9 à 11 sans réponse, « Oui » est noir
+  plein et « Non » cerné, ce qui se lit comme un choix déjà fait.]
 - **TOUJOURS OUVERT, non vérifié — et il ne se mesure pas en `next dev`.** Le
   héros de la page d'accueil reste un aplat noir ~4 s avant que la photo arrive.
   Pas cassé, lent — sur la première image d'une page de vente. À juger sur un
   `next build`, faute de quoi on relèvera la compilation à la demande comme un
   défaut de produit.
+  [2026-10-13, contrôle visuel (session de l'autre Mac) : `next build` + `next start` en local, `main` à 4f6de986, base Docker locale, dossier « Le Comptoir des Halles » déjà semé — NON REPRODUIT en local : onglet au premier plan, cache
+  d'images vidé, rechargement forcé ; TTFB 161 ms, image de 48 Ko reçue à
+  285 ms, affichage (LCP) à 324 ms, préchargement présent. Réserve : localhost
+  n'a pas de latence réseau, à confirmer en prod. Le cadre est peint
+  `--board-ink` tant que l'image manque — d'où du noir si elle tarde.]
 
 ### Et un fait de conception, découvert en le cherchant
 
@@ -728,8 +783,19 @@ rien sur une correction de charte. S'y ajoutent tout l'onboarding, le refus de l
 > établissements et affiche A4) et `/plan-actions` (fiche d'action). Une
 > quinzaine de constats en sont sortis, dont plusieurs déjà corrigés depuis.
 >
-> **Réellement jamais ouverts, et c'est tout ce qui reste :** `/permis-feu`,
-> `/plan-prevention`, `/carnet-sanitaire`.
+> ~~**Réellement jamais ouverts, et c'est tout ce qui reste :** `/permis-feu`,
+> `/plan-prevention`, `/carnet-sanitaire`.~~
+>
+> [2026-10-13, contrôle visuel (session de l'autre Mac) : `next build` + `next start` en local, `main` à 4f6de986, base Docker locale, dossier « Le Comptoir des Halles » déjà semé — CLOS. VUS avec des données : `/permis-feu` (PF-001 « En
+> attente de signatures »), `/plan-prevention` (PP-001 « Inspection commune
+> faite »), `/carnet-sanitaire` (3 points, 18 relevés, 1 analyse). Le refus de
+> la 4ᵉ zone s'affiche (« Un établissement compte 3 zones au plus… ») ; le
+> formulaire de prescription revient à ses valeurs par défaut après
+> l'enregistrement (prescription de test créée puis supprimée, vérifié en base).
+> L'onboarding s'ouvre et rend bien son étape 1 sur 3, sans avoir été parcouru
+> jusqu'à la création. **Constat neuf** : `/onboarding` s'ouvre sans
+> redirection pour un compte qui a déjà une entreprise — à vérifier dans le
+> code avant d'en faire un défaut.]
 
 ### Comment la session s'ouvre, et pourquoi ça ne s'improvise pas
 
@@ -937,9 +1003,13 @@ que le corpus en porte :
 | Livre III — 5ᵉ catégorie | 59 | **`integral`** |
 | Livre II — catégories 1 à 4 | **18** | `articles_cites` |
 
-**Plus l'établissement est grand, plus la couverture est mince — et rien ne le
-dit au dirigeant.** Un restaurant de 3ᵉ catégorie voit un dossier qui a l'air
-complet.
+**Plus l'établissement est grand, plus la couverture est mince — ~~et rien ne le
+dit au dirigeant.~~ ~~Un restaurant de 3ᵉ catégorie voit un dossier qui a l'air
+complet.~~** [2026-10-13, vérifié dans le code : l'axe `categorie_erp` de
+`perimetre/couverture.ts` déclare le manque à tout ERP hors
+`CATEGORIES_COUVERTES` — « Cet établissement relève de la … catégorie » —, sur
+la page « Ce que Rojer ne couvre pas ». Le dénominateur ci-dessous reste à
+mesurer.]
 
 **Réserve** : le dénominateur du Livre II n'est pas établi. On sait qu'on en cite
 dix-huit articles, on ne sait pas combien il en compte. Le mesurer est le premier
@@ -1002,7 +1072,12 @@ l'argument pour ne jamais retirer une question sans ouvrir son texte :
   est l'article 101 ». Bloqué, lui : pas d'attribut de parc annexe, et un
   débiteur — « le gestionnaire » — que le modèle ne connaît pas.
 
-Les deux sont au corpus en `obligation_manquante`, aucune n'est encodée : une
+~~Les deux sont au corpus en `obligation_manquante`, aucune n'est encodée~~
+[2026-10-13, vérifié dans le code : `GH 61 § 5` a été encodé le 2026-09-04
+(`incendie-igh-charge-calorifique-quinquennale`), puis retiré le 2026-10-07
+avec tout l'IGH ; `GH 61` est `non_couvert`. ~~L'art. 78-1 est classé HORS
+CADRE le 2026-10-13.~~ L'art. 78-1, classé hors cadre puis annoncé le même jour,
+est `non_couvert`.] : une
 obligation ne s'encode pas en effet de bord d'une question à laquelle elle ne
 répond pas.
 
@@ -2291,8 +2366,11 @@ dossier tant que la variable n'est pas mise à jour.
 
 ### Ce que ça n'a pas réglé, et qui reste ouvert
 
-Une base propre pour les tests : ni preview, ni local peuplé. `docs/rgpd.md` et
-le § 5 disent déjà qu'aucun seed n'amorce une base vide, si bien qu'un contrôle
+Une base propre pour les tests : ni preview, ni local peuplé. ~~`docs/rgpd.md` et
+le § 5 disent déjà qu'aucun seed n'amorce une base vide~~ [2026-10-13, vérifié dans le code :
+faux depuis le 2026-09-03 — le § 5 dit le contraire, `scripts/seed-dossier-complet.ts`
+crée un dossier sur une base vide et migrée ; reste que personne ne l'a lancé
+pour un contrôle visuel], si bien qu'un contrôle
 visuel sur données réalistes n'existe nulle part ailleurs qu'en production.
 C'est le vrai manque ; les previews n'étaient qu'une façon coûteuse de le
 contourner.
@@ -2435,7 +2513,8 @@ lot 6.
 > « ECS » ne dit pas où est le point. (2) L'article 1er de l'arrêté de 1978
 > (champ, installations neuves ou existantes) n'est pas ouvert. (3) Le relevé
 > hebdomadaire du tableau de bord reste un seuil du produit, plus serré que le
-> mensuel de l'annexe 2 — déjà dit dans `dashboard/obligations.ts`. (4) La
+> mensuel de l'annexe 2 — déjà dit dans `dashboard/obligations.ts` [2026-10-13 :
+> un constat, pas une tâche]. (4) La
 > ~~phrase « entre 25 et 45 °C » de la page ne cite aucune source~~ — retirée
 > le même jour. (5) Le jeu de données `scripts/seed-dossier-complet.ts` pose
 > 55 °C en sortie d'un ballon de 300 L et 50 °C minimum à un mitigeur : deux
@@ -2523,6 +2602,7 @@ bloquante pour la branche :
 6. **« Formations liées aux risques du poste »** regroupe aussi des
    attestations médicales et une autorisation, qui ne sont pas des
    formations. Titre validé par la propriétaire ; signalé par la relecture.
+   [2026-10-13 : CLOS — tranché par la propriétaire, rien à faire.]
 7. **Un engin déclaré et un « non » à la conduite.** Un chariot ou une nacelle
    actif, avec « non » à `q-conduite-engins` : le tableau de bord suit le
    DUERP et se tait, et rien ne relève la contradiction. Ce n'est pas faux en

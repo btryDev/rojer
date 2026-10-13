@@ -183,6 +183,8 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "incendie-erp-visite-commission-cat4-r-sans-hebergement-quinquennale": "etablissement",
   "incendie-erp-visite-commission-cat4-triennale": "etablissement",
   "incendie-hotel-po-controle-annuel-electricite": "equipement",
+  "incendie-hotel-po-controle-biennal-installations": "etablissement",
+  "incendie-hotel-po-instruction-personnel-semestrielle": "etablissement",
   "incendie-igh-charge-calorifique-quinquennale": "etablissement",
   "incendie-igh-moyens-secours-annuelle": "equipement",
   "incendie-registre-securite": "etablissement",

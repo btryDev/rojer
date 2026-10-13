@@ -11,6 +11,7 @@
 // une obligation décennale au § 3° que le référentiel ne porte pas.
 
 import type { Corpus } from "./types";
+import { ADRESSE_MANQUES_ANNONCES } from "./adresses";
 
 export const ARRETE_2018_02_23_GAZ_HABITATION: Corpus = {
   id: "arrete-2018-02-23-gaz-habitation",
@@ -46,14 +47,10 @@ export const ARRETE_2018_02_23_GAZ_HABITATION: Corpus = {
       versionEnVigueur: "2023-01-01",
       luLe: "2026-08-26",
       lecture: "premiere_main",
-      statut: "obligation_manquante",
-      cause: "categorie_equipement",
-      // ~~false~~ → true le 2026-10-12 : la cible est ce que l'onboarding ne
-      // refuse pas (≤ 50 travailleurs, pas d'ERP en IGH ; ADR-031). Ouverte, à
-      // évaluer selon la grille C45 (encoder / annoncer / hors cadre).
-      toucheLaCible: true,
+      statut: "non_couvert",
+      declareA: ADRESSE_MANQUES_ANNONCES,
       motif:
-        "« Dans les bâtiments collectifs, les installations situées entre l'organe de coupure générale visé à l'article 9.1 et les compteurs individuels ou, à défaut de compteurs, les organes de coupure individuels (OCI) visés à l'article 9.2 inclus font l'objet d'actions d'entretien dont la périodicité n'excède pas 10 ans. » Le référentiel ne porte AUCUNE obligation sur ces installations collectives de gaz : il ne connaît que la VMC-gaz du § 5°. Le même paragraphe impose en outre un contrat d'entretien écrit passé avec le distributeur ou une entreprise compétente lorsque les installations ne sont pas sous la garde du distributeur — c'est ce contrat qui avait été porté à tort sur la VMC-gaz. Créer l'obligation suppose une catégorie d'équipement « installation collective de gaz » qui n'existe pas dans l'enum.",
+        "« Dans les bâtiments collectifs, les installations situées entre l'organe de coupure générale visé à l'article 9.1 et les compteurs individuels ou, à défaut de compteurs, les organes de coupure individuels (OCI) visés à l'article 9.2 inclus font l'objet d'actions d'entretien dont la périodicité n'excède pas 10 ans. » Le référentiel ne porte AUCUNE obligation sur ces installations collectives de gaz : il ne connaît que la VMC-gaz du § 5°. Le même paragraphe impose en outre un contrat d'entretien écrit passé avec le distributeur ou une entreprise compétente lorsque les installations ne sont pas sous la garde du distributeur — c'est ce contrat qui avait été porté à tort sur la VMC-gaz. Créer l'obligation suppose une catégorie d'équipement « installation collective de gaz » qui n'existe pas dans l'enum.\n\n[2026-10-13 — ANNONCÉ, décision de la propriétaire du 2026-10-13 (grille C45 appliquée aux quinze manques entrés dans la cible le 2026-10-12). Passé de `obligation_manquante` à `non_couvert` : nommé sur la page « Ce que Rojer ne couvre pas », domaine « Installations de gaz », à tout dossier qui déclare le régime d'habitation. Rien n'est encodé ; la phrase de l'écran reste « une obligation que cet outil ne traite pas reste due si un texte l'impose ».]",
     },
     {
       ref: "Arrêté 23-02-2018 art. 32",

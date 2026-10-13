@@ -832,8 +832,13 @@ describe("référentiel conformité — seuils d'effectif", () => {
     // que l'exploitant voit, lu ici dans le référentiel et non recopié.
     const pe4 = obligationParId("incendie-erp-pe4-entretien-installations-techniques")!;
     expect(pe4.periodicite).toBe("triennale");
-    expect(pe4.typologies.erp).toEqual({ categories: ["N5"] });
+    // ~~`{ categories: ["N5"] }`~~ — 2026-10-13 : l'hôtel sort de la ligne
+    // triennale, PO 1 § 3 lui donnant le même contrôle tous les deux ans.
+    expect(pe4.typologies.erp).toEqual({ categories: ["N5"], typesExclus: ["O"] });
     expect(pe4.referencesLegales[0].reference).toContain("PE 4 § 2");
+    const hotel = obligationParId("incendie-hotel-po-controle-biennal-installations")!;
+    expect(hotel.periodicite).toBe("biennale");
+    expect(hotel.typologies.erp).toEqual({ categories: ["N5"], types: ["O"] });
     const invoquent = obligationsConformite.filter((o) =>
       /PE 15 § 1|PE 20 § 2/.test(o.description ?? ""),
     );
@@ -845,8 +850,14 @@ describe("référentiel conformité — seuils d'effectif", () => {
     // Bornes basses : sans elles, un renommage de la phrase viderait le test.
     expect(recurrentes.length).toBeGreaterThan(0);
     expect(ponctuelles.length).toBeGreaterThan(0);
+    // Et la ligne de l'hôtel, depuis le 2026-10-13 : « tout établissement de
+    // 5ᵉ catégorie » cessait d'être vrai pour lui.
     const muettes = recurrentes
-      .filter((o) => !(o.description ?? "").includes(`« ${pe4.libelle} »`))
+      .filter(
+        (o) =>
+          !(o.description ?? "").includes(`« ${pe4.libelle} »`) ||
+          !(o.description ?? "").includes(`« ${hotel.libelle} »`),
+      )
       .map((o) => o.id);
     expect(muettes).toEqual([]);
     const accolees = ponctuelles
@@ -1795,6 +1806,26 @@ describe("référentiel conformité — version et empreinte", () => {
     // l'établissement (critère `ssiCategorieAouB`), plus sur le désenfumage.
     // 174 + 0 − 0 = 174, relevé en appelant `empreinteReferentiel()`.
     { version: "2026-10-12.2", empreinte: "174-12f96465dba4ff5d" },
+    // 2026-10-13, décision de la propriétaire sur les quinze manques entrés
+    // dans la cible le 2026-10-12 : le chapitre hôtels est encodé.
+    // `incendie-hotel-po-controle-biennal-installations` (PO 1 § 3, avec PE 4
+    // § 2 et PO 8 § 1) et `incendie-hotel-po-instruction-personnel-semestrielle`
+    // (PO 7, PO 12, PE 27 § 5), N5 type O, porteur établissement ; les lignes
+    // triennale de PE 4 § 2 et d'état permanent de PE 27 § 5 excluent le type O
+    // (`typesExclus`). `.2` est pris par `lot/polir-relecture` : ce lot prend
+    // `2026-10-13.1`. 174 + 2 − 0 = 176, dont 3 au niveau audit, 173 suivies.
+    // ~~176-c21296118ba6a213~~ : empreinte avant la revue indépendante du même
+    // jour, jamais servie — ligne réécrite le 2026-10-13 (version non servie) :
+    // la ligne biennale déclare `succedeA` la triennale (l'hôtel garde sa
+    // rangée et son dernier rapport), retire ALARME_INCENDIE de son
+    // contexte et prend le libellé « Entretien et contrôle… » (PE 4 § 2 dit
+    // entretien). 176 + 0 − 0 = 176.
+    // ~~176-df8284f8efebaad8~~ : empreinte de la branche avant la réunion avec
+    // `main` (PR #21, `2026-10-12.2`), jamais servie — ligne réécrite le
+    // 2026-10-13 : la `.13.1` hache désormais aussi le critère
+    // `ssiCategorieAouB` de la `.12.2`. 174 (`.12.2`) + 2 − 0 = 176, mesuré en
+    // appelant `empreinteReferentiel()` après la réunion.
+    { version: "2026-10-13.1", empreinte: "176-8239ab60d548b72a" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1965,7 +1996,10 @@ describe("référentiel conformité — version et empreinte", () => {
       // 19 mars 1993, au niveau audit) − 0 = 174, dont 3 au niveau audit.
       // 2026-10-12, fusion de `main` (ADR-041, `.3`, 172 + 0 − 0 = 172) :
       // remesuré en appelant, 172 + 2 − 0 = 174, inchangé.
-    ).toBe(174);
+      // ~~174~~ — 2026-10-13 (hôtels, décision de la propriétaire) : 174 + 2
+      // (`incendie-hotel-po-controle-biennal-installations`,
+      // `incendie-hotel-po-instruction-personnel-semestrielle`) − 0 = 176.
+    ).toBe(176);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {

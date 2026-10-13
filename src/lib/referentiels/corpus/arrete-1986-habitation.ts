@@ -158,6 +158,7 @@
 // modification que l'arrêté du 19 juin 2015 déclare y avoir portée.
 
 import type { Corpus } from "./types";
+import { ADRESSE_MANQUES_ANNONCES } from "./adresses";
 
 const URL_TEXTE =
   "https://www.legifrance.gouv.fr/loda/id/JORFTEXT000000474032/";
@@ -280,8 +281,10 @@ export const ARRETE_1986_HABITATION: Corpus = {
       statut: "obligation_manquante",
       cause: "attribut_etablissement",
       // ~~false~~ → true le 2026-10-12 : la cible est ce que l'onboarding ne
-      // refuse pas (≤ 50 travailleurs, pas d'ERP en IGH ; ADR-031). Ouverte, à
-      // évaluer selon la grille C45 (encoder / annoncer / hors cadre).
+      // refuse pas (≤ 50 travailleurs, pas d'ERP en IGH ; ADR-031). ~~Ouverte, à évaluer selon la grille C45~~ —
+      // 2026-10-13 : HORS CADRE, décision de la propriétaire ; couverte par la
+      // clause générale des mentions légales (§ 7 de
+      // `docs/couverture-declaree-du-produit.md`).
       toucheLaCible: true,
       citationCle:
         "Si l'une des conditions suivantes est respectée, le système de ventilation est soumis aux seules prescriptions de l'article 59 relatives aux conduits.\n" +
@@ -303,21 +306,16 @@ export const ARRETE_1986_HABITATION: Corpus = {
       },
       luLe: "2026-09-03",
       lecture: "agent_verbatim",
-      statut: "obligation_manquante",
-      cause: "destinataire",
-      // ~~false~~ → true le 2026-10-12 : la cible est ce que l'onboarding ne
-      // refuse pas (≤ 50 travailleurs, pas d'ERP en IGH ; ADR-031). Ouverte, à
-      // évaluer selon la grille C45 (encoder / annoncer / hors cadre).
-      toucheLaCible: true,
+      // 2026-10-13, revue : rétablis — le passage à `non_couvert` les avait emportés.
       historique:
         "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : URL de modifiePar : l'URL du texte porteur (arrêté de 1986) remplacée par celle de l'arrêté du 27 juillet 2026 que l'API rend (JORFTEXT000054596627). La citation (2° puis 7°, sur deux lignes) est exacte : l'écart du premier passage venait du script, qui ne coupait pas aux sauts de ligne.",
       citationCle:
         "2° Le parc de stationnement relève d'un propriétaire unique. Le propriétaire unique ou la personne qu'il désigne expressément pour assurer la gestion du parc est dénommée, pour l'application du présent article, le gestionnaire.\n" +
         "7° Le gestionnaire assure le suivi et le contrôle des boxes affectés au stockage. Il procède à un contrôle visuel de chaque box affecté au stockage au moins une fois par an et à chaque changement d'utilisateur. Ce contrôle a pour but de s'assurer du respect des dispositions prévues au 4° et de la déclaration mentionnée au 6°. Les résultats du contrôle sont consignés dans le registre mentionné à l'article 101 et tenus à la disposition de l'autorité compétente. Les boxes affectés au stockage sont identifiés dans un document tenu à jour par le gestionnaire et annexé au registre mentionné à l'article 101.",
+      statut: "non_couvert",
+      declareA: ADRESSE_MANQUES_ANNONCES,
       motif:
-        "ARTICLE NEUF — CRÉÉ PAR L'ARRÊTÉ DU 27 JUILLET 2026, EN VIGUEUR DEPUIS LE 3 AOÛT 2026, soit un mois avant sa découverte. Il dément, à lui seul, la présomption que les articles 5 à 96 de ce texte seraient purement constructifs : son 7° porte un CONTRÔLE VISUEL AU MOINS ANNUEL de chaque box affecté au stockage, plus un contrôle à chaque changement d'utilisateur, dont les résultats se consignent au registre de l'article 101.\n\nLE DESTINATAIRE EST UN TROISIÈME PORTEUR, ET C'EST CE QUI BLOQUE. Ni « le propriétaire » de l'article 101, ni « l'exploitant » : le 2° définit un GESTIONNAIRE, qui est le propriétaire unique du parc ou la personne qu'il désigne expressément. Un employeur locataire d'un local dans un immeuble d'habitation n'est pas le gestionnaire du parc annexe ; il peut l'être si le parc lui appartient et qu'il en assure la gestion.\n\nAUCUNE CONDITION DE FAMILLE, ce qui est le résultat que le lot venait chercher : les conditions de déclenchement sont l'existence d'un parc de stationnement couvert annexe de plus de 100 m² (art. 1er et 77), d'au plus 100 places, à propriétaire unique, dont une part des places est affectée au stockage en boxes. Aucune n'est une famille d'habitation.\n\nLE PREMIER CONTRÔLE N'EST PAS SEUL : « à chaque changement d'utilisateur » est un déclencheur d'ÉVÉNEMENT, que le modèle ne porte pas (ADR-022, pas de sixième déclencheur). L'annuel, lui, serait portable — c'est l'attribut du parc qui manque.",
-      bloquePar:
-        "Aucun attribut d'établissement ne dit qu'un parc de stationnement couvert annexe existe, ni qu'il comporte des boxes affectés au stockage — c'est le même manque que l'article 102 signale depuis le 2026-09-01 pour son second alinéa. S'y ajoute la question du destinataire : l'obligation vise le GESTIONNAIRE du parc, qualité que le modèle ne connaît pas et qui ne se déduit pas de la typologie de l'établissement. Le déclencheur « à chaque changement d'utilisateur » n'est de toute façon pas portable.",
+        "ARTICLE NEUF — CRÉÉ PAR L'ARRÊTÉ DU 27 JUILLET 2026, EN VIGUEUR DEPUIS LE 3 AOÛT 2026, soit un mois avant sa découverte. Il dément, à lui seul, la présomption que les articles 5 à 96 de ce texte seraient purement constructifs : son 7° porte un CONTRÔLE VISUEL AU MOINS ANNUEL de chaque box affecté au stockage, plus un contrôle à chaque changement d'utilisateur, dont les résultats se consignent au registre de l'article 101.\n\nLE DESTINATAIRE EST UN TROISIÈME PORTEUR, ET C'EST CE QUI BLOQUE. Ni « le propriétaire » de l'article 101, ni « l'exploitant » : le 2° définit un GESTIONNAIRE, qui est le propriétaire unique du parc ou la personne qu'il désigne expressément. Un employeur locataire d'un local dans un immeuble d'habitation n'est pas le gestionnaire du parc annexe ; il peut l'être si le parc lui appartient et qu'il en assure la gestion.\n\nAUCUNE CONDITION DE FAMILLE, ce qui est le résultat que le lot venait chercher : les conditions de déclenchement sont l'existence d'un parc de stationnement couvert annexe de plus de 100 m² (art. 1er et 77), d'au plus 100 places, à propriétaire unique, dont une part des places est affectée au stockage en boxes. Aucune n'est une famille d'habitation.\n\nLE PREMIER CONTRÔLE N'EST PAS SEUL : « à chaque changement d'utilisateur » est un déclencheur d'ÉVÉNEMENT, que le modèle ne porte pas (ADR-022, pas de sixième déclencheur). L'annuel, lui, serait portable — c'est l'attribut du parc qui manque.\n\nSON BLOCAGE, quand l'article était `obligation_manquante` : Aucun attribut d'établissement ne dit qu'un parc de stationnement couvert annexe existe, ni qu'il comporte des boxes affectés au stockage — c'est le même manque que l'article 102 signale depuis le 2026-09-01 pour son second alinéa. S'y ajoute la question du destinataire : l'obligation vise le GESTIONNAIRE du parc, qualité que le modèle ne connaît pas et qui ne se déduit pas de la typologie de l'établissement. Le déclencheur « à chaque changement d'utilisateur » n'est de toute façon pas portable.\n\n[2026-10-13 — ANNONCÉ, décision de la propriétaire du 2026-10-13. Classé d'abord HORS CADRE le même jour ; la revue indépendante a relevé que le motif écrit (« pèse sur le propriétaire / le gestionnaire, pas sur l'employeur ») ne tenait pas — Rojer sert déjà le propriétaire pour l'article 101 —, et la propriétaire a choisi l'annonce. Passé de `obligation_manquante` à `non_couvert` : nommé sur la page « Ce que Rojer ne couvre pas », domaine « Immeuble d'habitation », à tout dossier qui déclare le régime d'habitation. Rien n'est encodé.]",
     },
     {
       ref: "Arrêté 1986-01-31 art. 97",
@@ -411,18 +409,13 @@ export const ARRETE_1986_HABITATION: Corpus = {
       modifiePar: ARRETE_2020_12_07,
       luLe: "2026-09-01",
       lecture: "agent_verbatim",
-      statut: "obligation_manquante",
-      cause: "evenement",
-      // ~~false~~ → true le 2026-10-12 : la cible est ce que l'onboarding ne
-      // refuse pas (≤ 50 travailleurs, pas d'ERP en IGH ; ADR-031). Ouverte, à
-      // évaluer selon la grille C45 (encoder / annoncer / hors cadre).
-      toucheLaCible: true,
+      // 2026-10-13, revue : rétablis — le passage à `non_couvert` les avait emportés.
       citationCle:
         "Le propriétaire doit s'assurer que les transformations apportées aux immeubles en ce qui concerne l'affectation des locaux, les matériaux constitutifs des revêtements des couvertures ou des façades, les revêtements de sols et des parois des circulations communes, des celliers ainsi que des parcs, la constitution de ces parois ne soient pas de nature à diminuer les caractéristiques de réaction et de résistance au feu exigées pour ces divers éléments par le présent arrêté. Le propriétaire est tenu de s'assurer du respect des dispositions de l'article 1er, en identifiant les places de stationnement utilisées effectivement par des personnes non résidentes du bâtiment d'habitation pour une durée inférieure à 30 jours consécutifs.",
+      statut: "non_couvert",
+      declareA: ADRESSE_MANQUES_ANNONCES,
       motif:
-        "Deux obligations permanentes du propriétaire que le référentiel ne porte pas. (1) Vérifier que les transformations apportées à l'immeuble ne dégradent pas la réaction et la résistance au feu : c'est une vigilance déclenchée par un événement — des travaux — et le modèle n'a pas de déclencheur « événement » (voir le registre des déclencheurs, `.claude/CLAUDE.md`). L'encoder en `etat_permanent` la ferait apparaître au calendrier d'un propriétaire qui n'a rien transformé, et l'y laisserait indéfiniment. (2) Identifier les places de stationnement occupées moins de 30 jours consécutifs par des non-résidents : c'est le pendant de la dérogation posée à l'article 1er, et son enjeu est de savoir si le parc reste sous cet arrêté ou bascule sous le régime ERP. L'encoder suppose de connaître l'existence et l'usage d'un parc de stationnement annexe, attribut d'établissement qui n'existe pas au modèle.",
-      bloquePar:
-        "Aucun déclencheur « événement » au modèle pour le premier alinéa ; aucun attribut de parc de stationnement annexe pour le second.",
+        "Deux obligations permanentes du propriétaire que le référentiel ne porte pas. (1) Vérifier que les transformations apportées à l'immeuble ne dégradent pas la réaction et la résistance au feu : c'est une vigilance déclenchée par un événement — des travaux — et le modèle n'a pas de déclencheur « événement » (voir le registre des déclencheurs, `.claude/CLAUDE.md`). L'encoder en `etat_permanent` la ferait apparaître au calendrier d'un propriétaire qui n'a rien transformé, et l'y laisserait indéfiniment. (2) Identifier les places de stationnement occupées moins de 30 jours consécutifs par des non-résidents : c'est le pendant de la dérogation posée à l'article 1er, et son enjeu est de savoir si le parc reste sous cet arrêté ou bascule sous le régime ERP. L'encoder suppose de connaître l'existence et l'usage d'un parc de stationnement annexe, attribut d'établissement qui n'existe pas au modèle.\n\nSON BLOCAGE, quand l'article était `obligation_manquante` : Aucun déclencheur « événement » au modèle pour le premier alinéa ; aucun attribut de parc de stationnement annexe pour le second.\n\n[2026-10-13 — ANNONCÉ, décision de la propriétaire du 2026-10-13. Classé d'abord HORS CADRE le même jour ; la revue indépendante a relevé que le motif écrit (« pèse sur le propriétaire / le gestionnaire, pas sur l'employeur ») ne tenait pas — Rojer sert déjà le propriétaire pour l'article 101 —, et la propriétaire a choisi l'annonce. Passé de `obligation_manquante` à `non_couvert` : nommé sur la page « Ce que Rojer ne couvre pas », domaine « Immeuble d'habitation », à tout dossier qui déclare le régime d'habitation. Rien n'est encodé.]",
     },
     {
       ref: "Arrêté 1986-01-31 art. 103",
