@@ -327,7 +327,10 @@ Chaque nouveau test a été éprouvé en retirant la protection qu'il garde.
 - Next reçoit le corps d'une Server Action avant de l'appeler : S6 supprime le
   traitement, pas la réception.
 - `uploadRapport` lit encore la vérification avant d'en contrôler la propriété.
-  Un utilisateur connecté peut ainsi apprendre qu'un identifiant existe.
+  Un utilisateur connecté peut ainsi apprendre qu'un identifiant existe. C'est
+  corrigé par `lot/audit-1013-perimetre`, avec `supprimerRapport`,
+  `plan-prevention` et `equipements` : conflit attendu au merge, à résoudre en
+  gardant un seul `requireUser()` en tête.
 - Une fonction créée plus tard dans `public` serait exécutable par `anon` (droit
   `EXECUTE` accordé à `PUBLIC`). Il n'en existe aucune aujourd'hui.
 - `verifierIntegriteSignature` est publique et hache jusqu'à 20 Mo par appel
