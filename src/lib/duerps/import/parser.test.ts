@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
 import * as XLSX from "xlsx";
-import { parserFichierDuerp, planifierImport } from "./parser";
+import {
+  erreurDeFichier,
+  LIGNES_MAX_IMPORT,
+  parserFichierDuerp,
+  planifierImport,
+} from "./parser";
 
 function excel(rows: Record<string, unknown>[]): Buffer {
   const ws = XLSX.utils.json_to_sheet(rows);
@@ -221,5 +226,67 @@ describe("parserFichierDuerp — colonnes de mesures et de cotation", () => {
     );
     expect(res.mappingDetecte.libelleRisque).toBe("Risques identifiés");
     expect(res.lignes[0].libelleRisque).toBe("Brûlure");
+  });
+});
+
+describe("parserFichierDuerp — fichier illisible ou trop long (audit OWASP du 2026-10-13)", () => {
+  const ENTETE = "Unité de travail;Risque;Gravité;Probabilité;Maîtrise";
+  const csv = (nbLignes: number, derniere?: string) =>
+    Buffer.from(
+      [
+        ENTETE,
+        ...Array.from({ length: nbLignes }, (_, i) => `Atelier;Risque ${i + 1};2;2;2`),
+        ...(derniere === undefined ? [] : [derniere]),
+      ].join("\n"),
+      "utf8",
+    );
+
+  it("un .xlsx corrompu rend une erreur de fichier, sans lever", () => {
+    const valide = excel([{ "Unité de travail": "A", Risque: "B", Gravité: 1, Probabilité: 1, Maîtrise: 1 }]);
+    // Un zip coupé en son milieu : l'en-tête « PK » passe, le reste non.
+    const tronque = valide.subarray(0, Math.floor(valide.length / 2));
+    let res: ReturnType<typeof parserFichierDuerp> | undefined;
+    expect(() => {
+      res = parserFichierDuerp(tronque);
+    }).not.toThrow();
+    expect(res?.lignes).toEqual([]);
+    expect(erreurDeFichier(res!)).toMatch(/^Fichier illisible/);
+  });
+
+  it("une borne qui n'est pas en deçà d'un DUERP réel", () => {
+    // Borne basse : cinq unités, quelques centaines de risques passent large.
+    expect(LIGNES_MAX_IMPORT).toBeGreaterThanOrEqual(2000);
+    // Borne haute : la borne protège encore la mémoire.
+    expect(LIGNES_MAX_IMPORT).toBeLessThanOrEqual(20000);
+  });
+
+  it("exactement la borne : tout est importé", () => {
+    const res = parserFichierDuerp(csv(LIGNES_MAX_IMPORT));
+    expect(erreurDeFichier(res)).toBeNull();
+    expect(res.lignes).toHaveLength(LIGNES_MAX_IMPORT);
+  });
+
+  it("une ligne de plus que la borne : refusé en entier, jamais tronqué", () => {
+    const res = parserFichierDuerp(csv(LIGNES_MAX_IMPORT + 1));
+    expect(res.lignes).toEqual([]);
+    expect(erreurDeFichier(res)).toMatch(/^Fichier trop long/);
+  });
+
+  it("un .xlsx dont la ligne sentinelle est vide mais qui continue : refusé", () => {
+    const aoa: unknown[][] = [ENTETE.split(";")];
+    for (let i = 1; i <= LIGNES_MAX_IMPORT; i++) aoa.push(["Atelier", `R${i}`, 2, 2, 2]);
+    aoa.push([]); // la sentinelle, vide
+    aoa.push(["Atelier", "Risque au-delà", 2, 2, 2]);
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "DUERP");
+    const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" }) as Buffer;
+    const res = parserFichierDuerp(buf);
+    expect(res.lignes).toEqual([]);
+    expect(erreurDeFichier(res)).toMatch(/^Fichier trop long/);
+  });
+
+  it("un fichier lisible et court n'a pas d'erreur de fichier", () => {
+    expect(erreurDeFichier(parserFichierDuerp(csv(3)))).toBeNull();
   });
 });

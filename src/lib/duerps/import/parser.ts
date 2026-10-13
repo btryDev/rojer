@@ -264,6 +264,9 @@ function splitMesures(val: unknown): string[] {
  * « é » est un octet seul, invalide en UTF-8 — il garde la lecture d'origine.
  */
 function lireClasseur(buffer: ArrayBuffer | Buffer | Uint8Array): XLSX.WorkBook {
+  // `sheetRows` : l'en-tête, les lignes admises, et UNE de plus — la
+  // sentinelle qui dit que le fichier dépasse (cf. `LIGNES_MAX_IMPORT`).
+  const options = { sheetRows: LIGNES_MAX_IMPORT + 2 };
   const octets = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
   const zip = octets[0] === 0x50 && octets[1] === 0x4b;
   const ole = octets[0] === 0xd0 && octets[1] === 0xcf && octets[2] === 0x11;
@@ -275,27 +278,96 @@ function lireClasseur(buffer: ArrayBuffer | Buffer | Uint8Array): XLSX.WorkBook 
       texte = null;
     }
     if (texte !== null) {
-      return XLSX.read(texte.replace(/^\uFEFF/, ""), { type: "string" });
+      return XLSX.read(texte.replace(/^\uFEFF/, ""), {
+        type: "string",
+        ...options,
+      });
     }
   }
-  return XLSX.read(buffer, { type: "buffer" });
+  return XLSX.read(buffer, { type: "buffer", ...options });
+}
+
+/**
+ * Le nombre de lignes de données qu'un import lit, au plus.
+ *
+ * Un DUERP réel, c'est cinq unités de travail et quelques centaines de risques
+ * au plus : 5 000 lignes laissent plus d'un ordre de grandeur de marge. La
+ * borne est passée à SheetJS (`sheetRows`), qui cesse alors de construire des
+ * cellules : un classeur de 5 Mo très compressé peut en déplier des millions,
+ * et chacune devient un objet en mémoire (1 000 000 de lignes : 874 Mo de tas
+ * sans borne, 68 Mo avec — mesuré le 2026-10-13).
+ *
+ * UNE BORNE QUI NE SE TAIT PAS. Lu jusqu'à la borne puis importé, un fichier
+ * plus long perdrait sa fin sans que personne le voie : des risques absents du
+ * DUERP. Il est refusé en entier, avec la raison (`depasseLaBorne`).
+ */
+export const LIGNES_MAX_IMPORT = 5000;
+
+/**
+ * Vrai si la feuille a plus de lignes, après l'en-tête, que l'import n'en lit.
+ *
+ * On lit la sentinelle (la ligne LIGNES_MAX_IMPORT + 2) sur deux plages :
+ *   - `!ref`, la plage des cellules lues — pour un CSV, elle couvre aussi les
+ *     lignes vides ;
+ *   - `!fullref`, que SheetJS pose sur un .xlsx ou un .xls quand il a coupé la
+ *     lecture : la seule trace d'un dépassement quand la sentinelle est vide.
+ *
+ * `!fullref` reprend la dimension déclarée par le classeur : des lignes vides
+ * mises en forme au-delà de la borne font refuser le fichier. Le message le
+ * dit ; c'est le prix d'une borne qui ne tronque jamais en silence.
+ */
+function depasseLaBorne(sheet: XLSX.WorkSheet): boolean {
+  const indexSentinelle = LIGNES_MAX_IMPORT + 1; // base 0, en-tête = 0
+  return [sheet["!ref"], sheet["!fullref"]].some(
+    (plage) =>
+      typeof plage === "string" &&
+      XLSX.utils.decode_range(plage).e.r >= indexSentinelle,
+  );
+}
+
+/**
+ * L'erreur qui porte sur le fichier entier, s'il y en a une : vide, illisible,
+ * trop long. Elle est à rendre telle quelle — compter « 1 ligne à corriger »
+ * ne dirait rien au dirigeant.
+ */
+export function erreurDeFichier(res: ResultatParsing): string | null {
+  return res.erreurs.find((e) => e.ligne === 0 && e.champ === "fichier")
+    ?.message ?? null;
+}
+
+function refusFichier(message: string): ResultatParsing {
+  return {
+    lignes: [],
+    erreurs: [{ ligne: 0, champ: "fichier", message }],
+    totalLignes: 0,
+    mappingDetecte: {} as Record<ColonneAttendue, string | null>,
+  };
 }
 
 export function parserFichierDuerp(
   buffer: ArrayBuffer | Buffer | Uint8Array,
   mappingUtilisateur?: Partial<Record<ColonneAttendue, string>>,
 ): ResultatParsing {
-  const wb = lireClasseur(buffer);
-  const firstSheetName = wb.SheetNames[0];
-  if (!firstSheetName) {
-    return {
-      lignes: [],
-      erreurs: [{ ligne: 0, champ: "fichier", message: "Fichier vide" }],
-      totalLignes: 0,
-      mappingDetecte: {} as Record<ColonneAttendue, string | null>,
-    };
+  // SheetJS lève sur un fichier qu'il ne sait pas lire (zip tronqué, .xlsx
+  // renommé qui n'en est pas un) : sans ce garde, l'exception remontait de
+  // l'action serveur et le dirigeant voyait une page d'erreur générique.
+  let wb: XLSX.WorkBook;
+  try {
+    wb = lireClasseur(buffer);
+  } catch {
+    return refusFichier(
+      "Fichier illisible : il n'a pas pu être ouvert comme un tableur. Vérifiez qu'il s'agit bien d'un fichier Excel (.xlsx / .xls) ou CSV, et qu'il s'ouvre dans votre tableur.",
+    );
   }
+  const firstSheetName = wb.SheetNames[0];
+  if (!firstSheetName) return refusFichier("Fichier vide");
   const sheet = wb.Sheets[firstSheetName];
+  if (!sheet) return refusFichier("Fichier vide");
+  if (depasseLaBorne(sheet)) {
+    return refusFichier(
+      `Fichier trop long : plus de ${LIGNES_MAX_IMPORT} lignes après l'en-tête, lignes vides mises en forme comprises. Rien n'a été importé — un DUERP en compte au plus quelques centaines ; supprimez les lignes en trop ou scindez le fichier.`,
+    );
+  }
   const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
     defval: null,
     raw: false, // string-ify les nombres pour traitement uniforme

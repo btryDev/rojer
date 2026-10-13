@@ -9,6 +9,7 @@ import {
   estAppareilRetire,
 } from "@/lib/equipements/retrait";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
+import { requireUser } from "@/lib/auth/require-user";
 import {
   cleRapport,
   getStorage,
@@ -77,6 +78,19 @@ export async function uploadRapport(
   _prev: UploadRapportState,
   formData: FormData,
 ): Promise<UploadRapportState> {
+  // 0. LA SESSION D'ABORD (audit OWASP du 2026-10-13, S6). Le contrôle de
+  //    propriété ne peut venir qu'après la lecture de la vérification, qui
+  //    donne l'établissement ; jusque-là, un appel anonyme faisait valider
+  //    les métadonnées, le fichier (jusqu'à 20 Mo) et interroger la base
+  //    avant d'être refusé. Le middleware ne protège pas une action serveur :
+  //    elle s'appelle par son identifiant depuis n'importe quelle page, les
+  //    pages publiques comprises.
+  //
+  //    Ce que ce garde n'arrête pas : le corps de la requête, que Next reçoit
+  //    et découpe en FormData avant d'appeler l'action. Celui-là est borné par
+  //    `serverActions.bodySizeLimit` (next.config).
+  await requireUser();
+
   // 1. Métadonnées
   const parsed = rapportMetadataSchema.safeParse({
     dateRapport: formData.get("dateRapport"),
