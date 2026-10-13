@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { batimentParDefaut } from "@/lib/batiments/queries";
@@ -10,6 +10,7 @@ import {
   toutesLesConditions,
 } from "@/lib/calendrier/portee";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
+import { requireUser } from "@/lib/auth/require-user";
 import {
   MESSAGE_REGEN_ECHEC,
   regenererApresMutation,
@@ -103,18 +104,25 @@ async function regimeDe(etablissementId: string): Promise<RegimeExigence> {
 }
 
 /**
- * L'établissement de l'appareil, pour le contrôle d'appartenance, et son état
- * de service : un appareil retiré du parc n'accepte plus aucune écriture
- * (`retrait.ts`, décision du 2026-10-12).
+ * L'appareil, lu DANS le périmètre du compte connecté — ou 404 : son
+ * établissement, son état de service (un appareil retiré du parc n'accepte
+ * plus aucune écriture, `retrait.ts`, décision du 2026-10-12) et ce que la
+ * relance d'une question en lit.
+ *
+ * ~~`resoudreAppareil`~~ lisait par le seul `id`, et l'appelant vérifiait
+ * l'établissement ensuite : un id absent levait « Équipement introuvable »
+ * (ou le renvoyait en message), l'appareil d'un autre client donnait le 404
+ * du contrôle — de quoi sonder l'existence d'un appareil chez autrui (audit
+ * du 2026-10-13, même défaut que `permisDuCompte`). Les deux cas tombent
+ * désormais sur le même `notFound()`.
  */
-async function resoudreAppareil(
-  equipementId: string,
-): Promise<{ etablissementId: string; actif: boolean }> {
-  const eq = await prisma.equipement.findUnique({
-    where: { id: equipementId },
-    select: { etablissementId: true, actif: true },
+async function appareilDuCompte(equipementId: string) {
+  const user = await requireUser();
+  const eq = await prisma.equipement.findFirst({
+    where: { id: equipementId, etablissement: { entreprise: { userId: user.id } } },
+    select: { etablissementId: true, actif: true, categorie: true, caracteristiques: true },
   });
-  if (!eq) throw new Error("Équipement introuvable");
+  if (!eq) notFound();
   return eq;
 }
 
@@ -202,8 +210,7 @@ export async function modifierEquipement(
   _prev: EquipementActionState,
   formData: FormData,
 ): Promise<EquipementActionState> {
-  const appareil = await resoudreAppareil(id);
-  await assertEtablissementOwnership(appareil.etablissementId);
+  const appareil = await appareilDuCompte(id);
   // L'appartenance d'abord, le refus ensuite : on ne dit rien d'un appareil
   // qui n'est pas à soi.
   if (estAppareilRetire(appareil)) {
@@ -304,9 +311,8 @@ export type SuppressionEquipementResult =
 export async function supprimerEquipement(
   id: string,
 ): Promise<SuppressionEquipementResult> {
-  const appareil = await resoudreAppareil(id);
+  const appareil = await appareilDuCompte(id);
   const { etablissementId } = appareil;
-  await assertEtablissementOwnership(etablissementId);
   // Déjà retiré : le retrait est définitif, il ne se rejoue pas. Sans ce
   // refus, un appareil retiré dont le dernier rapport aurait été retiré
   // ensuite repasserait par la branche « aucune trace » et serait détruit.
@@ -419,17 +425,7 @@ export async function repondreQuestionEquipement(
   _prev: ReponseParametrage,
   formData: FormData,
 ): Promise<ReponseParametrage> {
-  const eq = await prisma.equipement.findUnique({
-    where: { id: equipementId },
-    select: {
-      etablissementId: true,
-      actif: true,
-      categorie: true,
-      caracteristiques: true,
-    },
-  });
-  if (!eq) return { status: "error", message: "Équipement introuvable." };
-  await assertEtablissementOwnership(eq.etablissementId);
+  const eq = await appareilDuCompte(equipementId);
   if (estAppareilRetire(eq)) {
     return { status: "error", message: MESSAGE_APPAREIL_RETIRE };
   }
