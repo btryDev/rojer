@@ -26,8 +26,26 @@ const h = vi.hoisted(() => {
 
   const prisma = {
     equipement: {
+      // Ce que fait la base : l'identifiant seul, sans égard au compte.
       findUnique: async ({ where }: { where: { id: string } }) =>
         db.equipements.find((e) => e.id === where.id) ?? null,
+      // La lecture d'entrée porte le compte (`appareilDuCompte`) : le faux
+      // l'applique — « etab-1 » est au compte « user-1 » du test, tout autre
+      // établissement à un voisin.
+      findFirst: vi.fn(
+        async ({
+          where,
+        }: {
+          where: { id: string; etablissement?: { entreprise?: { userId?: string } } };
+        }) =>
+          db.equipements.find(
+            (e) =>
+              e.id === where.id &&
+              (where.etablissement?.entreprise?.userId === undefined ||
+                (e.etablissementId === "etab-1" ? "user-1" : "u-voisin") ===
+                  where.etablissement.entreprise.userId),
+          ) ?? null,
+      ),
       update: async ({
         where,
         data,
@@ -82,7 +100,11 @@ const h = vi.hoisted(() => {
     db,
     prisma,
     genererCalendrier: vi.fn(async () => ({})),
-    assertOwnership: vi.fn(async (etablissementId: string) => ({ id: "user-1", etablissementId })),
+    // Comme le vrai : un établissement qui n'est pas au compte « user-1 » → 404.
+    assertOwnership: vi.fn(async (etablissementId: string) => {
+      if (etablissementId !== "etab-1") throw new Error("NEXT_NOT_FOUND");
+      return { id: "user-1", etablissementId };
+    }),
     marquerCalendrierPerime: vi.fn(async () => {}),
   };
 });
@@ -93,7 +115,11 @@ vi.mock("next/navigation", () => ({
   redirect: vi.fn(() => {
     throw new Error("NEXT_REDIRECT");
   }),
+  notFound: vi.fn(() => {
+    throw new Error("NEXT_NOT_FOUND");
+  }),
 }));
+vi.mock("@/lib/auth/require-user", () => ({ requireUser: vi.fn(async () => ({ id: "user-1" })) }));
 vi.mock("@/lib/auth/scope", () => ({
   assertEtablissementOwnership: h.assertOwnership,
 }));
@@ -128,6 +154,7 @@ beforeEach(() => {
   h.db.journal = [];
   h.db.regime = { estERP: false, typeErp: null, categorieErp: null, ssiCategorieAouB: null };
   h.assertOwnership.mockClear();
+  h.prisma.equipement.findFirst.mockClear();
   h.genererCalendrier.mockClear();
   h.genererCalendrier.mockImplementation(async () => {
     h.db.journal.push("régénération");
@@ -234,8 +261,13 @@ describe("un appareil retiré du parc est en lecture seule (décision du 2026-10
     expect(r).toEqual({ status: "error", message: MESSAGE_APPAREIL_RETIRE });
     expect(h.db.equipements[0]).not.toHaveProperty("libelle");
     expect(h.genererCalendrier).not.toHaveBeenCalled();
-    // L'appartenance est contrôlée avant le refus.
-    expect(h.assertOwnership).toHaveBeenCalledWith("etab-1");
+    // L'appartenance est contrôlée avant le refus : la lecture même porte le
+    // compte (`appareilDuCompte`).
+    expect(h.prisma.equipement.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "eq-1", etablissement: { entreprise: { userId: "user-1" } } },
+      }),
+    );
   });
 
   it("répondre à une question : refusé", async () => {
@@ -368,7 +400,11 @@ describe("repondreQuestionEquipement : la relance d'un appareil muet (D29 (a))",
   it("contrôle l'appartenance par l'établissement de l'appareil, écrit la réponse sans rien effacer, régénère", async () => {
     const r = await repondreQuestionEquipement("eq-1", champ, { status: "idle" }, reponse("non"));
     expect(r.status).toBe("success");
-    expect(h.assertOwnership).toHaveBeenCalledWith("etab-1");
+    expect(h.prisma.equipement.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "eq-1", etablissement: { entreprise: { userId: "user-1" } } },
+      }),
+    );
     expect((h.db.equipements[0] as { caracteristiques?: unknown }).caracteristiques).toEqual({ notes: "garder", [champ]: false });
     expect(h.genererCalendrier).toHaveBeenCalled();
   });
@@ -470,5 +506,52 @@ describe("décision du 2026-10-08 : « désenfumage mécanique » exigé là où
     expect((h.db.equipements[0] as { caracteristiques?: unknown }).caracteristiques).toEqual({
       estDesenfumageMecanique: true,
     });
+  });
+});
+
+/**
+ * Un identifiant d'appareil ne dit pas s'il existe chez un autre client
+ * (audit du 2026-10-13). L'appareil était lu par son seul `id`, puis son
+ * établissement vérifié : « Équipement introuvable » pour un id absent, le
+ * 404 du contrôle pour l'appareil d'autrui. Les deux répondent pareil, et
+ * rien ne s'écrit.
+ */
+describe("périmètre : absent et hors compte répondent pareil", () => {
+  const issue = async (f: () => Promise<unknown>) => {
+    try {
+      return { rend: await f() };
+    } catch (e) {
+      return { leve: (e as Error).message };
+    }
+  };
+  const fd = () => {
+    const f = new FormData();
+    f.set("libelle", "Extincteur");
+    f.set("categorie", "EXTINCTEUR");
+    f.set("reponse", "non");
+    return f;
+  };
+  const ACTIONS: [string, (id: string) => Promise<unknown>][] = [
+    ["modifierEquipement", (id) => modifierEquipement(id, { status: "idle" }, fd())],
+    ["supprimerEquipement", (id) => supprimerEquipement(id)],
+    [
+      "repondreQuestionEquipement",
+      (id) => repondreQuestionEquipement(id, "estDesenfumageMecanique", { status: "idle" }, fd()),
+    ],
+  ];
+
+  it.each(ACTIONS)("%s", async (_nom, action) => {
+    h.db.equipements.push({ id: "eq-voisin", etablissementId: "etab-voisin", actif: true });
+    const absent = await issue(() => action("eq-inexistant"));
+    const voisin = await issue(() => action("eq-voisin"));
+    expect(voisin).toEqual(absent);
+    expect(voisin).toEqual({ leve: "NEXT_NOT_FOUND" });
+    expect(h.db.equipements.find((e) => e.id === "eq-voisin")).toEqual({
+      id: "eq-voisin",
+      etablissementId: "etab-voisin",
+      actif: true,
+    });
+    expect(h.db.supprimesPhysiquement).toEqual([]);
+    expect(h.genererCalendrier).not.toHaveBeenCalled();
   });
 });

@@ -271,6 +271,10 @@ export function fauxPrisma(db: Magasin) {
       v.salarieId ?? "∅",
     ].join("|");
 
+  /** Le prédicat `etablissement: { entreprise: { userId } }`, contre le magasin. */
+  const auCompte = (etablissementId: string, userId: string) =>
+    db.etablissements.some((e) => e.id === etablissementId && e.userId === userId);
+
   const etablissement = {
     /** `where: { id }` + `include: { <relation>: { where } }`. */
     findUnique: async ({
@@ -434,6 +438,31 @@ export function fauxPrisma(db: Magasin) {
       }
       db.journal.push({ operation: "verification.findUnique", where });
       const v = db.verifications.find((x) => x.id === id);
+      if (!v) return null;
+      return select === undefined ? { ...v } : projeter(v, select);
+    },
+
+    /**
+     * `where: { id, etablissement: { entreprise: { userId } } }` — la lecture
+     * du dépôt, bornée au compte (audit du 2026-10-13). Le prédicat est
+     * HONORÉ contre le propriétaire du magasin : une ligne d'un autre compte
+     * ne ressort pas, comme en base.
+     */
+    findFirst: async ({
+      where,
+      select,
+    }: {
+      where: { id: string; etablissement: { entreprise: { userId: string } } };
+      select?: Record<string, unknown>;
+    }) => {
+      const { id, etablissement: portee, ...reste } = where;
+      if (Object.keys(reste).length > 0 || portee?.entreprise?.userId === undefined) {
+        inconnu("verification.findFirst", [...Object.keys(reste), ...(portee ? [] : ["sans portée"])]);
+      }
+      db.journal.push({ operation: "verification.findFirst", where });
+      const v = db.verifications.find(
+        (x) => x.id === id && auCompte(x.etablissementId, portee.entreprise.userId),
+      );
       if (!v) return null;
       return select === undefined ? { ...v } : projeter(v, select);
     },
@@ -713,6 +742,26 @@ export function fauxPrisma(db: Magasin) {
   /** `createdAt`, ou l'ordre de pose à défaut — comme la base départage. */
   const cree = (r: RapportFaux, rang: number) => r.createdAt ?? new Date(rang);
 
+  /**
+   * La ligne d'un rapport, projetée comme `verification.findUnique` la
+   * projette : la suppression lit l'état de service de l'appareil
+   * (`equipements/retrait.ts`, 2026-10-12).
+   */
+  const ligneDeRapport = (trouve: { v: LigneFausse; r: RapportFaux }, select: unknown) => {
+    const sousLigne = (select as { verification?: { select?: Record<string, unknown> } } | undefined)
+      ?.verification?.select;
+    return {
+      ...(sousLigne ? { verification: projeter(trouve.v, sousLigne) } : {}),
+      id: trouve.r.id,
+      etablissementId: trouve.v.etablissementId,
+      verificationId: trouve.v.id,
+      dateRapport: trouve.r.dateRapport,
+      resultat: trouve.r.resultat,
+      echeanceHonoree: trouve.r.echeanceHonoree ?? null,
+      fichierCle: trouve.r.fichierCle ?? `rapports/${trouve.v.etablissementId}/${trouve.r.id}`,
+    };
+  };
+
   const rapportVerification = {
     /**
      * Deux formes, et seulement celles-là :
@@ -767,11 +816,28 @@ export function fauxPrisma(db: Magasin) {
     findFirst: async ({
       where,
       orderBy,
+      select,
     }: {
-      where: { verificationId: string; resultat?: { in: readonly string[] } };
+      where:
+        | { verificationId: string; resultat?: { in: readonly string[] } }
+        | { id: string; etablissement: { entreprise: { userId: string } } };
       orderBy?: { dateRapport?: "asc" | "desc"; createdAt?: "asc" | "desc" }[];
       select?: unknown;
     }) => {
+      // Troisième forme : `where: { id, etablissement: { entreprise: { userId } } }`,
+      // la lecture du retrait bornée au compte (audit du 2026-10-13). HONORÉE
+      // contre le propriétaire du magasin.
+      if ("id" in where) {
+        const { id, etablissement: portee, ...autres } = where;
+        if (Object.keys(autres).length > 0 || portee?.entreprise?.userId === undefined) {
+          inconnu("rapportVerification.findFirst", [...Object.keys(autres), ...(portee ? [] : ["sans portée"])]);
+        }
+        db.journal.push({ operation: "rapportVerification.findFirst", where });
+        const trouve = tousLesRapports().find(
+          ({ v, r }) => r.id === id && auCompte(v.etablissementId, portee.entreprise.userId),
+        );
+        return trouve ? ligneDeRapport(trouve, select) : null;
+      }
       const { verificationId, resultat, ...reste } = where;
       if (Object.keys(reste).length > 0) {
         inconnu("rapportVerification.findFirst", Object.keys(reste));
@@ -799,22 +865,7 @@ export function fauxPrisma(db: Magasin) {
 
     findUnique: async ({ where, select }: { where: { id: string }; select?: unknown }) => {
       const trouve = tousLesRapports().find(({ r }) => r.id === where.id);
-      if (!trouve) return null;
-      // La ligne du rapport, projetée comme `verification.findUnique` la
-      // projette : la suppression lit l'état de service de l'appareil
-      // (`equipements/retrait.ts`, 2026-10-12).
-      const sousLigne = (select as { verification?: { select?: Record<string, unknown> } } | undefined)
-        ?.verification?.select;
-      return {
-        ...(sousLigne ? { verification: projeter(trouve.v, sousLigne) } : {}),
-        id: trouve.r.id,
-        etablissementId: trouve.v.etablissementId,
-        verificationId: trouve.v.id,
-        dateRapport: trouve.r.dateRapport,
-        resultat: trouve.r.resultat,
-        echeanceHonoree: trouve.r.echeanceHonoree ?? null,
-        fichierCle: trouve.r.fichierCle ?? `rapports/${trouve.v.etablissementId}/${where.id}`,
-      };
+      return trouve ? ligneDeRapport(trouve, select) : null;
     },
 
     /** Pose le rapport sur sa ligne, et compte une preuve de plus. */
