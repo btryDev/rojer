@@ -32,7 +32,7 @@ const MODULES_NEUTRES: ModulesMatrice = {
     existe: false,
     nbPoints: 0,
     nbPointsJamaisReleves: 0,
-    jourPointLePlusEnRetard: null,
+    nbPointsReleveAncien: 0,
     jourDerniereAnalyse: null,
   },
   prestataires: { total: 0, enAlerte: 0 },
@@ -391,24 +391,20 @@ describe("construireMatrice — carnet sanitaire", () => {
     );
   });
 
-  it("considère à jour un carnet dont tous les points ont été relevés dans la semaine", () => {
+  it("considère à jour un carnet dont aucun point n'a de relevé de plus d'un mois", () => {
+    // 2026-10-13 : le rythme écrit (un mois), plus les 7 jours retirés —
+    // l'âge lui-même est jugé par `releveAncien`, testé dans `etat-releve`.
     expect(
-      ligne(
-        carnet({ nbPoints: 4, jourPointLePlusEnRetard: 3 }),
-        "carnet-sanitaire",
-      ).cellules[1],
+      ligne(carnet({ nbPoints: 4, nbPointsReleveAncien: 0 }), "carnet-sanitaire")
+        .cellules[1],
     ).toBe("ok");
     expect(
-      ligne(
-        carnet({ nbPoints: 4, jourPointLePlusEnRetard: 10 }),
-        "carnet-sanitaire",
-      ).cellules[1],
+      ligne(carnet({ nbPoints: 4, nbPointsReleveAncien: 1 }), "carnet-sanitaire")
+        .cellules[1],
     ).toBe("todo");
     expect(
-      ligne(
-        carnet({ nbPoints: 4, jourPointLePlusEnRetard: null }),
-        "carnet-sanitaire",
-      ).cellules[1],
+      ligne(carnet({ nbPoints: 4, nbPointsJamaisReleves: 4 }), "carnet-sanitaire")
+        .cellules[1],
     ).toBe("todo");
   });
 
@@ -418,7 +414,7 @@ describe("construireMatrice — carnet sanitaire", () => {
     // vert. La pastille n'établissait pas le fait qu'elle prétendait
     // établir (doctrine en tête de `obligations.ts`).
     const l = ligne(
-      carnet({ nbPoints: 11, jourPointLePlusEnRetard: 365 }),
+      carnet({ nbPoints: 11, nbPointsReleveAncien: 10 }),
       "carnet-sanitaire",
     );
     expect(l.cellules[1]).toBe("todo");
@@ -429,7 +425,7 @@ describe("construireMatrice — carnet sanitaire", () => {
       carnet({
         nbPoints: 5,
         nbPointsJamaisReleves: 1,
-        jourPointLePlusEnRetard: 2,
+        nbPointsReleveAncien: 0,
       }),
       "carnet-sanitaire",
     );

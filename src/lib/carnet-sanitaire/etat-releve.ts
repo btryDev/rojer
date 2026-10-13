@@ -38,9 +38,10 @@
  * des établissements autres que de santé (corpus
  * `arrete-2010-02-01-legionelles.ts`). Un relevé de moins d'un mois est donc
  * dans le rythme écrit, et le griser plus tôt suggérerait un manquement que le
- * droit ne fait pas — décision du 2026-10-13. Le tableau de bord compte, lui,
+ * droit ne fait pas — décision du 2026-10-13. ~~Le tableau de bord compte, lui,
  * sur 7 jours (`SEUIL_RELEVE_CARNET_JOURS`) : écart connu, signalé, pas tranché
- * ici.
+ * ici.~~ [2026-10-13 : tranché — le tableau de bord lit `releveAncien`, et la
+ * constante de 7 jours est retirée.]
  */
 
 import { ajouterMois, joursCivilsEntre } from "@/lib/dates";
@@ -55,14 +56,25 @@ export type EtatReleve =
   | { readonly nature: "dansLaPlage" }
   | { readonly nature: "horsPlage" };
 
+/**
+ * Un relevé est-il ancien — au-delà du rythme écrit d'un mois ? Le seul
+ * prédicat : la carte du point (`etatDernierReleve`) et la ligne « Carnet
+ * sanitaire » du tableau de bord (`dashboard/queries.ts`) le lisent toutes
+ * deux, pour ne plus dire deux choses du même relevé.
+ *
+ * Périmé quand la date qui suit d'un mois le relevé est passée : un relevé
+ * du 13 septembre est encore dans le rythme le 13 octobre, plus le 14.
+ */
+export function releveAncien(dateReleve: Date, now: Date): boolean {
+  return estEnRetard(ajouterMois(dateReleve, MOIS_RELEVE_TEMPERATURE), now);
+}
+
 export function etatDernierReleve(
   dernier: { dateReleve: Date; conforme: boolean } | null,
   now: Date,
 ): EtatReleve {
   if (!dernier) return { nature: "sansReleve" };
-  // Périmé quand la date qui suit d'un mois le relevé est passée : un relevé
-  // du 13 septembre est encore dans le rythme le 13 octobre, plus le 14.
-  if (estEnRetard(ajouterMois(dernier.dateReleve, MOIS_RELEVE_TEMPERATURE), now)) {
+  if (releveAncien(dernier.dateReleve, now)) {
     return {
       nature: "ancien",
       joursDepuis: joursCivilsEntre(dernier.dateReleve, now),

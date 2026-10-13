@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { etatDernierReleve, libelleReleveAncien } from "./etat-releve";
+import { etatDernierReleve, libelleReleveAncien, releveAncien } from "./etat-releve";
 
 /** Le 13 octobre 2026, à midi à Paris. */
 const NOW = new Date("2026-10-13T10:00:00.000Z");
@@ -47,6 +47,16 @@ describe("etatDernierReleve", () => {
         if (e.nature === "dansLaPlage") expect(conforme).toBe(true);
       }
     }
+  });
+});
+
+describe("releveAncien — le prédicat partagé avec le tableau de bord", () => {
+  it("un relevé de 8 jours n'est pas ancien (la ligne du tableau de bord le disait, à 7 jours)", () => {
+    expect(releveAncien(jour("2026-10-05"), NOW)).toBe(false);
+  });
+  it("au-delà d'un mois, il l'est", () => {
+    expect(releveAncien(jour("2026-09-12"), NOW)).toBe(true);
+    expect(releveAncien(jour("2026-09-13"), NOW)).toBe(false);
   });
 });
 
