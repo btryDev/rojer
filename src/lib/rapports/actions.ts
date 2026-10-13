@@ -2,13 +2,13 @@
 
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import {
   MESSAGE_APPAREIL_RETIRE,
   estAppareilRetire,
 } from "@/lib/equipements/retrait";
-import { assertEtablissementOwnership } from "@/lib/auth/scope";
+import { requireUser } from "@/lib/auth/require-user";
 import {
   cleRapport,
   getStorage,
@@ -120,8 +120,13 @@ export async function uploadRapport(
 
   // 3. Contexte vérification : de quoi refuser AVANT tout stockage. La date et
   //    le statut sont relus sous le verrou, dans la transaction.
-  const verif = await prisma.verification.findUnique({
-    where: { id: verificationId },
+  //    Lue DANS le périmètre du compte (audit du 2026-10-13) : lue par le
+  //    seul `id` puis contrôlée, elle répondait « Vérification introuvable »
+  //    pour un id absent et 404 pour celle d'autrui — un oracle d'existence.
+  //    Les deux cas tombent désormais sur le même `notFound()`.
+  const user = await requireUser();
+  const verif = await prisma.verification.findFirst({
+    where: { id: verificationId, etablissement: { entreprise: { userId: user.id } } },
     select: {
       id: true,
       etablissementId: true,
@@ -130,10 +135,7 @@ export async function uploadRapport(
       equipement: { select: { actif: true } },
     },
   });
-  if (!verif) {
-    return { status: "error", message: "Vérification introuvable" };
-  }
-  await assertEtablissementOwnership(verif.etablissementId);
+  if (!verif) notFound();
 
   // UN APPAREIL RETIRÉ DU PARC NE REÇOIT PLUS DE RAPPORT (décision du
   // 2026-10-12, `equipements/retrait.ts`). La régénération archive ses lignes
@@ -329,8 +331,11 @@ export async function uploadRapport(
  * date : la ligne ne bouge pas.
  */
 export async function supprimerRapport(rapportId: string): Promise<void> {
-  const rap = await prisma.rapportVerification.findUnique({
-    where: { id: rapportId },
+  // Lu DANS le périmètre du compte, absent et étranger confondus dans le même
+  // `notFound()` (audit du 2026-10-13, comme le dépôt ci-dessus).
+  const user = await requireUser();
+  const rap = await prisma.rapportVerification.findFirst({
+    where: { id: rapportId, etablissement: { entreprise: { userId: user.id } } },
     select: {
       id: true,
       etablissementId: true,
@@ -339,8 +344,7 @@ export async function supprimerRapport(rapportId: string): Promise<void> {
       verification: { select: { equipement: { select: { actif: true } } } },
     },
   });
-  if (!rap) return;
-  await assertEtablissementOwnership(rap.etablissementId);
+  if (!rap) notFound();
   // L'ARCHIVE D'UN APPAREIL RETIRÉ EST EN LECTURE SEULE (décision du
   // 2026-10-12, `equipements/retrait.ts`) : ses rapports sont la preuve au
   // registre, ils ne se suppriment plus. L'écran n'offre pas le bouton ; le
