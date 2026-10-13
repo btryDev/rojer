@@ -14,6 +14,16 @@ import "./globals.css";
  * propre `<html>` et son propre `<body>`, ses styles et ses polices (cf.
  * `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/error.md`,
  * « Global Error »). Pas d'en-tête d'application : c'est lui qui est tombé.
+ *
+ * LIMITE, RELEVÉE ET NON CORRIGÉE (revue du 2026-10-13). Ce fichier couvre
+ * le rendu À LA DEMANDE. `next build` écrit en plus deux pages d'erreur
+ * statiques, `.next/server/app/_global-error.html` et
+ * `.next/server/pages/500.html`, et toutes deux sortent du composant intégré
+ * de Next, en anglais (« 500: This page couldn’t load »), pas de celui-ci.
+ * Selon la revue, elles ne servent qu'à l'export statique, que Rojer
+ * n'emploie pas ; ce n'a pas été éprouvé en panne réelle. Si un jour une
+ * page d'erreur anglaise apparaît en production, c'est par là qu'il faut
+ * chercher.
  */
 export default function ErreurGlobale({
   error,
@@ -31,6 +41,7 @@ export default function ErreurGlobale({
       <body className="min-h-full">
         <title>Erreur — Rojer</title>
         <EcranIncident
+          sansEntete
           surTitre="Erreur"
           titre="Rojer n'a pas pu s'afficher."
           reference={error.digest}

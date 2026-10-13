@@ -20,15 +20,23 @@ export function EcranIncident({
   children,
   actions,
   reference,
+  sansEntete = false,
 }: {
   surTitre: string;
   titre: string;
   children: ReactNode;
   actions: ReactNode;
   reference?: string;
+  /**
+   * Aucun en-tête au-dessus : `global-error.tsx`, qui remplace la mise en
+   * page racine. Sinon la colonne retranche les 56 px de l'en-tête global.
+   */
+  sansEntete?: boolean;
 }) {
   return (
-    <main className="flex min-h-[calc(100vh-56px)] flex-col justify-center bg-[color:var(--board-canvas)] px-6 py-14 sm:px-10">
+    <main
+      className={`flex ${sansEntete ? "min-h-screen" : "min-h-[calc(100vh-56px)]"} flex-col justify-center bg-[color:var(--board-canvas)] px-6 py-14 sm:px-10`}
+    >
       <div className="mx-auto w-full max-w-[460px]">
         <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
           {surTitre}

@@ -62,6 +62,10 @@ describe("global-error.tsx", () => {
     expect(html).toContain("Rojer n&#x27;a pas pu s&#x27;afficher.");
     expect(html).toContain("1234567890");
     expect(html).not.toContain("motdepasse");
+    // Pas d'en-tête au-dessus : la colonne prend tout l'écran, sans retrancher
+    // les 56 px de l'en-tête global (revue du 2026-10-13).
+    expect(html).toContain("min-h-screen");
+    expect(html).not.toContain("100vh-56px");
   });
 });
 
