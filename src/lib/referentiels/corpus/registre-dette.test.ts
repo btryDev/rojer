@@ -186,7 +186,12 @@ describe("registre de dette — les réserves de lecture", () => {
     // contrôle électrique annuel de l'hôtel) et gagnent chacun une réserve —
     // le renvoi à AS 9, question posée au préventeur, qui borne AS 9 aux
     // N1–N4 ; les deux lignes N5/O sont supprimées. 87 + 2 − 0 = 89.
-    expect(n).toBe(89);
+    // 89 → 91 le 2026-10-14 (livre II, titre II, décision de la propriétaire) :
+    // `M 29` (le SSIAP au-delà de 4 000 personnes) et `N 20` (le rappel
+    // « fréquemment », sans rythme) entrent retenus avec une réserve. `CH 39`
+    // garde la sienne — sa première branche, le livret, est encodée, les
+    // deux autres restent. 89 + 2 − 0 = 91.
+    expect(n).toBe(91);
     expect(reservesDeLecture().length).toBe(n);
   });
 });

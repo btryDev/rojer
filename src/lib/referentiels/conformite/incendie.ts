@@ -160,6 +160,31 @@ const NOTE_GE4_TABLEAU =
   "RÉSERVE D'USAGE : la visite est initiée par l'administration, pas par l'exploitant. Une déclaration « en place » n'aurait pas de sens sur ces lignes ; ce qui se trace est la visite QUAND ELLE A EU LIEU.\n\n" +
   "NATURE : ÉCHÉANCE RÉCURRENTE (ADR-026). La visite revient.";
 
+// -----------------------------------------------------------------------------
+// Livre II, titre II — dispositions particulières des types M, N, O et W
+// (décision de la propriétaire du 2026-10-14)
+//
+// Cinq lignes d'établissement, bornées aux catégories 1 à 4 ET aux types dont
+// le chapitre a été lu (corpus `arrete-1980-livre-2-titre-2`). Elles citent
+// GN 10 en entier, comme les états permanents du livre III : la phrase ci-
+// dessous est la constante `DESCRIPTION_GN_10` (`texte-gn10.ts`), recopiée en
+// littéral parce qu'un fichier de données n'importe pas de valeur ;
+// `conformite.test.ts` exige que chaque description la contienne mot pour mot.
+// -----------------------------------------------------------------------------
+
+const GN_10_PHRASE =
+  "Les dispositions générales du règlement de sécurité écrivent, à l'article GN 10 (rédaction en vigueur depuis le 23 janvier 2010, arrêté du 24 septembre 2009) : « § 1. A l'exception des dispositions à caractère administratif, de celles relatives aux contrôles et aux vérifications techniques ainsi qu'à l'entretien, le présent règlement ne s'applique pas aux établissements existants. § 2. Lorsque des travaux de remplacement d'installation, d'aménagement ou d'agrandissement sont entrepris dans ces établissements, les dispositions du présent règlement sont applicables aux seules parties de la construction ou des installations modifiées. Toutefois, si ces modifications ont pour effet d'accroître le risque de l'ensemble de l'établissement, notamment si une évacuation différée est rendue nécessaire, des mesures de sécurité complémentaires peuvent être imposées après avis de la commission de sécurité. »";
+
+/** La borne commune : les quatre premières catégories, où le livre II s'applique (PE 1 § 1). */
+const CATEGORIES_LIVRE_2 = ["N1", "N2", "N3", "N4"] as const;
+
+/** Ce qui vaut pour les cinq lignes, dit une fois. */
+const NOTE_TITRE_2_COMMUNE =
+  "DÉCISION DE LA PROPRIÉTAIRE DU 2026-10-14 (exception explicite à « l'encodage est terminé »). Le titre II du livre II n'avait jamais été ouvert : la cible était N5 seule. Elle est devenue, le 2026-10-12, ce que l'onboarding ne refuse pas, catégories 1 à 4 comprises (ADR-031). Les quatre chapitres des secteurs cibles — M (magasins), N (restaurants), O (hôtels), W (bureaux) — ont été lus en entier le 2026-10-14 par l'API Légifrance (PISTE, bac à sable), cent vingt et une entrées, classées au corpus `arrete-1980-livre-2-titre-2`.\n\n" +
+  "BORNE : `categories` N1 à N4 ET `types`. Chaque chapitre ne s'applique qu'au-dessus des seuils de public de son article 1er, c'est-à-dire en catégories 1 à 4 ; en 5ᵉ, PE 1 § 1 écarte le livre II entier. Les autres types n'ont pas été lus : ils ne reçoivent rien. Un `typeErp` non renseigné rejette (restriction `types`, règle du dépôt) ; la base rend l'absence impossible pour un ERP (CHECK `Etablissement_erp_type_categorie_requis`).\n\n" +
+  "CE QUE LA BORNE NE SAIT PAS : GN 2 applique à un établissement qui groupe plusieurs exploitations les dispositions de CHACUN de leurs types. `Etablissement.typeErp` n'en porte qu'un, le principal : un magasin avec un espace de restauration ne reçoit que les lignes du type M (`docs/registre-releve-types-erp.md`, D.2).\n\n" +
+  "GN 10 cité en description, comme sur les états permanents du livre III : le règlement ne s'applique pas aux établissements existants, hors administratif, contrôles, vérifications et entretien, et le moteur ne lit pas de date d'ouverture. Sur-application visible, assumée sur le même pied que PE 27.";
+
 export const obligationsIncendie: Obligation[] = [
   // ---------------------------------------------------------------------------
   // Porteur : l'établissement (ADR-022)
@@ -566,7 +591,7 @@ export const obligationsIncendie: Obligation[] = [
     domaine: "incendie",
     libelle: "Consigne de sécurité incendie établie et affichée",
     description:
-      "Dans les établissements mentionnés à l'article R. 4227-34 (plus de cinquante personnes occupées ou réunies habituellement, ou manipulation de matières visées par R. 4227-22, quel que soit l'effectif), une consigne de sécurité incendie est établie et affichée de manière très apparente : dans chaque local de plus de cinq personnes et dans les locaux à matières inflammables, sinon dans chaque local ou dégagement desservant un groupe de locaux. Elle indique le matériel d'extinction et de secours, les personnes chargées de l'activer, de diriger l'évacuation des travailleurs et du public, les mesures pour les personnes handicapées, les moyens d'alerte, les personnes chargées d'aviser les sapeurs-pompiers, l'adresse et le numéro du service de secours, et le devoir, pour toute personne apercevant un début d'incendie, de donner l'alarme et de mettre en œuvre les moyens de premier secours sans attendre les travailleurs spécialement désignés (R. 4227-38). « La consigne de sécurité incendie est communiquée à l'inspection du travail. » (R. 4227-40) Les autres établissements établissent de simples instructions d'évacuation.",
+      "Dans les établissements mentionnés à l'article R. 4227-34 (plus de cinquante personnes occupées ou réunies habituellement, ou manipulation de matières visées par R. 4227-22, quel que soit l'effectif), une consigne de sécurité incendie est établie et affichée de manière très apparente : dans chaque local de plus de cinq personnes et dans les locaux à matières inflammables, sinon dans chaque local ou dégagement desservant un groupe de locaux. Elle indique le matériel d'extinction et de secours, les personnes chargées de l'activer, de diriger l'évacuation des travailleurs et du public, les mesures pour les personnes handicapées, les moyens d'alerte, les personnes chargées d'aviser les sapeurs-pompiers, l'adresse et le numéro du service de secours, et le devoir, pour toute personne apercevant un début d'incendie, de donner l'alarme et de mettre en œuvre les moyens de premier secours sans attendre les travailleurs spécialement désignés (R. 4227-38). « La consigne de sécurité incendie est communiquée à l'inspection du travail. » (R. 4227-40) Les autres établissements établissent de simples instructions d'évacuation. Dans un restaurant ou débit de boissons (type N) des quatre premières catégories, le règlement de sécurité ajoute des consignes spéciales, portées fréquemment à la connaissance du personnel, qui doivent lui rappeler les interdictions suivantes : « faire sécher près des appareils de cuisson des chiffons, des torchons et des serviettes, projeter de la graisse ou de l'huile dans les foyers pour y provoquer des \"coups de feu\", entreposer des emballages vides (même momentanément) dans un local ouvert au public, etc. » (N 20) ; « fréquemment » ne fixe aucun rythme, et Rojer n'en date aucun.",
     referencesLegales: [
       {
         source: "CODE_TRAVAIL",
@@ -595,6 +620,17 @@ export const obligationsIncendie: Obligation[] = [
         note: "« La consigne de sécurité incendie est communiquée à l'inspection du travail. » Relu sur l'API le 2026-09-27 (lot 2), en vigueur depuis le 2008-05-01. Même champ que la consigne.",
         versionConstatee: "2008-05-01",
       },
+      {
+        // 2026-10-14, point 5 de la décision de la propriétaire : contexte,
+        // jamais fondement — N 20 ne vaut qu'en type N, catégories 1 à 4.
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. N 20 (consignes spéciales portées fréquemment à la connaissance du personnel) — livre II, titre II, type N : restaurants et débits de boissons des quatre premières catégories seulement",
+        article: "N 20",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024752327",
+        note: "« Des consignes spéciales, portées fréquemment à la connaissance du personnel, doivent lui rappeler les interdictions suivantes : faire sécher près des appareils de cuisson des chiffons, des torchons et des serviettes, projeter de la graisse ou de l'huile dans les foyers pour y provoquer des \"coups de feu\", entreposer des emballages vides (même momentanément) dans un local ouvert au public, etc. » Relu le 2026-10-14 par l'API Légifrance (PISTE, bac à sable) : LEGIARTI000024752327, seule version, en vigueur depuis le 1982-08-12 (arrêté du 21 juin 1982). Cité en contexte : il ne vaut qu'en type N des quatre premières catégories, et la phrase de la description le dit.",
+        versionConstatee: "1982-08-12",
+      },
     ],
     periodicite: "autre",
     nature: "etat_permanent",
@@ -606,7 +642,7 @@ export const obligationsIncendie: Obligation[] = [
     typologies: { travail: true, personnesPresentesMin: 51, champR422734: true },
     equipementsEnContexte: ["EXTINCTEUR", "ALARME_INCENDIE"],
     notesInternes:
-      "Amendement 2026-08-25 (relecture Légifrance R. 4227-34, -37, -38) : la consigne affichée n'est due que dans les établissements de R. 4227-34, par renvoi exprès de R. 4227-37 ; hors de ce champ le texte ne demande que des « instructions » d'évacuation. L'obligation était encodée sans seuil (sur-application à tout employeur) et sa description exigeait une « mise à jour à chaque changement notable » qui ne figure dans aucun des deux articles — retirée. La périodicité annuelle est une convention de rappel, aucun texte ne fixe de périodicité à la consigne. R. 4227-37 porte une version future au 01/01/2027 : à relire à cette date.\n\nAMENDEMENT 2026-08-27, même audit. L'obligation affichait une échéance ANNUELLE en ne citant que R. 4227-37, qui ne porte aucune périodicité — vérifié sur toute la section. Aucun texte n'impose de réafficher ou de réviser la consigne chaque année.\n\n`periodicite` passe à `autre`. L'affichage de la consigne est une obligation PERMANENTE, pas une échéance : elle est due tant que l'établissement entre dans le champ de R. 4227-34, et elle se met à jour quand l'organisation change — pas à date fixe. Ce qui est bien périodique, dans la même sous-section, ce sont les exercices et essais semestriels de R. 4227-39, portés par `incendie-travail-exercice-semestriel`.\n\nAMENDEMENT 2026-08-31, lot « faux négatifs d'ancrage ». `categoriesEquipement: [EXTINCTEUR, ALARME_INCENDIE]` est retiré au profit du porteur établissement (ADR-022). R. 4227-37 relu au verbatim ce jour : il ne mentionne aucun équipement. Le champ de l'obligation est celui de R. 4227-34, et il est DÉJÀ encodé — `personnesPresentesMin: 51` et `champR422734`. La liste d'équipements ne restreignait donc rien de ce que le texte restreint : elle ajoutait une condition que le texte n'écrit pas, et qui produisait un faux négatif chez tout établissement du champ de R. 4227-34 n'ayant déclaré ni extincteur ni alarme. Les deux catégories passent en `equipementsEnContexte`, à titre indicatif — c'est bien le matériel que la consigne doit désigner (R. 4227-38 1°), mais le désigner n'est pas en avoir déclaré un dans l'outil.\n\nNATURE : ÉTAT PERMANENT, `pieceAttendue: \"consigne de sécurité incendie\"` (ADR-026). R. 4227-37 fait ÉTABLIR la consigne avant de la faire afficher : c'est un écrit, et son contenu est fixé par R. 4227-38. Deux affichages voisins n'en sont pas — l'affichage des coordonnées (D. 4711-1) et l'avis d'accès au DUERP (R. 4121-4) portent `pieceAttendue: null`, parce que ce que le texte exige y est l'affichage lui-même, pas la détention d'une pièce.\n\nAMENDEMENT 2026-09-01, lot « traçabilité ». `R. 4227-38` était nommé dans la prose de `reference` (« R. 4227-37 et R. 4227-38 ») et dans la description, mais la clé `article` ne désignait que le 37 : l'article était donc irrattachable au corpus, où il n'existait pas. Ouvert à la source ce jour (LEGIARTI000024769384, version en vigueur depuis le 10 novembre 2011, sans terme programmé — contrairement à R. 4227-37 qui, lui, s'arrête au 1er janvier 2027). Il entre au corpus avec son verbatim intégral et devient une `ReferenceLegale` à part entière ; `reference` se réduit à « R. 4227-37 » pour le premier élément, qui reste l'article fondateur. Aucun champ d'empreinte n'est touché : `referencesLegales` en est hors, et R. 4227-38 ne porte ni champ d'application ni périodicité propres.",
+      "Amendement 2026-08-25 (relecture Légifrance R. 4227-34, -37, -38) : la consigne affichée n'est due que dans les établissements de R. 4227-34, par renvoi exprès de R. 4227-37 ; hors de ce champ le texte ne demande que des « instructions » d'évacuation. L'obligation était encodée sans seuil (sur-application à tout employeur) et sa description exigeait une « mise à jour à chaque changement notable » qui ne figure dans aucun des deux articles — retirée. La périodicité annuelle est une convention de rappel, aucun texte ne fixe de périodicité à la consigne. R. 4227-37 porte une version future au 01/01/2027 : à relire à cette date.\n\nAMENDEMENT 2026-08-27, même audit. L'obligation affichait une échéance ANNUELLE en ne citant que R. 4227-37, qui ne porte aucune périodicité — vérifié sur toute la section. Aucun texte n'impose de réafficher ou de réviser la consigne chaque année.\n\n`periodicite` passe à `autre`. L'affichage de la consigne est une obligation PERMANENTE, pas une échéance : elle est due tant que l'établissement entre dans le champ de R. 4227-34, et elle se met à jour quand l'organisation change — pas à date fixe. Ce qui est bien périodique, dans la même sous-section, ce sont les exercices et essais semestriels de R. 4227-39, portés par `incendie-travail-exercice-semestriel`.\n\nAMENDEMENT 2026-08-31, lot « faux négatifs d'ancrage ». `categoriesEquipement: [EXTINCTEUR, ALARME_INCENDIE]` est retiré au profit du porteur établissement (ADR-022). R. 4227-37 relu au verbatim ce jour : il ne mentionne aucun équipement. Le champ de l'obligation est celui de R. 4227-34, et il est DÉJÀ encodé — `personnesPresentesMin: 51` et `champR422734`. La liste d'équipements ne restreignait donc rien de ce que le texte restreint : elle ajoutait une condition que le texte n'écrit pas, et qui produisait un faux négatif chez tout établissement du champ de R. 4227-34 n'ayant déclaré ni extincteur ni alarme. Les deux catégories passent en `equipementsEnContexte`, à titre indicatif — c'est bien le matériel que la consigne doit désigner (R. 4227-38 1°), mais le désigner n'est pas en avoir déclaré un dans l'outil.\n\nNATURE : ÉTAT PERMANENT, `pieceAttendue: \"consigne de sécurité incendie\"` (ADR-026). R. 4227-37 fait ÉTABLIR la consigne avant de la faire afficher : c'est un écrit, et son contenu est fixé par R. 4227-38. Deux affichages voisins n'en sont pas — l'affichage des coordonnées (D. 4711-1) et l'avis d'accès au DUERP (R. 4121-4) portent `pieceAttendue: null`, parce que ce que le texte exige y est l'affichage lui-même, pas la détention d'une pièce.\n\nAMENDEMENT 2026-09-01, lot « traçabilité ». `R. 4227-38` était nommé dans la prose de `reference` (« R. 4227-37 et R. 4227-38 ») et dans la description, mais la clé `article` ne désignait que le 37 : l'article était donc irrattachable au corpus, où il n'existait pas. Ouvert à la source ce jour (LEGIARTI000024769384, version en vigueur depuis le 10 novembre 2011, sans terme programmé — contrairement à R. 4227-37 qui, lui, s'arrête au 1er janvier 2027). Il entre au corpus avec son verbatim intégral et devient une `ReferenceLegale` à part entière ; `reference` se réduit à « R. 4227-37 » pour le premier élément, qui reste l'article fondateur. Aucun champ d'empreinte n'est touché : `referencesLegales` en est hors, et R. 4227-38 ne porte ni champ d'application ni périodicité propres.\n\nAMENDEMENT 2026-10-14 — N 20, point 5 de la décision de la propriétaire. N 20 (type N, catégories 1 à 4) fait porter « fréquemment » à la connaissance du personnel des consignes spéciales d'exploitation. « Fréquemment » est un rythme vague, et l'ADR-039 ne lui donne pas le défaut annuel : ce serait rater l'esprit du mot, et la propriétaire a écarté une ligne neuve. N 20 entre donc ici EN CONTEXTE (jamais en fondement, `referencesLegales[0]` reste R. 4227-37), avec une phrase de description.\n\nLA FORME DE CETTE PHRASE, ET POURQUOI. Le modèle n'a aucun moyen de rendre une phrase de description conditionnelle à l'établissement : `description` est une chaîne, la même pour tous ceux qui reçoivent la ligne. La condition est donc écrite DANS la phrase — « Dans un restaurant ou débit de boissons (type N) des quatre premières catégories » —, en fin de description, après le régime du Code du travail : un bureau ou un magasin qui reçoit la ligne lit une phrase qui dit elle-même ne pas le viser. La référence porte la même borne dans son libellé (garde `conformite.test.ts`, « une référence du titre II dit son champ »). Ce que la forme ne garantit pas : un restaurant N1–N4 dont l'exploitant n'est pas employeur ne reçoit pas cette ligne (porteur `travail`) ; N 20 s'adresse au personnel, donc à un employeur, et le cas est vide. Un restaurant N1–N4 qui emploie reçoit la ligne — mesuré en appelant le moteur le 2026-10-14 : en 3ᵉ catégorie sans réserve, le plancher de public de la catégorie franchissant le seuil de R. 4227-34 ; en 4ᵉ « à confirmer » tant que les personnes présentes ne sont pas déclarées (N 1 fait pourtant commencer le chapitre à deux cents personnes, mais le moteur ne lit pas les seuils par type).",
   },
   {
     // 2026-09-27, analyse de la réponse absente, § 1 et étape 6 — décision de
@@ -1686,6 +1722,253 @@ export const obligationsIncendie: Obligation[] = [
     porteur: "etablissement",
     notesInternes:
       "TROUVÉE EN OUVRANT L'ARTICLE POUR SON § 5, le 2026-09-21. Le corpus ne nommait de l'article que l'alinéa facultatif sur les exercices — qui est au § 2 c), et non au § 4 comme l'ancien motif l'écrivait — ; la consigne affichée du § 4 n'était relevée nulle part. C'est pourtant une obligation entière, sans seuil, de tout ERP de 5ᵉ catégorie.\n\nÀ NE PAS CONFONDRE avec `incendie-travail-consigne-affichee` (`R. 4227-37`) : celle-là est une consigne du Code du travail, due au-delà de cinquante personnes, avec huit rubriques (`R. 4227-38`). Celle-ci est du règlement de sécurité, due dès la 5ᵉ catégorie, avec trois mentions. Un restaurant de six salariés et trente couverts doit celle-ci et pas l'autre ; au-delà de cinquante personnes il doit les deux, et un même affichage peut porter les deux contenus — ce que le produit ne dit pas, n'ayant pas à le dire.\n\n`pieceAttendue` NOMMÉE : l'obligation EST un écrit affiché.\n\nCriticité 3, celle de `incendie-travail-consigne-affichee`.\n\nGN 10, OUVERT LE 2026-09-21 : le règlement « ne s'applique pas aux établissements existants », sauf administratif, contrôles, vérifications et entretien — et cette obligation n'est rien de tout cela. Elle est pourtant servie à TOUT ERP de 5ᵉ catégorie : le moteur ne lit pas `dateAutorisationOuverture`. ~~« la date d'entrée en vigueur du paragraphe n'est pas relevée »~~ — RELEVÉE le 2026-09-21 : le paragraphe figure dans PE 27 depuis sa création par l'arrêté du 22 juin 1990, en vigueur le 27 AOÛT 1990 (six versions de l'article lues sur Légifrance). ~~La sur-application ne touche donc que les établissements ouverts avant cette date et jamais modifiés — une minorité, que le produit ne sait pas reconnaître.~~ [2026-09-26 : c'est une LECTURE — `GN 10` ne date pas l'« existant » ; voir C23 du journal.] Sur-application VISIBLE et assumée ~~, écrite dans la description que le dirigeant lit~~ [2026-09-26 : la description ne conclut plus ; elle cite `GN 10`, ses deux paragraphes, et la date du type PE] ; la décision de la borner est au dossier des décisions (A6). Voir `corpus/arrete-1980-livre-1.ts`, entrée GN 10.",
+  },
+
+  // ---------------------------------------------------------------------------
+  // Livre II, titre II — types M, N, O, W, catégories 1 à 4 (2026-10-14)
+  // ---------------------------------------------------------------------------
+
+  {
+    id: "incendie-erp-personnel-designe-moyens-secours",
+    domaine: "incendie",
+    libelle:
+      "Personnel spécialement désigné et entraîné à la mise en œuvre des moyens de secours (ERP des quatre premières catégories : restaurants, magasins, hôtels, bureaux)",
+    description:
+      "Dans un restaurant ou débit de boissons (type N), un hôtel ou autre établissement d'hébergement (type O) ou une administration, banque ou bureau (type W) des quatre premières catégories, des employés — des personnes, pour le type W — spécialement désignés doivent être entraînés à la mise en œuvre des moyens de secours (N 17, O 18, W 13). Dans un magasin ou centre commercial (type M), « des agents, entraînés à la manœuvre des moyens de secours contre l'incendie et à l'évacuation du public, doivent être désignés par l'exploitant » (M 29 § 1) ; au-delà du seuil de public que fixe le même article, la surveillance est assurée à la place par des agents de sécurité incendie (M 29 § 2 à § 4), que Rojer ne suit pas. " +
+      GN_10_PHRASE,
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. N 17 (employés spécialement désignés, entraînés à la mise en œuvre des moyens de secours) — livre II, titre II, type N, établissements des quatre premières catégories",
+        article: "N 17",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024752266",
+        note: "« Des employés, spécialement désignés, doivent être entraînés à la mise en oeuvre des moyens de secours. » Relu le 2026-10-14 par l'API Légifrance (PISTE, bac à sable) : LEGIARTI000024752266, seule version, en vigueur depuis le 1982-08-12 (arrêté du 21 juin 1982).",
+        versionConstatee: "1982-08-12",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. M 29 § 1 (agents désignés par l'exploitant, entraînés à la manœuvre des moyens de secours et à l'évacuation du public, effectif inférieur à 4 000 personnes) — livre II, titre II, type M, établissements des quatre premières catégories",
+        article: "M 29",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000034988398",
+        note: "« Paragraphe 1. Dans les établissements où l'effectif du public reçu est inférieur à 4 000 personnes, des agents, entraînés à la manœuvre des moyens de secours contre l'incendie et à l'évacuation du public, doivent être désignés par l'exploitant. » Relu le 2026-10-14 par l'API (bac à sable) : LEGIARTI000034988398, en vigueur depuis le 2017-07-01 (arrêté du 13 juin 2017, art. 13). Les § 2 à § 5 — agents SSIAP au-delà de 4 000 personnes — ne sont pas portés : réserve du corpus.",
+        versionConstatee: "2017-07-01",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. O 18 (employés spécialement désignés, entraînés à la mise en œuvre des moyens de secours) — livre II, titre II, type O, établissements des quatre premières catégories",
+        article: "O 18",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024760450",
+        note: "« Des employés, spécialement désignés, doivent être entraînés à la mise en œuvre des moyens de secours. » Relu le 2026-10-14 par l'API (bac à sable) : LEGIARTI000024760450, en vigueur depuis le 2012-01-01 (arrêté du 25 octobre 2011).",
+        versionConstatee: "2012-01-01",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. W 13 (personnes spécialement désignées, entraînées à la mise en œuvre des moyens de secours) — livre II, titre II, type W, établissements des quatre premières catégories",
+        article: "W 13",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000025177328",
+        note: "« Des personnes, spécialement désignées, doivent être entraînées à la mise en oeuvre des moyens de secours. » Relu le 2026-10-14 par l'API (bac à sable) : LEGIARTI000025177328, seule version, en vigueur depuis le 1983-05-21 (arrêté du 21 avril 1983).",
+        versionConstatee: "1983-05-21",
+      },
+    ],
+    periodicite: "autre",
+    nature: "etat_permanent",
+    pieceAttendue: null,
+    realisateurs: ["exploitant"],
+    criticite: 4,
+    transmet: [],
+    typologies: { erp: { categories: [...CATEGORIES_LIVRE_2], types: ["M", "N", "O", "W"] } },
+    porteur: "etablissement",
+    notesInternes:
+      "CRÉÉE LE 2026-10-14, point 1 de la décision de la propriétaire. Patron : `incendie-erp-5-instruction-personnel` (PE 27 § 5), même acte en 5ᵉ catégorie — état permanent sans rythme, `pieceAttendue: null` (le texte fait désigner et entraîner, il ne demande ni liste ni attestation), criticité 4.\n\n" +
+      "UNE LIGNE POUR QUATRE ARTICLES. N 17, O 18 et W 13 disent la même phrase, à « employés » / « personnes » près ; M 29 § 1 dit la même chose avec deux précisions — la désignation est le fait de l'exploitant, et l'entraînement porte aussi sur l'évacuation du public. Même acte, même débiteur, même constat : quatre lignes auraient fait quatre cases pour une seule désignation, et un établissement n'en reçoit de toute façon qu'une (un seul `typeErp`).\n\n" +
+      "M 29 AU-DELÀ DE 4 000 PERSONNES. Le § 1 ne vaut que sous 4 000 ; au-delà, les § 2 à § 4 exigent des agents de sécurité incendie (SSIAP) en nombre fixé par tranche. Rojer ne connaît pas l'effectif du public et sert la ligne à tout magasin N1–N4 : au-dessus de 4 000, la ligne dit moins que le texte, et la description le dit. Le SSIAP est en réserve de M 29 au corpus. Le texte ne dit rien de l'effectif d'exactement 4 000 (« inférieur » / « supérieur ») ; la ligne le retient.\n\n" +
+      "SANS RECOUVREMENT : `incendie-erp-5-instruction-personnel` et `incendie-hotel-po-instruction-personnel-semestrielle` sont bornées à N5 ; celle-ci à N1–N4.\n\n" +
+      NOTE_TITRE_2_COMMUNE,
+  },
+
+  {
+    id: "incendie-erp-interdiction-fumer-affichee",
+    domaine: "incendie",
+    libelle:
+      "Interdiction de fumer affichée bien en évidence (ERP des quatre premières catégories : magasins, hôtels, bureaux)",
+    description:
+      "Dans un magasin ou centre commercial (type M) des quatre premières catégories, il est formellement interdit de fumer dans les locaux de vente (M 44) et dans les locaux à risques importants — locaux de stockage et de manipulation des matériaux d'emballage, dépôts de déchets d'emballage, réserves autres que les réserves d'approche (M 47) —, et il est interdit de fumer dans l'ensemble des réserves et dans les locaux de réception, d'emballage, d'expédition et leurs annexes (M 58). Dans une administration, une banque ou un bureau (type W), il est interdit de fumer dans les locaux à risques particuliers (W 16). Dans un hôtel ou autre établissement d'hébergement (type O), il est formellement interdit de fumer dans les réserves, lingeries, etc. et, en général, dans les locaux présentant des risques particuliers d'incendie (O 21 § 1). Chaque fois, l'interdiction doit être affichée bien en évidence. Pour les types W et O, le texte vise les locaux à risques particuliers : Rojer ne sait pas si l'établissement en compte, et présente la ligne à tous. " +
+      GN_10_PHRASE,
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. M 44 (défense de fumer dans les locaux de vente, affichée bien en évidence) — livre II, titre II, type M, établissements des quatre premières catégories",
+        article: "M 44",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024931940",
+        note: "« Il est formellement interdit de fumer dans les locaux de vente. Cette prescription doit être affichée bien en évidence. » Relu le 2026-10-14 par l'API (bac à sable) : LEGIARTI000024931940, seule version, en vigueur depuis le 1982-02-03 (arrêté du 22 décembre 1981).",
+        versionConstatee: "1982-02-03",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. M 47 § 2 (défense de fumer dans les locaux à risques importants) — livre II, titre II, type M, établissements des quatre premières catégories",
+        article: "M 47",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024932040",
+        note: "« § 2. Il est formellement interdit de fumer dans les locaux. Cette prescription doit être affichée bien en évidence. » Les locaux sont ceux du § 1 : « les locaux de stockage et de manipulation des matériaux d'emballage visés à l'article M 48, ainsi que les dépôts de déchets d'emballage ; les réserves, à l'exception des réserves d'approche qui sont assimilées aux risques des locaux de vente ». Relu le 2026-10-14 par l'API (bac à sable) : LEGIARTI000024932040, seule version, en vigueur depuis le 1982-02-03.",
+        versionConstatee: "1982-02-03",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. M 58 (défense de fumer dans les réserves et les locaux de réception, d'emballage, d'expédition) — livre II, titre II, type M, établissements des quatre premières catégories",
+        article: "M 58",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024932062",
+        note: "« Il est interdit de fumer dans l'ensemble des réserves et dans les locaux de réception, d'emballage, d'expédition et leurs annexes. Cette prescription doit être affichée bien en évidence. » Relu le 2026-10-14 par l'API (bac à sable) : LEGIARTI000024932062, seule version, en vigueur depuis le 1982-02-03.",
+        versionConstatee: "1982-02-03",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. W 16 (défense de fumer dans les locaux à risques particuliers) — livre II, titre II, type W, établissements des quatre premières catégories",
+        article: "W 16",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000025177346",
+        note: "« Il est interdit de fumer dans les locaux à risques particuliers. Cette prescription doit être affichée bien en évidence. » Relu le 2026-10-14 par l'API (bac à sable) : LEGIARTI000025177346, seule version, en vigueur depuis le 1983-05-21. Les locaux à risques particuliers du type W sont classés par W 4 (archives et stockage de papier, imprimerie ; réserves, reprographie, conservation de documents informatiques, dépôts d'au moins 150 litres de liquides inflammables).",
+        versionConstatee: "1983-05-21",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. O 21 § 1 (interdiction de fumer dans les réserves, lingeries et locaux à risques particuliers) — livre II, titre II, type O, établissements des quatre premières catégories",
+        article: "O 21",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024760444",
+        note: "« § 1. Il est rappelé qu'il est formellement interdit de fumer dans les réserves, lingeries, etc. et, en général, dans les locaux présentant des risques particuliers d'incendie. Cette interdiction doit être affichée bien en évidence. » Relu le 2026-10-14 par l'API (bac à sable) : LEGIARTI000024760444, en vigueur depuis le 2012-01-01 (arrêté du 25 octobre 2011).",
+        versionConstatee: "2012-01-01",
+      },
+    ],
+    periodicite: "autre",
+    nature: "etat_permanent",
+    pieceAttendue: "interdiction de fumer affichée",
+    realisateurs: ["exploitant"],
+    criticite: 3,
+    transmet: [],
+    typologies: { erp: { categories: [...CATEGORIES_LIVRE_2], types: ["M", "O", "W"] } },
+    porteur: "etablissement",
+    notesInternes:
+      "CRÉÉE LE 2026-10-14, point 2 de la décision de la propriétaire. État permanent d'établissement : le texte fait AFFICHER une interdiction, c'est un écrit au mur (`pieceAttendue` nommée, comme `incendie-erp-5-consignes-affichees`).\n\n" +
+      "UNE LIGNE POUR CINQ ARTICLES. Pour le type M, trois articles visent trois familles de locaux (vente, risques importants, réserves et locaux d'expédition) ; pour W et O, un article chacun. L'acte est le même — afficher l'interdiction là où elle vaut — et un établissement ne reçoit la ligne qu'une fois. Le type N n'a pas d'article de ce genre : il n'est pas dans `types`.\n\n" +
+      "SUR-APPLICATION NOMMÉE, W ET O (décision de la propriétaire). W 16 et O 21 § 1 visent les locaux à risques particuliers ; Rojer ne sait pas si l'établissement en a. La ligne est servie à tous les établissements de ces types, et la description le dit. Sens d'erreur : une affiche demandée à qui n'a pas de tel local — visible, et sans coût de tiers. Pour M, les locaux de vente existent par définition : pas de sur-application.\n\n" +
+      "L'interdiction générale de fumer dans les lieux à usage collectif relève du code de la santé publique, que ce lot n'a pas ouvert : cette ligne ne porte que le règlement de sécurité.\n\n" +
+      NOTE_TITRE_2_COMMUNE,
+  },
+
+  {
+    id: "incendie-erp-schema-organisation-securite",
+    domaine: "incendie",
+    libelle:
+      "Schéma d'organisation globale de la sécurité annexé au registre de sécurité (magasins et centres commerciaux, ERP des quatre premières catégories)",
+    description:
+      "Dans un magasin ou centre commercial (type M) des quatre premières catégories, « le directeur de l'établissement ou le responsable unique de sécurité (RUS) annexe au registre de sécurité un schéma d'organisation globale de la sécurité de l'établissement. Ce document précise plus particulièrement les obligations en matière de dimensionnement du service de sécurité incendie tel que défini à l'article M 29 ainsi que les actions prioritaires à mettre en œuvre pour assurer la sécurité du public et les modalités de la réalisation d'une évacuation générale de l'établissement » (M 31). " +
+      GN_10_PHRASE,
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. M 31 (schéma d'organisation globale de la sécurité annexé au registre de sécurité) — livre II, titre II, type M, établissements des quatre premières catégories",
+        article: "M 31",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000034988400",
+        note: "« Le directeur de l'établissement ou le responsable unique de sécurité (RUS) annexe au registre de sécurité un schéma d'organisation globale de la sécurité de l'établissement. » Relu le 2026-10-14 par l'API (bac à sable) : LEGIARTI000034988400, en vigueur depuis le 2017-07-01 (arrêté du 13 juin 2017, art. 14).",
+        versionConstatee: "2017-07-01",
+      },
+    ],
+    periodicite: "autre",
+    nature: "etat_permanent",
+    pieceAttendue: "schéma d'organisation globale de la sécurité",
+    realisateurs: ["exploitant"],
+    criticite: 3,
+    transmet: [],
+    typologies: { erp: { categories: [...CATEGORIES_LIVRE_2], types: ["M"] } },
+    porteur: "etablissement",
+    notesInternes:
+      "CRÉÉE LE 2026-10-14, point 3 de la décision de la propriétaire. Document, état permanent : l'écrit est l'obligation (`pieceAttendue` nommée), annexé au registre de sécurité que `incendie-registre-securite` porte déjà. Aucun rythme : le texte ne dit pas quand le refaire.\n\n" +
+      "LE DÉBITEUR : « le directeur de l'établissement ou le responsable unique de sécurité (RUS) ». Le RUS est celui d'un groupement d'établissements — le centre commercial (M 1 § 3). Rojer ne sait pas si le magasin est dans un centre commercial : la ligne est présentée à l'exploitant du magasin, qui est le directeur de son établissement. `realisateurs: [\"exploitant\"]`.\n\n" +
+      "LE CONTENU renvoie au dimensionnement du service de sécurité de M 29 : sous 4 000 personnes, les agents désignés que `incendie-erp-personnel-designe-moyens-secours` porte ; au-delà, le SSIAP, que Rojer ne suit pas (réserve de M 29).\n\n" +
+      NOTE_TITRE_2_COMMUNE,
+  },
+
+  {
+    id: "incendie-erp-hotel-consigne-chambres",
+    domaine: "incendie",
+    libelle:
+      "Consigne d'incendie du modèle réglementaire affichée dans chaque chambre ou appartement (hôtel, ERP des quatre premières catégories)",
+    description:
+      "Dans un hôtel ou autre établissement d'hébergement (type O) des quatre premières catégories, une consigne d'incendie, du modèle joint en annexe du chapitre, est affichée dans chaque chambre ou appartement. Elle est rédigée en français et complétée par une bande dessinée illustrant les consignes ; sa rédaction en langue française peut être complétée par sa traduction dans les langues parlées par les usagers habituels. Elle attire l'attention du public sur l'interdiction d'utiliser les ascenseurs en cas d'incendie, à l'exception de ceux conformes aux dispositions de l'article AS 4 du règlement de sécurité qui sont réservés à l'évacuation des personnes handicapées (O 21 § 2). Le modèle annexé dit la conduite à tenir : en cas d'incendie dans la chambre, si le feu ne peut être maîtrisé, gagner la sortie en refermant la porte et en suivant le balisage, et prévenir la réception ; à l'audition du signal d'alarme, gagner la sortie si les dégagements sont praticables, sinon rester dans la chambre et manifester sa présence à la fenêtre en attendant les sapeurs-pompiers. " +
+      GN_10_PHRASE,
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. O 21 § 2 (consigne d'incendie du modèle annexé, affichée dans chaque chambre ou appartement) — livre II, titre II, type O, établissements des quatre premières catégories",
+        article: "O 21",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024760444",
+        note: "« § 2. Une consigne d'incendie, du modèle joint en annexe, est affichée dans chaque chambre ou appartement. Elle est rédigée en français et complétée par une bande dessinée illustrant les consignes. Sa rédaction en langue française peut être complétée par sa traduction dans les langues parlées par les usagers habituels. Cette consigne attire l'attention du public sur l'interdiction d'utiliser les ascenseurs en cas d'incendie, à l'exception de ceux conformes aux dispositions de l'article AS 4 du règlement de sécurité qui sont réservés à l'évacuation des personnes handicapées. » Relu le 2026-10-14 par l'API (bac à sable) : LEGIARTI000024760444, en vigueur depuis le 2012-01-01 (arrêté du 25 octobre 2011).",
+        versionConstatee: "2012-01-01",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, annexe II du chapitre O (conduite à tenir en cas d'incendie, modèle de la consigne de l'article O 21) — livre II, titre II, type O, établissements des quatre premières catégories",
+        article: "O annexe II",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024758877",
+        note: "« Conduite à tenir en cas d'incendie relative à l'application de l'article O 21 ». Relue le 2026-10-14 par l'API (bac à sable) : LEGIARTI000024758877, seule version, en vigueur depuis le 2012-01-01 (créée par l'arrêté du 25 octobre 2011).",
+        versionConstatee: "2012-01-01",
+      },
+    ],
+    periodicite: "autre",
+    nature: "etat_permanent",
+    pieceAttendue: "consigne d'incendie affichée dans chaque chambre ou appartement",
+    realisateurs: ["exploitant"],
+    criticite: 3,
+    transmet: [],
+    typologies: { erp: { categories: [...CATEGORIES_LIVRE_2], types: ["O"] } },
+    porteur: "etablissement",
+    notesInternes:
+      "CRÉÉE LE 2026-10-14, point 4 de la décision de la propriétaire. Patron : `incendie-erp-5-sommeil-consigne-chambres` (PE 33 § 2), même acte en 5ᵉ catégorie. Deux différences, toutes deux écrites par le texte : le modèle de la consigne est fixé (annexe II du chapitre, résumée en description), et la consigne doit rappeler l'interdiction des ascenseurs. La traduction est une faculté (« peut »), pas une obligation.\n\n" +
+      "PAS DE `locauxSommeilPublic` : O 21 vise tout établissement du type O, et un hôtel a des chambres par définition. La sœur de 5ᵉ, elle, est servie à tout ERP de 5ᵉ à locaux à sommeil, quel que soit son type.\n\n" +
+      "LE PLAN D'ÉVACUATION, dernière phrase du même paragraphe, a sa propre ligne (`incendie-erp-hotel-plans-evacuation-niveaux`) : deux affichages, deux emplacements — la chambre, le niveau.\n\n" +
+      NOTE_TITRE_2_COMMUNE,
+  },
+
+  {
+    id: "incendie-erp-hotel-plans-evacuation-niveaux",
+    domaine: "incendie",
+    libelle:
+      "Plan d'évacuation apposé à chaque niveau, près du cheminement habituel (hôtel, ERP des quatre premières catégories)",
+    description:
+      "Dans un hôtel ou autre établissement d'hébergement (type O) des quatre premières catégories, « un plan d'évacuation dont les caractéristiques correspondent à celles des plans d'évacuation de la norme NF S 60-303 septembre 1987) relative aux plans et consignes de protection contre l'incendie est apposé à chaque niveau à proximité du cheminement habituel » (O 21 § 2 ; la parenthèse est ouverte ainsi dans le texte). Rojer n'a pas lu cette norme et ne dit pas ce qu'elle exige du plan. " +
+      GN_10_PHRASE,
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. O 21 § 2, dernière phrase (plan d'évacuation à chaque niveau) — livre II, titre II, type O, établissements des quatre premières catégories",
+        article: "O 21",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024760444",
+        note: "« Un plan d'évacuation dont les caractéristiques correspondent à celles des plans d'évacuation de la norme NF S 60-303 septembre 1987) relative aux plans et consignes de protection contre l'incendie est apposé à chaque niveau à proximité du cheminement habituel. » Recopié tel que l'API le rend, parenthèse non ouverte comprise. Relu le 2026-10-14 par l'API (bac à sable) : LEGIARTI000024760444, en vigueur depuis le 2012-01-01.",
+        versionConstatee: "2012-01-01",
+      },
+    ],
+    periodicite: "autre",
+    nature: "etat_permanent",
+    pieceAttendue: "plan d'évacuation apposé à chaque niveau",
+    realisateurs: ["exploitant"],
+    criticite: 3,
+    transmet: [],
+    typologies: { erp: { categories: [...CATEGORIES_LIVRE_2], types: ["O"] } },
+    porteur: "etablissement",
+    notesInternes:
+      "CRÉÉE LE 2026-10-14, point 4 de la décision de la propriétaire. Patron : `incendie-erp-5-sommeil-plans-affiches` (PE 35), la ligne des plans de la 5ᵉ catégorie. O 21 n'exige qu'un plan, à chaque niveau ; PE 35 en exige trois (hall, étage, chambre). Les deux ne se recouvrent pas : PE 35 est borné à N5, celle-ci à N1–N4.\n\n" +
+      "LA NORME NF S 60-303 est NOMMÉE par le texte, non lue : elle n'est pas au corpus `normes`, et aucune référence `NORME` n'est posée (ADR-039 : une norme ne se cite comme norme que lue). La description le dit.\n\n" +
+      NOTE_TITRE_2_COMMUNE,
   },
 
   {

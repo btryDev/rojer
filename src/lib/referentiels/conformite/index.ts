@@ -409,7 +409,18 @@ export const obligationsConformite: Obligation[] = [
 // de six salariés sans appareil passe de 45 à 43 lignes. La réponse au
 // groupe électrogène devient exigée en ERP (`reponses-exigees.ts`), hors
 // référentiel.]
-export const REFERENTIEL_VERSION = "2026-10-13.2";
+// 2026-10-14 — `2026-10-14.1`, décision de la propriétaire (points 1 à 6) :
+// le livre II, titre II, chapitres M, N, O et W lus en entier, et le livret
+// de CH 39. 176 + 6 − 0 = 182, toutes portées aux catégories 1 à 4 :
+// `incendie-erp-personnel-designe-moyens-secours` (N 17, M 29 § 1, O 18,
+// W 13), `incendie-erp-interdiction-fumer-affichee` (M 44, M 47 § 2, M 58,
+// W 16, O 21 § 1), `incendie-erp-schema-organisation-securite` (M 31),
+// `incendie-erp-hotel-consigne-chambres` et
+// `incendie-erp-hotel-plans-evacuation-niveaux` (O 21 § 2) — établissement,
+// bornées aux types — et `aeration-erp-filtres-livret-entretien` (CH 39 § 1,
+// § 2, § 4) — équipement `VMC`/`CTA`, tous types. N 20 entre en contexte de
+// `incendie-travail-consigne-affichee`, hors empreinte.
+export const REFERENTIEL_VERSION = "2026-10-14.1";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.
