@@ -341,7 +341,7 @@ et le module `perimetre/couverture.ts` distingue déjà les deux.
 
 ---
 
-## 3. Le défibrillateur (DAE) — **FONDÉE en droit, HORS PÉRIMÈTRE, et l'hypothèse de l'audit est périmée**
+## 3. Le défibrillateur (DAE) — **FONDÉE en droit, ~~HORS PÉRIMÈTRE~~ [2026-10-14 : ENCODÉ pour les ERP 1 à 4, commit 940b57af], et l'hypothèse de l'audit est périmée**
 
 L'audit énonce : « obligation du Code de la construction et de l'habitation pour
 les ERP (catégories 1 à 4 et certains types de 5ᵉ), avec maintenance et
@@ -405,7 +405,20 @@ Autres articles du chapitre :
 
 ### Verdict
 
-**FONDÉE en droit. HORS du périmètre couvert par le produit.**
+**FONDÉE en droit. ~~HORS du périmètre couvert par le produit.~~**
+
+**[2026-10-14, verdict rayé — commit 940b57af.]** La réserve écrite plus bas
+(« si la propriétaire ouvre un jour les catégories 1 à 4 […] le DAE devient dû
+sans condition ») s'est réalisée : depuis le 2026-10-12, la cible est ce que
+l'onboarding ne refuse pas, catégories 1 à 4 comprises (ADR-031). Encodage
+validé par la propriétaire le 2026-10-14 : `dae-erp-detention`,
+`dae-erp-maintenance` (défaut annuel, ADR-039) et `dae-erp-declaration-geodae`,
+corpus `cch-defibrillateur`, tous relus par l'API Légifrance le même jour. Ce qui
+suit reste vrai pour la 5ᵉ catégorie, qui n'est pas encodée : l'arrêté du seuil
+du 2° n'est toujours pas publié. Deux points de cette section sont dépassés :
+la déclaration à la base nationale a été lue (décret n° 2018-1259, arrêté du
+29 octobre 2019), et le renvoi de `R. 157-4` au code de la santé publique vise
+depuis le 2026-04-22 `R. 5212-16`.
 
 `src/lib/perimetre/couverture.ts:86` porte `CATEGORIES_COUVERTES = ["N5"]` : le
 produit ne couvre **que la 5ᵉ catégorie**, et le déclare (axe `categorie_erp`).
@@ -424,7 +437,7 @@ s'applique pas.** Ce n'est pas un trou du référentiel.
 
 ### Recommandation
 
-**Ne rien encoder.** Mais **écrire l'exclusion**, parce qu'aujourd'hui elle
+~~**Ne rien encoder.**~~ [2026-10-14 : encodé pour les ERP 1 à 4, commit 940b57af.] Mais **écrire l'exclusion**, parce qu'aujourd'hui elle
 n'existe nulle part et que la prochaine relecture reposera la même question :
 
 - une ligne « Défibrillateur automatisé externe (`R. 157-1` et s. CCH) » dans la
@@ -584,7 +597,7 @@ couverture sont l'endroit où le manque se voit déjà aujourd'hui.
 |---|---|---|
 | Chapitre chaleur `R. 4463-1` à `-8` | **Fondée, dans le périmètre** | ~~2 obligations d'établissement à encoder~~ — **ENCODÉES le 2026-09-20** (`lot/chaleur-intense`), corpus `code-travail-chaleur-intense`. Deux écarts avec ce document : `R. 4463-6` a un second alinéa que la page de section tronquait, et `R. 4463-8` n'est PAS « déjà servi » par `PlanPrevention` (aucune ligne n'y nomme la chaleur) |
 | Pénibilité / C2P | **Fondée, hors périmètre outillé** | Corpus `non_couvert` + déclaration, **pas** d'obligation |
-| Défibrillateur | **Fondée, hors périmètre couvert** | Rien à encoder ; ~~exclusion à écrire~~ — **écrite le 2026-09-20** (`.claude/CLAUDE.md`, `docs/couverture-declaree-du-produit.md`, axe `categorie_erp`) |
+| Défibrillateur | **Fondée, ~~hors périmètre couvert~~ dans la cible depuis le 2026-10-12** | ~~Rien à encoder~~ — **ENCODÉ le 2026-10-14** pour les ERP 1 à 4 (`lot/dae`, commit 940b57af, corpus `cch-defibrillateur`) ; ~~exclusion à écrire~~ — **écrite le 2026-09-20** (`.claude/CLAUDE.md`, `docs/couverture-declaree-du-produit.md`, axe `categorie_erp`) |
 | Seconde branche de `R. 4323-23` | **Fondée, dans le périmètre** | 1 obligation d'équipement, trimestrielle, après création du type |
 
 **Quatre sur quatre existent en droit. Deux sur quatre donnent des obligations à
