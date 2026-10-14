@@ -123,6 +123,10 @@ lectures d'`Etablissement` passent de 12 à 8 et les comptages d'`Action` de 11
   les marques, les transmissions, les états permanents, la couverture et
   `equipementsSansEcheance`.
 
+Complément du même jour : `getDuerp`, lu par le layout du DUERP puis par
+chacune de ses pages (sept requêtes chaque fois), est mémoïsé — DUERP / unités
+48 → 41 requêtes, synthèse 49 → 42.
+
 **Écart au correctif proposé : `compterEtatEcheances` n'est pas mémoïsé
 entier.** Le layout et la page sont rendus en parallèle, et la page répare le
 calendrier avant de lire (`regeneration-sure.ts`). Partagé avec la barre
