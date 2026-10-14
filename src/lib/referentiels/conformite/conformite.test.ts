@@ -1882,6 +1882,12 @@ describe("référentiel conformité — version et empreinte", () => {
     // (`VMC`, `CTA`) bornée à N1–N4. 179 + 6 − 0 = 185, dont 3 au niveau
     // audit, 182 suivies (version `.2` à l'intégration, `lot/dae` ayant pris `.1`) ; relevée en appelant `empreinteReferentiel()`.
     { version: "2026-10-14.2", empreinte: "185-15d84b2a86bafdfc" },
+    // 2026-10-14, `lot/materiels-non-couverts-1014`, décision de la
+    // propriétaire : la catégorie `INSTALLATION_GAZ` entre, et
+    // `cuisson-gaz-installations-annuelle` (GZ 15) s'y accroche en plus de
+    // `APPAREIL_CUISSON_ERP`. 185 + 0 − 0 = 185 (`.3` à l'intégration), une liste de catégories
+    // changée ; relevée en appelant `empreinteReferentiel()`.
+    { version: "2026-10-14.3", empreinte: "185-47b3ee1d533b3c7f" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

@@ -78,6 +78,7 @@ import {
 } from "@/lib/registre/completude";
 import { afficherValeur } from "@/lib/registre/valeur";
 import type { DossierData } from "./DossierConformiteDocument";
+import { blocsMaterielsNonCouverts } from "./mentions-perimetre";
 import { couvertureDuDossier } from "@/lib/perimetre/faits";
 import { faitInventaire } from "@/lib/perimetre/couverture";
 import { blocEtatsPermanents } from "./mentions-etats-permanents";
@@ -550,6 +551,13 @@ export async function construireDossierConformiteData(
       }),
     ]);
 
+  // 2026-10-14 : les matériels que Rojer ne suit pas, déclarés au parc en
+  // service de CET établissement (l'appartenance est établie plus haut).
+  const materielsDeclares = await prisma.equipement.findMany({
+    where: { etablissementId, actif: true, materielNonCouvert: { not: null } },
+    select: { materielNonCouvert: true },
+  });
+
   const now = new Date();
   // Les lignes retenues par prudence sortent des compteurs, du score et du
   // tableau « à rattraper » (D1 (a)) ; elles s'impriment à part, marquées.
@@ -636,6 +644,7 @@ export async function construireDossierConformiteData(
     regime: { estERP: etab.estERP, estIGH: etab.estIGH },
     genereLe: now,
     couverture,
+    materielsNonCouverts: blocsMaterielsNonCouverts(materielsDeclares.map((e) => e.materielNonCouvert)),
     avertissementCalendrier: phraseFraicheur(fraicheur),
     calendrier: fraicheur,
     score,

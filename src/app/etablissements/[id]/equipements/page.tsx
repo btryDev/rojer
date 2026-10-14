@@ -29,7 +29,7 @@ import {
 } from "@/lib/equipements/etat-verifications";
 import {
   LIBELLE_SANS_ECHEANCE,
-  EXPLICATION_SANS_ECHEANCE,
+  explicationSansEcheance,
   equipementsSansEcheance,
 } from "@/lib/equipements/hors-referentiel";
 import { avecProvenance, origineDepuis } from "@/lib/navigation/provenance";
@@ -171,7 +171,8 @@ export default async function EquipementsPage({
           return motif
             ? {
                 libelle: LIBELLE_SANS_ECHEANCE[motif],
-                explication: EXPLICATION_SANS_ECHEANCE[motif],
+                // 2026-10-14 : la phrase propre au matériel non suivi.
+                explication: explicationSansEcheance(motif, eq.materielNonCouvert),
               }
             : null;
         })(),
@@ -242,17 +243,20 @@ export default async function EquipementsPage({
           </div>
         )}
 
-        {suggestionsRestantes.length > 0 && (
-          <div id="suggestions" className="scroll-mt-6">
-            <PreRemplissagePanel
-              etablissementId={id}
-              suggestions={suggestionsRestantes}
-              // 2026-10-13 (option 2) : les questions exigées dans le régime
-              // de l'établissement, que le panneau pose à côté de la case.
-              questionsExigees={questionsExigeesParCategorie(etab)}
-            />
-          </div>
-        )}
+        {/* ~~`suggestionsRestantes.length > 0 &&`~~ — 2026-10-14 (revue du
+            lot, point 2) : le panneau est TOUJOURS rendu, au même endroit.
+            Créer la dernière suggestion vide la liste ; démonté, le panneau
+            perdait son état, et l'avertissement d'un calendrier non recalculé
+            avec lui. Vide et sans résultat à dire, il ne rend rien. */}
+        <div id="suggestions" className="scroll-mt-6">
+          <PreRemplissagePanel
+            etablissementId={id}
+            suggestions={suggestionsRestantes}
+            // 2026-10-13 (option 2) : les questions exigées dans le régime
+            // de l'établissement, que le panneau pose à côté de la case.
+            questionsExigees={questionsExigeesParCategorie(etab)}
+          />
+        </div>
 
         {equipements.length === 0 ? (
           <EmptyState

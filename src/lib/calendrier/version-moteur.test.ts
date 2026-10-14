@@ -400,7 +400,15 @@ const RELEVE = {
   // Recopiée SANS incrément le 2026-10-14 (intégration de
   // `lot/securite-owasp-1013` et `lot/dossier-relecture-2`) : la somme des deux
   // changements ci-dessus, aucun autre. ~~4943db84e624fce1~~ ~~7e3bde89eb15a58d~~.
-  empreinte: "a5d569d53f9b8b2b",
+  // Recopiée SANS incrément le 2026-10-14 (`lot/materiels-non-couverts-1014`) :
+  // `referentiels/types-communs.ts` gagne la valeur `INSTALLATION_GAZ` dans
+  // `CATEGORIES_EQUIPEMENT`, et `conformite/index.ts` passe à `2026-10-14.1`.
+  // NON au sens de la question : aucune règle du moteur ne change ; ce qui
+  // change les lignes est une DONNÉE — GZ 15 vise aussi la nouvelle
+  // catégorie —, hachée par l'empreinte du référentiel, donc déjà dans le
+  // sceau. Un dossier existant n'a aucun appareil de cette catégorie : sa
+  // réconciliation ne pose aucune ligne nouvelle. ~~a5d569d53f9b8b2b~~.
+  empreinte: "2689968acb89519c",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

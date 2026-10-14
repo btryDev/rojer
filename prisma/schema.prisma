@@ -564,6 +564,10 @@ model Equipement {
   datePeremption    DateTime?
   caracteristiques  Json?
   actif             Boolean             @default(true)
+  // 2026-10-14 : la clé d'un matériel que Rojer ne suit pas
+  // (`equipements/materiels-non-couverts.ts`), posée seulement en catégorie
+  // AUTRE et validée contre la liste par `equipementSchema`. `null` sinon.
+  materielNonCouvert String?
 
   verifications              Verification[]
   prescriptionsParticulieres PrescriptionParticuliere[]
@@ -608,6 +612,9 @@ enum CategorieEquipement {
   EPI_ANTICHUTE
   EPI_RESPIRATOIRE
   EPI_GILET_SAUVETAGE
+  // 2026-10-14 : les installations de gaz combustible que GZ 15 vérifie
+  // (stockage, distribution, appareils) — pas seulement la cuisine.
+  INSTALLATION_GAZ
   AUTRE
 }
 

@@ -12,7 +12,7 @@ import { getEquipement } from "@/lib/equipements/queries";
 import {
   CHAMP_SANS_ECHEANCE,
   ENCRE_SANS_ECHEANCE,
-  EXPLICATION_SANS_ECHEANCE,
+  explicationSansEcheance,
   LIBELLE_SANS_ECHEANCE,
   equipementsSansEcheance,
 } from "@/lib/equipements/hors-referentiel";
@@ -119,7 +119,7 @@ export default async function ModifierEquipementPage({
               >
                 {LIBELLE_SANS_ECHEANCE[motifSansEcheance]}
               </span>
-              <span>{EXPLICATION_SANS_ECHEANCE[motifSansEcheance]}</span>
+              <span>{explicationSansEcheance(motifSansEcheance, eq.materielNonCouvert)}</span>
             </p>
           </div>
         )}
@@ -145,6 +145,9 @@ export default async function ModifierEquipementPage({
               localisation: eq.localisation,
               dateMiseEnService: eq.dateMiseEnService,
               datePeremption: eq.datePeremption,
+              // 2026-10-14 : sans elle, enregistrer la fiche d'un escabeau
+              // effacerait le matériel et son « Rojer ne suit pas ».
+              materielNonCouvert: eq.materielNonCouvert,
               nombre: caracs.nombre ?? null,
               estLocalPollutionSpecifique: caracs.estLocalPollutionSpecifique,
               aSystemeDeRecyclage: caracs.aSystemeDeRecyclage,

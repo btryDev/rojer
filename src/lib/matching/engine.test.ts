@@ -1203,6 +1203,13 @@ describe("moteur matching — cartographie des catégories sans obligation", () 
       vides: [
         // Soupape de saisie : aucune obligation ne la cite, par construction.
         "AUTRE",
+        // INSTALLATION_GAZ, entrée le 2026-10-14 (décision de la
+        // propriétaire) : sa seule obligation, GZ 15, ne vise que les ERP des
+        // quatre premières catégories. Hors ERP, le référentiel ne porte
+        // aucune ligne sur l'installation de gaz d'un lieu de travail ;
+        // l'appareil dit « aucune échéance calculée ». Signalé au rendu du lot,
+        // pas comblé : rien n'a été décidé pour ce cas.
+        "INSTALLATION_GAZ",
         // EPI, ajoutée le 2026-09-04 : déclarable et volontairement sans
         // obligation. Le dirigeant pouvait DIRE qu'il fournit des équipements
         // de protection — la question `epiPresents` de la fiche
@@ -1314,6 +1321,13 @@ describe("moteur matching — cartographie des catégories sans obligation", () 
         // la page « Ce que Rojer ne couvre pas » nomme l'obligation.
         "EPI_GILET_SAUVETAGE",
         "EPI_RESPIRATOIRE",
+        // INSTALLATION_GAZ, entrée le 2026-10-14 (décision de la
+        // propriétaire) : sa seule obligation, la vérification annuelle de
+        // GZ 15, relève du livre II — ERP des quatre premières catégories.
+        // En 5ᵉ, PE 4 § 2 porte déjà les installations de gaz, à
+        // l'établissement (`incendie-erp-pe4-entretien-installations-techniques`).
+        // L'appareil porte « aucune échéance calculée », ce qui est vrai.
+        "INSTALLATION_GAZ",
       ],
     },
   ];

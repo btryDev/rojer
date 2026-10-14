@@ -15,6 +15,7 @@
 // Module **pur**.
 
 import type { CouvertureEtablissement } from "@/lib/perimetre/couverture";
+import { MATERIELS_NON_COUVERTS } from "@/lib/equipements/materiels-non-couverts";
 
 export type BlocPerimetre = {
   /** Le fait, en tête de paragraphe. */
@@ -33,8 +34,11 @@ export type BlocPerimetre = {
  */
 export function chapeauPerimetre(
   couverture: CouvertureEtablissement,
+  /** 2026-10-14 : les matériels non couverts déclarés au parc comptent aussi. */
+  nbMaterielsNonCouverts = 0,
 ): string | null {
-  const n = couverture.manques.length + couverture.indeterminations.length;
+  const n =
+    couverture.manques.length + couverture.indeterminations.length + nbMaterielsNonCouverts;
   if (n === 0) return null;
   return (
     // « ou ne peut pas traiter faute de déclaration » : ajouté le 2026-09-26
@@ -77,4 +81,24 @@ export function blocsPerimetre(
       corps: i.quoiFaire,
     })),
   ];
+}
+
+/**
+ * Les matériels que Rojer ne suit pas et que ce dossier a réellement déclarés
+ * (2026-10-14, décision de la propriétaire) : un bloc par matériel, son
+ * libellé et sa phrase — dans l'ordre de la liste, sans doublon, une clé
+ * inconnue ignorée. Rien n'est imprimé pour un matériel que le dossier n'a pas
+ * déclaré : le document parle de CET établissement.
+ */
+export function blocsMaterielsNonCouverts(
+  cles: readonly (string | null | undefined)[],
+): BlocPerimetre[] {
+  const declarees = new Set(cles.filter(Boolean));
+  // Les textes suivent la phrase (revue du lot, point 3) : la page « Ce que
+  // Rojer ne couvre pas » nommait les articles qu'elle annonçait, le dossier
+  // remis à un tiers les nomme aussi. Le bloc garde ses deux champs.
+  return MATERIELS_NON_COUVERTS.filter((m) => declarees.has(m.cle)).map((m) => ({
+    titre: m.libelle,
+    corps: `${m.phrase} Textes : ${m.references.map((r) => r.libelle).join(" ; ")}.`,
+  }));
 }

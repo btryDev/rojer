@@ -3,6 +3,7 @@ import { z } from "zod";
 import { CATEGORIES_EQUIPEMENT } from "@/lib/referentiels/types-communs";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
 import { FAMILLES_ESP } from "./esp";
+import { CLES_MATERIELS_NON_COUVERTS } from "./materiels-non-couverts";
 
 /**
  * Schéma de validation d'un équipement. Les propriétés spécifiques à une
@@ -437,8 +438,26 @@ export const equipementSchema = z
       (v) => (typeof v === "string" ? v.trim() || undefined : v),
       z.string().max(1000).optional(),
     ),
+    // 2026-10-14 : la clé d'un matériel que Rojer ne suit pas, choisie dans la
+    // recherche du formulaire — validée contre la liste fermée, jamais déduite
+    // du libellé. Vide ou absente : aucun matériel.
+    materielNonCouvert: z.preprocess(
+      (v) => (v === "" || v === null || v === undefined ? undefined : v),
+      z.enum(CLES_MATERIELS_NON_COUVERTS).optional(),
+    ),
   })
   .superRefine((val, ctx) => {
+    // Un matériel non suivi s'enregistre en « Autre équipement » (décision du
+    // 2026-10-14) : une clé posée sur une catégorie suivie ferait dire à la
+    // fiche que Rojer ne suit pas un appareil qu'il suit.
+    if (val.materielNonCouvert !== undefined && val.categorie !== "AUTRE") {
+      ctx.addIssue({
+        code: "custom",
+        path: ["materielNonCouvert"],
+        message: "Un matériel que Rojer ne suit pas s'enregistre en « Autre équipement »",
+      });
+    }
+
     // Cohérence catégorie ↔ propriétés : une propriété spécifique ne doit
     // pas être positionnée pour une catégorie incompatible.
     // (`aGroupeElectrogene` est contrôlé plus bas, avec les autres questions
@@ -549,6 +568,7 @@ export function normaliserFormDataEquipement(
     pressionMaxAdmissibleBar: raw.pressionMaxAdmissibleBar,
     volumeLitres: raw.volumeLitres,
     notes: raw.notes,
+    materielNonCouvert: raw.materielNonCouvert,
   };
   for (const champ of CHAMPS_TRI_ETAT) {
     out[champ] = normaliserTriEtat(raw[champ]);

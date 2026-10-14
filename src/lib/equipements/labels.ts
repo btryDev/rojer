@@ -2,6 +2,7 @@ import {
   CATEGORIES_EQUIPEMENT,
   type CategorieEquipement,
 } from "@/lib/referentiels/types-communs";
+import { nonPorte, porte } from "@/lib/perimetre/non-couverture";
 
 /**
  * Libellés FR des catégories d'équipement, affichables tel quel en UI.
@@ -40,6 +41,9 @@ export const LABEL_CATEGORIE_EQUIPEMENT: Record<CategorieEquipement, string> = {
   EPI_ANTICHUTE: "Harnais antichute et systèmes d'arrêt de chute",
   EPI_RESPIRATOIRE: "Appareil de protection respiratoire",
   EPI_GILET_SAUVETAGE: "Gilet de sauvetage gonflable",
+  // 2026-10-14, décision de la propriétaire : pas « chaudière » — GZ 15 vise
+  // l'installation entière, dont une chaudière n'est qu'un appareil.
+  INSTALLATION_GAZ: "Installation de gaz (chauffage, stockage…)",
   AUTRE: "Autre équipement",
 };
 
@@ -76,15 +80,24 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
   // l'adresse de non-couverture des articles passés `non_couvert` le
   // 2026-10-07 (ICPE, R. 4412-11, R. 4412-17, arrêté du 1er juin 2015 art. 22).
   STOCKAGE_MATIERE_DANGEREUSE:
-    "Liquides inflammables, gaz, produits chimiques en quantité significative. Rojer suit, pour ce stockage, les fiches de données de sécurité, la formation du personnel et la signalisation des aires de stockage ; il ne suit ni le régime des installations classées (ICPE), ni la capacité de rétention, ni la vérification de l'état du stockage, ni la ventilation des locaux de stockage.",
+    // 2026-10-14 : `porte(…)` autour de la pièce attendue — le balayage de
+    // `non-couverture-balayage.ts` lit désormais `src/lib/equipements` et
+    // demande que toute pièce du référentiel nommée ici se déclare. Le texte
+    // rendu est inchangé, caractère pour caractère : les `declareA` qui le
+    // citent restent justes.
+    `Liquides inflammables, gaz, produits chimiques en quantité significative. Rojer suit, pour ce stockage, ${porte("les fiches de données de sécurité")}, la formation du personnel et la signalisation des aires de stockage ; il ne suit ni le régime des installations classées (ICPE), ni la capacité de rétention, ni la vérification de l'état du stockage, ni la ventilation des locaux de stockage.`,
   EQUIPEMENT_LEVAGE:
     // ~~« transpalette électrique, monte-charge »~~ (2026-09-27, lot 2) :
     // l'arrêté du 1er mars 2004 exclut les monte-charges installés à demeure,
     // et un transpalette qui ne lève la charge que pour la déplacer ne la
     // change pas de niveau (art. 2 a) — voir `conformite/levage.ts`.
     "Palan, gerbeur, chariot élévateur, hayon élévateur.",
-  INSTALLATION_FRIGORIFIQUE:
-    "Chambre froide, vitrine ou meuble réfrigéré, groupe froid. Contrôle d'étanchéité du fluide frigorigène.",
+  // 2026-10-14, décision de la propriétaire : la seconde phrase vient de
+  // l'arrêté du 30 septembre 1957 (annexe, art. 2, 3 et 4), en vigueur, relu
+  // sur Légifrance par la propriétaire le 2026-10-14. Aucune obligation n'est
+  // créée : l'aide dit ce que le texte demande et que Rojer ne suit pas
+  // (`docs/chantiers-ouverts.md`, « Alarme de chambre froide », rayé).
+  INSTALLATION_FRIGORIFIQUE: `Chambre froide, vitrine ou meuble réfrigéré, groupe froid. Contrôle d'étanchéité du fluide frigorigène. Pour une chambre froide, l'arrêté du 30 septembre 1957 demande aussi qu'une chambre froide ou climatisée puisse toujours s'ouvrir à la main de l'intérieur (annexe, art. 2), qu'une chambre froide à 0 °C ou moins de plus de 10 m³ ait un dispositif d'avertissement sonore (art. 3), et qu'une installation neuve de plus de 10 m³ ait un voyant lumineux à l'extérieur (art. 4) ; Rojer ne suit pas ${nonPorte("ces dispositifs de sécurité des chambres froides")}.`,
   // L'aide dit ce que la catégorie couvre ET ce qu'elle ne couvre pas. Les
   // trois exclusions ne sont pas décoratives : ce sont les trois confusions
   // que le dépouillement de l'arrêté a relevées — la benne du collecteur, le
@@ -129,6 +142,17 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
   // La description renvoie donc explicitement vers les catégories vérifiables,
   // et n'énumère plus que ce qui reste vraiment ici.
   EPI: "Ce qu'une personne porte pour se protéger et qu'aucun texte ne soumet à vérification périodique : casque, gants, chaussures de sécurité, lunettes, protections auditives, masque de confort. Un harnais antichute, un appareil respiratoire ou un gilet de sauvetage gonflable ne se déclarent PAS ici — ils ont leur propre catégorie, parce qu'ils se vérifient tous les douze mois. Pas non plus les protections collectives — garde-corps, filet, capot de machine —, qui appartiennent à l'ouvrage ou à la machine qu'elles protègent.",
+  // 2026-10-14, décision de la propriétaire. Même rôle que l'aide des
+  // équipements sous pression et du stockage : ce qui suit « Rojer ne suit
+  // pas » est l'ADRESSE de non-couverture de GZ 13, GZ 14 et de l'arrêté du
+  // 23 février 2018, art. 26 § 3 — leur `declareA` en cite la phrase mot pour
+  // mot (`manques-annonces.test.ts`). Ces trois articles étaient annoncés
+  // jusqu'ici sur la page « Ce que Rojer ne couvre pas », rubrique
+  // « Installations de gaz » ; ils sont DÉPLACÉS ici, pas dupliqués.
+  // L'entretien annuel de la chaudière (C. env., R. 224-41-4 et s.) est hors
+  // cadre par décision du 2026-09-20 ; l'article a été relu sur Légifrance
+  // par la propriétaire le 2026-10-14.
+  INSTALLATION_GAZ: `Installation fixe de gaz combustible ou d'hydrocarbures liquéfiés : stockage, canalisations et appareils raccordés — chauffage, production d'eau chaude, cuisson. En établissement recevant du public des quatre premières catégories, Rojer suit ${porte("la vérification annuelle des installations de gaz")} (règlement de sécurité, art. GZ 15). Un appareil de cuisson au gaz déjà déclaré porte déjà cette vérification annuelle : déclarer aussi l'installation en ajoute une seconde ligne, une par équipement déclaré. Rojer ne suit pas ${nonPorte("la vérification d'une installation de gaz neuve ou modifiée avant sa mise en service")} (art. GZ 13), ni ${nonPorte("l'entretien des installations et appareils à gaz et de leurs conduits d'évacuation")} ni ${nonPorte("l'accès et la signalisation de l'organe de coupure de branchement du gaz")} (art. GZ 14), ni ${nonPorte("l'entretien des installations collectives de gaz des immeubles d'habitation")}, au moins tous les dix ans (arrêté du 23 février 2018, art. 26 § 3), ni ${nonPorte("l'entretien annuel de la chaudière")} (code de l'environnement, art. R. 224-41-4 et suivants).`,
   AUTRE: "Autre équipement soumis à vérification périodique.",
 };
 

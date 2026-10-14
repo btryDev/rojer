@@ -199,6 +199,8 @@ export async function creerEquipement(
       dateMiseEnService: parsed.data.dateMiseEnService,
       datePeremption: parsed.data.datePeremption,
       caracteristiques: (caracs ?? undefined) as Prisma.InputJsonValue | undefined,
+      // 2026-10-14 : la clé du matériel non suivi, validée par le schéma.
+      materielNonCouvert: parsed.data.materielNonCouvert ?? null,
     },
   });
   await constaterEpiDeclare(etablissementId, [parsed.data.categorie]);
@@ -277,6 +279,9 @@ export async function modifierEquipement(
       dateMiseEnService: parsed.data.dateMiseEnService,
       datePeremption: parsed.data.datePeremption,
       caracteristiques: (caracs ?? undefined) as Prisma.InputJsonValue | undefined,
+      // 2026-10-14 : toujours écrite, `null` compris — choisir une catégorie
+      // suivie dans la recherche efface le matériel non suivi d'avant.
+      materielNonCouvert: parsed.data.materielNonCouvert ?? null,
     },
   });
 

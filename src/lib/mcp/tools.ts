@@ -419,6 +419,7 @@ export const LIBELLE_CATEGORIE: Record<string, string> = {
   INSTALLATION_FRIGORIFIQUE: "installation frigorifique",
   COMPACTEUR_PRESSE_DECHETS_MOTORISE:
     "compacteur à déchets ou presse à cartons motorisé",
+  INSTALLATION_GAZ: "installation de gaz",
   AUTRE: "autre",
 };
 

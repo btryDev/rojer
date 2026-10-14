@@ -45,6 +45,7 @@ export function PreRemplissagePanel({
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
+  const [avertissement, setAvertissement] = useState<string | null>(null);
   // Les catégories cochées dont la question est restée sans réponse au
   // dernier envoi : leur champ porte l'erreur (`aria-invalid`, message lié).
   const [sansReponse, setSansReponse] = useState<ReadonlySet<CategorieEquipement>>(
@@ -52,7 +53,34 @@ export function PreRemplissagePanel({
   );
   const formRef = useRef<HTMLFormElement>(null);
 
-  if (suggestions.length === 0) return null;
+  // 2026-10-14 (revue du lot, point 2) : quand la création épuise les
+  // suggestions, `revalidatePath` re-rend la page avec une liste vide. Le
+  // panneau ne disparaît plus : la page le rend toujours, au même endroit, si
+  // bien que React garde son état à travers le rafraîchissement — et ce qu'il
+  // reste à dire (le succès, et surtout l'avertissement d'un calendrier non
+  // recalculé) se lit encore. Sans résultat à dire, rien n'est rendu, comme
+  // avant. Un paramètre d'URL aurait survécu au rechargement et redit un
+  // échec peut-être réparé depuis ; un état client meurt avec la page.
+  if (suggestions.length === 0) {
+    if (!message && !avertissement) return null;
+    return (
+      <section className="carte-board px-7 py-6 sm:px-8">
+        {message && (
+          <p className="m-0 text-[12.5px] text-[color:var(--board-green-ink)]">
+            {message}
+          </p>
+        )}
+        {avertissement && (
+          <p
+            role="alert"
+            className="m-0 mt-1.5 text-[12.5px] text-[color:var(--board-signal-ink)]"
+          >
+            {avertissement}
+          </p>
+        )}
+      </section>
+    );
+  }
 
   const toggle = (cat: string) => {
     setSelection((old) => {
@@ -101,6 +129,7 @@ export function PreRemplissagePanel({
     }
 
     setErreur(null);
+    setAvertissement(null);
     startTransition(async () => {
       try {
         const res = await creerEquipementsDepuisPreRemplissage(
@@ -122,6 +151,12 @@ export function PreRemplissagePanel({
               }. Pensez à les affiner si besoin.`
             : "Aucun équipement ajouté.",
         );
+        // 2026-10-14 : les fiches sont créées, mais le calendrier n'a pas
+        // suivi — le dire, comme la fiche entreprise
+        // (`success_avec_avertissement`) et `FaitActiviteRow`. Ignoré
+        // jusqu'ici, l'échec de régénération passait inaperçu
+        // (`docs/chantiers-ouverts.md`, § 0, défaut n° 6).
+        setAvertissement(res.avertissement ?? null);
       } catch {
         setMessage(null);
         // ~~`e.message`~~ (rayé le 2026-10-13) : en production, Next remplace
@@ -236,6 +271,17 @@ export function PreRemplissagePanel({
         {!pending && message && (
           <p className="m-0 text-[12.5px] text-[color:var(--board-green-ink)]">
             {message}
+          </p>
+        )}
+        {/* Les fiches existent (le vert au-dessus est vrai) ; le calendrier,
+            lui, n'a pas été recalculé : encre du signal, comme la fiche
+            entreprise. */}
+        {!pending && avertissement && (
+          <p
+            role="alert"
+            className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]"
+          >
+            {avertissement}
           </p>
         )}
         {!pending && erreur && (

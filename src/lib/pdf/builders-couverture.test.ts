@@ -26,7 +26,13 @@ const etab = {
 };
 
 vi.mock("@/lib/auth/require-user", () => ({ requireUser: async () => ({ id: "user-1" }) }));
-vi.mock("@/lib/prisma", () => ({ prisma: { etablissement: { findFirst: async () => etab } } }));
+// 2026-10-14 : le builder lit aussi les matériels non couverts déclarés.
+vi.mock("@/lib/prisma", () => ({
+  prisma: {
+    etablissement: { findFirst: async () => etab },
+    equipement: { findMany: async () => [] },
+  },
+}));
 vi.mock("@/lib/actions/queries", async (orig) => ({
   ...(await orig<typeof import("@/lib/actions/queries")>()),
   compterActions: async () => ({ totalACouvrir: 0, enRetard: 0, ouvertes: 0, enCours: 0, leveesRecemment: 0 }),

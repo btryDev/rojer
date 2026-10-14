@@ -425,7 +425,13 @@ export const obligationsConformite: Obligation[] = [
 // bornées aux types — et `aeration-erp-filtres-livret-entretien` (CH 39 § 1,
 // § 2, § 4) — équipement `VMC`/`CTA`, tous types. N 20 entre en contexte de
 // `incendie-travail-consigne-affichee`, hors empreinte.
-export const REFERENTIEL_VERSION = "2026-10-14.2";
+// `2026-10-14.3` (`lot/materiels-non-couverts-1014`, `.3` à l'intégration, décision de la
+// propriétaire du 2026-10-14) : la catégorie `INSTALLATION_GAZ` entre, et
+// `cuisson-gaz-installations-annuelle` (GZ 15, ERP N1–N4) la prend en plus de
+// `APPAREIL_CUISSON_ERP` — un ERP chauffé au gaz sans cuisine reçoit enfin la
+// vérification annuelle. 185 + 0 − 0 = 185. Les lignes existantes ne bougent
+// pas : seule une installation de gaz déclarée en fait naître une.
+export const REFERENTIEL_VERSION = "2026-10-14.3";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

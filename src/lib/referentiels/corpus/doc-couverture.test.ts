@@ -16,9 +16,14 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { CORPUS, articlesNonCouverts } from "./index";
-import { ADRESSE_MANQUES_ANNONCES } from "./adresses";
+import { ADRESSE_MANQUES_ANNONCES, ADRESSE_MATERIELS_NON_COUVERTS } from "./adresses";
 
 const CHEMIN = "docs/couverture-declaree-du-produit.md";
+
+/** Les deux adresses où une annonce a pu être déplacée le 2026-10-14. */
+function estAdresseDeplacee(declareA: string): boolean {
+  return declareA.includes("DESCRIPTION_CATEGORIE.") || declareA === ADRESSE_MATERIELS_NON_COUVERTS;
+}
 
 function documentCouverture(): string {
   return readFileSync(path.join(process.cwd(), CHEMIN), "utf8");
@@ -173,6 +178,14 @@ describe(`${CHEMIN} — la liste ne se périme pas en silence`, () => {
       if (!a) return true;
       if (a.statut === "retenu") return false;
       if (a.statut === "non_couvert" && a.declareA === ADRESSE_MANQUES_ANNONCES) return false;
+      // 2026-10-14 : les annonces du gaz et des escaliers mécaniques ont été
+      // DÉPLACÉES vers l'aide de leur catégorie ou la liste des matériels non
+      // couverts (décision de la propriétaire). Annoncé reste annoncé, à une
+      // autre adresse visible — que `manques-annonces.test.ts` et
+      // `materiels-non-couverts.test.ts` vérifient.
+      if (a.statut === "non_couvert" && a.declareA && estAdresseDeplacee(a.declareA)) {
+        return false;
+      }
       return !auSeptieme.has(ref);
     });
     expect(sansSort).toEqual([]);
