@@ -29,7 +29,7 @@ import {
 } from "@/lib/equipements/etat-verifications";
 import {
   LIBELLE_SANS_ECHEANCE,
-  EXPLICATION_SANS_ECHEANCE,
+  explicationSansEcheance,
   equipementsSansEcheance,
 } from "@/lib/equipements/hors-referentiel";
 import { avecProvenance, origineDepuis } from "@/lib/navigation/provenance";
@@ -171,7 +171,8 @@ export default async function EquipementsPage({
           return motif
             ? {
                 libelle: LIBELLE_SANS_ECHEANCE[motif],
-                explication: EXPLICATION_SANS_ECHEANCE[motif],
+                // 2026-10-14 : la phrase propre au matériel non suivi.
+                explication: explicationSansEcheance(motif, eq.materielNonCouvert),
               }
             : null;
         })(),

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { reperterSansEcheance } from "./hors-referentiel";
+import {
+  EXPLICATION_SANS_ECHEANCE,
+  explicationSansEcheance,
+  reperterSansEcheance,
+} from "./hors-referentiel";
 import type { ObligationPorteeParEquipement } from "@/lib/referentiels/conformite/types";
 import type {
   EquipementMatching,
@@ -203,5 +207,26 @@ describe("reperterSansEcheance — référentiel injecté", () => {
     );
 
     expect([...m.keys()]).toEqual(["autre"]);
+  });
+});
+
+// 2026-10-14 : un matériel non suivi dit sa phrase, pas le générique.
+describe("explicationSansEcheance — la phrase propre au matériel non suivi", () => {
+  it("catégorie hors référentiel avec une clé connue : la phrase du matériel, et la réserve", () => {
+    const t = explicationSansEcheance("categorie_hors_referentiel", "chaudiere");
+    expect(t).toMatch(/^Rojer ne suit pas l'entretien annuel des chaudières/);
+    expect(t).toContain("Cela ne veut pas dire qu'aucune vérification ne lui est due.");
+  });
+
+  it("sans clé, clé inconnue ou autre motif : le générique", () => {
+    expect(explicationSansEcheance("categorie_hors_referentiel", null)).toBe(
+      EXPLICATION_SANS_ECHEANCE.categorie_hors_referentiel,
+    );
+    expect(explicationSansEcheance("categorie_hors_referentiel", "defibrillateur")).toBe(
+      EXPLICATION_SANS_ECHEANCE.categorie_hors_referentiel,
+    );
+    expect(explicationSansEcheance("aucune_echeance_datable", "chaudiere")).toBe(
+      EXPLICATION_SANS_ECHEANCE.aucune_echeance_datable,
+    );
   });
 });

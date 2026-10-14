@@ -12,7 +12,7 @@ import { getEquipement } from "@/lib/equipements/queries";
 import {
   CHAMP_SANS_ECHEANCE,
   ENCRE_SANS_ECHEANCE,
-  EXPLICATION_SANS_ECHEANCE,
+  explicationSansEcheance,
   LIBELLE_SANS_ECHEANCE,
   equipementsSansEcheance,
 } from "@/lib/equipements/hors-referentiel";
@@ -119,7 +119,7 @@ export default async function ModifierEquipementPage({
               >
                 {LIBELLE_SANS_ECHEANCE[motifSansEcheance]}
               </span>
-              <span>{EXPLICATION_SANS_ECHEANCE[motifSansEcheance]}</span>
+              <span>{explicationSansEcheance(motifSansEcheance, eq.materielNonCouvert)}</span>
             </p>
           </div>
         )}

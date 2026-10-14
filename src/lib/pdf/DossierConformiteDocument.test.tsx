@@ -28,6 +28,7 @@ import {
   type DossierData,
 } from "./DossierConformiteDocument";
 import type { BlocEtatsPermanents } from "./mentions-etats-permanents";
+import { blocsMaterielsNonCouverts } from "./mentions-perimetre";
 
 const VIDE: BlocEtatsPermanents = {
   chapeau: null,
@@ -68,6 +69,7 @@ function dossier(etatsPermanents: BlocEtatsPermanents): DossierData {
     effectifSurSite: 6,
     codeNaf: "56.10A",
     regimesTexte: "Établissement de travail, ERP type N cat. 5",
+    materielsNonCouverts: [],
     regime: { estERP: true, estIGH: false },
     genereLe: new Date("2026-09-01T10:00:00Z"),
     couverture: null,
@@ -340,5 +342,30 @@ describe("D2 (a) : la page de garde dit la question de couverture (2026-09-28)",
   it("une question ouverte : la phrase est rendue ; aucune : rien", () => {
     expect(textes(avec(1)).some((t) => t.startsWith("Une question reste ouverte"))).toBe(true);
     expect(textes(avec(0)).some((t) => t.includes("question reste ouverte"))).toBe(false);
+  });
+});
+
+// 2026-10-14, décision de la propriétaire : le bloc « Ce que ce dossier ne
+// couvre pas » liste les matériels non couverts réellement déclarés.
+// Éprouvé en retirant `...data.materielsNonCouverts` des blocs du document.
+describe("les matériels non couverts déclarés s'impriment sous « Ce que ce dossier ne couvre pas »", () => {
+  const textes = (d: DossierData) =>
+    elementsDansLOrdre(DossierConformiteDocument({ data: d })).map(texteDirect);
+  const sansManque = { manques: [], indeterminations: [] };
+
+  it("déclaré : le titre de section, le matériel et sa phrase sont rendus", () => {
+    const t = textes({
+      ...dossier(bloc(2)),
+      couverture: sansManque,
+      materielsNonCouverts: blocsMaterielsNonCouverts(["echelle", "echelle", "inconnu"]),
+    });
+    expect(t).toContain("Ce que ce dossier ne couvre pas");
+    expect(t.filter((x) => x.includes("Échelle, escabeau ou marchepied"))).toHaveLength(1);
+    expect(t.some((x) => x.startsWith("Rojer ne suit pas l'usage des échelles"))).toBe(true);
+  });
+
+  it("aucun déclaré, aucun manque : la section ne s'imprime pas", () => {
+    const t = textes({ ...dossier(bloc(2)), couverture: sansManque, materielsNonCouverts: [] });
+    expect(t).not.toContain("Ce que ce dossier ne couvre pas");
   });
 });
