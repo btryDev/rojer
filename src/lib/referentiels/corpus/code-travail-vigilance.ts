@@ -9,6 +9,8 @@
 // financière, l'injonction) et le même chapitre en partie réglementaire
 // (`R. 8222-1` à `D. 8222-8` — le seuil de montant, les pièces, le rythme).
 // Chacun des deux est ici INTÉGRAL : sept articles sur sept, huit sur huit.
+// [2026-10-14 : huit et huit — `L. 8222-1-1`, créé par la loi n° 2026-534,
+// entre au corpus avant son entrée en vigueur (`versionFuture`).]
 // Les fondre aurait rendu leur `etendue` `articles_cites` sans rien gagner.
 //
 // Le troisième est d'une autre nature. `L. 8221-3` et `L. 8221-5` vivent au
@@ -267,13 +269,16 @@ export const CODE_TRAVAIL_TRAVAIL_DISSIMULE: Corpus = {
  * 25 juin 2026, art. 95, CRÉE un huitième article, `L. 8222-1-1` (vigilance du
  * maître de l'ouvrage sur le sous-traitant qu'il accepte), à une date fixée
  * par décret et au plus tard six mois après la promulgation — Légifrance le
- * date au 2026-12-26. Lu sur l'API le 2026-10-14 ; il n'entre pas au corpus
+ * date au 2026-12-26. Lu sur l'API le 2026-10-14 ; ~~il n'entre pas au corpus
  * avant d'être en vigueur, parce que tout statut qu'on lui donnerait ici
  * vaudrait décision (`non_couvert` = annoncé, `obligation_manquante` = hors
  * cadre, § 7 de `docs/couverture-declaree-du-produit.md`), et que la décision
  * appartient à la propriétaire. Il attend dans `TEXTES_A_VENIR`, dont le test
  * rougit à la date : ce jour-là, ce chapitre redevient intégral en
- * l'ajoutant.]
+ * l'ajoutant.~~ [2026-10-14, même jour, décision de la propriétaire : une
+ * phrase discrète du module Prestataires, et nulle part ailleurs. L'article
+ * entre au corpus, `non_couvert` avec `versionFuture` et un `declareA` vers
+ * cette phrase : le chapitre compte huit articles, et reste intégral.]
  */
 export const CODE_TRAVAIL_VIGILANCE: Corpus = {
   id: "code-travail-vigilance",
@@ -282,7 +287,7 @@ export const CODE_TRAVAIL_VIGILANCE: Corpus = {
   url: "https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000006072050/LEGISCTA000006178268/",
   etendue: "integral",
   portee:
-    "Chapitre II « Obligations et solidarité financière des donneurs d'ordre et des maîtres d'ouvrage » du titre II (travail dissimulé), partie législative : l'obligation de vérifier son cocontractant à la conclusion du contrat et périodiquement jusqu'à sa fin (L. 8222-1), la solidarité financière encourue à défaut et son assiette (L. 8222-2 et L. 8222-3), la règle applicable au cocontractant établi à l'étranger (L. 8222-4), l'injonction due après signalement écrit (L. 8222-5), le régime propre aux personnes morales de droit public (L. 8222-6) et le renvoi au décret en Conseil d'État (L. 8222-7). CE CHAPITRE NE PORTE NI MONTANT NI PÉRIODICITÉ : L. 8222-1 dit « un montant minimum » et « périodiquement », et rien de plus. Le seuil est réglementaire (R. 8222-1), le rythme aussi (D. 8222-5) — c'est le corpus voisin. Le produit sert cette obligation par son module Prestataires, hors du référentiel de conformité : aucune Obligation ne s'y adosse.",
+    "Chapitre II « Obligations et solidarité financière des donneurs d'ordre et des maîtres d'ouvrage » du titre II (travail dissimulé), partie législative : l'obligation de vérifier son cocontractant à la conclusion du contrat et périodiquement jusqu'à sa fin (L. 8222-1), la solidarité financière encourue à défaut et son assiette (L. 8222-2 et L. 8222-3), la règle applicable au cocontractant établi à l'étranger (L. 8222-4), l'injonction due après signalement écrit (L. 8222-5) [2026-10-14 : et, créée par la loi n° 2026-534 et pas encore en vigueur, la vérification périodique du sous-traitant que le maître de l'ouvrage accepte (L. 8222-1-1)], le régime propre aux personnes morales de droit public (L. 8222-6) et le renvoi au décret en Conseil d'État (L. 8222-7). CE CHAPITRE NE PORTE NI MONTANT NI PÉRIODICITÉ : L. 8222-1 dit « un montant minimum » et « périodiquement », et rien de plus. Le seuil est réglementaire (R. 8222-1), le rythme aussi (D. 8222-5) — c'est le corpus voisin. Le produit sert cette obligation par son module Prestataires, hors du référentiel de conformité : aucune Obligation ne s'y adosse.",
   articles: [
     {
       ref: "L. 8222-1",
@@ -302,6 +307,30 @@ export const CODE_TRAVAIL_VIGILANCE: Corpus = {
       declareA: ADRESSE_MANQUES_ANNONCES,
       motif:
         "L'article impose une vérification récurrente à tout donneur d'ordre, et le référentiel de conformité ne porte AUCUNE Obligation qui s'y adosse — vérifié le 2026-09-02 : aucune ReferenceLegale ne cite L. 8222-1. Le produit la sert quand même, mais par un chemin parallèle : le module Prestataires (annuaire, pièces, alertes d'expiration), qui vit hors du référentiel et n'apparaît donc ni au calendrier des échéances, ni dans les comptes de couverture, ni dans le dossier de contrôle au même titre que les autres obligations. Ce n'est pas un oubli d'encodage, c'est une obligation servie par une autre mécanique — et le dire est exactement ce que ce statut existe pour faire. À noter que l'article lui-même ne se suffit pas : il dit « un montant minimum » et « périodiquement » sans les chiffrer, et renvoie au décret pour les modalités.\n\n[2026-09-27, C45 — ANNONCÉ, par décision de la propriétaire du 2026-09-27 (évaluation des 42 manques qui touchent la cible). Passé de `obligation_manquante` (cause `relation_tiers`, touchait la cible) à `non_couvert` : nommé sur la page « Ce que Rojer ne couvre pas », domaine « Vigilance à l'égard des cocontractants », à tout dossier — « toute personne » qui contracte ; le module Prestataires n'en suit qu'une partie. Rien n'est encodé ; la phrase de l'écran reste « une obligation que cet outil ne traite pas reste due si un texte l'impose ». Relu en première main sur Légifrance le 2026-09-27 (C45), page de l'article : structure demandée à l'aveugle, puis confirmation ciblée de la formulation décisive. Écart : verbatim identique à la `citationCle`. Blocage écrit à la lecture, conservé ici avec le champ `bloquePar` que le statut `non_couvert` ne porte pas : « Trois choses, distinctes. (1) Le porteur : l'ADR-022 en connaît trois — établissement, salarié, équipement — et un prestataire n'est aucun des trois ; la vigilance porte sur une RELATION, pas sur une chose de l'établissement. (2) Le déclencheur : l'assujettissement dépend du montant de l'opération (R. 8222-1) et l'échéance de la date de conclusion (D. 8222-5), deux données que `prestataireSchema` ne détient pas — il n'y a pas de contrat dans le modèle, seulement un prestataire. (3) Le périmètre lui-même, non tranché : ce chapitre est du droit du travail non santé-sécurité, et CLAUDE.md écarte le RH non-SST. »]",
+    },
+    {
+      // 2026-10-14 — créé par la loi n° 2026-534 du 25 juin 2026, art. 95,
+      // pas encore en vigueur (`versionFuture`). Entré au corpus le jour où
+      // la propriétaire a décidé de l'adresse : une phrase du module
+      // Prestataires, et nulle part ailleurs.
+      ref: "L. 8222-1-1",
+      intitule: "Vérification du sous-traitant accepté par le maître de l'ouvrage",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000054335512",
+      versionFuture: "2026-12-26",
+      modifiePar: { texte: "LOI n° 2026-534 du 25 juin 2026 - art. 95 (V)" },
+      luLe: "2026-10-14",
+      lecture: "api_legifrance",
+      prescrit:
+        "Le maître de l'ouvrage vérifie périodiquement, jusqu'à la fin de l'exécution du contrat de sous-traitance d'un montant minimal, que le sous-traitant qu'il accepte (art. 3 de la loi n° 75-1334, ou L. 2193-4 du code de la commande publique) s'acquitte des formalités de L. 8221-3 et L. 8221-5 ; il est réputé l'avoir fait en se faisant remettre les documents fixés par décret et en s'assurant de leur authenticité. Le particulier est exclu.",
+      citationCle:
+        "Le maître de l'ouvrage vérifie périodiquement, jusqu'à la fin de l'exécution du contrat de sous-traitance d'un montant minimal, que le sous-traitant qu'il accepte en application de l' article 3 de la loi n° 75-1334 du 31 décembre 1975 relative à la sous-traitance ou de l' article L. 2193-4 du code de la commande publique s'acquitte des formalités mentionnées aux articles L. 8221-3 et L. 8221-5 du présent code. Le maître de l'ouvrage est réputé avoir procédé aux vérifications mentionnées au premier alinéa du présent article lorsqu'il se fait remettre les documents dont la liste et les conditions de remise sont déterminées par décret et qu'il s'assure de leur authenticité. Le présent article ne s'applique pas au particulier qui contracte pour son usage personnel ou pour celui de son conjoint, du partenaire auquel il est lié par un pacte civil de solidarité, de son concubin, de ses ascendants ou de ses descendants.",
+      historique:
+        "Lu sur l'API Légifrance le 2026-10-14 : LEGIARTI000054335512, `VIGUEUR_DIFF` au 2026-12-26, seule version (aucune antérieure, aucune autre programmée — recherche au 2035-01-01). Nota : « Conformément au III de l'article 95 de la 2026-534 du 25 juin 2026, ces dispositions, dans leur rédaction résultant du I de l'article précité, entrent en vigueur à une date fixée par décret, et au plus tard six mois après la promulgation de ladite loi. » Légifrance la date au 2026-12-26 ; la promulgation étant du 25 juin, la date légale peut la précéder d'un jour, et un décret peut l'avancer. Au 2026-10-14, aucun texte du JORF ne cite l'article hormis la loi : ni date anticipée, ni montant minimal, ni liste des documents. Un décret qui avancerait la date se verrait avec `pnpm legifrance:verifier -- --ref \"L. 8222-1-1\"` (comparaison `versionFuture` / `VIGUEUR_DIFF`, `verification.ts`).",
+      statut: "non_couvert",
+      declareA:
+        "Page Prestataires (`src/app/etablissements/[id]/prestataires/page.tsx`), section « Votre obligation de vigilance » : une phrase en texte secondaire, « … (art. L. 8222-1-1). Rojer ne suit pas ces vérifications. » — et nulle part ailleurs, décision de la propriétaire du 2026-10-14. Tenue par `vigilance-sous-traitant.test.ts`.",
+      motif:
+        "Obligation nouvelle, à la charge du dirigeant maître de l'ouvrage qui accepte un sous-traitant de son prestataire. Décision de la propriétaire du 2026-10-14 : la dire par une phrase discrète du module Prestataires, et rien d'autre — ni la page « Ce que Rojer ne couvre pas », ni le plan de prévention, ni une ligne au référentiel, ni une modélisation de la sous-traitance. Ce qui en empêcherait l'encodage, quand on le voudrait : (1) le porteur — une relation avec un tiers, comme L. 8222-1 ; (2) le déclencheur — le montant minimal et les documents sont renvoyés à un décret non paru au 2026-10-14 ; (3) le modèle ne connaît ni contrat, ni sous-traitant, ni acceptation.",
     },
     {
       ref: "L. 8222-2",

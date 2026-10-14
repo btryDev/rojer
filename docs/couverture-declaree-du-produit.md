@@ -152,7 +152,7 @@ sixième `??` recopié.
 C'est la limite la plus importante de ce document, et la raison directe du
 retrait de la carte.
 
-~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ ~~Les 66 articles (2026-10-07, l'IGH, les équipements sous pression et le stockage de matières dangereuses en partie retirés)~~ ~~Les 70 articles (2026-10-13, quatre manques de la cible redéfinie annoncés)~~ ~~Les 72 articles (2026-10-13, six manques de la cible redéfinie annoncés)~~ Les 73 articles (2026-10-13, sept manques de la cible redéfinie annoncés) ci-dessous sont ceux que le dépouillement a lus, qui imposent
+~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ ~~Les 66 articles (2026-10-07, l'IGH, les équipements sous pression et le stockage de matières dangereuses en partie retirés)~~ ~~Les 70 articles (2026-10-13, quatre manques de la cible redéfinie annoncés)~~ ~~Les 72 articles (2026-10-13, six manques de la cible redéfinie annoncés)~~ ~~Les 73 articles (2026-10-13, sept manques de la cible redéfinie annoncés)~~ Les 74 articles (2026-10-14, `L. 8222-1-1` dit sur la page Prestataires) ci-dessous sont ceux que le dépouillement a lus, qui imposent
 quelque chose à un exploitant, et que le référentiel ne porte pas. **Rien ne les
 restreint aux établissements que leur chapitre vise** — sauf les ~~vingt-cinq
 annoncés le 2026-09-27~~ ~~trente-trois~~ trente-cinq annoncés (vingt-cinq le
@@ -274,10 +274,14 @@ hôtels qui sont encodés le même jour n'y figuraient pas, ils étaient
 indépendante : `Arrêté 1986-01-31 art. 78-1` et `Arrêté 1986-01-31 art. 102`,
 d'abord classés hors cadre, sont annoncés. **Puis 72 + 1 − 0 = 73** : `R. 4544-11`,
 annoncé par décision de la propriétaire (« hors cadre et on l'annonce »).
+**Puis 73 + 1 − 0 = 74** (2026-10-14) : `L. 8222-1-1`, créé par la loi
+n° 2026-534 et pas encore en vigueur, entre `non_couvert` ; son adresse est une
+phrase de la page Prestataires, pas `ADRESSE_MANQUES_ANNONCES` (décision de la
+propriétaire du 2026-10-14).
 
 ---
 
-## 3. Les 73 articles lus et non portés
+## 3. Les 74 articles lus et non portés
 
 ~~Cinq familles~~ ~~Neuf familles (compte refait le 2026-09-26)~~ Dix-huit familles (compte refait le 2026-09-27, C45), une dixième étant sortie de la liste le 2026-09-01 (voir
 ci-dessous). Les motifs sont ceux du corpus, cités et non réécrits : ils ont
@@ -656,6 +660,18 @@ chimique », annoncée à tout employeur ; l'aide du stockage continue de le dir
 > employeur.
 
 **Adresse visible** : `ADRESSE_MANQUES_ANNONCES`, domaine « Formation ».
+
+### Vigilance à l'égard du sous-traitant accepté — 1 article (2026-10-14)
+
+`L. 8222-1-1`
+
+> Obligation nouvelle, à la charge du dirigeant maître de l'ouvrage qui accepte un sous-traitant de son prestataire. Décision de la propriétaire du 2026-10-14 : la dire par une phrase discrète du module Prestataires, et rien d'autre — ni la page « Ce que Rojer ne couvre pas », ni le plan de prévention, ni une ligne au référentiel, ni une modélisation de la sous-traitance.
+
+(Motif du corpus, début.) Créé par la loi n° 2026-534 du 25 juin 2026, art. 95,
+en vigueur à une date fixée par décret et au plus tard six mois après la
+promulgation (Légifrance : 2026-12-26). **Adresse visible** : la section
+« Votre obligation de vigilance » de la page Prestataires, une phrase en texte
+secondaire — et elle seule (`vigilance-sous-traitant.test.ts`).
 
 ---
 

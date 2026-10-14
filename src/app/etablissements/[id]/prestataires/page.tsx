@@ -155,6 +155,19 @@ export default async function PrestatairesPage({
             l&apos;attestation
             de vigilance de votre prestataire, et vous en gardez trace.
           </p>
+          {/* 2026-10-14, décision de la propriétaire : L. 8222-1-1 (loi
+              n° 2026-534, art. 95) se dit ici, et nulle part ailleurs. Entrée
+              en vigueur à une date fixée par décret, au plus tard six mois
+              après la promulgation du 25 juin 2026 — Légifrance la date au
+              2026-12-26 : « fin décembre 2026 » reste juste des deux côtés.
+              Adresse du `declareA` de L. 8222-1-1 au corpus, tenue par
+              `vigilance-sous-traitant.test.ts`. */}
+          <p className="m-0 mt-2 max-w-[62ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+            Si votre prestataire fait intervenir un sous-traitant que vous
+            acceptez, vous devez aussi vérifier périodiquement que ce
+            sous-traitant est en règle, au plus tard à partir de fin décembre
+            2026 (art. L. 8222-1-1). Rojer ne suit pas ces vérifications.
+          </p>
           <div className="mt-4">
             {/* L'URL pointait sur LEGIARTI000037389145, qui rend 404, et
                 l'extrait attribué à « L. 8222-1 · D. 8222-5 » n'était le texte
