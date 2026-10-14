@@ -145,6 +145,9 @@ export default async function ModifierEquipementPage({
               localisation: eq.localisation,
               dateMiseEnService: eq.dateMiseEnService,
               datePeremption: eq.datePeremption,
+              // 2026-10-14 : sans elle, enregistrer la fiche d'un escabeau
+              // effacerait le matériel et son « Rojer ne suit pas ».
+              materielNonCouvert: eq.materielNonCouvert,
               nombre: caracs.nombre ?? null,
               estLocalPollutionSpecifique: caracs.estLocalPollutionSpecifique,
               aSystemeDeRecyclage: caracs.aSystemeDeRecyclage,

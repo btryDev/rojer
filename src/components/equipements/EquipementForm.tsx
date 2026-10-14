@@ -6,8 +6,15 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { ChampBoard } from "@/components/ui-kit";
 import { MarqueCategorie } from "@/components/equipements/MarqueCategorie";
 import {
+  RechercheMateriel,
+  type ChoixMateriel,
+} from "@/components/equipements/RechercheMateriel";
+import {
+  materielNonCouvert,
+  type CleMaterielNonCouvert,
+} from "@/lib/equipements/materiels-non-couverts";
+import {
   CATEGORIES_AERATION,
-  CATEGORIES_EQUIPEMENT,
   VALEURS_TRI_ETAT,
   questionsTriEtatPour,
   valeurTriEtat,
@@ -74,6 +81,8 @@ type Valeurs = {
   aSystemeDeRecyclage?: boolean;
   nbVehiculesParkingCouvert?: number | null;
   notes?: string | null;
+  /** 2026-10-14 : la clé du matériel non suivi, en catégorie `AUTRE`. */
+  materielNonCouvert?: string | null;
 } & Partial<Record<ChampTriEtat, boolean | null>>;
 
 /**
@@ -285,6 +294,18 @@ export function EquipementForm({
   const [categorie, setCategorie] = useState<CategorieEquipement>(
     valeursInitiales?.categorie ?? "INSTALLATION_ELECTRIQUE",
   );
+  // 2026-10-14 : le matériel non suivi choisi dans la recherche — seulement
+  // en catégorie `AUTRE`. Une clé inconnue de la liste (retirée depuis) est
+  // ignorée plutôt que renvoyée au serveur, qui la refuserait.
+  const [materiel, setMateriel] = useState<CleMaterielNonCouvert | null>(() => {
+    const m = materielNonCouvert(valeursInitiales?.materielNonCouvert);
+    return m && (valeursInitiales?.categorie ?? "AUTRE") === "AUTRE" ? m.cle : null;
+  });
+  const entreeMateriel = materielNonCouvert(materiel);
+  const choisir = (c: ChoixMateriel) => {
+    setCategorie(c.categorie);
+    setMateriel(c.materiel);
+  };
 
   const err = (champ: string) =>
     state.status === "error" ? state.fieldErrors?.[champ]?.[0] : undefined;
@@ -309,33 +330,61 @@ export function EquipementForm({
       {/* Catégorie + libellé */}
       <section className="flex flex-col gap-5">
         <div>
+          {/* ~~`<select>` des catégories~~ — 2026-10-14, décision de la
+              propriétaire : une recherche par libellé et par synonymes, qui
+              trouve aussi les matériels que Rojer ne suit pas. Le choix part
+              dans deux champs cachés ; la saisie, elle, n'est jamais envoyée. */}
           <label className="label-board" htmlFor="categorie">
             Catégorie *
           </label>
           <div className="flex items-center gap-3">
             <MarqueCategorie categorie={categorie} taille={44} />
-            <select
+            <RechercheMateriel
               id="categorie"
-              name="categorie"
-              value={categorie}
-              onChange={(e) =>
-                setCategorie(e.currentTarget.value as CategorieEquipement)
-              }
-              required
-              className="champ-board"
-              aria-invalid={Boolean(err("categorie"))}
-            >
-              {CATEGORIES_EQUIPEMENT.map((c) => (
-                <option key={c} value={c}>
-                  {LABEL_CATEGORIE_EQUIPEMENT[c]}
-                </option>
-              ))}
-            </select>
+              choix={{ categorie, materiel }}
+              onChoix={choisir}
+              invalide={Boolean(err("categorie") || err("materielNonCouvert"))}
+              decritPar="categorie-aide"
+            />
           </div>
-          {DESCRIPTION_CATEGORIE[categorie] && (
-            <Aide>{DESCRIPTION_CATEGORIE[categorie]}</Aide>
+          <input type="hidden" name="categorie" value={categorie} />
+          <input type="hidden" name="materielNonCouvert" value={materiel ?? ""} />
+          {entreeMateriel ? (
+            /* L'encart du matériel non suivi : on peut l'ajouter, et on lit
+               ce que Rojer ne suit pas pour lui. Sous-bloc creux, aucune
+               couleur d'état — ce n'est ni un retard ni une faute. */
+            <div
+              id="categorie-aide"
+              className="mt-3 max-w-[66ch] rounded-[22px] bg-[color:var(--board-slate-pale)] px-5 py-4"
+            >
+              <p className="m-0 text-[13.5px] font-semibold leading-[1.4] text-[color:var(--board-ink)]">
+                Vous pouvez l&apos;ajouter.
+              </p>
+              <p className="m-0 mt-1.5 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                {entreeMateriel.phrase} Il sera enregistré en « {LABEL_CATEGORIE_EQUIPEMENT.AUTRE} »,
+                sans échéance au calendrier.
+              </p>
+              {entreeMateriel.orienteVers && (
+                <p className="m-0 mt-2 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                  {entreeMateriel.orienteVers.phrase}{" "}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      choisir({ categorie: entreeMateriel.orienteVers!.categorie, materiel: null })
+                    }
+                    className="font-semibold text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline"
+                  >
+                    Déclarer plutôt : {LABEL_CATEGORIE_EQUIPEMENT[entreeMateriel.orienteVers.categorie]}
+                  </button>
+                </p>
+              )}
+            </div>
+          ) : (
+            DESCRIPTION_CATEGORIE[categorie] && (
+              <Aide id="categorie-aide">{DESCRIPTION_CATEGORIE[categorie]}</Aide>
+            )
           )}
-          <Erreur message={err("categorie")} />
+          <Erreur message={err("categorie") ?? err("materielNonCouvert")} />
         </div>
 
         <ChampBoard

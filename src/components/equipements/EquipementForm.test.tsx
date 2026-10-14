@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from "vitest";
-import { cleanup, render } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { EquipementForm } from "./EquipementForm";
 import {
   CATEGORIES_A_REPONSE_EXIGEE,
@@ -175,5 +175,85 @@ describe("EquipementForm : l'aide au-dessus des questions exigées du levage (re
     // Le cas n'a de sens que si la question y est bien exigée.
     expect(questionsExigeesPour("DESENFUMAGE", n3)).toContain("estDesenfumageMecanique");
     expect(rendre("DESENFUMAGE", n3).querySelector("#aide-reponses-exigees")).toBeNull();
+  });
+});
+
+// 2026-10-14, décision de la propriétaire : la catégorie se cherche, par
+// libellé et par synonymes, et la recherche trouve aussi les matériels que
+// Rojer ne suit pas. Le choix part dans deux champs cachés ; la saisie, jamais.
+describe("EquipementForm : la recherche de matériel (2026-10-14)", () => {
+  const rendre = (valeursInitiales = {}) =>
+    render(<EquipementForm action={action} libelleSubmit="Créer" valeursInitiales={valeursInitiales} />)
+      .container;
+  const champ = (c: HTMLElement) => c.querySelector<HTMLInputElement>('input[role="combobox"]')!;
+  const cache = (c: HTMLElement, nom: string) =>
+    c.querySelector<HTMLInputElement>(`input[type="hidden"][name="${nom}"]`)!.value;
+  const chercher = (c: HTMLElement, saisie: string) =>
+    fireEvent.change(champ(c), { target: { value: saisie } });
+  // Les options de la liste seulement : les `<select>` des questions à trois
+  // états en ont aussi.
+  const listeOptions = () => within(screen.getByRole("listbox")).getAllByRole("option");
+  const options = () => listeOptions().map((o) => o.textContent ?? "");
+
+  it("un combobox accessible : rôle, liste contrôlée, état ouvert dit", () => {
+    const c = rendre();
+    const input = champ(c);
+    expect(input.getAttribute("aria-autocomplete")).toBe("list");
+    expect(input.getAttribute("aria-expanded")).toBe("false");
+    // Plus de `<select>` de catégories : le seul champ envoyé est caché.
+    expect(c.querySelector('select[name="categorie"]')).toBeNull();
+    chercher(c, "chambre froide");
+    expect(input.getAttribute("aria-expanded")).toBe("true");
+    expect(screen.getByRole("listbox").id).toBe(input.getAttribute("aria-controls"));
+    expect(options()).toEqual(["Installation frigorifique"]);
+  });
+
+  it("au clavier : flèche, Entrée choisit l'option active ; Échap referme sans rien changer", () => {
+    const c = rendre({ categorie: "EXTINCTEUR" });
+    chercher(c, "monte-charge");
+    fireEvent.keyDown(champ(c), { key: "Escape" });
+    expect(cache(c, "categorie")).toBe("EXTINCTEUR");
+    expect(champ(c).value).toBe("Extincteurs");
+    chercher(c, "monte-charge");
+    expect(champ(c).getAttribute("aria-activedescendant")).toBe(listeOptions()[0].id);
+    fireEvent.keyDown(champ(c), { key: "Enter" });
+    expect(cache(c, "categorie")).toBe("EQUIPEMENT_LEVAGE");
+    expect(cache(c, "materielNonCouvert")).toBe("");
+  });
+
+  it("un matériel non suivi : enregistré en AUTRE avec sa clé, l'encart dit ce que Rojer ne suit pas", () => {
+    const c = rendre();
+    chercher(c, "escabeau");
+    expect(options()[0]).toMatch(/Échelle, escabeau ou marchepied/);
+    fireEvent.mouseDown(listeOptions()[0]);
+    expect(cache(c, "categorie")).toBe("AUTRE");
+    expect(cache(c, "materielNonCouvert")).toBe("echelle");
+    const aide = c.querySelector("#categorie-aide")!.textContent ?? "";
+    expect(aide).toContain("Vous pouvez l'ajouter");
+    expect(aide).toContain("Rojer ne suit pas l'usage des échelles");
+  });
+
+  it("la chaudière se trouve des deux côtés, et le matériel oriente vers l'installation de gaz", () => {
+    const c = rendre();
+    chercher(c, "chaudière");
+    const libelles = options();
+    expect(libelles.some((l) => l.startsWith("Installation de gaz"))).toBe(true);
+    expect(libelles.some((l) => l.startsWith("Chaudière"))).toBe(true);
+    fireEvent.mouseDown(listeOptions().find((o) => o.textContent?.startsWith("Chaudière"))!);
+    expect(cache(c, "materielNonCouvert")).toBe("chaudiere");
+    fireEvent.click(screen.getByRole("button", { name: /Déclarer plutôt : Installation de gaz/ }));
+    expect(cache(c, "categorie")).toBe("INSTALLATION_GAZ");
+    expect(cache(c, "materielNonCouvert")).toBe("");
+    expect(c.querySelector("#categorie-aide")!.textContent).toContain("Rojer ne suit pas");
+  });
+
+  it("modifier un matériel non suivi : la clé revient, et choisir une catégorie l'efface", () => {
+    const c = rendre({ categorie: "AUTRE", materielNonCouvert: "escalier_mecanique" });
+    expect(cache(c, "materielNonCouvert")).toBe("escalier_mecanique");
+    expect(champ(c).value).toBe("Escalier mécanique ou trottoir roulant");
+    chercher(c, "ascenseur");
+    fireEvent.mouseDown(listeOptions()[0]);
+    expect(cache(c, "categorie")).toBe("ASCENSEUR");
+    expect(cache(c, "materielNonCouvert")).toBe("");
   });
 });
