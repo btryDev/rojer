@@ -33,6 +33,10 @@ import {
   fraicheurCalendrier,
   fraicheurDepuisRepere,
   phraseFraicheur,
+  SUJET_COMPTEURS_DU_PARC,
+  SUJET_ECHEANCES_DE_L_APPAREIL,
+  SUJET_UNE_ECHEANCE,
+  SUJET_VERIFICATIONS_DE_LA_FICHE,
   type FraicheurCalendrier,
 } from "./fraicheur";
 import { SCEAU_CALENDRIER } from "./version-moteur";
@@ -204,5 +208,56 @@ describe("ce que les sorties en font", () => {
     expect(phraseFraicheur({ etat: "jamais_genere" })).toMatch(
       /ne veut pas dire qu'il n'y en a pas/i,
     );
+  });
+});
+
+describe("les phrases d'ÉCRAN nomment ce que l'écran montre (2026-10-13)", () => {
+  const CAS: FraicheurCalendrier[] = [
+    { etat: "jamais_genere" },
+    { etat: "echec_regeneration" },
+    { etat: "perime", sceauPose: "a", sceauAttendu: "b" },
+  ];
+  const SUJETS = [
+    SUJET_UNE_ECHEANCE,
+    SUJET_ECHEANCES_DE_L_APPAREIL,
+    SUJET_COMPTEURS_DU_PARC,
+    SUJET_VERIFICATIONS_DE_LA_FICHE,
+  ];
+
+  it.each(SUJETS)("« $texte » : mêmes règles que les sorties", (sujet) => {
+    const phrases = CAS.map((f) => phraseFraicheur(f, sujet));
+    expect(new Set(phrases).size).toBe(3);
+    for (const p of phrases) {
+      expect(p).not.toBeNull();
+      expect(p).toMatch(/tableau de bord ou le calendrier/);
+      expect(p).not.toMatch(
+        /non[- ]conform|en infraction|opposable|vous êtes tenu|obligatoire/i,
+      );
+      // Ni une fiche ni le parc n'ont d'échéances « ci-dessous ».
+      expect(p).not.toMatch(/ci-dessous/);
+    }
+    expect(phraseFraicheur({ etat: "a_jour" }, sujet)).toBeNull();
+    expect(phraseFraicheur({ etat: "jamais_genere" }, sujet)).toMatch(
+      /ne veut pas dire qu'il n'y en a pas/,
+    );
+  });
+
+  it("le verbe s'accorde au sujet", () => {
+    const perime = { etat: "perime", sceauPose: "a", sceauAttendu: "b" } as const;
+    expect(phraseFraicheur(perime, SUJET_UNE_ECHEANCE)).toContain(
+      "Cette échéance date d'avant",
+    );
+    expect(phraseFraicheur(perime, SUJET_COMPTEURS_DU_PARC)).toContain(
+      "Les compteurs de vérification de cet écran datent d'avant",
+    );
+    expect(
+      phraseFraicheur({ etat: "echec_regeneration" }, SUJET_UNE_ECHEANCE),
+    ).toContain("Cette échéance peut ne pas être à jour");
+  });
+
+  it("sans sujet, la phrase des sorties est inchangée", () => {
+    expect(
+      phraseFraicheur({ etat: "perime", sceauPose: "a", sceauAttendu: "b" }),
+    ).toContain("les échéances ci-dessous sont celles d'avant");
   });
 });

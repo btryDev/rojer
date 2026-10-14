@@ -384,7 +384,13 @@ const RELEVE = {
   // permis. NON : fonction AJOUTÉE, appelée par deux pages seulement, aucune
   // fonction existante n'est touchée — la régénération n'écrit rien d'autre.
   // ~~005b4fafbfab216a~~.
-  empreinte: "7d1d30ef2861a9a2",
+  // Recopiée SANS incrément le 2026-10-13 (`lot/dossier-relecture-2`) :
+  // `matching/engine.ts` exporte `LIBELLE_ACTIVITE` et le type `FaitDeclare`,
+  // lus par la seule ligne « Régime » de la grille de relecture
+  // (`pdf/textes-grille-relecture.ts`). NON : deux mots-clés `export`, aucune
+  // valeur ni règle touchée — la régénération n'écrit rien d'autre.
+  // ~~7d1d30ef2861a9a2~~.
+  empreinte: "7e3bde89eb15a58d",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

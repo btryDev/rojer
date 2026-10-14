@@ -35,6 +35,9 @@ import {
   getNomEtablissement,
   getFicheEtablissement,
   getFraicheurCalendrier,
+  getParcEquipements,
+  parcDeLaFiche,
+  parcDepuis,
   listerActions,
   listerEquipements,
   listerVerifications,
@@ -45,6 +48,12 @@ import {
   type VerificationLue,
 } from "./queries";
 import { phraseFraicheur } from "@/lib/calendrier/fraicheur";
+import { estAppareilRetire } from "@/lib/equipements/retrait";
+import {
+  couvertureDeLInventaire,
+  type FaitParc,
+  type ManqueCouverture,
+} from "@/lib/perimetre/couverture";
 import {
   MAJ_DUERP_AMENAGEMENT_IMPORTANT,
   MAJ_DUERP_ANNUELLE,
@@ -139,7 +148,7 @@ function formaterRegimes(f: FicheEtablissement): string {
   return regimes.length > 0 ? regimes.join(" · ") : "aucun régime déclaré";
 }
 
-function formaterFiche(f: FicheEtablissement): string {
+function formaterFiche(f: FicheEtablissement, parc: FaitParc): string {
   // Le nom est déjà porté par le préfixe commun (cf. `avecEtablissement`).
   return [
     `Adresse : ${f.adresse}`,
@@ -151,7 +160,11 @@ function formaterFiche(f: FicheEtablissement): string {
     `SIRET : ${tiret(f.entreprise.siret)}`,
     `Effectif entreprise : ${f.entreprise.effectif}`,
     "",
-    `Équipements déclarés : ${f._count.equipements}`,
+    // En service seulement, comme l'axe `inventaire` : un appareil retiré du
+    // parc garde ses preuves mais n'est plus déclaré (§ 15).
+    `Équipements déclarés en service : ${parc.nbEquipements}${
+      parc.nbRetires > 0 ? ` (${parc.nbRetires} retiré(s) du parc)` : ""
+    }`,
     `Vérifications au calendrier : ${f._count.verifications}`,
     `Actions au plan d'actions : ${f._count.actions}`,
   ].join("\n");
@@ -307,7 +320,9 @@ const outilFiche: OutilMcp<SchemaVide> = {
     // Déjà filtré par `avecEtablissement` ; si l'établissement disparaît
     // entre les deux lectures, même réponse, même marquage.
     if (!fiche) throw new ErreurOutilMcp(MESSAGE_ETABLISSEMENT_INTROUVABLE);
-    return formaterFiche(fiche);
+    // Le parc vient de la fiche elle-même : une lecture, pas deux.
+    const inventaire = inventaireDe(parcDeLaFiche(fiche));
+    return avecInventaire(inventaire, formaterFiche(fiche, inventaire.parc));
   },
 };
 
@@ -409,7 +424,7 @@ export const LIBELLE_CATEGORIE: Record<string, string> = {
 
 const categorieLisible = (c: string) => LIBELLE_CATEGORIE[c] ?? c.toLowerCase();
 
-function formaterEquipements(equipements: EquipementLu[]): string {
+function formaterEquipements(equipements: EquipementLu[], parc: FaitParc): string {
   if (equipements.length === 0) {
     return "Aucun équipement déclaré pour cet établissement.";
   }
@@ -433,7 +448,9 @@ function formaterEquipements(equipements: EquipementLu[]): string {
       e.dateMiseEnService
         ? `en service depuis le ${formaterDateFr(e.dateMiseEnService)}`
         : null,
-      e.actif ? null : "hors service",
+      // Le mot de `equipements/retrait.ts` : retiré, pas « hors service »,
+      // qui laissait croire à une remise en service possible.
+      estAppareilRetire(e) ? "retiré du parc" : null,
     ]
       .filter(Boolean)
       .join(" · ");
@@ -441,9 +458,13 @@ function formaterEquipements(equipements: EquipementLu[]): string {
     return `• ${e.libelle} — ${details}\n  ${etat}`;
   });
 
-  return [`${equipements.length} équipement(s) déclaré(s).`, "", ...lignes].join(
-    "\n",
-  );
+  // Un appareil retiré n'est pas compté comme déclaré (§ 15, axe `inventaire`) :
+  // il reste listé, ses preuves existent, mais à part.
+  const entete =
+    parc.nbRetires > 0
+      ? `${parc.nbEquipements} équipement(s) déclaré(s) en service, ${parc.nbRetires} retiré(s) du parc.`
+      : `${equipements.length} équipement(s) déclaré(s).`;
+  return [entete, "", ...lignes].join("\n");
 }
 
 const LIBELLE_ETAT: Record<VerificationLue["etat"], string> = {
@@ -544,7 +565,15 @@ const outilEquipements: OutilMcp<SchemaVide> = {
   schema: SCHEMA_VIDE,
   executer: async (ctx) => {
     const equipements = await listerEquipements(ctx.scope.etablissementId, ctx.now);
-    return formaterEquipements(equipements);
+    // Le parc se déduit de la liste rendue : ni seconde lecture, ni écart
+    // possible entre ce qui est listé et ce que la phrase affirme.
+    const inventaire = inventaireDe(parcDepuis(equipements));
+    // Liste vide ET fait d'inventaire : la phrase de l'axe dit déjà « aucun
+    // équipement n'est déclaré », la répéter dessous n'ajouterait rien.
+    if (equipements.length === 0 && inventaire.manque) {
+      return phraseInventaire(inventaire.manque);
+    }
+    return avecInventaire(inventaire, formaterEquipements(equipements, inventaire.parc));
   },
 };
 
@@ -595,6 +624,44 @@ async function avecFraicheur(
   return phrase === null ? rendu : `${phrase}\n\n${rendu}`;
 }
 
+/** Le parc lu, et le fait d'inventaire qu'en tire l'axe des écrans. */
+type InventaireLu = { parc: FaitParc; manque: ManqueCouverture | null };
+
+/**
+ * Le fait « aucun équipement déclaré », par la fonction des écrans.
+ *
+ * `docs/chantiers-ouverts.md` § 15 : les écrans le disaient depuis le
+ * 2026-09-26, le serveur non — à un dossier sans équipement, l'assistant
+ * rendait des listes vides, lisibles « rien à faire ». La règle et la phrase
+ * restent dans `perimetre/couverture.ts` (`couvertureDeLInventaire`) ; ce
+ * fichier ne collecte que le parc, à la portée du jeton.
+ */
+async function lireInventaire(etablissementId: string): Promise<InventaireLu> {
+  return inventaireDe(await getParcEquipements(etablissementId));
+}
+
+function inventaireDe(parc: FaitParc): InventaireLu {
+  return { parc, manque: couvertureDeLInventaire(parc) };
+}
+
+/** La phrase de l'axe, motif puis conséquence — ce que l'écran « Préparer un
+ *  contrôle » imprime, dans le même ordre. */
+const phraseInventaire = (m: ManqueCouverture) => `${m.motif} ${m.consequence}`;
+
+/**
+ * Préfixe la réponse du fait d'inventaire, quand il y en a un.
+ *
+ * Même place que la fraîcheur, et pour la même raison : un modèle qui tronque
+ * lit le début. Posé quelle que soit la liste — un calendrier qui porte des
+ * obligations d'établissement n'est pas vide, et il tait pourtant tout ce
+ * qu'un équipement porterait.
+ */
+function avecInventaire(inventaire: InventaireLu, rendu: string): string {
+  return inventaire.manque === null
+    ? rendu
+    : `${phraseInventaire(inventaire.manque)}\n\n${rendu}`;
+}
+
 const outilVerifications: OutilMcp<typeof schemaVerifications> = {
   nom: "verifications",
   titre: "Calendrier des vérifications",
@@ -608,14 +675,13 @@ const outilVerifications: OutilMcp<typeof schemaVerifications> = {
     "Attention : Rojer distingue deux échéances qui ne se recouvrent pas. Celles rendues ici sont les échéances des obligations suivies. Les échéances de traitement des actions correctives sont d'autres dates, rendues par l'outil `plan_actions`. Avant de conclure qu'une date n'existe pas dans le dossier, interroger les deux.",
   schema: schemaVerifications,
   executer: async (ctx, args) => {
-    const verifs = await listerVerifications(
-      ctx.scope.etablissementId,
-      args,
-      ctx.now,
-    );
+    const [verifs, inventaire] = await Promise.all([
+      listerVerifications(ctx.scope.etablissementId, args, ctx.now),
+      lireInventaire(ctx.scope.etablissementId),
+    ]);
     return avecFraicheur(
       ctx.scope.etablissementId,
-      formaterVerifications(verifs, avecFiltre(args)),
+      avecInventaire(inventaire, formaterVerifications(verifs, avecFiltre(args))),
     );
   },
 };

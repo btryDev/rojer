@@ -156,6 +156,11 @@ export const LABEL_ITEM: Record<SidebarItemId, string> = {
   "carnet-sanitaire": "Carnet sanitaire",
 };
 
+/** Ce que dit la pastille neutre du calendrier, en infobulle et aux
+ *  technologies d'assistance. Elle nomme le geste qui la lève. */
+export const LIBELLE_CALENDRIER_A_METTRE_A_JOUR =
+  "Calendrier à mettre à jour : ouvrez le tableau de bord ou le calendrier";
+
 export type SidebarCounts = {
   equipements?: number;
   /** Échéances dépassées, **toutes familles** (vérifications + registre
@@ -163,6 +168,11 @@ export type SidebarCounts = {
    *  compteurs voisins de périmètres différents se sont déjà contredits
    *  une fois (ADR-015). Cf. `repartirRetards`. */
   enRetardTotal?: number;
+  /** Le calendrier n'est pas à jour (`fraicheurCalendrier` : périmé, jamais
+   *  calculé, calcul échoué) : `enRetardTotal` compterait les lignes d'avant.
+   *  À `true`, la pastille du calendrier ne porte AUCUN nombre — même si un
+   *  appelant en passait un (2026-10-13). */
+  calendrierAMettreAJour?: boolean;
   actions?: number;
   prestatairesAlertes?: number;
   /** Parmi eux, ceux dont une pièce est EN RETARD (expirée, à redemander) :
@@ -220,6 +230,9 @@ export type NavItem = {
   Icon: typeof LayoutDashboard;
   count?: number;
   alert?: boolean;
+  /** À la place d'un nombre qu'on ne peut pas défendre : une pastille
+   *  neutre, et ce libellé en infobulle et pour les lecteurs d'écran. */
+  aMettreAJour?: string;
   /** Destination pas encore implémentée : rendue inerte et signalée comme
    *  telle plutôt qu'en lien mort indiscernable d'un lien réel. */
   bientot?: boolean;
@@ -288,8 +301,14 @@ export function construireSections({
       label: LABEL_ITEM.calendrier,
       href: href("/calendrier"),
       Icon: Calendar,
-      count: counts?.enRetardTotal,
-      alert: (counts?.enRetardTotal ?? 0) > 0,
+      ...(counts?.calendrierAMettreAJour
+        ? // Ni nombre ni alerte : le compte serait celui d'avant le
+          // changement de référentiel ou de moteur.
+          { aMettreAJour: LIBELLE_CALENDRIER_A_METTRE_A_JOUR }
+        : {
+            count: counts?.enRetardTotal,
+            alert: (counts?.enRetardTotal ?? 0) > 0,
+          }),
     },
     {
       id: "actions",

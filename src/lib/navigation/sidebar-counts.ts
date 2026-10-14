@@ -15,12 +15,16 @@ import { compterEnRetardParFamille } from "@/lib/calendrier/retards";
 import { compterActions } from "@/lib/actions/queries";
 import { compterVigilanceParGravite } from "@/lib/prestataires/queries";
 import { compterTitresEnRetard } from "@/lib/salaries/queries";
+import {
+  calendrierIncertain,
+  fraicheurCalendrier,
+} from "@/lib/calendrier/fraicheur";
 
 export async function chargerSidebarCounts(
   etablissementId: string,
 ): Promise<SidebarCounts> {
   const now = new Date();
-  const [retards, actions, vigilance, equipements, titresEnRetard] =
+  const [retards, actions, vigilance, equipements, titresEnRetard, fraicheur] =
     await Promise.all([
       compterEnRetardParFamille(etablissementId),
       compterActions(etablissementId),
@@ -31,11 +35,24 @@ export async function chargerSidebarCounts(
       // page à 12.
       prisma.equipement.count({ where: { etablissementId, actif: true } }),
       compterTitresEnRetard(etablissementId, now),
+      // L'âge des lignes que la pastille « en retard » compte. Le layout qui
+      // nous appelle ne répare pas — il tourne EN PARALLÈLE de la page, et
+      // seuls le tableau de bord et le calendrier réparent
+      // (`regeneration-sure.ts`). Une lecture du repère, bornée au
+      // propriétaire par `requireUser`, aucune écriture.
+      fraicheurCalendrier(etablissementId),
     ]);
+
+  // UNE PASTILLE NE DIT JAMAIS UN COMPTE FAUX (2026-10-13). Calendrier
+  // périmé, jamais calculé ou dont le dernier calcul a échoué : le nombre de
+  // retards serait celui d'avant. La pastille se tait sur le nombre et dit
+  // que le calendrier est à mettre à jour (`docs/chantiers-ouverts.md` § 12).
+  const aMettreAJour = calendrierIncertain(fraicheur);
 
   return {
     equipements,
-    enRetardTotal: retards.total,
+    enRetardTotal: aMettreAJour ? undefined : retards.total,
+    calendrierAMettreAJour: aMettreAJour,
     actions: actions.totalACouvrir,
     prestatairesAlertes: vigilance.total,
     prestatairesEnRetard: vigilance.enRetard,
