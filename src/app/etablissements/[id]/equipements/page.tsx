@@ -32,6 +32,7 @@ import {
   equipementsSansEcheance,
 } from "@/lib/equipements/hors-referentiel";
 import { avecProvenance, origineDepuis } from "@/lib/navigation/provenance";
+import { questionsExigeesParCategorie } from "@/lib/equipements/reponses-exigees";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
 import {
   fraicheurCalendrier,
@@ -242,6 +243,9 @@ export default async function EquipementsPage({
             <PreRemplissagePanel
               etablissementId={id}
               suggestions={suggestionsRestantes}
+              // 2026-10-13 (option 2) : les questions exigées dans le régime
+              // de l'établissement, que le panneau pose à côté de la case.
+              questionsExigees={questionsExigeesParCategorie(etab)}
             />
           </div>
         )}
