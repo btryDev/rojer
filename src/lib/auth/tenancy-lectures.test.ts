@@ -174,22 +174,15 @@ const EXEMPTIONS = new Map<string, Exemption>([
     "lib/auth/actions.ts:signOutAction",
     { garde: "supabase.auth", raison: "Déconnexion : ne lit aucune donnée de dossier." },
   ],
-  [
-    "lib/signatures/actions.ts:verifierIntegriteSignature",
-    {
-      garde: "enPreuve",
-      raison:
-        "Vérification publique d'une preuve (ADR-006, page /verifier/[id]) : " +
-        "lit la signature par son identifiant non énumérable et ne rend que la " +
-        "projection `enPreuve`.",
-    },
-  ],
 ]);
 
 /** Taille figée : on retire une exemption, on n'en ajoute pas sans le voir. */
 // ~~15~~ → 16 le 2026-10-14 (intégration) : `mcp/queries.ts:getParcEquipements`,
 // entrée par `lot/mcp-inventaire` sous la même garde que ses sept sœurs MCP.
-const PLAFOND_EXEMPTIONS = 16;
+// ~~16~~ → 15 le 2026-10-14 (`lot/nextjs-securite-1014`) :
+// `verifierIntegriteSignature` n'est plus une action serveur
+// (`signatures/verification-publique.ts`).
+const PLAFOND_EXEMPTIONS = 15;
 
 const RACINE = join(process.cwd(), "src/lib");
 const SRC = join(process.cwd(), "src");

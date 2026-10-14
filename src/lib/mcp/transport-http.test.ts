@@ -29,6 +29,13 @@ const { prismaMock } = vi.hoisted(() => ({
   },
 }));
 
+// La limitation de débit écrit en base : neutralisée ici, éprouvée par
+// `mcp/limite-debit-mcp.test.ts` et `securite/limite-debit*.test.ts`.
+vi.mock("@/lib/securite/limite-debit", async (original) => ({
+  ...(await original<typeof import("@/lib/securite/limite-debit")>()),
+  consommer: async () => ({ ok: true }),
+}));
+
 vi.mock("./prisma", () => ({ prismaMcp: prismaMock }));
 
 process.env.MCP_CLE = CLE;

@@ -198,7 +198,11 @@ un critère de recette.
 - **B2 — Origine.** `baseURL` et `trustedOrigins` sont fixés côté serveur, depuis
   `PUBLIC_APP_URL`. Aucune URL de lien envoyé par e-mail ne vient d'une requête.
   Le chemin de retour après connexion passe par le filtre de C1 et C2.
-- **B3 — Limitation de débit.** Le rate limiter de Better Auth est activé sur la
+- **B3 — Limitation de débit.** *[2026-10-14, `lot/nextjs-securite-1014` :
+  faite côté app sans attendre la bascule — table `LimiteDebit`, connexion,
+  inscription, réinitialisation, `/verifier`, MCP ; détail au M11 de
+  `audit-nextjs-2026-10-14.md`. Restent pour la bascule : le plafond de renvois
+  d'OTP par jeton et la lecture de l'IP derrière le répartiteur CC.]* Le rate limiter de Better Auth est activé sur la
   connexion, l'inscription et la réinitialisation, et adossé à la base, pas à la
   mémoire d'une instance. L'IP réelle est lue derrière le proxy Clever Cloud
   (`X-Forwarded-For` de confiance). Mettre aussi un plafond total de renvois
