@@ -1275,6 +1275,7 @@ model AccessToken {
 
   @@index([etablissementId])
   @@index([objetType, objetId])
+  @@index([prestataireId])
 }
 
 /// Le plafond des envois de code de confirmation, PAR ADRESSE (ADR-006,
@@ -1455,6 +1456,7 @@ model PermisFeu {
   @@index([etablissementId, dateDebut])
   @@index([statut])
   @@index([batimentId])
+  @@index([prestataireId])
 }
 
 enum NatureTravauxPointChaud {
@@ -1589,6 +1591,7 @@ model PlanPrevention {
   @@unique([etablissementId, numero])
   @@index([etablissementId, dateDebut])
   @@index([batimentId])
+  @@index([prestataireId])
 }
 
 model LignePlanPrevention {
