@@ -287,3 +287,28 @@ describe("useLayoutPerso — migration et normalisation", () => {
     ]);
   });
 });
+
+describe("disposition lue dans le cookie (B9)", () => {
+  it("relit au serveur la disposition écrite par le client", () => {
+    // Le client écrit `encodeURIComponent(JSON)`, Next décode la valeur
+    // avant `cookies().get()`.
+    const ecrit = {
+      version: SCHEMA_VERSION,
+      items: [
+        { widgetId: "guide", variant: "default" },
+        { widgetId: "score", variant: "anneau" },
+      ],
+    };
+    const valeur = decodeURIComponent(encodeURIComponent(JSON.stringify(ecrit)));
+    expect(
+      __internal.lireLayoutCookie(valeur)?.items.map((i) => i.widgetId),
+    ).toEqual(["equipements-grid", "guide", "score"]);
+  });
+
+  it("retombe sur le défaut (null) sans cookie ou sur une valeur illisible", () => {
+    expect(__internal.lireLayoutCookie(null)).toBeNull();
+    expect(__internal.lireLayoutCookie("")).toBeNull();
+    expect(__internal.lireLayoutCookie("{pas du json")).toBeNull();
+    expect(__internal.lireLayoutCookie(JSON.stringify({ version: 1, items: [] }))).toBeNull();
+  });
+});

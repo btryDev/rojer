@@ -1,7 +1,10 @@
 "use client";
 
-// Persistance locale du layout perso du tableau de bord.
-// Clé : `duerp.dashboard.<etablissementId>`.
+// Persistance du layout perso du tableau de bord, dans un cookie par
+// établissement (`cookie-layout.ts`) que le serveur lit pour rendre
+// d'emblée la bonne disposition. L'ancienne clé `localStorage`
+// `duerp.dashboard.<etablissementId>` n'est plus que relue, une fois, pour
+// reprendre une disposition faite avant le cookie.
 // Schéma versionné — quand la structure change, on incrémente
 // SCHEMA_VERSION et on fournit une fonction de migration dans
 // `migrerLayout`. Les clients obsolètes retombent sur les défauts
@@ -14,11 +17,13 @@ import {
   variantValide,
   type WidgetId,
 } from "./registry";
+import { cheminCookieLayout, nomCookieLayout } from "./cookie-layout";
 import type { LayoutItem, PersistedLayout } from "./types";
 
 export const SCHEMA_VERSION = 3;
 
-function cle(etablissementId: string): string {
+/** Ancienne clé `localStorage`, relue seulement pour la reprise. */
+function cleStorage(etablissementId: string): string {
   return `duerp.dashboard.${etablissementId}`;
 }
 
@@ -146,59 +151,72 @@ function migrerLayout(brut: unknown): PersistedLayout | null {
   return null;
 }
 
-function lireDepuisStorage(
-  etablissementId: string,
-): PersistedLayout | null {
-  if (typeof window === "undefined") return null;
+/** Lit la valeur du cookie (déjà décodée par Next côté serveur). Même
+ *  entrée, même sortie au serveur et à l'hydratation : pas de désaccord. */
+function lireLayoutCookie(valeur: string | null): PersistedLayout | null {
+  if (!valeur) return null;
   try {
-    const raw = window.localStorage.getItem(cle(etablissementId));
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    return migrerLayout(parsed);
+    return migrerLayout(JSON.parse(valeur));
   } catch {
     return null;
   }
 }
 
-function ecrireDansStorage(
-  etablissementId: string,
-  layout: PersistedLayout,
-) {
-  if (typeof window === "undefined") return;
+const UN_AN_EN_SECONDES = 60 * 60 * 24 * 365;
+
+function ecrireLayoutCookie(etablissementId: string, layout: PersistedLayout) {
+  if (typeof document === "undefined") return;
+  const secure = window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie =
+    `${nomCookieLayout(etablissementId)}=${encodeURIComponent(JSON.stringify(layout))}` +
+    `; Path=${cheminCookieLayout(etablissementId)}` +
+    `; Max-Age=${UN_AN_EN_SECONDES}; SameSite=Lax${secure}`;
+}
+
+/** Reprise, une fois, d'une disposition enregistrée avant le cookie. La
+ *  clé est retirée : le cookie, écrit juste après, prend le relais. */
+function reprendreDuStorage(etablissementId: string): PersistedLayout | null {
   try {
-    window.localStorage.setItem(
-      cle(etablissementId),
-      JSON.stringify(layout),
-    );
+    const raw = window.localStorage.getItem(cleStorage(etablissementId));
+    if (!raw) return null;
+    window.localStorage.removeItem(cleStorage(etablissementId));
+    return migrerLayout(JSON.parse(raw));
   } catch {
-    // quota dépassé, mode privé, etc. — on avale silencieusement, le
-    // layout sera simplement non persistant pour cette session.
+    return null;
   }
 }
 
-export function useLayoutPerso(etablissementId: string) {
-  const [layout, setLayout] = useState<PersistedLayout>(() => ({
-    version: SCHEMA_VERSION,
-    items: layoutParDefaut(),
-  }));
+export function useLayoutPerso(
+  etablissementId: string,
+  layoutCookie: string | null,
+) {
+  // Le premier rendu — serveur et hydratation — part du cookie : la
+  // disposition affichée est d'emblée la bonne.
+  const [layout, setLayout] = useState<PersistedLayout>(
+    () =>
+      lireLayoutCookie(layoutCookie) ?? {
+        version: SCHEMA_VERSION,
+        items: layoutParDefaut(),
+      },
+  );
   const initialise = useRef(false);
 
-  // Hydratation : après le premier rendu côté client, on lit le storage.
-  // On évite le mismatch SSR/CSR en conservant le layout par défaut au
-  // premier rendu.
+  // Sans cookie seulement : reprise d'une disposition du `localStorage`
+  // (avant B9). Elle ne peut se lire qu'après montage — c'est le seul cas
+  // où la disposition change encore après le premier affichage, une fois.
   useEffect(() => {
-    const stored = lireDepuisStorage(etablissementId);
-    // Motif d'hydratation assumé : le premier rendu (SSR compris) sert
-    // le layout par défaut, le storage n'est relu qu'après montage.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (stored) setLayout(stored);
+    if (layoutCookie === null) {
+      const repris = reprendreDuStorage(etablissementId);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (repris) setLayout(repris);
+    }
     initialise.current = true;
-  }, [etablissementId]);
+  }, [etablissementId, layoutCookie]);
 
-  // Écriture : dès qu'on a hydraté, chaque changement part en storage.
+  // Écriture : après montage, chaque changement part dans le cookie.
   useEffect(() => {
     if (!initialise.current) return;
-    ecrireDansStorage(etablissementId, layout);
+    ecrireLayoutCookie(etablissementId, layout);
   }, [etablissementId, layout]);
 
   const actif = useMemo(
@@ -264,4 +282,4 @@ export function useLayoutPerso(etablissementId: string) {
 }
 
 // Exports pour les tests unitaires
-export const __internal = { migrerLayout, normaliser };
+export const __internal = { migrerLayout, normaliser, lireLayoutCookie };
