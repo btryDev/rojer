@@ -204,6 +204,7 @@ describe("les actions lisent le maximum", () => {
   it("modifierPointReleve : préciser le type d'un point recalcule ses relevés sur le maximum", async () => {
     h.reponses["pointReleve.findFirst"] = () => ({
       id: "pt_1",
+      typePoint: null,
       releves: [
         { id: "r_45", temperatureCelsius: 45 },
         { id: "r_58", temperatureCelsius: 58 },
@@ -230,8 +231,26 @@ describe("les actions lisent le maximum", () => {
     });
   });
 
+  it("modifierPointReleve : le type d'un point typé ne se retire pas, rien n'est écrit", async () => {
+    h.reponses["pointReleve.findFirst"] = () => ({
+      id: "pt_1",
+      typePoint: "PUISAGE_TOILETTE",
+      releves: [{ id: "r_58", temperatureCelsius: 58 }],
+    });
+    // Envoi forgé : le formulaire ne propose pas « non précisé » à un point typé.
+    const r = await modifierPointReleve(
+      "e1",
+      "pt_1",
+      idle,
+      fd({ nom: "Douche", localisation: "", batimentId: "", typePoint: "", typeReseau: "ECS", seuilMinCelsius: "50" }),
+    );
+    expect(r).toMatchObject({ status: "error", fieldErrors: { typePoint: expect.any(Array) } });
+    expect(ops("pointReleve.update")).toEqual([]);
+    expect(ops("releveTemperature.update")).toEqual([]);
+  });
+
   it("modifierPointReleve : un point d'avant le type peut le rester, et garde son réseau", async () => {
-    h.reponses["pointReleve.findFirst"] = () => ({ id: "pt_1", releves: [] });
+    h.reponses["pointReleve.findFirst"] = () => ({ id: "pt_1", typePoint: null, releves: [] });
     const r = await modifierPointReleve(
       "e1",
       "pt_1",

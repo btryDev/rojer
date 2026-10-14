@@ -95,6 +95,7 @@ describe("modifierPointReleve", () => {
   it("le seuil et le type recalculent la plage de chaque relevé du point", async () => {
     h.reponses["pointReleve.findFirst"] = () => ({
       id: "pt_1",
+      typePoint: null,
       releves: [
         { id: "r_52", temperatureCelsius: 52 },
         { id: "r_53", temperatureCelsius: 53 },

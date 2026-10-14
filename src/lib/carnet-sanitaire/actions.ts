@@ -141,9 +141,22 @@ export async function modifierPointReleve(
   if (!parsed.success) return formulaireInvalide(parsed.error.flatten().fieldErrors);
   const point = await prisma.pointReleve.findFirst({
     where: { id: pointId, actif: true, carnet: { etablissementId } },
-    select: { id: true, releves: { select: { id: true, temperatureCelsius: true } } },
+    select: {
+      id: true,
+      typePoint: true,
+      releves: { select: { id: true, temperatureCelsius: true } },
+    },
   });
   if (!point) return { status: "error", message: "Point de relevé introuvable" };
+  // Un type précisé ne se retire pas (revue du 2026-10-14) : « non précisé »
+  // n'existe que pour les points d'avant le type. Le formulaire ne le propose
+  // pas ; un envoi forgé avec `typePoint=""` le pouvait, et rendait au point
+  // le réseau qu'on lui envoyait.
+  if (point.typePoint !== null && !parsed.data.typePoint) {
+    return formulaireInvalide({
+      typePoint: ["Le type d'un point déjà précisé ne peut pas être retiré."],
+    });
+  }
   const batiment = await resoudreBatimentOptionnel(
     etablissementId,
     parsed.data.batimentId,
