@@ -47,20 +47,41 @@ const inscriptionSchema = z.object({
  * B3 / B14). Rend le message à afficher si la limite est atteinte.
  *
  * Pas d'énumération : la clé « compte » est l'adresse SAISIE, qu'un compte
- * existe ou non — la réponse est la même dans les deux cas. Une action serveur
+ * existe ou non — la réponse est la même dans les deux cas.
+ *
+ * `parIp` sur le compte (connexion) : la clé devient « adresse + IP ». Comptée
+ * sur l'adresse seule, la limite se consomme avant le fournisseur, réussites
+ * comme échecs : dix essais d'un tiers par quart d'heure suffisaient à refuser
+ * indéfiniment à la titulaire son propre mot de passe, depuis n'importe quelle
+ * IP (revue de l'intégration Next.js du 2026-10-14, C1). Liée à l'IP, elle ne
+ * bloque que celui qui insiste ; un essai distribué reste borné par la limite
+ * par IP. La réinitialisation garde l'adresse seule : ce qu'elle protège est
+ * la boîte de la titulaire contre l'envoi en rafale, et la refuser n'empêche
+ * pas de se connecter. Une action serveur
  * ne choisit pas son statut HTTP : le refus est un message du formulaire, pas
  * un 429.
  */
 async function refusParLimite(
   action: string,
   parIp: Limite,
-  compte?: { adresse: string; limite: Limite },
+  compte?: { adresse: string; limite: Limite; parIp?: boolean },
 ): Promise<string | null> {
   const ip = ipClient(await headers());
   const demandes = [
     ...(ip ? [{ cle: cleLimite(action, "ip", ip), limite: parIp }] : []),
     ...(compte
-      ? [{ cle: cleLimite(action, "compte", compte.adresse.trim().toLowerCase()), limite: compte.limite }]
+      ? [
+          {
+            cle: cleLimite(
+              action,
+              "compte",
+              compte.parIp && ip
+                ? `${compte.adresse.trim().toLowerCase()}|${ip}`
+                : compte.adresse.trim().toLowerCase(),
+            ),
+            limite: compte.limite,
+          },
+        ]
       : []),
   ];
   if (demandes.length === 0) return null;
@@ -95,6 +116,7 @@ export async function signInAction(
   const limite = await refusParLimite("connexion", LIMITES.connexionIp, {
     adresse: parsed.data.email,
     limite: LIMITES.connexionCompte,
+    parIp: true,
   });
   if (limite) return { error: limite };
 

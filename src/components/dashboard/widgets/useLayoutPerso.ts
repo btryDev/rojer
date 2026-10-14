@@ -77,7 +77,7 @@ function epingler(items: LayoutItem[]): LayoutItem[] {
 function normaliser(items: LayoutItem[]): LayoutItem[] {
   const valides = items
     .filter(
-      (it): it is LayoutItem => typeof it?.widgetId === "string" && it.widgetId in REGISTRY,
+      (it): it is LayoutItem => typeof it?.widgetId === "string" && Object.hasOwn(REGISTRY, it.widgetId),
     )
     .map((it) => {
       const def = REGISTRY[it.widgetId];

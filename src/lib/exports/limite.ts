@@ -8,9 +8,10 @@ import "server-only";
  * qu'elle tourne, la boucle d'événements ne sert personne d'autre — mesuré
  * jusqu'à 250 ms d'un tenant par PDF, 470 ms avec quatre ZIP lancés ensemble
  * (`scripts/mesure-exports.ts`). Et quatre ZIP construits ensemble montaient
- * le processus à 1,8 Go. Sur Vercel chaque requête a son instance ; sur un
- * Node permanent à une instance (Clever Cloud), tous les utilisateurs
- * partagent cette boucle et cette mémoire.
+ * le processus à 1,8 Go. Sur Vercel (Fluid Compute), une instance sert
+ * déjà plusieurs requêtes à la fois, et le sémaphore s'y applique par
+ * instance ; sur un Node permanent à une instance (Clever Cloud), tous les
+ * utilisateurs partagent cette boucle et cette mémoire.
  *
  * LE REMÈDE ICI. Un sémaphore de processus, partagé par toutes les routes
  * d'export : au plus `EXPORTS_SIMULTANES` exports à la fois, quelques-uns en

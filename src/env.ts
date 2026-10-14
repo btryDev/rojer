@@ -129,19 +129,6 @@ export function validerEnvironnement(env: Env = process.env): EnvValide {
     ? []
     : r.error.issues.map((i) => ({ variable: String(i.path[0] ?? "?"), message: i.message }));
 
-  // Hors du schéma, et non en `superRefine` : zod n'exécute pas un raffinement
-  // d'objet quand un champ a déjà échoué, et `APP_ENV` ne serait signalée qu'au
-  // second démarrage. Toutes les fautes sortent en une fois.
-  if (vide(env.NODE_ENV) === "production" && !vide(env.APP_ENV) && !vide(env.VERCEL_ENV)) {
-    fautes.push({
-      variable: "APP_ENV",
-      message:
-        "absente : un serveur de production hors Vercel doit dire ce qu'il est " +
-        "(production | preview | development). Sans elle, la réparation du " +
-        "calendrier ne s'exécute jamais (lib/environnement.ts)",
-    });
-  }
-
   if (r.success && fautes.length === 0) return r.data;
 
   const lignes = fautes.map((f) => `  - ${f.variable} : ${f.message}`);
@@ -154,8 +141,32 @@ export function validerEnvironnement(env: Env = process.env): EnvValide {
   );
 }
 
+/**
+ * Ce qui se signale sans empêcher de servir. `APP_ENV` absente d'une
+ * production qui ne se dit pas Vercel : l'environnement est alors
+ * « indéterminé », et `lib/environnement.ts` en tire déjà le défaut sûr — la
+ * réparation automatique du calendrier ne s'exécute pas. Rien d'autre n'en
+ * dépend. En faire une faute fermait TOUTE la prod (500 partout) dès que
+ * Vercel n'expose pas ses variables système à l'exécution — réglage de projet
+ * qu'aucune ligne du dépôt ne garantit (revue de l'intégration Next.js du
+ * 2026-10-14, B1). La sanction doit être à la mesure de la conséquence.
+ */
+export function avertissementsEnvironnement(env: Env = process.env): string[] {
+  if (vide(env.NODE_ENV) === "production" && !vide(env.APP_ENV) && !vide(env.VERCEL_ENV)) {
+    return [
+      "APP_ENV absente : un serveur de production hors Vercel doit dire ce qu'il est " +
+        "(production | preview | development). Sans elle, la réparation automatique " +
+        "du calendrier ne s'exécute pas (lib/environnement.ts).",
+    ];
+  }
+  return [];
+}
+
 /** Appelé par `register()` ; ne fait rien pendant `next build`. */
 export function validerEnvironnementAuDemarrage(env: Env = process.env): void {
   if (env.NEXT_PHASE === "phase-production-build") return;
   validerEnvironnement(env);
+  for (const message of avertissementsEnvironnement(env)) {
+    console.warn(JSON.stringify({ type: "avertissement_environnement", message }));
+  }
 }

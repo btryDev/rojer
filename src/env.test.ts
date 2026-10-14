@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { ErreurEnvironnement, validerEnvironnement, validerEnvironnementAuDemarrage } from "./env";
+import {
+  ErreurEnvironnement,
+  avertissementsEnvironnement,
+  validerEnvironnement,
+  validerEnvironnementAuDemarrage,
+} from "./env";
 
 // Validation au démarrage (audit Next.js du 2026-10-14, M6). Ce qu'on éprouve :
 // une variable requise manquante est NOMMÉE, sa valeur jamais citée ; une
@@ -58,11 +63,16 @@ describe("validerEnvironnement", () => {
     ).not.toThrow();
   });
 
-  it("exige APP_ENV d'une production hors Vercel, pas d'une production Vercel", () => {
+  // APP_ENV absente d'une production non Vercel : un avertissement, pas une
+  // faute — en faire une faute fermait toute la prod si Vercel n'exposait pas
+  // ses variables système (revue du 2026-10-14, B1).
+  it("signale APP_ENV d'une production hors Vercel sans fermer le serveur", () => {
     const prod = { ...BASE, NODE_ENV: "production" };
-    expect(erreurDe(prod).variables).toEqual(["APP_ENV"]);
-    expect(() => validerEnvironnement({ ...prod, VERCEL_ENV: "production" })).not.toThrow();
-    expect(() => validerEnvironnement({ ...prod, APP_ENV: "production" })).not.toThrow();
+    expect(() => validerEnvironnement(prod)).not.toThrow();
+    expect(avertissementsEnvironnement(prod)).toHaveLength(1);
+    expect(avertissementsEnvironnement(prod)[0]).toMatch(/^APP_ENV absente/);
+    expect(avertissementsEnvironnement({ ...prod, VERCEL_ENV: "production" })).toEqual([]);
+    expect(avertissementsEnvironnement({ ...prod, APP_ENV: "production" })).toEqual([]);
   });
 });
 
@@ -81,8 +91,11 @@ describe("validerEnvironnementAuDemarrage", () => {
 });
 
 describe("toutes les fautes en une fois", () => {
-  it("signale APP_ENV avec une requise manquante, pas au démarrage suivant", () => {
-    const e = erreurDe({ NODE_ENV: "production", DATABASE_URL: BASE.DATABASE_URL, NEXT_PUBLIC_SUPABASE_URL: BASE.NEXT_PUBLIC_SUPABASE_URL });
-    expect(e.variables.sort()).toEqual(["APP_ENV", "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"]);
+  it("nomme toutes les requises manquantes en une fois", () => {
+    const e = erreurDe({ NODE_ENV: "production", DATABASE_URL: BASE.DATABASE_URL });
+    expect(e.variables.sort()).toEqual([
+      "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+      "NEXT_PUBLIC_SUPABASE_URL",
+    ]);
   });
 });

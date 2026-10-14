@@ -311,4 +311,19 @@ describe("disposition lue dans le cookie (B9)", () => {
     expect(__internal.lireLayoutCookie("{pas du json")).toBeNull();
     expect(__internal.lireLayoutCookie(JSON.stringify({ version: 1, items: [] }))).toBeNull();
   });
+
+  // Le cookie se lit au serveur : une propriété héritée du registre
+  // (`__proto__`, `toString`) passait `in REGISTRY` et faisait planter le
+  // rendu du board pour la durée du cookie, un an (revue du 2026-10-14, C2).
+  it("écarte les identifiants hérités du prototype", () => {
+    for (const piege of ["__proto__", "toString", "constructor", "hasOwnProperty"]) {
+      const valeur = JSON.stringify({
+        version: SCHEMA_VERSION,
+        items: [{ widgetId: piege }, { widgetId: "guide", variant: "default" }],
+      });
+      expect(
+        __internal.lireLayoutCookie(valeur)?.items.map((i) => i.widgetId),
+      ).toEqual(["equipements-grid", "guide"]);
+    }
+  });
 });

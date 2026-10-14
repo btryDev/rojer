@@ -226,6 +226,35 @@ describe("limitation de débit des parcours d'entrée", () => {
     expect(premier.join()).not.toMatch(/exemple|203\.0/);
   });
 
+  it("connexion : la clé de compte est liée à l'IP — un tiers ne bloque pas la titulaire", async () => {
+    const entetes = h.entetes;
+    await signInAction({}, formulaire({ email: "a@exemple.fr", password: "x" })).catch(() => {});
+    h.entetes = new Headers({ "x-forwarded-for": "198.51.100.9" });
+    try {
+      await signInAction({}, formulaire({ email: "a@exemple.fr", password: "x" })).catch(() => {});
+    } finally {
+      h.entetes = entetes;
+    }
+    const [depuisA, depuisB] = h.limite.mock.calls.map((c) => c[0].map((d) => d.cle));
+    expect(depuisA[1]).toMatch(/^connexion:compte:/);
+    expect(depuisB[1]).not.toEqual(depuisA[1]);
+  });
+
+  it("réinitialisation : la clé de compte reste l'adresse seule (boîte de la titulaire)", async () => {
+    vi.stubEnv("PUBLIC_APP_URL", "https://app.rojer.fr");
+    const entetes = h.entetes;
+    await requestPasswordResetAction({}, formulaire({ email: "a@exemple.fr" })).catch(() => {});
+    h.entetes = new Headers({ "x-forwarded-for": "198.51.100.9" });
+    try {
+      await requestPasswordResetAction({}, formulaire({ email: "a@exemple.fr" })).catch(() => {});
+    } finally {
+      h.entetes = entetes;
+    }
+    const [depuisA, depuisB] = h.limite.mock.calls.map((c) => c[0].map((d) => d.cle));
+    expect(depuisA[1]).toMatch(/^reinitialisation:compte:/);
+    expect(depuisB[1]).toEqual(depuisA[1]);
+  });
+
   it("le même refus, que le compte existe ou non : la clé est l'adresse saisie", async () => {
     h.limite.mockResolvedValue(refus);
     const inconnu = await signInAction({}, formulaire({ email: "inconnu@exemple.fr", password: "x" }));
