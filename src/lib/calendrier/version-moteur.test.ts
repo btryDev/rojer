@@ -412,7 +412,12 @@ const RELEVE = {
   // à `rapports/resultats.ts` (sans zod) ; le générateur, `decision-par-faits`,
   // `echeance-de-ligne` et `derniere-realisation` les y prennent. NON :
   // extraction, mêmes valeurs, mêmes appelants. ~~c8f112a346c9ac63~~.
-  empreinte: "adf2b7f801f974e6",
+  // Recopiée SANS incrément le 2026-10-14 (`lot/nextjs-client-1014`, audit
+  // Next.js B1) : `calendrier/actions.ts` perd sa directive `"use server"` et
+  // gagne `import "server-only"` — ses deux fonctions ne sont plus des
+  // actions appelables depuis le navigateur. NON : aucune instruction de la
+  // passe ne change. ~~adf2b7f801f974e6~~.
+  empreinte: "02fa4e7ac8212555",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

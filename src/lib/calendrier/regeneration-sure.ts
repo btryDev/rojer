@@ -14,7 +14,8 @@
 //
 // CE MODULE N'EST PAS UN `"use server"`, comme `reconciliation.ts` et pour la
 // même raison : une fonction exportée d'un fichier d'actions devient un point
-// d'entrée appelable depuis le navigateur. Il est ici, entre les deux, pour
+// d'entrée appelable depuis le navigateur. [2026-10-14 : `actions.ts` non plus,
+// depuis l'audit Next.js (B1) — il n'en avait gardé que la directive.] Il est ici, entre les deux, pour
 // n'introduire aucun cycle — `regeneration-sure` → `actions` → `reconciliation`,
 // et `regeneration-sure` → `reconciliation`.
 
