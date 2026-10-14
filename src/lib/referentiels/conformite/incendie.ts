@@ -180,7 +180,7 @@ const CATEGORIES_LIVRE_2 = ["N1", "N2", "N3", "N4"] as const;
 
 /** Ce qui vaut pour les cinq lignes, dit une fois. */
 const NOTE_TITRE_2_COMMUNE =
-  "DÉCISION DE LA PROPRIÉTAIRE DU 2026-10-14 (exception explicite à « l'encodage est terminé »). Le titre II du livre II n'avait jamais été ouvert : la cible était N5 seule. Elle est devenue, le 2026-10-12, ce que l'onboarding ne refuse pas, catégories 1 à 4 comprises (ADR-031). Les quatre chapitres des secteurs cibles — M (magasins), N (restaurants), O (hôtels), W (bureaux) — ont été lus en entier le 2026-10-14 par l'API Légifrance (PISTE, bac à sable), cent vingt et une entrées, classées au corpus `arrete-1980-livre-2-titre-2`.\n\n" +
+  "DÉCISION DE LA PROPRIÉTAIRE DU 2026-10-14 (exception explicite à « l'encodage est terminé »). Le titre II du livre II n'avait jamais été ouvert : la cible était N5 seule. Elle est devenue, le 2026-10-12, ce que l'onboarding ne refuse pas, catégories 1 à 4 comprises (ADR-031). Les quatre chapitres des secteurs cibles — M (magasins), N (restaurants), O (hôtels), W (bureaux) — ont été lus en entier le 2026-10-14 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée), cent vingt et une entrées, classées au corpus `arrete-1980-livre-2-titre-2`.\n\n" +
   "BORNE : `categories` N1 à N4 ET `types`. Chaque chapitre ne s'applique qu'au-dessus des seuils de public de son article 1er, c'est-à-dire en catégories 1 à 4 ; en 5ᵉ, PE 1 § 1 écarte le livre II entier. Les autres types n'ont pas été lus : ils ne reçoivent rien. Un `typeErp` non renseigné rejette (restriction `types`, règle du dépôt) ; la base rend l'absence impossible pour un ERP (CHECK `Etablissement_erp_type_categorie_requis`).\n\n" +
   "CE QUE LA BORNE NE SAIT PAS : GN 2 applique à un établissement qui groupe plusieurs exploitations les dispositions de CHACUN de leurs types. `Etablissement.typeErp` n'en porte qu'un, le principal : un magasin avec un espace de restauration ne reçoit que les lignes du type M (`docs/registre-releve-types-erp.md`, D.2).\n\n" +
   "GN 10 cité en description, comme sur les états permanents du livre III : le règlement ne s'applique pas aux établissements existants, hors administratif, contrôles, vérifications et entretien, et le moteur ne lit pas de date d'ouverture. Sur-application visible, assumée sur le même pied que PE 27.";
@@ -591,7 +591,7 @@ export const obligationsIncendie: Obligation[] = [
     domaine: "incendie",
     libelle: "Consigne de sécurité incendie établie et affichée",
     description:
-      "Dans les établissements mentionnés à l'article R. 4227-34 (plus de cinquante personnes occupées ou réunies habituellement, ou manipulation de matières visées par R. 4227-22, quel que soit l'effectif), une consigne de sécurité incendie est établie et affichée de manière très apparente : dans chaque local de plus de cinq personnes et dans les locaux à matières inflammables, sinon dans chaque local ou dégagement desservant un groupe de locaux. Elle indique le matériel d'extinction et de secours, les personnes chargées de l'activer, de diriger l'évacuation des travailleurs et du public, les mesures pour les personnes handicapées, les moyens d'alerte, les personnes chargées d'aviser les sapeurs-pompiers, l'adresse et le numéro du service de secours, et le devoir, pour toute personne apercevant un début d'incendie, de donner l'alarme et de mettre en œuvre les moyens de premier secours sans attendre les travailleurs spécialement désignés (R. 4227-38). « La consigne de sécurité incendie est communiquée à l'inspection du travail. » (R. 4227-40) Les autres établissements établissent de simples instructions d'évacuation. Dans un restaurant ou débit de boissons (type N) des quatre premières catégories, le règlement de sécurité ajoute des consignes spéciales, portées fréquemment à la connaissance du personnel, qui doivent lui rappeler les interdictions suivantes : « faire sécher près des appareils de cuisson des chiffons, des torchons et des serviettes, projeter de la graisse ou de l'huile dans les foyers pour y provoquer des \"coups de feu\", entreposer des emballages vides (même momentanément) dans un local ouvert au public, etc. » (N 20) ; « fréquemment » ne fixe aucun rythme, et Rojer n'en date aucun.",
+      "Dans les établissements mentionnés à l'article R. 4227-34 (plus de cinquante personnes occupées ou réunies habituellement, ou manipulation de matières visées par R. 4227-22, quel que soit l'effectif), une consigne de sécurité incendie est établie et affichée de manière très apparente : dans chaque local de plus de cinq personnes et dans les locaux à matières inflammables, sinon dans chaque local ou dégagement desservant un groupe de locaux. Elle indique le matériel d'extinction et de secours, les personnes chargées de l'activer, de diriger l'évacuation des travailleurs et du public, les mesures pour les personnes handicapées, les moyens d'alerte, les personnes chargées d'aviser les sapeurs-pompiers, l'adresse et le numéro du service de secours, et le devoir, pour toute personne apercevant un début d'incendie, de donner l'alarme et de mettre en œuvre les moyens de premier secours sans attendre les travailleurs spécialement désignés (R. 4227-38). « La consigne de sécurité incendie est communiquée à l'inspection du travail. » (R. 4227-40) Les autres établissements établissent de simples instructions d'évacuation. Dans un établissement recevant du public des quatre premières catégories, le règlement de sécurité veut en outre ces consignes destinées aux personnels conformes à la norme NF S 60-303, constamment mises à jour et affichées sur supports fixes et inaltérables, et qu'elles indiquent aussi l'accueil et le guidage des sapeurs-pompiers (MS 47). Dans un restaurant ou débit de boissons (type N) des quatre premières catégories, le règlement de sécurité ajoute des consignes spéciales, portées fréquemment à la connaissance du personnel, qui doivent lui rappeler les interdictions suivantes : « faire sécher près des appareils de cuisson des chiffons, des torchons et des serviettes, projeter de la graisse ou de l'huile dans les foyers pour y provoquer des \"coups de feu\", entreposer des emballages vides (même momentanément) dans un local ouvert au public, etc. » (N 20) ; « fréquemment » ne fixe aucun rythme, et Rojer n'en date aucun.",
     referencesLegales: [
       {
         source: "CODE_TRAVAIL",
@@ -621,6 +621,17 @@ export const obligationsIncendie: Obligation[] = [
         versionConstatee: "2008-05-01",
       },
       {
+        // 2026-10-14, revue indépendante : contexte — le même écrit, exigé
+        // par le règlement de sécurité dans tout ERP des catégories 1 à 4.
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. MS 47 (consignes destinées aux personnels, constamment mises à jour et affichées) — livre II, établissements des quatre premières catégories seulement",
+        article: "MS 47",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000021231059",
+        note: "« Des consignes précises, conformes à la norme NF S 60-303 du 20 septembre 1987 relative aux plans et consignes de protection contre l'incendie, destinées aux personnels de l'établissement, constamment mises à jour, et affichées sur supports fixes et inaltérables doivent indiquer : […] » Relu le 2026-10-14 par l'API Légifrance (PISTE, bac à sable, égalité avec la production non vérifiée) : LEGIARTI000021231059, en vigueur depuis le 2010-01-23 (arrêté du 24 septembre 2009). La norme n'est pas lue.",
+        versionConstatee: "2010-01-23",
+      },
+      {
         // 2026-10-14, point 5 de la décision de la propriétaire : contexte,
         // jamais fondement — N 20 ne vaut qu'en type N, catégories 1 à 4.
         source: "ARRETE",
@@ -628,7 +639,7 @@ export const obligationsIncendie: Obligation[] = [
           "Arrêté du 25 juin 1980, art. N 20 (consignes spéciales portées fréquemment à la connaissance du personnel) — livre II, titre II, type N : restaurants et débits de boissons des quatre premières catégories seulement",
         article: "N 20",
         url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024752327",
-        note: "« Des consignes spéciales, portées fréquemment à la connaissance du personnel, doivent lui rappeler les interdictions suivantes : faire sécher près des appareils de cuisson des chiffons, des torchons et des serviettes, projeter de la graisse ou de l'huile dans les foyers pour y provoquer des \"coups de feu\", entreposer des emballages vides (même momentanément) dans un local ouvert au public, etc. » Relu le 2026-10-14 par l'API Légifrance (PISTE, bac à sable) : LEGIARTI000024752327, seule version, en vigueur depuis le 1982-08-12 (arrêté du 21 juin 1982). Cité en contexte : il ne vaut qu'en type N des quatre premières catégories, et la phrase de la description le dit.",
+        note: "« Des consignes spéciales, portées fréquemment à la connaissance du personnel, doivent lui rappeler les interdictions suivantes : faire sécher près des appareils de cuisson des chiffons, des torchons et des serviettes, projeter de la graisse ou de l'huile dans les foyers pour y provoquer des \"coups de feu\", entreposer des emballages vides (même momentanément) dans un local ouvert au public, etc. » Relu le 2026-10-14 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000024752327, seule version, en vigueur depuis le 1982-08-12 (arrêté du 21 juin 1982). Cité en contexte : il ne vaut qu'en type N des quatre premières catégories, et la phrase de la description le dit.",
         versionConstatee: "1982-08-12",
       },
     ],
@@ -1743,7 +1754,7 @@ export const obligationsIncendie: Obligation[] = [
           "Arrêté du 25 juin 1980, art. N 17 (employés spécialement désignés, entraînés à la mise en œuvre des moyens de secours) — livre II, titre II, type N, établissements des quatre premières catégories",
         article: "N 17",
         url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024752266",
-        note: "« Des employés, spécialement désignés, doivent être entraînés à la mise en oeuvre des moyens de secours. » Relu le 2026-10-14 par l'API Légifrance (PISTE, bac à sable) : LEGIARTI000024752266, seule version, en vigueur depuis le 1982-08-12 (arrêté du 21 juin 1982).",
+        note: "« Des employés, spécialement désignés, doivent être entraînés à la mise en oeuvre des moyens de secours. » Relu le 2026-10-14 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000024752266, seule version, en vigueur depuis le 1982-08-12 (arrêté du 21 juin 1982).",
         versionConstatee: "1982-08-12",
       },
       {
@@ -1752,7 +1763,7 @@ export const obligationsIncendie: Obligation[] = [
           "Arrêté du 25 juin 1980, art. M 29 § 1 (agents désignés par l'exploitant, entraînés à la manœuvre des moyens de secours et à l'évacuation du public, effectif du public de moins de 4 000 personnes) — livre II, titre II, type M, établissements des quatre premières catégories",
         article: "M 29",
         url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000034988398",
-        note: "« Paragraphe 1. Dans les établissements où l'effectif du public reçu est inférieur à 4 000 personnes, des agents, entraînés à la manœuvre des moyens de secours contre l'incendie et à l'évacuation du public, doivent être désignés par l'exploitant. » Relu le 2026-10-14 par l'API (bac à sable) : LEGIARTI000034988398, en vigueur depuis le 2017-07-01 (arrêté du 13 juin 2017, art. 13). Les § 2 à § 5 — agents SSIAP au-delà de 4 000 personnes — ne sont pas portés : réserve du corpus.",
+        note: "« Paragraphe 1. Dans les établissements où l'effectif du public reçu est inférieur à 4 000 personnes, des agents, entraînés à la manœuvre des moyens de secours contre l'incendie et à l'évacuation du public, doivent être désignés par l'exploitant. » Relu le 2026-10-14 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000034988398, en vigueur depuis le 2017-07-01 (arrêté du 13 juin 2017, art. 13). Les § 2 à § 5 — agents SSIAP au-delà de 4 000 personnes — ne sont pas portés : réserve du corpus.",
         versionConstatee: "2017-07-01",
       },
       {
@@ -1761,7 +1772,7 @@ export const obligationsIncendie: Obligation[] = [
           "Arrêté du 25 juin 1980, art. O 18 (employés spécialement désignés, entraînés à la mise en œuvre des moyens de secours) — livre II, titre II, type O, établissements des quatre premières catégories",
         article: "O 18",
         url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024760450",
-        note: "« Des employés, spécialement désignés, doivent être entraînés à la mise en œuvre des moyens de secours. » Relu le 2026-10-14 par l'API (bac à sable) : LEGIARTI000024760450, en vigueur depuis le 2012-01-01 (arrêté du 25 octobre 2011).",
+        note: "« Des employés, spécialement désignés, doivent être entraînés à la mise en œuvre des moyens de secours. » Relu le 2026-10-14 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000024760450, en vigueur depuis le 2012-01-01 (arrêté du 25 octobre 2011).",
         versionConstatee: "2012-01-01",
       },
       {
@@ -1770,8 +1781,18 @@ export const obligationsIncendie: Obligation[] = [
           "Arrêté du 25 juin 1980, art. W 13 (personnes spécialement désignées, entraînées à la mise en œuvre des moyens de secours) — livre II, titre II, type W, établissements des quatre premières catégories",
         article: "W 13",
         url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000025177328",
-        note: "« Des personnes, spécialement désignées, doivent être entraînées à la mise en oeuvre des moyens de secours. » Relu le 2026-10-14 par l'API (bac à sable) : LEGIARTI000025177328, seule version, en vigueur depuis le 1983-05-21 (arrêté du 21 avril 1983).",
+        note: "« Des personnes, spécialement désignées, doivent être entraînées à la mise en oeuvre des moyens de secours. » Relu le 2026-10-14 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000025177328, seule version, en vigueur depuis le 1983-05-21 (arrêté du 21 avril 1983).",
         versionConstatee: "1983-05-21",
+      },
+      {
+        // 2026-10-14, revue indépendante : contexte, tous types des catégories 1 à 4.
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. MS 48 § 1 (formation des personnes désignées par l'exploitant, conduite à son initiative et sous sa responsabilité) — livre II, établissements des quatre premières catégories",
+        article: "MS 48",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000021838329",
+        note: "« § 1. Les personnes désignées par l'exploitant, mentionnées au paragraphe 1.a de l'article MS 46 pour assurer la sécurité contre l'incendie, doivent avoir reçu une formation conduite à l'initiative et sous la responsabilité de l'exploitant. » Relu le 2026-10-14 par l'API Légifrance (PISTE, bac à sable, égalité avec la production non vérifiée) : LEGIARTI000021838329, en vigueur depuis le 2010-05-16 (arrêté du 11 décembre 2009).",
+        versionConstatee: "2010-05-16",
       },
     ],
     periodicite: "autre",
@@ -1805,7 +1826,7 @@ export const obligationsIncendie: Obligation[] = [
           "Arrêté du 25 juin 1980, art. M 44 (défense de fumer dans les locaux de vente, affichée bien en évidence) — livre II, titre II, type M, établissements des quatre premières catégories",
         article: "M 44",
         url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024931940",
-        note: "« Il est formellement interdit de fumer dans les locaux de vente. Cette prescription doit être affichée bien en évidence. » Relu le 2026-10-14 par l'API (bac à sable) : LEGIARTI000024931940, seule version, en vigueur depuis le 1982-02-03 (arrêté du 22 décembre 1981).",
+        note: "« Il est formellement interdit de fumer dans les locaux de vente. Cette prescription doit être affichée bien en évidence. » Relu le 2026-10-14 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000024931940, seule version, en vigueur depuis le 1982-02-03 (arrêté du 22 décembre 1981).",
         versionConstatee: "1982-02-03",
       },
       {
@@ -1814,7 +1835,7 @@ export const obligationsIncendie: Obligation[] = [
           "Arrêté du 25 juin 1980, art. M 47 § 2 (défense de fumer dans les locaux à risques importants) — livre II, titre II, type M, établissements des quatre premières catégories",
         article: "M 47",
         url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024932040",
-        note: "« § 2. Il est formellement interdit de fumer dans les locaux. Cette prescription doit être affichée bien en évidence. » Les locaux sont ceux du § 1 : « les locaux de stockage et de manipulation des matériaux d'emballage visés à l'article M 48, ainsi que les dépôts de déchets d'emballage ; les réserves, à l'exception des réserves d'approche qui sont assimilées aux risques des locaux de vente ». Relu le 2026-10-14 par l'API (bac à sable) : LEGIARTI000024932040, seule version, en vigueur depuis le 1982-02-03.",
+        note: "« § 2. Il est formellement interdit de fumer dans les locaux. Cette prescription doit être affichée bien en évidence. » Les locaux sont ceux du § 1 : « les locaux de stockage et de manipulation des matériaux d'emballage visés à l'article M 48, ainsi que les dépôts de déchets d'emballage ; les réserves, à l'exception des réserves d'approche qui sont assimilées aux risques des locaux de vente ». Relu le 2026-10-14 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000024932040, seule version, en vigueur depuis le 1982-02-03.",
         versionConstatee: "1982-02-03",
       },
       {
@@ -1823,7 +1844,7 @@ export const obligationsIncendie: Obligation[] = [
           "Arrêté du 25 juin 1980, art. M 58 (défense de fumer dans les réserves et les locaux de réception, d'emballage, d'expédition) — livre II, titre II, type M, établissements des quatre premières catégories",
         article: "M 58",
         url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024932062",
-        note: "« Il est interdit de fumer dans l'ensemble des réserves et dans les locaux de réception, d'emballage, d'expédition et leurs annexes. Cette prescription doit être affichée bien en évidence. » Relu le 2026-10-14 par l'API (bac à sable) : LEGIARTI000024932062, seule version, en vigueur depuis le 1982-02-03.",
+        note: "« Il est interdit de fumer dans l'ensemble des réserves et dans les locaux de réception, d'emballage, d'expédition et leurs annexes. Cette prescription doit être affichée bien en évidence. » Relu le 2026-10-14 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000024932062, seule version, en vigueur depuis le 1982-02-03.",
         versionConstatee: "1982-02-03",
       },
       {
@@ -1832,7 +1853,7 @@ export const obligationsIncendie: Obligation[] = [
           "Arrêté du 25 juin 1980, art. W 16 (défense de fumer dans les locaux à risques particuliers) — livre II, titre II, type W, établissements des quatre premières catégories",
         article: "W 16",
         url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000025177346",
-        note: "« Il est interdit de fumer dans les locaux à risques particuliers. Cette prescription doit être affichée bien en évidence. » Relu le 2026-10-14 par l'API (bac à sable) : LEGIARTI000025177346, seule version, en vigueur depuis le 1983-05-21. Les locaux à risques particuliers du type W sont classés par W 4 (archives et stockage de papier, imprimerie ; réserves, reprographie, conservation de documents informatiques, dépôts d'au moins 150 litres de liquides inflammables).",
+        note: "« Il est interdit de fumer dans les locaux à risques particuliers. Cette prescription doit être affichée bien en évidence. » Relu le 2026-10-14 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000025177346, seule version, en vigueur depuis le 1983-05-21. Les locaux à risques particuliers du type W sont classés par W 4 (archives et stockage de papier, imprimerie ; réserves, reprographie, conservation de documents informatiques, dépôts d'au moins 150 litres de liquides inflammables).",
         versionConstatee: "1983-05-21",
       },
       {
@@ -1841,7 +1862,7 @@ export const obligationsIncendie: Obligation[] = [
           "Arrêté du 25 juin 1980, art. O 21 § 1 (interdiction de fumer dans les réserves, lingeries et locaux à risques particuliers) — livre II, titre II, type O, établissements des quatre premières catégories",
         article: "O 21",
         url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024760444",
-        note: "« § 1. Il est rappelé qu'il est formellement interdit de fumer dans les réserves, lingeries, etc. et, en général, dans les locaux présentant des risques particuliers d'incendie. Cette interdiction doit être affichée bien en évidence. » Relu le 2026-10-14 par l'API (bac à sable) : LEGIARTI000024760444, en vigueur depuis le 2012-01-01 (arrêté du 25 octobre 2011).",
+        note: "« § 1. Il est rappelé qu'il est formellement interdit de fumer dans les réserves, lingeries, etc. et, en général, dans les locaux présentant des risques particuliers d'incendie. Cette interdiction doit être affichée bien en évidence. » Relu le 2026-10-14 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000024760444, en vigueur depuis le 2012-01-01 (arrêté du 25 octobre 2011).",
         versionConstatee: "2012-01-01",
       },
     ],
@@ -1876,7 +1897,7 @@ export const obligationsIncendie: Obligation[] = [
           "Arrêté du 25 juin 1980, art. M 31 (schéma d'organisation globale de la sécurité annexé au registre de sécurité) — livre II, titre II, type M, établissements des quatre premières catégories",
         article: "M 31",
         url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000034988400",
-        note: "« Le directeur de l'établissement ou le responsable unique de sécurité (RUS) annexe au registre de sécurité un schéma d'organisation globale de la sécurité de l'établissement. » Relu le 2026-10-14 par l'API (bac à sable) : LEGIARTI000034988400, en vigueur depuis le 2017-07-01 (arrêté du 13 juin 2017, art. 14).",
+        note: "« Le directeur de l'établissement ou le responsable unique de sécurité (RUS) annexe au registre de sécurité un schéma d'organisation globale de la sécurité de l'établissement. » Relu le 2026-10-14 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000034988400, en vigueur depuis le 2017-07-01 (arrêté du 13 juin 2017, art. 14).",
         versionConstatee: "2017-07-01",
       },
     ],
@@ -1910,7 +1931,7 @@ export const obligationsIncendie: Obligation[] = [
           "Arrêté du 25 juin 1980, art. O 21 § 2 (consigne d'incendie du modèle annexé, affichée dans chaque chambre ou appartement) — livre II, titre II, type O, établissements des quatre premières catégories",
         article: "O 21",
         url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024760444",
-        note: "« § 2. Une consigne d'incendie, du modèle joint en annexe, est affichée dans chaque chambre ou appartement. Elle est rédigée en français et complétée par une bande dessinée illustrant les consignes. Sa rédaction en langue française peut être complétée par sa traduction dans les langues parlées par les usagers habituels. Cette consigne attire l'attention du public sur l'interdiction d'utiliser les ascenseurs en cas d'incendie, à l'exception de ceux conformes aux dispositions de l'article AS 4 du règlement de sécurité qui sont réservés à l'évacuation des personnes handicapées. » Relu le 2026-10-14 par l'API (bac à sable) : LEGIARTI000024760444, en vigueur depuis le 2012-01-01 (arrêté du 25 octobre 2011).",
+        note: "« § 2. Une consigne d'incendie, du modèle joint en annexe, est affichée dans chaque chambre ou appartement. Elle est rédigée en français et complétée par une bande dessinée illustrant les consignes. Sa rédaction en langue française peut être complétée par sa traduction dans les langues parlées par les usagers habituels. Cette consigne attire l'attention du public sur l'interdiction d'utiliser les ascenseurs en cas d'incendie, à l'exception de ceux conformes aux dispositions de l'article AS 4 du règlement de sécurité qui sont réservés à l'évacuation des personnes handicapées. » Relu le 2026-10-14 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000024760444, en vigueur depuis le 2012-01-01 (arrêté du 25 octobre 2011).",
         versionConstatee: "2012-01-01",
       },
       {
@@ -1919,7 +1940,7 @@ export const obligationsIncendie: Obligation[] = [
           "Arrêté du 25 juin 1980, annexe II du chapitre O (conduite à tenir en cas d'incendie, modèle de la consigne de l'article O 21) — livre II, titre II, type O, établissements des quatre premières catégories",
         article: "O annexe II",
         url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024758877",
-        note: "« Conduite à tenir en cas d'incendie relative à l'application de l'article O 21 ». Relue le 2026-10-14 par l'API (bac à sable) : LEGIARTI000024758877, seule version, en vigueur depuis le 2012-01-01 (créée par l'arrêté du 25 octobre 2011).",
+        note: "« Conduite à tenir en cas d'incendie relative à l'application de l'article O 21 ». Relue le 2026-10-14 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000024758877, seule version, en vigueur depuis le 2012-01-01 (créée par l'arrêté du 25 octobre 2011).",
         versionConstatee: "2012-01-01",
       },
     ],
@@ -1953,7 +1974,7 @@ export const obligationsIncendie: Obligation[] = [
           "Arrêté du 25 juin 1980, art. O 21 § 2, dernière phrase (plan d'évacuation à chaque niveau) — livre II, titre II, type O, établissements des quatre premières catégories",
         article: "O 21",
         url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024760444",
-        note: "« Un plan d'évacuation dont les caractéristiques correspondent à celles des plans d'évacuation de la norme NF S 60-303 septembre 1987) relative aux plans et consignes de protection contre l'incendie est apposé à chaque niveau à proximité du cheminement habituel. » Recopié tel que l'API le rend, parenthèse non ouverte comprise. Relu le 2026-10-14 par l'API (bac à sable) : LEGIARTI000024760444, en vigueur depuis le 2012-01-01.",
+        note: "« Un plan d'évacuation dont les caractéristiques correspondent à celles des plans d'évacuation de la norme NF S 60-303 septembre 1987) relative aux plans et consignes de protection contre l'incendie est apposé à chaque niveau à proximité du cheminement habituel. » Recopié tel que l'API le rend, parenthèse non ouverte comprise. Relu le 2026-10-14 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000024760444, en vigueur depuis le 2012-01-01.",
         versionConstatee: "2012-01-01",
       },
     ],

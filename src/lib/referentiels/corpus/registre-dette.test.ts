@@ -196,7 +196,10 @@ describe("registre de dette — les réserves de lecture", () => {
     // « fréquemment », sans rythme) entrent retenus avec une réserve. `CH 39`
     // garde la sienne — sa première branche, le livret, est encodée, les
     // deux autres restent. 89 + 2 − 0 = 91.
-    expect(n).toBe(91);
+    // 91 → 93 le même jour, revue indépendante : `MS 47` (même écrit que la
+    // consigne du Code du travail, champ différent) et `MS 48` (§ 2 SSIAP
+    // dehors) entrent retenus en contexte, chacun avec sa réserve. 91 + 2 = 93.
+    expect(n).toBe(93);
     expect(reservesDeLecture().length).toBe(n);
   });
 });

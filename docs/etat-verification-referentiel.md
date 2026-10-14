@@ -83,11 +83,11 @@ repose sur un texte que personne n'a ouvert.
 
 ## 2. Où en est-on
 
-**182 obligations**, **366 références** — 103 obligations en citent plus d'une.
+**182 obligations**, **368 références** — 103 obligations en citent plus d'une.
 
 | degré | obligations (au plancher) | part | dont fondements | références | part |
 | --- | --- | --- | --- | --- | --- |
-| 5 · lu à la source, verbatim relevé | 92 | 51 % | 99 | 225 | 61 % |
+| 5 · lu à la source, verbatim relevé | 92 | 51 % | 99 | 227 | 62 % |
 | 4 · lu à la source par un agent, verbatim rapporté | 86 | 47 % | 83 | 136 | 37 % |
 | 3 · lu et daté, aucun verbatim | 3 | 2 % | 0 | 4 | 1 % |
 | 2 · lu ailleurs qu'à la source | 1 | 1 % | 0 | 1 | 0 % |
@@ -108,7 +108,7 @@ repose sur un texte que personne n'a ouvert.
 
 | ancrage | références | part |
 | --- | --- | --- |
-| ancrée | 342 | 93 % |
+| ancrée | 344 | 93 % |
 | divergente | 1 | 0 % |
 | jamais constatée | 23 | 6 % |
 
@@ -133,7 +133,7 @@ repose sur un texte que personne n'a ouvert.
 | `equipement_sous_pression` | 1 | 1 | 1 | · | · | · | · | · | 1 / 1 — 100 % | 0 / 1 | 2026-09-01 |
 | `formation_securite` | 11 | 32 | 1 | 10 | · | · | · | · | 11 / 11 — 100 % | 0 / 32 | 2026-08-31 → 2026-09-27 |
 | `froid` | 8 | 16 | 8 | · | · | · | · | · | 8 / 8 — 100 % | 16 / 16 | 2026-08-26 → 2026-09-27 |
-| `incendie` | 50 | 109 | 37 | 12 | 1 | · | · | · | 49 / 50 — 98 % | 4 / 109 | 2026-08-26 → 2026-10-14 |
+| `incendie` | 50 | 111 | 37 | 12 | 1 | · | · | · | 49 / 50 — 98 % | 4 / 111 | 2026-08-26 → 2026-10-14 |
 | `information_travailleurs` | 2 | 2 | · | 2 | · | · | · | · | 2 / 2 — 100 % | 0 / 2 | 2026-08-31 → 2026-09-26 |
 | `levage` | 11 | 30 | 10 | 1 | · | · | · | · | 11 / 11 — 100 % | 0 / 30 | 2026-08-26 → 2026-09-02 |
 | `locaux_sociaux` | 4 | 4 | 2 | 2 | · | · | · | · | 4 / 4 — 100 % | 0 / 4 | 2026-08-31 → 2026-09-26 |
@@ -157,7 +157,7 @@ Aucun domaine n'est entièrement dépourvu de verbatim.
 |  | obl. | réf. | 5 | 4 | 3 | 2 | 1 | 0 | vérifiées à la source | sans ancre | lu entre |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `equipement` | 91 | 180 | 59 | 31 | 1 | · | · | · | 90 / 91 — 99 % | 22 / 180 | 2026-08-26 → 2026-10-14 |
-| `etablissement` | 77 | 153 | 33 | 42 | 2 | · | · | · | 75 / 77 — 97 % | 0 / 153 | 2026-08-26 → 2026-10-14 |
+| `etablissement` | 77 | 155 | 33 | 42 | 2 | · | · | · | 75 / 77 — 97 % | 0 / 155 | 2026-08-26 → 2026-10-14 |
 | `salarie` | 14 | 33 | · | 13 | · | 1 | · | · | 13 / 14 — 93 % | 1 / 33 | 2026-08-27 → 2026-10-07 |
 
 Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, mesuré au plancher — **5** première main, **4** agent + verbatim, **3** lu sans verbatim, **2** indirect, **1** sans trace, **0** non rattaché.
@@ -179,9 +179,9 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 | 2026-09-27 | 37 | 10 % | 35 |
 | 2026-10-07 | 33 | 9 % | 22 |
 | 2026-10-13 | 2 | 1 % | 1 |
-| 2026-10-14 | 17 | 5 % | 9 |
+| 2026-10-14 | 19 | 5 % | 9 |
 
-366 des 366 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-10-14.
+368 des 368 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-10-14.
 
 Ces dates ne sont pas un âge : elles disent quand quelqu'un a ouvert le
 texte, pas depuis quand la version lue est en vigueur. Une lecture d'hier
@@ -214,7 +214,7 @@ une relecture déjà faite.
 | `code-travail-epi` | 11 | 16 | 2026-09-04 → 2026-09-27 |
 | `code-travail-formation-securite` | 10 | 27 | 2026-08-31 → 2026-09-27 |
 | `code-travail-sante-travail` | 9 | 26 | 2026-08-31 → 2026-09-27 |
-| `arrete-1980-livre-2` | 8 | 30 | 2026-09-01 → 2026-10-14 |
+| `arrete-1980-livre-2` | 8 | 32 | 2026-09-01 → 2026-10-14 |
 | `code-travail-risque-chimique` | 8 | 14 | 2026-08-27 → 2026-09-28 |
 | `code-travail-vigilance-modalites` | 8 | 8 | 2026-09-02 → 2026-09-27 |
 | `arrete-2004-12-21-echafaudages` | 7 | 7 | 2026-09-01 |
@@ -403,7 +403,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `incendie-erp-hotel-consigne-chambres` | incendie | etablissement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-10-14 |
 | `incendie-erp-hotel-plans-evacuation-niveaux` | incendie | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-10-14 |
 | `incendie-erp-interdiction-fumer-affichee` | incendie | etablissement | 5 | 5 · première main | 5 · première main | 0 / 5 | 2026-10-14 |
-| `incendie-erp-personnel-designe-moyens-secours` | incendie | etablissement | 4 | 5 · première main | 5 · première main | 0 / 4 | 2026-10-14 |
+| `incendie-erp-personnel-designe-moyens-secours` | incendie | etablissement | 5 | 5 · première main | 5 · première main | 0 / 5 | 2026-10-14 |
 | `incendie-erp-ria-annuelle` | incendie | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-10-07 |
 | `incendie-erp-schema-organisation-securite` | incendie | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-10-14 |
 | `incendie-erp-ssi-annuelle` | incendie | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-10-07 |
@@ -418,7 +418,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `incendie-erp-visite-commission-cat4-triennale` | incendie | etablissement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-08-26 → 2026-09-01 |
 | `incendie-hotel-po-controle-biennal-installations` | incendie | etablissement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-08-26 → 2026-10-07 |
 | `incendie-travail-chiffons-impregnes-recipients-clos` | incendie | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-27 |
-| `incendie-travail-consigne-affichee` | incendie | etablissement | 4 | 5 · première main | 5 · première main | 0 / 4 | 2026-09-01 → 2026-10-14 |
+| `incendie-travail-consigne-affichee` | incendie | etablissement | 5 | 5 · première main | 5 · première main | 0 / 5 | 2026-09-01 → 2026-10-14 |
 | `incendie-travail-eclairage-securite-autonomie-semestrielle` | incendie | equipement | 4 | 5 · première main | 5 · première main | 0 / 4 | 2026-09-01 |
 | `incendie-travail-eclairage-securite-essai-mensuel` | incendie | equipement | 4 | 5 · première main | 5 · première main | 0 / 4 | 2026-09-01 |
 | `incendie-travail-exercice-semestriel` | incendie | etablissement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-01 |
@@ -451,7 +451,7 @@ demande le plus de travail.
 
 ---
 
-## 9. Les 366 références, une par une
+## 9. Les 368 références, une par une
 
 `prescrit` et `verbatim` sont les deux champs du corpus qui rendent une
 lecture relisible : ce que l'article impose, en une phrase, et la phrase
@@ -503,7 +503,8 @@ refaire pour la contredire.
 | `incendie-travail-consigne-affichee` | fondement | R. 4227-37 | R. 4227-37 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2011-11-10 | 2011-11-10 | 5 · première main | ancrée |
 | `incendie-travail-consigne-affichee` | contexte 1 | R. 4227-38 | R. 4227-38 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2011-11-10 | 2011-11-10 | 5 · première main | ancrée |
 | `incendie-travail-consigne-affichee` | contexte 2 | R. 4227-40 | R. 4227-40 | code-travail-incendie | retenu | 2026-09-27 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
-| `incendie-travail-consigne-affichee` | contexte 3 | Arrêté du 25 juin 1980, art. N 20 (consignes spéciales portées fréquemment à la connaissance du personnel) — livre II, titre II, type N : restaurants et débits de boissons des quatre premières catégories seulement | N 20 | arrete-1980-livre-2-titre-2 | retenu | 2026-10-14 | api_legifrance | ✓ | ✓ | 1982-08-12 | 1982-08-12 | 5 · première main | ancrée |
+| `incendie-travail-consigne-affichee` | contexte 3 | Arrêté du 25 juin 1980, art. MS 47 (consignes destinées aux personnels, constamment mises à jour et affichées) — livre II, établissements des quatre premières catégories seulement | MS 47 | arrete-1980-livre-2 | retenu | 2026-10-14 | api_legifrance | ✓ | ✓ | 2010-01-23 | 2010-01-23 | 5 · première main | ancrée |
+| `incendie-travail-consigne-affichee` | contexte 4 | Arrêté du 25 juin 1980, art. N 20 (consignes spéciales portées fréquemment à la connaissance du personnel) — livre II, titre II, type N : restaurants et débits de boissons des quatre premières catégories seulement | N 20 | arrete-1980-livre-2-titre-2 | retenu | 2026-10-14 | api_legifrance | ✓ | ✓ | 1982-08-12 | 1982-08-12 | 5 · première main | ancrée |
 | `incendie-travail-instructions-evacuation` | fondement | R. 4227-37 | R. 4227-37 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2011-11-10 | 2011-11-10 | 5 · première main | ancrée |
 | `incendie-travail-instructions-evacuation` | contexte 1 | R. 4216-2 | R. 4216-2 | code-travail-incendie | retenu | 2026-09-27 | premiere_main | ✓ | ✓ | 2011-11-10 | 2011-11-10 | 5 · première main | ancrée |
 | `incendie-travail-alarme-sonore` | fondement | R. 4227-34 | R. 4227-34 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
@@ -558,9 +559,10 @@ refaire pour la contredire.
 | `incendie-hotel-po-instruction-personnel-semestrielle` | contexte 2 | Arrêté du 25 juin 1980, art. PE 27 § 5 (instruction et entraînement du personnel) | PE 27 | arrete-1980-livre-3 | retenu | 2026-09-26 | agent_verbatim | ✓ | ✓ | 2026-05-01 | 2026-05-01 | 4 · agent + verbatim | ancrée |
 | `incendie-erp-5-consignes-affichees` | fondement | Arrêté du 25 juin 1980, art. PE 27 § 4 (consignes affichées) | PE 27 | arrete-1980-livre-3 | retenu | 2026-09-26 | agent_verbatim | ✓ | ✓ | 2026-05-01 | 2026-05-01 | 4 · agent + verbatim | ancrée |
 | `incendie-erp-personnel-designe-moyens-secours` | fondement | Arrêté du 25 juin 1980, art. N 17 (employés spécialement désignés, entraînés à la mise en œuvre des moyens de secours) — livre II, titre II, type N, établissements des quatre premières catégories | N 17 | arrete-1980-livre-2-titre-2 | retenu | 2026-10-14 | api_legifrance | ✓ | ✓ | 1982-08-12 | 1982-08-12 | 5 · première main | ancrée |
-| `incendie-erp-personnel-designe-moyens-secours` | contexte 1 | Arrêté du 25 juin 1980, art. M 29 § 1 (agents désignés par l'exploitant, entraînés à la manœuvre des moyens de secours et à l'évacuation du public, effectif inférieur à 4 000 personnes) — livre II, titre II, type M, établissements des quatre premières catégories | M 29 | arrete-1980-livre-2-titre-2 | retenu | 2026-10-14 | api_legifrance | ✓ | ✓ | 2017-07-01 | 2017-07-01 | 5 · première main | ancrée |
+| `incendie-erp-personnel-designe-moyens-secours` | contexte 1 | Arrêté du 25 juin 1980, art. M 29 § 1 (agents désignés par l'exploitant, entraînés à la manœuvre des moyens de secours et à l'évacuation du public, effectif du public de moins de 4 000 personnes) — livre II, titre II, type M, établissements des quatre premières catégories | M 29 | arrete-1980-livre-2-titre-2 | retenu | 2026-10-14 | api_legifrance | ✓ | ✓ | 2017-07-01 | 2017-07-01 | 5 · première main | ancrée |
 | `incendie-erp-personnel-designe-moyens-secours` | contexte 2 | Arrêté du 25 juin 1980, art. O 18 (employés spécialement désignés, entraînés à la mise en œuvre des moyens de secours) — livre II, titre II, type O, établissements des quatre premières catégories | O 18 | arrete-1980-livre-2-titre-2 | retenu | 2026-10-14 | api_legifrance | ✓ | ✓ | 2012-01-01 | 2012-01-01 | 5 · première main | ancrée |
 | `incendie-erp-personnel-designe-moyens-secours` | contexte 3 | Arrêté du 25 juin 1980, art. W 13 (personnes spécialement désignées, entraînées à la mise en œuvre des moyens de secours) — livre II, titre II, type W, établissements des quatre premières catégories | W 13 | arrete-1980-livre-2-titre-2 | retenu | 2026-10-14 | api_legifrance | ✓ | ✓ | 1983-05-21 | 1983-05-21 | 5 · première main | ancrée |
+| `incendie-erp-personnel-designe-moyens-secours` | contexte 4 | Arrêté du 25 juin 1980, art. MS 48 § 1 (formation des personnes désignées par l'exploitant, conduite à son initiative et sous sa responsabilité) — livre II, établissements des quatre premières catégories | MS 48 | arrete-1980-livre-2 | retenu | 2026-10-14 | api_legifrance | ✓ | ✓ | 2010-05-16 | 2010-05-16 | 5 · première main | ancrée |
 | `incendie-erp-interdiction-fumer-affichee` | fondement | Arrêté du 25 juin 1980, art. M 44 (défense de fumer dans les locaux de vente, affichée bien en évidence) — livre II, titre II, type M, établissements des quatre premières catégories | M 44 | arrete-1980-livre-2-titre-2 | retenu | 2026-10-14 | api_legifrance | ✓ | ✓ | 1982-02-03 | 1982-02-03 | 5 · première main | ancrée |
 | `incendie-erp-interdiction-fumer-affichee` | contexte 1 | Arrêté du 25 juin 1980, art. M 47 § 2 (défense de fumer dans les locaux à risques importants) — livre II, titre II, type M, établissements des quatre premières catégories | M 47 | arrete-1980-livre-2-titre-2 | retenu | 2026-10-14 | api_legifrance | ✓ | ✓ | 1982-02-03 | 1982-02-03 | 5 · première main | ancrée |
 | `incendie-erp-interdiction-fumer-affichee` | contexte 2 | Arrêté du 25 juin 1980, art. M 58 (défense de fumer dans les réserves et les locaux de réception, d'emballage, d'expédition) — livre II, titre II, type M, établissements des quatre premières catégories | M 58 | arrete-1980-livre-2-titre-2 | retenu | 2026-10-14 | api_legifrance | ✓ | ✓ | 1982-02-03 | 1982-02-03 | 5 · première main | ancrée |
