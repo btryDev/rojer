@@ -51,9 +51,14 @@ release (lots lancés le même jour) ; **n° 1 (gaz sans cuisine) et n° 5
    50 °C aux robinets de toilette et les 55 °C en sortie de stockage de
    l'article 36 de l'arrêté du 23 juin 1978 ne s'expriment pas. Premier geste :
    lire l'article 1er de cet arrêté.
-6. **[2026-10-14, APRÈS LA RELEASE] Le panneau de pré-remplissage ignore
+6. ~~**[2026-10-14, APRÈS LA RELEASE] Le panneau de pré-remplissage ignore
    `avertissement`** (`lot/conditions-equipement`) — un échec de
-   régénération du calendrier n'est pas montré, les fiches sont créées.
+   régénération du calendrier n'est pas montré, les fiches sont créées.~~
+   [2026-10-14, rayé — `lot/materiels-non-couverts-1014` : `PreRemplissagePanel`
+   affiche l'avertissement à côté du succès (encre du signal, `role="alert"`,
+   comme la fiche entreprise) ; test
+   `PreRemplissagePanel.avertissement.test.tsx`, éprouvé en retirant la
+   lecture du champ. Décision de la propriétaire.]
 
 ### Décisions attendues
 
