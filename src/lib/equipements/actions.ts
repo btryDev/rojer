@@ -417,13 +417,13 @@ export async function creerEquipementsDepuisPreRemplissage(
   }[],
 ): Promise<ResultatPreRemplissage> {
   await assertEtablissementOwnership(etablissementId);
-  // Le tableau vient du client : borné (une catégorie au plus une fois, pas
-  // plus d'entrées que de catégories) et validé avant toute écriture
-  // (`preRemplissageSchema`, ASVS V2.2.1). Le schéma ne sert qu'à REFUSER : ce
-  // qu'il rend écarterait les réponses, que les portes ci-dessous lisent.
-  // [2026-10-14, intégration de `lot/securite-owasp-1013` sur
-  // `lot/conditions-equipement` : un refus se retourne, comme les autres.]
-  if (!preRemplissageSchema.safeParse(entrees).success) {
+  // Le tableau vient du client : un tableau, pas plus d'entrées que de
+  // catégories (ASVS V2.2.1, `lot/securite-owasp-1013`), avant de le parcourir.
+  // [2026-10-14, intégration avec `lot/conditions-equipement` : la catégorie et
+  // le libellé gardent leurs portes nommées, plus bas, qui disent pourquoi ;
+  // `preRemplissageSchema` ne tient plus que le doublon de catégorie, après
+  // elles. Un refus se retourne, comme les autres.]
+  if (!Array.isArray(entrees) || entrees.length > CATEGORIES_EQUIPEMENT.length) {
     return { status: "error", message: "Sélection invalide : aucun équipement ajouté." };
   }
   if (entrees.length === 0) return { status: "success", created: 0 };
@@ -472,6 +472,14 @@ export async function creerEquipementsDepuisPreRemplissage(
       status: "error",
       message:
         "Libellé refusé : il doit être un texte de 1 à 200 caractères. Rien n'a été créé.",
+    };
+  }
+  // Une catégorie au plus une fois (`preRemplissageSchema`, ASVS V2.2.1). Le
+  // schéma ne sert qu'à REFUSER : ce qu'il rend écarterait les réponses.
+  if (!preRemplissageSchema.safeParse(entrees).success) {
+    return {
+      status: "error",
+      message: "Sélection invalide : une catégorie au plus une fois. Rien n'a été créé.",
     };
   }
   const regime = await regimeDe(etablissementId);

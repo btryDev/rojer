@@ -141,6 +141,9 @@ const EXEMPTIONS = new Map<string, Exemption>([
       "listerEquipements",
       "listerVerifications",
       "getNomEtablissement",
+      // 2026-10-14 : entrée par `lot/mcp-inventaire`, même garde — `where:
+      // { etablissementId }`.
+      "getParcEquipements",
     ] as const
   ).map(
     (nom) =>
@@ -184,7 +187,9 @@ const EXEMPTIONS = new Map<string, Exemption>([
 ]);
 
 /** Taille figée : on retire une exemption, on n'en ajoute pas sans le voir. */
-const PLAFOND_EXEMPTIONS = 15;
+// ~~15~~ → 16 le 2026-10-14 (intégration) : `mcp/queries.ts:getParcEquipements`,
+// entrée par `lot/mcp-inventaire` sous la même garde que ses six sœurs MCP.
+const PLAFOND_EXEMPTIONS = 16;
 
 const RACINE = join(process.cwd(), "src/lib");
 const SRC = join(process.cwd(), "src");
