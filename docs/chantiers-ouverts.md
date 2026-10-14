@@ -16,7 +16,7 @@ passent de constat à décision — ils se règlent avant les premiers clients.]
 
 [2026-10-13, décision de la propriétaire : n° 2, 3 et 4 corrigés avant la
 release (lots lancés le même jour) ; **n° 1 (gaz sans cuisine) et n° 5
-(seuils du carnet sanitaire) APRÈS LA RELEASE** — ils restent ouverts ici.]
+(seuils du carnet sanitaire) APRÈS LA RELEASE** — ils restent ouverts ici.] [2026-10-14 : le n° 5 est fait, rayé ci-dessous.]
 
 1. **Gaz sans cuisine** ([§ 3 bis](#3-bis-le-registre-de-dette-compté--2026-09-20))
    — la vérification annuelle de `GZ 15` n'atteint que l'ERP 1-4 qui déclare
@@ -40,13 +40,22 @@ release (lots lancés le même jour) ; **n° 1 (gaz sans cuisine) et n° 5
    ([§ 15](#15-un-dossier-qui-na-rien-déclaré-rend-des-listes-vides-et-ne-le-dit-pas--fait-le-2026-09-26))
    — aucun fichier de `src/lib/mcp/` ne lit l'axe `inventaire`.~~
    [2026-10-14, rayé à l'intégration : corrigé par `lot/mcp-inventaire`, § 15.]
-5. **Carnet sanitaire : un seul seuil minimal par point d'eau chaude**
+5. ~~**Carnet sanitaire : un seul seuil minimal par point d'eau chaude**
    ([§ 16](#16-larrêté-du-1er-février-2010--un-module-livré-sur-un-texte-jamais-ouvert--fait-le-2026-09-20),
    points 1 et 2) — `PointReleve` n'a qu'un `seuilMinCelsius` et
    `estReleveConforme` rend « conforme » toute ECS au-dessus : le plafond de
    50 °C aux robinets de toilette et les 55 °C en sortie de stockage de
    l'article 36 de l'arrêté du 23 juin 1978 ne s'expriment pas. Premier geste :
-   lire l'article 1er de cet arrêté.
+   lire l'article 1er de cet arrêté.~~ [2026-10-14, `lot/carnet-seuils-1014`,
+   FAIT — décision de la propriétaire du même jour. L'article 1er est lu et au
+   corpus (0224e48f) : il étend le titre III, donc l'article 36, aux bâtiments
+   d'habitation, de bureaux et recevant du public. `PointReleve` porte
+   `seuilMaxCelsius` et `typePoint` (cinq types qui préremplissent les seuils),
+   `estReleveConforme` lit les deux bornes, l'eau froide est passée au maximum
+   explicite par la migration `20261014120000`, les points d'eau chaude
+   existants gardent leur minimum et la fiche invite à préciser leur type
+   (e405920b). Reste ouvert, hors de ce point : le champ de l'article 36 dans
+   le temps (neuf ou existant), que l'article 1er ne tranche pas.]
 6. **[2026-10-14, APRÈS LA RELEASE] Le panneau de pré-remplissage ignore
    `avertissement`** (`lot/conditions-equipement`) — un échec de
    régénération du calendrier n'est pas montré, les fiches sont créées.
@@ -2854,7 +2863,7 @@ lot 6.
 > « limite de qualité », pas à « l'annexe II ». **Aucune obligation encodée**,
 > par décision de la propriétaire : la cible n'est pas dans le champ.
 >
-> **Reste ouvert, et petit.** (1) Le module propose UN seuil minimal par point
+> **Reste ouvert, et petit.** (1) ~~Le module propose UN seuil minimal par point
 > d'eau chaude, quand l'article 36 en pose trois selon l'endroit (≥ 50 réseau,
 > ≥ 55 sortie de stockage ≥ 400 L, ≤ 50 aux robinets de toilette) : le type
 > « ECS » ne dit pas où est le point. [2026-10-13, tri : DÉFAUT RÉEL, vérifié —
@@ -2864,11 +2873,18 @@ lot 6.
 > à 55, ni le plafond de 50 aux robinets de toilette ne s'expriment, et un
 > robinet à 60 °C se lit « Dans la plage » (`estReleveConforme`,
 > `src/lib/carnet-sanitaire/schema.ts:149-152` : en ECS, conforme dès
-> `temperature >= seuil`). Sous la réserve du (2).]
-> (2) L'article 1er de l'arrêté de 1978
-> (champ, installations neuves ou existantes) n'est pas ouvert. [2026-10-13,
+> `temperature >= seuil`). Sous la réserve du (2).]~~ [2026-10-14, FAIT par
+> `lot/carnet-seuils-1014` (e405920b) : un minimum et un maximum par point,
+> préremplis par le type de point — point 5 des défauts réels, en tête de ce
+> document.]
+> (2) ~~L'article 1er de l'arrêté de 1978
+> (champ, installations neuves ou existantes) n'est pas ouvert.~~ [2026-10-13,
 > tri : rattaché au DÉFAUT du (1), dont il est le premier geste — le champ de
-> l'article 36 n'est pas établi tant qu'il n'est pas lu.] (3) Le relevé
+> l'article 36 n'est pas établi tant qu'il n'est pas lu.] [2026-10-14 : ouvert
+> et au corpus (0224e48f). Le champ matériel est établi — bâtiments
+> d'habitation, de bureaux ou recevant du public, la cible comprise ; le champ
+> dans le temps ne l'est pas : l'article ne distingue pas le neuf de
+> l'existant.] (3) Le relevé
 > hebdomadaire du tableau de bord reste un seuil du produit, plus serré que le
 > mensuel de l'annexe 2 — déjà dit dans `dashboard/obligations.ts` [2026-10-13 :
 > un constat, pas une tâche]. (4) La

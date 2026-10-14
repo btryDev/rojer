@@ -97,7 +97,7 @@ const CAS: Cas[] = [
         etablissementId="e1"
         pointReleveId="p1"
         seuilMinCelsius={50}
-        typeReseau="ECS"
+        seuilMaxCelsius={null}
         releve={{
           id: "r1",
           dateReleve: "2026-01-10",
@@ -112,7 +112,7 @@ const CAS: Cas[] = [
         etablissementId="e1"
         pointReleveId="p1"
         seuilMinCelsius={50}
-        typeReseau="ECS"
+        seuilMaxCelsius={null}
       />
     ),
     ouvrirCorrection: /^Modifier$/,
@@ -130,7 +130,9 @@ const CAS: Cas[] = [
           localisation: null,
           batimentId: null,
           typeReseau: "ECS",
+          typePoint: null,
           seuilMinCelsius: 50,
+          seuilMaxCelsius: null,
         }}
       />
     ),
@@ -238,6 +240,18 @@ describe.each(CAS)("formulaire du carnet — $nom", (c) => {
       if (champ.value) continue;
       setter.call(champ, champ.type === "number" ? "55" : "Évier");
       champ.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    // Et un choix `required` sans valeur (le type d'un point neuf, 2026-10-14) :
+    // sa première option réelle.
+    const choisir = Object.getOwnPropertyDescriptor(
+      window.HTMLSelectElement.prototype,
+      "value",
+    )!.set!;
+    for (const choix of document.querySelectorAll<HTMLSelectElement>("select[required]")) {
+      if (choix.value) continue;
+      const option = [...choix.options].find((o) => o.value && !o.disabled)!;
+      choisir.call(choix, option.value);
+      choix.dispatchEvent(new Event("change", { bubbles: true }));
     }
     await souffler();
 

@@ -67,9 +67,23 @@ function lirePoint(formData: FormData) {
     nom: formData.get("nom"),
     localisation: formData.get("localisation"),
     batimentId: formData.get("batimentId"),
+    typePoint: formData.get("typePoint"),
     typeReseau: formData.get("typeReseau"),
     seuilMinCelsius: formData.get("seuilMinCelsius"),
+    seuilMaxCelsius: formData.get("seuilMaxCelsius"),
   });
+}
+
+/** Ce que la base reçoit d'un point lu : le réseau est sûr après le refine. */
+function champsDuPoint(p: NonNullable<ReturnType<typeof lirePoint>["data"]>) {
+  return {
+    nom: p.nom,
+    localisation: p.localisation ?? null,
+    typePoint: p.typePoint ?? null,
+    typeReseau: p.typeReseau!,
+    seuilMinCelsius: p.seuilMinCelsius,
+    seuilMaxCelsius: p.seuilMaxCelsius,
+  };
 }
 
 export async function creerPointReleve(
@@ -80,6 +94,11 @@ export async function creerPointReleve(
   await assertEtablissementOwnership(etablissementId);
   const parsed = lirePoint(formData);
   if (!parsed.success) return formulaireInvalide(parsed.error.flatten().fieldErrors);
+  // Un point NEUF dit où il est (2026-10-14) : seul un point d'avant le type
+  // peut rester sans, et seulement à la correction.
+  if (!parsed.data.typePoint) {
+    return formulaireInvalide({ typePoint: ["Type de point requis"] });
+  }
   const batiment = await resoudreBatimentOptionnel(
     etablissementId,
     parsed.data.batimentId,
@@ -96,7 +115,7 @@ export async function creerPointReleve(
     data: {
       id: `pt_${randomUUID()}`,
       carnetId: carnet.id,
-      ...parsed.data,
+      ...champsDuPoint(parsed.data),
       batimentId: batiment.id,
     },
   });
@@ -122,9 +141,22 @@ export async function modifierPointReleve(
   if (!parsed.success) return formulaireInvalide(parsed.error.flatten().fieldErrors);
   const point = await prisma.pointReleve.findFirst({
     where: { id: pointId, actif: true, carnet: { etablissementId } },
-    select: { id: true, releves: { select: { id: true, temperatureCelsius: true } } },
+    select: {
+      id: true,
+      typePoint: true,
+      releves: { select: { id: true, temperatureCelsius: true } },
+    },
   });
   if (!point) return { status: "error", message: "Point de relevé introuvable" };
+  // Un type précisé ne se retire pas (revue du 2026-10-14) : « non précisé »
+  // n'existe que pour les points d'avant le type. Le formulaire ne le propose
+  // pas ; un envoi forgé avec `typePoint=""` le pouvait, et rendait au point
+  // le réseau qu'on lui envoyait.
+  if (point.typePoint !== null && !parsed.data.typePoint) {
+    return formulaireInvalide({
+      typePoint: ["Le type d'un point déjà précisé ne peut pas être retiré."],
+    });
+  }
   const batiment = await resoudreBatimentOptionnel(
     etablissementId,
     parsed.data.batimentId,
@@ -136,24 +168,16 @@ export async function modifierPointReleve(
       fieldErrors: { batimentId: ["Zone introuvable"] },
     };
   }
-  const { seuilMinCelsius, typeReseau } = parsed.data;
+  const champs = champsDuPoint(parsed.data);
   await prisma.$transaction([
     prisma.pointReleve.update({
       where: { id: point.id },
-      data: {
-        nom: parsed.data.nom,
-        localisation: parsed.data.localisation ?? null,
-        batimentId: batiment.id,
-        typeReseau,
-        seuilMinCelsius,
-      },
+      data: { ...champs, batimentId: batiment.id },
     }),
     ...point.releves.map((r) =>
       prisma.releveTemperature.update({
         where: { id: r.id },
-        data: {
-          conforme: estReleveConforme(r.temperatureCelsius, seuilMinCelsius, typeReseau),
-        },
+        data: { conforme: estReleveConforme(r.temperatureCelsius, champs) },
       }),
     ),
   ]);
@@ -208,16 +232,16 @@ export async function ajouterReleve(
   if (!parsed.success) return formulaireInvalide(parsed.error.flatten().fieldErrors);
   const point = await prisma.pointReleve.findUnique({
     where: { id: parsed.data.pointReleveId },
-    select: { seuilMinCelsius: true, typeReseau: true, carnet: { select: { etablissementId: true } } },
+    select: {
+      seuilMinCelsius: true,
+      seuilMaxCelsius: true,
+      carnet: { select: { etablissementId: true } },
+    },
   });
   if (!point || point.carnet.etablissementId !== etablissementId) {
     return { status: "error", message: "Point de relevé introuvable" };
   }
-  const conforme = estReleveConforme(
-    parsed.data.temperatureCelsius,
-    point.seuilMinCelsius,
-    point.typeReseau,
-  );
+  const conforme = estReleveConforme(parsed.data.temperatureCelsius, point);
   await prisma.releveTemperature.create({
     data: {
       id: `rel_${randomUUID()}`,
@@ -241,7 +265,7 @@ function releveDansLeCarnet(etablissementId: string, releveId: string) {
     select: {
       id: true,
       pointReleveId: true,
-      pointReleve: { select: { seuilMinCelsius: true, typeReseau: true } },
+      pointReleve: { select: { seuilMinCelsius: true, seuilMaxCelsius: true } },
     },
   });
 }
@@ -265,11 +289,7 @@ export async function modifierReleve(
     data: {
       dateReleve: parsed.data.dateReleve,
       temperatureCelsius: parsed.data.temperatureCelsius,
-      conforme: estReleveConforme(
-        parsed.data.temperatureCelsius,
-        releve.pointReleve.seuilMinCelsius,
-        releve.pointReleve.typeReseau,
-      ),
+      conforme: estReleveConforme(parsed.data.temperatureCelsius, releve.pointReleve),
       operateur: parsed.data.operateur ?? null,
       commentaire: parsed.data.commentaire ?? null,
     },

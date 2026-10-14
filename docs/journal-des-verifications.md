@@ -755,8 +755,17 @@ la responsabilité — et le corpus a d'abord écrit « l'article ne donne aucun
 liste d'exemples ». La page propre de l'article l'a démenti une heure plus tard.
 La parade du § 2.D tient ; elle n'avait simplement pas été appliquée d'emblée.
 
-**Non lu :** l'article 1er de l'arrêté de 1978 (son champ), et l'annexe 1 de
+**Non lu :** ~~l'article 1er de l'arrêté de 1978 (son champ), et~~ l'annexe 1 de
 l'arrêté de 2005 (durées d'élévation), que Légifrance ne reproduit pas.
+[2026-10-14, `lot/carnet-seuils-1014` (0224e48f) : l'article 1er de l'arrêté du
+23 juin 1978 (LEGIARTI000006827998, version du 21 juillet 1978) est lu sur sa
+page propre par `WebFetch`, rendu en morceaux consécutifs contre le résumé
+silencieux, et consigné au même corpus. Son ~~alinéa 4~~ alinéa 5 [2026-10-14,
+revue indépendante : recompté sur l'API Légifrance, `texteHtml` découpé en
+paragraphes ; l'alinéa 4 est celui du titre II] étend le titre III —
+articles 31 à 37, donc l'article 36 — à toutes les installations d'eau chaude
+des bâtiments d'habitation, de bureaux ou recevant du public. Il ne distingue
+pas le neuf de l'existant.]
 ### C16 · 2026-09-20 — Le chapitre « chaleur intense », encodé trois semaines après son instruction
 
 **Lu :** `R. 4463-1` à `R. 4463-8` du code du travail (créés par le décret

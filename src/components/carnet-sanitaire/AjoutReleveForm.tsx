@@ -9,6 +9,7 @@ import {
   modifierReleve,
   type CarnetActionState,
 } from "@/lib/carnet-sanitaire/actions";
+import { estReleveConforme, libelleSeuils } from "@/lib/carnet-sanitaire/schema";
 import { cleJourCivil } from "@/lib/dates";
 import { formaterMesure } from "@/lib/rendu/mesures";
 
@@ -24,13 +25,15 @@ export function AjoutReleveForm({
   etablissementId,
   pointReleveId,
   seuilMinCelsius,
-  typeReseau,
+  seuilMaxCelsius,
   releve,
 }: {
   etablissementId: string;
   pointReleveId: string;
-  seuilMinCelsius: number;
-  typeReseau: string;
+  /** La plage du point (2026-10-14) ; l'aperçu la lit par
+   *  `estReleveConforme`, comme le serveur. */
+  seuilMinCelsius: number | null;
+  seuilMaxCelsius: number | null;
   releve?: {
     id: string;
     /** « AAAA-MM-JJ ». */
@@ -58,12 +61,9 @@ export function AjoutReleveForm({
   const sfx = releve ? releve.id : pointReleveId;
 
   const tempNum = temperature ? parseFloat(temperature) : null;
+  const seuils = { seuilMinCelsius, seuilMaxCelsius };
   const dansLaPlage =
-    tempNum === null
-      ? null
-      : typeReseau === "EFS"
-        ? tempNum <= seuilMinCelsius
-        : tempNum >= seuilMinCelsius;
+    tempNum === null || Number.isNaN(tempNum) ? null : estReleveConforme(tempNum, seuils);
 
   if (!ouvert) {
     return releve ? (
@@ -150,7 +150,7 @@ export function AjoutReleveForm({
             id={`seuil-${sfx}`}
             className="m-0 mt-1.5 text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
           >
-            Seuil {typeReseau === "EFS" ? "max" : "min"} : {formaterMesure(seuilMinCelsius, "°C", 0, 1)}
+            Plage du point : {libelleSeuils(seuils, (c) => formaterMesure(c, "°C", 0, 1))}
           </p>
         </div>
       </div>

@@ -9,11 +9,14 @@ import { AjoutPointReleveForm } from "@/components/carnet-sanitaire/AjoutPointRe
 import { AjoutReleveForm } from "@/components/carnet-sanitaire/AjoutReleveForm";
 import { AjoutAnalyseForm } from "@/components/carnet-sanitaire/AjoutAnalyseForm";
 import { GraphTemperatures } from "@/components/carnet-sanitaire/GraphTemperatures";
+import { InvitationTypePoint } from "@/components/carnet-sanitaire/InvitationTypePoint";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { getCarnetSanitaire } from "@/lib/carnet-sanitaire/queries";
 import { listerBatimentsDeLEtablissement } from "@/lib/batiments/queries";
 import {
   LABEL_RESEAU,
+  LABEL_TYPE_POINT,
+  libelleSeuils,
   SEUIL_LEGIONELLE_UFC_PAR_L,
   resultatAnalyse,
 } from "@/lib/carnet-sanitaire/schema";
@@ -243,12 +246,12 @@ export default async function CarnetSanitairePage({
                           {p.nom}
                         </p>
                         <p className="board-eyebrow m-0 mt-1 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
-                          {LABEL_RESEAU[p.typeReseau]}
+                          {p.typePoint ? LABEL_TYPE_POINT[p.typePoint] : LABEL_RESEAU[p.typeReseau]}
                           {p.localisation && ` · ${p.localisation}`}
-                          {" · seuil "}
-                          {p.typeReseau === "EFS" ? "max" : "min"}{" "}
-                          {formaterMesure(p.seuilMinCelsius, "°C", 0, 1)}
+                          {" · "}
+                          {libelleSeuils(p, (c) => formaterMesure(c, "°C", 0, 1))}
                         </p>
+                        <InvitationTypePoint typePoint={p.typePoint} />
                         {/* Qui a relevé, et quand. Le formulaire demande ce
                             nom depuis toujours ; jusqu'au 2026-08-28 son seul
                             lecteur était l'export ZIP remis à un tiers — d'où
@@ -314,7 +317,7 @@ export default async function CarnetSanitairePage({
                       <GraphTemperatures
                         releves={p.releves}
                         seuilMinCelsius={p.seuilMinCelsius}
-                        typeReseau={p.typeReseau}
+                        seuilMaxCelsius={p.seuilMaxCelsius}
                       />
                     </div>
 
@@ -323,7 +326,7 @@ export default async function CarnetSanitairePage({
                         etablissementId={id}
                         pointReleveId={p.id}
                         seuilMinCelsius={p.seuilMinCelsius}
-                        typeReseau={p.typeReseau}
+                        seuilMaxCelsius={p.seuilMaxCelsius}
                       />
                     </div>
 
@@ -349,7 +352,7 @@ export default async function CarnetSanitairePage({
                                 etablissementId={id}
                                 pointReleveId={p.id}
                                 seuilMinCelsius={p.seuilMinCelsius}
-                                typeReseau={p.typeReseau}
+                                seuilMaxCelsius={p.seuilMaxCelsius}
                                 releve={{
                                   id: r.id,
                                   dateReleve: cleJourCivil(r.dateReleve),
@@ -381,7 +384,9 @@ export default async function CarnetSanitairePage({
                           localisation: p.localisation,
                           batimentId: p.batimentId,
                           typeReseau: p.typeReseau,
+                          typePoint: p.typePoint,
                           seuilMinCelsius: p.seuilMinCelsius,
+                          seuilMaxCelsius: p.seuilMaxCelsius,
                         }}
                       />
                       <BoutonRetirer

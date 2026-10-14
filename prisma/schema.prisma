@@ -1666,7 +1666,15 @@ model PointReleve {
   batimentId      String?
   batiment        Batiment?     @relation(fields: [batimentId], references: [id], onDelete: SetNull)
   typeReseau      TypeReseauEau
-  seuilMinCelsius Float         @default(50)
+  /// Où est le point (2026-10-14, chantier § 5). `null` : point créé avant
+  /// que le type existe, jamais deviné — la fiche invite à le préciser.
+  typePoint       TypePointReleve?
+  /// Minimum (≥) et maximum (≤) de la plage du point ; chacun facultatif,
+  /// au moins un des deux (CHECK `PointReleve_un_seuil_au_moins`, et
+  /// `min ≤ max` par `PointReleve_seuils_ordonnes`). Lus par la seule
+  /// `estReleveConforme`.
+  seuilMinCelsius Float?
+  seuilMaxCelsius Float?
   actif           Boolean       @default(true)
 
   releves ReleveTemperature[]
@@ -1716,6 +1724,17 @@ enum TypeReseauEau {
   ECS
   EFS
   ECS_BOUCLAGE
+}
+
+/// Le type d'un point de relevé : il préremplit les seuils (article 36 de
+/// l'arrêté du 23 juin 1978 ; 20 °C de l'eau froide, repère de Rojer) et
+/// donne le réseau (`RESEAU_DU_TYPE_POINT`).
+enum TypePointReleve {
+  SORTIE_STOCKAGE
+  RETOUR_BOUCLE
+  PUISAGE_TOILETTE
+  PUISAGE_AUTRE
+  EAU_FROIDE
 }
 
 // ----------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 import { cleJourCivil, depuisCleJourCivil, estJourCivilReel } from "@/lib/dates";
 import { z } from "zod";
-import { TypeReseauEau } from "@prisma/client";
+import type { TypePointReleve, TypeReseauEau } from "@prisma/client";
 
 const DATE_FMT = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -17,28 +17,97 @@ export const LABEL_RESEAU: Record<TypeReseauEau, string> = {
 };
 
 /**
- * Valeurs PROPOSÉES à la création d'un point — modifiables, et qui ne sont pas
- * des seuils de l'arrêté du 1er février 2010 : ce texte ne porte AUCUNE
- * température (lu le 2026-09-20, `corpus/arrete-2010-02-01-legionelles.ts`).
+ * ~~`SEUIL_DEFAUT` : un seuil par TYPE DE RÉSEAU — `{ ECS: 50, EFS: 20,
+ * ECS_BOUCLAGE: 50 }` —, lu comme un minimum en eau chaude et comme un maximum
+ * en eau froide.~~ [2026-10-14, `lot/carnet-seuils-1014`, chantier § 5 :
+ * retiré. Le réseau ne dit pas OÙ est le point, et c'est l'endroit qui décide
+ * du seuil — un robinet de toilette à 60 °C se lisait « dans la plage ».]
  *
+ * Son historique, gardé parce qu'il dit d'où viennent les valeurs :
  * ~~ECS: 50 // au puisage (arrêté 01-02-2010)~~ · ~~ECS_BOUCLAGE: 55 // retour
- * de boucle~~ — deux attributions fausses. Les températures viennent de
- * l'article 36 § 2 de l'arrêté du 23 juin 1978 :
- *   - 50 °C AU MOINS « en tout point du système de distribution, à l'exception
- *     des tubes finaux » — donc le retour de boucle, et PAS le robinet, où le
- *     § 1 fixe au contraire 50 °C AU PLUS dans les pièces de toilette ;
- *   - 55 °C AU MOINS « à la sortie des équipements » de stockage de 400 litres
- *     et plus — pas au retour de boucle, où le module le plaçait.
- * Le bouclage passe donc de 55 à 50. Seuls les points créés ensuite sont
- * touchés : chaque point existant garde le seuil qu'il a enregistré.
+ * de boucle~~ — deux attributions fausses (2026-09-20). L'arrêté du 1er février
+ * 2010 ne porte AUCUNE température (`corpus/arrete-2010-02-01-legionelles.ts`) ;
+ * elles viennent de l'article 36 de l'arrêté du 23 juin 1978, dont l'article
+ * 1er (lu le 2026-10-14) étend le titre III aux bâtiments d'habitation, de
+ * bureaux et recevant du public.
  *
- * 20 °C pour l'eau froide ne vient d'aucun des deux textes : repère du produit.
+ * LE TYPE DE POINT (décision de la propriétaire du 2026-10-14). L'utilisateur
+ * dit où est le point ; le type préremplit les seuils, qui restent modifiables,
+ * et donne le réseau. Les valeurs, toutes PROPOSÉES :
+ *   - sortie d'un stockage de 400 L ou plus au total, ballons de
+ *     préchauffage exclus : 55 °C AU MOINS (art. 36 § 2 : « lorsque le volume
+ *     total des équipements de stockage est supérieur ou égal à 400 litres,
+ *     l'eau contenue dans les équipements de stockage, à l'exclusion des
+ *     ballons de préchauffage, doit […] être en permanence à une température
+ *     supérieure ou égale à 55 °C à la sortie des équipements ») ;
+ *   - retour de boucle / réseau : 50 °C AU MOINS (art. 36 § 2 : « en tout
+ *     point du système de distribution », quand plus de 3 litres séparent la
+ *     mise en distribution du point le plus éloigné) ;
+ *   - point de puisage d'une pièce de toilette : 50 °C AU PLUS (§ 1), et PAS
+ *     de minimum — le § 2 en exempte « les tubes finaux d'alimentation des
+ *     points de puisage » ;
+ *   - point de puisage d'une autre pièce : 60 °C AU PLUS (§ 1), pas de
+ *     minimum non plus ;
+ *   - eau froide : 20 °C AU PLUS — repère de Rojer, qu'aucun des deux textes
+ *     ne fixe.
+ * Les points créés avant le 2026-10-14 n'ont pas de type (`null`) : il ne se
+ * déduit de rien de stocké, et ne se devine pas — sauf l'eau froide, que la
+ * migration `20261014120000` a typée parce que c'est le seul type de son réseau.
+ *
+ * LA SORTIE D'UN BALLON DE MOINS DE 400 L (revue du 2026-10-14). L'article ne
+ * lui fixe RIEN de propre : la condition des 55 °C est le volume TOTAL de
+ * stockage. Elle n'est donc pas un type ; un tel point relève, s'il en relève,
+ * des 50 °C « en tout point du système de distribution » — le type « retour
+ * de boucle / réseau ». ~~« Sortie de production / stockage de 400 L ou
+ * plus »~~ : le libellé laissait choisir 55 °C pour un petit ballon.
  */
-export const SEUIL_DEFAUT: Record<TypeReseauEau, number> = {
-  ECS: 50,
-  EFS: 20,
-  ECS_BOUCLAGE: 50,
+export const TYPES_POINT = [
+  "SORTIE_STOCKAGE",
+  "RETOUR_BOUCLE",
+  "PUISAGE_TOILETTE",
+  "PUISAGE_AUTRE",
+  "EAU_FROIDE",
+] as const satisfies readonly TypePointReleve[];
+
+export const LABEL_TYPE_POINT: Record<TypePointReleve, string> = {
+  // Libellés revus le 2026-10-14 (revue indépendante) pour suivre l'article
+  // 36 : « pièces destinées à la toilette » (une baignoire, un bidet y sont),
+  // « autres pièces », et le volume TOTAL de stockage hors préchauffage.
+  SORTIE_STOCKAGE: "Sortie d'un stockage de 400 L ou plus au total (hors ballon de préchauffage)",
+  RETOUR_BOUCLE: "Retour de boucle / réseau de distribution",
+  PUISAGE_TOILETTE: "Point de puisage d'une pièce de toilette (douche, lavabo, baignoire…)",
+  PUISAGE_AUTRE: "Point de puisage d'une autre pièce (cuisine, plonge…)",
+  EAU_FROIDE: "Eau froide",
 };
+
+/** Les deux bornes d'une plage ; `null` : pas de borne de ce côté. */
+export type SeuilsPoint = {
+  seuilMinCelsius: number | null;
+  seuilMaxCelsius: number | null;
+};
+
+export const SEUILS_TYPE_POINT: Record<TypePointReleve, SeuilsPoint> = {
+  SORTIE_STOCKAGE: { seuilMinCelsius: 55, seuilMaxCelsius: null },
+  RETOUR_BOUCLE: { seuilMinCelsius: 50, seuilMaxCelsius: null },
+  PUISAGE_TOILETTE: { seuilMinCelsius: null, seuilMaxCelsius: 50 },
+  PUISAGE_AUTRE: { seuilMinCelsius: null, seuilMaxCelsius: 60 },
+  EAU_FROIDE: { seuilMinCelsius: null, seuilMaxCelsius: 20 },
+};
+
+/** Le réseau que le type de point donne : il n'est plus choisi à part. */
+export const RESEAU_DU_TYPE_POINT: Record<TypePointReleve, TypeReseauEau> = {
+  SORTIE_STOCKAGE: "ECS",
+  RETOUR_BOUCLE: "ECS_BOUCLAGE",
+  PUISAGE_TOILETTE: "ECS",
+  PUISAGE_AUTRE: "ECS",
+  EAU_FROIDE: "EFS",
+};
+
+/** Un seuil saisi : vide = pas de borne de ce côté. */
+const seuilFacultatif = z.preprocess(
+  (v) => (v === "" || v === null || v === undefined ? null : v),
+  z.coerce.number().min(0).max(100).nullable(),
+);
 
 
 export const pointReleveSchema = z.object({
@@ -52,9 +121,50 @@ export const pointReleveSchema = z.object({
     (v) => (v === "" || v === null ? undefined : v),
     z.string().optional(),
   ),
-  typeReseau: z.enum(TYPES_RESEAU),
-  seuilMinCelsius: z.coerce.number().min(0).max(100).default(50),
-});
+  /**
+   * Requis à la création (`creerPointReleve`). Absent à la correction d'un
+   * point créé avant le type : le point garde alors son `typeReseau`, que le
+   * formulaire renvoie tel quel.
+   */
+  typePoint: z.preprocess(
+    (v) => (v === "" || v === null ? undefined : v),
+    z.enum(TYPES_POINT).optional(),
+  ),
+  typeReseau: z.preprocess(
+    (v) => (v === "" || v === null ? undefined : v),
+    z.enum(TYPES_RESEAU).optional(),
+  ),
+  seuilMinCelsius: seuilFacultatif,
+  seuilMaxCelsius: seuilFacultatif,
+})
+  // Le type donne le réseau ; sans type, le réseau reçu est gardé.
+  .transform(({ typeReseau, ...p }) => ({
+    ...p,
+    typeReseau: p.typePoint ? RESEAU_DU_TYPE_POINT[p.typePoint] : typeReseau,
+  }))
+  .superRefine((p, ctx) => {
+    if (!p.typeReseau) {
+      ctx.addIssue({ code: "custom", path: ["typePoint"], message: "Type de point requis" });
+    }
+    if (p.seuilMinCelsius === null && p.seuilMaxCelsius === null) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["seuilMinCelsius"],
+        message: "Indiquez au moins un seuil : un minimum, un maximum, ou les deux.",
+      });
+    }
+    if (
+      p.seuilMinCelsius !== null &&
+      p.seuilMaxCelsius !== null &&
+      p.seuilMinCelsius > p.seuilMaxCelsius
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["seuilMaxCelsius"],
+        message: "Le maximum ne peut pas être inférieur au minimum.",
+      });
+    }
+  });
 
 /**
  * Une date de relevé ou d'analyse : un fait accompli, donc jamais dans le
@@ -138,17 +248,43 @@ export function resultatAnalyse(valeurUfcParL: number | null | undefined): Resul
 }
 
 /**
- * Vérifie si un relevé est conforme en fonction du seuil du point.
- * Pour ECS : température ≥ seuilMinCelsius (50 °C proposés par défaut).
- * Pour EFS : température ≤ seuilMinCelsius (traité comme plafond supérieur).
+ * Un relevé tombe-t-il dans la plage du point ? Au-dessus du minimum quand il
+ * y en a un, au-dessous du maximum quand il y en a un — bornes incluses. La
+ * SEULE lecture des seuils : la saisie, la correction, le recalcul au
+ * changement de seuils (`actions.ts`) et l'aperçu du formulaire de relevé la
+ * lisent ; la carte, le graphique et le ZIP lisent la colonne qu'elle écrit.
+ *
+ * ~~`(temperatureCelsius, seuilMinCelsius, typeReseau)` : en ECS
+ * `temperature >= seuil`, en EFS `temperature <= seuil` (le même champ lu
+ * comme un plafond).~~ [2026-10-14, chantier § 5 : un seul seuil ne disait pas
+ * le maximum d'un robinet de toilette, et toute eau chaude au-dessus du
+ * minimum passait. Le réseau n'est plus lu ; le seuil de l'eau froide a été
+ * recopié en maximum par la migration `20261014120000`.]
+ *
+ * Le champ s'appelle `conforme` en base ; l'écran dit « dans la plage » —
+ * l'outil ne prononce pas la conformité d'une installation (règle 8).
  */
-export function estReleveConforme(
-  temperatureCelsius: number,
-  seuilMinCelsius: number,
-  typeReseau: TypeReseauEau,
-): boolean {
-  if (typeReseau === "EFS") {
-    return temperatureCelsius <= seuilMinCelsius;
+export function estReleveConforme(temperatureCelsius: number, seuils: SeuilsPoint): boolean {
+  if (seuils.seuilMinCelsius !== null && temperatureCelsius < seuils.seuilMinCelsius) {
+    return false;
   }
-  return temperatureCelsius >= seuilMinCelsius;
+  if (seuils.seuilMaxCelsius !== null && temperatureCelsius > seuils.seuilMaxCelsius) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * La plage d'un point, en mots : « min 50 °C », « max 60 °C »,
+ * « min 50 °C · max 60 °C ». Un seul libellé pour la fiche, le formulaire de
+ * relevé et l'export de contrôle.
+ */
+export function libelleSeuils(
+  seuils: SeuilsPoint,
+  formater: (celsius: number) => string,
+): string {
+  const parties: string[] = [];
+  if (seuils.seuilMinCelsius !== null) parties.push(`min ${formater(seuils.seuilMinCelsius)}`);
+  if (seuils.seuilMaxCelsius !== null) parties.push(`max ${formater(seuils.seuilMaxCelsius)}`);
+  return parties.join(" · ");
 }

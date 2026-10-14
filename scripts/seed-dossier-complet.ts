@@ -105,6 +105,7 @@ import {
 } from "@prisma/client";
 
 import { genererSlug } from "@/lib/accessibilite/schema";
+import { estReleveConforme } from "@/lib/carnet-sanitaire/schema";
 import { NOM_BATIMENT_PRINCIPAL } from "@/lib/batiments/schema";
 import { calculerCriticite } from "@/lib/cotation";
 import {
@@ -1467,18 +1468,20 @@ async function main(): Promise<void> {
   for (const point of carnet.pointsReleve) {
     const valeurs = MESURES[point.nom] ?? [];
     for (const [i, temperature] of valeurs.entries()) {
+      // La seule lecture des seuils (2026-10-14) : les points de démonstration
+      // n'ont pas de type ni de maximum, ils restent des points « d'avant ».
+      const conforme = estReleveConforme(temperature, point);
       await prisma.releveTemperature.create({
         data: {
           pointReleveId: point.id,
           // i = 0 est le plus ancien : six relevés mensuels jusqu'au mois passé.
           dateReleve: jours(-30 * (valeurs.length - i)),
           temperatureCelsius: temperature,
-          conforme: temperature >= point.seuilMinCelsius,
+          conforme,
           operateur: "Gérant",
-          commentaire:
-            temperature < point.seuilMinCelsius
-              ? "Sous le seuil — purge du bras mort et contrôle du bouclage demandés."
-              : null,
+          commentaire: !conforme
+            ? "Sous le seuil — purge du bras mort et contrôle du bouclage demandés."
+            : null,
         },
       });
       nbReleves += 1;
