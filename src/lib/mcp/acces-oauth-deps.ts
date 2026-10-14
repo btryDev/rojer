@@ -14,7 +14,7 @@ import "server-only";
 // fichier dont la règle est la raison d'être.
 
 import { createClient } from "@supabase/supabase-js";
-import { prismaMcp } from "./prisma";
+import { dbMcp } from "./db";
 import type { ChercheurEtablissement, VerificateurJeton } from "./acces-oauth";
 
 /**
@@ -79,7 +79,7 @@ export function creerVerificateurSupabase(
  */
 export const chercherEtablissementDeUtilisateur: ChercheurEtablissement =
   async (userId) => {
-    const entreprise = await prismaMcp.entreprise.findUnique({
+    const entreprise = await dbMcp().entreprise.findUnique({
       where: { userId },
       select: {
         etablissements: {

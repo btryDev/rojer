@@ -35,7 +35,7 @@ const { prismaMock, verifierMock, chercherMock } = vi.hoisted(() => ({
   chercherMock: vi.fn(),
 }));
 
-vi.mock("./prisma", () => ({ prismaMcp: prismaMock }));
+vi.mock("./db", () => ({ dbMcp: () => prismaMock }));
 vi.mock("./acces-oauth-deps", () => ({
   creerVerificateurSupabase: () => verifierMock,
   chercherEtablissementDeUtilisateur: chercherMock,

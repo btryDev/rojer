@@ -29,7 +29,7 @@ const { prismaMock } = vi.hoisted(() => ({
   },
 }));
 
-vi.mock("./prisma", () => ({ prismaMcp: prismaMock }));
+vi.mock("./db", () => ({ dbMcp: () => prismaMock }));
 
 process.env.MCP_CLE = CLE;
 process.env.MCP_ETABLISSEMENT_ID = ETAB;

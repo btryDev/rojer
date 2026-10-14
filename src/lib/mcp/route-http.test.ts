@@ -27,7 +27,7 @@ const { prismaMock } = vi.hoisted(() => ({
   },
 }));
 
-vi.mock("./prisma", () => ({ prismaMcp: prismaMock }));
+vi.mock("./db", () => ({ dbMcp: () => prismaMock }));
 
 // La route lit sa configuration au chargement du module : l'environnement
 // doit être posé avant l'import.

@@ -44,7 +44,7 @@ import {
   type LignePrudence,
   type RetenueParPrudence,
 } from "@/lib/calendrier/prudence";
-import { prismaMcp } from "./prisma";
+import { dbMcp } from "./db";
 import { estAppareilRetire } from "@/lib/equipements/retrait";
 import type { FaitParc } from "@/lib/perimetre/couverture";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
@@ -90,18 +90,18 @@ export type FicheEtablissement = NonNullable<
 export async function getFraicheurCalendrier(
   etablissementId: string,
 ): Promise<FraicheurCalendrier> {
-  const etab = await prismaMcp.etablissement.findUnique({
+  const etab = await dbMcp().etablissement.findUnique({
     where: { id: etablissementId },
     select: { referentielVersionCalendrier: true },
   });
   if (!etab) return { etat: "jamais_genere" };
   return fraicheurDepuisRepere(etab.referentielVersionCalendrier, () =>
-    prismaMcp.verification.count({ where: { etablissementId } }),
+    dbMcp().verification.count({ where: { etablissementId } }),
   );
 }
 
 export async function getFicheEtablissement(etablissementId: string) {
-  return prismaMcp.etablissement.findUnique({
+  return dbMcp().etablissement.findUnique({
     where: { id: etablissementId },
     select: {
       raisonDisplay: true,
@@ -182,7 +182,7 @@ export async function getEtatDuerp(
   etablissementId: string,
   now: Date,
 ): Promise<EtatDuerpLu> {
-  const duerp = await prismaMcp.duerp.findFirst({
+  const duerp = await dbMcp().duerp.findFirst({
     where: { etablissementId },
     // `select` de bout en bout, et jamais `include`. `include` rend TOUS les
     // scalaires du modèle qu'il ouvre : ici il ramenait la colonne
@@ -332,7 +332,7 @@ export async function listerActions(
   filtres: FiltresActionsMcp,
   now: Date,
 ): Promise<ActionLue[]> {
-  const actions = await prismaMcp.action.findMany({
+  const actions = await dbMcp().action.findMany({
     where: {
       etablissementId,
       ...(filtres.statut ? { statut: filtres.statut } : {}),
@@ -467,7 +467,7 @@ export async function listerEquipements(
   now: Date,
 ): Promise<EquipementLu[]> {
   const [lus, marques] = await Promise.all([
-    prismaMcp.equipement.findMany({
+    dbMcp().equipement.findMany({
     where: { etablissementId },
     // Voir `equipements/labels.ts` : l'ordre des catégories n'est pas celui de
     // l'enum PostgreSQL, il se pose après la lecture.
@@ -504,7 +504,7 @@ export async function listerEquipements(
     }),
     // D1 (a) : une ligne que seul le silence de la fiche retient ne compte pas
     // dans les retards de son appareil. La portée est celle du jeton.
-    marquesAConfirmerDuDossier(prismaMcp, { id: etablissementId }),
+    marquesAConfirmerDuDossier(dbMcp(), { id: etablissementId }),
   ]);
   const equipements = trierParCategorie(lus);
   const prudence = retenueParPrudence(marques.parObligation);
@@ -538,7 +538,7 @@ export async function listerEquipements(
 export async function getParcEquipements(
   etablissementId: string,
 ): Promise<FaitParc> {
-  const lus = await prismaMcp.equipement.findMany({
+  const lus = await dbMcp().equipement.findMany({
     where: { etablissementId },
     select: { actif: true },
   });
@@ -644,7 +644,7 @@ export async function listerVerifications(
   now: Date,
 ): Promise<VerificationLue[]> {
   const [brutes, marques] = await Promise.all([
-    prismaMcp.verification.findMany({
+    dbMcp().verification.findMany({
     where: { etablissementId },
     orderBy: { datePrevue: "asc" },
     select: {
@@ -689,7 +689,7 @@ export async function listerVerifications(
     // du 2026-09-27, § 6.3) : sans le mot, il restituerait comme due une
     // ligne que seul un silence de la fiche fait exister. La portée est celle
     // du jeton, déjà établie.
-    marquesAConfirmerDuDossier(prismaMcp, { id: etablissementId }),
+    marquesAConfirmerDuDossier(dbMcp(), { id: etablissementId }),
   ]);
 
   const prudence = retenueParPrudence(marques.parObligation);
@@ -798,7 +798,7 @@ export async function listerVerifications(
 export async function getNomEtablissement(
   etablissementId: string,
 ): Promise<string | null> {
-  const e = await prismaMcp.etablissement.findUnique({
+  const e = await dbMcp().etablissement.findUnique({
     where: { id: etablissementId },
     select: { raisonDisplay: true, adresse: true },
   });

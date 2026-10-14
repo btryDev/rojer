@@ -299,7 +299,8 @@ bruit dépasse l'écart. Il n'existe que sur un pool de plus d'une connexion.
 - **Correctif** : `Promise.all` après la garde d'accès. Le gain n'existe que sur un pool > 1 connexion, donc chez CC.
 - **Effort** : S. **[Maintenant]**
 
-### M5 Deux `PrismaClient` dans le même processus
+### ~~M5 Deux `PrismaClient` dans le même processus~~
+**[Corrigé le 2026-10-14, `lot/nextjs-infra-1014`.]** Les lectures MCP (`queries.ts`, `acces-oauth-deps.ts`) prennent leur client par `dbMcp()` (`src/lib/mcp/db.ts`), lu à chaque appel : le singleton `@/lib/prisma` par défaut, donc un seul client dans le processus web (route `/api/mcp` **et** page « Connecter », qui tirait aussi `prismaMcp` par `tools.ts`). `scripts/mcp-server.ts`, seul importeur de `prismaMcp`, le substitue au démarrage (`utiliserClientMcp`). `db.test.ts` refuse tout autre importeur (vu rouge en réimportant `./prisma` dans `queries.ts`). `pnpm mcp` vérifié sur la base locale avec `NODE_ENV=development` : 3 lignes sur stdout, toutes JSON-RPC, la trace « prêt » sur stderr ; sans la substitution, 4 lignes `prisma:query` sur stdout — elle est porteuse. Le singleton est importé mais jamais interrogé dans le processus stdio : aucune connexion. → bascule : fixer `connection_limit` selon `max_connections` du plan CC (H2), inchangé ici.
 - **Où** : `src/lib/mcp/prisma.ts:18` (`prismaMcp`), utilisé par `mcp/queries.ts` et `mcp/acces-oauth-deps.ts`, donc par la route HTTP `/api/mcp`.
 - **Constat** : justifié en commentaire pour le serveur stdio (logs sur stderr). Mais la route HTTP en hérite.
 - **Impact** : sur un Node permanent, deux pools vers la même base, à compter dans `max_connections` du plan CC.
