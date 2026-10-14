@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { requireUser } from "@/lib/auth/require-user";
-import { prisma } from "@/lib/prisma";
+import { requireAnalyseLegionelle } from "@/lib/auth/scope";
 import { servirFichier } from "@/lib/storage/servir";
 
 /**
@@ -12,27 +11,17 @@ import { servirFichier } from "@/lib/storage/servir";
  *
  * **Appartenance** : l'analyse n'est servie que si
  * `AnalyseLegionelle → CarnetSanitaire → Etablissement → Entreprise → userId`
- * est celui de la session, dans le `findFirst` même. 403 pour une analyse
- * hors périmètre comme pour une analyse inexistante : pas d'oracle
- * d'existence. 404 pour une analyse à soi sans rapport déposé.
+ * est celui de la session (`requireAnalyseLegionelle`, `auth/scope.ts`).
+ * ~~403~~ 404 pour une analyse hors périmètre comme pour une analyse
+ * inexistante — pas d'oracle d'existence ; depuis le 2026-10-14, audit
+ * Next.js B6. 404 aussi pour une analyse à soi sans rapport déposé.
  */
 export async function GET(
   _req: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
-  const user = await requireUser();
   const { id } = await context.params;
-
-  const analyse = await prisma.analyseLegionelle.findFirst({
-    where: {
-      id,
-      carnet: { etablissement: { entreprise: { userId: user.id } } },
-    },
-    select: { rapportCle: true, rapportNom: true },
-  });
-  if (!analyse) {
-    return new NextResponse("Analyse introuvable ou hors périmètre", { status: 403 });
-  }
+  const { analyse } = await requireAnalyseLegionelle(id);
   if (!analyse.rapportCle) {
     return new NextResponse("Aucun rapport de laboratoire déposé pour cette analyse", {
       status: 404,

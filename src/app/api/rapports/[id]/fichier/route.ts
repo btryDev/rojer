@@ -1,6 +1,5 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { requireUser } from "@/lib/auth/require-user";
-import { prisma } from "@/lib/prisma";
+import type { NextRequest } from "next/server";
+import { requireRapportVerification } from "@/lib/auth/scope";
 import { servirFichier } from "@/lib/storage/servir";
 
 /**
@@ -14,38 +13,21 @@ import { servirFichier } from "@/lib/storage/servir";
  * **Scoping (ADR-005).** Le rapport n'est servi que si son établissement
  * appartient au user connecté : la relation complète
  * `RapportVerification → Etablissement → Entreprise → userId` est vérifiée
- * dans le `findFirst` ci-dessous. Avant ce garde, un simple
- * identifiant suffisait à télécharger le rapport de vérification de
+ * par `requireRapportVerification` (`auth/scope.ts`). Avant ce garde, un
+ * simple identifiant suffisait à télécharger le rapport de vérification de
  * n'importe quel client : un rapport porte la raison sociale, l'adresse et
  * les écarts constatés chez un tiers.
  *
- * On répond 403 (et non 404) pour un rapport existant hors périmètre comme
- * pour un rapport inexistant : la réponse ne doit pas permettre de
- * distinguer les deux cas, sans quoi elle devient un oracle d'existence.
+ * Même réponse pour un rapport hors périmètre et pour un rapport inexistant,
+ * sans quoi elle devient un oracle d'existence : ~~403~~ 404 depuis le
+ * 2026-10-14 (audit Next.js, B6), celui de toutes les gardes de `scope.ts`.
  */
 export async function GET(
   _req: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
-  const user = await requireUser();
   const { id } = await context.params;
-
-  const rapport = await prisma.rapportVerification.findFirst({
-    where: {
-      id,
-      etablissement: { entreprise: { userId: user.id } },
-    },
-    select: {
-      fichierCle: true,
-      fichierMime: true,
-      fichierNomOriginal: true,
-    },
-  });
-  if (!rapport) {
-    return new NextResponse("Rapport introuvable ou hors périmètre", {
-      status: 403,
-    });
-  }
+  const { rapport } = await requireRapportVerification(id);
 
   // Lecture et réponse : `storage/servir.ts`, commun aux trois routes de
   // fichiers (2026-09-27).

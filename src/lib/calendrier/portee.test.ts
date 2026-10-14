@@ -458,7 +458,14 @@ describe("les pages emploient bien ce que `portee.ts` leur tient", () => {
     readFileSync(join(RACINE, "src", "app", "etablissements", "[id]", relatif), "utf8");
 
   it("la page d'établissement filtre ses cinq prochaines par `echeancesAnnoncables`", () => {
-    expect(source("page.tsx")).toContain("echeancesAnnoncables()");
+    // La lecture vit dans `calendrier/queries.ts` depuis le 2026-10-14 (audit
+    // Next.js, B6) : la page l'appelle, la query porte la clause, sans `take`.
+    expect(source("page.tsx")).toContain("listerEcheancesAnnoncables(id, batimentFiltre)");
+    const queries = readFileSync(join(RACINE, "src", "lib", "calendrier", "queries.ts"), "utf8");
+    const corps = queries.slice(queries.indexOf("export async function listerEcheancesAnnoncables("));
+    const fonction = corps.slice(0, corps.indexOf("\n}\n"));
+    expect(fonction).toContain("echeancesAnnoncables()");
+    expect(fonction.replace(/^\s*\/\/.*$/gm, "")).not.toMatch(/take:/);
   });
 
   it("et les choisit après projection, pas par un `take` en base", () => {

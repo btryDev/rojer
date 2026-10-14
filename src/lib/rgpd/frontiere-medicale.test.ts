@@ -919,7 +919,9 @@ describe("les noms saisis en texte libre ne partent ni vers un assistant ni vers
     },
     {
       champ: "operateur",
-      chemins: [/^app\/api\//],
+      // `lib/controle/` : les lectures du ZIP y vivent depuis le 2026-10-14
+      // (audit Next.js, B6) — la règle les suit.
+      chemins: [/^app\/api\//, /^lib\/controle\//],
       message:
         "Une route d'API lit `ReleveTemperature.operateur`. Ce champ porte le nom " +
         "de qui a fait le relevé, et l'export part vers un tiers. Aucun texte ne " +

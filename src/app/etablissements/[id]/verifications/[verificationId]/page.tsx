@@ -21,8 +21,8 @@ import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/menti
 import { referencesCitees } from "@/lib/referentiels/conformite/rythme-retenu";
 import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
 import { BlocAConfirmer } from "@/components/calendrier/BlocAConfirmer";
-import { marquesAConfirmerDuDossier } from "@/lib/etablissements/marques-a-confirmer";
-import { requireUser } from "@/lib/auth/require-user";
+import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
+import { listerActionsDeLaVerification } from "@/lib/actions/queries";
 import {
   MARQUAGE_CONTRACTUEL,
   MARQUAGE_CONTRACTUEL_LONG,
@@ -71,7 +71,6 @@ import {
 } from "@/lib/referentiels/conformite/types";
 import { uploadRapport } from "@/lib/rapports/actions";
 import { creerActionDepuisVerification } from "@/lib/actions/plan";
-import { prisma } from "@/lib/prisma";
 import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
 import { DemanderSignatureForm } from "@/components/signatures/DemanderSignatureForm";
 import {
@@ -137,16 +136,14 @@ export default async function VerificationDetailPage({
   // La ligne est-elle retenue par prudence ? Même calcul que le calendrier
   // (`matching/marques.ts`) : la fiche d'une ligne ne peut pas taire ce que
   // la liste dit.
-  const utilisateur = await requireUser();
   // Et l'âge de la ligne : ouverte par lien direct (registre, action,
   // tableau de bord d'hier), cette fiche la lit sans la réparer — seuls le
   // tableau de bord et le calendrier réparent (`regeneration-sure.ts`,
   // `docs/chantiers-ouverts.md` § 12). Une lecture du repère, aucune écriture.
   const [marques, fraicheur] = await Promise.all([
-    marquesAConfirmerDuDossier(prisma, {
-      id,
-      entreprise: { userId: utilisateur.id },
-    }),
+    // Celle du rendu (mémoïsée, même prédicat d'appartenance) : la page ne
+    // lit plus la base elle-même (audit Next.js du 2026-10-14, B6).
+    marquesAConfirmerDuRendu(id),
     fraicheurCalendrier(id),
   ]);
   const marque = marques.parObligation.get(v.obligationId) ?? null;
@@ -158,10 +155,7 @@ export default async function VerificationDetailPage({
     obligation && !estPorteeParEquipement(obligation)
       ? (obligation.equipementsEnContexte ?? [])
       : [];
-  const actionsLiees = await prisma.action.findMany({
-    where: { verificationId: v.id },
-    orderBy: [{ statut: "asc" }, { echeance: "asc" }],
-  });
+  const actionsLiees = await listerActionsDeLaVerification(v.id);
   const boundCreerAction = creerActionDepuisVerification.bind(null, v.id);
   const boundUpload = uploadRapport.bind(null, v.id);
 
