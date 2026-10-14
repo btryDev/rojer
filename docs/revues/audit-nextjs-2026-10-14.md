@@ -191,7 +191,7 @@ la page un compte d'avant régénération. Seule sa moitié indépendante des li
 - **Axe** : 9. **[Recette bascule]**
 - **Où et constat** :
   - `package.json:10` : `"build": "prisma generate && next build && prisma migrate deploy"`. Tout build migre la base qu'il vise (B7, toujours ouvert).
-  - `src/lib/calendrier/regeneration-sure.ts:90` : `if (process.env.VERCEL_ENV === "preview") return false;`. Chez CC, la variable n'existe pas : une preview **écrirait** le calendrier.
+  - ~~`src/lib/calendrier/regeneration-sure.ts:90` : `if (process.env.VERCEL_ENV === "preview") return false;`. Chez CC, la variable n'existe pas : une preview **écrirait** le calendrier.~~ **[Corrigé le 2026-10-14, `lot/nextjs-infra-1014`]** La garde lit `ecritureAutomatiqueAutorisee()` (`src/lib/environnement.ts`) : `APP_ENV` (`production` | `preview` | `development`) d'abord, `VERCEL_ENV` à défaut (rien à poser sur Vercel aujourd'hui), développement hors build de production ; un serveur de production qui ne dit pas ce qu'il est, ou une valeur inconnue, est **indéterminé et n'écrit pas**. Éprouvé : l'ancienne garde remise en place, le test « préversion hors Vercel » passe au rouge. → bascule : poser `APP_ENV=production` sur l'application CC de prod et `APP_ENV=preview` sur toute préversion.
   - `src/lib/mcp/hotes.ts:29` : hôtes autorisés pris dans `VERCEL_PROJECT_PRODUCTION_URL` / `VERCEL_URL`. Sans `MCP_HOTES`, l'hôte de prod est refusé, et la variable est absente de `.env.example`.
   - `maxDuration` (`controle-zip`, `api/mcp`) n'a plus d'effet.
   - Pas de `output: "standalone"`.
