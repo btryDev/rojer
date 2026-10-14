@@ -262,6 +262,16 @@ calendrier. Sur une obligation de criticité élevée, une sur-application
 visible — que le dirigeant éteint en répondant « non » — vaut toujours
 mieux qu'un faux négatif muet.
 
+[2026-10-13 : **une exception, et elle a sa raison** — quand la réponse est
+EXIGÉE là où la condition décide (`QUESTIONS_EXIGEES_PAR_DECISION`,
+`src/lib/equipements/reponses-exigees.ts` : le formulaire refuse
+l'enregistrement sans « oui » ou « non », la relance des appareils muets
+pose la question), il n'y a plus de silence à protéger, et une condition
+stricte est sûre. C'est le cas du désenfumage mécanique (2026-10-12) et du
+groupe électrogène de sécurité (2026-10-13). L'appareil déclaré avant la
+décision, jamais rouvert, reste muet jusqu'à la réponse : c'est la relance
+qui le couvre, pas le calendrier.]
+
 Côté formulaire, ces propriétés sont donc des questions à **trois états**
 (oui / non / « je ne sais pas encore ») et non des cases à cocher : une
 case décochée ne distingue pas « non » de « pas encore répondu ».
@@ -273,8 +283,15 @@ antérieures à cette règle et explicitement tolérées
 été appliquées sans réponse, donc personne ne peut les perdre. Une
 troisième, `elec-erp-groupe-electrogene-annuel`, en est sortie le
 2026-09-27 (C41) : la case est devenue une question à trois états, et les
-deux lignes d'EL 18 § 4 portent une condition `non_infirmee`. La liste
-est figée dans les tests ; toute nouvelle entrée doit être justifiée.
+deux lignes d'EL 18 § 4 ~~portent une condition `non_infirmee`~~
+[rayé le 2026-10-13 : elles y sont revenues, les deux, par décision de la
+propriétaire — condition `booleenne` à `true`, servies sur un « oui »
+déclaré seulement. ~~Un groupe électrogène est un appareil, le dirigeant sait
+s'il en a un : règle des propriétés d'équipement~~ [motif rayé le
+2026-10-13, seconde décision du jour : la réponse est EXIGÉE pour une
+installation électrique en ERP, donc il n'y a plus de silence — voir
+l'exception ci-dessus], référentiel `2026-10-13.2`]. La liste est figée dans les tests ; toute nouvelle entrée
+doit être justifiée.
 
 ### Exclusivité PS 32
 

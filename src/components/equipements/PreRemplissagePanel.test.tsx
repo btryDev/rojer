@@ -23,7 +23,7 @@ vi.mock("@/lib/equipements/actions", () => ({
     await new Promise<void>((r) => {
       debloquer = r;
     });
-    return { created: 8 };
+    return { status: "success" as const, created: 8 };
   },
 }));
 
