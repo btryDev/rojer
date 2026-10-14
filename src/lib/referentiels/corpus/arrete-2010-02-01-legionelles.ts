@@ -29,7 +29,9 @@
 //
 // LECTURE : `agent_verbatim`. Les textes ont été lus sur Légifrance à travers
 // l'outil de récupération, qui en rapporte le verbatim ; il n'a pas été recoupé
-// à l'œil. DEUX PASSES, ET LA SECONDE A CORRIGÉ LA PREMIÈRE : la page consolidée
+// à l'œil. [2026-10-14 : l'article 1er de l'arrêté du 23 juin 1978 a été lu de
+// même, sur sa page propre, et rendu en morceaux consécutifs pour éviter un
+// résumé silencieux.] DEUX PASSES, ET LA SECONDE A CORRIGÉ LA PREMIÈRE : la page consolidée
 // de l'arrêté d'abord, puis la page PROPRE de chaque article pour les articles
 // 1er, 2, 3, 4, 7, l'annexe 2 et l'article 36 de 1978 — la parade du journal des
 // vérifications (§ 2.D, pièges 4 à 8). La page consolidée avait rendu l'article
@@ -48,7 +50,7 @@ export const ARRETE_2010_02_01_LEGIONELLES: Corpus = {
   url: "https://www.legifrance.gouv.fr/loda/id/JORFTEXT000021795143/",
   etendue: "integral",
   portee:
-    "Les huit articles et les deux annexes de l'arrêté du 1er février 2010, lus à la source le 2026-09-20 dans leur version au 1er janvier 2023, et son texte modificateur du 30 décembre 2022. S'y ajoute UN article d'un autre texte — l'article 36 de l'arrêté du 23 juin 1978 — parce que le module du carnet sanitaire tient de lui ses deux températures : le reste de cet arrêté-là n'est PAS dépouillé, et son article 1er (champ d'application) n'a pas été ouvert.",
+    "Les huit articles et les deux annexes de l'arrêté du 1er février 2010, lus à la source le 2026-09-20 dans leur version au 1er janvier 2023, et son texte modificateur du 30 décembre 2022. S'y ajoutent DEUX articles d'un autre texte, l'arrêté du 23 juin 1978 : l'article 36, parce que le module du carnet sanitaire tient de lui ses températures, et l'article 1er, qui en borne le champ. Le reste de cet arrêté-là n'est PAS dépouillé. ~~et son article 1er (champ d'application) n'a pas été ouvert~~ [2026-10-14 : ouvert et entré au corpus, `lot/carnet-seuils-1014`].",
   articles: [
     {
       ref: "Arrêté 01-02-2010 art. 1",
@@ -205,6 +207,22 @@ export const ARRETE_2010_02_01_LEGIONELLES: Corpus = {
       declareA: "src/app/etablissements/[id]/carnet-sanitaire/page.tsx — le paragraphe « Êtes-vous concerné ? » cite le champ de l'arrêté (art. 1er et 2) et dit ce que Rojer fait : rien tant qu'aucun carnet n'est ouvert, puis un rappel de l'analyse suivante à un an",
     },
     {
+      ref: "Arrêté du 23 juin 1978 art. 1",
+      intitule: "Champ d'application — installations de chauffage et d'eau chaude des bâtiments d'habitation, de bureaux ou recevant du public",
+      url: "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000006827998",
+      versionEnVigueur: "1978-07-21",
+      modifiePar: null,
+      luLe: "2026-10-14",
+      lecture: "agent_verbatim",
+      prescrit:
+        "Borne tout l'arrêté : il s'applique aux installations destinées au chauffage et à l'alimentation en eau chaude des bâtiments d'habitation, de bureaux ou recevant du public, locaux de stockage de combustibles exceptés. Répartit ensuite ses titres : le titre III (« Installations intérieures aux bâtiments d'habitation, de bureaux ou aux locaux et dégagements accessibles au public ») vaut pour TOUTES ces installations placées à demeure en usage normal dans ces locaux, appareils de cuisson exceptés ; les titres I et II (chaufferies, sous-stations) au-delà de 70 kW utiles ; le titre IV seul aux unités de toiture monoblocs.",
+      citationCle:
+        "Le présent arrêté s'applique dans les conditions ci-après aux installations destinées au chauffage et à l'alimentation en eau chaude des bâtiments d'habitation, de bureaux ou recevant du public à l'exception des locaux de stockage de combustibles.",
+      statut: "sans_objet",
+      motif:
+        "Article de champ, qui ne prescrit rien par lui-même — mais c'est lui qui dit à qui s'adresse l'article 36. Celui-ci est placé au titre III (articles 31 à 37, relevé en tête de la page de l'article 36 le 2026-10-14), et l'alinéa 4 rend le titre III « applicables à toutes les installations visées à l'alinéa 1 ci-dessus placées à demeure en usage normal dans ces locaux à l'exclusion des appareils dont un des objets essentiels est la cuisson ou le réchauffage des aliments ». La cible du produit y est : un restaurant ou un commerce est un bâtiment recevant du public, un bureau est nommé. N'y est PAS un établissement de travail seul qui n'est ni un bureau ni un ERP (atelier, entrepôt) : le texte ne le vise pas. Lu le 2026-10-14, page propre de l'article : neuf alinéas, dix phrases ; aucun texte modificateur affiché pour cet article (version du 21 juillet 1978). Ce qu'il ne dit PAS : il ne distingue pas installations neuves et existantes — la question du champ dans le temps, laissée ouverte au motif de l'article 36, n'est pas tranchée par cette lecture. Il ne fonde aucune obligation du référentiel : il fonde les repères proposés par le carnet sanitaire (`AjoutPointReleveForm.tsx`).",
+    },
+    {
       ref: "Arrêté du 23 juin 1978 art. 36",
       intitule: "Installations de distribution d'eau chaude sanitaire — températures contre la brûlure et contre les légionelles",
       url: "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000006828036",
@@ -220,7 +238,7 @@ export const ARRETE_2010_02_01_LEGIONELLES: Corpus = {
       declareA:
         "src/components/carnet-sanitaire/AjoutPointReleveForm.tsx — l'aide du seuil cite l'article, ses conditions et son alternative, et présente les valeurs proposées comme des repères",
       motif:
-        "~~sans_objet~~ : l'article IMPOSE (« les exigences suivantes doivent être respectées pendant l'utilisation […] et dans les 24 heures précédant »), à qui tient un réseau susceptible d'alimenter des points de puisage à risque. Le référentiel ne le porte pas : exigence permanente sans échéance, sur un fait — la présence de douches — que le produit ne détient pas. C'est LA SOURCE des 50 °C et des 55 °C du module, que son code attribuait à l'arrêté du 1er février 2010 — lequel ne porte aucune température. Deux écarts relevés le 2026-09-20. (1) Le module posait « 50 °C au puisage » comme un MINIMUM : au puisage des pièces de toilette, 50 °C est un MAXIMUM (§ 1) ; le minimum de 50 °C vaut « en tout point du système de distribution », tubes finaux EXCEPTÉS — donc précisément pas au robinet. (2) Il posait 55 °C « au retour de boucle » : le texte le place « à la sortie des équipements » de stockage de 400 litres et plus ; le retour de boucle relève des 50 °C de tout point du réseau. Aucune périodicité ici : c'est une règle de conception et d'exploitation d'installation, d'où le statut. NON TRANCHÉ : le champ dans le temps. L'article 2 de l'arrêté du 30 novembre 2005, ouvert le même jour, fixe la prise d'effet un an après parution (15 décembre 2006) sans distinguer installations neuves et existantes ; l'article 1er de l'arrêté de 1978, qui borne l'ensemble du texte, n'a PAS été ouvert. L'écran présente donc ces deux valeurs comme des repères tirés de cet article, avec ses conditions (réseau pouvant alimenter un point de puisage à risque, plus de 3 litres) et son alternative (élévation quotidienne), pas comme une obligation du dirigeant. L'annexe 1 (durées d'élévation quotidienne) n'est pas reproduite sur Légifrance : non lue.",
+        "~~sans_objet~~ : l'article IMPOSE (« les exigences suivantes doivent être respectées pendant l'utilisation […] et dans les 24 heures précédant »), à qui tient un réseau susceptible d'alimenter des points de puisage à risque. Le référentiel ne le porte pas : exigence permanente sans échéance, sur un fait — la présence de douches — que le produit ne détient pas. C'est LA SOURCE des 50 °C et des 55 °C du module, que son code attribuait à l'arrêté du 1er février 2010 — lequel ne porte aucune température. Deux écarts relevés le 2026-09-20. (1) Le module posait « 50 °C au puisage » comme un MINIMUM : au puisage des pièces de toilette, 50 °C est un MAXIMUM (§ 1) ; le minimum de 50 °C vaut « en tout point du système de distribution », tubes finaux EXCEPTÉS — donc précisément pas au robinet. (2) Il posait 55 °C « au retour de boucle » : le texte le place « à la sortie des équipements » de stockage de 400 litres et plus ; le retour de boucle relève des 50 °C de tout point du réseau. Aucune périodicité ici : c'est une règle de conception et d'exploitation d'installation, d'où le statut. NON TRANCHÉ : le champ dans le temps. L'article 2 de l'arrêté du 30 novembre 2005, ouvert le même jour, fixe la prise d'effet un an après parution (15 décembre 2006) sans distinguer installations neuves et existantes ; ~~l'article 1er de l'arrêté de 1978, qui borne l'ensemble du texte, n'a PAS été ouvert~~ [2026-10-14, `lot/carnet-seuils-1014` : ouvert, entrée qui précède. Il étend le titre III — donc cet article — aux installations des bâtiments d'habitation, de bureaux ou recevant du public, la cible comprise, et ne distingue pas non plus le neuf de l'existant : le champ dans le temps reste ouvert]. L'écran présente donc ces deux valeurs comme des repères tirés de cet article, avec ses conditions (réseau pouvant alimenter un point de puisage à risque, plus de 3 litres) et son alternative (élévation quotidienne), pas comme une obligation du dirigeant. L'annexe 1 (durées d'élévation quotidienne) n'est pas reproduite sur Légifrance : non lue.",
     },
   ],
 };
