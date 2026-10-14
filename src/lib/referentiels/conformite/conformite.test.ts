@@ -1862,6 +1862,12 @@ describe("référentiel conformité — version et empreinte", () => {
     // lignes d'alimentation de secours de signalisation, et leurs notes le
     // disent. 176 + 0 − 0 = 176 ; relevée en appelant `empreinteReferentiel()`.
     { version: "2026-10-13.2", empreinte: "176-c32c2c8896d2d0ca" },
+    // 2026-10-14 (`lot/dae`, décision de la propriétaire) : le défibrillateur
+    // automatisé externe, ERP des catégories 1 à 4 (CCH R. 157-1 à R. 157-4).
+    // 176 + 3 (`dae-erp-detention`, `dae-erp-maintenance`,
+    // `dae-erp-declaration-geodae`) − 0 = 179 ; relevée en appelant
+    // `empreinteReferentiel()`.
+    { version: "2026-10-14.1", empreinte: "179-625abddddb255e71" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -2035,7 +2041,10 @@ describe("référentiel conformité — version et empreinte", () => {
       // ~~174~~ — 2026-10-13 (hôtels, décision de la propriétaire) : 174 + 2
       // (`incendie-hotel-po-controle-biennal-installations`,
       // `incendie-hotel-po-instruction-personnel-semestrielle`) − 0 = 176.
-    ).toBe(176);
+      // ~~176~~ — 2026-10-14 (défibrillateur, décision de la propriétaire) :
+      // 176 + 3 (`dae-erp-detention`, `dae-erp-maintenance`,
+      // `dae-erp-declaration-geodae`) − 0 = 179.
+    ).toBe(179);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {

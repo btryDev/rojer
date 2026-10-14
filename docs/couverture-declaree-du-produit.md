@@ -53,7 +53,7 @@ ce que le dépôt s'interdit.
 | `effectif` | L'effectif dépasse la borne au-delà de laquelle la création d'un dossier est refusée (ADR-031 § 1 bis) | Que le dossier soit fermé : la borne ne vaut qu'à la création, un client qui embauche reste servi | `EFFECTIF_MAX` (`etablissements/schema.ts`), passé en fait par `faits.ts` |
 | ~~`famille_obligation`~~ **(retiré, § 3 bis)** | Des articles lus imposent quelque chose que le produit ne porte pas | **Qu'ils visent cet établissement-là.** Voir § 2 | statut `non_couvert` du corpus |
 
-**Une unité du manque de l'axe `categorie_erp`, écrite le 2026-09-20 : le
+~~**Une unité du manque de l'axe `categorie_erp`, écrite le 2026-09-20 : le
 défibrillateur automatisé externe.** L'axe établit « qu'il existe » un manque,
 « pas de combien » ; en voici une conséquence nommable. `R. 157-1` CCH (lu le
 2026-09-01, version en vigueur depuis le 7 décembre 2025 — détail et verbatim
@@ -68,7 +68,18 @@ jour où les catégories 1 à 4 seraient COUVERTES, le DAE deviendrait dû sans
 condition et redeviendrait une obligation d'établissement à encoder — avec une
 réserve : `R. 157-4` fait peser la maintenance sur le PROPRIÉTAIRE du
 défibrillateur, pas sur l'exploitant. La déclaration à la base nationale relève
-de textes non lus : ne rien en affirmer.
+de textes non lus : ne rien en affirmer.~~
+
+**[2026-10-14, rayé — commit 940b57af, décision de la propriétaire.]** Le DAE
+n'est plus une unité du manque de l'axe `categorie_erp` : la cible accepte les
+catégories 1 à 4 depuis le 2026-10-12 (ADR-031), et le référentiel porte
+désormais le DAE pour elles — `dae-erp-detention`, `dae-erp-maintenance` (défaut
+annuel) et `dae-erp-declaration-geodae`, corpus `cch-defibrillateur`. Le
+paragraphe barré se trompait sur un point : la déclaration à la base nationale
+a été lue le 2026-10-14 (décret n° 2018-1259, arrêté du 29 octobre 2019). Reste
+hors du référentiel la 5ᵉ catégorie (familles a à h de `R. 157-1` 2°) : l'arrêté
+qui fixe le nombre minimal de personnes n'est pas publié — réserve du corpus,
+relecture au 2027-01-14.
 
 Deux garanties de construction méritent d'être connues avant de toucher au
 module :
