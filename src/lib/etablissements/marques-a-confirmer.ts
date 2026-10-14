@@ -90,6 +90,19 @@ export async function marquesAConfirmerDuDossier(
         > | null,
       })),
   );
+  return marquesDepuisApplicables(applicables, entrepriseId);
+}
+
+/**
+ * La mise en forme, sans la lecture : ce que rend le moteur, traduit en
+ * marques. Séparée pour que le rendu RSC la nourrisse du passage du moteur
+ * qu'il partage déjà (`dossier-du-rendu.ts`, audit du 2026-10-14, H2), sans
+ * relire l'établissement ni rappeler le moteur.
+ */
+export function marquesDepuisApplicables(
+  applicables: ReturnType<typeof determineObligationsApplicables>,
+  entrepriseId: string,
+): MarquesDuDossier {
   return {
     parObligation: marquesParObligation(applicables),
     entrepriseId,

@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
+import { cache } from "react";
 
 // ADR-005 : scope par userId via la chaîne duerp → etablissement → entreprise.
 
@@ -34,7 +35,17 @@ function actionVersMesure(a: ActionRow) {
   };
 }
 
-export async function getDuerp(id: string) {
+/**
+ * Le DUERP du user, avec son établissement, ses unités, risques, mesures et
+ * versions.
+ *
+ * Mémoïsé par `cache()` sur le rendu (audit Next.js du 2026-10-14, H2) : le
+ * layout du DUERP et chacune de ses pages le lisaient dans le même rendu —
+ * sept requêtes chaque fois. Clé primitive, portée de la requête HTTP ; hors
+ * rendu RSC, la lecture se fait à chaque appel. Le résultat est partagé : un
+ * appelant ne le modifie pas.
+ */
+export const getDuerp = cache(async function getDuerp(id: string) {
   const user = await requireUser();
   const duerp = await prisma.duerp.findFirst({
     where: { id, etablissement: { entreprise: { userId: user.id } } },
@@ -65,7 +76,7 @@ export async function getDuerp(id: string) {
       })),
     })),
   };
-}
+});
 
 export async function getUnite(id: string) {
   const user = await requireUser();

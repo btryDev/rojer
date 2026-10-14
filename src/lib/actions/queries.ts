@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { ORDRE_RAPPORT_PLUS_RECENT } from "@/lib/rapports/derniere-realisation";
 import { requireUser } from "@/lib/auth/require-user";
 import type { StatutAction } from "@prisma/client";
+import { cache } from "react";
 import { JOURS_HORIZON_PROCHE, ajouterJours, debutDuJour } from "@/lib/dates";
 import { STATUTS_ACTION_OUVERTE, joursDeRetard } from "@/lib/dates/retard";
 
@@ -158,13 +159,40 @@ export async function compterActions(
    */
   filtres: { origine?: OrigineAction } = {},
 ) {
+  return compteursActionsDuRendu(
+    etablissementId,
+    debutDuJour(now).getTime(),
+    filtres.origine,
+  );
+}
+
+/**
+ * Le corps de `compterActions`, mémoïsé par `cache()` sur le rendu (audit
+ * Next.js du 2026-10-14, H2) : la barre latérale et le tableau de bord en
+ * demandaient chacun les cinq comptages, dans le même rendu.
+ *
+ * LA CLÉ EST LE DÉBUT DU JOUR, EN MILLISECONDES, et non l'instant : c'est la
+ * seule chose que le calcul lit de l'horloge. Deux appelants qui prennent
+ * chacun leur `new Date()` à quelques millisecondes d'écart tombent donc sur
+ * la même entrée — et sur le même résultat, puisque le calcul ne pouvait pas
+ * les distinguer. `cache()` compare par identité : un `Date` ne serait jamais
+ * deux fois le même. Hors rendu RSC (PDF, actions), rien n'est mémoïsé.
+ *
+ * Plus d'actions ne naissent ni ne bougent pendant un rendu : le partage entre
+ * le layout et la page, rendus en parallèle, ne lit rien de périmé.
+ */
+const compteursActionsDuRendu = cache(async function compteursActionsDuRendu(
+  etablissementId: string,
+  debutDuJourMs: number,
+  origine: OrigineAction | undefined,
+) {
   const user = await requireUser();
   const scope = {
     etablissementId,
     etablissement: { entreprise: { userId: user.id } },
-    ...clauseOrigine(filtres.origine),
+    ...clauseOrigine(origine),
   } as const;
-  const debut = debutDuJour(now);
+  const debut = new Date(debutDuJourMs);
   // Le module de dates expose la liste en `readonly string[]` — il reste
   // utilisable côté client, sans importer l'enum Prisma. Le cast n'élargit
   // rien : les deux littéraux sont bien des `StatutAction`.
@@ -214,7 +242,7 @@ export async function compterActions(
     leveesRecemment, // sur 30 derniers jours
     totalACouvrir: ouvertes + enCours,
   };
-}
+});
 
 export type StatsRetardActions = {
   nb: number;

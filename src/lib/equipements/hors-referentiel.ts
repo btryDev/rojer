@@ -35,8 +35,8 @@
 // générateur d'occurrences, donc exactement ce que le calendrier montre.
 
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
-import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
+import { chargerEtablissementEtParc } from "@/lib/etablissements/dossier-du-rendu";
 import {
   determineObligationsApplicables,
   determineObligationsNiveauAudit,
@@ -250,13 +250,9 @@ export async function equipementsSansEcheance(
   etablissementId: string,
 ): Promise<Map<string, MotifSansEcheance>> {
   const user = await requireUser();
-  const etab = await prisma.etablissement.findFirst({
-    where: { id: etablissementId, entreprise: { userId: user.id } },
-    include: {
-      equipements: { where: { actif: true } },
-      entreprise: { select: { effectif: true } },
-    },
-  });
+  // [2026-10-14, audit Next.js H2] La lecture que le rendu partage
+  // (`dossier-du-rendu.ts`) : même prédicat, même parc en service.
+  const etab = await chargerEtablissementEtParc(etablissementId, user.id);
   if (!etab) return new Map();
 
   return reperterSansEcheance(

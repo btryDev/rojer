@@ -1,6 +1,7 @@
 import type { StatutPermisFeu, StatutPlanPrevention } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
+import { cache } from "react";
 import { JOURS_APRES } from "@/lib/dashboard/frise";
 import {
   MOIS_PERIODE_ANNUELLE,
@@ -862,6 +863,31 @@ export async function listerAutresEcheances(
   etablissementId: string,
   aujourdhui: Date = new Date(),
 ): Promise<EcheanceCalendrier[]> {
+  return autresEcheancesDuRendu(etablissementId, aujourdhui.getTime());
+}
+
+/**
+ * Le corps de `listerAutresEcheances`, mémoïsé par `cache()` sur le rendu
+ * (audit Next.js du 2026-10-14, H2) : le tableau de bord le demandait trois
+ * fois — barre latérale, état des échéances, frise —, six lectures chaque fois.
+ *
+ * LA CLÉ EST L'INSTANT EN MILLISECONDES : l'horloge entre dans le résultat (les
+ * tons, et des dates — une attestation à redemander « aujourd'hui »), donc deux
+ * instants différents ne partagent rien. Les appelants qui veulent partager
+ * passent le même, `instantDuRendu()`. Un `Date` ne serait jamais deux fois la
+ * même clé : `cache()` compare par identité.
+ *
+ * Ce registre ne lit AUCUNE ligne du calendrier — actions, DUERP,
+ * prestataires, permis, plans, légionelles — et la réparation que font le
+ * tableau de bord et le calendrier (`regeneration-sure.ts`) n'écrit que des
+ * lignes : le partager avec le layout, rendu en parallèle, ne lit rien de
+ * périmé. Le tableau rendu est partagé : un appelant ne le modifie pas.
+ */
+const autresEcheancesDuRendu = cache(async function autresEcheancesDuRendu(
+  etablissementId: string,
+  instant: number,
+): Promise<EcheanceCalendrier[]> {
+  const aujourdhui = new Date(instant);
   const user = await requireUser();
   const ctx: ContexteSource = {
     etablissementId,
@@ -878,4 +904,4 @@ export async function listerAutresEcheances(
     .flat()
     .filter((e) => e.date.getTime() <= finFenetre.getTime())
     .sort((a, b) => a.date.getTime() - b.date.getTime());
-}
+});

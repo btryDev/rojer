@@ -8,6 +8,7 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getOptionalUser, requireUser } from "./require-user";
+import { cache } from "react";
 
 /**
  * Récupère une entreprise appartenant au user connecté, ou 404.
@@ -27,8 +28,15 @@ export async function requireEntreprise(entrepriseId: string) {
  * Récupère un établissement dont l'entreprise appartient au user connecté,
  * ou 404. Utilisé par toutes les pages /etablissements/[id]/... et les
  * actions qui reçoivent un etablissementId.
+ *
+ * Mémoïsé par `cache()` sur le rendu (audit Next.js du 2026-10-14, H2) : la
+ * barre latérale (vigilance prestataires) et la page le demandent dans le même
+ * rendu. Clé primitive, portée de la requête HTTP ; hors rendu RSC — une
+ * action serveur —, la garde s'exécute à chaque appel, comme avant.
  */
-export async function requireEtablissement(etablissementId: string) {
+export const requireEtablissement = cache(async function requireEtablissement(
+  etablissementId: string,
+) {
   const user = await requireUser();
   const etablissement = await prisma.etablissement.findFirst({
     where: { id: etablissementId, entreprise: { userId: user.id } },
@@ -36,7 +44,7 @@ export async function requireEtablissement(etablissementId: string) {
   });
   if (!etablissement) notFound();
   return { user, etablissement };
-}
+});
 
 /**
  * Récupère un DUERP dont l'établissement appartient au user, ou 404.
@@ -218,33 +226,40 @@ export const COOKIE_ETABLISSEMENT_ACTIF = "etablissement-actif";
  *
  * Version "optional" : ne déclenche pas de redirect vers /login — à
  * combiner avec `getOptionalUser()`.
+ *
+ * Mémoïsé par `cache()` sur le rendu (audit Next.js du 2026-10-14, H2, M2) :
+ * l'accueil et l'en-tête public le lisent dans le même rendu. Sans argument,
+ * la clé est vide — une entrée par requête HTTP, jamais partagée entre deux.
+ * Hors rendu RSC (actions serveur), il s'exécute à chaque appel.
  */
-export async function getOptionalUserEtablissement(): Promise<{
-  id: string;
-  raisonDisplay: string;
-  entrepriseId: string;
-} | null> {
-  const user = await getOptionalUser();
-  if (!user) return null;
+export const getOptionalUserEtablissement = cache(
+  async function getOptionalUserEtablissement(): Promise<{
+    id: string;
+    raisonDisplay: string;
+    entrepriseId: string;
+  } | null> {
+    const user = await getOptionalUser();
+    if (!user) return null;
 
-  const champs = {
-    id: true,
-    raisonDisplay: true,
-    entrepriseId: true,
-  } as const;
+    const champs = {
+      id: true,
+      raisonDisplay: true,
+      entrepriseId: true,
+    } as const;
 
-  const demande = (await cookies()).get(COOKIE_ETABLISSEMENT_ACTIF)?.value;
-  if (demande) {
-    const actif = await prisma.etablissement.findFirst({
-      where: { id: demande, entreprise: { userId: user.id } },
+    const demande = (await cookies()).get(COOKIE_ETABLISSEMENT_ACTIF)?.value;
+    if (demande) {
+      const actif = await prisma.etablissement.findFirst({
+        where: { id: demande, entreprise: { userId: user.id } },
+        select: champs,
+      });
+      if (actif) return actif;
+    }
+
+    return prisma.etablissement.findFirst({
+      where: { entreprise: { userId: user.id } },
+      orderBy: { createdAt: "asc" },
       select: champs,
     });
-    if (actif) return actif;
-  }
-
-  return prisma.etablissement.findFirst({
-    where: { entreprise: { userId: user.id } },
-    orderBy: { createdAt: "asc" },
-    select: champs,
-  });
-}
+  },
+);

@@ -52,6 +52,7 @@ import { statsActionsEnRetard } from "@/lib/actions/queries";
 import { prisma } from "@/lib/prisma";
 import { ORDRE_RAPPORT_PLUS_RECENT } from "@/lib/rapports/derniere-realisation";
 import { composantesCiviles, joursCivilsEntre } from "@/lib/dates";
+import { instantDuRendu } from "@/lib/dates/instant-du-rendu";
 import { enumererFamilles, libellePorteur } from "@/lib/calendrier/labels";
 import { libelleEtatCourtCapitale } from "@/lib/calendrier/etats";
 import { echeancesDuTableauDeBord } from "@/lib/calendrier/prochaine-echeance";
@@ -93,7 +94,10 @@ export default async function EtablissementPage({
   // écarts d'hydratation et rend les rendus reproductibles (ADR-011). Elle est
   // prise ici, avant la première lecture qui en dépend — la charge par
   // bâtiment affichée dans le hero se calcule à cette seconde-là.
-  const aujourdhui = new Date();
+  // [2026-10-14, audit Next.js H2] L'instant DU RENDU, que la barre latérale
+  // lit aussi : les lectures indépendantes des lignes (registre des autres
+  // échéances, compteurs d'actions) ne partent qu'une fois pour les deux.
+  const aujourdhui = instantDuRendu();
 
   // Filtre bâtiment (ADR-019). Il porte sur ce qui a un lieu — échéances
   // d'équipements, parc, opérations — et laisse passer ce qui concerne tout

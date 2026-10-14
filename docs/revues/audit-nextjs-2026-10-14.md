@@ -103,7 +103,37 @@ sont fermés sur `517309db`.
   - ajouter `import "server-only"` en tête de `src/lib/referentiels/conformite/index.ts`, pour que le build casse si ça revient.
 - **Effort** : S
 
-### H2 Tableau de bord : mêmes données relues plusieurs fois par rendu, sans `cache()`
+### ~~H2 Tableau de bord : mêmes données relues plusieurs fois par rendu, sans `cache()`~~
+**[Corrigé le 2026-10-14, `lot/nextjs-perf-1014`.]** Mesuré sur le dossier de
+démo complet (`seed:complet`), `next build` + `next start`, requêtes comptées
+dans le journal PostgreSQL (`log_statement = all`) : **le tableau de bord
+faisait 146 requêtes SQL par affichage, pas « ≈ 50 »** ; il en fait 106 après
+ce correctif (calendrier 74 → 57, registre 50 → 47, équipements 51 → 44). Les
+lectures d'`Etablissement` passent de 12 à 8 et les comptages d'`Action` de 11
+à 6. Fait :
+- `cache()` sur `getEtablissement`, `getOptionalUserEtablissement`,
+  `requireEtablissement` (le layout s'en sert désormais comme garde, la
+  vigilance prestataires de la barre la redemandait), `getEtatModules`,
+  `compterActions` (clé : début du jour en ms, la seule chose qu'il lit de
+  l'horloge) et `listerAutresEcheances` (clé : l'instant en ms) ;
+- un instant de rendu partagé, `instantDuRendu()`, lu par la barre latérale,
+  le tableau de bord et le calendrier : sans lui, deux `new Date()` différents
+  rendaient tout partage impossible ;
+- un chargement unique « établissement + parc en service » et un passage
+  unique du moteur, mémoïsés (`etablissements/dossier-du-rendu.ts`), lus par
+  les marques, les transmissions, les états permanents, la couverture et
+  `equipementsSansEcheance`.
+
+Complément du même jour : `getDuerp`, lu par le layout du DUERP puis par
+chacune de ses pages (sept requêtes chaque fois), est mémoïsé — DUERP / unités
+48 → 41 requêtes, synthèse 49 → 42.
+
+**Écart au correctif proposé : `compterEtatEcheances` n'est pas mémoïsé
+entier.** Le layout et la page sont rendus en parallèle, et la page répare le
+calendrier avant de lire (`regeneration-sure.ts`). Partagé avec la barre
+latérale, le compte des LIGNES pouvait partir avant la réparation et donner à
+la page un compte d'avant régénération. Seule sa moitié indépendante des lignes
+(`listerAutresEcheances`) est partagée.
 - **Axe** : 4. **[Maintenant]**, gain encore plus net sur CC
 - **Où** :
   - `src/app/etablissements/[id]/layout.tsx:31-58` et `page.tsx:87-188` ;
@@ -182,13 +212,55 @@ sont fermés sur `517309db`.
 
 ## Améliorations (Moyenne)
 
-### M1 Aucun état de chargement
+### ~~M1 Aucun état de chargement~~
+**[Corrigé en partie le 2026-10-14, `lot/nextjs-perf-1014`.]**
+`src/app/etablissements/[id]/loading.tsx` existe : la barre latérale et la
+barre de compte (le layout) restent en place, la colonne de droite montre le
+patron « Liste » de la charte, sans style ni animation nouveaux. Vérifié dans
+le HTML servi : le repli (`<template id="B:0">`) part en tête de flux, le
+contenu le remplace ensuite.
+- **Non fait : `<Suspense>` autour des widgets du board.** Le tableau de bord
+  est un seul composant client (`DashboardGrid`, disposition personnalisée,
+  glisser-déposer) nourri d'un seul `DashboardBundle` sérialisé ; le bandeau
+  (`BlocBrief`) agrège ses champs. Diffuser les transmissions, les états
+  permanents ou la frise à part demande de faire de ces champs des promesses
+  lues par `use()` dans chaque widget, et de reprendre le bandeau : c'est
+  réécrire le flux de données du board, hors du « sans tout réécrire » de ce
+  lot.
+- **Effet de bord, voulu par Next et à connaître** : un `notFound()` levé par
+  une page imbriquée arrive après le début du flux. La réponse garde le statut
+  200, avec la page introuvable et `<meta name="robots" content="noindex">`
+  (doc Next 16, `loading.js`, « Status Codes »). Mesuré :
+  `/etablissements/<inexistant>` répond toujours 404 (la garde est dans le
+  layout, au-dessus du repli), `/etablissements/<le sien>/verifications/<inexistant>`
+  répond 200 + `noindex` au lieu de 404. Le contenu ne distingue toujours pas
+  « étranger » d'« inexistant ».
 - **Où** : 0 `loading.tsx`, 0 `<Suspense` dans `src` (comptés).
 - **Constat** : toutes les routes sont dynamiques. Un clic dans la sidebar ne donne aucun retour tant que la réponse RSC complète n'est pas arrivée.
 - **Correctif** : `src/app/etablissements/[id]/loading.tsx` (le layout et la sidebar restent en place), puis `<Suspense>` autour des widgets lents du board (transmissions, états permanents, frise).
 - **Effort** : S. **[Maintenant]**
 
-### M2 Le header racine s'exécute sur toutes les pages
+### ~~M2 Le header racine s'exécute sur toutes les pages~~
+**[Corrigé le 2026-10-14, `lot/nextjs-perf-1014`.]** `AppHeader` n'est plus
+dans le layout racine : un layout d'une ligne (`LayoutAvecEnTete`) le monte sur
+les neuf segments qui l'affichent (`acces`, `accessibilite`, `auth`, `dev`,
+`entreprises`, `login`, `signe`, `signup`, `verifier`), et le portillon client
+`AppHeaderGate` est supprimé. Pas de groupes de routes : ils déplaçaient neuf
+dossiers, dont `login/` que le lot 1 modifie, et un layout par segment ne peut
+pas changer une URL. Mesuré : −1 requête SQL et ≈ −2 Ko de charge utile RSC
+sur chaque écran de l'application (tableau de bord 106 → 105 requêtes,
+78 663 octets RSC au lieu de 80 788).
+- **Tableau du build** : `/_not-found` redevient statique (`○`). `/login` et
+  `/signup` restent dynamiques, et c'est attendu : ils lisent `searchParams`
+  (`next`, `confirmed`), et l'en-tête qu'ils portent lit la session (« Mon
+  dossier » / « Se connecter »). `/login/mot-de-passe-oublie` et
+  `/signup/verification-en-attente` restent dynamiques pour la seconde raison.
+- **Trouvé en mesurant** : l'en-tête remis dans `not-found.tsx` (pour garder
+  la barre sur une URL inconnue) s'exécutait sur TOUS les écrans — Next
+  sérialise l'élément `not-found` racine dans la charge utile de chaque page.
+  Retiré : la page introuvable perd l'en-tête qu'elle montrait hors de
+  l'application, elle garde « Revenir à l'accueil ». Les pages d'erreur le
+  perdent aussi (`error.tsx` est client, il ne peut pas rendre l'en-tête).
 - **Où** : `src/app/layout.tsx:28-30`, `src/components/layout/AppHeader.tsx:22-23`, `AppHeaderGate.tsx`.
 - **Constat** : `AppHeader` (server) lit la session et fait 1 ou 2 requêtes en base. Le portillon est **client** : il masque le résultat après coup. Le travail est donc fait aussi sur le tableau de bord, le calendrier et le DUERP, où le header n'apparaît jamais. Il rend aussi `/login`, `/signup` et `/_not-found` dynamiques. `/` refait le même couple d'appels (`page.tsx:31-32`).
 - **Correctif** : route groups `(public)` / `(app)`, `AppHeader` dans le layout `(public)` seulement, `cache()` sur `getOptionalUserEtablissement`.
@@ -201,7 +273,24 @@ sont fermés sur `517309db`.
 - **Correctif** : `import "server-only"` dans ces modules et dans le référentiel.
 - **Effort** : S. **[Maintenant]**
 
-### M4 Requêtes indépendantes en série
+### ~~M4 Requêtes indépendantes en série~~
+**[Corrigé le 2026-10-14, `lot/nextjs-perf-1014`.]** Toujours après la garde
+d'accès, jamais avant :
+- registre : `listerRapportsDeLEtablissement`, `composerRegistreDeLEtablissement`
+  et `couvertureDuDossier` en un `Promise.all` (trois `await` à la suite) ;
+- équipements : les bâtiments rejoignent le `Promise.all` des quatre autres
+  lectures, dont aucune ne dépend du filtre ;
+- calendrier : deux temps au lieu de trois — bâtiments et tout ce qui ne
+  dépend pas du filtre, puis ce que le filtre borne ;
+- layout DUERP : rien à paralléliser de plus. Sur `main`, `getDuerp` et
+  `getOptionalUser` partaient déjà ensemble, et le second `Promise.all` lit
+  l'établissement que le premier rend. Ce qui coûtait, c'était la relecture
+  de `getDuerp` par la page (H2, complément).
+
+Le nombre de requêtes ne bouge pas (mesuré : 56, 46, 43 sur calendrier,
+registre, équipements) ; seule la profondeur de la chaîne diminue. Le temps
+gagné ne se mesure pas ici : en local, chaque page répond en 20 à 60 ms et le
+bruit dépasse l'écart. Il n'existe que sur un pool de plus d'une connexion.
 - **Où** :
   - `etablissements/[id]/registre/page.tsx:52,62,66,71` (4 `await` à la suite) ;
   - `equipements/page.tsx:54` puis `:66` ;
@@ -246,7 +335,29 @@ sont fermés sur `517309db`.
 - **Correctif** : timeouts explicites sur le client S3 (Cellar) et l'adaptateur Better Auth. Fixer `connect_timeout` et `pool_timeout` dans `DATABASE_URL`.
 - **Effort** : S. **[Recette bascule]**
 
-### M10 Le calendrier sérialise toutes les années
+### ~~M10 Le calendrier sérialise toutes les années~~
+**[Corrigé le 2026-10-14, `lot/nextjs-perf-1014`.]** La page ne sérialise
+plus que l'année affichée : sa règle, ses cartes, et — sur l'année en cours —
+les mois révolus en retard qu'elle remonte (`moisEnRetardAvant`, passée côté
+serveur dans `lib/calendrier/regle-annee.ts`). L'année se choisit par
+`?annee=`, comme les filtres de la page ; les flèches du cadran naviguent
+(`router.push`, sans défilement), les autres paramètres sont gardés. Sans
+paramètre ou hors des années du dossier, c'est l'année du mois servi d'office,
+la règle d'avant.
+- **Mesuré** sur le dossier de démo (huit années, 2026 → 2033) : charge utile
+  RSC du calendrier **183 643 → 148 386 octets** (−19 %), HTML 277 936 →
+  238 319. Une autre année se sert seule : 47 661 octets pour 2027, 36 386
+  pour 2033. Le gain croît avec l'historique : ce dossier n'a ni rapport ni
+  année révolue.
+- **Vérifié dans Chrome (headless)** : clic sur « Afficher l'année 2027 »,
+  URL `?annee=2027` en 54 ms, cadran et cartes de 2027, retour arrière sur
+  2026, aucune erreur console, et le repli `loading.tsx` (M1) n'a pas été vu
+  pendant la navigation. Sur un serveur plus lent, il pourrait apparaître le
+  temps de la réponse, comme pour les pilules de filtre de la même page.
+- **Ce qui change pour l'utilisateur** : tourner l'année est un aller-retour
+  serveur, et non plus un changement d'état local ; le mois déplié n'est pas
+  conservé d'une année à l'autre (il ne l'était pas non plus avant, la carte
+  ouverte appartenant à l'autre année).
 - **Où** : `calendrier/page.tsx:440-443` (`anneeMin` → `anneeMax` sur toutes les lignes).
 - **Constat** : la charge utile RSC grandit avec l'historique du dossier (taille réelle non mesurée, pas de données).
 - **Correctif** : ne rendre que l'année affichée.
@@ -318,13 +429,67 @@ Ils s'ajoutent à B1-B16 de l'audit OWASP :
 
 ## Non vérifié / à confirmer
 
-- **Pages authentifiées non mesurées** (pas de session ni de données dans le worktree) : temps de rendu réel, nombre exact de requêtes SQL du board (≈ 50 est une estimation par lecture), taille du payload RSC du board et du calendrier.
+- ~~**Pages authentifiées non mesurées** (pas de session ni de données dans le worktree) : temps de rendu réel, nombre exact de requêtes SQL du board (≈ 50 est une estimation par lecture), taille du payload RSC du board et du calendrier.~~ [2026-10-14 : mesurées, et l'estimation était fausse d'un facteur trois — 146 requêtes, pas ≈ 50. Voir « Mesures du lot perf » ci-dessous.]
 - **Exports** : durée et mémoire de `renderToBuffer` et du ZIP sur un vrai dossier.
 - **Server actions** : l'absence de mémoïsation de la session dans le corps d'une action est déduite de la lecture de React, pas mesurée.
 - **Better Auth** : nom exact de l'option de génération d'UUID, à lire dans la doc de la version qui sera installée.
 - **Clever Cloud** : `max_connections` du plan PostgreSQL, plafond de corps du reverse proxy, en-têtes `X-Forwarded-*`.
 - **Non lancés** : Lighthouse et l'analyseur de bundle Turbopack (`next experimental-analyze`, qui écrit dans `.next`). Les chunks ont été identifiés à la main.
 - **Non couverts** : DAST, ReDoS, le détail des 86 exports inutilisés de knip.
+
+## Mesures du lot perf (2026-10-14, `lot/nextjs-perf-1014`)
+
+**Méthode.** Base locale (`duerp_perf`, conteneur `duerp-db`), migrée puis
+semée par `seed:complet` : un restaurant, dix équipements, cinq salariés, un
+DUERP de six unités, 36 échéances de 2026 à 2033, aucun rapport. `next build`
+puis `next start` (jamais `pnpm build`, qui migre). L'authentification
+Supabase est servie par un faux serveur Auth **local** (`/auth/v1/user` rend un
+utilisateur fixe), vers lequel `NEXT_PUBLIC_SUPABASE_URL` pointe au build :
+aucun compte créé, aucun appel au projet Supabase. Les requêtes SQL sont
+comptées dans le journal de PostgreSQL (`ALTER DATABASE duerp_perf SET
+log_statement = 'all'`), hors `SELECT 1` de santé du pool, sur un affichage
+complet (`curl` avec le cookie de session) ; la charge utile RSC est la
+réponse à `RSC: 1`. Médiane de trois essais après une chauffe. **Rien n'est
+resté dans le code** : la méthode ne demande ni extension Prisma ni variable
+d'environnement, et un compteur côté Prisma n'aurait pas vu les requêtes que
+fait un `include` (une par relation). L'outillage (faux serveur, script de
+mesure, captures) vivait hors du dépôt.
+
+| Page | SQL avant | SQL après | RSC avant (o) | RSC après (o) | HTML avant (o) | HTML après (o) | 1er octet avant (ms) | 1er octet après (ms) |
+|---|---|---|---|---|---|---|---|---|
+| Tableau de bord | 146 | 105 | 80 602 | 79 743 | 197 708 | 200 786 | 56 | 26 |
+| Calendrier | 74 | 56 | 184 501 | 148 386 | 275 933 | 238 319 | 32 | 19 |
+| Registre | 50 | 46 | 60 971 | 60 441 | 127 690 | 130 753 | 24 | 19 |
+| Équipements | 51 | 43 | 56 132 | 55 263 | 121 403 | 122 904 | 22 | 20 |
+| DUERP (unités) | 49 | 41 | 24 596 | 22 985 | 67 700 | 66 150 | 20 | 20 |
+| DUERP (synthèse) | 50 | 42 | 67 763 | 66 152 | 143 046 | 141 496 | 20 | 20 |
+| `/login` (connecté) | 1 | 1 | 9 407 | 9 639 | 18 443 | 18 909 | 6 | 6 |
+
+- Le HTML du tableau de bord grossit de 3 Ko : c'est le repli `loading.tsx`
+  et le balisage du flux (M1). En échange, le premier octet — barre latérale
+  comprise — part en 26 ms au lieu de 56.
+- `/login` gagne ≈ 0,5 Ko : le segment porte désormais son layout (M2).
+- Les temps sont locaux, base sur la même machine, pool Prisma de plusieurs
+  connexions : ils ne disent rien de la production derrière le pooler en
+  mode transaction (`connection_limit=1`), où chaque requête économisée est
+  un aller-retour sérialisé de moins.
+- Deux appels au serveur Auth par affichage, avant comme après : le proxy et
+  le rendu (mémoïsé). C'est H4, hors de ce lot.
+
+**Contrôle visuel.** Les mêmes pages ouvertes dans Chrome (headless, 1440 ×
+1000) avant et après : texte rendu (`innerText`) identique et captures
+identiques au pixel près pour le tableau de bord, le calendrier, le registre,
+les équipements, le DUERP et `/login`. Seule la page introuvable diffère :
+elle a perdu l'en-tête global (M2).
+
+**Ce qui reste, mesuré et non traité ici.** Sur les 105 requêtes du tableau
+de bord : la barre latérale et le layout en coûtent environ 25 opérations
+Prisma sur chaque écran (relevé par pile d'appels en `next dev` : compteurs,
+registre des échéances, vigilance, fraîcheur, fratrie) ; `listerEvenementsFenetre` est appelée
+trois fois (7 j, 30 j, frise) pour trois fenêtres de la même requête ;
+`getModulesMatrice` (page) et `getEtatModules` (barre) comptent chacun les
+permis, les plans et le carnet ; le compte des lignes du calendrier part deux
+fois (barre et page), et c'est voulu tant que la page répare avant de lire.
 
 ## Plan de correction proposé
 

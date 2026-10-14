@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
+import { cache } from "react";
 import type { SidebarModules } from "@/components/layout/sidebar-nav";
 
 /**
@@ -15,9 +16,13 @@ import type { SidebarModules } from "@/components/layout/sidebar-nav";
  *
  * `estERP` est passé par l'appelant, qui a déjà l'établissement en main.
  *
+ * Mémoïsé par `cache()` sur le rendu (audit Next.js du 2026-10-14, H2) — deux
+ * clés primitives, l'identifiant et le booléen. Hors rendu RSC, rien n'est
+ * mémoïsé.
+ *
  * ADR-005 : scope par userId via la relation entreprise.
  */
-export async function getEtatModules(
+export const getEtatModules = cache(async function getEtatModules(
   etablissementId: string,
   estERP: boolean,
 ): Promise<SidebarModules> {
@@ -39,4 +44,4 @@ export async function getEtatModules(
     nbPlansPrevention,
     carnetSanitaireExiste: Boolean(carnet),
   };
-}
+});

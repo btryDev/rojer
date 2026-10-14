@@ -89,7 +89,7 @@ export function LandingHeader({
             ) : (
               // L'accueil est la destination du « Quitter » de la mise en
               // place, et il n'y porte pas le header d'application
-              // (`AppHeaderGate` l'exclut par égalité stricte). Sans cette
+              // (`LayoutAvecEnTete` n'est pas monté sur `/`). Sans cette
               // sortie, un compte connecté sans dossier arrivait ici sur un
               // seul bouton, qui le renvoyait à l'écran qu'il venait de
               // quitter.

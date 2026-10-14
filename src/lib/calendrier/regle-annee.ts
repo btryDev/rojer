@@ -255,3 +255,42 @@ export function regleDeLAnnee<V extends VerificationLue>(
     };
   });
 }
+
+/** Une année de la règle : douze mois, présents ou vides. */
+export type AnneeRegle = {
+  annee: number;
+  mois: MoisRegle[];
+};
+
+/**
+ * Les mois des années **révolues** qui portent encore du retard.
+ *
+ * Extraite du composant pour être testable : la règle qu'elle porte est
+ * une règle de vérité, pas de mise en page. Elle vit ici, côté serveur,
+ * depuis le 2026-10-14 (audit Next.js, M10) : la page ne sérialise plus que
+ * l'année affichée, et c'est elle qui remonte ces mois. « En retard » se dit du
+ * présent — une échéance dépassée en 2024 l'est toujours aujourd'hui —,
+ * alors que la liste ne montre qu'une année à la fois. Sans cette
+ * remontée, une dette d'une année révolue n'apparaît nulle part sur la
+ * page ouverte à l'arrivée, pendant que le tableau de bord la compte.
+ *
+ * Deux exclusions, et ce sont elles qui font la règle :
+ *
+ *   - **les années futures** n'entrent jamais : une échéance de 2029 n'est
+ *     pas en retard, quoi qu'en dise un compteur mal calculé ;
+ *   - **les mois sans retard** non plus : une vérification faite en 2024
+ *     est rangée, elle n'a rien à faire en tête de l'année en cours.
+ *
+ * Rendre les mois plutôt qu'un simple compte permet de les déplier avec
+ * leurs cartes, donc de montrer chaque ligne à SA date — on remonte
+ * l'information, jamais la date.
+ */
+export function moisEnRetardAvant(
+  anneesRegle: AnneeRegle[],
+  annee: number,
+): MoisRegle[] {
+  return anneesRegle
+    .filter((a) => a.annee < annee)
+    .flatMap((a) => a.mois)
+    .filter((m) => m.enRetard + (m.retardSansDate ?? 0) > 0);
+}
