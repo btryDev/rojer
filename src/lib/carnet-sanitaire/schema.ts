@@ -34,20 +34,32 @@ export const LABEL_RESEAU: Record<TypeReseauEau, string> = {
  * LE TYPE DE POINT (décision de la propriétaire du 2026-10-14). L'utilisateur
  * dit où est le point ; le type préremplit les seuils, qui restent modifiables,
  * et donne le réseau. Les valeurs, toutes PROPOSÉES :
- *   - sortie de production / stockage de 400 L et plus : 55 °C AU MOINS
- *     (art. 36 § 2 : « à la sortie des équipements » de stockage) ;
+ *   - sortie d'un stockage de 400 L ou plus au total, ballons de
+ *     préchauffage exclus : 55 °C AU MOINS (art. 36 § 2 : « lorsque le volume
+ *     total des équipements de stockage est supérieur ou égal à 400 litres,
+ *     l'eau contenue dans les équipements de stockage, à l'exclusion des
+ *     ballons de préchauffage, doit […] être en permanence à une température
+ *     supérieure ou égale à 55 °C à la sortie des équipements ») ;
  *   - retour de boucle / réseau : 50 °C AU MOINS (art. 36 § 2 : « en tout
  *     point du système de distribution », quand plus de 3 litres séparent la
  *     mise en distribution du point le plus éloigné) ;
- *   - point de puisage de toilette (douche, lavabo) : 50 °C AU PLUS (§ 1), et
- *     PAS de minimum — le § 2 en exempte « les tubes finaux d'alimentation des
+ *   - point de puisage d'une pièce de toilette : 50 °C AU PLUS (§ 1), et PAS
+ *     de minimum — le § 2 en exempte « les tubes finaux d'alimentation des
  *     points de puisage » ;
- *   - autre point de puisage : 60 °C AU PLUS (§ 1), pas de minimum non plus ;
+ *   - point de puisage d'une autre pièce : 60 °C AU PLUS (§ 1), pas de
+ *     minimum non plus ;
  *   - eau froide : 20 °C AU PLUS — repère de Rojer, qu'aucun des deux textes
  *     ne fixe.
  * Les points créés avant le 2026-10-14 n'ont pas de type (`null`) : il ne se
  * déduit de rien de stocké, et ne se devine pas — sauf l'eau froide, que la
  * migration `20261014120000` a typée parce que c'est le seul type de son réseau.
+ *
+ * LA SORTIE D'UN BALLON DE MOINS DE 400 L (revue du 2026-10-14). L'article ne
+ * lui fixe RIEN de propre : la condition des 55 °C est le volume TOTAL de
+ * stockage. Elle n'est donc pas un type ; un tel point relève, s'il en relève,
+ * des 50 °C « en tout point du système de distribution » — le type « retour
+ * de boucle / réseau ». ~~« Sortie de production / stockage de 400 L ou
+ * plus »~~ : le libellé laissait choisir 55 °C pour un petit ballon.
  */
 export const TYPES_POINT = [
   "SORTIE_STOCKAGE",
@@ -58,10 +70,13 @@ export const TYPES_POINT = [
 ] as const satisfies readonly TypePointReleve[];
 
 export const LABEL_TYPE_POINT: Record<TypePointReleve, string> = {
-  SORTIE_STOCKAGE: "Sortie de production / stockage de 400 L ou plus",
+  // Libellés revus le 2026-10-14 (revue indépendante) pour suivre l'article
+  // 36 : « pièces destinées à la toilette » (une baignoire, un bidet y sont),
+  // « autres pièces », et le volume TOTAL de stockage hors préchauffage.
+  SORTIE_STOCKAGE: "Sortie d'un stockage de 400 L ou plus au total (hors ballon de préchauffage)",
   RETOUR_BOUCLE: "Retour de boucle / réseau de distribution",
-  PUISAGE_TOILETTE: "Point de puisage de toilette (douche, lavabo)",
-  PUISAGE_AUTRE: "Autre point de puisage",
+  PUISAGE_TOILETTE: "Point de puisage d'une pièce de toilette (douche, lavabo, baignoire…)",
+  PUISAGE_AUTRE: "Point de puisage d'une autre pièce (cuisine, plonge…)",
   EAU_FROIDE: "Eau froide",
 };
 

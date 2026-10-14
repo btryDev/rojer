@@ -53,7 +53,7 @@ describe("lignesPointDeReleve — la pièce carnet sanitaire de l'export contrô
       seuilMaxCelsius: 50,
     };
     const texte = texteDe(douche);
-    expect(texte).toContain("Point de puisage de toilette (douche, lavabo) · plage max 50 °C");
+    expect(texte).toContain("Point de puisage d'une pièce de toilette (douche, lavabo, baignoire…) · plage max 50 °C");
     expect(texte).not.toContain("min");
   });
 

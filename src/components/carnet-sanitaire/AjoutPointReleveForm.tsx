@@ -37,9 +37,16 @@ import type { TypePointReleve, TypeReseauEau } from "@prisma/client";
  * et pourquoi la douche et le lavabo n'ont pas de minimum : le texte exempte
  * les tubes finaux. Le champ de l'article — bâtiments d'habitation, de bureaux
  * ou recevant du public — vient de l'article 1er de l'arrêté, lu le même jour.
+ *
+ * Revue indépendante du 2026-10-14 : ~~« 60 °C au plus aux autres (hors
+ * certains points signalés des cuisines et buanderies) »~~ résumait mal le
+ * § 1 — le texte dit « dans les autres pièces », et les 90 °C ne valent que
+ * dans les cuisines et buanderies « des établissements recevant du public ».
+ * Les passages entre guillemets sont recollés MOT POUR MOT depuis l'API
+ * Légifrance (`AjoutPointReleveForm.test.tsx` les confronte au texte).
  */
-const AIDE_SEUIL_TEMPERATURE =
-  "Valeurs proposées selon le type de point, à ajuster : ce sont des repères. Ils sont tirés de l'article 36 de l'arrêté du 23 juin 1978, qui vise l'eau chaude des bâtiments d'habitation, de bureaux ou recevant du public. Contre la brûlure : 50 °C au plus aux points de puisage des pièces destinées à la toilette, 60 °C au plus aux autres (hors certains points signalés des cuisines et buanderies). Contre les légionelles, pour les réseaux susceptibles d'alimenter des points de puisage à risque (notamment des douches) : 50 °C au moins en tout point du réseau d'eau chaude, quand plus de 3 litres séparent la mise en distribution du point le plus éloigné — à l'exception des tubes finaux d'alimentation des points de puisage, d'où l'absence de minimum proposé à la douche ou au lavabo ; et, pour un stockage de 400 litres et plus, 55 °C au moins en permanence à sa sortie, ou une élévation quotidienne de température. Les 20 °C proposés pour l'eau froide sont un repère de Rojer : aucun de ces textes ne les fixe.";
+export const AIDE_SEUIL_TEMPERATURE =
+  "Valeurs proposées selon le type de point, à ajuster : ce sont des repères. Ils sont tirés de l'article 36 de l'arrêté du 23 juin 1978, qui vise l'eau chaude des bâtiments d'habitation, de bureaux ou recevant du public. Contre la brûlure : « dans les pièces destinées à la toilette, la température maximale de l'eau chaude sanitaire est fixée à 50 °C aux points de puisage » ; « dans les autres pièces, la température de l'eau chaude sanitaire est limitée à 60 °C aux points de puisage » ; « dans les cuisines et les buanderies des établissements recevant du public, la température de l'eau distribuée pourra être portée au maximum à 90 °C en certains points faisant l'objet d'une signalisation particulière ». Contre les légionelles, sur les systèmes de distribution auxquels sont susceptibles d'être raccordés des points de puisage à risque (« il s'agit notamment des douches ») : quand plus de 3 litres séparent le point de mise en distribution du point de puisage le plus éloigné, 50 °C au moins « en tout point du système de distribution, à l'exception des tubes finaux d'alimentation des points de puisage » — d'où l'absence de minimum proposé à un point de puisage ; « lorsque le volume total des équipements de stockage est supérieur ou égal à 400 litres, l'eau contenue dans les équipements de stockage, à l'exclusion des ballons de préchauffage », doit « être en permanence à une température supérieure ou égale à 55 °C à la sortie des équipements » ou « être portée à une température suffisante au moins une fois par 24 heures ». L'article ne fixe pas de température propre à la sortie d'un stockage plus petit. Les 20 °C proposés pour l'eau froide sont un repère de Rojer : aucun de ces textes ne les fixe.";
 
 /** Ce que le formulaire préremplit pour un type ; `""` : point d'avant le
  *  type, qui garde ses seuils. */
