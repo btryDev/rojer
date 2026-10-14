@@ -4526,18 +4526,24 @@ seuil, destinataire). Les gardes `fait-dans-le-texte`, `extraits-affiches`,
 1. `incendie-hotel-po-controle-annuel-electricite` déclare
    `versionConstatee` 2018-01-01 ; le corpus lit désormais 2011-10-30 :
    divergence visible dans `docs/etat-verification-referentiel.md`.
-2. R. 4227-37 au 2027-01-01 (décret n° 2025-1100, art. 3) : SEULE la dernière
+2. ~~R. 4227-37 au 2027-01-01 (décret n° 2025-1100, art. 3) : SEULE la dernière
    phrase change — les « instructions » des autres établissements renvoient au
    2e alinéa de CCH R. 141-7 au lieu du 1° de R. 4216-2. Champ (R. 4227-34),
    consigne et locaux inchangés. Le nota confirme ce que `veille-textes.ts`
    laissait « à confirmer » : application aux opérations de construction ou de
    rénovation dont la demande d'autorisation d'urbanisme est déposée à compter
-   du 2027-01-01.
-3. L. 8222-2 au 2026-12-26 au plus tard (loi n° 2026-534, art. 95) : ajoute
+   du 2027-01-01.~~ [2026-10-14, C69 : traité à la main avant la date —
+   description datée, `relectureDue` réécrits, `veille-textes.ts` rayé
+   (`fb608751`). Reste le geste du 1er janvier 2027 : URL et
+   `versionConstatee`.]
+3. ~~L. 8222-2 au 2026-12-26 au plus tard (loi n° 2026-534, art. 95) : ajoute
    « ou de l'article L. 8222-1-1 », article CRÉÉ par la même loi : le maître
    de l'ouvrage vérifie périodiquement que le sous-traitant qu'il accepte
    s'acquitte des formalités de L. 8221-3 et L. 8221-5 (documents fixés par
-   décret ; particuliers exclus). Obligation nouvelle, hors corpus.
+   décret ; particuliers exclus). Obligation nouvelle, hors corpus.~~
+   [2026-10-14, C69 : relu, inscrit à `TEXTES_A_VENIR` au 2026-12-26
+   (`1746e7ea`) ; la décision — annoncer, encoder, hors cadre — attend la
+   propriétaire.]
 4. C. env. L. 512-7 : 2222-02-22 est la date conventionnelle de Légifrance
    (entrée en vigueur à la publication d'un acte d'exécution européen) ; la
    version future (loi n° 2025-794) ajoute l'élevage : sans effet sur le
@@ -4616,7 +4622,7 @@ abrogation différée au 2027-01-01 **sans version suivante**, relevée au corpu
 contre entreposage, R. 4227-22 à -25). La marque des conditions d'équipement opt-out
 (groupe électrogène). ~~La requalification de l'article de l'arrêté du 4 novembre 1993
 que la note désignait « candidat ».~~ Les indéterminations de couverture hors de
-l'indice d'avancement (A3). La version 2027 de R. 4227-37. [2026-09-28, C53 :
+l'indice d'avancement (A3). ~~La version 2027 de R. 4227-37.~~ [2026-10-14, C69 : relue, voir C69.] [2026-09-28, C53 :
 l'art. 14 est requalifié `retenu` (`f67f56d5`) ; le champ des matières, la marque
 opt-out et A3 sont instruits et attendent D24, D14 et D2.]
 
@@ -5640,6 +5646,92 @@ ce lot sert **`2026-10-08.4`**.]
     pour classer la ligne, il ne dit pas la date. Question non tranchée,
     **à la propriétaire**.
   - Le motif court des obligations retirées (C61/C62) : rien ne l'a décidé.
+
+### C69 · 2026-10-14 — Textes à venir traités à la main : R. 4227-37 (2027-01-01), L. 8222-1-1 (2026-12-26)
+
+- **Quand · par quoi** : 2026-10-14, branche `lot/veille-textes-a-venir-1014`
+  (base `main`, `517309db`). Décision de la propriétaire du même jour :
+  traiter les deux textes relevés par le premier passage de l'API (C51,
+  « À décider », points 2 et 3) à la main, avant leur date, sans attendre un
+  système de veille. ~~Le 2026-09-27 : « pour l'instant on ne fait rien, il
+  faudra un système de veille ».~~ La veille outillée reste un chantier à
+  part, non commencé ici.
+- **Lu sur l'API** (client du dépôt, `getArticle` et `/search` en
+  `CODE_DATE` au 2026-10-14, 2027-01-02 et 2035-01-01, `JORF` en texte
+  intégral) :
+  - **R. 4227-37** : en vigueur LEGIARTI000024769379 (`ABROGE_DIFF`,
+    2011-11-10 → 2027-01-01, décret n° 2011-1461 art. 6) ; future
+    LEGIARTI000052645197 (`VIGUEUR_DIFF` au 2027-01-01, décret
+    n° 2025-1100 art. 3). Premier alinéa identique ; la dernière phrase
+    renvoie « au deuxième alinéa de l'article R. 141-7 du code de la
+    construction et de l'habitation » au lieu du « 1° de l'article
+    R. 4216-2 ». Nota : opérations de construction ou de rénovation dont la
+    demande d'autorisation d'urbanisme est déposée, ou dont les travaux
+    débutent, à compter du 2027-01-01. Aucune autre version programmée.
+    R. 4227-34, -38, -39, -40 : aucune version future. R. 4216-2 : rien au
+    2027-01-02. CCH R. 141-7 : LEGIARTI000052644871, en vigueur depuis le
+    2026-07-01. R. 4227-2 : version au 2027-01-01 (LEGIARTI000052645195),
+    non lue — hors des deux textes.
+  - **L. 8222-1-1** : LEGIARTI000054335512, `VIGUEUR_DIFF` au 2026-12-26,
+    CRÉÉ par la loi n° 2026-534 du 25 juin 2026, art. 95 ; aucune version
+    antérieure. **L. 8222-2** : LEGIARTI000054335516 au 2026-12-26 (« ou de
+    l'article L. 8222-1-1 »). Nota des deux : « à une date fixée par décret,
+    et au plus tard six mois après la promulgation » — le 2026-12-26 est un
+    plafond. **JORF** : seule la loi cite L. 8222-1-1 au 2026-10-14 ; aucun
+    décret (date, montant minimal, liste des documents). L. 8271-9 porte
+    aussi une version au 2026-12-26 (pouvoirs de contrôle, non lu).
+- **Ce qui change pour la cible** :
+  - R. 4227-37 : **rien dans ce que le dirigeant fait.** Consigne affichée
+    dans le champ de R. 4227-34, instructions d'évacuation hors du champ,
+    exercices semestriels : inchangés. Seul le texte auquel renvoient les
+    CONDITIONS des instructions change, et pour les seules opérations de
+    construction ou de rénovation de 2027 et après.
+  - L. 8222-1-1 : **une diligence nouvelle**. Le dirigeant maître de
+    l'ouvrage — travaux d'aménagement d'un restaurant, d'une boutique, d'un
+    bureau, ou tout contrat d'entreprise — qui ACCEPTE un sous-traitant de
+    son entrepreneur (art. 3 de la loi du 31 décembre 1975) doit vérifier
+    périodiquement, jusqu'à la fin du contrat de sous-traitance, que ce
+    sous-traitant est en règle (L. 8221-3, L. 8221-5), par des documents
+    qu'un décret fixera, et au-dessus d'un montant qu'un décret fixera.
+    À défaut, solidarité financière (L. 8222-2). Aujourd'hui, L. 8222-1 ne
+    le vise que pour son cocontractant direct.
+- **Appliqué** : `fb608751` (R. 4227-37 : description des instructions
+  datée, trois `relectureDue` réécrits, historique au corpus,
+  `TEXTES_A_VENIR` rayé) ; `1746e7ea` (L. 8222-1-1 : entrée
+  `TEXTES_A_VENIR` au 2026-12-26, garde éprouvée en avançant la date —
+  rouge, puis verte ; corpus vigilance annoté). Aucune obligation ajoutée
+  ni retirée, aucun champ d'application touché : 176 + 0 − 0 = 176.
+- **Ce qui reste ouvert, et qui le porte** :
+  - **Le 1er janvier 2027** (garde : `relectureDue`) : passer l'URL de
+    R. 4227-37 sur LEGIARTI000052645197 et `versionConstatee` à
+    « 2027-01-01 » dans `incendie-travail-consigne-affichee` et
+    `incendie-travail-instructions-evacuation`, la note de la seconde sur la
+    phrase nouvelle, la `citationCle` du corpus ; dépouiller CCH R. 144-16,
+    R. 144-17 et R. 4227-2. Rien ne peut se faire avant : une
+    `versionConstatee` future est refusée par `conformite.test.ts`.
+  - **Deux points de lecture de R. 4227-37** (sans effet sur ce que le
+    dirigeant doit faire) : (1) un bâtiment antérieur à 2027 garde-t-il le
+    renvoi à R. 4216-2, abrogé ? Le nota borne l'application de la
+    rédaction nouvelle aux opérations de 2027, comme celui de 2011 bornait
+    la sienne ; la description dit les deux renvois sans trancher. (2) Le
+    « deuxième alinéa » de R. 141-7, compté à la lettre, est son 1° (« Le
+    bâtiment présente une stabilité au feu adaptée à la stratégie
+    d'évacuation… ») ; le contenu le plus proche de l'ancien R. 4216-2 1°
+    est son 2° (« rejoindre rapidement et en sécurité l'extérieur… »). La
+    description cite le renvoi sans le paraphraser.
+  - **L. 8222-1-1 — à la propriétaire** (garde : `TEXTES_A_VENIR`, rouge
+    au 2026-12-26 au plus tard). Options : (a) **l'annoncer** dans la
+    rubrique « Vigilance à l'égard des cocontractants » de « Ce que Rojer
+    ne couvre pas », comme L. 8222-1 (C45) — corpus `non_couvert`,
+    `ANNONCES`, § 3 de `docs/couverture-declaree-du-produit.md` ; (b)
+    **l'encoder** au module Prestataires (un prestataire « sous-traitant
+    accepté », rattaché à son entrepreneur) — impossible à faire juste
+    avant le décret, qui fixe le montant et les pièces ; (c) le classer
+    **hors cadre** (`obligation_manquante`, § 7). Recommandation : (a), à
+    la date d'entrée en vigueur ou dès qu'un décret l'avance, et (b) à
+    réexaminer quand le décret paraîtra. Pas (c) : le produit sert déjà la
+    vigilance, et taire la nouvelle branche laisserait croire le sujet
+    couvert par le module.
 
 ## Partie 2 — Registre des constats en suspens
 
