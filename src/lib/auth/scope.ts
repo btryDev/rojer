@@ -1,3 +1,4 @@
+import "server-only";
 // Helpers de scoping par utilisateur (ADR-005).
 // Toute lecture/écriture d'une entité doit vérifier que l'entreprise racine
 // appartient bien au user connecté. On passe par ces helpers pour éviter de

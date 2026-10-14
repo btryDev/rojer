@@ -1,3 +1,4 @@
+import "server-only";
 /**
  * Ce que l'écran « Ce qui doit être en place » lit.
  *

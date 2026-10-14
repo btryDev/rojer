@@ -1,3 +1,4 @@
+import "server-only";
 // Lectures du tableau de bord.
 //
 // Une règle traverse ce fichier : **aucune définition du retard n'est écrite

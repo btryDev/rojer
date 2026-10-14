@@ -65,7 +65,7 @@ import { attestationUrssafPresente } from "@/lib/prestataires/vigilance";
 import { resultatAnalyse } from "@/lib/carnet-sanitaire/schema";
 import { formaterMesure } from "@/lib/rendu/mesures";
 import { lignesPointDeReleve, NB_RELEVES_DU_DOSSIER } from "@/lib/carnet-sanitaire/export";
-import { registreAuDossier } from "@/lib/accessibilite/publication";
+import { registreAuDossier } from "@/lib/accessibilite/registre-au-dossier";
 
 /** Les dates de l'attestation d'un prestataire, telles que le ZIP les écrit. */
 function datesAttestationZip(p: {

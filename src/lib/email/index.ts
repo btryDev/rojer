@@ -1,3 +1,4 @@
+import "server-only";
 /**
  * Abstraction d'envoi d'email transactionnel.
  *

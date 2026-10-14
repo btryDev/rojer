@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { registreAuDossier } from "./publication";
+import { registreAuDossier } from "./registre-au-dossier";
 
 /**
  * Ce que le ZIP joint et ce que « Préparer un contrôle » annonce : une règle

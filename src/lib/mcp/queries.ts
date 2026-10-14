@@ -1,3 +1,4 @@
+import "server-only";
 // Lectures du serveur MCP — **portée explicite, jamais implicite**.
 //
 // Les queries de l'application (`src/lib/*/queries.ts`) déterminent leur

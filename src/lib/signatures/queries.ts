@@ -1,3 +1,4 @@
+import "server-only";
 import { prisma } from "@/lib/prisma";
 import type { ObjetSignable } from "@prisma/client";
 

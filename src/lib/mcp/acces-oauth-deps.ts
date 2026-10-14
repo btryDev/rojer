@@ -1,3 +1,4 @@
+import "server-only";
 // Câblage concret de l'accès OAuth — cf. ADR-013.
 //
 // `./acces-oauth` décide *quand* refuser ; ce module fournit les deux

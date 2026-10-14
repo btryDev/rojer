@@ -194,7 +194,8 @@ sont fermés sur `517309db`.
 - **Correctif** : route groups `(public)` / `(app)`, `AppHeader` dans le layout `(public)` seulement, `cache()` sur `getOptionalUserEtablissement`.
 - **Effort** : S-M. **[Maintenant]**
 
-### M3 `server-only` presque absent
+### ~~M3 `server-only` presque absent~~
+- **[Corrigé le 2026-10-14, `lot/nextjs-client-1014`]** `import "server-only"` en première ligne de `prisma.ts`, `auth/require-user.ts`, `auth/scope.ts`, `email/index.ts`, `supabase/server.ts`, `mcp/{prisma,queries,acces-oauth-deps}.ts` (les trois modules MCP qui ouvrent la base) et des 23 `lib/**/queries.ts`. La chaîne cliente vers `email/index.ts` était réelle et le build l'a refusée : `registreAuDossier` (seule à lire `refusUrlPublique`) sort de `accessibilite/publication.ts` vers `accessibilite/registre-au-dossier.ts`, `publication.ts` reste pur. **Écart au rapport** : `legifrance/client.ts` ne contient pas `import "server-only"`, seulement un commentaire et une garde `typeof window` (le paquet n'est pas installé ; Next le fournit). **Scripts `tsx`** : 10 sur 16 cassaient (« Cannot find module 'server-only' »). `--conditions=react-server` essayé : 14 passent, mais `mcp-server.ts` casse à l'import (`next/navigation` appelle `React.createContext`, absent de la version RSC de React) et `generer-grille-equipements.tsx` au rendu du PDF. Retenu : un préchargement `scripts/server-only-hors-next.mjs` (`registerHooks`, Node ≥ 22.15) qui résout `server-only` vers son module vide, comme l'alias de vitest, posé sur tous les scripts `tsx` de `package.json`. Les 16 scripts chargent leurs imports ; `pnpm verification`, `relecture`, `veille`, `mcp` et la grille PDF ont tourné jusqu'au bout ou jusqu'à leur garde d'environnement.
 - **Où** : présent seulement dans `storage/{index,supabase,servir}.ts` et `legifrance/client.ts`. Absent de `src/lib/prisma.ts`, `auth/require-user.ts`, `auth/scope.ts`, `email/index.ts`, `supabase/server.ts`, `mcp/*` et des 23 `*/queries.ts` (vérifié : 0 occurrence).
 - **Constat** : `lib/email/index.ts` (lit `EMAIL_DRIVER`, `PUBLIC_APP_URL`) est déjà atteint transitivement depuis un composant client (`WidgetShell.tsx:15` → … → `accessibilite/publication.ts:1`). Seul l'élagage du bundler l'écarte. H1 montre que l'élagage ne suffit pas toujours.
 - **Correctif** : `import "server-only"` dans ces modules et dans le référentiel.
@@ -283,7 +284,7 @@ Vérifiés sur `517309db` :
 ## Quick wins
 
 1. ~~**H1** : couper l'import du référentiel dans `prescriptions/schema.ts` et ajouter `server-only` au référentiel. −216 Ko gzip. (S)~~ fait le 2026-10-14 (−207 Ko gzip mesurés)
-2. **M3** : `import "server-only"` sur `prisma.ts`, `auth/*`, `email/*`, `*/queries.ts`. (S)
+2. ~~**M3** : `import "server-only"` sur `prisma.ts`, `auth/*`, `email/*`, `*/queries.ts`. (S)~~ fait le 2026-10-14
 3. **M1** : `etablissements/[id]/loading.tsx`. (S)
 4. **H2 (partiel)** : `cache()` sur `getEtablissement`, `getOptionalUserEtablissement`, `compterActions`. (S)
 5. **M8** : import direct de `ChampBoard`. −67 Ko gzip sur `/login`. (S)

@@ -6,7 +6,7 @@ import { getDashboardData } from "@/lib/dashboard/queries";
 import { compterVigilanceParGravite } from "@/lib/prestataires/queries";
 import { prisma } from "@/lib/prisma";
 import { formaterDateFr } from "@/lib/dates";
-import { registreAuDossier } from "@/lib/accessibilite/publication";
+import { registreAuDossier } from "@/lib/accessibilite/registre-au-dossier";
 import { fraicheurCalendrier, phraseFraicheur } from "@/lib/calendrier/fraicheur";
 import { AvertissementFraicheur } from "@/components/calendrier/AvertissementFraicheur";
 import { couvertureDuDossier } from "@/lib/perimetre/faits";

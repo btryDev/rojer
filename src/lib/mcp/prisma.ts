@@ -1,3 +1,4 @@
+import "server-only";
 // Client Prisma dédié au serveur MCP.
 //
 // Le singleton `@/lib/prisma` n'est pas réutilisable ici, et pas pour une

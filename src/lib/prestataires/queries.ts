@@ -1,3 +1,4 @@
+import "server-only";
 import { prisma } from "@/lib/prisma";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { requireUser } from "@/lib/auth/require-user";
