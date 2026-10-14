@@ -21,7 +21,9 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         {/* Plus d'en-tête ici (audit Next.js du 2026-10-14, M2) : il est
             rendu par les segments qui l'affichent (`LayoutAvecEnTete`), et
-            par `not-found.tsx`. Rendu ici puis masqué côté client, il lisait
+            seulement par eux : ni la page introuvable ni `error.tsx` ne
+            l'ont (sous `not-found.tsx`, Next le sérialisait dans chaque
+            page). Rendu ici puis masqué côté client, il lisait
             la session et la base sur chaque écran de l'application. */}
         <div className="flex-1">{children}</div>
       </body>

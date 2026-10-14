@@ -92,7 +92,7 @@
 //
 // Usage :
 //   pnpm seed:complet --user 3f2a91c4-7d18-4e02-9b55-0c1ee6a4d7b0
-//   pnpm tsx --env-file=.env scripts/seed-dossier-complet.ts --user <uuid>
+//   pnpm tsx --import ./scripts/server-only-hors-next.mjs --env-file=.env scripts/seed-dossier-complet.ts --user <uuid>
 
 import {
   PrismaClient,

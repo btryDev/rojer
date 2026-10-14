@@ -61,17 +61,17 @@ aucune méthode d'écriture Prisma (un test relit son texte pour le garantir :
 ## 2. La commande
 
 ```sh
-pnpm tsx --env-file=.env scripts/passage-a-blanc-echeances.ts --json passage-a-blanc-$(date +%F).json
+pnpm tsx --import ./scripts/server-only-hors-next.mjs --env-file=.env scripts/passage-a-blanc-echeances.ts --json passage-a-blanc-$(date +%F).json
 ```
 
 Variantes :
 
 ```sh
 # Un seul établissement
-pnpm tsx --env-file=.env scripts/passage-a-blanc-echeances.ts --etablissement <id>
+pnpm tsx --import ./scripts/server-only-hors-next.mjs --env-file=.env scripts/passage-a-blanc-echeances.ts --etablissement <id>
 
 # Sans export
-pnpm tsx --env-file=.env scripts/passage-a-blanc-echeances.ts
+pnpm tsx --import ./scripts/server-only-hors-next.mjs --env-file=.env scripts/passage-a-blanc-echeances.ts
 ```
 
 Le fichier `--json` garde **l'état d'avant** (chaque ligne telle qu'elle est en
