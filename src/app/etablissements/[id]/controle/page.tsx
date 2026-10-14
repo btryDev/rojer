@@ -4,7 +4,7 @@ import { LegalBadge, WhyCard, StatusPill } from "@/components/ui-kit";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { getDashboardData } from "@/lib/dashboard/queries";
 import { compterVigilanceParGravite } from "@/lib/prestataires/queries";
-import { prisma } from "@/lib/prisma";
+import { etatDesPiecesDuDossier } from "@/lib/controle/queries";
 import { formaterDateFr } from "@/lib/dates";
 import { registreAuDossier } from "@/lib/accessibilite/registre-au-dossier";
 import { fraicheurCalendrier, phraseFraicheur } from "@/lib/calendrier/fraicheur";
@@ -26,8 +26,6 @@ import {
   NB_ANALYSES_DU_DOSSIER,
   PIECES_A_L_ECRAN,
   PIECES_ZIP,
-  filtreActesDuDossier,
-  filtreRapportsDuDossier,
   type ClePiece,
 } from "@/lib/controle/pieces-zip";
 
@@ -69,31 +67,25 @@ export default async function ControlePage({
   const [
     dashboard,
     vigilance,
-    nbPrestataires,
-    duerpVersion,
-    nbRapports,
-    registreAccessibilite,
+    {
+      nbPrestataires,
+      duerpVersion,
+      nbRapports,
+      registreAccessibilite,
+      nbRapportsDuDossier,
+      nbPermisFeu,
+      nbPlansPrevention,
+      carnet,
+    },
     fraicheur,
     couverture,
     registre,
-    nbRapportsDuDossier,
-    nbPermisFeu,
-    nbPlansPrevention,
-    carnet,
   ] = await Promise.all([
     getDashboardData(id),
     compterVigilanceParGravite(id),
-    prisma.prestataire.count({ where: { etablissementId: id } }),
-    prisma.duerpVersion.findFirst({
-      where: { duerp: { etablissementId: id } },
-      orderBy: { numero: "desc" },
-      select: { numero: true, createdAt: true },
-    }),
-    prisma.rapportVerification.count({ where: { etablissementId: id } }),
-    prisma.registreAccessibilite.findUnique({
-      where: { etablissementId: id },
-      select: { publie: true },
-    }),
+    // Ce que le ZIP met dans ses pièces, par les filtres de la route
+    // (`controle/pieces-zip.ts`) : l'écran annonce ce que le ZIP contient.
+    etatDesPiecesDuDossier(id, maintenant),
     // CE QU'ON SAIT AVANT DE COMPTER. C'est l'écran qu'on ouvre devant un
     // contrôleur : il ne peut affirmer « à jour » que s'il sait sur quoi.
     fraicheurCalendrier(id),
@@ -104,24 +96,6 @@ export default async function ControlePage({
     // Les fiches du registre, comptées comme l'écran du registre les compte
     // (`completudesDuRegistre`, audit du 2026-10-12, B3).
     composerRegistreDeLEtablissement(id),
-    // Ce que le ZIP met dans ses autres pièces, par les filtres de la route
-    // (`controle/pieces-zip.ts`) : l'écran annonce ce que le ZIP contient.
-    prisma.rapportVerification.count({ where: filtreRapportsDuDossier(id) }),
-    prisma.permisFeu.count({ where: filtreActesDuDossier(id, maintenant) }),
-    prisma.planPrevention.count({ where: filtreActesDuDossier(id, maintenant) }),
-    prisma.carnetSanitaire.findUnique({
-      where: { etablissementId: id },
-      select: {
-        _count: {
-          select: { pointsReleve: { where: { actif: true } }, analyses: true },
-        },
-        analyses: {
-          orderBy: { dateAnalyse: "desc" },
-          take: NB_ANALYSES_DU_DOSSIER,
-          select: { rapportCle: true },
-        },
-      },
-    }),
   ]);
 
   // LE PATRON `etat-charge.ts`, APPLIQUÉ À UN ÉCRAN : la question « sait-on ? »

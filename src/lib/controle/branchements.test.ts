@@ -23,10 +23,13 @@ describe("branchements des fichiers déposés", () => {
   });
 
   it("le ZIP lit les rapports de CET établissement, et jamais ceux d'une ligne de salarié (M1)", () => {
-    // Le filtre lui-même est éprouvé dans `pieces-zip.test.ts`.
-    expect(zip).toMatch(
-      /rapportVerification\.findMany\(\{[\s\S]{0,600}?where: filtreRapportsDuDossier\(id\),/,
+    // Le filtre lui-même est éprouvé dans `pieces-zip.test.ts`. La lecture vit
+    // dans `controle/queries.ts` depuis le 2026-10-14 (B6).
+    const queries = lire("src/lib/controle/queries.ts");
+    expect(queries).toMatch(
+      /rapportVerification\.findMany\(\{[\s\S]{0,600}?where: \{ \.\.\.filtreRapportsDuDossier\(etablissementId\), etablissement: \{ entreprise: \{ userId \} \} \},/,
     );
+    expect(zip).toMatch(/rapportsDeposesDuDossier\(id, user\.id\)/);
   });
 
   it("le ZIP répond en flux, avec une durée maximale posée", () => {

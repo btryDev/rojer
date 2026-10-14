@@ -35,6 +35,10 @@ vi.mock("@/lib/prisma", () => ({ prisma: h.prisma }));
 vi.mock("@/lib/auth/scope", () => ({
   assertEtablissementOwnership: vi.fn(async () => ({ id: "u1" })),
   requireEtablissement: vi.fn(async () => ({ etablissement: { id: "e1" } })),
+  // La garde de la route du fichier (audit Next.js du 2026-10-14, B6).
+  requireRapportVerification: vi.fn(async () => ({
+    rapport: { id: "r1", fichierCle: "rapports/e1/r1.pdf", fichierMime: "application/pdf", fichierNomOriginal: "r.pdf" },
+  })),
 }));
 vi.mock("@/lib/auth/require-user", () => ({ requireUser: vi.fn(async () => ({ id: "u1" })) }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));

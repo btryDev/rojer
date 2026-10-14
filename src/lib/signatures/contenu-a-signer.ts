@@ -115,6 +115,21 @@ export type ContenuASigner =
   | ContenuPermisASigner
   | ContenuRapportASigner;
 
+/**
+ * Qui demande la signature : l'établissement DU JETON — l'identifiant vient
+ * d'un jeton vérifié (`verifierAccessToken`), jamais de l'URL. Lu par la page
+ * `/acces/[token]`, qui le lisait elle-même (audit Next.js du 2026-10-14, B6).
+ */
+export async function etablissementDuJeton(etablissementId: string) {
+  return prisma.etablissement.findUnique({
+    where: { id: etablissementId },
+    select: {
+      raisonDisplay: true,
+      entreprise: { select: { raisonSociale: true } },
+    },
+  });
+}
+
 export async function contenuASigner(
   objetType: string,
   objetId: string,

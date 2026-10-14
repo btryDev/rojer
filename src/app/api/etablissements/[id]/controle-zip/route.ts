@@ -5,7 +5,6 @@ import JSZip from "jszip";
 import { NextResponse } from "next/server";
 import { requireEtablissement } from "@/lib/auth/scope";
 import type { AuthedUser } from "@/lib/auth/require-user";
-import { prisma } from "@/lib/prisma";
 import { getStorage, type FileStorage } from "@/lib/storage";
 import { publicAppUrl, refusUrlPublique } from "@/lib/email";
 import {
@@ -13,14 +12,17 @@ import {
   formaterDateFr,
   formaterDateHeureFr,
 } from "@/lib/dates";
+import { PIECES_ZIP, fichierDuerp, nomDeDossier } from "@/lib/controle/pieces-zip";
 import {
-  NB_ANALYSES_DU_DOSSIER,
-  PIECES_ZIP,
-  fichierDuerp,
-  filtreActesDuDossier,
-  filtreRapportsDuDossier,
-  nomDeDossier,
-} from "@/lib/controle/pieces-zip";
+  carnetSanitaireDuDossier,
+  compterRapportsSalariesEcartes,
+  permisFeuDuDossier,
+  plansPreventionDuDossier,
+  prestatairesDuDossier,
+  rapportsDeposesDuDossier,
+  registreAccessibiliteDuDossier,
+  versionsDuDuerpDuDossier,
+} from "@/lib/controle/queries";
 import {
   construireDossierConformiteData,
   construirePlanActionsData,
@@ -71,7 +73,7 @@ import {
 import { attestationUrssafPresente } from "@/lib/prestataires/vigilance";
 import { resultatAnalyse } from "@/lib/carnet-sanitaire/schema";
 import { formaterMesure } from "@/lib/rendu/mesures";
-import { lignesPointDeReleve, NB_RELEVES_DU_DOSSIER } from "@/lib/carnet-sanitaire/export";
+import { lignesPointDeReleve } from "@/lib/carnet-sanitaire/export";
 import { registreAuDossier } from "@/lib/accessibilite/registre-au-dossier";
 
 /** Les dates de l'attestation d'un prestataire, telles que le ZIP les écrit. */
@@ -273,17 +275,13 @@ async function construireArchive(
   // annoncé par le README manquait systématiquement.
   //
   // L'ownership a déjà été vérifié par requireEtablissement en haut ; la
-  // requête reste néanmoins bornée par `duerp.etablissementId`.
+  // requête reste néanmoins bornée au propriétaire (`controle/queries.ts`).
   let duerpNumeroVersion: number | null = null;
   // `false` tant que la lecture des versions n'a pas abouti : une lecture en
   // échec n'est pas « aucune version validée ».
   let duerpLu = false;
   try {
-    const versions = await prisma.duerpVersion.findMany({
-      where: { duerp: { etablissementId: id } },
-      orderBy: { numero: "desc" },
-      select: { numero: true, snapshot: true, motif: true, createdAt: true },
-    });
+    const versions = await versionsDuDuerpDuDossier(id, user.id);
     duerpLu = true;
     const versionCourante = versions[0] ?? null;
     if (versionCourante) {
@@ -353,10 +351,8 @@ async function construireArchive(
 
   // ── 05 Accessibilité (URL publique + QR si publié) ──────────────────
   const registreAccess = await lire(PIECES_ZIP.accessibilite, null, () =>
-    prisma.registreAccessibilite.findUnique({
-    where: { etablissementId: id },
-    select: { slugPublic: true, publie: true },
-  }));
+    registreAccessibiliteDuDossier(id, user.id),
+  );
   // La même règle que la page publique (`registreServiAuPublic`) : le ZIP ne
   // donne pas une adresse qui répondrait 404 (2026-10-12). Et sans adresse
   // publique en production, pas d'URL localhost dans un dossier remis à un
@@ -386,19 +382,8 @@ async function construireArchive(
 
   // ── Prestataires : attestations URSSAF, RC Pro, Kbis ────────────────
   const prestataires = await lire(PIECES_ZIP.prestataires, [], () =>
-    prisma.prestataire.findMany({
-    where: { etablissementId: id },
-    orderBy: { raisonSociale: "asc" },
-    // Les pièces remplacées (2026-10-12) : le ZIP joint les pièces en cours,
-    // il joint donc aussi celles qu'elles ont remplacées — l'attestation d'un
-    // semestre passé est la preuve de la vigilance à ce moment-là.
-    include: {
-      piecesPrecedentes: {
-        orderBy: { remplaceeLe: "asc" },
-        select: { id: true, type: true, fichierCle: true, fichierNom: true },
-      },
-    },
-  }));
+    prestatairesDuDossier(id, user.id),
+  );
   if (prestataires.length > 0) {
     const dossierPrestataires = zip.folder(nomDeDossier(PIECES_ZIP.prestataires)) ?? zip;
     // Stockage partagé, lu à la première pièce (`stockage()`, plus haut).
@@ -461,34 +446,15 @@ async function construireArchive(
   // ── Rapports/ — les fichiers des rapports de vérification déposés ────
   // Le registre (03) n'en porte que l'index ; le tiers qui reçoit ce ZIP
   // n'a pas accès à l'application (`controle/fichiers-zip.ts`, 2026-09-27).
+  // Jamais ceux d'une ligne de salarié (`filtreRapportsDuDossier`, M1).
   const rapportsDeposes = await lire(PIECES_ZIP.rapports, [], () =>
-    prisma.rapportVerification.findMany({
-      // PAS LES RAPPORTS DES LIGNES DE SALARIÉ (contre-lecture du 2026-09-27,
-      // M1). Depuis `bb03cdd` aucun dépôt n'y est possible, mais des rapports
-      // antérieurs peuvent exister : documents nominatifs, parfois médicaux,
-      // dans un ZIP remis à un tiers. Ils n'y entrent pas ; le README le dit.
-      where: filtreRapportsDuDossier(id),
-      // Pas d'`orderBy` : l'ordre des rapports vit dans
-      // `ORDRE_RAPPORT_PLUS_RECENT` (garde de `derniere-realisation.test.ts`),
-      // et les entrées portent leur date en tête de nom — l'archive les range.
-      select: {
-        id: true,
-        fichierCle: true,
-        fichierNomOriginal: true,
-        dateRapport: true,
-        verification: {
-          select: { libelleObligation: true, equipement: { select: { libelle: true } } },
-        },
-      },
-    }),
+    rapportsDeposesDuDossier(id, user.id),
   );
   // Combien sont écartés, pour le dire. Un comptage en échec ne prive pas
   // Rapports/ (ce n'est pas `lire`) : le README dit alors la règle sans nombre.
   let rapportsSalariesEcartes: number | null;
   try {
-    rapportsSalariesEcartes = await prisma.rapportVerification.count({
-      where: { etablissementId: id, verification: { salarieId: { not: null } } },
-    });
+    rapportsSalariesEcartes = await compterRapportsSalariesEcartes(id, user.id);
   } catch (e) {
     console.error("controle-zip : comptage des rapports de salarié en échec", e);
     rapportsSalariesEcartes = null;
@@ -518,10 +484,8 @@ async function construireArchive(
   // encore présente le matin. (La fenêtre et le filtre vivent dans
   // `controle/pieces-zip.ts` depuis le 2026-10-12 : l'écran les lit aussi.)
   const permisFeuList = await lire(PIECES_ZIP.permisFeu, [], () =>
-    prisma.permisFeu.findMany({
-    where: filtreActesDuDossier(id, maintenant),
-    orderBy: { numero: "desc" },
-  }));
+    permisFeuDuDossier(id, user.id, maintenant),
+  );
   if (permisFeuList.length > 0) {
     const txt = [
       `PERMIS DE FEU — 12 derniers mois (${permisFeuList.length})`,
@@ -558,14 +522,8 @@ async function construireArchive(
 
   // ── 07 Plans de prévention (actifs 12 derniers mois) ────────────────
   const plansList = await lire(PIECES_ZIP.plansPrevention, [], () =>
-    prisma.planPrevention.findMany({
-    where: filtreActesDuDossier(id, maintenant),
-    include: {
-      lignes: { orderBy: { ordre: "asc" } },
-      phasesDangereuses: { orderBy: { ordre: "asc" } },
-    },
-    orderBy: { numero: "desc" },
-  }));
+    plansPreventionDuDossier(id, user.id, maintenant),
+  );
   if (plansList.length > 0) {
     const txt = [
       `PLANS DE PRÉVENTION — 12 derniers mois (${plansList.length})`,
@@ -625,52 +583,11 @@ async function construireArchive(
   }
 
   // ── 08 Carnet sanitaire (résumé) ─────────────────────────────────────
+  // Sans le nom de qui a relevé (`ReleveTemperature.operateur`) : la
+  // retenue est dans la requête (`carnetSanitaireDuDossier`, docs/rgpd.md § 2.5).
   const carnetSan = await lire(PIECES_ZIP.carnet, null, () =>
-    prisma.carnetSanitaire.findUnique({
-    where: { etablissementId: id },
-    include: {
-      pointsReleve: {
-        where: { actif: true },
-        include: {
-          // `select` et non `include` : `ReleveTemperature.operateur` est un
-          // champ de texte libre où l'exploitant écrit qui a relevé, et ce ZIP
-          // est remis « à un inspecteur, un assureur, un bailleur ou un
-          // acquéreur ». Aucun texte n'exige ce nom : l'article 3 de l'arrêté
-          // du 1er février 2010 demande de consigner « les modalités et les
-          // résultats » de la surveillance dans un fichier sanitaire tenu à
-          // disposition de l'ARS — pas l'identité de qui relève, et pas pour
-          // ces destinataires-là. `D. 4711-2`, qui exige l'identité du
-          // vérificateur, ne vise que la santé-sécurité AU TRAVAIL ; un relevé
-          // d'eau chaude sanitaire relève du code de la santé publique.
-          //
-          // La retenue est dans la requête et non dans le formateur : ce qui
-          // n'est pas lu ne peut pas ressortir par une colonne qu'on
-          // ajouterait plus tard.
-          //
-          // Ce ZIP en était le seul lecteur, et le retirer d'ici a d'abord
-          // laissé un champ que le formulaire demande, que le zod valide, que
-          // la base garde, et que plus rien ne lisait — une donnée sans
-          // finalité, qui tient plus mal sous la minimisation que l'usage
-          // interne auquel elle était destinée. Le champ s'affiche donc
-          // désormais sur la carte du point de relevé
-          // (`carnet-sanitaire/page.tsx`), où l'exploitant sait à qui
-          // demander quand une mesure surprend. Il ne ressort pas de
-          // l'établissement pour autant : la retenue posée ici tient
-          // (docs/rgpd.md § 2.5).
-          releves: {
-            orderBy: { dateReleve: "desc" },
-            take: NB_RELEVES_DU_DOSSIER,
-            select: {
-              dateReleve: true,
-              temperatureCelsius: true,
-              conforme: true,
-            },
-          },
-        },
-      },
-      analyses: { orderBy: { dateAnalyse: "desc" }, take: NB_ANALYSES_DU_DOSSIER },
-    },
-  }));
+    carnetSanitaireDuDossier(id, user.id),
+  );
   if (carnetSan && (carnetSan.pointsReleve.length > 0 || carnetSan.analyses.length > 0)) {
     const txt = [
       `CARNET SANITAIRE EAU`,

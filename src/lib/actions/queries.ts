@@ -303,3 +303,15 @@ export async function statsActionsEnRetard(
     },
   };
 }
+
+/**
+ * Les actions correctives nées d'une vérification, pour sa fiche (audit
+ * Next.js du 2026-10-14, B6 — la page les lisait elle-même).
+ */
+export async function listerActionsDeLaVerification(verificationId: string) {
+  const user = await requireUser();
+  return prisma.action.findMany({
+    where: { verificationId, etablissement: { entreprise: { userId: user.id } } },
+    orderBy: [{ statut: "asc" }, { echeance: "asc" }],
+  });
+}

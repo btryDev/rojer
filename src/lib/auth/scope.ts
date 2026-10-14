@@ -166,6 +166,64 @@ export async function requireVerification(verificationId: string) {
 }
 
 /**
+ * Les quatre gardes des routes de fichiers déposés (audit Next.js du
+ * 2026-10-14, B6) : chacune recodait son `findFirst` d'appartenance. Même
+ * prédicat que celles-ci — la chaîne complète jusqu'à `Entreprise.userId`,
+ * dans la requête même — et même réponse pour une ligne inexistante et pour
+ * celle d'un autre compte (404) : pas d'oracle d'existence.
+ */
+
+/** Un rapport de vérification dont l'établissement appartient au user, ou 404. */
+export async function requireRapportVerification(rapportId: string) {
+  const user = await requireUser();
+  const rapport = await prisma.rapportVerification.findFirst({
+    where: { id: rapportId, etablissement: { entreprise: { userId: user.id } } },
+  });
+  if (!rapport) notFound();
+  return { user, rapport };
+}
+
+/** Une analyse de légionelles dont le carnet appartient au user, ou 404. */
+export async function requireAnalyseLegionelle(analyseId: string) {
+  const user = await requireUser();
+  const analyse = await prisma.analyseLegionelle.findFirst({
+    where: {
+      id: analyseId,
+      carnet: { etablissement: { entreprise: { userId: user.id } } },
+    },
+  });
+  if (!analyse) notFound();
+  return { user, analyse };
+}
+
+/** Un prestataire dont l'établissement appartient au user, ou 404. */
+export async function requirePrestataire(prestataireId: string) {
+  const user = await requireUser();
+  const prestataire = await prisma.prestataire.findFirst({
+    where: { id: prestataireId, etablissement: { entreprise: { userId: user.id } } },
+  });
+  if (!prestataire) notFound();
+  return { user, prestataire };
+}
+
+/**
+ * Une pièce remplacée de CE prestataire, dont l'établissement appartient au
+ * user, ou 404 — une pièce rattachée à un autre de ses prestataires aussi.
+ */
+export async function requirePiecePrestataire(pieceId: string, prestataireId: string) {
+  const user = await requireUser();
+  const piece = await prisma.piecePrestataire.findFirst({
+    where: {
+      id: pieceId,
+      prestataireId,
+      prestataire: { etablissement: { entreprise: { userId: user.id } } },
+    },
+  });
+  if (!piece) notFound();
+  return { user, piece };
+}
+
+/**
  * Vérifie (sans retourner l'entité) qu'un etablissementId appartient au user.
  * Utile dans les server actions où on veut juste un garde-fou.
  */

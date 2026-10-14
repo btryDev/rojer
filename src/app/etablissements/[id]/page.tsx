@@ -49,18 +49,19 @@ import { listerEvenementsCalendrier } from "@/lib/calendrier/evenements";
 import { compterEtatEcheances } from "@/lib/calendrier/retards";
 import { assurerCalendrierAJour } from "@/lib/calendrier/regeneration-sure";
 import { statsActionsEnRetard } from "@/lib/actions/queries";
-import { prisma } from "@/lib/prisma";
-import { ORDRE_RAPPORT_PLUS_RECENT } from "@/lib/rapports/derniere-realisation";
+import {
+  compterRapportsDuDossier,
+  listerRapportsRecents,
+} from "@/lib/rapports/queries";
+import {
+  compterVerificationsDuDossier,
+  listerEcheancesAnnoncables,
+} from "@/lib/calendrier/queries";
 import { composantesCiviles, joursCivilsEntre } from "@/lib/dates";
 import { instantDuRendu } from "@/lib/dates/instant-du-rendu";
 import { enumererFamilles, libellePorteur } from "@/lib/calendrier/labels";
 import { libelleEtatCourtCapitale } from "@/lib/calendrier/etats";
 import { echeancesDuTableauDeBord } from "@/lib/calendrier/prochaine-echeance";
-import {
-  echeancesAnnoncables,
-  porteeBatiment,
-  toutesLesConditions,
-} from "@/lib/calendrier/portee";
 
 export default async function EtablissementPage({
   params,
@@ -144,36 +145,12 @@ export default async function EtablissementPage({
     listerEvenementsFenetre(id, 30, { batimentId: batimentFiltre }),
     statsActionsEnRetard(id),
     getModulesMatrice(id, etab.estERP),
-    prisma.verification.count({ where: { etablissementId: id } }),
-    prisma.rapportVerification.count({ where: { etablissementId: id } }),
-    prisma.verification.findMany({
-      // La clause vit dans `portee.ts`, où un test la tient : écrite ici, elle
-      // n'était atteinte par aucun — une page serveur n'en a pas — et son
-      // retrait passait inaperçu (relecture du 2026-09-12).
-      where: toutesLesConditions(
-        { etablissementId: id },
-        echeancesAnnoncables(),
-        porteeBatiment(batimentFiltre),
-      ),
-      // `prescription` : la source suffit, et elle seule — c'est de quoi dire
-      // qu'une ligne est contractuelle sans faire remonter l'acte (ADR-032).
-      include: {
-        equipement: true,
-        salarie: true,
-        prescription: { select: { source: true } },
-      },
-      // PAS DE `take` : les cinq prochaines se choisissent après projection,
-      // par `cinqProchaines` plus bas, pour que la borne ne dépende jamais de
-      // ce que le SQL sait ou non calculer (relecture externe du 2026-09-13,
-      // où un `take` en base avait chassé une vraie échéance proche).
-      orderBy: { datePrevue: "asc" },
-    }),
-    prisma.rapportVerification.findMany({
-      where: { etablissementId: id },
-      include: { verification: true },
-      orderBy: ORDRE_RAPPORT_PLUS_RECENT,
-      take: 4,
-    }),
+    compterVerificationsDuDossier(id),
+    compterRapportsDuDossier(id),
+    // Toutes : les cinq prochaines se choisissent après projection
+    // (`cinqProchaines`, plus bas).
+    listerEcheancesAnnoncables(id, batimentFiltre),
+    listerRapportsRecents(id, 4),
     // Les marques « à confirmer » : pour les échéances du board comme pour la
     // relance plus bas — un seul calcul, partagé avec les fenêtres
     // d'événements ci-dessus par `cache()`.
