@@ -5665,9 +5665,7 @@ ce lot sert **`2026-10-08.4`**.]
     n° 2025-1100 art. 3). Premier alinéa identique ; la dernière phrase
     renvoie « au deuxième alinéa de l'article R. 141-7 du code de la
     construction et de l'habitation » au lieu du « 1° de l'article
-    R. 4216-2 ». Nota : opérations de construction ou de rénovation dont la
-    demande d'autorisation d'urbanisme est déposée, ou dont les travaux
-    débutent, à compter du 2027-01-01. Aucune autre version programmée.
+    R. 4216-2 ». Nota, recollé de l'API : « Ils s'appliquent : 1° Aux opérations de construction ou de rénovation de bâtiments à usage professionnel pour lesquelles la demande d'autorisation d'urbanisme est déposée à compter du 1er janvier 2027 ; 2° Aux opérations ne nécessitant pas d'autorisation d'urbanisme, lorsque les travaux débutent à partir du 1er janvier 2027. » Aucune autre version programmée.
     R. 4227-34, -38, -39, -40 : aucune version future. R. 4216-2 : rien au
     2027-01-02. CCH R. 141-7 : LEGIARTI000052644871, en vigueur depuis le
     2026-07-01. R. 4227-2 : version au 2027-01-01 (LEGIARTI000052645195),
@@ -5685,7 +5683,8 @@ ce lot sert **`2026-10-08.4`**.]
     dans le champ de R. 4227-34, instructions d'évacuation hors du champ,
     exercices semestriels : inchangés. Seul le texte auquel renvoient les
     CONDITIONS des instructions change, et pour les seules opérations de
-    construction ou de rénovation de 2027 et après.
+    construction ou de rénovation de bâtiments à usage professionnel de 2027
+    et après.
   - L. 8222-1-1 : **une diligence nouvelle**. Le dirigeant maître de
     l'ouvrage — travaux d'aménagement d'un restaurant, d'une boutique, d'un
     bureau, ou tout contrat d'entreprise — qui ACCEPTE un sous-traitant de
