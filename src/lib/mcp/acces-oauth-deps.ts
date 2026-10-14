@@ -87,7 +87,8 @@ export function creerVerificateurSupabase(
  */
 export const chercherEtablissementDeUtilisateur: ChercheurEtablissement =
   async (userId) => {
-    const entreprise = await dbMcp().entreprise.findUnique({
+    const db = dbMcp();
+    const entreprise = await db.entreprise.findUnique({
       where: { userId },
       select: {
         etablissements: {

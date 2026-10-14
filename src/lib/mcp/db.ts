@@ -17,6 +17,12 @@ import "server-only";
 //     d'outil. `./prisma` n'est importé nulle part ailleurs : c'est ce que
 //     `db.test.ts` vérifie.
 //
+// FORME D'APPEL : `const db = dbMcp();` en tête de fonction, puis `db.x.y(…)`.
+// Pas `dbMcp().x.y(…)` : la sonde de cloisonnement (`auth/tenancy-sonde.ts`)
+// reconnaît une lecture à la forme `client.modele.findUnique(` et ne verrait
+// plus les lectures MCP — elle les a vues disparaître, et leurs exemptions
+// devenir orphelines, au premier essai (2026-10-14).
+//
 // Le singleton n'ouvre aucune connexion tant qu'on ne l'interroge pas : dans
 // le processus stdio, où il est importé mais jamais lu, il ne coûte aucun pool.
 
