@@ -375,7 +375,7 @@ export const obligationsAeration: Obligation[] = [
           "Arrêté du 25 juin 1980, art. CH 39 § 1, § 2 et § 4 (livret d'entretien de l'installation de filtration, tenu par l'utilisateur) — livre II, établissements des quatre premières catégories",
         article: "CH 39",
         url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020304645",
-        note: "« § 1. L'utilisateur doit tenir un livret d'entretien de l'installation de filtration faisant référence aux recommandations de l'installateur et du fabricant du filtre. Les valeurs d'efficacité minimale sont portées sur le livret d'entretien. » « § 4. Les visites, mesures, nettoyages, ou changements de filtres, doivent être notés sur le livret d'entretien. » Relu le 2026-10-14 par l'API Légifrance (PISTE, bac à sable) : LEGIARTI000020304645, seule version, en vigueur depuis le 1980-08-15 (texte modificateur affiché : arrêté du 14 février 2000).",
+        note: "« § 1. L'utilisateur doit tenir un livret d'entretien de l'installation de filtration faisant référence aux recommandations de l'installateur et du fabricant du filtre. Les valeurs d'efficacité minimale sont portées sur le livret d'entretien. » « § 4. Les visites, mesures, nettoyages, ou changements de filtres, doivent être notés sur le livret d'entretien. » Relu le 2026-10-14 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000020304645, seule version, en vigueur depuis le 1980-08-15 (texte modificateur affiché : arrêté du 14 février 2000).",
         versionConstatee: "1980-08-15",
       },
     ],
