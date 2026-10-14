@@ -119,6 +119,16 @@ export const AIDE_SSI =
  * le texte parle d'un « état physique », pas d'une classe CLP, et aucune table
  * de correspondance ne les rapproche.]
  *
+ * [2026-10-14, décision de la propriétaire. `R. 4227-22` vise aussi « des
+ * matières dans un état physique susceptible d'engendrer des risques
+ * d'explosion ou d'inflammation instantanée ». De cette catégorie, la question
+ * ne garde que l'inflammation instantanée. Le risque d'explosion lié à un état
+ * physique est écarté exprès, pas oublié : son exemple type, ce sont les
+ * poussières combustibles en suspension (farine, bois, sucre), qui relèvent
+ * des minoteries, des silos et des installations industrielles, hors de la
+ * cible. Un pétrin de boulangerie de quartier ne forme pas un nuage explosif.
+ * Pas de question au préventeur sur ce point.]
+ *
  * [2026-10-13, revue de `8ffc560a`. Deux corrections de l'aide, anciens
  * textes rayés :
  * ~~aide § 1 : « Sur l'étiquette, la mention « extrêmement inflammable »
