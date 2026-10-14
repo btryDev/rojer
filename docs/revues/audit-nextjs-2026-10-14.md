@@ -174,6 +174,41 @@ la page un compte d'avant régénération. Seule sa moitié indépendante des li
 - **Effort** : M
 
 ### H4 Le proxy valide la session par un appel réseau sur chaque requête, routes publiques comprises
+**[Corrigé en partie le 2026-10-14, `lot/nextjs-securite-1014`.]** Fait sur
+Supabase, sans rien réécrire de l'auth (`src/lib/supabase/middleware.ts`) :
+- **le chemin d'abord, l'auth ensuite.** Sans cookie de session
+  (`sb-<ref>-auth-token`), un chemin public passe sans client Supabase ni
+  appel réseau, un chemin protégé est refusé sans appel non plus. Les routes
+  qui ne lisent jamais la session — `/api/mcp`, `/api/mcp/[cle]`,
+  `/.well-known/…`, `/api/accessibilite/[slug]/affiche`, `/robots.txt` — n'y
+  touchent pas même avec un cookie (inventaire des routes à auth propre : ces
+  cinq-là, d'après `tenancy-routes.test.ts`) ;
+- **401 JSON sur `/api/*`** (`{ error: "non_authentifie" }`, `no-store`) au
+  lieu de la 307 ; les pages gardent la redirection vers `/login` ;
+- **`getClaims()` au lieu de `getUser()`.** Il rafraîchit le jeton expiré et
+  réécrit les cookies exactement comme `getUser()` (les deux passent par
+  `getSession()`), mais vérifie la signature localement (JWKS mis en cache par
+  processus) quand le projet signe en asymétrique ; en HS256 il retombe sur
+  `getUser()`, jamais plus d'appels qu'avant. Mesuré avec un faux serveur Auth
+  local, `next build` + `next start`, cinq pages connectées : 10 appels
+  `/auth/v1/user` en HS256 (2 par page, comme avant), **5 en ES256** (1 par
+  page, celui de `requireUser`) + 1 lecture JWKS pour le processus. Un jeton
+  expiré est rafraîchi par le proxy (`Set-Cookie`) sur une page publique comme
+  protégée. **À vérifier côté Supabase** : l'algorithme de signature du
+  projet (réglage « JWT Signing Keys ») — le gain n'existe qu'en asymétrique.
+- **Pas de garde réelle dans le proxy** : vérifié, `requireUser()`
+  (`getUser()` contre le serveur Auth) reste la seule validation, appelée par
+  les gardes de `scope.ts` (pages, actions, routes : `tenancy-*.test.ts`).
+- **Pourquoi pas la vérification par simple présence du cookie maintenant** :
+  `@supabase/ssr` impose au proxy de rafraîchir la session (docs/design.md :
+  « Using the middleware pattern is mandatory »). Les pages publiques lisent la
+  session (en-tête « Mon dossier ») ; ne plus y rafraîchir ferait consommer le
+  refresh token, à usage unique, par un rendu qui ne peut pas réécrire le
+  cookie — la session tomberait à la requête suivante. Le proxy rafraîchit donc
+  dès qu'un cookie est présent, sur tout chemin qui lit la session.
+- → bascule : proxy purement optimiste (présence du cookie Better Auth,
+  `getSessionCookie`, aucune lecture réseau ni base), la session se
+  rafraîchissant côté Better Auth ; validation dans `requireUser`.
 - **Axe** : 2. **[Recette bascule]**. Ne pas réécrire sur Supabase.
 - **Où** : `src/lib/supabase/middleware.ts:84-101`
 - **Constat** :
