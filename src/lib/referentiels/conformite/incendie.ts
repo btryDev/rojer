@@ -1749,7 +1749,7 @@ export const obligationsIncendie: Obligation[] = [
       {
         source: "ARRETE",
         reference:
-          "Arrêté du 25 juin 1980, art. M 29 § 1 (agents désignés par l'exploitant, entraînés à la manœuvre des moyens de secours et à l'évacuation du public, effectif inférieur à 4 000 personnes) — livre II, titre II, type M, établissements des quatre premières catégories",
+          "Arrêté du 25 juin 1980, art. M 29 § 1 (agents désignés par l'exploitant, entraînés à la manœuvre des moyens de secours et à l'évacuation du public, effectif du public de moins de 4 000 personnes) — livre II, titre II, type M, établissements des quatre premières catégories",
         article: "M 29",
         url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000034988398",
         note: "« Paragraphe 1. Dans les établissements où l'effectif du public reçu est inférieur à 4 000 personnes, des agents, entraînés à la manœuvre des moyens de secours contre l'incendie et à l'évacuation du public, doivent être désignés par l'exploitant. » Relu le 2026-10-14 par l'API (bac à sable) : LEGIARTI000034988398, en vigueur depuis le 2017-07-01 (arrêté du 13 juin 2017, art. 13). Les § 2 à § 5 — agents SSIAP au-delà de 4 000 personnes — ne sont pas portés : réserve du corpus.",
