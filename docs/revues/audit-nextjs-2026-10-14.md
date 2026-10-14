@@ -307,7 +307,15 @@ bruit dépasse l'écart. Il n'existe que sur un pool de plus d'une connexion.
 - **Correctif** : n'utiliser `prismaMcp` que dans `scripts/mcp-server.ts`.
 - **Effort** : S. **[Recette bascule]**
 
-### M6 Ni validation des variables au démarrage, ni instrumentation, ni monitoring
+### ~~M6 Ni validation des variables au démarrage, ni instrumentation, ni monitoring~~
+**[Corrigé le 2026-10-14, `lot/nextjs-infra-1014`.]**
+- `src/env.ts` (zod, `server-only`), appelé par `register()` de `src/instrumentation.ts` (runtime Node). Requises : `DATABASE_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, plus `APP_ENV` pour une production hors Vercel. Les optionnelles restent optionnelles ; posées, leur forme est vérifiée (`STORAGE_DRIVER`, `LEGIFRANCE_ENV`, `APP_ENV`, `PUBLIC_APP_URL`). Toutes les fautes sortent en une fois, nommées, sans valeur. Vérifié avec `next start` sans la clé publiable : le journal nomme `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, toute requête répond 500 (Next garde le processus en vie : le message le dit tel quel).
+- `next build` n'exige rien : la validation vit dans `register()` et saute `NEXT_PHASE=phase-production-build`. Build vérifié `.env` écarté, avec les quatre variables factices des règles (dont `NEXT_PUBLIC_SUPABASE_ANON_KEY`, que le code ne lit pas : la clé lue est `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, et le build passe sans elle).
+- `onRequestError` : une ligne JSON sur stderr par erreur serveur (`lib/journal/erreur-requete.ts`) — motif de route (`/accessibilite/[slug]`), type, source de rendu, nom, message, digest, pile ; **ni le chemin réel ni la requête ni les en-têtes** (jetons). Vérifié sur `next start`, base injoignable : la ligne sort, sans le jeton passé dans l'URL.
+- `.env.example` complété par inventaire des lectures (`APP_ENV`, `MCP_*`, `LEGIFRANCE_*`, variables posées par l'hébergeur, variables de tests et scripts) ; un relevé par grep de toutes les lectures ne trouve plus de variable absente du fichier.
+- **Non migré** : les `process.env.X` du code restent en place (argumenté en tête de `env.ts` : lecteurs paramétrés pour les tests, règles contextuelles dont le message est plus juste là où elles vivent, modules Supabase au lot sécurité puis à Better Auth).
+- **Avant merge** : comparer les variables de la prod Vercel au schéma (une `PUBLIC_APP_URL` sans schéma, un `STORAGE_DRIVER` hors énumération y feraient répondre 500 partout).
+- → bascule : brancher le drain de journaux CC sur stderr (B10) ; décider si `register()` doit faire sortir le processus (`process.exit(1)`) pour qu'un déploiement CC mal configuré échoue au lieu de servir des 500.
 - **Où** : pas d'`instrumentation.ts`, pas de module `env`. `src/lib/supabase/*.ts` lit `process.env.NEXT_PUBLIC_SUPABASE_URL!`. 20 fichiers journalisent par `console.error`.
 - **Constat** : une variable manquante plante à la première requête qui la lit, avec une erreur obscure.
   - `MCP_CLE`, `MCP_ETABLISSEMENT_ID`, `MCP_HOTES`, `LEGIFRANCE_*` sont absentes de `.env.example`.

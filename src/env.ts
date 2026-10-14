@@ -1,0 +1,161 @@
+import "server-only";
+// Les variables d'environnement, validées une fois, au démarrage du serveur.
+//
+// AVANT (audit Next.js du 2026-10-14, M6). Rien ne les validait : une variable
+// manquante plantait à la première requête qui la lisait, avec une erreur
+// obscure (`NEXT_PUBLIC_SUPABASE_URL!` passé à `createServerClient`, une URL
+// Prisma vide…), et seulement sur le chemin qui la lit.
+//
+// MAINTENANT. `src/instrumentation.ts` appelle `validerEnvironnementAuDemarrage`
+// dans `register()`, que Next exécute avant de servir la moindre requête. Un
+// serveur mal configuré ne sert aucune requête (Next garde le processus et
+// répond 500 partout, vérifié avec `next start` le 2026-10-14), et le message,
+// au journal, NOMME chaque variable fautive — jamais sa valeur.
+//
+// CE QUI EST EXIGÉ, et ce qui ne l'est pas.
+//   - Trois variables sans lesquelles aucune page authentifiée ne répond :
+//     `DATABASE_URL`, `NEXT_PUBLIC_SUPABASE_URL`,
+//     `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+//   - `APP_ENV`, seulement pour un serveur de production qui n'est pas sur
+//     Vercel (pas de `VERCEL_ENV`) : sans elle, l'environnement est
+//     indéterminé et la réparation du calendrier ne s'exécute jamais
+//     (`lib/environnement.ts`) — une dégradation silencieuse, que le démarrage
+//     rend visible à qui déploie.
+//   - Les variables optionnelles RESTENT optionnelles : posées, leur FORME est
+//     vérifiée (une énumération, une URL) ; absentes, rien. Les règles qui
+//     dépendent du contexte restent là où elles vivent et où leur message est
+//     le plus juste : stockage (`storage/index.ts`, `STORAGE_DRIVER=local`
+//     refusé en production au premier dépôt), e-mail (`email/index.ts`),
+//     URL publique (`refusUrlPublique`), MCP (`mcp/acces-*.ts`, route fermée
+//     plutôt que serveur en panne), Légifrance (`configurationDepuisEnv`).
+//     Les rapatrier ici aurait fait tomber au démarrage des serveurs qui
+//     servent correctement tout le reste.
+//
+// CE QUI N'EST PAS MIGRÉ. Le code continue de lire `process.env.X` là où il le
+// lisait. Plusieurs lecteurs prennent l'environnement en PARAMÈTRE pour être
+// testés sans muter `process.env` (`mcp/hotes.ts`, `mcp/acces-*.ts`,
+// `legifrance/client.ts`, `lib/environnement.ts`), et les modules Supabase sont
+// au lot sécurité puis à Better Auth. Les remplacer par un objet importé d'ici
+// toucherait une vingtaine de fichiers pour un gain nul : la validation, elle,
+// est faite.
+//
+// LE BUILD. `next build` n'exige aucune vraie valeur : la validation ne vit que
+// dans `register()`, appelé au démarrage d'un serveur, et l'ignore en phase de
+// build (`NEXT_PHASE`) au cas où Next l'y appellerait.
+
+import { z } from "zod";
+import { ENVIRONNEMENTS_APP } from "@/lib/environnement";
+
+type Env = Record<string, string | undefined>;
+
+/** Une variable posée vide (ou faite d'espaces) est absente. */
+const vide = (v: unknown) => (typeof v === "string" && v.trim() === "" ? undefined : v);
+
+const requise = (description: string) =>
+  z.preprocess(vide, z.string({ error: `absente (${description})` }));
+
+const optionnelle = z.preprocess(vide, z.string().optional());
+
+const urlHttp = z.string().refine((v) => {
+  try {
+    return ["http:", "https:"].includes(new URL(v).protocol);
+  } catch {
+    return false;
+  }
+}, "doit être une URL http(s) complète, schéma compris");
+
+const enumeration = <T extends readonly [string, ...string[]]>(valeurs: T) =>
+  z.preprocess(
+    vide,
+    z.enum(valeurs, { error: `doit valoir ${valeurs.map((v) => `« ${v} »`).join(" ou ")}` }).optional(),
+  );
+
+const schema = z
+  .object({
+    NODE_ENV: optionnelle,
+
+    // Base de données (Prisma). `DIRECT_URL` ne sert qu'aux migrations.
+    DATABASE_URL: requise("URL PostgreSQL du client Prisma").pipe(
+      z.string().regex(/^postgres(ql)?:\/\//, "doit commencer par postgresql://"),
+    ),
+    DIRECT_URL: optionnelle,
+
+    // Authentification Supabase (ADR-005), jusqu'à la bascule Better Auth.
+    NEXT_PUBLIC_SUPABASE_URL: requise("URL du projet Supabase").pipe(urlHttp),
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: requise("clé publiable Supabase"),
+
+    // Environnement de l'application (`lib/environnement.ts`).
+    APP_ENV: enumeration(ENVIRONNEMENTS_APP),
+    VERCEL_ENV: optionnelle,
+
+    // URL publique, e-mail.
+    PUBLIC_APP_URL: z.preprocess(vide, urlHttp.optional()),
+    EMAIL_DRIVER: optionnelle,
+    SIGNATURE_MAIL_FROM: optionnelle,
+
+    // Stockage des fichiers (`storage/index.ts`).
+    STORAGE_DRIVER: enumeration(["local", "supabase"] as const),
+    STORAGE_BUCKET: optionnelle,
+    STORAGE_LOCAL_PATH: optionnelle,
+    SUPABASE_SERVICE_ROLE_KEY: optionnelle,
+
+    // Serveur MCP (`mcp/acces-*.ts`, `mcp/hotes.ts`).
+    MCP_CLE: optionnelle,
+    MCP_ETABLISSEMENT_ID: optionnelle,
+    MCP_HOTES: optionnelle,
+
+    // API Légifrance (`legifrance/client.ts`, scripts).
+    LEGIFRANCE_CLIENT_ID: optionnelle,
+    LEGIFRANCE_CLIENT_SECRET: optionnelle,
+    LEGIFRANCE_ENV: enumeration(["sandbox", "production"] as const),
+  });
+
+export type EnvValide = z.infer<typeof schema>;
+
+export class ErreurEnvironnement extends Error {
+  constructor(readonly variables: string[], message: string) {
+    super(message);
+    this.name = "ErreurEnvironnement";
+  }
+}
+
+/**
+ * Valide `env` et rend sa forme typée, ou lève une `ErreurEnvironnement` qui
+ * nomme chaque variable fautive et la raison — jamais la valeur.
+ */
+export function validerEnvironnement(env: Env = process.env): EnvValide {
+  const r = schema.safeParse(env);
+  const fautes: { variable: string; message: string }[] = r.success
+    ? []
+    : r.error.issues.map((i) => ({ variable: String(i.path[0] ?? "?"), message: i.message }));
+
+  // Hors du schéma, et non en `superRefine` : zod n'exécute pas un raffinement
+  // d'objet quand un champ a déjà échoué, et `APP_ENV` ne serait signalée qu'au
+  // second démarrage. Toutes les fautes sortent en une fois.
+  if (vide(env.NODE_ENV) === "production" && !vide(env.APP_ENV) && !vide(env.VERCEL_ENV)) {
+    fautes.push({
+      variable: "APP_ENV",
+      message:
+        "absente : un serveur de production hors Vercel doit dire ce qu'il est " +
+        "(production | preview | development). Sans elle, la réparation du " +
+        "calendrier ne s'exécute jamais (lib/environnement.ts)",
+    });
+  }
+
+  if (r.success && fautes.length === 0) return r.data;
+
+  const lignes = fautes.map((f) => `  - ${f.variable} : ${f.message}`);
+  throw new ErreurEnvironnement(
+    [...new Set(fautes.map((f) => f.variable))],
+    // Next garde le processus en vie et répond 500 à toute requête : le
+    // message le dit tel quel, sans promettre un arrêt qui n'a pas lieu.
+    `Configuration invalide : le serveur ne servira aucune requête. Variable(s) en cause :\n${lignes.join("\n")}\n` +
+      "Modèle et explications : .env.example.",
+  );
+}
+
+/** Appelé par `register()` ; ne fait rien pendant `next build`. */
+export function validerEnvironnementAuDemarrage(env: Env = process.env): void {
+  if (env.NEXT_PHASE === "phase-production-build") return;
+  validerEnvironnement(env);
+}
