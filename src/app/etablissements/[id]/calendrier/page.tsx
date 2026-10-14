@@ -265,6 +265,27 @@ export default async function CalendrierPage({
 }) {
   const { id } = await params;
   const { domaine, urgent, famille, batiment } = await searchParams;
+
+  // Rattrapage à l'affichage, AVANT toute lecture : un calendrier jamais
+  // généré, périmé par un échec, ou calculé sur une version antérieure du
+  // référentiel (ADR-003 — ses corrections n'atteignaient les calendriers
+  // qu'au hasard d'une mutation). Un seul repère les distingue, et la même
+  // fonction sert le tableau de bord (`assurerCalendrierAJour`).
+  //
+  // La page comptait ici toutes les lignes pour détecter un calendrier vide,
+  // puis réemployait ce compte à l'affichage. Le repère rend le premier inutile
+  // — il est vide tant que le calendrier n'a jamais été généré — et le compte
+  // se fait désormais une fois, avec les autres lectures.
+  //
+  // La réconciliation est idempotente et ne détruit jamais une ligne portant un
+  // rapport, une action ou une date de réalisation (cf. ADR-012) : la relancer
+  // est sans risque, et elle ne réécrit que ce qui a réellement changé.
+  //
+  // [2026-10-13] Avant TOUT autre `await`, `getEtablissement` compris
+  // (`fraicheur-sorties.test.ts`) : la réparation porte sa propre garde de
+  // tenancy (`calendrierDesynchronise` filtre sur le propriétaire), un
+  // identifiant étranger ne régénère rien et tombe au `notFound` qui suit.
+  await assurerCalendrierAJour(id);
   const etab = await getEtablissement(id);
   if (!etab) notFound();
 
@@ -285,22 +306,6 @@ export default async function CalendrierPage({
       ? (domaine as DomaineObligation)
       : undefined;
   const filtreUrgent = urgent === "1";
-
-  // Rattrapage à l'affichage, AVANT toute lecture : un calendrier jamais
-  // généré, périmé par un échec, ou calculé sur une version antérieure du
-  // référentiel (ADR-003 — ses corrections n'atteignaient les calendriers
-  // qu'au hasard d'une mutation). Un seul repère les distingue, et la même
-  // fonction sert le tableau de bord (`assurerCalendrierAJour`).
-  //
-  // La page comptait ici toutes les lignes pour détecter un calendrier vide,
-  // puis réemployait ce compte à l'affichage. Le repère rend le premier inutile
-  // — il est vide tant que le calendrier n'a jamais été généré — et le compte
-  // se fait désormais une fois, avec les autres lectures.
-  //
-  // La réconciliation est idempotente et ne détruit jamais une ligne portant un
-  // rapport, une action ou une date de réalisation (cf. ADR-012) : la relancer
-  // est sans risque, et elle ne réécrit que ce qui a réellement changé.
-  await assurerCalendrierAJour(id);
 
   const [
     verifsBruts,

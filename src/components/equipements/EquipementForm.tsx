@@ -32,14 +32,19 @@ const CASE_A_COCHER =
   "mt-0.5 size-4 flex-none rounded border-[color:var(--board-slate)] accent-[color:var(--board-ink)]";
 
 /** Le message de validation, à l'encre du signal. */
-function Erreur({ message }: { message?: string }) {
+function Erreur({ message, id }: { message?: string; id?: string }) {
   if (!message) return null;
   return (
-    <p className="m-0 mt-1.5 text-[12.5px] text-[color:var(--board-signal-ink)]">
+    <p id={id} className="m-0 mt-1.5 text-[12.5px] text-[color:var(--board-signal-ink)]">
       {message}
     </p>
   );
 }
+
+/** Le gabarit d'une aide : partagé par la phrase d'aide d'un champ et par
+ *  l'aide en plusieurs blocs au-dessus des questions exigées du levage. */
+const CLASSE_AIDE =
+  "m-0 mt-1.5 max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]";
 
 /** La phrase d'aide d'un champ : en clair sous le champ, jamais en infobulle
  *  — une infobulle n'existe pas au doigt. */
@@ -47,7 +52,7 @@ function Aide({ id, children }: { id?: string; children: ReactNode }) {
   return (
     <p
       id={id}
-      className="m-0 mt-1.5 max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
+      className={CLASSE_AIDE}
     >
       {children}
     </p>
@@ -91,8 +96,13 @@ const QUESTIONS_TRI_ETAT: Record<
   // Une case à cocher jusqu'au 2026-09-27 (C41) : décochée par défaut, elle
   // écrivait « non » sur toute installation électrique, réponse ou pas, et ce
   // « non » ne pouvait rien éteindre sans éteindre aussi les silences. En trois
-  // états, « Je ne sais pas encore » garde les deux lignes d'EL 18 § 4 ; seul
-  // un « non » choisi les retire.
+  // états, ~~« Je ne sais pas encore » garde les deux lignes d'EL 18 § 4 ; seul
+  // un « non » choisi les retire~~ [2026-10-13, décision de la propriétaire :
+  // seul un « oui » fait naître les deux lignes ; « Non » et « Je ne sais pas
+  // encore » n'en donnent aucune — ~~un groupe électrogène est un appareil~~
+  // (motif remplacé le même jour : en ERP la réponse est EXIGÉE,
+  // `QUESTIONS_EXIGEES_PAR_DECISION`, donc il n'y a plus de silence ; le
+  // formulaire n'y offre plus « Je ne sais pas encore »)].
   aGroupeElectrogene: {
     question: "Un groupe électrogène de sécurité est-il présent ?",
     aide: AIDE_GROUPE_ELECTROGENE,
@@ -144,7 +154,14 @@ const QUESTIONS_TRI_ETAT: Record<
     // 2026-09-28 (revue indépendante du lot 3) : l'aide ne disait que le
     // 23 b) ; le 23 a) met aussi à six mois l'appareil manuel qui ne lève pas
     // de personnes (art. 20-III).
-    aide: "Manuel : un treuil à manivelle, un palan à chaîne tiré à la main, une nacelle poussée et montée à la force du bras. Motorisé (répondez « non ») : électrique, hydraulique ou thermique, même commandé à la main ou par télécommande — un appareil automatique ou semi-automatique est motorisé. Si oui, la vérification générale a lieu tous les six mois — tous les trois mois s'il sert à élever un poste de travail — et non tous les douze.",
+    // [2026-10-13, revue de lot/reprise-suites-lot3 : ~~« Si oui, la
+    // vérification générale a lieu tous les six mois — tous les trois mois
+    // s'il sert à élever un poste de travail — et non tous les douze. »~~ —
+    // plus large que le texte. L'art. 20-III ne vise que les appareils « non
+    // conçus spécialement pour lever des personnes, mus par la force humaine
+    // employée directement » ; la condition est rendue. Même correction que
+    // l'aide au-dessus des questions exigées, qui dit la même chose.]
+    aide: "Manuel : un treuil à manivelle, un palan à chaîne tiré à la main, une nacelle poussée et montée à la force du bras. Motorisé (répondez « non ») : électrique, hydraulique ou thermique, même commandé à la main ou par télécommande — un appareil automatique ou semi-automatique est motorisé. Si oui, la vérification générale a lieu tous les trois mois s'il sert à élever un poste de travail ; sinon, tous les six mois s'il n'est pas conçu spécialement pour lever des personnes (arrêté du 1er mars 2004, art. 20-III et 23).",
   },
   estChariotOuGerbeur: {
     // 2026-09-28 (revue indépendante du lot 3) : la question ne nommait que
@@ -502,6 +519,56 @@ export function EquipementForm({
               />
             )}
 
+            {/* Reprise des suites du lot 3 (2026-10-13) : un appareil de levage
+                déjà enregistré sans ces réponses ne s'enregistre plus sans
+                elles — la ligne dit pourquoi, au-dessus des questions. Le
+                texte suit l'art. 23 de l'arrêté du 1er mars 2004 (corpus
+                `arrete-2004-03-01-levage.ts`) et les mots « manuel » /
+                « motorisé » posés le 2026-10-08 avec le préventeur (7f8a6433).
+                Levage seulement : le désenfumage, l'autre catégorie dont une
+                réponse peut être exigée (décision du 2026-10-08), relève de
+                DF 10 § 3, que son aide dit déjà.
+                [2026-10-13, revue : ~~« tous les six mois s'il est manuel »~~ —
+                plus large que l'art. 20-III, qui ne vise que les appareils
+                « non conçus spécialement pour lever des personnes » ; la
+                condition est rendue. Une puce par rythme et sa condition,
+                pour que chacune se lise — et se teste — en entier.] */}
+            {categorie === "EQUIPEMENT_LEVAGE" &&
+              (questionsExigees[categorie] ?? []).length > 0 && (
+                <div
+                  id="aide-reponses-exigees"
+                  className={CLASSE_AIDE}
+                >
+                  <p className="m-0">
+                    La vérification générale périodique de cet appareil a lieu
+                    (arrêté du 1er mars 2004, art. 23) :
+                  </p>
+                  <ul className="m-0 mt-1 list-disc pl-5">
+                    <li>tous les douze mois en principe ;</li>
+                    <li>
+                      tous les six mois s&apos;il figure à la liste de
+                      l&apos;art. 20-II ;
+                    </li>
+                    <li>
+                      tous les six mois s&apos;il est manuel et n&apos;est pas
+                      conçu spécialement pour lever des personnes (art. 20-III) ;
+                    </li>
+                    <li>
+                      tous les six mois s&apos;il est motorisé et sert au
+                      transport de personnes ou à élever un poste de travail ;
+                    </li>
+                    <li>
+                      tous les trois mois s&apos;il est manuel et sert à élever
+                      un poste de travail.
+                    </li>
+                  </ul>
+                  <p className="m-0 mt-1">
+                    Les réponses marquées d&apos;un astérisque en décident :
+                    elles sont donc exigées, y compris pour un appareil déjà
+                    enregistré, et la fiche ne s&apos;enregistre plus sans elles.
+                  </p>
+                </div>
+              )}
             {questions.map(({ champ }) => (
               <QuestionTriEtat
                 key={champ}
@@ -569,11 +636,16 @@ export function EquipementForm({
 // ~~`valeur` et `onChange`~~ — retirés le 2026-10-12 : ils ne servaient qu'à la
 // question du SSI A/B du désenfumage, montrée après « mécanique : Oui » et
 // passée depuis sur la fiche de l'établissement.
-function QuestionTriEtat({
+// Exportée le 2026-10-13 : le panneau de pré-remplissage pose les questions
+// exigées « au même format que le formulaire » (décision de la propriétaire,
+// option 2). `nom` y distingue la question d'une catégorie de celle d'une
+// autre ; ici, il vaut le champ.
+export function QuestionTriEtat({
   champ,
   defaut,
   erreur,
   exigee = false,
+  nom = champ,
 }: {
   champ: ChampTriEtat;
   defaut: string;
@@ -581,24 +653,28 @@ function QuestionTriEtat({
   /** D29 (a) : « Je ne sais pas encore » n'est pas offert, et aucune réponse
    *  n'est présélectionnée — le serveur refuse l'absence (comme A2). */
   exigee?: boolean;
+  /** `id` et `name` du `<select>` ; le champ par défaut. */
+  nom?: string;
 }) {
   const { question, aide } = QUESTIONS_TRI_ETAT[champ];
   return (
     <div>
       <label
         className="label-board mb-1 text-[14px] text-[color:var(--board-ink)]"
-        htmlFor={champ}
+        htmlFor={nom}
       >
         {question}
         {exigee ? " *" : ""}
       </label>
-      <Aide id={`${champ}-aide`}>{aide}</Aide>
+      <Aide id={`${nom}-aide`}>{aide}</Aide>
       <select
-        id={champ}
-        name={champ}
+        id={nom}
+        name={nom}
         defaultValue={defaut}
         className="champ-board mt-2 sm:w-64"
-        aria-describedby={`${champ}-aide`}
+        // Le message d'erreur est lié au champ (revue du 2026-10-13) : un
+        // lecteur d'écran l'annonce avec la question, pas seulement l'aide.
+        aria-describedby={erreur ? `${nom}-aide ${nom}-erreur` : `${nom}-aide`}
         aria-invalid={Boolean(erreur)}
         required={exigee}
       >
@@ -621,7 +697,7 @@ function QuestionTriEtat({
           ))
         )}
       </select>
-      <Erreur message={erreur} />
+      <Erreur id={`${nom}-erreur`} message={erreur} />
     </div>
   );
 }
