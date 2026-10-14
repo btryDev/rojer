@@ -426,13 +426,67 @@ Ils s'ajoutent à B1-B16 de l'audit OWASP :
 
 ## Non vérifié / à confirmer
 
-- **Pages authentifiées non mesurées** (pas de session ni de données dans le worktree) : temps de rendu réel, nombre exact de requêtes SQL du board (≈ 50 est une estimation par lecture), taille du payload RSC du board et du calendrier.
+- ~~**Pages authentifiées non mesurées** (pas de session ni de données dans le worktree) : temps de rendu réel, nombre exact de requêtes SQL du board (≈ 50 est une estimation par lecture), taille du payload RSC du board et du calendrier.~~ [2026-10-14 : mesurées, et l'estimation était fausse d'un facteur trois — 146 requêtes, pas ≈ 50. Voir « Mesures du lot perf » ci-dessous.]
 - **Exports** : durée et mémoire de `renderToBuffer` et du ZIP sur un vrai dossier.
 - **Server actions** : l'absence de mémoïsation de la session dans le corps d'une action est déduite de la lecture de React, pas mesurée.
 - **Better Auth** : nom exact de l'option de génération d'UUID, à lire dans la doc de la version qui sera installée.
 - **Clever Cloud** : `max_connections` du plan PostgreSQL, plafond de corps du reverse proxy, en-têtes `X-Forwarded-*`.
 - **Non lancés** : Lighthouse et l'analyseur de bundle Turbopack (`next experimental-analyze`, qui écrit dans `.next`). Les chunks ont été identifiés à la main.
 - **Non couverts** : DAST, ReDoS, le détail des 86 exports inutilisés de knip.
+
+## Mesures du lot perf (2026-10-14, `lot/nextjs-perf-1014`)
+
+**Méthode.** Base locale (`duerp_perf`, conteneur `duerp-db`), migrée puis
+semée par `seed:complet` : un restaurant, dix équipements, cinq salariés, un
+DUERP de six unités, 36 échéances de 2026 à 2033, aucun rapport. `next build`
+puis `next start` (jamais `pnpm build`, qui migre). L'authentification
+Supabase est servie par un faux serveur Auth **local** (`/auth/v1/user` rend un
+utilisateur fixe), vers lequel `NEXT_PUBLIC_SUPABASE_URL` pointe au build :
+aucun compte créé, aucun appel au projet Supabase. Les requêtes SQL sont
+comptées dans le journal de PostgreSQL (`ALTER DATABASE duerp_perf SET
+log_statement = 'all'`), hors `SELECT 1` de santé du pool, sur un affichage
+complet (`curl` avec le cookie de session) ; la charge utile RSC est la
+réponse à `RSC: 1`. Médiane de trois essais après une chauffe. **Rien n'est
+resté dans le code** : la méthode ne demande ni extension Prisma ni variable
+d'environnement, et un compteur côté Prisma n'aurait pas vu les requêtes que
+fait un `include` (une par relation). L'outillage (faux serveur, script de
+mesure, captures) vivait hors du dépôt.
+
+| Page | SQL avant | SQL après | RSC avant (o) | RSC après (o) | HTML avant (o) | HTML après (o) | 1er octet avant (ms) | 1er octet après (ms) |
+|---|---|---|---|---|---|---|---|---|
+| Tableau de bord | 146 | 105 | 80 602 | 79 743 | 197 708 | 200 786 | 56 | 26 |
+| Calendrier | 74 | 56 | 184 501 | 148 386 | 275 933 | 238 319 | 32 | 19 |
+| Registre | 50 | 46 | 60 971 | 60 441 | 127 690 | 130 753 | 24 | 19 |
+| Équipements | 51 | 43 | 56 132 | 55 263 | 121 403 | 122 904 | 22 | 20 |
+| DUERP (unités) | 49 | 41 | 24 596 | 22 985 | 67 700 | 66 150 | 20 | 20 |
+| DUERP (synthèse) | 50 | 42 | 67 763 | 66 152 | 143 046 | 141 496 | 20 | 20 |
+| `/login` (connecté) | 1 | 1 | 9 407 | 9 639 | 18 443 | 18 909 | 6 | 6 |
+
+- Le HTML du tableau de bord grossit de 3 Ko : c'est le repli `loading.tsx`
+  et le balisage du flux (M1). En échange, le premier octet — barre latérale
+  comprise — part en 26 ms au lieu de 56.
+- `/login` gagne ≈ 0,5 Ko : le segment porte désormais son layout (M2).
+- Les temps sont locaux, base sur la même machine, pool Prisma de plusieurs
+  connexions : ils ne disent rien de la production derrière le pooler en
+  mode transaction (`connection_limit=1`), où chaque requête économisée est
+  un aller-retour sérialisé de moins.
+- Deux appels au serveur Auth par affichage, avant comme après : le proxy et
+  le rendu (mémoïsé). C'est H4, hors de ce lot.
+
+**Contrôle visuel.** Les mêmes pages ouvertes dans Chrome (headless, 1440 ×
+1000) avant et après : texte rendu (`innerText`) identique et captures
+identiques au pixel près pour le tableau de bord, le calendrier, le registre,
+les équipements, le DUERP et `/login`. Seule la page introuvable diffère :
+elle a perdu l'en-tête global (M2).
+
+**Ce qui reste, mesuré et non traité ici.** Sur les 105 requêtes du tableau
+de bord : la barre latérale et le layout en coûtent environ 25 opérations
+Prisma sur chaque écran (relevé par pile d'appels en `next dev` : compteurs,
+registre des échéances, vigilance, fraîcheur, fratrie) ; `listerEvenementsFenetre` est appelée
+trois fois (7 j, 30 j, frise) pour trois fenêtres de la même requête ;
+`getModulesMatrice` (page) et `getEtatModules` (barre) comptent chacun les
+permis, les plans et le carnet ; le compte des lignes du calendrier part deux
+fois (barre et page), et c'est voulu tant que la page répare avant de lire.
 
 ## Plan de correction proposé
 
