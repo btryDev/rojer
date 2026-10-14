@@ -211,7 +211,29 @@ la page un compte d'avant régénération. Seule sa moitié indépendante des li
 
 ## Améliorations (Moyenne)
 
-### M1 Aucun état de chargement
+### ~~M1 Aucun état de chargement~~
+**[Corrigé en partie le 2026-10-14, `lot/nextjs-perf-1014`.]**
+`src/app/etablissements/[id]/loading.tsx` existe : la barre latérale et la
+barre de compte (le layout) restent en place, la colonne de droite montre le
+patron « Liste » de la charte, sans style ni animation nouveaux. Vérifié dans
+le HTML servi : le repli (`<template id="B:0">`) part en tête de flux, le
+contenu le remplace ensuite.
+- **Non fait : `<Suspense>` autour des widgets du board.** Le tableau de bord
+  est un seul composant client (`DashboardGrid`, disposition personnalisée,
+  glisser-déposer) nourri d'un seul `DashboardBundle` sérialisé ; le bandeau
+  (`BlocBrief`) agrège ses champs. Diffuser les transmissions, les états
+  permanents ou la frise à part demande de faire de ces champs des promesses
+  lues par `use()` dans chaque widget, et de reprendre le bandeau : c'est
+  réécrire le flux de données du board, hors du « sans tout réécrire » de ce
+  lot.
+- **Effet de bord, voulu par Next et à connaître** : un `notFound()` levé par
+  une page imbriquée arrive après le début du flux. La réponse garde le statut
+  200, avec la page introuvable et `<meta name="robots" content="noindex">`
+  (doc Next 16, `loading.js`, « Status Codes »). Mesuré :
+  `/etablissements/<inexistant>` répond toujours 404 (la garde est dans le
+  layout, au-dessus du repli), `/etablissements/<le sien>/verifications/<inexistant>`
+  répond 200 + `noindex` au lieu de 404. Le contenu ne distingue toujours pas
+  « étranger » d'« inexistant ».
 - **Où** : 0 `loading.tsx`, 0 `<Suspense` dans `src` (comptés).
 - **Constat** : toutes les routes sont dynamiques. Un clic dans la sidebar ne donne aucun retour tant que la réponse RSC complète n'est pas arrivée.
 - **Correctif** : `src/app/etablissements/[id]/loading.tsx` (le layout et la sidebar restent en place), puis `<Suspense>` autour des widgets lents du board (transmissions, états permanents, frise).
