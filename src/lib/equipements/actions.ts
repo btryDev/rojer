@@ -122,7 +122,14 @@ async function appareilDuCompte(equipementId: string) {
   const user = await requireUser();
   const eq = await prisma.equipement.findFirst({
     where: { id: equipementId, etablissement: { entreprise: { userId: user.id } } },
-    select: { etablissementId: true, actif: true, categorie: true, caracteristiques: true },
+    select: {
+      etablissementId: true,
+      actif: true,
+      categorie: true,
+      // ~~`caracteristiques: true`~~ — 2026-10-13 (revue, R4) : la réponse
+      // s'écrit par la base (`jsonb_set`), le JSON n'est plus lu. [2026-10-14,
+      // revue de l'intégration : revenu par cette fonction, retiré de nouveau.]
+    },
   });
   if (!eq) notFound();
   return eq;
