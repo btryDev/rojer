@@ -1,5 +1,5 @@
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { FilAriane } from "@/components/navigation/FilAriane";
+import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
 import { listerQuandCaArrive } from "@/lib/quand-ca-arrive/lignes";
@@ -46,14 +46,13 @@ export default async function QuandCaArrivePage({
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
       <header className="border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] py-[22px]">
         <div className="min-w-0">
-          <Link
-            href={`/etablissements/${id}`}
-            className="board-eyebrow inline-flex items-center gap-2 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)] transition-colors hover:text-[color:var(--board-ink)]"
-          >
-            <ArrowLeft className="size-3" aria-hidden />
-            {etablissement.raisonDisplay}
-          </Link>
-          <h1 className="board-titre m-0 mt-2.5 text-[clamp(22px,2.2vw,27px)]">
+          <FilAriane
+            crumbs={[
+              { href: `/etablissements/${id}`, label: etablissement.raisonDisplay },
+              { label: LABEL_ITEM["quand-ca-arrive"] },
+            ]}
+          />
+          <h1 className="board-titre m-0 text-[clamp(22px,2.2vw,27px)]">
             Quand ça arrive
           </h1>
           <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">

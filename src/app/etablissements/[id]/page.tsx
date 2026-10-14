@@ -70,8 +70,6 @@ export default async function EtablissementPage({
 }) {
   const { id } = await params;
   const { batiment } = await searchParams;
-  const etab = await getEtablissement(id);
-  if (!etab) notFound();
 
   // Le tableau de bord est la porte d'entrée — la connexion et « Reprendre mon
   // dossier » y mènent. Il lisait ce qui était en base, sans jamais le
@@ -80,7 +78,15 @@ export default async function EtablissementPage({
   // changement de référentiel s'y affichaient faux tant que personne n'ouvrait
   // la page Calendrier. Même réparation qu'elle, AVANT la première lecture —
   // la charge par bâtiment, juste en dessous, lit déjà les lignes.
+  // [2026-10-13] Avant TOUT autre `await`, y compris `getEtablissement` : la
+  // garde de `fraicheur-sorties.test.ts` l'exige, parce qu'elle ne sait pas
+  // dire quelle lecture touche aux lignes. Sans risque de tenancy : la
+  // réparation lit le repère sous `requireUser` et filtre sur le propriétaire
+  // (`calendrierDesynchronise`) — un identifiant étranger ne régénère rien et
+  // tombe au `notFound` juste après.
   await assurerCalendrierAJour(id);
+  const etab = await getEtablissement(id);
+  if (!etab) notFound();
 
   // Date de référence unique, figée côté serveur : tous les blocs qui
   // calculent un « dans N jours » partent de la même valeur, ce qui évite les
@@ -341,6 +347,7 @@ export default async function EtablissementPage({
             id: `relance-${question}`,
             titre: relance.titre,
             pourquoi: relance.pourquoi,
+            lien: relance.lien,
             faite,
             question: (
               <QuestionParametrage
@@ -364,8 +371,18 @@ export default async function EtablissementPage({
   //
   // Un appareil de levage sans réponse sur une question dont le silence change
   // le rythme de sa VGP : le moteur retient le rythme le plus court, et la
-  // question se répond ici, appareil par appareil. Les appareils nés du
-  // pré-remplissage, sans caractéristiques, arrivent tous par ici.
+  // question se répond ici, appareil par appareil. ~~Les appareils nés du
+  // pré-remplissage, sans caractéristiques, arrivent tous par ici.~~
+  // [2026-10-13, reprise des suites du lot 3 : faux — ~~le pré-remplissage ne
+  // propose aucune catégorie dont une réponse est exigée (vérifié en appelant
+  // `suggererEquipements` sur 288 contextes, puis `questionsExigeesPour` sur
+  // 16 régimes : zéro), et~~ [rayé le 2026-10-13 (`lot/conditions-equipement`,
+  // ed036f18) : faux depuis que la réponse au groupe électrogène est exigée
+  // en ERP — le pré-remplissage propose l'installation électrique à tout ERP,
+  // et son panneau POSE la question (`PreRemplissagePanel`)]
+  // `creerEquipementsDepuisPreRemplissage` refuse un appareil créé sans les
+  // réponses exigées, POST forgé compris. Arrivent ici les appareils
+  // enregistrés avant que leur réponse ne soit exigée.]
   // [2026-10-12 : et un désenfumage d'ERP des quatre premières catégories
   // muet sur « mécanique » — la décision du 2026-10-08 rend la réponse
   // exigée là où elle fait naître la triennale de DF 10 § 3. Le régime de

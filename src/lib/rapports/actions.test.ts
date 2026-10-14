@@ -46,12 +46,15 @@ vi.mock("next/navigation", () => ({
   redirect: vi.fn(() => {
     throw new Error("NEXT_REDIRECT");
   }),
+  notFound: vi.fn(() => {
+    throw new Error("NEXT_NOT_FOUND");
+  }),
 }));
-vi.mock("@/lib/auth/scope", () => ({
-  assertEtablissementOwnership: vi.fn(async () => ({ id: "user-1" })),
-}));
-// `uploadRapport` exige la session dès l'entrée (audit OWASP du 2026-10-13,
-// S6) ; le refus sans session est tenu par `upload-sans-session.test.ts`.
+// Le compte connecté. Les lectures du dépôt et du retrait le portent dans leur
+// `where` (audit du 2026-10-13), et le faux client l'honore contre le
+// propriétaire du magasin (`EtablissementFaux.userId`). `uploadRapport` exige
+// la session dès l'entrée (audit OWASP du 2026-10-13, S6) ; le refus sans
+// session est tenu par `upload-sans-session.test.ts`.
 vi.mock("@/lib/auth/require-user", () => ({
   requireUser: vi.fn(async () => ({ id: "user-1", email: null })),
 }));
@@ -355,14 +358,17 @@ describe("uploadRapport — un rapport réalisé : la ligne se recalcule sur lui
     expect(db.verrous.length).toBeGreaterThanOrEqual(1);
     expect(db.verrous[0]).toContain('FROM "Verification"');
     expect(db.verrous[0]).toContain("FOR UPDATE");
-    // Le verrou précède la relecture de la ligne DANS la transaction — la
-    // seconde `verification.findUnique`, la première étant le refus préalable.
+    // Le verrou précède la relecture de la ligne DANS la transaction
+    // (`verification.findUnique`) et suit la lecture du refus préalable —
+    // bornée au compte depuis le 2026-10-13, donc un `findFirst`.
     const ops = db.journal.map((j) => j.operation);
     const iVerrou = ops.indexOf("$queryRaw");
-    const relectures = ops.flatMap((o, i) => (o === "verification.findUnique" ? [i] : []));
-    expect(relectures.length).toBeGreaterThanOrEqual(2);
-    expect(iVerrou).toBeGreaterThan(relectures[0]);
-    expect(iVerrou).toBeLessThan(relectures[1]);
+    const prealable = ops.indexOf("verification.findFirst");
+    const relecture = ops.indexOf("verification.findUnique", Math.max(prealable, 0));
+    expect(prealable).toBeGreaterThanOrEqual(0);
+    expect(relecture).toBeGreaterThan(prealable);
+    expect(iVerrou).toBeGreaterThan(prealable);
+    expect(iVerrou).toBeLessThan(relecture);
   });
 
   it("n'écrit rien si la ligne ne ressemble plus à ce que la lecture a vu : ni rapport, ni fichier", async () => {
@@ -373,9 +379,14 @@ describe("uploadRapport — un rapport réalisé : la ligne se recalcule sur lui
     const original = verification.updateMany;
     verification.updateMany = () => Promise.resolve({ count: 0 });
 
-    const res = await deposer("conforme", "2026-06-01");
-
-    verification.updateMany = original;
+    // Restauré en `finally` : un remplacement qui survit à un échec fausse
+    // les tests suivants du fichier (revue du 2026-10-13).
+    let res: Awaited<ReturnType<typeof deposer>>;
+    try {
+      res = await deposer("conforme", "2026-06-01");
+    } finally {
+      verification.updateMany = original;
+    }
     expect(res.status).toBe("error");
     expect(res.status === "error" && res.message).toMatch(/modifiée/);
     expect(rapports()).toEqual([]);
@@ -828,9 +839,11 @@ describe("supprimerRapport — la ligne se recalcule sur ce qui reste (ADR-036)"
     const original = verification.updateMany;
     verification.updateMany = () => Promise.resolve({ count: 0 });
 
-    await expect(supprimerRapport("rap-1")).rejects.toThrow("Cette échéance a été modifiée");
-
-    verification.updateMany = original;
+    try {
+      await expect(supprimerRapport("rap-1")).rejects.toThrow("Cette échéance a été modifiée");
+    } finally {
+      verification.updateMany = original;
+    }
     expect(rapports().map((r) => r.id)).toEqual(["rap-1"]);
     expect(ligne().datePrevue).toEqual(d("2027-06-01"));
   });
@@ -840,18 +853,20 @@ describe("supprimerRapport — la ligne se recalcule sur ce qui reste (ADR-036)"
     const rv = (prisma as { rapportVerification: { findUnique: (a: unknown) => Promise<unknown> } })
       .rapportVerification;
     const lecture = rv.findUnique;
-    let appels = 0;
-    rv.findUnique = async (a: unknown) => {
-      appels += 1;
-      // Première lecture (hors transaction) : le rapport existe. Relecture
-      // sous le verrou : une autre suppression l'a emporté.
-      return appels === 1 ? lecture(a) : null;
-    };
+    // La première lecture (hors transaction, bornée au compte : `findFirst`)
+    // trouve le rapport. La relecture sous le verrou (`findUnique`) : une
+    // autre suppression l'a emporté.
+    rv.findUnique = async () => null;
     const avant = { ...ligne(), rapports: [...rapports()] };
 
-    await retirer("rap-1");
-
-    rv.findUnique = lecture;
+    // Restauré en `finally` : sans lui, un échec ici laissait la relecture
+    // à `null` pour tout le reste du fichier — et le test de périmètre de
+    // `supprimerRapport` passait défaut réinjecté (revue du 2026-10-13).
+    try {
+      await retirer("rap-1");
+    } finally {
+      rv.findUnique = lecture;
+    }
     expect(ligne()).toEqual(avant);
   });
 });
@@ -877,5 +892,57 @@ describe("confluence — dépôt puis retrait, la régénération n'a jamais rie
     await retirer(conforme.id!);
     expect(ligne().datePrevue).toEqual(d("2026-06-01"));
     await attendreConfluence();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Le périmètre : un identifiant ne dit pas s'il existe chez un autre client
+// ---------------------------------------------------------------------------
+
+/**
+ * Audit du 2026-10-13. La ligne (dépôt) et le rapport (retrait) étaient lus
+ * par leur seul `id`, puis l'établissement contrôlé : « Vérification
+ * introuvable » (ou rien) pour un id absent, le 404 du contrôle pour celui
+ * d'un autre client. Absent et étranger répondent désormais pareil, et rien
+ * ne s'écrit — ni rapport, ni fichier.
+ */
+describe("périmètre — absent et hors compte répondent pareil", () => {
+  const issue = async (f: () => Promise<unknown>) => {
+    try {
+      return { rend: await f() };
+    } catch (e) {
+      return { leve: (e as Error).message };
+    }
+  };
+
+  beforeEach(() => {
+    poserEtablissement();
+    // Un second compte, avec sa ligne et son rapport.
+    db.etablissements.push({ ...db.etablissements[0], id: "etab-voisin", userId: "user-2", equipements: [] });
+    poserLigne({
+      id: "v-voisin",
+      etablissementId: "etab-voisin",
+      equipementId: null,
+      rapports: [rapport({ id: "rap-voisin", dateRapport: d("2026-06-01") })],
+    });
+    stockage.fichiers.clear();
+  });
+
+  it("uploadRapport", async () => {
+    const absent = await issue(() => deposer("conforme", "2026-06-01", "v-inexistante"));
+    const voisin = await issue(() => deposer("conforme", "2026-06-01", "v-voisin"));
+    expect(voisin).toEqual(absent);
+    expect(voisin).toEqual({ leve: "NEXT_NOT_FOUND" });
+    expect(rapports("v-voisin").map((r) => r.id)).toEqual(["rap-voisin"]);
+    expect(stockage.fichiers.size).toBe(0);
+  });
+
+  it("supprimerRapport", async () => {
+    const absent = await issue(() => supprimerRapport("rap-inexistant"));
+    const voisin = await issue(() => supprimerRapport("rap-voisin"));
+    expect(voisin).toEqual(absent);
+    expect(voisin).toEqual({ leve: "NEXT_NOT_FOUND" });
+    expect(rapports("v-voisin").map((r) => r.id)).toEqual(["rap-voisin"]);
+    expect(regenerer).not.toHaveBeenCalledWith("etab-voisin", expect.anything());
   });
 });

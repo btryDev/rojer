@@ -444,7 +444,23 @@ function NavLink({ item, actif }: { item: NavItem; actif: SidebarItemId }) {
           </span>
         ) : null}
       </span>
-      {typeof item.count === "number" && item.count > 0 ? (
+      {item.aMettreAJour ? (
+        // Pastille NEUTRE et sans nombre : le compte serait faux, le
+        // calendrier n'ayant pas été recalculé (2026-10-13). Le gabarit d'un
+        // volume, jamais la couleur du signal.
+        <span
+          title={item.aMettreAJour}
+          className={
+            "flex-none rounded-full px-[7px] py-px font-mono text-[11px] " +
+            (isActive
+              ? "bg-[color:var(--board-ink)]/10 text-[color:var(--board-ink)]"
+              : "bg-white/10 text-white/60")
+          }
+        >
+          <span aria-hidden>…</span>
+          <span className="sr-only">{item.aMettreAJour}</span>
+        </span>
+      ) : typeof item.count === "number" && item.count > 0 ? (
         <span
           className={
             "flex-none rounded-full px-[7px] py-px font-mono text-[11px] " +

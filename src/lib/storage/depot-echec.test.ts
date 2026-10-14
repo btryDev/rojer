@@ -12,7 +12,9 @@ const h = vi.hoisted(() => {
       {
         get: (_t, op: string) => async () => {
           if (/create|update|upsert|delete/.test(op)) ecritures.push(`${nom}.${op}`);
-          if (nom === "verification" && op === "findUnique")
+          // La lecture du dépôt, bornée au compte depuis le 2026-10-13
+          // (`findFirst`) ; la portée n'est pas l'objet de ce test.
+          if (nom === "verification" && op === "findFirst")
             return { id: "v1", etablissementId: "e1", salarieId: null, archiveLe: null };
           if (nom === "carnetSanitaire") return { id: "c1", etablissementId: "e1" };
           return null;

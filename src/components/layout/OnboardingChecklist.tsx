@@ -24,6 +24,11 @@ export type EtapeOnboarding = {
   id: string;
   titre: string;
   pourquoi: string;
+  /**
+   * Un lien sous la raison (2026-10-13) : le tableau CLP de l'INERIS, sous la
+   * relance de la question des matières — la même aide que sur la fiche.
+   */
+  lien?: { intro: string; libelle: string; url: string };
   faite: boolean;
   href?: string;
   /** Texte du bouton d'action. Non affiché si l'étape est faite. */
@@ -177,6 +182,19 @@ export function OnboardingChecklist({
                 <p className="m-0 mt-1 max-w-[62ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                   {e.pourquoi}
                 </p>
+                {e.lien ? (
+                  <p className="m-0 mt-1 max-w-[62ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                    {e.lien.intro}{" "}
+                    <a
+                      href={e.lien.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline underline-offset-2"
+                    >
+                      {e.lien.libelle}
+                    </a>
+                  </p>
+                ) : null}
 
                 {!e.faite && e.question}
 

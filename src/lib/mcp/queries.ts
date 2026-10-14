@@ -44,6 +44,8 @@ import {
   type RetenueParPrudence,
 } from "@/lib/calendrier/prudence";
 import { prismaMcp } from "./prisma";
+import { estAppareilRetire } from "@/lib/equipements/retrait";
+import type { FaitParc } from "@/lib/perimetre/couverture";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
 import { libellePorteurSansNom } from "@/lib/calendrier/labels";
 import { aUnRendezVous } from "@/lib/calendrier/etats";
@@ -120,8 +122,17 @@ export async function getFicheEtablissement(etablissementId: string) {
           adresse: true,
         },
       },
+      // Les retirés, à part : seule leur présence compte (axe `inventaire`).
+      equipements: { where: { actif: false }, select: { id: true } },
       _count: {
-        select: { equipements: true, verifications: true, actions: true },
+        // ~~`equipements: true`~~ : comptait les appareils RETIRÉS du parc
+        // comme déclarés (`docs/chantiers-ouverts.md` § 15). Le parc en
+        // service seul, comme `perimetre/faits.ts`, dans la même lecture.
+        select: {
+          equipements: { where: { actif: true } },
+          verifications: true,
+          actions: true,
+        },
       },
     },
   });
@@ -512,6 +523,37 @@ export async function listerEquipements(
       },
     };
   });
+}
+
+/**
+ * Le parc, tel que l'axe `inventaire` le lit (`perimetre/couverture.ts`) : en
+ * service d'un côté, retirés de l'autre.
+ *
+ * La partition est celle de `faits.ts` — `actif` — par le prédicat du produit,
+ * `estAppareilRetire`. Un appareil retiré porte des preuves, il ne compte pas
+ * comme déclaré : un parc entièrement retiré se lit « aucun équipement en
+ * service », comme sur les écrans.
+ */
+export async function getParcEquipements(
+  etablissementId: string,
+): Promise<FaitParc> {
+  const lus = await prismaMcp.equipement.findMany({
+    where: { etablissementId },
+    select: { actif: true },
+  });
+  return parcDepuis(lus);
+}
+
+/** La partition, une fois : pour `getParcEquipements` et pour l'outil
+ *  `equipements`, qui la tire de sa propre liste plutôt que de relire. */
+export function parcDepuis(lus: readonly { actif: boolean }[]): FaitParc {
+  const nbRetires = lus.filter(estAppareilRetire).length;
+  return { nbEquipements: lus.length - nbRetires, nbRetires };
+}
+
+/** Le parc de la fiche, lu dans la même requête qu'elle. */
+export function parcDeLaFiche(f: FicheEtablissement): FaitParc {
+  return { nbEquipements: f._count.equipements, nbRetires: f.equipements.length };
 }
 
 export type VerificationLue = {

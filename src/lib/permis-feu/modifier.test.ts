@@ -31,7 +31,14 @@ vi.mock("@/lib/prisma", () => {
         return data;
       }),
       findUnique: vi.fn(async ({ where }: { where: Ligne }) => db.permis.find((p) => correspond(p, where)) ?? null),
-      findFirst: vi.fn(async ({ where }: { where: Ligne }) => db.permis.find((p) => correspond(p, where)) ?? null),
+      // Même convention que le prestataire ci-dessous : la portée par le compte
+      // (`etablissement: { entreprise: { userId } }`) est celle du compte du
+      // test ; le cloisonnement est éprouvé par `perimetre.test.ts`.
+      findFirst: vi.fn(async ({ where }: { where: Ligne }) => {
+        const reste = { ...where };
+        delete reste.etablissement;
+        return db.permis.find((p) => correspond(p, reste)) ?? null;
+      }),
       updateMany: vi.fn(async ({ where, data }: { where: Ligne; data: Ligne }) => {
         const t = db.permis.filter((x) => correspond(x, where));
         t.forEach((p) => Object.assign(p, data));
@@ -47,8 +54,11 @@ vi.mock("@/lib/prisma", () => {
     prestataire: {
       // La portée par le compte (`etablissement: { entreprise: { userId } }`)
       // est celle du compte connecté du test : seul l'établissement compte ici.
-      findFirst: vi.fn(async ({ where: { etablissement: _portee, ...where } }: { where: Ligne }) =>
-        db.prestataires.find((x) => correspond(x, where)) ?? null),
+      findFirst: vi.fn(async ({ where }: { where: Ligne }) => {
+        const sansPortee = { ...where };
+        delete sansPortee.etablissement;
+        return db.prestataires.find((x) => correspond(x, sansPortee)) ?? null;
+      }),
     },
     accessToken: {
       updateMany: vi.fn(async ({ where, data }: { where: Ligne; data: Ligne }) => {
@@ -65,7 +75,8 @@ vi.mock("@/lib/signatures/hash-objet", () => ({
   calculerHashObjet: vi.fn(async (_t: string, id: string) => {
     const p = db.permis.find((x) => x.id === id);
     if (!p) return { ok: false, raison: "objet_introuvable" };
-    const { batimentId: _zone, ...couvert } = p;
+    const couvert = { ...p };
+    delete couvert.batimentId;
     return { ok: true, hash: JSON.stringify(couvert), nomDocument: null };
   }),
 }));
@@ -222,6 +233,19 @@ describe("les liens de signature en vol (relecture indépendante du 2026-10-12)"
 
     await modifier(saisie());
 
+    expect(db.jetons[0].revoqueLe).toBeNull();
+  });
+
+  // La zone est hors de l'empreinte (`hash-objet.ts`, que le faux ci-dessus
+  // reproduit) : la changer seule ne révoque pas le lien envoyé.
+  it("changer la zone seule ne révoque rien : elle est hors de l'empreinte", async () => {
+    db.permis.push(permisEnBase());
+    await modifier(saisie());
+    db.jetons.push(jeton());
+
+    expect((await modifier(saisie({ batimentId: "zone-2" }))).status).toBe("success");
+
+    expect(db.permis[0].batimentId).toBe("zone-2");
     expect(db.jetons[0].revoqueLe).toBeNull();
   });
 

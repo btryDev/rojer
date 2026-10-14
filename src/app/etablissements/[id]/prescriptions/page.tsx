@@ -1,5 +1,5 @@
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { FilAriane } from "@/components/navigation/FilAriane";
+import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { cleJourCivil, formaterDateFr } from "@/lib/dates";
 import { chargerPagePrescriptions } from "@/lib/prescriptions/queries";
@@ -87,13 +87,12 @@ export default async function PrescriptionsPage({
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
       <header className="border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] py-[22px]">
         <div className="min-w-0">
-          <Link
-            href={`/etablissements/${id}`}
-            className="board-eyebrow inline-flex items-center gap-2 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)] transition-colors hover:text-[color:var(--board-ink)]"
-          >
-            <ArrowLeft className="size-3" aria-hidden />
-            {etablissement.raisonDisplay}
-          </Link>
+          <FilAriane
+            crumbs={[
+              { href: `/etablissements/${id}`, label: etablissement.raisonDisplay },
+              { label: LABEL_ITEM.prescriptions },
+            ]}
+          />
           {/* « Ce qu'une autorité vous a prescrit » : le formulaire de cette
               page propose « Demande de votre assureur », et un assureur n'est
               pas une autorité. Le titre rangeait donc sous le mot « autorité »
@@ -102,7 +101,7 @@ export default async function PrescriptionsPage({
               compte ici est « à vous seul » : le propre de cette page est la
               prescription particulière, opposée au référentiel commun ; qui
               l'a prescrite se lit ligne par ligne. */}
-          <h1 className="board-titre m-0 mt-2.5 text-[clamp(22px,2.2vw,27px)]">
+          <h1 className="board-titre m-0 text-[clamp(22px,2.2vw,27px)]">
             Ce qu&apos;on vous a prescrit, à vous seul
           </h1>
           <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">

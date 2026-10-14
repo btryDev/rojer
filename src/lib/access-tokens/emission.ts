@@ -80,7 +80,6 @@ export const emissionSchema = z.object({
     .max(120)
     .regex(SANS_CONTROLE)
     .optional(),
-  prestataireId: z.string().min(1).max(100).optional(),
   // La partie invitée à signer (2026-10-12), recopiée sur la signature.
   partie: z.enum(PartieSignataire).optional(),
   sujetMail: z.string().trim().min(1).max(200).regex(SANS_CONTROLE),
@@ -135,6 +134,14 @@ export const emissionSchema = z.object({
  * fin de validité du lien.
  */
 
+/**
+ * ~~`prestataireId`~~ — retiré le 2026-10-13 (revue de
+ * `lot/audit-1013-perimetre`) : accepté ici, écrit sur le jeton, vérifié
+ * nulle part — un identifiant de prestataire d'un autre client se serait
+ * écrit tel quel — et passé par aucun appelant ni lu par personne. La colonne
+ * `AccessToken.prestataireId` reste en base (aucune migration) ; un besoin
+ * futur la remettra avec sa vérification d'appartenance.
+ */
 export type EmissionTokenParams = {
   etablissementId: string;
   scope: ScopeAccessToken;
@@ -142,7 +149,6 @@ export type EmissionTokenParams = {
   objetId: string;
   emailDestinataire: string;
   nomDestinataire?: string;
-  prestataireId?: string;
   partie?: PartieSignataire;
   sujetMail: string;
   messageMail: string;
@@ -251,7 +257,6 @@ export async function emettreAccessToken(
       scope: params.scope,
       objetType: params.objetType,
       objetId: params.objetId,
-      prestataireId: params.prestataireId,
       partie: params.partie,
       emailDestinataire: params.emailDestinataire,
       nomDestinataire: params.nomDestinataire,

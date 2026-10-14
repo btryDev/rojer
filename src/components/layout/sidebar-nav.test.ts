@@ -4,6 +4,7 @@ import {
   construireRail,
   construireSections,
   deduireActif,
+  LIBELLE_CALENDRIER_A_METTRE_A_JOUR,
   type SidebarItemId,
   type SidebarModules,
 } from "./sidebar-nav";
@@ -405,6 +406,31 @@ describe("construireSections — badges", () => {
       count: 5,
       alert: true,
     });
+  });
+
+  it("calendrier à mettre à jour : ni nombre ni alerte, une pastille neutre (2026-10-13)", () => {
+    // Même si un nombre est passé : il compterait les lignes d'avant.
+    const counts = { enRetardTotal: 5, calendrierAMettreAJour: true };
+    const items = construireSections({ etablissementId: ID, counts }).flatMap(
+      (s) => s.items,
+    );
+    const cal = items.find((i) => i.id === "calendrier");
+    expect(cal?.count).toBeUndefined();
+    expect(cal?.alert).toBeFalsy();
+    expect(cal?.aMettreAJour).toBe(LIBELLE_CALENDRIER_A_METTRE_A_JOUR);
+    // Et le rail ne s'allume pas sur un retard qu'on ne sait pas compter.
+    const rail = construireRail({ etablissementId: ID, counts });
+    expect(rail.find((c) => c.id === "a-faire")?.alert).toBe(false);
+  });
+
+  it("calendrier à jour : aucune pastille neutre", () => {
+    const items = construireSections({
+      etablissementId: ID,
+      counts: { enRetardTotal: 5, calendrierAMettreAJour: false },
+    }).flatMap((s) => s.items);
+    const cal = items.find((i) => i.id === "calendrier");
+    expect(cal).toMatchObject({ count: 5, alert: true });
+    expect(cal?.aMettreAJour).toBeUndefined();
   });
 
   it("n'affiche pas d'alerte quand les compteurs sont à zéro", () => {

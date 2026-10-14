@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { batimentParDefaut } from "@/lib/batiments/queries";
@@ -10,6 +10,7 @@ import {
   toutesLesConditions,
 } from "@/lib/calendrier/portee";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
+import { requireUser } from "@/lib/auth/require-user";
 import {
   MESSAGE_REGEN_ECHEC,
   regenererApresMutation,
@@ -17,6 +18,7 @@ import {
 import {
   CHAMPS_TRI_ETAT,
   equipementSchema,
+  libelleEquipementSchema,
   normaliserFormDataEquipement,
   normaliserTriEtat,
   preRemplissageSchema,
@@ -24,6 +26,7 @@ import {
   type ChampTriEtat,
 } from "./schema";
 import {
+  CATEGORIES_EQUIPEMENT,
   estCategorieEpi,
   type CategorieEquipement,
 } from "@/lib/referentiels/types-communs";
@@ -104,20 +107,33 @@ async function regimeDe(etablissementId: string): Promise<RegimeExigence> {
 }
 
 /**
- * L'établissement de l'appareil, pour le contrôle d'appartenance, et son état
- * de service : un appareil retiré du parc n'accepte plus aucune écriture
- * (`retrait.ts`, décision du 2026-10-12).
+ * L'appareil, lu DANS le périmètre du compte connecté — ou 404 : son
+ * établissement, son état de service (un appareil retiré du parc n'accepte
+ * plus aucune écriture, `retrait.ts`, décision du 2026-10-12) et ce que la
+ * relance d'une question en lit.
+ *
+ * ~~`resoudreAppareil`~~ lisait par le seul `id`, et l'appelant vérifiait
+ * l'établissement ensuite : un id absent levait « Équipement introuvable »
+ * (ou le renvoyait en message), l'appareil d'un autre client donnait le 404
+ * du contrôle — de quoi sonder l'existence d'un appareil chez autrui (audit
+ * du 2026-10-13, même défaut que `permisDuCompte`). Les deux cas tombent
+ * désormais sur le même `notFound()`.
  */
-async function resoudreAppareil(
-  equipementId: string,
-): Promise<{ etablissementId: string; actif: boolean }> {
-  const eq = await prisma.equipement.findUnique({
-    where: { id: equipementId },
-    select: { etablissementId: true, actif: true },
+async function appareilDuCompte(equipementId: string) {
+  const user = await requireUser();
+  const eq = await prisma.equipement.findFirst({
+    where: { id: equipementId, etablissement: { entreprise: { userId: user.id } } },
+    select: { etablissementId: true, actif: true, categorie: true, caracteristiques: true },
   });
-  if (!eq) throw new Error("Équipement introuvable");
+  if (!eq) notFound();
   return eq;
 }
+
+/** Le retour du pré-remplissage : le motif de `EquipementActionState`, un
+ *  refus se RETOURNE (revue du 2026-10-13). */
+export type ResultatPreRemplissage =
+  | { status: "success"; created: number; avertissement?: string }
+  | { status: "error"; message: string };
 
 export type EquipementActionState =
   | { status: "idle" }
@@ -203,8 +219,7 @@ export async function modifierEquipement(
   _prev: EquipementActionState,
   formData: FormData,
 ): Promise<EquipementActionState> {
-  const appareil = await resoudreAppareil(id);
-  await assertEtablissementOwnership(appareil.etablissementId);
+  const appareil = await appareilDuCompte(id);
   // L'appartenance d'abord, le refus ensuite : on ne dit rien d'un appareil
   // qui n'est pas à soi.
   if (estAppareilRetire(appareil)) {
@@ -305,9 +320,8 @@ export type SuppressionEquipementResult =
 export async function supprimerEquipement(
   id: string,
 ): Promise<SuppressionEquipementResult> {
-  const appareil = await resoudreAppareil(id);
+  const appareil = await appareilDuCompte(id);
   const { etablissementId } = appareil;
-  await assertEtablissementOwnership(etablissementId);
   // Déjà retiré : le retrait est définitif, il ne se rejoue pas. Sans ce
   // refus, un appareil retiré dont le dernier rapport aurait été retiré
   // ensuite repasserait par la branche « aucune trace » et serait détruit.
@@ -373,32 +387,153 @@ export async function supprimerEquipement(
  * Attend un tableau `categories` de catégories validées par l'utilisateur.
  * Chaque catégorie donne lieu à un `Equipement` minimal (libellé générique,
  * pas de caractéristiques) que l'utilisateur pourra enrichir ensuite.
+ *
+ * Deux refus, en bloc et avant toute écriture (reprise des suites du lot 3,
+ * 2026-10-13) : une catégorie qui n'est pas dans `CATEGORIES_EQUIPEMENT`, et
+ * une catégorie dont une réponse est exigée dans le régime de l'établissement
+ * (`questionsExigeesPour`) — ~~celle-là se déclare par le formulaire, qui pose
+ * la question. L'écran n'envoie ni l'une ni l'autre : seul un POST forgé les
+ * fait lever.~~ [2026-10-13, `lot/conditions-equipement`, décision de la
+ * propriétaire (option 2) : le panneau POSE les questions exigées des
+ * catégories qu'il suggère, et l'action accepte leurs réponses dans
+ * `caracteristiques` — champ exigé pour cette catégorie dans ce régime, valeur
+ * booléenne stricte, rien d'autre. Ce qui manque reste refusé en bloc ; une
+ * clé ou une valeur hors de ce cadre aussi.]
+ *
+ * ~~Les refus lèvent une exception.~~ [Rayé le 2026-10-13 (revue de
+ * `lot/conditions-equipement`) : Next masque en production le message d'une
+ * exception levée par une action serveur, et le panneau affichait alors un
+ * texte générique à la place du refus. Les refus RETOURNENT
+ * `{ status: "error", message }`, le motif de `EquipementActionState` ; seul
+ * le contrôle d'appartenance lève encore, comme partout.]
  */
 export async function creerEquipementsDepuisPreRemplissage(
   etablissementId: string,
-  entrees: { categorie: CategorieEquipement; libelle: string }[],
-): Promise<{ created: number; avertissement?: string }> {
+  entrees: {
+    categorie: CategorieEquipement;
+    libelle: string;
+    /** Les seules réponses aux questions exigées, posées par le panneau. */
+    caracteristiques?: Partial<Record<ChampTriEtat, boolean>>;
+  }[],
+): Promise<ResultatPreRemplissage> {
   await assertEtablissementOwnership(etablissementId);
-  // Le tableau vient du client : borné et validé avant toute écriture
-  // (`preRemplissageSchema`, ASVS V2.2.1). Un refus n'écrit rien.
-  const parsed = preRemplissageSchema.safeParse(entrees);
-  if (!parsed.success) {
-    return { created: 0, avertissement: "Sélection invalide : aucun équipement ajouté." };
+  // Le tableau vient du client : borné (une catégorie au plus une fois, pas
+  // plus d'entrées que de catégories) et validé avant toute écriture
+  // (`preRemplissageSchema`, ASVS V2.2.1). Le schéma ne sert qu'à REFUSER : ce
+  // qu'il rend écarterait les réponses, que les portes ci-dessous lisent.
+  // [2026-10-14, intégration de `lot/securite-owasp-1013` sur
+  // `lot/conditions-equipement` : un refus se retourne, comme les autres.]
+  if (!preRemplissageSchema.safeParse(entrees).success) {
+    return { status: "error", message: "Sélection invalide : aucun équipement ajouté." };
   }
-  if (parsed.data.length === 0) return { created: 0 };
+  if (entrees.length === 0) return { status: "success", created: 0 };
+
+  // LA PORTE DES RÉPONSES EXIGÉES TIENT AUSSI ICI (reprise des suites du lot 3,
+  // 2026-10-13). ~~Le pré-remplissage ne propose aucune catégorie dont une réponse
+  // est exigée (`suggererEquipements` sondé sur 288 contextes : neuf catégories,
+  // aucune avec une question exigée dans aucun des 16 régimes essayés),~~
+  // [Rayé le 2026-10-13 (`lot/conditions-equipement`) : faux depuis que la
+  // réponse au groupe électrogène est exigée en ERP — `suggererEquipements`
+  // propose l'installation électrique à tout ERP. Le panneau pose donc la
+  // question (`PreRemplissagePanel`), et `components/equipements/PreRemplissagePanel.questions.test.tsx`
+  // vérifie, contexte par contexte, que toute catégorie suggérée à question
+  // exigée a sa question dans le panneau.]
+  // Mais cette action est un point d'entrée serveur : un POST forgé y créait un
+  // appareil sans les réponses que `creerEquipement` exige. Le refus lit ce qui
+  // fait foi, `questionsExigeesPour` dans le régime de l'établissement — D29
+  // pour le levage, la décision du 2026-10-08 pour le désenfumage d'un ERP des
+  // quatre premières catégories —, et non la seule liste de D29. ~~Une ligne
+  // créée ici n'a aucune caractéristique : toute question exigée y manque.~~
+  // [2026-10-13 : elle porte désormais les réponses que le panneau a posées,
+  // et seulement elles ; ce qui manque est refusé.]
+  // Refusé en bloc, avant toute écriture.
+  //
+  // La catégorie d'abord (revue du 2026-10-13, R1) : le type ne tient rien à
+  // l'exécution, et `questionsExigeesPour` met en cache, sans condition, ce
+  // qu'on lui passe — une valeur forgée y aurait laissé une entrée par appel.
+  const inconnues = [
+    ...new Set(
+      entrees
+        .map((e) => e.categorie as string)
+        .filter((c) => !(CATEGORIES_EQUIPEMENT as readonly string[]).includes(c)),
+    ),
+  ];
+  if (inconnues.length > 0) {
+    return {
+      status: "error",
+      message: `Catégorie d'équipement inconnue (${inconnues.join(", ")}) : rien n'a été créé.`,
+    };
+  }
+  // Le libellé (revue du 2026-10-13) : la règle de la création manuelle,
+  // `libelleEquipementSchema`, jamais recopiée — chaîne, rognée, 1 à 200.
+  const libelles = entrees.map((e) => libelleEquipementSchema.safeParse(e.libelle));
+  if (libelles.some((r) => !r.success)) {
+    return {
+      status: "error",
+      message:
+        "Libellé refusé : il doit être un texte de 1 à 200 caractères. Rien n'a été créé.",
+    };
+  }
+  const regime = await regimeDe(etablissementId);
+  // Les réponses fournies (2026-10-13) : un objet simple, dont chaque clé est
+  // une question EXIGÉE pour cette catégorie dans ce régime, et chaque valeur
+  // un booléen. Rien d'autre n'entre dans le JSON de l'appareil par ici.
+  // Les lectures ne voient que les clés PROPRES (`Object.hasOwn`, revue du
+  // 2026-10-13) : une valeur portée par le prototype passait la porte des
+  // manquantes sans être écrite, et l'appareil naissait muet.
+  const horsCadre = entrees.filter((e) => {
+    const c = e.caracteristiques;
+    if (c === undefined) return false;
+    if (c === null || typeof c !== "object" || Array.isArray(c)) return true;
+    const exigeesIci: readonly string[] = questionsExigeesPour(e.categorie, regime);
+    return Object.entries(c).some(
+      ([cle, v]) => !exigeesIci.includes(cle) || typeof v !== "boolean",
+    );
+  });
+  if (horsCadre.length > 0) {
+    return {
+      status: "error",
+      message: `Réponses refusées (${[...new Set(horsCadre.map((e) => e.categorie))].join(", ")}) : le pré-remplissage n'accepte que « oui » ou « non » aux questions exigées. Rien n'a été créé.`,
+    };
+  }
+  const manquantes = [
+    ...new Set(
+      entrees
+        .filter((e) =>
+          questionsExigeesPour(e.categorie, regime).some(
+            (champ) =>
+              !(
+                e.caracteristiques &&
+                Object.hasOwn(e.caracteristiques, champ) &&
+                typeof e.caracteristiques[champ] === "boolean"
+              ),
+          ),
+        )
+        .map((e) => e.categorie),
+    ),
+  ];
+  if (manquantes.length > 0) {
+    return {
+      status: "error",
+      message: `Le pré-remplissage ne crée pas d'appareil sans les réponses exigées (${manquantes.join(", ")}) : répondez oui ou non à la question posée à côté de la case. Rien n'a été créé.`,
+    };
+  }
 
   const batiment = await batimentParDefaut(etablissementId);
   const result = await prisma.equipement.createMany({
-    data: parsed.data.map((e) => ({
+    data: entrees.map((e, i) => ({
       etablissementId,
       batimentId: batiment.id,
       categorie: e.categorie,
-      libelle: e.libelle,
+      libelle: libelles[i].data as string,
+      ...(e.caracteristiques && Object.keys(e.caracteristiques).length > 0
+        ? { caracteristiques: e.caracteristiques as Prisma.InputJsonValue }
+        : {}),
     })),
   });
   await constaterEpiDeclare(
     etablissementId,
-    parsed.data.map((e) => e.categorie),
+    entrees.map((e) => e.categorie),
   );
 
   const regen = await regenererCalendrier(etablissementId);
@@ -407,6 +542,7 @@ export async function creerEquipementsDepuisPreRemplissage(
   revalidatePath(`/etablissements/${etablissementId}/equipements`);
   revalidatePath(`/etablissements/${etablissementId}/calendrier`);
   return {
+    status: "success",
     created: result.count,
     ...(regen.ok ? {} : { avertissement: regen.message }),
   };
@@ -426,17 +562,7 @@ export async function repondreQuestionEquipement(
   _prev: ReponseParametrage,
   formData: FormData,
 ): Promise<ReponseParametrage> {
-  const eq = await prisma.equipement.findUnique({
-    where: { id: equipementId },
-    select: {
-      etablissementId: true,
-      actif: true,
-      categorie: true,
-      caracteristiques: true,
-    },
-  });
-  if (!eq) return { status: "error", message: "Équipement introuvable." };
-  await assertEtablissementOwnership(eq.etablissementId);
+  const eq = await appareilDuCompte(equipementId);
   if (estAppareilRetire(eq)) {
     return { status: "error", message: MESSAGE_APPAREIL_RETIRE };
   }
@@ -455,18 +581,53 @@ export async function repondreQuestionEquipement(
     return { status: "error", message: "Répondez oui ou non." };
   }
 
-  const avant =
-    eq.caracteristiques !== null &&
-    typeof eq.caracteristiques === "object" &&
-    !Array.isArray(eq.caracteristiques)
-      ? (eq.caracteristiques as Record<string, unknown>)
-      : {};
-  await prisma.equipement.update({
-    where: { id: equipementId },
-    data: {
-      caracteristiques: { ...avant, [champ]: reponse } as Prisma.InputJsonValue,
-    },
-  });
+  // UNE CLÉ, ÉCRITE PAR LA BASE (reprise des suites du lot 3, 2026-10-13). La
+  // fusion lecture-puis-écriture de tout l'objet JSON écrasait une écriture
+  // concurrente : deux relances répondues ensemble (deux onglets, deux
+  // questions du même appareil), ou une fiche enregistrée entre la lecture
+  // ci-dessus et l'écriture, et l'une des deux réponses redevenait un silence.
+  // Même contrat que `ecrireReponseFermee` (`duerps/ecrire-reponse-fermee.ts`),
+  // la politique sœur du dépôt : un seul UPDATE pose UNE clé par `jsonb_set`
+  // (`create_missing` à vrai), repart d'un objet vide si la colonne n'en est
+  // pas un (NULL tant que rien n'est déclaré), garde un booléen JSON, lie la
+  // clé, la valeur et les identifiants sans les concaténer, et horodate la
+  // ligne — le `@updatedAt` de Prisma est appliqué par le client, pas par la
+  // base. Scopé par l'appareil ET l'établissement dont l'appartenance vient
+  // d'être contrôlée. `champ` est une clé fermée : elle a passé le filtre de
+  // `questionsExigeesPour` plus haut.
+  //
+  // Revue du 2026-10-13 : `AND "actif" = true` (R2) — un appareil retiré
+  // entre la lecture et l'écriture est en lecture seule (`retrait.ts`), la
+  // garde de plus haut ne voyait que la photo. `NOW() AT TIME ZONE 'UTC'`
+  // (R3) — `updatedAt` est un TIMESTAMP(3) sans fuseau où Prisma range des
+  // instants UTC (ADR-011 § 1) ; `NOW()` seul y écrirait l'heure locale de la
+  // session.
+  const lignes = await prisma.$executeRaw`
+    UPDATE "Equipement"
+       SET "caracteristiques" = jsonb_set(
+             CASE
+               WHEN jsonb_typeof("caracteristiques") = 'object'
+               THEN "caracteristiques"
+               ELSE '{}'::jsonb
+             END,
+             ARRAY[${champ}]::text[],
+             to_jsonb(${reponse}::boolean),
+             true
+           ),
+           "updatedAt" = NOW() AT TIME ZONE 'UTC'
+     WHERE "id" = ${equipementId}
+       AND "etablissementId" = ${eq.etablissementId}
+       AND "actif" = true`;
+  // L'appareil vient d'être lu : zéro ligne veut dire qu'il a disparu ou
+  // quitté le parc entre-temps. Se taire afficherait une réponse que rien
+  // n'a enregistrée.
+  if (lignes === 0) {
+    return {
+      status: "error",
+      message:
+        "Cet équipement a été supprimé ou retiré du parc entre-temps : la réponse n'a pas été enregistrée.",
+    };
+  }
 
   const regen = await regenererCalendrier(eq.etablissementId);
   revalidatePath(`/etablissements/${eq.etablissementId}`);

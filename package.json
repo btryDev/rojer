@@ -2,6 +2,9 @@
   "name": "duerp",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=22 <25"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build && prisma migrate deploy",
@@ -35,6 +38,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^5.2.2",
+    "@modelcontextprotocol/server": "^2.0.0",
     "@prisma/client": "^6",
     "@react-pdf/renderer": "^4.5.1",
     "@supabase/ssr": "^0.10.2",
@@ -55,7 +59,6 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@modelcontextprotocol/server": "^2.0.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

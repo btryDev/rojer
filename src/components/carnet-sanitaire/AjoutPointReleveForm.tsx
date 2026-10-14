@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
+import { useOuvertureFormulaire } from "./useOuvertureFormulaire";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ChampBoard } from "@/components/ui-kit";
 import { ChampBatiment } from "@/components/batiments/ChampBatiment";
@@ -59,11 +60,8 @@ export function AjoutPointReleveForm({
     FormData
   >(boundAction, { status: "idle" });
   const [type, setType] = useState<TypeReseauEau>(point?.typeReseau ?? "ECS");
-  const [ouvert, setOuvert] = useState(false);
   // Une correction faite referme le formulaire : la carte montre le résultat.
-  useEffect(() => {
-    if (point && state.status === "success") setOuvert(false);
-  }, [point, state]);
+  const [ouvert, setOuvert] = useOuvertureFormulaire(state, Boolean(point));
   const err = (champ: string) =>
     state.status === "error" ? state.fieldErrors?.[champ]?.[0] : undefined;
   // Un formulaire de correction par point : ses identifiants ne se répètent pas.

@@ -49,6 +49,12 @@ export const MESSAGE_REGEN_ECHEC =
  * le layout n'est pas relancé d'une page à l'autre. Pas non plus dans chaque
  * page ni dans les fonctions de lecture : une page lance ses lectures en
  * parallèle, et chacune déclencherait sa régénération (revue du 2026-09-14).
+ * [2026-10-13 : le layout a été réexaminé pour les pages ouvertes par lien
+ * direct, et écarté pour la même raison, relue dans la documentation de
+ * Next 16.3.5 — « layouts and pages are rendered in parallel », et un layout
+ * n'empêche pas la page de s'exécuter. Ces pages DISENT l'âge
+ * (`fraicheur.ts`) ; `fraicheur-sorties.test.ts` tient la réparation hors des
+ * layouts, une fois par rendu, avant les lectures.]
  *
  * SANS INVALIDATION : Next refuse `revalidatePath` pendant un rendu. Les
  * pastilles de la barre latérale, rendues par le layout, peuvent garder
@@ -67,13 +73,16 @@ export const MESSAGE_REGEN_ECHEC =
  * tour à la visite suivante. Une preview lit, elle ne répare pas — elle écrit
  * toujours sur les gestes explicites (revue du 2026-09-14).
  *
- * LE PARTAGE EST CONFIRMÉ, ET LES PREVIEWS SONT ABANDONNÉES (2026-09-18).
- * `DATABASE_URL` porte la portée « Production, Preview, and Development » au
- * projet Vercel : une preview lisait bien les vrais dossiers. La propriétaire a
- * décidé de ne plus en déployer — on éprouve en local, puis on regarde la
- * production (`docs/chantiers-ouverts.md` § 13). La garde reste : elle coûte une
- * ligne et couvre le jour où une preview repartirait, par réglage ou par
- * accident. Elle ne se retire qu'avec une base propre pour les previews.
+ * LE PARTAGE A ÉTÉ CONFIRMÉ, PUIS COUPÉ (2026-09-18, 2026-09-19).
+ * Le 2026-09-18, `DATABASE_URL` portait la portée « Production, Preview, and
+ * Development » au projet Vercel : une preview lisait bien les vrais dossiers.
+ * La propriétaire a décidé de ne plus en déployer — on éprouve en local, puis
+ * on regarde la production (`docs/chantiers-ouverts.md` § 13). Depuis le
+ * 2026-09-19, `DATABASE_URL` et `DIRECT_URL` ne sont plus portées que par
+ * l'environnement Production (même document, « FAIT le 2026-09-19 ») : une
+ * preview n'atteint plus la base. La garde reste : elle coûte une ligne et
+ * couvre le jour où une preview repartirait avec une base, par réglage ou par
+ * accident.
  */
 export async function assurerCalendrierAJour(
   etablissementId: string,

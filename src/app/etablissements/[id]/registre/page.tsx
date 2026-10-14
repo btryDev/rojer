@@ -1,7 +1,8 @@
 import { estAppareilRetire } from "@/lib/equipements/retrait";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronRight } from "lucide-react";
+import { FilAriane } from "@/components/navigation/FilAriane";
+import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
 import { AideEcran } from "@/components/ui-kit/AideEcran";
 import { LegalBadge } from "@/components/ui-kit/LegalBadge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -177,19 +178,15 @@ export default async function RegistrePage({
           règlent. */}
       <div className="border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] pb-8 pt-[26px]">
         <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-2">
-          <Link
-            href={base}
-            className="board-eyebrow group -ml-0.5 inline-flex min-w-0 items-center gap-1.5 transition-colors hover:text-[color:var(--board-ink)]"
-          >
-            <ChevronRight
-              aria-hidden
-              className="size-3 flex-none rotate-180 transition-transform group-hover:-translate-x-0.5"
-            />
-            <span className="truncate">{etab.raisonDisplay}</span>
-          </Link>
+          <FilAriane
+            crumbs={[
+              { href: base, label: etab.raisonDisplay },
+              { label: LABEL_ITEM.registre },
+            ]}
+          />
         </div>
 
-        <div className="mt-3 flex flex-wrap items-start justify-between gap-x-8 gap-y-4">
+        <div className="mt-1.5 flex flex-wrap items-start justify-between gap-x-8 gap-y-4">
           <div className="min-w-0 flex-1">
             <h1 className="board-titre m-0 text-[clamp(29px,3vw,39px)]">
               Registre de sécurité

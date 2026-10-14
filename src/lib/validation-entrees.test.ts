@@ -22,6 +22,9 @@ vi.mock("@/lib/prisma", () => ({
   prisma: {
     uniteTravail: { update: enregistrer("uniteTravail", "update") },
     equipement: { createMany: enregistrer("equipement", "createMany") },
+    // Le régime lu par le pré-remplissage (2026-10-14) : aucun établissement
+    // rendu, l'action retombe sur le régime de travail.
+    etablissement: { findUnique: async () => null },
     prescriptionParticuliere: {
       findFirst: async () => prescription,
       update: enregistrer("prescriptionParticuliere", "update"),
@@ -52,6 +55,7 @@ vi.mock("@/lib/calendrier/regeneration-sure", async (orig) => ({
 import { renommerUnite, declarerAucunRisque } from "@/lib/duerps/actions";
 import { creerEquipementsDepuisPreRemplissage } from "@/lib/equipements/actions";
 import { suggererEquipements } from "@/lib/equipements/pre-remplissage";
+import { questionsExigeesPour, REGIME_TRAVAIL } from "@/lib/equipements/reponses-exigees";
 import { entrepriseSchema, entrepriseCreationSchema } from "@/lib/entreprises/schema";
 import { leverPrescription } from "@/lib/prescriptions/actions";
 import { ajouterMesureCustom, modifierMesure } from "@/lib/mesures/actions";
@@ -105,31 +109,41 @@ describe("declarerAucunRisque — justification bornée", () => {
 });
 
 describe("creerEquipementsDepuisPreRemplissage — une entrée par catégorie au plus", () => {
+  // [2026-10-14, intégration avec `lot/conditions-equipement`] : l'action refuse
+  // désormais une catégorie sans les réponses exigées dans le régime lu (ici le
+  // faux client ne rend aucun établissement : régime de travail). Les cas
+  // acceptés les fournissent, comme le panneau.
+  const reponses = (c: CategorieEquipement) =>
+    Object.fromEntries(questionsExigeesPour(c, REGIME_TRAVAIL).map((q) => [q, false]));
   const nonEpi = CATEGORIES_EQUIPEMENT.filter((c) => !estCategorieEpi(c as CategorieEquipement));
 
   it("refuse 5 000 appareils en un appel et n'écrit rien", async () => {
     const entrees = Array.from({ length: 5000 }, () => ({ categorie: "EXTINCTEUR" as CategorieEquipement, libelle: "x" }));
     const r = await creerEquipementsDepuisPreRemplissage("etab1", entrees);
-    expect(r.created).toBe(0);
+    expect(r.status).toBe("error");
     expect(ecrit("equipement")).toHaveLength(0);
   });
   it("refuse un libellé d'1 Mo", async () => {
     const r = await creerEquipementsDepuisPreRemplissage("etab1", [
       { categorie: nonEpi[0] as CategorieEquipement, libelle: "L".repeat(1_000_000) },
     ]);
-    expect(r.created).toBe(0);
+    expect(r.status).toBe("error");
     expect(ecrit("equipement")).toHaveLength(0);
   });
   it("refuse deux entrées de la même catégorie, et une catégorie inconnue", async () => {
     const c = nonEpi[0] as CategorieEquipement;
-    expect((await creerEquipementsDepuisPreRemplissage("etab1", [{ categorie: c, libelle: "a" }, { categorie: c, libelle: "b" }])).created).toBe(0);
-    expect((await creerEquipementsDepuisPreRemplissage("etab1", [{ categorie: "INVENTEE" as CategorieEquipement, libelle: "a" }])).created).toBe(0);
+    expect((await creerEquipementsDepuisPreRemplissage("etab1", [{ categorie: c, libelle: "a" }, { categorie: c, libelle: "b" }])).status).toBe("error");
+    expect((await creerEquipementsDepuisPreRemplissage("etab1", [{ categorie: "INVENTEE" as CategorieEquipement, libelle: "a" }])).status).toBe("error");
     expect(ecrit("equipement")).toHaveLength(0);
   });
   it("accepte une entrée par catégorie, toutes catégories confondues", async () => {
-    const entrees = nonEpi.map((c) => ({ categorie: c as CategorieEquipement, libelle: `Appareil ${c}` }));
+    const entrees = nonEpi.map((c) => ({
+      categorie: c as CategorieEquipement,
+      libelle: `Appareil ${c}`,
+      caracteristiques: reponses(c as CategorieEquipement),
+    }));
     const r = await creerEquipementsDepuisPreRemplissage("etab1", entrees);
-    expect(r.created).toBe(nonEpi.length);
+    expect(r).toMatchObject({ status: "success", created: nonEpi.length });
   });
   it("accepte tout ce que l'écran peut envoyer : les suggestions du pré-remplissage", async () => {
     for (const estERP of [true, false]) {
@@ -141,9 +155,9 @@ describe("creerEquipementsDepuisPreRemplissage — une entrée par catégorie au
         ecritures.length = 0;
         const entrees = suggestions
           .filter((s) => !estCategorieEpi(s.categorie))
-          .map((s) => ({ categorie: s.categorie, libelle: s.libelle }));
+          .map((s) => ({ categorie: s.categorie, libelle: s.libelle, caracteristiques: reponses(s.categorie) }));
         const r = await creerEquipementsDepuisPreRemplissage("etab1", entrees);
-        expect(r.created, `${codeNaf} ERP=${estERP}`).toBe(entrees.length);
+        expect(r, `${codeNaf} ERP=${estERP}`).toMatchObject({ status: "success", created: entrees.length });
       }
     }
   });

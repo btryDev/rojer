@@ -22,6 +22,9 @@ const nextConfig: NextConfig = {
     process.env.NODE_ENV === "production"
       ? EXTENSIONS_PAGES
       : [...EXTENSIONS_PAGES, ...EXTENSIONS_PAGES_DEV],
+  // Pas d'en-tête `x-powered-by: Next.js` : il n'apprend rien à l'utilisateur
+  // et désigne le cadre à viser (audit du 2026-10-13).
+  poweredByHeader: false,
   experimental: {
     serverActions: {
       // Les rapports de vérification peuvent atteindre 20 Mo (cf.

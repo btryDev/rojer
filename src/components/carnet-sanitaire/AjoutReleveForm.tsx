@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
+import { useOuvertureFormulaire } from "./useOuvertureFormulaire";
 import { Button } from "@/components/ui/button";
 import { ChampBoard, StatusPill } from "@/components/ui-kit";
 import {
@@ -49,11 +50,8 @@ export function AjoutReleveForm({
   const [temperature, setTemperature] = useState<string>(
     releve ? String(releve.temperatureCelsius) : "",
   );
-  const [ouvert, setOuvert] = useState(false);
   // Une correction faite referme le formulaire : la liste montre le résultat.
-  useEffect(() => {
-    if (releve && state.status === "success") setOuvert(false);
-  }, [releve, state]);
+  const [ouvert, setOuvert] = useOuvertureFormulaire(state, Boolean(releve));
   const err = (champ: string) =>
     state.status === "error" ? state.fieldErrors?.[champ]?.[0] : undefined;
   // Un identifiant par formulaire : la saisie et chaque correction coexistent.

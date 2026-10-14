@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { creerEquipementsDepuisPreRemplissage } from "@/lib/equipements/actions";
 import { MarqueCategorie } from "@/components/equipements/MarqueCategorie";
+import { QuestionTriEtat } from "@/components/equipements/EquipementForm";
 import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
+import type { ChampTriEtat } from "@/lib/equipements/schema";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
 
 type Suggestion = {
@@ -17,14 +19,38 @@ type Suggestion = {
 type Props = {
   etablissementId: string;
   suggestions: Suggestion[];
+  /**
+   * Les questions exigées par catégorie, dans le régime de l'établissement
+   * (`questionsExigeesParCategorie`, calculé au serveur — le panneau ne les
+   * recopie pas). Décision de la propriétaire du 2026-10-13 (option 2) : le
+   * panneau les pose à côté de la case, au format du formulaire ; la case
+   * reste cochable, mais l'envoi exige la réponse. Aujourd'hui : le groupe
+   * électrogène d'une installation électrique en ERP.
+   */
+  questionsExigees?: Partial<Record<CategorieEquipement, readonly ChampTriEtat[]>>;
 };
 
-export function PreRemplissagePanel({ etablissementId, suggestions }: Props) {
+/** Le `name` d'une question du panneau : une par catégorie et par champ. */
+export const nomQuestionPanneau = (categorie: CategorieEquipement, champ: ChampTriEtat) =>
+  `pre-${categorie}-${champ}`;
+
+export function PreRemplissagePanel({
+  etablissementId,
+  suggestions,
+  questionsExigees = {},
+}: Props) {
   const [selection, setSelection] = useState<Set<string>>(
     () => new Set(suggestions.map((s) => s.categorie)),
   );
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
+  const [erreur, setErreur] = useState<string | null>(null);
+  // Les catégories cochées dont la question est restée sans réponse au
+  // dernier envoi : leur champ porte l'erreur (`aria-invalid`, message lié).
+  const [sansReponse, setSansReponse] = useState<ReadonlySet<CategorieEquipement>>(
+    () => new Set(),
+  );
+  const formRef = useRef<HTMLFormElement>(null);
 
   if (suggestions.length === 0) return null;
 
@@ -38,27 +64,71 @@ export function PreRemplissagePanel({ etablissementId, suggestions }: Props) {
   };
 
   const valider = () => {
+    const fd = formRef.current ? new FormData(formRef.current) : new FormData();
+    const manque: CategorieEquipement[] = [];
     const entrees = suggestions
       .filter((s) => selection.has(s.categorie))
-      .map((s) => ({ categorie: s.categorie, libelle: s.libelle }));
+      .map((s) => {
+        const champs = questionsExigees[s.categorie] ?? [];
+        const caracteristiques: Partial<Record<ChampTriEtat, boolean>> = {};
+        for (const champ of champs) {
+          const v = fd.get(nomQuestionPanneau(s.categorie, champ));
+          if (v === "oui") caracteristiques[champ] = true;
+          else if (v === "non") caracteristiques[champ] = false;
+          else manque.push(s.categorie);
+        }
+        return {
+          categorie: s.categorie,
+          libelle: s.libelle,
+          ...(champs.length > 0 ? { caracteristiques } : {}),
+        };
+      });
 
+    setSansReponse(new Set(manque));
     if (entrees.length === 0) {
+      setErreur(null);
       setMessage("Aucune catégorie sélectionnée.");
       return;
     }
+    if (manque.length > 0) {
+      setMessage(null);
+      setErreur(
+        `Répondez oui ou non à la question posée pour : ${[...new Set(manque)]
+          .map((c) => LABEL_CATEGORIE_EQUIPEMENT[c])
+          .join(", ")}.`,
+      );
+      return;
+    }
 
+    setErreur(null);
     startTransition(async () => {
-      const res = await creerEquipementsDepuisPreRemplissage(
-        etablissementId,
-        entrees,
-      );
-      setMessage(
-        res.created > 0
-          ? `${res.created} équipement${res.created > 1 ? "s" : ""} ajouté${
-              res.created > 1 ? "s" : ""
-            }. Pensez à les affiner si besoin.`
-          : "Aucun équipement ajouté.",
-      );
+      try {
+        const res = await creerEquipementsDepuisPreRemplissage(
+          etablissementId,
+          entrees,
+        );
+        // Un refus du serveur se RETOURNE (revue du 2026-10-13) : son message
+        // arrive tel quel, là où une exception aurait été masquée par Next en
+        // production.
+        if (res.status === "error") {
+          setMessage(null);
+          setErreur(res.message);
+          return;
+        }
+        setMessage(
+          res.created > 0
+            ? `${res.created} équipement${res.created > 1 ? "s" : ""} ajouté${
+                res.created > 1 ? "s" : ""
+              }. Pensez à les affiner si besoin.`
+            : "Aucun équipement ajouté.",
+        );
+      } catch {
+        setMessage(null);
+        // ~~`e.message`~~ (rayé le 2026-10-13) : en production, Next remplace
+        // le message d'une exception d'action serveur ; les refus attendus
+        // arrivent désormais par le retour, ci-dessus. Reste l'imprévu.
+        setErreur("La création a échoué. Rien n'a été créé ; réessayez.");
+      }
     });
   };
 
@@ -76,32 +146,79 @@ export function PreRemplissagePanel({ etablissementId, suggestions }: Props) {
         </p>
       </header>
 
-      <div className="flex flex-col gap-4 pt-5">
+      <form
+        ref={formRef}
+        className="flex flex-col gap-4 pt-5"
+        onSubmit={(e) => {
+          e.preventDefault();
+          valider();
+        }}
+      >
+        {/* L'astérisque se lit (revue du 2026-10-13) : la légende n'est
+            posée que si une question l'est. */}
+        {suggestions.some((s) => (questionsExigees[s.categorie] ?? []).length > 0) && (
+          <p className="m-0 text-[12px] text-[color:var(--board-slate-mid)]">
+            * réponse requise pour créer la fiche cochée
+          </p>
+        )}
         <ul className="m-0 flex list-none flex-col gap-3 p-0">
           {suggestions.map((s) => {
             const coche = selection.has(s.categorie);
+            const questions = questionsExigees[s.categorie] ?? [];
             return (
-              <li key={s.categorie} className="flex items-start gap-3">
-                <input
-                  type="checkbox"
-                  id={`pre-${s.categorie}`}
-                  checked={coche}
-                  onChange={() => toggle(s.categorie)}
-                  className="mt-0.5 size-4 flex-none rounded border-[color:var(--board-slate)] accent-[color:var(--board-ink)]"
-                />
-                <MarqueCategorie categorie={s.categorie} taille={36} />
-                <label
-                  htmlFor={`pre-${s.categorie}`}
-                  className="min-w-0 flex-1 cursor-pointer"
-                >
-                  <p className="m-0 text-[14px] font-semibold leading-[1.35] text-[color:var(--board-ink)]">
-                    {LABEL_CATEGORIE_EQUIPEMENT[s.categorie]}
-                  </p>
-                  <p className="m-0 mt-1 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                    {s.libelle} — {s.raison}
-                    {s.mention ? ` ${s.mention}` : null}
-                  </p>
-                </label>
+              <li key={s.categorie} className="flex flex-col gap-2">
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    id={`pre-${s.categorie}`}
+                    checked={coche}
+                    onChange={() => toggle(s.categorie)}
+                    className="mt-0.5 size-4 flex-none rounded border-[color:var(--board-slate)] accent-[color:var(--board-ink)]"
+                  />
+                  <MarqueCategorie categorie={s.categorie} taille={36} />
+                  <label
+                    htmlFor={`pre-${s.categorie}`}
+                    className="min-w-0 flex-1 cursor-pointer"
+                  >
+                    <p
+                      id={`pre-${s.categorie}-titre`}
+                      className="m-0 text-[14px] font-semibold leading-[1.35] text-[color:var(--board-ink)]"
+                    >
+                      {LABEL_CATEGORIE_EQUIPEMENT[s.categorie]}
+                    </p>
+                    <p className="m-0 mt-1 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                      {s.libelle} — {s.raison}
+                      {s.mention ? ` ${s.mention}` : null}
+                    </p>
+                  </label>
+                </div>
+                {/* La question exigée, au format du formulaire : oui ou non,
+                    sans présélection. Requise seulement si la case est
+                    cochée — une catégorie décochée n'est pas envoyée.
+                    Groupe nommé par la catégorie (revue du 2026-10-13) : la
+                    question seule ne dit pas de quel appareil elle parle. */}
+                {questions.length > 0 && (
+                  <div
+                    role="group"
+                    aria-labelledby={`pre-${s.categorie}-titre`}
+                    className="ml-7 flex flex-col gap-3"
+                  >
+                    {questions.map((champ) => (
+                      <QuestionTriEtat
+                        key={champ}
+                        champ={champ}
+                        nom={nomQuestionPanneau(s.categorie, champ)}
+                        defaut=""
+                        exigee={coche}
+                        erreur={
+                          coche && sansReponse.has(s.categorie)
+                            ? "Répondez oui ou non."
+                            : undefined
+                        }
+                      />
+                    ))}
+                  </div>
+                )}
               </li>
             );
           })}
@@ -121,13 +238,20 @@ export function PreRemplissagePanel({ etablissementId, suggestions }: Props) {
             {message}
           </p>
         )}
+        {!pending && erreur && (
+          <p
+            role="alert"
+            className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]"
+          >
+            {erreur}
+          </p>
+        )}
 
         <div className="flex items-center gap-3">
           <Button
-            type="button"
+            type="submit"
             variant="board"
             size="board"
-            onClick={valider}
             disabled={pending}
           >
             {pending
@@ -135,7 +259,7 @@ export function PreRemplissagePanel({ etablissementId, suggestions }: Props) {
               : `Créer ${selection.size} fiche${selection.size > 1 ? "s" : ""}`}
           </Button>
         </div>
-      </div>
+      </form>
     </section>
   );
 }

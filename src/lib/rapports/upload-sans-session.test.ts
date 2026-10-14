@@ -23,7 +23,9 @@ const h = vi.hoisted(() => {
           // Une vérification qui existe : sans elle, l'ancien ordre s'arrêtait
           // sur « introuvable » avant le contrôle de propriété, et l'épreuve
           // ne montrerait pas ce qu'il faisait lire à un anonyme.
-          if (nom === "verification" && op === "findUnique")
+          // [2026-10-14 : la lecture est bornée au compte (`findFirst`,
+          // `integration/audit-1013`) ; le faux répond aux deux.]
+          if (nom === "verification" && (op === "findUnique" || op === "findFirst"))
             return { id: "v1", etablissementId: "e1", salarieId: null, archiveLe: null, equipement: null };
           return null;
         },
@@ -126,7 +128,9 @@ describe("uploadRapport sans session", () => {
     await uploadRapport("v1", { status: "idle" }, formulaireEspion()).catch(() => {});
     expect(h.appels).toContain("formData.get(fichier)");
     expect(h.appels).toContain("validerFichier");
-    expect(h.appels).toContain("prisma.verification.findUnique");
-    expect(h.appels).toContain("assertEtablissementOwnership");
+    // [2026-10-14 : la lecture porte le compte dans son `where` — elle EST le
+    // contrôle de propriété (`integration/audit-1013`), il n'y a plus
+    // d'`assertEtablissementOwnership` séparé.]
+    expect(h.appels).toContain("prisma.verification.findFirst");
   });
 });

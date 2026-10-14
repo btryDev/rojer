@@ -45,7 +45,7 @@ describe("le sujet d'une surface publique du registre", () => {
   });
 
   it("les répertoires balayés sont bien ceux servis sans session", () => {
-    // Le périmètre n'est pas affirmé, il est demandé à la règle du middleware.
+    // Le périmètre n'est pas affirmé, il est demandé à la règle du proxy.
     // Si `/accessibilite` cessait d'être public, cette garde parlerait d'un
     // risque qui n'existe plus — et il vaut mieux qu'elle le dise que de
     // continuer à balayer une liste devenue arbitraire.

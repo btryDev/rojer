@@ -182,6 +182,11 @@ export async function ajouterLigneJournal(
   //
   // Ici, Postgres lit et écrit `contenu` dans la même instruction : deux
   // ajouts concurrents s'empilent au lieu de s'écraser.
+  //
+  // `updatedAt` en UTC (2026-10-13, revue de `lot/reprise-suites-lot3`, R3,
+  // étendu à cette écriture sœur) : la colonne est un TIMESTAMP(3) sans fuseau
+  // où Prisma range des instants UTC (ADR-011 § 1) ; ~~`NOW()`~~ seul y
+  // écrivait l'heure locale de la session.
   await creerLaFicheSiAbsente(etablissementId, sectionId);
   await prisma.$executeRaw`
     UPDATE "FicheRegistre"
@@ -189,7 +194,7 @@ export async function ajouterLigneJournal(
           'lignes',
           COALESCE("contenu"->'lignes', '[]'::jsonb) || ${JSON.stringify([ligne])}::jsonb
         ),
-        "updatedAt" = NOW()
+        "updatedAt" = NOW() AT TIME ZONE 'UTC'
     WHERE "etablissementId" = ${etablissementId}
       AND "sectionId" = ${sectionId}
   `;
