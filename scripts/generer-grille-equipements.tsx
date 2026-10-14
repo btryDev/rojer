@@ -23,7 +23,7 @@
 // Document de relecture, pas un document remis à un tiers : il décrit ce que
 // l'outil calcule, à une version donnée du référentiel.
 //
-//   pnpm exec tsx scripts/generer-grille-equipements.tsx [chemin.pdf]
+//   pnpm exec tsx --import ./scripts/server-only-hors-next.mjs scripts/generer-grille-equipements.tsx [chemin.pdf]
 //     [--propositions-audit propositions.json] [--annexe-relecture remarques.json]
 //
 // Les deux options lisent des données de RELECTURE, tenues hors du dépôt

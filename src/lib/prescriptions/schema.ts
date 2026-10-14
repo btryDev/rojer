@@ -1,3 +1,4 @@
+import "server-only";
 import { z } from "zod";
 import {
   CATEGORIES_EQUIPEMENT,
@@ -22,21 +23,14 @@ import { cleJourCivil, estJourCivilReel } from "@/lib/dates";
  *    règle vit ici et dans le moteur.
  */
 
-// Sources, libellés et marquage contractuel vivent dans le module feuille
-// `sources.ts` — ce fichier importe le moteur de matching, et le moteur
-// importe désormais le marquage : les y laisser fermait un cycle d'imports.
-// Réexportés ici : les écrans qui les prennent de `schema.ts` n'ont pas
-// bougé, et n'avaient aucune raison de bouger.
-export {
-  SOURCES_PRESCRIPTION,
-  LABEL_SOURCE_PRESCRIPTION,
-  MARQUAGE_CONTRACTUEL,
-  MARQUAGE_CONTRACTUEL_LONG,
-  PASTILLE_CONTRACTUELLE,
-  estEcheanceContractuelle,
-  estSourceContractuelle,
-  type SourcePrescription,
-} from "./sources";
+// SERVEUR SEULEMENT (audit Next.js du 2026-10-14, H1). Ce schéma importe le
+// référentiel (`obligationParId`) et le moteur de matching pour valider
+// l'effet `renforce_periodicite` : un composant client qui l'importait
+// embarquait les 176 obligations, notes internes comprises, dans le paquet
+// envoyé au navigateur. Les sources, libellés et marquage contractuel vivent
+// dans le module feuille `sources.ts` : c'est là que les écrans les prennent,
+// et ce fichier ne les réexporte plus. La validation reste entière, côté
+// serveur, dans l'action qui l'appelle (`actions.ts`).
 
 export const EFFETS_PRESCRIPTION = [
   "renforce_periodicite",

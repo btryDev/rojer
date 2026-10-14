@@ -14,6 +14,13 @@
  *     frigorifiques (R. 543-79 code de l'environnement, règlement UE 2024/573)
  */
 
+// SERVEUR SEULEMENT (audit Next.js du 2026-10-14, H1). Le référentiel entier,
+// notes internes comprises, n'a rien à faire dans un paquet client : un
+// composant "use client" qui l'importerait — même par rebond — fait échouer
+// le build. Un composant client qui a besoin d'un TYPE d'ici l'importe en
+// `import type` (effacé à la compilation) ; d'une valeur, il la reçoit en
+// props depuis un composant serveur.
+import "server-only";
 import {
   porteurDe,
   type DomaineObligation,

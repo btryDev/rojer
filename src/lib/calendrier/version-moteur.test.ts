@@ -400,7 +400,13 @@ const RELEVE = {
   // Recopiée SANS incrément le 2026-10-14 (intégration de
   // `lot/securite-owasp-1013` et `lot/dossier-relecture-2`) : la somme des deux
   // changements ci-dessus, aucun autre. ~~4943db84e624fce1~~ ~~7e3bde89eb15a58d~~.
-  empreinte: "a5d569d53f9b8b2b",
+  // Recopiée SANS incrément le 2026-10-14 (`lot/nextjs-client-1014`, audit
+  // Next.js H1) : `estPeriodicitePlusStricte` passe, texte identique, de
+  // `matching/prescriptions.ts` (qui la réexporte) à `calendrier/periodicite.ts`
+  // — `periodicite.ts` ne tire plus le référentiel jusqu'aux composants
+  // clients. NON : extraction, même fonction, mêmes appelants.
+  // ~~a5d569d53f9b8b2b~~.
+  empreinte: "c8f112a346c9ac63",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

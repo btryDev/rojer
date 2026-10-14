@@ -86,7 +86,8 @@ sont fermés sur `517309db`.
 
 ## Constats importants (Haute)
 
-### H1 Le référentiel réglementaire entier est servi au navigateur
+### ~~H1 Le référentiel réglementaire entier est servi au navigateur~~
+- **[Corrigé le 2026-10-14, `lot/nextjs-client-1014`]** `PrescriptionForm` et la page prennent sources et libellés de `prescriptions/sources.ts` ; `prescriptions/schema.ts` garde le `superRefine` (`obligationParId`) et devient serveur seulement ; `import "server-only"` en tête de `referentiels/conformite/index.ts`. Le build a alors révélé une seconde chaîne cliente, que l'élagage masquait : `ui-kit` → `PastilleFiche` → `dates/retard` → `calendrier/periodicite` → `matching/prescriptions` → `obligation-retiree` → référentiel ; `estPeriodicitePlusStricte` est passée dans `periodicite.ts`. Mesuré : `/etablissements/[id]/prescriptions` 1 665 → 836 Ko (444 → 237 Ko gzip), plus aucun chunk de `.next/static` ne porte les notes du référentiel. Scripts `tsx` : préchargement `scripts/server-only-hors-next.mjs` (voir M3).
 - **Axe** : 1 / 5. **[Maintenant]**
 - **Où** : `src/components/prescriptions/PrescriptionForm.tsx:6` → `src/lib/prescriptions/schema.ts:7` (`import { obligationParId } from "@/lib/referentiels/conformite"`)
 - **Constat** : un composant client importe le schéma zod, qui importe le référentiel.
@@ -281,7 +282,7 @@ Vérifiés sur `517309db` :
 
 ## Quick wins
 
-1. **H1** : couper l'import du référentiel dans `prescriptions/schema.ts` et ajouter `server-only` au référentiel. −216 Ko gzip. (S)
+1. ~~**H1** : couper l'import du référentiel dans `prescriptions/schema.ts` et ajouter `server-only` au référentiel. −216 Ko gzip. (S)~~ fait le 2026-10-14 (−207 Ko gzip mesurés)
 2. **M3** : `import "server-only"` sur `prisma.ts`, `auth/*`, `email/*`, `*/queries.ts`. (S)
 3. **M1** : `etablissements/[id]/loading.tsx`. (S)
 4. **H2 (partiel)** : `cache()` sur `getEtablissement`, `getOptionalUserEtablissement`, `compterActions`. (S)
