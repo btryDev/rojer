@@ -86,6 +86,7 @@ describe("getStorage — le pilote selon les variables", () => {
     expect(getStorage()).toBeInstanceOf(SupabaseFileStorage);
     expect(creer).toHaveBeenCalledWith("https://projet.supabase.co", CLE_SERVICE, {
       auth: { persistSession: false, autoRefreshToken: false },
+      global: { fetch: expect.any(Function) },
     });
   });
 
@@ -118,6 +119,7 @@ describe("getStorage — le pilote selon les variables", () => {
     getStorage();
     expect(creer).toHaveBeenCalledWith("https://projet.supabase.co", CLE_SERVICE, {
       auth: { persistSession: false, autoRefreshToken: false },
+      global: { fetch: expect.any(Function) },
     });
     // Le journal dit la forme et la longueur, jamais la valeur.
     const journal = info.mock.calls.map((c) => String(c[0])).join("\n");
@@ -144,6 +146,31 @@ describe("getStorage — le pilote selon les variables", () => {
     expect(message).not.toContain(cle);
     expect(creer).not.toHaveBeenCalled();
     erreur.mockRestore();
+  });
+
+  it("le client Supabase borne chaque appel par un délai (audit Next.js M9)", async () => {
+    // Sans délai, un Storage muet tenait la requête ouverte jusqu'au plafond
+    // de la plateforme. On vérifie que le `fetch` remis au client pose un
+    // signal d'abandon sur chaque appel.
+    poser({ NODE_ENV: "production", ...SUPABASE_COMPLET });
+    getStorage();
+    const options = (creer.mock.calls.at(-1) as unknown[] | undefined)?.[2] as
+      | { global?: { fetch?: typeof fetch } }
+      | undefined;
+    const fetchDuClient = options?.global?.fetch;
+    expect(fetchDuClient).toBeTypeOf("function");
+
+    let signal: AbortSignal | null | undefined;
+    vi.stubGlobal("fetch", async (_e: unknown, init?: RequestInit) => {
+      signal = init?.signal;
+      return new Response("ok");
+    });
+    try {
+      await fetchDuClient!("https://projet.supabase.co/storage/v1/object/x");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+    expect(signal).toBeInstanceOf(AbortSignal);
   });
 
   it("un pilote inconnu est refusé", () => {

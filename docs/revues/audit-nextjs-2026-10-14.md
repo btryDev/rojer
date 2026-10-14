@@ -339,7 +339,10 @@ bruit dépasse l'écart. Il n'existe que sur un pool de plus d'une connexion.
 - **Correctif** : import direct `@/components/ui-kit/ChampBoard`, et sortir `statutDepuisResultat` du fichier de schéma.
 - **Effort** : S. **[Maintenant]**
 
-### M9 Pas de timeout sur les appels sortants
+### ~~M9 Pas de timeout sur les appels sortants~~
+**[Corrigé pour l'existant le 2026-10-14, `lot/nextjs-infra-1014`.]** `fetchAvecDelai` (`src/lib/reseau/delai.ts`) pose un `AbortSignal.timeout` sur chaque appel, combiné au signal de l'appelant, corps de réponse compris. Branché sur : le client Supabase du **stockage** (`DELAI_STOCKAGE_MS` = 60 s, un dépôt de 20 Mo doit y tenir), le **vérificateur de jetons MCP** (`DELAI_VERIFICATION_MS` = 10 s, abandon = refus 401), le **client Légifrance** (`delaiReponseMs`, 30 s par défaut, abandon repris comme une panne réseau, y compris pendant la lecture d'un corps 2xx, qui sortait jusqu'ici en `DOMException` brute). Éprouvé : sans le branchement, quatre tests rouges (stockage ×3, Légifrance ×1). `connect_timeout` et `pool_timeout` documentés dans `.env.example` (défauts Prisma 5 s et 10 s, déjà des bornes ; à poser explicitement en prod).
+- **Non touché, hors périmètre** : les clients Supabase **Auth** (`src/lib/supabase/*`, `getUser()` du proxy et de `requireUser`) — lot sécurité, puis remplacés par Better Auth ; `scripts/mcp-http-test.ts`, script de diagnostic local. Aucun e-mail ne part (pas de driver réel).
+- → bascule : pilote S3 Cellar avec `requestTimeout`/`connectionTimeout` du gestionnaire HTTP du SDK (même ordre de grandeur que `DELAI_STOCKAGE_MS`) ; adaptateur Better Auth : délai sur ses appels sortants s'il en fait (OAuth MCP), sa base passant par Prisma et les paramètres d'URL ci-dessus.
 - **Où** : aucun `AbortSignal` ni timeout sur le stockage ni sur l'auth.
 - **Correctif** : timeouts explicites sur le client S3 (Cellar) et l'adaptateur Better Auth. Fixer `connect_timeout` et `pool_timeout` dans `DATABASE_URL`.
 - **Effort** : S. **[Recette bascule]**

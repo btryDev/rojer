@@ -231,3 +231,28 @@ describe("serveur seulement", () => {
     expect(clients.filter((f) => /lib\/legifrance/.test(readFileSync(f, "utf8")))).toEqual([]);
   });
 });
+
+describe("délai de réponse (audit Next.js du 2026-10-14, M9)", () => {
+  // Un fetch qui ne répond jamais, sauf abandon.
+  const muet = (async (_u: unknown, init?: RequestInit) =>
+    new Promise<Response>((_, rejeter) => {
+      init?.signal?.addEventListener("abort", () => rejeter(init.signal!.reason));
+    })) as unknown as typeof fetch;
+
+  it("un PISTE muet échoue en panne réseau au lieu de pendre", async () => {
+    const h = horloge();
+    const c = creerClientLegifrance({
+      clientId: ID,
+      clientSecret: SECRET,
+      env: "sandbox",
+      fetch: muet,
+      delaiMs: 0,
+      delaiReponseMs: 20,
+      maintenant: h.maintenant,
+      attendre: h.attendre,
+    });
+    const e = await echec(c.getArticle("LEGIARTI000000000001"));
+    expect(e).toBeInstanceOf(ErreurLegifrance);
+    expect(e.nature).toBe("reseau");
+  });
+});
