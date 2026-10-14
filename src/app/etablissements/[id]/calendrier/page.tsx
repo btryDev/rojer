@@ -31,6 +31,7 @@ import {
   equipementsSansEcheance,
 } from "@/lib/equipements/hors-referentiel";
 import { assurerCalendrierAJour } from "@/lib/calendrier/regeneration-sure";
+import { instantDuRendu } from "@/lib/dates/instant-du-rendu";
 import {
   compterEtatCalendrier,
   listerVerifications,
@@ -289,6 +290,13 @@ export default async function CalendrierPage({
   const etab = await getEtablissement(id);
   if (!etab) notFound();
 
+  // Une seule horloge pour toute la page, et c'est celle du RENDU : la barre
+  // latérale, rendue en parallèle, lit la même, si bien que le registre des
+  // autres échéances ne part qu'une fois pour les deux (audit Next.js du
+  // 2026-10-14, H2). Le bandeau, la liste et la règle comptaient chacun sur
+  // leur `new Date()`.
+  const aujourdhui = instantDuRendu();
+
   // Le filtre bâtiment n'existe qu'à partir de deux bâtiments (ADR-019) ;
   // un id inconnu vaut « tout l'établissement ».
   const batiments = await listerBatimentsDeLEtablissement(id);
@@ -324,8 +332,8 @@ export default async function CalendrierPage({
       // Sous le filtre bâtiment : un compte de tout l'établissement annonçait
       // les occurrences sans date de tout le dossier au-dessus d'une liste
       // restreinte à un bâtiment.
-      compterEtatCalendrier(id, new Date(), { batimentId: filtreBatiment }),
-      listerAutresEcheances(id),
+      compterEtatCalendrier(id, aujourdhui, { batimentId: filtreBatiment }),
+      listerAutresEcheances(id, aujourdhui),
       // Le parc entier, pas seulement les appareils qui portent une
       // échéance : la lecture par équipement doit pouvoir dire combien
       // n'en ont aucune.
@@ -349,7 +357,6 @@ export default async function CalendrierPage({
       // (`compterEtatCalendrier`), qui en tire la même prudence (D1 (a)).
       marquesAConfirmerDuRendu(id),
     ]);
-  const aujourdhui = new Date();
   const prudence = retenueParPrudence(marquesAConfirmer.parObligation);
   // La lecture par équipement suit le même bâtiment que le reste.
   const equipements = restreindreAuBatiment(equipementsTous, filtreBatiment);

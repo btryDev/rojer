@@ -21,7 +21,7 @@
 
 import type { DomainePrestataire } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { determineObligationsApplicables } from "@/lib/matching";
+import { obligationsApplicablesDuDossier } from "@/lib/etablissements/dossier-du-rendu";
 import { LABEL_DOMAINE as LABEL_DOMAINE_OBLIGATION } from "@/lib/calendrier/labels";
 import { domainesSansPrestataire } from "@/lib/prestataires/domaines";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
@@ -349,14 +349,14 @@ export async function chargerTransmissions(
   /** L'horloge du tableau de bord, pour que ses cartes lisent la même. */
   now: Date,
 ): Promise<Transmissions> {
-  const etab = await prisma.etablissement.findFirst({
-    where: { id: etablissementId, entreprise: { userId } },
-    include: {
-      equipements: { where: { actif: true } },
-      entreprise: { select: { effectif: true } },
-    },
-  });
-  if (!etab) return AUCUNE_TRANSMISSION;
+  // [2026-10-14, audit Next.js H2] L'établissement, son parc en service et le
+  // passage du moteur sont ceux que le rendu partage (`dossier-du-rendu.ts`) :
+  // même prédicat d'appartenance, même projection (`projeterEtablissement`,
+  // dont la recopie champ à champ qui était ici donnait les vingt et un mêmes
+  // champs). Hors rendu RSC, la lecture se fait comme avant.
+  const dossier = await obligationsApplicablesDuDossier(etablissementId, userId);
+  if (!dossier) return AUCUNE_TRANSMISSION;
+  const { etab } = dossier;
 
   const [prestataires, effectif] = await Promise.all([
     // `etab.id` et non le paramètre : l'appartenance vient d'être établie
@@ -388,49 +388,7 @@ export async function chargerTransmissions(
     }),
   ]);
 
-  const applicables = determineObligationsApplicables(
-    {
-      id: etab.id,
-      effectifSurSite: etab.effectifSurSite,
-      effectifEntreprise: etab.entreprise.effectif,
-      estEtablissementTravail: etab.estEtablissementTravail,
-      estERP: etab.estERP,
-      estIGH: etab.estIGH,
-      estHabitation: etab.estHabitation,
-      typeErp: etab.typeErp,
-      categorieErp: etab.categorieErp,
-      classeIgh: etab.classeIgh,
-      familleHabitation: etab.familleHabitation,
-      // Ces deux-là manquaient. La première rédaction de ce commentaire
-      // parlait d'« une » divergence et la déclarait résorbée : il y en avait
-      // deux autres, dans `equipements/hors-referentiel.ts` et dans la page
-      // guide. Corriger un site sur trois et l'écrire au singulier était la
-      // faute que ce lot corrige ailleurs.
-      //
-      // La cause tenait au type : les deux champs y étaient optionnels
-      // « pour ne pas casser les projections existantes », donc les omettre
-      // compilait. Ils sont requis depuis (`matching/types.ts`).
-      personnesPresentesHabituellement: etab.personnesPresentesHabituellement,
-      manipuleMatieresR422722: etab.manipuleMatieresR422722,
-      comporteLocauxSommeilPublic: etab.comporteLocauxSommeilPublic,
-      manutentionManuelle: etab.manutentionManuelle,
-      travailSurEcran: etab.travailSurEcran,
-      operationsElectriques: etab.operationsElectriques,
-      conduiteEngins: etab.conduiteEngins,
-      expositionCMR: etab.expositionCMR,
-      epiPresents: etab.epiPresents,
-      ssiCategorieAouB: etab.ssiCategorieAouB,
-    },
-    etab.equipements.map((eq) => ({
-      id: eq.id,
-      libelle: eq.libelle,
-      categorie: eq.categorie,
-      caracteristiques: (eq.caracteristiques ?? null) as Record<
-        string,
-        unknown
-      > | null,
-    })),
-  ).map((a) => a.obligation);
+  const applicables = dossier.applicables.map((a) => a.obligation);
 
   return rapprocher(
     applicables,

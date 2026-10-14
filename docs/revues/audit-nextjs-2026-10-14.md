@@ -102,7 +102,33 @@ sont fermés sur `517309db`.
   - ajouter `import "server-only"` en tête de `src/lib/referentiels/conformite/index.ts`, pour que le build casse si ça revient.
 - **Effort** : S
 
-### H2 Tableau de bord : mêmes données relues plusieurs fois par rendu, sans `cache()`
+### ~~H2 Tableau de bord : mêmes données relues plusieurs fois par rendu, sans `cache()`~~
+**[Corrigé le 2026-10-14, `lot/nextjs-perf-1014`.]** Mesuré sur le dossier de
+démo complet (`seed:complet`), `next build` + `next start`, requêtes comptées
+dans le journal PostgreSQL (`log_statement = all`) : **le tableau de bord
+faisait 146 requêtes SQL par affichage, pas « ≈ 50 »** ; il en fait 106 après
+ce correctif (calendrier 74 → 57, registre 50 → 47, équipements 51 → 44). Les
+lectures d'`Etablissement` passent de 12 à 8 et les comptages d'`Action` de 11
+à 6. Fait :
+- `cache()` sur `getEtablissement`, `getOptionalUserEtablissement`,
+  `requireEtablissement` (le layout s'en sert désormais comme garde, la
+  vigilance prestataires de la barre la redemandait), `getEtatModules`,
+  `compterActions` (clé : début du jour en ms, la seule chose qu'il lit de
+  l'horloge) et `listerAutresEcheances` (clé : l'instant en ms) ;
+- un instant de rendu partagé, `instantDuRendu()`, lu par la barre latérale,
+  le tableau de bord et le calendrier : sans lui, deux `new Date()` différents
+  rendaient tout partage impossible ;
+- un chargement unique « établissement + parc en service » et un passage
+  unique du moteur, mémoïsés (`etablissements/dossier-du-rendu.ts`), lus par
+  les marques, les transmissions, les états permanents, la couverture et
+  `equipementsSansEcheance`.
+
+**Écart au correctif proposé : `compterEtatEcheances` n'est pas mémoïsé
+entier.** Le layout et la page sont rendus en parallèle, et la page répare le
+calendrier avant de lire (`regeneration-sure.ts`). Partagé avec la barre
+latérale, le compte des LIGNES pouvait partir avant la réparation et donner à
+la page un compte d'avant régénération. Seule sa moitié indépendante des lignes
+(`listerAutresEcheances`) est partagée.
 - **Axe** : 4. **[Maintenant]**, gain encore plus net sur CC
 - **Où** :
   - `src/app/etablissements/[id]/layout.tsx:31-58` et `page.tsx:87-188` ;
