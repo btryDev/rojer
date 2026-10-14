@@ -274,6 +274,53 @@ describe("EquipementForm : la recherche de matériel (2026-10-14)", () => {
     }
   });
 
+  // Revue du lot, points 6 et 7. Éprouvés : `aria-controls` remis en
+  // permanence, l'option « Autre » retirée du cas vide, `categorie-erreur`
+  // retiré de `decritPar`.
+  it("aria-controls ne vise la liste que liste ouverte", () => {
+    const c = rendre();
+    expect(champ(c).hasAttribute("aria-controls")).toBe(false);
+    chercher(c, "extincteur");
+    const id = champ(c).getAttribute("aria-controls");
+    expect(id && document.getElementById(id)).toBeTruthy();
+  });
+
+  it("rien ne correspond : annoncé par une région live, et « Autre équipement » se choisit", () => {
+    const c = rendre({ categorie: "EXTINCTEUR" });
+    chercher(c, "zzz");
+    expect(screen.getByRole("status").textContent).toMatch(/Rien ne correspond/);
+    expect(options()).toEqual(["Autre équipement"]);
+    fireEvent.keyDown(champ(c), { key: "Enter" });
+    expect(cache(c, "categorie")).toBe("AUTRE");
+    expect(screen.getByRole("status").textContent).toBe("");
+  });
+
+  it("la liste suit le patron flottant du board, pas la surface creuse", () => {
+    const c = rendre();
+    chercher(c, "extincteur");
+    const cls = screen.getByRole("listbox").className;
+    expect(cls).toContain("rounded-[18px]");
+    expect(cls).toContain("bg-[color:var(--board-card)]");
+    expect(cls).not.toContain("board-slate-pale");
+  });
+
+  it("l'erreur de catégorie est reliée au champ par aria-describedby", async () => {
+    const enErreur = async () => ({
+      status: "error" as const,
+      message: "Formulaire invalide",
+      fieldErrors: { materielNonCouvert: ["Un matériel que Rojer ne suit pas s'enregistre en « Autre équipement »"] },
+    });
+    const { container } = render(
+      <EquipementForm action={enErreur} libelleSubmit="Créer" valeursInitiales={{ categorie: "AUTRE" }} />,
+    );
+    fireEvent.submit(container.querySelector("form")!);
+    await new Promise((r) => setTimeout(r, 30));
+    const erreur = container.querySelector("#categorie-erreur");
+    expect(erreur?.textContent).toMatch(/Autre équipement/);
+    expect(champ(container).getAttribute("aria-describedby")?.split(" ")).toContain("categorie-erreur");
+    expect(champ(container).getAttribute("aria-invalid")).toBe("true");
+  });
+
   it("modifier un matériel non suivi : la clé revient, et choisir une catégorie l'efface", () => {
     const c = rendre({ categorie: "AUTRE", materielNonCouvert: "escalier_mecanique" });
     expect(cache(c, "materielNonCouvert")).toBe("escalier_mecanique");

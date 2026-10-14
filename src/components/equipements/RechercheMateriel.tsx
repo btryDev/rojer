@@ -38,6 +38,9 @@ type Option =
   | { type: "categorie"; categorie: CategorieEquipement }
   | { type: "materiel"; cle: CleMaterielNonCouvert; libelle: string };
 
+export const MESSAGE_RIEN_NE_CORRESPOND =
+  "Rien ne correspond. Vous pouvez choisir « Autre équipement » si l'appareil n'est dans aucune catégorie.";
+
 /** Ce que le champ affiche quand on ne cherche pas : le choix en cours. */
 export function libelleDuChoix(choix: ChoixMateriel): string {
   const m = materielNonCouvert(choix.materiel);
@@ -66,7 +69,18 @@ export function RechercheMateriel({
   const [saisie, setSaisie] = useState<string | null>(null);
   const [actif, setActif] = useState(0);
 
-  const resultat = useMemo(() => rechercherMateriel(saisie ?? ""), [saisie]);
+  const resultatBrut = useMemo(() => rechercherMateriel(saisie ?? ""), [saisie]);
+  // Revue du lot (point 7) : une saisie qui ne désigne rien propose « Autre
+  // équipement », sélectionnable — la soupape de saisie reste à un geste.
+  const rienNeCorrespond =
+    resultatBrut.categories.length === 0 && resultatBrut.materiels.length === 0;
+  const resultat = useMemo(
+    () =>
+      rienNeCorrespond
+        ? { categories: ["AUTRE" as CategorieEquipement], materiels: [] }
+        : resultatBrut,
+    [resultatBrut, rienNeCorrespond],
+  );
   const options: Option[] = useMemo(
     () => [
       ...resultat.categories.map((c) => ({ type: "categorie" as const, categorie: c })),
@@ -178,7 +192,9 @@ export function RechercheMateriel({
         autoComplete="off"
         aria-autocomplete="list"
         aria-expanded={ouvert}
-        aria-controls={idListe}
+        // Revue du lot (point 7) : `aria-controls` ne vise que la liste
+        // présente — elle n'est montée qu'ouverte.
+        aria-controls={ouvert ? idListe : undefined}
         aria-activedescendant={ouvert && options[actif] ? idOption(actif) : undefined}
         aria-invalid={invalide || undefined}
         aria-describedby={decritPar}
@@ -195,16 +211,24 @@ export function RechercheMateriel({
         onKeyDown={onKeyDown}
         onBlur={fermer}
       />
+      {/* Région live, toujours montée (revue du lot, point 7) : « rien ne
+          correspond » s'annonce au lecteur d'écran sans déplacer le focus. */}
+      <p role="status" aria-live="polite" className="sr-only">
+        {ouvert && rienNeCorrespond ? MESSAGE_RIEN_NE_CORRESPOND : ""}
+      </p>
       {ouvert && (
         <ul
           id={idListe}
           role="listbox"
           aria-label="Catégories et matériels"
-          className="absolute left-0 right-0 z-20 m-0 mt-2 max-h-[340px] list-none overflow-y-auto rounded-[22px] bg-[color:var(--board-slate-pale)] p-2 shadow-[0_12px_32px_rgba(13,18,36,0.14)]"
+          // Le patron flottant du board (`BarreCompte`, panneau du compte) :
+          // carte, rayon 18, son ombre — pas une quatrième recette (charte
+          // § 1.7), ni la surface creuse, qui est celle des sous-blocs.
+          className="absolute left-0 right-0 z-50 m-0 mt-2 max-h-[340px] list-none overflow-y-auto rounded-[18px] bg-[color:var(--board-card)] p-2 shadow-[0_0_0_1px_rgba(13,18,36,.08),0_18px_40px_-20px_rgba(13,18,36,.35)]"
         >
-          {options.length === 0 && (
-            <li role="presentation" className="px-3 py-2 text-[12.5px] text-[color:var(--board-slate-mid)]">
-              Rien ne correspond. Choisissez « Autre équipement » si l&apos;appareil n&apos;est dans aucune catégorie.
+          {rienNeCorrespond && (
+            <li role="presentation" aria-hidden="true" className="px-3 py-2 text-[12.5px] text-[color:var(--board-slate-mid)]">
+              {MESSAGE_RIEN_NE_CORRESPOND}
             </li>
           )}
           {optionsCategories.length > 0 && (

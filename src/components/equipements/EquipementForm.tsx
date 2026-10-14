@@ -3,7 +3,7 @@
 import { useActionState, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { ChampBoard } from "@/components/ui-kit";
+import { BlocCreux, ChampBoard } from "@/components/ui-kit";
 import { MarqueCategorie } from "@/components/equipements/MarqueCategorie";
 import { ReferencesMateriel } from "@/components/equipements/ReferencesMateriel";
 import {
@@ -310,6 +310,7 @@ export function EquipementForm({
 
   const err = (champ: string) =>
     state.status === "error" ? state.fieldErrors?.[champ]?.[0] : undefined;
+  const erreurCategorie = err("categorie") ?? err("materielNonCouvert");
 
   const estAeration = CATEGORIES_AERATION.includes(categorie);
   const estVmc = categorie === "VMC";
@@ -344,20 +345,28 @@ export function EquipementForm({
               id="categorie"
               choix={{ categorie, materiel }}
               onChoix={choisir}
-              invalide={Boolean(err("categorie") || err("materielNonCouvert"))}
-              decritPar="categorie-aide"
+              invalide={Boolean(erreurCategorie)}
+              // Revue du lot (point 7) : l'erreur est reliée au champ, comme
+              // l'aide — et seulement les éléments présents sont cités.
+              decritPar={
+                [
+                  entreeMateriel || DESCRIPTION_CATEGORIE[categorie] ? "categorie-aide" : null,
+                  erreurCategorie ? "categorie-erreur" : null,
+                ]
+                  .filter(Boolean)
+                  .join(" ") || undefined
+              }
             />
           </div>
           <input type="hidden" name="categorie" value={categorie} />
           <input type="hidden" name="materielNonCouvert" value={materiel ?? ""} />
           {entreeMateriel ? (
             /* L'encart du matériel non suivi : on peut l'ajouter, et on lit
-               ce que Rojer ne suit pas pour lui. Sous-bloc creux, aucune
-               couleur d'état — ce n'est ni un retard ni une faute. */
-            <div
-              id="categorie-aide"
-              className="mt-3 max-w-[66ch] rounded-[22px] bg-[color:var(--board-slate-pale)] px-5 py-4"
-            >
+               ce que Rojer ne suit pas pour lui. `BlocCreux` du kit (revue
+               du lot, point 6), aucune couleur d'état — ce n'est ni un
+               retard ni une faute. */
+            <div id="categorie-aide" className="mt-3 max-w-[66ch]">
+            <BlocCreux>
               <p className="m-0 text-[13.5px] font-semibold leading-[1.4] text-[color:var(--board-ink)]">
                 Vous pouvez l&apos;ajouter.
               </p>
@@ -380,13 +389,14 @@ export function EquipementForm({
                   </button>
                 </p>
               )}
+            </BlocCreux>
             </div>
           ) : (
             DESCRIPTION_CATEGORIE[categorie] && (
               <Aide id="categorie-aide">{DESCRIPTION_CATEGORIE[categorie]}</Aide>
             )
           )}
-          <Erreur message={err("categorie") ?? err("materielNonCouvert")} />
+          <Erreur id="categorie-erreur" message={erreurCategorie} />
         </div>
 
         <ChampBoard
