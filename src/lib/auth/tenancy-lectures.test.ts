@@ -159,16 +159,13 @@ const EXEMPTIONS = new Map<string, Exemption>([
       ] as const,
   ),
   [
-    "lib/auth/actions.ts:signInAction",
-    { garde: "supabase.auth", raison: "Connexion : il n'y a pas encore de session à borner." },
-  ],
-  [
-    "lib/auth/actions.ts:signUpAction",
-    { garde: "supabase.auth", raison: "Inscription : il n'y a pas encore de compte." },
-  ],
-  [
-    "lib/auth/actions.ts:requestPasswordResetAction",
-    { garde: "supabase.auth", raison: "Mot de passe oublié : l'appelant n'est pas connecté." },
+    "lib/auth/actions.ts:definirMotDePasseAction",
+    {
+      garde: "supabase.auth",
+      raison:
+        "Nouveau mot de passe au retour du lien de réinitialisation : agit sur " +
+        "le compte de la session de récupération, ne lit aucune donnée de dossier.",
+    },
   ],
   [
     "lib/auth/actions.ts:signOutAction",
@@ -179,10 +176,13 @@ const EXEMPTIONS = new Map<string, Exemption>([
 /** Taille figée : on retire une exemption, on n'en ajoute pas sans le voir. */
 // ~~15~~ → 16 le 2026-10-14 (intégration) : `mcp/queries.ts:getParcEquipements`,
 // entrée par `lot/mcp-inventaire` sous la même garde que ses sept sœurs MCP.
-// ~~16~~ → 15 le 2026-10-14 (`lot/nextjs-securite-1014`) :
-// `verifierIntegriteSignature` n'est plus une action serveur
-// (`signatures/verification-publique.ts`).
-const PLAFOND_EXEMPTIONS = 15;
+// ~~16~~ → 13 le 2026-10-14 (`lot/nextjs-securite-1014`) : 16 − 4 + 1. Les
+// trois actions d'entrée (connexion, inscription, mot de passe oublié)
+// écrivent désormais — la limitation de débit — et passent aux exemptions de
+// `tenancy-ecritures.test.ts` ; `verifierIntegriteSignature` n'est plus une
+// action serveur (`signatures/verification-publique.ts`) ; entre
+// `definirMotDePasseAction`, la réinitialisation passée côté serveur.
+const PLAFOND_EXEMPTIONS = 13;
 
 const RACINE = join(process.cwd(), "src/lib");
 const SRC = join(process.cwd(), "src");
@@ -264,7 +264,9 @@ describe("les lectures exportées et les server actions qui ne font que lire", (
     // Bornes basses : une découpe qui cesserait de trouver les fonctions
     // rendrait ce test vert et vide.
     expect(lectures.length, "Lectures de queries trouvées").toBeGreaterThan(50);
-    expect(actions.length, "Actions en lecture seule trouvées").toBeGreaterThan(5);
+    // ~~> 5~~ → > 3 le 2026-10-14 : quatre des actions en lecture seule ont
+    // quitté le champ (voir `PLAFOND_EXEMPTIONS`), il en reste cinq.
+    expect(actions.length, "Actions en lecture seule trouvées").toBeGreaterThan(3);
     // Et les deux défauts qui ont fait élargir ce test sont dans le champ.
     const cles = new Set([...lectures, ...actions].map((l) => l.cle));
     expect(cles).toContain("etablissements/queries.ts:getEtablissement");

@@ -207,7 +207,10 @@ un critère de recette.
   mémoire d'une instance. L'IP réelle est lue derrière le proxy Clever Cloud
   (`X-Forwarded-For` de confiance). Mettre aussi un plafond total de renvois
   d'OTP par jeton : aujourd'hui, seul le délai de 60 secondes s'applique.
-- **B4 — Mots de passe et sessions.** Au moins 12 caractères, vérifiés côté
+- **B4 — Mots de passe et sessions.** *[2026-10-14, `lot/nextjs-securite-1014` :
+  12 caractères vérifiés côté serveur de l'app à l'inscription et à la
+  réinitialisation (devenue une action serveur). Restent pour la bascule : le
+  réglage côté fournisseur, la révocation des autres sessions, la 2FA.]* Au moins 12 caractères, vérifiés côté
   serveur, y compris à la réinitialisation (aujourd'hui, seul l'attribut HTML
   `minLength=8` s'applique à ce moment-là). Les autres sessions sont révoquées
   après une réinitialisation. Proposer le plugin 2FA.

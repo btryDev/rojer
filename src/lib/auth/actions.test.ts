@@ -13,18 +13,40 @@ const h = vi.hoisted(() => ({
     resetPasswordForEmail: vi.fn<
       (email: string, options: unknown) => Promise<unknown>
     >(async () => ({ error: null })),
+    updateUser: vi.fn<(attrs: unknown) => Promise<unknown>>(async () => ({ error: null })),
+    signOut: vi.fn(async () => ({ error: null })),
   },
+  entetes: new Headers({ "x-forwarded-for": "203.0.113.7" }),
+  cookiesEffaces: [] as string[],
+  limite: vi.fn<
+    (demandes: { cle: string }[]) => Promise<
+      { ok: true } | { ok: false; reessayerDansSecondes: number }
+    >
+  >(async () => ({ ok: true })),
 }));
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/navigation", () => ({ redirect: h.redirect }));
+vi.mock("next/headers", () => ({
+  headers: async () => h.entetes,
+  cookies: async () => ({ delete: (nom: string) => h.cookiesEffaces.push(nom) }),
+}));
 vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({ auth: h.auth }),
 }));
+vi.mock("@/lib/auth/scope", () => ({ COOKIE_ETABLISSEMENT_ACTIF: "etablissement-actif" }));
+vi.mock("@/lib/securite/limite-debit", async (original) => ({
+  ...(await original<typeof import("@/lib/securite/limite-debit")>()),
+  consommer: h.limite,
+}));
 
-const { requestPasswordResetAction, signInAction, signUpAction } = await import(
-  "./actions",
-);
+const {
+  definirMotDePasseAction,
+  requestPasswordResetAction,
+  signInAction,
+  signOutAction,
+  signUpAction,
+} = await import("./actions");
 
 function formulaire(champs: Record<string, string>): FormData {
   const f = new FormData();
@@ -40,7 +62,12 @@ async function cibleDeRedirection(p: Promise<unknown>): Promise<string> {
 beforeEach(() => {
   h.redirect.mockClear();
   h.auth.signUp.mockClear();
+  h.auth.signInWithPassword.mockClear();
   h.auth.resetPasswordForEmail.mockClear();
+  h.auth.updateUser.mockClear();
+  h.limite.mockClear();
+  h.limite.mockResolvedValue({ ok: true });
+  h.cookiesEffaces = [];
   vi.unstubAllEnvs();
 });
 
@@ -86,7 +113,7 @@ describe("liens envoyés par mail : l'origine vient du serveur (C3)", () => {
     await expect(
       signUpAction(
         {},
-        formulaire({ email: "a@exemple.fr", password: "motdepasse", ...forge }),
+        formulaire({ email: "a@exemple.fr", password: "motdepasse-solide", ...forge }),
       ),
     ).rejects.toThrow("NEXT_REDIRECT");
     expect(h.auth.signUp.mock.calls[0][0]).toMatchObject({
@@ -107,7 +134,7 @@ describe("liens envoyés par mail : l'origine vient du serveur (C3)", () => {
     vi.stubEnv("PUBLIC_APP_URL", "");
     const inscription = await signUpAction(
       {},
-      formulaire({ email: "a@exemple.fr", password: "motdepasse", ...forge }),
+      formulaire({ email: "a@exemple.fr", password: "motdepasse-solide", ...forge }),
     );
     const oubli = await requestPasswordResetAction(
       {},
@@ -117,5 +144,110 @@ describe("liens envoyés par mail : l'origine vient du serveur (C3)", () => {
     expect(oubli.error).toBeTruthy();
     expect(h.auth.signUp).not.toHaveBeenCalled();
     expect(h.auth.resetPasswordForEmail).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Douze caractères au moins, vérifiés côté serveur à l'inscription et à la
+ * réinitialisation (audit OWASP B4, 2026-10-14) ; aucune règle à la connexion.
+ */
+describe("mot de passe : douze caractères (B4)", () => {
+  it("l'inscription refuse onze caractères, avec un message clair, sans appeler le fournisseur", async () => {
+    vi.stubEnv("PUBLIC_APP_URL", "https://app.rojer.fr");
+    const r = await signUpAction({}, formulaire({ email: "a@exemple.fr", password: "onze-caract" }));
+    expect(r.error).toMatch(/au moins 12 caractères/);
+    expect(h.auth.signUp).not.toHaveBeenCalled();
+  });
+
+  it("l'inscription accepte douze caractères", async () => {
+    vi.stubEnv("PUBLIC_APP_URL", "https://app.rojer.fr");
+    await expect(
+      signUpAction({}, formulaire({ email: "a@exemple.fr", password: "douze-caract" })),
+    ).rejects.toThrow("NEXT_REDIRECT");
+    expect(h.auth.signUp).toHaveBeenCalled();
+  });
+
+  it("la connexion n'impose aucune longueur : un compte de l'ancienne règle entre", async () => {
+    await expect(
+      signInAction({}, formulaire({ email: "a@exemple.fr", password: "8carac!!" })),
+    ).rejects.toThrow("NEXT_REDIRECT");
+    expect(h.auth.signInWithPassword).toHaveBeenCalled();
+  });
+
+  it("la réinitialisation refuse onze caractères côté serveur", async () => {
+    const r = await definirMotDePasseAction(
+      {},
+      formulaire({ password: "onze-caract", confirm: "onze-caract" }),
+    );
+    expect(r.error).toMatch(/au moins 12 caractères/);
+    expect(h.auth.updateUser).not.toHaveBeenCalled();
+  });
+
+  it("la réinitialisation refuse deux saisies différentes", async () => {
+    const r = await definirMotDePasseAction(
+      {},
+      formulaire({ password: "douze-caract", confirm: "douze-caracX" }),
+    );
+    expect(r.error).toMatch(/ne correspondent pas/);
+    expect(h.auth.updateUser).not.toHaveBeenCalled();
+  });
+
+  it("la réinitialisation pose un mot de passe conforme puis mène au dossier", async () => {
+    const cible = await cibleDeRedirection(
+      definirMotDePasseAction({}, formulaire({ password: "douze-caract", confirm: "douze-caract" })),
+    );
+    expect(h.auth.updateUser).toHaveBeenCalledWith({ password: "douze-caract" });
+    expect(cible).toBe("/entreprises");
+  });
+});
+
+/**
+ * Limitation de débit (audit OWASP B3 / B14) : la tentative est réservée
+ * AVANT l'appel au fournisseur, par IP et par adresse saisie.
+ */
+describe("limitation de débit des parcours d'entrée", () => {
+  const refus = { ok: false as const, reessayerDansSecondes: 600 };
+
+  it("connexion : refusée avant le fournisseur, message clair", async () => {
+    h.limite.mockResolvedValue(refus);
+    const r = await signInAction({}, formulaire({ email: "a@exemple.fr", password: "x" }));
+    expect(r.error).toMatch(/Trop de tentatives.*10 minutes/);
+    expect(h.auth.signInWithPassword).not.toHaveBeenCalled();
+  });
+
+  it("connexion : une clé par IP et une par adresse, en minuscules, sans rien en clair", async () => {
+    await signInAction({}, formulaire({ email: "A@Exemple.fr", password: "x" })).catch(() => {});
+    await signInAction({}, formulaire({ email: "a@exemple.fr", password: "x" })).catch(() => {});
+    const [premier, second] = h.limite.mock.calls.map((c) => c[0].map((d) => d.cle));
+    expect(premier).toHaveLength(2);
+    expect(premier[0]).toMatch(/^connexion:ip:/);
+    expect(premier[1]).toMatch(/^connexion:compte:/);
+    expect(second).toEqual(premier);
+    expect(premier.join()).not.toMatch(/exemple|203\.0/);
+  });
+
+  it("le même refus, que le compte existe ou non : la clé est l'adresse saisie", async () => {
+    h.limite.mockResolvedValue(refus);
+    const inconnu = await signInAction({}, formulaire({ email: "inconnu@exemple.fr", password: "x" }));
+    const connu = await signInAction({}, formulaire({ email: "a@exemple.fr", password: "x" }));
+    expect(inconnu).toEqual(connu);
+  });
+
+  it("inscription et réinitialisation : refusées avant le fournisseur", async () => {
+    vi.stubEnv("PUBLIC_APP_URL", "https://app.rojer.fr");
+    h.limite.mockResolvedValue(refus);
+    const i = await signUpAction({}, formulaire({ email: "a@exemple.fr", password: "douze-caract" }));
+    const o = await requestPasswordResetAction({}, formulaire({ email: "a@exemple.fr" }));
+    expect(i.error).toMatch(/Trop de tentatives/);
+    expect(o.error).toMatch(/Trop de tentatives/);
+    expect(h.auth.signUp).not.toHaveBeenCalled();
+    expect(h.auth.resetPasswordForEmail).not.toHaveBeenCalled();
+  });
+});
+
+describe("déconnexion (audit Next.js, B3)", () => {
+  it("efface le cookie de l'établissement actif", async () => {
+    await expect(signOutAction()).rejects.toThrow("NEXT_REDIRECT");
+    expect(h.cookiesEffaces).toContain("etablissement-actif");
   });
 });
