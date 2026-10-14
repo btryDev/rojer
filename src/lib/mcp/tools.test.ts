@@ -32,7 +32,7 @@ const { prismaMock } = vi.hoisted(() => ({
   },
 }));
 
-vi.mock("./prisma", () => ({ prismaMcp: prismaMock }));
+vi.mock("./db", () => ({ dbMcp: () => prismaMock }));
 // ADR-039 : aucune obligation livrée ne porte encore de rythme retenu (lot 3).
 // Pour éprouver que la mention voyage jusqu'à l'assistant, une ligne FICTIVE
 // en reçoit une ; toutes les autres reçoivent `null`, ce que la fonction réelle

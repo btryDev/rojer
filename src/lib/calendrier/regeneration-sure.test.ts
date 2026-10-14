@@ -99,6 +99,22 @@ describe("assurerCalendrierAJour — la réparation à l'affichage", () => {
     expect(regenererSansInvalider).not.toHaveBeenCalled();
   });
 
+  it("ne répare rien depuis une préversion hors Vercel (APP_ENV), ni dans le doute", async () => {
+    // Audit Next.js du 2026-10-14, H5 : chez Clever Cloud `VERCEL_ENV`
+    // n'existe pas, et la garde qui ne lisait qu'elle laissait écrire.
+    calendrierDesynchronise.mockResolvedValue(true);
+
+    vi.stubEnv("APP_ENV", "preview");
+    await expect(assurerCalendrierAJour("etab-1")).resolves.toBe(false);
+
+    // Production sans rien qui dise ce qu'elle est : indéterminé, pas d'écriture.
+    vi.stubEnv("APP_ENV", "");
+    vi.stubEnv("NODE_ENV", "production");
+    await expect(assurerCalendrierAJour("etab-1")).resolves.toBe(false);
+
+    expect(regenererSansInvalider).not.toHaveBeenCalled();
+  });
+
   it("un échec de régénération ne fait pas tomber la page : elle s'affiche sur les lignes en base", async () => {
     // Le repère n'est pas posé : l'affichage suivant retentera de lui-même.
     calendrierDesynchronise.mockResolvedValue(true);

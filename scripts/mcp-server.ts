@@ -20,7 +20,10 @@
 //   - **stdout appartient au protocole.** Toute trace part sur stderr. C'est
 //     aussi la raison pour laquelle `@/lib/mcp/prisma` instancie son propre
 //     client plutôt que le singleton de l'application, qui journalise ses
-//     requêtes sur la sortie standard en développement.
+//     requêtes sur la sortie standard en développement. Ce fichier est le
+//     SEUL à l'importer : il le substitue au client des lectures MCP
+//     (`utiliserClientMcp`) avant tout appel d'outil ; la route HTTP, elle,
+//     garde le client commun (audit Next.js du 2026-10-14, M5).
 //   - **Une erreur ne doit pas fuir.** Les exceptions sont renvoyées au
 //     client comme résultat d'outil en erreur, avec un message court : pas
 //     de pile d'appels, pas d'URL de connexion.
@@ -37,6 +40,10 @@ import {
   type ScopeMcp,
 } from "@/lib/mcp/tools";
 import { prismaMcp } from "@/lib/mcp/prisma";
+import { utiliserClientMcp } from "@/lib/mcp/db";
+
+// Avant toute lecture : les outils lisent `dbMcp()` à chaque appel.
+utiliserClientMcp(prismaMcp);
 
 const NOM_SERVEUR = "rojer-demo";
 const VERSION_SERVEUR = "0.1.0";

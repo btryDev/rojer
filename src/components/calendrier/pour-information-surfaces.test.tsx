@@ -33,7 +33,7 @@ vi.mock("@/components/navigation/LienProvenance", () => ({
     <a href={href}>{children}</a>
   ),
 }));
-vi.mock("@/lib/mcp/prisma", () => ({ prismaMcp: {} }));
+vi.mock("@/lib/mcp/db", () => ({ dbMcp: () => ({}) }));
 
 const { BadgeStatut } = await import("@/components/calendrier/BadgeStatut");
 const { WidgetProchainesEcheances } = await import(

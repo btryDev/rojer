@@ -23,9 +23,10 @@ const etat = vi.hoisted(() => ({
   annule: false,
 }));
 
-vi.mock("./prisma", () => ({
-  prismaMcp: { $on: vi.fn(), etablissement: { findUnique: vi.fn() } },
-}));
+vi.mock("./db", () => {
+  const client = { etablissement: { findUnique: vi.fn() } };
+  return { dbMcp: () => client };
+});
 
 vi.mock("@modelcontextprotocol/server", async (importOriginal) => {
   const reel = await importOriginal<typeof import("@modelcontextprotocol/server")>();

@@ -14,8 +14,12 @@ import "server-only";
 // fichier dont la règle est la raison d'être.
 
 import { createClient } from "@supabase/supabase-js";
-import { prismaMcp } from "./prisma";
+import { fetchAvecDelai } from "@/lib/reseau/delai";
+import { dbMcp } from "./db";
 import type { ChercheurEtablissement, VerificateurJeton } from "./acces-oauth";
+
+/** Délai maximal d'un appel de vérification de jeton à Supabase Auth (M9). */
+export const DELAI_VERIFICATION_MS = 10_000;
 
 /**
  * Vérificateur de jetons adossé au projet Supabase.
@@ -43,6 +47,10 @@ export function creerVerificateurSupabase(
       autoRefreshToken: false,
       detectSessionInUrl: false,
     },
+    // Lecture du JWKS (et, en HS256, aller-retour par jeton) : un Supabase
+    // muet ne doit pas tenir la requête MCP ouverte jusqu'à `maxDuration`.
+    // Un abandon rend une erreur, donc un refus (401) — audit Next.js M9.
+    global: { fetch: fetchAvecDelai(DELAI_VERIFICATION_MS) },
   });
 
   return async (jeton) => {
@@ -79,7 +87,8 @@ export function creerVerificateurSupabase(
  */
 export const chercherEtablissementDeUtilisateur: ChercheurEtablissement =
   async (userId) => {
-    const entreprise = await prismaMcp.entreprise.findUnique({
+    const db = dbMcp();
+    const entreprise = await db.entreprise.findUnique({
       where: { userId },
       select: {
         etablissements: {

@@ -22,6 +22,7 @@
 import { genererCalendrier, regenererSansInvalider } from "./actions";
 import { calendrierDesynchronise } from "./queries";
 import { marquerCalendrierPerime } from "./reconciliation";
+import { ecritureAutomatiqueAutorisee } from "@/lib/environnement";
 
 /**
  * Message rendu à l'utilisateur quand le recalage a échoué. Il dit les deux
@@ -84,11 +85,16 @@ export const MESSAGE_REGEN_ECHEC =
  * preview n'atteint plus la base. La garde reste : elle coûte une ligne et
  * couvre le jour où une preview repartirait avec une base, par réglage ou par
  * accident.
+ *
+ * [2026-10-14, audit Next.js H5] La garde lisait `VERCEL_ENV === "preview"`,
+ * qui n'existe pas chez Clever Cloud : une préversion y aurait écrit. Elle lit
+ * désormais `ecritureAutomatiqueAutorisee` (`@/lib/environnement`) : `APP_ENV`
+ * d'abord, `VERCEL_ENV` à défaut, et, dans le doute, PAS d'écriture.
  */
 export async function assurerCalendrierAJour(
   etablissementId: string,
 ): Promise<boolean> {
-  if (process.env.VERCEL_ENV === "preview") return false;
+  if (!ecritureAutomatiqueAutorisee()) return false;
   if (!(await calendrierDesynchronise(etablissementId))) return false;
   try {
     await regenererSansInvalider(etablissementId);
