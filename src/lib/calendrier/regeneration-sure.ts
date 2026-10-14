@@ -49,6 +49,12 @@ export const MESSAGE_REGEN_ECHEC =
  * le layout n'est pas relancé d'une page à l'autre. Pas non plus dans chaque
  * page ni dans les fonctions de lecture : une page lance ses lectures en
  * parallèle, et chacune déclencherait sa régénération (revue du 2026-09-14).
+ * [2026-10-13 : le layout a été réexaminé pour les pages ouvertes par lien
+ * direct, et écarté pour la même raison, relue dans la documentation de
+ * Next 16.3.5 — « layouts and pages are rendered in parallel », et un layout
+ * n'empêche pas la page de s'exécuter. Ces pages DISENT l'âge
+ * (`fraicheur.ts`) ; `fraicheur-sorties.test.ts` tient la réparation hors des
+ * layouts, une fois par rendu, avant les lectures.]
  *
  * SANS INVALIDATION : Next refuse `revalidatePath` pendant un rendu. Les
  * pastilles de la barre latérale, rendues par le layout, peuvent garder

@@ -162,3 +162,49 @@ describe("décision du 2026-10-08 : « désenfumage mécanique », réponse exig
     expect(appareilsMuets(d, ERP("N5"))).toEqual([]);
   });
 });
+
+describe("décision du 2026-10-13 : « groupe électrogène », réponse exigée pour une installation électrique en ERP", () => {
+  // Les deux lignes d'EL 18 § 4 ne naissent que d'un « oui » (référentiel
+  // `2026-10-13.2`) : la réponse est exigée là où elle décide, donc il n'y a
+  // plus de silence. Le lieu est dérivé du moteur : tout ERP, rien ailleurs.
+  const exigee = (regime: RegimeExigence) =>
+    questionsExigeesPour("INSTALLATION_ELECTRIQUE", regime).includes("aGroupeElectrogene");
+
+  it("exigée dans toutes les catégories d'ERP, quelle que soit la réponse au SSI A/B", () => {
+    for (const c of ["N1", "N2", "N3", "N4", "N5"] as const) {
+      expect(exigee(ERP(c)), c).toBe(true);
+      expect(exigee(ERP(c, false)), c).toBe(true);
+    }
+  });
+
+  it("facultative hors ERP", () => {
+    expect(exigee(REGIME_TRAVAIL)).toBe(false);
+  });
+
+  it("la porte du serveur refuse le silence avec le motif d'EL 18 § 4, et laisse passer « non »", () => {
+    const val = (groupe?: string) => {
+      const r = equipementSchema.safeParse({
+        libelle: "TGBT",
+        categorie: "INSTALLATION_ELECTRIQUE",
+        ...(groupe === undefined ? {} : { aGroupeElectrogene: groupe }),
+      });
+      if (!r.success) throw new Error("schéma");
+      return r.data;
+    };
+    expect(reponsesExigeesManquantes(val(), ERP("N3"))).toEqual({
+      aGroupeElectrogene: [messageReponseExigee("aGroupeElectrogene")],
+    });
+    expect(messageReponseExigee("aGroupeElectrogene")).toContain("EL 18 § 4");
+    expect(reponsesExigeesManquantes(val("non"), ERP("N3"))).toBeNull();
+    expect(reponsesExigeesManquantes(val(), REGIME_TRAVAIL)).toBeNull();
+  });
+
+  it("une installation muette d'un ERP est relancée ; d'un lieu de travail, non", () => {
+    const el = [{ id: "e", libelle: "TGBT", categorie: "INSTALLATION_ELECTRIQUE", caracteristiques: null }];
+    expect(appareilsMuets(el, ERP("N5")).map((m) => m.champ)).toEqual(["aGroupeElectrogene"]);
+    expect(appareilsMuets(el, REGIME_TRAVAIL)).toEqual([]);
+    expect(
+      appareilsMuets([{ ...el[0], caracteristiques: { aGroupeElectrogene: false } }], ERP("N5")),
+    ).toEqual([]);
+  });
+});
