@@ -187,7 +187,7 @@ export const obligationsSecours: Obligation[] = [
       {
         source: "ARRETE",
         reference:
-          "Arrêté du 29 octobre 2019 relatif aux défibrillateurs automatisés externes et à leurs modalités de signalisation, art. 2 (affiche à chaque entrée, fléchage, étiquette sur le boîtier)",
+          "Arrêté du 29 octobre 2019 relatif aux défibrillateurs automatisés externes et à leurs modalités de signalisation dans les lieux publics et les établissements recevant du public, art. 2 (affiche à chaque entrée, fléchage, étiquette sur le boîtier)",
         article: "Arrêté 2019-10-29 DAE signalisation art. 2",
         url: "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000039364652",
         note: "Les propriétaires d'ERP exploitants d'un DAE sont tenus « 1° d'apposer une affiche de signalisation, visible à chaque entrée de l'établissement, conformément au modèle 1 de l'annexe 1 du présent arrêté ; 2° d'indiquer l'emplacement et le chemin d'accès au défibrillateur automatisé externe à l'aide des affiches de signalisation conformes aux modèles 2, 3 et 4 […] ; 3° d'apposer sur le boîtier ou à proximité immédiate de l'appareil une étiquette conforme au modèle de l'annexe 3 du présent arrêté. […] Les informations y figurant sont mises à jour. » Relu le 2026-10-14 par l'API Légifrance (bac à sable, égalité avec la production non vérifiée), version du 2019-11-14.",
@@ -196,7 +196,7 @@ export const obligationsSecours: Obligation[] = [
       {
         source: "ARRETE",
         reference:
-          "Arrêté du 29 octobre 2019 relatif aux défibrillateurs automatisés externes et à leurs modalités de signalisation, art. 3 (emplacement accessible, utilisation permanente, boîtier extérieur)",
+          "Arrêté du 29 octobre 2019 relatif aux défibrillateurs automatisés externes et à leurs modalités de signalisation dans les lieux publics et les établissements recevant du public, art. 3 (emplacement accessible, utilisation permanente, boîtier extérieur)",
         article: "Arrêté 2019-10-29 DAE signalisation art. 3",
         url: "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000039364654",
         note: "« Le défibrillateur automatisé externe est installé dans un emplacement facilement accessible et permettant son utilisation permanente par toute personne présente dans l'enceinte de l'établissement. Le défibrillateur automatisé externe installé à l'extérieur de l'établissement est muni d'un boitier assurant sa protection contre les intempéries […]. » Relu le 2026-10-14 par l'API Légifrance (bac à sable, égalité avec la production non vérifiée), version du 2019-11-14.",
@@ -275,7 +275,7 @@ export const obligationsSecours: Obligation[] = [
       {
         source: "DECRET",
         reference:
-          "Décret n° 2018-1259 du 27 décembre 2018 relatif à la base de données des défibrillateurs automatisés externes, art. 2 (transmission des informations par les exploitants)",
+          "Décret n° 2018-1259 du 27 décembre 2018 relatif à la base de données nationale des défibrillateurs automatisés externes, art. 2 (transmission des informations par les exploitants)",
         article: "Décret 2018-1259 art. 2",
         url: "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000037973080",
         note: "« Les exploitants des défibrillateurs automatisés externes transmettent les informations relatives aux lieux d'implantation et à l'accessibilité de leurs appareils au gestionnaire de la base de données désigné par le présent décret, à compter des dates mentionnées à l'article 2 du décret du 19 décembre 2018 susvisé. » Relu le 2026-10-14 par l'API Légifrance (bac à sable, égalité avec la production non vérifiée), version du 2018-12-29.",
@@ -293,7 +293,7 @@ export const obligationsSecours: Obligation[] = [
       {
         source: "ARRETE",
         reference:
-          "Arrêté du 29 octobre 2019 relatif au fonctionnement de la base de données des défibrillateurs automatisés externes, art. 3 et annexe 1 (informations obligatoirement transmises par l'exploitant)",
+          "Arrêté du 29 octobre 2019 relatif au fonctionnement de la base de données nationale des défibrillateurs automatisés externes (DAE), art. 3 et annexe 1 (informations obligatoirement transmises par l'exploitant)",
         article: "Arrêté 2019-10-29 DAE base nationale art. 3",
         url: "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000039364770",
         note: "Art. 3 : « l'annexe 1 précise les informations qui devront être obligatoirement transmises par l'exploitant du défibrillateur ». Annexe 1, champ `expt_rais` : « L'exploitant est le propriétaire du DAE, seul responsable de la déclaration sur la base ». Relu le 2026-10-14 par l'API Légifrance (bac à sable, égalité avec la production non vérifiée), version du 2020-01-01.",

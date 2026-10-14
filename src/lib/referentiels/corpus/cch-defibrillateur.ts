@@ -30,8 +30,9 @@
 //  2. Le renvoi de R. 157-4 vise, depuis le décret n° 2026-299 du 17 avril
 //     2026, « R. 5212-16 » du code de la santé publique — l'article des
 //     décisions de l'ANSM sur le contrôle de qualité. Le texte de l'ancien
-//     R. 5212-25 (maintenance par l'exploitant) se retrouve mot pour mot au
-//     R. 5212-14. Que le renvoi soit une erreur est UNE LECTURE, pas ce que dit
+//     R. 5212-25 (maintenance par l'exploitant) se retrouve au R. 5212-14,
+//     qui vise toutefois les « dispositifs mentionnés au I de l'article
+//     L. 5211-1 » et non plus les « dispositifs médicaux ». Que le renvoi soit une erreur est UNE LECTURE, pas ce que dit
 //     le texte : rien n'est corrigé sur cette base.
 //  3. Trois porteurs différents selon le texte : « les propriétaires des
 //     établissements recevant du public » installent (décret n° 2018-1186,
