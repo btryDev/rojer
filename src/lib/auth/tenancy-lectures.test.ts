@@ -188,7 +188,7 @@ const EXEMPTIONS = new Map<string, Exemption>([
 
 /** Taille figée : on retire une exemption, on n'en ajoute pas sans le voir. */
 // ~~15~~ → 16 le 2026-10-14 (intégration) : `mcp/queries.ts:getParcEquipements`,
-// entrée par `lot/mcp-inventaire` sous la même garde que ses six sœurs MCP.
+// entrée par `lot/mcp-inventaire` sous la même garde que ses sept sœurs MCP.
 const PLAFOND_EXEMPTIONS = 16;
 
 const RACINE = join(process.cwd(), "src/lib");

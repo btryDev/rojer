@@ -430,7 +430,13 @@ export async function creerEquipementsDepuisPreRemplissage(
   // le libellé gardent leurs portes nommées, plus bas, qui disent pourquoi ;
   // `preRemplissageSchema` ne tient plus que le doublon de catégorie, après
   // elles. Un refus se retourne, comme les autres.]
-  if (!Array.isArray(entrees) || entrees.length > CATEGORIES_EQUIPEMENT.length) {
+  // Chaque entrée est un objet (revue de l'intégration, 2026-10-14 : `[null]`
+  // levait au lieu d'être refusé).
+  if (
+    !Array.isArray(entrees) ||
+    entrees.length > CATEGORIES_EQUIPEMENT.length ||
+    entrees.some((e) => e === null || typeof e !== "object" || Array.isArray(e))
+  ) {
     return { status: "error", message: "Sélection invalide : aucun équipement ajouté." };
   }
   if (entrees.length === 0) return { status: "success", created: 0 };

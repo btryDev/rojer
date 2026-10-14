@@ -123,6 +123,27 @@ describe("creerEquipementsDepuisPreRemplissage — une entrée par catégorie au
     expect(r.status).toBe("error");
     expect(ecrit("equipement")).toHaveLength(0);
   });
+  it("refuse ce qui n'est pas un tableau d'objets, par un refus retourné et sans rien écrire", async () => {
+    for (const forge of [{}, null, "x", [null], [42], [[]]]) {
+      const r = await creerEquipementsDepuisPreRemplissage("etab1", forge as never);
+      expect(r, JSON.stringify(forge)).toEqual({
+        status: "error",
+        message: "Sélection invalide : aucun équipement ajouté.",
+      });
+    }
+    expect(ecrit("equipement")).toHaveLength(0);
+  });
+  it("refuse plus d'entrées que de catégories, même toutes distinctes", async () => {
+    // Le plafond porte seul ce cas : sans lui, la porte des doublons ne dit
+    // rien et la catégorie inconnue répond par un autre message.
+    const entrees = Array.from({ length: CATEGORIES_EQUIPEMENT.length + 1 }, (_, i) => ({
+      categorie: `CAT_${i}` as CategorieEquipement,
+      libelle: "x",
+    }));
+    const r = await creerEquipementsDepuisPreRemplissage("etab1", entrees);
+    expect(r).toEqual({ status: "error", message: "Sélection invalide : aucun équipement ajouté." });
+    expect(ecrit("equipement")).toHaveLength(0);
+  });
   it("refuse un libellé d'1 Mo", async () => {
     const r = await creerEquipementsDepuisPreRemplissage("etab1", [
       { categorie: nonEpi[0] as CategorieEquipement, libelle: "L".repeat(1_000_000) },
