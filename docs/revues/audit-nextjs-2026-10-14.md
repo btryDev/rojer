@@ -152,6 +152,26 @@ la page un compte d'avant régénération. Seule sa moitié indépendante des li
 - **Effort** : M
 
 ### H3 Exports PDF et ZIP entièrement en mémoire, rendu PDF synchrone sur le processus commun
+- **[En grande partie corrigé le 2026-10-14, `lot/nextjs-exports-1014`]**
+  - **Mesure** (`scripts/mesure-exports.ts`) : les route handlers appelés tels que Next les appelle, session remplacée par une doublure qui compte ses lectures, réponse lue jusqu'au dernier octet, un processus Node par scénario ; « blocage » = plus long écart entre deux tops d'un minuteur de 2 ms (le temps où aucune autre requête n'avance), pic = `maxRSS`. Base `duerp_perf` (dossier de démo : 36 lignes, 28 actions, 1 version de DUERP, aucun fichier) et une copie « lourde » (`duerp_mesure_exports`) : + 60 rapports de 5 Mo et 9 pièces de prestataire de 2 Mo, octets aléatoires, stockage local. React en mode développement (`NODE_ENV=test`) : écart avec la production mesuré < 10 % sur deux PDF.
+  - **Sémaphore** : `src/lib/exports/limite.ts`, partagé par les cinq PDF (via `reponsePdf`, B8) et le ZIP. `EXPORTS_SIMULTANES` (défaut **1**), 8 en file au plus, 20 s d'attente au plus, puis **503 + `Retry-After: 5`**. Le ZIP tient sa place pendant la construction (lectures, quatre rendus, vérification des fichiers) et la rend avant le flux. Défaut 1 et non 2 : mesuré sur quatre ZIP lourds simultanés, à 2 le blocage double (417-474 ms contre 222-234 ms à 1) pour la même durée totale (~8 s) — le calcul est sur un seul fil.
+  - **ZIP en flux** : JSZip le permet (une entrée peut être un flux Node, consommé à son tour : `ZipFileWorker.prepareNextSource`). Les fichiers déposés ne sont plus lus d'avance : leur existence est vérifiée (`exists`, ce que le README compte), leur contenu lu quand l'archive l'atteint, poussé par tranches d'1 Mio (le CRC32 de JSZip coûte ~17 ms pour 5 Mo d'un tenant), avec contre-pression vers le client (`zipEnFlux` : `pull`/`pause`). Une lecture qui échoue après une existence constatée interrompt le téléchargement — l'archive ne ment pas au tiers. Le stockage Supabase rend encore chaque fichier entier (`download` → `Blob`) : un fichier en mémoire à la fois, pas un flux de bout en bout.
+  - **Rendu PDF** : rien de plus que le sémaphore. `renderToStream` ne change rien au blocage : dans `@react-pdf/renderer` 4.5.1 il fait la même mise en page synchrone (`layoutDocument` puis `renderPDF`) et ne rend un flux qu'ensuite ; il n'épargnerait que la concaténation d'un PDF de 9 à 56 Ko. Un `worker_thread` déplacerait le plus long blocage mesuré, **241 ms** (registre lourd), au prix d'un fichier de worker à faire suivre par le bundler, de la sérialisation des données, et du chargement de `@react-pdf` et des polices dans le worker : non justifié à ce niveau, avec un seul rendu à la fois.
+  - **Avant / après** (médiane de 3 à 5 exécutions ; blocage et pic : maximum) :
+
+    | Scénario | Durée avant → après | Blocage max avant → après | Pic RSS avant → après | Sessions avant → après |
+    |---|---|---|---|---|
+    | ZIP, démo (131 Ko) | 572 → 593 ms | 133 → 137 ms | 437 → 439 Mo | 23 → 18 |
+    | ZIP, lourd (318 Mo) | 2 112 → 2 058 ms | 246 → 218 ms | 712 → 383 Mo | 23 → 18 |
+    | 4 ZIP lourds simultanés | 6 675 → 8 885 ms | 467 → 251 ms | 1 777 → 368 Mo | — |
+    | 12 ZIP lourds simultanés | — → 23 306 ms | — → 878 ms | — → 373 Mo | 5 servis, 7 × 503 |
+    | PDF registre, démo / lourd | 212 / 336 → 214 / 335 ms | 157 / 238 → 153 / 241 ms | 321 / 258 → 320 / 257 Mo | 9 → 7 |
+    | PDF dossier, démo / lourd | 172 / 201 → 178 / 193 ms | 122 / 135 → 119 / 126 ms | 263 / 266 → 297 / 267 Mo | 11 → 9 |
+    | PDF plan d'actions | 63 → 64 ms | 41 → 41 ms | 222 → 222 Mo | 4 → 3 |
+    | PDF DUERP v1 / aperçu | 137 / 154 → 137 / 155 ms | 99 / 101 → 97 / 104 ms | 283 / 271 → 283 / 286 Mo | 2 → 2 |
+
+    Le pic d'un processus de mesure à vide est ~200 Mo. Quatre ZIP simultanés prennent plus longtemps au total (ils passent un par un) mais ne bloquent plus la boucle que le temps d'un rendu, et la mémoire ne grossit plus avec le nombre d'exports ni de fichiers. Le 878 ms à douze simultanés est une seule exécution, non expliqué ; une exécution isolée à 4 a aussi donné une fois 38 s de « blocage » et 3 refus, non reproduite sur quatre reprises — à recontrôler sur la machine Clever Cloud.
+  - → bascule : timeout du reverse proxy CC (un client lent tient un flux ouvert, pas une place d'export), RAM de l'instance dimensionnée sur ~400 Mo par export lourd en cours de construction, `EXPORTS_SIMULTANES` à poser dans `src/env.ts` et `.env.example` (lot infra), lecture en flux de bout en bout avec le pilote S3 (Cellar) si les rapports grossissent.
 - **Axe** : 4 / 6. **[Recette bascule]**
 - **Où** :
   - `src/app/api/etablissements/[id]/controle-zip/route.ts:214,273,299,310` (4 `renderToBuffer`) ;
