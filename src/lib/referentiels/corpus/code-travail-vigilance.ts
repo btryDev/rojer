@@ -262,6 +262,18 @@ export const CODE_TRAVAIL_TRAVAIL_DISSIMULE: Corpus = {
  * d'ordre que le référentiel ne porte pas (`L. 8222-1`, `L. 8222-5`), un
  * s'adresse aux personnes morales de droit public, et les quatre autres
  * décrivent la conséquence du manquement ou renvoient au décret.
+ *
+ * [2026-10-14 : vrai jusqu'au 2026-12-26 au plus tard. La loi n° 2026-534 du
+ * 25 juin 2026, art. 95, CRÉE un huitième article, `L. 8222-1-1` (vigilance du
+ * maître de l'ouvrage sur le sous-traitant qu'il accepte), à une date fixée
+ * par décret et au plus tard six mois après la promulgation — Légifrance le
+ * date au 2026-12-26. Lu sur l'API le 2026-10-14 ; il n'entre pas au corpus
+ * avant d'être en vigueur, parce que tout statut qu'on lui donnerait ici
+ * vaudrait décision (`non_couvert` = annoncé, `obligation_manquante` = hors
+ * cadre, § 7 de `docs/couverture-declaree-du-produit.md`), et que la décision
+ * appartient à la propriétaire. Il attend dans `TEXTES_A_VENIR`, dont le test
+ * rougit à la date : ce jour-là, ce chapitre redevient intégral en
+ * l'ajoutant.]
  */
 export const CODE_TRAVAIL_VIGILANCE: Corpus = {
   id: "code-travail-vigilance",
@@ -302,7 +314,7 @@ export const CODE_TRAVAIL_VIGILANCE: Corpus = {
       prescrit:
         "Qui méconnaît L. 8222-1, ou recourt aux services de celui qui exerce un travail dissimulé, est tenu solidairement au paiement des impôts, cotisations, aides publiques et rémunérations dus par celui-ci.",
       historique:
-        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : versionFuture null → 2026-12-26 : la version en vigueur est ABROGE_DIFF et suivie d'une version VIGUEUR_DIFF (LEGIARTI000054335516) issue de la loi n° 2026-534 du 25 juin 2026, art. 95 (V), qui ajoute « ou de l'article L. 8222-1-1 » ; entrée en vigueur « à une date fixée par décret, et au plus tard six mois après la promulgation » (nota).",
+        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : versionFuture null → 2026-12-26 : la version en vigueur est ABROGE_DIFF et suivie d'une version VIGUEUR_DIFF (LEGIARTI000054335516) issue de la loi n° 2026-534 du 25 juin 2026, art. 95 (V), qui ajoute « ou de l'article L. 8222-1-1 » ; entrée en vigueur « à une date fixée par décret, et au plus tard six mois après la promulgation » (nota).\n\n2026-10-14, relu sur l'API Légifrance (décision de la propriétaire du même jour : traiter le texte avant sa date). Version future LEGIARTI000054335516, `VIGUEUR_DIFF` du 2026-12-26 : « Toute personne qui méconnaît les dispositions de l'article L. 8222-1 ou de l'article L. 8222-1-1, ainsi que toute personne condamnée […] » — le reste de l'article est inchangé. Aucune autre version programmée (recherche au 2035-01-01). L. 8222-1-1 (LEGIARTI000054335512), créé par le même article de loi, n'a aucune version antérieure : c'est une obligation nouvelle, pas une modification. Le 2026-12-26 est un plafond (« au plus tard ») ; au 2026-10-14 aucun décret ne l'a avancé. `citationCle` et `versionEnVigueur` restent ceux de la version en vigueur : les passer à la date (`TEXTES_A_VENIR`, loi n° 2026-534). Le statut ne change pas : la solidarité reste la conséquence d'un manquement, pas une diligence.",
       citationCle:
         "Toute personne qui méconnaît les dispositions de l'article L. 8222-1, ainsi que toute personne condamnée pour avoir recouru directement ou par personne interposée aux services de celui qui exerce un travail dissimulé, est tenue solidairement avec celui qui a fait l'objet d'un procès-verbal pour délit de travail dissimulé : 1° Au paiement des impôts, taxes et cotisations obligatoires ainsi que des pénalités et majorations dus par celui-ci au Trésor ou aux organismes de protection sociale ; 2° Le cas échéant, au remboursement des sommes correspondant au montant des aides publiques dont il a bénéficié ; 3° Au paiement des rémunérations, indemnités et charges dues par lui à raison de l'emploi de salariés n'ayant pas fait l'objet de l'une des formalités prévues aux articles L. 1221-10, relatif à la déclaration préalable à l'embauche et L. 3243-2, relatif à la délivrance du bulletin de paie.",
       statut: "sans_objet",

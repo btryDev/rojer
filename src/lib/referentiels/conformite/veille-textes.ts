@@ -44,6 +44,15 @@ export const TEXTES_A_VENIR: readonly TexteAVenir[] = [
   },
   {
     intitule:
+      "Loi n° 2026-534 du 25 juin 2026 relative à la lutte contre les fraudes sociales et fiscales (art. 95)",
+    entreeEnVigueur: "2026-12-26",
+    url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000054309429",
+    portee:
+      "Crée L. 8222-1-1 du Code du travail (LEGIARTI000054335512) : « Le maître de l'ouvrage vérifie périodiquement, jusqu'à la fin de l'exécution du contrat de sous-traitance d'un montant minimal, que le sous-traitant qu'il accepte en application de l'article 3 de la loi n° 75-1334 du 31 décembre 1975 relative à la sous-traitance ou de l'article L. 2193-4 du code de la commande publique s'acquitte des formalités mentionnées aux articles L. 8221-3 et L. 8221-5 du présent code. » Il est réputé l'avoir fait en se faisant remettre les documents dont la liste et les conditions de remise sont fixées par décret, et en s'assurant de leur authenticité ; le particulier est exclu. Modifie L. 8222-2 (LEGIARTI000054335516) : la solidarité financière s'étend à qui méconnaît L. 8222-1-1. DATE : « à une date fixée par décret, et au plus tard six mois après la promulgation » (art. 95 III, nota) — Légifrance date les deux versions au 2026-12-26, qui est donc un PLAFOND : un décret peut avancer la date. Au 2026-10-14, aucun texte du JORF ne cite L. 8222-1-1 hormis la loi (recherche API) : ni la date, ni le montant minimal, ni la liste des documents ne sont fixés. Relu sur l'API le 2026-10-14. CE QUI EST À DÉCIDER par la propriétaire (journal C69) : annoncer, encoder au module Prestataires une fois le décret paru, ou classer hors cadre. CE QU'IL FAUDRA FAIRE à la date, quelle que soit la décision : entrer L. 8222-1-1 au corpus `code-travail-vigilance` (chapitre « intégral ») avec son statut, et passer la `citationCle` de L. 8222-2 sur la version nouvelle.",
+    verifieLe: "2026-10-14",
+  },
+  {
+    intitule:
       "Arrêté du 19 février 2026 modifiant l'arrêté du 25 juin 1980 (règlement de sécurité ERP)",
     entreeEnVigueur: "2027-06-01",
     url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000053525217",
