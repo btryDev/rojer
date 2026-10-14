@@ -325,9 +325,12 @@ type EvalLocauxSommeil =
  * ou B (DF 10 § 3), qui suit la même règle et passe donc par la même
  * fonction plutôt que par une seconde qui la redirait.
  */
-type FaitDeclare = ActiviteDeclaree | "ssiCategorieAouB";
+export type FaitDeclare = ActiviteDeclaree | "ssiCategorieAouB";
 
-const LIBELLE_ACTIVITE: Record<FaitDeclare, string> = {
+// Exporté le 2026-10-13 : la ligne « Régime » de la grille de relecture
+// (`src/lib/pdf/textes-grille-relecture.ts`) nomme le fait avec les mêmes mots
+// que la raison du moteur, plutôt qu'avec une seconde table qui divergerait.
+export const LIBELLE_ACTIVITE: Record<FaitDeclare, string> = {
   manutentionManuelle: "manutention manuelle de charges",
   travailSurEcran: "travail habituel sur écran",
   operationsElectriques: "opérations sur les installations électriques ou dans leur voisinage",

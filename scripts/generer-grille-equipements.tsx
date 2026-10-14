@@ -1,7 +1,9 @@
 #!/usr/bin/env tsx
 //
-// Grille de RELECTURE du référentiel : les 116 obligations, sans exception,
-// rangées par ce qui les déclenche.
+// Grille de RELECTURE du référentiel : ~~les 116 obligations~~ toutes les
+// obligations [2026-10-13 : 176 au référentiel 2026-10-13.1 ; le compte n'est
+// plus écrit ici, l'en-tête du PDF l'imprime, calculé sur
+// `obligationsConformite`], sans exception, rangées par ce qui les déclenche.
 //
 // Trois parties, une par porteur (ADR-022, ADR-023) :
 //   1. par catégorie d'équipement — ce qu'un appareil déclaré fait naître ;
@@ -67,7 +69,6 @@ import {
   type ConditionApplication,
   type Obligation,
 } from "@/lib/referentiels/conformite/types";
-import { CORPUS } from "@/lib/referentiels/corpus";
 import { mentionRythmeRetenu } from "@/lib/referentiels/conformite/mention-rythme";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import { libelleRythme } from "@/lib/referentiels/conformite/renvoi-aux-normes";
@@ -75,8 +76,18 @@ import {
   CATEGORIES_EQUIPEMENT,
   PERIODICITE_EN_JOURS,
   type CategorieEquipement,
-  type TypologieApplication,
 } from "@/lib/referentiels/types-communs";
+import {
+  LEGENDE_REGIME,
+  pourHelvetica as t,
+  LEGENDE_PORTEURS,
+  LEGENDE_SURFACE,
+  LIBELLE_SURFACE,
+  texteOuVisible,
+  texteTypologie,
+} from "@/lib/pdf/textes-grille-relecture";
+import { SURFACES } from "@/lib/surfaces/obligations-sans-surface";
+import { ReferenceDetaillee } from "@/lib/pdf/ReferenceDetaillee";
 import {
   DESCRIPTION_CATEGORIE,
   LABEL_CATEGORIE_EQUIPEMENT,
@@ -106,37 +117,9 @@ const LABEL_SOURCE: Record<string, string> = {
   NORME: "Norme",
 };
 
-/**
- * Helvetica — la police de base d'un PDF, celle qu'aucun lecteur n'a besoin
- * d'embarquer — ne porte ni exposants ni indices. Le référentiel écrit
- * « 1ʳᵉ à 4ᵉ catégorie » et « CO₂ » ; sans cette table, le PDF imprimait
- * « 1³l à 4l catégorie », c'est-à-dire un texte faux. On rend donc la forme
- * plate, qui se lit, plutôt qu'une forme savante qui ne s'imprime pas.
- */
-const SUBSTITUTIONS: [RegExp, string][] = [
-  // Helvetica, dans l'encodage WinAnsi que react-pdf utilise, ne porte ni `≥`
-  // ni `≤` : ils sortaient remplacés par un glyphe faux, sans erreur. Le
-  // document destiné à un relecteur affichait « e 51 personnes présentes ».
-  // Les seuils s'écrivent donc en toutes lettres à la source ; ces deux lignes
-  // sont le filet pour les occurrences qui échapperaient.
-  [/≥\s*/g, "au moins "],
-  [/≤\s*/g, "au plus "],
-  [/ʳᵉ/g, "re"],
-  [/ᵉʳ/g, "er"],
-  [/ᵉ/g, "e"],
-  [/₀/g, "0"],
-  [/₁/g, "1"],
-  [/₂/g, "2"],
-  [/₃/g, "3"],
-  [/₄/g, "4"],
-  // Un guillemet ne se retrouve jamais seul en début ou en fin de ligne.
-  [/« /g, "«\u00a0"],
-  [/ »/g, "\u00a0»"],
-];
-
-function t(s: string): string {
-  return SUBSTITUTIONS.reduce((acc, [re, rep]) => acc.replace(re, rep), s);
-}
+// `t` (la table SUBSTITUTIONS) vit dans `src/lib/pdf/textes-grille-relecture.ts`
+// sous le nom `pourHelvetica` depuis le 2026-10-13 : le bloc de référence du
+// dossier, extrait pour être testé, en a besoin.
 
 /**
  * Le texte fondateur, cité comme on le citerait à l'écrit. La source n'est
@@ -150,28 +133,9 @@ function texteReference(r: { source: string; reference: string }): string {
   return ref.toLowerCase().startsWith(premierMot) ? ref : `${libelle}, ${ref}`;
 }
 
-/** Le régime auquel l'obligation s'applique, en une ligne lisible. */
-function texteTypologie(t: TypologieApplication): string {
-  const bouts: string[] = [];
-  if (t.travail === true) bouts.push("Travail");
-  if (t.erp === true) bouts.push("ERP");
-  else if (t.erp && typeof t.erp === "object") {
-    const p: string[] = [];
-    if (t.erp.categories?.length) p.push(`cat. ${t.erp.categories.join(", ")}`);
-    if (t.erp.types?.length) p.push(`type ${t.erp.types.join(", ")}`);
-    bouts.push(`ERP${p.length ? ` (${p.join(" ; ")})` : ""}`);
-  } else if (t.erp === false) bouts.push("hors ERP");
-  if (t.igh === true) bouts.push("IGH");
-  else if (t.igh && typeof t.igh === "object")
-    bouts.push(`IGH (${t.igh.classes.join(", ")})`);
-  if (t.habitation === true) bouts.push("Habitation");
-  if (t.effectifMin !== undefined) bouts.push(`effectif d'au moins ${t.effectifMin}`);
-  if (t.effectifMax !== undefined) bouts.push(`effectif d'au plus ${t.effectifMax}`);
-  if (t.personnesPresentesMin !== undefined)
-    bouts.push(`au moins ${t.personnesPresentesMin} personnes présentes`);
-  if (t.champR422734) bouts.push("ou matières R. 4227-22");
-  return bouts.length ? bouts.join(" · ") : "Tous régimes";
-}
+// La ligne « Régime » (`texteTypologie`) vit dans
+// `src/lib/pdf/textes-grille-relecture.ts`, où le compilateur tient qu'elle
+// rend chaque critère de `TypologieApplication` (2026-10-13).
 
 /** La condition portée par une propriété de l'équipement, en clair. */
 /**
@@ -224,8 +188,16 @@ function libelleValeurEnum(propriete: string, valeur: string): string {
 }
 
 function conditionsTexte(o: Obligation): string {
-  if (!o.conditions?.length) return "—";
-  return o.conditions.map(texteCondition).join(" ; ");
+  const parts = (o.conditions ?? []).map(texteCondition);
+  // 2026-10-13 : une obligation d'établissement peut naître d'un appareil
+  // déclaré (`siEquipementDeclare`) — la grille le taisait.
+  const si = o.siEquipementDeclare;
+  if (si?.length) {
+    parts.push(
+      `si déclaré au parc : ${si.map((c) => LABEL_CATEGORIE_EQUIPEMENT[c]).join(" ou ")}`,
+    );
+  }
+  return parts.length ? parts.join(" ; ") : "—";
 }
 
 /** Les questions du formulaire qui bornent les obligations de la catégorie. */
@@ -292,20 +264,10 @@ function parDomaine(obligations: Obligation[]): Map<string, Obligation[]> {
  * personne n'a dépouillé n'a rien à montrer, et l'absence est dite plutôt que
  * masquée.
  */
-const RELEVE_PAR_ARTICLE = new Map<
-  string,
-  { prescrit?: string; citationCle?: string; version?: string; statut: string }
->();
-for (const corpus of CORPUS) {
-  for (const a of corpus.articles) {
-    RELEVE_PAR_ARTICLE.set(a.ref, {
-      prescrit: a.prescrit,
-      citationCle: a.citationCle,
-      version: a.versionEnVigueur,
-      statut: a.statut,
-    });
-  }
-}
+// La recherche passe par l'index canonique, `indexArticlesParRef()` : voir
+// `releveDe` (`src/lib/pdf/textes-grille-relecture.ts`). La boucle locale qui
+// tenait lieu d'index ici gardait le dernier corpus, le dépôt le premier
+// dépouillé (2026-10-13).
 
 const OBLIGATIONS_ETABLISSEMENT = obligationsConformite.filter(
   (o) => !estPorteeParEquipement(o) && !estPorteeParSalarie(o),
@@ -324,7 +286,9 @@ const C = {
   audit: "6%",
 } as const;
 
-const cell = { paddingRight: 6 } as const;
+// 2026-10-13, retour de la propriétaire : 6 → 12, plus d'air entre les
+// colonnes qui passent à la ligne.
+const cell = { paddingRight: 12 } as const;
 
 /**
  * `stylesCommuns.page` porte `lineHeight: 1.4`. Dans cette version de
@@ -338,7 +302,7 @@ const stylePage = { ...s.page, lineHeight: undefined } as const;
 
 function EnTeteTableau() {
   return (
-    <View style={s.thead}>
+    <View style={[s.thead, { marginTop: 14 }]}>
       <Text style={[s.th, cell, { width: C.obligation }]}>Obligation</Text>
       <Text style={[s.th, cell, { width: C.periodicite }]}>Échéance</Text>
       <Text style={[s.th, cell, { width: C.realisateur }]}>Par qui</Text>
@@ -380,6 +344,11 @@ function LigneObligation({
           criticité {o.criticite}/5 · {LABEL_DOMAINE[o.domaine]} ·{" "}
           {LIBELLE_NATURE[o.nature]}
         </Text>
+        {/* 2026-10-13 : où le dirigeant la voit, lu dans `surfacesDe` — une
+            ligne courte sous le libellé plutôt qu'une colonne de plus. */}
+        <Text style={[s.small, { marginTop: 1, color: BOARD.bleuEncre }]}>
+          {t(`Visible : ${texteOuVisible(o)}`)}
+        </Text>
       </View>
       <View style={[cell, { width: C.periodicite }]}>
         <Text style={s.td}>{libelleRythme(o)}</Text>
@@ -394,7 +363,7 @@ function LigneObligation({
         {o.realisateurs.map((r) => LABEL_REALISATEUR[r]).join(" ou ")}
       </Text>
       <Text style={[s.td, cell, { width: C.regime }]}>
-        {texteTypologie(o.typologies)}
+        {t(texteTypologie(o.typologies))}
       </Text>
       <Text style={[s.td, cell, { width: C.condition }]}>
         {conditionsTexte(o)}
@@ -528,6 +497,244 @@ function PageRemarques({
   );
 }
 
+/** La référence courte d'une obligation : son article, sinon sa référence. */
+function referenceCourte(o: Obligation): string {
+  const r = o.referencesLegales[0];
+  return r.article ?? r.reference;
+}
+
+/** Primitives de la charte board, transposées au PDF (docs/charte-board.md). */
+const BOARD_PDF = {
+  /** `.board-eyebrow` : mono, capitales, espacé. Courier tient lieu de JetBrains Mono, non embarquée. */
+  eyebrow: {
+    fontFamily: "Courier",
+    fontSize: 8,
+    letterSpacing: 1.6,
+    color: BOARD.ardoiseDouce,
+    textTransform: "uppercase" as const,
+  },
+  /** `.carte-board` : blanc, rayon 30 px (≈ 22 pt), filet très léger. */
+  carte: {
+    backgroundColor: BOARD.carte,
+    borderRadius: 18,
+    borderWidth: 0.6,
+    borderColor: BOARD.ardoiseFilet,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    marginBottom: 10,
+  },
+  /** `.pastille-board` : pilule, champ bleu pâle, encre bleue. */
+  pastille: {
+    backgroundColor: BOARD.cielPale,
+    color: BOARD.bleuEncre,
+    borderRadius: 999,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    fontSize: 8.5,
+    fontFamily: "Helvetica-Bold",
+    marginRight: 5,
+  },
+} as const;
+
+function Pastille({ children, ton }: { children: string; ton?: "ambre" }) {
+  return (
+    <Text
+      style={[
+        BOARD_PDF.pastille,
+        ton === "ambre" ? { backgroundColor: "#fdecc8", color: BOARD.ambreEncre } : {},
+      ]}
+    >
+      {t(children)}
+    </Text>
+  );
+}
+
+function CarteProposition({ o, motif }: { o: Obligation; motif: string }) {
+  return (
+    <View wrap={false} style={BOARD_PDF.carte}>
+      <View style={{ flexDirection: "row", marginBottom: 7 }}>
+        <Pastille>{referenceCourte(o)}</Pastille>
+        <Pastille>{LABEL_DOMAINE[o.domaine]}</Pastille>
+      </View>
+      <Text
+        style={{ fontSize: 12, fontFamily: "Helvetica-Bold", color: BOARD.encre, lineHeight: 1.35 }}
+      >
+        {t(o.libelle)}
+      </Text>
+      <Text style={{ fontSize: 10.5, lineHeight: 1.55, marginTop: 6, color: BOARD.ardoiseEncre }}>
+        {t(motif)}
+      </Text>
+      <Text style={{ fontSize: 9, marginTop: 6, color: BOARD.bleuEncre }}>
+        {t(`Aujourd'hui visible : ${texteOuVisible(o)}`)}
+      </Text>
+    </View>
+  );
+}
+
+function TitrePartie({
+  sousTitre,
+  titre,
+  explication,
+}: {
+  sousTitre: string;
+  titre: string;
+  explication: string;
+}) {
+  return (
+    // `minPresenceAhead` : le titre ne reste pas seul en bas de page, il
+    // part avec sa première carte.
+    <View style={{ marginTop: 20, marginBottom: 10 }} wrap={false} minPresenceAhead={110}>
+      <Text style={BOARD_PDF.eyebrow}>{t(sousTitre)}</Text>
+      <Text style={{ fontSize: 16, fontFamily: "Helvetica-Bold", color: BOARD.encre, marginTop: 4 }}>
+        {t(titre)}
+      </Text>
+      <Text style={{ fontSize: 10, color: BOARD.ardoiseMoyenne, marginTop: 3, lineHeight: 1.45 }}>
+        {t(explication)}
+      </Text>
+    </View>
+  );
+}
+
+/**
+ * La légende des écrans nommés par « Visible : … » (2026-10-13). En page 1
+ * dans tous les cas : dans la page des propositions quand elle existe, sinon
+ * dans le récapitulatif — revue du 2026-10-13, A2 : elle n'était rendue
+ * qu'avec des propositions, et un document sans l'option nommait des écrans
+ * sans jamais les expliquer.
+ */
+function LegendeEcrans() {
+  return (
+    <View style={[BOARD_PDF.carte, { marginTop: 4 }]} wrap={false}>
+      <Text style={BOARD_PDF.eyebrow}>Où le dirigeant voit une obligation</Text>
+      {[
+        ...SURFACES.map((s2) => [LIBELLE_SURFACE[s2], LEGENDE_SURFACE[s2]] as const),
+        ...LEGENDE_PORTEURS,
+      ].map(([nom, explication]) => (
+        <Text key={nom} style={{ fontSize: 9.5, lineHeight: 1.5, marginTop: 4, color: BOARD.ardoiseEncre }}>
+          <Text style={{ fontFamily: "Helvetica-Bold", color: BOARD.bleuEncre }}>{t(nom)}</Text>
+          {t(` — ${explication}`)}
+        </Text>
+      ))}
+    </View>
+  );
+}
+
+/**
+ * « Nos propositions de passage au niveau audit » — en tête du document, quand
+ * `--propositions-audit` est passé (2026-10-13, demande de la propriétaire :
+ * la liste à part, au début, lisible par le préventeur). Le motif, qui n'est
+ * plus imprimé dans la grille depuis le 2026-10-09, l'est ici : c'est
+ * l'argument soumis. Les obligations déjà au niveau audit suivent, pour
+ * rappel.
+ *
+ * 2026-10-13, retour de la propriétaire : la première version était un
+ * tableau dense à trois colonnes, « étouffant pour un humain ». Une carte par
+ * proposition, en portrait, avec de l'air : le titre, la référence courte, le
+ * motif en une phrase. Deux parties — ce que nous proposons, ce que nous
+ * voulons discuter —, puis le rappel de ce qui est déjà décidé.
+ */
+function PagePropositions({
+  propositions,
+  genereLe,
+}: {
+  propositions: Propositions;
+  genereLe: string;
+}) {
+  const motifDe = (o: Obligation) => propositions.get(o.id)!.motif;
+  const aDiscuter = (o: Obligation) => /^À discuter\s*:/.test(motifDe(o));
+  const sansPrefixe = (m: string) => {
+    const r = m.replace(/^À discuter\s*:\s*/, "");
+    return r.charAt(0).toUpperCase() + r.slice(1);
+  };
+  const toutes = obligationsConformite.filter((o) => propositions.has(o.id));
+  const fermes = toutes.filter((o) => !aDiscuter(o));
+  const ouvertes = toutes.filter(aDiscuter);
+  const dejaAudit = obligationsConformite.filter((o) => estNiveauAudit(o));
+  return (
+    <Page
+      size="A4"
+      style={{
+        ...stylePage,
+        backgroundColor: BOARD.canevas,
+        paddingHorizontal: 48,
+        paddingTop: 44,
+        paddingBottom: 56,
+      }}
+    >
+      <Text style={BOARD_PDF.eyebrow}>
+        {t(`Rojer · référentiel ${REFERENTIEL_VERSION} · ${genereLe}`)}
+      </Text>
+      <Text
+        style={{ fontSize: 24, fontFamily: "Helvetica-Bold", color: BOARD.encre, marginTop: 10, lineHeight: 1.2 }}
+      >
+        Passer des obligations au niveau audit
+      </Text>
+      <View style={[BOARD_PDF.carte, { marginTop: 14, backgroundColor: BOARD.cielPale, borderColor: BOARD.cielPale }]}>
+        <Text style={{ fontSize: 10.5, lineHeight: 1.55, color: BOARD.ardoiseEncre }}>
+          {t(
+            "Le niveau audit garde une obligation dans le référentiel, avec sa source, mais ne la suit plus au quotidien : pas d'échéance au calendrier, pas de ligne au tableau de bord. Elle reste nommée sur la page « Ce que Rojer ne couvre pas ». Rien n'est retiré.",
+          )}
+        </Text>
+        <Text style={{ fontSize: 10.5, lineHeight: 1.55, marginTop: 5, color: BOARD.ardoiseEncre, fontFamily: "Helvetica-Bold" }}>
+          {t(
+            ouvertes.length > 0
+              ? `Ce sont des propositions, rien n'est décidé : ${fermes.length} que nous soutenons, ${ouvertes.length} sur lesquelles votre avis tranchera.`
+              : `Ce sont des propositions, rien n'est décidé : ${fermes.length} lignes que nous proposons de passer au niveau audit, à valider ou non.`,
+          )}
+        </Text>
+      </View>
+
+      <LegendeEcrans />
+
+      {dejaAudit.length > 0 && (
+        <View wrap={false}>
+          <TitrePartie
+            sousTitre="Rappel"
+            titre={`Déjà au niveau audit (${dejaAudit.length})`}
+            explication="Décidé le 8 octobre 2026, sur vos remarques."
+          />
+          <View style={BOARD_PDF.carte}>
+            {dejaAudit.map((o, i) => (
+              <View
+                key={o.id}
+                style={{ flexDirection: "row", alignItems: "center", marginTop: i === 0 ? 0 : 7 }}
+              >
+                <Pastille>{referenceCourte(o)}</Pastille>
+                <Text style={{ fontSize: 10.5, color: BOARD.ardoiseEncre, flex: 1 }}>
+                  {t(o.libelle)}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
+      <TitrePartie
+        sousTitre={`${fermes.length} propositions`}
+        titre="Nous proposons"
+        explication="Des documents faits une fois ou des exigences d'installation, que le dirigeant n'a pas à piloter au quotidien."
+      />
+      {fermes.map((o) => (
+        <CarteProposition key={o.id} o={o} motif={motifDe(o)} />
+      ))}
+
+      {ouvertes.length > 0 && (
+        <>
+          <TitrePartie
+            sousTitre={`${ouvertes.length} questions`}
+            titre="À discuter avec vous"
+            explication="Nous hésitons : votre avis tranchera."
+          />
+          {ouvertes.map((o) => (
+            <CarteProposition key={o.id} o={o} motif={sansPrefixe(motifDe(o))} />
+          ))}
+        </>
+      )}
+
+      <PiedDePage />
+    </Page>
+  );
+}
+
 function GrilleDocument({
   genereLe,
   propositions,
@@ -548,6 +755,9 @@ function GrilleDocument({
       title="Rojer — grille de relecture du référentiel"
       author="Rojer"
     >
+      {propositions.size > 0 && (
+        <PagePropositions propositions={propositions} genereLe={genereLe} />
+      )}
       {annexe && <PageRemarques annexe={annexe} genereLe={genereLe} />}
 
       {/* Récapitulatif */}
@@ -579,6 +789,7 @@ function GrilleDocument({
             l&apos;absence d&apos;une obligation n&apos;emporte aucune
             conclusion. Rojer calcule, il n&apos;avise pas.
           </Text>
+          <Text style={{ marginTop: 6 }}>{t(LEGENDE_REGIME)}</Text>
           <Text style={{ marginTop: 6 }}>
             Colonne{" "}
             <Text style={{ fontFamily: "Helvetica-Bold", color: BOARD.ambreEncre }}>
@@ -600,7 +811,10 @@ function GrilleDocument({
           </Text>
         </View>
 
-        <Text style={s.h2}>Récapitulatif par porteur</Text>
+        {propositions.size === 0 && <LegendeEcrans />}
+
+        {/* Le titre part avec son tableau : la légende l'aurait laissé seul en bas de page. */}
+        <Text style={s.h2} minPresenceAhead={80}>Récapitulatif par porteur</Text>
         <View style={s.thead}>
           <Text style={[s.th, cell, { width: "22%" }]}>Porteur</Text>
           <Text style={[s.th, cell, { width: "8%" }]}>Obligations</Text>
@@ -693,7 +907,7 @@ function GrilleDocument({
           <Text style={{ fontSize: 9, color: BOARD.ardoiseMoyenne }}>
             Équipement déclarable
           </Text>
-          <Text style={[s.h1, { fontSize: 16, marginTop: 2, marginBottom: 4 }]}>
+          <Text style={[s.h1, { fontSize: 16, marginTop: 2, marginBottom: 8 }]}>
             {LABEL_CATEGORIE_EQUIPEMENT[categorie]}
           </Text>
           {DESCRIPTION_CATEGORIE[categorie] && (
@@ -735,7 +949,7 @@ function GrilleDocument({
           <Text style={{ fontSize: 9, color: BOARD.ardoiseMoyenne }}>
             Portée par l&apos;établissement · aucun équipement requis
           </Text>
-          <Text style={[s.h1, { fontSize: 16, marginTop: 2, marginBottom: 4 }]}>
+          <Text style={[s.h1, { fontSize: 16, marginTop: 2, marginBottom: 8 }]}>
             {LABEL_DOMAINE[domaine as keyof typeof LABEL_DOMAINE]}
           </Text>
           <Text style={s.small}>
@@ -762,7 +976,7 @@ function GrilleDocument({
           <Text style={{ fontSize: 9, color: BOARD.ardoiseMoyenne }}>
             Portée par un salarié · déclarée par l&apos;employeur
           </Text>
-          <Text style={[s.h1, { fontSize: 16, marginTop: 2, marginBottom: 4 }]}>
+          <Text style={[s.h1, { fontSize: 16, marginTop: 2, marginBottom: 8 }]}>
             {LABEL_DOMAINE[domaine as keyof typeof LABEL_DOMAINE]}
           </Text>
           <Text style={s.small}>
@@ -843,9 +1057,10 @@ function DossierDetaille({ genereLe }: { genereLe: string }) {
           </Text>
           <Text style={{ marginTop: 6 }}>
             {t(
-              "Sous chaque référence, deux mentions reviennent souvent et il faut les lire pour ce qu'elles sont. « Dépouillé, aucun extrait relevé » : quelqu'un a ouvert l'article et l'a classé, sans en recopier le texte — le relecteur doit donc l'ouvrir lui-même, et c'est le cas le plus fréquent du référentiel. « Aucune version constatée » : la date de la version lue n'a pas été notée, donc rien ne dit que l'article n'a pas changé depuis. Ces deux silences sont affichés plutôt que masqués : ils bornent ce que cette relecture peut établir.",
+              "Sous chaque référence, deux mentions reviennent souvent et il faut les lire pour ce qu'elles sont. « Dépouillé, aucun extrait relevé » : quelqu'un a ouvert l'article et l'a classé, sans en recopier le texte — le relecteur doit donc l'ouvrir lui-même, et c'est le cas le plus fréquent du référentiel. « Aucune version constatée » : la date de la version lue n'a pas été notée, donc rien ne dit que l'article n'a pas changé depuis. Ces deux silences sont affichés plutôt que masqués : ils bornent ce que cette relecture peut établir. Sous la référence, une ligne en petit corps dit la provenance de ce qui suit : le sort de l'article au corpus (« retenu » s'il fonde une obligation), la façon dont il a été lu, la date de lecture, et la version lue au corpus quand elle n'est pas celle que la référence dit avoir constatée.",
             )}
           </Text>
+          <Text style={{ marginTop: 6 }}>{t(LEGENDE_REGIME)}</Text>
         </View>
         <PiedDePage document="dossier de relecture détaillé ·" />
       </Page>
@@ -869,8 +1084,7 @@ function DossierDetaille({ genereLe }: { genereLe: string }) {
                 · par {o.realisateurs.map((r) => LABEL_REALISATEUR[r]).join(" ou ")}
               </Text>
               <Text style={[s.small, { marginTop: 1 }]}>
-                Régime : {texteTypologie(o.typologies)} · Condition :{" "}
-                {conditionsTexte(o)}
+                {t(`Régime : ${texteTypologie(o.typologies)} · Condition : ${conditionsTexte(o)}`)}
               </Text>
               {o.rythmeRetenu && (
                 <Text style={[s.small, { marginTop: 1 }]}>
@@ -880,39 +1094,9 @@ function DossierDetaille({ genereLe }: { genereLe: string }) {
               {o.description && (
                 <Text style={[s.td, { marginTop: 4 }]}>{t(o.description)}</Text>
               )}
-              {o.referencesLegales.map((r, i) => {
-                const releve = r.article
-                  ? RELEVE_PAR_ARTICLE.get(r.article)
-                  : undefined;
-                return (
-                  <View key={i} style={{ marginTop: 4 }}>
-                    <Text style={[s.small, { fontFamily: "Helvetica-Bold" }]}>
-                      {t(r.reference)}
-                      {r.versionConstatee
-                        ? ` — version constatée ${r.versionConstatee}`
-                        : " — aucune version constatée"}
-                    </Text>
-                    {releve?.prescrit && (
-                      <Text style={s.small}>{t(releve.prescrit)}</Text>
-                    )}
-                    {releve?.citationCle && (
-                      <Text style={[s.small, { fontFamily: "Helvetica-Oblique" }]}>
-                        « {t(releve.citationCle)} »
-                      </Text>
-                    )}
-                    {!releve && (
-                      <Text style={s.small}>
-                        {t("Absent du corpus — jamais dépouillé.")}
-                      </Text>
-                    )}
-                    {releve && !releve.prescrit && !releve.citationCle && (
-                      <Text style={s.small}>
-                        {t("Dépouillé, aucun extrait relevé — texte à ouvrir.")}
-                      </Text>
-                    )}
-                  </View>
-                );
-              })}
+              {o.referencesLegales.map((r, i) => (
+                <ReferenceDetaillee key={i} r={r} />
+              ))}
               {o.notesInternes && (
                 <Text style={[s.small, { marginTop: 4 }]}>
                   {t(o.notesInternes)}
