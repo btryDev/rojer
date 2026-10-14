@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { moisEnRetardAvant, type AnneeRegle } from "./AnneeCalendrier";
+import { moisEnRetardAvant, type AnneeRegle } from "@/lib/calendrier/regle-annee";
 import { sansDateDeLAnnee, type MoisRegle } from "./RegleAnnuelle";
 
 /**

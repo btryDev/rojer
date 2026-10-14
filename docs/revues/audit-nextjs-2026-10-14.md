@@ -332,7 +332,29 @@ bruit dépasse l'écart. Il n'existe que sur un pool de plus d'une connexion.
 - **Correctif** : timeouts explicites sur le client S3 (Cellar) et l'adaptateur Better Auth. Fixer `connect_timeout` et `pool_timeout` dans `DATABASE_URL`.
 - **Effort** : S. **[Recette bascule]**
 
-### M10 Le calendrier sérialise toutes les années
+### ~~M10 Le calendrier sérialise toutes les années~~
+**[Corrigé le 2026-10-14, `lot/nextjs-perf-1014`.]** La page ne sérialise
+plus que l'année affichée : sa règle, ses cartes, et — sur l'année en cours —
+les mois révolus en retard qu'elle remonte (`moisEnRetardAvant`, passée côté
+serveur dans `lib/calendrier/regle-annee.ts`). L'année se choisit par
+`?annee=`, comme les filtres de la page ; les flèches du cadran naviguent
+(`router.push`, sans défilement), les autres paramètres sont gardés. Sans
+paramètre ou hors des années du dossier, c'est l'année du mois servi d'office,
+la règle d'avant.
+- **Mesuré** sur le dossier de démo (huit années, 2026 → 2033) : charge utile
+  RSC du calendrier **183 643 → 148 386 octets** (−19 %), HTML 277 936 →
+  238 319. Une autre année se sert seule : 47 661 octets pour 2027, 36 386
+  pour 2033. Le gain croît avec l'historique : ce dossier n'a ni rapport ni
+  année révolue.
+- **Vérifié dans Chrome (headless)** : clic sur « Afficher l'année 2027 »,
+  URL `?annee=2027` en 54 ms, cadran et cartes de 2027, retour arrière sur
+  2026, aucune erreur console, et le repli `loading.tsx` (M1) n'a pas été vu
+  pendant la navigation. Sur un serveur plus lent, il pourrait apparaître le
+  temps de la réponse, comme pour les pilules de filtre de la même page.
+- **Ce qui change pour l'utilisateur** : tourner l'année est un aller-retour
+  serveur, et non plus un changement d'état local ; le mois déplié n'est pas
+  conservé d'une année à l'autre (il ne l'était pas non plus avant, la carte
+  ouverte appartenant à l'autre année).
 - **Où** : `calendrier/page.tsx:440-443` (`anneeMin` → `anneeMax` sur toutes les lignes).
 - **Constat** : la charge utile RSC grandit avec l'historique du dossier (taille réelle non mesurée, pas de données).
 - **Correctif** : ne rendre que l'année affichée.

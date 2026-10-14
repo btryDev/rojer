@@ -61,6 +61,7 @@ import {
   estDatable,
   lignesDuCalendrier,
   rangerParMois,
+  moisEnRetardAvant,
   regleDeLAnnee,
   type LigneMois,
 } from "@/lib/calendrier/regle-annee";
@@ -262,10 +263,11 @@ export default async function CalendrierPage({
     famille?: string;
     vue?: string;
     batiment?: string;
+    annee?: string;
   }>;
 }) {
   const { id } = await params;
-  const { domaine, urgent, famille, batiment } = await searchParams;
+  const { domaine, urgent, famille, batiment, annee } = await searchParams;
 
   // Rattrapage à l'affichage, AVANT toute lecture : un calendrier jamais
   // généré, périmé par un échec, ou calculé sur une version antérieure du
@@ -847,6 +849,36 @@ export default async function CalendrierPage({
     moisTries[0]?.[0] ??
     null;
 
+  // ── L'année SERVIE (audit Next.js du 2026-10-14, M10) ─────────────────
+  //
+  // La règle et les cartes de toutes les années partaient au navigateur, qui
+  // les feuilletait sur place : la charge utile grandissait avec l'historique
+  // du dossier. Seule l'année affichée est sérialisée ; tourner la page la
+  // redemande ici, par `?annee=`, comme les filtres. Sans paramètre — ou hors
+  // des années du dossier — c'est l'année du mois servi d'office, la règle que
+  // le composant appliquait à l'arrivée. Les années révolues restent lues
+  // ici, pour remonter leurs mois en retard en tête de l'année en cours.
+  const anneeParDefaut = moisInitial
+    ? Number(moisInitial.slice(0, 4))
+    : anneeCourante;
+  const anneeDemandee = Number(annee);
+  const anneeAffichee =
+    annee !== undefined &&
+    Number.isInteger(anneeDemandee) &&
+    anneeDemandee >= anneeMin &&
+    anneeDemandee <= anneeMax
+      ? anneeDemandee
+      : anneeParDefaut;
+  // `anneesRegle` couvre `anneeMin` → `anneeMax` sans trou.
+  const regleAffichee = anneesRegle[anneeAffichee - anneeMin];
+  const moisAnterieursEnRetard =
+    anneeAffichee === anneeCourante
+      ? moisEnRetardAvant(anneesRegle, anneeCourante)
+      : [];
+  const clesServies = new Set(
+    [...regleAffichee.mois, ...moisAnterieursEnRetard].map((m) => m.cle),
+  );
+
   // Pilules de famille : seules celles qui ont au moins une échéance —
   // une famille vide n'a pas à encombrer la rangée.
   //
@@ -1208,7 +1240,14 @@ export default async function CalendrierPage({
                  Passé d'un bloc, il comptait toutes les années, et la page
                  2027 annonçait « 12 sans date » sans aucune carte pour les
                  porter (relecture système, 2026-09-14). */
-              anneesRegle={anneesRegle}
+              regle={regleAffichee}
+              anneePrecedente={
+                anneeAffichee > anneeMin ? anneeAffichee - 1 : null
+              }
+              anneeSuivante={
+                anneeAffichee < anneeMax ? anneeAffichee + 1 : null
+              }
+              moisAnterieursEnRetard={moisAnterieursEnRetard}
               /* Seulement sur la lecture d'ensemble : sous un filtre, la
                  remarque porterait sur un périmètre qu'elle ne décrit
                  pas. */
@@ -1224,7 +1263,11 @@ export default async function CalendrierPage({
                   horsReferentiel={horsReferentiel}
                 />
               }
-              sections={moisTries.map(([cleMois, liste]) => ({
+              // Les cartes de l'année servie, et des mois révolus qu'elle
+              // remonte : pas une de plus (M10).
+              sections={moisTries
+                .filter(([cleMois]) => clesServies.has(cleMois))
+                .map(([cleMois, liste]) => ({
                 cle: cleMois,
                 titre: libelleMois(cleMois),
                 nb: liste.length,
