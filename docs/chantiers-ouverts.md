@@ -60,10 +60,14 @@ release (lots lancés le même jour) ; **n° 1 (gaz sans cuisine) et n° 5
    tout employeur et sera reformulée pour se répondre étiquette en main
    (pictogrammes, H220/H222/H224, exemples). Question d'interprétation posée au
    préventeur : `docs/questions-preventeur.md`, n° 1.]
-2. **Livret d'entretien de la filtration (`CH 39 § 1`) et stock de rechange de
+2. ~~**Livret d'entretien de la filtration (`CH 39 § 1`) et stock de rechange de
    l'alarme (`MS 69`)** : encoder, annoncer ou hors cadre — obligations d'ERP
-   1-4, dans la cible depuis le 2026-10-12
+   1-4, dans la cible depuis le 2026-10-12~~
    ([§ 3](#3-deux-obligations-que-rien-ne-bloquait--clos-le-2026-09-04), [§ 3 bis](#3-bis-le-registre-de-dette-compté--2026-09-20)).
+   [2026-10-14 : TRANCHÉ par la propriétaire — le livret est encodé
+   (`aeration-erp-filtres-livret-entretien`, VMC/CTA, N1–N4), le stock est
+   HORS CADRE (§ 7 de `docs/couverture-declaree-du-produit.md`) ; branche
+   `lot/erp-categories-1-4-1014`, commits 4eb332c9 et 380faf27.]
 3. **Vigilance prestataires, décision B1** : assumer le module ou le déclarer
    hors référentiel ([§ 4](#4-ce-qui-attend-une-décision-pas-un-développement)).
 4. **Un assureur peut-il resserrer un rythme (`renforce_periodicite`) ou
@@ -257,12 +261,12 @@ de celle de l'éclairage, ~~toujours `obligation_manquante`~~ — **encodée le
 2026-09-20**, voir § 3 bis), le **livret
 d'entretien de l'installation de filtration** (`CH 39 § 1`), et le **stock
 permanent de fournitures de rechange de l'alarme** (`MS 69`).
-[2026-10-13, tri : DÉCISION ATTENDUE — deux obligations de l'exploitant
+~~[2026-10-13, tri : DÉCISION ATTENDUE — deux obligations de l'exploitant
 d'ERP de 1ʳᵉ à 4ᵉ catégorie, dans la cible depuis le 2026-10-12, que rien ne
 sert ni n'annonce : elles sont en `reserve` d'articles `retenu`
 (`corpus/arrete-1980-livre-2.ts`, `CH 39` et `MS 69`), hors des quinze
 manquantes classées le 2026-10-13. À classer selon la même grille
-(encoder / annoncer / hors cadre). Voir aussi « Deux libres du plan », § 3 bis.]
+(encoder / annoncer / hors cadre). Voir aussi « Deux libres du plan », § 3 bis.]~~ [2026-10-14 : CLOS — décision de la propriétaire : `CH 39 § 1` encodé (`aeration-erp-filtres-livret-entretien`, commit 4eb332c9), le stock de `MS 69` classé HORS CADRE, entrée à part au corpus et § 7 de `docs/couverture-declaree-du-produit.md` (commit 380faf27).]
 
 ---
 
@@ -399,8 +403,8 @@ matin annonçait vingt-huit réserves closes : il avait compté des mots.
 tranche s'il fait un écrit à part ou rejoint ceux de `GC 18` et de `R. 4224-17` ;
 le stock de rechange de `MS 69` « se décide pour lui-même ». Et les deux visent
 les ERP des quatre premières catégories.
-[2026-10-13, tri : DÉCISION ATTENDUE — le même point que la fin du § 3,
-compté une fois.]
+~~[2026-10-13, tri : DÉCISION ATTENDUE — le même point que la fin du § 3,
+compté une fois.]~~ [2026-10-14 : CLOS, voir la fin du § 3.]
 
 ## 4. Ce qui attend une décision, pas un développement
 
