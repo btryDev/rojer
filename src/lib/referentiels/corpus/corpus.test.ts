@@ -731,6 +731,11 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // annuel de GC 21 pour toutes les cuisines professionnelles, sur la foi
       // d'un article qui ne vise que la cuisine TEMPORAIRE.
       "GC 18",
+      // 2026-10-14 : la dernière phrase de MS 69 — le stock permanent de
+      // petites fournitures de rechange de l'alarme —, sortie de la réserve
+      // de MS 69 pour être classée HORS CADRE (décision de la propriétaire :
+      // un stock, pas un acte ; ADR-027). MS 69 reste retenu.
+      "MS 69 — stock permanent de fournitures de rechange",
       // MS 71 § 3 : vérification de la continuité des communications
       // radioélectriques, une fois avant ouverture puis tous les trois ans, par
       // un organisme agréé par le ministère chargé de la sécurité civile. Le

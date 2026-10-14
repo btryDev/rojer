@@ -197,7 +197,7 @@ que rien ne cite n'apparaît donc dans aucun degré ci-dessus — et le prendre
 pour du travail restant est exactement l'erreur qui a failli faire relancer
 une relecture déjà faite.
 
-**448 articles dépouillés ne sont cités par aucune obligation**, répartis sur 51 corpus.
+**449 articles dépouillés ne sont cités par aucune obligation**, répartis sur 51 corpus.
 
 | corpus | articles non cités | sur | lus |
 | --- | --- | --- | --- |
@@ -214,9 +214,9 @@ une relecture déjà faite.
 | `code-travail-epi` | 11 | 16 | 2026-09-04 → 2026-09-27 |
 | `code-travail-formation-securite` | 10 | 27 | 2026-08-31 → 2026-09-27 |
 | `code-travail-sante-travail` | 9 | 26 | 2026-08-31 → 2026-09-27 |
+| `arrete-1980-livre-2` | 8 | 30 | 2026-09-01 → 2026-10-14 |
 | `code-travail-risque-chimique` | 8 | 14 | 2026-08-27 → 2026-09-28 |
 | `code-travail-vigilance-modalites` | 8 | 8 | 2026-09-02 → 2026-09-27 |
-| `arrete-1980-livre-2` | 7 | 29 | 2026-09-01 → 2026-09-28 |
 | `arrete-2004-12-21-echafaudages` | 7 | 7 | 2026-09-01 |
 | `arrete-1986-habitation` | 7 | 12 | 2026-09-01 → 2026-09-27 |
 | `code-travail-vigilance` | 7 | 7 | 2026-09-02 → 2026-09-27 |

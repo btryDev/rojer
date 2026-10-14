@@ -684,7 +684,35 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       statut: "retenu",
       obligations: ["incendie-erp-alarme-verification-hebdomadaire"],
       reserve:
-        "TROIS DES QUATRE OBLIGATIONS DE L'ARTICLE NE SONT PORTÉES PAR RIEN, et elles ne se ressemblent pas.\n\n(1) L'INITIATION DU PERSONNEL AU FONCTIONNEMENT DU SYSTÈME D'ALARME. Première phrase de l'article, sans rythme et sans réalisateur nommé. Elle est voisine de la formation à la sécurité de `L. 4141-1` et de l'exercice semestriel de `R. 4227-39`, que le référentiel porte l'une et l'autre côté Code du travail — mais elle vise l'ALARME nommément, et un ERP peut n'avoir aucun salarié. Non encodée : la rabattre sur l'une des deux serait le rabattage que ce dépôt refuse.\n\n(2) LA REMISE EN ÉTAT « LE PLUS RAPIDEMENT POSSIBLE » n'est ni un rythme ni un état : c'est une obligation de diligence dont le fait déclencheur est la panne. Le produit ne l'observe pas.\n\n(3) LE STOCK PERMANENT DE PETITES FOURNITURES DE RECHANGE — lampes, fusibles, vitres de bris de glace, cartouches de gaz inerte — est un ÉTAT PERMANENT MATÉRIEL, de la même espèce que le matériel de premiers secours de `R. 4224-14` que le référentiel porte. Rien ne le bloque au modèle ; ce lot ne l'encode pas parce que le mandat bornait ce qui devait l'être aux articles qui PORTENT UN RYTHME, et qu'une seconde ligne sur le même article se décide pour elle-même.\n\nUNE TENSION DE DATE, SIGNALÉE PLUTÔT QUE LISSÉE. La page de l'article annonce « Version en vigueur depuis le 15/08/1980 » et, dans le même bandeau, « Modifié par Arrêté du 2 février 1993 - art. Annexe, v. init. ». Les deux ne peuvent pas être vraies ensemble. `versionEnVigueur` porte la date que la page affiche comme telle — c'est elle que la veille compare —, et `modifiePar` porte le texte que la même page nomme. Le § 2.D du journal tient ce piège au n° 7, mais pour une page CONSOLIDÉE ; ici la lecture vient de la page d'ARTICLE, et les deux informations y coexistent telles quelles. Le désaccord est donc dans la source, pas dans la lecture.",
+        "~~TROIS DES QUATRE OBLIGATIONS DE L'ARTICLE NE SONT PORTÉES PAR RIEN, et elles ne se ressemblent pas.~~ [2026-10-14 : DEUX restent ouvertes ici — l'initiation du personnel et la remise en état ; la troisième, le stock, est classée hors cadre à part.]\n\n(1) L'INITIATION DU PERSONNEL AU FONCTIONNEMENT DU SYSTÈME D'ALARME. Première phrase de l'article, sans rythme et sans réalisateur nommé. Elle est voisine de la formation à la sécurité de `L. 4141-1` et de l'exercice semestriel de `R. 4227-39`, que le référentiel porte l'une et l'autre côté Code du travail — mais elle vise l'ALARME nommément, et un ERP peut n'avoir aucun salarié. Non encodée : la rabattre sur l'une des deux serait le rabattage que ce dépôt refuse.\n\n(2) LA REMISE EN ÉTAT « LE PLUS RAPIDEMENT POSSIBLE » n'est ni un rythme ni un état : c'est une obligation de diligence dont le fait déclencheur est la panne. Le produit ne l'observe pas.\n\n~~(3) LE STOCK PERMANENT DE PETITES FOURNITURES DE RECHANGE — lampes, fusibles, vitres de bris de glace, cartouches de gaz inerte — est un ÉTAT PERMANENT MATÉRIEL, de la même espèce que le matériel de premiers secours de `R. 4224-14` que le référentiel porte. Rien ne le bloque au modèle ; ce lot ne l'encode pas parce que le mandat bornait ce qui devait l'être aux articles qui PORTENT UN RYTHME, et qu'une seconde ligne sur le même article se décide pour elle-même.~~ [2026-10-14 : DÉCIDÉ — HORS CADRE, décision de la propriétaire : c'est un stock, pas un acte, et une case cochée ressemblerait à une preuve (ADR-027). Classé à part, entrée « MS 69 — stock permanent de fournitures de rechange » ci-dessous, et au § 7 de `docs/couverture-declaree-du-produit.md`. Les points (1) et (2) restent ouverts.]\n\nUNE TENSION DE DATE, SIGNALÉE PLUTÔT QUE LISSÉE. La page de l'article annonce « Version en vigueur depuis le 15/08/1980 » et, dans le même bandeau, « Modifié par Arrêté du 2 février 1993 - art. Annexe, v. init. ». Les deux ne peuvent pas être vraies ensemble. `versionEnVigueur` porte la date que la page affiche comme telle — c'est elle que la veille compare —, et `modifiePar` porte le texte que la même page nomme. Le § 2.D du journal tient ce piège au n° 7, mais pour une page CONSOLIDÉE ; ici la lecture vient de la page d'ARTICLE, et les deux informations y coexistent telles quelles. Le désaccord est donc dans la source, pas dans la lecture. [2026-10-14 : l'API Légifrance rend la même paire — une seule version, en vigueur depuis le 1980-08-15, et un lien MODIFICATION vers l'arrêté du 2 février 1993 (art. Annexe, v. init.) sans date d'effet utilisable.]",
+    },
+    {
+      // 2026-10-14 — la dernière phrase de MS 69, classée pour elle-même
+      // (comme « PO 1 § 3 — contrôle biennal » au livre III) : l'article reste
+      // `retenu` pour son contrôle hebdomadaire, ce volet est HORS CADRE.
+      ref: "MS 69 — stock permanent de fournitures de rechange",
+      intitule: "Le stock de petites fournitures de rechange de l'équipement d'alarme",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020317748",
+      versionEnVigueur: "1980-08-15",
+      modifiePar: {
+        texte: "Arrêté du 2 février 1993 - art. Annexe, v. init.",
+      },
+      luLe: "2026-10-14",
+      lecture: "api_legifrance",
+      citationCle:
+        "L'exploitant doit disposer en permanence d'un stock de petites fournitures de rechange des modèles utilisés tels que lampes, fusibles, vitres pour déclencheurs manuels à bris de glace, cartouches de gaz inerte comprimé, etc.",
+      prescrit:
+        "Dernière phrase de MS 69 : l'exploitant d'un ERP des quatre premières catégories tient en permanence un stock de petites fournitures de rechange de son équipement d'alarme. Livre II > Titre Ier > Chapitre XI > Section 5 « Système de sécurité incendie (SSI) ».",
+      statut: "obligation_manquante",
+      cause: "a_trancher",
+      // HORS CADRE, décision de la propriétaire du 2026-10-14 ; couverte par
+      // la clause générale des mentions légales (§ 7 de
+      // `docs/couverture-declaree-du-produit.md`).
+      toucheLaCible: true,
+      motif:
+        "UN STOCK, PAS UN ACTE. Une obligation réelle de l'exploitant d'un ERP des catégories 1 à 4 qui détient un équipement d'alarme — dans la cible depuis le 2026-10-12. Rien ne la bloque au modèle : un état permanent d'équipement saurait la porter. La propriétaire l'a classée HORS CADRE le 2026-10-14 : avoir en réserve des lampes, des fusibles, des vitres ou des cartouches est un état de fait que personne ne constate, et une case « stock en place » cochée dans Rojer ressemblerait à une preuve sans en être une — la déclaration-qui-ressemble-à-une-preuve que l'ADR-027 interdit. Même motif que `R. 4224-3` et `R. 4223-4` au § 7. La vérification hebdomadaire de l'alarme, deuxième phrase du même article, reste portée par `incendie-erp-alarme-verification-hebdomadaire`.",
+      bloquePar:
+        "Rien de technique : une décision de produit, prise le 2026-10-14 (hors cadre).",
     },
     {
       ref: "MS 71",

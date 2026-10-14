@@ -119,7 +119,10 @@ describe("registre de dette — les obligations manquantes", () => {
       // ici, avec les trois du 2026-09-27.
       // [4, 0] → [3, 0] le même jour : `R. 4544-11` annoncé (`non_couvert`),
       // décision de la propriétaire (« hors cadre et on l'annonce »).
-      a_trancher: [3, 0],
+      // [3, 0] → [4, 0] le 2026-10-14 : « MS 69 — stock permanent de
+      // fournitures de rechange », HORS CADRE (décision de la propriétaire),
+      // sortie de la réserve de `MS 69` pour être classée.
+      a_trancher: [4, 0],
       // [0, 3] → [0, 0] le 2026-10-12 : les trois hôtels, voir `a_trancher`.
       perimetre: [0, 0],
     });
@@ -142,8 +145,10 @@ describe("registre de dette — les obligations manquantes", () => {
     // 23 → 21 le même jour, après revue : arrêté 1986 art. 78-1 et 102,
     // d'abord classés hors cadre, sont annoncés (décision de la propriétaire).
     // 21 → 20 : `R. 4544-11` annoncé, même décision.
-    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(20);
-    expect(manquantes.length).toBe(20);
+    // 20 → 21 le 2026-10-14 : le stock de rechange de `MS 69`, hors cadre
+    // (§ 7). 20 + 1 − 0 = 21.
+    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(21);
+    expect(manquantes.length).toBe(21);
   });
 });
 
