@@ -413,7 +413,7 @@ sans condition ») s'est réalisée : depuis le 2026-10-12, la cible est ce que
 l'onboarding ne refuse pas, catégories 1 à 4 comprises (ADR-031). Encodage
 validé par la propriétaire le 2026-10-14 : `dae-erp-detention`,
 `dae-erp-maintenance` (défaut annuel, ADR-039) et `dae-erp-declaration-geodae`,
-corpus `cch-defibrillateur`, tous relus par l'API Légifrance le même jour. Ce qui
+corpus `cch-defibrillateur`, tous relus par l'API Légifrance le même jour (bac à sable, égalité avec la production non vérifiée). Ce qui
 suit reste vrai pour la 5ᵉ catégorie, qui n'est pas encodée : l'arrêté du seuil
 du 2° n'est toujours pas publié. Deux points de cette section sont dépassés :
 la déclaration à la base nationale a été lue (décret n° 2018-1259, arrêté du

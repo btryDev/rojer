@@ -12,13 +12,18 @@
 // conséquence. Encodage validé par la propriétaire le 2026-10-14 (« c'est un
 // gros manque »), décisions Q1 à Q4 du même jour.
 //
-// TOUT A ÉTÉ RELU LE 2026-10-14 PAR L'API LÉGIFRANCE (PISTE), versions en
-// vigueur à cette date. Trois pièges relevés à la lecture :
+// TOUT A ÉTÉ RELU LE 2026-10-14 PAR L'API LÉGIFRANCE (PISTE), EN BAC À SABLE
+// — l'`.env.local` pointe la sandbox ; égalité avec la production non
+// vérifiée —, versions en vigueur à cette date. `lecture: "api_legifrance"`
+// vaut pour cette lecture-là, comme pour les articles d'`arrete-1980-livre-2.ts`
+// relus en bac à sable le 2026-10-07. `pnpm legifrance:verifier -- --corpus
+// cch-defibrillateur`, le même jour et dans le même bac à sable : 9 OK sur 9.
+// Trois pièges relevés à la lecture :
 //
 //  1. R. 157-1 a changé le 7 décembre 2025 (décret n° 2025-1167) : le 2° pose
 //     désormais deux conditions cumulatives en 5ᵉ catégorie — implantation de
 //     plus de trois mois, et un nombre minimal de personnes « défini par
-//     arrêté ». Cet arrêté n'est PAS publié au JORF : recherche du 2026-10-14
+//     arrêté ». Cet arrêté n'est PAS publié au JORF : recherche du 2026-10-14 (API, bac à sable)
 //     sur « défibrillateur », « nombre minimal de personnes » et « R. 157-1 »
 //     depuis le 2025-12-06 — l'index de l'API a été vu jusqu'au 2026-09-17 au
 //     moins.
@@ -78,7 +83,7 @@ export const CCH_DEFIBRILLATEUR: Corpus = {
         "dae-erp-declaration-geodae",
       ],
       reserve:
-        "LE 2° (5ᵉ CATÉGORIE) N'EST PAS ENCODÉ — décision de la propriétaire du 2026-10-14 (Q4). Deux raisons, dont une seule tient au texte. (1) L'arrêté qui fixe « un nombre minimal de personnes » n'est pas publié : recherche au JORF du 2026-10-14, aucune occurrence de « nombre minimal de personnes » ni de « défibrillateur » en ce sens depuis le décret n° 2025-1167 (index vu jusqu'au 2026-09-17 au moins). Sans seuil, le champ du 2° ne se lit pas, et le texte ne dit pas ce qui vaut en son absence. (2) La condition « implantés pour une durée supérieure à trois mois » ne correspond à aucun attribut d'établissement. Les familles a à h se rapprochent des types J (a), U (b), X (c), P (d), GA (e), OA (g) et REF (h) ; les aéroports (f) n'ont pas de type ERP dédié. `relectureDue` au 2027-01-14 sur `dae-erp-detention` pour rouvrir la question.",
+        "LE 2° (5ᵉ CATÉGORIE) N'EST PAS ENCODÉ — décision de la propriétaire du 2026-10-14 (Q4). Deux raisons, dont une seule tient au texte. (1) L'arrêté qui fixe « un nombre minimal de personnes » n'est pas publié : recherche au JORF du 2026-10-14 par l'API Légifrance (bac à sable, égalité avec la production non vérifiée), aucune occurrence de « nombre minimal de personnes » ni de « défibrillateur » en ce sens depuis le décret n° 2025-1167 (index vu jusqu'au 2026-09-17 au moins). Sans seuil, le champ du 2° ne se lit pas, et le texte ne dit pas ce qui vaut en son absence. (2) La condition « implantés pour une durée supérieure à trois mois » ne correspond à aucun attribut d'établissement. Les familles a à h se rapprochent des types J (a), U (b), X (c), P (d), GA (e), OA (g) et REF (h) ; les aéroports (f) n'ont pas de type ERP dédié. `relectureDue` au 2027-01-14 sur `dae-erp-detention` pour rouvrir la question.",
     },
     {
       ref: "CCH R. 157-2",
