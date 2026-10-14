@@ -18,11 +18,15 @@ passent de constat à décision — ils se règlent avant les premiers clients.]
 release (lots lancés le même jour) ; **n° 1 (gaz sans cuisine) et n° 5
 (seuils du carnet sanitaire) APRÈS LA RELEASE** — ils restent ouverts ici.]
 
-1. **Gaz sans cuisine** ([§ 3 bis](#3-bis-le-registre-de-dette-compté--2026-09-20))
+1. ~~**Gaz sans cuisine** ([§ 3 bis](#3-bis-le-registre-de-dette-compté--2026-09-20))
    — la vérification annuelle de `GZ 15` n'atteint que l'ERP 1-4 qui déclare
    un appareil de cuisson ; preuve : `categoriesEquipement:
    ["APPAREIL_CUISSON_ERP"]` dans `conformite/cuisson-hotte.ts`. Le remède
-   demande une catégorie, donc une migration.
+   demande une catégorie, donc une migration.~~ [2026-10-14, rayé —
+   `lot/materiels-non-couverts-1014`, commit `57fe1d3c` : catégorie
+   `INSTALLATION_GAZ` (migration `20261014120000`), à laquelle
+   `cuisson-gaz-installations-annuelle` s'accroche en plus de l'appareil de
+   cuisson ; référentiel `2026-10-14.1`. Décision de la propriétaire.]
 2. ~~**Huit pages d'entrée gardent la flèche de retour**
    ([§ 6 bis](#6-bis-ce-que-la-passe-du-2026-09-07-a-rendu--six-constats-un-corrigé))
    — `<ArrowLeft>` + raison sociale dans `actions`, `equipe`, `duerp`,
@@ -93,13 +97,21 @@ release (lots lancés le même jour) ; **n° 1 (gaz sans cuisine) et n° 5
 
 ### À vérifier après la release
 
-1. **Alarme de chambre froide** (2026-10-13). La vérification annuelle des
+1. ~~**Alarme de chambre froide** (2026-10-13). La vérification annuelle des
    alimentations de secours des signalisations (arrêté du 4 novembre 1993,
    art. 15) n'est servie que si une alarme incendie ou des BAES sont déclarés
    (`lot/conditions-equipement`). Si un texte impose un dispositif d'alarme
    dans les chambres froides, voir s'il est couvert par le domaine « Froid ».
    Texte non ouvert : ni manque ni non-manque établi. L'alarme de cabine
-   d'ascenseur, elle, suit l'ascenseur (entretien, contrôle quinquennal CCH).
+   d'ascenseur, elle, suit l'ascenseur (entretien, contrôle quinquennal CCH).~~
+   [2026-10-14, rayé — `lot/materiels-non-couverts-1014` : le texte est
+   l'arrêté du 30 septembre 1957 (annexe, art. 2 : ouverture manuelle de
+   l'intérieur ; art. 3 : avertissement sonore au-delà de 10 m³ à 0 °C ou
+   moins ; art. 4 : voyant lumineux extérieur d'une installation neuve de
+   plus de 10 m³), en vigueur, relu sur Légifrance par la propriétaire. Décision
+   de la propriétaire : aucune obligation créée ; l'aide de la catégorie
+   « Installation frigorifique » le dit, et dit que Rojer ne le suit pas
+   (`DESCRIPTION_CATEGORIE.INSTALLATION_FRIGORIFIQUE`).]
 
 ### Feuille de route
 
@@ -379,7 +391,9 @@ de cuisson ; un commerce chauffé au gaz sans cuisine ne la reçoit pas.]
 `cuisson-gaz-installations-annuelle` exige `categoriesEquipement:
 ["APPAREIL_CUISSON_ERP"]` (`src/lib/referentiels/conformite/cuisson-hotte.ts`),
 aucune catégorie « installation de gaz » au schéma. Le remède suppose une
-migration ; le nommer reste à la propriétaire.]
+migration ; le nommer reste à la propriétaire.] [2026-10-14 : CLOS —
+`INSTALLATION_GAZ`, commit `57fe1d3c` (`lot/materiels-non-couverts-1014`),
+décision de la propriétaire ; voir § 0, défaut n° 1, rayé.]
 
 ~~**Trois dettes sans blocage, et non encodées : les hôtels.** `perimetre` veut
 dire « encodable, hors cible ». `PO 7` est chiffré (deux séances par an) et le

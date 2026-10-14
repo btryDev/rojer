@@ -3,7 +3,7 @@ import {
   obligationParId,
   obligationsConformite,
 } from "@/lib/referentiels/conformite";
-import { AIDE_GROUPE_ELECTROGENE } from "./labels";
+import { AIDE_GROUPE_ELECTROGENE, DESCRIPTION_CATEGORIE } from "./labels";
 import { CHAMPS_TRI_ETAT, VALEURS_TRI_ETAT } from "./schema";
 
 /**
@@ -95,5 +95,24 @@ describe("aide de la question groupe électrogène", () => {
       );
     }
     expect(AIDE_GROUPE_ELECTROGENE).toMatch(/livre II(?!I)/);
+  });
+});
+
+describe("aide de l'installation frigorifique : la chambre froide (2026-10-14)", () => {
+  it("dit les trois dispositifs de l'arrêté du 30 septembre 1957, et que Rojer ne les suit pas", () => {
+    const aide = DESCRIPTION_CATEGORIE.INSTALLATION_FRIGORIFIQUE ?? "";
+    expect(aide).toContain("arrêté du 30 septembre 1957");
+    for (const art of ["art. 2", "art. 3", "art. 4"]) expect(aide).toContain(art);
+    expect(aide).toMatch(/s'ouvrir à la main de l'intérieur/);
+    expect(aide).toMatch(/avertissement sonore/);
+    expect(aide).toMatch(/voyant lumineux/);
+    expect(aide).toContain("Rojer ne suit pas");
+  });
+
+  it("aucune obligation n'est créée sur ce texte (décision de la propriétaire)", () => {
+    const citant = obligationsConformite.filter((o) =>
+      o.referencesLegales.some((r) => r.reference.includes("30 septembre 1957")),
+    );
+    expect(citant).toEqual([]);
   });
 });

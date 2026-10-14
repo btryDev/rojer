@@ -92,8 +92,12 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
     // et un transpalette qui ne lève la charge que pour la déplacer ne la
     // change pas de niveau (art. 2 a) — voir `conformite/levage.ts`.
     "Palan, gerbeur, chariot élévateur, hayon élévateur.",
-  INSTALLATION_FRIGORIFIQUE:
-    "Chambre froide, vitrine ou meuble réfrigéré, groupe froid. Contrôle d'étanchéité du fluide frigorigène.",
+  // 2026-10-14, décision de la propriétaire : la seconde phrase vient de
+  // l'arrêté du 30 septembre 1957 (annexe, art. 2, 3 et 4), en vigueur, relu
+  // sur Légifrance par la propriétaire le 2026-10-14. Aucune obligation n'est
+  // créée : l'aide dit ce que le texte demande et que Rojer ne suit pas
+  // (`docs/chantiers-ouverts.md`, « Alarme de chambre froide », rayé).
+  INSTALLATION_FRIGORIFIQUE: `Chambre froide, vitrine ou meuble réfrigéré, groupe froid. Contrôle d'étanchéité du fluide frigorigène. Pour une chambre froide, l'arrêté du 30 septembre 1957 demande aussi qu'une chambre froide ou climatisée puisse toujours s'ouvrir à la main de l'intérieur (annexe, art. 2), qu'une chambre froide à 0 °C ou moins de plus de 10 m³ ait un dispositif d'avertissement sonore (art. 3), et qu'une installation neuve de plus de 10 m³ ait un voyant lumineux à l'extérieur (art. 4) ; Rojer ne suit pas ${nonPorte("ces dispositifs de sécurité des chambres froides")}.`,
   // L'aide dit ce que la catégorie couvre ET ce qu'elle ne couvre pas. Les
   // trois exclusions ne sont pas décoratives : ce sont les trois confusions
   // que le dépouillement de l'arrêté a relevées — la benne du collecteur, le
