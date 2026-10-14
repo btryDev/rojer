@@ -107,14 +107,34 @@ describe("n'annonce à un dossier que ce qui peut le concerner", () => {
     expect(de("R. 4463-8")).toMatch(/chaleur intense/);
   });
 
-  it("sans travailleur, rien du Code du travail — l'eau et la vigilance restent", () => {
+  // ~~« l'eau et la vigilance restent »~~ — 2026-10-14 : l'eau et l'échelle
+  // (R. 4323-63) ont quitté la page pour la liste des matériels non couverts.
+  it("sans travailleur, rien du Code du travail — la vigilance reste", () => {
     const f = { travail: false, epiPresents: null, categorieErp: null, habitation: false, operationsElectriques: null };
     const refs = refsProjetees(f);
     expect(refs).not.toContain("R. 4227-22");
-    expect(refs).not.toContain("R. 4323-63");
-    expect(refs).toEqual(
-      expect.arrayContaining(["R. 1321-60", "L. 8222-1"]),
-    );
+    expect(refs).not.toContain("R. 4412-11");
+    expect(refs).toEqual(expect.arrayContaining(["L. 8222-1"]));
+  });
+
+  it("2026-10-14 : l'eau, l'échelle et les escaliers mécaniques ne sont plus sur la page", () => {
+    const refs = refsProjetees(EMPLOYEUR);
+    for (const ref of [
+      "R. 4323-63",
+      "R. 1321-60",
+      "Arrêté 10-09-2021 art. 4",
+      "Arrêté 10-09-2021 art. 8",
+      "Arrêté 10-09-2021 art. 9",
+      "Arrêté 10-09-2021 art. 10",
+      "Arrêté 10-09-2021 art. 12",
+      "AS 10",
+    ]) {
+      expect(refs, ref).not.toContain(ref);
+    }
+    const titres = manquesAnnoncesDuDossier(CORPUS, EMPLOYEUR).map((d) => d.titre);
+    for (const t of ["Travail en hauteur", "Réseaux intérieurs d'eau", "Escaliers mécaniques et trottoirs roulants"]) {
+      expect(titres).not.toContain(t);
+    }
   });
 
   it("rubrique « Risque chimique » (décision du 2026-10-08) : R. 4412-11 et R. 4412-17, à l'employeur seul", () => {

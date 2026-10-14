@@ -1,0 +1,21 @@
+-- ============================================================================
+-- Equipement.materielNonCouvert — 2026-10-14
+--
+-- Décision de la propriétaire du 2026-10-14 : la recherche du formulaire
+-- d'équipement propose aussi les matériels que Rojer ne suit pas (échelle,
+-- chaudière, escalier mécanique…, liste fermée dans
+-- `src/lib/equipements/materiels-non-couverts.ts`). Un tel matériel
+-- s'enregistre en catégorie 'AUTRE', et sa clé est gardée ici pour que la
+-- fiche, l'indicateur « sans échéance » et le dossier de conformité disent
+-- ce que Rojer ne suit pas POUR CE MATÉRIEL, au lieu du message générique.
+--
+-- Facultative, sans défaut : `NULL` pour tout équipement existant et pour
+-- tout équipement d'une catégorie suivie. La clé est validée contre la liste
+-- par l'application (`equipementSchema`), qui refuse aussi une clé posée hors
+-- de la catégorie 'AUTRE'. Pas de CHECK en base sur les valeurs : la liste vit
+-- en TypeScript versionné (ADR-003) et une contrainte la recopierait.
+--
+-- Ajout pur : aucune ligne existante n'est touchée.
+-- ============================================================================
+
+ALTER TABLE "Equipement" ADD COLUMN "materielNonCouvert" TEXT;

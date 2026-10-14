@@ -564,6 +564,10 @@ model Equipement {
   datePeremption    DateTime?
   caracteristiques  Json?
   actif             Boolean             @default(true)
+  // 2026-10-14 : la clé d'un matériel que Rojer ne suit pas
+  // (`equipements/materiels-non-couverts.ts`), posée seulement en catégorie
+  // AUTRE et validée contre la liste par `equipementSchema`. `null` sinon.
+  materielNonCouvert String?
 
   verifications              Verification[]
   prescriptionsParticulieres PrescriptionParticuliere[]
