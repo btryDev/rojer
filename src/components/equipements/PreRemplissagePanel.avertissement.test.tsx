@@ -41,6 +41,26 @@ describe("le panneau de pré-remplissage dit l'échec de régénération", () =>
     expect(screen.getByRole("alert").textContent).toBe(AVERTISSEMENT);
   });
 
+  it("toutes les suggestions créées : la page re-rendue sans suggestion garde l'avertissement (revue, point 2)", async () => {
+    // Le cas par défaut : tout est coché, tout est créé, `revalidatePath`
+    // re-rend la page avec une liste vide. Simulé par `rerender` au même
+    // endroit — ce que fait la page, qui rend désormais toujours le panneau.
+    // Éprouvé en rétablissant `if (suggestions.length === 0) return null;`.
+    reponse = { status: "success", created: 2, avertissement: AVERTISSEMENT };
+    const { rerender } = render(<PreRemplissagePanel etablissementId="e1" suggestions={suggestions} />);
+    screen.getByRole("button", { name: /Créer/ }).click();
+    await souffler();
+    rerender(<PreRemplissagePanel etablissementId="e1" suggestions={[]} />);
+    expect(screen.getByRole("alert").textContent).toBe(AVERTISSEMENT);
+    expect(screen.getByText(/2 équipements ajoutés/)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /Créer/ })).toBeNull();
+  });
+
+  it("aucune suggestion et aucun résultat : rien n'est rendu", () => {
+    const { container } = render(<PreRemplissagePanel etablissementId="e1" suggestions={[]} />);
+    expect(container.innerHTML).toBe("");
+  });
+
   it("sans avertissement : rien de plus que le succès", async () => {
     reponse = { status: "success", created: 2 };
     render(<PreRemplissagePanel etablissementId="e1" suggestions={suggestions} />);
