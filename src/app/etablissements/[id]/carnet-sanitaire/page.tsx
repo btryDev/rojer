@@ -9,6 +9,7 @@ import { AjoutPointReleveForm } from "@/components/carnet-sanitaire/AjoutPointRe
 import { AjoutReleveForm } from "@/components/carnet-sanitaire/AjoutReleveForm";
 import { AjoutAnalyseForm } from "@/components/carnet-sanitaire/AjoutAnalyseForm";
 import { GraphTemperatures } from "@/components/carnet-sanitaire/GraphTemperatures";
+import { InvitationTypePoint } from "@/components/carnet-sanitaire/InvitationTypePoint";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { getCarnetSanitaire } from "@/lib/carnet-sanitaire/queries";
 import { listerBatimentsDeLEtablissement } from "@/lib/batiments/queries";
@@ -250,17 +251,7 @@ export default async function CarnetSanitairePage({
                           {" · "}
                           {libelleSeuils(p, (c) => formaterMesure(c, "°C", 0, 1))}
                         </p>
-                        {/* Un point d'avant le type (2026-10-14) : son seul
-                            minimum ne dit rien d'un plafond contre la brûlure.
-                            Le type ne se devine pas — on le demande. */}
-                        {p.typePoint === null && (
-                          <p className="m-0 mt-1.5 max-w-[60ch] text-[12.5px] leading-[1.5] text-[color:var(--board-amber-ink)]">
-                            Type de point non précisé : ce point n&apos;a qu&apos;un
-                            minimum. Précisez où il est (« Modifier le point ») pour
-                            que Rojer propose aussi le maximum contre la brûlure
-                            d&apos;un point de puisage.
-                          </p>
-                        )}
+                        <InvitationTypePoint typePoint={p.typePoint} />
                         {/* Qui a relevé, et quand. Le formulaire demande ce
                             nom depuis toujours ; jusqu'au 2026-08-28 son seul
                             lecteur était l'export ZIP remis à un tiers — d'où

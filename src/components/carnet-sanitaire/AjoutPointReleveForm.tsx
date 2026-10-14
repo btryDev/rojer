@@ -98,6 +98,16 @@ export function AjoutPointReleveForm({
     state.status === "error" ? state.fieldErrors?.[champ]?.[0] : undefined;
   // Un formulaire de correction par point : ses identifiants ne se répètent pas.
   const sfx = point ? `-${point.id}` : "";
+  // L'astérisque suit le `required` : un point d'avant le type peut le rester.
+  const typeRequis = !point || point.typePoint !== null;
+  // L'aide des seuils, partagée par trois champs, est chaînée à chacun AVEC
+  // son erreur (charte, § formulaires) : `ChampBoard` ne chaîne que sa propre
+  // aide, et la prop `aria-describedby` passée remplace la sienne — l'id de
+  // l'erreur est donc celui qu'il pose, `${id}-erreur`.
+  const decritPar = (champ: string) =>
+    [`aide-seuils${sfx}`, err(champ) ? `${champ}${sfx}-erreur` : null]
+      .filter(Boolean)
+      .join(" ");
 
   if (!ouvert) {
     return point ? (
@@ -158,17 +168,17 @@ export function AjoutPointReleveForm({
 
       <div>
         <label className="label-board" htmlFor={`typePoint${sfx}`}>
-          Type de point *
+          Type de point{typeRequis && " *"}
         </label>
         <select
           id={`typePoint${sfx}`}
           name="typePoint"
           value={type}
-          required={!point || point.typePoint !== null}
+          required={typeRequis}
           onChange={(e) => setType(e.target.value as TypePointReleve | "")}
           className="champ-board"
           aria-invalid={Boolean(err("typePoint"))}
-          aria-describedby={`aide-seuils${sfx}`}
+          aria-describedby={decritPar("typePoint")}
         >
           {/* Un point d'avant le type peut le rester ; un point neuf choisit. */}
           {point && point.typePoint === null ? (
@@ -189,7 +199,10 @@ export function AjoutPointReleveForm({
           <input type="hidden" name="typeReseau" value={point.typeReseau} />
         )}
         {err("typePoint") && (
-          <p className="m-0 mt-1.5 text-[12.5px] text-[color:var(--board-signal-ink)]">
+          <p
+            id={`typePoint${sfx}-erreur`}
+            className="m-0 mt-1.5 text-[12.5px] text-[color:var(--board-signal-ink)]"
+          >
             {err("typePoint")}
           </p>
         )}
@@ -204,6 +217,7 @@ export function AjoutPointReleveForm({
           step="0.5"
           defaultValue={proposes.seuilMinCelsius ?? ""}
           erreur={err("seuilMinCelsius")}
+          aria-describedby={decritPar("seuilMinCelsius")}
         />
         <ChampBoard
           id={`seuilMaxCelsius${sfx}`}
@@ -213,6 +227,7 @@ export function AjoutPointReleveForm({
           step="0.5"
           defaultValue={proposes.seuilMaxCelsius ?? ""}
           erreur={err("seuilMaxCelsius")}
+          aria-describedby={decritPar("seuilMaxCelsius")}
         />
       </div>
       <p

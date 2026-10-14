@@ -14,6 +14,56 @@ vi.mock("@/lib/carnet-sanitaire/actions", () => ({
 
 import { AIDE_SEUIL_TEMPERATURE, AjoutPointReleveForm } from "./AjoutPointReleveForm";
 import { LABEL_TYPE_POINT } from "@/lib/carnet-sanitaire/schema";
+import { modifierPointReleve } from "@/lib/carnet-sanitaire/actions";
+
+describe("AjoutPointReleveForm — charte du formulaire (revue du 2026-10-14)", () => {
+  const ancien = {
+    id: "p1",
+    nom: "Retour",
+    localisation: null,
+    batimentId: null,
+    typeReseau: "ECS_BOUCLAGE" as const,
+    typePoint: null,
+    seuilMinCelsius: 55,
+    seuilMaxCelsius: null,
+  };
+  const libelleType = () => document.querySelector('label[for^="typePoint"]')!.textContent!;
+
+  it("l'astérisque suit le caractère requis du type", async () => {
+    render(<AjoutPointReleveForm etablissementId="e1" />);
+    screen.getByRole("button", { name: /Ajouter un point de relevé/ }).click();
+    await souffler();
+    expect(libelleType()).toBe("Type de point *");
+    cleanup();
+
+    render(<AjoutPointReleveForm etablissementId="e1" point={ancien} />);
+    screen.getByRole("button", { name: /Modifier le point/ }).click();
+    await souffler();
+    expect(libelleType()).toBe("Type de point");
+  });
+
+  it("l'aide est reliée aux trois champs, et l'erreur s'y chaîne", async () => {
+    vi.mocked(modifierPointReleve).mockResolvedValueOnce({
+      status: "error",
+      message: "Formulaire invalide",
+      fieldErrors: { seuilMinCelsius: ["Indiquez au moins un seuil"] },
+    });
+    render(<AjoutPointReleveForm etablissementId="e1" point={ancien} />);
+    screen.getByRole("button", { name: /Modifier le point/ }).click();
+    await souffler();
+    const decrit = (nom: string) =>
+      document.querySelector(`[name="${nom}"]`)!.getAttribute("aria-describedby")!.split(" ");
+    for (const nom of ["typePoint", "seuilMinCelsius", "seuilMaxCelsius"]) {
+      expect(decrit(nom), nom).toContain("aide-seuils-p1");
+    }
+
+    screen.getByRole("button", { name: /Enregistrer le point/ }).click();
+    await souffler();
+    expect(decrit("seuilMinCelsius")).toEqual(["aide-seuils-p1", "seuilMinCelsius-p1-erreur"]);
+    expect(document.getElementById("seuilMinCelsius-p1-erreur")).not.toBeNull();
+    expect(decrit("seuilMaxCelsius")).toEqual(["aide-seuils-p1"]);
+  });
+});
 
 afterEach(cleanup);
 const souffler = () => new Promise((r) => setTimeout(r, 20));
