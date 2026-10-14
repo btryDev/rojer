@@ -5675,7 +5675,11 @@ ce lot sert **`2026-10-08.4`**.]
     l'article L. 8222-1-1 »). Nota des deux : « à une date fixée par décret,
     et au plus tard six mois après la promulgation ». Légifrance la date au
     2026-12-26 ; la promulgation étant du 25 juin, la date légale peut
-    tomber le 2026-12-25, un jour avant, et un décret peut l'avancer. **JORF** : seule la loi cite L. 8222-1-1 au 2026-10-14 ; aucun
+    tomber le 2026-12-25, un jour avant, et un décret peut l'avancer. Filet
+    existant : `pnpm legifrance:verifier -- --ref "L. 8222-2"` compare
+    `versionFuture` du corpus à la version `VIGUEUR_DIFF` de l'API
+    (`verification.ts`, l. 572) — un décret qui avancerait la date s'y
+    verrait. **JORF** : seule la loi cite L. 8222-1-1 au 2026-10-14 ; aucun
     décret (date, montant minimal, liste des documents). L. 8271-9 porte
     aussi une version au 2026-12-26 (pouvoirs de contrôle, non lu).
 - **Ce qui change pour la cible** :
