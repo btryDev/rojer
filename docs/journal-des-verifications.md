@@ -4539,10 +4539,13 @@ seuil, destinataire). Les gardes `fait-dans-le-texte`, `extraits-affiches`,
    « ou de l'article L. 8222-1-1 », article CRÉÉ par la même loi : le maître
    de l'ouvrage vérifie périodiquement que le sous-traitant qu'il accepte
    s'acquitte des formalités de L. 8221-3 et L. 8221-5 (documents fixés par
-   décret ; particuliers exclus). Obligation nouvelle, hors corpus.
+   décret ; particuliers exclus). Obligation nouvelle, ~~hors corpus~~.
    [2026-10-14, voir C69 : relu, inscrit à `TEXTES_A_VENIR` (`1746e7ea`) ;
-   reste ouvert — la décision (annoncer, encoder, hors cadre) attend la
-   propriétaire.]
+   ~~reste ouvert — la décision (annoncer, encoder, hors cadre) attend la
+   propriétaire.~~ décidé le même jour par la propriétaire : une phrase de la
+   page Prestataires, et nulle part ailleurs ; L. 8222-1-1 entre au corpus,
+   `non_couvert`. Reste ouvert jusqu'à l'entrée en vigueur : la
+   `citationCle` de L. 8222-2 et la `versionEnVigueur` de L. 8222-1-1.]
 4. C. env. L. 512-7 : 2222-02-22 est la date conventionnelle de Légifrance
    (entrée en vigueur à la publication d'un acte d'exécution européen) ; la
    version future (loi n° 2025-794) ajoute l'élevage : sans effet sur le
@@ -5722,9 +5725,22 @@ ce lot sert **`2026-10-08.4`**.]
     d'évacuation… ») ; le contenu le plus proche de l'ancien R. 4216-2 1°
     est son 2° (« rejoindre rapidement et en sécurité l'extérieur… »). La
     description cite le renvoi sans le paraphraser.
-  - **L. 8222-1-1 — à la propriétaire** (garde : `TEXTES_A_VENIR`, rouge
-    au 2026-12-26, date de Légifrance ; la date légale peut la précéder d'un
-    jour). Options : (a) **l'annoncer** dans la
+  - **L. 8222-1-1 — ~~à la propriétaire~~ décidé par la propriétaire le
+    2026-10-14** : « une phrase discrète dans le module Prestataires, et
+    nulle part ailleurs » — rien sur « Ce que Rojer ne couvre pas », rien
+    dans le plan de prévention, aucune ligne au référentiel, aucune
+    modélisation de la sous-traitance. Appliqué : la phrase, en texte
+    secondaire sous « Votre obligation de vigilance » de la page
+    Prestataires ; L. 8222-1-1 au corpus `code-travail-vigilance`,
+    `non_couvert`, `versionFuture` 2026-12-26, `declareA` vers cette phrase
+    (ranger l'article au corpus était nécessaire : la page le cite, et
+    `citations-ecran.ts` refuse un article cité à l'écran sans corpus) ;
+    § 3 de `docs/couverture-declaree-du-produit.md` 73 + 1 − 0 = 74 ;
+    `vigilance-sous-traitant.test.ts` tient la phrase, l'adresse et
+    l'absence de toute autre surface. Reste à la date (garde :
+    `TEXTES_A_VENIR`, rouge au 2026-12-26, date de Légifrance ; la date
+    légale peut la précéder d'un jour) : `versionEnVigueur` de L. 8222-1-1,
+    `citationCle` de L. 8222-2. ~~Options : (a) **l'annoncer** dans la
     rubrique « Vigilance à l'égard des cocontractants » de « Ce que Rojer
     ne couvre pas », comme L. 8222-1 (C45) — corpus `non_couvert`,
     `ANNONCES`, § 3 de `docs/couverture-declaree-du-produit.md` ; (b)
@@ -5735,7 +5751,7 @@ ce lot sert **`2026-10-08.4`**.]
     la date d'entrée en vigueur ou dès qu'un décret l'avance, et (b) à
     réexaminer quand le décret paraîtra. Pas (c) : le produit sert déjà la
     vigilance, et taire la nouvelle branche laisserait croire le sujet
-    couvert par le module.
+    couvert par le module.~~
 
 ## Partie 2 — Registre des constats en suspens
 
