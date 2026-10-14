@@ -396,7 +396,12 @@ function axeRegime(
     // W 13) et quatre autres dispositions particulières sont portés. Ce qui
     // reste vrai : le service assuré par des agents de sécurité incendie
     // (M 29 § 2 à § 4, MS 46), et le reste des dispositions particulières.
-    consequence: `Rojer est construit pour les ERP de 5ᵉ catégorie. Au-dessus, le règlement de sécurité applique en entier son livre II, dont cet outil ne porte qu'une part : ${nonPorte("le service de sécurité incendie assuré par des agents de sécurité incendie")}, notamment, n'y est pas, et des dispositions particulières à votre type d'activité il ne porte que quelques-unes, pour les magasins, les restaurants, les hôtels et les bureaux. Votre calendrier et votre registre sont donc incomplets, et le resteront.`,
+    // [2026-10-14, revue : ~~« des dispositions particulières à votre type
+    // d'activité il ne porte que quelques-unes »~~ — la phrase est servie à
+    // tout ERP des catégories 1 à 4, et pour un type autre que M, N, O, W
+    // elle promettait des lignes qui n'existent pas. Elle parle désormais des
+    // types en général.]
+    consequence: `Rojer est construit pour les ERP de 5ᵉ catégorie. Au-dessus, le règlement de sécurité applique en entier son livre II, dont cet outil ne porte qu'une part : ${nonPorte("le service de sécurité incendie assuré par des agents de sécurité incendie")}, notamment, n'y est pas, et des dispositions particulières par type d'activité, il ne porte que quelques-unes, celles des magasins, restaurants, hôtels et bureaux. Votre calendrier et votre registre sont donc incomplets, et le resteront.`,
   });
 }
 
