@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { formaterDateFr } from "@/lib/dates";
 import { registreAuDossier } from "@/lib/accessibilite/publication";
 import { fraicheurCalendrier, phraseFraicheur } from "@/lib/calendrier/fraicheur";
+import { AvertissementFraicheur } from "@/components/calendrier/AvertissementFraicheur";
 import { couvertureDuDossier } from "@/lib/perimetre/faits";
 import { faitInventaire } from "@/lib/perimetre/couverture";
 import {
@@ -379,11 +380,11 @@ export default async function ControlePage({
                   pièces et dit l&apos;état de chacune, ce que la liste ci-dessous
                   fait ligne par ligne. Le titre annonce donc le geste, pas un
                   verdict. */}
-              {avertissement && (
-                <p className="mt-4 max-w-prose rounded-md border border-[color:var(--board-slate-line)] bg-[color:var(--board-slate-pale)] px-4 py-3 text-[0.85rem] leading-relaxed text-[color:var(--board-ink)]/85">
-                  {avertissement}
-                </p>
-              )}
+              <AvertissementFraicheur
+                phrase={avertissement}
+                hrefCalendrier={`/etablissements/${id}/calendrier`}
+                className="mt-4"
+              />
               {inventaire && (
                 <div className="mt-4 max-w-prose rounded-md border border-[color:var(--board-slate-line)] bg-[color:var(--board-slate-pale)] px-4 py-3 text-[0.85rem] leading-relaxed text-[color:var(--board-ink)]/85">
                   <p className="font-semibold">{inventaire.motif}</p>

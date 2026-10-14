@@ -628,7 +628,7 @@ function axeEquipements(
  * établissement devrait détenir.
  */
 function axeInventaire(
-  eq: FaitEquipements,
+  eq: FaitParc,
   manques: ManqueCouverture[],
 ): void {
   if (eq.nbEquipements > 0) return;
@@ -659,6 +659,28 @@ function axeInventaire(
     motif: "Aucun équipement n'est déclaré pour cet établissement.",
     consequence: `Aucune vérification attachée à un équipement ne figure donc au calendrier ni au registre. ${listeVide}`,
   });
+}
+
+/** Ce que l'axe `inventaire` lit du parc : la taille en service, et les
+ *  retirés à part. Rien d'autre — le nombre sans obligation est l'affaire de
+ *  `axeEquipements`. */
+export type FaitParc = Pick<FaitEquipements, "nbEquipements" | "nbRetires">;
+
+/**
+ * L'axe `inventaire`, APPELÉ SEUL — sur le modèle de `couvertureDuRegime`.
+ *
+ * Pour le serveur MCP (`mcp/tools.ts`), qui lit sa portée dans un jeton et non
+ * dans une session : `couvertureDuDossier` passe par `requireUser`, il ne peut
+ * pas l'appeler. Il collecte donc le parc lui-même et reçoit ici la même phrase
+ * que les écrans, par la même fonction — jamais une seconde règle « zéro
+ * équipement » (`docs/chantiers-ouverts.md` § 15).
+ */
+export function couvertureDeLInventaire(
+  parc: FaitParc,
+): ManqueCouverture | null {
+  const manques: ManqueCouverture[] = [];
+  axeInventaire(parc, manques);
+  return manques[0] ?? null;
 }
 
 /**

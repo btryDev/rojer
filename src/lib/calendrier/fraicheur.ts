@@ -24,6 +24,11 @@
 // fermé, que l'appelant affiche. La réparation reste là où elle est : aux deux
 // pages d'entrée, qui la font pour tout le monde.
 //
+// [2026-10-13] Trois écrans de plus le lisent : le parc, la fiche d'un
+// appareil et la fiche d'une échéance, qu'un lien direct ouvre avant toute
+// réparation (`docs/chantiers-ouverts.md` § 12). La phrase s'y pose par
+// `AvertissementFraicheur`, le même habit que « Préparer un contrôle ».
+//
 // LE REPÈRE SUFFIT À TROIS CAS SUR QUATRE. `referentielVersionCalendrier`
 // (`prisma/schema.prisma`) vaut le sceau du moteur qui a réconcilié pour la
 // dernière fois. Il est vide à la création, effacé par `marquerCalendrierPerime`
@@ -62,6 +67,7 @@
 // (`docs/chantiers-ouverts.md` § 15, rayé). Ce module, lui, se tait toujours
 // sur `a_jour`, et c'est toujours juste.
 
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { SCEAU_CALENDRIER } from "./version-moteur";
@@ -134,8 +140,14 @@ export async function fraicheurDepuisRepere(
  * la moins affirmative, celle qui ne fait pas passer un vide pour un état sain.
  *
  * Hors session (serveur MCP), voir `getFraicheurCalendrier`.
+ *
+ * [2026-10-13, revue.] Mémoïsée par `cache()` de React, comme `requireUser` :
+ * le layout (pastille de la barre latérale) et la page la lisent dans le même
+ * rendu, et chacun refaisait sa requête pour le même repère. Portée à la
+ * requête, jamais au module ; hors rendu (tests, route hors dispatcher), la
+ * fonction s'exécute sans mémoïsation.
  */
-export async function fraicheurCalendrier(
+export const fraicheurCalendrier = cache(async function fraicheurCalendrier(
   etablissementId: string,
 ): Promise<FraicheurCalendrier> {
   const user = await requireUser();
@@ -150,7 +162,7 @@ export async function fraicheurCalendrier(
     // les dossiers sains — qui sont le cas courant.
     prisma.verification.count({ where: { etablissementId } }),
   );
-}
+});
 
 /**
  * Vrai quand ce que le dossier montre ne peut pas être présenté comme un état
@@ -171,7 +183,11 @@ export function calendrierIncertain(f: FraicheurCalendrier): boolean {
  * Le verbe est au constat, et chaque phrase nomme le geste qui la lève, parce
  * qu'un avertissement sans issue ne fait qu'inquiéter.
  */
-export function phraseFraicheur(f: FraicheurCalendrier): string | null {
+export function phraseFraicheur(
+  f: FraicheurCalendrier,
+  sujet?: SujetFraicheur,
+): string | null {
+  if (sujet) return phraseDEcran(f, sujet);
   switch (f.etat) {
     case "a_jour":
       return null;
@@ -193,6 +209,69 @@ export function phraseFraicheur(f: FraicheurCalendrier): string | null {
         "Le référentiel a évolué depuis le dernier calcul du calendrier : les " +
         "échéances ci-dessous sont celles d'avant cette évolution. Ouvrez le " +
         "tableau de bord ou le calendrier pour les recalculer."
+      );
+  }
+}
+
+/**
+ * Ce qu'un ÉCRAN montre du calendrier, pour que la phrase le nomme.
+ *
+ * « Les échéances ci-dessous » est juste pour une liste d'échéances — un PDF,
+ * le ZIP, « Préparer un contrôle ». Il est faux sur la fiche d'UNE échéance, et
+ * sur le parc, qui ne montre que des compteurs (revue du 2026-10-13). Le sujet
+ * porte son nombre, pour l'accord ; les phrases sont tournées pour qu'aucun
+ * genre n'ait à s'accorder.
+ */
+export type SujetFraicheur = { texte: string; pluriel: boolean };
+
+/** La fiche d'une échéance. */
+export const SUJET_UNE_ECHEANCE: SujetFraicheur = {
+  texte: "Cette échéance",
+  pluriel: false,
+};
+/** La fiche d'un appareil. */
+export const SUJET_ECHEANCES_DE_L_APPAREIL: SujetFraicheur = {
+  texte: "Les échéances de cet appareil",
+  pluriel: true,
+};
+/** Une fiche du registre de sécurité alimentée par le calendrier. */
+export const SUJET_VERIFICATIONS_DE_LA_FICHE: SujetFraicheur = {
+  texte: "Les vérifications reprises sur cette fiche",
+  pluriel: true,
+};
+/** Le parc, qui compte les retards par appareil. */
+export const SUJET_COMPTEURS_DU_PARC: SujetFraicheur = {
+  texte: "Les compteurs de vérification de cet écran",
+  pluriel: true,
+};
+
+function phraseDEcran(
+  f: FraicheurCalendrier,
+  { texte, pluriel }: SujetFraicheur,
+): string | null {
+  const geste =
+    "Ouvrez le tableau de bord ou le calendrier pour le recalculer.";
+  switch (f.etat) {
+    case "a_jour":
+      return null;
+    case "jamais_genere":
+      return (
+        "Le calendrier des vérifications n'a pas encore été calculé pour ce " +
+        "dossier : l'absence d'échéance ici ne veut pas dire qu'il n'y en a " +
+        "pas. " +
+        geste
+      );
+    case "echec_regeneration":
+      return (
+        "Le dernier calcul du calendrier des vérifications n'a pas abouti. " +
+        `${texte} ${pluriel ? "peuvent" : "peut"} ne pas être à jour. ` +
+        geste
+      );
+    case "perime":
+      return (
+        "Le référentiel a évolué depuis le dernier calcul du calendrier. " +
+        `${texte} ${pluriel ? "datent" : "date"} d'avant cette évolution. ` +
+        geste
       );
   }
 }

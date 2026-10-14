@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowUpRight, ChevronRight } from "lucide-react";
 import { AideEcran } from "@/components/ui-kit/AideEcran";
 import { LienProvenance } from "@/components/navigation/LienProvenance";
+import { FilAriane } from "@/components/navigation/FilAriane";
 import { LegalBadge } from "@/components/ui-kit/LegalBadge";
 import { BadgeStatut } from "@/components/calendrier/BadgeStatut";
 import { mentionDelaiDeGrace } from "@/lib/calendrier/grace";
@@ -264,6 +265,27 @@ export default async function CalendrierPage({
 }) {
   const { id } = await params;
   const { domaine, urgent, famille, batiment } = await searchParams;
+
+  // Rattrapage à l'affichage, AVANT toute lecture : un calendrier jamais
+  // généré, périmé par un échec, ou calculé sur une version antérieure du
+  // référentiel (ADR-003 — ses corrections n'atteignaient les calendriers
+  // qu'au hasard d'une mutation). Un seul repère les distingue, et la même
+  // fonction sert le tableau de bord (`assurerCalendrierAJour`).
+  //
+  // La page comptait ici toutes les lignes pour détecter un calendrier vide,
+  // puis réemployait ce compte à l'affichage. Le repère rend le premier inutile
+  // — il est vide tant que le calendrier n'a jamais été généré — et le compte
+  // se fait désormais une fois, avec les autres lectures.
+  //
+  // La réconciliation est idempotente et ne détruit jamais une ligne portant un
+  // rapport, une action ou une date de réalisation (cf. ADR-012) : la relancer
+  // est sans risque, et elle ne réécrit que ce qui a réellement changé.
+  //
+  // [2026-10-13] Avant TOUT autre `await`, `getEtablissement` compris
+  // (`fraicheur-sorties.test.ts`) : la réparation porte sa propre garde de
+  // tenancy (`calendrierDesynchronise` filtre sur le propriétaire), un
+  // identifiant étranger ne régénère rien et tombe au `notFound` qui suit.
+  await assurerCalendrierAJour(id);
   const etab = await getEtablissement(id);
   if (!etab) notFound();
 
@@ -284,22 +306,6 @@ export default async function CalendrierPage({
       ? (domaine as DomaineObligation)
       : undefined;
   const filtreUrgent = urgent === "1";
-
-  // Rattrapage à l'affichage, AVANT toute lecture : un calendrier jamais
-  // généré, périmé par un échec, ou calculé sur une version antérieure du
-  // référentiel (ADR-003 — ses corrections n'atteignaient les calendriers
-  // qu'au hasard d'une mutation). Un seul repère les distingue, et la même
-  // fonction sert le tableau de bord (`assurerCalendrierAJour`).
-  //
-  // La page comptait ici toutes les lignes pour détecter un calendrier vide,
-  // puis réemployait ce compte à l'affichage. Le repère rend le premier inutile
-  // — il est vide tant que le calendrier n'a jamais été généré — et le compte
-  // se fait désormais une fois, avec les autres lectures.
-  //
-  // La réconciliation est idempotente et ne détruit jamais une ligne portant un
-  // rapport, une action ou une date de réalisation (cf. ADR-012) : la relancer
-  // est sans risque, et elle ne réécrit que ce qui a réellement changé.
-  await assurerCalendrierAJour(id);
 
   const [
     verifsBruts,
@@ -867,7 +873,7 @@ export default async function CalendrierPage({
   // niveaux de texte (le titre, un paragraphe gris).
   //
   // Elle en porte quatre, du plus discret au plus haut : le rail de
-  // contexte en mono (d'où l'on vient, depuis quand on compte), le titre
+  // contexte (où la page est rangée, depuis quand on compte), le titre
   // en grand, la phrase. Les commandes, elles, sont parties dans la barre
   // de réglage de l'instrument — voir `commandes` plus bas.
   //
@@ -875,25 +881,22 @@ export default async function CalendrierPage({
   // serré entre le titre et sa phrase, ouvert avant le filet.
   const bandeTitre = (
     <div className="border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] pb-8 pt-[26px]">
-      {/* Le rail de contexte : d'où l'on vient à gauche, depuis quand on
-          compte à droite. Deux registres distincts pour qu'ils ne se
-          lisent pas comme une même taxonomie — le retour est bleu et
+      {/* Le rail de contexte : où la page est rangée à gauche, depuis quand
+          on compte à droite. Deux registres distincts pour qu'ils ne se
+          lisent pas comme une même taxonomie — le fil d'Ariane est
           cliquable, la date est une valeur, étiquette grise puis chiffre
           en encre. */}
       <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-2">
-        {/* Le chevron seul n'avait pas de destination lisible : nommer
-            l'établissement dit où il mène, et la page dit enfin de quel
-            dossier elle est le calendrier. */}
-        <Link
-          href={`/etablissements/${id}`}
-          className="board-eyebrow group -ml-0.5 inline-flex min-w-0 items-center gap-1.5 transition-colors hover:text-[color:var(--board-ink)]"
-        >
-          <ChevronRight
-            aria-hidden
-            className="size-3 flex-none rotate-180 transition-transform group-hover:-translate-x-0.5"
-          />
-          <span className="truncate">{etab.raisonDisplay}</span>
-        </Link>
+        {/* Nommer l'établissement dit de quel dossier la page est le
+            calendrier. Un fil d'Ariane et non un chevron de retour (2026-10-13) :
+            c'est une page d'entrée, elle dit où elle est rangée, pas d'où
+            l'on vient (ADR-014). */}
+        <FilAriane
+          crumbs={[
+            { href: `/etablissements/${id}`, label: etab.raisonDisplay },
+            { label: LABEL_ITEM.calendrier },
+          ]}
+        />
 
         {/* Le zéro de l'instrument. « En retard », « sous 30 jours » et
             « à venir » se mesurent tous depuis ce jour-là (ADR-011) : la
@@ -917,7 +920,7 @@ export default async function CalendrierPage({
       {/* Le titre prend la taille de son rang : c'est la page, pas l'en-tête
           d'une carte. À 27 px il pesait le même poids qu'un titre de mois
           dans la liste juste dessous. */}
-      <h1 className="board-titre m-0 mt-3 text-[clamp(29px,3vw,39px)]">
+      <h1 className="board-titre m-0 mt-1.5 text-[clamp(29px,3vw,39px)]">
         {LABEL_ITEM.calendrier}
       </h1>
       {/* « Calendrier » ne dit pas ce qu'on y trouve : les familles y sont

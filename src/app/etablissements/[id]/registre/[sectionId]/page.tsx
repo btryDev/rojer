@@ -16,7 +16,16 @@ import {
 import { saisiePourSection } from "@/lib/registre/champs";
 import { aplatirRegistre } from "@/lib/registre/composition";
 import { composerRegistreDeLEtablissement } from "@/lib/registre/queries";
-import { lireContenuTenuAilleurs } from "@/lib/registre/contenu-ailleurs";
+import {
+  lireContenuTenuAilleurs,
+  partieLueAuCalendrier,
+} from "@/lib/registre/contenu-ailleurs";
+import {
+  fraicheurCalendrier,
+  phraseFraicheur,
+  SUJET_VERIFICATIONS_DE_LA_FICHE,
+} from "@/lib/calendrier/fraicheur";
+import { AvertissementFraicheur } from "@/components/calendrier/AvertissementFraicheur";
 import { ajouterLigneJournal, enregistrerFiche } from "@/lib/registre/actions";
 import { avecProvenance, lireProvenance } from "@/lib/navigation/provenance";
 
@@ -159,13 +168,25 @@ export default async function FicheDuRegistrePage({
     // qu'elle seule sait — d'où l'on vient, pour que le retour ramène à
     // cette fiche et non au parc.
     if (!courante.completude.alimentee) return undefined;
-    const contenu = await lireContenuTenuAilleurs(
-      id,
-      courante.partie.id,
-      courante.due.section,
-    );
+    // Une fiche des vérifications montre les lignes du calendrier, que cette
+    // page ne répare pas : elle en dit l'âge (revue du 2026-10-13 — l'état
+    // des lieux de 56f3c2b2 l'avait classée à tort parmi les pages qui ne
+    // lisent pas `Verification`). Une fiche d'inventaire n'en a rien à dire.
+    const [contenu, fraicheur] = await Promise.all([
+      lireContenuTenuAilleurs(id, courante.partie.id, courante.due.section),
+      partieLueAuCalendrier(courante.partie.id)
+        ? fraicheurCalendrier(id)
+        : Promise.resolve(null),
+    ]);
     if (!contenu) return undefined;
     return (
+      <>
+      {fraicheur && (
+        <AvertissementFraicheur
+          phrase={phraseFraicheur(fraicheur, SUJET_VERIFICATIONS_DE_LA_FICHE)}
+          hrefCalendrier={`${base}/calendrier`}
+        />
+      )}
       <ContenuTenuAilleurs
         source={contenu.source}
         vide={contenu.vide}
@@ -176,6 +197,7 @@ export default async function FicheDuRegistrePage({
             : undefined,
         }))}
       />
+      </>
     );
   }
 }

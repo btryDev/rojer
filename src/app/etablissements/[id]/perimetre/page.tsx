@@ -41,7 +41,8 @@
 // quatrième source de vérité sur ce que le produit couvre.
 
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { FilAriane } from "@/components/navigation/FilAriane";
+import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
 import { BandeauCouverture } from "@/components/perimetre/BandeauCouverture";
 import { requireEtablissement } from "@/lib/auth/scope";
 import {
@@ -106,18 +107,14 @@ export default async function PerimetrePage({
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
       <div className="border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] pb-8 pt-[26px]">
-        <Link
-          href={base}
-          className="board-eyebrow group -ml-0.5 inline-flex min-w-0 items-center gap-1.5 transition-colors hover:text-[color:var(--board-ink)]"
-        >
-          <ChevronRight
-            aria-hidden
-            className="size-3 flex-none rotate-180 transition-transform group-hover:-translate-x-0.5"
-          />
-          <span className="truncate">{etablissement.raisonDisplay}</span>
-        </Link>
+        <FilAriane
+          crumbs={[
+            { href: base, label: etablissement.raisonDisplay },
+            { label: LABEL_ITEM.perimetre },
+          ]}
+        />
 
-        <div className="mt-3">
+        <div className="mt-1.5">
           <h1 className="board-titre m-0 text-[clamp(29px,3vw,39px)]">
             Ce que Rojer ne couvre pas
           </h1>
