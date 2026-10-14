@@ -428,8 +428,9 @@ prolonge une ligne — modèle : `equipements/[equipementId]/page.tsx`.
 | { status: "success"; id: string }
 ```
 
-`react-hook-form` et `zodResolver` sont dans `package.json` mais **utilisés
-nulle part**. Ne pas les introduire.
+~~`react-hook-form` et `zodResolver` sont dans `package.json` mais **utilisés
+nulle part**.~~ [2026-10-14 : retirés de `package.json` (audit Next.js, B7).]
+Ne pas les introduire.
 
 Champs en `.label-board` / `.champ-board`. **L'erreur de validation est en
 `text-[12.5px]` `--board-signal-ink`**, pas `text-destructive`.

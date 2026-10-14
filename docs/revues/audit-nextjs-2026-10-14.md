@@ -270,7 +270,7 @@ Vérifiés sur `517309db` :
 - **B4** `react`/`react-dom` 19.2.4 déclarés alors que le correctif DoS RSC est en 19.2.8. Sans effet sur l'App Router (React fourni par Next), mais à aligner pour les tests et le futur.
 - **B5** `sharp` (librsvg, via next) : à monter dès que next le propose. Pertinent en self-host si `next/image` sert un jour des SVG.
 - **B6** 27 appels `prisma.` directs dans 10 fichiers de `src/app` (dont `controle/page.tsx` ×8 et `controle-zip/route.ts` ×8). Les 4 routes de fichiers recodent leur garde au lieu de passer par `scope.ts`. Les ramener dans les `queries.ts`.
-- **B7** Code mort (knip, vérifié à la main) :
+- ~~**B7** Code mort (knip, vérifié à la main) :~~ **[Corrigé le 2026-10-14, `lot/nextjs-client-1014`]** Revérifié par grep (chemins `@/`, relatifs et noms exportés) : les cinq fichiers et les sept fichiers de `public/` supprimés (aucune référence dans `src`, les CSS, `next.config.ts`, `vercel.json` ; pas de manifeste d'application ; `pictos.ts` pointait vers un `public/pictos/` qui n'existe pas). `pnpm remove react-hook-form @hookform/resolvers @dnd-kit/modifiers`, lockfile cohérent (`pnpm install --frozen-lockfile` : à jour). CLAUDE.md, `docs/charte-board.md` et un commentaire de `mcp/tools.test.ts` rayés. **Écart** : `public/photos/hero-cuisine.jpg` n'est référencé nulle part non plus, mais `public/photos/README.md` le garde exprès « pour un futur emplacement » : laissé.
   - fichiers : `CreerDuerpButton.tsx`, `onboarding/CarteChoix.tsx`, `ui/card.tsx`, `ui/select.tsx`, `lib/equipements/pictos.ts` ;
   - dépendances : `react-hook-form`, `@hookform/resolvers` (0 import), `@dnd-kit/modifiers` ;
   - `public/` : `vercel.svg`, `next.svg`, `globe.svg`, `window.svg`, `file.svg`, `building.png`, `store.png` (0 référence dans `src`) ;
@@ -291,7 +291,7 @@ Vérifiés sur `517309db` :
 5. ~~**M8** : import direct de `ChampBoard`. −67 Ko gzip sur `/login`. (S)~~ fait le 2026-10-14 (−73 Ko gzip mesurés)
 6. **M4** : `Promise.all` sur le registre et les équipements. (S)
 7. ~~**B1, B2** : sortir `regenererSansInvalider` du module `'use server'` et ajouter un `select` à `listerVersions`. (S)~~ fait le 2026-10-14
-8. **B7** : retirer `react-hook-form`, `@hookform/resolvers` et les fichiers morts. (S)
+8. ~~**B7** : retirer `react-hook-form`, `@hookform/resolvers` et les fichiers morts. (S)~~ fait le 2026-10-14
 
 ## Critères de recette de la bascule Clever Cloud + Better Auth
 

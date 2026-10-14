@@ -711,9 +711,10 @@ describe("provenance de la réponse", () => {
  * ─────────────────────────────────────────────────────────────────────────────
  *
  * LE DÉFAUT (2026-09-04). `LIBELLE_CATEGORIE` est la SEULE table du dépôt
- * indexée par `string` et non par `CategorieEquipement` — les quatre autres
+ * indexée par `string` et non par `CategorieEquipement` — les ~~quatre~~ trois autres
  * (`ICONE_CATEGORIE`, `LABEL_CATEGORIE_EQUIPEMENT`, `DESCRIPTION_CATEGORIE`,
- * `PICTO_CATEGORIE_EQUIPEMENT`) sont typées, et `tsc` refuse d'en compiler une
+ * ~~`PICTO_CATEGORIE_EQUIPEMENT`~~ [2026-10-14 : `lib/equipements/pictos.ts`,
+ * importé nulle part, supprimé — audit Next.js B7]) sont typées, et `tsc` refuse d'en compiler une
  * incomplète. Celle-ci ne peut rien signaler : une clé manquante n'est pas une
  * erreur de type sur un `Record<string, …>`.
  *
