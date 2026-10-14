@@ -152,7 +152,7 @@ sixième `??` recopié.
 C'est la limite la plus importante de ce document, et la raison directe du
 retrait de la carte.
 
-~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ ~~Les 66 articles (2026-10-07, l'IGH, les équipements sous pression et le stockage de matières dangereuses en partie retirés)~~ ~~Les 70 articles (2026-10-13, quatre manques de la cible redéfinie annoncés)~~ ~~Les 72 articles (2026-10-13, six manques de la cible redéfinie annoncés)~~ Les 73 articles (2026-10-13, sept manques de la cible redéfinie annoncés) ci-dessous sont ceux que le dépouillement a lus, qui imposent
+~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ ~~Les 66 articles (2026-10-07, l'IGH, les équipements sous pression et le stockage de matières dangereuses en partie retirés)~~ ~~Les 70 articles (2026-10-13, quatre manques de la cible redéfinie annoncés)~~ ~~Les 72 articles (2026-10-13, six manques de la cible redéfinie annoncés)~~ ~~Les 73 articles (2026-10-13, sept manques de la cible redéfinie annoncés)~~ Les 77 articles (2026-10-14, quatre articles cités par l'aide des catégories entrés au corpus) ci-dessous sont ceux que le dépouillement a lus, qui imposent
 quelque chose à un exploitant, et que le référentiel ne porte pas. **Rien ne les
 restreint aux établissements que leur chapitre vise** — sauf les ~~vingt-cinq
 annoncés le 2026-09-27~~ ~~trente-trois~~ trente-cinq annoncés (vingt-cinq le
@@ -274,10 +274,15 @@ hôtels qui sont encodés le même jour n'y figuraient pas, ils étaient
 indépendante : `Arrêté 1986-01-31 art. 78-1` et `Arrêté 1986-01-31 art. 102`,
 d'abord classés hors cadre, sont annoncés. **Puis 72 + 1 − 0 = 73** : `R. 4544-11`,
 annoncé par décision de la propriétaire (« hors cadre et on l'annonce »).
+**Puis 73 + 4 − 0 = 77** (2026-10-14, revue de `lot/materiels-non-couverts-1014`) :
+`C. env. R. 224-41-4` (entretien annuel des chaudières) et l'arrêté du
+30 septembre 1957, annexe art. 2, 3 et 4 (chambres froides), cités à l'écran
+par l'aide des catégories, entrent au corpus `non_couvert` — voir § 3,
+« Annoncés le 2026-10-14 ».
 
 ---
 
-## 3. Les 73 articles lus et non portés
+## 3. Les 77 articles lus et non portés
 
 ~~Cinq familles~~ ~~Neuf familles (compte refait le 2026-09-26)~~ Dix-huit familles (compte refait le 2026-09-27, C45), une dixième étant sortie de la liste le 2026-09-01 (voir
 ci-dessous). Les motifs sont ceux du corpus, cités et non réécrits : ils ont
@@ -620,9 +625,29 @@ s'enregistre en « Autre équipement » avec sa clé, et sa phrase revient sur s
 fiche, dans l'indicateur « sans échéance » et dans le dossier de conformité.
 Déplacés, pas dupliqués : aucun n'est plus annoncé sur la page. Statut au
 corpus inchangé (`non_couvert`) ; `materiels-non-couverts.test.ts` vérifie
-qu'aucun article non porté n'a d'adresse qui ne mène nulle part. Les comptes
+qu'aucun article non porté n'a d'adresse qui ne mène nulle part. ~~Les comptes
 de ce document (73 `non_couvert`, 20 manquantes) ne bougent pas : seule
-l'adresse change.
+l'adresse change.~~ [Le même jour, après la revue : le déplacement ne change
+aucun compte ; l'entrée au corpus des quatre articles ci-dessous fait passer
+les `non_couvert` de 73 à 77. Manquantes : 20, inchangé.]
+
+### ANNONCÉS LE 2026-10-14 — deux textes, quatre articles, par l'aide des catégories
+
+Revue indépendante de `lot/materiels-non-couverts-1014` : la garde
+`citations-ecran` lit désormais `src/lib/equipements`, et deux textes que
+l'aide des catégories cite n'étaient pas au corpus. Relus le 2026-10-14 par
+l'API Légifrance, en **bac à sable** (`pnpm legifrance:verifier`, quatre
+articles, quatre OK).
+
+- **Entretien annuel des chaudières** — `C. env. R. 224-41-4` : hors cadre par
+  décision de la propriétaire du 2026-09-20, confirmée le 2026-10-14. Adresse
+  visible : l'aide de la catégorie « Installation de gaz »
+  (`DESCRIPTION_CATEGORIE.INSTALLATION_GAZ`), citée mot pour mot.
+- **Chambres froides** — `Arrêté 1957-09-30 annexe art. 2`,
+  `Arrêté 1957-09-30 annexe art. 3`, `Arrêté 1957-09-30 annexe art. 4` :
+  aucune obligation créée, décision de la propriétaire du 2026-10-14. Adresse
+  visible : l'aide de la catégorie « Installation frigorifique »
+  (`DESCRIPTION_CATEGORIE.INSTALLATION_FRIGORIFIQUE`).
 
 ### Plan de prévention, information de l'inspection du travail — 1 article (2026-09-27)
 

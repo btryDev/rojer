@@ -24,6 +24,8 @@ import {
 } from "./csp-eau-potable";
 import { ARRETE_2010_02_01_LEGIONELLES } from "./arrete-2010-02-01-legionelles";
 import { ARRETE_2018_02_23_GAZ_HABITATION } from "./arrete-2018-02-23-gaz-habitation";
+import { CODE_ENVIRONNEMENT_CHAUDIERES } from "./code-environnement-chaudieres";
+import { ARRETE_1957_09_30_CHAMBRES_FROIDES } from "./arrete-1957-09-30-chambres-froides";
 import { ARRETES_ASCENSEURS } from "./arretes-ascenseurs";
 import { ARRETES_MODIFICATIFS_ERP } from "./arretes-modificatifs-erp";
 import { CCH_ASCENSEURS } from "./cch-ascenseurs";
@@ -125,6 +127,10 @@ export const CORPUS: readonly Corpus[] = [
   ARRETE_1993_12_21_PORTES,
   ARRETE_1980_LIVRE_4_PARCS,
   ARRETE_2018_02_23_GAZ_HABITATION,
+  // 2026-10-14 (revue de `lot/materiels-non-couverts-1014`) : deux textes que
+  // l'aide des catégories cite, non couverts par décision de la propriétaire.
+  CODE_ENVIRONNEMENT_CHAUDIERES,
+  ARRETE_1957_09_30_CHAMBRES_FROIDES,
   INRS_DOCUMENTAIRE,
   // ADR-039, 2026-10-07 — les normes homologuées lues, dont un rythme peut
   // être retenu. Ni droit ni brochure : statut `norme`.
