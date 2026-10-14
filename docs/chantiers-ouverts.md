@@ -1,5 +1,114 @@
 # Chantiers ouverts
 
+## 0. Le tri du 2026-10-13 — ce qui reste vraiment
+
+Chaque point encore ouvert du document a été lu et annoté sur place
+(« [2026-10-13, tri : …] »). Rien n'est supprimé ; les points clos sont rayés
+et datés (règle 11). Les défauts ont été revérifiés dans le code du jour
+(`main` à `8f48889e`).
+
+**50 points ouverts avant tri → 5 défauts, ~~11~~ 13 décisions, 7 projets, ~~27~~ 25 constats
+rayés ou annotés** (dont 5 déjà faits ou corrigés, rayés). [Relu le même jour :
+les comptes de test en production et le stockage Vercel au-dessus du quota
+passent de constat à décision — ils se règlent avant les premiers clients.]
+
+### Défauts réels
+
+[2026-10-13, décision de la propriétaire : n° 2, 3 et 4 corrigés avant la
+release (lots lancés le même jour) ; **n° 1 (gaz sans cuisine) et n° 5
+(seuils du carnet sanitaire) APRÈS LA RELEASE** — ils restent ouverts ici.]
+
+1. **Gaz sans cuisine** ([§ 3 bis](#3-bis-le-registre-de-dette-compté--2026-09-20))
+   — la vérification annuelle de `GZ 15` n'atteint que l'ERP 1-4 qui déclare
+   un appareil de cuisson ; preuve : `categoriesEquipement:
+   ["APPAREIL_CUISSON_ERP"]` dans `conformite/cuisson-hotte.ts`. Le remède
+   demande une catégorie, donc une migration.
+2. **Huit pages d'entrée gardent la flèche de retour**
+   ([§ 6 bis](#6-bis-ce-que-la-passe-du-2026-09-07-a-rendu--six-constats-un-corrigé))
+   — `<ArrowLeft>` + raison sociale dans `actions`, `equipe`, `duerp`,
+   `modifier`, `etats-permanents`, `prescriptions`, `quand-ca-arrive`,
+   `prestataires` (ADR-014 : fil d'Ariane).
+3. **Une page ouverte par lien direct sert un calendrier périmé sans le dire**
+   ([§ 12](#12-les-alertes-par-e-mail--une-règle-à-tenir-avant-la-première-ligne))
+   — `assurerCalendrierAJour` n'est appelée que par le tableau de bord et le
+   calendrier ; `fraicheur` n'est lue que par le contrôle, le ZIP, les PDF et
+   le MCP.
+4. **Le MCP ne dit pas qu'un dossier n'a rien déclaré**
+   ([§ 15](#15-un-dossier-qui-na-rien-déclaré-rend-des-listes-vides-et-ne-le-dit-pas--fait-le-2026-09-26))
+   — aucun fichier de `src/lib/mcp/` ne lit l'axe `inventaire`.
+5. **Carnet sanitaire : un seul seuil minimal par point d'eau chaude**
+   ([§ 16](#16-larrêté-du-1er-février-2010--un-module-livré-sur-un-texte-jamais-ouvert--fait-le-2026-09-20),
+   points 1 et 2) — `PointReleve` n'a qu'un `seuilMinCelsius` et
+   `estReleveConforme` rend « conforme » toute ECS au-dessus : le plafond de
+   50 °C aux robinets de toilette et les 55 °C en sortie de stockage de
+   l'article 36 de l'arrêté du 23 juin 1978 ne s'expriment pas. Premier geste :
+   lire l'article 1er de cet arrêté.
+6. **[2026-10-14, APRÈS LA RELEASE] Le panneau de pré-remplissage ignore
+   `avertissement`** (`lot/conditions-equipement`) — un échec de
+   régénération du calendrier n'est pas montré, les fiches sont créées.
+
+### Décisions attendues
+
+1. ~~**Champ de la question `R. 4227-22`** : manipulation seule, ou entreposage
+   aussi~~ ([§ 1](#1-ce-qui-reste-du-champ-de-r-4227-34--manipulematieresr422722)).
+   [2026-10-13 : TRANCHÉ — le libellé « pas seulement stockés » est fidèle à
+   `R. 4227-34` (« manipulées et mises en œuvre ») ; la question reste posée à
+   tout employeur et sera reformulée pour se répondre étiquette en main
+   (pictogrammes, H220/H222/H224, exemples). Question d'interprétation posée au
+   préventeur : `docs/questions-preventeur.md`, n° 1.]
+2. **Livret d'entretien de la filtration (`CH 39 § 1`) et stock de rechange de
+   l'alarme (`MS 69`)** : encoder, annoncer ou hors cadre — obligations d'ERP
+   1-4, dans la cible depuis le 2026-10-12
+   ([§ 3](#3-deux-obligations-que-rien-ne-bloquait--clos-le-2026-09-04), [§ 3 bis](#3-bis-le-registre-de-dette-compté--2026-09-20)).
+3. **Vigilance prestataires, décision B1** : assumer le module ou le déclarer
+   hors référentiel ([§ 4](#4-ce-qui-attend-une-décision-pas-un-développement)).
+4. **Un assureur peut-il resserrer un rythme (`renforce_periodicite`) ou
+   seulement ajouter une échéance ?** ([§ 4](#4-ce-qui-attend-une-décision-pas-un-développement))
+5. **Seuil des 400 heures franchi en cours de route** : le nouvel accord, la
+   fenêtre de douze mois ([§ 6](#6-plus-petit-mais-mesuré)).
+6. **Ce que veut dire l'état « inspection commune faite » du plan de
+   prévention** — rien ne l'écrit
+   ([§ 6 bis](#6-bis-ce-que-la-passe-du-2026-09-07-a-rendu--six-constats-un-corrigé)).
+7. **`GHW`** : compter en production, puis retirer la valeur ou la colonne
+   ([§ 9 bis](#9-bis-ghw--retrait-programmé-en-attente-dun-comptage-en-production)).
+8. **Règle de fusion « la plus ancienne réalisation »**, en production sans
+   confirmation ([§ 11](#11-le-réconciliateur-de-calendrier--seize-constats-un-plan-ordonné), lot 2).
+9. **`MCP_ETABLISSEMENT_ID` en production** désigne un établissement supprimé :
+   la mettre à jour ou la retirer
+   ([§ 13](#13-les-previews-vercel-sont-abandonnées--2026-09-18)).
+10. **Les cinq décisions de produit de l'audit du 2026-09-19**, à confirmer
+    ([§ 14](#14-laudit-du-2026-09-19-est-fusionné--ce-quil-laisse-ouvert)).
+11. **Engin déclaré et « non » à la conduite** : relever la contradiction ou
+    non ([§ 17](#17-les-titres-que-le-duerp-rend-dus--ce-que-ladr-038-laisse-ouvert-2026-10-05), point 7).
+12. **Comptes de test en production**, dont le compte de seed créé par erreur
+    le 2026-09-03 dans l'authentification Supabase de production : les
+    garder ou les supprimer avant les premiers clients ([§ 6](#6-plus-petit-mais-mesuré)).
+13. **Stockage Vercel au-dessus du quota** (24,7 Go pour 10 inclus, offre
+    Hobby) : raccourcir la rétention des déploiements annulés, en erreur et de
+    pré-production ([§ 13](#13-les-previews-vercel-sont-abandonnées--2026-09-18)).
+
+### À vérifier après la release
+
+1. **Alarme de chambre froide** (2026-10-13). La vérification annuelle des
+   alimentations de secours des signalisations (arrêté du 4 novembre 1993,
+   art. 15) n'est servie que si une alarme incendie ou des BAES sont déclarés
+   (`lot/conditions-equipement`). Si un texte impose un dispositif d'alarme
+   dans les chambres froides, voir s'il est couvert par le domaine « Froid ».
+   Texte non ouvert : ni manque ni non-manque établi. L'alarme de cabine
+   d'ascenseur, elle, suit l'ascenseur (entretien, contrôle quinquennal CCH).
+
+### Feuille de route
+
+1. La protection collective comme famille d'objet ([§ 7 bis](#7-bis-les-équipements-de-protection--ce-quon-ne-sait-pas-déclarer--clos-le-2026-09-04-rayé-le-2026-09-20)).
+2. Ce que l'onboarding permet de déduire — l'étude ([§ 8](#8-ce-que-lonboarding-permet-de-déduire--à-instruire-bas-de-liste)).
+3. Le dénominateur du Livre II — la mesure ([§ 8](#8-ce-que-lonboarding-permet-de-déduire--à-instruire-bas-de-liste)).
+4. La contre-signature versionnée du plan de prévention ([§ 10](#10-le-cycle-de-contre-signature-du-plan-de-prévention--décidé-à-faire-après)).
+5. Les alertes par e-mail, gelées ([§ 12](#12-les-alertes-par-e-mail--une-règle-à-tenir-avant-la-première-ligne)).
+6. Les titres « gestes et postures », « écran », « chimique » au catalogue ([§ 17](#17-les-titres-que-le-duerp-rend-dus--ce-que-ladr-038-laisse-ouvert-2026-10-05), point 3).
+7. « Ne concerne pas cette personne », après instruction RGPD ([§ 17](#17-les-titres-que-le-duerp-rend-dus--ce-que-ladr-038-laisse-ouvert-2026-10-05), point 4).
+
+---
+
 **Arrêté au 2026-09-02**, au sortir de la journée qui a fermé le référentiel :
 trois trous du guide professionnel comblés, le Code cartographié, et trois
 cliquets à zéro.
@@ -44,6 +153,9 @@ permanents en découlent que le référentiel ne porte pas.
 **Ce qui le bloque** : rien de technique. C'est une décision sur le champ de la
 question posée au dirigeant — l'élargir à l'entreposage ferait entrer dans les
 obligations de `R. 4227-34` des établissements que ce texte-là ne vise pas.
+[2026-10-13, tri : DÉCISION ATTENDUE. Vérifié : la question ne vise toujours
+que la manipulation (« Dire si vous manipulez des matières explosives ou
+inflammables », `src/lib/etablissements/relance.ts:77`).]
 
 ## ~~2. La date de remise de l'attestation de vigilance~~ — CLOS LE 2026-09-27, RAYÉ LE 2026-10-12
 
@@ -116,6 +228,12 @@ de celle de l'éclairage, ~~toujours `obligation_manquante`~~ — **encodée le
 2026-09-20**, voir § 3 bis), le **livret
 d'entretien de l'installation de filtration** (`CH 39 § 1`), et le **stock
 permanent de fournitures de rechange de l'alarme** (`MS 69`).
+[2026-10-13, tri : DÉCISION ATTENDUE — deux obligations de l'exploitant
+d'ERP de 1ʳᵉ à 4ᵉ catégorie, dans la cible depuis le 2026-10-12, que rien ne
+sert ni n'annonce : elles sont en `reserve` d'articles `retenu`
+(`corpus/arrete-1980-livre-2.ts`, `CH 39` et `MS 69`), hors des quinze
+manquantes classées le 2026-10-13. À classer selon la même grille
+(encoder / annoncer / hors cadre). Voir aussi « Deux libres du plan », § 3 bis.]
 
 ---
 
@@ -228,6 +346,11 @@ le contrôle électrique annuel n'apparaît que si l'installation est déclarée
 (amendement du 2026-10-12). Reste ouvert, non décidé : la vérification
 annuelle du gaz (`GZ 15`) n'est servie qu'à l'ERP 1-4 qui déclare un appareil
 de cuisson ; un commerce chauffé au gaz sans cuisine ne la reçoit pas.]
+[2026-10-13, tri : DÉFAUT RÉEL, vérifié — obligation légale mal servie :
+`cuisson-gaz-installations-annuelle` exige `categoriesEquipement:
+["APPAREIL_CUISSON_ERP"]` (`src/lib/referentiels/conformite/cuisson-hotte.ts`),
+aucune catégorie « installation de gaz » au schéma. Le remède suppose une
+migration ; le nommer reste à la propriétaire.]
 
 ~~**Trois dettes sans blocage, et non encodées : les hôtels.** `perimetre` veut
 dire « encodable, hors cible ». `PO 7` est chiffré (deux séances par an) et le
@@ -247,6 +370,8 @@ matin annonçait vingt-huit réserves closes : il avait compté des mots.
 tranche s'il fait un écrit à part ou rejoint ceux de `GC 18` et de `R. 4224-17` ;
 le stock de rechange de `MS 69` « se décide pour lui-même ». Et les deux visent
 les ERP des quatre premières catégories.
+[2026-10-13, tri : DÉCISION ATTENDUE — le même point que la fin du § 3,
+compté une fois.]
 
 ## 4. Ce qui attend une décision, pas un développement
 
@@ -271,6 +396,10 @@ prévoit qu'une exclusion « se discute et s'ajoute là ».
 > tranché ») et `L. 8222-5` (« attend toujours la décision B1 ») —, et
 > `EXCLUSIONS` (`corpus/perimetre.ts`) a toujours ses quatre motifs, sans
 > « RH non-SST ». L'audit du 2026-10-12 (§ 5) le classait clos : il ne l'est pas.
+>
+> [2026-10-13, tri : DÉCISION ATTENDUE (B1) — `EXCLUSIONS`
+> (`src/lib/referentiels/corpus/perimetre.ts`) n'a toujours aucun motif
+> « RH non-SST ».]
 
 ~~**Le type ERP `J` n'existe pas dans l'enum**, et `R` n'est pas subdivisé en
 `R(1)` / `R(2)`. Un EHPAD ne peut pas se déclarer pour ce qu'il est.~~ Origine
@@ -307,9 +436,12 @@ valeurs » et jamais reconfrontée à la nomenclature.
 > fichier se sont contredites pendant trois jours. Rayer là où on corrige,
 > pas ailleurs.
 >
-> Reste la réserve du dernier paragraphe, qui n'a pas été vérifiée : rien
+> ~~Reste la réserve du dernier paragraphe, qui n'a pas été vérifiée : rien
 > n'établit que le parcours d'accueil pose la question du sommeil. C'est
-> l'objet de la branche `worktree-sommeil-parcours`, en attente d'une décision.
+> l'objet de la branche `worktree-sommeil-parcours`, en attente d'une décision.~~
+> [2026-10-13, tri : déjà corrigé — clos le 2026-09-20 sous une autre forme,
+> `lot/sommeil-parcours` (`f62a8572`, `5ff87368`, `cb31e994`) : voir « CLOS LE
+> 2026-09-20 » plus bas dans ce §.]
 
 ~~**`R` RESTE NON SUBDIVISÉ, ET LA LETTRE LE VEUT.**~~ `GN 1 § 1` n'écrit qu'un seul
 `R` ; les deux colonnes de `GE 4` sont deux régimes d'une même ligne, séparés par
@@ -352,13 +484,15 @@ que personne n'ouvre est un allègement qui n'existe pas.~~
 
 **Les `obligation_manquante` du corpus ne sont pas une liste de tâches.** La
 plupart demandent un attribut de modèle, et dans le cadre arrêté le 2026-09-02
-elles se **déclarent**, elles ne s'encodent pas.
+elles se **déclarent**, elles ne s'encodent pas. [2026-10-13, tri : constat,
+pas une tâche.]
 
 **Un assureur doit-il pouvoir employer `renforce_periodicite`, ou seulement
 ajouter une échéance (`obligation_sur_mesure`) ?** Relevé par la propriétaire le
 2026-09-17 en tranchant D1 de l'ADR-036 : un assureur ajoute en général une
 échéance complémentaire, et D1 ne règle que le resserrement d'un rythme du
 référentiel. Décision produit distincte, non tranchée ; ADR-032 et ADR-035.
+[2026-10-13, tri : DÉCISION ATTENDUE.]
 
 ---
 
@@ -393,7 +527,8 @@ venaient de la répartition à la main (`repartir`) et de la bande réservée,
 retirées au lot 3 de l'ADR-036 : les dates sortent désormais des faits, et le
 calendrier semé est presque entièrement « à planifier » en retard, l'assureur
 compris (J−52). Voir l'entrée « Lot 3, 2026-09-18 » au § 11. Non remesuré : rien
-n'a été exécuté.
+n'a été exécuté. [2026-10-13, tri : constat, pas une tâche — le contrôle
+visuel du 2026-10-13 s'est fait sur un dossier semé (§ 6 bis, § 7).]
 
 ~~**Ce qui reste** : la passe elle-même, sur les sept écrans que personne n'a
 jamais pu regarder avec des données — `/equipe`, `/duerp`, `/permis-feu`,
@@ -459,7 +594,9 @@ en tête du fichier.
 ## 6. Plus petit, mais mesuré
 
 - **30 URL de section** au lieu d'URL d'article au corpus, sous cliquet
-  (`PLAFOND_URLS_DE_SECTION`), aucune corrigée.
+  (`PLAFOND_URLS_DE_SECTION`), aucune corrigée. [2026-10-13, tri : constat,
+  pas une tâche — limite tenue sous cliquet (`corpus.test.ts:406`, plafond
+  toujours à 30) ; le lien mène à la bonne section, pas à un texte faux.]
 - ~~**`R. 4512-8`** — le contenu minimal du plan de prévention compte cinq
   rubriques, le produit n'en porte qu'une. Ni premiers secours, ni instructions
   aux travailleurs, ni organisation du commandement — alors que Rojer **émet** le
@@ -487,6 +624,8 @@ en tête du fichier.
   > plans (§ 6 bis, états morts). Et le 4° ne se pré-remplit pas : aucun champ
   > d'`Etablissement` ne décrit le dispositif de secours, `R. 4224-16` est
   > détenu par le dirigeant et pas par la base.
+  > [2026-10-13, tri : constat, pas une tâche — limite assumée ; la porte de
+  > validation relève du § 10.]
 - ~~**Le seuil des 400 heures ne se recalcule pas en cours d'exécution**, alors que
   `R. 4512-7` le déclenche « dès lors qu'il apparaît » qu'elles seront atteintes.
   Depuis le 2026-09-02, l'aide de saisie le dit au dirigeant ; le module ne le
@@ -495,7 +634,8 @@ en tête du fichier.
   (`heuresPrevisiblesRevisees`, migration additive `20261012130000`, hors
   empreinte), `diagnostiquerPlan` en tire `seuil400EnCours` ; liste, ZIP et page
   du lien les montrent. Restent des DÉCISIONS : le nouvel accord après
-  franchissement, la fenêtre de douze mois.
+  franchissement, la fenêtre de douze mois. [2026-10-13, tri : DÉCISION
+  ATTENDUE.]
 - **Comptes de test en production — à la main de la propriétaire, pas à
   supprimer d'office.** Un compte de contrôle visuel (`contact+…@`, adresse gardée hors du dépôt public) et « Bistrot de la
   Verification SARL » (identifiant gardé hors du dépôt public) sont **gardés
@@ -512,7 +652,9 @@ en tête du fichier.
   n'avait pas le droit de la traiter. **Tout lot qui approche l'auth doit porter
   cette interdiction explicitement**, l'auth vivant chez Supabase et non en base
   (ADR-005) : un `.env` qui pointe une base locale peut parfaitement écrire dans
-  l'auth de production.
+  l'auth de production. [2026-10-13, tri : ~~constat, pas une tâche — à la main
+  de la propriétaire, rien n'en dépend~~ DÉCISION ATTENDUE — un compte créé
+  par erreur dans l'auth de production se règle avant les premiers clients.]
 
 ---
 
@@ -544,6 +686,10 @@ constat qui ne rejoint pas cette liste se perd** — c'est la leçon du § 7.
   permis passe « valide » à la seconde signature, d'où « Démarrer ». Ce qui
   débloque un plan en `inspection_faite` reste non dit — cet état n'est
   toujours écrit par rien, et son sens est une décision.]
+  [2026-10-13, tri : DÉCISION ATTENDUE. Vérifié : aucune écriture de
+  `inspection_faite` dans `src/` (`plan-prevention/actions.ts` n'écrit que
+  `attente_signatures`, `clos`, `annule`) ; `signatures/statut-objet.ts:30` le
+  dit « à trancher ».]
 
 - ~~**Le carnet sanitaire affiche du vert sur une donnée de 34 jours**~~ — **CLOS LE 2026-10-13** : « Dans la
   plage » et « 100% dans la plage » sur un relevé du 4 août, sans que rien ne
@@ -588,6 +734,10 @@ constat qui ne rejoint pas cette liste se perd** — c'est la leçon du § 7.
   actions, équipe, DUERP, modifier, états permanents, prescriptions, « quand
   ça arrive », prestataires (ADR-014 : sur une page d'entrée, le lien vers
   l'établissement dit où la page vit).]
+  [2026-10-13, tri : DÉFAUT RÉEL, vérifié — `<ArrowLeft>` suivi de la raison
+  sociale, une fois chacune, dans `src/app/etablissements/[id]/{actions,equipe,duerp,modifier,etats-permanents,prescriptions,quand-ca-arrive,prestataires}/page.tsx` ;
+  le test de `26040e90` ne garde que les quatre frères et nomme les autres
+  « incohérence connue ».]
 
 - ~~**`SupprimerEtablissementButton` n'est monté sur aucun écran**, donc il
   n'existe aucun endroit d'où supprimer un établissement.~~ **RÉSOLU le
@@ -777,6 +927,8 @@ bord, 19 sur la carte de zone, « 22 datées · 5 à planifier » au calendrier,
   285 ms, affichage (LCP) à 324 ms, préchargement présent. Réserve : localhost
   n'a pas de latence réseau, à confirmer en prod. Le cadre est peint
   `--board-ink` tant que l'image manque — d'où du noir si elle tarde.]
+  [2026-10-13, tri : constat, pas une tâche — non reproduit ; à surveiller en
+  production, sans défaut établi.]
 
 ### Et un fait de conception, découvert en le cherchant
 
@@ -786,6 +938,7 @@ régénération idempotente de l'ADR-012, pas un défaut — mais elle a pour
 conséquence qu'**une consigne de « lecture seule en naviguant » n'est pas tenable
 sur ce produit**, ce qui a été demandé à tort à la session distante et exécuté sur
 la base de production. À savoir avant de refaire regarder un dossier réel.
+[2026-10-13, tri : constat, pas une tâche.]
 
 ### Ce qui reste injugeable sans le seed du § 5
 
@@ -929,7 +1082,8 @@ du même mécanisme et laissé la troisième.**
 
 **La protection collective** n'existe pas davantage comme objet. Ce qui s'en
 approche est traité par domaine — garde-corps sous le travail en hauteur,
-signalisation, désenfumage —, jamais comme une famille.
+signalisation, désenfumage —, jamais comme une famille. [2026-10-13, tri :
+PROJET FUTUR → feuille de route.]
 
 ### Ce qu'on dit aujourd'hui, et qui reste vrai
 
@@ -1033,7 +1187,9 @@ mesurer.]
 
 **Réserve** : le dénominateur du Livre II n'est pas établi. On sait qu'on en cite
 dix-huit articles, on ne sait pas combien il en compte. Le mesurer est le premier
-geste, avant toute conclusion sur l'ampleur.
+geste, avant toute conclusion sur l'ampleur. [2026-10-13, tri : PROJET FUTUR
+→ feuille de route — une mesure, pas un défaut : le manque est déjà déclaré
+au dirigeant, voir le crochet ci-dessus.]
 
 Ce n'est pas un défaut de déduction, et ce chantier n'est donc pas son remède :
 c'est un **trou de couverture**, qui relève du mécanisme de déclaration
@@ -1122,6 +1278,9 @@ finit son dossier.
 `docs/adr/004-typologie-etablissement.md` pour les seuils, et le mode `explain`
 du moteur — qui sait déjà dire *pourquoi* une obligation s'applique chez vous, et
 qui est donc l'inventaire des déductions existantes.
+
+[2026-10-13, tri : PROJET FUTUR → feuille de route — le chantier du § 8 est
+une étude.]
 
 ---
 
@@ -1291,8 +1450,11 @@ proche. `nature-travaux-point-chaud.test.ts` et le dernier `it` de
 absence : il relit le verbatim d'un texte pour constater qu'il ne dit rien, et
 rougit le jour où le texte se met à parler.
 
-Les trois autres suivent le même chemin, chacune courte. Après quoi « est-ce
-complet » a une réponse mécanique au lieu d'une affirmation.
+~~Les trois autres suivent le même chemin, chacune courte. Après quoi « est-ce
+complet » a une réponse mécanique au lieu d'une affirmation.~~ [2026-10-13,
+tri : déjà fait — le tableau du § 9 rend les sept listes confrontées, et la
+parenthèse qui clôt « Ce que la seconde passe a appris » le dit pour les trois
+dernières.]
 
 **Origine du défaut, écrite pour qu'on ne la redécouvre pas.** `docs/adr/004-typologie-etablissement.md`
 énonce la liste des types une seule fois, avec la mention **« (~20 valeurs) »**.
@@ -1431,6 +1593,11 @@ remonter.
   inscrirait au dossier une hauteur que personne n'a constatée. Une erreur
   invisible plutôt qu'une donnée manquante visible.
 
+[2026-10-13, tri : DÉCISION ATTENDUE — le comptage en production (point 2) et
+le sort de la colonne (amendement ci-dessus). Vérifié : `GHW` est toujours à
+l'énumération (`prisma/schema.prisma:351`) et `EN_SURSIS_JUSQU_AU_TEMPS_2`
+toujours à `["GHW"]` (`src/lib/referentiels/classes-igh.test.ts:253`).]
+
 ---
 
 ## 10. Le cycle de contre-signature du plan de prévention — DÉCIDÉ, à faire après
@@ -1493,6 +1660,8 @@ ce dépôt-là, sous aucun prétexte.**
   révocation datée reste à faire ici]. Les deux se tiennent : une contre-signature
   sans modification possible n'a rien à corriger, et une modification sans
   révocation des signatures est précisément le défaut qu'on cherche à éviter.
+
+[2026-10-13, tri : PROJET FUTUR → feuille de route — le § 10 entier.]
 
 ---
 
@@ -1694,6 +1863,8 @@ deux rapports.
 > ligne à changer. La propriétaire n'a pas dit le contraire ; elle n'a pas dit
 > oui non plus. **Toujours en attente de sa décision le 2026-09-17** ; la
 > recommandation de ce jour est de garder la règle en l'état.
+> [2026-10-13, tri : DÉCISION ATTENDUE — la règle décide de la date affichée
+> après une fusion de lignes ; elle tourne en production sans confirmation.]
 >
 > ~~**CE QUI RESTE, ET CE N'EST PAS DANS CE DÉPÔT-CI.** Le mécanisme sert deux cas ;
 > un seul a sa déclaration. La FUSION est câblée, parce qu'`absorbePar` existe.
@@ -1893,6 +2064,11 @@ enum à cinq valeurs, type d'affichage `StatutPeint` séparé du type stocké.
 
 **Le calendrier naît avec l'établissement** (`lot/calendrier-genere-a-la-creation`, 2026-09-14). Le générateur ne tournait qu'après une mutation ou à l'ouverture de la page Calendrier : un bureau sans appareil, qui doit ses obligations d'établissement (ADR-022), n'avait aucune ligne en base, et le tableau de bord — porte d'entrée du produit — disait « Votre calendrier est vide ». Même trou pour un calendrier périmé (référentiel changé, régénération échouée) : seul le Calendrier le réparait. Corrigé en trois points, sans mécanique neuve : génération à la création (onboarding et nouvel établissement) ; une seule réparation à l'affichage (`assurerCalendrierAJour`, sur le seul repère `referentielVersionCalendrier`) en tête du tableau de bord et du calendrier ; panneau vide réécrit. **Écarté, avec sa raison** : réparer dans le layout (Next rend layout et page en parallèle), dans chaque page ou dans les fonctions de lecture (régénérations concurrentes), au déploiement (écriture en production depuis la compilation). **Reste, assumé** : une page ouverte par lien direct sur un dossier périmé, avant le tableau de bord ou le calendrier, lit les anciennes lignes ; les pastilles de la barre latérale peuvent garder l'ancien compte jusqu'au rechargement ; le serveur MCP, en lecture seule, ne répare pas. **Relecture neutre** : aucun défaut introduit. Un risque amplifié, fermé : si une preview Vercel écrit dans la base de production, ouvrir son tableau de bord suffisait à recalculer les dossiers réels avec le référentiel de sa branche — la réparation à l'affichage ne tourne plus sur une preview (`VERCEL_ENV`). **Non vérifié ici : que les previews partagent la base de production** ; la garde vaut dans les deux cas. Textes alignés (état vide des barres borné à l'année, état vide du calendrier, étape de la checklist, panneau lu sur le parc entier), test de l'onboarding ajouté. **Contrôle visuel en production** (2026-09-14, lecture seule, un dossier déjà à jour) : les compteurs concordent, quatre défauts corrigés dans `lot/controle-visuel` — le lien des notes sous la frise était un bouton plein qui laissait un point orphelin ; la règle du calendrier peignait « dépassée » une opération en cours dont la date de début était passée (`etatAutreEcheance` : le ton, jamais la date seule) ; le titre du tableau de bord disait « ont dépassé leur date » de vérifications sans échéance connue, et le paragraphe les comptait « dépassées » ; le bloc « À faire » n'affichait ni pastille ni raison pour un retard sans date. Deux relectures ont étendu le deuxième point : une opération démarrée sans alerte se lit sur sa FIN (`EcheanceCalendrier.dateFin`, `dateEnJeuAutre`) partout où l'on classe — règle et vue par équipement du calendrier, « sous 30 j » du tableau de bord, frise, carte et fiche du permis de feu, liste et fiche du plan de prévention. **Restes écrits ce jour-là, tous fermés le 2026-09-15** : ~~la fenêtre de la frise filtrait sur le début d'une opération~~ — elle y entre au bord gauche (`lot/trois-petits-defauts`) ; ~~la règle annuelle rangeait le « sous 30 j » d'une opération en cours au mois de son début~~. **Le 2026-09-15** (`lot/trois-petits-defauts`) : le widget « Prochaines échéances » range les échéances connues avant les lignes sans échéance, qui cachaient les vraies aux cinq places ; sur Équipe, un titre dont l'obligation a quitté le référentiel se lit « Ne s'applique plus ». **Le 2026-09-15** (`lot/restes-tableau-calendrier`, relu deux fois) — une opération en cours se RANGE sur ce qui reste à tenir dans le calendrier et ses grilles : ~~la liste mensuelle et la règle du calendrier la rangeaient au mois de son début~~, ~~la carte « Autres échéances » de la vue par équipement aussi~~, ~~la vue calendrier du tableau de bord aussi (`grille.ts`)~~ — toutes la posent désormais à sa date en jeu (`dateEnJeuAutre`), avec « Fin · » en tête du texte qui accompagne la date (`avecMentionFin`) ; le rangement et la règle sont sortis de la page (`lib/calendrier/regle-annee`, testés). Sur la frise, c'est voulu, une opération reste posée sur son début — au bord gauche si elle a commencé avant la fenêtre, et c'est alors le libellé de sa carte qui garde sa date réelle. ~~Sur la frise, une opération dont le point tombe à gauche du cadrage d'ouverture était hors de l'écran sans que rien ne le dise~~ — une note la nomme, « Y aller » mène à sa carte ; la note ne s'efface pas, sa phrase restant vraie après le défilement — un état qui l'effaçait ne suivait ni les allers-retours d'échelle ni un changement de données (`Frise.horsCadrage`). Règle : toute opération non close présente sur la frise dont le point est hors de l'écran à l'ouverture, en cours, en retard ou échue, marge de la piste comprise. La borne est celle de la fenêtre : commencée dedans, ou avant avec une fin qui tombe dedans ou après — une opération échue avant le début de la fenêtre n'est ni sur la frise ni dans la note, le compte « en retard » la porte. La note ne promet ni « sous 30 jours » ni une ancienneté, qui dépend de l'échelle. ~~Le relevé « DÉPASSÉES N » gardait son seul nombre sous un titre qui nomme la part sans date connue~~ — « dont N sans date connue », « toutes sans date connue », ou « sans date connue » pour une seule, le mot de l'état inchangé. ~~Dès cinq échéances connues, le widget « Prochaines échéances » taisait les retards sans date~~ — « Hors de ces cinq : N vérifications en retard, sans échéance connue ». **Risque latent, écrit** : aucune obligation portée par un salarié n'est retirée aujourd'hui ; le jour où l'une le serait avec un remplaçant (`absorbePar`), ses titres resteraient sur l'ancien identifiant et se liraient « Ne s'applique plus » à tort — ~~rien ne l'empêche~~ (le 2026-09-15, `lot/fusibles-referentiel` : un fusible le signale, rien n'est corrigé. `succession-porteurs.test.ts` tombe quand un `absorbePar` ou un `succedeA` met un salarié en jeu, ou relie deux porteurs que ni l'adoption ni le report d'échéance ne servent — le porteur d'une obligation retirée se lit sur `OBLIGATIONS_RETIREES.porteur`, requis à la compilation — et quand une obligation change de porteur en gardant son identifiant, contre une table des 154 porteurs. **Ce qui n'est pas gardé** : un porteur mal déclaré à la main, au retrait ou pour une obligation neuve ; et les titres ne suivent toujours aucune succession, ce qui suppose de trancher le titre qui prime quand une personne détient les deux — le cas n'existe pas). **Limites antérieures, écrites et non traitées** : ~~le sceau ne scelle que le contenu du référentiel, pas le code du moteur~~ (le 2026-09-15, `lot/fusibles-referentiel` : `VERSION_MOTEUR_CALENDRIER` entre au sceau, composé désormais côté calendrier ; à `0` le sceau garde sa forme et rien ne se régénère, le premier incrément régénère tout le parc à sa prochaine ouverture — une écriture en production, décidée par la propriétaire et faite à l'intégration (`lot/integration-restes`, moteur `1`). **Ce qui est gardé** : l'incrément est RAPPELÉ, pas garanti — `version-moteur.test.ts` relève la passe de régénération et ses imports d'exécution, transpilés sans types ni commentaires (tables de périodicité de `types-communs.ts` et code de `conformite/types.ts` compris), plus la table des absorbants, et tombe dès que ce relevé change ; recopier le relevé sans incrémenter laisse tout vert. De `conformite/index.ts`, seules les fonctions que le moteur importe sont relevées, avec tout ce qu'elles nomment au premier niveau (`let _index`, `obligationsConformite`) ; les fichiers de données exclus sont nommés un par un, un test vérifie qu'ils ne portent ni fonction ni import de valeur, et un fichier neuf du référentiel entre dans le relevé par défaut. **Ce qui ne l'est pas** : les champs du référentiel que l'empreinte ne hache pas (`criticite`, `domaine`, `description`…) — sans effet sur les lignes, que le générateur n'en écrit pas —, l'accès aux données et la garde de session) ; une double panne (régénération puis marquage) laisse le repère posé ; une passe calculée sur une fiche lue avant une modification concurrente peut converger et poser le repère.
 
+[2026-10-13, tri : constat, pas une tâche — le « Reste, assumé », le risque
+latent des successions de titres et les limites antérieures de ce paragraphe
+sont des limites écrites. Seule la page ouverte par lien direct a une suite, et
+elle est comptée au § 12.]
+
 **Ce qui est acquis quoi qu'il arrive.** La règle de fond ne dépend pas du
 modèle : la réglementation dit « au minimum une fois par an » — l'obligation est
 l'INTERVALLE, pas le souvenir. Une ligne dont l'échéance suivante est passée est
@@ -1974,7 +2150,9 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
   Il n'y a donc aucune écriture à retirer ; le retrait se fait en deux
   déploiements et attend la décision de la propriétaire. **Toujours en attente
   le 2026-09-17** ; la recommandation de ce jour est de garder la colonne en
-  l'état.
+  l'état. [2026-10-13, tri : constat, pas une tâche — colonne inerte
+  (`prisma/schema.prisma:676`), rien ne l'écrit ni ne la lit ; la garder ne
+  coûte rien à personne. La propriétaire peut reprendre la question.]
   `Etablissement.referentielVersionCalendrier`, le repère réellement lu, n'est
   pas concerné. ~~Premier déploiement : le champ quitte `schema.prisma` sans
   migration~~ — **faux, relevé à la relecture** : `.github/workflows/derive-schema.yml`
@@ -2046,6 +2224,7 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
   après la saisie de la prescription ; un arrêté réel saisi tard devient
   supprimable, protégé par la seule confirmation ; une succession qui renomme
   l'obligation ciblée ferait tomber le compte à zéro (théorique à ce jour).
+  [2026-10-13, tri : constat, pas une tâche.]
 - ~~**`estUrgent`** n'est pas persisté : le correctif qui devait sortir les mises en
   service de la tête du calendrier change un champ que personne ne lit.~~
   **Retiré le 2026-09-17** (`lot/salarie-inactif-et-menage`), avec
@@ -2147,7 +2326,8 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
 - **en grande partie tenue** : ADR-011 l.201, « toutes les surfaces affichent le
   même compte » — tenue par `lot/salarie-inactif-et-menage` pour les lignes de
   personnes parties, sauf les pastilles de la barre latérale, périmées jusqu'au
-  rechargement, ce qui est assumé ;
+  rechargement, ce qui est assumé [2026-10-13, tri : constat, pas une
+  tâche] ;
 - ~~**en partie tenue** : ADR-012 l.129-142, « cycle ouvert : `datePrevue` ne
   bouge pas » — vrai, mais un changement de rythme ne ré-ancre qu'une ligne
   réalisée (constat B, ci-dessus)~~ — **remplacée** le 2026-09-19 : la règle
@@ -2176,6 +2356,10 @@ régénération dans le code ; le salarié inactif traité conformément à `doc
 
 Posé le 2026-09-16, sur décision de la propriétaire, avant que le chantier des
 relances ne s'ouvre (elles sont encore hors périmètre dans `.claude/CLAUDE.md`).
+
+[2026-10-13, tri : PROJET FUTUR → feuille de route — les alertes, gelées par
+la propriétaire. Une seule entrée de ce § n'attend pas les alertes : « À faire
+sans attendre les alertes », classée à part.]
 
 ### La règle
 
@@ -2266,12 +2450,20 @@ direct avant le tableau de bord ou le calendrier.
 en place, rend ce cas rare sans le rendre impossible — un déploiement peut
 tomber entre deux passages.
 
+[2026-10-13, tri : DÉFAUT RÉEL, vérifié — `assurerCalendrierAJour` n'est
+appelée que par `src/app/etablissements/[id]/page.tsx` et
+`.../calendrier/page.tsx` ; `fraicheur` n'est lue que par « Préparer un
+contrôle », le ZIP, les PDF et le MCP. Toute autre page (Équipements, fiche
+d'un appareil, Équipe…) ouverte par lien direct sert sans le dire un calendrier
+d'avant un changement de référentiel ou de moteur.]
+
 ### Limite qui reste
 
 La version du moteur (`VERSION_MOTEUR_CALENDRIER`) se monte à la main :
 `version-moteur.test.ts` le rappelle, il ne le garantit pas. La tâche
 quotidienne ne change rien à ce point — elle répare ce que le repère désigne,
-et un repère qu'on a oublié de monter ne désigne rien.
+et un repère qu'on a oublié de monter ne désigne rien. [2026-10-13, tri :
+constat, pas une tâche.]
 
 ## 13. Les previews Vercel sont abandonnées — 2026-09-18
 
@@ -2322,6 +2514,7 @@ Ce que la décision change dans notre façon de travailler :
   assurance — le jour où une preview repart, par réglage ou par accident, elle
   empêche de recalculer les dossiers réels avec le référentiel d'une branche.
   À retirer seulement le jour où les previews auront leur propre base.
+  [2026-10-13, tri : constat, pas une tâche.]
 - **Les mentions de preview dans les ADR et les revues** décrivent ce qui était
   vrai quand elles ont été écrites : elles ne sont pas réécrites, elles sont
   amendées là où elles donnent une consigne (ADR-036 § 9, revue du passage à
@@ -2383,16 +2576,23 @@ et redéployer aussitôt. Le build rejoue `prisma migrate deploy` sur
 désigne un établissement qui n'existe plus : l'outil `fiche_etablissement`
 répond « Établissement introuvable ». Le serveur MCP n'est donc relié à aucun
 dossier tant que la variable n'est pas mise à jour.
+[2026-10-13, tri : DÉCISION ATTENDUE — un geste de la propriétaire dans
+Vercel (mettre à jour ou retirer la variable). La variable est toujours lue
+(`src/lib/mcp/acces-http.ts:51`) ; sa valeur en production n'a pas été
+revérifiée par ce tri.]
 
 ### Ce que ça n'a pas réglé, et qui reste ouvert
 
-Une base propre pour les tests : ni preview, ni local peuplé. ~~`docs/rgpd.md` et
+~~Une base propre pour les tests : ni preview, ni local peuplé.~~
+[2026-10-13, tri : déjà corrigé — le contrôle visuel du 2026-10-13 s'est fait
+en local, `next build` + `next start`, base Docker, dossier « Le Comptoir des
+Halles » semé (§ 6 bis, § 7).] ~~`docs/rgpd.md` et
 le § 5 disent déjà qu'aucun seed n'amorce une base vide~~ [2026-10-13, vérifié dans le code :
 faux depuis le 2026-09-03 — le § 5 dit le contraire, `scripts/seed-dossier-complet.ts`
 crée un dossier sur une base vide et migrée ; reste que personne ne l'a lancé
-pour un contrôle visuel], si bien qu'un contrôle
+pour un contrôle visuel], ~~si bien qu'un contrôle
 visuel sur données réalistes n'existe nulle part ailleurs qu'en production.
-C'est le vrai manque ; les previews n'étaient qu'une façon coûteuse de le
+C'est le vrai manque ;~~ les previews n'étaient qu'une façon coûteuse de le
 contourner.
 
 **Stockage des fonctions Vercel au-dessus du quota** (relevé le 2026-09-19) :
@@ -2404,7 +2604,9 @@ expirent. Raccourcir la rétention des déploiements annulés, en erreur et de
 pré-production le ferait plus vite, sans toucher à la production — c'est une
 décision de la propriétaire, pas faite ici. Au même relevé, la mémoire
 provisionnée des fonctions est à 250 Go-h sur 360 : à surveiller, pas encore
-un dépassement.
+un dépassement. [2026-10-13, tri : ~~constat, pas une tâche — à surveiller ;
+l'arrêt des previews le fait redescendre seul~~ DÉCISION ATTENDUE pour le
+stockage (dépassement de quota en offre Hobby) ; la mémoire reste un constat.]
 
 ---
 
@@ -2421,22 +2623,31 @@ relire ce document : S1 à S7, M3, M4, Q2 à Q4 sont clos.
 
 **M2 — une lecture en production.** Compter les lignes touchées par le
 déploiement du 11 au 14 septembre. Lecture seule, aucune écriture. Elle attend
-l'autorisation de la propriétaire pour qui a accès à la base.
+l'autorisation de la propriétaire pour qui a accès à la base. [2026-10-13,
+tri : constat, pas une tâche — la production ne porte que des données
+factices (constat du 2026-10-08) : le compte ne changerait rien pour
+personne.]
 
 **M1 — invérifiable.** La cause des builds rouges du 11 au 14 septembre est
 donnée pour plausible par la session qui était aux commandes, et ne se tranche
 plus : les heures réelles des déploiements ne sont plus consultables. Ne pas
-rejouer l'enquête ; elle a déjà coûté deux passes.
+rejouer l'enquête ; elle a déjà coûté deux passes. [2026-10-13, tri : constat,
+pas une tâche.]
 
 **Q1 — de l'historique.** Le commit rouge `617844b` reste rouge dans l'arbre.
-On ne réécrit pas l'historique pour ça.
+On ne réécrit pas l'historique pour ça. [2026-10-13, tri : constat, pas une
+tâche.]
 
 **Les cinq décisions de produit.** Elles sont énumérées à la fin de l'audit,
 avec ce qui les fonde. La relecture neutre les juge toutes justes ; la
 cinquième — la règle du statut réalisé non appliquée aux lignes archivées — est
 la moins solide, et c'est pour cela qu'elle est écrite dans
 `reouvrirSansRapportRealise` plutôt que tue. Elles n'attendent pas un
-développement, elles attendent un mot.
+développement, elles attendent un mot. [2026-10-13, tri : DÉCISION ATTENDUE —
+une confirmation de comportements déjà en production : ① ce que voit le
+signataire, ② permis « en cours » signable, ③ débits, ④ jeton qui bloque la
+suppression dure, ⑤ statut réalisé et lignes archivées
+(`docs/revues/audit-2026-09-19.md`).]
 
 **Ce document lui-même surestimait ce qui reste** (passe de vérification du
 2026-09-20, chaque entrée rouverte dans le code). Trois entrées présentées au
@@ -2449,7 +2660,9 @@ la sous-branche `datePrevueFaisantFoi`, dont le champ n'existe plus depuis le
 **Les branches `garde-fous-tests` et `garde-fous-tests-2`** sont des souches
 d'avant les 177 commits ; leur contenu utile est entré dans `main` par d'autres
 routes, sauf la règle de conduite n° 11, reprise ici. Elles ne portent plus
-rien : à supprimer, pas à fusionner.
+rien : à supprimer, pas à fusionner. [2026-10-13, tri : confirmé — `git cherry`
+montre tout leur contenu sur `main` ; la suppression sera faite à part.
+Constat, pas une tâche de produit.]
 
 ---
 
@@ -2481,6 +2694,10 @@ rien : à supprimer, pas à fusionner.
 > « Équipements déclarés : N » depuis le 2026-08-12. Ce qui manque : l'axe
 > `inventaire` de `perimetre/couverture.ts` n'est lu par aucun fichier de
 > `src/lib/mcp/`, et un parc entièrement retiré y compte comme déclaré.
+>
+> [2026-10-13, tri : DÉFAUT RÉEL, vérifié — `grep "inventaire\|couverture"
+> src/lib/mcp/*.ts` ne rend rien hors tests : l'assistant d'un dossier qui n'a
+> rien déclaré reçoit une liste vide sans le fait.]
 
 ~~Relevé le 2026-09-20 par la contre-lecture du lot « fraîcheur des sorties ».~~
 
@@ -2530,8 +2747,18 @@ lot 6.
 > **Reste ouvert, et petit.** (1) Le module propose UN seuil minimal par point
 > d'eau chaude, quand l'article 36 en pose trois selon l'endroit (≥ 50 réseau,
 > ≥ 55 sortie de stockage ≥ 400 L, ≤ 50 aux robinets de toilette) : le type
-> « ECS » ne dit pas où est le point. (2) L'article 1er de l'arrêté de 1978
-> (champ, installations neuves ou existantes) n'est pas ouvert. (3) Le relevé
+> « ECS » ne dit pas où est le point. [2026-10-13, tri : DÉFAUT RÉEL, vérifié —
+> `PointReleve` ne porte qu'un `typeReseau` à trois valeurs (`ECS`, `EFS`,
+> `ECS_BOUCLAGE`) et un seul `seuilMinCelsius`, 50 par défaut
+> (`prisma/schema.prisma:1655-1656`, `:1702-1706`) : ni la sortie de stockage
+> à 55, ni le plafond de 50 aux robinets de toilette ne s'expriment, et un
+> robinet à 60 °C se lit « Dans la plage » (`estReleveConforme`,
+> `src/lib/carnet-sanitaire/schema.ts:149-152` : en ECS, conforme dès
+> `temperature >= seuil`). Sous la réserve du (2).]
+> (2) L'article 1er de l'arrêté de 1978
+> (champ, installations neuves ou existantes) n'est pas ouvert. [2026-10-13,
+> tri : rattaché au DÉFAUT du (1), dont il est le premier geste — le champ de
+> l'article 36 n'est pas établi tant qu'il n'est pas lu.] (3) Le relevé
 > hebdomadaire du tableau de bord reste un seuil du produit, plus serré que le
 > mensuel de l'annexe 2 — déjà dit dans `dashboard/obligations.ts` [2026-10-13 :
 > un constat, pas une tâche]. (4) La
@@ -2539,12 +2766,16 @@ lot 6.
 > le même jour. (5) Le jeu de données `scripts/seed-dossier-complet.ts` pose
 > 55 °C en sortie d'un ballon de 300 L et 50 °C minimum à un mitigeur : deux
 > valeurs que la lecture dément ; données de démonstration, non corrigées.
+> [2026-10-13, tri : constat, pas une tâche — données de démonstration.]
 > (6) `arretesDuCorpus()` tient un arrêté pour « ouvert » dès qu'UN de ses
 > articles est au corpus : l'arrêté du 23 juin 1978 l'est sur la foi du seul
-> article 36. (7) Le balayage des ARTICLES (`citationsSansCorpus`) garde le
+> article 36. [2026-10-13, tri : constat, pas une tâche — limite d'une garde
+> interne.] (7) Le balayage des ARTICLES (`citationsSansCorpus`) garde le
 > défaut que celui des arrêtés vient de perdre : une citation coupée en fin de
-> ligne lui est invisible. (8) Les textes d'écran rangés dans `src/lib/` ne
-> sont pas balayés.
+> ligne lui est invisible. [2026-10-13, tri : constat, pas une tâche — limite
+> d'une garde interne.] (8) Les textes d'écran rangés dans `src/lib/` ne
+> sont pas balayés. [2026-10-13, tri : constat, pas une tâche — limite d'une
+> garde interne.]
 
 
 Relevé le 2026-09-20 par la sonde de dépouillement, puis **rendu visible par un
@@ -2580,11 +2811,16 @@ protection contre les retours d'eau : un autre texte, un autre objet.
 
 ## 17. Les titres que le DUERP rend dus — ce que l'ADR-038 laisse ouvert (2026-10-05)
 
-Branche `lot/duerp-questions-titres`, non fusionnée. Quatre suites, aucune
+Branche `lot/duerp-questions-titres`, ~~non fusionnée~~ [2026-10-13, tri :
+fusionnée — PR #13, `0299e288`]. Quatre suites, aucune
 bloquante pour la branche :
 
-1. **Migration prod** `20261005120000_duerp_reponses_transverses` (additive,
-   une colonne `JSONB` nullable) : à appliquer par la propriétaire au merge.
+1. ~~**Migration prod** `20261005120000_duerp_reponses_transverses` (additive,
+   une colonne `JSONB` nullable) : à appliquer par la propriétaire au merge.~~
+   [2026-10-13, tri : déjà fait — appliquée en production : le
+   `prisma migrate status` de prod du 2026-10-13 ne liste comme non appliquées
+   que `20261012120000`, `20261012130000`, `20261012140000` et
+   `20261012210000`.]
 2. ~~**Les « non » transverses n'entrent pas dans le document imprimé.** Le
    snapshot d'une version fige les risques, pas les refus. Un DUERP qui part
    chez un tiers ne dit donc pas « le dirigeant a déclaré qu'aucun salarié ne
@@ -2600,11 +2836,12 @@ bloquante pour la branche :
 3. **Gestes et postures, écran, chimique** : la question ou le risque existe
    au DUERP, l'obligation est portée par l'établissement, aucun titre n'est au
    catalogue. Les y faire entrer relève du filtre à trois conditions, article
-   par article.
+   par article. [2026-10-13, tri : PROJET FUTUR → feuille de route.]
 4. **Pas de « ne concerne pas cette personne ».** Un « oui » au DUERP affiche
    ses titres sur toutes les fiches, avec « si elle est concernée, déclarez son
    titre ». Le refus nominatif demanderait de stocker l'exposition d'une
    personne — une donnée à instruire au regard du RGPD avant d'être un champ.
+   [2026-10-13, tri : PROJET FUTUR → feuille de route.]
 5. ~~**L'étape « questions transverses » reste cochée** sur les DUERP validés
    avant l'ADR-038 (`transversesRepondues`), alors que deux questions y sont
    neuves et sans réponse. Seule la fiche salarié le signale. Rouvrir l'étape
@@ -2628,3 +2865,6 @@ bloquante pour la branche :
    DUERP et se tait, et rien ne relève la contradiction. Ce n'est pas faux en
    droit — un équipement peut ne pas être conduit —, mais c'est la résolution
    que le dirigeant voit le moins. Même cas pour l'installation électrique.
+   [2026-10-13, tri : DÉCISION ATTENDUE — relever la contradiction ou non ;
+   l'autorisation de conduite (`R. 4323-56`) est en jeu, d'où DÉCISION et non
+   constat.]
