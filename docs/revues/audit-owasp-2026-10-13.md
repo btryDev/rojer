@@ -250,7 +250,12 @@ un critère de recette.
   déploiements pour retirer une colonne. Previews sur une base isolée, jamais
   l'URL de prod. Sauvegardes et PITR. Contrôle de dérive entre la base de prod
   et les migrations.
-- **B14 — Comptes.** Correspondance de `Entreprise.userId` (UUID Supabase) vers
+- **B14 — Comptes.** *[2026-10-14, `lot/nextjs-securite-1014` : `/api/*` sans
+  session répond 401 JSON ; limite de débit sur `/verifier` et
+  `verifierIntegriteSignature`, qui n'est plus une action serveur. `/signe/*`
+  et `/acces/*` gardent leurs limites d'OTP (essais, envois), sans limite par
+  IP : non faites ici. Restent pour la bascule : correspondance des
+  identifiants, lecture unique de la session.]* Correspondance de `Entreprise.userId` (UUID Supabase) vers
   l'identifiant Better Auth, et choix entre réinitialisation forcée et import des
   hachés bcrypt. Lire la session une seule fois par requête. Une route `/api/*`
   sans session répond 401, pas 307. La limite de débit couvre aussi `/signe/*`,

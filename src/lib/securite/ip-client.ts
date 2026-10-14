@@ -17,6 +17,10 @@
 //   CDN placé devant ajouterait une entrée : il faudrait alors lire l'avant-
 //   dernière, et ce module le dire.
 //
+// - **Next lui-même** (`next start`, standalone) ne pose `X-Forwarded-For`
+//   que s'il est ABSENT (`??=` dans `server/base-server.js`, Next 16.3.8) : il
+//   n'ajoute pas l'adresse du répartiteur à droite, la règle tient derrière.
+//
 // Sans en-tête exploitable (développement local, appel direct), `null` : la
 // limite par IP ne s'applique pas, celle par compte si.
 
