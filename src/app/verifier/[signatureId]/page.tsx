@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { verifierIntegriteSignature } from "@/lib/signatures/actions";
-import { SignatureBlock } from "@/components/ui-kit";
+import { SignatureBlock } from "@/components/ui-kit/SignatureBlock";
 
 /**
  * Page publique de vérification d'intégrité d'une signature.

@@ -23,7 +23,7 @@ import { cloturerAction } from "@/lib/actions/plan";
 import { getAction, origineDeLAction } from "@/lib/actions/queries";
 import { LABEL_TYPE_ACTION } from "@/lib/actions/labels";
 import { CRITICITE_ACTION_MAX } from "@/lib/actions/schema";
-import { LABEL_RESULTAT } from "@/lib/rapports/schema";
+import { LABEL_RESULTAT } from "@/lib/rapports/resultats";
 import { classerDate, type RegistreLigne } from "@/lib/calendrier/etats";
 import { formaterDateFr, formaterDateLongueFr } from "@/lib/dates";
 import { estActionEnRetard, estActionOuverte } from "@/lib/dates/retard";

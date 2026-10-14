@@ -234,7 +234,8 @@ sont fermés sur `517309db`.
 - **Correctif** : passer l'utilisateur en paramètre aux builders, ou une mémoïsation par requête qui marche aussi hors RSC (`AsyncLocalStorage`) dans le futur `requireUser` Better Auth.
 - **Effort** : S. **[Recette bascule]**
 
-### M8 zod et le barrel `ui-kit` chargés sur `/login`
+### ~~M8 zod et le barrel `ui-kit` chargés sur `/login`~~
+- **[Corrigé le 2026-10-14, `lot/nextjs-client-1014`]** Résultats, libellés, `RESULTATS_REALISES`, `STATUT_DEPUIS_RESULTAT` et `statutDepuisResultat` sortent de `rapports/schema.ts` vers `rapports/resultats.ts` (sans zod) ; tous les lecteurs non zod y sont repointés. Les sept entrées publiques (`LoginForm`, `SignupForm`, `ForgotPasswordForm`, `ResetPasswordForm`, `/verifier`, `/signe`, `/acces`) importent le kit composant par composant ; **le barrel est gardé** pour les 54 autres importeurs (pages authentifiées, qui tirent l'essentiel du kit de toute façon), avec un commentaire en tête. Mesuré sur `/login` : 799 → 504 Ko, 225 → 152 Ko gzip ; `ZodError` n'est plus dans aucun chunk des routes mesurées (sortir le schéma seul : 532 Ko / 161 Ko gzip ; contourner le barrel : −28 Ko / −9 Ko gzip de plus).
 - **Où** : `LoginForm` → `@/components/ui-kit` (barrel) → `StatusPill` → `lib/calendrier/etats.ts:29` → `lib/rapports/schema` → zod.
 - **Constat** : le chunk `0ict46jwt06ly.js` (282 Ko, 67 Ko gzip, contient `ZodError`) figure dans les manifestes de `/login` et `/login/mot-de-passe-oublie`. Le barrel `ui-kit` est importé par environ 30 composants client, presque tous pour `ChampBoard`.
 - **Correctif** : import direct `@/components/ui-kit/ChampBoard`, et sortir `statutDepuisResultat` du fichier de schéma.
@@ -287,7 +288,7 @@ Vérifiés sur `517309db` :
 2. ~~**M3** : `import "server-only"` sur `prisma.ts`, `auth/*`, `email/*`, `*/queries.ts`. (S)~~ fait le 2026-10-14
 3. **M1** : `etablissements/[id]/loading.tsx`. (S)
 4. **H2 (partiel)** : `cache()` sur `getEtablissement`, `getOptionalUserEtablissement`, `compterActions`. (S)
-5. **M8** : import direct de `ChampBoard`. −67 Ko gzip sur `/login`. (S)
+5. ~~**M8** : import direct de `ChampBoard`. −67 Ko gzip sur `/login`. (S)~~ fait le 2026-10-14 (−73 Ko gzip mesurés)
 6. **M4** : `Promise.all` sur le registre et les équipements. (S)
 7. **B1, B2** : sortir `regenererSansInvalider` du module `'use server'` et ajouter un `select` à `listerVersions`. (S)
 8. **B7** : retirer `react-hook-form`, `@hookform/resolvers` et les fichiers morts. (S)

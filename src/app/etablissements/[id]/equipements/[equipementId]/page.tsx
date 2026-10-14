@@ -50,7 +50,7 @@ import {
 } from "@/lib/equipements/frise";
 import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
 import { LABEL_PERIODICITE, LABEL_REALISATEUR } from "@/lib/calendrier/labels";
-import { LABEL_RESULTAT } from "@/lib/rapports/schema";
+import { LABEL_RESULTAT } from "@/lib/rapports/resultats";
 import type { RegistreLigne } from "@/lib/calendrier/etats";
 import {
   formaterDateLongueFr,

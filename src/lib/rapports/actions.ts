@@ -26,7 +26,8 @@ import {
   ORDRE_RAPPORT_PLUS_RECENT,
   WHERE_RAPPORT_REALISE,
 } from "./derniere-realisation";
-import { estResultatRealise, rapportMetadataSchema } from "./schema";
+import { rapportMetadataSchema } from "./schema";
+import { estResultatRealise } from "./resultats";
 import { validerFichier } from "./validator";
 
 export type UploadRapportState =

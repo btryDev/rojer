@@ -406,7 +406,13 @@ const RELEVE = {
   // — `periodicite.ts` ne tire plus le référentiel jusqu'aux composants
   // clients. NON : extraction, même fonction, mêmes appelants.
   // ~~a5d569d53f9b8b2b~~.
-  empreinte: "c8f112a346c9ac63",
+  // Recopiée SANS incrément le 2026-10-14 (`lot/nextjs-client-1014`, audit
+  // Next.js M8) : `RESULTATS`, `RESULTATS_REALISES`, `STATUT_DEPUIS_RESULTAT`
+  // et `statutDepuisResultat` passent, texte identique, de `rapports/schema.ts`
+  // à `rapports/resultats.ts` (sans zod) ; le générateur, `decision-par-faits`,
+  // `echeance-de-ligne` et `derniere-realisation` les y prennent. NON :
+  // extraction, mêmes valeurs, mêmes appelants. ~~c8f112a346c9ac63~~.
+  empreinte: "adf2b7f801f974e6",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

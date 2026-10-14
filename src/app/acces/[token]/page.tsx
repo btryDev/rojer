@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { verifierAccessToken } from "@/lib/access-tokens/verify";
-import { WhyCard, LegalBadge } from "@/components/ui-kit";
+import { WhyCard } from "@/components/ui-kit/WhyCard";
+import { LegalBadge } from "@/components/ui-kit/LegalBadge";
 import { SignatureExterneForm } from "@/components/signatures/SignatureExterneForm";
 import { prisma } from "@/lib/prisma";
 import { formaterDateFr } from "@/lib/dates";

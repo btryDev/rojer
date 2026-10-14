@@ -11,7 +11,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { ChampBoard } from "@/components/ui-kit";
+import { ChampBoard } from "@/components/ui-kit/ChampBoard";
 import { createClient } from "@/lib/supabase/client";
 
 type Status = "checking" | "ready" | "invalid";

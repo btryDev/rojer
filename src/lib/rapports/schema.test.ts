@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { rapportMetadataSchema } from "./schema";
 import {
   estResultatRealise,
-  rapportMetadataSchema,
   RESULTATS,
   STATUT_DEPUIS_RESULTAT,
-} from "./schema";
+} from "./resultats";
 
 describe("rapportMetadataSchema", () => {
   it("accepte une saisie minimale valide", () => {

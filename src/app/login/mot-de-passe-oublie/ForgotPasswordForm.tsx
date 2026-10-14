@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChampBoard } from "@/components/ui-kit";
+import { ChampBoard } from "@/components/ui-kit/ChampBoard";
 import {
   requestPasswordResetAction,
   type AuthActionState,

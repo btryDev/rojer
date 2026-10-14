@@ -9,7 +9,7 @@ import {
   referencesRegistreTenue,
   type RegimeDuRegistre,
 } from "./mentions-registre";
-import { LABEL_RESULTAT } from "@/lib/rapports/schema";
+import { LABEL_RESULTAT } from "@/lib/rapports/resultats";
 import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
 import { MARQUAGE_CONTRACTUEL } from "@/lib/prescriptions/sources";
 import type { DomaineObligation } from "@/lib/referentiels/conformite/types";

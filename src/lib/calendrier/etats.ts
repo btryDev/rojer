@@ -26,7 +26,7 @@ import {
 } from "@/lib/dates/retard";
 import { estLignePourInformation } from "@/lib/referentiels/conformite/initiative";
 import { JOURS_HORIZON_PROCHE } from "@/lib/dates";
-import { statutDepuisResultat } from "@/lib/rapports/schema";
+import { statutDepuisResultat } from "@/lib/rapports/resultats";
 // Type seul : effacé à la compilation, donc ce module reste utilisable côté
 // client, comme le dit l'en-tête de `VerificationDatee`.
 import type { StatutVerification } from "@prisma/client";

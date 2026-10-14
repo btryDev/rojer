@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleJourCivil, depuisCleJourCivil, instantCivil } from "@/lib/dates";
 import { joursDeRetard } from "@/lib/dates/retard";
-import type { ResultatRealise } from "@/lib/rapports/schema";
+import type { ResultatRealise } from "@/lib/rapports/resultats";
 import type { Periodicite } from "@/lib/referentiels/types-communs";
 import { echeanceDuTitre } from "@/lib/salaries/echeance";
 import {
