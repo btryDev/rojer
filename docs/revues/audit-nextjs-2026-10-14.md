@@ -386,7 +386,7 @@ Vérifiés sur `517309db` :
   - dépendances : `react-hook-form`, `@hookform/resolvers` (0 import), `@dnd-kit/modifiers` ;
   - `public/` : `vercel.svg`, `next.svg`, `globe.svg`, `window.svg`, `file.svg`, `building.png`, `store.png` (0 référence dans `src`) ;
   - la section « Stack » du CLAUDE.md annonce react-hook-form, qui n'est plus utilisé.
-- **B8** Cinq routes PDF répètent le même squelette `renderToBuffer` → `Response`. Un helper `reponsePdf()`.
+- ~~**B8** Cinq routes PDF répètent le même squelette `renderToBuffer` → `Response`. Un helper `reponsePdf()`.~~ **[Corrigé le 2026-10-14, `lot/nextjs-exports-1014`]** `src/lib/pdf/reponse.ts` : `reponsePdf(document, nomFichier)` rend le PDF et répond ; les cinq routes (dossier de conformité, registre, plan d'actions, DUERP aperçu et version) y passent. C'est lui qui porte le sémaphore des exports (H3). En-têtes relevés sur les six réponses avant et après (`scripts/mesure-exports.ts`) : identiques à l'octet (`content-type`, `content-disposition` `inline; filename="…"`, `cache-control: no-store`) ; `reponse.test.ts` les fige. `securite/cache-documents.test.ts` accepte la délégation à `reponsePdf(` comme celle à `servirFichier(` et tient `reponse.ts` et le 503 des exports à `no-store`.
 - **B9** `useLayoutPerso` (`useLayoutPerso.ts:180-199`) rend la disposition par défaut puis celle du `localStorage` : saut visuel (CLS) chez qui a personnalisé son board.
 - **B10** Index manquants sur `PermisFeu.prestataireId`, `PlanPrevention.prestataireId`, `AccessToken.prestataireId`.
 - **B11** Pas de `robots.ts`. Les pages publiques (`/accessibilite/[slug]`, `/verifier`, `/signe`, `/acces`) devraient être exclues de l'indexation, sauf choix contraire. Pas de mentions légales (R1, en attente de la propriétaire).

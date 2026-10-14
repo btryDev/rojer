@@ -1,8 +1,8 @@
-import { renderToBuffer } from "@react-pdf/renderer";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { construirePlanActionsData } from "@/lib/pdf/builders";
 import { PlanActionsDocument } from "@/lib/pdf/PlanActionsDocument";
 import { slugifyFilename } from "@/lib/pdf/styles";
+import { reponsePdf } from "@/lib/pdf/reponse";
 
 /**
  * Plan d'actions de conformité en PDF.
@@ -21,17 +21,8 @@ export async function GET(
   const data = await construirePlanActionsData(id);
   if (!data) return new Response("Établissement introuvable", { status: 404 });
 
-  const buffer = await renderToBuffer(PlanActionsDocument({ data }));
-  const filename = `Plan_actions_${slugifyFilename(data.etablissement)}.pdf`;
-
-  const blob = new Blob([new Uint8Array(buffer)], {
-    type: "application/pdf",
-  });
-  return new Response(blob, {
-    headers: {
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="${filename}"`,
-      "Cache-Control": "no-store",
-    },
-  });
+  return reponsePdf(
+    PlanActionsDocument({ data }),
+    `Plan_actions_${slugifyFilename(data.etablissement)}.pdf`,
+  );
 }
