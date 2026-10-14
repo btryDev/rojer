@@ -603,6 +603,14 @@ describe("référentiel conformité — anti-doublon", () => {
       raison:
         "Instruit le 2026-09-21, ce n'est PAS un doublon. `PE 27` fonde d'un côté, par son § 4, un ÉCRIT affiché — trois mentions, une pièce que l'on voit au mur — et de l'autre, par son § 5, un ACTE envers des personnes : instruire le personnel et l'entraîner à la manœuvre des moyens de secours. Deux paragraphes, deux objets, deux façons de le constater ; les fondre donnerait une case unique pour une affiche et pour une formation. La clé d'article reste « PE 27 » pour les deux parce que le corpus ne descend pas au paragraphe — leur `reference` le désigne.",
     },
+    {
+      paire: [
+        "incendie-erp-hotel-consigne-chambres",
+        "incendie-erp-hotel-plans-evacuation-niveaux",
+      ],
+      raison:
+        "Instruit le 2026-10-14 (décision de la propriétaire, point 4), ce n'est PAS un doublon. `O 21 § 2` fait afficher deux écrits différents à deux endroits différents : une consigne d'incendie du modèle annexé DANS CHAQUE CHAMBRE, et un plan d'évacuation (NF S 60-303) À CHAQUE NIVEAU. Le livre III les sépare en deux articles pour la 5ᵉ catégorie (PE 33 § 2 et PE 35), et le référentiel en deux lignes (`incendie-erp-5-sommeil-consigne-chambres`, `incendie-erp-5-sommeil-plans-affiches`) ; le chapitre O les met dans un même paragraphe. Les fondre ferait cocher une case pour deux affichages qui ne se constatent pas au même endroit. La clé d'article reste « O 21 » parce que le corpus ne descend pas au paragraphe.",
+    },
     // ── Résolus le 2026-08-27 ──────────────────────────────────────────
     // Trois paires figuraient ici : les fragments de PE 4 § 2 (électricité,
     // gaz) et de R. 4222-20 (VMC/CTA) face aux obligations qui portent ces
@@ -1868,6 +1876,12 @@ describe("référentiel conformité — version et empreinte", () => {
     // `dae-erp-declaration-geodae`) − 0 = 179 ; relevée en appelant
     // `empreinteReferentiel()`.
     { version: "2026-10-14.1", empreinte: "179-625abddddb255e71" },
+    // 2026-10-14, décision de la propriétaire (points 1 à 6) : livre II,
+    // titre II, chapitres M, N, O, W, et le livret de CH 39. Cinq lignes
+    // d'établissement bornées à N1–N4 et à leurs types, une d'équipement
+    // (`VMC`, `CTA`) bornée à N1–N4. 179 + 6 − 0 = 185, dont 3 au niveau
+    // audit, 182 suivies (version `.2` à l'intégration, `lot/dae` ayant pris `.1`) ; relevée en appelant `empreinteReferentiel()`.
+    { version: "2026-10-14.2", empreinte: "185-15d84b2a86bafdfc" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -2044,7 +2058,10 @@ describe("référentiel conformité — version et empreinte", () => {
       // ~~176~~ — 2026-10-14 (défibrillateur, décision de la propriétaire) :
       // 176 + 3 (`dae-erp-detention`, `dae-erp-maintenance`,
       // `dae-erp-declaration-geodae`) − 0 = 179.
-    ).toBe(179);
+      // ~~179~~ — 2026-10-14 (livre II, titre II, M/N/O/W, et livret de
+      // CH 39, décision de la propriétaire) : 179 + 6 − 0 = 185, remesuré en
+      // appelant `obligationsConformite`.
+    ).toBe(185);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {
@@ -3059,7 +3076,12 @@ describe("GN 10 dit sur tout état permanent fondé sur le livre III (2026-09-27
   // l'accompagnent), dont `signalisation-erp-extincteurs-identification`,
   // fondée sur le livre II et servie aux N1–N4, que le filtre « PE » ne
   // voyait pas. Éprouvé en retirant la constante de cette ligne-là.
-  const FONDE_SUR_LE_REGLEMENT = /^(PE \d|MS 39$)/;
+  // 2026-10-14 : + les chapitres de type du livre II, titre II, lus pour les
+  // types M, N, O et W (corpus `arrete-1980-livre-2-titre-2`) : leurs états
+  // permanents sont servis à tout établissement du type en catégories 1 à 4,
+  // sans date d'ouverture — même sur-application, même phrase. Éprouvé en
+  // retirant la phrase de `incendie-erp-schema-organisation-securite`.
+  const FONDE_SUR_LE_REGLEMENT = /^(PE \d|MS 39$|[MNOW] \d)/;
   const fondateur = (o: (typeof obligationsConformite)[number]) =>
     o.referencesLegales[0].article ?? o.referencesLegales[0].reference;
   it("un état permanent fondé sur un article PE ou sur MS 39 cite GN 10 entier dans sa description", () => {
@@ -3079,6 +3101,60 @@ describe("GN 10 dit sur tout état permanent fondé sur le livre III (2026-09-27
     );
     expect(vus.some((o) => fondateur(o) === "MS 39")).toBe(true);
     expect(vus.filter((o) => /^PE \d/.test(fondateur(o))).length).toBeGreaterThanOrEqual(4);
+    expect(vus.filter((o) => /^[MNOW] \d/.test(fondateur(o))).length).toBeGreaterThanOrEqual(4);
+  });
+});
+
+describe("livre II, titre II — un chapitre de type ne sert que son type, en catégories 1 à 4 (2026-10-14)", () => {
+  // Décision de la propriétaire du 2026-10-14 : quatre chapitres lus (M, N,
+  // O, W), dont chacun ne s'applique qu'au-dessus des seuils de public de son
+  // article 1er — en catégories 1 à 4 — et à son type. Les autres types n'ont
+  // pas été lus : on ne les sert pas.
+  const TITRE_2 = /^[LMNOPRSTUVWXYJ] (?:\d|annexe)/;
+  const DIT_SON_CHAMP = /livre II(?!I)|quatre premières catégories/;
+  const LUS = ["M", "N", "O", "W"];
+  const fondateur = (o: (typeof obligationsConformite)[number]) =>
+    o.referencesLegales[0].article ?? "";
+
+  it("une obligation fondée sur un chapitre de type est bornée à N1–N4 et aux seuls types lus", () => {
+    const fautives: string[] = [];
+    for (const o of obligationsConformite) {
+      if (!TITRE_2.test(fondateur(o))) continue;
+      const erp = o.typologies.erp;
+      const borne =
+        typeof erp === "object" &&
+        erp.categories !== undefined &&
+        erp.categories.length > 0 &&
+        erp.categories.every((c) => ["N1", "N2", "N3", "N4"].includes(c)) &&
+        erp.types !== undefined &&
+        erp.types.length > 0 &&
+        erp.types.every((t) => LUS.includes(t)) &&
+        // Le type du chapitre fondateur est dans la liste.
+        erp.types.some((t) => t === fondateur(o)[0]);
+      if (!borne) fautives.push(o.id);
+    }
+    expect(fautives).toEqual([]);
+  });
+
+  it("toute référence à un chapitre de type dit son champ, même en contexte", () => {
+    // N 20 est cité en CONTEXTE d'une ligne du Code du travail servie à tout
+    // employeur : la référence affichée doit dire qu'elle ne vaut qu'en type N
+    // des quatre premières catégories.
+    const muettes = obligationsConformite.flatMap((o) =>
+      o.referencesLegales
+        .filter((r) => TITRE_2.test(r.article ?? "") && !DIT_SON_CHAMP.test(r.reference))
+        .map((r) => `${o.id} — ${r.reference}`),
+    );
+    expect(muettes).toEqual([]);
+  });
+
+  it("la garde voit les lignes du titre II (borne basse)", () => {
+    const fondees = obligationsConformite.filter((o) => TITRE_2.test(fondateur(o)));
+    expect(fondees.length).toBeGreaterThanOrEqual(5);
+    const citees = obligationsConformite.filter((o) =>
+      o.referencesLegales.slice(1).some((r) => TITRE_2.test(r.article ?? "")),
+    );
+    expect(citees.map((o) => o.id)).toContain("incendie-travail-consigne-affichee");
   });
 });
 

@@ -28,7 +28,7 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
   url: "https://www.legifrance.gouv.fr/loda/id/LEGITEXT000020303557/",
   etendue: "articles_cites",
   portee:
-    "TITRE IER SEUL — dispositions générales, dix des onze chapitres : GE (généralités), CO (construction), DF (désenfumage), CH (chauffage-ventilation), GZ (gaz), EL (électricité), EC (éclairage de sécurité), AS (ascenseurs, escaliers mécaniques, trottoirs roulants), GC (appareils de cuisson), MS (moyens de secours). Seul AM (aménagements intérieurs) n'a aucune entrée. AUCUN ARTICLE DU TITRE II — les 482 articles des quatorze chapitres de type (L, M, N, O, P, R, S, T, U, V, W, X, Y, J) ne sont pas ouverts, et pas davantage cités par le référentiel. PE 1 § 1 écarte ce livre en 5ᵉ catégorie sauf renvoi exprès : le Livre III n'en ouvre que MS 39 et MS 70 [2026-10-07, C60 : et AS 9, pour les hôtels, par PO 1 § 3 que PO 8 § 1 réimporte ; PE 37 ouvre en outre GE 2, GE 3, GE 5 et GE 6 aux établissements à locaux à sommeil — ces renvois ne sont pas ceux de PE 26 et PE 27 que la phrase comptait]. Les articles listés ici sont cités par le référentiel malgré cette exclusion — la sur-application est documentée obligation par obligation.",
+    "TITRE IER SEUL — dispositions générales, dix des onze chapitres : GE (généralités), CO (construction), DF (désenfumage), CH (chauffage-ventilation), GZ (gaz), EL (électricité), EC (éclairage de sécurité), AS (ascenseurs, escaliers mécaniques, trottoirs roulants), GC (appareils de cuisson), MS (moyens de secours). Seul AM (aménagements intérieurs) n'a aucune entrée. ~~AUCUN ARTICLE DU TITRE II — les 482 articles des quatorze chapitres de type (L, M, N, O, P, R, S, T, U, V, W, X, Y, J) ne sont pas ouverts, et pas davantage cités par le référentiel.~~ [2026-10-14 : quatre chapitres du titre II — M, N, O, W — sont lus en entier et classés au corpus `arrete-1980-livre-2-titre-2`, cent vingt et une entrées ; cinq obligations nouvelles en naissent, bornées aux catégories 1 à 4 et à leurs types, et N 20 entre en contexte d'une sixième, existante (décision de la propriétaire). Les dix autres chapitres de type (L, P, R, S, T, U, V, X, Y, J) restent non ouverts, et aucune ligne du référentiel ne les cite.] PE 1 § 1 écarte ce livre en 5ᵉ catégorie sauf renvoi exprès : le Livre III n'en ouvre que MS 39 et MS 70 [2026-10-07, C60 : et AS 9, pour les hôtels, par PO 1 § 3 que PO 8 § 1 réimporte ; PE 37 ouvre en outre GE 2, GE 3, GE 5 et GE 6 aux établissements à locaux à sommeil — ces renvois ne sont pas ceux de PE 26 et PE 27 que la phrase comptait]. Les articles listés ici sont cités par le référentiel malgré cette exclusion — la sur-application est documentée obligation par obligation.",
   articles: [
     {
       ref: "CH 57",
@@ -569,16 +569,20 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       modifiePar: {
         texte: "Arrêté du 14 février 2000 - art. Annexe, v. init.",
       },
-      luLe: "2026-09-04",
-      lecture: "agent_verbatim",
+      // ~~luLe: "2026-09-04", lecture: "agent_verbatim"~~ — relu le
+      // 2026-10-14 par l'API Légifrance, bac à sable (LEGIARTI000020304645) ;
+      // égalité avec la production non vérifiée.
+      luLe: "2026-10-14",
+      lecture: "api_legifrance",
       prescrit:
         "Quatre paragraphes sur le chargement en poussières des filtres d'une installation de ventilation de confort. § 1 : l'UTILISATEUR tient un livret d'entretien de l'installation de filtration, où sont portées les valeurs d'efficacité minimale. § 2 : l'installateur y consigne la perte de charge maximale au-delà de laquelle les filtres doivent être nettoyés ou changés. § 3 : une VISITE PÉRIODIQUE est effectuée par l'utilisateur ou son représentant, à une périodicité qui ne peut excéder UN AN, RAMENÉE À TROIS MOIS en l'absence d'un système de mesure et d'alarme fonctionnant en permanence, et raccourcie encore si les caractéristiques locales ou fonctionnelles le justifient. § 4 : les visites, mesures, nettoyages et changements sont notés sur le livret. Chemin : Livre II > Titre Ier > Chapitre V > Section 7 « Traitement d'air et ventilation » > Sous-section 1 « Ventilation de confort » (CH 29 à CH 40).",
       citationCle:
         "§ 3. Une visite périodique doit être effectuée par l'utilisateur ou son représentant. Cette périodicité ne doit pas être supérieure à un an. En l'absence d'un système de mesure et d'alarme fonctionnant en permanence, cette périodicité est ramenée à trois mois. De plus, les caractéristiques locales ou fonctionnelles de certaines installations peuvent justifier une périodicité plus courte, qui sera portée sur le livret d'entretien.",
       statut: "retenu",
-      obligations: ["aeration-erp-filtres-visite-periodique"],
+      // 2026-10-14 : + le livret d'entretien (§ 1, § 2, § 4), réserve (1) levée.
+      obligations: ["aeration-erp-filtres-visite-periodique", "aeration-erp-filtres-livret-entretien"],
       reserve:
-        "TROIS CHOSES RESTENT DEHORS, ET LA PREMIÈRE EST UN ÉCRIT.\n\n(1) LE LIVRET D'ENTRETIEN DE L'INSTALLATION DE FILTRATION (§ 1, § 2 et § 4) N'EST PORTÉ PAR AUCUNE OBLIGATION. C'est une pièce que l'utilisateur TIENT — valeurs d'efficacité minimale, perte de charge maximale fixée par l'installateur, puis chaque visite, mesure, nettoyage ou changement de filtre. Un état permanent avec `pieceAttendue`, de la même espèce que le carnet d'entretien d'ascenseur que le référentiel porte déjà. Rien ne le bloque au modèle ; ce lot ne l'encode pas parce qu'il n'a pas tranché s'il fait un écrit à part ou s'il rejoint le livret d'entretien de GC 18 h) et le dossier de R. 4224-17, trois écrits voisins que personne n'a rapprochés.\n\n(2) L'ALLÈGEMENT ANNUEL N'EST PAS DONNÉ, ET C'EST DÉLIBÉRÉ. Le § 3 écrit un plafond d'un an et le ramène à trois mois « en l'absence d'un système de mesure et d'alarme fonctionnant en permanence ». Le produit ne détient aucun attribut disant qu'une installation en est pourvue, et la règle du dépôt vaut ici en plein : un allègement ne se donne pas sur une absence supposée. `aeration-erp-filtres-visite-periodique` porte donc TRIMESTRIELLE, qui est le régime ordinaire — une ventilation de confort de restaurant ou de commerce n'a presque jamais de mesure permanente. La sur-application possible est de trois visites par an, faites par l'exploitant lui-même, donc visible et sans coût de tiers ; l'erreur inverse aurait multiplié le délai par quatre sans que personne puisse s'en apercevoir.\n\n(3) LA TROISIÈME PHRASE DU § 3 N'EST PAS ENCODABLE, et il faut le dire : « les caractéristiques locales ou fonctionnelles de certaines installations peuvent justifier une périodicité plus courte, qui sera portée sur le livret d'entretien ». C'est un rythme que l'exploitant fixe lui-même, sur le livret. Le produit ne l'invente pas ; la prescription particulière (ADR-035) est la voie par laquelle il pourrait un jour l'accueillir.",
+        "~~TROIS CHOSES RESTENT DEHORS, ET LA PREMIÈRE EST UN ÉCRIT.~~ [2026-10-14 : DEUX — la première est portée.]\n\n~~(1) LE LIVRET D'ENTRETIEN DE L'INSTALLATION DE FILTRATION (§ 1, § 2 et § 4) N'EST PORTÉ PAR AUCUNE OBLIGATION. C'est une pièce que l'utilisateur TIENT — valeurs d'efficacité minimale, perte de charge maximale fixée par l'installateur, puis chaque visite, mesure, nettoyage ou changement de filtre. Un état permanent avec `pieceAttendue`, de la même espèce que le carnet d'entretien d'ascenseur que le référentiel porte déjà. Rien ne le bloque au modèle ; ce lot ne l'encode pas parce qu'il n'a pas tranché s'il fait un écrit à part ou s'il rejoint le livret d'entretien de GC 18 h) et le dossier de R. 4224-17, trois écrits voisins que personne n'a rapprochés.~~ [2026-10-14 : ENCODÉ, décision de la propriétaire (point 6) — un écrit à part, `aeration-erp-filtres-livret-entretien`, porté par l'équipement (`VMC`, `CTA`), N1–N4, sur le patron de la visite trimestrielle. Article relu le même jour par l'API Légifrance (bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000020304645, seule version, texte inchangé.]\n\n(2) L'ALLÈGEMENT ANNUEL N'EST PAS DONNÉ, ET C'EST DÉLIBÉRÉ. Le § 3 écrit un plafond d'un an et le ramène à trois mois « en l'absence d'un système de mesure et d'alarme fonctionnant en permanence ». Le produit ne détient aucun attribut disant qu'une installation en est pourvue, et la règle du dépôt vaut ici en plein : un allègement ne se donne pas sur une absence supposée. `aeration-erp-filtres-visite-periodique` porte donc TRIMESTRIELLE, qui est le régime ordinaire — une ventilation de confort de restaurant ou de commerce n'a presque jamais de mesure permanente. La sur-application possible est de trois visites par an, faites par l'exploitant lui-même, donc visible et sans coût de tiers ; l'erreur inverse aurait multiplié le délai par quatre sans que personne puisse s'en apercevoir.\n\n(3) LA TROISIÈME PHRASE DU § 3 N'EST PAS ENCODABLE, et il faut le dire : « les caractéristiques locales ou fonctionnelles de certaines installations peuvent justifier une périodicité plus courte, qui sera portée sur le livret d'entretien ». C'est un rythme que l'exploitant fixe lui-même, sur le livret. Le produit ne l'invente pas ; la prescription particulière (ADR-035) est la voie par laquelle il pourrait un jour l'accueillir.",
     },
     {
       ref: "AS 9",
@@ -663,6 +667,48 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
         "Aucune catégorie d'équipement pour le « module ou conteneur spécialisé » de cuisson, et aucun attribut d'équipement disant qu'une installation de cuisson est TEMPORAIRE. Les deux conditions du champ de GC 18 sont indissociables : le régime dérogatoire qu'il ouvre (bouteilles de 35 kg, ouvertures latérales) n'a de sens que pour un module temporaire.",
     },
     {
+      // 2026-10-14 — lu à la demande de la revue indépendante du lot titre II :
+      // vaut pour tout ERP des catégories 1 à 4, et n'était dans aucun corpus.
+      ref: "MS 47",
+      intitule: "Consignes",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000021231059",
+      versionEnVigueur: "2010-01-23",
+      modifiePar: { texte: "Arrêté du 24 septembre 2009 - art. (V)" },
+      luLe: "2026-10-14",
+      lecture: "api_legifrance",
+      prescrit:
+        "Des consignes destinées aux personnels de l'établissement, conformes à la norme NF S 60-303, constamment mises à jour et affichées sur supports fixes et inaltérables, indiquent l'alerte des sapeurs-pompiers, la sécurité du public et du personnel, l'évacuation des personnes en situation de handicap, la mise en œuvre des moyens de secours, l'accueil et le guidage des sapeurs-pompiers. Livre II > Titre Ier > Chapitre XI > Section 4 « Service de sécurité incendie » (MS 45 à MS 52). Relu par l'API Légifrance en BAC À SABLE (égalité avec la production non vérifiée) : LEGIARTI000021231059.",
+      citationCle:
+        "Des consignes précises, conformes à la norme NF S 60-303 du 20 septembre 1987 relative aux plans et consignes de protection contre l'incendie, destinées aux personnels de l'établissement, constamment mises à jour, et affichées sur supports fixes et inaltérables doivent indiquer : - les modalités d'alerte des sapeurs-pompiers ; - les dispositions à prendre pour assurer la sécurité du public et du personnel ; ― les dispositions à prendre pour favoriser l'évacuation des personnes en situation de handicap ou leur évacuation différée si celle-ci est rendue nécessaire ; - la mise en oeuvre des moyens de secours de l'établissement ; - l'accueil et le guidage des sapeurs-pompiers.",
+      statut: "retenu",
+      // En CONTEXTE : même objet que la consigne du Code du travail — un
+      // écrit affiché à l'intention du personnel, qui dit l'alerte,
+      // l'évacuation, les personnes handicapées et les moyens de secours.
+      obligations: ["incendie-travail-consigne-affichee"],
+      reserve:
+        "LE MÊME ÉCRIT, PAS LE MÊME CHAMP. MS 47 vaut pour tout ERP des quatre premières catégories ; la ligne qui l'accueille, `incendie-travail-consigne-affichee`, est due à l'employeur dans le champ de R. 4227-34. Un ERP des catégories 1 à 4 sans travailleurs n'en reçoit donc aucune, et en 4ᵉ catégorie la ligne est « à confirmer » tant que les personnes présentes ne sont pas déclarées (mesuré le 2026-10-14). Pas de ligne nouvelle, consigne de la revue : deux lignes pour une affiche feraient deux cases. Ce qui reste dehors : l'ERP 1–4 sans personnel dans le champ de R. 4227-34, et la conformité à la norme NF S 60-303, nommée par le texte et non lue.",
+    },
+    {
+      // 2026-10-14 — même origine que MS 47.
+      ref: "MS 48",
+      intitule: "Formation et qualification du personnel du service de sécurité incendie",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000021838329",
+      versionEnVigueur: "2010-05-16",
+      modifiePar: { texte: "Arrêté du 11 décembre 2009 - art." },
+      luLe: "2026-10-14",
+      lecture: "api_legifrance",
+      prescrit:
+        "§ 1 : les personnes désignées par l'exploitant (MS 46 § 1 a) ont reçu une formation conduite à son initiative et sous sa responsabilité — retenu. § 2 : la qualification des agents de sécurité incendie est vérifiée dans les conditions d'un arrêté ministériel. § 3 : la commission de sécurité contrôle l'instruction du service lors de ses visites. Livre II > Titre Ier > Chapitre XI > Section 4. Relu par l'API Légifrance en BAC À SABLE (égalité avec la production non vérifiée) : LEGIARTI000021838329.",
+      citationCle:
+        "§ 1. Les personnes désignées par l'exploitant, mentionnées au paragraphe 1.a de l'article MS 46 pour assurer la sécurité contre l'incendie, doivent avoir reçu une formation conduite à l'initiative et sous la responsabilité de l'exploitant.",
+      statut: "retenu",
+      // En CONTEXTE : la formation des personnes que la ligne fait désigner
+      // et entraîner (N 17, M 29 § 1, O 18, W 13).
+      obligations: ["incendie-erp-personnel-designe-moyens-secours"],
+      reserve:
+        "DEUX PARAGRAPHES DEHORS, ET UNE BORNE. Le § 2 (qualification des agents de sécurité incendie, SSIAP) suit le sort de M 29 § 2 à § 4 : non porté. Le § 3 décrit un contrôle de la commission, que l'exploitant subit. La borne : MS 48 vaut pour tout ERP des quatre premières catégories qui a des personnes désignées, mais la ligne qui l'accueille n'est servie qu'aux types M, N, O, W, les seuls dont le chapitre a été lu ; ailleurs, MS 46, qui dit QUI compose le service selon le type, n'a pas été encodé (lu le même jour, non classé : hors de la demande).",
+    },
+    {
       ref: "MS 69",
       intitule: "Exploitation de l'équipement d'alarme",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020317748",
@@ -670,8 +716,11 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       modifiePar: {
         texte: "Arrêté du 2 février 1993 - art. Annexe, v. init.",
       },
-      luLe: "2026-09-04",
-      lecture: "agent_verbatim",
+      // ~~luLe: "2026-09-04", lecture: "agent_verbatim"~~ — relu le
+      // 2026-10-14 par l'API Légifrance, bac à sable (LEGIARTI000020317748) ;
+      // égalité avec la production non vérifiée.
+      luLe: "2026-10-14",
+      lecture: "api_legifrance",
       prescrit:
         "Quatre obligations d'exploitation de l'alarme : initier le personnel au fonctionnement du système d'alarme ; s'assurer, UNE FOIS PAR SEMAINE AU MOINS, du bon fonctionnement de l'installation et de l'aptitude des alimentations électriques et/ou pneumatiques de sécurité ; faire effectuer les remises en état le plus rapidement possible ; disposer en permanence d'un stock de petites fournitures de rechange (lampes, fusibles, vitres de déclencheurs manuels à bris de glace, cartouches de gaz inerte comprimé). Chemin : Livre II > Titre Ier > Chapitre XI > Section 5 « Système de sécurité incendie (SSI) » (MS 53 à MS 69) — donc écarté en 5ᵉ catégorie par PE 1 § 1.",
       citationCle:
@@ -679,7 +728,35 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       statut: "retenu",
       obligations: ["incendie-erp-alarme-verification-hebdomadaire"],
       reserve:
-        "TROIS DES QUATRE OBLIGATIONS DE L'ARTICLE NE SONT PORTÉES PAR RIEN, et elles ne se ressemblent pas.\n\n(1) L'INITIATION DU PERSONNEL AU FONCTIONNEMENT DU SYSTÈME D'ALARME. Première phrase de l'article, sans rythme et sans réalisateur nommé. Elle est voisine de la formation à la sécurité de `L. 4141-1` et de l'exercice semestriel de `R. 4227-39`, que le référentiel porte l'une et l'autre côté Code du travail — mais elle vise l'ALARME nommément, et un ERP peut n'avoir aucun salarié. Non encodée : la rabattre sur l'une des deux serait le rabattage que ce dépôt refuse.\n\n(2) LA REMISE EN ÉTAT « LE PLUS RAPIDEMENT POSSIBLE » n'est ni un rythme ni un état : c'est une obligation de diligence dont le fait déclencheur est la panne. Le produit ne l'observe pas.\n\n(3) LE STOCK PERMANENT DE PETITES FOURNITURES DE RECHANGE — lampes, fusibles, vitres de bris de glace, cartouches de gaz inerte — est un ÉTAT PERMANENT MATÉRIEL, de la même espèce que le matériel de premiers secours de `R. 4224-14` que le référentiel porte. Rien ne le bloque au modèle ; ce lot ne l'encode pas parce que le mandat bornait ce qui devait l'être aux articles qui PORTENT UN RYTHME, et qu'une seconde ligne sur le même article se décide pour elle-même.\n\nUNE TENSION DE DATE, SIGNALÉE PLUTÔT QUE LISSÉE. La page de l'article annonce « Version en vigueur depuis le 15/08/1980 » et, dans le même bandeau, « Modifié par Arrêté du 2 février 1993 - art. Annexe, v. init. ». Les deux ne peuvent pas être vraies ensemble. `versionEnVigueur` porte la date que la page affiche comme telle — c'est elle que la veille compare —, et `modifiePar` porte le texte que la même page nomme. Le § 2.D du journal tient ce piège au n° 7, mais pour une page CONSOLIDÉE ; ici la lecture vient de la page d'ARTICLE, et les deux informations y coexistent telles quelles. Le désaccord est donc dans la source, pas dans la lecture.",
+        "~~TROIS DES QUATRE OBLIGATIONS DE L'ARTICLE NE SONT PORTÉES PAR RIEN, et elles ne se ressemblent pas.~~ [2026-10-14 : DEUX restent ouvertes ici — l'initiation du personnel et la remise en état ; la troisième, le stock, est classée hors cadre à part.]\n\n(1) L'INITIATION DU PERSONNEL AU FONCTIONNEMENT DU SYSTÈME D'ALARME. Première phrase de l'article, sans rythme et sans réalisateur nommé. Elle est voisine de la formation à la sécurité de `L. 4141-1` et de l'exercice semestriel de `R. 4227-39`, que le référentiel porte l'une et l'autre côté Code du travail — mais elle vise l'ALARME nommément, et un ERP peut n'avoir aucun salarié. Non encodée : la rabattre sur l'une des deux serait le rabattage que ce dépôt refuse.\n\n(2) LA REMISE EN ÉTAT « LE PLUS RAPIDEMENT POSSIBLE » n'est ni un rythme ni un état : c'est une obligation de diligence dont le fait déclencheur est la panne. Le produit ne l'observe pas.\n\n~~(3) LE STOCK PERMANENT DE PETITES FOURNITURES DE RECHANGE — lampes, fusibles, vitres de bris de glace, cartouches de gaz inerte — est un ÉTAT PERMANENT MATÉRIEL, de la même espèce que le matériel de premiers secours de `R. 4224-14` que le référentiel porte. Rien ne le bloque au modèle ; ce lot ne l'encode pas parce que le mandat bornait ce qui devait l'être aux articles qui PORTENT UN RYTHME, et qu'une seconde ligne sur le même article se décide pour elle-même.~~ [2026-10-14 : DÉCIDÉ — HORS CADRE, décision de la propriétaire : c'est un stock, pas un acte, et une case cochée ressemblerait à une preuve (ADR-027). Classé à part, entrée « MS 69 — stock permanent de fournitures de rechange » ci-dessous, et au § 7 de `docs/couverture-declaree-du-produit.md`. Les points (1) et (2) restent ouverts.]\n\nUNE TENSION DE DATE, SIGNALÉE PLUTÔT QUE LISSÉE. La page de l'article annonce « Version en vigueur depuis le 15/08/1980 » et, dans le même bandeau, « Modifié par Arrêté du 2 février 1993 - art. Annexe, v. init. ». Les deux ne peuvent pas être vraies ensemble. `versionEnVigueur` porte la date que la page affiche comme telle — c'est elle que la veille compare —, et `modifiePar` porte le texte que la même page nomme. Le § 2.D du journal tient ce piège au n° 7, mais pour une page CONSOLIDÉE ; ici la lecture vient de la page d'ARTICLE, et les deux informations y coexistent telles quelles. Le désaccord est donc dans la source, pas dans la lecture. [2026-10-14 : l'API Légifrance rend la même paire — une seule version, en vigueur depuis le 1980-08-15, et un lien MODIFICATION vers l'arrêté du 2 février 1993 (art. Annexe, v. init.) sans date d'effet utilisable.]",
+    },
+    {
+      // 2026-10-14 — la dernière phrase de MS 69, classée pour elle-même
+      // (comme « PO 1 § 3 — contrôle biennal » au livre III) : l'article reste
+      // `retenu` pour son contrôle hebdomadaire, ce volet est HORS CADRE.
+      ref: "MS 69 — stock permanent de fournitures de rechange",
+      intitule: "Le stock de petites fournitures de rechange de l'équipement d'alarme",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020317748",
+      versionEnVigueur: "1980-08-15",
+      modifiePar: {
+        texte: "Arrêté du 2 février 1993 - art. Annexe, v. init.",
+      },
+      luLe: "2026-10-14",
+      lecture: "api_legifrance",
+      citationCle:
+        "L'exploitant doit disposer en permanence d'un stock de petites fournitures de rechange des modèles utilisés tels que lampes, fusibles, vitres pour déclencheurs manuels à bris de glace, cartouches de gaz inerte comprimé, etc.",
+      prescrit:
+        "Dernière phrase de MS 69 : l'exploitant d'un ERP des quatre premières catégories tient en permanence un stock de petites fournitures de rechange de son équipement d'alarme. Livre II > Titre Ier > Chapitre XI > Section 5 « Système de sécurité incendie (SSI) ». Relu le 2026-10-14 par l'API Légifrance en BAC À SABLE (PISTE) ; égalité avec la production non vérifiée.",
+      statut: "obligation_manquante",
+      cause: "a_trancher",
+      // HORS CADRE, décision de la propriétaire du 2026-10-14 ; couverte par
+      // la clause générale des mentions légales (§ 7 de
+      // `docs/couverture-declaree-du-produit.md`).
+      toucheLaCible: true,
+      motif:
+        "UN STOCK, PAS UN ACTE. Une obligation réelle de l'exploitant d'un ERP des catégories 1 à 4 qui détient un équipement d'alarme — dans la cible depuis le 2026-10-12. Rien ne la bloque au modèle : un état permanent d'équipement saurait la porter. La propriétaire l'a classée HORS CADRE le 2026-10-14 : avoir en réserve des lampes, des fusibles, des vitres ou des cartouches est un état de fait que personne ne constate, et une case « stock en place » cochée dans Rojer ressemblerait à une preuve sans en être une — la déclaration-qui-ressemble-à-une-preuve que l'ADR-027 interdit. Même motif que `R. 4224-3` et `R. 4223-4` au § 7. La vérification hebdomadaire de l'alarme, deuxième phrase du même article, reste portée par `incendie-erp-alarme-verification-hebdomadaire`.",
+      bloquePar:
+        "Rien de technique : une décision de produit, prise le 2026-10-14 (hors cadre).",
     },
     {
       ref: "MS 71",

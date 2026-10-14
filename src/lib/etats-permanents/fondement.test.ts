@@ -98,3 +98,45 @@ describe("l'article cité sous une ligne « Ce qui doit être en place »", () =
     expect(cites.some((id) => /reglement-interieur/.test(id))).toBe(true);
   });
 });
+
+describe("livre II, titre II — l'article affiché est celui du type de l'établissement (2026-10-14)", () => {
+  const ob = (id: string) => obligationsConformite.find((o) => o.id === id)!;
+  const PERSONNEL = ob("incendie-erp-personnel-designe-moyens-secours");
+  const FUMER = ob("incendie-erp-interdiction-fumer-affichee");
+  const CONSIGNE = ob("incendie-travail-consigne-affichee");
+
+  it.each([
+    ["N", "N 17"],
+    ["M", "M 29"],
+    ["O", "O 18"],
+    ["W", "W 13"],
+  ] as const)("personnel désigné, type %s : %s", (type, article) => {
+    const f = fondementDe(PERSONNEL, { typeErp: type, categorieErp: "N3" })!;
+    expect(f.reference).toContain(`art. ${article}`);
+    // Le texte montré est celui de cet article, au corpus.
+    expect(f.extrait).toBe(INDEX.get(article)?.article.citationCle);
+  });
+
+  it.each([
+    ["M", "M 44"],
+    ["O", "O 21"],
+    ["W", "W 16"],
+  ] as const)("interdiction de fumer, type %s : %s", (type, article) => {
+    const f = fondementDe(FUMER, { typeErp: type, categorieErp: "N4" })!;
+    expect(f.reference).toContain(`art. ${article}`);
+  });
+
+  it("sans contexte, la règle d'avant : le premier article", () => {
+    expect(fondementDe(PERSONNEL)!.reference).toBe(PERSONNEL.referencesLegales[0].reference);
+  });
+
+  it("N 20 en complément de la consigne, pour un restaurant N1–N4 seulement", () => {
+    const n3 = fondementDe(CONSIGNE, { typeErp: "N", categorieErp: "N3" })!;
+    expect(n3.reference).toBe(CONSIGNE.referencesLegales[0].reference);
+    expect(n3.complement?.reference).toContain("art. N 20");
+    expect(n3.complement?.extrait).toBe(INDEX.get("N 20")?.article.citationCle);
+    expect(fondementDe(CONSIGNE, { typeErp: "N", categorieErp: "N5" })!.complement).toBeUndefined();
+    expect(fondementDe(CONSIGNE, { typeErp: "M", categorieErp: "N3" })!.complement).toBeUndefined();
+    expect(fondementDe(CONSIGNE, { typeErp: null, categorieErp: null })!.complement).toBeUndefined();
+  });
+});

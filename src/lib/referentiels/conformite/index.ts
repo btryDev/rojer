@@ -414,7 +414,18 @@ export const obligationsConformite: Obligation[] = [
 // catégories 1 à 4 (CCH R. 157-1 à R. 157-4, corpus `cch-defibrillateur`).
 // 176 + 3 (`dae-erp-detention`, `dae-erp-maintenance` au défaut annuel,
 // `dae-erp-declaration-geodae`) − 0 = 179, toutes trois d'établissement.
-export const REFERENTIEL_VERSION = "2026-10-14.1";
+// 2026-10-14 — `2026-10-14.2` (intégration : `lot/dae` a pris `.1`), décision de la propriétaire (points 1 à 6) :
+// le livre II, titre II, chapitres M, N, O et W lus en entier, et le livret
+// de CH 39. 179 + 6 − 0 = 185, toutes portées aux catégories 1 à 4 :
+// `incendie-erp-personnel-designe-moyens-secours` (N 17, M 29 § 1, O 18,
+// W 13), `incendie-erp-interdiction-fumer-affichee` (M 44, M 47 § 2, M 58,
+// W 16, O 21 § 1), `incendie-erp-schema-organisation-securite` (M 31),
+// `incendie-erp-hotel-consigne-chambres` et
+// `incendie-erp-hotel-plans-evacuation-niveaux` (O 21 § 2) — établissement,
+// bornées aux types — et `aeration-erp-filtres-livret-entretien` (CH 39 § 1,
+// § 2, § 4) — équipement `VMC`/`CTA`, tous types. N 20 entre en contexte de
+// `incendie-travail-consigne-affichee`, hors empreinte.
+export const REFERENTIEL_VERSION = "2026-10-14.2";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

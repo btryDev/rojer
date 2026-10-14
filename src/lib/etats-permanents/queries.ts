@@ -115,10 +115,14 @@ export async function listerEtatsPermanents(
   etablissement: SourceEtablissement,
   equipements: EquipementMatching[],
 ): Promise<EtatsPermanentsDuDossier> {
-  const applicables = determineObligationsApplicables(
-    projeterEtablissement(etablissement),
-    equipements,
-  );
+  const projete = projeterEtablissement(etablissement);
+  const applicables = determineObligationsApplicables(projete, equipements);
+  // Le fondement affiché dépend du type d'ERP (livre II, titre II : une ligne
+  // pour plusieurs types, l'article de CE type à l'écran) — 2026-10-14.
+  const contexteFondement = {
+    typeErp: projete.estERP ? projete.typeErp : null,
+    categorieErp: projete.estERP ? projete.categorieErp : null,
+  };
 
   // Le prédicat d'appartenance, porté par la lecture elle-même.
   //
@@ -177,7 +181,7 @@ export async function listerEtatsPermanents(
       questionsSansReponse: (app.sansReponse ?? []).map(
         (q) => PHRASE_SANS_REPONSE[q],
       ),
-      fondement: fondementDe(o),
+      fondement: fondementDe(o, contexteFondement),
     };
 
     if (mode.compteDansLEnTete) {

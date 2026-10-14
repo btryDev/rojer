@@ -19,6 +19,19 @@ export function PastilleFondement({
 }: {
   fondement: FondementLigne;
 }) {
+  // 2026-10-14 : un article de contexte propre au type de l'établissement
+  // (N 20 pour un restaurant des catégories 1 à 4) suit le fondement.
+  if (fondement.complement)
+    return (
+      <span className="inline-flex flex-wrap items-center gap-1.5">
+        <PastilleSeule fondement={fondement} />
+        <PastilleSeule fondement={fondement.complement} />
+      </span>
+    );
+  return <PastilleSeule fondement={fondement} />;
+}
+
+function PastilleSeule({ fondement }: { fondement: FondementLigne }) {
   const { reference, href } = fondement;
   if (fondement.extrait !== null)
     return (
