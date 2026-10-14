@@ -1862,6 +1862,12 @@ describe("référentiel conformité — version et empreinte", () => {
     // lignes d'alimentation de secours de signalisation, et leurs notes le
     // disent. 176 + 0 − 0 = 176 ; relevée en appelant `empreinteReferentiel()`.
     { version: "2026-10-13.2", empreinte: "176-c32c2c8896d2d0ca" },
+    // 2026-10-14, `lot/materiels-non-couverts-1014`, décision de la
+    // propriétaire : la catégorie `INSTALLATION_GAZ` entre, et
+    // `cuisson-gaz-installations-annuelle` (GZ 15) s'y accroche en plus de
+    // `APPAREIL_CUISSON_ERP`. 176 + 0 − 0 = 176, une liste de catégories
+    // changée ; relevée en appelant `empreinteReferentiel()`.
+    { version: "2026-10-14.1", empreinte: "176-f3628d25e81b2603" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

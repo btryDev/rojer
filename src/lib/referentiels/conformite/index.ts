@@ -409,7 +409,13 @@ export const obligationsConformite: Obligation[] = [
 // de six salariés sans appareil passe de 45 à 43 lignes. La réponse au
 // groupe électrogène devient exigée en ERP (`reponses-exigees.ts`), hors
 // référentiel.]
-export const REFERENTIEL_VERSION = "2026-10-13.2";
+// `2026-10-14.1` (`lot/materiels-non-couverts-1014`, décision de la
+// propriétaire du 2026-10-14) : la catégorie `INSTALLATION_GAZ` entre, et
+// `cuisson-gaz-installations-annuelle` (GZ 15, ERP N1–N4) la prend en plus de
+// `APPAREIL_CUISSON_ERP` — un ERP chauffé au gaz sans cuisine reçoit enfin la
+// vérification annuelle. 176 + 0 − 0 = 176. Les lignes existantes ne bougent
+// pas : seule une installation de gaz déclarée en fait naître une.
+export const REFERENTIEL_VERSION = "2026-10-14.1";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

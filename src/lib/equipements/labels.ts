@@ -2,6 +2,7 @@ import {
   CATEGORIES_EQUIPEMENT,
   type CategorieEquipement,
 } from "@/lib/referentiels/types-communs";
+import { nonPorte, porte } from "@/lib/perimetre/non-couverture";
 
 /**
  * Libellés FR des catégories d'équipement, affichables tel quel en UI.
@@ -40,6 +41,9 @@ export const LABEL_CATEGORIE_EQUIPEMENT: Record<CategorieEquipement, string> = {
   EPI_ANTICHUTE: "Harnais antichute et systèmes d'arrêt de chute",
   EPI_RESPIRATOIRE: "Appareil de protection respiratoire",
   EPI_GILET_SAUVETAGE: "Gilet de sauvetage gonflable",
+  // 2026-10-14, décision de la propriétaire : pas « chaudière » — GZ 15 vise
+  // l'installation entière, dont une chaudière n'est qu'un appareil.
+  INSTALLATION_GAZ: "Installation de gaz (chauffage, stockage…)",
   AUTRE: "Autre équipement",
 };
 
@@ -76,7 +80,12 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
   // l'adresse de non-couverture des articles passés `non_couvert` le
   // 2026-10-07 (ICPE, R. 4412-11, R. 4412-17, arrêté du 1er juin 2015 art. 22).
   STOCKAGE_MATIERE_DANGEREUSE:
-    "Liquides inflammables, gaz, produits chimiques en quantité significative. Rojer suit, pour ce stockage, les fiches de données de sécurité, la formation du personnel et la signalisation des aires de stockage ; il ne suit ni le régime des installations classées (ICPE), ni la capacité de rétention, ni la vérification de l'état du stockage, ni la ventilation des locaux de stockage.",
+    // 2026-10-14 : `porte(…)` autour de la pièce attendue — le balayage de
+    // `non-couverture-balayage.ts` lit désormais `src/lib/equipements` et
+    // demande que toute pièce du référentiel nommée ici se déclare. Le texte
+    // rendu est inchangé, caractère pour caractère : les `declareA` qui le
+    // citent restent justes.
+    `Liquides inflammables, gaz, produits chimiques en quantité significative. Rojer suit, pour ce stockage, ${porte("les fiches de données de sécurité")}, la formation du personnel et la signalisation des aires de stockage ; il ne suit ni le régime des installations classées (ICPE), ni la capacité de rétention, ni la vérification de l'état du stockage, ni la ventilation des locaux de stockage.`,
   EQUIPEMENT_LEVAGE:
     // ~~« transpalette électrique, monte-charge »~~ (2026-09-27, lot 2) :
     // l'arrêté du 1er mars 2004 exclut les monte-charges installés à demeure,
@@ -129,6 +138,17 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
   // La description renvoie donc explicitement vers les catégories vérifiables,
   // et n'énumère plus que ce qui reste vraiment ici.
   EPI: "Ce qu'une personne porte pour se protéger et qu'aucun texte ne soumet à vérification périodique : casque, gants, chaussures de sécurité, lunettes, protections auditives, masque de confort. Un harnais antichute, un appareil respiratoire ou un gilet de sauvetage gonflable ne se déclarent PAS ici — ils ont leur propre catégorie, parce qu'ils se vérifient tous les douze mois. Pas non plus les protections collectives — garde-corps, filet, capot de machine —, qui appartiennent à l'ouvrage ou à la machine qu'elles protègent.",
+  // 2026-10-14, décision de la propriétaire. Même rôle que l'aide des
+  // équipements sous pression et du stockage : ce qui suit « Rojer ne suit
+  // pas » est l'ADRESSE de non-couverture de GZ 13, GZ 14 et de l'arrêté du
+  // 23 février 2018, art. 26 § 3 — leur `declareA` en cite la phrase mot pour
+  // mot (`manques-annonces.test.ts`). Ces trois articles étaient annoncés
+  // jusqu'ici sur la page « Ce que Rojer ne couvre pas », rubrique
+  // « Installations de gaz » ; ils sont DÉPLACÉS ici, pas dupliqués.
+  // L'entretien annuel de la chaudière (C. env., R. 224-41-4 et s.) est hors
+  // cadre par décision du 2026-09-20 ; l'article a été relu sur Légifrance
+  // par la propriétaire le 2026-10-14.
+  INSTALLATION_GAZ: `Installation fixe de gaz combustible ou d'hydrocarbures liquéfiés : stockage, canalisations et appareils raccordés — chauffage, production d'eau chaude, cuisson. En établissement recevant du public des quatre premières catégories, Rojer suit ${porte("la vérification annuelle des installations de gaz")} (règlement de sécurité, art. GZ 15). Rojer ne suit pas ${nonPorte("la vérification d'une installation de gaz neuve ou modifiée avant sa mise en service")} (art. GZ 13), ni ${nonPorte("l'entretien des installations et appareils à gaz et de leurs conduits d'évacuation")} ni ${nonPorte("l'accès et la signalisation de l'organe de coupure de branchement du gaz")} (art. GZ 14), ni ${nonPorte("l'entretien des installations collectives de gaz des immeubles d'habitation")} (arrêté du 23 février 2018, art. 26 § 3), ni ${nonPorte("l'entretien annuel de la chaudière")} (code de l'environnement, art. R. 224-41-4 et suivants).`,
   AUTRE: "Autre équipement soumis à vérification périodique.",
 };
 

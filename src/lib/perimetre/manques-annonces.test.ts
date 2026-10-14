@@ -160,28 +160,39 @@ describe("n'annonce à un dossier que ce qui peut le concerner", () => {
   });
 });
 
-describe("2026-10-13 : le gaz et les escaliers mécaniques ne visent que leurs dossiers", () => {
-  const GAZ_ERP = ["GZ 13", "GZ 14"];
+// ~~« 2026-10-13 : le gaz et les escaliers mécaniques ne visent que leurs
+// dossiers »~~ — 2026-10-14, décision de la propriétaire : le gaz a quitté la
+// page pour l'aide de la catégorie « Installation de gaz ». La garde devient :
+// il n'y est plus, et il n'a pas perdu son adresse (voir aussi « un declareA
+// qui cite l'aide d'une catégorie la cite mot pour mot », plus bas).
+describe("2026-10-14 : le gaz a quitté la page pour l'aide de sa catégorie", () => {
+  const GAZ = ["GZ 13", "GZ 14", "Arrêté 23-02-2018 art. 26 § 3"];
 
-  it("un ERP des quatre premières catégories lit le gaz et les escaliers mécaniques", () => {
-    expect(refsProjetees({ ...RESTAURANT_N5, categorieErp: "N4" })).toEqual(
-      expect.arrayContaining([...GAZ_ERP, "AS 10"]),
+  it("aucun dossier ne lit plus le gaz sur la page, même celui qui n'a rien écarté", () => {
+    const refs = refsProjetees(EMPLOYEUR);
+    for (const ref of GAZ) expect(refs).not.toContain(ref);
+    expect(manquesAnnoncesDuDossier(CORPUS, EMPLOYEUR).map((d) => d.titre)).not.toContain(
+      "Installations de gaz",
     );
   });
 
-  it("un ERP de 5ᵉ catégorie ne les lit pas — le livre II ne le vise pas", () => {
-    const refs = refsProjetees(RESTAURANT_N5);
-    for (const ref of [...GAZ_ERP, "AS 10"]) expect(refs).not.toContain(ref);
+  it("chacun garde une adresse : l'aide de la catégorie, citée mot pour mot", () => {
+    const aide = DESCRIPTION_CATEGORIE.INSTALLATION_GAZ ?? "";
+    for (const ref of GAZ) {
+      const a = CORPUS.flatMap((c) => c.articles).find((x) => x.ref === ref);
+      expect(a?.statut, ref).toBe("non_couvert");
+      const declareA = a && a.statut === "non_couvert" ? (a.declareA ?? "") : "";
+      expect(declareA, ref).toContain("DESCRIPTION_CATEGORIE.INSTALLATION_GAZ");
+      const cite =
+        /DESCRIPTION_CATEGORIE\.[A-Z_]+`?\)?\s*:\s*«\s*([\s\S]+?)\s*»\s*$/.exec(declareA)?.[1] ?? "∅";
+      expect(aide, ref).toContain(cite);
+    }
   });
+});
 
-  it("un établissement qui ne reçoit pas de public ne les lit pas", () => {
-    const refs = refsProjetees({ ...RESTAURANT_N5, categorieErp: null });
-    for (const ref of [...GAZ_ERP, "AS 10"]) expect(refs).not.toContain(ref);
-  });
-
-  it("le gaz collectif et l'immeuble d'habitation ne vont qu'au régime d'habitation", () => {
+describe("2026-10-13 : l'immeuble d'habitation ne vise que ses dossiers", () => {
+  it("l'immeuble d'habitation ne va qu'au régime d'habitation", () => {
     for (const ref of [
-      "Arrêté 23-02-2018 art. 26 § 3",
       "Arrêté 1986-01-31 art. 78-1",
       "Arrêté 1986-01-31 art. 102",
     ]) {

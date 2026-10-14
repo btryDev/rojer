@@ -39,7 +39,7 @@
 
 import { ADRESSE_MANQUES_ANNONCES } from "@/lib/referentiels/corpus/adresses";
 import type { Corpus } from "@/lib/referentiels/corpus/types";
-import { nonPorte, porte } from "./non-couverture";
+import { nonPorte } from "./non-couverture";
 import type { CategorieErp } from "@/lib/referentiels/types-communs";
 
 /** Les faits du dossier qui décident de ce qui peut le concerner. */
@@ -106,7 +106,6 @@ export type CleDomaine =
   | "formation"
   | "boissons"
   | "risque_chimique"
-  | "gaz"
   | "escaliers_mecaniques"
   | "habitation"
   | "electricite";
@@ -173,9 +172,8 @@ const DOMAINES: Record<CleDomaine, Domaine> = {
   // 2026-10-13 : décision de la propriétaire sur les quinze manques entrés
   // dans la cible le 2026-10-12. Les articles disent chacun ce qu'ils ne
   // suivent pas : ils ne visent pas les mêmes dossiers.
-  gaz: {
-    titre: "Installations de gaz",
-  },
+  // ~~gaz: { titre: "Installations de gaz" }~~ — 2026-10-14 : rubrique
+  // déplacée dans l'aide de la catégorie « Installation de gaz ».
   habitation: {
     titre: "Immeuble d'habitation",
   },
@@ -278,21 +276,11 @@ export const ANNONCES: Readonly<Record<string, Annonce>> = {
   },
   // 2026-10-13 : décision de la propriétaire (grille C45 sur les quinze
   // manques entrés dans la cible le 2026-10-12).
-  "GZ 13": {
-    domaine: "gaz",
-    condition: "erp_1_4",
-    phrase: `Rojer ne suit pas ${nonPorte("la vérification d'une installation de gaz neuve ou modifiée avant sa mise en service")}, par une personne ou un organisme agréé, avant toute utilisation du gaz.`,
-  },
-  "GZ 14": {
-    domaine: "gaz",
-    condition: "erp_1_4",
-    phrase: `Rojer ne suit pas ${nonPorte("l'entretien des installations et appareils à gaz et de leurs conduits d'évacuation")}, ni ${nonPorte("l'accès et la signalisation de l'organe de coupure de branchement du gaz")}. Il suit ${porte("la vérification annuelle des installations de gaz")} lorsqu'un appareil de cuisson est déclaré au parc.`,
-  },
-  "Arrêté 23-02-2018 art. 26 § 3": {
-    domaine: "gaz",
-    condition: "habitation",
-    phrase: `Rojer ne suit pas ${nonPorte("l'entretien des installations collectives de gaz situées entre l'organe de coupure générale et les compteurs individuels")}, que le texte fait faire au moins tous les dix ans dans les bâtiments collectifs.`,
-  },
+  // ~~« GZ 13 », « GZ 14 », « Arrêté 23-02-2018 art. 26 § 3 » (rubrique
+  // « Installations de gaz »)~~ — 2026-10-14, décision de la propriétaire :
+  // DÉPLACÉS dans l'aide de la catégorie « Installation de gaz »
+  // (`DESCRIPTION_CATEGORIE.INSTALLATION_GAZ`), leur nouvelle adresse au
+  // corpus. La catégorie existe désormais, et GZ 15 s'y accroche.
   "AS 10": { domaine: "escaliers_mecaniques", condition: "erp_1_4" },
   // 2026-10-13, après revue : classés hors cadre puis annoncés, décision de
   // la propriétaire.

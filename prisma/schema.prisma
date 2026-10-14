@@ -608,6 +608,9 @@ enum CategorieEquipement {
   EPI_ANTICHUTE
   EPI_RESPIRATOIRE
   EPI_GILET_SAUVETAGE
+  // 2026-10-14 : les installations de gaz combustible que GZ 15 vérifie
+  // (stockage, distribution, appareils) — pas seulement la cuisine.
+  INSTALLATION_GAZ
   AUTRE
 }
 
