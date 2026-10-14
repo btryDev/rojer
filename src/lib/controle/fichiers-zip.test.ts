@@ -1,6 +1,7 @@
 // Les fichiers déposés joints au ZIP de contrôle : chacun sous un nom
-// assaini, unique et lisible ; un fichier illisible compté manquant, pas
-// d'archive qui tombe.
+// assaini, unique et lisible ; un fichier absent compté manquant, pas
+// d'archive qui tombe. Depuis le 2026-10-14 (audit Next.js, H3) le contenu
+// n'est lu qu'à son tour dans le flux, un fichier à la fois.
 
 import JSZip from "jszip";
 import { describe, expect, it, vi } from "vitest";
@@ -21,16 +22,21 @@ const f = (id: string, cle: string, nom: string | null, etiquette: string | null
   etiquette,
 });
 
-function stockage(fichiers: Record<string, string>): FileStorage {
+function stockage(fichiers: Record<string, string | Buffer>): FileStorage {
   return {
     put: vi.fn(),
     delete: vi.fn(),
-    exists: vi.fn(),
+    exists: vi.fn(async (cle: string) => cle in fichiers),
     get: vi.fn(async (cle: string) => {
       if (!(cle in fichiers)) throw new Error(`absent ${cle}`);
       return Buffer.from(fichiers[cle]);
     }),
   };
+}
+
+/** L'archive entière, relue par JSZip. */
+async function relire(zip: JSZip) {
+  return JSZip.loadAsync(new Uint8Array(await new Response(zipEnFlux(zip)).arrayBuffer()));
 }
 
 describe("joindreFichiers", () => {
@@ -56,7 +62,7 @@ describe("joindreFichiers", () => {
       "Rapports/2026-09-15_passwd",
       "Rapports/bbbbbb22_2026-09-15_Tableau_electrique_TGBT_rapport_elec.pdf",
     ].sort());
-    expect(await zip.file("Rapports/2026-09-15_passwd")!.async("string")).toBe("C");
+    expect(await (await relire(zip)).file("Rapports/2026-09-15_passwd")!.async("string")).toBe("C");
     // Aucune entrée ne sort du dossier.
     expect(noms.every((n) => n.startsWith("Rapports/") && !n.includes(".."))).toBe(true);
   });
@@ -73,34 +79,132 @@ describe("joindreFichiers", () => {
     const s = stockage({});
     expect(await joindreFichiers(zip, "Rapports", [], s, "r.pdf")).toEqual({ deposes: 0, inclus: 0, manquants: 0 });
     expect(Object.keys(zip.files)).toEqual([]);
+    expect(s.exists).not.toHaveBeenCalled();
     expect(s.get).not.toHaveBeenCalled();
   });
 });
 
-describe("lectures en parallèle borné", () => {
-  it(`jamais plus de ${LECTURES_SIMULTANEES} lectures à la fois, toutes faites`, async () => {
+describe("vérifications en parallèle borné, lectures une à une", () => {
+  it(`jamais plus de ${LECTURES_SIMULTANEES} vérifications à la fois, toutes faites`, async () => {
     let enCours = 0;
     let max = 0;
     const s: FileStorage = {
       put: vi.fn(),
       delete: vi.fn(),
-      exists: vi.fn(),
-      get: vi.fn(async (cle: string) => {
+      exists: vi.fn(async () => {
         enCours++;
         max = Math.max(max, enCours);
         await new Promise((r) => setTimeout(r, 5));
         enCours--;
-        return Buffer.from(cle);
+        return true;
       }),
+      get: vi.fn(async (cle: string) => Buffer.from(cle)),
     };
     const fichiers = Array.from({ length: 11 }, (_, i) => f(`id${i}`, `k${i}`, `r${i}.pdf`, null));
     const c = await joindreFichiers(new JSZip(), "Rapports", fichiers, s, "r.pdf");
     expect(c).toEqual({ deposes: 11, inclus: 11, manquants: 0 });
     expect(max).toBe(LECTURES_SIMULTANEES);
   });
+
+  it("rien n'est lu avant le flux, puis un fichier à la fois, dans l'ordre", async () => {
+    let enCours = 0;
+    let max = 0;
+    const lus: string[] = [];
+    const s = stockage({});
+    s.exists = vi.fn(async () => true);
+    s.get = vi.fn(async (cle: string) => {
+      enCours++;
+      max = Math.max(max, enCours);
+      await new Promise((r) => setTimeout(r, 2));
+      lus.push(cle);
+      enCours--;
+      return randomBytes(200_000);
+    });
+    const zip = new JSZip();
+    const fichiers = Array.from({ length: 6 }, (_, i) => f(`id${i}`, `k${i}`, `r${i}.pdf`, null));
+    await joindreFichiers(zip, "Rapports", fichiers, s, "r.pdf");
+    expect(s.get).not.toHaveBeenCalled();
+    const relu = await relire(zip);
+    expect(lus).toEqual(["k0", "k1", "k2", "k3", "k4", "k5"]);
+    expect(max).toBe(1);
+    expect(Object.keys(relu.files).filter((n) => !n.endsWith("/"))).toHaveLength(6);
+  });
+
+  it("présent à la vérification, illisible à son tour : le téléchargement s'interrompt, il ne pend pas", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const s = stockage({ k0: "A", k1: "B" });
+    s.get = vi.fn(async (cle: string) => {
+      if (cle === "k1") throw new Error("panne entre la vérification et la lecture");
+      return Buffer.from("A");
+    });
+    const zip = new JSZip();
+    const c = await joindreFichiers(
+      zip,
+      "Rapports",
+      [f("id0", "k0", "a.pdf", null), f("id1", "k1", "b.pdf", null)],
+      s,
+      "r.pdf",
+    );
+    expect(c).toEqual({ deposes: 2, inclus: 2, manquants: 0 });
+    await expect(new Response(zipEnFlux(zip)).arrayBuffer()).rejects.toThrow(
+      "panne entre la vérification et la lecture",
+    );
+  });
 });
 
 describe("l'archive en flux", () => {
+  it("illisible pendant que le client marque une pause : interrompu quand même, pas pendu", async () => {
+    // L'échec arrive pendant que la génération attend le client : il doit
+    // quand même interrompre le téléchargement, pas le laisser pendu.
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const s = stockage({});
+    s.exists = vi.fn(async () => true);
+    s.get = vi.fn(async (cle: string) => {
+      if (cle === "k0") return randomBytes(1_000_000);
+      await new Promise((r) => setTimeout(r, 30));
+      throw new Error("panne pendant la pause");
+    });
+    const zip = new JSZip();
+    await joindreFichiers(
+      zip,
+      "Rapports",
+      [f("id0", "k0", "a.pdf", null), f("id1", "k1", "b.pdf", null)],
+      s,
+      "r.pdf",
+    );
+    const lecteur = zipEnFlux(zip).getReader();
+    const lireLentement = async () => {
+      for (;;) {
+        const { done } = await lecteur.read();
+        if (done) return "fini";
+        await new Promise((r) => setTimeout(r, 60));
+      }
+    };
+    const issue = await Promise.race([
+      lireLentement().catch((e: Error) => e.message),
+      new Promise((r) => setTimeout(() => r("pendu"), 2_000)),
+    ]);
+    expect(issue).toBe("panne pendant la pause");
+  });
+
+
+  it("contre-pression : un client qui ne lit pas n'entraîne pas la lecture de toute l'archive", async () => {
+    const s = stockage({});
+    s.exists = vi.fn(async () => true);
+    s.get = vi.fn(async () => randomBytes(1_000_000));
+    const zip = new JSZip();
+    const fichiers = Array.from({ length: 8 }, (_, i) => f(`id${i}`, `k${i}`, `r${i}.pdf`, null));
+    await joindreFichiers(zip, "Rapports", fichiers, s, "r.pdf");
+    const lecteur = zipEnFlux(zip).getReader();
+    await lecteur.read();
+    // Le client s'arrête là : la génération ne court pas devant lui.
+    await new Promise((r) => setTimeout(r, 100));
+    expect(vi.mocked(s.get).mock.calls.length).toBeLessThanOrEqual(2);
+    await lecteur.cancel();
+    await new Promise((r) => setTimeout(r, 50));
+    expect(vi.mocked(s.get).mock.calls.length).toBeLessThanOrEqual(2);
+  });
+
   it("un ZIP de plus de 4,5 Mo sort entier par une Response réelle, octet pour octet", async () => {
     const zip = new JSZip();
     // Incompressible : trois « rapports » de 2 Mo font une archive de plus de 6 Mo.

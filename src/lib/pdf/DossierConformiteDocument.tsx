@@ -5,7 +5,7 @@ import { faitRetards } from "./fait-retards";
 import type { LignePlanActions } from "./PlanActionsDocument";
 import type { LigneRapport, LigneVerif } from "./RegistreDocument";
 import { LABEL_STATUT_ACTION, LABEL_TYPE_ACTION } from "@/lib/actions/labels";
-import { LABEL_RESULTAT } from "@/lib/rapports/schema";
+import { LABEL_RESULTAT } from "@/lib/rapports/resultats";
 import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
 import { MARQUAGE_CONTRACTUEL } from "@/lib/prescriptions/sources";
 import { LIBELLE_SANS_ECHEANCE } from "@/lib/calendrier/etats";

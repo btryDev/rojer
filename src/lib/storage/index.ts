@@ -11,6 +11,7 @@ import { StockageNonConfigure } from "./erreurs";
 import { diagnostic, formeDeLaCle, nettoyer, refusDeLaCle } from "./cle-service";
 import { segmentCleStockage } from "./noms";
 import type { FileStorage } from "./types";
+import { fetchAvecDelai } from "@/lib/reseau/delai";
 
 export type { FileStorage, StorageKey } from "./types";
 export {
@@ -38,6 +39,18 @@ export {
  * Un pilote S3 (migration prévue vers Clever Cloud) s'ajoutera ici, derrière
  * la même interface. Procédure côté propriétaire : `docs/deploiement-stockage.md`.
  */
+
+/**
+ * Délai maximal d'un appel au service de stockage (audit Next.js du
+ * 2026-10-14, M9). Il couvre la réponse entière : un dépôt de 20 Mo (borne de
+ * `rapports/validator.ts`) ou le téléchargement d'un fichier pour le ZIP de
+ * contrôle doivent y tenir sur un lien lent, d'où une minute plutôt que
+ * quelques secondes. Au-delà, l'opération échoue en `ErreurStockage` comme
+ * une panne : l'écran dit `MESSAGE_ECHEC_ENREGISTREMENT`, rien n'est écrit en
+ * base. → bascule : le pilote S3 (Cellar) prendra le même délai, par
+ * `requestTimeout`/`connectionTimeout` de son gestionnaire HTTP.
+ */
+export const DELAI_STOCKAGE_MS = 60_000;
 
 const VARIABLES_SUPABASE = [
   "STORAGE_BUCKET",
@@ -108,6 +121,7 @@ export function getStorage(): FileStorage {
     );
     const client = createClient(url, cle, {
       auth: { persistSession: false, autoRefreshToken: false },
+      global: { fetch: fetchAvecDelai(DELAI_STOCKAGE_MS) },
     });
     // Sans conversion : le client supabase-js satisfait `ClientStockage` tel
     // quel, et le compilateur le vérifie à chaque montée de version.

@@ -1,5 +1,5 @@
 import type { ResultatVerification } from "@prisma/client";
-import { LABEL_RESULTAT } from "@/lib/rapports/schema";
+import { LABEL_RESULTAT } from "@/lib/rapports/resultats";
 
 // Champs du board, alignés sur `BadgeStatut` : le résultat d'un rapport
 // et le statut de la vérification qui le porte s'affichent à quelques

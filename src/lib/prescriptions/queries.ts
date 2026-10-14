@@ -1,3 +1,4 @@
+import "server-only";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";

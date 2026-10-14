@@ -164,9 +164,10 @@ export default async function PrestatairesPage({
               `vigilance-sous-traitant.test.ts`. */}
           <p className="m-0 mt-2 max-w-[62ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
             Si votre prestataire fait intervenir un sous-traitant que vous
-            acceptez, vous devez aussi vérifier périodiquement que ce
-            sous-traitant est en règle, au plus tard à partir de fin décembre
-            2026 (art. L. 8222-1-1). Rojer ne suit pas ces vérifications.
+            acceptez, vous devez aussi vérifier périodiquement, au plus tard à
+            partir de fin décembre 2026, que ce sous-traitant s&apos;acquitte de
+            ses formalités déclaratives (art. L. 8222-1-1). Rojer ne suit pas
+            ces vérifications.
           </p>
           <div className="mt-4">
             {/* L'URL pointait sur LEGIARTI000037389145, qui rend 404, et

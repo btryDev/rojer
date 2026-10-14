@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getSignature } from "@/lib/signatures/queries";
-import { SignatureBlock, LegalBadge } from "@/components/ui-kit";
+import { SignatureBlock } from "@/components/ui-kit/SignatureBlock";
+import { LegalBadge } from "@/components/ui-kit/LegalBadge";
 
 /**
  * Page publique de confirmation après signature. Accessible sans

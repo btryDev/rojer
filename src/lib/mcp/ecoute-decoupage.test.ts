@@ -23,9 +23,17 @@ const etat = vi.hoisted(() => ({
   annule: false,
 }));
 
-vi.mock("./prisma", () => ({
-  prismaMcp: { $on: vi.fn(), etablissement: { findUnique: vi.fn() } },
+// La limitation de débit écrit en base : neutralisée ici, éprouvée par
+// `mcp/limite-debit-mcp.test.ts` et `securite/limite-debit*.test.ts`.
+vi.mock("@/lib/securite/limite-debit", async (original) => ({
+  ...(await original<typeof import("@/lib/securite/limite-debit")>()),
+  consommer: async () => ({ ok: true }),
 }));
+
+vi.mock("./db", () => {
+  const client = { etablissement: { findUnique: vi.fn() } };
+  return { dbMcp: () => client };
+});
 
 vi.mock("@modelcontextprotocol/server", async (importOriginal) => {
   const reel = await importOriginal<typeof import("@modelcontextprotocol/server")>();

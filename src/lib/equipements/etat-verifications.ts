@@ -9,7 +9,7 @@
 // Le calendrier répond « qu'est-ce qui tombe quand » ; cette lecture répond
 // « où en est chacun ». Deux questions, deux écrans, une seule donnée.
 
-import { marquesAConfirmerDuDossier } from "@/lib/etablissements/marques-a-confirmer";
+import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
 import { porteSaMarque, retenueParSaMarque } from "@/lib/calendrier/prudence";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
@@ -111,10 +111,10 @@ export async function etatVerificationsParEquipement(
       orderBy: { datePrevue: "asc" },
     }),
   );
-  const marques = await marquesAConfirmerDuDossier(prisma, {
-    id: etablissementId,
-    entreprise: { userId: user.id },
-  });
+  // [2026-10-14, audit Next.js H2] Les marques mémoïsées sur le rendu : même
+  // utilisateur, même dossier, et le passage du moteur partagé avec le reste
+  // de la page au lieu d'un passage de plus.
+  const marques = await marquesAConfirmerDuRendu(etablissementId);
 
   return repartirParEquipement(verifs, now, marques.parObligation);
 }

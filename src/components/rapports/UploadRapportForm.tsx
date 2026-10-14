@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
-import { LABEL_RESULTAT, RESULTATS } from "@/lib/rapports/schema";
+import { LABEL_RESULTAT, RESULTATS } from "@/lib/rapports/resultats";
 import type { UploadRapportState } from "@/lib/rapports/actions";
 import {
   MIME_AUTORISES,

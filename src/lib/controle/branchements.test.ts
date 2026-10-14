@@ -23,16 +23,30 @@ describe("branchements des fichiers déposés", () => {
   });
 
   it("le ZIP lit les rapports de CET établissement, et jamais ceux d'une ligne de salarié (M1)", () => {
-    // Le filtre lui-même est éprouvé dans `pieces-zip.test.ts`.
-    expect(zip).toMatch(
-      /rapportVerification\.findMany\(\{[\s\S]{0,600}?where: filtreRapportsDuDossier\(id\),/,
+    // Le filtre lui-même est éprouvé dans `pieces-zip.test.ts`. La lecture vit
+    // dans `controle/queries.ts` depuis le 2026-10-14 (B6).
+    const queries = lire("src/lib/controle/queries.ts");
+    expect(queries).toMatch(
+      /rapportVerification\.findMany\(\{[\s\S]{0,600}?where: \{ \.\.\.filtreRapportsDuDossier\(etablissementId\), etablissement: \{ entreprise: \{ userId \} \} \},/,
     );
+    expect(zip).toMatch(/rapportsDeposesDuDossier\(id, user\.id\)/);
   });
 
   it("le ZIP répond en flux, avec une durée maximale posée", () => {
-    expect(zip).toMatch(/new NextResponse\(zipEnFlux\(zip\)/);
+    expect(zip).toMatch(/new NextResponse\(zipEnFlux\(archive\.zip\)/);
     expect(zip).not.toMatch(/generateAsync/);
     expect(zip).toMatch(/export const maxDuration = \d+;/);
+  });
+
+  it("le ZIP ne lit aucun fichier déposé avant le flux, et tient une place d'export (H3)", () => {
+    // Toute lecture du stockage passe par `contenuDiffere` : lue à son tour
+    // dans l'archive, jamais toute d'avance (`fichiers-zip.ts`).
+    const lectures = zip.match(/\.get\(/g) ?? [];
+    const differees = zip.match(/contenuDiffere\(\s*\(\) => storage!\.get\(/g) ?? [];
+    expect(lectures.length).toBeGreaterThan(0);
+    expect(differees.length).toBe(lectures.length);
+    expect(zip).toMatch(/const liberer = await reserverPlaceExport\(\);/);
+    expect(zip).toMatch(/\} finally \{\s*liberer\(\);\s*\}/);
   });
 
   it("le carnet ouvre le rapport d'une analyse qui en a un", () => {

@@ -1,3 +1,4 @@
+import "server-only";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { obligationParId } from "@/lib/referentiels/conformite";
@@ -17,7 +18,12 @@ import { joindreDernieresRealisations } from "@/lib/rapports/joindre-realisation
 import { repartirVerifications } from "@/lib/pdf/etat-verifications";
 import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
 import { retenueParPrudence } from "./prudence";
-import { porteeBatiment, toutesLesConditions, urgenceSeule } from "./portee";
+import {
+  echeancesAnnoncables,
+  porteeBatiment,
+  toutesLesConditions,
+  urgenceSeule,
+} from "./portee";
 import { aUnRendezVous } from "./etats";
 import {
   TYPES_VERIFICATION,
@@ -306,4 +312,45 @@ export async function calendrierDesynchronise(
   });
   if (!etab) return false;
   return etab.referentielVersionCalendrier !== SCEAU_CALENDRIER;
+}
+
+/**
+ * Tableau de bord : combien de lignes le calendrier porte (audit Next.js du
+ * 2026-10-14, B6 — la page le comptait elle-même).
+ */
+export async function compterVerificationsDuDossier(etablissementId: string) {
+  const user = await requireUser();
+  return prisma.verification.count({
+    where: { etablissementId, etablissement: { entreprise: { userId: user.id } } },
+  });
+}
+
+/**
+ * Tableau de bord : les échéances annonçables, toutes, par date (B6). PAS DE
+ * `take` : les cinq prochaines se choisissent après projection, par
+ * `cinqProchaines`, pour que la borne ne dépende jamais de ce que le SQL sait
+ * ou non calculer (relecture externe du 2026-09-13, où un `take` en base avait
+ * chassé une vraie échéance proche).
+ */
+export async function listerEcheancesAnnoncables(
+  etablissementId: string,
+  batimentId: Parameters<typeof porteeBatiment>[0],
+) {
+  const user = await requireUser();
+  return prisma.verification.findMany({
+    // La clause vit dans `portee.ts`, où un test la tient.
+    where: toutesLesConditions(
+      { etablissementId, etablissement: { entreprise: { userId: user.id } } },
+      echeancesAnnoncables(),
+      porteeBatiment(batimentId),
+    ),
+    // `prescription` : la source suffit, et elle seule — c'est de quoi dire
+    // qu'une ligne est contractuelle sans faire remonter l'acte (ADR-032).
+    include: {
+      equipement: true,
+      salarie: true,
+      prescription: { select: { source: true } },
+    },
+    orderBy: { datePrevue: "asc" },
+  });
 }

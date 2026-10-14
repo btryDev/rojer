@@ -14,13 +14,15 @@
 //
 // CE MODULE N'EST PAS UN `"use server"`, comme `reconciliation.ts` et pour la
 // même raison : une fonction exportée d'un fichier d'actions devient un point
-// d'entrée appelable depuis le navigateur. Il est ici, entre les deux, pour
+// d'entrée appelable depuis le navigateur. [2026-10-14 : `actions.ts` non plus,
+// depuis l'audit Next.js (B1) — il n'en avait gardé que la directive.] Il est ici, entre les deux, pour
 // n'introduire aucun cycle — `regeneration-sure` → `actions` → `reconciliation`,
 // et `regeneration-sure` → `reconciliation`.
 
 import { genererCalendrier, regenererSansInvalider } from "./actions";
 import { calendrierDesynchronise } from "./queries";
 import { marquerCalendrierPerime } from "./reconciliation";
+import { ecritureAutomatiqueAutorisee } from "@/lib/environnement";
 
 /**
  * Message rendu à l'utilisateur quand le recalage a échoué. Il dit les deux
@@ -83,11 +85,16 @@ export const MESSAGE_REGEN_ECHEC =
  * preview n'atteint plus la base. La garde reste : elle coûte une ligne et
  * couvre le jour où une preview repartirait avec une base, par réglage ou par
  * accident.
+ *
+ * [2026-10-14, audit Next.js H5] La garde lisait `VERCEL_ENV === "preview"`,
+ * qui n'existe pas chez Clever Cloud : une préversion y aurait écrit. Elle lit
+ * désormais `ecritureAutomatiqueAutorisee` (`@/lib/environnement`) : `APP_ENV`
+ * d'abord, `VERCEL_ENV` à défaut, et, dans le doute, PAS d'écriture.
  */
 export async function assurerCalendrierAJour(
   etablissementId: string,
 ): Promise<boolean> {
-  if (process.env.VERCEL_ENV === "preview") return false;
+  if (!ecritureAutomatiqueAutorisee()) return false;
   if (!(await calendrierDesynchronise(etablissementId))) return false;
   try {
     await regenererSansInvalider(etablissementId);

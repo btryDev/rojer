@@ -3,7 +3,7 @@ import { cleJourCivil } from "@/lib/dates";
 // d'`echeances.ts`, qui ouvre la base (passage à blanc, C62).
 import { LABEL_PERIODICITE } from "@/lib/calendrier/label-periodicite";
 // Depuis le module feuille, pas depuis `prescriptions/schema.ts` : celui-ci
-// importe `estPeriodicitePlusStricte` d'ici, et passer par lui refermerait le
+// importe `prescriptionRenforce` d'ici, et passer par lui refermerait le
 // cycle que `sources.ts` a été créé pour ouvrir.
 import {
   MARQUAGE_CONTRACTUEL,
@@ -14,6 +14,7 @@ import {
   PERIODICITE_EN_JOURS,
   type Periodicite,
 } from "@/lib/referentiels/types-communs";
+import { estPeriodicitePlusStricte } from "@/lib/calendrier/periodicite";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import type { Obligation } from "@/lib/referentiels/conformite/types";
 import { mentionRythmeRetenu } from "@/lib/referentiels/conformite/mention-rythme";
@@ -53,23 +54,12 @@ export function estObligationSurMesure(obligationId: string): boolean {
   return obligationId.startsWith(PREFIXE_PRESCRIPTION);
 }
 
-/**
- * `candidate` est-elle strictement plus stricte que `reference` ?
- *
- * Une périodicité sans échéance (`mise_en_service_uniquement`, `autre`,
- * `null` en jours) est « infiniment longue » : n'importe quel rythme daté la
- * renforce. Deux périodicités sans échéance ne se renforcent pas.
- */
-export function estPeriodicitePlusStricte(
-  candidate: Periodicite,
-  reference: Periodicite,
-): boolean {
-  const c = PERIODICITE_EN_JOURS[candidate];
-  const r = PERIODICITE_EN_JOURS[reference];
-  if (c === null) return false;
-  if (r === null) return true;
-  return c < r;
-}
+// `estPeriodicitePlusStricte` vit dans `calendrier/periodicite.ts` depuis le
+// 2026-10-14 (audit Next.js, H1) : ce module importe le référentiel, et
+// `periodicite.ts` — tiré par `dates/retard.ts` jusque dans des composants
+// clients — l'importait d'ici pour cette seule fonction pure. Réexportée :
+// les lecteurs de `matching` n'ont pas bougé.
+export { estPeriodicitePlusStricte };
 
 /**
  * Une prescription qui vise cette obligation est-elle retenue ? (ADR-039 § 3,

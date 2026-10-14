@@ -69,7 +69,42 @@ describe("lireHotesAutorises", () => {
   });
 });
 
+describe("lireHotesAutorises — hors Vercel (bascule Clever Cloud)", () => {
+  // Audit Next.js du 2026-10-14, H5 : sans `VERCEL_*` ni `MCP_HOTES`, la
+  // production refusait son propre hôte. Elle le tire de `PUBLIC_APP_URL`.
+  it("retient l'hôte de PUBLIC_APP_URL, sans schéma ni port", () => {
+    const hotes = lireHotesAutorises(env({ PUBLIC_APP_URL: "https://app.rojer.fr:443/" }));
+    expect(hotes).toContain("app.rojer.fr");
+  });
+
+  it("n'en fait pas un hôte public quand c'est la boucle locale", () => {
+    expect(lireHotePublic(env({ PUBLIC_APP_URL: "http://localhost:3000" }))).toBe("localhost");
+  });
+
+  it("ignore une PUBLIC_APP_URL illisible plutôt que de lever", () => {
+    expect(lireHotesAutorises(env({ PUBLIC_APP_URL: "pas une url" }))).toEqual([
+      "localhost",
+      "127.0.0.1",
+    ]);
+  });
+});
+
 describe("lireHotePublic", () => {
+  it("hors Vercel et sans MCP_HOTES, annonce l'hôte de PUBLIC_APP_URL", () => {
+    expect(lireHotePublic(env({ PUBLIC_APP_URL: "https://app.rojer.fr" }))).toBe("app.rojer.fr");
+  });
+
+  it("MCP_HOTES prime sur PUBLIC_APP_URL, qui prime sur Vercel", () => {
+    expect(
+      lireHotePublic(env({ MCP_HOTES: "mcp.rojer.fr", PUBLIC_APP_URL: "https://app.rojer.fr" })),
+    ).toBe("mcp.rojer.fr");
+    expect(
+      lireHotePublic(
+        env({ PUBLIC_APP_URL: "https://app.rojer.fr", VERCEL_URL: "x-abc.vercel.app" }),
+      ),
+    ).toBe("app.rojer.fr");
+  });
+
   it("écarte la boucle locale au profit d'un hôte joignable", () => {
     expect(lireHotePublic(env({ MCP_HOTES: "rojer.fr" }))).toBe("rojer.fr");
   });

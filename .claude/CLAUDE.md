@@ -529,7 +529,7 @@ est nulle, la conservation reste à la charge de l'employeur hors de l'outil.
 - **TypeScript strict**
 - **PostgreSQL** + **Prisma** (ORM)
 - **Supabase Auth** (`@supabase/ssr`) pour l'authentification — cf. ADR-005. Supabase sert uniquement d'auth provider ; la data reste accédée via Prisma (rôle `postgres`, bypass RLS). Pas de modèle `User` en base : l'identité vit chez Supabase, `Entreprise.userId` fait le lien.
-- **react-hook-form** + **Zod** pour les formulaires et la validation
+- ~~**react-hook-form** +~~ **Zod** pour la validation, côté serveur ; les formulaires passent par `useActionState` et une action serveur [2026-10-14 : `react-hook-form` et `@hookform/resolvers` n'étaient importés nulle part, retirés de `package.json` (audit Next.js, B7)]
 - **Tailwind CSS** + **shadcn/ui** (+ `@base-ui/react`, `@dnd-kit` pour le board) pour l'interface
 - **@react-pdf/renderer** pour la génération PDF ; `jszip` (export contrôle), `qrcode` (affiche accessibilité), `xlsx` (import DUERP)
 - **Vitest** pour les tests unitaires

@@ -84,7 +84,8 @@ vi.mock("next/navigation", () => ({
   },
 }));
 vi.mock("next/link", () => ({ default: "a" }));
-vi.mock("@/components/ui-kit", () => ({ WhyCard: "div", LegalBadge: "div" }));
+vi.mock("@/components/ui-kit/WhyCard", () => ({ WhyCard: "div" }));
+vi.mock("@/components/ui-kit/LegalBadge", () => ({ LegalBadge: "div" }));
 vi.mock("@/components/signatures/SignatureExterneForm", () => ({
   SignatureExterneForm: "form",
 }));

@@ -1,6 +1,4 @@
-import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireEtablissement } from "@/lib/auth/scope";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { BarreCompte } from "@/components/layout/BarreCompte";
 import { chargerSidebarCounts } from "@/lib/navigation/sidebar-counts";
@@ -11,7 +9,7 @@ import { listerEtablissementsDeLEntreprise } from "@/lib/etablissements/queries"
  * Layout imbriqué pour toutes les pages d'un établissement.
  *
  * Rôles :
- *   1. Garde d'ownership (findFirst scopé par userId).
+ *   1. Garde d'ownership (`requireEtablissement`, scopé par userId).
  *   2. Monte la sidebar persistante sur toutes les sous-pages — la
  *      sidebar déduit l'item actif depuis le pathname (cf. AppSidebar).
  *   3. Fait le scroll container à droite pour que la sidebar reste sticky.
@@ -27,21 +25,22 @@ export default async function EtablissementLayout({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const user = await requireUser();
-
-  const etab = await prisma.etablissement.findFirst({
-    where: { id, entreprise: { userId: user.id } },
-    select: {
-      id: true,
-      raisonDisplay: true,
-      adresse: true,
-      effectifSurSite: true,
-      entrepriseId: true,
-      // Qualifie le registre d'accessibilité dans la sidebar (ERP seulement).
-      estERP: true,
-    },
-  });
-  if (!etab) notFound();
+  // La garde d'appartenance, par la porte commune (404 si l'établissement
+  // n'est pas au user). Mémoïsée sur le rendu (audit Next.js du 2026-10-14,
+  // H2) : la vigilance prestataires de la barre latérale la redemandait, et
+  // c'était une troisième lecture du même établissement.
+  const { user, etablissement } = await requireEtablissement(id);
+  // Le client ne reçoit que ce que la barre affiche — l'entreprise chargée
+  // par la garde reste ici.
+  const etab = {
+    id: etablissement.id,
+    raisonDisplay: etablissement.raisonDisplay,
+    adresse: etablissement.adresse,
+    effectifSurSite: etablissement.effectifSurSite,
+    entrepriseId: etablissement.entrepriseId,
+    // Qualifie le registre d'accessibilité dans la sidebar (ERP seulement).
+    estERP: etablissement.estERP,
+  };
 
   // Pastilles de la sidebar : même chargement que le shell DUERP, pour
   // que les deux annoncent les mêmes nombres (ADR-015).

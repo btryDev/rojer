@@ -25,7 +25,7 @@
 import {
   statutDepuisResultat,
   type ResultatRealise,
-} from "@/lib/rapports/schema";
+} from "@/lib/rapports/resultats";
 import type { FaitsDeLigne } from "./echeance-de-ligne";
 // DES TYPES SEULEMENT, et en `import type` : `generateur.ts` importe ce module
 // pour sa décision, et un import de valeur dans l'autre sens ferait

@@ -22,9 +22,9 @@
 // aux dates lui-même.
 
 import { ajouterJours, ajouterMois } from "@/lib/dates";
-import { estPeriodicitePlusStricte } from "@/lib/matching/prescriptions";
 import {
   PERIODICITE_CALENDAIRE,
+  PERIODICITE_EN_JOURS,
   type Periodicite,
 } from "@/lib/referentiels/types-communs";
 
@@ -132,4 +132,26 @@ export function premierPas(
   // valeur. Une surcharge ne DESSERRE jamais : moins stricte que la base, elle
   // est sans effet sur le premier cycle.
   return estPeriodicitePlusStricte(surcharge, base) ? surcharge : base;
+}
+
+// Venue de `matching/prescriptions.ts` le 2026-10-14 (audit Next.js, H1) :
+// `periodicite.ts` l'importait de là, et tirait avec elle le référentiel
+// entier jusque dans les composants clients qui lisent `dates/retard.ts`.
+// Fonction pure sur la table d'ordre du référentiel, sans autre dépendance.
+/**
+ * `candidate` est-elle strictement plus stricte que `reference` ?
+ *
+ * Une périodicité sans échéance (`mise_en_service_uniquement`, `autre`,
+ * `null` en jours) est « infiniment longue » : n'importe quel rythme daté la
+ * renforce. Deux périodicités sans échéance ne se renforcent pas.
+ */
+export function estPeriodicitePlusStricte(
+  candidate: Periodicite,
+  reference: Periodicite,
+): boolean {
+  const c = PERIODICITE_EN_JOURS[candidate];
+  const r = PERIODICITE_EN_JOURS[reference];
+  if (c === null) return false;
+  if (r === null) return true;
+  return c < r;
 }

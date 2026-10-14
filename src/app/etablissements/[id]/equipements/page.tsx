@@ -63,7 +63,27 @@ export default async function EquipementsPage({
   // le reste : c'est lui qui borne le parc affiché, donc les compteurs du
   // bandeau, les sections et leur tri par urgence. Appliqué après, il
   // laisserait un en-tête et un ordre calculés sur un autre périmètre.
-  const batiments = await listerBatimentsDeLEtablissement(id);
+  // Les cinq lectures partent ensemble, APRÈS la garde (`getEtablissement`
+  // + `notFound`) : les bâtiments étaient lus seuls, puis le reste — aucune
+  // des quatre autres ne dépend du filtre (audit Next.js du 2026-10-14, M4).
+  const [batiments, equipements, etatsVerifs, sansEcheance, fraicheur] =
+    await Promise.all([
+      listerBatimentsDeLEtablissement(id),
+      listerEquipementsDeLEtablissement(id),
+      // Le parc ne disait rien de son état de vérification : on lisait un
+      // inventaire, pas une situation.
+      etatVerificationsParEquipement(id),
+      // Et le parc ne disait rien du silence : un appareil pour lequel le
+      // référentiel ne produit aucune échéance est rendu comme un appareil à
+      // jour — c'est-à-dire comme une réponse alors que personne n'en a
+      // donné (cf. `hors-referentiel.ts`).
+      equipementsSansEcheance(id),
+      // Ouverte par lien direct, cette page lit des lignes qu'elle ne répare
+      // pas : la réparation vit au tableau de bord et au calendrier
+      // (`regeneration-sure.ts`). Elle dit donc leur âge — une lecture du
+      // repère, aucune écriture (`docs/chantiers-ouverts.md` § 12).
+      fraicheurCalendrier(id),
+    ]);
   const multiBatiments = estMultiBatiments(batiments);
   const batimentFiltre = resoudreFiltreBatiment(batiments, batiment);
 
@@ -79,23 +99,6 @@ export default async function EquipementsPage({
     `${base}/equipements`,
     batimentFiltre ? { batiment: batimentFiltre } : {},
   );
-
-  const [equipements, etatsVerifs, sansEcheance, fraicheur] = await Promise.all([
-    listerEquipementsDeLEtablissement(id),
-    // Le parc ne disait rien de son état de vérification : on lisait un
-    // inventaire, pas une situation.
-    etatVerificationsParEquipement(id),
-    // Et le parc ne disait rien du silence : un appareil pour lequel le
-    // référentiel ne produit aucune échéance est rendu comme un appareil à
-    // jour — c'est-à-dire comme une réponse alors que personne n'en a
-    // donné (cf. `hors-referentiel.ts`).
-    equipementsSansEcheance(id),
-    // Ouverte par lien direct, cette page lit des lignes qu'elle ne répare
-    // pas : la réparation vit au tableau de bord et au calendrier
-    // (`regeneration-sure.ts`). Elle dit donc leur âge — une lecture du
-    // repère, aucune écriture (`docs/chantiers-ouverts.md` § 12).
-    fraicheurCalendrier(id),
-  ]);
 
   const equipementsAffiches = restreindreAuBatiment(equipements, batimentFiltre);
   const parCategorie = grouperParCategorie(equipementsAffiches);

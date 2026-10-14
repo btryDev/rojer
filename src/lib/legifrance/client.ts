@@ -58,6 +58,8 @@ if (typeof window !== "undefined") {
   throw new Error("src/lib/legifrance/client.ts est réservé au serveur.");
 }
 
+import { fetchAvecDelai } from "@/lib/reseau/delai";
+
 export type EnvironnementLegifrance = "sandbox" | "production";
 
 export const POINTS_D_ENTREE: Record<
@@ -117,6 +119,12 @@ export type OptionsClientLegifrance = {
    * plus de trois appels par seconde, en série.
    */
   delaiMs?: number;
+  /**
+   * Délai maximal d'un appel (jeton ou API), réponse entière comprise.
+   * Défaut : 30 s. Un appel abandonné compte comme une panne réseau : il est
+   * repris comme elle (audit Next.js du 2026-10-14, M9).
+   */
+  delaiReponseMs?: number;
   /** Nombre total d'essais sur 429 / 5xx / panne réseau. Défaut : 4. */
   maxEssais?: number;
   /** Attente de base de la reprise exponentielle. Défaut : 1000 ms. */
@@ -226,7 +234,7 @@ export type ClientLegifrance = {
 };
 
 export function creerClientLegifrance(o: OptionsClientLegifrance): ClientLegifrance {
-  const f = o.fetch ?? globalThis.fetch;
+  const f = fetchAvecDelai(o.delaiReponseMs ?? 30_000, o.fetch);
   const points = POINTS_D_ENTREE[o.env];
   const delaiMs = o.delaiMs ?? 300;
   const maxEssais = Math.max(1, o.maxEssais ?? 4);
@@ -355,7 +363,21 @@ export function creerClientLegifrance(o: OptionsClientLegifrance): ClientLegifra
         });
       }
       if (r.ok) {
-        const texte = await r.text();
+        let texte: string;
+        try {
+          texte = await r.text();
+        } catch {
+          // Corps interrompu (coupure, ou délai `delaiReponseMs` atteint
+          // pendant la lecture) : une panne réseau, reprise comme elle.
+          if (essai < maxEssais) {
+            c.reprises++;
+            await attendre(attenteReprise(essai));
+            continue;
+          }
+          throw new ErreurLegifrance("reseau", `${chemin} : réponse interrompue après ${essai} essai(s).`, {
+            point: chemin,
+          });
+        }
         if (texte.trim() === "") return null as T;
         try {
           return JSON.parse(texte) as T;

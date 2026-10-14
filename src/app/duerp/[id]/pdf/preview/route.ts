@@ -1,5 +1,5 @@
-import { renderToBuffer } from "@react-pdf/renderer";
 import { DuerpDocument } from "@/lib/pdf/DuerpDocument";
+import { reponsePdf } from "@/lib/pdf/reponse";
 import { listerVersions } from "@/lib/versions/queries";
 import { historiqueJusqua } from "@/lib/versions/historique";
 import { construireSnapshot } from "@/lib/versions/snapshot-builder";
@@ -38,22 +38,14 @@ export async function GET(
 
   const historique = historiqueJusqua(versions, numeroProvisoire);
 
-  const buffer = await renderToBuffer(
-    DuerpDocument({ snapshot, historique, brouillon: true }),
-  );
-
   const safe = snapshot.entreprise.raisonSociale
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-zA-Z0-9]/g, "_");
-  const filename = `DUERP_${safe}_apercu.pdf`;
 
-  return new Response(new Uint8Array(buffer), {
-    headers: {
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="${filename}"`,
-      // Pas de cache : l'aperçu reflète l'état instantané du DUERP.
-      "Cache-Control": "no-store",
-    },
-  });
+  // `no-store` (dans `reponsePdf`) : l'aperçu reflète l'état instantané du DUERP.
+  return reponsePdf(
+    DuerpDocument({ snapshot, historique, brouillon: true }),
+    `DUERP_${safe}_apercu.pdf`,
+  );
 }

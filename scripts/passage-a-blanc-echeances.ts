@@ -24,9 +24,9 @@
 // masqué, pour qu'on sache toujours où l'on lit. Aucun nom de personne ni
 // d'établissement n'est imprimé — des identifiants seulement.
 //
-//   pnpm tsx --env-file=.env scripts/passage-a-blanc-echeances.ts
-//   pnpm tsx --env-file=.env scripts/passage-a-blanc-echeances.ts --etablissement <id>
-//   pnpm tsx --env-file=.env scripts/passage-a-blanc-echeances.ts --json passage.json
+//   pnpm tsx --import ./scripts/server-only-hors-next.mjs --env-file=.env scripts/passage-a-blanc-echeances.ts
+//   pnpm tsx --import ./scripts/server-only-hors-next.mjs --env-file=.env scripts/passage-a-blanc-echeances.ts --etablissement <id>
+//   pnpm tsx --import ./scripts/server-only-hors-next.mjs --env-file=.env scripts/passage-a-blanc-echeances.ts --json passage.json
 //
 // SORTIE. Par établissement : la table catégorie → nombre, le nombre de lignes
 // que la régénération créerait, puis une ligne par écart hors `identique` et

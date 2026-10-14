@@ -1282,6 +1282,7 @@ model AccessToken {
 
   @@index([etablissementId])
   @@index([objetType, objetId])
+  @@index([prestataireId])
 }
 
 /// Le plafond des envois de code de confirmation, PAR ADRESSE (ADR-006,
@@ -1295,6 +1296,24 @@ model QuotaEnvoiOtp {
   empreinteAdresse String   @id
   fenetreDebut     DateTime
   envois           Int      @default(0)
+}
+
+/// Limitation de débit des points d'entrée publics (audit OWASP B3/B14, audit
+/// Next.js M11, 2026-10-14) : connexion, inscription, réinitialisation,
+/// vérification publique d'une signature, serveur MCP. Une ligne par clé
+/// `<action>:<ip|compte|portee>:<empreinte SHA-256>` — ni adresse IP ni
+/// adresse e-mail en clair. Fenêtre fixe : `compte` repart de 1 quand
+/// `fenetreFin` est passée. Tenue en base, et non en mémoire, parce que chaque
+/// instance Vercel a la sienne ; elle vaut aussi chez Clever Cloud.
+/// L'incrément est un seul `INSERT … ON CONFLICT DO UPDATE`, que PostgreSQL
+/// sérialise sur la ligne (`securite/limite-debit.ts`).
+model LimiteDebit {
+  cle        String   @id
+  compte     Int
+  fenetreFin DateTime
+
+  // Le ménage des fenêtres closes (`DELETE … WHERE "fenetreFin" < …`).
+  @@index([fenetreFin])
 }
 
 enum ScopeAccessToken {
@@ -1462,6 +1481,7 @@ model PermisFeu {
   @@index([etablissementId, dateDebut])
   @@index([statut])
   @@index([batimentId])
+  @@index([prestataireId])
 }
 
 enum NatureTravauxPointChaud {
@@ -1596,6 +1616,7 @@ model PlanPrevention {
   @@unique([etablissementId, numero])
   @@index([etablissementId, dateDebut])
   @@index([batimentId])
+  @@index([prestataireId])
 }
 
 model LignePlanPrevention {

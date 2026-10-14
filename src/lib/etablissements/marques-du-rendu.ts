@@ -6,12 +6,12 @@
 // tableau de bord aurait noué les deux modules. Serveur seulement.
 
 import { cache } from "react";
-import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import {
-  marquesAConfirmerDuDossier,
+  marquesDepuisApplicables,
   type MarquesDuDossier,
 } from "./marques-a-confirmer";
+import { obligationsApplicablesDuDossier } from "./dossier-du-rendu";
 
 /**
  * Les marques « à confirmer » du dossier, mémoïsées par `cache()` sur le rendu
@@ -26,9 +26,21 @@ export const marquesAConfirmerDuRendu = cache(
     etablissementId: string,
   ): Promise<MarquesDuDossier> {
     const user = await requireUser();
-    return marquesAConfirmerDuDossier(prisma, {
-      id: etablissementId,
-      entreprise: { userId: user.id },
-    });
+    // [2026-10-14, audit Next.js H2] Le passage du moteur est celui que le
+    // rendu partage avec les transmissions, les états permanents et la
+    // couverture (`dossier-du-rendu.ts`) : même établissement, même parc en
+    // service, même prédicat d'appartenance que `marquesAConfirmerDuDossier`,
+    // qui reste la porte du MCP et des routes hors rendu.
+    const dossier = await obligationsApplicablesDuDossier(
+      etablissementId,
+      user.id,
+    );
+    if (!dossier) {
+      return { parObligation: new Map(), entrepriseId: null, questions: [] };
+    }
+    return marquesDepuisApplicables(
+      dossier.applicables,
+      dossier.etab.entrepriseId,
+    );
   },
 );

@@ -75,6 +75,30 @@ type Exemption = {
 
 const EXEMPTIONS = new Map<string, Exemption>([
   [
+    "lib/auth/actions.ts:signInAction",
+    {
+      garde: "refusParLimite",
+      raison:
+        "Connexion, sans session à borner. La seule écriture est le compteur " +
+        "de limitation de débit (`LimiteDebit`), dont la clé est l'IP et " +
+        "l'adresse saisie : aucune donnée de dossier.",
+    },
+  ],
+  [
+    "lib/auth/actions.ts:signUpAction",
+    {
+      garde: "refusParLimite",
+      raison: "Inscription, sans compte encore : la seule écriture est le compteur de limitation de débit.",
+    },
+  ],
+  [
+    "lib/auth/actions.ts:requestPasswordResetAction",
+    {
+      garde: "refusParLimite",
+      raison: "Mot de passe oublié, appelant non connecté : la seule écriture est le compteur de limitation de débit.",
+    },
+  ],
+  [
     "lib/entreprises/actions.ts:creerEntreprise",
     {
       garde: "requireUser",

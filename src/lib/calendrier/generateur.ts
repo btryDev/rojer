@@ -45,7 +45,7 @@ import {
 import { estCyclique, premierPas } from "./periodicite";
 import { estStatutRealise } from "@/lib/dates/retard";
 import { echeanceDuTitre } from "@/lib/salaries/echeance";
-import { statutDepuisResultat } from "@/lib/rapports/schema";
+import { statutDepuisResultat } from "@/lib/rapports/resultats";
 import type {
   ObligationApplicable,
   ObligationSurMesureApplicable,

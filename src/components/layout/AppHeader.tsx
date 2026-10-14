@@ -6,8 +6,10 @@ import { signOutAction } from "@/lib/auth/actions";
 
 /**
  * Header global persistant — visible partout où l'app n'a pas son propre
- * chrome (cf. `AppHeaderGate`) : connexion, création de compte, pages
- * publiques hors accueil.
+ * chrome : connexion, création de compte, pages publiques hors accueil. Il
+ * n'est rendu que par les segments qui l'affichent (`LayoutAvecEnTete`,
+ * audit Next.js du 2026-10-14, M2) — un portillon client le masquait après
+ * coup, et il s'exécutait donc sur tous les écrans.
  *
  * Il portait la charte papier — surfaces et gris du papier, filet
  * pointillé, boutons du registre administratif. C'était un constat de

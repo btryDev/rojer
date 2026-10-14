@@ -287,3 +287,43 @@ describe("useLayoutPerso — migration et normalisation", () => {
     ]);
   });
 });
+
+describe("disposition lue dans le cookie (B9)", () => {
+  it("relit au serveur la disposition écrite par le client", () => {
+    // Le client écrit `encodeURIComponent(JSON)`, Next décode la valeur
+    // avant `cookies().get()`.
+    const ecrit = {
+      version: SCHEMA_VERSION,
+      items: [
+        { widgetId: "guide", variant: "default" },
+        { widgetId: "score", variant: "anneau" },
+      ],
+    };
+    const valeur = decodeURIComponent(encodeURIComponent(JSON.stringify(ecrit)));
+    expect(
+      __internal.lireLayoutCookie(valeur)?.items.map((i) => i.widgetId),
+    ).toEqual(["equipements-grid", "guide", "score"]);
+  });
+
+  it("retombe sur le défaut (null) sans cookie ou sur une valeur illisible", () => {
+    expect(__internal.lireLayoutCookie(null)).toBeNull();
+    expect(__internal.lireLayoutCookie("")).toBeNull();
+    expect(__internal.lireLayoutCookie("{pas du json")).toBeNull();
+    expect(__internal.lireLayoutCookie(JSON.stringify({ version: 1, items: [] }))).toBeNull();
+  });
+
+  // Le cookie se lit au serveur : une propriété héritée du registre
+  // (`__proto__`, `toString`) passait `in REGISTRY` et faisait planter le
+  // rendu du board pour la durée du cookie, un an (revue du 2026-10-14, C2).
+  it("écarte les identifiants hérités du prototype", () => {
+    for (const piege of ["__proto__", "toString", "constructor", "hasOwnProperty"]) {
+      const valeur = JSON.stringify({
+        version: SCHEMA_VERSION,
+        items: [{ widgetId: piege }, { widgetId: "guide", variant: "default" }],
+      });
+      expect(
+        __internal.lireLayoutCookie(valeur)?.items.map((i) => i.widgetId),
+      ).toEqual(["equipements-grid", "guide"]);
+    }
+  });
+});

@@ -1,7 +1,7 @@
 import { estLignePourInformation } from "@/lib/referentiels/conformite/initiative";
 import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
+import type { AuthedUser } from "@/lib/auth/require-user";
 import { compterActions, listerActions, origineDeLAction } from "@/lib/actions/queries";
 import { listerVerifications, type VerificationListee } from "@/lib/calendrier/queries";
 import { libellePorteurSansNom } from "@/lib/calendrier/labels";
@@ -115,9 +115,14 @@ import {
  * Charge un établissement (et son entreprise) en le bornant au user
  * connecté. Retourne `null` aussi bien pour un établissement inexistant que
  * pour celui d'un tiers : l'appelant ne doit pas pouvoir les distinguer.
+ *
+ * L'utilisateur est REÇU, pas relu (audit Next.js du 2026-10-14, M7) : hors
+ * rendu, `requireUser()` refait un `getUser()` réseau à chaque appel, et le
+ * ZIP de contrôle en faisait vingt-trois. Les builders le reçoivent de la
+ * route, qui le tient de `requireEtablissement` ; le prédicat `userId` reste
+ * dans chaque requête.
  */
-async function chargerEtablissementDuUser(etablissementId: string) {
-  const user = await requireUser();
+async function chargerEtablissementDuUser(etablissementId: string, user: AuthedUser) {
   return prisma.etablissement.findFirst({
     where: { id: etablissementId, entreprise: { userId: user.id } },
     include: { entreprise: true, _count: { select: { batiments: true } } },
@@ -260,8 +265,9 @@ export function ligneVerif(
 
 export async function construirePlanActionsData(
   etablissementId: string,
+  user: AuthedUser,
 ): Promise<PlanActionsData | null> {
-  const etab = await chargerEtablissementDuUser(etablissementId);
+  const etab = await chargerEtablissementDuUser(etablissementId, user);
   if (!etab) return null;
 
   // Le PDF Plan d'actions documente ce qui reste à faire à la date
@@ -302,8 +308,9 @@ export async function construirePlanActionsData(
 
 export async function construireRegistreData(
   etablissementId: string,
+  user: AuthedUser,
 ): Promise<RegistreData | null> {
-  const etab = await chargerEtablissementDuUser(etablissementId);
+  const etab = await chargerEtablissementDuUser(etablissementId, user);
   if (!etab) return null;
   const multiBatiments = etab._count.batiments > 1;
   // Une horloge pour tout le document (ADR-011) : la pastille des
@@ -319,12 +326,10 @@ export async function construireRegistreData(
     // périmètre, et ce lot ne l'y ajoute pas.
     couvertureDuDossier(etablissementId),
     fraicheurCalendrier(etablissementId),
-    requireUser().then((user) =>
-      marquesAConfirmerDuDossier(prisma, {
-        id: etablissementId,
-        entreprise: { userId: user.id },
-      }),
-    ),
+    marquesAConfirmerDuDossier(prisma, {
+      id: etablissementId,
+      entreprise: { userId: user.id },
+    }),
   ]);
 
   const lignesRapports: LigneRapport[] = rapports.map((r) => ({
@@ -482,8 +487,8 @@ function ficheDuPdf(
 
 export async function construireDossierConformiteData(
   etablissementId: string,
+  user: AuthedUser,
 ): Promise<DossierData | null> {
-  const user = await requireUser();
   const etab = await prisma.etablissement.findFirst({
     where: { id: etablissementId, entreprise: { userId: user.id } },
     include: {
@@ -522,7 +527,7 @@ export async function construireDossierConformiteData(
     marques,
   ] = await Promise.all([
       compterActions(etablissementId),
-      construirePlanActionsData(etablissementId),
+      construirePlanActionsData(etablissementId, user),
       listerRapportsDeLEtablissement(etablissementId),
       listerVerifications(etablissementId),
       // Ce que le référentiel ne traite pas pour cet établissement. Lu par la

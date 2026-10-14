@@ -407,8 +407,27 @@ const RELEVE = {
   // change les lignes est une DONNÉE — GZ 15 vise aussi la nouvelle
   // catégorie —, hachée par l'empreinte du référentiel, donc déjà dans le
   // sceau. Un dossier existant n'a aucun appareil de cette catégorie : sa
-  // réconciliation ne pose aucune ligne nouvelle. ~~a5d569d53f9b8b2b~~.
-  empreinte: "2689968acb89519c",
+  // réconciliation ne pose aucune ligne nouvelle. ~~2689968acb89519c~~ (empreinte de ce lot seul, avant l'intégration de l'audit Next.js).
+  // Recopiée SANS incrément le 2026-10-14, à l'intégration des lots du jour :
+  // les deux lignées ci-dessus et ci-dessous se rejoignent ; même motif, NON.
+  // Recopiée SANS incrément le 2026-10-14 (`lot/nextjs-client-1014`, audit
+  // Next.js H1) : `estPeriodicitePlusStricte` passe, texte identique, de
+  // `matching/prescriptions.ts` (qui la réexporte) à `calendrier/periodicite.ts`
+  // — `periodicite.ts` ne tire plus le référentiel jusqu'aux composants
+  // clients. NON : extraction, même fonction, mêmes appelants.
+  // ~~a5d569d53f9b8b2b~~.
+  // Recopiée SANS incrément le 2026-10-14 (`lot/nextjs-client-1014`, audit
+  // Next.js M8) : `RESULTATS`, `RESULTATS_REALISES`, `STATUT_DEPUIS_RESULTAT`
+  // et `statutDepuisResultat` passent, texte identique, de `rapports/schema.ts`
+  // à `rapports/resultats.ts` (sans zod) ; le générateur, `decision-par-faits`,
+  // `echeance-de-ligne` et `derniere-realisation` les y prennent. NON :
+  // extraction, mêmes valeurs, mêmes appelants. ~~c8f112a346c9ac63~~.
+  // Recopiée SANS incrément le 2026-10-14 (`lot/nextjs-client-1014`, audit
+  // Next.js B1) : `calendrier/actions.ts` perd sa directive `"use server"` et
+  // gagne `import "server-only"` — ses deux fonctions ne sont plus des
+  // actions appelables depuis le navigateur. NON : aucune instruction de la
+  // passe ne change. ~~adf2b7f801f974e6~~.
+  empreinte: "da691471f9fe392b",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

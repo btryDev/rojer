@@ -34,8 +34,8 @@
 // d'abord, reprendre ensuite, et la fenêtre entre les deux est couverte par la
 // branche EXTINCTEUR transitoire de l'obligation.
 //
-//   pnpm tsx scripts/reprise-ria.ts            # dry-run
-//   pnpm tsx scripts/reprise-ria.ts --appliquer
+//   pnpm tsx --import ./scripts/server-only-hors-next.mjs scripts/reprise-ria.ts            # dry-run
+//   pnpm tsx --import ./scripts/server-only-hors-next.mjs scripts/reprise-ria.ts --appliquer
 
 import { PrismaClient, type Prisma } from "@prisma/client";
 
@@ -82,8 +82,8 @@ async function main() {
         "Ordre à respecter :",
         "  1. déployer (le build joue `prisma migrate deploy`) ;",
         "  2. snapshot de la base ;",
-        "  3. `pnpm tsx scripts/reprise-ria.ts` (dry-run) ;",
-        "  4. `pnpm tsx scripts/reprise-ria.ts --appliquer` ;",
+        "  3. `pnpm tsx --import ./scripts/server-only-hors-next.mjs scripts/reprise-ria.ts` (dry-run) ;",
+        "  4. `pnpm tsx --import ./scripts/server-only-hors-next.mjs scripts/reprise-ria.ts --appliquer` ;",
         "  5. retirer la branche EXTINCTEUR de `incendie-erp-ria-annuelle`.",
         "",
       ].join("\n"),

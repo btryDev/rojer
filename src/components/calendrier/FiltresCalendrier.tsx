@@ -45,6 +45,12 @@ function construireHref(
      * filtre depuis la vue par équipement renvoyait à la vue par mois.
      */
     vue?: string | null;
+    /**
+     * L'année affichée (`?annee=`, audit Next.js M10) : comme la lecture,
+     * elle vit dans l'URL ; sans la reconduire, régler un filtre depuis
+     * 2027 renvoyait sur l'année par défaut.
+     */
+    annee?: string | null;
   },
 ): string {
   const p = new URLSearchParams();
@@ -53,6 +59,7 @@ function construireHref(
   if (filtres.urgent) p.set("urgent", "1");
   if (filtres.batiment) p.set("batiment", filtres.batiment);
   if (filtres.vue) p.set("vue", filtres.vue);
+  if (filtres.annee) p.set("annee", filtres.annee);
   const q = p.toString();
   return q ? `${baseHref}?${q}` : baseHref;
 }
@@ -227,6 +234,7 @@ export function FiltresCalendrier({
           // La lecture se lit dans l'URL courante, pas dans une prop : la
           // bascule mois/équipement la met à jour sans repasser serveur.
           vue: searchParams.get("vue"),
+          annee: searchParams.get("annee"),
         }),
         { scroll: false },
       );

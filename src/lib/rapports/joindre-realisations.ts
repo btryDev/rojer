@@ -4,6 +4,10 @@
 // Séparée de `derniere-realisation.ts`, qui reste pur, pour une raison
 // précise : le serveur MCP a son propre client (`lib/mcp/prisma.ts`) et lit ce
 // module-là. S'il importait celui-ci, il chargerait un second client.
+// [2026-10-14, audit Next.js M5 : le MCP lit désormais `dbMcp()`
+// (`lib/mcp/db.ts`) — le client commun dans le processus web, `prismaMcp`
+// dans le seul serveur stdio. La séparation reste juste : en stdio, ce module
+// interrogerait le client commun, qui écrit ses requêtes sur stdout en dev.]
 
 import { prisma } from "@/lib/prisma";
 import {

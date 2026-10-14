@@ -240,7 +240,7 @@ describe("le refus de périmètre est aussi lisible sans le voir", () => {
 });
 
 /**
- * La sortie de l'écran. `/onboarding` masque le header global (`AppHeaderGate`)
+ * La sortie de l'écran. `/onboarding` ne porte pas le header global (`LayoutAvecEnTete`)
  * et la barre de compte n'existe qu'une fois un établissement créé : cet écran
  * est le seul à porter la déconnexion pour un compte qui n'a pas encore de
  * dossier. Et la confirmation de « Quitter » ne peut pas être une boîte native

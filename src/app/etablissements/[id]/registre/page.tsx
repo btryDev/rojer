@@ -59,16 +59,21 @@ export default async function RegistrePage({
     ? (domaine as DomaineObligation)
     : undefined;
 
-  const rapports = await listerRapportsDeLEtablissement(id, {
-    domaine: filtreDomaine,
-    recherche: q,
-  });
-  const registre = await composerRegistreDeLEtablissement(id);
-
-  // Ce que l'outil couvre, et ce qu'il ne couvre pas. Se lit AVANT le
-  // registre : un dirigeant hors périmètre doit savoir que ce qui suit est
-  // incomplet avant de le lire, pas après.
-  const couverture = await couvertureDuDossier(id);
+  // Trois lectures indépendantes, lancées ensemble APRÈS la garde
+  // (`getEtablissement` + `notFound` ci-dessus) : elles se suivaient, chacune
+  // attendant la précédente pour rien (audit Next.js du 2026-10-14, M4). Le
+  // gain n'existe que sur un pool de plus d'une connexion.
+  const [rapports, registre, couverture] = await Promise.all([
+    listerRapportsDeLEtablissement(id, {
+      domaine: filtreDomaine,
+      recherche: q,
+    }),
+    composerRegistreDeLEtablissement(id),
+    // Ce que l'outil couvre, et ce qu'il ne couvre pas. Se lit AVANT le
+    // registre : un dirigeant hors périmètre doit savoir que ce qui suit est
+    // incomplet avant de le lire, pas après.
+    couvertureDuDossier(id),
+  ]);
 
   // La complétude se lit fiche par fiche, jamais partie par partie : une même
   // partie mêle des fiches que l'outil recueille et d'autres non. Le

@@ -35,7 +35,14 @@ const { prismaMock, verifierMock, chercherMock } = vi.hoisted(() => ({
   chercherMock: vi.fn(),
 }));
 
-vi.mock("./prisma", () => ({ prismaMcp: prismaMock }));
+// La limitation de débit écrit en base : neutralisée ici, éprouvée par
+// `mcp/limite-debit-mcp.test.ts` et `securite/limite-debit*.test.ts`.
+vi.mock("@/lib/securite/limite-debit", async (original) => ({
+  ...(await original<typeof import("@/lib/securite/limite-debit")>()),
+  consommer: async () => ({ ok: true }),
+}));
+
+vi.mock("./db", () => ({ dbMcp: () => prismaMock }));
 vi.mock("./acces-oauth-deps", () => ({
   creerVerificateurSupabase: () => verifierMock,
   chercherEtablissementDeUtilisateur: chercherMock,

@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { verifierAccessToken } from "@/lib/access-tokens/verify";
-import { WhyCard, LegalBadge } from "@/components/ui-kit";
+import { WhyCard } from "@/components/ui-kit/WhyCard";
+import { LegalBadge } from "@/components/ui-kit/LegalBadge";
 import { SignatureExterneForm } from "@/components/signatures/SignatureExterneForm";
-import { prisma } from "@/lib/prisma";
 import { formaterDateFr } from "@/lib/dates";
 import { objetEstSignable } from "@/lib/signatures/etat-signable";
 import {
   contenuASigner,
+  etablissementDuJeton,
   type ContenuASigner,
   type ContenuPermisASigner,
   type ContenuPlanASigner,
@@ -66,13 +67,7 @@ export default async function AccesParTokenPage({
   const t = res.token;
 
   // Récupération du contexte métier pour affichage (qui signe quoi).
-  const etablissement = await prisma.etablissement.findUnique({
-    where: { id: t.etablissementId },
-    select: {
-      raisonDisplay: true,
-      entreprise: { select: { raisonSociale: true } },
-    },
-  });
+  const etablissement = await etablissementDuJeton(t.etablissementId);
   if (!etablissement) notFound();
 
   // Lecture bornée à l'établissement DU JETON : c'est par une lecture non

@@ -153,7 +153,10 @@ anonyme peut donc faire traiter un gros corps de requête. Rien ne fuit, mais
 c'est une porte au déni de service.
 → Contrôler la session dès l'entrée de l'action.
 
-**S7 — CSP en Report-Only seulement. Moyenne.**
+~~**S7 — CSP en Report-Only seulement. Moyenne.**~~ **[Corrigé le
+2026-10-14, `lot/nextjs-securite-1014` : CSP bloquante à nonce posée par le
+proxy, sans `'unsafe-inline'` en script — détail au M11 de
+`audit-nextjs-2026-10-14.md`.]**
 Seul `frame-ancestors 'none'` est appliqué. Le reste
 (`script-src 'self' 'unsafe-inline'`) est en Report-Only, sans point de collecte
 des violations : personne ne lit les rapports. Combiné à S9, une faille XSS
@@ -195,12 +198,19 @@ un critère de recette.
 - **B2 — Origine.** `baseURL` et `trustedOrigins` sont fixés côté serveur, depuis
   `PUBLIC_APP_URL`. Aucune URL de lien envoyé par e-mail ne vient d'une requête.
   Le chemin de retour après connexion passe par le filtre de C1 et C2.
-- **B3 — Limitation de débit.** Le rate limiter de Better Auth est activé sur la
+- **B3 — Limitation de débit.** *[2026-10-14, `lot/nextjs-securite-1014` :
+  faite côté app sans attendre la bascule — table `LimiteDebit`, connexion,
+  inscription, réinitialisation, `/verifier`, MCP ; détail au M11 de
+  `audit-nextjs-2026-10-14.md`. Restent pour la bascule : le plafond de renvois
+  d'OTP par jeton et la lecture de l'IP derrière le répartiteur CC.]* Le rate limiter de Better Auth est activé sur la
   connexion, l'inscription et la réinitialisation, et adossé à la base, pas à la
   mémoire d'une instance. L'IP réelle est lue derrière le proxy Clever Cloud
   (`X-Forwarded-For` de confiance). Mettre aussi un plafond total de renvois
   d'OTP par jeton : aujourd'hui, seul le délai de 60 secondes s'applique.
-- **B4 — Mots de passe et sessions.** Au moins 12 caractères, vérifiés côté
+- **B4 — Mots de passe et sessions.** *[2026-10-14, `lot/nextjs-securite-1014` :
+  12 caractères vérifiés côté serveur de l'app à l'inscription et à la
+  réinitialisation (devenue une action serveur). Restent pour la bascule : le
+  réglage côté fournisseur, la révocation des autres sessions, la 2FA.]* Au moins 12 caractères, vérifiés côté
   serveur, y compris à la réinitialisation (aujourd'hui, seul l'attribut HTML
   `minLength=8` s'applique à ce moment-là). Les autres sessions sont révoquées
   après une réinitialisation. Proposer le plugin 2FA.
@@ -240,7 +250,12 @@ un critère de recette.
   déploiements pour retirer une colonne. Previews sur une base isolée, jamais
   l'URL de prod. Sauvegardes et PITR. Contrôle de dérive entre la base de prod
   et les migrations.
-- **B14 — Comptes.** Correspondance de `Entreprise.userId` (UUID Supabase) vers
+- **B14 — Comptes.** *[2026-10-14, `lot/nextjs-securite-1014` : `/api/*` sans
+  session répond 401 JSON ; limite de débit sur `/verifier` et
+  `verifierIntegriteSignature`, qui n'est plus une action serveur. `/signe/*`
+  et `/acces/*` gardent leurs limites d'OTP (essais, envois), sans limite par
+  IP : non faites ici. Restent pour la bascule : correspondance des
+  identifiants, lecture unique de la session.]* Correspondance de `Entreprise.userId` (UUID Supabase) vers
   l'identifiant Better Auth, et choix entre réinitialisation forcée et import des
   hachés bcrypt. Lire la session une seule fois par requête. Une route `/api/*`
   sans session répond 401, pas 307. La limite de débit couvre aussi `/signe/*`,

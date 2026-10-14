@@ -13,6 +13,7 @@ import { prisma } from "@/lib/prisma";
 import type { SidebarCounts } from "@/components/layout/sidebar-nav";
 import { compterEnRetardParFamille } from "@/lib/calendrier/retards";
 import { compterActions } from "@/lib/actions/queries";
+import { instantDuRendu } from "@/lib/dates/instant-du-rendu";
 import { compterVigilanceParGravite } from "@/lib/prestataires/queries";
 import { compterTitresEnRetard } from "@/lib/salaries/queries";
 import {
@@ -23,11 +24,18 @@ import {
 export async function chargerSidebarCounts(
   etablissementId: string,
 ): Promise<SidebarCounts> {
-  const now = new Date();
+  // L'instant du RENDU, et non un `new Date()` à soi : la page qui tourne en
+  // parallèle lit le même, et les lectures qui ne dépendent pas des lignes du
+  // calendrier — le registre des autres échéances, les compteurs d'actions —
+  // ne partent qu'une fois pour les deux (audit Next.js du 2026-10-14, H2).
+  // Le compte des lignes, lui, n'est jamais partagé avec la page : il n'est pas
+  // mémoïsé, parce que la page répare avant de lire et que la barre lit sans
+  // attendre (`regeneration-sure.ts`).
+  const now = instantDuRendu();
   const [retards, actions, vigilance, equipements, titresEnRetard, fraicheur] =
     await Promise.all([
-      compterEnRetardParFamille(etablissementId),
-      compterActions(etablissementId),
+      compterEnRetardParFamille(etablissementId, now),
+      compterActions(etablissementId, now),
       compterVigilanceParGravite(etablissementId),
       // `actif: true`, comme `listerEquipementsDeLEtablissement` : c'est le
       // parc en service que l'écran Équipements montre. Sans ce filtre, un
