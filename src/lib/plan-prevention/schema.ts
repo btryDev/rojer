@@ -2,6 +2,8 @@ import { z } from "zod";
 import {
   depuisCleJourCivil,
   depuisSaisieDateHeure,
+  estJourCivilReel,
+  estSaisieDateHeureReelle,
   formaterDateFr,
 } from "@/lib/dates";
 import {
@@ -73,6 +75,7 @@ const optionalTrimmed = (max = 2000) =>
 const dateFromDatetime = z
   .string()
   .regex(DATETIME_FMT, "Format attendu : AAAA-MM-JJTHH:MM")
+  .refine(estSaisieDateHeureReelle, "Cette date ou cette heure n'existe pas")
   // Ancré sur Europe/Paris — cf. ADR-011 et `depuisSaisieDateHeure`.
   .transform((v) => depuisSaisieDateHeure(v));
 
@@ -81,6 +84,7 @@ const dateFromDate = z.preprocess(
   z
     .string()
     .regex(DATE_FMT, "Format attendu : AAAA-MM-JJ")
+    .refine(estJourCivilReel, "Cette date n'existe pas")
     .optional()
     .transform((v) => (v ? depuisCleJourCivil(v) : undefined)),
 );

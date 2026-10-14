@@ -1,6 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import type { AccessToken, Prisma } from "@prisma/client";
-import { OTP_ESSAIS_MAX } from "@/lib/signatures/otp";
+import { sha256Hex } from "@/lib/signatures/hash";
+import {
+  OTP_ENVOIS_MAX_PAR_HEURE,
+  OTP_ESSAIS_MAX,
+  OTP_FENETRE_ENVOIS_MS,
+} from "@/lib/signatures/otp";
 import { hashToken } from "./token";
 
 /**
@@ -98,27 +103,133 @@ export async function revoquerOtpEpuise(accessTokenId: string): Promise<void> {
 }
 
 /**
- * Remplace le code OTP d'un token : nouveau hash, nouvelle expiration, et
- * compteur d'essais remis à son maximum.
+ * Remplace le code OTP d'un token : nouveau hash, nouvelle expiration.
  *
- * La remise à zéro du compteur est volontaire — un nouveau code mérite ses
- * essais — mais elle serait un contournement de l'anti-bruteforce si le
- * renvoi était illimité. C'est l'appelant qui doit avoir vérifié
- * `renvoiOtpAutorise` (délai minimal entre deux envois) avant d'arriver
- * ici. Un token déjà révoqué pour épuisement d'essais ne repasse pas par
- * ce chemin : `verifierAccessToken` le rejette en amont.
+ * ~~et compteur d'essais remis à son maximum~~ (retiré le 2026-10-13, ASVS
+ * 5.0.0 V6.6.3). La remise à trois était dite volontaire — « un nouveau code
+ * mérite ses essais » —, mais elle faisait du nombre de codes éprouvables sur
+ * un lien une fonction du nombre de renvois : trois par code, un code par
+ * minute, sur un lien de 72 h. LE COMPTEUR EST CELUI DU LIEN, nouveaux codes
+ * compris : trois codes éprouvés au total, quelle que soit la cadence des
+ * renvois. Ce que le signataire y perd est étroit — un code expiré ne consomme
+ * aucun essai (`poserSignatureAvecToken` le refuse avant la réservation), seul
+ * celui qui s'est trompé puis a redemandé un code garde ses essais restants —
+ * et le mail comme la page disent « au total ».
+ *
+ * CONDITIONNELLE, comme la réservation d'un essai : le code n'est remplacé que
+ * s'il est encore celui que l'appelant a lu (`otpExpireLeLu`), et le lien ni
+ * révoqué, ni consommé, ni épuisé. Deux renvois simultanés lisaient le même
+ * code, passaient tous deux le délai de 60 s (`renvoiOtpAutorise`) et
+ * envoyaient deux codes ; un seul obtient désormais l'écriture. Rend `false`
+ * si un autre renvoi l'a devancé ou si le lien n'accepte plus de code.
  */
 export async function renouvelerOtp(
   accessTokenId: string,
-  params: { otpHash: string; otpExpireLe: Date },
-): Promise<void> {
-  await prisma.accessToken.update({
-    where: { id: accessTokenId },
+  params: { otpHash: string; otpExpireLe: Date; otpExpireLeLu: Date | null },
+): Promise<boolean> {
+  const r = await prisma.accessToken.updateMany({
+    where: {
+      id: accessTokenId,
+      otpExpireLe: params.otpExpireLeLu,
+      otpEssaisRestants: { gt: 0 },
+      revoqueLe: null,
+      utiliseLe: null,
+    },
     data: {
       otpHash: params.otpHash,
       otpExpireLe: params.otpExpireLe,
-      otpEssaisRestants: OTP_ESSAIS_MAX,
     },
+  });
+  return r.count === 1;
+}
+
+/** La clé du quota d'une adresse : son empreinte, jamais l'adresse en clair. */
+function empreinteAdresse(emailDestinataire: string): string {
+  return sha256Hex(emailDestinataire.trim().toLowerCase());
+}
+
+export type ReservationEnvoiOtp = { ok: true } | { ok: false; possibleLe: Date };
+
+/**
+ * Réserve l'envoi d'un code à une adresse — ADR-006, « max 5 envois d'OTP /
+ * heure / email » (ASVS 5.0.0 V6.6.3, 2026-10-13). À appeler AVANT de toucher
+ * au code : un refus laisse le code précédent valable.
+ *
+ * Ce qui compte : les liens à code émis vers cette adresse dans l'heure — leur
+ * premier code part avec eux (`emission.ts`) —, plus les renvois de la fenêtre
+ * en cours (`QuotaEnvoiOtp`). Les premiers sont LUS : ils ne passent pas par
+ * ici, et seul un titulaire de compte en crée, sous sa propre limite. Les
+ * seconds sont RÉSERVÉS, et c'est là que tient la garde : le chemin d'un
+ * porteur de lien, le seul qui se rejoue sans compte, est le renvoi.
+ *
+ * La réservation est une écriture CONDITIONNELLE, que la base sérialise sur la
+ * ligne de l'adresse — `envois < plafond` → `+ 1` —, comme la réservation d'un
+ * essai (`reserverEssaiOtp`). Dix renvois simultanés vers une même adresse en
+ * obtiennent cinq, pas dix. La ligne naît par `INSERT … ON CONFLICT DO
+ * NOTHING` (atomique aussi), et la fenêtre — fixe, une heure — se rouvre par
+ * une écriture conditionnée à son ancienneté, qu'une seule requête obtient.
+ */
+export async function reserverEnvoiOtp(
+  emailDestinataire: string,
+  maintenant: Date,
+): Promise<ReservationEnvoiOtp> {
+  const empreinte = empreinteAdresse(emailDestinataire);
+  const ouverture = new Date(maintenant.getTime() - OTP_FENETRE_ENVOIS_MS);
+
+  const liensRecents = await prisma.accessToken.findMany({
+    where: {
+      emailDestinataire,
+      createdAt: { gte: ouverture },
+      scope: { in: ["signature", "depot_rapport"] },
+    },
+    select: { createdAt: true },
+  });
+  const plafond = OTP_ENVOIS_MAX_PAR_HEURE - liensRecents.length;
+
+  await prisma.quotaEnvoiOtp.createMany({
+    data: [{ empreinteAdresse: empreinte, fenetreDebut: maintenant, envois: 0 }],
+    skipDuplicates: true,
+  });
+  await prisma.quotaEnvoiOtp.updateMany({
+    where: { empreinteAdresse: empreinte, fenetreDebut: { lte: ouverture } },
+    data: { fenetreDebut: maintenant, envois: 0 },
+  });
+  if (plafond > 0) {
+    const r = await prisma.quotaEnvoiOtp.updateMany({
+      where: { empreinteAdresse: empreinte, envois: { lt: plafond } },
+      data: { envois: { increment: 1 } },
+    });
+    if (r.count === 1) return { ok: true };
+  }
+
+  // Refusé : quand un envoi redeviendra possible. Les renvois se libèrent à la
+  // fin de leur fenêtre, les liens une heure après leur émission ; si les seuls
+  // liens suffisent à remplir le plafond, c'est le plus ancien qui libère.
+  if (plafond <= 0) {
+    const plusAncien = Math.min(...liensRecents.map((l) => l.createdAt.getTime()));
+    return { ok: false, possibleLe: new Date(plusAncien + OTP_FENETRE_ENVOIS_MS) };
+  }
+  const q = await prisma.quotaEnvoiOtp.findUnique({
+    where: { empreinteAdresse: empreinte },
+    select: { fenetreDebut: true },
+  });
+  return {
+    ok: false,
+    possibleLe: new Date((q?.fenetreDebut ?? maintenant).getTime() + OTP_FENETRE_ENVOIS_MS),
+  };
+}
+
+/**
+ * Rend la place d'un envoi réservé puis non fait — le renvoi devancé par un
+ * autre sur le même lien (`renouvelerOtp` rendu `false`). Sans elle, un
+ * double clic consommait deux des cinq envois de l'heure pour un seul code
+ * parti. Relative (`- 1`) et non absolue : elle commute avec les réservations
+ * concurrentes, comme elles.
+ */
+export async function rendreEnvoiOtp(emailDestinataire: string): Promise<void> {
+  await prisma.quotaEnvoiOtp.updateMany({
+    where: { empreinteAdresse: empreinteAdresse(emailDestinataire), envois: { gt: 0 } },
+    data: { envois: { decrement: 1 } },
   });
 }
 

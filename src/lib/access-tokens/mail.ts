@@ -54,7 +54,7 @@ export async function envoyerMailAcces(args: MailAccesArgs): Promise<void> {
       `Code de confirmation : ${args.otp}`,
       // Le texte annonce la durée réelle : elle est portée par
       // `AccessToken.otpExpireLe` et vérifiée à chaque tentative.
-      `(Ce code vous sera demandé sur la page. Valable ${OTP_TTL_MINUTES} minutes, ${OTP_ESSAIS_MAX} essais maximum. Passé ce délai, la page vous permet d'en demander un nouveau.)`,
+      `(Ce code vous sera demandé sur la page. Valable ${OTP_TTL_MINUTES} minutes, ${OTP_ESSAIS_MAX} essais au total sur ce lien, nouveaux codes compris. Passé ce délai, la page vous permet d'en demander un nouveau.)`,
       "",
     );
   }

@@ -77,6 +77,21 @@ export async function uploadRapport(
   _prev: UploadRapportState,
   formData: FormData,
 ): Promise<UploadRapportState> {
+  // 0. LA SESSION D'ABORD (audit OWASP du 2026-10-13, S6). Le contrôle de
+  //    propriété ne peut venir qu'après la lecture de la vérification, qui
+  //    donne l'établissement ; jusque-là, un appel anonyme faisait valider
+  //    les métadonnées, le fichier (jusqu'à 20 Mo) et interroger la base
+  //    avant d'être refusé. Le middleware ne protège pas une action serveur :
+  //    elle s'appelle par son identifiant depuis n'importe quelle page, les
+  //    pages publiques comprises.
+  //
+  //    Ce que ce garde n'arrête pas : le corps de la requête, que Next reçoit
+  //    et découpe en FormData avant d'appeler l'action. Celui-là est borné par
+  //    `serverActions.bodySizeLimit` (next.config).
+  //    [2026-10-14, intégration avec `integration/audit-1013` : un seul appel,
+  //    son `user` borne aussi la lecture de l'étape 3.]
+  const user = await requireUser();
+
   // 1. Métadonnées
   const parsed = rapportMetadataSchema.safeParse({
     dateRapport: formData.get("dateRapport"),
@@ -109,7 +124,7 @@ export async function uploadRapport(
       fieldErrors: { fichier: ["Sélectionnez un fichier à uploader"] },
     };
   }
-  const val = validerFichier(fichier);
+  const val = await validerFichier(fichier);
   if (!val.ok) {
     return {
       status: "error",
@@ -124,7 +139,6 @@ export async function uploadRapport(
   //    seul `id` puis contrôlée, elle répondait « Vérification introuvable »
   //    pour un id absent et 404 pour celle d'autrui — un oracle d'existence.
   //    Les deux cas tombent désormais sur le même `notFound()`.
-  const user = await requireUser();
   const verif = await prisma.verification.findFirst({
     where: { id: verificationId, etablissement: { entreprise: { userId: user.id } } },
     select: {

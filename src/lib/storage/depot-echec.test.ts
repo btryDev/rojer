@@ -43,7 +43,7 @@ vi.mock("@/lib/storage", async (original) => ({
 
 import { MESSAGE_ECHEC_ENREGISTREMENT } from "./erreurs";
 
-const pdf = () => new File([new Uint8Array([37, 80, 68, 70])], "piece.pdf", { type: "application/pdf" });
+const pdf = () => new File([new TextEncoder().encode("%PDF-1.7\n")], "piece.pdf", { type: "application/pdf" });
 
 beforeEach(() => {
   h.ecritures.length = 0;

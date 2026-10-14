@@ -384,13 +384,23 @@ const RELEVE = {
   // permis. NON : fonction AJOUTÉE, appelée par deux pages seulement, aucune
   // fonction existante n'est touchée — la régénération n'écrit rien d'autre.
   // ~~005b4fafbfab216a~~.
+  // Recopiée SANS incrément le 2026-10-13 (`lot/securite-owasp-1013-asvs-
+  // validation`, ASVS V2.2.1) : `dates/index.ts` gagne `estJourCivilReel`
+  // (remonté de `prestataires/schema.ts`), `estSaisieDateHeureReelle` et
+  // `formaterHeureFr` ; `rapports/schema.ts` refuse une date de rapport qui
+  // n'existe pas. NON : fonctions AJOUTÉES, aucune existante touchée ; le
+  // refus vaut à la SAISIE, la régénération ne relit pas ce schéma.
+  // ~~7d1d30ef2861a9a2~~.
   // Recopiée SANS incrément le 2026-10-13 (`lot/dossier-relecture-2`) :
   // `matching/engine.ts` exporte `LIBELLE_ACTIVITE` et le type `FaitDeclare`,
   // lus par la seule ligne « Régime » de la grille de relecture
   // (`pdf/textes-grille-relecture.ts`). NON : deux mots-clés `export`, aucune
   // valeur ni règle touchée — la régénération n'écrit rien d'autre.
   // ~~7d1d30ef2861a9a2~~.
-  empreinte: "7e3bde89eb15a58d",
+  // Recopiée SANS incrément le 2026-10-14 (intégration de
+  // `lot/securite-owasp-1013` et `lot/dossier-relecture-2`) : la somme des deux
+  // changements ci-dessus, aucun autre. ~~4943db84e624fce1~~ ~~7e3bde89eb15a58d~~.
+  empreinte: "a5d569d53f9b8b2b",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

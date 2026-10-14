@@ -52,8 +52,12 @@ vi.mock("next/navigation", () => ({
 }));
 // Le compte connecté. Les lectures du dépôt et du retrait le portent dans leur
 // `where` (audit du 2026-10-13), et le faux client l'honore contre le
-// propriétaire du magasin (`EtablissementFaux.userId`).
-vi.mock("@/lib/auth/require-user", () => ({ requireUser: vi.fn(async () => ({ id: "user-1" })) }));
+// propriétaire du magasin (`EtablissementFaux.userId`). `uploadRapport` exige
+// la session dès l'entrée (audit OWASP du 2026-10-13, S6) ; le refus sans
+// session est tenu par `upload-sans-session.test.ts`.
+vi.mock("@/lib/auth/require-user", () => ({
+  requireUser: vi.fn(async () => ({ id: "user-1", email: null })),
+}));
 vi.mock("@/lib/calendrier/regeneration-sure", async () => ({
   regenererApresMutation: (await h).regenerer,
 }));
@@ -175,7 +179,7 @@ function formulaire(resultat: string, dateRapport: string): FormData {
   fd.set("resultat", resultat);
   fd.set("organismeVerif", "");
   fd.set("commentaires", "");
-  fd.set("fichier", new File([new Uint8Array([1, 2, 3])], "rapport.pdf", { type: "application/pdf" }));
+  fd.set("fichier", new File([new TextEncoder().encode("%PDF-1.7\n")], "rapport.pdf", { type: "application/pdf" }));
   return fd;
 }
 

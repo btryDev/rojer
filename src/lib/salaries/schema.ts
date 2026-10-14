@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { estJourCivilReel } from "@/lib/dates";
 
 /**
  * La saisie d'un salarié et de ses titres.
@@ -35,6 +36,7 @@ const dateCivile = z
   .string()
   .trim()
   .regex(/^\d{4}-\d{2}-\d{2}$/, "Date attendue au format JJ/MM/AAAA")
+  .refine(estJourCivilReel, "Cette date n'existe pas")
   .transform((s) => new Date(`${s}T12:00:00.000Z`));
 
 const dateCivileOptionnelle = z

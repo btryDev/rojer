@@ -1,4 +1,4 @@
-import { cleJourCivil, depuisCleJourCivil } from "@/lib/dates";
+import { cleJourCivil, depuisCleJourCivil, estJourCivilReel } from "@/lib/dates";
 import { z } from "zod";
 
 /**
@@ -31,6 +31,7 @@ export const rapportMetadataSchema = z.object({
   dateRapport: z
     .string()
     .regex(DATE_FMT, "Format attendu : AAAA-MM-JJ")
+    .refine(estJourCivilReel, "Cette date n'existe pas")
     .transform((v) => depuisCleJourCivil(v))
     .refine((d) => !Number.isNaN(d.getTime()), "Date invalide")
     // PAS DE CONTRÔLE DANS LE FUTUR, et depuis l'ADR-034 la faute de frappe

@@ -4331,7 +4331,14 @@ point grave — isolation des trois routes, types exotiques, en-têtes (CRLF,
 - **M2** — le type enregistré en base était servi tel quel : `text/html` ou
   `image/svg+xml` en `inline`. Liste blanche (`TYPES_SERVIS`, les quatre types
   du dépôt) ; hors liste, le type du nom ou `application/octet-stream` +
-  `attachment`. `Content-Security-Policy: sandbox`, `no-store`.
+  `attachment`. ~~`Content-Security-Policy: sandbox`~~, `no-store`.
+  [2026-10-13, audit ASVS V3.2.1 : la route posait bien `sandbox`, mais
+  elle n'a jamais atteint le client — Next pose d'abord les en-têtes de
+  `next.config.ts` et n'ajoute ceux de la route que s'ils sont absents ;
+  `frame-ancestors 'none'` seule sortait (prouvé sous `next start`). Corrigé
+  sur `lot/securite-owasp-1013-asvs-entetes` : la configuration porte
+  `sandbox; frame-ancestors 'none'` sur les quatre routes de fichiers
+  (`SOURCES_FICHIERS_DEPOSES`), garde `securite/entetes-servis.test.ts`.]
 - **Faibles** — antislash neutralisé dans `filename` ; la troncature à 120
   caractères garde l'extension (`noms.ts`) ; le registre dit que les
   originaux sont aussi dans `Rapports/` du ZIP ; le README dit « 5 dernières
@@ -4348,7 +4355,10 @@ point grave — isolation des trois routes, types exotiques, en-têtes (CRLF,
 **Gardes ajoutées.** Un ZIP de plus de 4,5 Mo (trois pièces incompressibles
 de 2 Mo) traverse une `Response` réelle et se relit octet pour octet ; le flux
 livre plusieurs morceaux ; jamais plus de quatre lectures à la fois ; types
-hostiles servis en téléchargement ; sandbox, nosniff, no-store ; nom de
+hostiles servis en téléchargement ; ~~sandbox~~ [2026-10-13 : la garde
+lisait l'objet `Response`, pas la réponse du serveur, où la CSP de la
+configuration l'emportait — voir la rature de M2 ci-dessus], nosniff,
+no-store ; nom de
 fichier qui ne ferme pas l'en-tête ; extension gardée ; README des salariés
 écartés ; source de la route (filtre salarié, flux, `maxDuration`). **Ne
 prouvent pas** : que le serveur de Next en production transmet le flux sans

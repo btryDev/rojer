@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { estJourCivilReel } from "@/lib/dates";
 import { ecrireFaitActivite } from "@/lib/etablissements/faits-activite-ecriture";
 import { requireRisque, requireUnite } from "@/lib/auth/scope";
 import { calculerCriticite } from "@/lib/cotation";
@@ -184,9 +185,13 @@ const infosComplementairesSchema = z.object({
     .optional()
     .or(z.literal(NaN).transform(() => undefined))
     .or(z.literal("").transform(() => undefined)),
+  // Un jour réel avant `new Date(v)` (ASVS V2.2.1, 2026-10-13) : sans ce
+  // contrôle, une chaîne quelconque donnait une date invalide que Prisma
+  // refusait en 500, et « 2026-02-30 » devenait le 2 mars.
   dateMesuresPhysiques: z
     .string()
     .trim()
+    .refine(estJourCivilReel, "Cette date n'existe pas")
     .optional()
     .or(z.literal("").transform(() => undefined))
     .transform((v) => (v ? new Date(v) : null)),

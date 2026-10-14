@@ -42,7 +42,7 @@ vi.mock("@/lib/calendrier/regeneration-sure", () => ({ regenererApresMutation: v
 
 import { __oublierPiloteStockage, MESSAGE_DEPOT_NON_CONFIGURE } from "./index";
 
-const pdf = () => new File([new Uint8Array([37, 80, 68, 70])], "piece.pdf", { type: "application/pdf" });
+const pdf = () => new File([new TextEncoder().encode("%PDF-1.7\n")], "piece.pdf", { type: "application/pdf" });
 
 beforeEach(() => {
   vi.stubEnv("NODE_ENV", "production");

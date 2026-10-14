@@ -10,6 +10,7 @@ import { construireEcrituresImport } from "./ecritures";
 import { verifierPlafondImport } from "../plafond-unites";
 import {
   LIBELLE_CHAMP_IMPORT,
+  erreurDeFichier,
   parserFichierDuerp,
   planifierImport,
   type ColonneAttendue,
@@ -72,6 +73,8 @@ export async function previewImport(
 
   const buffer = Buffer.from(await fichier.arrayBuffer());
   const res = parserFichierDuerp(buffer);
+  const refus = erreurDeFichier(res);
+  if (refus) return { status: "error", message: refus };
   const plan = planifierImport(res.lignes);
 
   return {
@@ -126,6 +129,8 @@ export async function commitImport(
 
   const buffer = Buffer.from(await fichier.arrayBuffer());
   const res = parserFichierDuerp(buffer);
+  const refus = erreurDeFichier(res);
+  if (refus) return { status: "error", message: refus };
   if (res.lignes.length === 0) {
     return {
       status: "error",

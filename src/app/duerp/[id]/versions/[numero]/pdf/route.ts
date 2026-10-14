@@ -38,7 +38,10 @@ export async function GET(
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `inline; filename="${filename}"`,
-      "Cache-Control": "private, max-age=60",
+      // `no-store` comme toute réponse personnelle (ASVS V14.3.2, audit du
+      // 2026-10-13) : `private, max-age=60` laissait le DUERP nominatif dans
+      // le cache du navigateur, relisible après déconnexion sur un poste partagé.
+      "Cache-Control": "no-store",
     },
   });
 }

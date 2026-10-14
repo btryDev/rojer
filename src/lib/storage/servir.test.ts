@@ -25,7 +25,9 @@ describe("servirFichier", () => {
 
   it("sandbox, nosniff, no-store sur toute réponse", async () => {
     const r = await servirFichier({ cle: "k", nomOriginal: "r.pdf", mime: "application/pdf", contexte: "t" });
-    expect(r.headers.get("Content-Security-Policy")).toBe("sandbox");
+    // La Response de la route seule : ce qui atteint le client est éprouvé
+    // par `securite/entetes-servis.test.ts`, où la configuration l'emporte.
+    expect(r.headers.get("Content-Security-Policy")).toBe("sandbox; frame-ancestors 'none'");
     expect(r.headers.get("X-Content-Type-Options")).toBe("nosniff");
     expect(r.headers.get("Cache-Control")).toBe("no-store");
   });

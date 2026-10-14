@@ -10,7 +10,8 @@
       "spike/*": false,
       "perf/*": false,
       "worktree-*": false,
-      "integration/*": false
+      "integration/*": false,
+      "dependabot/*": false
     }
   }
 }

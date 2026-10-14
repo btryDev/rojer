@@ -1277,6 +1277,19 @@ model AccessToken {
   @@index([objetType, objetId])
 }
 
+/// Le plafond des envois de code de confirmation, PAR ADRESSE (ADR-006,
+/// « Anti-abus » : « max 5 envois d'OTP / heure / email » ; ASVS 5.0.0 V6.6.3,
+/// 2026-10-13). Une ligne par adresse destinataire, désignée par l'empreinte
+/// SHA-256 de l'adresse en minuscules : l'adresse est déjà sur `AccessToken`,
+/// elle n'est pas recopiée ici. Fenêtre fixe d'une heure, ouverte au premier
+/// renvoi qui la trouve close ; `envois` ne monte que par une écriture
+/// conditionnelle (`reserverEnvoiOtp`), que la base sérialise.
+model QuotaEnvoiOtp {
+  empreinteAdresse String   @id
+  fenetreDebut     DateTime
+  envois           Int      @default(0)
+}
+
 enum ScopeAccessToken {
   signature
   depot_rapport

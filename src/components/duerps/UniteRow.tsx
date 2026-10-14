@@ -39,6 +39,7 @@ export function UniteRow({ id, nom, description, nombreRisques }: Props) {
               <input
                 className="champ-board max-w-md"
                 aria-label="Nom de l'unité de travail"
+                maxLength={100}
                 value={valeur}
                 onChange={(e) => setValeur(e.target.value)}
                 autoFocus

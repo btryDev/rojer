@@ -13,6 +13,7 @@
 // Module **pur** : ni Prisma, ni React.
 
 import { z } from "zod";
+import { estJourCivilReel } from "@/lib/dates";
 import { saisiePourSection, type ChampFiche } from "./champs";
 
 const CLE_JOUR = /^\d{4}-\d{2}-\d{2}$/;
@@ -42,6 +43,7 @@ function validateurDuChamp(champ: ChampFiche): z.ZodType<string | null> {
         z
           .string()
           .regex(CLE_JOUR, "Format attendu : AAAA-MM-JJ")
+          .refine(estJourCivilReel, "Cette date n'existe pas")
           .nullable(),
       ) as z.ZodType<string | null>;
     case "nombre":
