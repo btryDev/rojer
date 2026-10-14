@@ -1,15 +1,39 @@
-// ADR-005 : garde d'auth (convention `proxy` de Next 16, ex-`middleware`,
-// runtime Node imposé). Le fichier vit dans `src/`, au niveau de `app/` : à la
-// racine du dépôt, `proxy.ts` n'est pas détecté et la garde saute en silence
-// (le build ne liste plus « Proxy »). Le matcher exclut les assets statiques et les routes
-// internes Next. La logique (refresh session + redirect si non connecté hors
-// whitelist) vit dans src/lib/supabase/middleware.ts.
+// ADR-005 : proxy (convention `proxy` de Next 16, ex-`middleware`, runtime
+// Node imposé). Le fichier vit dans `src/`, au niveau de `app/` : à la racine
+// du dépôt, `proxy.ts` n'est pas détecté et la garde saute en silence (le
+// build ne liste plus « Proxy »). Le matcher exclut les assets statiques et
+// les routes internes Next.
+//
+// Deux rôles :
+//   - la session (rafraîchissement, refus sans session hors chemins publics) :
+//     `src/lib/supabase/middleware.ts`. Ce n'est PAS la garde d'accès, qui
+//     vit dans `requireUser()` et `lib/auth/scope.ts` ;
+//   - la CSP bloquante à nonce (audit OWASP S7) : un nonce neuf par requête,
+//     posé sur l'en-tête de requête — Next l'y lit et l'appose à ses scripts —
+//     et sur la réponse. Pas sur `/api/*` : des route handlers qui rendent du
+//     JSON ou des fichiers, et dont la CSP (`frame-ancestors`, `sandbox` des
+//     fichiers déposés) vient de `next.config.ts`.
 
 import type { NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
+import { nonceCsp, politiqueContenu } from "@/lib/securite/entetes";
 
 export async function proxy(request: NextRequest) {
-  return updateSession(request);
+  const pathname = request.nextUrl.pathname;
+  if (pathname === "/api" || pathname.startsWith("/api/")) {
+    return updateSession(request);
+  }
+
+  const csp = politiqueContenu({
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    developpement: process.env.NODE_ENV !== "production",
+    nonce: nonceCsp(),
+  });
+  const reponse = await updateSession(request, {
+    entetesRequete: { "Content-Security-Policy": csp },
+  });
+  reponse.headers.set("Content-Security-Policy", csp);
+  return reponse;
 }
 
 export const config = {

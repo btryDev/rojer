@@ -153,7 +153,10 @@ anonyme peut donc faire traiter un gros corps de requête. Rien ne fuit, mais
 c'est une porte au déni de service.
 → Contrôler la session dès l'entrée de l'action.
 
-**S7 — CSP en Report-Only seulement. Moyenne.**
+~~**S7 — CSP en Report-Only seulement. Moyenne.**~~ **[Corrigé le
+2026-10-14, `lot/nextjs-securite-1014` : CSP bloquante à nonce posée par le
+proxy, sans `'unsafe-inline'` en script — détail au M11 de
+`audit-nextjs-2026-10-14.md`.]**
 Seul `frame-ancestors 'none'` est appliqué. Le reste
 (`script-src 'self' 'unsafe-inline'`) est en Report-Only, sans point de collecte
 des violations : personne ne lit les rapports. Combiné à S9, une faille XSS
