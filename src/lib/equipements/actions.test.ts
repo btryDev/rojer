@@ -13,6 +13,12 @@ const h = vi.hoisted(() => {
     nbTraces: 0,
     supprimesPhysiquement: [] as string[],
     crees: [] as Record<string, unknown>[],
+    /** Lignes reçues par `createMany`, pour prouver qu'un refus n'écrit rien. */
+    creesEnLot: [] as unknown[],
+    /** Les UPDATE reçus par le faux `$executeRaw`, tels qu'émis. */
+    requetes: [] as { sql: string; valeurs: unknown[] }[],
+    /** Une écriture concurrente, jouée APRÈS la lecture de l'appareil. */
+    apresLecture: null as null | (() => void),
     /** La réponse à « Fournissez-vous des EPI ? », et l'ordre des écritures. */
     etablissement: { id: "etab-1", epiPresents: false as boolean | null },
     journal: [] as string[],
@@ -26,25 +32,36 @@ const h = vi.hoisted(() => {
 
   const prisma = {
     equipement: {
-      // Ce que fait la base : l'identifiant seul, sans égard au compte.
-      findUnique: async ({ where }: { where: { id: string } }) =>
-        db.equipements.find((e) => e.id === where.id) ?? null,
+      // Une PHOTO, comme la base en rend une : la modifier après coup ne
+      // change pas ce que l'appelant a lu. Ce que fait la base : l'identifiant
+      // seul, sans égard au compte.
+      findUnique: async ({ where }: { where: { id: string } }) => {
+        const e = db.equipements.find((x) => x.id === where.id);
+        const photo = e ? structuredClone(e) : null;
+        db.apresLecture?.();
+        return photo;
+      },
       // La lecture d'entrée porte le compte (`appareilDuCompte`) : le faux
       // l'applique — « etab-1 » est au compte « user-1 » du test, tout autre
-      // établissement à un voisin.
+      // établissement à un voisin. Elle rend aussi une photo et déclenche
+      // `apresLecture`, pour que les tests de concurrence portent sur elle.
       findFirst: vi.fn(
         async ({
           where,
         }: {
           where: { id: string; etablissement?: { entreprise?: { userId?: string } } };
-        }) =>
-          db.equipements.find(
-            (e) =>
-              e.id === where.id &&
+        }) => {
+          const e = db.equipements.find(
+            (x) =>
+              x.id === where.id &&
               (where.etablissement?.entreprise?.userId === undefined ||
-                (e.etablissementId === "etab-1" ? "user-1" : "u-voisin") ===
+                (x.etablissementId === "etab-1" ? "user-1" : "u-voisin") ===
                   where.etablissement.entreprise.userId),
-          ) ?? null,
+          );
+          const photo = e ? structuredClone(e) : null;
+          db.apresLecture?.();
+          return photo;
+        },
       ),
       update: async ({
         where,
@@ -67,9 +84,35 @@ const h = vi.hoisted(() => {
         db.crees.push(data);
         return { id: "eq-nouveau" };
       },
-      createMany: async ({ data }: { data: unknown[] }) => ({
-        count: data.length,
-      }),
+      createMany: async ({ data }: { data: unknown[] }) => {
+        db.creesEnLot.push(...data);
+        return { count: data.length };
+      },
+    },
+    // Le faux `$executeRaw` applique la fusion CLÉ À CLÉ que la base applique
+    // à un `jsonb_set` d'une seule ligne. Il reproduit cette sémantique, il ne
+    // la démontre pas : ce que le test prouve, c'est que l'action la délègue
+    // à la base au lieu de fusionner tout l'objet elle-même (même limite que
+    // `activites/actions.test.ts`).
+    $executeRaw: async (strings: TemplateStringsArray, ...valeurs: unknown[]) => {
+      db.requetes.push({ sql: strings.join("?"), valeurs });
+      const [cle, valeur, id, etablissementId] = valeurs as [string, boolean, string, string];
+      // La garde « actif » (revue du 2026-10-13, R2) n'est appliquée que si le
+      // SQL la porte : le faux joue ce que la requête dit, pas ce qu'on espère.
+      const exigeActif = /"actif"\s*=\s*true/.test(strings.join("?"));
+      const e = db.equipements.find(
+        (x) =>
+          x.id === id &&
+          x.etablissementId === etablissementId &&
+          (!exigeActif || x.actif === true),
+      ) as (Record<string, unknown> & { caracteristiques?: unknown }) | undefined;
+      if (!e) return 0;
+      const base =
+        e.caracteristiques !== null && typeof e.caracteristiques === "object" && !Array.isArray(e.caracteristiques)
+          ? (e.caracteristiques as Record<string, unknown>)
+          : {};
+      e.caracteristiques = { ...base, [cle]: valeur };
+      return 1;
     },
     verification: {
       count: async () => db.nbTraces,
@@ -150,6 +193,9 @@ beforeEach(() => {
   h.db.nbTraces = 0;
   h.db.supprimesPhysiquement = [];
   h.db.crees = [];
+  h.db.creesEnLot = [];
+  h.db.requetes = [];
+  h.db.apresLecture = null;
   h.db.etablissement = { id: "etab-1", epiPresents: false };
   h.db.journal = [];
   h.db.regime = { estERP: false, typeErp: null, categorieErp: null, ssiCategorieAouB: null };
@@ -434,6 +480,77 @@ describe("repondreQuestionEquipement : la relance d'un appareil muet (D29 (a))",
   });
 });
 
+describe("relance d'un appareil muet : une clé écrite par la base (reprise des suites du lot 3)", () => {
+  // La fusion lecture-puis-écriture de tout l'objet JSON écrasait une
+  // écriture concurrente. Éprouvé en remettant la fusion naïve
+  // (`equipement.update` avec `{ ...avant, [champ]: reponse }`).
+  const LEVAGE = CATEGORIES_A_REPONSE_EXIGEE[0];
+  const [champ, autre] = questionsExigeesPour(LEVAGE, REGIME_TRAVAIL);
+  const reponse = (v: string) => {
+    const fd = new FormData();
+    fd.set("reponse", v);
+    return fd;
+  };
+  beforeEach(() => {
+    Object.assign(h.db.equipements[0], {
+      etablissementId: "etab-1",
+      categorie: LEVAGE,
+      caracteristiques: { notes: "garder" },
+    });
+  });
+
+  it("deux réponses simultanées : celle écrite entre la lecture et l'écriture survit", async () => {
+    // La seconde relance du même appareil, répondue pendant que la première
+    // est entre sa lecture et son écriture.
+    h.db.apresLecture = () => {
+      const e = h.db.equipements[0] as { caracteristiques?: Record<string, unknown> };
+      e.caracteristiques = { ...(e.caracteristiques ?? {}), [autre]: true };
+    };
+    const r = await repondreQuestionEquipement("eq-1", champ, { status: "idle" }, reponse("non"));
+    expect(r.status).toBe("success");
+    expect((h.db.equipements[0] as { caracteristiques?: unknown }).caracteristiques).toEqual({
+      notes: "garder",
+      [autre]: true,
+      [champ]: false,
+    });
+  });
+
+  it("lie la clé, le booléen et les deux identifiants, sans les concaténer dans le SQL", async () => {
+    await repondreQuestionEquipement("eq-1", champ, { status: "idle" }, reponse("oui"));
+    expect(h.db.requetes).toHaveLength(1);
+    const [{ sql, valeurs }] = h.db.requetes;
+    expect(valeurs).toEqual([champ, true, "eq-1", "etab-1"]);
+    expect(sql).not.toContain(champ);
+    expect(sql).toContain("jsonb_set");
+    expect(sql).toContain("\"updatedAt\" = NOW() AT TIME ZONE 'UTC'");
+  });
+
+  it("aucune ligne touchée : l'erreur est dite, rien n'est régénéré", async () => {
+    h.db.apresLecture = () => {
+      h.db.equipements = [];
+    };
+    const r = await repondreQuestionEquipement("eq-1", champ, { status: "idle" }, reponse("oui"));
+    expect(r.status).toBe("error");
+    expect(h.genererCalendrier).not.toHaveBeenCalled();
+  });
+
+  // Revue du 2026-10-13, R2 : la garde `estAppareilRetire` lit la photo ;
+  // un retrait entre la lecture et l'écriture passait. Éprouvé en retirant
+  // `AND "actif" = true` du WHERE.
+  it("appareil retiré entre la lecture et l'écriture : zéro ligne, l'erreur est dite, rien n'est écrit ni régénéré", async () => {
+    h.db.apresLecture = () => {
+      h.db.equipements[0].actif = false;
+    };
+    const r = await repondreQuestionEquipement("eq-1", champ, { status: "idle" }, reponse("oui"));
+    expect(r.status).toBe("error");
+    expect((r as { message?: string }).message).toContain("retiré du parc");
+    expect((h.db.equipements[0] as { caracteristiques?: unknown }).caracteristiques).toEqual({
+      notes: "garder",
+    });
+    expect(h.genererCalendrier).not.toHaveBeenCalled();
+  });
+});
+
 describe("un EPI déclaré contredit un « non » aux EPI (relecture indépendante du 2026-10-12, B2)", () => {
   function epi(categorie: string): FormData {
     const fd = new FormData();
@@ -553,5 +670,268 @@ describe("périmètre : absent et hors compte répondent pareil", () => {
     });
     expect(h.db.supprimesPhysiquement).toEqual([]);
     expect(h.genererCalendrier).not.toHaveBeenCalled();
+  });
+});
+
+describe("décision du 2026-10-13 : « groupe électrogène » exigé pour une installation électrique en ERP", () => {
+  // Les deux lignes d'EL 18 § 4 ne naissent que d'un « oui » : la réponse est
+  // exigée là où elle décide, pour qu'il n'y ait plus de silence. Éprouvé en
+  // retirant l'entrée de `QUESTIONS_EXIGEES_PAR_DECISION`.
+  function installation(groupe?: string) {
+    const fd = new FormData();
+    fd.set("libelle", "TGBT");
+    fd.set("categorie", "INSTALLATION_ELECTRIQUE");
+    if (groupe !== undefined) fd.set("aGroupeElectrogene", groupe);
+    return fd;
+  }
+
+  it("ERP N5 : sans réponse, refusé et rien n'est créé ; avec « non », créé", async () => {
+    h.db.regime = { estERP: true, typeErp: "N", categorieErp: "N5", ssiCategorieAouB: null };
+    const r = await creerEquipement("etab-1", { status: "idle" }, installation());
+    expect(r.status).toBe("error");
+    expect(Object.keys((r as { fieldErrors?: object }).fieldErrors ?? {})).toEqual(["aGroupeElectrogene"]);
+    expect(h.db.crees).toHaveLength(0);
+    await expect(creerEquipement("etab-1", { status: "idle" }, installation("non"))).rejects.toThrow("NEXT_REDIRECT");
+    expect(h.db.crees).toHaveLength(1);
+  });
+
+  it("ERP N3 : « Je ne sais pas encore » (valeur vide) est refusé à la modification", async () => {
+    h.db.regime = { estERP: true, typeErp: "N", categorieErp: "N3", ssiCategorieAouB: null };
+    Object.assign(h.db.equipements[0], { categorie: "INSTALLATION_ELECTRIQUE", caracteristiques: null });
+    const r = await modifierEquipement("eq-1", { status: "idle" }, installation(""));
+    expect(r.status).toBe("error");
+    expect(Object.keys((r as { fieldErrors?: object }).fieldErrors ?? {})).toEqual(["aGroupeElectrogene"]);
+  });
+
+  it("hors ERP : la question reste facultative", async () => {
+    await expect(creerEquipement("etab-1", { status: "idle" }, installation())).rejects.toThrow("NEXT_REDIRECT");
+  });
+
+  it("la relance du tableau de bord accepte la question en ERP", async () => {
+    h.db.regime = { estERP: true, typeErp: "N", categorieErp: "N2", ssiCategorieAouB: null };
+    Object.assign(h.db.equipements[0], { categorie: "INSTALLATION_ELECTRIQUE", caracteristiques: null });
+    const fd = new FormData();
+    fd.set("reponse", "non");
+    const r = await repondreQuestionEquipement("eq-1", "aGroupeElectrogene", { status: "idle" }, fd);
+    expect(r.status).toBe("success");
+    expect((h.db.equipements[0] as { caracteristiques?: unknown }).caracteristiques).toEqual({
+      aGroupeElectrogene: false,
+    });
+  });
+});
+
+describe("pré-remplissage : la porte des réponses exigées tient aussi pour un appel forgé (reprise des suites du lot 3)", () => {
+  // `suggererEquipements` ne propose aucune catégorie à réponse exigée ;
+  // l'action serveur, elle, reçoit ce qu'on lui poste. Le refus lit
+  // `questionsExigeesPour` dans le régime de l'établissement, comme
+  // `creerEquipement`. Éprouvé en retirant le refus.
+  it("levage : refusé en bloc, rien n'est écrit, l'appartenance est contrôlée d'abord", async () => {
+    const [levage] = CATEGORIES_A_REPONSE_EXIGEE;
+    expect(
+      await creerEquipementsDepuisPreRemplissage("etab-1", [
+        { categorie: "EXTINCTEUR", libelle: "Extincteur" },
+        { categorie: levage, libelle: "Palan" },
+      ]),
+    ).toEqual({ status: "error", message: expect.stringContaining(levage) });
+    expect(h.db.creesEnLot).toHaveLength(0);
+    expect(h.genererCalendrier).not.toHaveBeenCalled();
+    expect(h.assertOwnership).toHaveBeenCalledWith("etab-1");
+  });
+
+  it("désenfumage dans un ERP N3 (décision du 2026-10-08) : refusé, rien n'est écrit", async () => {
+    h.db.regime = { estERP: true, typeErp: "M", categorieErp: "N3", ssiCategorieAouB: null };
+    expect(
+      await creerEquipementsDepuisPreRemplissage("etab-1", [
+        { categorie: "DESENFUMAGE", libelle: "Désenfumage" },
+      ]),
+    ).toEqual({ status: "error", message: expect.stringContaining("DESENFUMAGE") });
+    expect(h.db.creesEnLot).toHaveLength(0);
+  });
+
+  it("désenfumage là où la question est facultative : créé, comme par le formulaire", async () => {
+    const r = await creerEquipementsDepuisPreRemplissage("etab-1", [
+      { categorie: "DESENFUMAGE", libelle: "Désenfumage" },
+    ]);
+    expect(r).toMatchObject({ status: "success", created: 1 });
+    expect(h.db.creesEnLot).toHaveLength(1);
+  });
+
+  it("ce que le pré-remplissage propose est créé", async () => {
+    const r = await creerEquipementsDepuisPreRemplissage("etab-1", [
+      { categorie: "EXTINCTEUR", libelle: "Extincteur" },
+      { categorie: "BAES", libelle: "BAES" },
+    ]);
+    expect(r).toMatchObject({ status: "success", created: 2 });
+    expect(h.db.creesEnLot).toHaveLength(2);
+  });
+
+  // Revue du 2026-10-13, R1 : une catégorie forgée n'atteint ni le cache de
+  // `questionsExigeesPour` ni la base. Éprouvé en retirant le filtre sur
+  // `CATEGORIES_EQUIPEMENT`.
+  it("catégorie inconnue : refusée en bloc, avant de lire le régime, rien n'est écrit", async () => {
+    let regimeLu = false;
+    const lire = h.prisma.etablissement.findUnique;
+    h.prisma.etablissement.findUnique = async () => {
+      regimeLu = true;
+      return h.db.regime;
+    };
+    try {
+      expect(
+        await creerEquipementsDepuisPreRemplissage("etab-1", [
+          { categorie: "EXTINCTEUR", libelle: "Extincteur" },
+          { categorie: "PAS_UNE_CATEGORIE" as never, libelle: "Forgé" },
+        ]),
+      ).toEqual({ status: "error", message: expect.stringContaining("PAS_UNE_CATEGORIE") });
+    } finally {
+      h.prisma.etablissement.findUnique = lire;
+    }
+    expect(regimeLu).toBe(false);
+    expect(h.db.creesEnLot).toHaveLength(0);
+    expect(h.genererCalendrier).not.toHaveBeenCalled();
+  });
+});
+
+describe("pré-remplissage : le panneau pose la question exigée, l'action en reçoit la réponse (option 2, 2026-10-13)", () => {
+  // Décision de la propriétaire : le panneau pose `aGroupeElectrogene` à côté
+  // de l'installation électrique d'un ERP. L'action accepte la réponse — champ
+  // exigé pour cette catégorie dans ce régime, booléen strict, rien d'autre —
+  // et refuse toujours ce qui manque.
+  const ERP_N3 = { estERP: true, typeErp: "N", categorieErp: "N3", ssiCategorieAouB: null };
+  const GE = ["elec-erp-groupe-electrogene-annuel", "elec-erp-groupe-electrogene-quinzaine"];
+  const lignesGe = async (cree: unknown) => {
+    const { determineObligationsApplicables } = await import("@/lib/matching/engine");
+    const c = cree as { caracteristiques?: Record<string, unknown> };
+    return determineObligationsApplicables(
+      {
+        id: "etab-1", effectifSurSite: 8, effectifEntreprise: 8, estEtablissementTravail: true,
+        estERP: true, estIGH: false, estHabitation: false, typeErp: "N", categorieErp: "N3",
+        classeIgh: null, familleHabitation: null, personnesPresentesHabituellement: null,
+        manipuleMatieresR422722: null, comporteLocauxSommeilPublic: null, manutentionManuelle: null,
+        travailSurEcran: null, operationsElectriques: null, conduiteEngins: null, expositionCMR: null,
+        epiPresents: null, ssiCategorieAouB: null,
+      },
+      [{ id: "e", libelle: "TGBT", categorie: "INSTALLATION_ELECTRIQUE", caracteristiques: c.caracteristiques ?? null }],
+    )
+      .map((a) => a.obligation.id)
+      .filter((id) => GE.includes(id))
+      .sort();
+  };
+
+  it("ERP, installation électrique et « oui » : créée avec `aGroupeElectrogene: true`, puis les deux lignes", async () => {
+    h.db.regime = ERP_N3;
+    const r = await creerEquipementsDepuisPreRemplissage("etab-1", [
+      { categorie: "INSTALLATION_ELECTRIQUE", libelle: "TGBT", caracteristiques: { aGroupeElectrogene: true } },
+      { categorie: "EXTINCTEUR", libelle: "Extincteur" },
+    ]);
+    expect(r).toMatchObject({ status: "success", created: 2 });
+    const [elec, ext] = h.db.creesEnLot as { caracteristiques?: unknown }[];
+    expect(elec.caracteristiques).toEqual({ aGroupeElectrogene: true });
+    expect(ext).not.toHaveProperty("caracteristiques");
+    expect(await lignesGe(elec)).toEqual(GE);
+  });
+
+  it("« non » : créée avec `aGroupeElectrogene: false`, aucune ligne", async () => {
+    h.db.regime = ERP_N3;
+    await creerEquipementsDepuisPreRemplissage("etab-1", [
+      { categorie: "INSTALLATION_ELECTRIQUE", libelle: "TGBT", caracteristiques: { aGroupeElectrogene: false } },
+    ]);
+    const [elec] = h.db.creesEnLot as { caracteristiques?: unknown }[];
+    expect(elec.caracteristiques).toEqual({ aGroupeElectrogene: false });
+    expect(await lignesGe(elec)).toEqual([]);
+  });
+
+  it("réponse manquante : refusé en bloc, rien n'est écrit", async () => {
+    h.db.regime = ERP_N3;
+    expect(
+      await creerEquipementsDepuisPreRemplissage("etab-1", [
+        { categorie: "EXTINCTEUR", libelle: "Extincteur" },
+        { categorie: "INSTALLATION_ELECTRIQUE", libelle: "TGBT", caracteristiques: {} },
+      ]),
+    ).toEqual({ status: "error", message: expect.stringContaining("INSTALLATION_ELECTRIQUE") });
+    expect(h.db.creesEnLot).toHaveLength(0);
+    expect(h.genererCalendrier).not.toHaveBeenCalled();
+  });
+
+  it("POST forgé sans réponse, ou avec une réponse hors cadre : refusé, rien n'est écrit", async () => {
+    h.db.regime = ERP_N3;
+    const forges: unknown[] = [
+      undefined,
+      { aGroupeElectrogene: "oui" },
+      { aGroupeElectrogene: true, estVmcGaz: true },
+      { aGroupeElectrogene: true, notes: "texte libre" },
+      ["aGroupeElectrogene"],
+      null,
+    ];
+    for (const caracteristiques of forges) {
+      expect(
+        await creerEquipementsDepuisPreRemplissage("etab-1", [
+          {
+            categorie: "INSTALLATION_ELECTRIQUE",
+            libelle: "TGBT",
+            ...(caracteristiques === undefined ? {} : { caracteristiques: caracteristiques as never }),
+          },
+        ]),
+        JSON.stringify(caracteristiques),
+      ).toEqual({ status: "error", message: expect.stringContaining("INSTALLATION_ELECTRIQUE") });
+    }
+    expect(h.db.creesEnLot).toHaveLength(0);
+  });
+
+  // Revue du 2026-10-13 : la réponse se lit sur les clés PROPRES. Un objet
+  // dont le PROTOTYPE porte `aGroupeElectrogene: true` passait la porte des
+  // manquantes (lecture par `?.[champ]`) sans rien écrire : l'appareil
+  // naissait muet. Éprouvé en remettant la lecture par `?.[champ]`.
+  it("une réponse portée par le prototype n'est pas une réponse : refusé, rien n'est écrit", async () => {
+    h.db.regime = ERP_N3;
+    const herite = Object.create({ aGroupeElectrogene: true }) as Record<string, boolean>;
+    expect(herite.aGroupeElectrogene).toBe(true);
+    expect(
+      await creerEquipementsDepuisPreRemplissage("etab-1", [
+        { categorie: "INSTALLATION_ELECTRIQUE", libelle: "TGBT", caracteristiques: herite },
+      ]),
+    ).toEqual({ status: "error", message: expect.stringContaining("INSTALLATION_ELECTRIQUE") });
+    expect(h.db.creesEnLot).toHaveLength(0);
+    expect(h.genererCalendrier).not.toHaveBeenCalled();
+  });
+
+  // Revue du 2026-10-13 : le libellé suit la règle de la création manuelle
+  // (`libelleEquipementSchema`), et un refus se RETOURNE — Next masque en
+  // production le message d'une exception levée par une action serveur.
+  it("libellé hors règle (vide, trop long, pas une chaîne) : refusé sans exception, rien n'est écrit", async () => {
+    for (const libelle of ["   ", "x".repeat(201), 42 as never, null as never]) {
+      expect(
+        await creerEquipementsDepuisPreRemplissage("etab-1", [
+          { categorie: "EXTINCTEUR", libelle: "Extincteur" },
+          { categorie: "BAES", libelle },
+        ]),
+        JSON.stringify(libelle),
+      ).toEqual({ status: "error", message: expect.stringContaining("Libellé") });
+    }
+    expect(h.db.creesEnLot).toHaveLength(0);
+  });
+
+  it("le libellé écrit est le libellé rogné, et 200 caractères passent", async () => {
+    const r = await creerEquipementsDepuisPreRemplissage("etab-1", [
+      { categorie: "EXTINCTEUR", libelle: "  Extincteur  " },
+      { categorie: "BAES", libelle: "b".repeat(200) },
+    ]);
+    expect(r).toMatchObject({ status: "success", created: 2 });
+    expect((h.db.creesEnLot as { libelle: string }[]).map((e) => e.libelle)).toEqual([
+      "Extincteur",
+      "b".repeat(200),
+    ]);
+  });
+
+  it("hors ERP : pas de question — créée sans réponse, et une réponse fournie est refusée", async () => {
+    const r = await creerEquipementsDepuisPreRemplissage("etab-1", [
+      { categorie: "INSTALLATION_ELECTRIQUE", libelle: "TGBT" },
+    ]);
+    expect(r).toMatchObject({ status: "success", created: 1 });
+    expect(h.db.creesEnLot[0]).not.toHaveProperty("caracteristiques");
+    expect(
+      await creerEquipementsDepuisPreRemplissage("etab-1", [
+        { categorie: "INSTALLATION_ELECTRIQUE", libelle: "TGBT", caracteristiques: { aGroupeElectrogene: true } },
+      ]),
+    ).toEqual({ status: "error", message: expect.stringContaining("INSTALLATION_ELECTRIQUE") });
   });
 });

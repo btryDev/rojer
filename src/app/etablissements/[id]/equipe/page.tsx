@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { ArrowLeft, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
+import { FilAriane } from "@/components/navigation/FilAriane";
+import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
 import { buttonVariants } from "@/components/ui/button";
 import { LegalBadge } from "@/components/ui-kit";
 import { SalarieCard } from "@/components/salaries/SalarieCard";
@@ -64,14 +66,13 @@ export default async function EquipePage({
       <header className="border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] py-[22px]">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div className="min-w-0 flex-1">
-            <Link
-              href={`/etablissements/${id}`}
-              className="board-eyebrow inline-flex items-center gap-2 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)] transition-colors hover:text-[color:var(--board-ink)]"
-            >
-              <ArrowLeft className="size-3" aria-hidden />
-              {etablissement.raisonDisplay}
-            </Link>
-            <h1 className="board-titre m-0 mt-2.5 text-[clamp(22px,2.2vw,27px)]">
+            <FilAriane
+              crumbs={[
+                { href: `/etablissements/${id}`, label: etablissement.raisonDisplay },
+                { label: LABEL_ITEM.equipe },
+              ]}
+            />
+            <h1 className="board-titre m-0 text-[clamp(22px,2.2vw,27px)]">
               Équipe
             </h1>
             <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">

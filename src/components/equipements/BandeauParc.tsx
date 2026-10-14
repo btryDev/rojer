@@ -44,7 +44,7 @@
 // disparaissait exactement chez ceux qui n'ont qu'un lieu.
 
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { FilAriane, type Crumb } from "@/components/navigation/FilAriane";
 import { SelecteurBatiment } from "@/components/batiments/SelecteurBatiment";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -87,7 +87,7 @@ function Compteur({
 }
 
 export function BandeauParc({
-  hrefRetour,
+  crumbs,
   hrefCalendrier,
   enRetard,
   proches,
@@ -97,7 +97,8 @@ export function BandeauParc({
   suggestions,
   filtreBatiment,
 }: {
-  hrefRetour: string;
+  /** Où la page est rangée : l'établissement, puis l'entrée du rail. */
+  crumbs: Crumb[];
   /** Où se lit ce que ces chiffres ne comptent pas. La légende y renvoie :
    *  nommer un manque sans dire où le trouver le laisse entier. */
   hrefCalendrier: string;
@@ -163,14 +164,11 @@ export function BandeauParc({
       <header className="border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] py-[22px]">
         <div className="flex flex-wrap items-start justify-between gap-x-8 gap-y-5">
           <div className="flex min-w-0 items-start gap-4">
-            <Link
-              href={hrefRetour}
-              aria-label="Retour à Mon établissement"
-              className="grid size-8 flex-none place-items-center rounded-full bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-mid)] transition-colors hover:bg-[color:var(--board-blue-pale)] hover:text-[color:var(--board-blue-ink)]"
-            >
-              <ChevronLeft className="size-4" />
-            </Link>
             <div className="min-w-0">
+              {/* Un fil d'Ariane et non un bouton rond de retour (2026-10-13) :
+                  c'est une page d'entrée, elle dit où elle est rangée, pas
+                  d'où l'on vient (ADR-014) — le même idiome que ses sœurs. */}
+              <FilAriane crumbs={crumbs} />
               <h1 className="board-titre m-0 text-[clamp(22px,2.2vw,27px)]">
                 Équipements
               </h1>

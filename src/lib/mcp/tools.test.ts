@@ -51,7 +51,10 @@ vi.mock("@/lib/referentiels/conformite/mention-de-ligne", () => ({
 
 import { ErreurOutilMcp, OUTILS_MCP, type ContexteMcp } from "./tools";
 import { SCEAU_CALENDRIER } from "@/lib/calendrier/version-moteur";
-import { getEtatDuerp, listerActions } from "./queries";
+import { getEtatDuerp, getParcEquipements, listerActions } from "./queries";
+import { couvertureDeLInventaire } from "@/lib/perimetre/couverture";
+import { PHRASE_SANS_REPONSE } from "@/lib/matching/sans-reponse";
+import { QUESTION_MATIERES } from "@/lib/etablissements/questions";
 
 /** 10 août 2026, 9 h à Paris. */
 const NOW = new Date("2026-08-10T07:00:00Z");
@@ -120,6 +123,7 @@ describe("le serveur dit quand le calendrier n'est pas à jour", () => {
         codeNaf: "56.10A",
         effectif: 8,
       },
+      equipements: [],
       _count: { equipements: 0, verifications: 0, actions: 0 },
     };
   }
@@ -178,6 +182,7 @@ describe("portée des lectures", () => {
         codeNaf: "56.10A",
         effectif: 8,
       },
+      equipements: [],
       _count: { equipements: 4, verifications: 12, actions: 3 },
     });
 
@@ -641,6 +646,7 @@ describe("provenance de la réponse", () => {
       codeNaf: "47.25Z",
       effectif: 2,
     },
+    equipements: [],
     _count: { equipements: 13, verifications: 43, actions: 21 },
   };
 
@@ -805,7 +811,12 @@ describe("une ligne retenue par prudence le dit à l'assistant (2026-09-27)", ()
     prismaMock.etablissement.findFirst.mockResolvedValue(bureauMuet);
     prismaMock.verification.findMany.mockResolvedValue([ligneExercice]);
     const texte = await outil("verifications").executer(ctx, {});
-    expect(texte).toContain("à confirmer : La fiche de l'établissement ne dit pas si des matières");
+    // ~~« à confirmer : La fiche de l'établissement ne dit pas si des
+    // matières »~~ [2026-10-13, `lot/question-matieres` : la phrase cite la
+    // question reformulée, et l'assistant la reçoit entière, question
+    // comprise — c'est la surface MCP de `question-matieres.test.tsx`.]
+    expect(texte).toContain(`à confirmer : ${PHRASE_SANS_REPONSE.matieres_r4227_22}`);
+    expect(texte).toContain(QUESTION_MATIERES);
     // La lecture porte la portée du jeton.
     expect(prismaMock.etablissement.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: ETABLISSEMENT_ID } }),
@@ -843,5 +854,166 @@ describe("une ligne retenue par prudence le dit à l'assistant (2026-09-27)", ()
     prismaMock.verification.findMany.mockResolvedValue([exerciceEchu]);
     const texte = await outil("verifications").executer(ctx, {});
     expect(texte).toContain("dont 1 en retard");
+  });
+});
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * UN DOSSIER QUI N'A RIEN DÉCLARÉ LE DIT À L'ASSISTANT (§ 15, 2026-10-13)
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * LE DÉFAUT. Les écrans disaient depuis le 2026-09-26 qu'un dossier n'a déclaré
+ * aucun équipement (axe `inventaire`, `perimetre/couverture.ts`). Le serveur,
+ * non : à ce dossier, `verifications` et `equipements` rendaient des listes
+ * vides, qu'un modèle lit « rien à faire ». Et la fiche comptait un appareil
+ * RETIRÉ du parc comme déclaré.
+ *
+ * Les phrases attendues ne sont pas recopiées ici : elles sont demandées à
+ * l'axe lui-même (`couvertureDeLInventaire`). C'est ce qui éprouve que le
+ * serveur lit la même fonction que les écrans — une phrase propre au MCP, même
+ * juste, ferait tomber ces tests.
+ */
+describe("le serveur dit qu'aucun équipement n'est déclaré (§ 15)", () => {
+  const OUTILS_DU_PARC = ["verifications", "equipements", "fiche_etablissement"];
+
+  const appareil = (actif: boolean) => ({
+    libelle: actif ? "Extincteur hall" : "Ancien extincteur",
+    categorie: "EXTINCTEUR",
+    localisation: null,
+    dateMiseEnService: null,
+    actif,
+    verifications: [],
+  });
+
+  /**
+   * Pose le parc d'un scénario aux DEUX endroits où le serveur le lit : la
+   * liste des équipements (`equipements`, `verifications`) et la fiche, qui
+   * compte le parc en service et liste les retirés dans sa propre requête.
+   * La fiche et le nom passent tous deux par `findUnique`.
+   */
+  function parc(appareils: ReturnType<typeof appareil>[]) {
+    prismaMock.equipement.findMany.mockResolvedValue(appareils);
+    prismaMock.etablissement.findUnique.mockResolvedValue({
+      raisonDisplay: "Le Comptoir",
+      adresse: "1 rue des Lilas, 75011 Paris",
+      codeNaf: "56.10A",
+      effectifSurSite: 3,
+      estEtablissementTravail: true,
+      estERP: false,
+      estIGH: false,
+      estHabitation: false,
+      typeErp: null,
+      categorieErp: null,
+      referentielVersionCalendrier: SCEAU_CALENDRIER,
+      entreprise: { raisonSociale: "Comptoir SAS", siret: null, codeNaf: "56.10A", effectif: 3 },
+      equipements: appareils.filter((a) => !a.actif).map((_, i) => ({ id: `retire-${i}` })),
+      _count: { equipements: appareils.filter((a) => a.actif).length, verifications: 0, actions: 0 },
+    });
+  }
+
+  const sansRien = couvertureDeLInventaire({ nbEquipements: 0, nbRetires: 0 })!;
+  const toutRetire = couvertureDeLInventaire({ nbEquipements: 0, nbRetires: 1 })!;
+  const lignes = (t: string) => t.split("\n");
+
+  it("dossier sans équipement : chaque outil du parc porte la phrase de l'axe, avant le contenu", async () => {
+    parc([]);
+    // Une obligation d'établissement au calendrier : la liste n'est PAS vide,
+    // et elle tait pourtant tout ce qu'un équipement porterait.
+    prismaMock.verification.findMany.mockResolvedValue([
+      {
+        libelleObligation: "Consigne de sécurité incendie",
+        periodicite: "autre",
+        datePrevue: jour("2026-09-01"),
+        archiveLe: null,
+        statut: "planifiee",
+        equipement: null,
+        rapports: [],
+      },
+    ]);
+    for (const nom of OUTILS_DU_PARC) {
+      const texte = await outil(nom).executer(ctx, {});
+      expect(texte, nom).toContain(sansRien.motif);
+      expect(texte, nom).toContain(sansRien.consequence);
+      // Juste après le nom de l'établissement : un modèle qui tronque lit le début.
+      expect(texte.split("\n\n")[1], nom).toBe(`${sansRien.motif} ${sansRien.consequence}`);
+    }
+    // Aussi sur une liste filtrée : le filtre ne change pas le parc.
+    const filtree = await outil("verifications").executer(ctx, { enRetardSeulement: true });
+    expect(filtree).toContain(sansRien.motif);
+  });
+
+  it("dossier avec un équipement actif : aucune phrase d'inventaire, aucun retiré annoncé", async () => {
+    parc([appareil(true)]);
+    for (const nom of OUTILS_DU_PARC) {
+      const texte = await outil(nom).executer(ctx, {});
+      expect(texte, nom).not.toContain(sansRien.motif);
+      expect(texte, nom).not.toContain(toutRetire.motif);
+      // Pas de « (0 retiré(s) du parc) » : sans retiré, rien n'en est dit.
+      expect(texte, nom).not.toContain("retiré(s) du parc");
+    }
+    const ficheTexte = await outil("fiche_etablissement").executer(ctx, {});
+    expect(lignes(ficheTexte)).toContain("Équipements déclarés en service : 1");
+    const liste = await outil("equipements").executer(ctx, {});
+    expect(lignes(liste)).toContain("1 équipement(s) déclaré(s).");
+  });
+
+  it("un appareil actif à côté d'un retiré suffit : pas de phrase", async () => {
+    parc([appareil(true), appareil(false)]);
+    for (const nom of OUTILS_DU_PARC) {
+      const texte = await outil(nom).executer(ctx, {});
+      expect(texte, nom).not.toContain(toutRetire.motif);
+    }
+    const liste = await outil("equipements").executer(ctx, {});
+    expect(lignes(liste)).toContain("1 équipement(s) déclaré(s) en service, 1 retiré(s) du parc.");
+    const ficheTexte = await outil("fiche_etablissement").executer(ctx, {});
+    expect(lignes(ficheTexte)).toContain("Équipements déclarés en service : 1 (1 retiré(s) du parc)");
+  });
+
+  it("parc entièrement retiré : compte comme non déclaré, avec la phrase des retirés", async () => {
+    parc([appareil(false)]);
+    for (const nom of OUTILS_DU_PARC) {
+      const texte = await outil(nom).executer(ctx, {});
+      expect(texte, nom).toContain(toutRetire.motif);
+      expect(texte, nom).toContain(toutRetire.consequence);
+    }
+    const ficheTexte = await outil("fiche_etablissement").executer(ctx, {});
+    expect(lignes(ficheTexte)).toContain("Équipements déclarés en service : 0 (1 retiré(s) du parc)");
+    const liste = await outil("equipements").executer(ctx, {});
+    expect(lignes(liste)).toContain("0 équipement(s) déclaré(s) en service, 1 retiré(s) du parc.");
+    expect(liste).toContain("Ancien extincteur — extincteur · retiré du parc");
+  });
+
+  it("tenancy : chaque lecture du parc porte l'établissement du jeton, et lui seul", async () => {
+    await getParcEquipements(ETABLISSEMENT_ID);
+    expect(prismaMock.equipement.findMany).toHaveBeenCalledWith({
+      where: { etablissementId: ETABLISSEMENT_ID },
+      select: { actif: true },
+    });
+
+    parc([appareil(true), appareil(false)]);
+    prismaMock.equipement.findMany.mockClear();
+    prismaMock.etablissement.findUnique.mockClear();
+    for (const nom of OUTILS_DU_PARC) {
+      // Un client qui glisse un autre établissement est refusé par le schéma
+      // strict ; l'outil, lui, ne lit que la portée du contexte.
+      expect(outil(nom).schema.safeParse({ etablissementId: AUTRE_ETABLISSEMENT }).success).toBe(false);
+      await outil(nom).executer(ctx, {});
+    }
+    // TOUTES les clauses `where` qui lisent le parc — la liste des équipements,
+    // et la fiche qui le compte dans sa propre requête —, pas un échantillon.
+    const parEquipement = prismaMock.equipement.findMany.mock.calls.map(
+      (appel) => (appel[0] as { where: unknown }).where,
+    );
+    const parEtablissement = prismaMock.etablissement.findUnique.mock.calls.map(
+      (appel) => (appel[0] as { where: unknown }).where,
+    );
+    expect(parEquipement.length).toBeGreaterThan(0);
+    expect(parEtablissement.length).toBeGreaterThan(0);
+    for (const where of parEquipement) {
+      expect(where).toEqual({ etablissementId: ETABLISSEMENT_ID });
+    }
+    for (const where of parEtablissement) {
+      expect(where).toEqual({ id: ETABLISSEMENT_ID });
+    }
   });
 });

@@ -50,7 +50,10 @@ type Executeur = Pick<Prisma.TransactionClient, "$executeRaw">;
  * Le retrait (`null`) suit la même règle avec l'opérateur `-`. Toutes les
  * valeurs venues de l'appelant sont des paramètres liés ; `updatedAt` est posé
  * à la main, parce que le `@updatedAt` de Prisma est appliqué par le client et
- * non par la base.
+ * non par la base. ~~`NOW()`~~ [2026-10-13, revue de
+ * `lot/reprise-suites-lot3`, R3 : `NOW() AT TIME ZONE 'UTC'`. La colonne est
+ * un TIMESTAMP(3) sans fuseau où Prisma range des instants UTC (ADR-011 § 1) ;
+ * `NOW()` seul y écrivait l'heure locale de la session.]
  *
  * Extrait de `activites/actions.ts` le 2026-10-05, quand les questions
  * transverses ont dû persister leur « non » (ADR-038) : la recopier aurait
@@ -76,7 +79,7 @@ export async function ecrireReponseFermee(
                      THEN ${c} - ${cle}::text
                      ELSE '{}'::jsonb
                    END,
-                 "updatedAt" = NOW()
+                 "updatedAt" = NOW() AT TIME ZONE 'UTC'
            WHERE "id" = ${duerpId}`)
     : client.$executeRaw(Prisma.sql`
           UPDATE "Duerp"
@@ -90,6 +93,6 @@ export async function ecrireReponseFermee(
                    to_jsonb(${valeur}::boolean),
                    true
                  ),
-                 "updatedAt" = NOW()
+                 "updatedAt" = NOW() AT TIME ZONE 'UTC'
            WHERE "id" = ${duerpId}`);
 }

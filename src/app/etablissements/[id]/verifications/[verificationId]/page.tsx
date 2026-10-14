@@ -87,6 +87,12 @@ import {
 } from "@/components/ui-kit";
 import { avecProvenance, lireProvenance } from "@/lib/navigation/provenance";
 import { listSignatures } from "@/lib/signatures/queries";
+import {
+  fraicheurCalendrier,
+  phraseFraicheur,
+  SUJET_UNE_ECHEANCE,
+} from "@/lib/calendrier/fraicheur";
+import { AvertissementFraicheur } from "@/components/calendrier/AvertissementFraicheur";
 
 // Les dates sont formatées et comparées dans le fuseau de référence du
 // produit (Europe/Paris, cf. ADR-011), jamais dans celui du serveur :
@@ -132,10 +138,17 @@ export default async function VerificationDetailPage({
   // (`matching/marques.ts`) : la fiche d'une ligne ne peut pas taire ce que
   // la liste dit.
   const utilisateur = await requireUser();
-  const marques = await marquesAConfirmerDuDossier(prisma, {
-    id,
-    entreprise: { userId: utilisateur.id },
-  });
+  // Et l'âge de la ligne : ouverte par lien direct (registre, action,
+  // tableau de bord d'hier), cette fiche la lit sans la réparer — seuls le
+  // tableau de bord et le calendrier réparent (`regeneration-sure.ts`,
+  // `docs/chantiers-ouverts.md` § 12). Une lecture du repère, aucune écriture.
+  const [marques, fraicheur] = await Promise.all([
+    marquesAConfirmerDuDossier(prisma, {
+      id,
+      entreprise: { userId: utilisateur.id },
+    }),
+    fraicheurCalendrier(id),
+  ]);
   const marque = marques.parObligation.get(v.obligationId) ?? null;
   // Les catégories que le TEXTE nomme, pas celles que l'établissement a
   // déclarées. Restreindre à ce qui est déclaré ferait disparaître la section
@@ -466,6 +479,12 @@ export default async function VerificationDetailPage({
             </Link>
           ) : null
         }
+      />
+      {/* Sous le titre de la fiche, comme sur « Préparer un contrôle » ; la
+          fiche montre UNE échéance, la phrase la nomme ainsi. */}
+      <AvertissementFraicheur
+        phrase={phraseFraicheur(fraicheur, SUJET_UNE_ECHEANCE)}
+        hrefCalendrier={calendrier.href}
       />
 
       {marque ? (

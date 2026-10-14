@@ -19,6 +19,8 @@ import {
   AIDE_IGH,
   QUESTION_IGH,
 } from "@/lib/etablissements/aides-regimes";
+import { QUESTION_MATIERES } from "@/lib/etablissements/questions";
+import { AideQuestionMatieres } from "@/components/etablissements/AideQuestionMatieres";
 import type { StepProps } from "./types";
 import { nombreDePersonnesDemande } from "./validation";
 
@@ -447,13 +449,21 @@ export function StepTypologie({
               </p>
             </div>
             <div className="flex flex-col gap-3">
+              {/* ~~« Manipulez-vous et mettez-vous en œuvre des matières
+                  explosives ou inflammables ? »~~ — reformulée le 2026-10-13
+                  (`lot/question-matieres`, décision de la propriétaire) :
+                  libellé et aide sont ceux de la fiche, importés de
+                  `etablissements/questions.ts`. */}
               <SousQuestion
-                question="Manipulez-vous et mettez-vous en œuvre des matières explosives ou inflammables ?"
-                aide="Matières classées explosives, comburantes ou extrêmement inflammables, ou dans un état physique susceptible d'engendrer une explosion ou une inflammation instantanée. Si oui, l'alarme sonore, la consigne incendie et les exercices semestriels sont dus quel que soit l'effectif (art. R. 4227-34 du Code du travail). Les entreposer sans les mettre en œuvre ne relève pas de cette question."
+                question={QUESTION_MATIERES}
+                aide={
+                  <AideQuestionMatieres id="manipuleMatieresR422722-aide" />
+                }
               />
               <select
                 id="manipuleMatieresR422722"
-                aria-label="Matières explosives ou inflammables"
+                aria-label={QUESTION_MATIERES}
+                aria-describedby="manipuleMatieresR422722-aide"
                 value={state.manipuleMatieresR422722}
                 onChange={(e) =>
                   update({ manipuleMatieresR422722: e.currentTarget.value })
@@ -480,7 +490,11 @@ function SousQuestion({
   aide,
 }: {
   question: string;
-  aide?: string;
+  /**
+   * Une phrase, ou une aide composée de plusieurs paragraphes — d'où le
+   * conteneur `div` : un `p` ne peut pas en contenir d'autres.
+   */
+  aide?: React.ReactNode;
 }) {
   return (
     <div className="border-t border-[color:var(--board-slate-line)] pt-5">
@@ -488,9 +502,9 @@ function SousQuestion({
         {question}
       </p>
       {aide ? (
-        <p className="m-0 mt-1.5 max-w-[62ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+        <div className="m-0 mt-1.5 max-w-[62ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           {aide}
-        </p>
+        </div>
       ) : null}
     </div>
   );

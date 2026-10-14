@@ -205,7 +205,7 @@ describe("repondreActivite — la requête émise", () => {
     await repondreActivite(DUERP, VIANDE, true);
     // `@updatedAt` est appliqué par le client Prisma, pas par la base : sans
     // ce `NOW()`, la fiche resterait datée de sa dernière écriture ORM.
-    expect(h.db.requetes[0].sql).toContain('"updatedAt" = NOW()');
+    expect(h.db.requetes[0].sql).toContain("\"updatedAt\" = NOW() AT TIME ZONE 'UTC'");
   });
 });
 
@@ -244,7 +244,7 @@ describe("repondreActivite — retirer une réponse", () => {
     expect(sql).not.toContain("jsonb_set(");
     expect(sql).not.toContain(VIANDE);
     expect(valeurs).toEqual([VIANDE, DUERP]);
-    expect(sql).toContain('"updatedAt" = NOW()');
+    expect(sql).toContain("\"updatedAt\" = NOW() AT TIME ZONE 'UTC'");
   });
 
   it("refuse un retrait sur une clé que le référentiel ne connaît pas", async () => {
