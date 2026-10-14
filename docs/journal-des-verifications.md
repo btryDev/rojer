@@ -5673,8 +5673,9 @@ ce lot sert **`2026-10-08.4`**.]
     CRÉÉ par la loi n° 2026-534 du 25 juin 2026, art. 95 ; aucune version
     antérieure. **L. 8222-2** : LEGIARTI000054335516 au 2026-12-26 (« ou de
     l'article L. 8222-1-1 »). Nota des deux : « à une date fixée par décret,
-    et au plus tard six mois après la promulgation » — le 2026-12-26 est un
-    plafond. **JORF** : seule la loi cite L. 8222-1-1 au 2026-10-14 ; aucun
+    et au plus tard six mois après la promulgation ». Légifrance la date au
+    2026-12-26 ; la promulgation étant du 25 juin, la date légale peut
+    tomber le 2026-12-25, un jour avant, et un décret peut l'avancer. **JORF** : seule la loi cite L. 8222-1-1 au 2026-10-14 ; aucun
     décret (date, montant minimal, liste des documents). L. 8271-9 porte
     aussi une version au 2026-12-26 (pouvoirs de contrôle, non lu).
 - **Ce qui change pour la cible** :
@@ -5718,7 +5719,8 @@ ce lot sert **`2026-10-08.4`**.]
     est son 2° (« rejoindre rapidement et en sécurité l'extérieur… »). La
     description cite le renvoi sans le paraphraser.
   - **L. 8222-1-1 — à la propriétaire** (garde : `TEXTES_A_VENIR`, rouge
-    au 2026-12-26 au plus tard). Options : (a) **l'annoncer** dans la
+    au 2026-12-26, date de Légifrance ; la date légale peut la précéder d'un
+    jour). Options : (a) **l'annoncer** dans la
     rubrique « Vigilance à l'égard des cocontractants » de « Ce que Rojer
     ne couvre pas », comme L. 8222-1 (C45) — corpus `non_couvert`,
     `ANNONCES`, § 3 de `docs/couverture-declaree-du-produit.md` ; (b)
