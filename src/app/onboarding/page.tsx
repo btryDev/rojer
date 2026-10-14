@@ -14,8 +14,8 @@ import { getOptionalUserEtablissement } from "@/lib/auth/scope";
  * Nom d'usage de l'établissement = raison sociale par défaut, modifiable
  * plus tard depuis la page établissement.
  *
- * L'écran a son propre chrome — `AppHeaderGate` masque le header global sur
- * `/onboarding` —, donc il porte lui-même la barre de compte : sans l'email
+ * L'écran a son propre chrome — le header global n'est pas rendu sur
+ * `/onboarding` (`LayoutAvecEnTete`, 2026-10-14) —, donc il porte lui-même la barre de compte : sans l'email
  * et la déconnexion rendus ici, un compte qui n'a pas encore d'établissement
  * n'avait aucune porte de sortie, ni sur cet écran ni sur l'accueil.
  */

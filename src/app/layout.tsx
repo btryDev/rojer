@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { AppHeader } from "@/components/layout/AppHeader";
-import { AppHeaderGate } from "@/components/layout/AppHeaderGate";
 import { variablesPolices } from "./polices";
 import "./globals.css";
 
@@ -21,9 +19,10 @@ export default function RootLayout({
       className={`${variablesPolices} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <AppHeaderGate>
-          <AppHeader />
-        </AppHeaderGate>
+        {/* Plus d'en-tête ici (audit Next.js du 2026-10-14, M2) : il est
+            rendu par les segments qui l'affichent (`LayoutAvecEnTete`), et
+            par `not-found.tsx`. Rendu ici puis masqué côté client, il lisait
+            la session et la base sur chaque écran de l'application. */}
         <div className="flex-1">{children}</div>
       </body>
     </html>

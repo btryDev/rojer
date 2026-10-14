@@ -213,7 +213,27 @@ la page un compte d'avant régénération. Seule sa moitié indépendante des li
 - **Correctif** : `src/app/etablissements/[id]/loading.tsx` (le layout et la sidebar restent en place), puis `<Suspense>` autour des widgets lents du board (transmissions, états permanents, frise).
 - **Effort** : S. **[Maintenant]**
 
-### M2 Le header racine s'exécute sur toutes les pages
+### ~~M2 Le header racine s'exécute sur toutes les pages~~
+**[Corrigé le 2026-10-14, `lot/nextjs-perf-1014`.]** `AppHeader` n'est plus
+dans le layout racine : un layout d'une ligne (`LayoutAvecEnTete`) le monte sur
+les neuf segments qui l'affichent (`acces`, `accessibilite`, `auth`, `dev`,
+`entreprises`, `login`, `signe`, `signup`, `verifier`), et le portillon client
+`AppHeaderGate` est supprimé. Pas de groupes de routes : ils déplaçaient neuf
+dossiers, dont `login/` que le lot 1 modifie, et un layout par segment ne peut
+pas changer une URL. Mesuré : −1 requête SQL et ≈ −2 Ko de charge utile RSC
+sur chaque écran de l'application (tableau de bord 106 → 105 requêtes,
+78 663 octets RSC au lieu de 80 788).
+- **Tableau du build** : `/_not-found` redevient statique (`○`). `/login` et
+  `/signup` restent dynamiques, et c'est attendu : ils lisent `searchParams`
+  (`next`, `confirmed`), et l'en-tête qu'ils portent lit la session (« Mon
+  dossier » / « Se connecter »). `/login/mot-de-passe-oublie` et
+  `/signup/verification-en-attente` restent dynamiques pour la seconde raison.
+- **Trouvé en mesurant** : l'en-tête remis dans `not-found.tsx` (pour garder
+  la barre sur une URL inconnue) s'exécutait sur TOUS les écrans — Next
+  sérialise l'élément `not-found` racine dans la charge utile de chaque page.
+  Retiré : la page introuvable perd l'en-tête qu'elle montrait hors de
+  l'application, elle garde « Revenir à l'accueil ». Les pages d'erreur le
+  perdent aussi (`error.tsx` est client, il ne peut pas rendre l'en-tête).
 - **Où** : `src/app/layout.tsx:28-30`, `src/components/layout/AppHeader.tsx:22-23`, `AppHeaderGate.tsx`.
 - **Constat** : `AppHeader` (server) lit la session et fait 1 ou 2 requêtes en base. Le portillon est **client** : il masque le résultat après coup. Le travail est donc fait aussi sur le tableau de bord, le calendrier et le DUERP, où le header n'apparaît jamais. Il rend aussi `/login`, `/signup` et `/_not-found` dynamiques. `/` refait le même couple d'appels (`page.tsx:31-32`).
 - **Correctif** : route groups `(public)` / `(app)`, `AppHeader` dans le layout `(public)` seulement, `cache()` sur `getOptionalUserEtablissement`.
