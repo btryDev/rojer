@@ -1,3 +1,5 @@
+import "server-only";
+
 // L'établissement, son parc en service et ses obligations applicables, lus
 // UNE FOIS par rendu.
 //
