@@ -1,6 +1,6 @@
-import Link from "next/link";
+import { FilAriane } from "@/components/navigation/FilAriane";
+import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 import { EtablissementForm } from "@/components/etablissements/EtablissementForm";
 import { modifierEtablissement } from "@/lib/etablissements/actions";
 import { getEtablissement } from "@/lib/etablissements/queries";
@@ -25,18 +25,19 @@ export default async function ModifierEtablissementPage({
 
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
-      {/* Le fil de retour porte le nom de l'établissement, le titre porte le
-          geste : c'est le gabarit des écrans de saisie déjà migrés, et il
-          évite d'écrire deux fois la même raison sociale. */}
+      {/* Le fil d'Ariane porte le nom de l'établissement et l'entrée du rail
+          (« Fiche établissement »), le titre porte le geste : il évite
+          d'écrire deux fois la même raison sociale. Un fil et non une flèche
+          de retour : c'est une page d'entrée, elle dit où elle est rangée
+          (ADR-014). */}
       <header className="border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] py-[22px]">
-        <Link
-          href={`/etablissements/${id}`}
-          className="board-eyebrow inline-flex items-center gap-2 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)] transition-colors hover:text-[color:var(--board-ink)]"
-        >
-          <ArrowLeft className="size-3" aria-hidden />
-          {etab.raisonDisplay}
-        </Link>
-        <h1 className="board-titre m-0 mt-2.5 text-[clamp(22px,2.2vw,27px)]">
+        <FilAriane
+          crumbs={[
+            { href: `/etablissements/${id}`, label: etab.raisonDisplay },
+            { label: LABEL_ITEM.fiche },
+          ]}
+        />
+        <h1 className="board-titre m-0 text-[clamp(22px,2.2vw,27px)]">
           Modifier l&apos;établissement
         </h1>
       </header>

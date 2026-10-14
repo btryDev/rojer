@@ -23,11 +23,12 @@ release (lots lancés le même jour) ; **n° 1 (gaz sans cuisine) et n° 5
    un appareil de cuisson ; preuve : `categoriesEquipement:
    ["APPAREIL_CUISSON_ERP"]` dans `conformite/cuisson-hotte.ts`. Le remède
    demande une catégorie, donc une migration.
-2. **Huit pages d'entrée gardent la flèche de retour**
+2. ~~**Huit pages d'entrée gardent la flèche de retour**
    ([§ 6 bis](#6-bis-ce-que-la-passe-du-2026-09-07-a-rendu--six-constats-un-corrigé))
    — `<ArrowLeft>` + raison sociale dans `actions`, `equipe`, `duerp`,
    `modifier`, `etats-permanents`, `prescriptions`, `quand-ca-arrive`,
-   `prestataires` (ADR-014 : fil d'Ariane).
+   `prestataires` (ADR-014 : fil d'Ariane).~~ [2026-10-14, rayé à
+   l'intégration : corrigé par `lot/fil-ariane-entrees`, § 6 bis.]
 3. ~~**Une page ouverte par lien direct sert un calendrier périmé sans le dire**
    ([§ 12](#12-les-alertes-par-e-mail--une-règle-à-tenir-avant-la-première-ligne))
    — `assurerCalendrierAJour` n'est appelée que par le tableau de bord et le
@@ -732,15 +733,44 @@ constat qui ne rejoint pas cette liste se perd** — c'est la leçon du § 7.
   elles désignent la même relation.
   [2026-10-13, contrôle visuel (session de l'autre Mac) : `next build` + `next start` en local, `main` à 4f6de986, base Docker locale, dossier « Le Comptoir des Halles » déjà semé — DÉFAUT CONFIRMÉ ; la page Zones emploie aussi le retour.]
   [2026-10-13 : permis de feu, plan de prévention et Zones passent au fil
-  d'Ariane (`lot/controle-visuel-1310`, rojer-outils-34). RESTE, après le
+  d'Ariane (`lot/controle-visuel-1310`, rojer-outils-34). ~~RESTE, après le
   lancement : huit pages d'entrée portent encore « ← Établissement » en dur —
   actions, équipe, DUERP, modifier, états permanents, prescriptions, « quand
   ça arrive », prestataires (ADR-014 : sur une page d'entrée, le lien vers
-  l'établissement dit où la page vit).]
-  [2026-10-13, tri : DÉFAUT RÉEL, vérifié — `<ArrowLeft>` suivi de la raison
+  l'établissement dit où la page vit).~~]
+  ~~[2026-10-13, tri : DÉFAUT RÉEL, vérifié — `<ArrowLeft>` suivi de la raison
   sociale, une fois chacune, dans `src/app/etablissements/[id]/{actions,equipe,duerp,modifier,etats-permanents,prescriptions,quand-ca-arrive,prestataires}/page.tsx` ;
   le test de `26040e90` ne garde que les quatre frères et nomme les autres
-  « incohérence connue ».]
+  « incohérence connue ».]~~ [2026-10-14, rayé à l'intégration : corrigé par
+  `lot/fil-ariane-entrees`, ci-dessous.]
+  [2026-10-13 : **CLOS** (`lot/fil-ariane-entrees`, commit qui porte cette
+  rature). Les huit passent au `FilAriane` partagé, dernier maillon pris dans
+  `LABEL_ITEM`. Le balayage en a trouvé **trois de plus**, que la liste
+  ignorait parce qu'elles ne portaient pas d'`ArrowLeft` : le calendrier, le
+  registre de sécurité et « Ce que Rojer ne couvre pas » disaient le même
+  retour par un `ChevronRight` retourné (`rotate-180`). Les onze sont
+  converties. `FilAriane.test.tsx` balaie désormais toutes les pages d'entrée
+  (21, borne basse) et refuse flèche, chevron gauche ou retourné, « ← » en
+  texte et `<Link>` écrit à la main vers l'établissement — éprouvé en
+  remettant l'ancien `/quand-ca-arrive` et l'ancien `/calendrier` : 4 échecs.
+  Hors règle, laissé tel quel : `equipe/risques` porte « ← Équipe — … » vers
+  `/equipe`, un sous-écran et non une page d'entrée.]
+  [2026-10-13, revue de `784bb428` — deux phrases de la rature ci-dessus et
+  du message de commit étaient inexactes. (1) « Toutes les pages d'entrée » :
+  une douzième passait, `/equipements`, qui délègue son en-tête à
+  `BandeauParc` (bouton rond `ChevronLeft` « Retour à Mon établissement ») —
+  convertie à son tour, et la garde lit désormais les bandeaux délégués (les
+  composants importés par une page d'entrée qui portent le `<h1>`). (2)
+  « Espacement conservé » : faux pour les huit pages de la liste, où l'écart
+  entre le lien et le titre passe de 10 px (`mt-2.5`) à 6 px (`mb-1.5` du
+  fil), comme sur les quatre pages de `26040e90` ; il n'est conservé (12 px)
+  que sur le calendrier, le registre et le périmètre. La garde a été
+  réécrite sur l'arbre syntaxique (commentaires retirés par
+  `ts.createPrinter`) : elle ne dépend plus de l'ordre des attributs ni du
+  nom de la variable, attrape `&larr;`, et ne prend plus un
+  `group-open:rotate-180` ni un commentaire de fin de ligne pour un retour.
+  Le fil tronque désormais la raison sociale (`min-w-0 truncate`) ; la
+  charte porte une ligne « Fil d'Ariane » au barème.]
 
 - ~~**`SupprimerEtablissementButton` n'est monté sur aucun écran**, donc il
   n'existe aucun endroit d'où supprimer un établissement.~~ **RÉSOLU le
