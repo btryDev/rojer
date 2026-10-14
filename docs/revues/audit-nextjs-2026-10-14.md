@@ -265,7 +265,7 @@ Vérifiés sur `517309db` :
 ## Polish (Basse)
 
 - ~~**B1** `regenererSansInvalider` est exporté d'un module `'use server'` (`calendrier/actions.ts:1,96`). C'est donc un endpoint public, même s'il est gardé par l'appartenance : un propriétaire peut déclencher des régénérations coûteuses à volonté. Le sortir dans un module `server-only`.~~ **[Corrigé le 2026-10-14, `lot/nextjs-client-1014`]** `genererCalendrier` était exposé de la même façon (les deux au `server-reference-manifest.json`, 108 actions) et n'a, lui non plus, aucun appelant client — la directive datait du bouton « Régénérer » retiré le 2026-08-19. Plutôt que de déplacer la passe d'écriture, que `version-moteur.test.ts` (entrée du relevé) et `garde-convergence.test.ts` (seul fichier autorisé à écrire `datePrevue`/`statut`) désignent par ce chemin, `calendrier/actions.ts` perd `"use server"` et prend `import "server-only"`. Après build : 106 actions, aucune de `calendrier/actions.ts`. Appelants inchangés (`regeneration-sure.ts`).
-- **B2** `listerVersions` (`versions/queries.ts:5-13`) charge tous les `snapshot` JSON (conservation 40 ans) pour une liste. Ajouter un `select`.
+- ~~**B2** `listerVersions` (`versions/queries.ts:5-13`) charge tous les `snapshot` JSON (conservation 40 ans) pour une liste. Ajouter un `select`.~~ **[Corrigé le 2026-10-14, `lot/nextjs-client-1014`]** `select` sur `id`, `numero`, `motif`, `createdAt`, `transmiseSpstLe` — les seuls champs que lisent la synthèse, l'aperçu PDF et le PDF d'une version (`historiqueJusqua`) ; tsc le confirme.
 - **B3** `signOutAction` (`auth/actions.ts:117-121`) n'efface pas le cookie `etablissement-actif`. Il est revalidé par `userId` à la lecture, donc sans risque, mais il est à nettoyer.
 - **B4** `react`/`react-dom` 19.2.4 déclarés alors que le correctif DoS RSC est en 19.2.8. Sans effet sur l'App Router (React fourni par Next), mais à aligner pour les tests et le futur.
 - **B5** `sharp` (librsvg, via next) : à monter dès que next le propose. Pertinent en self-host si `next/image` sert un jour des SVG.
@@ -290,7 +290,7 @@ Vérifiés sur `517309db` :
 4. **H2 (partiel)** : `cache()` sur `getEtablissement`, `getOptionalUserEtablissement`, `compterActions`. (S)
 5. ~~**M8** : import direct de `ChampBoard`. −67 Ko gzip sur `/login`. (S)~~ fait le 2026-10-14 (−73 Ko gzip mesurés)
 6. **M4** : `Promise.all` sur le registre et les équipements. (S)
-7. **B1, B2** : sortir `regenererSansInvalider` du module `'use server'` et ajouter un `select` à `listerVersions`. (S)
+7. ~~**B1, B2** : sortir `regenererSansInvalider` du module `'use server'` et ajouter un `select` à `listerVersions`. (S)~~ fait le 2026-10-14
 8. **B7** : retirer `react-hook-form`, `@hookform/resolvers` et les fichiers morts. (S)
 
 ## Critères de recette de la bascule Clever Cloud + Better Auth
