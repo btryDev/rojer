@@ -38,7 +38,13 @@ import {
   lignesR4512_12Zip,
 } from "@/lib/plan-prevention/annonces-zip";
 import { nomDossierArchive, nomEntreeArchive } from "@/lib/storage/noms";
-import { joindreFichiers, zipEnFlux } from "@/lib/controle/fichiers-zip";
+import {
+  contenuDiffere,
+  existe,
+  joindreFichiers,
+  zipEnFlux,
+} from "@/lib/controle/fichiers-zip";
+import { reserverPlaceExport } from "@/lib/exports/limite";
 
 /**
  * Durée maximale de la fonction : lire les pièces, rendre quatre PDF et
@@ -109,6 +115,33 @@ export async function GET(
   const { id } = await context.params;
   const { etablissement } = await requireEtablissement(id);
 
+  // Une place d'export (H3, `exports/limite.ts`), tenue pendant la
+  // construction — lectures, quatre rendus PDF, vérification des fichiers — et
+  // rendue avant le flux : les fichiers déposés ne sont lus qu'à leur tour
+  // dans l'archive, un à la fois, et un client lent ne doit pas priver les
+  // autres d'export pendant des minutes.
+  const liberer = await reserverPlaceExport();
+  if (liberer instanceof Response) return liberer;
+  let archive: Awaited<ReturnType<typeof construireArchive>>;
+  try {
+    archive = await construireArchive(id, etablissement);
+  } finally {
+    liberer();
+  }
+
+  return new NextResponse(zipEnFlux(archive.zip), {
+    headers: {
+      "Content-Type": "application/zip",
+      "Content-Disposition": `attachment; filename="${archive.filename}"`,
+      "Cache-Control": "no-store",
+    },
+  });
+}
+
+async function construireArchive(
+  id: string,
+  etablissement: Awaited<ReturnType<typeof requireEtablissement>>["etablissement"],
+) {
   // LA FRAÎCHEUR SE LIT AVANT TOUT LE RESTE, et elle ne répare rien.
   // Ce dossier part chez un tiers qui n'a aucun moyen de recouper ce
   // qu'il lit : s'il est bâti sur un calendrier jamais calculé, ses
@@ -390,16 +423,14 @@ export async function GET(
         [p.kbisCle, nomEntreeArchive(p.kbisNom, "Kbis.pdf"), "kbis"],
       ] as const) {
         if (!cle) continue;
-        try {
-          if (!storage) throw new Error("stockage indisponible");
-          const buf = await storage.get(cle);
-          sousDossier.file(nom, new Uint8Array(buf));
+        // Une pièce déclarée que le stockage n'a pas : comptée, et annoncée
+        // par le README au lieu d'être ignorée. Présente, elle n'est lue
+        // qu'à son tour dans le flux (`contenuDiffere`, H3).
+        if (await existe(storage, cle, `pièce prestataire ${nom}`)) {
+          sousDossier.file(nom, contenuDiffere(() => storage!.get(cle), nom));
           piecesPrestataires[type]++;
-        } catch (e) {
-          // Une pièce déclarée que le stockage ne rend pas : comptée, et
-          // annoncée par le README au lieu d'être ignorée.
+        } else {
           piecesPrestatairesManquantes++;
-          console.error(`controle-zip : pièce prestataire non récupérée (${nom})`, e);
         }
       }
       // Les pièces précédentes, à part : le tiers ne doit pas prendre une
@@ -409,14 +440,14 @@ export async function GET(
         const dossierPrecedentes = sousDossier.folder("Pieces_precedentes") ?? sousDossier;
         for (const pp of p.piecesPrecedentes) {
           const nom = `${pp.id}-${nomEntreeArchive(pp.fichierNom, `${pp.type}.pdf`)}`;
-          try {
-            if (!storage) throw new Error("stockage indisponible");
-            const buf = await storage.get(pp.fichierCle);
-            dossierPrecedentes.file(nom, new Uint8Array(buf));
+          if (await existe(storage, pp.fichierCle, `pièce prestataire précédente ${nom}`)) {
+            dossierPrecedentes.file(
+              nom,
+              contenuDiffere(() => storage!.get(pp.fichierCle), nom),
+            );
             piecesPrestatairesPrecedentes++;
-          } catch (e) {
+          } else {
             piecesPrestatairesManquantes++;
-            console.error(`controle-zip : pièce prestataire précédente non récupérée (${nom})`, e);
           }
         }
       }
@@ -727,15 +758,9 @@ export async function GET(
   zip.file(PIECES_ZIP.readme, readme);
 
   // ── Génération ──────────────────────────────────────────────────────
-  // En flux : au-delà de 4,5 Mo, une réponse d'un bloc est refusée par Vercel
-  // (`zipEnFlux`). Sans Content-Length, par construction.
+  // En flux, par `GET` : au-delà de 4,5 Mo, une réponse d'un bloc est refusée
+  // par Vercel (`zipEnFlux`). Sans Content-Length, par construction.
   const filename = `Dossier_controle_${slugifyFilename(etablissement.raisonDisplay)}_${cleJourCivil(maintenant)}.zip`;
 
-  return new NextResponse(zipEnFlux(zip), {
-    headers: {
-      "Content-Type": "application/zip",
-      "Content-Disposition": `attachment; filename="${filename}"`,
-      "Cache-Control": "no-store",
-    },
-  });
+  return { zip, filename };
 }

@@ -77,7 +77,7 @@ describe("le limiteur des exports", () => {
 
   it("EXPORTS_SIMULTANES : un entier ≥ 1, sinon le défaut", () => {
     expect(exportsSimultanes("3")).toBe(3);
-    expect(exportsSimultanes("1")).toBe(1);
+    expect(exportsSimultanes("2")).toBe(2);
     for (const v of [undefined, "", "0", "-2", "1.5", "deux"]) {
       expect(exportsSimultanes(v)).toBe(EXPORTS_SIMULTANES_DEFAUT);
     }

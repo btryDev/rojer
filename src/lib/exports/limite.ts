@@ -22,8 +22,16 @@ import "server-only";
  * une file pleine se dit au lieu de grossir.
  */
 
-/** Exports menés de front par défaut, sans `EXPORTS_SIMULTANES`. */
-export const EXPORTS_SIMULTANES_DEFAUT = 2;
+/**
+ * Exports menés de front par défaut, sans `EXPORTS_SIMULTANES` : UN. Mesuré
+ * sur quatre ZIP lancés ensemble (`scripts/mesure-exports.ts`, 2026-10-14) :
+ * à 1, le plus long blocage de la boucle reste celui d'un seul rendu
+ * (~230 ms) ; à 2, deux mises en page s'enchaînent sans rendre la main
+ * (~420-470 ms), pour la même durée totale (~8 s) — le calcul est sur un seul
+ * fil, mener deux exports de front ne va pas plus vite, et coûte plus de
+ * mémoire.
+ */
+export const EXPORTS_SIMULTANES_DEFAUT = 1;
 /** Exports en file, au-delà desquels on répond 503 tout de suite. */
 export const EXPORTS_EN_ATTENTE_MAX = 8;
 /** Attente maximale en file avant 503, en millisecondes. */

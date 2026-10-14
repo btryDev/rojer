@@ -30,9 +30,20 @@ describe("branchements des fichiers déposés", () => {
   });
 
   it("le ZIP répond en flux, avec une durée maximale posée", () => {
-    expect(zip).toMatch(/new NextResponse\(zipEnFlux\(zip\)/);
+    expect(zip).toMatch(/new NextResponse\(zipEnFlux\(archive\.zip\)/);
     expect(zip).not.toMatch(/generateAsync/);
     expect(zip).toMatch(/export const maxDuration = \d+;/);
+  });
+
+  it("le ZIP ne lit aucun fichier déposé avant le flux, et tient une place d'export (H3)", () => {
+    // Toute lecture du stockage passe par `contenuDiffere` : lue à son tour
+    // dans l'archive, jamais toute d'avance (`fichiers-zip.ts`).
+    const lectures = zip.match(/\.get\(/g) ?? [];
+    const differees = zip.match(/contenuDiffere\(\s*\(\) => storage!\.get\(/g) ?? [];
+    expect(lectures.length).toBeGreaterThan(0);
+    expect(differees.length).toBe(lectures.length);
+    expect(zip).toMatch(/const liberer = await reserverPlaceExport\(\);/);
+    expect(zip).toMatch(/\} finally \{\s*liberer\(\);\s*\}/);
   });
 
   it("le carnet ouvre le rapport d'une analyse qui en a un", () => {
