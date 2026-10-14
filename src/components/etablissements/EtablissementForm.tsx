@@ -27,8 +27,10 @@ import {
   EXEMPLE_DETAIL_EPI,
   LIBELLE_DETAIL_EPI,
   QUESTION_EPI,
+  QUESTION_MATIERES,
   QUESTION_SSI,
 } from "@/lib/etablissements/questions";
+import { AideQuestionMatieres } from "./AideQuestionMatieres";
 
 
 /** La case à cocher du board : encre pleine à l'état coché, filet d'ardoise. */
@@ -274,11 +276,20 @@ export function EtablissementForm({
               référentiel ne dépend aujourd'hui. La dernière phrase de l'aide
               dit au dirigeant ce que la question ne couvre pas, plutôt que de
               trancher à sa place. Renommer l'attribut est une migration, hors
-              de ce lot. */}
+              de ce lot.
+
+              [2026-10-13, `lot/question-matieres`, décision de la
+              propriétaire : ~~« Manipulez-vous et mettez-vous en œuvre des
+              matières explosives ou inflammables ? »~~ — personne ne se
+              reconnaissait dans la classification de R. 4227-22. La question
+              se répond désormais étiquette en main ; libellé et aide viennent
+              de `etablissements/questions.ts` (`QUESTION_MATIERES`,
+              `AideQuestionMatieres`), partagés avec le parcours, la relance et
+              la phrase « à confirmer ». La condition reste celle de
+              R. 4227-34, et la dernière phrase sur l'entreposage demeure.] */}
           <div className="sm:col-span-2">
             <label className="label-board" htmlFor="manipuleMatieresR422722">
-              Manipulez-vous <em>et</em> mettez-vous en œuvre des matières
-              explosives ou inflammables ?
+              {QUESTION_MATIERES}
             </label>
             <select
               id="manipuleMatieresR422722"
@@ -297,21 +308,10 @@ export function EtablissementForm({
               <option value="oui">Oui</option>
               <option value="non">Non</option>
             </select>
-            <p
+            <AideQuestionMatieres
               id="manipuleMatieresR422722-aide"
-              className="m-0 mt-1.5 max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
-            >
-              Matières classées explosives, comburantes ou extrêmement
-              inflammables, ou dans un état physique susceptible d&apos;engendrer
-              une explosion ou une inflammation instantanée. Répondez oui si
-              elles sont <strong>à la fois manipulées et mises en œuvre</strong>{" "}
-              chez vous : c&apos;est ce que vise l&apos;art. R. 4227-34 du Code
-              du travail, et c&apos;est lui qui rend l&apos;alarme sonore, la
-              consigne incendie et les exercices semestriels dus quel que soit
-              l&apos;effectif. Les entreposer sans les mettre en œuvre ne relève
-              pas de cette question — d&apos;autres articles de la même section
-              le visent, que Rojer ne suit pas.
-            </p>
+              className="mt-1.5 max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
+            />
           </div>
 
           {/* ~~R. 4227-26 CT (C45) : la question des chiffons imprégnés~~ —

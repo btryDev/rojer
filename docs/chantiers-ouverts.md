@@ -147,19 +147,44 @@ aujourd'hui — sa branche n'ajoute des cas qu'à un champ déjà ouvert par le 
 de personnes présentes. Il en retirerait le jour où une obligation s'appuierait
 sur cette branche seule~~ [2026-09-27 : faux depuis le 2026-09-03, corrigé — le
 silence retient « à confirmer » (`e6b0fb6`, `0d94de1`) et la question est posée à la
-création (`ec9917c`). Ce qui suit reste OUVERT : le champ de la question,
-manipulation contre entreposage], et le corpus dit lequel :
+création (`ec9917c`). ~~Ce qui suit reste OUVERT : le champ de la question,
+manipulation contre entreposage~~ [2026-10-13 : tranché, voir plus bas]], et le corpus dit lequel :
 `code-travail-matieres-inflammables.ts` a relevé le 2026-09-02 que `R. 4227-22`
 oblige sans condition d'effectif ni d'équipement, qu'il vise « entreposées OU
 manipulées » là où l'attribut ne demande que la manipulation, et que deux états
 permanents en découlent que le référentiel ne porte pas.
 
-**Ce qui le bloque** : rien de technique. C'est une décision sur le champ de la
+~~**Ce qui le bloque** : rien de technique. C'est une décision sur le champ de la
 question posée au dirigeant — l'élargir à l'entreposage ferait entrer dans les
-obligations de `R. 4227-34` des établissements que ce texte-là ne vise pas.
-[2026-10-13, tri : DÉCISION ATTENDUE. Vérifié : la question ne vise toujours
+obligations de `R. 4227-34` des établissements que ce texte-là ne vise pas.~~
+[2026-10-13, revue de `e6ba53d9` : plus rien ne bloque. L'entreposage n'a pas à
+entrer dans la question, qui sert le champ de `R. 4227-34` (« manipulées et
+mises en œuvre ») et lui seul. Les articles qui visent l'entreposage —
+`R. 4227-22` à `R. 4227-25` — sont déjà ANNONCÉS depuis le 2026-09-27 (C45,
+décision de la propriétaire) : `statut: "non_couvert"` au corpus
+`code-travail-matieres-inflammables.ts`, nommés sur la page « Ce que Rojer ne
+couvre pas », domaine « Matières explosives et inflammables », à tout
+établissement employant des travailleurs.]
+
+[2026-10-13, `lot/question-matieres` : les MOTS de la question ont changé, pas
+son champ. Décision de la propriétaire : elle reste posée à tout employeur et
+se répond désormais étiquette en main (~~flamme sur un cercle, bombe qui explose,~~
+mention « extrêmement inflammable » [même jour, décision de la propriétaire sur
+le point 2 de la revue, « on respecte la loi » : `R. 4227-34` ne vise que les
+matières INFLAMMABLES de `R. 4227-22` ; comburants et explosifs sortent de la
+question, qui garde la mention « extrêmement inflammable » et les matières
+pouvant s'enflammer instantanément]), texte unique dans
+`etablissements/questions.ts`. L'entreposage reste hors de la question~~, et ce
+paragraphe reste ouvert~~ [même jour, revue : voir ci-dessus, il ne l'est
+plus]. **Seul reste ouvert** : des aérosols pulvérisés dans la journée
+suffisent-ils à « manipulées et mises en œuvre » ? — question n° 1 au
+préventeur, `docs/questions-preventeur.md` sur `lot/tri-chantiers`.]
+~~[2026-10-13, tri : DÉCISION ATTENDUE. Vérifié : la question ne vise toujours
 que la manipulation (« Dire si vous manipulez des matières explosives ou
-inflammables », `src/lib/etablissements/relance.ts:77`).]
+inflammables », `src/lib/etablissements/relance.ts:77`).]~~ [2026-10-14,
+intégration : la décision est prise, voir le crochet de `lot/question-matieres`
+ci-dessus. Les atmosphères explosives (poussières en nuage, `R. 4227-42` à
+`R. 4227-54`) sont annoncées, pas questionnées : décision de la propriétaire.]
 
 ## ~~2. La date de remise de l'attestation de vigilance~~ — CLOS LE 2026-09-27, RAYÉ LE 2026-10-12
 

@@ -53,6 +53,8 @@ import { ErreurOutilMcp, OUTILS_MCP, type ContexteMcp } from "./tools";
 import { SCEAU_CALENDRIER } from "@/lib/calendrier/version-moteur";
 import { getEtatDuerp, getParcEquipements, listerActions } from "./queries";
 import { couvertureDeLInventaire } from "@/lib/perimetre/couverture";
+import { PHRASE_SANS_REPONSE } from "@/lib/matching/sans-reponse";
+import { QUESTION_MATIERES } from "@/lib/etablissements/questions";
 
 /** 10 août 2026, 9 h à Paris. */
 const NOW = new Date("2026-08-10T07:00:00Z");
@@ -809,7 +811,12 @@ describe("une ligne retenue par prudence le dit à l'assistant (2026-09-27)", ()
     prismaMock.etablissement.findFirst.mockResolvedValue(bureauMuet);
     prismaMock.verification.findMany.mockResolvedValue([ligneExercice]);
     const texte = await outil("verifications").executer(ctx, {});
-    expect(texte).toContain("à confirmer : La fiche de l'établissement ne dit pas si des matières");
+    // ~~« à confirmer : La fiche de l'établissement ne dit pas si des
+    // matières »~~ [2026-10-13, `lot/question-matieres` : la phrase cite la
+    // question reformulée, et l'assistant la reçoit entière, question
+    // comprise — c'est la surface MCP de `question-matieres.test.tsx`.]
+    expect(texte).toContain(`à confirmer : ${PHRASE_SANS_REPONSE.matieres_r4227_22}`);
+    expect(texte).toContain(QUESTION_MATIERES);
     // La lecture porte la portée du jeton.
     expect(prismaMock.etablissement.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: ETABLISSEMENT_ID } }),

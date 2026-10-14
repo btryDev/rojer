@@ -7,6 +7,7 @@
 //
 // Module pur, sans dépendance au runtime.
 
+import { QUESTION_MATIERES } from "@/lib/etablissements/questions";
 import type { QuestionSansReponse } from "./types";
 
 export const PHRASE_SANS_REPONSE: Record<QuestionSansReponse, string> = {
@@ -35,6 +36,10 @@ export const PHRASE_SANS_REPONSE: Record<QuestionSansReponse, string> = {
     "La fiche de l'établissement ne précise pas le type de l'établissement recevant du public : cette ligne s'affiche tant qu'il n'est pas renseigné, et peut changer ou disparaître une fois qu'il l'est.",
   personnes_presentes:
     "La fiche de l'établissement ne dit pas combien de personnes y sont habituellement présentes, public compris : cette ligne s'affiche tant que ce nombre n'est pas renseigné.",
-  matieres_r4227_22:
-    "La fiche de l'établissement ne dit pas si des matières explosives ou inflammables y sont manipulées et mises en œuvre : cette ligne s'affiche tant que la réponse n'est pas « non ».",
+  // ~~« La fiche de l'établissement ne dit pas si des matières explosives ou
+  // inflammables y sont manipulées et mises en œuvre : […] »~~ [2026-10-13,
+  // `lot/question-matieres` : la question reformulée est citée mot pour mot,
+  // depuis son unique définition — la phrase voyage jusqu'au guide et au
+  // MCP, qui la reconnaissent ainsi.]
+  matieres_r4227_22: `La fiche de l'établissement ne répond pas encore à la question « ${QUESTION_MATIERES} » : cette ligne s'affiche tant que la réponse n'est pas « non ».`,
 };

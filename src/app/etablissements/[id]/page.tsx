@@ -347,6 +347,7 @@ export default async function EtablissementPage({
             id: `relance-${question}`,
             titre: relance.titre,
             pourquoi: relance.pourquoi,
+            lien: relance.lien,
             faite,
             question: (
               <QuestionParametrage
