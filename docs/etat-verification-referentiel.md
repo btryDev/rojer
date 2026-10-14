@@ -4,8 +4,8 @@
      écraserait la correction, et un test compare déjà ce fichier au rendu
      du script. Pour le mettre à jour : pnpm verification --ecrire -->
 
-**Généré le** : 2026-10-13
-**Référentiel** : `2026-10-13.2`
+**Généré le** : 2026-10-14
+**Référentiel** : `2026-10-14.1`
 **Régénérer** : `pnpm verification --ecrire`
 
 Ce document répond à une question, et à une seule : **de quoi le
@@ -83,18 +83,18 @@ repose sur un texte que personne n'a ouvert.
 
 ## 2. Où en est-on
 
-**176 obligations**, **351 références** — 100 obligations en citent plus d'une.
+**179 obligations**, **361 références** — 103 obligations en citent plus d'une.
 
 | degré | obligations (au plancher) | part | dont fondements | références | part |
 | --- | --- | --- | --- | --- | --- |
-| 5 · lu à la source, verbatim relevé | 84 | 48 % | 91 | 208 | 59 % |
-| 4 · lu à la source par un agent, verbatim rapporté | 88 | 50 % | 85 | 138 | 39 % |
+| 5 · lu à la source, verbatim relevé | 87 | 49 % | 94 | 218 | 60 % |
+| 4 · lu à la source par un agent, verbatim rapporté | 88 | 49 % | 85 | 138 | 38 % |
 | 3 · lu et daté, aucun verbatim | 3 | 2 % | 0 | 4 | 1 % |
 | 2 · lu ailleurs qu'à la source | 1 | 1 % | 0 | 1 | 0 % |
 | 1 · au corpus, aucune trace de lecture | 0 | 0 % | 0 | 0 | 0 % |
 | 0 · rien à ouvrir | 0 | 0 % | 0 | 0 | 0 % |
 
-**172 obligations sur 176 (98 %)** reposent, jusqu'à leur dernière référence de contexte, sur des textes lus à la source avec verbatim relevé.
+**175 obligations sur 179 (98 %)** reposent, jusqu'à leur dernière référence de contexte, sur des textes lus à la source avec verbatim relevé.
 
 **3 obligations (2 %)** citent au moins un texte ouvert et daté dont rien n'a été relevé. Ce n'est pas une lecture à refaire : c'est une lecture qu'on ne peut ni contrôler ni contredire sans rouvrir Légifrance.
 
@@ -108,11 +108,11 @@ repose sur un texte que personne n'a ouvert.
 
 | ancrage | références | part |
 | --- | --- | --- |
-| ancrée | 327 | 93 % |
+| ancrée | 337 | 93 % |
 | divergente | 1 | 0 % |
-| jamais constatée | 23 | 7 % |
+| jamais constatée | 23 | 6 % |
 
-**9 obligations sur 176 (5 %) ne portent aucune version constatée, sur aucune de leurs références.** Le jour où l'un de leurs textes est modifié, rien dans le dépôt ne pourra le signaler : l'absence de repère se lit comme « à vérifier », jamais comme « à jour ».
+**9 obligations sur 179 (5 %) ne portent aucune version constatée, sur aucune de leurs références.** Le jour où l'un de leurs textes est modifié, rien dans le dépôt ne pourra le signaler : l'absence de repère se lit comme « à vérifier », jamais comme « à jour ».
 
 **1 obligation déclare une version que le corpus contredit** : `incendie-hotel-po-controle-annuel-electricite`. À trancher, pas à relire.
 
@@ -140,13 +140,13 @@ repose sur un texte que personne n'a ouvert.
 | `organisation_prevention` | 9 | 13 | 2 | 7 | · | · | · | · | 9 / 9 — 100 % | 0 / 13 | 2026-08-31 → 2026-09-27 |
 | `porte_portail` | 5 | 8 | · | 5 | · | · | · | · | 5 / 5 — 100 % | 0 / 8 | 2026-09-01 |
 | `sante_travail` | 13 | 22 | 3 | 9 | 1 | · | · | · | 12 / 13 — 92 % | 0 / 22 | 2026-08-31 → 2026-09-26 |
-| `secours` | 4 | 4 | · | 4 | · | · | · | · | 4 / 4 — 100 % | 0 / 4 | 2026-08-31 → 2026-09-20 |
+| `secours` | 7 | 14 | 3 | 4 | · | · | · | · | 7 / 7 — 100 % | 0 / 14 | 2026-08-31 → 2026-10-14 |
 | `signalisation` | 11 | 15 | 2 | 9 | · | · | · | · | 11 / 11 — 100 % | 0 / 15 | 2026-09-02 → 2026-10-07 |
 | `stockage_dangereux` | 2 | 5 | · | 2 | · | · | · | · | 2 / 2 — 100 % | 0 / 5 | 2026-08-31 → 2026-10-07 |
 
 Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, mesuré au plancher — **5** première main, **4** agent + verbatim, **3** lu sans verbatim, **2** indirect, **1** sans trace, **0** non rattaché.
 
-**18 domaines ont toutes leurs obligations adossées à des textes lus à la source avec verbatim relevé** : `aeration` (11), `ascenseur` (10), `co_activite` (1), `compactage_dechets` (1), `cuisson_hotte` (7), `eclairage` (1), `epi` (5), `equipement_sous_pression` (1), `formation_securite` (11), `froid` (8), `information_travailleurs` (2), `levage` (11), `locaux_sociaux` (4), `organisation_prevention` (9), `porte_portail` (5), `secours` (4), `signalisation` (11), `stockage_dangereux` (2).
+**18 domaines ont toutes leurs obligations adossées à des textes lus à la source avec verbatim relevé** : `aeration` (11), `ascenseur` (10), `co_activite` (1), `compactage_dechets` (1), `cuisson_hotte` (7), `eclairage` (1), `epi` (5), `equipement_sous_pression` (1), `formation_securite` (11), `froid` (8), `information_travailleurs` (2), `levage` (11), `locaux_sociaux` (4), `organisation_prevention` (9), `porte_portail` (5), `secours` (7), `signalisation` (11), `stockage_dangereux` (2).
 
 Aucun domaine n'est entièrement dépourvu de verbatim.
 
@@ -157,7 +157,7 @@ Aucun domaine n'est entièrement dépourvu de verbatim.
 |  | obl. | réf. | 5 | 4 | 3 | 2 | 1 | 0 | vérifiées à la source | sans ancre | lu entre |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `equipement` | 90 | 179 | 56 | 33 | 1 | · | · | · | 89 / 90 — 99 % | 22 / 179 | 2026-08-26 → 2026-10-07 |
-| `etablissement` | 72 | 139 | 28 | 42 | 2 | · | · | · | 70 / 72 — 97 % | 0 / 139 | 2026-08-26 → 2026-10-13 |
+| `etablissement` | 75 | 149 | 31 | 42 | 2 | · | · | · | 73 / 75 — 97 % | 0 / 149 | 2026-08-26 → 2026-10-14 |
 | `salarie` | 14 | 33 | · | 13 | · | 1 | · | · | 13 / 14 — 93 % | 1 / 33 | 2026-08-27 → 2026-10-07 |
 
 Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, mesuré au plancher — **5** première main, **4** agent + verbatim, **3** lu sans verbatim, **2** indirect, **1** sans trace, **0** non rattaché.
@@ -170,17 +170,18 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 | --- | --- | --- | --- |
 | 2026-08-26 | 26 | 7 % | 26 |
 | 2026-08-27 | 7 | 2 % | 4 |
-| 2026-08-31 | 59 | 17 % | 29 |
-| 2026-09-01 | 120 | 34 % | 75 |
+| 2026-08-31 | 59 | 16 % | 29 |
+| 2026-09-01 | 120 | 33 % | 75 |
 | 2026-09-02 | 18 | 5 % | 15 |
 | 2026-09-04 | 20 | 6 % | 7 |
 | 2026-09-20 | 3 | 1 % | 2 |
 | 2026-09-26 | 26 | 7 % | 21 |
-| 2026-09-27 | 37 | 11 % | 35 |
+| 2026-09-27 | 37 | 10 % | 35 |
 | 2026-10-07 | 33 | 9 % | 22 |
 | 2026-10-13 | 2 | 1 % | 1 |
+| 2026-10-14 | 10 | 3 % | 3 |
 
-351 des 351 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-10-13.
+361 des 361 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-10-14.
 
 Ces dates ne sont pas un âge : elles disent quand quelqu'un a ouvert le
 texte, pas depuis quand la version lue est en vigueur. Une lecture d'hier
@@ -196,7 +197,7 @@ que rien ne cite n'apparaît donc dans aucun degré ci-dessus — et le prendre
 pour du travail restant est exactement l'erreur qui a failli faire relancer
 une relecture déjà faite.
 
-**339 articles dépouillés ne sont cités par aucune obligation**, répartis sur 50 corpus.
+**340 articles dépouillés ne sont cités par aucune obligation**, répartis sur 51 corpus.
 
 | corpus | articles non cités | sur | lus |
 | --- | --- | --- | --- |
@@ -243,6 +244,7 @@ une relecture déjà faite.
 | `code-travail-circulation-lieux` | 2 | 2 | 2026-09-21 |
 | `arrete-1993-03-19-epi` | 2 | 4 | 2026-09-04 |
 | `cch-registre-securite` | 1 | 6 | 2026-09-20 |
+| `cch-defibrillateur` | 1 | 9 | 2026-10-14 |
 | `code-travail-equipements-information` | 1 | 1 | 2026-09-01 |
 | `code-travail-locaux-sociaux` | 1 | 5 | 2026-09-27 |
 | `code-travail-service-prevention-sante` | 1 | 4 | 2026-08-31 |
@@ -257,7 +259,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 
 ---
 
-## 8. Les 176 obligations
+## 8. Les 179 obligations
 
 | obligation | domaine | porteur | réf. | fondement | plancher | sans ancre | lu |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -435,6 +437,9 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `sante-travail-etablissement-examen-de-reprise` | sante_travail | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-26 |
 | `sante-travail-etablissement-information-arret-accident-moins-trente-jours` | sante_travail | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-26 |
 | `sante-travail-etablissement-information-possibilite-prereprise` | sante_travail | etablissement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-26 |
+| `dae-erp-declaration-geodae` | secours | etablissement | 4 | 5 · première main | 5 · première main | 0 / 4 | 2026-10-14 |
+| `dae-erp-detention` | secours | etablissement | 4 | 5 · première main | 5 · première main | 0 / 4 | 2026-10-14 |
+| `dae-erp-maintenance` | secours | etablissement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-10-14 |
 | `signalisation-erp-5-extincteurs-identification` | signalisation | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-10-07 |
 | `signalisation-erp-extincteurs-identification` | signalisation | equipement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-10-07 |
 
@@ -443,7 +448,7 @@ demande le plus de travail.
 
 ---
 
-## 9. Les 351 références, une par une
+## 9. Les 361 références, une par une
 
 `prescrit` et `verbatim` sont les deux champs du corpus qui rendent une
 lecture relisible : ce que l'article impose, en une phrase, et la phrase
@@ -737,6 +742,16 @@ refaire pour la contredire.
 | `secours-salarie-secouriste` | fondement | R. 4224-15 (membre du personnel formé au secourisme dans chaque atelier où sont accomplis des travaux dangereux) | R. 4224-15 | code-travail-secours | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
 | `secours-etablissement-mesures` | fondement | R. 4224-16 (mesures prises après avis du médecin du travail, consignées dans un document tenu à disposition de l'inspection du travail) | R. 4224-16 | code-travail-secours | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2021-02-13 | 2021-02-13 | 4 · agent + verbatim | ancrée |
 | `secours-etablissement-signalement-chaleur-intense` | fondement | R. 4463-6 (modalités de signalement et de secours, portées à la connaissance des travailleurs et communiquées au service de prévention et de santé au travail) | R. 4463-6 | code-travail-chaleur-intense | retenu | 2026-09-20 | agent_verbatim | ✓ | ✓ | 2025-06-02 | 2025-06-02 | 4 · agent + verbatim | ancrée |
+| `dae-erp-detention` | fondement | R. 157-1, 1° (obligation de détenir un défibrillateur automatisé externe dans les ERP des catégories 1 à 4) | CCH R. 157-1 | cch-defibrillateur | retenu | 2026-10-14 | api_legifrance | ✓ | ✓ | 2025-12-07 | 2025-12-07 | 5 · première main | ancrée |
+| `dae-erp-detention` | contexte 1 | R. 157-2 (emplacement visible du public et en permanence facile d'accès ; signalétique renvoyée à un arrêté) | CCH R. 157-2 | cch-defibrillateur | retenu | 2026-10-14 | api_legifrance | ✓ | ✓ | 2021-07-01 | 2021-07-01 | 5 · première main | ancrée |
+| `dae-erp-detention` | contexte 2 | Arrêté du 29 octobre 2019 relatif aux défibrillateurs automatisés externes et à leurs modalités de signalisation, art. 2 (affiche à chaque entrée, fléchage, étiquette sur le boîtier) | Arrêté 2019-10-29 DAE signalisation art. 2 | cch-defibrillateur | retenu | 2026-10-14 | api_legifrance | ✓ | ✓ | 2019-11-14 | 2019-11-14 | 5 · première main | ancrée |
+| `dae-erp-detention` | contexte 3 | Arrêté du 29 octobre 2019 relatif aux défibrillateurs automatisés externes et à leurs modalités de signalisation, art. 3 (emplacement accessible, utilisation permanente, boîtier extérieur) | Arrêté 2019-10-29 DAE signalisation art. 3 | cch-defibrillateur | retenu | 2026-10-14 | api_legifrance | ✓ | ✓ | 2019-11-14 | 2019-11-14 | 5 · première main | ancrée |
+| `dae-erp-maintenance` | fondement | R. 157-4 (maintenance du défibrillateur et de ses accessoires, et contrôles de qualité, à la charge de son propriétaire) | CCH R. 157-4 | cch-defibrillateur | retenu | 2026-10-14 | api_legifrance | ✓ | ✓ | 2026-04-22 | 2026-04-22 | 5 · première main | ancrée |
+| `dae-erp-maintenance` | contexte 1 | R. 157-1, 1° (ERP des catégories 1 à 4 soumis à l'obligation de détenir un défibrillateur) | CCH R. 157-1 | cch-defibrillateur | retenu | 2026-10-14 | api_legifrance | ✓ | ✓ | 2025-12-07 | 2025-12-07 | 5 · première main | ancrée |
+| `dae-erp-declaration-geodae` | fondement | Décret n° 2018-1259 du 27 décembre 2018 relatif à la base de données des défibrillateurs automatisés externes, art. 2 (transmission des informations par les exploitants) | Décret 2018-1259 art. 2 | cch-defibrillateur | retenu | 2026-10-14 | api_legifrance | ✓ | ✓ | 2018-12-29 | 2018-12-29 | 5 · première main | ancrée |
+| `dae-erp-declaration-geodae` | contexte 1 | L. 5233-1 (base de données nationale des lieux d'implantation et de l'accessibilité des défibrillateurs) | CSP L. 5233-1 | cch-defibrillateur | retenu | 2026-10-14 | api_legifrance | ✓ | ✓ | 2018-06-30 | 2018-06-30 | 5 · première main | ancrée |
+| `dae-erp-declaration-geodae` | contexte 2 | Arrêté du 29 octobre 2019 relatif au fonctionnement de la base de données des défibrillateurs automatisés externes, art. 3 et annexe 1 (informations obligatoirement transmises par l'exploitant) | Arrêté 2019-10-29 DAE base nationale art. 3 | cch-defibrillateur | retenu | 2026-10-14 | api_legifrance | ✓ | ✓ | 2020-01-01 | 2020-01-01 | 5 · première main | ancrée |
+| `dae-erp-declaration-geodae` | contexte 3 | R. 157-1, 1° (ERP des catégories 1 à 4 soumis à l'obligation de détenir un défibrillateur) | CCH R. 157-1 | cch-defibrillateur | retenu | 2026-10-14 | api_legifrance | ✓ | ✓ | 2025-12-07 | 2025-12-07 | 5 · première main | ancrée |
 | `prevention-etablissement-salarie-designe` | fondement | L. 4644-1 I (l'employeur désigne un ou plusieurs salariés compétents pour s'occuper des activités de protection et de prévention) | L. 4644-1 | code-travail-organisation-prevention | retenu | 2026-09-27 | agent_verbatim | ✓ | ✓ | 2022-03-31 | 2022-03-31 | 4 · agent + verbatim | ancrée |
 | `prevention-etablissement-salarie-designe` | contexte 1 | R. 4644-1 (les personnes désignées le sont après avis du comité social et économique s'il existe, et disposent du temps nécessaire et des moyens requis) | R. 4644-1 | code-travail-organisation-prevention | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 4 · agent + verbatim | ancrée |
 | `prevention-etablissement-cse` | fondement | L. 2311-2 (CSE dans les entreprises d'au moins onze salariés, si l'effectif est atteint pendant douze mois consécutifs) | L. 2311-2 | code-travail-organisation-prevention | retenu | 2026-09-26 | premiere_main | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 5 · première main | ancrée |

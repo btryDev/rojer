@@ -409,7 +409,12 @@ export const obligationsConformite: Obligation[] = [
 // de six salariés sans appareil passe de 45 à 43 lignes. La réponse au
 // groupe électrogène devient exigée en ERP (`reponses-exigees.ts`), hors
 // référentiel.]
-export const REFERENTIEL_VERSION = "2026-10-13.2";
+// `2026-10-14.1` (`lot/dae`, décision de la propriétaire du 2026-10-14) : le
+// défibrillateur automatisé externe entre au référentiel pour les ERP des
+// catégories 1 à 4 (CCH R. 157-1 à R. 157-4, corpus `cch-defibrillateur`).
+// 176 + 3 (`dae-erp-detention`, `dae-erp-maintenance` au défaut annuel,
+// `dae-erp-declaration-geodae`) − 0 = 179, toutes trois d'établissement.
+export const REFERENTIEL_VERSION = "2026-10-14.1";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.
