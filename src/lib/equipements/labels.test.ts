@@ -98,6 +98,18 @@ describe("aide de la question groupe électrogène", () => {
   });
 });
 
+describe("aide de l'installation de gaz : la double ligne s'explique (revue du 2026-10-14, point 5)", () => {
+  // Une cuisine au gaz déclarée porte déjà GZ 15 ; déclarer aussi
+  // l'installation en ajoute une seconde ligne. L'aide le dit, pour que le
+  // dirigeant comprenne les deux lignes. Éprouvé en retirant la phrase.
+  it("dit que l'appareil de cuisson au gaz porte déjà la vérification annuelle", () => {
+    const aide = DESCRIPTION_CATEGORIE.INSTALLATION_GAZ ?? "";
+    expect(aide).toMatch(/appareil de cuisson au gaz déjà déclaré porte déjà cette vérification annuelle/);
+    expect(aide).toMatch(/seconde ligne/);
+    expect(aide).toContain("GZ 15");
+  });
+});
+
 describe("aide de l'installation frigorifique : la chambre froide (2026-10-14)", () => {
   it("dit les trois dispositifs de l'arrêté du 30 septembre 1957, et que Rojer ne les suit pas", () => {
     const aide = DESCRIPTION_CATEGORIE.INSTALLATION_FRIGORIFIQUE ?? "";
