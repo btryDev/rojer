@@ -4526,23 +4526,22 @@ seuil, destinataire). Les gardes `fait-dans-le-texte`, `extraits-affiches`,
 1. `incendie-hotel-po-controle-annuel-electricite` déclare
    `versionConstatee` 2018-01-01 ; le corpus lit désormais 2011-10-30 :
    divergence visible dans `docs/etat-verification-referentiel.md`.
-2. ~~R. 4227-37 au 2027-01-01 (décret n° 2025-1100, art. 3) : SEULE la dernière
+2. R. 4227-37 au 2027-01-01 (décret n° 2025-1100, art. 3) : SEULE la dernière
    phrase change — les « instructions » des autres établissements renvoient au
    2e alinéa de CCH R. 141-7 au lieu du 1° de R. 4216-2. Champ (R. 4227-34),
    consigne et locaux inchangés. Le nota confirme ce que `veille-textes.ts`
    laissait « à confirmer » : application aux opérations de construction ou de
    rénovation dont la demande d'autorisation d'urbanisme est déposée à compter
-   du 2027-01-01.~~ [2026-10-14, C69 : traité à la main avant la date —
-   description datée, `relectureDue` réécrits, `veille-textes.ts` rayé
-   (`fb608751`). Reste le geste du 1er janvier 2027 : URL et
-   `versionConstatee`.]
-3. ~~L. 8222-2 au 2026-12-26 au plus tard (loi n° 2026-534, art. 95) : ajoute
+   du 2027-01-01. [2026-10-14, voir C69 : relu en avance, description
+   datée, `relectureDue` réécrits (`fb608751`) ; reste ouvert jusqu'au geste
+   du 1er janvier 2027 — URL et `versionConstatee`.]
+3. L. 8222-2 au 2026-12-26 au plus tard (loi n° 2026-534, art. 95) : ajoute
    « ou de l'article L. 8222-1-1 », article CRÉÉ par la même loi : le maître
    de l'ouvrage vérifie périodiquement que le sous-traitant qu'il accepte
    s'acquitte des formalités de L. 8221-3 et L. 8221-5 (documents fixés par
-   décret ; particuliers exclus). Obligation nouvelle, hors corpus.~~
-   [2026-10-14, C69 : relu, inscrit à `TEXTES_A_VENIR` au 2026-12-26
-   (`1746e7ea`) ; la décision — annoncer, encoder, hors cadre — attend la
+   décret ; particuliers exclus). Obligation nouvelle, hors corpus.
+   [2026-10-14, voir C69 : relu, inscrit à `TEXTES_A_VENIR` (`1746e7ea`) ;
+   reste ouvert — la décision (annoncer, encoder, hors cadre) attend la
    propriétaire.]
 4. C. env. L. 512-7 : 2222-02-22 est la date conventionnelle de Légifrance
    (entrée en vigueur à la publication d'un acte d'exécution européen) ; la
@@ -4622,7 +4621,7 @@ abrogation différée au 2027-01-01 **sans version suivante**, relevée au corpu
 contre entreposage, R. 4227-22 à -25). La marque des conditions d'équipement opt-out
 (groupe électrogène). ~~La requalification de l'article de l'arrêté du 4 novembre 1993
 que la note désignait « candidat ».~~ Les indéterminations de couverture hors de
-l'indice d'avancement (A3). ~~La version 2027 de R. 4227-37.~~ [2026-10-14, C69 : relue, voir C69.] [2026-09-28, C53 :
+l'indice d'avancement (A3). La version 2027 de R. 4227-37. [2026-10-14, voir C69 : relue en avance ; reste ouvert jusqu'au geste du 1er janvier 2027.] [2026-09-28, C53 :
 l'art. 14 est requalifié `retenu` (`f67f56d5`) ; le champ des matières, la marque
 opt-out et A3 sont instruits et attendent D24, D14 et D2.]
 
