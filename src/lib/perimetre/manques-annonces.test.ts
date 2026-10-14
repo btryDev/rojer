@@ -205,6 +205,17 @@ describe("2026-10-13 : les travaux sous tension, annoncés sauf « non » aux op
   });
 });
 
+describe("2026-10-14 : les poussières en nuage sont annoncées, pas questionnées", () => {
+  it("la rubrique des matières annonce les atmosphères explosives dues aux poussières", () => {
+    const rubrique = manquesAnnoncesDuDossier(CORPUS, RESTAURANT_N5).find(
+      (d) => d.cle === "matieres_inflammables",
+    );
+    expect(rubrique?.phrase).toMatch(/atmosphères explosives/);
+    expect(rubrique?.phrase).toMatch(/poussières/);
+    expect(rubrique?.phrase).toMatch(/R\. 4227-42 à R\. 4227-54/);
+  });
+});
+
 describe("aucun score, aucune qualification", () => {
   const textes = () =>
     manquesAnnoncesDuDossier(CORPUS, EMPLOYEUR)

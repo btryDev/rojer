@@ -124,10 +124,15 @@ export const AIDE_SSI =
  * d'explosion ou d'inflammation instantanée ». De cette catégorie, la question
  * ne garde que l'inflammation instantanée. Le risque d'explosion lié à un état
  * physique est écarté exprès, pas oublié : son exemple type, ce sont les
- * poussières combustibles en suspension (farine, bois, sucre), qui relèvent
+ * poussières combustibles en suspension (farine, bois, sucre)~~, qui relèvent
  * des minoteries, des silos et des installations industrielles, hors de la
- * cible. Un pétrin de boulangerie de quartier ne forme pas un nuage explosif.
- * Pas de question au préventeur sur ce point.]
+ * cible~~ [2026-10-14 : faux, l'onboarding accepte minoteries et silos —
+ * `onboarding/scope.ts` ne refuse aucun NAF]. ~~Un pétrin de boulangerie de
+ * quartier ne forme pas un nuage explosif.~~ Le vrai motif (2026-10-14,
+ * décision de la propriétaire) : ce cas de niche n'entre pas dans la question
+ * pour ne pas l'alourdir pour la majorité ; il est annoncé sur la page « Ce que
+ * Rojer ne couvre pas », domaine `matieres_inflammables` de
+ * `perimetre/manques-annonces.ts`. Pas de question au préventeur sur ce point.]
  *
  * [2026-10-13, revue de `8ffc560a`. Deux corrections de l'aide, anciens
  * textes rayés :

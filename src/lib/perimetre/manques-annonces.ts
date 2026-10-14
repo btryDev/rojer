@@ -119,9 +119,14 @@ type Domaine = {
 
 /** Dans l'ordre d'affichage : celui de l'évaluation du 2026-09-27. */
 const DOMAINES: Record<CleDomaine, Domaine> = {
+  // 2026-10-14, décision de la propriétaire : les poussières en nuage ne sont
+  // pas dans la question des matières (`etablissements/questions.ts`), elles
+  // s'annoncent ici. Section 6 « Prévention des explosions » (R. 4227-42 à
+  // R. 4227-54) lue sur Légifrance le 2026-10-14 : R. 4227-43 définit
+  // l'atmosphère explosive par « gaz, vapeurs, brouillards ou poussières ».
   matieres_inflammables: {
     titre: "Matières explosives et inflammables",
-    phrase: `Rojer ne suit pas ${nonPorte("l'aménagement des locaux où des matières explosives, comburantes ou inflammables sont entreposées ou manipulées")} : sources d'ignition, ventilation, interdiction de fumer aux emplacements à l'air libre, distance des postes aux issues, sens d'ouverture des portes, dépôts dans les escaliers, passages et couloirs.`,
+    phrase: `Rojer ne suit pas ${nonPorte("l'aménagement des locaux où des matières explosives, comburantes ou inflammables sont entreposées ou manipulées")} : sources d'ignition, ventilation, interdiction de fumer aux emplacements à l'air libre, distance des postes aux issues, sens d'ouverture des portes, dépôts dans les escaliers, passages et couloirs. Il ne suit pas non plus ${nonPorte("les atmosphères explosives dues aux poussières ou matières combustibles en nuage")} (silos, broyage, meunerie, ponçage du bois), que l'article R. 4227-22 vise parmi les « matières dans un état physique susceptible d'engendrer des risques d'explosion », ni ${nonPorte("la prévention des explosions des articles R. 4227-42 à R. 4227-54")}.`,
   },
   travail_en_hauteur: {
     titre: "Travail en hauteur",

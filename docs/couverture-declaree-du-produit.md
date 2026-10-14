@@ -527,7 +527,13 @@ corpus, chacun complété d'une note datée du 2026-09-27 ; ils ne sont pas
 recopiés ici. Entre parenthèses : à quel dossier la page les montre.
 
 - **Matières explosives et inflammables** (employeur) — `R. 4227-22`,
-  `R. 4227-23`, `R. 4227-24`, `R. 4227-25`.
+  `R. 4227-23`, `R. 4227-24`, `R. 4227-25`. Depuis le 2026-10-14, la phrase
+  du domaine annonce aussi les atmosphères explosives dues aux poussières ou
+  matières combustibles en nuage (silos, broyage, meunerie, ponçage du bois),
+  visées par `R. 4227-22`, et la section « Prévention des explosions »
+  (`R. 4227-42` à `R. 4227-54`) : décision de la propriétaire, plutôt qu'une
+  question à l'onboarding. Aucun article ajouté à la liste, les comptes ne
+  bougent pas.
 - **Travail en hauteur** (employeur) — `R. 4323-63`, ci-dessus.
 - **Réseaux intérieurs d'eau** (tout dossier : le texte vise le propriétaire
   des réseaux intérieurs) — `R. 1321-60`, `Arrêté 10-09-2021 art. 4`,
