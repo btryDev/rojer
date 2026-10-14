@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { variablesPolices } from "./polices";
 import "./globals.css";
 
@@ -8,11 +9,20 @@ export const metadata: Metadata = {
     "Plateforme continue d'accompagnement à la conformité santé-sécurité pour dirigeants de TPE/PME : DUERP, calendrier de vérifications, registre de sécurité, plan d'actions.",
 };
 
-export default function RootLayout({
+/**
+ * `await connection()` : TOUTE page est rendue à la requête (audit OWASP S7,
+ * 2026-10-14). La CSP est bloquante et à nonce (`src/proxy.ts`) ; une page
+ * prérendue au build porte des scripts sans nonce, que le navigateur refuse —
+ * mesuré dans Chrome sur `/_not-found`, seule page statique jusque-là : treize
+ * scripts bloqués, page morte. Posé ici et non page par page, pour qu'une page
+ * statique ajoutée demain ne casse pas en silence.
+ */
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  await connection();
   return (
     <html
       lang="fr"

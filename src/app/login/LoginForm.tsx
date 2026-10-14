@@ -33,7 +33,6 @@ export function LoginForm({ next }: { next: string }) {
           label="Mot de passe"
           autoComplete="current-password"
           required
-          minLength={8}
         />
         {/* Sous le champ et non dans la ligne du libellé : `ChampBoard` pose
             son propre <label>, et y glisser un lien reviendrait à réécrire le

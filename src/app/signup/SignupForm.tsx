@@ -4,6 +4,10 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { ChampBoard } from "@/components/ui-kit/ChampBoard";
 import { signUpAction, type AuthActionState } from "@/lib/auth/actions";
+import {
+  AIDE_MOT_DE_PASSE,
+  LONGUEUR_MIN_MOT_DE_PASSE,
+} from "@/lib/auth/mot-de-passe";
 
 const initialState: AuthActionState = {};
 
@@ -32,8 +36,8 @@ export function SignupForm() {
         label="Mot de passe"
         autoComplete="new-password"
         required
-        minLength={8}
-        aide="8 caractères minimum"
+        minLength={LONGUEUR_MIN_MOT_DE_PASSE}
+        aide={AIDE_MOT_DE_PASSE}
       />
 
       {state.error ? (

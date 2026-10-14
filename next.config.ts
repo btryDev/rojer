@@ -34,14 +34,11 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "25mb",
     },
   },
-  // En-têtes de sécurité sur toutes les réponses — le détail, ce que la CSP
-  // laisse en Report-Only et la CSP propre aux fichiers déposés sont dans
+  // En-têtes de sécurité sur toutes les réponses — le détail, la CSP à nonce
+  // posée par le proxy et la CSP propre aux fichiers déposés sont dans
   // `src/lib/securite/entetes.ts`.
   async headers() {
-    return reglesEntetes({
-      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-      developpement: process.env.NODE_ENV !== "production",
-    });
+    return reglesEntetes();
   },
 };
 

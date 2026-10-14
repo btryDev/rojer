@@ -31,6 +31,13 @@ import {
   SERVER_INFO_META_KEY,
   SUBSCRIPTION_ID_META_KEY,
 } from "@modelcontextprotocol/server";
+import { ipClient } from "@/lib/securite/ip-client";
+import {
+  cleLimite,
+  consommer,
+  LIMITES,
+  type Limite,
+} from "@/lib/securite/limite-debit";
 import {
   CONSIGNE_SERVEUR,
   ErreurOutilMcp,
@@ -234,6 +241,36 @@ async function idDeRequete(request: Request): Promise<string | number | null> {
 const estFluxSse = (reponse: Response) =>
   (reponse.headers.get("content-type") ?? "").startsWith("text/event-stream");
 
+/**
+ * Limitation de débit (audit OWASP B3 / B14, 2026-10-14) : un 429 JSON-RPC
+ * avec `Retry-After`, que les clients MCP savent attendre.
+ */
+async function refusParLimite(
+  cle: string,
+  limite: Limite,
+): Promise<Response | null> {
+  const verdict = await consommer([{ cle, limite }]);
+  if (verdict.ok) return null;
+  return new Response(
+    JSON.stringify({
+      jsonrpc: "2.0",
+      error: {
+        code: -32000,
+        message: `Trop de requêtes : réessayez dans ${verdict.reessayerDansSecondes} s.`,
+      },
+      id: null,
+    }),
+    {
+      status: 429,
+      headers: {
+        "content-type": "application/json",
+        "retry-after": String(verdict.reessayerDansSecondes),
+        "cache-control": "no-store",
+      },
+    },
+  );
+}
+
 /** Refus par défaut, volontairement muet — cf. `servir`. */
 const refusMuet = () =>
   new Response(JSON.stringify({ error: "not_found" }), {
@@ -266,6 +303,15 @@ export function creerHandlerMcpHttp(options: OptionsServeurHttp) {
       originValidationResponse(request, options.originesAutorisees);
     if (rejete) return rejete;
 
+    // Par IP AVANT l'authentification, qui peut coûter un appel au serveur
+    // Auth ; par portée APRÈS, pour qu'un porteur légitime ne puisse pas
+    // marteler un établissement depuis plusieurs adresses.
+    const ip = ipClient(request.headers);
+    if (ip) {
+      const trop = await refusParLimite(cleLimite("mcp", "ip", ip), LIMITES.mcpIp);
+      if (trop) return trop;
+    }
+
     const resolution = await options.resoudreScope(request);
     if (resolution.statut === "refus") {
       return (options.reponseRefus ?? refusMuet)(request);
@@ -273,6 +319,11 @@ export function creerHandlerMcpHttp(options: OptionsServeurHttp) {
     if (resolution.statut === "reponse") return resolution.reponse;
 
     const scope = resolution.scope;
+    const tropPourLaPortee = await refusParLimite(
+      cleLimite("mcp", "portee", scope.etablissementId),
+      LIMITES.mcpPortee,
+    );
+    if (tropPourLaPortee) return tropPourLaPortee;
 
     // Lu AVANT l'appel : le SDK consomme le corps. L'en-tête est exigé par
     // la révision 2026-07-28 et confronté au corps par le SDK, qui rejette

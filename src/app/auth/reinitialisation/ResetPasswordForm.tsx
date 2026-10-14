@@ -6,21 +6,36 @@
 // - flux implicite (lien envoyé manuellement depuis le dashboard Supabase) :
 //   #access_token=…&type=recovery — détecté via detectSessionInUrl.
 // Dans les deux cas la session finit dans les cookies (@supabase/ssr), puis
-// updateUser({ password }) pose le nouveau mot de passe.
+// l'action serveur `definirMotDePasseAction` pose le nouveau mot de passe —
+// côté serveur, où la règle des douze caractères est vérifiée (audit OWASP B4,
+// 2026-10-14 ; c'était `updateUser` depuis le navigateur).
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ChampBoard } from "@/components/ui-kit/ChampBoard";
+import {
+  definirMotDePasseAction,
+  type AuthActionState,
+} from "@/lib/auth/actions";
+import {
+  AIDE_MOT_DE_PASSE,
+  LONGUEUR_MIN_MOT_DE_PASSE,
+} from "@/lib/auth/mot-de-passe";
 import { createClient } from "@/lib/supabase/client";
+
+const etatInitial: AuthActionState = {};
 
 type Status = "checking" | "ready" | "invalid";
 
 export function ResetPasswordForm() {
   const supabase = useMemo(() => createClient(), []);
   const [status, setStatus] = useState<Status>("checking");
-  const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
+  const [state, action, pending] = useActionState(
+    definirMotDePasseAction,
+    etatInitial,
+  );
+  const error = state.error ?? null;
 
   useEffect(() => {
     // Lien expiré ou déjà utilisé : Supabase renvoie l'erreur dans le hash.
@@ -55,35 +70,6 @@ export function ResetPasswordForm() {
     };
   }, [supabase]);
 
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const password = form.get("password") as string;
-    const confirm = form.get("confirm") as string;
-
-    if (password !== confirm) {
-      setError("Les deux mots de passe ne correspondent pas");
-      return;
-    }
-
-    setPending(true);
-    setError(null);
-    const { error: updateError } = await supabase.auth.updateUser({ password });
-    if (updateError) {
-      setPending(false);
-      setError(
-        updateError.message === "New password should be different from the old password."
-          ? "Le nouveau mot de passe doit être différent de l'ancien"
-          : "Impossible de mettre à jour le mot de passe. Redemandez un lien.",
-      );
-      return;
-    }
-    // Session déjà posée dans les cookies : navigation complète pour que le
-    // proxy et les Server Components la voient.
-    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- rechargement complet voulu après changement de session (le cache du routeur client date d'avant)
-    window.location.assign("/entreprises");
-  }
-
   if (status === "checking") {
     return (
       <p className="m-0 text-[13px] leading-[1.5] text-[color:var(--board-slate-mid)]">
@@ -114,7 +100,7 @@ export function ResetPasswordForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-5">
+    <form action={action} className="flex flex-col gap-5">
       <ChampBoard
         id="password"
         name="password"
@@ -122,7 +108,8 @@ export function ResetPasswordForm() {
         label="Nouveau mot de passe"
         autoComplete="new-password"
         required
-        minLength={8}
+        minLength={LONGUEUR_MIN_MOT_DE_PASSE}
+        aide={AIDE_MOT_DE_PASSE}
       />
 
       <ChampBoard
@@ -132,7 +119,7 @@ export function ResetPasswordForm() {
         label="Confirmer le mot de passe"
         autoComplete="new-password"
         required
-        minLength={8}
+        minLength={LONGUEUR_MIN_MOT_DE_PASSE}
       />
 
       {/* La comparaison des deux saisies est faite à la soumission, sur le

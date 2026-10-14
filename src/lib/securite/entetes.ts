@@ -1,5 +1,5 @@
 /**
- * En-têtes de sécurité HTTP, posés sur toutes les réponses par `next.config.ts`.
+ * En-têtes de sécurité HTTP.
  *
  * Aucune page n'a à être encadrée : le dépôt ne contient aucun `<iframe>`, le
  * registre public d'accessibilité s'ouvre par lien ou QR code et n'offre
@@ -7,18 +7,28 @@
  * des pages de premier niveau. L'interdiction d'encadrement vaut donc partout,
  * sans exception — vérifié le 2026-09-19.
  *
- * La CSP complète est en **Report-Only**. Next injecte des scripts en ligne
- * (`self.__next_f.push`) qu'on ne peut autoriser sans `'unsafe-inline'` qu'au
- * prix de nonces, donc d'un rendu dynamique partout ; et la page de
- * réinitialisation du mot de passe appelle Supabase depuis le navigateur, ce
- * qu'un `connect-src` mal renseigné couperait sans bruit. Aucun navigateur n'a
- * été lancé contre cette politique : elle ne bloque rien, elle signale ses
- * violations dans la console de qui ouvre les outils de développement (aucun
- * point de collecte n'est déclaré). La passer en bloquante se fera après
- * l'avoir regardée sur la production.
+ * Deux sources, et c'est voulu :
+ * - `next.config.ts` (`reglesEntetes`) pose sur TOUTES les réponses les
+ *   en-têtes fixes, dont une CSP réduite à `frame-ancestors 'none'` — le
+ *   plancher qui vaut aussi pour les fichiers statiques et les routes que le
+ *   proxy ne voit pas ;
+ * - le proxy (`src/proxy.ts`) pose la CSP complète, BLOQUANTE, avec un nonce
+ *   tiré à chaque requête (audit OWASP S7, audit Next.js M11, 2026-10-14).
+ *   Next lit le nonce dans l'en-tête de requête et l'appose à ses propres
+ *   scripts ; `'strict-dynamic'` étend la confiance aux morceaux qu'ils
+ *   chargent. Plus de `'unsafe-inline'` en `script-src` : un script injecté
+ *   n'a pas le nonce et ne s'exécute pas.
  *
- * Seule `frame-ancestors 'none'` est appliquée pour de bon, dans un en-tête
- * CSP à elle seule : elle ne peut rien casser, puisque rien n'encadre l'app.
+ * Ce qui reste permis, et pourquoi :
+ * - `style-src 'unsafe-inline'` : React rend des attributs `style`, qu'aucun
+ *   nonce ne couvre (un nonce ne vaut que pour un élément `<style>`). Une
+ *   injection de style ne fait pas exécuter de code ;
+ * - `connect-src` vers l'origine Supabase : le navigateur échange le code du
+ *   lien de réinitialisation (PKCE) avec le serveur Auth.
+ *
+ * Les browsers d'avant CSP 3 ignorent `'strict-dynamic'` et retombent sur
+ * `'self'` : ils chargent les morceaux de l'app, et refusent tout script en
+ * ligne sans nonce.
  */
 
 type Entete = { key: string; value: string };
@@ -36,6 +46,8 @@ function origineSupabase(url: string | undefined): string | null {
 export function politiqueContenu(options: {
   supabaseUrl: string | undefined;
   developpement: boolean;
+  /** Le nonce de la requête, tiré par le proxy (`nonceCsp`). */
+  nonce: string;
 }): string {
   const supabase = origineSupabase(options.supabaseUrl);
   const directives: Record<string, string[]> = {
@@ -43,7 +55,8 @@ export function politiqueContenu(options: {
     // 'unsafe-eval' : React en développement seulement (piles d'appel).
     "script-src": [
       "'self'",
-      "'unsafe-inline'",
+      `'nonce-${options.nonce}'`,
+      "'strict-dynamic'",
       ...(options.developpement ? ["'unsafe-eval'"] : []),
     ],
     "style-src": ["'self'", "'unsafe-inline'"],
@@ -97,15 +110,23 @@ export const SOURCES_FICHIERS_DEPOSES = [
 /** La CSP d'un fichier déposé : n'exécute rien dans notre origine, ne s'encadre pas. */
 export const CSP_FICHIER_DEPOSE = "sandbox; frame-ancestors 'none'";
 
+/**
+ * Un nonce par requête : 128 bits tirés par l'aléa cryptographique de la
+ * plateforme (Web Crypto, disponible dans le runtime Node du proxy comme
+ * ailleurs), en base64 — l'alphabet que la grammaire CSP accepte.
+ */
+export function nonceCsp(): string {
+  const octets = new Uint8Array(16);
+  crypto.getRandomValues(octets);
+  return btoa(String.fromCharCode(...octets));
+}
+
 type RegleEntetes = { source: string; headers: Entete[] };
 
 /** Ce que `next.config.ts` rend dans `headers()` — l'ordre compte. */
-export function reglesEntetes(options: {
-  supabaseUrl: string | undefined;
-  developpement: boolean;
-}): RegleEntetes[] {
+export function reglesEntetes(): RegleEntetes[] {
   return [
-    { source: "/:path*", headers: entetesSecurite(options) },
+    { source: "/:path*", headers: entetesSecurite() },
     ...SOURCES_FICHIERS_DEPOSES.map((source) => ({
       source,
       headers: [{ key: "Content-Security-Policy", value: CSP_FICHIER_DEPOSE }],
@@ -113,17 +134,11 @@ export function reglesEntetes(options: {
   ];
 }
 
-export function entetesSecurite(options: {
-  supabaseUrl: string | undefined;
-  developpement: boolean;
-}): Entete[] {
+export function entetesSecurite(): Entete[] {
   return [
     { key: "X-Frame-Options", value: "DENY" },
+    // Le plancher : la CSP complète, à nonce, vient du proxy (voir en tête).
     { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
-    {
-      key: "Content-Security-Policy-Report-Only",
-      value: politiqueContenu(options),
-    },
     { key: "X-Content-Type-Options", value: "nosniff" },
     { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
     // includeSubDomains (ASVS 5.0.0 V3.4.1, L2 ; audit du 2026-10-13) : HSTS
