@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useActionState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,19 +30,19 @@ export function SignatureExterneForm({
     FormData
   >(boundAction, { status: "idle" });
 
-  // Redirection navigateur vers la page de confirmation dès que la
-  // signature est posée. On utilise window.location plutôt que router.push
-  // parce que la page publique n'est pas dans l'arbre Next habituel et on
-  // veut une navigation « hard » (nouveau RSC rendu avec la signature fraîche).
+  // Vers l'accusé de réception dès que la signature est posée. `/signe/[id]`
+  // est une route dynamique sous le même layout racine, jamais visitée
+  // avant (l'identifiant vient de naître) : `router.push` la rend au
+  // serveur avec la signature fraîche, sans rechargement complet. Ni
+  // session ni cookie n'a changé, rien n'impose une navigation « hard ».
+  // (L'ancien `window.location` invoquait une iframe de démo qui n'existe
+  // plus dans le dépôt.)
+  const router = useRouter();
   useEffect(() => {
     if (state.status === "success") {
-      const href = `/signe/${state.signatureId}`;
-      // Si on est dans une iframe (modal de démo local), on fait la
-      // navigation dans l'iframe pour que le parent puisse aussi détecter
-      // et rafraîchir.
-      window.location.href = href;
+      router.push(`/signe/${state.signatureId}`);
     }
-  }, [state]);
+  }, [state, router]);
 
   if (state.status === "success") {
     // Transition — la page de confirmation va s'afficher immédiatement.

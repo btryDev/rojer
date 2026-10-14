@@ -80,6 +80,7 @@ export function ResetPasswordForm() {
     }
     // Session déjà posée dans les cookies : navigation complète pour que le
     // proxy et les Server Components la voient.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- rechargement complet voulu après changement de session (le cache du routeur client date d'avant)
     window.location.assign("/entreprises");
   }
 
