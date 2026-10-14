@@ -297,9 +297,38 @@ export default async function CalendrierPage({
   // leur `new Date()`.
   const aujourdhui = instantDuRendu();
 
+  // Premier temps, APRÈS la garde (réparation, puis `getEtablissement` et
+  // `notFound`) : les bâtiments, et tout ce qui ne dépend pas du filtre qu'ils
+  // résolvent. Les bâtiments étaient lus seuls, et ces quatre lectures
+  // attendaient derrière eux (audit Next.js du 2026-10-14, M4).
+  const [
+    batiments,
+    autresEcheances,
+    equipementsTous,
+    motifsSansEcheance,
+    marquesAConfirmer,
+  ] = await Promise.all([
+    listerBatimentsDeLEtablissement(id),
+    listerAutresEcheances(id, aujourdhui),
+    // Le parc entier, pas seulement les appareils qui portent une
+    // échéance : la lecture par équipement doit pouvoir dire combien
+    // n'en ont aucune.
+    listerEquipementsDeLEtablissement(id),
+    // …et POURQUOI ils n'en ont aucune. « Rien à cette date » et « le
+    // référentiel ne calcule rien pour cet appareil » se ressemblaient
+    // trait pour trait sur cet écran : un calendrier qui n'affiche rien
+    // pour un équipement déclaré doit pouvoir l'expliquer.
+    equipementsSansEcheance(id),
+    // Les lignes retenues par prudence, qui le disent (analyse du
+    // 2026-09-27, § 6.3). Calculées au rendu, par le moteur, comme l'écran
+    // des états permanents : la ligne persistée ne porte pas la marque, et
+    // une réponse donnée sur la fiche doit la lever sans régénération.
+    // Mémoïsées sur le rendu, et partagées avec le compte du bandeau
+    // (`compterEtatCalendrier`), qui en tire la même prudence (D1 (a)).
+    marquesAConfirmerDuRendu(id),
+  ]);
   // Le filtre bâtiment n'existe qu'à partir de deux bâtiments (ADR-019) ;
   // un id inconnu vaut « tout l'établissement ».
-  const batiments = await listerBatimentsDeLEtablissement(id);
   const multiBatiments = estMultiBatiments(batiments);
   const filtreBatiment = resoudreFiltreBatiment(batiments, batiment);
 
@@ -315,15 +344,8 @@ export default async function CalendrierPage({
       : undefined;
   const filtreUrgent = urgent === "1";
 
-  const [
-    verifsBruts,
-    etat,
-    autresEcheances,
-    equipementsTous,
-    motifsSansEcheance,
-    verifsDuLieu,
-    marquesAConfirmer,
-  ] = await Promise.all([
+  // Second temps : ce que le filtre borne.
+  const [verifsBruts, etat, verifsDuLieu] = await Promise.all([
       listerVerifications(id, {
         domaine: filtreDomaine,
         urgentsSeulement: filtreUrgent,
@@ -333,29 +355,12 @@ export default async function CalendrierPage({
       // les occurrences sans date de tout le dossier au-dessus d'une liste
       // restreinte à un bâtiment.
       compterEtatCalendrier(id, aujourdhui, { batimentId: filtreBatiment }),
-      listerAutresEcheances(id, aujourdhui),
-      // Le parc entier, pas seulement les appareils qui portent une
-      // échéance : la lecture par équipement doit pouvoir dire combien
-      // n'en ont aucune.
-      listerEquipementsDeLEtablissement(id),
-      // …et POURQUOI ils n'en ont aucune. « Rien à cette date » et « le
-      // référentiel ne calcule rien pour cet appareil » se ressemblaient
-      // trait pour trait sur cet écran : un calendrier qui n'affiche rien
-      // pour un équipement déclaré doit pouvoir l'expliquer.
-      equipementsSansEcheance(id),
       // Les lignes du lieu SANS filtre de domaine ni d'urgence : elles ne
       // servent qu'à savoir quels domaines proposer au filtre. Les lire sur
       // `verifsBruts` ferait disparaître de la liste des choix tous les
       // domaines sauf celui qu'on vient de choisir. Dans le même
       // `Promise.all`, donc sans allonger le rendu.
       listerVerifications(id, { batimentId: filtreBatiment }),
-      // Les lignes retenues par prudence, qui le disent (analyse du
-      // 2026-09-27, § 6.3). Calculées au rendu, par le moteur, comme l'écran
-      // des états permanents : la ligne persistée ne porte pas la marque, et
-      // une réponse donnée sur la fiche doit la lever sans régénération.
-      // Mémoïsées sur le rendu, et partagées avec le compte du bandeau
-      // (`compterEtatCalendrier`), qui en tire la même prudence (D1 (a)).
-      marquesAConfirmerDuRendu(id),
     ]);
   const prudence = retenueParPrudence(marquesAConfirmer.parObligation);
   // La lecture par équipement suit le même bâtiment que le reste.

@@ -249,7 +249,24 @@ sur chaque écran de l'application (tableau de bord 106 → 105 requêtes,
 - **Correctif** : `import "server-only"` dans ces modules et dans le référentiel.
 - **Effort** : S. **[Maintenant]**
 
-### M4 Requêtes indépendantes en série
+### ~~M4 Requêtes indépendantes en série~~
+**[Corrigé le 2026-10-14, `lot/nextjs-perf-1014`.]** Toujours après la garde
+d'accès, jamais avant :
+- registre : `listerRapportsDeLEtablissement`, `composerRegistreDeLEtablissement`
+  et `couvertureDuDossier` en un `Promise.all` (trois `await` à la suite) ;
+- équipements : les bâtiments rejoignent le `Promise.all` des quatre autres
+  lectures, dont aucune ne dépend du filtre ;
+- calendrier : deux temps au lieu de trois — bâtiments et tout ce qui ne
+  dépend pas du filtre, puis ce que le filtre borne ;
+- layout DUERP : rien à paralléliser de plus. Sur `main`, `getDuerp` et
+  `getOptionalUser` partaient déjà ensemble, et le second `Promise.all` lit
+  l'établissement que le premier rend. Ce qui coûtait, c'était la relecture
+  de `getDuerp` par la page (H2, complément).
+
+Le nombre de requêtes ne bouge pas (mesuré : 56, 46, 43 sur calendrier,
+registre, équipements) ; seule la profondeur de la chaîne diminue. Le temps
+gagné ne se mesure pas ici : en local, chaque page répond en 20 à 60 ms et le
+bruit dépasse l'écart. Il n'existe que sur un pool de plus d'une connexion.
 - **Où** :
   - `etablissements/[id]/registre/page.tsx:52,62,66,71` (4 `await` à la suite) ;
   - `equipements/page.tsx:54` puis `:66` ;
