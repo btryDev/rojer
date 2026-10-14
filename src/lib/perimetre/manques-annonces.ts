@@ -126,7 +126,7 @@ const DOMAINES: Record<CleDomaine, Domaine> = {
   // l'atmosphère explosive par « gaz, vapeurs, brouillards ou poussières ».
   matieres_inflammables: {
     titre: "Matières explosives et inflammables",
-    phrase: `Rojer ne suit pas ${nonPorte("l'aménagement des locaux où des matières explosives, comburantes ou inflammables sont entreposées ou manipulées")} : sources d'ignition, ventilation, interdiction de fumer aux emplacements à l'air libre, distance des postes aux issues, sens d'ouverture des portes, dépôts dans les escaliers, passages et couloirs. Il ne suit pas non plus ${nonPorte("les atmosphères explosives dues aux poussières ou matières combustibles en nuage")} (silos, broyage, meunerie, ponçage du bois), que l'article R. 4227-22 vise parmi les « matières dans un état physique susceptible d'engendrer des risques d'explosion », ni ${nonPorte("la prévention des explosions des articles R. 4227-42 à R. 4227-54")}.`,
+    phrase: `Rojer ne suit pas ${nonPorte("l'aménagement des locaux où des matières explosives, comburantes ou inflammables sont entreposées ou manipulées")} : sources d'ignition, ventilation, interdiction de fumer aux emplacements à l'air libre, distance des postes aux issues, sens d'ouverture des portes, dépôts dans les escaliers, passages et couloirs. Il ne suit pas non plus ${nonPorte("la prévention des explosions des articles R. 4227-42 à R. 4227-54")} : les atmosphères explosives, qu'elles viennent de gaz, de vapeurs, de brouillards ou de poussières en suspension dans l'air — silos, broyage, meunerie, ponçage du bois, par exemple.`,
   },
   travail_en_hauteur: {
     titre: "Travail en hauteur",
