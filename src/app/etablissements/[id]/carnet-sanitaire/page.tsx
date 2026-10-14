@@ -14,6 +14,8 @@ import { getCarnetSanitaire } from "@/lib/carnet-sanitaire/queries";
 import { listerBatimentsDeLEtablissement } from "@/lib/batiments/queries";
 import {
   LABEL_RESEAU,
+  LABEL_TYPE_POINT,
+  libelleSeuils,
   SEUIL_LEGIONELLE_UFC_PAR_L,
   resultatAnalyse,
 } from "@/lib/carnet-sanitaire/schema";
@@ -243,12 +245,22 @@ export default async function CarnetSanitairePage({
                           {p.nom}
                         </p>
                         <p className="board-eyebrow m-0 mt-1 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
-                          {LABEL_RESEAU[p.typeReseau]}
+                          {p.typePoint ? LABEL_TYPE_POINT[p.typePoint] : LABEL_RESEAU[p.typeReseau]}
                           {p.localisation && ` · ${p.localisation}`}
-                          {" · seuil "}
-                          {p.typeReseau === "EFS" ? "max" : "min"}{" "}
-                          {formaterMesure(p.seuilMinCelsius, "°C", 0, 1)}
+                          {" · "}
+                          {libelleSeuils(p, (c) => formaterMesure(c, "°C", 0, 1))}
                         </p>
+                        {/* Un point d'avant le type (2026-10-14) : son seul
+                            minimum ne dit rien d'un plafond contre la brûlure.
+                            Le type ne se devine pas — on le demande. */}
+                        {p.typePoint === null && (
+                          <p className="m-0 mt-1.5 max-w-[60ch] text-[12.5px] leading-[1.5] text-[color:var(--board-amber-ink)]">
+                            Type de point non précisé : ce point n&apos;a qu&apos;un
+                            minimum. Précisez où il est (« Modifier le point ») pour
+                            que Rojer propose aussi le maximum contre la brûlure
+                            d&apos;un point de puisage.
+                          </p>
+                        )}
                         {/* Qui a relevé, et quand. Le formulaire demande ce
                             nom depuis toujours ; jusqu'au 2026-08-28 son seul
                             lecteur était l'export ZIP remis à un tiers — d'où
@@ -314,7 +326,7 @@ export default async function CarnetSanitairePage({
                       <GraphTemperatures
                         releves={p.releves}
                         seuilMinCelsius={p.seuilMinCelsius}
-                        typeReseau={p.typeReseau}
+                        seuilMaxCelsius={p.seuilMaxCelsius}
                       />
                     </div>
 
@@ -323,7 +335,7 @@ export default async function CarnetSanitairePage({
                         etablissementId={id}
                         pointReleveId={p.id}
                         seuilMinCelsius={p.seuilMinCelsius}
-                        typeReseau={p.typeReseau}
+                        seuilMaxCelsius={p.seuilMaxCelsius}
                       />
                     </div>
 
@@ -349,7 +361,7 @@ export default async function CarnetSanitairePage({
                                 etablissementId={id}
                                 pointReleveId={p.id}
                                 seuilMinCelsius={p.seuilMinCelsius}
-                                typeReseau={p.typeReseau}
+                                seuilMaxCelsius={p.seuilMaxCelsius}
                                 releve={{
                                   id: r.id,
                                   dateReleve: cleJourCivil(r.dateReleve),
@@ -381,7 +393,9 @@ export default async function CarnetSanitairePage({
                           localisation: p.localisation,
                           batimentId: p.batimentId,
                           typeReseau: p.typeReseau,
+                          typePoint: p.typePoint,
                           seuilMinCelsius: p.seuilMinCelsius,
+                          seuilMaxCelsius: p.seuilMaxCelsius,
                         }}
                       />
                       <BoutonRetirer

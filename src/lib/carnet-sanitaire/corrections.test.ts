@@ -139,7 +139,7 @@ describe("modifierReleve / supprimerReleve", () => {
     h.reponses["releveTemperature.findFirst"] = () => ({
       id: "r_1",
       pointReleveId: "pt_1",
-      pointReleve: { seuilMinCelsius: 50, typeReseau: "ECS" },
+      pointReleve: { seuilMinCelsius: 50, seuilMaxCelsius: null },
     });
     const r = await modifierReleve(
       "e1",

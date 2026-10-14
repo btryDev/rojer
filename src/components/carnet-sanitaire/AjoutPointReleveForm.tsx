@@ -11,11 +11,12 @@ import {
   type CarnetActionState,
 } from "@/lib/carnet-sanitaire/actions";
 import {
-  LABEL_RESEAU,
-  SEUIL_DEFAUT,
-  TYPES_RESEAU,
+  LABEL_TYPE_POINT,
+  SEUILS_TYPE_POINT,
+  TYPES_POINT,
+  type SeuilsPoint,
 } from "@/lib/carnet-sanitaire/schema";
-import type { TypeReseauEau } from "@prisma/client";
+import type { TypePointReleve, TypeReseauEau } from "@prisma/client";
 
 /**
  * D'où viennent les valeurs proposées — et ce qui n'a pas de texte.
@@ -29,9 +30,27 @@ import type { TypeReseauEau } from "@prisma/client";
  * 3 litres » ni « points de puisage à risque », la phrase étendait l'exigence
  * à tout réseau ; sans « ou une élévation quotidienne », elle donnait 55 °C
  * pour la seule voie.
+ *
+ * 2026-10-14 (chantier § 5) : l'aide accompagne désormais les DEUX seuils
+ * préremplis par le type de point. Elle dit d'abord les maximums contre la
+ * brûlure (§ 1 de l'article), puis les minimums contre les légionelles (§ 2),
+ * et pourquoi la douche et le lavabo n'ont pas de minimum : le texte exempte
+ * les tubes finaux. Le champ de l'article — bâtiments d'habitation, de bureaux
+ * ou recevant du public — vient de l'article 1er de l'arrêté, lu le même jour.
  */
 const AIDE_SEUIL_TEMPERATURE =
-  "Valeurs proposées, à ajuster. Repères tirés de l'article 36 de l'arrêté du 23 juin 1978, pour les réseaux susceptibles d'alimenter des points de puisage à risque (notamment des douches) : 50 °C au moins en tout point du réseau d'eau chaude, tubes finaux exceptés, quand plus de 3 litres séparent la mise en distribution du point le plus éloigné ; et, pour un stockage de 400 litres et plus, 55 °C au moins en permanence à sa sortie, ou une élévation quotidienne de température. Aux robinets des pièces de toilette, le même article fixe au contraire 50 °C au plus. Les 20 °C proposés pour l'eau froide sont un repère de Rojer : aucun de ces deux textes ne les fixe.";
+  "Valeurs proposées selon le type de point, à ajuster : ce sont des repères, pas une obligation qui vous serait notifiée. Ils sont tirés de l'article 36 de l'arrêté du 23 juin 1978, qui vise l'eau chaude des bâtiments d'habitation, de bureaux ou recevant du public. Contre la brûlure : 50 °C au plus aux points de puisage des pièces destinées à la toilette, 60 °C au plus aux autres (hors certains points signalés des cuisines et buanderies). Contre les légionelles, pour les réseaux susceptibles d'alimenter des points de puisage à risque (notamment des douches) : 50 °C au moins en tout point du réseau d'eau chaude, quand plus de 3 litres séparent la mise en distribution du point le plus éloigné — à l'exception des tubes finaux d'alimentation des points de puisage, d'où l'absence de minimum proposé à la douche ou au lavabo ; et, pour un stockage de 400 litres et plus, 55 °C au moins en permanence à sa sortie, ou une élévation quotidienne de température. Les 20 °C proposés pour l'eau froide sont un repère de Rojer : aucun de ces textes ne les fixe.";
+
+/** Ce que le formulaire préremplit pour un type ; `""` : point d'avant le
+ *  type, qui garde ses seuils. */
+function seuilsProposes(
+  type: TypePointReleve | "",
+  point: { typePoint: TypePointReleve | null } & SeuilsPoint | undefined,
+): SeuilsPoint {
+  if (point && type === (point.typePoint ?? "")) return point;
+  if (type === "") return { seuilMinCelsius: null, seuilMaxCelsius: null };
+  return SEUILS_TYPE_POINT[type];
+}
 
 export function AjoutPointReleveForm({
   etablissementId,
@@ -41,15 +60,18 @@ export function AjoutPointReleveForm({
   etablissementId: string;
   /** Rendu seulement à partir de deux (ADR-019). */
   batiments?: { id: string; nom: string }[];
-  /** Présent : corriger ce point (2026-10-12). Le type et le seuil
-   *  recalculent la plage de tous ses relevés (`modifierPointReleve`). */
+  /** Présent : corriger ce point (2026-10-12). Les seuils recalculent la
+   *  plage de tous ses relevés (`modifierPointReleve`). `typePoint` à `null` :
+   *  point créé avant le type (2026-10-14), qui peut le rester. */
   point?: {
     id: string;
     nom: string;
     localisation: string | null;
     batimentId: string | null;
     typeReseau: TypeReseauEau;
-    seuilMinCelsius: number;
+    typePoint: TypePointReleve | null;
+    seuilMinCelsius: number | null;
+    seuilMaxCelsius: number | null;
   };
 }) {
   const boundAction = point
@@ -59,7 +81,10 @@ export function AjoutPointReleveForm({
     CarnetActionState,
     FormData
   >(boundAction, { status: "idle" });
-  const [type, setType] = useState<TypeReseauEau>(point?.typeReseau ?? "ECS");
+  // Pas de type présélectionné à la création : le choix EST la question
+  // (« où est ce point ? »), et un défaut silencieux proposerait ses seuils.
+  const [type, setType] = useState<TypePointReleve | "">(point ? (point.typePoint ?? "") : "");
+  const proposes = seuilsProposes(type, point);
   // Une correction faite referme le formulaire : la carte montre le résultat.
   const [ouvert, setOuvert] = useOuvertureFormulaire(state, Boolean(point));
   const err = (champ: string) =>
@@ -124,39 +149,71 @@ export function AjoutPointReleveForm({
         placeholder="Ex : RDC, local plonge, 2e étage"
       />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-[2fr_1fr]">
-        <div>
-          <label className="label-board" htmlFor={`typeReseau${sfx}`}>
-            Type de réseau *
-          </label>
-          <select
-            id={`typeReseau${sfx}`}
-            name="typeReseau"
-            value={type}
-            onChange={(e) => setType(e.target.value as TypeReseauEau)}
-            className="champ-board"
-          >
-            {TYPES_RESEAU.map((t) => (
-              <option key={t} value={t}>
-                {LABEL_RESEAU[t]}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div>
+        <label className="label-board" htmlFor={`typePoint${sfx}`}>
+          Type de point *
+        </label>
+        <select
+          id={`typePoint${sfx}`}
+          name="typePoint"
+          value={type}
+          required={!point || point.typePoint !== null}
+          onChange={(e) => setType(e.target.value as TypePointReleve | "")}
+          className="champ-board"
+          aria-invalid={Boolean(err("typePoint"))}
+          aria-describedby={`aide-seuils${sfx}`}
+        >
+          {/* Un point d'avant le type peut le rester ; un point neuf choisit. */}
+          {point && point.typePoint === null ? (
+            <option value="">Non précisé (point créé avant le choix du type)</option>
+          ) : (
+            <option value="" disabled>
+              Choisir où est le point…
+            </option>
+          )}
+          {TYPES_POINT.map((t) => (
+            <option key={t} value={t}>
+              {LABEL_TYPE_POINT[t]}
+            </option>
+          ))}
+        </select>
+        {/* Sans type, le point garde son réseau. */}
+        {point && type === "" && (
+          <input type="hidden" name="typeReseau" value={point.typeReseau} />
+        )}
+        {err("typePoint") && (
+          <p className="m-0 mt-1.5 text-[12.5px] text-[color:var(--board-signal-ink)]">
+            {err("typePoint")}
+          </p>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2" key={`seuils-${type}`}>
         <ChampBoard
           id={`seuilMinCelsius${sfx}`}
           name="seuilMinCelsius"
-          label={`Seuil ${type === "EFS" ? "max" : "min"} (°C)`}
+          label="Minimum (°C, facultatif)"
           type="number"
           step="0.5"
-          defaultValue={
-            point && type === point.typeReseau ? point.seuilMinCelsius : SEUIL_DEFAUT[type]
-          }
-          key={`seuil-${type}`}
+          defaultValue={proposes.seuilMinCelsius ?? ""}
           erreur={err("seuilMinCelsius")}
-          aide={AIDE_SEUIL_TEMPERATURE}
+        />
+        <ChampBoard
+          id={`seuilMaxCelsius${sfx}`}
+          name="seuilMaxCelsius"
+          label="Maximum (°C, facultatif)"
+          type="number"
+          step="0.5"
+          defaultValue={proposes.seuilMaxCelsius ?? ""}
+          erreur={err("seuilMaxCelsius")}
         />
       </div>
+      <p
+        id={`aide-seuils${sfx}`}
+        className="m-0 -mt-1 text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
+      >
+        {AIDE_SEUIL_TEMPERATURE}
+      </p>
 
       {state.status === "error" && (
         <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">

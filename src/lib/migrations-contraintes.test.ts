@@ -786,3 +786,37 @@ describe("les migrations des lots N5, retrait de `depassee` et ADR-036", () => {
     }
   });
 });
+
+describe("carnet sanitaire : la plage d'un point a au moins une borne, dans l'ordre (2026-10-14)", () => {
+  const migrations = lireMigrations();
+  const sqlComplet = migrations.map((m) => normaliser(m.sql)).join(" ");
+
+  // Les deux seuils sont facultatifs depuis que la douche n'a plus de minimum
+  // (article 36 de l'arrêté du 23 juin 1978, tubes finaux exceptés). Sans
+  // borne du tout, `estReleveConforme` dirait « dans la plage » de toute
+  // mesure : la base le refuse, et un `db push` perdrait ce refus sans bruit.
+  it.each([
+    ["PointReleve_un_seuil_au_moins", 'CHECK ("seuilMinCelsius" IS NOT NULL OR "seuilMaxCelsius" IS NOT NULL)'],
+    ["PointReleve_seuils_ordonnes", 'OR "seuilMinCelsius" <= "seuilMaxCelsius")'],
+  ])("déclare et conserve %s", (nom, expression) => {
+    expect(sqlComplet).toContain(`CONSTRAINT "${nom}"`);
+    expect(sqlComplet).toContain(expression);
+    const suppressions = migrations.filter((m) =>
+      new RegExp(`DROP\\s+CONSTRAINT\\s+(IF\\s+EXISTS\\s+)?"${nom}"`, "i").test(normaliser(m.sql)),
+    );
+    expect(suppressions.map((m) => m.nom)).toEqual([]);
+  });
+
+  it("recopie le seuil de l'eau froide en maximum, et ne pose de type qu'à elle", () => {
+    const m = migrations.find((x) => x.nom.endsWith("_point_releve_seuil_max"));
+    expect(m, "migration du seuil maximal introuvable").toBeDefined();
+    const sql = normaliser(m!.sql);
+    // Sans cette recopie, le seuil EFS — lu comme un plafond jusqu'ici —
+    // deviendrait un minimum : « 20 °C au moins » à l'eau froide.
+    expect(sql).toContain(
+      `SET "seuilMaxCelsius" = "seuilMinCelsius", "seuilMinCelsius" = NULL, "typePoint" = 'EAU_FROIDE' WHERE "typeReseau" = 'EFS'`,
+    );
+    // Le type des points d'eau chaude ne se devine pas : aucune autre écriture.
+    expect(sql.match(/"typePoint" =/g)?.length).toBe(1);
+  });
+});

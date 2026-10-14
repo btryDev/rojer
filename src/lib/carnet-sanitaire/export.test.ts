@@ -11,7 +11,9 @@ const point = (n: number) => ({
   nom: "Retour de boucle",
   localisation: null,
   typeReseau: "ECS_BOUCLAGE" as const,
+  typePoint: null,
   seuilMinCelsius: 50,
+  seuilMaxCelsius: null,
   releves: Array.from({ length: n }, (_, i) => releve(`2026-09-${String(i + 1).padStart(2, "0")}`)),
 });
 
@@ -33,6 +35,26 @@ describe("lignesPointDeReleve — la pièce carnet sanitaire de l'export contrô
   it("un seul relevé, aucun relevé : pas de pluriel fabriqué", () => {
     expect(lignesPointDeReleve(point(1))).toContain("  Dernier relevé :");
     expect(lignesPointDeReleve(point(0))).toContain("  Aucun relevé enregistré.");
+  });
+
+  it("dit où est le point et les deux bornes de sa plage (2026-10-14)", () => {
+    // `formaterMesure` sépare le nombre et l'unité par une espace insécable.
+    const texteDe = (p: Parameters<typeof lignesPointDeReleve>[0]) =>
+      lignesPointDeReleve(p).join("\n").replace(/\s/g, " ");
+    // Point d'avant le type : le document le dit, il ne devine pas.
+    expect(texteDe(point(1))).toContain(
+      "type de point non précisé · plage min 50 °C",
+    );
+    const douche = {
+      ...point(1),
+      typeReseau: "ECS" as const,
+      typePoint: "PUISAGE_TOILETTE" as const,
+      seuilMinCelsius: null,
+      seuilMaxCelsius: 50,
+    };
+    const texte = texteDe(douche);
+    expect(texte).toContain("Point de puisage de toilette (douche, lavabo) · plage max 50 °C");
+    expect(texte).not.toContain("min");
   });
 
   it("le type de réseau est le libellé de l'écran, jamais l'énumération", () => {

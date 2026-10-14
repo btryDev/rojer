@@ -13,23 +13,31 @@
  */
 import { formaterDateFr } from "@/lib/dates";
 import { formaterMesure } from "@/lib/rendu/mesures";
-import { LABEL_RESEAU } from "./schema";
-import type { TypeReseauEau } from "@prisma/client";
+import { LABEL_RESEAU, LABEL_TYPE_POINT, libelleSeuils } from "./schema";
+import type { TypePointReleve, TypeReseauEau } from "@prisma/client";
 
 /** Le nombre de relevés par point que l'export lit (borne de la requête). */
 export const NB_RELEVES_DU_DOSSIER = 10;
 
+/**
+ * 2026-10-14 (chantier § 5) : la ligne du type dit aussi OÙ est le point, et
+ * les deux bornes de sa plage. ~~« seuil max » en eau froide, « seuil min »
+ * sinon~~ : la borne ne se déduit plus du réseau, elle est stockée.
+ */
 export function lignesPointDeReleve(pt: {
   nom: string;
   localisation: string | null;
   typeReseau: TypeReseauEau;
-  seuilMinCelsius: number;
+  typePoint: TypePointReleve | null;
+  seuilMinCelsius: number | null;
+  seuilMaxCelsius: number | null;
   releves: { dateReleve: Date; temperatureCelsius: number; conforme: boolean }[];
 }): string[] {
   const n = pt.releves.length;
+  const ou = pt.typePoint ? LABEL_TYPE_POINT[pt.typePoint] : "type de point non précisé";
   return [
     `${pt.nom}${pt.localisation ? ` — ${pt.localisation}` : ""}`,
-    `  Type : ${LABEL_RESEAU[pt.typeReseau]} · seuil ${pt.typeReseau === "EFS" ? "max" : "min"} ${formaterMesure(pt.seuilMinCelsius, "°C", 0, 1)}`,
+    `  Type : ${LABEL_RESEAU[pt.typeReseau]} · ${ou} · plage ${libelleSeuils(pt, (c) => formaterMesure(c, "°C", 0, 1))}`,
     n === 0
       ? "  Aucun relevé enregistré."
       : n === 1
@@ -37,7 +45,7 @@ export function lignesPointDeReleve(pt: {
         : `  ${n} derniers relevés :`,
     ...pt.releves.map(
       (r) =>
-        `    ${formaterDateFr(r.dateReleve)} · ${formaterMesure(r.temperatureCelsius, "°C", 1)} · ${r.conforme ? "au seuil du point" : "HORS du seuil du point"}`,
+        `    ${formaterDateFr(r.dateReleve)} · ${formaterMesure(r.temperatureCelsius, "°C", 1)} · ${r.conforme ? "dans la plage du point" : "HORS de la plage du point"}`,
     ),
   ];
 }
