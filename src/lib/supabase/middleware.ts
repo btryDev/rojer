@@ -1,6 +1,7 @@
-// Middleware helper : rafraîchit la session Supabase à chaque requête et
+// Helper du proxy : rafraîchit la session Supabase à chaque requête et
 // redirige vers /login si aucun user et que la route n'est pas whitelistée.
-// Appelé depuis middleware.ts à la racine.
+// Appelé depuis src/proxy.ts (ex-middleware.ts racine, renommé pour Next 16).
+// Le fichier garde son nom : il disparaîtra avec Supabase Auth.
 
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
@@ -26,18 +27,24 @@ const PUBLIC_PREFIXES = [
   // authentification — secret d'URL ou jeton porteur OAuth — et doivent
   // répondre à des clients qui n'ont pas de session Supabase par
   // construction : ce sont des programmes, pas des navigateurs. Sans cette
-  // exception, le middleware leur renvoie une redirection vers /login et le
+  // exception, le proxy leur renvoie une redirection vers /login et le
   // serveur n'est jamais atteint. Les laisser passer ici ne les ouvre pas :
   // c'est leur propre garde qui décide, et elle refuse par défaut.
   "/api/mcp",
   // Découverte OAuth (RFC 9728) : document public par nature, lu par un
   // client *avant* qu'il ait le moindre jeton.
-  "/.well-known/",
+  "/.well-known",
 ];
 
+// Un préfixe s'entend par segment entier : `/auth` ouvre `/auth` et
+// `/auth/callback`, jamais `/authorisations` (audit du 2026-10-13, C7). Une
+// comparaison par début de chaîne rendait publique, sans que personne l'ait
+// décidé, toute route future dont le nom commencerait comme une route ouverte.
 function isPublicPath(pathname: string): boolean {
   if (pathname === "/") return true;
-  return PUBLIC_PREFIXES.some((p) => pathname.startsWith(p));
+  return PUBLIC_PREFIXES.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`),
+  );
 }
 
 /** Exporté pour les tests — la règle mérite d'être vérifiée directement. */

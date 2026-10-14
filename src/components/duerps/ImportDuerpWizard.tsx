@@ -15,6 +15,7 @@ import {
   type PreviewImportState,
   type CommitImportState,
 } from "@/lib/duerps/import/actions";
+import { TAILLE_MAX_IMPORT_MO } from "@/lib/duerps/import/format";
 
 /**
  * Wizard 2 étapes :
@@ -109,7 +110,7 @@ export function ImportDuerpWizard({
                 {nomFichier ?? "Choisir un fichier"}
               </span>
               <span className="board-eyebrow block text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
-                .xlsx · .xls · .csv · max 20 Mo
+                .xlsx · .xls · .csv · max {TAILLE_MAX_IMPORT_MO} Mo
               </span>
             </span>
           </label>

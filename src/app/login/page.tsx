@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cheminDeRetour } from "@/lib/auth/chemin-de-retour";
 import { LoginForm } from "./LoginForm";
 
 export const metadata = {
@@ -10,7 +11,10 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ next?: string; confirmed?: string }>;
 }) {
-  const { next, confirmed } = await searchParams;
+  const { next: nextBrut, confirmed } = await searchParams;
+  // Filtré dès la page : le lien vers /signup le recopie, et l'action le
+  // refiltre de toute façon (le champ caché se modifie à la main).
+  const next = nextBrut === undefined ? undefined : cheminDeRetour(nextBrut);
 
   return (
     // Colonne étroite centrée : c'est le seul cas où `mx-auto max-w-*` tient
@@ -37,7 +41,7 @@ export default async function LoginPage({
         ) : null}
 
         <div className="carte-board mt-7 px-7 py-6 sm:px-8">
-          <LoginForm next={next ?? "/entreprises"} />
+          <LoginForm next={cheminDeRetour(next)} />
         </div>
 
         <p className="m-0 mt-6 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">

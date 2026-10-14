@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { cheminPublic, refreshTokenPerime } from "./middleware";
 
 /**
- * Chemins que le middleware laisse passer sans session Supabase.
+ * Chemins que le proxy (`src/proxy.ts`, ex-`middleware.ts`) laisse passer sans
+ * session Supabase.
  *
  * Cette liste est à double tranchant et mérite d'être tenue par des tests
  * plutôt que par la relecture :
@@ -66,10 +67,31 @@ describe("chemins publics", () => {
       expect(cheminPublic(p)).toBe(false);
     }
   });
+
+  it("compare par segment entier, pas par début de chaîne", () => {
+    // Audit du 2026-10-13, C7 : `startsWith("/auth")` ouvrait `/authorisations`,
+    // `startsWith("/signe")` ouvrait `/signets`. Une route ajoutée demain sous
+    // un de ces noms serait publique sans que personne l'ait décidé.
+    for (const p of [
+      "/authorisations",
+      "/signets",
+      "/acces-admin",
+      "/verifiers",
+      "/loginx",
+      "/signup-admin",
+      "/accessibilite-interne",
+      "/api/mcpx",
+      "/api/accessibilites",
+      "/_nextx",
+      "/.well-knownx",
+    ]) {
+      expect(cheminPublic(p), p).toBe(false);
+    }
+  });
 });
 
 /**
- * Le middleware efface les cookies de session sur cette erreur-là, et
+ * Le proxy efface les cookies de session sur cette erreur-là, et
  * seulement sur celle-là. Se tromper de côté coûte cher dans les deux sens :
  * trop laxiste, on déconnecte un utilisateur valide au premier hoquet réseau ;
  * trop strict, le navigateur rejoue indéfiniment un jeton mort et l'écran

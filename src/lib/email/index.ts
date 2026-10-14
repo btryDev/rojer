@@ -135,6 +135,10 @@ export const MESSAGE_URL_PUBLIQUE_ABSENTE =
 export function publicAppUrl(): string {
   const refus = refusUrlPublique();
   if (refus) throw new Error(refus);
-  // `||` et non `??` : une variable posée vide n'est pas une adresse.
-  return process.env.PUBLIC_APP_URL || "http://localhost:3000";
+  // `||` et non `??` : une variable posée vide n'est pas une adresse. Le « / »
+  // final est retiré : tous les appelants écrivent `${publicAppUrl()}/…`.
+  return (process.env.PUBLIC_APP_URL || "http://localhost:3000").replace(
+    /\/+$/,
+    "",
+  );
 }
