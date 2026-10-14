@@ -32,9 +32,10 @@ const h = vi.hoisted(() => {
 
   const prisma = {
     equipement: {
-      // Une PHOTO, comme la base en rend une : la modifier après coup ne
-      // change pas ce que l'appelant a lu. Ce que fait la base : l'identifiant
-      // seul, sans égard au compte.
+      // Une PHOTO, comme la base en rend une. [2026-10-14 : plus aucune lecture
+      // de l'action ne passe par ici — elles sont bornées au compte, par
+      // `findFirst` ci-dessous ; gardé pour qu'une régression vers la lecture
+      // par le seul id reste observable.]
       findUnique: async ({ where }: { where: { id: string } }) => {
         const e = db.equipements.find((x) => x.id === where.id);
         const photo = e ? structuredClone(e) : null;
