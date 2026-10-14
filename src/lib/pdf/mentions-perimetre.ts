@@ -94,8 +94,11 @@ export function blocsMaterielsNonCouverts(
   cles: readonly (string | null | undefined)[],
 ): BlocPerimetre[] {
   const declarees = new Set(cles.filter(Boolean));
+  // Les textes suivent la phrase (revue du lot, point 3) : la page « Ce que
+  // Rojer ne couvre pas » nommait les articles qu'elle annonçait, le dossier
+  // remis à un tiers les nomme aussi. Le bloc garde ses deux champs.
   return MATERIELS_NON_COUVERTS.filter((m) => declarees.has(m.cle)).map((m) => ({
     titre: m.libelle,
-    corps: m.phrase,
+    corps: `${m.phrase} Textes : ${m.references.map((r) => r.libelle).join(" ; ")}.`,
   }));
 }

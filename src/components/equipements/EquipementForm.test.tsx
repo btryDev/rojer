@@ -247,6 +247,33 @@ describe("EquipementForm : la recherche de matériel (2026-10-14)", () => {
     expect(c.querySelector("#categorie-aide")!.textContent).toContain("Rojer ne suit pas");
   });
 
+  // Revue du lot, point 3 : les articles déplacés de la page « Ce que Rojer
+  // ne couvre pas » restent NOMMÉS à l'écran. Test de rendu, pas de donnée.
+  // Éprouvé en retirant `<ReferencesMateriel>` de l'encart.
+  it("l'encart nomme les textes des articles déplacés : AS 10, R. 4323-63, R. 1321-60, arrêté du 10/09/2021", () => {
+    const attendus: [string, string[]][] = [
+      ["escalier_mecanique", ["art. AS 10"]],
+      ["echelle", ["art. R. 4323-63"]],
+      [
+        "reservoir_eau",
+        [
+          "art. R. 1321-60",
+          "Arrêté du 10 septembre 2021, art. 4",
+          "Arrêté du 10 septembre 2021, art. 8",
+          "Arrêté du 10 septembre 2021, art. 9",
+          "Arrêté du 10 septembre 2021, art. 10",
+          "Arrêté du 10 septembre 2021, art. 12",
+        ],
+      ],
+    ];
+    for (const [cle, textes] of attendus) {
+      const c = rendre({ categorie: "AUTRE", materielNonCouvert: cle });
+      const items = [...c.querySelectorAll("#categorie-aide li")].map((li) => li.textContent ?? "");
+      for (const t of textes) expect(items.some((i) => i.includes(t)), `${cle} : ${t}`).toBe(true);
+      cleanup();
+    }
+  });
+
   it("modifier un matériel non suivi : la clé revient, et choisir une catégorie l'efface", () => {
     const c = rendre({ categorie: "AUTRE", materielNonCouvert: "escalier_mecanique" });
     expect(cache(c, "materielNonCouvert")).toBe("escalier_mecanique");

@@ -154,9 +154,10 @@ export const MATERIELS_NON_COUVERTS: readonly MaterielNonCouvert[] = [
       "clapet anti-retour",
       "disconnecteur",
     ],
-    // Reprise mot pour mot de la rubrique « Réseaux intérieurs d'eau » de
-    // `manques-annonces.ts` (2026-09-27), déplacée.
-    phrase: `Rojer ne suit pas ${nonPorte("la protection des réseaux intérieurs d'eau contre les retours d'eau")}, ni ${nonPorte("l'entretien des réservoirs et bâches de stockage d'eau")}. L'arrêté du 10 septembre 2021 vise les réseaux mis en place ou rénovés totalement à partir du 1er janvier 2023, et en charge le propriétaire des réseaux intérieurs de distribution, que Rojer ne sait pas identifier.`,
+    // Reprise de la rubrique « Réseaux intérieurs d'eau » de
+    // `manques-annonces.ts` (2026-09-27), déplacée ; les articles y sont
+    // désormais cités (revue du lot, point 3).
+    phrase: `Rojer ne suit pas ${nonPorte("la protection des réseaux intérieurs d'eau contre les retours d'eau")} (arrêté du 10 septembre 2021, art. 4, 8, 9, 10 et 12), ni ${nonPorte("l'entretien des réservoirs et bâches de stockage d'eau")} (code de la santé publique, art. R. 1321-60). L'arrêté du 10 septembre 2021 vise les réseaux mis en place ou rénovés totalement à partir du 1er janvier 2023, et en charge le propriétaire des réseaux intérieurs de distribution, que Rojer ne sait pas identifier.`,
     references: [
       { libelle: "Code de la santé publique, art. R. 1321-60", corpus: "R. 1321-60" },
       { libelle: "Arrêté du 10 septembre 2021, art. 4", corpus: "Arrêté 10-09-2021 art. 4" },

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ChampBoard } from "@/components/ui-kit";
 import { MarqueCategorie } from "@/components/equipements/MarqueCategorie";
+import { ReferencesMateriel } from "@/components/equipements/ReferencesMateriel";
 import {
   RechercheMateriel,
   type ChoixMateriel,
@@ -364,6 +365,7 @@ export function EquipementForm({
                 {entreeMateriel.phrase} Il sera enregistré en « {LABEL_CATEGORIE_EQUIPEMENT.AUTRE} »,
                 sans échéance au calendrier.
               </p>
+              <ReferencesMateriel references={entreeMateriel.references} />
               {entreeMateriel.orienteVers && (
                 <p className="m-0 mt-2 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                   {entreeMateriel.orienteVers.phrase}{" "}

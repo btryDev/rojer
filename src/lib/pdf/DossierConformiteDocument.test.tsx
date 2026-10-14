@@ -364,6 +364,23 @@ describe("les matériels non couverts déclarés s'impriment sous « Ce que ce d
     expect(t.some((x) => x.startsWith("Rojer ne suit pas l'usage des échelles"))).toBe(true);
   });
 
+  it("les textes des articles déplacés s'impriment avec le matériel (revue du lot, point 3)", () => {
+    // Éprouvé en retirant « Textes : … » de `blocsMaterielsNonCouverts`.
+    const t = textes({
+      ...dossier(bloc(2)),
+      couverture: sansManque,
+      materielsNonCouverts: blocsMaterielsNonCouverts(["escalier_mecanique", "echelle", "reservoir_eau"]),
+    }).join("\n");
+    for (const attendu of [
+      "art. AS 10",
+      "art. R. 4323-63",
+      "art. R. 1321-60",
+      "Arrêté du 10 septembre 2021, art. 12",
+    ]) {
+      expect(t, attendu).toContain(attendu);
+    }
+  });
+
   it("aucun déclaré, aucun manque : la section ne s'imprime pas", () => {
     const t = textes({ ...dossier(bloc(2)), couverture: sansManque, materielsNonCouverts: [] });
     expect(t).not.toContain("Ce que ce dossier ne couvre pas");

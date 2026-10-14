@@ -50,6 +50,7 @@ import {
 } from "@/lib/equipements/frise";
 import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
 import { materielNonCouvert } from "@/lib/equipements/materiels-non-couverts";
+import { ReferencesMateriel } from "@/components/equipements/ReferencesMateriel";
 import { LABEL_PERIODICITE, LABEL_REALISATEUR } from "@/lib/calendrier/labels";
 import { LABEL_RESULTAT } from "@/lib/rapports/schema";
 import type { RegistreLigne } from "@/lib/calendrier/etats";
@@ -459,6 +460,7 @@ export default async function EquipementDetailPage({
                     <span className="mt-1 block text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                       {materiel.phrase}
                     </span>
+                    <ReferencesMateriel references={materiel.references} />
                   </ChampFiche>
                 ) : null}
                 {multiBatiments ? (
