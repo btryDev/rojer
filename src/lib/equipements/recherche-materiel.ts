@@ -34,13 +34,15 @@ import {
  * dit que le mot courant d'un objet que la catégorie VISE — son aide au
  * formulaire reste ce qui borne la catégorie.
  *
- * Trois sont des décisions de la propriétaire du 2026-10-14 : « chaudière »
+ * Deux sont des décisions de la propriétaire du 2026-10-14 : « chaudière »
  * et « chauffage gaz » → installation de gaz ; « chambre froide » →
- * installation frigorifique ; « monte-charge » → levage. [Ce dernier est
- * signalé dans le rendu du lot : `conformite/levage.ts` relève que l'annexe
- * de l'arrêté du 1er mars 2004 exclut les monte-charges INSTALLÉS À DEMEURE ;
- * la recherche propose la catégorie, l'aide du levage et la question « lever
- * des personnes » disent la suite.]
+ * installation frigorifique. ~~« monte-charge » → levage~~ [2026-10-14,
+ * RETIRÉ après la revue indépendante du lot : l'annexe de l'arrêté du 1er mars
+ * 2004 exclut les monte-charges installés à demeure (`conformite/levage.ts`),
+ * et le moteur leur servait pourtant les lignes de levage. Le monte-charge
+ * n'est orienté nulle part — ni levage, ni ascenseur, ni « non couvert » :
+ * son texte (arrêté du 29 décembre 2010) n'est pas au corpus, et la décision
+ * D10 reste ouverte. `recherche-materiel.test.ts` tient qu'il ne trouve rien.]
  */
 export const SYNONYMES_CATEGORIE: Readonly<Record<CategorieEquipement, readonly string[]>> = {
   INSTALLATION_ELECTRIQUE: ["électricité", "tableau électrique", "TGBT", "disjoncteur", "groupe électrogène"],
@@ -58,7 +60,7 @@ export const SYNONYMES_CATEGORIE: Readonly<Record<CategorieEquipement, readonly 
   PORTAIL_AUTO: ["portail", "portail motorisé"],
   EQUIPEMENT_SOUS_PRESSION: ["compresseur", "air comprimé"],
   STOCKAGE_MATIERE_DANGEREUSE: ["produits chimiques", "liquides inflammables", "solvants"],
-  EQUIPEMENT_LEVAGE: ["monte-charge", "palan", "chariot élévateur", "gerbeur", "hayon élévateur", "nacelle", "treuil"],
+  EQUIPEMENT_LEVAGE: ["palan", "chariot élévateur", "gerbeur", "hayon élévateur", "nacelle", "treuil"],
   INSTALLATION_FRIGORIFIQUE: ["chambre froide", "réfrigérateur", "frigo", "congélateur", "vitrine réfrigérée", "groupe froid"],
   COMPACTEUR_PRESSE_DECHETS_MOTORISE: ["compacteur", "presse à cartons", "presse à balles"],
   EPI: ["casque", "gants", "chaussures de sécurité", "lunettes de protection", "protection auditive"],

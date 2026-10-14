@@ -210,11 +210,11 @@ describe("EquipementForm : la recherche de matériel (2026-10-14)", () => {
 
   it("au clavier : flèche, Entrée choisit l'option active ; Échap referme sans rien changer", () => {
     const c = rendre({ categorie: "EXTINCTEUR" });
-    chercher(c, "monte-charge");
+    chercher(c, "palan");
     fireEvent.keyDown(champ(c), { key: "Escape" });
     expect(cache(c, "categorie")).toBe("EXTINCTEUR");
     expect(champ(c).value).toBe("Extincteurs");
-    chercher(c, "monte-charge");
+    chercher(c, "palan");
     expect(champ(c).getAttribute("aria-activedescendant")).toBe(listeOptions()[0].id);
     fireEvent.keyDown(champ(c), { key: "Enter" });
     expect(cache(c, "categorie")).toBe("EQUIPEMENT_LEVAGE");

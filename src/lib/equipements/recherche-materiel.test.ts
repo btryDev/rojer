@@ -15,12 +15,19 @@ describe("la recherche de matériel (2026-10-14)", () => {
     expect(cats("chaudière")).toContain("INSTALLATION_GAZ");
     expect(cats("chauffage gaz")).toContain("INSTALLATION_GAZ");
     expect(cats("chambre froide")).toContain("INSTALLATION_FRIGORIFIQUE");
-    expect(cats("monte-charge")).toContain("EQUIPEMENT_LEVAGE");
+  });
+
+  it("le monte-charge n'est orienté nulle part (revue du 2026-10-14, décision D10 ouverte)", () => {
+    // L'arrêté du 1er mars 2004 exclut les monte-charges installés à demeure
+    // du levage ; leur texte (arrêté du 29 décembre 2010) n'est pas au corpus.
+    // Ni catégorie, ni matériel non couvert : la recherche ne trouve rien.
+    expect(rechercherMateriel("monte-charge")).toEqual({ categories: [], materiels: [] });
+    expect(rechercherMateriel("monte charge")).toEqual({ categories: [], materiels: [] });
   });
 
   it("ni accents, ni casse, ni trait d'union ne comptent", () => {
     expect(cats("CHAUDIERE")).toEqual(cats("chaudière"));
-    expect(cats("monte charge")).toEqual(cats("monte-charge"));
+    expect(cats("chambre-froide")).toEqual(cats("chambre froide"));
     expect(normaliser("Échelle d’Été")).toBe("echelle d ete");
   });
 
