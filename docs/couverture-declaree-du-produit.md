@@ -627,7 +627,7 @@ le combler suppose une catégorie d'équipement « installation de gaz », donc
 une migration. Non décidé.~~ [2026-10-14 : COMBLÉ, décision de la
 propriétaire — catégorie `INSTALLATION_GAZ` (migration `20261014120000`),
 déclencheuse de `cuisson-gaz-installations-annuelle` avec l'appareil de
-cuisson ; référentiel `2026-10-14.1`, commit `57fe1d3c`.]
+cuisson ; référentiel `2026-10-14.3`, commit `57fe1d3c`.]
 
 **[2026-10-14] Où vont désormais ces annonces.** Décision de la propriétaire :
 la page « Ce que Rojer ne couvre pas » ne porte plus le gaz, les escaliers
@@ -953,8 +953,7 @@ vérifie que chaque ligne du § 8 a reçu un sort.] [2026-10-14 : ~~vingt~~
 **vingt et une** — 20 + 1 − 0 : le stock de rechange de l'alarme (dernière
 phrase de `MS 69`) entre hors cadre, décision de la propriétaire ; il est
 classé au corpus sous une entrée à part, `MS 69` restant retenu pour son
-contrôle hebdomadaire.]
-vérifie que chaque ligne du § 8 a reçu un sort.] [2026-10-14, décision de la
+contrôle hebdomadaire.] [2026-10-14, décision de la
 propriétaire : ~~« Rien au produit — ni écran, ni annonce, ni ligne »~~ ne vaut
 plus pour tous. La liste des matériels non couverts
 (`src/lib/equipements/materiels-non-couverts.ts`) NOMME le matériel de

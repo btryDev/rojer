@@ -438,7 +438,7 @@ export const SECTIONS_REGISTRE: readonly SectionRegistre[] = [
     id: "verif-chauffage-gaz-ventilation",
     partie: "3.2",
     titre: "Chauffage - Gaz - Ventilation - Désenfumage",
-    categoriesEquipement: ["VMC", "CTA", "HOTTE_PRO", "APPAREIL_CUISSON_ERP"],
+    categoriesEquipement: ["VMC", "CTA", "HOTTE_PRO", "APPAREIL_CUISSON_ERP", "INSTALLATION_GAZ"],
     attendu: "Vérificateur, date, observations, visa.",
   },
   {

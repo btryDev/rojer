@@ -402,7 +402,7 @@ const RELEVE = {
   // changements ci-dessus, aucun autre. ~~4943db84e624fce1~~ ~~7e3bde89eb15a58d~~.
   // Recopiée SANS incrément le 2026-10-14 (`lot/materiels-non-couverts-1014`) :
   // `referentiels/types-communs.ts` gagne la valeur `INSTALLATION_GAZ` dans
-  // `CATEGORIES_EQUIPEMENT`, et `conformite/index.ts` passe à `2026-10-14.1`.
+  // `CATEGORIES_EQUIPEMENT`, et `conformite/index.ts` passe à `2026-10-14.3` (numéro pris à l'intégration).
   // NON au sens de la question : aucune règle du moteur ne change ; ce qui
   // change les lignes est une DONNÉE — GZ 15 vise aussi la nouvelle
   // catégorie —, hachée par l'empreinte du référentiel, donc déjà dans le
@@ -410,6 +410,7 @@ const RELEVE = {
   // réconciliation ne pose aucune ligne nouvelle. ~~2689968acb89519c~~ (empreinte de ce lot seul, avant l'intégration de l'audit Next.js).
   // Recopiée SANS incrément le 2026-10-14, à l'intégration des lots du jour :
   // les deux lignées ci-dessus et ci-dessous se rejoignent ; même motif, NON.
+  // ~~02fa4e7ac8212555~~ (bout de la lignée de l'audit Next.js).
   // Recopiée SANS incrément le 2026-10-14 (`lot/nextjs-client-1014`, audit
   // Next.js H1) : `estPeriodicitePlusStricte` passe, texte identique, de
   // `matching/prescriptions.ts` (qui la réexporte) à `calendrier/periodicite.ts`

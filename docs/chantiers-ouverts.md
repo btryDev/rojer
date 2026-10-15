@@ -26,7 +26,7 @@ release (lots lancés le même jour) ; **n° 1 (gaz sans cuisine) et n° 5
    `lot/materiels-non-couverts-1014`, commit `57fe1d3c` : catégorie
    `INSTALLATION_GAZ` (migration `20261014120000`), à laquelle
    `cuisson-gaz-installations-annuelle` s'accroche en plus de l'appareil de
-   cuisson ; référentiel `2026-10-14.1`. Décision de la propriétaire.]
+   cuisson ; référentiel `2026-10-14.3`. Décision de la propriétaire.]
 2. ~~**Huit pages d'entrée gardent la flèche de retour**
    ([§ 6 bis](#6-bis-ce-que-la-passe-du-2026-09-07-a-rendu--six-constats-un-corrigé))
    — `<ArrowLeft>` + raison sociale dans `actions`, `equipe`, `duerp`,
