@@ -230,7 +230,7 @@ export const MATERIELS_NON_COUVERTS: readonly MaterielNonCouvert[] = [
     libelle: "Piscine ou équipement sportif",
     synonymes: ["piscine", "bassin de natation", "équipement sportif", "agrès"],
     phrase: `Rojer ne suit pas ${nonPorte("les piscines et les équipements sportifs")} : ils sont hors de son périmètre.`,
-    references: [{ libelle: "Hors du périmètre de Rojer" }],
+    references: [],
   },
 ];
 

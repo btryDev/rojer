@@ -401,7 +401,7 @@ function axeRegime(
     // tout ERP des catégories 1 à 4, et pour un type autre que M, N, O, W
     // elle promettait des lignes qui n'existent pas. Elle parle désormais des
     // types en général.]
-    consequence: `Rojer est construit pour les ERP de 5ᵉ catégorie. Au-dessus, le règlement de sécurité applique en entier son livre II, dont cet outil ne porte qu'une part : ${nonPorte("le service de sécurité incendie assuré par des agents de sécurité incendie")}, notamment, n'y est pas, et des dispositions particulières par type d'activité, il ne porte que quelques-unes, celles des magasins, restaurants, hôtels et bureaux. Votre calendrier et votre registre sont donc incomplets, et le resteront.`,
+    consequence: `Rojer est construit pour les ERP de 5ᵉ catégorie. Au-dessus, le règlement de sécurité applique en entier son livre II, dont cet outil ne porte qu'une part : ${nonPorte("le service de sécurité incendie assuré par des agents de sécurité incendie")}, notamment, n'y est pas, et des dispositions particulières par type d'activité, il ne porte que quelques-unes, et seulement pour les magasins, restaurants, hôtels et bureaux. Votre calendrier et votre registre sont donc incomplets, et le resteront.`,
   });
 }
 

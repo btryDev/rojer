@@ -99,6 +99,9 @@ export function blocsMaterielsNonCouverts(
   // remis à un tiers les nomme aussi. Le bloc garde ses deux champs.
   return MATERIELS_NON_COUVERTS.filter((m) => declarees.has(m.cle)).map((m) => ({
     titre: m.libelle,
-    corps: `${m.phrase} Textes : ${m.references.map((r) => r.libelle).join(" ; ")}.`,
+    corps:
+      m.references.length > 0
+        ? `${m.phrase} Textes : ${m.references.map((r) => r.libelle).join(" ; ")}.`
+        : m.phrase,
   }));
 }

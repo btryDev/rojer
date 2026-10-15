@@ -251,7 +251,13 @@ export default async function EquipementsPage({
             Créer la dernière suggestion vide la liste ; démonté, le panneau
             perdait son état, et l'avertissement d'un calendrier non recalculé
             avec lui. Vide et sans résultat à dire, il ne rend rien. */}
-        <div id="suggestions" className="scroll-mt-6">
+        <div
+          id="suggestions"
+          // Vide (ni suggestion ni résultat), le panneau ne rend rien : en
+          // `contents`, le div ne crée pas d'écart dans la pile — sans être
+          // démonté, ce qui garderait l'état du panneau (revue du 2026-10-15).
+          className={suggestionsRestantes.length > 0 ? "scroll-mt-6" : "contents"}
+        >
           <PreRemplissagePanel
             etablissementId={id}
             suggestions={suggestionsRestantes}

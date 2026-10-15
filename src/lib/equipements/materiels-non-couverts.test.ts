@@ -148,7 +148,11 @@ describe("la liste elle-même", () => {
     for (const m of MATERIELS_NON_COUVERTS) {
       expect(m.phrase, m.cle).toMatch(/^Rojer ne suit pas /);
       expect(m.phrase.toLowerCase(), m.cle).not.toMatch(/conforme|en infraction|vous devez/);
-      expect(m.references.length, m.cle).toBeGreaterThan(0);
+      // La piscine est hors du périmètre par décision (CLAUDE.md), sans texte
+      // lu : elle n'a aucune référence, et rien ne s'imprime sous « Textes »
+      // (revue du 2026-10-15). Toute autre entrée cite au moins un texte.
+      if (m.cle === "piscine_equipement_sportif") expect(m.references, m.cle).toEqual([]);
+      else expect(m.references.length, m.cle).toBeGreaterThan(0);
     }
   });
 
