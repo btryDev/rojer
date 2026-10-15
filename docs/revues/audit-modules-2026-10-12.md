@@ -17,7 +17,8 @@ sauvegardes. Déjà en cours le même jour : réactivation d'un appareil, seuil 
 400 h, « non » imprimés au DUERP, étape transverses calculée, règle « À
 renseigner » (ADR-044, dossier neuf / appareil ancien / salarié ancien —
 [2026-10-15 : cette ADR n'a jamais été écrite ni poussée, sur aucune branche ;
-la règle n'existe pas dans le code]), visites
+la règle n'existe pas dans le code ; décidée le 2026-10-12, elle attend
+sept réponses — `docs/chantiers-ouverts.md` § 0, décision 17]), visites
 avant affectation (fait, `7ab800e3`).
 
 ## 1. Bloquants V0

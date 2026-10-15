@@ -7,7 +7,7 @@ Chaque point encore ouvert du document a été lu et annoté sur place
 et datés (règle 11). Les défauts ont été revérifiés dans le code du jour
 (`main` à `8f48889e`).
 
-**50 points ouverts avant tri → 5 défauts, ~~11~~ 13 décisions, 7 projets, ~~27~~ 25 constats
+**50 points ouverts avant tri → 5 défauts, ~~11~~ ~~13~~ 20 décisions [2026-10-15 : + 7, remontées des ADR, § 18], 7 projets, ~~27~~ 25 constats
 rayés ou annotés** (dont 5 déjà faits ou corrigés, rayés). [Relu le même jour :
 les comptes de test en production et le stockage Vercel au-dessus du quota
 passent de constat à décision — ils se règlent avant les premiers clients.]
@@ -124,7 +124,7 @@ release (lots lancés le même jour) ; **n° 1 (gaz sans cuisine) et n° 5
     Hobby) : raccourcir la rétention des déploiements annulés, en erreur et de
     pré-production ([§ 13](#13-les-previews-vercel-sont-abandonnées--2026-09-18)).
 
-[2026-10-15, ménage des ADR ([§ 18](#18-le-ménage-des-adr--2026-10-15)) : six
+[2026-10-15, ménage des ADR ([§ 18](#18-le-ménage-des-adr--2026-10-15)) : sept
 décisions qui dormaient dans le texte des ADR, remontées ici.]
 
 14. **Purge des jetons d'accès externe** (ADR-007) : la purge promise n'a
@@ -132,19 +132,35 @@ décisions qui dormaient dans le texte des ADR, remontées ici.]
     `AccessToken` (nom, adresse, IP, agent d'un tiers). Choisir le mécanisme
     — tâche planifiée Vercel (une route et un secret à poser) ou purge au fil
     des émissions (ne touche pas un dossier inactif) — et la durée.
-15. **Les quatre questions du § 7 de l'ADR-037** (« Quand ça arrive ») : le
-    code suit les recommandations depuis le 2026-09-21, rien n'écrit qu'elles
-    ont été retenues.
+15. **Les quatre questions du § 7 de l'ADR-037** (« Quand ça arrive ») : déjà
+    posées en **A2** de `docs/revues/decisions-en-attente-2026-09-20.md`
+    (recommandation : « les quatre telles que recommandées »), jamais
+    tranchées par écrit ; le code les suit depuis le 2026-09-21. Confirmer, et
+    rayer A2 avec l'ADR.
 16. **Le dossier `referentiels/duerp/` de l'ADR-003** : jamais créé. Déplacer
     les quatre fichiers ou écrire l'abandon.
 17. **ADR-044, règle « À renseigner »** (dossier neuf, appareil ancien,
-    salarié ancien) : annoncée le 2026-10-12, jamais écrite, la règle
-    n'existe pas dans le code. L'écrire ou l'abandonner.
+    salarié ancien). La règle est **décidée** par la propriétaire le
+    2026-10-12 — « À renseigner » pendant trois mois, puis retard —, un plan
+    a été rendu le même jour, et il attend sept réponses avant d'écrire
+    l'ADR ou le code. Le plan ne vivait que dans le scratchpad d'une session ;
+    ses questions, recopiées ici pour survivre (recommandation entre
+    parenthèses) : **Q1** dater un appareil ancien sans pièce ? (non) ;
+    **Q2** le manque d'un salarié daté de sa fiche ? (oui, D8) ; **Q3** une
+    ligne « à renseigner » rend l'indice indéterminé sans le pénaliser ?
+    (oui) ; **Q4** un seul libellé « À renseigner » ? (oui) ; **Q5** lancer la
+    reprise sur les dossiers existants ? (oui, à blanc d'abord) ; **Q6** une
+    ligne déjà suivie reste hors champ ? (oui) ; **Q7** trois mois uniformes ?
+    (oui). Aucune migration prévue.
 18. **ADR-039, décision 2** : un acte d'autorité moins strict qu'un rythme
     retenu par DÉFAUT doit-il l'emporter ? Le plancher tient en attendant.
 19. **L'action libre** (ADR-002, 016, 018) : depuis le retrait des
     Interventions, rien ne relie un constat de terrain à une action datée ; la
     rétablir suppose d'assouplir le XOR d'`Action` en « au plus une origine ».
+20. **Relevés de température ECS** (ADR-010, « À REPRENDRE ») : le rythme est
+    passé à mensuel, et l'exclusion du calendrier a perdu son motif. Une ligne
+    de calendrier par point de relevé, ou une exclusion remotivée. Suivi nulle
+    part ailleurs que dans l'ADR.
 
 ### À vérifier après la release
 
@@ -3080,7 +3096,10 @@ expliqué dans son statut ; le « moteur 3 » de l'ADR-036 décrit l'état à sa
 `renforce_periodicite` (ADR-036, § 0 décision 4) ; OAuth du MCP et route à clé
 (ADR-013, suspendue jusqu'à la migration Better Auth) ; `drop` des tables
 `Intervention` (ADR-018, `CLAUDE.md`) ; modèles `ExerciceSecurite`,
-`PersonnelSecurite`, `ControleAdministratif` (ADR-021 et 024, transmissions non
-câblées) ; relevés ECS « À REPRENDRE » (ADR-010). Le « non » au DUERP imprimé,
+`PersonnelSecurite`, `ControleAdministratif` (ADR-024, transmissions non
+câblées ; suivis dans `docs/registre-securite-ecart.md`) ; les quatre
+questions de l'ADR-037 (A2 de `docs/revues/decisions-en-attente-2026-09-20.md`,
+rappelée en décision 15). Les relevés ECS « À REPRENDRE » (ADR-010) n'étaient
+suivis nulle part : décision 20. Le « non » au DUERP imprimé,
 que l'ADR-038 laisse ouvert, est tranché depuis le 2026-10-12 (§ 17, point 2).
 

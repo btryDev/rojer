@@ -162,7 +162,7 @@ model AccessToken {
 
 - L'émetteur peut révoquer à tout moment depuis l'interface (bouton « Annuler l'accès »).
 - Révocation auto si `otpEssaisRestants = 0`.
-- Les tokens expirés sont purgés automatiquement par un cron (soft delete 90 j, puis hard delete) pour garder la table légère et conserver une piste d'audit courte. [2026-10-15, ménage des ADR : **JAMAIS CONSTRUIT** — ni `cron.ts`, ni purge, ni cron dans `vercel.json`. Un jeton expiré est refusé à l'usage (`verify.ts`) mais reste en base avec le nom, l'adresse, l'IP et l'agent du tiers ; `docs/rgpd.md` § 4 ne fixe aucune durée pour `AccessToken`. Dette RGPD, en décision attendue dans `docs/chantiers-ouverts.md` § 0. Aucun jeton ne peut être émis en production depuis le 2026-09-26 (C38 : l'envoi hors service refuse avant toute écriture) ; ceux qu'une demande y laissait orphelins avant cette date peuvent y être encore — à compter en lecture seule.]
+- ~~Les tokens expirés sont purgés automatiquement par un cron (soft delete 90 j, puis hard delete) pour garder la table légère et conserver une piste d'audit courte.~~ [2026-10-15, ménage des ADR : **JAMAIS CONSTRUIT** — ni `cron.ts`, ni purge, ni cron dans `vercel.json`. Un jeton expiré est refusé à l'usage (`verify.ts`) mais reste en base avec le nom, l'adresse, l'IP et l'agent du tiers ; `docs/rgpd.md` § 4 ne fixe aucune durée pour `AccessToken`. Dette RGPD, en décision attendue dans `docs/chantiers-ouverts.md` § 0. Aucun jeton ne peut être émis en production depuis le 2026-09-26 (C38 : l'envoi hors service refuse avant toute écriture) ; ceux qu'une demande y laissait orphelins avant cette date peuvent y être encore — à compter en lecture seule.]
 
 #### Scoping
 
@@ -188,7 +188,7 @@ model AccessToken {
 
 ### Négatives / coûts
 - Dépendance email transactionnel (déjà requise pour ADR-006). Surveiller la délivrabilité.
-- Un cron de nettoyage des tokens est nécessaire (simple, mais à ne pas oublier). À défaut, la table grossit indéfiniment.
+- Un cron de nettoyage des tokens est nécessaire (simple, mais à ne pas oublier). À défaut, la table grossit indéfiniment. [2026-10-15 : oublié — voir l'annotation des conséquences positives ci-dessus.]
 - L'accès externe sans compte **n'a pas d'historique unifié** pour le prestataire (il reçoit N liens, un par mission). Ce n'est pas un problème au MVP : la plupart des prestataires ne veulent pas se connecter. Si besoin, on ajoute plus tard une route « Mes interventions » accessible avec email + OTP persistant (hors périmètre).
 
 ### Neutres
@@ -226,7 +226,7 @@ Rejetée : un prestataire (au sens fiche annuaire) n'est pas systématiquement d
 ### Phase 0.3 — Access token
 8. Ajouter enum `ScopeAccessToken` + table `AccessToken`.
 9. Migration.
-10. Créer `src/lib/access-tokens/` : `generate.ts` (émission), `verify.ts` (consommation), `revoke.ts`, `cron.ts` (purge).
+10. Créer `src/lib/access-tokens/` : `generate.ts` (émission), `verify.ts` (consommation), `revoke.ts`, ~~`cron.ts` (purge)~~ [2026-10-15 : jamais créé].
 11. Route publique `/acces/[token]` (Next.js route handler) qui dispatch selon scope.
 12. Intégration avec `src/lib/signatures/` (cf. ADR-006).
 13. Tests : génération ULID, hash, expiration, tentatives OTP, révocation.
@@ -238,6 +238,6 @@ Rejetée : un prestataire (au sens fiche annuaire) n'est pas systématiquement d
 
 ## Notes de conformité
 
-- **RGPD** : `emailDestinataire`, `nomDestinataire`, IP, UA sont des données personnelles d'une tierce personne. Base légale : **intérêt légitime** (permettre au donneur d'ordre de tenir son registre et d'exécuter une obligation légale). Durée de conservation : alignée sur la durée de conservation de l'objet signé / du rapport déposé, avec une **purge soft** des tokens expirés à 90 j.
+- **RGPD** : `emailDestinataire`, `nomDestinataire`, IP, UA sont des données personnelles d'une tierce personne. Base légale : **intérêt légitime** (permettre au donneur d'ordre de tenir son registre et d'exécuter une obligation légale). Durée de conservation : alignée sur la durée de conservation de l'objet signé / du rapport déposé, avec une ~~**purge soft** des tokens expirés à 90 j.~~ [2026-10-15 : la purge n'existe pas, et `docs/rgpd.md` § 4 ne fixe aucune durée à `AccessToken` : la conservation promise ici n'est pas tenue. Décision 14 de `docs/chantiers-ouverts.md` § 0.]
 - **L8222-1 / D8222-5** : les documents uploadés (URSSAF, RC Pro, Kbis) sont chiffrés au repos (FileStorage) et seul le donneur d'ordre y a accès.
 - **Information du destinataire** : le premier email contenant le token mentionne en pied la finalité, le responsable de traitement, la durée de conservation et le droit d'accès / effacement (conforme art. 13 RGPD).

@@ -658,7 +658,9 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
 
 [2026-10-15, ménage des ADR : 037, 038 et 043 manquaient à cette liste ;
 **il n'existe pas d'ADR-044** — annoncée dans
-`docs/revues/audit-modules-2026-10-12.md`, jamais écrite ni poussée.]
+`docs/revues/audit-modules-2026-10-12.md`, jamais écrite ni poussée ; la
+règle « À renseigner » est décidée et attend sept réponses avant l'ADR —
+`docs/chantiers-ouverts.md` § 0, décision 17.]
 
 **Sept ADR ont été déplacées le 2026-09-01** (« six » disait la phrase, qui en
 énumère sept), chacune portant en tête le renvoi
