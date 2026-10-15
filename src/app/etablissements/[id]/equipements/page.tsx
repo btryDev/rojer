@@ -29,7 +29,7 @@ import {
 } from "@/lib/equipements/etat-verifications";
 import {
   LIBELLE_SANS_ECHEANCE,
-  EXPLICATION_SANS_ECHEANCE,
+  explicationSansEcheance,
   equipementsSansEcheance,
 } from "@/lib/equipements/hors-referentiel";
 import { avecProvenance, origineDepuis } from "@/lib/navigation/provenance";
@@ -63,7 +63,27 @@ export default async function EquipementsPage({
   // le reste : c'est lui qui borne le parc affiché, donc les compteurs du
   // bandeau, les sections et leur tri par urgence. Appliqué après, il
   // laisserait un en-tête et un ordre calculés sur un autre périmètre.
-  const batiments = await listerBatimentsDeLEtablissement(id);
+  // Les cinq lectures partent ensemble, APRÈS la garde (`getEtablissement`
+  // + `notFound`) : les bâtiments étaient lus seuls, puis le reste — aucune
+  // des quatre autres ne dépend du filtre (audit Next.js du 2026-10-14, M4).
+  const [batiments, equipements, etatsVerifs, sansEcheance, fraicheur] =
+    await Promise.all([
+      listerBatimentsDeLEtablissement(id),
+      listerEquipementsDeLEtablissement(id),
+      // Le parc ne disait rien de son état de vérification : on lisait un
+      // inventaire, pas une situation.
+      etatVerificationsParEquipement(id),
+      // Et le parc ne disait rien du silence : un appareil pour lequel le
+      // référentiel ne produit aucune échéance est rendu comme un appareil à
+      // jour — c'est-à-dire comme une réponse alors que personne n'en a
+      // donné (cf. `hors-referentiel.ts`).
+      equipementsSansEcheance(id),
+      // Ouverte par lien direct, cette page lit des lignes qu'elle ne répare
+      // pas : la réparation vit au tableau de bord et au calendrier
+      // (`regeneration-sure.ts`). Elle dit donc leur âge — une lecture du
+      // repère, aucune écriture (`docs/chantiers-ouverts.md` § 12).
+      fraicheurCalendrier(id),
+    ]);
   const multiBatiments = estMultiBatiments(batiments);
   const batimentFiltre = resoudreFiltreBatiment(batiments, batiment);
 
@@ -79,23 +99,6 @@ export default async function EquipementsPage({
     `${base}/equipements`,
     batimentFiltre ? { batiment: batimentFiltre } : {},
   );
-
-  const [equipements, etatsVerifs, sansEcheance, fraicheur] = await Promise.all([
-    listerEquipementsDeLEtablissement(id),
-    // Le parc ne disait rien de son état de vérification : on lisait un
-    // inventaire, pas une situation.
-    etatVerificationsParEquipement(id),
-    // Et le parc ne disait rien du silence : un appareil pour lequel le
-    // référentiel ne produit aucune échéance est rendu comme un appareil à
-    // jour — c'est-à-dire comme une réponse alors que personne n'en a
-    // donné (cf. `hors-referentiel.ts`).
-    equipementsSansEcheance(id),
-    // Ouverte par lien direct, cette page lit des lignes qu'elle ne répare
-    // pas : la réparation vit au tableau de bord et au calendrier
-    // (`regeneration-sure.ts`). Elle dit donc leur âge — une lecture du
-    // repère, aucune écriture (`docs/chantiers-ouverts.md` § 12).
-    fraicheurCalendrier(id),
-  ]);
 
   const equipementsAffiches = restreindreAuBatiment(equipements, batimentFiltre);
   const parCategorie = grouperParCategorie(equipementsAffiches);
@@ -171,7 +174,8 @@ export default async function EquipementsPage({
           return motif
             ? {
                 libelle: LIBELLE_SANS_ECHEANCE[motif],
-                explication: EXPLICATION_SANS_ECHEANCE[motif],
+                // 2026-10-14 : la phrase propre au matériel non suivi.
+                explication: explicationSansEcheance(motif, eq.materielNonCouvert),
               }
             : null;
         })(),
@@ -242,17 +246,26 @@ export default async function EquipementsPage({
           </div>
         )}
 
-        {suggestionsRestantes.length > 0 && (
-          <div id="suggestions" className="scroll-mt-6">
-            <PreRemplissagePanel
-              etablissementId={id}
-              suggestions={suggestionsRestantes}
-              // 2026-10-13 (option 2) : les questions exigées dans le régime
-              // de l'établissement, que le panneau pose à côté de la case.
-              questionsExigees={questionsExigeesParCategorie(etab)}
-            />
-          </div>
-        )}
+        {/* ~~`suggestionsRestantes.length > 0 &&`~~ — 2026-10-14 (revue du
+            lot, point 2) : le panneau est TOUJOURS rendu, au même endroit.
+            Créer la dernière suggestion vide la liste ; démonté, le panneau
+            perdait son état, et l'avertissement d'un calendrier non recalculé
+            avec lui. Vide et sans résultat à dire, il ne rend rien. */}
+        <div
+          id="suggestions"
+          // Vide (ni suggestion ni résultat), le panneau ne rend rien : en
+          // `contents`, le div ne crée pas d'écart dans la pile — sans être
+          // démonté, ce qui garderait l'état du panneau (revue du 2026-10-15).
+          className={suggestionsRestantes.length > 0 ? "scroll-mt-6" : "contents"}
+        >
+          <PreRemplissagePanel
+            etablissementId={id}
+            suggestions={suggestionsRestantes}
+            // 2026-10-13 (option 2) : les questions exigées dans le régime
+            // de l'établissement, que le panneau pose à côté de la case.
+            questionsExigees={questionsExigeesParCategorie(etab)}
+          />
+        </div>
 
         {equipements.length === 0 ? (
           <EmptyState

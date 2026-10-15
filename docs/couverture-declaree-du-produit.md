@@ -53,7 +53,7 @@ ce que le dépôt s'interdit.
 | `effectif` | L'effectif dépasse la borne au-delà de laquelle la création d'un dossier est refusée (ADR-031 § 1 bis) | Que le dossier soit fermé : la borne ne vaut qu'à la création, un client qui embauche reste servi | `EFFECTIF_MAX` (`etablissements/schema.ts`), passé en fait par `faits.ts` |
 | ~~`famille_obligation`~~ **(retiré, § 3 bis)** | Des articles lus imposent quelque chose que le produit ne porte pas | **Qu'ils visent cet établissement-là.** Voir § 2 | statut `non_couvert` du corpus |
 
-**Une unité du manque de l'axe `categorie_erp`, écrite le 2026-09-20 : le
+~~**Une unité du manque de l'axe `categorie_erp`, écrite le 2026-09-20 : le
 défibrillateur automatisé externe.** L'axe établit « qu'il existe » un manque,
 « pas de combien » ; en voici une conséquence nommable. `R. 157-1` CCH (lu le
 2026-09-01, version en vigueur depuis le 7 décembre 2025 — détail et verbatim
@@ -68,7 +68,18 @@ jour où les catégories 1 à 4 seraient COUVERTES, le DAE deviendrait dû sans
 condition et redeviendrait une obligation d'établissement à encoder — avec une
 réserve : `R. 157-4` fait peser la maintenance sur le PROPRIÉTAIRE du
 défibrillateur, pas sur l'exploitant. La déclaration à la base nationale relève
-de textes non lus : ne rien en affirmer.
+de textes non lus : ne rien en affirmer.~~
+
+**[2026-10-14, rayé — commit 940b57af, décision de la propriétaire.]** Le DAE
+n'est plus une unité du manque de l'axe `categorie_erp` : la cible accepte les
+catégories 1 à 4 depuis le 2026-10-12 (ADR-031), et le référentiel porte
+désormais le DAE pour elles — `dae-erp-detention`, `dae-erp-maintenance` (défaut
+annuel) et `dae-erp-declaration-geodae`, corpus `cch-defibrillateur`. Le
+paragraphe barré se trompait sur un point : la déclaration à la base nationale
+a été lue le 2026-10-14 (décret n° 2018-1259, arrêté du 29 octobre 2019). Reste
+hors du référentiel la 5ᵉ catégorie (familles a à h de `R. 157-1` 2°) : l'arrêté
+qui fixe le nombre minimal de personnes n'est pas publié — réserve du corpus,
+relecture au 2027-01-14.
 
 Deux garanties de construction méritent d'être connues avant de toucher au
 module :
@@ -152,7 +163,7 @@ sixième `??` recopié.
 C'est la limite la plus importante de ce document, et la raison directe du
 retrait de la carte.
 
-~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ ~~Les 66 articles (2026-10-07, l'IGH, les équipements sous pression et le stockage de matières dangereuses en partie retirés)~~ ~~Les 70 articles (2026-10-13, quatre manques de la cible redéfinie annoncés)~~ ~~Les 72 articles (2026-10-13, six manques de la cible redéfinie annoncés)~~ Les 73 articles (2026-10-13, sept manques de la cible redéfinie annoncés) ci-dessous sont ceux que le dépouillement a lus, qui imposent
+~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ ~~Les 66 articles (2026-10-07, l'IGH, les équipements sous pression et le stockage de matières dangereuses en partie retirés)~~ ~~Les 70 articles (2026-10-13, quatre manques de la cible redéfinie annoncés)~~ ~~Les 72 articles (2026-10-13, six manques de la cible redéfinie annoncés)~~ ~~Les 73 articles (2026-10-13, sept manques de la cible redéfinie annoncés)~~ ~~Les 74 articles (2026-10-14, `L. 8222-1-1` dit sur la page Prestataires)~~ ~~Les 77 articles (2026-10-14, quatre articles cités par l'aide des catégories entrés au corpus)~~ Les 78 articles (2026-10-14, intégration des deux lots : 73 + 1 + 4) ci-dessous sont ceux que le dépouillement a lus, qui imposent
 quelque chose à un exploitant, et que le référentiel ne porte pas. **Rien ne les
 restreint aux établissements que leur chapitre vise** — sauf les ~~vingt-cinq
 annoncés le 2026-09-27~~ ~~trente-trois~~ trente-cinq annoncés (vingt-cinq le
@@ -274,10 +285,20 @@ hôtels qui sont encodés le même jour n'y figuraient pas, ils étaient
 indépendante : `Arrêté 1986-01-31 art. 78-1` et `Arrêté 1986-01-31 art. 102`,
 d'abord classés hors cadre, sont annoncés. **Puis 72 + 1 − 0 = 73** : `R. 4544-11`,
 annoncé par décision de la propriétaire (« hors cadre et on l'annonce »).
+**Puis 73 + 1 − 0 = 74** (2026-10-14) : `L. 8222-1-1`, créé par la loi
+n° 2026-534 et pas encore en vigueur, entre `non_couvert` ; son adresse est une
+phrase de la page Prestataires, pas `ADRESSE_MANQUES_ANNONCES` (décision de la
+propriétaire du 2026-10-14).
+
+**Puis 74 + 4 − 0 = 78** (2026-10-14, revue de `lot/materiels-non-couverts-1014`) :
+`C. env. R. 224-41-4` (entretien annuel des chaudières) et l'arrêté du
+30 septembre 1957, annexe art. 2, 3 et 4 (chambres froides), cités à l'écran
+par l'aide des catégories, entrent au corpus `non_couvert` — voir § 3,
+« Annoncés le 2026-10-14 ».
 
 ---
 
-## 3. Les 73 articles lus et non portés
+## 3. Les 78 articles lus et non portés
 
 ~~Cinq familles~~ ~~Neuf familles (compte refait le 2026-09-26)~~ Dix-huit familles (compte refait le 2026-09-27, C45), une dixième étant sortie de la liste le 2026-09-01 (voir
 ci-dessous). Les motifs sont ceux du corpus, cités et non réécrits : ils ont
@@ -491,7 +512,14 @@ risque.
 entré au corpus le 2026-09-01, plus de trois jours après le retrait de la carte,
 et il n'a donc jamais été annoncé à personne.~~ [2026-09-27, C45 : il a une
 adresse visible — la page « Ce que Rojer ne couvre pas », domaine « Travail en
-hauteur », à tout dossier d'employeur. `MUETS` passe de 19 à 18.] Les « 27 » du § 3 bis restent 27 :
+hauteur », à tout dossier d'employeur. `MUETS` passe de 19 à 18.] [2026-10-14,
+décision de la propriétaire : ~~la page « Ce que Rojer ne couvre pas », domaine
+« Travail en hauteur »~~ — l'adresse est DÉPLACÉE dans la liste des matériels
+non couverts (`src/lib/equipements/materiels-non-couverts.ts`, entrée
+« Échelle, escabeau ou marchepied »), que la recherche du formulaire
+d'équipement propose ; `declareA` = `ADRESSE_MATERIELS_NON_COUVERTS`. Toujours
+visible, plus à tout employeur d'office : à qui cherche le matériel, et sur
+sa fiche s'il le déclare. `MUETS` ne bouge pas.] Les « 27 » du § 3 bis restent 27 :
 ils comptent une histoire, pas un état.
 
 ### Travaux en présence du public, tous ERP — 1 article (2026-09-26)
@@ -535,11 +563,17 @@ recopiés ici. Entre parenthèses : à quel dossier la page les montre.
   aussi, à notre lecture, de l'état physique de `R. 4227-22` — décision de la propriétaire, plutôt qu'une
   question à l'onboarding. Aucun article ajouté à la liste, les comptes ne
   bougent pas.
-- **Travail en hauteur** (employeur) — `R. 4323-63`, ci-dessus.
-- **Réseaux intérieurs d'eau** (tout dossier : le texte vise le propriétaire
+- ~~**Travail en hauteur** (employeur) — `R. 4323-63`, ci-dessus.~~
+  [2026-10-14 : déplacé dans la liste des matériels non couverts, entrée
+  « Échelle, escabeau ou marchepied ».]
+- ~~**Réseaux intérieurs d'eau** (tout dossier : le texte vise le propriétaire
   des réseaux intérieurs) — `R. 1321-60`, `Arrêté 10-09-2021 art. 4`,
   `Arrêté 10-09-2021 art. 8`, `Arrêté 10-09-2021 art. 9`,
-  `Arrêté 10-09-2021 art. 10`, `Arrêté 10-09-2021 art. 12`.
+  `Arrêté 10-09-2021 art. 10`, `Arrêté 10-09-2021 art. 12`.~~
+  [2026-10-14 : déplacés dans la liste des matériels non couverts, entrée
+  « Réservoir ou bâche d'eau, clapet anti-retour » — `R. 1321-60`,
+  `Arrêté 10-09-2021 art. 4`, `art. 8`, `art. 9`, `art. 10`, `art. 12`,
+  adresse `ADRESSE_MATERIELS_NON_COUVERTS`.]
 - **Plan de prévention** (employeur ; restent aussi cités sur le formulaire,
   la fiche et le ZIP) — `R. 4463-8`, `R. 4512-1`, `R. 4512-9`, `R. 4512-11`.
 - **Vigilance à l'égard des cocontractants** (tout dossier ; ~~`D. 8222-7` au
@@ -561,15 +595,20 @@ Même adresse, même page, même règle : décision de la propriétaire du
 2026-10-13 sur les quinze manques entrés dans la cible le 2026-10-12 (§ 8).
 Leurs motifs sont ceux du corpus, complétés d'une note datée.
 
-- **Installations de gaz** — `GZ 13` (vérification par une personne ou un
+- ~~**Installations de gaz** — `GZ 13` (vérification par une personne ou un
   organisme agréé avant la première utilisation d'une installation neuve ou
   modifiée) et `GZ 14` (entretien des installations et appareils, signalisation
   de l'organe de coupure), aux ERP des quatre premières catégories ;
   `Arrêté 23-02-2018 art. 26 § 3` (entretien au moins décennal des
   installations collectives de gaz), aux dossiers qui déclarent le régime
-  d'habitation.
-- **Escaliers mécaniques et trottoirs roulants** (ERP des quatre premières
-  catégories) — `AS 10`.
+  d'habitation.~~ [2026-10-14, décision de la propriétaire : les trois
+  articles sont DÉPLACÉS dans l'aide de la catégorie « Installation de gaz »
+  (`DESCRIPTION_CATEGORIE.INSTALLATION_GAZ`), que leur `declareA` cite mot
+  pour mot. L'aide dit aussi l'entretien annuel de la chaudière (C. env.,
+  R. 224-41-4 et s.), hors cadre.]
+- ~~**Escaliers mécaniques et trottoirs roulants** (ERP des quatre premières
+  catégories) — `AS 10`.~~ [2026-10-14 : déplacé dans la liste des matériels
+  non couverts, entrée « Escalier mécanique ou trottoir roulant ».]
 - **Immeuble d'habitation** (dossiers qui déclarent le régime d'habitation),
   ajoutée le même jour après la revue — `Arrêté 1986-01-31 art. 78-1`
   (contrôle visuel annuel des boxes de stockage d'un parc couvert annexe, par
@@ -580,12 +619,51 @@ Leurs motifs sont ceux du corpus, complétés d'une note datée.
   tension. La question vise toutes les opérations électriques : l'annonce peut
   atteindre un dossier qui ne fait pas de travaux sous tension.
 
-Un trou reste, et il est nommé ici plutôt qu'à l'écran : la vérification
+~~Un trou reste, et il est nommé ici plutôt qu'à l'écran : la vérification
 annuelle des installations de gaz de GZ 15 n'est servie qu'à l'ERP qui
 déclare un appareil de cuisson (`cuisson-gaz-installations-annuelle`). Un
 commerce de 1ʳᵉ à 4ᵉ catégorie chauffé au gaz sans cuisine ne la reçoit pas ;
 le combler suppose une catégorie d'équipement « installation de gaz », donc
-une migration. Non décidé.
+une migration. Non décidé.~~ [2026-10-14 : COMBLÉ, décision de la
+propriétaire — catégorie `INSTALLATION_GAZ` (migration `20261014120000`),
+déclencheuse de `cuisson-gaz-installations-annuelle` avec l'appareil de
+cuisson ; référentiel `2026-10-14.3`, commit `57fe1d3c`.]
+
+**[2026-10-14] Où vont désormais ces annonces.** Décision de la propriétaire :
+la page « Ce que Rojer ne couvre pas » ne porte plus le gaz, les escaliers
+mécaniques, l'eau ni l'échelle. Les trois articles du gaz sont dans l'aide de la
+catégorie « Installation de gaz » ; `AS 10`, `R. 4323-63`, `R. 1321-60` et les
+cinq articles de l'arrêté du 10 septembre 2021 sont dans la liste des matériels
+non couverts (`src/lib/equipements/materiels-non-couverts.ts`, adresse
+`ADRESSE_MATERIELS_NON_COUVERTS`), que la recherche du formulaire d'équipement
+propose : « vous pouvez l'ajouter ; Rojer ne suit pas … ». Le matériel déclaré
+s'enregistre en « Autre équipement » avec sa clé, et sa phrase revient sur sa
+fiche, dans l'indicateur « sans échéance » et dans le dossier de conformité.
+Déplacés, pas dupliqués : aucun n'est plus annoncé sur la page. Statut au
+corpus inchangé (`non_couvert`) ; `materiels-non-couverts.test.ts` vérifie
+qu'aucun article non porté n'a d'adresse qui ne mène nulle part. ~~Les comptes
+de ce document (73 `non_couvert`, 20 manquantes) ne bougent pas : seule
+l'adresse change.~~ [Le même jour, après la revue : le déplacement ne change
+aucun compte ; l'entrée au corpus des quatre articles ci-dessous fait passer
+les `non_couvert` de 73 à 77. Manquantes : 20, inchangé.]
+
+### ANNONCÉS LE 2026-10-14 — deux textes, quatre articles, par l'aide des catégories
+
+Revue indépendante de `lot/materiels-non-couverts-1014` : la garde
+`citations-ecran` lit désormais `src/lib/equipements`, et deux textes que
+l'aide des catégories cite n'étaient pas au corpus. Relus le 2026-10-14 par
+l'API Légifrance, en **bac à sable** (`pnpm legifrance:verifier`, quatre
+articles, quatre OK).
+
+- **Entretien annuel des chaudières** — `C. env. R. 224-41-4` : hors cadre par
+  décision de la propriétaire du 2026-09-20, confirmée le 2026-10-14. Adresse
+  visible : l'aide de la catégorie « Installation de gaz »
+  (`DESCRIPTION_CATEGORIE.INSTALLATION_GAZ`), citée mot pour mot.
+- **Chambres froides** — `Arrêté 1957-09-30 annexe art. 2`,
+  `Arrêté 1957-09-30 annexe art. 3`, `Arrêté 1957-09-30 annexe art. 4` :
+  aucune obligation créée, décision de la propriétaire du 2026-10-14. Adresse
+  visible : l'aide de la catégorie « Installation frigorifique »
+  (`DESCRIPTION_CATEGORIE.INSTALLATION_FRIGORIFIQUE`).
 
 ### Plan de prévention, information de l'inspection du travail — 1 article (2026-09-27)
 
@@ -656,6 +734,18 @@ chimique », annoncée à tout employeur ; l'aide du stockage continue de le dir
 > employeur.
 
 **Adresse visible** : `ADRESSE_MANQUES_ANNONCES`, domaine « Formation ».
+
+### Vigilance à l'égard du sous-traitant accepté — 1 article (2026-10-14)
+
+`L. 8222-1-1`
+
+> Obligation nouvelle, à la charge du dirigeant maître de l'ouvrage qui accepte un sous-traitant de son prestataire. Décision de la propriétaire du 2026-10-14 : la dire par une phrase discrète du module Prestataires, et rien d'autre — ni la page « Ce que Rojer ne couvre pas », ni le plan de prévention, ni une ligne au référentiel, ni une modélisation de la sous-traitance.
+
+(Motif du corpus, début.) Créé par la loi n° 2026-534 du 25 juin 2026, art. 95,
+en vigueur à une date fixée par décret et au plus tard six mois après la
+promulgation (Légifrance : 2026-12-26). **Adresse visible** : la section
+« Votre obligation de vigilance » de la page Prestataires, une phrase en texte
+secondaire — et elle seule (`vigilance-sous-traitant.test.ts`).
 
 ---
 
@@ -859,7 +949,26 @@ après la revue indépendante ; leurs lignes sont retirées du tableau, l'égali
 avec le corpus l'exige, et le § 8 dit leur sort ; puis **vingt** : `R. 4544-11`
 en sort aussi, annoncé). Le test tient de nouveau l'égalité
 entre ce § 7 seul et les `obligation_manquante` qui touchent la cible, et
-vérifie que chaque ligne du § 8 a reçu un sort.]
+vérifie que chaque ligne du § 8 a reçu un sort.] [2026-10-14 : ~~vingt~~
+**vingt et une** — 20 + 1 − 0 : le stock de rechange de l'alarme (dernière
+phrase de `MS 69`) entre hors cadre, décision de la propriétaire ; il est
+classé au corpus sous une entrée à part, `MS 69` restant retenu pour son
+contrôle hebdomadaire.] [2026-10-15 : ~~vingt et une~~ **vingt-deux** — 21 + 1 − 0 :
+le contrat d'entretien des machines de nettoyage à sec (`M 40 § 3 e)`) entre
+hors cadre, décision de la propriétaire — une condition pour exercer
+l'activité, pas une obligation que Rojer suit.] [2026-10-14, décision de la
+propriétaire : ~~« Rien au produit — ni écran, ni annonce, ni ligne »~~ ne vaut
+plus pour tous. La liste des matériels non couverts
+(`src/lib/equipements/materiels-non-couverts.ts`) NOMME le matériel de
+plusieurs d'entre eux quand on le cherche dans le formulaire d'équipement —
+`R. 4323-61` (point d'ancrage), `R. 4323-69`, `R. 4323-70`, `R. 4323-72` et
+l'arrêté du 21 décembre 2004 art. 4 à 6 (échafaudage), `Arrêté 1993-03-05
+art. 2` (centrifugeuse, engin de terrassement), `CO 61` (tribune
+télescopique), `GC 18` (module de cuisson temporaire), `Arrêté 1986-01-31
+art. 60` (groupe électrogène d'habitation). Leur statut au corpus est
+INCHANGÉ (`obligation_manquante`, hors cadre) : la liste dit ce que Rojer ne
+suit pas à qui déclare l'objet, elle ne les annonce pas à chaque dossier.
+L'égalité de ce § 7 avec le corpus est intacte.]
 
 | Article | Motif, en une ligne |
 |---|---|
@@ -880,6 +989,8 @@ vérifie que chaque ligne du § 8 a reçu un sort.]
 | `Arrêté 1993-03-05 art. 2` | Vérification annuelle des centrifugeuses et engins de terrassement : quasi jamais dans la cible, et « centrifugeuse » n'est pas défini. |
 | `CO 61` | Inspection quinquennale des tribunes télescopiques de plus d'un mètre : ~~aucun des trois secteurs n'en exploite~~ quasi jamais dans la cible — le corpus le dit absent des trois secteurs, et la cible, plus large, ne le rend pas courant. *(2026-10-13, motif corrigé après revue)* |
 | `GC 18` | Nettoyage semestriel du conduit d'un module de cuisson temporaire : ~~quasi jamais dans la cible~~ il touche la restauration, secteur cible, mais par un mode d'exploitation — la cuisine mobile ou d'événement — que le modèle ne sait pas décrire (motif du corpus) ; rien ne permet de l'annoncer au seul dossier concerné. *(2026-10-13, motif corrigé après revue)* |
+| `MS 69 — stock permanent de fournitures de rechange` | Stock permanent de petites fournitures de rechange de l'alarme (lampes, fusibles, vitres, cartouches), ERP des catégories 1 à 4 : c'est un stock, pas un acte ; une case cochée ressemblerait à une preuve (ADR-027). *(2026-10-14, décision de la propriétaire)* |
+| `M 40 § 3 e) — contrat d'entretien des machines de nettoyage à sec` | Contrat d'entretien des machines de nettoyage à sec aux solvants halogénés, dans un magasin des catégories 1 à 4 : c'est l'une des conditions auxquelles le texte subordonne l'activité (avec la ventilation, l'emplacement des postes et les interdictions), pas une obligation d'exploitation suivie. *(2026-10-15, décision de la propriétaire)* |
 | `MS 71` | Communications radio des secours, ERP de plus d'un niveau de sous-sol et de plus de 100 m² en sous-sol : quasi jamais dans la cible. *(2026-10-13)* |
 | `Arrêté 1986-01-31 art. 60` | VMC d'habitation secourue par un groupe électrogène : rare, et le texte ne nomme pas le débiteur. *(2026-10-13)* |
 | `R. 4323-89` | Travail sur cordes : ~~dans la cible, c'est l'entreprise extérieure qui l'exerce~~ le corpus le dit exercé, dans les trois secteurs cibles, par une entreprise extérieure — auquel cas il relève de la co-activité, déjà servie ; le produit ne sait pas qui l'exerce (déclencheur d'activité manquant). *(2026-10-13, motif corrigé après revue)* |
@@ -920,13 +1031,13 @@ l'annonce » : sept annoncées, cinq hors cadre ; manquantes **20** ;
 | `PO 1 § 3 — contrôle biennal des installations techniques` | Hôtel (type O), ~~toutes catégories~~ 5ᵉ catégorie | `a_trancher` (était perimetre) | Encodé : `incendie-hotel-po-controle-biennal-installations` |
 | `PO 7` | Hôtel (type O), 5ᵉ catégorie | `a_trancher` (était perimetre) | Encodé : `incendie-hotel-po-instruction-personnel-semestrielle` |
 | `PO 12` | Hôtel (type O), 5ᵉ catégorie | `a_trancher` (était perimetre) | Encodé : même ligne que PO 7 |
-| `GZ 13` | ERP des quatre premières catégories | `categorie_equipement` | Annoncé — Installations de gaz |
-| `GZ 14` | ERP des quatre premières catégories | `categorie_equipement` | Annoncé — Installations de gaz |
+| `GZ 13` | ERP des quatre premières catégories | `categorie_equipement` | ~~Annoncé — Installations de gaz~~ Annoncé — aide de la catégorie « Installation de gaz » (2026-10-14, déplacé) |
+| `GZ 14` | ERP des quatre premières catégories | `categorie_equipement` | ~~Annoncé — Installations de gaz~~ Annoncé — aide de la catégorie « Installation de gaz » (2026-10-14, déplacé) |
 | `CO 61` | ERP des quatre premières catégories | `categorie_equipement` | Hors cadre (§ 7) |
-| `AS 10` | ERP des quatre premières catégories | `categorie_equipement` | Annoncé — Escaliers mécaniques et trottoirs roulants |
+| `AS 10` | ERP des quatre premières catégories | `categorie_equipement` | ~~Annoncé — Escaliers mécaniques et trottoirs roulants~~ Annoncé — liste des matériels non couverts (2026-10-14, déplacé) |
 | `GC 18` | ERP des quatre premières catégories | `categorie_equipement` | Hors cadre (§ 7) |
 | `MS 71` | ERP des quatre premières catégories | `attribut_etablissement` | Hors cadre (§ 7) |
-| `Arrêté 23-02-2018 art. 26 § 3` | Habitation collective | `categorie_equipement` | Annoncé — Installations de gaz |
+| `Arrêté 23-02-2018 art. 26 § 3` | Habitation collective | `categorie_equipement` | ~~Annoncé — Installations de gaz~~ Annoncé — aide de la catégorie « Installation de gaz » (2026-10-14, déplacé) |
 | `Arrêté 1986-01-31 art. 60` | Habitation | `attribut_etablissement` | Hors cadre (§ 7) |
 | `Arrêté 1986-01-31 art. 78-1` | Habitation | `destinataire` | ~~Hors cadre (§ 7)~~ Annoncé — Immeuble d'habitation (après revue) |
 | `Arrêté 1986-01-31 art. 102` | Habitation | `evenement` | ~~Hors cadre (§ 7)~~ Annoncé — Immeuble d'habitation (après revue) |

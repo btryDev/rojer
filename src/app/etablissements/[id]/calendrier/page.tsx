@@ -31,6 +31,7 @@ import {
   equipementsSansEcheance,
 } from "@/lib/equipements/hors-referentiel";
 import { assurerCalendrierAJour } from "@/lib/calendrier/regeneration-sure";
+import { instantDuRendu } from "@/lib/dates/instant-du-rendu";
 import {
   compterEtatCalendrier,
   listerVerifications,
@@ -60,6 +61,7 @@ import {
   estDatable,
   lignesDuCalendrier,
   rangerParMois,
+  moisEnRetardAvant,
   regleDeLAnnee,
   type LigneMois,
 } from "@/lib/calendrier/regle-annee";
@@ -261,10 +263,11 @@ export default async function CalendrierPage({
     famille?: string;
     vue?: string;
     batiment?: string;
+    annee?: string;
   }>;
 }) {
   const { id } = await params;
-  const { domaine, urgent, famille, batiment } = await searchParams;
+  const { domaine, urgent, famille, batiment, annee } = await searchParams;
 
   // Rattrapage à l'affichage, AVANT toute lecture : un calendrier jamais
   // généré, périmé par un échec, ou calculé sur une version antérieure du
@@ -289,9 +292,45 @@ export default async function CalendrierPage({
   const etab = await getEtablissement(id);
   if (!etab) notFound();
 
+  // Une seule horloge pour toute la page, et c'est celle du RENDU : la barre
+  // latérale, rendue en parallèle, lit la même, si bien que le registre des
+  // autres échéances ne part qu'une fois pour les deux (audit Next.js du
+  // 2026-10-14, H2). Le bandeau, la liste et la règle comptaient chacun sur
+  // leur `new Date()`.
+  const aujourdhui = instantDuRendu();
+
+  // Premier temps, APRÈS la garde (réparation, puis `getEtablissement` et
+  // `notFound`) : les bâtiments, et tout ce qui ne dépend pas du filtre qu'ils
+  // résolvent. Les bâtiments étaient lus seuls, et ces quatre lectures
+  // attendaient derrière eux (audit Next.js du 2026-10-14, M4).
+  const [
+    batiments,
+    autresEcheances,
+    equipementsTous,
+    motifsSansEcheance,
+    marquesAConfirmer,
+  ] = await Promise.all([
+    listerBatimentsDeLEtablissement(id),
+    listerAutresEcheances(id, aujourdhui),
+    // Le parc entier, pas seulement les appareils qui portent une
+    // échéance : la lecture par équipement doit pouvoir dire combien
+    // n'en ont aucune.
+    listerEquipementsDeLEtablissement(id),
+    // …et POURQUOI ils n'en ont aucune. « Rien à cette date » et « le
+    // référentiel ne calcule rien pour cet appareil » se ressemblaient
+    // trait pour trait sur cet écran : un calendrier qui n'affiche rien
+    // pour un équipement déclaré doit pouvoir l'expliquer.
+    equipementsSansEcheance(id),
+    // Les lignes retenues par prudence, qui le disent (analyse du
+    // 2026-09-27, § 6.3). Calculées au rendu, par le moteur, comme l'écran
+    // des états permanents : la ligne persistée ne porte pas la marque, et
+    // une réponse donnée sur la fiche doit la lever sans régénération.
+    // Mémoïsées sur le rendu, et partagées avec le compte du bandeau
+    // (`compterEtatCalendrier`), qui en tire la même prudence (D1 (a)).
+    marquesAConfirmerDuRendu(id),
+  ]);
   // Le filtre bâtiment n'existe qu'à partir de deux bâtiments (ADR-019) ;
   // un id inconnu vaut « tout l'établissement ».
-  const batiments = await listerBatimentsDeLEtablissement(id);
   const multiBatiments = estMultiBatiments(batiments);
   const filtreBatiment = resoudreFiltreBatiment(batiments, batiment);
 
@@ -307,15 +346,8 @@ export default async function CalendrierPage({
       : undefined;
   const filtreUrgent = urgent === "1";
 
-  const [
-    verifsBruts,
-    etat,
-    autresEcheances,
-    equipementsTous,
-    motifsSansEcheance,
-    verifsDuLieu,
-    marquesAConfirmer,
-  ] = await Promise.all([
+  // Second temps : ce que le filtre borne.
+  const [verifsBruts, etat, verifsDuLieu] = await Promise.all([
       listerVerifications(id, {
         domaine: filtreDomaine,
         urgentsSeulement: filtreUrgent,
@@ -324,32 +356,14 @@ export default async function CalendrierPage({
       // Sous le filtre bâtiment : un compte de tout l'établissement annonçait
       // les occurrences sans date de tout le dossier au-dessus d'une liste
       // restreinte à un bâtiment.
-      compterEtatCalendrier(id, new Date(), { batimentId: filtreBatiment }),
-      listerAutresEcheances(id),
-      // Le parc entier, pas seulement les appareils qui portent une
-      // échéance : la lecture par équipement doit pouvoir dire combien
-      // n'en ont aucune.
-      listerEquipementsDeLEtablissement(id),
-      // …et POURQUOI ils n'en ont aucune. « Rien à cette date » et « le
-      // référentiel ne calcule rien pour cet appareil » se ressemblaient
-      // trait pour trait sur cet écran : un calendrier qui n'affiche rien
-      // pour un équipement déclaré doit pouvoir l'expliquer.
-      equipementsSansEcheance(id),
+      compterEtatCalendrier(id, aujourdhui, { batimentId: filtreBatiment }),
       // Les lignes du lieu SANS filtre de domaine ni d'urgence : elles ne
       // servent qu'à savoir quels domaines proposer au filtre. Les lire sur
       // `verifsBruts` ferait disparaître de la liste des choix tous les
       // domaines sauf celui qu'on vient de choisir. Dans le même
       // `Promise.all`, donc sans allonger le rendu.
       listerVerifications(id, { batimentId: filtreBatiment }),
-      // Les lignes retenues par prudence, qui le disent (analyse du
-      // 2026-09-27, § 6.3). Calculées au rendu, par le moteur, comme l'écran
-      // des états permanents : la ligne persistée ne porte pas la marque, et
-      // une réponse donnée sur la fiche doit la lever sans régénération.
-      // Mémoïsées sur le rendu, et partagées avec le compte du bandeau
-      // (`compterEtatCalendrier`), qui en tire la même prudence (D1 (a)).
-      marquesAConfirmerDuRendu(id),
     ]);
-  const aujourdhui = new Date();
   const prudence = retenueParPrudence(marquesAConfirmer.parObligation);
   // La lecture par équipement suit le même bâtiment que le reste.
   const equipements = restreindreAuBatiment(equipementsTous, filtreBatiment);
@@ -835,6 +849,36 @@ export default async function CalendrierPage({
     moisTries[0]?.[0] ??
     null;
 
+  // ── L'année SERVIE (audit Next.js du 2026-10-14, M10) ─────────────────
+  //
+  // La règle et les cartes de toutes les années partaient au navigateur, qui
+  // les feuilletait sur place : la charge utile grandissait avec l'historique
+  // du dossier. Seule l'année affichée est sérialisée ; tourner la page la
+  // redemande ici, par `?annee=`, comme les filtres. Sans paramètre — ou hors
+  // des années du dossier — c'est l'année du mois servi d'office, la règle que
+  // le composant appliquait à l'arrivée. Les années révolues restent lues
+  // ici, pour remonter leurs mois en retard en tête de l'année en cours.
+  const anneeParDefaut = moisInitial
+    ? Number(moisInitial.slice(0, 4))
+    : anneeCourante;
+  const anneeDemandee = Number(annee);
+  const anneeAffichee =
+    annee !== undefined &&
+    Number.isInteger(anneeDemandee) &&
+    anneeDemandee >= anneeMin &&
+    anneeDemandee <= anneeMax
+      ? anneeDemandee
+      : anneeParDefaut;
+  // `anneesRegle` couvre `anneeMin` → `anneeMax` sans trou.
+  const regleAffichee = anneesRegle[anneeAffichee - anneeMin];
+  const moisAnterieursEnRetard =
+    anneeAffichee === anneeCourante
+      ? moisEnRetardAvant(anneesRegle, anneeCourante)
+      : [];
+  const clesServies = new Set(
+    [...regleAffichee.mois, ...moisAnterieursEnRetard].map((m) => m.cle),
+  );
+
   // Pilules de famille : seules celles qui ont au moins une échéance —
   // une famille vide n'a pas à encombrer la rangée.
   //
@@ -1196,7 +1240,14 @@ export default async function CalendrierPage({
                  Passé d'un bloc, il comptait toutes les années, et la page
                  2027 annonçait « 12 sans date » sans aucune carte pour les
                  porter (relecture système, 2026-09-14). */
-              anneesRegle={anneesRegle}
+              regle={regleAffichee}
+              anneePrecedente={
+                anneeAffichee > anneeMin ? anneeAffichee - 1 : null
+              }
+              anneeSuivante={
+                anneeAffichee < anneeMax ? anneeAffichee + 1 : null
+              }
+              moisAnterieursEnRetard={moisAnterieursEnRetard}
               /* Seulement sur la lecture d'ensemble : sous un filtre, la
                  remarque porterait sur un périmètre qu'elle ne décrit
                  pas. */
@@ -1212,7 +1263,11 @@ export default async function CalendrierPage({
                   horsReferentiel={horsReferentiel}
                 />
               }
-              sections={moisTries.map(([cleMois, liste]) => ({
+              // Les cartes de l'année servie, et des mois révolus qu'elle
+              // remonte : pas une de plus (M10).
+              sections={moisTries
+                .filter(([cleMois]) => clesServies.has(cleMois))
+                .map(([cleMois, liste]) => ({
                 cle: cleMois,
                 titre: libelleMois(cleMois),
                 nb: liste.length,

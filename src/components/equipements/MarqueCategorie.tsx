@@ -28,6 +28,7 @@ import {
   Forklift,
   Gauge,
   HardHat,
+  Heater,
   Lightbulb,
   LifeBuoy,
   Package,
@@ -111,6 +112,10 @@ export const ICONE_CATEGORIE: Record<CategorieEquipement, Picto> = {
   // catégorie, et `Recycle` est un symbole de thème, pas un appareil présent
   // dans les murs — les deux règles de cette table le refusent.
   COMPACTEUR_PRESSE_DECHETS_MOTORISE: Shredder,
+  // L'installation de gaz (2026-10-14) : le radiateur, l'appareil qu'on voit
+  // dans les murs. `Flame` est déjà le permis de feu ; `Fuel` dessine une
+  // pompe à carburant, autre chose.
+  INSTALLATION_GAZ: Heater,
   AUTRE: Package,
 };
 

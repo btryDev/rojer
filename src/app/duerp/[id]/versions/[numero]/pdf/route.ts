@@ -1,5 +1,5 @@
-import { renderToBuffer } from "@react-pdf/renderer";
 import { DuerpDocument } from "@/lib/pdf/DuerpDocument";
+import { reponsePdf } from "@/lib/pdf/reponse";
 import { getVersion, listerVersions } from "@/lib/versions/queries";
 import { historiqueJusqua } from "@/lib/versions/historique";
 import type { DuerpSnapshot } from "@/lib/versions/snapshot";
@@ -24,24 +24,17 @@ export async function GET(
   // 2026-10-12) : il se rouvre tel qu'il était, sans ce qui l'a suivi.
   const historique = historiqueJusqua(await listerVersions(id), numeroInt);
 
-  const buffer = await renderToBuffer(
-    DuerpDocument({ snapshot, historique }),
-  );
-
   const safe = snapshot.entreprise.raisonSociale
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-zA-Z0-9]/g, "_");
-  const filename = `DUERP_${safe}_v${numeroInt}.pdf`;
 
-  return new Response(new Uint8Array(buffer), {
-    headers: {
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="${filename}"`,
-      // `no-store` comme toute réponse personnelle (ASVS V14.3.2, audit du
-      // 2026-10-13) : `private, max-age=60` laissait le DUERP nominatif dans
-      // le cache du navigateur, relisible après déconnexion sur un poste partagé.
-      "Cache-Control": "no-store",
-    },
-  });
+  // `no-store` (dans `reponsePdf`) comme toute réponse personnelle (ASVS
+  // V14.3.2, audit du 2026-10-13) : `private, max-age=60` laissait le DUERP
+  // nominatif dans le cache du navigateur, relisible après déconnexion sur un
+  // poste partagé.
+  return reponsePdf(
+    DuerpDocument({ snapshot, historique }),
+    `DUERP_${safe}_v${numeroInt}.pdf`,
+  );
 }

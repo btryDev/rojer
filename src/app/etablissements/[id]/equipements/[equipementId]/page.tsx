@@ -49,8 +49,10 @@ import {
   type JalonFrise,
 } from "@/lib/equipements/frise";
 import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
+import { materielNonCouvert } from "@/lib/equipements/materiels-non-couverts";
+import { ReferencesMateriel } from "@/components/equipements/ReferencesMateriel";
 import { LABEL_PERIODICITE, LABEL_REALISATEUR } from "@/lib/calendrier/labels";
-import { LABEL_RESULTAT } from "@/lib/rapports/schema";
+import { LABEL_RESULTAT } from "@/lib/rapports/resultats";
 import type { RegistreLigne } from "@/lib/calendrier/etats";
 import {
   formaterDateLongueFr,
@@ -92,6 +94,8 @@ export default async function EquipementDetailPage({
   // rapports restent lisibles, aucun bouton d'écriture ne se pose. Le serveur
   // refuse de toute façon (`retrait.ts`) ; l'écran ne fait que ne pas proposer.
   const retire = estAppareilRetire(eq);
+  // 2026-10-14 : le matériel non suivi, s'il en est un (catégorie AUTRE).
+  const materiel = materielNonCouvert(eq.materielNonCouvert);
 
   const base = `/etablissements/${id}`;
   const provenance = lireProvenance(de, id);
@@ -350,12 +354,18 @@ export default async function EquipementDetailPage({
                   derrière le « ? », le même objet que celui du calendrier. */}
               <AideEcran titre="Pourquoi on vérifie cet équipement">
                 {obligationsCitees.length === 0 ? (
+                  // 2026-10-14 : un matériel non suivi dit ce que Rojer ne
+                  // suit pas pour lui, au lieu de la supposition générique.
+                  materiel ? (
+                    <p className="m-0">{materiel.phrase}</p>
+                  ) : (
                   <p className="m-0">
                     Aucune obligation du référentiel n&apos;est rattachée à cet
                     appareil pour l&apos;instant. Sa catégorie n&apos;en
                     déclenche peut-être aucune sous vos régimes, ou son
                     calendrier n&apos;a pas encore été généré.
                   </p>
+                  )
                 ) : (
                   <>
                     <p className="m-0">
@@ -441,6 +451,18 @@ export default async function EquipementDetailPage({
                 <ChampFiche cle="Catégorie">
                   {LABEL_CATEGORIE_EQUIPEMENT[eq.categorie]}
                 </ChampFiche>
+                {/* 2026-10-14 : le matériel que Rojer ne suit pas, et ce
+                    qu'il ne suit pas pour lui — un fait sur l'outil, pas un
+                    jugement sur l'appareil. */}
+                {materiel ? (
+                  <ChampFiche cle="Matériel">
+                    {materiel.libelle}
+                    <span className="mt-1 block text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                      {materiel.phrase}
+                    </span>
+                    <ReferencesMateriel references={materiel.references} />
+                  </ChampFiche>
+                ) : null}
                 {multiBatiments ? (
                   <ChampFiche cle="Zone">{eq.batiment.nom}</ChampFiche>
                 ) : null}

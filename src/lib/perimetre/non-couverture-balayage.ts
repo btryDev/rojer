@@ -55,6 +55,12 @@ import { obligationsConformite } from "@/lib/referentiels/conformite";
 export const SURFACES_DE_COUVERTURE = [
   "src/lib/perimetre",
   "src/app/etablissements/[id]/perimetre",
+  // 2026-10-14 : l'aide des catégories (`labels.ts`) et la liste des
+  // matériels non couverts disent désormais, elles aussi, ce que Rojer ne
+  // suit pas — les annonces du gaz, des escaliers mécaniques, de l'eau et des
+  // échelles y ont été déplacées depuis la page « Ce que Rojer ne couvre
+  // pas ». Elles passent par `nonPorte` / `porte`, et sont confrontées ici.
+  "src/lib/equipements",
 ] as const;
 
 /**

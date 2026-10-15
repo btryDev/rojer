@@ -691,6 +691,12 @@ export const CATEGORIES_EQUIPEMENT = [
   "EPI_ANTICHUTE",
   "EPI_RESPIRATOIRE",
   "EPI_GILET_SAUVETAGE",
+  // 2026-10-14, décision de la propriétaire : les installations de gaz
+  // combustible (stockage, distribution, appareils) que GZ 15 vérifie chaque
+  // année en ERP des quatre premières catégories. Le nom n'est pas
+  // « chaudière » : une chaudière n'est qu'un appareil possible de
+  // l'installation, et GZ 15 vise l'installation entière.
+  "INSTALLATION_GAZ",
   "AUTRE",
 ] as const;
 

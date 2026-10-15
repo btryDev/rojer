@@ -66,6 +66,10 @@ export const SURFACES_AFFICHEES = [
   "src/app",
   "src/components",
   "src/lib/pdf",
+  // 2026-10-14 (revue de `lot/materiels-non-couverts-1014`, point 4) : l'aide
+  // des catégories (`labels.ts`) et la liste des matériels non couverts
+  // s'affichent au formulaire, sur la fiche et dans le dossier.
+  "src/lib/equipements",
 ] as const;
 
 /**

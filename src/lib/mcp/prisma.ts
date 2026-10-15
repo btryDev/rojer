@@ -1,3 +1,4 @@
+import "server-only";
 // Client Prisma dédié au serveur MCP.
 //
 // Le singleton `@/lib/prisma` n'est pas réutilisable ici, et pas pour une
@@ -12,6 +13,12 @@
 // événements et réécrites sur **stderr**, qui n'est pas lu par le protocole.
 // C'est le même réflexe que `prisma/seed.ts`, qui instancie aussi son propre
 // client plutôt que d'importer le singleton de l'application.
+//
+// RÉSERVÉ À `scripts/mcp-server.ts` (audit Next.js du 2026-10-14, M5). Importé
+// depuis le code de l'application, il ouvrirait un second pool dans le
+// processus web ; les lectures MCP passent par `./db`, qui rend le client
+// commun sauf quand le serveur stdio y a substitué celui-ci. `db.test.ts`
+// refuse tout autre importeur.
 
 import { PrismaClient } from "@prisma/client";
 

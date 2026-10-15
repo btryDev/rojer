@@ -1,13 +1,14 @@
 import { describe, it, expect } from "vitest";
-import { entetesSecurite, politiqueContenu } from "./entetes";
+import { entetesSecurite, nonceCsp, politiqueContenu } from "./entetes";
 
 const PROD = {
   supabaseUrl: "https://abcd.supabase.co",
   developpement: false,
+  nonce: "bm9uY2U=",
 };
 
-function valeur(nom: string, opts = PROD): string | undefined {
-  return entetesSecurite(opts).find(
+function valeur(nom: string): string | undefined {
+  return entetesSecurite().find(
     (e) => e.key.toLowerCase() === nom.toLowerCase(),
   )?.value;
 }
@@ -18,13 +19,11 @@ describe("entetesSecurite", () => {
     expect(valeur("Content-Security-Policy")).toBe("frame-ancestors 'none'");
   });
 
-  it("la CSP bloquante ne porte QUE frame-ancestors", () => {
-    // Le reste de la politique n'a été regardé dans aucun navigateur : le
-    // rendre bloquant sans l'avoir observé casserait des pages en silence.
+  it("next.config ne pose que le plancher frame-ancestors, plus de Report-Only", () => {
+    // La CSP complète est celle du proxy, à nonce : un nonce ne peut pas
+    // venir d'un en-tête fixe, tiré une fois au build.
     expect(valeur("Content-Security-Policy")).not.toMatch(/script-src|default-src/);
-    expect(valeur("Content-Security-Policy-Report-Only")).toMatch(
-      /default-src 'self'/,
-    );
+    expect(valeur("Content-Security-Policy-Report-Only")).toBeUndefined();
   });
 
   it("pose nosniff, la politique de référent et HSTS", () => {
@@ -56,6 +55,7 @@ describe("politiqueContenu", () => {
     const csp = politiqueContenu({
       supabaseUrl: "https://abcd.supabase.co/auth/v1",
       developpement: false,
+      nonce: "n",
     });
     expect(csp).toMatch(/connect-src 'self' https:\/\/abcd\.supabase\.co(;|$)/);
   });
@@ -69,8 +69,41 @@ describe("politiqueContenu", () => {
 
   it("une URL Supabase absente ou invalide ne produit pas de source fautive", () => {
     for (const supabaseUrl of [undefined, "", "pas une url"]) {
-      const csp = politiqueContenu({ supabaseUrl, developpement: false });
+      const csp = politiqueContenu({ supabaseUrl, developpement: false, nonce: "n" });
       expect(csp).toMatch(/connect-src 'self'(;|$)/);
     }
+  });
+});
+
+describe("politiqueContenu : scripts", () => {
+  const scripts = (csp: string) =>
+    csp.split(";").map((d) => d.trim()).find((d) => d.startsWith("script-src")) ?? "";
+
+  it("n'admet un script qu'avec le nonce de la requête, sans 'unsafe-inline'", () => {
+    const s = scripts(politiqueContenu(PROD));
+    expect(s).toContain("'nonce-bm9uY2U='");
+    expect(s).toContain("'strict-dynamic'");
+    expect(s).not.toContain("'unsafe-inline'");
+  });
+
+  it("garde default-src, object-src, base-uri, form-action et frame-ancestors", () => {
+    const csp = politiqueContenu(PROD);
+    for (const d of [
+      "default-src 'self'",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "frame-ancestors 'none'",
+    ]) {
+      expect(csp).toContain(d);
+    }
+  });
+});
+
+describe("nonceCsp", () => {
+  it("tire 128 bits en base64, différents à chaque appel", () => {
+    const a = nonceCsp();
+    expect(a).toMatch(/^[A-Za-z0-9+/]{22}==$/);
+    expect(nonceCsp()).not.toBe(a);
   });
 });

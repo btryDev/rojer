@@ -11,9 +11,9 @@ import type {
   Obligation,
   PorteurObligation,
 } from "@/lib/referentiels/conformite/types";
-// Type seul : l'import est effacé à la compilation, il ne crée donc pas de
-// cycle avec `prescriptions/schema.ts`, qui importe une valeur d'ici.
-import type { SourcePrescription } from "@/lib/prescriptions/schema";
+// Depuis le module feuille : `prescriptions/schema.ts` ne réexporte plus les
+// sources depuis qu'il est réservé au serveur (audit Next.js du 2026-10-14).
+import type { SourcePrescription } from "@/lib/prescriptions/sources";
 import type { EffectifsDeclares } from "./effectif-entreprise";
 
 /**

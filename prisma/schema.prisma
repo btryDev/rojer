@@ -564,6 +564,10 @@ model Equipement {
   datePeremption    DateTime?
   caracteristiques  Json?
   actif             Boolean             @default(true)
+  // 2026-10-14 : la clé d'un matériel que Rojer ne suit pas
+  // (`equipements/materiels-non-couverts.ts`), posée seulement en catégorie
+  // AUTRE et validée contre la liste par `equipementSchema`. `null` sinon.
+  materielNonCouvert String?
 
   verifications              Verification[]
   prescriptionsParticulieres PrescriptionParticuliere[]
@@ -608,6 +612,9 @@ enum CategorieEquipement {
   EPI_ANTICHUTE
   EPI_RESPIRATOIRE
   EPI_GILET_SAUVETAGE
+  // 2026-10-14 : les installations de gaz combustible que GZ 15 vérifie
+  // (stockage, distribution, appareils) — pas seulement la cuisine.
+  INSTALLATION_GAZ
   AUTRE
 }
 
@@ -1275,6 +1282,7 @@ model AccessToken {
 
   @@index([etablissementId])
   @@index([objetType, objetId])
+  @@index([prestataireId])
 }
 
 /// Le plafond des envois de code de confirmation, PAR ADRESSE (ADR-006,
@@ -1288,6 +1296,24 @@ model QuotaEnvoiOtp {
   empreinteAdresse String   @id
   fenetreDebut     DateTime
   envois           Int      @default(0)
+}
+
+/// Limitation de débit des points d'entrée publics (audit OWASP B3/B14, audit
+/// Next.js M11, 2026-10-14) : connexion, inscription, réinitialisation,
+/// vérification publique d'une signature, serveur MCP. Une ligne par clé
+/// `<action>:<ip|compte|portee>:<empreinte SHA-256>` — ni adresse IP ni
+/// adresse e-mail en clair. Fenêtre fixe : `compte` repart de 1 quand
+/// `fenetreFin` est passée. Tenue en base, et non en mémoire, parce que chaque
+/// instance Vercel a la sienne ; elle vaut aussi chez Clever Cloud.
+/// L'incrément est un seul `INSERT … ON CONFLICT DO UPDATE`, que PostgreSQL
+/// sérialise sur la ligne (`securite/limite-debit.ts`).
+model LimiteDebit {
+  cle        String   @id
+  compte     Int
+  fenetreFin DateTime
+
+  // Le ménage des fenêtres closes (`DELETE … WHERE "fenetreFin" < …`).
+  @@index([fenetreFin])
 }
 
 enum ScopeAccessToken {
@@ -1455,6 +1481,7 @@ model PermisFeu {
   @@index([etablissementId, dateDebut])
   @@index([statut])
   @@index([batimentId])
+  @@index([prestataireId])
 }
 
 enum NatureTravauxPointChaud {
@@ -1589,6 +1616,7 @@ model PlanPrevention {
   @@unique([etablissementId, numero])
   @@index([etablissementId, dateDebut])
   @@index([batimentId])
+  @@index([prestataireId])
 }
 
 model LignePlanPrevention {
@@ -1666,7 +1694,15 @@ model PointReleve {
   batimentId      String?
   batiment        Batiment?     @relation(fields: [batimentId], references: [id], onDelete: SetNull)
   typeReseau      TypeReseauEau
-  seuilMinCelsius Float         @default(50)
+  /// Où est le point (2026-10-14, chantier § 5). `null` : point créé avant
+  /// que le type existe, jamais deviné — la fiche invite à le préciser.
+  typePoint       TypePointReleve?
+  /// Minimum (≥) et maximum (≤) de la plage du point ; chacun facultatif,
+  /// au moins un des deux (CHECK `PointReleve_un_seuil_au_moins`, et
+  /// `min ≤ max` par `PointReleve_seuils_ordonnes`). Lus par la seule
+  /// `estReleveConforme`.
+  seuilMinCelsius Float?
+  seuilMaxCelsius Float?
   actif           Boolean       @default(true)
 
   releves ReleveTemperature[]
@@ -1716,6 +1752,17 @@ enum TypeReseauEau {
   ECS
   EFS
   ECS_BOUCLAGE
+}
+
+/// Le type d'un point de relevé : il préremplit les seuils (article 36 de
+/// l'arrêté du 23 juin 1978 ; 20 °C de l'eau froide, repère de Rojer) et
+/// donne le réseau (`RESEAU_DU_TYPE_POINT`).
+enum TypePointReleve {
+  SORTIE_STOCKAGE
+  RETOUR_BOUCLE
+  PUISAGE_TOILETTE
+  PUISAGE_AUTRE
+  EAU_FROIDE
 }
 
 // ----------------------------------------------------------------------------

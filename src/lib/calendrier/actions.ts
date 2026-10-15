@@ -1,5 +1,15 @@
-"use server";
-
+// SERVEUR SEULEMENT, ET PLUS UN `"use server"` (2026-10-14, audit Next.js B1).
+// La directive datait du bouton « Régénérer » de l'étape 6, retiré le
+// 2026-08-19 (93ab08bb, « le calendrier se répare seul ») : depuis, aucun
+// composant n'appelle ces fonctions comme action, seul
+// `regeneration-sure.ts` les appelle, côté serveur. Mais un export d'un
+// fichier `"use server"` reste un point d'entrée appelable depuis le
+// navigateur — `genererCalendrier` et `regenererSansInvalider` figuraient au
+// manifeste des actions serveur (`server-reference-manifest.json`), et un
+// propriétaire pouvait déclencher des régénérations coûteuses à volonté. Le
+// module garde son nom : le moteur (`version-moteur.test.ts`) et la garde des
+// écritures (`garde-convergence.test.ts`) le désignent par son chemin.
+import "server-only";
 import { revalidatePath } from "next/cache";
 import { Prisma, type Realisateur } from "@prisma/client";
 import { prisma } from "@/lib/prisma";

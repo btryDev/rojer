@@ -35,8 +35,8 @@
 // générateur d'occurrences, donc exactement ce que le calendrier montre.
 
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
-import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
+import { chargerEtablissementEtParc } from "@/lib/etablissements/dossier-du-rendu";
 import {
   determineObligationsApplicables,
   determineObligationsNiveauAudit,
@@ -51,6 +51,7 @@ import {
   type Obligation,
 } from "@/lib/referentiels/conformite/types";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
+import { materielNonCouvert } from "./materiels-non-couverts";
 
 /**
  * Pourquoi cet appareil ne porte aucune échéance. Trois causes bien
@@ -116,6 +117,26 @@ export const EXPLICATION_SANS_ECHEANCE: Record<MotifSansEcheance, string> = {
   niveau_audit:
     "Une obligation légale vise cet équipement, mais Rojer la tient au niveau audit : il ne la suit pas au quotidien et ne pose aucune date. Elle s'applique malgré tout — la page « Ce que Rojer ne couvre pas » la nomme, avec son texte.",
 };
+
+/**
+ * La phrase longue d'un appareil précis (2026-10-14, décision de la
+ * propriétaire) : un matériel que Rojer ne suit pas (`materielNonCouvert`,
+ * catégorie `AUTRE`) dit CE QUE Rojer ne suit pas pour lui, au lieu du
+ * message générique « sa catégorie n'est couverte par aucune obligation ».
+ * La fin reste celle du générique : l'outil ne dit jamais que rien n'est dû.
+ *
+ * Seul le motif `categorie_hors_referentiel` est concerné : la clé n'existe
+ * qu'en catégorie `AUTRE`, qu'aucune obligation ne cite. Une clé inconnue de
+ * la liste retombe sur le générique.
+ */
+export function explicationSansEcheance(
+  motif: MotifSansEcheance,
+  materiel: string | null | undefined,
+): string {
+  const m = materielNonCouvert(materiel);
+  if (motif !== "categorie_hors_referentiel" || !m) return EXPLICATION_SANS_ECHEANCE[motif];
+  return `${m.phrase} Aucune échéance n'est donc calculée pour cet équipement. Cela ne veut pas dire qu'aucune vérification ne lui est due.`;
+}
 
 /**
  * Compte les appareils pour lesquels **aucune obligation** ne s'applique — le
@@ -250,13 +271,9 @@ export async function equipementsSansEcheance(
   etablissementId: string,
 ): Promise<Map<string, MotifSansEcheance>> {
   const user = await requireUser();
-  const etab = await prisma.etablissement.findFirst({
-    where: { id: etablissementId, entreprise: { userId: user.id } },
-    include: {
-      equipements: { where: { actif: true } },
-      entreprise: { select: { effectif: true } },
-    },
-  });
+  // [2026-10-14, audit Next.js H2] La lecture que le rendu partage
+  // (`dossier-du-rendu.ts`) : même prédicat, même parc en service.
+  const etab = await chargerEtablissementEtParc(etablissementId, user.id);
   if (!etab) return new Map();
 
   return reperterSansEcheance(

@@ -119,7 +119,13 @@ describe("registre de dette — les obligations manquantes", () => {
       // ici, avec les trois du 2026-09-27.
       // [4, 0] → [3, 0] le même jour : `R. 4544-11` annoncé (`non_couvert`),
       // décision de la propriétaire (« hors cadre et on l'annonce »).
-      a_trancher: [3, 0],
+      // [3, 0] → [4, 0] le 2026-10-14 : « MS 69 — stock permanent de
+      // fournitures de rechange », HORS CADRE (décision de la propriétaire),
+      // sortie de la réserve de `MS 69` pour être classée.
+      // [4, 0] → [5, 0] le 2026-10-15 : « M 40 § 3 e) — contrat d'entretien
+      // des machines de nettoyage à sec », HORS CADRE (décision de la
+      // propriétaire, une condition d'activité).
+      a_trancher: [5, 0],
       // [0, 3] → [0, 0] le 2026-10-12 : les trois hôtels, voir `a_trancher`.
       perimetre: [0, 0],
     });
@@ -142,8 +148,12 @@ describe("registre de dette — les obligations manquantes", () => {
     // 23 → 21 le même jour, après revue : arrêté 1986 art. 78-1 et 102,
     // d'abord classés hors cadre, sont annoncés (décision de la propriétaire).
     // 21 → 20 : `R. 4544-11` annoncé, même décision.
-    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(20);
-    expect(manquantes.length).toBe(20);
+    // 20 → 21 le 2026-10-14 : le stock de rechange de `MS 69`, hors cadre
+    // (§ 7). 20 + 1 − 0 = 21.
+    // 21 → 22 le 2026-10-15 : le contrat d'entretien de `M 40 § 3 e)`, hors
+    // cadre (§ 7), une condition d'activité. 21 + 1 − 0 = 22.
+    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(22);
+    expect(manquantes.length).toBe(22);
   });
 });
 
@@ -186,7 +196,18 @@ describe("registre de dette — les réserves de lecture", () => {
     // contrôle électrique annuel de l'hôtel) et gagnent chacun une réserve —
     // le renvoi à AS 9, question posée au préventeur, qui borne AS 9 aux
     // N1–N4 ; les deux lignes N5/O sont supprimées. 87 + 2 − 0 = 89.
-    expect(n).toBe(89);
+    // 89 → 90 le 2026-10-14 (`lot/dae`) : `CCH R. 157-1` entre au corpus,
+    // retenu pour son 1° (ERP 1 à 4) ; le 2° (5ᵉ catégorie, arrêté du seuil non
+    // publié) reste en réserve. 89 + 1 − 0 = 90.
+    // 90 → 92 le 2026-10-14 (livre II, titre II, décision de la propriétaire) :
+    // `M 29` (le SSIAP au-delà de 4 000 personnes) et `N 20` (le rappel
+    // « fréquemment », sans rythme) entrent retenus avec une réserve. `CH 39`
+    // garde la sienne — sa première branche, le livret, est encodée, les
+    // deux autres restent. 90 + 2 − 0 = 92.
+    // 92 → 94 le même jour, revue indépendante : `MS 47` (même écrit que la
+    // consigne du Code du travail, champ différent) et `MS 48` (§ 2 SSIAP
+    // dehors) entrent retenus en contexte, chacun avec sa réserve. 92 + 2 = 94.
+    expect(n).toBe(94);
     expect(reservesDeLecture().length).toBe(n);
   });
 });

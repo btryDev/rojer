@@ -5,7 +5,7 @@ import { faitRetards } from "./fait-retards";
 import type { LignePlanActions } from "./PlanActionsDocument";
 import type { LigneRapport, LigneVerif } from "./RegistreDocument";
 import { LABEL_STATUT_ACTION, LABEL_TYPE_ACTION } from "@/lib/actions/labels";
-import { LABEL_RESULTAT } from "@/lib/rapports/schema";
+import { LABEL_RESULTAT } from "@/lib/rapports/resultats";
 import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
 import { MARQUAGE_CONTRACTUEL } from "@/lib/prescriptions/sources";
 import { LIBELLE_SANS_ECHEANCE } from "@/lib/calendrier/etats";
@@ -20,7 +20,11 @@ import {
   faitInventaire,
   type CouvertureEtablissement,
 } from "@/lib/perimetre/couverture";
-import { blocsPerimetre, chapeauPerimetre } from "./mentions-perimetre";
+import {
+  blocsPerimetre,
+  chapeauPerimetre,
+  type BlocPerimetre,
+} from "./mentions-perimetre";
 import {
   destinatairesDossier,
   referencesRegistreDossier,
@@ -54,6 +58,12 @@ export type DossierData = {
    * le document reste muet plutôt que de rassurer.
    */
   couverture: CouvertureEtablissement | null;
+  /**
+   * 2026-10-14 : les matériels que Rojer ne suit pas, réellement déclarés au
+   * parc en service (`blocsMaterielsNonCouverts`). Requis, comme les champs
+   * ci-dessous : optionnel, il serait resté vide.
+   */
+  materielsNonCouverts: BlocPerimetre[];
   /**
    * Ce qu'il faut savoir de l'âge du calendrier, ou `null` s'il est à jour.
    *
@@ -237,8 +247,14 @@ function EncadreALire({
 export function DossierConformiteDocument({ data }: { data: DossierData }) {
   // Muet si la couverture n'a pas pu être lue : un document qui ne sait pas
   // ce qu'il ignore ne doit pas écrire qu'il n'ignore rien.
-  const chapeau = data.couverture ? chapeauPerimetre(data.couverture) : null;
-  const blocs = data.couverture ? blocsPerimetre(data.couverture) : [];
+  const chapeau = data.couverture
+    ? chapeauPerimetre(data.couverture, data.materielsNonCouverts.length)
+    : null;
+  // Les matériels non suivis après les manques du référentiel (2026-10-14) :
+  // le même bloc, la même forme, des faits de ce dossier seulement.
+  const blocs = data.couverture
+    ? [...blocsPerimetre(data.couverture), ...data.materielsNonCouverts]
+    : [];
   const inventaire = data.couverture ? faitInventaire(data.couverture) : null;
 
   return (

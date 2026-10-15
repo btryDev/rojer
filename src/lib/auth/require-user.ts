@@ -1,3 +1,4 @@
+import "server-only";
 // Helper utilisé par les Server Actions et les RSC qui accèdent à de la data
 // utilisateur. Lit la session Supabase côté serveur et redirige vers /login
 // si aucun user. À appeler AU DÉBUT de chaque action/loader, avant toute

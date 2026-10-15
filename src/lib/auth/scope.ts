@@ -1,3 +1,4 @@
+import "server-only";
 // Helpers de scoping par utilisateur (ADR-005).
 // Toute lecture/écriture d'une entité doit vérifier que l'entreprise racine
 // appartient bien au user connecté. On passe par ces helpers pour éviter de
@@ -7,6 +8,7 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getOptionalUser, requireUser } from "./require-user";
+import { cache } from "react";
 
 /**
  * Récupère une entreprise appartenant au user connecté, ou 404.
@@ -26,8 +28,15 @@ export async function requireEntreprise(entrepriseId: string) {
  * Récupère un établissement dont l'entreprise appartient au user connecté,
  * ou 404. Utilisé par toutes les pages /etablissements/[id]/... et les
  * actions qui reçoivent un etablissementId.
+ *
+ * Mémoïsé par `cache()` sur le rendu (audit Next.js du 2026-10-14, H2) : la
+ * barre latérale (vigilance prestataires) et la page le demandent dans le même
+ * rendu. Clé primitive, portée de la requête HTTP ; hors rendu RSC — une
+ * action serveur —, la garde s'exécute à chaque appel, comme avant.
  */
-export async function requireEtablissement(etablissementId: string) {
+export const requireEtablissement = cache(async function requireEtablissement(
+  etablissementId: string,
+) {
   const user = await requireUser();
   const etablissement = await prisma.etablissement.findFirst({
     where: { id: etablissementId, entreprise: { userId: user.id } },
@@ -35,7 +44,7 @@ export async function requireEtablissement(etablissementId: string) {
   });
   if (!etablissement) notFound();
   return { user, etablissement };
-}
+});
 
 /**
  * Récupère un DUERP dont l'établissement appartient au user, ou 404.
@@ -157,6 +166,64 @@ export async function requireVerification(verificationId: string) {
 }
 
 /**
+ * Les quatre gardes des routes de fichiers déposés (audit Next.js du
+ * 2026-10-14, B6) : chacune recodait son `findFirst` d'appartenance. Même
+ * prédicat que celles-ci — la chaîne complète jusqu'à `Entreprise.userId`,
+ * dans la requête même — et même réponse pour une ligne inexistante et pour
+ * celle d'un autre compte (404) : pas d'oracle d'existence.
+ */
+
+/** Un rapport de vérification dont l'établissement appartient au user, ou 404. */
+export async function requireRapportVerification(rapportId: string) {
+  const user = await requireUser();
+  const rapport = await prisma.rapportVerification.findFirst({
+    where: { id: rapportId, etablissement: { entreprise: { userId: user.id } } },
+  });
+  if (!rapport) notFound();
+  return { user, rapport };
+}
+
+/** Une analyse de légionelles dont le carnet appartient au user, ou 404. */
+export async function requireAnalyseLegionelle(analyseId: string) {
+  const user = await requireUser();
+  const analyse = await prisma.analyseLegionelle.findFirst({
+    where: {
+      id: analyseId,
+      carnet: { etablissement: { entreprise: { userId: user.id } } },
+    },
+  });
+  if (!analyse) notFound();
+  return { user, analyse };
+}
+
+/** Un prestataire dont l'établissement appartient au user, ou 404. */
+export async function requirePrestataire(prestataireId: string) {
+  const user = await requireUser();
+  const prestataire = await prisma.prestataire.findFirst({
+    where: { id: prestataireId, etablissement: { entreprise: { userId: user.id } } },
+  });
+  if (!prestataire) notFound();
+  return { user, prestataire };
+}
+
+/**
+ * Une pièce remplacée de CE prestataire, dont l'établissement appartient au
+ * user, ou 404 — une pièce rattachée à un autre de ses prestataires aussi.
+ */
+export async function requirePiecePrestataire(pieceId: string, prestataireId: string) {
+  const user = await requireUser();
+  const piece = await prisma.piecePrestataire.findFirst({
+    where: {
+      id: pieceId,
+      prestataireId,
+      prestataire: { etablissement: { entreprise: { userId: user.id } } },
+    },
+  });
+  if (!piece) notFound();
+  return { user, piece };
+}
+
+/**
  * Vérifie (sans retourner l'entité) qu'un etablissementId appartient au user.
  * Utile dans les server actions où on veut juste un garde-fou.
  */
@@ -217,33 +284,40 @@ export const COOKIE_ETABLISSEMENT_ACTIF = "etablissement-actif";
  *
  * Version "optional" : ne déclenche pas de redirect vers /login — à
  * combiner avec `getOptionalUser()`.
+ *
+ * Mémoïsé par `cache()` sur le rendu (audit Next.js du 2026-10-14, H2, M2) :
+ * l'accueil et l'en-tête public le lisent dans le même rendu. Sans argument,
+ * la clé est vide — une entrée par requête HTTP, jamais partagée entre deux.
+ * Hors rendu RSC (actions serveur), il s'exécute à chaque appel.
  */
-export async function getOptionalUserEtablissement(): Promise<{
-  id: string;
-  raisonDisplay: string;
-  entrepriseId: string;
-} | null> {
-  const user = await getOptionalUser();
-  if (!user) return null;
+export const getOptionalUserEtablissement = cache(
+  async function getOptionalUserEtablissement(): Promise<{
+    id: string;
+    raisonDisplay: string;
+    entrepriseId: string;
+  } | null> {
+    const user = await getOptionalUser();
+    if (!user) return null;
 
-  const champs = {
-    id: true,
-    raisonDisplay: true,
-    entrepriseId: true,
-  } as const;
+    const champs = {
+      id: true,
+      raisonDisplay: true,
+      entrepriseId: true,
+    } as const;
 
-  const demande = (await cookies()).get(COOKIE_ETABLISSEMENT_ACTIF)?.value;
-  if (demande) {
-    const actif = await prisma.etablissement.findFirst({
-      where: { id: demande, entreprise: { userId: user.id } },
+    const demande = (await cookies()).get(COOKIE_ETABLISSEMENT_ACTIF)?.value;
+    if (demande) {
+      const actif = await prisma.etablissement.findFirst({
+        where: { id: demande, entreprise: { userId: user.id } },
+        select: champs,
+      });
+      if (actif) return actif;
+    }
+
+    return prisma.etablissement.findFirst({
+      where: { entreprise: { userId: user.id } },
+      orderBy: { createdAt: "asc" },
       select: champs,
     });
-    if (actif) return actif;
-  }
-
-  return prisma.etablissement.findFirst({
-    where: { entreprise: { userId: user.id } },
-    orderBy: { createdAt: "asc" },
-    select: champs,
-  });
-}
+  },
+);

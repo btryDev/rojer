@@ -1,3 +1,4 @@
+import "server-only";
 /**
  * Ce que l'écran « Ce qui doit être en place » lit.
  *
@@ -30,6 +31,7 @@ import { modeDeclarationApplique, type ModeDeclaration } from "./regle";
 import { ordonnerLignes } from "./ordre";
 import { fondementDe, type FondementLigne } from "./fondement";
 import { PHRASE_SANS_REPONSE } from "@/lib/matching/sans-reponse";
+import { obligationsApplicablesDuDossier } from "@/lib/etablissements/dossier-du-rendu";
 
 export type LigneEtatPermanent = {
   obligation: Obligation;
@@ -114,11 +116,26 @@ export type EtatsPermanentsDuDossier = {
 export async function listerEtatsPermanents(
   etablissement: SourceEtablissement,
   equipements: EquipementMatching[],
-): Promise<EtatsPermanentsDuDossier> {
-  const applicables = determineObligationsApplicables(
+  /**
+   * Le passage du moteur sur CES entrées, quand l'appelant l'a déjà
+   * (`dossier-du-rendu.ts`, audit du 2026-10-14, H2) : le tableau de bord le
+   * partage avec ses autres lectures au lieu d'en refaire un. Absent, il est
+   * calculé ici, comme avant.
+   */
+  applicables: ReturnType<
+    typeof determineObligationsApplicables
+  > = determineObligationsApplicables(
     projeterEtablissement(etablissement),
     equipements,
-  );
+  ),
+): Promise<EtatsPermanentsDuDossier> {
+  const projete = projeterEtablissement(etablissement);
+  // Le fondement affiché dépend du type d'ERP (livre II, titre II : une ligne
+  // pour plusieurs types, l'article de CE type à l'écran) — 2026-10-14.
+  const contexteFondement = {
+    typeErp: projete.estERP ? projete.typeErp : null,
+    categorieErp: projete.estERP ? projete.categorieErp : null,
+  };
 
   // Le prédicat d'appartenance, porté par la lecture elle-même.
   //
@@ -177,7 +194,7 @@ export async function listerEtatsPermanents(
       questionsSansReponse: (app.sansReponse ?? []).map(
         (q) => PHRASE_SANS_REPONSE[q],
       ),
-      fondement: fondementDe(o),
+      fondement: fondementDe(o, contexteFondement),
     };
 
     if (mode.compteDansLEnTete) {
@@ -260,17 +277,17 @@ export async function etatsPermanentsDuDossier(
   etablissementId: string,
   userId: string,
 ): Promise<EtatsPermanentsDuDossier> {
-  const etab = await prisma.etablissement.findFirst({
-    where: { id: etablissementId, entreprise: { userId } },
-    include: {
-      equipements: { where: { actif: true } },
-      entreprise: { select: { effectif: true } },
-    },
-  });
+  // [2026-10-14, audit Next.js H2] Lecture et passage du moteur partagés avec
+  // le reste du rendu (`dossier-du-rendu.ts`) — même prédicat, même parc en
+  // service. Hors rendu RSC, ils se font ici comme avant.
+  const dossier = await obligationsApplicablesDuDossier(
+    etablissementId,
+    userId,
+  );
   // Un dossier qui n'est pas celui de l'utilisateur n'a rien à montrer, et
   // zéro sur zéro ne produit aucune indétermination : le score reste ce qu'il
   // aurait été sans ce terme, et le document n'imprime aucun tableau.
-  if (!etab) {
+  if (!dossier) {
     return {
       groupes: [],
       faits: [],
@@ -282,16 +299,9 @@ export async function etatsPermanentsDuDossier(
   }
 
   return listerEtatsPermanents(
-    etab,
-    etab.equipements.map((eq) => ({
-      id: eq.id,
-      libelle: eq.libelle,
-      categorie: eq.categorie,
-      caracteristiques: (eq.caracteristiques ?? null) as Record<
-        string,
-        unknown
-      > | null,
-    })),
+    dossier.etab,
+    dossier.equipements,
+    dossier.applicables,
   );
 }
 

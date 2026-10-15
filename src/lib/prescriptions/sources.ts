@@ -11,7 +11,9 @@
  * l'initialisation et un autre qui s'en sert. Le cycle aurait probablement
  * tenu ; « probablement » n'est pas une garantie qu'on veut sous un
  * marquage dont l'absence fait passer un engagement d'assurance pour du
- * droit. `schema.ts` les réexporte, les imports existants ne bougent pas.
+ * droit. ~~`schema.ts` les réexporte, les imports existants ne bougent pas.~~
+ * [2026-10-14, audit Next.js H1 : `schema.ts` est réservé au serveur et ne
+ * les réexporte plus ; les écrans les prennent ici.]
  */
 
 export const SOURCES_PRESCRIPTION = [

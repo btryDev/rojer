@@ -8,8 +8,9 @@
 // réconciliateur, et une migration. L'écran des états permanents fait déjà
 // ainsi : c'est le même calcul, par la même traduction (`matching/marques.ts`).
 //
-// Le client est reçu, pas importé : le MCP a le sien (`mcp/prisma.ts`, qui
-// n'écrit rien sur la sortie standard). La portée l'est aussi — l'appelant
+// Le client est reçu, pas importé : le MCP passe le sien (`dbMcp()`, qui vaut
+// `mcp/prisma.ts` dans le serveur stdio — rien sur la sortie standard — et le
+// client commun dans le processus web, audit Next.js M5 du 2026-10-14). La portée l'est aussi — l'appelant
 // passe le prédicat d'appartenance qu'il a établi, et la lecture le porte.
 
 import type { Prisma, PrismaClient } from "@prisma/client";
@@ -90,6 +91,19 @@ export async function marquesAConfirmerDuDossier(
         > | null,
       })),
   );
+  return marquesDepuisApplicables(applicables, entrepriseId);
+}
+
+/**
+ * La mise en forme, sans la lecture : ce que rend le moteur, traduit en
+ * marques. Séparée pour que le rendu RSC la nourrisse du passage du moteur
+ * qu'il partage déjà (`dossier-du-rendu.ts`, audit du 2026-10-14, H2), sans
+ * relire l'établissement ni rappeler le moteur.
+ */
+export function marquesDepuisApplicables(
+  applicables: ReturnType<typeof determineObligationsApplicables>,
+  entrepriseId: string,
+): MarquesDuDossier {
   return {
     parObligation: marquesParObligation(applicables),
     entrepriseId,

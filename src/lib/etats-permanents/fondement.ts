@@ -13,6 +13,9 @@
  * référentiel place en tête — la même règle que la fiche d'un salarié
  * (`equipe/[salarieId]/page.tsx`, `slice(0, 1)`). Les suivants restent sur la
  * fiche de l'obligation ; une ligne qui en porterait trois ne se lirait plus.
+ * [2026-10-14 : sauf une ligne fondée sur un chapitre de type du livre II,
+ * titre II, qui montre l'article du type de l'établissement ; et un article
+ * de type cité en contexte s'ajoute en complément — voir `ContexteFondement`.]
  *
  * **L'extrait EST la `citationCle` du corpus**, prise telle quelle et jamais
  * recomposée. Une citation qu'on ne trouve pas au corpus — article absent,
@@ -24,7 +27,8 @@
  */
 
 import { indexArticlesParRef } from "@/lib/referentiels/corpus";
-import type { Obligation } from "@/lib/referentiels/conformite";
+import type { Obligation, ReferenceLegale } from "@/lib/referentiels/conformite/types";
+import type { CategorieErp, TypeErp } from "@/lib/referentiels/types-communs";
 
 export type FondementLigne = {
   /** La `reference` du référentiel, telle qu'elle s'imprime ailleurs. */
@@ -33,7 +37,36 @@ export type FondementLigne = {
   href: string | null;
   /** La `citationCle` du corpus ; `null` si le corpus n'en porte pas. */
   extrait: string | null;
+  /**
+   * Un article de CONTEXTE propre au type de l'établissement, montré à côté
+   * du fondement (2026-10-14) : `N 20` sur la consigne du Code du travail,
+   * pour un restaurant de type N des catégories 1 à 4. Absent partout
+   * ailleurs.
+   */
+  complement?: FondementLigne;
 };
+
+/**
+ * Ce que la ligne sait de l'établissement pour choisir son article
+ * (2026-10-14, revue du lot livre II, titre II).
+ *
+ * POURQUOI. Une ligne fondée sur un chapitre de type (livre II, titre II)
+ * réunit les articles de plusieurs types — `N 17`, `M 29`, `O 18`, `W 13` pour
+ * le personnel désigné. Afficher toujours `referencesLegales[0]` montrait
+ * « N 17 … type N » à un magasin. Le fondement affiché est celui du type de
+ * l'établissement ; la ligne reste une (pas de scission).
+ */
+export type ContexteFondement = {
+  typeErp: TypeErp | null;
+  categorieErp: CategorieErp | null;
+};
+
+/** Le type dont un article est le chapitre (livre II, titre II), ou `null`. */
+const CHAPITRE_DE_TYPE = /^([LMNOPRSTUVWXYJ]) (?:\d|annexe)/;
+function typeDuChapitre(article: string | undefined): string | null {
+  return CHAPITRE_DE_TYPE.exec(article ?? "")?.[1] ?? null;
+}
+const QUATRE_PREMIERES: readonly string[] = ["N1", "N2", "N3", "N4"];
 
 /**
  * Ce qui désigne l'article dans sa clé, sans le texte qui le porte :
@@ -90,9 +123,34 @@ export function referenceNommeLArticle(
   return nommes.size === 1 && nommes.has(designation(article).replace(/\. ?/, ". "));
 }
 
-export function fondementDe(obligation: Obligation): FondementLigne | null {
-  const r = obligation.referencesLegales[0];
-  if (!r) return null;
+export function fondementDe(
+  obligation: Obligation,
+  contexte?: ContexteFondement,
+): FondementLigne | null {
+  const refs = obligation.referencesLegales;
+  const premiere = refs[0];
+  if (!premiere) return null;
+  const type = contexte?.typeErp ?? null;
+  // Fondée sur un chapitre de type : l'article du type de l'établissement,
+  // s'il y en a un ; sinon le premier, comme partout.
+  const r =
+    type && typeDuChapitre(premiere.article)
+      ? (refs.find((x) => typeDuChapitre(x.article) === type) ?? premiere)
+      : premiere;
+  const ligne = ligneDe(r);
+  // Fondée ailleurs et citant EN CONTEXTE le chapitre du type de
+  // l'établissement, servi en catégories 1 à 4 : ce complément s'affiche.
+  const complementRef =
+    type &&
+    !typeDuChapitre(premiere.article) &&
+    contexte?.categorieErp &&
+    QUATRE_PREMIERES.includes(contexte.categorieErp)
+      ? refs.slice(1).find((x) => typeDuChapitre(x.article) === type)
+      : undefined;
+  return complementRef ? { ...ligne, complement: ligneDe(complementRef) } : ligne;
+}
+
+function ligneDe(r: ReferenceLegale): FondementLigne {
   const lu =
     r.article && referenceNommeLArticle(r.reference, r.article)
       ? indexArticlesParRef().get(r.article)

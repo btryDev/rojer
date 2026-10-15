@@ -936,3 +936,30 @@ describe("pré-remplissage : le panneau pose la question exigée, l'action en re
     ).toEqual({ status: "error", message: expect.stringContaining("INSTALLATION_ELECTRIQUE") });
   });
 });
+
+// Revue du lot du 2026-10-14, point 8 : quitter « Autre équipement » efface
+// le matériel non suivi. Sans quoi la fiche d'un extincteur dirait « Rojer ne
+// suit pas l'usage des échelles ». Éprouvé en retirant l'écriture de
+// `materielNonCouvert` dans `modifierEquipement`.
+describe("modifierEquipement — le matériel non suivi suit la catégorie", () => {
+  function formulaire(categorie: string, materiel?: string): FormData {
+    const fd = new FormData();
+    fd.set("libelle", "Appareil de la réserve");
+    fd.set("categorie", categorie);
+    if (materiel !== undefined) fd.set("materielNonCouvert", materiel);
+    return fd;
+  }
+
+  it("en AUTRE, la clé est écrite", async () => {
+    const r = await modifierEquipement("eq-1", { status: "idle" }, formulaire("AUTRE", "echelle"));
+    expect(r.status).toBe("success");
+    expect((h.db.equipements[0] as Record<string, unknown>).materielNonCouvert).toBe("echelle");
+  });
+
+  it("quitter AUTRE efface la clé (champ vide envoyé par le formulaire)", async () => {
+    (h.db.equipements[0] as Record<string, unknown>).materielNonCouvert = "echelle";
+    const r = await modifierEquipement("eq-1", { status: "idle" }, formulaire("EXTINCTEUR", ""));
+    expect(r.status).toBe("success");
+    expect((h.db.equipements[0] as Record<string, unknown>).materielNonCouvert).toBeNull();
+  });
+});

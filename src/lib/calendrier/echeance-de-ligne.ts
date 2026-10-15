@@ -47,7 +47,7 @@ import { estSansRendezVous } from "@/lib/etats-permanents/regle";
 import {
   statutDepuisResultat,
   type ResultatRealise,
-} from "@/lib/rapports/schema";
+} from "@/lib/rapports/resultats";
 import type { Periodicite } from "@/lib/referentiels/types-communs";
 import { estCyclique, prochaineEcheance } from "./periodicite";
 

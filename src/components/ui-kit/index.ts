@@ -1,3 +1,7 @@
+// Le barrel du kit. Les pages PUBLIQUES (connexion, inscription, mot de passe,
+// vérification et signature, accès externe) importent chaque composant par son
+// fichier, pas d'ici : sur `/login`, passer par le barrel coûtait 28 Ko
+// (9 Ko gzip) de plus, mesuré le 2026-10-14 (audit Next.js, M8).
 export type { Charte } from "./charte";
 export {
   StatusPill,

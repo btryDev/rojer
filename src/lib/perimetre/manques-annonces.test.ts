@@ -107,14 +107,34 @@ describe("n'annonce à un dossier que ce qui peut le concerner", () => {
     expect(de("R. 4463-8")).toMatch(/chaleur intense/);
   });
 
-  it("sans travailleur, rien du Code du travail — l'eau et la vigilance restent", () => {
+  // ~~« l'eau et la vigilance restent »~~ — 2026-10-14 : l'eau et l'échelle
+  // (R. 4323-63) ont quitté la page pour la liste des matériels non couverts.
+  it("sans travailleur, rien du Code du travail — la vigilance reste", () => {
     const f = { travail: false, epiPresents: null, categorieErp: null, habitation: false, operationsElectriques: null };
     const refs = refsProjetees(f);
     expect(refs).not.toContain("R. 4227-22");
-    expect(refs).not.toContain("R. 4323-63");
-    expect(refs).toEqual(
-      expect.arrayContaining(["R. 1321-60", "L. 8222-1"]),
-    );
+    expect(refs).not.toContain("R. 4412-11");
+    expect(refs).toEqual(expect.arrayContaining(["L. 8222-1"]));
+  });
+
+  it("2026-10-14 : l'eau, l'échelle et les escaliers mécaniques ne sont plus sur la page", () => {
+    const refs = refsProjetees(EMPLOYEUR);
+    for (const ref of [
+      "R. 4323-63",
+      "R. 1321-60",
+      "Arrêté 10-09-2021 art. 4",
+      "Arrêté 10-09-2021 art. 8",
+      "Arrêté 10-09-2021 art. 9",
+      "Arrêté 10-09-2021 art. 10",
+      "Arrêté 10-09-2021 art. 12",
+      "AS 10",
+    ]) {
+      expect(refs, ref).not.toContain(ref);
+    }
+    const titres = manquesAnnoncesDuDossier(CORPUS, EMPLOYEUR).map((d) => d.titre);
+    for (const t of ["Travail en hauteur", "Réseaux intérieurs d'eau", "Escaliers mécaniques et trottoirs roulants"]) {
+      expect(titres).not.toContain(t);
+    }
   });
 
   it("rubrique « Risque chimique » (décision du 2026-10-08) : R. 4412-11 et R. 4412-17, à l'employeur seul", () => {
@@ -160,28 +180,39 @@ describe("n'annonce à un dossier que ce qui peut le concerner", () => {
   });
 });
 
-describe("2026-10-13 : le gaz et les escaliers mécaniques ne visent que leurs dossiers", () => {
-  const GAZ_ERP = ["GZ 13", "GZ 14"];
+// ~~« 2026-10-13 : le gaz et les escaliers mécaniques ne visent que leurs
+// dossiers »~~ — 2026-10-14, décision de la propriétaire : le gaz a quitté la
+// page pour l'aide de la catégorie « Installation de gaz ». La garde devient :
+// il n'y est plus, et il n'a pas perdu son adresse (voir aussi « un declareA
+// qui cite l'aide d'une catégorie la cite mot pour mot », plus bas).
+describe("2026-10-14 : le gaz a quitté la page pour l'aide de sa catégorie", () => {
+  const GAZ = ["GZ 13", "GZ 14", "Arrêté 23-02-2018 art. 26 § 3"];
 
-  it("un ERP des quatre premières catégories lit le gaz et les escaliers mécaniques", () => {
-    expect(refsProjetees({ ...RESTAURANT_N5, categorieErp: "N4" })).toEqual(
-      expect.arrayContaining([...GAZ_ERP, "AS 10"]),
+  it("aucun dossier ne lit plus le gaz sur la page, même celui qui n'a rien écarté", () => {
+    const refs = refsProjetees(EMPLOYEUR);
+    for (const ref of GAZ) expect(refs).not.toContain(ref);
+    expect(manquesAnnoncesDuDossier(CORPUS, EMPLOYEUR).map((d) => d.titre)).not.toContain(
+      "Installations de gaz",
     );
   });
 
-  it("un ERP de 5ᵉ catégorie ne les lit pas — le livre II ne le vise pas", () => {
-    const refs = refsProjetees(RESTAURANT_N5);
-    for (const ref of [...GAZ_ERP, "AS 10"]) expect(refs).not.toContain(ref);
+  it("chacun garde une adresse : l'aide de la catégorie, citée mot pour mot", () => {
+    const aide = DESCRIPTION_CATEGORIE.INSTALLATION_GAZ ?? "";
+    for (const ref of GAZ) {
+      const a = CORPUS.flatMap((c) => c.articles).find((x) => x.ref === ref);
+      expect(a?.statut, ref).toBe("non_couvert");
+      const declareA = a && a.statut === "non_couvert" ? (a.declareA ?? "") : "";
+      expect(declareA, ref).toContain("DESCRIPTION_CATEGORIE.INSTALLATION_GAZ");
+      const cite =
+        /DESCRIPTION_CATEGORIE\.[A-Z_]+`?\)?\s*:\s*«\s*([\s\S]+?)\s*»\s*$/.exec(declareA)?.[1] ?? "∅";
+      expect(aide, ref).toContain(cite);
+    }
   });
+});
 
-  it("un établissement qui ne reçoit pas de public ne les lit pas", () => {
-    const refs = refsProjetees({ ...RESTAURANT_N5, categorieErp: null });
-    for (const ref of [...GAZ_ERP, "AS 10"]) expect(refs).not.toContain(ref);
-  });
-
-  it("le gaz collectif et l'immeuble d'habitation ne vont qu'au régime d'habitation", () => {
+describe("2026-10-13 : l'immeuble d'habitation ne vise que ses dossiers", () => {
+  it("l'immeuble d'habitation ne va qu'au régime d'habitation", () => {
     for (const ref of [
-      "Arrêté 23-02-2018 art. 26 § 3",
       "Arrêté 1986-01-31 art. 78-1",
       "Arrêté 1986-01-31 art. 102",
     ]) {

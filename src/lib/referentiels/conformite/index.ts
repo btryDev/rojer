@@ -14,6 +14,13 @@
  *     frigorifiques (R. 543-79 code de l'environnement, règlement UE 2024/573)
  */
 
+// SERVEUR SEULEMENT (audit Next.js du 2026-10-14, H1). Le référentiel entier,
+// notes internes comprises, n'a rien à faire dans un paquet client : un
+// composant "use client" qui l'importerait — même par rebond — fait échouer
+// le build. Un composant client qui a besoin d'un TYPE d'ici l'importe en
+// `import type` (effacé à la compilation) ; d'une valeur, il la reçoit en
+// props depuis un composant serveur.
+import "server-only";
 import {
   porteurDe,
   type DomaineObligation,
@@ -409,7 +416,29 @@ export const obligationsConformite: Obligation[] = [
 // de six salariés sans appareil passe de 45 à 43 lignes. La réponse au
 // groupe électrogène devient exigée en ERP (`reponses-exigees.ts`), hors
 // référentiel.]
-export const REFERENTIEL_VERSION = "2026-10-13.2";
+// `2026-10-14.1` (`lot/dae`, décision de la propriétaire du 2026-10-14) : le
+// défibrillateur automatisé externe entre au référentiel pour les ERP des
+// catégories 1 à 4 (CCH R. 157-1 à R. 157-4, corpus `cch-defibrillateur`).
+// 176 + 3 (`dae-erp-detention`, `dae-erp-maintenance` au défaut annuel,
+// `dae-erp-declaration-geodae`) − 0 = 179, toutes trois d'établissement.
+// 2026-10-14 — `2026-10-14.2` (intégration : `lot/dae` a pris `.1`), décision de la propriétaire (points 1 à 6) :
+// le livre II, titre II, chapitres M, N, O et W lus en entier, et le livret
+// de CH 39. 179 + 6 − 0 = 185, toutes portées aux catégories 1 à 4 :
+// `incendie-erp-personnel-designe-moyens-secours` (N 17, M 29 § 1, O 18,
+// W 13), `incendie-erp-interdiction-fumer-affichee` (M 44, M 47 § 2, M 58,
+// W 16, O 21 § 1), `incendie-erp-schema-organisation-securite` (M 31),
+// `incendie-erp-hotel-consigne-chambres` et
+// `incendie-erp-hotel-plans-evacuation-niveaux` (O 21 § 2) — établissement,
+// bornées aux types — et `aeration-erp-filtres-livret-entretien` (CH 39 § 1,
+// § 2, § 4) — équipement `VMC`/`CTA`, tous types. N 20 entre en contexte de
+// `incendie-travail-consigne-affichee`, hors empreinte.
+// `2026-10-14.3` (`lot/materiels-non-couverts-1014`, `.3` à l'intégration, décision de la
+// propriétaire du 2026-10-14) : la catégorie `INSTALLATION_GAZ` entre, et
+// `cuisson-gaz-installations-annuelle` (GZ 15, ERP N1–N4) la prend en plus de
+// `APPAREIL_CUISSON_ERP` — un ERP chauffé au gaz sans cuisine reçoit enfin la
+// vérification annuelle. 185 + 0 − 0 = 185. Les lignes existantes ne bougent
+// pas : seule une installation de gaz déclarée en fait naître une.
+export const REFERENTIEL_VERSION = "2026-10-14.3";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

@@ -34,13 +34,17 @@ import { formaterMesure } from "@/lib/rendu/mesures";
 export function GraphTemperatures({
   releves,
   seuilMinCelsius,
-  typeReseau,
+  seuilMaxCelsius,
   width = 600,
   height = 140,
 }: {
   releves: ReleveTemperature[];
-  seuilMinCelsius: number;
-  typeReseau: string;
+  /** Les deux bornes de la plage du point (2026-10-14, chantier § 5) : une
+   *  ligne et un voile par borne présente. ~~`seuilMinCelsius` seul, et
+   *  `typeReseau` pour savoir de quel côté le voile tombait~~ — la borne dit
+   *  désormais elle-même son côté. */
+  seuilMinCelsius: number | null;
+  seuilMaxCelsius: number | null;
   width?: number;
   height?: number;
 }) {
@@ -58,8 +62,11 @@ export function GraphTemperatures({
   );
 
   const temps = ordered.map((r) => r.temperatureCelsius);
-  const tMin = Math.min(...temps, seuilMinCelsius - 5);
-  const tMax = Math.max(...temps, seuilMinCelsius + 10);
+  const bornes = [seuilMinCelsius, seuilMaxCelsius].filter(
+    (b): b is number => b !== null,
+  );
+  const tMin = Math.min(...temps, ...bornes.map((b) => b - 5));
+  const tMax = Math.max(...temps, ...bornes.map((b) => b + 10));
   const span = Math.max(5, tMax - tMin);
 
   // 44 et non 36 : les graduations portent leur unité (« 65 °C », six
@@ -80,7 +87,9 @@ export function GraphTemperatures({
     return padT + (1 - ratio) * h;
   }
 
-  const ySeuil = yCoord(seuilMinCelsius);
+  const yMin = seuilMinCelsius === null ? null : yCoord(seuilMinCelsius);
+  const yMax = seuilMaxCelsius === null ? null : yCoord(seuilMaxCelsius);
+  const lignesSeuil = bornes.map((valeur) => ({ y: yCoord(valeur), valeur }));
 
   const path = ordered
     .map((r, i) => `${i === 0 ? "M" : "L"} ${xCoord(i)} ${yCoord(r.temperatureCelsius)}`)
@@ -121,47 +130,51 @@ export function GraphTemperatures({
         className="w-full h-auto"
         preserveAspectRatio="none"
       >
-        {/* Zone hors plage teintée — sous le seuil pour l'ECS, au-dessus
-            pour l'eau froide, dont le seuil est un maximum. */}
-        {typeReseau !== "EFS" && (
+        {/* Zones hors plage teintées — sous le minimum, au-dessus du
+            maximum, pour chaque borne que le point porte. */}
+        {yMin !== null && (
           <rect
             x={padL}
-            y={ySeuil}
+            y={yMin}
             width={w}
-            height={height - padB - ySeuil}
+            height={height - padB - yMin}
             fill="var(--board-signal-wash)"
           />
         )}
-        {typeReseau === "EFS" && (
+        {yMax !== null && (
           <rect
             x={padL}
             y={padT}
             width={w}
-            height={ySeuil - padT}
+            height={yMax - padT}
             fill="var(--board-signal-wash)"
           />
         )}
 
-        {/* Ligne de seuil */}
-        <line
-          x1={padL}
-          x2={width - padR}
-          y1={ySeuil}
-          y2={ySeuil}
-          stroke="var(--board-signal-ink)"
-          strokeWidth="1"
-          strokeDasharray="4 3"
-        />
-        <text
-          x={padL - 4}
-          y={ySeuil + 3}
-          textAnchor="end"
-          fontSize="9"
-          fill="var(--board-signal-ink)"
-          fontFamily="var(--font-mono), monospace"
-        >
-          {formaterMesure(seuilMinCelsius, "°C", 0, 1)}
-        </text>
+        {/* Lignes de seuil */}
+        {lignesSeuil.map(({ y, valeur }) => (
+          <g key={valeur}>
+            <line
+              x1={padL}
+              x2={width - padR}
+              y1={y}
+              y2={y}
+              stroke="var(--board-signal-ink)"
+              strokeWidth="1"
+              strokeDasharray="4 3"
+            />
+            <text
+              x={padL - 4}
+              y={y + 3}
+              textAnchor="end"
+              fontSize="9"
+              fill="var(--board-signal-ink)"
+              fontFamily="var(--font-mono), monospace"
+            >
+              {formaterMesure(valeur, "°C", 0, 1)}
+            </text>
+          </g>
+        ))}
 
         {/* Axe vertical temperatures indicatives */}
         {[Math.round(tMax), Math.round(tMin)].map((t) => (

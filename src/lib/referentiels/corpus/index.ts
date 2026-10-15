@@ -4,11 +4,13 @@ import { obligationsConformite } from "../conformite";
 import type { Obligation } from "../conformite/types";
 import { ARRETE_1980_LIVRE_1 } from "./arrete-1980-livre-1";
 import { ARRETE_1980_LIVRE_2 } from "./arrete-1980-livre-2";
+import { ARRETE_1980_LIVRE_2_TITRE_2 } from "./arrete-1980-livre-2-titre-2";
 import { CORPUS_PE } from "./arrete-1980-livre-3";
 import { ARRETE_2011_12_14_ECLAIRAGE } from "./arrete-2011-12-14-eclairage";
 import { ARRETE_2011_12_30_IGH } from "./arrete-2011-12-30-igh";
 import { CCH_CLASSEMENT_ERP_IGH } from "./cch-classement-erp-igh";
 import { CCH_REGISTRE_SECURITE } from "./cch-registre-securite";
+import { CCH_DEFIBRILLATEUR } from "./cch-defibrillateur";
 import { CODE_TRAVAIL_INCENDIE } from "./code-travail-incendie";
 import { ARRETE_2004_03_01_LEVAGE } from "./arrete-2004-03-01-levage";
 import { ARRETE_1993_03_05_MACHINES } from "./arrete-1993-03-05-machines";
@@ -24,6 +26,8 @@ import {
 } from "./csp-eau-potable";
 import { ARRETE_2010_02_01_LEGIONELLES } from "./arrete-2010-02-01-legionelles";
 import { ARRETE_2018_02_23_GAZ_HABITATION } from "./arrete-2018-02-23-gaz-habitation";
+import { CODE_ENVIRONNEMENT_CHAUDIERES } from "./code-environnement-chaudieres";
+import { ARRETE_1957_09_30_CHAMBRES_FROIDES } from "./arrete-1957-09-30-chambres-froides";
 import { ARRETES_ASCENSEURS } from "./arretes-ascenseurs";
 import { ARRETES_MODIFICATIFS_ERP } from "./arretes-modificatifs-erp";
 import { CCH_ASCENSEURS } from "./cch-ascenseurs";
@@ -103,8 +107,12 @@ export const CORPUS: readonly Corpus[] = [
   // des types dont `TypeErp` est le reflet (`types-erp.test.ts`).
   ARRETE_1980_LIVRE_1,
   ARRETE_1980_LIVRE_2,
+  // 2026-10-14 — le titre II, quatre chapitres de type (M, N, O, W), lus en
+  // entier pour les catégories 1 à 4 entrées dans la cible le 2026-10-12.
+  ARRETE_1980_LIVRE_2_TITRE_2,
   CODE_TRAVAIL_INCENDIE,
   CCH_REGISTRE_SECURITE,
+  CCH_DEFIBRILLATEUR,
   ARRETE_2011_12_14_ECLAIRAGE,
   ARRETE_2011_12_30_IGH,
   FROID_FLUIDES,
@@ -125,6 +133,10 @@ export const CORPUS: readonly Corpus[] = [
   ARRETE_1993_12_21_PORTES,
   ARRETE_1980_LIVRE_4_PARCS,
   ARRETE_2018_02_23_GAZ_HABITATION,
+  // 2026-10-14 (revue de `lot/materiels-non-couverts-1014`) : deux textes que
+  // l'aide des catégories cite, non couverts par décision de la propriétaire.
+  CODE_ENVIRONNEMENT_CHAUDIERES,
+  ARRETE_1957_09_30_CHAMBRES_FROIDES,
   INRS_DOCUMENTAIRE,
   // ADR-039, 2026-10-07 — les normes homologuées lues, dont un rythme peut
   // être retenu. Ni droit ni brochure : statut `norme`.

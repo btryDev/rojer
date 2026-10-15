@@ -26,7 +26,13 @@ const etab = {
 };
 
 vi.mock("@/lib/auth/require-user", () => ({ requireUser: async () => ({ id: "user-1" }) }));
-vi.mock("@/lib/prisma", () => ({ prisma: { etablissement: { findFirst: async () => etab } } }));
+// 2026-10-14 : le builder lit aussi les matériels non couverts déclarés.
+vi.mock("@/lib/prisma", () => ({
+  prisma: {
+    etablissement: { findFirst: async () => etab },
+    equipement: { findMany: async () => [] },
+  },
+}));
 vi.mock("@/lib/actions/queries", async (orig) => ({
   ...(await orig<typeof import("@/lib/actions/queries")>()),
   compterActions: async () => ({ totalACouvrir: 0, enRetard: 0, ouvertes: 0, enCours: 0, leveesRecemment: 0 }),
@@ -63,9 +69,9 @@ beforeEach(() => {
 
 describe("dossier PDF : le score reçoit la couverture (D2 (a))", () => {
   it("une question ouverte empêche « satisfaisante » ; sans question, rien ne change", async () => {
-    const sans = await construireDossierConformiteData("etab-1");
+    const sans = await construireDossierConformiteData("etab-1", { id: "user-1", email: null });
     h.indeterminations = [{ axe: "categorie_erp", motif: "m", quoiFaire: "q" }];
-    const avec = await construireDossierConformiteData("etab-1");
+    const avec = await construireDossierConformiteData("etab-1", { id: "user-1", email: null });
     expect(sans?.score.indeterminationsCouverture).toBe(0);
     expect(avec?.score.indeterminationsCouverture).toBe(1);
     expect(avec?.score.niveau).not.toBe(sans?.score.niveau);

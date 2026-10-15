@@ -27,8 +27,8 @@
 // une seconde.
 //
 // Usage :
-//   pnpm tsx scripts/seed-salaries-demo.ts            # crée
-//   pnpm tsx scripts/seed-salaries-demo.ts --annuler  # retire ce qu'il a créé
+//   pnpm tsx --import ./scripts/server-only-hors-next.mjs scripts/seed-salaries-demo.ts            # crée
+//   pnpm tsx --import ./scripts/server-only-hors-next.mjs scripts/seed-salaries-demo.ts --annuler  # retire ce qu'il a créé
 
 import { PrismaClient } from "@prisma/client";
 import { obligationParId } from "@/lib/referentiels/conformite";

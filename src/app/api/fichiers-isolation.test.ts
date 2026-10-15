@@ -6,6 +6,10 @@
 // une condition absente ne filtre pas. Une route qui oublierait le prédicat
 // d'appartenance servirait donc le fichier de l'autre compte, et ce test
 // tomberait.
+//
+// Depuis le 2026-10-14 (audit Next.js, B6) les gardes sont celles de
+// `auth/scope.ts`, qui refusent par `notFound()` : 404 et non plus 403, pour
+// l'inexistant comme pour l'étranger — toujours sans oracle d'existence.
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -86,6 +90,14 @@ const appel = {
     precedente.GET(req, { params: Promise.resolve({ id, pieceId }) }),
 };
 
+/** `notFound()` de Next lève une erreur porteuse d'un digest 404. */
+async function refuse404(f: () => Promise<Response>) {
+  await expect(f()).rejects.toSatisfy((e: unknown) => {
+    const digest = (e as { digest?: unknown }).digest;
+    return typeof digest === "string" && digest.includes("404");
+  });
+}
+
 beforeEach(() => {
   h.requireUser.mockResolvedValue({ id: "user-a" });
   h.get.mockReset();
@@ -111,21 +123,21 @@ describe("chaque route sert le fichier de son propriétaire, et seulement lui", 
     ["analyse", () => appel.analyse("ana-b")],
     ["pièce", () => appel.piece("pre-b", "urssaf")],
     ["pièce précédente", () => appel.precedente("pre-b", "pp-b")],
-  ])("%s d'un autre utilisateur : 403, et le stockage n'est pas lu", async (_n, f) => {
-    const r = await f();
-    expect(r.status).toBe(403);
+  ])("%s d'un autre utilisateur : 404, et le stockage n'est pas lu", async (_n, f) => {
+    await refuse404(f);
     expect(h.get).not.toHaveBeenCalled();
   });
 
-  it("pièce précédente sous un AUTRE de ses prestataires : 403 — elle doit être de CE prestataire", async () => {
-    const r = await appel.precedente("pre-a2", "pp-a");
-    expect(r.status).toBe(403);
+  it("pièce précédente sous un AUTRE de ses prestataires : 404 — elle doit être de CE prestataire", async () => {
+    await refuse404(() => appel.precedente("pre-a2", "pp-a"));
     expect(h.get).not.toHaveBeenCalled();
   });
 
   it("introuvable et hors périmètre répondent pareil : pas d'oracle d'existence", async () => {
-    expect((await appel.analyse("inexistante")).status).toBe(403);
-    expect((await appel.piece("inexistant", "urssaf")).status).toBe(403);
+    await refuse404(() => appel.rapport("inexistant"));
+    await refuse404(() => appel.analyse("inexistante"));
+    await refuse404(() => appel.piece("inexistant", "urssaf"));
+    await refuse404(() => appel.precedente("pre-a", "inexistante"));
   });
 
   it("à soi mais sans fichier : 404 ; type de pièce inconnu : 404", async () => {

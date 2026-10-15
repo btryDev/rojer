@@ -61,7 +61,8 @@ vi.mock("next/navigation", () => ({
   },
 }));
 vi.mock("next/link", () => ({ default: "a" }));
-vi.mock("@/components/ui-kit", () => ({ SignatureBlock: "div", LegalBadge: "div" }));
+vi.mock("@/components/ui-kit/SignatureBlock", () => ({ SignatureBlock: "div" }));
+vi.mock("@/components/ui-kit/LegalBadge", () => ({ LegalBadge: "div" }));
 
 import ConfirmationSignaturePage from "./page";
 

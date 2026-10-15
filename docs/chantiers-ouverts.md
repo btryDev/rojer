@@ -16,13 +16,17 @@ passent de constat à décision — ils se règlent avant les premiers clients.]
 
 [2026-10-13, décision de la propriétaire : n° 2, 3 et 4 corrigés avant la
 release (lots lancés le même jour) ; **n° 1 (gaz sans cuisine) et n° 5
-(seuils du carnet sanitaire) APRÈS LA RELEASE** — ils restent ouverts ici.]
+(seuils du carnet sanitaire) APRÈS LA RELEASE** — ils restent ouverts ici.] [2026-10-14 : le n° 5 est fait, rayé ci-dessous.]
 
-1. **Gaz sans cuisine** ([§ 3 bis](#3-bis-le-registre-de-dette-compté--2026-09-20))
+1. ~~**Gaz sans cuisine** ([§ 3 bis](#3-bis-le-registre-de-dette-compté--2026-09-20))
    — la vérification annuelle de `GZ 15` n'atteint que l'ERP 1-4 qui déclare
    un appareil de cuisson ; preuve : `categoriesEquipement:
    ["APPAREIL_CUISSON_ERP"]` dans `conformite/cuisson-hotte.ts`. Le remède
-   demande une catégorie, donc une migration.
+   demande une catégorie, donc une migration.~~ [2026-10-14, rayé —
+   `lot/materiels-non-couverts-1014`, commit `57fe1d3c` : catégorie
+   `INSTALLATION_GAZ` (migration `20261014120000`), à laquelle
+   `cuisson-gaz-installations-annuelle` s'accroche en plus de l'appareil de
+   cuisson ; référentiel `2026-10-14.3`. Décision de la propriétaire.]
 2. ~~**Huit pages d'entrée gardent la flèche de retour**
    ([§ 6 bis](#6-bis-ce-que-la-passe-du-2026-09-07-a-rendu--six-constats-un-corrigé))
    — `<ArrowLeft>` + raison sociale dans `actions`, `equipe`, `duerp`,
@@ -40,16 +44,30 @@ release (lots lancés le même jour) ; **n° 1 (gaz sans cuisine) et n° 5
    ([§ 15](#15-un-dossier-qui-na-rien-déclaré-rend-des-listes-vides-et-ne-le-dit-pas--fait-le-2026-09-26))
    — aucun fichier de `src/lib/mcp/` ne lit l'axe `inventaire`.~~
    [2026-10-14, rayé à l'intégration : corrigé par `lot/mcp-inventaire`, § 15.]
-5. **Carnet sanitaire : un seul seuil minimal par point d'eau chaude**
+5. ~~**Carnet sanitaire : un seul seuil minimal par point d'eau chaude**
    ([§ 16](#16-larrêté-du-1er-février-2010--un-module-livré-sur-un-texte-jamais-ouvert--fait-le-2026-09-20),
    points 1 et 2) — `PointReleve` n'a qu'un `seuilMinCelsius` et
    `estReleveConforme` rend « conforme » toute ECS au-dessus : le plafond de
    50 °C aux robinets de toilette et les 55 °C en sortie de stockage de
    l'article 36 de l'arrêté du 23 juin 1978 ne s'expriment pas. Premier geste :
-   lire l'article 1er de cet arrêté.
-6. **[2026-10-14, APRÈS LA RELEASE] Le panneau de pré-remplissage ignore
+   lire l'article 1er de cet arrêté.~~ [2026-10-14, `lot/carnet-seuils-1014`,
+   FAIT — décision de la propriétaire du même jour. L'article 1er est lu et au
+   corpus (0224e48f) : il étend le titre III, donc l'article 36, aux bâtiments
+   d'habitation, de bureaux et recevant du public. `PointReleve` porte
+   `seuilMaxCelsius` et `typePoint` (cinq types qui préremplissent les seuils),
+   `estReleveConforme` lit les deux bornes, l'eau froide est passée au maximum
+   explicite par la migration `20261014120000`, les points d'eau chaude
+   existants gardent leur minimum et la fiche invite à préciser leur type
+   (e405920b). Reste ouvert, hors de ce point : le champ de l'article 36 dans
+   le temps (neuf ou existant), que l'article 1er ne tranche pas.]
+6. ~~**[2026-10-14, APRÈS LA RELEASE] Le panneau de pré-remplissage ignore
    `avertissement`** (`lot/conditions-equipement`) — un échec de
-   régénération du calendrier n'est pas montré, les fiches sont créées.
+   régénération du calendrier n'est pas montré, les fiches sont créées.~~
+   [2026-10-14, rayé — `lot/materiels-non-couverts-1014` : `PreRemplissagePanel`
+   affiche l'avertissement à côté du succès (encre du signal, `role="alert"`,
+   comme la fiche entreprise) ; test
+   `PreRemplissagePanel.avertissement.test.tsx`, éprouvé en retirant la
+   lecture du champ. Décision de la propriétaire.]
 
 ### Décisions attendues
 
@@ -60,10 +78,14 @@ release (lots lancés le même jour) ; **n° 1 (gaz sans cuisine) et n° 5
    tout employeur et sera reformulée pour se répondre étiquette en main
    (pictogrammes, H220/H222/H224, exemples). Question d'interprétation posée au
    préventeur : `docs/questions-preventeur.md`, n° 1.]
-2. **Livret d'entretien de la filtration (`CH 39 § 1`) et stock de rechange de
+2. ~~**Livret d'entretien de la filtration (`CH 39 § 1`) et stock de rechange de
    l'alarme (`MS 69`)** : encoder, annoncer ou hors cadre — obligations d'ERP
-   1-4, dans la cible depuis le 2026-10-12
+   1-4, dans la cible depuis le 2026-10-12~~
    ([§ 3](#3-deux-obligations-que-rien-ne-bloquait--clos-le-2026-09-04), [§ 3 bis](#3-bis-le-registre-de-dette-compté--2026-09-20)).
+   [2026-10-14 : TRANCHÉ par la propriétaire — le livret est encodé
+   (`aeration-erp-filtres-livret-entretien`, VMC/CTA, N1–N4), le stock est
+   HORS CADRE (§ 7 de `docs/couverture-declaree-du-produit.md`) ; branche
+   `lot/erp-categories-1-4-1014`, commits 4eb332c9 et 380faf27.]
 3. **Vigilance prestataires, décision B1** : assumer le module ou le déclarer
    hors référentiel ([§ 4](#4-ce-qui-attend-une-décision-pas-un-développement)).
 4. **Un assureur peut-il resserrer un rythme (`renforce_periodicite`) ou
@@ -93,13 +115,21 @@ release (lots lancés le même jour) ; **n° 1 (gaz sans cuisine) et n° 5
 
 ### À vérifier après la release
 
-1. **Alarme de chambre froide** (2026-10-13). La vérification annuelle des
+1. ~~**Alarme de chambre froide** (2026-10-13). La vérification annuelle des
    alimentations de secours des signalisations (arrêté du 4 novembre 1993,
    art. 15) n'est servie que si une alarme incendie ou des BAES sont déclarés
    (`lot/conditions-equipement`). Si un texte impose un dispositif d'alarme
    dans les chambres froides, voir s'il est couvert par le domaine « Froid ».
    Texte non ouvert : ni manque ni non-manque établi. L'alarme de cabine
-   d'ascenseur, elle, suit l'ascenseur (entretien, contrôle quinquennal CCH).
+   d'ascenseur, elle, suit l'ascenseur (entretien, contrôle quinquennal CCH).~~
+   [2026-10-14, rayé — `lot/materiels-non-couverts-1014` : le texte est
+   l'arrêté du 30 septembre 1957 (annexe, art. 2 : ouverture manuelle de
+   l'intérieur ; art. 3 : avertissement sonore au-delà de 10 m³ à 0 °C ou
+   moins ; art. 4 : voyant lumineux extérieur d'une installation neuve de
+   plus de 10 m³), en vigueur, relu sur Légifrance par la propriétaire. Décision
+   de la propriétaire : aucune obligation créée ; l'aide de la catégorie
+   « Installation frigorifique » le dit, et dit que Rojer ne le suit pas
+   (`DESCRIPTION_CATEGORIE.INSTALLATION_FRIGORIFIQUE`).]
 
 ### Feuille de route
 
@@ -257,12 +287,12 @@ de celle de l'éclairage, ~~toujours `obligation_manquante`~~ — **encodée le
 2026-09-20**, voir § 3 bis), le **livret
 d'entretien de l'installation de filtration** (`CH 39 § 1`), et le **stock
 permanent de fournitures de rechange de l'alarme** (`MS 69`).
-[2026-10-13, tri : DÉCISION ATTENDUE — deux obligations de l'exploitant
+~~[2026-10-13, tri : DÉCISION ATTENDUE — deux obligations de l'exploitant
 d'ERP de 1ʳᵉ à 4ᵉ catégorie, dans la cible depuis le 2026-10-12, que rien ne
 sert ni n'annonce : elles sont en `reserve` d'articles `retenu`
 (`corpus/arrete-1980-livre-2.ts`, `CH 39` et `MS 69`), hors des quinze
 manquantes classées le 2026-10-13. À classer selon la même grille
-(encoder / annoncer / hors cadre). Voir aussi « Deux libres du plan », § 3 bis.]
+(encoder / annoncer / hors cadre). Voir aussi « Deux libres du plan », § 3 bis.]~~ [2026-10-14 : CLOS — décision de la propriétaire : `CH 39 § 1` encodé (`aeration-erp-filtres-livret-entretien`, commit 4eb332c9), le stock de `MS 69` classé HORS CADRE, entrée à part au corpus et § 7 de `docs/couverture-declaree-du-produit.md` (commit 380faf27).]
 
 ---
 
@@ -379,7 +409,9 @@ de cuisson ; un commerce chauffé au gaz sans cuisine ne la reçoit pas.]
 `cuisson-gaz-installations-annuelle` exige `categoriesEquipement:
 ["APPAREIL_CUISSON_ERP"]` (`src/lib/referentiels/conformite/cuisson-hotte.ts`),
 aucune catégorie « installation de gaz » au schéma. Le remède suppose une
-migration ; le nommer reste à la propriétaire.]
+migration ; le nommer reste à la propriétaire.] [2026-10-14 : CLOS —
+`INSTALLATION_GAZ`, commit `57fe1d3c` (`lot/materiels-non-couverts-1014`),
+décision de la propriétaire ; voir § 0, défaut n° 1, rayé.]
 
 ~~**Trois dettes sans blocage, et non encodées : les hôtels.** `perimetre` veut
 dire « encodable, hors cible ». `PO 7` est chiffré (deux séances par an) et le
@@ -399,8 +431,8 @@ matin annonçait vingt-huit réserves closes : il avait compté des mots.
 tranche s'il fait un écrit à part ou rejoint ceux de `GC 18` et de `R. 4224-17` ;
 le stock de rechange de `MS 69` « se décide pour lui-même ». Et les deux visent
 les ERP des quatre premières catégories.
-[2026-10-13, tri : DÉCISION ATTENDUE — le même point que la fin du § 3,
-compté une fois.]
+~~[2026-10-13, tri : DÉCISION ATTENDUE — le même point que la fin du § 3,
+compté une fois.]~~ [2026-10-14 : CLOS, voir la fin du § 3.]
 
 ## 4. Ce qui attend une décision, pas un développement
 
@@ -2854,7 +2886,7 @@ lot 6.
 > « limite de qualité », pas à « l'annexe II ». **Aucune obligation encodée**,
 > par décision de la propriétaire : la cible n'est pas dans le champ.
 >
-> **Reste ouvert, et petit.** (1) Le module propose UN seuil minimal par point
+> **Reste ouvert, et petit.** (1) ~~Le module propose UN seuil minimal par point
 > d'eau chaude, quand l'article 36 en pose trois selon l'endroit (≥ 50 réseau,
 > ≥ 55 sortie de stockage ≥ 400 L, ≤ 50 aux robinets de toilette) : le type
 > « ECS » ne dit pas où est le point. [2026-10-13, tri : DÉFAUT RÉEL, vérifié —
@@ -2864,11 +2896,18 @@ lot 6.
 > à 55, ni le plafond de 50 aux robinets de toilette ne s'expriment, et un
 > robinet à 60 °C se lit « Dans la plage » (`estReleveConforme`,
 > `src/lib/carnet-sanitaire/schema.ts:149-152` : en ECS, conforme dès
-> `temperature >= seuil`). Sous la réserve du (2).]
-> (2) L'article 1er de l'arrêté de 1978
-> (champ, installations neuves ou existantes) n'est pas ouvert. [2026-10-13,
+> `temperature >= seuil`). Sous la réserve du (2).]~~ [2026-10-14, FAIT par
+> `lot/carnet-seuils-1014` (e405920b) : un minimum et un maximum par point,
+> préremplis par le type de point — point 5 des défauts réels, en tête de ce
+> document.]
+> (2) ~~L'article 1er de l'arrêté de 1978
+> (champ, installations neuves ou existantes) n'est pas ouvert.~~ [2026-10-13,
 > tri : rattaché au DÉFAUT du (1), dont il est le premier geste — le champ de
-> l'article 36 n'est pas établi tant qu'il n'est pas lu.] (3) Le relevé
+> l'article 36 n'est pas établi tant qu'il n'est pas lu.] [2026-10-14 : ouvert
+> et au corpus (0224e48f). Le champ matériel est établi — bâtiments
+> d'habitation, de bureaux ou recevant du public, la cible comprise ; le champ
+> dans le temps ne l'est pas : l'article ne distingue pas le neuf de
+> l'existant.] (3) Le relevé
 > hebdomadaire du tableau de bord reste un seuil du produit, plus serré que le
 > mensuel de l'annexe 2 — déjà dit dans `dashboard/obligations.ts` [2026-10-13 :
 > un constat, pas une tâche]. (4) La

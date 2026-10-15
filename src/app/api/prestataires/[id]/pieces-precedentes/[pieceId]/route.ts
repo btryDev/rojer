@@ -1,6 +1,5 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { requireUser } from "@/lib/auth/require-user";
-import { prisma } from "@/lib/prisma";
+import type { NextRequest } from "next/server";
+import { requirePiecePrestataire } from "@/lib/auth/scope";
 import { servirFichier } from "@/lib/storage/servir";
 import { PIECES, type TypePiece } from "@/lib/prestataires/pieces";
 
@@ -10,28 +9,17 @@ import { PIECES, type TypePiece } from "@/lib/prestataires/pieces";
  * GET `/api/prestataires/[id]/pieces-precedentes/[pieceId]`
  *
  * **Appartenance** : comme la route des pièces en cours,
- * `PiecePrestataire → Prestataire → Etablissement → Entreprise → userId`, dans
- * le `findFirst` même, et la pièce doit être de CE prestataire. 403 hors
- * périmètre comme pour une pièce inexistante.
+ * `PiecePrestataire → Prestataire → Etablissement → Entreprise → userId`, par
+ * `requirePiecePrestataire` (`auth/scope.ts`), et la pièce doit être de CE
+ * prestataire. ~~403~~ 404 hors périmètre comme pour une pièce inexistante
+ * (2026-10-14, audit Next.js B6).
  */
 export async function GET(
   _req: NextRequest,
   context: { params: Promise<{ id: string; pieceId: string }> },
 ) {
-  const user = await requireUser();
   const { id, pieceId } = await context.params;
-
-  const piece = await prisma.piecePrestataire.findFirst({
-    where: {
-      id: pieceId,
-      prestataireId: id,
-      prestataire: { etablissement: { entreprise: { userId: user.id } } },
-    },
-    select: { type: true, fichierCle: true, fichierNom: true },
-  });
-  if (!piece) {
-    return new NextResponse("Pièce introuvable ou hors périmètre", { status: 403 });
-  }
+  const { piece } = await requirePiecePrestataire(pieceId, id);
 
   const repli = Object.hasOwn(PIECES, piece.type)
     ? PIECES[piece.type as TypePiece].repli

@@ -14,14 +14,15 @@
 // d'accord sans se connaître.
 //
 // L'état proprement local : le mois déplié (viser une graduation doit
-// ouvrir la carte correspondante), l'année affichée, le pli des mois
-// passés. Les deux listes restent montées : revenir d'une lecture à
+// ouvrir la carte correspondante), ~~l'année affichée~~ [2026-10-14 :
+// l'année vit dans l'URL, `?annee=`, et la page ne sert qu'elle — audit
+// Next.js, M10], le pli des mois passés. Les deux listes restent montées : revenir d'une lecture à
 // l'autre retrouve les cartes qu'on avait ouvertes.
 //
 // Le contenu, lui, est rendu côté serveur et descend ici en `ReactNode`.
 
 import { useEffect, useId, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   RegleAnnuelle,
@@ -29,6 +30,7 @@ import {
   totalDuMois,
   type MoisRegle,
 } from "./RegleAnnuelle";
+import type { AnneeRegle } from "@/lib/calendrier/regle-annee";
 import {
   libelleMoisPrecedents,
   libelleTotalAnnee,
@@ -47,27 +49,44 @@ export type SectionMoisData = {
   contenu: React.ReactNode;
 };
 
-/** Une année de la règle : douze mois, présents ou vides. */
-export type AnneeRegle = {
-  annee: number;
-  mois: MoisRegle[];
-};
+/** Une année de la règle : douze mois, présents ou vides. Vit avec la
+ *  règle dans `lib/calendrier/regle-annee` — la page la calcule côté serveur. */
+export type { AnneeRegle } from "@/lib/calendrier/regle-annee";
 
 export type Lecture = "mois" | "equipement";
 
 export function AnneeCalendrier({
   annee,
-  anneesRegle,
+  regle,
+  anneePrecedente,
+  anneeSuivante,
+  moisAnterieursEnRetard,
   sections,
   moisInitial,
   cleMoisCourant,
   commandes,
   parEquipement,
 }: {
-  /** Année d'aujourd'hui — celle que la règle affiche à l'arrivée. */
+  /** Année d'aujourd'hui — la charnière des mois passés. */
   annee: number;
-  /** La règle de chaque année couverte par le dossier, triées. */
-  anneesRegle: AnneeRegle[];
+  /**
+   * La règle de l'année AFFICHÉE, et d'elle seule (audit Next.js du
+   * 2026-10-14, M10). La page sérialisait toutes les années du dossier, de
+   * la plus ancienne dette au quinquennal le plus lointain, cartes comprises ;
+   * elle ne sert plus que celle qu'on regarde. L'année se choisit dans l'URL
+   * (`?annee=`), comme les filtres de la page.
+   */
+  regle: AnneeRegle;
+  /** L'année d'avant et l'année d'après dans le dossier, `null` aux bords. */
+  anneePrecedente: number | null;
+  anneeSuivante: number | null;
+  /**
+   * Les mois des années révolues qui portent du retard, calculés par la page
+   * (`moisEnRetardAvant`) — vides hors de l'année en cours. Leurs cartes sont
+   * dans `sections`.
+   */
+  moisAnterieursEnRetard: MoisRegle[];
+  /** Les cartes des mois de l'année affichée, et des mois ci-dessus. */
   sections: SectionMoisData[];
   /** Mois déplié au chargement — le premier qui porte quelque chose. */
   moisInitial: string | null;
@@ -107,10 +126,20 @@ export function AnneeCalendrier({
   // l'index de la liste, les deux tournent leurs pages ensemble. À
   // l'arrivée, c'est l'année du mois servi d'office (une dette de
   // décembre dernier ouvre la page sur son année, pas sur un présent
-  // vide).
-  const [anneeRegle, setAnneeRegle] = useState(() =>
-    moisInitial ? Number(moisInitial.slice(0, 4)) : annee,
-  );
+  // vide) — règle tenue désormais par la page, qui choisit l'année servie.
+  //
+  // [2026-10-14, audit Next.js M10] L'année n'est plus un état local : la
+  // page ne sert que celle de l'URL, et tourner la page la redemande au
+  // serveur — comme les pilules de filtre de la même page. Le paramètre est
+  // ajouté à ceux de l'URL, lecture comprise, pour que rien d'autre ne bouge.
+  const router = useRouter();
+  const chemin = usePathname();
+  const params = useSearchParams();
+  const allerA = (cible: number) => {
+    const suite = new URLSearchParams(params.toString());
+    suite.set("annee", String(cible));
+    router.push(`${chemin}?${suite.toString()}`, { scroll: false });
+  };
 
   // Sur l'année en cours, la liste s'ouvre sur aujourd'hui : les mois
   // déjà passés restent pliés derrière leur couture — présents, comptés,
@@ -128,12 +157,6 @@ export function AnneeCalendrier({
       moisInitial < cleMoisCourant &&
       moisInitial.slice(0, 4) === String(annee),
   );
-
-  const idxRegle = Math.max(
-    0,
-    anneesRegle.findIndex((a) => a.annee === anneeRegle),
-  );
-  const regle = anneesRegle[idxRegle];
 
   // Les douze mois de l'année affichée, cartes et creux mêlés : un mois
   // sans échéance se dit d'un mot au lieu de disparaître — l'année se lit
@@ -167,9 +190,8 @@ export function AnneeCalendrier({
   //
   // Seuls les mois EN RETARD y entrent : une échéance faite en 2024 est
   // rangée, elle n'a rien à faire en tête de 2026.
-  const moisAnterieursEnRetard = surAnneeCourante
-    ? moisEnRetardAvant(anneesRegle, annee)
-    : [];
+  // Calculés par la page (`moisEnRetardAvant`), vides hors de l'année en
+  // cours : elle seule voit les années révolues.
   const elementsAnterieurs = elementsDuSegment(
     moisAnterieursEnRetard,
     sectionsParCle,
@@ -206,8 +228,8 @@ export function AnneeCalendrier({
     ecrireLecture("mois");
     // La cible peut dormir dans le pli des mois passés : viser l'ouvre —
     // l'instrument ne pointe jamais une carte que la liste refuse de
-    // montrer.
-    setAnneeRegle(Number(cle.slice(0, 4)));
+    // montrer. Elle est toujours de l'année affichée : la règle n'en
+    // gradue pas d'autre.
     if (cle < cleMoisCourant && cle.slice(0, 4) === String(annee)) {
       setVoirPasses(true);
     }
@@ -264,14 +286,10 @@ export function AnneeCalendrier({
              absence — on le retire de la barre plutôt que de le griser. */
           montrerCadran={lecture === "mois"}
           onAnneePrecedente={
-            idxRegle > 0
-              ? () => setAnneeRegle(anneesRegle[idxRegle - 1].annee)
-              : undefined
+            anneePrecedente !== null ? () => allerA(anneePrecedente) : undefined
           }
           onAnneeSuivante={
-            idxRegle < anneesRegle.length - 1
-              ? () => setAnneeRegle(anneesRegle[idxRegle + 1].annee)
-              : undefined
+            anneeSuivante !== null ? () => allerA(anneeSuivante) : undefined
           }
           commandes={commandes}
         />
@@ -503,37 +521,6 @@ function FlecheAnnee({
 type ElementMois =
   | { type: "carte"; section: SectionMoisData }
   | { type: "creux"; cle: string; de: string; a: string };
-
-/**
- * Les mois des années **révolues** qui portent encore du retard.
- *
- * Extraite du composant pour être testable : la règle qu'elle porte est
- * une règle de vérité, pas de mise en page. « En retard » se dit du
- * présent — une échéance dépassée en 2024 l'est toujours aujourd'hui —,
- * alors que la liste ne montre qu'une année à la fois. Sans cette
- * remontée, une dette d'une année révolue n'apparaît nulle part sur la
- * page ouverte à l'arrivée, pendant que le tableau de bord la compte.
- *
- * Deux exclusions, et ce sont elles qui font la règle :
- *
- *   - **les années futures** n'entrent jamais : une échéance de 2029 n'est
- *     pas en retard, quoi qu'en dise un compteur mal calculé ;
- *   - **les mois sans retard** non plus : une vérification faite en 2024
- *     est rangée, elle n'a rien à faire en tête de l'année en cours.
- *
- * Rendre les mois plutôt qu'un simple compte permet de les déplier avec
- * leurs cartes, donc de montrer chaque ligne à SA date — on remonte
- * l'information, jamais la date.
- */
-export function moisEnRetardAvant(
-  anneesRegle: AnneeRegle[],
-  annee: number,
-): MoisRegle[] {
-  return anneesRegle
-    .filter((a) => a.annee < annee)
-    .flatMap((a) => a.mois)
-    .filter((m) => m.enRetard + (m.retardSansDate ?? 0) > 0);
-}
 
 /**
  * Mêle cartes et creux dans l'ordre des mois. Les mois vides consécutifs

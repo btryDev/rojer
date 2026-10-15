@@ -9,7 +9,7 @@ import {
   SOURCES_PRESCRIPTION,
   estSourceContractuelle,
   type SourcePrescription,
-} from "@/lib/prescriptions/schema";
+} from "@/lib/prescriptions/sources";
 import type { PrescriptionActionState } from "@/lib/prescriptions/actions";
 import {
   CATEGORIES_EQUIPEMENT,

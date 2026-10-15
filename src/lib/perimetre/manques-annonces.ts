@@ -39,7 +39,8 @@
 
 import { ADRESSE_MANQUES_ANNONCES } from "@/lib/referentiels/corpus/adresses";
 import type { Corpus } from "@/lib/referentiels/corpus/types";
-import { nonPorte, porte } from "./non-couverture";
+import { nonPorte } from "./non-couverture";
+import { PHRASE_BOXES_DE_STOCKAGE } from "@/lib/equipements/materiels-non-couverts";
 import type { CategorieErp } from "@/lib/referentiels/types-communs";
 
 /** Les faits du dossier qui décident de ce qui peut le concerner. */
@@ -97,8 +98,6 @@ function concerne(c: Condition, f: FaitsManquesAnnonces): boolean {
 
 export type CleDomaine =
   | "matieres_inflammables"
-  | "travail_en_hauteur"
-  | "eau"
   | "plan_prevention"
   | "vigilance"
   | "document_unique"
@@ -106,8 +105,6 @@ export type CleDomaine =
   | "formation"
   | "boissons"
   | "risque_chimique"
-  | "gaz"
-  | "escaliers_mecaniques"
   | "habitation"
   | "electricite";
 
@@ -128,14 +125,14 @@ const DOMAINES: Record<CleDomaine, Domaine> = {
     titre: "Matières explosives et inflammables",
     phrase: `Rojer ne suit pas ${nonPorte("l'aménagement des locaux où des matières explosives, comburantes ou inflammables sont entreposées ou manipulées")} : sources d'ignition, ventilation, interdiction de fumer aux emplacements à l'air libre, distance des postes aux issues, sens d'ouverture des portes, dépôts dans les escaliers, passages et couloirs. Il ne suit pas non plus ${nonPorte("la prévention des explosions des articles R. 4227-42 à R. 4227-54")} : les atmosphères explosives, qu'elles viennent de gaz, de vapeurs, de brouillards ou de poussières en suspension dans l'air — silos, broyage, meunerie, ponçage du bois, par exemple.`,
   },
-  travail_en_hauteur: {
-    titre: "Travail en hauteur",
-    phrase: `Rojer ne suit pas ${nonPorte("l'usage des échelles, escabeaux et marchepieds comme poste de travail")}. Le texte l'interdit, sauf impossibilité technique de recourir à une protection collective, ou risque évalué comme faible pour des travaux de courte durée sans caractère répétitif.`,
-  },
-  eau: {
-    titre: "Réseaux intérieurs d'eau",
-    phrase: `Rojer ne suit pas ${nonPorte("la protection des réseaux intérieurs d'eau contre les retours d'eau")}, ni ${nonPorte("l'entretien des réservoirs et bâches de stockage d'eau")}. L'arrêté du 10 septembre 2021 vise les réseaux mis en place ou rénovés totalement à partir du 1er janvier 2023, et en charge le propriétaire des réseaux intérieurs de distribution, que Rojer ne sait pas identifier.`,
-  },
+  // ~~travail_en_hauteur (« Travail en hauteur », l'échelle de R. 4323-63)~~
+  // et ~~eau (« Réseaux intérieurs d'eau », R. 1321-60 et l'arrêté du
+  // 10 septembre 2021)~~ — 2026-10-14, décision de la propriétaire :
+  // DÉPLACÉES, phrase comprise, dans la liste des matériels non couverts
+  // (`equipements/materiels-non-couverts.ts`, entrées `echelle` et
+  // `reservoir_eau`), nouvelle adresse au corpus
+  // (`ADRESSE_MATERIELS_NON_COUVERTS`). La rubrique « Travail en hauteur » ne
+  // portait que l'échelle : elle disparaît avec elle.
   plan_prevention: {
     titre: "Plan de prévention",
     phrase: `Le plan tenu dans Rojer ne rattache qu'une entreprise extérieure et ne suit pas ${nonPorte("les nouveaux sous-traitants recrutés après le début de l'intervention")} ; il ne porte ni ${nonPorte("la liste des postes relevant du suivi individuel renforcé")}, ni ${nonPorte("le dossier technique amiante joint au plan")}, et ne demande pas si les risques liés aux épisodes de chaleur intense ont été pris en compte. Ces articles sont cités sur la fiche de chaque plan.`,
@@ -173,19 +170,17 @@ const DOMAINES: Record<CleDomaine, Domaine> = {
   // 2026-10-13 : décision de la propriétaire sur les quinze manques entrés
   // dans la cible le 2026-10-12. Les articles disent chacun ce qu'ils ne
   // suivent pas : ils ne visent pas les mêmes dossiers.
-  gaz: {
-    titre: "Installations de gaz",
-  },
+  // ~~gaz: { titre: "Installations de gaz" }~~ — 2026-10-14 : rubrique
+  // déplacée dans l'aide de la catégorie « Installation de gaz ».
   habitation: {
     titre: "Immeuble d'habitation",
   },
   electricite: {
     titre: "Électricité",
   },
-  escaliers_mecaniques: {
-    titre: "Escaliers mécaniques et trottoirs roulants",
-    phrase: `Rojer ne suit pas ${nonPorte("la vérification annuelle des escaliers mécaniques et des trottoirs roulants")} par une personne ou un organisme agréé, ni ${nonPorte("l'examen des chaînes et crémaillères au milieu de l'année")}, ni ${nonPorte("la vérification de l'escalier mécanique avant sa remise en service après une transformation importante")}.`,
-  },
+  // ~~escaliers_mecaniques (« Escaliers mécaniques et trottoirs roulants »,
+  // AS 10)~~ — 2026-10-14, décision de la propriétaire : DÉPLACÉE dans la
+  // liste des matériels non couverts, entrée `escalier_mecanique`.
 };
 
 type Annonce = {
@@ -210,6 +205,11 @@ type Annonce = {
  * compté en appelant (`Object.keys(ANNONCES).length`), jamais au grep. [La
  * branche disait « trente-trois » : elle ne voyait pas les deux du risque
  * chimique, entrés sur `main` par `lot/suites-0810`.]
+ * [2026-10-14, décision de la propriétaire : 35 − 3 (gaz : `GZ 13`, `GZ 14`,
+ * 26 § 3, vers l'aide de la catégorie « Installation de gaz ») − 1 (`AS 10`)
+ * − 6 (eau : `R. 1321-60`, arrêté du 10 septembre 2021 art. 4, 8, 9, 10, 12)
+ * − 1 (`R. 4323-63`, l'échelle), ces huit-là vers la liste des matériels non
+ * couverts + 0 = 24 — compté en appelant dans `manques-annonces.test.ts`.]
  *
  * LA CLÉ EST LA RÉFÉRENCE DU CORPUS, ET RIEN N'EST RECOPIÉ D'AUTRE : ni
  * intitulé, ni texte. `manques-annonces.test.ts` tient l'égalité entre ces
@@ -222,13 +222,9 @@ export const ANNONCES: Readonly<Record<string, Annonce>> = {
   "R. 4227-23": { domaine: "matieres_inflammables", condition: "travail" },
   "R. 4227-24": { domaine: "matieres_inflammables", condition: "travail" },
   "R. 4227-25": { domaine: "matieres_inflammables", condition: "travail" },
-  "R. 4323-63": { domaine: "travail_en_hauteur", condition: "travail" },
-  "R. 1321-60": { domaine: "eau", condition: "tous" },
-  "Arrêté 10-09-2021 art. 4": { domaine: "eau", condition: "tous" },
-  "Arrêté 10-09-2021 art. 8": { domaine: "eau", condition: "tous" },
-  "Arrêté 10-09-2021 art. 9": { domaine: "eau", condition: "tous" },
-  "Arrêté 10-09-2021 art. 10": { domaine: "eau", condition: "tous" },
-  "Arrêté 10-09-2021 art. 12": { domaine: "eau", condition: "tous" },
+  // ~~« R. 4323-63 » (travail_en_hauteur), « R. 1321-60 » et « Arrêté
+  // 10-09-2021 art. 4, 8, 9, 10, 12 » (eau)~~ — 2026-10-14 : déplacés dans la
+  // liste des matériels non couverts (entrées `echelle`, `reservoir_eau`).
   "R. 4463-8": {
     domaine: "plan_prevention",
     condition: "travail",
@@ -278,28 +274,24 @@ export const ANNONCES: Readonly<Record<string, Annonce>> = {
   },
   // 2026-10-13 : décision de la propriétaire (grille C45 sur les quinze
   // manques entrés dans la cible le 2026-10-12).
-  "GZ 13": {
-    domaine: "gaz",
-    condition: "erp_1_4",
-    phrase: `Rojer ne suit pas ${nonPorte("la vérification d'une installation de gaz neuve ou modifiée avant sa mise en service")}, par une personne ou un organisme agréé, avant toute utilisation du gaz.`,
-  },
-  "GZ 14": {
-    domaine: "gaz",
-    condition: "erp_1_4",
-    phrase: `Rojer ne suit pas ${nonPorte("l'entretien des installations et appareils à gaz et de leurs conduits d'évacuation")}, ni ${nonPorte("l'accès et la signalisation de l'organe de coupure de branchement du gaz")}. Il suit ${porte("la vérification annuelle des installations de gaz")} lorsqu'un appareil de cuisson est déclaré au parc.`,
-  },
-  "Arrêté 23-02-2018 art. 26 § 3": {
-    domaine: "gaz",
-    condition: "habitation",
-    phrase: `Rojer ne suit pas ${nonPorte("l'entretien des installations collectives de gaz situées entre l'organe de coupure générale et les compteurs individuels")}, que le texte fait faire au moins tous les dix ans dans les bâtiments collectifs.`,
-  },
-  "AS 10": { domaine: "escaliers_mecaniques", condition: "erp_1_4" },
+  // ~~« GZ 13 », « GZ 14 », « Arrêté 23-02-2018 art. 26 § 3 » (rubrique
+  // « Installations de gaz »)~~ — 2026-10-14, décision de la propriétaire :
+  // DÉPLACÉS dans l'aide de la catégorie « Installation de gaz »
+  // (`DESCRIPTION_CATEGORIE.INSTALLATION_GAZ`), leur nouvelle adresse au
+  // corpus. La catégorie existe désormais, et GZ 15 s'y accroche.
+  // ~~« AS 10 » (escaliers_mecaniques)~~ — 2026-10-14 : déplacé dans la liste
+  // des matériels non couverts (entrée `escalier_mecanique`).
   // 2026-10-13, après revue : classés hors cadre puis annoncés, décision de
   // la propriétaire.
   "Arrêté 1986-01-31 art. 78-1": {
     domaine: "habitation",
     condition: "habitation",
-    phrase: `Rojer ne suit pas ${nonPorte("le contrôle visuel des boxes de stockage d'un parc de stationnement couvert annexe")}, que le gestionnaire du parc fait au moins une fois par an et à chaque changement d'utilisateur.`,
+    // 2026-10-14 : la phrase est partagée avec l'entrée « box de stockage »
+    // de la liste des matériels non couverts — une seule rédaction. L'article
+    // garde son adresse ici : la rubrique « Immeuble d'habitation » n'est pas
+    // déplacée (décision du 2026-10-14, qui nomme le gaz, les escaliers
+    // mécaniques, l'eau et les échelles).
+    phrase: PHRASE_BOXES_DE_STOCKAGE,
   },
   "Arrêté 1986-01-31 art. 102": {
     domaine: "habitation",

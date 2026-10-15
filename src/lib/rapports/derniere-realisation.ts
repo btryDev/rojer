@@ -17,7 +17,7 @@
 // l'application vit dans `joindre-realisations.ts`.
 
 import type { Prisma } from "@prisma/client";
-import { RESULTATS_REALISES } from "./schema";
+import { RESULTATS_REALISES } from "./resultats";
 
 /** Clause `where` d'un rapport qui vaut réalisation du contrôle. */
 export const WHERE_RAPPORT_REALISE = {

@@ -274,7 +274,7 @@ export function WizardShell({ email }: { email?: string | null }) {
           })}
         </ol>
 
-        {/* Le header global est masqué sur cet écran (`AppHeaderGate`) et
+        {/* Le header global n'est pas rendu sur cet écran (`LayoutAvecEnTete`) et
             la barre de compte n'apparaît qu'une fois un établissement créé :
             sans cette porte, un compte arrêté en cours de mise en place ne
             pouvait plus se déconnecter nulle part — ni ici, ni sur l'accueil,

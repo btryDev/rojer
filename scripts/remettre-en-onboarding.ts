@@ -40,9 +40,9 @@
  * mentait exactement de la même façon, et deux endroits ne doivent pas décrire
  * la même cascade de mémoire.
  *
- *   pnpm tsx scripts/remettre-en-onboarding.ts                      # liste les dossiers
- *   pnpm tsx scripts/remettre-en-onboarding.ts <userId>
- *   pnpm tsx scripts/remettre-en-onboarding.ts <userId> --vraiment
+ *   pnpm tsx --import ./scripts/server-only-hors-next.mjs scripts/remettre-en-onboarding.ts                      # liste les dossiers
+ *   pnpm tsx --import ./scripts/server-only-hors-next.mjs scripts/remettre-en-onboarding.ts <userId>
+ *   pnpm tsx --import ./scripts/server-only-hors-next.mjs scripts/remettre-en-onboarding.ts <userId> --vraiment
  *
  * **On désigne un dossier par son `userId`, pas par une adresse e-mail**, et la
  * première rédaction de ce script se trompait sur ce point : elle interrogeait
@@ -98,7 +98,7 @@ async function main(): Promise<void> {
       console.log(`  ${d.userId ?? "(sans compte)"}  ${d.raisonSociale}`);
     }
     console.log(
-      "\nUsage : pnpm tsx scripts/remettre-en-onboarding.ts <userId> [--vraiment]",
+      "\nUsage : pnpm tsx --import ./scripts/server-only-hors-next.mjs scripts/remettre-en-onboarding.ts <userId> [--vraiment]",
     );
     return;
   }

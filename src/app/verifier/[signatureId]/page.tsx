@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { verifierIntegriteSignature } from "@/lib/signatures/actions";
-import { SignatureBlock } from "@/components/ui-kit";
+import { verifierSousLimite } from "@/lib/signatures/verification-publique";
+import { messageTropDeTentatives } from "@/lib/securite/limite-debit";
+import { SignatureBlock } from "@/components/ui-kit/SignatureBlock";
 
 /**
  * Page publique de vérification d'intégrité d'une signature.
@@ -15,7 +16,26 @@ export default async function VerifierSignaturePage({
   params: Promise<{ signatureId: string }>;
 }) {
   const { signatureId } = await params;
-  const res = await verifierIntegriteSignature(signatureId);
+  const res = await verifierSousLimite(signatureId);
+
+  // Limitation de débit (audit OWASP B14) : chaque vérification recalcule une
+  // empreinte qui peut lire 20 Mo. Une page ne choisit pas son statut HTTP :
+  // le refus est un message, rendu avant toute lecture de la signature.
+  if (res.ok === false && res.raison === "trop_de_demandes") {
+    return (
+      <main className="mx-auto max-w-xl px-6 py-16 sm:px-10">
+        <div className="carte-board px-7 py-7 sm:px-8">
+          <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">Vérification suspendue</p>
+          <h1 className="mt-2 text-[1.4rem] font-semibold tracking-[-0.02em]">
+            Trop de vérifications depuis votre connexion
+          </h1>
+          <p role="alert" className="mt-4 text-[0.9rem] text-[color:var(--muted-foreground)]">
+            {messageTropDeTentatives(res.reessayerDansSecondes)}
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   if (res.ok === false && res.raison === "inexistante") {
     return (
