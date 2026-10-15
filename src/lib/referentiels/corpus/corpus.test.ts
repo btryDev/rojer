@@ -745,6 +745,10 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // le champ exclut plus qu'il n'inclut, et le rendez-vous appelle un
       // organisme agréé.
       "MS 71",
+      // 2026-10-15 : le contrat d'entretien des machines de nettoyage à sec,
+      // seul acte de M 40 § 3, classé à part et HORS CADRE (décision de la
+      // propriétaire : « les conditions c'est pas nous »).
+      "M 40 § 3 e) — contrat d'entretien des machines de nettoyage à sec",
       // R. 4323-24 A QUITTÉ CETTE LISTE LE 2026-09-04, et par la porte qu'il
       // annonçait lui-même. Il y était entré le 2026-09-02 avec un `bloquePar`
       // qui disait : « Rien de technique : la pièce est un document permanent

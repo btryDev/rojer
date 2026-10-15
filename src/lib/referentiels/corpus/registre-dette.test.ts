@@ -122,7 +122,10 @@ describe("registre de dette — les obligations manquantes", () => {
       // [3, 0] → [4, 0] le 2026-10-14 : « MS 69 — stock permanent de
       // fournitures de rechange », HORS CADRE (décision de la propriétaire),
       // sortie de la réserve de `MS 69` pour être classée.
-      a_trancher: [4, 0],
+      // [4, 0] → [5, 0] le 2026-10-15 : « M 40 § 3 e) — contrat d'entretien
+      // des machines de nettoyage à sec », HORS CADRE (décision de la
+      // propriétaire, une condition d'activité).
+      a_trancher: [5, 0],
       // [0, 3] → [0, 0] le 2026-10-12 : les trois hôtels, voir `a_trancher`.
       perimetre: [0, 0],
     });
@@ -147,8 +150,10 @@ describe("registre de dette — les obligations manquantes", () => {
     // 21 → 20 : `R. 4544-11` annoncé, même décision.
     // 20 → 21 le 2026-10-14 : le stock de rechange de `MS 69`, hors cadre
     // (§ 7). 20 + 1 − 0 = 21.
-    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(21);
-    expect(manquantes.length).toBe(21);
+    // 21 → 22 le 2026-10-15 : le contrat d'entretien de `M 40 § 3 e)`, hors
+    // cadre (§ 7), une condition d'activité. 21 + 1 − 0 = 22.
+    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(22);
+    expect(manquantes.length).toBe(22);
   });
 });
 

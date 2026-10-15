@@ -52,7 +52,7 @@ const MOTIF_USAGE =
   "Règle d'USAGE ou d'aménagement — une interdiction, une limite de quantité ou de capacité, une condition d'emploi —, sans acte ni pièce : elle se respecte, elle ne se planifie pas, et une case cochée y ressemblerait à une preuve (ADR-027). Même famille que PE 34 au livre III. Aucune ne porte de rythme.";
 
 const MOTIF_M40 =
-  "Trois paragraphes. Les § 1 et § 2 sont des règles d'usage — vente des produits particulièrement inflammables réservée aux magasins spécialisés, emballages étanches, aucun transvasement —, de la famille des autres articles de la section 10, classés `sans_objet`. Le § 3 admet les solvants halogénés dans les ateliers de nettoyage à sec « sous réserve de respecter les prescriptions générales de la réglementation des installations classées pour la protection de l'environnement », et y ajoute cinq prescriptions, dont la seule qui soit un acte : « e) Souscrire un contrat d'entretien des machines de traitement suivant les instructions du constructeur ». C'est une installation classée, que le produit déclare et ne couvre pas (`.claude/CLAUDE.md`, « ICPE ») ; l'exclusion `risque_specialise` est la plus proche — son libellé ne nomme que l'autorisation, et le régime de l'atelier n'a pas été lu. Classement à confirmer par la propriétaire.";
+  "Trois paragraphes. Les § 1 et § 2 sont des règles d'usage — vente des produits particulièrement inflammables réservée aux magasins spécialisés, emballages étanches, aucun transvasement —, de la famille des autres articles de la section 10, classés `sans_objet`. Le § 3 admet les solvants halogénés dans les ateliers de nettoyage à sec « sous réserve de respecter les prescriptions générales de la réglementation des installations classées pour la protection de l'environnement », et y ajoute cinq prescriptions, dont la seule qui soit un acte : « e) Souscrire un contrat d'entretien des machines de traitement suivant les instructions du constructeur ». ~~C'est une installation classée, que le produit déclare et ne couvre pas (`.claude/CLAUDE.md`, « ICPE ») ; l'exclusion `risque_specialise` est la plus proche — son libellé ne nomme que l'autorisation, et le régime de l'atelier n'a pas été lu. Classement à confirmer par la propriétaire.~~ [2026-10-15, décision de la propriétaire : « les conditions c'est pas nous, et les produits interdits non plus ». Les cinq prescriptions du § 3, contrat d'entretien compris, sont les conditions auxquelles le texte subordonne l'usage des solvants halogénés dans un atelier : les § 1, § 2 et § 3 a) à d) restent ici (règles d'usage, aménagement, produits interdits : aucun acte de l'exploitant à suivre) ; le seul acte, le contrat d'entretien du e), est classé à part et HORS CADRE — entrée « M 40 § 3 e) ». Un magasin qui abrite un pressing reste servi pour tout le reste de son dossier.]";
 
 const MOTIF_O22 =
   "Section 11, établissements existants reclassés ERP : réputés conformes s'ils répondent à la réglementation de leur construction, et un RENVOI — les dispositions de contrôle (R. 123-51, GE 3, GE 4, GE 5, MS 74), d'entretien (DF 9, CH 57, GZ 14, EL 18, EC 13, AS 8, GC 21, MS 68, MS 72) et de vérification (GE 6 à GE 10, DF 10, CH 58, GZ 15, EL 19, EC 15, AS 9, GC 22, MS 71, MS 73) leur sont applicables. Il ne crée rien : ces articles valent déjà pour tout établissement des quatre premières catégories, et ceux que le référentiel porte le sont sans condition de date d'ouverture. Le renvoi à R. 123-51 du CCH est recopié tel que le texte l'écrit ; sa correspondance après la recodification du CCH n'est pas vérifiée ici.";
@@ -799,6 +799,32 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       statut: "hors_perimetre",
       exclusion: "risque_specialise",
       motif: MOTIF_M40,
+    },
+    {
+      // 2026-10-15 — le seul acte de M 40 § 3, classé pour lui-même (comme
+      // « MS 69 — stock permanent » au livre II) : M 40 reste écarté pour le
+      // reste, ce volet est HORS CADRE.
+      ref: "M 40 § 3 e) — contrat d'entretien des machines de nettoyage à sec",
+      intitule: "Contrat d'entretien des machines de nettoyage à sec aux solvants halogénés",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000038485360",
+      versionEnVigueur: "2019-05-18",
+      modifiePar: { texte: "Arrêté du 10 mai 2019 - art. 4" },
+      luLe: "2026-10-14",
+      lecture: "api_legifrance",
+      citationCle:
+        "e) Souscrire un contrat d'entretien des machines de traitement suivant les instructions du constructeur.",
+      prescrit:
+        "M 40 § 3 : l'usage de solvants halogénés dans un atelier de nettoyage à sec d'un magasin des catégories 1 à 4 est autorisé sous réserve de la réglementation ICPE et de cinq prescriptions ; la dernière fait souscrire un contrat d'entretien des machines de traitement. Lu en bac à sable (API PISTE), égalité avec la production non vérifiée.",
+      statut: "obligation_manquante",
+      cause: "a_trancher",
+      // HORS CADRE, décision de la propriétaire du 2026-10-15 ; couverte par
+      // la clause générale des mentions légales (§ 7 de
+      // `docs/couverture-declaree-du-produit.md`).
+      toucheLaCible: true,
+      motif:
+        "UNE CONDITION D'ACTIVITÉ, PAS UNE OBLIGATION SUIVIE. Le contrat est la contrepartie que le texte met à l'usage des solvants halogénés dans un atelier de nettoyage à sec : il se souscrit pour avoir le droit d'exercer, avec les quatre autres conditions du § 3 (ventilation, postes, interdictions). Décision de la propriétaire du 2026-10-15 : « les conditions c'est pas nous, et les produits interdits non plus ». Un magasin qui abrite un pressing reste servi pour tout le reste de son dossier.",
+      bloquePar:
+        "Rien de technique : une décision de produit, prise le 2026-10-15 (hors cadre).",
     },
     {
       ref: "M 41",

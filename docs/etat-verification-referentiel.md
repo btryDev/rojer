@@ -197,11 +197,11 @@ que rien ne cite n'apparaît donc dans aucun degré ci-dessus — et le prendre
 pour du travail restant est exactement l'erreur qui a failli faire relancer
 une relecture déjà faite.
 
-**456 articles dépouillés ne sont cités par aucune obligation**, répartis sur 54 corpus.
+**457 articles dépouillés ne sont cités par aucune obligation**, répartis sur 54 corpus.
 
 | corpus | articles non cités | sur | lus |
 | --- | --- | --- | --- |
-| `arrete-1980-livre-2-titre-2` | 109 | 121 | 2026-10-14 |
+| `arrete-1980-livre-2-titre-2` | 110 | 122 | 2026-10-14 |
 | `arrete-1980-livre-3` | 46 | 59 | 2026-08-26 → 2026-09-27 |
 | `code-travail-travail-en-hauteur` | 33 | 33 | 2026-09-01 → 2026-09-27 |
 | `code-travail-plan-prevention` | 16 | 16 | 2026-09-02 → 2026-09-27 |

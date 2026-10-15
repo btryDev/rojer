@@ -953,7 +953,10 @@ vérifie que chaque ligne du § 8 a reçu un sort.] [2026-10-14 : ~~vingt~~
 **vingt et une** — 20 + 1 − 0 : le stock de rechange de l'alarme (dernière
 phrase de `MS 69`) entre hors cadre, décision de la propriétaire ; il est
 classé au corpus sous une entrée à part, `MS 69` restant retenu pour son
-contrôle hebdomadaire.] [2026-10-14, décision de la
+contrôle hebdomadaire.] [2026-10-15 : ~~vingt et une~~ **vingt-deux** — 21 + 1 − 0 :
+le contrat d'entretien des machines de nettoyage à sec (`M 40 § 3 e)`) entre
+hors cadre, décision de la propriétaire — une condition pour exercer
+l'activité, pas une obligation que Rojer suit.] [2026-10-14, décision de la
 propriétaire : ~~« Rien au produit — ni écran, ni annonce, ni ligne »~~ ne vaut
 plus pour tous. La liste des matériels non couverts
 (`src/lib/equipements/materiels-non-couverts.ts`) NOMME le matériel de
@@ -987,6 +990,7 @@ L'égalité de ce § 7 avec le corpus est intacte.]
 | `CO 61` | Inspection quinquennale des tribunes télescopiques de plus d'un mètre : ~~aucun des trois secteurs n'en exploite~~ quasi jamais dans la cible — le corpus le dit absent des trois secteurs, et la cible, plus large, ne le rend pas courant. *(2026-10-13, motif corrigé après revue)* |
 | `GC 18` | Nettoyage semestriel du conduit d'un module de cuisson temporaire : ~~quasi jamais dans la cible~~ il touche la restauration, secteur cible, mais par un mode d'exploitation — la cuisine mobile ou d'événement — que le modèle ne sait pas décrire (motif du corpus) ; rien ne permet de l'annoncer au seul dossier concerné. *(2026-10-13, motif corrigé après revue)* |
 | `MS 69 — stock permanent de fournitures de rechange` | Stock permanent de petites fournitures de rechange de l'alarme (lampes, fusibles, vitres, cartouches), ERP des catégories 1 à 4 : c'est un stock, pas un acte ; une case cochée ressemblerait à une preuve (ADR-027). *(2026-10-14, décision de la propriétaire)* |
+| `M 40 § 3 e) — contrat d'entretien des machines de nettoyage à sec` | Contrat d'entretien des machines de nettoyage à sec aux solvants halogénés, dans un magasin des catégories 1 à 4 : c'est l'une des conditions auxquelles le texte subordonne l'activité (avec la ventilation, l'emplacement des postes et les interdictions), pas une obligation d'exploitation suivie. *(2026-10-15, décision de la propriétaire)* |
 | `MS 71` | Communications radio des secours, ERP de plus d'un niveau de sous-sol et de plus de 100 m² en sous-sol : quasi jamais dans la cible. *(2026-10-13)* |
 | `Arrêté 1986-01-31 art. 60` | VMC d'habitation secourue par un groupe électrogène : rare, et le texte ne nomme pas le débiteur. *(2026-10-13)* |
 | `R. 4323-89` | Travail sur cordes : ~~dans la cible, c'est l'entreprise extérieure qui l'exerce~~ le corpus le dit exercé, dans les trois secteurs cibles, par une entreprise extérieure — auquel cas il relève de la co-activité, déjà servie ; le produit ne sait pas qui l'exerce (déclencheur d'activité manquant). *(2026-10-13, motif corrigé après revue)* |
