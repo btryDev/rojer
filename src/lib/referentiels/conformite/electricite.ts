@@ -225,6 +225,8 @@ export const obligationsElectricite: Obligation[] = [
         // Une question fermée dans un outil de conformité se lit comme un
         // reproche sans issue.
         titre: "elec-salarie-habilitation",
+        // La même habilitation, vue par personne : ses 3 ans y sont suivis.
+        memeObligation: true,
         motif:
           "R. 4544-10 fait délivrer l'habilitation à un travailleur désigné : l'obligation suppose une personne nommée. Le produit ne devine pas qui opère sur ou à proximité des installations (ADR-023) : il lit la réponse du DUERP à la question qui le demande (ADR-038), se tait si elle est « non », et dit sinon qu'aucune personne n'est déclarée.",
       },

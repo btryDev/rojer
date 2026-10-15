@@ -386,10 +386,12 @@ export function texteOuVisible(o: Obligation): string {
  * « sans rythme écrit », et rien ne disait que les 3 ans de la NF C 18-510 se
  * suivent sur le titre de chaque personne, vingt pages plus loin.
  *
- * Lu dans `transmet` (`vers: "salarie_designe"`), jamais dans une liste : le
- * lien est déclaré au référentiel, la grille l'imprime. Un titre qui en
- * appelle un autre (ADR-043) n'est pas concerné — sa ligne est déjà dans la
- * partie des salariés.
+ * Lu dans `transmet` (`vers: "salarie_designe"`, `memeObligation: true`),
+ * jamais dans une liste : le lien est déclaré au référentiel, la grille
+ * l'imprime. Seulement les DOUBLES — une transmission ordinaire dit qui est
+ * concerné, pas où se suit le rythme : imprimée partout le 2026-10-15, elle
+ * faisait dire « suivi par personne, tous les 3 ans » au carnet de
+ * prescriptions, remis une fois, et à la VGP semestrielle d'un chariot.
  */
 export function suiviParPersonne(
   o: Obligation,
@@ -398,7 +400,9 @@ export function suiviParPersonne(
   if (porteurDe(o) === "salarie") return [];
   const ids = new Set<string>();
   for (const tr of o.transmet ?? []) {
-    if (tr.vers === "salarie_designe" && tr.titre) ids.add(tr.titre);
+    if (tr.vers === "salarie_designe" && tr.titre && tr.memeObligation) {
+      ids.add(tr.titre);
+    }
   }
   return [...ids].map((id) => {
     const titre = catalogue.find((c) => c.id === id);

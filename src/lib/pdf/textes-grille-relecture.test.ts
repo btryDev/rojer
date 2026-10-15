@@ -533,16 +533,13 @@ describe("suiviParPersonne — le renvoi vers le titre nominatif", () => {
     }
   });
 
-  it("chaque titre nommé par une ligne d'équipement ou d'établissement existe au catalogue", () => {
-    const avecRenvoi = obligationsConformite.filter(
-      (o) => suiviParPersonne(o, obligationsConformite).length > 0,
-    );
-    // Borne basse : l'habilitation et le carnet de prescriptions au moins.
-    expect(avecRenvoi.map((o) => o.id)).toEqual(
-      expect.arrayContaining([
-        "elec-travail-habilitation-personnel",
-        "elec-travail-carnet-prescriptions",
-      ]),
-    );
+  it("une transmission ordinaire ne renvoie pas : le carnet et la VGP ne sont pas des doubles", () => {
+    for (const id of [
+      "elec-travail-carnet-prescriptions",
+      "levage-vgp-semestrielle-chariot-gerbeur",
+      "prevention-etablissement-cse",
+    ]) {
+      expect(suiviParPersonne(ligne(id), obligationsConformite)).toEqual([]);
+    }
   });
 });
