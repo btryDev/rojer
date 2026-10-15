@@ -10,7 +10,7 @@ l'avait fait périmer — du 2026-09-10 au 2026-09-19 elle a annoncé une branch
 | pour savoir… | lire |
 | --- | --- |
 | ce qui reste à faire, et ce qui est clos | `docs/chantiers-ouverts.md` — chaque entrée faite y est rayée et datée |
-| pourquoi une décision est prise | `docs/adr/` (001 à 036) |
+| pourquoi une décision est prise | `docs/adr/` (001 à ~~036~~ 043, 2026-10-15) |
 | ce qu'une revue a trouvé | `docs/revues/` |
 | l'état d'une branche | `git branch -r` et `git log origin/main..<branche>` — jamais un tableau écrit à la main |
 

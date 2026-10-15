@@ -162,7 +162,7 @@ model AccessToken {
 
 - L'émetteur peut révoquer à tout moment depuis l'interface (bouton « Annuler l'accès »).
 - Révocation auto si `otpEssaisRestants = 0`.
-- Les tokens expirés sont purgés automatiquement par un cron (soft delete 90 j, puis hard delete) pour garder la table légère et conserver une piste d'audit courte.
+- Les tokens expirés sont purgés automatiquement par un cron (soft delete 90 j, puis hard delete) pour garder la table légère et conserver une piste d'audit courte. [2026-10-15, ménage des ADR : **JAMAIS CONSTRUIT** — ni `cron.ts`, ni purge, ni cron dans `vercel.json`. Un jeton expiré est refusé à l'usage (`verify.ts`) mais reste en base avec le nom, l'adresse, l'IP et l'agent du tiers ; `docs/rgpd.md` § 4 ne fixe aucune durée pour `AccessToken`. Dette RGPD, en décision attendue dans `docs/chantiers-ouverts.md` § 0. Aucun jeton ne peut être émis en production depuis le 2026-09-26 (C38 : l'envoi hors service refuse avant toute écriture) ; ceux qu'une demande y laissait orphelins avant cette date peuvent y être encore — à compter en lecture seule.]
 
 #### Scoping
 

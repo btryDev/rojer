@@ -229,8 +229,12 @@ et oriente vers l'export du dossier de conformité.
 `regenererCalendrierSilencieux` avalait l'exception avec un `console.error` :
 l'utilisateur voyait son équipement enregistré et repartait en croyant ses
 obligations à jour. L'échec est désormais rendu comme avertissement explicite,
-avec la marche à suivre (« page Calendrier → Actualiser »), sans faire passer
-pour un échec une mutation qui a réussi.
+avec la marche à suivre (~~« page Calendrier → Actualiser »~~), sans faire passer
+pour un échec une mutation qui a réussi. [2026-10-15, ménage des ADR : le
+bouton « Actualiser » a été retiré le 2026-08-19 (`93ab08bb`, « le calendrier
+se répare seul »). Un échec marque le calendrier périmé
+(`marquerCalendrierPerime`) et la prochaine ouverture du tableau de bord ou
+du calendrier le reprend (`assurerCalendrierAJour`).]
 
 ## Conséquences
 

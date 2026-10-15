@@ -175,7 +175,7 @@ Rejetée : FranceConnect+ n'est pas ouvert aux acteurs privés non partenaires. 
 2. Créer table `Signature` + migration SQL.
 3. Créer `src/lib/signatures/` : `actions.ts` (créer/vérifier), `queries.ts` (lister pour un objet), `hash.ts` (calcul SHA-256 serveur), `otp.ts` (génération/envoi/vérification).
 4. Dépendance email : Resend ou Supabase SMTP. Variable `SIGNATURE_MAIL_FROM`.
-5. Page publique `/signer/[token]` (Server Component + Server Action).
+5. ~~Page publique `/signer/[token]` (Server Component + Server Action).~~ [2026-10-15 : construite sous d'autres chemins — `/acces/[token]` (le lien reçu, code puis signature) et `/signe/[signatureId]` (l'accusé). `/signer/` n'existe pas.]
 6. Page publique `/verifier/[signatureId]` (vérification d'intégrité).
 7. Composant partagé `<SignatureBlock />` (affichage scellé) et `<SignatureRequestButton />` (déclenchement flux).
 8. Tests unitaires : hash, OTP (génération, expiration, anti-bruteforce), sérialisation du bloc.

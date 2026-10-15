@@ -124,6 +124,28 @@ release (lots lancés le même jour) ; **n° 1 (gaz sans cuisine) et n° 5
     Hobby) : raccourcir la rétention des déploiements annulés, en erreur et de
     pré-production ([§ 13](#13-les-previews-vercel-sont-abandonnées--2026-09-18)).
 
+[2026-10-15, ménage des ADR ([§ 18](#18-le-ménage-des-adr--2026-10-15)) : six
+décisions qui dormaient dans le texte des ADR, remontées ici.]
+
+14. **Purge des jetons d'accès externe** (ADR-007) : la purge promise n'a
+    jamais été construite, et `docs/rgpd.md` ne fixe aucune durée à
+    `AccessToken` (nom, adresse, IP, agent d'un tiers). Choisir le mécanisme
+    — tâche planifiée Vercel (une route et un secret à poser) ou purge au fil
+    des émissions (ne touche pas un dossier inactif) — et la durée.
+15. **Les quatre questions du § 7 de l'ADR-037** (« Quand ça arrive ») : le
+    code suit les recommandations depuis le 2026-09-21, rien n'écrit qu'elles
+    ont été retenues.
+16. **Le dossier `referentiels/duerp/` de l'ADR-003** : jamais créé. Déplacer
+    les quatre fichiers ou écrire l'abandon.
+17. **ADR-044, règle « À renseigner »** (dossier neuf, appareil ancien,
+    salarié ancien) : annoncée le 2026-10-12, jamais écrite, la règle
+    n'existe pas dans le code. L'écrire ou l'abandonner.
+18. **ADR-039, décision 2** : un acte d'autorité moins strict qu'un rythme
+    retenu par DÉFAUT doit-il l'emporter ? Le plancher tient en attendant.
+19. **L'action libre** (ADR-002, 016, 018) : depuis le retrait des
+    Interventions, rien ne relie un constat de terrain à une action datée ; la
+    rétablir suppose d'assouplir le XOR d'`Action` en « au plus une origine ».
+
 ### À vérifier après la release
 
 1. ~~**Alarme de chambre froide** (2026-10-13). La vérification annuelle des
@@ -3028,3 +3050,37 @@ bloquante pour la branche :
    [2026-10-13, tri : DÉCISION ATTENDUE — relever la contradiction ou non ;
    l'autorisation de conduite (`R. 4323-56`) est en jeu, d'où DÉCISION et non
    constat.]
+
+---
+
+## 18. Le ménage des ADR — 2026-10-15
+
+Relecture des 43 ADR contre `origin/main` (`05ac9f60`) : chaque symbole cité
+cherché dans `src/` et `prisma/`. Branche `lot/menage-1015`.
+
+**Corrigé dans les ADR et la doc** (annotations datées, rien de réécrit) :
+- ADR-037, 038, 041 se disaient « non fusionnée » ; fusionnées le 2026-09-21,
+  le 2026-10-07 (#13) et le 2026-10-12 (#16).
+- ADR-006 : `/signer/[token]` n'existe pas, le flux passe par `/acces/[token]`
+  et `/signe/[signatureId]`.
+- ADR-007 : la purge des jetons n'a jamais été construite (§ 0, décision 14).
+- ADR-012 § E : le bouton « Actualiser » est retiré depuis le 2026-08-19.
+- ADR-003 : le dossier `referentiels/duerp/` n'a jamais été créé (§ 0,
+  décision 16).
+- `CLAUDE.md` : 037, 038 et 043 manquaient à la liste ; pas d'ADR-044.
+- `REPRISE.md` annonçait les ADR « 001 à 036 ».
+- `docs/revues/audit-modules-2026-10-12.md` citait une ADR-044 jamais écrite.
+
+**Contre-vérifié, rien à corriger** : le nom du fichier de l'ADR-034 est déjà
+expliqué dans son statut ; le « moteur 3 » de l'ADR-036 décrit l'état à sa date
+(`VERSION_MOTEUR_CALENDRIER` vaut 6 aujourd'hui, l'incrément a continué).
+
+**Ce qui reste écrit dans les ADR comme ouvert, et déjà suivi ailleurs** :
+`GHW` (ADR-004, § 9 bis) ; fusion N→1 (ADR-022, § 0 décision 8) ; assureur et
+`renforce_periodicite` (ADR-036, § 0 décision 4) ; OAuth du MCP et route à clé
+(ADR-013, suspendue jusqu'à la migration Better Auth) ; `drop` des tables
+`Intervention` (ADR-018, `CLAUDE.md`) ; modèles `ExerciceSecurite`,
+`PersonnelSecurite`, `ControleAdministratif` (ADR-021 et 024, transmissions non
+câblées) ; relevés ECS « À REPRENDRE » (ADR-010). Le « non » au DUERP imprimé,
+que l'ADR-038 laisse ouvert, est tranché depuis le 2026-10-12 (§ 17, point 2).
+

@@ -15,7 +15,9 @@ modules) et **la cohérence entre écrans** (un même fait dit différemment).
 Hors champ (traité ailleurs) : envoi d'e-mails, hébergement, mentions légales,
 sauvegardes. Déjà en cours le même jour : réactivation d'un appareil, seuil des
 400 h, « non » imprimés au DUERP, étape transverses calculée, règle « À
-renseigner » (ADR-044, dossier neuf / appareil ancien / salarié ancien), visites
+renseigner » (ADR-044, dossier neuf / appareil ancien / salarié ancien —
+[2026-10-15 : cette ADR n'a jamais été écrite ni poussée, sur aucune branche ;
+la règle n'existe pas dans le code]), visites
 avant affectation (fait, `7ab800e3`).
 
 ## 1. Bloquants V0
