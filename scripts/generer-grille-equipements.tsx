@@ -83,6 +83,7 @@ import {
   LEGENDE_PORTEURS,
   LEGENDE_SURFACE,
   LIBELLE_SURFACE,
+  suiviParPersonne,
   texteOuVisible,
   texteTypologie,
 } from "@/lib/pdf/textes-grille-relecture";
@@ -349,6 +350,14 @@ function LigneObligation({
         <Text style={[s.small, { marginTop: 1, color: BOARD.bleuEncre }]}>
           {t(`Visible : ${texteOuVisible(o)}`)}
         </Text>
+        {suiviParPersonne(o, obligationsConformite).map((ligne) => (
+          <Text
+            key={ligne}
+            style={[s.small, { marginTop: 1, color: BOARD.bleuEncre }]}
+          >
+            {t(ligne)}
+          </Text>
+        ))}
       </View>
       <View style={[cell, { width: C.periodicite }]}>
         <Text style={s.td}>{libelleRythme(o)}</Text>

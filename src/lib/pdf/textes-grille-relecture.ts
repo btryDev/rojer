@@ -15,6 +15,7 @@ import {
 } from "@/lib/referentiels/types-communs";
 import { surfacesDe, type Surface } from "@/lib/surfaces/obligations-sans-surface";
 import { porteurDe } from "@/lib/referentiels/conformite";
+import { libelleRythme } from "@/lib/referentiels/conformite/renvoi-aux-normes";
 import type { Obligation } from "@/lib/referentiels/conformite/types";
 import { releveDeLaPage } from "@/lib/quand-ca-arrive/lignes";
 
@@ -376,6 +377,34 @@ export function texteOuVisible(o: Obligation): string {
     libelles.push("Équipe (titres déclarés par salarié)");
   }
   return libelles.join(" · ");
+}
+
+/**
+ * Où se suit, personne par personne, ce qu'une ligne d'équipement ou
+ * d'établissement suppose (2026-10-15, remarque du préventeur, grille du
+ * 13/10 p. 8) : la ligne « Habilitation électrique du personnel » s'imprimait
+ * « sans rythme écrit », et rien ne disait que les 3 ans de la NF C 18-510 se
+ * suivent sur le titre de chaque personne, vingt pages plus loin.
+ *
+ * Lu dans `transmet` (`vers: "salarie_designe"`), jamais dans une liste : le
+ * lien est déclaré au référentiel, la grille l'imprime. Un titre qui en
+ * appelle un autre (ADR-043) n'est pas concerné — sa ligne est déjà dans la
+ * partie des salariés.
+ */
+export function suiviParPersonne(
+  o: Obligation,
+  catalogue: readonly Obligation[],
+): string[] {
+  if (porteurDe(o) === "salarie") return [];
+  const ids = new Set<string>();
+  for (const tr of o.transmet ?? []) {
+    if (tr.vers === "salarie_designe" && tr.titre) ids.add(tr.titre);
+  }
+  return [...ids].map((id) => {
+    const titre = catalogue.find((c) => c.id === id);
+    if (!titre) throw new Error(`${o.id} transmet vers un titre inconnu : ${id}`);
+    return `Suivi par personne : « ${titre.libelle} » — ${libelleRythme(titre)}`;
+  });
 }
 
 /**

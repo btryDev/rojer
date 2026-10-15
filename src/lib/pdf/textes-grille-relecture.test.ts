@@ -21,6 +21,7 @@ import {
   texteOuVisible,
   texteProvenance,
   texteTypologie,
+  suiviParPersonne,
 } from "./textes-grille-relecture";
 import { surfacesDe } from "@/lib/surfaces/obligations-sans-surface";
 import { releveDeLaPage } from "@/lib/quand-ca-arrive/lignes";
@@ -503,5 +504,45 @@ describe("« Visible » : où le dirigeant voit l'obligation (2026-10-13)", () =
       (x) => x.id === "incendie-travail-chiffons-impregnes-recipients-clos",
     )!;
     expect(texteOuVisible(o)).toBe("Ce que Rojer ne couvre pas (niveau audit)");
+  });
+});
+
+describe("suiviParPersonne — le renvoi vers le titre nominatif", () => {
+  const ligne = (id: string) => {
+    const o = obligationsConformite.find((x) => x.id === id);
+    if (!o) throw new Error(id);
+    return o;
+  };
+
+  it("l'habilitation du personnel renvoie au titre de chaque personne, avec ses 3 ans", () => {
+    expect(
+      suiviParPersonne(ligne("elec-travail-habilitation-personnel"), obligationsConformite),
+    ).toEqual([
+      "Suivi par personne : « Habilitation électrique du travailleur désigné » — tous les 3 ans",
+    ]);
+  });
+
+  it("le lien vient de `transmet` : le retirer fait taire le renvoi", () => {
+    const sansLien = { ...ligne("elec-travail-habilitation-personnel"), transmet: [] };
+    expect(suiviParPersonne(sansLien, obligationsConformite)).toEqual([]);
+  });
+
+  it("un titre de salarié ne renvoie pas à un autre titre", () => {
+    for (const o of obligationsConformite.filter((x) => porteurDe(x) === "salarie")) {
+      expect(suiviParPersonne(o, obligationsConformite)).toEqual([]);
+    }
+  });
+
+  it("chaque titre nommé par une ligne d'équipement ou d'établissement existe au catalogue", () => {
+    const avecRenvoi = obligationsConformite.filter(
+      (o) => suiviParPersonne(o, obligationsConformite).length > 0,
+    );
+    // Borne basse : l'habilitation et le carnet de prescriptions au moins.
+    expect(avecRenvoi.map((o) => o.id)).toEqual(
+      expect.arrayContaining([
+        "elec-travail-habilitation-personnel",
+        "elec-travail-carnet-prescriptions",
+      ]),
+    );
   });
 });
