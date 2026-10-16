@@ -296,6 +296,8 @@ describe("suggererEquipements — aucune référence n'est écrite en dur", () =
               estERP,
               estIGH,
               estHabitation,
+              // 2026-10-15 : une catégorie qui fait citer le défibrillateur.
+              categorieErp: estERP ? "N3" : null,
             });
           }
         }
@@ -397,6 +399,7 @@ describe("un second établissement sans NAF propre (2026-09-27, A1)", () => {
     estERP: true,
     estIGH: false,
     estHabitation: false,
+    categorieErp: "N5" as const,
   };
 
   it("hérite du NAF de l'entreprise, et de ses suggestions sectorielles", () => {
@@ -409,5 +412,43 @@ describe("un second établissement sans NAF propre (2026-09-27, A1)", () => {
     expect(
       contexteDesSuggestions({ ...secondRestaurant, codeNaf: "47.11B" }).codeNaf,
     ).toBe("47.11B");
+  });
+});
+
+describe("suggererEquipements — le défibrillateur, aux seuls ERP des catégories 1 à 4 (2026-10-15)", () => {
+  const erp = (categorieErp: "N3" | "N4" | "N5" | null) => ({
+    codeNaf: "56.10A",
+    estEtablissementTravail: true,
+    estERP: categorieErp !== null,
+    estIGH: false,
+    estHabitation: false,
+    categorieErp,
+  });
+
+  it("borne basse : un ERP de 3ᵉ ou de 4ᵉ catégorie se voit proposer le DAE, fondé sur R. 157-1", () => {
+    for (const c of ["N3", "N4"] as const) {
+      const dae = suggererEquipements(erp(c)).find((e) => e.categorie === "DEFIBRILLATEUR");
+      expect(dae, c).toBeDefined();
+      expect(dae!.raison).toContain("R. 157-1");
+    }
+  });
+
+  it("borne haute : ni en 5ᵉ catégorie, ni hors ERP", () => {
+    expect(categories(suggererEquipements(erp("N5")))).not.toContain("DEFIBRILLATEUR");
+    expect(categories(suggererEquipements(erp(null)))).not.toContain("DEFIBRILLATEUR");
+  });
+
+  it("la catégorie lue sur l'établissement passe dans le contexte", () => {
+    expect(
+      contexteDesSuggestions({
+        codeNaf: null,
+        entreprise: { codeNaf: null },
+        estEtablissementTravail: true,
+        estERP: true,
+        estIGH: false,
+        estHabitation: false,
+        categorieErp: "N4",
+      }).categorieErp,
+    ).toBe("N4");
   });
 });

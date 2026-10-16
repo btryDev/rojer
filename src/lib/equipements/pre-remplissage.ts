@@ -1,6 +1,9 @@
 import { obligationParId } from "@/lib/referentiels/conformite";
 import { nafEffectif } from "@/lib/perimetre/secteur";
-import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
+import type {
+  CategorieEquipement,
+  CategorieErp,
+} from "@/lib/referentiels/types-communs";
 
 /**
  * Règles de pré-remplissage du parc d'équipements d'un établissement, sur la
@@ -158,6 +161,14 @@ export type ContexteEtablissement = {
   estERP: boolean;
   estIGH: boolean;
   estHabitation: boolean;
+  /**
+   * La catégorie d'ERP (2026-10-15). Elle ne sert qu'au défibrillateur, que
+   * R. 157-1 1° ne fait détenir qu'aux catégories 1 à 4. Absente, la
+   * suggestion n'est pas faite — même sémantique que le moteur pour une
+   * restriction de catégorie, et sans risque : en ERP, la contrainte
+   * `Etablissement_erp_type_categorie_requis` rend l'absence impossible.
+   */
+  categorieErp?: CategorieErp | null;
 };
 
 /**
@@ -179,6 +190,7 @@ export function contexteDesSuggestions(etab: {
   estERP: boolean;
   estIGH: boolean;
   estHabitation: boolean;
+  categorieErp: CategorieErp | null;
 }): ContexteEtablissement {
   return {
     codeNaf: nafEffectif({
@@ -189,7 +201,14 @@ export function contexteDesSuggestions(etab: {
     estERP: etab.estERP,
     estIGH: etab.estIGH,
     estHabitation: etab.estHabitation,
+    categorieErp: etab.categorieErp,
   };
+}
+
+const CATEGORIES_UN_A_QUATRE: readonly CategorieErp[] = ["N1", "N2", "N3", "N4"];
+
+function estCategorieUnAQuatre(c: CategorieErp | null | undefined): boolean {
+  return c != null && CATEGORIES_UN_A_QUATRE.includes(c);
 }
 
 function normNaf(naf: string | null | undefined): string {
@@ -370,6 +389,22 @@ export function suggererEquipements(ctx: ContexteEtablissement): Entree[] {
       // périodicité dans le motif imbriquerait deux parenthèses pour rien.
       motif: "Vérification périodique du système de sécurité incendie",
       fondements: [{ obligationId: "incendie-erp-ssi-annuelle" }],
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // ERP des catégories 1 à 4 → défibrillateur (2026-10-15)
+  // ---------------------------------------------------------------------------
+  // R. 157-1 1° fait détenir un DAE aux seules catégories 1 à 4 ; le 2° (5ᵉ
+  // catégorie, familles a à h) n'est pas encodé. La suggestion suit le champ
+  // de `dae-erp-detention`, qui la fonde.
+  if (ctx.estERP && estCategorieUnAQuatre(ctx.categorieErp)) {
+    ajoute({
+      categorie: "DEFIBRILLATEUR",
+      libelle: "Défibrillateur (DAE)",
+      motif:
+        "Détention obligatoire, maintenance et déclaration à la base nationale",
+      fondements: [{ obligationId: "dae-erp-detention" }],
     });
   }
 
