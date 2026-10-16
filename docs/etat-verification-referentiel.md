@@ -4,8 +4,8 @@
      écraserait la correction, et un test compare déjà ce fichier au rendu
      du script. Pour le mettre à jour : pnpm verification --ecrire -->
 
-**Généré le** : 2026-10-15
-**Référentiel** : `2026-10-14.3`
+**Généré le** : 2026-10-16
+**Référentiel** : `2026-10-15.1`
 **Régénérer** : `pnpm verification --ecrire`
 
 Ce document répond à une question, et à une seule : **de quoi le
@@ -156,8 +156,8 @@ Aucun domaine n'est entièrement dépourvu de verbatim.
 
 |  | obl. | réf. | 5 | 4 | 3 | 2 | 1 | 0 | vérifiées à la source | sans ancre | lu entre |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `equipement` | 91 | 180 | 59 | 31 | 1 | · | · | · | 90 / 91 — 99 % | 22 / 180 | 2026-08-26 → 2026-10-14 |
-| `etablissement` | 80 | 165 | 36 | 42 | 2 | · | · | · | 78 / 80 — 98 % | 0 / 165 | 2026-08-26 → 2026-10-14 |
+| `equipement` | 93 | 186 | 61 | 31 | 1 | · | · | · | 92 / 93 — 99 % | 22 / 186 | 2026-08-26 → 2026-10-14 |
+| `etablissement` | 78 | 159 | 34 | 42 | 2 | · | · | · | 76 / 78 — 97 % | 0 / 159 | 2026-08-26 → 2026-10-14 |
 | `salarie` | 14 | 33 | · | 13 | · | 1 | · | · | 13 / 14 — 93 % | 1 / 33 | 2026-08-27 → 2026-10-07 |
 
 Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, mesuré au plancher — **5** première main, **4** agent + verbatim, **3** lu sans verbatim, **2** indirect, **1** sans trace, **0** non rattaché.
@@ -446,9 +446,9 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `sante-travail-etablissement-examen-de-reprise` | sante_travail | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-26 |
 | `sante-travail-etablissement-information-arret-accident-moins-trente-jours` | sante_travail | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-26 |
 | `sante-travail-etablissement-information-possibilite-prereprise` | sante_travail | etablissement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-26 |
-| `dae-erp-declaration-geodae` | secours | etablissement | 4 | 5 · première main | 5 · première main | 0 / 4 | 2026-10-14 |
+| `dae-erp-declaration-geodae` | secours | equipement | 4 | 5 · première main | 5 · première main | 0 / 4 | 2026-10-14 |
 | `dae-erp-detention` | secours | etablissement | 4 | 5 · première main | 5 · première main | 0 / 4 | 2026-10-14 |
-| `dae-erp-maintenance` | secours | etablissement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-10-14 |
+| `dae-erp-maintenance` | secours | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-10-14 |
 | `signalisation-erp-5-extincteurs-identification` | signalisation | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-10-07 |
 | `signalisation-erp-extincteurs-identification` | signalisation | equipement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-10-07 |
 

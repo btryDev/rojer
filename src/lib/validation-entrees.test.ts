@@ -170,7 +170,7 @@ describe("creerEquipementsDepuisPreRemplissage — une entrée par catégorie au
     for (const estERP of [true, false]) {
       for (const codeNaf of ["56.10A", "47.11B", "70.22Z", null]) {
         const suggestions = suggererEquipements({
-          codeNaf, estEtablissementTravail: true, estERP, estIGH: true, estHabitation: true,
+          codeNaf, estEtablissementTravail: true, estERP, estIGH: true, estHabitation: true, categorieErp: null,
         });
         expect(suggestions.length).toBeGreaterThan(0);
         ecritures.length = 0;

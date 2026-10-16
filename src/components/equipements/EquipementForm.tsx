@@ -2,6 +2,7 @@
 
 import { useActionState, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { AideCategorie, CLASSE_AIDE } from "@/components/equipements/AideCategorie";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { BlocCreux, ChampBoard } from "@/components/ui-kit";
 import { MarqueCategorie } from "@/components/equipements/MarqueCategorie";
@@ -24,6 +25,7 @@ import {
 import {
   AIDE_GROUPE_ELECTROGENE,
   DESCRIPTION_CATEGORIE,
+  EXEMPLES_CATEGORIE,
   LABEL_CATEGORIE_EQUIPEMENT,
 } from "@/lib/equipements/labels";
 import {
@@ -48,11 +50,6 @@ function Erreur({ message, id }: { message?: string; id?: string }) {
     </p>
   );
 }
-
-/** Le gabarit d'une aide : partagé par la phrase d'aide d'un champ et par
- *  l'aide en plusieurs blocs au-dessus des questions exigées du levage. */
-const CLASSE_AIDE =
-  "m-0 mt-1.5 max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]";
 
 /** La phrase d'aide d'un champ : en clair sous le champ, jamais en infobulle
  *  — une infobulle n'existe pas au doigt. */
@@ -392,9 +389,7 @@ export function EquipementForm({
             </BlocCreux>
             </div>
           ) : (
-            DESCRIPTION_CATEGORIE[categorie] && (
-              <Aide id="categorie-aide">{DESCRIPTION_CATEGORIE[categorie]}</Aide>
-            )
+            <AideCategorie id="categorie-aide" categorie={categorie} />
           )}
           <Erreur id="categorie-erreur" message={erreurCategorie} />
         </div>
@@ -405,7 +400,10 @@ export function EquipementForm({
           label="Libellé"
           requis
           defaultValue={valeursInitiales?.libelle}
-          placeholder="Ex : TGBT principal, Hotte de la cuisine chaude"
+          placeholder={
+            EXEMPLES_CATEGORIE[categorie]?.libelle ??
+            "Ex : TGBT principal, Hotte de la cuisine chaude"
+          }
           erreur={err("libelle")}
         />
 
@@ -464,7 +462,10 @@ export function EquipementForm({
             label="Date de péremption"
             type="date"
             defaultValue={toIsoDate(valeursInitiales?.datePeremption)}
-            aide="Facultatif. La fin de vie indiquée par le fabricant, quand il en fixe une — un harnais antichute a souvent dix ans. Rojer ne vous enverra pas d'échéance à cette date, mais la fiche de l'équipement affichera « Périmé depuis » dès qu'elle sera passée."
+            aide={
+              EXEMPLES_CATEGORIE[categorie]?.peremption ??
+              "Facultatif. La fin de vie indiquée par le fabricant, quand il en fixe une — un harnais antichute a souvent dix ans. Rojer ne vous enverra pas d'échéance à cette date, mais la fiche de l'équipement affichera « Périmé depuis » dès qu'elle sera passée."
+            }
             erreur={err("datePeremption")}
           />
         </div>

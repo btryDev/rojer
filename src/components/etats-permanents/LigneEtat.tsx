@@ -11,6 +11,7 @@ import { formaterDateFr } from "@/lib/dates";
 import { LienEffectifEntreprise } from "@/components/entreprises/LienEffectifEntreprise";
 import { PastilleFondement } from "./PastilleFondement";
 import type { FondementLigne } from "@/lib/etats-permanents/fondement";
+import { ancreEtatPermanent } from "@/lib/etats-permanents/ancre";
 import {
   libelleGeste,
   libelleRetour,
@@ -75,7 +76,11 @@ export function LigneEtat({
   const geste = libelleGeste(mode);
 
   return (
-    <li className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2 border-t border-[color:var(--board-slate-line)] py-3.5 first:border-t-0">
+    <li
+      // L'ancre visée par les liens vers cette ligne (`ancre.ts`, E5).
+      id={ancreEtatPermanent(obligationId)}
+      className="flex scroll-mt-24 flex-wrap items-start justify-between gap-x-6 gap-y-2 border-t border-[color:var(--board-slate-line)] py-3.5 first:border-t-0"
+    >
       <div className="min-w-0 flex-1 basis-[22rem]">
         <p className="m-0 text-[13.5px] leading-[1.45] text-[color:var(--board-ink)]">
           {libelle}

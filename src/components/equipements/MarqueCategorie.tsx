@@ -29,6 +29,7 @@ import {
   Gauge,
   HardHat,
   Heater,
+  HeartPulse,
   Lightbulb,
   LifeBuoy,
   Package,
@@ -116,6 +117,9 @@ export const ICONE_CATEGORIE: Record<CategorieEquipement, Picto> = {
   // dans les murs. `Flame` est déjà le permis de feu ; `Fuel` dessine une
   // pompe à carburant, autre chose.
   INSTALLATION_GAZ: Heater,
+  // Le défibrillateur (2026-10-15) : le cœur et le tracé, ce que porte la
+  // signalétique de l'arrêté du 29 octobre 2019. `LifeBuoy` est déjà pris.
+  DEFIBRILLATEUR: HeartPulse,
   AUTRE: Package,
 };
 
@@ -162,6 +166,30 @@ export function MarqueCategorie({
     (LABEL_CATEGORIE_EQUIPEMENT as Partial<Record<string, string>>)[
       categorie
     ] ?? "Catégorie inconnue";
+  return (
+    <MarqueIcone icone={Icone} label={label} taille={taille} ton={ton} className={className} />
+  );
+}
+
+/**
+ * La même marque pour un objet qui n'est pas une catégorie du parc — le
+ * matériel de premiers secours de la section « Équipements de sécurité »
+ * (2026-10-16). Une seule géométrie : rayon, trait et proportions ne se
+ * recopient pas.
+ */
+export function MarqueIcone({
+  icone: Icone,
+  label,
+  taille = 44,
+  ton = "encre",
+  className,
+}: {
+  icone: Picto;
+  label: string;
+  taille?: number;
+  ton?: keyof typeof TON;
+  className?: string;
+}) {
   const icone = Math.round(taille * (ton === "glacier" ? 0.62 : 0.5));
 
   return (

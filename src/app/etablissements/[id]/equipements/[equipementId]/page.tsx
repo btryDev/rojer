@@ -50,6 +50,7 @@ import {
 } from "@/lib/equipements/frise";
 import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
 import { materielNonCouvert } from "@/lib/equipements/materiels-non-couverts";
+import { AideCategorie } from "@/components/equipements/AideCategorie";
 import { ReferencesMateriel } from "@/components/equipements/ReferencesMateriel";
 import { LABEL_PERIODICITE, LABEL_REALISATEUR } from "@/lib/calendrier/labels";
 import { LABEL_RESULTAT } from "@/lib/rapports/resultats";
@@ -450,6 +451,10 @@ export default async function EquipementDetailPage({
               <ChampsFiche>
                 <ChampFiche cle="Catégorie">
                   {LABEL_CATEGORIE_EQUIPEMENT[eq.categorie]}
+                  {/* 2026-10-16 (E2) : l'aide de la catégorie, celle du
+                      formulaire — ce que Rojer suit pour cet appareil, et ce
+                      qu'il ne suit pas. Rien pour une catégorie sans aide. */}
+                  <AideCategorie categorie={eq.categorie} gabarit="fiche" />
                 </ChampFiche>
                 {/* 2026-10-14 : le matériel que Rojer ne suit pas, et ce
                     qu'il ne suit pas pour lui — un fait sur l'outil, pas un

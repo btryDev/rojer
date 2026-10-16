@@ -44,6 +44,8 @@ export const LABEL_CATEGORIE_EQUIPEMENT: Record<CategorieEquipement, string> = {
   // 2026-10-14, décision de la propriétaire : pas « chaudière » — GZ 15 vise
   // l'installation entière, dont une chaudière n'est qu'un appareil.
   INSTALLATION_GAZ: "Installation de gaz (chauffage, stockage…)",
+  // 2026-10-15, décision de la propriétaire.
+  DEFIBRILLATEUR: "Défibrillateur (DAE)",
   AUTRE: "Autre équipement",
 };
 
@@ -153,6 +155,20 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
   // cadre par décision du 2026-09-20 ; l'article a été relu sur Légifrance
   // par la propriétaire le 2026-10-14.
   INSTALLATION_GAZ: `Installation fixe de gaz combustible ou d'hydrocarbures liquéfiés : stockage, canalisations et appareils raccordés — chauffage, production d'eau chaude, cuisson. En établissement recevant du public des quatre premières catégories, Rojer suit ${porte("la vérification annuelle des installations de gaz")} (règlement de sécurité, art. GZ 15). Un appareil de cuisson au gaz déjà déclaré porte déjà cette vérification annuelle : déclarer aussi l'installation en ajoute une seconde ligne, une par équipement déclaré. Rojer ne suit pas ${nonPorte("la vérification d'une installation de gaz neuve ou modifiée avant sa mise en service")} (art. GZ 13), ni ${nonPorte("l'entretien des installations et appareils à gaz et de leurs conduits d'évacuation")} ni ${nonPorte("l'accès et la signalisation de l'organe de coupure de branchement du gaz")} (art. GZ 14), ni ${nonPorte("l'entretien des installations collectives de gaz des immeubles d'habitation")}, au moins tous les dix ans (arrêté du 23 février 2018, art. 26 § 3), ni ${nonPorte("l'entretien annuel de la chaudière")} (code de l'environnement, art. R. 224-41-4 et suivants).`,
+  // 2026-10-15, décision de la propriétaire. La maintenance et la déclaration
+  // à Géo'DAE sont portées par l'appareil (`dae-erp-maintenance`,
+  // `dae-erp-declaration-geodae`), la détention par l'établissement
+  // (`dae-erp-detention`). Le rythme annuel est le défaut de l'ADR-039 : il se
+  // dit comme défaut. « La notice du fabricant si elle est plus serrée » est un
+  // conseil d'usage, pas un rythme de texte — rien n'en est daté. La classe du
+  // dispositif n'est pas citée : elle se lit dans le règlement (UE) 2017/745,
+  // non lu (décision du 2026-10-15). ~~Le renvoi aux Prescriptions (2026-10-16,
+  // décision de la propriétaire) est tenu par `matching/dae.test.ts`~~
+  // [2026-10-16, rayé — option (a) de la propriétaire : la phrase « renforcez-le
+  // dans Prescriptions » est retirée de l'aide. Une notice n'est pas un acte, et
+  // une prescription de source « autre » arriverait au calendrier sans la
+  // mention « pas une obligation légale ». Voir les notes de `dae-erp-maintenance`.]
+  DEFIBRILLATEUR: `Défibrillateur automatisé externe, au mur ou en boîtier. Dans un établissement recevant du public des catégories 1 à 4, Rojer suit pour chaque appareil ${porte("la maintenance du défibrillateur automatisé externe et de ses accessoires")} (code de la construction et de l'habitation, art. R. 157-4) et sa déclaration ${porte("à la base de données nationale")} Géo'DAE (code de la santé publique, art. L. 5233-1). Le texte ne fixe aucun rythme de maintenance : Rojer retient par défaut une maintenance au moins une fois par an ; suivez la notice du fabricant si elle en demande une plus fréquente.`,
   AUTRE: "Autre équipement soumis à vérification périodique.",
 };
 
@@ -243,3 +259,27 @@ export function trierParCategorie<T extends { categorie: CategorieEquipement }>(
  */
 export const AIDE_GROUPE_ELECTROGENE =
   "Pour un établissement recevant du public seulement, et la réponse y est exigée : « Je ne sais pas encore » n'est pas accepté. Avec « Oui », le calendrier suit la vérification des niveaux toutes les deux semaines et l'entretien avec essai chaque mois (art. EL 18 § 4 du règlement de sécurité — livre II, établissements des quatre premières catégories ; en 5ᵉ catégorie, échéances maintenues par sur-application assumée). Avec « Non », aucune des deux n'est suivie.";
+
+/**
+ * Les exemples du formulaire propres à une catégorie (contrôle visuel E4,
+ * 2026-10-16). Sans entrée, le formulaire garde ses exemples génériques. Un
+ * exemple n'affirme aucune règle : la péremption reste la date du fabricant.
+ */
+export const EXEMPLES_CATEGORIE: Partial<
+  Record<CategorieEquipement, { libelle?: string; peremption?: string }>
+> = {
+  // ~~Les dates de l'étiquette du boîtier (arrêté du 29 octobre 2019, annexe 3 :~~
+  // [2026-10-16, revue c6 : référence précisée, relue par l'API Légifrance —
+  // bac à sable, égalité avec la production non vérifiée.] L'arrêté du 29
+  // octobre 2019 (signalétique), art. 2, 3° (LEGIARTI000039364652), fait
+  // apposer « sur le boîtier ou à proximité immédiate de l'appareil une
+  // étiquette conforme au modèle de l'annexe 3 » ; l'annexe 3
+  // (LEGIARTI000039364662) porte « Électrodes de défibrillation à remplacer
+  // le : » et « Batterie à remplacer le : ». Ces dates sont celles du
+  // fabricant ; aucun texte n'en fixe le rythme.
+  DEFIBRILLATEUR: {
+    libelle: "Ex : DAE accueil, DAE salle",
+    peremption:
+      "Facultatif. La date indiquée par le fabricant pour les électrodes ou la batterie — la plus proche des deux ; l'étiquette du défibrillateur, sur le boîtier ou juste à côté, les porte. Rojer ne vous enverra pas d'échéance à cette date, mais la fiche de l'équipement affichera « Périmé depuis » dès qu'elle sera passée.",
+  },
+};

@@ -697,6 +697,11 @@ export const CATEGORIES_EQUIPEMENT = [
   // « chaudière » : une chaudière n'est qu'un appareil possible de
   // l'installation, et GZ 15 vise l'installation entière.
   "INSTALLATION_GAZ",
+  // 2026-10-15, décision de la propriétaire : le défibrillateur automatisé
+  // externe. Sa détention reste portée par l'établissement (`dae-erp-detention`,
+  // due même sans appareil déclaré) ; sa maintenance et sa déclaration à la base
+  // nationale se portent sur chaque appareil.
+  "DEFIBRILLATEUR",
   "AUTRE",
 ] as const;
 

@@ -68,6 +68,17 @@ release (lots lancés le même jour) ; **n° 1 (gaz sans cuisine) et n° 5
    comme la fiche entreprise) ; test
    `PreRemplissagePanel.avertissement.test.tsx`, éprouvé en retirant la
    lecture du champ. Décision de la propriétaire.]
+7. **[2026-10-16, dette écrite, non corrigée] L'aide de catégorie affirme sans
+   condition sur la fiche d'un appareil** (`lot/dae-materiel-1015`, revue c6).
+   Depuis le contrôle visuel E2, `AideCategorie` pose `DESCRIPTION_CATEGORIE`
+   sur la fiche de l'appareil, et plus seulement dans le formulaire. Pour le
+   stockage de matières dangereuses, l'installation frigorifique et les
+   équipements sous pression, la phrase dit ce que « Rojer suit » sans la
+   condition qui fait naître ces obligations : dans un établissement sans
+   salarié, elle annonce un suivi qui n'y a pas lieu. Cas marginal ; ces textes
+   s'affichaient déjà ainsi dans le formulaire. Remède possible, non décidé :
+   une aide conditionnée au régime de l'établissement, ou une phrase qui pose la
+   condition.
 
 ### Décisions attendues
 

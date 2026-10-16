@@ -20,8 +20,10 @@
 // R. 224-41-4 et s.), hors cadre par décision du 2026-09-20 et relue sur
 // Légifrance par la propriétaire le 2026-10-14.
 //
-// LE DÉFIBRILLATEUR N'EST PAS ICI, et c'est voulu : une autre session
-// l'encode (décision du 2026-10-14).
+// ~~LE DÉFIBRILLATEUR N'EST PAS ICI, et c'est voulu : une autre session
+// l'encode (décision du 2026-10-14).~~ [2026-10-15, rayé — `lot/dae-materiel-1015` :
+// le défibrillateur a sa catégorie, `DEFIBRILLATEUR` ; il n'a pas à figurer
+// parmi les matériels non suivis.]
 //
 // ZÉRO HEURISTIQUE. La liste propose ; seul le choix explicite du dirigeant
 // écrit la clé. Le libellé saisi n'est jamais lu, ni pour suggérer ni pour

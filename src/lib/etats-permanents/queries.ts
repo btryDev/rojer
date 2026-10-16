@@ -29,7 +29,7 @@ import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
 import type { DomaineObligation } from "@/lib/referentiels/conformite";
 import { modeDeclarationApplique, type ModeDeclaration } from "./regle";
 import { ordonnerLignes } from "./ordre";
-import { fondementDe, type FondementLigne } from "./fondement";
+import { contexteFondementDe, fondementDe, type FondementLigne } from "./fondement";
 import { PHRASE_SANS_REPONSE } from "@/lib/matching/sans-reponse";
 import { obligationsApplicablesDuDossier } from "@/lib/etablissements/dossier-du-rendu";
 
@@ -132,10 +132,7 @@ export async function listerEtatsPermanents(
   const projete = projeterEtablissement(etablissement);
   // Le fondement affiché dépend du type d'ERP (livre II, titre II : une ligne
   // pour plusieurs types, l'article de CE type à l'écran) — 2026-10-14.
-  const contexteFondement = {
-    typeErp: projete.estERP ? projete.typeErp : null,
-    categorieErp: projete.estERP ? projete.categorieErp : null,
-  };
+  const contexteFondement = contexteFondementDe(projete);
 
   // Le prédicat d'appartenance, porté par la lecture elle-même.
   //

@@ -615,6 +615,10 @@ enum CategorieEquipement {
   // 2026-10-14 : les installations de gaz combustible que GZ 15 vérifie
   // (stockage, distribution, appareils) — pas seulement la cuisine.
   INSTALLATION_GAZ
+  // 2026-10-15 : le défibrillateur automatisé externe (CCH R. 157-1 à
+  // R. 157-4) — sa maintenance et sa déclaration à Géo'DAE se portent sur
+  // l'appareil, une ligne par DAE déclaré.
+  DEFIBRILLATEUR
   AUTRE
 }
 

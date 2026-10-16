@@ -13,6 +13,7 @@ vi.mock("@/lib/etats-permanents/actions", () => ({
 }));
 
 import { LigneEtat } from "./LigneEtat";
+import { ancreEtatPermanent } from "@/lib/etats-permanents/ancre";
 
 afterEach(cleanup);
 
@@ -52,5 +53,12 @@ describe("LigneEtat — l'article sous le libellé", () => {
     );
     expect(container.textContent).toContain("R. 0000-0");
     expect(container.querySelectorAll("button")).toHaveLength(1); // le geste seul
+  });
+});
+
+describe("LigneEtat — l'ancre visée par les liens vers la ligne (E5)", () => {
+  it("la ligne porte l'id que `ancreEtatPermanent` donne aux liens", () => {
+    const { container } = render(<LigneEtat {...base} />);
+    expect(container.querySelector(`li#${ancreEtatPermanent(base.obligationId)}`)).not.toBeNull();
   });
 });

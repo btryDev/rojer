@@ -8,6 +8,17 @@ import {
   type AppareilListe,
 } from "@/components/equipements/CarteCategorie";
 import { PreRemplissagePanel } from "@/components/equipements/PreRemplissagePanel";
+import {
+  SectionEquipementsSecurite,
+  type LigneSecuriteAffichee,
+} from "@/components/equipements/SectionEquipementsSecurite";
+import { requireUser } from "@/lib/auth/require-user";
+import { contexteFondementDe } from "@/lib/etats-permanents/fondement";
+import { obligationsApplicablesDuDossier } from "@/lib/etablissements/dossier-du-rendu";
+import {
+  hrefActionSecurite,
+  lignesEquipementsSecurite,
+} from "@/lib/equipements/equipements-securite";
 import { getEtablissement } from "@/lib/etablissements/queries";
 import {
   grouperParCategorie,
@@ -63,10 +74,13 @@ export default async function EquipementsPage({
   // le reste : c'est lui qui borne le parc affiché, donc les compteurs du
   // bandeau, les sections et leur tri par urgence. Appliqué après, il
   // laisserait un en-tête et un ordre calculés sur un autre périmètre.
-  // Les cinq lectures partent ensemble, APRÈS la garde (`getEtablissement`
+  // ~~Les cinq lectures~~ Les six lectures [2026-10-16 : la sixième, les
+  // obligations applicables, est entrée avec la section « Équipements de
+  // sécurité »] partent ensemble, APRÈS la garde (`getEtablissement`
   // + `notFound`) : les bâtiments étaient lus seuls, puis le reste — aucune
-  // des quatre autres ne dépend du filtre (audit Next.js du 2026-10-14, M4).
-  const [batiments, equipements, etatsVerifs, sansEcheance, fraicheur] =
+  // des ~~quatre~~ cinq autres ne dépend du filtre (audit Next.js du 2026-10-14, M4).
+  const user = await requireUser();
+  const [batiments, equipements, etatsVerifs, sansEcheance, fraicheur, dossier] =
     await Promise.all([
       listerBatimentsDeLEtablissement(id),
       listerEquipementsDeLEtablissement(id),
@@ -83,6 +97,10 @@ export default async function EquipementsPage({
       // (`regeneration-sure.ts`). Elle dit donc leur âge — une lecture du
       // repère, aucune écriture (`docs/chantiers-ouverts.md` § 12).
       fraicheurCalendrier(id),
+      // 2026-10-15 : les obligations applicables, pour la section
+      // « Équipements de sécurité ». Lecture bornée au compte (prédicat
+      // `entreprise.userId` dans la requête), partagée avec le reste du rendu.
+      obligationsApplicablesDuDossier(id, user.id),
     ]);
   const multiBatiments = estMultiBatiments(batiments);
   const batimentFiltre = resoudreFiltreBatiment(batiments, batiment);
@@ -152,6 +170,36 @@ export default async function EquipementsPage({
   const hrefAjouter = suffixeBatiment
     ? `${base}/equipements/nouveau?${suffixeBatiment}`
     : `${base}/equipements/nouveau`;
+  // Le formulaire ouvert sur une catégorie : une seule construction, pour les
+  // cartes du parc et pour la section « Équipements de sécurité ».
+  const hrefNouveau = (categorie: CategorieEquipement) =>
+    `${base}/equipements/nouveau?categorie=${categorie}${
+      suffixeBatiment ? `&${suffixeBatiment}` : ""
+    }`;
+
+  // Le résumé de chaque appareil, calculé une fois : les cartes et la
+  // section le lisent toutes deux.
+  const resumes = new Map(
+    equipements.map((eq) => [eq.id, resumerEquipement(etatsVerifs.get(eq.id))]),
+  );
+
+  // La section « Équipements de sécurité » (2026-10-15) se lit, comme les
+  // suggestions, sur le parc ENTIER : un DAE déclaré dans une autre zone est
+  // déclaré. Un regroupement d'affichage, rien de plus (`equipements-securite.ts`).
+  const lignesSecurite: LigneSecuriteAffichee[] = (
+    dossier
+      ? lignesEquipementsSecurite(dossier.applicables, equipements, contexteFondementDe(etab))
+      : []
+  ).map((l) => ({
+    ...l,
+    appareils: l.appareils.map((a) => ({
+      id: a.id,
+      libelle: a.libelle,
+      signal: resumes.get(a.id)?.signaux[0]?.libelle ?? null,
+      href: avecProvenance(`${base}/equipements/${a.id}`, origine),
+    })),
+    hrefAction: hrefActionSecurite(l, { base, hrefNouveau }),
+  }));
 
   // Une section par catégorie, la plus en peine en tête : sur un parc de
   // quinze appareils, l'ordre alphabétique enterrait le seul retard.
@@ -164,7 +212,7 @@ export default async function EquipementsPage({
         // bâtiment, et une précision dans ce bâtiment.
         lieu: montrerBatiment ? eq.batiment.nom : eq.localisation,
         precision: montrerBatiment ? eq.localisation : null,
-        resume: resumerEquipement(etatsVerifs.get(eq.id)),
+        resume: resumes.get(eq.id) ?? resumerEquipement(undefined),
         // Le motif se pose AU-DESSUS des signaux, il ne les remplace pas :
         // un appareil sans échéance à venir garde ses vérifications
         // réalisées, et c'est la seule chose qu'il ait à montrer en cas de
@@ -267,6 +315,8 @@ export default async function EquipementsPage({
           />
         </div>
 
+        <SectionEquipementsSecurite lignes={lignesSecurite} />
+
         {equipements.length === 0 ? (
           <EmptyState
             titre="Les équipements de votre établissement alimentent tout le reste"
@@ -295,9 +345,7 @@ export default async function EquipementsPage({
               categorie={s.categorie}
               appareils={s.appareils}
               periodicites={s.periodicites}
-              hrefAjouter={`${base}/equipements/nouveau?categorie=${s.categorie}${
-                suffixeBatiment ? `&${suffixeBatiment}` : ""
-              }`}
+              hrefAjouter={hrefNouveau(s.categorie)}
             />
           ))
         )}

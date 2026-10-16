@@ -8,18 +8,24 @@ import {
 } from "@/lib/referentiels/conformite/mention-rythme";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import { determineObligationsApplicables } from "./engine";
-import type { EtablissementMatching } from "./types";
+import { appliquerPrescriptions } from "./prescriptions";
+import type { EquipementMatching, EtablissementMatching, PrescriptionMatching } from "./types";
 
 /**
  * Le défibrillateur automatisé externe (CCH R. 157-1 à R. 157-4), entré le
  * 2026-10-14 pour les ERP des catégories 1 à 4.
  *
+ * Depuis le 2026-10-15 (décision de la propriétaire), la maintenance et la
+ * déclaration Géo'DAE se portent sur l'APPAREIL (catégorie `DEFIBRILLATEUR`),
+ * une ligne par DAE déclaré ; la détention reste à l'établissement, due même
+ * sans appareil.
+ *
  * Pas de liste exhaustive des catégories : une borne basse (deux profils qui
- * DOIVENT recevoir les trois lignes, de type et de catégorie différents), une
- * borne haute (deux profils qui ne doivent en recevoir AUCUNE), et la couche
- * voisine — la surface où chaque ligne atterrit. Chaque assertion a été
- * éprouvée en cassant le référentiel (élargir à N5, retirer N4, retirer le
- * rythme retenu, passer la détention en récurrente) : voir le commit.
+ * DOIVENT recevoir les lignes, de type et de catégorie différents), une borne
+ * haute (deux profils qui n'en reçoivent AUCUNE, appareil déclaré compris), et
+ * la couche voisine — la surface où chaque ligne atterrit. Chaque assertion a
+ * été éprouvée en cassant le référentiel : voir les commits du 2026-10-14 et
+ * du 2026-10-15.
  */
 
 const DAE = [
@@ -56,11 +62,26 @@ function erp(typeErp: "N" | "M", categorieErp: "N3" | "N4" | "N5"): Etablissemen
   return { ...BASE, estERP: true, typeErp, categorieErp };
 }
 
-function daeServies(e: EtablissementMatching): string[] {
-  return determineObligationsApplicables(e, [])
+const dae = (id: string): EquipementMatching => ({
+  id,
+  libelle: `DAE ${id}`,
+  categorie: "DEFIBRILLATEUR",
+  caracteristiques: null,
+});
+
+function daeServies(e: EtablissementMatching, parc: EquipementMatching[]): string[] {
+  return determineObligationsApplicables(e, parc)
     .map((a) => a.obligation.id)
     .filter((id) => id.startsWith("dae-"))
     .sort();
+}
+
+/** Les lignes de calendrier DAE qu'un parc fait naître, par obligation. */
+function lignesDuCalendrier(e: EtablissementMatching, parc: EquipementMatching[]) {
+  const applicables = determineObligationsApplicables(e, parc).filter((a) =>
+    a.obligation.id.startsWith("dae-"),
+  );
+  return genererProchainesVerifications(applicables);
 }
 
 function ligne(id: (typeof DAE)[number]) {
@@ -69,41 +90,107 @@ function ligne(id: (typeof DAE)[number]) {
   return o;
 }
 
-describe("défibrillateur — borne basse : les ERP des catégories 1 à 4 reçoivent les trois lignes", () => {
-  it("un restaurant (N) de 3ᵉ catégorie", () => {
-    expect(daeServies(erp("N", "N3"))).toEqual([...DAE].sort());
+describe("défibrillateur — borne basse : les ERP des catégories 1 à 4", () => {
+  it("un restaurant (N) de 3ᵉ catégorie qui déclare un DAE reçoit les trois lignes", () => {
+    expect(daeServies(erp("N", "N3"), [dae("a")])).toEqual([...DAE].sort());
   });
 
-  it("un magasin (M) de 4ᵉ catégorie", () => {
-    expect(daeServies(erp("M", "N4"))).toEqual([...DAE].sort());
+  it("un magasin (M) de 4ᵉ catégorie qui déclare un DAE reçoit les trois lignes", () => {
+    expect(daeServies(erp("M", "N4"), [dae("a")])).toEqual([...DAE].sort());
+  });
+
+  it("sans appareil déclaré, la détention est due quand même — et elle seule", () => {
+    expect(daeServies(erp("N", "N3"), [])).toEqual(["dae-erp-detention"]);
   });
 });
 
-describe("défibrillateur — borne haute : rien hors des catégories 1 à 4", () => {
-  it("un restaurant de 5ᵉ catégorie n'en reçoit aucune (le 2° de R. 157-1 n'est pas encodé)", () => {
-    expect(daeServies(erp("N", "N5"))).toEqual([]);
+describe("défibrillateur — borne haute : rien hors des catégories 1 à 4, appareil déclaré ou non", () => {
+  it("un restaurant de 5ᵉ catégorie qui déclare un DAE n'en reçoit aucune (le 2° de R. 157-1 n'est pas encodé)", () => {
+    expect(daeServies(erp("N", "N5"), [dae("a")])).toEqual([]);
   });
 
-  it("un établissement qui n'est pas un ERP n'en reçoit aucune", () => {
-    expect(daeServies(BASE)).toEqual([]);
+  it("un établissement qui n'est pas un ERP et déclare un DAE n'en reçoit aucune", () => {
+    expect(daeServies(BASE, [dae("a")])).toEqual([]);
   });
 });
 
 describe("défibrillateur — la surface de chaque ligne", () => {
-  it("la détention et la déclaration Géo'DAE se déclarent « en place »", () => {
+  it("la détention se déclare « en place », pas la maintenance ni Géo'DAE", () => {
     expect(estEtatADeclarer(ligne("dae-erp-detention"))).toBe(true);
-    expect(estEtatADeclarer(ligne("dae-erp-declaration-geodae"))).toBe(true);
+    expect(estEtatADeclarer(ligne("dae-erp-maintenance"))).toBe(false);
+    expect(estEtatADeclarer(ligne("dae-erp-declaration-geodae"))).toBe(false);
   });
 
-  it("la maintenance n'est pas « en place » : elle va au calendrier, annuelle, sous la mention du défaut", () => {
+  it("deux DAE déclarés : une maintenance annuelle et une déclaration Géo'DAE par appareil, la détention reste unique", () => {
+    const lignes = lignesDuCalendrier(erp("N", "N3"), [dae("a"), dae("b")]);
+    const par = (id: string) => lignes.filter((l) => l.obligationId === id);
+
+    const maintenance = par("dae-erp-maintenance");
+    expect(maintenance.map((l) => l.equipementId).sort()).toEqual(["a", "b"]);
+    expect(maintenance.every((l) => l.periodicite === "annuelle")).toBe(true);
+
+    const geodae = par("dae-erp-declaration-geodae");
+    expect(geodae.map((l) => l.equipementId).sort()).toEqual(["a", "b"]);
+    expect(geodae.every((l) => l.periodicite === "mise_en_service_uniquement")).toBe(true);
+
+    // La détention est un état sans rendez-vous : elle n'est pas au calendrier.
+    expect(par("dae-erp-detention")).toEqual([]);
+  });
+
+  it("la maintenance porte la mention du rythme retenu par défaut", () => {
     const o = ligne("dae-erp-maintenance");
-    expect(estEtatADeclarer(o)).toBe(false);
     expect(periodiciteEffective(o)).toBe("annuelle");
-    const lignes = genererProchainesVerifications([
-      { obligation: o, equipementsConcernes: [], porteur: "etablissement", raisons: ["fixture"] },
-    ]);
-    expect(lignes).toHaveLength(1);
-    expect(lignes[0].periodicite).toBe("annuelle");
     expect(mentionRythmeRetenu(o)?.court).toBe(PASTILLE_DEFAUT_ANNUEL);
+  });
+});
+
+describe("défibrillateur — une prescription renforce la maintenance d'un appareil (ADR-035)", () => {
+  // Un comportement du moteur, pas une promesse d'écran : la maintenance,
+  // portée par l'appareil et au défaut annuel, est une cible de la page
+  // Prescriptions (elle est parmi les applicables que la page propose), une
+  // prescription passe par-dessus le rythme retenu, et la ligne de l'appareil
+  // visé prend le rythme renforcé. [2026-10-16 : l'aide de la catégorie ne
+  // renvoie plus aux Prescriptions pour une notice — option (a) de la
+  // propriétaire ; le mécanisme, lui, reste vrai et tenu ici.]
+  const etab = erp("N", "N3");
+  const parc = [dae("a"), dae("b")];
+  const notice: PrescriptionMatching = {
+    id: "p1",
+    source: "autre",
+    effet: "renforce_periodicite",
+    reference: "Notice du fabricant",
+    autorite: null,
+    dateDocument: new Date("2026-10-01T00:00:00Z"),
+    dateFin: null,
+    obligationId: "dae-erp-maintenance",
+    libelle: null,
+    description: null,
+    periodicite: "semestrielle",
+    realisateurRequis: [],
+    categorieEquipement: null,
+    equipementId: "a",
+  };
+
+  it("la maintenance est proposée comme cible : elle est applicable, portée par l'appareil", () => {
+    const m = determineObligationsApplicables(etab, parc).find(
+      (x) => x.obligation.id === "dae-erp-maintenance",
+    );
+    expect(m?.porteur).toBe("equipement");
+    expect(m?.obligation.rythmeRetenu?.motif).toBe("defaut_annuel");
+  });
+
+  it("la prescription n'est pas ignorée, et la ligne de l'appareil visé devient semestrielle — l'autre reste annuelle", () => {
+    const res = appliquerPrescriptions(
+      determineObligationsApplicables(etab, parc),
+      [notice],
+      parc,
+      new Date("2026-10-16T12:00:00Z"),
+    );
+    expect(res.ignorees).toEqual([]);
+    const lignes = genererProchainesVerifications(
+      res.applicables.filter((a) => a.obligation.id === "dae-erp-maintenance"),
+    );
+    const parAppareil = Object.fromEntries(lignes.map((l) => [l.equipementId, l.periodicite]));
+    expect(parAppareil).toEqual({ a: "semestrielle", b: "annuelle" });
   });
 });

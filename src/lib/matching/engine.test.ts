@@ -1203,6 +1203,12 @@ describe("moteur matching — cartographie des catégories sans obligation", () 
       vides: [
         // Soupape de saisie : aucune obligation ne la cite, par construction.
         "AUTRE",
+        // DEFIBRILLATEUR, entrée le 2026-10-15 (décision de la propriétaire) :
+        // sa maintenance (R. 157-4) et sa déclaration Géo'DAE ne visent que les
+        // ERP des catégories 1 à 4 — le champ de R. 157-1 1°. Un DAE déclaré
+        // par un employeur non-ERP porte « aucune échéance calculée », ce qui
+        // est vrai : aucun texte encodé ne l'y astreint.
+        "DEFIBRILLATEUR",
         // INSTALLATION_GAZ, entrée le 2026-10-14 (décision de la
         // propriétaire) : sa seule obligation, GZ 15, ne vise que les ERP des
         // quatre premières catégories. Hors ERP, le référentiel ne porte
@@ -1293,6 +1299,11 @@ describe("moteur matching — cartographie des catégories sans obligation", () 
       etab: etabRestoErpCat5(),
       vides: [
         "AUTRE",
+        // DEFIBRILLATEUR, entrée le 2026-10-15 : le 2° de R. 157-1 (5ᵉ
+        // catégorie, familles a à h, seuil fixé par un arrêté non publié)
+        // n'est pas encodé — réserve du corpus, relecture au 2027-01-14.
+        // Un restaurant n'est d'ailleurs dans aucune des huit familles.
+        "DEFIBRILLATEUR",
         // EPI, ajoutée le 2026-09-04 : déclarable et volontairement sans
         // obligation. Le dirigeant pouvait DIRE qu'il fournit des équipements
         // de protection — la question `epiPresents` de la fiche

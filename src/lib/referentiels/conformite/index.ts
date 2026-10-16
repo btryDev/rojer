@@ -438,7 +438,13 @@ export const obligationsConformite: Obligation[] = [
 // `APPAREIL_CUISSON_ERP` — un ERP chauffé au gaz sans cuisine reçoit enfin la
 // vérification annuelle. 185 + 0 − 0 = 185. Les lignes existantes ne bougent
 // pas : seule une installation de gaz déclarée en fait naître une.
-export const REFERENTIEL_VERSION = "2026-10-14.3";
+// `2026-10-15.1` (`lot/dae-materiel-1015`, décision de la propriétaire du
+// 2026-10-15) : la catégorie `DEFIBRILLATEUR` entre ; `dae-erp-maintenance`
+// et `dae-erp-declaration-geodae` passent de l'établissement à l'appareil
+// (une ligne par DAE déclaré, ERP N1–N4), Géo'DAE devenant ponctuelle
+// (`mise_en_service_uniquement`). 185 + 0 − 0 = 185 ; par porteur, 91 + 2
+// équipement, 80 − 2 établissement. `dae-erp-detention` ne bouge pas.
+export const REFERENTIEL_VERSION = "2026-10-15.1";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

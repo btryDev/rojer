@@ -68,6 +68,7 @@ export const SYNONYMES_CATEGORIE: Readonly<Record<CategorieEquipement, readonly 
   EPI_RESPIRATOIRE: ["masque à cartouche", "cartouche filtrante", "appareil respiratoire"],
   EPI_GILET_SAUVETAGE: ["gilet de sauvetage"],
   INSTALLATION_GAZ: ["chaudière", "chauffage gaz", "chauffage au gaz", "gaz", "citerne de gaz", "cuve de propane", "chauffe-eau gaz"],
+  DEFIBRILLATEUR: ["défibrillateur", "DAE", "défibrillateur automatisé externe"],
   AUTRE: [],
 };
 
