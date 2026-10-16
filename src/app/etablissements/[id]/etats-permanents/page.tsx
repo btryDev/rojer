@@ -83,7 +83,7 @@ export default async function EtatsPermanentsPage({
   const { etablissement } = await requireEtablissement(id);
   const equipements = await listerEquipementsDeLEtablissement(id);
 
-  const { groupes, faits, enPlace, total, faitsDates, faitsDatesRenseignes } =
+  const { groupes, faits, enPlace, total, parLesTitres, faitsDates, faitsDatesRenseignes } =
     await listerEtatsPermanents(
       etablissement,
       equipements.map((eq) => ({
@@ -102,7 +102,10 @@ export default async function EtatsPermanentsPage({
   // ce JSX. Une locution coupée par un ternaire s'y était cassée au rendu —
   // « Elles n'entrepas dans le compte » — et rien ne pouvait l'attraper tant
   // que la phrase n'existait nulle part en entier.
-  const texteRestantes = phraseRestantes(restantes);
+  const texteRestantes = phraseRestantes(
+    restantes,
+    parLesTitres.total - parLesTitres.enPlace,
+  );
   const texteFaits = phraseFaitsDates(faitsDates, faitsDatesRenseignes);
 
   return (
@@ -144,7 +147,7 @@ export default async function EtatsPermanentsPage({
                 {enPlace} sur {total}
               </p>
               <p className="board-eyebrow m-0 mt-1.5 text-[9.5px] tracking-[0.12em] text-[color:var(--board-slate-soft)]">
-                {phraseCompteur(enPlace, total)}
+                {phraseCompteur(enPlace, total, parLesTitres.enPlace)}
               </p>
             </div>
           )}

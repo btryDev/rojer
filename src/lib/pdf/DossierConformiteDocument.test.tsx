@@ -37,6 +37,7 @@ const VIDE: BlocEtatsPermanents = {
   faits: [],
   noteFaits: null,
   vide: "Aucune obligation de ce type ne s'applique à cet établissement.",
+  nonEnPlaceParLesTitres: 0,
 };
 
 function lignes(n: number, prefixe: string) {
@@ -57,6 +58,7 @@ function bloc(nbEtats: number, nbFaits = 0): BlocEtatsPermanents {
     faits: lignes(nbFaits, "Fait"),
     noteFaits: nbFaits > 0 ? "Le texte les fait revenir sans dire à quel rythme." : null,
     vide: null,
+    nonEnPlaceParLesTitres: 0,
   };
 }
 

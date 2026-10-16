@@ -113,6 +113,13 @@ export type EtatsPermanentsDuDossier = {
    */
   enPlace: number;
   total: number;
+  /**
+   * La part de `total` et d'`enPlace` établie d'après les titres déclarés
+   * (`par-les-titres.ts`) — comptée DEDANS, pour que le score la lise comme
+   * une case, mais nommée à part : l'employeur n'a rien déclaré sur cet état,
+   * et « déclarés en place par vous » le dirait (revue du 2026-10-16).
+   */
+  parLesTitres: { total: number; enPlace: number };
   /** Les lignes « fait le », comptées à part et jamais additionnées au reste. */
   faitsDates: number;
   faitsDatesRenseignes: number;
@@ -218,6 +225,7 @@ export async function listerEtatsPermanents(
   const faits: LigneEtatPermanent[] = [];
   let enPlace = 0;
   let total = 0;
+  const parLesTitresCompte = { total: 0, enPlace: 0 };
   let faitsDates = 0;
   let faitsDatesRenseignes = 0;
 
@@ -258,6 +266,10 @@ export async function listerEtatsPermanents(
     if (mode.compteDansLEnTete) {
       total += 1;
       if (parLesTitres ? parLesTitres.enPlace : ligne.declareLe) enPlace += 1;
+      if (parLesTitres) {
+        parLesTitresCompte.total += 1;
+        if (parLesTitres.enPlace) parLesTitresCompte.enPlace += 1;
+      }
     } else {
       faitsDates += 1;
       if (ligne.declareLe) faitsDatesRenseignes += 1;
@@ -288,7 +300,15 @@ export async function listerEtatsPermanents(
   // la ligne suivante au moment précis où on va la cliquer.
   ordonnerLignes(faits);
 
-  return { groupes, faits, enPlace, total, faitsDates, faitsDatesRenseignes };
+  return {
+    groupes,
+    faits,
+    enPlace,
+    total,
+    parLesTitres: parLesTitresCompte,
+    faitsDates,
+    faitsDatesRenseignes,
+  };
 }
 
 /**
@@ -351,6 +371,7 @@ export async function etatsPermanentsDuDossier(
       faits: [],
       enPlace: 0,
       total: 0,
+      parLesTitres: { total: 0, enPlace: 0 },
       faitsDates: 0,
       faitsDatesRenseignes: 0,
     };

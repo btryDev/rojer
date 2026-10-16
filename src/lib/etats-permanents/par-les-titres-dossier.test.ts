@@ -26,7 +26,9 @@ vi.mock("@/lib/auth/require-user", () => ({
 }));
 
 const { listerEtatsPermanents } = await import("./queries");
-const { blocEtatsPermanents } = await import("@/lib/pdf/mentions-etats-permanents");
+const { blocEtatsPermanents, phraseIndetermines } = await import(
+  "@/lib/pdf/mentions-etats-permanents"
+);
 
 const HABILITATION = "elec-travail-habilitation-personnel";
 const NOW = new Date("2026-10-16T10:00:00Z");
@@ -136,5 +138,42 @@ describe("habilitation : l'état vient des titres, plus de la case", () => {
         }),
       }),
     );
+  });
+});
+
+describe("les comptes ne disent pas « déclaré » de ce que l'employeur n'a pas déclaré (revue du 2026-10-16)", () => {
+  it("PDF, tout en place : la ligne établie d'après les titres est comptée à part", async () => {
+    h.titres.mockResolvedValueOnce([titre("2025-03-01")]);
+    const { d } = await dossier();
+    expect(d.parLesTitres).toEqual({ total: 1, enPlace: 1 });
+    const bloc = blocEtatsPermanents(d);
+    expect(bloc.compteur).toBe(
+      `Les ${d.total} états applicables sont tous en place : ${d.total - 1} déclarés par l'employeur, 1 établi d'après les titres qu'il a déclarés.`,
+    );
+    expect(bloc.chapeau).toContain("« établie d'après les titres déclarés » ne se déclare pas");
+    expect(bloc.nonEnPlaceParLesTitres).toBe(0);
+  });
+
+  it("PDF, page de garde : une échéance dépassée n'est pas « sans déclaration, rien constaté »", async () => {
+    h.titres.mockResolvedValueOnce([titre("2022-06-01")]);
+    const { d } = await dossier();
+    const bloc = blocEtatsPermanents(d);
+    expect(bloc.nonEnPlaceParLesTitres).toBe(1);
+    const garde = phraseIndetermines(d.total - d.enPlace, bloc.nonEnPlaceParLesTitres);
+    expect(garde).toContain("Un état établi d'après les titres déclarés n'est pas en place");
+    expect(garde).not.toMatch(/ne porte pas encore de déclaration|rien constaté/);
+  });
+
+  it("contre-épreuve : sans ligne établie d'après les titres, le chapeau n'en parle pas", () => {
+    const bloc = blocEtatsPermanents({
+      groupes: [],
+      faits: [],
+      enPlace: 0,
+      total: 0,
+      parLesTitres: { total: 0, enPlace: 0 },
+      faitsDates: 0,
+      faitsDatesRenseignes: 0,
+    });
+    expect(bloc.chapeau ?? "").not.toContain("titres déclarés");
   });
 });

@@ -100,6 +100,7 @@ const DOSSIER: EtatsPermanentsDuDossier = {
   ],
   enPlace: 2,
   total: 4,
+  parLesTitres: { total: 0, enPlace: 0 },
   faitsDates: 2,
   faitsDatesRenseignes: 1,
 };
@@ -223,6 +224,7 @@ describe("widget sans ligne, ou sans réponse", () => {
     faits: [],
     enPlace: 0,
     total: 0,
+    parLesTitres: { total: 0, enPlace: 0 },
     faitsDates: 0,
     faitsDatesRenseignes: 0,
   };

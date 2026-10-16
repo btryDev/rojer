@@ -263,3 +263,28 @@ describe("l'accord des branches où un nombre s'insère", () => {
     ).toBe(2);
   });
 });
+
+describe("ce que l'employeur n'a pas déclaré ne se dit pas « par vous » (revue du 2026-10-16)", () => {
+  it("compteur : la part établie d'après les titres est nommée à part", () => {
+    expect(phraseCompteur(5, 5, 1)).toBe(
+      "tous en place : 4 déclarés par vous, 1 établi d'après les titres déclarés",
+    );
+    expect(phraseCompteur(3, 5, 1)).toBe(
+      "en place : 2 déclarés par vous, 1 établi d'après les titres déclarés",
+    );
+    expect(phraseCompteur(1, 1, 1)).toBe("tous en place : 1 établi d'après les titres déclarés");
+  });
+
+  it("contre-épreuve : sans elle, le compteur d'avant", () => {
+    expect(phraseCompteur(5, 5)).toBe("tous déclarés en place par vous");
+  });
+
+  it("restantes : une ligne établie d'après les titres n'est pas « une question sans réponse »", () => {
+    const seule = phraseRestantes(1, 1);
+    expect(seule).toContain("Une ligne établie d'après les titres déclarés n'est pas en place");
+    expect(seule).not.toContain("question à laquelle vous n'avez pas encore répondu");
+    const deux = phraseRestantes(3, 1);
+    expect(deux).toMatch(/^2 lignes restent à passer en revue\./);
+    expect(deux).toContain("Une ligne établie d'après les titres déclarés");
+  });
+});

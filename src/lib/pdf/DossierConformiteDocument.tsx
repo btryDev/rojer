@@ -337,7 +337,10 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
               rend `indetermines` à part de la valeur « pour que l'interface le
               dise à tous les niveaux » : ce document est une interface, et il
               ne le disait pas. */}
-          {phraseIndetermines(data.score.indetermines) && (
+          {phraseIndetermines(
+            data.score.indetermines,
+            data.etatsPermanents.nonEnPlaceParLesTitres,
+          ) && (
             <Text
               style={{
                 fontSize: 9,
@@ -346,7 +349,10 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
                 maxWidth: 380,
               }}
             >
-              {phraseIndetermines(data.score.indetermines)}
+              {phraseIndetermines(
+                data.score.indetermines,
+                data.etatsPermanents.nonEnPlaceParLesTitres,
+              )}
             </Text>
           )}
           {/* D2 (a) : la seconde source d'indétermination du score. */}

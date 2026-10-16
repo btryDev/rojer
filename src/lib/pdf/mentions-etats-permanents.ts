@@ -96,6 +96,12 @@ export type BlocEtatsPermanents = {
   noteFaits: string | null;
   /** Ce qui s'écrit quand rien ne s'applique, et rien d'autre alors. */
   vide: string | null;
+  /**
+   * Les états établis d'après les titres qui ne sont pas en place — lus par la
+   * page de garde (`phraseIndetermines`), pour ne pas les dire « sans
+   * déclaration » (2026-10-16).
+   */
+  nonEnPlaceParLesTitres: number;
 };
 
 /**
@@ -107,7 +113,7 @@ export type BlocEtatsPermanents = {
  * dépôt s'est fait prendre par des phrases rédigées à la main sous des listes
  * qui se calculent, et qui vieillissent toutes seules.
  */
-function chapeau(auMoinsUnEcritAttendu: boolean): string {
+function chapeau(auMoinsUnEcritAttendu: boolean, auMoinsUneParLesTitres = false): string {
   const phrases = [
     "Ces obligations n'ont pas d'échéance : le texte demande un état à " +
       "constituer puis à maintenir, sans écrire à quel rythme le revoir. " +
@@ -119,6 +125,15 @@ function chapeau(auMoinsUnEcritAttendu: boolean): string {
     "Une ligne sans déclaration n'est pas un manquement constaté : c'est une " +
       "question à laquelle l'employeur n'a pas encore répondu dans l'outil.",
   ];
+  // Mesurée comme la suivante : seulement si une ligne l'est (2026-10-16).
+  if (auMoinsUneParLesTitres) {
+    phrases.push(
+      "Une ligne « établie d'après les titres déclarés » ne se déclare pas : " +
+        "son état se lit dans les titres nominatifs que l'employeur a déclarés " +
+        "pour chaque personne, et dans leurs échéances. Elle ne porte donc pas " +
+        "de date de déclaration.",
+    );
+  }
   if (auMoinsUnEcritAttendu) {
     phrases.push(
       "Quand le texte attend un écrit, il est nommé en regard. Rojer ne le " +
@@ -141,8 +156,31 @@ function chapeau(auMoinsUnEcritAttendu: boolean): string {
  * « déclarés en place par l'employeur », jamais « conformes » : le produit
  * assiste, il ne certifie pas (`CLAUDE.md`, règle 8).
  */
-function compteur(enPlace: number, total: number): string | null {
+function compteur(enPlace: number, total: number, parLesTitres = 0): string | null {
   if (total === 0) return null;
+  // Une part d'`enPlace` établie d'après les titres (2026-10-16) : l'employeur
+  // ne l'a pas déclarée, « déclarés en place par l'employeur » serait faux.
+  if (parLesTitres > 0) {
+    const declares = enPlace - parLesTitres;
+    const parTitres =
+      parLesTitres === 1
+        ? "1 établi d'après les titres qu'il a déclarés"
+        : `${parLesTitres} établis d'après les titres qu'il a déclarés`;
+    const detail =
+      declares <= 0
+        ? parTitres
+        : `${declares === 1 ? "1 déclaré" : `${declares} déclarés`} par l'employeur, ${parTitres}`;
+    if (total === 1) {
+      return "Le seul état applicable à ce dossier est en place, établi d'après les titres que l'employeur a déclarés.";
+    }
+    if (enPlace === total) {
+      return `Les ${total} états applicables sont tous en place : ${detail}.`;
+    }
+    if (enPlace === 1) {
+      return `1 des ${total} états applicables est en place : ${detail}.`;
+    }
+    return `${enPlace} des ${total} états applicables sont en place : ${detail}.`;
+  }
   if (total === 1) {
     return enPlace === 1
       ? "Le seul état applicable à ce dossier est déclaré en place par l'employeur."
@@ -171,7 +209,33 @@ function compteur(enPlace: number, total: number): string | null {
  * Elle ne renvoie pas au nom d'un écran, à la différence de la même phrase au
  * tableau de bord : le lecteur de ce document n'a pas accès à l'application.
  */
-export function phraseIndetermines(indetermines: number): string | null {
+export function phraseIndetermines(
+  indetermines: number,
+  /**
+   * La part établie d'après les titres déclarés (2026-10-16). Elle n'est pas
+   * « sans déclaration, rien constaté » : aucun titre n'y est déclaré, ou
+   * leurs échéances sont dépassées. Elle se dit à part.
+   */
+  parLesTitres = 0,
+): string | null {
+  const titres =
+    parLesTitres <= 0
+      ? null
+      : parLesTitres === 1
+        ? "Un état établi d'après les titres déclarés n'est pas en place : " +
+          "aucun titre n'y est déclaré, ou leurs échéances sont dépassées. Il " +
+          "empêche la note de conclure."
+        : `${parLesTitres} états établis d'après les titres déclarés ne sont ` +
+          "pas en place : aucun titre n'y est déclaré, ou leurs échéances sont " +
+          "dépassées. Ils empêchent la note de conclure.";
+  const declares = phraseIndeterminesDeclares(indetermines - Math.max(parLesTitres, 0));
+  if (titres === null) return declares;
+  return declares
+    ? `${declares.replace(/ Le détail figure plus loin\.$/, "")} ${titres} Le détail figure plus loin.`
+    : `${titres} Le détail figure plus loin.`;
+}
+
+function phraseIndeterminesDeclares(indetermines: number): string | null {
   if (indetermines <= 0) return null;
   if (indetermines === 1) {
     return (
@@ -250,6 +314,7 @@ export function blocEtatsPermanents(
       noteFaits: null,
       // Le silence complet ne se distinguerait pas d'un sujet que le produit
       // ne traiterait pas. La phrase dit d'où vient l'absence, et de quand.
+      nonEnPlaceParLesTitres: 0,
       vide:
         "Aucune obligation de ce type ne s'applique à cet établissement " +
         "d'après le référentiel de Rojer, à la date d'édition : celles qu'il " +
@@ -258,8 +323,12 @@ export function blocEtatsPermanents(
   }
 
   return {
-    chapeau: chapeau([...etats, ...faits].some((l) => l.ecritAttendu !== null)),
-    compteur: compteur(d.enPlace, d.total),
+    chapeau: chapeau(
+      [...etats, ...faits].some((l) => l.ecritAttendu !== null),
+      d.parLesTitres.total > 0,
+    ),
+    compteur: compteur(d.enPlace, d.total, d.parLesTitres.enPlace),
+    nonEnPlaceParLesTitres: d.parLesTitres.total - d.parLesTitres.enPlace,
     etats,
     faits,
     // La phrase de l'écran, telle quelle : elle ne s'adresse à personne en

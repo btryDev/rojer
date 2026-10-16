@@ -64,6 +64,7 @@ function dossier(total: number, enPlace: number): EtatsPermanentsDuDossier {
     faits: [],
     enPlace,
     total,
+    parLesTitres: { total: 0, enPlace: 0 },
     faitsDates: 0,
     faitsDatesRenseignes: 0,
   };

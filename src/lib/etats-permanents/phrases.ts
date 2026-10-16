@@ -27,8 +27,27 @@
  * en a une autre.
  */
 
-/** Ce qu'il reste à passer en revue, ou rien. */
-export function phraseRestantes(restantes: number): string | null {
+/**
+ * Ce qu'il reste à passer en revue, ou rien.
+ *
+ * `parLesTitres` : la part des restantes établie d'après les titres déclarés
+ * (2026-10-16). Elle n'est pas « une question à laquelle vous n'avez pas
+ * répondu » — aucun titre n'est déclaré, ou leurs échéances sont dépassées —,
+ * et se dit à part.
+ */
+export function phraseRestantes(restantes: number, parLesTitres = 0): string | null {
+  const titres =
+    parLesTitres <= 0
+      ? null
+      : parLesTitres === 1
+        ? "Une ligne établie d'après les titres déclarés n'est pas en place : aucun titre n'y est déclaré, ou leurs échéances sont dépassées — la ligne dit lequel."
+        : `${parLesTitres} lignes établies d'après les titres déclarés ne sont pas en place : aucun titre n'y est déclaré, ou leurs échéances sont dépassées — chaque ligne dit lequel.`;
+  const declarees = phraseRestantesDeclarees(restantes - Math.max(parLesTitres, 0));
+  if (declarees && titres) return `${declarees} ${titres}`;
+  return declarees ?? titres;
+}
+
+function phraseRestantesDeclarees(restantes: number): string | null {
   if (restantes <= 0) return null;
   const tete =
     restantes === 1
@@ -94,8 +113,27 @@ export function phraseFaitsDates(
  * « déclarés en place **par vous** », jamais « conformes » : le produit assiste,
  * il ne certifie pas (`CLAUDE.md`, règle 8).
  */
-export function phraseCompteur(enPlace: number, total: number): string {
+export function phraseCompteur(
+  enPlace: number,
+  total: number,
+  /**
+   * La part d'`enPlace` établie d'après les titres déclarés (2026-10-16) :
+   * l'employeur ne l'a pas déclarée, « par vous » serait faux pour elle.
+   */
+  parLesTitres = 0,
+): string {
   if (total === 0) return "aucun état à déclarer sur ce dossier";
+  if (parLesTitres > 0) {
+    const declares = enPlace - parLesTitres;
+    const parVous =
+      declares <= 0 ? null : declares === 1 ? "1 déclaré par vous" : `${declares} déclarés par vous`;
+    const parTitres =
+      parLesTitres === 1
+        ? "1 établi d'après les titres déclarés"
+        : `${parLesTitres} établis d'après les titres déclarés`;
+    const detail = parVous ? `${parVous}, ${parTitres}` : parTitres;
+    return enPlace === total ? `tous en place : ${detail}` : `en place : ${detail}`;
+  }
   if (enPlace === 0) return "déclarés en place par vous";
   if (enPlace === total) return "tous déclarés en place par vous";
   return "déclarés en place par vous";
