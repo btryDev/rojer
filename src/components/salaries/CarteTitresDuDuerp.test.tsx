@@ -112,3 +112,26 @@ describe("un titre appelé par un titre détenu (ADR-043, relecture C3)", () => 
     expect(phraseTitre("oui", null, false)).toContain("pas un retard");
   });
 });
+
+describe("un titre déclaré dont l'échéance est dépassée (audit du 2026-10-16)", () => {
+  // La liste des titres de la même fiche le marque « en retard » : la carte ne
+  // doit plus le dire seulement « déclaré », comme s'il était valide.
+  const titres = [{ obligationId: "elec-salarie-habilitation", delivreLe: new Date("2022-06-01") }];
+  const rendreAvec = (expires: Map<string, Date>) =>
+    renderToStaticMarkup(
+      <CarteTitresDuDuerp
+        questions={titresDuDuerpPourUnePersonne(tous(true), titres)}
+        lienVersLaQuestion={(c) => `/q#${c}`}
+        expires={expires}
+      />,
+    );
+
+  it("dit « expiré le … : à renouveler » à l'écran", () => {
+    const html = rendreAvec(new Map([["elec-salarie-habilitation", new Date("2025-06-01")]]));
+    expect(html).toMatch(/délivré le 0?1 juin 2022, expiré le 0?1 juin 2025 : à renouveler/);
+  });
+
+  it("ne le dit pas d'un titre valide", () => {
+    expect(rendreAvec(new Map())).not.toContain("expiré");
+  });
+});
