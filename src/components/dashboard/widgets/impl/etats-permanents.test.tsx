@@ -278,7 +278,7 @@ describe("widget : une ligne établie d'après les titres (revue du 2026-10-16)"
         {
           domaine: "electricite",
           libelle: "Électricité",
-          lignes: [ligne("habilitation", { parLesTitres: { enPlace: false, phrase } })],
+          lignes: [ligne("habilitation", { parLesTitres: { enPlace: false, phrase, phraseSansNom: phrase } })],
         },
       ],
       faits: [],
@@ -296,7 +296,7 @@ describe("widget : une ligne établie d'après les titres (revue du 2026-10-16)"
           libelle: "Électricité",
           lignes: [
             ligne("habilitation", {
-              parLesTitres: { enPlace: true, phrase },
+              parLesTitres: { enPlace: true, phrase, phraseSansNom: phrase },
               questionsSansReponse: ["Effectuez-vous des opérations électriques ?"],
             }),
           ],

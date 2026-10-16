@@ -45,7 +45,14 @@ export type TitreDeclare = {
 export type EtatParLesTitres = {
   /** Au moins un titre déclaré dont l'échéance n'est pas dépassée. */
   enPlace: boolean;
+  /** Pour l'écran et le widget, lus par l'employeur : nomme les personnes. */
   phrase: string;
+  /**
+   * Pour ce qui SORT du produit — dossier de conformité, export contrôle :
+   * aucun nom (`docs/rgpd.md` § 6, « Ce qui sort du produit ne nomme donc plus
+   * personne » ; revue du 2026-10-16). Les dates restent.
+   */
+  phraseSansNom: string;
 };
 
 export function etatParLesTitres(
@@ -54,10 +61,8 @@ export function etatParLesTitres(
   now: Date,
 ): EtatParLesTitres {
   if (titres.length === 0) {
-    return {
-      enPlace: false,
-      phrase: `Établi d'après les titres déclarés : aucun titre « ${titre.libelle} » sur la fiche Équipe.`,
-    };
+    const phrase = `Établi d'après les titres déclarés : aucun titre « ${titre.libelle} » sur la fiche Équipe.`;
+    return { enPlace: false, phrase, phraseSansNom: phrase };
   }
   // Les mots de la fiche salarié (`equipe/[salarieId]/page.tsx`,
   // `MOT_DE_L_ETAT`), jamais « expiré » ni « à jour » : le triennal de
@@ -67,20 +72,24 @@ export function etatParLesTitres(
   // la pièce, « calculée » quand elle vient du rythme.
   const rythme = periodiciteEffective(titre);
   const depassees: string[] = [];
+  const depasseesSansNom: string[] = [];
   for (const t of titres) {
     const echeance = echeanceDuTitre(t, rythme);
     // La règle du jour civil (ADR-011), celle de `classerTitre`, qu'on ne
     // peut importer ici : son module est `server-only`.
     if (echeance !== null && estEnRetard(echeance, now)) {
       const mot = t.echeanceLe !== null ? "déclarée" : "calculée";
-      depassees.push(`${t.personne} : échéance ${mot} dépassée le ${formaterDateFr(echeance)}`);
+      const quoi = `échéance ${mot} dépassée le ${formaterDateFr(echeance)}`;
+      depassees.push(`${t.personne} : ${quoi}`);
+      depasseesSansNom.push(quoi);
     }
   }
   const compte = titres.length === 1 ? "1 titre" : `${titres.length} titres`;
-  const suite =
-    depassees.length === 0 ? ", aucune échéance dépassée" : ` ; ${depassees.join(" ; ")}`;
+  const suite = (liste: string[]) =>
+    liste.length === 0 ? ", aucune échéance dépassée" : ` ; ${liste.join(" ; ")}`;
   return {
     enPlace: depassees.length < titres.length,
-    phrase: `Établi d'après les titres déclarés : ${compte}${suite}.`,
+    phrase: `Établi d'après les titres déclarés : ${compte}${suite(depassees)}.`,
+    phraseSansNom: `Établi d'après les titres déclarés : ${compte}${suite(depasseesSansNom)}.`,
   };
 }

@@ -104,8 +104,9 @@ describe("habilitation : l'état vient des titres, plus de la case", () => {
     const imprimee = bloc.etats.find(
       (l) => l.libelle === "Habilitation électrique du personnel opérant sur ou à proximité d'installations électriques",
     );
+    // Sans nom : le document sort du produit (`docs/rgpd.md` § 6).
     expect(imprimee?.declaration).toMatch(
-      /^Établi d'après les titres déclarés : 1 titre ; Léa Martin : échéance calculée dépassée/,
+      /^Établi d'après les titres déclarés : 1 titre ; échéance calculée dépassée le 0?1\/06\/2025\.$/,
     );
   });
 
@@ -175,5 +176,23 @@ describe("les comptes ne disent pas « déclaré » de ce que l'employeur n'a pa
       faitsDatesRenseignes: 0,
     });
     expect(bloc.chapeau ?? "").not.toContain("titres déclarés");
+  });
+});
+
+describe("RGPD : ce qui sort du produit ne nomme personne (docs/rgpd.md § 6, revue du 2026-10-16)", () => {
+  // L'écran nomme — l'employeur lit sa propre équipe. Le dossier de
+  // conformité et l'export contrôle, remis à un tiers, ne nomment personne :
+  // ils impriment `blocEtatsPermanents`, et rien d'autre de cette ligne.
+  it("ni prénom ni nom dans le bloc imprimé, quel que soit l'état des titres", async () => {
+    for (const lot of [[titre("2022-06-01")], [titre("2025-03-01")], [titre("2022-06-01"), titre("2025-03-01")]]) {
+      h.titres.mockResolvedValueOnce(lot);
+      const { d, ligne } = await dossier();
+      // L'écran, lui, nomme : la contre-épreuve que le nom existe bien en amont.
+      if (lot.some((t) => t.delivreLe.getUTCFullYear() === 2022)) {
+        expect(ligne.parLesTitres?.phrase).toContain("Léa Martin");
+      }
+      const imprime = JSON.stringify(blocEtatsPermanents(d));
+      expect(imprime).not.toMatch(/Léa|Martin/);
+    }
   });
 });
