@@ -8,7 +8,8 @@ import {
 } from "@/lib/referentiels/conformite/mention-rythme";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import { determineObligationsApplicables } from "./engine";
-import type { EquipementMatching, EtablissementMatching } from "./types";
+import { appliquerPrescriptions } from "./prescriptions";
+import type { EquipementMatching, EtablissementMatching, PrescriptionMatching } from "./types";
 
 /**
  * Le défibrillateur automatisé externe (CCH R. 157-1 à R. 157-4), entré le
@@ -140,5 +141,55 @@ describe("défibrillateur — la surface de chaque ligne", () => {
     const o = ligne("dae-erp-maintenance");
     expect(periodiciteEffective(o)).toBe("annuelle");
     expect(mentionRythmeRetenu(o)?.court).toBe(PASTILLE_DEFAUT_ANNUEL);
+  });
+});
+
+describe("défibrillateur — une notice plus serrée se renforce par une prescription (ADR-035)", () => {
+  // L'aide de la catégorie le dit (2026-10-16, décision de la propriétaire) :
+  // si la notice du fabricant prévoit un rythme plus serré, on le renforce dans
+  // Prescriptions. Ce test tient la phrase : la maintenance, portée par
+  // l'appareil et au défaut annuel, est une cible de la page (elle est parmi
+  // les applicables que la page propose), la prescription passe par-dessus le
+  // rythme retenu, et la ligne de l'appareil visé prend le rythme renforcé.
+  const etab = erp("N", "N3");
+  const parc = [dae("a"), dae("b")];
+  const notice: PrescriptionMatching = {
+    id: "p1",
+    source: "autre",
+    effet: "renforce_periodicite",
+    reference: "Notice du fabricant",
+    autorite: null,
+    dateDocument: new Date("2026-10-01T00:00:00Z"),
+    dateFin: null,
+    obligationId: "dae-erp-maintenance",
+    libelle: null,
+    description: null,
+    periodicite: "semestrielle",
+    realisateurRequis: [],
+    categorieEquipement: null,
+    equipementId: "a",
+  };
+
+  it("la maintenance est proposée comme cible : elle est applicable, portée par l'appareil", () => {
+    const m = determineObligationsApplicables(etab, parc).find(
+      (x) => x.obligation.id === "dae-erp-maintenance",
+    );
+    expect(m?.porteur).toBe("equipement");
+    expect(m?.obligation.rythmeRetenu?.motif).toBe("defaut_annuel");
+  });
+
+  it("la prescription n'est pas ignorée, et la ligne de l'appareil visé devient semestrielle — l'autre reste annuelle", () => {
+    const res = appliquerPrescriptions(
+      determineObligationsApplicables(etab, parc),
+      [notice],
+      parc,
+      new Date("2026-10-16T12:00:00Z"),
+    );
+    expect(res.ignorees).toEqual([]);
+    const lignes = genererProchainesVerifications(
+      res.applicables.filter((a) => a.obligation.id === "dae-erp-maintenance"),
+    );
+    const parAppareil = Object.fromEntries(lignes.map((l) => [l.equipementId, l.periodicite]));
+    expect(parAppareil).toEqual({ a: "semestrielle", b: "annuelle" });
   });
 });

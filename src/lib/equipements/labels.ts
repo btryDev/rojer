@@ -162,8 +162,10 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
   // dit comme défaut. « La notice du fabricant si elle est plus serrée » est un
   // conseil d'usage, pas un rythme de texte — rien n'en est daté. La classe du
   // dispositif n'est pas citée : elle se lit dans le règlement (UE) 2017/745,
-  // non lu (décision du 2026-10-15).
-  DEFIBRILLATEUR: `Défibrillateur automatisé externe, au mur ou en boîtier. Dans un établissement recevant du public des catégories 1 à 4, Rojer suit pour chaque appareil ${porte("la maintenance du défibrillateur automatisé externe et de ses accessoires")} (code de la construction et de l'habitation, art. R. 157-4) et sa déclaration ${porte("à la base de données nationale")} Géo'DAE (code de la santé publique, art. L. 5233-1). Le texte ne fixe aucun rythme de maintenance : Rojer retient par défaut une maintenance au moins une fois par an ; suivez la notice du fabricant si elle en demande une plus fréquente.`,
+  // non lu (décision du 2026-10-15). Le renvoi aux Prescriptions (2026-10-16,
+  // décision de la propriétaire) est tenu par `matching/dae.test.ts` : la
+  // maintenance, portée par l'appareil, se renforce par `renforce_periodicite`.
+  DEFIBRILLATEUR: `Défibrillateur automatisé externe, au mur ou en boîtier. Dans un établissement recevant du public des catégories 1 à 4, Rojer suit pour chaque appareil ${porte("la maintenance du défibrillateur automatisé externe et de ses accessoires")} (code de la construction et de l'habitation, art. R. 157-4) et sa déclaration ${porte("à la base de données nationale")} Géo'DAE (code de la santé publique, art. L. 5233-1). Le texte ne fixe aucun rythme de maintenance : Rojer retient par défaut une maintenance au moins une fois par an ; suivez la notice du fabricant si elle en demande une plus fréquente. Si la notice prévoit un rythme plus serré, renforcez-le dans Prescriptions (renforcer la périodicité).`,
   AUTRE: "Autre équipement soumis à vérification périodique.",
 };
 
