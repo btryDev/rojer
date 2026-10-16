@@ -26,7 +26,9 @@ import type { Charte } from "./charte";
 // la ligne — au téléphone, R. 157-1 tenait sur sept —, `rounded-full` en
 // faisait une bulle ovale ; 18 px en fait un bloc aux coins de la charte.
 // Sans JavaScript ni mesure. PAPIER garde sa forme : c'est de la dette, elle
-// ne s'étend pas.
+// ne s'étend pas — mais l'alignement à gauche (`text-left`, commun aux deux
+// chartes) vaut aussi pour lui : sans effet sur une ligne, plus lisible sur
+// plusieurs (revue du 2026-10-16). La règle est écrite dans la charte, § 1.6.
 const FORME: Record<Charte, string> = {
   papier: "rounded-full",
   board: "rounded-[18px]",
