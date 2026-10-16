@@ -22,10 +22,10 @@
  * Pur : aucune horloge, aucune base. `queries.ts` charge et appelle.
  */
 import { formaterDateFr } from "@/lib/dates";
-import { estEnRetard } from "@/lib/dates/retard";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import type { Obligation } from "@/lib/referentiels/conformite/types";
 import { echeanceDuTitre } from "@/lib/salaries/echeance";
+import { classerTitre } from "@/lib/salaries/etat-titre";
 
 export type TitreDeclare = {
   /** « Prénom Nom », tel que la fiche Équipe l'affiche. */
@@ -66,10 +66,10 @@ export function etatParLesTitres(
   const depassees: string[] = [];
   const depasseesSansNom: string[] = [];
   for (const t of titres) {
+    // La règle d'un titre dépassé : `classerTitre`, la même que la fiche
+    // Équipe et le badge (jour civil, ADR-011).
     const echeance = echeanceDuTitre(t, rythme);
-    // La règle du jour civil (ADR-011), celle de `classerTitre`, qu'on ne
-    // peut importer ici : son module est `server-only`.
-    if (echeance !== null && estEnRetard(echeance, now)) {
+    if (echeance !== null && classerTitre(t, rythme, now) === "enRetard") {
       const mot = t.echeanceLe !== null ? "déclarée" : "calculée";
       const quoi = `échéance ${mot} dépassée le ${formaterDateFr(echeance)}`;
       depassees.push(`${t.personne} : ${quoi}`);
