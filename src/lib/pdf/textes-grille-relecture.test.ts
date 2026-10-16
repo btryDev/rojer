@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { obligationsConformite, porteurDe } from "@/lib/referentiels/conformite";
 import { LIBELLE_ACTIVITE, matchTypologie } from "@/lib/matching/engine";
@@ -541,5 +543,24 @@ describe("suiviParPersonne — le renvoi vers le titre nominatif", () => {
     ]) {
       expect(suiviParPersonne(ligne(id), obligationsConformite)).toEqual([]);
     }
+  });
+});
+
+describe("grille : le renvoi s'imprime dans la colonne Échéance (revue du 2026-10-16)", () => {
+  // Le préventeur lit la colonne Échéance : c'est là qu'il a vu « sans rythme
+  // écrit » sans renvoi (grille du 13/10, p. 8). Le script n'a pas de test
+  // rendu (`scripts/` hors de la suite) : la garde lit son source, et tombe si
+  // le renvoi repasse dans la cellule Obligation.
+  const source = readFileSync(join(process.cwd(), "scripts/generer-grille-equipements.tsx"), "utf8");
+  // La CELLULE de la ligne, pas l'en-tête du tableau qui porte le même width.
+  const debutEcheance = source.indexOf("<View style={[cell, { width: C.periodicite }]}>");
+  const finEcheance = source.indexOf("width: C.realisateur", debutEcheance);
+  const appel = source.indexOf("suiviParPersonne(o, obligationsConformite)");
+
+  it("un seul appel, entre l'ouverture de la cellule Échéance et la cellule suivante", () => {
+    expect(debutEcheance).toBeGreaterThan(0);
+    expect(appel).toBeGreaterThan(debutEcheance);
+    expect(appel).toBeLessThan(finEcheance);
+    expect(source.indexOf("suiviParPersonne(o, obligationsConformite)", appel + 1)).toBe(-1);
   });
 });

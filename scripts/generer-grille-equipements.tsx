@@ -350,14 +350,6 @@ function LigneObligation({
         <Text style={[s.small, { marginTop: 1, color: BOARD.bleuEncre }]}>
           {t(`Visible : ${texteOuVisible(o)}`)}
         </Text>
-        {suiviParPersonne(o, obligationsConformite).map((ligne) => (
-          <Text
-            key={ligne}
-            style={[s.small, { marginTop: 1, color: BOARD.bleuEncre }]}
-          >
-            {t(ligne)}
-          </Text>
-        ))}
       </View>
       <View style={[cell, { width: C.periodicite }]}>
         <Text style={s.td}>{libelleRythme(o)}</Text>
@@ -367,6 +359,17 @@ function LigneObligation({
             {t(mentionRythmeRetenu(o)!.court)}
           </Text>
         )}
+        {/* Le renvoi vers le titre qui porte le rythme, DANS la colonne
+            Échéance : c'est celle que le préventeur lit (grille du 13/10,
+            p. 8). « Sans rythme écrit » reste au-dessus, fidèle au texte. */}
+        {suiviParPersonne(o, obligationsConformite).map((ligne) => (
+          <Text
+            key={ligne}
+            style={[s.small, { marginTop: 2, color: BOARD.bleuEncre }]}
+          >
+            {t(ligne)}
+          </Text>
+        ))}
       </View>
       <Text style={[s.td, cell, { width: C.realisateur }]}>
         {o.realisateurs.map((r) => LABEL_REALISATEUR[r]).join(" ou ")}
