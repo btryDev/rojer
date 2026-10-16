@@ -87,7 +87,38 @@ déclencheur événementiel, hors règle. `periodicite` reste le rythme du texte
 
 ### Utilisateurs cibles
 - Dirigeants de TPE/PME (1 à 50 salariés), non-experts en prévention
-- Secteurs à faible complexité technique
+- ~~Secteurs à faible complexité technique~~ [2026-10-16 : remplacé par les
+  trois niveaux ci-dessous — la phrase laissait croire à un tri par secteur
+  que l'onboarding ne fait pas.]
+
+**Le périmètre en trois niveaux** (décision de la propriétaire du 2026-10-16,
+« on propose tout, on relit tout ») — à lire avant toute question de
+couverture, parce que les confondre a fait raisonner deux fois de travers :
+
+1. **Refusé à l'entrée** — deux cas, et deux seulement : plus de cinquante
+   travailleurs, un ERP situé dans un IGH (section suivante, ADR-031).
+2. **Accepté** — tout le reste. L'onboarding propose **les 22 types d'ERP**
+   (GN 1) et les cinq catégories ; les régimes travail, ERP, IGH seul et
+   habitation se cochent. Accepter n'est pas couvrir.
+3. **Servi** — ce que le référentiel porte réellement :
+   - le Code du travail et le DUERP (référentiel sectoriel : les trois
+     secteurs ci-dessous, les autres codes NAF déclarés en couverture
+     partielle, ADR-020) ;
+   - les dispositions générales ERP (livre II, titre Ier) et les petits
+     établissements (livre III) ;
+   - les dispositions particulières **des types lus** : M, N, O, W
+     (2026-10-14) et L (lu le 2026-10-16, encodé avec le chantier
+     multi-types). **J, P, R, S, T, U, V, X, Y ne sont pas encore lus** :
+     acceptés, servis en partie, et le dossier le dit (axe `categorie_erp`).
+     Décision : **tous seront relus** — livre II titre II et, pour J, U, R, les
+     chapitres « avec hébergement » du livre III.
+
+**Ne jamais déduire le niveau 3 du niveau 2.** « L'onboarding l'accepte » ne
+fait pas entrer une obligation dans ce que Rojer sert, et ne justifie pas
+d'élargir le périmètre sans décision : la question « une TPE de cinquante
+salariés au plus peut-elle être concernée ? » se tranche article par article,
+à la lecture, pas par chapitre.
+
 - **La cible est ce que l'onboarding ne refuse pas** (décision de la
   propriétaire du 2026-10-12, ADR-031) : au plus cinquante travailleurs, pas
   d'ERP situé dans un IGH. Les catégories d'ERP 1 à 4, l'hôtel, l'habitation y
@@ -792,4 +823,4 @@ Les étapes 0 à 11 de `spec/PLAN.md` sont livrées. Le travail actuel dépasse 
 - Construire ou étendre un référentiel sans sources vérifiables
 - Ajouter de l'IA « pour aider » sur un document à valeur légale
 - Déclarer qu'un utilisateur est conforme (l'outil assiste, il ne certifie pas)
-- Sortir du périmètre des 3 secteurs DUERP validés pour faire plaisir à un utilisateur test
+- Sortir du périmètre des 3 secteurs DUERP validés pour faire plaisir à un utilisateur test [2026-10-16 : vise le référentiel SECTORIEL du DUERP — restauration, commerce, bureaux. Ce n'est pas une liste des types d'ERP acceptés : l'onboarding les accepte tous (§ « Le périmètre en trois niveaux »).]
