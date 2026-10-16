@@ -8,6 +8,13 @@ import {
   type AppareilListe,
 } from "@/components/equipements/CarteCategorie";
 import { PreRemplissagePanel } from "@/components/equipements/PreRemplissagePanel";
+import {
+  SectionEquipementsSecurite,
+  type AppareilAffiche,
+} from "@/components/equipements/SectionEquipementsSecurite";
+import { requireUser } from "@/lib/auth/require-user";
+import { obligationsApplicablesDuDossier } from "@/lib/etablissements/dossier-du-rendu";
+import { lignesEquipementsSecurite } from "@/lib/equipements/equipements-securite";
 import { getEtablissement } from "@/lib/etablissements/queries";
 import {
   grouperParCategorie,
@@ -66,7 +73,8 @@ export default async function EquipementsPage({
   // Les cinq lectures partent ensemble, APRÈS la garde (`getEtablissement`
   // + `notFound`) : les bâtiments étaient lus seuls, puis le reste — aucune
   // des quatre autres ne dépend du filtre (audit Next.js du 2026-10-14, M4).
-  const [batiments, equipements, etatsVerifs, sansEcheance, fraicheur] =
+  const user = await requireUser();
+  const [batiments, equipements, etatsVerifs, sansEcheance, fraicheur, dossier] =
     await Promise.all([
       listerBatimentsDeLEtablissement(id),
       listerEquipementsDeLEtablissement(id),
@@ -83,6 +91,10 @@ export default async function EquipementsPage({
       // (`regeneration-sure.ts`). Elle dit donc leur âge — une lecture du
       // repère, aucune écriture (`docs/chantiers-ouverts.md` § 12).
       fraicheurCalendrier(id),
+      // 2026-10-15 : les obligations applicables, pour la section
+      // « Équipements de sécurité ». Lecture bornée au compte (prédicat
+      // `entreprise.userId` dans la requête), partagée avec le reste du rendu.
+      obligationsApplicablesDuDossier(id, user.id),
     ]);
   const multiBatiments = estMultiBatiments(batiments);
   const batimentFiltre = resoudreFiltreBatiment(batiments, batiment);
@@ -135,6 +147,24 @@ export default async function EquipementsPage({
   const dejaDeclarees = new Set(equipements.map((e) => e.categorie));
   const suggestionsRestantes = suggestions.filter(
     (s) => !dejaDeclarees.has(s.categorie),
+  );
+
+  // La section « Équipements de sécurité » (2026-10-15) se lit, comme les
+  // suggestions, sur le parc ENTIER : un DAE déclaré dans une autre zone est
+  // déclaré. Un regroupement d'affichage, rien de plus (`equipements-securite.ts`).
+  const lignesSecurite = dossier
+    ? lignesEquipementsSecurite(dossier.applicables, equipements)
+    : [];
+  const appareilsSecurite = new Map<string, AppareilAffiche[]>(
+    lignesSecurite.map((l) => [
+      l.obligationId,
+      l.appareils.map((a) => ({
+        id: a.id,
+        libelle: a.libelle,
+        signal: resumerEquipement(etatsVerifs.get(a.id)).signaux[0]?.libelle ?? null,
+        href: avecProvenance(`${base}/equipements/${a.id}`, origine),
+      })),
+    ]),
   );
 
   // Le bâtiment est le « où » qui discrimine dès qu'il y en a deux — sauf
@@ -266,6 +296,17 @@ export default async function EquipementsPage({
             questionsExigees={questionsExigeesParCategorie(etab)}
           />
         </div>
+
+        <SectionEquipementsSecurite
+          lignes={lignesSecurite}
+          appareils={appareilsSecurite}
+          hrefAjouter={(categorie) =>
+            `${base}/equipements/nouveau?categorie=${categorie}${
+              suffixeBatiment ? `&${suffixeBatiment}` : ""
+            }`
+          }
+          hrefEtatsPermanents={`${base}/etats-permanents`}
+        />
 
         {equipements.length === 0 ? (
           <EmptyState
