@@ -35,6 +35,7 @@ import {
   type FondementLigne,
 } from "@/lib/etats-permanents/fondement";
 import { modeDeclarationApplique } from "@/lib/etats-permanents/regle";
+import { phrasesAConfirmer } from "@/lib/matching/marques";
 import type { ObligationApplicable } from "@/lib/matching/types";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
 
@@ -97,7 +98,8 @@ export type LigneEquipementSecurite = {
   fondement: FondementLigne | null;
   /**
    * Le moteur retient l'obligation « à confirmer » : une réponse manque pour
-   * trancher (ADR-022, règle du non-renseigné). La ligne ne dit alors pas
+   * trancher (ADR-022, règle du non-renseigné), ou un seuil n'est franchi que
+   * par l'effectif de l'entreprise (C37). La ligne ne dit alors pas
    * « obligatoire ici ».
    */
   aConfirmer: boolean;
@@ -140,7 +142,9 @@ export function lignesEquipementsSecurite(
       obligationId: e.obligationId,
       libelle: e.libelle,
       fondement: fondementDe(a.obligation, contexte),
-      aConfirmer: (a.sansReponse?.length ?? 0) > 0,
+      // La règle entière, pas sa moitié : une question restée sans réponse OU
+      // un seuil compté sur l'effectif de l'entreprise (`phrasesAConfirmer`).
+      aConfirmer: phrasesAConfirmer(a).length > 0,
       cible,
       appareils,
       etat:

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { determineObligationsApplicables } from "@/lib/matching";
-import type { EtablissementMatching } from "@/lib/matching/types";
+import type { EtablissementMatching, ObligationApplicable } from "@/lib/matching/types";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import { porteurDe } from "@/lib/referentiels/conformite/types";
 import { estEtatADeclarer } from "@/lib/etats-permanents/regle";
@@ -122,5 +122,33 @@ describe("la borne : seules les obligations applicables font une ligne", () => {
     const ids = section(BUREAU, [dae]).map((x) => x.obligationId);
     expect(ids).not.toContain("dae-erp-detention");
     expect(ids).toContain("incendie-travail-extincteurs-dotation");
+  });
+});
+
+describe("« à confirmer » : la règle entière de `phrasesAConfirmer`", () => {
+  // Une ligne retenue seulement parce qu'un seuil est franchi par l'effectif de
+  // l'ENTREPRISE (C37) — sans question restée muette — est « à confirmer »
+  // comme celle qu'un silence retient.
+  const applicable = (extra: Partial<ObligationApplicable>): ObligationApplicable => ({
+    obligation: obligationParId("incendie-travail-extincteurs-dotation")!,
+    equipementsConcernes: [],
+    porteur: "etablissement",
+    raisons: ["fixture"],
+    ...extra,
+  });
+  const contexte = { typeErp: null, categorieErp: null };
+
+  it("un seuil compté sur l'entreprise rend la ligne « à confirmer »", () => {
+    const [l] = lignesEquipementsSecurite(
+      [applicable({ effectifAConfirmer: { entreprise: 60, site: 8 } })],
+      [],
+      contexte,
+    );
+    expect(l.aConfirmer).toBe(true);
+  });
+
+  it("sans marque, la ligne n'est pas « à confirmer »", () => {
+    const [l] = lignesEquipementsSecurite([applicable({})], [], contexte);
+    expect(l.aConfirmer).toBe(false);
   });
 });
