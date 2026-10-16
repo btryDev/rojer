@@ -51,7 +51,15 @@ vi.mock("@/lib/perimetre/faits", () => ({
 }));
 vi.mock("@/lib/etats-permanents/queries", async (orig) => ({
   ...(await orig<typeof import("@/lib/etats-permanents/queries")>()),
-  etatsPermanentsDuDossier: async () => ({ groupes: [], faits: [], total: 0, enPlace: 0 }),
+  etatsPermanentsDuDossier: async () => ({
+    groupes: [],
+    faits: [],
+    total: 0,
+    enPlace: 0,
+    parLesTitres: { total: 0, enPlace: 0 },
+    faitsDates: 0,
+    faitsDatesRenseignes: 0,
+  }),
 }));
 vi.mock("@/lib/calendrier/fraicheur", async (orig) => ({
   ...(await orig<typeof import("@/lib/calendrier/fraicheur")>()),
