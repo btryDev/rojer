@@ -182,7 +182,7 @@ intérieure** — un troisième cas de figure après ceux du lot 7 —, et le pr
 modélisant aucun mandat, l'échéance calculée arrive en avance pour un mandat interrompu.
 Le sens d'erreur est délibéré.
 
-**~~Huit~~ Sept des vingt domaines ne portent aucune obligation d'équipement** [2026-10-15, remesuré en appelant `porteurDe` : `secours` en sort, la maintenance et la déclaration Géo'DAE du défibrillateur y étant portées par l'appareil] :
+**~~Huit~~ Sept des ~~vingt~~ 21 domaines ne portent aucune obligation d'équipement** [2026-10-16, revue indépendante : « vingt » rayé, le référentiel compte 21 domaines] [2026-10-15, remesuré en appelant `porteurDe` : `secours` en sort, la maintenance et la déclaration Géo'DAE du défibrillateur y étant portées par l'appareil] :
 `formation_securite`, `sante_travail`, ~~`secours`~~, `organisation_prevention`,
 `information_travailleurs`, `locaux_sociaux`, `co_activite` et — depuis le
 2026-09-04 — `eclairage`. Leur déclencheur est le statut d'employeur, l'effectif ou la
