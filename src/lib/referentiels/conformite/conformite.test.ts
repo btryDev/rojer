@@ -1888,6 +1888,7 @@ describe("référentiel conformité — version et empreinte", () => {
     // `APPAREIL_CUISSON_ERP`. 185 + 0 − 0 = 185 (`.3` à l'intégration), une liste de catégories
     // changée ; relevée en appelant `empreinteReferentiel()`.
     { version: "2026-10-14.3", empreinte: "185-47b3ee1d533b3c7f" },
+    { version: "2026-10-15.1", empreinte: "185-46b39d4ed1c3134c" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

@@ -29,6 +29,7 @@ import {
   Gauge,
   HardHat,
   Heater,
+  HeartPulse,
   Lightbulb,
   LifeBuoy,
   Package,
@@ -116,6 +117,9 @@ export const ICONE_CATEGORIE: Record<CategorieEquipement, Picto> = {
   // dans les murs. `Flame` est déjà le permis de feu ; `Fuel` dessine une
   // pompe à carburant, autre chose.
   INSTALLATION_GAZ: Heater,
+  // Le défibrillateur (2026-10-15) : le cœur et le tracé, ce que porte la
+  // signalétique de l'arrêté du 29 octobre 2019. `LifeBuoy` est déjà pris.
+  DEFIBRILLATEUR: HeartPulse,
   AUTRE: Package,
 };
 

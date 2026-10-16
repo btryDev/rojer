@@ -428,7 +428,16 @@ const RELEVE = {
   // gagne `import "server-only"` — ses deux fonctions ne sont plus des
   // actions appelables depuis le navigateur. NON : aucune instruction de la
   // passe ne change. ~~adf2b7f801f974e6~~.
-  empreinte: "da691471f9fe392b",
+  // Recopiée SANS incrément le 2026-10-15 (`lot/dae-materiel-1015`) :
+  // `referentiels/types-communs.ts` gagne la valeur `DEFIBRILLATEUR` dans
+  // `CATEGORIES_EQUIPEMENT`, et `conformite/index.ts` passe à `2026-10-15.1`.
+  // NON au sens de la question : aucune règle du moteur ne change. Ce qui
+  // change les lignes — la maintenance et la déclaration Géo'DAE passent de
+  // l'établissement à l'appareil — est une DONNÉE (porteur, catégories,
+  // périodicité), hachée par l'empreinte du référentiel, donc déjà dans le
+  // sceau : les dossiers ERP N1–N4 seront réconciliés au titre de
+  // `2026-10-15.1`. ~~da691471f9fe392b~~.
+  empreinte: "1171c8d71e8df5c5",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

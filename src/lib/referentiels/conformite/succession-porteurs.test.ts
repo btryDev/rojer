@@ -110,9 +110,20 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "cuisson-erp-verification-initiale": "equipement",
   "cuisson-gaz-installations-annuelle": "equipement",
   "cuisson-travail-appareils-entretien-verification": "equipement",
-  "dae-erp-declaration-geodae": "etablissement",
+  // ~~"dae-erp-declaration-geodae": "etablissement",~~
+  // ~~"dae-erp-maintenance": "etablissement",~~
+  // 2026-10-15, `lot/dae-materiel-1015` : les deux lignes passent à
+  // l'ÉQUIPEMENT (catégorie `DEFIBRILLATEUR`) en GARDANT leur identifiant.
+  // DÉCISION ÉCRITE D'ACCEPTER LA PERTE DE CONTINUITÉ, prise par la
+  // propriétaire le 2026-10-15 : entrées au référentiel le 2026-10-14 et dans
+  // `main` le 2026-10-15 (PR #41), elles n'avaient pas de vie en production à
+  // préserver. Le sens établissement → équipement n'est servi ni par
+  // `succedeA` ni par `absorbePar` ; un nouvel identifiant n'aurait rien
+  // transmis de plus. Une ligne d'établissement déjà générée est archivée ou
+  // supprimée, chaque DAE déclaré reçoit la sienne « à planifier ».
+  "dae-erp-declaration-geodae": "equipement",
   "dae-erp-detention": "etablissement",
-  "dae-erp-maintenance": "etablissement",
+  "dae-erp-maintenance": "equipement",
   "eclairage-etablissement-regles-entretien": "etablissement",
   "elec-erp-cat1-4-annuelle": "equipement",
   "elec-erp-groupe-electrogene-annuel": "equipement",
