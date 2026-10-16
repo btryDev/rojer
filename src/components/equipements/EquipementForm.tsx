@@ -2,6 +2,7 @@
 
 import { useActionState, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { AideCategorie, CLASSE_AIDE } from "@/components/equipements/AideCategorie";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { BlocCreux, ChampBoard } from "@/components/ui-kit";
 import { MarqueCategorie } from "@/components/equipements/MarqueCategorie";
@@ -51,8 +52,6 @@ function Erreur({ message, id }: { message?: string; id?: string }) {
 
 /** Le gabarit d'une aide : partagé par la phrase d'aide d'un champ et par
  *  l'aide en plusieurs blocs au-dessus des questions exigées du levage. */
-const CLASSE_AIDE =
-  "m-0 mt-1.5 max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]";
 
 /** La phrase d'aide d'un champ : en clair sous le champ, jamais en infobulle
  *  — une infobulle n'existe pas au doigt. */
@@ -392,9 +391,7 @@ export function EquipementForm({
             </BlocCreux>
             </div>
           ) : (
-            DESCRIPTION_CATEGORIE[categorie] && (
-              <Aide id="categorie-aide">{DESCRIPTION_CATEGORIE[categorie]}</Aide>
-            )
+            <AideCategorie id="categorie-aide" categorie={categorie} />
           )}
           <Erreur id="categorie-erreur" message={erreurCategorie} />
         </div>
