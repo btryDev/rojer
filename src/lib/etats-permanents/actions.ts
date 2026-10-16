@@ -1,6 +1,6 @@
 "use server";
 
-import { titreDuDouble } from "@/lib/referentiels/conformite/transmissions";
+import { etabliParLesTitres } from "./par-les-titres";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
@@ -63,7 +63,7 @@ export type DeclarationActionState =
 async function obligationDeclarable(
   etablissementId: string,
   obligationId: string,
-): Promise<boolean> {
+): Promise<boolean | "etabli_par_les_titres"> {
   if (!obligationParId(obligationId)) return false;
 
   const etablissement = await prisma.etablissement.findUnique({
@@ -95,11 +95,14 @@ async function obligationDeclarable(
   // ne l'a jamais montrée. C'est un second cas que l'ancienne garde laissait
   // passer, celui-là sans même invoquer une surcharge.
   if (!app) return false;
-  // Établie d'après les titres déclarés (`par-les-titres.ts`) : elle ne se
-  // coche pas. Une case à côté des titres referait deux vérités.
-  if (titreDuDouble(app.obligation)) return false;
 
-  return modeDeclarationApplique(app) !== null;
+  const mode = modeDeclarationApplique(app);
+  if (mode === null) return false;
+  // Établie d'après les titres déclarés : elle ne se coche pas, une case à
+  // côté des titres referait deux vérités. LE prédicat de la lecture
+  // (`etabliParLesTitres`), pas un voisin (revue du 2026-10-16).
+  if (etabliParLesTitres(app.obligation, mode.mode)) return "etabli_par_les_titres";
+  return true;
 }
 
 /**
@@ -127,7 +130,15 @@ export async function declarerEnPlace(
 ): Promise<DeclarationActionState> {
   await assertEtablissementOwnership(etablissementId);
 
-  if (!(await obligationDeclarable(etablissementId, obligationId))) {
+  const declarable = await obligationDeclarable(etablissementId, obligationId);
+  if (declarable === "etabli_par_les_titres") {
+    return {
+      status: "error",
+      message:
+        "Cette obligation ne se déclare pas : son état s'établit d'après les titres déclarés sur la fiche Équipe.",
+    };
+  }
+  if (!declarable) {
     return {
       status: "error",
       message:

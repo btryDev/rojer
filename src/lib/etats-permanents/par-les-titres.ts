@@ -26,6 +26,24 @@ import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-reten
 import type { Obligation } from "@/lib/referentiels/conformite/types";
 import { echeanceDuTitre } from "@/lib/salaries/echeance";
 import { classerTitre } from "@/lib/salaries/etat-titre";
+import { titreParId } from "@/lib/salaries/catalogue";
+import { titreDuDouble } from "@/lib/referentiels/conformite/transmissions";
+
+/**
+ * LE prédicat : cette ligne est-elle établie d'après les titres, et d'après
+ * lequel ? Une ligne en mode « état » dont un titre est la même obligation
+ * (`titreDuDouble`), titre présent au catalogue. Lu par la lecture
+ * (`queries.ts`) ET par la garde de l'action (`actions.ts`) : deux prédicats
+ * voisins avaient été écrits, qui pouvaient diverger (revue du 2026-10-16).
+ */
+export function etabliParLesTitres(
+  o: Obligation,
+  mode: "etat" | "fait",
+): Obligation | null {
+  if (mode !== "etat") return null;
+  const id = titreDuDouble(o);
+  return id ? (titreParId(id) ?? null) : null;
+}
 
 export type TitreDeclare = {
   /** « Prénom Nom », tel que la fiche Équipe l'affiche. */

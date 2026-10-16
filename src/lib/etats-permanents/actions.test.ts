@@ -104,6 +104,8 @@ describe("declarerEnPlace — ce que la garde refuse", () => {
     h.prisma.declarationEtatPermanent.upsert.mockClear();
     const r = await declarerEnPlace("etab-1", "elec-travail-habilitation-personnel");
     expect(r.status).toBe("error");
+    // Son motif, pas celui des lignes à échéance (revue du 2026-10-16).
+    expect(r.status === "error" && r.message).toMatch(/d'après les titres déclarés sur la fiche Équipe/);
     expect(h.prisma.declarationEtatPermanent.upsert).not.toHaveBeenCalled();
   });
 

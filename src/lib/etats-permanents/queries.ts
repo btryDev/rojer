@@ -32,13 +32,12 @@ import { ordonnerLignes } from "./ordre";
 import { contexteFondementDe, fondementDe, type FondementLigne } from "./fondement";
 import { PHRASE_SANS_REPONSE } from "@/lib/matching/sans-reponse";
 import { obligationsApplicablesDuDossier } from "@/lib/etablissements/dossier-du-rendu";
-import { titreParId } from "@/lib/salaries/catalogue";
 import {
+  etabliParLesTitres,
   etatParLesTitres,
   type EtatParLesTitres,
   type TitreDeclare,
 } from "./par-les-titres";
-import { titreDuDouble } from "@/lib/referentiels/conformite/transmissions";
 
 export type LigneEtatPermanent = {
   obligation: Obligation;
@@ -172,53 +171,64 @@ export async function listerEtatsPermanents(
   // qui ne le porte pas devient une fuite le jour où quelqu'un rend la fonction
   // publique ».
   const user = await requireUser();
-  const declarations = await prisma.declarationEtatPermanent.findMany({
-    where: {
-      etablissementId: etablissement.id,
-      etablissement: { entreprise: { userId: user.id } },
-    },
-    select: { obligationId: true, declareLe: true, note: true },
-  });
-  const parObligation = new Map(declarations.map((d) => [d.obligationId, d]));
 
   // Les titres des personnes actives, pour les seules lignes établies d'après
-  // eux. Même prédicat d'appartenance que les déclarations ; une personne
-  // sortie ne répond plus pour l'établissement, comme au calendrier.
+  // eux (`etabliParLesTitres`, le prédicat que lit aussi la garde de
+  // l'action). Une personne sortie ne répond plus pour l'établissement, comme
+  // au calendrier.
   const titresVises = [
     ...new Set(
       applicables.flatMap((a) => {
-        const t = titreDuDouble(a.obligation);
-        return t ? [t] : [];
+        const mode = modeDeclarationApplique(a);
+        const titre = mode ? etabliParLesTitres(a.obligation, mode.mode) : null;
+        return titre ? [titre.id] : [];
       }),
     ),
   ];
-  const titresParObligation = new Map<string, TitreDeclare[]>();
-  if (titresVises.length > 0) {
-    const titres = await prisma.titreSalarie.findMany({
+
+  // Deux lectures indépendantes, lancées ensemble (revue du 2026-10-16).
+  //
+  // ⚠ LE PRÉDICAT D'APPARTENANCE DES TITRES (`userId`) N'A QU'UNE GARDE :
+  // `par-les-titres-dossier.test.ts` (« ne lit que les titres des personnes
+  // actives de CE dossier »). `tenancy-lectures.test.ts` ne voit pas cette
+  // lecture. Retirer le prédicat ne fait tomber que ce test-là.
+  const [declarations, titres] = await Promise.all([
+    prisma.declarationEtatPermanent.findMany({
       where: {
-        obligationId: { in: titresVises },
-        salarie: {
-          etablissementId: etablissement.id,
-          actif: true,
-          etablissement: { entreprise: { userId: user.id } },
-        },
+        etablissementId: etablissement.id,
+        etablissement: { entreprise: { userId: user.id } },
       },
-      select: {
-        obligationId: true,
-        delivreLe: true,
-        echeanceLe: true,
-        salarie: { select: { prenom: true, nom: true } },
-      },
+      select: { obligationId: true, declareLe: true, note: true },
+    }),
+    titresVises.length === 0
+      ? Promise.resolve([])
+      : prisma.titreSalarie.findMany({
+          where: {
+            obligationId: { in: titresVises },
+            salarie: {
+              etablissementId: etablissement.id,
+              actif: true,
+              etablissement: { entreprise: { userId: user.id } },
+            },
+          },
+          select: {
+            obligationId: true,
+            delivreLe: true,
+            echeanceLe: true,
+            salarie: { select: { prenom: true, nom: true } },
+          },
+        }),
+  ]);
+  const parObligation = new Map(declarations.map((d) => [d.obligationId, d]));
+  const titresParObligation = new Map<string, TitreDeclare[]>();
+  for (const t of titres) {
+    const liste = titresParObligation.get(t.obligationId) ?? [];
+    liste.push({
+      personne: `${t.salarie.prenom} ${t.salarie.nom}`.trim(),
+      delivreLe: t.delivreLe,
+      echeanceLe: t.echeanceLe,
     });
-    for (const t of titres) {
-      const liste = titresParObligation.get(t.obligationId) ?? [];
-      liste.push({
-        personne: `${t.salarie.prenom} ${t.salarie.nom}`.trim(),
-        delivreLe: t.delivreLe,
-        echeanceLe: t.echeanceLe,
-      });
-      titresParObligation.set(t.obligationId, liste);
-    }
+    titresParObligation.set(t.obligationId, liste);
   }
 
   const parDomaine = new Map<DomaineObligation, LigneEtatPermanent[]>();
@@ -237,8 +247,7 @@ export async function listerEtatsPermanents(
     const mode = modeDeclarationApplique(app);
     if (!mode) continue;
 
-    const idTitre = mode.mode === "etat" ? titreDuDouble(o) : null;
-    const titre = idTitre ? titreParId(idTitre) : undefined;
+    const titre = etabliParLesTitres(o, mode.mode);
     const parLesTitres = titre
       ? etatParLesTitres(titre, titresParObligation.get(titre.id) ?? [], now)
       : null;
