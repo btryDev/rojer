@@ -17,6 +17,21 @@ import type { Charte } from "./charte";
 // composants auraient dupliqué la logique d'ouverture, qui est la seule
 // chose fragile ici.
 
+// La forme de la pastille, par charte. BOARD : un rayon FIXE de 18 px — celui
+// du « bloc interne » de la charte (docs/charte-board.md, § 1.6) —, et non
+// `rounded-full` (2026-10-16, second contrôle visuel, F2). Sur une ligne, la
+// pastille fait ~24 px de haut : CSS ramène alors un rayon trop grand à la
+// demi-hauteur (réduction proportionnelle des rayons, CSS Backgrounds § 5.5),
+// et elle garde exactement sa forme de pastille. Dès que la référence passe à
+// la ligne — au téléphone, R. 157-1 tenait sur sept —, `rounded-full` en
+// faisait une bulle ovale ; 18 px en fait un bloc aux coins de la charte.
+// Sans JavaScript ni mesure. PAPIER garde sa forme : c'est de la dette, elle
+// ne s'étend pas.
+const FORME: Record<Charte, string> = {
+  papier: "rounded-full",
+  board: "rounded-[18px]",
+};
+
 const BOUTON: Record<Charte, string> = {
   papier:
     "border border-[color:var(--rule)] bg-[color:var(--paper-sunk)] px-3 py-1 font-mono text-[0.65rem] font-medium uppercase tracking-[0.14em] text-[color:var(--seal)]",
@@ -120,7 +135,10 @@ export function LegalBadge(props: SocleLegalBadge & SourceLegalBadge) {
         type="button"
         onClick={() => setOpen((o) => !o)}
         className={cn(
-          "group inline-flex items-center gap-2 self-start rounded-full transition",
+          // `text-left` : un bouton centre son texte ; une référence longue
+          // passée à la ligne se lisait centrée (F2).
+          "group inline-flex items-center gap-2 self-start text-left transition",
+          FORME[charte],
           BOUTON[charte],
           BOUTON_DEPLIABLE[charte],
         )}
