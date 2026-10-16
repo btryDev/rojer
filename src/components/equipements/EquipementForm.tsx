@@ -51,9 +51,6 @@ function Erreur({ message, id }: { message?: string; id?: string }) {
   );
 }
 
-/** Le gabarit d'une aide : partagé par la phrase d'aide d'un champ et par
- *  l'aide en plusieurs blocs au-dessus des questions exigées du levage. */
-
 /** La phrase d'aide d'un champ : en clair sous le champ, jamais en infobulle
  *  — une infobulle n'existe pas au doigt. */
 function Aide({ id, children }: { id?: string; children: ReactNode }) {

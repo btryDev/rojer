@@ -6,7 +6,9 @@
 import { DESCRIPTION_CATEGORIE } from "@/lib/equipements/labels";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
 
-/** Le gabarit d'une phrase d'aide — celui du formulaire. */
+/** Le gabarit d'une aide de formulaire : partagé par la phrase d'aide d'un
+ *  champ (`EquipementForm`) et par l'aide en plusieurs blocs au-dessus des
+ *  questions exigées du levage. */
 export const CLASSE_AIDE =
   "m-0 mt-1.5 max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]";
 
