@@ -25,6 +25,7 @@ import {
 import {
   AIDE_GROUPE_ELECTROGENE,
   DESCRIPTION_CATEGORIE,
+  EXEMPLES_CATEGORIE,
   LABEL_CATEGORIE_EQUIPEMENT,
 } from "@/lib/equipements/labels";
 import {
@@ -402,7 +403,10 @@ export function EquipementForm({
           label="Libellé"
           requis
           defaultValue={valeursInitiales?.libelle}
-          placeholder="Ex : TGBT principal, Hotte de la cuisine chaude"
+          placeholder={
+            EXEMPLES_CATEGORIE[categorie]?.libelle ??
+            "Ex : TGBT principal, Hotte de la cuisine chaude"
+          }
           erreur={err("libelle")}
         />
 
@@ -461,7 +465,10 @@ export function EquipementForm({
             label="Date de péremption"
             type="date"
             defaultValue={toIsoDate(valeursInitiales?.datePeremption)}
-            aide="Facultatif. La fin de vie indiquée par le fabricant, quand il en fixe une — un harnais antichute a souvent dix ans. Rojer ne vous enverra pas d'échéance à cette date, mais la fiche de l'équipement affichera « Périmé depuis » dès qu'elle sera passée."
+            aide={
+              EXEMPLES_CATEGORIE[categorie]?.peremption ??
+              "Facultatif. La fin de vie indiquée par le fabricant, quand il en fixe une — un harnais antichute a souvent dix ans. Rojer ne vous enverra pas d'échéance à cette date, mais la fiche de l'équipement affichera « Périmé depuis » dès qu'elle sera passée."
+            }
             erreur={err("datePeremption")}
           />
         </div>

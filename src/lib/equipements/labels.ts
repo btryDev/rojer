@@ -254,3 +254,21 @@ export function trierParCategorie<T extends { categorie: CategorieEquipement }>(
  */
 export const AIDE_GROUPE_ELECTROGENE =
   "Pour un établissement recevant du public seulement, et la réponse y est exigée : « Je ne sais pas encore » n'est pas accepté. Avec « Oui », le calendrier suit la vérification des niveaux toutes les deux semaines et l'entretien avec essai chaque mois (art. EL 18 § 4 du règlement de sécurité — livre II, établissements des quatre premières catégories ; en 5ᵉ catégorie, échéances maintenues par sur-application assumée). Avec « Non », aucune des deux n'est suivie.";
+
+/**
+ * Les exemples du formulaire propres à une catégorie (contrôle visuel E4,
+ * 2026-10-16). Sans entrée, le formulaire garde ses exemples génériques. Un
+ * exemple n'affirme aucune règle : la péremption reste la date du fabricant.
+ */
+export const EXEMPLES_CATEGORIE: Partial<
+  Record<CategorieEquipement, { libelle?: string; peremption?: string }>
+> = {
+  // Les dates de l'étiquette du boîtier (arrêté du 29 octobre 2019, annexe 3 :
+  // « Électrodes de défibrillation à remplacer le », « Batterie à remplacer
+  // le ») sont celles du fabricant ; aucun texte n'en fixe le rythme.
+  DEFIBRILLATEUR: {
+    libelle: "Ex : DAE accueil, DAE salle",
+    peremption:
+      "Facultatif. La date indiquée par le fabricant pour les électrodes ou la batterie — la plus proche des deux ; l'étiquette du boîtier les porte. Rojer ne vous enverra pas d'échéance à cette date, mais la fiche de l'équipement affichera « Périmé depuis » dès qu'elle sera passée.",
+  },
+};

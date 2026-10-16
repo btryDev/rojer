@@ -331,3 +331,24 @@ describe("EquipementForm : la recherche de matériel (2026-10-14)", () => {
     expect(cache(c, "materielNonCouvert")).toBe("");
   });
 });
+
+describe("EquipementForm : les exemples propres au défibrillateur (E4)", () => {
+  it("un DAE prend ses exemples de libellé et de péremption, sans rythme de texte", () => {
+    const { container } = render(
+      <EquipementForm action={action} libelleSubmit="Créer" valeursInitiales={{ categorie: "DEFIBRILLATEUR" }} />,
+    );
+    expect(container.querySelector<HTMLInputElement>('input[name="libelle"]')!.placeholder).toBe(
+      "Ex : DAE accueil, DAE salle",
+    );
+    const aide = container.querySelector("#datePeremption-aide")!.textContent!;
+    expect(aide).toMatch(/électrodes ou la batterie/);
+    expect(aide).not.toMatch(/harnais/);
+  });
+
+  it("une autre catégorie garde les exemples génériques", () => {
+    const { container } = render(
+      <EquipementForm action={action} libelleSubmit="Créer" valeursInitiales={{ categorie: "EXTINCTEUR" }} />,
+    );
+    expect(container.querySelector<HTMLInputElement>('input[name="libelle"]')!.placeholder).toMatch(/TGBT/);
+  });
+});
