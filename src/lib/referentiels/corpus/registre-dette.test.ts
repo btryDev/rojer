@@ -33,7 +33,30 @@ describe("registre de dette — les obligations manquantes", () => {
     // `R. 4222-21`, libre au matin du 2026-09-20, est encodée le soir même.
     // `PE 27`, nommée ici au soir du 2026-09-20, est encodée le lendemain
     // (§ 4 et § 5). La liste est vide ; elle doit le rester ou se justifier.
-    expect(parCause("libre").map((a) => a.ref)).toEqual([]);
+    //
+    // [] → treize le 2026-10-16 : la lecture des chapitres de types du titre II
+    // (catégories 1 à 4) et du chapitre V du livre III. Rien ne les bloque —
+    // dix sont des rattachements à une ligne existante (personnel désigné,
+    // interdiction de fumer affichée, schéma d'organisation, instruction du
+    // personnel de 5ᵉ), les autres des lignes d'établissement bornées N1–N4 et
+    // au type (exercices de J, R et U, consignes de J et U). Rien n'est encodé :
+    // la propriétaire décide, et la liste se vide à l'encodage. Le plan :
+    // `propositions/lecture-chapitres-types-erp-2026-10-16.md`.
+    expect(parCause("libre").map((a) => a.ref)).toEqual([
+      "PU 6",
+      "P 21",
+      "R 33",
+      "S 15",
+      "T 52",
+      "U 41",
+      "U 43",
+      "U 47",
+      "U 48",
+      "Y 19",
+      "J 35",
+      "J 39",
+      "J 40",
+    ]);
   });
 
   it("« hors de la cible, rien ne bloque » ne peut pas toucher la cible", () => {
@@ -64,7 +87,9 @@ describe("registre de dette — les obligations manquantes", () => {
     );
     expect(matrice).toEqual({
       //                        [cible, hors cible]
-      libre: [0, 0],
+      // [0, 0] → [13, 0] le 2026-10-16 : lecture des chapitres de types (titre II,
+      // et PU 6 au livre III), 0 + 13 − 0 ; voir le test des « libres ».
+      libre: [13, 0],
       // 9 → 6 le 2026-09-21 : les trois de la chaleur intense (`R. 4463-4`,
       // `-5`, `-7`) sont encodées sur la page « Quand ça arrive ».
       // 6 → 0 le même jour : cinq relues à la source et encodées ; la sixième,
@@ -78,7 +103,10 @@ describe("registre de dette — les obligations manquantes", () => {
       // [11, 0] → [7, 0] le 2026-10-13 (décision de la propriétaire) : `GZ 13`,
       // `GZ 14`, `AS 10` et l'arrêté 2018-02-23 art. 26 § 3 annoncés
       // (`non_couvert`). Restent HORS CADRE `CO 61`, `GC 18`.
-      categorie_equipement: [7, 0],
+      // [7, 0] → [11, 0] le 2026-10-16 : les gaz médicaux, `J 33`, `U 62`,
+      // `U 64` (titre II) et `PU 5` (livre III), 7 + 4 − 0 ; à évaluer, rien
+      // d'encodé.
+      categorie_equipement: [11, 0],
       // 4 → 1 le 2026-09-27 (C45) : `R. 4227-23`, `R. 4227-24` et l'art. 8 de
       // l'arrêté du 10 septembre 2021 passent `non_couvert`, annoncés.
       // [1, 2] → [3, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : `MS 71`, arrêté 1986 art. 60.
@@ -125,7 +153,10 @@ describe("registre de dette — les obligations manquantes", () => {
       // [4, 0] → [5, 0] le 2026-10-15 : « M 40 § 3 e) — contrat d'entretien
       // des machines de nettoyage à sec », HORS CADRE (décision de la
       // propriétaire, une condition d'activité).
-      a_trancher: [5, 0],
+      // [5, 0] → [6, 0] le 2026-10-16 : `X 25`, l'interdiction de fumer
+      // signalée en salle de sport couverte, contre l'exclusion
+      // `risque_specialise` (« équipements sportifs »), à évaluer.
+      a_trancher: [6, 0],
       // [0, 3] → [0, 0] le 2026-10-12 : les trois hôtels, voir `a_trancher`.
       perimetre: [0, 0],
     });
@@ -152,8 +183,13 @@ describe("registre de dette — les obligations manquantes", () => {
     // (§ 7). 20 + 1 − 0 = 21.
     // 21 → 22 le 2026-10-15 : le contrat d'entretien de `M 40 § 3 e)`, hors
     // cadre (§ 7), une condition d'activité. 21 + 1 − 0 = 22.
-    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(22);
-    expect(manquantes.length).toBe(22);
+    // 22 → 40 le 2026-10-16 : 22 + 18 − 0 — seize articles du titre II
+    // (`P 21`, `R 33`, `S 15`, `T 52`, `U 41`, `U 43`, `U 47`, `U 48`, `U 62`,
+    // `U 64`, `X 25`, `Y 19`, `J 33`, `J 35`, `J 39`, `J 40`) et deux du
+    // livre III (`PU 5`, `PU 6`). Toutes dans la cible ; aucune hors cadre :
+    // elles sont au § 9 (à évaluer), pas au § 7.
+    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(40);
+    expect(manquantes.length).toBe(40);
   });
 });
 

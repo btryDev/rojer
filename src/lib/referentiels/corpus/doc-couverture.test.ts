@@ -44,15 +44,32 @@ const HORS_CADRE = "## 7. Hors cadre — couvert par la clause générale des me
  */
 const A_EVALUER = "## 8. Classés le 2026-10-13 — entrés dans la cible le 2026-10-12";
 
+/**
+ * 2026-10-16 — les manques nés de la lecture des chapitres de types d'ERP,
+ * OUVERTS : ni encodés, ni annoncés, ni hors cadre, en attente de la décision
+ * de la propriétaire. Même mécanisme que le § 8 du 2026-10-12 : le § 7 et
+ * cette section, disjoints, font ensemble les `obligation_manquante` de la
+ * cible. Quand la propriétaire aura tranché, chaque ligne sort d'ici.
+ */
+const OUVERTS_1016 = "## 9. À évaluer — lecture des chapitres de types d'ERP du 2026-10-16";
+
 /** Le document sans ses sections hors cadre et à évaluer, et chacune seule. */
-function decoupe(doc: string): { avant: string; horsCadre: string; aEvaluer: string } {
+function decoupe(doc: string): {
+  avant: string;
+  horsCadre: string;
+  aEvaluer: string;
+  ouverts: string;
+} {
   const i = doc.indexOf(HORS_CADRE);
   const j = doc.indexOf(A_EVALUER);
-  const finHorsCadre = j < 0 ? doc.length : j;
+  const k = doc.indexOf(OUVERTS_1016);
+  const finHorsCadre = j >= 0 ? j : k >= 0 ? k : doc.length;
+  const finAEvaluer = k < 0 ? doc.length : k;
   return {
     avant: i < 0 ? doc : doc.slice(0, i),
     horsCadre: i < 0 ? "" : doc.slice(i, finHorsCadre),
-    aEvaluer: j < 0 ? "" : doc.slice(j),
+    aEvaluer: j < 0 ? "" : doc.slice(j, finAEvaluer),
+    ouverts: k < 0 ? "" : doc.slice(k),
   };
 }
 
@@ -151,14 +168,20 @@ describe(`${CHEMIN} — la liste ne se périme pas en silence`, () => {
     // doivent diverger dans aucun sens : un article encodé ou annoncé depuis
     // qui y resterait promettrait une exclusion qui n'est plus ; un manque
     // de la cible entré depuis et absent d'ici ne serait couvert par rien.
-    const { horsCadre } = decoupe(documentCouverture());
+    // [2026-10-16 : le § 9 rouvre le mécanisme du 2026-10-12 — dix-huit
+    // manques de la lecture des chapitres de types, non classés. Le § 7 et le
+    // § 9, DISJOINTS, font ensemble les manques de la cible.]
+    const { horsCadre, ouverts } = decoupe(documentCouverture());
     expect(horsCadre, `${CHEMIN} n'a plus de section « ${HORS_CADRE} ».`).not.toBe("");
     const duCorpus = CORPUS.flatMap((c) =>
       c.articles.flatMap((a) =>
         a.statut === "obligation_manquante" && a.toucheLaCible ? [a.ref] : [],
       ),
     ).sort();
-    expect(refsDuTableau(horsCadre).sort()).toEqual(duCorpus);
+    const auSeptieme = refsDuTableau(horsCadre);
+    const auNeuvieme = refsDuTableau(ouverts);
+    expect(auSeptieme.filter((r) => auNeuvieme.includes(r))).toEqual([]);
+    expect([...auSeptieme, ...auNeuvieme].sort()).toEqual(duCorpus);
   });
 
   it("2026-10-13 — chaque ligne du § 8 a reçu un sort que le corpus porte", () => {

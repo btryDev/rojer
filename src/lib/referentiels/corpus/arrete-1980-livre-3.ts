@@ -27,6 +27,19 @@
 // retenus (PE 33, PE 35), quatre sont `hors_perimetre` / `construction`
 // (PE 28 à PE 31), trois sont `sans_objet` (PE 32, PE 34, PE 36) comme PE 24
 // et PE 26 le sont depuis le premier jour.
+//
+// LES CHAPITRES « AVEC HÉBERGEMENT » POUR J, U ET R, RELUS LE 2026-10-16 (API
+// PISTE, bac à sable). La table des matières du livre III n'en a que deux :
+// le chapitre III (locaux réservés au sommeil, PE 28 à PE 37), commun à tous
+// les types, et le chapitre V (petits établissements de soins, PU 1 à PU 6).
+// IL N'Y A PAS DE CHAPITRE PROPRE À J NI À R : les six chapitres du livre III
+// sont I (dispositions générales), II (règles techniques), III (sommeil), IV
+// (hôtels, PO), V (soins, PU), VI (établissements sportifs, PX). Une structure
+// pour personnes âgées ou un internat de 5ᵉ catégorie relèvent donc des
+// chapitres I à III. PE 28 à PE 36 : versions inchangées, classement inchangé.
+// PU 1 à PU 6 : le renvoi de PU 5 à U 51 – U 64, « non dépouillé » depuis le
+// 2026-08-26, est ouvert ; les six articles quittent `non_couvert` et sont
+// reclassés un par un (l'ancien motif est rayé dans `historique`).
 
 import type { Corpus } from "./types";
 
@@ -391,9 +404,11 @@ export const CORPUS_PE: Corpus = {
     {
       ref: "PE 28",
       intitule: "Structure et planchers coupe-feu",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020374788",
       versionEnVigueur: "1990-08-27",
-      luLe: "2026-08-26",
-      lecture: "agent_verbatim",
+      // ~~luLe: "2026-08-26", lecture: "agent_verbatim"~~ — relu le 2026-10-16 par l'API PISTE en BAC À SABLE, avec les chapitres « avec hébergement » demandés pour J, U et R : LEGIARTI000020374788, version en vigueur depuis le 1990-08-27, celle déjà notée. Le classement ne change pas.
+      luLe: "2026-10-16",
+      lecture: "api_legifrance",
       statut: "hors_perimetre",
       exclusion: "construction",
       motif:
@@ -402,9 +417,11 @@ export const CORPUS_PE: Corpus = {
     {
       ref: "PE 29",
       intitule: "Cloisons et portes des locaux réservés au sommeil",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024756257",
       versionEnVigueur: "1990-08-27",
-      luLe: "2026-08-26",
-      lecture: "agent_verbatim",
+      // ~~luLe: "2026-08-26", lecture: "agent_verbatim"~~ — relu le 2026-10-16 par l'API PISTE en BAC À SABLE, avec les chapitres « avec hébergement » demandés pour J, U et R : LEGIARTI000024756257, version en vigueur depuis le 1990-08-27, celle déjà notée. Le classement ne change pas.
+      luLe: "2026-10-16",
+      lecture: "api_legifrance",
       statut: "hors_perimetre",
       exclusion: "construction",
       motif:
@@ -413,9 +430,11 @@ export const CORPUS_PE: Corpus = {
     {
       ref: "PE 30",
       intitule: "Couloirs",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024769415",
       versionEnVigueur: "2002-04-07",
-      luLe: "2026-08-26",
-      lecture: "agent_verbatim",
+      // ~~luLe: "2026-08-26", lecture: "agent_verbatim"~~ — relu le 2026-10-16 par l'API PISTE en BAC À SABLE, avec les chapitres « avec hébergement » demandés pour J, U et R : LEGIARTI000024769415, version en vigueur depuis le 2002-04-07, celle déjà notée. Le classement ne change pas.
+      luLe: "2026-10-16",
+      lecture: "api_legifrance",
       statut: "hors_perimetre",
       exclusion: "construction",
       motif:
@@ -424,9 +443,11 @@ export const CORPUS_PE: Corpus = {
     {
       ref: "PE 31",
       intitule: "Cheminées à foyer ouvert",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024756305",
       versionEnVigueur: "1990-08-27",
-      luLe: "2026-08-26",
-      lecture: "agent_verbatim",
+      // ~~luLe: "2026-08-26", lecture: "agent_verbatim"~~ — relu le 2026-10-16 par l'API PISTE en BAC À SABLE, avec les chapitres « avec hébergement » demandés pour J, U et R : LEGIARTI000024756305, version en vigueur depuis le 1990-08-27, celle déjà notée. Le classement ne change pas.
+      luLe: "2026-10-16",
+      lecture: "api_legifrance",
       statut: "hors_perimetre",
       exclusion: "construction",
       motif:
@@ -435,9 +456,11 @@ export const CORPUS_PE: Corpus = {
     {
       ref: "PE 32",
       intitule: "Détection automatique d'incendie et système d'alarme",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024770703",
       versionEnVigueur: "2011-10-30",
-      luLe: "2026-09-01",
-      lecture: "agent_verbatim",
+      // ~~luLe: "2026-09-01", lecture: "agent_verbatim"~~ — relu le 2026-10-16 par l'API PISTE en BAC À SABLE, avec les chapitres « avec hébergement » demandés pour J, U et R : LEGIARTI000024770703, version en vigueur depuis le 2011-10-30, celle déjà notée. Le classement ne change pas.
+      luLe: "2026-10-16",
+      lecture: "api_legifrance",
       citationCle:
         "les établissements doivent être équipés d'un système de sécurité incendie de catégorie A tel que défini à l'article MS 53 et conforme aux dispositions des articles MS 58 et MS 59",
       statut: "sans_objet",
@@ -447,9 +470,11 @@ export const CORPUS_PE: Corpus = {
     {
       ref: "PE 33",
       intitule: "Registre de sécurité, consignes",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024769472",
       versionEnVigueur: "2011-11-04",
-      luLe: "2026-09-01",
-      lecture: "agent_verbatim",
+      // ~~luLe: "2026-09-01", lecture: "agent_verbatim"~~ — relu le 2026-10-16 par l'API PISTE en BAC À SABLE, avec les chapitres « avec hébergement » demandés pour J, U et R : LEGIARTI000024769472, version en vigueur depuis le 2011-11-04, celle déjà notée. Le classement ne change pas.
+      luLe: "2026-10-16",
+      lecture: "api_legifrance",
       citationCle:
         "Une consigne d'incendie doit être affichée dans chaque chambre ; elle est rédigée en français et complétée par une bande dessinée illustrant les consignes.",
       statut: "retenu",
@@ -460,11 +485,14 @@ export const CORPUS_PE: Corpus = {
     {
       ref: "PE 34",
       intitule: "Signalisations",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024769510",
       versionEnVigueur: "2003-05-07",
-      luLe: "2026-09-01",
-      lecture: "agent_verbatim",
+      // ~~luLe: "2026-09-01", lecture: "agent_verbatim"~~ — relu le 2026-10-16 par l'API PISTE en BAC À SABLE, avec les chapitres « avec hébergement » demandés pour J, U et R : LEGIARTI000024769510, version en vigueur depuis le 2003-05-07, celle déjà notée. Le classement ne change pas.
+      luLe: "2026-10-16",
+      lecture: "api_legifrance",
       citationCle:
-        "Les portes, les escaliers et les différents cheminements qui conduisent à l'extérieur de l'établissement doivent être pourvus de symboles de sécurité, visibles de jour comme de nuit, conformes aux dispositions de la norme NF X 08-003.",
+        // 2026-10-16 : la citation de l'agent s'arrêtait sur « NF X 08-003. » ; le texte poursuit la phrase. Recopiée de l'API.
+        "§ 1. Les portes, les escaliers et les différents cheminements qui conduisent à l'extérieur de l'établissement doivent être pourvus de symboles de sécurité, visibles de jour comme de nuit, conformes aux dispositions de la norme NF X 08-003 relative aux couleurs et signaux de sécurité, à l'exception des signaux normalisés pour sortie et issue de secours n°s 50041, 50042 et 50044 dont l'utilisation est interdite dans les établissements recevant du public.",
       statut: "sans_objet",
       motif:
         "Règle d'équipement du bâtiment, sans récurrence : les dégagements sont POURVUS de symboles de sécurité, et les portes que le public ne doit pas emprunter en cas d'incendie sont fermées à clé ou munies d'un ferme-porte. Même famille que PE 24, PE 26 et PE 32. La ligne de partage avec PE 35, retenu, est écrite dans les `notesInternes` de `incendie-erp-5-sommeil-plans-affiches` : PE 34 fait ÉQUIPER l'ouvrage, PE 35 fait PRODUIRE ET AFFICHER un écrit par l'exploitant. RECLASSÉ LE 2026-09-01 (lot A11). L'article était `non_couvert`, au motif que « l'attribut « locaux à sommeil » n'existe pas en base ». `Etablissement.comporteLocauxSommeilPublic` existe désormais, et le motif avec lui est devenu faux : ce qui empêche d'encoder cet article n'a jamais été l'attribut, c'est ce que l'article impose. Le chapitre III a été relu à la source ce jour, article par article, avant de reclasser.",
@@ -472,9 +500,11 @@ export const CORPUS_PE: Corpus = {
     {
       ref: "PE 35",
       intitule: "Affichages",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024758405",
       versionEnVigueur: "1990-08-27",
-      luLe: "2026-09-01",
-      lecture: "agent_verbatim",
+      // ~~luLe: "2026-09-01", lecture: "agent_verbatim"~~ — relu le 2026-10-16 par l'API PISTE en BAC À SABLE, avec les chapitres « avec hébergement » demandés pour J, U et R : LEGIARTI000024758405, version en vigueur depuis le 1990-08-27, celle déjà notée. Le classement ne change pas.
+      luLe: "2026-10-16",
+      lecture: "api_legifrance",
       citationCle:
         "Un plan sommaire de repérage de chaque chambre par rapport aux dégagements à utiliser en cas d'incendie doit être fixé dans chaque chambre.",
       statut: "retenu",
@@ -485,9 +515,11 @@ export const CORPUS_PE: Corpus = {
     {
       ref: "PE 36",
       intitule: "Éclairage de sécurité",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024770568",
       versionEnVigueur: "2010-05-16",
-      luLe: "2026-08-26",
-      lecture: "agent_verbatim",
+      // ~~luLe: "2026-08-26", lecture: "agent_verbatim"~~ — relu le 2026-10-16 par l'API PISTE en BAC À SABLE, avec les chapitres « avec hébergement » demandés pour J, U et R : LEGIARTI000024770568, version en vigueur depuis le 2010-05-16, celle déjà notée. Le classement ne change pas.
+      luLe: "2026-10-16",
+      lecture: "api_legifrance",
       statut: "sans_objet",
       motif:
         "Règle de dotation en éclairage de sécurité — blocs autonomes ou source centralisée, éclairage d'évacuation renforcé dans les escaliers et circulations. Aucune périodicité : c'est le pendant exact de PE 24, classé `sans_objet` pour la même raison dès le premier dépouillement. Les vérifications de l'éclairage de sécurité, elles, sont portées par le référentiel et fondées ailleurs. RECLASSÉ LE 2026-09-01 (lot A11). L'article était `non_couvert`, au motif que « l'attribut « locaux à sommeil » n'existe pas en base ». `Etablissement.comporteLocauxSommeilPublic` existe désormais, et le motif avec lui est devenu faux : ce qui empêche d'encoder cet article n'a jamais été l'attribut, c'est ce que l'article impose. Le chapitre III a été relu à la source ce jour, article par article, avant de reclasser.",
@@ -734,84 +766,110 @@ export const CORPUS_PE: Corpus = {
     {
       ref: "PU 1",
       intitule: "Généralités",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024776408",
       versionEnVigueur: "2005-04-22",
-      luLe: "2026-08-26",
-      lecture: "agent_verbatim",
-      statut: "non_couvert",
-      motif:
-        "Chapitre V — petits établissements de soins (type U). Ces articles n'imposent aucune échéance récurrente à l'exploitant : ce sont des règles de construction et d'équipement, plus un renvoi aux articles U 51 à U 64 sur les gaz médicaux, qui n'a pas été dépouillé. Le manque de couverture porte donc surtout sur ce renvoi.",
-      declareA:
-        "docs/couverture-declaree-du-produit.md — NOTE INTERNE, pas une annonce à l'exploitant. Cet article a été nommé à l'écran, sur le tableau de bord de chaque établissement, du 2026-08-28 au soir du même jour ; la surface a été retirée par décision produit — déclarer ce que le produit ne couvre pas suppose d'avoir tranché ce qu'il couvre. Le document dit l'histoire et ce qu'il faudrait pour rendre l'annonce propre au dossier : un rattachement article → `Etablissement.typeErp`.",
+      modifiePar: { texte: "Arrêté du 10 décembre 2004 (V)" },
+      // ~~luLe: "2026-08-26", lecture: "agent_verbatim"~~ — relu le 2026-10-16 par l'API PISTE en BAC À SABLE : LEGIARTI000024776408, en vigueur depuis le 2005-04-22.
+      luLe: "2026-10-16",
+      lecture: "api_legifrance",
+      citationCle: "Les prescriptions définies dans le présent chapitre sont applicables aux établissements à construire ou à modifier en complément des mesures définies dans les chapitres Ier, II et III.",
+      historique: "~~`non_couvert`, lu le 2026-08-26 par un agent (`agent_verbatim`), motif commun aux six articles : « Chapitre V — petits établissements de soins (type U). Ces articles n'imposent aucune échéance récurrente à l'exploitant : ce sont des règles de construction et d'équipement, plus un renvoi aux articles U 51 à U 64 sur les gaz médicaux, qui n'a pas été dépouillé. Le manque de couverture porte donc surtout sur ce renvoi. »~~ [2026-10-16 : relu par l'API Légifrance (PISTE, bac à sable, égalité avec la production non vérifiée) avec les chapitres de types ; le renvoi de PU 5 est OUVERT — U 51 à U 64 sont lus et classés au corpus `arrete-1980-livre-2-titre-2` —, et chaque article est reclassé pour lui-même. Le statut commun disait « manque de couverture » pour quatre articles qui n'imposent qu'une construction ou une dotation.]",
+      statut: "sans_objet",
+      motif: "Champ du chapitre V : il ne vaut que pour les petits établissements de soins (type U de 5ᵉ catégorie) « à construire ou à modifier », en complément des chapitres I à III (dont le chapitre III, locaux à sommeil). Il ne prescrit rien ; il borne PU 5, et c'est ce qui borne la proposition qui en découle.",
     },
     {
       ref: "PU 2",
       intitule: "Structures",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024776463",
       versionEnVigueur: "2005-04-22",
-      luLe: "2026-08-26",
-      lecture: "agent_verbatim",
-      statut: "non_couvert",
-      motif:
-        "Chapitre V — petits établissements de soins (type U). Ces articles n'imposent aucune échéance récurrente à l'exploitant : ce sont des règles de construction et d'équipement, plus un renvoi aux articles U 51 à U 64 sur les gaz médicaux, qui n'a pas été dépouillé. Le manque de couverture porte donc surtout sur ce renvoi.",
-      declareA:
-        "docs/couverture-declaree-du-produit.md — NOTE INTERNE, pas une annonce à l'exploitant. Cet article a été nommé à l'écran, sur le tableau de bord de chaque établissement, du 2026-08-28 au soir du même jour ; la surface a été retirée par décision produit — déclarer ce que le produit ne couvre pas suppose d'avoir tranché ce qu'il couvre. Le document dit l'histoire et ce qu'il faudrait pour rendre l'annonce propre au dossier : un rattachement article → `Etablissement.typeErp`.",
+      modifiePar: { texte: "Arrêté du 10 décembre 2004 (V)" },
+      // ~~luLe: "2026-08-26", lecture: "agent_verbatim"~~ — relu le 2026-10-16 par l'API PISTE en BAC À SABLE : LEGIARTI000024776463, en vigueur depuis le 2005-04-22.
+      luLe: "2026-10-16",
+      lecture: "api_legifrance",
+      citationCle: "En aggravation des dispositions de l'article PE 28, les structures des établissements situés à rez-de-chaussée doivent être stables au feu de degré une demi-heure ou R. 30.",
+      historique: "~~`non_couvert`, lu le 2026-08-26 par un agent (`agent_verbatim`), motif commun aux six articles : « Chapitre V — petits établissements de soins (type U). Ces articles n'imposent aucune échéance récurrente à l'exploitant : ce sont des règles de construction et d'équipement, plus un renvoi aux articles U 51 à U 64 sur les gaz médicaux, qui n'a pas été dépouillé. Le manque de couverture porte donc surtout sur ce renvoi. »~~ [2026-10-16 : relu par l'API Légifrance (PISTE, bac à sable, égalité avec la production non vérifiée) avec les chapitres de types ; le renvoi de PU 5 est OUVERT — U 51 à U 64 sont lus et classés au corpus `arrete-1980-livre-2-titre-2` —, et chaque article est reclassé pour lui-même. Le statut commun disait « manque de couverture » pour quatre articles qui n'imposent qu'une construction ou une dotation.]",
+      statut: "hors_perimetre",
+      exclusion: "construction",
+      motif: "Règle de construction de l'ouvrage, en aggravation du chapitre II (PE 28, PE 11) : l'exploitant ne la refait ni ne la constate à date.",
     },
     {
       ref: "PU 3",
       intitule: "Escaliers",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024776468",
       versionEnVigueur: "2005-04-22",
-      luLe: "2026-08-26",
-      lecture: "agent_verbatim",
-      statut: "non_couvert",
-      motif:
-        "Chapitre V — petits établissements de soins (type U). Ces articles n'imposent aucune échéance récurrente à l'exploitant : ce sont des règles de construction et d'équipement, plus un renvoi aux articles U 51 à U 64 sur les gaz médicaux, qui n'a pas été dépouillé. Le manque de couverture porte donc surtout sur ce renvoi.",
-      declareA:
-        "docs/couverture-declaree-du-produit.md — NOTE INTERNE, pas une annonce à l'exploitant. Cet article a été nommé à l'écran, sur le tableau de bord de chaque établissement, du 2026-08-28 au soir du même jour ; la surface a été retirée par décision produit — déclarer ce que le produit ne couvre pas suppose d'avoir tranché ce qu'il couvre. Le document dit l'histoire et ce qu'il faudrait pour rendre l'annonce propre au dossier : un rattachement article → `Etablissement.typeErp`.",
+      modifiePar: { texte: "Arrêté du 10 décembre 2004 (V)" },
+      // ~~luLe: "2026-08-26", lecture: "agent_verbatim"~~ — relu le 2026-10-16 par l'API PISTE en BAC À SABLE : LEGIARTI000024776468, en vigueur depuis le 2005-04-22.
+      luLe: "2026-10-16",
+      lecture: "api_legifrance",
+      citationCle: "En aggravation des dispositions de l'article PE 11, les escaliers des établissements comportant des locaux à sommeil doivent avoir 1,40 mètre de largeur.",
+      historique: "~~`non_couvert`, lu le 2026-08-26 par un agent (`agent_verbatim`), motif commun aux six articles : « Chapitre V — petits établissements de soins (type U). Ces articles n'imposent aucune échéance récurrente à l'exploitant : ce sont des règles de construction et d'équipement, plus un renvoi aux articles U 51 à U 64 sur les gaz médicaux, qui n'a pas été dépouillé. Le manque de couverture porte donc surtout sur ce renvoi. »~~ [2026-10-16 : relu par l'API Légifrance (PISTE, bac à sable, égalité avec la production non vérifiée) avec les chapitres de types ; le renvoi de PU 5 est OUVERT — U 51 à U 64 sont lus et classés au corpus `arrete-1980-livre-2-titre-2` —, et chaque article est reclassé pour lui-même. Le statut commun disait « manque de couverture » pour quatre articles qui n'imposent qu'une construction ou une dotation.]",
+      statut: "hors_perimetre",
+      exclusion: "construction",
+      motif: "Règle de construction de l'ouvrage, en aggravation du chapitre II (PE 28, PE 11) : l'exploitant ne la refait ni ne la constate à date.",
     },
     {
       ref: "PU 4",
       intitule: "Fonctionnement des portes",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024776472",
       versionEnVigueur: "2005-04-22",
-      luLe: "2026-08-26",
-      lecture: "agent_verbatim",
-      statut: "non_couvert",
-      motif:
-        "Chapitre V — petits établissements de soins (type U). Ces articles n'imposent aucune échéance récurrente à l'exploitant : ce sont des règles de construction et d'équipement, plus un renvoi aux articles U 51 à U 64 sur les gaz médicaux, qui n'a pas été dépouillé. Le manque de couverture porte donc surtout sur ce renvoi.",
-      declareA:
-        "docs/couverture-declaree-du-produit.md — NOTE INTERNE, pas une annonce à l'exploitant. Cet article a été nommé à l'écran, sur le tableau de bord de chaque établissement, du 2026-08-28 au soir du même jour ; la surface a été retirée par décision produit — déclarer ce que le produit ne couvre pas suppose d'avoir tranché ce qu'il couvre. Le document dit l'histoire et ce qu'il faudrait pour rendre l'annonce propre au dossier : un rattachement article → `Etablissement.typeErp`.",
+      modifiePar: { texte: "Arrêté du 10 décembre 2004 (V)" },
+      // ~~luLe: "2026-08-26", lecture: "agent_verbatim"~~ — relu le 2026-10-16 par l'API PISTE en BAC À SABLE : LEGIARTI000024776472, en vigueur depuis le 2005-04-22.
+      luLe: "2026-10-16",
+      lecture: "api_legifrance",
+      citationCle: "1. Dans certains établissements réservés aux enfants et aux adolescents ou dans les centres spécialisés (centre de psychiatrie ou de traitement des toxicomanes, par exemple), les locaux ou les unités de soins peuvent être maintenus exceptionnellement fermés dans les conditions fixées à l'article U 21. 2. En dérogation à l'article PE 29 (alinéa 3), les portes des locaux réservés au sommeil peuvent ne pas être munies de ferme-porte.",
+      historique: "~~`non_couvert`, lu le 2026-08-26 par un agent (`agent_verbatim`), motif commun aux six articles : « Chapitre V — petits établissements de soins (type U). Ces articles n'imposent aucune échéance récurrente à l'exploitant : ce sont des règles de construction et d'équipement, plus un renvoi aux articles U 51 à U 64 sur les gaz médicaux, qui n'a pas été dépouillé. Le manque de couverture porte donc surtout sur ce renvoi. »~~ [2026-10-16 : relu par l'API Légifrance (PISTE, bac à sable, égalité avec la production non vérifiée) avec les chapitres de types ; le renvoi de PU 5 est OUVERT — U 51 à U 64 sont lus et classés au corpus `arrete-1980-livre-2-titre-2` —, et chaque article est reclassé pour lui-même. Le statut commun disait « manque de couverture » pour quatre articles qui n'imposent qu'une construction ou une dotation.]",
+      statut: "hors_perimetre",
+      exclusion: "construction",
+      motif: "Verrouillage exceptionnel des unités de soins aux conditions de U 21, et dérogation au ferme-porte des chambres (PE 29) : des conditions d'aménagement, ligne de partage 1. U 21 est classé au corpus du titre II.",
     },
     {
       ref: "PU 5",
       intitule: "Conditions d'installation des gaz médicaux",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024776480",
       versionEnVigueur: "2005-04-22",
-      luLe: "2026-08-26",
-      lecture: "agent_verbatim",
-      statut: "non_couvert",
-      motif:
-        "Chapitre V — petits établissements de soins (type U). Ces articles n'imposent aucune échéance récurrente à l'exploitant : ce sont des règles de construction et d'équipement, plus un renvoi aux articles U 51 à U 64 sur les gaz médicaux, qui n'a pas été dépouillé. Le manque de couverture porte donc surtout sur ce renvoi.",
-      declareA:
-        "docs/couverture-declaree-du-produit.md — NOTE INTERNE, pas une annonce à l'exploitant. Cet article a été nommé à l'écran, sur le tableau de bord de chaque établissement, du 2026-08-28 au soir du même jour ; la surface a été retirée par décision produit — déclarer ce que le produit ne couvre pas suppose d'avoir tranché ce qu'il couvre. Le document dit l'histoire et ce qu'il faudrait pour rendre l'annonce propre au dossier : un rattachement article → `Etablissement.typeErp`.",
+      modifiePar: { texte: "Arrêté du 10 décembre 2004 (V)" },
+      // ~~luLe: "2026-08-26", lecture: "agent_verbatim"~~ — relu le 2026-10-16 par l'API PISTE en BAC À SABLE : LEGIARTI000024776480, en vigueur depuis le 2005-04-22.
+      luLe: "2026-10-16",
+      lecture: "api_legifrance",
+      citationCle: "Les articles U 51 à U 64 du règlement de sécurité des établissements recevant du public sont applicables.",
+      historique: "~~`non_couvert`, lu le 2026-08-26 par un agent (`agent_verbatim`), motif commun aux six articles : « Chapitre V — petits établissements de soins (type U). Ces articles n'imposent aucune échéance récurrente à l'exploitant : ce sont des règles de construction et d'équipement, plus un renvoi aux articles U 51 à U 64 sur les gaz médicaux, qui n'a pas été dépouillé. Le manque de couverture porte donc surtout sur ce renvoi. »~~ [2026-10-16 : relu par l'API Légifrance (PISTE, bac à sable, égalité avec la production non vérifiée) avec les chapitres de types ; le renvoi de PU 5 est OUVERT — U 51 à U 64 sont lus et classés au corpus `arrete-1980-livre-2-titre-2` —, et chaque article est reclassé pour lui-même. Le statut commun disait « manque de couverture » pour quatre articles qui n'imposent qu'une construction ou une dotation.]",
+      statut: "obligation_manquante",
+      cause: "categorie_equipement",
+      toucheLaCible: true,
+      motif: "RENVOI EXPRÈS au livre II (au sens de PE 1 § 1) : la section des gaz médicaux du type U s'applique aux petits établissements de soins de 5ᵉ catégorie « à construire ou à modifier » (PU 1). Elle porte deux actes de l'exploitant : la vérification ANNUELLE écrite des stockages et installations de distribution (U 64 § 2) et les consignes « rappelées périodiquement » au personnel, affichées près des magasins et des centrales (U 62, défaut annuel ADR-039). Les autres articles (U 51 à U 61, U 63) sont de l'installation et de l'usage, classés au corpus du titre II. TPE CONCERNÉE : par construction — un établissement de soins sous les seuils de U 1 (moins de 20 lits, moins de 100 personnes simultanées). Proposition : la ligne d'équipement annuelle et la ligne de consignes proposées pour U 64 et U 62 (types J et U, catégories 1 à 4), étendues à U en 5ᵉ catégorie ; la borne « à construire ou à modifier » ne se lit pas dans le modèle (aucune date de permis ni de travaux), et l'appliquer à tout U de 5ᵉ sur-appliquerait à l'établissement ancien non modifié — sens d'erreur à trancher avec la ligne.",
+      bloquePar: "Aucune catégorie d'équipement ne désigne une installation ou un stockage de gaz médicaux ; et la borne « à construire ou à modifier » de PU 1 n'a pas d'attribut.",
     },
     {
       ref: "PU 6",
       intitule: "Détection automatique d'incendie et système d'alarme",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024776491",
       versionEnVigueur: "2005-04-22",
-      luLe: "2026-08-26",
-      lecture: "agent_verbatim",
-      statut: "non_couvert",
-      motif:
-        "Chapitre V — petits établissements de soins (type U). Ces articles n'imposent aucune échéance récurrente à l'exploitant : ce sont des règles de construction et d'équipement, plus un renvoi aux articles U 51 à U 64 sur les gaz médicaux, qui n'a pas été dépouillé. Le manque de couverture porte donc surtout sur ce renvoi.",
-      declareA:
-        "docs/couverture-declaree-du-produit.md — NOTE INTERNE, pas une annonce à l'exploitant. Cet article a été nommé à l'écran, sur le tableau de bord de chaque établissement, du 2026-08-28 au soir du même jour ; la surface a été retirée par décision produit — déclarer ce que le produit ne couvre pas suppose d'avoir tranché ce qu'il couvre. Le document dit l'histoire et ce qu'il faudrait pour rendre l'annonce propre au dossier : un rattachement article → `Etablissement.typeErp`.",
+      modifiePar: { texte: "Arrêté du 10 décembre 2004 (V)" },
+      // ~~luLe: "2026-08-26", lecture: "agent_verbatim"~~ — relu le 2026-10-16 par l'API PISTE en BAC À SABLE : LEGIARTI000024776491, en vigueur depuis le 2005-04-22.
+      luLe: "2026-10-16",
+      lecture: "api_legifrance",
+      citationCle: "L'alarme qui peut être générale ou générale sélective, doit pouvoir être reçue de façon permanente par le personnel soignant qui aura été préalablement formé à la mise en œuvre des moyens de défense contre l'incendie et à l'alerte des sapeurs-pompiers.",
+      historique: "~~`non_couvert`, lu le 2026-08-26 par un agent (`agent_verbatim`), motif commun aux six articles : « Chapitre V — petits établissements de soins (type U). Ces articles n'imposent aucune échéance récurrente à l'exploitant : ce sont des règles de construction et d'équipement, plus un renvoi aux articles U 51 à U 64 sur les gaz médicaux, qui n'a pas été dépouillé. Le manque de couverture porte donc surtout sur ce renvoi. »~~ [2026-10-16 : relu par l'API Légifrance (PISTE, bac à sable, égalité avec la production non vérifiée) avec les chapitres de types ; le renvoi de PU 5 est OUVERT — U 51 à U 64 sont lus et classés au corpus `arrete-1980-livre-2-titre-2` —, et chaque article est reclassé pour lui-même. Le statut commun disait « manque de couverture » pour quatre articles qui n'imposent qu'une construction ou une dotation.]",
+      statut: "obligation_manquante",
+      cause: "libre",
+      toucheLaCible: true,
+      motif: "Détection dans tous les locaux et indicateurs d'action : DOTATION. Le seul acte : le personnel soignant « préalablement formé à la mise en œuvre des moyens de défense contre l'incendie et à l'alerte des sapeurs-pompiers ». C'est l'acte de PE 27 § 5 (« instruit sur les conduites à tenir en cas d'incendie et […] entraîné à la manœuvre des moyens de secours »), que `incendie-erp-5-instruction-personnel` sert déjà à tout ERP de 5ᵉ catégorie hors type O — le petit établissement de soins compris. Rien à créer : ajouter PU 6 en référence de contexte de cette ligne. Il ne vaut que pour les établissements avec locaux réservés au sommeil, à construire ou à modifier (PU 1).",
+      bloquePar: "Rien ne bloque : une référence à ajouter à une ligne existante. Lecture du 2026-10-16, rien n'est encodé.",
     },
     {
       ref: "PX 1",
       intitule: "Établissements sportifs — dispositions applicables",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024776628",
       versionEnVigueur: "2001-03-20",
-      luLe: "2026-08-26",
-      lecture: "agent_verbatim",
+      modifiePar: { texte: "Arrêté du 20 novembre 2000, v. init." },
+      // ~~luLe: "2026-08-26", lecture: "agent_verbatim"~~ — relu le 2026-10-16 par l'API PISTE en BAC À SABLE : LEGIARTI000024776628, en vigueur depuis le 2001-03-20.
+      luLe: "2026-10-16",
+      lecture: "api_legifrance",
+      citationCle:
+        "En complément des dispositions des chapitres Ier et II du présent livre, les dispositions techniques du chapitre XII, livre II, visant les établissements du premier groupe, sont applicables aux établissements du 2e groupe.",
       statut: "non_couvert",
       motif:
-        "Chapitre VI — établissements sportifs. Article de pur renvoi qui importe tout le chapitre XII du Livre II, non dépouillé. Les équipements sportifs figurent par ailleurs parmi les risques spécialisés que le produit déclare ne pas traiter.",
+        "Chapitre VI — établissements sportifs. Article de pur renvoi qui importe tout le chapitre XII du Livre II~~, non dépouillé~~ [2026-10-16 : le chapitre XII (type X) est lu en entier et classé au corpus `arrete-1980-livre-2-titre-2`. Ce que le renvoi importe en 5ᵉ catégorie : des règles de construction et de dotation, le traitement des eaux des piscines (exclusion `risque_specialise`), et un seul acte, l'interdiction de fumer rappelée par une signalisation (X 25), à évaluer — si c'est une « disposition technique » au sens du renvoi, elle vaut aussi pour la petite salle de sport]. Les équipements sportifs figurent par ailleurs parmi les risques spécialisés que le produit déclare ne pas traiter.",
       declareA:
         "docs/couverture-declaree-du-produit.md — NOTE INTERNE, pas une annonce à l'exploitant. Cet article a été nommé à l'écran, sur le tableau de bord de chaque établissement, du 2026-08-28 au soir du même jour ; la surface a été retirée par décision produit — déclarer ce que le produit ne couvre pas suppose d'avoir tranché ce qu'il couvre. Le document dit l'histoire et ce qu'il faudrait pour rendre l'annonce propre au dossier : un rattachement article → `Etablissement.typeErp`.",
     },

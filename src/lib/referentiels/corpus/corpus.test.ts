@@ -717,6 +717,14 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // CO 61 § 6 : inspection quinquennale de l'état de conservation d'une
       // tribune TÉLESCOPIQUE de plus d'un mètre, par un organisme accrédité.
       // Types X et L, hors des trois secteurs cibles.
+      // 2026-10-16 — lecture des chapitres « avec hébergement » pour J, U et R :
+      // le renvoi de PU 5 à U 51 – U 64 est ouvert. PU 5 porte la vérification
+      // annuelle des gaz médicaux (U 64) et ses consignes (U 62), sans catégorie
+      // d'équipement ; PU 6 le personnel soignant formé, acte de PE 27 § 5 déjà
+      // servi, dont il manque la référence. Rien n'est encodé : à évaluer
+      // (§ 9 de `docs/couverture-declaree-du-produit.md`).
+      "PU 5",
+      "PU 6",
       "CO 61",
       // AS 10 : l'annuelle des escaliers mécaniques et trottoirs roulants, par
       // personne ou organisme agréé, PLUS un examen des chaînes et crémaillères
@@ -749,6 +757,29 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // seul acte de M 40 § 3, classé à part et HORS CADRE (décision de la
       // propriétaire : « les conditions c'est pas nous »).
       "M 40 § 3 e) — contrat d'entretien des machines de nettoyage à sec",
+      // 2026-10-16 — lecture des chapitres P, R, S, T, U, V, X, Y, J du titre II
+      // (catégories 1 à 4). Seize actes que le référentiel ne porte pas, aucun
+      // encodé : dix à rattacher à une ligne existante ou à porter par une ligne
+      // bornée N1–N4 et au type (`libre`), trois sans catégorie d'équipement
+      // (les gaz médicaux), une décision de périmètre (`X 25`, salle de sport).
+      // À évaluer : § 9 de `docs/couverture-declaree-du-produit.md`, et le
+      // plan `propositions/lecture-chapitres-types-erp-2026-10-16.md`.
+      "P 21",
+      "R 33",
+      "S 15",
+      "T 52",
+      "U 41",
+      "U 43",
+      "U 47",
+      "U 48",
+      "U 62",
+      "U 64",
+      "X 25",
+      "Y 19",
+      "J 33",
+      "J 35",
+      "J 39",
+      "J 40",
       // R. 4323-24 A QUITTÉ CETTE LISTE LE 2026-09-04, et par la porte qu'il
       // annonçait lui-même. Il y était entré le 2026-09-02 avec un `bloquePar`
       // qui disait : « Rien de technique : la pièce est un document permanent
