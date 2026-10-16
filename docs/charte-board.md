@@ -137,6 +137,16 @@ Les valeurs sont des littéraux. L'échelle de fait :
 | `16px` | Champ de saisie |
 | `9999px` | Pastilles, boutons |
 
+**Exception, la pastille d'article (`LegalBadge`, 2026-10-16)** : une
+référence peut passer à la ligne (« R. 157-1, 1° (obligation de détenir…) »).
+Elle prend alors le rayon du bloc interne, `18px`, et s'aligne à gauche
+(`text-left`) — à `9999px`, un texte de plusieurs lignes devient une bulle
+ovale centrée (contrôle visuel du lot défibrillateur, 500 px). Sur une seule
+ligne (~26 px de haut), le navigateur ramène 18 px à la demi-hauteur : la
+forme reste celle d'une pastille. La variante papier (dette) garde
+`rounded-full` mais s'aligne aussi à gauche. Tenu par `LegalBadge.test.tsx` ;
+ne pas « réaligner » ce composant sur `.pastille-board`.
+
 Règle relevée pour les marques carrées : `borderRadius: Math.round(taille * 0.34)`.
 
 ### 1.7 Ombres — trois recettes, jamais une quatrième

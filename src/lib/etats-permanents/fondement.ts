@@ -57,9 +57,19 @@ export type FondementLigne = {
  * l'établissement ; la ligne reste une (pas de scission).
  */
 export type ContexteFondement = {
-  typeErp: TypeErp | null;
-  categorieErp: CategorieErp | null;
+  readonly typeErp: TypeErp | null;
+  readonly categorieErp: CategorieErp | null;
+  /**
+   * Marque : seul `contexteFondementDe` fabrique un contexte (revue du
+   * 2026-10-16). Le type est structurel — sans marque, l'établissement entier
+   * ou sa projection (`projeterEtablissement`, qui garde un type périmé après
+   * décochage d'« ERP ») passaient à sa place, tests et tsc au vert. Le défaut
+   * se fabrique à l'écriture, comme `SourceLegalBadge`.
+   */
+  readonly [MARQUE_CONTEXTE]: true;
 };
+
+declare const MARQUE_CONTEXTE: unique symbol;
 
 /**
  * Le contexte d'un établissement pour choisir l'article d'une ligne : son type
@@ -76,7 +86,7 @@ export function contexteFondementDe(e: {
   return {
     typeErp: e.estERP ? e.typeErp : null,
     categorieErp: e.estERP ? e.categorieErp : null,
-  };
+  } as ContexteFondement;
 }
 
 /** Le type dont un article est le chapitre (livre II, titre II), ou `null`. */

@@ -19,6 +19,11 @@ import {
 import { indexArticlesParRef } from "@/lib/referentiels/corpus";
 import { figureSurLEcranEnPlace } from "./regle";
 import { contexteFondementDe, fondementDe, referenceNommeLArticle } from "./fondement";
+import type { CategorieErp, TypeErp } from "@/lib/referentiels/types-communs";
+
+/** Un contexte d'ERP, fabriqué par la seule voie permise. */
+const ctx = (typeErp: TypeErp | null, categorieErp: CategorieErp | null) =>
+  contexteFondementDe({ estERP: typeErp !== null, typeErp, categorieErp });
 
 const SUR_L_ECRAN = obligationsConformite.filter(figureSurLEcranEnPlace);
 const INDEX = indexArticlesParRef();
@@ -111,7 +116,7 @@ describe("livre II, titre II — l'article affiché est celui du type de l'étab
     ["O", "O 18"],
     ["W", "W 13"],
   ] as const)("personnel désigné, type %s : %s", (type, article) => {
-    const f = fondementDe(PERSONNEL, { typeErp: type, categorieErp: "N3" })!;
+    const f = fondementDe(PERSONNEL, ctx(type, "N3"))!;
     expect(f.reference).toContain(`art. ${article}`);
     // Le texte montré est celui de cet article, au corpus.
     expect(f.extrait).toBe(INDEX.get(article)?.article.citationCle);
@@ -122,7 +127,7 @@ describe("livre II, titre II — l'article affiché est celui du type de l'étab
     ["O", "O 21"],
     ["W", "W 16"],
   ] as const)("interdiction de fumer, type %s : %s", (type, article) => {
-    const f = fondementDe(FUMER, { typeErp: type, categorieErp: "N4" })!;
+    const f = fondementDe(FUMER, ctx(type, "N4"))!;
     expect(f.reference).toContain(`art. ${article}`);
   });
 
@@ -131,13 +136,13 @@ describe("livre II, titre II — l'article affiché est celui du type de l'étab
   });
 
   it("N 20 en complément de la consigne, pour un restaurant N1–N4 seulement", () => {
-    const n3 = fondementDe(CONSIGNE, { typeErp: "N", categorieErp: "N3" })!;
+    const n3 = fondementDe(CONSIGNE, ctx("N", "N3"))!;
     expect(n3.reference).toBe(CONSIGNE.referencesLegales[0].reference);
     expect(n3.complement?.reference).toContain("art. N 20");
     expect(n3.complement?.extrait).toBe(INDEX.get("N 20")?.article.citationCle);
-    expect(fondementDe(CONSIGNE, { typeErp: "N", categorieErp: "N5" })!.complement).toBeUndefined();
-    expect(fondementDe(CONSIGNE, { typeErp: "M", categorieErp: "N3" })!.complement).toBeUndefined();
-    expect(fondementDe(CONSIGNE, { typeErp: null, categorieErp: null })!.complement).toBeUndefined();
+    expect(fondementDe(CONSIGNE, ctx("N", "N5"))!.complement).toBeUndefined();
+    expect(fondementDe(CONSIGNE, ctx("M", "N3"))!.complement).toBeUndefined();
+    expect(fondementDe(CONSIGNE, ctx(null, null))!.complement).toBeUndefined();
   });
 });
 
