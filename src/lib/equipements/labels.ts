@@ -265,12 +265,18 @@ export const AIDE_GROUPE_ELECTROGENE =
 export const EXEMPLES_CATEGORIE: Partial<
   Record<CategorieEquipement, { libelle?: string; peremption?: string }>
 > = {
-  // Les dates de l'étiquette du boîtier (arrêté du 29 octobre 2019, annexe 3 :
-  // « Électrodes de défibrillation à remplacer le », « Batterie à remplacer
-  // le ») sont celles du fabricant ; aucun texte n'en fixe le rythme.
+  // ~~Les dates de l'étiquette du boîtier (arrêté du 29 octobre 2019, annexe 3 :~~
+  // [2026-10-16, revue c6 : référence précisée, relue par l'API Légifrance —
+  // bac à sable, égalité avec la production non vérifiée.] L'arrêté du 29
+  // octobre 2019 (signalétique), art. 2, 3° (LEGIARTI000039364652), fait
+  // apposer « sur le boîtier ou à proximité immédiate de l'appareil une
+  // étiquette conforme au modèle de l'annexe 3 » ; l'annexe 3
+  // (LEGIARTI000039364662) porte « Électrodes de défibrillation à remplacer
+  // le : » et « Batterie à remplacer le : ». Ces dates sont celles du
+  // fabricant ; aucun texte n'en fixe le rythme.
   DEFIBRILLATEUR: {
     libelle: "Ex : DAE accueil, DAE salle",
     peremption:
-      "Facultatif. La date indiquée par le fabricant pour les électrodes ou la batterie — la plus proche des deux ; l'étiquette du boîtier les porte. Rojer ne vous enverra pas d'échéance à cette date, mais la fiche de l'équipement affichera « Périmé depuis » dès qu'elle sera passée.",
+      "Facultatif. La date indiquée par le fabricant pour les électrodes ou la batterie — la plus proche des deux ; l'étiquette du défibrillateur, sur le boîtier ou juste à côté, les porte. Rojer ne vous enverra pas d'échéance à cette date, mais la fiche de l'équipement affichera « Périmé depuis » dès qu'elle sera passée.",
   },
 };
