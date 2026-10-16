@@ -1,5 +1,6 @@
 "use server";
 
+import { titreDuDouble } from "./par-les-titres";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
@@ -94,6 +95,9 @@ async function obligationDeclarable(
   // ne l'a jamais montrée. C'est un second cas que l'ancienne garde laissait
   // passer, celui-là sans même invoquer une surcharge.
   if (!app) return false;
+  // Établie d'après les titres déclarés (`par-les-titres.ts`) : elle ne se
+  // coche pas. Une case à côté des titres referait deux vérités.
+  if (titreDuDouble(app.obligation)) return false;
 
   return modeDeclarationApplique(app) !== null;
 }

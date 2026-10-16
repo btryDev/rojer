@@ -40,6 +40,7 @@ function ligne(p: Partial<LigneEtatPermanent> & { id?: string }): LigneEtatPerma
     obligation: { ...OBLIGATION, id: p.id ?? OBLIGATION.id },
     mode: "etat",
     compteDansLEnTete: true,
+    parLesTitres: null,
     pieceAttendue: null,
     declareLe: null,
     note: null,

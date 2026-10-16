@@ -62,3 +62,22 @@ describe("LigneEtat — l'ancre visée par les liens vers la ligne (E5)", () => 
     expect(container.querySelector(`li#${ancreEtatPermanent(base.obligationId)}`)).not.toBeNull();
   });
 });
+
+describe("LigneEtat — une ligne établie d'après les titres (2026-10-16)", () => {
+  const parLesTitres = {
+    phrase: "Établi d'après les titres déclarés : aucun titre à jour ; expiré : Léa Martin (le 01/06/2025).",
+    hrefEquipe: "/etablissements/etab-1/equipe",
+  };
+
+  it("n'offre pas de case : la phrase et le chemin vers Équipe", () => {
+    const { container, getByText } = render(<LigneEtat {...base} parLesTitres={parLesTitres} />);
+    expect(container.querySelectorAll("button")).toHaveLength(0);
+    expect(container.textContent).toContain(parLesTitres.phrase);
+    expect(getByText("Voir les titres sur Équipe").getAttribute("href")).toBe(parLesTitres.hrefEquipe);
+  });
+
+  it("contre-épreuve : sans elle, la ligne garde son geste", () => {
+    const { container } = render(<LigneEtat {...base} />);
+    expect(container.querySelectorAll("button")).toHaveLength(1);
+  });
+});

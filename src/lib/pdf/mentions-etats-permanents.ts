@@ -206,14 +206,19 @@ function ligne(l: {
   declareLe: Date | null;
   aConfirmer: string | null;
   questionsSansReponse: readonly string[];
+  parLesTitres: { phrase: string } | null;
 }): LigneEtatPermanentPdf {
   return {
     libelle: l.obligation.libelle,
     domaine: LABEL_DOMAINE[l.obligation.domaine],
     ecritAttendu: l.pieceAttendue,
-    declaration: l.declareLe
-      ? phraseDeclaration(l.mode, formatDateCourte(l.declareLe))
-      : sansDeclaration(l.mode),
+    // Établie d'après les titres : la phrase le dit, jamais « déclaré en
+    // place » (2026-10-16).
+    declaration: l.parLesTitres
+      ? l.parLesTitres.phrase
+      : l.declareLe
+        ? phraseDeclaration(l.mode, formatDateCourte(l.declareLe))
+        : sansDeclaration(l.mode),
     aConfirmer: [
       ...(l.aConfirmer ? [l.aConfirmer] : []),
       ...l.questionsSansReponse,

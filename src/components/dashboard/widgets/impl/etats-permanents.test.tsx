@@ -50,6 +50,7 @@ function ligne(
     obligation: { ...OBLIGATION, id, libelle: `Libellé ${id}` },
     mode: "etat",
     compteDansLEnTete: true,
+    parLesTitres: null,
     pieceAttendue: null,
     declareLe: null,
     note: null,

@@ -188,6 +188,14 @@ export default async function EtatsPermanentsPage({
                       mode={l.mode}
                       pieceAttendue={l.pieceAttendue}
                       declareLe={l.declareLe ? l.declareLe.toISOString() : null}
+                      parLesTitres={
+                        l.parLesTitres
+                          ? {
+                              phrase: l.parLesTitres.phrase,
+                              hrefEquipe: `/etablissements/${id}/equipe`,
+                            }
+                          : null
+                      }
                       aConfirmer={
                         l.aConfirmer
                           ? {
@@ -272,6 +280,14 @@ export default async function EtatsPermanentsPage({
                       mode={l.mode}
                       pieceAttendue={l.pieceAttendue}
                       declareLe={l.declareLe ? l.declareLe.toISOString() : null}
+                      parLesTitres={
+                        l.parLesTitres
+                          ? {
+                              phrase: l.parLesTitres.phrase,
+                              hrefEquipe: `/etablissements/${id}/equipe`,
+                            }
+                          : null
+                      }
                       aConfirmer={
                         l.aConfirmer
                           ? {

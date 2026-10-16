@@ -44,6 +44,7 @@ export function LigneEtat({
   aConfirmer = null,
   questionsSansReponse = null,
   fondement = null,
+  parLesTitres = null,
 }: {
   etablissementId: string;
   obligationId: string;
@@ -65,6 +66,12 @@ export function LigneEtat({
   questionsSansReponse?: { phrases: string[]; hrefFiche: string } | null;
   /** L'article qui fonde la ligne, et son texte (`fondement.ts`). */
   fondement?: FondementLigne | null;
+  /**
+   * Établie d'après les titres déclarés (`par-les-titres.ts`, 2026-10-16) :
+   * pas de bouton, la phrase et le chemin vers Équipe, où se déclarent les
+   * titres. `null` : la ligne se déclare.
+   */
+  parLesTitres?: { phrase: string; hrefEquipe: string } | null;
 }) {
   const [pending, startTransition] = useTransition();
   const declare = declareLe !== null;
@@ -156,6 +163,17 @@ export function LigneEtat({
           lit d'ailleurs mieux à côté du geste qui l'a produite, et elle reste
           à un clic de « Revenir dessus » — l'ADR-027 veut une déclaration
           révocable et lisible, pas seulement enregistrée. */}
+      {parLesTitres ? (
+        <div className="max-w-[26rem] shrink-0 text-right text-[12px] leading-[1.45] text-[color:var(--board-slate-mid)]">
+          <p className="m-0">{parLesTitres.phrase}</p>
+          <Link
+            href={parLesTitres.hrefEquipe}
+            className="mt-1 inline-block font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
+          >
+            Voir les titres sur Équipe
+          </Link>
+        </div>
+      ) : (
       <div className="flex shrink-0 items-center gap-3">
         {declare && (
           <span className="text-right text-[12px] leading-[1.4] text-[color:var(--board-slate-mid)]">
@@ -192,6 +210,7 @@ export function LigneEtat({
           {pending ? ATTENTE : declare ? libelleRetour() : geste}
         </button>
       </div>
+      )}
     </li>
   );
 }

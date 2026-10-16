@@ -37,14 +37,21 @@ export function lignesAffichees(
 export function lignesDuWidget(
   d: EtatsPermanentsDuDossier,
 ): LigneWidgetEtat[] {
-  return lignesAffichees(d).map((l) => ({
-    obligationId: l.obligation.id,
-    libelle: l.obligation.libelle,
-    etat: etatDeLaLigne({
-      mode: l.mode,
-      declareLe: l.declareLe ? formaterDateFr(l.declareLe) : null,
-      aConfirmer: l.aConfirmer !== null || l.questionsSansReponse.length > 0,
-    }),
-    fondement: l.fondement,
-  }));
+  return lignesAffichees(d).map((l) => {
+    const aConfirmer = l.aConfirmer !== null || l.questionsSansReponse.length > 0;
+    return {
+      obligationId: l.obligation.id,
+      libelle: l.obligation.libelle,
+      // Établie d'après les titres (2026-10-16) : sa phrase, et « À
+      // confirmer » devant quand l'écran l'affiche, comme pour les autres.
+      etat: l.parLesTitres
+        ? `${aConfirmer ? "À confirmer · " : ""}${l.parLesTitres.phrase}`
+        : etatDeLaLigne({
+            mode: l.mode,
+            declareLe: l.declareLe ? formaterDateFr(l.declareLe) : null,
+            aConfirmer,
+          }),
+      fondement: l.fondement,
+    };
+  });
 }

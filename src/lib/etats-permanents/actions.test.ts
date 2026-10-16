@@ -89,6 +89,24 @@ describe("declarerEnPlace — ce que la garde refuse", () => {
     expect(h.prisma.declarationEtatPermanent.upsert).not.toHaveBeenCalled();
   });
 
+  it("refuse l'habilitation : son état vient des titres, il ne se coche plus (2026-10-16)", async () => {
+    // Dossier où elle s'applique bien : opérations électriques déclarées, une
+    // installation au parc. Sans cela le refus viendrait de l'applicabilité,
+    // et le test ne prouverait rien.
+    const base = await h.prisma.etablissement.findUnique();
+    h.prisma.etablissement.findUnique.mockResolvedValueOnce({
+      ...base,
+      operationsElectriques: true,
+    } as never);
+    h.prisma.equipement.findMany.mockResolvedValueOnce([
+      { id: "eq-1", libelle: "TGBT", categorie: "INSTALLATION_ELECTRIQUE", caracteristiques: null },
+    ] as never);
+    h.prisma.declarationEtatPermanent.upsert.mockClear();
+    const r = await declarerEnPlace("etab-1", "elec-travail-habilitation-personnel");
+    expect(r.status).toBe("error");
+    expect(h.prisma.declarationEtatPermanent.upsert).not.toHaveBeenCalled();
+  });
+
   it("refuse un identifiant qui n'existe pas au référentiel", async () => {
     const r = await declarerEnPlace("etab-1", "obligation-inventee");
     expect(r.status).toBe("error");

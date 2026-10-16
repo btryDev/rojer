@@ -32,6 +32,13 @@ import { ordonnerLignes } from "./ordre";
 import { contexteFondementDe, fondementDe, type FondementLigne } from "./fondement";
 import { PHRASE_SANS_REPONSE } from "@/lib/matching/sans-reponse";
 import { obligationsApplicablesDuDossier } from "@/lib/etablissements/dossier-du-rendu";
+import { titreParId } from "@/lib/salaries/catalogue";
+import {
+  etatParLesTitres,
+  titreDuDouble,
+  type EtatParLesTitres,
+  type TitreDeclare,
+} from "./par-les-titres";
 
 export type LigneEtatPermanent = {
   obligation: Obligation;
@@ -62,6 +69,13 @@ export type LigneEtatPermanent = {
    * tableau de bord citent le même texte sans le rechercher chacun.
    */
   fondement: FondementLigne | null;
+  /**
+   * L'état ÉTABLI D'APRÈS LES TITRES déclarés, pour la ligne dont un titre est
+   * la même obligation vue par personne (`par-les-titres.ts`, 2026-10-16).
+   * Elle ne se coche pas : `declareLe` y vaut toujours `null`, une ancienne
+   * déclaration est ignorée. `null` pour toute autre ligne.
+   */
+  parLesTitres: EtatParLesTitres | null;
 };
 
 export type GroupeEtatsPermanents = {
@@ -128,6 +142,7 @@ export async function listerEtatsPermanents(
     projeterEtablissement(etablissement),
     equipements,
   ),
+  now: Date = new Date(),
 ): Promise<EtatsPermanentsDuDossier> {
   const projete = projeterEtablissement(etablissement);
   // Le fondement affiché dépend du type d'ERP (livre II, titre II : une ligne
@@ -159,6 +174,46 @@ export async function listerEtatsPermanents(
   });
   const parObligation = new Map(declarations.map((d) => [d.obligationId, d]));
 
+  // Les titres des personnes actives, pour les seules lignes établies d'après
+  // eux. Même prédicat d'appartenance que les déclarations ; une personne
+  // sortie ne répond plus pour l'établissement, comme au calendrier.
+  const titresVises = [
+    ...new Set(
+      applicables.flatMap((a) => {
+        const t = titreDuDouble(a.obligation);
+        return t ? [t] : [];
+      }),
+    ),
+  ];
+  const titresParObligation = new Map<string, TitreDeclare[]>();
+  if (titresVises.length > 0) {
+    const titres = await prisma.titreSalarie.findMany({
+      where: {
+        obligationId: { in: titresVises },
+        salarie: {
+          etablissementId: etablissement.id,
+          actif: true,
+          etablissement: { entreprise: { userId: user.id } },
+        },
+      },
+      select: {
+        obligationId: true,
+        delivreLe: true,
+        echeanceLe: true,
+        salarie: { select: { prenom: true, nom: true } },
+      },
+    });
+    for (const t of titres) {
+      const liste = titresParObligation.get(t.obligationId) ?? [];
+      liste.push({
+        personne: `${t.salarie.prenom} ${t.salarie.nom}`.trim(),
+        delivreLe: t.delivreLe,
+        echeanceLe: t.echeanceLe,
+      });
+      titresParObligation.set(t.obligationId, liste);
+    }
+  }
+
   const parDomaine = new Map<DomaineObligation, LigneEtatPermanent[]>();
   const faits: LigneEtatPermanent[] = [];
   let enPlace = 0;
@@ -174,7 +229,12 @@ export async function listerEtatsPermanents(
     const mode = modeDeclarationApplique(app);
     if (!mode) continue;
 
-    const d = parObligation.get(o.id) ?? null;
+    const idTitre = mode.mode === "etat" ? titreDuDouble(o) : null;
+    const titre = idTitre ? titreParId(idTitre) : undefined;
+    const parLesTitres = titre
+      ? etatParLesTitres(titre, titresParObligation.get(titre.id) ?? [], now)
+      : null;
+    const d = parLesTitres ? null : (parObligation.get(o.id) ?? null);
     const ligne: LigneEtatPermanent = {
       obligation: o,
       mode: mode.mode,
@@ -192,11 +252,12 @@ export async function listerEtatsPermanents(
         (q) => PHRASE_SANS_REPONSE[q],
       ),
       fondement: fondementDe(o, contexteFondement),
+      parLesTitres,
     };
 
     if (mode.compteDansLEnTete) {
       total += 1;
-      if (ligne.declareLe) enPlace += 1;
+      if (parLesTitres ? parLesTitres.enPlace : ligne.declareLe) enPlace += 1;
     } else {
       faitsDates += 1;
       if (ligne.declareLe) faitsDatesRenseignes += 1;
