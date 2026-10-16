@@ -715,9 +715,11 @@ export type Transmission =
        * celui de l'autre, suivi sur le titre. Déclaré, jamais déduit — un
        * article partagé ne suffit pas (le carnet de prescriptions partage
        * `R. 4544-10` avec l'habilitation, il se remet une fois et n'a pas de
-       * rythme). Seule lectrice : `suiviParPersonne`, qui imprime le
-       * renvoi sur la grille de relecture et sur la fiche équipement
-       * (panneau des obligations, 2026-10-16). N'entre pas à
+       * rythme). Une seule lecture, `titreDuDouble`
+       * (`etats-permanents/par-les-titres.ts`), et deux usages : l'état
+       * « en place » de la ligne est établi d'après les titres déclarés,
+       * et `suiviParPersonne` imprime le renvoi sur la grille de relecture
+       * et la fiche équipement (2026-10-16). N'entre pas à
        * l'empreinte, comme le reste de `transmet`.
        */
       memeObligation?: true;

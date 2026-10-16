@@ -16,6 +16,7 @@ import {
 import { surfacesDe, type Surface } from "@/lib/surfaces/obligations-sans-surface";
 import { porteurDe } from "@/lib/referentiels/conformite";
 import { libelleRythme } from "@/lib/referentiels/conformite/renvoi-aux-normes";
+import { titreDuDouble } from "@/lib/etats-permanents/par-les-titres";
 import type { Obligation } from "@/lib/referentiels/conformite/types";
 import { releveDeLaPage } from "@/lib/quand-ca-arrive/lignes";
 
@@ -398,17 +399,13 @@ export function suiviParPersonne(
   catalogue: readonly Obligation[],
 ): string[] {
   if (porteurDe(o) === "salarie") return [];
-  const ids = new Set<string>();
-  for (const tr of o.transmet ?? []) {
-    if (tr.vers === "salarie_designe" && tr.titre && tr.memeObligation) {
-      ids.add(tr.titre);
-    }
-  }
-  return [...ids].map((id) => {
-    const titre = catalogue.find((c) => c.id === id);
-    if (!titre) throw new Error(`${o.id} transmet vers un titre inconnu : ${id}`);
-    return `Suivi par personne : « ${titre.libelle} » — ${libelleRythme(titre)}`;
-  });
+  // Le prédicat de la règle d'état (`titreDuDouble`), pas une seconde lecture
+  // de `transmet` qui pourrait diverger (revue du 2026-10-16).
+  const id = titreDuDouble(o);
+  if (!id) return [];
+  const titre = catalogue.find((c) => c.id === id);
+  if (!titre) throw new Error(`${o.id} transmet vers un titre inconnu : ${id}`);
+  return [`Suivi par personne : « ${titre.libelle} » — ${libelleRythme(titre)}`];
 }
 
 /**
