@@ -25,6 +25,7 @@ import {
   texteTypologie,
 } from "./textes-grille-relecture";
 import { suiviParPersonne } from "@/lib/referentiels/conformite/transmissions";
+import { lignesColonneEcheance } from "./textes-grille-relecture";
 import { surfacesDe } from "@/lib/surfaces/obligations-sans-surface";
 import { releveDeLaPage } from "@/lib/quand-ca-arrive/lignes";
 
@@ -548,19 +549,24 @@ describe("suiviParPersonne — le renvoi vers le titre nominatif", () => {
 
 describe("grille : le renvoi s'imprime dans la colonne Échéance (revue du 2026-10-16)", () => {
   // Le préventeur lit la colonne Échéance : c'est là qu'il a vu « sans rythme
-  // écrit » sans renvoi (grille du 13/10, p. 8). Le script n'a pas de test
-  // rendu (`scripts/` hors de la suite) : la garde lit son source, et tombe si
-  // le renvoi repasse dans la cellule Obligation.
-  const source = readFileSync(join(process.cwd(), "scripts/generer-grille-equipements.tsx"), "utf8");
-  // La CELLULE de la ligne, pas l'en-tête du tableau qui porte le même width.
-  const debutEcheance = source.indexOf("<View style={[cell, { width: C.periodicite }]}>");
-  const finEcheance = source.indexOf("width: C.realisateur", debutEcheance);
-  const appel = source.indexOf("suiviParPersonne(o, obligationsConformite)");
+  // écrit » sans renvoi (grille du 13/10, p. 8). La colonne se compose dans
+  // `lignesColonneEcheance` ; le script ne fait que l'imprimer.
+  const habilitation = obligationsConformite.find((o) => o.id === "elec-travail-habilitation-personnel")!;
 
-  it("un seul appel, entre l'ouverture de la cellule Échéance et la cellule suivante", () => {
-    expect(debutEcheance).toBeGreaterThan(0);
-    expect(appel).toBeGreaterThan(debutEcheance);
-    expect(appel).toBeLessThan(finEcheance);
-    expect(source.indexOf("suiviParPersonne(o, obligationsConformite)", appel + 1)).toBe(-1);
+  it("la colonne Échéance de l'habilitation : le rythme du texte, puis le renvoi", () => {
+    expect(lignesColonneEcheance(habilitation, obligationsConformite)).toEqual({
+      rythme: "sans rythme écrit",
+      mention: null,
+      renvois: ["Suivi par personne : « Habilitation électrique du travailleur désigné » — tous les 3 ans"],
+    });
+  });
+
+  it("le script ne compose pas le renvoi lui-même : il n'appelle que lignesColonneEcheance", () => {
+    // Robuste au reformatage : un nom, pas une mise en page. Un second appel
+    // à `suiviParPersonne` — dans la colonne Obligation ou ailleurs — le
+    // ferait tomber.
+    const source = readFileSync(join(process.cwd(), "scripts/generer-grille-equipements.tsx"), "utf8");
+    expect(source).not.toMatch(/suiviParPersonne/);
+    expect(source).toMatch(/lignesColonneEcheance\(/);
   });
 });
