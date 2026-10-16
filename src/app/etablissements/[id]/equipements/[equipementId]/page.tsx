@@ -1,4 +1,6 @@
 import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeRetenu";
+import { suiviParPersonne } from "@/lib/pdf/textes-grille-relecture";
+import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { mentionRythmeRetenu } from "@/lib/referentiels/conformite/mention-rythme";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import Link from "next/link";
@@ -398,6 +400,17 @@ export default async function EquipementDetailPage({
                               n'en écrit pas. */}
                           <MentionRythmeRetenu mention={mentionRythmeRetenu(o)} />
                         </span>
+                        {/* « Sans rythme écrit » seul se lisait comme un
+                            rythme manquant : la même obligation se suit par
+                            personne, avec le sien (audit du 2026-10-16). */}
+                        {suiviParPersonne(o, obligationsConformite).map((ligne) => (
+                          <p
+                            key={ligne}
+                            className="m-0 mt-2 text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]"
+                          >
+                            {ligne}
+                          </p>
+                        ))}
                       </div>
                     ))}
                     <Link
