@@ -3,6 +3,7 @@ import { determineObligationsApplicables } from "@/lib/matching";
 import type { EtablissementMatching } from "@/lib/matching/types";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import { porteurDe } from "@/lib/referentiels/conformite/types";
+import { estEtatADeclarer } from "@/lib/etats-permanents/regle";
 import { CATEGORIES_EQUIPEMENT } from "@/lib/referentiels/types-communs";
 import {
   EQUIPEMENTS_DE_SECURITE,
@@ -60,6 +61,14 @@ describe("la table des équipements de sécurité", () => {
       const o = obligationParId(e.obligationId);
       expect(o, e.obligationId).toBeDefined();
       expect(porteurDe(o!), e.obligationId).toBe("etablissement");
+    }
+  });
+
+  it("chaque entrée renvoyée à « Ce qui doit être en place » s'y déclare vraiment", () => {
+    for (const e of EQUIPEMENTS_DE_SECURITE) {
+      if (e.cible.kind === "etat_permanent") {
+        expect(estEtatADeclarer(obligationParId(e.obligationId)!), e.obligationId).toBe(true);
+      }
     }
   });
 

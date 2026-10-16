@@ -29,6 +29,7 @@
 // Module pur : ni base, ni session. La page lui passe les obligations
 // applicables du dossier (lecture bornée au compte) et le parc déclaré.
 
+import { modeDeclarationApplique } from "@/lib/etats-permanents/regle";
 import type { ObligationApplicable } from "@/lib/matching/types";
 import { LIBELLE_SOURCE } from "@/lib/referentiels/conformite/types";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
@@ -127,6 +128,14 @@ export function lignesEquipementsSecurite(
   for (const e of EQUIPEMENTS_DE_SECURITE) {
     const a = parId.get(e.obligationId);
     if (!a) continue;
+    // « Déclarer sur Ce qui doit être en place » ne se promet que si l'écran
+    // montre la ligne : la règle de cet écran le décide (`modeDeclarationApplique`),
+    // pas cette table. Une obligation qui y gagnerait un rythme (prescription,
+    // rythme retenu) quitterait l'écran pour le calendrier ; le lien serait
+    // mort, et la ligne n'est alors pas posée ici (charte, interdit 19).
+    if (e.cible.kind === "etat_permanent" && modeDeclarationApplique(a)?.mode !== "etat") {
+      continue;
+    }
     const cible = e.cible;
     const appareils =
       cible.kind === "categorie"
