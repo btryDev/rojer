@@ -13,6 +13,7 @@ import {
   type LigneSecuriteAffichee,
 } from "@/components/equipements/SectionEquipementsSecurite";
 import { requireUser } from "@/lib/auth/require-user";
+import { contexteFondementDe } from "@/lib/etats-permanents/fondement";
 import { obligationsApplicablesDuDossier } from "@/lib/etablissements/dossier-du-rendu";
 import {
   hrefActionSecurite,
@@ -187,10 +188,7 @@ export default async function EquipementsPage({
   // déclaré. Un regroupement d'affichage, rien de plus (`equipements-securite.ts`).
   const lignesSecurite: LigneSecuriteAffichee[] = (
     dossier
-      ? lignesEquipementsSecurite(dossier.applicables, equipements, {
-          typeErp: etab.typeErp,
-          categorieErp: etab.categorieErp,
-        })
+      ? lignesEquipementsSecurite(dossier.applicables, equipements, contexteFondementDe(etab))
       : []
   ).map((l) => ({
     ...l,

@@ -61,6 +61,24 @@ export type ContexteFondement = {
   categorieErp: CategorieErp | null;
 };
 
+/**
+ * Le contexte d'un établissement pour choisir l'article d'une ligne : son type
+ * et sa catégorie d'ERP, `null` s'il n'est pas un ERP — ses colonnes peuvent
+ * garder des valeurs qui ne valent plus rien (2026-10-16, revue c6). Une
+ * seule écriture pour « Ce qui doit être en place » et pour la section
+ * « Équipements de sécurité » ; aucune lecture, l'appelant passe ce qu'il a.
+ */
+export function contexteFondementDe(e: {
+  estERP: boolean;
+  typeErp: TypeErp | null;
+  categorieErp: CategorieErp | null;
+}): ContexteFondement {
+  return {
+    typeErp: e.estERP ? e.typeErp : null,
+    categorieErp: e.estERP ? e.categorieErp : null,
+  };
+}
+
 /** Le type dont un article est le chapitre (livre II, titre II), ou `null`. */
 const CHAPITRE_DE_TYPE = /^([LMNOPRSTUVWXYJ]) (?:\d|annexe)/;
 function typeDuChapitre(article: string | undefined): string | null {

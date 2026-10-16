@@ -18,7 +18,7 @@ import {
 } from "@/lib/referentiels/conformite";
 import { indexArticlesParRef } from "@/lib/referentiels/corpus";
 import { figureSurLEcranEnPlace } from "./regle";
-import { fondementDe, referenceNommeLArticle } from "./fondement";
+import { contexteFondementDe, fondementDe, referenceNommeLArticle } from "./fondement";
 
 const SUR_L_ECRAN = obligationsConformite.filter(figureSurLEcranEnPlace);
 const INDEX = indexArticlesParRef();
@@ -138,5 +138,21 @@ describe("livre II, titre II — l'article affiché est celui du type de l'étab
     expect(fondementDe(CONSIGNE, { typeErp: "N", categorieErp: "N5" })!.complement).toBeUndefined();
     expect(fondementDe(CONSIGNE, { typeErp: "M", categorieErp: "N3" })!.complement).toBeUndefined();
     expect(fondementDe(CONSIGNE, { typeErp: null, categorieErp: null })!.complement).toBeUndefined();
+  });
+});
+
+describe("contexteFondementDe — le contexte d'un établissement qui n'est pas un ERP est vide", () => {
+  it("un ERP garde son type et sa catégorie", () => {
+    expect(contexteFondementDe({ estERP: true, typeErp: "N", categorieErp: "N3" })).toEqual({
+      typeErp: "N",
+      categorieErp: "N3",
+    });
+  });
+
+  it("un établissement qui n'est plus un ERP ne garde rien de ses anciennes colonnes", () => {
+    expect(contexteFondementDe({ estERP: false, typeErp: "N", categorieErp: "N3" })).toEqual({
+      typeErp: null,
+      categorieErp: null,
+    });
   });
 });
