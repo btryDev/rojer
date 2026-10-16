@@ -153,7 +153,10 @@ export default async function EquipementsPage({
   // suggestions, sur le parc ENTIER : un DAE déclaré dans une autre zone est
   // déclaré. Un regroupement d'affichage, rien de plus (`equipements-securite.ts`).
   const lignesSecurite = dossier
-    ? lignesEquipementsSecurite(dossier.applicables, equipements)
+    ? lignesEquipementsSecurite(dossier.applicables, equipements, {
+        typeErp: etab.typeErp,
+        categorieErp: etab.categorieErp,
+      })
     : [];
   const appareilsSecurite = new Map<string, AppareilAffiche[]>(
     lignesSecurite.map((l) => [

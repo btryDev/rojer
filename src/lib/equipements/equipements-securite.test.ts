@@ -4,6 +4,7 @@ import type { EtablissementMatching } from "@/lib/matching/types";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import { porteurDe } from "@/lib/referentiels/conformite/types";
 import { estEtatADeclarer } from "@/lib/etats-permanents/regle";
+import { fondementDe } from "@/lib/etats-permanents/fondement";
 import { CATEGORIES_EQUIPEMENT } from "@/lib/referentiels/types-communs";
 import {
   EQUIPEMENTS_DE_SECURITE,
@@ -52,7 +53,10 @@ const dae: AppareilDuParc = { id: "d1", libelle: "DAE de l'entrée", categorie: 
 
 function section(etab: EtablissementMatching, parc: AppareilDuParc[]) {
   const moteur = parc.map((p) => ({ ...p, caracteristiques: null }));
-  return lignesEquipementsSecurite(determineObligationsApplicables(etab, moteur), parc);
+  return lignesEquipementsSecurite(determineObligationsApplicables(etab, moteur), parc, {
+    typeErp: etab.typeErp,
+    categorieErp: etab.categorieErp,
+  });
 }
 
 describe("la table des équipements de sécurité", () => {
@@ -86,7 +90,12 @@ describe("la bascule déclaré / pas encore déclaré", () => {
     const l = section(RESTAURANT_N3, []).find((x) => x.obligationId === "dae-erp-detention");
     expect(l?.etat).toBe("pas_encore_declare");
     expect(l?.appareils).toEqual([]);
-    expect(l?.article).toBe("art. R. 157-1, Code de la construction et de l'habitation");
+    // La lecture de l'écran « Ce qui doit être en place », pas une seconde.
+    expect(l?.fondement).toEqual(fondementDe(obligationParId("dae-erp-detention")!, {
+      typeErp: "N",
+      categorieErp: "N3",
+    }));
+    expect(l?.fondement?.reference).toContain("R. 157-1");
   });
 
   it("le même restaurant qui déclare un DAE : « déclaré », avec l'appareil", () => {

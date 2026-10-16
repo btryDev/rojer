@@ -10,6 +10,7 @@
 import Link from "next/link";
 import { BriefcaseMedical, Plus } from "lucide-react";
 import { MarqueCategorie } from "@/components/equipements/MarqueCategorie";
+import { PastilleFondement } from "@/components/etats-permanents/PastilleFondement";
 import { buttonVariants } from "@/components/ui/button";
 import { LignesFiche, LigneFiche, PastilleFiche } from "@/components/ui-kit";
 import type { LigneEquipementSecurite } from "@/lib/equipements/equipements-securite";
@@ -54,20 +55,6 @@ export function SectionEquipementsSecurite({
       <LignesFiche>
         {lignes.map((l) => {
           const liste = appareils.get(l.obligationId) ?? [];
-          const lienArticle = l.href ? (
-            <a
-              href={l.href}
-              target="_blank"
-              rel="noreferrer"
-              className="underline decoration-[color:var(--board-slate)] underline-offset-2 hover:text-[color:var(--board-blue-ink)]"
-            >
-              {l.article}
-              <span className="sr-only"> (nouvel onglet)</span>
-            </a>
-          ) : (
-            l.article
-          );
-
           return (
             <LigneFiche
               key={l.obligationId}
@@ -83,10 +70,13 @@ export function SectionEquipementsSecurite({
                   </span>
                 )
               }
-              surtitre={
-                l.aConfirmer ? <>À confirmer ici · {lienArticle}</> : <>Obligatoire ici · {lienArticle}</>
+              surtitre={l.aConfirmer ? "À confirmer ici" : "Obligatoire ici"}
+              titre={
+                <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                  {l.libelle}
+                  {l.fondement ? <PastilleFondement fondement={l.fondement} /> : null}
+                </span>
               }
-              titre={l.libelle}
               detail={
                 l.etat === "declare" ? (
                   <span className="flex flex-col gap-1">

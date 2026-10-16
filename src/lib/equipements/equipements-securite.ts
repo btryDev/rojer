@@ -29,9 +29,13 @@
 // Module pur : ni base, ni session. La page lui passe les obligations
 // applicables du dossier (lecture bornée au compte) et le parc déclaré.
 
+import {
+  fondementDe,
+  type ContexteFondement,
+  type FondementLigne,
+} from "@/lib/etats-permanents/fondement";
 import { modeDeclarationApplique } from "@/lib/etats-permanents/regle";
 import type { ObligationApplicable } from "@/lib/matching/types";
-import { LIBELLE_SOURCE } from "@/lib/referentiels/conformite/types";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
 
 /** Ce qui fait passer une ligne à « déclaré ». */
@@ -86,10 +90,11 @@ export type AppareilDuParc = {
 export type LigneEquipementSecurite = {
   obligationId: string;
   libelle: string;
-  /** « art. R. 4227-29, Code du travail » — le premier article, celui qui fonde. */
-  article: string;
-  /** L'adresse de l'article sur Légifrance, si le référentiel la porte. */
-  href: string | null;
+  /**
+   * L'article qui fonde la ligne, et son texte — la même lecture que l'écran
+   * « Ce qui doit être en place » (`fondementDe`), jamais une seconde.
+   */
+  fondement: FondementLigne | null;
   /**
    * Le moteur retient l'obligation « à confirmer » : une réponse manque pour
    * trancher (ADR-022, règle du non-renseigné). La ligne ne dit alors pas
@@ -102,18 +107,6 @@ export type LigneEquipementSecurite = {
   etat: "declare" | "pas_encore_declare" | "ailleurs";
 };
 
-/** « art. R. 157-1, Code de la construction et de l'habitation ». */
-function articleCite(o: ObligationApplicable["obligation"]): {
-  article: string;
-  href: string | null;
-} {
-  const r = o.referencesLegales[0];
-  // La clé d'un article du CCH porte le code en préfixe (« CCH R. 157-1 ») ; le
-  // libellé de la source le redit en toutes lettres.
-  const nu = (r.article ?? r.reference).replace(/^CCH\s+/, "");
-  return { article: `art. ${nu}, ${LIBELLE_SOURCE[r.source]}`, href: r.url ?? null };
-}
-
 /**
  * Les lignes de la section, dans l'ordre de la table, pour les seules
  * obligations APPLICABLES au dossier. Un bureau non-ERP ne voit pas le
@@ -122,6 +115,8 @@ function articleCite(o: ObligationApplicable["obligation"]): {
 export function lignesEquipementsSecurite(
   applicables: readonly ObligationApplicable[],
   parc: readonly AppareilDuParc[],
+  /** Le type et la catégorie d'ERP, qui choisissent l'article à montrer. */
+  contexte: ContexteFondement,
 ): LigneEquipementSecurite[] {
   const parId = new Map(applicables.map((a) => [a.obligation.id, a]));
   const lignes: LigneEquipementSecurite[] = [];
@@ -144,7 +139,7 @@ export function lignesEquipementsSecurite(
     lignes.push({
       obligationId: e.obligationId,
       libelle: e.libelle,
-      ...articleCite(a.obligation),
+      fondement: fondementDe(a.obligation, contexte),
       aConfirmer: (a.sansReponse?.length ?? 0) > 0,
       cible,
       appareils,
