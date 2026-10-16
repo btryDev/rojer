@@ -144,13 +144,14 @@ describe("défibrillateur — la surface de chaque ligne", () => {
   });
 });
 
-describe("défibrillateur — une notice plus serrée se renforce par une prescription (ADR-035)", () => {
-  // L'aide de la catégorie le dit (2026-10-16, décision de la propriétaire) :
-  // si la notice du fabricant prévoit un rythme plus serré, on le renforce dans
-  // Prescriptions. Ce test tient la phrase : la maintenance, portée par
-  // l'appareil et au défaut annuel, est une cible de la page (elle est parmi
-  // les applicables que la page propose), la prescription passe par-dessus le
-  // rythme retenu, et la ligne de l'appareil visé prend le rythme renforcé.
+describe("défibrillateur — une prescription renforce la maintenance d'un appareil (ADR-035)", () => {
+  // Un comportement du moteur, pas une promesse d'écran : la maintenance,
+  // portée par l'appareil et au défaut annuel, est une cible de la page
+  // Prescriptions (elle est parmi les applicables que la page propose), une
+  // prescription passe par-dessus le rythme retenu, et la ligne de l'appareil
+  // visé prend le rythme renforcé. [2026-10-16 : l'aide de la catégorie ne
+  // renvoie plus aux Prescriptions pour une notice — option (a) de la
+  // propriétaire ; le mécanisme, lui, reste vrai et tenu ici.]
   const etab = erp("N", "N3");
   const parc = [dae("a"), dae("b")];
   const notice: PrescriptionMatching = {
