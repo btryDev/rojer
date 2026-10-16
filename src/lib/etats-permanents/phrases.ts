@@ -184,13 +184,20 @@ export function etatDeLaLigne({
   mode,
   declareLe,
   aConfirmer,
+  parLesTitres = null,
 }: {
   mode: "etat" | "fait";
   /** La date de la déclaration, déjà formatée ; `null` = non déclarée. */
   declareLe: string | null;
   aConfirmer: boolean;
+  /**
+   * La phrase d'une ligne établie d'après les titres (2026-10-16) : elle
+   * remplace déclaration et geste, « À confirmer » reste devant.
+   */
+  parLesTitres?: string | null;
 }): string {
   const base =
-    declareLe !== null ? phraseDeclaration(mode, declareLe) : libelleGeste(mode);
+    parLesTitres ??
+    (declareLe !== null ? phraseDeclaration(mode, declareLe) : libelleGeste(mode));
   return aConfirmer ? `À confirmer · ${base}` : base;
 }
