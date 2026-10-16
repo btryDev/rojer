@@ -122,3 +122,21 @@ describe("etatParLesTitres — ce que la ligne affirme", () => {
     }
   });
 });
+
+describe("la règle du jour civil (ADR-011) — revue du 2026-10-16", () => {
+  // Une date de fin saisie au 16 octobre, stockée à minuit UTC. Le soir même,
+  // à Paris, elle n'est pas encore dépassée ; le lendemain, elle l'est. Une
+  // comparaison d'instants (`echeance <= now`) la dirait dépassée dès le
+  // matin du 16.
+  const titre = [{ personne: "Léa Martin", delivreLe: jour("2024-01-10"), echeanceLe: jour("2026-10-16") }];
+
+  it("le jour même, au soir (23 h 30 à Paris), l'échéance n'est pas dépassée", () => {
+    const e = etatParLesTitres(habilitation, titre, new Date("2026-10-16T21:30:00Z"));
+    expect(e.enPlace).toBe(true);
+  });
+
+  it("le lendemain, à 0 h 30 à Paris, elle l'est", () => {
+    const e = etatParLesTitres(habilitation, titre, new Date("2026-10-16T22:30:00Z"));
+    expect(e.enPlace).toBe(false);
+  });
+});
