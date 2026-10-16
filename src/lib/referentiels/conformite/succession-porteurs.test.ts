@@ -121,6 +121,9 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   // `succedeA` ni par `absorbePar` ; un nouvel identifiant n'aurait rien
   // transmis de plus. Une ligne d'établissement déjà générée est archivée ou
   // supprimée, chaque DAE déclaré reçoit la sienne « à planifier ».
+  // 2026-10-16, revue indépendante : la perte vaut aussi pour une
+  // `DeclarationEtatPermanent` Géo'DAE déjà saisie — elle reste en base,
+  // orpheline et non affichée. Acceptée de même : production sans clients.
   "dae-erp-declaration-geodae": "equipement",
   "dae-erp-detention": "etablissement",
   "dae-erp-maintenance": "equipement",
