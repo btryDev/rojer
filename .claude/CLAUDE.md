@@ -647,6 +647,15 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     premier pas, sinon « à planifier » à l'origine du suivi (`suiviDepuis`) ;
     la fonction ne lit aucune horloge, et le réconciliateur ne garde que ses
     protections. La bascule est en production depuis le 2026-09-19 (moteur 3)
+37. **037** — Dire ce qu'un fait rend dû, sans jamais le dater : la page
+    « Quand ça arrive » sert les obligations événementielles du porteur
+    établissement — ni date, ni état, ni compteur (**fusionnée le 2026-09-21**,
+    `cf5ae396` ; l'issue de ses quatre questions du § 7 n'est écrite nulle part)
+38. **038** — Ce que le DUERP rend dû à une partie de l'effectif : une
+    question transverse du DUERP déclenche des titres (`declencheTitres`),
+    carte « Formations liées aux risques du poste » sur la fiche salarié
+    (**fusionnée le 2026-10-07, #13** ; source des faits déplacée sur
+    l'établissement par l'ADR-041)
 39. **039** — Une norme peut donner le rythme, et un rythme vague devient
     annuel, déclaré comme tel (**acceptée le 2026-10-07**, décisions (a) et (b)
     de la propriétaire). Source `NORME`, corpus `normes`, `rythmeRetenu` à côté
@@ -673,6 +682,16 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     « Ce que Rojer ne couvre pas ». Entre à l'empreinte. Amende les ADR-022
     et 025 § 8. ~~Le numéro 041 est celui de `lot/formations-faits-etablissement`~~
     [2026-10-12 : ADR-041 fusionnée dans `main` (#16), puis dans ce lot.]
+43. **043** — Ce qui est dû à une personne se lit sur sa fiche, depuis son
+    entrée : la VIP et la formation à la sécurité sont dues dès `entreLe`
+    (`premierDelai`), une seule fonction `ceQuiManqueALaPersonne`, aucune ligne
+    de calendrier (**fusionnée le 2026-10-12, #20**). Amende les ADR-023 et 024
+
+[2026-10-15, ménage des ADR : 037, 038 et 043 manquaient à cette liste ;
+**il n'existe pas d'ADR-044** — annoncée dans
+`docs/revues/audit-modules-2026-10-12.md`, jamais écrite ni poussée ; la
+règle « À renseigner » est décidée et attend sept réponses avant l'ADR —
+`docs/chantiers-ouverts.md` § 0, décision 17.]
 
 **Sept ADR ont été déplacées le 2026-09-01** (« six » disait la phrase, qui en
 énumère sept), chacune portant en tête le renvoi

@@ -1,7 +1,9 @@
 # ADR-038 — Ce que le DUERP rend dû à une partie de l'effectif
 
 - **Statut** : **CODÉE SUR SA BRANCHE le 2026-10-05** (`lot/duerp-questions-titres`),
-  non fusionnée, en attente de revue indépendante. Périmètre validé par la
+  ~~non fusionnée, en attente de revue indépendante.~~ [2026-10-15, ménage des
+  ADR : **FUSIONNÉE le 2026-10-07** (PR #13, `0299e288`). La source des faits
+  est passée sur l'établissement le 2026-10-12 (ADR-041).] Périmètre validé par la
   propriétaire le 2026-10-05 : formations spécifiques, le « non » montré sur la
   fiche, titre de carte « Formations liées aux risques du poste ». Le travail
   de nuit, d'abord inclus, a été retiré à la relecture du même jour (§ 5).
@@ -63,8 +65,11 @@ le fait évaluer ; il ne le demandait pas.
   titre déclaré. Un titre absent ne s'affiche jamais en retard.
 - **Pas de case « ne concerne pas cette personne ».** Elle demanderait un
   stockage nominatif de l'exposition ; écartée de ce lot.
-- **Le document unique imprimé ne porte pas les « non ».** Le snapshot fige les
-  risques, pas les refus. À décider à part.
+- ~~**Le document unique imprimé ne porte pas les « non ».** Le snapshot fige les
+  risques, pas les refus. À décider à part.~~ [2026-10-15, ménage des ADR :
+  tranché et fait le 2026-10-12 (`lot/duerp-non-imprimes`) — imprimés, section
+  « Expositions examinées et déclarées absentes » ; `chantiers-ouverts.md`
+  § 17, point 2.]
 - **Gestes et postures (`R. 4541-8`), écran (`R. 4542-16`), chimique
   (`R. 4412-38`, `-87`)** ont déjà leur question (`q-charges`, `q-ecran`) ou
   leur risque, mais leur obligation est portée par l'établissement, sans titre

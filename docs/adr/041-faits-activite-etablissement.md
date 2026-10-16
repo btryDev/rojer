@@ -1,7 +1,8 @@
 # ADR-041 — Les faits d'activité vivent sur l'établissement
 
 - **Statut** : **CODÉE SUR SA BRANCHE le 2026-10-08** (`lot/formations-faits-etablissement`),
-  non fusionnée, en attente de revue indépendante. Périmètre validé par la
+  ~~non fusionnée, en attente de revue indépendante.~~ [2026-10-15, ménage des
+  ADR : **FUSIONNÉE le 2026-10-12** (PR #16, `0a4be567`).] Périmètre validé par la
   propriétaire les 2026-10-07 et 2026-10-08.
 - **Amende** : l'ADR-038 (la réponse du DUERP comme source des titres
   salarié) et l'ADR-023 § 1 bis (le cinquième déclencheur). **Ne renverse

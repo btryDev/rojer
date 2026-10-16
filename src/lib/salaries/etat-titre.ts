@@ -23,10 +23,12 @@ import { echeanceDuTitre, type DatesDuTitre } from "./echeance";
  *
  * `aPlanifier` a ici un sens précis, et il n'est pas « en retard » : un titre
  * SANS ÉCHÉANCE — ni date de fin saisie, ni durée écrite au texte.
- * L'habilitation électrique en est le cas type — le Code renvoie à des
+ * ~~L'habilitation électrique en est le cas type — le Code renvoie à des
  * modalités qu'il qualifie lui-même de recommandées, et le produit ne décrète
- * pas un rendez-vous là où le texte n'en pose aucun (ADR-023 § 6). Le peindre
- * en rouge inventerait une non-conformité.
+ * pas un rendez-vous là où le texte n'en pose aucun (ADR-023 § 6).~~
+ * [2026-10-15, `lot/menage-1015` : plus depuis C66 (9ac4d98c) — l'habilitation porte un rythme retenu
+ * triennal (ADR-039 § 8) ; l'autorisation de conduite, sans durée écrite, est
+ * le cas type.] Le peindre en rouge inventerait une non-conformité.
  */
 export type EtatTitre = RegistreLigne;
 

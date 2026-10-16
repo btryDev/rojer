@@ -1,8 +1,13 @@
 # ADR-037 — Dire ce qu'un fait rend dû, sans jamais le dater
 
 - **Statut** : **PROPOSÉE le 2026-09-20, CODÉE SUR SA BRANCHE le 2026-09-21**
-  (`lot/surface-evenementiel`) pour être jugée sur pièce — non fusionnée, et les
-  quatre questions du § 7 restent à la propriétaire. ~~Rien n'est codé.~~
+  (`lot/surface-evenementiel`) pour être jugée sur pièce — ~~non fusionnée~~, et les
+  quatre questions du § 7 restent à la propriétaire. [2026-10-15, ménage des
+  ADR : **FUSIONNÉE le 2026-09-21** (`cf5ae396`, « Fusion du 2026-09-21 ») — la
+  page « Quand ça arrive » est en production depuis. **L'issue des quatre
+  questions du § 7 n'est écrite nulle part** : le code suit les
+  recommandations, aucune trace ne dit qu'elles ont été retenues. Reportée en
+  décision attendue, `docs/chantiers-ouverts.md` § 0.] ~~Rien n'est codé.~~
   Deux écarts à ce texte, écrits au § 8. Quatre questions
   attendent la propriétaire (§ 7) ; les recommandations y sont écrites, et
   l'ADR se lit « acceptée telle que recommandée » si elle les retient toutes.

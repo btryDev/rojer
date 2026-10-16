@@ -15,7 +15,7 @@
     "test:run": "vitest run",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
-    "db:migrate": "prisma migrate dev",
+    "db:migrate": "prisma migrate deploy",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
     "db:seed": "tsx --import ./scripts/server-only-hors-next.mjs prisma/seed.ts",
