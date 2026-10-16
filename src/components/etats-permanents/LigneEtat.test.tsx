@@ -65,7 +65,7 @@ describe("LigneEtat — l'ancre visée par les liens vers la ligne (E5)", () => 
 
 describe("LigneEtat — une ligne établie d'après les titres (2026-10-16)", () => {
   const parLesTitres = {
-    phrase: "Établi d'après les titres déclarés : aucun titre à jour ; expiré : Léa Martin (le 01/06/2025).",
+    phrase: "Établi d'après les titres déclarés : 1 titre ; Léa Martin : échéance calculée dépassée le 01/06/2025.",
     hrefEquipe: "/etablissements/etab-1/equipe",
   };
 

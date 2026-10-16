@@ -90,7 +90,7 @@ describe("habilitation : l'état vient des titres, plus de la case", () => {
     const { d, ligne } = await dossier();
     expect(ligne.declareLe).toBeNull();
     expect(ligne.parLesTitres?.enPlace).toBe(false);
-    expect(ligne.parLesTitres?.phrase).toContain("expiré : Léa Martin");
+    expect(ligne.parLesTitres?.phrase).toContain("Léa Martin : échéance calculée dépassée");
     expect(d.enPlace).toBe(d.total - 1);
   });
 
@@ -102,7 +102,9 @@ describe("habilitation : l'état vient des titres, plus de la case", () => {
     const imprimee = bloc.etats.find(
       (l) => l.libelle === "Habilitation électrique du personnel opérant sur ou à proximité d'installations électriques",
     );
-    expect(imprimee?.declaration).toMatch(/^Établi d'après les titres déclarés : aucun titre à jour ; expiré : Léa Martin/);
+    expect(imprimee?.declaration).toMatch(
+      /^Établi d'après les titres déclarés : 1 titre ; Léa Martin : échéance calculée dépassée/,
+    );
   });
 
   it("aucun titre déclaré, case cochée : pas en place — le score ne peut plus conclure sans habilité", async () => {
@@ -112,12 +114,12 @@ describe("habilitation : l'état vient des titres, plus de la case", () => {
     expect(d.enPlace).toBe(d.total - 1);
   });
 
-  it("contre-épreuve : un titre à jour la met en place", async () => {
+  it("contre-épreuve : un titre dont l'échéance n'est pas dépassée la met en place", async () => {
     h.titres.mockResolvedValueOnce([titre("2025-03-01")]);
     const { d, ligne } = await dossier();
     expect(ligne.parLesTitres?.enPlace).toBe(true);
     expect(d.enPlace).toBe(d.total);
-    expect(ligne.parLesTitres?.phrase).toBe("Établi d'après les titres déclarés : 1 titre à jour.");
+    expect(ligne.parLesTitres?.phrase).toBe("Établi d'après les titres déclarés : 1 titre, aucune échéance dépassée.");
   });
 
   it("ne lit que les titres des personnes actives de CE dossier", async () => {

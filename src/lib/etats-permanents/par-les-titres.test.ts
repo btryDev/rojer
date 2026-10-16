@@ -47,14 +47,14 @@ describe("etatParLesTitres — ce que la ligne affirme", () => {
     expect(e.phrase).toContain("fiche Équipe");
   });
 
-  it("un titre à jour : en place", () => {
+  it("un titre dont l'échéance n'est pas dépassée : en place", () => {
     const e = etatParLesTitres(
       habilitation,
       [{ personne: "Léa Martin", delivreLe: jour("2025-03-01"), echeanceLe: null }],
       NOW,
     );
     expect(e.enPlace).toBe(true);
-    expect(e.phrase).toBe("Établi d'après les titres déclarés : 1 titre à jour.");
+    expect(e.phrase).toBe("Établi d'après les titres déclarés : 1 titre, aucune échéance dépassée.");
   });
 
   it("le seul titre a dépassé ses 3 ans : PAS en place, et la personne est nommée", () => {
@@ -66,7 +66,9 @@ describe("etatParLesTitres — ce que la ligne affirme", () => {
       NOW,
     );
     expect(e.enPlace).toBe(false);
-    expect(e.phrase).toMatch(/aucun titre à jour ; expiré : Léa Martin \(le 0?1\/06\/2025\)/);
+    expect(e.phrase).toMatch(
+      /^Établi d'après les titres déclarés : 1 titre ; Léa Martin : échéance calculée dépassée le 0?1\/06\/2025\.$/,
+    );
   });
 
   it("une date de fin saisie prime sur le calcul", () => {
@@ -78,7 +80,17 @@ describe("etatParLesTitres — ce que la ligne affirme", () => {
     expect(e.enPlace).toBe(true);
   });
 
-  it("un titre à jour et un expiré : en place, et l'expiré reste nommé", () => {
+  it("une date de fin saisie et dépassée se dit « déclarée »", () => {
+    const e = etatParLesTitres(
+      habilitation,
+      [{ personne: "Léa Martin", delivreLe: jour("2024-06-01"), echeanceLe: jour("2026-01-01") }],
+      NOW,
+    );
+    expect(e.enPlace).toBe(false);
+    expect(e.phrase).toContain("Léa Martin : échéance déclarée dépassée le");
+  });
+
+  it("un titre dont l'échéance n'est pas dépassée et un autre dont elle l'est : en place, et le second reste nommé", () => {
     const e = etatParLesTitres(
       habilitation,
       [
@@ -88,7 +100,7 @@ describe("etatParLesTitres — ce que la ligne affirme", () => {
       NOW,
     );
     expect(e.enPlace).toBe(true);
-    expect(e.phrase).toMatch(/1 titre à jour ; expiré : Tom Petit/);
+    expect(e.phrase).toMatch(/: 2 titres ; Tom Petit : échéance calculée dépassée le/);
   });
 
   it("ne dit jamais que tout le personnel est habilité : Rojer ne sait pas qui intervient", () => {
@@ -98,6 +110,15 @@ describe("etatParLesTitres — ce que la ligne affirme", () => {
       NOW,
     );
     expect(e.phrase).toMatch(/^Établi d'après les titres déclarés/);
-    expect(e.phrase).not.toMatch(/tout le personnel|tous habilités|conforme/i);
+    // Ni « à jour » (affirmation de conformité), ni « expiré » (état de
+    // droit, quand le triennal vient d'une norme) : les mots de la fiche.
+    for (const titres of [
+      [{ personne: "Léa Martin", delivreLe: jour("2025-03-01"), echeanceLe: null }],
+      [{ personne: "Léa Martin", delivreLe: jour("2022-06-01"), echeanceLe: null }],
+    ]) {
+      expect(etatParLesTitres(habilitation, titres, NOW).phrase).not.toMatch(
+        /tout le personnel|tous habilités|conforme|à jour|expir|renouvel/i,
+      );
+    }
   });
 });

@@ -114,24 +114,35 @@ describe("un titre appelé par un titre détenu (ADR-043, relecture C3)", () => 
 });
 
 describe("un titre déclaré dont l'échéance est dépassée (audit du 2026-10-16)", () => {
-  // La liste des titres de la même fiche le marque « en retard » : la carte ne
-  // doit plus le dire seulement « déclaré », comme s'il était valide.
+  // La liste des titres de la même fiche le marque « Échéance calculée
+  // dépassée » : la carte ne doit plus le dire seulement « déclaré ». Ses mots
+  // sont ceux de la liste, jamais « expiré » ni « à renouveler ».
   const titres = [{ obligationId: "elec-salarie-habilitation", delivreLe: new Date("2022-06-01") }];
-  const rendreAvec = (expires: Map<string, Date>) =>
+  const rendreAvec = (depassees: Map<string, { le: Date; calculee: boolean }>) =>
     renderToStaticMarkup(
       <CarteTitresDuDuerp
         questions={titresDuDuerpPourUnePersonne(tous(true), titres)}
         lienVersLaQuestion={(c) => `/q#${c}`}
-        expires={expires}
+        depassees={depassees}
       />,
     );
 
-  it("dit « expiré le … : à renouveler » à l'écran", () => {
-    const html = rendreAvec(new Map([["elec-salarie-habilitation", new Date("2025-06-01")]]));
-    expect(html).toMatch(/délivré le 0?1 juin 2022, expiré le 0?1 juin 2025 : à renouveler/);
+  it("dit « échéance calculée dépassée le … », avec les mots de la liste", () => {
+    const html = rendreAvec(
+      new Map([["elec-salarie-habilitation", { le: new Date("2025-06-01"), calculee: true }]]),
+    );
+    expect(html).toMatch(/délivré le 0?1 juin 2022 ; échéance calculée dépassée le 0?1 juin 2025\./);
+    expect(html).not.toMatch(/expiré|à renouveler/);
   });
 
-  it("ne le dit pas d'un titre valide", () => {
-    expect(rendreAvec(new Map())).not.toContain("expiré");
+  it("« déclarée » quand la date vient de la pièce", () => {
+    const html = rendreAvec(
+      new Map([["elec-salarie-habilitation", { le: new Date("2025-06-01"), calculee: false }]]),
+    );
+    expect(html).toContain("échéance déclarée dépassée");
+  });
+
+  it("ne le dit pas d'un titre dont l'échéance n'est pas dépassée", () => {
+    expect(rendreAvec(new Map())).not.toContain("dépassée");
   });
 });

@@ -5,7 +5,7 @@
  * Le défaut fermé : « Habilitation électrique du personnel » se cochait en
  * place sans lire les titres. Le dossier remis à un inspecteur pouvait donc
  * dire « Les N états applicables sont tous déclarés en place » et, deux pages
- * plus loin, lister l'habilitation expirée du seul électricien parmi les
+ * plus loin, lister l'habilitation du seul électricien, échéance dépassée, parmi les
  * vérifications en retard ; et un dossier sans aucun habilité, case cochée,
  * pouvait conclure « satisfaisante ».
  *
@@ -14,9 +14,10 @@
  * transmission ordinaire ne suffit pas : « CSE en place » ne se déduit pas
  * d'une formation SST, ni le carnet de prescriptions d'une habilitation.
  *
- * CE QUE LA PHRASE NE DIT JAMAIS : « tout le personnel est habilité ». Rojer ne
- * sait pas qui intervient (ADR-023) ; il dit combien de titres déclarés sont à
- * jour, et nomme ceux qui ne le sont plus.
+ * CE QUE LA PHRASE NE DIT JAMAIS : « tout le personnel est habilité », ni
+ * « à jour », ni « expiré ». Rojer ne sait pas qui intervient (ADR-023) ; il
+ * dit combien de titres sont déclarés, et nomme ceux dont l'échéance est
+ * dépassée.
  *
  * Pur : aucune horloge, aucune base. `queries.ts` charge et appelle.
  */
@@ -42,7 +43,7 @@ export type TitreDeclare = {
 };
 
 export type EtatParLesTitres = {
-  /** Au moins un titre déclaré à jour. */
+  /** Au moins un titre déclaré dont l'échéance n'est pas dépassée. */
   enPlace: boolean;
   phrase: string;
 };
@@ -58,26 +59,28 @@ export function etatParLesTitres(
       phrase: `Établi d'après les titres déclarés : aucun titre « ${titre.libelle} » sur la fiche Équipe.`,
     };
   }
+  // Les mots de la fiche salarié (`equipe/[salarieId]/page.tsx`,
+  // `MOT_DE_L_ETAT`), jamais « expiré » ni « à jour » : le triennal de
+  // l'habilitation vient de la NF C 18-510, pas du Code, et « expiré » se lit
+  // comme un état de droit ; « à jour » serait une affirmation de conformité
+  // (revue indépendante du 2026-10-16). « Déclarée » quand la date vient de
+  // la pièce, « calculée » quand elle vient du rythme.
   const rythme = periodiciteEffective(titre);
-  const expires: string[] = [];
-  let aJour = 0;
+  const depassees: string[] = [];
   for (const t of titres) {
     const echeance = echeanceDuTitre(t, rythme);
+    // La règle du jour civil (ADR-011), celle de `classerTitre`, qu'on ne
+    // peut importer ici : son module est `server-only`.
     if (echeance !== null && estEnRetard(echeance, now)) {
-      expires.push(`${t.personne} (le ${formaterDateFr(echeance)})`);
-    } else {
-      aJour += 1;
+      const mot = t.echeanceLe !== null ? "déclarée" : "calculée";
+      depassees.push(`${t.personne} : échéance ${mot} dépassée le ${formaterDateFr(echeance)}`);
     }
   }
-  const compte =
-    aJour === 0
-      ? "aucun titre à jour"
-      : aJour === 1
-        ? "1 titre à jour"
-        : `${aJour} titres à jour`;
-  const suite = expires.length > 0 ? ` ; expiré : ${expires.join(", ")}` : "";
+  const compte = titres.length === 1 ? "1 titre" : `${titres.length} titres`;
+  const suite =
+    depassees.length === 0 ? ", aucune échéance dépassée" : ` ; ${depassees.join(" ; ")}`;
   return {
-    enPlace: aJour > 0,
+    enPlace: depassees.length < titres.length,
     phrase: `Établi d'après les titres déclarés : ${compte}${suite}.`,
   };
 }
