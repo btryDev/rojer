@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { obligationsConformite } from "@/lib/referentiels/conformite";
+import { obligationParId, obligationsConformite } from "@/lib/referentiels/conformite";
 import {
   MENTION_SUR_APPLICATION_5E,
   contexteDesSuggestions,
@@ -17,7 +17,7 @@ describe("suggererEquipements — secteurs cibles V2", () => {
       estEtablissementTravail: true,
       estERP: true,
       estIGH: false,
-      estHabitation: false,
+      estHabitation: false, categorieErp: null,
     });
     const cats = categories(r);
     expect(cats).toContain("HOTTE_PRO");
@@ -36,7 +36,7 @@ describe("suggererEquipements — secteurs cibles V2", () => {
       estEtablissementTravail: true,
       estERP: true,
       estIGH: false,
-      estHabitation: false,
+      estHabitation: false, categorieErp: null,
     });
     const cats = categories(r);
     expect(cats).toContain("INSTALLATION_ELECTRIQUE");
@@ -56,7 +56,7 @@ describe("suggererEquipements — secteurs cibles V2", () => {
         estEtablissementTravail: true,
         estERP: true,
         estIGH: false,
-        estHabitation: false,
+        estHabitation: false, categorieErp: null,
       }).find((e) => e.categorie === "INSTALLATION_FRIGORIFIQUE");
       expect(entree, naf).toBeDefined();
       expect(entree?.raison).toContain("R. 543-79");
@@ -75,7 +75,7 @@ describe("suggererEquipements — secteurs cibles V2", () => {
           estEtablissementTravail: true,
           estERP: true,
           estIGH: false,
-          estHabitation: false,
+          estHabitation: false, categorieErp: null,
         }),
       ).includes("INSTALLATION_FRIGORIFIQUE");
 
@@ -94,7 +94,7 @@ describe("suggererEquipements — secteurs cibles V2", () => {
         estEtablissementTravail: true,
         estERP: true,
         estIGH: false,
-        estHabitation: false,
+        estHabitation: false, categorieErp: null,
       }),
     );
     expect(cats).toContain("BAES");
@@ -108,7 +108,7 @@ describe("suggererEquipements — secteurs cibles V2", () => {
         estEtablissementTravail: true,
         estERP: false,
         estIGH: false,
-        estHabitation: false,
+        estHabitation: false, categorieErp: null,
       }),
     );
     expect(cats).not.toContain("INSTALLATION_FRIGORIFIQUE");
@@ -120,7 +120,7 @@ describe("suggererEquipements — secteurs cibles V2", () => {
       estEtablissementTravail: true,
       estERP: false,
       estIGH: false,
-      estHabitation: false,
+      estHabitation: false, categorieErp: null,
     });
     const cats = categories(r);
     expect(cats).toContain("INSTALLATION_ELECTRIQUE");
@@ -138,7 +138,7 @@ describe("suggererEquipements — secteurs cibles V2", () => {
       estEtablissementTravail: true,
       estERP: true,
       estIGH: false,
-      estHabitation: false,
+      estHabitation: false, categorieErp: null,
     });
     const extincteurs = r.filter((e) => e.categorie === "EXTINCTEUR");
     expect(extincteurs.length).toBe(1);
@@ -149,7 +149,7 @@ describe("suggererEquipements — secteurs cibles V2", () => {
       codeNaf: "70.10Z",
       estEtablissementTravail: true,
       estERP: false,
-      estHabitation: false,
+      estHabitation: false, categorieErp: null,
     };
     const cats = categories(suggererEquipements({ ...base, estIGH: true }));
     expect(cats).toContain("ASCENSEUR");
@@ -166,7 +166,7 @@ describe("suggererEquipements — secteurs cibles V2", () => {
       estEtablissementTravail: false,
       estERP: false,
       estIGH: false,
-      estHabitation: true,
+      estHabitation: true, categorieErp: null,
     });
     const cats = categories(r);
     expect(cats).toContain("VMC");
@@ -178,7 +178,7 @@ describe("suggererEquipements — secteurs cibles V2", () => {
       estEtablissementTravail: false,
       estERP: false,
       estIGH: false,
-      estHabitation: false,
+      estHabitation: false, categorieErp: null,
     });
     expect(r.length).toBe(0);
   });
@@ -189,7 +189,7 @@ describe("suggererEquipements — secteurs cibles V2", () => {
       estEtablissementTravail: true,
       estERP: false,
       estIGH: false,
-      estHabitation: false,
+      estHabitation: false, categorieErp: null,
     });
     const cats = categories(r);
     // aucune règle sectorielle, mais règles travail → élec, VMC, extincteurs
@@ -222,7 +222,7 @@ describe("suggererEquipements — la raison ne promet que ce que le référentie
       estEtablissementTravail: true,
       estERP: false,
       estIGH: false,
-      estHabitation: false,
+      estHabitation: false, categorieErp: null,
     });
     expect(raison).toContain("R. 4227-14");
     expect(raison).toContain("14 décembre 2011");
@@ -235,7 +235,7 @@ describe("suggererEquipements — la raison ne promet que ce que le référentie
       estEtablissementTravail: true,
       estERP: false,
       estIGH: false,
-      estHabitation: false,
+      estHabitation: false, categorieErp: null,
     });
     expect(raison).toContain("R. 4227-14");
     expect(raison).not.toMatch(/annuelle?/i);
@@ -247,7 +247,7 @@ describe("suggererEquipements — la raison ne promet que ce que le référentie
       estEtablissementTravail: true,
       estERP: true,
       estIGH: false,
-      estHabitation: false,
+      estHabitation: false, categorieErp: null,
     });
     expect(raison).toContain("EC 14");
     expect(raison).toMatch(/annuelle/i);
@@ -257,10 +257,10 @@ describe("suggererEquipements — la raison ne promet que ce que le référentie
 describe("suggererEquipements — chaque entrée a une raison non vide", () => {
   it("tous les contextes possibles renvoient des raisons renseignées", () => {
     const combos: Parameters<typeof suggererEquipements>[0][] = [
-      { codeNaf: "56.10A", estEtablissementTravail: true, estERP: true, estIGH: false, estHabitation: false },
-      { codeNaf: "47.11B", estEtablissementTravail: true, estERP: true, estIGH: false, estHabitation: false },
-      { codeNaf: "70.22Z", estEtablissementTravail: true, estERP: false, estIGH: false, estHabitation: false },
-      { codeNaf: null,     estEtablissementTravail: false, estERP: false, estIGH: true,  estHabitation: true  },
+      { codeNaf: "56.10A", estEtablissementTravail: true, estERP: true, estIGH: false, estHabitation: false, categorieErp: null },
+      { codeNaf: "47.11B", estEtablissementTravail: true, estERP: true, estIGH: false, estHabitation: false, categorieErp: null },
+      { codeNaf: "70.22Z", estEtablissementTravail: true, estERP: false, estIGH: false, estHabitation: false, categorieErp: null },
+      { codeNaf: null,     estEtablissementTravail: false, estERP: false, estIGH: true,  estHabitation: true , categorieErp: null },
     ];
     for (const ctx of combos) {
       for (const e of suggererEquipements(ctx)) {
@@ -360,7 +360,7 @@ describe("suggererEquipements — une citation du livre II dit la sur-applicatio
     estEtablissementTravail: true,
     estERP: true,
     estIGH: false,
-    estHabitation: false,
+    estHabitation: false, categorieErp: null,
   };
 
   it("les extincteurs d'un ERP portent la mention", () => {
@@ -416,7 +416,7 @@ describe("un second établissement sans NAF propre (2026-09-27, A1)", () => {
 });
 
 describe("suggererEquipements — le défibrillateur, aux seuls ERP des catégories 1 à 4 (2026-10-15)", () => {
-  const erp = (categorieErp: "N3" | "N4" | "N5" | null) => ({
+  const erp = (categorieErp: "N1" | "N2" | "N3" | "N4" | "N5" | null) => ({
     codeNaf: "56.10A",
     estEtablissementTravail: true,
     estERP: categorieErp !== null,
@@ -425,8 +425,8 @@ describe("suggererEquipements — le défibrillateur, aux seuls ERP des catégor
     categorieErp,
   });
 
-  it("borne basse : un ERP de 3ᵉ ou de 4ᵉ catégorie se voit proposer le DAE, fondé sur R. 157-1", () => {
-    for (const c of ["N3", "N4"] as const) {
+  it("borne basse : un ERP des catégories 1 à 4 se voit proposer le DAE, fondé sur R. 157-1", () => {
+    for (const c of ["N1", "N2", "N3", "N4"] as const) {
       const dae = suggererEquipements(erp(c)).find((e) => e.categorie === "DEFIBRILLATEUR");
       expect(dae, c).toBeDefined();
       expect(dae!.raison).toContain("R. 157-1");
@@ -436,6 +436,15 @@ describe("suggererEquipements — le défibrillateur, aux seuls ERP des catégor
   it("borne haute : ni en 5ᵉ catégorie, ni hors ERP", () => {
     expect(categories(suggererEquipements(erp("N5")))).not.toContain("DEFIBRILLATEUR");
     expect(categories(suggererEquipements(erp(null)))).not.toContain("DEFIBRILLATEUR");
+  });
+
+  it("les catégories proposées sont celles de `dae-erp-detention`, et elles seules", () => {
+    const erpDetention = obligationParId("dae-erp-detention")!.typologies.erp;
+    const attendues = typeof erpDetention === "object" ? erpDetention.categories ?? [] : [];
+    const proposees = (["N1", "N2", "N3", "N4", "N5"] as const).filter((c) =>
+      categories(suggererEquipements(erp(c))).includes("DEFIBRILLATEUR"),
+    );
+    expect(proposees).toEqual(attendues);
   });
 
   it("la catégorie lue sur l'établissement passe dans le contexte", () => {

@@ -164,12 +164,14 @@ export type ContexteEtablissement = {
   estHabitation: boolean;
   /**
    * La catégorie d'ERP (2026-10-15). Elle ne sert qu'au défibrillateur, que
-   * R. 157-1 1° ne fait détenir qu'aux catégories 1 à 4. Absente, la
+   * R. 157-1 1° ne fait détenir qu'aux catégories 1 à 4. `null`, la
    * suggestion n'est pas faite — même sémantique que le moteur pour une
    * restriction de catégorie, et sans risque : en ERP, la contrainte
    * `Etablissement_erp_type_categorie_requis` rend l'absence impossible.
+   * REQUISE (revue c6, 2026-10-16) : un contexte qui l'oublierait taisait le
+   * DAE sans que rien ne le dise.
    */
-  categorieErp?: CategorieErp | null;
+  categorieErp: CategorieErp | null;
 };
 
 /**
@@ -206,10 +208,20 @@ export function contexteDesSuggestions(etab: {
   };
 }
 
-const CATEGORIES_UN_A_QUATRE: readonly CategorieErp[] = ["N1", "N2", "N3", "N4"];
+/**
+ * Les catégories où le DAE se propose : celles de `dae-erp-detention`, LUES
+ * sur l'obligation qui fonde la suggestion — jamais recopiées (revue c6). Si la
+ * typologie s'élargit un jour (le 2° de R. 157-1), la suggestion suit.
+ */
+function categoriesDuDae(): readonly CategorieErp[] {
+  const o = obligationParId("dae-erp-detention");
+  if (!o) throw new FondementInconnuError("dae-erp-detention");
+  const erp = o.typologies.erp;
+  return typeof erp === "object" && erp.categories ? erp.categories : [];
+}
 
-function estCategorieUnAQuatre(c: CategorieErp | null | undefined): boolean {
-  return c != null && CATEGORIES_UN_A_QUATRE.includes(c);
+function estCategorieDuDae(c: CategorieErp | null): boolean {
+  return c !== null && categoriesDuDae().includes(c);
 }
 
 function normNaf(naf: string | null | undefined): string {
@@ -397,9 +409,9 @@ export function suggererEquipements(ctx: ContexteEtablissement): Entree[] {
   // ERP des catégories 1 à 4 → défibrillateur (2026-10-15)
   // ---------------------------------------------------------------------------
   // R. 157-1 1° fait détenir un DAE aux seules catégories 1 à 4 ; le 2° (5ᵉ
-  // catégorie, familles a à h) n'est pas encodé. La suggestion suit le champ
-  // de `dae-erp-detention`, qui la fonde.
-  if (ctx.estERP && estCategorieUnAQuatre(ctx.categorieErp)) {
+  // catégorie, familles a à h) n'est pas encodé. La suggestion lit le champ
+  // de `dae-erp-detention`, qui la fonde (`categoriesDuDae`).
+  if (ctx.estERP && estCategorieDuDae(ctx.categorieErp)) {
     ajoute({
       categorie: "DEFIBRILLATEUR",
       libelle: LABEL_CATEGORIE_EQUIPEMENT.DEFIBRILLATEUR,
