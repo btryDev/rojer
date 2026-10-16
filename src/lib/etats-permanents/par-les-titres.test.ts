@@ -141,3 +141,21 @@ describe("la règle du jour civil (ADR-011) — revue du 2026-10-16", () => {
     expect(e.enPlace).toBe(false);
   });
 });
+
+describe("la note de l'habilitation parle comme l'écran (relecture du 2026-10-16)", () => {
+  // Elle s'imprime dans la grille remise au préventeur : « à jour », « expiré »
+  // ou « nommés » y redisaient ce que le produit s'interdit, ou ce qui ne vaut
+  // que pour l'écran.
+  const note = ligne("elec-travail-habilitation-personnel").notesInternes ?? "";
+  const paragraphe = note.slice(note.indexOf("ÉTAT ÉTABLI D'APRÈS LES TITRES"));
+
+  it("hors citation, ni « à jour » ni « expiré »", () => {
+    expect(paragraphe.length).toBeGreaterThan(0);
+    const horsCitations = paragraphe.replace(/«[^»]*»/g, "");
+    expect(horsCitations).not.toMatch(/à jour|expir/i);
+  });
+
+  it("dit que le dossier remis à un tiers ne nomme personne", () => {
+    expect(paragraphe).toContain("ne nomment personne");
+  });
+});
