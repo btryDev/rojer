@@ -1,8 +1,8 @@
 # ADR-037 — Dire ce qu'un fait rend dû, sans jamais le dater
 
 - **Statut** : **PROPOSÉE le 2026-09-20, CODÉE SUR SA BRANCHE le 2026-09-21**
-  (`lot/surface-evenementiel`) pour être jugée sur pièce — ~~non fusionnée, et les
-  quatre questions du § 7 restent à la propriétaire.~~ [2026-10-15, ménage des
+  (`lot/surface-evenementiel`) pour être jugée sur pièce — ~~non fusionnée~~, et les
+  quatre questions du § 7 restent à la propriétaire. [2026-10-15, ménage des
   ADR : **FUSIONNÉE le 2026-09-21** (`cf5ae396`, « Fusion du 2026-09-21 ») — la
   page « Quand ça arrive » est en production depuis. **L'issue des quatre
   questions du § 7 n'est écrite nulle part** : le code suit les

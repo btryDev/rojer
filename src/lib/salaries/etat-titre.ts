@@ -26,7 +26,7 @@ import { echeanceDuTitre, type DatesDuTitre } from "./echeance";
  * ~~L'habilitation électrique en est le cas type — le Code renvoie à des
  * modalités qu'il qualifie lui-même de recommandées, et le produit ne décrète
  * pas un rendez-vous là où le texte n'en pose aucun (ADR-023 § 6).~~
- * [2026-10-15 : plus depuis C66 — l'habilitation porte un rythme retenu
+ * [2026-10-15, `lot/menage-1015` : plus depuis C66 (9ac4d98c) — l'habilitation porte un rythme retenu
  * triennal (ADR-039 § 8) ; l'autorisation de conduite, sans durée écrite, est
  * le cas type.] Le peindre en rouge inventerait une non-conformité.
  */

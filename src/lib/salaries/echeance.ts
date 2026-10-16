@@ -49,8 +49,8 @@ export type DatesDuTitre = {
  *     une obligation que l'appelant n'a pas su résoudre (`undefined`). Un titre
  *     sans durée écrite n'a pas de rendez-vous manqué, et en inventer un
  *     peindrait en rouge une non-conformité que le texte ne pose pas
- *     (~~l'habilitation électrique, ADR-023 § 6~~ — 2026-10-15 : plus
- *     depuis C66, elle porte un rythme retenu triennal ; l'autorisation de
+ *     (~~l'habilitation électrique, ADR-023 § 6~~ — 2026-10-15, `lot/menage-1015` :
+ *     plus depuis C66 (9ac4d98c), elle porte un rythme retenu triennal ; l'autorisation de
  *     conduite est le cas type).
  *
  * `periodicite` accepte `undefined` parce que deux lecteurs sur trois

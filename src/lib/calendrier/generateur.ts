@@ -1089,9 +1089,9 @@ function plusAncienne(
  *    d'établissement, qui est seule par construction, donc seule destinataire
  *    possible d'une fusion.
  *
- * Les quatre successions déclarées à ce jour [2026-10-15, compté dans
- * `OBLIGATIONS_RETIREES` : quatre absorbants, cinq lignes retirées — deux
- * fondues dans le même] visent toutes un absorbant porté
+ * Les ~~quatre~~ cinq successions déclarées à ce jour, qui visent quatre
+ * absorbants [2026-10-15, compté dans `OBLIGATIONS_RETIREES`, `lot/menage-1015` :
+ * deux lignes retirées sont fondues dans le même absorbant] visent toutes un absorbant porté
  * par l'établissement : c'est `parObligation` qui sert. `parCle` n'a pas
  * d'utilisateur — elle existe pour que le premier absorbant porté par un
  * équipement ne se serve pas en silence de la mauvaise table.

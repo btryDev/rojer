@@ -65,9 +65,10 @@ const MOT_DE_L_ETAT: Record<RegistreLigne, string> = {
   proche: "Échéance déclarée proche",
   enRetard: "Échéance déclarée dépassée",
   // Pas « en retard » : un titre sans terme écrit n'a pas de rendez-vous
-  // manqué. Le Code renvoie ici à des modalités qu'il qualifie lui-même de
-  // recommandées (ADR-023 § 6) — décréter une échéance serait inventer une
-  // non-conformité.
+  // manqué. ~~Le Code renvoie ici à des modalités qu'il qualifie lui-même de
+  // recommandées (ADR-023 § 6)~~ [2026-10-15, `lot/menage-1015` : c'était
+  // l'habilitation, qui porte un rythme retenu triennal depuis C66,
+  // 9ac4d98c] — décréter une échéance serait inventer une non-conformité.
   aPlanifier: "Sans terme écrit",
   // Un TITRE n'est jamais classé ainsi (`classerTitre`) : la table est fermée
   // sur les états d'une ligne, et le mot est le même que celui du calendrier.

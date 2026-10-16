@@ -7,7 +7,7 @@ Chaque point encore ouvert du document a été lu et annoté sur place
 et datés (règle 11). Les défauts ont été revérifiés dans le code du jour
 (`main` à `8f48889e`).
 
-**50 points ouverts avant tri → 5 défauts, ~~11~~ ~~13~~ 20 décisions [2026-10-15 : + 7, remontées des ADR, § 18], 7 projets, ~~27~~ 25 constats
+**50 points ouverts avant tri → 5 défauts [2026-10-16, `lot/menage-1015` : 7 au § 0 depuis — n° 6 ajouté le 2026-10-14, n° 7 le 2026-10-16 ; 6 clos, 1 ouvert], ~~11~~ ~~13~~ 20 décisions [2026-10-15 : + 7, remontées des ADR, § 18], 7 projets, ~~27~~ 25 constats
 rayés ou annotés** (dont 5 déjà faits ou corrigés, rayés). [Relu le même jour :
 les comptes de test en production et le stockage Vercel au-dessus du quota
 passent de constat à décision — ils se règlent avant les premiers clients.]

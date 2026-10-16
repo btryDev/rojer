@@ -97,9 +97,11 @@ describe("classerTitre", () => {
   const now = new Date("2026-03-03T12:00:00.000Z");
 
   it("ne met pas en retard un titre sans terme écrit", () => {
-    // Le cas de l'habilitation électrique : le Code renvoie à des modalités
-    // qu'il qualifie lui-même de recommandées (ADR-023 § 6). Le peindre en
-    // rouge inventerait une non-conformité.
+    // ~~Le cas de l'habilitation électrique : le Code renvoie à des modalités
+    // qu'il qualifie lui-même de recommandées (ADR-023 § 6).~~ [2026-10-15,
+    // `lot/menage-1015` : plus depuis C66 (9ac4d98c) — l'habilitation porte un
+    // rythme retenu triennal ; l'autorisation de conduite est le cas type.]
+    // Le peindre en rouge inventerait une non-conformité.
     const delivreLe = new Date("2020-03-03T12:00:00.000Z");
     expect(classerTitre({ delivreLe, echeanceLe: null }, "autre", now)).toBe("aPlanifier");
   });
