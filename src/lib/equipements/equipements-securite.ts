@@ -34,6 +34,7 @@ import {
   type ContexteFondement,
   type FondementLigne,
 } from "@/lib/etats-permanents/fondement";
+import { ancreEtatPermanent } from "@/lib/etats-permanents/ancre";
 import { modeDeclarationApplique } from "@/lib/etats-permanents/regle";
 import { phrasesAConfirmer } from "@/lib/matching/marques";
 import type { ObligationApplicable } from "@/lib/matching/types";
@@ -169,4 +170,20 @@ export function lignesEquipementsSecurite(
     });
   }
   return lignes;
+}
+
+/**
+ * Où mène le geste d'une ligne qui n'est pas déclarée : le formulaire ouvert
+ * sur la catégorie, ou la ligne de l'obligation sur « Ce qui doit être en
+ * place » — l'ancre que `LigneEtat` pose (E5). Une ligne « ailleurs » n'existe
+ * que si cet écran la montre (`modeDeclarationApplique`, plus haut) : l'ancre
+ * vise donc une ligne réellement rendue. `null` pour une ligne déclarée.
+ */
+export function hrefActionSecurite(
+  l: Pick<LigneEquipementSecurite, "obligationId" | "cible" | "etat">,
+  liens: { base: string; hrefNouveau: (categorie: CategorieEquipement) => string },
+): string | null {
+  if (l.etat === "declare") return null;
+  if (l.cible.kind === "categorie") return liens.hrefNouveau(l.cible.categorie);
+  return `${liens.base}/etats-permanents#${ancreEtatPermanent(l.obligationId)}`;
 }

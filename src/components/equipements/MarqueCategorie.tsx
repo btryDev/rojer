@@ -166,6 +166,30 @@ export function MarqueCategorie({
     (LABEL_CATEGORIE_EQUIPEMENT as Partial<Record<string, string>>)[
       categorie
     ] ?? "Catégorie inconnue";
+  return (
+    <MarqueIcone icone={Icone} label={label} taille={taille} ton={ton} className={className} />
+  );
+}
+
+/**
+ * La même marque pour un objet qui n'est pas une catégorie du parc — le
+ * matériel de premiers secours de la section « Équipements de sécurité »
+ * (2026-10-16). Une seule géométrie : rayon, trait et proportions ne se
+ * recopient pas.
+ */
+export function MarqueIcone({
+  icone: Icone,
+  label,
+  taille = 44,
+  ton = "encre",
+  className,
+}: {
+  icone: Picto;
+  label: string;
+  taille?: number;
+  ton?: keyof typeof TON;
+  className?: string;
+}) {
   const icone = Math.round(taille * (ton === "glacier" ? 0.62 : 0.5));
 
   return (

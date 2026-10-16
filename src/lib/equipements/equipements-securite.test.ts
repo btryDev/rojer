@@ -5,10 +5,12 @@ import { obligationParId } from "@/lib/referentiels/conformite";
 import { porteurDe } from "@/lib/referentiels/conformite/types";
 import { estEtatADeclarer } from "@/lib/etats-permanents/regle";
 import { fondementDe } from "@/lib/etats-permanents/fondement";
+import { ancreEtatPermanent } from "@/lib/etats-permanents/ancre";
 import { CATEGORIES_EQUIPEMENT } from "@/lib/referentiels/types-communs";
 import { LABEL_CATEGORIE_EQUIPEMENT } from "./labels";
 import {
   EQUIPEMENTS_DE_SECURITE,
+  hrefActionSecurite,
   libelleEquipementSecurite,
   lignesEquipementsSecurite,
   type AppareilDuParc,
@@ -160,5 +162,26 @@ describe("« à confirmer » : la règle entière de `phrasesAConfirmer`", () =>
   it("sans marque, la ligne n'est pas « à confirmer »", () => {
     const [l] = lignesEquipementsSecurite([applicable({})], [], contexte);
     expect(l.aConfirmer).toBe(false);
+  });
+});
+
+describe("le geste de chaque ligne", () => {
+  const liens = { base: "/etablissements/e", hrefNouveau: (c: string) => `/nouveau?categorie=${c}` };
+
+  it("pas encore déclaré : le formulaire ouvert sur la catégorie", () => {
+    const l = section(RESTAURANT_N3, []).find((x) => x.obligationId === "dae-erp-detention")!;
+    expect(hrefActionSecurite(l, liens)).toBe("/nouveau?categorie=DEFIBRILLATEUR");
+  });
+
+  it("déclaré : aucun geste", () => {
+    const l = section(RESTAURANT_N3, [dae]).find((x) => x.obligationId === "dae-erp-detention")!;
+    expect(hrefActionSecurite(l, liens)).toBeNull();
+  });
+
+  it("ailleurs : la ligne de l'obligation sur « Ce qui doit être en place », par l'ancre que LigneEtat pose", () => {
+    const l = section(RESTAURANT_N3, []).find((x) => x.obligationId === "secours-etablissement-materiel")!;
+    expect(hrefActionSecurite(l, liens)).toBe(
+      `/etablissements/e/etats-permanents#${ancreEtatPermanent("secours-etablissement-materiel")}`,
+    );
   });
 });
