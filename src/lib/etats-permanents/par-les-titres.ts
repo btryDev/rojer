@@ -27,14 +27,6 @@ import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-reten
 import type { Obligation } from "@/lib/referentiels/conformite/types";
 import { echeanceDuTitre } from "@/lib/salaries/echeance";
 
-/** Le titre qui est la même obligation que `o`, vue par personne, ou `null`. */
-export function titreDuDouble(o: Obligation): string | null {
-  for (const t of o.transmet ?? []) {
-    if (t.vers === "salarie_designe" && t.titre && t.memeObligation) return t.titre;
-  }
-  return null;
-}
-
 export type TitreDeclare = {
   /** « Prénom Nom », tel que la fiche Équipe l'affiche. */
   personne: string;

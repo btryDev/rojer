@@ -83,10 +83,10 @@ import {
   LEGENDE_PORTEURS,
   LEGENDE_SURFACE,
   LIBELLE_SURFACE,
-  suiviParPersonne,
   texteOuVisible,
   texteTypologie,
 } from "@/lib/pdf/textes-grille-relecture";
+import { suiviParPersonne } from "@/lib/referentiels/conformite/transmissions";
 import { SURFACES } from "@/lib/surfaces/obligations-sans-surface";
 import { ReferenceDetaillee } from "@/lib/pdf/ReferenceDetaillee";
 import {

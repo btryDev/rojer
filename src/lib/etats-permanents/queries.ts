@@ -35,10 +35,10 @@ import { obligationsApplicablesDuDossier } from "@/lib/etablissements/dossier-du
 import { titreParId } from "@/lib/salaries/catalogue";
 import {
   etatParLesTitres,
-  titreDuDouble,
   type EtatParLesTitres,
   type TitreDeclare,
 } from "./par-les-titres";
+import { titreDuDouble } from "@/lib/referentiels/conformite/transmissions";
 
 export type LigneEtatPermanent = {
   obligation: Obligation;

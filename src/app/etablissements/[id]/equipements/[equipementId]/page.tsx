@@ -1,5 +1,5 @@
 import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeRetenu";
-import { suiviParPersonne } from "@/lib/pdf/textes-grille-relecture";
+import { suiviParPersonne } from "@/lib/referentiels/conformite/transmissions";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { mentionRythmeRetenu } from "@/lib/referentiels/conformite/mention-rythme";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";

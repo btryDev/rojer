@@ -1,6 +1,6 @@
 "use server";
 
-import { titreDuDouble } from "./par-les-titres";
+import { titreDuDouble } from "@/lib/referentiels/conformite/transmissions";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";

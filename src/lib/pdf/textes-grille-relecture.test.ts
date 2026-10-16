@@ -23,8 +23,8 @@ import {
   texteOuVisible,
   texteProvenance,
   texteTypologie,
-  suiviParPersonne,
 } from "./textes-grille-relecture";
+import { suiviParPersonne } from "@/lib/referentiels/conformite/transmissions";
 import { surfacesDe } from "@/lib/surfaces/obligations-sans-surface";
 import { releveDeLaPage } from "@/lib/quand-ca-arrive/lignes";
 

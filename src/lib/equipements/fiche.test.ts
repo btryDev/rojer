@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { porteurDe } from "@/lib/referentiels/conformite/types";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
-import { suiviParPersonne } from "@/lib/pdf/textes-grille-relecture";
+import { suiviParPersonne } from "@/lib/referentiels/conformite/transmissions";
 import { AUCUNE_PRUDENCE } from "@/lib/calendrier/prudence";
 
 /**

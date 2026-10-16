@@ -7,7 +7,8 @@
 import { describe, expect, it } from "vitest";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { titreParId } from "@/lib/salaries/catalogue";
-import { etatParLesTitres, titreDuDouble } from "./par-les-titres";
+import { etatParLesTitres } from "./par-les-titres";
+import { titreDuDouble } from "@/lib/referentiels/conformite/transmissions";
 
 const ligne = (id: string) => {
   const o = obligationsConformite.find((x) => x.id === id);
