@@ -454,7 +454,7 @@ export default async function EquipementDetailPage({
                   {/* 2026-10-16 (E2) : l'aide de la catégorie, celle du
                       formulaire — ce que Rojer suit pour cet appareil, et ce
                       qu'il ne suit pas. Rien pour une catégorie sans aide. */}
-                  <AideCategorie categorie={eq.categorie} />
+                  <AideCategorie categorie={eq.categorie} gabarit="fiche" />
                 </ChampFiche>
                 {/* 2026-10-14 : le matériel que Rojer ne suit pas, et ce
                     qu'il ne suit pas pour lui — un fait sur l'outil, pas un

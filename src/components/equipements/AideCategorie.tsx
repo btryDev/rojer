@@ -12,17 +12,25 @@ import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
 export const CLASSE_AIDE =
   "m-0 mt-1.5 max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]";
 
+/** Le « corps explicatif » de la charte (`docs/charte-board.md`, barème) :
+ *  l'aide posée sur la fiche, hors d'un champ de formulaire. */
+const CLASSE_CORPS_EXPLICATIF =
+  "m-0 mt-1.5 max-w-[62ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]";
+
 export function AideCategorie({
   categorie,
   id,
+  gabarit = "champ",
 }: {
   categorie: CategorieEquipement;
   id?: string;
+  /** `champ` sous le choix du formulaire, `fiche` sur la fiche de l'appareil. */
+  gabarit?: "champ" | "fiche";
 }) {
   const aide = DESCRIPTION_CATEGORIE[categorie];
   if (!aide) return null;
   return (
-    <p id={id} className={CLASSE_AIDE}>
+    <p id={id} className={gabarit === "fiche" ? CLASSE_CORPS_EXPLICATIF : CLASSE_AIDE}>
       {aide}
     </p>
   );
