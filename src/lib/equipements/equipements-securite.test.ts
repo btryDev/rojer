@@ -185,3 +185,29 @@ describe("le geste de chaque ligne", () => {
     );
   });
 });
+
+describe("« Déclarer » suit l'écran, pas le référentiel seul (revue c6, 2026-10-16)", () => {
+  // Une obligation dont le rythme effectif n'est plus « autre » quitte « Ce qui
+  // doit être en place » pour le calendrier (`modeDeclarationApplique`). La
+  // section ne doit alors plus promettre de l'y déclarer. La fixture change ce
+  // que la règle lit — le rythme de l'obligation applicable —, sans toucher au
+  // référentiel.
+  const materiel = obligationParId("secours-etablissement-materiel")!;
+  const applicable = (o: ObligationApplicable["obligation"]): ObligationApplicable => ({
+    obligation: o,
+    equipementsConcernes: [],
+    porteur: "etablissement",
+    raisons: ["fixture"],
+  });
+  const contexte = { typeErp: null, categorieErp: null };
+
+  it("tel que le référentiel le porte, la ligne se déclare ailleurs", () => {
+    const [l] = lignesEquipementsSecurite([applicable(materiel)], [], contexte);
+    expect(l?.etat).toBe("ailleurs");
+  });
+
+  it("au rythme annuel, l'écran ne la montre pas : la section ne pose pas la ligne", () => {
+    const annuelle = { ...materiel, periodicite: "annuelle" } as ObligationApplicable["obligation"];
+    expect(lignesEquipementsSecurite([applicable(annuelle)], [], contexte)).toEqual([]);
+  });
+});
