@@ -81,6 +81,7 @@ import {
   LEGENDE_REGIME,
   pourHelvetica as t,
   LEGENDE_PORTEURS,
+  lignesColonneEcheance,
   LEGENDE_SURFACE,
   LIBELLE_SURFACE,
   texteOuVisible,
@@ -316,6 +317,28 @@ function EnTeteTableau() {
   );
 }
 
+
+/**
+ * La colonne Échéance : rythme, mention d'un rythme retenu (ADR-039), puis le
+ * renvoi vers le titre qui porte le rythme — ce que le préventeur lit (grille
+ * du 13/10, p. 8). Le contenu vient de `lignesColonneEcheance`, que les tests
+ * vérifient ; ce composant ne fait que l'imprimer.
+ */
+function ColonneEcheance({ o }: { o: Obligation }) {
+  const { rythme, mention, renvois } = lignesColonneEcheance(o, obligationsConformite);
+  return (
+    <View style={[cell, { width: C.periodicite }]}>
+      <Text style={s.td}>{rythme}</Text>
+      {mention && <Text style={[s.small, { marginTop: 1 }]}>{t(mention)}</Text>}
+      {renvois.map((ligne) => (
+        <Text key={ligne} style={[s.small, { marginTop: 2, color: BOARD.bleuEncre }]}>
+          {t(ligne)}
+        </Text>
+      ))}
+    </View>
+  );
+}
+
 /**
  * Les propositions de passage au niveau audit, par id — vide sans l'option.
  * Données de relecture : elles ne touchent pas au référentiel.
@@ -350,15 +373,7 @@ function LigneObligation({
           {t(`Visible : ${texteOuVisible(o)}`)}
         </Text>
       </View>
-      <View style={[cell, { width: C.periodicite }]}>
-        <Text style={s.td}>{libelleRythme(o)}</Text>
-        {/* ADR-039 : un rythme que le texte n'écrit pas dit d'où il vient. */}
-        {o.rythmeRetenu && (
-          <Text style={[s.small, { marginTop: 1 }]}>
-            {t(mentionRythmeRetenu(o)!.court)}
-          </Text>
-        )}
-      </View>
+      <ColonneEcheance o={o} />
       <Text style={[s.td, cell, { width: C.realisateur }]}>
         {o.realisateurs.map((r) => LABEL_REALISATEUR[r]).join(" ou ")}
       </Text>

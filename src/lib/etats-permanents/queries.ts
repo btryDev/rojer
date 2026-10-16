@@ -32,6 +32,12 @@ import { ordonnerLignes } from "./ordre";
 import { contexteFondementDe, fondementDe, type FondementLigne } from "./fondement";
 import { PHRASE_SANS_REPONSE } from "@/lib/matching/sans-reponse";
 import { obligationsApplicablesDuDossier } from "@/lib/etablissements/dossier-du-rendu";
+import {
+  etabliParLesTitres,
+  etatParLesTitres,
+  type EtatParLesTitres,
+  type TitreDeclare,
+} from "./par-les-titres";
 
 export type LigneEtatPermanent = {
   obligation: Obligation;
@@ -62,6 +68,13 @@ export type LigneEtatPermanent = {
    * tableau de bord citent le même texte sans le rechercher chacun.
    */
   fondement: FondementLigne | null;
+  /**
+   * L'état ÉTABLI D'APRÈS LES TITRES déclarés, pour la ligne dont un titre est
+   * la même obligation vue par personne (`par-les-titres.ts`, 2026-10-16).
+   * Elle ne se coche pas : `declareLe` y vaut toujours `null`, une ancienne
+   * déclaration est ignorée. `null` pour toute autre ligne.
+   */
+  parLesTitres: EtatParLesTitres | null;
 };
 
 export type GroupeEtatsPermanents = {
@@ -99,6 +112,13 @@ export type EtatsPermanentsDuDossier = {
    */
   enPlace: number;
   total: number;
+  /**
+   * La part de `total` et d'`enPlace` établie d'après les titres déclarés
+   * (`par-les-titres.ts`) — comptée DEDANS, pour que le score la lise comme
+   * une case, mais nommée à part : l'employeur n'a rien déclaré sur cet état,
+   * et « déclarés en place par vous » le dirait (revue du 2026-10-16).
+   */
+  parLesTitres: { total: number; enPlace: number };
   /** Les lignes « fait le », comptées à part et jamais additionnées au reste. */
   faitsDates: number;
   faitsDatesRenseignes: number;
@@ -128,6 +148,7 @@ export async function listerEtatsPermanents(
     projeterEtablissement(etablissement),
     equipements,
   ),
+  now: Date = new Date(),
 ): Promise<EtatsPermanentsDuDossier> {
   const projete = projeterEtablissement(etablissement);
   // Le fondement affiché dépend du type d'ERP (livre II, titre II : une ligne
@@ -150,19 +171,71 @@ export async function listerEtatsPermanents(
   // qui ne le porte pas devient une fuite le jour où quelqu'un rend la fonction
   // publique ».
   const user = await requireUser();
-  const declarations = await prisma.declarationEtatPermanent.findMany({
-    where: {
-      etablissementId: etablissement.id,
-      etablissement: { entreprise: { userId: user.id } },
-    },
-    select: { obligationId: true, declareLe: true, note: true },
-  });
+
+  // Les titres des personnes actives, pour les seules lignes établies d'après
+  // eux (`etabliParLesTitres`, le prédicat que lit aussi la garde de
+  // l'action). Une personne sortie ne répond plus pour l'établissement, comme
+  // au calendrier.
+  const titresVises = [
+    ...new Set(
+      applicables.flatMap((a) => {
+        const mode = modeDeclarationApplique(a);
+        const titre = mode ? etabliParLesTitres(a.obligation, mode.mode) : null;
+        return titre ? [titre.id] : [];
+      }),
+    ),
+  ];
+
+  // Deux lectures indépendantes, lancées ensemble (revue du 2026-10-16).
+  //
+  // ⚠ LE PRÉDICAT D'APPARTENANCE DES TITRES (`userId`) N'A QU'UNE GARDE :
+  // `par-les-titres-dossier.test.ts` (« ne lit que les titres des personnes
+  // actives de CE dossier »). `tenancy-lectures.test.ts` ne voit pas cette
+  // lecture. Retirer le prédicat ne fait tomber que ce test-là.
+  const [declarations, titres] = await Promise.all([
+    prisma.declarationEtatPermanent.findMany({
+      where: {
+        etablissementId: etablissement.id,
+        etablissement: { entreprise: { userId: user.id } },
+      },
+      select: { obligationId: true, declareLe: true, note: true },
+    }),
+    titresVises.length === 0
+      ? Promise.resolve([])
+      : prisma.titreSalarie.findMany({
+          where: {
+            obligationId: { in: titresVises },
+            salarie: {
+              etablissementId: etablissement.id,
+              actif: true,
+              etablissement: { entreprise: { userId: user.id } },
+            },
+          },
+          select: {
+            obligationId: true,
+            delivreLe: true,
+            echeanceLe: true,
+            salarie: { select: { prenom: true, nom: true } },
+          },
+        }),
+  ]);
   const parObligation = new Map(declarations.map((d) => [d.obligationId, d]));
+  const titresParObligation = new Map<string, TitreDeclare[]>();
+  for (const t of titres) {
+    const liste = titresParObligation.get(t.obligationId) ?? [];
+    liste.push({
+      personne: `${t.salarie.prenom} ${t.salarie.nom}`.trim(),
+      delivreLe: t.delivreLe,
+      echeanceLe: t.echeanceLe,
+    });
+    titresParObligation.set(t.obligationId, liste);
+  }
 
   const parDomaine = new Map<DomaineObligation, LigneEtatPermanent[]>();
   const faits: LigneEtatPermanent[] = [];
   let enPlace = 0;
   let total = 0;
+  const parLesTitresCompte = { total: 0, enPlace: 0 };
   let faitsDates = 0;
   let faitsDatesRenseignes = 0;
 
@@ -174,7 +247,11 @@ export async function listerEtatsPermanents(
     const mode = modeDeclarationApplique(app);
     if (!mode) continue;
 
-    const d = parObligation.get(o.id) ?? null;
+    const titre = etabliParLesTitres(o, mode.mode);
+    const parLesTitres = titre
+      ? etatParLesTitres(titre, titresParObligation.get(titre.id) ?? [], now)
+      : null;
+    const d = parLesTitres ? null : (parObligation.get(o.id) ?? null);
     const ligne: LigneEtatPermanent = {
       obligation: o,
       mode: mode.mode,
@@ -192,11 +269,16 @@ export async function listerEtatsPermanents(
         (q) => PHRASE_SANS_REPONSE[q],
       ),
       fondement: fondementDe(o, contexteFondement),
+      parLesTitres,
     };
 
     if (mode.compteDansLEnTete) {
       total += 1;
-      if (ligne.declareLe) enPlace += 1;
+      if (parLesTitres ? parLesTitres.enPlace : ligne.declareLe) enPlace += 1;
+      if (parLesTitres) {
+        parLesTitresCompte.total += 1;
+        if (parLesTitres.enPlace) parLesTitresCompte.enPlace += 1;
+      }
     } else {
       faitsDates += 1;
       if (ligne.declareLe) faitsDatesRenseignes += 1;
@@ -227,7 +309,15 @@ export async function listerEtatsPermanents(
   // la ligne suivante au moment précis où on va la cliquer.
   ordonnerLignes(faits);
 
-  return { groupes, faits, enPlace, total, faitsDates, faitsDatesRenseignes };
+  return {
+    groupes,
+    faits,
+    enPlace,
+    total,
+    parLesTitres: parLesTitresCompte,
+    faitsDates,
+    faitsDatesRenseignes,
+  };
 }
 
 /**
@@ -290,6 +380,7 @@ export async function etatsPermanentsDuDossier(
       faits: [],
       enPlace: 0,
       total: 0,
+      parLesTitres: { total: 0, enPlace: 0 },
       faitsDates: 0,
       faitsDatesRenseignes: 0,
     };

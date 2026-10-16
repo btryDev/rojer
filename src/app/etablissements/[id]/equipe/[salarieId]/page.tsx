@@ -169,6 +169,16 @@ export default async function SalarieDetailPage({
   const faits = await chargerFaitsActivite(id);
   if (!faits) notFound();
   const duerpDeLaFiche = titresDuDuerpPourUnePersonne(faits, s.titres);
+  // Le même classement que la liste des titres plus bas (`t.etat`), et ses
+  // mots : la carte ne dit pas seulement « déclaré » d'un titre que la liste
+  // marque « Échéance déclarée/calculée dépassée ».
+  const depassees = new Map(
+    s.titres.flatMap((t) =>
+      t.etat === "enRetard" && t.echeance
+        ? [[t.obligationId, { le: t.echeance, calculee: t.echeanceLe === null }] as const]
+        : [],
+    ),
+  );
   const lienVersLaQuestion = (champ: string) =>
     `/etablissements/${id}/equipe/risques#${champ}`;
 
@@ -482,6 +492,7 @@ export default async function SalarieDetailPage({
               questions={duerpDeLaFiche}
               lienVersLaQuestion={lienVersLaQuestion}
               manquants={manquants}
+              depassees={depassees}
             />
 
             <CarteFiche titreFort="Déclarer un titre">

@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { obligationsConformite, porteurDe } from "@/lib/referentiels/conformite";
 import { LIBELLE_ACTIVITE, matchTypologie } from "@/lib/matching/engine";
@@ -22,6 +24,8 @@ import {
   texteProvenance,
   texteTypologie,
 } from "./textes-grille-relecture";
+import { suiviParPersonne } from "@/lib/referentiels/conformite/transmissions";
+import { lignesColonneEcheance } from "./textes-grille-relecture";
 import { surfacesDe } from "@/lib/surfaces/obligations-sans-surface";
 import { releveDeLaPage } from "@/lib/quand-ca-arrive/lignes";
 
@@ -503,5 +507,66 @@ describe("« Visible » : où le dirigeant voit l'obligation (2026-10-13)", () =
       (x) => x.id === "incendie-travail-chiffons-impregnes-recipients-clos",
     )!;
     expect(texteOuVisible(o)).toBe("Ce que Rojer ne couvre pas (niveau audit)");
+  });
+});
+
+describe("suiviParPersonne — le renvoi vers le titre nominatif", () => {
+  const ligne = (id: string) => {
+    const o = obligationsConformite.find((x) => x.id === id);
+    if (!o) throw new Error(id);
+    return o;
+  };
+
+  it("l'habilitation du personnel renvoie au titre de chaque personne, avec ses 3 ans", () => {
+    expect(
+      suiviParPersonne(ligne("elec-travail-habilitation-personnel"), obligationsConformite),
+    ).toEqual([
+      "Suivi par personne : « Habilitation électrique du travailleur désigné » — tous les 3 ans",
+    ]);
+  });
+
+  it("le lien vient de `transmet` : le retirer fait taire le renvoi", () => {
+    const sansLien = { ...ligne("elec-travail-habilitation-personnel"), transmet: [] };
+    expect(suiviParPersonne(sansLien, obligationsConformite)).toEqual([]);
+  });
+
+  it("un titre de salarié ne renvoie pas à un autre titre", () => {
+    for (const o of obligationsConformite.filter((x) => porteurDe(x) === "salarie")) {
+      expect(suiviParPersonne(o, obligationsConformite)).toEqual([]);
+    }
+  });
+
+  it("une transmission ordinaire ne renvoie pas : le carnet et la VGP ne sont pas des doubles", () => {
+    for (const id of [
+      "elec-travail-carnet-prescriptions",
+      "levage-vgp-semestrielle-chariot-gerbeur",
+      "prevention-etablissement-cse",
+    ]) {
+      expect(suiviParPersonne(ligne(id), obligationsConformite)).toEqual([]);
+    }
+  });
+});
+
+describe("grille : le renvoi s'imprime dans la colonne Échéance (revue du 2026-10-16)", () => {
+  // Le préventeur lit la colonne Échéance : c'est là qu'il a vu « sans rythme
+  // écrit » sans renvoi (grille du 13/10, p. 8). La colonne se compose dans
+  // `lignesColonneEcheance` ; le script ne fait que l'imprimer.
+  const habilitation = obligationsConformite.find((o) => o.id === "elec-travail-habilitation-personnel")!;
+
+  it("la colonne Échéance de l'habilitation : le rythme du texte, puis le renvoi", () => {
+    expect(lignesColonneEcheance(habilitation, obligationsConformite)).toEqual({
+      rythme: "sans rythme écrit",
+      mention: null,
+      renvois: ["Suivi par personne : « Habilitation électrique du travailleur désigné » — tous les 3 ans"],
+    });
+  });
+
+  it("le script ne compose pas le renvoi lui-même : il n'appelle que lignesColonneEcheance", () => {
+    // Robuste au reformatage : un nom, pas une mise en page. Un second appel
+    // à `suiviParPersonne` — dans la colonne Obligation ou ailleurs — le
+    // ferait tomber.
+    const source = readFileSync(join(process.cwd(), "scripts/generer-grille-equipements.tsx"), "utf8");
+    expect(source).not.toMatch(/suiviParPersonne/);
+    expect(source).toMatch(/lignesColonneEcheance\(/);
   });
 });

@@ -15,6 +15,9 @@ import {
 } from "@/lib/referentiels/types-communs";
 import { surfacesDe, type Surface } from "@/lib/surfaces/obligations-sans-surface";
 import { porteurDe } from "@/lib/referentiels/conformite";
+import { libelleRythme } from "@/lib/referentiels/conformite/renvoi-aux-normes";
+import { mentionRythmeRetenu } from "@/lib/referentiels/conformite/mention-rythme";
+import { suiviParPersonne } from "@/lib/referentiels/conformite/transmissions";
 import type { Obligation } from "@/lib/referentiels/conformite/types";
 import { releveDeLaPage } from "@/lib/quand-ca-arrive/lignes";
 
@@ -376,6 +379,27 @@ export function texteOuVisible(o: Obligation): string {
     libelles.push("Équipe (titres déclarés par salarié)");
   }
   return libelles.join(" · ");
+}
+
+/**
+ * Ce que porte la colonne Échéance d'une ligne de la grille, dans l'ordre :
+ * le rythme du texte, d'où vient un rythme retenu (ADR-039), puis le renvoi
+ * vers le titre nominatif qui porte le rythme (`suiviParPersonne`).
+ *
+ * Sortie du JSX le 2026-10-16 (relecture groupée) : le renvoi doit vivre
+ * DANS cette colonne — celle que le préventeur lit (grille du 13/10, p. 8) —,
+ * et une garde sur le source du script se contournait ou rougissait au
+ * premier reformatage. Le test vérifie cette donnée ; le script l'imprime.
+ */
+export function lignesColonneEcheance(
+  o: Obligation,
+  catalogue: readonly Obligation[],
+): { rythme: string; mention: string | null; renvois: string[] } {
+  return {
+    rythme: libelleRythme(o),
+    mention: o.rythmeRetenu ? (mentionRythmeRetenu(o)?.court ?? null) : null,
+    renvois: suiviParPersonne(o, catalogue),
+  };
 }
 
 /**

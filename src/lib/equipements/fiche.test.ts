@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { porteurDe } from "@/lib/referentiels/conformite/types";
+import { obligationsConformite } from "@/lib/referentiels/conformite";
+import { suiviParPersonne } from "@/lib/referentiels/conformite/transmissions";
 import { AUCUNE_PRUDENCE } from "@/lib/calendrier/prudence";
 
 /**
@@ -744,6 +746,37 @@ describe("obligationsDeclencheesParUnFait", () => {
     expect(
       obligationsDeclencheesParUnFait(scelle).map((d) => d.obligation.id),
     ).not.toContain("froid-controle-etancheite-apres-modification");
+  });
+});
+
+describe("panneau « ? » d'une installation électrique — le renvoi vers le titre (audit du 2026-10-16)", () => {
+  // La fiche affichait « sans rythme écrit » pour l'habilitation, comme la
+  // grille relevée par le préventeur : le renvoi lit la même fonction.
+  const installation = ficheAuMoteur({
+    categorie: "INSTALLATION_ELECTRIQUE",
+    etablissement: { operationsElectriques: true },
+  });
+  const renvois = () =>
+    obligationsApplicablesALAppareil(installation).flatMap(({ obligation }) =>
+      suiviParPersonne(obligation, obligationsConformite),
+    );
+
+  it("l'habilitation y est, et renvoie aux 3 ans suivis par personne", () => {
+    expect(renvois()).toEqual([
+      "Suivi par personne : « Habilitation électrique du travailleur désigné » — tous les 3 ans",
+    ]);
+  });
+
+  it("après un « non » aux opérations électriques, plus de ligne, plus de renvoi", () => {
+    const sansOperations = ficheAuMoteur({
+      categorie: "INSTALLATION_ELECTRIQUE",
+      etablissement: { operationsElectriques: false },
+    });
+    expect(
+      obligationsApplicablesALAppareil(sansOperations).flatMap(({ obligation }) =>
+        suiviParPersonne(obligation, obligationsConformite),
+      ),
+    ).toEqual([]);
   });
 });
 

@@ -44,6 +44,7 @@ export function LigneEtat({
   aConfirmer = null,
   questionsSansReponse = null,
   fondement = null,
+  parLesTitres = null,
 }: {
   etablissementId: string;
   obligationId: string;
@@ -65,6 +66,12 @@ export function LigneEtat({
   questionsSansReponse?: { phrases: string[]; hrefFiche: string } | null;
   /** L'article qui fonde la ligne, et son texte (`fondement.ts`). */
   fondement?: FondementLigne | null;
+  /**
+   * Établie d'après les titres déclarés (`par-les-titres.ts`, 2026-10-16) :
+   * pas de bouton, la phrase et le chemin vers Équipe, où se déclarent les
+   * titres. `null` : la ligne se déclare.
+   */
+  parLesTitres?: { phrase: string; hrefEquipe: string } | null;
 }) {
   const [pending, startTransition] = useTransition();
   const declare = declareLe !== null;
@@ -143,55 +150,69 @@ export function LigneEtat({
 
       </div>
 
-      {/* LA DATE EST À CÔTÉ DU BOUTON, PAS SOUS LE LIBELLÉ — 2026-09-03.
+      {/* Établie d'après les titres déclarés (2026-10-16) : pas de geste,
+          la phrase et le chemin vers Équipe, où les titres se déclarent. */}
+      {parLesTitres ? (
+        <div className="max-w-[62ch] shrink-0 text-right text-[12px] leading-[1.45] text-[color:var(--board-slate-mid)]">
+          <p className="m-0">{parLesTitres.phrase}</p>
+          <Link
+            href={parLesTitres.hrefEquipe}
+            className="mt-1 inline-block font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
+          >
+            Voir les titres sur Équipe
+          </Link>
+        </div>
+      ) : (
+        <div className="flex shrink-0 items-center gap-3">
+          {/* LA DATE EST À CÔTÉ DU BOUTON, PAS SOUS LE LIBELLÉ — 2026-09-03.
 
-          Sous le libellé, elle apparaissait au clic et **rallongeait la
-          ligne** : tout ce qui suivait descendait d'une ligne de texte au
-          moment précis où le lecteur visait la ligne suivante. C'est la
-          seconde moitié du défaut de réordonnancement que `ordre.ts` corrige,
-          et elle survivait au tri stable.
+              Sous le libellé, elle apparaissait au clic et **rallongeait la
+              ligne** : tout ce qui suivait descendait d'une ligne de texte au
+              moment précis où le lecteur visait la ligne suivante. C'est la
+              seconde moitié du défaut de réordonnancement que `ordre.ts` corrige,
+              et elle survivait au tri stable.
 
-          Ici, la hauteur de la rangée est celle du bouton, que la déclaration
-          ne change pas : rien ne bouge, ni au-dessus ni au-dessous. La date se
-          lit d'ailleurs mieux à côté du geste qui l'a produite, et elle reste
-          à un clic de « Revenir dessus » — l'ADR-027 veut une déclaration
-          révocable et lisible, pas seulement enregistrée. */}
-      <div className="flex shrink-0 items-center gap-3">
-        {declare && (
-          <span className="text-right text-[12px] leading-[1.4] text-[color:var(--board-slate-mid)]">
-            {phraseDeclaration(mode, formaterDateFr(new Date(declareLe)))}
-          </span>
-        )}
-        <button
-          type="button"
-          disabled={pending}
-          aria-pressed={declare}
-          onClick={() =>
-            startTransition(async () => {
-              if (declare)
-                await retirerDeclaration(etablissementId, obligationId);
-              else await declarerEnPlace(etablissementId, obligationId);
-            })
-          }
-          className="inline-flex shrink-0 items-center gap-2 rounded-full border px-4 py-[7px] text-[12.5px] transition-colors disabled:opacity-60"
-          style={
-            declare
-              ? {
-                  borderColor: "var(--board-slate-line)",
-                  background: "var(--board-slate-pale)",
-                  color: "var(--board-slate-mid)",
-                }
-              : {
-                  borderColor: "var(--board-blue-soft)",
-                  background: "var(--board-blue-pale)",
-                  color: "var(--board-blue-ink)",
-                }
-          }
-        >
-          {declare && <Check className="size-3.5" aria-hidden />}
-          {pending ? ATTENTE : declare ? libelleRetour() : geste}
-        </button>
-      </div>
+              Ici, la hauteur de la rangée est celle du bouton, que la déclaration
+              ne change pas : rien ne bouge, ni au-dessus ni au-dessous. La date se
+              lit d'ailleurs mieux à côté du geste qui l'a produite, et elle reste
+              à un clic de « Revenir dessus » — l'ADR-027 veut une déclaration
+              révocable et lisible, pas seulement enregistrée. */}
+          {declare && (
+            <span className="text-right text-[12px] leading-[1.4] text-[color:var(--board-slate-mid)]">
+              {phraseDeclaration(mode, formaterDateFr(new Date(declareLe)))}
+            </span>
+          )}
+          <button
+            type="button"
+            disabled={pending}
+            aria-pressed={declare}
+            onClick={() =>
+              startTransition(async () => {
+                if (declare)
+                  await retirerDeclaration(etablissementId, obligationId);
+                else await declarerEnPlace(etablissementId, obligationId);
+              })
+            }
+            className="inline-flex shrink-0 items-center gap-2 rounded-full border px-4 py-[7px] text-[12.5px] transition-colors disabled:opacity-60"
+            style={
+              declare
+                ? {
+                    borderColor: "var(--board-slate-line)",
+                    background: "var(--board-slate-pale)",
+                    color: "var(--board-slate-mid)",
+                  }
+                : {
+                    borderColor: "var(--board-blue-soft)",
+                    background: "var(--board-blue-pale)",
+                    color: "var(--board-blue-ink)",
+                  }
+            }
+          >
+            {declare && <Check className="size-3.5" aria-hidden />}
+            {pending ? ATTENTE : declare ? libelleRetour() : geste}
+          </button>
+        </div>
+      )}
     </li>
   );
 }

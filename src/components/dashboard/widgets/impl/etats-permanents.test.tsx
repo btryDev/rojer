@@ -50,6 +50,7 @@ function ligne(
     obligation: { ...OBLIGATION, id, libelle: `Libellé ${id}` },
     mode: "etat",
     compteDansLEnTete: true,
+    parLesTitres: null,
     pieceAttendue: null,
     declareLe: null,
     note: null,
@@ -99,6 +100,7 @@ const DOSSIER: EtatsPermanentsDuDossier = {
   ],
   enPlace: 2,
   total: 4,
+  parLesTitres: { total: 0, enPlace: 0 },
   faitsDates: 2,
   faitsDatesRenseignes: 1,
 };
@@ -222,6 +224,7 @@ describe("widget sans ligne, ou sans réponse", () => {
     faits: [],
     enPlace: 0,
     total: 0,
+    parLesTitres: { total: 0, enPlace: 0 },
     faitsDates: 0,
     faitsDatesRenseignes: 0,
   };
@@ -263,5 +266,44 @@ describe("même source que l'écran — le source, faute de pouvoir exécuter la
     expect(lire("src/app/etablissements/[id]/etats-permanents/page.tsx")).toMatch(
       /await listerEtatsPermanents\(/,
     );
+  });
+});
+
+describe("widget : une ligne établie d'après les titres (revue du 2026-10-16)", () => {
+  it("affiche sa phrase, pas « Déclarer en place »", () => {
+    const phrase = "Établi d'après les titres déclarés : 1 titre ; Léa Martin : échéance calculée dépassée le 01/06/2025.";
+    const [l] = lignesDuWidget({
+      ...DOSSIER,
+      groupes: [
+        {
+          domaine: "electricite",
+          libelle: "Électricité",
+          lignes: [ligne("habilitation", { parLesTitres: { enPlace: false, phrase, phraseSansNom: phrase } })],
+        },
+      ],
+      faits: [],
+    });
+    expect(l.etat).toBe(phrase);
+  });
+
+  it("« À confirmer » devant, quand l'écran l'affiche", () => {
+    const phrase = "Établi d'après les titres déclarés : 1 titre, aucune échéance dépassée.";
+    const [l] = lignesDuWidget({
+      ...DOSSIER,
+      groupes: [
+        {
+          domaine: "electricite",
+          libelle: "Électricité",
+          lignes: [
+            ligne("habilitation", {
+              parLesTitres: { enPlace: true, phrase, phraseSansNom: phrase },
+              questionsSansReponse: ["Effectuez-vous des opérations électriques ?"],
+            }),
+          ],
+        },
+      ],
+      faits: [],
+    });
+    expect(l.etat).toBe(`À confirmer · ${phrase}`);
   });
 });

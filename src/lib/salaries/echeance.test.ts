@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { echeanceDuTitre } from "./echeance";
-import { classerTitre, etatDuTitre } from "./queries";
+import { classerTitre, etatDuTitre } from "./etat-titre";
 import { titreParId } from "./catalogue";
 import {
   genererVerificationsDepuisTitres,

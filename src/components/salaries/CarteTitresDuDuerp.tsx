@@ -60,9 +60,19 @@ export function phraseTitre(
    * contredirait.
    */
   manquant = false,
+  /**
+   * L'échéance du titre déclaré, quand elle est dépassée (2026-10-16, audit
+   * de l'habilitation) : « Titre déclaré, délivré le … » seul se lisait
+   * comme un titre valide, à côté de la liste qui le marque dépassé. Les mots
+   * sont ceux de cette liste (`MOT_DE_L_ETAT`) — jamais « expiré », qui se lit
+   * comme un état de droit quand le triennal vient d'une norme.
+   */
+  depassee: { le: Date; calculee: boolean } | null = null,
 ): string {
   const declare = dernierTitreLe
-    ? `Titre déclaré pour cette personne, délivré le ${formaterDateLongueFr(dernierTitreLe)}.`
+    ? depassee
+      ? `Titre déclaré pour cette personne, délivré le ${formaterDateLongueFr(dernierTitreLe)} ; échéance ${depassee.calculee ? "calculée" : "déclarée"} dépassée le ${formaterDateLongueFr(depassee.le)}.`
+      : `Titre déclaré pour cette personne, délivré le ${formaterDateLongueFr(dernierTitreLe)}.`
     : null;
   // Le manque d'abord (contre-relecture du 2026-10-12) : un titre qu'un titre
   // DÉCLARÉ appelle est dû même sous un « non » — la personne détient
@@ -88,11 +98,14 @@ export function CarteTitresDuDuerp({
   questions,
   lienVersLaQuestion,
   manquants = new Set(),
+  depassees = new Map(),
 }: {
   questions: readonly QuestionDeLaFiche[];
   lienVersLaQuestion: (questionId: string) => string;
   /** Les titres qui manquent à cette personne (ADR-043). */
   manquants?: ReadonlySet<string>;
+  /** Les titres déclarés dont l'échéance est dépassée : la date, et d'où elle vient. */
+  depassees?: ReadonlyMap<string, { le: Date; calculee: boolean }>;
 }) {
   return (
     <CarteFiche titreFort="Formations liées aux risques du poste">
@@ -149,7 +162,12 @@ export function CarteTitresDuDuerp({
                     </p>
                   )}
                   <p className="m-0 mt-1 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-soft)]">
-                    {phraseTitre(reponse, dernierTitreLe, manquants.has(obligation.id))}
+                    {phraseTitre(
+                      reponse,
+                      dernierTitreLe,
+                      manquants.has(obligation.id),
+                      depassees.get(obligation.id) ?? null,
+                    )}
                   </p>
                   <ReferenceFondatrice obligation={obligation} />
                 </li>

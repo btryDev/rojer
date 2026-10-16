@@ -709,6 +709,21 @@ export type Transmission =
        * (`du-a-la-personne.test.ts`) : absent, le délai se serait tu.
        */
       delai?: "rythme_du_titre" | "aucun";
+      /**
+       * La source et le titre sont LA MÊME obligation, vue une fois pour
+       * l'établissement et une fois par personne : le rythme de l'une est
+       * celui de l'autre, suivi sur le titre. Déclaré, jamais déduit — un
+       * article partagé ne suffit pas (le carnet de prescriptions partage
+       * `R. 4544-10` avec l'habilitation, il se remet une fois et n'a pas de
+       * rythme). Une seule lecture, `titreDuDouble` (`./transmissions.ts`),
+       * et deux usages : l'état « en place » de la ligne est établi d'après
+       * les titres déclarés (`etabliParLesTitres`,
+       * `etats-permanents/par-les-titres.ts`), et `suiviParPersonne`
+       * (`./transmissions.ts`) imprime le renvoi sur la grille de relecture
+       * et la fiche équipement (2026-10-16). N'entre pas à
+       * l'empreinte, comme le reste de `transmet`.
+       */
+      memeObligation?: true;
     }
   | {
       /**

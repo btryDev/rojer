@@ -44,6 +44,9 @@ export function lignesDuWidget(
       mode: l.mode,
       declareLe: l.declareLe ? formaterDateFr(l.declareLe) : null,
       aConfirmer: l.aConfirmer !== null || l.questionsSansReponse.length > 0,
+      // Établie d'après les titres (2026-10-16) : sa phrase, que
+      // `etatDeLaLigne` fait précéder d'« À confirmer » comme les autres.
+      parLesTitres: l.parLesTitres?.phrase ?? null,
     }),
     fondement: l.fondement,
   }));
