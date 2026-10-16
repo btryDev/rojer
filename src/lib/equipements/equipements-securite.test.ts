@@ -6,8 +6,10 @@ import { porteurDe } from "@/lib/referentiels/conformite/types";
 import { estEtatADeclarer } from "@/lib/etats-permanents/regle";
 import { fondementDe } from "@/lib/etats-permanents/fondement";
 import { CATEGORIES_EQUIPEMENT } from "@/lib/referentiels/types-communs";
+import { LABEL_CATEGORIE_EQUIPEMENT } from "./labels";
 import {
   EQUIPEMENTS_DE_SECURITE,
+  libelleEquipementSecurite,
   lignesEquipementsSecurite,
   type AppareilDuParc,
 } from "./equipements-securite";
@@ -74,6 +76,14 @@ describe("la table des équipements de sécurité", () => {
         expect(estEtatADeclarer(obligationParId(e.obligationId)!), e.obligationId).toBe(true);
       }
     }
+  });
+
+  it("le défibrillateur et les extincteurs prennent le libellé de leur catégorie, l'alarme le sien", () => {
+    const libelle = (id: string) =>
+      libelleEquipementSecurite(EQUIPEMENTS_DE_SECURITE.find((e) => e.obligationId === id)!);
+    expect(libelle("dae-erp-detention")).toBe(LABEL_CATEGORIE_EQUIPEMENT.DEFIBRILLATEUR);
+    expect(libelle("incendie-travail-extincteurs-dotation")).toBe(LABEL_CATEGORIE_EQUIPEMENT.EXTINCTEUR);
+    expect(libelle("incendie-travail-alarme-sonore")).toBe("Système d'alarme sonore");
   });
 
   it("chaque catégorie citée est déclarable", () => {

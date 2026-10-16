@@ -37,6 +37,7 @@ import {
 import { modeDeclarationApplique } from "@/lib/etats-permanents/regle";
 import { phrasesAConfirmer } from "@/lib/matching/marques";
 import type { ObligationApplicable } from "@/lib/matching/types";
+import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
 
 /** Ce qui fait passer une ligne à « déclaré ». */
@@ -53,24 +54,29 @@ export type CibleDeclaration =
 
 export type EquipementDeSecurite = {
   obligationId: string;
-  /** Le nom court de la ligne, celui du matériel. */
-  libelle: string;
+  /**
+   * Le nom de la ligne, quand il n'est pas celui de la catégorie. Absent, la
+   * ligne prend `LABEL_CATEGORIE_EQUIPEMENT` : un seul endroit où le
+   * défibrillateur s'appelle « Défibrillateur (DAE) ».
+   */
+  libelle?: string;
   cible: CibleDeclaration;
 };
 
 export const EQUIPEMENTS_DE_SECURITE: readonly EquipementDeSecurite[] = [
   {
     obligationId: "dae-erp-detention",
-    libelle: "Défibrillateur (DAE)",
     cible: { kind: "categorie", categorie: "DEFIBRILLATEUR" },
   },
   {
     obligationId: "incendie-travail-extincteurs-dotation",
-    libelle: "Extincteurs",
     cible: { kind: "categorie", categorie: "EXTINCTEUR" },
   },
   {
     obligationId: "incendie-travail-alarme-sonore",
+    // Pas le libellé de la catégorie (« SSI et équipement d'alarme
+    // incendie ») : R. 4227-34 exige un « système d'alarme sonore », et un
+    // SSI n'en est qu'une forme possible.
     libelle: "Système d'alarme sonore",
     cible: { kind: "categorie", categorie: "ALARME_INCENDIE" },
   },
@@ -80,6 +86,13 @@ export const EQUIPEMENTS_DE_SECURITE: readonly EquipementDeSecurite[] = [
     cible: { kind: "etat_permanent" },
   },
 ];
+
+/** Le nom affiché d'une ligne — et le seul : le bouton le reprend. */
+export function libelleEquipementSecurite(e: EquipementDeSecurite): string {
+  if (e.libelle) return e.libelle;
+  if (e.cible.kind === "categorie") return LABEL_CATEGORIE_EQUIPEMENT[e.cible.categorie];
+  throw new Error(`${e.obligationId} : une ligne sans catégorie doit porter son libellé`);
+}
 
 /** Ce que la section sait d'un appareil du parc. */
 export type AppareilDuParc = {
@@ -140,7 +153,7 @@ export function lignesEquipementsSecurite(
         : [];
     lignes.push({
       obligationId: e.obligationId,
-      libelle: e.libelle,
+      libelle: libelleEquipementSecurite(e),
       fondement: fondementDe(a.obligation, contexte),
       // La règle entière, pas sa moitié : une question restée sans réponse OU
       // un seuil compté sur l'effectif de l'entreprise (`phrasesAConfirmer`).

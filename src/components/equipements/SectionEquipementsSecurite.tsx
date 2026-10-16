@@ -14,7 +14,6 @@ import { PastilleFondement } from "@/components/etats-permanents/PastilleFondeme
 import { buttonVariants } from "@/components/ui/button";
 import { LignesFiche, LigneFiche, PastilleFiche } from "@/components/ui-kit";
 import type { LigneEquipementSecurite } from "@/lib/equipements/equipements-securite";
-import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
 
 export type AppareilAffiche = {
   id: string;
@@ -111,9 +110,9 @@ export function SectionEquipementsSecurite({
                   >
                     <Plus aria-hidden />
                     Ajouter
-                    <span className="sr-only">
-                      {" "}— {LABEL_CATEGORIE_EQUIPEMENT[l.cible.categorie]}
-                    </span>
+                    {/* Le libellé de la ligne, pas celui de la catégorie : le
+                        bouton dit ce que la ligne affiche (contrôle visuel E3). */}
+                    <span className="sr-only"> — {enMinuscule(l.libelle)}</span>
                   </Link>
                 ) : (
                   <Link
@@ -121,7 +120,7 @@ export function SectionEquipementsSecurite({
                     className={buttonVariants({ variant: "boardClair", size: "boardSm" })}
                   >
                     Déclarer
-                    <span className="sr-only"> — {l.libelle}</span>
+                    <span className="sr-only"> — {enMinuscule(l.libelle)}</span>
                   </Link>
                 )
               }
@@ -131,4 +130,9 @@ export function SectionEquipementsSecurite({
       </LignesFiche>
     </section>
   );
+}
+
+/** « Système d'alarme sonore » → « système d'alarme sonore », en fin de phrase. */
+function enMinuscule(s: string): string {
+  return s.charAt(0).toLowerCase() + s.slice(1);
 }

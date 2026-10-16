@@ -1,4 +1,5 @@
 import { obligationParId } from "@/lib/referentiels/conformite";
+import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
 import { nafEffectif } from "@/lib/perimetre/secteur";
 import type {
   CategorieEquipement,
@@ -401,7 +402,7 @@ export function suggererEquipements(ctx: ContexteEtablissement): Entree[] {
   if (ctx.estERP && estCategorieUnAQuatre(ctx.categorieErp)) {
     ajoute({
       categorie: "DEFIBRILLATEUR",
-      libelle: "Défibrillateur (DAE)",
+      libelle: LABEL_CATEGORIE_EQUIPEMENT.DEFIBRILLATEUR,
       motif:
         "Détention obligatoire, maintenance et déclaration à la base nationale",
       fondements: [{ obligationId: "dae-erp-detention" }],
