@@ -678,7 +678,8 @@ export type Transmission =
        * zéro.**~~ [2026-10-15 : il en reste un —
        * `elec-erp-presence-personne-qualifiee`, personne qualifiée en ERP
        * N1–N2 — et `transmission.test.ts` tient le cliquet à un
-       * (`PLAFOND_RENVOIS_SANS_TITRE`).] Le seul cas qui a existé était l'habilitation électrique de
+       * (`PLAFOND_RENVOIS_SANS_TITRE`).] Le seul cas ~~qui a existé~~ résolu
+       * [2026-10-15] était l'habilitation électrique de
        * `R. 4544-10` — branchée sur `elec-salarie-habilitation` le
        * 2026-09-01. Ce qu'il coûtait mérite d'être su avant d'en réécrire
        * un : l'écran disait au dirigeant « cette obligation suppose une
