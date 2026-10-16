@@ -4,7 +4,7 @@ import type { EtablissementMatching, ObligationApplicable } from "@/lib/matching
 import { obligationParId } from "@/lib/referentiels/conformite";
 import { porteurDe } from "@/lib/referentiels/conformite/types";
 import { estEtatADeclarer } from "@/lib/etats-permanents/regle";
-import { fondementDe } from "@/lib/etats-permanents/fondement";
+import { contexteFondementDe, fondementDe } from "@/lib/etats-permanents/fondement";
 import { ancreEtatPermanent } from "@/lib/etats-permanents/ancre";
 import { CATEGORIES_EQUIPEMENT } from "@/lib/referentiels/types-communs";
 import { LABEL_CATEGORIE_EQUIPEMENT } from "./labels";
@@ -55,12 +55,16 @@ const BUREAU: EtablissementMatching = {
 
 const dae: AppareilDuParc = { id: "d1", libelle: "DAE de l'entrée", categorie: "DEFIBRILLATEUR" };
 
+/** Le contexte d'un établissement qui n'est pas un ERP, fabriqué par la seule voie permise. */
+const SANS_ERP = contexteFondementDe({ estERP: false, typeErp: null, categorieErp: null });
+
 function section(etab: EtablissementMatching, parc: AppareilDuParc[]) {
   const moteur = parc.map((p) => ({ ...p, caracteristiques: null }));
-  return lignesEquipementsSecurite(determineObligationsApplicables(etab, moteur), parc, {
-    typeErp: etab.typeErp,
-    categorieErp: etab.categorieErp,
-  });
+  return lignesEquipementsSecurite(
+    determineObligationsApplicables(etab, moteur),
+    parc,
+    contexteFondementDe(etab),
+  );
 }
 
 describe("la table des équipements de sécurité", () => {
@@ -103,10 +107,11 @@ describe("la bascule déclaré / pas encore déclaré", () => {
     expect(l?.etat).toBe("pas_encore_declare");
     expect(l?.appareils).toEqual([]);
     // La lecture de l'écran « Ce qui doit être en place », pas une seconde.
-    expect(l?.fondement).toEqual(fondementDe(obligationParId("dae-erp-detention")!, {
+    expect(l?.fondement).toEqual(fondementDe(obligationParId("dae-erp-detention")!, contexteFondementDe({
+      estERP: true,
       typeErp: "N",
       categorieErp: "N3",
-    }));
+    })));
     expect(l?.fondement?.reference).toContain("R. 157-1");
   });
 
@@ -148,7 +153,7 @@ describe("« à confirmer » : la règle entière de `phrasesAConfirmer`", () =>
     raisons: ["fixture"],
     ...extra,
   });
-  const contexte = { typeErp: null, categorieErp: null };
+  const contexte = SANS_ERP;
 
   it("un seuil compté sur l'entreprise rend la ligne « à confirmer »", () => {
     const [l] = lignesEquipementsSecurite(
@@ -199,7 +204,7 @@ describe("« Déclarer » suit l'écran, pas le référentiel seul (revue c6, 20
     porteur: "etablissement",
     raisons: ["fixture"],
   });
-  const contexte = { typeErp: null, categorieErp: null };
+  const contexte = SANS_ERP;
 
   it("tel que le référentiel le porte, la ligne se déclare ailleurs", () => {
     const [l] = lignesEquipementsSecurite([applicable(materiel)], [], contexte);

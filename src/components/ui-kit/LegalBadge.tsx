@@ -20,7 +20,7 @@ import type { Charte } from "./charte";
 // La forme de la pastille, par charte. BOARD : un rayon FIXE de 18 px — celui
 // du « bloc interne » de la charte (docs/charte-board.md, § 1.6) —, et non
 // `rounded-full` (2026-10-16, second contrôle visuel, F2). Sur une ligne, la
-// pastille fait ~24 px de haut : CSS ramène alors un rayon trop grand à la
+// pastille fait ~26 px de haut : CSS ramène alors un rayon trop grand à la
 // demi-hauteur (réduction proportionnelle des rayons, CSS Backgrounds § 5.5),
 // et elle garde exactement sa forme de pastille. Dès que la référence passe à
 // la ligne — au téléphone, R. 157-1 tenait sur sept —, `rounded-full` en
