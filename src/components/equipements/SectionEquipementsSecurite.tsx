@@ -13,6 +13,7 @@ import { MarqueCategorie } from "@/components/equipements/MarqueCategorie";
 import { buttonVariants } from "@/components/ui/button";
 import { LignesFiche, LigneFiche, PastilleFiche } from "@/components/ui-kit";
 import type { LigneEquipementSecurite } from "@/lib/equipements/equipements-securite";
+import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
 
 export type AppareilAffiche = {
   id: string;
@@ -61,6 +62,7 @@ export function SectionEquipementsSecurite({
               className="underline decoration-[color:var(--board-slate)] underline-offset-2 hover:text-[color:var(--board-blue-ink)]"
             >
               {l.article}
+              <span className="sr-only"> (nouvel onglet)</span>
             </a>
           ) : (
             l.article
@@ -119,6 +121,9 @@ export function SectionEquipementsSecurite({
                   >
                     <Plus aria-hidden />
                     Ajouter
+                    <span className="sr-only">
+                      {" "}— {LABEL_CATEGORIE_EQUIPEMENT[l.cible.categorie]}
+                    </span>
                   </Link>
                 ) : (
                   <Link
@@ -126,6 +131,7 @@ export function SectionEquipementsSecurite({
                     className={buttonVariants({ variant: "boardClair", size: "boardSm" })}
                   >
                     Déclarer
+                    <span className="sr-only"> — {l.libelle}</span>
                   </Link>
                 )
               }
