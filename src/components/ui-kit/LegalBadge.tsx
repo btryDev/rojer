@@ -173,6 +173,9 @@ export function LegalBadge(props: SocleLegalBadge & SourceLegalBadge) {
               className={LIEN[charte]}
             >
               Lire la source officielle →
+              {/* Le lien ouvre un onglet : le lecteur d'écran l'entend (F4,
+                  2026-10-16). Une fois ici, pour toutes les pastilles. */}
+              <span className="sr-only"> (nouvel onglet)</span>
             </a>
           )}
         </div>
