@@ -290,3 +290,19 @@ describe("la marque « à confirmer » passe au document (2026-09-27)", () => {
     ]);
   });
 });
+
+describe("phraseIndetermines — déclarées et établies d'après les titres ensemble (relecture du 2026-10-16)", () => {
+  it("les deux parts, chacune entière, et le renvoi une seule fois à la fin", () => {
+    expect(phraseIndetermines(3, 1)).toBe(
+      "2 états permanents ne portent pas encore de déclaration. Ils ne pénalisent pas la note — l'outil n'a rien constaté à leur sujet —, ils l'empêchent de conclure. " +
+        "Un état établi d'après les titres déclarés n'est pas en place : aucun titre n'y est déclaré, ou leurs échéances sont dépassées. Il empêche la note de conclure. " +
+        "Le détail figure plus loin.",
+    );
+  });
+
+  it("chaque part seule garde sa phrase de renvoi", () => {
+    expect(phraseIndetermines(1)).toMatch(/de conclure\. Le détail figure plus loin\.$/);
+    expect(phraseIndetermines(1, 1)).toMatch(/^Un état établi d'après les titres déclarés.*Le détail figure plus loin\.$/);
+    expect(phraseIndetermines(0)).toBeNull();
+  });
+});

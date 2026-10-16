@@ -228,26 +228,27 @@ export function phraseIndetermines(
         : `${parLesTitres} états établis d'après les titres déclarés ne sont ` +
           "pas en place : aucun titre n'y est déclaré, ou leurs échéances sont " +
           "dépassées. Ils empêchent la note de conclure.";
+  // Composée sans retouche de chaîne : chaque partie est une phrase entière,
+  // et « Le détail figure plus loin. » n'est écrit qu'une fois, à la fin.
   const declares = phraseIndeterminesDeclares(indetermines - Math.max(parLesTitres, 0));
-  if (titres === null) return declares;
-  return declares
-    ? `${declares.replace(/ Le détail figure plus loin\.$/, "")} ${titres} Le détail figure plus loin.`
-    : `${titres} Le détail figure plus loin.`;
+  const parties = [declares, titres].filter((p): p is string => p !== null);
+  return parties.length === 0 ? null : `${parties.join(" ")} Le détail figure plus loin.`;
 }
 
+/** La part sans déclaration, sans la phrase de renvoi (ajoutée par l'appelant). */
 function phraseIndeterminesDeclares(indetermines: number): string | null {
   if (indetermines <= 0) return null;
   if (indetermines === 1) {
     return (
       "Un état permanent ne porte pas encore de déclaration. Il ne pénalise " +
       "pas la note — l'outil n'a rien constaté à son sujet —, il l'empêche de " +
-      "conclure. Le détail figure plus loin."
+      "conclure."
     );
   }
   return (
     `${indetermines} états permanents ne portent pas encore de déclaration. ` +
     "Ils ne pénalisent pas la note — l'outil n'a rien constaté à leur sujet —, " +
-    "ils l'empêchent de conclure. Le détail figure plus loin."
+    "ils l'empêchent de conclure."
   );
 }
 
