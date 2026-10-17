@@ -27,5 +27,12 @@
 export const ADRESSE_MATERIELS_NON_COUVERTS =
   "Formulaire de déclaration d'un équipement, recherche de matériel : l'encart « Rojer ne suit pas » du matériel (`src/lib/equipements/materiels-non-couverts.ts`), repris sur la fiche de l'équipement, dans l'indicateur « sans échéance » et dans le dossier de conformité.";
 
+// ~~section « Ce que l'outil ne suit pas »~~ — 2026-10-17, ADR-046 : la
+// section porte le titre `TITRE_ANNONCES` (« Ce qui peut vous concerner, et
+// que Rojer ne suit pas »), et l'article y est dit par son sujet, dans la
+// phrase de son domaine. L'adresse reste celle de la PAGE : le détail que
+// l'annexe du PDF du référentiel complet imprime n'est pas une adresse, le
+// dirigeant ne reçoit pas ce document. `parite-page-pdf.test.ts` tient le
+// titre cité ici égal au titre rendu.
 export const ADRESSE_MANQUES_ANNONCES =
-  "Page « Ce que Rojer ne couvre pas » (`src/app/etablissements/[id]/perimetre/page.tsx`), section « Ce que l'outil ne suit pas » — projetée par `src/lib/perimetre/manques-annonces.ts` au seul dossier que l'article peut concerner.";
+  "Page « Ce que Rojer ne couvre pas » (`src/app/etablissements/[id]/perimetre/page.tsx`), section « Ce qui peut vous concerner, et que Rojer ne suit pas » — une phrase par domaine, faite du sujet de chaque article, projetée par `src/lib/perimetre/manques-annonces.ts` au seul dossier que l'article peut concerner.";

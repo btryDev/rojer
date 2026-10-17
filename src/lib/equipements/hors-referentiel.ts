@@ -115,8 +115,13 @@ export const EXPLICATION_SANS_ECHEANCE: Record<MotifSansEcheance, string> = {
     "Aucune échéance n'est calculée pour cet équipement : aucune obligation du référentiel ne s'applique à lui compte tenu de la typologie de l'établissement et de ses caractéristiques. Cela ne veut pas dire qu'aucune vérification ne lui est due.",
   aucune_echeance_datable:
     "Aucun texte n'écrit de rythme pour les obligations qui visent cet équipement : le référentiel n'en tire aucune date, il n'y a donc rien à poser sur le calendrier. Elles s'appliquent malgré tout.",
+  // ~~« …mais Rojer la tient au niveau audit : … la page « Ce que Rojer ne
+  // couvre pas » la nomme, avec son texte. »~~ — 2026-10-17, revue de l'ADR-046 :
+  // la page ne montre plus le texte (la référence est à l'annexe du PDF du
+  // référentiel complet, que le dirigeant ne reçoit pas), et le mot « audit »
+  // ne s'adresse pas au dirigeant.
   niveau_audit:
-    "Une obligation légale vise cet équipement, mais Rojer la tient au niveau audit : il ne la suit pas au quotidien et ne pose aucune date. Elle s'applique malgré tout — la page « Ce que Rojer ne couvre pas » la nomme, avec son texte.",
+    "Une obligation légale vise cet équipement, mais Rojer ne la suit pas au quotidien et ne pose aucune date. Elle s'applique malgré tout — la page « Ce que Rojer ne couvre pas » la nomme.",
 };
 
 /**

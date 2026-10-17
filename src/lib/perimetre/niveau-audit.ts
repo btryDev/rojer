@@ -35,6 +35,7 @@ import {
   estPorteeParSalarie,
   type Obligation,
 } from "@/lib/referentiels/conformite/types";
+import type { Realisateur } from "@/lib/referentiels/types-communs";
 
 /** Une obligation au niveau audit, telle que la page la nomme. */
 export type LigneNiveauAudit = {
@@ -49,6 +50,8 @@ export type LigneNiveauAudit = {
    * quand elle n'apprendrait rien (2026-10-18).
    */
   porteePar: string | null;
+  /** Le geste, tiré des réalisateurs (`gesteHorsQuotidien`, ADR-046). */
+  geste: string;
 };
 
 /**
@@ -57,9 +60,77 @@ export type LigneNiveauAudit = {
  * l'établissement lui-même » : rien ne disait au dirigeant quoi faire. La
  * phrase nomme le geste et ce que l'outil ne fera pas, sans qualifier
  * personne.
+ *
+ * ~~Un seul geste pour toutes les cartes.~~ [2026-10-17, ADR-046 : faux pour
+ * la fiche d'entreprise, que le service de santé au travail établit
+ * (`R. 4624-46`) — le dirigeant ne la « tient » pas, il l'obtient. Le geste
+ * dépend désormais des réalisateurs (`gesteHorsQuotidien`) ; cette constante
+ * reste celui de l'exploitant.]
  */
 export const GESTE_HORS_QUOTIDIEN =
   "À tenir vous-même : Rojer ne vous le rappellera pas.";
+
+/** Qui réalise, rangé en trois : vous, votre service de santé au travail, un tiers. */
+type Qui = "exploitant" | "spst" | "tiers";
+
+function quiRealise(r: Realisateur): Qui {
+  switch (r) {
+    case "exploitant":
+      return "exploitant";
+    case "medecin_travail":
+    case "professionnel_sante_travail":
+    case "equipe_pluridisciplinaire":
+      return "spst";
+    case "organisme_agree":
+    case "organisme_accredite":
+    case "personne_qualifiee":
+    case "personne_competente":
+    case "fabricant":
+    case "bureau_controle":
+      return "tiers";
+    default: {
+      // Un réalisateur nouveau arrête la compilation ici : quelqu'un décide
+      // du geste au lieu d'en hériter un faux.
+      const jamais: never = r;
+      return jamais;
+    }
+  }
+}
+
+/** Les quatre gestes (2026-10-17, ADR-046, décision c6 Q4). */
+export const GESTES_HORS_QUOTIDIEN = {
+  exploitant: GESTE_HORS_QUOTIDIEN,
+  spst: "À obtenir de votre service de santé au travail : Rojer ne vous le rappellera pas.",
+  // ~~« À obtenir de votre ascensoriste : … »~~ — 2026-10-17, revue de
+  // l'ADR-046 : le propriétaire peut assurer lui-même l'entretien de
+  // l'ascenseur (R. 134-10 CCH, cité par la revue, non relu dans ce lot) ;
+  // la phrase n'impose plus un ascensoriste qu'il n'a pas.
+  ascensoriste:
+    "À obtenir de votre ascensoriste, ou à établir vous-même si vous assurez l'entretien de l'ascenseur : Rojer ne vous le rappellera pas.",
+  tiers: "À faire réaliser par une personne qualifiée : Rojer ne vous le rappellera pas.",
+} as const;
+
+/**
+ * Le geste d'une obligation hors du quotidien, tiré de ses réalisateurs
+ * (2026-10-17, ADR-046) :
+ *  - l'exploitant parmi eux → « À tenir vous-même » : s'il peut le faire, le
+ *    faire lui revient ;
+ *  - sinon le service de santé au travail → « À obtenir de votre service… » ;
+ *  - sinon un tiers ; pour un ascenseur, le tiers est l'entreprise
+ *    d'entretien — l'ascensoriste. ~~`niveau-audit.test.ts`~~ `geste-hors-quotidien.test.ts` tient que toute
+ *    obligation envoyée à l'ascensoriste relève du contrat d'entretien : un
+ *    contrôle technique (fait par un contrôleur, pas par l'ascensoriste)
+ *    passé au niveau audit ferait tomber le test au lieu de recevoir un faux
+ *    destinataire ;
+ *  - sinon → « À faire réaliser par une personne qualifiée ».
+ */
+export function gesteHorsQuotidien(o: Obligation): string {
+  const qui = new Set(o.realisateurs.map(quiRealise));
+  if (qui.has("exploitant")) return GESTES_HORS_QUOTIDIEN.exploitant;
+  if (qui.has("spst")) return GESTES_HORS_QUOTIDIEN.spst;
+  if (o.domaine === "ascenseur") return GESTES_HORS_QUOTIDIEN.ascensoriste;
+  return GESTES_HORS_QUOTIDIEN.tiers;
+}
 
 function porteePar(
   o: Obligation,
@@ -109,6 +180,7 @@ export function obligationsNiveauAuditDuDossier(
       reference: fondement.reference,
       url: fondement.url ?? null,
       porteePar: porteePar(o, applicable?.equipementsConcernes ?? []),
+      geste: gesteHorsQuotidien(o),
     });
   }
   return out;

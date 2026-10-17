@@ -3,11 +3,26 @@ import { CORPUS, articlesNonCouverts } from "@/lib/referentiels/corpus";
 import { ADRESSE_MANQUES_ANNONCES } from "@/lib/referentiels/corpus/adresses";
 import { DESCRIPTION_CATEGORIE } from "@/lib/equipements/labels";
 import { AIDE_TYPE_ERP } from "@/lib/etablissements/aide-type-erp";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   ANNONCES,
+  DOSSIER_QUI_N_ECARTE_RIEN,
   manquesAnnoncesDuDossier,
+  phraseDesSujets,
+  toutesLesAnnonces,
   type FaitsManquesAnnonces,
 } from "./manques-annonces";
+import { affirmationsDeNonCouverture } from "./non-couverture-balayage";
+import { obligationsConformite } from "@/lib/referentiels/conformite";
+
+/**
+ * Plafond de mots d'une phrase de la page, par domaine quand il en a un
+ * propre : la rubrique du livre II porte sept actes distincts, qu'un dossier
+ * des catégories 1 à 4 doit tous lire.
+ */
+const LIMITE_MOTS: Partial<Record<string, number>> = { reglement_erp_1_4: 85 };
 
 /** Les références que le corpus adresse à la page, lues en l'appelant. */
 function adressees(): string[] {
@@ -247,7 +262,7 @@ describe("2026-10-14 : les poussières en nuage sont annoncées, pas questionné
 describe("aucun score, aucune qualification", () => {
   const textes = () =>
     manquesAnnoncesDuDossier(CORPUS, EMPLOYEUR)
-      .flatMap((d) => [d.titre, d.phrase ?? "", ...d.articles.map((a) => a.phrase ?? "")])
+      .flatMap((d) => [d.titre, d.phrase ?? "", d.phrasePage, ...d.articles.map((a) => a.phrase ?? "")])
       .join(" ")
       .toLowerCase();
 
@@ -341,5 +356,113 @@ describe("2026-10-17 (sous-lot G) : l'aide du type L annonce les sièges et le g
       const cite = /AIDE_TYPE_ERP\.[A-Z]`?\)?\s*:\s*«\s*([\s\S]+?)\s*»\s*$/.exec(declareA)?.[1] ?? "∅";
       expect(aide, ref).toContain(cite);
     }
+  });
+});
+
+describe("2026-10-17, ADR-046 : la page dit une phrase par domaine, faite des sujets", () => {
+  const RACINE = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
+
+  it("chaque article a un sujet, et la phrase de son domaine le contient", () => {
+    for (const f of [EMPLOYEUR, RESTAURANT_N5, DOSSIER_QUI_N_ECARTE_RIEN]) {
+      for (const d of manquesAnnoncesDuDossier(CORPUS, f)) {
+        expect(d.phrasePage, d.cle).toMatch(/^Rojer ne suit pas .+\.$/);
+        for (const a of d.articles) {
+          expect(a.sujet.trim(), a.ref).not.toBe("");
+          expect(d.phrasePage, `${d.cle} / ${a.ref}`).toContain(a.sujet);
+        }
+      }
+    }
+  });
+
+  it("un sujet ne s'écrit que par `nonPorte` : le balayage le voit et le confronte", () => {
+    const vus = new Set(affirmationsDeNonCouverture(RACINE).map((a) => a.sujet));
+    for (const [ref, an] of Object.entries(ANNONCES)) {
+      expect(vus.has(an.sujet), `${ref} : « ${an.sujet} » hors de nonPorte`).toBe(true);
+    }
+    // Le même texte peut être écrit par `nonPorte` ailleurs (dans la phrase
+    // détaillée du domaine) : la présence ne suffit pas, la FORME se vérifie
+    // à la source — chaque `sujet:` de la table ouvre sur `nonPorte(`.
+    // Épreuve du 2026-10-17 : un sujet du bruit écrit en chaîne nue passait
+    // la seule présence.
+    const source = readFileSync(join(RACINE, "src", "lib", "perimetre", "manques-annonces.ts"), "utf8")
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/^[ \t]*\/\/.*$/gm, "");
+    const sujets = [...source.matchAll(/\bsujet:\s*([^\s(]+)/g)].map((m) => m[1]);
+    expect(sujets.length).toBeGreaterThan(0);
+    // Hors de la table : les deux déclarations de type, et la recopie dans la
+    // projection.
+    const admis = new Set(["nonPorte", "string;", "annonce.sujet,"]);
+    expect(sujets.filter((s) => !admis.has(s))).toEqual([]);
+    expect(sujets.filter((s) => s === "nonPorte").length).toBeGreaterThan(0);
+    // Et les sujets propres à un domaine (`DOMAINES[].sujets`) : revue du
+    // 2026-10-17, une chaîne nue y passait.
+    const blocs = [...source.matchAll(/\bsujets:\s*\[([\s\S]*?)\]/g)];
+    expect(blocs.length).toBeGreaterThan(0);
+    for (const b of blocs) {
+      const elements = b[1].split("\n").map((l) => l.trim()).filter((l) => l !== "");
+      expect(elements.length).toBeGreaterThan(0);
+      for (const e of elements) expect(e, e).toMatch(/^nonPorte\("/);
+    }
+  });
+
+  it("aucune référence, aucun corpus dans la phrase de la page", () => {
+    const corpus = CORPUS.map((c) => c.intitule);
+    for (const d of manquesAnnoncesDuDossier(CORPUS, DOSSIER_QUI_N_ECARTE_RIEN)) {
+      expect(d.phrasePage, d.cle).not.toMatch(/\b[LRD]\.\s?\d{3,4}(?:-\d+)*/);
+      expect(d.phrasePage, d.cle).not.toMatch(/\bart\.|arrêté du|§|\b(?:MS|EL|CO|CH|PE|GZ|AS)\s\d/i);
+      for (const a of d.articles) expect(d.phrasePage, a.ref).not.toContain(a.ref);
+      for (const c of corpus) expect(d.phrasePage).not.toContain(c);
+    }
+  });
+
+  it("le dossier qui n'écarte rien lit toutes les annonces — ce que le PDF imprime", () => {
+    const refs = toutesLesAnnonces(CORPUS).flatMap((d) => d.articles.map((a) => a.ref));
+    expect(refs.sort()).toEqual(Object.keys(ANNONCES).sort());
+  });
+
+  it("les poussières en nuage restent dites sur la page (décision du 2026-10-14)", () => {
+    const rubrique = manquesAnnoncesDuDossier(CORPUS, RESTAURANT_N5).find(
+      (d) => d.cle === "matieres_inflammables",
+    );
+    expect(rubrique?.phrasePage).toMatch(/atmosphères explosives/);
+    expect(rubrique?.phrasePage).toMatch(/poussières/);
+  });
+
+  it("R. 4512-9 : la liste DANS le plan de prévention — Rojer suit la liste des postes à risques", () => {
+    // Revue du 2026-10-17 : « la liste des postes relevant du suivi
+    // individuel renforcé » laissait croire que Rojer ne la suit pas, alors
+    // que la liste des postes à risques de R. 4624-23 III est servie.
+    expect(ANNONCES["R. 4512-9"].sujet).toContain("dans le plan de prévention");
+    expect(
+      obligationsConformite.some((o) =>
+        o.referencesLegales.some((r) => r.reference.includes("R. 4624-23")),
+      ),
+    ).toBe(true);
+  });
+
+  it("les sujets complétés à la revue disent la part de l'article que Rojer ne suit pas", () => {
+    expect(ANNONCES["R. 4433-2"].sujet).toMatch(/évaluation/);
+    expect(ANNONCES["R. 4121-1-1"].sujet).toMatch(/proportion de salariés exposés/);
+    expect(ANNONCES["R. 4412-17"].sujet).toMatch(/rupture des parois/);
+    expect(ANNONCES["L. 8222-1"].sujet).toMatch(/vérification de vos cocontractants/);
+  });
+
+  it("une phrase de domaine reste courte, sans exemple étranger au dossier", () => {
+    // Revue du 2026-10-17 : la phrase des matières faisait environ quatre-vingt-dix
+    // mots et citait silos et meunerie à un restaurant.
+    for (const f of [RESTAURANT_N5, EMPLOYEUR]) {
+      for (const d of manquesAnnoncesDuDossier(CORPUS, f)) {
+        const mots = d.phrasePage.split(/\s+/).length;
+        expect(mots, `${d.cle} : ${mots} mots`).toBeLessThanOrEqual(LIMITE_MOTS[d.cle] ?? 55);
+        expect(d.phrasePage, d.cle).not.toMatch(/silos|meunerie|broyage|ponçage/i);
+        // Relecture du 2026-10-17 : « dans le plan de prévention » deux fois.
+        expect((d.phrasePage.match(/dans le plan de prévention/g) ?? []).length, d.cle).toBeLessThanOrEqual(1);
+      }
+    }
+  });
+
+  it("phraseDesSujets : une phrase, sans doublon", () => {
+    expect(phraseDesSujets(["a", "b", "a"])).toBe("Rojer ne suit pas a, ni b.");
+    expect(phraseDesSujets(["a"])).toBe("Rojer ne suit pas a.");
   });
 });

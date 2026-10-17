@@ -1307,9 +1307,11 @@ function resoudreGroupesExclusifs(
  * règle du non-renseigné que `determineObligationsApplicables`.
  *
  * Ne nourrit AUCUNE surface du quotidien : sa seule lectrice est la rubrique
- * « Niveau audit » de la page « Ce que Rojer ne couvre pas »
- * (`perimetre/niveau-audit.ts`), qui nomme l'obligation et sa référence sans
- * la dater ni la compter. Une obligation audit portée par un salarié n'y
+ * ~~« Niveau audit »~~ « Obligations légales que Rojer ne suit pas au
+ * quotidien » de la page « Ce que Rojer ne couvre pas »
+ * (`perimetre/niveau-audit.ts`), qui nomme l'obligation ~~et sa référence~~
+ * et son geste sans la dater ni la compter [2026-10-17, ADR-046 : titre sans
+ * « audit », référence passée à l'annexe du PDF du référentiel complet]. Une obligation audit portée par un salarié n'y
  * passe pas — le moteur ne sait pas qui la détient (ADR-023) — : la rubrique
  * la nomme sans ce calcul.
  */

@@ -206,6 +206,16 @@ function affirmations(
 }
 
 /**
+ * Toutes les affirmations de non-couverture que le balayage voit, démenties ou
+ * non (2026-10-17, ADR-046). Sert à prouver qu'un texte passe bien par
+ * `nonPorte` — les sujets des annonces, les phrases des familles : un sujet
+ * écrit hors du marqueur échapperait à la règle 1 sans que rien le signale.
+ */
+export function affirmationsDeNonCouverture(racine: string): AffirmationConfrontee[] {
+  return affirmations(racine, "nonPorte");
+}
+
+/**
  * Règle 1 — les affirmations de non-couverture que le référentiel dément.
  *
  * Vide, et rien d'autre. Chaque entrée est une phrase qui annonce au dirigeant
