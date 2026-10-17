@@ -1,5 +1,5 @@
 import { estLignePourInformation } from "@/lib/referentiels/conformite/initiative";
-import { libelleTypesErp } from "@/lib/etablissements/types-erp-affiches";
+import { libelleRegimeErp } from "@/lib/etablissements/types-erp-affiches";
 import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
 import { prisma } from "@/lib/prisma";
 import type { AuthedUser } from "@/lib/auth/require-user";
@@ -142,14 +142,8 @@ function regimesTexte(etab: {
 }): string {
   const out: string[] = [];
   if (etab.estEtablissementTravail) out.push("Établissement de travail");
-  if (etab.estERP) {
-    let lib = "ERP";
-    // ADR-045 : tous les types déclarés, pas le seul premier.
-    const types = libelleTypesErp(etab);
-    if (types) lib += ` ${types}`;
-    if (etab.categorieErp) lib += ` cat. ${etab.categorieErp.slice(1)}`;
-    out.push(lib);
-  }
+  // ADR-045 : tous les types déclarés ; même forme que le widget.
+  if (etab.estERP) out.push(libelleRegimeErp(etab));
   // Sans la classe depuis le 2026-09-03. Un document remis à un tiers est le
   // pire endroit pour une donnée que son porteur ne peut plus reprendre :
   // celui qui la lit la croit tenue à jour.

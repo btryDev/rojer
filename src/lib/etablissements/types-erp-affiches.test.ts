@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { libelleTypesErp, typesErpAffiches } from "./types-erp-affiches";
+import {
+  autresApresChangementDuPremier,
+  libelleRegimeErp,
+  libelleTypesErp,
+  typesErpAffiches,
+} from "./types-erp-affiches";
 
 // L'affichage des types d'ERP (ADR-045) : une seule écriture pour le PDF, le
 // MCP, le registre, le widget et l'illustration. Éprouvé en ne gardant que
@@ -14,5 +19,27 @@ describe("types d'ERP affichés", () => {
     expect(libelleTypesErp({ typeErp: "N", typesErpAutres: [] })).toBe("type N");
     expect(libelleTypesErp({ typeErp: "O", typesErpAutres: ["N", "L"] })).toBe("types O, N, L");
     expect(libelleTypesErp({ typeErp: null, typesErpAutres: [] })).toBeNull();
+  });
+});
+
+describe("le régime ERP en une ligne — même forme au PDF et au widget (revue du lot 3, R2)", () => {
+  it("ERP · types N, O · cat. 3", () => {
+    expect(libelleRegimeErp({ typeErp: "N", typesErpAutres: ["O"], categorieErp: "N3" })).toBe(
+      "ERP · types N, O · cat. 3",
+    );
+    expect(libelleRegimeErp({ typeErp: "N", typesErpAutres: [], categorieErp: "N5" })).toBe(
+      "ERP · type N · cat. 5",
+    );
+    expect(libelleRegimeErp({ typeErp: null, typesErpAutres: [], categorieErp: null })).toBe("ERP");
+  });
+});
+
+describe("changer le premier type (revue du lot 3, C3)", () => {
+  const ORDRE = ["M", "N", "O", "L"];
+  it("un échange rend l'ancien premier aux autres", () => {
+    expect(autresApresChangementDuPremier(["O"], "N", "O", ORDRE)).toEqual(["N"]);
+  });
+  it("une correction ne le rend pas", () => {
+    expect(autresApresChangementDuPremier(["O"], "N", "M", ORDRE)).toEqual(["O"]);
   });
 });

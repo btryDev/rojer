@@ -141,7 +141,9 @@ function formaterRegimes(f: FicheEtablissement): string {
   if (f.estERP) {
     // ADR-045 : tous les types déclarés, pas le seul premier.
     const types = typesErpAffiches(f).join(", ") || null;
-    const precisions = [types, f.categorieErp ? `catégorie ${f.categorieErp}` : null]
+    // « catégorie 3 », pas « catégorie N3 » : la valeur en base est un code
+    // (revue du lot 3, R2).
+    const precisions = [types, f.categorieErp ? `catégorie ${f.categorieErp.slice(1)}` : null]
       .filter(Boolean)
       .join(", ");
     regimes.push(precisions ? `ERP (${precisions})` : "ERP");

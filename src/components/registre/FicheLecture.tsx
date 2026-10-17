@@ -83,7 +83,14 @@ export function FicheLecture({
           const valeur = afficherValeur(valeurs?.[champ.cle], champ);
           const vide = valeur === NON_RENSEIGNE;
           return (
-            <ChampFiche key={champ.cle} cle={champ.libelle}>
+            <ChampFiche
+              key={champ.cle}
+              cle={
+                champ.libellePluriel && !vide && valeur.includes(", ")
+                  ? champ.libellePluriel
+                  : champ.libelle
+              }
+            >
               {/* « — » se lit comme un tiret décoratif au milieu d'une
                   liste de valeurs. Une réponse absente doit se dire en
                   toutes lettres : c'est ce qui manquerait à une visite. */}

@@ -666,9 +666,15 @@ describe("provenance de la réponse", () => {
   });
 
   it("dit tous les types d'ERP déclarés, pas le seul premier (ADR-045)", async () => {
-    prismaMock.etablissement.findUnique.mockResolvedValue({ ...fiche, typeErp: "O", typesErpAutres: ["N", "L"] });
+    prismaMock.etablissement.findUnique.mockResolvedValue({
+      ...fiche,
+      typeErp: "O",
+      typesErpAutres: ["N", "L"],
+      categorieErp: "N3",
+    });
     const texte = await outil("fiche_etablissement").executer(ctx, {});
-    expect(texte).toContain("ERP (O, N, L, catégorie cinq)");
+    // « catégorie 3 », et non le code « N3 » (revue du lot 3, R2).
+    expect(texte).toContain("ERP (O, N, L, catégorie 3)");
   });
 
   it("ajoute la ville, pour départager deux homonymes", async () => {

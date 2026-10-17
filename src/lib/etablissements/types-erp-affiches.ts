@@ -17,6 +17,20 @@ export function typesErpAffiches(e: {
   return typesErpDe(e);
 }
 
+/**
+ * Le régime ERP en une ligne, pour le PDF et le widget (revue du lot 3, R2) :
+ * « ERP · types N, O · cat. 3 ». Une seule forme, écrite ici.
+ */
+export function libelleRegimeErp(e: {
+  typeErp: string | null;
+  typesErpAutres: readonly string[];
+  categorieErp: string | null;
+}): string {
+  return ["ERP", libelleTypesErp(e), e.categorieErp ? `cat. ${e.categorieErp.slice(1)}` : null]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 /** « type N », « types N, O, L », ou `null` sans type. */
 export function libelleTypesErp(e: {
   typeErp: string | null;
