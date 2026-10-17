@@ -13,6 +13,7 @@ import {
   SommaireParUsage,
 } from "@/components/etats-permanents/SectionsParUsage";
 import { compteDeLaPage } from "@/lib/etats-permanents/compte";
+import { FocusSurAncre } from "@/components/etats-permanents/FocusSurAncre";
 import {
   phraseFaitsDates,
   phraseRestantes,
@@ -221,6 +222,9 @@ export default async function EtatsPermanentsPage({
           <>
             <SommaireParUsage familles={familles} />
             <SectionsParUsage familles={familles} rendreLigne={rendreLigne} />
+            {/* Arrivée par un lien du widget (`next/link`) : le défilement est
+                celui de Next, le focus doit suivre (`FocusSurAncre`). */}
+            <FocusSurAncre />
 
             {/*
               LE SECOND VERBE A SA PROPRE SECTION, ET C'EST UNE CORRECTION.
