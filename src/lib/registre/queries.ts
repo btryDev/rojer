@@ -12,14 +12,13 @@ import "server-only";
 // serait un troisième avis sur la même question.
 
 import { trierParCategorie } from "@/lib/equipements/labels";
-import { typesErpAffiches } from "@/lib/etablissements/types-erp-affiches";
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { projeterEtablissement } from "@/lib/matching/projection";
-import { cleJourCivil } from "@/lib/dates";
 import { composerRegistreParPartie, type PartieDue } from "./composition";
 import { CHAMPS_PAR_SECTION } from "./champs";
+import { valeursParSource } from "./valeurs-etablissement";
 import { lireContenu, lignesDuJournal } from "./schema";
 
 /**
@@ -27,8 +26,13 @@ import { lireContenu, lignesDuJournal } from "./schema";
  * les deux : une fiche est un formulaire ou un journal, pas les deux à la fois.
  */
 export type ContenuLu =
-  | { champs?: Record<string, string | null>; lignes?: undefined }
-  | { lignes?: ReturnType<typeof lignesDuJournal>; champs?: undefined };
+  | {
+      champs?: Record<string, string | null>;
+      /** Par clé de champ : combien de valeurs il porte, là où il peut en porter plusieurs. */
+      nombres?: Record<string, number>;
+      lignes?: undefined;
+    }
+  | { lignes?: ReturnType<typeof lignesDuJournal>; champs?: undefined; nombres?: undefined };
 
 export type RegistreDeLEtablissement = {
   parties: PartieDue[];
@@ -143,28 +147,19 @@ export const composerRegistreDeLEtablissement = cache(
     }
 
     // Les fiches adossées à l'établissement lisent la colonne qui porte la
-    // réponse. Une date sort en clé de jour civil (ADR-011) : `cleJourCivil` et
-    // non `toISOString()`, sinon une date s'afficherait la veille.
-    const jour = (d: Date | null) => (d ? cleJourCivil(d) : null);
-    const parSource: Record<string, string | null> = {
-      "Etablissement.adresse": etab.adresse,
-      "Etablissement.natureActivite": etab.natureActivite,
-      // ADR-045 : tous les types déclarés, le premier en tête.
-      "Etablissement.typeErp": typesErpAffiches(etab).join(", ") || null,
-      "Etablissement.categorieErp": etab.categorieErp,
-      "Etablissement.effectifPublicAdmis":
-        etab.effectifPublicAdmis === null ? null : String(etab.effectifPublicAdmis),
-      "Etablissement.dateAutorisationOuverture": jour(etab.dateAutorisationOuverture),
-      "Etablissement.dateCertificatConformite": jour(etab.dateCertificatConformite),
-      "Entreprise.raisonSociale": etab.entreprise.raisonSociale,
-      "Entreprise.adresse": etab.entreprise.adresse,
-    };
+    // réponse (`valeurs-etablissement.ts`).
+    const { valeurs: parSource, nombres: nombreParSource } = valeursParSource(etab);
 
     for (const [sectionId, saisie] of Object.entries(CHAMPS_PAR_SECTION)) {
       if (saisie.forme !== "etablissement") continue;
       contenus[sectionId] = {
         champs: Object.fromEntries(
           saisie.champs.map((c) => [c.cle, parSource[c.source] ?? null]),
+        ),
+        nombres: Object.fromEntries(
+          saisie.champs.flatMap((c) =>
+            c.source in nombreParSource ? [[c.cle, nombreParSource[c.source]]] : [],
+          ),
         ),
       };
       // Ces fiches n'ont pas de ligne à elles : leur fraîcheur est celle de

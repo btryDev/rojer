@@ -52,7 +52,32 @@ describe("typesErpAutres : la colonne et sa contrainte", () => {
     expect(sql).not.toMatch(new RegExp(`DROP\\s+CONSTRAINT\\s+(IF\\s+EXISTS\\s+)?"?${nom}"?`, "i"));
   });
 
-  it("aucune contrainte ne vide les autres types hors ERP : décocher « ERP » ne perd rien", () => {
-    expect(sql).not.toMatch(/CHECK \( "estERP" OR cardinality\("typesErpAutres"\)/);
+  // ~~it("aucune contrainte ne vide les autres types hors ERP …") : `not.toMatch`
+  // d'une écriture exacte~~ — retiré le 2026-10-17 (revue de c6) : il
+  // n'interdisait qu'une rédaction, la moindre variante passait. Remplacé
+  // par le test ci-dessous, qui lit toutes les contraintes de la colonne.
+
+  it("les contraintes de la colonne sont celles-ci, et aucune ne lit le régime", () => {
+    // Toute contrainte CHECK qui nomme `typesErpAutres`, quelle que soit sa
+    // rédaction : aucune ne lit `estERP` (décocher « ERP » ne perd rien), et
+    // une nouvelle se déclare ici, avec sa raison.
+    const checks = [...sql.matchAll(/ADD CONSTRAINT "([^"]+)" CHECK \((.*?)\);/g)]
+      .filter((m) => m[2].includes('"typesErpAutres"'));
+    expect(checks.map((m) => m[1]).sort()).toEqual([
+      "Etablissement_types_erp_autres_sans_null",
+      "Etablissement_types_erp_autres_sans_premier",
+    ]);
+    for (const m of checks) expect(m[2], m[1]).not.toContain('"estERP"');
+  });
+
+  it("aucun élément NULL : la contrainte d'avant le laissait passer (revue de c6)", () => {
+    // `'N' = ANY('{NULL}')` vaut NULL, et un CHECK NULL est satisfait. Rejoué
+    // sur PGlite le 2026-10-17 : sans cette contrainte, `{O,NULL}` est accepté ;
+    // avec, refusé. Éprouvé en retirant la migration : rouge.
+    const nom = "Etablissement_types_erp_autres_sans_null";
+    expect(sql).toMatch(
+      new RegExp(`ADD CONSTRAINT "${nom}" CHECK \\( array_position\\("typesErpAutres", NULL\\) IS NULL \\)`),
+    );
+    expect(sql).not.toMatch(new RegExp(`DROP\\s+CONSTRAINT\\s+(IF\\s+EXISTS\\s+)?"?${nom}"?`, "i"));
   });
 });

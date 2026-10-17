@@ -3,7 +3,7 @@
 import { PastilleFiche } from "@/components/ui-kit/fiche";
 import type { StepProps } from "./types";
 import { LABEL_TYPE_ERP } from "@/lib/etablissements/labels";
-import { libelleTypesErp } from "@/lib/etablissements/types-erp-affiches";
+import { libelleTypesErp, numeroCategorie } from "@/lib/etablissements/types-erp-affiches";
 import type { TYPE_ERP } from "@/lib/etablissements/schema";
 
 /**
@@ -28,7 +28,7 @@ export function StepResume({ state }: StepProps) {
         : state.typeErp
           ? typeErpLabel
           : null,
-      state.categorieErp ? `${state.categorieErp.slice(1)}ᵉ cat.` : null,
+      state.categorieErp ? `${numeroCategorie(state.categorieErp)}ᵉ cat.` : null,
     ].filter(Boolean);
     regimes.push(
       precisions.length > 0 ? `ERP · ${precisions.join(" · ")}` : "ERP",

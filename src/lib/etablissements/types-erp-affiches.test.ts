@@ -3,7 +3,7 @@ import {
   autresApresChangementDuPremier,
   libelleRegimeErp,
   libelleTypesErp,
-  typesErpAffiches,
+  typesErpDe,
 } from "./types-erp-affiches";
 
 // L'affichage des types d'ERP (ADR-045) : une seule écriture pour le PDF, le
@@ -11,8 +11,8 @@ import {
 // `typeErp` : rouge.
 describe("types d'ERP affichés", () => {
   it("le premier déclaré, puis les autres, sans doublon", () => {
-    expect(typesErpAffiches({ typeErp: "O", typesErpAutres: ["N", "O", "L"] })).toEqual(["O", "N", "L"]);
-    expect(typesErpAffiches({ typeErp: null, typesErpAutres: [] })).toEqual([]);
+    expect(typesErpDe({ typeErp: "O", typesErpAutres: ["N", "O", "L"] })).toEqual(["O", "N", "L"]);
+    expect(typesErpDe({ typeErp: null, typesErpAutres: [] })).toEqual([]);
   });
 
   it("le libellé dit « type » au singulier et « types » au pluriel", () => {

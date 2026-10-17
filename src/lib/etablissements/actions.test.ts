@@ -9,6 +9,7 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NOM_BATIMENT_PRINCIPAL } from "@/lib/batiments/schema";
+import { CHAMP_TEMOIN_TYPES_ERP_AUTRES } from "@/lib/etablissements/types-erp-affiches";
 
 const h = vi.hoisted(() => {
   const db = {
@@ -648,6 +649,44 @@ describe("plusieurs types d'ERP — l'écriture respecte les contraintes de la b
     expect(h.genererCalendrier).not.toHaveBeenCalled();
   });
 
+  it("le même ensemble dans un autre ordre ne recalcule rien : il se compare trié", async () => {
+    // Revue de c6 (2026-10-17) : la comparaison par `JSON.stringify` voyait un
+    // changement dans ["W", "M"] → ["M", "W"]. Éprouvé en retirant le tri : rouge.
+    h.db.etablissement.estERP = true;
+    h.db.etablissement.typeErp = "N";
+    h.db.etablissement.categorieErp = "N3";
+    h.db.etablissement.typesErpAutres = ["W", "M"];
+    await modifierEtablissement(
+      "etab-1",
+      { status: "idle" },
+      avecAutresTypes(formulaire({ estERP: "on", typeErp: "N", categorieErp: "N3" }), ["M", "W"]),
+    );
+    expect(h.genererCalendrier).not.toHaveBeenCalled();
+  });
+
+  it("une liste trop longue est refusée, d'un seul message, sans rien écrire", async () => {
+    // Revue de c6 (2026-10-17) : sans borne, 300 000 entrées rendaient 52 Mo
+    // d'erreurs, un million une RangeError et un 500. Éprouvé en retirant la
+    // borne du schéma et la troncature de `typesErpAutresPostes` : rouge.
+    h.db.etablissement.estERP = true;
+    h.db.etablissement.typeErp = "N";
+    h.db.etablissement.categorieErp = "N3";
+    h.db.etablissement.typesErpAutres = ["M"];
+    const res = await modifierEtablissement(
+      "etab-1",
+      { status: "idle" },
+      avecAutresTypes(
+        formulaire({ estERP: "on", typeErp: "N", categorieErp: "N3" }),
+        Array.from({ length: 5_000 }, () => "pas-un-type"),
+      ),
+    );
+    expect(res.status).toBe("error");
+    expect(res.status === "error" && res.fieldErrors?.typesErpAutres).toEqual([
+      "La liste des autres types d'ERP est trop longue.",
+    ]);
+    expect(h.db.etablissement.typesErpAutres).toEqual(["M"]);
+  });
+
   it("la porte refuse d'autres types sur un établissement qui n'est pas ERP", async () => {
     const res = await modifierEtablissement(
       "etab-1",
@@ -682,7 +721,7 @@ describe("plusieurs types d'ERP — l'écriture respecte les contraintes de la b
 
 describe("plusieurs types d'ERP — la fiche poste la liste entière, avec son témoin (ADR-045, lot 3)", () => {
   const temoin = (fd: FormData) => {
-    fd.set("typesErpAutresAffiche", "1");
+    fd.set(CHAMP_TEMOIN_TYPES_ERP_AUTRES, "1");
     return fd;
   };
 

@@ -98,3 +98,18 @@ export const LABEL_CATEGORIE_ERP: Record<
   N4: "4ᵉ catégorie (jusqu'à 300, seuil du type)",
   N5: "5ᵉ catégorie (petits établissements, règles PE)",
 };
+
+/**
+ * La catégorie sans ses seuils : « 3ᵉ catégorie ». Pour une valeur LUE (le
+ * registre, l'avertissement de couverture), là où `LABEL_CATEGORIE_ERP` sert
+ * à CHOISIR, seuils compris. Elle vivait dans `perimetre/couverture.ts` ; le
+ * registre affichait faute de mieux « N3 », le code de l'enum (contrôle
+ * visuel du lot 3, 2026-10-17).
+ */
+export const LABEL_CATEGORIE_ERP_COURT: Record<(typeof CATEGORIES_ERP)[number], string> = {
+  N1: "1ʳᵉ catégorie",
+  N2: "2ᵉ catégorie",
+  N3: "3ᵉ catégorie",
+  N4: "4ᵉ catégorie",
+  N5: "5ᵉ catégorie",
+};

@@ -1,6 +1,8 @@
 // Ce que Rojer couvre, et ce qu'il ne couvre pas.
 //
-// Le produit est construit pour les ERP de **5e catégorie** et pour les
+// ~~Le produit est construit pour les ERP de **5e catégorie**~~ [2026-10-17 :
+// la cible accepte les catégories 1 à 4 depuis le 2026-10-12, ADR-031 ; le
+// produit ne COUVRE entièrement que la 5ᵉ, `CATEGORIES_COUVERTES`] et pour les
 // établissements soumis au Code du travail. Ce n'est pas un choix de
 // développement, c'est une frontière réglementaire nette : l'article PE 1 § 1
 // de l'arrêté du 22 juin 1990 écarte, pour la 5e catégorie, la totalité du
@@ -88,6 +90,7 @@ import type { EtatCouverture } from "@/lib/duerps/couverture";
 import { nonPorte, porte } from "./non-couverture";
 import type { CorrespondanceSecteur } from "./secteur";
 import type { CategorieErp } from "@/lib/referentiels/types-communs";
+import { LABEL_CATEGORIE_ERP_COURT } from "@/lib/etablissements/labels";
 
 /**
  * Les catégories que le produit couvre.
@@ -295,13 +298,9 @@ export type FaitsCouverture = {
 
 /* ─── Les axes ────────────────────────────────────────────────────────── */
 
-const LIBELLE_CATEGORIE: Record<CategorieErp, string> = {
-  N1: "1ʳᵉ catégorie",
-  N2: "2ᵉ catégorie",
-  N3: "3ᵉ catégorie",
-  N4: "4ᵉ catégorie",
-  N5: "5ᵉ catégorie",
-};
+// `LIBELLE_CATEGORIE` vivait ici ; il est passé dans `etablissements/labels.ts`
+// (`LABEL_CATEGORIE_ERP_COURT`) le 2026-10-17, pour que le registre le lise aussi.
+const LIBELLE_CATEGORIE: Record<CategorieErp, string> = LABEL_CATEGORIE_ERP_COURT;
 
 /**
  * Ce que le règlement IGH laisse hors de l'outil, dit UNE fois — ici, pour
@@ -401,7 +400,12 @@ function axeRegime(
     // tout ERP des catégories 1 à 4, et pour un type autre que M, N, O, W
     // elle promettait des lignes qui n'existent pas. Elle parle désormais des
     // types en général.]
-    consequence: `Rojer est construit pour les ERP de 5ᵉ catégorie. Au-dessus, le règlement de sécurité applique en entier son livre II, dont cet outil ne porte qu'une part : ${nonPorte("le service de sécurité incendie assuré par des agents de sécurité incendie")}, notamment, n'y est pas, et des dispositions particulières par type d'activité, il ne porte que quelques-unes, et seulement pour les magasins, restaurants, hôtels et bureaux. Votre calendrier et votre registre sont donc incomplets, et le resteront.`,
+    // [2026-10-17, contrôle visuel du lot 3 : ~~« Rojer est construit pour les
+    // ERP de 5ᵉ catégorie. Au-dessus, le règlement… »~~ — périmé depuis le
+    // 2026-10-12 : la cible accepte les catégories 1 à 4 (ADR-031). La phrase
+    // dit désormais ce que l'onboarding fait, et rien de plus : il les accepte,
+    // le produit n'en porte qu'une part.]
+    consequence: `Rojer accepte les ERP des catégories 1 à 4. Le règlement de sécurité leur applique en entier son livre II, dont cet outil ne porte qu'une part : ${nonPorte("le service de sécurité incendie assuré par des agents de sécurité incendie")}, notamment, n'y est pas, et des dispositions particulières par type d'activité, il ne porte que quelques-unes, et seulement pour les magasins, restaurants, hôtels et bureaux. Votre calendrier et votre registre sont donc incomplets, et le resteront.`,
   });
 }
 

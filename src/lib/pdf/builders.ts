@@ -1,5 +1,5 @@
 import { estLignePourInformation } from "@/lib/referentiels/conformite/initiative";
-import { libelleTypesErp } from "@/lib/etablissements/types-erp-affiches";
+import { libelleTypesErp, numeroCategorie } from "@/lib/etablissements/types-erp-affiches";
 import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
 import { prisma } from "@/lib/prisma";
 import type { AuthedUser } from "@/lib/auth/require-user";
@@ -149,7 +149,7 @@ export function regimesTexte(etab: {
     let lib = "ERP";
     const types = libelleTypesErp(etab);
     if (types) lib += ` ${types}`;
-    if (etab.categorieErp) lib += ` cat. ${etab.categorieErp.slice(1)}`;
+    if (etab.categorieErp) lib += ` cat. ${numeroCategorie(etab.categorieErp)}`;
     out.push(lib);
   }
   // Sans la classe depuis le 2026-09-03. Un document remis à un tiers est le

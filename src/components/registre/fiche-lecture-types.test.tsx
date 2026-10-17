@@ -7,6 +7,7 @@ import { CHAMPS_PAR_SECTION, type ChampEtablissement } from "@/lib/registre/cham
 // La fiche « Renseignements ERP » du registre : « Type » passe au pluriel quand
 // l'établissement en déclare plusieurs (ADR-045, revue du lot 3, R2).
 // Éprouvé en retirant `libellePluriel` du champ : rouge.
+// La catégorie : « 3ᵉ catégorie », pas « N3 » — `valeurs-etablissement.test.ts`.
 afterEach(cleanup);
 
 const section = CHAMPS_PAR_SECTION["renseignements-erp"];
@@ -18,7 +19,17 @@ describe("registre, Renseignements ERP — le libellé du type", () => {
     expect(un.container.textContent).toMatch(/Type\s*N/);
     expect(un.container.textContent).not.toMatch(/Types/);
     cleanup();
-    const deux = render(<FicheLecture champs={champs} valeurs={{ typeErp: "N, O" }} hrefEdition="/e" />);
+    const deux = render(
+      <FicheLecture champs={champs} valeurs={{ typeErp: "N, O" }} nombres={{ typeErp: 2 }} hrefEdition="/e" />,
+    );
     expect(deux.container.textContent).toMatch(/Types\s*N, O/);
+  });
+
+  it("le pluriel suit le NOMBRE fourni, pas une virgule dans la valeur (revue de c6)", () => {
+    // Éprouvé en remettant `valeur.includes(", ")` : rouge.
+    const r = render(
+      <FicheLecture champs={champs} valeurs={{ typeErp: "N, O" }} nombres={{ typeErp: 1 }} hrefEdition="/e" />,
+    );
+    expect(r.container.textContent).not.toMatch(/Types/);
   });
 });

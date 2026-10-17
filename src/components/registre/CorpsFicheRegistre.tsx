@@ -106,6 +106,7 @@ export function CorpsFicheRegistre({
           <FicheLecture
             champs={saisie.champs}
             valeurs={contenu?.champs}
+            nombres={contenu?.nombres}
             hrefEdition={hrefEdition ?? "#"}
           />
         );

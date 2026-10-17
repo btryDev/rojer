@@ -10,6 +10,7 @@ import { signOutAction } from "@/lib/auth/actions";
 import { StepIdentite } from "./StepIdentite";
 import { StepTypologie } from "./StepTypologie";
 import { StepResume } from "./StepResume";
+import { CHAMP_TEMOIN_TYPES_ERP_AUTRES } from "@/lib/etablissements/types-erp-affiches";
 import {
   finaliserOnboarding,
   type OnboardingActionState,
@@ -546,7 +547,7 @@ function ChampsCaches({ state }: { state: OnboardingState }) {
           hors ERP, rien n'est posté, et le schéma refuserait une liste. */}
       {state.estERP ? (
         <>
-          <input type="hidden" name="typesErpAutresAffiche" value="1" />
+          <input type="hidden" name={CHAMP_TEMOIN_TYPES_ERP_AUTRES} value="1" />
           {state.typesErpAutres.map((t) => (
             <input key={t} type="hidden" name="typesErpAutres" value={t} />
           ))}

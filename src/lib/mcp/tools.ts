@@ -22,7 +22,7 @@
 // `new Date()` planté au milieu d'un formatage.
 
 import { LABEL_PERIODICITE } from "@/lib/calendrier/labels";
-import { typesErpAffiches } from "@/lib/etablissements/types-erp-affiches";
+import { numeroCategorie, typesErpDe } from "@/lib/etablissements/types-erp-affiches";
 import type { Periodicite } from "@/lib/referentiels/types-communs";
 import { z } from "zod";
 import type { StatutAction } from "@prisma/client";
@@ -140,10 +140,10 @@ function formaterRegimes(f: FicheEtablissement): string {
   if (f.estEtablissementTravail) regimes.push("établissement de travail");
   if (f.estERP) {
     // ADR-045 : tous les types déclarés, pas le seul premier.
-    const types = typesErpAffiches(f).join(", ") || null;
+    const types = typesErpDe(f).join(", ") || null;
     // « catégorie 3 », pas « catégorie N3 » : la valeur en base est un code
     // (revue du lot 3, R2).
-    const precisions = [types, f.categorieErp ? `catégorie ${f.categorieErp.slice(1)}` : null]
+    const precisions = [types, f.categorieErp ? `catégorie ${numeroCategorie(f.categorieErp)}` : null]
       .filter(Boolean)
       .join(", ");
     regimes.push(precisions ? `ERP (${precisions})` : "ERP");

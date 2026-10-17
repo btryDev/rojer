@@ -1,4 +1,3 @@
-import { typesErpAffiches } from "./types-erp-affiches";
 // Le dessin du bâtiment affiché en tête de tableau de bord.
 //
 // **Ce qu'il dit, et ce qu'il ne dit pas.** L'application connaît l'activité
@@ -11,6 +10,8 @@ import { typesErpAffiches } from "./types-erp-affiches";
 //
 // C'est une illustration, pas un plan : elle rappelle de quel genre de lieu
 // il s'agit, elle ne le décrit pas.
+
+import { typesErpDe } from "./types-erp-affiches";
 
 /** Les planches disponibles dans `public/illustrations/`. */
 export type IllustrationBatiment = "neutre" | "commerce";
@@ -56,7 +57,7 @@ export function illustrationBatiment(etab: {
   // un NAF de commerce recevait la devanture.
   // ADR-045 : sur l'ensemble des types — un hôtel qui exploite un restaurant
   // a une devanture.
-  const types = typesErpAffiches(etab);
+  const types = typesErpDe(etab);
   if (types.length > 0) {
     return types.some((t) => TYPES_ERP_DEVANTURE.has(t)) ? "commerce" : "neutre";
   }

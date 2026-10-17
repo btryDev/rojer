@@ -1,20 +1,27 @@
 import { typesErpDe } from "@/lib/matching/types-erp";
+import { TYPE_ERP } from "./schema";
 
 /**
  * Les types d'ERP d'un établissement, tels que les surfaces les affichent
- * (ADR-045) : le premier déclaré, puis les autres, sans doublon. Une seule
- * écriture pour le PDF, le MCP, le registre, le widget et l'illustration — un
- * écran qui ne lirait que `typeErp` montrerait « type N » à un hôtel-
- * restaurant.
+ * (ADR-045) : `typesErpDe`, la lecture du moteur, réexportée sous son nom — le
+ * PDF, le MCP, le registre, le widget et l'illustration la lisent. Un écran
+ * qui ne lirait que `typeErp` montrerait « type N » à un hôtel-restaurant.
  *
- * L'ordre est celui de la saisie : il ne décide de rien (le moteur lit l'union),
- * il suit seulement ce que le dirigeant a écrit, comme son arrêté.
+ * ~~L'ordre est celui de la saisie~~ [2026-10-17, revue de c6 : faux] : le
+ * premier déclaré, puis les autres dans l'ordre où la base les garde — celui de
+ * `TYPE_ERP`, les écrans les y rangeant à l'écriture
+ * (`autresApresChangementDuPremier`, `AutresTypesErp`). Il ne décide de rien :
+ * le moteur lit l'union.
  */
-export function typesErpAffiches(e: {
-  typeErp: string | null;
-  typesErpAutres: readonly string[];
-}): string[] {
-  return typesErpDe(e);
+export { typesErpDe };
+
+/**
+ * Le numéro de la catégorie, sans le code de l'enum : « 3 » pour « N3 ». Seule
+ * écriture pour le PDF, le MCP, le résumé du parcours et le widget, qui gardent
+ * chacun leur forme autour (revue de c6, 2026-10-17).
+ */
+export function numeroCategorie(categorieErp: string): string {
+  return categorieErp.slice(1);
 }
 
 /**
@@ -27,7 +34,7 @@ export function libelleRegimeErp(e: {
   typesErpAutres: readonly string[];
   categorieErp: string | null;
 }): string {
-  return ["ERP", libelleTypesErp(e), e.categorieErp ? `cat. ${e.categorieErp.slice(1)}` : null]
+  return ["ERP", libelleTypesErp(e), e.categorieErp ? `cat. ${numeroCategorie(e.categorieErp)}` : null]
     .filter(Boolean)
     .join(" · ");
 }
@@ -37,7 +44,7 @@ export function libelleTypesErp(e: {
   typeErp: string | null;
   typesErpAutres: readonly string[];
 }): string | null {
-  const types = typesErpAffiches(e);
+  const types = typesErpDe(e);
   if (types.length === 0) return null;
   return `${types.length > 1 ? "types" : "type"} ${types.join(", ")}`;
 }
@@ -57,8 +64,12 @@ export const CHAMP_TEMOIN_TYPES_ERP_AUTRES = "typesErpAutresAffiche";
  */
 export function typesErpAutresPostes(fd: FormData): string[] | undefined {
   if (!fd.has(CHAMP_TEMOIN_TYPES_ERP_AUTRES) && !fd.has("typesErpAutres")) return undefined;
+  // Tronquée à une de plus que la borne du schéma : assez pour qu'il refuse,
+  // jamais assez pour qu'un POST forgé de cent mille cases coûte cent mille
+  // erreurs (revue de c6, 2026-10-17).
   return fd
     .getAll("typesErpAutres")
+    .slice(0, TYPE_ERP.length + 1)
     .filter((v): v is string => typeof v === "string" && v !== "");
 }
 

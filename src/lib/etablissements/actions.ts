@@ -5,7 +5,6 @@ import {
   libererFichiers,
 } from "@/lib/suppression/fichiers";
 import { revalidatePath } from "next/cache";
-import { typesErpAutresPostes } from "./types-erp-affiches";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -23,6 +22,7 @@ import {
   reponseSommeilSuivantLeType,
   typesErpAutresCoherents,
 } from "./schema";
+import { typesErpAutresPostes } from "./types-erp-affiches";
 
 export type EtablissementActionState =
   | { status: "idle" }
@@ -93,8 +93,11 @@ function typologieAChange(
   apres: Partial<ProfilStructurant>,
 ): boolean {
   // Une liste se compare par son contenu, pas par sa référence : sans quoi
-  // `typesErpAutres` « changerait » à chaque enregistrement.
-  const valeur = (v: unknown) => JSON.stringify(v ?? null);
+  // `typesErpAutres` « changerait » à chaque enregistrement. Et comme un
+  // ENSEMBLE, triée : le même ensemble dans un autre ordre ne change aucune
+  // obligation, il ne doit pas régénérer le calendrier (revue de c6).
+  const valeur = (v: unknown) =>
+    JSON.stringify(Array.isArray(v) ? [...v].sort() : (v ?? null));
   return CHAMPS_STRUCTURANTS.some(
     (c) => c in apres && valeur(apres[c]) !== valeur(avant[c]),
   );

@@ -3,6 +3,7 @@ import {
   CATEGORIES_ERP,
   EFFECTIF_MAX,
   TYPE_ERP,
+  typesErpAutresSchema,
   questionSommeilPosee,
 } from "@/lib/etablissements/schema";
 
@@ -113,7 +114,7 @@ export const onboardingSchema = z
       z.enum(TYPE_ERP).optional(),
     ),
     // Les autres types d'ERP (ADR-045, GN 2). Absent = aucun.
-    typesErpAutres: z.array(z.enum(TYPE_ERP)).optional(),
+    typesErpAutres: typesErpAutresSchema.optional(),
     categorieErp: z.preprocess(
       (v) => (v === "" || v === null ? undefined : v),
       z.enum(CATEGORIES_ERP).optional(),

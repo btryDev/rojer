@@ -30,6 +30,23 @@ export const TYPE_ERP = [
   "PA", "CTS", "SG", "PS", "REF", "GA", "OA", "EF",
 ] as const;
 
+/**
+ * La liste des autres types d'ERP postée (ADR-045), BORNÉE AVANT d'être lue
+ * (revue de c6, 2026-10-17). Sans borne, un POST forgé de 300 000 entrées
+ * invalides rendait 52 Mo d'erreurs, et à un million zod levait une RangeError
+ * — l'action répondait 500. Un simple `.max()` ne suffit pas : zod contrôle
+ * chaque élément AVANT la longueur, et rend une erreur par élément plus la
+ * sienne. La longueur se vérifie donc d'abord sur des valeurs quelconques, et
+ * `pipe` n'examine les types que si elle passe : un seul message.
+ *
+ * La même à la fiche et au parcours d'accueil. `typesErpAutresPostes` tronque
+ * aussi en amont.
+ */
+export const typesErpAutresSchema = z
+  .array(z.unknown())
+  .max(TYPE_ERP.length, { message: "La liste des autres types d'ERP est trop longue." })
+  .pipe(z.array(z.enum(TYPE_ERP)));
+
 /** Catégories d'ERP — CCH, art. R. 143-19. Cinq, dans l'ordre du texte. */
 export const CATEGORIES_ERP = ["N1", "N2", "N3", "N4", "N5"] as const;
 
@@ -313,7 +330,7 @@ export const etablissementSchema = z
     ),
     // Les autres types d'ERP (ADR-045, GN 2). Absent = le formulaire ne l'a
     // pas posté : la valeur en base est gardée (`typesErpAutresCoherents`).
-    typesErpAutres: z.array(z.enum(TYPE_ERP)).optional(),
+    typesErpAutres: typesErpAutresSchema.optional(),
     categorieErp: z.preprocess(
       (v) => (v === "" || v === null ? undefined : v),
       z.enum(CATEGORIES_ERP).optional(),

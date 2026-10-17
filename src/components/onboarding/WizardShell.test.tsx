@@ -49,6 +49,7 @@ vi.mock("@/lib/auth/actions", () => ({
 }));
 
 import { WizardShell } from "./WizardShell";
+import { CHAMP_TEMOIN_TYPES_ERP_AUTRES } from "@/lib/etablissements/types-erp-affiches";
 
 afterEach(cleanup);
 beforeEach(() => {
@@ -388,7 +389,7 @@ describe("plusieurs types d'ERP au parcours (ADR-045, lot 3)", () => {
     await allerEtape2AvecType("N");
     expect(document.querySelector("details")!.open).toBe(false);
     expect(document.querySelectorAll('input[type="hidden"][name="typesErpAutres"]').length).toBe(0);
-    expect(document.querySelector('input[type="hidden"][name="typesErpAutresAffiche"]')).not.toBeNull();
+    expect(document.querySelector(`input[type="hidden"][name="${CHAMP_TEMOIN_TYPES_ERP_AUTRES}"]`)).not.toBeNull();
   });
 
   it("cocher O pose la question du sommeil à un restaurant, et poste le type", async () => {

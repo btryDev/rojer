@@ -113,7 +113,6 @@ export function AutresTypesErp({
                   // Sur les cases et non sur le fieldset : le rôle « group »
                   // n'admet pas aria-invalid (relecture du lot 3).
                   aria-invalid={erreur ? true : undefined}
-
                   className={CASE_A_COCHER}
                 />
                 <span>{LABEL_TYPE_ERP[t]}</span>

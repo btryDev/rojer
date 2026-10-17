@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { cleJourCivil } from "@/lib/dates";
+import { TYPES_ERP } from "@/lib/referentiels/types-communs";
 import {
+  TYPE_ERP,
   etablissementCreationSchema,
   etablissementSchema,
 } from "./schema";
@@ -300,5 +302,30 @@ describe("etablissementSchema — nombre de personnes (2026-09-20)", () => {
         personnesPresentesHabituellement: 12,
       }).success,
     ).toBe(true);
+  });
+});
+
+describe("etablissementSchema — plusieurs types d'ERP (ADR-045, revue de c6)", () => {
+  it("une liste trop longue se refuse d'un seul message, même d'un million d'entrées", () => {
+    // Éprouvé en remplaçant le schéma borné par `z.array(z.enum(TYPE_ERP)).max(…)` :
+    // un message par entrée, rouge.
+    const res = etablissementSchema.safeParse({
+      ...base,
+      estERP: true,
+      typeErp: "N",
+      categorieErp: "N3",
+      typesErpAutres: Array(1_000_000).fill("pas-un-type"),
+    });
+    expect(res.success).toBe(false);
+    const issues = res.success ? [] : res.error.issues.filter((i) => i.path[0] === "typesErpAutres");
+    expect(issues.map((i) => i.message)).toEqual(["La liste des autres types d'ERP est trop longue."]);
+  }, 60_000);
+
+  it("TYPE_ERP (formulaires) et TYPES_ERP (référentiel) ont le même ORDRE", () => {
+    // Les écrans rangent les autres types dans l'ordre de `TYPE_ERP`, le moteur
+    // départage dans celui de `TYPES_ERP` (`typesErpOrdreProduit`) : deux
+    // ordres différents feraient afficher une liste que le moteur ne lit pas
+    // dans le même sens. Éprouvé en permutant deux types de `TYPE_ERP` : rouge.
+    expect([...TYPE_ERP]).toEqual([...TYPES_ERP]);
   });
 });
