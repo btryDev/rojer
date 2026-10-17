@@ -19,12 +19,14 @@ import type {
   LigneEtatPermanent,
 } from "@/lib/etats-permanents/queries";
 import { ancreFamille } from "@/lib/etats-permanents/ancre";
-import { phraseCompteur } from "@/lib/etats-permanents/phrases";
+import { phraseCompteur, phraseSommaire } from "@/lib/etats-permanents/phrases";
 
 /**
  * Le sommaire : les familles PRÉSENTES sur ce dossier, et elles seules — une
  * ancre vers une famille absente serait un lien mort (interdit 19). Les ancres
- * et les `id` sortent de la même fonction.
+ * et les `id` sortent de la même fonction. Le repli « Autres obligations »
+ * (`familles.ts`) y entre comme une famille, en dernier, quand il porte une
+ * ligne.
  *
  * Aucun défilement animé : le saut est celui du navigateur. En ajouter un
  * obligerait à le couper sous `prefers-reduced-motion` (interdit 22), pour
@@ -47,8 +49,10 @@ export function SommaireParUsage({
             >
               {f.libelle}
             </a>
+            {/* ~~« x sur n », nu~~ (2026-10-17, revue indépendante) : le
+                compte dit qui affirme, comme celui de la famille (ADR-027). */}
             <span className="text-[12.5px] tabular-nums text-[color:var(--board-slate-mid)]">
-              {f.enPlace} sur {f.total}
+              {phraseSommaire(f.enPlace, f.total, f.parLesTitres.enPlace)}
             </span>
           </li>
         ))}

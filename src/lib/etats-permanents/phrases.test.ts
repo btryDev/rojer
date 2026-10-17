@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { basename, join } from "node:path";
-import { phraseCompteur, phraseFaitsDates, phraseRestantes } from "./phrases";
+import {
+  phraseCompteur,
+  phraseFaitsDates,
+  phraseRestantes,
+  phraseSommaire,
+} from "./phrases";
 
 /**
  * La garde que le contrôle visuel du 2026-08-31 a rendue nécessaire.
@@ -25,6 +30,12 @@ function toutesLesPhrases(): { cas: string; texte: string }[] {
     if (r) out.push({ cas: `restantes(${n})`, texte: r });
     out.push({ cas: `compteur(0,${n})`, texte: phraseCompteur(0, n) });
     out.push({ cas: `compteur(${n},${n})`, texte: phraseCompteur(n, n) });
+    out.push({ cas: `compteur-sommaire(0,${n})`, texte: phraseSommaire(0, n) });
+    out.push({ cas: `compteur-sommaire(${n},${n})`, texte: phraseSommaire(n, n) });
+    if (n > 0) {
+      out.push({ cas: `compteur-sommaire(${n},${n},1)`, texte: phraseSommaire(n, n, 1) });
+      out.push({ cas: `compteur-sommaire(${n},${n},${n})`, texte: phraseSommaire(n, n, n) });
+    }
     for (let k = 0; k <= n; k++) {
       const f = phraseFaitsDates(n, k);
       if (f) out.push({ cas: `faits(${n},${k})`, texte: f });
@@ -116,6 +127,29 @@ describe("les phrases assemblées", () => {
     }
     expect(phraseCompteur(0, 12)).toContain("par vous");
     expect(phraseCompteur(12, 12)).toContain("par vous");
+  });
+
+  it("le sommaire dit qui affirme, comme l'en-tête de famille (2026-10-17)", () => {
+    // Corollaire de l'ADR-027 : jamais un compteur nu.
+    expect(phraseSommaire(0, 8)).toBe("0 sur 8 déclaré par vous");
+    expect(phraseSommaire(1, 8)).toBe("1 sur 8 déclaré par vous");
+    expect(phraseSommaire(3, 8)).toBe("3 sur 8 déclarés par vous");
+    expect(phraseSommaire(3, 8, 1)).toBe(
+      "3 sur 8 en place : 2 déclarés par vous, 1 d'après les titres",
+    );
+    expect(phraseSommaire(2, 8, 1)).toBe(
+      "2 sur 8 en place : 1 déclaré par vous, 1 d'après les titres",
+    );
+    expect(phraseSommaire(2, 8, 2)).toBe("2 sur 8 en place d'après les titres");
+    for (const [e, t, p] of [
+      [0, 5, 0],
+      [5, 5, 0],
+      [4, 5, 2],
+      [2, 5, 2],
+    ] as const) {
+      const texte = phraseSommaire(e, t, p);
+      expect(texte, `${e},${t},${p}`).toMatch(/déclarés? par vous|d'après les titres/);
+    }
   });
 
   it("le témoin : rien ne se rend vide, sur aucune branche", () => {

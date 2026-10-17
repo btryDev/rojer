@@ -140,6 +140,34 @@ export function phraseCompteur(
 }
 
 /**
+ * Le compte d'une famille dans le sommaire, en tête de l'écran (2026-10-17).
+ *
+ * Il rendait un compteur nu, « 3 sur 8 » : le corollaire de l'ADR-027 veut
+ * que tout compte d'« en place » dise QUI l'affirme — l'employeur, ou les
+ * titres qu'il a déclarés —, jamais le produit (revue indépendante). Plus
+ * court que `phraseCompteur`, qui suit le titre de la famille, mais avec les
+ * mêmes deux sources et les mêmes mots.
+ */
+export function phraseSommaire(
+  enPlace: number,
+  total: number,
+  /** La part d'`enPlace` établie d'après les titres déclarés. */
+  parLesTitres = 0,
+): string {
+  if (total === 0) return "aucun état à déclarer";
+  if (parLesTitres <= 0) {
+    return enPlace <= 1
+      ? `${enPlace} sur ${total} déclaré par vous`
+      : `${enPlace} sur ${total} déclarés par vous`;
+  }
+  const declares = enPlace - parLesTitres;
+  if (declares <= 0) return `${enPlace} sur ${total} en place d'après les titres`;
+  const parVous =
+    declares === 1 ? "1 déclaré par vous" : `${declares} déclarés par vous`;
+  return `${enPlace} sur ${total} en place : ${parVous}, ${parLesTitres} d'après les titres`;
+}
+
+/**
  * Ce qu'une ligne déclarée affiche, verbe et date d'un seul tenant.
  *
  * **Trouvée par la garde du 2026-08-31, pas par une relecture.** `LigneEtat`
