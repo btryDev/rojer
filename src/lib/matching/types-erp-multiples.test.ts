@@ -9,8 +9,8 @@
 // l'hôtel-restaurant de 5ᵉ et le sommeil rougissent — pas l'hôtel O + N + L,
 // que O, déclaré en premier, sert déjà en entier) ; `groupeExclusif`
 // retiré d'une ligne à `typesExclus` (le test de structure rougit) ; le
-// départage à rythme égal réduit à l'ordre du référentiel inversé (le membre
-// établi rougit).
+// critère « établi » du départage retiré (`lEmporte` rend `false` à rythme
+// égal : le test des membres synthétiques rougit).
 import { describe, expect, it } from "vitest";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { porteurDe } from "@/lib/referentiels/conformite/types";
@@ -204,6 +204,42 @@ describe("plusieurs types : l'union, puis un membre par groupe", () => {
     expect(sortie.has("incendie-erp-5-instruction-personnel")).toBe(false);
     // Le sommeil se lit sur l'ensemble des types : O le rend plausible.
     expect(sortie.has("incendie-erp-5-visite-commission")).toBe(true);
+  });
+
+  it("à rythme égal, le membre établi l'emporte, quel que soit l'ordre du référentiel", () => {
+    // Deux membres SYNTHÉTIQUES d'un même groupe, au même rythme : l'un borné
+    // à R et aux locaux à sommeil (retenu « à confirmer » quand le sommeil
+    // n'est pas renseigné), l'autre borné à O (établi). Présentés dans les
+    // deux ordres, c'est l'établi qui sort : l'ordre ne décide pas, la règle
+    // décide. Dans le référentiel, l'ordre donne déjà la bonne réponse, et le
+    // test sur les vraies lignes ci-dessous ne peut pas voir le critère.
+    const modele = obligationsConformite.find(
+      (o) => o.id === "incendie-erp-visite-commission-cat4-triennale",
+    )!;
+    const aConfirmer = {
+      ...modele,
+      id: "synthetique-a-confirmer",
+      groupeExclusif: "synthetique",
+      typologies: { erp: { categories: ["N4"], types: ["R"] }, locauxSommeilPublic: true },
+    } as typeof modele;
+    const etabli = {
+      ...modele,
+      id: "synthetique-etabli",
+      groupeExclusif: "synthetique",
+      typologies: { erp: { categories: ["N4"], types: ["O"] } },
+    } as typeof modele;
+    for (const obligations of [[aConfirmer, etabli], [etabli, aConfirmer]]) {
+      const sortie = determineObligationsApplicables(erp(["R", "O"], "N4", null), [], { obligations });
+      const ordre = obligations.map((o) => o.id).join(" puis ");
+      expect(sortie.map((a) => a.obligation.id), ordre).toEqual(["synthetique-etabli"]);
+    }
+    // Les deux membres sortent bien, chacun de son côté : sans quoi le test
+    // ne départagerait rien.
+    const r = determineObligationsApplicables(erp(["R"], "N4", null), [], { obligations: [aConfirmer] });
+    expect(r.map((a) => a.sansReponse?.length ?? 0)).toEqual([1]);
+    expect(
+      determineObligationsApplicables(erp(["O"], "N4", null), [], { obligations: [etabli] }),
+    ).toHaveLength(1);
   });
 
   it("à rythme égal, le membre établi l'emporte sur celui que retient le silence", () => {
