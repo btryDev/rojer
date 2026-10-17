@@ -426,6 +426,8 @@ export const LIBELLE_CATEGORIE: Record<string, string> = {
     "compacteur à déchets ou presse à cartons motorisé",
   INSTALLATION_GAZ: "installation de gaz",
   DEFIBRILLATEUR: "défibrillateur automatisé externe",
+  EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC:
+    "eau chaude collective alimentant des douches ou des bains à remous ouverts au public",
   AUTRE: "autre",
 };
 

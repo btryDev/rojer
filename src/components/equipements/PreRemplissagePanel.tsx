@@ -14,6 +14,8 @@ type Suggestion = {
   libelle: string;
   raison: string;
   mention?: string;
+  /** `false` : proposée sans être cochée (`Entree.cocheeParDefaut`). */
+  cocheeParDefaut?: false;
 };
 
 type Props = {
@@ -40,7 +42,10 @@ export function PreRemplissagePanel({
   questionsExigees = {},
 }: Props) {
   const [selection, setSelection] = useState<Set<string>>(
-    () => new Set(suggestions.map((s) => s.categorie)),
+    // 2026-10-17 : une suggestion marquée `cocheeParDefaut: false` part
+    // décochée — l'eau chaude collective, qui dépend d'un fait que le
+    // produit ne détient pas.
+    () => new Set(suggestions.filter((s) => s.cocheeParDefaut !== false).map((s) => s.categorie)),
   );
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);

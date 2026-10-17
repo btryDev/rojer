@@ -30,11 +30,58 @@ export const ENJEU_CARNET =
  * toujours les deux faits qui décident — installation collective, point
  * d'usage à risque.
  *
- * La phrase se termine sur le sujet de la suivante (« il » / « Rojer »),
- * commune aux deux cas : ce que Rojer inscrit au calendrier.
+ * ~~La phrase se termine sur le sujet de la suivante (« il » / « Rojer »),
+ * commune aux deux cas : ce que Rojer inscrit au calendrier.~~ [2026-10-17,
+ * sous-lot F : la phrase est entière, et `ceQueRojerFait` dit la suite — elle
+ * dépend désormais de l'installation déclarée.]
+ *
+ * [2026-10-17, sous-lot F] Un ERP qui a DÉCLARÉ l'installation
+ * `EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC` a dit ce que Rojer ignorait : la
+ * question ne se pose plus, la phrase ne la pose plus.
  */
-export function quiEstVise(estERP: boolean): string {
+export function quiEstVise(estERP: boolean, installationDeclaree = false): string {
+  if (estERP && installationDeclaree) {
+    // ~~« : l'arrêté vous concerne. »~~ — 2026-10-17, revue indépendante :
+    // une conclusion juridique. La phrase dit le cas que le texte vise, sans
+    // qualifier la situation du dirigeant.
+    return "Vous avez déclaré, dans vos équipements, une eau chaude collective alimentant des douches ou des bains à remous ouverts au public : c'est le cas que visent les articles 1er et 2.";
+  }
   return estERP
-    ? "Rojer ne sait pas si c'est votre cas, et ne le décide pas à votre place : il"
-    : "Votre établissement n'est pas déclaré recevant du public : l'arrêté ne le vise que s'il est l'un des autres établissements que nomme son article 1er — de santé, social ou médico-social, pénitentiaire, hôtel ou résidence de tourisme, camping. Rojer";
+    ? "Rojer ne sait pas si c'est votre cas, et ne le décide pas à votre place."
+    : "Votre établissement n'est pas déclaré recevant du public : l'arrêté ne le vise que s'il est l'un des autres établissements que nomme son article 1er — de santé, social ou médico-social, pénitentiaire, hôtel ou résidence de tourisme, camping.";
+}
+
+/**
+ * Ce que Rojer inscrit au calendrier, selon que l'installation est déclarée
+ * (2026-10-17, sous-lot F — décision de la propriétaire : les légionelles
+ * passent par le matériel).
+ *
+ * - ERP, installation déclarée : les deux lignes du référentiel, une de chaque
+ *   par installation ; le carnet garde les résultats. DETTE dite à l'écran,
+ *   parce que c'est le dirigeant qui la subit : une analyse saisie ici ne fait
+ *   pas avancer la date du calendrier (`docs/dette-chantier-porteur-echeance.md`).
+ * - Sinon : l'échéance du module, comme avant — rien sans carnet, puis
+ *   l'analyse suivante un an après la dernière saisie. En ERP, la phrase dit
+ *   comment faire porter la surveillance par le calendrier.
+ *
+ * Un établissement non ERP qui aurait déclaré la catégorie n'en reçoit aucune
+ * ligne (`typologies: { erp: true }`) : il garde l'échéance du module.
+ */
+export function ceQueRojerFait(estERP: boolean, installationDeclaree: boolean): string {
+  if (estERP && installationDeclaree) {
+    // ~~« une analyse saisie ici ne fait pas avancer la date du calendrier :
+    // déposez le rapport du laboratoire sur la ligne de l'analyse »~~ —
+    // 2026-10-17, revue indépendante : la ligne mensuelle n'avance, elle
+    // aussi, qu'au dépôt d'un document ; la phrase ne disait rien de la
+    // température.
+    return "Rojer inscrit à votre calendrier, pour chaque installation déclarée, la mesure de la température une fois par mois et l'analyse de légionelles une fois par an, par un laboratoire accrédité. Ce carnet garde vos relevés et vos résultats, mais ce que vous y saisissez ne fait pas avancer les dates du calendrier : chaque mois, déposez la fiche de vos relevés de température sur la ligne de la température ; chaque année, le rapport du laboratoire sur la ligne de l'analyse. Pas de rappel par e-mail.";
+  }
+  const duModule =
+    "Rojer n'inscrit rien à votre calendrier tant que vous n'avez pas ouvert de carnet, puis y inscrit l'analyse suivante un an après la dernière saisie — sans rappel par e-mail.";
+  // ~~`Sans cette déclaration, ${minuscule(duModule)}`~~ — 2026-10-17,
+  // contrôle visuel : la première lettre mise en minuscule rendait « rojer ».
+  // Deux phrases, la seconde garde sa majuscule.
+  return estERP
+    ? `Si votre eau chaude est produite en commun et alimente des douches ou des bains à remous accessibles au public, déclarez-la dans vos équipements : Rojer inscrira à votre calendrier la température une fois par mois et l'analyse une fois par an. Sans cette déclaration : ${duModule}`
+    : duModule;
 }

@@ -47,6 +47,15 @@ export const LABEL_CATEGORIE_EQUIPEMENT: Record<CategorieEquipement, string> = {
   INSTALLATION_GAZ: "Installation de gaz (chauffage, stockage…)",
   // 2026-10-15, décision de la propriétaire.
   DEFIBRILLATEUR: "Défibrillateur (DAE)",
+  // 2026-10-17, décision de la propriétaire : le libellé dit les deux
+  // conditions de l'arrêté du 1er février 2010 (art. 1er et 2) — installation
+  // COLLECTIVE, point d'usage ACCESSIBLE AU PUBLIC — par les exemples de
+  // l'art. 2 (« des douches, des douchettes, des bains à remous ou à jets »).
+  // ~~« … des douches ouvertes au public »~~ [2026-10-17, c6 : élargi aux bains
+  // à remous, que le sous-lot B oriente vers cette catégorie ; la clé de l'enum
+  // est gardée]. Il couvre aussi les hôtels, cas le plus important de la cible.
+  EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC:
+    "Eau chaude collective alimentant des douches ou des bains à remous ouverts au public",
   AUTRE: "Autre équipement",
 };
 
@@ -221,6 +230,15 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
   // une prescription de source « autre » arriverait au calendrier sans la
   // mention « pas une obligation légale ». Voir les notes de `dae-erp-maintenance`.]
   DEFIBRILLATEUR: `Défibrillateur automatisé externe, au mur ou en boîtier. Dans un établissement recevant du public des catégories 1 à 4, Rojer suit pour chaque appareil ${porte("la maintenance du défibrillateur automatisé externe et de ses accessoires")} (code de la construction et de l'habitation, art. R. 157-4) et sa déclaration ${porte("à la base de données nationale")} Géo'DAE (code de la santé publique, art. L. 5233-1). Le texte ne fixe aucun rythme de maintenance : Rojer retient par défaut une maintenance au moins une fois par an ; suivez la notice du fabricant si elle en demande une plus fréquente.`,
+  // 2026-10-17, décision de la propriétaire. Arrêté du 1er février 2010 relu
+  // le 2026-10-17 par l'API Légifrance (bac à sable) : art. 1er et 2 (version
+  // du 2023-01-01), art. 3, 4, 5, annexe 2. Les deux lignes portées :
+  // `ecs-temperature-mensuelle`, `ecs-legionelles-analyse-annuelle`. Ce qui
+  // n'est pas porté est dit avec `nonPorte` : la surveillance renforcée et la
+  // remise en service (art. 3), les mesures correctives (art. 4), les
+  // températures de l'arrêté du 23 juin 1978 (art. 36), règle d'exploitation
+  // sans échéance.
+  EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC: `Production d'eau chaude centralisée (ballon, chaudière, échangeur) qui alimente des douches, douchettes ou bains à remous accessibles au public — chambres d'hôtel, vestiaires d'une salle de sport, douches d'un camping. Une douche réservée au personnel n'en fait pas partie. Dans un établissement recevant du public, Rojer suit pour chaque installation déclarée ${porte("la mesure de la température de l'eau chaude sanitaire")} une fois par mois et ${porte("l'analyse de légionelles")} une fois par an, par un laboratoire accrédité (arrêté du 1er février 2010, art. 3, 5 et annexe 2). Vos relevés et vos résultats d'analyse se consignent au carnet sanitaire. Rojer ne suit pas ${nonPorte("les prélèvements avant la réouverture d'un réseau resté inutilisé plusieurs semaines")} ni ${nonPorte("la surveillance renforcée après un incident ou à la demande de l'agence régionale de santé")} (art. 3), ni ${nonPorte("les mesures correctives quand la limite de 1 000 UFC/L est dépassée")} (art. 4), ni ${nonPorte("les températures minimales du réseau d'eau chaude")} (arrêté du 23 juin 1978, art. 36).`,
   AUTRE: "Autre équipement soumis à vérification périodique.",
 };
 

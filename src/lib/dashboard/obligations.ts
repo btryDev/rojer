@@ -48,6 +48,9 @@ export type LigneMatrice = {
  *     travaux par point chaud ne doit pas voir une ligne trouée ;
  *   - carnet sanitaire : dépend de la présence d'un réseau ECS, que
  *     l'outil ne sait pas déduire — la ligne suit la création du carnet.
+ *     [2026-10-17 : une installation `EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC`
+ *     déclarée fait porter les rappels par le calendrier ; la ligne ne garde
+ *     alors que « En place ».]
  */
 export type ModulesMatrice = {
   estERP: boolean;
@@ -72,6 +75,14 @@ export type ModulesMatrice = {
     nbPointsReleveAncien: number;
     /** Jours depuis la dernière analyse légionelles, null si aucune. */
     jourDerniereAnalyse: number | null;
+    /**
+     * Une installation `EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC` est déclarée
+     * (2026-10-17, sous-lot F ; `eauChaudeSuivieParLeCalendrier`). Le
+     * calendrier porte alors la température mensuelle et l'analyse annuelle,
+     * une ligne de chaque par installation : la matrice ne les rappelle pas
+     * une seconde fois.
+     */
+    suiviParLeCalendrier: boolean;
   };
   prestataires: { total: number; enAlerte: number };
 };
@@ -198,27 +209,37 @@ function lignesModules(
   }
 
   if (m.carnetSanitaire.existe) {
+    // 2026-10-17, sous-lot F : quand l'installation est déclarée, « À jour »
+    // (relevé mensuel) et « Sans retard » (analyse annuelle) sont DÉJÀ deux
+    // lignes du calendrier, une par installation. Les juger ici aussi ferait
+    // deux rappels pour un acte, et deux verdicts qui peuvent diverger — le
+    // carnet compte les relevés saisis au carnet, le calendrier les rapports
+    // déposés. Les deux cellules passent « na » ; « En place » reste, et les
+    // résultats restent sur la page du carnet.
+    const suivi = m.carnetSanitaire.suiviParLeCalendrier;
     lignes.push({
       id: "carnet-sanitaire",
       libelle: "Carnet sanitaire",
       href: `${base}/carnet-sanitaire`,
-      cellules: [
-        oui(m.carnetSanitaire.nbPoints > 0),
-        // « À jour » se juge sur le point **le plus en retard**, jamais sur
-        // le plus récent : un seul point relevé cette semaine ne dit rien
-        // des dix autres. Un point actif jamais relevé suffit à empêcher la
-        // pastille — on ne peut pas établir un fait sur une sonde muette.
-        oui(
-          m.carnetSanitaire.nbPoints > 0 &&
-            m.carnetSanitaire.nbPointsJamaisReleves === 0 &&
-            m.carnetSanitaire.nbPointsReleveAncien === 0,
-        ),
-        oui(
-          m.carnetSanitaire.jourDerniereAnalyse !== null &&
-            m.carnetSanitaire.jourDerniereAnalyse <=
-              SEUIL_ANALYSE_LEGIONELLE_JOURS,
-        ),
-      ],
+      cellules: suivi
+        ? [oui(m.carnetSanitaire.nbPoints > 0), "na", "na"]
+        : [
+            oui(m.carnetSanitaire.nbPoints > 0),
+            // « À jour » se juge sur le point **le plus en retard**, jamais sur
+            // le plus récent : un seul point relevé cette semaine ne dit rien
+            // des dix autres. Un point actif jamais relevé suffit à empêcher la
+            // pastille — on ne peut pas établir un fait sur une sonde muette.
+            oui(
+              m.carnetSanitaire.nbPoints > 0 &&
+                m.carnetSanitaire.nbPointsJamaisReleves === 0 &&
+                m.carnetSanitaire.nbPointsReleveAncien === 0,
+            ),
+            oui(
+              m.carnetSanitaire.jourDerniereAnalyse !== null &&
+                m.carnetSanitaire.jourDerniereAnalyse <=
+                  SEUIL_ANALYSE_LEGIONELLE_JOURS,
+            ),
+          ],
     });
   }
 

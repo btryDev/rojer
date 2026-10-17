@@ -171,6 +171,9 @@ describe("creerEquipementsDepuisPreRemplissage — une entrée par catégorie au
       for (const codeNaf of ["56.10A", "47.11B", "70.22Z", null]) {
         const suggestions = suggererEquipements({
           codeNaf, estEtablissementTravail: true, estERP, estIGH: true, estHabitation: true, categorieErp: null,
+          // 2026-10-17 : un type O fait proposer l'eau chaude collective — elle
+          // doit passer la validation comme toute autre suggestion.
+          typesErp: estERP ? ["O"] : [],
         });
         expect(suggestions.length).toBeGreaterThan(0);
         ecritures.length = 0;

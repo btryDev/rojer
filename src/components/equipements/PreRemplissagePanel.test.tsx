@@ -89,3 +89,27 @@ describe("la mention de sur-application s'affiche avec la raison (C39)", () => {
     expect(p.textContent).toContain("sur-application assumée");
   });
 });
+
+describe("une suggestion marquée non cochée part décochée (2026-10-17)", () => {
+  it("l'eau chaude collective est proposée sans être cochée ; les autres restent cochées", () => {
+    render(
+      <PreRemplissagePanel
+        etablissementId="e1"
+        suggestions={[
+          { categorie: "EXTINCTEUR", libelle: "Extincteurs", raison: "Tout établissement" },
+          {
+            categorie: "EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC",
+            libelle: "Eau chaude collective",
+            raison: "Si l'eau chaude est produite en commun",
+            cocheeParDefaut: false,
+          },
+        ]}
+      />,
+    );
+    const cases = screen.getAllByRole("checkbox") as HTMLInputElement[];
+    expect(cases).toHaveLength(2);
+    expect(cases[0].checked).toBe(true);
+    expect(cases[1].checked).toBe(false);
+    expect(screen.getByRole("button", { name: /Créer 1 fiche\b/ })).toBeTruthy();
+  });
+});

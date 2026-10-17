@@ -1928,6 +1928,12 @@ describe("référentiel conformité — version et empreinte", () => {
     // 185, dont 12 au niveau audit, 173 suivies ; relevée en appelant
     // `empreinteReferentiel()`.
     { version: "2026-10-17.2", empreinte: "185-a0799d49b88fc395" },
+    // 2026-10-17 (sous-lot F, décision de la propriétaire ; numéro PROVISOIRE,
+    // renuméroté au merge en cas de collision) : les légionelles au matériel —
+    // catégorie `EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC`, `ecs-temperature-mensuelle`
+    // et `ecs-legionelles-analyse-annuelle`. 185 + 2 − 0 = 187 ; relevée en
+    // appelant `empreinteReferentiel()`.
+    { version: "2026-10-17.3", empreinte: "187-470daeccc33bc1ac" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -2107,7 +2113,11 @@ describe("référentiel conformité — version et empreinte", () => {
       // ~~179~~ — 2026-10-14 (livre II, titre II, M/N/O/W, et livret de
       // CH 39, décision de la propriétaire) : 179 + 6 − 0 = 185, remesuré en
       // appelant `obligationsConformite`.
-    ).toBe(185);
+      // ~~185~~ — 2026-10-17 (sous-lot F, légionelles au matériel, décision
+      // de la propriétaire) : 185 + 2 (`ecs-temperature-mensuelle`,
+      // `ecs-legionelles-analyse-annuelle`) − 0 = 187, remesuré en appelant
+      // `obligationsConformite`.
+    ).toBe(187);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {

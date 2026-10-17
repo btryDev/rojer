@@ -338,7 +338,12 @@ describe("registre de dette — les réserves de lecture", () => {
     // 92 → 94 le même jour, revue indépendante : `MS 47` (même écrit que la
     // consigne du Code du travail, champ différent) et `MS 48` (§ 2 SSIAP
     // dehors) entrent retenus en contexte, chacun avec sa réserve. 92 + 2 = 94.
-    expect(n).toBe(94);
+    // 94 → 96 le 2026-10-17 (sous-lot F, légionelles au matériel) : l'art. 3
+    // de l'arrêté du 1er février 2010 (remise en service, surveillance
+    // renforcée, fichier sanitaire complet) et son art. 4 (mesures correctives)
+    // passent `retenu` avec une réserve ; l'annexe 2 passe `retenu` sans
+    // réserve. 94 + 2 − 0 = 96.
+    expect(n).toBe(96);
     expect(reservesDeLecture().length).toBe(n);
   });
 });

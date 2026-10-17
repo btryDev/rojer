@@ -22,7 +22,12 @@ import {
 } from "@/lib/carnet-sanitaire/schema";
 import { cleJourCivil, formaterDateCourteFr } from "@/lib/dates";
 import { BoutonRetirer } from "@/components/carnet-sanitaire/BoutonRetirer";
-import { ENJEU_CARNET, quiEstVise } from "@/components/carnet-sanitaire/textes";
+import {
+  ceQueRojerFait,
+  ENJEU_CARNET,
+  quiEstVise,
+} from "@/components/carnet-sanitaire/textes";
+import { eauChaudeSuivieParLeCalendrier } from "@/lib/carnet-sanitaire/suivi-calendrier";
 import { formaterMesure, formaterNombreFr } from "@/lib/rendu/mesures";
 import { etatDernierReleve, libelleReleveAncien } from "@/lib/carnet-sanitaire/etat-releve";
 import {
@@ -45,7 +50,13 @@ export default async function CarnetSanitairePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { etablissement } = await requireEtablissement(id);
+  const { user, etablissement } = await requireEtablissement(id);
+  // 2026-10-17, sous-lot F : l'installation déclarée au parc fait porter la
+  // surveillance par le calendrier — la page le dit (`ceQueRojerFait`).
+  const installationDeclaree = await eauChaudeSuivieParLeCalendrier({
+    etablissementId: etablissement.id,
+    etablissement: { entreprise: { userId: user.id } },
+  });
   const carnet = await getCarnetSanitaire(id);
   const batiments = await listerBatimentsDeLEtablissement(id);
   const now = new Date();
@@ -106,10 +117,9 @@ export default async function CarnetSanitairePage({
             remous ou à jets » (art. 2). Pour les établissements autres que de
             santé, son annexe 2 fixe au minimum un relevé de température par
             mois et une analyse de légionelles par an, à chaque point de
-            surveillance. {quiEstVise(etablissement.estERP)}{" "}
-            n&apos;inscrit rien à votre calendrier tant que vous n&apos;avez
-            pas ouvert de carnet, puis y inscrit l&apos;analyse suivante un an
-            après la dernière saisie — sans rappel par e-mail.
+            surveillance.{" "}
+            {quiEstVise(etablissement.estERP, installationDeclaree)}{" "}
+            {ceQueRojerFait(etablissement.estERP, installationDeclaree)}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {/* L'extrait affiché ici était FABRIQUÉ : ni « bonne

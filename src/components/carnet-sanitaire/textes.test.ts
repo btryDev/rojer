@@ -5,7 +5,7 @@
 
 import { describe, expect, it } from "vitest";
 import { ARRETE_2010_02_01_LEGIONELLES } from "@/lib/referentiels/corpus/arrete-2010-02-01-legionelles";
-import { ENJEU_CARNET, quiEstVise } from "./textes";
+import { ceQueRojerFait, ENJEU_CARNET, quiEstVise } from "./textes";
 
 const article = (ref: string) => {
   const a = ARRETE_2010_02_01_LEGIONELLES.articles.find((x) => x.ref === ref);
@@ -46,5 +46,44 @@ describe("à qui l'arrêté s'adresse (art. 1er)", () => {
       expect(art1, `corpus : ${famille}`).toContain(famille);
       expect(phrase, `écran : ${famille}`).toContain(famille);
     }
+  });
+});
+
+describe("ce que Rojer fait, selon l'installation déclarée (2026-10-17, sous-lot F)", () => {
+  const annexe2 = article("Arrêté 01-02-2010 annexe 2");
+
+  it("ERP avec l'installation : les deux rythmes de l'annexe 2, et la dette dite", () => {
+    const t = ceQueRojerFait(true, true);
+    expect(annexe2).toContain("1 fois par mois");
+    expect(annexe2).toContain("1 fois par an");
+    expect(t).toContain("une fois par mois");
+    expect(t).toContain("une fois par an");
+    expect(t).toContain("ne fait pas avancer les dates du calendrier");
+    // Les deux lignes, chacune avec ce qu'il faut y déposer (revue du
+    // 2026-10-17 : la température était oubliée).
+    expect(t).toContain("sur la ligne de la température");
+    expect(t).toContain("sur la ligne de l'analyse");
+    expect(t).not.toContain("un an après la dernière saisie");
+    expect(quiEstVise(true, true)).not.toContain("ne sait pas");
+    // Pas de conclusion juridique (revue du 2026-10-17) : le cas visé, cité.
+    expect(quiEstVise(true, true)).not.toContain("vous concerne");
+    expect(quiEstVise(true, true)).toContain("articles 1er et 2");
+  });
+
+  it("ERP sans l'installation : l'échéance du module, et comment déclarer", () => {
+    const t = ceQueRojerFait(true, false);
+    expect(t).toContain("déclarez-la dans vos équipements");
+    expect(t).toContain("un an après la dernière saisie");
+    // Contrôle visuel du 2026-10-17 : « rojer » en minuscule.
+    expect(t).not.toMatch(/\brojer\b/);
+  });
+
+  it("hors ERP, même déclarée : aucune ligne du référentiel, l'échéance du module reste", () => {
+    for (const declaree of [true, false]) {
+      const t = ceQueRojerFait(false, declaree);
+      expect(t).toContain("un an après la dernière saisie");
+      expect(t).not.toContain("pour chaque installation");
+    }
+    expect(quiEstVise(false, true)).toContain("n'est pas déclaré recevant du public");
   });
 });

@@ -5,7 +5,7 @@
      du script. Pour le mettre à jour : pnpm verification --ecrire -->
 
 **Généré le** : 2026-10-17
-**Référentiel** : `2026-10-17.2`
+**Référentiel** : `2026-10-17.3`
 **Régénérer** : `pnpm verification --ecrire`
 
 Ce document répond à une question, et à une seule : **de quoi le
@@ -83,18 +83,18 @@ repose sur un texte que personne n'a ouvert.
 
 ## 2. Où en est-on
 
-**185 obligations**, **378 références** — 106 obligations en citent plus d'une.
+**187 obligations**, **386 références** — 108 obligations en citent plus d'une.
 
 | degré | obligations (au plancher) | part | dont fondements | références | part |
 | --- | --- | --- | --- | --- | --- |
-| 5 · lu à la source, verbatim relevé | 97 | 52 % | 104 | 239 | 63 % |
-| 4 · lu à la source par un agent, verbatim rapporté | 84 | 45 % | 81 | 134 | 35 % |
+| 5 · lu à la source, verbatim relevé | 97 | 52 % | 104 | 239 | 62 % |
+| 4 · lu à la source par un agent, verbatim rapporté | 86 | 46 % | 83 | 142 | 37 % |
 | 3 · lu et daté, aucun verbatim | 3 | 2 % | 0 | 4 | 1 % |
 | 2 · lu ailleurs qu'à la source | 1 | 1 % | 0 | 1 | 0 % |
 | 1 · au corpus, aucune trace de lecture | 0 | 0 % | 0 | 0 | 0 % |
 | 0 · rien à ouvrir | 0 | 0 % | 0 | 0 | 0 % |
 
-**181 obligations sur 185 (98 %)** reposent, jusqu'à leur dernière référence de contexte, sur des textes lus à la source avec verbatim relevé.
+**183 obligations sur 187 (98 %)** reposent, jusqu'à leur dernière référence de contexte, sur des textes lus à la source avec verbatim relevé.
 
 **3 obligations (2 %)** citent au moins un texte ouvert et daté dont rien n'a été relevé. Ce n'est pas une lecture à refaire : c'est une lecture qu'on ne peut ni contrôler ni contredire sans rouvrir Légifrance.
 
@@ -108,11 +108,11 @@ repose sur un texte que personne n'a ouvert.
 
 | ancrage | références | part |
 | --- | --- | --- |
-| ancrée | 354 | 94 % |
+| ancrée | 362 | 94 % |
 | divergente | 1 | 0 % |
 | jamais constatée | 23 | 6 % |
 
-**9 obligations sur 185 (5 %) ne portent aucune version constatée, sur aucune de leurs références.** Le jour où l'un de leurs textes est modifié, rien dans le dépôt ne pourra le signaler : l'absence de repère se lit comme « à vérifier », jamais comme « à jour ».
+**9 obligations sur 187 (5 %) ne portent aucune version constatée, sur aucune de leurs références.** Le jour où l'un de leurs textes est modifié, rien dans le dépôt ne pourra le signaler : l'absence de repère se lit comme « à vérifier », jamais comme « à jour ».
 
 **1 obligation déclare une version que le corpus contredit** : `incendie-hotel-po-controle-annuel-electricite`. À trancher, pas à relire.
 
@@ -127,6 +127,7 @@ repose sur un texte que personne n'a ouvert.
 | `co_activite` | 1 | 7 | · | 1 | · | · | · | · | 1 / 1 — 100 % | 0 / 7 | 2026-08-31 → 2026-09-26 |
 | `compactage_dechets` | 1 | 5 | 1 | · | · | · | · | · | 1 / 1 — 100 % | 0 / 5 | 2026-09-01 → 2026-09-02 |
 | `cuisson_hotte` | 7 | 10 | 3 | 4 | · | · | · | · | 7 / 7 — 100 % | 1 / 10 | 2026-08-27 → 2026-10-07 |
+| `eau_chaude_sanitaire` | 2 | 8 | · | 2 | · | · | · | · | 2 / 2 — 100 % | 0 / 8 | 2026-09-20 |
 | `eclairage` | 1 | 2 | · | 1 | · | · | · | · | 1 / 1 — 100 % | 0 / 2 | 2026-09-01 → 2026-09-02 |
 | `electricite` | 14 | 24 | 5 | 7 | 1 | 1 | · | · | 12 / 14 — 86 % | 2 / 24 | 2026-08-26 → 2026-10-07 |
 | `epi` | 5 | 18 | 5 | · | · | · | · | · | 5 / 5 — 100 % | 0 / 18 | 2026-09-04 |
@@ -146,7 +147,7 @@ repose sur un texte que personne n'a ouvert.
 
 Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, mesuré au plancher — **5** première main, **4** agent + verbatim, **3** lu sans verbatim, **2** indirect, **1** sans trace, **0** non rattaché.
 
-**18 domaines ont toutes leurs obligations adossées à des textes lus à la source avec verbatim relevé** : `aeration` (12), `ascenseur` (10), `co_activite` (1), `compactage_dechets` (1), `cuisson_hotte` (7), `eclairage` (1), `epi` (5), `equipement_sous_pression` (1), `formation_securite` (11), `froid` (8), `information_travailleurs` (2), `levage` (11), `locaux_sociaux` (4), `organisation_prevention` (9), `porte_portail` (5), `secours` (7), `signalisation` (11), `stockage_dangereux` (2).
+**19 domaines ont toutes leurs obligations adossées à des textes lus à la source avec verbatim relevé** : `aeration` (12), `ascenseur` (10), `co_activite` (1), `compactage_dechets` (1), `cuisson_hotte` (7), `eau_chaude_sanitaire` (2), `eclairage` (1), `epi` (5), `equipement_sous_pression` (1), `formation_securite` (11), `froid` (8), `information_travailleurs` (2), `levage` (11), `locaux_sociaux` (4), `organisation_prevention` (9), `porte_portail` (5), `secours` (7), `signalisation` (11), `stockage_dangereux` (2).
 
 Aucun domaine n'est entièrement dépourvu de verbatim.
 
@@ -156,7 +157,7 @@ Aucun domaine n'est entièrement dépourvu de verbatim.
 
 |  | obl. | réf. | 5 | 4 | 3 | 2 | 1 | 0 | vérifiées à la source | sans ancre | lu entre |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `equipement` | 93 | 186 | 61 | 31 | 1 | · | · | · | 92 / 93 — 99 % | 22 / 186 | 2026-08-26 → 2026-10-14 |
+| `equipement` | 95 | 194 | 61 | 33 | 1 | · | · | · | 94 / 95 — 99 % | 22 / 194 | 2026-08-26 → 2026-10-14 |
 | `etablissement` | 78 | 159 | 36 | 40 | 2 | · | · | · | 76 / 78 — 97 % | 0 / 159 | 2026-08-26 → 2026-10-16 |
 | `salarie` | 14 | 33 | · | 13 | · | 1 | · | · | 13 / 14 — 93 % | 1 / 33 | 2026-08-27 → 2026-10-07 |
 
@@ -170,11 +171,11 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 | --- | --- | --- | --- |
 | 2026-08-26 | 26 | 7 % | 26 |
 | 2026-08-27 | 7 | 2 % | 4 |
-| 2026-08-31 | 59 | 16 % | 29 |
-| 2026-09-01 | 117 | 31 % | 73 |
+| 2026-08-31 | 59 | 15 % | 29 |
+| 2026-09-01 | 117 | 30 % | 73 |
 | 2026-09-02 | 18 | 5 % | 15 |
 | 2026-09-04 | 18 | 5 % | 5 |
-| 2026-09-20 | 3 | 1 % | 2 |
+| 2026-09-20 | 11 | 3 % | 4 |
 | 2026-09-26 | 26 | 7 % | 21 |
 | 2026-09-27 | 37 | 10 % | 35 |
 | 2026-10-07 | 33 | 9 % | 22 |
@@ -182,7 +183,7 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 | 2026-10-14 | 29 | 8 % | 12 |
 | 2026-10-16 | 3 | 1 % | 3 |
 
-378 des 378 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-10-16.
+386 des 386 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-10-16.
 
 Ces dates ne sont pas un âge : elles disent quand quelqu'un a ouvert le
 texte, pas depuis quand la version lue est en vigueur. Une lecture d'hier
@@ -198,7 +199,7 @@ que rien ne cite n'apparaît donc dans aucun degré ci-dessus — et le prendre
 pour du travail restant est exactement l'erreur qui a failli faire relancer
 une relecture déjà faite.
 
-**1082 articles dépouillés ne sont cités par aucune obligation**, répartis sur 58 corpus.
+**1077 articles dépouillés ne sont cités par aucune obligation**, répartis sur 58 corpus.
 
 | corpus | articles non cités | sur | lus |
 | --- | --- | --- | --- |
@@ -210,7 +211,6 @@ une relecture déjà faite.
 | `inrs-documentaire` | 15 | 16 | 2026-09-03 → 2026-09-26 |
 | `arrete-2021-09-10-retours-eau` | 14 | 14 | 2026-09-02 → 2026-09-27 |
 | `arrete-1993-11-04-signalisation` | 13 | 21 | 2026-09-02 |
-| `arrete-2010-02-01-legionelles` | 12 | 12 | 2026-09-20 → 2026-10-14 |
 | `csp-eau-potable` | 11 | 11 | 2026-09-02 → 2026-09-27 |
 | `code-travail-eclairage` | 11 | 12 | 2026-09-02 → 2026-09-27 |
 | `code-travail-epi` | 11 | 16 | 2026-09-04 → 2026-09-27 |
@@ -221,6 +221,7 @@ une relecture déjà faite.
 | `code-travail-vigilance-modalites` | 8 | 8 | 2026-09-02 → 2026-09-27 |
 | `arrete-2004-12-21-echafaudages` | 7 | 7 | 2026-09-01 |
 | `arrete-1986-habitation` | 7 | 12 | 2026-09-01 → 2026-09-27 |
+| `arrete-2010-02-01-legionelles` | 7 | 12 | 2026-09-20 → 2026-10-14 |
 | `arrete-2011-12-30-igh` | 6 | 6 | 2026-09-03 → 2026-09-27 |
 | `code-travail-duerp-principes` | 6 | 6 | 2026-09-02 → 2026-09-27 |
 | `code-travail-bruit-vibrations` | 6 | 6 | 2026-09-02 → 2026-09-27 |
@@ -261,13 +262,13 @@ une relecture déjà faite.
 | `cch-registre-accessibilite` | 1 | 1 | 2026-09-04 |
 | `code-travail-epi-amont` | 1 | 2 | 2026-09-04 |
 
-**29 corpus ne sont cités nulle part** — `code-travail-travail-en-hauteur` (33 articles, lus 2026-09-01 → 2026-09-27), `code-travail-plan-prevention` (16 articles, lus 2026-09-02 → 2026-09-27), `arrete-2021-09-10-retours-eau` (14 articles, lus 2026-09-02 → 2026-09-27), `arrete-2010-02-01-legionelles` (12 articles, lus 2026-09-20 → 2026-10-14), `csp-eau-potable` (11 articles, lus 2026-09-02 → 2026-09-27), `code-travail-vigilance` (8 articles, lus 2026-09-02 → 2026-10-14), `code-travail-vigilance-modalites` (8 articles, lus 2026-09-02 → 2026-09-27), `arrete-2004-12-21-echafaudages` (7 articles, lus 2026-09-01), `arrete-2011-12-30-igh` (6 articles, lus 2026-09-03 → 2026-09-27), `code-travail-duerp-principes` (6 articles, lus 2026-09-02 → 2026-09-27), `code-travail-bruit-vibrations` (6 articles, lus 2026-09-02 → 2026-09-27), `cch-classement-erp-igh` (5 articles, lus 2026-09-03 → 2026-09-27), `icpe-stockage` (4 articles, lus 2026-09-01), `csp-appareils-bronzage` (4 articles, lus 2026-10-17), `arrete-2004-07-01-produits-petroliers` (4 articles, lus 2026-10-17), `code-travail-travail-dissimule` (4 articles, lus 2026-09-02), `arrete-2017-04-19-registre-accessibilite` (4 articles, lus 2026-09-03 → 2026-09-27), `arrete-1980-livre-1` (3 articles, lus 2026-09-03 → 2026-09-26), `arrete-1957-09-30-chambres-froides` (3 articles, lus 2026-10-14), `decret-1996-aires-de-jeux` (3 articles, lus 2026-10-17), `csp-bains-a-remous` (2 articles, lus 2026-10-17), `code-travail-agents-biologiques` (2 articles, lus 2026-09-26), `code-travail-travail-de-nuit` (2 articles, lus 2026-09-26), `code-travail-circulation-lieux` (2 articles, lus 2026-09-21), `code-travail-equipements-information` (1 articles, lus 2026-09-01), `code-environnement-chaudieres` (1 articles, lus 2026-10-14), `arrete-1993-03-19-travaux-dangereux` (1 articles, lus 2026-09-03), `casf-definition-handicap` (1 articles, lus 2026-09-03), `cch-registre-accessibilite` (1 articles, lus 2026-09-04). Le dépouillement est fait, aucune obligation ne s'y branche encore.
+**28 corpus ne sont cités nulle part** — `code-travail-travail-en-hauteur` (33 articles, lus 2026-09-01 → 2026-09-27), `code-travail-plan-prevention` (16 articles, lus 2026-09-02 → 2026-09-27), `arrete-2021-09-10-retours-eau` (14 articles, lus 2026-09-02 → 2026-09-27), `csp-eau-potable` (11 articles, lus 2026-09-02 → 2026-09-27), `code-travail-vigilance` (8 articles, lus 2026-09-02 → 2026-10-14), `code-travail-vigilance-modalites` (8 articles, lus 2026-09-02 → 2026-09-27), `arrete-2004-12-21-echafaudages` (7 articles, lus 2026-09-01), `arrete-2011-12-30-igh` (6 articles, lus 2026-09-03 → 2026-09-27), `code-travail-duerp-principes` (6 articles, lus 2026-09-02 → 2026-09-27), `code-travail-bruit-vibrations` (6 articles, lus 2026-09-02 → 2026-09-27), `cch-classement-erp-igh` (5 articles, lus 2026-09-03 → 2026-09-27), `icpe-stockage` (4 articles, lus 2026-09-01), `csp-appareils-bronzage` (4 articles, lus 2026-10-17), `arrete-2004-07-01-produits-petroliers` (4 articles, lus 2026-10-17), `code-travail-travail-dissimule` (4 articles, lus 2026-09-02), `arrete-2017-04-19-registre-accessibilite` (4 articles, lus 2026-09-03 → 2026-09-27), `arrete-1980-livre-1` (3 articles, lus 2026-09-03 → 2026-09-26), `arrete-1957-09-30-chambres-froides` (3 articles, lus 2026-10-14), `decret-1996-aires-de-jeux` (3 articles, lus 2026-10-17), `csp-bains-a-remous` (2 articles, lus 2026-10-17), `code-travail-agents-biologiques` (2 articles, lus 2026-09-26), `code-travail-travail-de-nuit` (2 articles, lus 2026-09-26), `code-travail-circulation-lieux` (2 articles, lus 2026-09-21), `code-travail-equipements-information` (1 articles, lus 2026-09-01), `code-environnement-chaudieres` (1 articles, lus 2026-10-14), `arrete-1993-03-19-travaux-dangereux` (1 articles, lus 2026-09-03), `casf-definition-handicap` (1 articles, lus 2026-09-03), `cch-registre-accessibilite` (1 articles, lus 2026-09-04). Le dépouillement est fait, aucune obligation ne s'y branche encore.
 
 Le total du corpus, les articles jamais lus et ceux qui imposent une obligation que le référentiel ne porte pas sont tenus par `pnpm relecture`, qui les compte à la maille du corpus.
 
 ---
 
-## 8. Les 185 obligations
+## 8. Les 187 obligations
 
 | obligation | domaine | porteur | réf. | fondement | plancher | sans ancre | lu |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -290,6 +291,8 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `cuisson-erp-verification-initiale` | cuisson_hotte | equipement | 3 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 3 | 2026-09-01 → 2026-09-27 |
 | `cuisson-gaz-installations-annuelle` | cuisson_hotte | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
 | `cuisson-travail-appareils-entretien-verification` | cuisson_hotte | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
+| `ecs-legionelles-analyse-annuelle` | eau_chaude_sanitaire | equipement | 5 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 5 | 2026-09-20 |
+| `ecs-temperature-mensuelle` | eau_chaude_sanitaire | equipement | 3 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 3 | 2026-09-20 |
 | `eclairage-etablissement-regles-entretien` | eclairage | etablissement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 → 2026-09-02 |
 | `elec-erp-mise-en-service` | electricite | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 → 2026-09-27 |
 | `elec-salarie-attestation-medicale-voisinage` | electricite | salarie | 2 | 5 · première main | 4 · agent + verbatim | 0 / 2 | 2026-08-27 → 2026-09-01 |
@@ -462,7 +465,7 @@ demande le plus de travail.
 
 ---
 
-## 9. Les 378 références, une par une
+## 9. Les 386 références, une par une
 
 `prescrit` et `verbatim` sont les deux champs du corpus qui rendent une
 lecture relisible : ce que l'article impose, en une phrase, et la phrase
@@ -849,3 +852,11 @@ refaire pour la contredire.
 | `compactage-dechets-vgp-trimestrielle` | contexte 4 | R. 4323-25 (consignation au registre de sécurité) | R. 4323-25 | code-travail-levage | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `eclairage-etablissement-regles-entretien` | fondement | R. 4223-11 (l'employeur fixe les règles d'entretien périodique du matériel d'éclairage ; règles consignées dans un document communiqué aux membres du CSE) | R. 4223-11 | code-travail-eclairage | retenu | 2026-09-02 | agent_verbatim | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 4 · agent + verbatim | ancrée |
 | `eclairage-etablissement-regles-entretien` | contexte 1 | R. 4224-17 dernière phrase (le dossier de maintenance des lieux de travail regroupe notamment le document prévu en matière d'éclairage à l'article R. 4223-11) | R. 4224-17 | code-travail-portes | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
+| `ecs-temperature-mensuelle` | fondement | Arrêté du 1er février 2010, annexe 2 (fréquences minimales hors établissements de santé — température de l'eau : 1 fois par mois) | Arrêté 01-02-2010 annexe 2 | arrete-2010-02-01-legionelles | retenu | 2026-09-20 | agent_verbatim | ✓ | ✓ | 2010-02-10 | 2010-02-10 | 4 · agent + verbatim | ancrée |
+| `ecs-temperature-mensuelle` | contexte 1 | Arrêté du 1er février 2010 (surveillance des légionelles), art. 3 (surveillance des installations par le responsable des installations, aux fréquences minimales de l'annexe 2) | Arrêté 01-02-2010 art. 3 | arrete-2010-02-01-legionelles | retenu | 2026-09-20 | agent_verbatim | ✓ | ✓ | 2023-01-01 | 2023-01-01 | 4 · agent + verbatim | ancrée |
+| `ecs-temperature-mensuelle` | contexte 2 | Arrêté du 1er février 2010, art. 1er et 2 (installations collectives alimentant des points d'usage à risque — douches, douchettes, bains à remous ou à jets accessibles au public — dans les hôtels, campings et autres ERP) | Arrêté 01-02-2010 art. 1 | arrete-2010-02-01-legionelles | sans_objet | 2026-09-20 | agent_verbatim | ✓ | ✓ | 2023-01-01 | 2023-01-01 | 4 · agent + verbatim | ancrée |
+| `ecs-legionelles-analyse-annuelle` | fondement | Arrêté du 1er février 2010, annexe 2 (fréquences minimales hors établissements de santé — analyses de légionelles : 1 fois par an) | Arrêté 01-02-2010 annexe 2 | arrete-2010-02-01-legionelles | retenu | 2026-09-20 | agent_verbatim | ✓ | ✓ | 2010-02-10 | 2010-02-10 | 4 · agent + verbatim | ancrée |
+| `ecs-legionelles-analyse-annuelle` | contexte 1 | Arrêté du 1er février 2010, art. 5 (prélèvements et analyses par un laboratoire ou un organisme accrédité) | Arrêté 01-02-2010 art. 5 | arrete-2010-02-01-legionelles | sans_objet | 2026-09-20 | agent_verbatim | ✓ | ✓ | 2023-01-01 | 2023-01-01 | 4 · agent + verbatim | ancrée |
+| `ecs-legionelles-analyse-annuelle` | contexte 2 | Arrêté du 1er février 2010, art. 4 (limite de qualité de 1 000 UFC/L en Legionella pneumophila aux points d'usage à risque) | Arrêté 01-02-2010 art. 4 | arrete-2010-02-01-legionelles | retenu | 2026-09-20 | agent_verbatim | ✓ | ✓ | 2023-01-01 | 2023-01-01 | 4 · agent + verbatim | ancrée |
+| `ecs-legionelles-analyse-annuelle` | contexte 3 | Arrêté du 1er février 2010 (surveillance des légionelles), art. 3 (surveillance des installations par le responsable des installations, aux fréquences minimales de l'annexe 2) | Arrêté 01-02-2010 art. 3 | arrete-2010-02-01-legionelles | retenu | 2026-09-20 | agent_verbatim | ✓ | ✓ | 2023-01-01 | 2023-01-01 | 4 · agent + verbatim | ancrée |
+| `ecs-legionelles-analyse-annuelle` | contexte 4 | Arrêté du 1er février 2010, art. 1er et 2 (installations collectives alimentant des points d'usage à risque — douches, douchettes, bains à remous ou à jets accessibles au public — dans les hôtels, campings et autres ERP) | Arrêté 01-02-2010 art. 1 | arrete-2010-02-01-legionelles | sans_objet | 2026-09-20 | agent_verbatim | ✓ | ✓ | 2023-01-01 | 2023-01-01 | 4 · agent + verbatim | ancrée |

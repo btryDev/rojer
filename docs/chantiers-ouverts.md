@@ -122,6 +122,12 @@ release (lots lancés le même jour) ; **n° 1 (gaz sans cuisine) et n° 5
    déclarant une cabine UV ou une cuve de fioul, le dirigeant lit des exemples
    sans rapport. Remède à instruire : un exemple par matériel non couvert (ou
    un repli neutre pour « Autre »), avec un test sur deux matériels.
+12. **[2026-10-17, dette écrite, non corrigée] Un test instable sous charge.**
+   `src/components/equipements/PreRemplissagePanel.avertissement.test.tsx`
+   échoue parfois quand la suite complète tourne en parallèle, et passe seul.
+   Relevé par la revue indépendante du sous-lot F (`lot/ref-f-legionelles`),
+   sans lien avec ce lot ; non corrigé ici, sur décision de c6. Cause non
+   instruite.
 
 ### Décisions attendues
 

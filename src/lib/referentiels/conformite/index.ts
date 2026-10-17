@@ -48,6 +48,7 @@ import { obligationsCoActivite } from "./co-activite";
 import { obligationsSignalisation } from "./signalisation";
 import { obligationsCompactageDechets } from "./compactage-dechets";
 import { obligationsEclairage } from "./eclairage";
+import { obligationsEauChaudeSanitaire } from "./eau-chaude-sanitaire";
 import { estNiveauAudit } from "./niveau-audit";
 
 export {
@@ -72,6 +73,7 @@ export {
   obligationsSignalisation,
   obligationsCompactageDechets,
   obligationsEclairage,
+  obligationsEauChaudeSanitaire,
 };
 export * from "./types";
 export * from "./veille-textes";
@@ -119,6 +121,11 @@ export const obligationsConformite: Obligation[] = [
   // communiqué au CSE. Le corpus l'avait lu le 2026-09-02 et écrit que rien ne
   // le bloquait ; il aura fallu deux jours pour le croire.
   ...obligationsEclairage,
+  // Sous-lot F de la mise à jour du référentiel (2026-10-17) — les
+  // légionelles au matériel. Deux lignes par installation collective d'eau
+  // chaude sanitaire déclarée en ERP : la température mensuelle et l'analyse
+  // annuelle de l'annexe 2 de l'arrêté du 1er février 2010.
+  ...obligationsEauChaudeSanitaire,
 ];
 
 /**
@@ -464,7 +471,14 @@ export const obligationsConformite: Obligation[] = [
 // 185, dont 3 + 9 = 12 au niveau audit (six d'établissement, trois
 // d'équipement), 182 − 9 = 173 suivies, relevé en appelant `estNiveauAudit`.
 // Le contenu ne change pas ; seuls les marqueurs et les notes bougent.
-export const REFERENTIEL_VERSION = "2026-10-17.2";
+// `2026-10-17.3` (sous-lot F, décision de la propriétaire du 2026-10-17 ;
+// numéro PROVISOIRE, renuméroté au merge en cas de collision) : la catégorie
+// `EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC` et le domaine `eau_chaude_sanitaire`
+// entrent, avec `ecs-temperature-mensuelle` et
+// `ecs-legionelles-analyse-annuelle` (arrêté du 1er février 2010, annexe 2),
+// portées par l'équipement, tout ERP. 185 + 2 − 0 = 187 ; par porteur, 93 + 2
+// équipement, 78 établissement, 14 salarié.
+export const REFERENTIEL_VERSION = "2026-10-17.3";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

@@ -708,6 +708,12 @@ export const CATEGORIES_EQUIPEMENT = [
   // due même sans appareil déclaré) ; sa maintenance et sa déclaration à la base
   // nationale se portent sur chaque appareil.
   "DEFIBRILLATEUR",
+  // 2026-10-17, décision de la propriétaire : l'installation collective d'eau
+  // chaude sanitaire qui alimente des douches ou des bains à remous ouverts au public. Les
+  // légionelles passent par le matériel, sans question à l'accueil : le produit
+  // ne sait pas dire qui a une installation collective ni un point d'usage à
+  // risque, et c'est en déclarant l'installation que le dirigeant le dit.
+  "EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC",
   "AUTRE",
 ] as const;
 

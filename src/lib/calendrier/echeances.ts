@@ -11,6 +11,7 @@ import {
 } from "@/lib/dates";
 import { estEnRetard } from "@/lib/dates/retard";
 import { etatAutreEcheance } from "./etats";
+import { eauChaudeSuivieParLeCalendrier } from "@/lib/carnet-sanitaire/suivi-calendrier";
 import {
   REGISTRE_DU_STATUT,
   finDuRepliDepot,
@@ -599,16 +600,27 @@ export function etatPlanPrevention(
 
 /** Prochaine analyse légionelles : dernière analyse + 1 an. Sans
  *  première analyse, pas de date dérivable — la matrice d'obligations
- *  porte l'invitation. */
+ *  porte l'invitation.
+ *
+ *  [2026-10-17, sous-lot F] RIEN quand l'établissement a déclaré une
+ *  installation `EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC` : le référentiel
+ *  porte alors l'analyse annuelle (`ecs-legionelles-analyse-annuelle`), une
+ *  ligne par installation, et un second rappel de la même analyse ferait
+ *  deux dates pour un acte. Dette : une analyse saisie au carnet ne fait
+ *  pas rouler la ligne du référentiel (`docs/dette-chantier-porteur-echeance.md`). */
 export function echeanceLegionelles({
   etablissementId,
   dateDerniereAnalyse,
   aujourdhui,
+  suivieParLeCalendrier,
 }: {
   etablissementId: string;
   dateDerniereAnalyse: Date | null;
   aujourdhui: Date;
+  /** Une installation de la catégorie est déclarée (`eauChaudeSuivieParLeCalendrier`). */
+  suivieParLeCalendrier: boolean;
 }): EcheanceCalendrier | null {
+  if (suivieParLeCalendrier) return null;
   if (!dateDerniereAnalyse) return null;
   const date = ajouterMois(dateDerniereAnalyse, MOIS_ANALYSE_LEGIONELLES);
   return {
@@ -815,20 +827,24 @@ const sourceLegionelles: SourceEcheances = async ({
   // déterminée. Le départage des analyses, lui, ne l'est pas — deux
   // analyses peuvent porter la même `dateAnalyse` (deux points de relevé
   // le même jour) : on tranche par ordre d'enregistrement.
-  const carnet = await prisma.carnetSanitaire.findFirst({
-    where: scope,
-    select: {
-      analyses: {
-        orderBy: [{ dateAnalyse: "desc" }, { createdAt: "desc" }],
-        take: 1,
-        select: { dateAnalyse: true },
+  const [carnet, suivieParLeCalendrier] = await Promise.all([
+    prisma.carnetSanitaire.findFirst({
+      where: scope,
+      select: {
+        analyses: {
+          orderBy: [{ dateAnalyse: "desc" }, { createdAt: "desc" }],
+          take: 1,
+          select: { dateAnalyse: true },
+        },
       },
-    },
-  });
+    }),
+    eauChaudeSuivieParLeCalendrier(scope),
+  ]);
   const e = echeanceLegionelles({
     etablissementId,
     dateDerniereAnalyse: carnet?.analyses[0]?.dateAnalyse ?? null,
     aujourdhui,
+    suivieParLeCalendrier,
   });
   return e ? [e] : [];
 };
