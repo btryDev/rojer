@@ -34,6 +34,7 @@ const MODULES_NEUTRES: ModulesMatrice = {
     nbPointsJamaisReleves: 0,
     nbPointsReleveAncien: 0,
     jourDerniereAnalyse: null,
+    suiviParLeCalendrier: false,
   },
   prestataires: { total: 0, enAlerte: 0 },
 };
@@ -441,6 +442,16 @@ describe("construireMatrice — carnet sanitaire", () => {
       ligne(carnet({ jourDerniereAnalyse: 400 }), "carnet-sanitaire")
         .cellules[2],
     ).toBe("todo");
+  });
+
+  // 2026-10-17, sous-lot F : installation déclarée → le calendrier porte la
+  // température mensuelle et l'analyse annuelle ; la ligne ne les rappelle pas.
+  it("se tait sur les rappels quand l'installation est déclarée au parc", () => {
+    const enRetard = { nbPoints: 3, nbPointsReleveAncien: 3, jourDerniereAnalyse: 400 };
+    expect(ligne(carnet(enRetard), "carnet-sanitaire").cellules).toEqual(["ok", "todo", "todo"]);
+    expect(
+      ligne(carnet({ ...enRetard, suiviParLeCalendrier: true }), "carnet-sanitaire").cellules,
+    ).toEqual(["ok", "na", "na"]);
   });
 });
 

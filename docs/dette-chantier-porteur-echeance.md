@@ -466,6 +466,33 @@ porter supposerait un second compte (« dont N à confirmer ») ; c'est la même
 question que D1 du dossier des décisions du lot 2 (les lignes « à confirmer »
 dans les retards et l'indice), et elle se tranchera avec elle.
 
+### 7 quater. Une analyse saisie au carnet ne fait pas rouler la ligne de légionelles (2026-10-17)
+
+Sous-lot F de la mise à jour du référentiel, décision de la propriétaire : une
+installation `EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC` déclarée en ERP fait naître
+`ecs-legionelles-analyse-annuelle` et `ecs-temperature-mensuelle`, et
+l'échéance du carnet sanitaire se tait (ADR-010, amendement du 2026-10-17).
+
+**Le carnet et la ligne ne se parlent pas.** La ligne roule au dépôt d'un
+rapport (ADR-034, ADR-036) ; le carnet enregistre une `AnalyseLegionelle` ou un
+`ReleveTemperature` sans rien écrire au calendrier. Un dirigeant qui saisit son
+analyse au carnet seulement voit la ligne de l'analyse passer en retard un an
+après sa naissance, alors que l'acte est fait. Même chose, chaque mois, pour la
+température.
+
+**Ce que le produit fait en attendant.** La page du carnet le dit en clair
+(`ceQueRojerFait`) : « une analyse saisie ici ne fait pas avancer la date du
+calendrier : déposez le rapport du laboratoire sur la ligne de l'analyse ». Le
+sens d'erreur est celui que le dirigeant voit : une ligne en retard à tort, pas
+une ligne à jour à tort.
+
+**Ce qui la solderait.** Rattacher une analyse ou un relevé du carnet à une
+installation déclarée, et faire de cette saisie un fait que `echeanceDe` lit
+(ADR-036). Deux questions de modèle, non tranchées : une analyse du carnet est
+aujourd'hui rattachée à l'établissement entier, à aucun point ni à aucune
+installation (ADR-019, carnet unique) ; et le relevé de température est par
+point, quand la ligne est par installation.
+
 ---
 
 ## 8. Ce qui n'est PAS de la dette

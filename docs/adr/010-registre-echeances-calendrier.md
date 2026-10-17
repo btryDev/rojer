@@ -3,7 +3,10 @@
 Date : 2026-08-10
 Statut : accepté — **amendé par l'ADR-017** (le permis de feu et le plan de
 prévention ont quitté la famille `travaux` pour une famille `operations` ;
-le tableau ci-dessous est à jour de cet amendement).
+le tableau ci-dessous est à jour de cet amendement) — **amendé le 2026-10-17**
+(sous-lot F de la mise à jour du référentiel : la source « Analyse
+légionelles » se tait quand le référentiel porte l'analyse ; voir
+« Amendement du 2026-10-17 » en fin de document).
 
 ## Contexte
 
@@ -54,7 +57,7 @@ injectée), conformément au principe zéro-IA / déterminisme.
 | Source | Famille | Date | Règle |
 |---|---|---|---|
 | Vérifications périodiques | controle | `datePrevue` | moteur de matching (hors registre : flux historique dédié) |
-| Analyse légionelles | controle | dernière analyse + 1 an | arrêté du 1er février 2010 (déjà cité au module) |
+| Analyse légionelles | controle | dernière analyse + 1 an | arrêté du 1er février 2010 (déjà cité au module) — **muette depuis le 2026-10-17 quand l'établissement est un ERP qui a déclaré une installation `EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC`** : le référentiel porte alors l'analyse (voir l'amendement) |
 | Actions correctives | travaux | `echeance` | statuts ouverte / en cours |
 | Permis de feu | operations | `dateDebut` | non terminés/annulés ; alerte si la date de début est passée sans être en cours |
 | Plans de prévention | operations | `dateDebut` | opérations non finies ; alerte si commencé sans inspection commune (R. 4512-7) |
@@ -144,3 +147,33 @@ injectée), conformément au principe zéro-IA / déterminisme.
 - Toute nouvelle colonne datée du schéma doit être soit branchée en
   source, soit ajoutée aux exclusions ci-dessus — un champ date orphelin
   non documenté est un bug de revue.
+
+## Amendement du 2026-10-17 — un acte, un rappel
+
+**Décision de la propriétaire du 2026-10-17** (sous-lot F de la mise à jour du
+référentiel, `lot/ref-f-legionelles`) : les légionelles passent par le
+matériel. Une installation `EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC` déclarée en
+ERP fait naître deux lignes du RÉFÉRENTIEL, une de chaque par installation :
+`ecs-temperature-mensuelle` et `ecs-legionelles-analyse-annuelle` (arrêté du
+1er février 2010, annexe 2). Elles passent par le moteur, pas par ce registre.
+
+**La source « Analyse légionelles » se tait dans ce cas.** Sans quoi le
+calendrier poserait deux dates pour un même acte : celle du carnet (dernière
+analyse saisie + 1 an) et celle de la ligne du référentiel (dernier rapport
+déposé + 1 an). La règle tient en une fonction, `echeanceLegionelles`
+(`suivieParLeCalendrier`), et en un prédicat partagé avec le tableau de bord,
+`eauChaudeSuivieParLeCalendrier` (`src/lib/carnet-sanitaire/suivi-calendrier.ts`),
+qui ne répond oui qu'en ERP : hors ERP, les deux lignes ne naissent pas, et
+taire le carnet laisserait l'établissement sans aucun rappel. La matrice du
+tableau de bord suit la même règle : « À jour » et « Sans retard » de la ligne
+« Carnet sanitaire » passent `na`.
+
+**Ce que cet amendement ne change pas.** Le principe de l'ADR — tout module qui
+crée une échéance datée figure au registre ou aux exclusions — est intact : la
+source reste branchée, elle a une condition de silence de plus. Sans
+installation déclarée, elle se comporte comme avant.
+
+**Dette ouverte** (`docs/dette-chantier-porteur-echeance.md` § 7 quater) : une
+analyse saisie au carnet ne fait pas rouler la ligne du référentiel. Le
+dirigeant qui saisit ses résultats au carnet doit aussi déposer le rapport du
+laboratoire sur la ligne ; la page du carnet le dit.

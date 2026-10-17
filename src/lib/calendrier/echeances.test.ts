@@ -487,6 +487,7 @@ describe("echeanceLegionelles", () => {
       etablissementId: "etab1",
       dateDerniereAnalyse: jour("2026-02-10"),
       aujourdhui: AUJOURDHUI,
+      suivieParLeCalendrier: false,
     });
     expect(e).not.toBeNull();
     expect(e!.famille).toBe("controle");
@@ -500,6 +501,21 @@ describe("echeanceLegionelles", () => {
         etablissementId: "etab1",
         dateDerniereAnalyse: null,
         aujourdhui: AUJOURDHUI,
+        suivieParLeCalendrier: false,
+      }),
+    ).toBeNull();
+  });
+
+  // 2026-10-17, sous-lot F : une installation `EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC`
+  // déclarée fait porter l'analyse annuelle par le référentiel — l'échéance du
+  // carnet se tait, sinon le calendrier montrerait deux dates pour un acte.
+  it("se tait quand l'installation est déclarée, même avec une analyse saisie", () => {
+    expect(
+      echeanceLegionelles({
+        etablissementId: "etab1",
+        dateDerniereAnalyse: jour("2026-02-10"),
+        aujourdhui: AUJOURDHUI,
+        suivieParLeCalendrier: true,
       }),
     ).toBeNull();
   });

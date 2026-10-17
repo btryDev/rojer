@@ -36,6 +36,7 @@ import {
 } from "@/lib/dates";
 import { estActionEnRetard } from "@/lib/dates/retard";
 import { releveAncien } from "@/lib/carnet-sanitaire/etat-releve";
+import { eauChaudeSuivieParLeCalendrier } from "@/lib/carnet-sanitaire/suivi-calendrier";
 import {
   aUnRendezVous,
   classerVerification,
@@ -531,6 +532,7 @@ export async function getModulesMatrice(
     nbPlansEchus,
     carnet,
     prestataires,
+    suiviParLeCalendrier,
   ] = await Promise.all([
     prisma.registreAccessibilite.findFirst({
       where: scope,
@@ -571,6 +573,7 @@ export async function getModulesMatrice(
       },
     }),
     prisma.prestataire.findMany({ where: scope }),
+    eauChaudeSuivieParLeCalendrier(scope),
   ]);
 
   // Fraîcheur du carnet sanitaire : mesurée **point par point**.
@@ -640,6 +643,7 @@ export async function getModulesMatrice(
       jourDerniereAnalyse: derniereAnalyse
         ? Math.max(0, joursCivilsEntre(derniereAnalyse, now))
         : null,
+      suiviParLeCalendrier,
     },
     prestataires: {
       total: prestataires.length,
