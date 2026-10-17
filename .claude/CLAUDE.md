@@ -699,9 +699,12 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     présent ; le moteur sert l'union des types, et un `groupeExclusif` garde le
     plus exigeant (visites GE 4 § 1 : le rythme le plus court, par analogie
     avec GE 4 § 2 — aucun texte ne règle le cas ; le PV prime). **Moteur
-    fusionné le 2026-10-17 (lots 0 et 1)** ; la colonne `typesErpAutres` et
+    fusionné le 2026-10-17 (lots 0 et 1)** ; ~~la colonne `typesErpAutres` et
     les écrans viennent aux lots 2 et 3 — d'ici là, un établissement ne
-    déclare toujours qu'un type
+    déclare toujours qu'un type~~ [2026-10-17 : colonne `typesErpAutres`
+    (#50) et écrans (#51) fusionnés — un établissement déclare ses autres
+    types (`typesErpDe`) ; lot 4 (chapitre L, catégorie Scène) déplacé vers
+    la mise à jour du référentiel]
 
 [2026-10-15, ménage des ADR : 037, 038 et 043 manquaient à cette liste ;
 **il n'existe pas d'ADR-044** — annoncée dans
