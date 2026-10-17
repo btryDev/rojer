@@ -456,6 +456,7 @@ describe("référentiel conformité — anti-doublon", () => {
       categorieErp: EtablissementMatching["categorieErp"],
       typeErp: EtablissementMatching["typeErp"],
       comporteLocauxSommeilPublic: boolean | null,
+      typesErpAutres: EtablissementMatching["typesErpAutres"] = [],
     ): EtablissementMatching => ({
       id: "sonde",
       effectifSurSite: 10,
@@ -465,7 +466,7 @@ describe("référentiel conformité — anti-doublon", () => {
       estIGH: false,
       estHabitation: false,
       typeErp,
-      typesErpAutres: [],
+      typesErpAutres,
       categorieErp,
       classeIgh: null,
       familleHabitation: null,
@@ -496,6 +497,27 @@ describe("référentiel conformité — anti-doublon", () => {
             matchTypologie(b.typologies, etab).ok
           ) {
             return false;
+          }
+        }
+      }
+    }
+    // PLUSIEURS TYPES (ADR-045, revue des lots 0-1). Un établissement qui
+    // groupe deux exploitations reçoit les lignes de chacune : deux lignes
+    // qu'un seul type sépare — l'une bornée à O, l'autre à L — se rejoignent
+    // chez l'hôtel qui a une salle. Le domaine sondé couvre donc aussi les
+    // PAIRES de types. Les paires suffisent : `matchTypologie` rend l'union
+    // type par type, et chacune des deux lignes ne demande qu'un type.
+    for (const cat of [...CATEGORIES_ERP, null] as const) {
+      for (let i = 0; i < TYPES_ERP.length; i++) {
+        for (let k = i + 1; k < TYPES_ERP.length; k++) {
+          for (const heb of [true, false, null] as const) {
+            const etab = sonde(cat, TYPES_ERP[i], heb, [TYPES_ERP[k]]);
+            if (
+              matchTypologie(a.typologies, etab).ok &&
+              matchTypologie(b.typologies, etab).ok
+            ) {
+              return false;
+            }
           }
         }
       }
@@ -662,6 +684,11 @@ describe("référentiel conformité — anti-doublon", () => {
         if (periodiciteEffective(a) !== periodiciteEffective(b)) continue;
         if (signatureConditions(a) !== signatureConditions(b)) continue;
         if (typologiesErpDisjointes(a, b)) continue;
+        // Deux membres d'un même groupe exclusif (ADR-045) se rejoignent chez
+        // un établissement à plusieurs types, et c'est voulu : le moteur n'en
+        // sert que le plus exigeant (`determineObligationsApplicables`). Le
+        // groupe est la seule façon d'accepter deux lignes qu'un type sépare.
+        if (a.groupeExclusif !== undefined && a.groupeExclusif === b.groupeExclusif) continue;
         // Le porteur ne dispense PAS de la comparaison. Une obligation
         // portée par l'établissement et un fragment de la même obligation
         // accroché à un équipement sont deux lignes pour un seul acte —
