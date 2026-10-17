@@ -22,6 +22,7 @@
 // `new Date()` planté au milieu d'un formatage.
 
 import { LABEL_PERIODICITE } from "@/lib/calendrier/labels";
+import { typesErpAffiches } from "@/lib/etablissements/types-erp-affiches";
 import type { Periodicite } from "@/lib/referentiels/types-communs";
 import { z } from "zod";
 import type { StatutAction } from "@prisma/client";
@@ -138,7 +139,9 @@ function formaterRegimes(f: FicheEtablissement): string {
   const regimes: string[] = [];
   if (f.estEtablissementTravail) regimes.push("établissement de travail");
   if (f.estERP) {
-    const precisions = [f.typeErp, f.categorieErp ? `catégorie ${f.categorieErp}` : null]
+    // ADR-045 : tous les types déclarés, pas le seul premier.
+    const types = typesErpAffiches(f).join(", ") || null;
+    const precisions = [types, f.categorieErp ? `catégorie ${f.categorieErp}` : null]
       .filter(Boolean)
       .join(", ");
     regimes.push(precisions ? `ERP (${precisions})` : "ERP");

@@ -77,6 +77,7 @@ type EtablissementLite = {
   estIGH: boolean;
   estHabitation: boolean;
   typeErp: string | null;
+  typesErpAutres: readonly string[];
   categorieErp: string | null;
   classeIgh: string | null;
   entreprise: {

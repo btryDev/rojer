@@ -133,6 +133,8 @@ export const CHAMPS_PAR_SECTION: Readonly<Record<string, FormeSaisie>> = {
     champs: [
       {
         cle: "typeErp",
+        // ADR-045 : la colonne `typeErp` ET `typesErpAutres` (lecture dans
+        // `registre/queries.ts`) — un établissement peut en déclarer plusieurs.
         libelle: "Type",
         type: "texte",
         source: "Etablissement.typeErp",

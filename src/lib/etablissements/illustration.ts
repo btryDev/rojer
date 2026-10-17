@@ -1,3 +1,4 @@
+import { typesErpAffiches } from "./types-erp-affiches";
 // Le dessin du bâtiment affiché en tête de tableau de bord.
 //
 // **Ce qu'il dit, et ce qu'il ne dit pas.** L'application connaît l'activité
@@ -45,6 +46,7 @@ const DIVISIONS_NAF_DEVANTURE = new Set(["47", "56"]);
  */
 export function illustrationBatiment(etab: {
   typeErp: string | null;
+  typesErpAutres: readonly string[];
   codeNaf: string | null;
   entreprise: { codeNaf: string };
 }): IllustrationBatiment {
@@ -52,8 +54,11 @@ export function illustrationBatiment(etab: {
   // reçu du public, là où le code NAF ne dit que l'activité de l'entreprise.
   // Sans cette priorité, un établissement de type W dont l'entreprise porte
   // un NAF de commerce recevait la devanture.
-  if (etab.typeErp != null) {
-    return TYPES_ERP_DEVANTURE.has(etab.typeErp) ? "commerce" : "neutre";
+  // ADR-045 : sur l'ensemble des types — un hôtel qui exploite un restaurant
+  // a une devanture.
+  const types = typesErpAffiches(etab);
+  if (types.length > 0) {
+    return types.some((t) => TYPES_ERP_DEVANTURE.has(t)) ? "commerce" : "neutre";
   }
 
   const naf = etab.codeNaf ?? etab.entreprise.codeNaf;

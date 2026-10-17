@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { libelleTypesErp } from "@/lib/etablissements/types-erp-affiches";
 import { Pencil, Phone } from "lucide-react";
 import type { DashboardBundle } from "../types";
 import { hrefEffectifEntreprise } from "@/components/entreprises/LienEffectifEntreprise";
@@ -10,7 +11,9 @@ function regimes(etab: DashboardBundle["etablissement"]): string[] {
   if (etab.estEtablissementTravail) out.push("Établissement de travail");
   if (etab.estERP) {
     const suffixes: string[] = [];
-    if (etab.typeErp) suffixes.push(`type ${etab.typeErp}`);
+    // ADR-045 : tous les types déclarés, pas le seul premier.
+    const types = libelleTypesErp(etab);
+    if (types) suffixes.push(types);
     if (etab.categorieErp) suffixes.push(`cat. ${etab.categorieErp.slice(1)}`);
     out.push(`ERP${suffixes.length ? " · " + suffixes.join(" · ") : ""}`);
   }

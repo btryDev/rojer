@@ -1,4 +1,5 @@
 import { estLignePourInformation } from "@/lib/referentiels/conformite/initiative";
+import { libelleTypesErp } from "@/lib/etablissements/types-erp-affiches";
 import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
 import { prisma } from "@/lib/prisma";
 import type { AuthedUser } from "@/lib/auth/require-user";
@@ -135,6 +136,7 @@ function regimesTexte(etab: {
   estIGH: boolean;
   estHabitation: boolean;
   typeErp: string | null;
+  typesErpAutres: readonly string[];
   categorieErp: string | null;
   classeIgh: string | null;
 }): string {
@@ -142,7 +144,9 @@ function regimesTexte(etab: {
   if (etab.estEtablissementTravail) out.push("Établissement de travail");
   if (etab.estERP) {
     let lib = "ERP";
-    if (etab.typeErp) lib += ` type ${etab.typeErp}`;
+    // ADR-045 : tous les types déclarés, pas le seul premier.
+    const types = libelleTypesErp(etab);
+    if (types) lib += ` ${types}`;
     if (etab.categorieErp) lib += ` cat. ${etab.categorieErp.slice(1)}`;
     out.push(lib);
   }

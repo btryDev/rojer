@@ -12,6 +12,7 @@ import "server-only";
 // serait un troisième avis sur la même question.
 
 import { trierParCategorie } from "@/lib/equipements/labels";
+import { typesErpAffiches } from "@/lib/etablissements/types-erp-affiches";
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
@@ -148,7 +149,8 @@ export const composerRegistreDeLEtablissement = cache(
     const parSource: Record<string, string | null> = {
       "Etablissement.adresse": etab.adresse,
       "Etablissement.natureActivite": etab.natureActivite,
-      "Etablissement.typeErp": etab.typeErp,
+      // ADR-045 : tous les types déclarés, le premier en tête.
+      "Etablissement.typeErp": typesErpAffiches(etab).join(", ") || null,
       "Etablissement.categorieErp": etab.categorieErp,
       "Etablissement.effectifPublicAdmis":
         etab.effectifPublicAdmis === null ? null : String(etab.effectifPublicAdmis),
