@@ -204,8 +204,15 @@ describe(`${CHEMIN} — la liste ne se périme pas en silence`, () => {
       "EL 23 § 2 — vérification des installations électriques semi-permanentes",
       "CO 48 § 3 e) — contrat d'entretien des portes automatiques",
     ]);
+    // ~~`corpus === "arrete-1980-livre-2-titre-2"`~~ — 2026-10-17, seconde
+    // revue (mutation M4) : la borne admettait tout le titre II, M, N, O, W
+    // compris, sur une date de LECTURE qu'une relecture légitime déplace —
+    // `M 40 § 3 e)` relu le 2026-10-17 passait du § 7 au § 9 sans rien rougir.
+    // Le titre II est désormais borné aux NEUF CHAPITRES lus le 2026-10-16,
+    // par leur lettre de type.
+    const CHAPITRES_LUS_LE_16 = /^[JPRSTUVXY] (?:\d|annexe)/;
     const admise = (corpus: string, ref: string) =>
-      corpus === "arrete-1980-livre-2-titre-2" ||
+      (corpus === "arrete-1980-livre-2-titre-2" && CHAPITRES_LUS_LE_16.test(ref)) ||
       (corpus === "arrete-1980-livre-3" && ref.startsWith("PU ")) ||
       (corpus === "arrete-1980-livre-2" && DU_TITRE_IER.has(ref));
     const horsBorne = refsDuTableau(ouverts).filter((ref) => {
@@ -216,6 +223,38 @@ describe(`${CHEMIN} — la liste ne se périme pas en silence`, () => {
       );
       return !origines.some((o) => admise(o.corpus, ref) && o.luLe >= "2026-10-16");
     });
+    // Et une référence classée HORS CADRE au § 7 — décisions de la propriétaire
+    // des 2026-09-27, 10-13, 10-14 et 10-15, relevées le 2026-10-17 — ne passe
+    // jamais au § 9, quelle que soit sa date de relecture. Une borne basse :
+    // une décision hors cadre plus récente se protège en s'ajoutant ici.
+    const CLASSES_HORS_CADRE = new Set([
+      "R. 4323-61",
+      "R. 4323-69",
+      "R. 4323-70",
+      "R. 4323-72",
+      "Arrêté 21-12-2004 art. 4",
+      "Arrêté 21-12-2004 art. 5",
+      "Arrêté 21-12-2004 art. 6",
+      "Arrêté 1993-11-04 art. 4",
+      "Arrêté 1993-11-04 art. 8",
+      "Arrêté 1993-11-04 art. 13",
+      "Arrêté 1993-11-04 annexe III",
+      "R. 4224-3",
+      "R. 4223-4",
+      "R. 4434-9",
+      "Arrêté 1993-03-05 art. 2",
+      "CO 61",
+      "GC 18",
+      "MS 69 — stock permanent de fournitures de rechange",
+      "M 40 § 3 e) — contrat d'entretien des machines de nettoyage à sec",
+      "MS 71",
+      "Arrêté 1986-01-31 art. 60",
+      "R. 4323-89",
+    ]);
+    expect(
+      refsDuTableau(ouverts).filter((r) => CLASSES_HORS_CADRE.has(r)),
+      `Une référence classée hors cadre au § 7 ne passe pas au § 9 de ${CHEMIN}.`,
+    ).toEqual([]);
     expect(
       horsBorne,
       `Le § 9 de ${CHEMIN} ne reçoit que les manques nés de la lecture des ` +
