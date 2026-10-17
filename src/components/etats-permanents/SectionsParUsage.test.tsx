@@ -199,6 +199,16 @@ describe.each(Object.keys(DOSSIERS) as (keyof typeof DOSSIERS)[])(
       }
     });
 
+    it("à 375 px, chaque entrée du sommaire passe à la ligne plutôt que de serrer deux colonnes", async () => {
+      // jsdom ne met rien en page : on vérifie la classe qui autorise le
+      // retour, comme les tests voisins vérifient `carte-board`.
+      const d = await lire(nom);
+      const { container } = rendre(d);
+      const lis = container.querySelectorAll('nav[aria-label="Sommaire"] li');
+      expect(lis.length).toBe(d.familles.length);
+      for (const li of lis) expect(li.className.split(/\s+/)).toContain("flex-wrap");
+    });
+
     it("aucune carte ne porte un sur-titre qui répète le titre, ni deux niveaux de titrage", async () => {
       const d = await lire(nom);
       const { container } = rendre(d);

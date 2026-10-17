@@ -75,7 +75,13 @@ export function SommaireParUsage({
     <nav aria-label="Sommaire">
       <ol className="m-0 flex list-none flex-wrap gap-x-7 gap-y-2 p-0">
         {familles.map((f) => (
-          <li key={f.groupe} className="flex items-baseline gap-2">
+          // `flex-wrap` (2026-10-17, revue de c6) : à 375 px, un libellé
+          // long et son compte se serraient en deux colonnes étroites ; le
+          // compte passe désormais sous le libellé quand la place manque.
+          <li
+            key={f.groupe}
+            className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5"
+          >
             <a
               href={`#${ancreFamille(f.groupe)}`}
               className="text-[13.5px] font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
