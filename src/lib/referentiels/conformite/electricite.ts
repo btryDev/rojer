@@ -263,7 +263,8 @@ export const obligationsElectricite: Obligation[] = [
     periodicite: "autre",
     nature: "etat_permanent",
     pieceAttendue: "carnet de prescriptions",
-    usageEcran: { groupe: "organisation", sous: null },
+    // Remis au travailleur (R. 4544-10) : ~~organisation~~ (2026-10-17).
+    usageEcran: { groupe: "quotidien", sous: "informer" },
     realisateurs: ["exploitant"],
     criticite: 3,
     transmet: [

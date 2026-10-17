@@ -357,7 +357,9 @@ export const obligationsSignalisation: Obligation[] = [
     periodicite: "autre",
     nature: "etat_permanent",
     pieceAttendue: null,
-    usageEcran: { groupe: "installations", sous: null },
+    // Signalisation d'un risque au poste, comme les risques résiduels :
+    // ~~installations~~ (2026-10-17).
+    usageEcran: { groupe: "quotidien", sous: "conditions" },
     realisateurs: ["exploitant"],
     criticite: 3,
     typologies: { travail: true },
