@@ -300,7 +300,7 @@ export const CSP_EAU_POTABLE: Corpus = {
       statut: "non_couvert",
       declareA: ADRESSE_MATERIELS_NON_COUVERTS,
       motif:
-        "Vérification et entretien des dispositifs de protection ET de traitement (R. 1321-53 et R. 1321-57) des installations collectives de distribution. Pour la PROTECTION, la dette est portée sur les articles 9 et 10 de l'arrêté du 10 septembre 2021, qui en chiffrent le rythme. Pour le TRAITEMENT — un adoucisseur, par exemple —, aucun arrêté ne fixe de fréquence : l'obligation existe sans rythme écrit, et le renvoi de l'article ne vise que la protection. Rojer ne la suit pas et le dit dans la liste des matériels non couverts, entrée « Réservoir ou bâche d'eau, clapet anti-retour » (2026-10-17, décision de c6 sur la revue du sous-lot B).",
+        "Vérification et entretien des dispositifs de protection ET de traitement (R. 1321-53 et R. 1321-57) des installations collectives de distribution. Pour la PROTECTION, la dette est portée sur les articles 9 et 10 de l'arrêté du 10 septembre 2021, qui en chiffrent le rythme. Pour le TRAITEMENT — un adoucisseur, par exemple —, le renvoi de l'article à un arrêté ne vise que les dispositifs de protection : le dépôt n'a lu aucun rythme pour le traitement. Rojer ne la suit pas et le dit dans la liste des matériels non couverts, entrée « Réservoir ou bâche d'eau, clapet anti-retour » (2026-10-17, décision de c6 sur la revue du sous-lot B).",
     },
   ],
 };

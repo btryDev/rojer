@@ -104,13 +104,18 @@ export const SYNONYMES_CATEGORIE: Readonly<Record<CategorieEquipement, readonly 
   AUTRE: [],
 };
 
-/** Minuscules, sans accents, apostrophes et traits d'union ramenés à l'espace. */
+/**
+ * Minuscules, sans accents, apostrophes, traits d'union et ponctuation ramenés
+ * à l'espace. [2026-10-17, relecture de B : la parenthèse restait collée au mot
+ * — « (motorise) » — et « motorisé » ne trouvait plus le compacteur.]
+ */
 export function normaliser(s: string): string {
   return s
     .normalize("NFD")
     .replace(/\p{Diacritic}/gu, "")
     .toLowerCase()
     .replace(/[’ʼ'\-]/g, " ")
+    .replace(/[()[\]{}.,;:!?«»"…/]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }

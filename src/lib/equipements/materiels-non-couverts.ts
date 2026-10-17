@@ -433,8 +433,11 @@ export const MATERIELS_NON_COUVERTS: readonly MaterielNonCouvert[] = [
     libelle: "Store ou volet roulant motorisé",
     synonymes: ["store", "volet roulant", "store banne"],
     // ~~« Rojer ne suit pas les stores et volets roulants motorisés. » +
-    // AUCUN_TEXTE_LU~~ — 2026-10-17, revue de B : phrase de c6.
-    phrase: `Rojer ne suit pas ${nonPorte("l'entretien des stores et volets roulants motorisés")} ; il ne sait pas si l'arrêté du 21 décembre 1993 (portes et portails automatiques) s'y applique — à confirmer avec le préventeur.`,
+    // AUCUN_TEXTE_LU~~ — 2026-10-17, revue de B : phrase de c6. ~~« — à
+    // confirmer avec le préventeur » en fin de phrase~~ (relecture du même
+    // jour : une note de travail, pas une phrase d'écran) — la question reste
+    // à poser au préventeur à la prochaine relecture.
+    phrase: `Rojer ne suit pas ${nonPorte("l'entretien des stores et volets roulants motorisés")} ; il ne sait pas si l'arrêté du 21 décembre 1993 (portes et portails automatiques) s'y applique.`,
     references: [{ libelle: "Arrêté du 21 décembre 1993 (portes et portails automatiques)" }],
   },
   {

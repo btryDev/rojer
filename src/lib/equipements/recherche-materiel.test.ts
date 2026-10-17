@@ -64,6 +64,11 @@ describe("la recherche de matériel (2026-10-14)", () => {
     expect(rechercherMateriel("solarium", { synonymes: SYNONYMES_CATEGORIE, materiels }).materiels).toEqual([]);
   });
 
+  it("la ponctuation d'un libellé ne colle pas au mot : « motorisé » trouve le compacteur (relecture de B)", () => {
+    expect(cats("motorisé")).toContain("COMPACTEUR_PRESSE_DECHETS_MOTORISE");
+    expect(normaliser("(Motorisé)")).toBe("motorise");
+  });
+
   it("un mot de la saisie commence un mot du terme, jamais son milieu (revue du 2026-10-17)", () => {
     expect(cles("spa")).not.toContain("transpalette");
     expect(cles("spa")).toContain("bain_a_remous");
