@@ -1125,10 +1125,10 @@ tranchée. Manquantes : ~~22 + 18 − 0 = 40~~ ~~22 + 26 − 0 = 48~~ 22 + 28 �
 | `U 64` | Type U | `categorie_equipement` | ~~Catégorie « gaz médicaux » ; vérification annuelle (rythme écrit)~~ [2026-10-17] **Décision** (catégorie d'équipement nouvelle) : vise les STOCKAGES et RÉSEAUX de distribution de gaz médicaux ; vérification annuelle (rythme écrit) |
 | `U 62` | Type U | `categorie_equipement` | ~~Catégorie « gaz médicaux » ; consignes rappelées, défaut annuel~~ [2026-10-17] **Décision**, avec U 64 : consignes rappelées, défaut annuel |
 | `PU 5` | Type U de 5ᵉ catégorie à construire ou à modifier (PU 1) | `categorie_equipement` | ~~Les deux lignes des gaz médicaux étendues à la 5ᵉ, borne à trancher~~ [2026-10-17] **Décision**, avec U 64 : les deux lignes étendues à la 5ᵉ ; la borne « à construire ou à modifier » n'a pas d'attribut |
-| `MS 41` | Tout ERP des catégories 1 à 4 | `libre` | Ligne nouvelle N1–N4 : plan d'intervention à chaque entrée (porté en 5ᵉ avec sommeil seulement) |
+| `MS 41` | Tout ERP des catégories 1 à 4 | ~~`libre`~~ `a_trancher` | ~~Ligne nouvelle N1–N4 : plan d'intervention à chaque entrée (porté en 5ᵉ avec sommeil seulement)~~ [2026-10-17] Attend la décision A6 (GN 10), comme PE 27 § 6 |
 | `MS 58 § 3 et § 4 — contrat d'entretien de la détection, annexé au registre` | ERP des catégories 1 à 4 avec détection | `libre` | Ligne sur `ALARME_INCENDIE` N1–N4, patron de PE 4 § 1 |
 | `EC 13 — notice annexée au registre et entretiens consignés` | ERP des catégories 1 à 4 | `libre` | Ligne d'état permanent sur `BAES` N1–N4 (notice annexée) |
-| `MS 70 § 5 — modalités d'appel des sapeurs-pompiers affichées` | ERP des catégories 1 à 4 | `libre` | Référence à la ligne de D. 4711-1, ou ligne propre |
+| `MS 70 § 5 — modalités d'appel des sapeurs-pompiers affichées` | ERP des catégories 1 à 4 | ~~`libre`~~ `a_trancher` | ~~Référence à la ligne de D. 4711-1, ou ligne propre~~ [2026-10-17] Attend la décision A6 (GN 10), comme PE 27 § 6 |
 | `GE 5` | ERP des catégories 1 à 4 ; 5ᵉ avec sommeil par PE 37 | `libre` | Ligne nouvelle : avis de contrôle affiché |
 | `CO 48 § 3 e) — contrat d'entretien des portes automatiques` | ERP des catégories 1 à 4 avec porte automatique | `libre` | Ligne d'état permanent sur `PORTE_AUTO` N1–N4 (le contrat) |
 | `MS 46 § 3 — convention avec un organisateur, annexée au registre` | ERP sans hébergement jusqu'à 300 personnes, hors 1ʳᵉ | `relation_tiers` | Annoncer |

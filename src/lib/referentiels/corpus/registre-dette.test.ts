@@ -44,12 +44,12 @@ describe("registre de dette — les obligations manquantes", () => {
     // `propositions/lecture-chapitres-types-erp-2026-10-16.md`.
     expect(parCause("libre").map((a) => a.ref)).toEqual([
       "PU 6",
-      // 2026-10-17, revue indépendante : six articles du titre Ier ouverts en
-      // suivant les renvois des chapitres de types, au corpus `arrete-1980-livre-2`.
-      "MS 41",
+      // 2026-10-17, revue indépendante : ~~six~~ quatre articles du titre Ier ouverts
+      // en suivant les renvois des chapitres de types, au corpus
+      // `arrete-1980-livre-2` [seconde revue, même jour : `MS 41` et `MS 70 § 5`
+      // passent `a_trancher`, classe GN 10 / A6].
       "MS 58 § 3 et § 4 — contrat d'entretien de la détection, annexé au registre",
       "EC 13 — notice annexée au registre et entretiens consignés",
-      "MS 70 § 5 — modalités d'appel des sapeurs-pompiers affichées",
       "GE 5",
       "CO 48 § 3 e) — contrat d'entretien des portes automatiques",
       "P 21",
@@ -99,7 +99,9 @@ describe("registre de dette — les obligations manquantes", () => {
       // et PU 6 au livre III), 0 + 13 − 0 ; voir le test des « libres ».
       // [13, 0] → [19, 0] le 2026-10-17 (revue indépendante) : six articles du
       // titre Ier ouverts par les renvois, 13 + 6 − 0.
-      libre: [19, 0],
+      // [19, 0] → [17, 0] le 2026-10-17 (seconde revue) : `MS 41` et `MS 70 § 5`
+      // passent `a_trancher`, politique sœur de PE 27 § 6 (GN 10, décision A6).
+      libre: [17, 0],
       // 9 → 6 le 2026-09-21 : les trois de la chaleur intense (`R. 4463-4`,
       // `-5`, `-7`) sont encodées sur la page « Quand ça arrive ».
       // 6 → 0 le même jour : cinq relues à la source et encodées ; la sixième,
@@ -172,7 +174,9 @@ describe("registre de dette — les obligations manquantes", () => {
       // `risque_specialise` (« équipements sportifs »), à évaluer.
       // [6, 0] → [8, 0] le 2026-10-17 (revue indépendante) : `X annexe` et
       // `X 1 § 2`, les actes « piscines » du type X sortis de l'exclusion.
-      a_trancher: [8, 0],
+      // [8, 0] → [10, 0] le 2026-10-17 (seconde revue) : `MS 41` et `MS 70 § 5`,
+      // venus de `libre` — la classe GN 10 / A6 de PE 27 § 6.
+      a_trancher: [10, 0],
       // [0, 3] → [0, 0] le 2026-10-12 : les trois hôtels, voir `a_trancher`.
       perimetre: [0, 0],
     });
