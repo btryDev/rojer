@@ -535,7 +535,9 @@ export const CORPUS_PE: Corpus = {
       // Jamais modifié depuis sa création — pas de texte modificateur à signaler.
       modifiePar: null,
       // ~~luLe: "2026-09-01", lecture: "premiere_main"~~ — relu le 2026-10-16 par
-      // l'API PISTE en BAC À SABLE (revue indépendante du 2026-10-17) :
+      // l'API PISTE en BAC À SABLE (texte rendu ce jour-là avec les chapitres de
+      // types ; ~~revue indépendante du 2026-10-17~~ porté au corpus le
+      // 2026-10-17, après la revue indépendante qui l'a relevé) :
       // LEGIARTI000024770572, seule version, en vigueur depuis le 2004-11-24.
       // L'API rend l'article EN ENTIER, suite de la phrase des cinq ans
       // comprise — voir la fin de la réserve.
