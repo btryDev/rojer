@@ -300,6 +300,10 @@ export function EquipementForm({
     return m && (valeursInitiales?.categorie ?? "AUTRE") === "AUTRE" ? m.cle : null;
   });
   const entreeMateriel = materielNonCouvert(materiel);
+  // 2026-10-17, contrôle visuel de c6 : l'encart du matériel choisi restait
+  // affiché pendant qu'on tapait une autre recherche. Masqué dès que la
+  // saisie change, rendu au choix ou à l'abandon de la recherche.
+  const [rechercheEnCours, setRechercheEnCours] = useState(false);
   const choisir = (c: ChoixMateriel) => {
     setCategorie(c.categorie);
     setMateriel(c.materiel);
@@ -342,6 +346,7 @@ export function EquipementForm({
               id="categorie"
               choix={{ categorie, materiel }}
               onChoix={choisir}
+              onRecherche={setRechercheEnCours}
               invalide={Boolean(erreurCategorie)}
               // Revue du lot (point 7) : l'erreur est reliée au champ, comme
               // l'aide — et seulement les éléments présents sont cités.
@@ -357,7 +362,7 @@ export function EquipementForm({
           </div>
           <input type="hidden" name="categorie" value={categorie} />
           <input type="hidden" name="materielNonCouvert" value={materiel ?? ""} />
-          {entreeMateriel ? (
+          {entreeMateriel && !rechercheEnCours ? (
             /* L'encart du matériel non suivi : on peut l'ajouter, et on lit
                ce que Rojer ne suit pas pour lui. `BlocCreux` du kit (revue
                du lot, point 6), aucune couleur d'état — ce n'est ni un
@@ -365,7 +370,9 @@ export function EquipementForm({
             <div id="categorie-aide" className="mt-3 max-w-[66ch]">
             <BlocCreux>
               <p className="m-0 text-[13.5px] font-semibold leading-[1.4] text-[color:var(--board-ink)]">
-                Vous pouvez l&apos;ajouter.
+                {/* ~~« Vous pouvez l'ajouter. »~~ — 2026-10-17, contrôle
+                    visuel de c6 : une phrase factuelle. */}
+                Rojer ne suit pas ce matériel.
               </p>
               <p className="m-0 mt-1.5 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                 {entreeMateriel.phrase} Il sera enregistré en « {LABEL_CATEGORIE_EQUIPEMENT.AUTRE} »,

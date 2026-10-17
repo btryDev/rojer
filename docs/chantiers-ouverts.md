@@ -112,6 +112,16 @@ release (lots lancés le même jour) ; **n° 1 (gaz sans cuisine) et n° 5
    trouverait plus la chaudière). Remède à instruire : mot entier pour les
    mots de la saisie déjà terminés par une espace, début de mot pour le
    dernier, avec un test sur « gaz » et sur « chaud ».
+11. **[2026-10-17, relevé au contrôle visuel de B, non corrigé] Les exemples du
+   formulaire d'équipement ne suivent pas la catégorie choisie**
+   (`src/components/equipements/EquipementForm.tsx`, décision de c6 : hors du
+   sous-lot B). Les catégories ont leurs exemples (`EXEMPLES_CATEGORIE`), mais
+   un matériel non couvert s'enregistre en « Autre équipement », qui n'en a
+   pas : le libellé retombe sur « Ex : TGBT principal, Hotte de la cuisine
+   chaude », et la quantité dit toujours « Ex : 12 extincteurs, 3 BAES ». En
+   déclarant une cabine UV ou une cuve de fioul, le dirigeant lit des exemples
+   sans rapport. Remède à instruire : un exemple par matériel non couvert (ou
+   un repli neutre pour « Autre »), avec un test sur deux matériels.
 
 ### Décisions attendues
 

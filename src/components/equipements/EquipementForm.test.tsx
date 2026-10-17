@@ -229,8 +229,28 @@ describe("EquipementForm : la recherche de matériel (2026-10-14)", () => {
     expect(cache(c, "categorie")).toBe("AUTRE");
     expect(cache(c, "materielNonCouvert")).toBe("echelle");
     const aide = c.querySelector("#categorie-aide")!.textContent ?? "";
-    expect(aide).toContain("Vous pouvez l'ajouter");
+    expect(aide).toContain("Rojer ne suit pas ce matériel.");
+    expect(aide).not.toContain("Vous pouvez l'ajouter");
     expect(aide).toContain("Rojer ne suit pas l'usage des échelles");
+  });
+
+  it("l'encart du matériel choisi se masque dès qu'on tape une autre recherche (contrôle visuel du 2026-10-17)", () => {
+    const c = rendre();
+    chercher(c, "escabeau");
+    fireEvent.mouseDown(listeOptions()[0]);
+    expect(c.querySelector("#categorie-aide")!.textContent).toContain("Rojer ne suit pas ce matériel.");
+    chercher(c, "pal");
+    expect(c.textContent).not.toContain("Rojer ne suit pas ce matériel.");
+    // L'abandon de la recherche rend l'encart du choix en cours.
+    fireEvent.keyDown(champ(c), { key: "Escape" });
+    expect(cache(c, "materielNonCouvert")).toBe("echelle");
+    expect(c.querySelector("#categorie-aide")!.textContent).toContain("Rojer ne suit pas ce matériel.");
+  });
+
+  it("« adoucisseur » mène à une option qui le nomme (contrôle visuel du 2026-10-17)", () => {
+    const c = rendre();
+    chercher(c, "adoucisseur");
+    expect(options().some((l) => /adoucisseur/i.test(l))).toBe(true);
   });
 
   it("la chaudière se trouve des deux côtés, et le matériel oriente vers l'installation de gaz", () => {

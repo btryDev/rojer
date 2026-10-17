@@ -3,6 +3,7 @@ import {
   type CategorieEquipement,
 } from "@/lib/referentiels/types-communs";
 import { nonPorte, porte } from "@/lib/perimetre/non-couverture";
+import { EXPLICATION_NIVEAU_AUDIT } from "@/lib/referentiels/conformite/niveau-audit";
 
 /**
  * Libellés FR des catégories d'équipement, affichables tel quel en UI.
@@ -159,10 +160,16 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
   // d'entretien, chlore, peinture —, pourtant dans le champ par la lettre.
   // L'exclusion du masque JETABLE reste juste : sans cartouche, il n'y a rien
   // à vérifier.
+  // 2026-10-17, relecture de B (contrôle visuel de c6) : ~~« Vérification par
+  // une personne qualifiée tous les douze mois »~~ seul — la ligne
+  // `epi-verification-generale-periodique-respiratoire` est au NIVEAU AUDIT
+  // depuis le 2026-10-08, et l'aide promettait un rendez-vous qui ne venait
+  // jamais. Même correction pour le gilet. `labels.test.ts` tient qu'aucune
+  // aide n'annonce le rythme d'une ligne audit sans le dire.
   EPI_RESPIRATOIRE:
-    `L'appareil respiratoire isolant autonome d'évacuation, l'équipement complet d'intervention en milieu hostile, et tout stock de cartouches filtrantes antigaz pour appareil respiratoire — y compris celles d'un demi-masque à cartouches. Vérification par une personne qualifiée tous les douze mois, en service comme en stock. Pas le masque de confort ni le masque jetable sans cartouche, qui ne se vérifient pas. ${PHRASE_FORMATION_EPI}`,
+    `L'appareil respiratoire isolant autonome d'évacuation, l'équipement complet d'intervention en milieu hostile, et tout stock de cartouches filtrantes antigaz pour appareil respiratoire — y compris celles d'un demi-masque à cartouches. Le texte impose leur vérification par une personne qualifiée tous les douze mois, en service comme en stock. ${EXPLICATION_NIVEAU_AUDIT} Pas le masque de confort ni le masque jetable sans cartouche, qui ne se vérifient pas. ${PHRASE_FORMATION_EPI}`,
   EPI_GILET_SAUVETAGE:
-    `Le gilet de sauvetage GONFLABLE — celui dont la cartouche et le déclencheur doivent fonctionner le jour venu. Vérification par une personne qualifiée tous les douze mois. Le gilet en mousse, qui ne se gonfle pas, n'en relève pas. ${PHRASE_FORMATION_EPI}`,
+    `Le gilet de sauvetage GONFLABLE — celui dont la cartouche et le déclencheur doivent fonctionner le jour venu. Le texte impose sa vérification par une personne qualifiée tous les douze mois. ${EXPLICATION_NIVEAU_AUDIT} Le gilet en mousse, qui ne se gonfle pas, n'en relève pas. ${PHRASE_FORMATION_EPI}`,
   // « SYSTÈMES de protection individuelle contre les chutes de hauteur », dit
   // l'arrêté — un genre plus large que l'arrêt de chute. La retenue et le
   // maintien au travail, qui EMPÊCHENT la chute au lieu de l'arrêter, en sont.
@@ -185,7 +192,7 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
   //
   // La description renvoie donc explicitement vers les catégories vérifiables,
   // et n'énumère plus que ce qui reste vraiment ici.
-  EPI: `Ce qu'une personne porte pour se protéger et qu'aucun texte ne soumet à vérification périodique : casque, gants, chaussures de sécurité, lunettes, protections auditives, masque de confort. Un harnais antichute, un appareil respiratoire ou un gilet de sauvetage gonflable ne se déclarent PAS ici — ils ont leur propre catégorie, parce qu'ils se vérifient tous les douze mois. Pas non plus les protections collectives — garde-corps, filet, capot de machine —, qui appartiennent à l'ouvrage ou à la machine qu'elles protègent. ${PHRASE_FORMATION_EPI}`,
+  EPI: `Ce qu'une personne porte pour se protéger et qu'aucun texte ne soumet à vérification périodique : casque, gants, chaussures de sécurité, lunettes, protections auditives, masque de confort. Un harnais antichute, un appareil respiratoire ou un gilet de sauvetage gonflable ne se déclarent PAS ici — ils ont leur propre catégorie, parce qu'un texte les soumet à une vérification tous les douze mois. Pas non plus les protections collectives — garde-corps, filet, capot de machine —, qui appartiennent à l'ouvrage ou à la machine qu'elles protègent. ${PHRASE_FORMATION_EPI}`,
   // 2026-10-14, décision de la propriétaire. Même rôle que l'aide des
   // équipements sous pression et du stockage : ce qui suit « Rojer ne suit
   // pas » est l'ADRESSE de non-couverture de GZ 13, GZ 14 et de l'arrêté du

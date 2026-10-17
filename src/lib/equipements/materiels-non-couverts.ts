@@ -222,7 +222,10 @@ export const MATERIELS_NON_COUVERTS: readonly MaterielNonCouvert[] = [
   },
   {
     cle: "reservoir_eau",
-    libelle: "Réservoir ou bâche d'eau, clapet anti-retour",
+    // ~~« Réservoir ou bâche d'eau, clapet anti-retour »~~ — 2026-10-17,
+    // contrôle visuel de c6 : « adoucisseur » menait à une option qui ne le
+    // nommait pas.
+    libelle: "Réservoir ou bâche d'eau, clapet anti-retour, adoucisseur",
     synonymes: [
       "réservoir d'eau",
       "bâche d'eau",
@@ -379,7 +382,7 @@ export const MATERIELS_NON_COUVERTS: readonly MaterielNonCouvert[] = [
     cle: "cuve_fioul",
     libelle: "Cuve de fioul ou de gazole",
     synonymes: ["cuve de fioul", "cuve à fioul", "réservoir de fioul", "cuve de gazole", "fioul", "fuel"],
-    phrase: `Rojer ne suit pas ${nonPorte("l'entretien d'une cuve de fioul ou de gazole")} (arrêté du 1er juillet 2004, art. 27), ni ${nonPorte("les dispositions à prendre à l'abandon d'un réservoir")} (art. 28), ni ${nonPorte("les opérations dues avant de remettre en service un réservoir abandonné, contrôle d'étanchéité compris")} (art. 29). Cet arrêté ne vise que les réservoirs implantés hors d'une installation classée et hors d'un établissement recevant du public (art. 2). En établissement recevant du public des quatre premières catégories, Rojer ne suit ${nonPorte("la vérification annuelle du stockage des combustibles")} (règlement de sécurité, art. CH 58 § 2) que si une ventilation mécanique ou une centrale de traitement d'air est déclarée.`,
+    phrase: `Rojer ne suit pas ${nonPorte("l'entretien d'une cuve de fioul ou de gazole")} (arrêté du 1er juillet 2004, art. 27), ni ${nonPorte("les dispositions à prendre à l'abandon d'un réservoir")} (art. 28), ni ${nonPorte("les opérations dues avant de remettre en service un réservoir abandonné, contrôle d'étanchéité compris")} (art. 29). Cet arrêté ne vise que les réservoirs implantés hors d'une installation classée et hors d'un établissement recevant du public (art. 2). Dans un établissement recevant du public des catégories 1 à 4, ${nonPorte("la vérification annuelle du stockage de combustible")} (art. CH 58 § 2) n'apparaît dans Rojer que si vous déclarez aussi une ventilation mécanique (VMC) ou une centrale de traitement d'air.`,
     references: [
       { libelle: "Arrêté du 1er juillet 2004, art. 2", corpus: "Arrêté 2004-07-01 art. 2" },
       { libelle: "Arrêté du 1er juillet 2004, art. 27", corpus: "Arrêté 2004-07-01 art. 27" },

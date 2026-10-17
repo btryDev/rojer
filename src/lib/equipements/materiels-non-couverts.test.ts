@@ -234,6 +234,12 @@ describe("la liste elle-même", () => {
     expect(sansReserve(casse)).toEqual(["fontaine_glacons"]);
   });
 
+  it("cuve de fioul : la phrase de l'ERP 1 à 4 dit au dirigeant ce qui fait apparaître CH 58 § 2 (contrôle visuel du 2026-10-17)", () => {
+    expect(materielNonCouvert("cuve_fioul")?.phrase).toContain(
+      "(art. CH 58 § 2) n'apparaît dans Rojer que si vous déclarez aussi une ventilation mécanique (VMC) ou une centrale de traitement d'air.",
+    );
+  });
+
   it("une orientation mène à une catégorie suivie, jamais à « Autre »", () => {
     for (const m of MATERIELS_NON_COUVERTS) {
       if (!m.orienteVers) continue;
