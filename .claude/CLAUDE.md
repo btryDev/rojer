@@ -108,10 +108,18 @@ couverture, parce que les confondre a fait raisonner deux fois de travers :
      établissements (livre III) ;
    - les dispositions particulières **des types lus** : M, N, O, W
      (2026-10-14) et L (lu le 2026-10-16, encodé avec le chantier
-     multi-types). **J, P, R, S, T, U, V, X, Y ne sont pas encore lus** :
+     multi-types). ~~**J, P, R, S, T, U, V, X, Y ne sont pas encore lus** :
      acceptés, servis en partie, et le dossier le dit (axe `categorie_erp`).
      Décision : **tous seront relus** — livre II titre II et, pour J, U, R, les
-     chapitres « avec hébergement » du livre III.
+     chapitres « avec hébergement » du livre III.~~ [2026-10-17,
+     `lot/erp-chapitres-types-1016` : **J, P, R, S, T, U, V, X, Y sont lus**
+     (296 entrées au corpus `arrete-1980-livre-2-titre-2`, recomptées article
+     par article contre la table des matières) ; le livre III n'a pas de
+     chapitre propre à J ni à R, PU et PX sont reclassés. **Rien n'en est encore
+     encodé** : les manques nés de cette lecture sont au § 9 « À évaluer » de
+     `docs/couverture-declaree-du-produit.md`, en attente des décisions de la
+     propriétaire (piscines, X 25, gaz médicaux, classe GN 10 / A6). Tant
+     qu'ils n'y sont pas portés, ces types restent servis en partie.]
 
 **Ne jamais déduire le niveau 3 du niveau 2.** « L'onboarding l'accepte » ne
 fait pas entrer une obligation dans ce que Rojer sert, et ne justifie pas
