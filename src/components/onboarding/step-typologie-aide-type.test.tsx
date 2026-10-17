@@ -30,6 +30,13 @@ describe("accueil : l'aide du type d'ERP", () => {
     expect(aides(container)).toEqual(["T"]);
   });
 
+  it("elle est placée SOUS le champ Catégorie (contrôle visuel du 2026-10-17)", () => {
+    const { container } = render(<Hote initial={{ typeErp: "T" }} />);
+    const categorie = container.querySelector("#categorieErp")!;
+    const aide = container.querySelector("[data-aide-types-erp]")!;
+    expect(categorie.compareDocumentPosition(aide) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it("un type sans aide : rien", () => {
     const { container } = render(<Hote initial={{ typeErp: "N" }} />);
     expect(aides(container)).toEqual([]);

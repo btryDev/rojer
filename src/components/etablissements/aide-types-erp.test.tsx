@@ -43,6 +43,13 @@ describe("fiche établissement : l'aide du type d'ERP", () => {
     expect(aides(fiche("N", ["T"]).container)).toEqual(["T"]);
   });
 
+  it("elle est placée SOUS le champ Catégorie (contrôle visuel du 2026-10-17)", () => {
+    const { container } = fiche("T");
+    const categorie = container.querySelector('select[name="categorieErp"]')!;
+    const aide = container.querySelector("[data-aide-types-erp]")!;
+    expect(categorie.compareDocumentPosition(aide) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it("un type sans aide : rien", () => {
     expect(aides(fiche("N").container)).toEqual([]);
   });

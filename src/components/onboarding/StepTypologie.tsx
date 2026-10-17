@@ -247,7 +247,6 @@ export function StepTypologie({
                     }
                     erreur={messagePour("typesErpAutres")}
                   />
-                  <AideTypesErp types={[state.typeErp, ...state.typesErpAutres]} categorieErp={state.categorieErp} />
                 </div>
 
                 <div className="flex flex-col gap-3">
@@ -280,6 +279,9 @@ export function StepTypologie({
                       {messagePour("categorieErp")}
                     </p>
                   )}
+                  {/* 2026-10-17, contrôle visuel de c6 : SOUS la catégorie,
+                      dont le choix la fait apparaître (N1 à N4). */}
+                  <AideTypesErp types={[state.typeErp, ...state.typesErpAutres]} categorieErp={state.categorieErp} />
                 </div>
 
                 {/* Locaux à sommeil — posée au parcours depuis le 2026-09-09,

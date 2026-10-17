@@ -1954,7 +1954,9 @@ describe("référentiel conformité — version et empreinte", () => {
     // en appelant. ~~198-e52863e35380d30b~~ — contrôle visuel de c6, même
     // jour : libellé de `incendie-erp-interdiction-fumer-affichee` réécrit sur
     // son objet ; 198 + 0 − 0, relevée en appelant. Version pas encore servie.
-    { version: "2026-10-17.5", empreinte: "198-63bb85c2f3459490" },
+    // ~~198-63bb85c2f3459490~~ — même jour, c6 : libellé raccourci (« dans les
+    // réserves et locaux à risques ») ; 198 + 0 − 0, relevée en appelant.
+    { version: "2026-10-17.5", empreinte: "198-e102d541698739f7" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
