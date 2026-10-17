@@ -57,7 +57,7 @@ const BUREAU: EtablissementMatching = {
 const dae: AppareilDuParc = { id: "d1", libelle: "DAE de l'entrée", categorie: "DEFIBRILLATEUR" };
 
 /** Le contexte d'un établissement qui n'est pas un ERP, fabriqué par la seule voie permise. */
-const SANS_ERP = contexteFondementDe({ estERP: false, typeErp: null, categorieErp: null });
+const SANS_ERP = contexteFondementDe({ estERP: false, typeErp: null, typesErpAutres: [], categorieErp: null });
 
 function section(etab: EtablissementMatching, parc: AppareilDuParc[]) {
   const moteur = parc.map((p) => ({ ...p, caracteristiques: null }));
@@ -111,6 +111,7 @@ describe("la bascule déclaré / pas encore déclaré", () => {
     expect(l?.fondement).toEqual(fondementDe(obligationParId("dae-erp-detention")!, contexteFondementDe({
       estERP: true,
       typeErp: "N",
+      typesErpAutres: [],
       categorieErp: "N3",
     })));
     expect(l?.fondement?.reference).toContain("R. 157-1");

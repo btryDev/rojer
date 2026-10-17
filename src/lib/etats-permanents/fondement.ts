@@ -28,7 +28,8 @@
 
 import { indexArticlesParRef } from "@/lib/referentiels/corpus";
 import type { Obligation, ReferenceLegale } from "@/lib/referentiels/conformite/types";
-import type { CategorieErp, TypeErp } from "@/lib/referentiels/types-communs";
+import { TYPES_ERP, type CategorieErp, type TypeErp } from "@/lib/referentiels/types-communs";
+import { typesErpDe } from "@/lib/matching/types-erp";
 
 export type FondementLigne = {
   /** La `reference` du référentiel, telle qu'elle s'imprime ailleurs. */
@@ -38,12 +39,14 @@ export type FondementLigne = {
   /** La `citationCle` du corpus ; `null` si le corpus n'en porte pas. */
   extrait: string | null;
   /**
-   * Un article de CONTEXTE propre au type de l'établissement, montré à côté
-   * du fondement (2026-10-14) : `N 20` sur la consigne du Code du travail,
-   * pour un restaurant de type N des catégories 1 à 4. Absent partout
-   * ailleurs.
+   * Les articles de CONTEXTE propres aux types de l'établissement, montrés à
+   * côté du fondement (2026-10-14) : `N 20` sur la consigne du Code du
+   * travail, pour un restaurant de type N des catégories 1 à 4. Depuis
+   * l'ADR-045 (lot 3), une LISTE : un établissement qui groupe plusieurs
+   * exploitations voit l'article de chacun de ses types — `N 17` à côté de
+   * `O 18` pour un hôtel-restaurant. Absent quand il n'y en a aucun.
    */
-  complement?: FondementLigne;
+  complement?: FondementLigne[];
 };
 
 /**
@@ -57,7 +60,11 @@ export type FondementLigne = {
  * l'établissement ; la ligne reste une (pas de scission).
  */
 export type ContexteFondement = {
-  readonly typeErp: TypeErp | null;
+  /**
+   * Les types d'ERP de l'établissement (ADR-045), dans l'ordre de la
+   * nomenclature ; vide hors ERP.
+   */
+  readonly typesErp: readonly TypeErp[];
   readonly categorieErp: CategorieErp | null;
   /**
    * Marque : seul `contexteFondementDe` fabrique un contexte (revue du
@@ -81,12 +88,19 @@ declare const MARQUE_CONTEXTE: unique symbol;
 export function contexteFondementDe(e: {
   estERP: boolean;
   typeErp: TypeErp | null;
+  // Requis : un appelant qui l'omettrait citerait l'article du seul premier
+  // type, sans que tsc le voie (même raison que dans `matching/types.ts`).
+  typesErpAutres: readonly TypeErp[];
   categorieErp: CategorieErp | null;
 }): ContexteFondement {
   return {
-    typeErp: e.estERP ? e.typeErp : null,
+    typesErp: e.estERP
+      ? typesErpDe({ typeErp: e.typeErp, typesErpAutres: [...e.typesErpAutres] }).sort(
+          (a, b) => TYPES_ERP.indexOf(a) - TYPES_ERP.indexOf(b),
+        )
+      : [],
     categorieErp: e.estERP ? e.categorieErp : null,
-  } as ContexteFondement;
+  } as unknown as ContexteFondement;
 }
 
 /** Le type dont un article est le chapitre (livre II, titre II), ou `null`. */
@@ -158,24 +172,33 @@ export function fondementDe(
   const refs = obligation.referencesLegales;
   const premiere = refs[0];
   if (!premiere) return null;
-  const type = contexte?.typeErp ?? null;
-  // Fondée sur un chapitre de type : l'article du type de l'établissement,
-  // s'il y en a un ; sinon le premier, comme partout.
-  const r =
-    type && typeDuChapitre(premiere.article)
-      ? (refs.find((x) => typeDuChapitre(x.article) === type) ?? premiere)
-      : premiere;
-  const ligne = ligneDe(r);
-  // Fondée ailleurs et citant EN CONTEXTE le chapitre du type de
-  // l'établissement, servi en catégories 1 à 4 : ce complément s'affiche.
-  const complementRef =
-    type &&
-    !typeDuChapitre(premiere.article) &&
-    contexte?.categorieErp &&
-    QUATRE_PREMIERES.includes(contexte.categorieErp)
-      ? refs.slice(1).find((x) => typeDuChapitre(x.article) === type)
-      : undefined;
-  return complementRef ? { ...ligne, complement: ligneDe(complementRef) } : ligne;
+  const types: readonly string[] = contexte?.typesErp ?? [];
+  // Les références que la ligne cite pour l'un des types de l'établissement,
+  // dans l'ordre de la nomenclature (le contexte est déjà trié).
+  const desTypes = (candidates: readonly ReferenceLegale[]) =>
+    types.flatMap((t) => {
+      const r = candidates.find((x) => typeDuChapitre(x.article) === t);
+      return r ? [r] : [];
+    });
+  if (typeDuChapitre(premiere.article)) {
+    // Fondée sur un chapitre de type : l'article du premier type de
+    // l'établissement que la ligne cite, puis ceux des autres types ; à
+    // défaut, la première référence, comme partout.
+    const [principale, ...autres] = desTypes(refs);
+    if (!principale) return ligneDe(premiere);
+    return avecComplement(ligneDe(principale), autres);
+  }
+  // Fondée ailleurs et citant EN CONTEXTE le chapitre des types de
+  // l'établissement, servi en catégories 1 à 4 : ces compléments s'affichent.
+  const enContexte =
+    contexte?.categorieErp && QUATRE_PREMIERES.includes(contexte.categorieErp)
+      ? desTypes(refs.slice(1))
+      : [];
+  return avecComplement(ligneDe(premiere), enContexte);
+}
+
+function avecComplement(ligne: FondementLigne, complement: readonly ReferenceLegale[]): FondementLigne {
+  return complement.length > 0 ? { ...ligne, complement: complement.map(ligneDe) } : ligne;
 }
 
 function ligneDe(r: ReferenceLegale): FondementLigne {

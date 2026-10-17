@@ -22,8 +22,11 @@ import { contexteFondementDe, fondementDe, referenceNommeLArticle } from "./fond
 import type { CategorieErp, TypeErp } from "@/lib/referentiels/types-communs";
 
 /** Un contexte d'ERP, fabriqué par la seule voie permise. */
-const ctx = (typeErp: TypeErp | null, categorieErp: CategorieErp | null) =>
-  contexteFondementDe({ estERP: typeErp !== null, typeErp, categorieErp });
+const ctx = (
+  typeErp: TypeErp | null,
+  categorieErp: CategorieErp | null,
+  typesErpAutres: TypeErp[] = [],
+) => contexteFondementDe({ estERP: typeErp !== null, typeErp, typesErpAutres, categorieErp });
 
 const SUR_L_ECRAN = obligationsConformite.filter(figureSurLEcranEnPlace);
 const INDEX = indexArticlesParRef();
@@ -138,26 +141,53 @@ describe("livre II, titre II — l'article affiché est celui du type de l'étab
   it("N 20 en complément de la consigne, pour un restaurant N1–N4 seulement", () => {
     const n3 = fondementDe(CONSIGNE, ctx("N", "N3"))!;
     expect(n3.reference).toBe(CONSIGNE.referencesLegales[0].reference);
-    expect(n3.complement?.reference).toContain("art. N 20");
-    expect(n3.complement?.extrait).toBe(INDEX.get("N 20")?.article.citationCle);
+    expect(n3.complement?.map((c) => c.reference)).toEqual([expect.stringContaining("art. N 20")]);
+    expect(n3.complement?.[0].extrait).toBe(INDEX.get("N 20")?.article.citationCle);
     expect(fondementDe(CONSIGNE, ctx("N", "N5"))!.complement).toBeUndefined();
     expect(fondementDe(CONSIGNE, ctx("M", "N3"))!.complement).toBeUndefined();
     expect(fondementDe(CONSIGNE, ctx(null, null))!.complement).toBeUndefined();
   });
 });
 
+describe("plusieurs types d'ERP — l'article de chacun (ADR-045, lot 3)", () => {
+  // Éprouvé en ne gardant que le premier type du contexte : rouge.
+  const ob = (id: string) => obligationsConformite.find((o) => o.id === id)!;
+  const PERSONNEL = ob("incendie-erp-personnel-designe-moyens-secours");
+  const CONSIGNE = ob("incendie-travail-consigne-affichee");
+
+  it("un hôtel-restaurant voit N 17 et O 18, quel que soit l'ordre de déclaration", () => {
+    for (const f of [
+      fondementDe(PERSONNEL, ctx("O", "N3", ["N"]))!,
+      fondementDe(PERSONNEL, ctx("N", "N3", ["O"]))!,
+    ]) {
+      expect(f.reference).toContain("art. N 17");
+      expect(f.complement?.map((c) => c.reference)).toEqual([expect.stringContaining("art. O 18")]);
+      expect(f.complement?.[0].extrait).toBe(INDEX.get("O 18")?.article.citationCle);
+    }
+  });
+
+  it("un type que la ligne ne cite pas n'ajoute rien", () => {
+    // L : le chapitre n'est pas cité par cette ligne.
+    expect(fondementDe(PERSONNEL, ctx("N", "N3", ["L"]))!.complement).toBeUndefined();
+  });
+
+  it("la consigne d'un hôtel-restaurant de 3ᵉ : N 20 en complément, O n'en a pas", () => {
+    expect(fondementDe(CONSIGNE, ctx("O", "N3", ["N"]))!.complement?.map((c) => c.reference)).toEqual([
+      expect.stringContaining("art. N 20"),
+    ]);
+  });
+});
+
 describe("contexteFondementDe — le contexte d'un établissement qui n'est pas un ERP est vide", () => {
-  it("un ERP garde son type et sa catégorie", () => {
-    expect(contexteFondementDe({ estERP: true, typeErp: "N", categorieErp: "N3" })).toEqual({
-      typeErp: "N",
-      categorieErp: "N3",
-    });
+  it("un ERP garde ses types, dans l'ordre de la nomenclature, et sa catégorie", () => {
+    expect(
+      contexteFondementDe({ estERP: true, typeErp: "O", typesErpAutres: ["N"], categorieErp: "N3" }),
+    ).toEqual({ typesErp: ["N", "O"], categorieErp: "N3" });
   });
 
   it("un établissement qui n'est plus un ERP ne garde rien de ses anciennes colonnes", () => {
-    expect(contexteFondementDe({ estERP: false, typeErp: "N", categorieErp: "N3" })).toEqual({
-      typeErp: null,
-      categorieErp: null,
-    });
+    expect(
+      contexteFondementDe({ estERP: false, typeErp: "N", typesErpAutres: ["O"], categorieErp: "N3" }),
+    ).toEqual({ typesErp: [], categorieErp: null });
   });
 });
