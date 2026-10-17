@@ -2,6 +2,11 @@ import { describe, expect, it } from "vitest";
 import { determineObligationsApplicables } from "./engine";
 import type { EquipementMatching, EtablissementMatching } from "./types";
 import { CATEGORIES_EQUIPEMENT } from "@/lib/referentiels/types-communs";
+import {
+  estNiveauAudit,
+  obligationsConformite,
+  type Obligation,
+} from "@/lib/referentiels/conformite";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
 
 /**
@@ -72,9 +77,23 @@ const appareil = (
   caracteristiques: EquipementMatching["caracteristiques"] = null,
 ): EquipementMatching => ({ id, libelle: id, categorie, caracteristiques });
 
+/**
+ * 2026-10-17 (ADR-042) : la présence est au NIVEAU AUDIT, le moteur ne la
+ * sert plus. Sa condition `siEquipementDeclare` reste au référentiel — et
+ * sert la rubrique « Niveau audit », qui calcule le champ sans la porte. Pour
+ * la présence, ces gardes s'éprouvent donc marqueur levé : elles tiennent la
+ * condition, qui vaudra le jour où le marqueur se lèvera. Que la porte la
+ * ferme, c'est le test suivant ce bloc.
+ */
+const SANS_MARQUEUR: Obligation[] = obligationsConformite.map((o) =>
+  o.id === PRESENCE ? ({ ...o, niveau: undefined } as Obligation) : o,
+);
+
 for (const ID of [ALIM, PRESENCE]) describe(`${ID} — sur un appareil alimenté déclaré`, () => {
   const lignes = (e: EtablissementMatching, eqs: EquipementMatching[]) =>
-    determineObligationsApplicables(e, eqs).filter((a) => a.obligation.id === ID);
+    determineObligationsApplicables(e, eqs, { obligations: SANS_MARQUEUR }).filter(
+      (a) => a.obligation.id === ID,
+    );
 
   it("bureau de six salariés sans aucun appareil : la ligne n'existe pas", () => {
     expect(lignes(BUREAU, [])).toHaveLength(0);
@@ -122,6 +141,17 @@ for (const ID of [ALIM, PRESENCE]) describe(`${ID} — sur un appareil alimenté
     expect(lignes(ERP_N3, [])).toHaveLength(0);
     expect(lignes(ERP_N3, [appareil("BAES")])).toHaveLength(1);
   });
+});
+
+it("la présence est au niveau audit : aucune ligne, même un BAES et une alarme déclarés ; l'annuelle reste servie", () => {
+  const presence = obligationsConformite.find((o) => o.id === PRESENCE)!;
+  expect(estNiveauAudit(presence)).toBe(true);
+  const ids = determineObligationsApplicables(BUREAU, [
+    appareil("BAES"),
+    appareil("ALARME_INCENDIE", "a1"),
+  ]).map((a) => a.obligation.id);
+  expect(ids).not.toContain(PRESENCE);
+  expect(ids).toContain(ALIM);
 });
 
 it("l'annuelle garde son rythme annuel", () => {

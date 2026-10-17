@@ -450,7 +450,21 @@ export const obligationsConformite: Obligation[] = [
 // catégorie (PE 4 § 2 / PO 1 § 3, PE 27 § 5 / PO 7). 185 + 0 − 0 = 185. Aucune
 // ligne ne change pour un dossier à un seul type : le groupe ne départage que
 // les établissements qui en déclarent plusieurs.
-export const REFERENTIEL_VERSION = "2026-10-17.1";
+// `2026-10-17.2` (ADR-042, décision de la propriétaire du 2026-10-17, après
+// la relecture du préventeur) : neuf obligations passent au niveau audit —
+// `eclairage-etablissement-regles-entretien`,
+// `prevention-etablissement-liste-personnes-qualifiees`,
+// `aeration-etablissement-consigne-utilisation`,
+// `signalisation-etablissement-alimentation-secours-presence`,
+// `porte-auto-portail-piete-coulissant`,
+// `sante-travail-etablissement-fiche-entreprise`,
+// `ascenseur-rapport-annuel-activite`,
+// `signalisation-etablissement-obstacles-zones-dangereuses` et
+// `incendie-travail-extincteurs-revision-atelier-decennale`. 185 + 0 − 0 =
+// 185, dont 3 + 9 = 12 au niveau audit (six d'établissement, trois
+// d'équipement), 182 − 9 = 173 suivies, relevé en appelant `estNiveauAudit`.
+// Le contenu ne change pas ; seuls les marqueurs et les notes bougent.
+export const REFERENTIEL_VERSION = "2026-10-17.2";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

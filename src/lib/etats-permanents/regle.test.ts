@@ -317,10 +317,18 @@ describe("le dossier neuf — ce que le lot rend visible", () => {
     // Le point du lot : la MAJORITÉ de ce qu'un dossier neuf déclenche n'avait
     // aucune surface. Si cette proportion s'effondre, c'est que les obligations
     // ont gagné des échéances — ou que l'écran a perdu son critère.
+    //
+    // ~~`toBeGreaterThan(applicables.length / 2)`~~ — 2026-10-17 (ADR-042) :
+    // cinq états permanents d'établissement passent au niveau audit
+    // (éclairage, liste des personnes qualifiées, consigne de ventilation,
+    // fiche d'entreprise, obstacles). Ils quittent le dossier ET l'écran :
+    // mesuré en appelant le moteur, 24 sur 43 avant, 19 sur 38 après —
+    // exactement la moitié. Ni échéance gagnée ni critère perdu : la borne
+    // devient « au moins la moitié », et la cause est celle-ci.
     expect(
       surEcran.length,
-      "l'écran ne montre plus la majorité de ce que le dossier déclenche",
-    ).toBeGreaterThan(applicables.length / 2);
+      "l'écran ne montre plus au moins la moitié de ce que le dossier déclenche",
+    ).toBeGreaterThanOrEqual(applicables.length / 2);
   });
 
   it("chaque ligne de l'écran a un domaine libellé et un verbe", () => {

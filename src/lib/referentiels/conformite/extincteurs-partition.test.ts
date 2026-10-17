@@ -88,12 +88,18 @@ function rythmesDeLAppareil(
 const rythmesDeLExtincteur = (e: EtablissementMatching) =>
   rythmesDeLAppareil(e, "EXTINCTEUR");
 
-describe("extincteur : une annuelle et une décennale, une seule de chaque, quel que soit le régime", () => {
+// ~~« une annuelle et une décennale, une seule de chaque, quel que soit le
+// régime »~~ — 2026-10-17 (ADR-042, décision de la propriétaire) : la
+// révision en atelier hors ERP, dont les dix ans ne viennent que de la norme,
+// passe au niveau audit. L'annuelle reste une et une seule partout ; la
+// décennale reste une et une seule en ERP (MS 38 § 4), et n'est plus servie
+// hors ERP. Jamais deux : la partition tient toujours.
+describe("extincteur : une annuelle partout ; une décennale en ERP, aucune hors ERP", () => {
   for (const { nom, e } of PROFILS) {
     it(nom, () => {
       const rythmes = rythmesDeLExtincteur(e);
       expect(rythmes.filter((r) => r === "annuelle"), nom).toHaveLength(1);
-      expect(rythmes.filter((r) => r === "decennale"), nom).toHaveLength(1);
+      expect(rythmes.filter((r) => r === "decennale"), nom).toHaveLength(e.estERP ? 1 : 0);
     });
   }
 });
@@ -127,10 +133,19 @@ describe("RIA et désenfumage : une annuelle et une seule, quel que soit le rég
 describe("une ancienne valeur `typeExtincteur` en base est inerte", () => {
   for (const typeExtincteur of ["halon", "co2", "poudre_opercule_pression_permanente"]) {
     it(typeExtincteur, () => {
+      // 2026-10-17 : ~~une décennale, deux rythmes~~ — hors ERP, la décennale
+      // est au niveau audit (ADR-042) ; il reste l'annuelle seule.
       const rythmes = rythmesDeLAppareil(etab({}), "EXTINCTEUR", { typeExtincteur });
       expect(rythmes.filter((r) => r === "annuelle")).toHaveLength(1);
-      expect(rythmes.filter((r) => r === "decennale")).toHaveLength(1);
-      expect(rythmes).toHaveLength(2);
+      expect(rythmes.filter((r) => r === "decennale")).toHaveLength(0);
+      expect(rythmes).toHaveLength(1);
+      // Le type reste inerte en ERP aussi, où la décennale est servie.
+      const erp = rythmesDeLAppareil(
+        etab({ estERP: true, categorieErp: "N3", typeErp: "M" }),
+        "EXTINCTEUR",
+        { typeExtincteur },
+      );
+      expect(erp.filter((r) => r === "decennale")).toHaveLength(1);
     });
   }
 });

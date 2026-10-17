@@ -9,9 +9,10 @@
 //      concerne ;
 //  (c) elle garde sa référence légale : un texte, un article lu au corpus,
 //      retenu, qui la nomme ;
-//  (d) borne basse, pas de liste exacte : AU MOINS les trois obligations de
-//      la décision du 2026-10-08 sont au niveau audit. Une liste exhaustive
-//      recopiée se réparerait en recopiant et cesserait de vérifier.
+//  (d) borne basse, pas de liste exacte : AU MOINS les ~~trois~~ obligations
+//      des décisions du 2026-10-08 (trois) et du 2026-10-17 (neuf) sont au
+//      niveau audit. Une liste exhaustive recopiée se réparerait en recopiant
+//      et cesserait de vérifier.
 
 import { describe, expect, it } from "vitest";
 import {
@@ -68,10 +69,19 @@ function etabLarge(): EtablissementMatching {
   };
 }
 
-/** Un appareil de chaque catégorie que vise une obligation audit. */
+/**
+ * Un appareil de chaque catégorie que vise une obligation audit — celles qui
+ * la portent, et celles qui la font naître (`siEquipementDeclare`, 2026-10-17).
+ * Éprouvé en le retirant : aujourd'hui l'ajout ne change rien, l'`ASCENSEUR`
+ * du rapport annuel d'activité faisant déjà naître la présence de
+ * l'alimentation de secours. Il est gardé pour que les gardes (a) et (b)
+ * n'atteignent pas cette ligne par une coïncidence du parc.
+ */
 function parcAudit(): EquipementMatching[] {
   const categories = new Set(
-    AUDIT.flatMap((o) => (estPorteeParEquipement(o) ? o.categoriesEquipement : [])),
+    AUDIT.flatMap((o) =>
+      estPorteeParEquipement(o) ? o.categoriesEquipement : (o.siEquipementDeclare ?? []),
+    ),
   );
   return [...categories].map((c) => ({
     id: `eq-${c}`,
@@ -82,13 +92,24 @@ function parcAudit(): EquipementMatching[] {
 }
 
 describe("niveau audit — (d) borne basse, jamais la liste exacte", () => {
-  it("au moins les trois obligations de la décision du 2026-10-08 sont au niveau audit", () => {
+  it("au moins les obligations des décisions du 2026-10-08 et du 2026-10-17 sont au niveau audit", () => {
     const ids = new Set(AUDIT.map((o) => o.id));
-    expect(ids.size).toBeGreaterThanOrEqual(3);
+    expect(ids.size).toBeGreaterThanOrEqual(12);
     for (const id of [
+      // Décision du 2026-10-08.
       "incendie-travail-chiffons-impregnes-recipients-clos",
       "epi-verification-generale-periodique-respiratoire",
       "epi-verification-generale-periodique-gilet-sauvetage",
+      // Décision du 2026-10-17, après la relecture du préventeur.
+      "eclairage-etablissement-regles-entretien",
+      "prevention-etablissement-liste-personnes-qualifiees",
+      "aeration-etablissement-consigne-utilisation",
+      "signalisation-etablissement-alimentation-secours-presence",
+      "porte-auto-portail-piete-coulissant",
+      "sante-travail-etablissement-fiche-entreprise",
+      "ascenseur-rapport-annuel-activite",
+      "signalisation-etablissement-obstacles-zones-dangereuses",
+      "incendie-travail-extincteurs-revision-atelier-decennale",
     ]) {
       expect(ids.has(id), id).toBe(true);
     }
@@ -194,15 +215,42 @@ describe("niveau audit — (b) nommée dans la rubrique « Niveau audit »", () 
   // ~~« un « non » aux chiffons et aucun appareil n'y laissent rien »~~ —
   // 2026-10-08 : la question des chiffons est retirée (décision de la
   // propriétaire) ; la ligne, sans seuil, est nommée à tout lieu de travail.
-  it("la rubrique suit le dossier : sans appareil, les seuls chiffons ; hors lieu de travail, rien", () => {
+  // ~~« sans appareil, les seuls chiffons »~~ — 2026-10-17 : six lignes
+  // d'établissement entrent au niveau audit ; la liste attendue se calcule
+  // sur le référentiel au lieu de se recopier.
+  it("la rubrique suit le dossier : sans appareil, les lignes d'établissement sans condition de parc ; hors lieu de travail, rien", () => {
     const horsSalarie = (etab: EtablissementMatching) =>
       obligationsNiveauAuditDuDossier(etab, [])
         .map((l) => l.id)
         .filter((id) => obligationParId(id)?.porteur !== "salarie");
-    expect(horsSalarie(etabLarge())).toEqual([
-      "incendie-travail-chiffons-impregnes-recipients-clos",
-    ]);
+    const attendues = AUDIT.filter(
+      (o) => o.porteur === "etablissement" && !o.siEquipementDeclare,
+    ).map((o) => o.id);
+    // Borne basse : les chiffons y sont, et pas seulement eux.
+    expect(attendues).toContain("incendie-travail-chiffons-impregnes-recipients-clos");
+    expect(attendues.length).toBeGreaterThan(1);
+    expect(horsSalarie(etabLarge())).toEqual(attendues);
+    // La présence de l'alimentation de secours ne vient qu'avec une
+    // signalisation alimentée déclarée — sans appareil, elle n'est pas nommée.
+    expect(horsSalarie(etabLarge())).not.toContain(
+      "signalisation-etablissement-alimentation-secours-presence",
+    );
     expect(horsSalarie({ ...etabLarge(), estEtablissementTravail: false })).toEqual([]);
+  });
+
+  it("le rapport annuel d'ascenseur est nommé à une habitation seule qui déclare un ascenseur", () => {
+    // Sa typologie est la plus large des neuf du 2026-10-17 (travail, ERP,
+    // IGH, habitation) : le profil « lieu de travail » de `etabLarge` ne
+    // l'éprouve que sur un régime.
+    const habitation: EtablissementMatching = {
+      ...etabLarge(),
+      estEtablissementTravail: false,
+      estHabitation: true,
+    };
+    const ids = obligationsNiveauAuditDuDossier(habitation, [
+      { id: "asc", libelle: "Ascenseur", categorie: "ASCENSEUR", caracteristiques: null },
+    ]).map((l) => l.id);
+    expect(ids).toContain("ascenseur-rapport-annuel-activite");
   });
 
   it("sa seule surface est la rubrique, jamais une surface du quotidien", () => {

@@ -1923,6 +1923,11 @@ describe("référentiel conformité — version et empreinte", () => {
     // et les deux paires de la 5ᵉ (PE 4 / PO 1 § 3, PE 27 / PO 7). 185 + 0 − 0
     // = 185 ; relevée en appelant `empreinteReferentiel()`.
     { version: "2026-10-17.1", empreinte: "185-b0dc045847297da2" },
+    // 2026-10-17 (ADR-042, décision de la propriétaire après la relecture du
+    // préventeur) : neuf obligations passent au niveau audit. 185 + 0 − 0 =
+    // 185, dont 12 au niveau audit, 173 suivies ; relevée en appelant
+    // `empreinteReferentiel()`.
+    { version: "2026-10-17.2", empreinte: "185-a0799d49b88fc395" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

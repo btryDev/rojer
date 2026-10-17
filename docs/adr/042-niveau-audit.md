@@ -82,6 +82,37 @@ obligation légale sortie du quotidien reste VISIBLE.
   `succedeA` vers l'ancien (convention de GE 4 § 1, 2026-09-08). Au niveau
   audit, `succedeA` n'agit pas ; il servira le jour où le marqueur se lève.
 
+### Appliqué le 2026-10-17 à neuf obligations
+
+Décision de la propriétaire du 2026-10-17, après la relecture du préventeur :
+« toutes les suggestions sont acceptées plus p9 du référentiel "Révision en
+atelier de l'extincteur, tous les dix ans au plus (travail, hors ERP)" ». Les
+huit suggestions sont celles soumises au préventeur
+(`relecture-jc-2026-10/propositions-audit.json`, hors dépôt) ; la neuvième est
+la ligne de la page 9 du référentiel complet qui lui a été remis. Le motif de
+chacune est en tête de ses `notesInternes`.
+
+- `eclairage-etablissement-regles-entretien` (`R. 4223-11`) ;
+- `prevention-etablissement-liste-personnes-qualifiees` (`R. 4323-24`) ;
+- `aeration-etablissement-consigne-utilisation` (`R. 4222-21`) — motif
+  reformulé : un écrit établi une fois, sans échéance ;
+- `signalisation-etablissement-alimentation-secours-presence` (arrêté du
+  4 novembre 1993, art. 7) — l'annuelle de l'art. 15 reste servie ;
+- `porte-auto-portail-piete-coulissant` (arrêté du 21 décembre 1993, art. 2
+  et 5) — la vérification semestrielle reste servie ;
+- `sante-travail-etablissement-fiche-entreprise` (`R. 4624-46`) ;
+- `ascenseur-rapport-annuel-activite` (CCH `R. 134-7` III, `R. 134-10`) — le
+  contrat et le carnet d'entretien restent servis ;
+- `signalisation-etablissement-obstacles-zones-dangereuses` (arrêté du
+  4 novembre 1993, art. 12) ;
+- `incendie-travail-extincteurs-revision-atelier-decennale` (`R. 4227-29`,
+  rythme de la seule NF S 61-919) — hors ERP seulement : en ERP, la décennale
+  de MS 38 § 4 reste servie, et l'annuelle hors ERP
+  (`incendie-travail-moyens-lutte`) aussi.
+
+Référentiel `2026-10-17.2` : 185 + 0 − 0 = 185, dont 3 + 9 = 12 au niveau
+audit, 173 suivies, relevé en appelant `estNiveauAudit`.
+
 ## Ce que ce n'est pas
 
 - **Pas un retrait** (`OBLIGATIONS_RETIREES`). Une obligation retirée n'est

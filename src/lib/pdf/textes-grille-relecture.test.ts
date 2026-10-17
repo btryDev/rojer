@@ -497,9 +497,13 @@ describe("« Visible » : où le dirigeant voit l'obligation (2026-10-13)", () =
   });
 
   it("un état permanent d'établissement : « Ce qui doit être en place », sans fiche d'équipement", () => {
+    // ~~`sante-travail-etablissement-fiche-entreprise`~~ — 2026-10-17 : passée
+    // au niveau audit (ADR-042) ; l'exemple devient l'affichage de D. 4711-1,
+    // état permanent d'établissement toujours servi.
     const o = obligationsConformite.find(
-      (x) => x.id === "sante-travail-etablissement-fiche-entreprise",
+      (x) => x.id === "information-etablissement-affichages-obligatoires",
     )!;
+    expect(o.nature).toBe("etat_permanent");
     expect(texteOuVisible(o)).toBe("Ce qui doit être en place");
   });
 
