@@ -54,6 +54,7 @@ function internat(
     estIGH: false,
     estHabitation: false,
     typeErp: "R",
+    typesErpAutres: [],
     categorieErp: "N4",
     classeIgh: null,
     familleHabitation: null,

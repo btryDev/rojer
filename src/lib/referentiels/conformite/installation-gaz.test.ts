@@ -27,6 +27,7 @@ function commerce(categorieErp: CategorieErp | null): EtablissementMatching {
     estIGH: false,
     estHabitation: false,
     typeErp: categorieErp !== null ? "M" : null,
+    typesErpAutres: [],
     categorieErp,
     classeIgh: null,
     familleHabitation: null,

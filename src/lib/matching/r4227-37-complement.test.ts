@@ -32,6 +32,7 @@ const e = (over: Partial<EtablissementMatching>): EtablissementMatching => ({
   estIGH: false,
   estHabitation: false,
   typeErp: null,
+  typesErpAutres: [],
   categorieErp: null,
   classeIgh: null,
   familleHabitation: null,
@@ -85,7 +86,7 @@ describe("R. 4227-37 et R. 4227-34 : consigne, instructions, alarme", () => {
               personnesPresentesHabituellement: personnes,
               effectifSurSite: eff,
               effectifEntreprise: eff,
-              ...(erp ? { estERP: true, typeErp: "N", categorieErp: erp } : {}),
+              ...(erp ? { estERP: true, typeErp: "N", typesErpAutres: [], categorieErp: erp } : {}),
             });
             const r = ids(x);
             if (r.has(CONSIGNE) === r.has(INSTRUCTIONS)) {

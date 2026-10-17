@@ -28,6 +28,7 @@ function etabHabitation(
     estIGH: false,
     estHabitation: true,
     typeErp: null,
+    typesErpAutres: [],
     categorieErp: null,
     classeIgh: null,
     familleHabitation: null,

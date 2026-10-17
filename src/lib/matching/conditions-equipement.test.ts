@@ -40,6 +40,7 @@ const BUREAU: EtablissementMatching = {
   estIGH: false,
   estHabitation: false,
   typeErp: null,
+  typesErpAutres: [],
   categorieErp: null,
   classeIgh: null,
   familleHabitation: null,
@@ -61,6 +62,7 @@ const ERP_N3: EtablissementMatching = {
   effectifEntreprise: 8,
   estERP: true,
   typeErp: "N",
+  typesErpAutres: [],
   categorieErp: "N3",
 };
 

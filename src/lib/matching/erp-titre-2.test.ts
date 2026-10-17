@@ -30,6 +30,7 @@ function etab(typeErp: TypeErp, categorieErp: CategorieErp): EtablissementMatchi
     estIGH: false,
     estHabitation: false,
     typeErp,
+    typesErpAutres: [],
     categorieErp,
     classeIgh: null,
     familleHabitation: null,

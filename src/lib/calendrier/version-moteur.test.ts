@@ -124,6 +124,22 @@ function estHorsReleve(chemin: string): boolean {
  */
 const RELEVE = {
   version: 6,
+  // Recopiée SANS incrément le 2026-10-17 (ADR-045, lot 1, plusieurs types
+  // d'ERP) : `matchTypologie` évalue la typologie type par type et
+  // `determineObligationsApplicables` résout les groupes exclusifs. Ce que la
+  // régénération ÉCRIT ne change pour aucun dossier : la projection répond
+  // `typesErpAutres: []` tant que la colonne n'existe pas (lot 2), et pour un
+  // seul type la sortie est celle d'avant. Mesuré en appelant les deux
+  // moteurs (`main` a6b2303a et le lot) sur 2 484 profils — 23 valeurs de
+  // type, 6 de catégorie, 3 réponses sommeil, 3 de personnes présentes, avec
+  // et sans parc —, 198 336 lignes comparées (identifiant, porteur,
+  // équipements, questions sans réponse, effectif à confirmer) : zéro écart.
+  // Le passage du référentiel à `2026-10-17.1` resynchronise déjà le parc.
+  // ~~1171c8d71e8df5c5~~. Recopiée SANS incrément le même jour, deux fois :
+  // le chemin mono-type passe l'établissement sans copie (~~894c53b2c805ef42~~),
+  // puis la revue fait écrire le départage à rythme égal d'un groupe exclusif
+  // (~~fcb84a3a65380209~~) — un groupe n'a jamais deux membres pour un seul
+  // type, la régénération n'écrit rien d'autre.
   // Recalculée SANS incrément le 2026-10-12 à la réunion de
   // `lot/polir-relecture` (EPI déclaré, `6a4d02a8f770c62b`) et de
   // `lot/suites-0810` (SSI A/B, libellés, rythme en clair,
@@ -437,7 +453,7 @@ const RELEVE = {
   // périodicité), hachée par l'empreinte du référentiel, donc déjà dans le
   // sceau : les dossiers ERP N1–N4 seront réconciliés au titre de
   // `2026-10-15.1`. ~~da691471f9fe392b~~.
-  empreinte: "1171c8d71e8df5c5",
+  empreinte: "9811835e07535557",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

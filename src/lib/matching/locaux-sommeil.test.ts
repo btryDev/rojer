@@ -34,6 +34,7 @@ function etabErp5(
     estIGH: false,
     estHabitation: false,
     typeErp: "O",
+    typesErpAutres: [],
     categorieErp: "N5",
     classeIgh: null,
     familleHabitation: null,
@@ -159,6 +160,7 @@ describe("le critère est en ET, ce n'est pas un régime", () => {
       etabErp5({
         estERP: false,
         typeErp: null,
+        typesErpAutres: [],
         categorieErp: null,
         comporteLocauxSommeilPublic: true,
       }),

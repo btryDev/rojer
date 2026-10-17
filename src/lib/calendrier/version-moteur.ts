@@ -108,6 +108,15 @@ import {
  * même identifiant, rapports et actions gardés
  * (`reconciliateur-bout-en-bout.test.ts`, « D8 »). Un ponctuel soldé, ou dont
  * la mise en service tombe à l'origine ou après, ne bouge pas.
+ *
+ * PAS DE `7` POUR L'ADR-045, LOT 1 (2026-10-17, plusieurs types d'ERP). Le
+ * moteur évalue la typologie type par type et résout les groupes exclusifs ;
+ * mais la question de ce fichier est « ce que la régénération ÉCRIT », et la
+ * réponse est NON : aucun dossier n'a encore d'autre type (la colonne arrive
+ * au lot 2), et pour un seul type la sortie est identique — mesuré en
+ * appelant les deux moteurs sur 2 484 profils, zéro écart (`RELEVE`,
+ * `version-moteur.test.ts`). Le premier dossier qui déclarera un second type
+ * le fera par une mutation, qui régénère son calendrier.
  */
 export const VERSION_MOTEUR_CALENDRIER = 6;
 

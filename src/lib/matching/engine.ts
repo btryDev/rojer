@@ -55,9 +55,14 @@ import type {
   FamilleHabitation,
   TypologieApplication,
 } from "@/lib/referentiels/types-communs";
-import { sommeilPlausiblePourLeType } from "@/lib/referentiels/types-communs";
+import {
+  PERIODICITE_EN_JOURS,
+  sommeilPlausiblePourLeType,
+} from "@/lib/referentiels/types-communs";
+import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import { evaluerPersonnesPresentes } from "./personnes-presentes";
 import { POLITIQUE_ABSENCE } from "./absence";
+import { typesErpDe } from "./types-erp";
 
 /**
  * La marque d'une ligne que seul le type d'ERP manquant retient. Le type écarte
@@ -377,8 +382,12 @@ function evaluerLocauxSommeil(
     // bascule se fait une fois, à la régénération, pour tout le monde.
     //
     // CE QUE ÇA COÛTE, NOMMÉ : l'auberge ou la chambre d'hôtes typée N n'est
-    // plus couverte — le modèle ne stocke qu'un type, et c'est en se déclarant
-    // O qu'elle retrouve la question. Coût accepté avec l'arbitrage.
+    // plus couverte — ~~le modèle ne stocke qu'un type, et c'est en se déclarant
+    // O qu'elle retrouve la question~~ [2026-10-17, ADR-045 : le moteur lit
+    // désormais chaque type déclaré, cette évaluation se fait type par type
+    // (`matchTypologie`), et l'auberge qui déclare N ET O est couverte par O ;
+    // seule celle qui ne déclare que N reste dans le cas]. Coût accepté avec
+    // l'arbitrage.
     //
     // Sans type déclaré, rien n'a répondu : la prudence joue comme avant
     // (ADR-022 § 7), et la réponse en base est lue.
@@ -548,7 +557,38 @@ function evaluerEffectif(
 // s'applique-t-elle ? » — et doit y répondre avec la même logique, seuils,
 // exclusions et garde-fous compris. La réécrire ailleurs, c'est se garantir
 // deux réponses divergentes le jour où l'une des deux est corrigée.
+//
+// PLUSIEURS TYPES D'ERP (ADR-045). Un établissement qui groupe plusieurs
+// exploitations reçoit les dispositions particulières de CHACUN de ses types
+// (GN 2 § 3). La typologie est donc évaluée type par type, et la première
+// évaluation satisfaite, dans l'ordre de déclaration, l'emporte : l'union.
+// Pour un seul type, l'évaluation est celle d'avant l'ADR-045, à l'identique.
+// Les doublons que l'union fait naître entre les membres d'une paire
+// (`groupeExclusif`) se résolvent dans `determineObligationsApplicables`.
 export function matchTypologie(
+  t: TypologieApplication,
+  etab: EtablissementMatching,
+): ResultatTypologie {
+  // Le cas de presque tous les dossiers — un type au plus, déclaré en
+  // premier — passe l'établissement tel quel : ni copie, ni écart possible
+  // avec l'évaluation d'avant l'ADR-045.
+  if (etab.typesErpAutres.length === 0) return matchTypologieUnType(t, etab);
+  const types = typesErpDe(etab);
+  if (types.length <= 1) {
+    return matchTypologieUnType(t, {
+      ...etab,
+      typeErp: types[0] ?? null,
+      typesErpAutres: [],
+    });
+  }
+  for (const type of types) {
+    const r = matchTypologieUnType(t, { ...etab, typeErp: type, typesErpAutres: [] });
+    if (r.ok) return r;
+  }
+  return { ok: false };
+}
+
+function matchTypologieUnType(
   t: TypologieApplication,
   etab: EtablissementMatching,
 ): ResultatTypologie {
@@ -1183,7 +1223,63 @@ export function determineObligationsApplicables(
     const res = evaluerObligation(o, etab, equipements);
     if (res) out.push(res);
   }
-  return out;
+  return resoudreGroupesExclusifs(out);
+}
+
+/** Jours d'un rythme, pour comparer deux membres d'un groupe ; sans rythme = le moins exigeant. */
+function joursDuRythme(o: Obligation): number {
+  return PERIODICITE_EN_JOURS[periodiciteEffective(o)] ?? Number.POSITIVE_INFINITY;
+}
+
+/** Le membre retient-il « à confirmer » — une question sans réponse ou un effectif à confirmer ? */
+function estAConfirmer(a: ObligationApplicable): boolean {
+  return (a.sansReponse?.length ?? 0) > 0 || a.effectifAConfirmer !== undefined;
+}
+
+/**
+ * `a` l'emporte-t-il sur `b` dans un groupe exclusif ? Le rythme le plus court
+ * d'abord ; à rythme égal, le membre ÉTABLI sur celui que retient le silence
+ * — même règle que la composition du registre (`registre/composition.ts` :
+ * « la prudente ne sert que si aucune autre ne tient ») ; à égalité encore,
+ * le premier du référentiel, que l'ordre d'appel garde.
+ */
+function lEmporte(a: ObligationApplicable, b: ObligationApplicable): boolean {
+  const ja = joursDuRythme(a.obligation);
+  const jb = joursDuRythme(b.obligation);
+  if (ja !== jb) return ja < jb;
+  return estAConfirmer(b) && !estAConfirmer(a);
+}
+
+/**
+ * Un seul membre par groupe exclusif (ADR-045) : le plus exigeant, au sens de
+ * `lEmporte`. Les autres sont retirés.
+ *
+ * Deux égalités de rythme existent aujourd'hui, toutes deux dans le groupe de
+ * la 4ᵉ catégorie (un type R avec un type à trois ans, ou R sans hébergement
+ * avec un type à cinq ans). Celle qui compte est la première quand le sommeil
+ * n'est pas renseigné : la ligne R « avec hébergement », retenue « à
+ * confirmer », ne doit pas évincer la triennale établie par l'autre type.
+ *
+ * Pour un établissement à un seul type, les typologies de chaque groupe
+ * forment une partition : il n'en sort jamais qu'un, et cette fonction ne
+ * retire rien (`types-erp-multiples.test.ts` l'éprouve sur toute la grille).
+ */
+function resoudreGroupesExclusifs(
+  applicables: ObligationApplicable[],
+): ObligationApplicable[] {
+  const retenu = new Map<string, ObligationApplicable>();
+  for (const a of applicables) {
+    const g = a.obligation.groupeExclusif;
+    if (g === undefined) continue;
+    const deja = retenu.get(g);
+    if (deja === undefined || lEmporte(a, deja)) {
+      retenu.set(g, a);
+    }
+  }
+  return applicables.filter((a) => {
+    const g = a.obligation.groupeExclusif;
+    return g === undefined || retenu.get(g) === a;
+  });
 }
 
 /**

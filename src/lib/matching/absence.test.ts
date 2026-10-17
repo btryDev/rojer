@@ -47,6 +47,7 @@ const base = (over: Partial<Etab>): Etab => ({
   estIGH: false,
   estHabitation: false,
   typeErp: null,
+  typesErpAutres: [],
   categorieErp: null,
   classeIgh: null,
   familleHabitation: null,
@@ -96,8 +97,8 @@ function profils(): { nom: string; e: Etab }[] {
       out.push({ nom: `travail seul, ${eff}, contexte ${i}`, e: c({}) });
       for (const t of TYPES_ERP)
         for (const cat of CATEGORIES_ERP)
-          out.push({ nom: `ERP ${t} ${cat}, ${eff}, contexte ${i}`, e: c({ estERP: true, typeErp: t, categorieErp: cat }) });
-      out.push({ nom: `ERP sans salariés N N5, contexte ${i}`, e: c({ estEtablissementTravail: false, estERP: true, typeErp: "N", categorieErp: "N5", effectifSurSite: 0, effectifEntreprise: 0 }) });
+          out.push({ nom: `ERP ${t} ${cat}, ${eff}, contexte ${i}`, e: c({ estERP: true, typeErp: t, typesErpAutres: [], categorieErp: cat }) });
+      out.push({ nom: `ERP sans salariés N N5, contexte ${i}`, e: c({ estEtablissementTravail: false, estERP: true, typeErp: "N", typesErpAutres: [], categorieErp: "N5", effectifSurSite: 0, effectifEntreprise: 0 }) });
       out.push({ nom: `IGH, ${eff}, contexte ${i}`, e: c({ estIGH: true }) });
       out.push({ nom: `habitation, contexte ${i}`, e: c({ estHabitation: true, estEtablissementTravail: false, effectifSurSite: 0, effectifEntreprise: 0 }) });
     }

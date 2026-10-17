@@ -28,6 +28,7 @@ function etab(p: Partial<EtablissementMatching>): EtablissementMatching {
     estIGH: false,
     estHabitation: false,
     typeErp: "N",
+    typesErpAutres: [],
     categorieErp: "N5",
     classeIgh: null,
     familleHabitation: null,

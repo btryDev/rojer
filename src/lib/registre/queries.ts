@@ -15,6 +15,7 @@ import { trierParCategorie } from "@/lib/equipements/labels";
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
+import { projeterEtablissement } from "@/lib/matching/projection";
 import { cleJourCivil } from "@/lib/dates";
 import { composerRegistreParPartie, type PartieDue } from "./composition";
 import { CHAMPS_PAR_SECTION } from "./champs";
@@ -118,29 +119,7 @@ export const composerRegistreDeLEtablissement = cache(
     if (!etab) return null;
 
     const parties = composerRegistreParPartie(
-      {
-        id: etab.id,
-        effectifSurSite: etab.effectifSurSite,
-        effectifEntreprise: etab.entreprise.effectif,
-        estEtablissementTravail: etab.estEtablissementTravail,
-        estERP: etab.estERP,
-        estIGH: etab.estIGH,
-        estHabitation: etab.estHabitation,
-        typeErp: etab.typeErp,
-        categorieErp: etab.categorieErp,
-        classeIgh: etab.classeIgh,
-      familleHabitation: etab.familleHabitation,
-        personnesPresentesHabituellement: etab.personnesPresentesHabituellement,
-        manipuleMatieresR422722: etab.manipuleMatieresR422722,
-        comporteLocauxSommeilPublic: etab.comporteLocauxSommeilPublic,
-        manutentionManuelle: etab.manutentionManuelle,
-        travailSurEcran: etab.travailSurEcran,
-        operationsElectriques: etab.operationsElectriques,
-        conduiteEngins: etab.conduiteEngins,
-        expositionCMR: etab.expositionCMR,
-        epiPresents: etab.epiPresents,
-        ssiCategorieAouB: etab.ssiCategorieAouB,
-      },
+      projeterEtablissement(etab),
       trierParCategorie(etab.equipements).map((eq) => ({
         id: eq.id,
         libelle: eq.libelle,

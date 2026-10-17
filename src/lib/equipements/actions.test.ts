@@ -805,7 +805,7 @@ describe("pré-remplissage : le panneau pose la question exigée, l'action en re
     return determineObligationsApplicables(
       {
         id: "etab-1", effectifSurSite: 8, effectifEntreprise: 8, estEtablissementTravail: true,
-        estERP: true, estIGH: false, estHabitation: false, typeErp: "N", categorieErp: "N3",
+        estERP: true, estIGH: false, estHabitation: false, typeErp: "N", typesErpAutres: [], categorieErp: "N3",
         classeIgh: null, familleHabitation: null, personnesPresentesHabituellement: null,
         manipuleMatieresR422722: null, comporteLocauxSommeilPublic: null, manutentionManuelle: null,
         travailSurEcran: null, operationsElectriques: null, conduiteEngins: null, expositionCMR: null,

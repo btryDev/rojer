@@ -124,6 +124,10 @@ const DESCRIPTION_GE4_RESERVES =
  * La note commune aux six lignes : d'où vient le tableau, comment il est
  * contrôlé, pourquoi six lignes, et ce qui reste non encodé.
  */
+/** Les deux paires de la 5ᵉ catégorie dont un membre est propre au type O (ADR-045). */
+const NOTE_GROUPE_5E =
+  "PLUSIEURS TYPES (ADR-045). Un hôtel qui groupe d'autres exploitations (GN 2) recevrait, type par type, la ligne générale ET celle de l'hôtel. Les deux portent le même `groupeExclusif` : la plus exigeante l'emporte — celle de l'hôtel, qui fait le même acte à un rythme plus court et cite le texte général. C'est la doctrine que la note de chaque ligne écrit déjà pour l'hôtel seul (« au rythme le plus court »).\n\n";
+
 const NOTE_GE4_TABLEAU =
   "POUR INFORMATION DEPUIS LE 2026-10-08 (C64 ; décision 2 de la synthèse de " +
   "revue, option A, sans migration). La visite est déclenchée par " +
@@ -158,7 +162,8 @@ const NOTE_GE4_TABLEAU =
   "FRONTIÈRE AVEC LA 5ᵉ CATÉGORIE, INCHANGÉE : GE 4 relève du Livre II, écarté en 5ᵉ par PE 1 § 1 ; `incendie-erp-5-visite-commission` se fonde sur PE 37 et ne vise que la 5ᵉ. Aucun établissement ne peut recevoir une ligne de chaque, et un test l'éprouve sur les cinq catégories.\n\n" +
   "LE PIÈGE DE LA DATE, RAPPELÉ POUR QU'IL NE SE REPRENNE PAS : le sélecteur de la page de SECTION affiche pour GE 4 « 01/01/2015 au 01/06/2027 ». Ce terme est celui de GE 2 et GE 6, qui vivent dans la même section ; trois lectures s'y sont laissé prendre le 2026-09-01. La section relue AU 1ER JUILLET 2027 rend GE 4 présent et inchangé. Aucune `relectureDue` n'est due de ce chef.\n\n" +
   "RÉSERVE D'USAGE : la visite est initiée par l'administration, pas par l'exploitant. Une déclaration « en place » n'aurait pas de sens sur ces lignes ; ce qui se trace est la visite QUAND ELLE A EU LIEU.\n\n" +
-  "NATURE : ÉCHÉANCE RÉCURRENTE (ADR-026). La visite revient.";
+  "NATURE : ÉCHÉANCE RÉCURRENTE (ADR-026). La visite revient.\n\n" +
+  "PLUSIEURS TYPES (ADR-045, décision de la propriétaire du 2026-10-16). Un établissement qui groupe plusieurs exploitations (GN 2) reçoit les lignes de chacun de ses types : un hôtel O + restaurant N de 3ᵉ catégorie sortirait la triennale ET la quinquennale. Les lignes de chaque bloc portent donc le même `groupeExclusif`, et UNE SEULE visite est servie au groupement, AU RYTHME LE PLUS COURT des types déclarés. C'EST UNE LECTURE PAR ANALOGIE, ET AUCUN TEXTE NE LE DIT : GE 4 § 2 fixe « la périodicité la plus courte » pour les bâtiments ISOLÉS d'un même établissement (GN 3) ; pour des exploitations GROUPÉES, GN 2 § 3 applique les dispositions de chaque type sans dire laquelle l'emporte. La propriétaire a cherché un texte ou une doctrine (guides préfectoraux) et n'en a trouvé aucun. La date fixée au procès-verbal prime toujours, par une prescription particulière de source `pv_commission_securite` (ADR-035).";
 
 // -----------------------------------------------------------------------------
 // Livre II, titre II — dispositions particulières des types M, N, O et W
@@ -270,6 +275,7 @@ export const obligationsIncendie: Obligation[] = [
     // inconnu : une exclusion invérifiable ne s'applique pas.
     typologies: { erp: { categories: ["N5"], typesExclus: ["O"] } },
     porteur: "etablissement",
+    groupeExclusif: "erp5-entretien-installations-techniques",
     equipementsEnContexte: [
       "INSTALLATION_ELECTRIQUE",
       "ALARME_INCENDIE",
@@ -280,6 +286,7 @@ export const obligationsIncendie: Obligation[] = [
       "RIA",
     ],
     notesInternes:
+      NOTE_GROUPE_5E +
       "Porteur établissement (ADR-022) — c'est l'obligation qui a motivé le chantier.\n\nVersion relue sur Légifrance le 2026-08-27 : PE 4 est en vigueur dans sa rédaction du 2026-07-01 (arrêté du 1er décembre 2025). Le § 2 disait « En cours d'exploitation » ; il dit désormais « Tous les trois ans AU PLUS ». La périodicité triennale est donc écrite dans le texte, elle n'est plus déduite.\n\nChamp d'application, par renvoi : PE 2 § 3, dans sa version du 2026-01-01 (même arrêté), maintient « PE 4, PE 10 B, PE 24 § 1, PE 26 § 1 et PE 27 » pour les établissements recevant au plus 19 personnes. La rédaction antérieure ne maintenait que « PE 4 § 2 et § 3 ». Le champ s'est donc élargi, et l'argument tient a fortiori : l'obligation atteint les établissements qui ont le MOINS déclaré, ceux-là mêmes chez qui une décomposition par installation ne produirait aucune ligne.\n\n`equipementsEnContexte` n'est pas un déclencheur : ce sont les installations que le texte cite (« chauffage, éclairage, installations électriques, appareils de cuisson, circuits d'extraction, ascenseurs, moyens de secours »), affichées pour aider le dirigeant à voir ce qui est visé chez lui. Le texte finit par « etc. » — l'interface accompagne la liste de la mention « non limitative », et il ne faut pas la refermer.\n\nCe que cette ligne ne fait PAS : elle ne lève aucune des neuf sur-applications du Livre II — six ici, trois dans `electricite.ts`. Leurs notes annoncent « à reprendre lorsque le référentiel saura porter PE 4 § 2 » — le référentiel le sait désormais, mais savoir le porter n'est que la moitié de la condition. L'autre moitié est un point de droit, article par article : le Code du travail fonde-t-il chacune d'elles indépendamment du classement ERP ? Tant que cette relecture n'est pas faite sur Légifrance, retirer les lignes détruirait chez l'utilisateur des échéances dont on n'a pas établi qu'elles ne sont pas dues. Voir la note commune de ces neuf lignes.\n\nLe chapeau neuf de PE 4 (installations de gaz neuves ou modifiées, renvoi à PE 10 B, applicable au 2026-07-01) n'est pas encodé ici : c'est une vérification à la construction ou après travaux, pas une échéance récurrente. À instruire à part.",
   },
   {
@@ -331,6 +338,7 @@ export const obligationsIncendie: Obligation[] = [
     transmet: [],
     typologies: { erp: { categories: ["N5"], types: ["O"] } },
     porteur: "etablissement",
+    groupeExclusif: "erp5-entretien-installations-techniques",
     // La liste de PE 4 § 2, moins ce que PO 1 § 3 met à un autre rythme ou
     // sous d'autres dispositions : l'électricité (annuelle,
     // `incendie-hotel-po-controle-annuel-electricite`) et l'ascenseur.
@@ -349,6 +357,7 @@ export const obligationsIncendie: Obligation[] = [
     // compte du dernier contrôle déposé (revue de sécurité du 2026-10-13).
     succedeA: ["incendie-erp-pe4-entretien-installations-techniques"],
     notesInternes:
+      NOTE_GROUPE_5E +
       "Créée le 2026-10-13, décision de la propriétaire : l'hôtel entre dans la cible redéfinie le 2026-10-12 (ce que l'onboarding ne refuse pas), et le chapitre PO est le seul de ses manques à être encodé — exception assumée à « encodage terminé ». Le corpus portait PO 1 § 3 en `obligation_manquante` avec ce motif : « le référentiel ne sait pas porter \"l'ensemble\" ». Il le sait depuis l'ADR-022 : c'est exactement ce que fait `incendie-erp-pe4-entretien-installations-techniques`.\n\nUNE LIGNE, ET NON DEUX. ~~PO 8 § 1 applique PO 1 § 3 « en complément » de PE 4~~ [2026-10-13, revue : PO 8 § 1 applique SA section « en complément des articles PE 4, […] PO 1 (§ 3) », qui restent donc dus aux hôtels existants] : l'hôtel doit les deux. Mais les deux textes nomment le même acte — contrôler l'ensemble des installations techniques par un technicien compétent — à deux rythmes, trois ans au plus et deux ans. Le contrôle biennal satisfait le triennal ; deux lignes donneraient deux rendez-vous pour un contrôle. La ligne triennale exclut donc le type O (`typesExclus`), et celle-ci cite les deux textes. ~~Même raisonnement que la ligne CCH des ascenseurs, à laquelle AS 9 a été ajouté en contexte plutôt qu'en seconde ligne.~~ [2026-10-13, revue : précédent faux — le préventeur a levé ce refus le 2026-10-07 (« deux régimes, deux lignes », `ascenseurs.ts`). Ici les deux textes nomment le même acte et le même objet, à deux rythmes ; c'est la partition des extincteurs (`extincteurs-partition.test.ts`) : un acte, un rythme, celui qui est écrit le plus court.] La description ne dit pas que le biennal « tient lieu » du triennal — aucun texte ne le dit — : elle dit que Rojer suit les deux sur une ligne.\n\nCE QUE LE BIENNAL N'EMPORTE PAS. Le texte en excepte l'électricité et la détection incendie (annuelles) et renvoie l'ascenseur à AS 9. L'électricité a sa ligne depuis le 2026-08-26, ~~;~~ [2026-10-13, revue — mais portée par l'équipement : un hôtel qui n'a pas déclaré son installation électrique ne la voit pas, et la ligne triennale, qui la nommait, ne lui est plus servie ; la description le dit] ; la détection est servie par `incendie-erp-ssi-annuelle`, portée par l'alarme déclarée ; l'ascenseur reste suivi par les lignes du CCH — le préventeur borne AS 9 aux N1–N4 (C64), Rojer le suit.\n\nRELECTURE : PO 1 et PO 8 relus par l'API Légifrance le 2026-10-07 (C60), en vigueur depuis le 2011-10-30, texte inchangé. Non relus de nouveau pour cette ligne.",
   },
   // ---------------------------------------------------------------------------
@@ -1655,7 +1664,9 @@ export const obligationsIncendie: Obligation[] = [
     // textes.
     typologies: { erp: { categories: ["N5"], typesExclus: ["O"] } },
     porteur: "etablissement",
+    groupeExclusif: "erp5-instruction-personnel",
     notesInternes:
+      NOTE_GROUPE_5E +
       "LA SEULE OBLIGATION MANQUANTE QUE RIEN NE BLOQUAIT (registre de dette, `cause: \"libre\"`). Le corpus la portait depuis le 2026-08-26 avec ce blocage : « l'article n'écrit aucune périodicité, et en inventer une serait décider à la place du texte ». L'argument était juste et il est devenu sans objet : depuis l'ADR-026 le référentiel porte cinquante états permanents sans rythme. Une obligation sans périodicité n'est pas une obligation qu'on ne sait pas écrire.\n\nAUCUN RYTHME, ET IL NE FAUT PAS LUI EN PRÊTER. Le § 2 du même article dit que l'information du personnel sur le signal d'alarme « peut être complétée par des exercices périodiques d'évacuation » — FACULTATIF, et à ne pas confondre avec l'exercice semestriel de `R. 4227-39`, que le Code du travail n'impose qu'au-delà de cinquante personnes. Un restaurant de six salariés doit CETTE ligne et pas l'autre.\n\n`pieceAttendue: null` : le texte fait instruire et entraîner, il ne demande ni registre ni attestation.\n\nUNE SUR-APPLICATION CONNUE : un ERP de 5ᵉ catégorie peut n'avoir aucun personnel (une salle mise à disposition, que le § 1 du même article organise). La ligne lui est présentée quand même ; la typologie ne sait pas conjuguer « ERP de 5ᵉ catégorie ET employeur » (les régimes positifs forment une disjonction), et l'écran des états permanents n'a pas de « sans objet ».\n\nCriticité 4, celle de `incendie-travail-exercice-semestriel` : c'est ce qui décide, le jour d'un feu, de ce que fait la personne qui est là.\n\nGN 10, OUVERT LE 2026-09-21 : le règlement « ne s'applique pas aux établissements existants », sauf administratif, contrôles, vérifications et entretien — et cette obligation n'est rien de tout cela. Elle est pourtant servie à ~~TOUT ERP de 5ᵉ catégorie~~ tout ERP de 5ᵉ catégorie autre qu'un hôtel [2026-10-13 : le type O a sa ligne semestrielle, `incendie-hotel-po-instruction-personnel-semestrielle`, qui porte la même sur-application] : le moteur ne lit pas `dateAutorisationOuverture`. ~~« la date d'entrée en vigueur du paragraphe n'est pas relevée »~~ — RELEVÉE le 2026-09-21 : le paragraphe figure dans PE 27 depuis sa création par l'arrêté du 22 juin 1990, en vigueur le 27 AOÛT 1990 (six versions de l'article lues sur Légifrance). ~~La sur-application ne touche donc que les établissements ouverts avant cette date et jamais modifiés — une minorité, que le produit ne sait pas reconnaître.~~ [2026-09-26 : c'est une LECTURE — `GN 10` ne date pas l'« existant » ; voir C23 du journal.] Sur-application VISIBLE et assumée ~~, écrite dans la description que le dirigeant lit~~ [2026-09-26 : la description ne conclut plus ; elle cite `GN 10`, ses deux paragraphes, et la date du type PE] ; la décision de la borner est au dossier des décisions (A6). Voir `corpus/arrete-1980-livre-1.ts`, entrée GN 10.",
   },
 
@@ -1702,7 +1713,9 @@ export const obligationsIncendie: Obligation[] = [
     transmet: [],
     typologies: { erp: { categories: ["N5"], types: ["O"] } },
     porteur: "etablissement",
+    groupeExclusif: "erp5-instruction-personnel",
     notesInternes:
+      NOTE_GROUPE_5E +
       "Créée le 2026-10-13, décision de la propriétaire (voir `incendie-hotel-po-controle-biennal-installations`). Le corpus portait PO 7 et PO 12 en `obligation_manquante` au motif que « l'obligation ne porte sur aucun équipement » — levé depuis l'ADR-022, comme pour PE 27 § 5.\n\nUNE LIGNE, ET NON DEUX. PO 12 applique ensemble PE 27 § 5 et PO 7. Le premier fait instruire et entraîner le personnel sans rythme ; le second donne à ce même acte deux séances par an. Un état permanent et une échéance semestrielle sur la même formation feraient deux lignes pour un acte : `incendie-erp-5-instruction-personnel` exclut donc le type O (`typesExclus`), et celle-ci cite les trois textes. L'état permanent n'apporte rien que la séance datée ne prouve mieux.\n\nRYTHME SAISONNIER. « Compte tenu, le cas échéant, de son rythme saisonnier » module le moment des séances, pas leur nombre : deux par an. Un hôtel fermé six mois les place dans sa saison ; le calendrier ne le sait pas et propose un semestre glissant. Sens d'erreur : une date à déplacer, visible.\n\nÀ NE PAS CONFONDRE avec l'exercice semestriel de `R. 4227-39` (Code du travail, au-delà de cinquante personnes) : un exercice d'évacuation n'est pas une séance d'instruction. Un hôtel qui franchit le seuil doit les deux.",
   },
 
@@ -2009,6 +2022,7 @@ export const obligationsIncendie: Obligation[] = [
     transmet: [],
     typologies: { erp: { categories: ["N1", "N2"], typesExclus: ["V"] } },
     porteur: "etablissement",
+    groupeExclusif: "ge4-visite-cat1-2",
     notesInternes:
       "LIGNE 1 SUR 6 DU TABLEAU DE GE 4 § 1 — 1ʳᵉ et 2ᵉ catégories, tous types SAUF V.\n\nCASES COUVERTES : quatorze des quinze colonnes du tableau sur chacune des deux lignes de catégorie, soit les cardinalités officielles 14 et 14 (voir la note commune ci-dessous). Les quatorze sont représentables depuis que le type J est entré dans l'énumération (2026-09-03, avec le dépouillement de GN 1) ; les huit types spéciaux, absents du tableau, y sont retenus à trois ans par prudence.\n\n" +
       NOTE_GE4_TABLEAU,
@@ -2031,6 +2045,7 @@ export const obligationsIncendie: Obligation[] = [
     transmet: [],
     typologies: { erp: { categories: ["N1", "N2"], types: ["V"] } },
     porteur: "etablissement",
+    groupeExclusif: "ge4-visite-cat1-2",
     notesInternes:
       "LIGNE 2 SUR 6 DU TABLEAU DE GE 4 § 1 — 1ʳᵉ et 2ᵉ catégories, type V seul.\n\nCASES COUVERTES : une colonne sur quinze sur chacune des deux lignes de catégorie, soit les cardinalités officielles 1 et 1 (voir la note commune ci-dessous). C'est la seule case de ces deux catégories où le tableau quitte les trois ans, et elle est la raison pour laquelle la note de corpus qui parlait du « type Y » était fausse : la lettre est V.\n\nCETTE LIGNE EST LA SEULE DES SIX QUI ALLONGE UN DÉLAI PAR RAPPORT À L'ÉTAT ANTÉRIEUR sur les deux premières catégories. Un établissement de culte de 1ʳᵉ ou 2ᵉ catégorie passait jusqu'ici en trois ans ; il passe à cinq. C'est ce que dit le tableau, et c'est le sens d'erreur que le dépôt surveille le plus : elle est posée sur un tableau vérifié case par case au fac-similé du Journal officiel, pas sur une reconstruction.\n\n" +
       NOTE_GE4_TABLEAU,
@@ -2058,6 +2073,7 @@ export const obligationsIncendie: Obligation[] = [
       },
     },
     porteur: "etablissement",
+    groupeExclusif: "ge4-visite-cat3",
     notesInternes:
       "LIGNE 3 SUR 6 DU TABLEAU DE GE 4 § 1 — 3ᵉ catégorie, types J, L, O, P, R (1), R (2) et U.\n\nCASES COUVERTES : sept colonnes sur quinze, soit la cardinalité officielle 7 (voir la note commune ci-dessous). En 3ᵉ catégorie, R avec et R sans hébergement sont TOUS DEUX à trois ans : la distinction R (1) / R (2) ne mord pas ici, et l'exclusion écrite en face — M, N, S, T, V, W, X, Y — reproduit exactement les huit cases à cinq ans de cette ligne.\n\n" +
       NOTE_GE4_TABLEAU,
@@ -2085,6 +2101,7 @@ export const obligationsIncendie: Obligation[] = [
       },
     },
     porteur: "etablissement",
+    groupeExclusif: "ge4-visite-cat3",
     notesInternes:
       "LIGNE 4 SUR 6 DU TABLEAU DE GE 4 § 1 — 3ᵉ catégorie, types M, N, S, T, V, W, X, Y.\n\nCASES COUVERTES : huit colonnes sur quinze, soit la cardinalité officielle 8 (voir la note commune ci-dessous).\n\nY EST ICI, ET IL N'EST PAS UNE EXCEPTION. La note de corpus corrigée par ce lot faisait du type Y le seul à sortir du rythme de trois ans ; il suit en réalité exactement le régime de M, N, S, T, W et X — trois ans en 1ʳᵉ et 2ᵉ catégories, cinq ans en 3ᵉ et 4ᵉ.\n\n" +
       NOTE_GE4_TABLEAU,
@@ -2118,6 +2135,7 @@ export const obligationsIncendie: Obligation[] = [
       },
     },
     porteur: "etablissement",
+    groupeExclusif: "ge4-visite-cat4",
     notesInternes:
       "LIGNE 5 SUR 7 DU TABLEAU DE GE 4 § 1 — 4ᵉ catégorie, types J, O et U.\n\nCASES COUVERTES : trois colonnes sur quinze — J, O, U. La quatrième case triennale de cette ligne de catégorie est R (1), l'enseignement AVEC hébergement, portée depuis le 2026-09-08 par `incendie-erp-visite-commission-cat4-r-avec-hebergement-triennale` ; les deux lignes ensemble font la cardinalité officielle 4 (voir la note commune ci-dessous). Y retombent aussi, par `typesExclus`, les huit types spéciaux sans colonne au tableau et l'ERP dont le type n'est pas renseigné.\n\n~~LE MANQUE À COMBLER EST NOMMÉ : un attribut d'établissement disant si l'exploitation comporte des locaux d'hébergement. Il n'existe pas ; le poser est une migration de schéma, hors du périmètre de ce lot. Tant qu'il n'existe pas, cette ligne garde R et la ligne quinquennale de 4ᵉ catégorie ne le prend pas.~~ [RAYÉ LE 2026-09-08, ET LA MANIÈRE DONT CE MOTIF EST MORT VAUT D'ÊTRE GARDÉE. L'attribut existait DÉJÀ quand cette phrase a été écrite : `Etablissement.comporteLocauxSommeilPublic` est arrivé le 2026-09-02 à 08h49 (commit 8646305 ; sa migration s'appelle `20260901180000`, et c'est le NOM du dossier qui dit 09-01, pas la date du commit), et cette ligne a été écrite le même jour à 09h30 (commit 2565a25). Les deux ne sont ancêtres l'un de l'autre DANS AUCUN SENS : deux branches parallèles, réunies plus tard dans `integration/2026-09-02-final`. Le motif était donc exact sur sa branche, et faux au merge, sans qu'une ligne de ce fichier soit touchée — un lot voisin l'a falsifié. C'est le second cas en deux jours après `R. 4512-3`, et il dit ce que la règle de conduite restée sur la branche `garde-fous-tests` (non fusionnée) ne couvrait pas encore : rouvrir le code avant de rapporter un manque attrape la ligne qui a vieilli, pas celle-ci ; ce qui attrape celle-ci est de relire AU MERGE les motifs d'impossibilité des deux branches réunies.]\n\nCE QUI EST ENCODÉ DEPUIS, ET OÙ ÇA S'ARRÊTE. La distinction R (1) / R (2) n'ajoute aucune lettre à `TypeErp` — GN 1 § 1 n'écrit qu'un seul R, et les deux colonnes du tableau sont deux régimes d'une même ligne, séparés par un fait que le § 4 du même article définit : « les seuls locaux destinés au sommeil du public la nuit ». C'est l'objet même de `comporteLocauxSommeilPublic`, dont la question posée au dirigeant est « comporte-t-il, POUR LE PUBLIC, des locaux à sommeil ». Le croisement s'écrit donc sans rien inventer, et il n'est fait QU'EN 4ᵉ CATÉGORIE : c'est la seule où le tableau sépare les deux R (trois ans contre cinq). En 1ʳᵉ, 2ᵉ et 3ᵉ, les deux colonnes portent trois ans, la question n'y change rien, et y scinder une ligne serait ajouter un risque sans rien gagner.\n\nLES QUATRE CASES DU TABLEAU SONT CELLES QUE LA NOTE DE CORPUS FAUSSE AURAIT EFFACÉES. Elle disait « cinq ans en 4ᵉ catégorie hors Y » ; l'encoder aurait mis à cinq ans un EHPAD (J), un hôtel (O), un internat (R avec hébergement) et un établissement de soins (U) que le texte visite tous les trois ans.\n\n" +
       NOTE_GE4_TABLEAU,
@@ -2144,6 +2162,7 @@ export const obligationsIncendie: Obligation[] = [
       locauxSommeilPublic: true,
     },
     porteur: "etablissement",
+    groupeExclusif: "ge4-visite-cat4",
     notesInternes:
       "LIGNE 5 BIS SUR 7 DU TABLEAU DE GE 4 § 1 — 4ᵉ catégorie, colonne R (1), l'enseignement AVEC hébergement.\n\nCASE COUVERTE : une colonne sur quinze. Avec les trois de la ligne 5 (J, O, U), elle fait la cardinalité officielle 4 de la ligne triennale de 4ᵉ catégorie.\n\nPOURQUOI CETTE LIGNE PORTE `types` ET NON `typesExclus`, ALORS QUE TOUTES LES TRIENNALES PORTENT LE COMPLÉMENT. Le motif du complément est écrit à la note commune : une restriction `types` rejette l'ERP dont le type n'est pas renseigné, et l'aurait privé de toute visite. Ici ce risque n'existe pas, parce que la ligne 5 garde le complément : un R non renseigné n'est pas concerné par cette ligne, mais il n'est pas non plus laissé sans rien — c'est la ligne 5 qui le prend, à trois ans. Le seul établissement que cette ligne-ci doit attraper est celui dont le type EST renseigné à R.\n\nC'EST `locauxSommeilPublic: true` QUI TIENT LE CAS DU SILENCE, ET IL LE TIENT DANS LE BON SENS. `evaluerLocauxSommeil` (`matching/engine.ts`) retient l'obligation quand l'attribut n'est pas renseigné, en le disant — « présence de locaux à sommeil pour le public non renseignée, obligation retenue par prudence, à confirmer ». Un R de 4ᵉ catégorie qui n'a pas répondu reçoit donc TROIS ANS, comme avant la scission ; c'est la ligne quinquennale jumelle, portée par `locauxSommeilPublic: false`, qui exige une réponse explicite. La règle du non-renseigné joue ainsi ses deux faces sur la même paire de lignes : on ne retire rien sur un silence, et on n'allège jamais sur un silence.\n\nET C'EST CE QUI FAIT QUE LA SCISSION NE DÉPEND PAS DU PARCOURS D'ACCUEIL. Le wizard ne pose pas la question (mesuré le 2026-09-08 : aucune occurrence dans `components/onboarding`, et `lib/onboarding/actions.ts` n'écrit pas le champ ; deux décisions du 2026-09-01 et du 2026-09-03 ont retiré du parcours les questions de technicien). Un dossier neuf naît donc à `null`, et `null` rend exactement le comportement d'avant. Mieux : la raison « à confirmer » que cette ligne produit est affichée au guide (`ChezVous.tsx`), qui est le premier endroit où la question se pose à quelqu'un qui a une raison d'y répondre.\n\nBORNÉE À LA 4ᵉ CATÉGORIE, ET C'EST TOUT LE TABLEAU QUI LE DIT : R (1) et R (2) portent tous deux trois ans en 1ʳᵉ, 2ᵉ et 3ᵉ. La distinction n'y change rien, et l'y encoder ajouterait un critère qui ne peut que se tromper.\n\n" +
       NOTE_GE4_TABLEAU,
@@ -2170,6 +2189,7 @@ export const obligationsIncendie: Obligation[] = [
       locauxSommeilPublic: false,
     },
     porteur: "etablissement",
+    groupeExclusif: "ge4-visite-cat4",
     notesInternes:
       "LIGNE 6 BIS SUR 7 DU TABLEAU DE GE 4 § 1 — 4ᵉ catégorie, colonne R (2), l'enseignement SANS hébergement.\n\nCASE COUVERTE : une colonne sur quinze. Avec les dix de la ligne 6, elle fait la cardinalité officielle 11 de la ligne quinquennale de 4ᵉ catégorie — celle qui manquait jusqu'au 2026-09-08.\n\nC'EST LA SEULE LIGNE DES SEPT QUI ALLONGE UN DÉLAI PAR RAPPORT À L'ÉTAT ANTÉRIEUR DU PRODUIT, et c'est pourquoi elle exige une déclaration. Un centre de formation de 4ᵉ catégorie passait jusqu'ici en trois ans par sur-application assumée ; il passe à cinq, ce que le tableau dit depuis 2014. Mais `locauxSommeilPublic: false` ne s'applique QU'À UNE ABSENCE DÉCLARÉE : `evaluerLocauxSommeil` refuse l'allègement tant que l'attribut n'est pas renseigné. Personne ne gagne deux ans de délai par son silence — il faut avoir répondu « non ».\n\nLE § 3 N'EST PAS CE QUI FONDE CES CINQ ANS, et la confusion serait facile puisqu'il parle lui aussi d'hébergement. Le § 3 est une FACULTÉ SOUS PLAFOND — après deux visites consécutives favorables, un établissement sans hébergement peut voir son délai « prolongé dans la limite de cinq ans », sur proposition de la commission —, il suppose un historique que le produit n'observe pas, et il ne vise aucun type en particulier. Cette ligne-ci vient d'une CASE DU TABLEAU du § 1 : type R, 4ᵉ catégorie, cinq ans. Deux tests interdisent qu'une quinquennale se fonde sur le § 3, et l'un d'eux vérifie que la case invoquée existe bien au tableau pour ce type, cette catégorie ET ce régime d'hébergement.\n\nBORNÉE À LA 4ᵉ CATÉGORIE : en 1ʳᵉ, 2ᵉ et 3ᵉ, le tableau met R (2) à trois ans comme R (1). Y porter cette ligne allongerait un délai que le texte n'allonge pas — l'erreur exacte que le référentiel refuse.\n\n" +
       NOTE_GE4_TABLEAU,
@@ -2197,6 +2217,7 @@ export const obligationsIncendie: Obligation[] = [
       },
     },
     porteur: "etablissement",
+    groupeExclusif: "ge4-visite-cat4",
     notesInternes:
       "LIGNE 6 SUR 7 DU TABLEAU DE GE 4 § 1 — 4ᵉ catégorie, types L, M, N, P, S, T, V, W, X, Y.\n\nCASES COUVERTES : dix colonnes sur quinze. ~~La cardinalité officielle de cette ligne est ONZE, et l'écart est nommé : la onzième est R (2), l'enseignement sans hébergement, que le produit ne sait pas distinguer de R (1) et qu'il laisse donc à trois ans sur la ligne triennale de 4ᵉ catégorie. C'est le seul écart volontaire de l'encodage, et il va dans le sens court.~~ [RAYÉ LE 2026-09-08 : LA ONZIÈME CASE EST ENCODÉE. Elle est portée par `incendie-erp-visite-commission-cat4-r-sans-hebergement-quinquennale`, qui croise le type R avec l'absence DÉCLARÉE de locaux à sommeil pour le public. Elle n'est pas venue ici : la porter sur cette ligne aurait imposé le critère d'hébergement aux dix autres types, dont aucun n'en dépend au tableau — un M ou un W ayant déclaré des locaux à sommeil aurait alors perdu sa ligne. Le motif de l'écart — « le produit ne sait pas distinguer » — était déjà faux le jour où il a été écrit, l'attribut ayant été posé quarante minutes plus tôt sur une branche parallèle ; le détail est à la ligne triennale jumelle.] L'écart de cette ligne est donc nul, et les onze cases de la ligne quinquennale de 4ᵉ catégorie sont couvertes par deux obligations.\n\n" +
       NOTE_GE4_TABLEAU,

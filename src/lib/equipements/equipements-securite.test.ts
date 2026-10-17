@@ -31,6 +31,7 @@ const RESTAURANT_N3: EtablissementMatching = {
   estIGH: false,
   estHabitation: false,
   typeErp: "N",
+  typesErpAutres: [],
   categorieErp: "N3",
   classeIgh: null,
   familleHabitation: null,

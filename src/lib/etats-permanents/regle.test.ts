@@ -40,6 +40,7 @@ const bureau = (effectif: number): EtablissementMatching => ({
   estIGH: false,
   estHabitation: false,
   typeErp: null,
+  typesErpAutres: [],
   categorieErp: null,
   classeIgh: null,
   familleHabitation: null,
@@ -60,7 +61,7 @@ describe("figureSurLEcranEnPlace — la même réponse que l'écran (2026-09-15)
     // L'écran : le moteur, puis `modeDeclarationApplique`. Un établissement de
     // travail, ERP, et un appareil de chaque catégorie : le plus large que le
     // moteur accepte de rendre.
-    const etab = { ...bureau(20), estERP: true, typeErp: "N", categorieErp: "N5" } as EtablissementMatching;
+    const etab = { ...bureau(20), estERP: true, typeErp: "N", typesErpAutres: [], categorieErp: "N5" } as EtablissementMatching;
     const equipements = CATEGORIES_EQUIPEMENT.map((categorie, i) => ({
       id: `eq-${i}`,
       libelle: categorie,

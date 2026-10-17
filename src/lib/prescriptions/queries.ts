@@ -2,6 +2,7 @@ import "server-only";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
+import { projeterEtablissement } from "@/lib/matching/projection";
 import { cleJourCivil } from "@/lib/dates";
 import { compterLignesAvecPreuve } from "./preuves";
 import { chargerLignesVisees } from "./lecture-preuves";
@@ -126,29 +127,7 @@ export async function chargerPagePrescriptions(
     > | null,
   }));
   const applicables = determineObligationsApplicables(
-    {
-      id: etab.id,
-      effectifSurSite: etab.effectifSurSite,
-      effectifEntreprise: etab.entreprise.effectif,
-      estEtablissementTravail: etab.estEtablissementTravail,
-      estERP: etab.estERP,
-      estIGH: etab.estIGH,
-      estHabitation: etab.estHabitation,
-      typeErp: etab.typeErp,
-      categorieErp: etab.categorieErp,
-      classeIgh: etab.classeIgh,
-      familleHabitation: etab.familleHabitation,
-      personnesPresentesHabituellement: etab.personnesPresentesHabituellement,
-      manipuleMatieresR422722: etab.manipuleMatieresR422722,
-      comporteLocauxSommeilPublic: etab.comporteLocauxSommeilPublic,
-      manutentionManuelle: etab.manutentionManuelle,
-      travailSurEcran: etab.travailSurEcran,
-      operationsElectriques: etab.operationsElectriques,
-      conduiteEngins: etab.conduiteEngins,
-      expositionCMR: etab.expositionCMR,
-      epiPresents: etab.epiPresents,
-      ssiCategorieAouB: etab.ssiCategorieAouB,
-    },
+    projeterEtablissement(etab),
     equipements,
   );
   const actives = etab.prescriptionsParticulieres.filter((p) => p.actif);

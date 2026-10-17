@@ -1199,6 +1199,27 @@ type ObligationCommune = {
    * un établissement donné n'en reçoit qu'une, donc une seule reprend sa ligne.
    */
   succedeA?: string[];
+  /**
+   * Le groupe exclusif auquel appartient l'obligation (ADR-045) : un
+   * établissement n'en reçoit qu'UN membre, le plus exigeant — le rythme le
+   * plus court (`periodiciteEffective`), un rythme l'emportant sur aucun.
+   *
+   * Né du cumul des types d'ERP (GN 2 § 3). Évaluées type par type, les
+   * paires écrites en `types` / `typesExclus` sortent toutes deux pour un
+   * établissement qui porte un type de chaque côté : les deux visites de
+   * commission de GE 4 § 1, ou PE 4 § 2 avec PO 1 § 3. Aucune règle sur
+   * `types` ou `typesExclus` seuls ne les départage — les deux familles vont
+   * en sens contraires —, d'où un groupe déclaré.
+   *
+   * Réservé aux obligations portées par l'ÉTABLISSEMENT : la résolution retire
+   * une obligation entière, ce qui serait faux pour des lignes d'appareils
+   * différents. `conformite.test.ts` l'exige, et exige que toute obligation à
+   * `typesExclus` appartienne à un groupe.
+   *
+   * **Entre dans `empreinteReferentiel()`** : il décide de l'existence d'une
+   * ligne. En segment ajouté, et seulement quand il est présent.
+   */
+  groupeExclusif?: string;
 };
 
 /**

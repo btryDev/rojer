@@ -444,7 +444,13 @@ export const obligationsConformite: Obligation[] = [
 // (une ligne par DAE déclaré, ERP N1–N4), Géo'DAE devenant ponctuelle
 // (`mise_en_service_uniquement`). 185 + 0 − 0 = 185 ; par porteur, 91 + 2
 // équipement, 80 − 2 établissement. `dae-erp-detention` ne bouge pas.
-export const REFERENTIEL_VERSION = "2026-10-15.1";
+// `2026-10-17.1` (ADR-045, lot 1 du chantier « plusieurs types d'ERP »,
+// décision de la propriétaire du 2026-10-16) : `groupeExclusif` entre sur les
+// huit visites de commission de GE 4 § 1 et sur les deux paires de la 5ᵉ
+// catégorie (PE 4 § 2 / PO 1 § 3, PE 27 § 5 / PO 7). 185 + 0 − 0 = 185. Aucune
+// ligne ne change pour un dossier à un seul type : le groupe ne départage que
+// les établissements qui en déclarent plusieurs.
+export const REFERENTIEL_VERSION = "2026-10-17.1";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.
@@ -767,6 +773,10 @@ export function empreinteReferentiel(
         // quand il est présent. Le lever la réactive — et fait bouger
         // l'empreinte, donc réconcilier tous les calendriers.
         ...(o.niveau ? [`niveau:${o.niveau}`] : []),
+        // Le groupe exclusif (ADR-045) décide de l'EXISTENCE d'une ligne quand
+        // un établissement porte plusieurs types : il entre, en segment
+        // ajouté et seulement quand il est présent.
+        ...(o.groupeExclusif ? [`groupe:${o.groupeExclusif}`] : []),
         ...(o.rythmeRetenu
           ? [
               `rythme:${o.rythmeRetenu.periodicite}:${o.rythmeRetenu.motif}:${

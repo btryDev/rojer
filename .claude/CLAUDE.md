@@ -694,6 +694,14 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     entrée : la VIP et la formation à la sécurité sont dues dès `entreLe`
     (`premierDelai`), une seule fonction `ceQuiManqueALaPersonne`, aucune ligne
     de calendrier (**fusionnée le 2026-10-12, #20**). Amende les ADR-023 et 024
+45. **045** — Un ERP peut porter plusieurs types (`GN 2`) : un seul ERP, une
+    seule catégorie déclarée, les dispositions particulières de chaque type
+    présent ; le moteur sert l'union des types, et un `groupeExclusif` garde le
+    plus exigeant (visites GE 4 § 1 : le rythme le plus court, par analogie
+    avec GE 4 § 2 — aucun texte ne règle le cas ; le PV prime). **Moteur
+    fusionné le 2026-10-17 (lots 0 et 1)** ; la colonne `typesErpAutres` et
+    les écrans viennent aux lots 2 et 3 — d'ici là, un établissement ne
+    déclare toujours qu'un type
 
 [2026-10-15, ménage des ADR : 037, 038 et 043 manquaient à cette liste ;
 **il n'existe pas d'ADR-044** — annoncée dans
