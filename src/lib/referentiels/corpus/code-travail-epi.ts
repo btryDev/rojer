@@ -341,9 +341,9 @@ export const CODE_TRAVAIL_EPI: Corpus = {
         "Quand le vérificateur n'appartient pas à l'établissement, ses rapports sont annexés au registre de sécurité. À DÉFAUT, une solution de repli est expressément ouverte par le texte : porter au registre les indications précises de la date des vérifications, de la date de remise des rapports et de leur archivage dans l'établissement. Le texte admet donc que le rapport vive ailleurs, à condition que le registre dise où.",
       citationCle:
         "Lorsque les vérifications périodiques sont réalisées par des personnes n'appartenant pas à l'établissement, les rapports établis à la suite de ces vérifications sont annexés au registre de sécurité. A défaut, les indications précises relatives à la date des vérifications, à la date de remise des rapports correspondants et à leur archivage dans l'établissement sont portées sur le registre de sécurité.",
-      statut: "sans_objet",
-      motif:
-        "Modalité d'archivage, sans périodicité propre — elle suit la vérification comme R. 4323-101, encodée depuis le 2026-09-04.",
+      historique: "2026-10-17 — sous-lot C (`lot/ref-c-incendie-n1-n4`, décision Q6 de c6) : ~~`sans_objet`~~ → `retenu`, rattaché à `incendie-registre-securite` comme MS 75 : des rapports « annexés au registre de sécurité » sont l'acte de la tenue du registre. Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable) : LEGIARTI000018531290, seule version. Ancien motif : ~~Modalité d'archivage, sans périodicité propre — elle suit la vérification comme R. 4323-101, encodée depuis le 2026-09-04.~~",
+      statut: "retenu",
+      obligations: ["incendie-registre-securite"],
     },
     {
       ref: "R. 4323-103",

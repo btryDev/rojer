@@ -27,7 +27,10 @@ const FIN_DE_PROPOSITION = /^\s*(?:$|[,;:.—–…»«()[\]°!?])/;
 // « V.-A.-Le document… » : le séparateur de numérotation de Légifrance
 // (« I.- », « A.- ») ouvre une proposition, comme « 1° ». Ajouté le 2026-09-26 :
 // sans lui, rien de ce qui suit un « V.-A.- » ne pouvait être cité.
-const DEBUT_DE_PROPOSITION = /(?:^|[,;:.—–…»«()[\]°!?]|\.-)\s*$/;
+// « § 1. » (2026-10-17, relecture de c6) : le signe de paragraphe du
+// règlement de sécurité ouvre une proposition — son numéro se cite, et se
+// confronte au texte comme un mot.
+const DEBUT_DE_PROPOSITION = /(?:^|[,;:.—–…»«()[\]°!?§]|\.-)\s*$/;
 // Mais la LETTRE de numérotation n'est pas une proposition : « A » dans
 // « V.-A.-Le », suivie de son « .- ». Sans cette exclusion (contre-lecture du
 // 2026-09-26), « a le document unique… » passait sur `L. 4121-3-1` — le « A »
@@ -93,6 +96,15 @@ const PONCTUATION_DE_COUPE = /[,;:.—]/;
  * était refusée sur son numéro seul (« V », « III »). Le numéro est un repère,
  * pas un mot du texte : il s'efface de la citation, et ce qui le suit doit
  * toujours ouvrir une proposition du verbatim.
+ *
+ * ~~[2026-10-17, sous-lot C : le repère de paragraphe du règlement de sécurité,
+ * « § 1. », « § 2. », suit la même règle — un repère, pas un mot.]~~
+ * [2026-10-17, relecture de c6 : FAUX REMÈDE — effacer « § n. » chiffre
+ * compris laissait passer un numéro faux ou inventé (« § 2. A l'exception… »
+ * sur GN 10, « § 9. La temporisation… » sur MS 66). La cause était ailleurs :
+ * dans le verbatim, le chiffre qui suit « § » n'ouvrait pas de proposition.
+ * Le signe « § » ouvre désormais une proposition (`DEBUT_DE_PROPOSITION`), et
+ * le numéro se confronte au texte comme un mot.]
  */
 const NUMEROTATION = /(?<![\p{L}\p{N}])(?:[IVXLCDM]+|[A-Z])\.-\s*/gu;
 export const sansNumerotation = (t: string) => t.replace(NUMEROTATION, "");

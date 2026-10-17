@@ -94,11 +94,15 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
     "Dispositifs d'évacuation naturelle ou mécanique des fumées (DENFC, volets).",
   VMC:
     "Ventilation mécanique contrôlée. Locaux à pollution spécifique à déclarer.",
-  CTA: "Centrale de traitement d'air avec filtration et conditionnement.",
+  // 2026-10-17, sous-lot C : la seconde phrase est l'ADRESSE de CH 38 6°
+  // (`declareA` du corpus, cité mot pour mot).
+  CTA: "Centrale de traitement d'air avec filtration et conditionnement. Dans un établissement recevant du public des catégories 1 à 4, Rojer ne suit pas l'affichage « Danger d'incendie, filtres empoussiérés inflammables » aux accès des filtres d'une centrale qui traite plus de 10 000 m³/h, d'une centrale qui dessert plusieurs locaux réservés au sommeil, ou d'un ensemble de centrales traitant au total plus de 10 000 m³/h (art. CH 38, 6°).",
   HOTTE_PRO:
     "Hotte au-dessus d'appareils de cuisson en cuisine professionnelle.",
+  // 2026-10-17, sous-lot C : la seconde phrase est l'ADRESSE de GC 15 et de
+  // PE 18 (`declareA` du corpus, cité mot pour mot).
   APPAREIL_CUISSON_ERP:
-    "Fourneau, friteuse, grill, four… situés en cuisine d'un ERP (art. GC).",
+    "Fourneau, friteuse, grill, four… situés en cuisine d'un ERP (art. GC). Rojer ne suit pas la présence d'un personnel de service pendant le fonctionnement des appareils d'un îlot de cuisson installé dans une salle de restauration (art. GC 15 et PE 18).",
   // 2026-10-17, sous-lot B du plan « mise à jour du référentiel ». La seconde
   // phrase est l'ADRESSE de AS 5 (consignes des ascenseurs d'évacuation,
   // décision du plan, § 3) : son `declareA` la cite mot pour mot. Les pancartes

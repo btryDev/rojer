@@ -478,7 +478,22 @@ export const obligationsConformite: Obligation[] = [
 // `ecs-legionelles-analyse-annuelle` (arrêté du 1er février 2010, annexe 2),
 // portées par l'équipement, tout ERP. 185 + 2 − 0 = 187 ; par porteur, 93 + 2
 // équipement, 78 établissement, 14 salarié.
-export const REFERENTIEL_VERSION = "2026-10-17.3";
+// `2026-10-17.4` (sous-lot C du plan « mise à jour du référentiel »,
+// `lot/ref-c-incendie-n1-n4`, découpage validé par c6 le 2026-10-17) : dix
+// états permanents d'établissement du livre II, titre Ier —
+// `incendie-erp-plan-intervention-entrees` (MS 41),
+// `incendie-erp-modalites-appel-pompiers-affichees` (MS 70 § 5),
+// `incendie-erp-personnel-qualifie-detection` (MS 57, MS 66, EL 17),
+// `incendie-erp-ssi-contrat-entretien` (MS 58 § 3-4, MS 68),
+// `incendie-erp-eclairage-securite-notice-registre` (EC 13),
+// `porte-auto-erp-contrat-entretien` (CO 48 § 3 e)),
+// `incendie-erp-avis-controle-affiche` (GE 5),
+// `incendie-erp-5-sommeil-avis-controle-affiche` (GE 5 par PE 37),
+// `cuisson-erp-consignes-arret-urgence` (GC 4 § 3) et
+// `incendie-erp-exploitant-present-public` (MS 52 § 1). 187 + 10 − 0 = 197 ;
+// par porteur, 95 équipement, 78 + 10 = 88 établissement, 14 salarié.
+// Rebasé sur F, qui a pris `.3`.
+export const REFERENTIEL_VERSION = "2026-10-17.4";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

@@ -156,10 +156,17 @@ export const MATERIELS_NON_COUVERTS: readonly MaterielNonCouvert[] = [
     // dont l'adresse est l'aide « Installation de gaz » (même constante). La
     // référence ne porte pas la clé du corpus : un article `non_couvert` que
     // la liste cite par sa clé doit avoir la liste pour adresse.
-    phrase: `Rojer ne suit pas ${nonPorte("l'entretien annuel des chaudières de 4 à 400 kW")} (code de l'environnement, art. R. 224-41-4 et suivants). ${PHRASE_PLAN_SCHEMATIQUE_CHAUFFAGE}`,
+    // 2026-10-17, sous-lot C (décision Q4 de c6, sur celle de la propriétaire
+    // du 2026-10-14) : CH 58 § 2 n'est servie qu'avec une VMC ou une CTA
+    // déclarée, et le ramonage de CH 57 n'est pas suivi. CH 57 et CH 58 sont
+    // `retenu` (`aeration-erp-chauffage-ventilation-annuelle`) : la clé est
+    // admise par la garde.
+    phrase: `Rojer ne suit pas ${nonPorte("l'entretien annuel des chaudières de 4 à 400 kW")} (code de l'environnement, art. R. 224-41-4 et suivants). ${PHRASE_PLAN_SCHEMATIQUE_CHAUFFAGE} Dans un établissement recevant du public des catégories 1 à 4, ${nonPorte("la vérification annuelle des installations de production de chaleur")} (art. CH 58 § 2) n'apparaît dans Rojer que si vous déclarez aussi une ventilation mécanique (VMC) ou une centrale de traitement d'air, et Rojer ne suit pas ${nonPorte("le ramonage et le nettoyage annuels des conduits de fumée, des cheminées et des appareils")} (art. CH 57).`,
     references: [
       { libelle: "Code de l'environnement, art. R. 224-41-4 et suivants" },
       { libelle: "Arrêté du 25 juin 1980, art. CH 23 et CH 24" },
+      { libelle: "Arrêté du 25 juin 1980, art. CH 57", corpus: "CH 57" },
+      { libelle: "Arrêté du 25 juin 1980, art. CH 58", corpus: "CH 58" },
     ],
     orienteVers: {
       categorie: "INSTALLATION_GAZ",

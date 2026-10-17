@@ -118,13 +118,16 @@ describe("matériels non couverts : la liste et le corpus se citent (2026-10-14)
     expect(clesFautives(MATERIELS_NON_COUVERTS)).toEqual([]);
   });
 
-  it("cassure : l'entrée « Piscine » qui cite MS 41 par clé est vue", () => {
+  // ~~MS 41~~ — 2026-10-17, sous-lot C : MS 41 est retenu
+  // (`incendie-erp-plan-intervention-entrees`) ; la cassure prend `M 35`, qui
+  // reste `obligation_manquante` (sous-lot D).
+  it("cassure : l'entrée « Piscine » qui cite M 35 par clé est vue", () => {
     const casse = MATERIELS_NON_COUVERTS.map((m) =>
       m.cle === "piscine_equipement_sportif"
-        ? { ...m, references: [...m.references, { libelle: "MS 41", corpus: "MS 41" }] }
+        ? { ...m, references: [...m.references, { libelle: "M 35", corpus: "M 35" }] }
         : m,
     );
-    expect(clesFautives(casse)).toEqual(["piscine_equipement_sportif → MS 41 (obligation_manquante)"]);
+    expect(clesFautives(casse)).toEqual(["piscine_equipement_sportif → M 35 (obligation_manquante)"]);
   });
 
   it("borne basse : la liste porte bien les articles déplacés de la page", () => {

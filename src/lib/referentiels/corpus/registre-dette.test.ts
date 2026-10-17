@@ -44,16 +44,16 @@ describe("registre de dette — les obligations manquantes", () => {
     // `propositions/lecture-chapitres-types-erp-2026-10-16.md`.
     expect(parCause("libre").map((a) => a.ref)).toEqual([
       // Seconde relecture du 2026-10-17 : `PE 18`, ligne de partage 10.
-      "PE 18",
+      // ~~"PE 18"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
       "PU 6",
       // 2026-10-17, revue indépendante : ~~six~~ quatre articles du titre Ier ouverts
       // en suivant les renvois des chapitres de types, au corpus
       // `arrete-1980-livre-2` [seconde revue, même jour : `MS 41` et `MS 70 § 5`
       // passent `a_trancher`, classe GN 10 / A6].
-      "MS 58 § 3 et § 4 — contrat d'entretien de la détection, annexé au registre",
-      "EC 13 — notice annexée au registre et entretiens consignés",
-      "GE 5",
-      "CO 48 § 3 e) — contrat d'entretien des portes automatiques",
+      // ~~"MS 58 § 3 et § 4 — contrat d'entretien de la détection, annexé au registre"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
+      // ~~"EC 13 — notice annexée au registre et entretiens consignés"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
+      // ~~"GE 5"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
+      // ~~"CO 48 § 3 e) — contrat d'entretien des portes automatiques"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
       // 2026-10-17, `lot/ref-a-corpus-titre-1` : le titre Ier lu en entier,
       // quinze actes que rien ne bloque — rattachements à une ligne existante
       // (registre, exercices, personnel désigné, visites, désenfumage) ou
@@ -61,29 +61,29 @@ describe("registre de dette — les obligations manquantes", () => {
       // sous-lot C les rattache ou les encode.
       // Revue du même jour : ~~"CH 23"~~, ~~"CH 24"~~ (annonces décidées,
       // `non_couvert`) sortent ; `CH 17`, `EL 17`, `GC 15`, `MS 66` entrent.
-      "GE 3",
-      "GE 10",
+      // ~~"GE 3"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
+      // ~~"GE 10"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
       // Seconde relecture du 2026-10-17 (ligne de partage 11, affichages) :
-      "CO 45 § 5 — inscription « sans issue » des portes en cul-de-sac",
-      "CO 47 § 2 — avertissement porté par les portes coupe-feu maintenues ouvertes",
-      "CO 59 — g) consignes affichées dans l'espace d'attente sécurisé",
-      "DF 9",
-      "CH 17",
-      "CH 38 — 6° avertissement affiché aux accès des filtres",
-      "CH 52",
-      "EL 17",
-      "AS 11",
-      "GC 4",
-      "GC 15",
-      "MS 51",
-      "MS 52",
-      "MS 57",
-      "MS 66",
-      "MS 67",
-      "MS 68",
-      "MS 72",
-      "MS 74",
-      "MS 75",
+      // ~~"CO 45 § 5 — inscription « sans issue » des portes en cul-de-sac"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
+      // ~~"CO 47 § 2 — avertissement porté par les portes coupe-feu maintenues ouvertes"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
+      // ~~"CO 59 — g) consignes affichées dans l'espace d'attente sécurisé"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
+      // ~~"DF 9"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
+      // ~~"CH 17"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
+      // ~~"CH 38 — 6° avertissement affiché aux accès des filtres"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
+      // ~~"CH 52"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
+      // ~~"EL 17"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
+      // ~~"AS 11"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
+      // ~~"GC 4"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
+      // ~~"GC 15"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
+      // ~~"MS 51"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
+      // ~~"MS 52"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
+      // ~~"MS 57"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
+      // ~~"MS 66"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
+      // ~~"MS 67"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
+      // ~~"MS 68"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
+      // ~~"MS 72"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
+      // ~~"MS 74"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
+      // ~~"MS 75"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
       "P 21",
       "R 33",
       "S 15",
@@ -140,7 +140,10 @@ describe("registre de dette — les obligations manquantes", () => {
       // [34, 0] → [40, 0] après la seconde relecture : 34 + 6 — `CO 45 § 5`,
       // `CO 47 § 2`, `CO 59 — g)`, `CH 38 — 6°`, `CH 52` (affichages, ligne de
       // partage 11) et `PE 18` (présence, ligne de partage 10).
-      libre: [40, 0],
+      // [40, 0] → [13, 0] le 2026-10-17 (sous-lot C, `lot/ref-c-incendie-n1-n4`) :
+      // 40 − 27 + 0 — vingt retenus (lignes nouvelles ou rattachements), sept
+      // annoncés (`non_couvert`) ; voir le test des « libres ».
+      libre: [13, 0],
       // 9 → 6 le 2026-09-21 : les trois de la chaleur intense (`R. 4463-4`,
       // `-5`, `-7`) sont encodées sur la page « Quand ça arrive ».
       // 6 → 0 le même jour : cinq relues à la source et encodées ; la sixième,
@@ -153,7 +156,8 @@ describe("registre de dette — les obligations manquantes", () => {
       // [1, 0] → [2, 0] le 2026-10-17 (`lot/ref-a-corpus-titre-1`) : `MS 42`
       // § 2, les plans fournis à la demande des sapeurs-pompiers.
       // [2, 0] → [1, 0] le même jour : `MS 42` passe `non_couvert` (décision de c6).
-      evenement: [1, 0],
+      // [1, 0] → [0, 0] le 2026-10-17 (sous-lot C) : `EL 23 § 2` annoncé.
+      evenement: [0, 0],
       // [5, 6] → [11, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : `GZ 13`, `GZ 14`, `CO 61`,
       // `AS 10`, `GC 18`, arrêté 2018-02-23 art. 26 § 3.
       // [11, 0] → [7, 0] le 2026-10-13 (décision de la propriétaire) : `GZ 13`,
@@ -198,7 +202,8 @@ describe("registre de dette — les obligations manquantes", () => {
       // annoncés.
       // [0, 0] → [1, 0] le 2026-10-17 : `MS 46 § 3`, la convention avec un
       // organisateur annexée au registre.
-      relation_tiers: [1, 0],
+      // [1, 0] → [0, 0] le 2026-10-17 (sous-lot C) : `MS 46 § 3` annoncé.
+      relation_tiers: [0, 0],
       // 7 → 9 le 2026-09-21 : `R. 4431-2` ouvert, les deux manques du bruit ne
       // sont plus un texte à lire mais une donnée que le DUERP ne recueille pas.
       // 9 → 1 le 2026-09-27 (C45) : `L. 4121-3-1` (VI tracé, III 1° annoncé)
@@ -239,7 +244,10 @@ describe("registre de dette — les obligations manquantes", () => {
       // [10, 0] → [8, 0] le 2026-10-17 (sous-lot B) : `X annexe` et `X 1 § 2`
       // tranchés hors cadre (piscines), vers `categorie_equipement` et
       // `attribut_etablissement`.
-      a_trancher: [8, 0],
+      // [8, 0] → [6, 0] le 2026-10-17 (sous-lot C) : `MS 41` et `MS 70 § 5`
+      // retenus — la classe GN 10 / A6 tranchée pour eux par la propriétaire
+      // (servis N1–N4, phrase GN 10).
+      a_trancher: [6, 0],
       // [0, 3] → [0, 0] le 2026-10-12 : les trois hôtels, voir `a_trancher`.
       perimetre: [0, 0],
     });
@@ -283,8 +291,11 @@ describe("registre de dette — les obligations manquantes", () => {
     // 69 → 68 après la revue : 69 − 6 + 5 (annonces décidées sorties ; CH 17,
     // EL 17, GC 15, MS 66, M 35 entrés).
     // 68 → 74 après la seconde relecture : 68 + 6 − 0.
-    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(74);
-    expect(manquantes.length).toBe(74);
+    // 74 → 43 le 2026-10-17 (sous-lot C, `lot/ref-c-incendie-n1-n4`), mesuré
+    // en appelant : 74 − 31 + 0 — vingt-deux retenus (douze entrées fondent
+    // les dix lignes nouvelles, dix sont rattachées), neuf annoncés (`non_couvert`).
+    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(43);
+    expect(manquantes.length).toBe(43);
   });
 });
 
@@ -343,7 +354,12 @@ describe("registre de dette — les réserves de lecture", () => {
     // renforcée, fichier sanitaire complet) et son art. 4 (mesures correctives)
     // passent `retenu` avec une réserve ; l'annexe 2 passe `retenu` sans
     // réserve. 94 + 2 − 0 = 96.
-    expect(n).toBe(96);
+    // 96 → 110 le 2026-10-17 (sous-lot C, `lot/ref-c-incendie-n1-n4`),
+    // mesuré en appelant : 96 + 14 − 0 — quatorze articles du titre Ier
+    // retenus avec ce qu'ils imposent encore (`MS 57`, `MS 66`, `EL 17`,
+    // `MS 68`, `EC 13`, `GC 4`, `MS 52`, `GE 3`, `CH 17`, `MS 51`, `MS 67`,
+    // `MS 72`, `DF 9`, `AS 11`).
+    expect(n).toBe(110);
     expect(reservesDeLecture().length).toBe(n);
   });
 });

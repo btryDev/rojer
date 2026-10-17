@@ -379,6 +379,15 @@ export const obligationsAscenseurs: Obligation[] = [
         note: "Cité pour le cas PARTICULIER, et pour lui seul : « Lorsque le propriétaire ne recourt pas à un prestataire de services mais décide d'assurer par ses propres moyens l'entretien de l'ascenseur […] Il tient à jour le carnet d'entretien et établit un rapport annuel d'activité dans les conditions fixées au III de l'article R. 134-7. »",
         versionConstatee: "2021-07-01",
       },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. AS 11 (registre technique des appareils annexé au registre de sécurité ; documents classés après chaque intervention) — livre II, établissements des quatre premières catégories",
+        article: "AS 11",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020317533",
+        note: "« L'exploitant est tenu de : - produire, à l'occasion de la visite de réception des appareils visés dans la présente section, le registre technique des appareils annexé au registre de sécurité de l'établissement […] ; - classer ensuite dans ce registre tous les documents, rapports, attestations qui doivent être rédigés et lui être remis après tout examen ou intervention quelconque sur l'appareil ; […] » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000020317533, seule version, en vigueur depuis le 1980-08-15. Les pancartes d'arrêt sont annoncées dans l'aide de la catégorie (sous-lot B) ; la propreté des cuvettes est un état sans pièce.",
+        versionConstatee: "1980-08-15",
+      },
     ],
     periodicite: "autre",
     nature: "etat_permanent",
@@ -390,6 +399,7 @@ export const obligationsAscenseurs: Obligation[] = [
     typologies: { travail: true, erp: true, igh: true, habitation: true },
     categoriesEquipement: ["ASCENSEUR"],
     notesInternes:
+      "RATTACHEMENT DU 2026-10-17 (sous-lot C, découpage validé par c6) — référence seule. En ERP des quatre premières catégories, AS 11 fait annexer le registre technique des appareils au registre de sécurité et y classer les documents de chaque intervention : c'est l'acte de cette ligne (R. 134-7 et R. 134-10 du CCH priment). TEMPORALITÉ : état permanent, sans rythme ; aucune norme citée.\n\n" +
       "NATURE : ÉTAT PERMANENT, `pieceAttendue: \"carnet d'entretien\"` (ADR-026). R. 134-7 III et R. 134-10 imposent la tenue du carnet lui-même, conservé toute la vie de l'appareil.\n\nFONDEMENT RECALÉ LE 2026-09-01 (lot A). La `reference` citait bien « R. 134-7 et R. 134-10 », mais la clé `article` — la seule que le corpus et la veille savent lire — pointait R. 134-10, qui ne régit QUE le propriétaire assurant l'entretien par ses propres moyens. Le cas ordinaire, l'entretien confié à une entreprise, est à R. 134-7 III, et il n'était rattaché à aucun texte lu. Les deux sont désormais cités séparément, chacun pour son régime, et R. 134-7 est entré au corpus.\n\nCE QUI ÉTAIT NON PORTÉ L'EST DEPUIS LE 2026-09-01 (lot C) : le RAPPORT ANNUEL D'ACTIVITÉ ~~a sa ligne~~ [2026-10-17, ADR-042 : est au référentiel au niveau audit, sans ligne au quotidien ; nommé sur « Ce que Rojer ne couvre pas »], `ascenseur-rapport-annuel-activite`. La note disait « il est annuel, il a un réalisateur, il n'a pas de ligne » ; les trois restent vrais, le dernier ne l'est plus [2026-10-17 : le redevient au quotidien]. Cette obligation-ci garde le seul carnet.\n\nFAMILLE D'HABITATION — EXAMINÉE LE 2026-09-01, AUCUNE RESTRICTION POSÉE. L'arrêté du 31 janvier 1986, qui définit les familles, a été dépouillé ce jour (`corpus/arrete-1986-habitation.ts`). Son SEUL article traitant des ascenseurs est le 97, et il ne prescrit que des degrés coupe-feu de parois de cages par famille, plus un dispositif d'appel prioritaire des pompiers en 4ᵉ famille : des règles de construction, dont aucune ne conditionne l'entretien, la visite ni le contrôle technique. Le régime de cette ligne vient du CCH, et L. 134-1, relu le même jour, énumère huit exclusions de champ dont AUCUNE ne vise les maisons individuelles. Poser `habitation: { familles }` ici serait une restriction inventée : la typologie reste inchangée.",
   },
   {

@@ -92,6 +92,12 @@ type SocleLegalBadge = {
   defaultOpen?: boolean;
   /** La grammaire visuelle de l'écran qui porte la pastille. */
   charte?: Charte;
+  /**
+   * Ce qui se lit AVANT la citation, au dépli (2026-10-17, mention GN 10) :
+   * une phrase qui dit pourquoi l'article est cité. Les `children` restent
+   * après. Absent : rien ne change.
+   */
+  avant?: ReactNode;
 };
 
 /**
@@ -128,6 +134,7 @@ export function LegalBadge(props: SocleLegalBadge & SourceLegalBadge) {
     className,
     defaultOpen = false,
     charte = "papier",
+    avant,
   } = props;
   const [open, setOpen] = useState(defaultOpen);
 
@@ -161,6 +168,7 @@ export function LegalBadge(props: SocleLegalBadge & SourceLegalBadge) {
 
       {open && (
         <div className={PANNEAU[charte]}>
+          {avant && <div className="mb-3">{avant}</div>}
           {extrait && (
             <blockquote className={CITATION[charte]}>
               «&nbsp;{extrait}&nbsp;»

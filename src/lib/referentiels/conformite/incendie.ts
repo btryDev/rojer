@@ -76,7 +76,11 @@ const RYTHME_NF_S_61_919_ANNUEL: RythmeRetenu = {
 // ne verrait pas.
 // -----------------------------------------------------------------------------
 
-/** Les deux références de GE 4 § 1, partagées par les six lignes du tableau. */
+/**
+ * ~~Les deux références de GE 4 § 1, partagées par les six lignes du tableau.~~
+ * [2026-10-17, sous-lot C : trois — MS 74 s'ajoute, l'acte de l'exploitant à
+ * chaque visite ; huit lignes du tableau les partagent.]
+ */
 const REFERENCES_GE4: [ReferenceLegale, ...ReferenceLegale[]] = [
   {
     source: "ARRETE",
@@ -96,6 +100,15 @@ const REFERENCES_GE4: [ReferenceLegale, ...ReferenceLegale[]] = [
     note:
       "Fonde les visites périodiques de la commission et renvoie leur périodicité au règlement de sécurité, sans en fixer aucune. C'est GE 4 qui la fixe pour les quatre premières catégories.",
     versionConstatee: "2021-07-01",
+  },
+  {
+    source: "ARRETE",
+    reference:
+      "Arrêté du 25 juin 1980, art. MS 74 (personnel compétent et matériel mis en place pour les essais lors des visites de la commission) — livre II, établissements des quatre premières catégories",
+    article: "MS 74",
+    url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020317754",
+    note: "« Lors des visites périodiques effectuées par les commissions de sécurité, toutes dispositions doivent être prises par l'exploitant pour permettre le contrôle efficace des moyens de secours. A cet effet, la direction doit mettre en place le personnel compétent et le matériel nécessaire aux essais de fonctionnement. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000020317754, seule version, en vigueur depuis le 1980-08-15. Rattaché le 2026-10-17 (sous-lot C) : l'acte accompagne chaque visite, au rythme de GE 4.",
+    versionConstatee: "1980-08-15",
   },
 ];
 
@@ -129,6 +142,7 @@ const NOTE_GROUPE_5E =
   "PLUSIEURS TYPES (ADR-045). Un hôtel qui groupe d'autres exploitations (GN 2) recevrait, type par type, la ligne générale ET celle de l'hôtel. Les deux portent le même `groupeExclusif` : la plus exigeante l'emporte — celle de l'hôtel, qui fait le même acte à un rythme plus court et cite le texte général. C'est la doctrine que la note de chaque ligne écrit déjà pour l'hôtel seul (« au rythme le plus court »).\n\n";
 
 const NOTE_GE4_TABLEAU =
+  "RATTACHEMENT DU 2026-10-17 (sous-lot C, découpage validé par c6) : MS 74 — l'exploitant met en place le personnel compétent et le matériel nécessaire aux essais lors de chaque visite périodique — est cité dans `REFERENCES_GE4`, donc sur les huit lignes du tableau. Référence seule. TEMPORALITÉ : celle de la visite (rythme écrit, GE 4 § 1) ; aucune norme citée.\n\n" +
   "POUR INFORMATION DEPUIS LE 2026-10-08 (C64 ; décision 2 de la synthèse de " +
   "revue, option A, sans migration). La visite est déclenchée par " +
   "l'administration — le préventeur : « une information ». La ligne porte " +
@@ -189,6 +203,15 @@ const NOTE_TITRE_2_COMMUNE =
   "BORNE : `categories` N1 à N4 ET `types`. Chaque chapitre ne s'applique qu'au-dessus des seuils de public de son article 1er, c'est-à-dire en catégories 1 à 4 ; en 5ᵉ, PE 1 § 1 écarte le livre II entier. Les autres types n'ont pas été lus : ils ne reçoivent rien. Un `typeErp` non renseigné rejette (restriction `types`, règle du dépôt) ; la base rend l'absence impossible pour un ERP (CHECK `Etablissement_erp_type_categorie_requis`).\n\n" +
   "~~CE QUE LA BORNE NE SAIT PAS : GN 2 applique à un établissement qui groupe plusieurs exploitations les dispositions de CHACUN de leurs types. `Etablissement.typeErp` n'en porte qu'un, le principal : un magasin avec un espace de restauration ne reçoit que les lignes du type M (`docs/registre-releve-types-erp.md`, D.2).~~ [2026-10-17, ADR-045 : un établissement déclare ses autres types (`typesErpAutres`, PR #50), et le moteur sert les lignes de chacun (PR #49) — un magasin avec un espace de restauration qui coche N reçoit aussi les lignes du type N.]\n\n" +
   "GN 10 cité en description, comme sur les états permanents du livre III : le règlement ne s'applique pas aux établissements existants, hors administratif, contrôles, vérifications et entretien, et le moteur ne lit pas de date d'ouverture. Sur-application visible, assumée sur le même pied que PE 27.";
+
+/**
+ * Ce qui vaut pour les états permanents du livre II, titre Ier, encodés par le
+ * sous-lot C (2026-10-17), dit une fois.
+ */
+const NOTE_TITRE_1_COMMUNE =
+  "SOUS-LOT C DU PLAN « MISE À JOUR DU RÉFÉRENTIEL » (2026-10-17, `propositions/plan-maj-referentiel-2026-10-17.md`, § 4 ; découpage validé par c6 le même jour). Le titre Ier du livre II a été lu en entier le 2026-10-17 (`lot/ref-a-corpus-titre-1`, corpus `arrete-1980-livre-2` passé `integral`) ; les actes qu'il porte et que le référentiel ne servait pas étaient au § 9 de `docs/couverture-declaree-du-produit.md`, transitoirement. Chaque article a été relu le 2026-10-17 par l'API Légifrance (PISTE, BAC À SABLE ; égalité avec la production non vérifiée) avant d'être encodé.\n\n" +
+  "BORNE : `categories` N1 à N4, tous types. Le titre Ier s'applique aux établissements des quatre premières catégories ; en 5ᵉ, PE 1 § 1 écarte le livre II, sauf renvoi exprès (PE 37 pour GE 5).\n\n" +
+  "GN 10 (décision de c6 du 2026-10-17, Q7) : la phrase entière est citée en description sur les états permanents qui ne sont ni administratifs, ni des contrôles, ni de l'entretien — MS 41, MS 70 § 5, MS 57 § 1, MS 52 § 1, GC 4 § 3. Elle ne l'est pas sur GE 5 (pièce de la procédure de contrôle), ni sur les contrats d'entretien et la notice de maintenance (MS 58, MS 68, CO 48 § 3 e), EC 13), que GN 10 § 1 maintient pour l'établissement existant. Le moteur ne lit pas de date d'ouverture : sur-application visible, assumée sur le même pied que PE 27.";
 
 export const obligationsIncendie: Obligation[] = [
   // ---------------------------------------------------------------------------
@@ -847,6 +870,24 @@ export const obligationsIncendie: Obligation[] = [
         note: "Article qui pose le seuil : « Les établissements dans lesquels peuvent se trouver occupées ou réunies habituellement plus de cinquante personnes, ainsi que ceux, quelle que soit leur importance, où sont manipulées et mises en œuvre des matières inflammables mentionnées à l'article R. 4227-22 SONT ÉQUIPÉS d'un système d'alarme sonore. » Verbatim relevé le 2026-08-31. Le point décisif pour l'ancrage : cet article IMPOSE l'alarme aux établissements de son champ. L'alarme est donc l'objet d'une obligation qui découle du champ, jamais le critère qui y fait entrer.",
         versionConstatee: "2008-05-01",
       },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. MS 51 (exercices d'instruction du personnel organisés par l'exploitant) — livre II, établissements des quatre premières catégories",
+        article: "MS 51",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020317798",
+        note: "« Des exercices d'instruction du personnel doivent être organisés sous la responsabilité de l'exploitant. La date de ceux-ci doit être portée sur le registre de sécurité de l'établissement. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000020317798, en vigueur depuis le 2009-02-27. Aucun rythme : celui de la ligne est le semestre de R. 4227-39.",
+        versionConstatee: "2009-02-27",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. MS 67 § 3 (personnel informé de la signification du signal d'alarme générale) — livre II, établissements des quatre premières catégories",
+        article: "MS 67",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020317741",
+        note: "« § 3. Le personnel de l'établissement doit être informé de la signification du signal sonore d'alarme générale et du signal sonore d'alarme générale sélective, si ce dernier existe. Cette information doit être complétée éventuellement par des exercices périodiques d'évacuation. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000020317741, seule version, en vigueur depuis le 1980-08-15.",
+        versionConstatee: "1980-08-15",
+      },
     ],
     periodicite: "semestrielle",
     nature: "echeance_recurrente",
@@ -866,6 +907,7 @@ export const obligationsIncendie: Obligation[] = [
     typologies: { travail: true, personnesPresentesMin: 51, champR422734: true },
     equipementsEnContexte: ["ALARME_INCENDIE"],
     notesInternes:
+      "RATTACHEMENTS DU 2026-10-17 (sous-lot C, découpage validé par c6) — références seules. MS 51 (exercices d'instruction du personnel, date au registre) et MS 67 § 3 (information du personnel sur le signal d'alarme, « complétée éventuellement par des exercices périodiques ») sont, en ERP des quatre premières catégories, l'acte de cette ligne. TEMPORALITÉ : rythme écrit (R. 4227-39, « au moins tous les six mois ») ; MS 51 n'en écrit aucun, et « éventuellement » ne rend pas l'exercice de MS 67 obligatoire — aucun défaut annuel. CE QUE LE RATTACHEMENT NE COUVRE PAS : la ligne est bornée à `travail: true` et au seuil de 51 personnes présentes (public et personnel comptés, `matching/personnes-presentes.ts`). Un ERP des catégories 1 à 4 qui déclare moins de 51 personnes présentes — possible en 4ᵉ catégorie pour les types dont le seuil de la 5ᵉ est bas — ne reçoit pas MS 51 ; aucune norme n'est citée par ces articles.\n\n" +
       "Seuil encodé (amendement 2026-08) : sans seuil, la règle s'appliquait à un salon de coiffure de deux personnes alors que sa propre description citait un seuil. « Plus de cinquante » ⇒ 51, bornes incluses.\n\nAmendement 2026-08-25 (relecture Légifrance R. 4227-22, -34, -37, -39) : le champ de R. 4227-39 est celui de R. 4227-34 par double renvoi (39 → consigne 37 → établissements 34). Il est disjonctif — « plus de cinquante personnes […] ainsi que ceux, quelle que soit leur importance, où sont manipulées et mises en œuvre des matières inflammables mentionnées à l'article R. 4227-22 » — et compte les personnes « occupées ou réunies », public compris (R. 4227-38 3° distingue « les travailleurs et le public »). `effectifMin: 51` (salariés seuls) est remplacé par `personnesPresentesMin: 51` (personnes présentes, repli sur l'effectif salarié si non déclaré) et `champR422734: true` (branche matières R. 4227-22, déclarée par le dirigeant). Le déclencheur ALARME_INCENDIE reste une heuristique : l'alarme est une conséquence de R. 4227-34, pas sa condition.\n\nAMENDEMENT 2026-08-31, lot « faux négatifs d'ancrage ». La phrase ci-dessus avait raison et n'avait pas été suivie d'effet : le déclencheur ALARME_INCENDIE est retiré, l'obligation passe au porteur établissement (ADR-022). R. 4227-34 relu au verbatim ce jour, et il tranche seul : les établissements de son champ « SONT ÉQUIPÉS d'un système d'alarme sonore ». L'alarme y est le CONTENU d'une obligation, pas la condition d'une autre. Ancrer l'exercice semestriel dessus revenait à ne l'exiger que de ceux qui avaient déjà obéi — et à laisser sans aucune ligne d'exercice l'établissement de plus de cinquante personnes qui n'a rien déclaré, c'est-à-dire précisément celui qui est en défaut. C'est le faux négatif le plus lourd du lot : criticité 4, échéance semestrielle réelle, et zéro ligne affichée.\n\nCe qui NE change pas : le champ. `personnesPresentesMin: 51` et `champR422734` restent la seule restriction, et ils portent le double renvoi 39 → 37 → 34. Le salon de coiffure de deux personnes ne reçoit toujours rien. ALARME_INCENDIE passe en `equipementsEnContexte`.",
   },
   {
@@ -964,6 +1006,68 @@ export const obligationsIncendie: Obligation[] = [
           "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000043819153",
         versionConstatee: "2026-07-01",
       },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. GE 3 § 3 (registre présentable à la commission, consignes d'évacuation prenant en compte les handicaps) — livre II, établissements des quatre premières catégories",
+        article: "GE 3",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000021231100",
+        note: "« § 3. L'exploitant doit être en mesure de présenter à la commission le registre de sécurité prévu à l'article R. 123-51 du code de la construction et de l'habitation. Ce registre contiendra notamment les consignes d'évacuation prenant en compte les différents types de handicap. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000021231100, en vigueur depuis le 2010-01-23.",
+        versionConstatee: "2010-01-23",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. GE 10 (date, nom du vérificateur et objet des vérifications inscrits au registre ; relevé annexé) — livre II, établissements des quatre premières catégories",
+        article: "GE 10",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020380181",
+        note: "« La date, le nom du vérificateur et l'objet des vérifications doivent être inscrits au registre de sécurité. Un relevé des vérifications effectuées doit être annexé au registre de sécurité. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000020380181, en vigueur depuis le 2007-11-19.",
+        versionConstatee: "2007-11-19",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. MS 51 (date des exercices d'instruction portée au registre) — livre II, établissements des quatre premières catégories",
+        article: "MS 51",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020317798",
+        note: "« Des exercices d'instruction du personnel doivent être organisés sous la responsabilité de l'exploitant. La date de ceux-ci doit être portée sur le registre de sécurité de l'établissement. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000020317798, en vigueur depuis le 2009-02-27.",
+        versionConstatee: "2009-02-27",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. MS 52 § 1 (mise à jour du registre par l'exploitant ou son représentant) — livre II, établissements des quatre premières catégories",
+        article: "MS 52",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000021838325",
+        note: "« § 1. Pendant la présence du public, l'exploitant ou son représentant doit se trouver dans l'établissement pour : […] -assurer la mise à jour du registre de sécurité prévu à l'article R. 123-51 du code de la construction et de l'habitation. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000021838325, en vigueur depuis le 2010-05-16. La présence elle-même est portée par `incendie-erp-exploitant-present-public`.",
+        versionConstatee: "2010-05-16",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. MS 75 (dossier technique des moyens de secours annexé au registre ; documents classés après chaque intervention) — livre II, établissements des quatre premières catégories",
+        article: "MS 75",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020344703",
+        note: "« L'exploitant est tenu de : - produire, à l'occasion de la visite de réception […], le dossier technique des installations annexé au registre de sécurité de l'établissement […] ; - classer ensuite dans ce registre tous les documents, rapports, attestations qui doivent être rédigés et lui être remis après tout examen ou intervention quelconque sur l'installation. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000020344703, seule version, en vigueur depuis le 1980-08-15.",
+        versionConstatee: "1980-08-15",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. CH 17 § 2 (certificat de conformité d'un réservoir fixe de combustible liquide consigné au registre) — livre II, établissements des quatre premières catégories",
+        article: "CH 17",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000052225053",
+        note: "« Un exemplaire du certificat de conformité est gardé par l'installateur et un second est consigné dans le registre de sécurité de l'établissement. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000052225053, en vigueur depuis le 2026-01-01 (arrêté du 1er septembre 2025, art. 45).",
+        versionConstatee: "2026-01-01",
+      },
+      {
+        source: "CODE_TRAVAIL",
+        reference: "R. 4323-102 — rapports d'un vérificateur extérieur annexés au registre",
+        article: "R. 4323-102",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018531290",
+        note: "« Lorsque les vérifications périodiques sont réalisées par des personnes n'appartenant pas à l'établissement, les rapports établis à la suite de ces vérifications sont annexés au registre de sécurité. A défaut, les indications précises relatives à la date des vérifications, à la date de remise des rapports correspondants et à leur archivage dans l'établissement sont portées sur le registre de sécurité. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000018531290, seule version, en vigueur depuis le 2008-05-01. Article des équipements de protection individuelle vérifiés (R. 4323-99 à R. 4323-103).",
+        versionConstatee: "2008-05-01",
+      },
     ],
     periodicite: "autre",
     nature: "etat_permanent",
@@ -976,6 +1080,7 @@ export const obligationsIncendie: Obligation[] = [
     typologies: { travail: true, erp: true },
     equipementsEnContexte: ["EXTINCTEUR", "ALARME_INCENDIE"],
     notesInternes:
+      "RATTACHEMENTS DU 2026-10-17 (sous-lot C du plan « mise à jour du référentiel », découpage validé par c6) — références seules, aucun changement de condition ni de rythme. Les actes du titre Ier qui versent une pièce au registre ou en fixent le contenu sont l'acte de cette ligne : GE 3 § 3 (consignes d'évacuation prenant en compte les handicaps, déjà dites en description), GE 10 (date, vérificateur, objet ; relevé annexé), MS 51 (date des exercices d'instruction), MS 52 § 1 (mise à jour par l'exploitant présent), MS 75 (dossier technique des moyens de secours, documents classés après chaque intervention), CH 17 § 2 (certificat de conformité d'un réservoir fixe de combustible liquide). R. 4323-102 (rapports d'un vérificateur extérieur des EPI annexés au registre) suit la même règle (Q6 de c6) : au corpus `code-travail-epi`, il passe de `sans_objet` à `retenu`. TEMPORALITÉ : état permanent, sans rythme ; aucun de ces articles ne renvoie à une norme.\n\n" +
       "Obligation permanente (pas d'échéance périodique). Modélisée sur travail=true en MVP : en pratique tout établissement du scope V2 emploie au moins un salarié (L. 4711-5 CT). Les références CCH R. 143-44 (ERP) et R. 146-35 (IGH) restent citées pour information. Corrigé à l'audit 2026-08 : R. 146-21 était cité à tort — cet article traite du silence de l'administration sur une demande d'agrément et a été abrogé par le décret 2025-1100 ; le registre de sécurité IGH est à R. 146-35.\n\nLIMITE CONNUE, NON CORRIGÉE ICI — restaurée le 2026-08-27. Cette note a été écrite le 2026-08-26 (commit 7736869) et perdue : un rebase a laissé ce commit derrière, et sa rapatriation partielle n'en a rien repris ici. Elle disait, et c'était juste : `categoriesEquipement` ancre cette obligation à un extincteur ou une alarme DÉCLARÉS. Un établissement qui n'a déclaré ni l'un ni l'autre ne reçoit AUCUNE ligne « tenue du registre », alors que le registre est dû sans condition d'équipement. Même cause pour `incendie-travail-exercice-semestriel`, ancrée sur ALARME_INCENDIE.\n\nCe qui a changé depuis : la note concluait que corriger ce faux négatif « suppose de rendre le calendrier capable de porter une obligation sans équipement — décision de schéma, à instruire séparément ». C'est fait (ADR-022). Le modèle ne bloque plus ; ces deux obligations peuvent passer au porteur établissement. Elles ne l'ont PAS été dans ce lot, tenu aux deux articles dont le verbatim était relevé en première main (PE 4 § 2, R. 4222-20). C'est le lot suivant, et il est court.\n\nAUTRE PERTE DU MÊME REBASE, non réparée ici et signalée pour qu'elle ne se reperde pas : le commit 7736869 portait aussi trois corrections réglementaires à cette obligation, relevées sur Légifrance le 2026-08-26. (1) R. 143-44 a été RÉÉCRIT au 1er juillet 2026 par le décret n° 2025-1100 ; la description ci-dessus reprend la version antérieure et ignore le 5° (dates des exercices de sécurité incendie) ainsi que le renvoi aux articles R. 141-10 et R. 141-11. (2) `typologies` devait gagner `erp: true` : R. 143-44 fonde le registre en ERP par lui-même, indépendamment de la qualité d'employeur. (3) R. 146-35 (IGH) reste cité sans `igh: true` parce que l'IGH est hors périmètre, non parce que la référence serait décorative. Réparer ces trois points modifie le champ d'application d'une obligation en production : c'est une relecture réglementaire, pas un effet de bord du chantier du porteur.\n\nAMENDEMENT 2026-08-31, lot « faux négatifs d'ancrage ». C'est le lot annoncé ci-dessus, et il fait deux choses.\n\n(A) LE PORTEUR. `categoriesEquipement: [EXTINCTEUR, ALARME_INCENDIE]` est retiré, `porteur: etablissement`. R. 143-44 relu au verbatim le 2026-08-31 dans sa version en vigueur depuis le 2026-07-01 : « DANS LES ÉTABLISSEMENTS SOUMIS AUX PRESCRIPTIONS DU PRÉSENT CHAPITRE, il doit être tenu un registre de sécurité [...] » Le champ est le chapitre ERP tout entier, 5ᵉ catégorie comprise ; l'article ne nomme aucun équipement. Côté travail, L. 4711-1 et L. 4711-2 relus le même jour ne posent pas davantage de condition d'équipement. Les deux catégories passent en `equipementsEnContexte`.\n\n(B) LA BRANCHE TRAVAIL REPOSAIT SUR UNE FACULTÉ. Constat non prévu par le brief de ce lot, et c'est le plus gênant des deux. Les seules références Code du travail portées ici étaient R. 4227-39 — dont le champ est celui de R. 4227-34, donc PAS tout employeur — et L. 4711-5, qui dispose que « l'employeur EST AUTORISÉ À réunir ces informations dans un registre unique ». Une autorisation ne fonde rien. `travail: true` s'appliquait donc à tout employeur sans qu'aucune des références citées ne l'établisse pour lui. L. 4711-1, L. 4711-2, D. 4711-2 et D. 4711-3 sont ajoutés : ce sont eux qui obligent tout employeur, sans seuil, à tenir datées et à conserver cinq ans les pièces des vérifications. La typologie ne bouge pas ; ce qui la fonde est désormais écrit. L. 4711-5 reste cité, requalifié en toutes lettres.\n\nCE QUI ÉTAIT DÉJÀ RÉPARÉ, contrairement à ce que la note ci-dessus annonce. Les points (1) et (2) de la « autre perte du même rebase » ont été traités avant ce lot : la description porte bien le 5° et le renvoi à R. 141-10 / R. 141-11, et `typologies` porte bien `erp: true`. Vérifié ligne à ligne contre le verbatim du 2026-08-31. Le point (3) tient toujours : R. 146-35 reste cité sans `igh: true` parce que l'IGH est hors périmètre. La note qui les annonçait comme non réparés est restée en place après leur correction — c'est elle qui m'a fait ouvrir R. 143-44, ce qui est le comportement voulu, mais une note qui décrit un état révolu finit par faire refaire le travail.\n\nNATURE : ÉTAT PERMANENT, `pieceAttendue: \"registre de sécurité\"` (ADR-026). Un registre tenu, pas un acte à refaire.\n\nPAS DE `champR422734`, ET C'EST VOULU — EXAMINÉ LE 2026-09-26 (C39). La question : cette ligne cite R. 4227-39 comme la consigne (R. 4227-37) et l'exercice, qui portent `personnesPresentesMin: 51` et `champR422734` ; faut-il l'aligner ? NON. R. 4227-39 relu sur Légifrance (LEGIARTI000024769386, en vigueur depuis le 10/11/2011) : il s'ouvre sur « La consigne de sécurité incendie prévoit… » et finit par « Leur date et les observations […] sont consignées sur un registre tenu à la disposition de l'inspection du travail ». R. 4227-37 relu (en vigueur du 10/11/2011 au 01/01/2027) : « Dans les établissements mentionnés à l'article R. 4227-34, une consigne de sécurité incendie est établie ». R. 4227-34 relu (en vigueur depuis le 01/05/2008) : « plus de cinquante personnes […] ainsi que ceux, quelle que soit leur importance, où sont manipulées […] des matières inflammables ». LE TEXTE DIT que le registre DE R. 4227-39 est dans ce champ (le renvoi passe par « la consigne », ce qui est une lecture, mais la même que celle des deux sœurs : `incendie-travail-consigne-affichee`, notes « la consigne affichée n'est due que dans les établissements de R. 4227-34 », et `incendie-travail-exercice-semestriel`, notes « le champ de R. 4227-39 est celui de R. 4227-34 par double renvoi »). MAIS cette ligne-ci n'est pas le registre de R. 4227-39 : c'est le registre de sécurité, que fondent L. 4711-1, L. 4711-2, D. 4711-2 et D. 4711-3 chez tout employeur, sans seuil (amendement (B) ci-dessus, 2026-08-31), et CCH R. 143-44 dans tout ERP, 5ᵉ catégorie comprise. Le registre des essais et exercices, dans le champ de R. 4227-34, est déjà porté par `incendie-travail-exercice-semestriel`, dont la `pieceAttendue` est le « registre des exercices et essais ». Aligner ferait perdre la ligne à tout employeur de cinquante personnes ou moins sans matières inflammables et à tout ERP de 5ᵉ catégorie sous le seuil — un faux négatif muet, et la réconciliation SUPPRIMERAIT les lignes sans trace. Ce qui a changé ici : R. 4227-39 cesse d'être `referencesLegales[0]` — la convention du type en fait « l'article qui fonde », et le guide « Par métier » l'affichait comme la référence du registre d'un bureau de cinq —, L. 4711-1 prend sa place ; la description dit ce que tout employeur doit, puis ce que les seuls établissements de R. 4227-34 doivent en plus. Typologies inchangées, empreinte inchangée.",
   },
 
@@ -1406,7 +1511,7 @@ export const obligationsIncendie: Obligation[] = [
     domaine: "incendie",
     libelle: "Vérification annuelle des installations de désenfumage (ERP)",
     description:
-      "Les dispositifs de désenfumage (DENFC, volets, clapets, amenées d'air) des ERP font l'objet d'une vérification annuelle par un technicien compétent. Cet article relève du livre II du règlement de sécurité, qui vise les établissements des quatre premières catégories. En 5ᵉ catégorie, PE 4 § 1 fait vérifier les installations de désenfumage à la construction et avant l'ouverture, par des personnes ou des organismes agréés, dans les établissements avec locaux à sommeil ; la liste de PE 4 § 2 (« tous les trois ans au plus ») ne nomme pas le désenfumage et se termine par « etc. ». Le calendrier y maintient pourtant cette échéance, par sur-application assumée.",
+      "Les dispositifs de désenfumage (DENFC, volets, clapets, amenées d'air) des ERP font l'objet d'une vérification annuelle par un technicien compétent. Cet article relève du livre II du règlement de sécurité, qui vise les établissements des quatre premières catégories. En 5ᵉ catégorie, PE 4 § 1 fait vérifier les installations de désenfumage à la construction et avant l'ouverture, par des personnes ou des organismes agréés, dans les établissements avec locaux à sommeil ; la liste de PE 4 § 2 (« tous les trois ans au plus ») ne nomme pas le désenfumage et se termine par « etc. ». Le calendrier y maintient pourtant cette échéance, par sur-application assumée. L'article DF 9 fait aussi ENTRETENIR « périodiquement » le désenfumage par un personnel compétent — sources de sécurité, éléments mécaniques et électriques, système de sécurité : c'est un autre geste que la vérification, et Rojer ne le suit pas.",
     referencesLegales: [
       {
         source: "ARRETE",
@@ -1416,6 +1521,15 @@ export const obligationsIncendie: Obligation[] = [
           "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000020382687",
         note: "« § 2. La périodicité des vérifications est de un an. » Relu le 2026-10-07 sur l'API Légifrance (PISTE, bac à sable), LEGIARTI000020382687, en vigueur depuis le 28/10/2007, sans version future. Le § 3 — triennale par organisme agréé quand existent un désenfumage mécanique et un SSI de catégorie A ou B — est porté par `incendie-erp-desenfumage-triennale-mecanique-ssi`.",
         versionConstatee: "2007-10-28",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. DF 9 (entretien périodique du désenfumage par un personnel compétent) — livre II, établissements des quatre premières catégories",
+        article: "DF 9",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020304547",
+        note: "« Il doit être procédé périodiquement par un personnel compétent aux opérations suivantes : - entretien des sources de sécurité selon les dispositions de l'article EL 18 ; - entretien courant des éléments mécaniques et électriques selon les prescriptions des constructeurs ; - entretien du système de sécurité selon les dispositions de l'article MS 68 et suivant la notice du constructeur. Les règles d'exploitation et de maintenance sont définies à l'article MS 69 et dans la norme NF S 61-933. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000020304547, en vigueur depuis le 2004-07-01.",
+        versionConstatee: "2004-07-01",
       },
     ],
     periodicite: "annuelle",
@@ -1428,6 +1542,7 @@ export const obligationsIncendie: Obligation[] = [
     typologies: { erp: true },
     categoriesEquipement: ["DESENFUMAGE"],
     notesInternes:
+      "RATTACHEMENT DU 2026-10-17 (sous-lot C, plan § 4 : « pas de seconde ligne ») — référence de CONTEXTE. DF 9 fait ENTRETENIR le désenfumage « périodiquement » ; cette ligne le fait VÉRIFIER chaque année (DF 10 § 2). L'entretien est un autre geste, que Rojer NE SUIT PAS : la description le dit (revue indépendante du 2026-10-17). TEMPORALITÉ : DF 9 a un rythme vague (« périodiquement ») ; le défaut annuel de l'ADR-039 ne s'applique pas ici, faute de ligne qui porte l'entretien — la périodicité de cette ligne est le rythme ÉCRIT de DF 10 § 2. NORME CITÉE NON LUE : DF 9 renvoie à la NF S 61-933 pour les règles d'exploitation et de maintenance ; elle n'est pas au corpus `normes`, aucune référence `NORME` n'est posée et aucun rythme n'en est tiré.\n\n" +
       "Sur-application assumée en 5ᵉ catégorie (constatée 2026-08-26, dépouillement du Livre III). L'article cité relève du Livre II du règlement de sécurité — « Dispositions applicables aux établissements des quatre premières catégories » — et PE 1 § 1 dispose que « les dispositions du livre II ne sont pas applicables sauf celles relevant d'articles expressément mentionnés dans la suite du présent livre ». Le Livre III a été dépouillé article par article : PE 26 n'ouvre le Livre II que sur MS 39, PE 27 que sur MS 70, ni l'un ni l'autre n'étant un article de vérification. L'article cité ne fonde donc PAS cette obligation en N5. Ce qui la fonde en N5 est PE 4 § 2 — « tous les trois ans au plus », par techniciens compétents — et, chez un employeur, le Code du travail, qui s'applique indépendamment du classement ERP. La ligne est MAINTENUE volontairement : la retirer créerait un faux négatif muet chez 100 % des utilisateurs, alors qu'une sur-application visible et documentée reste corrigeable. À reprendre lorsque le référentiel saura porter PE 4 § 2, dont le porteur est l'établissement et non un équipement.\n\nÉtat au 2026-08-27 (ADR-022) : le référentiel sait désormais le porter — `incendie-erp-pe4-entretien-installations-techniques` existe, portée par l'établissement, triennale, et elle atteint tous les ERP y compris ceux qui n'ont rien déclaré. La condition annoncée ci-dessus est donc à moitié levée, et à moitié seulement. Ce qui manque est un point de DROIT, pas de modèle : cette ligne-ci n'est pas seulement fondée sur le Livre II, sa note dit qu'elle l'est aussi, chez un employeur, sur le Code du travail — lequel s'applique indépendamment du classement ERP. Tant que cela n'a pas été vérifié article par article sur Légifrance, retirer la ligne supprimerait chez l'utilisateur une échéance dont on n'a PAS établi qu'elle n'est pas due, et le ferait en silence : sans rapport ni action attachés, la réconciliation la supprime physiquement (ADR-012). La relecture réglementaire de ces six lignes est un chantier distinct, à mener avec la skill de veille ; ce n'est pas un effet de bord du chantier du porteur.\n\nRÉSERVE AFFICHÉE — 2026-09-26 (C39). Même traitement que `incendie-erp-extincteurs-annuelle` : sur-application en 5ᵉ MAINTENUE, comportement inchangé. Ce qui change est ce que l'exploitant lit : chaque `reference` au livre II porte « — livre II, établissements des quatre premières catégories », et la description dit ce que le livre III porte en 5ᵉ, relu sur Légifrance le 2026-09-26 — PE 1 § 1 (en vigueur depuis le 27/08/1990), PE 4 (en vigueur depuis le 01/07/2026), PE 15 § 1 (depuis le 01/03/2006), PE 20 § 2 (depuis le 22/05/2004) —, sans y ajouter de renvoi que ces articles ne font pas. Garde : `conformite.test.ts`, « toute référence au livre II servie à un ERP de 5ᵉ dit son champ ».\n\nPRÉCISÉE AU § 2 LE 2026-10-07 (lot 4, relecture du préventeur du 05/10). La référence citait « DF 10 » sans paragraphe, et l'URL pointait le texte entier. Elle désigne désormais le § 2, qui porte seul l'annuelle (« La périodicité des vérifications est de un an. »), et l'article lui-même. Rythme, réalisateur, périmètre : inchangés. Le § 3 a désormais sa ligne, `incendie-erp-desenfumage-triennale-mecanique-ssi` ; cette annuelle n'est PAS conditionnée par lui — voir les notes de la triennale sur le cumul, que le texte n'écrit pas."
   },
   {
@@ -1845,6 +1960,15 @@ export const obligationsIncendie: Obligation[] = [
         note: "« § 1. Les personnes désignées par l'exploitant, mentionnées au paragraphe 1.a de l'article MS 46 pour assurer la sécurité contre l'incendie, doivent avoir reçu une formation conduite à l'initiative et sous la responsabilité de l'exploitant. » Relu le 2026-10-14 par l'API Légifrance (PISTE, bac à sable, égalité avec la production non vérifiée) : LEGIARTI000021838329, en vigueur depuis le 2010-05-16 (arrêté du 11 décembre 2009).",
         versionConstatee: "2010-05-16",
       },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. MS 72 § 1 (personnel initié à la mise en œuvre des moyens d'extinction et d'alerte, information maintenue dans le temps) — livre II, établissements des quatre premières catégories",
+        article: "MS 72",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020317756",
+        note: "« § 1. Tous les appareils ou dispositifs d'extinction et d'alerte doivent être soigneusement entretenus et maintenus en permanence en bon état de fonctionnement. Le personnel de l'établissement doit être initié à leur mise en œuvre. Cette information doit être maintenue dans le temps. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000020317756, seule version, en vigueur depuis le 1980-08-15. L'entretien des appareils déclarés est porté par leurs lignes ; le § 2 (pancartes de manœuvre, NF X 08-003) est une dotation.",
+        versionConstatee: "1980-08-15",
+      },
     ],
     periodicite: "autre",
     nature: "etat_permanent",
@@ -1856,6 +1980,7 @@ export const obligationsIncendie: Obligation[] = [
     typologies: { erp: { categories: [...CATEGORIES_LIVRE_2], types: ["M", "N", "O", "W"] } },
     porteur: "etablissement",
     notesInternes:
+      "RATTACHEMENT DU 2026-10-17 (sous-lot C ; décision Q2 de c6) — référence seule. MS 72 § 1 fait initier le personnel à la mise en œuvre des moyens d'extinction et d'alerte : rattaché à cette ligne, comme le prévoit le plan. TEMPORALITÉ : état permanent, sans rythme ; « cette information doit être maintenue dans le temps » ne devient PAS un défaut annuel, comme pour PE 27 § 5, sa sœur de 5ᵉ (décision de c6). Aucune norme citée au § 1 (NF X 08-003, au § 2, porte sur les panneaux). LE TROU, DIT : la ligne est bornée aux types M, N, O, W ; MS 72 vaut pour tous les types des catégories 1 à 4. Le sous-lot D l'étend à P, S, Y, le sous-lot G à L ; J et U seront refusés à l'accueil ; R, T, V et X restent sans MS 72 en catégories 1 à 4. ET L'ASSIETTE N'EST PAS LA MÊME (revue indépendante du 2026-10-17) : MS 72 fait initier « le personnel de l'établissement » tout entier ; cette ligne ne vise que le personnel spécialement désigné et entraîné. Le rattachement couvre donc l'acte pour les désignés, pas l'initiation des autres membres du personnel.\n\n" +
       "CRÉÉE LE 2026-10-14, point 1 de la décision de la propriétaire. Patron : `incendie-erp-5-instruction-personnel` (PE 27 § 5), même acte en 5ᵉ catégorie — état permanent sans rythme, `pieceAttendue: null` (le texte fait désigner et entraîner, il ne demande ni liste ni attestation), criticité 4.\n\n" +
       "UNE LIGNE POUR QUATRE ARTICLES. N 17, O 18 et W 13 disent la même phrase, à « employés » / « personnes » près ; M 29 § 1 dit la même chose avec deux précisions — la désignation est le fait de l'exploitant, et l'entraînement porte aussi sur l'évacuation du public. Même acte, même débiteur, même constat : quatre lignes auraient fait quatre cases pour une seule désignation, et un établissement n'en reçoit de toute façon qu'une ~~(un seul `typeErp`)~~ [2026-10-17, ADR-045 : même à plusieurs types — la ligne sort une fois, et son fondement cite l'article de chacun des types déclarés, N 17 et O 18 pour un hôtel-restaurant].\n\n" +
       "M 29 AU-DELÀ DE 4 000 PERSONNES. Le § 1 ne vaut que sous 4 000 ; au-delà, les § 2 à § 4 exigent des agents de sécurité incendie (SSIAP) en nombre fixé par tranche. Rojer ne connaît pas l'effectif du public et sert la ligne à tout magasin N1–N4 : au-dessus de 4 000, la ligne dit moins que le texte, et la description le dit. Le SSIAP est en réserve de M 29 au corpus. Le texte ne dit rien de l'effectif d'exactement 4 000 (« inférieur » / « supérieur ») ; la ligne le retient.\n\n" +
@@ -2046,6 +2171,345 @@ export const obligationsIncendie: Obligation[] = [
       "CRÉÉE LE 2026-10-14, point 4 de la décision de la propriétaire. Patron : `incendie-erp-5-sommeil-plans-affiches` (PE 35), la ligne des plans de la 5ᵉ catégorie. O 21 n'exige qu'un plan, à chaque niveau ; PE 35 en exige trois (hall, étage, chambre). Les deux ne se recouvrent pas : PE 35 est borné à N5, celle-ci à N1–N4.\n\n" +
       "LA NORME NF S 60-303 est NOMMÉE par le texte, non lue : elle n'est pas au corpus `normes`, et aucune référence `NORME` n'est posée (ADR-039 : une norme ne se cite comme norme que lue). La description le dit.\n\n" +
       NOTE_TITRE_2_COMMUNE,
+  },
+
+  // ---------------------------------------------------------------------------
+  // Livre II, titre Ier — états permanents des catégories 1 à 4 (sous-lot C,
+  // 2026-10-17). Le contrat du système de sécurité incendie et la présence
+  // qualifiée sont ici ; le contrat des portes automatiques est dans
+  // `portes-portails.ts`, les consignes de l'arrêt d'urgence de cuisson dans
+  // `cuisson-hotte.ts`.
+  // ---------------------------------------------------------------------------
+
+  {
+    id: "incendie-erp-plan-intervention-entrees",
+    domaine: "incendie",
+    libelle:
+      "Plan d'intervention pour les sapeurs-pompiers apposé à chaque entrée de bâtiment (ERP des quatre premières catégories)",
+    description:
+      "Dans un établissement recevant du public des quatre premières catégories, « un plan schématique, sous forme de pancarte inaltérable, doit être apposé à chaque entrée de bâtiment de l'établissement pour faciliter l'intervention des sapeurs-pompiers » (MS 41, rédaction en vigueur depuis le 23 janvier 2010). Il représente au minimum le sous-sol, le rez-de-chaussée et chaque étage ou l'étage courant ; y figurent, outre les dégagements, les espaces d'attente sécurisés et les cloisonnements principaux, l'emplacement des locaux techniques et des autres locaux à risques particuliers, des dispositifs et commandes de sécurité, des organes de coupure des fluides et des sources d'énergie, et des moyens d'extinction fixes et d'alarme. Le texte renvoie, pour ses caractéristiques, à la norme NF S 60-303 du 20 septembre 1987, que Rojer n'a pas lue. " +
+      GN_10_PHRASE,
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. MS 41 (plan schématique apposé à chaque entrée de bâtiment) — livre II, établissements des quatre premières catégories",
+        article: "MS 41",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000021231064",
+        note: "« Un plan schématique, sous forme de pancarte inaltérable, doit être apposé à chaque entrée de bâtiment de l'établissement pour faciliter l'intervention des sapeurs-pompiers. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000021231064, en vigueur depuis le 2010-01-23.",
+        versionConstatee: "2010-01-23",
+      },
+    ],
+    periodicite: "autre",
+    nature: "etat_permanent",
+    pieceAttendue: "plan d'intervention apposé à chaque entrée de bâtiment",
+    usageEcran: { groupe: "incendie_secours", sous: "evacuer" },
+    realisateurs: ["exploitant"],
+    criticite: 3,
+    transmet: [],
+    typologies: { erp: { categories: [...CATEGORIES_LIVRE_2] } },
+    porteur: "etablissement",
+    notesInternes:
+      "TEMPORALITÉ : état permanent, sans rythme. NORME CITÉE NON LUE : MS 41 renvoie à la NF S 60-303 (20 septembre 1987) pour les caractéristiques du plan — un contenu, pas un rythme ; elle n'est pas au corpus `normes`.\n\n" +
+      "CRÉÉE LE 2026-10-17 (sous-lot C, ligne 1 du plan). La classe GN 10 / A6 qui la retenait est tranchée pour MS 41 et MS 70 § 5 par la propriétaire le 2026-10-17 (constats, § 4) : servis aux N1–N4 avec la phrase GN 10, dans « Ce qui doit être en place ».\n\n" +
+      "SANS RECOUVREMENT : en 5ᵉ avec locaux à sommeil, `incendie-erp-5-sommeil-plans-affiches` (PE 35 § 1, qui exige un plan « conforme aux dispositions de l'article MS 41 ») ; à l'hôtel N1–N4, `incendie-erp-hotel-plans-evacuation-niveaux` (O 21) porte des plans d'ÉVACUATION par niveau, destinés aux occupants — pas ce plan d'INTERVENTION, destiné aux secours. Un hôtel N1–N4 reçoit donc les deux, et ce sont deux affichages.\n\n" +
+      "LA NORME NF S 60-303 est NOMMÉE par le texte, non lue : aucune référence `NORME` n'est posée (ADR-039). La description le dit.\n\nÉCRAN : « Évacuer », la famille de sa sœur de 5ᵉ (`incendie-erp-5-sommeil-plans-affiches`, PE 35, qui renvoie à MS 41) — une seule famille pour les deux plans (revue indépendante du 2026-10-17).\n\n" +
+      NOTE_TITRE_1_COMMUNE,
+  },
+
+  {
+    id: "incendie-erp-modalites-appel-pompiers-affichees",
+    domaine: "incendie",
+    libelle:
+      "Modalités d'appel des sapeurs-pompiers affichées près du dispositif d'alerte (ERP des quatre premières catégories)",
+    description:
+      "Dans un établissement recevant du public des quatre premières catégories, « les modalités d'appel des sapeurs-pompiers sont affichées de façon apparente, permanente et inaltérable près des dispositifs d'alerte ou à défaut à l'entrée principale de l'établissement » (MS 70 § 5, rédaction en vigueur depuis le 20 septembre 2023). Cet affichage ne remplace pas celui des coordonnées des services de secours d'urgence que le Code du travail fait afficher par tout employeur (D. 4711-1) : il se place près des dispositifs d'alerte ou, à défaut, à l'entrée principale de l'établissement. " +
+      GN_10_PHRASE,
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. MS 70 § 5 (modalités d'appel des sapeurs-pompiers affichées) — livre II, établissements des quatre premières catégories",
+        article: "MS 70 § 5 — modalités d'appel des sapeurs-pompiers affichées",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000048088146",
+        note: "« § 5. Les modalités d'appel des sapeurs-pompiers sont affichées de façon apparente, permanente et inaltérable près des dispositifs d'alerte ou à défaut à l'entrée principale de l'établissement. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000048088146, en vigueur depuis le 2023-09-20. Les § 1 à § 4 décrivent le dispositif d'alerte (dotation).",
+        versionConstatee: "2023-09-20",
+      },
+    ],
+    periodicite: "autre",
+    nature: "etat_permanent",
+    pieceAttendue: "modalités d'appel des sapeurs-pompiers affichées",
+    usageEcran: { groupe: "incendie_secours", sous: "alerter" },
+    realisateurs: ["exploitant"],
+    criticite: 3,
+    transmet: [],
+    typologies: { erp: { categories: [...CATEGORIES_LIVRE_2] } },
+    porteur: "etablissement",
+    notesInternes:
+      "TEMPORALITÉ : état permanent, sans rythme ; aucune norme ni arrêté d'application cité par MS 70 § 5.\n\n" +
+      "CRÉÉE LE 2026-10-17 (sous-lot C, ligne 2 du plan), décision de la propriétaire du même jour (constats, § 4).\n\n" +
+      "LIGNE PROPRE, PAS UNE RÉFÉRENCE DE PLUS À D. 4711-1 : la ligne du Code du travail vise tout employeur, un lieu indifférent et un objet plus large (service de santé au travail, inspection, secours). MS 70 § 5 vise un lieu précis — près du dispositif d'alerte — et un objet précis. Les rattacher aurait étendu le libellé de l'une au champ de l'autre.\n\n" +
+      "SANS RECOUVREMENT : en 5ᵉ, `incendie-erp-5-consignes-affichees` (PE 27 § 4) fait afficher le numéro d'appel des sapeurs-pompiers ; elle est bornée à N5.\n\n" +
+      NOTE_TITRE_1_COMMUNE,
+  },
+
+  {
+    id: "incendie-erp-personnel-qualifie-detection",
+    domaine: "incendie",
+    libelle:
+      "Personnel qualifié présent pendant l'ouverture au public, en présence d'une détection (repère : SSI de catégorie A ou B) — ERP 1 à 4",
+    description:
+      "Dans un établissement recevant du public des quatre premières catégories, « les installations de détection impliquent, pendant la présence du public, l'existence dans les établissements concernés d'un personnel permanent, qualifié, susceptible d'alerter les sapeurs-pompiers et de mettre en œuvre les moyens de lutte contre l'incendie » (MS 57 § 1). Le tableau de signalisation d'un équipement d'alarme de type 1 ou 2 est installé « à un emplacement non accessible au public et surveillé pendant les heures d'exploitation », et une temporisation de l'alarme générale n'est admise que si l'établissement dispose, pendant la présence du public, « d'un personnel qualifié pour exploiter immédiatement l'alarme restreinte » (MS 66 § 1 et § 5). Les signalisations de l'alimentation de sécurité sont reportées, à défaut de poste de sécurité, dans un emplacement « habituellement surveillé pendant la présence du public » (EL 17). Rojer sert cette ligne quand l'établissement a déclaré une alarme incendie et n'a pas répondu « non » à la question du système de sécurité incendie de catégorie A ou B. Les catégories de système (A à E) et les types d'équipement d'alarme (1, 2 a, 2 b, 3, 4) sont définis par des normes auxquelles le règlement renvoie (MS 53 § 2, MS 62 § 1) et que Rojer n'a pas lues. Selon ces normes, telles que Rojer les comprend sans les avoir lues, un système de catégorie B n'a pas toujours de détection automatique — la ligne lui est alors servie au-delà de MS 57 —, et une alarme de type 2 b peut relever d'une autre catégorie que A ou B — elle ne reçoit alors pas la ligne, bien que MS 66 la vise. " +
+      GN_10_PHRASE,
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. MS 57 § 1 (personnel permanent et qualifié pendant la présence du public, dès qu'une détection est installée) — livre II, établissements des quatre premières catégories",
+        article: "MS 57",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020317737",
+        note: "« § 1. Les installations de détection impliquent, pendant la présence du public, l'existence dans les établissements concernés d'un personnel permanent, qualifié, susceptible d'alerter les sapeurs-pompiers et de mettre en œuvre les moyens de lutte contre l'incendie. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000020317737, seule version, en vigueur depuis le 1980-08-15. Le § 2 (éliminer les fausses alarmes) est une obligation de résultat sans acte.",
+        versionConstatee: "1980-08-15",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. MS 66 § 1 et § 5 (tableau de signalisation surveillé ; temporisation admise avec un personnel qualifié présent) — livre II, établissements des quatre premières catégories",
+        article: "MS 66",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020317742",
+        note: "« § 1. Le tableau de signalisation de l'équipement d'alarme des types 1 et 2 doit être installé à un emplacement non accessible au public et surveillé pendant les heures d'exploitation de l'établissement. […] § 5. La temporisation ne doit être admise que lorsque l'établissement dispose, pendant la présence du public, d'un personnel qualifié pour exploiter immédiatement l'alarme restreinte. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable) : LEGIARTI000020317742, seule version, en vigueur depuis le 1980-08-15. Les § 2 à § 4 et § 6 sont des règles de conception de l'équipement.",
+        versionConstatee: "1980-08-15",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. EL 17 (signalisations reportées dans un emplacement surveillé pendant la présence du public) — livre II, établissements des quatre premières catégories",
+        article: "EL 17",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020314202",
+        note: "« Les signalisations suivantes doivent être reportées au poste de sécurité ou, à défaut, dans un local ou emplacement non accessible au public et habituellement surveillé pendant la présence du public : - coupure des dispositifs de charge prévus à l'article EL 8, § 3 ; - défauts d'isolement […] » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable) : LEGIARTI000020314202, seule version, en vigueur depuis le 1980-08-15. Le report est une règle d'installation ; la surveillance de l'emplacement est l'état permanent porté ici (ligne de partage 10).",
+        versionConstatee: "1980-08-15",
+      },
+    ],
+    periodicite: "autre",
+    nature: "etat_permanent",
+    pieceAttendue: null,
+    usageEcran: { groupe: "organisation", sous: null },
+    realisateurs: ["exploitant"],
+    criticite: 4,
+    transmet: [],
+    typologies: {
+      erp: { categories: [...CATEGORIES_LIVRE_2] },
+      ssiCategorieAouB: true,
+    },
+    siEquipementDeclare: ["ALARME_INCENDIE"],
+    porteur: "etablissement",
+    notesInternes:
+      "TEMPORALITÉ : état permanent, sans rythme (une présence pendant l'exploitation). MS 66 § 4 renvoie aux « normes en vigueur visant les systèmes de sécurité incendie » pour le niveau d'accès de la commande — une règle de conception, sans effet sur cette ligne ; aucune norme lue.\n\n" +
+      "CRÉÉE LE 2026-10-17 (sous-lot C, ligne 3 du plan ; décision Q5 de la propriétaire : servie aux SSI de catégorie A ou B, sur-application dite en description). Patron : `elec-erp-presence-personne-qualifiee` (EL 18 § 2), état permanent de présence (ligne de partage 10), `pieceAttendue: null` — le texte fait être présent, il ne demande aucune pièce.\n\n" +
+      "LIBELLÉ (contrôle visuel de c6, 2026-10-17) : ~~« Personnel qualifié présent pendant l'ouverture au public, avec un système de sécurité incendie de catégorie A ou B »~~ — le titre disait la condition de Rojer, la pastille (MS 57) le déclencheur du texte. Il dit désormais les deux : la détection, que le texte vise, et la catégorie du SSI, par laquelle Rojer la repère. L'empreinte bouge. [Relecture de c6, même jour : ~~« dès qu'une détection automatique est installée — repérée par un système de sécurité incendie de catégorie A ou B »~~ — environ 200 caractères, « repérée par » flou, « automatique » absent du texte (« installations de détection »). Libellé retenu : « … en présence d'une détection (repère : SSI de catégorie A ou B) — ERP 1 à 4 ».]\n\nTROIS ARTICLES, UN ÉTAT. MS 57 § 1 (détection), MS 66 § 1 et § 5 (tableau surveillé, temporisation) et EL 17 (emplacement surveillé) disent la même chose : quelqu'un de qualifié est là pendant l'exploitation pour exploiter l'alarme. Trois lignes auraient fait trois cases pour une seule présence (proposition du corpus pour MS 66 et EL 17, reprise ici).\n\n" +
+      "LA CONDITION, ET CE QU'ELLE MANQUE. Rojer ne connaît ni la détection ni le type d'alarme ; il connaît l'alarme déclarée (`siEquipementDeclare: ALARME_INCENDIE`) et la réponse à la question du SSI de catégorie A ou B (`ssiCategorieAouB`, règle du non-renseigné : le silence retient « à confirmer », un « non » retire). LES DEUX CLASSEMENTS VIENNENT DE NORMES NON LUES (revue indépendante du 2026-10-17) : MS 53 § 2 renvoie aux « normes en vigueur » pour les catégories A à E du SSI, MS 62 § 1 à « la norme relative aux équipements d'alarme » pour les types 1 à 4 (relus le 2026-10-17 par l'API, PISTE, bac à sable). Ce qui suit est la correspondance usuelle entre les deux, NON vérifiée sur la norme, et dite comme telle en description. (1) SUR-APPLICATION : un SSI de catégorie B n'aurait pas toujours de détection automatique ; MS 57 ne le vise pas, MS 66 si (alarme de type 2 a). Dite en description. (2) SOUS-APPLICATION : une alarme de type 2 b relèverait d'une catégorie de système autre que A ou B ; MS 66 la vise et la ligne ne la sert pas. Dite en description ; aucune question n'est ajoutée pour un cas que la majorité ne connaît pas (ligne de partage 5). (3) EL 17 vaut aussi sans SSI, dès qu'il y a une alimentation de sécurité à contrôleur d'isolement ; aucune catégorie ne la désigne.\n\n" +
+      "SANS RECOUVREMENT avec `incendie-erp-personnel-designe-moyens-secours` (personnel désigné et ENTRAÎNÉ, types M, N, O, W) : celle-ci porte la PRÉSENCE pendant l'exploitation, celle-là la désignation et l'entraînement.\n\n" +
+      NOTE_TITRE_1_COMMUNE,
+  },
+
+  {
+    id: "incendie-erp-ssi-contrat-entretien",
+    domaine: "incendie",
+    libelle:
+      "Contrat d'entretien du système de sécurité incendie de catégorie A ou B, annexé au registre de sécurité (ERP des quatre premières catégories)",
+    description:
+      "Dans un établissement recevant du public des quatre premières catégories, « les systèmes de sécurité incendie de catégories A et B doivent toujours faire l'objet d'un contrat d'entretien » ; le contrat précise la périodicité des interventions et prévoit la réparation rapide ou l'échange des éléments défaillants, et « la preuve de l'existence de ce contrat […] doit pouvoir être fournie et être transcrite sur le registre de sécurité » (MS 68). Toute installation de détection fait l'objet d'un contrat d'entretien avec un installateur qualifié, qui inclut les essais fonctionnels — définis, par renvoi de MS 56 § 4, au paragraphe 7.3 du fascicule du cahier des clauses techniques générales relatif aux installations de détection incendie, que Rojer n'a pas lu ; ce contrat et la notice descriptive des conditions d'entretien et de fonctionnement sont annexés au registre de sécurité (MS 58 § 3 et § 4). Le rythme des interventions est celui du contrat : le texte n'en fixe aucun. Rojer sert cette ligne quand l'établissement a déclaré une alarme incendie et n'a pas répondu « non » à la question du système de sécurité incendie de catégorie A ou B.",
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. MS 68 (contrat d'entretien des SSI de catégories A et B, preuve transcrite au registre de sécurité) — livre II, établissements des quatre premières catégories",
+        article: "MS 68",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020317749",
+        note: "« Toutefois, les systèmes de sécurité incendie de catégories A et B doivent toujours faire l'objet d'un contrat d'entretien. Dans tous les cas, le contrat passé avec les personnes physiques ou morales, ou les consignes données au technicien attaché à l'établissement, doivent préciser la périodicité des interventions et prévoir la réparation rapide ou l'échange des éléments défaillants. La preuve de l'existence de ce contrat ou des consignes écrites doit pouvoir être fournie et être transcrite sur le registre de sécurité. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000020317749, seule version, en vigueur depuis le 1980-08-15.",
+        versionConstatee: "1980-08-15",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. MS 58 § 3 et § 4 (contrat d'entretien de la détection, annexé au registre de sécurité avec la notice) — livre II, établissements des quatre premières catégories",
+        article: "MS 58 § 3 et § 4 — contrat d'entretien de la détection, annexé au registre",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020317731",
+        note: "« § 3. Toute installation de détection doit faire l'objet d'un contrat d'entretien avec un installateur qualifié. Ce contrat doit inclure les essais fonctionnels prévus à l'article MS 56, paragraphe 3, deuxième tiret. § 4. Ce contrat d'entretien ainsi que la notice descriptive des conditions d'entretien et de fonctionnement doivent être annexés au registre de sécurité. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable) : LEGIARTI000020317731, seule version, en vigueur depuis le 1980-08-15.",
+        versionConstatee: "1980-08-15",
+      },
+    ],
+    periodicite: "autre",
+    nature: "etat_permanent",
+    pieceAttendue: "contrat d'entretien du système de sécurité incendie, annexé au registre",
+    usageEcran: { groupe: "installations", sous: null },
+    realisateurs: ["exploitant"],
+    criticite: 4,
+    transmet: [],
+    typologies: {
+      erp: { categories: [...CATEGORIES_LIVRE_2] },
+      ssiCategorieAouB: true,
+    },
+    siEquipementDeclare: ["ALARME_INCENDIE"],
+    porteur: "etablissement",
+    notesInternes:
+      "TEMPORALITÉ : état permanent, sans rythme — MS 68 renvoie la périodicité des interventions au contrat lui-même, que Rojer ne lit pas ; pas de défaut annuel, l'acte imposé étant d'avoir un contrat. MS 58 § 3 renvoie aux essais fonctionnels de MS 56 § 3, que MS 56 § 4 définit au paragraphe 7.3 du fascicule du cahier des clauses techniques générales « installations de détection incendie » — un CONTENU du contrat, pas un rythme ; ce fascicule n'est pas lu, il est nommé en description et aucune référence `NORME` n'est posée. Aucune norme citée par MS 58 § 3-4 ni MS 68.\n\n" +
+      "CRÉÉE LE 2026-10-17 (sous-lot C, ligne 4 du plan) : MS 58 § 3-4 et MS 68 fondus. Patron : `incendie-erp-5-sommeil-contrat-entretien-sdi` (PE 4 § 1), sans son rythme — PE 4 § 1 écrit « contrat annuel », MS 58 et MS 68 n'écrivent aucune durée, et renvoient la périodicité des interventions au contrat lui-même (constats du 2026-10-17, § 3 : « aucun rythme »). Pas de défaut annuel : ce qui est imposé est d'AVOIR un contrat, pas de refaire un acte (notes-cadre, ligne de partage 9).\n\n" +
+      "LA CONDITION. La détection (MS 58) appartient au SSI de catégorie A ; MS 68 vise A et B. L'union est « SSI de catégorie A ou B » : `ssiCategorieAouB` (le silence retient « à confirmer »), sur une alarme déclarée. Un SSI de catégorie C, D ou E reste entretenu (MS 68, premier alinéa) par un technicien compétent ou l'installateur, contrat OU consignes écrites : Rojer ne le suit pas sur cette ligne, la vérification annuelle (`incendie-erp-ssi-annuelle`) restant servie.\n\n" +
+      "GN 10 N'EST PAS CITÉ : c'est de l'entretien, que GN 10 § 1 maintient pour l'établissement existant.\n\n" +
+      "TIERS : le réalisateur est l'exploitant (il tient le contrat) ; le domaine `incendie` appelle déjà un prestataire par ses vérifications (`appelleUnTiers`).\n\n" +
+      NOTE_TITRE_1_COMMUNE,
+  },
+
+  {
+    id: "incendie-erp-eclairage-securite-notice-registre",
+    domaine: "incendie",
+    libelle:
+      "Notice de maintenance de l'éclairage de sécurité annexée au registre de sécurité (ERP des quatre premières catégories)",
+    description:
+      "Dans un établissement recevant du public des quatre premières catégories, « une notice descriptive des conditions de maintenance et de fonctionnement est annexée au registre de sécurité. Elle comporte les caractéristiques des pièces de rechange » (EC 13, rédaction en vigueur depuis le 16 mai 2010). L'entretien des blocs autonomes « peut être réalisé dès qu'une anomalie est constatée », et ces opérations d'entretien sont consignées dans le registre de sécurité. Le même article fait disposer en permanence de lampes de rechange correspondant aux modèles utilisés : Rojer ne suit pas ce stock. Rojer sert cette ligne quand un bloc autonome d'éclairage de sécurité (BAES) est déclaré ; le texte vise aussi un éclairage de sécurité alimenté par une source centralisée, qui n'a pas de catégorie dans Rojer et ne fait pas naître la ligne.",
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. EC 13 (notice de maintenance annexée au registre de sécurité ; entretiens consignés) — livre II, établissements des quatre premières catégories",
+        article: "EC 13 — notice annexée au registre et entretiens consignés",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000021838317",
+        note: "« - une notice descriptive des conditions de maintenance et de fonctionnement est annexée au registre de sécurité. Elle comporte les caractéristiques des pièces de rechange. L'entretien des blocs autonomes peut être réalisé dès qu'une anomalie est constatée. […] Ces opérations d'entretien doivent être consignées dans le registre de sécurité. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000021838317, en vigueur depuis le 2010-05-16.",
+        versionConstatee: "2010-05-16",
+      },
+    ],
+    periodicite: "autre",
+    nature: "etat_permanent",
+    pieceAttendue: "notice de maintenance de l'éclairage de sécurité, annexée au registre",
+    usageEcran: { groupe: "installations", sous: null },
+    realisateurs: ["exploitant"],
+    criticite: 3,
+    transmet: [],
+    typologies: { erp: { categories: [...CATEGORIES_LIVRE_2] } },
+    siEquipementDeclare: ["BAES"],
+    porteur: "etablissement",
+    notesInternes:
+      "TEMPORALITÉ : état permanent, sans rythme ; l'entretien des blocs autonomes « peut être réalisé dès qu'une anomalie est constatée » — une faculté, ni rythme ni déclencheur imposé. EC 13 ne cite aucune norme ; les rythmes écrits de l'éclairage de sécurité (EC 14, EC 15) sont portés par leurs lignes.\n\n" +
+      "CRÉÉE LE 2026-10-17 (sous-lot C, ligne 5 du plan). Trois prescriptions dans EC 13 : (1) les lampes de rechange — un STOCK, même famille que la dernière phrase de MS 69, hors cadre (ADR-027), dit en description ; (2) la notice annexée — l'état permanent porté ici ; (3) la consignation des entretiens au registre — l'acte du registre que le produit tient, dit en description sans ligne propre ; l'entretien lui-même « peut être réalisé dès qu'une anomalie est constatée », une FACULTÉ ouverte par le texte, pas un fait ni un déclencheur imposé (revue indépendante du 2026-10-17).\n\n" +
+      "PORTEUR ÉTABLISSEMENT SUR `BAES` DÉCLARÉ : une notice vaut pour l'installation d'éclairage de sécurité, pas pour chaque bloc. `siEquipementDeclare` fait naître la ligne d'un BAES déclaré. SOUS-APPLICATION DITE : EC 13 vise l'éclairage de sécurité « alimenté par une source centralisée ou constitué de blocs autonomes » ; la source centralisée n'a pas de catégorie, et un établissement qui n'a qu'elle ne reçoit pas la ligne (dit en description).\n\n" +
+      "GN 10 N'EST PAS CITÉ : maintenance et entretien, que GN 10 § 1 maintient.\n\n" +
+      "SANS RECOUVREMENT : les essais et vérifications de l'éclairage de sécurité en ERP (`incendie-erp-eclairage-securite-essai-mensuel`, `-autonomie-semestrielle`, `incendie-erp-baes-annuelle`, EC 14 et EC 15) sont des échéances ; celle-ci est la pièce.\n\n" +
+      NOTE_TITRE_1_COMMUNE,
+  },
+
+  {
+    id: "incendie-erp-avis-controle-affiche",
+    domaine: "incendie",
+    libelle:
+      "Avis relatif au contrôle de la sécurité affiché près de l'entrée principale (ERP des quatre premières catégories)",
+    description:
+      "Dans un établissement recevant du public des quatre premières catégories, « il doit être affiché d'une façon apparente, près de l'entrée principale, un \" avis \" relatif au contrôle de la sécurité ». Cet avis, du modèle CERFA 20 3230, est rempli par l'exploitant et sous sa responsabilité à partir de l'autorisation d'ouverture — type, catégorie, effectif maximal du public autorisé, dates de la visite de réception et de l'autorisation d'ouverture —, puis visé par l'autorité qui a délivré cette autorisation (GE 5, rédaction en vigueur depuis le 1er juillet 2021).",
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. GE 5 (avis relatif au contrôle de la sécurité, affiché près de l'entrée principale) — livre II, établissements des quatre premières catégories",
+        article: "GE 5",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000046362358",
+        note: "« Dans tous les établissements assujettis aux dispositions du présent titre, il doit être affiché d'une façon apparente, près de l'entrée principale, un \" avis \" relatif au contrôle de la sécurité. Cet avis, du modèle ci-après, est dûment rempli par l'exploitant et sous sa responsabilité en fonction des renseignements figurant dans l'autorisation d'ouverture, puis visé par l'autorité ayant délivré cette autorisation (CERFA 20 3230). » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000046362358, en vigueur depuis le 2021-07-01.",
+        versionConstatee: "2021-07-01",
+      },
+    ],
+    periodicite: "autre",
+    nature: "etat_permanent",
+    pieceAttendue: "avis relatif au contrôle de la sécurité, affiché",
+    usageEcran: { groupe: "organisation", sous: null },
+    realisateurs: ["exploitant"],
+    criticite: 3,
+    transmet: [],
+    typologies: { erp: { categories: [...CATEGORIES_LIVRE_2] } },
+    porteur: "etablissement",
+    notesInternes:
+      "TEMPORALITÉ : état permanent, sans rythme ; GE 5 renvoie au modèle CERFA 20 3230 (contenu de l'avis), aucune norme.\n\n" +
+      "CRÉÉE LE 2026-10-17 (sous-lot C, ligne 7 du plan). Sa sœur de 5ᵉ catégorie avec locaux à sommeil est `incendie-erp-5-sommeil-avis-controle-affiche` (GE 5 par PE 37) : deux lignes, parce qu'une typologie ne dit pas « N1 à N4, OU N5 avec locaux à sommeil ».\n\n" +
+      "GN 10 N'EST PAS CITÉ : l'avis est une pièce de la procédure de contrôle (autorisation d'ouverture, visite de réception), et GN 10 § 1 maintient les « dispositions à caractère administratif » et les contrôles pour l'établissement existant (motif du corpus, seconde revue du 2026-10-17).\n\n" +
+      NOTE_TITRE_1_COMMUNE,
+  },
+
+  {
+    id: "incendie-erp-5-sommeil-avis-controle-affiche",
+    domaine: "incendie",
+    libelle:
+      "Avis relatif au contrôle de la sécurité affiché près de l'entrée principale (ERP 5ᵉ avec locaux à sommeil)",
+    description:
+      "Dans un établissement recevant du public de 5ᵉ catégorie qui comporte, pour le public, des locaux à sommeil, l'article GE 5 du règlement de sécurité est applicable (PE 37) : « il doit être affiché d'une façon apparente, près de l'entrée principale, un \" avis \" relatif au contrôle de la sécurité ». Cet avis, du modèle CERFA 20 3230, est rempli par l'exploitant à partir de l'autorisation d'ouverture — type, catégorie, effectif maximal du public autorisé, dates de la visite de réception et de l'autorisation d'ouverture —, puis visé par l'autorité qui a délivré cette autorisation.",
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. PE 37 (GE 5 applicable aux établissements de 5ᵉ catégorie comportant, pour le public, des locaux à sommeil)",
+        article: "PE 37",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024770572",
+        note: "« Le premier paragraphe et le premier alinéa du deuxième paragraphe de l'article GE 2 du règlement de sécurité, ainsi que ses articles GE 3, GE 5 et GE 6 sont applicables aux établissements comportant, pour le public, des locaux à sommeil. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000024770572, en vigueur depuis le 2004-11-24.",
+        versionConstatee: "2004-11-24",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. GE 5 (avis relatif au contrôle de la sécurité) — livre II, rendu applicable en 5ᵉ catégorie avec locaux à sommeil par PE 37",
+        article: "GE 5",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000046362358",
+        note: "« Dans tous les établissements assujettis aux dispositions du présent titre, il doit être affiché d'une façon apparente, près de l'entrée principale, un \" avis \" relatif au contrôle de la sécurité. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable) : LEGIARTI000046362358, en vigueur depuis le 2021-07-01.",
+        versionConstatee: "2021-07-01",
+      },
+    ],
+    periodicite: "autre",
+    nature: "etat_permanent",
+    pieceAttendue: "avis relatif au contrôle de la sécurité, affiché",
+    usageEcran: { groupe: "organisation", sous: null },
+    realisateurs: ["exploitant"],
+    criticite: 3,
+    transmet: [],
+    typologies: { erp: { categories: ["N5"] }, locauxSommeilPublic: true },
+    porteur: "etablissement",
+    notesInternes:
+      "TEMPORALITÉ : état permanent, sans rythme ; GE 5 renvoie au modèle CERFA 20 3230 (contenu de l'avis), aucune norme. Le rythme quinquennal de PE 37 est celui de la visite, porté par `incendie-erp-5-visite-commission`.\n\n" +
+      "CRÉÉE LE 2026-10-17 (sous-lot C, ligne 8 du plan). FONDÉE SUR PE 37, qui rend GE 5 applicable : le renvoi est EXPRÈS, l'exception que PE 1 § 1 réserve. Pas une sur-application du livre II en 5ᵉ, et la référence GE 5 le dit.\n\n" +
+      "PE 37 ÉCRIT « pour le public, des locaux à sommeil » : la condition est `locauxSommeilPublic`, comme `incendie-erp-5-visite-commission` qui se fonde sur le même article.\n\n" +
+      "GN 10 N'EST PAS CITÉ : pièce administrative de la procédure de contrôle.\n\n" +
+      "Sœur : `incendie-erp-avis-controle-affiche` (N1–N4). Sans recouvrement : les deux typologies sont disjointes par la catégorie.",
+  },
+
+  {
+    id: "incendie-erp-exploitant-present-public",
+    domaine: "incendie",
+    libelle:
+      "Exploitant ou son représentant présent dans l'établissement pendant la présence du public (ERP des quatre premières catégories)",
+    description:
+      "Dans un établissement recevant du public des quatre premières catégories, « pendant la présence du public, l'exploitant ou son représentant doit se trouver dans l'établissement » pour décider des éventuelles premières mesures de sécurité, ouvrir tous les locaux communs ou recevant du public aux membres de la commission de sécurité lors de ses visites, et assurer la mise à jour du registre de sécurité (MS 52 § 1, rédaction en vigueur depuis le 16 mai 2010). La commission de sécurité peut admettre, lorsque les conditions d'exploitation le justifient, que l'exploitant ou son représentant ne soit pas en permanence dans l'établissement, s'il est joignable en permanence et en mesure de le rejoindre dans les délais les plus courts, et si des consignes claires sont données au service de sécurité incendie présent sur le site (MS 52 § 2). " +
+      GN_10_PHRASE,
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. MS 52 (présence de l'exploitant ou de son représentant pendant la présence du public) — livre II, établissements des quatre premières catégories",
+        article: "MS 52",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000021838325",
+        note: "« § 1. Pendant la présence du public, l'exploitant ou son représentant doit se trouver dans l'établissement pour : -décider des éventuelles premières mesures de sécurité ; -assurer l'accès à tous les locaux communs ou recevant du public aux membres de la commission de sécurité lors des visites de sécurité […] ; -assurer la mise à jour du registre de sécurité […]. § 2. Lorsque les conditions d'exploitation le justifient, il peut être admis par la commission de sécurité compétente que l'exploitant ou son représentant ne soit pas en permanence dans l'établissement sous réserve : -d'être joignable en permanence et en mesure de rejoindre l'établissement dans les délais les plus courts ; -que des consignes claires soient données au service de sécurité incendie présent sur le site. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000021838325, en vigueur depuis le 2010-05-16.",
+        versionConstatee: "2010-05-16",
+      },
+    ],
+    periodicite: "autre",
+    nature: "etat_permanent",
+    pieceAttendue: null,
+    usageEcran: { groupe: "organisation", sous: null },
+    realisateurs: ["exploitant"],
+    criticite: 3,
+    transmet: [],
+    typologies: { erp: { categories: [...CATEGORIES_LIVRE_2] } },
+    porteur: "etablissement",
+    notesInternes:
+      "TEMPORALITÉ : état permanent, sans rythme (une présence pendant l'ouverture) ; aucune norme citée.\n\n" +
+      "CRÉÉE LE 2026-10-17 (sous-lot C, hors des neuf lignes du plan) : décision de c6 du même jour (Q1). MS 52 § 1 porte deux actes : la PRÉSENCE de l'exploitant ou de son représentant pendant la présence du public — un état permanent (ligne de partage 10, politique sœur EL 18 § 2), porté ici — et la mise à jour du registre, rattachée à `incendie-registre-securite`. Pas une niche : tout établissement des quatre premières catégories.\n\n" +
+      "LA DISPENSE DU § 2 n'a pas d'attribut : elle est décidée par la commission, au cas par cas. Elle est dite en description ; la ligne reste servie (règle du non-renseigné : un allègement conditionné à un fait non déclaré ne s'applique pas).\n\n" +
+      "`pieceAttendue: null` : le texte fait être présent, il ne demande aucune pièce. GN 10 cité (Q7) : organisation, ni administratif, ni contrôle, ni entretien.\n\n" +
+      NOTE_TITRE_1_COMMUNE,
   },
 
   {

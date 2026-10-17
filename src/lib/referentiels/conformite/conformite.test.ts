@@ -1934,6 +1934,20 @@ describe("référentiel conformité — version et empreinte", () => {
     // et `ecs-legionelles-analyse-annuelle`. 185 + 2 − 0 = 187 ; relevée en
     // appelant `empreinteReferentiel()`.
     { version: "2026-10-17.3", empreinte: "187-470daeccc33bc1ac" },
+    // 2026-10-17 — sous-lot C du plan « mise à jour du référentiel »
+    // (`lot/ref-c-incendie-n1-n4`, découpage validé par c6) : dix états
+    // permanents d'établissement du livre II, titre Ier — MS 41, MS 70 § 5,
+    // MS 57 (+ MS 66, EL 17), MS 58/MS 68, EC 13, CO 48 § 3 e), GE 5 (N1–N4
+    // et, par PE 37, N5 avec locaux à sommeil), GC 4 § 3, MS 52 § 1 ; les
+    // rattachements sont des références, hors empreinte. 187 + 10 − 0 = 197,
+    // 95 / 88 / 14 par `porteurDe` ; relevée en appelant
+    // `empreinteReferentiel()`. ~~2026-10-17.3~~ → .4 : F a
+    // mergé avant et pris .3 (consigne de c6).
+    // Libellé de MS 57 (contrôle visuel de c6) compris : la détection ET la
+    // catégorie du SSI.
+    // ~~197-4ec886cc5ae6a4b8~~ — relecture de c6, même jour : libellé de MS 57
+    // raccourci ; 197 + 0 − 0, relevée en appelant. Version pas encore servie.
+    { version: "2026-10-17.4", empreinte: "197-fd0724f829cbafbe" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -2117,7 +2131,9 @@ describe("référentiel conformité — version et empreinte", () => {
       // de la propriétaire) : 185 + 2 (`ecs-temperature-mensuelle`,
       // `ecs-legionelles-analyse-annuelle`) − 0 = 187, remesuré en appelant
       // `obligationsConformite`.
-    ).toBe(187);
+      // ~~187~~ — 2026-10-17, sous-lot C rebasé sur F : 187 + 10 − 0 = 197,
+      // remesuré en appelant `obligationsConformite`.
+    ).toBe(197);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {
@@ -3143,12 +3159,19 @@ describe("GN 10 dit sur tout état permanent fondé sur le livre III (2026-09-27
   const FONDE_SUR_LE_REGLEMENT = /^(PE \d|MS 39$|[MNOW] \d)/;
   const fondateur = (o: (typeof obligationsConformite)[number]) =>
     o.referencesLegales[0].article ?? o.referencesLegales[0].reference;
+  // 2026-10-17, sous-lot C (décision Q7 de c6) : PE 37 rend applicables en 5ᵉ
+  // avec locaux à sommeil des articles ADMINISTRATIFS et de contrôle du livre
+  // II (GE 2, GE 3, GE 5, GE 6), que GN 10 § 1 maintient pour l'établissement
+  // existant. Citer GN 10 sur l'avis de GE 5 dirait une sur-application qui
+  // n'existe pas. Une exception nommée, pas un préfixe.
+  const ADMINISTRATIF_PAR_RENVOI = new Set(["PE 37"]);
   it("un état permanent fondé sur un article PE ou sur MS 39 cite GN 10 entier dans sa description", () => {
     const muets = obligationsConformite
       .filter(
         (o) =>
           o.nature === "etat_permanent" &&
           FONDE_SUR_LE_REGLEMENT.test(fondateur(o)) &&
+          !ADMINISTRATIF_PAR_RENVOI.has(fondateur(o)) &&
           !(o.description ?? "").includes(DESCRIPTION_GN_10),
       )
       .map((o) => o.id);

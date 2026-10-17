@@ -127,6 +127,42 @@ export const obligationsCuissonHotte: Obligation[] = [
     notesInternes:
       "Corrigé à l'audit 2026-08 : la vérification annuelle est à l'article GC 22 (« Vérifications techniques »), GC 21 ne traitant que de l'entretien.\n\nRÉSERVE AFFICHÉE — 2026-09-26 (C39). Même traitement que `incendie-erp-extincteurs-annuelle` : sur-application en 5ᵉ MAINTENUE, comportement inchangé. Ce qui change est ce que l'exploitant lit : chaque `reference` au livre II porte « — livre II, établissements des quatre premières catégories », et la description dit ce que le livre III porte en 5ᵉ, relu sur Légifrance le 2026-09-26 — PE 1 § 1 (en vigueur depuis le 27/08/1990), PE 4 (en vigueur depuis le 01/07/2026), PE 15 § 1 (depuis le 01/03/2006), PE 20 § 2 (depuis le 22/05/2004) —, sans y ajouter de renvoi que ces articles ne font pas. Garde : `conformite.test.ts`, « toute référence au livre II servie à un ERP de 5ᵉ dit son champ ».\n\nPE 15 § 1 / PE 20 § 2 RELUS EN ENTIER LE 2026-09-27 (C41), avec le plan des chapitres V et X du livre II. Le renvoi porte sur la « mise en œuvre » des installations « autorisées dans les établissements de 4e catégorie », « dans ce cas » seulement. Au livre II, l'entretien et la vérification ne sont pas mêlés aux règles d'installation : ils forment une section à part, « Section 7 : Entretien et vérifications » (GC 21, GC 22) au chapitre X, « Section 9 : Entretien et vérification » (CH 57, CH 58) au chapitre V. Le texte ne définit pas « mise en œuvre » ; y lire l'entretien et la vérification reste une lecture, que le découpage ne soutient pas. Le rythme que le livre III impose en 5ᵉ sur ces objets est PE 4 § 2 — trois ans au plus, « appareils de cuisson, circuits d'extraction de l'air vicié, des buées et des graisses des grandes cuisines », « chauffage » —, porté par `incendie-erp-pe4-entretien-installations-techniques` (N5, porteur établissement) ; la description le dit désormais. Applicabilité INCHANGÉE : la sur-application assumée reste la politique des sœurs.",
   },
+  {
+    id: "cuisson-erp-consignes-arret-urgence",
+    domaine: "cuisson_hotte",
+    libelle:
+      "Consignes affichées près du dispositif d'arrêt d'urgence des appareils de cuisson (ERP des quatre premières catégories)",
+    description:
+      "Dans un établissement recevant du public des quatre premières catégories, les dispositifs d'arrêt d'urgence de l'alimentation en énergie des appareils de cuisson et de remise en température « doivent être facilement accessibles, être correctement identifiés et comporter des consignes précisant les modalités d'action en cas d'incident » ; après une coupure de l'alimentation en gaz, « des consignes précises concernant cette réutilisation doivent être affichées près du dispositif d'arrêt d'urgence » (GC 4 § 3, rédaction en vigueur depuis le 1er janvier 2026, arrêté du 1er septembre 2025). La manœuvre de l'arrêt d'urgence est vérifiée chaque année avec les appareils ; cette ligne porte les consignes affichées. GC 4 vaut pour une grande cuisine — un local ou un groupement de locaux dont la puissance utile totale des appareils de cuisson et de remise en température dépasse 20 kW —, un office de remise en température ou un îlot de cuisson (GC 1 § 3) ; des appareils de 20 kW ou moins installés ailleurs, ou une cuisine en module ou conteneur, n'en relèvent pas. Rojer ne connaît pas la puissance installée : il sert la ligne dès qu'un appareil de cuisson ERP est déclaré. Les dispositions générales du règlement de sécurité écrivent, à l'article GN 10 (rédaction en vigueur depuis le 23 janvier 2010, arrêté du 24 septembre 2009) : « § 1. A l'exception des dispositions à caractère administratif, de celles relatives aux contrôles et aux vérifications techniques ainsi qu'à l'entretien, le présent règlement ne s'applique pas aux établissements existants. § 2. Lorsque des travaux de remplacement d'installation, d'aménagement ou d'agrandissement sont entrepris dans ces établissements, les dispositions du présent règlement sont applicables aux seules parties de la construction ou des installations modifiées. Toutefois, si ces modifications ont pour effet d'accroître le risque de l'ensemble de l'établissement, notamment si une évacuation différée est rendue nécessaire, des mesures de sécurité complémentaires peuvent être imposées après avis de la commission de sécurité. »",
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. GC 4 § 3 (consignes au dispositif d'arrêt d'urgence ; consignes de réutilisation affichées) — livre II, établissements des quatre premières catégories",
+        article: "GC 4",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000052225081",
+        note: "« § 3. Les dispositifs d'arrêt d'urgence doivent être facilement accessibles, être correctement identifiés et comporter des consignes précisant les modalités d'action en cas d'incident. En cas de coupure de l'alimentation en gaz combustible des appareils, toutes précautions doivent être prises avant la réutilisation des brûleurs. Des consignes précises concernant cette réutilisation doivent être affichées près du dispositif d'arrêt d'urgence. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000052225081, en vigueur depuis le 2026-01-01 (arrêté du 1er septembre 2025, art. 45). Les § 1 et § 2 sont des règles d'installation.",
+        versionConstatee: "2026-01-01",
+      },
+    ],
+    periodicite: "autre",
+    nature: "etat_permanent",
+    pieceAttendue: "consignes affichées près de l'arrêt d'urgence",
+    usageEcran: { groupe: "incendie_secours", sous: "prevenir" },
+    realisateurs: ["exploitant"],
+    criticite: 3,
+    transmet: [],
+    typologies: { erp: { categories: ["N1", "N2", "N3", "N4"] } },
+    siEquipementDeclare: ["APPAREIL_CUISSON_ERP"],
+    porteur: "etablissement",
+    notesInternes:
+      "TEMPORALITÉ : état permanent, sans rythme ; GC 4 § 3 ne cite aucune norme (GZ 8 et GZ 10, au § 2, sont des règles d'installation).\n\n" +
+      "CRÉÉE LE 2026-10-17 (sous-lot C du plan « mise à jour du référentiel », ligne 9 ; découpage validé par c6 le même jour). GC 4 relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable). Affichage prescrit, donc état permanent (notes-cadre, ligne de partage 11, dont GC 4 § 3 est la politique sœur).\n\n" +
+      "PORTEUR ÉTABLISSEMENT SUR `APPAREIL_CUISSON_ERP` DÉCLARÉ : une cuisine a un arrêt d'urgence (un par îlot de cuisson), pas un par appareil ; une ligne par appareil ferait autant de cases pour un seul affichage.\n\n" +
+      "SANS RECOUVREMENT avec `cuisson-erp-appareils-annuelle` (GC 22, vérification annuelle des appareils et de leurs dispositifs de sécurité, arrêts d'urgence compris) : celle-là est une échéance, celle-ci l'affichage.\n\n" +
+      "SUR-APPLICATION DITE (revue indépendante du 2026-10-17) : GC 4 est à la section I du chapitre X, que GC 1 § 3 réserve à la grande cuisine (plus de 20 kW), à l'office de remise en température et à l'îlot de cuisson ; les appareils de 20 kW ou moins hors de ces locaux relèvent de la seule section VI, un module ou conteneur de la seule section V. La catégorie ne dit pas la puissance : description et réserve du corpus le disent, comme les lignes sœurs (`cuisson-erp-verification-initiale`, `cuisson-erp-appareils-annuelle`).\n\nBORNE N1–N4, et non `erp: true` comme les échéances du chapitre GC : une ligne NOUVELLE ne reprend pas la sur-application en 5ᵉ que les anciennes gardent (réserve PE 15 § 1, non tranchée) ; écrite en littéral, un fichier de données n'important pas de valeur.\n\n" +
+      "GN 10 cité (décision de c6 du 2026-10-17, Q7) : un affichage n'est ni administratif, ni un contrôle, ni de l'entretien. La phrase est recopiée en littéral (même forme que `signalisation.ts`) ; `conformite.test.ts` exige qu'elle soit entière.",
+  },
   // `cuisson-gaz-installations-triennale` a été RETIRÉ le 2026-08-27
   // (ADR-022), pour la même raison que `elec-erp-cat5-quinquennale` : son
   // article fondateur était PE 4 § 2, dont il ne projetait qu'un fragment —

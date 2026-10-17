@@ -30,6 +30,7 @@ import { indexArticlesParRef } from "@/lib/referentiels/corpus";
 import type { Obligation, ReferenceLegale } from "@/lib/referentiels/conformite/types";
 import type { CategorieErp, TypeErp } from "@/lib/referentiels/types-communs";
 import { typesErpOrdreProduit } from "@/lib/matching/types-erp";
+import { porteGn10 } from "@/lib/referentiels/conformite/texte-gn10";
 
 export type FondementLigne = {
   /** La `reference` du référentiel, telle qu'elle s'imprime ailleurs. */
@@ -47,6 +48,12 @@ export type FondementLigne = {
    * `O 18` pour un hôtel-restaurant. Absent quand il n'y en a aucun.
    */
   complement?: FondementLigne[];
+  /**
+   * La ligne cite GN 10 (`porteGn10`, 2026-10-17, contrôle visuel de c6) :
+   * la pastille dit alors, sous l'article, que le règlement ne s'applique
+   * pas aux établissements existants (`MENTION_GN_10`). Absent sinon.
+   */
+  gn10?: true;
 };
 
 /**
@@ -165,6 +172,14 @@ export function referenceNommeLArticle(
 }
 
 export function fondementDe(
+  obligation: Obligation,
+  contexte?: ContexteFondement,
+): FondementLigne | null {
+  const f = fondementSansGn10(obligation, contexte);
+  return f && porteGn10(obligation) ? { ...f, gn10: true } : f;
+}
+
+function fondementSansGn10(
   obligation: Obligation,
   contexte?: ContexteFondement,
 ): FondementLigne | null {
