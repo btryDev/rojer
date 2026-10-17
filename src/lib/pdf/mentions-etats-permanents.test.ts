@@ -29,6 +29,7 @@ const OBLIGATION: Obligation = {
   transmet: [],
   nature: "etat_permanent",
   pieceAttendue: null,
+  usageEcran: null,
   typologies: { erp: true },
   // Un état permanent de cette page est porté par l'établissement : il n'a
   // ni équipement déclencheur, ni salarié nommé.
@@ -60,7 +61,16 @@ function dossier(total: number, enPlace: number): EtatsPermanentsDuDossier {
     }),
   );
   return {
-    groupes: [{ domaine: "incendie", libelle: "Incendie / sécurité", lignes }],
+    familles: [
+      {
+        groupe: "incendie_secours",
+        libelle: "Incendie et secours",
+        enPlace,
+        total,
+        parLesTitres: { total: 0, enPlace: 0 },
+        blocs: [{ sous: "alerter", libelle: "Alerter", lignes, enPlace, total }],
+      },
+    ],
     faits: [],
     enPlace,
     total,
@@ -150,7 +160,7 @@ describe("ce que le dossier de conformité dit des états permanents", () => {
     );
 
     const avecPiece = dossier(3, 0);
-    avecPiece.groupes[0].lignes[0].pieceAttendue = "registre de sécurité";
+    avecPiece.familles[0].blocs[0].lignes[0].pieceAttendue = "registre de sécurité";
     const bloc = blocEtatsPermanents(avecPiece);
     expect(bloc.chapeau).toContain("Rojer ne le détient pas");
     expect(bloc.etats[0].ecritAttendu).toBe("registre de sécurité");
@@ -187,13 +197,13 @@ describe("ce que le dossier de conformité dit des états permanents", () => {
     // diraient deux choses de la même déclaration, et personne ne le verrait —
     // c'est la question posée à ce lot.
     const d = dossier(1, 1);
-    expect(d.groupes[0].lignes[0].declareLe).not.toBeNull();
+    expect(d.familles[0].blocs[0].lignes[0].declareLe).not.toBeNull();
     expect(blocEtatsPermanents(d).etats[0].declaration).toBe(
       "Déclaré en place le 12/08/2026",
     );
 
     const f = dossier(0, 0);
-    f.groupes = [];
+    f.familles = [];
     f.faits = [
       ligne({
         id: "fait-1",
@@ -226,7 +236,7 @@ describe("ce que le dossier de conformité dit des états permanents", () => {
     // et ce document part chez un inspecteur, un assureur ou un acquéreur.
     // Éprouvé en ajoutant `note: l.note` à la projection.
     const d = dossier(1, 1);
-    d.groupes[0].lignes[0].note = "à revoir avec le comptable, cf. sinistre 2024";
+    d.familles[0].blocs[0].lignes[0].note = "à revoir avec le comptable, cf. sinistre 2024";
     const bloc = blocEtatsPermanents(d);
     for (const l of [...bloc.etats, ...bloc.faits]) {
       expect(Object.keys(l).sort()).toEqual([
@@ -279,14 +289,100 @@ describe("la marque « à confirmer » passe au document (2026-09-27)", () => {
   // à un tiers affirmait la ligne. Éprouvé en retirant le champ de `ligne()`.
   it("recopie la phrase d'effectif et celles des questions muettes", () => {
     const d = dossier(1, 0);
-    d.groupes[0].lignes[0] = {
-      ...d.groupes[0].lignes[0],
+    d.familles[0].blocs[0].lignes[0] = {
+      ...d.familles[0].blocs[0].lignes[0],
       aConfirmer: "phrase d'effectif",
       questionsSansReponse: ["phrase de question"],
     };
     expect(blocEtatsPermanents(d).etats[0].aConfirmer).toEqual([
       "phrase d'effectif",
       "phrase de question",
+    ]);
+  });
+});
+
+describe("le document garde l'ordre par domaine (2026-10-17)", () => {
+  // L'écran range par usage, le PDF par domaine. Les deux lignes sont prises
+  // dans l'ordre INVERSE des deux lectures : la famille « Incendie et secours »
+  // passe avant « Vos installations », le domaine « Ascenseur » avant
+  // « Signalisation de sécurité » — et les libellés seuls donneraient l'ordre
+  // de l'écran. Éprouvé en retirant le tri de `blocEtatsPermanents` : les
+  // lignes sortent dans l'ordre des familles, et ce test tombe.
+  it("deux lignes de familles différentes sortent dans l'ordre de leur domaine", () => {
+    const balisage = ligne({ id: "balisage" });
+    balisage.obligation = {
+      ...balisage.obligation,
+      domaine: "signalisation",
+      libelle: "A — Balisage des cheminements",
+    };
+    const carnet = ligne({ id: "carnet" });
+    carnet.obligation = {
+      ...carnet.obligation,
+      domaine: "ascenseur",
+      libelle: "Z — Carnet d'entretien",
+    };
+    const d = dossier(0, 0);
+    d.total = 2;
+    d.familles = [
+      {
+        groupe: "incendie_secours",
+        libelle: "Incendie et secours",
+        enPlace: 0,
+        total: 1,
+        parLesTitres: { total: 0, enPlace: 0 },
+        blocs: [
+          { sous: "evacuer", libelle: "Évacuer", lignes: [balisage], enPlace: 0, total: 1 },
+        ],
+      },
+      {
+        groupe: "installations",
+        libelle: "Vos installations et leurs registres",
+        enPlace: 0,
+        total: 1,
+        parLesTitres: { total: 0, enPlace: 0 },
+        blocs: [{ sous: null, libelle: null, lignes: [carnet], enPlace: 0, total: 1 }],
+      },
+    ];
+    expect(blocEtatsPermanents(d).etats.map((l) => l.domaine)).toEqual([
+      "Ascenseur",
+      "Signalisation de sécurité",
+    ]);
+  });
+
+  it("à l'intérieur d'un domaine, deux lignes de familles différentes sortent dans l'ordre de `comparerLignes`", () => {
+    // Même domaine, deux familles, et l'ordre des familles INVERSE de celui
+    // des libellés : seul le second critère du tri les départage. Éprouvé en
+    // retirant `|| comparerLignes(a, b)` : le tri, stable, rend l'ordre des
+    // familles, et ce test tombe.
+    const zeta = ligne({ id: "zeta" });
+    zeta.obligation = { ...zeta.obligation, libelle: "Z — Consigne affichée" };
+    const alpha = ligne({ id: "alpha" });
+    alpha.obligation = { ...alpha.obligation, libelle: "A — Registre de sécurité" };
+    const d = dossier(0, 0);
+    d.total = 2;
+    d.familles = [
+      {
+        groupe: "incendie_secours",
+        libelle: "Incendie et secours",
+        enPlace: 0,
+        total: 1,
+        parLesTitres: { total: 0, enPlace: 0 },
+        blocs: [{ sous: "alerter", libelle: "Alerter", lignes: [zeta], enPlace: 0, total: 1 }],
+      },
+      {
+        groupe: "installations",
+        libelle: "Vos installations et leurs registres",
+        enPlace: 0,
+        total: 1,
+        parLesTitres: { total: 0, enPlace: 0 },
+        blocs: [{ sous: null, libelle: null, lignes: [alpha], enPlace: 0, total: 1 }],
+      },
+    ];
+    const etats = blocEtatsPermanents(d).etats;
+    expect(new Set(etats.map((l) => l.domaine)).size).toBe(1);
+    expect(etats.map((l) => l.libelle)).toEqual([
+      "A — Registre de sécurité",
+      "Z — Consigne affichée",
     ]);
   });
 });

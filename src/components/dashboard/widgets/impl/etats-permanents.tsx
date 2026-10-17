@@ -3,21 +3,30 @@
 // Widget « Ce qui doit être en place » — 2026-09-27, à la demande de la
 // propriétaire (« peut-être penser un widget »).
 //
-// Il liste les lignes de l'écran du même nom, dans son ordre, avec leur état
-// et l'article qui les fonde. Il ne compte rien et ne note rien : l'écran a
-// son compteur de déclarations, l'indice d'avancement a le sien, et un
-// troisième chiffre sur le même ensemble finirait par diverger des deux.
-// Les lignes viennent de `etats-permanents/widget.ts`, qui aplatit la lecture
-// de l'écran ; `etats-permanents.test.tsx` tient l'égalité. Elles sont
-// demandées par le widget monté (`lecture-widget.ts`), pas chargées à chaque
-// affichage du tableau de bord : le serveur ne sait pas si le widget y est.
+// ~~Il liste les lignes de l'écran du même nom, dans son ordre, avec leur état
+// et l'article qui les fonde. Il ne compte rien et ne note rien~~ (2026-10-17,
+// contrôle visuel de c6 : trente-quatre lignes, 3 811 px, et aucun compte — un
+// widget qui recopie l'écran n'en est pas le résumé). Il RÉSUME désormais :
+// le compte de l'en-tête de page — le même composant, `CompteurDeLaPage`, sur
+// la même lecture, `compteDeLaPage` —, puis chaque famille présente avec son
+// « x sur n » et un lien vers sa section. Aucune ligne individuelle.
+//
+// Le chiffre n'est pas un troisième compte : c'est celui de l'écran, et
+// `etats-permanents.test.tsx` rend les deux sur les mêmes dossiers pour le
+// tenir. Le résumé est demandé par le widget monté (`lecture-widget.ts`), pas
+// chargé à chaque affichage du tableau de bord : le serveur ne sait pas si le
+// widget y est.
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { CarteBoard, TitreBloc } from "./board";
-import { PastilleFondement } from "@/components/etats-permanents/PastilleFondement";
+import {
+  CLASSES_LIEN_FAMILLE,
+  CompteurDeLaPage,
+} from "@/components/etats-permanents/SectionsParUsage";
 import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
-import { lignesEtatsPermanentsPourWidget } from "@/lib/etats-permanents/lecture-widget";
-import type { LigneWidgetEtat } from "@/lib/etats-permanents/widget";
+import { resumeEtatsPermanentsPourWidget } from "@/lib/etats-permanents/lecture-widget";
+import type { ResumeWidgetEtats } from "@/lib/etats-permanents/widget";
 import type { DashboardBundle } from "../types";
 
 export function WidgetEtatsPermanents({
@@ -28,13 +37,13 @@ export function WidgetEtatsPermanents({
   const { etablissementId } = bundle;
   const href = `/etablissements/${etablissementId}/etats-permanents`;
   // `null` : pas encore lu. Une erreur de lecture laisse le lien vers l'écran,
-  // qui dit tout, plutôt qu'une liste vide qui se lirait « rien à faire ».
-  const [lignes, setLignes] = useState<LigneWidgetEtat[] | null>(null);
+  // qui dit tout, plutôt qu'un résumé vide qui se lirait « rien à faire ».
+  const [resume, setResume] = useState<ResumeWidgetEtats | null>(null);
   const [echec, setEchec] = useState(false);
   useEffect(() => {
     let vivant = true;
-    lignesEtatsPermanentsPourWidget(etablissementId).then(
-      (l) => vivant && setLignes(l),
+    resumeEtatsPermanentsPourWidget(etablissementId).then(
+      (r) => vivant && setResume(r),
       () => vivant && setEchec(true),
     );
     return () => {
@@ -52,44 +61,53 @@ export function WidgetEtatsPermanents({
 
       {echec ? (
         <p className="m-0 mt-[18px] text-[13px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-          La liste n&apos;a pas pu être lue. Elle est sur l&apos;écran complet.
+          Le résumé n&apos;a pas pu être lu. Tout est sur l&apos;écran complet.
         </p>
-      ) : lignes === null ? (
+      ) : resume === null ? (
         <p className="m-0 mt-[18px] text-[13px] leading-[1.5] text-[color:var(--board-slate-soft)]">
           …
         </p>
-      ) : lignes.length === 0 ? (
+      ) : resume.familles.length === 0 ? (
         // ~~« elles ont toutes une date, et figurent au calendrier »~~
         // (contre-lecture du 2026-09-27) : faux pour ce qui naît d'un
         // événement (« Quand ça arrive ») et pour ce que porte un salarié
-        // (Équipe). On dit ce qui est su : cet écran-ci n'a rien.
+        // (Équipe). On dit ce qui est su : cet écran-ci n'a rien — ou, s'il
+        // n'a que des lignes « fait le », aucun état.
         <p className="m-0 mt-[18px] text-[13px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-          Rien à déclarer sur cet écran pour ce dossier.
+          {resume.faits === 0
+            ? "Rien à déclarer sur cet écran pour ce dossier."
+            : "Aucun état à déclarer sur ce dossier."}
         </p>
       ) : (
-        <ul className="m-0 mt-[18px] list-none p-0">
-          {lignes.map((l) => (
-            <li
-              key={l.obligationId}
-              data-obligation={l.obligationId}
-              className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1.5 border-t border-[color:var(--board-slate-line)] py-3 first:border-t-0"
-            >
-              <div className="min-w-0 flex-1 basis-[16rem]">
-                <p className="m-0 text-[13px] leading-[1.45] text-[color:var(--board-ink)]">
-                  {l.libelle}
-                </p>
-                {l.fondement && (
-                  <div className="mt-1.5">
-                    <PastilleFondement fondement={l.fondement} />
-                  </div>
-                )}
-              </div>
-              <span className="shrink-0 text-right text-[12px] leading-[1.4] text-[color:var(--board-slate-mid)]">
-                {l.etat}
-              </span>
-            </li>
-          ))}
-        </ul>
+        <>
+          {/* Le compte de l'en-tête de page, tel quel : chiffre et phrase.
+              Aligné à droite comme sur l'écran, et comme les comptes des
+              familles en dessous. */}
+          <div className="mt-[18px] flex justify-end">
+            <CompteurDeLaPage
+              enPlace={resume.enPlace}
+              total={resume.total}
+              parLesTitres={resume.parLesTitres}
+            />
+          </div>
+          {/* Filets sur le `<li>`, jamais sur le lien (charte, interdit 25). */}
+          <ul className="m-0 mt-4 list-none p-0">
+            {resume.familles.map((f) => (
+              <li
+                key={f.groupe}
+                data-famille={f.groupe}
+                className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 border-t border-[color:var(--board-slate-line)] py-3 first:border-t-0"
+              >
+                <Link href={`${href}#${f.ancre}`} className={CLASSES_LIEN_FAMILLE}>
+                  {f.libelle}
+                </Link>
+                <span className="text-[12.5px] tabular-nums text-[color:var(--board-slate-mid)]">
+                  {f.enPlace} sur {f.total}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </CarteBoard>
   );

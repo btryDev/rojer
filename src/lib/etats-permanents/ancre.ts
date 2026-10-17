@@ -10,3 +10,10 @@
 export function ancreEtatPermanent(obligationId: string): string {
   return `etat-${obligationId}`;
 }
+
+// L'ancre d'une famille d'usage (2026-10-17) : la `section` la pose, le
+// sommaire en tête de l'écran la vise. Même raison qu'au-dessus — une seule
+// fonction, pour qu'aucun lien du sommaire ne pointe vers un id absent.
+export function ancreFamille(groupe: string): string {
+  return `usage-${groupe}`;
+}

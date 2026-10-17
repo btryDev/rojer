@@ -44,6 +44,7 @@ function fakeObligation(
     transmet: [],
     nature: "echeance_recurrente",
     pieceAttendue: null,
+    usageEcran: null,
     typologies: { travail: true },
     categoriesEquipement: [
       "INSTALLATION_ELECTRIQUE",
@@ -71,6 +72,7 @@ function fakeObligationSalarie(
     exclut: [],
     nature: "echeance_recurrente",
     pieceAttendue: null,
+    usageEcran: null,
     typologies: { travail: true },
     pieceMedicale: false,
     ...over,
@@ -96,6 +98,7 @@ function fakeObligationEtablissement(
     transmet: [],
     nature: "echeance_recurrente",
     pieceAttendue: null,
+    usageEcran: null,
     typologies: { erp: true },
     ...over,
     porteur: "etablissement",

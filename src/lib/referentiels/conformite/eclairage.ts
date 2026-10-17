@@ -59,6 +59,7 @@ export const obligationsEclairage: Obligation[] = [
     periodicite: "autre",
     nature: "etat_permanent",
     pieceAttendue: "document consignant les règles d'entretien de l'éclairage",
+    usageEcran: { groupe: "installations", sous: null },
     realisateurs: ["exploitant"],
     criticite: 2,
     typologies: { travail: true },

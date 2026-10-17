@@ -2,10 +2,18 @@ import { FilAriane } from "@/components/navigation/FilAriane";
 import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
-import { listerEtatsPermanents } from "@/lib/etats-permanents/queries";
+import {
+  listerEtatsPermanents,
+  type LigneEtatPermanent,
+} from "@/lib/etats-permanents/queries";
 import { LigneEtat } from "@/components/etats-permanents/LigneEtat";
 import {
-  phraseCompteur,
+  CompteurDeLaPage,
+  SectionsParUsage,
+  SommaireParUsage,
+} from "@/components/etats-permanents/SectionsParUsage";
+import { compteDeLaPage } from "@/lib/etats-permanents/widget";
+import {
   phraseFaitsDates,
   phraseRestantes,
 } from "@/lib/etats-permanents/phrases";
@@ -83,21 +91,61 @@ export default async function EtatsPermanentsPage({
   const { etablissement } = await requireEtablissement(id);
   const equipements = await listerEquipementsDeLEtablissement(id);
 
-  const { groupes, faits, enPlace, total, parLesTitres, faitsDates, faitsDatesRenseignes } =
-    await listerEtatsPermanents(
-      etablissement,
-      equipements.map((eq) => ({
-        id: eq.id,
-        libelle: eq.libelle,
-        categorie: eq.categorie,
-        caracteristiques: (eq.caracteristiques ?? null) as Record<
-          string,
-          unknown
-        > | null,
-      })),
-    );
+  const dossier = await listerEtatsPermanents(
+    etablissement,
+    equipements.map((eq) => ({
+      id: eq.id,
+      libelle: eq.libelle,
+      categorie: eq.categorie,
+      caracteristiques: (eq.caracteristiques ?? null) as Record<
+        string,
+        unknown
+      > | null,
+    })),
+  );
+  const { familles, faits, enPlace, total, parLesTitres, faitsDates, faitsDatesRenseignes } =
+    dossier;
 
   const restantes = total - enPlace;
+  // Une seule écriture de la ligne pour les deux sections : les états rangés
+  // par usage et « ce qui revient ». Elle était recopiée, et deux copies des
+  // mêmes props divergent à la première correction.
+  const rendreLigne = (l: LigneEtatPermanent) => (
+    <LigneEtat
+      key={l.obligation.id}
+      etablissementId={id}
+      obligationId={l.obligation.id}
+      libelle={l.obligation.libelle}
+      mode={l.mode}
+      pieceAttendue={l.pieceAttendue}
+      declareLe={l.declareLe ? l.declareLe.toISOString() : null}
+      parLesTitres={
+        l.parLesTitres
+          ? {
+              phrase: l.parLesTitres.phrase,
+              hrefEquipe: `/etablissements/${id}/equipe`,
+            }
+          : null
+      }
+      aConfirmer={
+        l.aConfirmer
+          ? {
+              phrase: l.aConfirmer,
+              entrepriseId: etablissement.entrepriseId,
+            }
+          : null
+      }
+      questionsSansReponse={
+        l.questionsSansReponse.length > 0
+          ? {
+              phrases: l.questionsSansReponse,
+              hrefFiche: `/etablissements/${id}/modifier`,
+            }
+          : null
+      }
+      fondement={l.fondement}
+    />
+  );
   // Les phrases qui s'accordent en nombre vivent dans `phrases.ts` et non dans
   // ce JSX. Une locution coupée par un ternaire s'y était cassée au rendu —
   // « Elles n'entrepas dans le compte » — et rien ne pouvait l'attraper tant
@@ -139,23 +187,22 @@ export default async function EtatsPermanentsPage({
             jusque dans les briefs eux-mêmes, trois fois sur cette page.
 
             « déclarés en place par vous », jamais « conformes » : le produit
-            assiste, il ne certifie pas (CLAUDE.md, règle 8).
+            assiste, il ne certifie pas (CLAUDE.md, règle 8). C'est ici, et
+            ici SEULEMENT, que l'écran dit qui affirme « en place » : les
+            familles et le sommaire ne portent que « x sur n » (2026-10-17,
+            revue de c6 ; ADR-027, amendement du 2026-10-17, § 10).
           */}
-          {total > 0 && (
-            <div className="shrink-0 text-right">
-              <p className="board-titre m-0 text-[20px] tabular-nums leading-none">
-                {enPlace} sur {total}
-              </p>
-              <p className="board-eyebrow m-0 mt-1.5 text-[9.5px] tracking-[0.12em] text-[color:var(--board-slate-soft)]">
-                {phraseCompteur(enPlace, total, parLesTitres.enPlace)}
-              </p>
-            </div>
-          )}
+          {/* `compteDeLaPage` : la même lecture que le widget du tableau de
+              bord, qui affiche ce compte au-dessus de ses familles. */}
+          <CompteurDeLaPage {...compteDeLaPage(dossier)} />
         </div>
       </header>
 
       <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
-        {groupes.length === 0 ? (
+        {/* Vide seulement quand il n'y a NI état NI fait : la page testait
+            les seuls états, et un dossier qui n'avait que des lignes « fait
+            le » se voyait dire « Rien à mettre en place » au-dessus d'elles. */}
+        {familles.length === 0 && faits.length === 0 ? (
           <section className="carte-board px-7 py-8 sm:px-8">
             <div className="flex max-w-[600px] flex-col gap-3">
               <h2 className="board-titre m-0 text-[22px]">
@@ -172,55 +219,8 @@ export default async function EtatsPermanentsPage({
           </section>
         ) : (
           <>
-            {groupes.map((g) => (
-              <section key={g.domaine} className="carte-board px-7 py-6 sm:px-8">
-                {/* Barème « sur-titre de section » (10.5 px / 0.18em,
-                    `docs/charte-board.md` § 3). La première rédaction employait
-                    le barème de LIGNE — 10 px / 0.16em — qui n'est pas le bon
-                    rôle : un nom de domaine coiffe une carte, pas une ligne. */}
-                <h2 className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-                  {g.libelle}
-                </h2>
-                <ul className="m-0 mt-3 list-none p-0">
-                  {g.lignes.map((l) => (
-                    <LigneEtat
-                      key={l.obligation.id}
-                      etablissementId={id}
-                      obligationId={l.obligation.id}
-                      libelle={l.obligation.libelle}
-                      mode={l.mode}
-                      pieceAttendue={l.pieceAttendue}
-                      declareLe={l.declareLe ? l.declareLe.toISOString() : null}
-                      parLesTitres={
-                        l.parLesTitres
-                          ? {
-                              phrase: l.parLesTitres.phrase,
-                              hrefEquipe: `/etablissements/${id}/equipe`,
-                            }
-                          : null
-                      }
-                      aConfirmer={
-                        l.aConfirmer
-                          ? {
-                              phrase: l.aConfirmer,
-                              entrepriseId: etablissement.entrepriseId,
-                            }
-                          : null
-                      }
-                      questionsSansReponse={
-                        l.questionsSansReponse.length > 0
-                          ? {
-                              phrases: l.questionsSansReponse,
-                              hrefFiche: `/etablissements/${id}/modifier`,
-                            }
-                          : null
-                      }
-                      fondement={l.fondement}
-                    />
-                  ))}
-                </ul>
-              </section>
-            ))}
+            <SommaireParUsage familles={familles} />
+            <SectionsParUsage familles={familles} rendreLigne={rendreLigne} />
 
             {/*
               LE SECOND VERBE A SA PROPRE SECTION, ET C'EST UNE CORRECTION.
@@ -247,24 +247,21 @@ export default async function EtatsPermanentsPage({
                     correction du 2026-08-31.
 
                     La première rédaction composait ce libellé EXACTEMENT comme
-                    un nom de domaine : mêmes petites capitales, même graisse,
-                    même gris, même place en tête de carte. Le regroupement était
-                    juste, sa forme disait « encore un domaine ». À l'œil qui
-                    parcourt, « CE QUI REVIENT » occupait la place où l'on attend
-                    « PREMIERS SECOURS ».
+                    un nom de domaine — les cartes étaient alors rangées par
+                    domaine juridique, coiffées d'un sur-titre : mêmes petites
+                    capitales, même gris, même place en tête de carte. Le
+                    regroupement était juste, sa forme disait « encore un
+                    domaine ».
 
-                    Le barème (§ 3) distingue les deux rôles : un domaine porte
-                    un SUR-TITRE, une section porte un TITRE. Ce n'est pas une
-                    décoration mais une place dans la hiérarchie — et elle tient
-                    quand la section portera cinq lignes au lieu d'une, ce que le
-                    contraste actuel ne ferait pas : aujourd'hui c'est le
-                    déséquilibre (trois lignes d'explication pour une
-                    d'obligation) qui accroche l'œil, et il disparaîtra tout
-                    seul.
+                    Depuis le rangement par usage (2026-10-17), chaque famille
+                    porte un titre de section au même barème, et cette section
+                    en est la sœur : même rang, même titre. Ce qui la
+                    distingue n'est plus le barème mais la place — après les
+                    familles, hors du sommaire — et l'explication juste
+                    dessous.
 
                     Interdit 11 respecté — jamais deux niveaux de titrage dans
-                    une carte : celle-ci porte un titre et aucun sur-titre, les
-                    cartes de domaine l'inverse. */}
+                    une carte : celle-ci porte un titre et aucun sur-titre. */}
                 <h2 className="board-titre m-0 text-[22px]">
                   Ce qui revient, sans rythme écrit
                 </h2>
@@ -274,42 +271,7 @@ export default async function EtatsPermanentsPage({
                   </p>
                 )}
                 <ul className="m-0 mt-3 list-none p-0">
-                  {faits.map((l) => (
-                    <LigneEtat
-                      key={l.obligation.id}
-                      etablissementId={id}
-                      obligationId={l.obligation.id}
-                      libelle={l.obligation.libelle}
-                      mode={l.mode}
-                      pieceAttendue={l.pieceAttendue}
-                      declareLe={l.declareLe ? l.declareLe.toISOString() : null}
-                      parLesTitres={
-                        l.parLesTitres
-                          ? {
-                              phrase: l.parLesTitres.phrase,
-                              hrefEquipe: `/etablissements/${id}/equipe`,
-                            }
-                          : null
-                      }
-                      aConfirmer={
-                        l.aConfirmer
-                          ? {
-                              phrase: l.aConfirmer,
-                              entrepriseId: etablissement.entrepriseId,
-                            }
-                          : null
-                      }
-                      questionsSansReponse={
-                        l.questionsSansReponse.length > 0
-                          ? {
-                              phrases: l.questionsSansReponse,
-                              hrefFiche: `/etablissements/${id}/modifier`,
-                            }
-                          : null
-                      }
-                      fondement={l.fondement}
-                    />
-                  ))}
+                  {faits.map(rendreLigne)}
                 </ul>
               </section>
             )}

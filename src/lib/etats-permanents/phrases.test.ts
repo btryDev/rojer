@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { basename, join } from "node:path";
-import { phraseCompteur, phraseFaitsDates, phraseRestantes } from "./phrases";
+import {
+  phraseCompteur,
+  phraseFaitsDates,
+  phraseRestantes,
+} from "./phrases";
 
 /**
  * La garde que le contrôle visuel du 2026-08-31 a rendue nécessaire.
@@ -25,6 +29,11 @@ function toutesLesPhrases(): { cas: string; texte: string }[] {
     if (r) out.push({ cas: `restantes(${n})`, texte: r });
     out.push({ cas: `compteur(0,${n})`, texte: phraseCompteur(0, n) });
     out.push({ cas: `compteur(${n},${n})`, texte: phraseCompteur(n, n) });
+    if (n > 0) {
+      out.push({ cas: `compteur(1,${n})`, texte: phraseCompteur(1, n) });
+      out.push({ cas: `compteur(${n},${n},1)`, texte: phraseCompteur(n, n, 1) });
+      out.push({ cas: `compteur(${n},${n},${n})`, texte: phraseCompteur(n, n, n) });
+    }
     for (let k = 0; k <= n; k++) {
       const f = phraseFaitsDates(n, k);
       if (f) out.push({ cas: `faits(${n},${k})`, texte: f });
@@ -116,6 +125,75 @@ describe("les phrases assemblées", () => {
     }
     expect(phraseCompteur(0, 12)).toContain("par vous");
     expect(phraseCompteur(12, 12)).toContain("par vous");
+  });
+
+  // ~~« le sommaire dit qui affirme, comme l'en-tête de famille »~~
+  // (2026-10-17, revue de c6) : `phraseSommaire` est retirée, et avec elle
+  // « 0 sur 8 déclaré par vous » que ce test assérait mot pour mot — un
+  // singulier fautif à 0, recopié dans l'attendu. La phrase n'est plus qu'à
+  // l'en-tête de page ; c'est `SectionsParUsage.test.tsx` qui la compte.
+  // ~~« pluriel à 0, singulier à 1, pluriel à n » — la règle de
+  // `phraseFaitsDates`~~ (2026-10-17, décision de c6 : zéro prend le
+  // singulier, « 0 sur 32 · déclaré en place par vous »).
+  it("l'en-tête s'accorde avec le nombre en place : singulier à 0 et à 1, pluriel au-delà (2026-10-17, c6)", () => {
+    expect(phraseCompteur(0, 10)).toBe("déclaré en place par vous");
+    expect(phraseCompteur(0, 1)).toBe("déclaré en place par vous");
+    expect(phraseCompteur(1, 10)).toBe("déclaré en place par vous");
+    expect(phraseCompteur(3, 10)).toBe("déclarés en place par vous");
+    // « tous » ne se dit pas d'une seule ligne.
+    expect(phraseCompteur(1, 1)).toBe("déclaré en place par vous");
+    expect(phraseCompteur(10, 10)).toBe("tous déclarés en place par vous");
+    // Avec la part des titres, chaque nombre accorde son participe.
+    expect(phraseCompteur(2, 10, 1)).toBe(
+      "1 déclaré en place par vous, 1 établi d'après les titres déclarés",
+    );
+    expect(phraseCompteur(5, 10, 2)).toBe(
+      "3 déclarés en place par vous, 2 établis d'après les titres déclarés",
+    );
+  });
+
+  it("sur tout l'espace des entrées, le participe est singulier si et seulement si son nombre vaut 0 ou 1", () => {
+    // Chaque source porte son nombre devant elle, sauf la forme sans titres,
+    // où c'est `enPlace` (`tous` à n sur n, n ≥ 2).
+    for (let total = 1; total <= 6; total++) {
+      for (let enPlace = 0; enPlace <= total; enPlace++) {
+        for (let p = 0; p <= enPlace; p++) {
+          const texte = phraseCompteur(enPlace, total, p);
+          const cas = `${enPlace},${total},${p}`;
+          const parVous = p > 0 ? enPlace - p : enPlace;
+          const mVous = texte.match(/déclarés? en place par vous/);
+          if (mVous) {
+            expect(mVous[0].startsWith("déclarés"), cas).toBe(parVous > 1);
+          }
+          const mTitres = texte.match(/établis? d'après les titres/);
+          if (mTitres) expect(mTitres[0].startsWith("établis"), cas).toBe(p > 1);
+        }
+      }
+    }
+  });
+
+  it("une seule forme pour chaque source, sur tout l'espace des entrées", () => {
+    // Les deux rédactions qui coexistaient — « déclaré par vous » et
+    // « déclarés en place par vous », « d'après les titres » et « établis
+    // d'après les titres déclarés » — ne reviennent pas par une branche.
+    for (let total = 1; total <= 6; total++) {
+      for (let enPlace = 0; enPlace <= total; enPlace++) {
+        for (let p = 0; p <= enPlace; p++) {
+          const texte = phraseCompteur(enPlace, total, p);
+          const cas = `${enPlace},${total},${p}`;
+          for (const m of texte.matchAll(/par vous/g)) {
+            const avant = texte.slice(0, m.index);
+            expect(avant, cas).toMatch(/déclarés? en place $/);
+          }
+          for (const m of texte.matchAll(/d'après les titres/g)) {
+            expect(texte.slice(m.index), cas).toMatch(/^d'après les titres déclarés/);
+            expect(texte.slice(0, m.index), cas).toMatch(/établis? $/);
+          }
+          // L'une des deux sources, toujours (corollaire de l'ADR-027).
+          expect(texte, cas).toMatch(/par vous|d'après les titres déclarés/);
+        }
+      }
+    }
   });
 
   it("le témoin : rien ne se rend vide, sur aucune branche", () => {
@@ -266,13 +344,15 @@ describe("l'accord des branches où un nombre s'insère", () => {
 
 describe("ce que l'employeur n'a pas déclaré ne se dit pas « par vous » (revue du 2026-10-16)", () => {
   it("compteur : la part établie d'après les titres est nommée à part", () => {
+    // ~~« tous en place : … » / « en place : … »~~ (2026-10-17) : le préfixe
+    // redisait « en place » devant « déclarés en place par vous ».
     expect(phraseCompteur(5, 5, 1)).toBe(
-      "tous en place : 4 déclarés par vous, 1 établi d'après les titres déclarés",
+      "4 déclarés en place par vous, 1 établi d'après les titres déclarés",
     );
     expect(phraseCompteur(3, 5, 1)).toBe(
-      "en place : 2 déclarés par vous, 1 établi d'après les titres déclarés",
+      "2 déclarés en place par vous, 1 établi d'après les titres déclarés",
     );
-    expect(phraseCompteur(1, 1, 1)).toBe("tous en place : 1 établi d'après les titres déclarés");
+    expect(phraseCompteur(1, 1, 1)).toBe("1 établi d'après les titres déclarés");
   });
 
   it("contre-épreuve : sans elle, le compteur d'avant", () => {

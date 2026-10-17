@@ -82,7 +82,10 @@ obligations événementielles n'ont nulle part où se montrer.
    les événementielles d'un salarié ou d'un appareil restent sur leur fiche.
 2. **Ce qu'une ligne dit.** Le fait, dans les mots du texte ; ce qui est dû ; le
    délai quand le texte en écrit un (« au plus tard huit jours ») ; l'article.
-   Groupées par domaine, comme « Ce qui doit être en place ».
+   ~~Groupées par domaine, comme « Ce qui doit être en place ».~~
+   **2026-10-17** — la comparaison a cessé d'être vraie : « Ce qui doit être
+   en place » se range par usage depuis l'amendement du 2026-10-17 de
+   l'ADR-027 (04172376, 6595b2b3). Cette page-ci reste groupée par domaine.
 3. **Ce qu'une ligne ne porte JAMAIS.** Ni date, ni état, ni case, ni compteur,
    ni retard. Elle n'entre ni dans le score, ni dans le tableau de bord, ni dans
    les sorties remises à un tiers comme un élément d'état. Une obligation

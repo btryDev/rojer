@@ -147,6 +147,7 @@ export const obligationsEquipementSousPression: Obligation[] = [
     periodicite: "decennale",
     nature: "echeance_recurrente",
     pieceAttendue: null,
+    usageEcran: null,
     realisateurs: ["organisme_agree"],
     criticite: 5,
     transmet: [],

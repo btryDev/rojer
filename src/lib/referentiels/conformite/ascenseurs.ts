@@ -75,6 +75,7 @@ export const obligationsAscenseurs: Obligation[] = [
     periodicite: "six_semaines",
     nature: "echeance_recurrente",
     pieceAttendue: null,
+    usageEcran: null,
     realisateurs: ["personne_qualifiee"],
     criticite: 5,
     transmet: [],
@@ -110,6 +111,7 @@ export const obligationsAscenseurs: Obligation[] = [
     periodicite: "autre",
     nature: "etat_permanent",
     pieceAttendue: "contrat d'entretien",
+    usageEcran: { groupe: "installations", sous: null },
     realisateurs: ["exploitant"],
     criticite: 4,
     transmet: [],
@@ -145,6 +147,7 @@ export const obligationsAscenseurs: Obligation[] = [
     periodicite: "semestrielle",
     nature: "echeance_recurrente",
     pieceAttendue: null,
+    usageEcran: null,
     realisateurs: ["personne_qualifiee"],
     criticite: 5,
     transmet: [],
@@ -180,6 +183,7 @@ export const obligationsAscenseurs: Obligation[] = [
     periodicite: "annuelle",
     nature: "echeance_recurrente",
     pieceAttendue: null,
+    usageEcran: null,
     realisateurs: ["personne_qualifiee"],
     criticite: 5,
     transmet: [],
@@ -222,6 +226,7 @@ export const obligationsAscenseurs: Obligation[] = [
     periodicite: "quinquennale",
     nature: "echeance_recurrente",
     pieceAttendue: null,
+    usageEcran: null,
     // `bureau_controle` porte le a) de R. 134-12 (contrôleur technique agréé),
     // `personne_qualifiee` ses c) et d) (personne morale à salariés certifiés,
     // personne physique certifiée). Inchangés le 2026-10-07 : le préventeur
@@ -276,6 +281,7 @@ export const obligationsAscenseurs: Obligation[] = [
     periodicite: "quinquennale",
     nature: "echeance_recurrente",
     pieceAttendue: null,
+    usageEcran: null,
     realisateurs: ["organisme_agree"],
     criticite: 5,
     transmet: [],
@@ -329,6 +335,7 @@ export const obligationsAscenseurs: Obligation[] = [
     periodicite: "autre",
     nature: "evenementielle",
     pieceAttendue: null,
+    usageEcran: null,
     // Pas de `faitGenerateur` (facultatif hors établissement) : la seule
     // proposition complète d'AS 9 qui porte le fait commence à « dans les
     // conditions prévues » et contient « tous les cinq ans » — un extrait
@@ -376,6 +383,7 @@ export const obligationsAscenseurs: Obligation[] = [
     periodicite: "autre",
     nature: "etat_permanent",
     pieceAttendue: "carnet d'entretien",
+    usageEcran: { groupe: "installations", sous: null },
     realisateurs: ["exploitant"],
     criticite: 3,
     transmet: [],
@@ -415,6 +423,7 @@ export const obligationsAscenseurs: Obligation[] = [
     periodicite: "annuelle",
     nature: "echeance_recurrente",
     pieceAttendue: "rapport annuel d'activité",
+    usageEcran: null,
     // `personne_qualifiee` — c'est la valeur que porte déjà tout ce que
     // l'entreprise d'entretien fait sur cet appareil (`ascenseur-visite-six-
     // semaines`, `-examen-semestriel-secours`, `-examen-annuel-securite`).
@@ -459,6 +468,7 @@ export const obligationsAscenseurs: Obligation[] = [
     periodicite: "autre",
     nature: "etat_permanent",
     pieceAttendue: null,
+    usageEcran: { groupe: "installations", sous: null },
     realisateurs: ["exploitant"],
     criticite: 5,
     transmet: [],

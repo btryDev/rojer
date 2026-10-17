@@ -291,3 +291,234 @@ reformule, soit c'est le score qui redevient muet.
 parlant. Le motif est écrit dans la décision elle-même. Le lot documentaire a
 eu raison de ne pas trancher seul un point de score — et raison de l'écrire
 plutôt que de le laisser se découvrir plus tard.
+
+---
+
+# Amendement du 2026-10-17 — l'écran se range par usage, le référentiel reste par domaine
+
+Cet amendement ne touche à aucune des six décisions ci-dessus. Il ferme une
+question que l'ADR n'avait pas posée : **dans quel ordre l'écran présente ses
+lignes**. Il les rangeait par domaine juridique sans que rien l'ait décidé —
+c'était l'ordre du référentiel, repris tel quel.
+
+## Le constat qui l'appelle
+
+Mesure du 2026-10-14 sur `origin/main` 517309db, quatre profils (restaurant
+5ᵉ catégorie, magasin 3ᵉ, bureau, hôtel 5ᵉ) : **entre 29 et 33 lignes par
+dossier, rangées en 12 ou 13 cartes**, une par domaine, triées par ordre
+alphabétique. **Quatre cartes ne portaient qu'une ligne**, et les affichages
+étaient éparpillés sur trois cartes. La propriétaire parle d'une « liste de
+courses » : l'ordre de l'index d'un code, pas celui dans lequel un dirigeant
+se demande ce qu'il doit avoir.
+
+Le domaine est la bonne clé pour qui lit par texte. Ce n'est pas celle de qui
+passe ses lignes en revue : l'extincteur, sa signalisation et l'instruction du
+personnel qui doit s'en servir répondent à la même situation et vivaient dans
+trois domaines.
+
+## La décision
+
+**L'écran range ses lignes par usage. Le référentiel reste par domaine, et
+chaque ligne garde son article.**
+
+### 7. Quatre familles, et la règle qui tranche une frontière
+
+Ordre fixe (`etats-permanents/familles.ts`, `ORDRE_GROUPES`) :
+
+1. **Incendie et secours**, en cinq sous-catégories qui suivent le déroulé
+   d'un sinistre : *Prévenir*, *Alerter*, *Éteindre*, *Évacuer*, *Secourir* ;
+2. **Le quotidien de vos salariés**, en deux : *Conditions de travail*,
+   *Informer et former* ;
+3. **Qui s'occupe de quoi**, sans sous-catégorie ;
+4. **Vos installations et leurs registres**, sans sous-catégorie.
+
+Sept sous-catégories en tout. Une famille ou une sous-catégorie vide pour ce
+dossier ne s'affiche pas, et le sommaire ne lui fait pas d'ancre (charte,
+interdit 19).
+
+**Règle de frontière : une ligne se range dans la situation où l'on en a
+besoin en premier.** Une consigne incendie affichée sert d'abord à alerter,
+pas à informer ; le registre de sécurité sert d'abord aux installations qu'il
+consigne. Quand deux familles paraissent convenir, c'est cette question qui
+tranche, et non le domaine du texte.
+
+À l'écran, au commit 6595b2b3 : ~~**58 obligations** rangées (relevé de l'agent
+structure)~~. Le mouvement : 51 dans la table du plan, mesurée en appelant le
+moteur sur 517309db, + 7 états permanents entrés avec les lots « catégories 1
+à 4 » et défibrillateur, rangés par 6595b2b3 = 58. Ce chiffre est le nombre
+d'obligations de l'écran au référentiel, pas le nombre de lignes d'un
+dossier, qui reste celui que le moteur lui rend.
+
+[2026-10-17, revue indépendante] **57 obligations à l'écran** : 58 − 1 = 57,
+remesuré en appelant `obligationsConformite.filter(figureSurLEcranEnPlace)`
+sur `lot/etats-permanents-usage`. La sortante est
+`incendie-travail-chiffons-impregnes-recipients-clos`, **au niveau audit**
+(ADR-042) : la porte du moteur ne la rend jamais, l'écran ne l'a donc jamais
+affichée. `figureSurLEcranEnPlace` ne lisait pas le niveau audit, et le
+relevé des 58 la comptait. Elle le lit désormais (`modeSurLEcranEnPlace`,
+`regle.ts`), et la ligne porte `usageEcran: null`.
+
+Trois lignes changent de famille le même jour, par la règle de frontière :
+`elec-travail-carnet-prescriptions` (remis au travailleur, `R. 4544-10`) et
+`stockage-dangereux-fiches-donnees` (accès des travailleurs aux fiches,
+`R. 4412-38` 2°) passent à *Informer et former* ;
+`signalisation-stockage-substances-dangereuses` (signalisation d'un risque au
+poste, comme `signalisation-etablissement-risques-residuels`) passe à
+*Conditions de travail*.
+
+[2026-10-17, revue de c6] Une quatrième, par la même règle :
+`information-etablissement-affichages-obligatoires` (`D. 4711-1`, coordonnées
+du médecin du travail, des secours et de l'inspection) quitte *Alerter* pour
+*Informer et former* — l'affichage informe les travailleurs avant de servir à
+alerter. Le compte de l'écran ne bouge pas : 57 + 0 − 0 = 57.
+
+### 8. Une donnée d'écran vit dans le référentiel, et c'est voulu
+
+Le rangement est **un champ requis de chaque obligation**,
+`usageEcran: { groupe, sous } | null` (`referentiels/conformite/types.ts`),
+et non une table d'identifiants tenue à côté de l'écran. Décision de la
+propriétaire du 2026-10-17.
+
+Mettre une donnée de présentation dans le référentiel n'est pas élégant, et
+c'est le prix assumé. **Une table tenue à part ne voit pas un ajout au
+référentiel** : la nouvelle obligation y manque, et il faut alors soit la
+cacher — ce qui fausse le compteur —, soit la verser dans un groupe
+« Autres » — ce qui recrée la liste de courses par le bas. Le champ requis
+fait l'inverse : **la compilation oblige chaque ajout à se prononcer**, `null`
+compris. C'est le précédent de `pieceMedicale` : optionnel, le champ se serait
+tu, et l'oubli aurait été la faute naturelle.
+
+Le type admet `null` et ne sait donc pas dire qu'une ligne de l'écran *doit*
+être rangée. `familles.test.ts` tient le reste, sur ce que `regle.ts` dit de
+chaque obligation et sans liste recopiée :
+
+- `usageEcran` est non nul **si et seulement si** `figureSurLEcranEnPlace`
+  (qui écarte le niveau audit depuis le 2026-10-17, comme la porte du
+  moteur) ;
+- la sous-catégorie appartient à sa famille (`ORDRE_SOUS_CATEGORIES`) ;
+- [2026-10-17] une prescription ne peut pas faire ENTRER une ligne à
+  l'écran : aucun rythme sans échéance n'est « plus strict »
+  (`estPeriodicitePlusStricte`), et `prescriptionRenforce` refuse `autre`.
+  Sans cet invariant, le relevé — qui lit le référentiel sans prescription —
+  ne verrait pas une ligne entrée par un seul dossier.
+
+~~Il n'y a **pas de groupe « Autres »**. Une ligne de l'écran sans rangement
+fait échouer ce test, et `etatsPermanentsDuDossier` lève plutôt que de la
+cacher ou de la ranger au hasard (`queries.ts`).~~ [2026-10-17, revue
+indépendante : lever faisait tomber le score du tableau de bord
+(`compterEtatsPermanents`), le PDF et le widget, qui passent tous par
+`listerEtatsPermanents`, et `build` ne lance pas les tests.] Une ligne de
+l'écran sans rangement fait toujours échouer `familles.test.ts` : c'est le
+garde-fou. À l'écran, elle tombe dans un **repli d'affichage**, « Autres
+obligations », en dernier, sans sous-catégorie, comptée comme les autres
+(`familles.ts`, `queries.ts`). `autres` n'est pas un `GroupeUsage` : le
+référentiel ne peut pas le choisir, et le repli ne recrée donc pas la liste
+de courses — il ne recueille que l'oubli, visible au lieu de bloquant.
+
+**Le champ n'entre pas dans `empreinteReferentiel()`**, comme `faitGenerateur`
+(ADR-037) : il ne change ni le nombre de lignes de calendrier ni leurs dates,
+seulement l'endroit de l'écran où elles se lisent. Changer une ligne de
+famille ne déclenche aucune réconciliation.
+
+### 9. Le document remis à un tiers garde l'ordre par domaine
+
+Le PDF du dossier de conformité (décisions 4 à 6) **ne lit rien de
+`familles.ts`**. `pdf/mentions-etats-permanents.ts` aplatit les familles puis
+refait explicitement l'ordre par domaine — les domaines par libellé, puis dans
+chacun `comparerLignes` (`ordre.ts`).
+
+Le motif tient au lecteur, qui a changé (décision 5) : un contrôleur lit par
+texte. L'usage aide celui qui met en place ; il égarerait celui qui cherche
+l'article qu'il vient vérifier.
+
+### 10. ~~Le compteur d'une famille dit la même chose que celui de l'en-tête~~ Une phrase dit qui affirme, une fois, à l'en-tête de page
+
+Chaque famille porte son compteur, calculé comme celui de l'en-tête : il ne
+compte que les lignes en mode « état », et la somme des familles est le total
+(`queries.ts`). ~~Sa phrase est **celle de l'en-tête, `phraseCompteur`**
+(`etats-permanents/phrases.ts`) : « déclarés en place par vous », et, depuis
+le lot #45, la part « établie d'après les titres déclarés » dite à part.~~
+[2026-10-17, revue de c6 : barré, voir ci-dessous.]
+
+**Jamais « conformes », jamais un pourcentage.** Un compteur par famille est
+une affirmation de plus à l'écran ; il ne peut pas en porter une autre que
+celle que le corollaire de la décision 2 autorise. Une phrase propre aux
+familles aurait été une seconde rédaction de la même chose, et ce dépôt sait
+qu'elles divergent à la première correction.
+
+~~[2026-10-17, revue indépendante] Le **sommaire** rendait, lui, un compteur
+nu — « 3 sur 8 » —, qui ne disait pas qui affirme. Il porte désormais
+`phraseSommaire` (`phrases.ts`) : plus courte que `phraseCompteur`, faute de
+place, mais avec les deux mêmes sources et les mêmes mots — « déclarés par
+vous », « d'après les titres » —, testée à côté d'elle (`phrases.test.ts`).
+C'est la seconde rédaction que le paragraphe précédent redoute ; elle est
+admise parce que la première ne tient pas dans un sommaire, et le test qui
+exige l'une des deux sources sur chaque branche est ce qui l'empêche de
+diverger sur le fond.~~ [2026-10-17, revue de c6 : barré, `phraseSommaire`
+retirée.]
+
+[2026-10-17, revue de c6] **La phrase qui dit qui affirme ne se lit qu'une
+fois, à l'en-tête de PAGE** (`CompteurDeLaPage`, `phraseCompteur`). Sur une
+TPE de 5ᵉ catégorie à dossier vide, l'écran la disait trois fois et en trois
+rédactions : « 0 sur 10 déclaré par vous » au sommaire — singulier fautif —,
+« 0 sur 10 · déclarés en place par vous » sous la famille, la même à l'en-tête ;
+« d'après les titres » ici, « établis d'après les titres déclarés » là. La
+seconde rédaction que le paragraphe précédent redoutait avait divergé dès le
+jour de son écriture. Désormais :
+
+- **les familles et le sommaire n'affichent que « X sur Y »** (chiffres
+  tabulaires) : l'en-tête de page, au-dessus, dit pour tous d'où vient « en
+  place » ;
+- **une seule forme par source** : « déclaré(s) en place par vous » et
+  « établi(s) d'après les titres déclarés » ;
+- ~~**l'accord suit le nombre en place, singulier à 1 seulement** — 0 est
+  pluriel, la règle déjà retenue par `phraseFaitsDates`~~ [2026-10-17,
+  décision de c6 au contrôle visuel : **zéro prend le singulier** —
+  « 0 sur 32 · déclaré en place par vous ». Singulier à 0 et à 1, pluriel
+  au-delà, pour « déclaré(s) en place par vous » comme pour « établi(s)
+  d'après les titres déclarés ». `phraseFaitsDates` n'est pas touchée : elle
+  ne fait jamais précéder un verbe du nombre 0 (« Aucune ne porte encore de
+  date »), la « règle » invoquée ici ne s'y lisait pas] ; « tous » ne se dit
+  pas d'une seule ligne ;
+- le préfixe « en place : » / « tous en place : » de la variante avec titres
+  est retiré : il redisait « en place » devant « déclarés en place par vous ».
+
+`SectionsParUsage.test.tsx` rend l'en-tête, le sommaire et les familles
+ensemble et compte la phrase : une fois. `phrases.test.ts` balaie les accords
+à 0, 1 et n (singulier à 0 et à 1 depuis le 2026-10-17). Le PDF garde sa propre phrase, « par l'employeur », adressée à
+un tiers : il n'est pas touché.
+
+### 11. Rien ne se replie, ni à la main ni tout seul
+
+Aucune famille ne se replie quand ses lignes sont déclarées, et aucune ne se
+replie à la demande. C'est l'argument de `ordre.ts`, qui vaut ici tel quel :
+**rien ne bouge sous le curseur**. Une famille qui se referme au moment où
+l'on déclare sa dernière ligne déplace tout ce qui suit, et deux clics au même
+pixel déclarent deux obligations différentes — le défaut du contrôle visuel du
+2026-09-03. L'ordre des familles, des sous-catégories et des lignes ne lit pas
+la déclaration ; ce qu'il reste se lit aux compteurs.
+
+## Les lectures écartées
+
+- **Par geste** — la première proposition, en six familles. Écartée au profit
+  des quatre groupes ci-dessus.
+- **Par lieu** (cuisine, accueil, local technique…). Le moteur ne sait pas où
+  s'applique une obligation d'établissement : elle porte sur l'établissement
+  entier. Ranger par lieu aurait demandé d'inventer une localisation que ni le
+  texte ni le dossier ne donnent.
+- **Par moment** (à l'ouverture, chaque jour, à l'embauche…). Elle contredit
+  l'objet de l'écran : un état est **en place**, il n'a pas de moment. Et elle
+  se confond avec « Quand ça arrive » (ADR-037), dont l'objet est justement
+  le moment — le fait qui rend une obligation due — et qui distingue par là
+  l'événementiel de l'état.
+
+## Ce que l'amendement ne change pas
+
+- **Une déclaration n'est pas une preuve.** Ranger autrement ne change ni ce
+  que la case affirme, ni la façon dont elle se nomme, à l'écran comme au
+  document.
+- **Une surface, jamais deux.** La sélection des lignes reste
+  `estSansRendezVous` sur la périodicité effective ; `usageEcran` décide
+  *où* une ligne de l'écran se lit, jamais *si* elle y est.
+- **Aucune relance.** Ni badge, ni famille signalée « à revoir », ni ordre qui
+  fait remonter ce qui n'est pas déclaré.

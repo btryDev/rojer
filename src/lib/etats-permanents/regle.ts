@@ -65,6 +65,7 @@ import type { ObligationApplicable } from "@/lib/matching";
 import type { Obligation } from "../referentiels/conformite";
 import type { Periodicite } from "../referentiels/types-communs";
 import { periodiciteEffective } from "../referentiels/conformite/rythme-retenu";
+import { estNiveauAudit } from "../referentiels/conformite/niveau-audit";
 
 /**
  * Le générateur produit-il une ligne de calendrier pour cette périodicité ?
@@ -209,7 +210,8 @@ export function modeDeclaration(
  * pas — une événementielle (« après modification »), une ponctuelle (la
  * déclaration ICPE), et tous les titres de salarié, que le moteur ne rend pas
  * à l'écran (ADR-023, `listerEtatsPermanents`). Même règle que l'écran : un
- * mode de déclaration, et un porteur qui n'est pas un salarié. Sans surcharge :
+ * mode de déclaration, un porteur qui n'est pas un salarié, et — depuis le
+ * 2026-10-17 — une obligation qui n'est pas au niveau audit. Sans surcharge :
  * un lien n'est posé que sur une ligne sans rendez-vous, donc sans surcharge
  * en vigueur.
  */
@@ -222,11 +224,23 @@ export function figureSurLEcranEnPlace(o: Obligation): boolean {
  * PAR LE CODE DE L'ÉCRAN (`modeDeclarationApplique`), et non par une copie de
  * sa règle (relecture d'intégration, 2026-09-15). Le salarié est écarté en
  * amont, comme à l'écran : le moteur ne le rend pas.
+ *
+ * Le niveau audit aussi (2026-10-17, revue indépendante) : la porte du moteur
+ * (`evaluerObligation`, ADR-042) ne le rend jamais applicable, donc l'écran
+ * ne le liste jamais. Cette fonction contourne le moteur — elle fabrique
+ * l'applicable —, et elle disait « oui » aux chiffons imprégnés, que l'écran
+ * n'affiche pas : un lien vers une ligne absente, et un relevé de
+ * `familles.test.ts` qui leur faisait porter un rangement. Elle lit la même
+ * `estNiveauAudit` que la porte, sans en recopier la comparaison. Tous ses
+ * appelants le veulent : les liens de la fiche équipement et de la fiche de
+ * vérification, et `surfacesDe`, qui écarte le niveau audit avant de
+ * l'appeler.
  */
 export function modeSurLEcranEnPlace(
   o: Obligation,
 ): ModeDeclaration["mode"] | null {
   if (o.porteur === "salarie") return null;
+  if (estNiveauAudit(o)) return null;
   return (
     modeDeclarationApplique({
       obligation: o,

@@ -111,6 +111,7 @@ export const obligationsCompactageDechets: Obligation[] = [
     periodicite: "trimestrielle",
     nature: "echeance_recurrente",
     pieceAttendue: null,
+    usageEcran: null,
     realisateurs: ["personne_qualifiee"],
     criticite: 5,
     transmet: [],

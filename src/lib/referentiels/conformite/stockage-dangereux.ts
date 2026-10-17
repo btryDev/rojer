@@ -61,6 +61,9 @@ export const obligationsStockageDangereux: Obligation[] = [
     periodicite: "autre",
     nature: "etat_permanent",
     pieceAttendue: "fiches de données de sécurité",
+    // Accès des travailleurs aux fiches (R. 4412-38 2°) : ~~installations~~
+    // (2026-10-17).
+    usageEcran: { groupe: "quotidien", sous: "informer" },
     realisateurs: ["exploitant"],
     criticite: 3,
     transmet: [],
@@ -119,6 +122,7 @@ export const obligationsStockageDangereux: Obligation[] = [
     },
     nature: "echeance_recurrente",
     pieceAttendue: null,
+    usageEcran: null,
     realisateurs: ["exploitant"],
     criticite: 3,
     transmet: [],

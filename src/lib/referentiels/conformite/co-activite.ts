@@ -98,6 +98,7 @@ export const obligationsCoActivite: Obligation[] = [
     periodicite: "autre",
     nature: "evenementielle",
     pieceAttendue: "protocole de sécurité",
+    usageEcran: null,
     faitGenerateur:
       "Le protocole de sécurité est établi dans le cadre d'un échange entre les employeurs intéressés, préalablement à la réalisation de l'opération. Chacune des opérations ne revêtant pas le caractère répétitif défini à l'article R. 4515-3 donne lieu à un protocole de sécurité spécifique. Les opérations de chargement ou de déchargement impliquant les mêmes entreprises et revêtant un caractère répétitif font l'objet d'un seul protocole de sécurité établi préalablement à la première opération. Ce protocole de sécurité reste applicable aussi longtemps que les employeurs intéressés considèrent que les conditions de déroulement des opérations n'ont subi aucune modification significative, dans l'un quelconque de leurs éléments constitutifs",
     realisateurs: ["exploitant"],

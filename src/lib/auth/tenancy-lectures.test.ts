@@ -66,6 +66,7 @@ import {
  *
  * Il ne voyait pas non plus les server actions qui ne font que lire : une
  * lecture sans session ni portée injectée dans `lignesEtatsPermanentsPourWidget`
+ * (aujourd'hui `resumeEtatsPermanentsPourWidget`)
  * (M3) passait les deux balayages, celui-ci ne lisant que des `queries.ts`,
  * `tenancy-ecritures` que des écritures.
  *
@@ -271,7 +272,7 @@ describe("les lectures exportées et les server actions qui ne font que lire", (
     const cles = new Set([...lectures, ...actions].map((l) => l.cle));
     expect(cles).toContain("etablissements/queries.ts:getEtablissement");
     expect(cles).toContain(
-      "lib/etats-permanents/lecture-widget.ts:lignesEtatsPermanentsPourWidget",
+      "lib/etats-permanents/lecture-widget.ts:resumeEtatsPermanentsPourWidget",
     );
 
     const nues = [...lectures, ...actions]

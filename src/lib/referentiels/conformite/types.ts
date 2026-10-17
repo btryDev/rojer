@@ -912,6 +912,32 @@ export type RythmeRetenu =
 
 export type MotifRythmeRetenu = RythmeRetenu["motif"];
 
+/**
+ * Les quatre familles de l'écran « Ce qui doit être en place », rangées par
+ * USAGE et non par domaine juridique (2026-10-17). Libellés, ordre et lecture
+ * dans `etats-permanents/familles.ts` ; les types vivent ici parce que
+ * `ObligationCommune` les porte, et que le référentiel n'importe rien de
+ * l'écran.
+ */
+export type GroupeUsage =
+  | "incendie_secours"
+  | "quotidien"
+  | "organisation"
+  | "installations";
+
+/** Les sous-catégories d'une famille ; seules deux familles en ont. */
+export type SousCategorie =
+  | "prevenir"
+  | "alerter"
+  | "eteindre"
+  | "evacuer"
+  | "secourir"
+  | "conditions"
+  | "informer";
+
+/** Où une ligne se range à l'écran. `sous: null` pour une famille sans sous-catégorie. */
+export type UsageEcran = { groupe: GroupeUsage; sous: SousCategorie | null };
+
 /** Champs communs à toutes les obligations, quel que soit leur porteur. */
 type ObligationCommune = {
   /** Identifiant stable, versionné avec le code. Jamais réutilisé. */
@@ -1069,6 +1095,25 @@ type ObligationCommune = {
    * de lignes ni leurs dates.
    */
   pieceAttendue: string | null;
+  /**
+   * Où la ligne se range sur l'écran « Ce qui doit être en place » : sa
+   * famille d'usage, et sa sous-catégorie quand la famille en a (2026-10-17).
+   * `null` pour toute obligation que l'écran ne liste pas.
+   *
+   * **Requis, et c'est le point** — même raisonnement que `pieceMedicale` :
+   * optionnel, le champ se serait tu, et l'oubli aurait été la faute
+   * naturelle. ~~Une ligne non rangée n'a aucune famille où s'afficher~~
+   * [2026-10-17 : elle tombe dans le repli d'affichage « Autres obligations »,
+   * qui n'est pas une valeur de ce champ] ; requis,
+   * chaque ajout au référentiel se prononce. `familles.test.ts` tient le reste :
+   * non nul si et seulement si `figureSurLEcranEnPlace` (niveau audit écarté),
+   * et la sous-catégorie appartient à sa famille — ce que le type ne sait pas
+   * dire.
+   *
+   * **N'entre pas dans `empreinteReferentiel()`** : il ne change ni le nombre
+   * de lignes ni leurs dates, seulement l'endroit de l'écran où elles se lisent.
+   */
+  usageEcran: UsageEcran | null;
   /**
    * **Le fait qui rend l'obligation due**, dans les mots du texte — la phrase
    * « quand… » d'une obligation `evenementielle` (ADR-037).
