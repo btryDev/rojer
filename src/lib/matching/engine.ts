@@ -57,6 +57,7 @@ import type {
 } from "@/lib/referentiels/types-communs";
 import {
   PERIODICITE_EN_JOURS,
+  TYPES_ERP,
   sommeilPlausiblePourLeType,
 } from "@/lib/referentiels/types-communs";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
@@ -589,7 +590,18 @@ export function matchTypologie(
       typesErpAutres: [],
     });
   }
-  for (const type of types) {
+  // Quelle évaluation rendre, quand plusieurs types satisfont la ligne ? Ses
+  // raisons s'affichent (guide, « Comprendre », PDF) : elles ne doivent pas
+  // dépendre du type déclaré en premier, qui n'a pas de portée juridique
+  // (revue du lot 2). La première dans l'ordre de la nomenclature
+  // (`TYPES_ERP`) l'emporte.
+  //
+  // Pas de préférence pour une évaluation « établie » sur une « à confirmer » :
+  // deux types qui satisfont la même ligne lisent les mêmes réponses de
+  // l'établissement, et un type ne change que la PLAUSIBILITÉ du sommeil —
+  // qui écarte, sans retenir « à confirmer ». La préférence ne serait jamais
+  // décisive, donc jamais éprouvable.
+  for (const type of [...types].sort((a, b) => TYPES_ERP.indexOf(a) - TYPES_ERP.indexOf(b))) {
     const r = matchTypologieUnType(t, { ...etab, typeErp: type, typesErpAutres: [] });
     if (r.ok) return r;
   }

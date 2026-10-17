@@ -147,10 +147,6 @@ describe("plusieurs types : l'union, puis un membre par groupe", () => {
     }
   });
 
-  // Délai explicite (2026-10-17) : 1 540 triplets × 5 catégories × 3 réponses
-  // sommeil, soit ~23 000 appels du moteur — environ 5 s en CI, au bord du
-  // délai par défaut de vitest (5 s), qui a fait échouer la PR #50 sans erreur
-  // de logique. Ce n'est pas un palliatif : la grille est le contenu du test.
   it("chaque groupe sort au plus un membre, pour tout triplet de types", () => {
     expect(TRIPLETS.length).toBe(1540);
     for (const ts of TRIPLETS) {
@@ -164,7 +160,7 @@ describe("plusieurs types : l'union, puis un membre par groupe", () => {
         }
       }
     }
-  }, 60_000);
+  });
 
   it("l'union dépasse au moins une fois chacun des types déclarés seuls (borne basse)", () => {
     // M + O en 3ᵉ catégorie : M seul n'a ni la consigne des chambres ni les
@@ -176,12 +172,18 @@ describe("plusieurs types : l'union, puis un membre par groupe", () => {
     }
   });
 
-  it("le premier type déclaré ne décide de rien : permuter rend les mêmes lignes", () => {
+  it("le premier type déclaré ne décide de rien : permuter rend les mêmes lignes, raisons et « à confirmer » compris", { timeout: 60_000 }, () => {
+    // Pas seulement les identifiants (revue du lot 2) : les raisons et les
+    // questions sans réponse s'affichent au guide, à « Comprendre » et au PDF.
+    const complet = (e: EtablissementMatching) =>
+      determineObligationsApplicables(e, PARC)
+        .map((a) => JSON.stringify([a.obligation.id, a.raisons, a.sansReponse ?? [], a.effectifAConfirmer ?? null]))
+        .sort();
     for (const [a, b] of PAIRES) {
       for (const c of CATEGORIES) {
-        expect([...ids(erp([a, b], c, true), PARC)].sort(), `${a}+${b} ${c}`).toEqual(
-          [...ids(erp([b, a], c, true), PARC)].sort(),
-        );
+        for (const s of SOMMEIL) {
+          expect(complet(erp([a, b], c, s)), `${a}+${b} ${c} sommeil=${s}`).toEqual(complet(erp([b, a], c, s)));
+        }
       }
     }
   });
