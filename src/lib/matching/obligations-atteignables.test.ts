@@ -70,7 +70,10 @@ function profilsInscription(): EtablissementMatching[] {
         estEtablissementTravail: trav, estERP: erp !== null, estIGH: igh, estHabitation: hab,
         typeErp: erp?.t, typesErpAutres: [], categorieErp: erp?.c,
         comporteLocauxSommeilPublic: form(so), manipuleMatieresR422722: form(m),
- personnesPresentesHabituellement: p ?? "",
+        // Filtre à l'accueil (2026-10-17) : un R n'est inscrit qu'en répondant
+        // « non » à l'accueil d'enfants ; « oui » est refusé.
+        ...(erp?.t === "R" ? { accueilEnfants: "non" } : {}),
+        personnesPresentesHabituellement: p ?? "",
         manutentionManuelle: null,
         travailSurEcran: null,
         operationsElectriques: null,

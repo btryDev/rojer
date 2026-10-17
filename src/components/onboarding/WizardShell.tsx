@@ -27,6 +27,7 @@ import {
   type OnboardingState,
   type StepProps,
 } from "./types";
+import { questionEnfantsPosee } from "@/lib/etablissements/types-refuses";
 
 type Etape = {
   id: "identite" | "typologie" | "resume";
@@ -150,6 +151,12 @@ export function WizardShell({ email }: { email?: string | null }) {
    * lèvent en remplissant, et c'est le clic qui les apprend.
    */
   const refusPerimetre = etape.valide(state)?.perimetre === true;
+  // 2026-10-17, revue du filtre à l'accueil : le refus de périmètre grisait
+  // « Suivant » sans jamais s'écrire — `blocage` n'est posé qu'au clic, que le
+  // bouton désactivé empêche, et `update()` le remet à `null`. Le défaut
+  // valait déjà pour l'ERP en IGH. Le refus de périmètre s'affiche donc dès
+  // qu'il existe, à l'endroit qu'il vise.
+  const blocageAffiche = blocage ?? (refusPerimetre ? etape.valide(state) : null);
 
   const suivant = () => {
     const err = etape.valide(state);
@@ -407,7 +414,7 @@ export function WizardShell({ email }: { email?: string | null }) {
               state={state}
               update={update}
               errors={serverErrors}
-              blocage={blocage}
+              blocage={blocageAffiche}
             />
           </div>
 
@@ -415,8 +422,8 @@ export function WizardShell({ email }: { email?: string | null }) {
 
           {/* Seuls les refus qui ne visent aucun champ restent ici : les
               autres sont rendus par l'étape, sous le contrôle concerné. */}
-          {blocage && !blocage.champ ? (
-            <BandeauBlocage>{blocage.message}</BandeauBlocage>
+          {blocageAffiche && !blocageAffiche.champ ? (
+            <BandeauBlocage>{blocageAffiche.message}</BandeauBlocage>
           ) : null}
 
           {serverState.status === "error" && !serverState.fieldErrors ? (
@@ -517,7 +524,8 @@ function BandeauBlocage({ children }: { children: React.ReactNode }) {
   );
 }
 
-function ChampsCaches({ state }: { state: OnboardingState }) {
+/** Exportés pour le test de cohérence du filtre à l'accueil (2026-10-17). */
+export function ChampsCaches({ state }: { state: OnboardingState }) {
   const adresseComplete = [
     state.adresseRue.trim(),
     [state.adresseCodePostal.trim(), state.adresseVille.trim()]
@@ -581,6 +589,12 @@ function ChampsCaches({ state }: { state: OnboardingState }) {
           name="comporteLocauxSommeilPublic"
           value={state.comporteLocauxSommeilPublic}
         />
+      ) : null}
+      {/* Accueil d'enfants (filtre à l'accueil, 2026-10-17) : posté seulement
+          si R est déclaré et la question répondue — hors R, le serveur refuse
+          le champ, comme le sommeil. Jamais écrit en base. */}
+      {state.accueilEnfants && questionEnfantsPosee(state) ? (
+        <input type="hidden" name="accueilEnfants" value={state.accueilEnfants} />
       ) : null}
       {/* Matières (2026-09-27) : postées seulement si elles ont une
           réponse, comme le sommeil — « je ne sais pas encore » ne devient

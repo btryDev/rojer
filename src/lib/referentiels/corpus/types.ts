@@ -182,7 +182,9 @@ export type StatutArticle =
        * immeuble d'habitation, un ERP des quatre premières catégories ou un
        * chantier d'échafaudage y sont soumis, et que le produit les SERT sans
        * les viser (ADR-031)~~ que seuls y sont soumis des établissements que
-       * l'onboarding refuse. Au 2026-10-12, aucune entrée n'est dans ce cas.
+       * l'onboarding refuse. ~~Au 2026-10-12, aucune entrée n'est dans ce cas.~~
+       * [2026-10-17, filtre à l'accueil : douze entrées des types J et U (et
+       * PU) le sont désormais ; ~~R 33~~ est resté dans la cible (revue).]
        * Dans le doute, `true` : entre sur- et sous-compter une dette, on
        * sur-compte.
        */

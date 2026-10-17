@@ -249,6 +249,12 @@ describe("refus de périmètre — création seulement", () => {
     expect(etablissementCreationSchema.safeParse(erpAccepte).success).toBe(true);
   });
 
+  it("filtre à l'accueil : la réponse « accueil d'enfants » postée sur un type autre que R est refusée (revue du 2026-10-17)", () => {
+    const res = etablissementCreationSchema.safeParse({ ...erpAccepte, accueilEnfants: "non" });
+    expect(res.success).toBe(false);
+    if (!res.success) expect(res.error.issues.map((i) => i.path.join("."))).toEqual(["accueilEnfants"]);
+  });
+
   it("refuse un ERP situé dans un IGH — et pour cette seule raison", () => {
     const res = etablissementCreationSchema.safeParse({ ...erpAccepte, estIGH: true });
     expect(res.success).toBe(false);

@@ -145,7 +145,11 @@ describe("registre de dette — les obligations manquantes", () => {
       // annoncés (`non_couvert`) ; voir le test des « libres ».
       // [13, 0] → [9, 0] le 2026-10-17 (sous-lot D) : `P 21`, `S 15`, `Y 19`,
       // `T 52` retenus (rattachements).
-      libre: [9, 0],
+      // [9, 0] → [1, 8] le 2026-10-17 (filtre à l'accueil) : `PU 6`, `U 41`,
+      // `U 43`, `U 47`, `U 48`, `J 35`, `J 39`, `J 40` hors cible — seuls des
+      // types que l'onboarding refuse y sont soumis. ~~`R 33`~~ reste dans la
+      // cible (revue : la formation d'adultes est acceptée).
+      libre: [1, 8],
       // 9 → 6 le 2026-09-21 : les trois de la chaleur intense (`R. 4463-4`,
       // `-5`, `-7`) sont encodées sur la page « Quand ça arrive ».
       // 6 → 0 le même jour : cinq relues à la source et encodées ; la sixième,
@@ -178,7 +182,9 @@ describe("registre de dette — les obligations manquantes", () => {
       // [13, 0] → [11, 0] après la revue : `AS 5`, `AS 8` annoncés (`non_couvert`).
       // [11, 0] → [12, 0] le 2026-10-17 (sous-lot B) : `X annexe`, venu
       // d'`a_trancher`, hors cadre — aucune catégorie de désinfection des eaux.
-      categorie_equipement: [12, 0],
+      // [12, 0] → [8, 4] le 2026-10-17 (filtre à l'accueil) : les gaz
+      // médicaux `J 33`, `U 62`, `U 64`, `PU 5` hors cible (types J et U refusés).
+      categorie_equipement: [8, 4],
       // 4 → 1 le 2026-09-27 (C45) : `R. 4227-23`, `R. 4227-24` et l'art. 8 de
       // l'arrêté du 10 septembre 2021 passent `non_couvert`, annoncés.
       // [1, 2] → [3, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : `MS 71`, arrêté 1986 art. 60.
@@ -303,7 +309,12 @@ describe("registre de dette — les obligations manquantes", () => {
     // 43 → 37 le 2026-10-17 (sous-lot D, `lot/ref-d-types`), mesuré en
     // appelant : 43 − 6 + 0 — `P 21`, `S 15`, `Y 19`, `T 52`, `X 25` retenus
     // (rattachements), `M 35` annoncé (`non_couvert`).
-    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(37);
+    // 37 → 25 dans la cible le 2026-10-17 (lot « filtre à l'accueil »),
+    // mesuré en appelant : 37 − 12 — `J 33`, `J 35`, `J 39`, `J 40`, `U 41`,
+    // `U 43`, `U 47`, `U 48`, `U 62`, `U 64`, `PU 5`, `PU 6` passent
+    // `toucheLaCible: false` (~~`R 33`~~ reste, revue du même jour). Le total
+    // ne bouge pas (37) : c'est une mesure de la cible, pas une dette réglée.
+    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(25);
     expect(manquantes.length).toBe(37);
   });
 });

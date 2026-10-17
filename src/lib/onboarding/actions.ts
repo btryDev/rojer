@@ -9,7 +9,7 @@ import { getOptionalUserEtablissement } from "@/lib/auth/scope";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import { onboardingSchema } from "./schema";
 import { typesErpAutresCoherents } from "@/lib/etablissements/schema";
-import { typesErpAutresPostes } from "@/lib/etablissements/types-erp-affiches";
+import { saisieOnboardingDepuisFormData } from "./saisie";
 
 /**
  * Server action de finalisation du parcours d'onboarding.
@@ -53,31 +53,10 @@ export async function finaliserOnboarding(
   if (existant) redirect(`/etablissements/${existant.id}`);
   // On lit les champs un à un — permet de convertir checkboxes (HTML
   // ne soumet "on" que si la case est cochée) en vrais booléens.
-  const raw = Object.fromEntries(formData);
-  const typesErpAutres = typesErpAutresPostes(formData);
-  const input = {
-    raisonSociale: raw.raisonSociale,
-    siret: raw.siret,
-    adresse: raw.adresse,
-    codeNaf: raw.codeNaf,
-    effectifSurSite: raw.effectifSurSite,
-    effectifEntreprise: raw.effectifEntreprise,
-    estEtablissementTravail: raw.estEtablissementTravail === "true",
-    // Sans réponse, `undefined` : le schéma refuse, au lieu de lire « non »
-    // (2026-09-27, A2).
-    estERP: ouiNon(raw.estERP),
-    estIGH: ouiNon(raw.estIGH),
-    estHabitation: ouiNon(raw.estHabitation),
-    typeErp: raw.typeErp || undefined,
-    // Plusieurs valeurs possibles (ADR-045) : `getAll`, pas `raw`.
-    ...(typesErpAutres === undefined ? {} : { typesErpAutres }),
-    categorieErp: raw.categorieErp || undefined,
-    // Vide = « je ne sais pas encore », et le vide ne se coerce pas en `false` :
-    // le schéma le rend `undefined`, et l'écriture ci-dessous est alors omise.
-    comporteLocauxSommeilPublic: raw.comporteLocauxSommeilPublic,
-    personnesPresentesHabituellement: raw.personnesPresentesHabituellement,
-    manipuleMatieresR422722: raw.manipuleMatieresR422722,
-  };
+  // La lecture du formulaire, partagée avec le test de cohérence du filtre
+  // (`saisie.ts`, 2026-10-17) : ce que le serveur lit est ce que les champs
+  // cachés du parcours postent.
+  const input = saisieOnboardingDepuisFormData(formData);
 
   const parsed = onboardingSchema.safeParse(input);
   if (!parsed.success) {
@@ -185,7 +164,3 @@ export async function finaliserOnboarding(
   redirect(`/etablissements/${result.id}/equipements?bienvenue=1`);
 }
 
-/** « true » / « false » postés ; tout le reste — le vide compris — n'est pas une réponse. */
-function ouiNon(v: FormDataEntryValue | undefined): boolean | undefined {
-  return v === "true" ? true : v === "false" ? false : undefined;
-}

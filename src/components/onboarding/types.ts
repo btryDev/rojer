@@ -45,6 +45,11 @@ export type OnboardingState = {
   // "" (« je ne sais pas encore »), "oui", "non". La chaîne vide n'est pas un
   // trou de saisie, c'est une réponse : elle laisse la colonne à `null`.
   comporteLocauxSommeilPublic: string;
+  /**
+   * Filtre à l'accueil (2026-10-17) : « oui », « non » ou vide, posée au seul
+   * type R. Jamais stockée : elle ne sert qu'à refuser l'accueil d'enfants.
+   */
+  accueilEnfants: string;
 
   // Personnes pouvant se trouver réunies dans les locaux (R. 4227-34 CT) —
   // posée depuis le 2026-09-20 aux seuls dossiers que
@@ -80,6 +85,7 @@ export const VALEURS_INITIALES: OnboardingState = {
   typesErpAutres: [],
   categorieErp: "",
   comporteLocauxSommeilPublic: "",
+  accueilEnfants: "",
   personnesPresentesHabituellement: "",
   manipuleMatieresR422722: "",
 };
