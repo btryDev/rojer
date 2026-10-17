@@ -28,6 +28,7 @@
  * Les phrases expliquent sans qualifier (ligne de partage 8). Module pur.
  */
 
+import { z } from "zod";
 import type { TypeErp } from "@/lib/referentiels/types-communs";
 
 /** Les types refusés, et la famille de phrase qui le dit. */
@@ -40,8 +41,11 @@ export const PHRASE_REFUS_J =
   "Rojer ne prend pas en charge les structures d'accueil pour personnes âgées ou handicapées (type J) : leurs obligations propres relèvent de textes que Rojer ne couvre pas.";
 export const PHRASE_REFUS_U =
   "Rojer ne prend pas en charge les établissements de soins (type U) : leurs obligations propres relèvent de textes que Rojer ne couvre pas.";
+// ~~« Les établissements spéciaux — … — relèvent de dispositions propres du
+// règlement de sécurité que Rojer ne couvre pas. »~~ — revue du 2026-10-17 :
+// même forme que J et U.
 export const PHRASE_REFUS_SPECIAUX =
-  "Les établissements spéciaux — plein air, chapiteaux et tentes, structures gonflables, hôtels-restaurants d'altitude, refuges de montagne, gares, établissements flottants — relèvent de dispositions propres du règlement de sécurité que Rojer ne couvre pas.";
+  "Rojer ne prend pas en charge les établissements spéciaux (plein air, chapiteaux et tentes, structures gonflables, hôtels-restaurants d'altitude, refuges de montagne, gares, établissements flottants) : leurs obligations propres relèvent de textes que Rojer ne couvre pas.";
 export const PHRASE_REFUS_ENFANTS =
   "Rojer ne prend pas en charge l'accueil d'enfants (crèche, école, centre de loisirs) : il relève d'obligations propres que Rojer ne couvre pas.";
 
@@ -86,6 +90,50 @@ export function questionEnfantsPosee(d: {
   return d.estERP === true && [d.typeErp, ...(d.typesErpAutres ?? [])].includes("R");
 }
 
+type Types = { estERP?: boolean | null; typeErp?: string | null; typesErpAutres?: readonly string[] | null };
+type TypesEnBase = { typeErp: string | null; typesErpAutres: readonly string[] } | null | undefined;
+
+/**
+ * R entre-t-il ? Déclaré dans la saisie, absent de la fiche enregistrée
+ * (`avant` vide à la création). LA seule lecture de la règle : le filtre, la
+ * fiche et l'action la lisent ici (revue du 2026-10-17, R2).
+ */
+export function rEntre(apres: Types, avant?: TypesEnBase): boolean {
+  const dejaR = Boolean(avant && [avant.typeErp, ...avant.typesErpAutres].includes("R"));
+  return questionEnfantsPosee(apres) && !dejaR;
+}
+
+/** Le champ du schéma : « oui » / « non » / vide → vrai / faux / non posté. */
+export const champAccueilEnfants = z.preprocess(
+  (v) => (v === "oui" || v === true ? true : v === "non" || v === false ? false : undefined),
+  z.boolean().optional(),
+);
+
+/**
+ * Les refus du filtre posés sur un schéma (création, parcours) : ceux de
+ * `refusDuFiltre`, et la réponse postée là où la question n'est pas posée.
+ */
+export function appliquerFiltre(
+  val: Types & { accueilEnfants?: boolean | null },
+  ctx: { addIssue: (i: { code: "custom"; path: string[]; message: string }) => void },
+): void {
+  for (const r of refusDuFiltre(val)) ctx.addIssue({ code: "custom", path: [r.champ], message: r.message });
+  if (val.accueilEnfants !== undefined && !questionEnfantsPosee(val)) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["accueilEnfants"],
+      message: "La question de l'accueil d'enfants n'est posée qu'au type R.",
+    });
+  }
+}
+
+/** La saisie sans la réponse « accueil d'enfants », qui ne s'écrit jamais. */
+export function sansReponseEnfants<T extends { accueilEnfants?: unknown }>(d: T): Omit<T, "accueilEnfants"> {
+  const copie: Partial<T> = { ...d };
+  delete copie.accueilEnfants;
+  return copie as Omit<T, "accueilEnfants">;
+}
+
 export type RefusFiltre = { champ: "typeErp" | "typesErpAutres" | "accueilEnfants"; message: string };
 
 /**
@@ -111,7 +159,7 @@ export function refusDuFiltre(
   if (p) refus.push({ champ: "typeErp", message: p });
   const a = phraseRefusTypes(autres);
   if (a) refus.push({ champ: "typesErpAutres", message: a });
-  if (questionEnfantsPosee(d) && !dejaLa.has("R")) {
+  if (rEntre(d, avant)) {
     if (d.accueilEnfants === true) refus.push({ champ: "accueilEnfants", message: PHRASE_REFUS_ENFANTS });
     else if (d.accueilEnfants !== false)
       refus.push({ champ: "accueilEnfants", message: "Indiquez si vous accueillez des enfants." });

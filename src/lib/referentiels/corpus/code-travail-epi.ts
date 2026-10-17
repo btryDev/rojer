@@ -80,7 +80,6 @@
 // une sur ces pages.
 
 import type { Corpus } from "./types";
-import { ADRESSE_MANQUES_ANNONCES } from "./adresses";
 
 /**
  * La section 9 du chapitre III, en entier : seize articles sur seize.

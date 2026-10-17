@@ -34,7 +34,7 @@ import {
   QUESTION_SSI,
 } from "@/lib/etablissements/questions";
 import { AideQuestionMatieres } from "./AideQuestionMatieres";
-import { QUESTION_ACCUEIL_ENFANTS, questionEnfantsPosee } from "@/lib/etablissements/types-refuses";
+import { QUESTION_ACCUEIL_ENFANTS, rEntre } from "@/lib/etablissements/types-refuses";
 
 
 /** La case à cocher du board : encre pleine à l'état coché, filet d'ardoise. */
@@ -131,11 +131,12 @@ export function EtablissementForm({
   const [signalAutres, setSignalAutres] = useState(0);
   // Filtre à l'accueil (2026-10-17) : R entre-t-il ? Présent dans la saisie,
   // absent de la fiche enregistrée (rien n'est enregistré à la création).
-  const rDejaEnregistre =
-    valeursInitiales?.estERP === true &&
-    [valeursInitiales?.typeErp, ...(valeursInitiales?.typesErpAutres ?? [])].includes("R");
-  const rEntre =
-    !rDejaEnregistre && questionEnfantsPosee({ estERP: estERP === true, typeErp, typesErpAutres });
+  const rEntreIci = rEntre(
+    { estERP: estERP === true, typeErp, typesErpAutres },
+    valeursInitiales?.estERP === true
+      ? { typeErp: valeursInitiales.typeErp ?? null, typesErpAutres: valeursInitiales.typesErpAutres ?? [] }
+      : null,
+  );
   const poseLocauxSommeil = questionSommeilPosee({
     estERP,
     typeErp,
@@ -533,7 +534,7 @@ export function EtablissementForm({
                     {/* Filtre à l'accueil (2026-10-17) : la question n'est posée
                         qu'à l'ENTRÉE du type R — un établissement déjà R n'est
                         pas réinterrogé. La réponse n'est pas stockée. */}
-                    {rEntre && (
+                    {rEntreIci && (
                       <div className="mt-3">
                         <label className="label-board" htmlFor="accueilEnfants">
                           {QUESTION_ACCUEIL_ENFANTS}

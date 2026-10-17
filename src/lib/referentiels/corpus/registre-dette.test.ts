@@ -145,10 +145,11 @@ describe("registre de dette — les obligations manquantes", () => {
       // annoncés (`non_couvert`) ; voir le test des « libres ».
       // [13, 0] → [9, 0] le 2026-10-17 (sous-lot D) : `P 21`, `S 15`, `Y 19`,
       // `T 52` retenus (rattachements).
-      // [9, 0] → [0, 9] le 2026-10-17 (filtre à l'accueil) : `PU 6`, `R 33`,
-      // `U 41`, `U 43`, `U 47`, `U 48`, `J 35`, `J 39`, `J 40` hors cible —
-      // seuls des types que l'onboarding refuse y sont soumis.
-      libre: [0, 9],
+      // [9, 0] → [1, 8] le 2026-10-17 (filtre à l'accueil) : `PU 6`, `U 41`,
+      // `U 43`, `U 47`, `U 48`, `J 35`, `J 39`, `J 40` hors cible — seuls des
+      // types que l'onboarding refuse y sont soumis. ~~`R 33`~~ reste dans la
+      // cible (revue : la formation d'adultes est acceptée).
+      libre: [1, 8],
       // 9 → 6 le 2026-09-21 : les trois de la chaleur intense (`R. 4463-4`,
       // `-5`, `-7`) sont encodées sur la page « Quand ça arrive ».
       // 6 → 0 le même jour : cinq relues à la source et encodées ; la sixième,
@@ -308,12 +309,12 @@ describe("registre de dette — les obligations manquantes", () => {
     // 43 → 37 le 2026-10-17 (sous-lot D, `lot/ref-d-types`), mesuré en
     // appelant : 43 − 6 + 0 — `P 21`, `S 15`, `Y 19`, `T 52`, `X 25` retenus
     // (rattachements), `M 35` annoncé (`non_couvert`).
-    // 37 → 24 dans la cible le 2026-10-17 (lot « filtre à l'accueil »),
-    // mesuré en appelant : 37 − 13 — `J 33`, `J 35`, `J 39`, `J 40`, `U 41`,
-    // `U 43`, `U 47`, `U 48`, `U 62`, `U 64`, `PU 5`, `PU 6`, `R 33` passent
-    // `toucheLaCible: false`. Le total ne bouge pas (37) : c'est une mesure de
-    // la cible, pas une dette réglée.
-    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(24);
+    // 37 → 25 dans la cible le 2026-10-17 (lot « filtre à l'accueil »),
+    // mesuré en appelant : 37 − 12 — `J 33`, `J 35`, `J 39`, `J 40`, `U 41`,
+    // `U 43`, `U 47`, `U 48`, `U 62`, `U 64`, `PU 5`, `PU 6` passent
+    // `toucheLaCible: false` (~~`R 33`~~ reste, revue du même jour). Le total
+    // ne bouge pas (37) : c'est une mesure de la cible, pas une dette réglée.
+    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(25);
     expect(manquantes.length).toBe(37);
   });
 });

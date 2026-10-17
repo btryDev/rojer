@@ -45,7 +45,7 @@ describe("les types refusés", () => {
   it("aucune phrase ne qualifie", () => {
     for (const p of [PHRASE_REFUS_J, PHRASE_REFUS_U, PHRASE_REFUS_SPECIAUX, PHRASE_REFUS_ENFANTS]) {
       expect(p.toLowerCase()).not.toMatch(/conforme|en infraction|en règle|illégal|vous devez/);
-      expect(p).toMatch(/Rojer ne (prend pas en charge|couvre pas)/);
+      expect(p).toMatch(/^Rojer ne prend pas en charge /);
     }
   });
 });

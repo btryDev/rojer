@@ -4,18 +4,16 @@ import { cleanup, fireEvent, render } from "@testing-library/react";
 import { useState } from "react";
 import { StepTypologie } from "./StepTypologie";
 import { VALEURS_INITIALES, type OnboardingState } from "./types";
-import { validerTypologie } from "./validation";
-import { PHRASE_REFUS_J, QUESTION_ACCUEIL_ENFANTS } from "@/lib/etablissements/types-refuses";
+import { QUESTION_ACCUEIL_ENFANTS } from "@/lib/etablissements/types-refuses";
 
 // Filtre à l'accueil (2026-10-17) : la question R n'apparaît qu'au type R ;
 // le refus se lit sous le champ qu'il vise.
 
 afterEach(cleanup);
 
-function Hote({ initial, avecBlocage = false }: { initial: Partial<OnboardingState>; avecBlocage?: boolean }) {
+function Hote({ initial }: { initial: Partial<OnboardingState> }) {
   const [state, setState] = useState<OnboardingState>({ ...VALEURS_INITIALES, estERP: true, categorieErp: "N3", ...initial });
-  const blocage = avecBlocage ? validerTypologie(state) : null;
-  return <StepTypologie state={state} update={(p) => setState((s) => ({ ...s, ...p }))} errors={{}} blocage={blocage} />;
+  return <StepTypologie state={state} update={(p) => setState((s) => ({ ...s, ...p }))} errors={{}} blocage={null} />;
 }
 
 describe("accueil : la question de l'accueil d'enfants", () => {
@@ -35,10 +33,13 @@ describe("accueil : la question de l'accueil d'enfants", () => {
     const { container } = render(<Hote initial={{ typeErp: "R", accueilEnfants: "non" }} />);
     fireEvent.change(container.querySelector<HTMLSelectElement>("#typeErp")!, { target: { value: "N" } });
     expect(container.querySelector("#accueilEnfants")).toBeNull();
+    // Revue du 2026-10-17, C5 : de retour à R, la question revient VIDE — la
+    // réponse est partie avec le type.
+    fireEvent.change(container.querySelector<HTMLSelectElement>("#typeErp")!, { target: { value: "R" } });
+    expect(container.querySelector<HTMLSelectElement>("#accueilEnfants")!.value).toBe("");
   });
 
-  it("le refus d'un type J se lit à l'étape", () => {
-    const { container } = render(<Hote initial={{ typeErp: "J" }} avecBlocage />);
-    expect(container.textContent).toContain(PHRASE_REFUS_J);
-  });
+  // ~~« le refus d'un type J se lit à l'étape »~~ — revue du 2026-10-17 : il
+  // injectait lui-même `blocage`, et passait quand le vrai parcours ne
+  // montrait rien. Remplacé par les tests sur `WizardShell`.
 });

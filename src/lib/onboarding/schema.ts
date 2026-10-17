@@ -17,7 +17,7 @@ import {
 } from "@/lib/matching/personnes-presentes";
 import { evaluerScopeSecteur } from "./scope";
 import { MESSAGE_REFUS_EFFECTIF_ENTREPRISE } from "@/lib/entreprises/schema";
-import { questionEnfantsPosee, refusDuFiltre } from "@/lib/etablissements/types-refuses";
+import { appliquerFiltre, champAccueilEnfants } from "@/lib/etablissements/types-refuses";
 
 /** Le refus d'un effectif d'entreprise absent ou illisible, client et serveur. */
 export const MESSAGE_EFFECTIF_ENTREPRISE =
@@ -140,10 +140,7 @@ export const onboardingSchema = z
     // 2026-10-17, filtre à l'accueil : la réponse « accueil d'enfants », posée
     // au seul type R. NON STOCKÉE (choix assumé, c6) : elle ne sert qu'à
     // refuser ; l'action la retire avant l'écriture.
-    accueilEnfants: z.preprocess(
-      (v) => (v === "oui" || v === true ? true : v === "non" || v === false ? false : undefined),
-      z.boolean().optional(),
-    ),
+    accueilEnfants: champAccueilEnfants,
     comporteLocauxSommeilPublic: z.preprocess(
       (v) =>
         v === "oui"
@@ -277,16 +274,7 @@ export const onboardingSchema = z
     // Le filtre à l'accueil (2026-10-17, `etablissements/types-refuses.ts`) :
     // la même règle que `etablissementCreationSchema` et que le client
     // (`components/onboarding/validation.ts`).
-    for (const r of refusDuFiltre(val)) {
-      ctx.addIssue({ code: "custom", path: [r.champ], message: r.message });
-    }
-    if (val.accueilEnfants !== undefined && !questionEnfantsPosee(val)) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["accueilEnfants"],
-        message: "La question de l'accueil d'enfants n'est posée qu'au type R.",
-      });
-    }
+    appliquerFiltre(val, ctx);
 
     // LA RÉPONSE EST DUE LÀ OÙ LA QUESTION EST POSÉE (2026-09-20). Sans ce
     // contrôle, un client qui ne poste pas le champ créerait un hôtel muet —

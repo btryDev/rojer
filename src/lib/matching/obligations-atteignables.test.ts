@@ -73,7 +73,7 @@ function profilsInscription(): EtablissementMatching[] {
         // Filtre à l'accueil (2026-10-17) : un R n'est inscrit qu'en répondant
         // « non » à l'accueil d'enfants ; « oui » est refusé.
         ...(erp?.t === "R" ? { accueilEnfants: "non" } : {}),
- personnesPresentesHabituellement: p ?? "",
+        personnesPresentesHabituellement: p ?? "",
         manutentionManuelle: null,
         travailSurEcran: null,
         operationsElectriques: null,

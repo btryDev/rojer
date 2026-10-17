@@ -23,7 +23,7 @@ import {
   typesErpAutresCoherents,
 } from "./schema";
 import { typesErpAutresPostes } from "./types-erp-affiches";
-import { questionEnfantsPosee, refusDuFiltre } from "./types-refuses";
+import { refusDuFiltre, rEntre, sansReponseEnfants } from "./types-refuses";
 
 export type EtablissementActionState =
   | { status: "idle" }
@@ -224,7 +224,7 @@ export async function creerEtablissement(
 
   // La réponse « accueil d'enfants » ne s'écrit pas : elle ne sert qu'au
   // filtre (`types-refuses.ts`, choix assumé du 2026-10-17).
-  const { accueilEnfants: _accueilEnfants, ...saisie } = parsed.data;
+  const saisie = sansReponseEnfants(parsed.data);
   const etab = await prisma.etablissement.create({
     data: {
       entrepriseId,
@@ -316,7 +316,9 @@ export async function modifierEtablissement(
   if (!parsed.success) {
     // Filtre à l'accueil (2026-10-17) : un type refusé qui ENTRE se dit en
     // premier — sinon la fiche réclamerait d'abord la réponse au sommeil
-    // d'un type que Rojer ne prendra pas.
+    // d'un type que Rojer ne prendra pas. Ce chemin masque alors les autres
+    // erreurs du formulaire, qui reviendront une fois le type corrigé : choix
+    // assumé (revue du 2026-10-17, R1).
     const typesRefuses = await refusDeTypesALaTransition(id, brut);
     if (typesRefuses.length > 0)
       return {
@@ -362,23 +364,22 @@ export async function modifierEtablissement(
   // avec des enfants, est refusé ; un dossier créé avant le filtre
   // s'enregistre comme avant. La réponse n'est acceptée que là où la question
   // est posée — à l'entrée de R — et ne s'écrit jamais.
-  const { accueilEnfants, ...saisie } = parsed.data;
-  const typesApres = {
-    estERP: saisie.estERP,
-    typeErp: saisie.typeErp ?? avant.typeErp,
-    typesErpAutres: typesErpAutresCoherents(
-      { ...saisie, typeErp: saisie.typeErp ?? avant.typeErp },
-      avant.typesErpAutres,
-    ),
-  };
+  const accueilEnfants = parsed.data.accueilEnfants;
+  const saisie = sansReponseEnfants(parsed.data);
+  // Le premier type qui restera en base : le posté, sinon l'enregistré
+  // (`|| undefined` en amont le laisse en place quand il n'est pas posté).
+  // Calculé une fois, pour le filtre et pour l'écriture (revue, R2).
+  const typeErpApres = saisie.typeErp ?? avant.typeErp;
+  const typesErpAutresApres = typesErpAutresCoherents(
+    { ...saisie, typeErp: typeErpApres },
+    avant.typesErpAutres,
+  );
+  const typesApres = { estERP: saisie.estERP, typeErp: typeErpApres, typesErpAutres: typesErpAutresApres };
   const avantTypes = avant.estERP
     ? { typeErp: avant.typeErp, typesErpAutres: avant.typesErpAutres }
-    : { typeErp: null, typesErpAutres: [] };
+    : null;
   const refus = refusDuFiltre({ ...typesApres, accueilEnfants }, avantTypes);
-  const rEntre =
-    questionEnfantsPosee(typesApres) &&
-    !(avant.estERP && [avant.typeErp, ...avant.typesErpAutres].includes("R"));
-  if (accueilEnfants !== undefined && !rEntre) {
+  if (accueilEnfants !== undefined && !rEntre(typesApres, avantTypes)) {
     refus.push({
       champ: "accueilEnfants",
       message: "La question de l'accueil d'enfants n'est posée qu'à l'entrée du type R.",
@@ -396,15 +397,7 @@ export async function modifierEtablissement(
   // l'ensemble des types (ADR-045), y compris ceux que le formulaire n'a pas
   // postés et que la base garde.
   const donnees = reponseEpiCoherente(
-    reponseSommeilSuivantLeType({
-      ...saisie,
-      typesErpAutres: typesErpAutresCoherents(
-        // Le premier type qui restera en base : le posté, sinon l'enregistré
-        // (`|| undefined` en amont le laisse en place quand il n'est pas posté).
-        { ...saisie, typeErp: saisie.typeErp ?? avant.typeErp },
-        avant.typesErpAutres,
-      ),
-    }),
+    reponseSommeilSuivantLeType({ ...saisie, typesErpAutres: typesErpAutresApres }),
   );
   const etab = await prisma.etablissement.update({
     where: { id },
