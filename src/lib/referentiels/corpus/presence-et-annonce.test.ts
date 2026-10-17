@@ -88,6 +88,30 @@ describe("document consigné au registre : un acte, jamais écarté (livre II)",
   });
 });
 
+// 4. Une règle d'usage n'est pas une règle de construction (revue du
+//    2026-10-17) : une entrée écartée comme `construction` ne peut pas se
+//    motiver par la ligne de partage 3 (« sans acte ni pièce »), qui fonde un
+//    `sans_objet`.
+function usagesEnConstruction(articles: readonly ArticleDepouille[]): string[] {
+  return articles
+    .filter((a) => a.statut === "hors_perimetre" && a.exclusion === "construction" && /ligne de partage 3/.test(a.motif ?? ""))
+    .map((a) => a.ref);
+}
+
+describe("règle d'usage : `sans_objet`, jamais `construction` (livre II)", () => {
+  const livre2 = () => CORPUS.filter((c) => LIVRE_2.has(c.id)).flatMap((c) => [...c.articles]);
+
+  it("aucune entrée « construction » du livre II ne se motive par la ligne de partage 3", () => {
+    expect(usagesEnConstruction(livre2())).toEqual([]);
+  });
+
+  it("cassure : EL 5 rendu à `construction` est vu", () => {
+    const el5 = livre2().find((a) => a.ref === "EL 5")!;
+    const casse = { ...el5, statut: "hors_perimetre", exclusion: "construction" } as ArticleDepouille;
+    expect(usagesEnConstruction([casse])).toEqual(["EL 5"]);
+  });
+});
+
 describe("annonce décidée : `non_couvert`, jamais `obligation_manquante`", () => {
   it("aucun manque ne porte une décision d'annoncer", () => {
     expect(annoncesEnManque(tous())).toEqual([]);
