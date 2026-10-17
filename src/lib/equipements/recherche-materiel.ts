@@ -67,7 +67,9 @@ import {
  *    semi-automatiques » ; son annexe renvoie la définition de ces termes à la
  *    norme NF P 25-362, que le dépôt n'a pas lue. Lecture retenue : au sens
  *    courant de « fermeture d'une baie ou d'un passage ». L'aide de la
- *    catégorie le dit (`DESCRIPTION_CATEGORIE.PORTAIL_AUTO`).
+ *    catégorie le dit (`DESCRIPTION_CATEGORIE.PORTAIL_AUTO`). Le volet roulant
+ *    motorisé n'est PAS un synonyme (décision de c6 du même jour) : il reste un
+ *    matériel non couvert, à confirmer avec le préventeur dans la même note.
  */
 export const SYNONYMES_CATEGORIE: Readonly<Record<CategorieEquipement, readonly string[]>> = {
   INSTALLATION_ELECTRIQUE: ["électricité", "tableau électrique", "TGBT", "disjoncteur", "groupe électrogène", "panneaux photovoltaïques", "onduleur", "borne de recharge", "IRVE"],

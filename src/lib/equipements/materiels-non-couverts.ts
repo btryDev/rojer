@@ -390,6 +390,9 @@ export const MATERIELS_NON_COUVERTS: readonly MaterielNonCouvert[] = [
     references: [],
   },
   {
+    // Décision de c6 du 2026-10-17 : pas un synonyme du portail automatique,
+    // dont l'aide dit « d'un passage ». À confirmer avec le préventeur à la
+    // prochaine relecture, avec le rideau métallique et la barrière levante.
     cle: "store_volet_roulant",
     libelle: "Store ou volet roulant motorisé",
     synonymes: ["store", "volet roulant", "store banne"],

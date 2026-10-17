@@ -106,7 +106,11 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
   // (« Fermetures pour baies libres et portails »), que le dépôt n'a PAS lue.
   // Lecture retenue : « fermeture », au sens courant de fermeture d'une baie ou
   // d'un passage — un rideau de devanture motorisé et une barrière levante en
-  // sont. À confirmer avec le préventeur à la prochaine relecture. Le seul
+  // sont. À confirmer avec le préventeur à la prochaine relecture, avec le
+  // volet roulant motorisé : une fenêtre est une baie, et la lecture pourrait
+  // l'attraper ; décision de c6 du même jour, il reste un matériel non couvert
+  // (`materiels-non-couverts.ts`, `store_volet_roulant`) et la phrase de
+  // l'aide dit « d'un passage », pas « d'une baie ». Le seul
   // « Portail motorisé de véhicule » laissait croire le rideau de devanture
   // dehors : la phrase s'élargit, sans dire du rideau plus que l'arrêté.
   PORTAIL_AUTO: "Portail motorisé de véhicule. Le rideau métallique motorisé d'une devanture et la barrière levante, autres fermetures automatiques ou semi-automatiques d'un passage, se déclarent aussi ici.",
