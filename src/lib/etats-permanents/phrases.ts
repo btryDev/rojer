@@ -146,11 +146,11 @@ export function phraseCompteur(
     const parVous =
       declares <= 0
         ? null
-        : declares <= 1
+        : declares === 1
           ? "1 déclaré en place par vous"
           : `${declares} déclarés en place par vous`;
     const parTitres =
-      parLesTitres <= 1
+      parLesTitres === 1
         ? "1 établi d'après les titres déclarés"
         : `${parLesTitres} établis d'après les titres déclarés`;
     // ~~« tous en place : … » / « en place : … »~~ (2026-10-17) : le

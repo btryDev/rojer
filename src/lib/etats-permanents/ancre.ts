@@ -14,6 +14,12 @@ export function ancreEtatPermanent(obligationId: string): string {
 // L'ancre d'une famille d'usage (2026-10-17) : la `section` la pose, le
 // sommaire en tête de l'écran la vise. Même raison qu'au-dessus — une seule
 // fonction, pour qu'aucun lien du sommaire ne pointe vers un id absent.
+//
+// Le préfixe est exporté pour `FocusSurAncre`, qui ne doit agir que sur une
+// ancre de famille : le reconnaître par la même constante que celle qui le
+// pose, jamais par une copie de la chaîne.
+export const PREFIXE_ANCRE_FAMILLE = "usage-";
+
 export function ancreFamille(groupe: string): string {
-  return `usage-${groupe}`;
+  return `${PREFIXE_ANCRE_FAMILLE}${groupe}`;
 }
