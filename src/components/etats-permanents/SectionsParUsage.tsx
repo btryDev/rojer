@@ -43,7 +43,9 @@ export function CompteurDeLaPage({
 }) {
   if (total === 0) return null;
   return (
-    <div className="shrink-0 text-right">
+    // `data-compteur-page` : le test du widget relève ce bloc sur l'écran et
+    // dans le widget, qui le rend aussi (2026-10-17).
+    <div data-compteur-page className="shrink-0 text-right">
       <p className="board-titre m-0 text-[20px] tabular-nums leading-none">
         {enPlace} sur {total}
       </p>
@@ -53,6 +55,14 @@ export function CompteurDeLaPage({
     </div>
   );
 }
+
+/**
+ * Le lien vers une famille, au sommaire de l'écran et dans le widget du
+ * tableau de bord (2026-10-17) : la même porte a la même allure aux deux
+ * endroits.
+ */
+export const CLASSES_LIEN_FAMILLE =
+  "text-[13.5px] font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4";
 
 /**
  * Le sommaire : les familles PRÉSENTES sur ce dossier, et elles seules — une
@@ -82,10 +92,7 @@ export function SommaireParUsage({
             key={f.groupe}
             className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5"
           >
-            <a
-              href={`#${ancreFamille(f.groupe)}`}
-              className="text-[13.5px] font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
-            >
+            <a href={`#${ancreFamille(f.groupe)}`} className={CLASSES_LIEN_FAMILLE}>
               {f.libelle}
             </a>
             {/* ~~« x sur n », nu~~ (2026-10-17, revue indépendante) : le

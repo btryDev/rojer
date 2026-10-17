@@ -3,10 +3,14 @@
 import { requireUser } from "@/lib/auth/require-user";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { etatsPermanentsDuDossier } from "./queries";
-import { lignesDuWidget, type LigneWidgetEtat } from "./widget";
+import { resumeDuWidget, type ResumeWidgetEtats } from "./widget";
 
 /**
- * Les lignes du widget « Ce qui doit être en place », lues à la demande.
+ * Le résumé du widget « Ce qui doit être en place », lu à la demande.
+ *
+ * ~~`lignesEtatsPermanentsPourWidget`~~ (2026-10-17, contrôle visuel de c6) :
+ * l'action rendait les lignes de l'écran, une à une ; elle rend désormais le
+ * compte de l'en-tête et celui de chaque famille (`widget.ts`).
  *
  * POURQUOI UNE ACTION ET NON LE BUNDLE (contre-lecture du 2026-09-27). La
  * première écriture chargeait ces lignes dans le bundle du tableau de bord, à
@@ -17,10 +21,10 @@ import { lignesDuWidget, type LigneWidgetEtat } from "./widget";
  *
  * Même lecture que l'écran : `etatsPermanentsDuDossier` → `listerEtatsPermanents`.
  */
-export async function lignesEtatsPermanentsPourWidget(
+export async function resumeEtatsPermanentsPourWidget(
   etablissementId: string,
-): Promise<LigneWidgetEtat[]> {
+): Promise<ResumeWidgetEtats> {
   await assertEtablissementOwnership(etablissementId);
   const user = await requireUser();
-  return lignesDuWidget(await etatsPermanentsDuDossier(etablissementId, user.id));
+  return resumeDuWidget(await etatsPermanentsDuDossier(etablissementId, user.id));
 }

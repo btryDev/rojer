@@ -12,6 +12,7 @@ import {
   SectionsParUsage,
   SommaireParUsage,
 } from "@/components/etats-permanents/SectionsParUsage";
+import { compteDeLaPage } from "@/lib/etats-permanents/widget";
 import {
   phraseFaitsDates,
   phraseRestantes,
@@ -90,19 +91,20 @@ export default async function EtatsPermanentsPage({
   const { etablissement } = await requireEtablissement(id);
   const equipements = await listerEquipementsDeLEtablissement(id);
 
+  const dossier = await listerEtatsPermanents(
+    etablissement,
+    equipements.map((eq) => ({
+      id: eq.id,
+      libelle: eq.libelle,
+      categorie: eq.categorie,
+      caracteristiques: (eq.caracteristiques ?? null) as Record<
+        string,
+        unknown
+      > | null,
+    })),
+  );
   const { familles, faits, enPlace, total, parLesTitres, faitsDates, faitsDatesRenseignes } =
-    await listerEtatsPermanents(
-      etablissement,
-      equipements.map((eq) => ({
-        id: eq.id,
-        libelle: eq.libelle,
-        categorie: eq.categorie,
-        caracteristiques: (eq.caracteristiques ?? null) as Record<
-          string,
-          unknown
-        > | null,
-      })),
-    );
+    dossier;
 
   const restantes = total - enPlace;
   // Une seule écriture de la ligne pour les deux sections : les états rangés
@@ -190,11 +192,9 @@ export default async function EtatsPermanentsPage({
             familles et le sommaire ne portent que « x sur n » (2026-10-17,
             revue de c6 ; ADR-027, amendement du 2026-10-17, § 10).
           */}
-          <CompteurDeLaPage
-            enPlace={enPlace}
-            total={total}
-            parLesTitres={parLesTitres.enPlace}
-          />
+          {/* `compteDeLaPage` : la même lecture que le widget du tableau de
+              bord, qui affiche ce compte au-dessus de ses familles. */}
+          <CompteurDeLaPage {...compteDeLaPage(dossier)} />
         </div>
       </header>
 

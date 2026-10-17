@@ -359,7 +359,9 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
     id: "etats-permanents",
     titre: "Ce qui doit être en place",
     description:
-      "Les obligations sans date de l'écran du même nom — CSE, règlement intérieur, consignes… — avec leur état et l'article qui les fonde.",
+      // ~~« … avec leur état et l'article qui les fonde »~~ (2026-10-17,
+      // contrôle visuel de c6) : le widget résume, il ne liste plus les lignes.
+      "Le compte de l'écran du même nom — CSE, règlement intérieur, consignes… — et celui de chaque famille, avec un lien vers sa section.",
     taille: "medium",
     variants: [{ id: "default", label: "Défaut" }],
     defaultVariant: "default",

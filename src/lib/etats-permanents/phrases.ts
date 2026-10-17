@@ -194,38 +194,9 @@ export function libelleRetour(): string {
   return "Revenir dessus";
 }
 
-/**
- * L'état d'une ligne en quelques mots, pour une surface qui n'a pas la place
- * du bouton — le widget du tableau de bord (2026-09-27).
- *
- * LES MOTS DE L'ÉCRAN, ET RIEN D'AUTRE (contre-lecture du 2026-09-27, M2 et
- * M3). La première écriture disait « À mettre en place » et « Pas encore
- * daté » : des mots que l'écran n'emploie pas, et qui font d'une ligne non
- * déclarée un manque — alors que l'écran dit « Une ligne non déclarée n'est
- * pas un manquement constaté ». Elle faisait aussi passer la déclaration
- * avant « À confirmer », si bien qu'une ligne déclarée ET à confirmer taisait
- * ce que l'écran affiche. Désormais : la phrase de la déclaration
- * (`phraseDeclaration`) ou, à défaut, le geste de l'écran (`libelleGeste`) ;
- * précédés de « À confirmer » quand l'écran l'affiche, déclarée ou non.
+/*
+ * ~~`etatDeLaLigne`~~ (retirée le 2026-10-17, contrôle visuel de c6) : l'état
+ * d'une ligne en quelques mots, pour le widget du tableau de bord, qui listait
+ * les lignes de l'écran. Il les résume désormais par famille (`widget.ts`) ;
+ * elle n'avait pas d'autre appelant.
  */
-export function etatDeLaLigne({
-  mode,
-  declareLe,
-  aConfirmer,
-  parLesTitres = null,
-}: {
-  mode: "etat" | "fait";
-  /** La date de la déclaration, déjà formatée ; `null` = non déclarée. */
-  declareLe: string | null;
-  aConfirmer: boolean;
-  /**
-   * La phrase d'une ligne établie d'après les titres (2026-10-16) : elle
-   * remplace déclaration et geste, « À confirmer » reste devant.
-   */
-  parLesTitres?: string | null;
-}): string {
-  const base =
-    parLesTitres ??
-    (declareLe !== null ? phraseDeclaration(mode, declareLe) : libelleGeste(mode));
-  return aConfirmer ? `À confirmer · ${base}` : base;
-}
