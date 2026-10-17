@@ -117,6 +117,16 @@ describe("annonce décidée : `non_couvert`, jamais `obligation_manquante`", () 
     expect(annoncesEnManque(tous())).toEqual([]);
   });
 
+  it("une annonce encore muette ne cite aucune adresse structurée (sinon elle passerait pour annoncée)", () => {
+    // Relevé le 2026-10-17 : « Non déclaré … (`DESCRIPTION_CATEGORIE.X`) »
+    // était lu comme une citation d'aide par `manques-annonces.test.ts`, et
+    // compté comme annoncé par `doc-couverture.test.ts`.
+    const fautifs = tous()
+      .filter((a) => a.statut === "non_couvert" && (a.declareA ?? "").startsWith("Non déclaré") && (a.declareA ?? "").includes("DESCRIPTION_CATEGORIE."))
+      .map((a) => a.ref);
+    expect(fautifs).toEqual([]);
+  });
+
   it("cassure : CH 23 rendu à `obligation_manquante` est vu", () => {
     const ch23 = tous().find((a) => a.ref === "CH 23")!;
     const casse = { ...ch23, statut: "obligation_manquante", cause: "libre", toucheLaCible: true } as ArticleDepouille;
