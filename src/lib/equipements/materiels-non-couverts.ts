@@ -29,6 +29,18 @@
 // écrit la clé. Le libellé saisi n'est jamais lu, ni pour suggérer ni pour
 // classer.
 //
+// LES CLÉS DU CORPUS (`ReferenceMateriel.corpus`) — 2026-10-17, revue
+// indépendante du sous-lot B, option (b) décidée par c6. Une clé vise un
+// article `non_couvert` (adressé à cette liste ou à la page « Ce que Rojer ne
+// couvre pas »), ou un `retenu` / `sans_objet` cité en contexte (un seuil, un
+// champ, l'article qu'une catégorie suivie porte). JAMAIS un
+// `obligation_manquante` : la liste nomme le matériel des manques hors cadre
+// du § 7 par leur libellé, sans les lier ; les lier les faisait passer pour
+// annoncés. ~~Neuf références des entrées du 2026-10-14 (échafaudage, point
+// d'ancrage, groupe électrogène, tribune, cuisine mobile, centrifugeuse) et
+// deux de la piscine étaient citées par clé.~~ `materiels-non-couverts.test.ts`
+// tient la règle.
+//
 // Chaque sujet non suivi passe par `nonPorte(…)` : le balayage de
 // `perimetre/non-couverture-balayage.ts` lit ce dossier et échoue le jour où
 // le référentiel porterait ce que la phrase dit qu'il ne porte pas.
@@ -119,12 +131,21 @@ export const PHRASE_MAINTIEN_EN_ETAT_R_4322_1 = `Rojer ne suit pas ${nonPorte("l
 export const SANS_TEXTE_LU: ReadonlySet<CleMaterielNonCouvert> = new Set([
   "materiel_fitness",
   "fontaine_glacons",
-  "store_volet_roulant",
+  // ~~"store_volet_roulant"~~ — 2026-10-17, revue de B : sa phrase nomme
+  // l'arrêté du 21 décembre 1993, dont l'application reste à confirmer.
   "sauna_hammam",
 ]);
 
-const AUCUN_TEXTE_LU =
+export const AUCUN_TEXTE_LU =
   "Rojer n'a lu aucun texte qui en impose à l'exploitant, ce qui ne veut pas dire qu'il n'en existe aucun.";
+
+/**
+ * Les règles sanitaires des piscines (code de la santé publique, D. 1332-1 et
+ * D. 1332-2), dites dans l'entrée « Piscine » et dans celle du bain à remous.
+ * Une seule rédaction (revue du sous-lot B, 2026-10-17).
+ */
+const PHRASE_REGLES_SANITAIRES_PISCINES =
+  "Le code de la santé publique soumet à des règles sanitaires les piscines publiques et privées à usage collectif (art. D. 1332-1 et D. 1332-2)";
 
 export const MATERIELS_NON_COUVERTS: readonly MaterielNonCouvert[] = [
   {
@@ -152,11 +173,15 @@ export const MATERIELS_NON_COUVERTS: readonly MaterielNonCouvert[] = [
     synonymes: ["escalier mécanique", "escalator", "trottoir roulant", "tapis roulant"],
     // Reprise mot pour mot de la rubrique « Escaliers mécaniques et
     // trottoirs roulants » de `manques-annonces.ts` (2026-10-13), déplacée.
-    phrase: `Rojer ne suit pas ${nonPorte("la vérification annuelle des escaliers mécaniques et des trottoirs roulants")} par une personne ou un organisme agréé, ni ${nonPorte("l'examen des chaînes et crémaillères au milieu de l'année")}, ni ${nonPorte("la vérification de l'escalier mécanique avant sa remise en service après une transformation importante")}, ni ${nonPorte("l'entretien des appareils par un personnel spécialisé de l'établissement ou d'une entreprise liée par un contrat d'entretien")}, que le règlement de sécurité impose aux établissements recevant du public des quatre premières catégories.`,
-    // 2026-10-17, sous-lot B : AS 8 (entretien) nommé à côté d'AS 10.
+    phrase: `Rojer ne suit pas ${nonPorte("la vérification annuelle des escaliers mécaniques et des trottoirs roulants")} par une personne ou un organisme agréé, ni ${nonPorte("l'examen des chaînes et crémaillères au milieu de l'année")}, ni ${nonPorte("la vérification de l'escalier mécanique avant sa remise en service après une transformation importante")}, ni ${nonPorte("l'entretien des appareils par un personnel spécialisé de l'établissement ou d'une entreprise liée par un contrat d'entretien")}, ni ${nonPorte("les pancartes et la signalisation qui portent à la connaissance du public l'arrêt d'un appareil dont un défaut compromet la sécurité")}, que le règlement de sécurité impose aux établissements recevant du public des quatre premières catégories.`,
+    // 2026-10-17, sous-lot B : AS 8 (entretien) nommé à côté d'AS 10 ; revue
+    // du même jour : les pancartes d'arrêt de AS 11, comme dans l'aide de
+    // l'ascenseur. AS 11 reste un manque (registre technique, sous-lot C) :
+    // cité par son libellé, sans clé.
     references: [
       { libelle: "Arrêté du 25 juin 1980, art. AS 8", corpus: "AS 8" },
       { libelle: "Arrêté du 25 juin 1980, art. AS 10", corpus: "AS 10" },
+      { libelle: "Arrêté du 25 juin 1980, art. AS 11" },
     ],
   },
   {
@@ -174,12 +199,12 @@ export const MATERIELS_NON_COUVERTS: readonly MaterielNonCouvert[] = [
     synonymes: ["échafaudage", "échafaudage roulant"],
     phrase: `Rojer ne suit pas ${nonPorte("les vérifications des échafaudages")} — avant mise ou remise en service, examen quotidien, examen approfondi trimestriel —, ni ${nonPorte("la notice et la note de calcul de l'échafaudage")}, ni ${nonPorte("la formation au montage et au démontage des échafaudages")}.`,
     references: [
-      { libelle: "Arrêté du 21 décembre 2004, art. 4", corpus: "Arrêté 21-12-2004 art. 4" },
-      { libelle: "Arrêté du 21 décembre 2004, art. 5", corpus: "Arrêté 21-12-2004 art. 5" },
-      { libelle: "Arrêté du 21 décembre 2004, art. 6", corpus: "Arrêté 21-12-2004 art. 6" },
-      { libelle: "Code du travail, art. R. 4323-69", corpus: "R. 4323-69" },
-      { libelle: "Code du travail, art. R. 4323-70", corpus: "R. 4323-70" },
-      { libelle: "Code du travail, art. R. 4323-72", corpus: "R. 4323-72" },
+      { libelle: "Arrêté du 21 décembre 2004, art. 4" }, // ~~corpus: "Arrêté 21-12-2004 art. 4"~~ — 2026-10-17, un manque ne se cite pas par clé
+      { libelle: "Arrêté du 21 décembre 2004, art. 5" }, // ~~corpus: "Arrêté 21-12-2004 art. 5"~~ — 2026-10-17, un manque ne se cite pas par clé
+      { libelle: "Arrêté du 21 décembre 2004, art. 6" }, // ~~corpus: "Arrêté 21-12-2004 art. 6"~~ — 2026-10-17, un manque ne se cite pas par clé
+      { libelle: "Code du travail, art. R. 4323-69" }, // ~~corpus: "R. 4323-69"~~ — 2026-10-17, un manque ne se cite pas par clé
+      { libelle: "Code du travail, art. R. 4323-70" }, // ~~corpus: "R. 4323-70"~~ — 2026-10-17, un manque ne se cite pas par clé
+      { libelle: "Code du travail, art. R. 4323-72" }, // ~~corpus: "R. 4323-72"~~ — 2026-10-17, un manque ne se cite pas par clé
     ],
   },
   {
@@ -187,7 +212,8 @@ export const MATERIELS_NON_COUVERTS: readonly MaterielNonCouvert[] = [
     libelle: "Point d'ancrage ou ligne de vie",
     synonymes: ["point d'ancrage", "ligne de vie", "ancrage"],
     phrase: `Rojer ne suit pas ${nonPorte("la notice des points d'ancrage")} que l'employeur rédige et détient.`,
-    references: [{ libelle: "Code du travail, art. R. 4323-61", corpus: "R. 4323-61" }],
+    // ~~corpus: "R. 4323-61"~~ — 2026-10-17, un manque ne se cite pas par clé
+    references: [{ libelle: "Code du travail, art. R. 4323-61" }],
     orienteVers: {
       categorie: "EPI_ANTICHUTE",
       phrase:
@@ -210,7 +236,7 @@ export const MATERIELS_NON_COUVERTS: readonly MaterielNonCouvert[] = [
     // Reprise de la rubrique « Réseaux intérieurs d'eau » de
     // `manques-annonces.ts` (2026-09-27), déplacée ; les articles y sont
     // désormais cités (revue du lot, point 3).
-    phrase: `Rojer ne suit pas ${nonPorte("la protection des réseaux intérieurs d'eau contre les retours d'eau")} (arrêté du 10 septembre 2021, art. 4, 8, 9, 10 et 12), ni ${nonPorte("l'entretien des réservoirs et bâches de stockage d'eau")} (code de la santé publique, art. R. 1321-60). L'arrêté du 10 septembre 2021 vise les réseaux mis en place ou rénovés totalement à partir du 1er janvier 2023, et en charge le propriétaire des réseaux intérieurs de distribution, que Rojer ne sait pas identifier. Rojer ne suit pas non plus ${nonPorte("l'entretien d'un adoucisseur d'eau")} : le code de la santé publique fait vérifier et entretenir les dispositifs de traitement qui équipent les installations collectives de distribution (art. R. 1321-61), sans en fixer le rythme.`,
+    phrase: `Rojer ne suit pas ${nonPorte("la protection des réseaux intérieurs d'eau contre les retours d'eau")} (arrêté du 10 septembre 2021, art. 4, 8, 9, 10 et 12), ni ${nonPorte("l'entretien des réservoirs et bâches de stockage d'eau")} (code de la santé publique, art. R. 1321-60). L'arrêté du 10 septembre 2021 vise les réseaux mis en place ou rénovés totalement à partir du 1er janvier 2023, et en charge le propriétaire des réseaux intérieurs de distribution, que Rojer ne sait pas identifier. Rojer ne suit pas non plus ${nonPorte("l'entretien d'un adoucisseur d'eau")} : le code de la santé publique fait vérifier et entretenir les dispositifs de traitement qui équipent les installations collectives de distribution (art. R. 1321-61), sans en fixer le rythme ; son arrêté d'application, celui du 10 septembre 2021, ne vise que les dispositifs de protection.`,
     references: [
       { libelle: "Code de la santé publique, art. R. 1321-60", corpus: "R. 1321-60" },
       { libelle: "Code de la santé publique, art. R. 1321-61", corpus: "R. 1321-61" },
@@ -227,7 +253,7 @@ export const MATERIELS_NON_COUVERTS: readonly MaterielNonCouvert[] = [
     synonymes: ["groupe électrogène"],
     phrase: `Rojer ne suit pas ${nonPorte("la vérification mensuelle du groupe électrogène qui secourt la ventilation d'un immeuble d'habitation")}.`,
     references: [
-      { libelle: "Arrêté du 31 janvier 1986, art. 60", corpus: "Arrêté 1986-01-31 art. 60" },
+      { libelle: "Arrêté du 31 janvier 1986, art. 60" }, // ~~corpus: "Arrêté 1986-01-31 art. 60"~~ — 2026-10-17, un manque ne se cite pas par clé
     ],
     // Le groupe électrogène de SÉCURITÉ d'un ERP est suivi (EL 18 § 4), par
     // la question posée sur l'installation électrique : la recherche ne doit
@@ -243,14 +269,16 @@ export const MATERIELS_NON_COUVERTS: readonly MaterielNonCouvert[] = [
     libelle: "Tribune télescopique",
     synonymes: ["tribune", "gradins"],
     phrase: `Rojer ne suit pas ${nonPorte("l'inspection quinquennale des tribunes télescopiques de plus d'un mètre")}.`,
-    references: [{ libelle: "Arrêté du 25 juin 1980, art. CO 61", corpus: "CO 61" }],
+    // ~~corpus: "CO 61"~~ — 2026-10-17, un manque ne se cite pas par clé
+    references: [{ libelle: "Arrêté du 25 juin 1980, art. CO 61" }],
   },
   {
     cle: "cuisine_mobile",
     libelle: "Cuisine mobile ou module de cuisson temporaire",
     synonymes: ["cuisine mobile", "module de cuisson", "conteneur de cuisson"],
     phrase: `Rojer ne suit pas ${nonPorte("le nettoyage semestriel du conduit d'un module de cuisson temporaire")}.`,
-    references: [{ libelle: "Arrêté du 25 juin 1980, art. GC 18", corpus: "GC 18" }],
+    // ~~corpus: "GC 18"~~ — 2026-10-17, un manque ne se cite pas par clé
+    references: [{ libelle: "Arrêté du 25 juin 1980, art. GC 18" }],
   },
   {
     cle: "centrifugeuse_terrassement",
@@ -258,7 +286,7 @@ export const MATERIELS_NON_COUVERTS: readonly MaterielNonCouvert[] = [
     synonymes: ["centrifugeuse", "engin de terrassement", "pelleteuse", "mini-pelle"],
     phrase: `Rojer ne suit pas ${nonPorte("la vérification annuelle des centrifugeuses et des machines mobiles de terrassement à conducteur porté")}.`,
     references: [
-      { libelle: "Arrêté du 5 mars 1993, art. 2", corpus: "Arrêté 1993-03-05 art. 2" },
+      { libelle: "Arrêté du 5 mars 1993, art. 2" }, // ~~corpus: "Arrêté 1993-03-05 art. 2"~~ — 2026-10-17, un manque ne se cite pas par clé
     ],
   },
   {
@@ -285,26 +313,27 @@ export const MATERIELS_NON_COUVERTS: readonly MaterielNonCouvert[] = [
     // périmètre. », sans référence~~ — 2026-10-17, sous-lot B : « équipements
     // sportifs » sort de l'exclusion `risque_specialise` (le sous-lot E du plan
     // les instruit) ; la piscine y reste. La CLÉ ne change pas : elle est
-    // stockée en base.
+    // stockée en base. ~~Synonymes « équipement sportif », « agrès »~~ —
+    // 2026-10-17, revue de B : rattachés au matériel de fitness ; les buts et
+    // paniers viendront avec le sous-lot E. ~~Clés « X annexe » et « X 1 § 2 »~~
+    // — même revue, option (b) : deux manques hors cadre (§ 7), cités par leur
+    // libellé.
     cle: "piscine_equipement_sportif",
     libelle: "Piscine",
     synonymes: ["piscine", "bassin de natation"],
-    phrase: `Rojer ne suit pas ${nonPorte("les piscines")} : elles sont hors de son périmètre. Le code de la santé publique soumet à des normes d'hygiène de l'eau les piscines publiques et privées à usage collectif (art. D. 1332-1 et D. 1332-2). Dans une piscine couverte recevant du public, Rojer ne suit pas non plus ${nonPorte("les vérifications de l'installation de traitement des eaux")} (règlement de sécurité, annexe du chapitre X), ni ${nonPorte("l'affichage de l'effectif admis d'une piscine transformable ou mixte")} (art. X 1).`,
+    phrase: `Rojer ne suit pas ${nonPorte("les piscines")} : elles sont hors de son périmètre. ${PHRASE_REGLES_SANITAIRES_PISCINES}. Dans une piscine couverte recevant du public, Rojer ne suit pas non plus ${nonPorte("les vérifications de l'installation de traitement des eaux")} (règlement de sécurité, annexe du chapitre X), ni ${nonPorte("l'affichage de l'effectif admis d'une piscine transformable ou mixte")} (art. X 1).`,
     references: [
       { libelle: "Code de la santé publique, art. D. 1332-1", corpus: "CSP D. 1332-1" },
       { libelle: "Code de la santé publique, art. D. 1332-2", corpus: "CSP D. 1332-2" },
-      { libelle: "Arrêté du 25 juin 1980, annexe du chapitre X", corpus: "X annexe" },
-      {
-        libelle: "Arrêté du 25 juin 1980, art. X 1",
-        corpus: "X 1 § 2 — affichage de l'effectif des piscines transformables et mixtes",
-      },
+      { libelle: "Arrêté du 25 juin 1980, annexe du chapitre X" },
+      { libelle: "Arrêté du 25 juin 1980, art. X 1" },
     ],
   },
   {
     cle: "cabine_uv",
     libelle: "Cabine UV ou appareil de bronzage",
     synonymes: ["cabine UV", "solarium", "appareil de bronzage", "banc solaire", "bronzage", "UV"],
-    phrase: `Rojer ne suit pas ${nonPorte("les appareils de bronzage")} : ils sont hors de son périmètre. Leur exploitant les déclare au préfet, et un établissement qui en met un à disposition du public fait l'objet d'un contrôle par un organisme accrédité tous les deux ans (décret n° 2013-1261 du 27 décembre 2013, art. 15 et 17 ; arrêté du 20 octobre 2014, art. 2 et 9).`,
+    phrase: `Rojer ne suit pas ${nonPorte("les appareils de bronzage")} : ils sont hors de son périmètre. Leur exploitant les déclare au préfet ; un appareil mis à disposition du public fait l'objet d'un contrôle technique initial avant son utilisation, et l'établissement d'un contrôle par un organisme accrédité tous les deux ans (décret n° 2013-1261 du 27 décembre 2013, art. 15 et 17 ; arrêté du 20 octobre 2014, art. 2 et 9).`,
     references: [
       { libelle: "Décret n° 2013-1261 du 27 décembre 2013, art. 15", corpus: "Décret 2013-1261 art. 15" },
       { libelle: "Décret n° 2013-1261 du 27 décembre 2013, art. 17", corpus: "Décret 2013-1261 art. 17" },
@@ -316,7 +345,7 @@ export const MATERIELS_NON_COUVERTS: readonly MaterielNonCouvert[] = [
     cle: "bain_a_remous",
     libelle: "Bain à remous, spa ou jacuzzi",
     synonymes: ["bain à remous", "spa", "jacuzzi", "bain bouillonnant"],
-    phrase: `Rojer ne suit pas ${nonPorte("les bains à remous")} : ils sont hors de son périmètre. Le code de la santé publique soumet à des normes d'hygiène de l'eau les piscines publiques et privées à usage collectif (art. D. 1332-1 et D. 1332-2) ; un bain à remous n'en relève que s'il répond à leur définition.`,
+    phrase: `Rojer ne suit pas ${nonPorte("les bains à remous")} : ils sont hors de son périmètre. ${PHRASE_REGLES_SANITAIRES_PISCINES} ; un bain à remous n'en relève que s'il répond à leur définition.`,
     references: [
       { libelle: "Code de la santé publique, art. D. 1332-1", corpus: "CSP D. 1332-1" },
       { libelle: "Code de la santé publique, art. D. 1332-2", corpus: "CSP D. 1332-2" },
@@ -327,7 +356,9 @@ export const MATERIELS_NON_COUVERTS: readonly MaterielNonCouvert[] = [
     // l'est pas.
     cle: "materiel_fitness",
     libelle: "Matériel de fitness ou de musculation",
-    synonymes: ["fitness", "musculation", "tapis de course", "vélo d'appartement", "rameur", "elliptique", "banc de musculation"],
+    // 2026-10-17, revue de B : « équipement sportif » et « agrès » viennent de
+    // l'entrée « Piscine ».
+    synonymes: ["fitness", "musculation", "tapis de course", "vélo d'appartement", "rameur", "elliptique", "banc de musculation", "équipement sportif", "agrès"],
     phrase: `Rojer ne suit pas ${nonPorte("l'entretien du matériel de fitness et de musculation")}. ${AUCUN_TEXTE_LU}`,
     references: [],
   },
@@ -348,11 +379,13 @@ export const MATERIELS_NON_COUVERTS: readonly MaterielNonCouvert[] = [
     cle: "cuve_fioul",
     libelle: "Cuve de fioul ou de gazole",
     synonymes: ["cuve de fioul", "cuve à fioul", "réservoir de fioul", "cuve de gazole", "fioul", "fuel"],
-    phrase: `Rojer ne suit pas ${nonPorte("l'entretien d'une cuve de fioul ou de gazole")} (arrêté du 1er juillet 2004, art. 27), ni ${nonPorte("les opérations dues avant de remettre en service un réservoir abandonné, contrôle d'étanchéité compris")} (art. 29). Cet arrêté ne vise que les réservoirs implantés hors d'une installation classée et hors d'un établissement recevant du public (art. 2).`,
+    phrase: `Rojer ne suit pas ${nonPorte("l'entretien d'une cuve de fioul ou de gazole")} (arrêté du 1er juillet 2004, art. 27), ni ${nonPorte("les dispositions à prendre à l'abandon d'un réservoir")} (art. 28), ni ${nonPorte("les opérations dues avant de remettre en service un réservoir abandonné, contrôle d'étanchéité compris")} (art. 29). Cet arrêté ne vise que les réservoirs implantés hors d'une installation classée et hors d'un établissement recevant du public (art. 2). En établissement recevant du public des quatre premières catégories, Rojer ne suit ${nonPorte("la vérification annuelle du stockage des combustibles")} (règlement de sécurité, art. CH 58 § 2) que si une ventilation mécanique ou une centrale de traitement d'air est déclarée.`,
     references: [
       { libelle: "Arrêté du 1er juillet 2004, art. 2", corpus: "Arrêté 2004-07-01 art. 2" },
       { libelle: "Arrêté du 1er juillet 2004, art. 27", corpus: "Arrêté 2004-07-01 art. 27" },
+      { libelle: "Arrêté du 1er juillet 2004, art. 28", corpus: "Arrêté 2004-07-01 art. 28" },
       { libelle: "Arrêté du 1er juillet 2004, art. 29", corpus: "Arrêté 2004-07-01 art. 29" },
+      { libelle: "Arrêté du 25 juin 1980, art. CH 58", corpus: "CH 58" },
     ],
   },
   {
@@ -382,11 +415,14 @@ export const MATERIELS_NON_COUVERTS: readonly MaterielNonCouvert[] = [
     references: [{ libelle: "Code du travail, art. R. 4322-1", corpus: "R. 4322-1" }],
   },
   {
-    // Ligne de partage 4 : hors du champ de la santé et sécurité au travail.
+    // ~~Ligne de partage 4 : hors du champ de la santé et sécurité au
+    // travail ; phrase « …, qui relève de la sécurité sanitaire des aliments,
+    // hors de son champ. »~~ — 2026-10-17, revue de B : aucun texte lu, la
+    // phrase le dit sans classer.
     cle: "fontaine_glacons",
     libelle: "Fontaine à eau ou machine à glaçons",
     synonymes: ["fontaine à eau", "machine à glaçons", "distributeur d'eau"],
-    phrase: `Rojer ne suit pas ${nonPorte("l'hygiène des fontaines à eau et des machines à glaçons")}, qui relève de la sécurité sanitaire des aliments, hors de son champ.`,
+    phrase: `Rojer ne suit pas ${nonPorte("l'hygiène des fontaines à eau et des machines à glaçons")}. ${AUCUN_TEXTE_LU}`,
     references: [],
   },
   {
@@ -396,8 +432,10 @@ export const MATERIELS_NON_COUVERTS: readonly MaterielNonCouvert[] = [
     cle: "store_volet_roulant",
     libelle: "Store ou volet roulant motorisé",
     synonymes: ["store", "volet roulant", "store banne"],
-    phrase: `Rojer ne suit pas ${nonPorte("les stores et volets roulants motorisés")}. ${AUCUN_TEXTE_LU}`,
-    references: [],
+    // ~~« Rojer ne suit pas les stores et volets roulants motorisés. » +
+    // AUCUN_TEXTE_LU~~ — 2026-10-17, revue de B : phrase de c6.
+    phrase: `Rojer ne suit pas ${nonPorte("l'entretien des stores et volets roulants motorisés")} ; il ne sait pas si l'arrêté du 21 décembre 1993 (portes et portails automatiques) s'y applique — à confirmer avec le préventeur.`,
+    references: [{ libelle: "Arrêté du 21 décembre 1993 (portes et portails automatiques)" }],
   },
   {
     cle: "sauna_hammam",

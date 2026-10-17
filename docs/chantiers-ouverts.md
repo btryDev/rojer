@@ -102,6 +102,16 @@ release (lots lancés le même jour) ; **n° 1 (gaz sans cuisine) et n° 5
    recoupée à l'intérieur du texte, l'ancienne rayée en commentaire. Remède :
    normaliser les deux côtés de la même façon, avec un test sur PU 4 tel
    qu'il était (« 1. Dans certains … ferme-porte. »).
+10. **[2026-10-17, dette écrite, non corrigée] La recherche de matériel trouve
+   « gazole » quand on tape « gaz »** (`lot/ref-b-hors-cadre`, revue du
+   sous-lot B). `rechercherMateriel` (`src/lib/equipements/recherche-materiel.ts`)
+   compare désormais chaque mot de la saisie au DÉBUT des mots des termes :
+   « spa » ne trouve plus « transpalette ». Mais « gaz » commence « gazole »,
+   et la cuve de fioul ou de gazole sort à côté de l'installation de gaz. Le
+   mot entier corrigerait ce cas et casserait la frappe en cours (« chaud » ne
+   trouverait plus la chaudière). Remède à instruire : mot entier pour les
+   mots de la saisie déjà terminés par une espace, début de mot pour le
+   dernier, avec un test sur « gaz » et sur « chaud ».
 
 ### Décisions attendues
 

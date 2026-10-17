@@ -83,9 +83,12 @@ export const ARRETE_2004_07_01_PRODUITS_PETROLIERS: Corpus = {
         "Tout abandon (définitif ou provisoire) d'un réservoir doit faire l'objet de dispositions conduisant à éviter tout risque de formation de vapeurs",
       prescrit:
         "Tout abandon d'un réservoir passe par vidange, dégazage et nettoyage, puis comblement ou retrait ; l'entreprise intervenante remet un certificat d'inertage à l'utilisateur.",
-      statut: "sans_objet",
+      historique:
+        "~~`sans_objet`, motif : « Lu pour comprendre l'événement auquel l'article 29 renvoie (‹ la procédure citée à l'article 28 ›) : c'est l'abandon du réservoir. Obligation ponctuelle liée à un fait que Rojer n'observe pas, dans le même champ restreint que l'article 2 ; elle n'est pas citée par la liste des matériels et n'a pas d'échéance à porter. »~~ [2026-10-17, revue indépendante du sous-lot B : une obligation de l'utilisateur, même ponctuelle, n'est pas sans objet.]",
+      statut: "non_couvert",
+      declareA: ADRESSE_MATERIELS_NON_COUVERTS,
       motif:
-        "Lu pour comprendre l'événement auquel l'article 29 renvoie (« la procédure citée à l'article 28 ») : c'est l'abandon du réservoir. Obligation ponctuelle liée à un fait que Rojer n'observe pas, dans le même champ restreint que l'article 2 ; elle n'est pas citée par la liste des matériels et n'a pas d'échéance à porter. « Tout abandon (définitif ou provisoire) d'un réservoir doit faire l'objet de dispositions conduisant à éviter tout risque de formation de vapeurs ».",
+        "Obligation de l'utilisateur, ponctuelle, liée à un événement que Rojer n'observe pas : l'abandon, définitif ou provisoire, d'un réservoir (vidange, dégazage, nettoyage, puis comblement ou retrait, certificat d'inertage). C'est la procédure à laquelle l'article 29 renvoie. Même champ restreint que l'article 2 : hors installation classée et hors établissement recevant du public. Rojer ne la suit pas et le dit dans la liste des matériels non couverts, entrée « Cuve de fioul ou de gazole » (2026-10-17, décision de c6 sur la revue du sous-lot B).",
     },
     {
       ref: "Arrêté 2004-07-01 art. 29",

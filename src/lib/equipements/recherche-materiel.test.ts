@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { CATEGORIES_EQUIPEMENT } from "@/lib/referentiels/types-communs";
-import { LABEL_CATEGORIE_EQUIPEMENT } from "./labels";
 import { MATERIELS_NON_COUVERTS } from "./materiels-non-couverts";
 import { normaliser, rechercherMateriel, SYNONYMES_CATEGORIE } from "./recherche-materiel";
 
@@ -26,17 +25,14 @@ describe("la recherche de matériel (2026-10-14)", () => {
   });
 
   it("cassure : sans son synonyme, le rideau métallique ne trouve plus le portail", () => {
-    // La recherche, rejouée sur la table privée du synonyme : c'est lui, et
-    // non le libellé, qui oriente le rideau.
-    const termes = (retire: string) =>
-      [LABEL_CATEGORIE_EQUIPEMENT.PORTAIL_AUTO, ...SYNONYMES_CATEGORIE.PORTAIL_AUTO.filter((t) => t !== retire)]
-        .map(normaliser)
-        .join(" | ");
-    const trouve = (saisie: string, botte: string) =>
-      normaliser(saisie).split(" ").every((m) => botte.includes(m));
-    expect(trouve("rideau métallique", termes(""))).toBe(true);
-    expect(trouve("rideau métallique", termes("rideau métallique"))).toBe(false);
-    expect(trouve("barrière levante", termes("barrière levante"))).toBe(false);
+    // La vraie recherche, sur une table privée du synonyme (revue du 2026-10-17 :
+    // la première écriture recopiait la logique, et ne prouvait rien d'elle).
+    const sans = (retire: string) => ({
+      synonymes: { ...SYNONYMES_CATEGORIE, PORTAIL_AUTO: SYNONYMES_CATEGORIE.PORTAIL_AUTO.filter((t) => t !== retire) },
+      materiels: MATERIELS_NON_COUVERTS,
+    });
+    expect(rechercherMateriel("rideau métallique", sans("rideau métallique")).categories).not.toContain("PORTAIL_AUTO");
+    expect(rechercherMateriel("barrière levante", sans("barrière levante")).categories).not.toContain("PORTAIL_AUTO");
   });
 
   it("les synonymes du sous-lot B (inventaire validé le 2026-10-17)", () => {
@@ -62,9 +58,22 @@ describe("la recherche de matériel (2026-10-14)", () => {
   });
 
   it("cassure : sans son synonyme, « solarium » ne trouve plus la cabine UV", () => {
-    const uv = MATERIELS_NON_COUVERTS.find((m) => m.cle === "cabine_uv")!;
-    const botte = [uv.libelle, ...uv.synonymes.filter((t) => t !== "solarium")].map(normaliser).join(" | ");
-    expect(botte.includes("solarium")).toBe(false);
+    const materiels = MATERIELS_NON_COUVERTS.map((m) =>
+      m.cle === "cabine_uv" ? { ...m, synonymes: m.synonymes.filter((t) => t !== "solarium") } : m,
+    );
+    expect(rechercherMateriel("solarium", { synonymes: SYNONYMES_CATEGORIE, materiels }).materiels).toEqual([]);
+  });
+
+  it("un mot de la saisie commence un mot du terme, jamais son milieu (revue du 2026-10-17)", () => {
+    expect(cles("spa")).not.toContain("transpalette");
+    expect(cles("spa")).toContain("bain_a_remous");
+    // La frappe en cours garde sa réponse.
+    expect(cats("chaud")).toContain("INSTALLATION_GAZ");
+    expect(cles("escab")).toEqual(["echelle"]);
+    // Les synonymes rattachés depuis l'entrée « Piscine ».
+    expect(cles("agrès")).toEqual(["materiel_fitness"]);
+    expect(cles("équipement sportif")).toEqual(["materiel_fitness"]);
+    expect(cles("équipement sportif")).not.toContain("piscine_equipement_sportif");
   });
 
   it("le monte-charge n'est orienté nulle part (revue du 2026-10-14, décision D10 ouverte)", () => {

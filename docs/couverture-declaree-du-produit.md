@@ -163,7 +163,7 @@ sixième `??` recopié.
 C'est la limite la plus importante de ce document, et la raison directe du
 retrait de la carte.
 
-~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ ~~Les 66 articles (2026-10-07, l'IGH, les équipements sous pression et le stockage de matières dangereuses en partie retirés)~~ ~~Les 70 articles (2026-10-13, quatre manques de la cible redéfinie annoncés)~~ ~~Les 72 articles (2026-10-13, six manques de la cible redéfinie annoncés)~~ ~~Les 73 articles (2026-10-13, sept manques de la cible redéfinie annoncés)~~ ~~Les 74 articles (2026-10-14, `L. 8222-1-1` dit sur la page Prestataires)~~ ~~Les 77 articles (2026-10-14, quatre articles cités par l'aide des catégories entrés au corpus)~~ ~~Les 78 articles (2026-10-14, intégration des deux lots : 73 + 1 + 4)~~ ~~Les 76 articles (2026-10-16, lecture des chapitres de types d'ERP : 78 − 6 + 4)~~ ~~Les 82 articles (2026-10-17, titre Ier lu en entier et motifs du titre II réécrits : 76 + 6 − 0)~~ ~~Les 89 articles (2026-10-17, corrections de la revue de `lot/ref-a-corpus-titre-1` : 82 + 7 − 0)~~ Les 100 articles (2026-10-17, sous-lot B `lot/ref-b-hors-cadre` : 89 + 11 − 0) ci-dessous sont ceux que le dépouillement a lus, qui imposent
+~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ ~~Les 66 articles (2026-10-07, l'IGH, les équipements sous pression et le stockage de matières dangereuses en partie retirés)~~ ~~Les 70 articles (2026-10-13, quatre manques de la cible redéfinie annoncés)~~ ~~Les 72 articles (2026-10-13, six manques de la cible redéfinie annoncés)~~ ~~Les 73 articles (2026-10-13, sept manques de la cible redéfinie annoncés)~~ ~~Les 74 articles (2026-10-14, `L. 8222-1-1` dit sur la page Prestataires)~~ ~~Les 77 articles (2026-10-14, quatre articles cités par l'aide des catégories entrés au corpus)~~ ~~Les 78 articles (2026-10-14, intégration des deux lots : 73 + 1 + 4)~~ ~~Les 76 articles (2026-10-16, lecture des chapitres de types d'ERP : 78 − 6 + 4)~~ ~~Les 82 articles (2026-10-17, titre Ier lu en entier et motifs du titre II réécrits : 76 + 6 − 0)~~ ~~Les 89 articles (2026-10-17, corrections de la revue de `lot/ref-a-corpus-titre-1` : 82 + 7 − 0)~~ ~~Les 100 articles (2026-10-17, sous-lot B `lot/ref-b-hors-cadre` : 89 + 11 − 0)~~ Les 102 articles (2026-10-17, revue de B : 100 + 2 − 0) ci-dessous sont ceux que le dépouillement a lus, qui imposent
 quelque chose à un exploitant, et que le référentiel ne porte pas. **Rien ne les
 restreint aux établissements que leur chapitre vise** — sauf les ~~vingt-cinq
 annoncés le 2026-09-27~~ ~~trente-trois~~ trente-cinq annoncés (vingt-cinq le
@@ -332,9 +332,16 @@ bronzage) ; `CSP D. 1332-1`, `CSP D. 1332-2` (piscines et bains à remous) ;
 2026-10-17 ». Aucun ne sort ; `R. 4323-106` change d'adresse sans changer de
 statut.
 
+**Puis 100 + 2 − 0 = 102** (2026-10-17, revue indépendante du sous-lot B,
+décisions de c6) : `R. 1321-61` passe de `sans_objet` à `non_couvert` — son
+motif disait la dette portée par l'arrêté du 10 septembre 2021, qui ne vise
+que les dispositifs de protection, pas ceux de traitement (un adoucisseur) ;
+`Arrêté 2004-07-01 art. 28`, l'abandon d'un réservoir, passe de `sans_objet` à
+`non_couvert`. Adresse des deux : la liste des matériels non couverts.
+
 ---
 
-## 3. Les 100 articles lus et non portés
+## 3. Les 102 articles lus et non portés
 
 ~~Cinq familles~~ ~~Neuf familles (compte refait le 2026-09-26)~~ Dix-huit familles (compte refait le 2026-09-27, C45), une dixième étant sortie de la liste le 2026-09-01 (voir
 ci-dessous). Les motifs sont ceux du corpus, cités et non réécrits : ils ont
@@ -826,7 +833,7 @@ quand on cherche le matériel au formulaire d'équipement.
   accrédité tous les deux ans. Entrée « Cabine UV ou appareil de bronzage ».
   Les UV restent sous l'exclusion `risque_specialise`.
 - **Piscines et bains à remous** (`csp-bains-a-remous`) — `CSP D. 1332-1`,
-  `CSP D. 1332-2` : normes d'hygiène de l'eau des piscines publiques et privées
+  `CSP D. 1332-2` : règles sanitaires des piscines publiques et privées
   à usage collectif ; le texte ne nomme pas les bains à remous, et un bain à
   remous n'en relève que s'il répond à la définition de la piscine. Entrées
   « Piscine » et « Bain à remous, spa ou jacuzzi ».
@@ -836,11 +843,16 @@ quand on cherche le matériel au formulaire d'équipement.
   de l'exploitant. Annonce décidée par c6 (sécurité des personnes). Entrée
   « Aire de jeux pour enfants ».
 - **Cuves de fioul** (`arrete-2004-07-01-produits-petroliers`) —
-  `Arrêté 2004-07-01 art. 27`, `Arrêté 2004-07-01 art. 29` : entretien, et
-  opérations avant la remise en service d'un réservoir abandonné. L'arrêté ne
+  `Arrêté 2004-07-01 art. 27`, `Arrêté 2004-07-01 art. 28` (depuis la revue),
+  `Arrêté 2004-07-01 art. 29` : entretien, abandon d'un réservoir, et
+  opérations avant sa remise en service. L'arrêté ne
   vise que les réservoirs hors installation classée et hors ERP (art. 2,
   `sans_objet`) ; un restaurant, un commerce ou un hôtel n'y est pas soumis.
   Entrée « Cuve de fioul ou de gazole ».
+- **Dispositifs de traitement de l'eau** (`csp-eau-potable`, revue du même
+  jour) — `R. 1321-61` : vérification et entretien sans rythme écrit, l'arrêté
+  d'application ne visant que les dispositifs de protection. Entrée
+  « Réservoir ou bâche d'eau, clapet anti-retour » (adoucisseur).
 
 ### Plan de prévention, information de l'inspection du travail — 1 article (2026-09-27)
 
@@ -1268,10 +1280,10 @@ tranchée. Manquantes : ~~22 + 18 − 0 = 40~~ ~~22 + 26 − 0 = 48~~ ~~22 + 28 
 | `U 47` | Type U | `libre` | Ligne nouvelle : formation et exercices, défaut annuel (ADR-039) |
 | `J 40` | Type J | `libre` | Ligne nouvelle commune J et U : consignes affichées (et remises aux résidents en J) |
 | `U 48` | Type U | `libre` | Ligne nouvelle commune J et U : consignes affichées |
-| ~~`J 33`~~ | Type J | `categorie_equipement` | ~~~~Catégorie « gaz médicaux » ; vérification annuelle et consignes rappelées~~ [2026-10-17] **Décision** (catégorie d'équipement nouvelle) : vise les équipements MOBILES d'oxygénothérapie, seuls admis en J (J 32) ; vérification annuelle et consignes rappelées~~ **Hors cadre (§ 7)**, sous-lot B, 2026-10-17 |
-| ~~`U 64`~~ | Type U | `categorie_equipement` | ~~~~Catégorie « gaz médicaux » ; vérification annuelle (rythme écrit)~~ [2026-10-17] **Décision** (catégorie d'équipement nouvelle) : vise les STOCKAGES et RÉSEAUX de distribution de gaz médicaux ; vérification annuelle (rythme écrit)~~ **Hors cadre (§ 7)**, sous-lot B, 2026-10-17 |
-| ~~`U 62`~~ | Type U | `categorie_equipement` | ~~~~Catégorie « gaz médicaux » ; consignes rappelées, défaut annuel~~ [2026-10-17] **Décision**, avec U 64 : consignes rappelées, défaut annuel~~ **Hors cadre (§ 7)**, sous-lot B, 2026-10-17 |
-| ~~`PU 5`~~ | Type U de 5ᵉ catégorie à construire ou à modifier (PU 1) | `categorie_equipement` | ~~~~Les deux lignes des gaz médicaux étendues à la 5ᵉ, borne à trancher~~ [2026-10-17] **Décision**, avec U 64 : les deux lignes étendues à la 5ᵉ ; la borne « à construire ou à modifier » n'a pas d'attribut~~ **Hors cadre (§ 7)**, sous-lot B, 2026-10-17 |
+| ~~`J 33`~~ | Type J | `categorie_equipement` | ~~Catégorie « gaz médicaux » ; vérification annuelle et consignes rappelées~~ ~~[2026-10-17] **Décision** (catégorie d'équipement nouvelle) : vise les équipements MOBILES d'oxygénothérapie, seuls admis en J (J 32) ; vérification annuelle et consignes rappelées~~ **Hors cadre (§ 7)**, sous-lot B, 2026-10-17 |
+| ~~`U 64`~~ | Type U | `categorie_equipement` | ~~Catégorie « gaz médicaux » ; vérification annuelle (rythme écrit)~~ ~~[2026-10-17] **Décision** (catégorie d'équipement nouvelle) : vise les STOCKAGES et RÉSEAUX de distribution de gaz médicaux ; vérification annuelle (rythme écrit)~~ **Hors cadre (§ 7)**, sous-lot B, 2026-10-17 |
+| ~~`U 62`~~ | Type U | `categorie_equipement` | ~~Catégorie « gaz médicaux » ; consignes rappelées, défaut annuel~~ ~~[2026-10-17] **Décision**, avec U 64 : consignes rappelées, défaut annuel~~ **Hors cadre (§ 7)**, sous-lot B, 2026-10-17 |
+| ~~`PU 5`~~ | Type U de 5ᵉ catégorie à construire ou à modifier (PU 1) | `categorie_equipement` | ~~Les deux lignes des gaz médicaux étendues à la 5ᵉ, borne à trancher~~ ~~[2026-10-17] **Décision**, avec U 64 : les deux lignes étendues à la 5ᵉ ; la borne « à construire ou à modifier » n'a pas d'attribut~~ **Hors cadre (§ 7)**, sous-lot B, 2026-10-17 |
 | `MS 41` | Tout ERP des catégories 1 à 4 | ~~`libre`~~ `a_trancher` | ~~Ligne nouvelle N1–N4 : plan d'intervention à chaque entrée (porté en 5ᵉ avec sommeil seulement)~~ [2026-10-17] Attend la décision A6 (GN 10), comme PE 27 § 6 |
 | `MS 58 § 3 et § 4 — contrat d'entretien de la détection, annexé au registre` | ERP des catégories 1 à 4 avec détection | `libre` | Ligne sur `ALARME_INCENDIE` N1–N4, patron de PE 4 § 1 |
 | `EC 13 — notice annexée au registre et entretiens consignés` | ERP des catégories 1 à 4 | `libre` | Ligne d'état permanent sur `BAES` N1–N4 (notice annexée) |

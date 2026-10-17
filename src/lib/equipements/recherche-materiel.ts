@@ -10,7 +10,12 @@
 //
 // DÉTERMINISTE ET VERSIONNÉE. La table est écrite à la main, ici ; la
 // correspondance est une inclusion de mots, sans accents ni casse — aucune
-// distance, aucun score, aucun classement appris. La même saisie rend
+// distance, aucun score, aucun classement appris. ~~Chaque mot de la saisie
+// est cherché n'importe où dans les termes~~ [2026-10-17, revue du sous-lot B :
+// « spa » trouvait « transpalette ». Chaque mot de la saisie doit désormais
+// COMMENCER un mot d'un terme : la frappe en cours (« chaud » → chaudière)
+// garde sa réponse, le milieu de mot n'en a plus. Reste « gaz » → « gazole »,
+// un début de mot ; voir `docs/chantiers-ouverts.md`.] La même saisie rend
 // toujours la même liste, dans l'ordre de `CATEGORIES_EQUIPEMENT`.
 //
 // ELLE PROPOSE, ELLE NE DÉCIDE PAS. Ce que le dirigeant tape ici n'est pas
@@ -110,11 +115,17 @@ export function normaliser(s: string): string {
     .trim();
 }
 
-/** Chaque mot de la saisie figure dans l'un des termes. */
+/** Chaque mot de la saisie commence l'un des mots des termes. */
 function correspond(mots: readonly string[], termes: readonly string[]): boolean {
-  const botte = termes.map(normaliser).join(" | ");
-  return mots.every((m) => botte.includes(m));
+  const debuts = termes.flatMap((t) => normaliser(t).split(" "));
+  return mots.every((m) => debuts.some((d) => d.startsWith(m)));
 }
+
+/** Les tables où la recherche lit — injectables, pour éprouver un synonyme. */
+export type TablesRecherche = {
+  synonymes: Readonly<Record<CategorieEquipement, readonly string[]>>;
+  materiels: readonly MaterielNonCouvert[];
+};
 
 export type ResultatRecherche = {
   categories: CategorieEquipement[];
@@ -128,15 +139,18 @@ export type ResultatRecherche = {
  * l'ancien `<select>`, rien de plus. Les matériels non suivis n'apparaissent
  * que quand on les cherche.
  */
-export function rechercherMateriel(saisie: string): ResultatRecherche {
+export function rechercherMateriel(
+  saisie: string,
+  tables: TablesRecherche = { synonymes: SYNONYMES_CATEGORIE, materiels: MATERIELS_NON_COUVERTS },
+): ResultatRecherche {
   const mots = normaliser(saisie).split(" ").filter(Boolean);
   if (mots.length === 0) {
     return { categories: [...CATEGORIES_EQUIPEMENT], materiels: [] };
   }
   return {
     categories: CATEGORIES_EQUIPEMENT.filter((c) =>
-      correspond(mots, [LABEL_CATEGORIE_EQUIPEMENT[c], ...SYNONYMES_CATEGORIE[c]]),
+      correspond(mots, [LABEL_CATEGORIE_EQUIPEMENT[c], ...tables.synonymes[c]]),
     ),
-    materiels: MATERIELS_NON_COUVERTS.filter((m) => correspond(mots, [m.libelle, ...m.synonymes])),
+    materiels: tables.materiels.filter((m) => correspond(mots, [m.libelle, ...m.synonymes])),
   };
 }
