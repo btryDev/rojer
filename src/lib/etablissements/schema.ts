@@ -80,7 +80,9 @@ export function reponseSommeilSuivantLeType<
   T extends {
     estERP?: boolean | null;
     typeErp?: string | null;
-    typesErpAutres?: readonly string[] | null;
+    // REQUIS (revue du lot 2) : optionnel, un appelant l'omettait sans que
+    // tsc le voie, et un N + O se voyait refuser la réponse de son hôtel.
+    typesErpAutres: readonly string[] | null | undefined;
     comporteLocauxSommeilPublic?: boolean | null;
   },
 >(donnees: T): T {
@@ -101,7 +103,8 @@ export function reponseSommeilSuivantLeType<
 export function questionSommeilPosee(donnees: {
   estERP?: boolean | null;
   typeErp?: string | null;
-  typesErpAutres?: readonly string[] | null;
+  /** REQUIS : `undefined` doit être écrit, pas omis — c'est dire « non posté ». */
+  typesErpAutres: readonly string[] | null | undefined;
 }): boolean {
   if (donnees.estERP !== true) return false;
   const types = [donnees.typeErp, ...(donnees.typesErpAutres ?? [])];
@@ -405,8 +408,14 @@ export const etablissementSchema = z
     // porte, pas le parcours, qui doit porter la règle ». Même contrôle que
     // celui d'`onboarding/schema.ts`. Hors de la liste, rien n'est refusé : la
     // valeur est remise à `null` par `reponseSommeilSuivantLeType`.
+    // La liste POSTÉE seulement : la fusion avec la valeur en base se fait
+    // après, dans l'action. Un N + O dont O ne vient que de la base et dont la
+    // réponse est vide n'est donc pas refusé ici (revue du lot 2) — il n'a
+    // aucun écran pour répondre avant le lot 3, qui postera la liste. D'ici
+    // là, le moteur retient ses lignes de sommeil « à confirmer », et la
+    // relance de la fiche (`repondreSommeil`) lui pose la question.
     if (
-      questionSommeilPosee(val) &&
+      questionSommeilPosee({ ...val, typesErpAutres: val.typesErpAutres }) &&
       (val.comporteLocauxSommeilPublic === undefined ||
         val.comporteLocauxSommeilPublic === null)
     ) {

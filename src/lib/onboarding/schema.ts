@@ -255,7 +255,7 @@ export const onboardingSchema = z
     // ne retient rien sur leur silence (`matching/engine.ts`).
     if (
       val.comporteLocauxSommeilPublic !== undefined &&
-      !questionSommeilPosee(val)
+      !questionSommeilPosee({ ...val, typesErpAutres: val.typesErpAutres })
     ) {
       ctx.addIssue({
         code: "custom",
@@ -271,7 +271,7 @@ export const onboardingSchema = z
     // n'inviterait à répondre dès la création.
     if (
       val.comporteLocauxSommeilPublic === undefined &&
-      questionSommeilPosee(val)
+      questionSommeilPosee({ ...val, typesErpAutres: val.typesErpAutres })
     ) {
       ctx.addIssue({
         code: "custom",

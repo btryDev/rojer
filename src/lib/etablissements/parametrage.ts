@@ -186,11 +186,14 @@ export async function repondreSommeil(
     async (oui) => {
       const etab = await prisma.etablissement.findUnique({
         where: { id: etablissementId },
-        select: { estERP: true, typeErp: true },
+        select: { estERP: true, typeErp: true, typesErpAutres: true },
       });
       const garde = reponseSommeilSuivantLeType({
         estERP: etab?.estERP ?? false,
         typeErp: etab?.typeErp ?? null,
+        // ADR-045 : la question est posée dès qu'un des types l'appelle — un
+        // restaurant qui exploite un hôtel (N, puis O) doit pouvoir répondre.
+        typesErpAutres: etab?.typesErpAutres ?? [],
         comporteLocauxSommeilPublic: oui,
       });
       return garde.comporteLocauxSommeilPublic === null

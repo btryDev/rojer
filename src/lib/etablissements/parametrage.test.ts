@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const h = vi.hoisted(() => ({
   update: vi.fn(),
-  findUnique: vi.fn(async () => ({ estERP: true, typeErp: "O" as string | null })),
+  findUnique: vi.fn(async () => ({ estERP: true, typeErp: "O" as string | null, typesErpAutres: [] as string[] })),
   regen: vi.fn(async () => true),
 }));
 vi.mock("@/lib/prisma", () => ({ prisma: { etablissement: { update: h.update, findUnique: h.findUnique } } }));
@@ -61,13 +61,30 @@ describe("régénération ratée : la réponse est acquise, et on le dit (revue 
 describe("sommeil : la réponse suit le type, comme à la fiche (contre-revue du lot 1)", () => {
   // Éprouvé en retirant la garde de `repondreSommeil`.
   it.each([
-    ["type hors liste", { estERP: true, typeErp: "W" }],
-    ["pas ERP", { estERP: false, typeErp: null }],
+    ["type hors liste", { estERP: true, typeErp: "W", typesErpAutres: [] }],
+    ["pas ERP", { estERP: false, typeErp: null, typesErpAutres: [] }],
+    // Hors ERP, les autres types gardés en base ne la rouvrent pas.
+    ["pas ERP, O gardé parmi les autres types", { estERP: false, typeErp: "N", typesErpAutres: ["O"] }],
   ])("%s : refusée, rien n'est écrit", async (_nom, etab) => {
     h.findUnique.mockResolvedValueOnce(etab);
     const r = await repondreSommeil("etab-1", { status: "idle" }, reponse("oui"));
     expect(r.status).toBe("error");
     expect(h.update).not.toHaveBeenCalled();
     expect(h.regen).not.toHaveBeenCalled();
+  });
+});
+
+describe("sommeil : un des types suffit (ADR-045, revue du lot 2)", () => {
+  // Un restaurant qui exploite un hôtel : N en premier, O parmi les autres.
+  // La fiche relance la question (`marquesAConfirmerDuDossier` lit l'union) ;
+  // la réponse doit être acceptée, sans quoi le dirigeant tourne en rond.
+  // Éprouvé en retirant `typesErpAutres` de l'appel à la garde.
+  it("N + O : la réponse est acceptée et écrite", async () => {
+    h.findUnique.mockResolvedValueOnce({ estERP: true, typeErp: "N", typesErpAutres: ["O"] });
+    const r = await repondreSommeil("etab-1", { status: "idle" }, reponse("oui"));
+    expect(r.status).not.toBe("error");
+    expect(h.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { comporteLocauxSommeilPublic: true } }),
+    );
   });
 });
