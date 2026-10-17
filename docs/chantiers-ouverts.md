@@ -190,6 +190,17 @@ décisions qui dormaient dans le texte des ADR, remontées ici.]
    de la propriétaire : aucune obligation créée ; l'aide de la catégorie
    « Installation frigorifique » le dit, et dit que Rojer ne le suit pas
    (`DESCRIPTION_CATEGORIE.INSTALLATION_FRIGORIFIQUE`).]
+2. **Relire la table des matières du livre II au 2027-06-01**
+   (2026-10-17, `lot/ref-a-corpus-titre-1`, demandé par c6). Trente-neuf
+   articles du titre Ier (GE 2, GE 6, GE 7, CO 6 à CO 34 en partie, CO 52,
+   CO 53, CO 59, AM 1 à AM 5, AM 8, EL 5, AS 1, AS 4, MS 18) ont une version
+   future programmée au 2027-06-01 par l'arrêté du 19 février 2026 ; elles
+   ont été lues et ne changent aucun classement. Mais la table de cette date
+   AJOUTERA des articles — la version future de GE 2 cite déjà un « AM 1-4 » —,
+   et `table-des-matieres.test.ts` compare le corpus à la table figée le
+   2026-10-17 (`table-des-matieres-1980.ts`). À la date : relire la table
+   (`/consult/legi/tableMatieres`, date 2027-06-01), classer les articles
+   nouveaux, mettre à jour les entrées qui portent `versionFuture`.
 
 ### Feuille de route
 

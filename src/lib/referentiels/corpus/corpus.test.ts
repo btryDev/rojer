@@ -772,19 +772,18 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // existante ou en appellent une (cause `libre`), six attendent une
       // catégorie d'équipement ou un événement (CO 10, AM 18, CH 35, AS 5,
       // AS 8, MS 42). Transitoires : le sous-lot C les rattache ou les encode.
+      // Puis 68 − 4 + 2 = 66 le même jour (décision de c6) : ~~"CO 10"~~,
+      // ~~"AM 18"~~, ~~"CH 35"~~, ~~"MS 42"~~ passent `non_couvert` ; `T 29` et
+      // `T 33` (type T, motifs réécrits) entrent, plus bas.
       "GE 3",
       "GE 10",
-      "CO 10",
-      "AM 18",
       "DF 9",
       "CH 23",
       "CH 24",
-      "CH 35",
       "AS 5",
       "AS 8",
       "AS 11",
       "GC 4",
-      "MS 42",
       "MS 51",
       "MS 52",
       "MS 57",
@@ -807,6 +806,10 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       "P 21",
       "R 33",
       "S 15",
+      // 2026-10-17 (`lot/ref-a-corpus-titre-1`) : la présence d'un personnel
+      // compétent au-delà de 200 kW ou 200 kVA, politique sœur d'EL 18 § 2.
+      "T 29",
+      "T 33",
       "T 52",
       "U 41",
       "U 43",
@@ -1636,7 +1639,17 @@ describe("corpus — ce qu'on ne couvre pas, et où on le dit", () => {
     // `non_couvert` nés de la lecture des chapitres de types (`S 18`, `T 4`,
     // `T 48`, `Y 11`) ont une adresse produit, la phrase de l'axe
     // `categorie_erp`. Le cliquet est de nouveau saturé, à 12.
-    const MUETS = 12;
+    // ~~const MUETS = 12;~~ — **17 DEPUIS LE 2026-10-17** (`lot/ref-a-corpus-titre-1`),
+    // mesuré : 12 + 5 − 0. LE CLIQUET REMONTE, et c'est dit : cinq articles
+    // passent `non_couvert` sur décision de c6 du même jour, sans adresse
+    // produit encore — `T 43` et `T 44` attendent l'aide du type T (sous-lot D),
+    // `AM 18` l'aide de la catégorie Scène et du type L (sous-lot G), `CO 10`
+    // une rubrique d'annonce ; `MS 42` restera muet (acte sur demande des
+    // sapeurs-pompiers, rien à l'écran, décision de c6). Le classer
+    // `non_couvert` sans adresse est plus vrai que le laisser `sans_objet` ou
+    // lui prêter une adresse qui n'existe pas. À redescendre à 13 quand D et G
+    // auront livré leurs aides et que `CO 10` aura sa rubrique.
+    const MUETS = 17;
     // Une note interne n'est pas une annonce à l'exploitant. `declareA`
     // mélange aujourd'hui les deux natures — une adresse produit et un
     // document de travail — et cette distinction reste à trancher (lot 3) ;

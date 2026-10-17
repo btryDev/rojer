@@ -135,7 +135,8 @@ describe("registre de dette — les obligations manquantes", () => {
       // installations semi-permanentes à chaque montage.
       // [1, 0] → [2, 0] le 2026-10-17 (`lot/ref-a-corpus-titre-1`) : `MS 42`
       // § 2, les plans fournis à la demande des sapeurs-pompiers.
-      evenement: [2, 0],
+      // [2, 0] → [1, 0] le même jour : `MS 42` passe `non_couvert` (décision de c6).
+      evenement: [1, 0],
       // [5, 6] → [11, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : `GZ 13`, `GZ 14`, `CO 61`,
       // `AS 10`, `GC 18`, arrêté 2018-02-23 art. 26 § 3.
       // [11, 0] → [7, 0] le 2026-10-13 (décision de la propriétaire) : `GZ 13`,
@@ -149,11 +150,15 @@ describe("registre de dette — les obligations manquantes", () => {
       // `AM 18` (sièges rembourrés), `CH 35` (fluide frigorigène inflammable,
       // une propriété que la catégorie ne porte pas), `AS 5` (ascenseur
       // d'évacuation), `AS 8` (escalier mécanique, matériel non couvert).
-      categorie_equipement: [16, 0],
+      // [16, 0] → [13, 0] le même jour (décision de c6) : `CO 10`, `AM 18`,
+      // `CH 35` passent `non_couvert`.
+      categorie_equipement: [13, 0],
       // 4 → 1 le 2026-09-27 (C45) : `R. 4227-23`, `R. 4227-24` et l'art. 8 de
       // l'arrêté du 10 septembre 2021 passent `non_couvert`, annoncés.
       // [1, 2] → [3, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : `MS 71`, arrêté 1986 art. 60.
-      attribut_etablissement: [3, 0],
+      // [3, 0] → [5, 0] le 2026-10-17 (`lot/ref-a-corpus-titre-1`) : `T 29` § 3
+      // et `T 33` § 2, la puissance installée que Rojer ne connaît pas.
+      attribut_etablissement: [5, 0],
       // 5 → 0 le 2026-09-27 (C45) : `R. 1321-60` et les art. 4, 9, 10, 12 de
       // l'arrêté du 10 septembre 2021, annoncés (`non_couvert`).
       // [0, 1] → [1, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : arrêté 1986 art. 78-1.
@@ -244,8 +249,10 @@ describe("registre de dette — les obligations manquantes", () => {
     // 48 → 50 le 2026-10-17 : 48 + 2 − 0 — `X annexe` et `X 1 § 2`.
     // 50 → 71 le 2026-10-17 (`lot/ref-a-corpus-titre-1`) : 50 + 21 − 0 — les
     // vingt et un actes du titre Ier lu en entier, tous dans la cible.
-    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(71);
-    expect(manquantes.length).toBe(71);
+    // 71 → 69 le même jour : 71 − 4 + 2 (décision de c6 : `CO 10`, `AM 18`,
+    // `CH 35`, `MS 42` annoncés ou muets ; `T 29`, `T 33` entrent).
+    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(69);
+    expect(manquantes.length).toBe(69);
   });
 });
 
