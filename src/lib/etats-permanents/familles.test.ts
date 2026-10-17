@@ -24,6 +24,9 @@ import {
   obligationsConformite,
 } from "@/lib/referentiels/conformite";
 import { estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
+import { PERIODICITES } from "@/lib/referentiels/types-communs";
+import { estPeriodicitePlusStricte } from "@/lib/calendrier/periodicite";
+import { prescriptionRenforce } from "@/lib/matching/prescriptions";
 import { figureSurLEcranEnPlace } from "./regle";
 import { ORDRE_GROUPES, ORDRE_SOUS_CATEGORIES, rangementDe } from "./familles";
 
@@ -44,6 +47,35 @@ describe("le rangement de l'écran « Ce qui doit être en place »", () => {
     const audit = obligationsConformite.filter((o) => estNiveauAudit(o));
     expect(audit.length).toBeGreaterThanOrEqual(1);
     for (const o of audit) expect(figureSurLEcranEnPlace(o), o.id).toBe(false);
+  });
+
+  // LA DÉPENDANCE QUE CE RELEVÉ SUPPOSE. Il lit le référentiel sans
+  // prescription ; un dossier, lui, peut en porter (ADR-035). Une surcharge
+  // pourrait faire SORTIR une ligne de l'écran (un rythme la porte au
+  // calendrier), jamais la faire ENTRER : il faudrait qu'elle donne un rythme
+  // sans échéance à une ligne datée, et aucun rythme sans échéance n'est
+  // « plus strict » que quoi que ce soit. Sans cet invariant, une ligne
+  // pourrait s'afficher sans rangement sur un seul dossier, hors de ce relevé.
+  it.each(PERIODICITES.map((p) => [p] as const))(
+    "invariant : une périodicité sans échéance ne renforce jamais « %s »",
+    (p) => {
+      expect(estPeriodicitePlusStricte("autre", p)).toBe(false);
+      expect(estPeriodicitePlusStricte("mise_en_service_uniquement", p)).toBe(
+        false,
+      );
+    },
+  );
+
+  it("invariant : aucune prescription « autre » n'est retenue, sur aucune obligation", () => {
+    // La garde que le moteur (`appliquerPrescriptions`) et le formulaire
+    // (`prescriptions/schema.ts`) appellent tous deux.
+    for (const o of obligationsConformite) {
+      expect(prescriptionRenforce("autre", o), o.id).toBe(false);
+    }
+  });
+
+  it("le relevé voit des lignes hors de l'écran, dont des titres salarié", () => {
+    expect(HORS_ECRAN.some((o) => o.porteur === "salarie")).toBe(true);
   });
 
   it.each(SUR_L_ECRAN.map((o) => [o.id, o] as const))(
