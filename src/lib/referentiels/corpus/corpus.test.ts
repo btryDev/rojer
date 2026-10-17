@@ -1601,7 +1601,14 @@ describe("corpus — ce qu'on ne couvre pas, et où on le dit", () => {
     //
     // Le cliquet reste saturé : 18 muets, tous `docs/`. Toujours pas de
     // protection contre la PERTE d'une adresse, sauf pour les vingt-cinq.
-    const MUETS = 18;
+    // ~~const MUETS = 18;~~ — **12 DEPUIS LE 2026-10-17** (revue indépendante de
+    // `lot/erp-chapitres-types-1016`), mesuré : 18 − 6 + 0. Les six articles
+    // du chapitre V du livre III (PU 1 à PU 6), muets à l'adresse `docs/`,
+    // ont quitté `non_couvert` à leur relecture du 2026-10-16 ; les quatre
+    // `non_couvert` nés de la lecture des chapitres de types (`S 18`, `T 4`,
+    // `T 48`, `Y 11`) ont une adresse produit, la phrase de l'axe
+    // `categorie_erp`. Le cliquet est de nouveau saturé, à 12.
+    const MUETS = 12;
     // Une note interne n'est pas une annonce à l'exploitant. `declareA`
     // mélange aujourd'hui les deux natures — une adresse produit et un
     // document de travail — et cette distinction reste à trancher (lot 3) ;
