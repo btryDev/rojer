@@ -1,8 +1,12 @@
 # ADR-045 — Un ERP peut porter plusieurs types (GN 2)
 
-- **Statut** : **EN COURS sur sa branche le 2026-10-16** (`plan/multi-types-erp`),
-  non fusionnée. Plan validé par la propriétaire le 2026-10-16 (décisions
-  transmises par la session c6). Lots 0 (cet ADR) et 1 (moteur) en cours.
+- **Statut** : ~~**EN COURS sur sa branche le 2026-10-16** (`plan/multi-types-erp`),
+  non fusionnée.~~ Plan validé par la propriétaire le 2026-10-16 (décisions
+  transmises par la session c6). ~~Lots 0 (cet ADR) et 1 (moteur) en cours.~~
+  [2026-10-17 : lots 0 et 1 (ADR, moteur) **fusionnés**, PR #49 ; lot 2
+  (base, écriture) **fusionné**, PR #50 ; lot 3 (écrans, fondement,
+  surfaces) **en revue** sur `lot/multi-types-ecrans`, non fusionné ; lot 4
+  (scène, chapitre L) à venir.]
 - **Amende** : l'ADR-004 (régimes cumulables et énumérations de précision) —
   le type d'ERP devient cumulable, la catégorie reste unique ; l'ADR-031
   (cible) n'est pas touchée.
@@ -165,12 +169,18 @@ pas disponible dans la session).
   change pour aucun dossier (projection à `typesErpAutres: []` jusqu'au lot 2,
   sortie mono-type identique, 2 484 profils comparés à `main`). Seule
   l'empreinte du code du moteur est recopiée (`RELEVE`).
+- **Lot 3** (2026-10-17) : `VERSION_MOTEUR_CALENDRIER` **reste à 6**. Quand
+  plusieurs types satisfont une ligne, le moteur rend l'évaluation du premier
+  dans l'ordre de `TYPES_ERP` (l'ordre du produit) et non du premier déclaré :
+  seules les RAISONS changent, et elles ne sont pas écrites en base
+  (`version-moteur.ts`, « ce que la régénération écrit »). L'empreinte du code
+  est recopiée à chaque retouche du moteur.
 
 ## 6. À rayer et dater à la fusion (règle 11)
 
 - `docs/notes-cadre-juridique.md`, question ouverte « Cumul de types d'ERP » ;
 - `docs/registre-releve-types-erp.md`, D.2 ;
-- `NOTE_TITRE_2_COMMUNE` (`incendie.ts`), « CE QUE LA BORNE NE SAIT PAS » ;
+- ~~`NOTE_TITRE_2_COMMUNE` (`incendie.ts`), « CE QUE LA BORNE NE SAIT PAS »~~ [2026-10-17 : rayé au lot 3] ;
 - `corpus/cch-classement-erp-igh.ts`, la réserve sur le groupement ;
 - ~~le commentaire de `matching/engine.ts` « le modèle ne stocke qu'un type »~~ [2026-10-17 : rayé au lot 1] ;
 - `.claude/CLAUDE.md`, liste des ADR : l'entrée 045 est à ajouter.

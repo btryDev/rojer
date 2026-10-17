@@ -101,3 +101,42 @@ export const AIDE_HABITATION =
   (avecVmcGaz.length > 0
     ? ` et, si vous déclarez une installation collective de VMC-Gaz, ${enumerer(avecVmcGaz.map((c) => c.quoi))} (arrêté du 23 février 2018).`
     : ".");
+
+/**
+ * CE QUE « OUI » AUX LOCAUX À SOMMEIL CHANGE, CATÉGORIE PAR CATÉGORIE
+ * (contrôle visuel du lot 3, ADR-045, 2026-10-17).
+ *
+ * L'aide disait ~~« Si oui, et en 5ᵉ catégorie, s'ajoutent… »~~ et ne parlait
+ * que de la 5ᵉ, alors que la question est posée à tout ERP dont un type est de
+ * `TYPES_ERP_QUESTION_LOCAUX_SOMMEIL`, quelle que soit sa catégorie. Mesuré en
+ * appelant le moteur le même jour : en 5ᵉ, quatre lignes naissent ; en 4ᵉ, la
+ * visite de la commission d'un type R passe de la colonne « sans hébergement »
+ * à « avec hébergement » du tableau de GE 4 § 1 ; dans les trois premières,
+ * rien ne change.
+ *
+ * Liste de production, comme celle de l'habitation : `aides-regimes.test.ts`
+ * la confronte au moteur, catégorie par catégorie et type par type.
+ */
+export const CE_QUE_CHANGE_SOMMEIL = {
+  N5: [
+    "incendie-erp-5-visite-commission",
+    "incendie-erp-5-sommeil-contrat-entretien-sdi",
+    "incendie-erp-5-sommeil-consigne-chambres",
+    "incendie-erp-5-sommeil-plans-affiches",
+  ],
+  /** Seul le type R : la ligne qui naît, et celle qu'elle remplace. */
+  N4: {
+    type: "R",
+    entre: "incendie-erp-visite-commission-cat4-r-avec-hebergement-triennale",
+    sort: "incendie-erp-visite-commission-cat4-r-sans-hebergement-quinquennale",
+  },
+  /** N1, N2, N3 : rien. */
+  sansEffet: ["N1", "N2", "N3"],
+} as const;
+
+/** La même à la fiche et au parcours, au mot près. */
+export const AIDE_LOCAUX_SOMMEIL =
+  "Chambres d'hôtel, chambres d'hôtes, gîte, hébergement — des locaux où le public dort. Un logement de fonction occupé par vous ou par un salarié ne compte pas : le texte vise le sommeil du public. " +
+  "Si oui : en 5ᵉ catégorie, s'ajoutent un contrat annuel d'entretien de la détection incendie, des consignes et des plans affichés, et une visite de la commission de sécurité tous les cinq ans (arrêté du 25 juin 1980, art. PE 4, PE 33, PE 35 et PE 37) ; " +
+  "en 4ᵉ catégorie, un établissement d'enseignement (type R) est visité par la commission tous les trois ans au lieu de cinq (art. GE 4). " +
+  "Dans les trois premières catégories, la réponse ne change pas votre calendrier.";

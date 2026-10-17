@@ -29,11 +29,18 @@ import { afficherValeur, NON_RENSEIGNE } from "@/lib/registre/valeur";
 export function FicheLecture({
   champs,
   valeurs,
+  nombres,
   hrefEdition,
 }: {
   champs: readonly ChampEtablissement[];
   /** Les réponses lues sur l'établissement, par clé de champ. */
   valeurs?: Readonly<Record<string, string | null>>;
+  /**
+   * Par clé de champ : combien de valeurs il porte (`registre/queries.ts`).
+   * C'est lui qui met le libellé au pluriel, pas une virgule dans la valeur
+   * (revue de c6, 2026-10-17).
+   */
+  nombres?: Readonly<Record<string, number>>;
   /** L'écran où ces réponses se modifient — leur source. */
   hrefEdition: string;
 }) {
@@ -83,7 +90,14 @@ export function FicheLecture({
           const valeur = afficherValeur(valeurs?.[champ.cle], champ);
           const vide = valeur === NON_RENSEIGNE;
           return (
-            <ChampFiche key={champ.cle} cle={champ.libelle}>
+            <ChampFiche
+              key={champ.cle}
+              cle={
+                champ.libellePluriel && !vide && (nombres?.[champ.cle] ?? 1) > 1
+                  ? champ.libellePluriel
+                  : champ.libelle
+              }
+            >
               {/* « — » se lit comme un tiret décoratif au milieu d'une
                   liste de valeurs. Une réponse absente doit se dire en
                   toutes lettres : c'est ce qui manquerait à une visite. */}

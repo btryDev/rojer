@@ -9,7 +9,11 @@
  *
  * Ce qu'il fait : supprime l'`Entreprise` du compte. Tout le dossier part avec
  * elle par cascade — établissement, équipements, vérifications, salariés,
- * DUERP, prestataires, registres. Le compte Supabase, lui, n'est pas touché :
+ * ~~DUERP,~~ prestataires, registres. [2026-10-17 : pas un DUERP qui porte une
+ * version validée — `DuerpVersion.duerp` est en `onDelete: Restrict`
+ * (conservation de quarante ans), et `--vraiment` échoue alors en P2003 sur
+ * `DuerpVersion_duerpId_fkey`. Non corrigé : `docs/dette-chantier-porteur-
+ * echeance.md` § 7.1.] Le compte Supabase, lui, n'est pas touché :
  * l'utilisateur reste connecté, et l'application le renvoie à `/onboarding`
  * parce qu'il n'a plus d'entreprise (`app/entreprises/page.tsx:15`).
  *

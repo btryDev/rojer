@@ -53,6 +53,11 @@ export type ChampFiche = {
  * présente à la commission : c'est lui qui afficherait la valeur périmée.
  */
 export type ChampEtablissement = ChampFiche & {
+  /**
+   * Le libellé quand la valeur en énumère plusieurs, séparées par « , »
+   * (ADR-045 : « Types » pour un établissement à plusieurs types d'ERP).
+   */
+  libellePluriel?: string;
   /** Le modèle et la colonne qui portent la réponse. Source unique. */
   source: `Etablissement.${string}` | `Entreprise.${string}`;
   /**
@@ -133,7 +138,10 @@ export const CHAMPS_PAR_SECTION: Readonly<Record<string, FormeSaisie>> = {
     champs: [
       {
         cle: "typeErp",
+        // ADR-045 : la colonne `typeErp` ET `typesErpAutres` (lecture dans
+        // `registre/queries.ts`) — un établissement peut en déclarer plusieurs.
         libelle: "Type",
+        libellePluriel: "Types",
         type: "texte",
         source: "Etablissement.typeErp",
         enBase: true,

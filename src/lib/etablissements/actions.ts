@@ -22,6 +22,7 @@ import {
   reponseSommeilSuivantLeType,
   typesErpAutresCoherents,
 } from "./schema";
+import { typesErpAutresPostes } from "./types-erp-affiches";
 
 export type EtablissementActionState =
   | { status: "idle" }
@@ -92,8 +93,11 @@ function typologieAChange(
   apres: Partial<ProfilStructurant>,
 ): boolean {
   // Une liste se compare par son contenu, pas par sa référence : sans quoi
-  // `typesErpAutres` « changerait » à chaque enregistrement.
-  const valeur = (v: unknown) => JSON.stringify(v ?? null);
+  // `typesErpAutres` « changerait » à chaque enregistrement. Et comme un
+  // ENSEMBLE, triée : le même ensemble dans un autre ordre ne change aucune
+  // obligation, il ne doit pas régénérer le calendrier (revue de c6).
+  const valeur = (v: unknown) =>
+    JSON.stringify(Array.isArray(v) ? [...v].sort() : (v ?? null));
   return CHAMPS_STRUCTURANTS.some(
     (c) => c in apres && valeur(apres[c]) !== valeur(avant[c]),
   );
@@ -106,6 +110,7 @@ function typologieAChange(
  */
 function normaliserFormData(fd: FormData): Record<string, unknown> {
   const raw = Object.fromEntries(fd);
+  const typesErpAutres = typesErpAutresPostes(fd);
   const bool = (k: string) => raw[k] !== undefined;
   const regime = (k: string) => raw[k] !== undefined && raw[k] !== "non";
   return {
@@ -122,11 +127,10 @@ function normaliserFormData(fd: FormData): Record<string, unknown> {
     estIGH: regime("estIGH"),
     estHabitation: regime("estHabitation"),
     typeErp: raw.typeErp || undefined,
-    // Plusieurs valeurs possibles (ADR-045) : `getAll`, pas `raw`. Non posté =
+    // Plusieurs valeurs possibles (ADR-045) : `getAll`, pas `raw`, et un champ
+    // témoin pour que des cases toutes décochées disent « aucun ». Non posté =
     // omis, et la valeur en base est gardée (`typesErpAutresCoherents`).
-    ...(fd.has("typesErpAutres")
-      ? { typesErpAutres: fd.getAll("typesErpAutres").filter((v) => v !== "") }
-      : {}),
+    ...(typesErpAutres === undefined ? {} : { typesErpAutres }),
     categorieErp: raw.categorieErp || undefined,
     natureActivite: raw.natureActivite,
     // Ces quatre champs ne sont rendus que dans le bloc `{estERP && (…)}` du

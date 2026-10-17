@@ -117,7 +117,7 @@ describe("le serveur dit quand le calendrier n'est pas à jour", () => {
       estHabitation: false,
       typeErp: "N",
       typesErpAutres: [],
-      categorieErp: "cinq",
+      categorieErp: "N5",
       entreprise: {
         raisonSociale: "Port SARL",
         siret: "12345678900011",
@@ -177,7 +177,7 @@ describe("portée des lectures", () => {
       estHabitation: false,
       typeErp: "N",
       typesErpAutres: [],
-      categorieErp: "cinq",
+      categorieErp: "N5",
       entreprise: {
         raisonSociale: "Port SARL",
         siret: "12345678900011",
@@ -642,7 +642,7 @@ describe("provenance de la réponse", () => {
     estHabitation: false,
     typeErp: "M",
     typesErpAutres: [],
-    categorieErp: "cinq",
+    categorieErp: "N5",
     entreprise: {
       raisonSociale: "Maak",
       siret: "93476576900039",
@@ -663,6 +663,18 @@ describe("provenance de la réponse", () => {
       const texte = await o.executer(ctx, {});
       expect(texte.startsWith("Établissement : Maak")).toBe(true);
     }
+  });
+
+  it("dit tous les types d'ERP déclarés, pas le seul premier (ADR-045)", async () => {
+    prismaMock.etablissement.findUnique.mockResolvedValue({
+      ...fiche,
+      typeErp: "O",
+      typesErpAutres: ["N", "L"],
+      categorieErp: "N3",
+    });
+    const texte = await outil("fiche_etablissement").executer(ctx, {});
+    // « catégorie 3 », et non le code « N3 » (revue du lot 3, R2).
+    expect(texte).toContain("ERP (O, N, L, catégorie 3)");
   });
 
   it("ajoute la ville, pour départager deux homonymes", async () => {

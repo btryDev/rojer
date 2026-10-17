@@ -62,7 +62,7 @@ import {
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import { evaluerPersonnesPresentes } from "./personnes-presentes";
 import { POLITIQUE_ABSENCE } from "./absence";
-import { typesErpDe } from "./types-erp";
+import { typesErpDe, typesErpOrdreProduit } from "./types-erp";
 
 /**
  * La marque d'une ligne que seul le type d'ERP manquant retient. Le type écarte
@@ -589,7 +589,18 @@ export function matchTypologie(
       typesErpAutres: [],
     });
   }
-  for (const type of types) {
+  // Quelle évaluation rendre, quand plusieurs types satisfont la ligne ? Ses
+  // raisons s'affichent (guide, « Comprendre », PDF) : elles ne doivent pas
+  // dépendre du type déclaré en premier, qui n'a pas de portée juridique
+  // (revue du lot 2). La première dans l'ordre de `TYPES_ERP` — l'ordre du
+  // produit, pas celui de GN 1 (`typesErpOrdreProduit`) — l'emporte.
+  //
+  // Pas de préférence pour une évaluation « établie » sur une « à confirmer » :
+  // deux types qui satisfont la même ligne lisent les mêmes réponses de
+  // l'établissement, et un type ne change que la PLAUSIBILITÉ du sommeil —
+  // qui écarte, sans retenir « à confirmer ». La préférence ne serait jamais
+  // décisive, donc jamais éprouvable.
+  for (const type of typesErpOrdreProduit(etab)) {
     const r = matchTypologieUnType(t, { ...etab, typeErp: type, typesErpAutres: [] });
     if (r.ok) return r;
   }

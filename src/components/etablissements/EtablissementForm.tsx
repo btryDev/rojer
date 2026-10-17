@@ -12,14 +12,16 @@ import { ChampBoard, SectionChamps } from "@/components/ui-kit";
 import {
   CATEGORIES_ERP,
   TYPE_ERP,
-  TYPES_ERP_QUESTION_LOCAUX_SOMMEIL,
+  questionSommeilPosee,
 } from "@/lib/etablissements/schema";
+import { AutresTypesErp } from "./AutresTypesErp";
+import { autresApresChangementDuPremier, memesTypes } from "@/lib/etablissements/types-erp-affiches";
 import {
   LABEL_CATEGORIE_ERP,
   LABEL_TYPE_ERP,
 } from "@/lib/etablissements/labels";
 import type { EtablissementActionState } from "@/lib/etablissements/actions";
-import { AIDE_HABITATION, AIDE_IGH } from "@/lib/etablissements/aides-regimes";
+import { AIDE_HABITATION, AIDE_IGH, AIDE_LOCAUX_SOMMEIL } from "@/lib/etablissements/aides-regimes";
 import {
   AIDE_EPI,
   AIDE_SSI,
@@ -59,6 +61,10 @@ type Valeurs = {
   estIGH?: boolean;
   estHabitation?: boolean;
   typeErp?: string | null;
+  // Requis, à la différence de ses voisins : omis, la fiche d'un hôtel-
+  // restaurant s'ouvrirait sans ses autres types, et les retirerait au
+  // premier enregistrement (le champ témoin est posté).
+  typesErpAutres: readonly string[];
   categorieErp?: string | null;
   natureActivite?: string | null;
   effectifPublicAdmis?: number | null;
@@ -115,9 +121,17 @@ export function EtablissementForm({
   const [typeErp, setTypeErp] = useState<string>(
     valeursInitiales?.typeErp ?? "",
   );
-  const poseLocauxSommeil =
-    estERP &&
-    (TYPES_ERP_QUESTION_LOCAUX_SOMMEIL as readonly string[]).includes(typeErp);
+  // Les autres types (ADR-045), suivis en état pour la même raison que le
+  // premier : la question du sommeil apparaît dès que L'UN d'eux l'appelle.
+  const [typesErpAutres, setTypesErpAutres] = useState<string[]>([
+    ...(valeursInitiales?.typesErpAutres ?? []),
+  ]);
+  const [signalAutres, setSignalAutres] = useState(0);
+  const poseLocauxSommeil = questionSommeilPosee({
+    estERP,
+    typeErp,
+    typesErpAutres,
+  });
   // La catégorie aussi, depuis le 2026-10-12 : la question du SSI A/B n'est
   // posée qu'aux quatre premières catégories (DF 10, livre II).
   const [categorieErp, setCategorieErp] = useState<string>(
@@ -471,7 +485,20 @@ export function EtablissementForm({
                       id="typeErp"
                       name="typeErp"
                       value={typeErp}
-                      onChange={(e) => setTypeErp(e.currentTarget.value)}
+                      onChange={(e) => {
+                        const t = e.currentTarget.value;
+                        // Le premier type ne figure pas parmi les autres
+                        // (contrainte en base) ; un échange rend l'ancien.
+                        const apres = autresApresChangementDuPremier(
+                          typesErpAutres,
+                          typeErp,
+                          t,
+                          TYPE_ERP,
+                        );
+                        if (!memesTypes(apres, typesErpAutres)) setSignalAutres((n) => n + 1);
+                        setTypesErpAutres(apres);
+                        setTypeErp(t);
+                      }}
                       required={estERP === true}
                       className="champ-board"
                       aria-invalid={Boolean(err("typeErp"))}
@@ -484,6 +511,16 @@ export function EtablissementForm({
                       ))}
                     </select>
                     <Erreur message={err("typeErp")} />
+                    <div className="mt-3">
+                      <AutresTypesErp
+                        nom="typesErpAutres"
+                        typeErp={typeErp}
+                        valeurs={typesErpAutres}
+                        onChange={setTypesErpAutres}
+                        erreur={err("typesErpAutres")}
+                        signalOuverture={signalAutres}
+                      />
+                    </div>
                   </div>
 
                   <div className="sm:col-span-2">
@@ -647,15 +684,7 @@ export function EtablissementForm({
                       id="comporteLocauxSommeilPublic-aide"
                       className="m-0 mt-1.5 max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
                     >
-                      Chambres d&apos;hôtel, chambres d&apos;hôtes, gîte,
-                      hébergement — des locaux où le public dort. Un logement de fonction occupé par
-                      vous ou par un salarié ne compte pas : le texte vise le
-                      sommeil du public. Si oui, et en 5ᵉ catégorie,
-                      s&apos;ajoutent un contrat
-                      annuel d&apos;entretien de la détection incendie, des
-                      consignes et des plans affichés, et une visite de la
-                      commission de sécurité tous les cinq ans (arrêté du
-                      25 juin 1980, art. PE 4, PE 33, PE 35 et PE 37).
+                      {AIDE_LOCAUX_SOMMEIL}
                     </p>
                   </div>
                   )}

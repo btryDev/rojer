@@ -287,6 +287,12 @@ export const ANCRAGE_REALISATEUR: Record<
  * secteurs cibles. Ce qui est repris du texte, en revanche, c'est son
  * découpage en deux groupes — a) établissements installés dans un bâtiment
  * (M à J ci-dessous), b) établissements spéciaux (PA à EF).
+ *
+ * CET ORDRE DÉCIDE DÉSORMAIS D'UNE CHOSE (ADR-045, 2026-10-17) : pour un
+ * établissement à plusieurs types, le type dont le moteur cite les raisons et
+ * l'article affiché en principal au fondement — le premier dans cet ordre
+ * (`typesErpOrdreProduit`). Le changer change ces textes pour les dossiers à
+ * plusieurs types ; rien d'autre.
  */
 export const TYPES_ERP = [
   // a) Établissements installés dans un bâtiment.

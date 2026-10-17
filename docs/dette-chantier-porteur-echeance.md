@@ -353,6 +353,15 @@ Ce paragraphe n'a donc plus de point ouvert.
   base avec un `prisma migrate diff --from-migrations` — la commande exige une
   base d'ombre, qu'elle **vide** avant de rejouer les migrations. `.env.example`
   porte désormais la liste des commandes qui écrivent.
+- **`scripts/remettre-en-onboarding.ts --vraiment` échoue sur un compte qui a
+  un DUERP validé** (relevé par c6 au contrôle de l'accueil, 2026-10-17) :
+  erreur Prisma P2003 sur `DuerpVersion_duerpId_fkey`. La relation est
+  `onDelete: Restrict`, et c'est voulu — une version de DUERP se conserve
+  quarante ans (règle 10) ; la cascade de l'`Entreprise` s'y arrête. L'en-tête
+  du script promettait que « tout le dossier part avec elle », DUERP compris :
+  rayé le même jour. Non corrigé : le script devrait soit refuser d'emblée un
+  compte qui porte une version validée, soit — base locale seulement —
+  supprimer les versions d'abord. À trancher, pas dans le lot 3 (ADR-045).
 
 ---
 

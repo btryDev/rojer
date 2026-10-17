@@ -3,6 +3,7 @@
 import { PastilleFiche } from "@/components/ui-kit/fiche";
 import type { StepProps } from "./types";
 import { LABEL_TYPE_ERP } from "@/lib/etablissements/labels";
+import { libelleTypesErp, numeroCategorie } from "@/lib/etablissements/types-erp-affiches";
 import type { TYPE_ERP } from "@/lib/etablissements/schema";
 
 /**
@@ -19,9 +20,15 @@ export function StepResume({ state }: StepProps) {
   const regimes: string[] = [];
   if (state.estEtablissementTravail) regimes.push("Travail");
   if (state.estERP) {
+    // ADR-045 : un seul type, son libellé complet ; plusieurs, leurs lettres
+    // à tous — une seule forme dans la ligne (revue du lot 3, R2).
     const precisions = [
-      state.typeErp ? typeErpLabel : null,
-      state.categorieErp ? `${state.categorieErp.slice(1)}ᵉ cat.` : null,
+      state.typesErpAutres.length > 0
+        ? libelleTypesErp(state)
+        : state.typeErp
+          ? typeErpLabel
+          : null,
+      state.categorieErp ? `${numeroCategorie(state.categorieErp)}ᵉ cat.` : null,
     ].filter(Boolean);
     regimes.push(
       precisions.length > 0 ? `ERP · ${precisions.join(" · ")}` : "ERP",

@@ -6,6 +6,7 @@ import {
 
 const base = {
   typeErp: null as string | null,
+  typesErpAutres: [] as string[],
   codeNaf: null as string | null,
   entreprise: { codeNaf: "70.22Z" },
 };
@@ -83,5 +84,14 @@ describe("sourceIllustrationBatiment", () => {
     expect(sourceIllustrationBatiment("commerce")).toBe(
       "/illustrations/batiment-commerce.png",
     );
+  });
+});
+
+describe("plusieurs types d'ERP (ADR-045)", () => {
+  it("un hôtel qui exploite un restaurant a une devanture, quel que soit l'ordre", () => {
+    expect(illustrationBatiment({ ...base, typeErp: "O", typesErpAutres: ["N"] })).toBe(
+      illustrationBatiment({ ...base, typeErp: "N", typesErpAutres: ["O"] }),
+    );
+    expect(illustrationBatiment({ ...base, typeErp: "W", typesErpAutres: ["N"] })).toBe("commerce");
   });
 });

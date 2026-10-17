@@ -396,6 +396,15 @@ describe("onboardingSchema — plusieurs types d'ERP (ADR-045)", () => {
     expect(onboardingSchema.safeParse({ ...erp, typesErpAutres: ["M"] }).success).toBe(true);
   });
 
+  it("une liste trop longue se refuse d'un seul message, même d'un million d'entrées", () => {
+    // Revue de c6 (2026-10-17). Éprouvé en remplaçant le schéma borné par
+    // `z.array(z.enum(TYPE_ERP)).max(…)` : un message par entrée, rouge.
+    const res = onboardingSchema.safeParse({ ...erp, typesErpAutres: Array(1_000_000).fill("pas-un-type") });
+    expect(res.success).toBe(false);
+    const issues = res.success ? [] : res.error.issues.filter((i) => i.path[0] === "typesErpAutres");
+    expect(issues.map((i) => i.message)).toEqual(["La liste des autres types d'ERP est trop longue."]);
+  }, 60_000);
+
   it("refuse d'autres types hors ERP", () => {
     const res = onboardingSchema.safeParse({ ...base, typesErpAutres: ["M"] });
     expect(res.success).toBe(false);

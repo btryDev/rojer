@@ -115,6 +115,7 @@ export async function getFicheEtablissement(etablissementId: string) {
       estIGH: true,
       estHabitation: true,
       typeErp: true,
+      typesErpAutres: true,
       categorieErp: true,
       entreprise: {
         select: {

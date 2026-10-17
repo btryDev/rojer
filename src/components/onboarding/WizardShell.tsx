@@ -10,6 +10,7 @@ import { signOutAction } from "@/lib/auth/actions";
 import { StepIdentite } from "./StepIdentite";
 import { StepTypologie } from "./StepTypologie";
 import { StepResume } from "./StepResume";
+import { CHAMP_TEMOIN_TYPES_ERP_AUTRES } from "@/lib/etablissements/types-erp-affiches";
 import {
   finaliserOnboarding,
   type OnboardingActionState,
@@ -393,6 +394,10 @@ export function WizardShell({ email }: { email?: string | null }) {
           //
           // On ne corrige pas un mécanisme supposé, on tient l'invariant :
           // une soumission qui ne vient pas de l'étape 3 n'a pas lieu.
+          // [2026-10-17 : ~~supposé~~ — reproduit et corrigé à la cause (les
+          // `key` des deux boutons, plus bas). Cette garde ne l'arrêtait pas :
+          // quand l'activation soumet, l'état est déjà à l'étape 3. Elle reste
+          // pour une soumission provoquée hors de tout clic (Entrée, script).]
           onSubmit={(e) => {
             if (etapeIdx !== ETAPES.length - 1) e.preventDefault();
           }}
@@ -449,8 +454,19 @@ export function WizardShell({ email }: { email?: string | null }) {
               </Button>
             )}
 
+            {/* DEUX NŒUDS, pas un : les `key` distinctes empêchent React de
+                réutiliser le bouton « Suivant » pour « Créer mon espace ».
+                Sans elles, un clic sur « Suivant » à l'étape 2 rendait
+                l'étape 3 avant l'activation du bouton (la pile se vide entre
+                les écouteurs et l'activation, React y rend), et l'activation
+                lisait sur le MÊME nœud un `type="submit"` : l'espace partait
+                en création sans que « Créer mon espace » ait été cliqué
+                (contrôle de l'accueil, 2026-10-17 ; défaut antérieur au
+                lot 3). Le nœud cliqué est désormais retiré, et un bouton
+                détaché ne soumet rien. */}
             {etapeIdx < ETAPES.length - 1 ? (
               <Button
+                key="suivant"
                 type="button"
                 variant="board"
                 size="board"
@@ -466,6 +482,7 @@ export function WizardShell({ email }: { email?: string | null }) {
               </Button>
             ) : (
               <Button
+                key="creer"
                 type="submit"
                 variant="board"
                 size="board"
@@ -541,6 +558,17 @@ function ChampsCaches({ state }: { state: OnboardingState }) {
         value={reponseOuiNon(state.estHabitation)}
       />
       <input type="hidden" name="typeErp" value={state.typeErp} />
+      {/* Les autres types (ADR-045), un champ par type, et le témoin qui dit
+          que la liste a été montrée — vide comprise. Seulement pour un ERP :
+          hors ERP, rien n'est posté, et le schéma refuserait une liste. */}
+      {state.estERP ? (
+        <>
+          <input type="hidden" name={CHAMP_TEMOIN_TYPES_ERP_AUTRES} value="1" />
+          {state.typesErpAutres.map((t) => (
+            <input key={t} type="hidden" name="typesErpAutres" value={t} />
+          ))}
+        </>
+      ) : null}
       <input type="hidden" name="categorieErp" value={state.categorieErp} />
       {/* Locaux à sommeil. Le champ n'est POSTÉ QUE S'IL A UNE RÉPONSE : « je
           ne sais pas encore » ne s'envoie pas, et le schéma le lirait de toute

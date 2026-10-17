@@ -59,6 +59,17 @@ describe("axe du régime", () => {
     },
   );
 
+  it("dit que Rojer accepte les catégories 1 à 4, plus qu'il n'est « construit pour la 5ᵉ »", () => {
+    // Contrôle visuel du lot 3 (2026-10-17) : la phrase datait d'avant
+    // l'ouverture aux catégories 1 à 4 (2026-10-12, ADR-031). Éprouvé en
+    // remettant l'ancienne : rouge.
+    const c = couvertureDuRegime({ ...regimeCouvert, categorieErp: "N3" });
+    const [m] = c.manques;
+    expect(m.consequence).not.toContain("construit pour les ERP de 5ᵉ catégorie");
+    expect(m.consequence.startsWith("Rojer accepte les ERP des catégories 1 à 4.")).toBe(true);
+    expect(m.consequence).toContain("dont cet outil ne porte qu'une part");
+  });
+
   it("ne tranche pas quand la catégorie manque, et ne suppose surtout pas la 5e", () => {
     // Supposer « couvert » ici est l'erreur que ce module existe pour
     // empêcher : elle produirait un écran rassurant sur une donnée absente.

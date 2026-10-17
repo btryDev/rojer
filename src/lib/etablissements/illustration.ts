@@ -11,6 +11,8 @@
 // C'est une illustration, pas un plan : elle rappelle de quel genre de lieu
 // il s'agit, elle ne le décrit pas.
 
+import { typesErpDe } from "./types-erp-affiches";
+
 /** Les planches disponibles dans `public/illustrations/`. */
 export type IllustrationBatiment = "neutre" | "commerce";
 
@@ -45,6 +47,7 @@ const DIVISIONS_NAF_DEVANTURE = new Set(["47", "56"]);
  */
 export function illustrationBatiment(etab: {
   typeErp: string | null;
+  typesErpAutres: readonly string[];
   codeNaf: string | null;
   entreprise: { codeNaf: string };
 }): IllustrationBatiment {
@@ -52,8 +55,11 @@ export function illustrationBatiment(etab: {
   // reçu du public, là où le code NAF ne dit que l'activité de l'entreprise.
   // Sans cette priorité, un établissement de type W dont l'entreprise porte
   // un NAF de commerce recevait la devanture.
-  if (etab.typeErp != null) {
-    return TYPES_ERP_DEVANTURE.has(etab.typeErp) ? "commerce" : "neutre";
+  // ADR-045 : sur l'ensemble des types — un hôtel qui exploite un restaurant
+  // a une devanture.
+  const types = typesErpDe(etab);
+  if (types.length > 0) {
+    return types.some((t) => TYPES_ERP_DEVANTURE.has(t)) ? "commerce" : "neutre";
   }
 
   const naf = etab.codeNaf ?? etab.entreprise.codeNaf;

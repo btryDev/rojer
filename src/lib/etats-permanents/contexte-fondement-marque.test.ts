@@ -17,7 +17,7 @@ import { obligationParId } from "@/lib/referentiels/conformite";
 describe("le contexte du fondement ne se fabrique que par contexteFondementDe", () => {
   const o = obligationParId("dae-erp-detention")!;
   type Source = Parameters<typeof projeterEtablissement>[0];
-  const etab = { estERP: false, typeErp: "N", categorieErp: "N3" } as unknown as Source;
+  const etab = { estERP: false, typeErp: "N", typesErpAutres: [], categorieErp: "N3" } as unknown as Source;
 
   it("refuse la projection, un littéral et l'établissement (vérifié par tsc)", () => {
     // Jamais exécutée : seul tsc la lit. Le moteur n'a rien à calculer ici.
@@ -26,7 +26,7 @@ describe("le contexte du fondement ne se fabrique que par contexteFondementDe", 
       // @ts-expect-error — la projection n'est pas un contexte (type périmé hors ERP)
       fondementDe(o, projete);
       // @ts-expect-error — un littéral recopié n'est pas un contexte
-      fondementDe(o, { typeErp: "N", categorieErp: "N3" });
+      fondementDe(o, { typesErp: ["N"], categorieErp: "N3" });
       // @ts-expect-error — l'établissement n'est pas un contexte
       fondementDe(o, etab);
     };
@@ -34,9 +34,8 @@ describe("le contexte du fondement ne se fabrique que par contexteFondementDe", 
   });
 
   it("le contexte fabriqué annule le type hors ERP", () => {
-    expect(contexteFondementDe({ estERP: false, typeErp: "N", categorieErp: "N3" })).toEqual({
-      typeErp: null,
-      categorieErp: null,
-    });
+    expect(
+      contexteFondementDe({ estERP: false, typeErp: "N", typesErpAutres: ["O"], categorieErp: "N3" }),
+    ).toEqual({ typesErp: [], categorieErp: null });
   });
 });

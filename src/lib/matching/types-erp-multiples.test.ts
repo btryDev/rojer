@@ -176,12 +176,18 @@ describe("plusieurs types : l'union, puis un membre par groupe", () => {
     }
   });
 
-  it("le premier type déclaré ne décide de rien : permuter rend les mêmes lignes", () => {
+  it("le premier type déclaré ne décide de rien : permuter rend les mêmes lignes, raisons et « à confirmer » compris", { timeout: 60_000 }, () => {
+    // Pas seulement les identifiants (revue du lot 2) : les raisons et les
+    // questions sans réponse s'affichent au guide, à « Comprendre » et au PDF.
+    const complet = (e: EtablissementMatching) =>
+      determineObligationsApplicables(e, PARC)
+        .map((a) => JSON.stringify([a.obligation.id, a.raisons, a.sansReponse ?? [], a.effectifAConfirmer ?? null]))
+        .sort();
     for (const [a, b] of PAIRES) {
       for (const c of CATEGORIES) {
-        expect([...ids(erp([a, b], c, true), PARC)].sort(), `${a}+${b} ${c}`).toEqual(
-          [...ids(erp([b, a], c, true), PARC)].sort(),
-        );
+        for (const s of SOMMEIL) {
+          expect(complet(erp([a, b], c, s)), `${a}+${b} ${c} sommeil=${s}`).toEqual(complet(erp([b, a], c, s)));
+        }
       }
     }
   });
@@ -265,6 +271,19 @@ describe("plusieurs types : l'union, puis un membre par groupe", () => {
   it("le sommeil n'est pas plausible pour un restaurant seul, il l'est dès qu'O est déclaré", () => {
     expect(ids(erp(["N"], "N5", true)).has("incendie-erp-5-visite-commission")).toBe(false);
     expect(ids(erp(["N", "O"], "N5", true)).has("incendie-erp-5-visite-commission")).toBe(true);
+  });
+});
+
+describe("l'ordre de TYPES_ERP décide du type cité dans les raisons (revue du lot 3, C5)", () => {
+  // L'ordre du PRODUIT, pas celui de GN 1 (qui range J en tête) : pour J + L,
+  // la visite triennale de 3ᵉ cite L. Éprouvé en triant J en tête : rouge.
+  it("J + L en 3ᵉ : la raison de la visite cite le type L, dans les deux ordres de saisie", () => {
+    for (const ts of [["J", "L"], ["L", "J"]] as TypeErp[][]) {
+      const visite = determineObligationsApplicables(erp(ts, "N3"), []).find(
+        (a) => a.obligation.id === "incendie-erp-visite-commission-cat3-triennale",
+      )!;
+      expect(visite.raisons.join(" "), ts.join("+")).toMatch(/type L\b/);
+    }
   });
 });
 

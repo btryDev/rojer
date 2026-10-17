@@ -31,7 +31,6 @@ export async function getRegistrePublicParSlug(slug: string) {
           raisonDisplay: true,
           estERP: true,
           adresse: true,
-          typeErp: true,
           categorieErp: true,
           entreprise: {
             select: { raisonSociale: true },

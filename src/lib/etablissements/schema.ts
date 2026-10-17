@@ -30,6 +30,23 @@ export const TYPE_ERP = [
   "PA", "CTS", "SG", "PS", "REF", "GA", "OA", "EF",
 ] as const;
 
+/**
+ * La liste des autres types d'ERP postée (ADR-045), BORNÉE AVANT d'être lue
+ * (revue de c6, 2026-10-17). Sans borne, un POST forgé de 300 000 entrées
+ * invalides rendait 52 Mo d'erreurs, et à un million zod levait une RangeError
+ * — l'action répondait 500. Un simple `.max()` ne suffit pas : zod contrôle
+ * chaque élément AVANT la longueur, et rend une erreur par élément plus la
+ * sienne. La longueur se vérifie donc d'abord sur des valeurs quelconques, et
+ * `pipe` n'examine les types que si elle passe : un seul message.
+ *
+ * La même à la fiche et au parcours d'accueil. `typesErpAutresPostes` tronque
+ * aussi en amont.
+ */
+export const typesErpAutresSchema = z
+  .array(z.unknown())
+  .max(TYPE_ERP.length, { message: "La liste des autres types d'ERP est trop longue." })
+  .pipe(z.array(z.enum(TYPE_ERP)));
+
 /** Catégories d'ERP — CCH, art. R. 143-19. Cinq, dans l'ordre du texte. */
 export const CATEGORIES_ERP = ["N1", "N2", "N3", "N4", "N5"] as const;
 
@@ -313,7 +330,7 @@ export const etablissementSchema = z
     ),
     // Les autres types d'ERP (ADR-045, GN 2). Absent = le formulaire ne l'a
     // pas posté : la valeur en base est gardée (`typesErpAutresCoherents`).
-    typesErpAutres: z.array(z.enum(TYPE_ERP)).optional(),
+    typesErpAutres: typesErpAutresSchema.optional(),
     categorieErp: z.preprocess(
       (v) => (v === "" || v === null ? undefined : v),
       z.enum(CATEGORIES_ERP).optional(),
@@ -409,11 +426,15 @@ export const etablissementSchema = z
     // celui d'`onboarding/schema.ts`. Hors de la liste, rien n'est refusé : la
     // valeur est remise à `null` par `reponseSommeilSuivantLeType`.
     // La liste POSTÉE seulement : la fusion avec la valeur en base se fait
-    // après, dans l'action. Un N + O dont O ne vient que de la base et dont la
-    // réponse est vide n'est donc pas refusé ici (revue du lot 2) — il n'a
-    // aucun écran pour répondre avant le lot 3, qui postera la liste. D'ici
-    // là, le moteur retient ses lignes de sommeil « à confirmer », et la
-    // relance de la fiche (`repondreSommeil`) lui pose la question.
+    // après, dans l'action. ~~Un N + O dont O ne vient que de la base et dont
+    // la réponse est vide n'est donc pas refusé ici (revue du lot 2) — il n'a
+    // aucun écran pour répondre avant le lot 3, qui postera la liste.~~
+    // [2026-10-17, lot 3 : la fiche poste la liste ENTIÈRE, avec un champ
+    // témoin (`CHAMP_TEMOIN_TYPES_ERP_AUTRES`) — elle montre les autres types
+    // enregistrés et pose la question dès qu'un d'eux l'appelle. La liste
+    // postée est donc celle qui sera écrite, et ce contrôle la voit.] Seul
+    // un formulaire sans le bloc ERP ne poste rien ; il ne pose pas non plus
+    // la question.
     if (
       questionSommeilPosee({ ...val, typesErpAutres: val.typesErpAutres }) &&
       (val.comporteLocauxSommeilPublic === undefined ||

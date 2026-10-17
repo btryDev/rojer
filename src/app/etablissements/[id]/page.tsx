@@ -433,6 +433,7 @@ export default async function EtablissementPage({
       estIGH: etab.estIGH,
       estHabitation: etab.estHabitation,
       typeErp: etab.typeErp,
+      typesErpAutres: etab.typesErpAutres,
       categorieErp: etab.categorieErp,
       classeIgh: etab.classeIgh,
       entreprise: {

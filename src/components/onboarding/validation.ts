@@ -14,7 +14,7 @@
 // Module **pur** : ni Prisma, ni React.
 
 import { evaluerScopeSecteur } from "@/lib/onboarding/scope";
-import { TYPES_ERP_QUESTION_LOCAUX_SOMMEIL } from "@/lib/etablissements/schema";
+import { questionSommeilPosee } from "@/lib/etablissements/schema";
 import {
   MESSAGE_NOMBRE_DE_PERSONNES,
   nombreDePersonnesADemander,
@@ -226,10 +226,7 @@ export function validerTypologie(s: OnboardingState): Blocage | null {
   // sous les yeux. Les conditions sont celles du schéma, par les mêmes
   // fonctions, pas une copie.
   if (
-    s.estERP &&
-    (TYPES_ERP_QUESTION_LOCAUX_SOMMEIL as readonly string[]).includes(
-      s.typeErp,
-    ) &&
+    questionSommeilPosee({ estERP: s.estERP, typeErp: s.typeErp, typesErpAutres: s.typesErpAutres }) &&
     !s.comporteLocauxSommeilPublic
   )
     return {
