@@ -9,6 +9,7 @@ import {
   questionsExigeesPour,
 } from "@/lib/equipements/reponses-exigees";
 import { questionsTriEtatPour } from "@/lib/equipements/schema";
+import { DESCRIPTION_CATEGORIE } from "@/lib/equipements/labels";
 
 // D29 (a), à l'écran : une question exigée n'offre pas « Je ne sais pas
 // encore », n'a aucune réponse présélectionnée, et le navigateur la réclame.
@@ -256,6 +257,11 @@ describe("EquipementForm : la recherche de matériel (2026-10-14)", () => {
     for (const id of decrit.split(" ").filter(Boolean)) {
       expect(c.querySelector(`#${id}`), id).not.toBeNull();
     }
+    // Rien à la place de l'encart : ni l'aide générique de « Autre équipement »
+    // (« soumis à vérification périodique »), ni un id cité sans élément.
+    expect(c.textContent).not.toContain(DESCRIPTION_CATEGORIE.AUTRE);
+    expect(c.querySelector("#categorie-aide")).toBeNull();
+    expect(decrit).not.toContain("categorie-aide");
     fireEvent.blur(champ(c));
     expect(c.querySelector("#categorie-aide")!.textContent).toContain("Rojer ne suit pas ce matériel.");
     expect(champ(c).getAttribute("aria-describedby") ?? "").toContain("categorie-aide");

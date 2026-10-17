@@ -353,9 +353,9 @@ export function EquipementForm({
               decritPar={
                 [
                   // Suites de B : « categorie-aide » n'est cité que s'il est
-                  // monté — l'encart hors recherche, sinon l'aide de la
-                  // catégorie si elle en a une (la même condition que le rendu).
-                  (entreeMateriel && !rechercheEnCours) || DESCRIPTION_CATEGORIE[categorie]
+                  // monté — la même condition que le rendu : l'encart hors
+                  // recherche, rien pendant, sinon l'aide de la catégorie.
+                  (entreeMateriel ? !rechercheEnCours : DESCRIPTION_CATEGORIE[categorie])
                     ? "categorie-aide"
                     : null,
                   erreurCategorie ? "categorie-erreur" : null,
@@ -400,7 +400,10 @@ export function EquipementForm({
               )}
             </BlocCreux>
             </div>
-          ) : (
+          ) : entreeMateriel ? null : (
+            // Suites de B (c6) : pendant la recherche d'un autre matériel,
+            // l'aide de « Autre équipement » (« soumis à vérification
+            // périodique ») dirait le contraire de l'encart masqué : rien.
             <AideCategorie id="categorie-aide" categorie={categorie} />
           )}
           <Erreur id="categorie-erreur" message={erreurCategorie} />
