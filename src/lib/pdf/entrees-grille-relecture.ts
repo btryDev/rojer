@@ -58,13 +58,16 @@ function texteNonVide(v: unknown, ou: string): string {
  * Lit les propositions de passage au niveau audit.
  *
  * `idsReferentiel` : les ids du référentiel de la version imprimée.
- * `idsDejaAudit` : ceux qui y portent déjà le niveau audit — une proposition
- * sur l'un d'eux n'a pas de sens, la ligne s'imprime déjà « Audit ».
+ * ~~`idsDejaAudit` : ceux qui y portent déjà le niveau audit — une proposition
+ * sur l'un d'eux n'a pas de sens, la ligne s'imprime déjà « Audit ».~~
+ * [2026-10-17 : le refus faisait échouer tout le document dès qu'une
+ * proposition était DÉCIDÉE — les huit de `relecture-jc-2026-10` le sont
+ * depuis la PR #56. Une proposition décidée n'est pas une erreur du fichier :
+ * elle est lue, puis écartée des propositions par `propositionsADecider`.]
  */
 export function lirePropositionsAudit(
   brut: unknown,
   idsReferentiel: ReadonlySet<string>,
-  idsDejaAudit: ReadonlySet<string>,
 ): Map<string, PropositionAudit> {
   if (!Array.isArray(brut)) {
     throw new Error("Propositions audit : un tableau [{ id, motif }] est attendu");
@@ -78,13 +81,29 @@ export function lirePropositionsAudit(
     if (!idsReferentiel.has(idLu)) {
       throw new Error(`${ou} : « ${idLu} » n'est pas au référentiel`);
     }
-    if (idsDejaAudit.has(idLu)) {
-      throw new Error(`${ou} : « ${idLu} » est déjà au niveau audit`);
-    }
+    // ~~Refus d'une ligne déjà au niveau audit~~ — 2026-10-17 : voir
+    // `propositionsADecider`.
     if (m.has(idLu)) throw new Error(`${ou} : « ${idLu} » proposé deux fois`);
     m.set(idLu, { id: idLu, motif: texteNonVide(motif, `${ou}, motif`) });
   });
   return m;
+}
+
+/**
+ * Les propositions qui restent À DÉCIDER (2026-10-17).
+ *
+ * Une proposition dont la ligne porte déjà le niveau audit au référentiel est
+ * décidée : elle sort d'elle-même des propositions, et ne se lit plus que
+ * dans le rappel « Déjà au niveau audit » de la page des propositions, qui
+ * lit le référentiel. Sans ce tri, la même ligne s'imprimait sous « Ce sont
+ * des propositions, rien n'est décidé » ET sous « Déjà au niveau audit » : la
+ * page se contredisait.
+ */
+export function propositionsADecider(
+  propositions: ReadonlyMap<string, PropositionAudit>,
+  idsDejaAudit: ReadonlySet<string>,
+): Map<string, PropositionAudit> {
+  return new Map([...propositions].filter(([id]) => !idsDejaAudit.has(id)));
 }
 
 /** Lit la réponse aux remarques du relecteur. */

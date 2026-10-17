@@ -52,6 +52,7 @@ import {
   lireAnnexeRelecture,
   lireArguments,
   lirePropositionsAudit,
+  propositionsADecider,
   type AnnexeRelecture,
   type PropositionAudit,
 } from "@/lib/pdf/entrees-grille-relecture";
@@ -105,7 +106,6 @@ import {
   LABEL_REALISATEUR,
 } from "@/lib/calendrier/labels";
 import { BOARD, stylesCommuns as s } from "@/lib/pdf/styles";
-
 const LABEL_SOURCE: Record<string, string> = {
   CODE_TRAVAIL: "Code du travail",
   CCH: "CCH",
@@ -1137,9 +1137,11 @@ function lireJson(chemin: string): unknown {
 }
 
 const propositions = options.has("propositions-audit")
-  ? lirePropositionsAudit(
-      lireJson(options.get("propositions-audit")!),
-      new Set(obligationsConformite.map((o) => o.id)),
+  ? propositionsADecider(
+      lirePropositionsAudit(
+        lireJson(options.get("propositions-audit")!),
+        new Set(obligationsConformite.map((o) => o.id)),
+      ),
       new Set(obligationsConformite.filter(estNiveauAudit).map((o) => o.id)),
     )
   : new Map<string, PropositionAudit>();
