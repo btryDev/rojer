@@ -48,7 +48,11 @@ const h = vi.hoisted(() => {
       findUnique: async () => ({ ...db.etablissement }),
       findFirst: async () => ({ ...db.etablissement }),
       update: async ({ data }: { data: Record<string, unknown> }) => {
-        Object.assign(db.etablissement, data);
+        // Comme Prisma : une clé `undefined` ne touche pas à la colonne.
+        Object.assign(
+          db.etablissement,
+          Object.fromEntries(Object.entries(data).filter(([, v]) => v !== undefined)),
+        );
         return db.etablissement;
       },
       create: async ({ data }: { data: Record<string, unknown> }) => {
@@ -572,17 +576,19 @@ function avecAutresTypes(fd: FormData, types: string[]): FormData {
 }
 
 describe("plusieurs types d'ERP — l'écriture respecte les contraintes de la base (ADR-045, lot 2)", () => {
-  // Deux contraintes CHECK (migration 20261017120000) : pas d'autres types
-  // hors ERP, pas de `typeErp` parmi eux. Une écriture qui les ignorerait
-  // planterait en base ; le double de Prisma ne les vérifie pas, ces tests
-  // vérifient donc ce que l'action ÉCRIT.
-  it("décocher l'ERP vide les autres types", async () => {
+  // Une contrainte CHECK (migration 20261017120000) : pas de `typeErp` parmi
+  // les autres types. Une écriture qui l'ignorerait planterait en base ; le
+  // double de Prisma ne la vérifie pas, ces tests vérifient donc ce que
+  // l'action ÉCRIT.
+  it("décocher l'ERP garde les autres types, comme le premier — une erreur de clic ne perd rien", async () => {
     h.db.etablissement.estERP = true;
     h.db.etablissement.typeErp = "N";
     h.db.etablissement.categorieErp = "N3";
     h.db.etablissement.typesErpAutres = ["M"];
     await modifierEtablissement("etab-1", { status: "idle" }, formulaire());
-    expect(h.db.etablissement.typesErpAutres).toEqual([]);
+    expect(h.db.etablissement.estERP).toBe(false);
+    expect(h.db.etablissement.typeErp).toBe("N");
+    expect(h.db.etablissement.typesErpAutres).toEqual(["M"]);
   });
 
   it("le premier type qui passe parmi les autres en est retiré", async () => {

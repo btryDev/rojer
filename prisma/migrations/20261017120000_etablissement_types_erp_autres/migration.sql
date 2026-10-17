@@ -11,20 +11,17 @@
 -- reprise — tout dossier existant reste à un seul type, à l'identique.
 -- La contrainte `Etablissement_erp_type_categorie_requis` ne change pas.
 --
--- Deux contraintes, parce que le moteur suppose les deux faits :
---   · pas d'autres types sans ERP — un lieu de travail qui cesse d'être ERP
---     garderait sinon des types qui ne bornent plus rien ;
---   · pas de doublon avec `typeErp` — l'union les dédoublonne, mais un
---     doublon en base dirait deux exploitations là où il n'y en a qu'une.
+-- Une contrainte : pas de doublon avec `typeErp` — l'union les dédoublonne,
+-- mais un doublon en base dirait deux exploitations là où il n'y en a qu'une.
+--
+-- PAS DE CONTRAINTE « VIDE HORS ERP » (décision du 2026-10-17, via c6) :
+-- décocher « ERP » garde les autres types en base, comme il garde déjà
+-- `typeErp` et la catégorie — une erreur de clic ne doit rien perdre. Hors
+-- ERP, le moteur les ignore (`matchTypologie`).
 -- ============================================================================
 
 ALTER TABLE "Etablissement"
     ADD COLUMN "typesErpAutres" "TypeErp"[] NOT NULL DEFAULT ARRAY[]::"TypeErp"[];
-
-ALTER TABLE "Etablissement"
-    ADD CONSTRAINT "Etablissement_types_erp_autres_si_erp" CHECK (
-        "estERP" OR cardinality("typesErpAutres") = 0
-    );
 
 ALTER TABLE "Etablissement"
     ADD CONSTRAINT "Etablissement_types_erp_autres_sans_premier" CHECK (

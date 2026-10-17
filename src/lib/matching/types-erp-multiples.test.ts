@@ -290,3 +290,42 @@ describe("la projection porte les autres types enregistrés (lot 2)", () => {
     expect(ids(erp(["N"], "N3", true)).has("incendie-erp-hotel-consigne-chambres")).toBe(false);
   });
 });
+
+describe("hors ERP, les autres types gardés en base ne décident de rien (2026-10-17)", () => {
+  // Décocher « ERP » garde les autres types, comme `typeErp` (symétrie
+  // décidée le 2026-10-17). Le moteur doit alors les ignorer.
+  const horsErp = (types: TypeErp[], autresTypes: TypeErp[]): EtablissementMatching => ({
+    ...erp(types, "N3", true),
+    estERP: false,
+    typesErpAutres: autresTypes,
+  });
+
+  it("sur le référentiel, un non-ERP qui garde des types reçoit les mêmes lignes que sans", () => {
+    for (const t of [[], ["N"], ["O"]] as TypeErp[][]) {
+      for (const autres of [["O"], ["M", "W"], TYPES.filter((x) => !t.includes(x))] as TypeErp[][]) {
+        expect([...ids(horsErp(t, autres), PARC)].sort(), `${t} + ${autres}`).toEqual(
+          [...ids(horsErp(t, []), PARC)].sort(),
+        );
+      }
+    }
+  });
+
+  it("même une ligne qui lit le sommeil sans critère ERP ne sort pas par un type gardé", () => {
+    // Le référentiel n'en porte pas aujourd'hui : c'est ce qui rendrait la
+    // garde invisible sur les vraies lignes. Une obligation synthétique la
+    // rend observable.
+    const modele = obligationsConformite.find((o) => o.id === "incendie-erp-5-visite-commission")!;
+    const sommeil = {
+      ...modele,
+      id: "synthetique-sommeil-sans-erp",
+      typologies: { travail: true, locauxSommeilPublic: true },
+    } as typeof modele;
+    const sortie = determineObligationsApplicables(horsErp(["N"], ["O"]), [], { obligations: [sommeil] });
+    expect(sortie).toEqual([]);
+    // Et ERP, O parmi les autres types, elle sort : la garde ne vise que le hors-ERP.
+    const erpO = determineObligationsApplicables({ ...horsErp(["N"], ["O"]), estERP: true }, [], {
+      obligations: [sommeil],
+    });
+    expect(erpO).toHaveLength(1);
+  });
+});

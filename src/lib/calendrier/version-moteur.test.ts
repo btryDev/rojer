@@ -145,6 +145,10 @@ const RELEVE = {
   // dossiers existants — la régénération n'écrit donc rien de nouveau. Le
   // premier dossier qui déclarera un second type le fera par une mutation,
   // qui régénère son calendrier. ~~9811835e07535557~~.
+  // Recopiée SANS incrément le même jour : `matchTypologie` ignore les autres
+  // types d'un établissement qui n'est pas ERP (symétrie décidée au lot 2).
+  // Tous les dossiers ont `{}` : rien de ce que la régénération écrit ne
+  // change. ~~cea363fbd2956b72~~.
   // Recalculée SANS incrément le 2026-10-12 à la réunion de
   // `lot/polir-relecture` (EPI déclaré, `6a4d02a8f770c62b`) et de
   // `lot/suites-0810` (SSI A/B, libellés, rythme en clair,
@@ -458,7 +462,7 @@ const RELEVE = {
   // périodicité), hachée par l'empreinte du référentiel, donc déjà dans le
   // sceau : les dossiers ERP N1–N4 seront réconciliés au titre de
   // `2026-10-15.1`. ~~da691471f9fe392b~~.
-  empreinte: "cea363fbd2956b72",
+  empreinte: "e887744cc240a140",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

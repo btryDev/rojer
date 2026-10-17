@@ -328,7 +328,12 @@ export async function modifierEtablissement(
   const donnees = reponseEpiCoherente(
     reponseSommeilSuivantLeType({
       ...parsed.data,
-      typesErpAutres: typesErpAutresCoherents(parsed.data, avant.typesErpAutres),
+      typesErpAutres: typesErpAutresCoherents(
+        // Le premier type qui restera en base : le posté, sinon l'enregistré
+        // (`|| undefined` en amont le laisse en place quand il n'est pas posté).
+        { ...parsed.data, typeErp: parsed.data.typeErp ?? avant.typeErp },
+        avant.typesErpAutres,
+      ),
     }),
   );
   const etab = await prisma.etablissement.update({

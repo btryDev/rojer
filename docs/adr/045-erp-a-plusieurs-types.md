@@ -68,8 +68,15 @@ pas disponible dans la session).
    Rojer** (ADR-028).
 3. **Le modèle** (lot 2) : `typeErp` est gardé, `typesErpAutres TypeErp[]`
    est ajouté, `NOT NULL DEFAULT '{}'`, sans reprise de données. Le CHECK
-   `Etablissement_erp_type_categorie_requis` ne change pas ; deux CHECK
-   s'ajoutent (pas d'autres types sans ERP, pas de doublon avec `typeErp`).
+   `Etablissement_erp_type_categorie_requis` ne change pas ; ~~deux CHECK
+   s'ajoutent (pas d'autres types sans ERP, pas de doublon avec `typeErp`)~~
+   [2026-10-17, décision transmise par c6 au lot 2 : UN SEUL CHECK s'ajoute,
+   `Etablissement_types_erp_autres_sans_premier` — pas de `typeErp` parmi les
+   autres types. **Symétrie avec `typeErp` et la catégorie** : décocher « ERP »
+   GARDE les autres types en base, pour qu'une erreur de clic ne perde rien.
+   Hors ERP, `matchTypologie` les ignore — garde éprouvée sur une obligation
+   synthétique qui lirait le sommeil sans critère ERP
+   (`types-erp-multiples.test.ts`).]
    `typeErp` est « le premier type déclaré », **sans portée juridique** : il
    ne décide de rien dans le moteur.
 4. **Le moteur** (lot 1) : `EtablissementMatching` porte, comme la base,

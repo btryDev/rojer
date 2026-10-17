@@ -572,7 +572,15 @@ export function matchTypologie(
   // Le cas de presque tous les dossiers — un type au plus, déclaré en
   // premier — passe l'établissement tel quel : ni copie, ni écart possible
   // avec l'évaluation d'avant l'ADR-045.
-  if (etab.typesErpAutres.length === 0) return matchTypologieUnType(t, etab);
+  //
+  // HORS ERP, LES AUTRES TYPES SONT IGNORÉS (décision du 2026-10-17, via c6).
+  // Décocher « ERP » les garde en base, comme `typeErp` et la catégorie, pour
+  // qu'une erreur de clic ne perde rien. Ils ne doivent alors plus rien
+  // décider : une ligne qui lirait le sommeil sans critère ERP sortirait
+  // sinon par un type qui n'est plus exploité (`types-erp-multiples.test.ts`).
+  if (!etab.estERP || etab.typesErpAutres.length === 0) {
+    return matchTypologieUnType(t, etab);
+  }
   const types = typesErpDe(etab);
   if (types.length <= 1) {
     return matchTypologieUnType(t, {

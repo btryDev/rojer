@@ -111,19 +111,22 @@ export function questionSommeilPosee(donnees: {
 }
 
 /**
- * Les autres types d'ERP à écrire, cohérents avec les contraintes de la base
- * (migration `20261017120000`) : aucun hors ERP, ni `typeErp` ni doublon
- * dedans. Sans eux, une écriture planterait sur la contrainte.
+ * Les autres types d'ERP à écrire, cohérents avec la contrainte de la base
+ * (migration `20261017120000`) : ni `typeErp` ni doublon dedans. Sans quoi
+ * l'écriture planterait.
  *
  * `enBase` est la valeur enregistrée : un formulaire qui ne poste pas le champ
- * la garde — décocher l'ERP la vide, et changer le premier type pour l'un des
- * autres l'en retire.
+ * la garde. Décocher « ERP » la garde aussi, comme `typeErp` et la catégorie
+ * (décision du 2026-10-17) — le moteur l'ignore hors ERP. Changer le premier
+ * type pour l'un des autres l'en retire.
+ *
+ * `typeErp` est le premier type QUI SERA EN BASE : le posté, ou à défaut
+ * celui qu'un formulaire sans le champ laisse en place.
  */
 export function typesErpAutresCoherents<T extends string>(
-  donnees: { estERP?: boolean | null; typeErp?: string | null; typesErpAutres?: readonly T[] },
+  donnees: { typeErp?: string | null; typesErpAutres?: readonly T[] },
   enBase: readonly T[] = [],
 ): T[] {
-  if (donnees.estERP !== true) return [];
   const source = donnees.typesErpAutres ?? enBase;
   return [...new Set(source)].filter((t) => t !== donnees.typeErp);
 }
