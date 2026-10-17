@@ -103,7 +103,9 @@ export const obligationsAeration: Obligation[] = [
     periodicite: "autre",
     nature: "etat_permanent",
     pieceAttendue: "consigne d'utilisation de la ventilation",
-    usageEcran: { groupe: "quotidien", sous: "conditions" },
+    // 2026-10-17 (ADR-042) : niveau audit, hors de l'écran — ~~{ groupe: "quotidien", sous: "conditions" }~~,
+    // à reprendre si le marqueur se lève.
+    usageEcran: null,
     realisateurs: ["exploitant"],
     criticite: 2,
     transmet: [],

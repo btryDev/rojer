@@ -37,8 +37,10 @@ const HORS_ECRAN = obligationsConformite.filter(
 
 describe("le rangement de l'écran « Ce qui doit être en place »", () => {
   it("le relevé voit les lignes de l'écran — sinon ce test ne contrôle rien", () => {
-    // Borne basse, pas un compte : ~~58~~ 57 obligations au 2026-10-17
-    // (58 − 1, les chiffons imprégnés, niveau audit).
+    // Borne basse, pas un compte : ~~58~~ ~~57~~ 51 obligations au 2026-10-17
+    // (58 − 1, les chiffons imprégnés, niveau audit ; puis 57 − 6, les six
+    // états permanents d'établissement passés au niveau audit le même jour —
+    // relevé en appelant `figureSurLEcranEnPlace`).
     expect(SUR_L_ECRAN.length).toBeGreaterThanOrEqual(45);
   });
 

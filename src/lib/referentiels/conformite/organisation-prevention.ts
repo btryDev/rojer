@@ -200,7 +200,9 @@ export const obligationsOrganisationPrevention: Obligation[] = [
     periodicite: "autre",
     nature: "etat_permanent",
     pieceAttendue: "liste des personnes qualifiées",
-    usageEcran: { groupe: "organisation", sous: null },
+    // 2026-10-17 (ADR-042) : niveau audit, hors de l'écran — ~~{ groupe: "organisation", sous: null }~~,
+    // à reprendre si le marqueur se lève.
+    usageEcran: null,
     realisateurs: ["exploitant"],
     criticite: 2,
     typologies: { travail: true },

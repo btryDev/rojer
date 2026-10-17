@@ -468,7 +468,9 @@ export const obligationsSanteTravail: Obligation[] = [
     periodicite: "autre",
     nature: "etat_permanent",
     pieceAttendue: "fiche d'entreprise",
-    usageEcran: { groupe: "organisation", sous: null },
+    // 2026-10-17 (ADR-042) : niveau audit, hors de l'écran — ~~{ groupe: "organisation", sous: null }~~,
+    // à reprendre si le marqueur se lève.
+    usageEcran: null,
     realisateurs: ["medecin_travail", "equipe_pluridisciplinaire"],
     criticite: 2,
     typologies: { travail: true },

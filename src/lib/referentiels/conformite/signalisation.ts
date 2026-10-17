@@ -168,7 +168,9 @@ export const obligationsSignalisation: Obligation[] = [
     periodicite: "autre",
     nature: "etat_permanent",
     pieceAttendue: null,
-    usageEcran: { groupe: "incendie_secours", sous: "evacuer" },
+    // 2026-10-17 (ADR-042) : niveau audit, hors de l'écran — ~~{ groupe: "incendie_secours", sous: "evacuer" }~~,
+    // à reprendre si le marqueur se lève.
+    usageEcran: null,
     realisateurs: ["exploitant"],
     criticite: 3,
     typologies: { travail: true },
@@ -394,7 +396,9 @@ export const obligationsSignalisation: Obligation[] = [
     periodicite: "autre",
     nature: "etat_permanent",
     pieceAttendue: null,
-    usageEcran: { groupe: "quotidien", sous: "conditions" },
+    // 2026-10-17 (ADR-042) : niveau audit, hors de l'écran — ~~{ groupe: "quotidien", sous: "conditions" }~~,
+    // à reprendre si le marqueur se lève.
+    usageEcran: null,
     realisateurs: ["exploitant"],
     criticite: 3,
     typologies: { travail: true },

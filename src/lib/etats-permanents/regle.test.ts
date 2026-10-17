@@ -9,9 +9,11 @@ import {
 } from "@/lib/referentiels/conformite";
 import {
   determineObligationsApplicables,
+  determineObligationsNiveauAudit,
   projeterEtablissement,
   type EtablissementMatching,
 } from "@/lib/matching";
+import { obligationsNiveauAuditDuDossier } from "@/lib/perimetre/niveau-audit";
 import {
   estDeclencheeParUnFait,
   estEtatADeclarer,
@@ -300,35 +302,55 @@ describe("le dossier neuf — ce que le lot rend visible", () => {
    * brief, et ce dépôt s'est fait prendre plusieurs fois par des comptes
    * recopiés à la main — jusque dans les briefs eux-mêmes.
    */
-  it("un bureau de six personnes sans équipement reçoit des états à déclarer", () => {
-    const applicables = determineObligationsApplicables(
-      projeterEtablissement(bureau(6)),
-      [],
-    );
-    const surEcran = applicables.filter(
-      (a) => modeDeclaration(a.obligation) !== null,
-    );
+  // ~~« un bureau de six personnes sans équipement reçoit des états à
+  // déclarer » — la MAJORITÉ de ce que le dossier déclenche est à l'écran~~ —
+  // 2026-10-17 (ADR-042) : une proportion n'était pas la mesure. Le passage de
+  // cinq états permanents au niveau audit fait bouger ses deux termes (24 sur
+  // 43, puis 19 sur 38) sans que l'écran perde rien de ce qu'il doit montrer.
+  // La garde porte désormais sur la propriété : rien de ce que le dossier doit
+  // déclarer ne manque à l'écran, sauf une exclusion nommée et motivée.
+  it("un bureau de six sans équipement : chaque état permanent du dossier est à l'écran, sauf une exclusion nommée", () => {
+    const etab = projeterEtablissement(bureau(6));
+    const applicables = determineObligationsApplicables(etab, []);
+    const etats = applicables.filter((a) => a.obligation.nature === "etat_permanent");
+    // Borne basse : sans elle, les deux gardes suivantes passeraient à vide.
+    expect(etats.length, "le dossier neuf ne porte plus aucun état permanent").toBeGreaterThan(0);
 
-    expect(
-      applicables.length,
-      "le dossier neuf ne déclenche plus rien : le référentiel a changé de façon inattendue",
-    ).toBeGreaterThan(0);
+    // Les exclusions de l'écran, chacune avec sa raison. Il n'y en a qu'une
+    // parmi les lignes servies : un rythme effectif (texte, norme, défaut
+    // annuel — ADR-039) date la ligne, et elle vit au calendrier. Une surface,
+    // jamais deux.
+    const exclusion = (o: Obligation): string | null =>
+      estSansRendezVous(periodiciteEffective(o)) ? null : "rythme : au calendrier";
 
-    // Le point du lot : la MAJORITÉ de ce qu'un dossier neuf déclenche n'avait
-    // aucune surface. Si cette proportion s'effondre, c'est que les obligations
-    // ont gagné des échéances — ou que l'écran a perdu son critère.
-    //
-    // ~~`toBeGreaterThan(applicables.length / 2)`~~ — 2026-10-17 (ADR-042) :
-    // cinq états permanents d'établissement passent au niveau audit
-    // (éclairage, liste des personnes qualifiées, consigne de ventilation,
-    // fiche d'entreprise, obstacles). Ils quittent le dossier ET l'écran :
-    // mesuré en appelant le moteur, 24 sur 43 avant, 19 sur 38 après —
-    // exactement la moitié. Ni échéance gagnée ni critère perdu : la borne
-    // devient « au moins la moitié », et la cause est celle-ci.
-    expect(
-      surEcran.length,
-      "l'écran ne montre plus au moins la moitié de ce que le dossier déclenche",
-    ).toBeGreaterThanOrEqual(applicables.length / 2);
+    const manquantes = etats
+      .filter((a) => modeDeclarationApplique(a) === null && exclusion(a.obligation) === null)
+      .map((a) => a.obligation.id);
+    expect(manquantes, "un état permanent servi n'arrive pas à l'écran, sans raison nommée").toEqual([]);
+
+    // L'exclusion ne couvre que ce qu'elle nomme : une ligne datée n'est
+    // jamais déclarée « en place ».
+    for (const a of etats) {
+      if (exclusion(a.obligation) === null) continue;
+      expect(modeDeclarationApplique(a)?.mode, a.obligation.id).not.toBe("etat");
+    }
+
+    // La seconde exclusion est en amont de l'écran : le NIVEAU AUDIT (ADR-042).
+    // Le moteur ne sert pas ces lignes ; la règle de l'outil est qu'elles ne
+    // disparaissent pas pour autant — la rubrique « Niveau audit » de « Ce que
+    // Rojer ne couvre pas » les nomme, à ce dossier.
+    const champAudit = determineObligationsNiveauAudit(etab, []).filter(
+      (a) => a.obligation.nature === "etat_permanent",
+    );
+    expect(champAudit.length, "aucun état permanent audit n'atteint ce dossier : la garde serait vide").toBeGreaterThan(0);
+    const servies = new Set(applicables.map((a) => a.obligation.id));
+    const rubrique = new Set(obligationsNiveauAuditDuDossier(etab, []).map((l) => l.id));
+    for (const a of champAudit) {
+      const id = a.obligation.id;
+      expect(estNiveauAudit(a.obligation), id).toBe(true);
+      expect(servies.has(id), `${id} : servi malgré le niveau audit`).toBe(false);
+      expect(rubrique.has(id), `${id} : exclu de l'écran sans être nommé`).toBe(true);
+    }
   });
 
   it("chaque ligne de l'écran a un domaine libellé et un verbe", () => {

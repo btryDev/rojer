@@ -61,7 +61,9 @@ export const obligationsEclairage: Obligation[] = [
     periodicite: "autre",
     nature: "etat_permanent",
     pieceAttendue: "document consignant les règles d'entretien de l'éclairage",
-    usageEcran: { groupe: "installations", sous: null },
+    // 2026-10-17 (ADR-042) : niveau audit, hors de l'écran — ~~{ groupe: "installations", sous: null }~~,
+    // à reprendre si le marqueur se lève.
+    usageEcran: null,
     realisateurs: ["exploitant"],
     criticite: 2,
     typologies: { travail: true },
