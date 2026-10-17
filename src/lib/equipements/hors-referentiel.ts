@@ -36,6 +36,7 @@
 
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import { requireUser } from "@/lib/auth/require-user";
+import { projeterEtablissement } from "@/lib/matching/projection";
 import { chargerEtablissementEtParc } from "@/lib/etablissements/dossier-du-rendu";
 import {
   determineObligationsApplicables,
@@ -277,30 +278,7 @@ export async function equipementsSansEcheance(
   if (!etab) return new Map();
 
   return reperterSansEcheance(
-    {
-      id: etab.id,
-      effectifSurSite: etab.effectifSurSite,
-      effectifEntreprise: etab.entreprise.effectif,
-      estEtablissementTravail: etab.estEtablissementTravail,
-      estERP: etab.estERP,
-      estIGH: etab.estIGH,
-      estHabitation: etab.estHabitation,
-      typeErp: etab.typeErp,
-      typesErpAutres: [], // ADR-045 : colonne au lot 2
-      categorieErp: etab.categorieErp,
-      classeIgh: etab.classeIgh,
-      familleHabitation: etab.familleHabitation,
-      personnesPresentesHabituellement: etab.personnesPresentesHabituellement,
-      manipuleMatieresR422722: etab.manipuleMatieresR422722,
-      comporteLocauxSommeilPublic: etab.comporteLocauxSommeilPublic,
-      manutentionManuelle: etab.manutentionManuelle,
-      travailSurEcran: etab.travailSurEcran,
-      operationsElectriques: etab.operationsElectriques,
-      conduiteEngins: etab.conduiteEngins,
-      expositionCMR: etab.expositionCMR,
-      epiPresents: etab.epiPresents,
-      ssiCategorieAouB: etab.ssiCategorieAouB,
-    },
+    projeterEtablissement(etab),
     etab.equipements.map((eq) => ({
       id: eq.id,
       libelle: eq.libelle,
