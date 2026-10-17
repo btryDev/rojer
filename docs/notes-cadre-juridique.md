@@ -106,6 +106,32 @@ Une action qui n'est pas répétée par le texte n'a pas de rythme du tout.
 - *Cas* : `N 20`, « fréquemment » — ni ligne ni défaut annuel, rattaché à la
   consigne incendie existante (2026-10-14).
 
+### 10. Une présence requise pendant l'ouverture ou le fonctionnement est un état permanent
+
+Quand un texte exige qu'une personne soit présente — un personnel qualifié
+pendant la présence du public, un personnel de service pendant le
+fonctionnement d'un appareil, un tableau d'alarme surveillé —, ce n'est pas
+une règle sans acte (ligne 3) : c'est un état à constituer puis à maintenir,
+que Rojer peut servir comme les autres états permanents (ADR-026, ADR-027).
+Si Rojer ne le suit pas, c'est un choix de couverture (`non_couvert`, dit et
+annoncé), jamais « sans acte ni pièce ».
+
+- *Politique sœur* : `EL 18 § 2`, la présence physique d'une personne
+  qualifiée en 1ʳᵉ et 2ᵉ catégorie, encodée en
+  `elec-erp-presence-personne-qualifiee` (2026-09-01).
+- *Cas* (2026-10-17, revue de `lot/ref-a-corpus-titre-1`, décision de c6) :
+  `GC 15` (personnel présent pendant le fonctionnement des îlots de cuisson),
+  `MS 52 § 1` (exploitant présent pendant la présence du public), `MS 66 § 1
+  et § 5` (tableau surveillé, personnel qualifié pour la temporisation),
+  `MS 57 § 1`, `M 35` (machines-outils sous surveillance), passés en manques ;
+  `T 29 § 3`, `T 33 § 2`, `MS 50 § 3`, `S 18`, `T 48` restent ou passent
+  `non_couvert`, annoncés, et leur motif ne dit plus « sans acte ».
+- *Ce que la règle ne vise pas* : une faculté ouverte sous condition de
+  dotation (`J 21`, des clés remises au personnel de surveillance), le
+  destinataire d'une alarme (`AS 3 § 3`, « un responsable désigné par
+  l'exploitant »), un moyen pour la personne secourue de signaler sa présence
+  (`CO 59 g`).
+
 ## Questions ouvertes
 
 - **Monte-charge installé à demeure** (`D10`, `docs/revues/decisions-a-prendre-2026-09-27.md`) :

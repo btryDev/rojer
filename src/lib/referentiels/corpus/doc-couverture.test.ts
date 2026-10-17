@@ -220,15 +220,21 @@ describe(`${CHEMIN} — la liste ne se périme pas en silence`, () => {
     const DU_TITRE_IER_LU_EN_ENTIER = new Set([
       // ~~"CO 10", "AM 18", "CH 35", "MS 42"~~ — passés `non_couvert` le même
       // jour (décision de c6).
-      "GE 3", "GE 10", "DF 9", "CH 23", "CH 24",
-      "AS 5", "AS 8", "AS 11", "GC 4", "MS 51", "MS 52", "MS 57",
+      // ~~"CH 23", "CH 24", "AS 5", "AS 8"~~ — annonces décidées, `non_couvert`
+      // (revue du même jour) ; "GC 15", "MS 66", "EL 17", "CH 17" entrent
+      // (présence et registre, ligne de partage 10).
+      "GE 3", "GE 10", "DF 9", "CH 17", "EL 17", "GC 15",
+      "AS 11", "GC 4", "MS 51", "MS 52", "MS 57", "MS 66",
       "MS 67", "MS 68", "MS 72", "MS 74", "MS 75",
     ]);
     const admise = (corpus: string, ref: string) =>
       (corpus === "arrete-1980-livre-2-titre-2" && CHAPITRES_LUS_LE_16.test(ref)) ||
       (corpus === "arrete-1980-livre-3" && ref.startsWith("PU ")) ||
       (corpus === "arrete-1980-livre-2" && DU_TITRE_IER.has(ref)) ||
-      (corpus === "arrete-1980-livre-2" && DU_TITRE_IER_LU_EN_ENTIER.has(ref));
+      (corpus === "arrete-1980-livre-2" && DU_TITRE_IER_LU_EN_ENTIER.has(ref)) ||
+      // 2026-10-17 (revue) : `M 35` passe de `sans_objet` à manque par la ligne
+      // de partage 10 ; nommé, le chapitre M restant hors de la borne.
+      (corpus === "arrete-1980-livre-2-titre-2" && ref === "M 35");
     const horsBorne = refsDuTableau(ouverts).filter((ref) => {
       const origines = CORPUS.flatMap((c) =>
         c.articles

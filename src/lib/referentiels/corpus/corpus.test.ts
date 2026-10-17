@@ -766,27 +766,34 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       "EL 23 § 2 — vérification des installations électriques semi-permanentes",
       "CO 48 § 3 e) — contrat d'entretien des portes automatiques",
       // 2026-10-17 — `lot/ref-a-corpus-titre-1` : le titre Ier lu en entier
-      // (274 articles en vigueur et 24 abrogés ajoutés au corpus). 47 + 21 − 0
-      // = 68, mesuré en appelant `obligationsManquantes()`. Vingt et un actes
+      // (274 articles en vigueur et 24 abrogés ajoutés au corpus). ~~47 + 21 − 0
+      // = 68~~ — compte FAUX relevé par la revue du même jour : `main` (00d21b30)
+      // donne 50, mesuré en appelant `obligationsManquantes()` ; la lecture en
+      // ajoutait 21, soit 50 + 21 − 0 = 71. Vingt et un actes
       // trouvés, dans l'ordre du fichier : quinze se rattachent à une ligne
       // existante ou en appellent une (cause `libre`), six attendent une
       // catégorie d'équipement ou un événement (CO 10, AM 18, CH 35, AS 5,
       // AS 8, MS 42). Transitoires : le sous-lot C les rattache ou les encode.
-      // Puis 68 − 4 + 2 = 66 le même jour (décision de c6) : ~~"CO 10"~~,
-      // ~~"AM 18"~~, ~~"CH 35"~~, ~~"MS 42"~~ passent `non_couvert` ; `T 29` et
-      // `T 33` (type T, motifs réécrits) entrent, plus bas.
+      // Puis ~~68 − 4 + 2 = 66~~ 71 − 4 + 2 = 69 le même jour (décision de c6) :
+      // ~~"CO 10"~~, ~~"AM 18"~~, ~~"CH 35"~~, ~~"MS 42"~~ passent `non_couvert` ;
+      // `T 29` et `T 33` (type T, motifs réécrits) entrent, plus bas.
+      // Puis 69 − 6 + 5 = 68 (corrections de la revue, décisions de c6) :
+      // ~~"CH 23"~~, ~~"CH 24"~~, ~~"AS 5"~~, ~~"AS 8"~~ et, plus bas, ~~"T 29"~~,
+      // ~~"T 33"~~ sont des annonces décidées, `non_couvert` ; entrent `CH 17`
+      // (pièce consignée au registre), `EL 17`, `GC 15`, `MS 66` (présence,
+      // ligne de partage 10) et, plus bas, `M 35`.
       "GE 3",
       "GE 10",
       "DF 9",
-      "CH 23",
-      "CH 24",
-      "AS 5",
-      "AS 8",
+      "CH 17",
+      "EL 17",
       "AS 11",
       "GC 4",
+      "GC 15",
       "MS 51",
       "MS 52",
       "MS 57",
+      "MS 66",
       "MS 67",
       "MS 68",
       "MS 72",
@@ -795,6 +802,9 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // 2026-10-15 : le contrat d'entretien des machines de nettoyage à sec,
       // seul acte de M 40 § 3, classé à part et HORS CADRE (décision de la
       // propriétaire : « les conditions c'est pas nous »).
+      // 2026-10-17 (revue de `lot/ref-a-corpus-titre-1`) : machines-outils sous
+      // la surveillance directe d'un personnel compétent, ligne de partage 10.
+      "M 35",
       "M 40 § 3 e) — contrat d'entretien des machines de nettoyage à sec",
       // 2026-10-16 — lecture des chapitres P, R, S, T, U, V, X, Y, J du titre II
       // (catégories 1 à 4). Seize actes que le référentiel ne porte pas, aucun
@@ -806,10 +816,9 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       "P 21",
       "R 33",
       "S 15",
-      // 2026-10-17 (`lot/ref-a-corpus-titre-1`) : la présence d'un personnel
-      // compétent au-delà de 200 kW ou 200 kVA, politique sœur d'EL 18 § 2.
-      "T 29",
-      "T 33",
+      // 2026-10-17 (`lot/ref-a-corpus-titre-1`) : ~~"T 29"~~, ~~"T 33"~~, la
+      // présence d'un personnel compétent au-delà de 200 kW ou 200 kVA —
+      // passés `non_couvert` (annonce décidée) après la revue du même jour.
       "T 52",
       "U 41",
       "U 43",
@@ -1653,7 +1662,14 @@ describe("corpus — ce qu'on ne couvre pas, et où on le dit", () => {
     // 4 » de `manques-annonces.ts`, que C crée pour MS 46 § 3 et EL 23 § 2) ;
     // `AM 18` → sous-lot G (aide de la catégorie Scène et du type L). Cible :
     // 13 après G, `MS 42` restant muet.
-    const MUETS = 17;
+    // ~~const MUETS = 17;~~ — **23 DEPUIS LA REVUE DU MÊME JOUR**, mesuré :
+    // 17 + 6 − 0. Six annonces décidées passent `non_couvert`, sans adresse
+    // produit encore : `CH 23`, `CH 24` (aide gaz et entrée chaudière, sous-lot
+    // B), `AS 5` (aide ascenseur, B), `AS 8` (entrée escalier mécanique, B),
+    // `T 29`, `T 33` (aide du type T, D). Chemin de redescente complet : B
+    // (−4) → 19, C (`CO 10`, −1) → 18, D (`T 29`, `T 33`, `T 43`, `T 44`, −4)
+    // → 14, G (`AM 18`, −1) → 13 ; `MS 42` restant muet.
+    const MUETS = 23;
     // Une note interne n'est pas une annonce à l'exploitant. `declareA`
     // mélange aujourd'hui les deux natures — une adresse produit et un
     // document de travail — et cette distinction reste à trancher (lot 3) ;

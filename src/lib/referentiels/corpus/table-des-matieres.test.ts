@@ -98,12 +98,15 @@ describe("garde-fou 1 — table des matières ↔ corpus, chapitre par chapitre"
     }
   });
 
-  it("un article abrogé à la table est classé « sans objet » au corpus", () => {
+  it("un article abrogé à la table est classé « sans objet » au corpus, son texte abrogeant nommé", () => {
     const mal: string[] = [];
     for (const ch of CHAPITRES_LIVRE_2) {
       for (const a of ch.articles.filter((x) => x.etat === "ABROGE")) {
         const e = corpusDuTitre(ch.titre).articles.find((x) => x.ref === a.ref);
         if (e && e.statut !== "sans_objet") mal.push(`${a.ref} : ${e.statut}`);
+        // 2026-10-17 (revue) : le texte abrogeant est nommé — c'est ce que
+        // \`legifrance:verifier\` lit pour ne plus compter l'abrogé comme un écart.
+        if (e && !e.modifiePar) mal.push(`${a.ref} : texte abrogeant non nommé (modifiePar)`);
       }
     }
     expect(mal).toEqual([]);

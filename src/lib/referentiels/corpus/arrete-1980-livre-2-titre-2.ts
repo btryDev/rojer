@@ -69,6 +69,10 @@
 //    est pris dans le régime des installations classées.
 
 import type { Corpus } from "./types";
+import {
+  DECLARE_A_CATEGORIE_ERP,
+  SUITE_ARTICLE_ABROGE_LU,
+} from "./motifs-livre-2";
 
 const MOTIF_GENERALITES =
   "Champ d'application ou calcul de l'effectif du chapitre : un seuil ou une règle de calcul, sans acte ni échéance. Ce sont ces seuils qui situent le chapitre dans les catégories 1 à 4 ; la catégorie, déclarée par l'exploitant, les porte, et les lignes du chapitre sont bornées par elle (`erp: { categories: [\"N1\", …, \"N4\"], types }`).";
@@ -94,10 +98,7 @@ const MOTIF_MANIFESTATION_T =
   "Type T : une obligation propre à une MANIFESTATION temporaire — foire, salon, exposition —, à la charge de l'organisateur, du chargé de sécurité ou de l'exposant, ou une condition de son autorisation (« L'organisateur doit demander à l'autorité administrative l'autorisation de tenir une activité du présent type deux mois avant son ouverture », T 5 § 1). Ligne de partage 1 : ce qui conditionne le droit de tenir la manifestation ne se rythme pas, et ce qui se fait pendant elle (déclarations à l'organisateur, stands, démonstrations) ne pèse pas sur l'établissement que Rojer suit. Une TPE exposante y est soumise sur le stand d'un autre ; son propre établissement reste servi pour tout le reste. La salle d'exposition permanente de T 1 § 2 n'a ni organisateur ni exposant.";
 
 const MOTIF_SSIAP =
-  "Service de sécurité incendie assuré par des AGENTS DE SÉCURITÉ INCENDIE (MS 46 § 1 b), ou composé d'un effectif fixé, au-delà d'un seuil de public ou en 1ʳᵉ ou 2ᵉ catégorie. Rojer ne le suit pas, par choix de couverture, et le dit : la présence d'un service qualifié est un état permanent du même genre que la présence d'une personne qualifiée d'EL 18 § 2, que le référentiel encode (`elec-erp-presence-personne-qualifiee`) — ce n'est donc pas faute d'acte. Le choix tient à la ligne de partage 5 (`docs/notes-cadre-juridique.md`) : des établissements de 1ʳᵉ ou de 2ᵉ catégorie, et des seuils de public (plusieurs milliers de personnes) que la catégorie déclarée ne fixe pas — le produit ne connaît de l'effectif qu'une borne basse (catégorie, personnes présentes). Ce qui est suivi, c'est la désignation et l'entraînement d'employés là où le chapitre les prescrit. Annoncé par la phrase de manque de l'axe `categorie_erp`.";
-
-const DECLARE_A_CATEGORIE_ERP =
-  "src/lib/perimetre/couverture.ts — phrase de manque de l'axe `categorie_erp`, servie à tout ERP des catégories 1 à 4 : « le service de sécurité incendie assuré par des agents de sécurité incendie, notamment, n'y est pas, et des dispositions particulières par type d'activité, il ne porte que quelques-unes ».";
+  "Service de sécurité incendie assuré par des AGENTS DE SÉCURITÉ INCENDIE (MS 46 § 1 b), ou composé d'un effectif fixé, au-delà d'un seuil de public ou en 1ʳᵉ catégorie. Rojer ne le suit pas, par choix de couverture, et le dit : la présence d'un service qualifié est un état permanent du même genre que la présence d'une personne qualifiée d'EL 18 § 2, que le référentiel encode (`elec-erp-presence-personne-qualifiee`) — ce n'est donc pas faute d'acte. Le choix tient à la ligne de partage 5 (`docs/notes-cadre-juridique.md`) : des établissements de 1ʳᵉ catégorie, et des seuils de public (plusieurs milliers de personnes) que la catégorie déclarée ne fixe pas — le produit ne connaît de l'effectif qu'une borne basse (catégorie, personnes présentes). Ce qui est suivi, c'est la désignation et l'entraînement d'employés là où le chapitre les prescrit. Annoncé par la phrase de manque de l'axe `categorie_erp`.";
 
 export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
   id: "arrete-1980-livre-2-titre-2",
@@ -776,11 +777,16 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000034988404",
       versionEnVigueur: "2017-07-01",
       modifiePar: { texte: "Arrêté du 13 juin 2017 - art. 15" },
-      luLe: "2026-10-14",
+      // ~~luLe: "2026-10-14"~~ — relu le 2026-10-17 par l'API (PISTE, bac à sable), citation exacte, à son reclassement.
+      luLe: "2026-10-17",
       lecture: "api_legifrance",
       citationCle: "L'utilisation des machines-outils par le public dans les locaux de vente est autorisée si : - les machines-outils sont sous la surveillance directe d'un personnel compétent de l'établissement ; - l'accès aux machines-outils est réservé aux seuls clients intéressés par leur emploi. Les machines-outils dont l'utilisation présente un risque particulier d'incendie doivent être installées : - soit dans un local répondant aux caractéristiques définies à l'article CO 28 (§ 2) ; - soit dans un local protégé par une installation d'extinction automatique à eau appropriée aux risques. […]",
-      statut: "sans_objet",
-      motif: MOTIF_USAGE,
+      historique: "2026-10-17 — revue indépendante de `lot/ref-a-corpus-titre-1`, décision de c6 : une présence requise pendant l'ouverture ou le fonctionnement est un ÉTAT PERMANENT (politique sœur : EL 18 § 2, encodé en `elec-erp-presence-personne-qualifiee`), ligne de partage 10 de `docs/notes-cadre-juridique.md`. Ancien classement : ~~statut sans_objet ; motif : MOTIF_USAGE~~",
+      statut: "obligation_manquante",
+      motif: "L'utilisation de machines-outils par le public dans les locaux de vente (magasin de bricolage, par exemple) est autorisée sous deux conditions, dont un ÉTAT PERMANENT : les machines sont « sous la surveillance directe d'un personnel compétent de l'établissement » pendant leur emploi (ligne de partage 10, politique sœur EL 18 § 2) ; l'accès est réservé aux clients intéressés (usage). L'implantation des machines à risque particulier d'incendie est une règle de construction. Touche la cible commerce. PROPOSITION pour le sous-lot C : annonce dans l'aide du type M, ou état permanent conditionné à un fait d'activité (« machines-outils mises à la disposition du public ») que le modèle ne porte pas — à trancher. Transitoirement au § 9.",
+      cause: "activite_exercee",
+      bloquePar: "La mise à disposition de machines-outils au public est un fait d'activité que rien ne déclare.",
+      toucheLaCible: true,
     },
     {
       ref: "M 36",
@@ -1731,12 +1737,13 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       intitule: "Portes des sorties de secours",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000025000535",
       versionEnVigueur: "1983-09-04",
-      modifiePar: null,
+      // 2026-10-17 (revue de `lot/ref-a-corpus-titre-1`) : le texte ABROGEANT, relevé sur l'API ; ~~null~~.
+      modifiePar: { texte: "Arrêté du 2 février 1993, v. init." },
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "Les dispositions de l'article CO 46 (§ 2) ne sont pas applicables aux salles de danse.",
       statut: "sans_objet",
-      motif: "Article ABROGÉ (en vigueur depuis le 1983-09-04, abrogé par : Arrêté du 2 février 1993, v. init.). Lu pour être compté : la table des matières le liste encore, et un article qui manque au corpus ne se distingue pas d'un article oublié.",
+      motif: "Article ABROGÉ (en vigueur depuis le 1983-09-04, abrogé par : Arrêté du 2 février 1993, v. init.). " + SUITE_ARTICLE_ABROGE_LU,
     },
     {
       ref: "P 11",
@@ -2109,24 +2116,26 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       intitule: "Portes des sorties de secours",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000025005468",
       versionEnVigueur: "1982-07-08",
-      modifiePar: null,
+      // 2026-10-17 (revue de `lot/ref-a-corpus-titre-1`) : le texte ABROGEANT, relevé sur l'API ; ~~null~~.
+      modifiePar: { texte: "Arrêté du 2 février 1993, v. init." },
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "Les portes des sorties de secours doivent être maintenus verrouillées sous réserve que leur déverrouillage puisse être effectué par l'intermédiaire du système d'alarme. Le dispositif de déverrouillage doit fonctionner selon le principe de la sécurité positive.",
       statut: "sans_objet",
-      motif: "Article ABROGÉ (en vigueur depuis le 1982-07-08, abrogé par : Arrêté du 2 février 1993, v. init.). Lu pour être compté : la table des matières le liste encore, et un article qui manque au corpus ne se distingue pas d'un article oublié.",
+      motif: "Article ABROGÉ (en vigueur depuis le 1982-07-08, abrogé par : Arrêté du 2 février 1993, v. init.). " + SUITE_ARTICLE_ABROGE_LU,
     },
     {
       ref: "R 18",
       intitule: "Sièges de la salle polyvalente",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000025005538",
       versionEnVigueur: "1982-07-08",
-      modifiePar: null,
+      // 2026-10-17 (revue de `lot/ref-a-corpus-titre-1`) : le texte ABROGEANT, relevé sur l'API ; ~~null~~.
+      modifiePar: { texte: "Arrêté du 13 janvier 2004, v. init." },
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "Seules les dispositions du paragraphe 1 de l'article AM 18 sont applicables aux sièges des salles polyvalentes visées à l'article R 4, lorsque l'activité n'impose pas la constitution de rangées.",
       statut: "sans_objet",
-      motif: "Article ABROGÉ (en vigueur depuis le 1982-07-08, abrogé par : Arrêté du 13 janvier 2004, v. init.). Lu pour être compté : la table des matières le liste encore, et un article qui manque au corpus ne se distingue pas d'un article oublié.",
+      motif: "Article ABROGÉ (en vigueur depuis le 1982-07-08, abrogé par : Arrêté du 13 janvier 2004, v. init.). " + SUITE_ARTICLE_ABROGE_LU,
     },
     {
       ref: "R 19",
@@ -2193,12 +2202,13 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       intitule: "Appareillage des écoles maternelles",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000025133781",
       versionEnVigueur: "1982-07-08",
-      modifiePar: null,
+      // 2026-10-17 (revue de `lot/ref-a-corpus-titre-1`) : le texte ABROGEANT, relevé sur l'API ; ~~null~~.
+      modifiePar: { texte: "Arrêté du 19 novembre 2001, v. init." },
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "Les socles des prises de courant, les interrupteurs et autres appareillages installés dans les locaux accessibles aux enfants des écoles maternelles doivent être situés à 1,40 mètre du sol au moins ; en outre, les socles des prises de courant doivent être munis d'obturateurs.",
       statut: "sans_objet",
-      motif: "Article ABROGÉ (en vigueur depuis le 1982-07-08, abrogé par : Arrêté du 19 novembre 2001, v. init.). Lu pour être compté : la table des matières le liste encore, et un article qui manque au corpus ne se distingue pas d'un article oublié.",
+      motif: "Article ABROGÉ (en vigueur depuis le 1982-07-08, abrogé par : Arrêté du 19 novembre 2001, v. init.). " + SUITE_ARTICLE_ABROGE_LU,
     },
     {
       ref: "R 25",
@@ -2217,12 +2227,13 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       intitule: "Eclairage normal",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000025133908",
       versionEnVigueur: "1982-07-08",
-      modifiePar: null,
+      // 2026-10-17 (revue de `lot/ref-a-corpus-titre-1`) : le texte ABROGEANT, relevé sur l'API ; ~~null~~.
+      modifiePar: { texte: "Arrêté du 19 novembre 2001, v. init." },
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "Les lampes mobiles ne sont autorisées que dans les salles de lecture et dans les chambres.",
       statut: "sans_objet",
-      motif: "Article ABROGÉ (en vigueur depuis le 1982-07-08, abrogé par : Arrêté du 19 novembre 2001, v. init.). Lu pour être compté : la table des matières le liste encore, et un article qui manque au corpus ne se distingue pas d'un article oublié.",
+      motif: "Article ABROGÉ (en vigueur depuis le 1982-07-08, abrogé par : Arrêté du 19 novembre 2001, v. init.). " + SUITE_ARTICLE_ABROGE_LU,
     },
     {
       ref: "R 27",
@@ -2450,24 +2461,26 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       intitule: "Conditions d'installation",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000025172947",
       versionEnVigueur: "1995-10-18",
-      modifiePar: null,
+      // 2026-10-17 (revue de `lot/ref-a-corpus-titre-1`) : le texte ABROGEANT, relevé sur l'API ; ~~null~~.
+      modifiePar: { texte: "Arrêté du 19 novembre 2001, v. init." },
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "Les installations électriques des locaux à risques particuliers visés à l'article S 8 doivent être établies dans les conditions requises par la norme en vigueur pour les locaux présentant des risques d'incendie (condition d'influence externe BE 2).",
       statut: "sans_objet",
-      motif: "Article ABROGÉ (en vigueur depuis le 1995-10-18, abrogé par : Arrêté du 19 novembre 2001, v. init.). Lu pour être compté : la table des matières le liste encore, et un article qui manque au corpus ne se distingue pas d'un article oublié.",
+      motif: "Article ABROGÉ (en vigueur depuis le 1995-10-18, abrogé par : Arrêté du 19 novembre 2001, v. init.). " + SUITE_ARTICLE_ABROGE_LU,
     },
     {
       ref: "S 13",
       intitule: "Eclairage normal",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000025173115",
       versionEnVigueur: "1995-10-18",
-      modifiePar: null,
+      // 2026-10-17 (revue de `lot/ref-a-corpus-titre-1`) : le texte ABROGEANT, relevé sur l'API ; ~~null~~.
+      modifiePar: { texte: "Arrêté du 19 novembre 2001, v. init." },
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "La présence de lampes mobiles est admise sur les tables ; ces lampes doivent être alimentées par des prises de courant installées conformément aux dispositions de l'article EL 5 ( 2).",
       statut: "sans_objet",
-      motif: "Article ABROGÉ (en vigueur depuis le 1995-10-18, abrogé par : Arrêté du 19 novembre 2001, v. init.). Lu pour être compté : la table des matières le liste encore, et un article qui manque au corpus ne se distingue pas d'un article oublié.",
+      motif: "Article ABROGÉ (en vigueur depuis le 1995-10-18, abrogé par : Arrêté du 19 novembre 2001, v. init.). " + SUITE_ARTICLE_ABROGE_LU,
     },
     {
       ref: "S 14",
@@ -2907,12 +2920,10 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "§ 3. Dans les établissements où la puissance utile installée à l'intérieur du bâtiment est supérieure à 200 kW, la présence d'un personnel compétent est obligatoire pendant l'ouverture au public à raison d'une personne par zone définie au paragraphe 2 ci-dessus.",
-      historique: "2026-10-17 — RÉÉCRIT après la contre-lecture indépendante du 2026-10-17 (constats du 2026-10-17, § 2), verdict de c6 le même jour, `lot/ref-a-corpus-titre-1`. Ancien classement : ~~statut `hors_perimetre`, exclusion `construction` ; motif : Réseau de gaz du propriétaire du hall : conception, zonage, pression, repérage, prises en attente — construction. Le § 3 ajoute une présence de personnel compétent pendant l'ouverture au-delà de 200 kW installés : une condition de fonctionnement, sans acte daté ni pièce (ligne de partage 3), et un seuil hors de portée d'une salle d'exposition de TPE.~~",
-      statut: "obligation_manquante",
-      motif: "Les § 1, § 2 et § 4 à § 6 sont des règles de conception du réseau de gaz du propriétaire du hall (zonage, pression, repérage, prises en attente). Le § 3 impose un ACTE : au-delà de 200 kW de puissance utile installée, « la présence d'un personnel compétent est obligatoire pendant l'ouverture au public », une personne par zone, qui peut être celle de T 33 § 2. Même politique sœur qu'à T 33 § 2 : EL 18 § 2, encodé en état permanent. PROPOSITION (décision de c6 du 2026-10-17) : annoncer avec T 33 dans l'aide du type T (sous-lot D) et citer T 29 en contexte dans les notes de `elec-erp-presence-personne-qualifiee` (sous-lot C). Transitoirement au § 9.",
-      cause: "attribut_etablissement",
-      toucheLaCible: true,
-      bloquePar: "Rojer ne connaît pas la puissance utile installée : le seuil de 200 kW n'est pas un attribut d'établissement.",
+      historique: "2026-10-17 — RÉÉCRIT après la contre-lecture indépendante du 2026-10-17 (constats du 2026-10-17, § 2), verdict de c6 le même jour, `lot/ref-a-corpus-titre-1`. Ancien classement : ~~statut `hors_perimetre`, exclusion `construction` ; motif : Réseau de gaz du propriétaire du hall : conception, zonage, pression, repérage, prises en attente — construction. Le § 3 ajoute une présence de personnel compétent pendant l'ouverture au-delà de 200 kW installés : une condition de fonctionnement, sans acte daté ni pièce (ligne de partage 3), et un seuil hors de portée d'une salle d'exposition de TPE.~~\n\n2026-10-17 — revue indépendante de `lot/ref-a-corpus-titre-1`, décision de c6 : « annoncer » ne s'encode que d'une façon, `non_couvert` avec l'adresse de l'annonce, même provisoirement muette ; une annonce décidée n'est pas une ligne à encoder. Elle annule le classement `obligation_manquante` / `attribut_etablissement` donné plus tôt le même jour. Ancien classement : ~~statut obligation_manquante, cause attribut_etablissement ; motif : Les § 1, § 2 et § 4 à § 6 sont des règles de conception du réseau de gaz du propriétaire du hall (zonage, pression, repérage, prises en attente). Le § 3 impose un ACTE : au-delà de 200 kW de puissance utile installée, « la présence d'un personnel compétent est obligatoire pendant l'ouverture au public », une personne par zone, qui peut être celle de T 33 § 2. Même politique sœur qu'à T 33 § 2 : EL 18 § 2, encodé en état permanent. PROPOSITION (décision de c6 du 2026-10-17) : annoncer avec T 33 dans l'aide du type T (sous-lot D) et citer T 29 en contexte dans les notes de `elec-erp-presence-personne-qualifiee` (sous-lot C). Transitoirement au § 9.~~",
+      statut: "non_couvert",
+      motif: "Les § 1, § 2 et § 4 à § 6 sont des règles de conception du réseau de gaz du propriétaire du hall (zonage, pression, repérage, prises en attente). Le § 3 impose un ÉTAT PERMANENT : au-delà de 200 kW de puissance utile installée, « la présence d'un personnel compétent est obligatoire pendant l'ouverture au public », une personne par zone, qui peut être celle de T 33 § 2 (ligne de partage 10). Rojer ne connaît pas la puissance installée : annoncé avec T 33 (décision de c6 du 2026-10-17), et à citer en contexte dans les notes de `elec-erp-presence-personne-qualifiee` (sous-lot C).",
+      declareA: "Non déclaré au 2026-10-17 : l'annonce est prévue dans l'aide du type T (`AIDE_TYPE_ERP`, surface nouvelle du sous-lot D du plan « mise à jour du référentiel »), qui n'existe pas encore.",
     },
     {
       ref: "T 30",
@@ -2961,12 +2972,10 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "§ 2. En complément des dispositions de l'article EL 18 (§ 2), dans les salles où la puissance mise en oeuvre est supérieure à 200 kVA, la présence d'une personne compétente est obligatoire pendant l'ouverture au public à raison d'une personne par zone définie au paragraphe 1 ci-dessus.",
-      historique: "2026-10-17 — RÉÉCRIT après la contre-lecture indépendante du 2026-10-17 (constats du 2026-10-17, § 2), verdict de c6 le même jour, `lot/ref-a-corpus-titre-1`. Ancien classement : ~~statut `hors_perimetre`, exclusion `construction` ; motif : Zonage de la distribution électrique (§ 1, construction) ; présence d'une personne compétente au-delà de 200 kVA (§ 2) : condition de fonctionnement sans acte ni pièce (ligne de partage 3), à un seuil de puissance qu'une salle d'exposition de TPE n'atteint pas.~~",
-      statut: "obligation_manquante",
-      motif: "Le § 1 (zonage de la distribution électrique) est une règle de construction. Le § 2 impose un ACTE : dans les salles où la puissance mise en œuvre dépasse 200 kVA, « la présence d'une personne compétente est obligatoire pendant l'ouverture au public », une par zone, en complément d'EL 18 § 2. Politique sœur : la présence physique d'une personne qualifiée d'EL 18 § 2 est encodée comme état permanent (`elec-erp-presence-personne-qualifiee`). PROPOSITION (contre-lecture et décision de c6 du 2026-10-17) : annoncer dans l'aide du type T (sous-lot D), et citer T 33 en contexte dans les notes de `elec-erp-presence-personne-qualifiee` (sous-lot C). Transitoirement au § 9.",
-      cause: "attribut_etablissement",
-      toucheLaCible: true,
-      bloquePar: "Rojer ne connaît pas la puissance électrique mise en œuvre dans la salle : le seuil de 200 kVA n'est pas un attribut d'établissement.",
+      historique: "2026-10-17 — RÉÉCRIT après la contre-lecture indépendante du 2026-10-17 (constats du 2026-10-17, § 2), verdict de c6 le même jour, `lot/ref-a-corpus-titre-1`. Ancien classement : ~~statut `hors_perimetre`, exclusion `construction` ; motif : Zonage de la distribution électrique (§ 1, construction) ; présence d'une personne compétente au-delà de 200 kVA (§ 2) : condition de fonctionnement sans acte ni pièce (ligne de partage 3), à un seuil de puissance qu'une salle d'exposition de TPE n'atteint pas.~~\n\n2026-10-17 — revue indépendante de `lot/ref-a-corpus-titre-1`, décision de c6 : « annoncer » ne s'encode que d'une façon, `non_couvert` avec l'adresse de l'annonce, même provisoirement muette ; une annonce décidée n'est pas une ligne à encoder. Elle annule le classement `obligation_manquante` / `attribut_etablissement` donné plus tôt le même jour. Ancien classement : ~~statut obligation_manquante, cause attribut_etablissement ; motif : Le § 1 (zonage de la distribution électrique) est une règle de construction. Le § 2 impose un ACTE : dans les salles où la puissance mise en œuvre dépasse 200 kVA, « la présence d'une personne compétente est obligatoire pendant l'ouverture au public », une par zone, en complément d'EL 18 § 2. Politique sœur : la présence physique d'une personne qualifiée d'EL 18 § 2 est encodée comme état permanent (`elec-erp-presence-personne-qualifiee`). PROPOSITION (contre-lecture et décision de c6 du 2026-10-17) : annoncer dans l'aide du type T (sous-lot D), et citer T 33 en contexte dans les notes de `elec-erp-presence-personne-qualifiee` (sous-lot C). Transitoirement au § 9.~~",
+      statut: "non_couvert",
+      motif: "Le § 1 (zonage de la distribution électrique) est une règle de construction. Le § 2 impose un ÉTAT PERMANENT : dans les salles où la puissance mise en œuvre dépasse 200 kVA, « la présence d'une personne compétente est obligatoire pendant l'ouverture au public », une par zone, en complément d'EL 18 § 2 (politique sœur, encodée en `elec-erp-presence-personne-qualifiee` ; ligne de partage 10). Rojer ne connaît pas la puissance mise en œuvre : annoncé plutôt que suivi (décision de c6 du 2026-10-17). T 33 est aussi à citer en contexte dans les notes de `elec-erp-presence-personne-qualifiee` (sous-lot C).",
+      declareA: "Non déclaré au 2026-10-17 : l'annonce est prévue dans l'aide du type T (`AIDE_TYPE_ERP`, surface nouvelle du sous-lot D du plan « mise à jour du référentiel »), qui n'existe pas encore.",
     },
     {
       ref: "T 34",
@@ -3101,7 +3110,7 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       citationCle: "§ 1. Toute présentation de machines ou matériels utilisant des substances radioactives ou génératrices de rayons X doit faire l'objet d'une demande d'autorisation adressée par l'exposant à l'administration compétente. § 2. […]",
       historique: "2026-10-17 — RÉÉCRIT après la contre-lecture indépendante du 2026-10-17 (constats du 2026-10-17, § 2), verdict de c6 le même jour, `lot/ref-a-corpus-titre-1`. Ancien classement : ~~statut `sans_objet` ; motif : (motif commun MOTIF_MANIFESTATION_T)~~",
       statut: "non_couvert",
-      motif: "Toute présentation de machines utilisant des substances radioactives ou générant des rayons X fait l'objet d'une DEMANDE D'AUTORISATION par l'exposant (§ 1), sous des conditions de protection, de signalisation (NF M 60-101), de surveillance et de stockage (§ 2), et de conformité des appareils à rayons X (NF C 74-100, § 3). Une déclaration à faire à chaque présentation, de niche : annoncée plutôt que suivie (ligne de partage 5). Les normes citées ne fixent ni rythme ni contenu de vérification. Les rayonnements ionisants sont en outre déjà déclarés non couverts par Rojer (`.claude/CLAUDE.md`, « Hors périmètre »). Vaut aussi pour la salle d'exposition permanente de T 1 § 2, dont l'exploitant peut être l'exposant.",
+      motif: "Toute présentation de machines utilisant des substances radioactives ou générant des rayons X fait l'objet d'une DEMANDE D'AUTORISATION par l'exposant (§ 1), sous des conditions de protection, de signalisation (NF M 60-101), de surveillance et de stockage (§ 2), et de conformité des appareils à rayons X (NF C 74-100, § 3). Une déclaration à faire à chaque présentation, de niche : annoncée plutôt que suivie (ligne de partage 5). Les normes NF M 60-101 et NF C 74-100 que l'article cite ne sont pas lues : ce qu'elles fixent ou non (rythme, contenu de vérification) n'est pas établi ici. Les rayonnements ionisants relèvent en outre de l'exclusion `risque_specialise` (`corpus/perimetre.ts`), et Rojer les déclare non couverts (`.claude/CLAUDE.md`, « Hors périmètre »). Vaut aussi pour la salle d'exposition permanente de T 1 § 2, dont l'exploitant peut être l'exposant.",
       declareA: "Non déclaré au 2026-10-17 : l'annonce est prévue dans l'aide du type T (`AIDE_TYPE_ERP`, surface nouvelle du sous-lot D du plan « mise à jour du référentiel »), qui n'existe pas encore. Décision de c6 du 2026-10-17 : `non_couvert`, annoncé là.",
     },
     {
@@ -3404,12 +3413,13 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       ref: "U 17",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024803704",
       versionEnVigueur: "2005-04-22",
-      modifiePar: null,
+      // 2026-10-17 (revue de `lot/ref-a-corpus-titre-1`) : le texte ABROGEANT, relevé sur l'API ; ~~null~~.
+      modifiePar: { texte: "Arrêté du 9 mai 2006, v. init." },
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "(Abrogé suite à la modification de l'article U5, § 2)",
       statut: "sans_objet",
-      motif: "Article ABROGÉ (en vigueur depuis le 2005-04-22, abrogé par : Arrêté du 9 mai 2006, v. init.). Lu pour être compté : la table des matières le liste encore, et un article qui manque au corpus ne se distingue pas d'un article oublié.",
+      motif: "Article ABROGÉ (en vigueur depuis le 2005-04-22, abrogé par : Arrêté du 9 mai 2006, v. init.). " + SUITE_ARTICLE_ABROGE_LU,
     },
     {
       ref: "U 18",
@@ -3630,45 +3640,49 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       ref: "U 37",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000026022836",
       versionEnVigueur: "1989-06-15",
-      modifiePar: null,
+      // 2026-10-17 (revue de `lot/ref-a-corpus-titre-1`) : le texte ABROGEANT, relevé sur l'API ; ~~null~~.
+      modifiePar: { texte: "Arrêté du 10 décembre 2004 - art. 1 (V)" },
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "Définitions. § 1. Les conditions de stockage, d'installation et de fonctionnement des gaz médicaux doivent être conformes aux dispositions de la norme française NF S 90-155 (2) relative aux réseaux de distribution de gaz médicaux non inflammables. Cette norme s'applique aux gaz suivants : - oxygène ; - protoxyde d'azote ; - air à usage médical ; - azote ; - hélium ; - dioxyde de carbone ; […]",
       statut: "sans_objet",
-      motif: "Article ABROGÉ (en vigueur depuis le 1989-06-15, abrogé par : Arrêté du 10 décembre 2004 - art. 1 (V)). Lu pour être compté : la table des matières le liste encore, et un article qui manque au corpus ne se distingue pas d'un article oublié.",
+      motif: "Article ABROGÉ (en vigueur depuis le 1989-06-15, abrogé par : Arrêté du 10 décembre 2004 - art. 1 (V)). " + SUITE_ARTICLE_ABROGE_LU,
     },
     {
       ref: "U 38",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000026022837",
       versionEnVigueur: "1989-06-15",
-      modifiePar: null,
+      // 2026-10-17 (revue de `lot/ref-a-corpus-titre-1`) : le texte ABROGEANT, relevé sur l'API ; ~~null~~.
+      modifiePar: { texte: "Arrêté du 10 décembre 2004 - art. 1 (V)" },
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "Distribution par récipients mobiles. § 1. Lorsque la distribution se fait par récipients mobiles dont la capacité en eau est supérieure à 10 litres, ceux-ci sont obligatoirement fixés à un chariot pour leur transport à l'intérieur des bâtiments et maintenus en position stable pendant leur utilisation. § 2. […]",
       statut: "sans_objet",
-      motif: "Article ABROGÉ (en vigueur depuis le 1989-06-15, abrogé par : Arrêté du 10 décembre 2004 - art. 1 (V)). Lu pour être compté : la table des matières le liste encore, et un article qui manque au corpus ne se distingue pas d'un article oublié.",
+      motif: "Article ABROGÉ (en vigueur depuis le 1989-06-15, abrogé par : Arrêté du 10 décembre 2004 - art. 1 (V)). " + SUITE_ARTICLE_ABROGE_LU,
     },
     {
       ref: "U 39",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000026022838",
       versionEnVigueur: "1989-06-15",
-      modifiePar: null,
+      // 2026-10-17 (revue de `lot/ref-a-corpus-titre-1`) : le texte ABROGEANT, relevé sur l'API ; ~~null~~.
+      modifiePar: { texte: "Arrêté du 10 décembre 2004 - art. 1 (V)" },
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "Traversée des locaux à risques particuliers. Il est interdit de faire traverser les locaux à risques particuliers définis à l'article U 13, par des canalisations de distribution générale de gaz comburants desservant d'autres locaux.",
       statut: "sans_objet",
-      motif: "Article ABROGÉ (en vigueur depuis le 1989-06-15, abrogé par : Arrêté du 10 décembre 2004 - art. 1 (V)). Lu pour être compté : la table des matières le liste encore, et un article qui manque au corpus ne se distingue pas d'un article oublié.",
+      motif: "Article ABROGÉ (en vigueur depuis le 1989-06-15, abrogé par : Arrêté du 10 décembre 2004 - art. 1 (V)). " + SUITE_ARTICLE_ABROGE_LU,
     },
     {
       ref: "U 40",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000026022839",
       versionEnVigueur: "1989-06-15",
-      modifiePar: null,
+      // 2026-10-17 (revue de `lot/ref-a-corpus-titre-1`) : le texte ABROGEANT, relevé sur l'API ; ~~null~~.
+      modifiePar: { texte: "Arrêté du 10 décembre 2004 - art. 1 (V)" },
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "Consignes et plans. § 1. Des consignes très strictes doivent être données et rappelées périodiquement à tout le personnel pour attirer son attention sur les dangers qu'il y a : - de graisser les organes de distribution et d'utilisation ; - de mettre en contact l'oxygène avec les graisses de toutes origines ; […]",
       statut: "sans_objet",
-      motif: "Article ABROGÉ (en vigueur depuis le 1989-06-15, abrogé par : Arrêté du 10 décembre 2004 - art. 1 (V)). Lu pour être compté : la table des matières le liste encore, et un article qui manque au corpus ne se distingue pas d'un article oublié.",
+      motif: "Article ABROGÉ (en vigueur depuis le 1989-06-15, abrogé par : Arrêté du 10 décembre 2004 - art. 1 (V)). " + SUITE_ARTICLE_ABROGE_LU,
     },
     {
       ref: "U 41",
@@ -4687,12 +4701,13 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       intitule: "Conditions d'installation",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000025176721",
       versionEnVigueur: "1995-10-18",
-      modifiePar: null,
+      // 2026-10-17 (revue de `lot/ref-a-corpus-titre-1`) : le texte ABROGEANT, relevé sur l'API ; ~~null~~.
+      modifiePar: { texte: "Arrêté du 19 novembre 2001, v. init." },
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "Les installations électriques des locaux à risques particuliers visés à l'article Y 8 doivent être établies dans les conditions requises par la norme en vigueur pour les locaux présentant des risques d'incendie (condition d'influence externe BE 2).",
       statut: "sans_objet",
-      motif: "Article ABROGÉ (en vigueur depuis le 1995-10-18, abrogé par : Arrêté du 19 novembre 2001, v. init.). Lu pour être compté : la table des matières le liste encore, et un article qui manque au corpus ne se distingue pas d'un article oublié.",
+      motif: "Article ABROGÉ (en vigueur depuis le 1995-10-18, abrogé par : Arrêté du 19 novembre 2001, v. init.). " + SUITE_ARTICLE_ABROGE_LU,
     },
     {
       ref: "Y 17",
@@ -4811,12 +4826,13 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       intitule: "Vérifications techniques",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024971669",
       versionEnVigueur: "2002-04-07",
-      modifiePar: null,
+      // 2026-10-17 (revue de `lot/ref-a-corpus-titre-1`) : le texte ABROGEANT, relevé sur l'API ; ~~null~~.
+      modifiePar: { texte: "Arrêté du 29 juillet 2003 - art. 2, v. init." },
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "En aggravation des dispositions de l'article GE 7 (§ 1), les vérifications techniques des établissements de 4e catégorie doivent être effectuées dans les mêmes conditions que pour les établissements de 1re, 2e et 3e catégorie.",
       statut: "sans_objet",
-      motif: "Article ABROGÉ (en vigueur depuis le 2002-04-07, abrogé par : Arrêté du 29 juillet 2003 - art. 2, v. init.). Lu pour être compté : la table des matières le liste encore, et un article qui manque au corpus ne se distingue pas d'un article oublié.",
+      motif: "Article ABROGÉ (en vigueur depuis le 2002-04-07, abrogé par : Arrêté du 29 juillet 2003 - art. 2, v. init.). " + SUITE_ARTICLE_ABROGE_LU,
     },
     {
       ref: "J 5",
