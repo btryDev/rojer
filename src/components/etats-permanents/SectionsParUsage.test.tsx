@@ -207,6 +207,34 @@ describe.each(Object.keys(DOSSIERS) as (keyof typeof DOSSIERS)[])(
       for (const s of sections) expect(s.getAttribute("tabindex"), s.id).toBe("-1");
     });
 
+    it("l'anneau de focus d'une section est celui de la charte, décollé et arrondi (2026-10-17, c6)", async () => {
+      // jsdom ne peint pas l'anneau : on vérifie les classes, comme le test
+      // du sommaire vérifie `flex-wrap`. `focus-visible` et non `focus` :
+      // relevé dans Chrome, voir le commentaire de `SectionsParUsage`.
+      const d = await lire(nom);
+      const { container } = rendre(d);
+      const sections = [...container.querySelectorAll("section[id]")];
+      expect(sections.length).toBe(d.familles.length);
+      for (const s of sections) {
+        const classes = s.className.split(/\s+/);
+        expect(classes, s.id).toEqual(
+          expect.arrayContaining([
+            "focus-visible:outline-2",
+            "focus-visible:outline-[color:var(--board-blue-strong)]",
+            // Le rayon des cartes qu'elle entoure (charte § 1.6).
+            "rounded-[30px]",
+          ]),
+        );
+        // Décollé : un décalage d'au moins 4 px, jamais l'anneau collé.
+        const decalage = classes
+          .map((c) => /^focus-visible:outline-offset-(\d+)$/.exec(c)?.[1])
+          .find(Boolean);
+        expect(Number(decalage ?? 0), s.id).toBeGreaterThanOrEqual(4);
+        // Jamais au simple `:focus` : un clic dans la section l'allumerait.
+        expect(classes.filter((c) => c.startsWith("focus:")), s.id).toEqual([]);
+      }
+    });
+
     it("à 375 px, chaque entrée du sommaire passe à la ligne plutôt que de serrer deux colonnes", async () => {
       // jsdom ne met rien en page : on vérifie la classe qui autorise le
       // retour, comme les tests voisins vérifient `carte-board`.
