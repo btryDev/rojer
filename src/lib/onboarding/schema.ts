@@ -17,6 +17,7 @@ import {
 } from "@/lib/matching/personnes-presentes";
 import { evaluerScopeSecteur } from "./scope";
 import { MESSAGE_REFUS_EFFECTIF_ENTREPRISE } from "@/lib/entreprises/schema";
+import { questionEnfantsPosee, refusDuFiltre } from "@/lib/etablissements/types-refuses";
 
 /** Le refus d'un effectif d'entreprise absent ou illisible, client et serveur. */
 export const MESSAGE_EFFECTIF_ENTREPRISE =
@@ -136,6 +137,13 @@ export const onboardingSchema = z
     // aucune création — c'est ce que le recadrage du 2026-09-01 exigeait en
     // sortant deux questions de technicien du parcours — et rien n'est inscrit
     // au dossier que personne n'a déclaré.
+    // 2026-10-17, filtre à l'accueil : la réponse « accueil d'enfants », posée
+    // au seul type R. NON STOCKÉE (choix assumé, c6) : elle ne sert qu'à
+    // refuser ; l'action la retire avant l'écriture.
+    accueilEnfants: z.preprocess(
+      (v) => (v === "oui" || v === true ? true : v === "non" || v === false ? false : undefined),
+      z.boolean().optional(),
+    ),
     comporteLocauxSommeilPublic: z.preprocess(
       (v) =>
         v === "oui"
@@ -263,6 +271,20 @@ export const onboardingSchema = z
         path: ["comporteLocauxSommeilPublic"],
         message:
           "La question des locaux à sommeil n'est pas posée à ce type d'établissement.",
+      });
+    }
+
+    // Le filtre à l'accueil (2026-10-17, `etablissements/types-refuses.ts`) :
+    // la même règle que `etablissementCreationSchema` et que le client
+    // (`components/onboarding/validation.ts`).
+    for (const r of refusDuFiltre(val)) {
+      ctx.addIssue({ code: "custom", path: [r.champ], message: r.message });
+    }
+    if (val.accueilEnfants !== undefined && !questionEnfantsPosee(val)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["accueilEnfants"],
+        message: "La question de l'accueil d'enfants n'est posée qu'au type R.",
       });
     }
 

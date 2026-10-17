@@ -23,6 +23,7 @@ import {
   typesErpAutresCoherents,
 } from "./schema";
 import { typesErpAutresPostes } from "./types-erp-affiches";
+import { questionEnfantsPosee, refusDuFiltre } from "./types-refuses";
 
 export type EtablissementActionState =
   | { status: "idle" }
@@ -132,6 +133,8 @@ function normaliserFormData(fd: FormData): Record<string, unknown> {
     // omis, et la valeur en base est gardée (`typesErpAutresCoherents`).
     ...(typesErpAutres === undefined ? {} : { typesErpAutres }),
     categorieErp: raw.categorieErp || undefined,
+    // Filtre à l'accueil (2026-10-17) : vide = non posté.
+    accueilEnfants: raw.accueilEnfants || undefined,
     natureActivite: raw.natureActivite,
     // Ces quatre champs ne sont rendus que dans le bloc `{estERP && (…)}` du
     // formulaire. Décocher la case les retire donc du FormData, et un
@@ -219,12 +222,15 @@ export async function creerEtablissement(
     };
   }
 
+  // La réponse « accueil d'enfants » ne s'écrit pas : elle ne sert qu'au
+  // filtre (`types-refuses.ts`, choix assumé du 2026-10-17).
+  const { accueilEnfants: _accueilEnfants, ...saisie } = parsed.data;
   const etab = await prisma.etablissement.create({
     data: {
       entrepriseId,
       ...reponseSommeilSuivantLeType({
-        ...parsed.data,
-        typesErpAutres: typesErpAutresCoherents(parsed.data),
+        ...saisie,
+        typesErpAutres: typesErpAutresCoherents(saisie),
       }),
       // ADR-019 : tout établissement naît avec son bâtiment principal.
       batiments: { create: { nom: NOM_BATIMENT_PRINCIPAL, ordre: 0 } },
@@ -285,14 +291,39 @@ export async function choisirEtablissementActif(
   redirect(`/etablissements/${etablissementId}`);
 }
 
+/** Les seuls refus de TYPE du filtre, lus sur la saisie brute (le schéma a échoué). */
+async function refusDeTypesALaTransition(id: string, brut: Record<string, unknown>) {
+  const avant = await prisma.etablissement.findUnique({
+    where: { id },
+    select: { estERP: true, typeErp: true, typesErpAutres: true },
+  });
+  const typeErp = typeof brut.typeErp === "string" ? brut.typeErp : (avant?.typeErp ?? null);
+  const autres = Array.isArray(brut.typesErpAutres) ? (brut.typesErpAutres as string[]) : (avant?.typesErpAutres ?? []);
+  return refusDuFiltre(
+    { estERP: brut.estERP === true, typeErp, typesErpAutres: autres },
+    avant?.estERP ? { typeErp: avant.typeErp, typesErpAutres: avant.typesErpAutres } : null,
+  ).filter((r) => r.champ !== "accueilEnfants");
+}
+
 export async function modifierEtablissement(
   id: string,
   _prev: EtablissementActionState,
   formData: FormData,
 ): Promise<EtablissementActionState> {
   await assertEtablissementOwnership(id);
-  const parsed = etablissementSchema.safeParse(normaliserFormData(formData));
+  const brut = normaliserFormData(formData);
+  const parsed = etablissementSchema.safeParse(brut);
   if (!parsed.success) {
+    // Filtre à l'accueil (2026-10-17) : un type refusé qui ENTRE se dit en
+    // premier — sinon la fiche réclamerait d'abord la réponse au sommeil
+    // d'un type que Rojer ne prendra pas.
+    const typesRefuses = await refusDeTypesALaTransition(id, brut);
+    if (typesRefuses.length > 0)
+      return {
+        status: "error",
+        message: "Formulaire invalide",
+        fieldErrors: Object.fromEntries(typesRefuses.map((r) => [r.champ, [r.message]])),
+      };
     return {
       status: "error",
       message: "Formulaire invalide",
@@ -326,16 +357,51 @@ export async function modifierEtablissement(
     return { status: "error", message: "Établissement introuvable" };
   }
 
+  // LE FILTRE À L'ACCUEIL, À LA TRANSITION (2026-10-17, `types-refuses.ts`).
+  // Un type refusé qui n'était pas en base, ou un R qui entre sans réponse ou
+  // avec des enfants, est refusé ; un dossier créé avant le filtre
+  // s'enregistre comme avant. La réponse n'est acceptée que là où la question
+  // est posée — à l'entrée de R — et ne s'écrit jamais.
+  const { accueilEnfants, ...saisie } = parsed.data;
+  const typesApres = {
+    estERP: saisie.estERP,
+    typeErp: saisie.typeErp ?? avant.typeErp,
+    typesErpAutres: typesErpAutresCoherents(
+      { ...saisie, typeErp: saisie.typeErp ?? avant.typeErp },
+      avant.typesErpAutres,
+    ),
+  };
+  const avantTypes = avant.estERP
+    ? { typeErp: avant.typeErp, typesErpAutres: avant.typesErpAutres }
+    : { typeErp: null, typesErpAutres: [] };
+  const refus = refusDuFiltre({ ...typesApres, accueilEnfants }, avantTypes);
+  const rEntre =
+    questionEnfantsPosee(typesApres) &&
+    !(avant.estERP && [avant.typeErp, ...avant.typesErpAutres].includes("R"));
+  if (accueilEnfants !== undefined && !rEntre) {
+    refus.push({
+      champ: "accueilEnfants",
+      message: "La question de l'accueil d'enfants n'est posée qu'à l'entrée du type R.",
+    });
+  }
+  if (refus.length > 0) {
+    return {
+      status: "error",
+      message: "Formulaire invalide",
+      fieldErrors: Object.fromEntries(refus.map((r) => [r.champ, [r.message]])),
+    };
+  }
+
   // Les autres types d'abord : la réponse sur le sommeil se lit sur
   // l'ensemble des types (ADR-045), y compris ceux que le formulaire n'a pas
   // postés et que la base garde.
   const donnees = reponseEpiCoherente(
     reponseSommeilSuivantLeType({
-      ...parsed.data,
+      ...saisie,
       typesErpAutres: typesErpAutresCoherents(
         // Le premier type qui restera en base : le posté, sinon l'enregistré
         // (`|| undefined` en amont le laisse en place quand il n'est pas posté).
-        { ...parsed.data, typeErp: parsed.data.typeErp ?? avant.typeErp },
+        { ...saisie, typeErp: saisie.typeErp ?? avant.typeErp },
         avant.typesErpAutres,
       ),
     }),

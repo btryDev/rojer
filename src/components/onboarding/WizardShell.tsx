@@ -27,6 +27,7 @@ import {
   type OnboardingState,
   type StepProps,
 } from "./types";
+import { questionEnfantsPosee } from "@/lib/etablissements/types-refuses";
 
 type Etape = {
   id: "identite" | "typologie" | "resume";
@@ -581,6 +582,12 @@ function ChampsCaches({ state }: { state: OnboardingState }) {
           name="comporteLocauxSommeilPublic"
           value={state.comporteLocauxSommeilPublic}
         />
+      ) : null}
+      {/* Accueil d'enfants (filtre à l'accueil, 2026-10-17) : posté seulement
+          si R est déclaré et la question répondue — hors R, le serveur refuse
+          le champ, comme le sommeil. Jamais écrit en base. */}
+      {state.accueilEnfants && questionEnfantsPosee(state) ? (
+        <input type="hidden" name="accueilEnfants" value={state.accueilEnfants} />
       ) : null}
       {/* Matières (2026-09-27) : postées seulement si elles ont une
           réponse, comme le sommeil — « je ne sais pas encore » ne devient

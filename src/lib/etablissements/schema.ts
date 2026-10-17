@@ -5,6 +5,7 @@ import {
 import { z } from "zod";
 import { depuisCleJourCivil, estJourCivilReel } from "@/lib/dates";
 import { TYPES_ERP_A_SOMMEIL_PLAUSIBLE } from "@/lib/referentiels/types-communs";
+import { questionEnfantsPosee, refusDuFiltre } from "./types-refuses";
 
 // Enums reflétant le schéma Prisma. Si on ajoute une valeur côté Prisma,
 // pensez à la refléter ici — pas d'import direct de @prisma/client pour
@@ -415,6 +416,13 @@ export const etablissementSchema = z
     // UTC et décalerait la veille.
     dateAutorisationOuverture: dateCivileOptionnelle,
     dateCertificatConformite: dateCivileOptionnelle,
+    // 2026-10-17, filtre à l'accueil : la réponse « accueil d'enfants », posée
+    // au seul type R. NON STOCKÉE (choix assumé, c6) : elle ne sert qu'à
+    // refuser ; l'action la retire avant l'écriture.
+    accueilEnfants: z.preprocess(
+      (v) => (v === "oui" || v === true ? true : v === "non" || v === false ? false : undefined),
+      z.boolean().optional(),
+    ),
   })
   .superRefine((val, ctx) => {
     // LA RÉPONSE SUR LE SOMMEIL EST DUE À LA PORTE, PAS SEULEMENT À L'ÉCRAN
@@ -583,6 +591,20 @@ export const etablissementCreationSchema = etablissementSchema.superRefine(
         path: ["estIGH"],
         message:
           "Un établissement recevant du public situé dans un immeuble de grande hauteur relève du règlement de sécurité des IGH, que Rojer ne couvre pas.",
+      });
+    }
+
+    // Le filtre à l'accueil (2026-10-17, `types-refuses.ts`) : types J, U,
+    // établissements spéciaux, et R qui accueille des enfants. La modification
+    // de la fiche l'applique à la transition, dans `modifierEtablissement`.
+    for (const r of refusDuFiltre(val)) {
+      ctx.addIssue({ code: "custom", path: [r.champ], message: r.message });
+    }
+    if (val.accueilEnfants !== undefined && !questionEnfantsPosee(val)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["accueilEnfants"],
+        message: "La question de l'accueil d'enfants n'est posée qu'au type R.",
       });
     }
   },

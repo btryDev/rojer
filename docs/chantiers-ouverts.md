@@ -128,6 +128,14 @@ release (lots lancés le même jour) ; **n° 1 (gaz sans cuisine) et n° 5
    Relevé par la revue indépendante du sous-lot F (`lot/ref-f-legionelles`),
    sans lien avec ce lot ; non corrigé ici, sur décision de c6. Cause non
    instruite.
+13. **[2026-10-17, à revoir quand les premiers clients arrivent] Un établissement
+   J, U ou spécial créé avant le filtre à l'accueil ne dit pas qu'il n'est pas
+   pris en charge** (`lot/filtre-accueil`, décision de c6). Le filtre
+   (`src/lib/etablissements/types-refuses.ts`) refuse ces types à la création
+   et à leur ENTRÉE sur la fiche ; un dossier déjà enregistré dans l'un d'eux
+   s'enregistre comme avant, sans avertissement — la prod n'a que des données
+   factices au 2026-10-17. Même chose pour un type R qui accueillait des
+   enfants avant le filtre : la réponse n'est pas stockée, rien ne le signale.
 
 ### Décisions attendues
 

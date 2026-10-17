@@ -30,7 +30,8 @@ import type { CategorieErp, TypeErp } from "@/lib/referentiels/types-communs";
  * le lot « filtre à l'accueil » (plan, § 5) ; rien n'est dit d'ici là.~~
  * [2026-10-17, sous-lot E (`lot/ref-e-sport`, rebasé sur D) : la phrase du
  * code du sport occupe X ; la phrase « piscines » du lot « filtre à l'accueil »
- * s'ajoutera à la sienne.]
+ * s'ajoutera à la sienne.] [2026-10-17, filtre à l'accueil : la phrase
+ * « piscines » est ajoutée à la suite, décision de la propriétaire.]
  */
 export const AIDE_TYPE_ERP: Partial<Record<TypeErp, string>> = {
   // M 35 : annonce, décision de c6 du 2026-10-17 — une niche, et la mise à
@@ -45,7 +46,7 @@ export const AIDE_TYPE_ERP: Partial<Record<TypeErp, string>> = {
   // décision de la propriétaire du 2026-10-17 (sous-lot E, « on n'est pas un
   // outil de gestion de salle de sport, on n'alourdit pas »). Le code du sport
   // vaut en toutes catégories : la phrase ne dit pas « quatre premières ».
-  X: `Dans un établissement sportif, Rojer ne suit pas ${nonPorte("les affichages propres aux établissements sportifs (diplômes et cartes des éducateurs, textes de sécurité, attestation d'assurance, affiche Signal-sports)")}, ${nonPorte("la qualification des éducateurs employés")}, ${nonPorte("l'assurance de responsabilité civile de l'exploitant")} ni ${nonPorte("l'information des pratiquants")} (code du sport, art. R. 322-5, L. 212-8, L. 321-7, A. 322-3).`,
+  X: `Dans un établissement sportif, Rojer ne suit pas ${nonPorte("les affichages propres aux établissements sportifs (diplômes et cartes des éducateurs, textes de sécurité, attestation d'assurance, affiche Signal-sports)")}, ${nonPorte("la qualification des éducateurs employés")}, ${nonPorte("l'assurance de responsabilité civile de l'exploitant")} ni ${nonPorte("l'information des pratiquants")} (code du sport, art. R. 322-5, L. 212-8, L. 321-7, A. 322-3). Rojer ne suit pas non plus ${nonPorte("les obligations propres aux piscines")}.`,
   // AM 18 § 1, L 28 § 2, L 31 § 6 : annonces, décisions de c6 du 2026-10-17
   // (sous-lot G, chapitre L). Les sièges et le gaz sont dans la SALLE : ils
   // sont dits ici, pas dans l'aide de la catégorie Scène, qui porte ce qui

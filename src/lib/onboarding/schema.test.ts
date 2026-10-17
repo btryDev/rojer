@@ -280,13 +280,23 @@ describe("locaux à sommeil au parcours (2026-09-09)", () => {
     // Les deux moitiés sont écrites ensemble parce qu'aucune ne vaut sans
     // l'autre : la première seule passerait avec un contrôle absent, la
     // seconde seule passerait avec un contrôle qui refuse tout.
-    for (const t of ["J", "O", "U", "R", "REF", "OA"]) {
+    // 2026-10-17, filtre à l'accueil : J, U, REF et OA sont refusés à
+    // l'accueil, mais par le FILTRE (champ `typeErp`), jamais par la question
+    // du sommeil, qui reste posée ; R exige la réponse sur l'accueil d'enfants.
+    for (const t of ["O", "R"]) {
       const res = onboardingSchema.safeParse({
         ...hotel,
         typeErp: t,
         comporteLocauxSommeilPublic: "oui",
+        ...(t === "R" ? { accueilEnfants: "non" } : {}),
       });
       expect(res.success, t).toBe(true);
+    }
+    for (const t of ["J", "U", "REF", "OA"]) {
+      const res = onboardingSchema.safeParse({ ...hotel, typeErp: t, comporteLocauxSommeilPublic: "oui" });
+      expect(res.success, t).toBe(false);
+      const champs = res.success ? [] : Object.keys(res.error.flatten().fieldErrors);
+      expect(champs, t).toEqual(["typeErp"]);
     }
     for (const t of ["N", "M", "W", "Y", "EF"]) {
       const res = onboardingSchema.safeParse({

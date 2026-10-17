@@ -25,6 +25,7 @@ import {
 } from "@/lib/onboarding/schema";
 import type { CategorieErp } from "@/lib/referentiels/types-communs";
 import type { OnboardingState } from "./types";
+import { refusDuFiltre } from "@/lib/etablissements/types-refuses";
 
 /**
  * Un refus d'avancer, et ce qu'il faut pour le montrer au bon endroit.
@@ -218,6 +219,21 @@ export function validerTypologie(s: OnboardingState): Blocage | null {
     return {
       champ: "categorieErp",
       message: "Précisez la catégorie de votre ERP.",
+    };
+  // LE FILTRE À L'ACCUEIL (2026-10-17) : la règle du serveur, par la même
+  // fonction (`etablissements/types-refuses.ts`). Un type refusé est un refus
+  // de périmètre ; la question R sans réponse se corrige en répondant.
+  const filtre = refusDuFiltre({
+    estERP: s.estERP,
+    typeErp: s.typeErp,
+    typesErpAutres: s.typesErpAutres,
+    accueilEnfants: s.accueilEnfants === "oui" ? true : s.accueilEnfants === "non" ? false : undefined,
+  })[0];
+  if (filtre)
+    return {
+      champ: filtre.champ,
+      message: filtre.message,
+      ...(filtre.champ === "accueilEnfants" && s.accueilEnfants === "" ? {} : { perimetre: true }),
     };
   // LES DEUX QUESTIONS DONT LA PRÉSENCE DÉPEND D'UNE AUTRE, et dont la réponse
   // est due. Sans ces deux refus, le passage d'étape laissait filer et c'est la
