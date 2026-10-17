@@ -123,9 +123,13 @@ export function phraseFaitsDates(
  * plus que « X sur Y » ; l'en-tête de page dit pour tous d'où vient « en
  * place ».
  *
- * **L'accord suit le nombre « en place », singulier à 1 seulement** — 0 est
+ * ~~**L'accord suit le nombre « en place », singulier à 1 seulement** — 0 est
  * pluriel, la règle de `phraseFaitsDates` (« 2 sur 3 portent », « 1 sur 3
- * porte »). « tous » ne se dit pas d'une seule ligne.
+ * porte »).~~ [2026-10-17, décision de c6 au contrôle visuel : **zéro prend le
+ * singulier** — « 0 sur 32 · déclaré en place par vous ». Singulier à 0 et à 1,
+ * pluriel au-delà, pour « déclaré(s) en place par vous » comme pour
+ * « établi(s) d'après les titres déclarés ». `phraseFaitsDates` n'est pas
+ * touchée.] « tous » ne se dit pas d'une seule ligne.
  */
 export function phraseCompteur(
   enPlace: number,
@@ -142,11 +146,11 @@ export function phraseCompteur(
     const parVous =
       declares <= 0
         ? null
-        : declares === 1
+        : declares <= 1
           ? "1 déclaré en place par vous"
           : `${declares} déclarés en place par vous`;
     const parTitres =
-      parLesTitres === 1
+      parLesTitres <= 1
         ? "1 établi d'après les titres déclarés"
         : `${parLesTitres} établis d'après les titres déclarés`;
     // ~~« tous en place : … » / « en place : … »~~ (2026-10-17) : le
@@ -154,7 +158,9 @@ export function phraseCompteur(
     // et le chiffre au-dessus dit déjà si tout l'est.
     return parVous ? `${parVous}, ${parTitres}` : parTitres;
   }
-  if (enPlace === 1) return "déclaré en place par vous";
+  // Singulier à 0 et à 1 (2026-10-17, décision de c6), avant « tous » : à
+  // 1 sur 1, une seule ligne ne se dit pas « tous ».
+  if (enPlace <= 1) return "déclaré en place par vous";
   if (enPlace === total) return "tous déclarés en place par vous";
   return "déclarés en place par vous";
 }

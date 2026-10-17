@@ -471,15 +471,21 @@ jour de son écriture. Désormais :
   place » ;
 - **une seule forme par source** : « déclaré(s) en place par vous » et
   « établi(s) d'après les titres déclarés » ;
-- **l'accord suit le nombre en place, singulier à 1 seulement** — 0 est
-  pluriel, la règle déjà retenue par `phraseFaitsDates` ; « tous » ne se dit
+- ~~**l'accord suit le nombre en place, singulier à 1 seulement** — 0 est
+  pluriel, la règle déjà retenue par `phraseFaitsDates`~~ [2026-10-17,
+  décision de c6 au contrôle visuel : **zéro prend le singulier** —
+  « 0 sur 32 · déclaré en place par vous ». Singulier à 0 et à 1, pluriel
+  au-delà, pour « déclaré(s) en place par vous » comme pour « établi(s)
+  d'après les titres déclarés ». `phraseFaitsDates` n'est pas touchée : elle
+  ne fait jamais précéder un verbe du nombre 0 (« Aucune ne porte encore de
+  date »), la « règle » invoquée ici ne s'y lisait pas] ; « tous » ne se dit
   pas d'une seule ligne ;
 - le préfixe « en place : » / « tous en place : » de la variante avec titres
   est retiré : il redisait « en place » devant « déclarés en place par vous ».
 
 `SectionsParUsage.test.tsx` rend l'en-tête, le sommaire et les familles
 ensemble et compte la phrase : une fois. `phrases.test.ts` balaie les accords
-à 0, 1 et n. Le PDF garde sa propre phrase, « par l'employeur », adressée à
+à 0, 1 et n (singulier à 0 et à 1 depuis le 2026-10-17). Le PDF garde sa propre phrase, « par l'employeur », adressée à
 un tiers : il n'est pas touché.
 
 ### 11. Rien ne se replie, ni à la main ni tout seul

@@ -132,9 +132,12 @@ describe("les phrases assemblées", () => {
   // « 0 sur 8 déclaré par vous » que ce test assérait mot pour mot — un
   // singulier fautif à 0, recopié dans l'attendu. La phrase n'est plus qu'à
   // l'en-tête de page ; c'est `SectionsParUsage.test.tsx` qui la compte.
-  it("l'en-tête s'accorde avec le nombre en place : pluriel à 0, singulier à 1, pluriel à n (2026-10-17)", () => {
-    // La règle de `phraseFaitsDates` : singulier à 1 seulement.
-    expect(phraseCompteur(0, 10)).toBe("déclarés en place par vous");
+  // ~~« pluriel à 0, singulier à 1, pluriel à n » — la règle de
+  // `phraseFaitsDates`~~ (2026-10-17, décision de c6 : zéro prend le
+  // singulier, « 0 sur 32 · déclaré en place par vous »).
+  it("l'en-tête s'accorde avec le nombre en place : singulier à 0 et à 1, pluriel au-delà (2026-10-17, c6)", () => {
+    expect(phraseCompteur(0, 10)).toBe("déclaré en place par vous");
+    expect(phraseCompteur(0, 1)).toBe("déclaré en place par vous");
     expect(phraseCompteur(1, 10)).toBe("déclaré en place par vous");
     expect(phraseCompteur(3, 10)).toBe("déclarés en place par vous");
     // « tous » ne se dit pas d'une seule ligne.
@@ -147,6 +150,26 @@ describe("les phrases assemblées", () => {
     expect(phraseCompteur(5, 10, 2)).toBe(
       "3 déclarés en place par vous, 2 établis d'après les titres déclarés",
     );
+  });
+
+  it("sur tout l'espace des entrées, le participe est singulier si et seulement si son nombre vaut 0 ou 1", () => {
+    // Chaque source porte son nombre devant elle, sauf la forme sans titres,
+    // où c'est `enPlace` (`tous` à n sur n, n ≥ 2).
+    for (let total = 1; total <= 6; total++) {
+      for (let enPlace = 0; enPlace <= total; enPlace++) {
+        for (let p = 0; p <= enPlace; p++) {
+          const texte = phraseCompteur(enPlace, total, p);
+          const cas = `${enPlace},${total},${p}`;
+          const parVous = p > 0 ? enPlace - p : enPlace;
+          const mVous = texte.match(/déclarés? en place par vous/);
+          if (mVous) {
+            expect(mVous[0].startsWith("déclarés"), cas).toBe(parVous > 1);
+          }
+          const mTitres = texte.match(/établis? d'après les titres/);
+          if (mTitres) expect(mTitres[0].startsWith("établis"), cas).toBe(p > 1);
+        }
+      }
+    }
   });
 
   it("une seule forme pour chaque source, sur tout l'espace des entrées", () => {
