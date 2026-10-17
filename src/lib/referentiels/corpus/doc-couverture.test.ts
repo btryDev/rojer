@@ -277,6 +277,14 @@ describe(`${CHEMIN} — la liste ne se périme pas en silence`, () => {
       "MS 71",
       "Arrêté 1986-01-31 art. 60",
       "R. 4323-89",
+      // 2026-10-17, sous-lot B du plan « mise à jour du référentiel » (§ 3),
+      // validé par la propriétaire : venus du § 9.
+      "X annexe",
+      "X 1 § 2 — affichage de l'effectif des piscines transformables et mixtes",
+      "J 33",
+      "U 62",
+      "U 64",
+      "PU 5",
     ]);
     expect(
       refsDuTableau(ouverts).filter((r) => CLASSES_HORS_CADRE.has(r)),

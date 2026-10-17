@@ -163,7 +163,7 @@ sixième `??` recopié.
 C'est la limite la plus importante de ce document, et la raison directe du
 retrait de la carte.
 
-~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ ~~Les 66 articles (2026-10-07, l'IGH, les équipements sous pression et le stockage de matières dangereuses en partie retirés)~~ ~~Les 70 articles (2026-10-13, quatre manques de la cible redéfinie annoncés)~~ ~~Les 72 articles (2026-10-13, six manques de la cible redéfinie annoncés)~~ ~~Les 73 articles (2026-10-13, sept manques de la cible redéfinie annoncés)~~ ~~Les 74 articles (2026-10-14, `L. 8222-1-1` dit sur la page Prestataires)~~ ~~Les 77 articles (2026-10-14, quatre articles cités par l'aide des catégories entrés au corpus)~~ ~~Les 78 articles (2026-10-14, intégration des deux lots : 73 + 1 + 4)~~ ~~Les 76 articles (2026-10-16, lecture des chapitres de types d'ERP : 78 − 6 + 4)~~ ~~Les 82 articles (2026-10-17, titre Ier lu en entier et motifs du titre II réécrits : 76 + 6 − 0)~~ Les 89 articles (2026-10-17, corrections de la revue de `lot/ref-a-corpus-titre-1` : 82 + 7 − 0) ci-dessous sont ceux que le dépouillement a lus, qui imposent
+~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ ~~Les 66 articles (2026-10-07, l'IGH, les équipements sous pression et le stockage de matières dangereuses en partie retirés)~~ ~~Les 70 articles (2026-10-13, quatre manques de la cible redéfinie annoncés)~~ ~~Les 72 articles (2026-10-13, six manques de la cible redéfinie annoncés)~~ ~~Les 73 articles (2026-10-13, sept manques de la cible redéfinie annoncés)~~ ~~Les 74 articles (2026-10-14, `L. 8222-1-1` dit sur la page Prestataires)~~ ~~Les 77 articles (2026-10-14, quatre articles cités par l'aide des catégories entrés au corpus)~~ ~~Les 78 articles (2026-10-14, intégration des deux lots : 73 + 1 + 4)~~ ~~Les 76 articles (2026-10-16, lecture des chapitres de types d'ERP : 78 − 6 + 4)~~ ~~Les 82 articles (2026-10-17, titre Ier lu en entier et motifs du titre II réécrits : 76 + 6 − 0)~~ ~~Les 89 articles (2026-10-17, corrections de la revue de `lot/ref-a-corpus-titre-1` : 82 + 7 − 0)~~ Les 100 articles (2026-10-17, sous-lot B `lot/ref-b-hors-cadre` : 89 + 11 − 0) ci-dessous sont ceux que le dépouillement a lus, qui imposent
 quelque chose à un exploitant, et que le référentiel ne porte pas. **Rien ne les
 restreint aux établissements que leur chapitre vise** — sauf les ~~vingt-cinq
 annoncés le 2026-09-27~~ ~~trente-trois~~ trente-cinq annoncés (vingt-cinq le
@@ -319,9 +319,22 @@ d'une façon, et cinq annonces décidées passent de `obligation_manquante` à
 la famille du service d'agents de sécurité incendie (ligne de partage 10 de
 `docs/notes-cadre-juridique.md`). Aucun ne sort.
 
+**Puis 89 + 11 − 0 = 100** (2026-10-17, sous-lot B du plan « mise à jour du
+référentiel », `lot/ref-b-hors-cadre`, mesuré en appelant le corpus) : quatre
+corpus courts entrent, lus le même jour par l'API Légifrance en bac à sable, et
+leurs onze articles `non_couvert` ont pour adresse la liste des matériels non
+couverts — `Décret 2013-1261 art. 15`, `Décret 2013-1261 art. 17`,
+`Arrêté 2014-10-20 art. 2`, `Arrêté 2014-10-20 art. 9` (appareils de
+bronzage) ; `CSP D. 1332-1`, `CSP D. 1332-2` (piscines et bains à remous) ;
+`Décret 96-1136 art. 3`, `Décret 96-1136 art. 4`, `Décret 96-1136 annexe`
+(aires collectives de jeux) ; `Arrêté 2004-07-01 art. 27`,
+`Arrêté 2004-07-01 art. 29` (cuves de fioul) — voir § 3, « Annoncés le
+2026-10-17 ». Aucun ne sort ; `R. 4323-106` change d'adresse sans changer de
+statut.
+
 ---
 
-## 3. Les 89 articles lus et non portés
+## 3. Les 100 articles lus et non portés
 
 ~~Cinq familles~~ ~~Neuf familles (compte refait le 2026-09-26)~~ Dix-huit familles (compte refait le 2026-09-27, C45), une dixième étant sortie de la liste le 2026-09-01 (voir
 ci-dessous). Les motifs sont ceux du corpus, cités et non réécrits : ils ont
@@ -509,9 +522,14 @@ même jour. Les motifs complets sont au corpus (`arrete-1980-livre-2` et
 
 Où c'est dit. `CH 35` : l'aide de la catégorie « Installation frigorifique »
 (`DESCRIPTION_CATEGORIE.INSTALLATION_FRIGORIFIQUE`) ; `MS 50` : la phrase de
-l'axe `categorie_erp`. Les onze autres sont **muets au 2026-10-17** : `CH 23`,
+l'axe `categorie_erp`. ~~Les onze autres sont **muets au 2026-10-17** : `CH 23`,
 `CH 24`, `AS 5` et `AS 8` attendent le sous-lot B (aides gaz et ascenseur,
-entrées chaudière et escalier mécanique), `T 29`, `T 33`, `T 43` et `T 44`
+entrées chaudière et escalier mécanique),~~ [2026-10-17, sous-lot B : `CH 23` et
+`CH 24` sont dits dans l'aide « Installation de gaz »
+(`DESCRIPTION_CATEGORIE.INSTALLATION_GAZ`) et dans l'entrée « Chaudière » de la
+liste des matériels, `AS 5` dans l'aide « Ascenseur »
+(`DESCRIPTION_CATEGORIE.ASCENSEUR`), `AS 8` dans l'entrée « Escalier mécanique
+ou trottoir roulant » ; les sept autres restent **muets** :] `T 29`, `T 33`, `T 43` et `T 44`
 l'aide du type T (sous-lot D), `AM 18` l'aide de la catégorie Scène et du type
 L (sous-lot G), `CO 10` la rubrique que crée le sous-lot C, et `MS 42` n'en
 aura pas (décision de c6).
@@ -707,8 +725,11 @@ recopiés ici. Entre parenthèses : à quel dossier la page les montre.
   attend la décision B1 : il n'est pas fait.
 - **Document unique** (employeur) — `L. 4121-3`, `R. 4121-1-1`.
 - **Bruit** (employeur) — `R. 4433-2`.
-- **Formation** (employeur ; `R. 4323-106` sauf « non » aux équipements de
-  protection individuelle) — `L. 4141-5`, `R. 4323-106` ; et depuis le
+- **Formation** (employeur ; ~~`R. 4323-106` sauf « non » aux équipements de
+  protection individuelle~~) — `L. 4141-5`, ~~`R. 4323-106`~~ [2026-10-17,
+  sous-lot B, décision de c6 : `R. 4323-106` est DÉPLACÉ vers l'aide des quatre
+  catégories d'EPI (`DESCRIPTION_CATEGORIE.EPI` et suivantes), là où le
+  dirigeant déclare l'équipement ; retiré de la page, pas dupliqué] ; et depuis le
   2026-10-07 `R. 4323-1` (employeur), entré avec le retrait de
   `esp-personnel-formation` — voir sa famille ci-dessous.
 - **Boissons** (employeur) — `R. 4225-3`.
@@ -788,6 +809,38 @@ articles, quatre OK).
   aucune obligation créée, décision de la propriétaire du 2026-10-14. Adresse
   visible : l'aide de la catégorie « Installation frigorifique »
   (`DESCRIPTION_CATEGORIE.INSTALLATION_FRIGORIFIQUE`).
+
+### ANNONCÉS LE 2026-10-17 — sous-lot B, quatre textes, onze articles, par la liste des matériels
+
+Sous-lot B du plan « mise à jour du référentiel »
+(`propositions/plan-maj-referentiel-2026-10-17.md`, § 3) et inventaire des
+matériels validé par la propriétaire. Quatre corpus courts, relus le
+2026-10-17 par l'API Légifrance en **bac à sable** (`pnpm legifrance:verifier`,
+treize articles, treize OK) ; aucune obligation créée. Adresse visible de
+chacun : la liste des matériels non couverts (`ADRESSE_MATERIELS_NON_COUVERTS`),
+quand on cherche le matériel au formulaire d'équipement.
+
+- **Appareils de bronzage** (`csp-appareils-bronzage`) — `Décret 2013-1261 art. 15`,
+  `Décret 2013-1261 art. 17`, `Arrêté 2014-10-20 art. 2`,
+  `Arrêté 2014-10-20 art. 9` : déclaration au préfet, contrôle par un organisme
+  accrédité tous les deux ans. Entrée « Cabine UV ou appareil de bronzage ».
+  Les UV restent sous l'exclusion `risque_specialise`.
+- **Piscines et bains à remous** (`csp-bains-a-remous`) — `CSP D. 1332-1`,
+  `CSP D. 1332-2` : normes d'hygiène de l'eau des piscines publiques et privées
+  à usage collectif ; le texte ne nomme pas les bains à remous, et un bain à
+  remous n'en relève que s'il répond à la définition de la piscine. Entrées
+  « Piscine » et « Bain à remous, spa ou jacuzzi ».
+- **Aires collectives de jeux** (`decret-1996-aires-de-jeux`) —
+  `Décret 96-1136 art. 3`, `Décret 96-1136 art. 4`, `Décret 96-1136 annexe` :
+  dossier, plan d'entretien et de maintenance, inspection régulière, affichage
+  de l'exploitant. Annonce décidée par c6 (sécurité des personnes). Entrée
+  « Aire de jeux pour enfants ».
+- **Cuves de fioul** (`arrete-2004-07-01-produits-petroliers`) —
+  `Arrêté 2004-07-01 art. 27`, `Arrêté 2004-07-01 art. 29` : entretien, et
+  opérations avant la remise en service d'un réservoir abandonné. L'arrêté ne
+  vise que les réservoirs hors installation classée et hors ERP (art. 2,
+  `sans_objet`) ; un restaurant, un commerce ou un hôtel n'y est pas soumis.
+  Entrée « Cuve de fioul ou de gazole ».
 
 ### Plan de prévention, information de l'inspection du travail — 1 article (2026-09-27)
 
@@ -1092,7 +1145,13 @@ télescopique), `GC 18` (module de cuisson temporaire), `Arrêté 1986-01-31
 art. 60` (groupe électrogène d'habitation). Leur statut au corpus est
 INCHANGÉ (`obligation_manquante`, hors cadre) : la liste dit ce que Rojer ne
 suit pas à qui déclare l'objet, elle ne les annonce pas à chaque dossier.
-L'égalité de ce § 7 avec le corpus est intacte.]
+L'égalité de ce § 7 avec le corpus est intacte.] [2026-10-17 : ~~vingt-deux~~
+**vingt-huit** — 22 + 6 − 0 : sous-lot B du plan « mise à jour du référentiel »
+(§ 3), validé par la propriétaire. Six manques du § 9 entrent hors cadre :
+`X annexe` et `X 1 § 2` (les piscines restent sous l'exclusion
+`risque_specialise`), `J 33`, `U 62`, `U 64` et `PU 5` (gaz médicaux, aucune
+catégorie d'équipement créée). Leur ligne du § 9 est rayée. La liste des
+matériels nomme les deux articles des piscines à qui déclare une piscine.]
 
 | Article | Motif, en une ligne |
 |---|---|
@@ -1118,6 +1177,12 @@ L'égalité de ce § 7 avec le corpus est intacte.]
 | `MS 71` | Communications radio des secours, ERP de plus d'un niveau de sous-sol et de plus de 100 m² en sous-sol : quasi jamais dans la cible. *(2026-10-13)* |
 | `Arrêté 1986-01-31 art. 60` | VMC d'habitation secourue par un groupe électrogène : rare, et le texte ne nomme pas le débiteur. *(2026-10-13)* |
 | `R. 4323-89` | Travail sur cordes : ~~dans la cible, c'est l'entreprise extérieure qui l'exerce~~ le corpus le dit exercé, dans les trois secteurs cibles, par une entreprise extérieure — auquel cas il relève de la co-activité, déjà servie ; le produit ne sait pas qui l'exerce (déclencheur d'activité manquant). *(2026-10-13, motif corrigé après revue)* |
+| `X annexe` | Traitement des eaux des piscines couvertes : vérifications journalières, appareil respiratoire, personnel entraîné — les piscines restent hors du périmètre (`risque_specialise`). Nommé par la liste des matériels, entrée « Piscine ». *(2026-10-17)* |
+| `X 1 § 2 — affichage de l'effectif des piscines transformables et mixtes` | Affichage de l'effectif d'une piscine transformable ou mixte : même motif. Nommé par la liste des matériels, entrée « Piscine ». *(2026-10-17)* |
+| `J 33` | Vérification annuelle des équipements mobiles d'oxygénothérapie et consignes rappelées, type J : aucune catégorie d'équipement « gaz médicaux » n'est créée. *(2026-10-17)* |
+| `U 62` | Consignes sur les dangers des gaz médicaux rappelées au personnel, type U : même motif. *(2026-10-17)* |
+| `U 64` | Vérification annuelle des stockages et réseaux de distribution de gaz médicaux, type U : même motif. *(2026-10-17)* |
+| `PU 5` | Renvoi de la 5ᵉ catégorie aux gaz médicaux du type U : même motif. *(2026-10-17)* |
 
 ---
 
@@ -1180,7 +1245,7 @@ proposition : `propositions/lecture-chapitres-types-erp-2026-10-16.md`. Même
 mécanisme que le § 8 du 2026-10-12 : le § 7 et ce § 9, disjoints, font
 ensemble les `obligation_manquante` qui touchent la cible
 (`doc-couverture.test.ts`). Chaque ligne sort d'ici quand la propriétaire l'a
-tranchée. Manquantes : ~~22 + 18 − 0 = 40~~ ~~22 + 26 − 0 = 48~~ ~~22 + 28 − 0 = **50**~~ ~~22 + 49 − 0 = **71**~~ ~~22 + 47 − 0 = **69**~~ ~~22 + 46 − 0 = **68**~~ 22 + 52 − 0 = **74** [seconde relecture du même jour : + 6, les affichages prescrits `CO 45 § 5`, `CO 47 § 2`, `CO 59 — g)`, `CH 38 — 6°`, `CH 52` (ligne de partage 11) et `PE 18` (livre III, ligne de partage 10), 46 + 6 = 52 ; avant : corrections de la revue du même jour : − 6 annonces décidées passées `non_couvert` (`CH 23`, `CH 24`, `AS 5`, `AS 8`, `T 29`, `T 33`), + 5 (`CH 17`, `EL 17`, `GC 15`, `MS 66`, `M 35`), 47 − 6 + 5 = 46 ; avant elles : 2026-10-17, `lot/ref-a-corpus-titre-1` : + 21 actes du titre Ier lu en entier, ci-dessous, − 4 passés `non_couvert` (`CO 10`, `AM 18`, `CH 35`, `MS 42`, décision de c6), + 2 du type T (`T 29`, `T 33`, motifs réécrits) ; 28 + 21 − 4 + 2 = 47], toutes dans la cible.
+tranchée. Manquantes : ~~22 + 18 − 0 = 40~~ ~~22 + 26 − 0 = 48~~ ~~22 + 28 − 0 = **50**~~ ~~22 + 49 − 0 = **71**~~ ~~22 + 47 − 0 = **69**~~ ~~22 + 46 − 0 = **68**~~ ~~22 + 52 − 0 = **74**~~ [2026-10-17, sous-lot B : six lignes passent au § 7 — `X annexe`, `X 1 § 2`, `J 33`, `U 62`, `U 64`, `PU 5`, rayées ci-dessous ; le total ne bouge pas : § 7 22 + 6 = 28, § 9 52 − 6 = **46**, 28 + 46 = **74**, mesuré en appelant le corpus. Les autres lignes des types J, U et R (`J 35`, `U 43`, `U 41`, `PU 6`, `J 39`, `R 33`, `U 47`, `J 40`, `U 48`) restent ici jusqu'au lot « filtre à l'accueil » (plan, § 5), qui refusera J et U, et R s'il accueille des enfants : elles passeront alors à `toucheLaCible: false`.] [seconde relecture du même jour : + 6, les affichages prescrits `CO 45 § 5`, `CO 47 § 2`, `CO 59 — g)`, `CH 38 — 6°`, `CH 52` (ligne de partage 11) et `PE 18` (livre III, ligne de partage 10), 46 + 6 = 52 ; avant : corrections de la revue du même jour : − 6 annonces décidées passées `non_couvert` (`CH 23`, `CH 24`, `AS 5`, `AS 8`, `T 29`, `T 33`), + 5 (`CH 17`, `EL 17`, `GC 15`, `MS 66`, `M 35`), 47 − 6 + 5 = 46 ; avant elles : 2026-10-17, `lot/ref-a-corpus-titre-1` : + 21 actes du titre Ier lu en entier, ci-dessous, − 4 passés `non_couvert` (`CO 10`, `AM 18`, `CH 35`, `MS 42`, décision de c6), + 2 du type T (`T 29`, `T 33`, motifs réécrits) ; 28 + 21 − 4 + 2 = 47], toutes dans la cible.
 
 **[2026-10-17 — PASSAGE TRANSITOIRE.]** Le titre Ier du livre II est lu en entier (`lot/ref-a-corpus-titre-1`, corpus `arrete-1980-livre-2` passé `integral`, table des matières contrôlée par `table-des-matieres.test.ts`). Les ~~vingt et un~~ dix-sept actes qu'il porte [2026-10-17 : vingt et un lus, quatre passés `non_couvert` le même jour sur décision de c6] et que le référentiel ne sert pas entrent ici TRANSITOIREMENT, avec `T 29` et `T 33` (motifs du type T réécrits le même jour), à la suite du tableau, sous l'intertitre daté : le sous-lot C du plan « mise à jour du référentiel » (`propositions/plan-maj-referentiel-2026-10-17.md`, § 4) les rattache à une ligne existante ou les encode, et les retire de ce § 9 dans le même commit. Rien n'en est encodé ici.
 
@@ -1193,8 +1258,8 @@ tranchée. Manquantes : ~~22 + 18 − 0 = 40~~ ~~22 + 26 − 0 = 48~~ ~~22 + 28 
 | `Y 19` | Type Y dès 200 personnes (Y 1) | `libre` | Rattacher à `incendie-erp-personnel-designe-moyens-secours` |
 | `M 35` | Type M, machines-outils mises à la disposition du public (commerce) | `activite_exercee` | Annonce dans l'aide du type M, ou état permanent conditionné à un fait d'activité — à trancher |
 | `T 52` | Type T, salle d'exposition permanente dès 200 personnes (T 1 § 2) | `libre` | Rattacher à `incendie-erp-interdiction-fumer-affichee` |
-| `X annexe` | Piscine couverte dès 200 personnes ; 5ᵉ catégorie par PX 1 | `a_trancher` | Avec X 25 : sortie de l'exclusion « piscines » ou non ; sinon catégorie « désinfection des eaux de piscine », trois lignes |
-| `X 1 § 2 — affichage de l'effectif des piscines transformables et mixtes` | Piscine transformable ou mixte | `a_trancher` | Avec X 25 : affichage de l'effectif |
+| ~~`X annexe`~~ | Piscine couverte dès 200 personnes ; 5ᵉ catégorie par PX 1 | `a_trancher` | ~~Avec X 25 : sortie de l'exclusion « piscines » ou non ; sinon catégorie « désinfection des eaux de piscine », trois lignes~~ **Hors cadre (§ 7)**, sous-lot B, 2026-10-17 |
+| ~~`X 1 § 2 — affichage de l'effectif des piscines transformables et mixtes`~~ | Piscine transformable ou mixte | `a_trancher` | ~~Avec X 25 : affichage de l'effectif~~ **Hors cadre (§ 7)**, sous-lot B, 2026-10-17 |
 | `X 25` | Type X dès 200 personnes (X 1) ; 5ᵉ catégorie par PX 1 | `a_trancher` | Rattacher à `incendie-erp-interdiction-fumer-affichee`, si l'exclusion « équipements sportifs » ne la retient pas |
 | `U 41` | Type U | `libre` | Rattacher à `incendie-erp-schema-organisation-securite` |
 | `PU 6` | ~~Type U de 5ᵉ catégorie avec locaux à sommeil~~ Type U de 5ᵉ catégorie avec locaux à sommeil, à construire ou à modifier (PU 1) [2026-10-17] | `libre` | Ajouter en référence de `incendie-erp-5-instruction-personnel` |
@@ -1203,10 +1268,10 @@ tranchée. Manquantes : ~~22 + 18 − 0 = 40~~ ~~22 + 26 − 0 = 48~~ ~~22 + 28 
 | `U 47` | Type U | `libre` | Ligne nouvelle : formation et exercices, défaut annuel (ADR-039) |
 | `J 40` | Type J | `libre` | Ligne nouvelle commune J et U : consignes affichées (et remises aux résidents en J) |
 | `U 48` | Type U | `libre` | Ligne nouvelle commune J et U : consignes affichées |
-| `J 33` | Type J | `categorie_equipement` | ~~Catégorie « gaz médicaux » ; vérification annuelle et consignes rappelées~~ [2026-10-17] **Décision** (catégorie d'équipement nouvelle) : vise les équipements MOBILES d'oxygénothérapie, seuls admis en J (J 32) ; vérification annuelle et consignes rappelées |
-| `U 64` | Type U | `categorie_equipement` | ~~Catégorie « gaz médicaux » ; vérification annuelle (rythme écrit)~~ [2026-10-17] **Décision** (catégorie d'équipement nouvelle) : vise les STOCKAGES et RÉSEAUX de distribution de gaz médicaux ; vérification annuelle (rythme écrit) |
-| `U 62` | Type U | `categorie_equipement` | ~~Catégorie « gaz médicaux » ; consignes rappelées, défaut annuel~~ [2026-10-17] **Décision**, avec U 64 : consignes rappelées, défaut annuel |
-| `PU 5` | Type U de 5ᵉ catégorie à construire ou à modifier (PU 1) | `categorie_equipement` | ~~Les deux lignes des gaz médicaux étendues à la 5ᵉ, borne à trancher~~ [2026-10-17] **Décision**, avec U 64 : les deux lignes étendues à la 5ᵉ ; la borne « à construire ou à modifier » n'a pas d'attribut |
+| ~~`J 33`~~ | Type J | `categorie_equipement` | ~~~~Catégorie « gaz médicaux » ; vérification annuelle et consignes rappelées~~ [2026-10-17] **Décision** (catégorie d'équipement nouvelle) : vise les équipements MOBILES d'oxygénothérapie, seuls admis en J (J 32) ; vérification annuelle et consignes rappelées~~ **Hors cadre (§ 7)**, sous-lot B, 2026-10-17 |
+| ~~`U 64`~~ | Type U | `categorie_equipement` | ~~~~Catégorie « gaz médicaux » ; vérification annuelle (rythme écrit)~~ [2026-10-17] **Décision** (catégorie d'équipement nouvelle) : vise les STOCKAGES et RÉSEAUX de distribution de gaz médicaux ; vérification annuelle (rythme écrit)~~ **Hors cadre (§ 7)**, sous-lot B, 2026-10-17 |
+| ~~`U 62`~~ | Type U | `categorie_equipement` | ~~~~Catégorie « gaz médicaux » ; consignes rappelées, défaut annuel~~ [2026-10-17] **Décision**, avec U 64 : consignes rappelées, défaut annuel~~ **Hors cadre (§ 7)**, sous-lot B, 2026-10-17 |
+| ~~`PU 5`~~ | Type U de 5ᵉ catégorie à construire ou à modifier (PU 1) | `categorie_equipement` | ~~~~Les deux lignes des gaz médicaux étendues à la 5ᵉ, borne à trancher~~ [2026-10-17] **Décision**, avec U 64 : les deux lignes étendues à la 5ᵉ ; la borne « à construire ou à modifier » n'a pas d'attribut~~ **Hors cadre (§ 7)**, sous-lot B, 2026-10-17 |
 | `MS 41` | Tout ERP des catégories 1 à 4 | ~~`libre`~~ `a_trancher` | ~~Ligne nouvelle N1–N4 : plan d'intervention à chaque entrée (porté en 5ᵉ avec sommeil seulement)~~ [2026-10-17] Attend la décision A6 (GN 10), comme PE 27 § 6 |
 | `MS 58 § 3 et § 4 — contrat d'entretien de la détection, annexé au registre` | ERP des catégories 1 à 4 avec détection | `libre` | Ligne sur `ALARME_INCENDIE` N1–N4, patron de PE 4 § 1 |
 | `EC 13 — notice annexée au registre et entretiens consignés` | ERP des catégories 1 à 4 | `libre` | Ligne d'état permanent sur `BAES` N1–N4 (notice annexée) |

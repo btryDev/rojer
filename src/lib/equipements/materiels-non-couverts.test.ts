@@ -11,6 +11,7 @@ import { DESCRIPTION_CATEGORIE } from "./labels";
 import {
   CLES_MATERIELS_NON_COUVERTS,
   MATERIELS_NON_COUVERTS,
+  SANS_TEXTE_LU,
   materielNonCouvert,
 } from "./materiels-non-couverts";
 import { equipementSchema } from "./schema";
@@ -122,6 +123,20 @@ describe("aucun article non porté ne perd son adresse visible (2026-10-14)", ()
     expect(morts).toEqual([]);
   });
 
+  it("cassure : sans l'entrée « cabine UV », les quatre articles du bronzage sont orphelins (plan, § 3)", () => {
+    const sansUv = new Set(
+      MATERIELS_NON_COUVERTS.filter((m) => m.cle !== "cabine_uv").flatMap((m) =>
+        m.references.flatMap((r) => (r.corpus ? [r.corpus] : [])),
+      ),
+    );
+    const bronzage = CORPUS.find((c) => c.id === "csp-appareils-bronzage")!.articles;
+    expect(bronzage.length).toBeGreaterThan(0);
+    for (const a of bronzage) {
+      expect(resout(a.ref, ADRESSE_MATERIELS_NON_COUVERTS, refsCitees()), a.ref).toBe(true);
+      expect(resout(a.ref, ADRESSE_MATERIELS_NON_COUVERTS, sansUv), a.ref).toBe(false);
+    }
+  });
+
   it("épreuve : retirer une entrée de la liste rend son article orphelin", () => {
     // La garde ci-dessus, éprouvée sur une copie : sans l'entrée « échelle »,
     // R. 4323-63 garde une adresse qui ne mène plus nulle part.
@@ -148,11 +163,16 @@ describe("la liste elle-même", () => {
     for (const m of MATERIELS_NON_COUVERTS) {
       expect(m.phrase, m.cle).toMatch(/^Rojer ne suit pas /);
       expect(m.phrase.toLowerCase(), m.cle).not.toMatch(/conforme|en infraction|vous devez/);
-      // La piscine est hors du périmètre par décision (CLAUDE.md), sans texte
-      // lu : elle n'a aucune référence, et rien ne s'imprime sous « Textes »
-      // (revue du 2026-10-15). Toute autre entrée cite au moins un texte.
-      if (m.cle === "piscine_equipement_sportif") expect(m.references, m.cle).toEqual([]);
-      else expect(m.references.length, m.cle).toBeGreaterThan(0);
+      // ~~La piscine est hors du périmètre par décision (CLAUDE.md), sans texte
+      // lu : elle n'a aucune référence~~ [2026-10-17, sous-lot B : elle cite
+      // désormais D. 1332-1 et D. 1332-2, lus]. Une entrée sans texte lu n'a
+      // aucune référence, rien ne s'imprime sous « Textes » (revue du
+      // 2026-10-15), et sa phrase le dit ; toute autre entrée cite au moins un
+      // texte.
+      if (SANS_TEXTE_LU.has(m.cle)) {
+        expect(m.references, m.cle).toEqual([]);
+        expect(m.phrase, m.cle).toMatch(/n'a lu aucun texte|hors de son champ/);
+      } else expect(m.references.length, m.cle).toBeGreaterThan(0);
     }
   });
 
