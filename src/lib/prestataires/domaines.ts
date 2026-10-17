@@ -62,10 +62,14 @@ import type { Realisateur } from "@/lib/referentiels/types-communs";
  * choix est **écrit**, pas déduit d'une absence.
  *
  * Ce marqueur ne relâche aucune garde : `supposeUnTiers()` ne déclenche que
- * lorsque TOUS les réalisateurs d'une obligation sont des tiers, donc un
+ * lorsque TOUS les réalisateurs d'une obligation sont des tiers, ~~donc un
  * domaine réalisé par l'exploitant ne fait de toute façon jamais parler la
- * règle. Le marqueur ne change pas le comportement — il rend la raison
- * lisible, ce qu'un `[]` ne faisait pas.
+ * règle~~ [2026-10-17 : faux depuis `appelleUnTiers` — l'obligation dont
+ * l'objet est d'avoir un tiers (`TIERS_LUI_MEME_OBLIGATOIRE`) fait parler la
+ * règle bien que l'exploitant la réalise ; son domaine n'est jamais
+ * `aucun_tiers_attendu`, ce que `domaines.test.ts` tient]. Le marqueur ne
+ * change pas le comportement — il rend la raison lisible, ce qu'un `[]` ne
+ * faisait pas.
  *
  * ⚠ Il ne s'emploie **que** pour le cas 2. Un domaine dont le texte appelle un
  * tiers que l'enum `DomainePrestataire` ne sait pas nommer doit recevoir une
@@ -131,7 +135,7 @@ export const DOMAINES_PRESTATAIRE_ATTENDUS: Record<
   //     `realisateurs: ["exploitant"]`, donc `supposeUnTiers()` était faux — le
   //     Code confie ces actes à l'employeur, et c'est juste.
   //
-  // ⚠ `sante_travail` EST ATTEINT DEPUIS LE LOT 8, et c'est exactement le cas
+  // ⚠ `sante_travail` EST ATTEINT DEPUIS LE LOT 8, ~~et c'est exactement le cas
   // que la rédaction précédente annonçait comme futur : « la fiche d'entreprise
   // de R. 4624-46, réalisée par le médecin du travail ou l'équipe
   // pluridisciplinaire, en est le cas type ». Elle est encodée
@@ -139,7 +143,11 @@ export const DOMAINES_PRESTATAIRE_ATTENDUS: Record<
   // l'établissement, et ses réalisateurs sont tous des tiers — donc
   // `supposeUnTiers()` est vrai et la règle se déclenche. L'affirmation qui
   // était fausse est devenue vraie, et c'est le seul cas où il fallait la
-  // réécrire plutôt que la corriger.
+  // réécrire plutôt que la corriger.~~ [2026-10-17, ADR-042 : la fiche
+  // d'entreprise passe au niveau audit, le moteur ne la sert plus, et le
+  // signal s'éteignait avec elle. Il est désormais porté par l'obligation
+  // qu'il protège, `sante-travail-etablissement-adhesion-spst` (`L. 4622-1`),
+  // nommée dans `TIERS_LUI_MEME_OBLIGATOIRE` — voir `appelleUnTiers`.]
   //
   // `formation_securite` et `secours` restent inatteints : leurs obligations
   // d'établissement sont réalisées par l'exploitant, et leurs titres de salarié
@@ -154,9 +162,11 @@ export const DOMAINES_PRESTATAIRE_ATTENDUS: Record<
   // La VIP et le suivi individuel renforcé sont réalisés par les professionnels
   // de santé du service de prévention et de santé au travail (`R. 4624-10`,
   // `R. 4624-28`), mais ce sont des titres de salarié : ils ne franchissent pas
-  // le moteur. C'est la FICHE D'ENTREPRISE du lot 8 qui rend cette entrée
+  // le moteur. ~~C'est la FICHE D'ENTREPRISE du lot 8 qui rend cette entrée
   // vivante — portée par l'établissement, réalisée par le médecin du travail ou
-  // l'équipe pluridisciplinaire, donc par un tiers. Un dirigeant qui n'a déclaré
+  // l'équipe pluridisciplinaire, donc par un tiers.~~ [2026-10-17 : c'est
+  // l'ADHÉSION elle-même (`L. 4622-1`) qui la rend vivante, la fiche étant au
+  // niveau audit — `TIERS_LUI_MEME_OBLIGATOIRE.sante_travail.obligation`.] Un dirigeant qui n'a déclaré
   // aucun service de santé au travail à l'annuaire s'en voit désormais averti,
   // et ce n'est pas qu'un trou de vigilance : `L. 4622-1` — « les employeurs ORGANISENT des
   // services » — met cette organisation à la charge de l'employeur, encodée
@@ -284,9 +294,28 @@ export const DOMAINES_PRESTATAIRE_ATTENDUS: Record<
  * aujourd'hui ; chacune est écrite par quelqu'un qui a lu le texte qu'elle cite.
  */
 export const TIERS_LUI_MEME_OBLIGATOIRE: Partial<
-  Record<DomaineObligation, { titre: string; sousTitre: string }>
+  Record<
+    DomaineObligation,
+    {
+      /**
+       * L'obligation dont l'OBJET est d'avoir ce tiers (2026-10-17). Elle est
+       * réalisée par l'exploitant — c'est lui qui adhère —, donc
+       * `supposeUnTiers()` ne la voit pas ; mais c'est elle que le signal
+       * protège, et c'est elle qui l'allume quand elle est servie
+       * (`appelleUnTiers`). Sans ce rattachement, le signal dépendait d'une
+       * obligation voisine réalisée par le tiers — la fiche d'entreprise — et
+       * s'est éteint quand elle est passée au niveau audit.
+       */
+      obligation: string;
+      titre: string;
+      sousTitre: string;
+    }
+  >
 > = {
   sante_travail: {
+    // `L. 4622-1` : « Les employeurs relevant du présent titre organisent des
+    // services de prévention et de santé au travail. »
+    obligation: "sante-travail-etablissement-adhesion-spst",
     // ⚠ « À VOTRE ANNUAIRE », ET PAS « DÉCLARÉ » TOUT COURT.
     //
     // Le mot a été retiré le 2026-08-31, après un contrôle visuel : l'écran
@@ -410,6 +439,19 @@ export function supposeUnTiers(o: Obligation): boolean {
 }
 
 /**
+ * Vrai si l'obligation fait attendre un tiers à l'annuaire : soit ses
+ * réalisateurs sont tous des tiers (`supposeUnTiers`), soit son objet même est
+ * d'avoir ce tiers (`TIERS_LUI_MEME_OBLIGATOIRE`, 2026-10-17). La seule
+ * lecture de la règle — `domainesSansPrestataire` et ses tests la lisent, sans
+ * recopier ses deux branches.
+ */
+export function appelleUnTiers(o: Obligation): boolean {
+  return (
+    supposeUnTiers(o) || TIERS_LUI_MEME_OBLIGATOIRE[o.domaine]?.obligation === o.id
+  );
+}
+
+/**
  * Le constat, sans la base : les domaines d'obligation qui supposent un tiers
  * et qu'aucun prestataire déclaré ne couvre.
  *
@@ -430,11 +472,14 @@ export function domainesSansPrestataire(
   const manquants = new Set<DomaineObligation>();
 
   for (const o of obligationsApplicables) {
-    if (!supposeUnTiers(o)) continue;
+    if (!appelleUnTiers(o)) continue;
     const attendus = DOMAINES_PRESTATAIRE_ATTENDUS[o.domaine];
     // Un domaine que le texte confie à l'exploitant n'a aucun prestataire à
-    // manquer. En théorie inatteignable — `supposeUnTiers()` a déjà écarté les
-    // obligations réalisées par l'exploitant, et un domaine marqué
+    // manquer. En théorie inatteignable — ~~`supposeUnTiers()`~~
+    // `appelleUnTiers()` a déjà écarté les obligations réalisées par
+    // l'exploitant [2026-10-17 : sauf celle dont l'objet est d'avoir le tiers,
+    // nommée dans `TIERS_LUI_MEME_OBLIGATOIRE`, dont le domaine attend bien un
+    // prestataire], et un domaine marqué
     // `aucun_tiers_attendu` ne devrait en contenir aucune autre. On ne s'y fie
     // pas : les deux faits vivent dans deux fichiers différents, et rien ne
     // garantit qu'ils resteront d'accord. Le jour où ils divergent, le silence
