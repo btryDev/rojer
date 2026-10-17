@@ -65,6 +65,10 @@ export const SUITE_REDACTION_GAZ_2026 =
   " Rédaction issue de l'arrêté du 23 février 2025, en vigueur le 2026-01-01, lue dans cette version.";
 
 /** Suite d'un motif d'acte trouvé le 2026-10-17, en attente du sous-lot C. */
+// 2026-10-17, sous-lot C : plus aucun motif ne la porte — les
+// entrées qui l'employaient sont retenues ou annoncées, et leur `historique`
+// recopie la phrase rayée. Gardée pour l'histoire des commits ; ne plus
+// l'employer.
 export const SUITE_TRANSITOIRE_SOUS_LOT_C =
   " À faire au sous-lot C ; transitoirement au § 9.";
 

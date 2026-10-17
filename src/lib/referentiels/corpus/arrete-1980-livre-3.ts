@@ -43,7 +43,6 @@
 
 import type { Corpus } from "./types";
 import {
-  SUITE_TRANSITOIRE_SOUS_LOT_C,
 } from "./motifs-livre-2";
 
 export const CORPUS_PE: Corpus = {
