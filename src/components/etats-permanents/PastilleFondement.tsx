@@ -2,6 +2,11 @@
 
 import { LegalBadge } from "@/components/ui-kit";
 import type { FondementLigne } from "@/lib/etats-permanents/fondement";
+import {
+  CITATION_GN_10,
+  MENTION_GN_10,
+  URL_GN_10,
+} from "@/lib/referentiels/conformite/texte-gn10";
 
 /**
  * L'article d'une ligne « Ce qui doit être en place », en pastille.
@@ -19,6 +24,36 @@ export function PastilleFondement({
 }: {
   fondement: FondementLigne;
 }) {
+  // 2026-10-17 (contrôle visuel de c6) : une ligne qui cite GN 10 le DIT
+  // sous son article, avec le texte entier au dépli — sur l'écran, le widget
+  // et la section des équipements, qui lisent tous ce composant.
+  if (fondement.gn10)
+    return (
+      <div className="flex flex-col items-start gap-1.5">
+        <PastillesDeLaLigne fondement={fondement} />
+        <MentionGn10 />
+      </div>
+    );
+  return <PastillesDeLaLigne fondement={fondement} />;
+}
+
+/**
+ * La mention GN 10 : une phrase qui cite, et la pastille de l'article. Texte
+ * en ardoise moyenne (`--board-slate-mid`), comme les « à confirmer » de la
+ * ligne : une information, pas une alerte.
+ */
+function MentionGn10() {
+  return (
+    <div className="max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+      <p className="m-0">{MENTION_GN_10}</p>
+      <div className="mt-1">
+        <LegalBadge charte="board" reference="GN 10" href={URL_GN_10} extrait={CITATION_GN_10} />
+      </div>
+    </div>
+  );
+}
+
+function PastillesDeLaLigne({ fondement }: { fondement: FondementLigne }) {
   // 2026-10-14 : un article de contexte propre au type de l'établissement
   // (N 20 pour un restaurant des catégories 1 à 4) suit le fondement. Depuis
   // l'ADR-045, un par type déclaré (N 17 et O 18 pour un hôtel-restaurant).

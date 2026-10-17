@@ -93,8 +93,14 @@ const PONCTUATION_DE_COUPE = /[,;:.—]/;
  * était refusée sur son numéro seul (« V », « III »). Le numéro est un repère,
  * pas un mot du texte : il s'efface de la citation, et ce qui le suit doit
  * toujours ouvrir une proposition du verbatim.
+ *
+ * [2026-10-17, sous-lot C : le repère de paragraphe du règlement de sécurité,
+ * « § 1. », « § 2. », suit la même règle — un repère, pas un mot. La pastille
+ * GN 10, qui cite les deux paragraphes, était refusée face à son propre
+ * verbatim sur « § 1 » et « § 2 ».]
  */
-const NUMEROTATION = /(?<![\p{L}\p{N}])(?:[IVXLCDM]+|[A-Z])\.-\s*/gu;
+const NUMEROTATION =
+  /(?<![\p{L}\p{N}])(?:(?:[IVXLCDM]+|[A-Z])\.-\s*|§\s*\d+\.\s*)/gu;
 export const sansNumerotation = (t: string) => t.replace(NUMEROTATION, "");
 
 /** Les segments du fait qui ne sont pas un extrait complet d'un des textes. */

@@ -34,6 +34,7 @@
 //   laissait passer une chaîne vide), pas qu'il soit juste. Il se relit comme
 //   une `citationCle`, et sa date dit quand.
 
+import { CITATION_GN_10 } from "@/lib/referentiels/conformite/texte-gn10";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -57,6 +58,10 @@ const RACINE = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
  */
 const EXPRESSIONS: Record<string, string | { motif: string }> = {
   EXTRAIT_R4121_2,
+  // `PastilleFondement.tsx` (2026-10-17, contrôle visuel de c6) : la pastille
+  // « GN 10 » sous une ligne qui le cite. Sa valeur est confrontée au corpus
+  // comme les autres ; `texte-gn10.test.ts` la tient égale à la citationCle.
+  CITATION_GN_10,
   // `DocumentsObligatoires.tsx` : la pastille affiche la `citationCle` du
   // corpus elle-même, lue par `documentsObligatoires()`. L'extrait EST le
   // verbatim ; le confronter à lui-même ne prouverait rien.

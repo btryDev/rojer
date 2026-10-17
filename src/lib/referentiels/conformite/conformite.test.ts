@@ -1943,6 +1943,8 @@ describe("référentiel conformité — version et empreinte", () => {
     // 95 / 88 / 14 par `porteurDe` ; relevée en appelant
     // `empreinteReferentiel()`. ~~2026-10-17.3~~ → .4 : F a
     // mergé avant et pris .3 (consigne de c6).
+    // Libellé de MS 57 (contrôle visuel de c6) compris : la détection ET la
+    // catégorie du SSI.
     { version: "2026-10-17.4", empreinte: "EMPREINTE_A_RELEVER" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];

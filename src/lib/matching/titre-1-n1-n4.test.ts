@@ -296,3 +296,11 @@ describe("revue indépendante du sous-lot C (2026-10-17) : ce qui a été corrig
     expect(el23?.phrase).not.toContain("stands");
   });
 });
+
+describe("contrôle visuel de c6 (2026-10-17)", () => {
+  it("b. MS 57 : le libellé dit le déclencheur du texte (la détection) et le repère de Rojer (SSI A ou B)", () => {
+    const l = obligationsConformite.find((o) => o.id === PRESENCE_QUALIFIEE)?.libelle ?? "";
+    expect(l).toContain("dès qu'une détection automatique est installée");
+    expect(l).toContain("système de sécurité incendie de catégorie A ou B");
+  });
+});

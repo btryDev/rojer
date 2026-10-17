@@ -34,3 +34,32 @@ export const CITATION_GN_10 =
  * établissement de la catégorie : la sur-application, rendue lisible.
  */
 export const DESCRIPTION_GN_10 = `Les dispositions générales du règlement de sécurité écrivent, à l'article GN 10 (rédaction en vigueur depuis le 23 janvier 2010, arrêté du 24 septembre 2009) : « ${CITATION_GN_10} »`;
+
+/** L'adresse de GN 10 en vigueur (corpus `arrete-1980-livre-1`, relu le 2026-09-27). */
+export const URL_GN_10 =
+  "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000021231106";
+
+/**
+ * Vrai si l'obligation cite GN 10 entier dans sa description — la SEULE
+ * lecture de « cette ligne porte GN 10 » (contrôle visuel de c6, 2026-10-17).
+ *
+ * POURQUOI UNE FONCTION. La phrase n'était que dans la `description`, que
+ * l'écran « Ce qui doit être en place » n'affiche pas : la décision de la
+ * propriétaire (servir ces lignes à tous parce que GN 10 le dit) ne se lisait
+ * nulle part. L'écran en tire désormais une mention (`MENTION_GN_10`) ; aucune
+ * surface ne compare de texte elle-même, elles lisent ce prédicat, par
+ * `fondementDe` (`etats-permanents/fondement.ts`).
+ */
+export function porteGn10(o: { description?: string | null }): boolean {
+  return (o.description ?? "").includes(DESCRIPTION_GN_10);
+}
+
+/**
+ * La mention courte, sous la pastille de la ligne. Elle CITE GN 10 et dit ce
+ * que fait Rojer, sans dater l'« existant » ni conclure pour le dirigeant :
+ * le corpus a rayé le 2026-09-26 toute lecture qui rattache l'existant à
+ * l'entrée en vigueur de chaque disposition (`arrete-1980-livre-1`, GN 10).
+ * Le texte entier se déplie sous la pastille « GN 10 ».
+ */
+export const MENTION_GN_10 =
+  "Le règlement de sécurité écrit qu'il « ne s'applique pas aux établissements existants », hors dispositions administratives, contrôles, vérifications et entretien (art. GN 10). Rojer, qui ne connaît pas l'histoire de votre établissement, vous sert cette ligne.";
