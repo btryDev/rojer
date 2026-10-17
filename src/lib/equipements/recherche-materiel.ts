@@ -103,6 +103,9 @@ export const SYNONYMES_CATEGORIE: Readonly<Record<CategorieEquipement, readonly 
   DEFIBRILLATEUR: ["défibrillateur", "DAE", "défibrillateur automatisé externe"],
   EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC: ["douche", "douches", "eau chaude sanitaire", "ECS", "ballon d'eau chaude", "chauffe-eau collectif", "production d'eau chaude", "légionelles", "légionellose", "bain à remous", "jacuzzi", "spa"],
   BUT_PANIER_SPORTIF: ["but", "cage de but", "but de football", "but de handball", "but de hockey", "panier de basket", "but de basket", "basket-ball"],
+  // 2026-10-17, sous-lot G : les mots de l'art. L 49 (scène, estrade, plateau,
+  // piste) et ceux du bloc-scène (gril, cintres, machinerie scénique).
+  SCENE: ["scène", "estrade", "plateau", "piste", "espace scénique", "bloc-scène", "gril", "cintres", "machinerie scénique", "salle de spectacle", "théâtre"],
   AUTRE: [],
 };
 

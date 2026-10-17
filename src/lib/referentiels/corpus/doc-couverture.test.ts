@@ -210,6 +210,9 @@ describe(`${CHEMIN} — la liste ne se périme pas en silence`, () => {
     // `M 40 § 3 e)` relu le 2026-10-17 passait du § 7 au § 9 sans rien rougir.
     // Le titre II est désormais borné aux NEUF CHAPITRES lus le 2026-10-16,
     // par leur lettre de type.
+    // 2026-10-17, sous-lot G : L, lu le 2026-10-16 et entré au corpus avec son
+    // encodage, n'y ajoute rien — aucun manque du chapitre L ne reste ouvert
+    // (L 32, un temps au § 9, est annoncé par décision de c6).
     const CHAPITRES_LUS_LE_16 = /^[JPRSTUVXY] (?:\d|annexe)/;
     // 2026-10-17, `lot/ref-a-corpus-titre-1` : le titre Ier lu EN ENTIER. Les
     // ~~vingt et un~~ dix-sept actes trouvés [quatre passés `non_couvert` le même jour] passent TRANSITOIREMENT au § 9 (consigne de

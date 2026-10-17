@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CORPUS, articlesNonCouverts } from "@/lib/referentiels/corpus";
 import { ADRESSE_MANQUES_ANNONCES } from "@/lib/referentiels/corpus/adresses";
 import { DESCRIPTION_CATEGORIE } from "@/lib/equipements/labels";
+import { AIDE_TYPE_ERP } from "@/lib/etablissements/aide-type-erp";
 import {
   ANNONCES,
   manquesAnnoncesDuDossier,
@@ -298,5 +299,47 @@ describe("un declareA qui cite l'aide d'une catégorie la cite mot pour mot (rev
   it("borne basse : la garde porte sur des cas réels", () => {
     // Dix au 2026-10-07 (quatre ESP, six stockage) ; on n'en fige pas la liste.
     expect(citant.length).toBeGreaterThan(0);
+  });
+});
+
+describe("2026-10-17 (sous-lot G) : la scène annonce ce qu'elle ne fait pas naître", () => {
+  const SCENE_ANNONCES = [
+    "L 32",
+    "L 55",
+    "L 75",
+    "L 57 § 1 b — vérification annuelle des déversoirs et des rideaux d'eau",
+    "L 57 § 4 — inspection avant l'ouverture au public",
+    "L 63 § 4 — manœuvre du dispositif d'obturation avant chaque représentation",
+  ];
+
+  it("chacun garde une adresse : l'aide de la catégorie Scène, citée mot pour mot", () => {
+    const aide = DESCRIPTION_CATEGORIE.SCENE ?? "";
+    for (const ref of SCENE_ANNONCES) {
+      const a = CORPUS.flatMap((c) => c.articles).find((x) => x.ref === ref);
+      expect(a?.statut, ref).toBe("non_couvert");
+      const declareA = a && a.statut === "non_couvert" ? (a.declareA ?? "") : "";
+      expect(declareA, ref).toContain("DESCRIPTION_CATEGORIE.SCENE");
+      const cite =
+        /DESCRIPTION_CATEGORIE\.[A-Z_]+`?\)?\s*:\s*«\s*([\s\S]+?)\s*»\s*$/.exec(declareA)?.[1] ?? "∅";
+      expect(aide, ref).toContain(cite);
+    }
+  });
+
+  it("L 79 n'est pas annoncé : il ne dit pas « présent » (décision de c6)", () => {
+    expect(DESCRIPTION_CATEGORIE.SCENE ?? "").not.toContain("L 79");
+  });
+});
+
+describe("2026-10-17 (sous-lot G) : l'aide du type L annonce les sièges et le gaz des salles", () => {
+  it("AM 18, L 28 et L 31 gardent une adresse : l'aide du type L, citée mot pour mot", () => {
+    const aide = AIDE_TYPE_ERP.L ?? "";
+    for (const ref of ["AM 18", "L 28", "L 31"]) {
+      const a = CORPUS.flatMap((c) => c.articles).find((x) => x.ref === ref);
+      expect(a?.statut, ref).toBe("non_couvert");
+      const declareA = a && a.statut === "non_couvert" ? (a.declareA ?? "") : "";
+      expect(declareA, ref).toContain("AIDE_TYPE_ERP.L");
+      const cite = /AIDE_TYPE_ERP\.[A-Z]`?\)?\s*:\s*«\s*([\s\S]+?)\s*»\s*$/.exec(declareA)?.[1] ?? "∅";
+      expect(aide, ref).toContain(cite);
+    }
   });
 });

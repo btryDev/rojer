@@ -120,9 +120,23 @@ const QUATRE_PREMIERES: readonly string[] = ["N1", "N2", "N3", "N4"];
  * Ce qui désigne l'article dans sa clé, sans le texte qui le porte :
  * `R. 4544-10`, `art. 103` (de « Arrêté 1986-01-31 art. 103 »), `R. 134-6`
  * (de « CCH R. 134-6 »), `MS 38`.
+ *
+ * 2026-10-17 (sous-lot G, décision de c6) : une clé qui vise une ENTRÉE
+ * SCINDÉE du corpus — « MS 70 § 5 — modalités d'appel … », « CO 48 § 3 e) —
+ * contrat … », « L 57 § 7 — présence … » — désigne son article (« MS 70 »).
+ * Avant, la clé entière ne se reconnaissait dans aucune référence imprimée, et
+ * la ligne perdait la citation que le corpus porte pour ce paragraphe : la
+ * pastille ouvrait Légifrance sans rien citer (relevé sur MS 70 § 5, CO 48
+ * § 3 e), PO 1 § 3 et L 57 § 7). L'extrait reste celui de l'entrée scindée,
+ * lue par sa clé entière (`ligneDe`).
  */
 function designation(article: string): string {
-  const a = article.replace(/\s+/g, " ").trim();
+  const a = article
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" — ")[0]
+    .replace(/ §.*$/, "")
+    .trim();
   const m = /(?:art\. ?\S+|[LRD]\. ?\d[\d-]*\d|[A-Z]{1,3} \d+)$/.exec(a);
   return m?.[0] ?? a;
 }
@@ -171,12 +185,32 @@ export function referenceNommeLArticle(
   return nommes.size === 1 && nommes.has(designation(article).replace(/\. ?/, ". "));
 }
 
+/**
+ * Les types d'ERP dont le chapitre écrit que la disposition s'applique AUSSI
+ * aux établissements existants, « en aggravation des dispositions de
+ * l'article GN 10 » — par ligne. Pour un établissement qui déclare l'un
+ * d'eux, la mention GN 10 (« Peut ne pas s'appliquer à un établissement
+ * existant ») serait fausse : elle ne s'affiche pas.
+ *
+ * 2026-10-17, revue indépendante du sous-lot G (B1, décision de c6) : L 14 § 4
+ * — « En aggravation des dispositions de l'article GN 10, les dispositions du
+ * présent article sont applicables à tous les établissements existants ».
+ * Une table nommée, lue d'ici seulement : un fichier de données ne porte pas
+ * de règle d'affichage.
+ */
+export const GN10_AGGRAVE_PAR_TYPE: Readonly<Record<string, readonly TypeErp[]>> = {
+  "incendie-erp-personnel-designe-moyens-secours": ["L"],
+};
+
 export function fondementDe(
   obligation: Obligation,
   contexte?: ContexteFondement,
 ): FondementLigne | null {
   const f = fondementSansGn10(obligation, contexte);
-  return f && porteGn10(obligation) ? { ...f, gn10: true } : f;
+  const aggrave = (GN10_AGGRAVE_PAR_TYPE[obligation.id] ?? []).some((t) =>
+    (contexte?.typesErp ?? []).includes(t),
+  );
+  return f && porteGn10(obligation) && !aggrave ? { ...f, gn10: true } : f;
 }
 
 function fondementSansGn10(

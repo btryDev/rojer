@@ -178,8 +178,17 @@ describe("plusieurs types d'ERP — l'article de chacun (ADR-045, lot 3)", () =>
   });
 
   it("un type que la ligne ne cite pas n'ajoute rien", () => {
-    // L : le chapitre n'est pas cité par cette ligne.
-    expect(fondementDe(PERSONNEL, ctx("N", "N3", ["L"]))!.complement).toBeUndefined();
+    // ~~L : le chapitre n'est pas cité par cette ligne.~~ — 2026-10-17, sous-lot
+    // G : L 14 l'est désormais. V (lieux de culte), lu sans être servi, prend
+    // sa place.
+    expect(fondementDe(PERSONNEL, ctx("N", "N3", ["V"]))!.complement).toBeUndefined();
+  });
+
+  it("une salle L avec un restaurant : L 14 en complément, avec sa citation (sous-lot G)", () => {
+    const f = fondementDe(PERSONNEL, ctx("N", "N3", ["L"]))!;
+    expect(f.reference).toContain("art. N 17");
+    expect(f.complement?.map((c) => c.reference)).toEqual([expect.stringContaining("art. L 14")]);
+    expect(f.complement?.[0].extrait).toBe(INDEX.get("L 14")?.article.citationCle);
   });
 
   it("la consigne d'un hôtel-restaurant de 3ᵉ : N 20 en complément, O n'en a pas", () => {
@@ -200,5 +209,53 @@ describe("contexteFondementDe — le contexte d'un établissement qui n'est pas 
     expect(
       contexteFondementDe({ estERP: false, typeErp: "N", typesErpAutres: ["O"], categorieErp: "N3" }),
     ).toEqual({ typesErp: [], categorieErp: null });
+  });
+});
+
+describe("entrée scindée du corpus : la ligne cite le paragraphe (2026-10-17, sous-lot G)", () => {
+  // Une référence dont la clé vise une entrée scindée (« MS 70 § 5 — … »)
+  // perdait sa citation : la pastille ouvrait Légifrance sans rien citer.
+  // Éprouvé en retirant le découpage de `designation` : chaque moitié (« — »,
+  // puis « § ») retirée seule fait rougir au moins une ligne (revue de G).
+  it.each([
+    ["incendie-erp-modalites-appel-pompiers-affichees", "MS 70 § 5 — modalités d'appel des sapeurs-pompiers affichées"],
+    ["porte-auto-erp-contrat-entretien", "CO 48 § 3 e) — contrat d'entretien des portes automatiques"],
+    ["elec-erp-presence-personne-qualifiee-scene-n3", "L 57 § 7 — présence d'une personne qualifiée en 3e catégorie"],
+    // Revue du sous-lot G (point 2) : une clé SANS paragraphe (« EC 13 — … »)
+    // ne se garde que par le découpage « — » ; une clé biennale du livre III
+    // (« PO 1 § 3 — … ») par les deux.
+    ["incendie-erp-eclairage-securite-notice-registre", "EC 13 — notice annexée au registre et entretiens consignés"],
+    ["incendie-hotel-po-controle-biennal-installations", "PO 1 § 3 — contrôle biennal des installations techniques"],
+    // Revue de G (R1) : le dépoussiérage cite son § 3, imprimé au PDF.
+    ["scene-erp-depoussierage-annuel", "L 57 § 3 — dépoussiérage annuel de l'espace scénique"],
+  ])("%s cite l'entrée « %s »", (id, ref) => {
+    const o = obligationsConformite.find((x) => x.id === id)!;
+    const attendu = INDEX.get(ref)?.article.citationCle;
+    expect(attendu).toBeTruthy();
+    expect(fondementDe(o)!.extrait).toBe(attendu);
+  });
+
+  it("la sœur de 3ᵉ ne cite pas la phrase des vérifications triennales (§ 1 a)", () => {
+    const o = obligationsConformite.find((x) => x.id === "elec-erp-presence-personne-qualifiee-scene-n3")!;
+    expect(fondementDe(o)!.extrait).not.toContain("tous les trois ans");
+  });
+});
+
+describe("GN 10 aggravé par le type (revue du sous-lot G, B1)", () => {
+  const PERSONNEL = obligationsConformite.find((o) => o.id === "incendie-erp-personnel-designe-moyens-secours")!;
+  // L 14 § 4 : « En aggravation des dispositions de l'article GN 10, les
+  // dispositions du présent article sont applicables à tous les établissements
+  // existants ». Éprouvé en vidant `GN10_AGGRAVE_PAR_TYPE` : les deux
+  // premiers rougissent.
+  it("une salle L de 3ᵉ ne voit pas la mention GN 10 sur le personnel désigné", () => {
+    expect(fondementDe(PERSONNEL, ctx("L", "N3"))!.gn10).toBeUndefined();
+  });
+
+  it("un restaurant qui déclare aussi L ne la voit pas non plus", () => {
+    expect(fondementDe(PERSONNEL, ctx("N", "N3", ["L"]))!.gn10).toBeUndefined();
+  });
+
+  it("un restaurant seul la voit toujours (borne haute)", () => {
+    expect(fondementDe(PERSONNEL, ctx("N", "N3"))!.gn10).toBe(true);
   });
 });

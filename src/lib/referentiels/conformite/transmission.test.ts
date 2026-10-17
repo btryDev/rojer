@@ -171,8 +171,21 @@ describe("transmissions (ADR-024)", () => {
    * `elec-salarie-habilitation` plutôt que compté ici.
    *
    * Il ne remonte pas au-delà sans le même genre d'argument, écrit ici.
+   *
+   * REMONTÉ À 2 LE 2026-10-17 (sous-lot G, chapitre L), avec CE MÊME
+   * ARGUMENT, et lui seul : `elec-erp-presence-personne-qualifiee-scene-n3`
+   * est la sœur de la ligne d'EL 18 § 2, que L 57 § 7 rend applicable en 3ᵉ
+   * catégorie avec une scène. Même personne qualifiée, même texte muet sur
+   * toute formation : aucun titre à encoder. La garde se resserre en même
+   * temps — le plafond ne compte plus un nombre, il nomme les deux lignes
+   * (`RENVOIS_SANS_TITRE_ADMIS`) : une troisième, ou une autre à la place de
+   * l'une d'elles, rougit.
    */
-  const PLAFOND_RENVOIS_SANS_TITRE = 1;
+  const PLAFOND_RENVOIS_SANS_TITRE = 2;
+  const RENVOIS_SANS_TITRE_ADMIS = [
+    "elec-erp-presence-personne-qualifiee",
+    "elec-erp-presence-personne-qualifiee-scene-n3",
+  ];
 
   it("aucune transmission ne pose une question sans laisser répondre", () => {
     const muets = renvoisSansTitre(obligationsConformite);
@@ -186,6 +199,7 @@ describe("transmissions (ADR-024)", () => {
         `exister — \`periodicite: "autre"\` et \`echeanceLe\` nulle suffisent, ` +
         `c'est ce qui a débloqué l'habilitation électrique.`,
     ).toHaveLength(PLAFOND_RENVOIS_SANS_TITRE);
+    expect([...muets].sort()).toEqual(RENVOIS_SANS_TITRE_ADMIS);
   });
 
   it("le cliquet voit bien le `null` qu'il interdit", () => {

@@ -36,6 +36,7 @@ import {
   Package,
   Refrigerator,
   ShowerHead,
+  Theater,
   Shredder,
   Wind,
   Zap,
@@ -128,6 +129,9 @@ export const ICONE_CATEGORIE: Record<CategorieEquipement, Picto> = {
   // Les buts et paniers (2026-10-17) : la cage de but. `Volleyball` dirait
   // un ballon, un thème ; la règle de cette table veut l'objet.
   BUT_PANIER_SPORTIF: Goal,
+  // La scène (2026-10-17, sous-lot G) : les masques du théâtre, que lucide
+  // nomme `Theater`. Aucune autre catégorie ne l'emploie.
+  SCENE: Theater,
   AUTRE: Package,
 };
 

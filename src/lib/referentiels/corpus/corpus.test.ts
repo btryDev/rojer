@@ -1702,7 +1702,15 @@ describe("corpus — ce qu'on ne couvre pas, et où on le dit", () => {
     // `T 43` et `T 44` sont dits dans l'aide du type T (`AIDE_TYPE_ERP.T`).
     // `M 35` et `T 52 § 2` entrent `non_couvert` avec la même adresse : aucun
     // n'est muet. Reste : G (`AM 18`, −1) → 13 ; `MS 42` muet par décision.
-    const MUETS = 14;
+    // ~~const MUETS = 14;~~ — **13 DEPUIS LE SOUS-LOT G** (`lot/ref-g-chapitre-l`,
+    // rebasé sur D, 2026-10-17), mesuré en appelant : 14 − 1 + 0. `AM 18` est
+    // dit dans l'aide du type L (`AIDE_TYPE_ERP.L`). Les huit `non_couvert` du
+    // chapitre L naissent avec leur adresse — l'aide Scène pour `L 32`, `L 55`,
+    // `L 75`, `L 57 § 1 b`, `L 57 § 4`, `L 63 § 4`, l'aide du type L pour
+    // `L 28` et `L 31` : aucun n'est muet. (Avant le rebase, la branche portait
+    // `MUETS = 20` transitoire, accepté par c6.) Reste `MS 42`, muet par
+    // décision.
+    const MUETS = 13;
     // Une note interne n'est pas une annonce à l'exploitant. `declareA`
     // mélange aujourd'hui les deux natures — une adresse produit et un
     // document de travail — et cette distinction reste à trancher (lot 3) ;

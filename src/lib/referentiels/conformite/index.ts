@@ -50,6 +50,7 @@ import { obligationsCompactageDechets } from "./compactage-dechets";
 import { obligationsEclairage } from "./eclairage";
 import { obligationsEauChaudeSanitaire } from "./eau-chaude-sanitaire";
 import { obligationsEtablissementSportif } from "./etablissement-sportif";
+import { obligationsScene } from "./scene";
 import { estNiveauAudit } from "./niveau-audit";
 
 export {
@@ -76,6 +77,7 @@ export {
   obligationsEclairage,
   obligationsEauChaudeSanitaire,
   obligationsEtablissementSportif,
+  obligationsScene,
 };
 export * from "./types";
 export * from "./veille-textes";
@@ -136,6 +138,11 @@ export const obligationsConformite: Obligation[] = [
   // tout établissement qui déclare un but ou un panier de 10 kg ou plus (plan
   // de vérification et registre, R. 322-25).
   ...obligationsEtablissementSportif,
+  // 2026-10-17, sous-lot G (chapitre L) : l'espace scénique d'une salle de
+  // type L ou P des catégories 1 à 4 — vérifications triennales par un
+  // organisme agréé (L 57 § 1 a) et matériel temporaire (L 13 § 5), dues dès
+  // qu'une scène est déclarée ; dépoussiérage annuel par scène (L 57 § 3).
+  ...obligationsScene,
 ];
 
 /**
@@ -523,7 +530,17 @@ export const obligationsConformite: Obligation[] = [
 // R. 322-5, Signal-sports, L. 321-7 et A. 322-3 sont `non_couvert`. Le titre
 // salarié de la carte professionnelle est retiré avant d'entrer (décision du
 // même jour). 198 + 2 − 0 = 200, rebasé sur D, remesuré en appelant le code.
-export const REFERENTIEL_VERSION = "2026-10-17.6";
+// `2026-10-17.7` (sous-lot G du plan « mise à jour du référentiel »,
+// `lot/ref-g-chapitre-l`, plan validé par c6 le 2026-10-17 ; numéro
+// PROVISOIRE ; rebasé sur D (`.5`) puis sur E (`.6`)) : la catégorie `SCENE` et le
+// chapitre L — `scene-erp-verifications-triennales-organisme-agree` (L 57 § 1 a),
+// `scene-erp-materiels-installations-temporaires-annuelle` (L 13 § 5) et
+// `elec-erp-presence-personne-qualifiee-scene-n3` (L 57 § 7), établissement,
+// dues dès qu'une scène est déclarée ; `scene-erp-depoussierage-annuel`
+// (L 57 § 3), une par scène ; le type L entre au personnel désigné (L 14).
+// 200 + 4 − 0 = 204 (après D et E) ; par porteur, 95 + 1 = 96 équipement,
+// 91 + 3 = 94 établissement, 14 salarié — remesuré en appelant `porteurDe`.
+export const REFERENTIEL_VERSION = "2026-10-17.7";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

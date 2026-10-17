@@ -162,7 +162,9 @@ describe("annonce décidée : `non_couvert`, jamais `obligation_manquante`", () 
       // ~~"CO 10"~~ — sous-lot C : adresse posée (rubrique « Règlement de sécurité,
       // catégories 1 à 4 »).
       // ~~"T 29", "T 33", "T 43", "T 44"~~ — sous-lot D : aide du type T.
-      ["AM 18", "MS 42"].sort(),
+      // ~~"AM 18"~~ — sous-lot G : aide du type L ; `L 28` et `L 31` y naissent
+      // annoncés.
+      ["MS 42"].sort(),
     );
   });
 

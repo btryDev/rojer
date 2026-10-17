@@ -42,6 +42,7 @@ import {
   obligationsConformite,
   obligationsCuissonHotte,
   obligationsElectricite,
+  obligationsScene,
   obligationsEquipementSousPression,
   obligationsFroid,
   obligationsIncendie,
@@ -290,7 +291,13 @@ describe("référentiel conformité — couverture P1", () => {
 
   it("obligationsParDomaine renvoie cohérent avec le filtrage", () => {
     const elec = obligationsParDomaine("electricite");
-    expect(elec.length).toBe(obligationsElectricite.length);
+    // 2026-10-17, sous-lot G : le domaine `electricite` porte aussi la ligne
+    // du matériel des installations temporaires de spectacle (L 13 § 5),
+    // rangée dans `scene.ts` avec les lignes de la scène.
+    expect(elec.length).toBe(
+      obligationsElectricite.length +
+        obligationsScene.filter((o) => o.domaine === "electricite").length,
+    );
     expect(elec.every((o) => o.domaine === "electricite")).toBe(true);
   });
 
@@ -1964,6 +1971,23 @@ describe("référentiel conformité — version et empreinte", () => {
     // `BUT_PANIER_SPORTIF`). rebasé sur D (#65) : 198 + 2 − 0 = 200 ; relevée en appelant
     // `empreinteReferentiel()`.
     { version: "2026-10-17.6", empreinte: "200-7e27df57c13e9" },
+    // 2026-10-17 — sous-lot G du plan « mise à jour du référentiel »
+    // (`lot/ref-g-chapitre-l`, plan validé par c6) : la catégorie `SCENE` et
+    // quatre lignes du chapitre L — `scene-erp-verifications-triennales-
+    // organisme-agree` (L 57 § 1 a), `scene-erp-materiels-installations-
+    // temporaires-annuelle` (L 13 § 5), `elec-erp-presence-personne-qualifiee-
+    // scene-n3` (L 57 § 7, sœur d'EL 18 § 2), établissement, dues dès qu'une
+    // scène est déclarée ; `scene-erp-depoussierage-annuel` (L 57 § 3), une
+    // par scène. Le type L entre aux types de `incendie-erp-personnel-designe-
+    // moyens-secours` (L 14), dont le libellé nomme les salles. 200 + 4 − 0 =
+    // 204 après rebase sur D et E (~~197 + 4 = 201, 201-5f23aa4fbbebccd7~~ sur
+    // c5f638a5 ; ~~202-38b9447c1d41b84~~ sur D seul),
+    // relevée en appelant `empreinteReferentiel()`. Version PROVISOIRE ; D a
+    // pris `.5`, E `.6`.
+    // ~~204-c745f7409c593fe8~~ — revue indépendante de G, même jour : libellé
+    // du personnel désigné raccourci (R8) ; 204 + 0 − 0, relevée en appelant.
+    // Version pas encore servie.
+    { version: "2026-10-17.7", empreinte: "204-acb4dcf36b1e8fa3" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -2155,7 +2179,9 @@ describe("référentiel conformité — version et empreinte", () => {
       // (`sport-etablissement-secours-r322-4`,
       // `sport-etablissement-buts-plan-verification`) − 0 = 200, remesuré en
       // appelant `obligationsConformite`.
-    ).toBe(200);
+      // ~~200~~ — 2026-10-17, sous-lot G (chapitre L), rebasé sur D et E :
+      // 200 + 4 − 0 = 204, remesuré en appelant `obligationsConformite`.
+    ).toBe(204);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {
@@ -3219,8 +3245,8 @@ describe("livre II, titre II — un chapitre de type ne sert que son type, en ca
   // ~~const LUS = ["M", "N", "O", "W"];~~ — 2026-10-17, sous-lot D : les
   // chapitres J, P, R, S, T, U, V, X et Y ont été lus le 2026-10-16
   // (`lot/erp-chapitres-types-1016`), et D sert P, S, T, X et Y. Le chapitre L
-  // entre avec le sous-lot G.
-  const LUS = ["M", "N", "O", "W", "J", "P", "R", "S", "T", "U", "V", "X", "Y"];
+  // entre avec le sous-lot G. [2026-10-17, sous-lot G : + L, encodé.]
+  const LUS = ["M", "N", "O", "W", "J", "P", "R", "S", "T", "U", "V", "X", "Y", "L"];
   const fondateur = (o: (typeof obligationsConformite)[number]) =>
     o.referencesLegales[0].article ?? "";
 

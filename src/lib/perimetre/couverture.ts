@@ -102,8 +102,9 @@ import type { TypeErp } from "@/lib/referentiels/types-communs";
  * ajoutait un type. Le module reste pur — il ne lit pas le référentiel — et
  * `couverture.test.ts` DÉRIVE cette liste du référentiel pour la confronter.
  */
+// 2026-10-17, sous-lot G (chapitre L) : + L, servi par L 14 et la scène.
 export const TYPES_ERP_DISPOSITIONS_PARTICULIERES: readonly TypeErp[] = [
-  "M", "N", "O", "W", "P", "S", "T", "X", "Y",
+  "M", "N", "O", "W", "P", "S", "T", "X", "Y", "L",
 ];
 
 /** Le nom d'un type au pluriel, pour la phrase. Un type sans nom ici fait échouer le test. */
@@ -117,7 +118,9 @@ export const NOM_TYPE_ERP_PLURIEL: Partial<Record<TypeErp, string>> = {
   T: "salles d'exposition",
   X: "établissements sportifs couverts",
   Y: "musées",
-  L: "salles de spectacle et de réunion",
+  // ~~« salles de spectacle et de réunion »~~ — revue de G (R7) : le « et »
+  // doublait celui de l'énumération.
+  L: "salles de spectacle ou de réunion",
 };
 
 function enumeration(mots: readonly string[]): string {

@@ -163,7 +163,7 @@ sixième `??` recopié.
 C'est la limite la plus importante de ce document, et la raison directe du
 retrait de la carte.
 
-~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ ~~Les 66 articles (2026-10-07, l'IGH, les équipements sous pression et le stockage de matières dangereuses en partie retirés)~~ ~~Les 70 articles (2026-10-13, quatre manques de la cible redéfinie annoncés)~~ ~~Les 72 articles (2026-10-13, six manques de la cible redéfinie annoncés)~~ ~~Les 73 articles (2026-10-13, sept manques de la cible redéfinie annoncés)~~ ~~Les 74 articles (2026-10-14, `L. 8222-1-1` dit sur la page Prestataires)~~ ~~Les 77 articles (2026-10-14, quatre articles cités par l'aide des catégories entrés au corpus)~~ ~~Les 78 articles (2026-10-14, intégration des deux lots : 73 + 1 + 4)~~ ~~Les 76 articles (2026-10-16, lecture des chapitres de types d'ERP : 78 − 6 + 4)~~ ~~Les 82 articles (2026-10-17, titre Ier lu en entier et motifs du titre II réécrits : 76 + 6 − 0)~~ ~~Les 89 articles (2026-10-17, corrections de la revue de `lot/ref-a-corpus-titre-1` : 82 + 7 − 0)~~ ~~Les 100 articles (2026-10-17, sous-lot B `lot/ref-b-hors-cadre` : 89 + 11 − 0)~~ ~~Les 102 articles (2026-10-17, revue de B : 100 + 2 − 0)~~ ~~Les 99 articles (2026-10-17, sous-lot F, légionelles au matériel : 102 + 0 − 3)~~ ~~Les 108 articles (2026-10-17, sous-lot C, rebasé sur F : 99 + 9 − 0)~~ ~~Les 110 articles (2026-10-17, sous-lot D : 108 + 2 − 0)~~ Les 117 articles (2026-10-17, sous-lot E, code du sport, rebasé sur D : 110 + 7 − 0) ci-dessous sont ceux que le dépouillement a lus, qui imposent
+~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ ~~Les 66 articles (2026-10-07, l'IGH, les équipements sous pression et le stockage de matières dangereuses en partie retirés)~~ ~~Les 70 articles (2026-10-13, quatre manques de la cible redéfinie annoncés)~~ ~~Les 72 articles (2026-10-13, six manques de la cible redéfinie annoncés)~~ ~~Les 73 articles (2026-10-13, sept manques de la cible redéfinie annoncés)~~ ~~Les 74 articles (2026-10-14, `L. 8222-1-1` dit sur la page Prestataires)~~ ~~Les 77 articles (2026-10-14, quatre articles cités par l'aide des catégories entrés au corpus)~~ ~~Les 78 articles (2026-10-14, intégration des deux lots : 73 + 1 + 4)~~ ~~Les 76 articles (2026-10-16, lecture des chapitres de types d'ERP : 78 − 6 + 4)~~ ~~Les 82 articles (2026-10-17, titre Ier lu en entier et motifs du titre II réécrits : 76 + 6 − 0)~~ ~~Les 89 articles (2026-10-17, corrections de la revue de `lot/ref-a-corpus-titre-1` : 82 + 7 − 0)~~ ~~Les 100 articles (2026-10-17, sous-lot B `lot/ref-b-hors-cadre` : 89 + 11 − 0)~~ ~~Les 102 articles (2026-10-17, revue de B : 100 + 2 − 0)~~ ~~Les 99 articles (2026-10-17, sous-lot F, légionelles au matériel : 102 + 0 − 3)~~ ~~Les 108 articles (2026-10-17, sous-lot C, rebasé sur F : 99 + 9 − 0)~~ ~~Les 110 articles (2026-10-17, sous-lot D : 108 + 2 − 0)~~ ~~Les 117 articles (2026-10-17, sous-lot E, code du sport, rebasé sur D : 110 + 7 − 0)~~ Les 125 articles (2026-10-17, sous-lot G, chapitre L, rebasé sur D et E : 117 + 8 − 0) ci-dessous sont ceux que le dépouillement a lus, qui imposent
 quelque chose à un exploitant, et que le référentiel ne porte pas. **Rien ne les
 restreint aux établissements que leur chapitre vise** — sauf les ~~vingt-cinq
 annoncés le 2026-09-27~~ ~~trente-trois~~ trente-cinq annoncés (vingt-cinq le
@@ -367,9 +367,17 @@ au corpus, lus le même jour par l'API Légifrance en bac à sable. Sept article
 `non_couvert` — voir § 3, « Établissements sportifs, code du sport ». Aucun ne
 sort.
 
+**Puis 117 + 8 − 0 = 125** (2026-10-17, sous-lot G du plan « mise à jour du
+référentiel », `lot/ref-g-chapitre-l`, rebasé sur D et E, mesuré en appelant
+`articlesNonCouverts()`) : le chapitre L entre au corpus ; huit entrées
+`non_couvert`, annoncées — voir § 3, « Chapitre L (salles, type L) ». Aucune ne
+sort.
+
 ---
 
-## 3. Les 117 articles lus et non portés
+## 3. Les 125 articles lus et non portés
+
+[2026-10-17, sous-lot G : ~~117~~ → 125, voir la fin du § 2.]
 
 ~~Cinq familles~~ ~~Neuf familles (compte refait le 2026-09-26)~~ Dix-huit familles (compte refait le 2026-09-27, C45), une dixième étant sortie de la liste le 2026-09-01 (voir
 ci-dessous). Les motifs sont ceux du corpus, cités et non réécrits : ils ont
@@ -590,8 +598,8 @@ entrées chaudière et escalier mécanique),~~ [2026-10-17, sous-lot B : `CH 23`
 liste des matériels, `AS 5` dans l'aide « Ascenseur »
 (`DESCRIPTION_CATEGORIE.ASCENSEUR`), `AS 8` dans l'entrée « Escalier mécanique
 ou trottoir roulant » ; les sept autres restent **muets** :] `T 29`, `T 33`, `T 43` et `T 44`
-l'aide du type T (sous-lot D), `AM 18` l'aide de la catégorie Scène et du type
-L (sous-lot G), ~~`CO 10` la rubrique que crée le sous-lot C,~~ et `MS 42` n'en
+l'aide du type T (sous-lot D), `AM 18` ~~l'aide de la catégorie Scène et du type
+L (sous-lot G)~~ [2026-10-17, décision de c6 : l'aide du type L seulement, au rebase de G sur D], ~~`CO 10` la rubrique que crée le sous-lot C,~~ et `MS 42` n'en
 aura pas (décision de c6). [2026-10-17, sous-lot C : `CO 10` est dit dans la
 rubrique « Règlement de sécurité, catégories 1 à 4 » de la page « Ce que Rojer
 ne couvre pas » ; six restent muets.] [2026-10-17, sous-lot D : `T 29`,
@@ -634,6 +642,14 @@ sécurité, catégories 1 à 4 » de la page « Ce que Rojer ne couvre pas »
 `PE 18` : l'aide de la catégorie « Appareil de cuisson ERP » ; CH 38 6° :
 l'aide de la catégorie « Centrale de traitement d'air » — phrases posées au
 rebase sur le sous-lot B, qui tient `labels.ts` (décision Q3 de c6).
+
+### Chapitre L (salles, type L), classés par le sous-lot G le 2026-10-17 — 8 articles
+
+`L 32` · `L 55` · `L 75` · `L 57 § 1 b — vérification annuelle des déversoirs et des rideaux d'eau` · `L 57 § 4 — inspection avant l'ouverture au public` · `L 63 § 4 — manœuvre du dispositif d'obturation avant chaque représentation` · `L 28` · `L 31`
+
+Lecture du chapitre L relue à l'API le 2026-10-17 (`propositions/lecture-L-prerequis-2026-10-18.md`), décisions de c6 du même jour. `L 32` (§ 1) est une présence implicite — la commande d'un circuit d'éclairage placée « à partir d'un endroit habituellement surveillé pendant la présence du public » —, politique sœur d'EL 17 et de MS 66 (ligne de partage 10), décision de c6 du 2026-10-17. Les cinq suivants touchent aussi la scène : un acte daté par un événement (chaque programme, chaque ouverture, chaque représentation), une présence sous condition d'un choix de décor (L 75 § 3), ou un acte propre au bloc-scène isolable que le produit ne distingue pas (L 57 § 1 b) — de niche, annoncés (ligne de partage 5). `L 28` (§ 2, sièges à relevage automatique, politique sœur d'`AM 18`) et `L 31` (§ 6, « gaz - ne rien accrocher », ligne de partage 11) touchent la salle.
+
+Où c'est dit. Les six premiers : l'aide de la catégorie « Scène / installations scéniques » (`DESCRIPTION_CATEGORIE.SCENE`). `L 28`, `L 31` et `AM 18` : l'aide du type L (`AIDE_TYPE_ERP.L`), surface du sous-lot D, écrite au rebase de G sur D. `L 79` n'est pas annoncé : il ne dit pas « présent » (décision de c6).
 
 ### Gaz en habitation collective — 1 article
 

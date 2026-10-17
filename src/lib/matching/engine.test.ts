@@ -1241,6 +1241,11 @@ describe("moteur matching — cartographie des catégories sans obligation", () 
         // l'appareil dit « aucune échéance calculée ». Signalé au rendu du lot,
         // pas comblé : rien n'a été décidé pour ce cas.
         "INSTALLATION_GAZ",
+        // SCENE, entrée le 2026-10-17 (sous-lot G, chapitre L) : ses lignes ne
+        // visent que les salles de type L ou P des catégories 1 à 4 (L 1 § 2,
+        // L 1 § 3, PE 1 § 1). Hors de là, la scène porte « aucune échéance
+        // calculée », ce que son aide dit.
+        "SCENE",
         // EPI, ajoutée le 2026-09-04 : déclarable et volontairement sans
         // obligation. Le dirigeant pouvait DIRE qu'il fournit des équipements
         // de protection — la question `epiPresents` de la fiche
@@ -1370,6 +1375,10 @@ describe("moteur matching — cartographie des catégories sans obligation", () 
         // l'établissement (`incendie-erp-pe4-entretien-installations-techniques`).
         // L'appareil porte « aucune échéance calculée », ce qui est vrai.
         "INSTALLATION_GAZ",
+        // SCENE, entrée le 2026-10-17 (sous-lot G) : le chapitre L ne vaut
+        // qu'en catégories 1 à 4 (PE 1 § 1 écarte le livre II en 5ᵉ, et le
+        // livre III n'y renvoie pas), et pour les types L et P seulement.
+        "SCENE",
       ],
     },
   ];

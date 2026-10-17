@@ -5,7 +5,7 @@
      du script. Pour le mettre à jour : pnpm verification --ecrire -->
 
 **Généré le** : 2026-10-17
-**Référentiel** : `2026-10-17.6`
+**Référentiel** : `2026-10-17.7`
 **Régénérer** : `pnpm verification --ecrire`
 
 Ce document répond à une question, et à une seule : **de quoi le
@@ -83,20 +83,20 @@ repose sur un texte que personne n'a ouvert.
 
 ## 2. Où en est-on
 
-**200 obligations**, **435 références** — 116 obligations en citent plus d'une.
+**204 obligations**, **450 références** — 120 obligations en citent plus d'une.
 
 | degré | obligations (au plancher) | part | dont fondements | références | part |
 | --- | --- | --- | --- | --- | --- |
-| 5 · lu à la source, verbatim relevé | 110 | 55 % | 117 | 288 | 66 % |
-| 4 · lu à la source par un agent, verbatim rapporté | 86 | 43 % | 83 | 142 | 33 % |
-| 3 · lu et daté, aucun verbatim | 3 | 2 % | 0 | 4 | 1 % |
-| 2 · lu ailleurs qu'à la source | 1 | 1 % | 0 | 1 | 0 % |
+| 5 · lu à la source, verbatim relevé | 114 | 56 % | 121 | 303 | 67 % |
+| 4 · lu à la source par un agent, verbatim rapporté | 86 | 42 % | 83 | 142 | 32 % |
+| 3 · lu et daté, aucun verbatim | 3 | 1 % | 0 | 4 | 1 % |
+| 2 · lu ailleurs qu'à la source | 1 | 0 % | 0 | 1 | 0 % |
 | 1 · au corpus, aucune trace de lecture | 0 | 0 % | 0 | 0 | 0 % |
 | 0 · rien à ouvrir | 0 | 0 % | 0 | 0 | 0 % |
 
-**196 obligations sur 200 (98 %)** reposent, jusqu'à leur dernière référence de contexte, sur des textes lus à la source avec verbatim relevé.
+**200 obligations sur 204 (98 %)** reposent, jusqu'à leur dernière référence de contexte, sur des textes lus à la source avec verbatim relevé.
 
-**3 obligations (2 %)** citent au moins un texte ouvert et daté dont rien n'a été relevé. Ce n'est pas une lecture à refaire : c'est une lecture qu'on ne peut ni contrôler ni contredire sans rouvrir Légifrance.
+**3 obligations (1 %)** citent au moins un texte ouvert et daté dont rien n'a été relevé. Ce n'est pas une lecture à refaire : c'est une lecture qu'on ne peut ni contrôler ni contredire sans rouvrir Légifrance.
 
 **10 obligations sont mieux vérifiées sur leur fondement que sur l'ensemble de leurs références** — leur point faible est une référence de contexte, celle que le dossier de relecture replie dans un « + N réf. » : `elec-travail-consignation-registre`, `elec-travail-habilitation-personnel`, `elec-salarie-habilitation`, `elec-salarie-attestation-medicale-voisinage`, `elec-travail-rapport-quadriennal`, `incendie-erp-pe4-entretien-installations-techniques`, `incendie-travail-alarme-sonore`, `incendie-registre-securite`, `incendie-hotel-po-instruction-personnel-semestrielle`, `sante-travail-etablissement-adhesion-spst`.
 
@@ -108,11 +108,11 @@ repose sur un texte que personne n'a ouvert.
 
 | ancrage | références | part |
 | --- | --- | --- |
-| ancrée | 411 | 94 % |
+| ancrée | 426 | 95 % |
 | divergente | 1 | 0 % |
 | jamais constatée | 23 | 5 % |
 
-**9 obligations sur 200 (5 %) ne portent aucune version constatée, sur aucune de leurs références.** Le jour où l'un de leurs textes est modifié, rien dans le dépôt ne pourra le signaler : l'absence de repère se lit comme « à vérifier », jamais comme « à jour ».
+**9 obligations sur 204 (4 %) ne portent aucune version constatée, sur aucune de leurs références.** Le jour où l'un de leurs textes est modifié, rien dans le dépôt ne pourra le signaler : l'absence de repère se lit comme « à vérifier », jamais comme « à jour ».
 
 **1 obligation déclare une version que le corpus contredit** : `incendie-hotel-po-controle-annuel-electricite`. À trancher, pas à relire.
 
@@ -129,13 +129,13 @@ repose sur un texte que personne n'a ouvert.
 | `cuisson_hotte` | 8 | 11 | 4 | 4 | · | · | · | · | 8 / 8 — 100 % | 1 / 11 | 2026-08-27 → 2026-10-17 |
 | `eau_chaude_sanitaire` | 2 | 8 | · | 2 | · | · | · | · | 2 / 2 — 100 % | 0 / 8 | 2026-09-20 |
 | `eclairage` | 1 | 2 | · | 1 | · | · | · | · | 1 / 1 — 100 % | 0 / 2 | 2026-09-01 → 2026-09-02 |
-| `electricite` | 14 | 24 | 5 | 7 | 1 | 1 | · | · | 12 / 14 — 86 % | 2 / 24 | 2026-08-26 → 2026-10-07 |
+| `electricite` | 16 | 30 | 7 | 7 | 1 | 1 | · | · | 14 / 16 — 88 % | 2 / 30 | 2026-08-26 → 2026-10-17 |
 | `epi` | 5 | 18 | 5 | · | · | · | · | · | 5 / 5 — 100 % | 0 / 18 | 2026-09-04 |
 | `equipement_sous_pression` | 1 | 1 | 1 | · | · | · | · | · | 1 / 1 — 100 % | 0 / 1 | 2026-09-01 |
 | `etablissement_sportif` | 2 | 5 | 2 | · | · | · | · | · | 2 / 2 — 100 % | 0 / 5 | 2026-10-17 |
 | `formation_securite` | 11 | 32 | 1 | 10 | · | · | · | · | 11 / 11 — 100 % | 0 / 32 | 2026-08-31 → 2026-09-27 |
 | `froid` | 8 | 16 | 8 | · | · | · | · | · | 8 / 8 — 100 % | 16 / 16 | 2026-08-26 → 2026-09-27 |
-| `incendie` | 58 | 147 | 47 | 10 | 1 | · | · | · | 57 / 58 — 98 % | 4 / 147 | 2026-08-26 → 2026-10-17 |
+| `incendie` | 60 | 156 | 49 | 10 | 1 | · | · | · | 59 / 60 — 98 % | 4 / 156 | 2026-08-26 → 2026-10-17 |
 | `information_travailleurs` | 2 | 2 | · | 2 | · | · | · | · | 2 / 2 — 100 % | 0 / 2 | 2026-08-31 → 2026-09-26 |
 | `levage` | 11 | 30 | 10 | 1 | · | · | · | · | 11 / 11 — 100 % | 0 / 30 | 2026-08-26 → 2026-09-02 |
 | `locaux_sociaux` | 4 | 4 | 2 | 2 | · | · | · | · | 4 / 4 — 100 % | 0 / 4 | 2026-08-31 → 2026-09-26 |
@@ -158,8 +158,8 @@ Aucun domaine n'est entièrement dépourvu de verbatim.
 
 |  | obl. | réf. | 5 | 4 | 3 | 2 | 1 | 0 | vérifiées à la source | sans ancre | lu entre |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `equipement` | 95 | 197 | 61 | 33 | 1 | · | · | · | 94 / 95 — 99 % | 22 / 197 | 2026-08-26 → 2026-10-17 |
-| `etablissement` | 91 | 205 | 49 | 40 | 2 | · | · | · | 89 / 91 — 98 % | 0 / 205 | 2026-08-26 → 2026-10-17 |
+| `equipement` | 96 | 200 | 62 | 33 | 1 | · | · | · | 95 / 96 — 99 % | 22 / 200 | 2026-08-26 → 2026-10-17 |
+| `etablissement` | 94 | 217 | 52 | 40 | 2 | · | · | · | 92 / 94 — 98 % | 0 / 217 | 2026-08-26 → 2026-10-17 |
 | `salarie` | 14 | 33 | · | 13 | · | 1 | · | · | 13 / 14 — 93 % | 1 / 33 | 2026-08-27 → 2026-10-07 |
 
 Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, mesuré au plancher — **5** première main, **4** agent + verbatim, **3** lu sans verbatim, **2** indirect, **1** sans trace, **0** non rattaché.
@@ -172,20 +172,20 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 | --- | --- | --- | --- |
 | 2026-08-26 | 26 | 6 % | 26 |
 | 2026-08-27 | 7 | 2 % | 4 |
-| 2026-08-31 | 59 | 14 % | 29 |
-| 2026-09-01 | 117 | 27 % | 73 |
+| 2026-08-31 | 59 | 13 % | 29 |
+| 2026-09-01 | 117 | 26 % | 73 |
 | 2026-09-02 | 18 | 4 % | 15 |
 | 2026-09-04 | 19 | 4 % | 6 |
-| 2026-09-20 | 11 | 3 % | 4 |
+| 2026-09-20 | 11 | 2 % | 4 |
 | 2026-09-26 | 26 | 6 % | 21 |
-| 2026-09-27 | 37 | 9 % | 35 |
-| 2026-10-07 | 33 | 8 % | 22 |
+| 2026-09-27 | 37 | 8 % | 35 |
+| 2026-10-07 | 35 | 8 % | 24 |
 | 2026-10-13 | 2 | 0 % | 1 |
-| 2026-10-14 | 29 | 7 % | 12 |
+| 2026-10-14 | 29 | 6 % | 12 |
 | 2026-10-16 | 16 | 4 % | 12 |
-| 2026-10-17 | 35 | 8 % | 21 |
+| 2026-10-17 | 48 | 11 % | 25 |
 
-435 des 435 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-10-17.
+450 des 450 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-10-17.
 
 Ces dates ne sont pas un âge : elles disent quand quelqu'un a ouvert le
 texte, pas depuis quand la version lue est en vigueur. Une lecture d'hier
@@ -201,12 +201,12 @@ que rien ne cite n'apparaît donc dans aucun degré ci-dessus — et le prendre
 pour du travail restant est exactement l'erreur qui a failli faire relancer
 une relecture déjà faite.
 
-**1075 articles dépouillés ne sont cités par aucune obligation**, répartis sur 61 corpus.
+**1156 articles dépouillés ne sont cités par aucune obligation**, répartis sur 61 corpus.
 
 | corpus | articles non cités | sur | lus |
 | --- | --- | --- | --- |
-| `arrete-1980-livre-2-titre-2` | 402 | 420 | 2026-10-14 → 2026-10-17 |
-| `arrete-1980-livre-2` | 302 | 348 | 2026-09-01 → 2026-10-17 |
+| `arrete-1980-livre-2-titre-2` | 485 | 510 | 2026-10-14 → 2026-10-17 |
+| `arrete-1980-livre-2` | 300 | 348 | 2026-09-01 → 2026-10-17 |
 | `arrete-1980-livre-3` | 46 | 59 | 2026-08-26 → 2026-10-17 |
 | `code-travail-travail-en-hauteur` | 33 | 33 | 2026-09-01 → 2026-09-27 |
 | `code-sport-etablissements-aps` | 20 | 25 | 2026-10-17 |
@@ -273,7 +273,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 
 ---
 
-## 8. Les 200 obligations
+## 8. Les 204 obligations
 
 | obligation | domaine | porteur | réf. | fondement | plancher | sans ancre | lu |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -388,7 +388,9 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `elec-erp-groupe-electrogene-annuel` | electricite | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-27 → 2026-10-07 |
 | `elec-erp-groupe-electrogene-quinzaine` | electricite | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-10-07 |
 | `elec-erp-presence-personne-qualifiee` | electricite | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-10-07 |
+| `elec-erp-presence-personne-qualifiee-scene-n3` | electricite | etablissement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-10-07 → 2026-10-17 |
 | `incendie-hotel-po-controle-annuel-electricite` | electricite | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-10-07 |
+| `scene-erp-materiels-installations-temporaires-annuelle` | electricite | etablissement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-10-17 |
 | `epi-etablissement-consigne-utilisation` | epi | etablissement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-04 |
 | `epi-maintien-etat-conformite` | epi | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-04 |
 | `epi-verification-generale-periodique` | epi | equipement | 5 | 5 · première main | 5 · première main | 0 / 5 | 2026-09-04 |
@@ -427,7 +429,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `incendie-erp-hotel-plans-evacuation-niveaux` | incendie | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-10-14 |
 | `incendie-erp-interdiction-fumer-affichee` | incendie | etablissement | 7 | 5 · première main | 5 · première main | 0 / 7 | 2026-10-14 → 2026-10-16 |
 | `incendie-erp-modalites-appel-pompiers-affichees` | incendie | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-10-16 |
-| `incendie-erp-personnel-designe-moyens-secours` | incendie | etablissement | 9 | 5 · première main | 5 · première main | 0 / 9 | 2026-10-14 → 2026-10-17 |
+| `incendie-erp-personnel-designe-moyens-secours` | incendie | etablissement | 11 | 5 · première main | 5 · première main | 0 / 11 | 2026-10-14 → 2026-10-17 |
 | `incendie-erp-personnel-qualifie-detection` | incendie | etablissement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-10-17 |
 | `incendie-erp-plan-intervention-entrees` | incendie | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-10-16 |
 | `incendie-erp-ria-annuelle` | incendie | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-10-07 |
@@ -453,6 +455,8 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `incendie-travail-extincteurs-revision-atelier-decennale` | incendie | equipement | 3 | 5 · première main | 5 · première main | 1 / 3 | 2026-09-01 → 2026-10-07 |
 | `incendie-travail-instructions-evacuation` | incendie | etablissement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-01 → 2026-09-27 |
 | `incendie-travail-moyens-lutte` | incendie | equipement | 3 | 5 · première main | 5 · première main | 1 / 3 | 2026-09-01 → 2026-10-07 |
+| `scene-erp-depoussierage-annuel` | incendie | equipement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-10-17 |
+| `scene-erp-verifications-triennales-organisme-agree` | incendie | etablissement | 4 | 5 · première main | 5 · première main | 0 / 4 | 2026-10-07 → 2026-10-17 |
 | `levage-epreuve-initiale-fonctionnement` | levage | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-08-26 → 2026-09-01 |
 | `levage-examen-adequation-mise-en-service` | levage | equipement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-08-26 → 2026-09-01 |
 | `levage-registre-securite-consignation` | levage | equipement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-09-01 |
@@ -483,7 +487,7 @@ demande le plus de travail.
 
 ---
 
-## 9. Les 435 références, une par une
+## 9. Les 450 références, une par une
 
 `prescrit` et `verbatim` sont les deux champs du corpus qui rendent une
 lecture relisible : ce que l'article impose, en une phrase, et la phrase
@@ -510,6 +514,9 @@ refaire pour la contredire.
 | `elec-erp-cat1-4-annuelle` | fondement | Arrêté du 25 juin 1980, art. EL 19 § 3 (vérifications périodiques des installations non modifiées) | EL 19 | arrete-1980-livre-2 | retenu | 2026-09-27 | api_legifrance | ✓ | ✓ | 2010-01-23 | 2010-01-23 | 5 · première main | ancrée |
 | `elec-erp-groupe-electrogene-quinzaine` | fondement | Arrêté du 25 juin 1980, art. EL 18 § 4 (première périodicité) — livre II, établissements des quatre premières catégories | EL 18 | arrete-1980-livre-2 | retenu | 2026-10-07 | api_legifrance | ✓ | ✓ | 2019-07-01 | 2019-07-01 | 5 · première main | ancrée |
 | `elec-erp-presence-personne-qualifiee` | fondement | Arrêté du 25 juin 1980, art. EL 18 § 2 (présence physique d'une personne qualifiée) | EL 18 | arrete-1980-livre-2 | retenu | 2026-10-07 | api_legifrance | ✓ | ✓ | 2019-07-01 | 2019-07-01 | 5 · première main | ancrée |
+| `elec-erp-presence-personne-qualifiee-scene-n3` | fondement | Arrêté du 25 juin 1980, art. L 57 § 7 (présence d'une personne qualifiée rendue applicable, en aggravation, aux établissements de 3e catégorie avec espace scénique) — livre II, titre II, type L, établissements des quatre premières catégories | L 57 § 7 — présence d'une personne qualifiée en 3e catégorie | arrete-1980-livre-2-titre-2 | retenu | 2026-10-17 | api_legifrance | ✓ | ✓ | 2023-11-04 | 2023-11-04 | 5 · première main | ancrée |
+| `elec-erp-presence-personne-qualifiee-scene-n3` | contexte 1 | Arrêté du 25 juin 1980, art. EL 18 § 2 (présence physique d'une personne qualifiée) — livre II, établissements des quatre premières catégories | EL 18 | arrete-1980-livre-2 | retenu | 2026-10-07 | api_legifrance | ✓ | ✓ | 2019-07-01 | 2019-07-01 | 5 · première main | ancrée |
+| `elec-erp-presence-personne-qualifiee-scene-n3` | contexte 2 | Arrêté du 25 juin 1980, art. L 1 § 3 (salles de danse : le chapitre ne s'applique qu'aux installations de projection ou aménagements de spectacle) — livre II, titre II, type L, établissements des quatre premières catégories | L 1 | arrete-1980-livre-2-titre-2 | sans_objet | 2026-10-17 | api_legifrance | — | ✓ | 2022-02-10 | 2022-02-10 | 5 · première main | ancrée |
 | `elec-erp-groupe-electrogene-annuel` | fondement | Arrêté du 25 juin 1980, art. EL 18 § 4 (entretien et essais des groupes électrogènes de sécurité) — livre II, établissements des quatre premières catégories | EL 18 | arrete-1980-livre-2 | retenu | 2026-10-07 | api_legifrance | ✓ | ✓ | 2019-07-01 | 2019-07-01 | 5 · première main | ancrée |
 | `elec-erp-groupe-electrogene-annuel` | contexte 1 | Arrêté du 25 juin 1980, art. EL 19 (vérification annuelle) — livre II, établissements des quatre premières catégories | EL 19 | arrete-1980-livre-2 | retenu | 2026-09-27 | api_legifrance | ✓ | ✓ | 2010-01-23 | 2010-01-23 | 5 · première main | ancrée |
 | `incendie-hotel-po-controle-annuel-electricite` | fondement | Arrêté du 25 juin 1980, art. PO 1 § 3 (règles spécifiques aux hôtels) | PO 1 | arrete-1980-livre-3 | retenu | 2026-10-07 | api_legifrance | ✓ | ✓ | 2011-10-30 | 2018-01-01 | 5 · première main | divergente |
@@ -607,8 +614,10 @@ refaire pour la contredire.
 | `incendie-erp-personnel-designe-moyens-secours` | contexte 4 | Arrêté du 25 juin 1980, art. P 21 § 2 (employés spécialement désignés, entraînés à la mise en œuvre des moyens de secours, sans service de sécurité incendie) — livre II, titre II, type P, établissements des quatre premières catégories | P 21 | arrete-1980-livre-2-titre-2 | retenu | 2026-10-16 | api_legifrance | — | ✓ | 1983-09-04 | 1983-09-04 | 5 · première main | ancrée |
 | `incendie-erp-personnel-designe-moyens-secours` | contexte 5 | Arrêté du 25 juin 1980, art. S 15 § 3 (personnes spécialement désignées par l'exploitant, entraînées à la mise en œuvre des moyens d'extinction) — livre II, titre II, type S, établissements des quatre premières catégories | S 15 | arrete-1980-livre-2-titre-2 | retenu | 2026-10-16 | api_legifrance | — | ✓ | 2005-03-29 | 2005-03-29 | 5 · première main | ancrée |
 | `incendie-erp-personnel-designe-moyens-secours` | contexte 6 | Arrêté du 25 juin 1980, art. Y 19 § 2 (employés spécialement désignés, entraînés à la mise en œuvre de moyens de secours, sans service de sécurité incendie) — livre II, titre II, type Y, établissements des quatre premières catégories | Y 19 | arrete-1980-livre-2-titre-2 | retenu | 2026-10-16 | api_legifrance | — | ✓ | 1995-10-18 | 1995-10-18 | 5 · première main | ancrée |
-| `incendie-erp-personnel-designe-moyens-secours` | contexte 7 | Arrêté du 25 juin 1980, art. MS 48 § 1 (formation des personnes désignées par l'exploitant, conduite à son initiative et sous sa responsabilité) — livre II, établissements des quatre premières catégories | MS 48 | arrete-1980-livre-2 | retenu | 2026-10-14 | api_legifrance | ✓ | ✓ | 2010-05-16 | 2010-05-16 | 5 · première main | ancrée |
-| `incendie-erp-personnel-designe-moyens-secours` | contexte 8 | Arrêté du 25 juin 1980, art. MS 72 § 1 (personnel initié à la mise en œuvre des moyens d'extinction et d'alerte, information maintenue dans le temps) — livre II, établissements des quatre premières catégories | MS 72 | arrete-1980-livre-2 | retenu | 2026-10-17 | api_legifrance | — | ✓ | 1980-08-15 | 1980-08-15 | 5 · première main | ancrée |
+| `incendie-erp-personnel-designe-moyens-secours` | contexte 7 | Arrêté du 25 juin 1980, art. L 14 (une personne désignée, ayant reçu une formation de sécurité incendie ; applicable aussi aux établissements existants) — livre II, titre II, type L, établissements des quatre premières catégories | L 14 | arrete-1980-livre-2-titre-2 | retenu | 2026-10-17 | api_legifrance | ✓ | ✓ | 2007-06-22 | 2007-06-22 | 5 · première main | ancrée |
+| `incendie-erp-personnel-designe-moyens-secours` | contexte 8 | Arrêté du 25 juin 1980, art. MS 46 § 1 a (personnes désignées par l'exploitant et entraînées à la manœuvre des moyens de secours et à l'évacuation du public) — livre II, établissements des quatre premières catégories | MS 46 | arrete-1980-livre-2 | sans_objet | 2026-10-17 | api_legifrance | — | ✓ | 2010-05-16 | 2010-05-16 | 5 · première main | ancrée |
+| `incendie-erp-personnel-designe-moyens-secours` | contexte 9 | Arrêté du 25 juin 1980, art. MS 48 § 1 (formation des personnes désignées par l'exploitant, conduite à son initiative et sous sa responsabilité) — livre II, établissements des quatre premières catégories | MS 48 | arrete-1980-livre-2 | retenu | 2026-10-14 | api_legifrance | ✓ | ✓ | 2010-05-16 | 2010-05-16 | 5 · première main | ancrée |
+| `incendie-erp-personnel-designe-moyens-secours` | contexte 10 | Arrêté du 25 juin 1980, art. MS 72 § 1 (personnel initié à la mise en œuvre des moyens d'extinction et d'alerte, information maintenue dans le temps) — livre II, établissements des quatre premières catégories | MS 72 | arrete-1980-livre-2 | retenu | 2026-10-17 | api_legifrance | — | ✓ | 1980-08-15 | 1980-08-15 | 5 · première main | ancrée |
 | `incendie-erp-interdiction-fumer-affichee` | fondement | Arrêté du 25 juin 1980, art. M 44 (défense de fumer dans les locaux de vente, affichée bien en évidence) — livre II, titre II, type M, établissements des quatre premières catégories | M 44 | arrete-1980-livre-2-titre-2 | retenu | 2026-10-14 | api_legifrance | ✓ | ✓ | 1982-02-03 | 1982-02-03 | 5 · première main | ancrée |
 | `incendie-erp-interdiction-fumer-affichee` | contexte 1 | Arrêté du 25 juin 1980, art. M 47 § 2 (défense de fumer dans les locaux à risques importants) — livre II, titre II, type M, établissements des quatre premières catégories | M 47 | arrete-1980-livre-2-titre-2 | retenu | 2026-10-14 | api_legifrance | ✓ | ✓ | 1982-02-03 | 1982-02-03 | 5 · première main | ancrée |
 | `incendie-erp-interdiction-fumer-affichee` | contexte 2 | Arrêté du 25 juin 1980, art. M 58 (défense de fumer dans les réserves et les locaux de réception, d'emballage, d'expédition) — livre II, titre II, type M, établissements des quatre premières catégories | M 58 | arrete-1980-livre-2-titre-2 | retenu | 2026-10-14 | api_legifrance | ✓ | ✓ | 1982-02-03 | 1982-02-03 | 5 · première main | ancrée |
@@ -927,3 +936,13 @@ refaire pour la contredire.
 | `sport-etablissement-secours-r322-4` | contexte 2 | L. 322-2 (garanties d'hygiène et de sécurité des établissements où sont pratiquées des activités physiques ou sportives) | C. sport L. 322-2 | code-sport-etablissements-aps | sans_objet | 2026-10-17 | api_legifrance | ✓ | ✓ | 2006-05-25 | 2006-05-25 | 5 · première main | ancrée |
 | `sport-etablissement-buts-plan-verification` | fondement | R. 322-25 (entretien régulier, plan de vérification et d'entretien, registre des essais et contrôles) | C. sport R. 322-25 | code-sport-etablissements-aps | retenu | 2026-10-17 | api_legifrance | ✓ | ✓ | 2016-04-21 | 2016-04-21 | 5 · première main | ancrée |
 | `sport-etablissement-buts-plan-verification` | contexte 1 | R. 322-19 (cages de buts et buts de basket-ball, plein air ou salle ; buts de moins de 10 kg exclus) | C. sport R. 322-19 | code-sport-etablissements-aps | retenu | 2026-10-17 | api_legifrance | ✓ | ✓ | 2016-07-01 | 2016-07-01 | 5 · première main | ancrée |
+| `scene-erp-verifications-triennales-organisme-agree` | fondement | Arrêté du 25 juin 1980, art. L 57 § 1 a (vérifications techniques tous les trois ans par des personnes ou des organismes agréés) — livre II, titre II, type L, établissements des quatre premières catégories | L 57 | arrete-1980-livre-2-titre-2 | retenu | 2026-10-17 | api_legifrance | ✓ | ✓ | 2023-11-04 | 2023-11-04 | 5 · première main | ancrée |
+| `scene-erp-verifications-triennales-organisme-agree` | contexte 1 | Arrêté du 25 juin 1980, art. GE 7 § 1 (vérifications par des organismes agréés dans les établissements des quatre premières catégories, lorsque le règlement l'impose) — livre II, établissements des quatre premières catégories | GE 7 | arrete-1980-livre-2 | retenu | 2026-10-07 | api_legifrance | ✓ | ✓ | 2007-11-19 | 2007-11-19 | 5 · première main | ancrée |
+| `scene-erp-verifications-triennales-organisme-agree` | contexte 2 | Arrêté du 25 juin 1980, art. L 49 (terminologie : espace scénique isolable, intégré ou adossé) — livre II, titre II, type L, établissements des quatre premières catégories | L 49 | arrete-1980-livre-2-titre-2 | sans_objet | 2026-10-17 | api_legifrance | — | ✓ | 2007-06-22 | 2007-06-22 | 5 · première main | ancrée |
+| `scene-erp-verifications-triennales-organisme-agree` | contexte 3 | Arrêté du 25 juin 1980, art. L 1 (établissements assujettis au chapitre ; § 3, salles de danse comportant des aménagements de spectacle) — livre II, titre II, type L, établissements des quatre premières catégories | L 1 | arrete-1980-livre-2-titre-2 | sans_objet | 2026-10-17 | api_legifrance | — | ✓ | 2022-02-10 | 2022-02-10 | 5 · première main | ancrée |
+| `scene-erp-depoussierage-annuel` | fondement | Arrêté du 25 juin 1980, art. L 57 § 3 (dépoussiérage annuel de l'espace scénique) — livre II, titre II, type L, établissements des quatre premières catégories | L 57 § 3 — dépoussiérage annuel de l'espace scénique | arrete-1980-livre-2-titre-2 | retenu | 2026-10-17 | api_legifrance | ✓ | ✓ | 2023-11-04 | 2023-11-04 | 5 · première main | ancrée |
+| `scene-erp-depoussierage-annuel` | contexte 1 | Arrêté du 25 juin 1980, art. L 49 (terminologie : espace scénique isolable, intégré ou adossé) — livre II, titre II, type L, établissements des quatre premières catégories | L 49 | arrete-1980-livre-2-titre-2 | sans_objet | 2026-10-17 | api_legifrance | — | ✓ | 2007-06-22 | 2007-06-22 | 5 · première main | ancrée |
+| `scene-erp-depoussierage-annuel` | contexte 2 | Arrêté du 25 juin 1980, art. L 1 (établissements assujettis au chapitre ; § 3, salles de danse comportant des aménagements de spectacle) — livre II, titre II, type L, établissements des quatre premières catégories | L 1 | arrete-1980-livre-2-titre-2 | sans_objet | 2026-10-17 | api_legifrance | — | ✓ | 2022-02-10 | 2022-02-10 | 5 · première main | ancrée |
+| `scene-erp-materiels-installations-temporaires-annuelle` | fondement | Arrêté du 25 juin 1980, art. L 13 § 5 (matériels des installations temporaires ou semi-permanentes : vérification annuelle par un organisme agréé) — livre II, titre II, type L, établissements des quatre premières catégories | L 13 | arrete-1980-livre-2-titre-2 | retenu | 2026-10-17 | api_legifrance | ✓ | ✓ | 2007-06-22 | 2007-06-22 | 5 · première main | ancrée |
+| `scene-erp-materiels-installations-temporaires-annuelle` | contexte 1 | Arrêté du 25 juin 1980, art. EL 23 (installations semi-permanentes : vérification initiale, puis à chaque installation) — livre II, établissements des quatre premières catégories | EL 23 | arrete-1980-livre-2 | hors_perimetre | 2026-10-17 | api_legifrance | — | ✓ | 2024-05-24 | 2024-05-24 | 5 · première main | ancrée |
+| `scene-erp-materiels-installations-temporaires-annuelle` | contexte 2 | Arrêté du 25 juin 1980, art. L 1 (établissements assujettis au chapitre ; § 3, salles de danse comportant des aménagements de spectacle) — livre II, titre II, type L, établissements des quatre premières catégories | L 1 | arrete-1980-livre-2-titre-2 | sans_objet | 2026-10-17 | api_legifrance | — | ✓ | 2022-02-10 | 2022-02-10 | 5 · première main | ancrée |

@@ -635,6 +635,11 @@ enum CategorieEquipement {
   // (code du sport, art. R. 322-19) — leur déclaration fait naître le plan
   // de vérification et d'entretien de l'art. R. 322-25.
   BUT_PANIER_SPORTIF
+  // 2026-10-17 : l'espace scénique d'une salle de type L (ou P, L 1 § 3) des
+  // catégories 1 à 4 (arrêté du 25 juin 1980, art. L 49) — dépoussiérage annuel
+  // (L 57 § 3), une ligne par scène, et trois lignes d'établissement dues dès
+  // qu'une scène est déclarée (L 57 § 1 a, L 13 § 5, L 57 § 7).
+  SCENE
   AUTRE
 }
 
