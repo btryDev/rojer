@@ -4120,6 +4120,7 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       modifiePar: null,
       luLe: "2026-10-16",
       lecture: "api_legifrance",
+      historique: "~~`hors_perimetre` / `risque_specialise`, motif commun `MOTIF_PISCINE` (constante retirée le 2026-10-17) : « Piscines (type X) : traitement des eaux et ses produits (chlore, brome, ozone, hypochlorite), pédiluves, affichage de l'effectif des bassins. L'exclusion `risque_specialise` les nomme (« équipements sportifs, piscines »). Les vérifications journalières, l'appareil respiratoire « vérifié périodiquement » et l'entraînement du personnel de l'annexe sont des actes réels de l'exploitant, et c'est précisément l'expertise que l'exclusion dit ne pas porter. Seule la salle de sport hors piscine est mise en question (X 25). »~~ ; ~~`citationCle` : « CHLORE LIQUÉFIÉ Une installation de désinfection des eaux des piscines fonctionnant au chlore liquéfié (ou chlore gazeux ) doit respecter les dispositions suivantes : A. - Généralités Tous les récipients, en service ou en réserve, doivent être placés à l'abri des radiations solaires et des agents atmosphériques, dans un emplacement clos, spécialement aménagé, réservé à cet effet et comportant une porte fermant à clé. […] »~~ [2026-10-17, revue indépendante : une exclusion dit qu'aucune obligation d'exploitant n'en découle ; reclassé — voir le statut.]",
       citationCle: "L'installation de traitement doit faire l'objet, de la part de l'exploitant, de vérifications journalières destinées notamment à s'assurer, au moyen d'un chiffon imbibé d'ammoniaque, qu'il n'existe aucune fuite de chlore et que les récipients sont en parfait état.",
       // ~~statut: "hors_perimetre", exclusion: "risque_specialise", motif: MOTIF_PISCINE~~ —
       // 2026-10-17, revue indépendante : une exclusion dit « aucune obligation
@@ -4179,6 +4180,7 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       modifiePar: null,
       luLe: "2026-10-16",
       lecture: "api_legifrance",
+      historique: "~~`hors_perimetre` / `risque_specialise`, motif commun `MOTIF_PISCINE` (constante retirée le 2026-10-17) : « Piscines (type X) : traitement des eaux et ses produits (chlore, brome, ozone, hypochlorite), pédiluves, affichage de l'effectif des bassins. L'exclusion `risque_specialise` les nomme (« équipements sportifs, piscines »). Les vérifications journalières, l'appareil respiratoire « vérifié périodiquement » et l'entraînement du personnel de l'annexe sont des actes réels de l'exploitant, et c'est précisément l'expertise que l'exclusion dit ne pas porter. Seule la salle de sport hors piscine est mise en question (X 25). »~~ [2026-10-17, revue indépendante : une exclusion dit qu'aucune obligation d'exploitant n'en découle ; reclassé — voir le statut.]",
       citationCle: "§ 1. Différents modes de traitement des eaux des bassins des piscines sont décrits dans l'annexe du présent chapitre. Sous réserve des dispositions réglementaires relatives aux normes d'hygiène et de sécurité applicables aux piscines, tout autre procédé ne peut être utilisé qu'après avis de la commission centrale de sécurité sur le stockage du produit employé. § 2. […]",
       // ~~statut: "hors_perimetre", exclusion: "risque_specialise", motif: MOTIF_PISCINE~~ — 2026-10-17, revue indépendante.
       statut: "sans_objet",
@@ -4240,6 +4242,7 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       modifiePar: null,
       luLe: "2026-10-16",
       lecture: "api_legifrance",
+      historique: "~~`hors_perimetre` / `risque_specialise`, motif commun `MOTIF_PISCINE` (constante retirée le 2026-10-17) : « Piscines (type X) : traitement des eaux et ses produits (chlore, brome, ozone, hypochlorite), pédiluves, affichage de l'effectif des bassins. L'exclusion `risque_specialise` les nomme (« équipements sportifs, piscines »). Les vérifications journalières, l'appareil respiratoire « vérifié périodiquement » et l'entraînement du personnel de l'annexe sont des actes réels de l'exploitant, et c'est précisément l'expertise que l'exclusion dit ne pas porter. Seule la salle de sport hors piscine est mise en question (X 25). »~~ [2026-10-17, revue indépendante : une exclusion dit qu'aucune obligation d'exploitant n'en découle ; reclassé — voir le statut.]",
       citationCle: "La profondeur des pédiluves des piscines ne doit pas dépasser 0,15 mètre.",
       // ~~exclusion: "risque_specialise", motif: MOTIF_PISCINE~~ — 2026-10-17, revue indépendante : une profondeur de pédiluve est une règle de construction, aucun acte.
       statut: "hors_perimetre",
