@@ -96,7 +96,7 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
     "Ventilation mécanique contrôlée. Locaux à pollution spécifique à déclarer.",
   // 2026-10-17, sous-lot C : la seconde phrase est l'ADRESSE de CH 38 6°
   // (`declareA` du corpus, cité mot pour mot).
-  CTA: "Centrale de traitement d'air avec filtration et conditionnement. Rojer ne suit pas l'affichage « Danger d'incendie, filtres empoussiérés inflammables » aux accès des filtres d'une centrale qui traite plus de 10 000 m³/h ou dessert plusieurs locaux réservés au sommeil (art. CH 38, 6°).",
+  CTA: "Centrale de traitement d'air avec filtration et conditionnement. Dans un établissement recevant du public des catégories 1 à 4, Rojer ne suit pas l'affichage « Danger d'incendie, filtres empoussiérés inflammables » aux accès des filtres d'une centrale qui traite plus de 10 000 m³/h, d'une centrale qui dessert plusieurs locaux réservés au sommeil, ou d'un ensemble de centrales traitant au total plus de 10 000 m³/h (art. CH 38, 6°).",
   HOTTE_PRO:
     "Hotte au-dessus d'appareils de cuisson en cuisine professionnelle.",
   // 2026-10-17, sous-lot C : la seconde phrase est l'ADRESSE de GC 15 et de

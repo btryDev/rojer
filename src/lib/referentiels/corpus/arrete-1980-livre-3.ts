@@ -42,8 +42,6 @@
 // reclassés un par un (l'ancien motif est rayé dans `historique`).
 
 import type { Corpus } from "./types";
-import {
-} from "./motifs-livre-2";
 
 export const CORPUS_PE: Corpus = {
   id: "arrete-1980-livre-3",

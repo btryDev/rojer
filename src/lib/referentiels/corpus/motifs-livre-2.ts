@@ -64,13 +64,11 @@ export const SUITE_VERSION_FUTURE_REACTION_AU_FEU =
 export const SUITE_REDACTION_GAZ_2026 =
   " Rédaction issue de l'arrêté du 23 février 2025, en vigueur le 2026-01-01, lue dans cette version.";
 
-/** Suite d'un motif d'acte trouvé le 2026-10-17, en attente du sous-lot C. */
-// 2026-10-17, sous-lot C : plus aucun motif ne la porte — les
-// entrées qui l'employaient sont retenues ou annoncées, et leur `historique`
-// recopie la phrase rayée. Gardée pour l'histoire des commits ; ne plus
-// l'employer.
-export const SUITE_TRANSITOIRE_SOUS_LOT_C =
-  " À faire au sous-lot C ; transitoirement au § 9.";
+// ~~/** Suite d'un motif d'acte trouvé le 2026-10-17, en attente du sous-lot C. */~~
+// ~~export const SUITE_TRANSITOIRE_SOUS_LOT_C = " À faire au sous-lot C ;
+// transitoirement au § 9.";~~ — 2026-10-17, sous-lot C : retirée, plus aucun
+// motif ne la portait. Les entrées qui l'employaient sont retenues ou
+// annoncées, et leur `historique` recopie la phrase rayée.
 
 /** Adresse d'annonce : la phrase de manque de l'axe `categorie_erp` (déplacée ici depuis `arrete-1980-livre-2-titre-2.ts`). */
 export const DECLARE_A_CATEGORIE_ERP =
