@@ -185,12 +185,32 @@ export function referenceNommeLArticle(
   return nommes.size === 1 && nommes.has(designation(article).replace(/\. ?/, ". "));
 }
 
+/**
+ * Les types d'ERP dont le chapitre écrit que la disposition s'applique AUSSI
+ * aux établissements existants, « en aggravation des dispositions de
+ * l'article GN 10 » — par ligne. Pour un établissement qui déclare l'un
+ * d'eux, la mention GN 10 (« Peut ne pas s'appliquer à un établissement
+ * existant ») serait fausse : elle ne s'affiche pas.
+ *
+ * 2026-10-17, revue indépendante du sous-lot G (B1, décision de c6) : L 14 § 4
+ * — « En aggravation des dispositions de l'article GN 10, les dispositions du
+ * présent article sont applicables à tous les établissements existants ».
+ * Une table nommée, lue d'ici seulement : un fichier de données ne porte pas
+ * de règle d'affichage.
+ */
+export const GN10_AGGRAVE_PAR_TYPE: Readonly<Record<string, readonly TypeErp[]>> = {
+  "incendie-erp-personnel-designe-moyens-secours": ["L"],
+};
+
 export function fondementDe(
   obligation: Obligation,
   contexte?: ContexteFondement,
 ): FondementLigne | null {
   const f = fondementSansGn10(obligation, contexte);
-  return f && porteGn10(obligation) ? { ...f, gn10: true } : f;
+  const aggrave = (GN10_AGGRAVE_PAR_TYPE[obligation.id] ?? []).some((t) =>
+    (contexte?.typesErp ?? []).includes(t),
+  );
+  return f && porteGn10(obligation) && !aggrave ? { ...f, gn10: true } : f;
 }
 
 function fondementSansGn10(

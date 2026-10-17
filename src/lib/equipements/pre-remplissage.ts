@@ -212,12 +212,11 @@ export type ContexteEtablissement = {
 export const TYPES_ERP_EAU_CHAUDE_SUGGEREE: readonly TypeErp[] = ["O", "X"];
 
 /**
- * Les types d'ERP auxquels la scène est suggérée (2026-10-17, sous-lot G) :
- * L, et P par L 1 § 3 (« ça ne coûte rien de proposer », décision de la
- * propriétaire). Les catégories viennent de la ligne qui fonde la suggestion,
- * lues et jamais recopiées (`categoriesDeLaScene`).
+ * La ligne qui fonde la suggestion de la scène (2026-10-17, sous-lot G) : ses
+ * catégories ET ses types (L, et P par L 1 § 3) sont lus sur elle, jamais
+ * recopiés (revue de G, R5).
  */
-export const TYPES_ERP_SCENE_SUGGEREE: readonly TypeErp[] = ["L", "P"];
+const FONDEMENT_SCENE = "scene-erp-depoussierage-annuel";
 
 export function contexteDesSuggestions(etab: {
   codeNaf: string | null;
@@ -245,27 +244,30 @@ export function contexteDesSuggestions(etab: {
 }
 
 /**
- * Les catégories où le DAE se propose : celles de `dae-erp-detention`, LUES
- * sur l'obligation qui fonde la suggestion — jamais recopiées (revue c6). Si la
- * typologie s'élargit un jour (le 2° de R. 157-1), la suggestion suit.
+ * Les catégories d'ERP d'une obligation, LUES sur elle — jamais recopiées
+ * (revue c6). Si la typologie s'élargit un jour (le 2° de R. 157-1 pour le
+ * DAE), la suggestion suit. 2026-10-17, revue du sous-lot G (R5) : extraite
+ * de `categoriesDuDae`, qu'une copie pour la scène doublait.
  */
-function categoriesDuDae(): readonly CategorieErp[] {
-  const o = obligationParId("dae-erp-detention");
-  if (!o) throw new FondementInconnuError("dae-erp-detention");
-  const erp = o.typologies.erp;
+function categoriesDe(obligationId: string): readonly CategorieErp[] {
+  const erp = typologieErpDe(obligationId);
   return typeof erp === "object" && erp.categories ? erp.categories : [];
 }
 
-/** Les catégories où la scène se propose : celles du dépoussiérage, lues sur l'obligation. */
-function categoriesDeLaScene(): readonly CategorieErp[] {
-  const o = obligationParId("scene-erp-depoussierage-annuel");
-  if (!o) throw new FondementInconnuError("scene-erp-depoussierage-annuel");
-  const erp = o.typologies.erp;
-  return typeof erp === "object" && erp.categories ? erp.categories : [];
+/** Les types d'ERP d'une obligation, lus sur elle (même règle). */
+function typesDe(obligationId: string): readonly TypeErp[] {
+  const erp = typologieErpDe(obligationId);
+  return typeof erp === "object" && erp.types ? erp.types : [];
+}
+
+function typologieErpDe(obligationId: string) {
+  const o = obligationParId(obligationId);
+  if (!o) throw new FondementInconnuError(obligationId);
+  return o.typologies.erp;
 }
 
 function estCategorieDuDae(c: CategorieErp | null): boolean {
-  return c !== null && categoriesDuDae().includes(c);
+  return c !== null && categoriesDe("dae-erp-detention").includes(c);
 }
 
 function normNaf(naf: string | null | undefined): string {
@@ -454,7 +456,7 @@ export function suggererEquipements(ctx: ContexteEtablissement): Entree[] {
   // ---------------------------------------------------------------------------
   // R. 157-1 1° fait détenir un DAE aux seules catégories 1 à 4 ; le 2° (5ᵉ
   // catégorie, familles a à h) n'est pas encodé. La suggestion lit le champ
-  // de `dae-erp-detention`, qui la fonde (`categoriesDuDae`).
+  // de `dae-erp-detention`, qui la fonde (`categoriesDe`).
   if (ctx.estERP && estCategorieDuDae(ctx.categorieErp)) {
     ajoute({
       categorie: "DEFIBRILLATEUR",
@@ -501,8 +503,8 @@ export function suggererEquipements(ctx: ContexteEtablissement): Entree[] {
   if (
     ctx.estERP &&
     ctx.categorieErp !== null &&
-    categoriesDeLaScene().includes(ctx.categorieErp) &&
-    ctx.typesErp.some((t) => TYPES_ERP_SCENE_SUGGEREE.includes(t))
+    categoriesDe(FONDEMENT_SCENE).includes(ctx.categorieErp) &&
+    ctx.typesErp.some((t) => typesDe(FONDEMENT_SCENE).includes(t))
   ) {
     ajoute({
       categorie: "SCENE",

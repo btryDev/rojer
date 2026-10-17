@@ -20,8 +20,10 @@
  * seuls aménagements (« ça ne coûte rien de proposer »). c6 : L 57 § 1 a et
  * L 13 § 5 en lignes d'ÉTABLISSEMENT dues dès qu'une scène est déclarée,
  * L 57 § 3 par scène, L 57 § 7 en ligne sœur de la présence d'EL 18 § 2
- * (`electricite.ts`) ; L 57 § 1 b, § 4, L 63 § 4, L 55 et L 75 § 3 annoncés
- * dans l'aide de la catégorie (`DESCRIPTION_CATEGORIE.SCENE`).
+ * (`electricite.ts`) ; L 57 § 1 b, § 4, L 63 § 4, L 55, L 75 § 3 et L 32 § 1
+ * annoncés dans l'aide de la catégorie (`DESCRIPTION_CATEGORIE.SCENE`) ;
+ * AM 18 § 1, L 28 § 2, L 31 § 6 et, pour la cabine de projection, L 32 § 1,
+ * dans l'aide du type L (`AIDE_TYPE_ERP.L`).
  *
  * LA BORNE. `erp: { categories: N1–N4, types: ["L", "P"] }` : le chapitre ne
  * vaut qu'au-dessus des seuils de L 1 § 2 (catégories 1 à 4), et PE 1 § 1
@@ -122,7 +124,9 @@ export const obligationsScene: Obligation[] = [
         source: "ARRETE",
         reference:
           "Arrêté du 25 juin 1980, art. L 57 § 3 (dépoussiérage annuel de l'espace scénique) — livre II, titre II, type L, établissements des quatre premières catégories",
-        article: "L 57",
+        // 2026-10-17, revue du sous-lot G (R1) : l'entrée scindée, pour citer
+        // le § 3 et non le § 1 a (le PDF imprime l'extrait).
+        article: "L 57 § 3 — dépoussiérage annuel de l'espace scénique",
         url: URL_L_57,
         note: "« § 3. Un dépoussiérage annuel doit être effectué dans les cintres, les grils, les dessous, les fosses techniques, les planchers techniques, les dépôts, etc. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000048310306, en vigueur depuis le 2023-11-04, aucune version à venir.",
         versionConstatee: "2023-11-04",
@@ -149,7 +153,7 @@ export const obligationsScene: Obligation[] = [
     libelle:
       "Vérification annuelle par un organisme agréé du matériel d'éclairage de spectacle et d'effets scéniques monté pour une durée limitée (ERP des quatre premières catégories)",
     description:
-      "Dans une salle de type L — ou une salle de danse de type P pour ses aménagements de spectacle — des quatre premières catégories, le matériel des installations temporaires ou semi-permanentes d'éclairage de spectacle et d'effets scéniques doit justifier d'une vérification annuelle par un organisme agréé (art. L 13 § 5). Une installation semi-permanente est autorisée pour trois mois au plus. Le texte ne dit pas qui fait vérifier : quand ce matériel appartient à une compagnie ou à un prestataire, c'est son rapport de vérification qui en justifie. Les vérifications de l'installation elle-même, au premier montage puis à chaque montage, relèvent d'un autre article (EL 23), que Rojer ne suit pas.",
+      "Dans une salle de type L — ou une salle de danse de type P pour ses aménagements de spectacle — des quatre premières catégories, le matériel des installations temporaires ou semi-permanentes d'éclairage de spectacle et d'effets scéniques doit justifier d'une vérification annuelle par un organisme agréé (art. L 13 § 5). Une installation semi-permanente est autorisée pour trois mois au plus. Le texte ne dit pas qui doit faire vérifier ce matériel quand il appartient à une compagnie ou à un prestataire. Les vérifications de l'installation elle-même, au premier montage puis à chaque montage, relèvent d'un autre article (EL 23), que Rojer ne suit pas.",
     referencesLegales: [
       {
         source: "ARRETE",
@@ -182,6 +186,6 @@ export const obligationsScene: Obligation[] = [
     porteur: "etablissement",
     siEquipementDeclare: ["SCENE"],
     notesInternes:
-      "ENTRÉE LE 2026-10-17, sous-lot G (porteur établissement, décision de c6 du 2026-10-17).\n\nCE QUE L 13 § 5 AJOUTE À EL 23. EL 23 vise l'INSTALLATION semi-permanente — vérification initiale, puis « à chaque installation » : un acte daté par un événement, le montage. L 13 § 5 ajoute une vérification ANNUELLE des MATÉRIELS (projecteurs, gradateurs, coffrets, câbles), par un organisme agréé, quel que soit le nombre de montages. Deux objets : pas de doublon.\n\nCHAMP, ET CE QUE LA LIGNE NE SAIT PAS. L 13 est au sous-chapitre Ier (« Mesures applicables à tous les établissements ») : une salle L qui monte des éclairages de spectacle sans déclarer de scène y est soumise et ne reçoit pas cette ligne — un faux négatif accepté, la scène déclarée étant la seule approximation dont le produit dispose (« on n'alourdit pas »). « Temporaires » n'est défini ni par L 13 ni par EL 23 (lu en entier) ; « semi-permanentes » l'est par L 13 § 5 (trois mois au plus).\n\nDÉBITEUR. « doivent justifier » ne nomme personne. Quand le matériel est celui d'une compagnie en tournée, le rapport est le sien et l'exploitant s'en assure ; la description le dit — c'est une lecture, pas le texte.\n\nRYTHME ÉCRIT : « annuelle ». NORMES ET ARRÊTÉS D'APPLICATION (exigence de la propriétaire) : aucun ne fixe ce rythme. Temporalité nette pour la vérification ; le champ (« temporaires ») ne l'est pas.\n\nRÉALISATEUR écrit : « par un organisme agréé ».\n\nDOUBLON : aucun. `elec-erp-cat1-4-annuelle` vise les installations NON MODIFIÉES (EL 19 § 3), dont la liste ne cite pas EL 23 ; `elec-erp-mise-en-service` vise les installations fixes neuves.\n\n`usageEcran: null` : échéance datée.",
+      "ENTRÉE LE 2026-10-17, sous-lot G (porteur établissement, décision de c6 du 2026-10-17).\n\nCE QUE L 13 § 5 AJOUTE À EL 23. EL 23 vise l'INSTALLATION semi-permanente — vérification initiale, puis « à chaque installation » : un acte daté par un événement, le montage. L 13 § 5 ajoute une vérification ANNUELLE des MATÉRIELS (projecteurs, gradateurs, coffrets, câbles), par un organisme agréé, quel que soit le nombre de montages. Deux objets : pas de doublon.\n\nCHAMP, ET CE QUE LA LIGNE NE SAIT PAS. L 13 est au sous-chapitre Ier (« Mesures applicables à tous les établissements ») : une salle L qui monte des éclairages de spectacle sans déclarer de scène y est soumise et ne reçoit pas cette ligne — un faux négatif accepté, la scène déclarée étant la seule approximation dont le produit dispose (« on n'alourdit pas »). « Temporaires » n'est défini ni par L 13 ni par EL 23 (lu en entier) ; « semi-permanentes » l'est par L 13 § 5 (trois mois au plus).\n\nDÉBITEUR. « doivent justifier » ne nomme personne. Quand le matériel est celui d'une compagnie en tournée, on peut lire que le rapport est le sien et que l'exploitant s'en assure — une lecture, pas le texte : ~~la description le dit~~ [2026-10-17, revue de G, point 4 : la description ne tranche plus, elle dit seulement que le texte ne nomme pas le débiteur].\n\nRYTHME ÉCRIT : « annuelle ». NORMES ET ARRÊTÉS D'APPLICATION (exigence de la propriétaire) : aucun ne fixe ce rythme. Temporalité nette pour la vérification ; le champ (« temporaires ») ne l'est pas.\n\nRÉALISATEUR écrit : « par un organisme agréé ».\n\nDOUBLON : aucun. `elec-erp-cat1-4-annuelle` vise les installations NON MODIFIÉES (EL 19 § 3), dont la liste ne cite pas EL 23 ; `elec-erp-mise-en-service` vise les installations fixes neuves.\n\n`usageEcran: null` : échéance datée.",
   },
 ];

@@ -32,7 +32,7 @@ import type { ArticleDepouille, Corpus } from "./types";
  * - ~~`L` (2026-10-17) : lu le 2026-10-16 (`propositions/lecture-chapitre-L-2026-10-16.md`),
  *   entre au corpus avec le sous-lot G du plan « mise à jour du référentiel ».~~
  *   [2026-10-17, sous-lot G : L est au corpus `arrete-1980-livre-2-titre-2`,
- *   85 entrées et trois paragraphes classés à part ; la liste est vide.]
+ *   85 entrées et ~~trois~~ cinq paragraphes classés à part (revue de G) ; la liste est vide.]
  */
 const CHAPITRES_PAS_ENCORE_AU_CORPUS: readonly string[] = [];
 
