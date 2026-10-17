@@ -109,11 +109,11 @@ export const AIDE_HABITATION =
  * L'aide disait ~~« Si oui, et en 5ᵉ catégorie, s'ajoutent… »~~ et ne parlait
  * que de la 5ᵉ, alors que la question est posée à tout ERP dont un type est de
  * `TYPES_ERP_QUESTION_LOCAUX_SOMMEIL`, quelle que soit sa catégorie. Mesuré en
- * appelant le moteur le même jour : en 5ᵉ, quatre lignes naissent ; en 4ᵉ, la
+ * appelant le moteur le même jour : en 5ᵉ, ~~quatre~~ cinq lignes naissent
+ * [2026-10-17, sous-lot C : l'avis de GE 5, que PE 37 rend applicable] ; en 4ᵉ, la
  * visite de la commission d'un type R passe de la colonne « sans hébergement »
  * à « avec hébergement » du tableau de GE 4 § 1 ; dans les trois premières,
- * rien ne change. [2026-10-17, sous-lot C : cinq lignes en 5ᵉ — l'avis de
- * GE 5, que PE 37 rend applicable, s'ajoute ; mesuré en appelant le moteur.]
+ * rien ne change.
  *
  * Liste de production, comme celle de l'habitation : `aides-regimes.test.ts`
  * la confronte au moteur, catégorie par catégorie et type par type.

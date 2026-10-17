@@ -140,7 +140,10 @@ describe("la présence qualifiée et le contrat du SSI : alarme déclarée ET SS
     for (const id of [PRESENCE_QUALIFIEE, CONTRAT_SSI]) {
       const a = applicables.find((x) => x.obligation.id === id);
       expect(a, id).toBeDefined();
-      expect(JSON.stringify(a), id).toMatch(/ssi/i);
+      // ~~`toMatch(/ssi/i)` sur la ligne sérialisée~~ — toujours vrai (l'id
+      // contient « ssi ») : revue indépendante du 2026-10-17. La marque qui
+      // compte est la question restée sans réponse.
+      expect(a?.sansReponse ?? [], id).toContain("ssi_categorie_ab");
     }
   });
   it("« non » : les deux sont retirées", () => {
@@ -165,6 +168,27 @@ describe("les lignes qui naissent d'un matériel déclaré", () => {
   });
   it("appareil de cuisson ERP → les consignes de l'arrêt d'urgence", () => {
     expect(servies(erp("N3"), [appareil("APPAREIL_CUISSON_ERP")])).toContain(ARRET_URGENCE);
+  });
+});
+
+describe("chaque ligne dit sa temporalité (consigne de la propriétaire, 2026-10-17)", () => {
+  it("les dix notes portent « TEMPORALITÉ : »", () => {
+    const sans = DIX.filter(
+      (id) => !(obligationsConformite.find((o) => o.id === id)?.notesInternes ?? "").includes("TEMPORALITÉ : "),
+    );
+    expect(sans).toEqual([]);
+  });
+});
+
+describe("CH 58 : la ligne dit ce qu'elle ne sert pas (décision Q4 de c6)", () => {
+  const d = obligationsConformite.find((o) => o.id === "aeration-erp-chauffage-ventilation-annuelle")?.description ?? "";
+  it("le ramonage de CH 57 est dit non suivi", () => {
+    expect(d).toMatch(/ne suit pas le ramonage/);
+    expect(d).toContain("CH 57");
+  });
+  it("la ligne ne naît que d'une VMC ou d'une CTA, et nomme le stockage des combustibles", () => {
+    expect(d).toMatch(/quand une VMC ou une centrale de traitement d'air est déclarée/);
+    expect(d).toContain("stockage des combustibles");
   });
 });
 
@@ -206,5 +230,69 @@ describe("rubrique « Règlement de sécurité, catégories 1 à 4 »", () => {
   it("absente en 5ᵉ catégorie et hors ERP", () => {
     expect(rubrique("N5")).toBeUndefined();
     expect(rubrique(null)).toBeUndefined();
+  });
+});
+
+describe("revue indépendante du sous-lot C (2026-10-17) : ce qui a été corrigé ne revient pas", () => {
+  const o = (id: string) => obligationsConformite.find((x) => x.id === id);
+  const desc = (id: string) => o(id)?.description ?? "";
+  const notes = (id: string) => o(id)?.notesInternes ?? "";
+  const corpus = (ref: string) =>
+    CORPUS.flatMap((c) => [...c.articles]).find((a) => a.ref === ref) as
+      | (Record<string, unknown> & { ref: string })
+      | undefined;
+  const champ = (ref: string, k: string) => String(corpus(ref)?.[k] ?? "");
+
+  it("1. EC 13 : l'entretien « peut être réalisé » (une faculté), et la source centralisée est dite", () => {
+    expect(desc(NOTICE_BAES)).toContain("« peut être réalisé dès qu'une anomalie est constatée »");
+    expect(desc(NOTICE_BAES)).toContain("source centralisée");
+  });
+  it("2. MS 57 : les classements A–E et 1–4 sont dits venir de normes non lues", () => {
+    for (const s of ["MS 53 § 2", "MS 62 § 1", "que Rojer n'a pas lues"]) {
+      expect(desc(PRESENCE_QUALIFIEE)).toContain(s);
+    }
+  });
+  it("3. MS 58 § 3 : le fascicule du CCTG (§ 7.3) est nommé non lu, sans référence NORME", () => {
+    expect(desc(CONTRAT_SSI)).toMatch(/paragraphe 7\.3 du fascicule[^.]*que Rojer n'a pas lu/);
+    expect(DIX.filter((id) => o(id)?.referencesLegales.some((r) => r.source === "NORME"))).toEqual([]);
+  });
+  it("4. GC 4 : la sur-application aux cuisines hors section I est dite (description et réserve)", () => {
+    expect(desc(ARRET_URGENCE)).toContain("GC 1 § 3");
+    expect(desc(ARRET_URGENCE)).toContain("20 kW ou moins");
+    expect(champ("GC 4", "reserve")).toContain("seule section VI");
+  });
+  it("6. les motifs devenus faux sont rayés, et les `bloquePar` recopiés", () => {
+    expect(champ("EL 23", "motif")).toContain("~~(`obligation_manquante`, cause `evenement`)~~");
+    expect(champ("EC 13", "motif")).toContain("~~(`obligation_manquante`, cause `libre`)~~");
+    for (const ref of [
+      "MS 41",
+      "GE 5",
+      "MS 46 § 3 — convention avec un organisateur, annexée au registre",
+      "EL 23 § 2 — vérification des installations électriques semi-permanentes",
+    ]) {
+      expect(champ(ref, "historique"), ref).toContain("Champ `bloquePar` retiré");
+    }
+  });
+  it("7. DF 9 : l'entretien est dit un autre geste, non suivi", () => {
+    expect(desc("incendie-erp-desenfumage-annuelle")).toMatch(/DF 9 fait aussi ENTRETENIR[^.]*Rojer ne le suit pas/);
+  });
+  it("8. MS 72 : l'assiette (tout le personnel / le personnel désigné) est dite", () => {
+    expect(notes("incendie-erp-personnel-designe-moyens-secours")).toContain("tout entier");
+    expect(champ("MS 72", "reserve")).toContain("tout entier");
+  });
+  it("remarques : MS 70 § 5 sans « téléphone », MS 41 dans la famille de sa sœur, EL 23 sans glose", () => {
+    expect(desc(APPEL)).not.toContain("téléphone");
+    expect(o(PLAN)?.usageEcran).toEqual(o("incendie-erp-5-sommeil-plans-affiches")?.usageEcran);
+    const el23 = manquesAnnoncesDuDossier(CORPUS, {
+      travail: true,
+      habitation: false,
+      categorieErp: "N3",
+      epiPresents: null,
+      operationsElectriques: null,
+    } as never)
+      .flatMap((d) => d.articles)
+      .find((a) => a.ref.startsWith("EL 23 § 2"));
+    expect(el23?.phrase).toBeDefined();
+    expect(el23?.phrase).not.toContain("stands");
   });
 });

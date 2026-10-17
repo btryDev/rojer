@@ -318,7 +318,7 @@ export const ANNONCES: Readonly<Record<string, Annonce>> = {
     domaine: "reglement_erp_1_4",
     condition: "erp_1_4",
     intitule: "Vérification des installations électriques semi-permanentes",
-    phrase: `Rojer ne suit pas ${nonPorte("la vérification des installations électriques semi-permanentes")} — stands, scènes, installations montées pour une durée limitée —, due initialement et à chaque installation : en 1ʳᵉ, 2ᵉ et 3ᵉ catégorie, initialement par une personne ou un organisme agréé, puis par un technicien compétent ; en 4ᵉ catégorie, par un technicien compétent.`,
+    phrase: `Rojer ne suit pas ${nonPorte("la vérification des installations électriques semi-permanentes")}, due initialement et à chaque installation : en 1ʳᵉ, 2ᵉ et 3ᵉ catégorie, initialement par une personne ou un organisme agréé, puis par un technicien compétent ; en 4ᵉ catégorie, par un technicien compétent.`,
   },
   "CO 10": {
     domaine: "reglement_erp_1_4",

@@ -219,6 +219,6 @@ export const obligationsPortesPortails: Obligation[] = [
       "SANS RECOUVREMENT avec les quatre lignes du Code du travail (`porte-auto-verification-initiale`, `-verification-semestrielle`, `-dossier-maintenance`, `-maintien-en-etat`) : elles portent les vérifications, le dossier et le maintien en état ; celle-ci porte le contrat, que seul le règlement ERP exige.\n\n" +
       "PAS DE RYTHME, PAS DE DÉFAUT ANNUEL : ce qui est imposé est d'AVOIR un contrat (notes-cadre, ligne de partage 9). GN 10 n'est pas cité : de l'entretien, que GN 10 § 1 maintient.\n\n" +
       "BORNE N1–N4 écrite en littéral : `CATEGORIES_LIVRE_2` vit dans `incendie.ts`, et un fichier de données n'importe pas de valeur.\n\n" +
-      "TIERS : le réalisateur est l'exploitant (il tient le contrat) ; le domaine `porte_portail` appelle déjà un prestataire par sa vérification semestrielle (`appelleUnTiers`).",
+      "TIERS : le réalisateur est l'exploitant (il tient le contrat), et la ligne ne fait pas, à elle seule, attendre un prestataire (`appelleUnTiers`). ~~le domaine `porte_portail` appelle déjà un prestataire par sa vérification semestrielle~~ [2026-10-17, revue indépendante : inexact pour un ERP sans salarié — `porte-auto-verification-semestrielle` est `travail: true`, et un ERP des catégories 1 à 4 qui n'emploie personne ne la reçoit pas ; le domaine n'y appelle alors aucun tiers. Le mécanisme n'est pas touché.]",
   },
 ];
