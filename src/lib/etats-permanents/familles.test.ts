@@ -106,6 +106,10 @@ describe("le rangement de l'écran « Ce qui doit être en place »", () => {
 
   it.each([
     ["information-etablissement-avis-acces-duerp", "quotidien", "informer"],
+    // 2026-10-17, revue de c6 : ~~incendie_secours / alerter~~. Les
+    // coordonnées de `D. 4711-1` (médecin du travail, secours, inspection)
+    // servent d'abord à informer les travailleurs — règle de frontière.
+    ["information-etablissement-affichages-obligatoires", "quotidien", "informer"],
     // ~~chiffons imprégnés~~ (2026-10-17) : niveau audit, jamais à l'écran.
     ["incendie-erp-interdiction-fumer-affichee", "incendie_secours", "prevenir"],
     ["incendie-registre-securite", "installations", null],

@@ -366,6 +366,12 @@ Trois lignes changent de famille le même jour, par la règle de frontière :
 poste, comme `signalisation-etablissement-risques-residuels`) passe à
 *Conditions de travail*.
 
+[2026-10-17, revue de c6] Une quatrième, par la même règle :
+`information-etablissement-affichages-obligatoires` (`D. 4711-1`, coordonnées
+du médecin du travail, des secours et de l'inspection) quitte *Alerter* pour
+*Informer et former* — l'affichage informe les travailleurs avant de servir à
+alerter. Le compte de l'écran ne bouge pas : 57 + 0 − 0 = 57.
+
 ### 8. Une donnée d'écran vit dans le référentiel, et c'est voulu
 
 Le rangement est **un champ requis de chaque obligation**,

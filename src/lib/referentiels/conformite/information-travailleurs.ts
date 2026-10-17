@@ -44,7 +44,10 @@ export const obligationsInformationTravailleurs: Obligation[] = [
     periodicite: "autre",
     nature: "etat_permanent",
     pieceAttendue: null,
-    usageEcran: { groupe: "incendie_secours", sous: "alerter" },
+    // ~~incendie_secours / alerter~~ (2026-10-17, revue de c6) : les
+    // coordonnées servent d'abord à informer les travailleurs — règle de
+    // frontière de l'ADR-027, amendement du 2026-10-17, § 7.
+    usageEcran: { groupe: "quotidien", sous: "informer" },
     realisateurs: ["exploitant"],
     criticite: 3,
     typologies: { travail: true },
