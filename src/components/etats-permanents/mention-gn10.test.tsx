@@ -84,6 +84,24 @@ describe("GN 10 à l'écran — une ligne qui le cite le dit", () => {
     }
   });
 
+  it("borne haute : porteGn10 est faux sur les lignes que GN 10 maintient, et sur une échéance", () => {
+    // Relecture de c6 (2026-10-17) : le test précédent prend porteGn10 pour
+    // référence ; une détection élargie (« livre II ») y restait verte.
+    const parId = new Map(obligationsConformite.map((o) => [o.id, o] as const));
+    for (const id of [
+      "incendie-erp-ssi-contrat-entretien",
+      "incendie-erp-eclairage-securite-notice-registre",
+      "porte-auto-erp-contrat-entretien",
+      "incendie-erp-avis-controle-affiche",
+      "incendie-erp-5-sommeil-avis-controle-affiche",
+      "incendie-erp-extincteurs-annuelle",
+    ]) {
+      const o = parId.get(id);
+      expect(o, id).toBeDefined();
+      expect(porteGn10(o!), id).toBe(false);
+    }
+  });
+
   it("borne basse : les lignes anciennes et nouvelles sont vues", () => {
     const ids = obligationsConformite.filter(porteGn10).map((o) => o.id);
     for (const id of [
