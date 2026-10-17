@@ -348,6 +348,43 @@ describe("le document garde l'ordre par domaine (2026-10-17)", () => {
       "Signalisation de sécurité",
     ]);
   });
+
+  it("à l'intérieur d'un domaine, deux lignes de familles différentes sortent dans l'ordre de `comparerLignes`", () => {
+    // Même domaine, deux familles, et l'ordre des familles INVERSE de celui
+    // des libellés : seul le second critère du tri les départage. Éprouvé en
+    // retirant `|| comparerLignes(a, b)` : le tri, stable, rend l'ordre des
+    // familles, et ce test tombe.
+    const zeta = ligne({ id: "zeta" });
+    zeta.obligation = { ...zeta.obligation, libelle: "Z — Consigne affichée" };
+    const alpha = ligne({ id: "alpha" });
+    alpha.obligation = { ...alpha.obligation, libelle: "A — Registre de sécurité" };
+    const d = dossier(0, 0);
+    d.total = 2;
+    d.familles = [
+      {
+        groupe: "incendie_secours",
+        libelle: "Incendie et secours",
+        enPlace: 0,
+        total: 1,
+        parLesTitres: { total: 0, enPlace: 0 },
+        blocs: [{ sous: "alerter", libelle: "Alerter", lignes: [zeta], enPlace: 0, total: 1 }],
+      },
+      {
+        groupe: "installations",
+        libelle: "Vos installations et leurs registres",
+        enPlace: 0,
+        total: 1,
+        parLesTitres: { total: 0, enPlace: 0 },
+        blocs: [{ sous: null, libelle: null, lignes: [alpha], enPlace: 0, total: 1 }],
+      },
+    ];
+    const etats = blocEtatsPermanents(d).etats;
+    expect(new Set(etats.map((l) => l.domaine)).size).toBe(1);
+    expect(etats.map((l) => l.libelle)).toEqual([
+      "A — Registre de sécurité",
+      "Z — Consigne affichée",
+    ]);
+  });
 });
 
 describe("phraseIndetermines — déclarées et établies d'après les titres ensemble (relecture du 2026-10-16)", () => {
