@@ -1945,7 +1945,7 @@ describe("référentiel conformité — version et empreinte", () => {
     // mergé avant et pris .3 (consigne de c6).
     // Libellé de MS 57 (contrôle visuel de c6) compris : la détection ET la
     // catégorie du SSI.
-    { version: "2026-10-17.4", empreinte: "EMPREINTE_A_RELEVER" },
+    { version: "2026-10-17.4", empreinte: "197-4ec886cc5ae6a4b8" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
