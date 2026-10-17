@@ -1647,8 +1647,12 @@ describe("corpus — ce qu'on ne couvre pas, et où on le dit", () => {
     // une rubrique d'annonce ; `MS 42` restera muet (acte sur demande des
     // sapeurs-pompiers, rien à l'écran, décision de c6). Le classer
     // `non_couvert` sans adresse est plus vrai que le laisser `sans_objet` ou
-    // lui prêter une adresse qui n'existe pas. À redescendre à 13 quand D et G
-    // auront livré leurs aides et que `CO 10` aura sa rubrique.
+    // lui prêter une adresse qui n'existe pas. CHEMIN DE REDESCENTE (c6, même
+    // jour) : `T 43` et `T 44` → sous-lot D (aide du type T, `AIDE_TYPE_ERP`) ;
+    // `CO 10` → sous-lot C (rubrique « Règlement de sécurité, catégories 1 à
+    // 4 » de `manques-annonces.ts`, que C crée pour MS 46 § 3 et EL 23 § 2) ;
+    // `AM 18` → sous-lot G (aide de la catégorie Scène et du type L). Cible :
+    // 13 après G, `MS 42` restant muet.
     const MUETS = 17;
     // Une note interne n'est pas une annonce à l'exploitant. `declareA`
     // mélange aujourd'hui les deux natures — une adresse produit et un
