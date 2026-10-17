@@ -1091,8 +1091,8 @@ l'annonce » : sept annoncées, cinq hors cadre ; manquantes **20** ;
 
 ## 9. À évaluer — lecture des chapitres de types d'ERP du 2026-10-16
 
-~~Dix-huit~~ Vingt-six [2026-10-17, revue indépendante : + 8 articles du
-titre Ier ouverts en suivant les renvois] manques nés de la lecture des
+~~Dix-huit~~ ~~Vingt-six~~ Vingt-huit [2026-10-17, revue indépendante : + 8 articles du
+titre Ier ouverts en suivant les renvois, + 2 actes « piscines » du type X sortis de l'exclusion] manques nés de la lecture des
 chapitres P, R, S, T, U, V, X, Y et J du livre II, titre II (catégories 1 à 4),
 du chapitre V du livre III, et des renvois de ces chapitres au titre Ier
 (`lot/erp-chapitres-types-1016`). **OUVERTS : ni encodés, ni annoncés, ni hors
@@ -1101,7 +1101,7 @@ proposition : `propositions/lecture-chapitres-types-erp-2026-10-16.md`. Même
 mécanisme que le § 8 du 2026-10-12 : le § 7 et ce § 9, disjoints, font
 ensemble les `obligation_manquante` qui touchent la cible
 (`doc-couverture.test.ts`). Chaque ligne sort d'ici quand la propriétaire l'a
-tranchée. Manquantes : ~~22 + 18 − 0 = 40~~ 22 + 26 − 0 = **48**, toutes dans la cible.
+tranchée. Manquantes : ~~22 + 18 − 0 = 40~~ ~~22 + 26 − 0 = 48~~ 22 + 28 − 0 = **50**, toutes dans la cible.
 
 | Article | Ce qui la met dans la cible | Cause au corpus | Proposition |
 |---|---|---|---|
@@ -1111,6 +1111,8 @@ tranchée. Manquantes : ~~22 + 18 − 0 = 40~~ 22 + 26 − 0 = **48**, toutes da
 | `U 43` | Type U dès 20 lits ou 100 personnes (U 1) | `libre` | Rattacher à `incendie-erp-personnel-designe-moyens-secours` |
 | `Y 19` | Type Y dès 200 personnes (Y 1) | `libre` | Rattacher à `incendie-erp-personnel-designe-moyens-secours` |
 | `T 52` | Type T, salle d'exposition permanente dès 200 personnes (T 1 § 2) | `libre` | Rattacher à `incendie-erp-interdiction-fumer-affichee` |
+| `X annexe` | Piscine couverte dès 200 personnes ; 5ᵉ catégorie par PX 1 | `a_trancher` | Avec X 25 : sortie de l'exclusion « piscines » ou non ; sinon catégorie « désinfection des eaux de piscine », trois lignes |
+| `X 1 § 2 — affichage de l'effectif des piscines transformables et mixtes` | Piscine transformable ou mixte | `a_trancher` | Avec X 25 : affichage de l'effectif |
 | `X 25` | Type X dès 200 personnes (X 1) ; 5ᵉ catégorie par PX 1 | `a_trancher` | Rattacher à `incendie-erp-interdiction-fumer-affichee`, si l'exclusion « équipements sportifs » ne la retient pas |
 | `U 41` | Type U | `libre` | Rattacher à `incendie-erp-schema-organisation-securite` |
 | `PU 6` | Type U de 5ᵉ catégorie avec locaux à sommeil | `libre` | Ajouter en référence de `incendie-erp-5-instruction-personnel` |

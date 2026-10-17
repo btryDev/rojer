@@ -49,7 +49,11 @@
 // ligne bornée N1–N4 et au type. Deux familles nouvelles de motifs communs :
 // la manifestation temporaire du type T (ligne de partage 1) et le service
 // d'agents de sécurité incendie (`non_couvert`, annoncé par l'axe
-// `categorie_erp`). Les piscines restent sous l'exclusion `risque_specialise`.
+// `categorie_erp`). ~~Les piscines restent sous l'exclusion `risque_specialise`.~~
+// [2026-10-17, revue indépendante : l'annexe du type X (traitement des eaux)
+// et l'affichage de X 1 § 2 portent des actes de l'exploitant ; ils sont
+// `obligation_manquante` à trancher avec X 25, X 3 et X 8 reclassés (condition,
+// construction). Une exclusion dit qu'aucune obligation n'en découle.]
 //
 // LE CLASSEMENT, EN QUATRE FAMILLES — et le vocabulaire est celui du dépôt :
 //  - `retenu` : les douze articles qui fondent une obligation (dont N 20, en
@@ -91,9 +95,6 @@ const MOTIF_MANIFESTATION_T =
 
 const MOTIF_SSIAP =
   "Service de sécurité incendie assuré par des AGENTS DE SÉCURITÉ INCENDIE (MS 46 § 1 b), ou composé d'un effectif fixé, au-delà d'un seuil de public ou en 1ʳᵉ catégorie. Comme M 29 § 2 à § 4 et L 14, Rojer ne le suit pas : un effectif présent n'est ni un acte daté ni une pièce, et le produit ne connaît pas l'effectif du public. Ce qui est suivi, c'est la désignation et l'entraînement d'employés là où le chapitre les prescrit. Annoncé par la phrase de manque de l'axe `categorie_erp`.";
-
-const MOTIF_PISCINE =
-  "Piscines (type X) : traitement des eaux et ses produits (chlore, brome, ozone, hypochlorite), pédiluves, affichage de l'effectif des bassins. L'exclusion `risque_specialise` les nomme (« équipements sportifs, piscines »). Les vérifications journalières, l'appareil respiratoire « vérifié périodiquement » et l'entraînement du personnel de l'annexe sont des actes réels de l'exploitant, et c'est précisément l'expertise que l'exclusion dit ne pas porter. Seule la salle de sport hors piscine est mise en question (X 25).";
 
 const DECLARE_A_CATEGORIE_ERP =
   "src/lib/perimetre/couverture.ts — phrase de manque de l'axe `categorie_erp`, servie à tout ERP des catégories 1 à 4 : « le service de sécurité incendie assuré par des agents de sécurité incendie, notamment, n'y est pas, et des dispositions particulières par type d'activité, il ne porte que quelques-unes ».";
@@ -4115,10 +4116,15 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       modifiePar: null,
       luLe: "2026-10-16",
       lecture: "api_legifrance",
-      citationCle: "CHLORE LIQUÉFIÉ Une installation de désinfection des eaux des piscines fonctionnant au chlore liquéfié (ou chlore gazeux ) doit respecter les dispositions suivantes : A. - Généralités Tous les récipients, en service ou en réserve, doivent être placés à l'abri des radiations solaires et des agents atmosphériques, dans un emplacement clos, spécialement aménagé, réservé à cet effet et comportant une porte fermant à clé. […]",
-      statut: "hors_perimetre",
-      exclusion: "risque_specialise",
-      motif: MOTIF_PISCINE,
+      citationCle: "L'installation de traitement doit faire l'objet, de la part de l'exploitant, de vérifications journalières destinées notamment à s'assurer, au moyen d'un chiffon imbibé d'ammoniaque, qu'il n'existe aucune fuite de chlore et que les récipients sont en parfait état.",
+      // ~~statut: "hors_perimetre", exclusion: "risque_specialise", motif: MOTIF_PISCINE~~ —
+      // 2026-10-17, revue indépendante : une exclusion dit « aucune obligation
+      // d'exploitant n'en découle » ; le motif reconnaissait ici des actes.
+      statut: "obligation_manquante",
+      cause: "a_trancher",
+      toucheLaCible: true,
+      motif: "Traitement des eaux des piscines couvertes (chlore, brome, ozone, hypochlorite de sodium). Des ACTES DE L'EXPLOITANT : pour le chlore, « vérifications journalières » de l'absence de fuite et de l'état des récipients, fermeture des récipients si le traitement s'interrompt plus de 14 heures, livraison en présence d'un responsable ; pour le chlore et le brome, un appareil respiratoire « vérifié périodiquement » (rythme vague : défaut annuel, ADR-039) et le personnel « entraîné à l'emploi de l'appareil respiratoire » ; un tableau de consignes « connues du personnel ». Le reste est de l'aménagement (local, ventilation, rétention). TPE CONCERNÉE : X 1 vise une piscine couverte dès 200 personnes (une par m² de plan d'eau, X 2) ; par PX 1, la petite piscine couverte de 5ᵉ catégorie y entre aussi. À TRANCHER, avec X 25 : l'exclusion `risque_specialise` nomme les piscines (« une expertise que le produit ne prétend pas porter ») ; elle est antérieure au 2026-10-12 (ligne de partage 7). Si la propriétaire garde les piscines dehors, l'article passe hors cadre (§ 7) ou annoncé ; sinon, une catégorie d'équipement « installation de désinfection des eaux de piscine » et trois lignes (vérification journalière, appareil respiratoire, entraînement du personnel).",
+      bloquePar: "Une décision de périmètre : l'exclusion `risque_specialise` (« équipements sportifs, piscines »), antérieure au 2026-10-12. Puis une catégorie d'équipement qui n'existe pas.",
     },
     {
       ref: "X 1",
@@ -4130,7 +4136,24 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       lecture: "api_legifrance",
       citationCle: "L'affichage de l'effectif du public admis doit indiquer : - pour les piscines transformables, l'effectif en utilisation couverte et en utilisation découverte ;",
       statut: "sans_objet",
-      motif: "Champ du chapitre et seuils (MOTIF_GENERALITES). Le § 2 fait afficher l'effectif du public admis des piscines transformables et mixtes : un affichage propre aux piscines, que l'exclusion `risque_specialise` écarte nommément (« équipements sportifs, piscines »).",
+      motif: "Champ du chapitre et seuils (MOTIF_GENERALITES). Le § 2 fait afficher l'effectif du public admis des piscines transformables et mixtes : ~~un affichage propre aux piscines, que l'exclusion `risque_specialise` écarte nommément (« équipements sportifs, piscines »).~~ [2026-10-17, revue indépendante : un acte de l'exploitant, classé à part — entrée « X 1 § 2 », `obligation_manquante`, à trancher avec l'annexe.]",
+    },
+    {
+      // 2026-10-17 — revue indépendante : le seul acte de X 1, classé à part
+      // (patron « MS 69 — stock »), X 1 restant un article de champ.
+      ref: "X 1 § 2 — affichage de l'effectif des piscines transformables et mixtes",
+      intitule: "Etablissements assujettis",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020336673",
+      versionEnVigueur: "1982-07-08",
+      modifiePar: null,
+      luLe: "2026-10-16",
+      lecture: "api_legifrance",
+      citationCle: "L'affichage de l'effectif du public admis doit indiquer : - pour les piscines transformables, l'effectif en utilisation couverte et en utilisation découverte ; - pour les piscines mixtes, l'effectif des bassins couverts et l'effectif total correspondant à l'utilisation simultanée des deux types de bassins (couverts et plein air).",
+      statut: "obligation_manquante",
+      cause: "a_trancher",
+      toucheLaCible: true,
+      motif: "État permanent, affichage : l'effectif admis d'une piscine transformable (couverte et découverte) ou mixte (bassins couverts, et total). Un acte de l'exploitant, propre aux piscines : à trancher avec l'annexe et X 25, contre l'exclusion `risque_specialise` (ligne de partage 7). TPE CONCERNÉE : une piscine couverte dès 200 personnes (X 1), et en 5ᵉ catégorie par PX 1.",
+      bloquePar: "Une décision de périmètre : l'exclusion `risque_specialise` nomme les piscines, antérieure au 2026-10-12.",
     },
     {
       ref: "X 2",
@@ -4153,9 +4176,9 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "§ 1. Différents modes de traitement des eaux des bassins des piscines sont décrits dans l'annexe du présent chapitre. Sous réserve des dispositions réglementaires relatives aux normes d'hygiène et de sécurité applicables aux piscines, tout autre procédé ne peut être utilisé qu'après avis de la commission centrale de sécurité sur le stockage du produit employé. § 2. […]",
-      statut: "hors_perimetre",
-      exclusion: "risque_specialise",
-      motif: MOTIF_PISCINE,
+      // ~~statut: "hors_perimetre", exclusion: "risque_specialise", motif: MOTIF_PISCINE~~ — 2026-10-17, revue indépendante.
+      statut: "sans_objet",
+      motif: "Le § 1 renvoie à l'annexe (classée pour elle-même, `obligation_manquante`) et subordonne tout autre procédé de traitement à l'avis de la commission centrale de sécurité : une CONDITION, ligne de partage 1. Le § 2 admet l'appareillage de traitement en chaufferie : aménagement. Aucun acte propre ; les actes du traitement des eaux sont ceux de l'annexe.",
     },
     {
       ref: "X 4",
@@ -4214,9 +4237,9 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "La profondeur des pédiluves des piscines ne doit pas dépasser 0,15 mètre.",
+      // ~~exclusion: "risque_specialise", motif: MOTIF_PISCINE~~ — 2026-10-17, revue indépendante : une profondeur de pédiluve est une règle de construction, aucun acte.
       statut: "hors_perimetre",
-      exclusion: "risque_specialise",
-      motif: MOTIF_PISCINE,
+      exclusion: "construction",
     },
     {
       ref: "X 9",

@@ -786,6 +786,10 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       "U 48",
       "U 62",
       "U 64",
+      // 2026-10-17, revue indépendante : les deux actes « piscines » du type X,
+      // sortis de l'exclusion `risque_specialise`, à trancher avec X 25.
+      "X annexe",
+      "X 1 § 2 — affichage de l'effectif des piscines transformables et mixtes",
       "X 25",
       "Y 19",
       "J 33",

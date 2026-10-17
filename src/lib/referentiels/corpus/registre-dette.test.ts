@@ -170,7 +170,9 @@ describe("registre de dette — les obligations manquantes", () => {
       // [5, 0] → [6, 0] le 2026-10-16 : `X 25`, l'interdiction de fumer
       // signalée en salle de sport couverte, contre l'exclusion
       // `risque_specialise` (« équipements sportifs »), à évaluer.
-      a_trancher: [6, 0],
+      // [6, 0] → [8, 0] le 2026-10-17 (revue indépendante) : `X annexe` et
+      // `X 1 § 2`, les actes « piscines » du type X sortis de l'exclusion.
+      a_trancher: [8, 0],
       // [0, 3] → [0, 0] le 2026-10-12 : les trois hôtels, voir `a_trancher`.
       perimetre: [0, 0],
     });
@@ -206,8 +208,9 @@ describe("registre de dette — les obligations manquantes", () => {
     // articles du titre Ier ouverts en suivant les renvois (`MS 41`,
     // `MS 58 § 3 et § 4`, `EC 13`, `MS 70 § 5`, `GE 5`, `MS 46 § 3`,
     // `EL 23 § 2`, `CO 48 § 3 e)`), au § 9.
-    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(48);
-    expect(manquantes.length).toBe(48);
+    // 48 → 50 le 2026-10-17 : 48 + 2 − 0 — `X annexe` et `X 1 § 2`.
+    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(50);
+    expect(manquantes.length).toBe(50);
   });
 });
 
