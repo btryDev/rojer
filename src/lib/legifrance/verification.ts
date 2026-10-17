@@ -33,6 +33,9 @@ export const CATEGORIES = [
   "version_differente",
   "modificateur_different",
   "non_verifiable",
+  // 2026-10-17 : un article abrogé que le corpus classe `sans_objet` en nommant
+  // son texte abrogeant (`modifiePar`) n'est pas un écart — il est consigné.
+  "abroge_consigne",
   "ok",
 ] as const;
 /** Dans l'ordre de gravité : la catégorie d'un article est la plus grave de ses constats. */
@@ -45,12 +48,20 @@ export const LIBELLES: Record<Categorie, string> = {
   version_differente: "version différente",
   modificateur_different: "modificateur différent",
   non_verifiable: "non vérifiable",
+  abroge_consigne: "abrogé, consigné au corpus",
   ok: "OK",
 };
 
-/** Est-ce un écart (code de sortie non nul) ? `non_verifiable` et `ok` n'en sont pas. */
+/** Est-ce un écart (code de sortie non nul) ? `non_verifiable`, `abroge_consigne` et `ok` n'en sont pas. */
 export function estEcart(c: Categorie): boolean {
-  return c !== "ok" && c !== "non_verifiable";
+  return c !== "ok" && c !== "non_verifiable" && c !== "abroge_consigne";
+}
+
+/** Les liens d'abrogation d'un article, en modificateurs : ce qui l'a fait sortir de vigueur. */
+export function abrogeantsCourants(a: ArticleApi): Modificateur[] {
+  return (a.lienModifications ?? [])
+    .filter((l) => /ABROG/i.test(l.linkType ?? ""))
+    .map((l) => lienEnModificateur(l));
 }
 
 // ---------------------------------------------------------------------------
@@ -498,6 +509,23 @@ export type ResultatArticle = {
   erreurApi?: boolean;
 };
 
+/**
+ * Un article sorti de vigueur est-il consigné comme tel au corpus ? Classé
+ * `sans_objet`, et `modifiePar` nomme l'un des textes qui l'ont abrogé.
+ */
+function estAbrogeConsigne(a: ArticleDepouille, courant: ArticleApi): boolean {
+  if (a.statut !== "sans_objet" || !a.modifiePar) return false;
+  const cle = cleTexte(a.modifiePar.texte, a.modifiePar.url);
+  return abrogeantsCourants(courant).some(
+    (m) =>
+      memeTexte(cle, {
+        ...cleTexte(m.titre),
+        jorftext: m.cid?.startsWith("JORFTEXT") ? m.cid : undefined,
+        date: m.dateSignature ?? cleTexte(m.titre).date,
+      }) === true,
+  );
+}
+
 function plusGrave(cs: Constat[]): Categorie {
   for (const c of CATEGORIES) if (cs.some((x) => x.categorie === c)) return c;
   return "ok";
@@ -575,6 +603,11 @@ export function analyser(
         detail: `version future programmée au ${date} (${suivante.id ?? "?"}, VIGUEUR_DIFF) ; corpus versionFuture : ${a.versionFuture ?? "absente"}`,
       });
     }
+  } else if (ETATS_FIN.has(etat) && estAbrogeConsigne(a, courant)) {
+    constats.push({
+      categorie: "abroge_consigne",
+      detail: `état « ${etat} »${courant.dateFin ? ` depuis le ${jourCivil(courant.dateFin)}` : ""} ; classé \`sans_objet\` au corpus, texte abrogeant nommé (« ${a.modifiePar ? a.modifiePar.texte : ""} »)`,
+    });
   } else if (ETATS_FIN.has(etat)) {
     constats.push({
       categorie: "abroge",
@@ -625,7 +658,12 @@ export function analyser(
   }
 
   // 3. modificateur
-  const modifs = modificateursCourants(courant);
+  // Un article abrogé consigné se compare à son texte abrogeant, non au dernier
+  // texte qui l'a modifié tant qu'il était en vigueur.
+  const modifs =
+    ETATS_FIN.has(etat) && !suivante && a.statut === "sans_objet" && abrogeantsCourants(courant).length > 0
+      ? abrogeantsCourants(courant)
+      : modificateursCourants(courant);
   if (a.modifiePar !== undefined) {
     compare.modificateur = true;
     const creation = modifs.every((m) => m.source === "texte" || /CREATION|CREE|CODIFICATION/i.test(m.type ?? ""));
