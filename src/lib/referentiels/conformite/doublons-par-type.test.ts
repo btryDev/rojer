@@ -11,8 +11,10 @@
 // Éprouvé en cassant (commit du lot) : (a) un clone du contrôle biennal de
 // PO borné à L, même article, sans groupe ; (b) le même clone avec un article
 // fictif — seul ce test le voit ; (c) `groupeExclusif` retiré de PE 4 § 2,
-// le doublon réel à rythme différent (PE 4 triennal / PO 1 § 3 biennal). Les
-// trois rougissent ici.
+// le doublon réel à rythme différent (PE 4 triennal / PO 1 § 3 biennal) ;
+// (d) une copie de la consigne des chambres, tous types sauf O, sans groupe,
+// nommée « incendie-erp-visite-commission-consigne-chambres-bis » — que le
+// motif ouvert d'une famille couvrait. Les quatre rougissent ici.
 import { describe, expect, it } from "vitest";
 import { matchTypologie } from "@/lib/matching/engine";
 import type { EtablissementMatching } from "@/lib/matching/types";
@@ -118,16 +120,24 @@ function pairesSepareesParLeType(obligations: Obligation[]): [string, string][] 
 const FAMILLES_DECLAREES: {
   famille: string;
   motif: string;
-  /** Les deux côtés de la famille, chacun ancré : une paire en relève si chaque ligne est d'un côté. */
+  /**
+   * Les deux côtés de la famille, chacun ANCRÉ sur des identifiants nommés
+   * (`^…$`) : une paire en relève si chaque ligne est d'un côté. Jamais un
+   * motif ouvert — un identifiant qui contiendrait la chaîne serait couvert
+   * sans avoir été lu (relecture du 2026-10-17 : `/visite-commission/` aurait
+   * couvert une copie de la consigne des chambres nommée « …-visite-commission-… »).
+   */
   cotes: [RegExp, RegExp][];
 }[] = [
   {
     famille: "visite de commission ↔ disposition particulière d'un type",
     motif:
-      "La visite périodique de la commission de sécurité (GE 4 § 1, PE 37) est un contrôle de l'administration, à son rythme ; les dispositions particulières des chapitres de type (titre II : personnel désigné, interdiction de fumer affichée, schéma d'organisation, consigne des chambres, plans par niveau) sont des actes de l'exploitant, sans rythme. Deux types les réunissent parce que la ligne de visite retenue dépend du type (tableau de GE 4) et que la disposition aussi — l'établissement doit les deux, ce ne sont pas deux lignes pour un acte.",
+      "La visite périodique de la commission de sécurité (GE 4 § 1) est un contrôle de l'administration, à son rythme ; les dispositions particulières des chapitres de type (titre II : personnel désigné, interdiction de fumer affichée, schéma d'organisation, consigne des chambres, plans par niveau) sont des actes de l'exploitant, sans rythme. Deux types les réunissent parce que la ligne de visite retenue dépend du type (tableau de GE 4) et que la disposition aussi — l'établissement doit les deux, ce ne sont pas deux lignes pour un acte.",
     cotes: [
       [
-        /visite-commission/,
+        // Les sept visites de commission du tableau de GE 4 § 1 qui forment une
+        // paire aujourd'hui, nommées une à une.
+        /^incendie-erp-visite-commission-(cat1-2-quinquennale|cat3-triennale|cat3-quinquennale|cat4-triennale|cat4-quinquennale|cat4-r-avec-hebergement-triennale|cat4-r-sans-hebergement-quinquennale)$/,
         /^incendie-erp-(hotel-consigne-chambres|hotel-plans-evacuation-niveaux|interdiction-fumer-affichee|personnel-designe-moyens-secours|schema-organisation-securite)$/,
       ],
     ],
