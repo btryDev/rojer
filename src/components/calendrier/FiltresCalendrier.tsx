@@ -23,6 +23,7 @@ import {
 } from "./MarqueurFamille";
 import type { FamilleEcheance } from "@/lib/calendrier/echeances";
 import { LABEL_TOUT_ETABLISSEMENT } from "@/lib/calendrier/labels";
+import { nomDeZone } from "@/lib/batiments/nom-zone";
 
 export type FiltresActifs = {
   famille?: FamilleEcheance;
@@ -266,8 +267,10 @@ export function FiltresCalendrier({
     domaines.find((d) => d.id === id)?.label ?? id;
 
   const choisirBatiment = (batiment?: string) => appliquer({ ...f, batiment });
-  const nomBatiment = (id: string | undefined) =>
-    batiments.find((b) => b.id === id)?.nom ?? id;
+  const nomBatiment = (id: string | undefined) => {
+    const b = batiments.find((x) => x.id === id);
+    return b ? nomDeZone(b.nom) : id;
+  };
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -379,7 +382,7 @@ export function FiltresCalendrier({
                       actif={f.batiment === b.id}
                       onChoisir={() => choisirBatiment(b.id)}
                     >
-                      {b.nom}
+                      {nomDeZone(b.nom)}
                     </Option>
                   ))}
                 </fieldset>

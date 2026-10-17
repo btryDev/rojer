@@ -75,6 +75,7 @@ import {
   type LectureCalendrier,
   type RegistreLigne,
 } from "@/lib/calendrier/etats";
+import { nomDeZone } from "@/lib/batiments/nom-zone";
 import {
   VueParEquipement,
   type EtatMois,
@@ -408,7 +409,7 @@ export default async function CalendrierPage({
 
   // En multi-bâtiments, la méta d'une ligne dit d'abord où ça se passe.
   const lieuDe = (b: { nom: string } | null): string | null =>
-    multiBatiments ? (b?.nom ?? LABEL_TOUT_ETABLISSEMENT) : null;
+    multiBatiments ? (b ? nomDeZone(b.nom) : LABEL_TOUT_ETABLISSEMENT) : null;
   const metaAutre = (e: EcheanceCalendrier): string => {
     const lieu = lieuDe(e.batiment);
     return lieu ? `${lieu} · ${e.origine}` : e.origine;
@@ -1332,7 +1333,7 @@ export default async function CalendrierPage({
                                 // absent — et elle reste ici, sous tous les
                                 // filtres de bâtiment (ADR-010).
                                 (v.equipement && lieuDe(v.equipement.batiment)
-                                  ? `${v.equipement.batiment.nom} · `
+                                  ? `${nomDeZone(v.equipement.batiment.nom)} · `
                                   : "") +
                                 `${libellePorteur(v)} · ` +
                                 LABEL_PERIODICITE[v.periodicite] +

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { LABEL_TOUT_ETABLISSEMENT } from "@/lib/calendrier/labels";
+import { nomDeZone } from "@/lib/batiments/nom-zone";
 
 /**
  * Rangée de chips « Tout l'établissement · Zone A · Zone B ».
@@ -73,7 +74,7 @@ export function SelecteurBatiment({
             actif={actif === b.id}
             ton={ton}
           >
-            {b.nom}
+            {nomDeZone(b.nom)}
             {compteurs?.has(b.id) ? (
               <span className="ml-1.5 tabular-nums opacity-60">
                 {compteurs.get(b.id)}

@@ -52,6 +52,7 @@ import {
   SUJET_COMPTEURS_DU_PARC,
 } from "@/lib/calendrier/fraicheur";
 import { AvertissementFraicheur } from "@/components/calendrier/AvertissementFraicheur";
+import { nomDeZone } from "@/lib/batiments/nom-zone";
 
 export default async function EquipementsPage({
   params,
@@ -210,7 +211,7 @@ export default async function EquipementsPage({
         libelle: eq.libelle,
         // Le « où » de la vitrine, à deux étages depuis l'ADR-019 : un
         // bâtiment, et une précision dans ce bâtiment.
-        lieu: montrerBatiment ? eq.batiment.nom : eq.localisation,
+        lieu: montrerBatiment ? nomDeZone(eq.batiment.nom) : eq.localisation,
         precision: montrerBatiment ? eq.localisation : null,
         resume: resumes.get(eq.id) ?? resumerEquipement(undefined),
         // Le motif se pose AU-DESSUS des signaux, il ne les remplace pas :

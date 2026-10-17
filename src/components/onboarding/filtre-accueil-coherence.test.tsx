@@ -38,6 +38,9 @@ const CAS: Cas[] = [
   { typeErp: "R", enfants: "" },
   { typeErp: "N", autres: ["R"], enfants: "oui" },
   { typeErp: "N", autres: ["R"], enfants: "non" },
+  // Relecture du 2026-10-17 : un type refusé à côté de R, dans les deux sens.
+  { typeErp: "R", autres: ["J"], enfants: "non" },
+  { typeErp: "J", autres: ["R"], enfants: "non" },
   // Hors ERP : « Non » vide le type (comme l'écran) ; une réponse restée en
   // mémoire ne compte pas, et n'est pas postée.
   { erp: false, typeErp: "", enfants: "oui" },

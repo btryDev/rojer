@@ -6,6 +6,16 @@
   écrans qui nomment un lieu
 - **Remplace** l'ADR-019, dont elle garde l'invariant · **Découle de**
   l'ADR-025
+- **Amendée** le 2026-10-17 (ci-dessous)
+
+> **Amendée le 2026-10-17 — décision de la propriétaire : un établissement = un
+> bâtiment ; les zones (3 au plus) sont des subdivisions de ce bâtiment ; jamais
+> plusieurs bâtiments.** Le modèle `Batiment` porte ces ZONES sous un nom
+> historique : une ligne de `Batiment` est une zone (« Salle », « Cuisine »…),
+> jamais un bâtiment. Le bâtiment n'a pas de ligne propre : c'est l'établissement.
+> Le nom stocké de la première ligne (« Zone principale », « Bâtiment principal »
+> pour les dossiers anciens) est un nom de zone ; aucun écran ne le présente
+> comme un second bâtiment.
 
 ## Le problème
 
@@ -47,7 +57,9 @@ mots pour la même chose.
 
 ## Ce qu'on perd, et qu'on assume
 
-Le modèle savait faire N bâtiments ; il n'en fera plus que trois. C'est une
+~~Le modèle savait faire N bâtiments ; il n'en fera plus que trois.~~
+[2026-10-17, décision de la propriétaire : le modèle savait faire N zones ; il
+n'en fera plus que trois, toutes dans le même bâtiment — l'établissement.] C'est une
 capacité retirée, pas un réglage. Elle est retirée parce que le produit sert un
 SIRET avec un local, et que la promesse de tenir un parc immobilier n'a jamais
 été instruite : ni classement d'ensemble, ni isolement, ni tierce personne.

@@ -251,3 +251,35 @@ describe("D1 (a) : la fiche remise en contrôle ne peint pas « en retard » une
     expect(lignesDe([v])[0]?.statut).toBe("en_retard");
   });
 });
+
+describe("inventaire : la zone ne se dit que s'il y en a plusieurs (2026-10-17, ADR-029 amendée)", () => {
+  const sectionInventaire: SectionRegistre = {
+    id: "inventaire-extinction",
+    partie: "2.1",
+    titre: "Inventaire des moyens d'extinction",
+    attendu: "Liste des extincteurs.",
+    categoriesEquipement: ["EXTINCTEUR"],
+  };
+  const eq = (id: string, zone: string, localisation: string | null = "Couloir") => ({
+    id,
+    libelle: `Extincteur ${id}`,
+    categorie: "EXTINCTEUR",
+    localisation,
+    batiment: { nom: zone },
+  });
+  const metas = (equipements: ReturnType<typeof eq>[]) =>
+    (contenuTenuAilleursDepuis("etab-1", "2.1", sectionInventaire, equipements, [], NOW, AUCUNE_PRUDENCE)?.lignes ?? []).map(
+      (l) => l.meta,
+    );
+
+  it("une seule zone : son nom stocké (« Bâtiment principal ») ne s'imprime pas", () => {
+    expect(metas([eq("a", "Bâtiment principal"), eq("b", "Bâtiment principal")])).toEqual(["Couloir", "Couloir"]);
+  });
+
+  it("plusieurs zones : le nom de zone s'imprime, et le nom historique se lit « Zone principale »", () => {
+    expect(metas([eq("a", "Bâtiment principal"), eq("b", "Cuisine")])).toEqual([
+      "Zone principale · Couloir",
+      "Cuisine · Couloir",
+    ]);
+  });
+});

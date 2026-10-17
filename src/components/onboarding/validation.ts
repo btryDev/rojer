@@ -215,10 +215,11 @@ export function validerTypologie(s: OnboardingState): Blocage | null {
   // sinon il envoie chercher autre chose.
   if (s.estERP && !s.typeErp)
     return { champ: "typeErp", message: "Précisez le type de votre ERP." };
-  // LE FILTRE À L'ACCUEIL (2026-10-17) : AVANT la catégorie, comme le
-  // serveur — un J est refusé sans avoir à choisir de catégorie (revue). La règle du serveur, par la même
-  // fonction (`etablissements/types-refuses.ts`). Un type refusé est un refus
-  // de périmètre ; la question R sans réponse se corrige en répondant.
+  // LE FILTRE À L'ACCUEIL (2026-10-17) : la règle du serveur, par la même
+  // fonction (`etablissements/types-refuses.ts`), et AVANT la catégorie,
+  // comme le serveur — un J est refusé sans avoir à choisir de catégorie
+  // (revue). Un type refusé est un refus de périmètre ; la question R sans
+  // réponse se corrige en répondant.
   const filtre = refusDuFiltre({
     estERP: s.estERP,
     typeErp: s.typeErp,

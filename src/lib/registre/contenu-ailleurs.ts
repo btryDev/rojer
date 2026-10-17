@@ -44,6 +44,7 @@ import {
   statutAffichePrudent,
   type RetenueParPrudence,
 } from "@/lib/calendrier/prudence";
+import { nomDeZone } from "@/lib/batiments/nom-zone";
 
 /**
  * Ce que la fonction pure attend, réduit au strict nécessaire.
@@ -209,13 +210,20 @@ export function contenuTenuAilleursDepuis(
   const base = `/etablissements/${etablissementId}`;
 
   if (PARTIES_INVENTAIRE.has(partieId)) {
+    // ~~`[e.batiment?.nom, e.localisation]` toujours~~ — 2026-10-17 (ADR-029
+    // amendée) : la zone ne se dit que si le parc en compte plusieurs, comme
+    // au parc et dans les PDF ; sous une seule, son nom stocké (« Bâtiment
+    // principal ») se lisait comme un second bâtiment.
+    const plusieursZones = new Set(equipements.map((e) => e.batiment?.nom).filter(Boolean)).size > 1;
     return {
       lignes: equipements
         .filter((e) => cats.has(e.categorie))
         .map((e) => ({
           id: e.id,
           titre: e.libelle,
-          meta: [e.batiment?.nom, e.localisation].filter(Boolean).join(" · "),
+          meta: [plusieursZones && e.batiment ? nomDeZone(e.batiment.nom) : null, e.localisation]
+            .filter(Boolean)
+            .join(" · "),
           href: `${base}/equipements/${e.id}`,
         })),
       source: { libelle: "vos équipements", href: `${base}/equipements` },
