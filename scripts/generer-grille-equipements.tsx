@@ -106,6 +106,8 @@ import {
   LABEL_REALISATEUR,
 } from "@/lib/calendrier/labels";
 import { BOARD, stylesCommuns as s } from "@/lib/pdf/styles";
+import { AnnexeCeQueRojerNeSuitPas } from "@/lib/pdf/AnnexeCeQueRojerNeSuitPas";
+
 const LABEL_SOURCE: Record<string, string> = {
   CODE_TRAVAIL: "Code du travail",
   CCH: "CCH",
@@ -1006,6 +1008,7 @@ function GrilleDocument({
           <PiedDePage />
         </Page>
       ))}
+      <AnnexeCeQueRojerNeSuitPas stylePage={stylePage} piedDePage={<PiedDePage />} />
     </Document>
   );
 }

@@ -3,11 +3,17 @@ import { CORPUS, articlesNonCouverts } from "@/lib/referentiels/corpus";
 import { ADRESSE_MANQUES_ANNONCES } from "@/lib/referentiels/corpus/adresses";
 import { DESCRIPTION_CATEGORIE } from "@/lib/equipements/labels";
 import { AIDE_TYPE_ERP } from "@/lib/etablissements/aide-type-erp";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   ANNONCES,
+  DOSSIER_QUI_N_ECARTE_RIEN,
   manquesAnnoncesDuDossier,
+  phraseDesSujets,
+  toutesLesAnnonces,
   type FaitsManquesAnnonces,
 } from "./manques-annonces";
+import { affirmationsDeNonCouverture } from "./non-couverture-balayage";
 
 /** Les références que le corpus adresse à la page, lues en l'appelant. */
 function adressees(): string[] {
@@ -247,7 +253,7 @@ describe("2026-10-14 : les poussières en nuage sont annoncées, pas questionné
 describe("aucun score, aucune qualification", () => {
   const textes = () =>
     manquesAnnoncesDuDossier(CORPUS, EMPLOYEUR)
-      .flatMap((d) => [d.titre, d.phrase ?? "", ...d.articles.map((a) => a.phrase ?? "")])
+      .flatMap((d) => [d.titre, d.phrase ?? "", d.phrasePage, ...d.articles.map((a) => a.phrase ?? "")])
       .join(" ")
       .toLowerCase();
 
@@ -341,5 +347,56 @@ describe("2026-10-17 (sous-lot G) : l'aide du type L annonce les sièges et le g
       const cite = /AIDE_TYPE_ERP\.[A-Z]`?\)?\s*:\s*«\s*([\s\S]+?)\s*»\s*$/.exec(declareA)?.[1] ?? "∅";
       expect(aide, ref).toContain(cite);
     }
+  });
+});
+
+describe("2026-10-17, ADR-046 : la page dit une phrase par domaine, faite des sujets", () => {
+  const RACINE = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
+
+  it("chaque article a un sujet, et la phrase de son domaine le contient", () => {
+    for (const f of [EMPLOYEUR, RESTAURANT_N5, DOSSIER_QUI_N_ECARTE_RIEN]) {
+      for (const d of manquesAnnoncesDuDossier(CORPUS, f)) {
+        expect(d.phrasePage, d.cle).toMatch(/^Rojer ne suit pas .+\.$/);
+        for (const a of d.articles) {
+          expect(a.sujet.trim(), a.ref).not.toBe("");
+          expect(d.phrasePage, `${d.cle} / ${a.ref}`).toContain(a.sujet);
+        }
+      }
+    }
+  });
+
+  it("un sujet ne s'écrit que par `nonPorte` : le balayage le voit et le confronte", () => {
+    const vus = new Set(affirmationsDeNonCouverture(RACINE).map((a) => a.sujet));
+    for (const [ref, an] of Object.entries(ANNONCES)) {
+      expect(vus.has(an.sujet), `${ref} : « ${an.sujet} » hors de nonPorte`).toBe(true);
+    }
+  });
+
+  it("aucune référence, aucun corpus dans la phrase de la page", () => {
+    const corpus = CORPUS.map((c) => c.intitule);
+    for (const d of manquesAnnoncesDuDossier(CORPUS, DOSSIER_QUI_N_ECARTE_RIEN)) {
+      expect(d.phrasePage, d.cle).not.toMatch(/\b[LRD]\.\s?\d{3,4}(?:-\d+)*/);
+      expect(d.phrasePage, d.cle).not.toMatch(/\bart\.|arrêté du|§|\b(?:MS|EL|CO|CH|PE|GZ|AS)\s\d/i);
+      for (const a of d.articles) expect(d.phrasePage, a.ref).not.toContain(a.ref);
+      for (const c of corpus) expect(d.phrasePage).not.toContain(c);
+    }
+  });
+
+  it("le dossier qui n'écarte rien lit toutes les annonces — ce que le PDF imprime", () => {
+    const refs = toutesLesAnnonces(CORPUS).flatMap((d) => d.articles.map((a) => a.ref));
+    expect(refs.sort()).toEqual(Object.keys(ANNONCES).sort());
+  });
+
+  it("les poussières en nuage restent dites sur la page (décision du 2026-10-14)", () => {
+    const rubrique = manquesAnnoncesDuDossier(CORPUS, RESTAURANT_N5).find(
+      (d) => d.cle === "matieres_inflammables",
+    );
+    expect(rubrique?.phrasePage).toMatch(/atmosphères explosives/);
+    expect(rubrique?.phrasePage).toMatch(/poussières/);
+  });
+
+  it("phraseDesSujets : une phrase, sans doublon", () => {
+    expect(phraseDesSujets(["a", "b", "a"])).toBe("Rojer ne suit pas a, ni b.");
+    expect(phraseDesSujets(["a"])).toBe("Rojer ne suit pas a.");
   });
 });

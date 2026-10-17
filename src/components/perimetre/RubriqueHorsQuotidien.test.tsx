@@ -11,8 +11,11 @@ import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render } from "@testing-library/react";
 import {
   GESTE_HORS_QUOTIDIEN,
+  GESTES_HORS_QUOTIDIEN,
+  gesteHorsQuotidien,
   obligationsNiveauAuditDuDossier,
 } from "@/lib/perimetre/niveau-audit";
+import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
 import { CATEGORIES_EQUIPEMENT } from "@/lib/referentiels/types-communs";
 import type { EtablissementMatching } from "@/lib/matching/types";
@@ -68,15 +71,32 @@ describe("rubrique « hors du quotidien » — ce que la carte dit", () => {
     expect(lignes.some((l) => l.porteePar === null)).toBe(true);
   });
 
-  it("chaque carte dit le geste", () => {
+  // ~~« chaque carte dit LE geste » (un seul, `GESTE_HORS_QUOTIDIEN`)~~ —
+  // 2026-10-17, ADR-046 : le geste dépend des réalisateurs.
+  it("chaque carte dit son geste, tiré des réalisateurs", () => {
     const c = rendu();
     const cartes = [...c.querySelectorAll("li")];
     expect(cartes).toHaveLength(lignes.length);
+    const parLibelle = new Map(lignes.map((l) => [l.libelle, l]));
     for (const carte of cartes) {
-      expect(carte.textContent, `carte sans geste : ${carte.textContent}`).toContain(
-        GESTE_HORS_QUOTIDIEN,
+      const libelle = carte.querySelector("h3")?.textContent ?? "";
+      const o = obligationsConformite.find((x) => x.libelle === libelle)!;
+      expect(o, libelle).toBeDefined();
+      expect(carte.querySelector("[data-geste]")?.textContent, libelle).toBe(
+        gesteHorsQuotidien(o),
       );
+      expect(parLibelle.get(libelle)?.geste).toBe(gesteHorsQuotidien(o));
     }
+  });
+
+  it("la fiche d'entreprise s'obtient du service de santé au travail, pas « à tenir vous-même »", () => {
+    // Le défaut qui a fait naître `gesteHorsQuotidien` (plan du 2026-10-17).
+    const fiche = [...rendu().querySelectorAll("li")].find((li) =>
+      li.textContent?.includes("Fiche d'entreprise"),
+    );
+    expect(fiche, "le dossier de test doit porter la fiche d'entreprise").toBeDefined();
+    expect(fiche!.textContent).toContain(GESTES_HORS_QUOTIDIEN.spst);
+    expect(fiche!.textContent).not.toContain(GESTE_HORS_QUOTIDIEN);
   });
 
   it("« Vise l'établissement lui-même » n'est plus répété", () => {
@@ -135,10 +155,17 @@ describe("rubrique « hors du quotidien » — ce que la carte dit", () => {
     expect(fautif, `« audit » affiché : ${fautif}`).toBeUndefined();
   });
 
-  it("la référence en chasse fixe passe à la ligne au lieu de déborder", () => {
-    const refs = [...rendu().querySelectorAll("[data-reference]")];
-    expect(refs).toHaveLength(lignes.length);
-    for (const r of refs) expect(r.className).toMatch(/(?:^|\s)wrap-anywhere(?:\s|$)/);
+  // ~~« la référence en chasse fixe passe à la ligne au lieu de déborder »~~ —
+  // 2026-10-17, ADR-046 : la référence n'est plus sur la page.
+  it("aucune référence d'article n'est affichée (ADR-046) — elle est à l'annexe du PDF", () => {
+    const c = rendu();
+    expect(c.querySelectorAll("[data-reference]")).toHaveLength(0);
+    expect(c.querySelectorAll("a")).toHaveLength(0);
+    const texte = c.textContent ?? "";
+    for (const l of lignes) {
+      expect(texte, l.reference).not.toContain(l.reference);
+    }
+    expect(texte).not.toMatch(/\b[LRD]\.\s?\d{3,4}-\d/);
   });
 });
 
