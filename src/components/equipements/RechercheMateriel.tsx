@@ -51,6 +51,7 @@ export function RechercheMateriel({
   id,
   choix,
   onChoix,
+  onRecherche,
   invalide,
   decritPar,
 }: {
@@ -58,6 +59,8 @@ export function RechercheMateriel({
   id: string;
   choix: ChoixMateriel;
   onChoix: (c: ChoixMateriel) => void;
+  /** Une recherche commence (`true`) ou s'achève, par un choix ou un abandon (`false`). */
+  onRecherche?: (enCours: boolean) => void;
   invalide?: boolean;
   /** `aria-describedby` : l'aide sous le champ. */
   decritPar?: string;
@@ -98,11 +101,13 @@ export function RechercheMateriel({
     );
     setSaisie(null);
     setOuvert(false);
+    onRecherche?.(false);
   };
 
   const fermer = () => {
     setSaisie(null);
     setOuvert(false);
+    onRecherche?.(false);
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -207,6 +212,7 @@ export function RechercheMateriel({
           setSaisie(e.currentTarget.value);
           setActif(0);
           setOuvert(true);
+          onRecherche?.(true);
         }}
         onKeyDown={onKeyDown}
         onBlur={fermer}

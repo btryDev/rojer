@@ -70,8 +70,9 @@ type Condition =
   | "tous"
   /** Un employeur : le Code du travail, quatrième partie. */
   | "travail"
-  /** Un employeur qui n'a pas répondu « non » aux équipements de protection. */
-  | "travail_epi"
+  // ~~`travail_epi` — un employeur qui n'a pas répondu « non » aux
+  // équipements de protection~~ : 2026-10-17, sous-lot B, retirée avec son
+  // seul article (`R. 4323-106`, déplacé vers l'aide des catégories d'EPI).
   /** Un ERP des quatre premières catégories : le livre II du règlement de sécurité. */
   | "erp_1_4"
   /** Un dossier qui déclare le régime d'habitation. */
@@ -85,8 +86,6 @@ function concerne(c: Condition, f: FaitsManquesAnnonces): boolean {
       return true;
     case "travail":
       return f.travail;
-    case "travail_epi":
-      return f.travail && f.epiPresents !== false;
     case "erp_1_4":
       return f.categorieErp !== null && f.categorieErp !== "N5";
     case "habitation":
@@ -253,11 +252,9 @@ export const ANNONCES: Readonly<Record<string, Annonce>> = {
     condition: "travail",
     phrase: `Rojer ne renseigne pas ${nonPorte("le passeport de prévention")} : le texte en confie le renseignement à l'employeur, sur un service national que Rojer ne rejoint pas.`,
   },
-  "R. 4323-106": {
-    domaine: "formation",
-    condition: "travail_epi",
-    phrase: `Rojer ne suit pas ${nonPorte("la formation au port des équipements de protection individuelle")} : le texte la renouvelle aussi souvent que nécessaire, sans fixer de durée.`,
-  },
+  // ~~"R. 4323-106" (domaine « formation », condition `travail_epi`)~~ —
+  // 2026-10-17, sous-lot B, décision de c6 : DÉPLACÉ vers l'aide des quatre
+  // catégories d'EPI (`equipements/labels.ts`, `PHRASE_FORMATION_EPI`).
   "R. 4225-3": { domaine: "boissons", condition: "travail" },
   // 2026-10-07 : l'obligation qui le citait pour les seuls équipements sous
   // pression est retirée (relecture préventeur du 30/09, décision de la

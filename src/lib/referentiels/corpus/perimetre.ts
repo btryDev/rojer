@@ -47,10 +47,19 @@ export const EXCLUSIONS = {
     motif:
       "Les dispositions du Livre II du règlement de sécurité ERP ne s'appliquent pas au deuxième groupe, sauf renvoi exprès du Livre III (PE 1 § 1). Ce n'est pas un choix de couverture : le texte ne vise pas ces établissements.",
   },
+  // ~~« ICPE soumises à autorisation, ATEX, rayonnements ionisants,
+  // équipements sportifs, piscines : … »~~ — 2026-10-17, sous-lot B du plan
+  // « mise à jour du référentiel » (§ 3), validé par la propriétaire : les
+  // équipements sportifs SORTENT de l'exclusion (le sous-lot E du plan les
+  // instruit, X 25 compris) ; les bains à remous et les appareils de bronzage
+  // (UV), que la liste des matériels non couverts nomme désormais, y sont
+  // écrits. Le motif s'affiche sur la page « Ce que Rojer ne couvre pas »
+  // (`perimetre/exclusions.ts`) : l'ancienne rédaction est rayée ici, pas à
+  // l'écran. `exclusions.test.ts` tient qu'aucun article du type X n'y est rangé.
   risque_specialise: {
     libelle: "Risque spécialisé hors périmètre",
     motif:
-      "ICPE soumises à autorisation, ATEX, rayonnements ionisants, équipements sportifs, piscines : risques dont le traitement demande une expertise que le produit ne prétend pas porter.",
+      "ICPE soumises à autorisation, ATEX, rayonnements ionisants, piscines, bains à remous, appareils de bronzage (UV) : risques dont le traitement demande une expertise que le produit ne prétend pas porter.",
   },
   construction: {
     libelle: "Règle de construction, pas d'exploitation",

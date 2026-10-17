@@ -5,6 +5,8 @@ import {
 } from "@/lib/referentiels/conformite";
 import { AIDE_GROUPE_ELECTROGENE, DESCRIPTION_CATEGORIE } from "./labels";
 import { CHAMPS_TRI_ETAT, VALEURS_TRI_ETAT } from "./schema";
+import { EXPLICATION_NIVEAU_AUDIT, estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
+import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
 
 /**
  * L'aide de la question « groupe électrogène » dit ce que chaque réponse
@@ -126,5 +128,56 @@ describe("aide de l'installation frigorifique : la chambre froide (2026-10-14)",
       o.referencesLegales.some((r) => r.reference.includes("30 septembre 1957")),
     );
     expect(citant).toEqual([]);
+  });
+});
+
+// 2026-10-17, relecture de B (contrôle visuel de c6) : les aides de l'appareil
+// respiratoire et du gilet annonçaient « tous les douze mois » alors que leurs
+// lignes sont au niveau audit (ADR-042). Une aide qui dit le rythme d'une ligne
+// audit, sans ligne servie du même rythme sur la catégorie, doit dire qu'elle
+// n'est pas suivie.
+
+/** Les mots par lesquels une aide dit un rythme. Borne basse, pas une liste close. */
+const MOTS_DU_RYTHME: Partial<Record<string, RegExp>> = {
+  annuelle: /douze mois|une fois par an|annuel|chaque année/i,
+  semestrielle: /six mois|semestriel/i,
+  trimestrielle: /trois mois|trimestriel/i,
+  mensuelle: /chaque mois|mensuel/i,
+  quinquennale: /cinq ans|quinquennal/i,
+  decennale: /dix ans|décennal/i,
+};
+
+function rythmesAuditNonDits(aides: Partial<Record<CategorieEquipement, string>>): string[] {
+  const parCat = (c: string) =>
+    obligationsConformite.filter((o) => ((o.categoriesEquipement ?? []) as readonly string[]).includes(c));
+  return Object.entries(aides).flatMap(([c, aide]) =>
+    parCat(c)
+      .filter((o) => estNiveauAudit(o))
+      .filter((o) => {
+        const mots = MOTS_DU_RYTHME[o.periodicite];
+        if (!mots || !mots.test(aide ?? "")) return false;
+        const servieDuMemeRythme = parCat(c).some((s) => !estNiveauAudit(s) && s.periodicite === o.periodicite);
+        return !servieDuMemeRythme && !(aide ?? "").includes(EXPLICATION_NIVEAU_AUDIT);
+      })
+      .map((o) => `${c} → ${o.id}`),
+  );
+}
+
+describe("une aide ne promet pas le rythme d'une ligne au niveau audit (2026-10-17)", () => {
+  it("aucune aide n'annonce le rythme d'une ligne audit sans dire qu'elle n'est pas suivie", () => {
+    expect(rythmesAuditNonDits(DESCRIPTION_CATEGORIE)).toEqual([]);
+  });
+
+  it("borne basse : les deux catégories en cause disent bien le niveau audit", () => {
+    expect(DESCRIPTION_CATEGORIE.EPI_RESPIRATOIRE).toContain(EXPLICATION_NIVEAU_AUDIT);
+    expect(DESCRIPTION_CATEGORIE.EPI_GILET_SAUVETAGE).toContain(EXPLICATION_NIVEAU_AUDIT);
+  });
+
+  it("cassure : l'aide de l'appareil respiratoire sans la mention est vue", () => {
+    const casse = {
+      ...DESCRIPTION_CATEGORIE,
+      EPI_RESPIRATOIRE: DESCRIPTION_CATEGORIE.EPI_RESPIRATOIRE!.replace(EXPLICATION_NIVEAU_AUDIT, ""),
+    };
+    expect(rythmesAuditNonDits(casse)).toEqual(["EPI_RESPIRATOIRE → epi-verification-generale-periodique-respiratoire"]);
   });
 });

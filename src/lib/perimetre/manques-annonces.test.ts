@@ -79,18 +79,14 @@ describe("l'adresse mène quelque part (C45)", () => {
 });
 
 describe("n'annonce à un dossier que ce qui peut le concerner", () => {
-  it("« non » aux équipements de protection retire la formation au port, et elle seule", () => {
-    const sans = refsProjetees({ ...EMPLOYEUR, epiPresents: false });
-    expect(sans).not.toContain("R. 4323-106");
+  // ~~« non » aux équipements de protection retire la formation au port ;
+  // le silence ne retire rien~~ — 2026-10-17, sous-lot B : `R. 4323-106` a
+  // quitté la page pour l'aide des quatre catégories d'EPI (décision de c6).
+  it("la formation au port des EPI n'est plus sur la page, à aucun dossier (déplacée, pas dupliquée)", () => {
+    expect("R. 4323-106" in ANNONCES).toBe(false);
+    expect(refsProjetees({ ...EMPLOYEUR, epiPresents: null })).not.toContain("R. 4323-106");
     // Borne basse : le reste du domaine reste là.
-    expect(sans).toContain("L. 4141-5");
-  });
-
-  it("le silence sur les équipements de protection ne retire rien", () => {
-    // L'incertitude ne réduit jamais la couverture.
-    expect(refsProjetees({ ...EMPLOYEUR, epiPresents: null })).toContain(
-      "R. 4323-106",
-    );
+    expect(refsProjetees({ ...EMPLOYEUR, epiPresents: false })).toContain("L. 4141-5");
   });
 
   it("le cocontractant étranger est annoncé à tout dossier : aucun fait déclaré ne l'exclut (M4)", () => {

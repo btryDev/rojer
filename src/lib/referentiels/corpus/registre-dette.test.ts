@@ -170,14 +170,18 @@ describe("registre de dette — les obligations manquantes", () => {
       // [16, 0] → [13, 0] le même jour (décision de c6) : `CO 10`, `AM 18`,
       // `CH 35` passent `non_couvert`.
       // [13, 0] → [11, 0] après la revue : `AS 5`, `AS 8` annoncés (`non_couvert`).
-      categorie_equipement: [11, 0],
+      // [11, 0] → [12, 0] le 2026-10-17 (sous-lot B) : `X annexe`, venu
+      // d'`a_trancher`, hors cadre — aucune catégorie de désinfection des eaux.
+      categorie_equipement: [12, 0],
       // 4 → 1 le 2026-09-27 (C45) : `R. 4227-23`, `R. 4227-24` et l'art. 8 de
       // l'arrêté du 10 septembre 2021 passent `non_couvert`, annoncés.
       // [1, 2] → [3, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : `MS 71`, arrêté 1986 art. 60.
       // [3, 0] → [5, 0] le 2026-10-17 (`lot/ref-a-corpus-titre-1`) : `T 29` § 3
       // et `T 33` § 2, la puissance installée que Rojer ne connaît pas.
       // [5, 0] → [3, 0] après la revue : `T 29`, `T 33` annoncés (`non_couvert`).
-      attribut_etablissement: [3, 0],
+      // [3, 0] → [4, 0] le 2026-10-17 (sous-lot B) : `X 1 § 2`, venu
+      // d'`a_trancher`, hors cadre — aucun attribut de piscine transformable.
+      attribut_etablissement: [4, 0],
       // 5 → 0 le 2026-09-27 (C45) : `R. 1321-60` et les art. 4, 9, 10, 12 de
       // l'arrêté du 10 septembre 2021, annoncés (`non_couvert`).
       // [0, 1] → [1, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : arrêté 1986 art. 78-1.
@@ -226,12 +230,16 @@ describe("registre de dette — les obligations manquantes", () => {
       // propriétaire, une condition d'activité).
       // [5, 0] → [6, 0] le 2026-10-16 : `X 25`, l'interdiction de fumer
       // signalée en salle de sport couverte, contre l'exclusion
-      // `risque_specialise` (« équipements sportifs »), à évaluer.
+      // `risque_specialise` (« équipements sportifs »), à évaluer. [2026-10-17,
+      // sous-lot B : les équipements sportifs sont sortis de l'exclusion.]
       // [6, 0] → [8, 0] le 2026-10-17 (revue indépendante) : `X annexe` et
       // `X 1 § 2`, les actes « piscines » du type X sortis de l'exclusion.
       // [8, 0] → [10, 0] le 2026-10-17 (seconde revue) : `MS 41` et `MS 70 § 5`,
       // venus de `libre` — la classe GN 10 / A6 de PE 27 § 6.
-      a_trancher: [10, 0],
+      // [10, 0] → [8, 0] le 2026-10-17 (sous-lot B) : `X annexe` et `X 1 § 2`
+      // tranchés hors cadre (piscines), vers `categorie_equipement` et
+      // `attribut_etablissement`.
+      a_trancher: [8, 0],
       // [0, 3] → [0, 0] le 2026-10-12 : les trois hôtels, voir `a_trancher`.
       perimetre: [0, 0],
     });

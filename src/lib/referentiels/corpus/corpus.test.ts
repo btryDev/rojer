@@ -1680,7 +1680,16 @@ describe("corpus — ce qu'on ne couvre pas, et où on le dit", () => {
     // `T 29`, `T 33` (aide du type T, D). Chemin de redescente complet : B
     // (−4) → 19, C (`CO 10`, −1) → 18, D (`T 29`, `T 33`, `T 43`, `T 44`, −4)
     // → 14, G (`AM 18`, −1) → 13 ; `MS 42` restant muet.
-    const MUETS = 23;
+    // ~~const MUETS = 23;~~ — **19 DEPUIS LE SOUS-LOT B** (`lot/ref-b-hors-cadre`,
+    // 2026-10-17), mesuré en appelant le corpus : 23 − 4 + 0. `CH 23` et
+    // `CH 24` sont dits dans l'aide « Installation de gaz » (et l'entrée
+    // « Chaudière »), `AS 5` dans l'aide « Ascenseur », `AS 8` dans l'entrée
+    // « Escalier mécanique ou trottoir roulant ». Les onze articles des quatre
+    // corpus courts du même lot (bronzage, bains à remous, aires de jeux,
+    // produits pétroliers) entrent `non_couvert` avec l'adresse de la liste
+    // des matériels : aucun n'est muet. Restent : C (`CO 10`, −1) → 18, D
+    // (`T 29`, `T 33`, `T 43`, `T 44`, −4) → 14, G (`AM 18`, −1) → 13.
+    const MUETS = 19;
     // Une note interne n'est pas une annonce à l'exploitant. `declareA`
     // mélange aujourd'hui les deux natures — une adresse produit et un
     // document de travail — et cette distinction reste à trancher (lot 3) ;

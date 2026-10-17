@@ -11,6 +11,8 @@ import { DESCRIPTION_CATEGORIE } from "./labels";
 import {
   CLES_MATERIELS_NON_COUVERTS,
   MATERIELS_NON_COUVERTS,
+  SANS_TEXTE_LU,
+  AUCUN_TEXTE_LU,
   materielNonCouvert,
 } from "./materiels-non-couverts";
 import { equipementSchema } from "./schema";
@@ -46,6 +48,24 @@ function resout(ref: string, declareA: string, cites: Set<string>): boolean {
     return aide.includes(m[2]);
   }
   return true;
+}
+
+/** Les clés d'une liste qui visent autre chose qu'un article citable par clé. */
+function clesFautives(liste: typeof MATERIELS_NON_COUVERTS): string[] {
+  const parRef = new Map(articles().map((a) => [a.ref, a] as const));
+  return liste.flatMap((m) =>
+    m.references.flatMap((r) => {
+      if (!r.corpus) return [];
+      const a = parRef.get(r.corpus);
+      const admis =
+        a !== undefined &&
+        (a.statut === "retenu" ||
+          a.statut === "sans_objet" ||
+          (a.statut === "non_couvert" &&
+            (a.declareA === ADRESSE_MATERIELS_NON_COUVERTS || a.declareA === ADRESSE_MANQUES_ANNONCES)));
+      return admis ? [] : [`${m.cle} → ${r.corpus} (${a?.statut ?? "absent"})`];
+    }),
+  );
 }
 
 /** Les articles déplacés le 2026-10-14 : ceux dont l'adresse a changé. */
@@ -90,6 +110,23 @@ describe("matériels non couverts : la liste et le corpus se citent (2026-10-14)
     }
   });
 
+  it("une clé ne vise jamais un manque (revue de B, 2026-10-17, option (b) de c6)", () => {
+    // Une clé vise un `non_couvert` adressé à la liste ou à la page, ou un
+    // `retenu` / `sans_objet` cité en contexte. Un `obligation_manquante` cité
+    // par clé passait pour annoncé : la piscine citait ainsi `X annexe`, et la
+    // garde précédente ne regardait que les `non_couvert`.
+    expect(clesFautives(MATERIELS_NON_COUVERTS)).toEqual([]);
+  });
+
+  it("cassure : l'entrée « Piscine » qui cite MS 41 par clé est vue", () => {
+    const casse = MATERIELS_NON_COUVERTS.map((m) =>
+      m.cle === "piscine_equipement_sportif"
+        ? { ...m, references: [...m.references, { libelle: "MS 41", corpus: "MS 41" }] }
+        : m,
+    );
+    expect(clesFautives(casse)).toEqual(["piscine_equipement_sportif → MS 41 (obligation_manquante)"]);
+  });
+
   it("borne basse : la liste porte bien les articles déplacés de la page", () => {
     const parRef = new Map(articles().map((a) => [a.ref, a] as const));
     for (const ref of ["AS 10", "R. 4323-63", "R. 1321-60"]) {
@@ -122,6 +159,20 @@ describe("aucun article non porté ne perd son adresse visible (2026-10-14)", ()
     expect(morts).toEqual([]);
   });
 
+  it("cassure : sans l'entrée « cabine UV », les quatre articles du bronzage sont orphelins (plan, § 3)", () => {
+    const sansUv = new Set(
+      MATERIELS_NON_COUVERTS.filter((m) => m.cle !== "cabine_uv").flatMap((m) =>
+        m.references.flatMap((r) => (r.corpus ? [r.corpus] : [])),
+      ),
+    );
+    const bronzage = CORPUS.find((c) => c.id === "csp-appareils-bronzage")!.articles;
+    expect(bronzage.length).toBeGreaterThan(0);
+    for (const a of bronzage) {
+      expect(resout(a.ref, ADRESSE_MATERIELS_NON_COUVERTS, refsCitees()), a.ref).toBe(true);
+      expect(resout(a.ref, ADRESSE_MATERIELS_NON_COUVERTS, sansUv), a.ref).toBe(false);
+    }
+  });
+
   it("épreuve : retirer une entrée de la liste rend son article orphelin", () => {
     // La garde ci-dessus, éprouvée sur une copie : sans l'entrée « échelle »,
     // R. 4323-63 garde une adresse qui ne mène plus nulle part.
@@ -133,6 +184,16 @@ describe("aucun article non porté ne perd son adresse visible (2026-10-14)", ()
     expect(resout("R. 4323-63", ADRESSE_MATERIELS_NON_COUVERTS, sansEchelle)).toBe(false);
   });
 });
+
+/** La réserve de `AUCUN_TEXTE_LU`, écrite ici en toutes lettres : la garde ne se répare pas en raccourcissant la constante. */
+const RESERVE = "ce qui ne veut pas dire qu'il n'en existe aucun.";
+
+function sansReserve(liste: typeof MATERIELS_NON_COUVERTS): string[] {
+  return liste
+    .filter((m) => SANS_TEXTE_LU.has(m.cle))
+    .filter((m) => !m.phrase.includes(AUCUN_TEXTE_LU) || !m.phrase.includes(RESERVE))
+    .map((m) => m.cle);
+}
 
 describe("la liste elle-même", () => {
   it("une clé par entrée, et toutes les clés ont leur entrée", () => {
@@ -148,12 +209,35 @@ describe("la liste elle-même", () => {
     for (const m of MATERIELS_NON_COUVERTS) {
       expect(m.phrase, m.cle).toMatch(/^Rojer ne suit pas /);
       expect(m.phrase.toLowerCase(), m.cle).not.toMatch(/conforme|en infraction|vous devez/);
-      // La piscine est hors du périmètre par décision (CLAUDE.md), sans texte
-      // lu : elle n'a aucune référence, et rien ne s'imprime sous « Textes »
-      // (revue du 2026-10-15). Toute autre entrée cite au moins un texte.
-      if (m.cle === "piscine_equipement_sportif") expect(m.references, m.cle).toEqual([]);
-      else expect(m.references.length, m.cle).toBeGreaterThan(0);
+      // ~~La piscine est hors du périmètre par décision (CLAUDE.md), sans texte
+      // lu : elle n'a aucune référence~~ [2026-10-17, sous-lot B : elle cite
+      // désormais D. 1332-1 et D. 1332-2, lus]. Une entrée sans texte lu n'a
+      // aucune référence, rien ne s'imprime sous « Textes » (revue du
+      // 2026-10-15), et sa phrase le dit ; toute autre entrée cite au moins un
+      // texte.
+      if (SANS_TEXTE_LU.has(m.cle)) {
+        expect(m.references, m.cle).toEqual([]);
+        expect(sansReserve([m]), m.cle).toEqual([]);
+      } else expect(m.references.length, m.cle).toBeGreaterThan(0);
     }
+  });
+
+  it("une entrée sans texte lu porte la réserve entière (revue de B, 2026-10-17)", () => {
+    expect(sansReserve(MATERIELS_NON_COUVERTS)).toEqual([]);
+    expect(AUCUN_TEXTE_LU).toContain(RESERVE);
+  });
+
+  it("cassure : la réserve retirée d'une phrase sans texte est vue", () => {
+    const casse = MATERIELS_NON_COUVERTS.map((m) =>
+      m.cle === "fontaine_glacons" ? { ...m, phrase: m.phrase.replace(`, ${RESERVE}`, "") } : m,
+    );
+    expect(sansReserve(casse)).toEqual(["fontaine_glacons"]);
+  });
+
+  it("cuve de fioul : la phrase de l'ERP 1 à 4 dit au dirigeant ce qui fait apparaître CH 58 § 2 (contrôle visuel du 2026-10-17)", () => {
+    expect(materielNonCouvert("cuve_fioul")?.phrase).toContain(
+      "(art. CH 58 § 2) n'apparaît dans Rojer que si vous déclarez aussi une ventilation mécanique (VMC) ou une centrale de traitement d'air.",
+    );
   });
 
   it("une orientation mène à une catégorie suivie, jamais à « Autre »", () => {

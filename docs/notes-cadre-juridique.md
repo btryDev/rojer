@@ -180,6 +180,9 @@ niche (ligne 5) décide ensuite si Rojer en fait une ligne ou l'annonce.
   Les ~~dix-huit~~ vingt-huit manques sont au § 9 de `couverture-declaree-du-produit.md`
   (huit articles du titre Ier ouverts par les renvois s'y sont ajoutés le
   2026-10-17, et les deux actes « piscines » du type X), à
-  évaluer. Ce qui reste ouvert : l'exclusion « équipements sportifs, piscines »
-  face à X 25, à l'annexe du type X et à X 1 § 2 (ligne de partage 7) ; la
+  évaluer. Ce qui reste ouvert : ~~l'exclusion « équipements sportifs, piscines »
+  face à X 25, à l'annexe du type X et à X 1 § 2 (ligne de partage 7) ;~~
+  [2026-10-17, sous-lot B, validé par la propriétaire : tranché — les
+  équipements sportifs sortent de l'exclusion (X 25 au sous-lot E), les
+  piscines y restent, l'annexe du type X et X 1 § 2 passent hors cadre (§ 7)] la
   classe GN 10 / A6, pour MS 41 et MS 70 § 5.]

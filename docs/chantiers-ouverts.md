@@ -90,6 +90,38 @@ release (lots lancés le même jour) ; **n° 1 (gaz sans cuisine) et n° 5
    d'équipement du 2026-10-17 sont concernées (portail, rapport annuel
    d'ascenseur, révision en atelier de l'extincteur hors ERP), comme les deux
    EPI du 2026-10-08. Remède non décidé.
+9. **[2026-10-17, dette écrite, non corrigée] `legifrance:verifier` refuse une
+   citation exacte à ses bords** (`lot/ref-a-corpus-titre-1`, PU 4, relevé à
+   la revue ; à corriger dans un lot à part, décision de c6). La normalisation
+   (`src/lib/legifrance/normalisation.ts`, règle 7 et fin de texte) ramène un
+   numéro d'élément « 1. » à « 1° » et retire le point final dans le texte
+   OFFICIEL, mais pas au début ni à la fin d'une CITATION : une citation qui
+   commence par « 1. » ou finit par un point final de l'article est déclarée
+   « écart de citation » alors qu'elle est la sous-chaîne exacte du texte de
+   l'API. Contournement appliqué à PU 4 (`arrete-1980-livre-3.ts`) : citation
+   recoupée à l'intérieur du texte, l'ancienne rayée en commentaire. Remède :
+   normaliser les deux côtés de la même façon, avec un test sur PU 4 tel
+   qu'il était (« 1. Dans certains … ferme-porte. »).
+10. **[2026-10-17, dette écrite, non corrigée] La recherche de matériel trouve
+   « gazole » quand on tape « gaz »** (`lot/ref-b-hors-cadre`, revue du
+   sous-lot B). `rechercherMateriel` (`src/lib/equipements/recherche-materiel.ts`)
+   compare désormais chaque mot de la saisie au DÉBUT des mots des termes :
+   « spa » ne trouve plus « transpalette ». Mais « gaz » commence « gazole »,
+   et la cuve de fioul ou de gazole sort à côté de l'installation de gaz. Le
+   mot entier corrigerait ce cas et casserait la frappe en cours (« chaud » ne
+   trouverait plus la chaudière). Remède à instruire : mot entier pour les
+   mots de la saisie déjà terminés par une espace, début de mot pour le
+   dernier, avec un test sur « gaz » et sur « chaud ».
+11. **[2026-10-17, relevé au contrôle visuel de B, non corrigé] Les exemples du
+   formulaire d'équipement ne suivent pas la catégorie choisie**
+   (`src/components/equipements/EquipementForm.tsx`, décision de c6 : hors du
+   sous-lot B). Les catégories ont leurs exemples (`EXEMPLES_CATEGORIE`), mais
+   un matériel non couvert s'enregistre en « Autre équipement », qui n'en a
+   pas : le libellé retombe sur « Ex : TGBT principal, Hotte de la cuisine
+   chaude », et la quantité dit toujours « Ex : 12 extincteurs, 3 BAES ». En
+   déclarant une cabine UV ou une cuve de fioul, le dirigeant lit des exemples
+   sans rapport. Remède à instruire : un exemple par matériel non couvert (ou
+   un repli neutre pour « Autre »), avec un test sur deux matériels.
 
 ### Décisions attendues
 

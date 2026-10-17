@@ -184,6 +184,37 @@ describe("les exclusions déclarées projettent le corpus", () => {
     expect(annonces.filter((ref) => !nonCouverts.has(ref))).toEqual([]);
   });
 
+  it("aucun article du type X (établissements sportifs) n'est rangé sous `risque_specialise` (2026-10-17, sous-lot B)", () => {
+    // Les équipements sportifs sont sortis de l'exclusion : un article des
+    // chapitres X (titre II) ou PX (livre III) qui y serait rangé disparaîtrait
+    // du décompte sous un motif que la page ne dit plus. Les piscines restent
+    // exclues, mais leurs actes sont des manques hors cadre (§ 7), pas des
+    // exclusions.
+    const sousX = (corpus: typeof CORPUS) =>
+      corpus.flatMap((c) =>
+        c.articles
+          .filter((a) => a.statut === "hors_perimetre" && a.exclusion === "risque_specialise" && /^P?X /.test(a.ref))
+          .map((a) => a.ref),
+      );
+    expect(sousX(CORPUS)).toEqual([]);
+    // Cassure : X 25 rangé sous l'exclusion est vu.
+    const casse = CORPUS.map((c) => ({
+      ...c,
+      articles: c.articles.map((a) =>
+        a.ref === "X 25" ? { ...a, statut: "hors_perimetre" as const, exclusion: "risque_specialise" as const } : a,
+      ),
+    })) as unknown as typeof CORPUS;
+    expect(sousX(casse)).toEqual(["X 25"]);
+  });
+
+  it("le motif de `risque_specialise` ne nomme plus les équipements sportifs, et nomme bains à remous et UV", () => {
+    const motif = EXCLUSIONS.risque_specialise.motif;
+    expect(motif).not.toMatch(/équipements sportifs/);
+    for (const mot of ["ICPE", "ATEX", "rayonnements", "piscines", "bains à remous", "UV"]) {
+      expect(motif, mot).toContain(mot);
+    }
+  });
+
   it("cite le corpus mot pour mot, sans reformuler", () => {
     // Un motif réécrit vieillit à part de sa source. La garantie est faible
     // par construction — elle ne compare que des chaînes — mais elle attrape

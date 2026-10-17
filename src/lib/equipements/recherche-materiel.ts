@@ -10,7 +10,12 @@
 //
 // DÉTERMINISTE ET VERSIONNÉE. La table est écrite à la main, ici ; la
 // correspondance est une inclusion de mots, sans accents ni casse — aucune
-// distance, aucun score, aucun classement appris. La même saisie rend
+// distance, aucun score, aucun classement appris. ~~Chaque mot de la saisie
+// est cherché n'importe où dans les termes~~ [2026-10-17, revue du sous-lot B :
+// « spa » trouvait « transpalette ». Chaque mot de la saisie doit désormais
+// COMMENCER un mot d'un terme : la frappe en cours (« chaud » → chaudière)
+// garde sa réponse, le milieu de mot n'en a plus. Reste « gaz » → « gazole »,
+// un début de mot ; voir `docs/chantiers-ouverts.md`.] La même saisie rend
 // toujours la même liste, dans l'ordre de `CATEGORIES_EQUIPEMENT`.
 //
 // ELLE PROPOSE, ELLE NE DÉCIDE PAS. Ce que le dirigeant tape ici n'est pas
@@ -43,9 +48,36 @@ import {
  * n'est orienté nulle part — ni levage, ni ascenseur, ni « non couvert » :
  * son texte (arrêté du 29 décembre 2010) n'est pas au corpus, et la décision
  * D10 reste ouverte. `recherche-materiel.test.ts` tient qu'il ne trouve rien.]
+ *
+ * 2026-10-17, sous-lot B du plan « mise à jour du référentiel » (inventaire
+ * validé par la propriétaire ; décisions de c6 du même jour) :
+ *  - climatisation, climatiseur, pompe à chaleur, split → installation
+ *    frigorifique (contrôle d'étanchéité du fluide, CH 35 § 3 c) dans l'aide) ;
+ *    « climatisation » reste aussi sur la CTA : la recherche propose les deux,
+ *    l'aide de chaque catégorie borne ;
+ *  - réservoir d'air comprimé → équipement sous pression ;
+ *  - plateforme élévatrice mobile, PEMP, table élévatrice, pont élévateur →
+ *    levage : l'annexe de l'arrêté du 1er mars 2004 nomme « tables
+ *    élévatrices, hayons élévateurs », « ponts élévateurs de véhicule » et
+ *    « plates-formes élévatrices mobiles de personnes » (relue le 2026-10-17) ;
+ *  - panneaux photovoltaïques, onduleur, borne de recharge, IRVE → installation
+ *    électrique : R. 4226-16 fait vérifier périodiquement « les installations
+ *    électriques », sans en excepter aucune ; aucun texte propre à
+ *    l'exploitant d'une installation photovoltaïque ou d'une borne n'a été
+ *    trouvé, et la recherche n'en suppose aucun ;
+ *  - rideau métallique, barrière levante → portail automatique. DÉCISION de
+ *    c6 du 2026-10-17, à confirmer avec le préventeur à la prochaine relecture.
+ *    L'arrêté du 21 décembre 1993, art. 1er : « les portes ou portails
+ *    automatiques et semi-automatiques sont des fermetures automatiques et
+ *    semi-automatiques » ; son annexe renvoie la définition de ces termes à la
+ *    norme NF P 25-362, que le dépôt n'a pas lue. Lecture retenue : au sens
+ *    courant de « fermeture d'une baie ou d'un passage ». L'aide de la
+ *    catégorie le dit (`DESCRIPTION_CATEGORIE.PORTAIL_AUTO`). Le volet roulant
+ *    motorisé n'est PAS un synonyme (décision de c6 du même jour) : il reste un
+ *    matériel non couvert, à confirmer avec le préventeur dans la même note.
  */
 export const SYNONYMES_CATEGORIE: Readonly<Record<CategorieEquipement, readonly string[]>> = {
-  INSTALLATION_ELECTRIQUE: ["électricité", "tableau électrique", "TGBT", "disjoncteur", "groupe électrogène"],
+  INSTALLATION_ELECTRIQUE: ["électricité", "tableau électrique", "TGBT", "disjoncteur", "groupe électrogène", "panneaux photovoltaïques", "onduleur", "borne de recharge", "IRVE"],
   EXTINCTEUR: ["extincteur"],
   RIA: ["robinet d'incendie", "RIA"],
   BAES: ["éclairage de secours", "bloc de secours", "BAES"],
@@ -57,11 +89,11 @@ export const SYNONYMES_CATEGORIE: Readonly<Record<CategorieEquipement, readonly 
   APPAREIL_CUISSON_ERP: ["four", "friteuse", "fourneau", "piano de cuisson", "grill", "plancha", "cuisson"],
   ASCENSEUR: ["ascenseur"],
   PORTE_AUTO: ["porte automatique", "porte coulissante", "porte motorisée"],
-  PORTAIL_AUTO: ["portail", "portail motorisé"],
-  EQUIPEMENT_SOUS_PRESSION: ["compresseur", "air comprimé"],
+  PORTAIL_AUTO: ["portail", "portail motorisé", "rideau métallique", "barrière levante"],
+  EQUIPEMENT_SOUS_PRESSION: ["compresseur", "air comprimé", "réservoir d'air comprimé"],
   STOCKAGE_MATIERE_DANGEREUSE: ["produits chimiques", "liquides inflammables", "solvants"],
-  EQUIPEMENT_LEVAGE: ["palan", "chariot élévateur", "gerbeur", "hayon élévateur", "nacelle", "treuil"],
-  INSTALLATION_FRIGORIFIQUE: ["chambre froide", "réfrigérateur", "frigo", "congélateur", "vitrine réfrigérée", "groupe froid"],
+  EQUIPEMENT_LEVAGE: ["palan", "chariot élévateur", "gerbeur", "hayon élévateur", "nacelle", "treuil", "plateforme élévatrice mobile", "PEMP", "table élévatrice", "pont élévateur"],
+  INSTALLATION_FRIGORIFIQUE: ["chambre froide", "réfrigérateur", "frigo", "congélateur", "vitrine réfrigérée", "groupe froid", "climatisation", "climatiseur", "pompe à chaleur", "split"],
   COMPACTEUR_PRESSE_DECHETS_MOTORISE: ["compacteur", "presse à cartons", "presse à balles"],
   EPI: ["casque", "gants", "chaussures de sécurité", "lunettes de protection", "protection auditive"],
   EPI_ANTICHUTE: ["harnais", "longe", "antichute"],
@@ -72,22 +104,33 @@ export const SYNONYMES_CATEGORIE: Readonly<Record<CategorieEquipement, readonly 
   AUTRE: [],
 };
 
-/** Minuscules, sans accents, apostrophes et traits d'union ramenés à l'espace. */
+/**
+ * Minuscules, sans accents, apostrophes, traits d'union et ponctuation ramenés
+ * à l'espace. [2026-10-17, relecture de B : la parenthèse restait collée au mot
+ * — « (motorise) » — et « motorisé » ne trouvait plus le compacteur.]
+ */
 export function normaliser(s: string): string {
   return s
     .normalize("NFD")
     .replace(/\p{Diacritic}/gu, "")
     .toLowerCase()
     .replace(/[’ʼ'\-]/g, " ")
+    .replace(/[()[\]{}.,;:!?«»"…/]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
 
-/** Chaque mot de la saisie figure dans l'un des termes. */
+/** Chaque mot de la saisie commence l'un des mots des termes. */
 function correspond(mots: readonly string[], termes: readonly string[]): boolean {
-  const botte = termes.map(normaliser).join(" | ");
-  return mots.every((m) => botte.includes(m));
+  const debuts = termes.flatMap((t) => normaliser(t).split(" "));
+  return mots.every((m) => debuts.some((d) => d.startsWith(m)));
 }
+
+/** Les tables où la recherche lit — injectables, pour éprouver un synonyme. */
+export type TablesRecherche = {
+  synonymes: Readonly<Record<CategorieEquipement, readonly string[]>>;
+  materiels: readonly MaterielNonCouvert[];
+};
 
 export type ResultatRecherche = {
   categories: CategorieEquipement[];
@@ -101,15 +144,18 @@ export type ResultatRecherche = {
  * l'ancien `<select>`, rien de plus. Les matériels non suivis n'apparaissent
  * que quand on les cherche.
  */
-export function rechercherMateriel(saisie: string): ResultatRecherche {
+export function rechercherMateriel(
+  saisie: string,
+  tables: TablesRecherche = { synonymes: SYNONYMES_CATEGORIE, materiels: MATERIELS_NON_COUVERTS },
+): ResultatRecherche {
   const mots = normaliser(saisie).split(" ").filter(Boolean);
   if (mots.length === 0) {
     return { categories: [...CATEGORIES_EQUIPEMENT], materiels: [] };
   }
   return {
     categories: CATEGORIES_EQUIPEMENT.filter((c) =>
-      correspond(mots, [LABEL_CATEGORIE_EQUIPEMENT[c], ...SYNONYMES_CATEGORIE[c]]),
+      correspond(mots, [LABEL_CATEGORIE_EQUIPEMENT[c], ...tables.synonymes[c]]),
     ),
-    materiels: MATERIELS_NON_COUVERTS.filter((m) => correspond(mots, [m.libelle, ...m.synonymes])),
+    materiels: tables.materiels.filter((m) => correspond(mots, [m.libelle, ...m.synonymes])),
   };
 }

@@ -145,7 +145,9 @@ describe("annonce décidée : `non_couvert`, jamais `obligation_manquante`", () 
     expect(fautifs).toEqual([]);
   });
 
-  it("chaque annonce encore muette du livre II porte la phrase de la décision (les onze)", () => {
+  it("chaque annonce encore muette du livre II porte la phrase de la décision (~~les onze~~ les sept)", () => {
+    // 2026-10-17, sous-lot B : `AS 5`, `AS 8`, `CH 23` et `CH 24` sont
+    // annoncés (aide de catégorie, liste des matériels) ; 11 − 4 = 7.
     // Revue du 2026-10-17 : la reconnaissance par la seule formulation du motif
     // ne voyait que 4 des 11 annonces décidées. Une phrase commune les nomme
     // toutes ; une annonce muette qui ne la porte pas est hors de la garde.
@@ -153,7 +155,8 @@ describe("annonce décidée : `non_couvert`, jamais `obligation_manquante`", () 
     const muettes = livre2.filter((a) => a.statut === "non_couvert" && (a.declareA ?? "").startsWith("Non déclaré au 2026-10-17"));
     expect(muettes.filter((a) => !("motif" in a && (a.motif ?? "").includes(SUITE_ANNONCE_DECIDEE))).map((a) => a.ref)).toEqual([]);
     expect(muettes.map((a) => a.ref).sort()).toEqual(
-      ["AM 18", "AS 5", "AS 8", "CH 23", "CH 24", "CO 10", "MS 42", "T 29", "T 33", "T 43", "T 44"].sort(),
+      // ~~"AS 5", "AS 8", "CH 23", "CH 24"~~ — annoncés au sous-lot B.
+      ["AM 18", "CO 10", "MS 42", "T 29", "T 33", "T 43", "T 44"].sort(),
     );
   });
 
