@@ -753,6 +753,18 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // le champ exclut plus qu'il n'inclut, et le rendez-vous appelle un
       // organisme agréé.
       "MS 71",
+      // 2026-10-17 — revue indépendante : les huit articles du titre Ier ouverts
+      // en suivant les renvois des chapitres de types, classés au corpus
+      // `arrete-1980-livre-2`. Aucun n'est servi en catégories 1 à 4 ; à évaluer
+      // (§ 9 de `docs/couverture-declaree-du-produit.md`).
+      "MS 41",
+      "MS 58 § 3 et § 4 — contrat d'entretien de la détection, annexé au registre",
+      "EC 13 — notice annexée au registre et entretiens consignés",
+      "MS 70 § 5 — modalités d'appel des sapeurs-pompiers affichées",
+      "GE 5",
+      "MS 46 § 3 — convention avec un organisateur, annexée au registre",
+      "EL 23 § 2 — vérification des installations électriques semi-permanentes",
+      "CO 48 § 3 e) — contrat d'entretien des portes automatiques",
       // 2026-10-15 : le contrat d'entretien des machines de nettoyage à sec,
       // seul acte de M 40 § 3, classé à part et HORS CADRE (décision de la
       // propriétaire : « les conditions c'est pas nous »).

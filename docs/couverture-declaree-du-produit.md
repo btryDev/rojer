@@ -1091,15 +1091,17 @@ l'annonce » : sept annoncées, cinq hors cadre ; manquantes **20** ;
 
 ## 9. À évaluer — lecture des chapitres de types d'ERP du 2026-10-16
 
-Dix-huit manques nés de la lecture des chapitres P, R, S, T, U, V, X, Y et J
-du livre II, titre II (catégories 1 à 4), et du chapitre V du livre III
+~~Dix-huit~~ Vingt-six [2026-10-17, revue indépendante : + 8 articles du
+titre Ier ouverts en suivant les renvois] manques nés de la lecture des
+chapitres P, R, S, T, U, V, X, Y et J du livre II, titre II (catégories 1 à 4),
+du chapitre V du livre III, et des renvois de ces chapitres au titre Ier
 (`lot/erp-chapitres-types-1016`). **OUVERTS : ni encodés, ni annoncés, ni hors
 cadre.** Le plan, article par article, et la façon d'encoder chaque
 proposition : `propositions/lecture-chapitres-types-erp-2026-10-16.md`. Même
 mécanisme que le § 8 du 2026-10-12 : le § 7 et ce § 9, disjoints, font
 ensemble les `obligation_manquante` qui touchent la cible
 (`doc-couverture.test.ts`). Chaque ligne sort d'ici quand la propriétaire l'a
-tranchée. Manquantes : 22 + 18 − 0 = **40**, toutes dans la cible.
+tranchée. Manquantes : ~~22 + 18 − 0 = 40~~ 22 + 26 − 0 = **48**, toutes dans la cible.
 
 | Article | Ce qui la met dans la cible | Cause au corpus | Proposition |
 |---|---|---|---|
@@ -1121,3 +1123,11 @@ tranchée. Manquantes : 22 + 18 − 0 = **40**, toutes dans la cible.
 | `U 64` | Type U | `categorie_equipement` | Catégorie « gaz médicaux » ; vérification annuelle (rythme écrit) |
 | `U 62` | Type U | `categorie_equipement` | Catégorie « gaz médicaux » ; consignes rappelées, défaut annuel |
 | `PU 5` | Type U de 5ᵉ catégorie à construire ou à modifier | `categorie_equipement` | Les deux lignes des gaz médicaux étendues à la 5ᵉ, borne à trancher |
+| `MS 41` | Tout ERP des catégories 1 à 4 | `libre` | Ligne nouvelle N1–N4 : plan d'intervention à chaque entrée (porté en 5ᵉ avec sommeil seulement) |
+| `MS 58 § 3 et § 4 — contrat d'entretien de la détection, annexé au registre` | ERP des catégories 1 à 4 avec détection | `libre` | Ligne sur `ALARME_INCENDIE` N1–N4, patron de PE 4 § 1 |
+| `EC 13 — notice annexée au registre et entretiens consignés` | ERP des catégories 1 à 4 | `libre` | Ligne d'état permanent sur `BAES` N1–N4 (notice annexée) |
+| `MS 70 § 5 — modalités d'appel des sapeurs-pompiers affichées` | ERP des catégories 1 à 4 | `libre` | Référence à la ligne de D. 4711-1, ou ligne propre |
+| `GE 5` | ERP des catégories 1 à 4 ; 5ᵉ avec sommeil par PE 37 | `libre` | Ligne nouvelle : avis de contrôle affiché |
+| `CO 48 § 3 e) — contrat d'entretien des portes automatiques` | ERP des catégories 1 à 4 avec porte automatique | `libre` | Ligne d'état permanent sur `PORTE_AUTO` N1–N4 (le contrat) |
+| `MS 46 § 3 — convention avec un organisateur, annexée au registre` | ERP sans hébergement jusqu'à 300 personnes, hors 1ʳᵉ | `relation_tiers` | Annoncer |
+| `EL 23 § 2 — vérification des installations électriques semi-permanentes` | ERP des catégories 1 à 4 qui montent des installations temporaires | `evenement` | Annoncer, ou ligne événementielle |

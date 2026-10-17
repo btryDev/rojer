@@ -789,5 +789,157 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       bloquePar:
         "Deux attributs d'établissement absents du modèle : le NOMBRE DE NIVEAUX DE SOUS-SOL (le § 1 exige « plus d'un ») et la SURFACE TOTALE DES NIVEAUX EN SOUS-SOL (seuil de 100 m²). Les poser est une décision d'onboarding — deux questions de plus au dirigeant — et non un encodage ; c'est exactement la forme `Transmission.attribut_absent` de l'ADR-024, qui ne peut cependant pas être déclarée tant qu'aucune obligation ne porte l'article.",
     },
+    {
+      // 2026-10-16 — ouvert en suivant les renvois des chapitres de types
+      // d'ERP (lot/erp-chapitres-types-1016) ; demandé au corpus par la revue
+      // indépendante du 2026-10-17. À évaluer : § 9 de
+      // `docs/couverture-declaree-du-produit.md`.
+      ref: "MS 41",
+      intitule: "Affichage du plan de l'établissement",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000021231064",
+      versionEnVigueur: "2010-01-23",
+      modifiePar: { texte: "Arrêté du 24 septembre 2009 - art. (V)" },
+      luLe: "2026-10-16",
+      lecture: "api_legifrance",
+      citationCle: "Un plan schématique, sous forme de pancarte inaltérable, doit être apposé à chaque entrée de bâtiment de l'établissement pour faciliter l'intervention des sapeurs-pompiers.",
+      statut: "obligation_manquante",
+      cause: "libre",
+      toucheLaCible: true,
+      motif: "État permanent, pièce affichée : un plan d'intervention (norme NF S 60-303) à chaque entrée de bâtiment, avec les dégagements, les locaux à risques, les commandes de sécurité, les coupures de fluides et d'énergie, les moyens d'extinction et d'alarme. Vaut pour tout ERP des catégories 1 à 4 (titre Ier du livre II). CE QUI EST PORTÉ : en 5ᵉ catégorie à locaux à sommeil, `incendie-erp-5-sommeil-plans-affiches` (PE 35 § 1, qui exige un plan « conforme aux dispositions de l'article MS 41 » dans le hall) ; en 5ᵉ, le plan de PE 27 § 6 est en réserve de PE 27 ; à l'hôtel N1–N4, `incendie-erp-hotel-plans-evacuation-niveaux` (O 21) porte des plans d'évacuation par niveau, pas ce plan d'intervention. CE QUI NE L'EST PAS : MS 41 lui-même, pour tous les types en catégories 1 à 4. Proposition : une ligne d'établissement N1–N4, tous types, pièce attendue = le plan. Trouvé en ouvrant les renvois des chapitres de types (PE 35, U 62).",
+      bloquePar: "Rien ne bloque : une ligne ou une référence sur une catégorie d'équipement ou un porteur établissement qui existent. Lu le 2026-10-16 en ouvrant les renvois des chapitres de types d'ERP ; rien n'est encodé.",
+    },
+    {
+      // 2026-10-16 — ouvert en suivant les renvois des chapitres de types
+      // d'ERP (lot/erp-chapitres-types-1016) ; demandé au corpus par la revue
+      // indépendante du 2026-10-17. À évaluer : § 9 de
+      // `docs/couverture-declaree-du-produit.md`.
+      ref: "MS 58 § 3 et § 4 — contrat d'entretien de la détection, annexé au registre",
+      intitule: "Obligations de l'installateur et de l'exploitant",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020317731",
+      versionEnVigueur: "1980-08-15",
+      modifiePar: { texte: "Arrêté du 2 février 1993 - art. Annexe, v. init." },
+      luLe: "2026-10-16",
+      lecture: "api_legifrance",
+      citationCle: "§ 3. Toute installation de détection doit faire l'objet d'un contrat d'entretien avec un installateur qualifié.",
+      statut: "obligation_manquante",
+      cause: "libre",
+      toucheLaCible: true,
+      motif: "Le § 3 fait souscrire un contrat d'entretien de toute installation de détection, essais fonctionnels compris ; le § 4 annexe ce contrat et la notice d'entretien au registre de sécurité. Les § 1 et § 2 (marque NF, entreprise qualifiée) s'adressent à l'installateur. CE QUI EST PORTÉ : en 5ᵉ catégorie à locaux à sommeil, `incendie-erp-5-sommeil-contrat-entretien-sdi` (PE 4 § 1) ; en catégories 1 à 4, les vérifications du SSI (`incendie-erp-ssi-annuelle`, `incendie-erp-ssi-triennale`, catégorie `ALARME_INCENDIE`), pas le contrat. CE QUI NE L'EST PAS : le contrat et son annexion, en catégories 1 à 4 — dus dès qu'une détection est installée (J 36, U 44, R 31 § 1 la rendent obligatoire avec des locaux à sommeil). Proposition : une ligne sur l'équipement `ALARME_INCENDIE` borné N1–N4, sur le patron de la ligne de PE 4 § 1, pièce = le contrat annexé. Trouvé par les renvois de PE 32 et R 31.",
+      bloquePar: "Rien ne bloque : une ligne ou une référence sur une catégorie d'équipement ou un porteur établissement qui existent. Lu le 2026-10-16 en ouvrant les renvois des chapitres de types d'ERP ; rien n'est encodé.",
+    },
+    {
+      // 2026-10-16 — ouvert en suivant les renvois des chapitres de types
+      // d'ERP (lot/erp-chapitres-types-1016) ; demandé au corpus par la revue
+      // indépendante du 2026-10-17. À évaluer : § 9 de
+      // `docs/couverture-declaree-du-produit.md`.
+      ref: "EC 13 — notice annexée au registre et entretiens consignés",
+      intitule: "Maintenance et entretien",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000021838317",
+      versionEnVigueur: "2010-05-16",
+      modifiePar: { texte: "Arrêté du 11 décembre 2009 - art." },
+      luLe: "2026-10-16",
+      lecture: "api_legifrance",
+      citationCle: "une notice descriptive des conditions de maintenance et de fonctionnement est annexée au registre de sécurité.",
+      statut: "obligation_manquante",
+      cause: "libre",
+      toucheLaCible: true,
+      motif: "Trois prescriptions. (1) Des lampes de rechange en permanence : un STOCK, même famille que la dernière phrase de MS 69 (hors cadre, ADR-027). (2) Une notice de maintenance et de fonctionnement annexée au registre de sécurité : un état permanent, une pièce. (3) « Ces opérations d'entretien doivent être consignées dans le registre de sécurité » : l'entretien des blocs autonomes, fait dès qu'une anomalie est constatée — une consignation à chaque intervention. CE QUI EST PORTÉ : EC 13 est cité en contexte par `elec-erp-cat1-4-annuelle` (notes) ; l'éclairage de sécurité a ses lignes d'essai et de vérification (`incendie-erp-eclairage-securite-essai-mensuel`, `-autonomie-semestrielle`, `incendie-erp-baes-annuelle`), fondées sur EC 14 et EC 15. CE QUI NE L'EST PAS : la notice annexée (2) ; la consignation (3) relève du registre que le produit tient, sans ligne qui la demande. Proposition : une ligne d'état permanent sur l'équipement `BAES` borné N1–N4, pièce = la notice. Trouvé par les renvois des chapitres de types (EC 7 à EC 15).",
+      bloquePar: "Rien ne bloque : une ligne ou une référence sur une catégorie d'équipement ou un porteur établissement qui existent. Lu le 2026-10-16 en ouvrant les renvois des chapitres de types d'ERP ; rien n'est encodé.",
+    },
+    {
+      // 2026-10-16 — ouvert en suivant les renvois des chapitres de types
+      // d'ERP (lot/erp-chapitres-types-1016) ; demandé au corpus par la revue
+      // indépendante du 2026-10-17. À évaluer : § 9 de
+      // `docs/couverture-declaree-du-produit.md`.
+      ref: "MS 70 § 5 — modalités d'appel des sapeurs-pompiers affichées",
+      intitule: "Alerte, définition, règles générales",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000048088146",
+      versionEnVigueur: "2023-09-20",
+      modifiePar: { texte: "Arrêté du 11 septembre 2023 - art. 2" },
+      luLe: "2026-10-16",
+      lecture: "api_legifrance",
+      citationCle: "§ 5. Les modalités d'appel des sapeurs-pompiers sont affichées de façon apparente, permanente et inaltérable près des dispositifs d'alerte ou à défaut à l'entrée principale de l'établissement.",
+      statut: "obligation_manquante",
+      cause: "libre",
+      toucheLaCible: true,
+      motif: "État permanent, affichage. Les § 1 à § 4 décrivent le dispositif d'alerte (dotation). CE QUI EST PORTÉ : MS 70 est cité comme renvoi (PE 27 § 3 en 5ᵉ, et les articles d'alerte des chapitres de types, classés en dotation) ; en 5ᵉ, `incendie-erp-5-consignes-affichees` (PE 27 § 4) fait afficher le numéro d'appel des sapeurs-pompiers ; pour tout employeur, `D. 4711-1` fait afficher les coordonnées des services de secours d'urgence. CE QUI NE L'EST PAS : l'affichage du § 5 en catégories 1 à 4, près du dispositif d'alerte — proche de D. 4711-1 sans en être la copie (lieu et objet). Proposition : rattacher en référence à la ligne de D. 4711-1, bornée N1–N4 pour cette précision, ou une ligne propre ; à décider avec l'encodage.",
+      bloquePar: "Rien ne bloque : une ligne ou une référence sur une catégorie d'équipement ou un porteur établissement qui existent. Lu le 2026-10-16 en ouvrant les renvois des chapitres de types d'ERP ; rien n'est encodé.",
+    },
+    {
+      // 2026-10-16 — ouvert en suivant les renvois des chapitres de types
+      // d'ERP (lot/erp-chapitres-types-1016) ; demandé au corpus par la revue
+      // indépendante du 2026-10-17. À évaluer : § 9 de
+      // `docs/couverture-declaree-du-produit.md`.
+      ref: "GE 5",
+      intitule: "Avis relatif au contrôle de la sécurité",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000046362358",
+      versionEnVigueur: "2021-07-01",
+      modifiePar: { texte: "Décret n°2021-872 du 30 juin 2021 - art. 3 (V)" },
+      luLe: "2026-10-16",
+      lecture: "api_legifrance",
+      citationCle: "Dans tous les établissements assujettis aux dispositions du présent titre, il doit être affiché d'une façon apparente, près de l'entrée principale, un \" avis \" relatif au contrôle de la sécurité.",
+      statut: "obligation_manquante",
+      cause: "libre",
+      toucheLaCible: true,
+      motif: "État permanent, affichage : l'« avis » relatif au contrôle de la sécurité (type, catégorie, effectif maximal, dates de la visite de réception et de l'autorisation d'ouverture), rempli par l'exploitant et visé par l'autorité, affiché près de l'entrée principale de tout établissement du titre Ier — catégories 1 à 4. PE 37 l'applique aussi aux établissements de 5ᵉ catégorie à locaux à sommeil. CE QUI EST PORTÉ : rien ; PE 37 est retenu pour sa visite quinquennale seulement. Proposition : une ligne d'établissement N1–N4 (et N5 avec locaux à sommeil, par PE 37), pièce = l'avis affiché.",
+      bloquePar: "Rien ne bloque : une ligne ou une référence sur une catégorie d'équipement ou un porteur établissement qui existent. Lu le 2026-10-16 en ouvrant les renvois des chapitres de types d'ERP ; rien n'est encodé.",
+    },
+    {
+      // 2026-10-16 — ouvert en suivant les renvois des chapitres de types
+      // d'ERP (lot/erp-chapitres-types-1016) ; demandé au corpus par la revue
+      // indépendante du 2026-10-17. À évaluer : § 9 de
+      // `docs/couverture-declaree-du-produit.md`.
+      ref: "MS 46 § 3 — convention avec un organisateur, annexée au registre",
+      intitule: "Composition et missions du service",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000021838331",
+      versionEnVigueur: "2010-05-16",
+      modifiePar: { texte: "Arrêté du 11 décembre 2009 - art." },
+      luLe: "2026-10-16",
+      lecture: "api_legifrance",
+      citationCle: "Un exemplaire de cette convention doit être annexé au registre de sécurité.",
+      statut: "obligation_manquante",
+      cause: "relation_tiers",
+      toucheLaCible: true,
+      motif: "Le § 3 permet à l'exploitant, hors 1ʳᵉ catégorie, sans hébergement, jusqu'à 300 personnes, de confier le service de sécurité à l'organisateur d'une manifestation par une CONVENTION dont il fixe le contenu, et dont un exemplaire est annexé au registre de sécurité. Une faculté, mais qui, exercée, produit une pièce. CE QUI EST PORTÉ : MS 46 § 1 a) est cité comme renvoi par la référence MS 48 de `incendie-erp-personnel-designe-moyens-secours` (les personnes désignées). CE QUI NE L'EST PAS : la convention et son annexion. Elle naît d'une relation avec un tiers (l'organisateur), aucun des trois porteurs. Proposition : l'annoncer (une salle polyvalente louée à des associations en est le cas type), pas de ligne.",
+      bloquePar: "La convention lie l'exploitant à un organisateur : une relation contractuelle, aucun des trois porteurs.",
+    },
+    {
+      // 2026-10-16 — ouvert en suivant les renvois des chapitres de types
+      // d'ERP (lot/erp-chapitres-types-1016) ; demandé au corpus par la revue
+      // indépendante du 2026-10-17. À évaluer : § 9 de
+      // `docs/couverture-declaree-du-produit.md`.
+      ref: "EL 23 § 2 — vérification des installations électriques semi-permanentes",
+      intitule: "Installations semi-permanentes",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000049576760",
+      versionEnVigueur: "2024-05-24",
+      modifiePar: { texte: "Arrêté du 17 mai 2024 - art. 1" },
+      luLe: "2026-10-16",
+      lecture: "api_legifrance",
+      citationCle: "Dans les établissements recevant du public de 4e catégorie, ces installations doivent être vérifiées, initialement et à chaque installation, par un technicien compétent.",
+      statut: "obligation_manquante",
+      cause: "evenement",
+      toucheLaCible: true,
+      motif: "Les installations électriques semi-permanentes (stands, scènes, installations montées pour une durée limitée) sont vérifiées initialement par un organisme agréé en catégories 1 à 3, puis à chaque installation par un technicien compétent ; en 4ᵉ catégorie, par un technicien compétent, initialement et à chaque installation. Un acte daté par un ÉVÉNEMENT — le montage — que le produit n'observe pas. CE QUI EST PORTÉ : rien ; `elec-erp-cat1-4-annuelle` vise les installations fixes. Proposition : l'annoncer (salles L, T, P), ou une ligne événementielle sur la page « Quand ça arrive » si la propriétaire le veut. Trouvé par le renvoi de T 36.",
+      bloquePar: "Datée par chaque montage d'installation semi-permanente, un événement que le produit n'observe pas.",
+    },
+    {
+      // 2026-10-16 — ouvert en suivant les renvois des chapitres de types
+      // d'ERP (lot/erp-chapitres-types-1016) ; demandé au corpus par la revue
+      // indépendante du 2026-10-17. À évaluer : § 9 de
+      // `docs/couverture-declaree-du-produit.md`.
+      ref: "CO 48 § 3 e) — contrat d'entretien des portes automatiques",
+      intitule: "Portes de types spéciaux",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000038485458",
+      versionEnVigueur: "2019-07-01",
+      modifiePar: { texte: "Arrêté du 10 mai 2019 - art. 12" },
+      luLe: "2026-10-16",
+      lecture: "api_legifrance",
+      citationCle: "e) Toutes les portes automatiques doivent faire l'objet d'un contrat d'entretien.",
+      statut: "obligation_manquante",
+      cause: "libre",
+      toucheLaCible: true,
+      motif: "Un contrat d'entretien de toute porte automatique d'un ERP des catégories 1 à 4 : une pièce. Le reste de l'article (tambours, tourniquets, conditions d'autorisation, vitrages, examen « grand vent » par un organisme agréé à l'installation) est de la construction. CE QUI EST PORTÉ : les portes automatiques ont quatre lignes au titre du Code du travail (`porte-auto-verification-initiale`, `-verification-semestrielle`, `-dossier-maintenance`, `-maintien-en-etat`, catégories `PORTE_AUTO`, `PORTAIL_AUTO`) — vérification et dossier de maintenance, pas le contrat. CE QUI NE L'EST PAS : le contrat d'entretien ERP. Proposition : une ligne d'état permanent sur `PORTE_AUTO` bornée N1–N4, pièce = le contrat. Trouvé par les renvois de J 21 et U 21.",
+      bloquePar: "Rien ne bloque : une ligne ou une référence sur une catégorie d'équipement ou un porteur établissement qui existent. Lu le 2026-10-16 en ouvrant les renvois des chapitres de types d'ERP ; rien n'est encodé.",
+    },
   ],
 };

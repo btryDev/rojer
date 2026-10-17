@@ -4,7 +4,7 @@
      écraserait la correction, et un test compare déjà ce fichier au rendu
      du script. Pour le mettre à jour : pnpm verification --ecrire -->
 
-**Généré le** : 2026-10-16
+**Généré le** : 2026-10-17
 **Référentiel** : `2026-10-15.1`
 **Régénérer** : `pnpm verification --ecrire`
 
@@ -198,13 +198,14 @@ que rien ne cite n'apparaît donc dans aucun degré ci-dessus — et le prendre
 pour du travail restant est exactement l'erreur qui a failli faire relancer
 une relecture déjà faite.
 
-**752 articles dépouillés ne sont cités par aucune obligation**, répartis sur 54 corpus.
+**760 articles dépouillés ne sont cités par aucune obligation**, répartis sur 54 corpus.
 
 | corpus | articles non cités | sur | lus |
 | --- | --- | --- | --- |
 | `arrete-1980-livre-2-titre-2` | 405 | 417 | 2026-10-14 → 2026-10-16 |
 | `arrete-1980-livre-3` | 46 | 59 | 2026-08-26 → 2026-10-16 |
 | `code-travail-travail-en-hauteur` | 33 | 33 | 2026-09-01 → 2026-09-27 |
+| `arrete-1980-livre-2` | 16 | 40 | 2026-09-01 → 2026-10-16 |
 | `code-travail-plan-prevention` | 16 | 16 | 2026-09-02 → 2026-09-27 |
 | `inrs-documentaire` | 15 | 16 | 2026-09-03 → 2026-09-26 |
 | `arrete-2021-09-10-retours-eau` | 14 | 14 | 2026-09-02 → 2026-09-27 |
@@ -215,7 +216,6 @@ une relecture déjà faite.
 | `code-travail-epi` | 11 | 16 | 2026-09-04 → 2026-09-27 |
 | `code-travail-formation-securite` | 10 | 27 | 2026-08-31 → 2026-09-27 |
 | `code-travail-sante-travail` | 9 | 26 | 2026-08-31 → 2026-09-27 |
-| `arrete-1980-livre-2` | 8 | 32 | 2026-09-01 → 2026-10-14 |
 | `code-travail-risque-chimique` | 8 | 14 | 2026-08-27 → 2026-09-28 |
 | `code-travail-vigilance` | 8 | 8 | 2026-09-02 → 2026-10-14 |
 | `code-travail-vigilance-modalites` | 8 | 8 | 2026-09-02 → 2026-09-27 |

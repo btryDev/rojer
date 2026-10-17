@@ -44,6 +44,14 @@ describe("registre de dette — les obligations manquantes", () => {
     // `propositions/lecture-chapitres-types-erp-2026-10-16.md`.
     expect(parCause("libre").map((a) => a.ref)).toEqual([
       "PU 6",
+      // 2026-10-17, revue indépendante : six articles du titre Ier ouverts en
+      // suivant les renvois des chapitres de types, au corpus `arrete-1980-livre-2`.
+      "MS 41",
+      "MS 58 § 3 et § 4 — contrat d'entretien de la détection, annexé au registre",
+      "EC 13 — notice annexée au registre et entretiens consignés",
+      "MS 70 § 5 — modalités d'appel des sapeurs-pompiers affichées",
+      "GE 5",
+      "CO 48 § 3 e) — contrat d'entretien des portes automatiques",
       "P 21",
       "R 33",
       "S 15",
@@ -89,7 +97,9 @@ describe("registre de dette — les obligations manquantes", () => {
       //                        [cible, hors cible]
       // [0, 0] → [13, 0] le 2026-10-16 : lecture des chapitres de types (titre II,
       // et PU 6 au livre III), 0 + 13 − 0 ; voir le test des « libres ».
-      libre: [13, 0],
+      // [13, 0] → [19, 0] le 2026-10-17 (revue indépendante) : six articles du
+      // titre Ier ouverts par les renvois, 13 + 6 − 0.
+      libre: [19, 0],
       // 9 → 6 le 2026-09-21 : les trois de la chaleur intense (`R. 4463-4`,
       // `-5`, `-7`) sont encodées sur la page « Quand ça arrive ».
       // 6 → 0 le même jour : cinq relues à la source et encodées ; la sixième,
@@ -97,7 +107,9 @@ describe("registre de dette — les obligations manquantes", () => {
       // sur le module de vigilance, plus l'absence de surface.
       // [0, 1] → [1, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : arrêté 1986 art. 102.
       // [1, 0] → [0, 0] le 2026-10-13 : arrêté 1986 art. 102 annoncé (`non_couvert`).
-      evenement: [0, 0],
+      // [0, 0] → [1, 0] le 2026-10-17 : `EL 23 § 2`, la vérification des
+      // installations semi-permanentes à chaque montage.
+      evenement: [1, 0],
       // [5, 6] → [11, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : `GZ 13`, `GZ 14`, `CO 61`,
       // `AS 10`, `GC 18`, arrêté 2018-02-23 art. 26 § 3.
       // [11, 0] → [7, 0] le 2026-10-13 (décision de la propriétaire) : `GZ 13`,
@@ -123,7 +135,9 @@ describe("registre de dette — les obligations manquantes", () => {
       activite_exercee: [5, 0],
       // 3 → 0 le 2026-09-27 (C45) : `L. 8222-1`, `D. 8222-5`, `D. 8222-7`
       // annoncés.
-      relation_tiers: [0, 0],
+      // [0, 0] → [1, 0] le 2026-10-17 : `MS 46 § 3`, la convention avec un
+      // organisateur annexée au registre.
+      relation_tiers: [1, 0],
       // 7 → 9 le 2026-09-21 : `R. 4431-2` ouvert, les deux manques du bruit ne
       // sont plus un texte à lire mais une donnée que le DUERP ne recueille pas.
       // 9 → 1 le 2026-09-27 (C45) : `L. 4121-3-1` (VI tracé, III 1° annoncé)
@@ -188,8 +202,12 @@ describe("registre de dette — les obligations manquantes", () => {
     // `U 64`, `X 25`, `Y 19`, `J 33`, `J 35`, `J 39`, `J 40`) et deux du
     // livre III (`PU 5`, `PU 6`). Toutes dans la cible ; aucune hors cadre :
     // elles sont au § 9 (à évaluer), pas au § 7.
-    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(40);
-    expect(manquantes.length).toBe(40);
+    // 40 → 48 le 2026-10-17 (revue indépendante) : 40 + 8 − 0 — les huit
+    // articles du titre Ier ouverts en suivant les renvois (`MS 41`,
+    // `MS 58 § 3 et § 4`, `EC 13`, `MS 70 § 5`, `GE 5`, `MS 46 § 3`,
+    // `EL 23 § 2`, `CO 48 § 3 e)`), au § 9.
+    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(48);
+    expect(manquantes.length).toBe(48);
   });
 });
 
