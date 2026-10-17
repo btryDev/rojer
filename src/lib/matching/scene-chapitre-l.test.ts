@@ -100,8 +100,8 @@ describe("chapitre L — borne basse : une salle avec une scène déclarée", ()
     }
   });
 
-  it("une salle de danse (type P) de 3ᵉ avec une scène reçoit les lignes de la scène (L 1 § 3), pas le personnel désigné", () => {
-    expect(servies(salle("P", "N3"), [scene("a")])).toEqual([...LIGNES_G].sort());
+  it("une salle de danse (type P) de 3ᵉ avec une scène reçoit les lignes de la scène (L 1 § 3), et le personnel désigné (P 21, sous-lot D)", () => {
+    expect(servies(salle("P", "N3"), [scene("a")])).toEqual([...LIGNES_G, PERSONNEL].sort());
   });
 
   it("un hôtel (O) qui déclare L en type supplémentaire et une scène les reçoit (GN 2, ADR-045)", () => {
@@ -116,9 +116,9 @@ describe("chapitre L — borne haute : ni scène hors du champ, ni ligne sans sc
     }
   });
 
-  it("SANS SCÈNE DÉCLARÉE, une salle de danse P ne reçoit aucune ligne du sous-lot G", () => {
+  it("SANS SCÈNE DÉCLARÉE, une salle de danse P ne reçoit aucune ligne du sous-lot G (le personnel désigné lui vient de P 21)", () => {
     for (const c of ["N1", "N2", "N3", "N4"] as const) {
-      expect(servies(salle("P", c), []), c).toEqual([]);
+      expect(servies(salle("P", c), []), c).toEqual([PERSONNEL]);
     }
   });
 
