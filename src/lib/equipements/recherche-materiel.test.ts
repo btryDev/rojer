@@ -119,3 +119,18 @@ describe("la recherche de matériel (2026-10-14)", () => {
     expect(rechercherMateriel("zzz")).toEqual({ categories: [], materiels: [] });
   });
 });
+
+describe("la recherche — l'eau chaude collective (2026-10-17, sous-lot F)", () => {
+  const ECS = "EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC";
+
+  it("ses synonymes la trouvent, par début de mot", () => {
+    for (const q of ["douche", "ECS", "ballon", "eau chaude", "légionelles", "bain à remous", "jacuzzi", "spa"]) {
+      expect(cats(q), q).toContain(ECS);
+    }
+  });
+
+  it("« spa » ne remonte que la catégorie et le bain à remous, qui y oriente", () => {
+    expect(cats("spa")).toEqual([ECS]);
+    expect(cles("spa")).toEqual(["bain_a_remous"]);
+  });
+});

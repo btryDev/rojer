@@ -353,6 +353,16 @@ export const MATERIELS_NON_COUVERTS: readonly MaterielNonCouvert[] = [
       { libelle: "Code de la santé publique, art. D. 1332-1", corpus: "CSP D. 1332-1" },
       { libelle: "Code de la santé publique, art. D. 1332-2", corpus: "CSP D. 1332-2" },
     ],
+    // 2026-10-17, sous-lot F (posé au rebase, F mergeant après B, accord avec
+    // la session du sous-lot B) : l'art. 2 de l'arrêté du 1er février 2010
+    // nomme « des bains à remous ou à jets » parmi les points d'usage à
+    // risque. La phrase dit le cas que le texte vise, sans qualifier celui du
+    // dirigeant ; le bain lui-même reste hors du périmètre (phrase ci-dessus).
+    orienteVers: {
+      categorie: "EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC",
+      phrase:
+        "Un bain à remous accessible au public et alimenté par une eau chaude produite en commun est l'un des cas que visent les articles 1er et 2 de l'arrêté du 1er février 2010 : déclarez alors l'installation d'eau chaude, Rojer en suit la température une fois par mois et l'analyse de légionelles une fois par an, dans un établissement recevant du public.",
+    },
   },
   {
     // Plan, § 3 : la NF EN ISO 20957 n'est citée que si elle est lue — elle ne

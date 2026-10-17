@@ -248,6 +248,11 @@ describe("la liste elle-même", () => {
     }
     // La chaudière gaz oriente vers l'installation de gaz (décision du 2026-10-14).
     expect(materielNonCouvert("chaudiere")?.orienteVers?.categorie).toBe("INSTALLATION_GAZ");
+    // 2026-10-17, sous-lot F : l'art. 2 de l'arrêté du 1er février 2010 nomme
+    // les bains à remous parmi les points d'usage à risque.
+    expect(materielNonCouvert("bain_a_remous")?.orienteVers?.categorie).toBe(
+      "EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC",
+    );
   });
 
   it("une clé inconnue ne rend rien", () => {
