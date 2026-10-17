@@ -152,6 +152,12 @@ segmentation actuelle par régime et par catégorie (`erp: true`,
 
 ### D.2 — Le manque réel, et il est en base
 
+> **[2026-10-17 : CLOS par l'ADR-045** — colonne `typesErpAutres` (PR #50),
+> écrans (PR #51). Ce qui suit est l'état antérieur, gardé barré dans son
+> esprit : le nom retenu est `typesErpAutres`, pas `typesErpSecondaires`, et
+> `typeErp` est le PREMIER type déclaré, **pas un type principal** — GN 2 n'en
+> connaît pas. La lecture est `typesErpDe` (`matching/types-erp.ts`).]
+
 `Etablissement.typeErp` est une valeur unique (`TypeErp?`). GN 2 admet le cumul
 d'exploitations dans un même établissement, et impose que les dispositions
 particulières de **chacune** s'appliquent. Le modèle ne sait pas le représenter.
@@ -159,7 +165,7 @@ particulières de **chacune** s'appliquent. Le modèle ne sait pas le représent
 Proposition, purement additive :
 
 - `typesErpSecondaires TypeErp[]` sur `Etablissement`, défaut `[]` ;
-- `typeErp` reste le type **principal**, celui qui commande le classement ;
+- ~~`typeErp` reste le type **principal**, celui qui commande le classement~~ ;
 - un helper pur `typesErpDeLEtablissement(etab): TypeErp[]` rend l'union ;
 - le moteur de matching lit `TypologieApplication.erp.types` — qui **existe
   déjà et n'est utilisé par aucune fiche** — en OU contre cette union.

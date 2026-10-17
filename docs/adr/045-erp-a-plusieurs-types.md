@@ -5,8 +5,14 @@
   transmises par la session c6). ~~Lots 0 (cet ADR) et 1 (moteur) en cours.~~
   [2026-10-17 : lots 0 et 1 (ADR, moteur) **fusionnés**, PR #49 ; lot 2
   (base, écriture) **fusionné**, PR #50 ; lot 3 (écrans, fondement,
-  surfaces) **en revue** sur `lot/multi-types-ecrans`, non fusionné ; lot 4
-  (scène, chapitre L) à venir.]
+  surfaces) ~~**en revue** sur `lot/multi-types-ecrans`, non fusionné ; lot 4
+  (scène, chapitre L) à venir~~.]
+  [2026-10-17 (soir) : **lots 0 à 3 livrés** — lot 3 fusionné, PR #51
+  (`0f4da766`). **Lot 4 déplacé** vers le lot de mise à jour du référentiel
+  piloté par la session c6 (décision de la propriétaire) : corpus du chapitre
+  L, catégorie « Scène / installations scéniques », L 14 au personnel
+  désigné, préfixe L à la borne du § 9. Ce que cet ADR en dit (§ 4, point 6)
+  reste la décision ; son exécution n'est plus de ce chantier.]
 - **Amende** : l'ADR-004 (régimes cumulables et énumérations de précision) —
   le type d'ERP devient cumulable, la catégorie reste unique ; l'ADR-031
   (cible) n'est pas touchée.
@@ -178,9 +184,9 @@ pas disponible dans la session).
 
 ## 6. À rayer et dater à la fusion (règle 11)
 
-- `docs/notes-cadre-juridique.md`, question ouverte « Cumul de types d'ERP » ;
-- `docs/registre-releve-types-erp.md`, D.2 ;
+- ~~`docs/notes-cadre-juridique.md`, question ouverte « Cumul de types d'ERP »~~ [2026-10-17 : rayé après la fusion du lot 3] ;
+- ~~`docs/registre-releve-types-erp.md`, D.2~~ [2026-10-17 : idem] ;
 - ~~`NOTE_TITRE_2_COMMUNE` (`incendie.ts`), « CE QUE LA BORNE NE SAIT PAS »~~ [2026-10-17 : rayé au lot 3] ;
-- `corpus/cch-classement-erp-igh.ts`, la réserve sur le groupement ;
+- ~~`corpus/cch-classement-erp-igh.ts`, la réserve sur le groupement~~ [2026-10-17 : idem] ;
 - ~~le commentaire de `matching/engine.ts` « le modèle ne stocke qu'un type »~~ [2026-10-17 : rayé au lot 1] ;
-- `.claude/CLAUDE.md`, liste des ADR : l'entrée 045 est à ajouter.
+- ~~`.claude/CLAUDE.md`, liste des ADR : l'entrée 045 est à ajouter~~ [ajoutée au lot 1] ; sa fin (« les écrans viennent aux lots 2 et 3 — d'ici là, un établissement ne déclare toujours qu'un type ») est périmée depuis le 2026-10-17 : laissée à la session c6.
