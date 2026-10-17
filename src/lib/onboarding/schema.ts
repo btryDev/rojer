@@ -3,7 +3,7 @@ import {
   CATEGORIES_ERP,
   EFFECTIF_MAX,
   TYPE_ERP,
-  TYPES_ERP_QUESTION_LOCAUX_SOMMEIL,
+  questionSommeilPosee,
 } from "@/lib/etablissements/schema";
 
 // Réexportée : la validation client du wizard la lit ici, au plus près du
@@ -112,6 +112,8 @@ export const onboardingSchema = z
       (v) => (v === "" || v === null ? undefined : v),
       z.enum(TYPE_ERP).optional(),
     ),
+    // Les autres types d'ERP (ADR-045, GN 2). Absent = aucun.
+    typesErpAutres: z.array(z.enum(TYPE_ERP)).optional(),
     categorieErp: z.preprocess(
       (v) => (v === "" || v === null ? undefined : v),
       z.enum(CATEGORIES_ERP).optional(),
@@ -219,6 +221,13 @@ export const onboardingSchema = z
         });
       }
     } else {
+      if (val.typesErpAutres && val.typesErpAutres.length > 0) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["typesErpAutres"],
+          message: "Ne doit être posé que si l'établissement est ERP",
+        });
+      }
       if (val.typeErp) {
         ctx.addIssue({
           code: "custom",
@@ -246,13 +255,7 @@ export const onboardingSchema = z
     // ne retient rien sur leur silence (`matching/engine.ts`).
     if (
       val.comporteLocauxSommeilPublic !== undefined &&
-      !(
-        val.estERP &&
-        val.typeErp !== undefined &&
-        (TYPES_ERP_QUESTION_LOCAUX_SOMMEIL as readonly string[]).includes(
-          val.typeErp,
-        )
-      )
+      !questionSommeilPosee(val)
     ) {
       ctx.addIssue({
         code: "custom",
@@ -268,11 +271,7 @@ export const onboardingSchema = z
     // n'inviterait à répondre dès la création.
     if (
       val.comporteLocauxSommeilPublic === undefined &&
-      val.estERP &&
-      val.typeErp !== undefined &&
-      (TYPES_ERP_QUESTION_LOCAUX_SOMMEIL as readonly string[]).includes(
-        val.typeErp,
-      )
+      questionSommeilPosee(val)
     ) {
       ctx.addIssue({
         code: "custom",

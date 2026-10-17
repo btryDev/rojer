@@ -388,3 +388,28 @@ describe("nombre de personnes au parcours (2026-09-20)", () => {
     ).toBeDefined();
   });
 });
+
+describe("onboardingSchema — plusieurs types d'ERP (ADR-045)", () => {
+  const erp = { ...base, estERP: true, typeErp: "N", categorieErp: "N3" };
+
+  it("accepte d'autres types sur un ERP", () => {
+    expect(onboardingSchema.safeParse({ ...erp, typesErpAutres: ["M"] }).success).toBe(true);
+  });
+
+  it("refuse d'autres types hors ERP", () => {
+    const res = onboardingSchema.safeParse({ ...base, typesErpAutres: ["M"] });
+    expect(res.success).toBe(false);
+  });
+
+  it("la question du sommeil est due, et acceptée, dès qu'un des types l'appelle", () => {
+    // Un restaurant qui exploite un hôtel : N en premier, O parmi les autres.
+    expect(onboardingSchema.safeParse({ ...erp, typesErpAutres: ["O"] }).success).toBe(false);
+    expect(
+      onboardingSchema.safeParse({ ...erp, typesErpAutres: ["O"], comporteLocauxSommeilPublic: true }).success,
+    ).toBe(true);
+    // Sans type qui l'appelle, la réponse reste refusée.
+    expect(
+      onboardingSchema.safeParse({ ...erp, typesErpAutres: ["M"], comporteLocauxSommeilPublic: true }).success,
+    ).toBe(false);
+  });
+});

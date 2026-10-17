@@ -8,6 +8,7 @@ import { requireUser } from "@/lib/auth/require-user";
 import { getOptionalUserEtablissement } from "@/lib/auth/scope";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import { onboardingSchema } from "./schema";
+import { typesErpAutresCoherents } from "@/lib/etablissements/schema";
 
 /**
  * Server action de finalisation du parcours d'onboarding.
@@ -66,6 +67,10 @@ export async function finaliserOnboarding(
     estIGH: ouiNon(raw.estIGH),
     estHabitation: ouiNon(raw.estHabitation),
     typeErp: raw.typeErp || undefined,
+    // Plusieurs valeurs possibles (ADR-045) : `getAll`, pas `raw`.
+    ...(formData.has("typesErpAutres")
+      ? { typesErpAutres: formData.getAll("typesErpAutres").filter((v) => v !== "") }
+      : {}),
     categorieErp: raw.categorieErp || undefined,
     // Vide = « je ne sais pas encore », et le vide ne se coerce pas en `false` :
     // le schéma le rend `undefined`, et l'écriture ci-dessous est alors omise.
@@ -138,6 +143,7 @@ export async function finaliserOnboarding(
         estIGH: d.estIGH,
         estHabitation: d.estHabitation,
         typeErp: d.typeErp,
+        typesErpAutres: typesErpAutresCoherents(d),
         categorieErp: d.categorieErp,
         // Locaux à sommeil (2026-09-09). LE SPREAD CONDITIONNEL EST LE POINT :
         // sans lui, Prisma recevrait `comporteLocauxSommeilPublic: undefined`,

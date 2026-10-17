@@ -24,6 +24,7 @@ const h = vi.hoisted(() => {
       estIGH: false,
       estHabitation: false,
       typeErp: null as string | null,
+      typesErpAutres: [] as string[],
       categorieErp: null as string | null,
       classeIgh: null as string | null,
       effectifPublicAdmis: null as number | null,
@@ -153,6 +154,8 @@ function formulaire(over: Record<string, string> = {}): FormData {
 beforeEach(() => {
   h.db.etablissement.estERP = false;
   h.db.etablissement.typeErp = null;
+  h.db.etablissement.typesErpAutres = [];
+  h.db.etablissement.comporteLocauxSommeilPublic = null;
   h.db.etablissement.categorieErp = null;
   h.db.etablissement.effectifPublicAdmis = null;
   h.db.etablissement.dateAutorisationOuverture = null;
@@ -559,5 +562,114 @@ describe("creerEtablissement — aucun régime lu « non » sans réponse (2026-
     expect(data.estERP).toBe(true);
     expect(data.estIGH).toBe(false);
     expect(data.estHabitation).toBe(false);
+  });
+});
+
+/** Le formulaire, avec une ou plusieurs cases « autres types » cochées (ADR-045). */
+function avecAutresTypes(fd: FormData, types: string[]): FormData {
+  for (const t of types) fd.append("typesErpAutres", t);
+  return fd;
+}
+
+describe("plusieurs types d'ERP — l'écriture respecte les contraintes de la base (ADR-045, lot 2)", () => {
+  // Deux contraintes CHECK (migration 20261017120000) : pas d'autres types
+  // hors ERP, pas de `typeErp` parmi eux. Une écriture qui les ignorerait
+  // planterait en base ; le double de Prisma ne les vérifie pas, ces tests
+  // vérifient donc ce que l'action ÉCRIT.
+  it("décocher l'ERP vide les autres types", async () => {
+    h.db.etablissement.estERP = true;
+    h.db.etablissement.typeErp = "N";
+    h.db.etablissement.categorieErp = "N3";
+    h.db.etablissement.typesErpAutres = ["M"];
+    await modifierEtablissement("etab-1", { status: "idle" }, formulaire());
+    expect(h.db.etablissement.typesErpAutres).toEqual([]);
+  });
+
+  it("le premier type qui passe parmi les autres en est retiré", async () => {
+    h.db.etablissement.estERP = true;
+    h.db.etablissement.typeErp = "N";
+    h.db.etablissement.categorieErp = "N3";
+    h.db.etablissement.typesErpAutres = ["M", "W"];
+    await modifierEtablissement(
+      "etab-1",
+      { status: "idle" },
+      formulaire({ estERP: "on", typeErp: "M", categorieErp: "N3" }),
+    );
+    expect(h.db.etablissement.typesErpAutres).toEqual(["W"]);
+  });
+
+  it("non posté, la liste en base est gardée — et la réponse sur le sommeil qu'un autre type appelle aussi", async () => {
+    // Un restaurant qui exploite aussi un hôtel : N en premier, O parmi les
+    // autres. La fiche d'un N ne pose pas la question ; la réponse donnée
+    // pour l'hôtel ne doit pas être effacée.
+    h.db.etablissement.estERP = true;
+    h.db.etablissement.typeErp = "N";
+    h.db.etablissement.categorieErp = "N3";
+    h.db.etablissement.typesErpAutres = ["O"];
+    h.db.etablissement.comporteLocauxSommeilPublic = true;
+    await modifierEtablissement(
+      "etab-1",
+      { status: "idle" },
+      formulaire({ estERP: "on", typeErp: "N", categorieErp: "N3" }),
+    );
+    expect(h.db.etablissement.typesErpAutres).toEqual(["O"]);
+    expect(h.db.etablissement.comporteLocauxSommeilPublic).toBe(true);
+  });
+
+  it("posté, la liste s'écrit dédoublonnée, sans le premier type, et le calendrier se recalcule", async () => {
+    h.db.etablissement.estERP = true;
+    h.db.etablissement.typeErp = "N";
+    h.db.etablissement.categorieErp = "N3";
+    await modifierEtablissement(
+      "etab-1",
+      { status: "idle" },
+      avecAutresTypes(formulaire({ estERP: "on", typeErp: "N", categorieErp: "N3" }), ["M", "M", "N"]),
+    );
+    expect(h.db.etablissement.typesErpAutres).toEqual(["M"]);
+    expect(h.genererCalendrier).toHaveBeenCalled();
+  });
+
+  it("la même liste reposée ne recalcule rien : elle se compare par son contenu", async () => {
+    h.db.etablissement.estERP = true;
+    h.db.etablissement.typeErp = "N";
+    h.db.etablissement.categorieErp = "N3";
+    h.db.etablissement.typesErpAutres = ["M"];
+    await modifierEtablissement(
+      "etab-1",
+      { status: "idle" },
+      avecAutresTypes(formulaire({ estERP: "on", typeErp: "N", categorieErp: "N3" }), ["M"]),
+    );
+    expect(h.genererCalendrier).not.toHaveBeenCalled();
+  });
+
+  it("la porte refuse d'autres types sur un établissement qui n'est pas ERP", async () => {
+    const res = await modifierEtablissement(
+      "etab-1",
+      { status: "idle" },
+      avecAutresTypes(formulaire(), ["M"]),
+    );
+    expect(res.status).toBe("error");
+  });
+
+  it("à la création, la question du sommeil est due dès qu'un des types l'appelle", async () => {
+    const sansReponse = await creerEtablissement(
+      "ent-1",
+      { status: "idle" },
+      avecAutresTypes(creation({ estERP: "oui", typeErp: "N", categorieErp: "N3" }), ["O"]),
+    );
+    expect(sansReponse.status).toBe("error");
+    expect(h.db.crees).toEqual([]);
+
+    await expect(
+      creerEtablissement(
+        "ent-1",
+        { status: "idle" },
+        avecAutresTypes(
+          creation({ estERP: "oui", typeErp: "N", categorieErp: "N3", comporteLocauxSommeilPublic: "oui" }),
+          ["O"],
+        ),
+      ),
+    ).rejects.toThrow("NEXT_REDIRECT");
+    expect(h.db.crees[0]).toMatchObject({ typeErp: "N", typesErpAutres: ["O"], comporteLocauxSommeilPublic: true });
   });
 });

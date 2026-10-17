@@ -101,7 +101,7 @@ async function constaterEpiDeclare(
 async function regimeDe(etablissementId: string): Promise<RegimeExigence> {
   const r = await prisma.etablissement.findUnique({
     where: { id: etablissementId },
-    select: { estERP: true, typeErp: true, categorieErp: true, ssiCategorieAouB: true },
+    select: { estERP: true, typeErp: true, typesErpAutres: true, categorieErp: true, ssiCategorieAouB: true },
   });
   return r ?? REGIME_TRAVAIL;
 }

@@ -105,13 +105,14 @@ export const QUESTIONS_EXIGEES_PAR_DECISION: readonly {
  */
 export type RegimeExigence = Pick<
   EtablissementMatching,
-  "estERP" | "typeErp" | "categorieErp" | "ssiCategorieAouB"
+  "estERP" | "typeErp" | "typesErpAutres" | "categorieErp" | "ssiCategorieAouB"
 >;
 
 /** Un lieu de travail sans public : aucune question de décision n'y est exigée. */
 export const REGIME_TRAVAIL: RegimeExigence = {
   estERP: false,
   typeErp: null,
+  typesErpAutres: [],
   categorieErp: null,
   ssiCategorieAouB: null,
 };

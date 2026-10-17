@@ -42,7 +42,7 @@ beforeEach(() => creer.mockClear());
 
 const NAFS = [null, "56.10A", "47.11B", "47.61Z", "70.22Z", "55.10Z", "86.21Z"];
 const REGIMES_ERP: RegimeExigence[] = (["N1", "N2", "N3", "N4", "N5"] as const).flatMap((c) =>
-  [null, true, false].map((ssi) => ({ estERP: true, typeErp: "N", categorieErp: c, ssiCategorieAouB: ssi })),
+  [null, true, false].map((ssi) => ({ estERP: true, typeErp: "N", typesErpAutres: [], categorieErp: c, ssiCategorieAouB: ssi })),
 );
 
 describe("balayage : toute catégorie suggérée à question exigée a sa question dans le panneau", () => {
@@ -103,7 +103,7 @@ const ELEC = {
   raison: "Vérification périodique",
 };
 const EXT = { categorie: "EXTINCTEUR" as const, libelle: "Extincteurs", raison: "Vérification annuelle" };
-const ERP_N3: RegimeExigence = { estERP: true, typeErp: "N", categorieErp: "N3", ssiCategorieAouB: null };
+const ERP_N3: RegimeExigence = { estERP: true, typeErp: "N", typesErpAutres: [], categorieErp: "N3", ssiCategorieAouB: null };
 const NOM = nomQuestionPanneau("INSTALLATION_ELECTRIQUE", "aGroupeElectrogene");
 
 function panneau(regime: RegimeExigence) {

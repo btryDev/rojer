@@ -35,6 +35,7 @@ export async function getEquipement(id: string) {
           raisonDisplay: true,
           estERP: true,
           typeErp: true,
+          typesErpAutres: true,
           categorieErp: true,
           ssiCategorieAouB: true,
         },

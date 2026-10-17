@@ -82,7 +82,7 @@ describe("EquipementForm : le désenfumage ne pose plus la question du SSI A ou 
 });
 
 describe("EquipementForm : « désenfumage mécanique » exigé en ERP des quatre premières catégories (décision du 2026-10-08)", () => {
-  const regime = { estERP: true, typeErp: "M" as const, ssiCategorieAouB: null };
+  const regime = { estERP: true, typeErp: "M" as const, typesErpAutres: [], ssiCategorieAouB: null };
   it("N2 : pas de « Je ne sais pas encore », champ requis ; N5 : trois états", () => {
     const rendre = (categorieErp: "N2" | "N5") =>
       render(
@@ -171,7 +171,7 @@ describe("EquipementForm : l'aide au-dessus des questions exigées du levage (re
   });
 
   it("désenfumage d'un ERP N3, dont la réponse est exigée : pas l'aide du levage", () => {
-    const n3 = { estERP: true, typeErp: "M" as const, categorieErp: "N3" as const, ssiCategorieAouB: null };
+    const n3 = { estERP: true, typeErp: "M" as const, typesErpAutres: [], categorieErp: "N3" as const, ssiCategorieAouB: null };
     // Le cas n'a de sens que si la question y est bien exigée.
     expect(questionsExigeesPour("DESENFUMAGE", n3)).toContain("estDesenfumageMecanique");
     expect(rendre("DESENFUMAGE", n3).querySelector("#aide-reponses-exigees")).toBeNull();
