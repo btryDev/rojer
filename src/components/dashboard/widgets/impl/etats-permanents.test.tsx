@@ -76,6 +76,7 @@ const DOSSIER: EtatsPermanentsDuDossier = {
       libelle: "Incendie et secours",
       enPlace: 1,
       total: 3,
+      parLesTitres: { total: 0, enPlace: 0 },
       blocs: [
         {
           sous: "alerter",
@@ -101,6 +102,7 @@ const DOSSIER: EtatsPermanentsDuDossier = {
       libelle: "Qui s'occupe de quoi",
       enPlace: 1,
       total: 2,
+      parLesTitres: { total: 0, enPlace: 0 },
       blocs: [
         {
           sous: null,
@@ -309,6 +311,7 @@ describe("widget : une ligne établie d'après les titres (revue du 2026-10-16)"
           libelle: "Qui s'occupe de quoi",
           enPlace: 0,
           total: 1,
+          parLesTitres: { total: 1, enPlace: 0 },
           blocs: [
             {
               sous: null,
@@ -335,6 +338,7 @@ describe("widget : une ligne établie d'après les titres (revue du 2026-10-16)"
           libelle: "Qui s'occupe de quoi",
           enPlace: 1,
           total: 1,
+          parLesTitres: { total: 1, enPlace: 1 },
           blocs: [
             {
               sous: null,

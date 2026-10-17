@@ -166,6 +166,24 @@ describe("les comptes ne disent pas « déclaré » de ce que l'employeur n'a pa
     expect(garde).not.toMatch(/ne porte pas encore de déclaration|rien constaté/);
   });
 
+  it.each([
+    ["titre à jour", "2025-03-01"],
+    ["titre expiré", "2022-06-01"],
+  ])("écran, %s : les compteurs des familles s'additionnent à celui de l'en-tête", async (_cas, iso) => {
+    // Chaque famille dit sa part « d'après les titres » ; si elle la perdait,
+    // son compteur dirait « déclarés par vous » d'une ligne que l'en-tête,
+    // lui, attribue aux titres.
+    h.titres.mockResolvedValueOnce([titre(iso)]);
+    const { d } = await dossier();
+    const somme = (f: (x: (typeof d.familles)[number]) => number) =>
+      d.familles.reduce((n, x) => n + f(x), 0);
+    expect(somme((f) => f.total)).toBe(d.total);
+    expect(somme((f) => f.enPlace)).toBe(d.enPlace);
+    expect(somme((f) => f.parLesTitres.total)).toBe(d.parLesTitres.total);
+    expect(somme((f) => f.parLesTitres.enPlace)).toBe(d.parLesTitres.enPlace);
+    expect(d.parLesTitres.total).toBe(1);
+  });
+
   it("contre-épreuve : sans ligne établie d'après les titres, le chapeau n'en parle pas", () => {
     const bloc = blocEtatsPermanents({
       familles: [],

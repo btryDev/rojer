@@ -103,6 +103,12 @@ export type FamilleEtatsPermanents = {
   blocs: BlocSousCategorie[];
   enPlace: number;
   total: number;
+  /**
+   * La part de la famille établie d'après les titres déclarés, comptée comme
+   * celle de l'en-tête : le compteur de la famille ne peut pas dire « déclarés
+   * par vous » d'une ligne que l'employeur n'a pas déclarée.
+   */
+  parLesTitres: { total: number; enPlace: number };
 };
 
 export type EtatsPermanentsDuDossier = {
@@ -366,6 +372,16 @@ export async function listerEtatsPermanents(
         blocs,
         enPlace: blocs.reduce((n, b) => n + b.enPlace, 0),
         total: blocs.reduce((n, b) => n + b.total, 0),
+        parLesTitres: {
+          total: blocs.reduce(
+            (n, b) => n + b.lignes.filter((l) => l.parLesTitres).length,
+            0,
+          ),
+          enPlace: blocs.reduce(
+            (n, b) => n + b.lignes.filter((l) => l.parLesTitres?.enPlace).length,
+            0,
+          ),
+        },
       },
     ];
   });

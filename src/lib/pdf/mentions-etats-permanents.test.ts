@@ -67,6 +67,7 @@ function dossier(total: number, enPlace: number): EtatsPermanentsDuDossier {
         libelle: "Incendie et secours",
         enPlace,
         total,
+        parLesTitres: { total: 0, enPlace: 0 },
         blocs: [{ sous: "alerter", libelle: "Alerter", lignes, enPlace, total }],
       },
     ],
@@ -328,6 +329,7 @@ describe("le document garde l'ordre par domaine (2026-10-17)", () => {
         libelle: "Incendie et secours",
         enPlace: 0,
         total: 1,
+        parLesTitres: { total: 0, enPlace: 0 },
         blocs: [
           { sous: "evacuer", libelle: "Évacuer", lignes: [balisage], enPlace: 0, total: 1 },
         ],
@@ -337,6 +339,7 @@ describe("le document garde l'ordre par domaine (2026-10-17)", () => {
         libelle: "Vos installations et leurs registres",
         enPlace: 0,
         total: 1,
+        parLesTitres: { total: 0, enPlace: 0 },
         blocs: [{ sous: null, libelle: null, lignes: [carnet], enPlace: 0, total: 1 }],
       },
     ];
