@@ -13,7 +13,7 @@
  * individuelle ne traverse.
  *
  * **Aucun compte n'est refait ici.** Le compte de l'en-tête sort de
- * `compteDeLaPage`, que la page appelle aussi ; ceux des familles sont ceux que
+ * `compteDeLaPage` (`compte.ts`), que la page appelle aussi ; ceux des familles sont ceux que
  * `listerEtatsPermanents` a posés sur chaque famille, et l'ancre sort de
  * `ancreFamille`, qui pose l'`id` de la section. Le test du widget
  * (`components/dashboard/widgets/impl/etats-permanents.test.tsx`) rend la page
@@ -24,22 +24,8 @@
 
 import { ancreFamille } from "./ancre";
 import type { GroupeAffichage } from "./familles";
+import { compteDeLaPage } from "./compte";
 import type { EtatsPermanentsDuDossier } from "./queries";
-
-/**
- * Les trois nombres de l'en-tête de PAGE (`CompteurDeLaPage`), lus d'une seule
- * façon pour la page et pour le widget : deux lectures du même compte
- * finiraient par diverger, et le widget dirait un autre chiffre que l'écran
- * vers lequel il mène.
- */
-export function compteDeLaPage(d: EtatsPermanentsDuDossier): {
-  enPlace: number;
-  total: number;
-  /** La part d'`enPlace` établie d'après les titres déclarés. */
-  parLesTitres: number;
-} {
-  return { enPlace: d.enPlace, total: d.total, parLesTitres: d.parLesTitres.enPlace };
-}
 
 export type FamilleWidgetEtats = {
   groupe: GroupeAffichage;

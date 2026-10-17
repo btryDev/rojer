@@ -12,7 +12,7 @@ import {
   SectionsParUsage,
   SommaireParUsage,
 } from "@/components/etats-permanents/SectionsParUsage";
-import { compteDeLaPage } from "@/lib/etats-permanents/widget";
+import { compteDeLaPage } from "@/lib/etats-permanents/compte";
 import {
   phraseFaitsDates,
   phraseRestantes,

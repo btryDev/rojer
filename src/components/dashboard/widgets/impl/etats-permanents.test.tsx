@@ -430,6 +430,15 @@ describe("même source que l'écran — le source, faute de pouvoir exécuter la
     expect(lire("src/lib/etats-permanents/widget.ts")).toMatch(/\.\.\.compteDeLaPage\(d\)/);
   });
 
+  it("le compte vit dans `compte.ts` : la page ne dépend pas du module du widget", () => {
+    const page = lire("src/app/etablissements/[id]/etats-permanents/page.tsx");
+    expect(page).toMatch(/import \{ compteDeLaPage \} from "@\/lib\/etats-permanents\/compte";/);
+    expect(page).not.toMatch(/from "@\/lib\/etats-permanents\/widget"/);
+    expect(lire("src/lib/etats-permanents/widget.ts")).not.toMatch(
+      /export function compteDeLaPage/,
+    );
+  });
+
   it("le tableau de bord ne lit PAS les états permanents à chaque affichage", () => {
     // Le widget n'est pas au board par défaut ; les lire au rendu serveur,
     // c'était un passage du moteur pour rien sur la plupart des tableaux.
