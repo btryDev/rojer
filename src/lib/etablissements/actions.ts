@@ -5,6 +5,7 @@ import {
   libererFichiers,
 } from "@/lib/suppression/fichiers";
 import { revalidatePath } from "next/cache";
+import { typesErpAutresPostes } from "./types-erp-affiches";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -122,11 +123,12 @@ function normaliserFormData(fd: FormData): Record<string, unknown> {
     estIGH: regime("estIGH"),
     estHabitation: regime("estHabitation"),
     typeErp: raw.typeErp || undefined,
-    // Plusieurs valeurs possibles (ADR-045) : `getAll`, pas `raw`. Non posté =
+    // Plusieurs valeurs possibles (ADR-045) : `getAll`, pas `raw`, et un champ
+    // témoin pour que des cases toutes décochées disent « aucun ». Non posté =
     // omis, et la valeur en base est gardée (`typesErpAutresCoherents`).
-    ...(fd.has("typesErpAutres")
-      ? { typesErpAutres: fd.getAll("typesErpAutres").filter((v) => v !== "") }
-      : {}),
+    ...(typesErpAutresPostes(fd) === undefined
+      ? {}
+      : { typesErpAutres: typesErpAutresPostes(fd) }),
     categorieErp: raw.categorieErp || undefined,
     natureActivite: raw.natureActivite,
     // Ces quatre champs ne sont rendus que dans le bloc `{estERP && (…)}` du

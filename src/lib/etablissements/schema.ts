@@ -409,11 +409,15 @@ export const etablissementSchema = z
     // celui d'`onboarding/schema.ts`. Hors de la liste, rien n'est refusé : la
     // valeur est remise à `null` par `reponseSommeilSuivantLeType`.
     // La liste POSTÉE seulement : la fusion avec la valeur en base se fait
-    // après, dans l'action. Un N + O dont O ne vient que de la base et dont la
-    // réponse est vide n'est donc pas refusé ici (revue du lot 2) — il n'a
-    // aucun écran pour répondre avant le lot 3, qui postera la liste. D'ici
-    // là, le moteur retient ses lignes de sommeil « à confirmer », et la
-    // relance de la fiche (`repondreSommeil`) lui pose la question.
+    // après, dans l'action. ~~Un N + O dont O ne vient que de la base et dont
+    // la réponse est vide n'est donc pas refusé ici (revue du lot 2) — il n'a
+    // aucun écran pour répondre avant le lot 3, qui postera la liste.~~
+    // [2026-10-17, lot 3 : la fiche poste la liste ENTIÈRE, avec un champ
+    // témoin (`CHAMP_TEMOIN_TYPES_ERP_AUTRES`) — elle montre les autres types
+    // enregistrés et pose la question dès qu'un d'eux l'appelle. La liste
+    // postée est donc celle qui sera écrite, et ce contrôle la voit.] Seul
+    // un formulaire sans le bloc ERP ne poste rien ; il ne pose pas non plus
+    // la question.
     if (
       questionSommeilPosee({ ...val, typesErpAutres: val.typesErpAutres }) &&
       (val.comporteLocauxSommeilPublic === undefined ||

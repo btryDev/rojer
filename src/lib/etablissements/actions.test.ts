@@ -679,3 +679,36 @@ describe("plusieurs types d'ERP — l'écriture respecte les contraintes de la b
     expect(h.db.crees[0]).toMatchObject({ typeErp: "N", typesErpAutres: ["O"], comporteLocauxSommeilPublic: true });
   });
 });
+
+describe("plusieurs types d'ERP — la fiche poste la liste entière, avec son témoin (ADR-045, lot 3)", () => {
+  const temoin = (fd: FormData) => {
+    fd.set("typesErpAutresAffiche", "1");
+    return fd;
+  };
+
+  it("des cases toutes décochées retirent les autres types", async () => {
+    h.db.etablissement.estERP = true;
+    h.db.etablissement.typeErp = "N";
+    h.db.etablissement.categorieErp = "N3";
+    h.db.etablissement.typesErpAutres = ["M"];
+    await modifierEtablissement(
+      "etab-1",
+      { status: "idle" },
+      temoin(formulaire({ estERP: "on", typeErp: "N", categorieErp: "N3" })),
+    );
+    expect(h.db.etablissement.typesErpAutres).toEqual([]);
+  });
+
+  it("un N + O posté sans réponse sur le sommeil est refusé — la question était à l'écran", async () => {
+    h.db.etablissement.estERP = true;
+    h.db.etablissement.typeErp = "N";
+    h.db.etablissement.categorieErp = "N3";
+    h.db.etablissement.typesErpAutres = ["O"];
+    const res = await modifierEtablissement(
+      "etab-1",
+      { status: "idle" },
+      avecAutresTypes(temoin(formulaire({ estERP: "on", typeErp: "N", categorieErp: "N3" })), ["O"]),
+    );
+    expect(res.status).toBe("error");
+  });
+});

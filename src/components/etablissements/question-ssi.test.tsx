@@ -25,6 +25,7 @@ function fiche(categorieErp: string) {
         estEtablissementTravail: true,
         estERP: true,
         typeErp: "M",
+        typesErpAutres: [],
         categorieErp,
         ssiCategorieAouB: false,
       }}

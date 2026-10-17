@@ -12,8 +12,9 @@ import { ChampBoard, SectionChamps } from "@/components/ui-kit";
 import {
   CATEGORIES_ERP,
   TYPE_ERP,
-  TYPES_ERP_QUESTION_LOCAUX_SOMMEIL,
+  questionSommeilPosee,
 } from "@/lib/etablissements/schema";
+import { AutresTypesErp } from "./AutresTypesErp";
 import {
   LABEL_CATEGORIE_ERP,
   LABEL_TYPE_ERP,
@@ -59,6 +60,10 @@ type Valeurs = {
   estIGH?: boolean;
   estHabitation?: boolean;
   typeErp?: string | null;
+  // Requis, à la différence de ses voisins : omis, la fiche d'un hôtel-
+  // restaurant s'ouvrirait sans ses autres types, et les retirerait au
+  // premier enregistrement (le champ témoin est posté).
+  typesErpAutres: readonly string[];
   categorieErp?: string | null;
   natureActivite?: string | null;
   effectifPublicAdmis?: number | null;
@@ -115,9 +120,16 @@ export function EtablissementForm({
   const [typeErp, setTypeErp] = useState<string>(
     valeursInitiales?.typeErp ?? "",
   );
-  const poseLocauxSommeil =
-    estERP &&
-    (TYPES_ERP_QUESTION_LOCAUX_SOMMEIL as readonly string[]).includes(typeErp);
+  // Les autres types (ADR-045), suivis en état pour la même raison que le
+  // premier : la question du sommeil apparaît dès que L'UN d'eux l'appelle.
+  const [typesErpAutres, setTypesErpAutres] = useState<string[]>([
+    ...(valeursInitiales?.typesErpAutres ?? []),
+  ]);
+  const poseLocauxSommeil = questionSommeilPosee({
+    estERP,
+    typeErp,
+    typesErpAutres,
+  });
   // La catégorie aussi, depuis le 2026-10-12 : la question du SSI A/B n'est
   // posée qu'aux quatre premières catégories (DF 10, livre II).
   const [categorieErp, setCategorieErp] = useState<string>(
@@ -471,7 +483,12 @@ export function EtablissementForm({
                       id="typeErp"
                       name="typeErp"
                       value={typeErp}
-                      onChange={(e) => setTypeErp(e.currentTarget.value)}
+                      onChange={(e) => {
+                        const t = e.currentTarget.value;
+                        setTypeErp(t);
+                        // Le premier type ne figure pas parmi les autres (contrainte en base).
+                        setTypesErpAutres((v) => v.filter((x) => x !== t));
+                      }}
                       required={estERP === true}
                       className="champ-board"
                       aria-invalid={Boolean(err("typeErp"))}
@@ -484,6 +501,15 @@ export function EtablissementForm({
                       ))}
                     </select>
                     <Erreur message={err("typeErp")} />
+                    <div className="mt-3">
+                      <AutresTypesErp
+                        nom="typesErpAutres"
+                        typeErp={typeErp}
+                        valeurs={typesErpAutres}
+                        onChange={setTypesErpAutres}
+                        erreur={err("typesErpAutres")}
+                      />
+                    </div>
                   </div>
 
                   <div className="sm:col-span-2">
