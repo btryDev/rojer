@@ -3,6 +3,7 @@ import { CORPUS, articlesNonCouverts } from "@/lib/referentiels/corpus";
 import { ADRESSE_MANQUES_ANNONCES } from "@/lib/referentiels/corpus/adresses";
 import { DESCRIPTION_CATEGORIE } from "@/lib/equipements/labels";
 import { AIDE_TYPE_ERP } from "@/lib/etablissements/aide-type-erp";
+import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -370,6 +371,21 @@ describe("2026-10-17, ADR-046 : la page dit une phrase par domaine, faite des su
     for (const [ref, an] of Object.entries(ANNONCES)) {
       expect(vus.has(an.sujet), `${ref} : « ${an.sujet} » hors de nonPorte`).toBe(true);
     }
+    // Le même texte peut être écrit par `nonPorte` ailleurs (dans la phrase
+    // détaillée du domaine) : la présence ne suffit pas, la FORME se vérifie
+    // à la source — chaque `sujet:` de la table ouvre sur `nonPorte(`.
+    // Épreuve du 2026-10-17 : un sujet du bruit écrit en chaîne nue passait
+    // la seule présence.
+    const source = readFileSync(join(RACINE, "src", "lib", "perimetre", "manques-annonces.ts"), "utf8")
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/^[ \t]*\/\/.*$/gm, "");
+    const sujets = [...source.matchAll(/\bsujet:\s*([^\s(]+)/g)].map((m) => m[1]);
+    expect(sujets.length).toBeGreaterThan(0);
+    // Hors de la table : les deux déclarations de type, et la recopie dans la
+    // projection.
+    const admis = new Set(["nonPorte", "string;", "annonce.sujet,"]);
+    expect(sujets.filter((s) => !admis.has(s))).toEqual([]);
+    expect(sujets.filter((s) => s === "nonPorte").length).toBeGreaterThan(0);
   });
 
   it("aucune référence, aucun corpus dans la phrase de la page", () => {
