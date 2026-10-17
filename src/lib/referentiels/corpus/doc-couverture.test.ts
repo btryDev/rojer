@@ -211,10 +211,22 @@ describe(`${CHEMIN} — la liste ne se périme pas en silence`, () => {
     // Le titre II est désormais borné aux NEUF CHAPITRES lus le 2026-10-16,
     // par leur lettre de type.
     const CHAPITRES_LUS_LE_16 = /^[JPRSTUVXY] (?:\d|annexe)/;
+    // 2026-10-17, `lot/ref-a-corpus-titre-1` : le titre Ier lu EN ENTIER. Les
+    // vingt et un actes trouvés passent TRANSITOIREMENT au § 9 (consigne de
+    // c6), que le sous-lot C du plan « mise à jour du référentiel » videra. Ils
+    // sont nommés, comme les huit du 2026-10-16, et non admis par chapitre :
+    // une relecture d'un ancien manquant du titre Ier (`MS 71`, `GC 18`…) ne
+    // doit pas pouvoir le faire glisser du § 7 au § 9 (mutation M4).
+    const DU_TITRE_IER_LU_EN_ENTIER = new Set([
+      "GE 3", "GE 10", "CO 10", "AM 18", "DF 9", "CH 23", "CH 24", "CH 35",
+      "AS 5", "AS 8", "AS 11", "GC 4", "MS 42", "MS 51", "MS 52", "MS 57",
+      "MS 67", "MS 68", "MS 72", "MS 74", "MS 75",
+    ]);
     const admise = (corpus: string, ref: string) =>
       (corpus === "arrete-1980-livre-2-titre-2" && CHAPITRES_LUS_LE_16.test(ref)) ||
       (corpus === "arrete-1980-livre-3" && ref.startsWith("PU ")) ||
-      (corpus === "arrete-1980-livre-2" && DU_TITRE_IER.has(ref));
+      (corpus === "arrete-1980-livre-2" && DU_TITRE_IER.has(ref)) ||
+      (corpus === "arrete-1980-livre-2" && DU_TITRE_IER_LU_EN_ENTIER.has(ref));
     const horsBorne = refsDuTableau(ouverts).filter((ref) => {
       const origines = CORPUS.flatMap((c) =>
         c.articles

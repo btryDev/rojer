@@ -1101,7 +1101,9 @@ proposition : `propositions/lecture-chapitres-types-erp-2026-10-16.md`. Même
 mécanisme que le § 8 du 2026-10-12 : le § 7 et ce § 9, disjoints, font
 ensemble les `obligation_manquante` qui touchent la cible
 (`doc-couverture.test.ts`). Chaque ligne sort d'ici quand la propriétaire l'a
-tranchée. Manquantes : ~~22 + 18 − 0 = 40~~ ~~22 + 26 − 0 = 48~~ 22 + 28 − 0 = **50**, toutes dans la cible.
+tranchée. Manquantes : ~~22 + 18 − 0 = 40~~ ~~22 + 26 − 0 = 48~~ ~~22 + 28 − 0 = **50**~~ 22 + 49 − 0 = **71** [2026-10-17, `lot/ref-a-corpus-titre-1` : + 21 actes du titre Ier lu en entier, ci-dessous], toutes dans la cible.
+
+**[2026-10-17 — PASSAGE TRANSITOIRE.]** Le titre Ier du livre II est lu en entier (`lot/ref-a-corpus-titre-1`, corpus `arrete-1980-livre-2` passé `integral`, table des matières contrôlée par `table-des-matieres.test.ts`). Les vingt et un actes qu'il porte et que le référentiel ne sert pas entrent ici TRANSITOIREMENT, à la suite du tableau, sous l'intertitre daté : le sous-lot C du plan « mise à jour du référentiel » (`propositions/plan-maj-referentiel-2026-10-17.md`, § 4) les rattache à une ligne existante ou les encode, et les retire de ce § 9 dans le même commit. Rien n'en est encodé ici.
 
 | Article | Ce qui la met dans la cible | Cause au corpus | Proposition |
 |---|---|---|---|
@@ -1133,3 +1135,25 @@ tranchée. Manquantes : ~~22 + 18 − 0 = 40~~ ~~22 + 26 − 0 = 48~~ 22 + 28 �
 | `CO 48 § 3 e) — contrat d'entretien des portes automatiques` | ERP des catégories 1 à 4 avec porte automatique | `libre` | Ligne d'état permanent sur `PORTE_AUTO` N1–N4 (le contrat) |
 | `MS 46 § 3 — convention avec un organisateur, annexée au registre` | ERP sans hébergement jusqu'à 300 personnes, hors 1ʳᵉ | `relation_tiers` | Annoncer |
 | `EL 23 § 2 — vérification des installations électriques semi-permanentes` | ERP des catégories 1 à 4 qui montent des installations temporaires | `evenement` | Annoncer, ou ligne événementielle |
+| **2026-10-17 — titre Ier lu en entier (transitoire, vidé par le sous-lot C)** | | | |
+| `GE 3` | Tout ERP des catégories 1 à 4 | `libre` | Rattacher le § 3 (consignes d'évacuation au registre) à `incendie-registre-securite` |
+| `GE 10` | Tout ERP des catégories 1 à 4 | `libre` | Rattacher à `incendie-registre-securite` |
+| `CO 10` | ERP des catégories 1 à 4 avec franchissement d'isolement avec un tiers | `categorie_equipement` | Question de droit posée à c6 : la « maintenance placée sous la responsabilité de l'exploitant » impose-t-elle un entretien ? |
+| `AM 18` | ERP des catégories 1 à 4 à rangées de sièges rembourrés | `categorie_equipement` | Question posée à c6 : ligne au défaut annuel, annonce, ou hors cadre (niche) |
+| `DF 9` | ERP des catégories 1 à 4 avec désenfumage | `libre` | Rattacher à `incendie-erp-desenfumage-annuelle`, défaut annuel dit (plan, § 4) |
+| `CH 23` | ERP des catégories 1 à 4 avec chaudière | `libre` | Annoncer dans l'aide de la catégorie (décision Q3 du 2026-10-17) |
+| `CH 24` | ERP des catégories 1 à 4 avec générateur d'air chaud à combustion | `libre` | Annoncer avec CH 23 (décision Q3 du 2026-10-17) |
+| `CH 35` | ERP des catégories 1 à 4 avec climatisation à fluide inflammable non scellée | `categorie_equipement` | Question posée à c6 : propriété d'équipement ou annonce dans l'aide de `INSTALLATION_FRIGORIFIQUE` |
+| `AS 5` | ERP des catégories 1 à 4 avec ascenseur d'évacuation | `categorie_equipement` | Annoncer dans `DESCRIPTION_CATEGORIE.ASCENSEUR` (plan, § 3, sous-lot B) |
+| `AS 8` | ERP des catégories 1 à 4 avec escalier mécanique | `categorie_equipement` | Nommer avec AS 10 dans l'entrée de l'escalier mécanique, au matériel (plan, § 3) |
+| `AS 11` | ERP des catégories 1 à 4 avec ascenseur | `libre` | Rattacher à `ascenseur-carnet-entretien` ; pancartes annoncées (plan, § 3) |
+| `GC 4` | ERP des catégories 1 à 4 avec appareil de cuisson | `libre` | Ligne `cuisson-erp-consignes-arret-urgence` (plan, § 4, ligne 9) |
+| `MS 42` | Tout ERP des catégories 1 à 4 | `evenement` | Question posée à c6 : « Quand ça arrive » ou rien à l'écran |
+| `MS 51` | Tout ERP des catégories 1 à 4 | `libre` | Rattacher à `incendie-travail-exercice-semestriel` et `incendie-registre-securite` |
+| `MS 52` | Tout ERP des catégories 1 à 4 | `libre` | Rattacher le § 1 à `incendie-registre-securite` |
+| `MS 57` | ERP des catégories 1 à 4 avec détection | `libre` | Ligne `incendie-erp-personnel-qualifie-detection`, SSI A ou B (plan, § 4, ligne 3 ; décision Q5) |
+| `MS 67` | Tout ERP des catégories 1 à 4 | `libre` | Rattacher le § 3 à `incendie-travail-exercice-semestriel` |
+| `MS 68` | ERP des catégories 1 à 4 avec SSI | `libre` | Ligne `incendie-erp-ssi-contrat-entretien`, fondue avec MS 58 § 3-4 (plan, § 4, ligne 4) |
+| `MS 72` | Tout ERP des catégories 1 à 4 | `libre` | Rattacher le § 1 à `incendie-erp-personnel-designe-moyens-secours` |
+| `MS 74` | Tout ERP des catégories 1 à 4 | `libre` | Rattacher aux lignes `incendie-erp-visite-commission-*` |
+| `MS 75` | ERP des catégories 1 à 4 avec moyens d'extinction ou SSI | `libre` | Rattacher à `incendie-registre-securite` |

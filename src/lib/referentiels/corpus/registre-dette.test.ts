@@ -52,6 +52,26 @@ describe("registre de dette — les obligations manquantes", () => {
       "EC 13 — notice annexée au registre et entretiens consignés",
       "GE 5",
       "CO 48 § 3 e) — contrat d'entretien des portes automatiques",
+      // 2026-10-17, `lot/ref-a-corpus-titre-1` : le titre Ier lu en entier,
+      // quinze actes que rien ne bloque — rattachements à une ligne existante
+      // (registre, exercices, personnel désigné, visites, désenfumage) ou
+      // lignes proposées au plan du 2026-10-17 (§ 4). Transitoires : le
+      // sous-lot C les rattache ou les encode.
+      "GE 3",
+      "GE 10",
+      "DF 9",
+      "CH 23",
+      "CH 24",
+      "AS 11",
+      "GC 4",
+      "MS 51",
+      "MS 52",
+      "MS 57",
+      "MS 67",
+      "MS 68",
+      "MS 72",
+      "MS 74",
+      "MS 75",
       "P 21",
       "R 33",
       "S 15",
@@ -101,7 +121,9 @@ describe("registre de dette — les obligations manquantes", () => {
       // titre Ier ouverts par les renvois, 13 + 6 − 0.
       // [19, 0] → [17, 0] le 2026-10-17 (seconde revue) : `MS 41` et `MS 70 § 5`
       // passent `a_trancher`, politique sœur de PE 27 § 6 (GN 10, décision A6).
-      libre: [17, 0],
+      // [17, 0] → [32, 0] le 2026-10-17 (`lot/ref-a-corpus-titre-1`, titre Ier
+      // lu en entier) : 17 + 15 − 0, voir le test des « libres ».
+      libre: [32, 0],
       // 9 → 6 le 2026-09-21 : les trois de la chaleur intense (`R. 4463-4`,
       // `-5`, `-7`) sont encodées sur la page « Quand ça arrive ».
       // 6 → 0 le même jour : cinq relues à la source et encodées ; la sixième,
@@ -111,7 +133,9 @@ describe("registre de dette — les obligations manquantes", () => {
       // [1, 0] → [0, 0] le 2026-10-13 : arrêté 1986 art. 102 annoncé (`non_couvert`).
       // [0, 0] → [1, 0] le 2026-10-17 : `EL 23 § 2`, la vérification des
       // installations semi-permanentes à chaque montage.
-      evenement: [1, 0],
+      // [1, 0] → [2, 0] le 2026-10-17 (`lot/ref-a-corpus-titre-1`) : `MS 42`
+      // § 2, les plans fournis à la demande des sapeurs-pompiers.
+      evenement: [2, 0],
       // [5, 6] → [11, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : `GZ 13`, `GZ 14`, `CO 61`,
       // `AS 10`, `GC 18`, arrêté 2018-02-23 art. 26 § 3.
       // [11, 0] → [7, 0] le 2026-10-13 (décision de la propriétaire) : `GZ 13`,
@@ -120,7 +144,12 @@ describe("registre de dette — les obligations manquantes", () => {
       // [7, 0] → [11, 0] le 2026-10-16 : les gaz médicaux, `J 33`, `U 62`,
       // `U 64` (titre II) et `PU 5` (livre III), 7 + 4 − 0 ; à évaluer, rien
       // d'encodé.
-      categorie_equipement: [11, 0],
+      // [11, 0] → [16, 0] le 2026-10-17 (`lot/ref-a-corpus-titre-1`, titre Ier
+      // lu en entier) : 11 + 5 − 0 — `CO 10` (dispositif de franchissement),
+      // `AM 18` (sièges rembourrés), `CH 35` (fluide frigorigène inflammable,
+      // une propriété que la catégorie ne porte pas), `AS 5` (ascenseur
+      // d'évacuation), `AS 8` (escalier mécanique, matériel non couvert).
+      categorie_equipement: [16, 0],
       // 4 → 1 le 2026-09-27 (C45) : `R. 4227-23`, `R. 4227-24` et l'art. 8 de
       // l'arrêté du 10 septembre 2021 passent `non_couvert`, annoncés.
       // [1, 2] → [3, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : `MS 71`, arrêté 1986 art. 60.
@@ -213,8 +242,10 @@ describe("registre de dette — les obligations manquantes", () => {
     // `MS 58 § 3 et § 4`, `EC 13`, `MS 70 § 5`, `GE 5`, `MS 46 § 3`,
     // `EL 23 § 2`, `CO 48 § 3 e)`), au § 9.
     // 48 → 50 le 2026-10-17 : 48 + 2 − 0 — `X annexe` et `X 1 § 2`.
-    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(50);
-    expect(manquantes.length).toBe(50);
+    // 50 → 71 le 2026-10-17 (`lot/ref-a-corpus-titre-1`) : 50 + 21 − 0 — les
+    // vingt et un actes du titre Ier lu en entier, tous dans la cible.
+    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(71);
+    expect(manquantes.length).toBe(71);
   });
 });
 

@@ -765,6 +765,34 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       "MS 46 § 3 — convention avec un organisateur, annexée au registre",
       "EL 23 § 2 — vérification des installations électriques semi-permanentes",
       "CO 48 § 3 e) — contrat d'entretien des portes automatiques",
+      // 2026-10-17 — `lot/ref-a-corpus-titre-1` : le titre Ier lu en entier
+      // (274 articles en vigueur et 24 abrogés ajoutés au corpus). 47 + 21 − 0
+      // = 68, mesuré en appelant `obligationsManquantes()`. Vingt et un actes
+      // trouvés, dans l'ordre du fichier : quinze se rattachent à une ligne
+      // existante ou en appellent une (cause `libre`), six attendent une
+      // catégorie d'équipement ou un événement (CO 10, AM 18, CH 35, AS 5,
+      // AS 8, MS 42). Transitoires : le sous-lot C les rattache ou les encode.
+      "GE 3",
+      "GE 10",
+      "CO 10",
+      "AM 18",
+      "DF 9",
+      "CH 23",
+      "CH 24",
+      "CH 35",
+      "AS 5",
+      "AS 8",
+      "AS 11",
+      "GC 4",
+      "MS 42",
+      "MS 51",
+      "MS 52",
+      "MS 57",
+      "MS 67",
+      "MS 68",
+      "MS 72",
+      "MS 74",
+      "MS 75",
       // 2026-10-15 : le contrat d'entretien des machines de nettoyage à sec,
       // seul acte de M 40 § 3, classé à part et HORS CADRE (décision de la
       // propriétaire : « les conditions c'est pas nous »).
