@@ -493,7 +493,18 @@ export const obligationsConformite: Obligation[] = [
 // `incendie-erp-exploitant-present-public` (MS 52 § 1). 187 + 10 − 0 = 197 ;
 // par porteur, 95 équipement, 78 + 10 = 88 établissement, 14 salarié.
 // Rebasé sur F, qui a pris `.3`.
-export const REFERENTIEL_VERSION = "2026-10-17.4";
+// `2026-10-17.5` (sous-lot D du plan « mise à jour du référentiel »,
+// `lot/ref-d-types`, découpage validé par c6 le 2026-10-17 ; numéro
+// PROVISOIRE, pris au merge) : `incendie-erp-personnel-designe-moyens-secours`
+// gagne les types P, S, Y (P 21 § 2, S 15 § 3, Y 19 § 2) et
+// `incendie-erp-interdiction-fumer-affichee` les types T, X (T 52 § 3, X 25) ;
+// une ligne d'établissement entre, `signalisation-interdiction-fumer-csp`
+// (code de la santé publique, R. 3512-7 et R. 3512-2 1°, décision de la
+// propriétaire). R 10 entre en contexte de
+// `signalisation-stockage-substances-dangereuses`, hors empreinte.
+// 197 + 1 − 0 = 198 ; par porteur, 95 équipement, 88 + 1 = 89 établissement,
+// 14 salarié.
+export const REFERENTIEL_VERSION = "2026-10-17.5";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

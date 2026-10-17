@@ -91,6 +91,38 @@ import { nonPorte, porte } from "./non-couverture";
 import type { CorrespondanceSecteur } from "./secteur";
 import type { CategorieErp } from "@/lib/referentiels/types-communs";
 import { LABEL_CATEGORIE_ERP_COURT } from "@/lib/etablissements/labels";
+import type { TypeErp } from "@/lib/referentiels/types-communs";
+
+/**
+ * Les types d'ERP dont Rojer porte au moins une disposition particulière du
+ * titre II du livre II (une ligne servie qui cite un article du chapitre du
+ * type : « N 17 », « P 21 »…), dans l'ordre de la phrase de l'axe
+ * `categorie_erp`. 2026-10-17, sous-lot D : ~~« magasins, restaurants,
+ * hôtels et bureaux »~~ écrit à la main dans la phrase, faux dès qu'un lot
+ * ajoutait un type. Le module reste pur — il ne lit pas le référentiel — et
+ * `couverture.test.ts` DÉRIVE cette liste du référentiel pour la confronter.
+ */
+export const TYPES_ERP_DISPOSITIONS_PARTICULIERES: readonly TypeErp[] = [
+  "M", "N", "O", "W", "P", "S", "T", "X", "Y",
+];
+
+/** Le nom d'un type au pluriel, pour la phrase. Un type sans nom ici fait échouer le test. */
+export const NOM_TYPE_ERP_PLURIEL: Partial<Record<TypeErp, string>> = {
+  M: "magasins",
+  N: "restaurants",
+  O: "hôtels",
+  W: "bureaux",
+  P: "salles de danse et de jeux",
+  S: "bibliothèques",
+  T: "salles d'exposition",
+  X: "établissements sportifs couverts",
+  Y: "musées",
+  L: "salles de spectacle et de réunion",
+};
+
+function enumeration(mots: readonly string[]): string {
+  return mots.length <= 1 ? (mots[0] ?? "") : `${mots.slice(0, -1).join(", ")} et ${mots[mots.length - 1]}`;
+}
 
 /**
  * Les catégories que le produit couvre.
@@ -405,7 +437,10 @@ function axeRegime(
     // 2026-10-12 : la cible accepte les catégories 1 à 4 (ADR-031). La phrase
     // dit désormais ce que l'onboarding fait, et rien de plus : il les accepte,
     // le produit n'en porte qu'une part.]
-    consequence: `Rojer accepte les ERP des catégories 1 à 4. Le règlement de sécurité leur applique en entier son livre II, dont cet outil ne porte qu'une part : ${nonPorte("le service de sécurité incendie assuré par des agents de sécurité incendie")}, notamment, n'y est pas, et des dispositions particulières par type d'activité, il ne porte que quelques-unes, et seulement pour les magasins, restaurants, hôtels et bureaux. Votre calendrier et votre registre sont donc incomplets, et le resteront.`,
+    // [2026-10-17, sous-lot D : ~~« et seulement pour les magasins,
+    // restaurants, hôtels et bureaux »~~ — la liste des types se compose de
+    // `TYPES_ERP_DISPOSITIONS_PARTICULIERES`, que le test dérive du référentiel.]
+    consequence: `Rojer accepte les ERP des catégories 1 à 4. Le règlement de sécurité leur applique en entier son livre II, dont cet outil ne porte qu'une part : ${nonPorte("le service de sécurité incendie assuré par des agents de sécurité incendie")}, notamment, n'y est pas, et des dispositions particulières par type d'activité, il ne porte que quelques-unes, et seulement pour les ${enumeration(TYPES_ERP_DISPOSITIONS_PARTICULIERES.map((t) => NOM_TYPE_ERP_PLURIEL[t] ?? t))}. Votre calendrier et votre registre sont donc incomplets, et le resteront.`,
   });
 }
 

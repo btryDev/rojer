@@ -61,6 +61,10 @@ export const SURFACES_DE_COUVERTURE = [
   // échelles y ont été déplacées depuis la page « Ce que Rojer ne couvre
   // pas ». Elles passent par `nonPorte` / `porte`, et sont confrontées ici.
   "src/lib/equipements",
+  // 2026-10-17, sous-lot D : l'aide par type d'ERP (`AIDE_TYPE_ERP`). Un
+  // fichier, pas le dossier : le reste de `etablissements` ne dit rien de la
+  // couverture, et `aides-regimes.ts` dit ce qui EST porté sans marqueur.
+  "src/lib/etablissements/aide-type-erp.ts",
 ] as const;
 
 /**
@@ -119,6 +123,8 @@ function texteAffiche(source: string): string {
 
 function fichiersSources(racine: string, dossier: string): string[] {
   const chemin = join(racine, dossier);
+  // Une surface peut être un fichier seul (2026-10-17, `aides-regimes.ts`).
+  if (statSync(chemin).isFile()) return [chemin];
   const trouves: string[] = [];
   const descendre = (d: string) => {
     for (const entree of readdirSync(d)) {

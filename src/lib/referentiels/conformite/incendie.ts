@@ -1909,9 +1909,9 @@ export const obligationsIncendie: Obligation[] = [
     id: "incendie-erp-personnel-designe-moyens-secours",
     domaine: "incendie",
     libelle:
-      "Personnel spécialement désigné et entraîné à la mise en œuvre des moyens de secours (ERP des quatre premières catégories : restaurants, magasins, hôtels, bureaux)",
+      "Personnel spécialement désigné et entraîné à la mise en œuvre des moyens de secours (ERP des quatre premières catégories : restaurants, magasins, hôtels, bureaux, salles de danse, bibliothèques, musées)",
     description:
-      "Dans un restaurant ou débit de boissons (type N), un hôtel ou autre établissement d'hébergement (type O) ou une administration, banque ou bureau (type W) des quatre premières catégories, des employés — des personnes, pour le type W — spécialement désignés doivent être entraînés à la mise en œuvre des moyens de secours (N 17, O 18, W 13). Dans un magasin ou centre commercial (type M), « des agents, entraînés à la manœuvre des moyens de secours contre l'incendie et à l'évacuation du public, doivent être désignés par l'exploitant » (M 29 § 1) ; au-delà du seuil de public que fixe le même article, la surveillance est assurée à la place par des agents de sécurité incendie (M 29 § 2 à § 4), que Rojer ne suit pas. " +
+      "Dans un restaurant ou débit de boissons (type N), un hôtel ou autre établissement d'hébergement (type O) ou une administration, banque ou bureau (type W) des quatre premières catégories, des employés — des personnes, pour le type W — spécialement désignés doivent être entraînés à la mise en œuvre des moyens de secours (N 17, O 18, W 13). Dans un magasin ou centre commercial (type M), « des agents, entraînés à la manœuvre des moyens de secours contre l'incendie et à l'évacuation du public, doivent être désignés par l'exploitant » (M 29 § 1) ; au-delà du seuil de public que fixe le même article, la surveillance est assurée à la place par des agents de sécurité incendie (M 29 § 2 à § 4), que Rojer ne suit pas. Dans une salle de danse ou de jeux (type P), « des employés spécialement désignés doivent être entraînés à la mise en oeuvre des moyens de secours dans les établissements ne possédant pas de service de sécurité incendie » (P 21 § 2) ; dans un musée (type Y), « des employés, spécialement désignés, doivent être entraînés à la mise en oeuvre de moyens de secours dans les établissements ne possédant pas de service de sécurité incendie » (Y 19 § 2). Pour ces deux types, le texte ne vise que l'établissement sans service de sécurité incendie : Rojer ne sait pas si vous en avez un, et vous présente la ligne dans tous les cas. Dans une bibliothèque ou un centre de documentation (type S), « des personnes spécialement désignées par l'exploitant doivent être entraînées à la mise en oeuvre des moyens d'extinction » (S 15 § 3). " +
       GN_10_PHRASE,
     referencesLegales: [
       {
@@ -1951,6 +1951,36 @@ export const obligationsIncendie: Obligation[] = [
         versionConstatee: "1983-05-21",
       },
       {
+        // 2026-10-17, sous-lot D du plan « mise à jour du référentiel ».
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. P 21 § 2 (employés spécialement désignés, entraînés à la mise en œuvre des moyens de secours, sans service de sécurité incendie) — livre II, titre II, type P, établissements des quatre premières catégories",
+        article: "P 21",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000025000798",
+        note: "« § 2. Des employés spécialement désignés doivent être entraînés à la mise en oeuvre des moyens de secours dans les établissements ne possédant pas de service de sécurité incendie. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000025000798, seule version, en vigueur depuis le 1983-09-04 (arrêté du 7 juillet 1983).",
+        versionConstatee: "1983-09-04",
+      },
+      {
+        // 2026-10-17, sous-lot D du plan « mise à jour du référentiel ».
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. S 15 § 3 (personnes spécialement désignées par l'exploitant, entraînées à la mise en œuvre des moyens d'extinction) — livre II, titre II, type S, établissements des quatre premières catégories",
+        article: "S 15",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000025173722",
+        note: "« § 3. Des personnes spécialement désignées par l'exploitant doivent être entraînées à la mise en oeuvre des moyens d'extinction. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000025173722, seule version, en vigueur depuis le 2005-03-29 (arrêté du 22 novembre 2004).",
+        versionConstatee: "2005-03-29",
+      },
+      {
+        // 2026-10-17, sous-lot D du plan « mise à jour du référentiel ».
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. Y 19 § 2 (employés spécialement désignés, entraînés à la mise en œuvre de moyens de secours, sans service de sécurité incendie) — livre II, titre II, type Y, établissements des quatre premières catégories",
+        article: "Y 19",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000025176784",
+        note: "« § 2. Des employés, spécialement désignés, doivent être entraînés à la mise en oeuvre de moyens de secours dans les établissements ne possédant pas de service de sécurité incendie. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000025176784, seule version, en vigueur depuis le 1995-10-18 (arrêté du 12 juin 1995).",
+        versionConstatee: "1995-10-18",
+      },
+      {
         // 2026-10-14, revue indépendante : contexte, tous types des catégories 1 à 4.
         source: "ARRETE",
         reference:
@@ -1977,9 +2007,11 @@ export const obligationsIncendie: Obligation[] = [
     realisateurs: ["exploitant"],
     criticite: 4,
     transmet: [],
-    typologies: { erp: { categories: [...CATEGORIES_LIVRE_2], types: ["M", "N", "O", "W"] } },
+    // ~~types: ["M", "N", "O", "W"]~~ — 2026-10-17, sous-lot D : + P, S, Y.
+    typologies: { erp: { categories: [...CATEGORIES_LIVRE_2], types: ["M", "N", "O", "W", "P", "S", "Y"] } },
     porteur: "etablissement",
     notesInternes:
+      "RATTACHEMENTS DU 2026-10-17 (sous-lot D du plan « mise à jour du référentiel », découpage validé par c6). P 21 § 2, S 15 § 3 et Y 19 § 2 disent le même acte que N 17 et W 13 — désigner et entraîner — pour les salles de danse et de jeux, les bibliothèques et les musées des quatre premières catégories : types P, S et Y ajoutés, libellé élargi, textes cités dans la description. S 15 dit « moyens d'extinction » là où les autres disent « moyens de secours » : cité tel quel. P 21 § 2 et Y 19 § 2 portent, comme N 17 ne le fait pas, « dans les établissements ne possédant pas de service de sécurité incendie » : Rojer ne suit pas ce service (phrase de l'axe `categorie_erp`), ne sait donc pas si l'établissement en a un, et sert la ligne à tous — sur-application visible, le service d'agents la rendant sans objet. Les § 1 de P 21 et Y 19 (un service d'agents « peut être imposé par la commission de sécurité ») sont des prescriptions d'autorité (ADR-035), non suivies. Empreinte : typologies et libellé.\n\n" +
       "RATTACHEMENT DU 2026-10-17 (sous-lot C ; décision Q2 de c6) — référence seule. MS 72 § 1 fait initier le personnel à la mise en œuvre des moyens d'extinction et d'alerte : rattaché à cette ligne, comme le prévoit le plan. TEMPORALITÉ : état permanent, sans rythme ; « cette information doit être maintenue dans le temps » ne devient PAS un défaut annuel, comme pour PE 27 § 5, sa sœur de 5ᵉ (décision de c6). Aucune norme citée au § 1 (NF X 08-003, au § 2, porte sur les panneaux). LE TROU, DIT : la ligne est bornée aux types M, N, O, W ; MS 72 vaut pour tous les types des catégories 1 à 4. Le sous-lot D l'étend à P, S, Y, le sous-lot G à L ; J et U seront refusés à l'accueil ; R, T, V et X restent sans MS 72 en catégories 1 à 4. ET L'ASSIETTE N'EST PAS LA MÊME (revue indépendante du 2026-10-17) : MS 72 fait initier « le personnel de l'établissement » tout entier ; cette ligne ne vise que le personnel spécialement désigné et entraîné. Le rattachement couvre donc l'acte pour les désignés, pas l'initiation des autres membres du personnel.\n\n" +
       "CRÉÉE LE 2026-10-14, point 1 de la décision de la propriétaire. Patron : `incendie-erp-5-instruction-personnel` (PE 27 § 5), même acte en 5ᵉ catégorie — état permanent sans rythme, `pieceAttendue: null` (le texte fait désigner et entraîner, il ne demande ni liste ni attestation), criticité 4.\n\n" +
       "UNE LIGNE POUR QUATRE ARTICLES. N 17, O 18 et W 13 disent la même phrase, à « employés » / « personnes » près ; M 29 § 1 dit la même chose avec deux précisions — la désignation est le fait de l'exploitant, et l'entraînement porte aussi sur l'évacuation du public. Même acte, même débiteur, même constat : quatre lignes auraient fait quatre cases pour une seule désignation, et un établissement n'en reçoit de toute façon qu'une ~~(un seul `typeErp`)~~ [2026-10-17, ADR-045 : même à plusieurs types — la ligne sort une fois, et son fondement cite l'article de chacun des types déclarés, N 17 et O 18 pour un hôtel-restaurant].\n\n" +
@@ -1992,9 +2024,21 @@ export const obligationsIncendie: Obligation[] = [
     id: "incendie-erp-interdiction-fumer-affichee",
     domaine: "incendie",
     libelle:
-      "Interdiction de fumer affichée bien en évidence (ERP des quatre premières catégories : magasins, hôtels, bureaux)",
+      // ~~« Interdiction de fumer affichée bien en évidence (ERP des quatre
+      // premières catégories : magasins, hôtels, bureaux, salles d'exposition,
+      // établissements sportifs couverts) »~~ — 2026-10-17, contrôle visuel de
+      // c6 : à côté de la signalisation du code de la santé publique, le
+      // dirigeant lisait deux fois la même chose, et l'énumération oubliait
+      // l'hôtel-restaurant. Le libellé dit l'OBJET : des locaux désignés.
+      // ~~« … dans les locaux que désigne le règlement de sécurité : réserves,
+      // locaux à risques particuliers, surfaces de vente, locaux sportifs (ERP
+      // des catégories 1 à 4) »~~ — même jour, c6 : 188 caractères, et un
+      // hôtel y lisait des surfaces de vente qui ne sont pas les siennes. Le
+      // détail par type est dans les pastilles (un article par type) et dans
+      // la description (locaux de vente M 44, locaux sportifs X 25).
+      "Interdiction de fumer affichée dans les réserves et locaux à risques (ERP des catégories 1 à 4)",
     description:
-      "Dans un magasin ou centre commercial (type M) des quatre premières catégories, il est formellement interdit de fumer dans les locaux de vente (M 44) et dans les locaux à risques importants — locaux de stockage et de manipulation des matériaux d'emballage, dépôts de déchets d'emballage, réserves autres que les réserves d'approche (M 47) —, et il est interdit de fumer dans l'ensemble des réserves et dans les locaux de réception, d'emballage, d'expédition et leurs annexes (M 58). Dans une administration, une banque ou un bureau (type W), il est interdit de fumer dans les locaux à risques particuliers (W 16). Dans un hôtel ou autre établissement d'hébergement (type O), il est formellement interdit de fumer dans les réserves, lingeries, etc. et, en général, dans les locaux présentant des risques particuliers d'incendie (O 21 § 1). Chaque fois, l'interdiction doit être affichée bien en évidence. Pour les types W et O, le texte vise les locaux à risques particuliers : Rojer ne sait pas si l'établissement en compte, et présente la ligne à tous. " +
+      "Dans un magasin ou centre commercial (type M) des quatre premières catégories, il est formellement interdit de fumer dans les locaux de vente (M 44) et dans les locaux à risques importants — locaux de stockage et de manipulation des matériaux d'emballage, dépôts de déchets d'emballage, réserves autres que les réserves d'approche (M 47) —, et il est interdit de fumer dans l'ensemble des réserves et dans les locaux de réception, d'emballage, d'expédition et leurs annexes (M 58). Dans une administration, une banque ou un bureau (type W), il est interdit de fumer dans les locaux à risques particuliers (W 16). Dans un hôtel ou autre établissement d'hébergement (type O), il est formellement interdit de fumer dans les réserves, lingeries, etc. et, en général, dans les locaux présentant des risques particuliers d'incendie (O 21 § 1). Dans une salle d'exposition (type T), l'interdiction de fumer doit être affichée bien en évidence dans les locaux à risques particuliers visés à l'article T 13 (T 52 § 3). Chaque fois, l'interdiction doit être affichée bien en évidence. Dans un établissement sportif couvert (type X), « il est interdit de fumer dans les locaux sportifs, les vestiaires-douches, les locaux de matériel et les gradins. Une signalisation appropriée doit rappeler cette interdiction dans les locaux intéressés » (X 25). Pour les types W, O et T, le texte vise les locaux à risques particuliers : Rojer ne sait pas si l'établissement en compte, et présente la ligne à tous. " +
       GN_10_PHRASE,
     referencesLegales: [
       {
@@ -2034,6 +2078,26 @@ export const obligationsIncendie: Obligation[] = [
         versionConstatee: "1983-05-21",
       },
       {
+        // 2026-10-17, sous-lot D du plan « mise à jour du référentiel ».
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. T 52 § 3 (interdiction de fumer affichée dans les locaux à risques particuliers visés à l'article T 13) — livre II, titre II, type T, établissements des quatre premières catégories",
+        article: "T 52",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000025201384",
+        note: "« § 3. Dans les locaux à risques particuliers, visés à l'article T 13, l'interdiction de fumer doit être affichée bien en évidence. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000025201384, seule version, en vigueur depuis le 1988-01-15 (arrêté du 18 novembre 1987).",
+        versionConstatee: "1988-01-15",
+      },
+      {
+        // 2026-10-17, sous-lot D du plan « mise à jour du référentiel ».
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. X 25 (interdiction de fumer dans les locaux sportifs, les vestiaires-douches, les locaux de matériel et les gradins, rappelée par une signalisation) — livre II, titre II, type X, établissements des quatre premières catégories",
+        article: "X 25",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000025164550",
+        note: "« Il est interdit de fumer dans les locaux sportifs, les vestiaires-douches, les locaux de matériel et les gradins. Une signalisation appropriée doit rappeler cette interdiction dans les locaux intéressés. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000025164550, seule version, en vigueur depuis le 1982-07-08 (arrêté du 4 juin 1982).",
+        versionConstatee: "1982-07-08",
+      },
+      {
         source: "ARRETE",
         reference:
           "Arrêté du 25 juin 1980, art. O 21 § 1 (interdiction de fumer dans les réserves, lingeries et locaux à risques particuliers) — livre II, titre II, type O, établissements des quatre premières catégories",
@@ -2050,13 +2114,15 @@ export const obligationsIncendie: Obligation[] = [
     realisateurs: ["exploitant"],
     criticite: 3,
     transmet: [],
-    typologies: { erp: { categories: [...CATEGORIES_LIVRE_2], types: ["M", "O", "W"] } },
+    // ~~types: ["M", "O", "W"]~~ — 2026-10-17, sous-lot D : + T, X.
+    typologies: { erp: { categories: [...CATEGORIES_LIVRE_2], types: ["M", "O", "W", "T", "X"] } },
     porteur: "etablissement",
     notesInternes:
+      "RATTACHEMENTS DU 2026-10-17 (sous-lot D du plan « mise à jour du référentiel », découpage validé par c6). T 52 § 3 (salles d'exposition, locaux à risques de T 13 : réserves, réception des marchandises, ateliers d'entretien et de réparation) et X 25 (établissements sportifs couverts ; décision Q1 de la propriétaire, plan § 11) disent le même acte : afficher, ou rappeler par une signalisation, l'interdiction de fumer. Types T et X ajoutés, libellé élargi. T, comme W et O, vise des locaux à risques que Rojer ne connaît pas : même sur-application nommée. X 25 vise des locaux qu'un établissement sportif a par définition. CATÉGORIES 1 À 4 SEULEMENT : PX 1 importe en 5ᵉ catégorie « les dispositions techniques du chapitre XII » ; que X 25 en soit une n'est pas tranché, et la ligne n'est PAS étendue à la petite salle de sport (décision de c6 du 2026-10-17 ; réserve écrite au corpus, X 25 et PX 1). Le sous-lot E (Code du sport) ne touche pas cette ligne. Empreinte : typologies et libellé.\n\n" +
       "CRÉÉE LE 2026-10-14, point 2 de la décision de la propriétaire. État permanent d'établissement : le texte fait AFFICHER une interdiction, c'est un écrit au mur (`pieceAttendue` nommée, comme `incendie-erp-5-consignes-affichees`).\n\n" +
       "UNE LIGNE POUR CINQ ARTICLES. Pour le type M, trois articles visent trois familles de locaux (vente, risques importants, réserves et locaux d'expédition) ; pour W et O, un article chacun. L'acte est le même — afficher l'interdiction là où elle vaut — et un établissement ne reçoit la ligne qu'une fois. Le type N n'a pas d'article de ce genre : il n'est pas dans `types`.\n\n" +
       "SUR-APPLICATION NOMMÉE, W ET O (décision de la propriétaire). W 16 et O 21 § 1 visent les locaux à risques particuliers ; Rojer ne sait pas si l'établissement en a. La ligne est servie à tous les établissements de ces types, et la description le dit. Sens d'erreur : une affiche demandée à qui n'a pas de tel local — visible, et sans coût de tiers. Pour M, les locaux de vente existent par définition : pas de sur-application.\n\n" +
-      "L'interdiction générale de fumer dans les lieux à usage collectif relève du code de la santé publique, que ce lot n'a pas ouvert : cette ligne ne porte que le règlement de sécurité.\n\n" +
+      "~~L'interdiction générale de fumer dans les lieux à usage collectif relève du code de la santé publique, que ce lot n'a pas ouvert : cette ligne ne porte que le règlement de sécurité.~~ [2026-10-17, sous-lot D : le code de la santé publique est ouvert (corpus `csp-tabac`) et sa signalisation générale portée À PART, par `signalisation-interdiction-fumer-csp` (R. 3512-7, tout local fermé et couvert de travail ou recevant du public, décision de la propriétaire). Cette ligne-ci reste celle du règlement de sécurité : l'interdiction affichée dans des LOCAUX À RISQUES désignés d'un ERP des quatre premières catégories. Objets différents ; rangées à deux endroits de l'écran (« Incendie et secours — Prévenir » ici, « Le quotidien — Informer et former » là), libellés distincts.]\n\n" +
       NOTE_TITRE_2_COMMUNE,
   },
 

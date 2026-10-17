@@ -22,6 +22,7 @@ import {
 } from "@/lib/etablissements/labels";
 import type { EtablissementActionState } from "@/lib/etablissements/actions";
 import { AIDE_HABITATION, AIDE_IGH, AIDE_LOCAUX_SOMMEIL } from "@/lib/etablissements/aides-regimes";
+import { AideTypesErp } from "./AideTypesErp";
 import {
   AIDE_EPI,
   AIDE_SSI,
@@ -561,6 +562,9 @@ export function EtablissementForm({
                       l&apos;incendie (art. R. 122-5 CCH).
                     </p>
                     <Erreur message={err("categorieErp")} />
+                    {/* 2026-10-17, contrôle visuel de c6 : SOUS la catégorie,
+                        dont le choix la fait apparaître (N1 à N4). */}
+                    <AideTypesErp types={[typeErp, ...typesErpAutres]} categorieErp={categorieErp} />
                   </div>
 
                   {/* Fiche « Établissement recevant du public » du registre de

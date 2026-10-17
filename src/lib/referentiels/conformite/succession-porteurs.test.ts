@@ -295,6 +295,7 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "signalisation-etablissement-risques-residuels": "etablissement",
   "signalisation-etablissement-signaux-lumineux-acoustiques-semestrielle": "etablissement",
   "signalisation-incendie-moyens-lutte": "equipement",
+  "signalisation-interdiction-fumer-csp": "etablissement",
   "signalisation-stockage-substances-dangereuses": "equipement",
   "stockage-dangereux-declaration-icpe": "equipement",
   "stockage-dangereux-fiches-donnees": "equipement",

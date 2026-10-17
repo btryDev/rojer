@@ -163,7 +163,7 @@ sixième `??` recopié.
 C'est la limite la plus importante de ce document, et la raison directe du
 retrait de la carte.
 
-~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ ~~Les 66 articles (2026-10-07, l'IGH, les équipements sous pression et le stockage de matières dangereuses en partie retirés)~~ ~~Les 70 articles (2026-10-13, quatre manques de la cible redéfinie annoncés)~~ ~~Les 72 articles (2026-10-13, six manques de la cible redéfinie annoncés)~~ ~~Les 73 articles (2026-10-13, sept manques de la cible redéfinie annoncés)~~ ~~Les 74 articles (2026-10-14, `L. 8222-1-1` dit sur la page Prestataires)~~ ~~Les 77 articles (2026-10-14, quatre articles cités par l'aide des catégories entrés au corpus)~~ ~~Les 78 articles (2026-10-14, intégration des deux lots : 73 + 1 + 4)~~ ~~Les 76 articles (2026-10-16, lecture des chapitres de types d'ERP : 78 − 6 + 4)~~ ~~Les 82 articles (2026-10-17, titre Ier lu en entier et motifs du titre II réécrits : 76 + 6 − 0)~~ ~~Les 89 articles (2026-10-17, corrections de la revue de `lot/ref-a-corpus-titre-1` : 82 + 7 − 0)~~ ~~Les 100 articles (2026-10-17, sous-lot B `lot/ref-b-hors-cadre` : 89 + 11 − 0)~~ ~~Les 102 articles (2026-10-17, revue de B : 100 + 2 − 0)~~ ~~Les 99 articles (2026-10-17, sous-lot F, légionelles au matériel : 102 + 0 − 3)~~ Les 108 articles (2026-10-17, sous-lot C, rebasé sur F : 99 + 9 − 0) ci-dessous sont ceux que le dépouillement a lus, qui imposent
+~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ ~~Les 66 articles (2026-10-07, l'IGH, les équipements sous pression et le stockage de matières dangereuses en partie retirés)~~ ~~Les 70 articles (2026-10-13, quatre manques de la cible redéfinie annoncés)~~ ~~Les 72 articles (2026-10-13, six manques de la cible redéfinie annoncés)~~ ~~Les 73 articles (2026-10-13, sept manques de la cible redéfinie annoncés)~~ ~~Les 74 articles (2026-10-14, `L. 8222-1-1` dit sur la page Prestataires)~~ ~~Les 77 articles (2026-10-14, quatre articles cités par l'aide des catégories entrés au corpus)~~ ~~Les 78 articles (2026-10-14, intégration des deux lots : 73 + 1 + 4)~~ ~~Les 76 articles (2026-10-16, lecture des chapitres de types d'ERP : 78 − 6 + 4)~~ ~~Les 82 articles (2026-10-17, titre Ier lu en entier et motifs du titre II réécrits : 76 + 6 − 0)~~ ~~Les 89 articles (2026-10-17, corrections de la revue de `lot/ref-a-corpus-titre-1` : 82 + 7 − 0)~~ ~~Les 100 articles (2026-10-17, sous-lot B `lot/ref-b-hors-cadre` : 89 + 11 − 0)~~ ~~Les 102 articles (2026-10-17, revue de B : 100 + 2 − 0)~~ ~~Les 99 articles (2026-10-17, sous-lot F, légionelles au matériel : 102 + 0 − 3)~~ ~~Les 108 articles (2026-10-17, sous-lot C, rebasé sur F : 99 + 9 − 0)~~ Les 110 articles (2026-10-17, sous-lot D : 108 + 2 − 0) ci-dessous sont ceux que le dépouillement a lus, qui imposent
 quelque chose à un exploitant, et que le référentiel ne porte pas. **Rien ne les
 restreint aux établissements que leur chapitre vise** — sauf les ~~vingt-cinq
 annoncés le 2026-09-27~~ ~~trente-trois~~ trente-cinq annoncés (vingt-cinq le
@@ -353,9 +353,16 @@ référentiel », `lot/ref-c-incendie-n1-n4`, rebasé sur B puis sur F, mesuré 
 d'`obligation_manquante` à `non_couvert`, annoncés — voir § 3, « Titre Ier,
 annoncés par le sous-lot C ». Aucun ne sort ; `CO 10` reçoit son adresse.
 
+**Puis 108 + 2 − 0 = 110** (2026-10-17, sous-lot D du plan « mise à jour du
+référentiel », `lot/ref-d-types`, mesuré en appelant `articlesNonCouverts()`) :
+`M 35` passe d'`obligation_manquante` à `non_couvert`, et `T 52 § 2 — nettoyage
+quotidien des locaux` entre, classé à part de `T 52` (retenu pour son § 3) ;
+tous deux annoncés dans l'aide du type d'ERP (`AIDE_TYPE_ERP`). `T 29`, `T 33`,
+`T 43` et `T 44` reçoivent leur adresse dans la même aide. Aucun ne sort.
+
 ---
 
-## 3. Les 108 articles lus et non portés
+## 3. Les 110 articles lus et non portés
 
 ~~Cinq familles~~ ~~Neuf familles (compte refait le 2026-09-26)~~ Dix-huit familles (compte refait le 2026-09-27, C45), une dixième étant sortie de la liste le 2026-09-01 (voir
 ci-dessous). Les motifs sont ceux du corpus, cités et non réécrits : ils ont
@@ -555,7 +562,26 @@ l'aide du type T (sous-lot D), `AM 18` l'aide de la catégorie Scène et du type
 L (sous-lot G), ~~`CO 10` la rubrique que crée le sous-lot C,~~ et `MS 42` n'en
 aura pas (décision de c6). [2026-10-17, sous-lot C : `CO 10` est dit dans la
 rubrique « Règlement de sécurité, catégories 1 à 4 » de la page « Ce que Rojer
-ne couvre pas » ; six restent muets.]
+ne couvre pas » ; six restent muets.] [2026-10-17, sous-lot D : `T 29`,
+`T 33`, `T 43` et `T 44` sont dits dans l'aide du type T
+(`AIDE_TYPE_ERP.T`, sous le choix du type, à la création et sur la fiche) ;
+deux restent muets, `AM 18` et `MS 42`.]
+
+### Types d'ERP, annoncés par le sous-lot D le 2026-10-17 — 2 articles
+
+`M 35` · `T 52 § 2 — nettoyage quotidien des locaux`
+
+Surface nouvelle : l'aide du type d'ERP (`src/lib/etablissements/aide-type-erp.ts`,
+`AIDE_TYPE_ERP`), rendue sous le choix du type principal et des autres types.
+
+> `M 35` — les machines-outils mises à la disposition du public, « sous la
+> surveillance directe d'un personnel compétent de l'établissement » : un état
+> permanent (ligne de partage 10), conditionné à un fait d'activité que le
+> modèle ne porte pas ; une niche. Annoncé, décision de c6.
+
+> `T 52 § 2` — « Un nettoyage régulier (quotidien) » : un rythme que le modèle
+> n'a pas, et une case quotidienne ressemblerait à une preuve (ligne de
+> partage 3). Annoncé, plan du 2026-10-17, § 5.
 
 ### Titre Ier, annoncés par le sous-lot C le 2026-10-17 — 9 articles
 
@@ -1309,22 +1335,22 @@ proposition : `propositions/lecture-chapitres-types-erp-2026-10-16.md`. Même
 mécanisme que le § 8 du 2026-10-12 : le § 7 et ce § 9, disjoints, font
 ensemble les `obligation_manquante` qui touchent la cible
 (`doc-couverture.test.ts`). Chaque ligne sort d'ici quand la propriétaire l'a
-tranchée. Manquantes : ~~22 + 18 − 0 = 40~~ ~~22 + 26 − 0 = 48~~ ~~22 + 28 − 0 = **50**~~ ~~22 + 49 − 0 = **71**~~ ~~22 + 47 − 0 = **69**~~ ~~22 + 46 − 0 = **68**~~ ~~22 + 52 − 0 = **74**~~ ~~28 + 46 − 0 = **74**~~ 28 + 15 − 0 = **43** [2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`, rebasé sur B), mesuré en appelant `obligationsManquantes()` : § 9 46 − 31 = 15 — vingt-deux retenus (dix lignes nouvelles, rattachements), neuf annoncés ; rangées rayées et datées dans le tableau] [2026-10-17, sous-lot B : six lignes passent au § 7 — `X annexe`, `X 1 § 2`, `J 33`, `U 62`, `U 64`, `PU 5`, rayées ci-dessous ; le total ne bouge pas : § 7 22 + 6 = 28, § 9 52 − 6 = **46**, 28 + 46 = **74**, mesuré en appelant le corpus. Les autres lignes des types J, U et R (`J 35`, `U 43`, `U 41`, `PU 6`, `J 39`, `R 33`, `U 47`, `J 40`, `U 48`) restent ici jusqu'au lot « filtre à l'accueil » (plan, § 5), qui refusera J et U, et R s'il accueille des enfants : elles passeront alors à `toucheLaCible: false`.] [seconde relecture du même jour : + 6, les affichages prescrits `CO 45 § 5`, `CO 47 § 2`, `CO 59 — g)`, `CH 38 — 6°`, `CH 52` (ligne de partage 11) et `PE 18` (livre III, ligne de partage 10), 46 + 6 = 52 ; avant : corrections de la revue du même jour : − 6 annonces décidées passées `non_couvert` (`CH 23`, `CH 24`, `AS 5`, `AS 8`, `T 29`, `T 33`), + 5 (`CH 17`, `EL 17`, `GC 15`, `MS 66`, `M 35`), 47 − 6 + 5 = 46 ; avant elles : 2026-10-17, `lot/ref-a-corpus-titre-1` : + 21 actes du titre Ier lu en entier, ci-dessous, − 4 passés `non_couvert` (`CO 10`, `AM 18`, `CH 35`, `MS 42`, décision de c6), + 2 du type T (`T 29`, `T 33`, motifs réécrits) ; 28 + 21 − 4 + 2 = 47], toutes dans la cible.
+tranchée. Manquantes : ~~22 + 18 − 0 = 40~~ ~~22 + 26 − 0 = 48~~ ~~22 + 28 − 0 = **50**~~ ~~22 + 49 − 0 = **71**~~ ~~22 + 47 − 0 = **69**~~ ~~22 + 46 − 0 = **68**~~ ~~22 + 52 − 0 = **74**~~ ~~28 + 46 − 0 = **74**~~ 28 + 15 − 0 = **43** [2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`, rebasé sur B), mesuré en appelant `obligationsManquantes()` : § 9 46 − 31 = 15 — vingt-deux retenus (dix lignes nouvelles, rattachements), neuf annoncés ; rangées rayées et datées dans le tableau] [2026-10-17, sous-lot D (`lot/ref-d-types`), mesuré en appelant `obligationsManquantes()` : § 9 15 − 6 = 9 — `P 21`, `S 15`, `Y 19`, `T 52`, `X 25` retenus (rattachements), `M 35` annoncé ; rangées rayées et datées] [2026-10-17, sous-lot B : six lignes passent au § 7 — `X annexe`, `X 1 § 2`, `J 33`, `U 62`, `U 64`, `PU 5`, rayées ci-dessous ; le total ne bouge pas : § 7 22 + 6 = 28, § 9 52 − 6 = **46**, 28 + 46 = **74**, mesuré en appelant le corpus. Les autres lignes des types J, U et R (`J 35`, `U 43`, `U 41`, `PU 6`, `J 39`, `R 33`, `U 47`, `J 40`, `U 48`) restent ici jusqu'au lot « filtre à l'accueil » (plan, § 5), qui refusera J et U, et R s'il accueille des enfants : elles passeront alors à `toucheLaCible: false`.] [seconde relecture du même jour : + 6, les affichages prescrits `CO 45 § 5`, `CO 47 § 2`, `CO 59 — g)`, `CH 38 — 6°`, `CH 52` (ligne de partage 11) et `PE 18` (livre III, ligne de partage 10), 46 + 6 = 52 ; avant : corrections de la revue du même jour : − 6 annonces décidées passées `non_couvert` (`CH 23`, `CH 24`, `AS 5`, `AS 8`, `T 29`, `T 33`), + 5 (`CH 17`, `EL 17`, `GC 15`, `MS 66`, `M 35`), 47 − 6 + 5 = 46 ; avant elles : 2026-10-17, `lot/ref-a-corpus-titre-1` : + 21 actes du titre Ier lu en entier, ci-dessous, − 4 passés `non_couvert` (`CO 10`, `AM 18`, `CH 35`, `MS 42`, décision de c6), + 2 du type T (`T 29`, `T 33`, motifs réécrits) ; 28 + 21 − 4 + 2 = 47], toutes dans la cible.
 
 **[2026-10-17 — PASSAGE TRANSITOIRE.]** **[2026-10-17, sous-lot C : VIDÉ. Les actes du titre Ier ci-dessous sont rattachés, encodés ou annoncés, et leurs rangées rayées ; `M 35` reste au § 9, pour le sous-lot D (aide du type M).]** Le titre Ier du livre II est lu en entier (`lot/ref-a-corpus-titre-1`, corpus `arrete-1980-livre-2` passé `integral`, table des matières contrôlée par `table-des-matieres.test.ts`). Les ~~vingt et un~~ dix-sept actes qu'il porte [2026-10-17 : vingt et un lus, quatre passés `non_couvert` le même jour sur décision de c6] et que le référentiel ne sert pas entrent ici TRANSITOIREMENT, avec `T 29` et `T 33` (motifs du type T réécrits le même jour), à la suite du tableau, sous l'intertitre daté : le sous-lot C du plan « mise à jour du référentiel » (`propositions/plan-maj-referentiel-2026-10-17.md`, § 4) les rattache à une ligne existante ou les encode, et les retire de ce § 9 dans le même commit. Rien n'en est encodé ici.
 
 | Article | Ce qui la met dans la cible | Cause au corpus | Proposition |
 |---|---|---|---|
 | `J 35` | Type J dès 20 ou 25 places d'hébergement (J 1) | `libre` | Rattacher à `incendie-erp-personnel-designe-moyens-secours` |
-| `P 21` | Type P dès 120 personnes (P 1) | `libre` | Rattacher à `incendie-erp-personnel-designe-moyens-secours` |
-| `S 15` | Type S dès 200 personnes (S 1) | `libre` | Rattacher à `incendie-erp-personnel-designe-moyens-secours` |
+| ~~`P 21`~~ | Type P dès 120 personnes (P 1) | `libre` | ~~Rattacher à `incendie-erp-personnel-designe-moyens-secours`~~ **Retenu (personnel désigné)**, sous-lot D, 2026-10-17 |
+| ~~`S 15`~~ | Type S dès 200 personnes (S 1) | `libre` | ~~Rattacher à `incendie-erp-personnel-designe-moyens-secours`~~ **Retenu (personnel désigné)**, sous-lot D, 2026-10-17 |
 | `U 43` | Type U dès 20 lits ou 100 personnes (U 1) | `libre` | Rattacher à `incendie-erp-personnel-designe-moyens-secours` |
-| `Y 19` | Type Y dès 200 personnes (Y 1) | `libre` | Rattacher à `incendie-erp-personnel-designe-moyens-secours` |
-| `M 35` | Type M, machines-outils mises à la disposition du public (commerce) | `activite_exercee` | Annonce dans l'aide du type M, ou état permanent conditionné à un fait d'activité — à trancher |
-| `T 52` | Type T, salle d'exposition permanente dès 200 personnes (T 1 § 2) | `libre` | Rattacher à `incendie-erp-interdiction-fumer-affichee` |
+| ~~`Y 19`~~ | Type Y dès 200 personnes (Y 1) | `libre` | ~~Rattacher à `incendie-erp-personnel-designe-moyens-secours`~~ **Retenu (personnel désigné)**, sous-lot D, 2026-10-17 |
+| ~~`M 35`~~ | Type M, machines-outils mises à la disposition du public (commerce) | `activite_exercee` | ~~Annonce dans l'aide du type M, ou état permanent conditionné à un fait d'activité — à trancher~~ **Annoncé — aide du type M**, sous-lot D, 2026-10-17 |
+| ~~`T 52`~~ | Type T, salle d'exposition permanente dès 200 personnes (T 1 § 2) | `libre` | ~~Rattacher à `incendie-erp-interdiction-fumer-affichee`~~ **Retenu pour le § 3 (interdiction de fumer) ; le § 2 annoncé**, sous-lot D, 2026-10-17 |
 | ~~`X annexe`~~ | Piscine couverte dès 200 personnes ; 5ᵉ catégorie par PX 1 | `a_trancher` | ~~Avec X 25 : sortie de l'exclusion « piscines » ou non ; sinon catégorie « désinfection des eaux de piscine », trois lignes~~ **Hors cadre (§ 7)**, sous-lot B, 2026-10-17 |
 | ~~`X 1 § 2 — affichage de l'effectif des piscines transformables et mixtes`~~ | Piscine transformable ou mixte | `a_trancher` | ~~Avec X 25 : affichage de l'effectif~~ **Hors cadre (§ 7)**, sous-lot B, 2026-10-17 |
-| `X 25` | Type X dès 200 personnes (X 1) ; 5ᵉ catégorie par PX 1 | `a_trancher` | Rattacher à `incendie-erp-interdiction-fumer-affichee`, si l'exclusion « équipements sportifs » ne la retient pas |
+| ~~`X 25`~~ | Type X dès 200 personnes (X 1) ; 5ᵉ catégorie par PX 1 | `a_trancher` | ~~Rattacher à `incendie-erp-interdiction-fumer-affichee`, si l'exclusion « équipements sportifs » ne la retient pas~~ **Retenu (interdiction de fumer, N1–N4 ; décision Q1)**, sous-lot D, 2026-10-17 |
 | `U 41` | Type U | `libre` | Rattacher à `incendie-erp-schema-organisation-securite` |
 | `PU 6` | ~~Type U de 5ᵉ catégorie avec locaux à sommeil~~ Type U de 5ᵉ catégorie avec locaux à sommeil, à construire ou à modifier (PU 1) [2026-10-17] | `libre` | Ajouter en référence de `incendie-erp-5-instruction-personnel` |
 | `J 39` | Type J | `libre` | Ligne nouvelle : exercices semestriels (rythme écrit) |
