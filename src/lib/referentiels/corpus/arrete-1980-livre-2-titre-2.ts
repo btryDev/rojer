@@ -782,12 +782,13 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       luLe: "2026-10-17",
       lecture: "api_legifrance",
       citationCle: "L'utilisation des machines-outils par le public dans les locaux de vente est autorisée si : - les machines-outils sont sous la surveillance directe d'un personnel compétent de l'établissement ; - l'accès aux machines-outils est réservé aux seuls clients intéressés par leur emploi. Les machines-outils dont l'utilisation présente un risque particulier d'incendie doivent être installées : - soit dans un local répondant aux caractéristiques définies à l'article CO 28 (§ 2) ; - soit dans un local protégé par une installation d'extinction automatique à eau appropriée aux risques. […]",
-      historique: "2026-10-17 — revue indépendante de `lot/ref-a-corpus-titre-1`, décision de c6 : une présence requise pendant l'ouverture ou le fonctionnement est un ÉTAT PERMANENT (politique sœur : EL 18 § 2, encodé en `elec-erp-presence-personne-qualifiee`), ligne de partage 10 de `docs/notes-cadre-juridique.md`. Ancien classement : ~~statut sans_objet ; motif : MOTIF_USAGE~~",
-      statut: "obligation_manquante",
-      motif: "L'utilisation de machines-outils par le public dans les locaux de vente (magasin de bricolage, par exemple) est autorisée sous deux conditions, dont un ÉTAT PERMANENT : les machines sont « sous la surveillance directe d'un personnel compétent de l'établissement » pendant leur emploi (ligne de partage 10, politique sœur EL 18 § 2) ; l'accès est réservé aux clients intéressés (usage). L'implantation des machines à risque particulier d'incendie est une règle de construction. Touche la cible commerce. PROPOSITION pour le sous-lot C : annonce dans l'aide du type M, ou état permanent conditionné à un fait d'activité (« machines-outils mises à la disposition du public ») que le modèle ne porte pas — à trancher. Transitoirement au § 9.",
-      cause: "activite_exercee",
-      bloquePar: "La mise à disposition de machines-outils au public est un fait d'activité que rien ne déclare.",
-      toucheLaCible: true,
+      historique:
+        "2026-10-17 — revue indépendante de `lot/ref-a-corpus-titre-1`, décision de c6 : une présence requise pendant l'ouverture ou le fonctionnement est un ÉTAT PERMANENT (politique sœur : EL 18 § 2, encodé en `elec-erp-presence-personne-qualifiee`), ligne de partage 10 de `docs/notes-cadre-juridique.md`. Ancien classement : ~~statut sans_objet ; motif : MOTIF_USAGE~~ ; ~~`obligation_manquante` / cause `activite_exercee`, motif : « L'utilisation de machines-outils par le public dans les locaux de vente (magasin de bricolage, par exemple) est autorisée sous deux conditions, dont un ÉTAT PERMANENT : les machines sont ‹ sous la surveillance directe d'un personnel compétent de l'établissement › pendant leur emploi (ligne de partage 10, politique sœur EL 18 § 2) ; l'accès est réservé aux clients intéressés (usage). L'implantation des machines à risque particulier d'incendie est une règle de construction. Touche la cible commerce. PROPOSITION pour le sous-lot C : annonce dans l'aide du type M, ou état permanent conditionné à un fait d'activité (‹ machines-outils mises à la disposition du public ›) que le modèle ne porte pas — à trancher. Transitoirement au § 9. »~~ [2026-10-17, sous-lot D du plan « mise à jour du référentiel », découpage validé par c6 : annoncé dans l'aide du type M]",
+      statut: "non_couvert",
+      declareA:
+        "Formulaire de l'établissement, aide du type d'ERP sous le choix du type (`src/lib/etablissements/aide-type-erp.ts`, `AIDE_TYPE_ERP.M`) : « la surveillance directe de ces machines par un personnel compétent de l'établissement »",
+      motif:
+        "L'utilisation de machines-outils par le public dans les locaux de vente est autorisée sous deux conditions, dont un ÉTAT PERMANENT : les machines sont « sous la surveillance directe d'un personnel compétent de l'établissement » (ligne de partage 10, politique sœur EL 18 § 2) ; l'accès est réservé aux clients intéressés (usage). L'implantation des machines à risque particulier d'incendie est une règle de construction. DÉCISION de c6 du 2026-10-17 (sous-lot D) : annoncé dans l'aide du type M, pas de ligne — une niche (ligne de partage 5), et la mise à disposition de machines-outils au public est un fait d'activité que le modèle ne porte pas." + SUITE_ANNONCE_DECIDEE,
     },
     {
       ref: "M 36",
@@ -1875,11 +1876,10 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "§ 2. Des employés spécialement désignés doivent être entraînés à la mise en oeuvre des moyens de secours dans les établissements ne possédant pas de service de sécurité incendie.",
-      statut: "obligation_manquante",
-      cause: "libre",
-      toucheLaCible: true,
-      motif: "Même acte que N 17 : à rattacher à `incendie-erp-personnel-designe-moyens-secours` (ajouter P, P 21 en référence). Le § 1 — un service d'agents de sécurité incendie « peut être imposé par la commission de sécurité » en 1ʳᵉ catégorie ou dans les complexes de loisirs où la danse est une activité principale — est une prescription d'autorité (ADR-035), pas une obligation d'office, et le service d'agents n'est pas suivi (phrase de manque de l'axe `categorie_erp`). TPE CONCERNÉE : P 1 fait entrer au chapitre une salle de danse dès 120 personnes au total, effectif qu'une discothèque de quelques salariés reçoit.",
-      bloquePar: "Rien ne bloque : l'acte est celui d'une ligne existante ou d'une ligne d'établissement bornée N1–N4 et au type, sur le patron de `incendie-erp-personnel-designe-moyens-secours`. Ce qui manque est l'encodage, que la propriétaire décide (lecture du 2026-10-16, rien n'est encodé).",
+      historique:
+        "~~`obligation_manquante` / cause `libre`, motif : « Même acte que N 17 : à rattacher à `incendie-erp-personnel-designe-moyens-secours` (ajouter P, P 21 en référence). Le § 1 — un service d'agents de sécurité incendie ‹ peut être imposé par la commission de sécurité › en 1ʳᵉ catégorie ou dans les complexes de loisirs où la danse est une activité principale — est une prescription d'autorité (ADR-035), pas une obligation d'office, et le service d'agents n'est pas suivi (phrase de manque de l'axe `categorie_erp`). TPE CONCERNÉE : P 1 fait entrer au chapitre une salle de danse dès 120 personnes au total, effectif qu'une discothèque de quelques salariés reçoit. »~~ [2026-10-17, sous-lot D du plan « mise à jour du référentiel », découpage validé par c6 : rattaché à `incendie-erp-personnel-designe-moyens-secours`, type ajouté]",
+      statut: "retenu",
+      obligations: ["incendie-erp-personnel-designe-moyens-secours"],
     },
     {
       ref: "P 22",
@@ -2038,6 +2038,19 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       citationCle: "§ 1. Locaux de stockage de liquides inflammables destinés à l'enseignement et à la recherche a) En application de l'article CO 27, § 2, la nature du classement des locaux de stockage de liquides inflammables est déterminée en fonction de la capacité totale équivalente exprimée en capacité équivalente à celle d'un liquide inflammable selon la formule : […]",
       statut: "hors_perimetre",
       exclusion: "construction",
+    },
+    {
+      // 2026-10-17, sous-lot D : la mention apposée sur les portes, classée à part.
+      ref: "R 10 § 1 b) et § 2 — mention apposée sur les portes",
+      intitule: "Locaux à risques",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000025005234",
+      versionEnVigueur: "2004-05-14",
+      modifiePar: { texte: "Arrêté du 13 janvier 2004, v. init." },
+      luLe: "2026-10-17",
+      lecture: "api_legifrance",
+      citationCle: 'Les locaux doivent être identifiés par la mention "stockage de produits dangereux" apposée sur leurs portes d\'accès.',
+      statut: "retenu",
+      obligations: ["signalisation-stockage-substances-dangereuses"],
     },
     {
       ref: "R 11",
@@ -2504,11 +2517,10 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "§ 3. Des personnes spécialement désignées par l'exploitant doivent être entraînées à la mise en oeuvre des moyens d'extinction.",
-      statut: "obligation_manquante",
-      cause: "libre",
-      toucheLaCible: true,
-      motif: "Même acte que W 13 (« personnes spécialement désignées ») : à rattacher à `incendie-erp-personnel-designe-moyens-secours` (ajouter S, S 15 § 3 en référence). Le texte dit « moyens d'extinction » là où W 13 dit « moyens de secours » : la description le reprendra mot pour mot. Les § 1 et § 2 sont des dotations. TPE CONCERNÉE : S 1 fait entrer au chapitre une bibliothèque ou un centre d'archives dès 200 personnes au total.",
-      bloquePar: "Rien ne bloque : l'acte est celui d'une ligne existante ou d'une ligne d'établissement bornée N1–N4 et au type, sur le patron de `incendie-erp-personnel-designe-moyens-secours`. Ce qui manque est l'encodage, que la propriétaire décide (lecture du 2026-10-16, rien n'est encodé).",
+      historique:
+        "~~`obligation_manquante` / cause `libre`, motif : « Même acte que W 13 (‹ personnes spécialement désignées ›) : à rattacher à `incendie-erp-personnel-designe-moyens-secours` (ajouter S, S 15 § 3 en référence). Le texte dit ‹ moyens d'extinction › là où W 13 dit ‹ moyens de secours › : la description le reprendra mot pour mot. Les § 1 et § 2 sont des dotations. TPE CONCERNÉE : S 1 fait entrer au chapitre une bibliothèque ou un centre d'archives dès 200 personnes au total. »~~ [2026-10-17, sous-lot D du plan « mise à jour du référentiel », découpage validé par c6 : rattaché à `incendie-erp-personnel-designe-moyens-secours`, type ajouté]",
+      statut: "retenu",
+      obligations: ["incendie-erp-personnel-designe-moyens-secours"],
     },
     {
       ref: "S 16",
@@ -2924,7 +2936,9 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       historique: "2026-10-17 — RÉÉCRIT après la contre-lecture indépendante du 2026-10-17 (constats du 2026-10-17, § 2), verdict de c6 le même jour, `lot/ref-a-corpus-titre-1`. Ancien classement : ~~statut `hors_perimetre`, exclusion `construction` ; motif : Réseau de gaz du propriétaire du hall : conception, zonage, pression, repérage, prises en attente — construction. Le § 3 ajoute une présence de personnel compétent pendant l'ouverture au-delà de 200 kW installés : une condition de fonctionnement, sans acte daté ni pièce (ligne de partage 3), et un seuil hors de portée d'une salle d'exposition de TPE.~~\n\n2026-10-17 — revue indépendante de `lot/ref-a-corpus-titre-1`, décision de c6 : « annoncer » ne s'encode que d'une façon, `non_couvert` avec l'adresse de l'annonce, même provisoirement muette ; une annonce décidée n'est pas une ligne à encoder. Elle annule le classement `obligation_manquante` / `attribut_etablissement` donné plus tôt le même jour. Ancien classement : ~~statut obligation_manquante, cause attribut_etablissement ; motif : Les § 1, § 2 et § 4 à § 6 sont des règles de conception du réseau de gaz du propriétaire du hall (zonage, pression, repérage, prises en attente). Le § 3 impose un ACTE : au-delà de 200 kW de puissance utile installée, « la présence d'un personnel compétent est obligatoire pendant l'ouverture au public », une personne par zone, qui peut être celle de T 33 § 2. Même politique sœur qu'à T 33 § 2 : EL 18 § 2, encodé en état permanent. PROPOSITION (décision de c6 du 2026-10-17) : annoncer avec T 33 dans l'aide du type T (sous-lot D) et citer T 29 en contexte dans les notes de `elec-erp-presence-personne-qualifiee` (sous-lot C). Transitoirement au § 9.~~",
       statut: "non_couvert",
       motif: "Les § 1, § 2 et § 4 à § 6 sont des règles de conception du réseau de gaz du propriétaire du hall (zonage, pression, repérage, prises en attente). Le § 3 impose un ÉTAT PERMANENT : au-delà de 200 kW de puissance utile installée, « la présence d'un personnel compétent est obligatoire pendant l'ouverture au public », une personne par zone, qui peut être celle de T 33 § 2 (ligne de partage 10). Rojer ne connaît pas la puissance installée : annoncé avec T 33 (décision de c6 du 2026-10-17), et à citer en contexte dans les notes de `elec-erp-presence-personne-qualifiee` (sous-lot C)." + SUITE_ANNONCE_DECIDEE,
-      declareA: "Non déclaré au 2026-10-17 : l'annonce est prévue dans l'aide du type T (`AIDE_TYPE_ERP`, surface nouvelle du sous-lot D du plan « mise à jour du référentiel »), qui n'existe pas encore.",
+      // ~~declareA: "Non déclaré au 2026-10-17 : l'annonce est prévue dans l'aid…~~ — annoncé le 2026-10-17, sous-lot D.
+      declareA:
+        "Formulaire de l'établissement, aide du type d'ERP sous le choix du type (`src/lib/etablissements/aide-type-erp.ts`, `AIDE_TYPE_ERP.T`) : « la présence d'une personne compétente pendant l'ouverture au public, au-delà de 200 kW de puissance utile installée ou de 200 kVA de puissance électrique mise en œuvre »",
     },
     {
       ref: "T 30",
@@ -2976,7 +2990,9 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       historique: "2026-10-17 — RÉÉCRIT après la contre-lecture indépendante du 2026-10-17 (constats du 2026-10-17, § 2), verdict de c6 le même jour, `lot/ref-a-corpus-titre-1`. Ancien classement : ~~statut `hors_perimetre`, exclusion `construction` ; motif : Zonage de la distribution électrique (§ 1, construction) ; présence d'une personne compétente au-delà de 200 kVA (§ 2) : condition de fonctionnement sans acte ni pièce (ligne de partage 3), à un seuil de puissance qu'une salle d'exposition de TPE n'atteint pas.~~\n\n2026-10-17 — revue indépendante de `lot/ref-a-corpus-titre-1`, décision de c6 : « annoncer » ne s'encode que d'une façon, `non_couvert` avec l'adresse de l'annonce, même provisoirement muette ; une annonce décidée n'est pas une ligne à encoder. Elle annule le classement `obligation_manquante` / `attribut_etablissement` donné plus tôt le même jour. Ancien classement : ~~statut obligation_manquante, cause attribut_etablissement ; motif : Le § 1 (zonage de la distribution électrique) est une règle de construction. Le § 2 impose un ACTE : dans les salles où la puissance mise en œuvre dépasse 200 kVA, « la présence d'une personne compétente est obligatoire pendant l'ouverture au public », une par zone, en complément d'EL 18 § 2. Politique sœur : la présence physique d'une personne qualifiée d'EL 18 § 2 est encodée comme état permanent (`elec-erp-presence-personne-qualifiee`). PROPOSITION (contre-lecture et décision de c6 du 2026-10-17) : annoncer dans l'aide du type T (sous-lot D), et citer T 33 en contexte dans les notes de `elec-erp-presence-personne-qualifiee` (sous-lot C). Transitoirement au § 9.~~",
       statut: "non_couvert",
       motif: "Le § 1 (zonage de la distribution électrique) est une règle de construction. Le § 2 impose un ÉTAT PERMANENT : dans les salles où la puissance mise en œuvre dépasse 200 kVA, « la présence d'une personne compétente est obligatoire pendant l'ouverture au public », une par zone, en complément d'EL 18 § 2 (politique sœur, encodée en `elec-erp-presence-personne-qualifiee` ; ligne de partage 10). Rojer ne connaît pas la puissance mise en œuvre : annoncé plutôt que suivi (décision de c6 du 2026-10-17). T 33 est aussi à citer en contexte dans les notes de `elec-erp-presence-personne-qualifiee` (sous-lot C)." + SUITE_ANNONCE_DECIDEE,
-      declareA: "Non déclaré au 2026-10-17 : l'annonce est prévue dans l'aide du type T (`AIDE_TYPE_ERP`, surface nouvelle du sous-lot D du plan « mise à jour du référentiel »), qui n'existe pas encore.",
+      // ~~declareA: "Non déclaré au 2026-10-17 : l'annonce est prévue dans l'aid…~~ — annoncé le 2026-10-17, sous-lot D.
+      declareA:
+        "Formulaire de l'établissement, aide du type d'ERP sous le choix du type (`src/lib/etablissements/aide-type-erp.ts`, `AIDE_TYPE_ERP.T`) : « la présence d'une personne compétente pendant l'ouverture au public, au-delà de 200 kW de puissance utile installée ou de 200 kVA de puissance électrique mise en œuvre »",
     },
     {
       ref: "T 34",
@@ -3112,7 +3128,9 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       historique: "2026-10-17 — RÉÉCRIT après la contre-lecture indépendante du 2026-10-17 (constats du 2026-10-17, § 2), verdict de c6 le même jour, `lot/ref-a-corpus-titre-1`. Ancien classement : ~~statut `sans_objet` ; motif : (motif commun MOTIF_MANIFESTATION_T)~~",
       statut: "non_couvert",
       motif: "Toute présentation de machines utilisant des substances radioactives ou générant des rayons X fait l'objet d'une DEMANDE D'AUTORISATION par l'exposant (§ 1), sous des conditions de protection, de signalisation (NF M 60-101), de surveillance et de stockage (§ 2), et de conformité des appareils à rayons X (NF C 74-100, § 3). Une déclaration à faire à chaque présentation, de niche : annoncée plutôt que suivie (ligne de partage 5). Les normes NF M 60-101 et NF C 74-100 que l'article cite ne sont pas lues : ce qu'elles fixent ou non (rythme, contenu de vérification) n'est pas établi ici. Les rayonnements ionisants relèvent en outre de l'exclusion `risque_specialise` (`corpus/perimetre.ts`), et Rojer les déclare non couverts (`.claude/CLAUDE.md`, « Hors périmètre »). Vaut aussi pour la salle d'exposition permanente de T 1 § 2, dont l'exploitant peut être l'exposant." + SUITE_ANNONCE_DECIDEE,
-      declareA: "Non déclaré au 2026-10-17 : l'annonce est prévue dans l'aide du type T (`AIDE_TYPE_ERP`, surface nouvelle du sous-lot D du plan « mise à jour du référentiel »), qui n'existe pas encore. Décision de c6 du 2026-10-17 : `non_couvert`, annoncé là.",
+      // ~~declareA: "Non déclaré au 2026-10-17 : l'annonce est prévue dans l'aid…~~ — annoncé le 2026-10-17, sous-lot D.
+      declareA:
+        "Formulaire de l'établissement, aide du type d'ERP sous le choix du type (`src/lib/etablissements/aide-type-erp.ts`, `AIDE_TYPE_ERP.T`) : « la demande d'autorisation de présenter des machines utilisant des substances radioactives ou génératrices de rayons X »",
     },
     {
       ref: "T 44",
@@ -3126,7 +3144,9 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       historique: "2026-10-17 — RÉÉCRIT après la contre-lecture indépendante du 2026-10-17 (constats du 2026-10-17, § 2), verdict de c6 le même jour, `lot/ref-a-corpus-titre-1`. Ancien classement : ~~statut `sans_objet` ; motif : (motif commun MOTIF_MANIFESTATION_T)~~",
       statut: "non_couvert",
       motif: "L'emploi de lasers dans les salles est autorisé sous conditions d'usage (aucune exposition du public au faisceau, fixation, absence d'éléments réfléchissants, essais hors présence du public) et, « avant sa mise en oeuvre », sous une DÉCLARATION de l'exposant à l'autorité administrative, avec note technique, plan et document de conformité de l'installateur. Une déclaration à faire à chaque installation, de niche : annoncée plutôt que suivie (ligne de partage 5). Vaut aussi pour la salle d'exposition permanente de T 1 § 2, dont l'exploitant peut être l'exposant." + SUITE_ANNONCE_DECIDEE,
-      declareA: "Non déclaré au 2026-10-17 : l'annonce est prévue dans l'aide du type T (`AIDE_TYPE_ERP`, surface nouvelle du sous-lot D du plan « mise à jour du référentiel »), qui n'existe pas encore. Décision de c6 du 2026-10-17 : `non_couvert`, annoncé là.",
+      // ~~declareA: "Non déclaré au 2026-10-17 : l'annonce est prévue dans l'aid…~~ — annoncé le 2026-10-17, sous-lot D.
+      declareA:
+        "Formulaire de l'établissement, aide du type d'ERP sous le choix du type (`src/lib/etablissements/aide-type-erp.ts`, `AIDE_TYPE_ERP.T`) : « la déclaration préalable de l'emploi de lasers dans les salles »",
     },
     {
       ref: "T 45",
@@ -3223,11 +3243,27 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "§ 3. Dans les locaux à risques particuliers, visés à l'article T 13, l'interdiction de fumer doit être affichée bien en évidence.",
-      statut: "obligation_manquante",
-      cause: "libre",
-      toucheLaCible: true,
-      motif: "Même acte que M 44, M 47, M 58, W 16 et O 21 § 1 : une interdiction de fumer AFFICHÉE bien en évidence. À rattacher à `incendie-erp-interdiction-fumer-affichee` (ajouter T, T 52 § 3 en référence). T 13 classe à risques les réserves, les locaux de réception des marchandises et les ateliers d'entretien et de réparation — ceux d'une concession automobile (salle d'exposition permanente, T 1 § 2) en sont. Les § 1 (aucun dépôt de caisses, bois, paille, carton) et § 2 (« Un nettoyage régulier (quotidien) ») sont des règles d'usage : une case quotidienne ressemblerait à une preuve (ligne de partage 3). TPE CONCERNÉE : T 1 § 2 vise les salles d'exposition permanentes dès 200 personnes, et T 2 b) compte une personne pour 9 m² : 1 800 m² d'exposition suffisent.",
-      bloquePar: "Rien ne bloque : l'acte est celui d'une ligne existante ou d'une ligne d'établissement bornée N1–N4 et au type, sur le patron de `incendie-erp-personnel-designe-moyens-secours`. Ce qui manque est l'encodage, que la propriétaire décide (lecture du 2026-10-16, rien n'est encodé).",
+      historique:
+        "~~`obligation_manquante` / cause `libre`, motif : « Même acte que M 44, M 47, M 58, W 16 et O 21 § 1 : une interdiction de fumer AFFICHÉE bien en évidence. À rattacher à `incendie-erp-interdiction-fumer-affichee` (ajouter T, T 52 § 3 en référence). T 13 classe à risques les réserves, les locaux de réception des marchandises et les ateliers d'entretien et de réparation — ceux d'une concession automobile (salle d'exposition permanente, T 1 § 2) en sont. Les § 1 (aucun dépôt de caisses, bois, paille, carton) et § 2 (‹ Un nettoyage régulier (quotidien) ›) sont des règles d'usage : une case quotidienne ressemblerait à une preuve (ligne de partage 3). TPE CONCERNÉE : T 1 § 2 vise les salles d'exposition permanentes dès 200 personnes, et T 2 b) compte une personne pour 9 m² : 1 800 m² d'exposition suffisent. »~~ [2026-10-17, sous-lot D du plan « mise à jour du référentiel », découpage validé par c6 : le § 3 rattaché à `incendie-erp-interdiction-fumer-affichee`, type T ajouté ; le § 2 classé à part, annoncé]",
+      statut: "retenu",
+      obligations: ["incendie-erp-interdiction-fumer-affichee"],
+      // Le § 2 (nettoyage quotidien) est classé à part : entrée « T 52 § 2 ».
+    },
+    {
+      // 2026-10-17, sous-lot D : le § 2 de T 52, classé à part.
+      ref: "T 52 § 2 — nettoyage quotidien des locaux",
+      intitule: "Consignes d'exploitation",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000025201384",
+      versionEnVigueur: "1988-01-15",
+      modifiePar: null,
+      luLe: "2026-10-17",
+      lecture: "api_legifrance",
+      citationCle: "§ 2. Un nettoyage régulier (quotidien) doit débarrasser les locaux des poussières et des déchets de toute nature.",
+      statut: "non_couvert",
+      declareA:
+        "Formulaire de l'établissement, aide du type d'ERP sous le choix du type (`src/lib/etablissements/aide-type-erp.ts`, `AIDE_TYPE_ERP.T`) : « le nettoyage quotidien des locaux et l'enlèvement des déchets chaque jour avant l'ouverture au public »",
+      motif:
+        "Un nettoyage « régulier (quotidien) » des locaux, et l'enlèvement des déchets « chaque jour, avant l'heure d'ouverture au public ». Un acte répété au rythme écrit, quotidien, que le modèle n'a pas (aucune périodicité journalière) et dont une case cochée chaque jour ressemblerait à une preuve (ligne de partage 3). DÉCISION (plan du 2026-10-17, § 5, sous-lot D) : annoncé dans l'aide du type T, pas de ligne." + SUITE_ANNONCE_DECIDEE,
     },
     // ----- Livre II > Titre II > Chapitre IX : Etablissements du type U - Etablissements de soins — lu le 2026-10-16 -----
     {
@@ -4486,11 +4522,12 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "Il est interdit de fumer dans les locaux sportifs, les vestiaires-douches, les locaux de matériel et les gradins. Une signalisation appropriée doit rappeler cette interdiction dans les locaux intéressés.",
-      statut: "obligation_manquante",
-      cause: "a_trancher",
-      toucheLaCible: true,
-      motif: "Même acte que M 44 et W 16 : une interdiction de fumer rappelée par une signalisation. Ce serait un rattachement à `incendie-erp-interdiction-fumer-affichee` (ajouter X). À TRANCHER : l'exclusion `risque_specialise` (`perimetre.ts`) nomme « équipements sportifs, piscines », et la section « Hors périmètre » de `.claude/CLAUDE.md` aussi. Elle est antérieure au 2026-10-12, donc suspecte (ligne de partage 7), et son motif — « une expertise que le produit ne prétend pas porter » — ne vise pas un panneau. Lecture proposée : l'exclusion garde les piscines (traitement de l'eau, annexe du chapitre) et ne retient pas la salle de sport couverte pour ce seul affichage. TPE CONCERNÉE : X 1 vise une salle de sport couverte dès 200 personnes ; X 2 compte une personne pour 4 m² d'aire d'activité, soit 800 m². [2026-10-17, sous-lot B du plan « mise à jour du référentiel », validé par la propriétaire : l'exclusion ne nomme plus les équipements sportifs ; X 25 reste au § 9, pour le sous-lot E.]",
-      bloquePar: "~~Une décision de périmètre : l'exclusion `risque_specialise` nomme « équipements sportifs », antérieure au 2026-10-12 (ligne de partage 7).~~ [2026-10-17, sous-lot B : la décision est prise — les équipements sportifs sortent de l'exclusion. Reste le rattachement à `incendie-erp-interdiction-fumer-affichee`, instruit au sous-lot E du plan (sport).]",
+      historique:
+        "~~`obligation_manquante` / cause `a_trancher`, motif : « Même acte que M 44 et W 16 : une interdiction de fumer rappelée par une signalisation. Ce serait un rattachement à `incendie-erp-interdiction-fumer-affichee` (ajouter X). À TRANCHER : l'exclusion `risque_specialise` (`perimetre.ts`) nomme ‹ équipements sportifs, piscines ›, et la section ‹ Hors périmètre › de `.claude/CLAUDE.md` aussi. Elle est antérieure au 2026-10-12, donc suspecte (ligne de partage 7), et son motif — ‹ une expertise que le produit ne prétend pas porter › — ne vise pas un panneau. Lecture proposée : l'exclusion garde les piscines (traitement de l'eau, annexe du chapitre) et ne retient pas la salle de sport couverte pour ce seul affichage. TPE CONCERNÉE : X 1 vise une salle de sport couverte dès 200 personnes ; X 2 compte une personne pour 4 m² d'aire d'activité, soit 800 m². [2026-10-17, sous-lot B du plan ‹ mise à jour du référentiel ›, validé par la propriétaire : l'exclusion ne nomme plus les équipements sportifs ; X 25 reste au § 9, pour le sous-lot E.] »~~ [2026-10-17, sous-lot D du plan « mise à jour du référentiel », découpage validé par c6 ; décision Q1 de la propriétaire (plan, § 11) : rattaché à `incendie-erp-interdiction-fumer-affichee`, type X ajouté, catégories 1 à 4]",
+      statut: "retenu",
+      obligations: ["incendie-erp-interdiction-fumer-affichee"],
+      reserve:
+        "CATÉGORIES 1 À 4 SEULEMENT. PX 1 importe en 5ᵉ catégorie « les dispositions techniques du chapitre XII, livre II, visant les établissements du premier groupe » ; qu'une interdiction de fumer rappelée par une signalisation en soit une n'est pas tranché. La ligne n'est PAS étendue à la petite salle de sport de 5ᵉ catégorie (décision de c6 du 2026-10-17). Ce qui reste dehors : X 25 en 5ᵉ, si la lecture du renvoi l'y importe.",
     },
     {
       ref: "X 26",
@@ -4745,11 +4782,10 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "§ 2. Des employés, spécialement désignés, doivent être entraînés à la mise en oeuvre de moyens de secours dans les établissements ne possédant pas de service de sécurité incendie.",
-      statut: "obligation_manquante",
-      cause: "libre",
-      toucheLaCible: true,
-      motif: "Mot pour mot l'acte de N 17 : à rattacher à `incendie-erp-personnel-designe-moyens-secours` (ajouter Y, Y 19 § 2 en référence). Le § 1 — un service d'agents de sécurité incendie « peut être imposé par la commission de sécurité » au-delà de 4 000 personnes — est une prescription d'autorité et un service non suivi. TPE CONCERNÉE : Y 1 vise un musée dès 200 personnes ; Y 2 compte une personne pour 5 m² de salles, soit 1 000 m².",
-      bloquePar: "Rien ne bloque : l'acte est celui d'une ligne existante ou d'une ligne d'établissement bornée N1–N4 et au type, sur le patron de `incendie-erp-personnel-designe-moyens-secours`. Ce qui manque est l'encodage, que la propriétaire décide (lecture du 2026-10-16, rien n'est encodé).",
+      historique:
+        "~~`obligation_manquante` / cause `libre`, motif : « Mot pour mot l'acte de N 17 : à rattacher à `incendie-erp-personnel-designe-moyens-secours` (ajouter Y, Y 19 § 2 en référence). Le § 1 — un service d'agents de sécurité incendie ‹ peut être imposé par la commission de sécurité › au-delà de 4 000 personnes — est une prescription d'autorité et un service non suivi. TPE CONCERNÉE : Y 1 vise un musée dès 200 personnes ; Y 2 compte une personne pour 5 m² de salles, soit 1 000 m². »~~ [2026-10-17, sous-lot D du plan « mise à jour du référentiel », découpage validé par c6 : rattaché à `incendie-erp-personnel-designe-moyens-secours`, type ajouté]",
+      statut: "retenu",
+      obligations: ["incendie-erp-personnel-designe-moyens-secours"],
     },
     {
       ref: "Y 20",

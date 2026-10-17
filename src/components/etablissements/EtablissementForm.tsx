@@ -22,6 +22,7 @@ import {
 } from "@/lib/etablissements/labels";
 import type { EtablissementActionState } from "@/lib/etablissements/actions";
 import { AIDE_HABITATION, AIDE_IGH, AIDE_LOCAUX_SOMMEIL } from "@/lib/etablissements/aides-regimes";
+import { AideTypesErp } from "./AideTypesErp";
 import {
   AIDE_EPI,
   AIDE_SSI,
@@ -521,6 +522,7 @@ export function EtablissementForm({
                         signalOuverture={signalAutres}
                       />
                     </div>
+                    <AideTypesErp types={[typeErp, ...typesErpAutres]} />
                   </div>
 
                   <div className="sm:col-span-2">

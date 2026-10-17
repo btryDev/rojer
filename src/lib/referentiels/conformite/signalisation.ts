@@ -115,6 +115,52 @@ import type { Obligation } from "./types";
 
 export const obligationsSignalisation: Obligation[] = [
   {
+    // 2026-10-17, sous-lot D du plan « mise à jour du référentiel » : ligne
+    // validée par la propriétaire (« attention, on n'alourdit pas »).
+    id: "signalisation-interdiction-fumer-csp",
+    domaine: "signalisation",
+    libelle: "Signalisation de l'interdiction de fumer, dans les locaux fermés et couverts",
+    description:
+      "Le code de la santé publique interdit de fumer dans tous les lieux fermés et couverts qui accueillent du public ou qui constituent des lieux de travail (R. 3512-2, 1°), et y fait rappeler l'interdiction : « une signalisation apparente rappelle le principe de l'interdiction de fumer » (R. 3512-7). Un modèle réglementaire de cette signalisation, avec un message sanitaire de prévention, est fixé par arrêté du ministre chargé de la santé. C'est la règle générale, distincte de l'interdiction que le règlement de sécurité fait afficher dans certains locaux à risques d'un ERP des quatre premières catégories.",
+    referencesLegales: [
+      {
+        source: "CSP",
+        reference:
+          "Code de la santé publique, art. R. 3512-7 (une signalisation apparente rappelle le principe de l'interdiction de fumer ; modèle fixé par arrêté)",
+        article: "R. 3512-7",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000033045289",
+        note: "« Dans les lieux mentionnés à l'article R. 3512-2, une signalisation apparente rappelle le principe de l'interdiction de fumer. Un modèle de signalisation accompagné d'un message sanitaire de prévention est déterminé par arrêté du ministre chargé de la santé. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000033045289, en vigueur depuis le 2016-08-15 (décret n° 2016-1117).",
+        versionConstatee: "2016-08-15",
+      },
+      {
+        source: "CSP",
+        reference:
+          "Code de la santé publique, art. R. 3512-2, 1° (lieux fermés et couverts qui accueillent du public ou qui constituent des lieux de travail)",
+        article: "R. 3512-2",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000051820547",
+        note: "« L'interdiction de fumer dans les lieux affectés à un usage collectif mentionnée à l'article L. 3512-8 s'applique : 1° Dans tous les lieux fermés et couverts qui accueillent du public ou qui constituent des lieux de travail ; » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000051820547, en vigueur depuis le 2025-06-29 (décret n° 2025-582).",
+        versionConstatee: "2025-06-29",
+      },
+    ],
+    periodicite: "autre",
+    nature: "etat_permanent",
+    pieceAttendue: "signalisation de l'interdiction de fumer apposée",
+    // « Informer et former » plutôt que « Conditions de travail » : la
+    // signalisation informe toute personne présente, salarié ou public, d'une
+    // règle ; elle n'est pas une condition matérielle du poste (locaux
+    // sociaux, aération).
+    usageEcran: { groupe: "quotidien", sous: "informer" },
+    realisateurs: ["exploitant"],
+    criticite: 2,
+    typologies: { travail: true, erp: true },
+    porteur: "etablissement",
+    transmet: [],
+    notesInternes:
+      "CRÉÉE LE 2026-10-17 (sous-lot D, décision de la propriétaire relayée par c6). État permanent d'établissement, sans rythme : la signalisation est posée, puis maintenue. Servie à tout établissement de travail et à tout ERP, toutes catégories : R. 3512-2 1° vise « tous les lieux fermés et couverts qui accueillent du public ou qui constituent des lieux de travail ». Aucune question à l'accueil (« on n'alourdit pas ») : un établissement sans local fermé et couvert est un cas d'école. Le texte, L. 3512-8, R. 3512-2, R. 3512-3 et R. 3512-7, est au corpus `csp-tabac`.\n\n" +
+      "CE QUE LA LIGNE NE PORTE PAS, et c'est voulu (décision de la propriétaire). Les espaces NON couverts que R. 3512-2 vise aussi — abords des écoles et des établissements pour mineurs, aires collectives de jeux, espaces non couverts des bibliothèques et des équipements sportifs, plages, parcs (3° à 8°) — et les emplacements mis à la disposition des fumeurs (R. 3512-3), avec l'avertissement sanitaire à apposer à leur entrée (R. 3512-7, dernière phrase) : pas de ligne. L'ARRÊTÉ DU MODÈLE n'est pas lu (introuvable par la recherche par titre en bac à sable) : la description dit qu'un modèle réglementaire existe, sans le recopier ni le dater.\n\n" +
+      "À PART DE `incendie-erp-interdiction-fumer-affichee`, ET C'EST VOULU. Celle-là porte le règlement de sécurité : l'interdiction affichée dans des LOCAUX À RISQUES désignés (réserves, locaux d'emballage, lingeries, locaux sportifs…) d'un ERP des quatre premières catégories des types M, O, W, T, X. Celle-ci porte le code de la santé publique : la signalisation générale de tout local fermé et couvert. Objets différents, textes différents ; elles ne se rangent pas au même endroit de l'écran (« Le quotidien de vos salariés — Informer et former » ici, « Incendie et secours — Prévenir » là), et leurs libellés disent chacun leur objet.",
+  },
+  {
     id: "signalisation-etablissement-risques-residuels",
     domaine: "signalisation",
     libelle:
@@ -357,6 +403,17 @@ export const obligationsSignalisation: Obligation[] = [
         note: "« Les tuyauteries apparentes contenant ou transportant des substances ou mélanges dangereux sont munis du pictogramme ou symbole sur couleur de fond défini par le règlement (CE) n° 1272/2008. […] Les aires, salles ou enceintes utilisées pour stocker des substances ou mélanges dangereux en quantités importantes doivent être signalisées par un panneau d'avertissement approprié choisi parmi ceux énumérés à l'annexe II, point 3, ou être identifiées conformément au premier alinéa du présent article, à moins que l'étiquetage des différents emballages ou récipients suffise à cet effet. » Verbatim relevé le 2026-09-02, version en vigueur depuis le 2014-01-19 (arrêté du 2 août 2013).",
         versionConstatee: "2014-01-19",
       },
+      {
+        // 2026-10-17, sous-lot D du plan « mise à jour du référentiel » :
+        // référence de CONTEXTE, la ligne reste fondée sur l'arrêté de 1993.
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. R 10 § 1 b) et § 2 (locaux de stockage de liquides inflammables et de produits dangereux destinés à l'enseignement et à la recherche, identifiés par une mention apposée sur leurs portes d'accès) — livre II, titre II, type R, établissements des quatre premières catégories",
+        article: "R 10 § 1 b) et § 2 — mention apposée sur les portes",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000025005234",
+        note: "« Les locaux doivent être identifiés par la mention \"stockage de produits dangereux\" apposée sur leurs portes d'accès. » (§ 2) ; le § 1 b) fait de même pour la mention stockage de liquides inflammables. Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000025005234, en vigueur depuis le 2004-05-14 (arrêté du 13 janvier 2004). L'article cite l'arrêté du 20 avril 1994 pour classer et étiqueter les produits : relu le même jour (LEGITEXT000020137069), il est en vigueur en partie — 6 articles en vigueur, 22 abrogés — et s'intitule désormais « relatif à la classification, l'emballage et l'étiquetage des substances dangereuses » ; la mention sur les portes n'en dépend pas.",
+        versionConstatee: "2004-05-14",
+      },
     ],
     periodicite: "autre",
     nature: "etat_permanent",
@@ -370,6 +427,7 @@ export const obligationsSignalisation: Obligation[] = [
     categoriesEquipement: ["STOCKAGE_MATIERE_DANGEREUSE"],
     transmet: [],
     notesInternes:
+      "R 10 EN CONTEXTE (2026-10-17, sous-lot D, découpage validé par c6). Dans un établissement d'enseignement ou de recherche (type R, catégories 1 à 4), les locaux de stockage de liquides inflammables et de produits dangereux sont identifiés par une mention apposée sur leurs portes d'accès (R 10 § 1 b et § 2). Une mention destinée aux occupants : un affichage prescrit (ligne de partage 11, comme l'inscription « sans issue » de CO 45 § 5), pas une signalétique d'identification pour les secours. Même acte que cette ligne — signaler un stockage dangereux — ; la ligne est servie à l'employeur qui déclare un stockage, ce qu'un établissement de type R qui stocke est aussi. Référence seule : ni typologie ni libellé ne changent, l'empreinte non plus. Ce que la référence ne fait pas : servir un établissement R sans travailleur (cas d'école).\n\n" +
       "[2026-10-07 : le domaine n'en porte plus que DEUX — les fiches de données de sécurité et la formation ; les quatre autres sont retirées (relecture préventeur du 30/09, « à exclure sauf 3 derniers points », dont celle-ci).] ~~LE DOMAINE `stockage_dangereux` PORTE SIX OBLIGATIONS~~ ET AUCUNE NE PORTAIT CELLE-CI : déclaration ICPE, rétention, vérification d'étanchéité, ventilation des locaux, fiches de données de sécurité, formation du personnel. La signalisation du stockage n'y figurait pas. Le test anti-doublon compare l'article fondateur : aucune obligation du référentiel ne se fonde sur l'article 11 de cet arrêté, vérifié avant encodage.\n\nANCRAGE SUR `STOCKAGE_MATIERE_DANGEREUSE`, EN CONNAISSANCE DE CAUSE, ET C'EST LE MÊME ARBITRAGE QUE `stockage-dangereux-formation-personnel` : le déclencheur du texte est la PRÉSENCE de substances dangereuses, ce qui relève du cinquième déclencheur de l'ADR-022 (« activité réellement exercée »), non implémenté. La catégorie d'équipement est un proxy imparfait — un établissement peut détenir des produits classés sans avoir déclaré de stockage — mais un proxy dans le bon sens : il sous-applique au lieu de sur-appliquer. Passer au porteur établissement poserait un panneau d'avertissement de produits dangereux à tout employeur du produit, cabinet et boutique de vêtements compris.\n\nCE QUE CETTE LIGNE LAISSE DEHORS, ET C'EST ÉCRIT AU CORPUS EN `reserve`. L'article a trois branches ; l'ancrage n'en atteint qu'une. Les TUYAUTERIES APPARENTES et le TRANSPORT INTERNE de substances dangereuses ne sont attachés à aucun stockage déclaré et n'ont aucune catégorie propre — un établissement qui a des tuyauteries marquables sans avoir déclaré de stockage ne verra pas cette ligne. La branche du stockage est celle qui touche réellement la cible (réserve de produits d'entretien d'un commerce, local à produits de plonge d'un restaurant), et c'est elle que l'ancrage sert. La `description` nomme les trois branches pour que le dirigeant qui voit la ligne sache ce qu'elle couvre.\n\nDEUX CONDITIONS DU TEXTE NE SONT PAS ENCODÉES, et toutes deux dans le sens de la sur-application : « en quantités importantes », que le texte ne chiffre pas et qu'aucun attribut ne mesure ; et « à moins que l'étiquetage des différents emballages ou récipients suffise à cet effet », qui est un constat de terrain. Les deux sont écrites dans la `description`. Inventer un seuil de quantité aurait été inventer un chiffre que le texte ne porte pas.\n\nLE RÉGIME TRANSITOIRE EST ÉPUISÉ : l'arrêté du 2 août 2013 laissait jusqu'au 31 mai 2017 pour passer de l'ancien étiquetage au règlement CLP. La date est passée, seul le régime CLP s'applique, et la ligne ne porte donc qu'une référence.\n\nCET ARTICLE DÉTAILLE R. 4224-21 DU CODE DU TRAVAIL — « Lorsque le contenu transporté par les tuyauteries présente un danger, ces tuyauteries font l'objet d'une signalisation permettant de déterminer la nature du contenu transporté. » L'article du Code n'est dans AUCUN corpus de ce dépôt : la section 5 du chapitre IV (R. 4224-20 à R. 4224-24) est un angle mort entier, dont le verbatim est relevé en tête du corpus de l'arrêté sans y être dépouillé. Il n'est donc pas cité ici — on ne cite pas un texte que personne n'a lu, et le cliquet de `corpus.test.ts` le vérifie.\n\nNATURE : ÉTAT PERMANENT (ADR-026), `pieceAttendue: null` — le panneau et le pictogramme sont l'obligation. À ne pas confondre avec les fiches de données de sécurité, qui sont un écrit et vivent sur `stockage-dangereux-fiches-donnees`.",
   },
 

@@ -1948,6 +1948,11 @@ describe("référentiel conformité — version et empreinte", () => {
     // ~~197-4ec886cc5ae6a4b8~~ — relecture de c6, même jour : libellé de MS 57
     // raccourci ; 197 + 0 − 0, relevée en appelant. Version pas encore servie.
     { version: "2026-10-17.4", empreinte: "197-fd0724f829cbafbe" },
+    // 2026-10-17, sous-lot D (`lot/ref-d-types`, version PROVISOIRE) : types
+    // P, S, Y et T, X sur deux lignes du titre II, libellés élargis, et
+    // `signalisation-interdiction-fumer-csp` entre. 197 + 1 − 0 = 198, relevée
+    // en appelant.
+    { version: "2026-10-17.5", empreinte: "198-e52863e35380d30b" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -2133,7 +2138,9 @@ describe("référentiel conformité — version et empreinte", () => {
       // `obligationsConformite`.
       // ~~187~~ — 2026-10-17, sous-lot C rebasé sur F : 187 + 10 − 0 = 197,
       // remesuré en appelant `obligationsConformite`.
-    ).toBe(197);
+      // ~~197~~ — 2026-10-17, sous-lot D : 197 + 1
+      // (`signalisation-interdiction-fumer-csp`) − 0 = 198, remesuré en appelant.
+    ).toBe(198);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {
@@ -3194,7 +3201,11 @@ describe("livre II, titre II — un chapitre de type ne sert que son type, en ca
   // pas été lus : on ne les sert pas.
   const TITRE_2 = /^[LMNOPRSTUVWXYJ] (?:\d|annexe)/;
   const DIT_SON_CHAMP = /livre II(?!I)|quatre premières catégories/;
-  const LUS = ["M", "N", "O", "W"];
+  // ~~const LUS = ["M", "N", "O", "W"];~~ — 2026-10-17, sous-lot D : les
+  // chapitres J, P, R, S, T, U, V, X et Y ont été lus le 2026-10-16
+  // (`lot/erp-chapitres-types-1016`), et D sert P, S, T, X et Y. Le chapitre L
+  // entre avec le sous-lot G.
+  const LUS = ["M", "N", "O", "W", "J", "P", "R", "S", "T", "U", "V", "X", "Y"];
   const fondateur = (o: (typeof obligationsConformite)[number]) =>
     o.referencesLegales[0].article ?? "";
 

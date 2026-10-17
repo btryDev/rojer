@@ -145,10 +145,12 @@ describe("annonce décidée : `non_couvert`, jamais `obligation_manquante`", () 
     expect(fautifs).toEqual([]);
   });
 
-  it("chaque annonce encore muette du livre II porte la phrase de la décision (~~les onze~~ ~~les sept~~ les six, sous-lot C)", () => {
+  it("chaque annonce encore muette du livre II porte la phrase de la décision (~~les onze~~ ~~les sept~~ ~~les six, sous-lot C~~ les deux, sous-lot D)", () => {
     // 2026-10-17, sous-lot B : `AS 5`, `AS 8`, `CH 23` et `CH 24` sont
     // annoncés (aide de catégorie, liste des matériels) ; 11 − 4 = 7.
     // 2026-10-17, sous-lot C : `CO 10` reçoit son adresse ; 7 − 1 = 6.
+    // 2026-10-17, sous-lot D : `T 29`, `T 33`, `T 43`, `T 44` sont dits dans
+    // l'aide du type T (`AIDE_TYPE_ERP.T`) ; 6 − 4 = 2.
     // Revue du 2026-10-17 : la reconnaissance par la seule formulation du motif
     // ne voyait que 4 des 11 annonces décidées. Une phrase commune les nomme
     // toutes ; une annonce muette qui ne la porte pas est hors de la garde.
@@ -159,7 +161,8 @@ describe("annonce décidée : `non_couvert`, jamais `obligation_manquante`", () 
       // ~~"AS 5", "AS 8", "CH 23", "CH 24"~~ — annoncés au sous-lot B.
       // ~~"CO 10"~~ — sous-lot C : adresse posée (rubrique « Règlement de sécurité,
       // catégories 1 à 4 »).
-      ["AM 18", "MS 42", "T 29", "T 33", "T 43", "T 44"].sort(),
+      // ~~"T 29", "T 33", "T 43", "T 44"~~ — sous-lot D : aide du type T.
+      ["AM 18", "MS 42"].sort(),
     );
   });
 

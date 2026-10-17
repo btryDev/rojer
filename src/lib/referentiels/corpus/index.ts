@@ -28,6 +28,7 @@ import { ARRETE_2010_02_01_LEGIONELLES } from "./arrete-2010-02-01-legionelles";
 import { ARRETE_2018_02_23_GAZ_HABITATION } from "./arrete-2018-02-23-gaz-habitation";
 import { CODE_ENVIRONNEMENT_CHAUDIERES } from "./code-environnement-chaudieres";
 import { CSP_APPAREILS_BRONZAGE } from "./csp-appareils-bronzage";
+import { CSP_TABAC } from "./csp-tabac";
 import { CSP_BAINS_A_REMOUS } from "./csp-bains-a-remous";
 import { DECRET_1996_AIRES_DE_JEUX } from "./decret-1996-aires-de-jeux";
 import { ARRETE_2004_07_01_PRODUITS_PETROLIERS } from "./arrete-2004-07-01-produits-petroliers";
@@ -212,6 +213,9 @@ export const CORPUS: readonly Corpus[] = [
   // le produit ne sait pas identifier.
   CSP_EAU_POTABLE,
   ARRETE_2021_09_10_RETOURS_EAU,
+  // Sous-lot D, 2026-10-17 — l'interdiction de fumer du code de la santé
+  // publique et sa signalisation (R. 3512-7), ligne validée par la propriétaire.
+  CSP_TABAC,
   // Lot légionelles, 2026-09-20 — le dernier arrêté cité à l'écran sans avoir
   // été ouvert. Aucune obligation encodée : le champ laisse la cible dehors.
   ARRETE_2010_02_01_LEGIONELLES,

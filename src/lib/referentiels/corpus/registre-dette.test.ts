@@ -84,15 +84,15 @@ describe("registre de dette — les obligations manquantes", () => {
       // ~~"MS 72"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
       // ~~"MS 74"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
       // ~~"MS 75"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
-      "P 21",
+      // ~~"P 21"~~ — 2026-10-17, sous-lot D : retenu (rattachement).
       "R 33",
-      "S 15",
-      "T 52",
+      // ~~"S 15"~~ — 2026-10-17, sous-lot D : retenu (rattachement).
+      // ~~"T 52"~~ — 2026-10-17, sous-lot D : retenu (rattachement).
       "U 41",
       "U 43",
       "U 47",
       "U 48",
-      "Y 19",
+      // ~~"Y 19"~~ — 2026-10-17, sous-lot D : retenu (rattachement).
       "J 35",
       "J 39",
       "J 40",
@@ -143,7 +143,9 @@ describe("registre de dette — les obligations manquantes", () => {
       // [40, 0] → [13, 0] le 2026-10-17 (sous-lot C, `lot/ref-c-incendie-n1-n4`) :
       // 40 − 27 + 0 — vingt retenus (lignes nouvelles ou rattachements), sept
       // annoncés (`non_couvert`) ; voir le test des « libres ».
-      libre: [13, 0],
+      // [13, 0] → [9, 0] le 2026-10-17 (sous-lot D) : `P 21`, `S 15`, `Y 19`,
+      // `T 52` retenus (rattachements).
+      libre: [9, 0],
       // 9 → 6 le 2026-09-21 : les trois de la chaleur intense (`R. 4463-4`,
       // `-5`, `-7`) sont encodées sur la page « Quand ça arrive ».
       // 6 → 0 le même jour : cinq relues à la source et encodées ; la sixième,
@@ -197,7 +199,9 @@ describe("registre de dette — les obligations manquantes", () => {
       // [4, 1] → [5, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : `R. 4323-89`.
       // [5, 0] → [6, 0] le 2026-10-17 (revue de `lot/ref-a-corpus-titre-1`) :
       // `M 35`, machines-outils mises à la disposition du public.
-      activite_exercee: [6, 0],
+      // [6, 0] → [5, 0] le 2026-10-17 (sous-lot D) : `M 35` annoncé dans
+      // l'aide du type M (`non_couvert`).
+      activite_exercee: [5, 0],
       // 3 → 0 le 2026-09-27 (C45) : `L. 8222-1`, `D. 8222-5`, `D. 8222-7`
       // annoncés.
       // [0, 0] → [1, 0] le 2026-10-17 : `MS 46 § 3`, la convention avec un
@@ -247,7 +251,9 @@ describe("registre de dette — les obligations manquantes", () => {
       // [8, 0] → [6, 0] le 2026-10-17 (sous-lot C) : `MS 41` et `MS 70 § 5`
       // retenus — la classe GN 10 / A6 tranchée pour eux par la propriétaire
       // (servis N1–N4, phrase GN 10).
-      a_trancher: [6, 0],
+      // [6, 0] → [5, 0] le 2026-10-17 (sous-lot D) : `X 25` retenu (décision
+      // Q1 de la propriétaire).
+      a_trancher: [5, 0],
       // [0, 3] → [0, 0] le 2026-10-12 : les trois hôtels, voir `a_trancher`.
       perimetre: [0, 0],
     });
@@ -294,8 +300,11 @@ describe("registre de dette — les obligations manquantes", () => {
     // 74 → 43 le 2026-10-17 (sous-lot C, `lot/ref-c-incendie-n1-n4`), mesuré
     // en appelant : 74 − 31 + 0 — vingt-deux retenus (douze entrées fondent
     // les dix lignes nouvelles, dix sont rattachées), neuf annoncés (`non_couvert`).
-    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(43);
-    expect(manquantes.length).toBe(43);
+    // 43 → 37 le 2026-10-17 (sous-lot D, `lot/ref-d-types`), mesuré en
+    // appelant : 43 − 6 + 0 — `P 21`, `S 15`, `Y 19`, `T 52`, `X 25` retenus
+    // (rattachements), `M 35` annoncé (`non_couvert`).
+    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(37);
+    expect(manquantes.length).toBe(37);
   });
 });
 
@@ -359,7 +368,9 @@ describe("registre de dette — les réserves de lecture", () => {
     // retenus avec ce qu'ils imposent encore (`MS 57`, `MS 66`, `EL 17`,
     // `MS 68`, `EC 13`, `GC 4`, `MS 52`, `GE 3`, `CH 17`, `MS 51`, `MS 67`,
     // `MS 72`, `DF 9`, `AS 11`).
-    expect(n).toBe(110);
+    // 110 → 111 le 2026-10-17 (sous-lot D) : `X 25` retenu avec sa réserve —
+    // la 5ᵉ catégorie par PX 1, non étendue (décision de c6). 110 + 1 − 0.
+    expect(n).toBe(111);
     expect(reservesDeLecture().length).toBe(n);
   });
 });

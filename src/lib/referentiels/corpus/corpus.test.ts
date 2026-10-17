@@ -815,7 +815,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // propriétaire : « les conditions c'est pas nous »).
       // 2026-10-17 (revue de `lot/ref-a-corpus-titre-1`) : machines-outils sous
       // la surveillance directe d'un personnel compétent, ligne de partage 10.
-      "M 35",
+      // ~~"M 35"~~ — 2026-10-17, sous-lot D : annoncé dans l'aide du type M (`non_couvert`).
       "M 40 § 3 e) — contrat d'entretien des machines de nettoyage à sec",
       // 2026-10-16 — lecture des chapitres P, R, S, T, U, V, X, Y, J du titre II
       // (catégories 1 à 4). Seize actes que le référentiel ne porte pas, aucun
@@ -824,13 +824,13 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // (les gaz médicaux), une décision de périmètre (`X 25`, salle de sport).
       // À évaluer : § 9 de `docs/couverture-declaree-du-produit.md`, et le
       // plan `propositions/lecture-chapitres-types-erp-2026-10-16.md`.
-      "P 21",
+      // ~~"P 21"~~ — 2026-10-17, sous-lot D : retenu (personnel désigné).
       "R 33",
-      "S 15",
+      // ~~"S 15"~~ — 2026-10-17, sous-lot D : retenu (personnel désigné).
       // 2026-10-17 (`lot/ref-a-corpus-titre-1`) : ~~"T 29"~~, ~~"T 33"~~, la
       // présence d'un personnel compétent au-delà de 200 kW ou 200 kVA —
       // passés `non_couvert` (annonce décidée) après la revue du même jour.
-      "T 52",
+      // ~~"T 52"~~ — 2026-10-17, sous-lot D : retenu pour le § 3 (interdiction de fumer), le § 2 annoncé.
       "U 41",
       "U 43",
       "U 47",
@@ -841,8 +841,8 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // sortis de l'exclusion `risque_specialise`, à trancher avec X 25.
       "X annexe",
       "X 1 § 2 — affichage de l'effectif des piscines transformables et mixtes",
-      "X 25",
-      "Y 19",
+      // ~~"X 25"~~ — 2026-10-17, sous-lot D : retenu (interdiction de fumer, N1–N4 ; décision Q1).
+      // ~~"Y 19"~~ — 2026-10-17, sous-lot D : retenu (personnel désigné).
       "J 33",
       "J 35",
       "J 39",
@@ -1697,7 +1697,12 @@ describe("corpus — ce qu'on ne couvre pas, et où on le dit", () => {
     // `GC 15`, `CH 38 6°`, `PE 18`) naissent avec la leur (+ 9 `non_couvert`)
     // `non_couvert`, aucun muet de plus. Suite du chemin : D (−4) → 14,
     // G (−1) → 13.
-    const MUETS = 18;
+    // ~~const MUETS = 18;~~ — **14 DEPUIS LE SOUS-LOT D** (`lot/ref-d-types`,
+    // 2026-10-17), mesuré en appelant le corpus : 18 − 4 + 0. `T 29`, `T 33`,
+    // `T 43` et `T 44` sont dits dans l'aide du type T (`AIDE_TYPE_ERP.T`).
+    // `M 35` et `T 52 § 2` entrent `non_couvert` avec la même adresse : aucun
+    // n'est muet. Reste : G (`AM 18`, −1) → 13 ; `MS 42` muet par décision.
+    const MUETS = 14;
     // Une note interne n'est pas une annonce à l'exploitant. `declareA`
     // mélange aujourd'hui les deux natures — une adresse produit et un
     // document de travail — et cette distinction reste à trancher (lot 3) ;

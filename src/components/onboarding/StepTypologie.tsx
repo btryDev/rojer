@@ -27,6 +27,7 @@ import { QUESTION_MATIERES } from "@/lib/etablissements/questions";
 import { AideQuestionMatieres } from "@/components/etablissements/AideQuestionMatieres";
 import type { StepProps } from "./types";
 import { nombreDePersonnesDemande } from "./validation";
+import { AideTypesErp } from "@/components/etablissements/AideTypesErp";
 
 /**
  * Étape 2 sur 3 — la typologie de l'établissement (ERP / IGH / habitation).
@@ -246,6 +247,7 @@ export function StepTypologie({
                     }
                     erreur={messagePour("typesErpAutres")}
                   />
+                  <AideTypesErp types={[state.typeErp, ...state.typesErpAutres]} />
                 </div>
 
                 <div className="flex flex-col gap-3">
