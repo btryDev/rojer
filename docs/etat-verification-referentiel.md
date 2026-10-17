@@ -83,11 +83,11 @@ repose sur un texte que personne n'a ouvert.
 
 ## 2. Où en est-on
 
-**198 obligations**, **428 références** — 114 obligations en citent plus d'une.
+**198 obligations**, **430 références** — 114 obligations en citent plus d'une.
 
 | degré | obligations (au plancher) | part | dont fondements | références | part |
 | --- | --- | --- | --- | --- | --- |
-| 5 · lu à la source, verbatim relevé | 108 | 55 % | 115 | 281 | 66 % |
+| 5 · lu à la source, verbatim relevé | 108 | 55 % | 115 | 283 | 66 % |
 | 4 · lu à la source par un agent, verbatim rapporté | 86 | 43 % | 83 | 142 | 33 % |
 | 3 · lu et daté, aucun verbatim | 3 | 2 % | 0 | 4 | 1 % |
 | 2 · lu ailleurs qu'à la source | 1 | 1 % | 0 | 1 | 0 % |
@@ -108,7 +108,7 @@ repose sur un texte que personne n'a ouvert.
 
 | ancrage | références | part |
 | --- | --- | --- |
-| ancrée | 404 | 94 % |
+| ancrée | 406 | 94 % |
 | divergente | 1 | 0 % |
 | jamais constatée | 23 | 5 % |
 
@@ -142,7 +142,7 @@ repose sur un texte que personne n'a ouvert.
 | `porte_portail` | 6 | 9 | 1 | 5 | · | · | · | · | 6 / 6 — 100 % | 0 / 9 | 2026-09-01 → 2026-10-16 |
 | `sante_travail` | 13 | 22 | 3 | 9 | 1 | · | · | · | 12 / 13 — 92 % | 0 / 22 | 2026-08-31 → 2026-09-26 |
 | `secours` | 7 | 14 | 3 | 4 | · | · | · | · | 7 / 7 — 100 % | 0 / 14 | 2026-08-31 → 2026-10-14 |
-| `signalisation` | 12 | 18 | 3 | 9 | · | · | · | · | 12 / 12 — 100 % | 0 / 18 | 2026-09-02 → 2026-10-17 |
+| `signalisation` | 12 | 20 | 3 | 9 | · | · | · | · | 12 / 12 — 100 % | 0 / 20 | 2026-09-02 → 2026-10-17 |
 | `stockage_dangereux` | 2 | 5 | · | 2 | · | · | · | · | 2 / 2 — 100 % | 0 / 5 | 2026-08-31 → 2026-10-07 |
 
 Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, mesuré au plancher — **5** première main, **4** agent + verbatim, **3** lu sans verbatim, **2** indirect, **1** sans trace, **0** non rattaché.
@@ -158,7 +158,7 @@ Aucun domaine n'est entièrement dépourvu de verbatim.
 |  | obl. | réf. | 5 | 4 | 3 | 2 | 1 | 0 | vérifiées à la source | sans ancre | lu entre |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `equipement` | 95 | 197 | 61 | 33 | 1 | · | · | · | 94 / 95 — 99 % | 22 / 197 | 2026-08-26 → 2026-10-17 |
-| `etablissement` | 89 | 198 | 47 | 40 | 2 | · | · | · | 87 / 89 — 98 % | 0 / 198 | 2026-08-26 → 2026-10-17 |
+| `etablissement` | 89 | 200 | 47 | 40 | 2 | · | · | · | 87 / 89 — 98 % | 0 / 200 | 2026-08-26 → 2026-10-17 |
 | `salarie` | 14 | 33 | · | 13 | · | 1 | · | · | 13 / 14 — 93 % | 1 / 33 | 2026-08-27 → 2026-10-07 |
 
 Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, mesuré au plancher — **5** première main, **4** agent + verbatim, **3** lu sans verbatim, **2** indirect, **1** sans trace, **0** non rattaché.
@@ -182,9 +182,9 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 | 2026-10-13 | 2 | 0 % | 1 |
 | 2026-10-14 | 29 | 7 % | 12 |
 | 2026-10-16 | 16 | 4 % | 12 |
-| 2026-10-17 | 28 | 7 % | 19 |
+| 2026-10-17 | 30 | 7 % | 19 |
 
-428 des 428 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-10-17.
+430 des 430 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-10-17.
 
 Ces dates ne sont pas un âge : elles disent quand quelqu'un a ouvert le
 texte, pas depuis quand la version lue est en vigueur. Une lecture d'hier
@@ -249,7 +249,7 @@ une relecture déjà faite.
 | `code-travail-organisation-prevention` | 2 | 10 | 2026-09-26 |
 | `code-travail-agents-biologiques` | 2 | 2 | 2026-09-26 |
 | `code-travail-travail-de-nuit` | 2 | 2 | 2026-09-26 |
-| `csp-tabac` | 2 | 4 | 2026-10-17 |
+| `csp-tabac` | 2 | 6 | 2026-10-17 |
 | `code-travail-chaleur-intense` | 2 | 8 | 2026-09-20 → 2026-09-27 |
 | `code-travail-circulation-lieux` | 2 | 2 | 2026-09-21 |
 | `arrete-1993-03-19-epi` | 2 | 4 | 2026-09-04 |
@@ -471,14 +471,14 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `dae-erp-maintenance` | secours | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-10-14 |
 | `signalisation-erp-5-extincteurs-identification` | signalisation | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-10-07 |
 | `signalisation-erp-extincteurs-identification` | signalisation | equipement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-10-07 |
-| `signalisation-interdiction-fumer-csp` | signalisation | etablissement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-10-17 |
+| `signalisation-interdiction-fumer-csp` | signalisation | etablissement | 4 | 5 · première main | 5 · première main | 0 / 4 | 2026-10-17 |
 
 Trié du plus faible au plus solide : la première ligne est celle qui
 demande le plus de travail.
 
 ---
 
-## 9. Les 428 références, une par une
+## 9. Les 430 références, une par une
 
 `prescrit` et `verbatim` sont les deux champs du corpus qui rendent une
 lecture relisible : ce que l'article impose, en une phrase, et la phrase
@@ -884,6 +884,8 @@ refaire pour la contredire.
 | `co-activite-etablissement-protocole-securite` | contexte 6 | R. 4515-11 (exemplaire daté et signé tenu à la disposition des comités sociaux et économiques et de l'inspection du travail) | R. 4515-11 | code-travail-co-activite | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 4 · agent + verbatim | ancrée |
 | `signalisation-interdiction-fumer-csp` | fondement | Code de la santé publique, art. R. 3512-7 (une signalisation apparente rappelle le principe de l'interdiction de fumer ; modèle fixé par arrêté) | R. 3512-7 | csp-tabac | retenu | 2026-10-17 | api_legifrance | — | ✓ | 2016-08-15 | 2016-08-15 | 5 · première main | ancrée |
 | `signalisation-interdiction-fumer-csp` | contexte 1 | Code de la santé publique, art. R. 3512-2, 1° (lieux fermés et couverts qui accueillent du public ou qui constituent des lieux de travail) | R. 3512-2 | csp-tabac | retenu | 2026-10-17 | api_legifrance | — | ✓ | 2025-06-29 | 2025-06-29 | 5 · première main | ancrée |
+| `signalisation-interdiction-fumer-csp` | contexte 2 | Arrêté du 21 juillet 2025 fixant les périmètres et les modèles de signalisation prévus aux articles R. 3512-2 et R. 3512-7 du code de la santé publique, art. 2 et annexe 3 (modèles de l'annexe 1, reproduits en l'état ; A5 au moins dans les lieux fermés et couverts) | Arrêté 2025-07-21 art. 2 | csp-tabac | retenu | 2026-10-17 | api_legifrance | — | ✓ | 2025-07-23 | 2025-07-23 | 5 · première main | ancrée |
+| `signalisation-interdiction-fumer-csp` | contexte 3 | Arrêté du 21 juillet 2025, annexe 3 (dispositions graphiques) | Arrêté 2025-07-21 annexe 3 | csp-tabac | retenu | 2026-10-17 | api_legifrance | — | ✓ | 2025-07-23 | 2025-07-23 | 5 · première main | ancrée |
 | `signalisation-etablissement-risques-residuels` | fondement | Arrêté du 4 novembre 1993, art. 2 (mise en œuvre d'une signalisation de sécurité pour tout risque non évité par une protection collective ou par l'organisation du travail) | Arrêté 1993-11-04 art. 2 | arrete-1993-11-04-signalisation | retenu | 2026-09-02 | agent_verbatim | ✓ | ✓ | 2014-01-19 | 2014-01-19 | 4 · agent + verbatim | ancrée |
 | `signalisation-etablissement-alimentation-secours-presence` | fondement | Arrêté du 4 novembre 1993, art. 7 (alimentation de secours des signalisations qui ont besoin d'une source d'énergie) | Arrêté 1993-11-04 art. 7 | arrete-1993-11-04-signalisation | retenu | 2026-09-02 | agent_verbatim | ✓ | ✓ | 1993-12-17 | 1993-12-17 | 4 · agent + verbatim | ancrée |
 | `signalisation-etablissement-cheminements-evacuation` | fondement | Arrêté du 4 novembre 1993, art. 9 (balisage des cheminements d'évacuation par panneaux, et panneau additionnel « Sortie de secours » sur les dégagements réglementaires non utilisés habituellement) | Arrêté 1993-11-04 art. 9 | arrete-1993-11-04-signalisation | retenu | 2026-09-02 | agent_verbatim | ✓ | ✓ | 1993-12-17 | 1993-12-17 | 4 · agent + verbatim | ancrée |

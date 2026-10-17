@@ -110,3 +110,18 @@ describe("signalisation du code de la santé publique — tout établissement, e
     expect(erp.libelle).toMatch(/ERP des quatre premières catégories/);
   });
 });
+
+describe("sous-lot D, revue indépendante — ce que les descriptions disent", () => {
+  it("la signalisation CSP nomme l'arrêté du modèle et son format", () => {
+    const d = obligationParId(FUMER_CSP)!.description ?? "";
+    expect(d).toContain("arrêté du 21 juillet 2025");
+    expect(d).toContain("A5 (15 × 21 cm)");
+  });
+
+  it("le personnel désigné dit la sur-application de P 21 § 2 et Y 19 § 2, et cite chacun par sa lettre", () => {
+    const d = obligationParId(PERSONNEL)!.description ?? "";
+    expect(d).toContain("Rojer ne sait pas si vous en avez un");
+    expect(d).toContain("« des employés spécialement désignés doivent être entraînés à la mise en oeuvre des moyens de secours dans les établissements ne possédant pas de service de sécurité incendie » (P 21 § 2)");
+    expect(d).toContain("« des employés, spécialement désignés, doivent être entraînés à la mise en oeuvre de moyens de secours dans les établissements ne possédant pas de service de sécurité incendie » (Y 19 § 2)");
+  });
+});

@@ -1880,6 +1880,9 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
         "~~`obligation_manquante` / cause `libre`, motif : « Même acte que N 17 : à rattacher à `incendie-erp-personnel-designe-moyens-secours` (ajouter P, P 21 en référence). Le § 1 — un service d'agents de sécurité incendie ‹ peut être imposé par la commission de sécurité › en 1ʳᵉ catégorie ou dans les complexes de loisirs où la danse est une activité principale — est une prescription d'autorité (ADR-035), pas une obligation d'office, et le service d'agents n'est pas suivi (phrase de manque de l'axe `categorie_erp`). TPE CONCERNÉE : P 1 fait entrer au chapitre une salle de danse dès 120 personnes au total, effectif qu'une discothèque de quelques salariés reçoit. »~~ [2026-10-17, sous-lot D du plan « mise à jour du référentiel », découpage validé par c6 : rattaché à `incendie-erp-personnel-designe-moyens-secours`, type ajouté]",
       statut: "retenu",
       obligations: ["incendie-erp-personnel-designe-moyens-secours"],
+      // 2026-10-17, revue indépendante du sous-lot D.
+      reserve:
+        "LE SERVICE DE SÉCURITÉ INCENDIE N'EST PAS CONNU. Le § 2 ne vise que « les établissements ne possédant pas de service de sécurité incendie » ; Rojer ne suit pas ce service (§ 1, prescription d'autorité ; phrase de l'axe `categorie_erp`) et sert la ligne à toute salle de type P des catégories 1 à 4. Sur-application visible, dite dans la description de la ligne : un établissement doté d'un service d'agents la reçoit quand même.",
     },
     {
       ref: "P 22",
@@ -3130,7 +3133,7 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       motif: "Toute présentation de machines utilisant des substances radioactives ou générant des rayons X fait l'objet d'une DEMANDE D'AUTORISATION par l'exposant (§ 1), sous des conditions de protection, de signalisation (NF M 60-101), de surveillance et de stockage (§ 2), et de conformité des appareils à rayons X (NF C 74-100, § 3). Une déclaration à faire à chaque présentation, de niche : annoncée plutôt que suivie (ligne de partage 5). Les normes NF M 60-101 et NF C 74-100 que l'article cite ne sont pas lues : ce qu'elles fixent ou non (rythme, contenu de vérification) n'est pas établi ici. Les rayonnements ionisants relèvent en outre de l'exclusion `risque_specialise` (`corpus/perimetre.ts`), et Rojer les déclare non couverts (`.claude/CLAUDE.md`, « Hors périmètre »). Vaut aussi pour la salle d'exposition permanente de T 1 § 2, dont l'exploitant peut être l'exposant." + SUITE_ANNONCE_DECIDEE,
       // ~~declareA: "Non déclaré au 2026-10-17 : l'annonce est prévue dans l'aid…~~ — annoncé le 2026-10-17, sous-lot D.
       declareA:
-        "Formulaire de l'établissement, aide du type d'ERP sous le choix du type (`src/lib/etablissements/aide-type-erp.ts`, `AIDE_TYPE_ERP.T`) : « la demande d'autorisation de présenter des machines utilisant des substances radioactives ou génératrices de rayons X »",
+        "Formulaire de l'établissement, aide du type d'ERP sous le choix du type (`src/lib/etablissements/aide-type-erp.ts`, `AIDE_TYPE_ERP.T`) : « la demande d'autorisation, adressée par l'exposant, de présenter des machines utilisant des substances radioactives ou génératrices de rayons X »",
     },
     {
       ref: "T 44",
@@ -3146,7 +3149,7 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       motif: "L'emploi de lasers dans les salles est autorisé sous conditions d'usage (aucune exposition du public au faisceau, fixation, absence d'éléments réfléchissants, essais hors présence du public) et, « avant sa mise en oeuvre », sous une DÉCLARATION de l'exposant à l'autorité administrative, avec note technique, plan et document de conformité de l'installateur. Une déclaration à faire à chaque installation, de niche : annoncée plutôt que suivie (ligne de partage 5). Vaut aussi pour la salle d'exposition permanente de T 1 § 2, dont l'exploitant peut être l'exposant." + SUITE_ANNONCE_DECIDEE,
       // ~~declareA: "Non déclaré au 2026-10-17 : l'annonce est prévue dans l'aid…~~ — annoncé le 2026-10-17, sous-lot D.
       declareA:
-        "Formulaire de l'établissement, aide du type d'ERP sous le choix du type (`src/lib/etablissements/aide-type-erp.ts`, `AIDE_TYPE_ERP.T`) : « la déclaration préalable de l'emploi de lasers dans les salles »",
+        "Formulaire de l'établissement, aide du type d'ERP sous le choix du type (`src/lib/etablissements/aide-type-erp.ts`, `AIDE_TYPE_ERP.T`) : « la déclaration préalable de l'emploi de lasers dans les salles, faite par l'exposant »",
     },
     {
       ref: "T 45",
@@ -4786,6 +4789,9 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
         "~~`obligation_manquante` / cause `libre`, motif : « Mot pour mot l'acte de N 17 : à rattacher à `incendie-erp-personnel-designe-moyens-secours` (ajouter Y, Y 19 § 2 en référence). Le § 1 — un service d'agents de sécurité incendie ‹ peut être imposé par la commission de sécurité › au-delà de 4 000 personnes — est une prescription d'autorité et un service non suivi. TPE CONCERNÉE : Y 1 vise un musée dès 200 personnes ; Y 2 compte une personne pour 5 m² de salles, soit 1 000 m². »~~ [2026-10-17, sous-lot D du plan « mise à jour du référentiel », découpage validé par c6 : rattaché à `incendie-erp-personnel-designe-moyens-secours`, type ajouté]",
       statut: "retenu",
       obligations: ["incendie-erp-personnel-designe-moyens-secours"],
+      // 2026-10-17, revue indépendante du sous-lot D.
+      reserve:
+        "LE SERVICE DE SÉCURITÉ INCENDIE N'EST PAS CONNU. Le § 2 ne vise que « les établissements ne possédant pas de service de sécurité incendie » ; Rojer ne suit pas ce service (§ 1, au-delà de 4 000 personnes, prescription d'autorité ; phrase de l'axe `categorie_erp`) et sert la ligne à tout musée des catégories 1 à 4. Sur-application visible, dite dans la description de la ligne : un établissement doté d'un service d'agents la reçoit quand même.",
     },
     {
       ref: "Y 20",

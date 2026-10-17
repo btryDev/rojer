@@ -370,7 +370,10 @@ describe("registre de dette — les réserves de lecture", () => {
     // `MS 72`, `DF 9`, `AS 11`).
     // 110 → 111 le 2026-10-17 (sous-lot D) : `X 25` retenu avec sa réserve —
     // la 5ᵉ catégorie par PX 1, non étendue (décision de c6). 110 + 1 − 0.
-    expect(n).toBe(111);
+    // 111 → 114 le même jour (revue indépendante de D) : `P 21` et `Y 19` (le
+    // service de sécurité incendie que Rojer ne connaît pas) et `R. 3512-7`
+    // (emplacements fumeurs, annexes en image non lues). 111 + 3 − 0.
+    expect(n).toBe(114);
     expect(reservesDeLecture().length).toBe(n);
   });
 });

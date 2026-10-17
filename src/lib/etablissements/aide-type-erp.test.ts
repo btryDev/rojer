@@ -56,6 +56,11 @@ describe("AIDE_TYPE_ERP — adresse des annonces par type (2026-10-17)", () => {
     }
   });
 
+  it("T 43 et T 44 sont à la charge de l'exposant, et la phrase le dit (revue de D)", () => {
+    expect(AIDE_TYPE_ERP.T).toContain("la demande d'autorisation, adressée par l'exposant,");
+    expect(AIDE_TYPE_ERP.T).toContain("faite par l'exposant");
+  });
+
   it("le type X n'a pas encore d'aide : emplacement réservé au lot « filtre à l'accueil »", () => {
     expect(AIDE_TYPE_ERP.X).toBeUndefined();
   });

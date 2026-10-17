@@ -9,10 +9,16 @@
 // ligne, aucune question à l'accueil.
 //
 // Relu par l'API Légifrance le 2026-10-17, en BAC À SABLE (LEGIFRANCE_ENV =
-// sandbox ; égalité avec la production non vérifiée). L'ARRÊTÉ du ministre
+// sandbox ; égalité avec la production non vérifiée). ~~L'ARRÊTÉ du ministre
 // chargé de la santé qui fixe le modèle de signalisation (R. 3512-7, 2e
 // phrase) N'EST PAS LU : la recherche par titre en bac à sable ne l'a pas
-// trouvé. Il n'est ni cité ni daté ici.
+// trouvé. Il n'est ni cité ni daté ici.~~ [2026-10-17, revue indépendante du
+// sous-lot D : la recherche plein texte du fonds LODA le trouve — arrêté du
+// 21 juillet 2025 (NOR TSSP2518305A, JORF du 22 juillet 2025,
+// LEGITEXT000053393366), en vigueur depuis le 2025-07-23, qui abroge l'arrêté
+// du 1er décembre 2010. Relu le même jour : ses dix articles en vigueur ; son
+// art. 2 et son annexe 3 sont ici. Ses annexes 1, 2 et 4 sont des IMAGES, que
+// l'API ne rend pas : non lues.]
 
 import type { Corpus } from "./types";
 
@@ -25,7 +31,7 @@ export const CSP_TABAC: Corpus = {
   url: "https://www.legifrance.gouv.fr/codes/id/LEGITEXT000006072665/",
   etendue: "articles_cites",
   portee:
-    "Les quatre articles cités, lus le 2026-10-17. Non ouverts : les autres articles de la section (R. 3512-4 à R. 3512-6, R. 3512-8 et suivants : normes des emplacements fumeurs, sanctions), et l'arrêté qui fixe le modèle de signalisation, introuvable par la recherche par titre en bac à sable.",
+    "Les quatre articles cités, lus le 2026-10-17. Non ouverts : les autres articles de la section (R. 3512-4 à R. 3512-6, R. 3512-8 et suivants : normes des emplacements fumeurs, sanctions), et ~~l'arrêté qui fixe le modèle de signalisation, introuvable par la recherche par titre en bac à sable~~ [2026-10-17, revue : l'arrêté du 21 juillet 2025 (LEGITEXT000053393366) est lu — art. 2 et annexe 3 ici ; art. 1 (périmètre de dix mètres des espaces non couverts) et art. 3 (modèle d'entrée des emplacements fumeurs) lus, non classés, la ligne ne portant ni l'un ni l'autre ; annexes 1, 2 et 4, des images, non lues].",
   articles: [
     {
       ref: "L. 3512-8",
@@ -78,6 +84,35 @@ export const CSP_TABAC: Corpus = {
       lecture: "api_legifrance",
       citationCle:
         "Dans les lieux mentionnés à l'article R. 3512-2, une signalisation apparente rappelle le principe de l'interdiction de fumer. Un modèle de signalisation accompagné d'un message sanitaire de prévention est déterminé par arrêté du ministre chargé de la santé.",
+      statut: "retenu",
+      obligations: ["signalisation-interdiction-fumer-csp"],
+      reserve:
+        "Deux choses que la ligne ne porte pas. (1) L'avertissement sanitaire à apposer à l'entrée des emplacements fumeurs de R. 3512-3 (dernière phrase), dont le modèle est à l'annexe 2 de l'arrêté du 21 juillet 2025 (art. 3) : pas de ligne pour les emplacements fumeurs, décision de la propriétaire du 2026-10-17. (2) Les modèles eux-mêmes : les annexes 1, 2 et 4 de l'arrêté sont des images que l'API ne rend pas, non lues ; Rojer dit qu'un modèle existe et son format, sans le reproduire.",
+    },
+    {
+      // 2026-10-17, revue indépendante du sous-lot D : l'arrêté du modèle.
+      ref: "Arrêté 2025-07-21 art. 2",
+      intitule: "Modèles de signalisation de l'interdiction de fumer",
+      url: ART("LEGIARTI000053393380"),
+      versionEnVigueur: "2025-07-23",
+      modifiePar: null,
+      luLe: "2026-10-17",
+      lecture: "api_legifrance",
+      citationCle:
+        "La signalisation rappelant le principe de l'interdiction de fumer dans les lieux mentionnés à l'article R. 3512-2 du code de la santé publique, prévue à l'article R. 3512-7 du même code, reproduit les modèles en annexe 1 du présent arrêté.",
+      statut: "retenu",
+      obligations: ["signalisation-interdiction-fumer-csp"],
+    },
+    {
+      ref: "Arrêté 2025-07-21 annexe 3",
+      intitule: "Dispositions graphiques",
+      url: ART("LEGIARTI000053393394"),
+      versionEnVigueur: "2025-07-23",
+      modifiePar: null,
+      luLe: "2026-10-17",
+      lecture: "api_legifrance",
+      citationCle:
+        "La taille minimale de la signalisation, quel que soit le support ou la méthode utilisée, est de 15 × 21 cm (A5), sans limites d'agrandissement homothétique, dans les lieux fermés et couverts.",
       statut: "retenu",
       obligations: ["signalisation-interdiction-fumer-csp"],
     },

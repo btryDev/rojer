@@ -121,7 +121,7 @@ export const obligationsSignalisation: Obligation[] = [
     domaine: "signalisation",
     libelle: "Signalisation de l'interdiction de fumer, dans les locaux fermés et couverts",
     description:
-      "Le code de la santé publique interdit de fumer dans tous les lieux fermés et couverts qui accueillent du public ou qui constituent des lieux de travail (R. 3512-2, 1°), et y fait rappeler l'interdiction : « une signalisation apparente rappelle le principe de l'interdiction de fumer » (R. 3512-7). Un modèle réglementaire de cette signalisation, avec un message sanitaire de prévention, est fixé par arrêté du ministre chargé de la santé. C'est la règle générale, distincte de l'interdiction que le règlement de sécurité fait afficher dans certains locaux à risques d'un ERP des quatre premières catégories.",
+      "Le code de la santé publique interdit de fumer dans tous les lieux fermés et couverts qui accueillent du public ou qui constituent des lieux de travail (R. 3512-2, 1°), et y fait rappeler l'interdiction : « une signalisation apparente rappelle le principe de l'interdiction de fumer » (R. 3512-7). Le modèle est fixé par l'arrêté du 21 juillet 2025 (annexe 1) : à reproduire en l'état, au format A5 (15 × 21 cm) au moins dans les lieux fermés et couverts. C'est la règle générale, distincte de l'interdiction que le règlement de sécurité fait afficher dans certains locaux à risques d'un ERP des quatre premières catégories.",
     referencesLegales: [
       {
         source: "CSP",
@@ -141,6 +141,23 @@ export const obligationsSignalisation: Obligation[] = [
         note: "« L'interdiction de fumer dans les lieux affectés à un usage collectif mentionnée à l'article L. 3512-8 s'applique : 1° Dans tous les lieux fermés et couverts qui accueillent du public ou qui constituent des lieux de travail ; » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000051820547, en vigueur depuis le 2025-06-29 (décret n° 2025-582).",
         versionConstatee: "2025-06-29",
       },
+      {
+        // 2026-10-17, revue indépendante du sous-lot D.
+        source: "ARRETE",
+        reference:
+          "Arrêté du 21 juillet 2025 fixant les périmètres et les modèles de signalisation prévus aux articles R. 3512-2 et R. 3512-7 du code de la santé publique, art. 2 et annexe 3 (modèles de l'annexe 1, reproduits en l'état ; A5 au moins dans les lieux fermés et couverts)",
+        article: "Arrêté 2025-07-21 art. 2",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000053393380",
+        note: "Art. 2 : « La signalisation rappelant le principe de l'interdiction de fumer dans les lieux mentionnés à l'article R. 3512-2 du code de la santé publique, prévue à l'article R. 3512-7 du même code, reproduit les modèles en annexe 1 du présent arrêté. » Annexe 3 : « La taille minimale de la signalisation, quel que soit le support ou la méthode utilisée, est de 15 × 21 cm (A5), sans limites d'agrandissement homothétique, dans les lieux fermés et couverts. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGITEXT000053393366, NOR TSSP2518305A, JORF du 22 juillet 2025, en vigueur depuis le 2025-07-23. Annexes 1, 2 et 4 (images) non lues.",
+        versionConstatee: "2025-07-23",
+      },
+      {
+        source: "ARRETE",
+        reference: "Arrêté du 21 juillet 2025, annexe 3 (dispositions graphiques)",
+        article: "Arrêté 2025-07-21 annexe 3",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000053393394",
+        versionConstatee: "2025-07-23",
+      },
     ],
     periodicite: "autre",
     nature: "etat_permanent",
@@ -157,7 +174,7 @@ export const obligationsSignalisation: Obligation[] = [
     transmet: [],
     notesInternes:
       "CRÉÉE LE 2026-10-17 (sous-lot D, décision de la propriétaire relayée par c6). État permanent d'établissement, sans rythme : la signalisation est posée, puis maintenue. Servie à tout établissement de travail et à tout ERP, toutes catégories : R. 3512-2 1° vise « tous les lieux fermés et couverts qui accueillent du public ou qui constituent des lieux de travail ». Aucune question à l'accueil (« on n'alourdit pas ») : un établissement sans local fermé et couvert est un cas d'école. Le texte, L. 3512-8, R. 3512-2, R. 3512-3 et R. 3512-7, est au corpus `csp-tabac`.\n\n" +
-      "CE QUE LA LIGNE NE PORTE PAS, et c'est voulu (décision de la propriétaire). Les espaces NON couverts que R. 3512-2 vise aussi — abords des écoles et des établissements pour mineurs, aires collectives de jeux, espaces non couverts des bibliothèques et des équipements sportifs, plages, parcs (3° à 8°) — et les emplacements mis à la disposition des fumeurs (R. 3512-3), avec l'avertissement sanitaire à apposer à leur entrée (R. 3512-7, dernière phrase) : pas de ligne. L'ARRÊTÉ DU MODÈLE n'est pas lu (introuvable par la recherche par titre en bac à sable) : la description dit qu'un modèle réglementaire existe, sans le recopier ni le dater.\n\n" +
+      "CE QUE LA LIGNE NE PORTE PAS, et c'est voulu (décision de la propriétaire). Les espaces NON couverts que R. 3512-2 vise aussi — abords des écoles et des établissements pour mineurs, aires collectives de jeux, espaces non couverts des bibliothèques et des équipements sportifs, plages, parcs (3° à 8°) — et les emplacements mis à la disposition des fumeurs (R. 3512-3), avec l'avertissement sanitaire à apposer à leur entrée (R. 3512-7, dernière phrase) : pas de ligne. ~~L'ARRÊTÉ DU MODÈLE n'est pas lu (introuvable par la recherche par titre en bac à sable) : la description dit qu'un modèle réglementaire existe, sans le recopier ni le dater.~~ [2026-10-17, revue indépendante : l'arrêté du 21 juillet 2025 (LEGITEXT000053393366, en vigueur depuis le 2025-07-23, abroge celui du 1er décembre 2010) est trouvé par la recherche plein texte et relu. Art. 2 : la signalisation reproduit les modèles de l'annexe 1 ; les signalisations antérieures restent valides si elles mentionnent le principe, Tabac-info-service, la référence à R. 3512-2 et les sanctions. Annexe 3 : modèles reproduits en l'état, A5 au moins dans les lieux fermés et couverts. La description le dit en une phrase. Les annexes 1, 2 et 4, des images, ne sont pas lues (réserve de R. 3512-7).]\n\n" +
       "À PART DE `incendie-erp-interdiction-fumer-affichee`, ET C'EST VOULU. Celle-là porte le règlement de sécurité : l'interdiction affichée dans des LOCAUX À RISQUES désignés (réserves, locaux d'emballage, lingeries, locaux sportifs…) d'un ERP des quatre premières catégories des types M, O, W, T, X. Celle-ci porte le code de la santé publique : la signalisation générale de tout local fermé et couvert. Objets différents, textes différents ; elles ne se rangent pas au même endroit de l'écran (« Le quotidien de vos salariés — Informer et former » ici, « Incendie et secours — Prévenir » là), et leurs libellés disent chacun leur objet.",
   },
   {
