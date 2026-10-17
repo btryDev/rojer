@@ -112,11 +112,14 @@ Une action qui n'est pas répétée par le texte n'a pas de rythme du tout.
   l'arrêté du 1er mars 2004 l'exclut du levage ; le texte applicable (arrêté
   du 29 décembre 2010) n'est pas au corpus. Retiré de la recherche de
   matériel le 2026-10-14, en attendant.
-- **Cumul de types d'ERP** (`GN 2`) : un magasin avec restauration ne reçoit
-  que les lignes de son type déclaré, `typeErp` étant unique. [2026-10-17 :
+- ~~**Cumul de types d'ERP** (`GN 2`) : un magasin avec restauration ne reçoit
+  que les lignes de son type déclaré, `typeErp` étant unique.~~ [2026-10-17 :
   tranché, ADR-045 ; le moteur sait servir l'union des types (lots 0 et 1
-  fusionnés), mais tant que la colonne et l'écran (lots 2 et 3) ne sont pas
-  livrés, la phrase ci-dessus reste vraie pour l'utilisateur.]
+  fusionnés), ~~mais tant que la colonne et l'écran (lots 2 et 3) ne sont pas
+  livrés, la phrase ci-dessus reste vraie pour l'utilisateur~~.]
+  [2026-10-17 (soir) : CLOS — colonne `typesErpAutres` (PR #50) et écrans
+  (PR #51, `0f4da766`) fusionnés : un établissement déclare ses autres types,
+  et reçoit les dispositions particulières de chacun.]
 - ~~**Dix chapitres du livre II, titre II non lus** (L, P, R, S, T, U, V, X, Y, J) :
   hors des secteurs cibles, à classer si la cible s'élargit.~~ [2026-10-16 :
   tous lus. L par la session du chantier multi-types
