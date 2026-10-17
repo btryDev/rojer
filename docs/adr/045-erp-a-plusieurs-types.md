@@ -136,7 +136,8 @@ pas disponible dans la session).
   - **dans la suite** : sur toute grille mono-type, la résolution des groupes
     ne retire rien. C'est ce qui garantit que la sortie mono-type reste
     l'évaluation par type, inchangée.
-- **Chaque groupe sort au plus un membre**, pour toute paire et tout triplet.
+- **Chaque groupe sort au plus un membre**, pour toute paire (231) et tout
+  triplet (1 540) de types, × 5 catégories × 3 réponses sur le sommeil.
 - **L'union dépasse au moins une fois chaque type seul** (borne basse).
 - **Permuter le premier type ne change rien.**
 - **Toute ligne à `typesExclus` appartient à un groupe** ; les membres d'un

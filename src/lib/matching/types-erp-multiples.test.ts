@@ -77,6 +77,9 @@ for (const o of obligationsConformite) {
 }
 
 const PAIRES: TypeErp[][] = TYPES.flatMap((a, i) => TYPES.slice(i + 1).map((b) => [a, b]));
+const TRIPLETS: TypeErp[][] = TYPES.flatMap((a, i) =>
+  TYPES.slice(i + 1).flatMap((b, j) => TYPES.slice(i + j + 2).map((c) => [a, b, c])),
+);
 
 describe("les groupes exclusifs — la structure", () => {
   it("toute obligation à `typesExclus` appartient à un groupe", () => {
@@ -131,6 +134,21 @@ describe("un seul type : la sortie d'avant l'ADR-045", () => {
 describe("plusieurs types : l'union, puis un membre par groupe", () => {
   it("chaque groupe sort au plus un membre, pour toute paire de types", () => {
     for (const ts of PAIRES) {
+      for (const c of CATEGORIES) {
+        for (const s of SOMMEIL) {
+          const sortie = ids(erp(ts, c, s));
+          for (const [g, membres] of GROUPES) {
+            const n = membres.filter((id) => sortie.has(id)).length;
+            expect(n, `${g} — ${ts.join("+")} ${c} sommeil=${s}`).toBeLessThanOrEqual(1);
+          }
+        }
+      }
+    }
+  });
+
+  it("chaque groupe sort au plus un membre, pour tout triplet de types", () => {
+    expect(TRIPLETS.length).toBe(1540);
+    for (const ts of TRIPLETS) {
       for (const c of CATEGORIES) {
         for (const s of SOMMEIL) {
           const sortie = ids(erp(ts, c, s));
