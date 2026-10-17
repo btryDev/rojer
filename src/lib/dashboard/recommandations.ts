@@ -50,7 +50,9 @@
  *
  * Toutes les catégories contribuent à la liste ; le tri par priorité +
  * date (tie-breaker) fait remonter les items les plus urgents. Le total
- * est tronqué à 5 (paramétrable).
+ * est tronqué à 5 (paramétrable) — avec une place réservée, la dernière, à
+ * la transmission du tiers obligatoire quand la troncature l'aurait coupée
+ * (`avecPlaceReservee`, 2026-10-18).
  */
 
 import {
@@ -559,5 +561,33 @@ export function genererRecommandations(
     return da - db;
   });
 
-  return acc.slice(0, limite);
+  return avecPlaceReservee(acc, limite);
+}
+
+/**
+ * La troncature, avec une place réservée au tiers obligatoire (2026-10-18).
+ *
+ * LE DÉFAUT. La carte « aucun service de santé au travail » a la priorité
+ * 8,5 : derrière tout retard, et c'est voulu — une transmission est une
+ * question, un retard est un fait. Mais la limite coupe à cinq : sur un
+ * dossier qui comptait cinq retards ou plus, elle ne s'affichait JAMAIS. Le
+ * dossier qui en avait le plus besoin était celui qui ne la voyait pas.
+ *
+ * LE CHOIX : une place réservée, la dernière, plutôt qu'une priorité qui la
+ * ferait passer devant les retards. L'ordre des autres ne bouge pas, rien ne
+ * passe devant une urgence datée, et le brief et « Par où commencer » (qui
+ * lisent les deux premières) restent tels quels. Le retard évincé n'est pas
+ * perdu : le widget compte le reste depuis les compteurs, pas depuis la file.
+ */
+function avecPlaceReservee(
+  triees: readonly Recommandation[],
+  limite: number,
+): Recommandation[] {
+  const retenues = triees.slice(0, limite);
+  const reservees = triees
+    .slice(limite)
+    .filter((r) => r.kind === "transmission_tiers_obligatoire");
+  if (reservees.length === 0) return retenues;
+  const libres = Math.max(0, limite - reservees.length);
+  return [...retenues.slice(0, libres), ...reservees].slice(0, limite);
 }

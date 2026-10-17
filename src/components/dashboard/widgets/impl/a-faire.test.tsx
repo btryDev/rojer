@@ -13,6 +13,10 @@ vi.mock("@/components/navigation/LienProvenance", () => ({
 }));
 
 import { BlocAFaire } from "./board";
+import { genererRecommandations } from "@/lib/dashboard/recommandations";
+import { rapprocher } from "@/lib/dashboard/transmissions";
+import { obligationsConformite } from "@/lib/referentiels/conformite";
+import { TIERS_LUI_MEME_OBLIGATOIRE } from "@/lib/prestataires/domaines";
 
 afterEach(cleanup);
 
@@ -59,5 +63,56 @@ describe("bloc « À faire » — un retard sans échéance connue", () => {
     expect(texte).toContain("En retard");
     // La ligne datée garde son compte de jours.
     expect(texte).toContain("57 j de retard");
+  });
+});
+
+describe("bloc « À faire » — aucun service de santé au travail, six retards (2026-10-18)", () => {
+  /**
+   * Le défaut constaté dans l'app : la carte avait la priorité 8,5 et la file
+   * s'arrêtait à cinq. Sur un dossier à cinq retards ou plus, le widget ne la
+   * montrait jamais. Chaîne entière : rapprochement réel, moteur, widget.
+   */
+  it("montre l'alerte dans le widget", () => {
+    const adhesion = obligationsConformite.find(
+      (o) => o.id === "sante-travail-etablissement-adhesion-spst",
+    )!;
+    const recommandations = genererRecommandations(
+      {
+        etablissementId: "etab-1",
+        verifications: Array.from({ length: 6 }, (_, i) => ({
+          id: `v${i}`,
+          statut: "planifiee",
+          datePrevue: new Date(Date.UTC(2026, 5, 1 + i, 12)),
+          periodicite: "annuelle",
+          archiveLe: null,
+          graceJusquAu: null,
+          libelleObligation: `Vérification ${i}`,
+          equipementLibelle: "Tableau",
+        })),
+        actions: [],
+        nbEquipements: 3,
+        duerpSecteurChoisi: true,
+        nbRapports: 2,
+        transmissions: rapprocher([adhesion], [], [], AUJOURDHUI),
+      },
+      { now: AUJOURDHUI },
+    );
+    const { container } = render(
+      <BlocAFaire
+        bundle={
+          {
+            etablissementId: "etab-1",
+            aujourdhui: AUJOURDHUI,
+            dashboard: { recommandations },
+            echeances: { sous30j: { total: 0 }, retards: { total: 6 } },
+          } as unknown as DashboardBundle
+        }
+      />,
+    );
+    const texte = container.textContent ?? "";
+    expect(texte).toContain(TIERS_LUI_MEME_OBLIGATOIRE.sante_travail!.titre);
+    // Le retard évincé de la file n'est pas perdu : le pied le compte
+    // (six retards, quatre affichés).
+    expect(texte).toContain("2 autres en retard");
   });
 });
