@@ -256,6 +256,14 @@ export const DOMAINES_PRESTATAIRE_ATTENDUS: Record<
   // les vérifications de `R. 4224-17`, où le Code demande de même une personne
   // compétente et rien de plus.
   epi: ["entretien_general"],
+  // L'eau chaude sanitaire, entrée le 2026-10-17. L'analyse annuelle de
+  // légionelles est réalisée par « un laboratoire ou un organisme accrédité »
+  // (arrêté du 1er février 2010, art. 5) : `organisme_accredite` est un tiers,
+  // donc l'entrée est consultée. `carnet_sanitaire` (« Carnet sanitaire
+  // (eau) ») est la valeur existante de l'annuaire pour ce métier — rien n'est
+  // créé. La température mensuelle, réalisée par l'exploitant, n'appelle
+  // personne.
+  eau_chaude_sanitaire: ["carnet_sanitaire"],
 };
 
 /**

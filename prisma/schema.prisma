@@ -626,6 +626,11 @@ enum CategorieEquipement {
   // R. 157-4) — sa maintenance et sa déclaration à Géo'DAE se portent sur
   // l'appareil, une ligne par DAE déclaré.
   DEFIBRILLATEUR
+  // 2026-10-17 : l'installation collective d'eau chaude sanitaire qui alimente
+  // des douches ou des bains à remous ouverts au public (arrêté du 1er février 2010, art. 1er et 2)
+  // — température mensuelle et analyse annuelle de légionelles (annexe 2),
+  // une ligne de chaque par installation déclarée.
+  EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC
   AUTRE
 }
 

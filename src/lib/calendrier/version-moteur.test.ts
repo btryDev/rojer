@@ -91,6 +91,7 @@ const DONNEES_REFERENTIEL = [
   "co-activite",
   "compactage-dechets",
   "cuisson-hotte",
+  "eau-chaude-sanitaire",
   "eclairage",
   "electricite",
   "epi",
@@ -477,7 +478,18 @@ const RELEVE = {
   // lecteurs sont les liens des fiches et `surfacesDe` —, et le moteur écarte
   // déjà le niveau audit à sa porte (`evaluerObligation`).
   // ~~8f04f49061475e71~~.
-  empreinte: "b28f27a9bbb75780",
+  // Recopiée SANS incrément le 2026-10-17 (`lot/ref-f-legionelles`, sous-lot
+  // F) : `referentiels/types-communs.ts` gagne `EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC`
+  // dans `CATEGORIES_EQUIPEMENT`, `conformite/types.ts` le domaine
+  // `eau_chaude_sanitaire`, `conformite/index.ts` le fichier de données
+  // `eau-chaude-sanitaire` (entré à `DONNEES_REFERENTIEL`) et la version
+  // `2026-10-17.3`. NON au sens de la question : aucune règle du moteur ne
+  // change. Les deux lignes neuves sont des DONNÉES (porteur équipement,
+  // catégorie, périodicité), hachées par l'empreinte du référentiel, donc déjà
+  // dans le sceau. `calendrier/echeances.ts` (`sourceLegionelles`, muette
+  // quand la catégorie est déclarée) n'écrit aucune ligne `Verification` : il
+  // compose l'affichage des échéances hors référentiel. ~~b28f27a9bbb75780~~.
+  empreinte: "a28c64daee65f778",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

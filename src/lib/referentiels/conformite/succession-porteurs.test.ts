@@ -127,6 +127,9 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "dae-erp-declaration-geodae": "equipement",
   "dae-erp-detention": "etablissement",
   "dae-erp-maintenance": "equipement",
+  // 2026-10-17, sous-lot F : les légionelles au matériel, nées à l'équipement.
+  "ecs-legionelles-analyse-annuelle": "equipement",
+  "ecs-temperature-mensuelle": "equipement",
   "eclairage-etablissement-regles-entretien": "etablissement",
   "elec-erp-cat1-4-annuelle": "equipement",
   "elec-erp-groupe-electrogene-annuel": "equipement",

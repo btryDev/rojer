@@ -54,6 +54,8 @@ export const LABEL_DOMAINE: Record<DomaineObligation, string> = {
   // vivent en domaine « Incendie / sécurité ». Deux objets, deux textes, deux
   // gestes — voir le commentaire du domaine dans `conformite/types.ts`.
   eclairage: "Éclairage des lieux de travail",
+  // 2026-10-17 : les légionelles au matériel (arrêté du 1er février 2010).
+  eau_chaude_sanitaire: "Eau chaude sanitaire",
 };
 
 export const MOIS_FR = [

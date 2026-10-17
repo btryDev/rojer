@@ -34,6 +34,7 @@ import {
   LifeBuoy,
   Package,
   Refrigerator,
+  ShowerHead,
   Shredder,
   Wind,
   Zap,
@@ -120,6 +121,9 @@ export const ICONE_CATEGORIE: Record<CategorieEquipement, Picto> = {
   // Le défibrillateur (2026-10-15) : le cœur et le tracé, ce que porte la
   // signalétique de l'arrêté du 29 octobre 2019. `LifeBuoy` est déjà pris.
   DEFIBRILLATEUR: HeartPulse,
+  // L'eau chaude collective (2026-10-17) : la pomme de douche, le point d'usage
+  // que nomme le libellé. `Droplets` est déjà le RIA, `Heater` le gaz.
+  EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC: ShowerHead,
   AUTRE: Package,
 };
 

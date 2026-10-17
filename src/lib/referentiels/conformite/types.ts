@@ -264,6 +264,24 @@ export const DOMAINES_OBLIGATION = [
    * réclame donc pas un tiers d'une catégorie particulière.
    */
   "epi",
+
+  /**
+   * Eau chaude sanitaire — arrêté du 1er février 2010 (légionelles), entré le
+   * 2026-10-17 par décision de la propriétaire.
+   *
+   * POURQUOI UN DOMAINE À LUI. La température mensuelle et l'analyse annuelle
+   * de légionelles ne relèvent d'aucun voisin : ni `incendie`, ni `aeration`,
+   * ni `stockage_dangereux`. Le domaine sert à grouper ce qu'un dirigeant lit
+   * dans son calendrier, et « Eau chaude sanitaire » lui dit de quoi il s'agit.
+   * Ses lignes naissent d'un équipement déclaré
+   * (`EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC`), comme les dix premiers domaines.
+   *
+   * SON PRESTATAIRE ATTENDU. L'art. 5 fait réaliser les prélèvements et les
+   * analyses par un laboratoire ou un organisme accrédité ; l'annuaire le
+   * range sous `carnet_sanitaire` (« Carnet sanitaire (eau) »), la valeur
+   * existante qui couvre ce métier.
+   */
+  "eau_chaude_sanitaire",
 ] as const;
 
 export type DomaineObligation = (typeof DOMAINES_OBLIGATION)[number];
