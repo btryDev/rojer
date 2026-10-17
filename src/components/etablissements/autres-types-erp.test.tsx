@@ -7,9 +7,10 @@ import { EtablissementForm } from "./EtablissementForm";
 // de la propriétaire contre le zèle : la majorité, à un seul type, ne voit
 // rien de plus qu'un lien replié, et aucun champ obligatoire n'est ajouté.
 //
-// Éprouvé en cassant (commit du lot) : `<details open>` par défaut — le
+// Éprouvé en cassant (commits du lot) : `<details open>` par défaut — le
 // premier test rougit ; la question du sommeil lue sur le premier type seul —
-// le dernier rougit.
+// le dernier rougit ; l'ancien premier non rendu à l'échange, et `open` lié
+// aux valeurs — leurs tests rougissent.
 
 afterEach(cleanup);
 
@@ -57,14 +58,35 @@ describe("fiche établissement : les autres types d'ERP", () => {
     expect(o.checked).toBe(true);
   });
 
-  it("le premier type n'est pas proposé parmi les autres, et en sort s'il y était", () => {
+  const coche = (c: HTMLElement, t: string) =>
+    c.querySelector<HTMLInputElement>(`input[name="typesErpAutres"][value="${t}"]`)?.checked;
+  const premier = (c: HTMLElement, t: string) =>
+    fireEvent.change(c.querySelector<HTMLSelectElement>('select[name="typeErp"]')!, { target: { value: t } });
+
+  it("échanger le premier type avec un autre garde les deux (revue du lot 3, C3)", () => {
+    // N en premier, O en autre ; le premier passe à O : l'hôtel-restaurant
+    // reste un hôtel-restaurant, N passe parmi les autres.
     const { container } = fiche("N", ["O"]);
     expect(container.querySelector('input[name="typesErpAutres"][value="N"]')).toBeNull();
-    fireEvent.change(container.querySelector<HTMLSelectElement>('select[name="typeErp"]')!, {
-      target: { value: "O" },
-    });
+    premier(container, "O");
     expect(container.querySelector('input[name="typesErpAutres"][value="O"]')).toBeNull();
-    expect(container.querySelector<HTMLInputElement>('input[name="typesErpAutres"][value="N"]')!.checked).toBe(false);
+    expect(coche(container, "N")).toBe(true);
+  });
+
+  it("corriger le premier type (N devient M) ne fait pas revenir N", () => {
+    const { container } = fiche("N", ["O"]);
+    premier(container, "M");
+    expect(coche(container, "N")).toBe(false);
+    expect(coche(container, "O")).toBe(true);
+  });
+
+  it("décocher le dernier type ne replie pas le panneau (revue du lot 3, C2)", () => {
+    // Lié aux valeurs, le panneau se repliait, et le focus restait sur une
+    // case devenue invisible.
+    const { container } = fiche("N", ["O"]);
+    fireEvent.click(container.querySelector<HTMLInputElement>('input[name="typesErpAutres"][value="O"]')!);
+    expect(coche(container, "O")).toBe(false);
+    expect(container.querySelector("details")!.open).toBe(true);
   });
 
   it("la question du sommeil apparaît dès qu'un des types l'appelle", () => {

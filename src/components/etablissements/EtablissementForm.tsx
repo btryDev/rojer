@@ -15,6 +15,7 @@ import {
   questionSommeilPosee,
 } from "@/lib/etablissements/schema";
 import { AutresTypesErp } from "./AutresTypesErp";
+import { autresApresChangementDuPremier } from "@/lib/etablissements/types-erp-affiches";
 import {
   LABEL_CATEGORIE_ERP,
   LABEL_TYPE_ERP,
@@ -485,9 +486,10 @@ export function EtablissementForm({
                       value={typeErp}
                       onChange={(e) => {
                         const t = e.currentTarget.value;
+                        // Le premier type ne figure pas parmi les autres
+                        // (contrainte en base) ; un échange garde l'ancien.
+                        setTypesErpAutres((v) => autresApresChangementDuPremier(v, typeErp, t, TYPE_ERP));
                         setTypeErp(t);
-                        // Le premier type ne figure pas parmi les autres (contrainte en base).
-                        setTypesErpAutres((v) => v.filter((x) => x !== t));
                       }}
                       required={estERP === true}
                       className="champ-board"

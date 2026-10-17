@@ -6,6 +6,7 @@ import {
   questionSommeilPosee,
 } from "@/lib/etablissements/schema";
 import { AutresTypesErp } from "@/components/etablissements/AutresTypesErp";
+import { autresApresChangementDuPremier } from "@/lib/etablissements/types-erp-affiches";
 import {
   LABEL_CATEGORIE_ERP,
   LABEL_TYPE_ERP,
@@ -180,8 +181,14 @@ export function StepTypologie({
                     value={state.typeErp}
                     onChange={(e) => {
                       const t = e.currentTarget.value;
-                      // Le premier type ne figure pas parmi les autres.
-                      const autres = state.typesErpAutres.filter((x) => x !== t);
+                      // Le premier type ne figure pas parmi les autres ; un
+                      // échange garde l'ancien (revue du lot 3, C3).
+                      const autres = autresApresChangementDuPremier(
+                        state.typesErpAutres,
+                        state.typeErp,
+                        t,
+                        TYPE_ERP,
+                      );
                       update({
                         typeErp: t,
                         typesErpAutres: autres,

@@ -402,6 +402,17 @@ describe("plusieurs types d'ERP au parcours (ADR-045, lot 3)", () => {
     ).toEqual(["O"]);
   });
 
+  it("échanger le premier type avec un autre garde les deux (revue du lot 3, C3)", async () => {
+    await allerEtape2AvecType("N");
+    caseO().click();
+    await souffler();
+    choisir(/Type d'ERP/, "O");
+    await souffler();
+    expect(
+      [...document.querySelectorAll<HTMLInputElement>('input[type="hidden"][name="typesErpAutres"]')].map((i) => i.value),
+    ).toEqual(["N"]);
+  });
+
   it("décocher O retire la question et la réponse", async () => {
     await allerEtape2AvecType("N");
     caseO().click();

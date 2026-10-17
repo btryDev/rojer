@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { TYPE_ERP } from "@/lib/etablissements/schema";
 import { LABEL_TYPE_ERP } from "@/lib/etablissements/labels";
 import { CHAMP_TEMOIN_TYPES_ERP_AUTRES } from "@/lib/etablissements/types-erp-affiches";
@@ -39,6 +40,11 @@ export function AutresTypesErp({
   erreur?: string;
 }) {
   const proposes = TYPE_ERP.filter((t) => t !== typeErp);
+  // Ouvert AU MONTAGE seulement s'il y a déjà des types (revue du lot 3, C2) :
+  // lié à `valeurs`, décocher le dernier type repliait le panneau, et le
+  // focus restait sur une case devenue invisible. Ensuite, c'est le
+  // dirigeant qui l'ouvre ou le ferme.
+  const [ouvert, setOuvert] = useState(valeurs.length > 0);
   const bascule = (t: string, coche: boolean) =>
     onChange(
       coche
@@ -49,7 +55,11 @@ export function AutresTypesErp({
   return (
     <div className="flex flex-col gap-2">
       {nom ? <input type="hidden" name={CHAMP_TEMOIN_TYPES_ERP_AUTRES} value="1" /> : null}
-      <details open={valeurs.length > 0} className="group">
+      <details
+        open={ouvert}
+        onToggle={(e) => setOuvert(e.currentTarget.open)}
+        className="group"
+      >
         <summary className="inline-flex cursor-pointer list-none items-center gap-2 text-[12.5px] font-semibold text-[color:var(--board-slate-ink)] transition-colors hover:text-[color:var(--board-ink)]">
           <span
             aria-hidden
@@ -61,7 +71,10 @@ export function AutresTypesErp({
           exemple, un hôtel avec restaurant)
         </summary>
 
-        <fieldset className="m-0 mt-3 flex flex-col gap-3 border-0 p-0">
+        <fieldset
+          aria-describedby="typesErpAutres-aide"
+          className="m-0 mt-3 flex flex-col gap-3 border-0 p-0"
+        >
           <legend className="sr-only">Autres types d&apos;ERP de l&apos;établissement</legend>
           <p
             id="typesErpAutres-aide"
@@ -87,7 +100,6 @@ export function AutresTypesErp({
                   value={t}
                   checked={valeurs.includes(t)}
                   onChange={(e) => bascule(t, e.currentTarget.checked)}
-                  aria-describedby="typesErpAutres-aide"
                   className={CASE_A_COCHER}
                 />
                 <span>{LABEL_TYPE_ERP[t]}</span>

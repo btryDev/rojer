@@ -46,3 +46,25 @@ export function typesErpAutresPostes(fd: FormData): string[] | undefined {
     .getAll("typesErpAutres")
     .filter((v): v is string => typeof v === "string" && v !== "");
 }
+
+/**
+ * Les autres types après un changement du premier (revue du lot 3, C3).
+ *
+ * Si le nouveau premier type venait des autres — un ÉCHANGE : N en premier et
+ * O en autre, le premier passe à O —, l'ancien premier prend sa place parmi
+ * les autres : l'hôtel-restaurant reste un hôtel-restaurant. Sinon, c'est une
+ * correction de saisie (N devient M) : l'ancien premier ne revient pas.
+ * Dans les deux cas, le nouveau premier ne figure pas parmi les autres
+ * (contrainte en base). L'ordre suit `ordre`, la liste des cases.
+ */
+export function autresApresChangementDuPremier(
+  autres: readonly string[],
+  ancien: string,
+  nouveau: string,
+  ordre: readonly string[],
+): string[] {
+  const echange = ancien !== "" && ancien !== nouveau && autres.includes(nouveau);
+  const garde = new Set(autres.filter((t) => t !== nouveau));
+  if (echange) garde.add(ancien);
+  return ordre.filter((t) => garde.has(t));
+}
