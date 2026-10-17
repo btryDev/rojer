@@ -124,6 +124,15 @@ export type Entree = {
    * `motif (références).` est tenue par un test.
    */
   mention?: string;
+  /**
+   * `false` : proposée, mais NON cochée au départ (2026-10-17, contrôle
+   * visuel du sous-lot F). Absent, la case part cochée, comme avant. Sert
+   * quand la suggestion dépend d'un fait que le contexte ne détient pas : un
+   * hôtel à ballons individuels qui validerait sans décocher recevrait des
+   * échéances qui ne le concernent pas. Le motif dit la condition ; c'est au
+   * dirigeant de cocher.
+   */
+  cocheeParDefaut?: false;
 };
 
 /**
@@ -144,6 +153,8 @@ type Suggestion = {
   libelle: string;
   motif: string;
   fondements: Fondement[];
+  /** Voir `Entree.cocheeParDefaut`. */
+  cocheeParDefaut?: false;
 };
 
 function entree(s: Suggestion): Entree {
@@ -155,6 +166,7 @@ function entree(s: Suggestion): Entree {
     ...(/livre II(?!I)/.test(citations)
       ? { mention: MENTION_SUR_APPLICATION_5E }
       : {}),
+    ...(s.cocheeParDefaut === false ? { cocheeParDefaut: false as const } : {}),
   };
 }
 
@@ -459,6 +471,9 @@ export function suggererEquipements(ctx: ContexteEtablissement): Entree[] {
         { obligationId: "ecs-legionelles-analyse-annuelle" },
         { obligationId: "ecs-temperature-mensuelle" },
       ],
+      // Proposée, pas cochée (contrôle visuel du 2026-10-17) : un hôtel à
+      // ballons individuels n'est pas visé, et le produit ne le sait pas.
+      cocheeParDefaut: false,
     });
   }
 

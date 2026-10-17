@@ -253,6 +253,13 @@ describe("la liste elle-même", () => {
     expect(materielNonCouvert("bain_a_remous")?.orienteVers?.categorie).toBe(
       "EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC",
     );
+    // Contrôle visuel du 2026-10-17 : l'encart se lit d'une traite — il ne
+    // dit plus « hors de son périmètre » avant de renvoyer vers une catégorie
+    // suivie.
+    const bain = materielNonCouvert("bain_a_remous")!;
+    expect(bain.phrase).not.toContain("hors de son périmètre");
+    expect(bain.phrase).toContain("le bain à remous lui-même");
+    expect(bain.orienteVers!.phrase).toMatch(/^Si son eau chaude est produite en commun/);
   });
 
   it("une clé inconnue ne rend rien", () => {

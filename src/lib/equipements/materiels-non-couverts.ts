@@ -348,7 +348,12 @@ export const MATERIELS_NON_COUVERTS: readonly MaterielNonCouvert[] = [
     cle: "bain_a_remous",
     libelle: "Bain à remous, spa ou jacuzzi",
     synonymes: ["bain à remous", "spa", "jacuzzi", "bain bouillonnant"],
-    phrase: `Rojer ne suit pas ${nonPorte("les bains à remous")} : ils sont hors de son périmètre. ${PHRASE_REGLES_SANITAIRES_PISCINES} ; un bain à remous n'en relève que s'il répond à leur définition.`,
+    // ~~`Rojer ne suit pas ${nonPorte("les bains à remous")} : ils sont hors de
+    // son périmètre. …`~~ — 2026-10-17, contrôle visuel du sous-lot F : « hors
+    // de son périmètre » suivi d'un renvoi vers une catégorie suivie ne se
+    // lisait pas d'une traite. La phrase dit ce que Rojer ne suit pas — le
+    // bain lui-même — et l'orientation dit l'eau chaude.
+    phrase: `Rojer ne suit pas ${nonPorte("le bain à remous lui-même")}. ${PHRASE_REGLES_SANITAIRES_PISCINES} ; un bain à remous n'en relève que s'il répond à leur définition.`,
     references: [
       { libelle: "Code de la santé publique, art. D. 1332-1", corpus: "CSP D. 1332-1" },
       { libelle: "Code de la santé publique, art. D. 1332-2", corpus: "CSP D. 1332-2" },
@@ -361,7 +366,7 @@ export const MATERIELS_NON_COUVERTS: readonly MaterielNonCouvert[] = [
     orienteVers: {
       categorie: "EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC",
       phrase:
-        "Un bain à remous accessible au public et alimenté par une eau chaude produite en commun est l'un des cas que visent les articles 1er et 2 de l'arrêté du 1er février 2010 : déclarez alors l'installation d'eau chaude, Rojer en suit la température une fois par mois et l'analyse de légionelles une fois par an, dans un établissement recevant du public.",
+        "Si son eau chaude est produite en commun et qu'il est accessible au public, déclarez plutôt l'installation d'eau chaude : dans un établissement recevant du public, Rojer en suit la température une fois par mois et l'analyse de légionelles une fois par an (arrêté du 1er février 2010, art. 1er, 2 et annexe 2).",
     },
   },
   {

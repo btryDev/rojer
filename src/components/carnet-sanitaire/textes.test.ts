@@ -74,6 +74,8 @@ describe("ce que Rojer fait, selon l'installation déclarée (2026-10-17, sous-l
     const t = ceQueRojerFait(true, false);
     expect(t).toContain("déclarez-la dans vos équipements");
     expect(t).toContain("un an après la dernière saisie");
+    // Contrôle visuel du 2026-10-17 : « rojer » en minuscule.
+    expect(t).not.toMatch(/\brojer\b/);
   });
 
   it("hors ERP, même déclarée : aucune ligne du référentiel, l'échéance du module reste", () => {

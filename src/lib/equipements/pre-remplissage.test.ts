@@ -488,6 +488,13 @@ describe("suggererEquipements — l'eau chaude collective, aux types O et X (202
     }
   });
 
+  it("proposée mais non cochée : le dirigeant coche s'il est concerné (contrôle visuel du 2026-10-17)", () => {
+    const s = suggererEquipements(erp(["O"]));
+    expect(s.find((e) => e.categorie === ECS)?.cocheeParDefaut).toBe(false);
+    // Les autres suggestions partent cochées, comme avant.
+    expect(s.filter((e) => e.categorie !== ECS).every((e) => e.cocheeParDefaut === undefined)).toBe(true);
+  });
+
   it("un O déclaré en second type suffit (ADR-045)", () => {
     expect(categories(suggererEquipements(erp(["N", "O"])))).toContain(ECS);
   });

@@ -78,7 +78,10 @@ export function ceQueRojerFait(estERP: boolean, installationDeclaree: boolean): 
   }
   const duModule =
     "Rojer n'inscrit rien à votre calendrier tant que vous n'avez pas ouvert de carnet, puis y inscrit l'analyse suivante un an après la dernière saisie — sans rappel par e-mail.";
+  // ~~`Sans cette déclaration, ${minuscule(duModule)}`~~ — 2026-10-17,
+  // contrôle visuel : la première lettre mise en minuscule rendait « rojer ».
+  // Deux phrases, la seconde garde sa majuscule.
   return estERP
-    ? `Si votre eau chaude est produite en commun et alimente des douches ou des bains à remous accessibles au public, déclarez-la dans vos équipements : Rojer inscrira à votre calendrier la température une fois par mois et l'analyse une fois par an. Sans cette déclaration, ${duModule.charAt(0).toLowerCase()}${duModule.slice(1)}`
+    ? `Si votre eau chaude est produite en commun et alimente des douches ou des bains à remous accessibles au public, déclarez-la dans vos équipements : Rojer inscrira à votre calendrier la température une fois par mois et l'analyse une fois par an. Sans cette déclaration : ${duModule}`
     : duModule;
 }
