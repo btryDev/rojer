@@ -21,6 +21,9 @@ export function StepResume({ state }: StepProps) {
   if (state.estERP) {
     const precisions = [
       state.typeErp ? typeErpLabel : null,
+      // ADR-045 : les autres types, par leur lettre — le premier porte déjà
+      // son libellé complet.
+      state.typesErpAutres.length > 0 ? `et ${state.typesErpAutres.join(", ")}` : null,
       state.categorieErp ? `${state.categorieErp.slice(1)}ᵉ cat.` : null,
     ].filter(Boolean);
     regimes.push(

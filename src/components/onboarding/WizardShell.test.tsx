@@ -365,6 +365,56 @@ describe("la question des locaux à sommeil au parcours (2026-09-09)", () => {
   });
 });
 
+describe("plusieurs types d'ERP au parcours (ADR-045, lot 3)", () => {
+  // La majorité ne voit qu'un lien replié ; un restaurant qui exploite un
+  // hôtel coche O, et la question du sommeil lui est posée. Éprouvé en
+  // ouvrant le lien par défaut et en lisant le sommeil sur le premier type
+  // seul : rouge.
+  async function allerEtape2AvecType(type: string) {
+    render(<WizardShell />);
+    remplirEtape1();
+    await souffler();
+    screen.getByRole("button", { name: /Suivant/ }).click();
+    await souffler();
+    screen.getAllByRole("button", { name: /^Oui$/ })[0].click();
+    await souffler();
+    choisir(/Type d'ERP/, type);
+    await souffler();
+  }
+  const caseO = () =>
+    screen.getByRole("checkbox", { name: /^O · Hôtel/ }) as HTMLInputElement;
+
+  it("un lien replié, rien de coché, et rien de posté hors le témoin", async () => {
+    await allerEtape2AvecType("N");
+    expect(document.querySelector("details")!.open).toBe(false);
+    expect(document.querySelectorAll('input[type="hidden"][name="typesErpAutres"]').length).toBe(0);
+    expect(document.querySelector('input[type="hidden"][name="typesErpAutresAffiche"]')).not.toBeNull();
+  });
+
+  it("cocher O pose la question du sommeil à un restaurant, et poste le type", async () => {
+    await allerEtape2AvecType("N");
+    expect(screen.queryByLabelText(/Hébergement du public pour la nuit/)).toBeNull();
+    caseO().click();
+    await souffler();
+    expect(screen.getByLabelText(/Hébergement du public pour la nuit/)).toBeTruthy();
+    expect(
+      [...document.querySelectorAll<HTMLInputElement>('input[type="hidden"][name="typesErpAutres"]')].map((i) => i.value),
+    ).toEqual(["O"]);
+  });
+
+  it("décocher O retire la question et la réponse", async () => {
+    await allerEtape2AvecType("N");
+    caseO().click();
+    await souffler();
+    choisir(/Hébergement du public pour la nuit/, "oui");
+    await souffler();
+    caseO().click();
+    await souffler();
+    expect(screen.queryByLabelText(/Hébergement du public pour la nuit/)).toBeNull();
+    expect(document.querySelector('input[type="hidden"][name="comporteLocauxSommeilPublic"]')).toBeNull();
+  });
+});
+
 describe("la question du nombre de personnes au parcours (2026-09-20)", () => {
   const LIBELLE = /Personnes pouvant se trouver habituellement/;
   const champPoste = () =>

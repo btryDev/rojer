@@ -36,6 +36,8 @@ export type OnboardingState = {
   estHabitation: boolean | null;
 
   typeErp: string;
+  /** Les autres types d'ERP (ADR-045) — vide pour la majorité. */
+  typesErpAutres: string[];
   categorieErp: string;
 
   // Locaux à sommeil pour le public — posée depuis le 2026-09-09, et seulement
@@ -75,6 +77,7 @@ export const VALEURS_INITIALES: OnboardingState = {
   estIGH: null,
   estHabitation: null,
   typeErp: "",
+  typesErpAutres: [],
   categorieErp: "",
   comporteLocauxSommeilPublic: "",
   personnesPresentesHabituellement: "",

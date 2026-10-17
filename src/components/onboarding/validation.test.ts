@@ -449,3 +449,18 @@ describe("matières « oui » : le nombre de personnes n'est plus demandé (revu
     expect(nombreDePersonnesDemande({ ...erp5, manipuleMatieresR422722: "oui" })).toBe(false);
   });
 });
+
+describe("plusieurs types d'ERP — la réponse sur le sommeil est due dès qu'un des types l'appelle (ADR-045)", () => {
+  const erp = {
+    ...complet,
+    estERP: true,
+    typeErp: "N",
+    categorieErp: "N3",
+  };
+  it("N + O sans réponse : refusé sur le champ du sommeil", () => {
+    expect(validerTypologie({ ...erp, typesErpAutres: ["O"] })?.champ).toBe("comporteLocauxSommeilPublic");
+  });
+  it("N + M : la question n'est pas posée", () => {
+    expect(validerTypologie({ ...erp, typesErpAutres: ["M"] })?.champ).not.toBe("comporteLocauxSommeilPublic");
+  });
+});

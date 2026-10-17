@@ -541,6 +541,17 @@ function ChampsCaches({ state }: { state: OnboardingState }) {
         value={reponseOuiNon(state.estHabitation)}
       />
       <input type="hidden" name="typeErp" value={state.typeErp} />
+      {/* Les autres types (ADR-045), un champ par type, et le témoin qui dit
+          que la liste a été montrée — vide comprise. Seulement pour un ERP :
+          hors ERP, rien n'est posté, et le schéma refuserait une liste. */}
+      {state.estERP ? (
+        <>
+          <input type="hidden" name="typesErpAutresAffiche" value="1" />
+          {state.typesErpAutres.map((t) => (
+            <input key={t} type="hidden" name="typesErpAutres" value={t} />
+          ))}
+        </>
+      ) : null}
       <input type="hidden" name="categorieErp" value={state.categorieErp} />
       {/* Locaux à sommeil. Le champ n'est POSTÉ QUE S'IL A UNE RÉPONSE : « je
           ne sais pas encore » ne s'envoie pas, et le schéma le lirait de toute

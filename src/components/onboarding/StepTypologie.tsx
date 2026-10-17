@@ -3,8 +3,9 @@
 import {
   CATEGORIES_ERP,
   TYPE_ERP,
-  TYPES_ERP_QUESTION_LOCAUX_SOMMEIL,
+  questionSommeilPosee,
 } from "@/lib/etablissements/schema";
+import { AutresTypesErp } from "@/components/etablissements/AutresTypesErp";
 import {
   LABEL_CATEGORIE_ERP,
   LABEL_TYPE_ERP,
@@ -69,9 +70,12 @@ export function StepTypologie({
    * SOUS le type, dans la même étape, et pas ailleurs : elle a besoin de la
    * réponse au type pour savoir si elle doit exister.
    */
-  const poseLocauxSommeil = (
-    TYPES_ERP_QUESTION_LOCAUX_SOMMEIL as readonly string[]
-  ).includes(state.typeErp);
+  const poseLocauxSommeil = questionSommeilPosee({
+    estERP: true,
+    typeErp: state.typeErp,
+    // ADR-045 : dès qu'un des types l'appelle.
+    typesErpAutres: state.typesErpAutres,
+  });
 
   /**
    * Le nombre de personnes n'est demandé qu'à ceux dont la réponse change
@@ -137,6 +141,7 @@ export function StepTypologie({
                   update({
                     estERP: false,
                     typeErp: "",
+                    typesErpAutres: [],
                     categorieErp: "",
                     // Une réponse sur les locaux à sommeil donnée avant de
                     // décocher l'ERP n'a plus de question : la garder ferait
@@ -175,16 +180,18 @@ export function StepTypologie({
                     value={state.typeErp}
                     onChange={(e) => {
                       const t = e.currentTarget.value;
+                      // Le premier type ne figure pas parmi les autres.
+                      const autres = state.typesErpAutres.filter((x) => x !== t);
                       update({
                         typeErp: t,
+                        typesErpAutres: autres,
                         // Changer de type pour un type hors liste retire la
                         // question : la réponse déjà donnée part avec elle.
                         // La laisser en état ferait poster, depuis un écran qui
                         // ne montre plus rien, une déclaration sur un
-                        // établissement qui n'est plus celui-là.
-                        ...((
-                          TYPES_ERP_QUESTION_LOCAUX_SOMMEIL as readonly string[]
-                        ).includes(t)
+                        // établissement qui n'est plus celui-là. [ADR-045 : sur
+                        // l'ensemble des types.]
+                        ...(questionSommeilPosee({ estERP: true, typeErp: t, typesErpAutres: autres })
                           ? {}
                           : { comporteLocauxSommeilPublic: "" }),
                       });
@@ -210,6 +217,21 @@ export function StepTypologie({
                       {messagePour("typeErp")}
                     </p>
                   )}
+                  <AutresTypesErp
+                    typeErp={state.typeErp}
+                    valeurs={state.typesErpAutres}
+                    onChange={(autres) =>
+                      update({
+                        typesErpAutres: autres,
+                        // Même règle qu'au changement de type : une réponse
+                        // dont la question disparaît ne part pas.
+                        ...(questionSommeilPosee({ estERP: true, typeErp: state.typeErp, typesErpAutres: autres })
+                          ? {}
+                          : { comporteLocauxSommeilPublic: "" }),
+                      })
+                    }
+                    erreur={messagePour("typesErpAutres")}
+                  />
                 </div>
 
                 <div className="flex flex-col gap-3">
