@@ -44,15 +44,32 @@ const HORS_CADRE = "## 7. Hors cadre — couvert par la clause générale des me
  */
 const A_EVALUER = "## 8. Classés le 2026-10-13 — entrés dans la cible le 2026-10-12";
 
+/**
+ * 2026-10-16 — les manques nés de la lecture des chapitres de types d'ERP,
+ * OUVERTS : ni encodés, ni annoncés, ni hors cadre, en attente de la décision
+ * de la propriétaire. Même mécanisme que le § 8 du 2026-10-12 : le § 7 et
+ * cette section, disjoints, font ensemble les `obligation_manquante` de la
+ * cible. Quand la propriétaire aura tranché, chaque ligne sort d'ici.
+ */
+const OUVERTS_1016 = "## 9. À évaluer — lecture des chapitres de types d'ERP du 2026-10-16";
+
 /** Le document sans ses sections hors cadre et à évaluer, et chacune seule. */
-function decoupe(doc: string): { avant: string; horsCadre: string; aEvaluer: string } {
+function decoupe(doc: string): {
+  avant: string;
+  horsCadre: string;
+  aEvaluer: string;
+  ouverts: string;
+} {
   const i = doc.indexOf(HORS_CADRE);
   const j = doc.indexOf(A_EVALUER);
-  const finHorsCadre = j < 0 ? doc.length : j;
+  const k = doc.indexOf(OUVERTS_1016);
+  const finHorsCadre = j >= 0 ? j : k >= 0 ? k : doc.length;
+  const finAEvaluer = k < 0 ? doc.length : k;
   return {
     avant: i < 0 ? doc : doc.slice(0, i),
     horsCadre: i < 0 ? "" : doc.slice(i, finHorsCadre),
-    aEvaluer: j < 0 ? "" : doc.slice(j),
+    aEvaluer: j < 0 ? "" : doc.slice(j, finAEvaluer),
+    ouverts: k < 0 ? "" : doc.slice(k),
   };
 }
 
@@ -151,14 +168,99 @@ describe(`${CHEMIN} — la liste ne se périme pas en silence`, () => {
     // doivent diverger dans aucun sens : un article encodé ou annoncé depuis
     // qui y resterait promettrait une exclusion qui n'est plus ; un manque
     // de la cible entré depuis et absent d'ici ne serait couvert par rien.
-    const { horsCadre } = decoupe(documentCouverture());
+    // [2026-10-16 : le § 9 rouvre le mécanisme du 2026-10-12 — dix-huit
+    // manques de la lecture des chapitres de types, non classés. Le § 7 et le
+    // § 9, DISJOINTS, font ensemble les manques de la cible.]
+    const { horsCadre, ouverts } = decoupe(documentCouverture());
     expect(horsCadre, `${CHEMIN} n'a plus de section « ${HORS_CADRE} ».`).not.toBe("");
     const duCorpus = CORPUS.flatMap((c) =>
       c.articles.flatMap((a) =>
         a.statut === "obligation_manquante" && a.toucheLaCible ? [a.ref] : [],
       ),
     ).sort();
-    expect(refsDuTableau(horsCadre).sort()).toEqual(duCorpus);
+    const auSeptieme = refsDuTableau(horsCadre);
+    const auNeuvieme = refsDuTableau(ouverts);
+    expect(auSeptieme.filter((r) => auNeuvieme.includes(r))).toEqual([]);
+    expect([...auSeptieme, ...auNeuvieme].sort()).toEqual(duCorpus);
+  });
+
+  it("2026-10-16 — le § 9 ne reçoit que les manques de la lecture des chapitres de types", () => {
+    // Revue indépendante du 2026-10-17 : sans borne, le § 9 servait de
+    // fourre-tout. Déplacer `R. 4224-3` du § 7 au § 9 (mutation M2), ou y
+    // inscrire une manquante d'un autre corpus (M3), laissait tout vert. Une
+    // référence n'y entre que si elle vient du titre II, du chapitre V du
+    // livre III (PU) ou des huit articles du titre Ier ouverts par les renvois,
+    // ET si elle a été lue le 2026-10-16 ou après. Le § 7 et le § 9 restent
+    // disjoints (test précédent).
+    const { ouverts } = decoupe(documentCouverture());
+    expect(ouverts, `${CHEMIN} n'a plus de section « ${OUVERTS_1016} ».`).not.toBe("");
+    const DU_TITRE_IER = new Set([
+      "MS 41",
+      "MS 58 § 3 et § 4 — contrat d'entretien de la détection, annexé au registre",
+      "EC 13 — notice annexée au registre et entretiens consignés",
+      "MS 70 § 5 — modalités d'appel des sapeurs-pompiers affichées",
+      "GE 5",
+      "MS 46 § 3 — convention avec un organisateur, annexée au registre",
+      "EL 23 § 2 — vérification des installations électriques semi-permanentes",
+      "CO 48 § 3 e) — contrat d'entretien des portes automatiques",
+    ]);
+    // ~~`corpus === "arrete-1980-livre-2-titre-2"`~~ — 2026-10-17, seconde
+    // revue (mutation M4) : la borne admettait tout le titre II, M, N, O, W
+    // compris, sur une date de LECTURE qu'une relecture légitime déplace —
+    // `M 40 § 3 e)` relu le 2026-10-17 passait du § 7 au § 9 sans rien rougir.
+    // Le titre II est désormais borné aux NEUF CHAPITRES lus le 2026-10-16,
+    // par leur lettre de type.
+    const CHAPITRES_LUS_LE_16 = /^[JPRSTUVXY] (?:\d|annexe)/;
+    const admise = (corpus: string, ref: string) =>
+      (corpus === "arrete-1980-livre-2-titre-2" && CHAPITRES_LUS_LE_16.test(ref)) ||
+      (corpus === "arrete-1980-livre-3" && ref.startsWith("PU ")) ||
+      (corpus === "arrete-1980-livre-2" && DU_TITRE_IER.has(ref));
+    const horsBorne = refsDuTableau(ouverts).filter((ref) => {
+      const origines = CORPUS.flatMap((c) =>
+        c.articles
+          .filter((a) => a.ref === ref && a.statut === "obligation_manquante")
+          .map((a) => ({ corpus: c.id, luLe: a.luLe ?? "" })),
+      );
+      return !origines.some((o) => admise(o.corpus, ref) && o.luLe >= "2026-10-16");
+    });
+    // Et une référence classée HORS CADRE au § 7 — décisions de la propriétaire
+    // des 2026-09-27, 10-13, 10-14 et 10-15, relevées le 2026-10-17 — ne passe
+    // jamais au § 9, quelle que soit sa date de relecture. Une borne basse :
+    // une décision hors cadre plus récente se protège en s'ajoutant ici.
+    const CLASSES_HORS_CADRE = new Set([
+      "R. 4323-61",
+      "R. 4323-69",
+      "R. 4323-70",
+      "R. 4323-72",
+      "Arrêté 21-12-2004 art. 4",
+      "Arrêté 21-12-2004 art. 5",
+      "Arrêté 21-12-2004 art. 6",
+      "Arrêté 1993-11-04 art. 4",
+      "Arrêté 1993-11-04 art. 8",
+      "Arrêté 1993-11-04 art. 13",
+      "Arrêté 1993-11-04 annexe III",
+      "R. 4224-3",
+      "R. 4223-4",
+      "R. 4434-9",
+      "Arrêté 1993-03-05 art. 2",
+      "CO 61",
+      "GC 18",
+      "MS 69 — stock permanent de fournitures de rechange",
+      "M 40 § 3 e) — contrat d'entretien des machines de nettoyage à sec",
+      "MS 71",
+      "Arrêté 1986-01-31 art. 60",
+      "R. 4323-89",
+    ]);
+    expect(
+      refsDuTableau(ouverts).filter((r) => CLASSES_HORS_CADRE.has(r)),
+      `Une référence classée hors cadre au § 7 ne passe pas au § 9 de ${CHEMIN}.`,
+    ).toEqual([]);
+    expect(
+      horsBorne,
+      `Le § 9 de ${CHEMIN} ne reçoit que les manques nés de la lecture des ` +
+        `chapitres de types (titre II, PU, huit articles du titre Ier), lus le ` +
+        `2026-10-16 ou après. Hors borne : ${horsBorne.join(", ")}.`,
+    ).toEqual([]);
   });
 
   it("2026-10-13 — chaque ligne du § 8 a reçu un sort que le corpus porte", () => {

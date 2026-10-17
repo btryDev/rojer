@@ -163,7 +163,7 @@ sixième `??` recopié.
 C'est la limite la plus importante de ce document, et la raison directe du
 retrait de la carte.
 
-~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ ~~Les 66 articles (2026-10-07, l'IGH, les équipements sous pression et le stockage de matières dangereuses en partie retirés)~~ ~~Les 70 articles (2026-10-13, quatre manques de la cible redéfinie annoncés)~~ ~~Les 72 articles (2026-10-13, six manques de la cible redéfinie annoncés)~~ ~~Les 73 articles (2026-10-13, sept manques de la cible redéfinie annoncés)~~ ~~Les 74 articles (2026-10-14, `L. 8222-1-1` dit sur la page Prestataires)~~ ~~Les 77 articles (2026-10-14, quatre articles cités par l'aide des catégories entrés au corpus)~~ Les 78 articles (2026-10-14, intégration des deux lots : 73 + 1 + 4) ci-dessous sont ceux que le dépouillement a lus, qui imposent
+~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ ~~Les 66 articles (2026-10-07, l'IGH, les équipements sous pression et le stockage de matières dangereuses en partie retirés)~~ ~~Les 70 articles (2026-10-13, quatre manques de la cible redéfinie annoncés)~~ ~~Les 72 articles (2026-10-13, six manques de la cible redéfinie annoncés)~~ ~~Les 73 articles (2026-10-13, sept manques de la cible redéfinie annoncés)~~ ~~Les 74 articles (2026-10-14, `L. 8222-1-1` dit sur la page Prestataires)~~ ~~Les 77 articles (2026-10-14, quatre articles cités par l'aide des catégories entrés au corpus)~~ ~~Les 78 articles (2026-10-14, intégration des deux lots : 73 + 1 + 4)~~ Les 76 articles (2026-10-16, lecture des chapitres de types d'ERP : 78 − 6 + 4) ci-dessous sont ceux que le dépouillement a lus, qui imposent
 quelque chose à un exploitant, et que le référentiel ne porte pas. **Rien ne les
 restreint aux établissements que leur chapitre vise** — sauf les ~~vingt-cinq
 annoncés le 2026-09-27~~ ~~trente-trois~~ trente-cinq annoncés (vingt-cinq le
@@ -296,9 +296,18 @@ propriétaire du 2026-10-14).
 par l'aide des catégories, entrent au corpus `non_couvert` — voir § 3,
 « Annoncés le 2026-10-14 ».
 
+**Puis 78 − 6 + 4 = 76** (2026-10-16, lecture des chapitres de types d'ERP,
+`lot/erp-chapitres-types-1016`) : les six articles du chapitre V du livre III
+(petits établissements de soins) quittent `non_couvert` — leur motif commun
+renvoyait à U 51 – U 64, « non dépouillé », et ces articles sont désormais
+lus ; chacun est reclassé pour lui-même (quatre construction ou champ, deux
+manques au § 9). Quatre articles du titre II entrent `non_couvert`, annoncés
+par la phrase de manque de l'axe `categorie_erp` — voir § 3, « Types d'ERP lus
+le 2026-10-16 ».
+
 ---
 
-## 3. Les 78 articles lus et non portés
+## 3. Les 76 articles lus et non portés
 
 ~~Cinq familles~~ ~~Neuf familles (compte refait le 2026-09-26)~~ Dix-huit familles (compte refait le 2026-09-27, C45), une dixième étant sortie de la liste le 2026-09-01 (voir
 ci-dessous). Les motifs sont ceux du corpus, cités et non réécrits : ils ont
@@ -375,22 +384,58 @@ pas été ouvert.
 > généralisée. Aucune périodicité, mais un attribut d'établissement de plus que
 > le modèle ne porte, distinct de « locaux à sommeil ».
 
-### Petits établissements de soins (type U) — 6 articles
+### Petits établissements de soins (type U) — la famille est SORTIE de cette liste (2026-10-16)
 
-`PU 1` · `PU 2` · `PU 3` · `PU 4` · `PU 5` · `PU 6`
+Six articles y figuraient — PU 1 à PU 6 —, sous le motif commun cité
+ci-dessous, rayé. Relus par l'API le 2026-10-16 avec les chapitres de types :
+le renvoi de PU 5 aux articles U 51 à U 64 est ouvert, et le motif commun ne
+tenait pas — il disait « manque de couverture » pour quatre articles qui
+n'imposent qu'une construction ou un champ. PU 1 est `sans_objet` (champ :
+établissements « à construire ou à modifier »), PU 2 à PU 4 sont
+`hors_perimetre` / construction, PU 5 (gaz médicaux) et PU 6 (personnel
+soignant formé) sont des manques ouverts, au § 9.
 
-> Chapitre V — petits établissements de soins (type U). Ces articles n'imposent
-> aucune échéance récurrente à l'exploitant : ce sont des règles de construction
-> et d'équipement, plus un renvoi aux articles PE.
+> ~~Chapitre V — petits établissements de soins (type U). Ces articles n'imposent~~
+> ~~aucune échéance récurrente à l'exploitant : ce sont des règles de construction~~
+> ~~et d'équipement, plus un renvoi aux articles PE.~~
 
 ### Établissements sportifs — 1 article
 
 `PX 1`
 
 > Chapitre VI — établissements sportifs. Article de pur renvoi qui importe tout
-> le chapitre XII du Livre II, non dépouillé. Les équipements sportifs figurent
+> le chapitre XII du Livre II~~, non dépouillé~~ [2026-10-16 : le chapitre XII
+> (type X) est lu en entier et classé au corpus `arrete-1980-livre-2-titre-2`.
+> Ce que le renvoi importe en 5ᵉ catégorie : des règles de construction et de
+> dotation, le traitement des eaux des piscines (exclusion
+> `risque_specialise`), et un seul acte, l'interdiction de fumer rappelée par
+> une signalisation (X 25), à évaluer — si c'est une « disposition technique »
+> au sens du renvoi, elle vaut aussi pour la petite salle de sport]. Les équipements sportifs figurent
 > par ailleurs parmi les risques spécialisés que le produit déclare ne pas
 > traiter.
+
+### Types d'ERP des catégories 1 à 4 lus le 2026-10-16 — 4 articles
+
+`S 18` · `T 4` · `T 48` · `Y 11`
+
+Annoncés par la phrase de manque de l'axe `categorie_erp`
+(`src/lib/perimetre/couverture.ts`), servie à tout ERP des catégories 1 à 4 :
+« le service de sécurité incendie assuré par des agents de sécurité incendie,
+notamment, n'y est pas, et des dispositions particulières par type d'activité,
+il ne porte que quelques-unes ». Deux motifs au corpus :
+
+> `S 18`, `T 48` — Service de sécurité incendie assuré par des AGENTS DE
+> SÉCURITÉ INCENDIE (MS 46 § 1 b), ou composé d'un effectif fixé, au-delà d'un
+> seuil de public ou en 1ʳᵉ catégorie. Comme M 29 § 2 à § 4 et L 14, Rojer ne
+> le suit pas : un effectif présent n'est ni un acte daté ni une pièce, et le
+> produit ne connaît pas l'effectif du public.
+
+> `T 4` — le cahier des charges que le propriétaire d'un hall d'expositions
+> annexe au registre de sécurité, avec l'organisateur de chaque manifestation
+> et avec ses locataires permanents : cas de niche pour la cible, ligne de
+> partage 5. `Y 11` — le dépoussiérage annuel des vélums d'un musée, qui
+> suppose un aménagement que Rojer ne connaît pas : même famille que L 57 § 3,
+> classé de même que la lecture du chapitre L le recommande.
 
 ### Gaz en habitation collective — 1 article
 
@@ -1043,3 +1088,48 @@ l'annonce » : sept annoncées, cinq hors cadre ; manquantes **20** ;
 | `Arrêté 1986-01-31 art. 102` | Habitation | `evenement` | ~~Hors cadre (§ 7)~~ Annoncé — Immeuble d'habitation (après revue) |
 | `R. 4544-11` | Employeur, travaux sous tension | `a_trancher` | ~~Hors cadre (§ 7)~~ Annoncé — Électricité |
 | `R. 4323-89` | Employeur, travail sur cordes | `activite_exercee` | Hors cadre (§ 7) |
+
+## 9. À évaluer — lecture des chapitres de types d'ERP du 2026-10-16
+
+~~Dix-huit~~ ~~Vingt-six~~ Vingt-huit [2026-10-17, revue indépendante : + 8 articles du
+titre Ier ouverts en suivant les renvois, + 2 actes « piscines » du type X sortis de l'exclusion] manques nés de la lecture des
+chapitres P, R, S, T, U, V, X, Y et J du livre II, titre II (catégories 1 à 4),
+du chapitre V du livre III, et des renvois de ces chapitres au titre Ier
+(`lot/erp-chapitres-types-1016`). **OUVERTS : ni encodés, ni annoncés, ni hors
+cadre.** Le plan, article par article, et la façon d'encoder chaque
+proposition : `propositions/lecture-chapitres-types-erp-2026-10-16.md`. Même
+mécanisme que le § 8 du 2026-10-12 : le § 7 et ce § 9, disjoints, font
+ensemble les `obligation_manquante` qui touchent la cible
+(`doc-couverture.test.ts`). Chaque ligne sort d'ici quand la propriétaire l'a
+tranchée. Manquantes : ~~22 + 18 − 0 = 40~~ ~~22 + 26 − 0 = 48~~ 22 + 28 − 0 = **50**, toutes dans la cible.
+
+| Article | Ce qui la met dans la cible | Cause au corpus | Proposition |
+|---|---|---|---|
+| `J 35` | Type J dès 20 ou 25 places d'hébergement (J 1) | `libre` | Rattacher à `incendie-erp-personnel-designe-moyens-secours` |
+| `P 21` | Type P dès 120 personnes (P 1) | `libre` | Rattacher à `incendie-erp-personnel-designe-moyens-secours` |
+| `S 15` | Type S dès 200 personnes (S 1) | `libre` | Rattacher à `incendie-erp-personnel-designe-moyens-secours` |
+| `U 43` | Type U dès 20 lits ou 100 personnes (U 1) | `libre` | Rattacher à `incendie-erp-personnel-designe-moyens-secours` |
+| `Y 19` | Type Y dès 200 personnes (Y 1) | `libre` | Rattacher à `incendie-erp-personnel-designe-moyens-secours` |
+| `T 52` | Type T, salle d'exposition permanente dès 200 personnes (T 1 § 2) | `libre` | Rattacher à `incendie-erp-interdiction-fumer-affichee` |
+| `X annexe` | Piscine couverte dès 200 personnes ; 5ᵉ catégorie par PX 1 | `a_trancher` | Avec X 25 : sortie de l'exclusion « piscines » ou non ; sinon catégorie « désinfection des eaux de piscine », trois lignes |
+| `X 1 § 2 — affichage de l'effectif des piscines transformables et mixtes` | Piscine transformable ou mixte | `a_trancher` | Avec X 25 : affichage de l'effectif |
+| `X 25` | Type X dès 200 personnes (X 1) ; 5ᵉ catégorie par PX 1 | `a_trancher` | Rattacher à `incendie-erp-interdiction-fumer-affichee`, si l'exclusion « équipements sportifs » ne la retient pas |
+| `U 41` | Type U | `libre` | Rattacher à `incendie-erp-schema-organisation-securite` |
+| `PU 6` | ~~Type U de 5ᵉ catégorie avec locaux à sommeil~~ Type U de 5ᵉ catégorie avec locaux à sommeil, à construire ou à modifier (PU 1) [2026-10-17] | `libre` | Ajouter en référence de `incendie-erp-5-instruction-personnel` |
+| `J 39` | Type J | `libre` | Ligne nouvelle : exercices semestriels (rythme écrit) |
+| `R 33` | Type R (crèche en étage quel que soit l'effectif, R 1) | `libre` | Ligne nouvelle : exercices d'évacuation, un par année scolaire, consignés au registre |
+| `U 47` | Type U | `libre` | Ligne nouvelle : formation et exercices, défaut annuel (ADR-039) |
+| `J 40` | Type J | `libre` | Ligne nouvelle commune J et U : consignes affichées (et remises aux résidents en J) |
+| `U 48` | Type U | `libre` | Ligne nouvelle commune J et U : consignes affichées |
+| `J 33` | Type J | `categorie_equipement` | ~~Catégorie « gaz médicaux » ; vérification annuelle et consignes rappelées~~ [2026-10-17] **Décision** (catégorie d'équipement nouvelle) : vise les équipements MOBILES d'oxygénothérapie, seuls admis en J (J 32) ; vérification annuelle et consignes rappelées |
+| `U 64` | Type U | `categorie_equipement` | ~~Catégorie « gaz médicaux » ; vérification annuelle (rythme écrit)~~ [2026-10-17] **Décision** (catégorie d'équipement nouvelle) : vise les STOCKAGES et RÉSEAUX de distribution de gaz médicaux ; vérification annuelle (rythme écrit) |
+| `U 62` | Type U | `categorie_equipement` | ~~Catégorie « gaz médicaux » ; consignes rappelées, défaut annuel~~ [2026-10-17] **Décision**, avec U 64 : consignes rappelées, défaut annuel |
+| `PU 5` | Type U de 5ᵉ catégorie à construire ou à modifier (PU 1) | `categorie_equipement` | ~~Les deux lignes des gaz médicaux étendues à la 5ᵉ, borne à trancher~~ [2026-10-17] **Décision**, avec U 64 : les deux lignes étendues à la 5ᵉ ; la borne « à construire ou à modifier » n'a pas d'attribut |
+| `MS 41` | Tout ERP des catégories 1 à 4 | ~~`libre`~~ `a_trancher` | ~~Ligne nouvelle N1–N4 : plan d'intervention à chaque entrée (porté en 5ᵉ avec sommeil seulement)~~ [2026-10-17] Attend la décision A6 (GN 10), comme PE 27 § 6 |
+| `MS 58 § 3 et § 4 — contrat d'entretien de la détection, annexé au registre` | ERP des catégories 1 à 4 avec détection | `libre` | Ligne sur `ALARME_INCENDIE` N1–N4, patron de PE 4 § 1 |
+| `EC 13 — notice annexée au registre et entretiens consignés` | ERP des catégories 1 à 4 | `libre` | Ligne d'état permanent sur `BAES` N1–N4 (notice annexée) |
+| `MS 70 § 5 — modalités d'appel des sapeurs-pompiers affichées` | ERP des catégories 1 à 4 | ~~`libre`~~ `a_trancher` | ~~Référence à la ligne de D. 4711-1, ou ligne propre~~ [2026-10-17] Attend la décision A6 (GN 10), comme PE 27 § 6 |
+| `GE 5` | ERP des catégories 1 à 4 ; 5ᵉ avec sommeil par PE 37 | `libre` | Ligne nouvelle : avis de contrôle affiché |
+| `CO 48 § 3 e) — contrat d'entretien des portes automatiques` | ERP des catégories 1 à 4 avec porte automatique | `libre` | Ligne d'état permanent sur `PORTE_AUTO` N1–N4 (le contrat) |
+| `MS 46 § 3 — convention avec un organisateur, annexée au registre` | ERP sans hébergement jusqu'à 300 personnes, hors 1ʳᵉ | `relation_tiers` | Annoncer |
+| `EL 23 § 2 — vérification des installations électriques semi-permanentes` | ERP des catégories 1 à 4 qui montent des installations temporaires | `evenement` | Annoncer, ou ligne événementielle |
