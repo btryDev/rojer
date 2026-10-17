@@ -43,6 +43,8 @@ describe("registre de dette — les obligations manquantes", () => {
     // la propriétaire décide, et la liste se vide à l'encodage. Le plan :
     // `propositions/lecture-chapitres-types-erp-2026-10-16.md`.
     expect(parCause("libre").map((a) => a.ref)).toEqual([
+      // Seconde relecture du 2026-10-17 : `PE 18`, ligne de partage 10.
+      "PE 18",
       "PU 6",
       // 2026-10-17, revue indépendante : ~~six~~ quatre articles du titre Ier ouverts
       // en suivant les renvois des chapitres de types, au corpus
@@ -52,6 +54,36 @@ describe("registre de dette — les obligations manquantes", () => {
       "EC 13 — notice annexée au registre et entretiens consignés",
       "GE 5",
       "CO 48 § 3 e) — contrat d'entretien des portes automatiques",
+      // 2026-10-17, `lot/ref-a-corpus-titre-1` : le titre Ier lu en entier,
+      // quinze actes que rien ne bloque — rattachements à une ligne existante
+      // (registre, exercices, personnel désigné, visites, désenfumage) ou
+      // lignes proposées au plan du 2026-10-17 (§ 4). Transitoires : le
+      // sous-lot C les rattache ou les encode.
+      // Revue du même jour : ~~"CH 23"~~, ~~"CH 24"~~ (annonces décidées,
+      // `non_couvert`) sortent ; `CH 17`, `EL 17`, `GC 15`, `MS 66` entrent.
+      "GE 3",
+      "GE 10",
+      // Seconde relecture du 2026-10-17 (ligne de partage 11, affichages) :
+      "CO 45 § 5 — inscription « sans issue » des portes en cul-de-sac",
+      "CO 47 § 2 — avertissement porté par les portes coupe-feu maintenues ouvertes",
+      "CO 59 — g) consignes affichées dans l'espace d'attente sécurisé",
+      "DF 9",
+      "CH 17",
+      "CH 38 — 6° avertissement affiché aux accès des filtres",
+      "CH 52",
+      "EL 17",
+      "AS 11",
+      "GC 4",
+      "GC 15",
+      "MS 51",
+      "MS 52",
+      "MS 57",
+      "MS 66",
+      "MS 67",
+      "MS 68",
+      "MS 72",
+      "MS 74",
+      "MS 75",
       "P 21",
       "R 33",
       "S 15",
@@ -101,7 +133,14 @@ describe("registre de dette — les obligations manquantes", () => {
       // titre Ier ouverts par les renvois, 13 + 6 − 0.
       // [19, 0] → [17, 0] le 2026-10-17 (seconde revue) : `MS 41` et `MS 70 § 5`
       // passent `a_trancher`, politique sœur de PE 27 § 6 (GN 10, décision A6).
-      libre: [17, 0],
+      // [17, 0] → [32, 0] le 2026-10-17 (`lot/ref-a-corpus-titre-1`, titre Ier
+      // lu en entier) : 17 + 15 − 0, voir le test des « libres ».
+      // [32, 0] → [34, 0] après la revue du même jour : 32 − 2 + 4 — `CH 23`,
+      // `CH 24` annoncés ; `CH 17`, `EL 17`, `GC 15`, `MS 66` entrent.
+      // [34, 0] → [40, 0] après la seconde relecture : 34 + 6 — `CO 45 § 5`,
+      // `CO 47 § 2`, `CO 59 — g)`, `CH 38 — 6°`, `CH 52` (affichages, ligne de
+      // partage 11) et `PE 18` (présence, ligne de partage 10).
+      libre: [40, 0],
       // 9 → 6 le 2026-09-21 : les trois de la chaleur intense (`R. 4463-4`,
       // `-5`, `-7`) sont encodées sur la page « Quand ça arrive ».
       // 6 → 0 le même jour : cinq relues à la source et encodées ; la sixième,
@@ -111,6 +150,9 @@ describe("registre de dette — les obligations manquantes", () => {
       // [1, 0] → [0, 0] le 2026-10-13 : arrêté 1986 art. 102 annoncé (`non_couvert`).
       // [0, 0] → [1, 0] le 2026-10-17 : `EL 23 § 2`, la vérification des
       // installations semi-permanentes à chaque montage.
+      // [1, 0] → [2, 0] le 2026-10-17 (`lot/ref-a-corpus-titre-1`) : `MS 42`
+      // § 2, les plans fournis à la demande des sapeurs-pompiers.
+      // [2, 0] → [1, 0] le même jour : `MS 42` passe `non_couvert` (décision de c6).
       evenement: [1, 0],
       // [5, 6] → [11, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : `GZ 13`, `GZ 14`, `CO 61`,
       // `AS 10`, `GC 18`, arrêté 2018-02-23 art. 26 § 3.
@@ -120,10 +162,21 @@ describe("registre de dette — les obligations manquantes", () => {
       // [7, 0] → [11, 0] le 2026-10-16 : les gaz médicaux, `J 33`, `U 62`,
       // `U 64` (titre II) et `PU 5` (livre III), 7 + 4 − 0 ; à évaluer, rien
       // d'encodé.
+      // [11, 0] → [16, 0] le 2026-10-17 (`lot/ref-a-corpus-titre-1`, titre Ier
+      // lu en entier) : 11 + 5 − 0 — `CO 10` (dispositif de franchissement),
+      // `AM 18` (sièges rembourrés), `CH 35` (fluide frigorigène inflammable,
+      // une propriété que la catégorie ne porte pas), `AS 5` (ascenseur
+      // d'évacuation), `AS 8` (escalier mécanique, matériel non couvert).
+      // [16, 0] → [13, 0] le même jour (décision de c6) : `CO 10`, `AM 18`,
+      // `CH 35` passent `non_couvert`.
+      // [13, 0] → [11, 0] après la revue : `AS 5`, `AS 8` annoncés (`non_couvert`).
       categorie_equipement: [11, 0],
       // 4 → 1 le 2026-09-27 (C45) : `R. 4227-23`, `R. 4227-24` et l'art. 8 de
       // l'arrêté du 10 septembre 2021 passent `non_couvert`, annoncés.
       // [1, 2] → [3, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : `MS 71`, arrêté 1986 art. 60.
+      // [3, 0] → [5, 0] le 2026-10-17 (`lot/ref-a-corpus-titre-1`) : `T 29` § 3
+      // et `T 33` § 2, la puissance installée que Rojer ne connaît pas.
+      // [5, 0] → [3, 0] après la revue : `T 29`, `T 33` annoncés (`non_couvert`).
       attribut_etablissement: [3, 0],
       // 5 → 0 le 2026-09-27 (C45) : `R. 1321-60` et les art. 4, 9, 10, 12 de
       // l'arrêté du 10 septembre 2021, annoncés (`non_couvert`).
@@ -134,7 +187,9 @@ describe("registre de dette — les obligations manquantes", () => {
       // annoncé. Restent quatre HORS CADRE (`R. 4323-61`, `-69`, arrêté 1993
       // art. 8 et annexe III).
       // [4, 1] → [5, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : `R. 4323-89`.
-      activite_exercee: [5, 0],
+      // [5, 0] → [6, 0] le 2026-10-17 (revue de `lot/ref-a-corpus-titre-1`) :
+      // `M 35`, machines-outils mises à la disposition du public.
+      activite_exercee: [6, 0],
       // 3 → 0 le 2026-09-27 (C45) : `L. 8222-1`, `D. 8222-5`, `D. 8222-7`
       // annoncés.
       // [0, 0] → [1, 0] le 2026-10-17 : `MS 46 § 3`, la convention avec un
@@ -213,8 +268,15 @@ describe("registre de dette — les obligations manquantes", () => {
     // `MS 58 § 3 et § 4`, `EC 13`, `MS 70 § 5`, `GE 5`, `MS 46 § 3`,
     // `EL 23 § 2`, `CO 48 § 3 e)`), au § 9.
     // 48 → 50 le 2026-10-17 : 48 + 2 − 0 — `X annexe` et `X 1 § 2`.
-    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(50);
-    expect(manquantes.length).toBe(50);
+    // 50 → 71 le 2026-10-17 (`lot/ref-a-corpus-titre-1`) : 50 + 21 − 0 — les
+    // vingt et un actes du titre Ier lu en entier, tous dans la cible.
+    // 71 → 69 le même jour : 71 − 4 + 2 (décision de c6 : `CO 10`, `AM 18`,
+    // `CH 35`, `MS 42` annoncés ou muets ; `T 29`, `T 33` entrent).
+    // 69 → 68 après la revue : 69 − 6 + 5 (annonces décidées sorties ; CH 17,
+    // EL 17, GC 15, MS 66, M 35 entrés).
+    // 68 → 74 après la seconde relecture : 68 + 6 − 0.
+    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(74);
+    expect(manquantes.length).toBe(74);
   });
 });
 

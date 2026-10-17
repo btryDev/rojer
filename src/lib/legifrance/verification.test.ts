@@ -210,6 +210,51 @@ describe("analyser", () => {
     expect(r.constats[0].detail).toContain("2021-07-01");
   });
 
+  // 2026-10-17 (revue de `lot/ref-a-corpus-titre-1`) : 24 abrogés du livre II
+  // faisaient sortir le script en code 1 à chaque passage, ce qui rendait le
+  // code inutilisable. Consigné (`sans_objet` + texte abrogeant nommé), un
+  // abrogé n'est plus un écart ; sans l'une des deux, il le reste.
+  describe("article abrogé consigné au corpus", () => {
+    const ABROGEANT = "Arrêté du 14 février 2000 - art. Annexe, v. init.";
+    const abroge: ArticleApi = {
+      ...EN_VIGUEUR,
+      etat: "ABROGE",
+      dateFin: J("2000-06-21"),
+      articleVersions: [{ id: EN_VIGUEUR.id, etat: "ABROGE", dateDebut: J("1980-08-15"), dateFin: J("2000-06-21") }],
+      lienModifications: [
+        { linkType: "ABROGATION", linkOrientation: "source", textCid: "JORFTEXT000000205424", textTitle: ABROGEANT, dateSignaTexte: J("2000-02-14") },
+      ],
+    } as ArticleApi;
+    const consigne = (p: Partial<ArticleDepouille>) =>
+      article({ url: URL_ART, statut: "sans_objet", motif: "Article ABROGÉ.", obligations: undefined, ...p } as Partial<ArticleDepouille>);
+
+    it("sans_objet et texte abrogeant nommé : consigné, et ce n'est pas un écart", async () => {
+      const { s } = source({ LEGIARTI000018531912: abroge });
+      const r = await verifier(consigne({ modifiePar: { texte: ABROGEANT } }), s);
+      expect(r.categorie).toBe("abroge_consigne");
+      expect(estEcart(r.categorie)).toBe(false);
+    });
+
+    it("cassure : sans texte abrogeant, l'abrogé reste un écart", async () => {
+      const { s } = source({ LEGIARTI000018531912: abroge });
+      const r = await verifier(consigne({ modifiePar: null }), s);
+      expect(r.categorie).toBe("abroge");
+      expect(estEcart(r.categorie)).toBe(true);
+    });
+
+    it("cassure : un autre texte que l'abrogeant ne vaut pas consignation", async () => {
+      const { s } = source({ LEGIARTI000018531912: abroge });
+      const r = await verifier(consigne({ modifiePar: { texte: "Arrêté du 22 novembre 2004 - art. Annexe, v. init." } }), s);
+      expect(r.categorie).toBe("abroge");
+    });
+
+    it("cassure : un article retenu, même abrogeant nommé, reste un écart", async () => {
+      const { s } = source({ LEGIARTI000018531912: abroge });
+      const r = await verifier(article({ url: URL_ART, modifiePar: { texte: ABROGEANT } }), s);
+      expect(r.categorie).toBe("abroge");
+    });
+  });
+
   it("introuvable : identifiant sans article, ou article de code absent ; arrêté cherché par numéro : non vérifiable", async () => {
     const { s } = source({});
     expect((await verifier(article({ url: URL_ART }), s)).categorie).toBe("introuvable");

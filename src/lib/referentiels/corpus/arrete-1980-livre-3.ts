@@ -42,6 +42,9 @@
 // reclassés un par un (l'ancien motif est rayé dans `historique`).
 
 import type { Corpus } from "./types";
+import {
+  SUITE_TRANSITOIRE_SOUS_LOT_C,
+} from "./motifs-livre-2";
 
 export const CORPUS_PE: Corpus = {
   id: "arrete-1980-livre-3",
@@ -270,12 +273,18 @@ export const CORPUS_PE: Corpus = {
     {
       ref: "PE 18",
       intitule: "Îlots de cuisson installés dans les salles",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024766742",
       versionEnVigueur: "2008-08-30",
-      luLe: "2026-08-26",
-      lecture: "agent_verbatim",
-      statut: "sans_objet",
-      motif:
-        "Conditions d'exploitation d'un îlot de cuisson, dont la présence de personnel pendant le fonctionnement — obligation continue, pas une échéance.",
+      modifiePar: { texte: "Arrêté du 21 mai 2008, v. init." },
+      // ~~luLe: "2026-08-26", lecture: "agent_verbatim"~~ — relu le 2026-10-17 par l'API (PISTE, bac à sable).
+      luLe: "2026-10-17",
+      lecture: "api_legifrance",
+      historique: "2026-10-17 — revue de `lot/ref-a-corpus-titre-1`, ligne de partage 10 (une présence requise pendant le fonctionnement est un ÉTAT PERMANENT, décision de c6) ; trouvé par la garde de présence, qui lit aussi les motifs. Ancien classement : ~~statut sans_objet ; motif : Conditions d'exploitation d'un îlot de cuisson, dont la présence de personnel pendant le fonctionnement — obligation continue, pas une échéance.~~",
+      citationCle: "Un personnel de service doit être présent pendant le fonctionnement des appareils.",
+      statut: "obligation_manquante",
+      motif: "Îlots de cuisson installés en salle, en 5ᵉ catégorie (le pendant de GC 15 au livre II) : enceinte interdite au public, appareils non laissés en libre utilisation, énergie gaz ou électrique, puissance limitée, captation des buées (règles d'installation et d'usage). Et un ÉTAT PERMANENT : « Un personnel de service doit être présent pendant le fonctionnement des appareils » (ligne de partage 10, politique sœur EL 18 § 2). « Obligation continue, pas une échéance » était le motif ancien : c'est précisément ce qu'est un état permanent. Touche la cible restaurant. PROPOSITION pour le sous-lot C : la même ligne que GC 15, étendue à la 5ᵉ catégorie." + SUITE_TRANSITOIRE_SOUS_LOT_C,
+      cause: "libre",
+      toucheLaCible: true,
     },
     {
       ref: "PE 19",
@@ -824,7 +833,11 @@ export const CORPUS_PE: Corpus = {
       // ~~luLe: "2026-08-26", lecture: "agent_verbatim"~~ — relu le 2026-10-16 par l'API PISTE en BAC À SABLE : LEGIARTI000024776472, en vigueur depuis le 2005-04-22.
       luLe: "2026-10-16",
       lecture: "api_legifrance",
-      citationCle: "1. Dans certains établissements réservés aux enfants et aux adolescents ou dans les centres spécialisés (centre de psychiatrie ou de traitement des toxicomanes, par exemple), les locaux ou les unités de soins peuvent être maintenus exceptionnellement fermés dans les conditions fixées à l'article U 21. 2. En dérogation à l'article PE 29 (alinéa 3), les portes des locaux réservés au sommeil peuvent ne pas être munies de ferme-porte.",
+      // 2026-10-17 (revue de `lot/ref-a-corpus-titre-1`) : citation recoupée à
+      // l'intérieur du texte — ~~« 1. Dans certains … ferme-porte. »~~ —, la
+      // normalisation de `legifrance:verifier` ramenant « 1. » à « 1° » et
+      // retirant le point final côté officiel, mais pas aux bords d'une citation.
+      citationCle: "Dans certains établissements réservés aux enfants et aux adolescents ou dans les centres spécialisés (centre de psychiatrie ou de traitement des toxicomanes, par exemple), les locaux ou les unités de soins peuvent être maintenus exceptionnellement fermés dans les conditions fixées à l'article U 21. 2. En dérogation à l'article PE 29 (alinéa 3), les portes des locaux réservés au sommeil peuvent ne pas être munies de ferme-porte",
       historique: "~~`non_couvert`, lu le 2026-08-26 par un agent (`agent_verbatim`), motif commun aux six articles : « Chapitre V — petits établissements de soins (type U). Ces articles n'imposent aucune échéance récurrente à l'exploitant : ce sont des règles de construction et d'équipement, plus un renvoi aux articles U 51 à U 64 sur les gaz médicaux, qui n'a pas été dépouillé. Le manque de couverture porte donc surtout sur ce renvoi. » ; `declareA` : « docs/couverture-declaree-du-produit.md — NOTE INTERNE, pas une annonce à l'exploitant. Cet article a été nommé à l'écran, sur le tableau de bord de chaque établissement, du 2026-08-28 au soir du même jour ; la surface a été retirée par décision produit — déclarer ce que le produit ne couvre pas suppose d'avoir tranché ce qu'il couvre. Le document dit l'histoire et ce qu'il faudrait pour rendre l'annonce propre au dossier : un rattachement article → `Etablissement.typeErp`. »~~ [2026-10-16 : relu par l'API Légifrance (PISTE, bac à sable, égalité avec la production non vérifiée) avec les chapitres de types ; le renvoi de PU 5 est OUVERT — U 51 à U 64 sont lus et classés au corpus `arrete-1980-livre-2-titre-2` —, et chaque article est reclassé pour lui-même. Le statut commun disait « manque de couverture » pour quatre articles qui n'imposent qu'une construction ou une dotation.]",
       // ~~statut: "hors_perimetre", exclusion: "construction"~~ — 2026-10-17, revue
       // indépendante : le motif invoque la ligne de partage 1 (une faculté et ses
