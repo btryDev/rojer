@@ -29,6 +29,10 @@ describe("gesteHorsQuotidien — un geste par réalisateur", () => {
     );
   });
 
+  it("le propriétaire qui entretient lui-même son ascenseur n'est pas renvoyé à un ascensoriste (revue du 2026-10-17)", () => {
+    expect(GESTES_HORS_QUOTIDIEN.ascensoriste).toMatch(/si vous assurez l'entretien/);
+  });
+
   it("les chiffons imprégnés se tiennent soi-même", () => {
     expect(gesteHorsQuotidien(par("incendie-travail-chiffons-impregnes-recipients-clos"))).toBe(
       GESTES_HORS_QUOTIDIEN.exploitant,

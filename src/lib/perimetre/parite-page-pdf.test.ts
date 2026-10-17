@@ -173,6 +173,14 @@ describe("la page « Ce que Rojer ne couvre pas » (source)", () => {
     expect(affiche).toContain("FAMILLES_NON_GEREES.map");
   });
 
+  it("une ligne séparée par `divide-y` occupe toute la carte (pas de `max-w` sur ses `li`)", () => {
+    // Revue du 2026-10-17 : un `max-w-[80ch]` sur les `li` raccourcissait le
+    // filet de séparation à la largeur du texte.
+    for (const m of affiche.matchAll(/<li\b[\s\S]*?>/g)) {
+      expect(m[0], m[0]).not.toMatch(/max-w-/);
+    }
+  });
+
   it("ne renvoie jamais au PDF, que le dirigeant ne reçoit pas", () => {
     expect(affiche).not.toMatch(/PDF|annexe|référentiel complet|grille de relecture/i);
   });

@@ -31,7 +31,7 @@ pour la fiche d'entreprise, que le service de santé au travail établit.
    quotidien » : nommées une par une, avec le geste de `gesteHorsQuotidien`.
    D, « Ce que Rojer ne gère pas » : cinq familles, une phrase chacune.
 2. **Aucune référence d'article à l'écran**, ni corpus ; le mot « audit » n'y
-   paraît pas (décision du 2026-10-18 de la rubrique, maintenue).
+   paraît pas (décision de la propriétaire du ~~2026-10-18~~ 2026-10-17 sur la rubrique, maintenue).
 3. **Le geste dépend des réalisateurs** : l'exploitant parmi eux → « À tenir
    vous-même » ; sinon le service de santé au travail → « À obtenir de votre
    service de santé au travail » ; sinon, pour un ascenseur, « À obtenir de
@@ -50,6 +50,14 @@ pour la fiche d'entreprise, que le service de santé au travail établit.
    `nonPorte`, ne promettent rien sur la dotation de `R. 4227-29` (encodée),
    disent « mise en accessibilité du bâtiment », jamais « accessibilité »
    seul, et ne qualifient pas.
+   [Revue indépendante, 2026-10-17 : **tout élément d'une énumération passe
+   par `nonPorte`** — une énumération ne s'écrit que dans `liste` ;
+   « rayonnements ionisants », écrit hors du marqueur, était démenti par le
+   suivi renforcé de catégorie A. La famille « risques spécialisés » reprend
+   le motif de l'exclusion `risque_specialise` et dit que le suivi individuel
+   renforcé reste tenu ; la famille « équipements » dit que Rojer ne
+   ~~choisit pas le type, l'emplacement~~ conçoit pas les installations, la
+   dotation en extincteurs et la détention du DAE étant encodées.]
 7. **`ADRESSE_MANQUES_ANNONCES` reste une adresse de PAGE** ; son texte nomme
    le nouveau titre de la section. Le cliquet `MUETS` ne bouge pas.
 
@@ -57,7 +65,8 @@ pour la fiche d'entreprise, que le service de santé au travail établit.
 
 - Parité page ↔ PDF (`parite-page-pdf.test.ts`) : l'inventaire figé
   (`inventaire-page-a493461c.ts`, 513 clés, produit en appelant le code de
-  main) ; chaque clé est dite par la page ou par l'annexe, sauf la table
+  main ; la clé d'un article écarté porte l'identifiant du corpus, pas son
+  intitulé, qu'un lot peut renommer — revue du 2026-10-17) ; chaque clé est dite par la page ou par l'annexe, sauf la table
   `SORTIS` — vide au 2026-10-17, raturée et datée quand elle change.
 - L'annexe porte le détail (références, phrases, « Audit ») — lu dans
   l'arbre rendu ; le script fait l'insertion, une fois, avant `</Document>`.

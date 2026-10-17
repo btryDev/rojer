@@ -205,7 +205,7 @@ export default async function PerimetrePage({
               <li
                 key={f.cle}
                 data-famille={f.cle}
-                className="max-w-[80ch] px-7 py-4 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)] sm:px-8"
+                className="px-7 py-4 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)] sm:px-8"
               >
                 {f.phrase}
               </li>

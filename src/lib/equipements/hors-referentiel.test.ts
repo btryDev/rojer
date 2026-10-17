@@ -232,3 +232,12 @@ describe("explicationSansEcheance — la phrase propre au matériel non suivi", 
     );
   });
 });
+
+describe("la phrase du niveau audit ne promet pas ce que la page ne montre plus (ADR-046, revue du 2026-10-17)", () => {
+  it("ni « audit », ni « avec son texte » — la référence n'est plus sur la page", () => {
+    const p = EXPLICATION_SANS_ECHEANCE.niveau_audit;
+    expect(p).not.toMatch(/(?<![\p{L}\p{N}_])audit(?![\p{L}\p{N}_])/iu);
+    expect(p).not.toMatch(/avec son texte/);
+    expect(p).toContain("« Ce que Rojer ne couvre pas »");
+  });
+});

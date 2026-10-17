@@ -101,7 +101,12 @@ function quiRealise(r: Realisateur): Qui {
 export const GESTES_HORS_QUOTIDIEN = {
   exploitant: GESTE_HORS_QUOTIDIEN,
   spst: "À obtenir de votre service de santé au travail : Rojer ne vous le rappellera pas.",
-  ascensoriste: "À obtenir de votre ascensoriste : Rojer ne vous le rappellera pas.",
+  // ~~« À obtenir de votre ascensoriste : … »~~ — 2026-10-17, revue de
+  // l'ADR-046 : le propriétaire peut assurer lui-même l'entretien de
+  // l'ascenseur (R. 134-10 CCH, cité par la revue, non relu dans ce lot) ;
+  // la phrase n'impose plus un ascensoriste qu'il n'a pas.
+  ascensoriste:
+    "À obtenir de votre ascensoriste, ou à établir vous-même si vous assurez l'entretien de l'ascenseur : Rojer ne vous le rappellera pas.",
   tiers: "À faire réaliser par une personne qualifiée : Rojer ne vous le rappellera pas.",
 } as const;
 
@@ -112,7 +117,7 @@ export const GESTES_HORS_QUOTIDIEN = {
  *    faire lui revient ;
  *  - sinon le service de santé au travail → « À obtenir de votre service… » ;
  *  - sinon un tiers ; pour un ascenseur, le tiers est l'entreprise
- *    d'entretien — l'ascensoriste. `niveau-audit.test.ts` tient que toute
+ *    d'entretien — l'ascensoriste. ~~`niveau-audit.test.ts`~~ `geste-hors-quotidien.test.ts` tient que toute
  *    obligation envoyée à l'ascensoriste relève du contrat d'entretien : un
  *    contrôle technique (fait par un contrôleur, pas par l'ascensoriste)
  *    passé au niveau audit ferait tomber le test au lieu de recevoir un faux

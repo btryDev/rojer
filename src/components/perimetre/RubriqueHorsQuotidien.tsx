@@ -1,7 +1,7 @@
 // La rubrique « Obligations légales que Rojer ne suit pas au quotidien » de la
 // page « Ce que Rojer ne couvre pas » (ADR-042, le niveau audit du référentiel).
 //
-// 2026-10-18, décision de la propriétaire : SUR CETTE PAGE, LE MOT « AUDIT »
+// ~~2026-10-18~~ 2026-10-17 [date corrigée le 2026-10-17, revue de l'ADR-046], décision de la propriétaire : SUR CETTE PAGE, LE MOT « AUDIT »
 // N'APPARAÎT PAS. Il nomme un marqueur du référentiel, pas quelque chose que le
 // dirigeant reconnaît ; il reste dans les aides des catégories et les ADR
 // (`EXPLICATION_NIVEAU_AUDIT`, que cette rubrique n'emploie donc plus).

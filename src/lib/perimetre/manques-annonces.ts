@@ -153,7 +153,7 @@ const DOMAINES: Record<CleDomaine, Domaine> = {
     titre: "Matières explosives et inflammables",
     phrase: `Rojer ne suit pas ${nonPorte("l'aménagement des locaux où des matières explosives, comburantes ou inflammables sont entreposées ou manipulées")} : sources d'ignition, ventilation, interdiction de fumer aux emplacements à l'air libre, distance des postes aux issues, sens d'ouverture des portes, dépôts dans les escaliers, passages et couloirs. Il ne suit pas non plus ${nonPorte("la prévention des explosions des articles R. 4227-42 à R. 4227-54")} : les atmosphères explosives, qu'elles viennent de gaz, de vapeurs, de brouillards ou de poussières en suspension dans l'air — silos, broyage, meunerie, ponçage du bois, par exemple.`,
     sujets: [
-      nonPorte("la prévention des atmosphères explosives, qu'elles viennent de gaz, de vapeurs ou de poussières en suspension dans l'air — silos, meunerie, ponçage du bois"),
+      nonPorte("la prévention des atmosphères explosives, dues aux gaz, aux vapeurs ou aux poussières en suspension"),
     ],
   },
   // ~~travail_en_hauteur (« Travail en hauteur », l'échelle de R. 4323-63)~~
@@ -166,7 +166,7 @@ const DOMAINES: Record<CleDomaine, Domaine> = {
   // portait que l'échelle : elle disparaît avec elle.
   plan_prevention: {
     titre: "Plan de prévention",
-    phrase: `Le plan tenu dans Rojer ne rattache qu'une entreprise extérieure et ne suit pas ${nonPorte("les nouveaux sous-traitants recrutés après le début de l'intervention")} ; il ne porte ni ${nonPorte("la liste des postes relevant du suivi individuel renforcé")}, ni ${nonPorte("le dossier technique amiante joint au plan")}, et ne demande pas si les risques liés aux épisodes de chaleur intense ont été pris en compte. Ces articles sont cités sur la fiche de chaque plan.`,
+    phrase: `Le plan tenu dans Rojer ne rattache qu'une entreprise extérieure et ne suit pas ${nonPorte("les nouveaux sous-traitants recrutés après le début de l'intervention")} ; il ne porte ni ${nonPorte("la liste, dans le plan de prévention, des postes susceptibles de relever du suivi individuel renforcé")}, ni ${nonPorte("le dossier technique amiante joint au plan")}, et ne demande pas si les risques liés aux épisodes de chaleur intense ont été pris en compte. Ces articles sont cités sur la fiche de chaque plan.`,
   },
   vigilance: {
     titre: "Vigilance à l'égard des cocontractants",
@@ -263,11 +263,19 @@ type Annonce = {
  * dans les deux sens. Une entrée ici sans l'adresse là-bas, ou l'inverse, fait
  * tomber le test.
  */
+// Sujets — revue indépendante du 2026-10-17 (ADR-046) : ~~R. 4227-22 à 25,
+// un sujet par article (sources d'ignition, fumer, issues, dépôts)~~ → un seul
+// sujet partagé, la phrase des matières passant d'environ quatre-vingt-dix mots
+// à trente-cinq, sans « silos, meunerie » adressés à un restaurant ;
+// ~~R. 4512-9 « la liste des postes relevant du suivi individuel renforcé »~~
+// (Rojer suit la liste des postes à risques de R. 4624-23 III) → la liste DANS
+// le plan de prévention ; L. 8222-1 rendu lisible ; R. 4433-2 (l'évaluation),
+// R. 4121-1-1 (la proportion), R. 4412-17 (la rupture des parois) complétés.
 export const ANNONCES: Readonly<Record<string, Annonce>> = {
-  "R. 4227-22": { domaine: "matieres_inflammables", condition: "travail", sujet: nonPorte("l'absence de source d'ignition et la ventilation des locaux où des matières explosives ou inflammables sont entreposées ou manipulées") },
-  "R. 4227-23": { domaine: "matieres_inflammables", condition: "travail", sujet: nonPorte("l'interdiction de fumer aux emplacements à l'air libre où ces matières se trouvent") },
-  "R. 4227-24": { domaine: "matieres_inflammables", condition: "travail", sujet: nonPorte("la distance des postes de travail aux issues et le sens d'ouverture des portes de ces locaux") },
-  "R. 4227-25": { domaine: "matieres_inflammables", condition: "travail", sujet: nonPorte("l'interdiction de déposer ces matières dans les escaliers, passages et couloirs") },
+  "R. 4227-22": { domaine: "matieres_inflammables", condition: "travail", sujet: nonPorte("l'aménagement et l'usage des locaux où des matières explosives ou inflammables sont entreposées ou manipulées") },
+  "R. 4227-23": { domaine: "matieres_inflammables", condition: "travail", sujet: nonPorte("l'aménagement et l'usage des locaux où des matières explosives ou inflammables sont entreposées ou manipulées") },
+  "R. 4227-24": { domaine: "matieres_inflammables", condition: "travail", sujet: nonPorte("l'aménagement et l'usage des locaux où des matières explosives ou inflammables sont entreposées ou manipulées") },
+  "R. 4227-25": { domaine: "matieres_inflammables", condition: "travail", sujet: nonPorte("l'aménagement et l'usage des locaux où des matières explosives ou inflammables sont entreposées ou manipulées") },
   // ~~« R. 4323-63 » (travail_en_hauteur), « R. 1321-60 » et « Arrêté
   // 10-09-2021 art. 4, 8, 9, 10, 12 » (eau)~~ — 2026-10-14 : déplacés dans la
   // liste des matériels non couverts (entrées `echelle`, `reservoir_eau`).
@@ -278,9 +286,9 @@ export const ANNONCES: Readonly<Record<string, Annonce>> = {
     intitule: "Prise en compte, dans le plan de prévention, des risques liés aux épisodes de chaleur intense",
   },
   "R. 4512-1": { domaine: "plan_prevention", condition: "travail", sujet: nonPorte("les nouveaux sous-traitants recrutés après le début de l'intervention") },
-  "R. 4512-9": { domaine: "plan_prevention", condition: "travail", sujet: nonPorte("la liste des postes relevant du suivi individuel renforcé") },
+  "R. 4512-9": { domaine: "plan_prevention", condition: "travail", sujet: nonPorte("la liste, dans le plan de prévention, des postes susceptibles de relever du suivi individuel renforcé") },
   "R. 4512-11": { domaine: "plan_prevention", condition: "travail", sujet: nonPorte("le dossier technique amiante joint au plan") },
-  "L. 8222-1": { domaine: "vigilance", condition: "tous", sujet: nonPorte("le montant et la date de conclusion de vos contrats") },
+  "L. 8222-1": { domaine: "vigilance", condition: "tous", sujet: nonPorte("le montant et la date de conclusion de vos contrats, qui déclenchent la vérification de vos cocontractants") },
   "L. 8222-5": { domaine: "vigilance", condition: "tous", sujet: nonPorte("l'injonction due après un signalement écrit de situation irrégulière") },
   "D. 8222-5": { domaine: "vigilance", condition: "tous", sujet: nonPorte("la vérification de l'authenticité de l'attestation de vigilance") },
   "D. 8222-7": {
@@ -295,8 +303,8 @@ export const ANNONCES: Readonly<Record<string, Annonce>> = {
     sujet: nonPorte("la prise en compte de l'impact différencié de l'exposition au risque en fonction du sexe"),
     intitule: "Évaluation des risques : prise en compte de l'impact différencié de l'exposition selon le sexe",
   },
-  "R. 4121-1-1": { domaine: "document_unique", condition: "travail", sujet: nonPorte("l'annexe des données collectives d'exposition aux facteurs de risques professionnels") },
-  "R. 4433-2": { domaine: "bruit", condition: "travail", sujet: nonPorte("le mesurage du bruit et son renouvellement") },
+  "R. 4121-1-1": { domaine: "document_unique", condition: "travail", sujet: nonPorte("l'annexe du document unique sur les expositions aux facteurs de risques professionnels et la proportion de salariés exposés") },
+  "R. 4433-2": { domaine: "bruit", condition: "travail", sujet: nonPorte("l'évaluation et le mesurage du bruit, et leur renouvellement") },
   "L. 4141-5": {
     domaine: "formation",
     condition: "travail",
@@ -314,7 +322,7 @@ export const ANNONCES: Readonly<Record<string, Annonce>> = {
   // deux articles visent l'employeur dont les travailleurs sont exposés à des
   // agents chimiques dangereux : la condition est celle du Code du travail.
   "R. 4412-11": { domaine: "risque_chimique", condition: "travail", sujet: nonPorte("les mesures de prévention du risque d'exposition aux agents chimiques dangereux") },
-  "R. 4412-17": { domaine: "risque_chimique", condition: "travail", sujet: nonPorte("les mesures contre le débordement, les éclaboussures et le déversement des récipients de produits chimiques") },
+  "R. 4412-17": { domaine: "risque_chimique", condition: "travail", sujet: nonPorte("la protection contre le débordement, les éclaboussures et le déversement par rupture des parois des récipients de produits chimiques") },
   "R. 4323-1": {
     domaine: "formation",
     condition: "travail",

@@ -1,10 +1,11 @@
 // « Ce que Rojer ne gère pas » — les cinq familles (2026-10-17, ADR-046).
 
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
-import { FAMILLES_NON_GEREES } from "./familles-non-gerees";
+import { enumerer, FAMILLES_NON_GEREES } from "./familles-non-gerees";
 import {
   affirmationsDeNonCouverture,
   obligationsRepondantA,
@@ -32,6 +33,66 @@ describe("les cinq familles", () => {
     }
   });
 
+  it("tout élément d'une énumération passe par `nonPorte`, et le référentiel ne le dément pas", () => {
+    // Revue indépendante du 2026-10-17 : « rayonnements ionisants », écrit
+    // hors du marqueur, était démenti par le suivi renforcé de catégorie A.
+    const vus = new Set(
+      affirmationsDeNonCouverture(RACINE)
+        .filter((a) => a.fichier === FICHIER)
+        .map((a) => a.sujet),
+    );
+    let n = 0;
+    for (const f of FAMILLES_NON_GEREES) {
+      for (const el of f.liste) {
+        n++;
+        expect(vus.has(el), `${f.cle} : « ${el} » hors de nonPorte`).toBe(true);
+        expect(obligationsRepondantA(el), el).toEqual([]);
+      }
+      if (f.liste.length > 0) {
+        const dans = [enumerer(f.liste), enumerer(f.liste, "ou")].some((e) => f.phrase.includes(e));
+        expect(dans, `${f.cle} : la phrase ne porte pas sa liste`).toBe(true);
+      }
+    }
+    expect(n).toBeGreaterThan(0);
+    // La forme, à la source : chaque élément des tableaux est un appel.
+    const source = readFileSync(join(RACINE, FICHIER), "utf8");
+    const tableaux = [...source.matchAll(/^const [A-Z_]+ = \[\n([\s\S]*?)\n\] as const;/gm)];
+    expect(tableaux.length).toBeGreaterThan(0);
+    for (const t of tableaux) {
+      for (const ligne of t[1].split("\n").filter((l) => l.trim() !== "")) {
+        expect(ligne.trim(), ligne).toMatch(/^nonPorte\("/);
+      }
+    }
+  });
+
+  it("aucune énumération n'est écrite hors de `liste`", () => {
+    // Trois éléments courts séparés par des virgules, une fois retirés les
+    // sujets `nonPorte` et la liste : c'est une énumération qui échappe au
+    // balayage.
+    const ENUMERATION_NUE = /(?:[^,;:.—]{1,30}, ){2,}[^,;:.—]{1,30}/;
+    const sujets = affirmationsDeNonCouverture(RACINE)
+      .filter((a) => a.fichier === FICHIER)
+      .map((a) => a.sujet)
+      .sort((a, b) => b.length - a.length);
+    for (const f of FAMILLES_NON_GEREES) {
+      let reste = f.phrase.replace(enumerer(f.liste, "ou"), " ").replace(enumerer(f.liste), " ");
+      for (const s of sujets) reste = reste.split(s).join(" ");
+      expect(reste, f.cle).not.toMatch(ENUMERATION_NUE);
+    }
+  });
+
+  it("les ballons : gonflés avec un gaz inflammable (M 36), pas « au gaz »", () => {
+    const conduite = FAMILLES_NON_GEREES.find((f) => f.cle === "regles_de_conduite")!;
+    expect(conduite.phrase).toContain("gaz inflammable");
+  });
+
+  it("ne laisse pas croire que le suivi renforcé n'est pas suivi", () => {
+    const risques = FAMILLES_NON_GEREES.find((f) => f.cle === "risques_specialises")!;
+    expect(risques.phrase).toContain("le suivi individuel renforcé");
+    expect(obligationsRepondantA("le suivi individuel renforcé").length).toBeGreaterThan(0);
+    expect(risques.phrase).not.toMatch(/amiante|plomb|radon/i);
+  });
+
   it("se suffit à elle-même : aucun renvoi au document ni à une autre partie", () => {
     // Le dirigeant n'a pas accès au PDF du référentiel complet (Q1).
     for (const f of FAMILLES_NON_GEREES) {
@@ -55,8 +116,13 @@ describe("les cinq familles", () => {
       obligationsConformite.some((o) => o.id === "incendie-travail-extincteurs-dotation"),
     ).toBe(true);
     for (const f of FAMILLES_NON_GEREES) {
-      expect(f.phrase, f.cle).not.toMatch(/extincteur|dotation|doté|nombre suffisant/i);
+      expect(f.phrase, f.cle).not.toMatch(/extincteur|dotation|doté|nombre suffisant|défibrillateur|\bDAE\b/i);
     }
+    // Revue du 2026-10-17 : « le type, l'emplacement » touchaient la dotation
+    // et la détention du DAE, encodées. La famille dit la conception.
+    const equipements = FAMILLES_NON_GEREES.find((f) => f.cle === "equipements_a_prevoir")!;
+    expect(equipements.phrase).toMatch(/^Rojer ne conçoit pas vos installations de sécurité/);
+    expect(equipements.phrase).not.toMatch(/\btype\b|emplacement/i);
   });
 
   it("ne qualifie jamais, ne compte rien, ne cite aucune référence", () => {
