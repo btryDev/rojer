@@ -17,6 +17,7 @@ import {
   GESTE_HORS_QUOTIDIEN,
   type LigneNiveauAudit,
 } from "@/lib/perimetre/niveau-audit";
+import { SurTitre } from "./SurTitre";
 
 export const TITRE_HORS_QUOTIDIEN =
   "Obligations légales que Rojer ne suit pas au quotidien";
@@ -30,9 +31,7 @@ export function RubriqueHorsQuotidien({
   return (
     <section className="flex flex-col gap-4">
       <div>
-        <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-          § Hors du quotidien
-        </p>
+        <SurTitre>§ Hors du quotidien</SurTitre>
         <h2 className="board-titre m-0 mt-2 text-[22px]">
           {TITRE_HORS_QUOTIDIEN}
         </h2>

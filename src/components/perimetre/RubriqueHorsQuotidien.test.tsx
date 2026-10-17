@@ -122,6 +122,15 @@ describe("rubrique « hors du quotidien » — ce que la carte dit", () => {
     const walker = document.createTreeWalker(c, NodeFilter.SHOW_TEXT);
     const noeuds: string[] = [];
     while (walker.nextNode()) noeuds.push(walker.currentNode.textContent ?? "");
+    // Et ce qu'un lecteur d'écran ou une infobulle dit (revue du 2026-10-18 :
+    // un `aria-label`, un `title` ou un `alt` passaient).
+    for (const el of c.querySelectorAll("*")) {
+      for (const a of el.attributes) {
+        if (a.name.startsWith("aria-") || a.name === "title" || a.name === "alt") {
+          noeuds.push(`${a.name}="${a.value}"`);
+        }
+      }
+    }
     const fautif = noeuds.find((t) => MOT_AUDIT.test(t));
     expect(fautif, `« audit » affiché : ${fautif}`).toBeUndefined();
   });
@@ -137,12 +146,37 @@ describe("page « Ce que Rojer ne couvre pas » — le mot « audit » hors du t
   // La page est un composant serveur qui lit la base : on lit sa source, sans
   // commentaires ni imports. Les identifiants (`niveauAudit`) ne tombent pas :
   // une lettre précède le mot.
-  it("aucune occurrence dans ce qui s'affiche", () => {
-    const ici = dirname(fileURLToPath(import.meta.url));
-    const source = readFileSync(
-      join(ici, "..", "..", "app", "etablissements", "[id]", "perimetre", "page.tsx"),
-      "utf8",
+  const source = readFileSync(
+    join(
+      dirname(fileURLToPath(import.meta.url)),
+      "..", "..", "app", "etablissements", "[id]", "perimetre", "page.tsx",
+    ),
+    "utf8",
+  );
+
+  it("la page n'importe du module du niveau que `estNiveauAudit`", () => {
+    // La garde par le mot ne voit pas `<p>{MENTION_NIVEAU_AUDIT}</p>` : le
+    // mot est dans la constante, pas dans la page (revue du 2026-10-18). Les
+    // libellés du niveau — « Audit », son explication — n'ont rien à faire
+    // ici ; seul le prédicat peut servir.
+    const imports = [
+      ...source.matchAll(
+        /import\s+(?:type\s+)?\{([^}]*)\}\s*from\s*["'][^"']*referentiels\/conformite\/niveau-audit["']/g,
+      ),
+    ].flatMap((m) =>
+      m[1]
+        .split(",")
+        .map((s) => s.trim().replace(/^type\s+/, "").split(/\s+as\s+/)[0])
+        .filter(Boolean),
     );
+    expect(imports.filter((n) => n !== "estNiveauAudit")).toEqual([]);
+    // Ni import par défaut, ni espace de noms.
+    expect(source).not.toMatch(
+      /import\s+(?:\*\s+as\s+\w+|\w+)\s*(?:,\s*\{[^}]*\})?\s*from\s*["'][^"']*referentiels\/conformite\/niveau-audit["']/,
+    );
+  });
+
+  it("aucune occurrence dans ce qui s'affiche", () => {
     const affiche = source
       .replace(/\/\*[\s\S]*?\*\//g, "")
       .split("\n")

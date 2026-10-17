@@ -54,6 +54,7 @@ import { obligationsNiveauAuditDuDossier } from "@/lib/perimetre/niveau-audit";
 import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
 import { projeterEtablissement } from "@/lib/matching";
 import { RubriqueHorsQuotidien } from "@/components/perimetre/RubriqueHorsQuotidien";
+import { SurTitre } from "@/components/perimetre/SurTitre";
 import { CORPUS } from "@/lib/referentiels/corpus";
 import { riensASignaler } from "@/lib/perimetre/couverture";
 import { porte } from "@/lib/perimetre/non-couverture";
@@ -66,13 +67,6 @@ export const metadata = {
   title: "Ce que Rojer ne couvre pas — Rojer",
 };
 
-function SurTitre({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-      {children}
-    </p>
-  );
-}
 
 export default async function PerimetrePage({
   params,
