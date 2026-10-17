@@ -101,6 +101,10 @@ const DECLARE_A_CATEGORIE_ERP =
 
 export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
   id: "arrete-1980-livre-2-titre-2",
+  // ~~intitule: "Arrêté du 25 juin 1980, livre II, titre II — dispositions
+  // particulières des types M, N, O et W (catégories 1 à 4)"~~ — 2026-10-16 :
+  // neuf types ajoutés (lecture des chapitres de types d'ERP) ; L manque, il
+  // n'est pas au corpus.
   intitule:
     "Arrêté du 25 juin 1980, livre II, titre II — dispositions particulières des types M, N, O, W, P, R, S, T, U, V, X, Y et J (catégories 1 à 4)",
   url: "https://www.legifrance.gouv.fr/loda/id/LEGITEXT000020303557/",

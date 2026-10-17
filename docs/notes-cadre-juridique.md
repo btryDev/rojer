@@ -117,7 +117,8 @@ Une action qui n'est pas répétée par le texte n'a pas de rythme du tout.
 - ~~**Dix chapitres du livre II, titre II non lus** (L, P, R, S, T, U, V, X, Y, J) :
   hors des secteurs cibles, à classer si la cible s'élargit.~~ [2026-10-16 :
   tous lus. L par la session du chantier multi-types
-  (`propositions/lecture-chapitre-L-2026-10-16.md`) ; les neuf autres en entier,
+  (`propositions/lecture-chapitre-L-2026-10-16.md`) — il n'est PAS au corpus,
+  et y entrera avec son encodage ; les neuf autres en entier,
   classés au corpus `arrete-1980-livre-2-titre-2` (295 entrées), avec le chapitre
   V du livre III (petits établissements de soins) — `lot/erp-chapitres-types-1016`.
   Les dix-huit manques sont au § 9 de `couverture-declaree-du-produit.md`, à

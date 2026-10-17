@@ -1115,16 +1115,16 @@ tranchée. Manquantes : ~~22 + 18 − 0 = 40~~ ~~22 + 26 − 0 = 48~~ 22 + 28 �
 | `X 1 § 2 — affichage de l'effectif des piscines transformables et mixtes` | Piscine transformable ou mixte | `a_trancher` | Avec X 25 : affichage de l'effectif |
 | `X 25` | Type X dès 200 personnes (X 1) ; 5ᵉ catégorie par PX 1 | `a_trancher` | Rattacher à `incendie-erp-interdiction-fumer-affichee`, si l'exclusion « équipements sportifs » ne la retient pas |
 | `U 41` | Type U | `libre` | Rattacher à `incendie-erp-schema-organisation-securite` |
-| `PU 6` | Type U de 5ᵉ catégorie avec locaux à sommeil | `libre` | Ajouter en référence de `incendie-erp-5-instruction-personnel` |
+| `PU 6` | Type U de 5ᵉ catégorie avec locaux à sommeil, à construire ou à modifier (PU 1) | `libre` | Ajouter en référence de `incendie-erp-5-instruction-personnel` |
 | `J 39` | Type J | `libre` | Ligne nouvelle : exercices semestriels (rythme écrit) |
 | `R 33` | Type R (crèche en étage quel que soit l'effectif, R 1) | `libre` | Ligne nouvelle : exercices d'évacuation, un par année scolaire, consignés au registre |
 | `U 47` | Type U | `libre` | Ligne nouvelle : formation et exercices, défaut annuel (ADR-039) |
 | `J 40` | Type J | `libre` | Ligne nouvelle commune J et U : consignes affichées (et remises aux résidents en J) |
 | `U 48` | Type U | `libre` | Ligne nouvelle commune J et U : consignes affichées |
-| `J 33` | Type J | `categorie_equipement` | Catégorie « gaz médicaux » ; vérification annuelle et consignes rappelées |
-| `U 64` | Type U | `categorie_equipement` | Catégorie « gaz médicaux » ; vérification annuelle (rythme écrit) |
-| `U 62` | Type U | `categorie_equipement` | Catégorie « gaz médicaux » ; consignes rappelées, défaut annuel |
-| `PU 5` | Type U de 5ᵉ catégorie à construire ou à modifier | `categorie_equipement` | Les deux lignes des gaz médicaux étendues à la 5ᵉ, borne à trancher |
+| `J 33` | Type J | `categorie_equipement` | **Décision** (catégorie d'équipement nouvelle) : vise les équipements MOBILES d'oxygénothérapie, seuls admis en J (J 32) ; vérification annuelle et consignes rappelées |
+| `U 64` | Type U | `categorie_equipement` | **Décision** (catégorie d'équipement nouvelle) : vise les STOCKAGES et RÉSEAUX de distribution de gaz médicaux ; vérification annuelle (rythme écrit) |
+| `U 62` | Type U | `categorie_equipement` | **Décision**, avec U 64 : consignes rappelées, défaut annuel |
+| `PU 5` | Type U de 5ᵉ catégorie à construire ou à modifier (PU 1) | `categorie_equipement` | **Décision**, avec U 64 : les deux lignes étendues à la 5ᵉ ; la borne « à construire ou à modifier » n'a pas d'attribut |
 | `MS 41` | Tout ERP des catégories 1 à 4 | `libre` | Ligne nouvelle N1–N4 : plan d'intervention à chaque entrée (porté en 5ᵉ avec sommeil seulement) |
 | `MS 58 § 3 et § 4 — contrat d'entretien de la détection, annexé au registre` | ERP des catégories 1 à 4 avec détection | `libre` | Ligne sur `ALARME_INCENDIE` N1–N4, patron de PE 4 § 1 |
 | `EC 13 — notice annexée au registre et entretiens consignés` | ERP des catégories 1 à 4 | `libre` | Ligne d'état permanent sur `BAES` N1–N4 (notice annexée) |
