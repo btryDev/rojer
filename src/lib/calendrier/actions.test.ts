@@ -109,6 +109,7 @@ function poserEtablissement(
     estIGH: false,
     estHabitation: false,
     typeErp: null,
+    typesErpAutres: [],
     categorieErp: null,
     classeIgh: null,
     familleHabitation: null,

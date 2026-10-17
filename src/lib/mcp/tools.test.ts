@@ -116,6 +116,7 @@ describe("le serveur dit quand le calendrier n'est pas à jour", () => {
       estIGH: false,
       estHabitation: false,
       typeErp: "N",
+      typesErpAutres: [],
       categorieErp: "cinq",
       entreprise: {
         raisonSociale: "Port SARL",
@@ -175,6 +176,7 @@ describe("portée des lectures", () => {
       estIGH: false,
       estHabitation: false,
       typeErp: "N",
+      typesErpAutres: [],
       categorieErp: "cinq",
       entreprise: {
         raisonSociale: "Port SARL",
@@ -639,6 +641,7 @@ describe("provenance de la réponse", () => {
     estIGH: false,
     estHabitation: false,
     typeErp: "M",
+    typesErpAutres: [],
     categorieErp: "cinq",
     entreprise: {
       raisonSociale: "Maak",
@@ -776,6 +779,7 @@ describe("une ligne retenue par prudence le dit à l'assistant (2026-09-27)", ()
     estIGH: false,
     estHabitation: false,
     typeErp: null,
+    typesErpAutres: [],
     categorieErp: null,
     classeIgh: null,
     familleHabitation: null,
@@ -904,6 +908,7 @@ describe("le serveur dit qu'aucun équipement n'est déclaré (§ 15)", () => {
       estIGH: false,
       estHabitation: false,
       typeErp: null,
+      typesErpAutres: [],
       categorieErp: null,
       referentielVersionCalendrier: SCEAU_CALENDRIER,
       entreprise: { raisonSociale: "Comptoir SAS", siret: null, codeNaf: "56.10A", effectif: 3 },

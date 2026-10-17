@@ -349,6 +349,7 @@ describe("compterEtatCalendrier — D1 (a), la prudence (2026-09-28)", () => {
     estIGH: false,
     estHabitation: false,
     typeErp: null,
+    typesErpAutres: [],
     categorieErp: null,
     classeIgh: null,
     familleHabitation: null,

@@ -95,6 +95,7 @@ export async function faitsDeCouverture(
     estIGH: etab.estIGH,
     estHabitation: etab.estHabitation,
     typeErp: etab.typeErp,
+    typesErpAutres: etab.typesErpAutres,
     categorieErp: etab.categorieErp,
     classeIgh: etab.classeIgh,
     familleHabitation: etab.familleHabitation,

@@ -81,6 +81,11 @@ model Etablissement {
   // que Prisma ne sait pas exprimer ici. Le moteur écarte sur leur absence
   // (`evaluerErp`) parce que la base l'interdit — `absence-erp.test.ts`.
   typeErp                 TypeErp?
+  // Les autres types d'ERP, quand l'établissement groupe plusieurs exploitations
+  // (GN 2, ADR-045). Une seule catégorie pour l'ensemble. `typeErp` reste le
+  // premier type déclaré, sans portée juridique. Deux contraintes CHECK
+  // (migration 20261017120000) : vide hors ERP, et sans `typeErp` dedans.
+  typesErpAutres          TypeErp[]          @default([])
   categorieErp            CategorieErp?
   classeIgh               ClasseIgh?
   // Famille au sens de l'arrêté du 31 janvier 1986 (ADR-025 § 4). Nullable

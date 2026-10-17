@@ -50,6 +50,8 @@ export type EtablissementFaux = {
   estIGH: boolean;
   estHabitation: boolean;
   typeErp: string | null;
+  /** ADR-045. REQUIS, comme en base (`NOT NULL DEFAULT []`). */
+  typesErpAutres: string[];
   categorieErp: string | null;
   classeIgh: string | null;
   familleHabitation: string | null;

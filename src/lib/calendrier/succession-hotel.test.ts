@@ -38,6 +38,7 @@ function poserEtablissement(typeErp: "O" | "N"): EtablissementFaux {
     estIGH: false,
     estHabitation: false,
     typeErp,
+    typesErpAutres: [],
     categorieErp: "N5",
     classeIgh: null,
     familleHabitation: null,

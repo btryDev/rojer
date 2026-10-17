@@ -23,6 +23,7 @@ import {
 import { determineObligationsApplicables, evaluerObligation } from "./engine";
 import type { EquipementMatching, EtablissementMatching } from "./types";
 import { typesErpDe } from "./types-erp";
+import { projeterEtablissement } from "./projection";
 
 const TYPES: TypeErp[] = [
   "J", "L", "M", "N", "O", "P", "R", "S", "T", "U", "V", "W", "X", "Y",
@@ -273,5 +274,19 @@ describe("typesErpDe", () => {
     expect([...ids({ ...erp([], "N4"), typesErpAutres: ["M"] })].sort()).toEqual(
       [...ids(erp(["M"], "N4"))].sort(),
     );
+  });
+});
+
+describe("la projection porte les autres types enregistrés (lot 2)", () => {
+  it("un restaurant déclaré N, avec O parmi les autres types, reçoit les lignes de l'hôtel", () => {
+    const { effectifEntreprise, ...ligne } = erp(["N"], "N3", true);
+    const projete = projeterEtablissement({
+      ...ligne,
+      typesErpAutres: ["O"],
+      entreprise: { effectif: effectifEntreprise },
+    });
+    expect(projete.typesErpAutres).toEqual(["O"]);
+    expect(ids(projete).has("incendie-erp-hotel-consigne-chambres")).toBe(true);
+    expect(ids(erp(["N"], "N3", true)).has("incendie-erp-hotel-consigne-chambres")).toBe(false);
   });
 });

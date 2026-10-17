@@ -23,6 +23,7 @@ const h = vi.hoisted(() => {
       estIGH: false,
       estHabitation: false,
       typeErp: null,
+      typesErpAutres: [],
       categorieErp: null,
       classeIgh: null,
       personnesPresentesHabituellement: null,
