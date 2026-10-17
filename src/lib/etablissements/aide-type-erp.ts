@@ -22,9 +22,15 @@ import type { CategorieErp, TypeErp } from "@/lib/referentiels/types-communs";
  *
  * Le titre II du livre II ne vise que les quatre premières catégories : chaque
  * phrase le dit. Aucune ne qualifie la situation (ligne de partage 8).
+ * [2026-10-17, sous-lot E : la phrase X vient du code du sport, qui vaut en
+ * toutes catégories ; elle ne parle pas des « quatre premières catégories », et
+ * X est dans `TYPES_AIDE_TOUTES_CATEGORIES`.]
  *
- * X : EMPLACEMENT RÉSERVÉ, vide. La phrase « piscines » du type X viendra avec
- * le lot « filtre à l'accueil » (plan, § 5) ; rien n'est dit d'ici là.
+ * ~~X : EMPLACEMENT RÉSERVÉ, vide. La phrase « piscines » du type X viendra avec
+ * le lot « filtre à l'accueil » (plan, § 5) ; rien n'est dit d'ici là.~~
+ * [2026-10-17, sous-lot E (`lot/ref-e-sport`, rebasé sur D) : la phrase du
+ * code du sport occupe X ; la phrase « piscines » du lot « filtre à l'accueil »
+ * s'ajoutera à la sienne.]
  */
 export const AIDE_TYPE_ERP: Partial<Record<TypeErp, string>> = {
   // M 35 : annonce, décision de c6 du 2026-10-17 — une niche, et la mise à
@@ -33,16 +39,24 @@ export const AIDE_TYPE_ERP: Partial<Record<TypeErp, string>> = {
   M: `Dans un magasin des quatre premières catégories qui met des machines-outils à la disposition du public, Rojer ne suit pas ${nonPorte("la surveillance directe de ces machines par un personnel compétent de l'établissement")} (règlement de sécurité, art. M 35).`,
   // T 52 § 2, T 29 § 3, T 33 § 2, T 43, T 44 : annonces (décisions de c6 du
   // 2026-10-17 ; plan, § 5).
+  // X : le code du sport — R. 322-5 (affichages, dont l'affiche Signal-sports
+  // de l'arrêté du 20 mai 2025), L. 212-8 (emploi d'éducateurs qualifiés),
+  // L. 321-7 (assurance), A. 322-3 (information des pratiquants) : annonces,
+  // décision de la propriétaire du 2026-10-17 (sous-lot E, « on n'est pas un
+  // outil de gestion de salle de sport, on n'alourdit pas »). Le code du sport
+  // vaut en toutes catégories : la phrase ne dit pas « quatre premières ».
+  X: `Dans un établissement sportif, Rojer ne suit pas ${nonPorte("les affichages propres aux établissements sportifs (diplômes et cartes des éducateurs, textes de sécurité, attestation d'assurance, affiche Signal-sports)")}, ${nonPorte("la qualification des éducateurs employés")}, ${nonPorte("l'assurance de responsabilité civile de l'exploitant")} ni ${nonPorte("l'information des pratiquants")} (code du sport, art. R. 322-5, L. 212-8, L. 321-7, A. 322-3).`,
   T: `Dans une salle d'exposition des quatre premières catégories, Rojer ne suit pas ${nonPorte("le nettoyage quotidien des locaux et l'enlèvement des déchets chaque jour avant l'ouverture au public")} (règlement de sécurité, art. T 52 § 2), ni ${nonPorte("la présence d'une personne compétente pendant l'ouverture au public, au-delà de 200 kW de puissance utile installée ou de 200 kVA de puissance électrique mise en œuvre")} (art. T 29 § 3 et T 33 § 2), ni ${nonPorte("la demande d'autorisation, adressée par l'exposant, de présenter des machines utilisant des substances radioactives ou génératrices de rayons X")} (art. T 43), ni ${nonPorte("la déclaration préalable de l'emploi de lasers dans les salles, faite par l'exposant")} (art. T 44).`,
 };
 
 /**
- * Les types dont l'aide vaut quelle que soit la catégorie. Vide : les aides
- * M et T disent le titre II du livre II, qui ne vise que les quatre premières
- * catégories. Une aide fondée sur un autre texte (le code du sport, pour X) y
- * entre avec sa phrase.
+ * Les types dont l'aide vaut quelle que soit la catégorie. ~~Vide~~ [2026-10-17,
+ * sous-lot E : X, dont l'aide vient du code du sport, qui vaut en toutes
+ * catégories] : les aides M et T disent le titre II du livre II, qui ne vise
+ * que les quatre premières catégories. Une aide fondée sur un autre texte (le
+ * code du sport, pour X) y entre avec sa phrase.
  */
-export const TYPES_AIDE_TOUTES_CATEGORIES: ReadonlySet<TypeErp> = new Set<TypeErp>();
+export const TYPES_AIDE_TOUTES_CATEGORIES: ReadonlySet<TypeErp> = new Set<TypeErp>(["X"]);
 
 const QUATRE_PREMIERES: readonly string[] = ["N1", "N2", "N3", "N4"];
 

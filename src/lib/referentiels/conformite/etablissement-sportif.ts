@@ -21,7 +21,9 @@
  *
  * LA PHRASE DE `AIDE_TYPE_ERP.X` (`src/lib/etablissements/aide-type-erp.ts`,
  * surface créée par le sous-lot D, qui merge avant E — décision de c6 du
- * 2026-10-17). Elle entre au rebase de E sur D, telle que relue ici ; chaque
+ * 2026-10-17). ~~Elle entre au rebase de E sur D, telle que relue ici~~
+ * [2026-10-17 : posée au rebase sur D (#65), telle que relue ici, et X ajouté
+ * à `TYPES_AIDE_TOUTES_CATEGORIES`] ; chaque
  * sujet passe par `nonPorte(…)`, et les `declareA` du corpus en citent quatre
  * fragments mot pour mot (vérifié le 2026-10-17) :
  *   Dans un établissement sportif, Rojer ne suit pas ${nonPorte("les

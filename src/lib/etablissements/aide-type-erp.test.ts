@@ -61,8 +61,28 @@ describe("AIDE_TYPE_ERP — adresse des annonces par type (2026-10-17)", () => {
     expect(AIDE_TYPE_ERP.T).toContain("faite par l'exposant");
   });
 
-  it("le type X n'a pas encore d'aide : emplacement réservé au lot « filtre à l'accueil »", () => {
-    expect(AIDE_TYPE_ERP.X).toBeUndefined();
+  // ~~it("le type X n'a pas encore d'aide : emplacement réservé au lot « filtre
+  // à l'accueil »", () => { expect(AIDE_TYPE_ERP.X).toBeUndefined(); });~~ —
+  // 2026-10-17, sous-lot E (rebasé sur D) : X porte la phrase du code du sport.
+  it("borne basse : les articles du code du sport annoncés par le sous-lot E la donnent (X)", () => {
+    const refs = CORPUS.flatMap((c) => c.articles)
+      .filter((a) => a.statut === "non_couvert" && ADRESSE.exec(a.declareA ?? "")?.[1] === "X")
+      .map((a) => a.ref);
+    expect(refs).toEqual(
+      expect.arrayContaining([
+        "C. sport R. 322-5",
+        "C. sport L. 212-8",
+        "C. sport L. 321-7",
+        "C. sport A. 322-3",
+        "Arrêté 2025-05-20 art. 1",
+        "Arrêté 2025-05-20 art. 2",
+      ]),
+    );
+  });
+
+  it("cassure : l'aide du type X réécrite laisse le code du sport sans adresse", () => {
+    const casse = { ...AIDE_TYPE_ERP, X: AIDE_TYPE_ERP.X!.replace("l'information des pratiquants", "l'information") };
+    expect(adressesMortes(casse)).toContain("C. sport A. 322-3");
   });
 });
 
@@ -82,6 +102,12 @@ describe("aidesDesTypes — l'aide n'apparaît que pour un type déclaré", () =
     expect(aidesDesTypes(["T", "M"], "N5")).toEqual([]);
     expect(aidesDesTypes(["T", "M"], null)).toEqual([]);
     expect(aidesDesTypes(["T", "M"], "")).toEqual([]);
+  });
+
+  it("X, fondée sur le code du sport, s'affiche en toutes catégories — T et M non (sous-lot E, 2026-10-17)", () => {
+    expect(aidesDesTypes(["X"], "N5").map((a) => a.type)).toEqual(["X"]);
+    expect(aidesDesTypes(["X"], "N2").map((a) => a.type)).toEqual(["X"]);
+    expect(aidesDesTypes(["T", "X"], "N5").map((a) => a.type)).toEqual(["X"]);
   });
 
   it("l'ordre est celui de la déclaration", () => {

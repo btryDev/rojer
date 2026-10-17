@@ -1963,7 +1963,7 @@ describe("référentiel conformité — version et empreinte", () => {
     // et R. 322-25 (plan de vérification des buts et paniers, catégorie
     // `BUT_PANIER_SPORTIF`). rebasé sur D (#65) : 198 + 2 − 0 = 200 ; relevée en appelant
     // `empreinteReferentiel()`.
-    { version: "2026-10-17.6", empreinte: "A-REMESURER" },
+    { version: "2026-10-17.6", empreinte: "200-7e27df57c13e9" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
