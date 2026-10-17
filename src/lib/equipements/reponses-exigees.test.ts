@@ -30,7 +30,7 @@ type Reponses = Partial<Record<ChampTriEtat, boolean>>;
 const ERP = (
   categorieErp: RegimeExigence["categorieErp"],
   ssiCategorieAouB: boolean | null = null,
-): RegimeExigence => ({ estERP: true, typeErp: "M", categorieErp, ssiCategorieAouB });
+): RegimeExigence => ({ estERP: true, typeErp: "M", typesErpAutres: [], categorieErp, ssiCategorieAouB });
 
 function combinaisons(champs: readonly ChampTriEtat[], silence: boolean): Reponses[] {
   return champs.reduce<Reponses[]>(

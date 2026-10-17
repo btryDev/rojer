@@ -20,6 +20,7 @@ import {
   etablissementSchema,
   reponseEpiCoherente,
   reponseSommeilSuivantLeType,
+  typesErpAutresCoherents,
 } from "./schema";
 
 export type EtablissementActionState =
@@ -51,6 +52,8 @@ const CHAMPS_STRUCTURANTS = [
   "estIGH",
   "estHabitation",
   "typeErp",
+  // ADR-045 : un type ajouté ou retiré fait entrer ou sortir des lignes.
+  "typesErpAutres",
   "categorieErp",
   // `classeIgh` et `familleHabitation` ont quitté cette liste le 2026-09-03
   // avec les questions qui les posaient : plus aucun formulaire ne les poste,
@@ -88,8 +91,11 @@ function typologieAChange(
   avant: ProfilStructurant,
   apres: Partial<ProfilStructurant>,
 ): boolean {
+  // Une liste se compare par son contenu, pas par sa référence : sans quoi
+  // `typesErpAutres` « changerait » à chaque enregistrement.
+  const valeur = (v: unknown) => JSON.stringify(v ?? null);
   return CHAMPS_STRUCTURANTS.some(
-    (c) => c in apres && (apres[c] ?? null) !== (avant[c] ?? null),
+    (c) => c in apres && valeur(apres[c]) !== valeur(avant[c]),
   );
 }
 
@@ -116,6 +122,11 @@ function normaliserFormData(fd: FormData): Record<string, unknown> {
     estIGH: regime("estIGH"),
     estHabitation: regime("estHabitation"),
     typeErp: raw.typeErp || undefined,
+    // Plusieurs valeurs possibles (ADR-045) : `getAll`, pas `raw`. Non posté =
+    // omis, et la valeur en base est gardée (`typesErpAutresCoherents`).
+    ...(fd.has("typesErpAutres")
+      ? { typesErpAutres: fd.getAll("typesErpAutres").filter((v) => v !== "") }
+      : {}),
     categorieErp: raw.categorieErp || undefined,
     natureActivite: raw.natureActivite,
     // Ces quatre champs ne sont rendus que dans le bloc `{estERP && (…)}` du
@@ -207,7 +218,10 @@ export async function creerEtablissement(
   const etab = await prisma.etablissement.create({
     data: {
       entrepriseId,
-      ...reponseSommeilSuivantLeType(parsed.data),
+      ...reponseSommeilSuivantLeType({
+        ...parsed.data,
+        typesErpAutres: typesErpAutresCoherents(parsed.data),
+      }),
       // ADR-019 : tout établissement naît avec son bâtiment principal.
       batiments: { create: { nom: NOM_BATIMENT_PRINCIPAL, ordre: 0 } },
     },
@@ -292,6 +306,7 @@ export async function modifierEtablissement(
       estIGH: true,
       estHabitation: true,
       typeErp: true,
+      typesErpAutres: true,
       categorieErp: true,
       classeIgh: true,
       familleHabitation: true,
@@ -307,7 +322,20 @@ export async function modifierEtablissement(
     return { status: "error", message: "Établissement introuvable" };
   }
 
-  const donnees = reponseEpiCoherente(reponseSommeilSuivantLeType(parsed.data));
+  // Les autres types d'abord : la réponse sur le sommeil se lit sur
+  // l'ensemble des types (ADR-045), y compris ceux que le formulaire n'a pas
+  // postés et que la base garde.
+  const donnees = reponseEpiCoherente(
+    reponseSommeilSuivantLeType({
+      ...parsed.data,
+      typesErpAutres: typesErpAutresCoherents(
+        // Le premier type qui restera en base : le posté, sinon l'enregistré
+        // (`|| undefined` en amont le laisse en place quand il n'est pas posté).
+        { ...parsed.data, typeErp: parsed.data.typeErp ?? avant.typeErp },
+        avant.typesErpAutres,
+      ),
+    }),
+  );
   const etab = await prisma.etablissement.update({
     where: { id },
     data: donnees,

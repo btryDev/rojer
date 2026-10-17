@@ -77,6 +77,7 @@ export const composerRegistreDeLEtablissement = cache(
         estIGH: true,
         estHabitation: true,
         typeErp: true,
+        typesErpAutres: true,
         categorieErp: true,
         classeIgh: true,
         familleHabitation: true,

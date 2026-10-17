@@ -7,6 +7,9 @@ import type { EtablissementMatching } from "./types";
  *
  * C'est la seule lecture des types que le moteur fasse. `typeErp` seul est
  * le premier type déclaré, pas un type principal : GN 2 n'en connaît pas.
+ *
+ * Elle ne regarde pas le régime : c'est `matchTypologie` qui écarte les
+ * autres types d'un établissement qui n'est pas ERP.
  */
 export function typesErpDe(
   etab: Pick<EtablissementMatching, "typeErp" | "typesErpAutres">,

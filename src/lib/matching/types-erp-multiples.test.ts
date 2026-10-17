@@ -23,6 +23,7 @@ import {
 import { determineObligationsApplicables, evaluerObligation } from "./engine";
 import type { EquipementMatching, EtablissementMatching } from "./types";
 import { typesErpDe } from "./types-erp";
+import { projeterEtablissement } from "./projection";
 
 const TYPES: TypeErp[] = [
   "J", "L", "M", "N", "O", "P", "R", "S", "T", "U", "V", "W", "X", "Y",
@@ -146,6 +147,10 @@ describe("plusieurs types : l'union, puis un membre par groupe", () => {
     }
   });
 
+  // Délai explicite (2026-10-17) : 1 540 triplets × 5 catégories × 3 réponses
+  // sommeil, soit ~23 000 appels du moteur — environ 5 s en CI, au bord du
+  // délai par défaut de vitest (5 s), qui a fait échouer la PR #50 sans erreur
+  // de logique. Ce n'est pas un palliatif : la grille est le contenu du test.
   it("chaque groupe sort au plus un membre, pour tout triplet de types", () => {
     expect(TRIPLETS.length).toBe(1540);
     for (const ts of TRIPLETS) {
@@ -159,7 +164,7 @@ describe("plusieurs types : l'union, puis un membre par groupe", () => {
         }
       }
     }
-  });
+  }, 60_000);
 
   it("l'union dépasse au moins une fois chacun des types déclarés seuls (borne basse)", () => {
     // M + O en 3ᵉ catégorie : M seul n'a ni la consigne des chambres ni les
@@ -273,5 +278,58 @@ describe("typesErpDe", () => {
     expect([...ids({ ...erp([], "N4"), typesErpAutres: ["M"] })].sort()).toEqual(
       [...ids(erp(["M"], "N4"))].sort(),
     );
+  });
+});
+
+describe("la projection porte les autres types enregistrés (lot 2)", () => {
+  it("un restaurant déclaré N, avec O parmi les autres types, reçoit les lignes de l'hôtel", () => {
+    const { effectifEntreprise, ...ligne } = erp(["N"], "N3", true);
+    const projete = projeterEtablissement({
+      ...ligne,
+      typesErpAutres: ["O"],
+      entreprise: { effectif: effectifEntreprise },
+    });
+    expect(projete.typesErpAutres).toEqual(["O"]);
+    expect(ids(projete).has("incendie-erp-hotel-consigne-chambres")).toBe(true);
+    expect(ids(erp(["N"], "N3", true)).has("incendie-erp-hotel-consigne-chambres")).toBe(false);
+  });
+});
+
+describe("hors ERP, les autres types gardés en base ne décident de rien (2026-10-17)", () => {
+  // Décocher « ERP » garde les autres types, comme `typeErp` (symétrie
+  // décidée le 2026-10-17). Le moteur doit alors les ignorer.
+  const horsErp = (types: TypeErp[], autresTypes: TypeErp[]): EtablissementMatching => ({
+    ...erp(types, "N3", true),
+    estERP: false,
+    typesErpAutres: autresTypes,
+  });
+
+  it("sur le référentiel, un non-ERP qui garde des types reçoit les mêmes lignes que sans", () => {
+    for (const t of [[], ["N"], ["O"]] as TypeErp[][]) {
+      for (const autres of [["O"], ["M", "W"], TYPES.filter((x) => !t.includes(x))] as TypeErp[][]) {
+        expect([...ids(horsErp(t, autres), PARC)].sort(), `${t} + ${autres}`).toEqual(
+          [...ids(horsErp(t, []), PARC)].sort(),
+        );
+      }
+    }
+  });
+
+  it("même une ligne qui lit le sommeil sans critère ERP ne sort pas par un type gardé", () => {
+    // Le référentiel n'en porte pas aujourd'hui : c'est ce qui rendrait la
+    // garde invisible sur les vraies lignes. Une obligation synthétique la
+    // rend observable.
+    const modele = obligationsConformite.find((o) => o.id === "incendie-erp-5-visite-commission")!;
+    const sommeil = {
+      ...modele,
+      id: "synthetique-sommeil-sans-erp",
+      typologies: { travail: true, locauxSommeilPublic: true },
+    } as typeof modele;
+    const sortie = determineObligationsApplicables(horsErp(["N"], ["O"]), [], { obligations: [sommeil] });
+    expect(sortie).toEqual([]);
+    // Et ERP, O parmi les autres types, elle sort : la garde ne vise que le hors-ERP.
+    const erpO = determineObligationsApplicables({ ...horsErp(["N"], ["O"]), estERP: true }, [], {
+      obligations: [sommeil],
+    });
+    expect(erpO).toHaveLength(1);
   });
 });

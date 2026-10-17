@@ -19,6 +19,7 @@ describe("reponseSommeilSuivantLeType", () => {
       estERP: true,
       typeErp: "N",
       comporteLocauxSommeilPublic: true,
+      typesErpAutres: [],
     });
     expect(apres.comporteLocauxSommeilPublic).toBeNull();
   });
@@ -28,6 +29,7 @@ describe("reponseSommeilSuivantLeType", () => {
       estERP: false,
       typeErp: "O",
       comporteLocauxSommeilPublic: true,
+      typesErpAutres: [],
     });
     expect(apres.comporteLocauxSommeilPublic).toBeNull();
   });
@@ -41,6 +43,7 @@ describe("reponseSommeilSuivantLeType", () => {
           estERP: true,
           typeErp,
           comporteLocauxSommeilPublic: reponse,
+          typesErpAutres: [],
         });
         expect(apres.comporteLocauxSommeilPublic, typeErp).toBe(reponse);
       }
@@ -52,11 +55,13 @@ describe("reponseSommeilSuivantLeType", () => {
       estERP: true,
       typeErp: "M",
       comporteLocauxSommeilPublic: false,
+      typesErpAutres: [],
       raisonDisplay: "La Boutique",
     };
     expect(reponseSommeilSuivantLeType(avant)).toEqual({
       ...avant,
       comporteLocauxSommeilPublic: null,
+      typesErpAutres: [],
     });
   });
 });

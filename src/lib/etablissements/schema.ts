@@ -80,18 +80,58 @@ export function reponseSommeilSuivantLeType<
   T extends {
     estERP?: boolean | null;
     typeErp?: string | null;
+    // REQUIS (revue du lot 2) : optionnel, un appelant l'omettait sans que
+    // tsc le voie, et un N + O se voyait refuser la réponse de son hôtel.
+    typesErpAutres: readonly string[] | null | undefined;
     comporteLocauxSommeilPublic?: boolean | null;
   },
 >(donnees: T): T {
-  const questionPosee =
-    donnees.estERP === true &&
-    donnees.typeErp != null &&
-    (TYPES_ERP_QUESTION_LOCAUX_SOMMEIL as readonly string[]).includes(
-      donnees.typeErp,
-    );
-  return questionPosee
+  return questionSommeilPosee(donnees)
     ? donnees
     : { ...donnees, comporteLocauxSommeilPublic: null };
+}
+
+/**
+ * La question des locaux à sommeil est-elle posée à cet établissement ? Oui
+ * pour un ERP dont L'UN des types déclarés est de la liste (ADR-045) : un
+ * restaurant qui exploite aussi un hôtel — N déclaré en premier, O parmi les
+ * autres — doit pouvoir répondre, et sa réponse ne doit pas être effacée.
+ *
+ * Seule lecture de la règle : les schémas de création et de modification et
+ * `reponseSommeilSuivantLeType` passent par elle.
+ */
+export function questionSommeilPosee(donnees: {
+  estERP?: boolean | null;
+  typeErp?: string | null;
+  /** REQUIS : `undefined` doit être écrit, pas omis — c'est dire « non posté ». */
+  typesErpAutres: readonly string[] | null | undefined;
+}): boolean {
+  if (donnees.estERP !== true) return false;
+  const types = [donnees.typeErp, ...(donnees.typesErpAutres ?? [])];
+  return types.some(
+    (t) => t != null && (TYPES_ERP_QUESTION_LOCAUX_SOMMEIL as readonly string[]).includes(t),
+  );
+}
+
+/**
+ * Les autres types d'ERP à écrire, cohérents avec la contrainte de la base
+ * (migration `20261017120000`) : ni `typeErp` ni doublon dedans. Sans quoi
+ * l'écriture planterait.
+ *
+ * `enBase` est la valeur enregistrée : un formulaire qui ne poste pas le champ
+ * la garde. Décocher « ERP » la garde aussi, comme `typeErp` et la catégorie
+ * (décision du 2026-10-17) — le moteur l'ignore hors ERP. Changer le premier
+ * type pour l'un des autres l'en retire.
+ *
+ * `typeErp` est le premier type QUI SERA EN BASE : le posté, ou à défaut
+ * celui qu'un formulaire sans le champ laisse en place.
+ */
+export function typesErpAutresCoherents<T extends string>(
+  donnees: { typeErp?: string | null; typesErpAutres?: readonly T[] },
+  enBase: readonly T[] = [],
+): T[] {
+  const source = donnees.typesErpAutres ?? enBase;
+  return [...new Set(source)].filter((t) => t !== donnees.typeErp);
 }
 
 export type TypeErpQuestionLocauxSommeil =
@@ -271,6 +311,9 @@ export const etablissementSchema = z
       (v) => (v === "" || v === null ? undefined : v),
       z.enum(TYPE_ERP).optional(),
     ),
+    // Les autres types d'ERP (ADR-045, GN 2). Absent = le formulaire ne l'a
+    // pas posté : la valeur en base est gardée (`typesErpAutresCoherents`).
+    typesErpAutres: z.array(z.enum(TYPE_ERP)).optional(),
     categorieErp: z.preprocess(
       (v) => (v === "" || v === null ? undefined : v),
       z.enum(CATEGORIES_ERP).optional(),
@@ -365,12 +408,14 @@ export const etablissementSchema = z
     // porte, pas le parcours, qui doit porter la règle ». Même contrôle que
     // celui d'`onboarding/schema.ts`. Hors de la liste, rien n'est refusé : la
     // valeur est remise à `null` par `reponseSommeilSuivantLeType`.
+    // La liste POSTÉE seulement : la fusion avec la valeur en base se fait
+    // après, dans l'action. Un N + O dont O ne vient que de la base et dont la
+    // réponse est vide n'est donc pas refusé ici (revue du lot 2) — il n'a
+    // aucun écran pour répondre avant le lot 3, qui postera la liste. D'ici
+    // là, le moteur retient ses lignes de sommeil « à confirmer », et la
+    // relance de la fiche (`repondreSommeil`) lui pose la question.
     if (
-      val.estERP &&
-      val.typeErp != null &&
-      (TYPES_ERP_QUESTION_LOCAUX_SOMMEIL as readonly string[]).includes(
-        val.typeErp,
-      ) &&
+      questionSommeilPosee({ ...val, typesErpAutres: val.typesErpAutres }) &&
       (val.comporteLocauxSommeilPublic === undefined ||
         val.comporteLocauxSommeilPublic === null)
     ) {
@@ -427,6 +472,13 @@ export const etablissementSchema = z
       }
     } else {
       // Si pas ERP, ni typeErp ni categorieErp ne doivent être posés
+      if (val.typesErpAutres && val.typesErpAutres.length > 0) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["typesErpAutres"],
+          message: "Ne doit être posé que si l'établissement est ERP",
+        });
+      }
       if (val.typeErp) {
         ctx.addIssue({
           code: "custom",

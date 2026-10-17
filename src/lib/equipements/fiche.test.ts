@@ -682,6 +682,7 @@ function ficheAuMoteur(opts: {
       estIGH: false,
       estHabitation: false,
       typeErp: null,
+      typesErpAutres: [],
       categorieErp: null,
       classeIgh: null,
       familleHabitation: null,
@@ -787,7 +788,7 @@ describe("obligationsApplicablesALAppareil — ce que comptent la pastille et le
   // sur 4.
   const porteEnErp = ficheAuMoteur({
     categorie: "PORTE_AUTO",
-    etablissement: { estERP: true, typeErp: "N", categorieErp: "N5" },
+    etablissement: { estERP: true, typeErp: "N", typesErpAutres: [], categorieErp: "N5" },
   });
 
   it("compte les états permanents de l'appareil, sans aucune ligne de suivi", () => {
