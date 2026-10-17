@@ -4,6 +4,7 @@ import { useState } from "react";
 import { TYPE_ERP } from "@/lib/etablissements/schema";
 import { LABEL_TYPE_ERP } from "@/lib/etablissements/labels";
 import { CHAMP_TEMOIN_TYPES_ERP_AUTRES } from "@/lib/etablissements/types-erp-affiches";
+import { ChevronRepli, LIEN_REPLI } from "@/components/ui/repli";
 
 /** La case à cocher du board : encre pleine à l'état coché, filet d'ardoise. */
 const CASE_A_COCHER =
@@ -74,13 +75,8 @@ export function AutresTypesErp({
         onToggle={(e) => setOuvert(e.currentTarget.open)}
         className="group"
       >
-        <summary className="inline-flex cursor-pointer list-none items-center gap-2 text-[12.5px] font-semibold text-[color:var(--board-slate-ink)] transition-colors hover:text-[color:var(--board-ink)]">
-          <span
-            aria-hidden
-            className="transition-transform group-open:rotate-90 motion-reduce:transition-none"
-          >
-            ›
-          </span>
+        <summary className={LIEN_REPLI}>
+          <ChevronRepli />
           Votre arrêté d&apos;ouverture mentionne plusieurs types ? (par
           exemple, un hôtel avec restaurant)
         </summary>

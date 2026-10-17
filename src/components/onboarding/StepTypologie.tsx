@@ -20,6 +20,7 @@ import {
 import {
   AIDE_HABITATION,
   AIDE_IGH,
+  AIDE_LOCAUX_SOMMEIL,
   QUESTION_IGH,
 } from "@/lib/etablissements/aides-regimes";
 import { QUESTION_MATIERES } from "@/lib/etablissements/questions";
@@ -302,7 +303,7 @@ export function StepTypologie({
                   <div className="flex flex-col gap-3">
                     <SousQuestion
                       question="Votre établissement héberge-t-il du public pour la nuit ?"
-                      aide="Chambres d'hôtel, chambres d'hôtes, gîte, hébergement — des locaux où le public dort. Un logement de fonction occupé par vous ou par un salarié ne compte pas : le texte vise le sommeil du public. Si oui, et en 5ᵉ catégorie, s'ajoutent un contrat annuel d'entretien de la détection incendie, des consignes et des plans affichés, et une visite de la commission de sécurité tous les cinq ans (arrêté du 25 juin 1980, art. PE 4, PE 33, PE 35 et PE 37)."
+                      aide={AIDE_LOCAUX_SOMMEIL}
                     />
                     <select
                       id="comporteLocauxSommeilPublic"

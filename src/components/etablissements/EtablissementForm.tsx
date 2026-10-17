@@ -21,7 +21,7 @@ import {
   LABEL_TYPE_ERP,
 } from "@/lib/etablissements/labels";
 import type { EtablissementActionState } from "@/lib/etablissements/actions";
-import { AIDE_HABITATION, AIDE_IGH } from "@/lib/etablissements/aides-regimes";
+import { AIDE_HABITATION, AIDE_IGH, AIDE_LOCAUX_SOMMEIL } from "@/lib/etablissements/aides-regimes";
 import {
   AIDE_EPI,
   AIDE_SSI,
@@ -684,15 +684,7 @@ export function EtablissementForm({
                       id="comporteLocauxSommeilPublic-aide"
                       className="m-0 mt-1.5 max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
                     >
-                      Chambres d&apos;hôtel, chambres d&apos;hôtes, gîte,
-                      hébergement — des locaux où le public dort. Un logement de fonction occupé par
-                      vous ou par un salarié ne compte pas : le texte vise le
-                      sommeil du public. Si oui, et en 5ᵉ catégorie,
-                      s&apos;ajoutent un contrat
-                      annuel d&apos;entretien de la détection incendie, des
-                      consignes et des plans affichés, et une visite de la
-                      commission de sécurité tous les cinq ans (arrêté du
-                      25 juin 1980, art. PE 4, PE 33, PE 35 et PE 37).
+                      {AIDE_LOCAUX_SOMMEIL}
                     </p>
                   </div>
                   )}

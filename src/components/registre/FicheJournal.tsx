@@ -15,6 +15,7 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { ChevronRepli, LIEN_REPLI } from "@/components/ui/repli";
 import type { ChampFiche } from "@/lib/registre/champs";
 import { ChampSaisie } from "./ChampSaisie";
 import { afficherSaisieLe, afficherValeur } from "@/lib/registre/valeur";
@@ -128,10 +129,8 @@ export function FicheJournal({
           plus souvent qu'elle ne s'écrit ; ouvert quand il est vide, où le
           geste attendu est justement d'écrire la première ligne. */}
       <details open={lignes.length === 0} className="group">
-        <summary className="inline-flex cursor-pointer list-none items-center gap-2 text-[12.5px] font-semibold text-[color:var(--board-slate-ink)] transition-colors hover:text-[color:var(--board-ink)]">
-          <span aria-hidden className="transition-transform group-open:rotate-90">
-            ›
-          </span>
+        <summary className={LIEN_REPLI}>
+          <ChevronRepli />
           Ajouter une ligne
         </summary>
 
