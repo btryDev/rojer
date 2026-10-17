@@ -1,9 +1,11 @@
 import { obligationParId } from "@/lib/referentiels/conformite";
 import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
 import { nafEffectif } from "@/lib/perimetre/secteur";
+import { typesErpDe } from "@/lib/matching/types-erp";
 import type {
   CategorieEquipement,
   CategorieErp,
+  TypeErp,
 } from "@/lib/referentiels/types-communs";
 
 /**
@@ -172,6 +174,14 @@ export type ContexteEtablissement = {
    * DAE sans que rien ne le dise.
    */
   categorieErp: CategorieErp | null;
+  /**
+   * Les types d'ERP déclarés (2026-10-17), lus par `typesErpDe` — le premier
+   * puis les autres (ADR-045). Ils ne servent qu'à l'eau chaude collective,
+   * suggérée aux types O et X. REQUIS, pour la même raison que la catégorie :
+   * un contexte qui les oublierait tairait la suggestion sans que rien ne le
+   * dise.
+   */
+  typesErp: readonly TypeErp[];
 };
 
 /**
@@ -186,6 +196,9 @@ export type ContexteEtablissement = {
  * repli que `perimetre/secteur.ts` (`nafEffectif`), et même moyen de ne pas
  * l'oublier : l'entreprise est un paramètre requis.
  */
+/** Les types d'ERP auxquels l'eau chaude collective est suggérée (2026-10-17). */
+export const TYPES_ERP_EAU_CHAUDE_SUGGEREE: readonly TypeErp[] = ["O", "X"];
+
 export function contexteDesSuggestions(etab: {
   codeNaf: string | null;
   entreprise: { codeNaf: string | null };
@@ -194,6 +207,8 @@ export function contexteDesSuggestions(etab: {
   estIGH: boolean;
   estHabitation: boolean;
   categorieErp: CategorieErp | null;
+  typeErp: TypeErp | null;
+  typesErpAutres: readonly TypeErp[];
 }): ContexteEtablissement {
   return {
     codeNaf: nafEffectif({
@@ -205,6 +220,7 @@ export function contexteDesSuggestions(etab: {
     estIGH: etab.estIGH,
     estHabitation: etab.estHabitation,
     categorieErp: etab.categorieErp,
+    typesErp: typesErpDe(etab),
   };
 }
 
@@ -418,6 +434,31 @@ export function suggererEquipements(ctx: ContexteEtablissement): Entree[] {
       motif:
         "Détention obligatoire, maintenance et déclaration à la base nationale",
       fondements: [{ obligationId: "dae-erp-detention" }],
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // ERP des types O et X → eau chaude collective (2026-10-17)
+  // ---------------------------------------------------------------------------
+  // Décision de la propriétaire du 2026-10-17 : la catégorie est suggérée aux
+  // hôtels (O) et aux établissements sportifs couverts (X), où les douches
+  // ouvertes au public sont le cas courant. L'arrêté du 1er février 2010 vise
+  // aussi les autres ERP qui en ont (art. 1er) : la catégorie reste ouverte à
+  // tous, seule la SUGGESTION est bornée. Le fondement est la ligne annuelle,
+  // celle dont le texte réserve la réalisation à un tiers.
+  if (
+    ctx.estERP &&
+    ctx.typesErp.some((t) => TYPES_ERP_EAU_CHAUDE_SUGGEREE.includes(t))
+  ) {
+    ajoute({
+      categorie: "EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC",
+      libelle: LABEL_CATEGORIE_EQUIPEMENT.EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC,
+      motif:
+        "Température chaque mois et analyse de légionelles chaque année, si l'eau chaude est produite en commun et alimente des douches ou bains à remous accessibles au public",
+      fondements: [
+        { obligationId: "ecs-legionelles-analyse-annuelle" },
+        { obligationId: "ecs-temperature-mensuelle" },
+      ],
     });
   }
 

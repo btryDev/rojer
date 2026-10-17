@@ -69,7 +69,7 @@ describe("balayage : toute catégorie suggérée à question exigée a sa questi
           estEtablissementTravail: Boolean(f & 1),
           estERP: Boolean(f & 2),
           estIGH: Boolean(f & 4),
-          estHabitation: Boolean(f & 8), categorieErp: null,
+          estHabitation: Boolean(f & 8), categorieErp: null, typesErp: [],
         };
         const suggestions = suggererEquipements(ctx);
         if (suggestions.length === 0) continue;
