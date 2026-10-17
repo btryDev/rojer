@@ -94,7 +94,7 @@ const MOTIF_MANIFESTATION_T =
   "Type T : une obligation propre à une MANIFESTATION temporaire — foire, salon, exposition —, à la charge de l'organisateur, du chargé de sécurité ou de l'exposant, ou une condition de son autorisation (« L'organisateur doit demander à l'autorité administrative l'autorisation de tenir une activité du présent type deux mois avant son ouverture », T 5 § 1). Ligne de partage 1 : ce qui conditionne le droit de tenir la manifestation ne se rythme pas, et ce qui se fait pendant elle (déclarations à l'organisateur, stands, démonstrations) ne pèse pas sur l'établissement que Rojer suit. Une TPE exposante y est soumise sur le stand d'un autre ; son propre établissement reste servi pour tout le reste. La salle d'exposition permanente de T 1 § 2 n'a ni organisateur ni exposant.";
 
 const MOTIF_SSIAP =
-  "Service de sécurité incendie assuré par des AGENTS DE SÉCURITÉ INCENDIE (MS 46 § 1 b), ou composé d'un effectif fixé, au-delà d'un seuil de public ou en 1ʳᵉ catégorie. Comme M 29 § 2 à § 4 et L 14, Rojer ne le suit pas : un effectif présent n'est ni un acte daté ni une pièce, et le produit ne connaît pas l'effectif du public. Ce qui est suivi, c'est la désignation et l'entraînement d'employés là où le chapitre les prescrit. Annoncé par la phrase de manque de l'axe `categorie_erp`.";
+  "Service de sécurité incendie assuré par des AGENTS DE SÉCURITÉ INCENDIE (MS 46 § 1 b), ou composé d'un effectif fixé, au-delà d'un seuil de public ou en 1ʳᵉ ou 2ᵉ catégorie. Rojer ne le suit pas, par choix de couverture, et le dit : la présence d'un service qualifié est un état permanent du même genre que la présence d'une personne qualifiée d'EL 18 § 2, que le référentiel encode (`elec-erp-presence-personne-qualifiee`) — ce n'est donc pas faute d'acte. Le choix tient à la ligne de partage 5 (`docs/notes-cadre-juridique.md`) : des établissements de 1ʳᵉ ou de 2ᵉ catégorie, et des seuils de public (plusieurs milliers de personnes) que la catégorie déclarée ne fixe pas — le produit ne connaît de l'effectif qu'une borne basse (catégorie, personnes présentes). Ce qui est suivi, c'est la désignation et l'entraînement d'employés là où le chapitre les prescrit. Annoncé par la phrase de manque de l'axe `categorie_erp`.";
 
 const DECLARE_A_CATEGORIE_ERP =
   "src/lib/perimetre/couverture.ts — phrase de manque de l'axe `categorie_erp`, servie à tout ERP des catégories 1 à 4 : « le service de sécurité incendie assuré par des agents de sécurité incendie, notamment, n'y est pas, et des dispositions particulières par type d'activité, il ne porte que quelques-unes ».";
@@ -1931,8 +1931,9 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "L'effectif maximal des personnes admises simultanément dans ces établissements est déterminé suivant la déclaration contrôlée du maître d'ouvrage ou du chef d'établissement. Cette déclaration doit préciser la capacité d'accueil maximale par niveau.",
+      historique: "2026-10-17 — RÉÉCRIT après la contre-lecture indépendante du 2026-10-17 (constats du 2026-10-17, § 2), verdict de c6 le même jour, `lot/ref-a-corpus-titre-1`. Ancien classement : ~~statut `sans_objet` ; motif : (motif commun MOTIF_GENERALITES)~~",
       statut: "sans_objet",
-      motif: MOTIF_GENERALITES,
+      motif: "L'effectif maximal est fixé par la DÉCLARATION, contrôlée, du maître d'ouvrage ou du chef d'établissement, qui précise la capacité d'accueil par niveau. C'est un acte, mais une pièce du dossier d'ouverture qui fonde le classement de l'établissement : ligne de partage 1 (`docs/notes-cadre-juridique.md`), une condition du droit d'ouvrir, que la commission contrôle. Le produit en reçoit le résultat par la catégorie déclarée, qui borne les lignes du chapitre.",
     },
     {
       ref: "R 3",
@@ -2039,8 +2040,9 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "les tuyaux reliant les bouteilles au chalumeau doivent être soigneusement enroulés après chaque utilisation et leur bon état vérifié avant toute remise en service.",
+      historique: "2026-10-17 — RÉÉCRIT après la contre-lecture indépendante du 2026-10-17 (constats du 2026-10-17, § 2), verdict de c6 le même jour, `lot/ref-a-corpus-titre-1`. Ancien classement : ~~statut `sans_objet` ; motif : Stockage et emploi des gaz en atelier d'enseignement technique, cabine de soudage : règles d'implantation et d'usage. Le seul geste — vérifier l'état des tuyaux « avant toute remise en service » — se fait à chaque emploi par l'utilisateur du poste : ni rythme ni pièce, il se respecte et ne se planifie pas (ligne de partage 3, MOTIF_USAGE).~~",
       statut: "sans_objet",
-      motif: "Stockage et emploi des gaz en atelier d'enseignement technique, cabine de soudage : règles d'implantation et d'usage. Le seul geste — vérifier l'état des tuyaux « avant toute remise en service » — se fait à chaque emploi par l'utilisateur du poste : ni rythme ni pièce, il se respecte et ne se planifie pas (ligne de partage 3, MOTIF_USAGE).",
+      motif: "Stockage et emploi des gaz dans les ateliers d'enseignement technique (§ 1 a et b : implantation des dépôts ; quantités maximales) et cabine de soudage (§ 2) : règles d'implantation et d'usage. Le § 1 c) porte un ACTE de vérification — les tuyaux reliant les bouteilles au chalumeau sont enroulés après chaque utilisation et « leur bon état vérifié avant toute remise en service » —, au passif, sans désigner qui le fait. Il est déclenché par chaque emploi du poste : aucune échéance planifiable, aucune pièce. Rien à encoder ; le classement tient, sur ce motif-ci et non sur la ligne de partage 3. Le texte rendu par l'API s'arrête au milieu du § 2 (« présentant une résistance mécanique ») : la fin de l'article n'est pas lue.",
     },
     {
       ref: "R 12",
@@ -2331,8 +2333,9 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "L'effectif maximal du public admis est déterminé suivant la déclaration du maître d'ouvrage ou du chef d'établissement.",
+      historique: "2026-10-17 — RÉÉCRIT après la contre-lecture indépendante du 2026-10-17 (constats du 2026-10-17, § 2), verdict de c6 le même jour, `lot/ref-a-corpus-titre-1`. Ancien classement : ~~statut `sans_objet` ; motif : (motif commun MOTIF_GENERALITES)~~",
       statut: "sans_objet",
-      motif: MOTIF_GENERALITES,
+      motif: "L'effectif maximal est fixé par la DÉCLARATION du maître d'ouvrage ou du chef d'établissement. C'est un acte, mais une pièce du dossier d'ouverture qui fonde le classement : ligne de partage 1 (`docs/notes-cadre-juridique.md`). Le produit en reçoit le résultat par la catégorie déclarée, qui borne les lignes du chapitre.",
     },
     {
       ref: "S 3",
@@ -2526,8 +2529,9 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "§ 2. Pour les établissements de 2e catégorie, la surveillance doit être assurée par trois employés désignés par la direction parmi les personnels ayant reçu une formation de sécurité incendie.",
+      historique: "2026-10-17 — RÉÉCRIT après la contre-lecture indépendante du 2026-10-17 (constats du 2026-10-17, § 2), verdict de c6 le même jour, `lot/ref-a-corpus-titre-1`. Ancien classement : ~~statut `non_couvert` ; motif : § 1 : en 1ʳᵉ catégorie (plus de 1 500 personnes), surveillance par des agents de sécurité incendie (MS 46). § 2 : en 2ᵉ catégorie (701 à 1 500 personnes), par TROIS employés désignés parmi les personnels formés. La désignation et l'entraînement sont l'acte de S 15 § 3 ; ce qui reste ici est la composition du service — un effectif présent, que Rojer ne suit pas, comme M 29 § 2 à § 4. Annoncé par la phrase de manque de l'axe `categorie_erp`.~~",
       statut: "non_couvert",
-      motif: "§ 1 : en 1ʳᵉ catégorie (plus de 1 500 personnes), surveillance par des agents de sécurité incendie (MS 46). § 2 : en 2ᵉ catégorie (701 à 1 500 personnes), par TROIS employés désignés parmi les personnels formés. La désignation et l'entraînement sont l'acte de S 15 § 3 ; ce qui reste ici est la composition du service — un effectif présent, que Rojer ne suit pas, comme M 29 § 2 à § 4. Annoncé par la phrase de manque de l'axe `categorie_erp`.",
+      motif: "§ 1 : en 1ʳᵉ catégorie, surveillance par des agents de sécurité incendie (MS 46), au-delà de 3 000 personnes dans les conditions de MS 46, en deçà avec des agents pouvant être employés à des tâches techniques. § 2 : en 2ᵉ catégorie, par trois employés désignés par la direction parmi les personnels ayant reçu une formation de sécurité incendie. La désignation et l'entraînement sont l'acte de S 15 § 3. Ce qui reste ici est la composition du service. Rojer ne le suit pas, par choix de couverture, et le dit : une présence de personnel est un état permanent du même genre que la présence d'une personne qualifiée d'EL 18 § 2, que le référentiel encode — ce n'est donc pas faute d'acte ; le choix tient à la ligne de partage 5, des établissements de 1ʳᵉ et 2ᵉ catégorie. Annoncé par la phrase de manque de l'axe `categorie_erp`.",
       declareA: DECLARE_A_CATEGORIE_ERP,
     },
     {
@@ -2841,8 +2845,9 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "§ 1. Si tout le volume du hall n'est pas utilisé, des éléments de séparation en matériaux de catégorie M3, et ne devant pas assurer une fonction de résistance au feu, délimiteront l'aire effectivement utilisée. Leur stabilité mécanique doit leur permettre de résister à la poussée du public. § 2. Si des sorties sont rendues inutilisables du fait de cette délimitation, elles ne doivent pas être visibles du public. […]",
-      statut: "hors_perimetre",
-      exclusion: "construction",
+      historique: "2026-10-17 — RÉÉCRIT après la contre-lecture indépendante du 2026-10-17 (constats du 2026-10-17, § 2), verdict de c6 le même jour, `lot/ref-a-corpus-titre-1`. Ancien classement : ~~statut `hors_perimetre`, exclusion `construction` ; motif : (aucun motif)~~",
+      statut: "sans_objet",
+      motif: MOTIF_MANIFESTATION_T + " Ici : la délimitation de l'aire utilisée d'un hall par des cloisons partielles (§ 1), les sorties masquées sans réduire les dégagements exigés (§ 2), et les surfaces non utilisées libres de dépôt « pendant la durée de la manifestation » ou placées sous l'attention du chargé de sécurité (§ 3) : des règles d'aménagement et d'usage de la manifestation, pas de construction. Rien à encoder.",
     },
     {
       ref: "T 25",
@@ -2889,8 +2894,9 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "Les stands peuvent être alimentés en gaz soit par réseau, soit par récipient. La distribution de gaz combustible à partir d'un réseau collectif comporte : - les installations de distribution dont la réalisation, l'exploitation et l'entretien sont assurés par le propriétaire de l'établissement, conformément à l'article T 29 ; - les installations temporaires établies dans les stands, conformément à l'article T 30. […]",
-      statut: "hors_perimetre",
-      exclusion: "construction",
+      historique: "2026-10-17 — RÉÉCRIT après la contre-lecture indépendante du 2026-10-17 (constats du 2026-10-17, § 2), verdict de c6 le même jour, `lot/ref-a-corpus-titre-1`. Ancien classement : ~~statut `hors_perimetre`, exclusion `construction` ; motif : (aucun motif)~~",
+      statut: "sans_objet",
+      motif: "Article de RÉPARTITION des responsabilités pour le gaz : le réseau de distribution, « dont la réalisation, l'exploitation et l'entretien sont assurés par le propriétaire de l'établissement » (T 29), et les installations temporaires des stands (T 30), les récipients relevant de T 31. Il nomme l'entretien sans en prescrire un nouveau : l'entretien et la vérification des installations de gaz sont ceux du chapitre VI du titre Ier (GZ 14 annoncé, GZ 15 porté). Pas de ligne nouvelle.",
     },
     {
       ref: "T 29",
@@ -2901,9 +2907,12 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "§ 3. Dans les établissements où la puissance utile installée à l'intérieur du bâtiment est supérieure à 200 kW, la présence d'un personnel compétent est obligatoire pendant l'ouverture au public à raison d'une personne par zone définie au paragraphe 2 ci-dessus.",
-      statut: "hors_perimetre",
-      exclusion: "construction",
-      motif: "Réseau de gaz du propriétaire du hall : conception, zonage, pression, repérage, prises en attente — construction. Le § 3 ajoute une présence de personnel compétent pendant l'ouverture au-delà de 200 kW installés : une condition de fonctionnement, sans acte daté ni pièce (ligne de partage 3), et un seuil hors de portée d'une salle d'exposition de TPE.",
+      historique: "2026-10-17 — RÉÉCRIT après la contre-lecture indépendante du 2026-10-17 (constats du 2026-10-17, § 2), verdict de c6 le même jour, `lot/ref-a-corpus-titre-1`. Ancien classement : ~~statut `hors_perimetre`, exclusion `construction` ; motif : Réseau de gaz du propriétaire du hall : conception, zonage, pression, repérage, prises en attente — construction. Le § 3 ajoute une présence de personnel compétent pendant l'ouverture au-delà de 200 kW installés : une condition de fonctionnement, sans acte daté ni pièce (ligne de partage 3), et un seuil hors de portée d'une salle d'exposition de TPE.~~",
+      statut: "obligation_manquante",
+      motif: "Les § 1, § 2 et § 4 à § 6 sont des règles de conception du réseau de gaz du propriétaire du hall (zonage, pression, repérage, prises en attente). Le § 3 impose un ACTE : au-delà de 200 kW de puissance utile installée, « la présence d'un personnel compétent est obligatoire pendant l'ouverture au public », une personne par zone, qui peut être celle de T 33 § 2. Même politique sœur qu'à T 33 § 2 : EL 18 § 2, encodé en état permanent. PROPOSITION (décision de c6 du 2026-10-17) : annoncer avec T 33 dans l'aide du type T (sous-lot D) et citer T 29 en contexte dans les notes de `elec-erp-presence-personne-qualifiee` (sous-lot C). Transitoirement au § 9.",
+      cause: "attribut_etablissement",
+      toucheLaCible: true,
+      bloquePar: "Rojer ne connaît pas la puissance utile installée : le seuil de 200 kW n'est pas un attribut d'établissement.",
     },
     {
       ref: "T 30",
@@ -2926,8 +2935,9 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "§ 1. En dérogation aux dispositions de l'article GZ 6, les récipients contenant 13 kilogrammes de gaz liquéfié au plus sont autorisés dans les salles d'expositions. § 2. Les bouteilles sans détendeur non utilisées à des fins démonstratives sont interdites. Les bouteilles en service doivent toujours être placées hors d'atteinte du public et être protégées contre les chocs. Elles doivent être : […]",
+      historique: "2026-10-17 — RÉÉCRIT après la contre-lecture indépendante du 2026-10-17 (constats du 2026-10-17, § 2), verdict de c6 le même jour, `lot/ref-a-corpus-titre-1`. Ancien classement : ~~statut `sans_objet` ; motif : (motif commun MOTIF_MANIFESTATION_T)~~",
       statut: "sans_objet",
-      motif: MOTIF_MANIFESTATION_T,
+      motif: "Règles d'USAGE des bouteilles de gaz liquéfié dans les salles d'exposition — récipients de 13 kg au plus, bouteilles sans détendeur interdites, bouteilles en service hors d'atteinte du public, protégées des chocs, séparées ou espacées, au plus six par stand, bouteilles non raccordées stockées hors du bâtiment —, sans acte daté ni pièce : ligne de partage 3. Elles valent aussi pour la salle d'exposition permanente de T 1 § 2, pas seulement pour une manifestation.",
     },
     {
       ref: "T 32",
@@ -2938,8 +2948,9 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "Les installations électriques comprennent : - les installations fixes et semi-permanentes, dont la réalisation, l'exploitation et l'entretien sont assurés par le propriétaire de l'établissement, sous sa responsabilité ; - les installations établies dans les stands destinés aux exposants et réalisées par eux-mêmes ou pour leur compte, sous leur responsabilité. […]",
-      statut: "hors_perimetre",
-      exclusion: "construction",
+      historique: "2026-10-17 — RÉÉCRIT après la contre-lecture indépendante du 2026-10-17 (constats du 2026-10-17, § 2), verdict de c6 le même jour, `lot/ref-a-corpus-titre-1`. Ancien classement : ~~statut `hors_perimetre`, exclusion `construction` ; motif : (aucun motif)~~",
+      statut: "sans_objet",
+      motif: "Article de RÉPARTITION des responsabilités : les installations électriques fixes et semi-permanentes, « dont la réalisation, l'exploitation et l'entretien sont assurés par le propriétaire de l'établissement », et celles des stands, à la charge des exposants, avec pour limite le tableau de chaque stand. Il nomme l'entretien sans en prescrire un nouveau : l'entretien et la vérification des installations fixes sont ceux du chapitre VII du titre Ier (EL 18, EL 19), portés par le référentiel. Pas de ligne nouvelle.",
     },
     {
       ref: "T 33",
@@ -2950,9 +2961,12 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "§ 2. En complément des dispositions de l'article EL 18 (§ 2), dans les salles où la puissance mise en oeuvre est supérieure à 200 kVA, la présence d'une personne compétente est obligatoire pendant l'ouverture au public à raison d'une personne par zone définie au paragraphe 1 ci-dessus.",
-      statut: "hors_perimetre",
-      exclusion: "construction",
-      motif: "Zonage de la distribution électrique (§ 1, construction) ; présence d'une personne compétente au-delà de 200 kVA (§ 2) : condition de fonctionnement sans acte ni pièce (ligne de partage 3), à un seuil de puissance qu'une salle d'exposition de TPE n'atteint pas.",
+      historique: "2026-10-17 — RÉÉCRIT après la contre-lecture indépendante du 2026-10-17 (constats du 2026-10-17, § 2), verdict de c6 le même jour, `lot/ref-a-corpus-titre-1`. Ancien classement : ~~statut `hors_perimetre`, exclusion `construction` ; motif : Zonage de la distribution électrique (§ 1, construction) ; présence d'une personne compétente au-delà de 200 kVA (§ 2) : condition de fonctionnement sans acte ni pièce (ligne de partage 3), à un seuil de puissance qu'une salle d'exposition de TPE n'atteint pas.~~",
+      statut: "obligation_manquante",
+      motif: "Le § 1 (zonage de la distribution électrique) est une règle de construction. Le § 2 impose un ACTE : dans les salles où la puissance mise en œuvre dépasse 200 kVA, « la présence d'une personne compétente est obligatoire pendant l'ouverture au public », une par zone, en complément d'EL 18 § 2. Politique sœur : la présence physique d'une personne qualifiée d'EL 18 § 2 est encodée comme état permanent (`elec-erp-presence-personne-qualifiee`). PROPOSITION (contre-lecture et décision de c6 du 2026-10-17) : annoncer dans l'aide du type T (sous-lot D), et citer T 33 en contexte dans les notes de `elec-erp-presence-personne-qualifiee` (sous-lot C). Transitoirement au § 9.",
+      cause: "attribut_etablissement",
+      toucheLaCible: true,
+      bloquePar: "Rojer ne connaît pas la puissance électrique mise en œuvre dans la salle : le seuil de 200 kVA n'est pas un attribut d'établissement.",
     },
     {
       ref: "T 34",
@@ -3060,8 +3074,9 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "Véhicules automobiles § 1. La liste des stands présentant des machines et appareils en fonctionnement doit être fournie à l'organisateur et à la commission de sécurité ; le chargé de sécurité visé à l'article T 6 devra, au préalable, en avoir assuré le contrôle dans les conditions de délai fixées à l'article T 5 (§ 1). Dans tous les cas, les gaz de combustion doivent être évacués à l'extérieur de la salle. § 2. […]",
+      historique: "2026-10-17 — RÉÉCRIT après la contre-lecture indépendante du 2026-10-17 (constats du 2026-10-17, § 2), verdict de c6 le même jour, `lot/ref-a-corpus-titre-1`. Ancien classement : ~~statut `sans_objet` ; motif : (motif commun MOTIF_USAGE)~~",
       statut: "sans_objet",
-      motif: MOTIF_USAGE,
+      motif: MOTIF_MANIFESTATION_T + " Ici, le § 1 : la liste des stands présentant des machines en fonctionnement est fournie à l'organisateur et à la commission, après contrôle du chargé de sécurité dans les délais de T 5 § 1 — un acte de la manifestation. Les gaz de combustion évacués à l'extérieur, les réservoirs vidés ou munis de bouchons à clé (§ 2) et la force motrice électrique, sauf avis de la commission (§ 3), sont des conditions d'usage (ligne de partage 3). Rien à encoder.",
     },
     {
       ref: "T 42",
@@ -3084,8 +3099,10 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "§ 1. Toute présentation de machines ou matériels utilisant des substances radioactives ou génératrices de rayons X doit faire l'objet d'une demande d'autorisation adressée par l'exposant à l'administration compétente. § 2. […]",
-      statut: "sans_objet",
-      motif: MOTIF_MANIFESTATION_T,
+      historique: "2026-10-17 — RÉÉCRIT après la contre-lecture indépendante du 2026-10-17 (constats du 2026-10-17, § 2), verdict de c6 le même jour, `lot/ref-a-corpus-titre-1`. Ancien classement : ~~statut `sans_objet` ; motif : (motif commun MOTIF_MANIFESTATION_T)~~",
+      statut: "non_couvert",
+      motif: "Toute présentation de machines utilisant des substances radioactives ou générant des rayons X fait l'objet d'une DEMANDE D'AUTORISATION par l'exposant (§ 1), sous des conditions de protection, de signalisation (NF M 60-101), de surveillance et de stockage (§ 2), et de conformité des appareils à rayons X (NF C 74-100, § 3). Une déclaration à faire à chaque présentation, de niche : annoncée plutôt que suivie (ligne de partage 5). Les normes citées ne fixent ni rythme ni contenu de vérification. Les rayonnements ionisants sont en outre déjà déclarés non couverts par Rojer (`.claude/CLAUDE.md`, « Hors périmètre »). Vaut aussi pour la salle d'exposition permanente de T 1 § 2, dont l'exploitant peut être l'exposant.",
+      declareA: "Non déclaré au 2026-10-17 : l'annonce est prévue dans l'aide du type T (`AIDE_TYPE_ERP`, surface nouvelle du sous-lot D du plan « mise à jour du référentiel »), qui n'existe pas encore. Décision de c6 du 2026-10-17 : `non_couvert`, annoncé là.",
     },
     {
       ref: "T 44",
@@ -3096,8 +3113,10 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "L'emploi de lasers dans les salles est autorisé sous réserve du respect des dispositions suivantes : - le public ne doit en aucun cas être soumis au faisceau direct ou réfléchi du laser ; - l'appareil et ses équipements annexes doivent être solidement fixés à des éléments stables ; […]",
-      statut: "sans_objet",
-      motif: MOTIF_MANIFESTATION_T,
+      historique: "2026-10-17 — RÉÉCRIT après la contre-lecture indépendante du 2026-10-17 (constats du 2026-10-17, § 2), verdict de c6 le même jour, `lot/ref-a-corpus-titre-1`. Ancien classement : ~~statut `sans_objet` ; motif : (motif commun MOTIF_MANIFESTATION_T)~~",
+      statut: "non_couvert",
+      motif: "L'emploi de lasers dans les salles est autorisé sous conditions d'usage (aucune exposition du public au faisceau, fixation, absence d'éléments réfléchissants, essais hors présence du public) et, « avant sa mise en oeuvre », sous une DÉCLARATION de l'exposant à l'autorité administrative, avec note technique, plan et document de conformité de l'installateur. Une déclaration à faire à chaque installation, de niche : annoncée plutôt que suivie (ligne de partage 5). Vaut aussi pour la salle d'exposition permanente de T 1 § 2, dont l'exploitant peut être l'exposant.",
+      declareA: "Non déclaré au 2026-10-17 : l'annonce est prévue dans l'aide du type T (`AIDE_TYPE_ERP`, surface nouvelle du sous-lot D du plan « mise à jour du référentiel »), qui n'existe pas encore. Décision de c6 du 2026-10-17 : `non_couvert`, annoncé là.",
     },
     {
       ref: "T 45",
@@ -3144,6 +3163,7 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "§ 1. En application des articles MS 45 et MS 46, la surveillance des établissements de première catégorie doit être assurée par des agents de sécurité incendie dans les conditions suivantes : a) Etablissements comportant un ou deux niveaux accessibles au public : - par quatre agents au moins, si l'effectif est supérieur à 6 000 personnes ; - par cinq agents au moins, si l'effectif dépasse 10 000 personnes ; […]",
+      historique: "2026-10-17 — la constante `MOTIF_SSIAP`, que T 48 est seul à employer (vérifié par recherche dans le fichier), est RÉÉCRITE après la contre-lecture indépendante du 2026-10-17 (constats du 2026-10-17, § 2), verdict de c6 le même jour, `lot/ref-a-corpus-titre-1`. Ancien texte : ~~Service de sécurité incendie assuré par des AGENTS DE SÉCURITÉ INCENDIE (MS 46 § 1 b), ou composé d'un effectif fixé, au-delà d'un seuil de public ou en 1ʳᵉ catégorie. Comme M 29 § 2 à § 4 et L 14, Rojer ne le suit pas : un effectif présent n'est ni un acte daté ni une pièce, et le produit ne connaît pas l'effectif du public. Ce qui est suivi, c'est la désignation et l'entraînement d'employés là où le chapitre les prescrit. Annoncé par la phrase de manque de l'axe `categorie_erp`.~~ Deux phrases ne tenaient pas : « un effectif présent n'est ni un acte daté ni une pièce », contredit par l'encodage d'EL 18 § 2 ; « le produit ne connaît pas l'effectif du public », alors qu'il en connaît une borne basse.",
       statut: "non_couvert",
       motif: MOTIF_SSIAP,
       declareA: DECLARE_A_CATEGORIE_ERP,
@@ -4501,8 +4521,9 @@ export const ARRETE_1980_LIVRE_2_TITRE_2: Corpus = {
       luLe: "2026-10-16",
       lecture: "api_legifrance",
       citationCle: "§ 1. L'effectif théorique du public admis est déterminé à raison de 1 personne par 5 mètres carrés de la surface des salles accessibles au public. § 2. Dans les musées à caractère évolutif ou dans les salles pouvant faire l'objet de présentations exceptionnelles, la densité d'occupation peut être supérieure, après avis de la commission de sécurité ; […]",
+      historique: "2026-10-17 — RÉÉCRIT après la contre-lecture indépendante du 2026-10-17 (constats du 2026-10-17, § 2), verdict de c6 le même jour, `lot/ref-a-corpus-titre-1`. Ancien classement : ~~statut `sans_objet` ; motif : (motif commun MOTIF_GENERALITES)~~",
       statut: "sans_objet",
-      motif: MOTIF_GENERALITES,
+      motif: "Le § 1 est une règle de calcul de l'effectif (une personne par 5 m²). Le § 2 admet, après avis de la commission, une densité supérieure dans les musées évolutifs ou les salles de présentations exceptionnelles, et impose alors une DOTATION : « un système de comptage doit être installé ». Une dotation conditionnée à un avis de la commission : une prescription particulière propre à l'établissement (ADR-035), non une ligne du référentiel. La densité diminuée sur demande est une faculté.",
     },
     {
       ref: "Y 3",
