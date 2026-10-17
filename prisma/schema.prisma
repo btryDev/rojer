@@ -631,6 +631,10 @@ enum CategorieEquipement {
   // — température mensuelle et analyse annuelle de légionelles (annexe 2),
   // une ligne de chaque par installation déclarée.
   EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC
+  // 2026-10-17 : les cages de buts et buts de basket-ball de 10 kg ou plus
+  // (code du sport, art. R. 322-19) — leur déclaration fait naître le plan
+  // de vérification et d'entretien de l'art. R. 322-25.
+  BUT_PANIER_SPORTIF
   AUTRE
 }
 

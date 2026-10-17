@@ -75,6 +75,8 @@ export const CODES: Record<string, string> = {
   LEGITEXT000006072665: "Code de la santé publique",
   LEGITEXT000006074069: "Code de l'action sociale et des familles",
   LEGITEXT000006074220: "Code de l'environnement",
+  // 2026-10-17, sous-lot E : les établissements sportifs.
+  LEGITEXT000006071318: "Code du sport",
 };
 const CODE_TRAVAIL = "LEGITEXT000006072050";
 const PREFIXES_CODE: [RegExp, string][] = [
@@ -82,6 +84,7 @@ const PREFIXES_CODE: [RegExp, string][] = [
   [/^C\.\s*env\.\s+/, "LEGITEXT000006074220"],
   [/^CSP\s+/, "LEGITEXT000006072665"],
   [/^CASF\s+/, "LEGITEXT000006074069"],
+  [/^C\.\s*sport\s+/, "LEGITEXT000006071318"],
 ];
 /** Le règlement de sécurité ERP (arrêté du 25 juin 1980), tel que Légifrance l'expose. */
 const REGLEMENT_ERP = ["JORFTEXT000000290033", "LEGITEXT000020303557"];

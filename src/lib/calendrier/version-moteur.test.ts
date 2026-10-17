@@ -94,6 +94,7 @@ const DONNEES_REFERENTIEL = [
   "eau-chaude-sanitaire",
   "eclairage",
   "electricite",
+  "etablissement-sportif",
   "epi",
   "equipement-sous-pression",
   "formation-securite",
@@ -489,7 +490,16 @@ const RELEVE = {
   // dans le sceau. `calendrier/echeances.ts` (`sourceLegionelles`, muette
   // quand la catégorie est déclarée) n'écrit aucune ligne `Verification` : il
   // compose l'affichage des échéances hors référentiel. ~~b28f27a9bbb75780~~.
-  empreinte: "a28c64daee65f778",
+  // Recopiée SANS incrément le 2026-10-17 (`lot/ref-e-sport`, sous-lot E) :
+  // `referentiels/types-communs.ts` gagne `BUT_PANIER_SPORTIF` dans
+  // `CATEGORIES_EQUIPEMENT`, `conformite/types.ts` la source `CODE_SPORT` (et
+  // son libellé) et le domaine `etablissement_sportif`, `conformite/index.ts`
+  // le fichier de données `etablissement-sportif` (entré à
+  // `DONNEES_REFERENTIEL`) et la version `2026-10-17.6`. NON au sens de la
+  // question : aucune règle du moteur ne change ; les deux lignes neuves sont
+  // des DONNÉES (typologies, `siEquipementDeclare`), hachées par l'empreinte
+  // du référentiel. ~~a28c64daee65f778~~.
+  empreinte: "f2ac197b52d5fb32",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

@@ -282,6 +282,24 @@ export const DOMAINES_OBLIGATION = [
    * existante qui couvre ce métier.
    */
   "eau_chaude_sanitaire",
+
+  /**
+   * Établissement sportif — code du sport, entré le 2026-10-17 par décision de
+   * la propriétaire (sous-lot E).
+   *
+   * POURQUOI UN DOMAINE À LUI. Les garanties de sécurité que le code du sport
+   * fait présenter à un établissement où se pratiquent des activités physiques
+   * ou sportives — secours, affichages, assurance, information des
+   * pratiquants, buts et paniers — ne relèvent ni du Code du travail ni du
+   * règlement ERP. Les ranger sous `secours` ou `information_travailleurs`
+   * aurait mêlé deux textes et deux publics : les pratiquants ne sont pas des
+   * travailleurs.
+   *
+   * SON PRESTATAIRE ATTENDU : aucun. R. 322-25 fait contrôler les buts « par
+   * les exploitants ou les gestionnaires », et les autres lignes sont des
+   * affichages, une information et un contrat d'assurance.
+   */
+  "etablissement_sportif",
 ] as const;
 
 export type DomaineObligation = (typeof DOMAINES_OBLIGATION)[number];
@@ -312,6 +330,13 @@ export const SOURCES_LEGALES = [
   // qu'on soit tenté de ranger ces obligations sous CODE_TRAVAIL, qui ne les
   // porte pas (ADR-022).
   "CSS",
+  // Code du sport, depuis le 2026-10-17 (sous-lot E, décision de la
+  // propriétaire) : les garanties d'hygiène et de sécurité des établissements
+  // où sont pratiquées des activités physiques ou sportives (L. 322-2,
+  // R. 322-4, R. 322-5), l'assurance de l'exploitant (L. 321-7), les buts et
+  // paniers (R. 322-19 à R. 322-26) et la qualification des éducateurs
+  // (L. 212-1, L. 212-8).
+  "CODE_SPORT",
   // Une norme homologuée — NF, EN —, depuis l'ADR-039 (2026-10-07). Elle peut
   // fonder une obligation ou un rythme même si aucun texte ne la rend
   // obligatoire, et elle se cite COMME NORME : intitulé, édition, paragraphe
@@ -343,6 +368,7 @@ export const LIBELLE_SOURCE: Record<SourceLegale, string> = {
   REGLEMENT_UE: "Règlement européen",
   CSP: "Code de la santé publique",
   CSS: "Code de la sécurité sociale",
+  CODE_SPORT: "Code du sport",
   NORME: "Norme",
 };
 

@@ -264,6 +264,12 @@ export const DOMAINES_PRESTATAIRE_ATTENDUS: Record<
   // créé. La température mensuelle, réalisée par l'exploitant, n'appelle
   // personne.
   eau_chaude_sanitaire: ["carnet_sanitaire"],
+  // L'établissement sportif, entré le 2026-10-17 (sous-lot E). Le marqueur, et
+  // c'est une lecture : R. 322-25 fait contrôler les buts et paniers « par les
+  // exploitants ou les gestionnaires », sans organisme ni qualification ; les
+  // autres lignes sont des affichages, une information des pratiquants et un
+  // contrat d'assurance. Aucune ligne du domaine n'a de réalisateur tiers.
+  etablissement_sportif: AUCUN_TIERS_ATTENDU,
 };
 
 /**

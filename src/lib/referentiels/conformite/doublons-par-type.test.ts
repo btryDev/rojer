@@ -162,6 +162,21 @@ const FAMILLES_DECLAREES: {
       [/^incendie-erp-pe4-entretien-installations-techniques$/, /^incendie-hotel-po-instruction-personnel-semestrielle$/],
     ],
   },
+  {
+    famille: "code du sport (type X) ↔ règlement de sécurité d'un autre type",
+    motif:
+      "La trousse, le moyen d'alerte et le tableau des secours de R. 322-4 (code du sport, établissement où se pratiquent des activités physiques ou sportives, lu sur le type X) ne sont aucun des actes du règlement de sécurité qu'un autre type fait naître : visite de la commission, consignes et plans, personnel désigné, interdiction de fumer, schéma d'organisation, contrat d'entretien du SDI, contrôle et instruction de l'hôtel. Une salle de sport qui comporte un hôtel ou un magasin doit les deux textes (sous-lot E, 2026-10-17). Identifiants nommés un à un.",
+    cotes: [
+      [
+        /^sport-etablissement-secours-r322-4$/,
+        /^incendie-erp-(5-sommeil-avis-controle-affiche|5-sommeil-consigne-chambres|5-sommeil-contrat-entretien-sdi|5-sommeil-plans-affiches|5-visite-commission|hotel-consigne-chambres|hotel-plans-evacuation-niveaux|interdiction-fumer-affichee|personnel-designe-moyens-secours|schema-organisation-securite|visite-commission-cat1-2-quinquennale|visite-commission-cat3-triennale|visite-commission-cat4-r-avec-hebergement-triennale|visite-commission-cat4-r-sans-hebergement-quinquennale|visite-commission-cat4-triennale)$/,
+      ],
+      [
+        /^sport-etablissement-secours-r322-4$/,
+        /^incendie-hotel-po-(controle-biennal-installations|instruction-personnel-semestrielle)$/,
+      ],
+    ],
+  },
 ];
 
 const declaree = ([a, b]: [string, string]) =>

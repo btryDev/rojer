@@ -714,6 +714,12 @@ export const CATEGORIES_EQUIPEMENT = [
   // ne sait pas dire qui a une installation collective ni un point d'usage à
   // risque, et c'est en déclarant l'installation que le dirigeant le dit.
   "EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC",
+  // 2026-10-17, décision de la propriétaire (sous-lot E) : les buts et
+  // paniers de sport de 10 kg ou plus (code du sport, art. R. 322-19 à
+  // R. 322-26). Ils ne portent pas de ligne chacun : leur présence fait naître
+  // la ligne d'établissement de l'art. R. 322-25 (`siEquipementDeclare`) — le
+  // plan et le registre se tiennent « pour chaque site ».
+  "BUT_PANIER_SPORTIF",
   "AUTRE",
 ] as const;
 
