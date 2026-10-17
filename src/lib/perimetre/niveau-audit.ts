@@ -28,6 +28,7 @@ import type {
   EquipementMatching,
   EtablissementMatching,
 } from "@/lib/matching/types";
+import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
 import {
@@ -43,21 +44,42 @@ export type LigneNiveauAudit = {
   reference: string;
   /** Le lien vers le texte, quand le référentiel en porte un. */
   url: string | null;
-  /** Ce qui la ferait s'appliquer ici, en une phrase descriptive. */
-  porteePar: string;
+  /**
+   * Ce qui la ferait s'appliquer ici, en une phrase descriptive — ou `null`
+   * quand elle n'apprendrait rien (2026-10-18).
+   */
+  porteePar: string | null;
 };
+
+/**
+ * Le geste, sur chaque carte (2026-10-18). La rubrique disait « elle reste
+ * due si le texte vous concerne », puis chaque carte répétait « Vise
+ * l'établissement lui-même » : rien ne disait au dirigeant quoi faire. La
+ * phrase nomme le geste et ce que l'outil ne fera pas, sans qualifier
+ * personne.
+ */
+export const GESTE_HORS_QUOTIDIEN =
+  "À tenir vous-même : Rojer ne vous le rappellera pas.";
 
 function porteePar(
   o: Obligation,
-  equipements: readonly { libelle: string }[],
-): string {
+  equipements: readonly Pick<EquipementMatching, "categorie">[],
+): string | null {
   if (estPorteeParSalarie(o)) {
     return "Concerne chaque personne qui détiendrait ce titre.";
   }
   if (equipements.length > 0) {
-    return `Vise ${equipements.length > 1 ? "les équipements déclarés" : "l'équipement déclaré"} : ${equipements.map((e) => e.libelle).join(", ")}.`;
+    // Le LIBELLÉ de la catégorie, jamais le code de l'enum : « EPI_RESPIRATOIRE »
+    // n'est pas un mot que le dirigeant a déclaré. Une catégorie nommée une
+    // fois, même pour trois appareils.
+    const categories = [
+      ...new Set(equipements.map((e) => LABEL_CATEGORIE_EQUIPEMENT[e.categorie])),
+    ];
+    return `Vise ${equipements.length > 1 ? "les équipements déclarés" : "l'équipement déclaré"} : ${categories.join(", ")}.`;
   }
-  return "Vise l'établissement lui-même.";
+  // ~~« Vise l'établissement lui-même. »~~ — 2026-10-18 : répété sur chaque
+  // carte, il n'apprenait rien. Le silence dit la même chose.
+  return null;
 }
 
 /**

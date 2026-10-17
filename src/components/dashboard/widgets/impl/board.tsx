@@ -44,6 +44,7 @@ import {
 } from "@/lib/etablissements/illustration";
 import { HeroBatiments } from "./hero-batiments";
 import type { Recommandation } from "@/lib/dashboard/recommandations";
+import { occupePlaceReservee } from "@/lib/dashboard/place-reservee";
 import {
   CADRAGE_INITIAL,
   construireFrise,
@@ -1573,7 +1574,11 @@ export function BlocAFaire({ bundle }: { bundle: DashboardBundle }) {
         titre="À faire"
         sousTitre={
           resteUrgent > 0
-            ? "Les cinq plus urgentes — vérifications et actions mêlées."
+            ? // La place réservée (`avecPlaceReservee`) sert : la dernière
+              // carte n'est pas une des « cinq plus urgentes », le dire.
+              file.some(occupePlaceReservee)
+              ? "Les plus urgentes, puis le service de santé au travail."
+              : "Les cinq plus urgentes — vérifications et actions mêlées."
             : "Vérifications et actions, par ordre d'urgence."
         }
         href={hrefCalendrier}

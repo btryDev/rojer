@@ -17,6 +17,7 @@ const FAITS: ReponsesFaitsActivite = {
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { supposeUnTiers } from "@/lib/prestataires/domaines";
 import { genererRecommandations, type EntreeRecos } from "./recommandations";
+import { occupePlaceReservee } from "./place-reservee";
 import type { Obligation } from "@/lib/referentiels/conformite/types";
 
 const NOW = new Date("2026-08-28T10:00:00Z");
@@ -842,5 +843,115 @@ describe("titresDusEnRetard — ce que le bandeau nomme (audit du 2026-10-12)", 
         titresDusNonDeclares: [compte("vip", 1), compte("autre", 0)],
       }),
     ).toBe(3);
+  });
+});
+
+describe("le service de santé au travail survit à la troncature (2026-10-18)", () => {
+  // Le défaut, constaté dans l'app : priorité 8,5, donc derrière tout retard,
+  // et la limite de cinq. Sur un dossier qui comptait cinq retards ou plus,
+  // la carte ne s'affichait jamais — le dossier qui en avait le plus besoin
+  // était le seul à ne pas la voir.
+  //
+  // Chaîne entière, par le vrai rapprochement : l'obligation d'adhésion
+  // servie, aucun prestataire déclaré.
+  const adhesion = obligationsConformite.find(
+    (o) => o.id === "sante-travail-etablissement-adhesion-spst",
+  )!;
+  const retards = (n: number) =>
+    Array.from({ length: n }, (_, i) => ({
+      id: `v${i}`,
+      statut: "planifiee" as const,
+      // Des dates toutes différentes : l'ordre des retards est observable.
+      datePrevue: new Date(Date.UTC(2026, 0, 1 + i, 12)),
+      periodicite: "annuelle" as const,
+      libelleObligation: `Vérification ${i}`,
+      equipementLibelle: "Tableau",
+      archiveLe: null,
+      graceJusquAu: null,
+    }));
+  const entree = (n: number): EntreeRecos => ({
+    etablissementId: "etab-x",
+    verifications: retards(n),
+    actions: [],
+    nbEquipements: 3,
+    duerpSecteurChoisi: true,
+    nbRapports: 2,
+    transmissions: rapprocher([adhesion], [], [], NOW),
+  });
+
+  it("le rapprochement signale bien l'absence — sinon ce bloc ne prouverait rien", () => {
+    expect(
+      entree(0).transmissions.domainesSansPrestataire.map((d) => d.domaine),
+    ).toEqual(["sante_travail"]);
+  });
+
+  it("six retards, aucun service : la carte est dans les cinq", () => {
+    const recs = genererRecommandations(entree(6), { now: NOW });
+    expect(recs).toHaveLength(5);
+    expect(
+      recs.map((r) => r.kind),
+      "La carte du service de santé au travail a disparu de la file de cinq",
+    ).toContain("transmission_tiers_obligatoire");
+  });
+
+  it("elle prend la dernière place, sans déranger l'ordre des retards", () => {
+    const recs = genererRecommandations(entree(6), { now: NOW });
+    expect(recs[4].kind).toBe("transmission_tiers_obligatoire");
+    // Les quatre premières sont les quatre retards les plus anciens, dans
+    // l'ordre : rien ne passe devant une urgence datée.
+    expect(recs.slice(0, 4).map((r) => r.cle)).toEqual([
+      "verif-depassee:v0",
+      "verif-depassee:v1",
+      "verif-depassee:v2",
+      "verif-depassee:v3",
+    ]);
+  });
+
+  it("quand elle tient dans la file, elle garde son rang naturel", () => {
+    // Contre-épreuve : une place réservée qui la pousserait TOUJOURS en
+    // dernier, ou devant, passerait les tests ci-dessus. Une carte de
+    // priorité 9 derrière elle est ce qui rend « toujours en dernier »
+    // observable (revue du 2026-10-18 : sans elle, le mutant survivait).
+    const e = entree(2);
+    e.transmissions = {
+      domainesSansPrestataire: [
+        ...e.transmissions.domainesSansPrestataire,
+        { domaine: "electricite", libelle: "Électricité" },
+      ],
+      obligationsSupposantUnePersonne: [],
+    };
+    const recs = genererRecommandations(e, { now: NOW });
+    expect(recs.map((r) => r.kind)).toEqual([
+      "verif_depassee",
+      "verif_depassee",
+      "transmission_tiers_obligatoire",
+      "transmission_prestataire",
+    ]);
+  });
+
+  it("la place va au domaine santé au travail, pas à tout tiers obligatoire", () => {
+    // Une future entrée de `TIERS_LUI_MEME_OBLIGATOIRE` n'en hérite pas.
+    expect(
+      occupePlaceReservee({
+        kind: "transmission_tiers_obligatoire",
+        cle: "transmission-domaine:sante_travail",
+      }),
+    ).toBe(true);
+    expect(
+      occupePlaceReservee({
+        kind: "transmission_tiers_obligatoire",
+        cle: "transmission-domaine:formation_securite",
+      }),
+    ).toBe(false);
+  });
+
+  it("la place n'est réservée qu'à elle : un domaine technique reste coupé", () => {
+    const e = entree(6);
+    e.transmissions = {
+      domainesSansPrestataire: [{ domaine: "electricite", libelle: "Électricité" }],
+      obligationsSupposantUnePersonne: [],
+    };
+    const kinds = genererRecommandations(e, { now: NOW }).map((r) => r.kind);
+    expect(kinds).toEqual(Array(5).fill("verif_depassee"));
   });
 });
