@@ -5,7 +5,8 @@ import {
   reconcilierCalendrier,
   type OccurrenceExistante,
 } from "@/lib/calendrier/generateur";
-import { obligationParId, OBLIGATIONS_RETIREES } from "./index";
+import { obligationParId, obligationsConformite, OBLIGATIONS_RETIREES } from "./index";
+import type { Obligation } from "./types";
 import { determineObligationsApplicables } from "@/lib/matching";
 import type { EtablissementMatching } from "@/lib/matching";
 import {
@@ -72,10 +73,13 @@ function rythmesDeLAppareil(
   e: EtablissementMatching,
   categorie: CategorieEquipement,
   caracteristiques: Record<string, unknown> | null = null,
+  obligations?: Obligation[],
 ): Periodicite[] {
-  const applicables = determineObligationsApplicables(e, [
-    { id: "eq", libelle: categorie, categorie, caracteristiques },
-  ]);
+  const applicables = determineObligationsApplicables(
+    e,
+    [{ id: "eq", libelle: categorie, categorie, caracteristiques }],
+    obligations ? { obligations } : undefined,
+  );
   return genererProchainesVerifications(applicables)
     .filter((l) => l.equipementId === "eq")
     .map((l) => l.periodicite);
@@ -100,6 +104,29 @@ describe("extincteur : une annuelle partout ; une décennale en ERP, aucune hors
       const rythmes = rythmesDeLExtincteur(e);
       expect(rythmes.filter((r) => r === "annuelle"), nom).toHaveLength(1);
       expect(rythmes.filter((r) => r === "decennale"), nom).toHaveLength(e.estERP ? 1 : 0);
+    });
+  }
+});
+
+/**
+ * LA PARTITION TIENT ENCORE MARQUEUR LEVÉ (2026-10-17, revue indépendante).
+ * Le niveau audit masquait la partition : retirer `erp: false` de la décennale
+ * hors ERP, marqueur gardé, laissait tout vert — la ligne n'était servie nulle
+ * part, donc jamais en double. Le jour où le marqueur se lève, elle doit
+ * retrouver exactement sa place : une décennale et une seule, partout.
+ */
+const SANS_MARQUEUR: Obligation[] = obligationsConformite.map((o) =>
+  o.id === "incendie-travail-extincteurs-revision-atelier-decennale"
+    ? ({ ...o, niveau: undefined } as Obligation)
+    : o,
+);
+
+describe("extincteur, marqueur levé : une décennale et une seule, quel que soit le régime", () => {
+  for (const { nom, e } of PROFILS) {
+    it(nom, () => {
+      const rythmes = rythmesDeLAppareil(e, "EXTINCTEUR", null, SANS_MARQUEUR);
+      expect(rythmes.filter((r) => r === "decennale"), nom).toHaveLength(1);
+      expect(rythmes.filter((r) => r === "annuelle"), nom).toHaveLength(1);
     });
   }
 });

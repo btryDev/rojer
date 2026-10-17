@@ -14,6 +14,7 @@ import {
   type EtablissementMatching,
 } from "@/lib/matching";
 import { obligationsNiveauAuditDuDossier } from "@/lib/perimetre/niveau-audit";
+import { genererProchainesVerifications } from "@/lib/calendrier/generateur";
 import {
   estDeclencheeParUnFait,
   estEtatADeclarer,
@@ -329,10 +330,20 @@ describe("le dossier neuf — ce que le lot rend visible", () => {
     expect(manquantes, "un état permanent servi n'arrive pas à l'écran, sans raison nommée").toEqual([]);
 
     // L'exclusion ne couvre que ce qu'elle nomme : une ligne datée n'est
-    // jamais déclarée « en place ».
-    for (const a of etats) {
-      if (exclusion(a.obligation) === null) continue;
+    // jamais déclarée « en place ». Et sa raison se vérifie au calendrier
+    // lui-même (revue du 2026-10-17, R2) — sans quoi « au calendrier » ne
+    // serait que la condition recopiée : le générateur produit bien la ligne.
+    const auCalendrier = new Set(
+      genererProchainesVerifications(applicables).map((v) => v.obligationId),
+    );
+    const exclues = etats.filter((a) => exclusion(a.obligation) !== null);
+    // Borne basse : au 2026-10-17, une seule (`signalisation-etablissement-
+    // entretien`, défaut annuel) — sans elle, la vérification au calendrier
+    // passerait à vide.
+    expect(exclues.length, "aucune exclusion « rythme » : la garde du calendrier serait vide").toBeGreaterThan(0);
+    for (const a of exclues) {
       expect(modeDeclarationApplique(a)?.mode, a.obligation.id).not.toBe("etat");
+      expect(auCalendrier.has(a.obligation.id), `${a.obligation.id} : exclue de l'écran, absente du calendrier`).toBe(true);
     }
 
     // La seconde exclusion est en amont de l'écran : le NIVEAU AUDIT (ADR-042).

@@ -79,6 +79,17 @@ release (lots lancés le même jour) ; **n° 1 (gaz sans cuisine) et n° 5
    s'affichaient déjà ainsi dans le formulaire. Remède possible, non décidé :
    une aide conditionnée au régime de l'établissement, ou une phrase qui pose la
    condition.
+8. **[2026-10-17, dette écrite, non corrigée] « Ne s'applique plus » sur une
+   ligne archivée au niveau audit** (`lot/niveau-audit-1017`, revue
+   indépendante, remarque R3). Quand une obligation passe au niveau audit
+   (ADR-042), sa ligne qui porte un rapport est archivée, et le registre la
+   présente comme une obligation qui « ne s'applique plus depuis le … »
+   (`verifications/[verificationId]/page.tsx`). Pour ces lignes, la phrase est
+   fausse : l'obligation reste due, Rojer cesse seulement de la suivre au
+   quotidien, et la page « Ce que Rojer ne couvre pas » le dit. Trois lignes
+   d'équipement du 2026-10-17 sont concernées (portail, rapport annuel
+   d'ascenseur, révision en atelier de l'extincteur hors ERP), comme les deux
+   EPI du 2026-10-08. Remède non décidé.
 
 ### Décisions attendues
 

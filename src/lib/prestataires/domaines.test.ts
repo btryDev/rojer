@@ -4,10 +4,16 @@ import {
   AUCUN_TIERS_ATTENDU,
   DOMAINES_PRESTATAIRE_ATTENDUS,
   TIERS_LUI_MEME_OBLIGATOIRE,
+  appelleUnTiers,
   domainesSansPrestataire,
   supposeUnTiers,
   type PrestatairesAttendus,
 } from "./domaines";
+import { estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
+import {
+  determineObligationsApplicables,
+  type EtablissementMatching,
+} from "@/lib/matching";
 import { LABEL_DOMAINE as LABEL_PRESTATAIRE } from "./schema";
 import { referencesDepouillees } from "@/lib/referentiels/corpus";
 import { porteurDe } from "@/lib/referentiels/conformite/types";
@@ -162,12 +168,16 @@ describe("les domaines dont la contrepartie n'est pas encore atteinte", () => {
     // produit la fausse affirmation.
     //
     // IL EST TOMBÉ UNE FOIS, ET IL A FAIT CE QU'ON ATTENDAIT DE LUI.
-    // `sante_travail` a quitté cette liste avec le lot 8 : la fiche d'entreprise
+    // `sante_travail` a quitté cette liste avec le lot 8 : ~~la fiche d'entreprise
     // de `R. 4624-46` est portée par l'établissement — donc elle franchit le
     // moteur — et réalisée par le médecin du travail ou l'équipe
     // pluridisciplinaire — donc `supposeUnTiers()` est vrai. C'est très
     // exactement le cas que le commentaire de `DOMAINES_PRESTATAIRE_ATTENDUS`
-    // annonçait comme futur. Le commentaire a été réécrit en même temps que
+    // annonçait comme futur.~~ [2026-10-17, ADR-042 : la fiche d'entreprise est
+    // au niveau audit, le moteur ne la sert plus. `sante_travail` reste atteint
+    // par l'adhésion (`L. 4622-1`), nommée dans `TIERS_LUI_MEME_OBLIGATOIRE`.
+    // Ce test ne la voyait pas partir : il ne filtrait pas le niveau audit.]
+    // Le commentaire a été réécrit en même temps que
     // cette liste, comme la consigne ci-dessus le demande.
     // DEUX conditions, et la seconde est facile à oublier — la première
     // rédaction de ce test l'a oubliée, et il a classé `sante_travail` parmi
@@ -178,10 +188,14 @@ describe("les domaines dont la contrepartie n'est pas encore atteinte", () => {
     // réalisateurs. C'est le cas de la VIP et du suivi renforcé, réalisés par
     // un professionnel de santé : des tiers bien réels, que le rapprochement
     // ne verra pourtant jamais.
+    // TROISIÈME condition (2026-10-17) : une obligation au niveau audit ne
+    // franchit pas le moteur non plus (ADR-042). Et la règle se lit par
+    // `appelleUnTiers`, sa seule lecture, pas par `supposeUnTiers` seul.
     const atteignables = new Set(
       obligationsConformite
         .filter((o) => porteurDe(o) !== "salarie")
-        .filter(supposeUnTiers)
+        .filter((o) => !estNiveauAudit(o))
+        .filter(appelleUnTiers)
         .map((o) => o.domaine),
     );
     const inatteignables = (
@@ -257,5 +271,56 @@ describe("les articles que ces phrases citent à l'écran", () => {
       "Ces articles sont cités dans une phrase affichée au dirigeant sans " +
         "qu'aucun corpus ne déclare les avoir lus. Dépouiller avant de citer.",
     ).toEqual([]);
+  });
+});
+
+describe("le signal « aucun service de santé au travail » (L. 4622-1)", () => {
+  // 2026-10-17 (revue indépendante du lot niveau audit, décision de c6 pour la
+  // propriétaire) : le signal s'éteignait chez un bureau de six quand la fiche
+  // d'entreprise, seule obligation qui l'allumait, est passée au niveau audit.
+  // Il est rattaché à l'obligation qu'il protège.
+  const BUREAU_SIX: EtablissementMatching = {
+    id: "bureau",
+    effectifSurSite: 6,
+    effectifEntreprise: 6,
+    estEtablissementTravail: true,
+    estERP: false,
+    estIGH: false,
+    estHabitation: false,
+    typeErp: null,
+    typesErpAutres: [],
+    categorieErp: null,
+    classeIgh: null,
+    familleHabitation: null,
+    personnesPresentesHabituellement: null,
+    manipuleMatieresR422722: null,
+    comporteLocauxSommeilPublic: null,
+    manutentionManuelle: null,
+    travailSurEcran: null,
+    operationsElectriques: null,
+    conduiteEngins: null,
+    expositionCMR: null,
+    epiPresents: null,
+    ssiCategorieAouB: null,
+  };
+
+  it("s'allume chez un bureau de six sans prestataire, sans aucun appareil", () => {
+    const servies = determineObligationsApplicables(BUREAU_SIX, []).map((a) => a.obligation);
+    expect(domainesSansPrestataire(servies, [])).toContain("sante_travail");
+    // Et s'éteint dès qu'un service est inscrit à l'annuaire.
+    expect(domainesSansPrestataire(servies, ["service_sante_travail"])).not.toContain(
+      "sante_travail",
+    );
+  });
+
+  it("est porté par l'adhésion, qui existe, est servie au bureau, et n'est pas au niveau audit", () => {
+    const id = TIERS_LUI_MEME_OBLIGATOIRE.sante_travail?.obligation;
+    const o = obligationsConformite.find((x) => x.id === id);
+    expect(o, `${id} : l'obligation rattachée n'existe pas`).toBeDefined();
+    expect(o!.domaine).toBe("sante_travail");
+    expect(estNiveauAudit(o!)).toBe(false);
+    expect(appelleUnTiers(o!)).toBe(true);
+    // Le rattachement, pas les réalisateurs : l'employeur adhère lui-même.
+    expect(supposeUnTiers(o!)).toBe(false);
   });
 });

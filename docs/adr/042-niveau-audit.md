@@ -95,7 +95,8 @@ chacune est en tête de ses `notesInternes`.
 - `eclairage-etablissement-regles-entretien` (`R. 4223-11`) ;
 - `prevention-etablissement-liste-personnes-qualifiees` (`R. 4323-24`) ;
 - `aeration-etablissement-consigne-utilisation` (`R. 4222-21`) — motif
-  reformulé : un écrit établi une fois, sans échéance ;
+  reformulé à la demande de la propriétaire : un écrit établi une fois,
+  sans échéance ;
 - `signalisation-etablissement-alimentation-secours-presence` (arrêté du
   4 novembre 1993, art. 7) — l'annuelle de l'art. 15 reste servie ;
 - `porte-auto-portail-piete-coulissant` (arrêté du 21 décembre 1993, art. 2

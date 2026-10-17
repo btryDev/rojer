@@ -40,7 +40,10 @@
  * deux, le registre de dette une, `PE 27` deux) — remesuré en appelant `obligationsConformite`, jamais au grep, sur un
  * total de 167 qui concorde avec le préfixe de l'empreinte ; le « quarante-cinq » du
  * 2026-09-04 avait été dépassé par trois lots sans que la phrase bouge —, et l'une d'elles
- * produit bel et bien une ligne de calendrier : `porte-auto-portail-piete-coulissant`
+ * ~~produit bel et bien une ligne de calendrier~~ [2026-10-17, ADR-042 : n'en
+ * produit plus, étant au niveau audit ; la règle ci-dessous reste juste pour
+ * le jour où le marqueur se lève, et pour toute autre ligne de ce cas] :
+ * `porte-auto-portail-piete-coulissant`
  * est un état permanent porté par un équipement, avec
  * `periodicite: "mise_en_service_uniquement"` — que le générateur date de la
  * mise en service au lieu de la sauter. La retenir ici lui donnerait **deux
