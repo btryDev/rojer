@@ -60,6 +60,7 @@ const obligation = (
   periodicite: "annuelle",
   nature: "echeance_recurrente",
   pieceAttendue: null,
+  usageEcran: null,
   realisateurs: ["organisme_agree"],
   criticite: 3,
   transmet: [],

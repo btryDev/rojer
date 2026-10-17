@@ -58,7 +58,7 @@ function etab(estEtablissementTravail = true) {
 
 async function ligne() {
   const d = await listerEtatsPermanents(etab(), []);
-  return [...d.groupes.flatMap((g) => g.lignes), ...d.faits].find(
+  return [...d.familles.flatMap((f) => f.blocs.flatMap((b) => b.lignes)), ...d.faits].find(
     (l) => l.obligation.id === OBLIGATION,
   );
 }
@@ -92,7 +92,7 @@ describe("« Ce qui doit être en place » — les chiffons (niveau audit, sans 
 describe("« Ce qui doit être en place » — le rendu « à confirmer », par la question des matières", () => {
   it("silence : une ligne retenue dit « À confirmer », sa phrase et le lien vers la fiche", async () => {
     const d = await listerEtatsPermanents(etab(), []);
-    const l = [...d.groupes.flatMap((g) => g.lignes), ...d.faits].find((x) =>
+    const l = [...d.familles.flatMap((f) => f.blocs.flatMap((b) => b.lignes)), ...d.faits].find((x) =>
       x.questionsSansReponse.includes(PHRASE_SANS_REPONSE.matieres_r4227_22),
     );
     expect(l).toBeDefined();

@@ -25,8 +25,15 @@ import {
   phraseEffectifAConfirmer,
 } from "@/lib/matching";
 import type { Obligation } from "@/lib/referentiels/conformite";
-import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
-import type { DomaineObligation } from "@/lib/referentiels/conformite";
+import {
+  LIBELLE_GROUPE,
+  LIBELLE_SOUS_CATEGORIE,
+  ORDRE_GROUPES,
+  ORDRE_SOUS_CATEGORIES,
+  rangementDe,
+  type GroupeUsage,
+  type SousCategorie,
+} from "./familles";
 import { modeDeclarationApplique, type ModeDeclaration } from "./regle";
 import { ordonnerLignes } from "./ordre";
 import { contexteFondementDe, fondementDe, type FondementLigne } from "./fondement";
@@ -77,15 +84,34 @@ export type LigneEtatPermanent = {
   parLesTitres: EtatParLesTitres | null;
 };
 
-export type GroupeEtatsPermanents = {
-  domaine: DomaineObligation;
-  libelle: string;
+/**
+ * Une sous-catégorie d'une famille, ou la famille entière quand elle n'en a
+ * pas (`sous` et `libelle` à `null`). Le compteur ne porte, comme celui de
+ * l'en-tête, que les lignes en mode « état ».
+ */
+export type BlocSousCategorie = {
+  sous: SousCategorie | null;
+  libelle: string | null;
   lignes: LigneEtatPermanent[];
+  enPlace: number;
+  total: number;
+};
+
+export type FamilleEtatsPermanents = {
+  groupe: GroupeUsage;
+  libelle: string;
+  blocs: BlocSousCategorie[];
+  enPlace: number;
+  total: number;
 };
 
 export type EtatsPermanentsDuDossier = {
-  /** Les états à déclarer en place, groupés par domaine. */
-  groupes: GroupeEtatsPermanents[];
+  /**
+   * Les états à déclarer en place, rangés par usage (`familles.ts`) et non
+   * plus par domaine depuis le 2026-10-17. Ordre fixe, familles et blocs vides
+   * omis ; la somme des compteurs des familles est `total` et `enPlace`.
+   */
+  familles: FamilleEtatsPermanents[];
   /**
    * Ce qui revient sans rythme écrit, **à part et non mêlé aux états**.
    *
@@ -231,7 +257,9 @@ export async function listerEtatsPermanents(
     titresParObligation.set(t.obligationId, liste);
   }
 
-  const parDomaine = new Map<DomaineObligation, LigneEtatPermanent[]>();
+  // Clé « groupe/sous » : un bloc par sous-catégorie, ou un par famille sans
+  // sous-catégorie.
+  const parBloc = new Map<string, LigneEtatPermanent[]>();
   const faits: LigneEtatPermanent[] = [];
   let enPlace = 0;
   let total = 0;
@@ -287,30 +315,67 @@ export async function listerEtatsPermanents(
     if (mode.mode === "fait") {
       faits.push(ligne);
     } else {
-      const liste = parDomaine.get(o.domaine) ?? [];
+      // Pas de groupe « autres » : une ligne de l'écran sans rangement est un
+      // oubli du référentiel, que `familles.test.ts` fait échouer. La cacher
+      // fausserait le compteur, la ranger au hasard mentirait sur son usage.
+      const usage = rangementDe(o);
+      if (!usage) {
+        throw new Error(
+          `« ${o.id} » figure sur l'écran sans \`usageEcran\` (familles.test.ts).`,
+        );
+      }
+      const cle = `${usage.groupe}/${usage.sous ?? ""}`;
+      const liste = parBloc.get(cle) ?? [];
       liste.push(ligne);
-      parDomaine.set(o.domaine, liste);
+      parBloc.set(cle, liste);
     }
   }
 
-  const groupes: GroupeEtatsPermanents[] = [...parDomaine.entries()]
-    .map(([domaine, lignes]) => ({
-      domaine,
-      libelle: LABEL_DOMAINE[domaine],
-      // L'ordre ne lit PAS `declareLe`, et `ordre.ts` dit pourquoi : il l'a
-      // lu jusqu'au 2026-09-03, si bien que déclarer une ligne la faisait
-      // descendre au bas de son groupe et remonter toutes les suivantes. Deux
-      // clics au même pixel déclaraient deux obligations différentes.
-      lignes: ordonnerLignes(lignes),
-    }))
-    .sort((a, b) => a.libelle.localeCompare(b.libelle, "fr"));
+  // L'ordre des familles et des blocs est fixe (`familles.ts`), celui des
+  // lignes aussi. Il ne lit PAS `declareLe`, et `ordre.ts` dit pourquoi : il
+  // l'a lu jusqu'au 2026-09-03, si bien que déclarer une ligne la faisait
+  // descendre au bas de son groupe et remonter toutes les suivantes. Deux
+  // clics au même pixel déclaraient deux obligations différentes.
+  const compter = (lignes: LigneEtatPermanent[]) => ({
+    enPlace: lignes.filter((l) =>
+      l.parLesTitres ? l.parLesTitres.enPlace : l.declareLe !== null,
+    ).length,
+    total: lignes.length,
+  });
+  const familles: FamilleEtatsPermanents[] = ORDRE_GROUPES.flatMap((groupe) => {
+    const sousCategories = ORDRE_SOUS_CATEGORIES[groupe];
+    const blocs: BlocSousCategorie[] = (
+      sousCategories.length === 0 ? [null] : sousCategories
+    ).flatMap((sous) => {
+      const lignes = parBloc.get(`${groupe}/${sous ?? ""}`);
+      if (!lignes) return [];
+      return [
+        {
+          sous,
+          libelle: sous ? LIBELLE_SOUS_CATEGORIE[sous] : null,
+          lignes: ordonnerLignes(lignes),
+          ...compter(lignes),
+        },
+      ];
+    });
+    if (blocs.length === 0) return [];
+    return [
+      {
+        groupe,
+        libelle: LIBELLE_GROUPE[groupe],
+        blocs,
+        enPlace: blocs.reduce((n, b) => n + b.enPlace, 0),
+        total: blocs.reduce((n, b) => n + b.total, 0),
+      },
+    ];
+  });
 
   // Même règle pour « ce qui revient » : un ordre qui dépend de l'état déplace
   // la ligne suivante au moment précis où on va la cliquer.
   ordonnerLignes(faits);
 
   return {
-    groupes,
+    familles,
     faits,
     enPlace,
     total,
@@ -376,7 +441,7 @@ export async function etatsPermanentsDuDossier(
   // aurait été sans ce terme, et le document n'imprime aucun tableau.
   if (!dossier) {
     return {
-      groupes: [],
+      familles: [],
       faits: [],
       enPlace: 0,
       total: 0,
@@ -398,7 +463,7 @@ export async function etatsPermanentsDuDossier(
  *
  * **Pourquoi une entrée séparée plutôt que la précédente rendue telle quelle.**
  * Le tableau de bord n'a besoin que de deux entiers ; lui faire transiter les
- * groupes, les libellés et les dates le rendrait dépendant de la forme
+ * familles, les libellés et les dates le rendrait dépendant de la forme
  * d'affichage d'un écran, qui bouge. Le calcul, lui, est le même —
  * l'énumération ci-dessus — et c'est la seule chose qui compte.
  */

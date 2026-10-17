@@ -83,7 +83,7 @@ export default async function EtatsPermanentsPage({
   const { etablissement } = await requireEtablissement(id);
   const equipements = await listerEquipementsDeLEtablissement(id);
 
-  const { groupes, faits, enPlace, total, parLesTitres, faitsDates, faitsDatesRenseignes } =
+  const { familles, faits, enPlace, total, parLesTitres, faitsDates, faitsDatesRenseignes } =
     await listerEtatsPermanents(
       etablissement,
       equipements.map((eq) => ({
@@ -98,6 +98,16 @@ export default async function EtatsPermanentsPage({
     );
 
   const restantes = total - enPlace;
+  // Rendu provisoire des familles d'usage (2026-10-17) : une carte par bloc,
+  // coiffée de sa sous-catégorie, ou de sa famille quand elle n'en a pas. La
+  // mise en page par famille vient avec le lot de l'écran.
+  const groupes = familles.flatMap((f) =>
+    f.blocs.map((b) => ({
+      cle: `${f.groupe}/${b.sous ?? ""}`,
+      libelle: b.libelle ?? f.libelle,
+      lignes: b.lignes,
+    })),
+  );
   // Les phrases qui s'accordent en nombre vivent dans `phrases.ts` et non dans
   // ce JSX. Une locution coupée par un ternaire s'y était cassée au rendu —
   // « Elles n'entrepas dans le compte » — et rien ne pouvait l'attraper tant
@@ -173,7 +183,7 @@ export default async function EtatsPermanentsPage({
         ) : (
           <>
             {groupes.map((g) => (
-              <section key={g.domaine} className="carte-board px-7 py-6 sm:px-8">
+              <section key={g.cle} className="carte-board px-7 py-6 sm:px-8">
                 {/* Barème « sur-titre de section » (10.5 px / 0.18em,
                     `docs/charte-board.md` § 3). La première rédaction employait
                     le barème de LIGNE — 10 px / 0.16em — qui n'est pas le bon

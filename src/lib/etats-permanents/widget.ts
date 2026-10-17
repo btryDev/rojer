@@ -4,8 +4,9 @@
  * **Même source que l'écran** : `etatsPermanentsDuDossier`, qui appelle
  * `listerEtatsPermanents` — la lecture de la page. Le widget ne refait ni la
  * sélection des obligations, ni la jointure des déclarations, ni l'ordre : il
- * aplatit ce que l'écran affiche, dans l'ordre où il l'affiche (les groupes
- * par domaine, puis « ce qui revient »). `widget.test.ts` le tient.
+ * aplatit ce que l'écran affiche, dans l'ordre où il l'affiche (les familles
+ * d'usage, bloc par bloc, puis « ce qui revient »). Le test du widget
+ * (`components/dashboard/widgets/impl/etats-permanents.test.tsx`) le tient.
  *
  * **Aucun score, aucune qualification.** L'état d'une ligne est ce que l'écran
  * dit déjà d'elle : la phrase de sa déclaration quand il y en a une, « À
@@ -31,7 +32,10 @@ export type LigneWidgetEtat = {
 export function lignesAffichees(
   d: EtatsPermanentsDuDossier,
 ): LigneEtatPermanent[] {
-  return [...d.groupes.flatMap((g) => g.lignes), ...d.faits];
+  return [
+    ...d.familles.flatMap((f) => f.blocs.flatMap((b) => b.lignes)),
+    ...d.faits,
+  ];
 }
 
 export function lignesDuWidget(

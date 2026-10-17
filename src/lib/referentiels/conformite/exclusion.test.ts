@@ -53,6 +53,7 @@ function titreTemoin(
     periodicite: "annuelle",
     nature: "echeance_recurrente",
     pieceAttendue: null,
+    usageEcran: null,
     realisateurs: ["medecin_travail"],
     criticite: 3,
     typologies: { travail: true },

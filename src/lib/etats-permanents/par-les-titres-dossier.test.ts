@@ -82,7 +82,7 @@ beforeEach(() => {
 
 async function dossier() {
   const d = await listerEtatsPermanents(etab, installation, undefined, NOW);
-  const ligne = d.groupes.flatMap((g) => g.lignes).find((l) => l.obligation.id === HABILITATION);
+  const ligne = d.familles.flatMap((f) => f.blocs.flatMap((b) => b.lignes)).find((l) => l.obligation.id === HABILITATION);
   if (!ligne) throw new Error("l'habilitation ne s'applique plus à ce dossier");
   return { d, ligne };
 }
@@ -168,7 +168,7 @@ describe("les comptes ne disent pas « déclaré » de ce que l'employeur n'a pa
 
   it("contre-épreuve : sans ligne établie d'après les titres, le chapeau n'en parle pas", () => {
     const bloc = blocEtatsPermanents({
-      groupes: [],
+      familles: [],
       faits: [],
       enPlace: 0,
       total: 0,

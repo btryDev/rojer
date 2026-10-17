@@ -38,6 +38,7 @@ const OBLIGATION: Obligation = {
   transmet: [],
   nature: "etat_permanent",
   pieceAttendue: null,
+  usageEcran: null,
   typologies: { erp: true },
   porteur: "etablissement",
 };
@@ -65,28 +66,56 @@ function ligne(
   };
 }
 
-// Deux domaines, une ligne à confirmer, une déclarée, une « fait le » datée
-// et une qui ne l'est pas : chaque branche d'état et chaque section.
+// Deux familles, l'une à deux blocs, une ligne à confirmer, une déclarée, une
+// « fait le » datée et une qui ne l'est pas : chaque branche d'état et chaque
+// section.
 const DOSSIER: EtatsPermanentsDuDossier = {
-  groupes: [
+  familles: [
     {
-      domaine: "incendie",
-      libelle: "Incendie",
-      lignes: [
-        ligne("inc-1", { declareLe: new Date("2026-08-12T09:00:00Z") }),
-        ligne("inc-2"),
+      groupe: "incendie_secours",
+      libelle: "Incendie et secours",
+      enPlace: 1,
+      total: 3,
+      blocs: [
+        {
+          sous: "alerter",
+          libelle: "Alerter",
+          enPlace: 1,
+          total: 2,
+          lignes: [
+            ligne("inc-1", { declareLe: new Date("2026-08-12T09:00:00Z") }),
+            ligne("inc-2"),
+          ],
+        },
+        {
+          sous: "evacuer",
+          libelle: "Évacuer",
+          enPlace: 0,
+          total: 1,
+          lignes: [ligne("inc-3")],
+        },
       ],
     },
     {
-      domaine: "organisation" as never,
-      libelle: "Organisation",
-      lignes: [
-        ligne("org-cse", { aConfirmer: "Phrase à confirmer." }),
-        // Déclarée ET à confirmer : l'écran affiche les deux (M3).
-        ligne("org-ri", {
-          aConfirmer: "Phrase à confirmer.",
-          declareLe: new Date("2026-09-01T09:00:00Z"),
-        }),
+      groupe: "organisation",
+      libelle: "Qui s'occupe de quoi",
+      enPlace: 1,
+      total: 2,
+      blocs: [
+        {
+          sous: null,
+          libelle: null,
+          enPlace: 1,
+          total: 2,
+          lignes: [
+            ligne("org-cse", { aConfirmer: "Phrase à confirmer." }),
+            // Déclarée ET à confirmer : l'écran affiche les deux (M3).
+            ligne("org-ri", {
+              aConfirmer: "Phrase à confirmer.",
+              declareLe: new Date("2026-09-01T09:00:00Z"),
+            }),
+          ],
+        },
       ],
     },
   ],
@@ -99,7 +128,7 @@ const DOSSIER: EtatsPermanentsDuDossier = {
     ligne("fait-2", { mode: "fait", compteDansLEnTete: false, fondement: null }),
   ],
   enPlace: 2,
-  total: 4,
+  total: 5,
   parLesTitres: { total: 0, enPlace: 0 },
   faitsDates: 2,
   faitsDatesRenseignes: 1,
@@ -172,9 +201,9 @@ describe("widget « Ce qui doit être en place »", () => {
     cleanup();
     const lignesWidget = releve((await rendreWidget(DOSSIER)).container);
 
-    // Borne basse : les cinq lignes du dossier sont bien à l'écran — sans
+    // Borne basse : les sept lignes du dossier sont bien à l'écran — sans
     // quoi deux relevés vides seraient égaux.
-    expect(lignesEcran).toHaveLength(6);
+    expect(lignesEcran).toHaveLength(7);
     expect(lignesWidget).toEqual(lignesEcran);
   });
 
@@ -188,7 +217,7 @@ describe("widget « Ce qui doit être en place »", () => {
     expect(references).toEqual(
       lignesDuWidget(DOSSIER).map((l) => l.fondement?.reference ?? ""),
     );
-    expect(references.filter(Boolean)).toHaveLength(5);
+    expect(references.filter(Boolean)).toHaveLength(6);
   });
 
   it("dit l'état par les mots de l'écran, sans compte ni qualification (M2, M3)", async () => {
@@ -220,7 +249,7 @@ describe("widget « Ce qui doit être en place »", () => {
 
 describe("widget sans ligne, ou sans réponse", () => {
   const vide: EtatsPermanentsDuDossier = {
-    groupes: [],
+    familles: [],
     faits: [],
     enPlace: 0,
     total: 0,
@@ -274,11 +303,21 @@ describe("widget : une ligne établie d'après les titres (revue du 2026-10-16)"
     const phrase = "Établi d'après les titres déclarés : 1 titre ; Léa Martin : échéance calculée dépassée le 01/06/2025.";
     const [l] = lignesDuWidget({
       ...DOSSIER,
-      groupes: [
+      familles: [
         {
-          domaine: "electricite",
-          libelle: "Électricité",
-          lignes: [ligne("habilitation", { parLesTitres: { enPlace: false, phrase, phraseSansNom: phrase } })],
+          groupe: "organisation",
+          libelle: "Qui s'occupe de quoi",
+          enPlace: 0,
+          total: 1,
+          blocs: [
+            {
+              sous: null,
+              libelle: null,
+              enPlace: 0,
+              total: 1,
+              lignes: [ligne("habilitation", { parLesTitres: { enPlace: false, phrase, phraseSansNom: phrase } })],
+            },
+          ],
         },
       ],
       faits: [],
@@ -290,15 +329,25 @@ describe("widget : une ligne établie d'après les titres (revue du 2026-10-16)"
     const phrase = "Établi d'après les titres déclarés : 1 titre, aucune échéance dépassée.";
     const [l] = lignesDuWidget({
       ...DOSSIER,
-      groupes: [
+      familles: [
         {
-          domaine: "electricite",
-          libelle: "Électricité",
-          lignes: [
-            ligne("habilitation", {
-              parLesTitres: { enPlace: true, phrase, phraseSansNom: phrase },
-              questionsSansReponse: ["Effectuez-vous des opérations électriques ?"],
-            }),
+          groupe: "organisation",
+          libelle: "Qui s'occupe de quoi",
+          enPlace: 1,
+          total: 1,
+          blocs: [
+            {
+              sous: null,
+              libelle: null,
+              enPlace: 1,
+              total: 1,
+              lignes: [
+                ligne("habilitation", {
+                  parLesTitres: { enPlace: true, phrase, phraseSansNom: phrase },
+                  questionsSansReponse: ["Effectuez-vous des opérations électriques ?"],
+                }),
+              ],
+            },
           ],
         },
       ],

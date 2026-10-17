@@ -52,7 +52,7 @@ vi.mock("@/lib/perimetre/faits", () => ({
 vi.mock("@/lib/etats-permanents/queries", async (orig) => ({
   ...(await orig<typeof import("@/lib/etats-permanents/queries")>()),
   etatsPermanentsDuDossier: async () => ({
-    groupes: [],
+    familles: [],
     faits: [],
     total: 0,
     enPlace: 0,

@@ -53,6 +53,7 @@
 
 import type { EtatsPermanentsDuDossier } from "@/lib/etats-permanents/queries";
 import { phraseDeclaration, phraseFaitsDates } from "@/lib/etats-permanents/phrases";
+import { comparerLignes } from "@/lib/etats-permanents/ordre";
 import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
 import { formatDateCourte } from "./styles";
 
@@ -295,16 +296,27 @@ function ligne(l: {
 /**
  * Le bloc à imprimer, prêt à rendre.
  *
- * **L'ordre n'est pas refait ici.** Il vient de `listerEtatsPermanents`, qui
- * range les domaines puis, dans chacun, ce qui n'est pas encore déclaré en
- * premier. Le retrier au format document donnerait un second classement à
- * maintenir, et le lecteur qui compare l'écran et le PDF verrait deux ordres
- * pour un même ensemble.
+ * **L'ordre est refait ici, par domaine** (décision de la propriétaire, du
+ * 2026-10-17). L'écran range ses lignes par usage (`familles.ts`) ; le
+ * document, lu par un tiers qui cherche un texte, garde l'ordre du
+ * référentiel : les domaines par libellé, puis dans chacun l'ordre de
+ * `comparerLignes` — celui de l'écran avant les familles, et qui ne lit pas
+ * `declareLe`. Ce tri-là ne doit pas migrer vers `queries.ts`, qui n'en a plus
+ * (`ordre.test.ts`).
  */
 export function blocEtatsPermanents(
   d: EtatsPermanentsDuDossier,
 ): BlocEtatsPermanents {
-  const etats = d.groupes.flatMap((g) => g.lignes.map(ligne));
+  const etats = d.familles
+    .flatMap((f) => f.blocs.flatMap((b) => b.lignes))
+    .sort(
+      (a, b) =>
+        LABEL_DOMAINE[a.obligation.domaine].localeCompare(
+          LABEL_DOMAINE[b.obligation.domaine],
+          "fr",
+        ) || comparerLignes(a, b),
+    )
+    .map(ligne);
   const faits = d.faits.map(ligne);
 
   if (etats.length === 0 && faits.length === 0) {

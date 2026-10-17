@@ -93,6 +93,7 @@ describe("transmissions (ADR-024)", () => {
       periodicite: "autre",
       nature: "etat_permanent",
       pieceAttendue: null,
+      usageEcran: null,
       realisateurs: ["exploitant"],
       criticite: 3,
       transmet: [
@@ -200,6 +201,7 @@ describe("transmissions (ADR-024)", () => {
       periodicite: "autre",
       nature: "etat_permanent",
       pieceAttendue: null,
+      usageEcran: null,
       realisateurs: ["exploitant"],
       criticite: 3,
       transmet: [
@@ -258,6 +260,7 @@ describe("transmissions (ADR-024)", () => {
       transmet: [],
     nature: "echeance_recurrente",
     pieceAttendue: null,
+    usageEcran: null,
       typologies: { erp: true },
       categoriesEquipement: ["ALARME_INCENDIE"],
     };
@@ -292,6 +295,7 @@ describe("transmissions (ADR-024)", () => {
       transmet: [],
     nature: "echeance_recurrente",
     pieceAttendue: null,
+    usageEcran: null,
       typologies: { erp: true },
       categoriesEquipement: ["ALARME_INCENDIE"],
     };

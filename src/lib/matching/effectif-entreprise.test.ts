@@ -160,15 +160,15 @@ describe("tous les lecteurs d'un seuil d'entreprise lisent la même règle", () 
 describe("« Ce qui doit être en place » porte la mention (M1)", () => {
   it("la ligne du CSE retenue par prudence dit « à confirmer » et de quoi conclure", async () => {
     const d = await listerEtatsPermanents(etab(12, 10), []);
-    const lignes = d.groupes.flatMap((g) => g.lignes);
+    const lignes = d.familles.flatMap((f) => f.blocs.flatMap((b) => b.lignes));
     const cse = lignes.find(
       (l) => l.obligation.id === "prevention-etablissement-cse",
     );
     expect(cse?.aConfirmer).toContain("apprentis");
     // Et seulement là où la prudence joue.
     const franc = await listerEtatsPermanents(etab(12, 12), []);
-    const cseFranc = franc.groupes
-      .flatMap((g) => g.lignes)
+    const cseFranc = franc.familles
+      .flatMap((f) => f.blocs.flatMap((b) => b.lignes))
       .find((l) => l.obligation.id === "prevention-etablissement-cse");
     expect(cseFranc?.aConfirmer).toBeNull();
   });
