@@ -1215,6 +1215,12 @@ describe("moteur matching — cartographie des catégories sans obligation", () 
         // par un employeur non-ERP porte « aucune échéance calculée », ce qui
         // est vrai : aucun texte encodé ne l'y astreint.
         "DEFIBRILLATEUR",
+        // BUT_PANIER_SPORTIF, entrée le 2026-10-17 (sous-lot E) : aucune ligne
+        // n'est portée par le but lui-même. Sa présence fait naître la ligne
+        // d'ÉTABLISSEMENT de R. 322-25 (plan de vérification et registre,
+        // `siEquipementDeclare`), une seule par site : l'appareil porte donc
+        // « aucune échéance calculée », ce qui est vrai.
+        "BUT_PANIER_SPORTIF",
         // EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC, entrée le 2026-10-17 (sous-lot
         // F, décision de la propriétaire) : ses deux lignes sont bornées aux
         // ERP (`typologies: { erp: true }`). ~~« Un employeur non-ERP qui la
@@ -1323,6 +1329,12 @@ describe("moteur matching — cartographie des catégories sans obligation", () 
         // n'est pas encodé — réserve du corpus, relecture au 2027-01-14.
         // Un restaurant n'est d'ailleurs dans aucune des huit familles.
         "DEFIBRILLATEUR",
+        // BUT_PANIER_SPORTIF, entrée le 2026-10-17 (sous-lot E) : aucune ligne
+        // n'est portée par le but lui-même. Sa présence fait naître la ligne
+        // d'ÉTABLISSEMENT de R. 322-25 (plan de vérification et registre,
+        // `siEquipementDeclare`), une seule par site : l'appareil porte donc
+        // « aucune échéance calculée », ce qui est vrai.
+        "BUT_PANIER_SPORTIF",
         // EPI, ajoutée le 2026-09-04 : déclarable et volontairement sans
         // obligation. Le dirigeant pouvait DIRE qu'il fournit des équipements
         // de protection — la question `epiPresents` de la fiche

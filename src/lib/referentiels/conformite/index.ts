@@ -49,6 +49,7 @@ import { obligationsSignalisation } from "./signalisation";
 import { obligationsCompactageDechets } from "./compactage-dechets";
 import { obligationsEclairage } from "./eclairage";
 import { obligationsEauChaudeSanitaire } from "./eau-chaude-sanitaire";
+import { obligationsEtablissementSportif } from "./etablissement-sportif";
 import { estNiveauAudit } from "./niveau-audit";
 
 export {
@@ -74,6 +75,7 @@ export {
   obligationsCompactageDechets,
   obligationsEclairage,
   obligationsEauChaudeSanitaire,
+  obligationsEtablissementSportif,
 };
 export * from "./types";
 export * from "./veille-textes";
@@ -126,6 +128,14 @@ export const obligationsConformite: Obligation[] = [
   // chaude sanitaire déclarée en ERP : la température mensuelle et l'analyse
   // annuelle de l'annexe 2 de l'arrêté du 1er février 2010.
   ...obligationsEauChaudeSanitaire,
+  // Sous-lot E de la mise à jour du référentiel (2026-10-17) — le code du
+  // sport. ~~Cinq lignes d'établissement bornées au type d'ERP X (secours,
+  // affichages, affiche Signal-sports, assurance, information des
+  // pratiquants) et~~ [2026-10-17, revue indépendante du sous-lot E : décrivait le premier plan ; la propriétaire a réduit E à deux lignes le même jour] Une ligne bornée au type d'ERP X (trousse,
+  // moyen d'alerte et tableau des secours, R. 322-4) et une ligne ouverte à
+  // tout établissement qui déclare un but ou un panier de 10 kg ou plus (plan
+  // de vérification et registre, R. 322-25).
+  ...obligationsEtablissementSportif,
 ];
 
 /**
@@ -504,7 +514,16 @@ export const obligationsConformite: Obligation[] = [
 // `signalisation-stockage-substances-dangereuses`, hors empreinte.
 // 197 + 1 − 0 = 198 ; par porteur, 95 équipement, 88 + 1 = 89 établissement,
 // 14 salarié.
-export const REFERENTIEL_VERSION = "2026-10-17.5";
+// `2026-10-17.6` (sous-lot E, décision de la propriétaire du 2026-10-17 ;
+// numéro PROVISOIRE ; D a mergé avant avec `.5`) : la
+// source `CODE_SPORT`, le domaine `etablissement_sportif` et la catégorie
+// `BUT_PANIER_SPORTIF` entrent, avec ~~six lignes d'établissement (R. 322-4,
+// R. 322-5 1° à 3°, Signal-sports, L. 321-7, A. 322-3, R. 322-25)~~
+// [2026-10-17, revue indépendante du sous-lot E : décrivait le premier plan ; la propriétaire a réduit E à deux lignes le même jour] deux lignes d'établissement (R. 322-4, R. 322-25) ;
+// R. 322-5, Signal-sports, L. 321-7 et A. 322-3 sont `non_couvert`. Le titre
+// salarié de la carte professionnelle est retiré avant d'entrer (décision du
+// même jour). 198 + 2 − 0 = 200, rebasé sur D, remesuré en appelant le code.
+export const REFERENTIEL_VERSION = "2026-10-17.6";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

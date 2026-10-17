@@ -56,6 +56,10 @@ export const LABEL_CATEGORIE_EQUIPEMENT: Record<CategorieEquipement, string> = {
   // est gardée]. Il couvre aussi les hôtels, cas le plus important de la cible.
   EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC:
     "Eau chaude collective alimentant des douches ou des bains à remous ouverts au public",
+  // 2026-10-17, décision de la propriétaire (sous-lot E) : le seuil de
+  // R. 322-19 (« les buts légers dont le poids total est inférieur à 10 kg »
+  // sont exclus) est dans le libellé, pour qu'un but léger ne se déclare pas.
+  BUT_PANIER_SPORTIF: "But ou panier de sport de 10 kg ou plus",
   AUTRE: "Autre équipement",
 };
 
@@ -243,6 +247,13 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
   // températures de l'arrêté du 23 juin 1978 (art. 36), règle d'exploitation
   // sans échéance.
   EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC: `Production d'eau chaude centralisée (ballon, chaudière, échangeur) qui alimente des douches, douchettes ou bains à remous accessibles au public — chambres d'hôtel, vestiaires d'une salle de sport, douches d'un camping. Une douche réservée au personnel n'en fait pas partie. Dans un établissement recevant du public, Rojer suit pour chaque installation déclarée ${porte("la mesure de la température de l'eau chaude sanitaire")} une fois par mois et ${porte("l'analyse de légionelles")} une fois par an, par un laboratoire accrédité (arrêté du 1er février 2010, art. 3, 5 et annexe 2). Vos relevés et vos résultats d'analyse se consignent au carnet sanitaire. Rojer ne suit pas ${nonPorte("les prélèvements avant la réouverture d'un réseau resté inutilisé plusieurs semaines")} ni ${nonPorte("la surveillance renforcée après un incident ou à la demande de l'agence régionale de santé")} (art. 3), ni ${nonPorte("les mesures correctives quand la limite de 1 000 UFC/L est dépassée")} (art. 4), ni ${nonPorte("les températures minimales du réseau d'eau chaude")} (arrêté du 23 juin 1978, art. 36).`,
+  // 2026-10-17, décision de la propriétaire (sous-lot E). Code du sport,
+  // art. R. 322-19 à R. 322-26, relus le 2026-10-17 par l'API Légifrance (bac
+  // à sable). Une ligne d'établissement portée : le plan de vérification et
+  // d'entretien et le registre de R. 322-25. Le reste de l'article est dit
+  // avec `nonPorte` ; les normes de sécurité que R. 322-22 et R. 322-25
+  // citent ne sont pas lues et ne sont pas nommées.
+  BUT_PANIER_SPORTIF: `Cage de but de football, de handball ou de hockey, but de basket-ball, en plein air ou en salle, de 10 kg ou plus — un but plus léger n'est pas visé (code du sport, art. R. 322-19). Pour tout établissement qui en met à la disposition des usagers, Rojer suit ${porte("le plan de vérification et d'entretien")} des buts et ${porte("le registre des essais et contrôles")} (art. R. 322-25) ; le texte laisse au plan le soin de fixer la périodicité des vérifications. Rojer ne suit pas ${nonPorte("le contrôle des buts dès leur première installation")}, ${nonPorte("la sécurisation des buts non fixés après chaque utilisation")} ni ${nonPorte("le signalement au préfet d'un accident grave lié à un but")} (art. R. 322-25 et R. 322-25-1).`,
   AUTRE: "Autre équipement soumis à vérification périodique.",
 };
 

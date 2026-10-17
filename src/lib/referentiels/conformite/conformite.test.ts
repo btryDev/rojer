@@ -1957,6 +1957,13 @@ describe("référentiel conformité — version et empreinte", () => {
     // ~~198-63bb85c2f3459490~~ — même jour, c6 : libellé raccourci (« dans les
     // réserves et locaux à risques ») ; 198 + 0 − 0, relevée en appelant.
     { version: "2026-10-17.5", empreinte: "198-e102d541698739f7" },
+    // 2026-10-17 (sous-lot E, décisions de la propriétaire du même jour ;
+    // numéro PROVISOIRE — D a .5, le premier qui merge garde le sien) : le
+    // code du sport, deux lignes d'établissement — R. 322-4 (secours, type X)
+    // et R. 322-25 (plan de vérification des buts et paniers, catégorie
+    // `BUT_PANIER_SPORTIF`). rebasé sur D (#65) : 198 + 2 − 0 = 200 ; relevée en appelant
+    // `empreinteReferentiel()`.
+    { version: "2026-10-17.6", empreinte: "200-7e27df57c13e9" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -2144,7 +2151,11 @@ describe("référentiel conformité — version et empreinte", () => {
       // remesuré en appelant `obligationsConformite`.
       // ~~197~~ — 2026-10-17, sous-lot D : 197 + 1
       // (`signalisation-interdiction-fumer-csp`) − 0 = 198, remesuré en appelant.
-    ).toBe(198);
+          // ~~198~~ — 2026-10-17, sous-lot E (code du sport), rebasé sur D : 198 + 2
+      // (`sport-etablissement-secours-r322-4`,
+      // `sport-etablissement-buts-plan-verification`) − 0 = 200, remesuré en
+      // appelant `obligationsConformite`.
+    ).toBe(200);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {

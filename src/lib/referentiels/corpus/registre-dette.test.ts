@@ -373,7 +373,12 @@ describe("registre de dette — les réserves de lecture", () => {
     // 111 → 114 le même jour (revue indépendante de D) : `P 21` et `Y 19` (le
     // service de sécurité incendie que Rojer ne connaît pas) et `R. 3512-7`
     // (emplacements fumeurs, annexes en image non lues). 111 + 3 − 0.
-    expect(n).toBe(114);
+    // 114 → 115 le 2026-10-17 (sous-lot E, `lot/ref-e-sport`, rebasé sur D), mesuré en
+    // appelant : `C. sport R. 322-25`, retenu pour le plan de vérification et
+    // le registre des buts, garde le contrôle à la première installation, la
+    // sécurisation des buts non fixés et l'inaccessibilité du non-conforme.
+    // 114 + 1 − 0 = 115.
+    expect(n).toBe(115);
     expect(reservesDeLecture().length).toBe(n);
   });
 });

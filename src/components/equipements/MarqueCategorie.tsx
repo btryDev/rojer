@@ -27,6 +27,7 @@ import {
   FireExtinguisher,
   Forklift,
   Gauge,
+  Goal,
   HardHat,
   Heater,
   HeartPulse,
@@ -124,6 +125,9 @@ export const ICONE_CATEGORIE: Record<CategorieEquipement, Picto> = {
   // L'eau chaude collective (2026-10-17) : la pomme de douche, le point d'usage
   // que nomme le libellé. `Droplets` est déjà le RIA, `Heater` le gaz.
   EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC: ShowerHead,
+  // Les buts et paniers (2026-10-17) : la cage de but. `Volleyball` dirait
+  // un ballon, un thème ; la règle de cette table veut l'objet.
+  BUT_PANIER_SPORTIF: Goal,
   AUTRE: Package,
 };
 

@@ -324,8 +324,9 @@ export const MATERIELS_NON_COUVERTS: readonly MaterielNonCouvert[] = [
     // sportifs » sort de l'exclusion `risque_specialise` (le sous-lot E du plan
     // les instruit) ; la piscine y reste. La CLÉ ne change pas : elle est
     // stockée en base. ~~Synonymes « équipement sportif », « agrès »~~ —
-    // 2026-10-17, revue de B : rattachés au matériel de fitness ; les buts et
-    // paniers viendront avec le sous-lot E. ~~Clés « X annexe » et « X 1 § 2 »~~
+    // 2026-10-17, revue de B : rattachés au matériel de fitness ; ~~les buts et
+    // paniers viendront avec le sous-lot E~~ [2026-10-17, sous-lot E : fait —
+    // catégorie `BUT_PANIER_SPORTIF`, ligne `sport-etablissement-buts-plan-verification`]. ~~Clés « X annexe » et « X 1 § 2 »~~
     // — même revue, option (b) : deux manques hors cadre (§ 7), cités par leur
     // libellé.
     cle: "piscine_equipement_sportif",

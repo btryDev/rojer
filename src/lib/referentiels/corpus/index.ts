@@ -11,6 +11,8 @@ import { ARRETE_2011_12_30_IGH } from "./arrete-2011-12-30-igh";
 import { CCH_CLASSEMENT_ERP_IGH } from "./cch-classement-erp-igh";
 import { CCH_REGISTRE_SECURITE } from "./cch-registre-securite";
 import { CCH_DEFIBRILLATEUR } from "./cch-defibrillateur";
+import { CODE_SPORT_ETABLISSEMENTS_APS } from "./code-sport-etablissements-aps";
+import { ARRETE_2025_05_20_SIGNAL_SPORTS } from "./arrete-2025-05-20-signal-sports";
 import { CODE_TRAVAIL_INCENDIE } from "./code-travail-incendie";
 import { ARRETE_2004_03_01_LEVAGE } from "./arrete-2004-03-01-levage";
 import { ARRETE_1993_03_05_MACHINES } from "./arrete-1993-03-05-machines";
@@ -118,6 +120,9 @@ export const CORPUS: readonly Corpus[] = [
   CODE_TRAVAIL_INCENDIE,
   CCH_REGISTRE_SECURITE,
   CCH_DEFIBRILLATEUR,
+  // 2026-10-17, sous-lot E — le code du sport et l'arrêté Signal-sports.
+  CODE_SPORT_ETABLISSEMENTS_APS,
+  ARRETE_2025_05_20_SIGNAL_SPORTS,
   ARRETE_2011_12_14_ECLAIRAGE,
   ARRETE_2011_12_30_IGH,
   FROID_FLUIDES,

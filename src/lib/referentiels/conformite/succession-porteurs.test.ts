@@ -297,6 +297,9 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "signalisation-incendie-moyens-lutte": "equipement",
   "signalisation-interdiction-fumer-csp": "etablissement",
   "signalisation-stockage-substances-dangereuses": "equipement",
+  // 2026-10-17, sous-lot E : le code du sport, deux lignes d'établissement.
+  "sport-etablissement-buts-plan-verification": "etablissement",
+  "sport-etablissement-secours-r322-4": "etablissement",
   "stockage-dangereux-declaration-icpe": "equipement",
   "stockage-dangereux-fiches-donnees": "equipement",
   // 2026-10-08 (C64) : succède à `stockage-dangereux-formation-personnel`
