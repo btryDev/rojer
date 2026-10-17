@@ -820,8 +820,11 @@ garde pas copie.
 ### ANNONCÉS LE 2026-09-27 (C45) — neuf familles, vingt-cinq articles
 
 Tous portent la même adresse, `ADRESSE_MANQUES_ANNONCES`
-(`src/lib/referentiels/corpus/adresses.ts`) : la section « Ce que l'outil ne
-suit pas » de la page « Ce que Rojer ne couvre pas », que
+(`src/lib/referentiels/corpus/adresses.ts`) : la section ~~« Ce que l'outil ne
+suit pas »~~ « Ce qui peut vous concerner, et que Rojer ne suit pas »
+[2026-10-17, ADR-046 : la page y dit une phrase par domaine, faite du `sujet`
+de chaque article ; références, intitulés et phrases détaillées sont à
+l'annexe du PDF du référentiel complet] de la page « Ce que Rojer ne couvre pas », que
 `src/lib/perimetre/manques-annonces.ts` projette. Leurs motifs sont ceux du
 corpus, chacun complété d'une note datée du 2026-09-27 ; ils ne sont pas
 recopiés ici. Entre parenthèses : à quel dossier la page les montre.
@@ -1248,6 +1251,11 @@ qui ».
 Décision de la propriétaire du 2026-09-27, sur l'évaluation des quarante-deux
 obligations manquantes qui touchent la cible : **quinze** relèvent de la clause
 générale, et de rien d'autre. Rien au produit — ni écran, ni annonce, ni ligne.
+[2026-10-17, ADR-046 : la page « Ce que Rojer ne couvre pas » dit désormais,
+en cinq familles d'une phrase (`perimetre/familles-non-gerees.ts`), ce que
+Rojer ne gère pas ; décision c6 (Q2) : ces familles valent clause générale de
+ce § 7 à l'écran. Elles ne nomment aucune ligne de la liste ci-dessous, qui
+reste sans écran.]
 Elles restent `obligation_manquante` au corpus : ce sont des obligations
 réelles, et le compte les garde. La clause reste à rédiger ; sa formulation à
 tenir est celle des écrans : « une obligation que cet outil ne traite pas reste

@@ -274,6 +274,14 @@ catégorie) / hors périmètre déclaré.
 > que Rojer ne sert pas au quotidien ; la page la nomme au dossier qu'elle
 > peut concerner. Ni refusée, ni hors périmètre, ni un manque du corpus.
 
+> **Amendé le 2026-10-17 (ADR-046)** — les statuts restent distincts, mais la
+> page n'en montre plus que ce qu'un dirigeant lit : le bandeau du dossier,
+> une phrase par domaine annoncé, les obligations hors du quotidien avec leur
+> geste, et cinq familles de « ce que Rojer ne gère pas ». ~~Refusé à
+> l'entrée~~ et ~~hors périmètre déclaré, article par article~~ ont quitté
+> la page pour l'annexe du PDF du référentiel complet, avec toutes les
+> références.
+
 C'est le point où le produit était le plus avancé : le bandeau de périmètre du
 calendrier dit déjà ce qui n'est pas couvert, sur six axes au 2026-09-03
 (`AxeCouverture` : `igh`, `categorie_erp`, `secteur_duerp`,

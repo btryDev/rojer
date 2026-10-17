@@ -52,6 +52,13 @@ obligation légale sortie du quotidien reste VISIBLE.
    par une seule obligation audit porte le motif « Obligation au niveau
    audit », jamais « aucune obligation ». La grille et l'export de relecture
    marquent ces lignes « Audit ».
+   [2026-10-17, ADR-046 : sur la page, la rubrique s'intitule « Obligations
+   légales que Rojer ne suit pas au quotidien », sans le mot « audit » ;
+   chaque carte dit un geste tiré des réalisateurs (`gesteHorsQuotidien` —
+   vous-même, service de santé au travail, ascensoriste, personne qualifiée)
+   au lieu ~~du seul « À tenir vous-même »~~, et ~~la référence~~ n'y est
+   plus : elle est, avec « Audit », à l'annexe du PDF du référentiel
+   complet.]
 4. **Le champ entre dans l'empreinte** (segment ajouté, seulement quand il est
    présent) : il décide de l'existence des lignes. Le poser ou le lever
    resynchronise tous les calendriers.
