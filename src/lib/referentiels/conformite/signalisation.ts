@@ -126,7 +126,10 @@ export const obligationsSignalisation: Obligation[] = [
       {
         source: "CSP",
         reference:
-          "Code de la santé publique, art. R. 3512-7 (une signalisation apparente rappelle le principe de l'interdiction de fumer ; modèle fixé par arrêté)",
+          // ~~« … ; modèle fixé par arrêté) »~~ — 2026-10-17, contrôle visuel
+          // de c6 : la description ne s'affiche pas sur la ligne ; le modèle et
+          // son format sont dits dans la pastille.
+          "Code de la santé publique, art. R. 3512-7 (une signalisation apparente rappelle le principe de l'interdiction de fumer ; modèle de l'arrêté du 21 juillet 2025, A5 au moins)",
         article: "R. 3512-7",
         url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000033045289",
         note: "« Dans les lieux mentionnés à l'article R. 3512-2, une signalisation apparente rappelle le principe de l'interdiction de fumer. Un modèle de signalisation accompagné d'un message sanitaire de prévention est déterminé par arrêté du ministre chargé de la santé. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000033045289, en vigueur depuis le 2016-08-15 (décret n° 2016-1117).",
@@ -145,17 +148,18 @@ export const obligationsSignalisation: Obligation[] = [
         // 2026-10-17, revue indépendante du sous-lot D.
         source: "ARRETE",
         reference:
-          "Arrêté du 21 juillet 2025 fixant les périmètres et les modèles de signalisation prévus aux articles R. 3512-2 et R. 3512-7 du code de la santé publique, art. 2 et annexe 3 (modèles de l'annexe 1, reproduits en l'état ; A5 au moins dans les lieux fermés et couverts)",
+          "Arrêté du 21 juillet 2025 fixant les périmètres et les modèles de signalisation prévus aux articles R. 3512-2 et R. 3512-7 du code de la santé publique, art. 2 (la signalisation reproduit les modèles de l'annexe 1)",
         article: "Arrêté 2025-07-21 art. 2",
         url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000053393380",
-        note: "Art. 2 : « La signalisation rappelant le principe de l'interdiction de fumer dans les lieux mentionnés à l'article R. 3512-2 du code de la santé publique, prévue à l'article R. 3512-7 du même code, reproduit les modèles en annexe 1 du présent arrêté. » Annexe 3 : « La taille minimale de la signalisation, quel que soit le support ou la méthode utilisée, est de 15 × 21 cm (A5), sans limites d'agrandissement homothétique, dans les lieux fermés et couverts. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGITEXT000053393366, NOR TSSP2518305A, JORF du 22 juillet 2025, en vigueur depuis le 2025-07-23. Annexes 1, 2 et 4 (images) non lues.",
+        note: "« La signalisation rappelant le principe de l'interdiction de fumer dans les lieux mentionnés à l'article R. 3512-2 du code de la santé publique, prévue à l'article R. 3512-7 du même code, reproduit les modèles en annexe 1 du présent arrêté. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGITEXT000053393366, NOR TSSP2518305A, JORF du 22 juillet 2025, en vigueur depuis le 2025-07-23. Annexes 1, 2 et 4 (images) non lues.",
         versionConstatee: "2025-07-23",
       },
       {
         source: "ARRETE",
-        reference: "Arrêté du 21 juillet 2025, annexe 3 (dispositions graphiques)",
+        reference: "Arrêté du 21 juillet 2025, annexe 3 (dispositions graphiques : modèles reproduits en l'état, A5 au moins dans les lieux fermés et couverts)",
         article: "Arrêté 2025-07-21 annexe 3",
         url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000053393394",
+        note: "« Les modèles en annexes 1 et 2 doivent être reproduits en l'état et ne peuvent en aucun cas être modifiés. » ; « La taille minimale de la signalisation, quel que soit le support ou la méthode utilisée, est de 15 × 21 cm (A5), sans limites d'agrandissement homothétique, dans les lieux fermés et couverts. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000053393394, en vigueur depuis le 2025-07-23.",
         versionConstatee: "2025-07-23",
       },
     ],

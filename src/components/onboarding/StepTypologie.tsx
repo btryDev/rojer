@@ -247,7 +247,7 @@ export function StepTypologie({
                     }
                     erreur={messagePour("typesErpAutres")}
                   />
-                  <AideTypesErp types={[state.typeErp, ...state.typesErpAutres]} />
+                  <AideTypesErp types={[state.typeErp, ...state.typesErpAutres]} categorieErp={state.categorieErp} />
                 </div>
 
                 <div className="flex flex-col gap-3">

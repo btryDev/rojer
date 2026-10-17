@@ -68,16 +68,23 @@ describe("AIDE_TYPE_ERP — adresse des annonces par type (2026-10-17)", () => {
 
 describe("aidesDesTypes — l'aide n'apparaît que pour un type déclaré", () => {
   it("T déclaré en principal ou en autre type : son aide, une fois", () => {
-    expect(aidesDesTypes(["T"]).map((a) => a.type)).toEqual(["T"]);
-    expect(aidesDesTypes(["N", "T"]).map((a) => a.type)).toEqual(["T"]);
-    expect(aidesDesTypes(["T", "T"]).map((a) => a.type)).toEqual(["T"]);
+    expect(aidesDesTypes(["T"], "N3").map((a) => a.type)).toEqual(["T"]);
+    expect(aidesDesTypes(["N", "T"], "N3").map((a) => a.type)).toEqual(["T"]);
+    expect(aidesDesTypes(["T", "T"], "N3").map((a) => a.type)).toEqual(["T"]);
   });
 
   it("sans T ni M : rien", () => {
-    expect(aidesDesTypes(["N", "W", null, "", undefined])).toEqual([]);
+    expect(aidesDesTypes(["N", "W", null, "", undefined], "N3")).toEqual([]);
+  });
+
+  it("seulement en catégories 1 à 4 : rien en 5ᵉ, rien sans catégorie (contrôle visuel du 2026-10-17)", () => {
+    expect(aidesDesTypes(["T", "M"], "N3").map((a) => a.type)).toEqual(["T", "M"]);
+    expect(aidesDesTypes(["T", "M"], "N5")).toEqual([]);
+    expect(aidesDesTypes(["T", "M"], null)).toEqual([]);
+    expect(aidesDesTypes(["T", "M"], "")).toEqual([]);
   });
 
   it("l'ordre est celui de la déclaration", () => {
-    expect(aidesDesTypes(["T", "M"]).map((a) => a.type)).toEqual(["T", "M"]);
+    expect(aidesDesTypes(["T", "M"], "N3").map((a) => a.type)).toEqual(["T", "M"]);
   });
 });

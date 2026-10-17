@@ -522,7 +522,7 @@ export function EtablissementForm({
                         signalOuverture={signalAutres}
                       />
                     </div>
-                    <AideTypesErp types={[typeErp, ...typesErpAutres]} />
+                    <AideTypesErp types={[typeErp, ...typesErpAutres]} categorieErp={categorieErp} />
                   </div>
 
                   <div className="sm:col-span-2">

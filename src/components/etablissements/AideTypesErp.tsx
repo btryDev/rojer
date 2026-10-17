@@ -5,8 +5,15 @@
 
 import { aidesDesTypes } from "@/lib/etablissements/aide-type-erp";
 
-export function AideTypesErp({ types }: { types: readonly (string | null | undefined)[] }) {
-  const aides = aidesDesTypes(types);
+export function AideTypesErp({
+  types,
+  categorieErp,
+}: {
+  types: readonly (string | null | undefined)[];
+  /** Les aides du titre II ne valent qu'en N1 à N4 (contrôle visuel du 2026-10-17). */
+  categorieErp: string | null | undefined;
+}) {
+  const aides = aidesDesTypes(types, categorieErp);
   if (aides.length === 0) return null;
   return (
     <div className="mt-2 flex max-w-[66ch] flex-col gap-1.5" data-aide-types-erp="">

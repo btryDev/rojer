@@ -107,7 +107,11 @@ describe("signalisation du code de la santé publique — tout établissement, e
     expect(erp.usageEcran).not.toEqual(csp.usageEcran);
     expect(erp.libelle).not.toBe(csp.libelle);
     expect(csp.libelle).toMatch(/locaux fermés et couverts/);
-    expect(erp.libelle).toMatch(/ERP des quatre premières catégories/);
+    // Contrôle visuel du 2026-10-17 : le libellé ERP dit son objet (des locaux
+    // désignés), sans énumérer les types.
+    expect(erp.libelle).toMatch(/dans les locaux que désigne le règlement de sécurité/);
+    expect(erp.libelle).toMatch(/\(ERP des catégories 1 à 4\)$/);
+    expect(erp.libelle).not.toMatch(/magasins|hôtels|bureaux/);
   });
 });
 

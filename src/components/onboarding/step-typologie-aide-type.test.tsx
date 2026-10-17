@@ -12,7 +12,7 @@ import { AIDE_TYPE_ERP } from "@/lib/etablissements/aide-type-erp";
 afterEach(cleanup);
 
 function Hote({ initial }: { initial: Partial<OnboardingState> }) {
-  const [state, setState] = useState<OnboardingState>({ ...VALEURS_INITIALES, estERP: true, ...initial });
+  const [state, setState] = useState<OnboardingState>({ ...VALEURS_INITIALES, estERP: true, categorieErp: "N3", ...initial });
   return <StepTypologie state={state} update={(p) => setState((s) => ({ ...s, ...p }))} errors={{}} blocage={null} />;
 }
 
@@ -33,6 +33,22 @@ describe("accueil : l'aide du type d'ERP", () => {
   it("un type sans aide : rien", () => {
     const { container } = render(<Hote initial={{ typeErp: "N" }} />);
     expect(aides(container)).toEqual([]);
+  });
+
+  it("N avec M et T en autres types : les deux aides, dans l'ordre", () => {
+    const { container } = render(<Hote initial={{ typeErp: "N", typesErpAutres: ["M", "T"] }} />);
+    expect(aides(container)).toEqual(["M", "T"]);
+  });
+
+  it("non-ERP, T resté en mémoire : rien", () => {
+    const { container } = render(<Hote initial={{ estERP: false, typeErp: "T" }} />);
+    expect(aides(container)).toEqual([]);
+  });
+
+  it("en 5ᵉ catégorie ou sans catégorie, rien (contrôle visuel du 2026-10-17)", () => {
+    expect(aides(render(<Hote initial={{ typeErp: "T", categorieErp: "N5" }} />).container)).toEqual([]);
+    cleanup();
+    expect(aides(render(<Hote initial={{ typeErp: "T", categorieErp: "" }} />).container)).toEqual([]);
   });
 
   it("elle suit le type choisi", () => {

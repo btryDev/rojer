@@ -12,7 +12,7 @@ afterEach(cleanup);
 const action = async () => ({ status: "idle" as const });
 const entreprise = { id: "ent", effectif: 10 };
 
-function fiche(typeErp: string, typesErpAutres: string[] = []) {
+function fiche(typeErp: string, typesErpAutres: string[] = [], categorieErp = "N3") {
   return render(
     <EtablissementForm
       action={action}
@@ -24,7 +24,7 @@ function fiche(typeErp: string, typesErpAutres: string[] = []) {
         estERP: true,
         typeErp,
         typesErpAutres,
-        categorieErp: "N3",
+        categorieErp,
       }}
     />,
   );
@@ -45,6 +45,17 @@ describe("fiche établissement : l'aide du type d'ERP", () => {
 
   it("un type sans aide : rien", () => {
     expect(aides(fiche("N").container)).toEqual([]);
+  });
+
+  it("en 5ᵉ catégorie, rien ; elle apparaît quand la catégorie passe en N3 (contrôle visuel du 2026-10-17)", () => {
+    const { container } = fiche("T", [], "N5");
+    expect(aides(container)).toEqual([]);
+    fireEvent.change(container.querySelector<HTMLSelectElement>('select[name="categorieErp"]')!, { target: { value: "N3" } });
+    expect(aides(container)).toEqual(["T"]);
+  });
+
+  it("sans catégorie choisie, rien", () => {
+    expect(aides(fiche("T", [], "").container)).toEqual([]);
   });
 
   it("elle suit le type choisi", () => {

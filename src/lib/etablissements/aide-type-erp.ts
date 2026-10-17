@@ -6,7 +6,7 @@
 // Module pur : il se charge dans un composant client.
 
 import { nonPorte } from "@/lib/perimetre/non-couverture";
-import type { TypeErp } from "@/lib/referentiels/types-communs";
+import type { CategorieErp, TypeErp } from "@/lib/referentiels/types-communs";
 
 /**
  * Ce que Rojer ne suit pas pour un type d'activité, dit sous le choix du type
@@ -36,12 +36,33 @@ export const AIDE_TYPE_ERP: Partial<Record<TypeErp, string>> = {
   T: `Dans une salle d'exposition des quatre premières catégories, Rojer ne suit pas ${nonPorte("le nettoyage quotidien des locaux et l'enlèvement des déchets chaque jour avant l'ouverture au public")} (règlement de sécurité, art. T 52 § 2), ni ${nonPorte("la présence d'une personne compétente pendant l'ouverture au public, au-delà de 200 kW de puissance utile installée ou de 200 kVA de puissance électrique mise en œuvre")} (art. T 29 § 3 et T 33 § 2), ni ${nonPorte("la demande d'autorisation, adressée par l'exposant, de présenter des machines utilisant des substances radioactives ou génératrices de rayons X")} (art. T 43), ni ${nonPorte("la déclaration préalable de l'emploi de lasers dans les salles, faite par l'exposant")} (art. T 44).`,
 };
 
-/** Les aides des types déclarés, dans l'ordre de la déclaration, sans doublon. */
-export function aidesDesTypes(types: readonly (string | null | undefined)[]): { type: TypeErp; aide: string }[] {
+/**
+ * Les types dont l'aide vaut quelle que soit la catégorie. Vide : les aides
+ * M et T disent le titre II du livre II, qui ne vise que les quatre premières
+ * catégories. Une aide fondée sur un autre texte (le code du sport, pour X) y
+ * entre avec sa phrase.
+ */
+export const TYPES_AIDE_TOUTES_CATEGORIES: ReadonlySet<TypeErp> = new Set<TypeErp>();
+
+const QUATRE_PREMIERES: readonly string[] = ["N1", "N2", "N3", "N4"];
+
+/**
+ * Les aides des types déclarés, dans l'ordre de la déclaration, sans doublon.
+ *
+ * 2026-10-17, contrôle visuel de c6 : une aide qui parle « des quatre
+ * premières catégories » ne s'affiche qu'en N1 à N4 — ni en 5ᵉ, ni avant
+ * qu'une catégorie soit choisie.
+ */
+export function aidesDesTypes(
+  types: readonly (string | null | undefined)[],
+  categorieErp: CategorieErp | string | null | undefined,
+): { type: TypeErp; aide: string }[] {
+  const quatrePremieres = Boolean(categorieErp && QUATRE_PREMIERES.includes(categorieErp));
   const vus = new Set<string>();
   const sortie: { type: TypeErp; aide: string }[] = [];
   for (const t of types) {
     if (!t || vus.has(t)) continue;
+    if (!quatrePremieres && !TYPES_AIDE_TOUTES_CATEGORIES.has(t as TypeErp)) continue;
     vus.add(t);
     const aide = AIDE_TYPE_ERP[t as TypeErp];
     if (aide) sortie.push({ type: t as TypeErp, aide });

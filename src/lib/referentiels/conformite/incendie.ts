@@ -2024,7 +2024,13 @@ export const obligationsIncendie: Obligation[] = [
     id: "incendie-erp-interdiction-fumer-affichee",
     domaine: "incendie",
     libelle:
-      "Interdiction de fumer affichée bien en évidence (ERP des quatre premières catégories : magasins, hôtels, bureaux, salles d'exposition, établissements sportifs couverts)",
+      // ~~« Interdiction de fumer affichée bien en évidence (ERP des quatre
+      // premières catégories : magasins, hôtels, bureaux, salles d'exposition,
+      // établissements sportifs couverts) »~~ — 2026-10-17, contrôle visuel de
+      // c6 : à côté de la signalisation du code de la santé publique, le
+      // dirigeant lisait deux fois la même chose, et l'énumération oubliait
+      // l'hôtel-restaurant. Le libellé dit l'OBJET : des locaux désignés.
+      "Interdiction de fumer affichée dans les locaux que désigne le règlement de sécurité : réserves, locaux à risques particuliers, surfaces de vente, locaux sportifs (ERP des catégories 1 à 4)",
     description:
       "Dans un magasin ou centre commercial (type M) des quatre premières catégories, il est formellement interdit de fumer dans les locaux de vente (M 44) et dans les locaux à risques importants — locaux de stockage et de manipulation des matériaux d'emballage, dépôts de déchets d'emballage, réserves autres que les réserves d'approche (M 47) —, et il est interdit de fumer dans l'ensemble des réserves et dans les locaux de réception, d'emballage, d'expédition et leurs annexes (M 58). Dans une administration, une banque ou un bureau (type W), il est interdit de fumer dans les locaux à risques particuliers (W 16). Dans un hôtel ou autre établissement d'hébergement (type O), il est formellement interdit de fumer dans les réserves, lingeries, etc. et, en général, dans les locaux présentant des risques particuliers d'incendie (O 21 § 1). Dans une salle d'exposition (type T), l'interdiction de fumer doit être affichée bien en évidence dans les locaux à risques particuliers visés à l'article T 13 (T 52 § 3). Chaque fois, l'interdiction doit être affichée bien en évidence. Dans un établissement sportif couvert (type X), « il est interdit de fumer dans les locaux sportifs, les vestiaires-douches, les locaux de matériel et les gradins. Une signalisation appropriée doit rappeler cette interdiction dans les locaux intéressés » (X 25). Pour les types W, O et T, le texte vise les locaux à risques particuliers : Rojer ne sait pas si l'établissement en compte, et présente la ligne à tous. " +
       GN_10_PHRASE,
