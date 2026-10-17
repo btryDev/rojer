@@ -55,7 +55,19 @@ export function porteGn10(o: { description?: string | null }): boolean {
 }
 
 /**
- * La mention courte, sous la pastille de la ligne. Elle CITE GN 10 et dit ce
+ * La mention COURTE, sur la ligne, suivie de la pastille « GN 10 »
+ * (décision de c6, 2026-10-17 : la phrase longue répétée sur onze lignes d'un
+ * N3 faisait trop de texte). La phrase longue et le verbatim vont au dépli.
+ */
+export const MENTION_GN_10_COURTE =
+  "Peut ne pas s'appliquer à un établissement existant (art. GN 10).";
+
+/** Le geste, au dépli, après le verbatim : sans qualification. */
+export const GESTE_GN_10 =
+  "En cas de doute, la commission de sécurité ou votre préventeur peut vous le dire.";
+
+/**
+ * La mention LONGUE, au dépli de la pastille « GN 10 », avant le verbatim. Elle CITE GN 10 et dit ce
  * que fait Rojer, sans dater l'« existant » ni conclure pour le dirigeant :
  * le corpus a rayé le 2026-09-26 toute lecture qui rattache l'existant à
  * l'entrée en vigueur de chaque disposition (`arrete-1980-livre-1`, GN 10).

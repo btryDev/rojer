@@ -4,7 +4,9 @@ import { LegalBadge } from "@/components/ui-kit";
 import type { FondementLigne } from "@/lib/etats-permanents/fondement";
 import {
   CITATION_GN_10,
+  GESTE_GN_10,
   MENTION_GN_10,
+  MENTION_GN_10_COURTE,
   URL_GN_10,
 } from "@/lib/referentiels/conformite/texte-gn10";
 
@@ -38,16 +40,25 @@ export function PastilleFondement({
 }
 
 /**
- * La mention GN 10 : une phrase qui cite, et la pastille de l'article. Texte
- * en ardoise moyenne (`--board-slate-mid`), comme les « à confirmer » de la
- * ligne : une information, pas une alerte.
+ * La mention GN 10 : sur la ligne, la phrase COURTE et la pastille ; au
+ * dépli, la phrase longue, le verbatim, puis le geste (décision de c6,
+ * 2026-10-17). Texte en ardoise moyenne (`--board-slate-mid`), comme les
+ * « à confirmer » de la ligne : une information, pas une alerte.
  */
 function MentionGn10() {
   return (
     <div className="max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-      <p className="m-0">{MENTION_GN_10}</p>
+      <p className="m-0">{MENTION_GN_10_COURTE}</p>
       <div className="mt-1">
-        <LegalBadge charte="board" reference="GN 10" href={URL_GN_10} extrait={CITATION_GN_10} />
+        <LegalBadge
+          charte="board"
+          reference="GN 10"
+          href={URL_GN_10}
+          avant={<p className="m-0">{MENTION_GN_10}</p>}
+          extrait={CITATION_GN_10}
+        >
+          <p className="m-0">{GESTE_GN_10}</p>
+        </LegalBadge>
       </div>
     </div>
   );

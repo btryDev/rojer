@@ -25,7 +25,7 @@ const { listerEtatsPermanents } = await import("@/lib/etats-permanents/queries")
 const { LigneEtat } = await import("./LigneEtat");
 const { obligationsConformite } = await import("@/lib/referentiels/conformite");
 const { fondementDe } = await import("@/lib/etats-permanents/fondement");
-const { porteGn10, MENTION_GN_10, CITATION_GN_10 } = await import(
+const { porteGn10, MENTION_GN_10, MENTION_GN_10_COURTE, GESTE_GN_10, CITATION_GN_10 } = await import(
   "@/lib/referentiels/conformite/texte-gn10"
 );
 
@@ -101,7 +101,11 @@ describe("GN 10 à l'écran — une ligne qui le cite le dit", () => {
     for (const e of [erp("N3"), erp("N5"), erp("N5", "O", true)]) {
       for (const l of await lignes(e)) {
         const { container, unmount } = rendre(l);
-        const affiche = (container.textContent ?? "").includes(MENTION_GN_10);
+        const texte = container.textContent ?? "";
+        const affiche = texte.includes(MENTION_GN_10_COURTE);
+        // Replié, la phrase longue n'est PAS sur la ligne (décision de c6 :
+        // onze fois la même phrase sur un N3, c'était trop de texte).
+        expect(texte.includes(MENTION_GN_10), l.obligation.id).toBe(false);
         expect(affiche, l.obligation.id).toBe(porteGn10(l.obligation));
         if (affiche) vues += 1;
         unmount();
@@ -110,12 +114,17 @@ describe("GN 10 à l'écran — une ligne qui le cite le dit", () => {
     expect(vues).toBeGreaterThanOrEqual(8);
   });
 
-  it("la pastille GN 10 déplie le texte entier", async () => {
+  it("la pastille GN 10 déplie la phrase longue, le texte entier, puis le geste", async () => {
     const l = (await lignes(erp("N3"))).find(
       (x) => x.obligation.id === "incendie-erp-plan-intervention-entrees",
     )!;
     const { getByRole, container } = rendre(l);
     fireEvent.click(getByRole("button", { name: /GN 10/ }));
-    expect(container.textContent).toContain(CITATION_GN_10);
+    const t = container.textContent ?? "";
+    // Au dépli : la phrase longue, puis le verbatim, puis le geste.
+    const [i, j, k] = [t.indexOf(MENTION_GN_10), t.indexOf(CITATION_GN_10), t.indexOf(GESTE_GN_10)];
+    expect(i).toBeGreaterThanOrEqual(0);
+    expect(j).toBeGreaterThan(i);
+    expect(k).toBeGreaterThan(j);
   });
 });
