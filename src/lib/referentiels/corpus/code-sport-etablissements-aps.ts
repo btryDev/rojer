@@ -62,7 +62,7 @@ export const CODE_SPORT_ETABLISSEMENTS_APS: Corpus = {
         "Nul ne peut exploiter soit directement, soit par l'intermédiaire d'un tiers, un établissement dans lequel sont pratiquées des activités physiques ou sportives s'il a fait l'objet d'une condamnation prévue à l'article L. 212-9.",
       statut: "sans_objet",
       motif:
-        "Une incapacité d'exploiter, que l'autorité administrative contrôle (A. 322-1) : ni acte à refaire, ni pièce à tenir par l'exploitant. Rien à inscrire au calendrier.",
+        "Une incapacité d'exploiter, que l'autorité administrative contrôle (A. 322-1) : ni acte à refaire, ni pièce à tenir par l'exploitant. Rien à inscrire au calendrier. [2026-10-17, revue indépendante du sous-lot E : l'article est cité par `sport-etablissement-secours-r322-4` comme article de CHAMP — R. 322-4 vise « les établissements mentionnés à l'article L. 322-1 » —, pas pour l'incapacité qu'il pose ; le statut ne change pas.]",
     },
     {
       ref: "C. sport L. 322-2",

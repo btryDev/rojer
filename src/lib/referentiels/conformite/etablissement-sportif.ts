@@ -19,6 +19,19 @@
  * la carte professionnelle n'est pas entré. R. 322-25-1 (signalement d'un
  * accident grave) est en réserve.
  *
+ * LA PHRASE DE `AIDE_TYPE_ERP.X` (`src/lib/etablissements/aide-type-erp.ts`,
+ * surface créée par le sous-lot D, qui merge avant E — décision de c6 du
+ * 2026-10-17). Elle entre au rebase de E sur D, telle que relue ici ; chaque
+ * sujet passe par `nonPorte(…)`, et les `declareA` du corpus en citent quatre
+ * fragments mot pour mot (vérifié le 2026-10-17) :
+ *   Dans un établissement sportif, Rojer ne suit pas ${nonPorte("les
+ *   affichages propres aux établissements sportifs (diplômes et cartes des
+ *   éducateurs, textes de sécurité, attestation d'assurance, affiche
+ *   Signal-sports)")}, ${nonPorte("la qualification des éducateurs
+ *   employés")}, ${nonPorte("l'assurance de responsabilité civile de
+ *   l'exploitant")} ni ${nonPorte("l'information des pratiquants")} (code du
+ *   sport, art. R. 322-5, L. 212-8, L. 321-7, A. 322-3).
+ *
  * LE CHAMP. Ces articles visent « les établissements où sont pratiquées une ou
  * des activités physiques ou sportives » (L. 322-2). Le produit ne connaît pas
  * ce fait ; il le lit sur le type d'ERP X (établissements sportifs couverts).
@@ -46,7 +59,23 @@ import type { Obligation, ReferenceLegale } from "./types";
 
 const X: Obligation["typologies"] = { erp: { types: ["X"] } };
 
-/** Le champ de la ligne des secours, bornée à X. */
+/**
+ * Le champ de la ligne des secours : R. 322-4 vise « les établissements
+ * mentionnés à l'article L. 322-1 dans lesquels sont pratiquées des activités
+ * physiques et sportives » (revue indépendante du 2026-10-17 : le renvoi est à
+ * L. 322-1, pas à L. 322-2).
+ */
+const REF_L322_1: ReferenceLegale = {
+  source: "CODE_SPORT",
+  reference:
+    "L. 322-1 (établissements dans lesquels sont pratiquées des activités physiques ou sportives — l'article auquel R. 322-4 renvoie)",
+  article: "C. sport L. 322-1",
+  url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000006547695",
+  note: "« Nul ne peut exploiter soit directement, soit par l'intermédiaire d'un tiers, un établissement dans lequel sont pratiquées des activités physiques ou sportives s'il a fait l'objet d'une condamnation prévue à l'article L. 212-9. » Cité pour le champ que R. 322-4 lui emprunte (« les établissements mentionnés à l'article L. 322-1 »), non pour l'incapacité qu'il pose. Relu le 2026-10-17 par l'API Légifrance (bac à sable), version du 2006-05-25.",
+  versionConstatee: "2006-05-25",
+};
+
+/** En contexte : les garanties d'hygiène et de sécurité que R. 322-4 précise. */
 const REF_L322_2: ReferenceLegale = {
   source: "CODE_SPORT",
   reference:
@@ -81,6 +110,7 @@ export const obligationsEtablissementSportif: Obligation[] = [
         note: "« Les établissements mentionnés à l'article L. 322-1 dans lesquels sont pratiquées des activités physiques et sportives doivent disposer d'une trousse de secours destinée à apporter les premiers soins en cas d'accident et d'un moyen de communication permettant d'alerter rapidement les services de secours. Un tableau d'organisation des secours est affiché dans l'établissement et comporte les adresses et numéros de téléphone des personnes et organismes susceptibles d'intervenir en cas d'urgence. » Relu le 2026-10-17 par l'API Légifrance (bac à sable), version du 2007-07-25.",
         versionConstatee: "2007-07-25",
       },
+      REF_L322_1,
       REF_L322_2,
     ],
     periodicite: "autre",
