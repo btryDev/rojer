@@ -147,6 +147,10 @@ describe("plusieurs types : l'union, puis un membre par groupe", () => {
     }
   });
 
+  // Délai explicite (2026-10-17) : 1 540 triplets × 5 catégories × 3 réponses
+  // sommeil, soit ~23 000 appels du moteur — environ 5 s en CI, au bord du
+  // délai par défaut de vitest (5 s), qui a fait échouer la PR #50 sans erreur
+  // de logique. Ce n'est pas un palliatif : la grille est le contenu du test.
   it("chaque groupe sort au plus un membre, pour tout triplet de types", () => {
     expect(TRIPLETS.length).toBe(1540);
     for (const ts of TRIPLETS) {
@@ -160,7 +164,7 @@ describe("plusieurs types : l'union, puis un membre par groupe", () => {
         }
       }
     }
-  });
+  }, 60_000);
 
   it("l'union dépasse au moins une fois chacun des types déclarés seuls (borne basse)", () => {
     // M + O en 3ᵉ catégorie : M seul n'a ni la consigne des chambres ni les
