@@ -6,13 +6,12 @@
 // `table-des-matieres.test.ts` vérifie, chapitre par chapitre, que les deux
 // listes sont égales (garde-fou 1, décision de la propriétaire du 2026-10-17).
 //
-// D'OÙ ELLE VIENT. POST `/consult/legi/tableMatieres` { textId:
-// LEGITEXT000020303557, date: 2026-10-17, nature: ARRETE }, API PISTE en BAC À
-// SABLE — son égalité avec la production n'est pas vérifiée (les identifiants
-// du dépôt n'ouvrent que le bac à sable). Réponse enregistrée le 2026-10-17,
-// empreinte SHA-256 (16 premiers caractères) e3ec7e968fcf5a18. Recopiée par
-// programme depuis cette réponse, jamais à la main : un numéro ajouté ou
-// retiré ici doit venir d'une nouvelle lecture de la table, datée.
+// D'OÙ ELLE VIENT. POST `/consult/legi/tableMatieres` { textId: LEGITEXT000020303557,
+// date: 2026-10-17, nature: ARRETE }, API PISTE en BAC À SABLE — son égalité avec la
+// production n'est pas vérifiée. ÉCRIT PAR
+// `scripts/figer-table-des-matieres-1980.ts`, jamais à la main : un numéro
+// ajouté ou retiré ici vient d'une nouvelle lecture de la table, datée.
+// Empreinte SHA-256 (16 premiers caractères) des chapitres extraits : 8e89b2b4da92be61.
 //
 // Les annexes et l'appendice prennent le préfixe de leur chapitre
 // (« Annexe » du chapitre T → « T annexe », « Appendice » du chapitre GE →
@@ -34,7 +33,7 @@ export const TABLE_DES_MATIERES_1980_LIVRE_2 = {
   texte: "LEGITEXT000020303557",
   date: "2026-10-17",
   environnement: "sandbox",
-  empreinteReponse: "e3ec7e968fcf5a18",
+  empreinteChapitres: "8e89b2b4da92be61",
 } as const;
 
 export const CHAPITRES_LIVRE_2: readonly ChapitreTable[] = [
