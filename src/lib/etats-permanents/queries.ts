@@ -26,12 +26,14 @@ import {
 } from "@/lib/matching";
 import type { Obligation } from "@/lib/referentiels/conformite";
 import {
+  GROUPE_REPLI,
   LIBELLE_GROUPE,
+  LIBELLE_GROUPE_REPLI,
   LIBELLE_SOUS_CATEGORIE,
   ORDRE_GROUPES,
   ORDRE_SOUS_CATEGORIES,
   rangementDe,
-  type GroupeUsage,
+  type GroupeAffichage,
   type SousCategorie,
 } from "./familles";
 import { modeDeclarationApplique, type ModeDeclaration } from "./regle";
@@ -98,7 +100,8 @@ export type BlocSousCategorie = {
 };
 
 export type FamilleEtatsPermanents = {
-  groupe: GroupeUsage;
+  /** Une famille du référentiel, ou `autres` — le repli, toujours en dernier. */
+  groupe: GroupeAffichage;
   libelle: string;
   blocs: BlocSousCategorie[];
   enPlace: number;
@@ -115,7 +118,10 @@ export type EtatsPermanentsDuDossier = {
   /**
    * Les états à déclarer en place, rangés par usage (`familles.ts`) et non
    * plus par domaine depuis le 2026-10-17. Ordre fixe, familles et blocs vides
-   * omis ; la somme des compteurs des familles est `total` et `enPlace`.
+   * omis ; la somme des compteurs des familles est `total` et `enPlace`. Une
+   * ligne sans rangement — un oubli que `familles.test.ts` fait échouer — va
+   * en dernier, dans le repli « Autres obligations », et compte comme les
+   * autres.
    */
   familles: FamilleEtatsPermanents[];
   /**
@@ -321,16 +327,20 @@ export async function listerEtatsPermanents(
     if (mode.mode === "fait") {
       faits.push(ligne);
     } else {
-      // Pas de groupe « autres » : une ligne de l'écran sans rangement est un
+      // ~~Pas de groupe « autres » : une ligne de l'écran sans rangement est un
       // oubli du référentiel, que `familles.test.ts` fait échouer. La cacher
-      // fausserait le compteur, la ranger au hasard mentirait sur son usage.
+      // fausserait le compteur, la ranger au hasard mentirait sur son usage.~~
+      // ~~(la ligne levait ici)~~ [2026-10-17, revue indépendante : lever
+      // faisait tomber le score du tableau de bord (`compterEtatsPermanents`),
+      // le PDF (`etatsPermanentsDuDossier`) et le widget, qui passent tous par
+      // cette lecture — et `build` ne lance pas les tests.] L'oubli reste un
+      // échec de `familles.test.ts` ; à l'écran, la ligne tombe dans le repli
+      // « Autres obligations » (`familles.ts`), en dernier, comptée comme les
+      // autres. Ni cachée, ni rangée au hasard.
       const usage = rangementDe(o);
-      if (!usage) {
-        throw new Error(
-          `« ${o.id} » figure sur l'écran sans \`usageEcran\` (familles.test.ts).`,
-        );
-      }
-      const cle = `${usage.groupe}/${usage.sous ?? ""}`;
+      const cle = usage
+        ? `${usage.groupe}/${usage.sous ?? ""}`
+        : `${GROUPE_REPLI}/`;
       const liste = parBloc.get(cle) ?? [];
       liste.push(ligne);
       parBloc.set(cle, liste);
@@ -348,6 +358,33 @@ export async function listerEtatsPermanents(
     ).length,
     total: lignes.length,
   });
+  const famille = (
+    groupe: GroupeAffichage,
+    libelle: string,
+    blocs: BlocSousCategorie[],
+  ): FamilleEtatsPermanents[] =>
+    blocs.length === 0
+      ? []
+      : [
+          {
+            groupe,
+            libelle,
+            blocs,
+            enPlace: blocs.reduce((n, b) => n + b.enPlace, 0),
+            total: blocs.reduce((n, b) => n + b.total, 0),
+            parLesTitres: {
+              total: blocs.reduce(
+                (n, b) => n + b.lignes.filter((l) => l.parLesTitres).length,
+                0,
+              ),
+              enPlace: blocs.reduce(
+                (n, b) =>
+                  n + b.lignes.filter((l) => l.parLesTitres?.enPlace).length,
+                0,
+              ),
+            },
+          },
+        ];
   const familles: FamilleEtatsPermanents[] = ORDRE_GROUPES.flatMap((groupe) => {
     const sousCategories = ORDRE_SOUS_CATEGORIES[groupe];
     const blocs: BlocSousCategorie[] = (
@@ -364,27 +401,23 @@ export async function listerEtatsPermanents(
         },
       ];
     });
-    if (blocs.length === 0) return [];
-    return [
-      {
-        groupe,
-        libelle: LIBELLE_GROUPE[groupe],
-        blocs,
-        enPlace: blocs.reduce((n, b) => n + b.enPlace, 0),
-        total: blocs.reduce((n, b) => n + b.total, 0),
-        parLesTitres: {
-          total: blocs.reduce(
-            (n, b) => n + b.lignes.filter((l) => l.parLesTitres).length,
-            0,
-          ),
-          enPlace: blocs.reduce(
-            (n, b) => n + b.lignes.filter((l) => l.parLesTitres?.enPlace).length,
-            0,
-          ),
-        },
-      },
-    ];
+    return famille(groupe, LIBELLE_GROUPE[groupe], blocs);
   });
+  // Le repli, après les familles du référentiel : une carte sans sur-titre,
+  // comme une famille sans sous-catégorie.
+  const orphelines = parBloc.get(`${GROUPE_REPLI}/`);
+  if (orphelines) {
+    familles.push(
+      ...famille(GROUPE_REPLI, LIBELLE_GROUPE_REPLI, [
+        {
+          sous: null,
+          libelle: null,
+          lignes: ordonnerLignes(orphelines),
+          ...compter(orphelines),
+        },
+      ]),
+    );
+  }
 
   // Même règle pour « ce qui revient » : un ordre qui dépend de l'état déplace
   // la ligne suivante au moment précis où on va la cliquer.

@@ -1102,10 +1102,13 @@ type ObligationCommune = {
    *
    * **Requis, et c'est le point** — même raisonnement que `pieceMedicale` :
    * optionnel, le champ se serait tu, et l'oubli aurait été la faute
-   * naturelle. Une ligne non rangée n'a aucune famille où s'afficher ; requis,
+   * naturelle. ~~Une ligne non rangée n'a aucune famille où s'afficher~~
+   * [2026-10-17 : elle tombe dans le repli d'affichage « Autres obligations »,
+   * qui n'est pas une valeur de ce champ] ; requis,
    * chaque ajout au référentiel se prononce. `familles.test.ts` tient le reste :
-   * non nul si et seulement si `figureSurLEcranEnPlace`, et la sous-catégorie
-   * appartient à sa famille — ce que le type ne sait pas dire.
+   * non nul si et seulement si `figureSurLEcranEnPlace` (niveau audit écarté),
+   * et la sous-catégorie appartient à sa famille — ce que le type ne sait pas
+   * dire.
    *
    * **N'entre pas dans `empreinteReferentiel()`** : il ne change ni le nombre
    * de lignes ni leurs dates, seulement l'endroit de l'écran où elles se lisent.

@@ -22,11 +22,16 @@ vi.mock("@/lib/auth/require-user", () => ({
 const { listerEtatsPermanents } = await import("@/lib/etats-permanents/queries");
 const { SectionsParUsage, SommaireParUsage } = await import("./SectionsParUsage");
 const {
+  GROUPE_REPLI,
   LIBELLE_GROUPE,
+  LIBELLE_GROUPE_REPLI,
   LIBELLE_SOUS_CATEGORIE,
   ORDRE_GROUPES,
   ORDRE_SOUS_CATEGORIES,
 } = await import("@/lib/etats-permanents/familles");
+const { determineObligationsApplicables, projeterEtablissement } = await import(
+  "@/lib/matching"
+);
 
 afterEach(cleanup);
 
@@ -139,7 +144,9 @@ describe.each(Object.keys(DOSSIERS) as (keyof typeof DOSSIERS)[])(
       for (const f of d.familles) {
         const section = container.querySelector(`#usage-${f.groupe}`)!;
         const h3 = [...section.querySelectorAll("h3")].map((h) => h.textContent);
-        const attendu = ORDRE_SOUS_CATEGORIES[f.groupe]
+        // Le repli n'a pas de sous-catégorie (`familles.ts`).
+        const ordre = f.groupe === GROUPE_REPLI ? [] : ORDRE_SOUS_CATEGORIES[f.groupe];
+        const attendu = ordre
           .filter((s) => f.blocs.some((b) => b.sous === s && b.lignes.length > 0))
           .map((s) => LIBELLE_SOUS_CATEGORIE[s]);
         expect(h3).toEqual(attendu);
@@ -221,5 +228,73 @@ describe("le témoin : une famille sans sous-catégorie n'a pas de h3", () => {
     expect(container.querySelectorAll(".carte-board")).toHaveLength(1);
     expect(container.querySelectorAll("h3")).toHaveLength(0);
     expect(container.querySelector("h2")?.textContent).toBe(LIBELLE_GROUPE.organisation);
+  });
+});
+
+describe("le repli : une ligne de l'écran sans rangement (2026-10-17, revue indépendante)", () => {
+  // `listerEtatsPermanents` levait sur une telle ligne, et le score du tableau
+  // de bord, le PDF et le widget passent par elle. L'oubli fait échouer
+  // `familles.test.ts` ; ici, on éprouve la ceinture : la ligne s'affiche en
+  // dernier dans « Autres obligations », rien ne lève, les comptes tiennent.
+  async function avecUneLigneNonRangee() {
+    const { etab } = DOSSIERS.bureau;
+    const source = etab as unknown as Parameters<typeof listerEtatsPermanents>[0];
+    const applicables = determineObligationsApplicables(
+      projeterEtablissement(source),
+      [],
+    );
+    const temoin = await listerEtatsPermanents(source, [], applicables);
+    // La première ligne « en place » du premier bloc : une ligne de l'écran.
+    const visee = temoin.familles[0].blocs[0].lignes[0].obligation.id;
+    const fixture = applicables.map((a) =>
+      a.obligation.id === visee
+        ? { ...a, obligation: { ...a.obligation, usageEcran: null } }
+        : a,
+    ) as typeof applicables;
+    const d = await listerEtatsPermanents(source, [], fixture);
+    return { temoin, d, visee };
+  }
+
+  it("la ligne va dans « Autres obligations », en dernier, et rien ne lève", async () => {
+    const { d, visee } = await avecUneLigneNonRangee();
+    const derniere = d.familles.at(-1)!;
+    expect(derniere.groupe).toBe(GROUPE_REPLI);
+    expect(derniere.libelle).toBe(LIBELLE_GROUPE_REPLI);
+    expect(derniere.blocs).toHaveLength(1);
+    expect(derniere.blocs[0].sous).toBeNull();
+    // `toContain`, pas `toEqual` : si le référentiel porte déjà un oubli, le
+    // repli le recueille aussi, et ce test doit rester vert — c'est
+    // `familles.test.ts` qui rougit.
+    expect(derniere.blocs[0].lignes.map((l) => l.obligation.id)).toContain(visee);
+    // Et nulle part ailleurs.
+    const ailleurs = d.familles
+      .slice(0, -1)
+      .flatMap((f) => f.blocs.flatMap((b) => b.lignes))
+      .filter((l) => l.obligation.id === visee);
+    expect(ailleurs).toEqual([]);
+  });
+
+  it("le compteur est juste : rien de caché, rien de compté deux fois", async () => {
+    const { temoin, d } = await avecUneLigneNonRangee();
+    expect(d.total).toBe(temoin.total);
+    expect(d.enPlace).toBe(temoin.enPlace);
+    expect(d.familles.reduce((n, f) => n + f.total, 0)).toBe(d.total);
+    const repliTemoin =
+      temoin.familles.find((f) => f.groupe === GROUPE_REPLI)?.total ?? 0;
+    expect(d.familles.at(-1)!.total).toBe(repliTemoin + 1);
+  });
+
+  it("l'écran rend le repli comme une famille sans sous-catégorie, sommaire compris", async () => {
+    const { d } = await avecUneLigneNonRangee();
+    const { container } = rendre(d);
+    const h2 = [...container.querySelectorAll("h2")].map((h) => h.textContent);
+    expect(h2.at(-1)).toBe(LIBELLE_GROUPE_REPLI);
+    const section = container.querySelector(`#usage-${GROUPE_REPLI}`)!;
+    expect(section).not.toBeNull();
+    expect(section.querySelectorAll("h3")).toHaveLength(0);
+    const liens = [...container.querySelectorAll("nav a")].map((a) =>
+      a.getAttribute("href"),
+    );
+    expect(liens.at(-1)).toBe(`#usage-${GROUPE_REPLI}`);
   });
 });
