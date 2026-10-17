@@ -114,9 +114,16 @@ describe("rubrique « hors du quotidien » — ce que la carte dit", () => {
   });
 
   it("le mot « audit » n'apparaît pas (décision de la propriétaire, 2026-10-18)", () => {
-    const texte = rendu().textContent ?? "";
-    expect(texte).toContain(TITRE_HORS_QUOTIDIEN);
-    expect(texte).not.toMatch(MOT_AUDIT);
+    const c = rendu();
+    expect(c.textContent).toContain(TITRE_HORS_QUOTIDIEN);
+    // Nœud par nœud, pas sur `textContent` : celui-ci colle le sur-titre au
+    // titre (« …auditObligations… ») et la frontière de mot ne se voit plus —
+    // la première version de ce test passait avec « § Niveau audit » affiché.
+    const walker = document.createTreeWalker(c, NodeFilter.SHOW_TEXT);
+    const noeuds: string[] = [];
+    while (walker.nextNode()) noeuds.push(walker.currentNode.textContent ?? "");
+    const fautif = noeuds.find((t) => MOT_AUDIT.test(t));
+    expect(fautif, `« audit » affiché : ${fautif}`).toBeUndefined();
   });
 
   it("la référence en chasse fixe passe à la ligne au lieu de déborder", () => {
