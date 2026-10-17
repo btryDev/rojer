@@ -151,9 +151,12 @@ const RELEVE = {
   // change. ~~cea363fbd2956b72~~.
   // Recopiée SANS incrément le 2026-10-17 (ADR-045, lot 3) : quand plusieurs
   // types satisfont une ligne, `matchTypologie` rend l'évaluation du premier
-  // dans l'ordre de la nomenclature, et non du premier déclaré — seules les
+  // dans l'ordre de TYPES_ERP (l'ordre du produit), et non du premier déclaré — seules les
   // RAISONS affichées changent, et seulement pour un dossier à plusieurs
   // types. ~~e887744cc240a140~~.
+  // Recopiée SANS incrément le même jour (revue du lot 3, C5 et R1) : le tri
+  // par `TYPES_ERP` s'écrit une seule fois (`typesErpOrdreProduit`), sans
+  // rien changer à ce qu'il rend. ~~0549be700bed51fc~~.
   // Recalculée SANS incrément le 2026-10-12 à la réunion de
   // `lot/polir-relecture` (EPI déclaré, `6a4d02a8f770c62b`) et de
   // `lot/suites-0810` (SSI A/B, libellés, rythme en clair,
@@ -467,7 +470,7 @@ const RELEVE = {
   // périodicité), hachée par l'empreinte du référentiel, donc déjà dans le
   // sceau : les dossiers ERP N1–N4 seront réconciliés au titre de
   // `2026-10-15.1`. ~~da691471f9fe392b~~.
-  empreinte: "0549be700bed51fc",
+  empreinte: "8f04f49061475e71",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

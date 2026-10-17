@@ -274,6 +274,19 @@ describe("plusieurs types : l'union, puis un membre par groupe", () => {
   });
 });
 
+describe("l'ordre de TYPES_ERP décide du type cité dans les raisons (revue du lot 3, C5)", () => {
+  // L'ordre du PRODUIT, pas celui de GN 1 (qui range J en tête) : pour J + L,
+  // la visite triennale de 3ᵉ cite L. Éprouvé en triant J en tête : rouge.
+  it("J + L en 3ᵉ : la raison de la visite cite le type L, dans les deux ordres de saisie", () => {
+    for (const ts of [["J", "L"], ["L", "J"]] as TypeErp[][]) {
+      const visite = determineObligationsApplicables(erp(ts, "N3"), []).find(
+        (a) => a.obligation.id === "incendie-erp-visite-commission-cat3-triennale",
+      )!;
+      expect(visite.raisons.join(" "), ts.join("+")).toMatch(/type L\b/);
+    }
+  });
+});
+
 describe("typesErpDe", () => {
   it("le premier type, puis les autres, sans doublon", () => {
     expect(typesErpDe({ typeErp: "O", typesErpAutres: ["N", "O", "L"] })).toEqual(["O", "N", "L"]);

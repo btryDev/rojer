@@ -28,8 +28,8 @@
 
 import { indexArticlesParRef } from "@/lib/referentiels/corpus";
 import type { Obligation, ReferenceLegale } from "@/lib/referentiels/conformite/types";
-import { TYPES_ERP, type CategorieErp, type TypeErp } from "@/lib/referentiels/types-communs";
-import { typesErpDe } from "@/lib/matching/types-erp";
+import type { CategorieErp, TypeErp } from "@/lib/referentiels/types-communs";
+import { typesErpOrdreProduit } from "@/lib/matching/types-erp";
 
 export type FondementLigne = {
   /** La `reference` du référentiel, telle qu'elle s'imprime ailleurs. */
@@ -61,8 +61,8 @@ export type FondementLigne = {
  */
 export type ContexteFondement = {
   /**
-   * Les types d'ERP de l'établissement (ADR-045), dans l'ordre de la
-   * nomenclature ; vide hors ERP.
+   * Les types d'ERP de l'établissement (ADR-045), dans l'ordre de
+   * `TYPES_ERP` (l'ordre du produit, `typesErpOrdreProduit`) ; vide hors ERP.
    */
   readonly typesErp: readonly TypeErp[];
   readonly categorieErp: CategorieErp | null;
@@ -94,12 +94,11 @@ export function contexteFondementDe(e: {
   categorieErp: CategorieErp | null;
 }): ContexteFondement {
   return {
-    typesErp: e.estERP
-      ? typesErpDe({ typeErp: e.typeErp, typesErpAutres: [...e.typesErpAutres] }).sort(
-          (a, b) => TYPES_ERP.indexOf(a) - TYPES_ERP.indexOf(b),
-        )
-      : [],
+    typesErp: e.estERP ? typesErpOrdreProduit(e) : [],
     categorieErp: e.estERP ? e.categorieErp : null,
+    // `as unknown as` : la marque est un symbole DÉCLARÉ, sans valeur à
+    // l'exécution — on ne peut pas l'écrire dans l'objet, et tsc refuse la
+    // conversion directe d'un objet qui ne la porte pas (revue du lot 3, R1).
   } as unknown as ContexteFondement;
 }
 
@@ -174,7 +173,7 @@ export function fondementDe(
   if (!premiere) return null;
   const types: readonly string[] = contexte?.typesErp ?? [];
   // Les références que la ligne cite pour l'un des types de l'établissement,
-  // dans l'ordre de la nomenclature (le contexte est déjà trié).
+  // dans l'ordre de `TYPES_ERP`, l'ordre du produit (le contexte est déjà trié).
   const desTypes = (candidates: readonly ReferenceLegale[]) =>
     types.flatMap((t) => {
       const r = candidates.find((x) => typeDuChapitre(x.article) === t);

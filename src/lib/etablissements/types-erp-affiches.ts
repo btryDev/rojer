@@ -1,3 +1,5 @@
+import { typesErpDe } from "@/lib/matching/types-erp";
+
 /**
  * Les types d'ERP d'un établissement, tels que les surfaces les affichent
  * (ADR-045) : le premier déclaré, puis les autres, sans doublon. Une seule
@@ -12,7 +14,7 @@ export function typesErpAffiches(e: {
   typeErp: string | null;
   typesErpAutres: readonly string[];
 }): string[] {
-  return [...new Set([...(e.typeErp ? [e.typeErp] : []), ...e.typesErpAutres])];
+  return typesErpDe(e);
 }
 
 /** « type N », « types N, O, L », ou `null` sans type. */

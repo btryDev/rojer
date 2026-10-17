@@ -54,6 +54,7 @@ export async function finaliserOnboarding(
   // On lit les champs un à un — permet de convertir checkboxes (HTML
   // ne soumet "on" que si la case est cochée) en vrais booléens.
   const raw = Object.fromEntries(formData);
+  const typesErpAutres = typesErpAutresPostes(formData);
   const input = {
     raisonSociale: raw.raisonSociale,
     siret: raw.siret,
@@ -69,9 +70,7 @@ export async function finaliserOnboarding(
     estHabitation: ouiNon(raw.estHabitation),
     typeErp: raw.typeErp || undefined,
     // Plusieurs valeurs possibles (ADR-045) : `getAll`, pas `raw`.
-    ...(typesErpAutresPostes(formData) === undefined
-      ? {}
-      : { typesErpAutres: typesErpAutresPostes(formData) }),
+    ...(typesErpAutres === undefined ? {} : { typesErpAutres }),
     categorieErp: raw.categorieErp || undefined,
     // Vide = « je ne sais pas encore », et le vide ne se coerce pas en `false` :
     // le schéma le rend `undefined`, et l'écriture ci-dessous est alors omise.

@@ -107,6 +107,7 @@ function typologieAChange(
  */
 function normaliserFormData(fd: FormData): Record<string, unknown> {
   const raw = Object.fromEntries(fd);
+  const typesErpAutres = typesErpAutresPostes(fd);
   const bool = (k: string) => raw[k] !== undefined;
   const regime = (k: string) => raw[k] !== undefined && raw[k] !== "non";
   return {
@@ -126,9 +127,7 @@ function normaliserFormData(fd: FormData): Record<string, unknown> {
     // Plusieurs valeurs possibles (ADR-045) : `getAll`, pas `raw`, et un champ
     // témoin pour que des cases toutes décochées disent « aucun ». Non posté =
     // omis, et la valeur en base est gardée (`typesErpAutresCoherents`).
-    ...(typesErpAutresPostes(fd) === undefined
-      ? {}
-      : { typesErpAutres: typesErpAutresPostes(fd) }),
+    ...(typesErpAutres === undefined ? {} : { typesErpAutres }),
     categorieErp: raw.categorieErp || undefined,
     natureActivite: raw.natureActivite,
     // Ces quatre champs ne sont rendus que dans le bloc `{estERP && (…)}` du

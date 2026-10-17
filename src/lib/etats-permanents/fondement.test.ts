@@ -179,7 +179,7 @@ describe("plusieurs types d'ERP — l'article de chacun (ADR-045, lot 3)", () =>
 });
 
 describe("contexteFondementDe — le contexte d'un établissement qui n'est pas un ERP est vide", () => {
-  it("un ERP garde ses types, dans l'ordre de la nomenclature, et sa catégorie", () => {
+  it("un ERP garde ses types, dans l'ordre de TYPES_ERP (l'ordre du produit), et sa catégorie", () => {
     expect(
       contexteFondementDe({ estERP: true, typeErp: "O", typesErpAutres: ["N"], categorieErp: "N3" }),
     ).toEqual({ typesErp: ["N", "O"], categorieErp: "N3" });
