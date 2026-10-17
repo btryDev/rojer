@@ -27,6 +27,10 @@ import {
 import { ARRETE_2010_02_01_LEGIONELLES } from "./arrete-2010-02-01-legionelles";
 import { ARRETE_2018_02_23_GAZ_HABITATION } from "./arrete-2018-02-23-gaz-habitation";
 import { CODE_ENVIRONNEMENT_CHAUDIERES } from "./code-environnement-chaudieres";
+import { CSP_APPAREILS_BRONZAGE } from "./csp-appareils-bronzage";
+import { CSP_BAINS_A_REMOUS } from "./csp-bains-a-remous";
+import { DECRET_1996_AIRES_DE_JEUX } from "./decret-1996-aires-de-jeux";
+import { ARRETE_2004_07_01_PRODUITS_PETROLIERS } from "./arrete-2004-07-01-produits-petroliers";
 import { ARRETE_1957_09_30_CHAMBRES_FROIDES } from "./arrete-1957-09-30-chambres-froides";
 import { ARRETES_ASCENSEURS } from "./arretes-ascenseurs";
 import { ARRETES_MODIFICATIFS_ERP } from "./arretes-modificatifs-erp";
@@ -137,6 +141,12 @@ export const CORPUS: readonly Corpus[] = [
   // l'aide des catégories cite, non couverts par décision de la propriétaire.
   CODE_ENVIRONNEMENT_CHAUDIERES,
   ARRETE_1957_09_30_CHAMBRES_FROIDES,
+  // 2026-10-17 (sous-lot B, `lot/ref-b-hors-cadre`) : quatre textes que la
+  // liste des matériels non couverts cite ; rien n'est encodé.
+  CSP_APPAREILS_BRONZAGE,
+  CSP_BAINS_A_REMOUS,
+  DECRET_1996_AIRES_DE_JEUX,
+  ARRETE_2004_07_01_PRODUITS_PETROLIERS,
   INRS_DOCUMENTAIRE,
   // ADR-039, 2026-10-07 — les normes homologuées lues, dont un rythme peut
   // être retenu. Ni droit ni brochure : statut `norme`.
