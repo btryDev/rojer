@@ -43,6 +43,8 @@ describe("registre de dette — les obligations manquantes", () => {
     // la propriétaire décide, et la liste se vide à l'encodage. Le plan :
     // `propositions/lecture-chapitres-types-erp-2026-10-16.md`.
     expect(parCause("libre").map((a) => a.ref)).toEqual([
+      // Seconde relecture du 2026-10-17 : `PE 18`, ligne de partage 10.
+      "PE 18",
       "PU 6",
       // 2026-10-17, revue indépendante : ~~six~~ quatre articles du titre Ier ouverts
       // en suivant les renvois des chapitres de types, au corpus
@@ -61,8 +63,14 @@ describe("registre de dette — les obligations manquantes", () => {
       // `non_couvert`) sortent ; `CH 17`, `EL 17`, `GC 15`, `MS 66` entrent.
       "GE 3",
       "GE 10",
+      // Seconde relecture du 2026-10-17 (ligne de partage 11, affichages) :
+      "CO 45 § 5 — inscription « sans issue » des portes en cul-de-sac",
+      "CO 47 § 2 — avertissement porté par les portes coupe-feu maintenues ouvertes",
+      "CO 59 — g) consignes affichées dans l'espace d'attente sécurisé",
       "DF 9",
       "CH 17",
+      "CH 38 — 6° avertissement affiché aux accès des filtres",
+      "CH 52",
       "EL 17",
       "AS 11",
       "GC 4",
@@ -129,7 +137,10 @@ describe("registre de dette — les obligations manquantes", () => {
       // lu en entier) : 17 + 15 − 0, voir le test des « libres ».
       // [32, 0] → [34, 0] après la revue du même jour : 32 − 2 + 4 — `CH 23`,
       // `CH 24` annoncés ; `CH 17`, `EL 17`, `GC 15`, `MS 66` entrent.
-      libre: [34, 0],
+      // [34, 0] → [40, 0] après la seconde relecture : 34 + 6 — `CO 45 § 5`,
+      // `CO 47 § 2`, `CO 59 — g)`, `CH 38 — 6°`, `CH 52` (affichages, ligne de
+      // partage 11) et `PE 18` (présence, ligne de partage 10).
+      libre: [40, 0],
       // 9 → 6 le 2026-09-21 : les trois de la chaleur intense (`R. 4463-4`,
       // `-5`, `-7`) sont encodées sur la page « Quand ça arrive ».
       // 6 → 0 le même jour : cinq relues à la source et encodées ; la sixième,
@@ -263,8 +274,9 @@ describe("registre de dette — les obligations manquantes", () => {
     // `CH 35`, `MS 42` annoncés ou muets ; `T 29`, `T 33` entrent).
     // 69 → 68 après la revue : 69 − 6 + 5 (annonces décidées sorties ; CH 17,
     // EL 17, GC 15, MS 66, M 35 entrés).
-    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(68);
-    expect(manquantes.length).toBe(68);
+    // 68 → 74 après la seconde relecture : 68 + 6 − 0.
+    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(74);
+    expect(manquantes.length).toBe(74);
   });
 });
 

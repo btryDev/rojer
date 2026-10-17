@@ -723,6 +723,9 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // d'équipement ; PU 6 le personnel soignant formé, acte de PE 27 § 5 déjà
       // servi, dont il manque la référence. Rien n'est encodé : à évaluer
       // (§ 9 de `docs/couverture-declaree-du-produit.md`).
+      // 2026-10-17 (seconde relecture de `lot/ref-a-corpus-titre-1`) : la présence
+      // du personnel pendant le fonctionnement d'un îlot de cuisson en 5ᵉ.
+      "PE 18",
       "PU 5",
       "PU 6",
       "CO 61",
@@ -784,8 +787,16 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // ligne de partage 10) et, plus bas, `M 35`.
       "GE 3",
       "GE 10",
+      // Seconde relecture du même jour (ligne de partage 11, un affichage prescrit
+      // est un état permanent) : 68 + 6 = 74 — ces trois, `CH 38 — 6°` et
+      // `CH 52` plus bas, et `PE 18` (livre III, ligne de partage 10) en tête.
+      "CO 45 § 5 — inscription « sans issue » des portes en cul-de-sac",
+      "CO 47 § 2 — avertissement porté par les portes coupe-feu maintenues ouvertes",
+      "CO 59 — g) consignes affichées dans l'espace d'attente sécurisé",
       "DF 9",
       "CH 17",
+      "CH 38 — 6° avertissement affiché aux accès des filtres",
+      "CH 52",
       "EL 17",
       "AS 11",
       "GC 4",

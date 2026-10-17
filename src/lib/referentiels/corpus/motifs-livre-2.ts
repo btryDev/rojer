@@ -71,3 +71,7 @@ export const SUITE_TRANSITOIRE_SOUS_LOT_C =
 /** Adresse d'annonce : la phrase de manque de l'axe `categorie_erp` (déplacée ici depuis `arrete-1980-livre-2-titre-2.ts`). */
 export const DECLARE_A_CATEGORIE_ERP =
   "src/lib/perimetre/couverture.ts — phrase de manque de l'axe `categorie_erp`, servie à tout ERP des catégories 1 à 4 : « le service de sécurité incendie assuré par des agents de sécurité incendie, notamment, n'y est pas, et des dispositions particulières par type d'activité, il ne porte que quelques-unes ».";
+
+/** Fin du motif de tout article dont le classement `non_couvert` est une décision prise le 2026-10-17 et dont l'adresse est encore muette : la garde « annonce décidée » le reconnaît par cette phrase (revue de `lot/ref-a-corpus-titre-1`). */
+export const SUITE_ANNONCE_DECIDEE =
+  " Classement décidé le 2026-10-17 : `non_couvert`, et non une ligne à encoder ; où et quand c'est dit est au `declareA`.";

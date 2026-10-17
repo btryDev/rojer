@@ -132,6 +132,29 @@ annoncé), jamais « sans acte ni pièce ».
   l'exploitant »), un moyen pour la personne secourue de signaler sa présence
   (`CO 59 g`).
 
+### 11. Un affichage prescrit est un état permanent, pas une dotation
+
+Quand un texte fait afficher, apposer ou rappeler une mention destinée à
+informer ou avertir les occupants ou le personnel — une consigne, un plan, une
+interdiction rappelée, un avertissement —, c'est un état à constituer puis à
+maintenir, comme les autres états permanents (ADR-026, ADR-027). La règle de
+niche (ligne 5) décide ensuite si Rojer en fait une ligne ou l'annonce.
+
+- *Politique sœur* : `GC 4 § 3` (consignes affichées près de l'arrêt d'urgence
+  de cuisson), `CH 23 § 3` (plan schématique affiché près des chaudières).
+- *Cas* (2026-10-17, revue de `lot/ref-a-corpus-titre-1`, décision de c6) :
+  `CO 59 g)` (consignes dans l'espace d'attente sécurisé), `CH 52 § 4`
+  (interdiction de remplir en marche, rappelée près de l'appareil), et, relus
+  avec la règle, `CH 38 6°` (« Danger d'incendie, filtres empoussiérés
+  inflammables »), `CO 47 § 2` (« Porte coupe-feu — Ne mettez pas d'obstacle à
+  la fermeture »), `CO 45 § 5` (inscription « sans issue ») : manques.
+- *Ce que la règle ne vise pas* : la signalétique qui IDENTIFIE un équipement
+  pour les secours ou l'exploitant — plaque « évacuation de fumées » (`GC 11`,
+  `GC 17`), pancarte d'un raccord de colonne sèche (`MS 19`, `MS 24`), trémies
+  ou organes « signalés » (`MS 44`, `AS 7`), balisage des dégagements
+  (`CO 42`), panneau de tonnage d'une voie engins (`CO 2`) : une dotation,
+  posée avec l'équipement.
+
 ## Questions ouvertes
 
 - **Monte-charge installé à demeure** (`D10`, `docs/revues/decisions-a-prendre-2026-09-27.md`) :

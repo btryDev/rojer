@@ -21,10 +21,11 @@
 
 import { describe, expect, it } from "vitest";
 import { CORPUS } from "./index";
+import { SUITE_ANNONCE_DECIDEE } from "./motifs-livre-2";
 import type { ArticleDepouille } from "./types";
 
 const PRESENCE =
-  /pendant (la présence du public|l'ouverture[^,.;]{0,20}|le fonctionnement)[^.]{0,80}\b(personne|personnel)\b|\b(personne|personnel)\b[^.]{0,80}pendant (la présence du public|l'ouverture|le fonctionnement)|sous la surveillance directe|surveillé pendant|occupé en permanence par une personne|doit être présent/i;
+  /pendant (la présence du public|l'ouverture[^,.;]{0,20}|le fonctionnement)[^.]{0,80}\b(personne|personnel)\b|\b(personne|personnel)\b[^.]{0,80}pendant (la présence du public|l'ouverture|le fonctionnement)|sous la surveillance directe|surveillé pendant|occupé en permanence par une personne|doit être présent|doit se trouver dans l'établissement/i;
 
 const ANNONCE_DECIDEE = /DÉCISION[^.]*\)\s*:\s*annonc|annoncé plutôt que suivi/i;
 
@@ -32,13 +33,24 @@ const tous = (): ArticleDepouille[] => CORPUS.flatMap((c) => [...c.articles]);
 
 function presencesEcartees(articles: readonly ArticleDepouille[]): string[] {
   return articles
-    .filter((a) => (a.statut === "sans_objet" || a.statut === "hors_perimetre") && PRESENCE.test(a.citationCle ?? ""))
+    // La citation ET le motif (revue du 2026-10-17) : une citation restée sur
+    // une autre phrase de l'article (MS 52, citée sur le registre) laissait la
+    // garde aveugle à la présence que le motif nomme.
+    .filter(
+      (a) =>
+        (a.statut === "sans_objet" || a.statut === "hors_perimetre") &&
+        (PRESENCE.test(a.citationCle ?? "") || PRESENCE.test("motif" in a ? (a.motif ?? "") : "")),
+    )
     .map((a) => a.ref);
 }
 
 function annoncesEnManque(articles: readonly ArticleDepouille[]): string[] {
   return articles
-    .filter((a) => a.statut === "obligation_manquante" && ANNONCE_DECIDEE.test(a.motif))
+    .filter(
+      (a) =>
+        a.statut === "obligation_manquante" &&
+        (ANNONCE_DECIDEE.test(a.motif) || a.motif.includes(SUITE_ANNONCE_DECIDEE)),
+    )
     .map((a) => a.ref);
 }
 
@@ -50,6 +62,12 @@ describe("présence requise : un état permanent, jamais écarté", () => {
   it("la garde voit les présences du dépôt (borne basse)", () => {
     const vues = tous().filter((a) => PRESENCE.test(a.citationCle ?? "")).map((a) => a.ref);
     expect(vues).toEqual(expect.arrayContaining(["EL 18", "GC 15", "MS 57", "MS 66", "EL 17", "T 29", "T 33"]));
+  });
+
+  it("cassure : MS 52 rendu à `sans_objet` est vu", () => {
+    const ms52 = tous().find((a) => a.ref === "MS 52")!;
+    const casse = { ...ms52, statut: "sans_objet" } as ArticleDepouille;
+    expect(presencesEcartees([casse])).toEqual(["MS 52"]);
   });
 
   it("cassure : GC 15 rendu à `sans_objet` est vu", () => {
@@ -125,6 +143,24 @@ describe("annonce décidée : `non_couvert`, jamais `obligation_manquante`", () 
       .filter((a) => a.statut === "non_couvert" && (a.declareA ?? "").startsWith("Non déclaré") && (a.declareA ?? "").includes("DESCRIPTION_CATEGORIE."))
       .map((a) => a.ref);
     expect(fautifs).toEqual([]);
+  });
+
+  it("chaque annonce encore muette du livre II porte la phrase de la décision (les onze)", () => {
+    // Revue du 2026-10-17 : la reconnaissance par la seule formulation du motif
+    // ne voyait que 4 des 11 annonces décidées. Une phrase commune les nomme
+    // toutes ; une annonce muette qui ne la porte pas est hors de la garde.
+    const livre2 = CORPUS.filter((c) => LIVRE_2.has(c.id)).flatMap((c) => [...c.articles]);
+    const muettes = livre2.filter((a) => a.statut === "non_couvert" && (a.declareA ?? "").startsWith("Non déclaré au 2026-10-17"));
+    expect(muettes.filter((a) => !("motif" in a && (a.motif ?? "").includes(SUITE_ANNONCE_DECIDEE))).map((a) => a.ref)).toEqual([]);
+    expect(muettes.map((a) => a.ref).sort()).toEqual(
+      ["AM 18", "AS 5", "AS 8", "CH 23", "CH 24", "CO 10", "MS 42", "T 29", "T 33", "T 43", "T 44"].sort(),
+    );
+  });
+
+  it("cassure : T 43 rendu à `obligation_manquante` est vu", () => {
+    const t43 = tous().find((a) => a.ref === "T 43")!;
+    const casse = { ...t43, statut: "obligation_manquante", cause: "libre", toucheLaCible: true } as ArticleDepouille;
+    expect(annoncesEnManque([casse])).toEqual(["T 43"]);
   });
 
   it("cassure : CH 23 rendu à `obligation_manquante` est vu", () => {

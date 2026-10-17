@@ -42,6 +42,9 @@
 // reclassés un par un (l'ancien motif est rayé dans `historique`).
 
 import type { Corpus } from "./types";
+import {
+  SUITE_TRANSITOIRE_SOUS_LOT_C,
+} from "./motifs-livre-2";
 
 export const CORPUS_PE: Corpus = {
   id: "arrete-1980-livre-3",
@@ -270,12 +273,18 @@ export const CORPUS_PE: Corpus = {
     {
       ref: "PE 18",
       intitule: "Îlots de cuisson installés dans les salles",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024766742",
       versionEnVigueur: "2008-08-30",
-      luLe: "2026-08-26",
-      lecture: "agent_verbatim",
-      statut: "sans_objet",
-      motif:
-        "Conditions d'exploitation d'un îlot de cuisson, dont la présence de personnel pendant le fonctionnement — obligation continue, pas une échéance.",
+      modifiePar: { texte: "Arrêté du 21 mai 2008, v. init." },
+      // ~~luLe: "2026-08-26", lecture: "agent_verbatim"~~ — relu le 2026-10-17 par l'API (PISTE, bac à sable).
+      luLe: "2026-10-17",
+      lecture: "api_legifrance",
+      historique: "2026-10-17 — revue de `lot/ref-a-corpus-titre-1`, ligne de partage 10 (une présence requise pendant le fonctionnement est un ÉTAT PERMANENT, décision de c6) ; trouvé par la garde de présence, qui lit aussi les motifs. Ancien classement : ~~statut sans_objet ; motif : Conditions d'exploitation d'un îlot de cuisson, dont la présence de personnel pendant le fonctionnement — obligation continue, pas une échéance.~~",
+      citationCle: "Un personnel de service doit être présent pendant le fonctionnement des appareils.",
+      statut: "obligation_manquante",
+      motif: "Îlots de cuisson installés en salle, en 5ᵉ catégorie (le pendant de GC 15 au livre II) : enceinte interdite au public, appareils non laissés en libre utilisation, énergie gaz ou électrique, puissance limitée, captation des buées (règles d'installation et d'usage). Et un ÉTAT PERMANENT : « Un personnel de service doit être présent pendant le fonctionnement des appareils » (ligne de partage 10, politique sœur EL 18 § 2). « Obligation continue, pas une échéance » était le motif ancien : c'est précisément ce qu'est un état permanent. Touche la cible restaurant. PROPOSITION pour le sous-lot C : la même ligne que GC 15, étendue à la 5ᵉ catégorie." + SUITE_TRANSITOIRE_SOUS_LOT_C,
+      cause: "libre",
+      toucheLaCible: true,
     },
     {
       ref: "PE 19",
