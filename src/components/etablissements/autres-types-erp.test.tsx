@@ -80,17 +80,29 @@ describe("fiche établissement : les autres types d'ERP", () => {
     expect(coche(container, "O")).toBe(true);
   });
 
-  it("N + O enregistrés, premier mis à M puis à O : O + N, M n'est pas coché (relecture, C3)", () => {
+  it("N + O, puis O, puis N : N + O — l'aller-retour ne perd rien", () => {
     const { container } = fiche("N", ["O"]);
-    premier(container, "M");
     premier(container, "O");
-    expect(coche(container, "N")).toBe(true);
-    expect(coche(container, "M")).toBe(false);
+    premier(container, "N");
+    expect(coche(container, "O")).toBe(true);
+    expect(container.querySelector('input[name="typesErpAutres"][value="N"]')).toBeNull();
   });
 
-  it("N + O enregistrés, premier vidé puis mis à O : O + N (relecture, C3)", () => {
+  it("N + O, puis M, puis O : O + M, panneau ouvert, M coché et visible", () => {
     const { container } = fiche("N", ["O"]);
-    premier(container, "");
+    const details = container.querySelector("details")!;
+    details.open = false;
+    fireEvent(details, new Event("toggle"));
+    premier(container, "M");
+    premier(container, "O");
+    expect(coche(container, "M")).toBe(true);
+    expect(coche(container, "N")).toBe(false);
+    expect(container.querySelector("details")!.open).toBe(true);
+  });
+
+  it("N seul, cocher O, puis O en premier : O + N", () => {
+    const { container } = fiche("N", []);
+    fireEvent.click(container.querySelector<HTMLInputElement>('input[name="typesErpAutres"][value="O"]')!);
     premier(container, "O");
     expect(coche(container, "N")).toBe(true);
   });
@@ -127,14 +139,17 @@ describe("fiche établissement : les autres types d'ERP", () => {
 });
 
 describe("l'erreur des autres types est reliée au groupe de cases (revue du lot 3, R3)", () => {
-  it("aria-describedby nomme l'erreur, et le fieldset se dit invalide", async () => {
+  it("aria-describedby nomme l'erreur, et les cases se disent invalides (pas le fieldset : le rôle group ne l'admet pas)", async () => {
     const { AutresTypesErp } = await import("./AutresTypesErp");
     const { container } = render(
       <AutresTypesErp typeErp="N" valeurs={[]} onChange={() => {}} nom="typesErpAutres" erreur="Ne doit être posé que si l'établissement est ERP" />,
     );
     const fs = container.querySelector("fieldset")!;
     expect(fs.getAttribute("aria-describedby")).toContain("typesErpAutres-erreur");
-    expect(fs.getAttribute("aria-invalid")).toBe("true");
+    expect(fs.hasAttribute("aria-invalid")).toBe(false);
+    const cases = [...container.querySelectorAll<HTMLInputElement>('input[name="typesErpAutres"]')];
+    expect(cases.length).toBeGreaterThan(0);
+    expect(cases.every((c) => c.getAttribute("aria-invalid") === "true")).toBe(true);
     expect(container.querySelector("#typesErpAutres-erreur")?.textContent).toContain("ERP");
   });
 });

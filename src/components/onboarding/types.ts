@@ -38,13 +38,6 @@ export type OnboardingState = {
   typeErp: string;
   /** Les autres types d'ERP (ADR-045) — vide pour la majorité. */
   typesErpAutres: string[];
-  /**
-   * La référence des échanges de premier type (revue du lot 3, C3) : ce que
-   * le dirigeant a DÉCLARÉ avec les cases — le premier type et les autres au
-   * moment où il les a cochés. Rien n'est enregistré au parcours ; c'est ce
-   * qui en tient lieu. Jamais posté.
-   */
-  typesErpReference: { premier: string; autres: string[] };
   categorieErp: string;
 
   // Locaux à sommeil pour le public — posée depuis le 2026-09-09, et seulement
@@ -85,7 +78,6 @@ export const VALEURS_INITIALES: OnboardingState = {
   estHabitation: null,
   typeErp: "",
   typesErpAutres: [],
-  typesErpReference: { premier: "", autres: [] },
   categorieErp: "",
   comporteLocauxSommeilPublic: "",
   personnesPresentesHabituellement: "",

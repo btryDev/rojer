@@ -63,33 +63,28 @@ export function typesErpAutresPostes(fd: FormData): string[] | undefined {
 }
 
 /**
- * Les autres types après un changement du premier (revue du lot 3, C3,
- * repris à la relecture).
+ * Les autres types après un changement du premier — sur l'état COURANT, même
+ * règle à la fiche et au parcours d'accueil (relecture du lot 3, décision de
+ * c6 : la plus simple et la plus prévisible).
  *
- * On raisonne sur la RÉFÉRENCE — l'état enregistré à la fiche ; au parcours
- * d'accueil, ce que le dirigeant a déclaré avec les cases — et non sur l'état
- * de passage. Un ÉCHANGE (le nouveau premier figure parmi les autres de la
- * référence) rend aux autres le premier type de la référence, et lui seul :
- * jamais un type de passage. Sinon c'est une correction de saisie, et rien
- * n'est rendu. Dans tous les cas, le nouveau premier ne figure pas parmi les
- * autres (contrainte en base). L'ordre suit `ordre`, la liste des cases.
+ * - Si le nouveau premier figure parmi les autres, il en sort, et l'ancien
+ *   premier (s'il n'est pas vide) prend sa place : un ÉCHANGE.
+ * - Sinon, c'est une correction : l'ancien premier ne revient pas.
  *
- * Exemples, référence N + O : premier mis à M, puis à O → autres [N] (M,
- * erreur de saisie, n'est pas coché tout seul) ; premier vidé, puis O →
- * autres [N].
+ * Aller-retour : N + O → O donne O + N → N redonne N + O. Un type de passage
+ * peut être rendu (N + O → M → O donne O + M) : le panneau s'ouvre alors
+ * (`memesTypes`), M est coché sous les yeux, et se décoche. C'est assumé.
+ * L'ordre suit `ordre`, la liste des cases.
  */
 export function autresApresChangementDuPremier(
   autres: readonly string[],
-  reference: { premier: string; autres: readonly string[] },
+  ancien: string,
   nouveau: string,
   ordre: readonly string[],
 ): string[] {
-  const echange =
-    reference.premier !== "" &&
-    reference.premier !== nouveau &&
-    reference.autres.includes(nouveau);
+  if (!autres.includes(nouveau)) return ordre.filter((t) => autres.includes(t));
   const garde = new Set(autres.filter((t) => t !== nouveau));
-  if (echange) garde.add(reference.premier);
+  if (ancien !== "" && ancien !== nouveau) garde.add(ancien);
   return ordre.filter((t) => garde.has(t));
 }
 

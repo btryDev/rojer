@@ -147,7 +147,6 @@ export function StepTypologie({
                     estERP: false,
                     typeErp: "",
                     typesErpAutres: [],
-                    typesErpReference: { premier: "", autres: [] },
                     categorieErp: "",
                     // Une réponse sur les locaux à sommeil donnée avant de
                     // décocher l'ERP n'a plus de question : la garder ferait
@@ -190,7 +189,7 @@ export function StepTypologie({
                       // échange garde l'ancien (revue du lot 3, C3).
                       const autres = autresApresChangementDuPremier(
                         state.typesErpAutres,
-                        state.typesErpReference,
+                        state.typeErp,
                         t,
                         TYPE_ERP,
                       );
@@ -237,9 +236,6 @@ export function StepTypologie({
                     onChange={(autres) =>
                       update({
                         typesErpAutres: autres,
-                        // Cocher ou décocher, c'est déclarer : la référence
-                        // des échanges suit (revue du lot 3, C3).
-                        typesErpReference: { premier: state.typeErp, autres },
                         // Même règle qu'au changement de type : une réponse
                         // dont la question disparaît ne part pas.
                         ...(questionSommeilPosee({ estERP: true, typeErp: state.typeErp, typesErpAutres: autres })

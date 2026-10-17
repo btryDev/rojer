@@ -126,12 +126,6 @@ export function EtablissementForm({
   const [typesErpAutres, setTypesErpAutres] = useState<string[]>([
     ...(valeursInitiales?.typesErpAutres ?? []),
   ]);
-  // La référence des échanges de premier type : l'état ENREGISTRÉ (revue du
-  // lot 3, C3).
-  const referenceTypes = {
-    premier: valeursInitiales?.typeErp ?? "",
-    autres: valeursInitiales?.typesErpAutres ?? [],
-  };
   const [signalAutres, setSignalAutres] = useState(0);
   const poseLocauxSommeil = questionSommeilPosee({
     estERP,
@@ -494,11 +488,10 @@ export function EtablissementForm({
                       onChange={(e) => {
                         const t = e.currentTarget.value;
                         // Le premier type ne figure pas parmi les autres
-                        // (contrainte en base) ; un échange rend le premier
-                        // type ENREGISTRÉ, jamais un type de passage.
+                        // (contrainte en base) ; un échange rend l'ancien.
                         const apres = autresApresChangementDuPremier(
                           typesErpAutres,
-                          referenceTypes,
+                          typeErp,
                           t,
                           TYPE_ERP,
                         );

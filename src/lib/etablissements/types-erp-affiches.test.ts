@@ -34,21 +34,22 @@ describe("le régime ERP en une ligne, au widget (revue du lot 3, R2)", () => {
   });
 });
 
-describe("changer le premier type — raisonné sur la référence (revue du lot 3, C3)", () => {
+describe("changer le premier type — sur l'état courant (relecture du lot 3)", () => {
   const ORDRE = ["M", "N", "O", "L"];
-  const REF = { premier: "N", autres: ["O"] };
-  it("un échange rend aux autres le premier type de la référence", () => {
-    expect(autresApresChangementDuPremier(["O"], REF, "O", ORDRE)).toEqual(["N"]);
+  const change = (autres: string[], ancien: string, nouveau: string) =>
+    autresApresChangementDuPremier(autres, ancien, nouveau, ORDRE);
+  it("N + O, puis O : O + N", () => {
+    expect(change(["O"], "N", "O")).toEqual(["N"]);
   });
-  it("une correction ne rend rien", () => {
-    expect(autresApresChangementDuPremier(["O"], REF, "M", ORDRE)).toEqual(["O"]);
+  it("N + O, puis O, puis N : N + O — l'aller-retour ne perd rien", () => {
+    expect(change(change(["O"], "N", "O"), "O", "N")).toEqual(["O"]);
   });
-  it("N + O, puis M, puis O : O + N — M, type de passage, n'est jamais coché", () => {
-    const apresM = autresApresChangementDuPremier(["O"], REF, "M", ORDRE);
-    expect(autresApresChangementDuPremier(apresM, REF, "O", ORDRE)).toEqual(["N"]);
+  it("N + O, puis M (une correction), puis O : O + M", () => {
+    const apresM = change(["O"], "N", "M");
+    expect(apresM).toEqual(["O"]);
+    expect(change(apresM, "M", "O")).toEqual(["M"]);
   });
-  it("N + O, puis vide, puis O : O + N", () => {
-    const apresVide = autresApresChangementDuPremier(["O"], REF, "", ORDRE);
-    expect(autresApresChangementDuPremier(apresVide, REF, "O", ORDRE)).toEqual(["N"]);
+  it("un premier type vide ne revient pas parmi les autres", () => {
+    expect(change(["O"], "", "O")).toEqual([]);
   });
 });

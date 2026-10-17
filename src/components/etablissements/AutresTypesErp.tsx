@@ -87,8 +87,6 @@ export function AutresTypesErp({
 
         <fieldset
           aria-describedby={erreur ? "typesErpAutres-aide typesErpAutres-erreur" : "typesErpAutres-aide"}
-          aria-invalid={erreur ? true : undefined}
-
           className="m-0 mt-3 flex flex-col gap-3 border-0 p-0"
         >
           <legend className="sr-only">Autres types d&apos;ERP de l&apos;établissement</legend>
@@ -116,6 +114,10 @@ export function AutresTypesErp({
                   value={t}
                   checked={valeurs.includes(t)}
                   onChange={(e) => bascule(t, e.currentTarget.checked)}
+                  // Sur les cases et non sur le fieldset : le rôle « group »
+                  // n'admet pas aria-invalid (relecture du lot 3).
+                  aria-invalid={erreur ? true : undefined}
+
                   className={CASE_A_COCHER}
                 />
                 <span>{LABEL_TYPE_ERP[t]}</span>
