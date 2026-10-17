@@ -191,6 +191,11 @@ export function refusAlEntree(): RefusAlEntree[] {
 export type ArticleEcarte = {
   /** Le corpus d'où il vient, pour situer le texte. */
   corpus: string;
+  /**
+   * L'identifiant du corpus — stable, là où l'intitulé se renomme (2026-10-17,
+   * ADR-046 : la clé de parité page ↔ PDF le lit).
+   */
+  corpusId: string;
   /** La référence telle qu'elle se cite : « PE 8 », « R. 4226-5 ». */
   ref: string;
   intitule?: string;
@@ -238,6 +243,7 @@ export function exclusionsDeclarees(): ExclusionDeclaree[] {
           ? [
               {
                 corpus: c.intitule,
+                corpusId: c.id,
                 ref: a.ref,
                 intitule: a.intitule,
                 motif: a.motif,

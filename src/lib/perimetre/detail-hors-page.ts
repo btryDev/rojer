@@ -83,7 +83,9 @@ export function detailHorsPage(): DetailHorsPage {
 /**
  * Les clés que le détail porte, dans l'espace de l'inventaire figé
  * (`inventaire-page-a493461c.ts`) : `domaine:`, `annonce:`, `audit:`,
- * `refus:`, `exclusion:`, `ecarte:<motif>|<corpus>|<ref>`, et `famille:`.
+ * `refus:`, `exclusion:`, `ecarte:<motif>|<id du corpus>|<ref>`, et `famille:`.
+ * ~~`<corpus>` = l'intitulé~~ [2026-10-17, revue : l'identifiant, stable ;
+ * un intitulé renommé faisait rougir la parité sans aucune perte.]
  */
 export function clesDuDetail(d: DetailHorsPage): Set<string> {
   const cles = new Set<string>();
@@ -95,7 +97,7 @@ export function clesDuDetail(d: DetailHorsPage): Set<string> {
   for (const r of d.refus) cles.add(`refus:${r.cle}`);
   for (const e of d.exclusions) {
     cles.add(`exclusion:${e.cle}`);
-    for (const a of e.articles) cles.add(`ecarte:${e.cle}|${a.corpus}|${a.ref}`);
+    for (const a of e.articles) cles.add(`ecarte:${e.cle}|${a.corpusId}|${a.ref}`);
   }
   for (const f of d.familles) cles.add(`famille:${f.cle}`);
   return cles;
