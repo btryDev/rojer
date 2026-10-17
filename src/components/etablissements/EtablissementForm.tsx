@@ -15,7 +15,7 @@ import {
   questionSommeilPosee,
 } from "@/lib/etablissements/schema";
 import { AutresTypesErp } from "./AutresTypesErp";
-import { autresApresChangementDuPremier } from "@/lib/etablissements/types-erp-affiches";
+import { autresApresChangementDuPremier, memesTypes } from "@/lib/etablissements/types-erp-affiches";
 import {
   LABEL_CATEGORIE_ERP,
   LABEL_TYPE_ERP,
@@ -126,6 +126,13 @@ export function EtablissementForm({
   const [typesErpAutres, setTypesErpAutres] = useState<string[]>([
     ...(valeursInitiales?.typesErpAutres ?? []),
   ]);
+  // La référence des échanges de premier type : l'état ENREGISTRÉ (revue du
+  // lot 3, C3).
+  const referenceTypes = {
+    premier: valeursInitiales?.typeErp ?? "",
+    autres: valeursInitiales?.typesErpAutres ?? [],
+  };
+  const [signalAutres, setSignalAutres] = useState(0);
   const poseLocauxSommeil = questionSommeilPosee({
     estERP,
     typeErp,
@@ -487,8 +494,16 @@ export function EtablissementForm({
                       onChange={(e) => {
                         const t = e.currentTarget.value;
                         // Le premier type ne figure pas parmi les autres
-                        // (contrainte en base) ; un échange garde l'ancien.
-                        setTypesErpAutres((v) => autresApresChangementDuPremier(v, typeErp, t, TYPE_ERP));
+                        // (contrainte en base) ; un échange rend le premier
+                        // type ENREGISTRÉ, jamais un type de passage.
+                        const apres = autresApresChangementDuPremier(
+                          typesErpAutres,
+                          referenceTypes,
+                          t,
+                          TYPE_ERP,
+                        );
+                        if (!memesTypes(apres, typesErpAutres)) setSignalAutres((n) => n + 1);
+                        setTypesErpAutres(apres);
                         setTypeErp(t);
                       }}
                       required={estERP === true}
@@ -510,6 +525,7 @@ export function EtablissementForm({
                         valeurs={typesErpAutres}
                         onChange={setTypesErpAutres}
                         erreur={err("typesErpAutres")}
+                        signalOuverture={signalAutres}
                       />
                     </div>
                   </div>

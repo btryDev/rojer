@@ -34,12 +34,21 @@ describe("le régime ERP en une ligne, au widget (revue du lot 3, R2)", () => {
   });
 });
 
-describe("changer le premier type (revue du lot 3, C3)", () => {
+describe("changer le premier type — raisonné sur la référence (revue du lot 3, C3)", () => {
   const ORDRE = ["M", "N", "O", "L"];
-  it("un échange rend l'ancien premier aux autres", () => {
-    expect(autresApresChangementDuPremier(["O"], "N", "O", ORDRE)).toEqual(["N"]);
+  const REF = { premier: "N", autres: ["O"] };
+  it("un échange rend aux autres le premier type de la référence", () => {
+    expect(autresApresChangementDuPremier(["O"], REF, "O", ORDRE)).toEqual(["N"]);
   });
-  it("une correction ne le rend pas", () => {
-    expect(autresApresChangementDuPremier(["O"], "N", "M", ORDRE)).toEqual(["O"]);
+  it("une correction ne rend rien", () => {
+    expect(autresApresChangementDuPremier(["O"], REF, "M", ORDRE)).toEqual(["O"]);
+  });
+  it("N + O, puis M, puis O : O + N — M, type de passage, n'est jamais coché", () => {
+    const apresM = autresApresChangementDuPremier(["O"], REF, "M", ORDRE);
+    expect(autresApresChangementDuPremier(apresM, REF, "O", ORDRE)).toEqual(["N"]);
+  });
+  it("N + O, puis vide, puis O : O + N", () => {
+    const apresVide = autresApresChangementDuPremier(["O"], REF, "", ORDRE);
+    expect(autresApresChangementDuPremier(apresVide, REF, "O", ORDRE)).toEqual(["N"]);
   });
 });

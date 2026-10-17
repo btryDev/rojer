@@ -413,6 +413,33 @@ describe("plusieurs types d'ERP au parcours (ADR-045, lot 3)", () => {
     ).toEqual(["N"]);
   });
 
+  const postes = () =>
+    [...document.querySelectorAll<HTMLInputElement>('input[type="hidden"][name="typesErpAutres"]')].map((i) => i.value);
+
+  it("N, O coché, puis M, puis O : O + N — M n'est pas coché (relecture, C3)", async () => {
+    await allerEtape2AvecType("N");
+    caseO().click();
+    await souffler();
+    choisir(/Type d'ERP/, "M");
+    await souffler();
+    choisir(/Type d'ERP/, "O");
+    await souffler();
+    expect(postes()).toEqual(["N"]);
+    // Le changement a coché N : le panneau s'ouvre pour que ça se voie.
+    expect(document.querySelector("details")!.open).toBe(true);
+  });
+
+  it("N, O coché, puis premier vidé, puis O : O + N (relecture, C3)", async () => {
+    await allerEtape2AvecType("N");
+    caseO().click();
+    await souffler();
+    choisir(/Type d'ERP/, "");
+    await souffler();
+    choisir(/Type d'ERP/, "O");
+    await souffler();
+    expect(postes()).toEqual(["N"]);
+  });
+
   it("décocher O retire la question et la réponse", async () => {
     await allerEtape2AvecType("N");
     caseO().click();

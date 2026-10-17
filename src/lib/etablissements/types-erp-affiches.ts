@@ -63,23 +63,37 @@ export function typesErpAutresPostes(fd: FormData): string[] | undefined {
 }
 
 /**
- * Les autres types après un changement du premier (revue du lot 3, C3).
+ * Les autres types après un changement du premier (revue du lot 3, C3,
+ * repris à la relecture).
  *
- * Si le nouveau premier type venait des autres — un ÉCHANGE : N en premier et
- * O en autre, le premier passe à O —, l'ancien premier prend sa place parmi
- * les autres : l'hôtel-restaurant reste un hôtel-restaurant. Sinon, c'est une
- * correction de saisie (N devient M) : l'ancien premier ne revient pas.
- * Dans les deux cas, le nouveau premier ne figure pas parmi les autres
- * (contrainte en base). L'ordre suit `ordre`, la liste des cases.
+ * On raisonne sur la RÉFÉRENCE — l'état enregistré à la fiche ; au parcours
+ * d'accueil, ce que le dirigeant a déclaré avec les cases — et non sur l'état
+ * de passage. Un ÉCHANGE (le nouveau premier figure parmi les autres de la
+ * référence) rend aux autres le premier type de la référence, et lui seul :
+ * jamais un type de passage. Sinon c'est une correction de saisie, et rien
+ * n'est rendu. Dans tous les cas, le nouveau premier ne figure pas parmi les
+ * autres (contrainte en base). L'ordre suit `ordre`, la liste des cases.
+ *
+ * Exemples, référence N + O : premier mis à M, puis à O → autres [N] (M,
+ * erreur de saisie, n'est pas coché tout seul) ; premier vidé, puis O →
+ * autres [N].
  */
 export function autresApresChangementDuPremier(
   autres: readonly string[],
-  ancien: string,
+  reference: { premier: string; autres: readonly string[] },
   nouveau: string,
   ordre: readonly string[],
 ): string[] {
-  const echange = ancien !== "" && ancien !== nouveau && autres.includes(nouveau);
+  const echange =
+    reference.premier !== "" &&
+    reference.premier !== nouveau &&
+    reference.autres.includes(nouveau);
   const garde = new Set(autres.filter((t) => t !== nouveau));
-  if (echange) garde.add(ancien);
+  if (echange) garde.add(reference.premier);
   return ordre.filter((t) => garde.has(t));
+}
+
+/** Les deux listes ont-elles les mêmes types ? (ouvrir le panneau quand un changement en coche ou décoche) */
+export function memesTypes(a: readonly string[], b: readonly string[]): boolean {
+  return a.length === b.length && a.every((t) => b.includes(t));
 }

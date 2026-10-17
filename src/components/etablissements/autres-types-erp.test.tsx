@@ -80,6 +80,31 @@ describe("fiche établissement : les autres types d'ERP", () => {
     expect(coche(container, "O")).toBe(true);
   });
 
+  it("N + O enregistrés, premier mis à M puis à O : O + N, M n'est pas coché (relecture, C3)", () => {
+    const { container } = fiche("N", ["O"]);
+    premier(container, "M");
+    premier(container, "O");
+    expect(coche(container, "N")).toBe(true);
+    expect(coche(container, "M")).toBe(false);
+  });
+
+  it("N + O enregistrés, premier vidé puis mis à O : O + N (relecture, C3)", () => {
+    const { container } = fiche("N", ["O"]);
+    premier(container, "");
+    premier(container, "O");
+    expect(coche(container, "N")).toBe(true);
+  });
+
+  it("un changement de premier type qui coche une case ouvre le panneau (relecture, C3)", () => {
+    const { container } = fiche("N", ["O"]);
+    const details = container.querySelector("details")!;
+    details.open = false;
+    fireEvent(details, new Event("toggle"));
+    expect(details.open).toBe(false);
+    premier(container, "O");
+    expect(container.querySelector("details")!.open).toBe(true);
+  });
+
   it("décocher le dernier type ne replie pas le panneau (revue du lot 3, C2)", () => {
     // Lié aux valeurs, le panneau se repliait, et le focus restait sur une
     // case devenue invisible.

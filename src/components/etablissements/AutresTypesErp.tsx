@@ -31,6 +31,7 @@ export function AutresTypesErp({
   onChange,
   nom,
   erreur,
+  signalOuverture = 0,
 }: {
   /** Le premier type, déjà choisi au-dessus : il n'est pas proposé ici. */
   typeErp: string;
@@ -38,6 +39,12 @@ export function AutresTypesErp({
   onChange: (valeurs: string[]) => void;
   nom?: string;
   erreur?: string;
+  /**
+   * Incrémenté par l'écran quand un changement du PREMIER type coche ou
+   * décoche une case (revue du lot 3, C3) : le panneau s'ouvre, pour que ce
+   * qui a changé se voie.
+   */
+  signalOuverture?: number;
 }) {
   const proposes = TYPE_ERP.filter((t) => t !== typeErp);
   // Ouvert AU MONTAGE seulement s'il y a déjà des types (revue du lot 3, C2) :
@@ -45,6 +52,13 @@ export function AutresTypesErp({
   // focus restait sur une case devenue invisible. Ensuite, c'est le
   // dirigeant qui l'ouvre ou le ferme.
   const [ouvert, setOuvert] = useState(valeurs.length > 0);
+  // Ajustement pendant le rendu, et non dans un effet : le signal ouvre le
+  // panneau au rendu même où les cases changent.
+  const [signalVu, setSignalVu] = useState(signalOuverture);
+  if (signalOuverture !== signalVu) {
+    setSignalVu(signalOuverture);
+    setOuvert(true);
+  }
   const bascule = (t: string, coche: boolean) =>
     onChange(
       coche

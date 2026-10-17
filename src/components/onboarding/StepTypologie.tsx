@@ -1,12 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import {
   CATEGORIES_ERP,
   TYPE_ERP,
   questionSommeilPosee,
 } from "@/lib/etablissements/schema";
 import { AutresTypesErp } from "@/components/etablissements/AutresTypesErp";
-import { autresApresChangementDuPremier } from "@/lib/etablissements/types-erp-affiches";
+import { autresApresChangementDuPremier, memesTypes } from "@/lib/etablissements/types-erp-affiches";
 import {
   LABEL_CATEGORIE_ERP,
   LABEL_TYPE_ERP,
@@ -52,6 +53,9 @@ export function StepTypologie({
   errors,
   blocage,
 }: StepProps) {
+  // Ouvre le panneau des autres types quand un changement du premier en coche
+  // ou décoche une case (revue du lot 3, C3).
+  const [signalAutres, setSignalAutres] = useState(0);
   /**
    * L'erreur d'un champ : le refus de passage d'étape s'il vise ce champ,
    * sinon celle du serveur.
@@ -143,6 +147,7 @@ export function StepTypologie({
                     estERP: false,
                     typeErp: "",
                     typesErpAutres: [],
+                    typesErpReference: { premier: "", autres: [] },
                     categorieErp: "",
                     // Une réponse sur les locaux à sommeil donnée avant de
                     // décocher l'ERP n'a plus de question : la garder ferait
@@ -185,10 +190,11 @@ export function StepTypologie({
                       // échange garde l'ancien (revue du lot 3, C3).
                       const autres = autresApresChangementDuPremier(
                         state.typesErpAutres,
-                        state.typeErp,
+                        state.typesErpReference,
                         t,
                         TYPE_ERP,
                       );
+                      if (!memesTypes(autres, state.typesErpAutres)) setSignalAutres((n) => n + 1);
                       update({
                         typeErp: t,
                         typesErpAutres: autres,
@@ -227,9 +233,13 @@ export function StepTypologie({
                   <AutresTypesErp
                     typeErp={state.typeErp}
                     valeurs={state.typesErpAutres}
+                    signalOuverture={signalAutres}
                     onChange={(autres) =>
                       update({
                         typesErpAutres: autres,
+                        // Cocher ou décocher, c'est déclarer : la référence
+                        // des échanges suit (revue du lot 3, C3).
+                        typesErpReference: { premier: state.typeErp, autres },
                         // Même règle qu'au changement de type : une réponse
                         // dont la question disparaît ne part pas.
                         ...(questionSommeilPosee({ estERP: true, typeErp: state.typeErp, typesErpAutres: autres })
