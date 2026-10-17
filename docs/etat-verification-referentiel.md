@@ -171,7 +171,7 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 | 2026-08-26 | 26 | 7 % | 26 |
 | 2026-08-27 | 7 | 2 % | 4 |
 | 2026-08-31 | 59 | 16 % | 29 |
-| 2026-09-01 | 118 | 31 % | 73 |
+| 2026-09-01 | 117 | 31 % | 73 |
 | 2026-09-02 | 18 | 5 % | 15 |
 | 2026-09-04 | 18 | 5 % | 5 |
 | 2026-09-20 | 3 | 1 % | 2 |
@@ -180,7 +180,7 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 | 2026-10-07 | 33 | 9 % | 22 |
 | 2026-10-13 | 2 | 1 % | 1 |
 | 2026-10-14 | 29 | 8 % | 12 |
-| 2026-10-16 | 2 | 1 % | 2 |
+| 2026-10-16 | 3 | 1 % | 3 |
 
 378 des 378 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-10-16.
 
@@ -395,7 +395,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `incendie-erp-5-sommeil-consigne-chambres` | incendie | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-10-16 |
 | `incendie-erp-5-sommeil-contrat-entretien-sdi` | incendie | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-27 |
 | `incendie-erp-5-sommeil-plans-affiches` | incendie | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-10-16 |
-| `incendie-erp-5-visite-commission` | incendie | etablissement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-08-26 → 2026-09-01 |
+| `incendie-erp-5-visite-commission` | incendie | etablissement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-08-26 → 2026-10-16 |
 | `incendie-erp-alarme-verification-hebdomadaire` | incendie | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-10-14 |
 | `incendie-erp-baes-annuelle` | incendie | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-01 → 2026-09-27 |
 | `incendie-erp-desenfumage-annuelle` | incendie | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-10-07 |
@@ -556,7 +556,7 @@ refaire pour la contredire.
 | `incendie-erp-ria-annuelle` | fondement | Arrêté du 25 juin 1980, art. MS 73 (appareils et installations fixes) — livre II, établissements des quatre premières catégories | MS 73 | arrete-1980-livre-2 | retenu | 2026-10-07 | api_legifrance | ✓ | ✓ | 1980-08-15 | 1980-08-15 | 5 · première main | ancrée |
 | `incendie-erp-5-visite-commission` | fondement | CCH, art. R. 143-41 (visites périodiques de la commission) | CCH R. 143-41 | cch-registre-securite | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2021-07-01 | 2021-07-01 | 5 · première main | ancrée |
 | `incendie-erp-5-visite-commission` | contexte 1 | Arrêté du 25 juin 1980, art. GE 4 — n'est PAS applicable en 5ᵉ catégorie | GE 4 | arrete-1980-livre-2 | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2015-01-01 | 2015-01-01 | 5 · première main | ancrée |
-| `incendie-erp-5-visite-commission` | contexte 2 | Arrêté du 25 juin 1980, art. PE 37 (ERP de 5ᵉ catégorie avec locaux à sommeil) | PE 37 | arrete-1980-livre-3 | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2004-11-24 | 2004-11-24 | 5 · première main | ancrée |
+| `incendie-erp-5-visite-commission` | contexte 2 | Arrêté du 25 juin 1980, art. PE 37 (ERP de 5ᵉ catégorie avec locaux à sommeil) | PE 37 | arrete-1980-livre-3 | retenu | 2026-10-16 | api_legifrance | ✓ | ✓ | 2004-11-24 | 2004-11-24 | 5 · première main | ancrée |
 | `incendie-erp-5-sommeil-contrat-entretien-sdi` | fondement | Arrêté du 25 juin 1980, art. PE 4 § 1 | PE 4 | arrete-1980-livre-3 | retenu | 2026-09-27 | premiere_main | — | ✓ | 2026-07-01 | 2026-07-01 | 5 · première main | ancrée |
 | `incendie-erp-5-sommeil-consigne-chambres` | fondement | Arrêté du 25 juin 1980, art. PE 33 § 2 | PE 33 | arrete-1980-livre-3 | retenu | 2026-10-16 | api_legifrance | — | ✓ | 2011-11-04 | 2011-11-04 | 5 · première main | ancrée |
 | `incendie-erp-5-sommeil-plans-affiches` | fondement | Arrêté du 25 juin 1980, art. PE 35 | PE 35 | arrete-1980-livre-3 | retenu | 2026-10-16 | api_legifrance | — | ✓ | 1990-08-27 | 1990-08-27 | 5 · première main | ancrée |
