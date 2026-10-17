@@ -70,6 +70,7 @@ import { ageEnMois, EFFECTIF_MAJ_ANNUELLE, type EtatDuerp } from "./duerp";
 import { mentionAConfirmer } from "@/lib/matching/effectif-entreprise";
 import { TIERS_LUI_MEME_OBLIGATOIRE } from "@/lib/prestataires/domaines";
 import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
+import { occupePlaceReservee } from "./place-reservee";
 // Type seul : ce module reste pur, sans base ni horloge.
 import type { CompteParPersonne, Transmissions } from "./transmissions";
 
@@ -578,16 +579,16 @@ export function genererRecommandations(
  * passe devant une urgence datée, et le brief et « Par où commencer » (qui
  * lisent les deux premières) restent tels quels. Le retard évincé n'est pas
  * perdu : le widget compte le reste depuis les compteurs, pas depuis la file.
+ *
+ * Par domaine, pas par `kind` : la santé au travail seule
+ * (`place-reservee.ts`).
  */
 function avecPlaceReservee(
   triees: readonly Recommandation[],
   limite: number,
 ): Recommandation[] {
   const retenues = triees.slice(0, limite);
-  const reservees = triees
-    .slice(limite)
-    .filter((r) => r.kind === "transmission_tiers_obligatoire");
-  if (reservees.length === 0) return retenues;
-  const libres = Math.max(0, limite - reservees.length);
-  return [...retenues.slice(0, libres), ...reservees].slice(0, limite);
+  const reservee = triees.slice(limite).find(occupePlaceReservee);
+  if (!reservee || limite < 1) return retenues;
+  return [...retenues.slice(0, limite - 1), reservee];
 }

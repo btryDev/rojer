@@ -17,6 +17,7 @@ const FAITS: ReponsesFaitsActivite = {
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { supposeUnTiers } from "@/lib/prestataires/domaines";
 import { genererRecommandations, type EntreeRecos } from "./recommandations";
+import { occupePlaceReservee } from "./place-reservee";
 import type { Obligation } from "@/lib/referentiels/conformite/types";
 
 const NOW = new Date("2026-08-28T10:00:00Z");
@@ -908,13 +909,40 @@ describe("le service de santé au travail survit à la troncature (2026-10-18)",
 
   it("quand elle tient dans la file, elle garde son rang naturel", () => {
     // Contre-épreuve : une place réservée qui la pousserait TOUJOURS en
-    // dernier, ou devant, passerait les tests ci-dessus.
-    const recs = genererRecommandations(entree(2), { now: NOW });
+    // dernier, ou devant, passerait les tests ci-dessus. Une carte de
+    // priorité 9 derrière elle est ce qui rend « toujours en dernier »
+    // observable (revue du 2026-10-18 : sans elle, le mutant survivait).
+    const e = entree(2);
+    e.transmissions = {
+      domainesSansPrestataire: [
+        ...e.transmissions.domainesSansPrestataire,
+        { domaine: "electricite", libelle: "Électricité" },
+      ],
+      obligationsSupposantUnePersonne: [],
+    };
+    const recs = genererRecommandations(e, { now: NOW });
     expect(recs.map((r) => r.kind)).toEqual([
       "verif_depassee",
       "verif_depassee",
       "transmission_tiers_obligatoire",
+      "transmission_prestataire",
     ]);
+  });
+
+  it("la place va au domaine santé au travail, pas à tout tiers obligatoire", () => {
+    // Une future entrée de `TIERS_LUI_MEME_OBLIGATOIRE` n'en hérite pas.
+    expect(
+      occupePlaceReservee({
+        kind: "transmission_tiers_obligatoire",
+        cle: "transmission-domaine:sante_travail",
+      }),
+    ).toBe(true);
+    expect(
+      occupePlaceReservee({
+        kind: "transmission_tiers_obligatoire",
+        cle: "transmission-domaine:formation_securite",
+      }),
+    ).toBe(false);
   });
 
   it("la place n'est réservée qu'à elle : un domaine technique reste coupé", () => {

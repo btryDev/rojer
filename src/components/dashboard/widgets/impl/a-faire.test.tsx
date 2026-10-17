@@ -114,5 +114,33 @@ describe("bloc « À faire » — aucun service de santé au travail, six retard
     // Le retard évincé de la file n'est pas perdu : le pied le compte
     // (six retards, quatre affichés).
     expect(texte).toContain("2 autres en retard");
+    // Le sous-titre ne prétend plus que les cinq cartes sont « les cinq plus
+    // urgentes » : la dernière est la place réservée.
+    expect(texte).toContain("Les plus urgentes, puis le service de santé au travail.");
+    expect(texte).not.toContain("Les cinq plus urgentes");
+  });
+
+  it("sans place réservée, le sous-titre reste « les cinq plus urgentes »", () => {
+    const retards = Array.from({ length: 5 }, (_, i) => ({
+      kind: "verif_depassee",
+      cle: `verif-depassee:v${i}`,
+      titre: `Vérification ${i}`,
+      href: `/etablissements/etab-1/verifications/v${i}`,
+      priorite: 1,
+      date: new Date(Date.UTC(2026, 5, 1 + i, 12)),
+    }));
+    const { container } = render(
+      <BlocAFaire
+        bundle={
+          {
+            etablissementId: "etab-1",
+            aujourdhui: AUJOURDHUI,
+            dashboard: { recommandations: retards },
+            echeances: { sous30j: { total: 0 }, retards: { total: 6 } },
+          } as unknown as DashboardBundle
+        }
+      />,
+    );
+    expect(container.textContent).toContain("Les cinq plus urgentes");
   });
 });
