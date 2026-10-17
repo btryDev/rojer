@@ -62,10 +62,14 @@ import type { Realisateur } from "@/lib/referentiels/types-communs";
  * choix est **écrit**, pas déduit d'une absence.
  *
  * Ce marqueur ne relâche aucune garde : `supposeUnTiers()` ne déclenche que
- * lorsque TOUS les réalisateurs d'une obligation sont des tiers, donc un
+ * lorsque TOUS les réalisateurs d'une obligation sont des tiers, ~~donc un
  * domaine réalisé par l'exploitant ne fait de toute façon jamais parler la
- * règle. Le marqueur ne change pas le comportement — il rend la raison
- * lisible, ce qu'un `[]` ne faisait pas.
+ * règle~~ [2026-10-17 : faux depuis `appelleUnTiers` — l'obligation dont
+ * l'objet est d'avoir un tiers (`TIERS_LUI_MEME_OBLIGATOIRE`) fait parler la
+ * règle bien que l'exploitant la réalise ; son domaine n'est jamais
+ * `aucun_tiers_attendu`, ce que `domaines.test.ts` tient]. Le marqueur ne
+ * change pas le comportement — il rend la raison lisible, ce qu'un `[]` ne
+ * faisait pas.
  *
  * ⚠ Il ne s'emploie **que** pour le cas 2. Un domaine dont le texte appelle un
  * tiers que l'enum `DomainePrestataire` ne sait pas nommer doit recevoir une

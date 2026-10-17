@@ -81,13 +81,14 @@ describe("correspondance domaine d'obligation → domaine de prestataire", () =>
     //
     // L'invariant se lit sur le référentiel livré, pas sur des cas construits :
     // un domaine marqué ne doit contenir AUCUNE obligation pour laquelle
-    // `supposeUnTiers()` est vrai. Le jour où quelqu'un ajoute au lot 8 une
+    // ~~`supposeUnTiers()`~~ `appelleUnTiers()` est vrai [2026-10-17 : la
+    // seule lecture de la règle, rattachement compris]. Le jour où quelqu'un ajoute au lot 8 une
     // obligation à réalisateur tiers dans `information_travailleurs`, ce test
     // tombe et le marqueur doit céder la place à une vraie valeur d'enum — au
     // besoin nouvelle, avec sa migration.
     const abus = obligationsConformite
       .filter((o) => DOMAINES_PRESTATAIRE_ATTENDUS[o.domaine] === AUCUN_TIERS_ATTENDU)
-      .filter((o) => supposeUnTiers(o))
+      .filter((o) => appelleUnTiers(o))
       .map((o) => `${o.id} (${o.domaine}) → ${o.realisateurs.join(", ")}`);
 
     expect(
