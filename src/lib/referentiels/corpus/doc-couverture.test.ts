@@ -184,6 +184,46 @@ describe(`${CHEMIN} — la liste ne se périme pas en silence`, () => {
     expect([...auSeptieme, ...auNeuvieme].sort()).toEqual(duCorpus);
   });
 
+  it("2026-10-16 — le § 9 ne reçoit que les manques de la lecture des chapitres de types", () => {
+    // Revue indépendante du 2026-10-17 : sans borne, le § 9 servait de
+    // fourre-tout. Déplacer `R. 4224-3` du § 7 au § 9 (mutation M2), ou y
+    // inscrire une manquante d'un autre corpus (M3), laissait tout vert. Une
+    // référence n'y entre que si elle vient du titre II, du chapitre V du
+    // livre III (PU) ou des huit articles du titre Ier ouverts par les renvois,
+    // ET si elle a été lue le 2026-10-16 ou après. Le § 7 et le § 9 restent
+    // disjoints (test précédent).
+    const { ouverts } = decoupe(documentCouverture());
+    expect(ouverts, `${CHEMIN} n'a plus de section « ${OUVERTS_1016} ».`).not.toBe("");
+    const DU_TITRE_IER = new Set([
+      "MS 41",
+      "MS 58 § 3 et § 4 — contrat d'entretien de la détection, annexé au registre",
+      "EC 13 — notice annexée au registre et entretiens consignés",
+      "MS 70 § 5 — modalités d'appel des sapeurs-pompiers affichées",
+      "GE 5",
+      "MS 46 § 3 — convention avec un organisateur, annexée au registre",
+      "EL 23 § 2 — vérification des installations électriques semi-permanentes",
+      "CO 48 § 3 e) — contrat d'entretien des portes automatiques",
+    ]);
+    const admise = (corpus: string, ref: string) =>
+      corpus === "arrete-1980-livre-2-titre-2" ||
+      (corpus === "arrete-1980-livre-3" && ref.startsWith("PU ")) ||
+      (corpus === "arrete-1980-livre-2" && DU_TITRE_IER.has(ref));
+    const horsBorne = refsDuTableau(ouverts).filter((ref) => {
+      const origines = CORPUS.flatMap((c) =>
+        c.articles
+          .filter((a) => a.ref === ref && a.statut === "obligation_manquante")
+          .map((a) => ({ corpus: c.id, luLe: a.luLe ?? "" })),
+      );
+      return !origines.some((o) => admise(o.corpus, ref) && o.luLe >= "2026-10-16");
+    });
+    expect(
+      horsBorne,
+      `Le § 9 de ${CHEMIN} ne reçoit que les manques nés de la lecture des ` +
+        `chapitres de types (titre II, PU, huit articles du titre Ier), lus le ` +
+        `2026-10-16 ou après. Hors borne : ${horsBorne.join(", ")}.`,
+    ).toEqual([]);
+  });
+
   it("2026-10-13 — chaque ligne du § 8 a reçu un sort que le corpus porte", () => {
     // Le § 8 dit, ligne par ligne, ce que la décision du 2026-10-13 a fait de
     // chaque manque. La garde lit le sort dans le CORPUS, pas dans la colonne
