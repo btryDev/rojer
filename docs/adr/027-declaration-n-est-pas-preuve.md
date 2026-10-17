@@ -342,12 +342,29 @@ pas à informer ; le registre de sécurité sert d'abord aux installations qu'il
 consigne. Quand deux familles paraissent convenir, c'est cette question qui
 tranche, et non le domaine du texte.
 
-À l'écran, au commit 6595b2b3 : **58 obligations** rangées (relevé de l'agent
-structure). Le mouvement : 51 dans la table du plan, mesurée en appelant le
+À l'écran, au commit 6595b2b3 : ~~**58 obligations** rangées (relevé de l'agent
+structure)~~. Le mouvement : 51 dans la table du plan, mesurée en appelant le
 moteur sur 517309db, + 7 états permanents entrés avec les lots « catégories 1
 à 4 » et défibrillateur, rangés par 6595b2b3 = 58. Ce chiffre est le nombre
 d'obligations de l'écran au référentiel, pas le nombre de lignes d'un
 dossier, qui reste celui que le moteur lui rend.
+
+[2026-10-17, revue indépendante] **57 obligations à l'écran** : 58 − 1 = 57,
+remesuré en appelant `obligationsConformite.filter(figureSurLEcranEnPlace)`
+sur `lot/etats-permanents-usage`. La sortante est
+`incendie-travail-chiffons-impregnes-recipients-clos`, **au niveau audit**
+(ADR-042) : la porte du moteur ne la rend jamais, l'écran ne l'a donc jamais
+affichée. `figureSurLEcranEnPlace` ne lisait pas le niveau audit, et le
+relevé des 58 la comptait. Elle le lit désormais (`modeSurLEcranEnPlace`,
+`regle.ts`), et la ligne porte `usageEcran: null`.
+
+Trois lignes changent de famille le même jour, par la règle de frontière :
+`elec-travail-carnet-prescriptions` (remis au travailleur, `R. 4544-10`) et
+`stockage-dangereux-fiches-donnees` (accès des travailleurs aux fiches,
+`R. 4412-38` 2°) passent à *Informer et former* ;
+`signalisation-stockage-substances-dangereuses` (signalisation d'un risque au
+poste, comme `signalisation-etablissement-risques-residuels`) passe à
+*Conditions de travail*.
 
 ### 8. Une donnée d'écran vit dans le référentiel, et c'est voulu
 
@@ -369,12 +386,28 @@ Le type admet `null` et ne sait donc pas dire qu'une ligne de l'écran *doit*
 être rangée. `familles.test.ts` tient le reste, sur ce que `regle.ts` dit de
 chaque obligation et sans liste recopiée :
 
-- `usageEcran` est non nul **si et seulement si** `figureSurLEcranEnPlace` ;
-- la sous-catégorie appartient à sa famille (`ORDRE_SOUS_CATEGORIES`).
+- `usageEcran` est non nul **si et seulement si** `figureSurLEcranEnPlace`
+  (qui écarte le niveau audit depuis le 2026-10-17, comme la porte du
+  moteur) ;
+- la sous-catégorie appartient à sa famille (`ORDRE_SOUS_CATEGORIES`) ;
+- [2026-10-17] une prescription ne peut pas faire ENTRER une ligne à
+  l'écran : aucun rythme sans échéance n'est « plus strict »
+  (`estPeriodicitePlusStricte`), et `prescriptionRenforce` refuse `autre`.
+  Sans cet invariant, le relevé — qui lit le référentiel sans prescription —
+  ne verrait pas une ligne entrée par un seul dossier.
 
-Il n'y a **pas de groupe « Autres »**. Une ligne de l'écran sans rangement
+~~Il n'y a **pas de groupe « Autres »**. Une ligne de l'écran sans rangement
 fait échouer ce test, et `etatsPermanentsDuDossier` lève plutôt que de la
-cacher ou de la ranger au hasard (`queries.ts`).
+cacher ou de la ranger au hasard (`queries.ts`).~~ [2026-10-17, revue
+indépendante : lever faisait tomber le score du tableau de bord
+(`compterEtatsPermanents`), le PDF et le widget, qui passent tous par
+`listerEtatsPermanents`, et `build` ne lance pas les tests.] Une ligne de
+l'écran sans rangement fait toujours échouer `familles.test.ts` : c'est le
+garde-fou. À l'écran, elle tombe dans un **repli d'affichage**, « Autres
+obligations », en dernier, sans sous-catégorie, comptée comme les autres
+(`familles.ts`, `queries.ts`). `autres` n'est pas un `GroupeUsage` : le
+référentiel ne peut pas le choisir, et le repli ne recrée donc pas la liste
+de courses — il ne recueille que l'oubli, visible au lieu de bloquant.
 
 **Le champ n'entre pas dans `empreinteReferentiel()`**, comme `faitGenerateur`
 (ADR-037) : il ne change ni le nombre de lignes de calendrier ni leurs dates,
@@ -405,6 +438,16 @@ une affirmation de plus à l'écran ; il ne peut pas en porter une autre que
 celle que le corollaire de la décision 2 autorise. Une phrase propre aux
 familles aurait été une seconde rédaction de la même chose, et ce dépôt sait
 qu'elles divergent à la première correction.
+
+[2026-10-17, revue indépendante] Le **sommaire** rendait, lui, un compteur
+nu — « 3 sur 8 » —, qui ne disait pas qui affirme. Il porte désormais
+`phraseSommaire` (`phrases.ts`) : plus courte que `phraseCompteur`, faute de
+place, mais avec les deux mêmes sources et les mêmes mots — « déclarés par
+vous », « d'après les titres » —, testée à côté d'elle (`phrases.test.ts`).
+C'est la seconde rédaction que le paragraphe précédent redoute ; elle est
+admise parce que la première ne tient pas dans un sommaire, et le test qui
+exige l'une des deux sources sur chaque branche est ce qui l'empêche de
+diverger sur le fond.
 
 ### 11. Rien ne se replie, ni à la main ni tout seul
 
