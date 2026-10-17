@@ -90,6 +90,18 @@ release (lots lancés le même jour) ; **n° 1 (gaz sans cuisine) et n° 5
    d'équipement du 2026-10-17 sont concernées (portail, rapport annuel
    d'ascenseur, révision en atelier de l'extincteur hors ERP), comme les deux
    EPI du 2026-10-08. Remède non décidé.
+9. **[2026-10-17, dette écrite, non corrigée] `legifrance:verifier` refuse une
+   citation exacte à ses bords** (`lot/ref-a-corpus-titre-1`, PU 4, relevé à
+   la revue ; à corriger dans un lot à part, décision de c6). La normalisation
+   (`src/lib/legifrance/normalisation.ts`, règle 7 et fin de texte) ramène un
+   numéro d'élément « 1. » à « 1° » et retire le point final dans le texte
+   OFFICIEL, mais pas au début ni à la fin d'une CITATION : une citation qui
+   commence par « 1. » ou finit par un point final de l'article est déclarée
+   « écart de citation » alors qu'elle est la sous-chaîne exacte du texte de
+   l'API. Contournement appliqué à PU 4 (`arrete-1980-livre-3.ts`) : citation
+   recoupée à l'intérieur du texte, l'ancienne rayée en commentaire. Remède :
+   normaliser les deux côtés de la même façon, avec un test sur PU 4 tel
+   qu'il était (« 1. Dans certains … ferme-porte. »).
 
 ### Décisions attendues
 
