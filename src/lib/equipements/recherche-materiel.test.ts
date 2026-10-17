@@ -69,6 +69,13 @@ describe("la recherche de matériel (2026-10-14)", () => {
     expect(normaliser("(Motorisé)")).toBe("motorise");
   });
 
+  it("tirets typographiques et trait d'union insécable ramenés à l'espace (suites de B)", () => {
+    expect(normaliser("chauffe\u2011eau")).toBe("chauffe eau");
+    expect(normaliser("chauffe–eau")).toBe("chauffe eau");
+    expect(normaliser("chauffe—eau")).toBe("chauffe eau");
+    expect(cats("chauffe\u2011eau gaz")).toContain("INSTALLATION_GAZ");
+  });
+
   it("un mot de la saisie commence un mot du terme, jamais son milieu (revue du 2026-10-17)", () => {
     expect(cles("spa")).not.toContain("transpalette");
     expect(cles("spa")).toContain("bain_a_remous");

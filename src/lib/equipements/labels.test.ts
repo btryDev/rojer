@@ -6,7 +6,8 @@ import {
 import { AIDE_GROUPE_ELECTROGENE, DESCRIPTION_CATEGORIE } from "./labels";
 import { CHAMPS_TRI_ETAT, VALEURS_TRI_ETAT } from "./schema";
 import { EXPLICATION_NIVEAU_AUDIT, estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
-import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
+import type { CategorieEquipement, Periodicite } from "@/lib/referentiels/types-communs";
+import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 
 /**
  * L'aide de la question « groupe électrogène » dit ce que chaque réponse
@@ -137,16 +138,38 @@ describe("aide de l'installation frigorifique : la chambre froide (2026-10-14)",
 // audit, sans ligne servie du même rythme sur la catégorie, doit dire qu'elle
 // n'est pas suivie.
 
-/** Les mots par lesquels une aide dit un rythme. Borne basse, pas une liste close. */
-const MOTS_DU_RYTHME: Partial<Record<string, RegExp>> = {
-  annuelle: /douze mois|une fois par an|annuel|chaque année/i,
-  semestrielle: /six mois|semestriel/i,
-  trimestrielle: /trois mois|trimestriel/i,
-  mensuelle: /chaque mois|mensuel/i,
-  quinquennale: /cinq ans|quinquennal/i,
-  decennale: /dix ans|décennal/i,
+/**
+ * Les mots par lesquels une aide dit un rythme. Borne basse, pas une liste
+ * close : un rythme écrit autrement passe. [Suites de B, 2026-10-17 : « tous
+ * les ans », les chiffres, biennal, triennal, hebdomadaire ajoutés.]
+ */
+const MOTS_DU_RYTHME: Partial<Record<Periodicite, RegExp>> = {
+  hebdomadaire: /chaque semaine|hebdomadaire|\b1 fois par semaine/i,
+  mensuelle: /chaque mois|tous les mois|mensuel/i,
+  trimestrielle: /trois mois|\b3 mois|trimestriel/i,
+  semestrielle: /six mois|\b6 mois|semestriel/i,
+  annuelle: /douze mois|\b12 mois|une fois par an|tous les ans|\b(un|1) an\b|annuel|chaque année/i,
+  biennale: /deux ans|\b2 ans|biennal/i,
+  triennale: /trois ans|\b3 ans|triennal/i,
+  quadriennale: /quatre ans|\b4 ans|quadriennal/i,
+  quinquennale: /cinq ans|\b5 ans|quinquennal/i,
+  decennale: /dix ans|\b10 ans|décennal/i,
 };
 
+/**
+ * Le rythme d'une ligne audit annoncé par une aide qui ne dit pas le niveau
+ * audit. Le rythme est celui que la ligne date, `periodiciteEffective` —
+ * `rythmeRetenu` compris (la révision décennale de l'extincteur hors ERP n'a
+ * que `autre` pour texte, et dix ans par la norme).
+ *
+ * ~~Exemptée si une ligne servie de même rythme existe sur la catégorie~~
+ * [suites de B : l'exemption couvrait la décennale de l'extincteur par sa
+ * jumelle ERP (MS 38 § 4), alors qu'hors ERP elle n'est pas suivie. Une
+ * exemption « par objet » demanderait de savoir que deux lignes visent le même
+ * acte pour les mêmes établissements, ce que le modèle ne dit pas : elle n'est
+ * pas écrite. Une aide qui annonce le rythme d'une ligne audit dit le niveau
+ * audit, même si une ligne sœur est servie.]
+ */
 function rythmesAuditNonDits(aides: Partial<Record<CategorieEquipement, string>>): string[] {
   const parCat = (c: string) =>
     obligationsConformite.filter((o) => ((o.categoriesEquipement ?? []) as readonly string[]).includes(c));
@@ -154,10 +177,8 @@ function rythmesAuditNonDits(aides: Partial<Record<CategorieEquipement, string>>
     parCat(c)
       .filter((o) => estNiveauAudit(o))
       .filter((o) => {
-        const mots = MOTS_DU_RYTHME[o.periodicite];
-        if (!mots || !mots.test(aide ?? "")) return false;
-        const servieDuMemeRythme = parCat(c).some((s) => !estNiveauAudit(s) && s.periodicite === o.periodicite);
-        return !servieDuMemeRythme && !(aide ?? "").includes(EXPLICATION_NIVEAU_AUDIT);
+        const mots = MOTS_DU_RYTHME[periodiciteEffective(o)];
+        return Boolean(mots?.test(aide ?? "")) && !(aide ?? "").includes(EXPLICATION_NIVEAU_AUDIT);
       })
       .map((o) => `${c} → ${o.id}`),
   );
@@ -171,6 +192,14 @@ describe("une aide ne promet pas le rythme d'une ligne au niveau audit (2026-10-
   it("borne basse : les deux catégories en cause disent bien le niveau audit", () => {
     expect(DESCRIPTION_CATEGORIE.EPI_RESPIRATOIRE).toContain(EXPLICATION_NIVEAU_AUDIT);
     expect(DESCRIPTION_CATEGORIE.EPI_GILET_SAUVETAGE).toContain(EXPLICATION_NIVEAU_AUDIT);
+  });
+
+  it("cassure : l'aide de l'extincteur qui annonce la révision tous les dix ans sans le dire est vue (rythme retenu)", () => {
+    const casse = {
+      ...DESCRIPTION_CATEGORIE,
+      EXTINCTEUR: `${DESCRIPTION_CATEGORIE.EXTINCTEUR} Révision en atelier tous les dix ans.`,
+    };
+    expect(rythmesAuditNonDits(casse)).toEqual(["EXTINCTEUR → incendie-travail-extincteurs-revision-atelier-decennale"]);
   });
 
   it("cassure : l'aide de l'appareil respiratoire sans la mention est vue", () => {
