@@ -282,7 +282,7 @@ export const ANNONCES: Readonly<Record<string, Annonce>> = {
   "R. 4463-8": {
     domaine: "plan_prevention",
     condition: "travail",
-    sujet: nonPorte("la prise en compte des épisodes de chaleur intense dans le plan de prévention"),
+    sujet: nonPorte("la prise en compte des épisodes de chaleur intense"),
     intitule: "Prise en compte, dans le plan de prévention, des risques liés aux épisodes de chaleur intense",
   },
   "R. 4512-1": { domaine: "plan_prevention", condition: "travail", sujet: nonPorte("les nouveaux sous-traitants recrutés après le début de l'intervention") },

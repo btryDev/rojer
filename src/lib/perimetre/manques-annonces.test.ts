@@ -455,6 +455,8 @@ describe("2026-10-17, ADR-046 : la page dit une phrase par domaine, faite des su
         const mots = d.phrasePage.split(/\s+/).length;
         expect(mots, `${d.cle} : ${mots} mots`).toBeLessThanOrEqual(LIMITE_MOTS[d.cle] ?? 55);
         expect(d.phrasePage, d.cle).not.toMatch(/silos|meunerie|broyage|ponçage/i);
+        // Relecture du 2026-10-17 : « dans le plan de prévention » deux fois.
+        expect((d.phrasePage.match(/dans le plan de prévention/g) ?? []).length, d.cle).toBeLessThanOrEqual(1);
       }
     }
   });

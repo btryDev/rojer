@@ -84,6 +84,14 @@ describe("les cinq familles", () => {
   it("les ballons : gonflés avec un gaz inflammable (M 36), pas « au gaz »", () => {
     const conduite = FAMILLES_NON_GEREES.find((f) => f.cle === "regles_de_conduite")!;
     expect(conduite.phrase).toContain("gaz inflammable");
+    // Relecture du 2026-10-17 : « l'interdiction » n'est dit qu'une fois.
+    expect(conduite.phrase.match(/l'interdiction/g)).toHaveLength(1);
+  });
+
+  it("la famille équipements ne se répète pas : « ne conçoit pas », puis « leur choix »", () => {
+    const equipements = FAMILLES_NON_GEREES.find((f) => f.cle === "equipements_a_prevoir")!;
+    expect(equipements.phrase).not.toMatch(/conception/);
+    expect(equipements.phrase).toContain("leur choix et leur dimensionnement");
   });
 
   it("ne laisse pas croire que le suivi renforcé n'est pas suivi", () => {

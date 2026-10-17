@@ -71,8 +71,8 @@ const CONSTRUCTION = [
 ] as const;
 
 const CONDUITE = [
-  nonPorte("l'interdiction des bougies"),
-  nonPorte("l'interdiction des ballons gonflés avec un gaz inflammable"),
+  nonPorte("des bougies"),
+  nonPorte("des ballons gonflés avec un gaz inflammable"),
 ] as const;
 
 // Le motif de l'exclusion `risque_specialise` (`corpus/perimetre.ts`), élément
@@ -105,12 +105,12 @@ export const FAMILLES_NON_GEREES: readonly FamilleNonGeree[] = [
   {
     cle: "equipements_a_prevoir",
     liste: [],
-    phrase: `Rojer ne conçoit pas vos installations de sécurité : ${nonPorte("leur conception et leur dimensionnement")} relèvent de l'installateur et, pour un établissement recevant du public, de la commission de sécurité ; Rojer part des équipements que vous déclarez.`,
+    phrase: `Rojer ne conçoit pas vos installations de sécurité : ${nonPorte("leur choix et leur dimensionnement")} relèvent de l'installateur et, pour un établissement recevant du public, de la commission de sécurité ; Rojer part des équipements que vous déclarez.`,
   },
   {
     cle: "regles_de_conduite",
     liste: CONDUITE,
-    phrase: `Rojer ne suit pas ${nonPorte("les interdictions et les règles de comportement qui ne demandent aucun geste daté")}, comme ${enumerer(CONDUITE, "ou")} dans certains établissements recevant du public.`,
+    phrase: `Rojer ne suit pas ${nonPorte("les interdictions et les règles de comportement qui ne demandent aucun geste daté")}, comme l'interdiction ${enumerer(CONDUITE, "ou")} dans certains établissements recevant du public.`,
   },
   {
     cle: "risques_specialises",
