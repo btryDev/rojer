@@ -199,6 +199,14 @@ describe.each(Object.keys(DOSSIERS) as (keyof typeof DOSSIERS)[])(
       }
     });
 
+    it("chaque section visée par le sommaire prend le focus au saut d'ancre (tabIndex -1)", async () => {
+      const d = await lire(nom);
+      const { container } = rendre(d);
+      const sections = [...container.querySelectorAll("section[id]")];
+      expect(sections.length).toBe(d.familles.length);
+      for (const s of sections) expect(s.getAttribute("tabindex"), s.id).toBe("-1");
+    });
+
     it("à 375 px, chaque entrée du sommaire passe à la ligne plutôt que de serrer deux colonnes", async () => {
       // jsdom ne met rien en page : on vérifie la classe qui autorise le
       // retour, comme les tests voisins vérifient `carte-board`.

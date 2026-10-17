@@ -118,6 +118,11 @@ export function SectionsParUsage({
           key={f.groupe}
           id={ancreFamille(f.groupe)}
           aria-labelledby={`${ancreFamille(f.groupe)}-titre`}
+          // `tabIndex={-1}` (2026-10-17, revue de c6) : la section est la
+          // cible d'une ancre du sommaire. Sans lui, le saut déplace la vue
+          // mais pas le focus, et la touche Tab repart du sommaire — un
+          // lecteur au clavier ou d'écran ne suit pas le lien qu'il a suivi.
+          tabIndex={-1}
           className="flex scroll-mt-8 flex-col gap-4"
         >
           <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
