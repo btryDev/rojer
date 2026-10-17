@@ -247,6 +247,20 @@ describe("EquipementForm : la recherche de matériel (2026-10-14)", () => {
     expect(c.querySelector("#categorie-aide")!.textContent).toContain("Rojer ne suit pas ce matériel.");
   });
 
+  it("après une perte du focus, l'encart revient ; pendant la recherche, aucun aria-describedby orphelin (suites de B)", () => {
+    const c = rendre();
+    chercher(c, "escabeau");
+    fireEvent.mouseDown(listeOptions()[0]);
+    chercher(c, "pal");
+    const decrit = champ(c).getAttribute("aria-describedby") ?? "";
+    for (const id of decrit.split(" ").filter(Boolean)) {
+      expect(c.querySelector(`#${id}`), id).not.toBeNull();
+    }
+    fireEvent.blur(champ(c));
+    expect(c.querySelector("#categorie-aide")!.textContent).toContain("Rojer ne suit pas ce matériel.");
+    expect(champ(c).getAttribute("aria-describedby") ?? "").toContain("categorie-aide");
+  });
+
   it("« adoucisseur » mène à une option qui le nomme (contrôle visuel du 2026-10-17)", () => {
     const c = rendre();
     chercher(c, "adoucisseur");

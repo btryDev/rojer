@@ -114,8 +114,10 @@ export function normaliser(s: string): string {
     .normalize("NFD")
     .replace(/\p{Diacritic}/gu, "")
     .toLowerCase()
-    .replace(/[’ʼ'\-]/g, " ")
-    .replace(/[()[\]{}.,;:!?«»"…/]/g, " ")
+    // ~~`/[’ʼ'\-]/` puis une liste de ponctuation~~ — 2026-10-17, suites de
+    // B : tout ce qui n'est ni lettre ni chiffre, tirets typographiques et
+    // trait d'union insécable (U+2011, « chauffe‑eau ») compris.
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
     .replace(/\s+/g, " ")
     .trim();
 }

@@ -352,7 +352,12 @@ export function EquipementForm({
               // l'aide — et seulement les éléments présents sont cités.
               decritPar={
                 [
-                  entreeMateriel || DESCRIPTION_CATEGORIE[categorie] ? "categorie-aide" : null,
+                  // Suites de B : « categorie-aide » n'est cité que s'il est
+                  // monté — l'encart hors recherche, sinon l'aide de la
+                  // catégorie si elle en a une (la même condition que le rendu).
+                  (entreeMateriel && !rechercheEnCours) || DESCRIPTION_CATEGORIE[categorie]
+                    ? "categorie-aide"
+                    : null,
                   erreurCategorie ? "categorie-erreur" : null,
                 ]
                   .filter(Boolean)

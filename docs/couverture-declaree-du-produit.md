@@ -850,9 +850,12 @@ quand on cherche le matériel au formulaire d'équipement.
   `sans_objet`) ; un restaurant, un commerce ou un hôtel n'y est pas soumis.
   Entrée « Cuve de fioul ou de gazole ».
 - **Dispositifs de traitement de l'eau** (`csp-eau-potable`, revue du même
-  jour) — `R. 1321-61` : vérification et entretien sans rythme écrit, l'arrêté
-  d'application ne visant que les dispositifs de protection. Entrée
-  « Réservoir ou bâche d'eau, clapet anti-retour » (adoucisseur).
+  jour) — `R. 1321-61` : vérification et entretien ~~sans rythme écrit~~, le
+  renvoi de l'article à un arrêté ne visant que les dispositifs de protection.
+  Entrée ~~« Réservoir ou bâche d'eau, clapet anti-retour » (adoucisseur)~~
+  « Réservoir ou bâche d'eau, clapet anti-retour, adoucisseur » [2026-10-17,
+  libellé élargi au contrôle visuel de B ; « sans rythme écrit » rayé : le
+  dépôt ne l'a pas établi].
 
 ### Plan de prévention, information de l'inspection du travail — 1 article (2026-09-27)
 
