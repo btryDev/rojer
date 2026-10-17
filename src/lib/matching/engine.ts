@@ -1231,10 +1231,34 @@ function joursDuRythme(o: Obligation): number {
   return PERIODICITE_EN_JOURS[periodiciteEffective(o)] ?? Number.POSITIVE_INFINITY;
 }
 
+/** Le membre retient-il « à confirmer » — une question sans réponse ou un effectif à confirmer ? */
+function estAConfirmer(a: ObligationApplicable): boolean {
+  return (a.sansReponse?.length ?? 0) > 0 || a.effectifAConfirmer !== undefined;
+}
+
 /**
- * Un seul membre par groupe exclusif (ADR-045) : le plus exigeant — le rythme
- * le plus court, un rythme l'emportant sur aucun ; à égalité, le premier du
- * référentiel. Les autres sont retirés.
+ * `a` l'emporte-t-il sur `b` dans un groupe exclusif ? Le rythme le plus court
+ * d'abord ; à rythme égal, le membre ÉTABLI sur celui que retient le silence
+ * — même règle que la composition du registre (`registre/composition.ts` :
+ * « la prudente ne sert que si aucune autre ne tient ») ; à égalité encore,
+ * le premier du référentiel, que l'ordre d'appel garde.
+ */
+function lEmporte(a: ObligationApplicable, b: ObligationApplicable): boolean {
+  const ja = joursDuRythme(a.obligation);
+  const jb = joursDuRythme(b.obligation);
+  if (ja !== jb) return ja < jb;
+  return estAConfirmer(b) && !estAConfirmer(a);
+}
+
+/**
+ * Un seul membre par groupe exclusif (ADR-045) : le plus exigeant, au sens de
+ * `lEmporte`. Les autres sont retirés.
+ *
+ * Deux égalités de rythme existent aujourd'hui, toutes deux dans le groupe de
+ * la 4ᵉ catégorie (un type R avec un type à trois ans, ou R sans hébergement
+ * avec un type à cinq ans). Celle qui compte est la première quand le sommeil
+ * n'est pas renseigné : la ligne R « avec hébergement », retenue « à
+ * confirmer », ne doit pas évincer la triennale établie par l'autre type.
  *
  * Pour un établissement à un seul type, les typologies de chaque groupe
  * forment une partition : il n'en sort jamais qu'un, et cette fonction ne
@@ -1248,7 +1272,7 @@ function resoudreGroupesExclusifs(
     const g = a.obligation.groupeExclusif;
     if (g === undefined) continue;
     const deja = retenu.get(g);
-    if (deja === undefined || joursDuRythme(a.obligation) < joursDuRythme(deja.obligation)) {
+    if (deja === undefined || lEmporte(a, deja)) {
       retenu.set(g, a);
     }
   }

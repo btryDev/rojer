@@ -8,7 +8,9 @@
 // `matchTypologie` réduit au premier type (la borne basse, la permutation,
 // l'hôtel-restaurant de 5ᵉ et le sommeil rougissent — pas l'hôtel O + N + L,
 // que O, déclaré en premier, sert déjà en entier) ; `groupeExclusif`
-// retiré d'une ligne à `typesExclus` (le test de structure rougit).
+// retiré d'une ligne à `typesExclus` (le test de structure rougit) ; le
+// départage à rythme égal réduit à l'ordre du référentiel inversé (le membre
+// établi rougit).
 import { describe, expect, it } from "vitest";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { porteurDe } from "@/lib/referentiels/conformite/types";
@@ -184,6 +186,21 @@ describe("plusieurs types : l'union, puis un membre par groupe", () => {
     expect(sortie.has("incendie-erp-5-instruction-personnel")).toBe(false);
     // Le sommeil se lit sur l'ensemble des types : O le rend plausible.
     expect(sortie.has("incendie-erp-5-visite-commission")).toBe(true);
+  });
+
+  it("à rythme égal, le membre établi l'emporte sur celui que retient le silence", () => {
+    // R + O de 4ᵉ, sommeil non renseigné : R seul donne la triennale « avec
+    // hébergement » à confirmer, O la triennale établie. Les deux sont à trois
+    // ans ; la ligne servie ne doit pas porter la question sans réponse.
+    for (const ts of [["R", "O"], ["O", "R"], ["R", "J"]] as TypeErp[][]) {
+      const visites = determineObligationsApplicables(erp(ts, "N4", null), []).filter(
+        (a) => a.obligation.groupeExclusif === "ge4-visite-cat4",
+      );
+      expect(visites.map((a) => a.obligation.id), ts.join("+")).toEqual([
+        "incendie-erp-visite-commission-cat4-triennale",
+      ]);
+      expect(visites[0].sansReponse ?? [], ts.join("+")).toEqual([]);
+    }
   });
 
   it("le sommeil n'est pas plausible pour un restaurant seul, il l'est dès qu'O est déclaré", () => {

@@ -84,7 +84,13 @@ pas disponible dans la session).
    3 525 combinaisons reçoivent deux membres d'une même paire. Les douze
    lignes concernées portent `groupeExclusif` ; quand plusieurs membres d'un
    groupe sortent, **le plus exigeant l'emporte** — le rythme le plus court,
-   un rythme l'emportant sur `autre`. Cinq groupes :
+   un rythme l'emportant sur `autre` ; à rythme égal, le membre **établi**
+   l'emporte sur celui que retient le silence (« à confirmer »), comme dans la
+   composition du registre ; à égalité encore, le premier du référentiel.
+   Les deux égalités connues sont dans le groupe de la 4ᵉ catégorie : un type R
+   avec un type à trois ans (sommeil non renseigné : la ligne R « avec
+   hébergement », à confirmer, cède la place à la triennale établie), et R
+   sans hébergement avec un type à cinq ans (deux quinquennales établies). Cinq groupes :
    - les visites de commission de GE 4 § 1, catégories 1-2, 3 et 4 (2, 2 et 4
      lignes) ;
    - PE 4 § 2 / PO 1 § 3 (entretien des installations techniques, 5ᵉ) ;
