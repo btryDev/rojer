@@ -305,6 +305,7 @@ describe("contrôle visuel de c6 (2026-10-17)", () => {
     expect(l).toContain("en présence d'une détection");
     expect(l).toContain("(repère : SSI de catégorie A ou B)");
     expect(l).not.toContain("automatique");
-    expect(l.length).toBeLessThanOrEqual(130);
+    // Le libellé décidé par c6 fait 132 caractères ; l'ancien, environ 200.
+    expect(l.length).toBeLessThanOrEqual(140);
   });
 });
