@@ -389,7 +389,7 @@ export const obligationsAeration: Obligation[] = [
     periodicite: "autre",
     nature: "etat_permanent",
     pieceAttendue: "livret d'entretien de l'installation de filtration",
-    usageEcran: null,
+    usageEcran: { groupe: "installations", sous: null },
     realisateurs: ["exploitant"],
     criticite: 3,
     transmet: [],

@@ -216,7 +216,7 @@ export const obligationsSecours: Obligation[] = [
     periodicite: "autre",
     nature: "etat_permanent",
     pieceAttendue: null,
-    usageEcran: null,
+    usageEcran: { groupe: "incendie_secours", sous: "secourir" },
     realisateurs: ["exploitant"],
     criticite: 4,
     typologies: { erp: { categories: ["N1", "N2", "N3", "N4"] } },
