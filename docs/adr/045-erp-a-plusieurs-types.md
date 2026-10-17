@@ -140,6 +140,12 @@ pas disponible dans la session).
   triplet (1 540) de types, × 5 catégories × 3 réponses sur le sommeil.
 - **L'union dépasse au moins une fois chaque type seul** (borne basse).
 - **Permuter le premier type ne change rien.**
+- **Deux lignes que seul un établissement à deux types réunit** — au même
+  porteur, aux mêmes conditions, quel que soit leur article ou leur rythme —
+  partagent un groupe exclusif, ou relèvent d'une famille déclarée avec son
+  motif (`doublons-par-type.test.ts`). Trois familles au 2026-10-17, 25
+  paires : visite de commission ↔ disposition particulière d'un type (21),
+  dispositions de deux types (2), paires de 5ᵉ croisées (2).
 - **Toute ligne à `typesExclus` appartient à un groupe** ; les membres d'un
   groupe ont le même porteur. Ce test garde les lectures à venir des chapitres
   J, P, R, S, T, U, V, X, Y.
