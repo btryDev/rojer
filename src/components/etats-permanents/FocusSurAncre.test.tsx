@@ -23,7 +23,7 @@ const page = (
       Incendie et secours
     </section>
     <section id="autre-chose" tabIndex={-1}>
-      une section focalisable qui n'est pas une famille
+      une section focalisable hors des familles
     </section>
     <FocusSurAncre />
   </>
