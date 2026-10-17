@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
+import { flushSync } from "react-dom";
 
 /**
  * Ce que le parcours de création ne doit PAS faire.
@@ -28,6 +29,13 @@ import { cleanup, render, screen } from "@testing-library/react";
  * corrige donc pas un mécanisme supposé : on tient l'invariant, qui est vrai
  * quelle que soit la cause. Une soumission qui ne vient pas de l'étape 3 n'a
  * pas lieu — le test l'établit en provoquant la soumission directement.
+ *
+ * [2026-10-17 : l'invariant ne suffisait pas. Contrôle de l'accueil dans
+ * Chrome (c6) : un seul clic sur « Suivant » à l'étape 2 créait l'espace — au
+ * moment de la soumission, l'état est DÉJÀ à l'étape 3, la garde la laisse
+ * passer. Le mécanisme est désormais reproduit ici (`flushSync` entre
+ * l'écouteur de React et l'activation, describe « un clic sur Suivant… ») et
+ * corrigé à la cause : deux `key`, deux nœuds.]
  */
 
 const appels: string[] = [];
@@ -150,6 +158,48 @@ describe("le formulaire ne se soumet qu'à la dernière étape", () => {
     await souffler();
 
     expect(appels).toEqual(["creation"]);
+  });
+});
+
+describe("un clic sur « Suivant » à l'étape 2 ne crée rien, même rendu avant l'activation", () => {
+  // Contrôle de l'accueil sur l'autre Mac (2026-10-17, c6) : dans Chrome, UN
+  // clic sur « Suivant → » à l'étape 2 affichait l'étape 3 ET lançait
+  // `finaliserOnboarding` — « Création en cours… », puis la redirection, sans
+  // que « Créer mon espace » ait jamais été cliqué. Le défaut est antérieur au
+  // lot 3 : main porte le même formulaire et la même garde.
+  //
+  // La séquence du navigateur : le gestionnaire React tourne, la pile JS se
+  // vide, React rend l'étape 3 (le bouton de droite devient `type="submit"`,
+  // la garde `onSubmit` lit déjà `etapeIdx === 2`), PUIS l'activation du
+  // bouton cliqué soumet. `element.click()` depuis un script ne vide pas la
+  // pile ; on la reproduit en forçant le rendu par `flushSync` dans un
+  // écouteur placé APRÈS celui de React (document, phase de bouillonnement).
+  //
+  // Éprouvé en cassant : les `key` des deux boutons retirées (le même nœud DOM
+  // change de type) — rouge, `appels` vaut ["creation"].
+  it("le rendu de l'étape 3 s'intercale avant l'activation : aucune création", async () => {
+    render(<WizardShell />);
+    remplirEtape1();
+    await souffler();
+    screen.getByRole("button", { name: /Suivant/ }).click();
+    await souffler();
+    for (const id of ["estERP-non", "estIGH-non", "estHabitation-non"]) {
+      (document.getElementById(id) as HTMLButtonElement).click();
+      await souffler();
+    }
+
+    const rendreAvantActivation = () => flushSync(() => {});
+    document.addEventListener("click", rendreAvantActivation);
+    try {
+      screen.getByRole("button", { name: /Suivant/ }).click();
+      await souffler();
+    } finally {
+      document.removeEventListener("click", rendreAvantActivation);
+    }
+
+    // L'étape 3 est affichée, et rien n'est parti.
+    expect(screen.getByRole("button", { name: /Créer mon espace/ })).toBeTruthy();
+    expect(appels).toEqual([]);
   });
 });
 
