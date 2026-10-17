@@ -465,6 +465,7 @@ describe("référentiel conformité — anti-doublon", () => {
       estIGH: false,
       estHabitation: false,
       typeErp,
+      typesErpAutres: [],
       categorieErp,
       classeIgh: null,
       familleHabitation: null,
@@ -1269,6 +1270,7 @@ describe("référentiel conformité — éclairage de sécurité en lieu de trav
       estIGH: false,
       estHabitation: false,
       typeErp: "N" as const,
+      typesErpAutres: [],
       categorieErp: "N5" as const,
       classeIgh: null,
       familleHabitation: null,
@@ -1292,7 +1294,7 @@ describe("référentiel conformité — éclairage de sécurité en lieu de trav
     for (const id of IDS_TRAVAIL) expect(ids, id).not.toContain(id);
     for (const id of IDS_ERP) expect(ids, id).toContain(id);
 
-    const employeurSeul = { ...erpEtTravail, estERP: false, typeErp: null, categorieErp: null };
+    const employeurSeul = { ...erpEtTravail, estERP: false, typeErp: null, typesErpAutres: [], categorieErp: null };
     const idsEmployeur = determineObligationsApplicables(employeurSeul, parc).map(
       (a) => a.obligation.id,
     );
@@ -1889,6 +1891,11 @@ describe("référentiel conformité — version et empreinte", () => {
     // changée ; relevée en appelant `empreinteReferentiel()`.
     { version: "2026-10-14.3", empreinte: "185-47b3ee1d533b3c7f" },
     { version: "2026-10-15.1", empreinte: "185-46b39d4ed1c3134c" },
+    // 2026-10-17 (ADR-045, lot 1, plusieurs types d'ERP) : douze lignes
+    // reçoivent `groupeExclusif` — les huit visites de commission de GE 4 § 1
+    // et les deux paires de la 5ᵉ (PE 4 / PO 1 § 3, PE 27 / PO 7). 185 + 0 − 0
+    // = 185 ; relevée en appelant `empreinteReferentiel()`.
+    { version: "2026-10-17.1", empreinte: "185-b0dc045847297da2" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -2569,6 +2576,7 @@ describe("IGH — aucune obligation ne naît plus du seul régime IGH", () => {
     estIGH: true,
     estHabitation: false,
     typeErp: null,
+    typesErpAutres: [],
     categorieErp: null,
     classeIgh: null,
     familleHabitation: null,
@@ -2707,6 +2715,7 @@ describe("GE 4 § 1 — le tableau, case par case", () => {
       estIGH: false,
       estHabitation: false,
       typeErp,
+      typesErpAutres: [],
       categorieErp,
       classeIgh: null,
       familleHabitation: null,

@@ -23,6 +23,7 @@ function bureau(over: Partial<EtablissementMatching> = {}): EtablissementMatchin
     estIGH: false,
     estHabitation: false,
     typeErp: null,
+    typesErpAutres: [],
     categorieErp: null,
     classeIgh: null,
     familleHabitation: null,
@@ -69,7 +70,7 @@ describe("R. 4227-26 — chiffons, cotons et papiers imprégnés", () => {
   it("sans travailleur, rien : l'article est au Code du travail", () => {
     const r = matchTypologie(
       typologie(),
-      bureau({ estEtablissementTravail: false, estERP: true, typeErp: "M", categorieErp: "N5" }),
+      bureau({ estEtablissementTravail: false, estERP: true, typeErp: "M", typesErpAutres: [], categorieErp: "N5" }),
     );
     expect(r.ok).toBe(false);
   });

@@ -31,6 +31,7 @@ function etab(over: Partial<EtablissementMatching> = {}): EtablissementMatching 
     estIGH: false,
     estHabitation: false,
     typeErp: null,
+    typesErpAutres: [],
     categorieErp: null,
     classeIgh: null,
     familleHabitation: null,
@@ -54,7 +55,7 @@ describe("le moteur nomme la question dont le silence retient la ligne", () => {
   it("personnes présentes muettes, ERP sous les bornes ⇒ `personnes_presentes`", () => {
     const m = marquesParObligation(
       determineObligationsApplicables(
-        etab({ estERP: true, typeErp: "N", categorieErp: "N5", effectifSurSite: 8, effectifEntreprise: 8, manipuleMatieresR422722: false }),
+        etab({ estERP: true, typeErp: "N", typesErpAutres: [], categorieErp: "N5", effectifSurSite: 8, effectifEntreprise: 8, manipuleMatieresR422722: false }),
         [],
       ),
     );
@@ -62,7 +63,7 @@ describe("le moteur nomme la question dont le silence retient la ligne", () => {
     // Nombre déclaré au-dessus du seuil : la ligne est due, sans marque.
     const d = marquesParObligation(
       determineObligationsApplicables(
-        etab({ estERP: true, typeErp: "N", categorieErp: "N5", effectifSurSite: 8, effectifEntreprise: 8, personnesPresentesHabituellement: 80 }),
+        etab({ estERP: true, typeErp: "N", typesErpAutres: [], categorieErp: "N5", effectifSurSite: 8, effectifEntreprise: 8, personnesPresentesHabituellement: 80 }),
         [],
       ),
     );
@@ -71,7 +72,7 @@ describe("le moteur nomme la question dont le silence retient la ligne", () => {
 
   it("sommeil sur un type non renseigné ⇒ `type_erp`, la question que la fiche pose", () => {
     const apps = determineObligationsApplicables(
-      etab({ estERP: true, typeErp: null, categorieErp: "N5" }),
+      etab({ estERP: true, typeErp: null, typesErpAutres: [], categorieErp: "N5" }),
       [],
     );
     const sommeil = apps.find((a) => a.obligation.id === "incendie-erp-5-sommeil-consigne-chambres");

@@ -28,9 +28,12 @@ import type { EtablissementMatching } from "./types";
  * **pur** — ni Prisma, ni React — et doit le rester pour rester testable sans
  * base.
  */
+// `typesErpAutres` n'a pas encore de colonne (ADR-045, lot 2) : la source ne
+// le porte pas, et la projection répond « aucun autre type ». Le lot 2 le
+// rend requis ici, lu en base.
 export type SourceEtablissement = Omit<
   EtablissementMatching,
-  "effectifEntreprise"
+  "effectifEntreprise" | "typesErpAutres"
 > &
   (
     | {
@@ -69,6 +72,7 @@ export function projeterEtablissement(
     estIGH: etab.estIGH,
     estHabitation: etab.estHabitation,
     typeErp: etab.typeErp,
+    typesErpAutres: [],
     categorieErp: etab.categorieErp,
     classeIgh: etab.classeIgh,
       familleHabitation: etab.familleHabitation,

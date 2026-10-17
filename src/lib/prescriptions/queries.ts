@@ -135,6 +135,7 @@ export async function chargerPagePrescriptions(
       estIGH: etab.estIGH,
       estHabitation: etab.estHabitation,
       typeErp: etab.typeErp,
+      typesErpAutres: [], // ADR-045 : colonne au lot 2
       categorieErp: etab.categorieErp,
       classeIgh: etab.classeIgh,
       familleHabitation: etab.familleHabitation,

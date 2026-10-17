@@ -19,6 +19,7 @@ function etabBureau(
     estIGH: false,
     estHabitation: false,
     typeErp: null,
+    typesErpAutres: [],
     categorieErp: null,
     classeIgh: null,
     familleHabitation: null,
@@ -127,6 +128,7 @@ describe("construireChezVous — domaines", () => {
       estEtablissementTravail: false,
       estERP: true,
       typeErp: "M",
+      typesErpAutres: [],
       categorieErp: "N3",
     });
     const r = construireChezVous(erpPur, [
@@ -201,7 +203,7 @@ describe("construireChezVous — trous honnêtes", () => {
     for (const etab of [
       etabBureau(),
       etabBureau({ effectifSurSite: 3 }),
-      etabBureau({ estEtablissementTravail: false, estERP: true, typeErp: "N", categorieErp: "N5" }),
+      etabBureau({ estEtablissementTravail: false, estERP: true, typeErp: "N", typesErpAutres: [], categorieErp: "N5" }),
     ]) {
       for (const a of determineObligationsApplicables(etab, [])) {
         expect(
@@ -232,7 +234,7 @@ describe("construireChezVous — trous honnêtes", () => {
     for (const etab of [
       etabBureau(),
       etabBureau({ effectifSurSite: 60, personnesPresentesHabituellement: 60 }),
-      etabBureau({ estEtablissementTravail: false, estERP: true, typeErp: "N", categorieErp: "N5" }),
+      etabBureau({ estEtablissementTravail: false, estERP: true, typeErp: "N", typesErpAutres: [], categorieErp: "N5" }),
     ]) {
       const duMoteur = [
         ...new Set(

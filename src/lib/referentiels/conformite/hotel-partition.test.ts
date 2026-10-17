@@ -45,6 +45,7 @@ const etab = (o: Partial<EtablissementMatching>): EtablissementMatching => ({
   estIGH: false,
   estHabitation: false,
   typeErp: "N",
+  typesErpAutres: [],
   categorieErp: "N5",
   classeIgh: null,
   familleHabitation: null,
@@ -84,7 +85,7 @@ describe("l'hôtel des quatre premières catégories ne reçoit aucune des deux"
   // son propre chapitre O, qui n'est pas ouvert.
   for (const categorieErp of CATEGORIES_ERP.filter((c) => c !== "N5")) {
     it(categorieErp, () => {
-      const recues = ids(etab({ typeErp: "O", categorieErp }));
+      const recues = ids(etab({ typeErp: "O", typesErpAutres: [], categorieErp }));
       for (const { general, hotel } of PAIRES) {
         expect(recues.has(general)).toBe(false);
         expect(recues.has(hotel)).toBe(false);

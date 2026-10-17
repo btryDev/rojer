@@ -63,6 +63,7 @@ describe("catégorie et type d'ERP : l'absence écarte parce que la base l'inter
       estIGH: false,
       estHabitation: false,
       typeErp: "N",
+      typesErpAutres: [],
       categorieErp: null,
       classeIgh: null,
       familleHabitation: null,
@@ -79,7 +80,7 @@ describe("catégorie et type d'ERP : l'absence écarte parce que la base l'inter
     };
     expect(matchTypologie({ erp: { categories: ["N5"] } }, erpSansCategorie).ok).toBe(false);
     expect(
-      matchTypologie({ erp: { categories: ["N5"], types: ["O"] } }, { ...erpSansCategorie, typeErp: null, categorieErp: "N5" }).ok,
+      matchTypologie({ erp: { categories: ["N5"], types: ["O"] } }, { ...erpSansCategorie, typeErp: null, typesErpAutres: [], categorieErp: "N5" }).ok,
     ).toBe(false);
   });
 });

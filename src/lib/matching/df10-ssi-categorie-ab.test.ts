@@ -34,6 +34,7 @@ function erp(
     estIGH: false,
     estHabitation: false,
     typeErp: "M",
+    typesErpAutres: [],
     categorieErp,
     classeIgh: null,
     familleHabitation: null,

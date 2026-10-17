@@ -68,7 +68,7 @@ function profilsInscription(): EtablissementMatching[] {
         raisonSociale: "X", adresse: "1 rue A, 75001 Paris", codeNaf: "56.10A",
         effectifSurSite: es, effectifEntreprise: ee,
         estEtablissementTravail: trav, estERP: erp !== null, estIGH: igh, estHabitation: hab,
-        typeErp: erp?.t, categorieErp: erp?.c,
+        typeErp: erp?.t, typesErpAutres: [], categorieErp: erp?.c,
         comporteLocauxSommeilPublic: form(so), manipuleMatieresR422722: form(m),
  personnesPresentesHabituellement: p ?? "",
         manutentionManuelle: null,
@@ -84,7 +84,7 @@ function profilsInscription(): EtablissementMatching[] {
       out.push({
         id: "e", effectifSurSite: d.effectifSurSite, effectifEntreprise: d.effectifEntreprise,
         estEtablissementTravail: d.estEtablissementTravail, estERP: d.estERP, estIGH: d.estIGH,
-        estHabitation: d.estHabitation, typeErp: d.typeErp ?? null, categorieErp: d.categorieErp ?? null,
+        estHabitation: d.estHabitation, typeErp: d.typeErp ?? null, typesErpAutres: [], categorieErp: d.categorieErp ?? null,
         // Ni l'inscription ni la fiche ne posent ces deux questions (2026-09-03).
         classeIgh: null, familleHabitation: null,
         personnesPresentesHabituellement: d.personnesPresentesHabituellement ?? null,

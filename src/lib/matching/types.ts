@@ -46,7 +46,22 @@ export type EtablissementMatching = {
   estERP: boolean;
   estIGH: boolean;
   estHabitation: boolean;
+  /**
+   * Le premier type d'ERP déclaré. **Sans portée juridique** (ADR-045) : GN 2
+   * ne connaît pas de type principal, et le moteur ne décide rien sur ce seul
+   * champ — il lit `typesErpDe(etab)`, qui le réunit à `typesErpAutres`.
+   */
   typeErp: TypeErp | null;
+  /**
+   * Les autres types d'ERP déclarés, quand l'établissement groupe plusieurs
+   * exploitations (GN 2 § 1). Une seule catégorie pour l'ensemble.
+   *
+   * **Requis**, pour la raison que portent les autres champs de cette
+   * projection : un champ optionnel s'omet sans que rien ne le signale, et le
+   * moteur servirait alors un seul type à un établissement qui en a déclaré
+   * trois. `[]` est la réponse d'un établissement à un seul type.
+   */
+  typesErpAutres: TypeErp[];
   categorieErp: CategorieErp | null;
   classeIgh: ClasseIgh | null;
   /**

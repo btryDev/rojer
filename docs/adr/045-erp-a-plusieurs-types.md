@@ -72,10 +72,14 @@ pas disponible dans la session).
    s'ajoutent (pas d'autres types sans ERP, pas de doublon avec `typeErp`).
    `typeErp` est « le premier type déclaré », **sans portée juridique** : il
    ne décide de rien dans le moteur.
-4. **Le moteur** (lot 1) : `EtablissementMatching.typesErp: TypeErp[]`,
-   requis. Une ligne bornée par type est évaluée pour chaque type déclaré, et
-   l'établissement reçoit l'**union** (GN 2 § 3). `sommeilPlausiblePourLeType`
-   se lit sur l'ensemble des types.
+4. **Le moteur** (lot 1) : `EtablissementMatching` porte, comme la base,
+   `typeErp` et `typesErpAutres: TypeErp[]`, ce dernier **requis** ; le moteur
+   ne lit les types que par `typesErpDe(etab)` (`matching/types-erp.ts`).
+   `matchTypologie` évalue la typologie type par type et rend la première
+   évaluation satisfaite dans l'ordre de déclaration : l'**union** (GN 2 § 3).
+   `sommeilPlausiblePourLeType` se lit donc sur l'ensemble des types. Pour un
+   seul type, l'établissement est évalué tel quel, comme avant. Les raisons
+   affichées sont celles du premier type qui a satisfait la ligne.
 5. **Les groupes exclusifs.** L'union seule sert des doublons : **945** des
    3 525 combinaisons reçoivent deux membres d'une même paire. Les douze
    lignes concernées portent `groupeExclusif` ; quand plusieurs membres d'un
@@ -133,11 +137,20 @@ pas disponible dans la session).
   groupe ont le même porteur. Ce test garde les lectures à venir des chapitres
   J, P, R, S, T, U, V, X, Y.
 
+## 5 bis. Le sceau
+
+- `REFERENTIEL_VERSION` passe à `2026-10-17.1` : `groupeExclusif` entre à
+  l'empreinte (`185-b0dc045847297da2`).
+- `VERSION_MOTEUR_CALENDRIER` **reste à 6** : ce que la régénération écrit ne
+  change pour aucun dossier (projection à `typesErpAutres: []` jusqu'au lot 2,
+  sortie mono-type identique, 2 484 profils comparés à `main`). Seule
+  l'empreinte du code du moteur est recopiée (`RELEVE`).
+
 ## 6. À rayer et dater à la fusion (règle 11)
 
 - `docs/notes-cadre-juridique.md`, question ouverte « Cumul de types d'ERP » ;
 - `docs/registre-releve-types-erp.md`, D.2 ;
 - `NOTE_TITRE_2_COMMUNE` (`incendie.ts`), « CE QUE LA BORNE NE SAIT PAS » ;
 - `corpus/cch-classement-erp-igh.ts`, la réserve sur le groupement ;
-- le commentaire de `matching/engine.ts` « le modèle ne stocke qu'un type » ;
+- ~~le commentaire de `matching/engine.ts` « le modèle ne stocke qu'un type »~~ [2026-10-17 : rayé au lot 1] ;
 - `.claude/CLAUDE.md`, liste des ADR : l'entrée 045 est à ajouter.
