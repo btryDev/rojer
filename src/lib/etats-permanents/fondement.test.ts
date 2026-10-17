@@ -166,6 +166,17 @@ describe("plusieurs types d'ERP — l'article de chacun (ADR-045, lot 3)", () =>
     }
   });
 
+  it("trois types que la ligne cite : un principal, DEUX compléments, dans l'ordre de TYPES_ERP", () => {
+    // Revue du lot 3, C4 : un cas à deux compléments, sans quoi une liste
+    // réduite à son premier élément passait. Éprouvé avec complement.slice(0, 1).
+    const f = fondementDe(PERSONNEL, ctx("W", "N3", ["O", "N"]))!;
+    expect(f.reference).toContain("art. N 17");
+    expect(f.complement?.map((c) => c.reference)).toEqual([
+      expect.stringContaining("art. O 18"),
+      expect.stringContaining("art. W 13"),
+    ]);
+  });
+
   it("un type que la ligne ne cite pas n'ajoute rien", () => {
     // L : le chapitre n'est pas cité par cette ligne.
     expect(fondementDe(PERSONNEL, ctx("N", "N3", ["L"]))!.complement).toBeUndefined();
