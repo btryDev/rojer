@@ -720,6 +720,12 @@ export const CATEGORIES_EQUIPEMENT = [
   // la ligne d'établissement de l'art. R. 322-25 (`siEquipementDeclare`) — le
   // plan et le registre se tiennent « pour chaque site ».
   "BUT_PANIER_SPORTIF",
+  // 2026-10-17, sous-lot G (chapitre L) : l'espace scénique — scène, estrade,
+  // plateau, piste « permettant […] tout spectacle » (art. L 49) — d'une salle de
+  // type L, ou d'une salle de danse de type P pour ses aménagements de spectacle
+  // (L 1 § 3), des catégories 1 à 4. C'est en déclarant la scène que le
+  // dirigeant dit qu'il en a une : le produit ne pose aucune question.
+  "SCENE",
   "AUTRE",
 ] as const;
 

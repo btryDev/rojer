@@ -587,6 +587,67 @@ export const obligationsElectricite: Obligation[] = [
       "AJOUTÉE LE 2026-09-01 (lot C). Le corpus la déclarait en réserve sur EL 18 depuis le relevé du matin — « LE § 2 N'EST ENCODÉ NULLE PART […] et le corpus ne la comptait pas comme manquante puisque l'article était déjà classé retenu au titre du seul § 4 ». C'est le cas d'école du manque qu'un statut « retenu » cache : un article de quatre paragraphes dont un seul est porté.\n\nPORTEUR ÉTABLISSEMENT, ET C'EST LE POINT (ADR-022). L'exigence ne naît d'aucun équipement déclaré : elle naît de la CATÉGORIE de l'établissement. L'accrocher à `INSTALLATION_ELECTRIQUE` en ferait un faux négatif chez tout ERP de 1ʳᵉ ou 2ᵉ catégorie n'ayant pas déclaré son tableau — c'est-à-dire chez celui qui a le moins renseigné, exactement le défaut que le palier 1 a corrigé sur trois autres lignes le 2026-08-31. `equipementsEnContexte` garde le lien, sans en faire une condition.\n\nÉTAT PERMANENT, PAS ÉCHÉANCE (ADR-026). « Pendant la présence du public » n'est pas un rythme : il n'y a pas d'acte à refaire à date, il y a quelqu'un qui est là ou qui ne l'est pas. Aucune périodicité n'est donc posée, et `autre` se lit ici avec la nature, pas seule.\n\nCE QUE LE PRODUIT NE SAIT PAS FAIRE, et qu'il ne feint pas : vérifier qu'une personne est effectivement présente aux heures d'ouverture. Il pose l'exigence et nomme le trou par `transmet` ; la déclaration appartient au dirigeant.\n\nCE QUI N'EST PAS ENCODÉ, et pourquoi. La seconde phrase du § 2 étend la mesure aux 3ᵉ et 4ᵉ catégories « après avis de la commission de sécurité ». Ce n'est pas une règle générale mais un acte administratif individuel : il relève des prescriptions particulières (ADR-035), qui surchargent un dossier donné, et l'encoder au référentiel donnerait à tous les ERP de 3ᵉ et 4ᵉ catégorie une obligation que la plupart n'ont pas reçue.\n\nSUR-APPLICATION EN 5ᵉ CATÉGORIE : AUCUNE, et c'est l'exception dans ce fichier. EL 18 relève du Livre II, écarté en N5 par PE 1 § 1 — mais la restriction `{ categories: [\"N1\", \"N2\"] }` est écrite dans l'article lui-même, si bien que la question ne se pose pas : un ERP de 5ᵉ catégorie ne reçoit pas cette ligne.",
   },
   {
+    // 2026-10-17, sous-lot G (chapitre L), décision de c6 (option a) : la
+    // sœur de la ligne ci-dessus. Le modèle ne sait pas écrire « N1–N2 tous
+    // types, OU N3 type L » dans une seule typologie : une seconde ligne,
+    // bornée à la 3ᵉ catégorie, aux types L et P, et à une scène déclarée.
+    id: "elec-erp-presence-personne-qualifiee-scene-n3",
+    domaine: "electricite",
+    libelle:
+      "Présence d'une personne qualifiée pendant l'ouverture au public (salle avec scène, ERP de 3ᵉ catégorie)",
+    description:
+      "Dans une salle de type L — ou une salle de danse de type P pour ses aménagements de spectacle — de 3ᵉ catégorie qui comporte un espace scénique, le règlement de sécurité étend à la 3ᵉ catégorie la règle des 1ʳᵉ et 2ᵉ : la présence physique d'une personne qualifiée est requise pendant toute la présence du public, pour assurer, conformément aux consignes données, l'exploitation et l'entretien quotidien des installations électriques (art. L 57 § 7, qui rend applicable l'article EL 18 § 2). Ce n'est pas une vérification à date : c'est un état à tenir chaque jour d'ouverture.",
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. L 57 § 7 (présence d'une personne qualifiée rendue applicable, en aggravation, aux établissements de 3e catégorie avec espace scénique) — livre II, titre II, type L, établissements des quatre premières catégories",
+        article: "L 57 § 7 — présence d'une personne qualifiée en 3e catégorie",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000048310306",
+        note: "« § 7. En aggravation, les dispositions de l'article EL 18 (§ 2) sont applicables aux dispositions pour les établissements de 3e catégorie. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000048310306, en vigueur depuis le 2023-11-04, aucune version à venir. La phrase est mal construite (« applicables aux dispositions pour les établissements ») : la lecture retenue — la présence d'EL 18 § 2 devient due d'office en 3ᵉ catégorie — est PROBABLE, pas certaine.",
+        versionConstatee: "2023-11-04",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. EL 18 § 2 (présence physique d'une personne qualifiée) — livre II, établissements des quatre premières catégories",
+        article: "EL 18",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000038485456/",
+        note: "« Dans tout établissement de 1re ou 2e catégorie, la présence physique d'une personne qualifiée est requise pendant la présence du public pour, conformément aux consignes données, assurer l'exploitation et l'entretien quotidien. Une telle mesure peut être imposée après avis de la commission de sécurité dans les établissements de 3e et de 4e catégorie si l'importance ou l'état des installations électriques le justifie. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable) : LEGIARTI000038485456, en vigueur depuis le 2019-07-01.",
+        versionConstatee: "2019-07-01",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. L 1 § 3 (salles de danse : le chapitre ne s'applique qu'aux installations de projection ou aménagements de spectacle) — livre II, titre II, type L, établissements des quatre premières catégories",
+        article: "L 1",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000045143482",
+        note: "« § 3. Dans les salles de danse comportant des installations de projection ou des aménagements de spectacle, les dispositions du présent chapitre ne sont applicables qu'à ces installations ou aménagements. » Fonde le type P de la borne (décision de la propriétaire du 2026-10-17). Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable) : LEGIARTI000045143482, en vigueur depuis le 2022-02-10.",
+        versionConstatee: "2022-02-10",
+      },
+    ],
+    periodicite: "autre",
+    nature: "etat_permanent",
+    pieceAttendue: null,
+    usageEcran: { groupe: "organisation", sous: null },
+    realisateurs: ["exploitant"],
+    criticite: 4,
+    transmet: [
+      {
+        vers: "salarie_designe",
+        // `null`, comme l'aînée : le texte ne nomme ni formation ni titre.
+        titre: null,
+        motif:
+          "EL 18 § 2, rendu applicable en 3ᵉ catégorie par L 57 § 7, exige la présence physique d'UNE PERSONNE qualifiée pendant toute la présence du public : l'obligation suppose quelqu'un de nommé, et le produit ne peut pas deviner qui. Il peut en revanche dire qu'aucune personne n'est déclarée pour ce rôle.",
+      },
+    ],
+    porteur: "etablissement",
+    siEquipementDeclare: ["SCENE"],
+    typologies: { erp: { categories: ["N3"], types: ["L", "P"] } },
+    notesInternes:
+      "ENTRÉE LE 2026-10-17, sous-lot G (chapitre L), décision de c6 (option a du plan) : ligne SŒUR de `elec-erp-presence-personne-qualifiee` (EL 18 § 2, N1–N2, tous types), dont elle reprend l'acte, la nature, le porteur, `usageEcran` et la transmission. Pourquoi pas une extension : `TypologieApplication.erp` ne porte qu'un jeu { categories, types } ; ajouter N3 à l'aînée la servirait à tout ERP de 3ᵉ catégorie, ce que le texte ne dit pas. Pas de disjonction dans le modèle (décision de c6).\n\nLECTURE PROBABLE, PAS CERTAINE. L 57 § 7 : « En aggravation, les dispositions de l'article EL 18 (§ 2) sont applicables aux dispositions pour les établissements de 3e catégorie. » La phrase est mal construite ; la lecture retenue est que la présence, que l'EL 18 § 2 ne rend imposable en 3ᵉ que sur avis de la commission, devient due d'office en 3ᵉ catégorie dans une salle avec espace scénique (l'article est au sous-chapitre IV, « Mesures applicables aux espaces scéniques »). Les deux lectures précédentes du chapitre (2026-10-16, et le plan multi-types) l'avaient manquée ; elle est trouvée à la relecture du 2026-10-17 (`propositions/lecture-L-prerequis-2026-10-18.md`, § 2.6).\n\nBORNE : N3 seule — les N1–N2 ont déjà l'aînée, et la 4ᵉ n'est pas nommée par le texte ; types L et P (L 1 § 3, décision de la propriétaire) ; une scène déclarée (`siEquipementDeclare`) — sans scène, rien (« on n'alourdit pas »). Garde : `matching/scene-chapitre-l.test.ts`.\n\nRYTHME : aucun — « pendant la présence du public » est un état, pas un rythme (ADR-026 ; ligne de partage 10 de `docs/notes-cadre-juridique.md`, dont l'aînée est la politique sœur). NORMES ET ARRÊTÉS D'APPLICATION (exigence de la propriétaire) : aucun ; le texte ne définit pas la « personne qualifiée ». Temporalité nette (chaque jour d'ouverture).\n\nGN 10 n'est pas cité en description, comme sur l'aînée : la présence relève de l'exploitation quotidienne, et la borne est écrite dans le texte.",
+  },
+  {
     id: "elec-erp-groupe-electrogene-annuel",
     domaine: "electricite",
     libelle: "Entretien et essais des groupes électrogènes de sécurité (ERP)",

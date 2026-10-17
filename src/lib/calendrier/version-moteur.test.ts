@@ -106,6 +106,7 @@ const DONNEES_REFERENTIEL = [
   "organisation-prevention",
   "portes-portails",
   "sante-travail",
+  "scene",
   "secours",
   "signalisation",
   "stockage-dangereux",
@@ -499,7 +500,15 @@ const RELEVE = {
   // question : aucune règle du moteur ne change ; les deux lignes neuves sont
   // des DONNÉES (typologies, `siEquipementDeclare`), hachées par l'empreinte
   // du référentiel. ~~a28c64daee65f778~~.
-  empreinte: "f2ac197b52d5fb32",
+  // Recopiée SANS incrément le 2026-10-17 (`lot/ref-g-chapitre-l`, sous-lot
+  // G) : `referentiels/types-communs.ts` gagne `SCENE` dans
+  // `CATEGORIES_EQUIPEMENT`, `conformite/index.ts` le fichier de données
+  // `scene` (entré à `DONNEES_REFERENTIEL`) et la version `2026-10-17.7`.
+  // NON au sens de la question : aucune règle du moteur ne change. Les quatre
+  // lignes neuves sont des DONNÉES (porteur, catégorie, `siEquipementDeclare`,
+  // typologie, périodicité), hachées par l'empreinte du référentiel, donc déjà
+  // dans le sceau. ~~f2ac197b52d5fb32~~.
+  empreinte: "SCEAU_A_RELEVER",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

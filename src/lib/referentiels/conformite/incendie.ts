@@ -1909,9 +1909,9 @@ export const obligationsIncendie: Obligation[] = [
     id: "incendie-erp-personnel-designe-moyens-secours",
     domaine: "incendie",
     libelle:
-      "Personnel spécialement désigné et entraîné à la mise en œuvre des moyens de secours (ERP des quatre premières catégories : restaurants, magasins, hôtels, bureaux, salles de danse, bibliothèques, musées)",
+      "Personnel spécialement désigné et entraîné à la mise en œuvre des moyens de secours (ERP des quatre premières catégories : restaurants, magasins, hôtels, bureaux, salles de danse, bibliothèques, musées, salles de spectacles et de réunion)",
     description:
-      "Dans un restaurant ou débit de boissons (type N), un hôtel ou autre établissement d'hébergement (type O) ou une administration, banque ou bureau (type W) des quatre premières catégories, des employés — des personnes, pour le type W — spécialement désignés doivent être entraînés à la mise en œuvre des moyens de secours (N 17, O 18, W 13). Dans un magasin ou centre commercial (type M), « des agents, entraînés à la manœuvre des moyens de secours contre l'incendie et à l'évacuation du public, doivent être désignés par l'exploitant » (M 29 § 1) ; au-delà du seuil de public que fixe le même article, la surveillance est assurée à la place par des agents de sécurité incendie (M 29 § 2 à § 4), que Rojer ne suit pas. Dans une salle de danse ou de jeux (type P), « des employés spécialement désignés doivent être entraînés à la mise en oeuvre des moyens de secours dans les établissements ne possédant pas de service de sécurité incendie » (P 21 § 2) ; dans un musée (type Y), « des employés, spécialement désignés, doivent être entraînés à la mise en oeuvre de moyens de secours dans les établissements ne possédant pas de service de sécurité incendie » (Y 19 § 2). Pour ces deux types, le texte ne vise que l'établissement sans service de sécurité incendie : Rojer ne sait pas si vous en avez un, et vous présente la ligne dans tous les cas. Dans une bibliothèque ou un centre de documentation (type S), « des personnes spécialement désignées par l'exploitant doivent être entraînées à la mise en oeuvre des moyens d'extinction » (S 15 § 3). " +
+      "Dans un restaurant ou débit de boissons (type N), un hôtel ou autre établissement d'hébergement (type O) ou une administration, banque ou bureau (type W) des quatre premières catégories, des employés — des personnes, pour le type W — spécialement désignés doivent être entraînés à la mise en œuvre des moyens de secours (N 17, O 18, W 13). Dans un magasin ou centre commercial (type M), « des agents, entraînés à la manœuvre des moyens de secours contre l'incendie et à l'évacuation du public, doivent être désignés par l'exploitant » (M 29 § 1) ; au-delà du seuil de public que fixe le même article, la surveillance est assurée à la place par des agents de sécurité incendie (M 29 § 2 à § 4), que Rojer ne suit pas. Dans une salle de danse ou de jeux (type P), « des employés spécialement désignés doivent être entraînés à la mise en oeuvre des moyens de secours dans les établissements ne possédant pas de service de sécurité incendie » (P 21 § 2) ; dans un musée (type Y), « des employés, spécialement désignés, doivent être entraînés à la mise en oeuvre de moyens de secours dans les établissements ne possédant pas de service de sécurité incendie » (Y 19 § 2). Pour ces deux types, le texte ne vise que l'établissement sans service de sécurité incendie : Rojer ne sait pas si vous en avez un, et vous présente la ligne dans tous les cas. Dans une bibliothèque ou un centre de documentation (type S), « des personnes spécialement désignées par l'exploitant doivent être entraînées à la mise en oeuvre des moyens d'extinction » (S 15 § 3). Dans une salle d'audition, de conférences, de réunions, de spectacles ou à usages multiples (type L), le service de sécurité incendie comprend au moins « une personne désignée qui peut être employée à d'autres tâches », et « toutes les personnes désignées doivent avoir reçu une formation de sécurité incendie » (L 14) ; en 1ʳᵉ catégorie le texte exige des agents de sécurité incendie, et un service de représentation dans certaines salles de spectacles, que Rojer ne suit pas. Pour le type L, ce même article écrit qu'il s'applique aussi aux établissements existants, en aggravation de l'article GN 10 cité ci-dessous. " +
       GN_10_PHRASE,
     referencesLegales: [
       {
@@ -1981,6 +1981,26 @@ export const obligationsIncendie: Obligation[] = [
         versionConstatee: "1995-10-18",
       },
       {
+        // 2026-10-17, sous-lot G (chapitre L) : le type L entre.
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. L 14 (une personne désignée, ayant reçu une formation de sécurité incendie ; applicable aussi aux établissements existants) — livre II, titre II, type L, établissements des quatre premières catégories",
+        article: "L 14",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024766671",
+        note: "« Service sécurité incendie : le service de sécurité incendie est défini à l'article MS 46. […] Autres établissements. Une personne désignée qui peut être employée à d'autres tâches. […] § 4. Toutes les personnes désignées doivent avoir reçu une formation de sécurité incendie. […] En aggravation des dispositions de l'article GN 10, les dispositions du présent article sont applicables à tous les établissements existants un an après la date de publication au Journal officiel du présent arrêté. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000024766671, en vigueur depuis le 2007-06-22, aucune version à venir. Le texte dit « formation », pas « entraînées » : l'entraînement vient du renvoi à MS 46 § 1 a (référence suivante).",
+        versionConstatee: "2007-06-22",
+      },
+      {
+        // 2026-10-17, sous-lot G : contexte du type L, qui renvoie à MS 46.
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. MS 46 § 1 a (personnes désignées par l'exploitant et entraînées à la manœuvre des moyens de secours et à l'évacuation du public) — livre II, établissements des quatre premières catégories",
+        article: "MS 46",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000021838331",
+        note: "« § 1. Pendant la présence du public, le service de sécurité incendie est composé selon le type, la catégorie et les caractéristiques des établissements de l'une des façons suivantes : a) Par des personnes désignées par l'exploitant et entraînées à la manœuvre des moyens de secours contre l'incendie et à l'évacuation du public ; […] » Cité pour le type L, dont l'article L 14 définit le service « à l'article MS 46 » : c'est d'ici que vient « entraînées ». Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable) : LEGIARTI000021838331, en vigueur depuis le 2010-05-16.",
+        versionConstatee: "2010-05-16",
+      },
+      {
         // 2026-10-14, revue indépendante : contexte, tous types des catégories 1 à 4.
         source: "ARRETE",
         reference:
@@ -2007,8 +2027,9 @@ export const obligationsIncendie: Obligation[] = [
     realisateurs: ["exploitant"],
     criticite: 4,
     transmet: [],
-    // ~~types: ["M", "N", "O", "W"]~~ — 2026-10-17, sous-lot D : + P, S, Y.
-    typologies: { erp: { categories: [...CATEGORIES_LIVRE_2], types: ["M", "N", "O", "W", "P", "S", "Y"] } },
+    // ~~types: ["M", "N", "O", "W"]~~ — 2026-10-17, sous-lot D : + P, S, Y ;
+    // sous-lot G : + L (L 14).
+    typologies: { erp: { categories: [...CATEGORIES_LIVRE_2], types: ["M", "N", "O", "W", "P", "S", "Y", "L"] } },
     porteur: "etablissement",
     notesInternes:
       "RATTACHEMENTS DU 2026-10-17 (sous-lot D du plan « mise à jour du référentiel », découpage validé par c6). P 21 § 2, S 15 § 3 et Y 19 § 2 disent le même acte que N 17 et W 13 — désigner et entraîner — pour les salles de danse et de jeux, les bibliothèques et les musées des quatre premières catégories : types P, S et Y ajoutés, libellé élargi, textes cités dans la description. S 15 dit « moyens d'extinction » là où les autres disent « moyens de secours » : cité tel quel. P 21 § 2 et Y 19 § 2 portent, comme N 17 ne le fait pas, « dans les établissements ne possédant pas de service de sécurité incendie » : Rojer ne suit pas ce service (phrase de l'axe `categorie_erp`), ne sait donc pas si l'établissement en a un, et sert la ligne à tous — sur-application visible, le service d'agents la rendant sans objet. Les § 1 de P 21 et Y 19 (un service d'agents « peut être imposé par la commission de sécurité ») sont des prescriptions d'autorité (ADR-035), non suivies. Empreinte : typologies et libellé.\n\n" +
@@ -2017,6 +2038,7 @@ export const obligationsIncendie: Obligation[] = [
       "UNE LIGNE POUR QUATRE ARTICLES. N 17, O 18 et W 13 disent la même phrase, à « employés » / « personnes » près ; M 29 § 1 dit la même chose avec deux précisions — la désignation est le fait de l'exploitant, et l'entraînement porte aussi sur l'évacuation du public. Même acte, même débiteur, même constat : quatre lignes auraient fait quatre cases pour une seule désignation, et un établissement n'en reçoit de toute façon qu'une ~~(un seul `typeErp`)~~ [2026-10-17, ADR-045 : même à plusieurs types — la ligne sort une fois, et son fondement cite l'article de chacun des types déclarés, N 17 et O 18 pour un hôtel-restaurant].\n\n" +
       "M 29 AU-DELÀ DE 4 000 PERSONNES. Le § 1 ne vaut que sous 4 000 ; au-delà, les § 2 à § 4 exigent des agents de sécurité incendie (SSIAP) en nombre fixé par tranche. Rojer ne connaît pas l'effectif du public et sert la ligne à tout magasin N1–N4 : au-dessus de 4 000, la ligne dit moins que le texte, et la description le dit. Le SSIAP est en réserve de M 29 au corpus. Le texte ne dit rien de l'effectif d'exactement 4 000 (« inférieur » / « supérieur ») ; la ligne le retient.\n\n" +
       "SANS RECOUVREMENT : `incendie-erp-5-instruction-personnel` et `incendie-hotel-po-instruction-personnel-semestrielle` sont bornées à N5 ; celle-ci à N1–N4.\n\n" +
+      "TYPE L, AJOUTÉ LE 2026-10-17 (sous-lot G, décision de c6). L 14 est le même acte — désigner, faire former — pour le même débiteur. Trois différences, dites en description : (1) L 14 § 4 dit « formation de sécurité incendie », pas « entraînées » ; l'entraînement vient de MS 46 § 1 a, auquel L 14 renvoie (cité en contexte) ; (2) L 14 § 4 s'applique aux établissements EXISTANTS, « en aggravation des dispositions de l'article GN 10 » : pour le type L, la sur-application que dit `GN_10_PHRASE` n'en est pas une, et la description le précise avant la phrase commune (gardée mot pour mot pour les autres types, garde de `conformite.test.ts`). LIMITE : la mention courte « Peut ne pas s'appliquer à un établissement existant » de l'écran (`porteGn10`) reste affichée à une salle L, la ligne étant commune ; (3) en 1ʳᵉ catégorie, L 14 exige des agents de sécurité incendie (SSIAP) et, dans les salles de spectacles, un service de représentation — non suivis, en réserve au corpus (MOTIF_SSIAP), annoncés par l'axe `categorie_erp`. Le nombre de personnes désignées (« deux » en 3ᵉ et 4ᵉ catégories avec espace scénique intégré ou adossé et décors M2) n'est pas compté : la ligne fait désigner, sans nombre.\n\n" +
       NOTE_TITRE_2_COMMUNE,
   },
 

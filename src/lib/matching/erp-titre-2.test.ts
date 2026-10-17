@@ -70,10 +70,19 @@ describe("leurs voisins ne les reçoivent pas", () => {
     expect(recues(etab("N", "N5"))).toEqual([]);
   });
 
-  it("une salle de type L en 3ᵉ ne reçoit aucune ligne du titre II — seul le livret, disposition générale de tous les types", () => {
+  // ~~« une salle de type L en 3ᵉ ne reçoit aucune ligne du titre II — seul le
+  // livret »~~ — 2026-10-17, sous-lot G : le chapitre L est encodé, et L 14
+  // fait entrer le type L au personnel désigné. Le voisin « autre type en
+  // 3ᵉ » devient un lieu de culte (type V), dont le chapitre est lu sans
+  // qu'aucune de ses lignes ne soit servie (ni par G, ni par D).
+  it("une salle de type L en 3ᵉ reçoit le personnel désigné (L 14) et le livret, rien d'autre du titre II", () => {
+    expect(recues(etab("L", "N3"))).toEqual([PERSONNEL, LIVRET]);
+  });
+
+  it("un lieu de culte (type V) en 3ᵉ ne reçoit aucune ligne du titre II — seul le livret", () => {
     // CH 39 est au titre Ier : il vaut pour tous les types des quatre
     // premières catégories, comme sa sœur la visite trimestrielle.
-    expect(recues(etab("L", "N3"))).toEqual([LIVRET]);
+    expect(recues(etab("V", "N3"))).toEqual([LIVRET]);
   });
 
   it("sans ventilation de confort déclarée, pas de livret", () => {

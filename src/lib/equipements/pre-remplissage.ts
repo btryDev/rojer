@@ -211,6 +211,14 @@ export type ContexteEtablissement = {
 /** Les types d'ERP auxquels l'eau chaude collective est suggérée (2026-10-17). */
 export const TYPES_ERP_EAU_CHAUDE_SUGGEREE: readonly TypeErp[] = ["O", "X"];
 
+/**
+ * Les types d'ERP auxquels la scène est suggérée (2026-10-17, sous-lot G) :
+ * L, et P par L 1 § 3 (« ça ne coûte rien de proposer », décision de la
+ * propriétaire). Les catégories viennent de la ligne qui fonde la suggestion,
+ * lues et jamais recopiées (`categoriesDeLaScene`).
+ */
+export const TYPES_ERP_SCENE_SUGGEREE: readonly TypeErp[] = ["L", "P"];
+
 export function contexteDesSuggestions(etab: {
   codeNaf: string | null;
   entreprise: { codeNaf: string | null };
@@ -244,6 +252,14 @@ export function contexteDesSuggestions(etab: {
 function categoriesDuDae(): readonly CategorieErp[] {
   const o = obligationParId("dae-erp-detention");
   if (!o) throw new FondementInconnuError("dae-erp-detention");
+  const erp = o.typologies.erp;
+  return typeof erp === "object" && erp.categories ? erp.categories : [];
+}
+
+/** Les catégories où la scène se propose : celles du dépoussiérage, lues sur l'obligation. */
+function categoriesDeLaScene(): readonly CategorieErp[] {
+  const o = obligationParId("scene-erp-depoussierage-annuel");
+  if (!o) throw new FondementInconnuError("scene-erp-depoussierage-annuel");
   const erp = o.typologies.erp;
   return typeof erp === "object" && erp.categories ? erp.categories : [];
 }
@@ -473,6 +489,30 @@ export function suggererEquipements(ctx: ContexteEtablissement): Entree[] {
       ],
       // Proposée, pas cochée (contrôle visuel du 2026-10-17) : un hôtel à
       // ballons individuels n'est pas visé, et le produit ne le sait pas.
+      cocheeParDefaut: false,
+    });
+  }
+
+  // Scène (2026-10-17, sous-lot G, chapitre L) : proposée à une salle de type L
+  // ou P des catégories où le chapitre s'applique, que le type soit le principal
+  // ou un type supplémentaire. Proposée, pas cochée : une salle de réunion ou
+  // une discothèque sans estrade de spectacle n'en a pas, et le produit ne le
+  // sait pas.
+  if (
+    ctx.estERP &&
+    ctx.categorieErp !== null &&
+    categoriesDeLaScene().includes(ctx.categorieErp) &&
+    ctx.typesErp.some((t) => TYPES_ERP_SCENE_SUGGEREE.includes(t))
+  ) {
+    ajoute({
+      categorie: "SCENE",
+      libelle: LABEL_CATEGORIE_EQUIPEMENT.SCENE,
+      motif:
+        "Dépoussiérage chaque année et vérifications par un organisme agréé, si la salle a une scène, une estrade ou un plateau de spectacle",
+      fondements: [
+        { obligationId: "scene-erp-depoussierage-annuel" },
+        { obligationId: "scene-erp-verifications-triennales-organisme-agree" },
+      ],
       cocheeParDefaut: false,
     });
   }

@@ -60,6 +60,10 @@ export const LABEL_CATEGORIE_EQUIPEMENT: Record<CategorieEquipement, string> = {
   // R. 322-19 (« les buts légers dont le poids total est inférieur à 10 kg »
   // sont exclus) est dans le libellé, pour qu'un but léger ne se déclare pas.
   BUT_PANIER_SPORTIF: "But ou panier de sport de 10 kg ou plus",
+  // 2026-10-17, sous-lot G : le nom décidé par c6 (« Scène / installations
+  // scéniques »). L'art. L 49 appelle « espace scénique » la scène, l'estrade,
+  // le plateau ou la piste qui permet un spectacle.
+  SCENE: "Scène / installations scéniques",
   AUTRE: "Autre équipement",
 };
 
@@ -254,6 +258,15 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
   // avec `nonPorte` ; les normes de sécurité que R. 322-22 et R. 322-25
   // citent ne sont pas lues et ne sont pas nommées.
   BUT_PANIER_SPORTIF: `Cage de but de football, de handball ou de hockey, but de basket-ball, en plein air ou en salle, de 10 kg ou plus — un but plus léger n'est pas visé (code du sport, art. R. 322-19). Pour tout établissement qui en met à la disposition des usagers, Rojer suit ${porte("le plan de vérification et d'entretien")} des buts et ${porte("le registre des essais et contrôles")} (art. R. 322-25) ; le texte laisse au plan le soin de fixer la périodicité des vérifications. Rojer ne suit pas ${nonPorte("le contrôle des buts dès leur première installation")}, ${nonPorte("la sécurisation des buts non fixés après chaque utilisation")} ni ${nonPorte("le signalement au préfet d'un accident grave lié à un but")} (art. R. 322-25 et R. 322-25-1).`,
+  // 2026-10-17, sous-lot G (chapitre L). La catégorie dit ce que la scène fait
+  // naître et ce qu'elle ne fait pas naître. Les phrases `nonPorte` sont
+  // l'ADRESSE d'annonce des entrées `non_couvert` du corpus
+  // `arrete-1980-livre-2-titre-2` — `L 57 § 1 b`, `L 57 § 4`, `L 63 § 4`,
+  // `L 55`, `L 75`, `L 32` — dont le `declareA` cite cette clé : les changer, c'est
+  // changer l'annonce. L 79 n'y est pas : il ne dit pas « présent » (décision
+  // de c6 du 2026-10-17). Les sièges (AM 18, L 28) et le gaz des salles (L 31)
+  // sont annoncés dans l'aide du type L, pas ici : ils ne touchent pas la scène.
+  SCENE: `Scène, estrade, plateau ou piste sur lesquels on donne des représentations, des concerts ou des spectacles (art. L 49), dans une salle de type L, ou dans une salle de danse de type P pour ses aménagements de spectacle (art. L 1 § 3), des catégories 1 à 4. Rojer suit pour chaque scène ${porte("le dépoussiérage annuel des cintres, grils, dessous, fosses et planchers techniques")} (art. L 57 § 3), et, pour l'établissement, les ${porte("vérifications techniques par un organisme agréé, au moins tous les trois ans")} (art. L 57 § 1 a), ${porte("la vérification annuelle par un organisme agréé du matériel d'éclairage de spectacle et d'effets scéniques monté pour une durée limitée")} (art. L 13 § 5) et, en 3ᵉ catégorie, ${porte("la présence d'une personne qualifiée pendant l'ouverture au public")} (art. L 57 § 7). Déclarez à part la machinerie qui lève des charges (perches, palans, porteuses) comme « Équipement de levage ». Rojer ne suit pas ${nonPorte("la commande d'un circuit de l'éclairage normal depuis un endroit habituellement surveillé pendant la présence du public, quand la salle a un espace scénique ou une cabine de projection (art. L 32 § 1), la vérification annuelle des déversoirs et des rideaux d'eau (art. L 57 § 1 b), l'inspection faite avant l'ouverture au public pour qu'aucun matériel suspendu ne puisse tomber (art. L 57 § 4), la manœuvre complète du dispositif d'obturation de la baie de scène avant l'entrée du public, à chaque représentation (art. L 63 § 4), l'examen par la commission de sécurité de tout programme qui emploie des artifices ou des flammes et, jusqu'à cinquante bougies, le membre du personnel désigné et équipé d'un moyen d'extinction (art. L 55), ni, avec des décors en matériaux M2 ou en bois M3 sur un espace scénique intégré, la présence du service de sécurité incendie pendant la présence du public, dont une personne désignée dans la salle (art. L 75 § 3)")}. Pour un établissement qui n'est déclaré ni de type L ni de type P, Rojer ne suit rien pour une scène.`,
   AUTRE: "Autre équipement soumis à vérification périodique.",
 };
 

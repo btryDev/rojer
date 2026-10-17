@@ -429,6 +429,7 @@ export const LIBELLE_CATEGORIE: Record<string, string> = {
   EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC:
     "eau chaude collective alimentant des douches ou des bains à remous ouverts au public",
   BUT_PANIER_SPORTIF: "but ou panier de sport de 10 kg ou plus",
+  SCENE: "scène / installations scéniques",
   AUTRE: "autre",
 };
 

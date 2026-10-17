@@ -520,3 +520,44 @@ describe("suggererEquipements — l'eau chaude collective, aux types O et X (202
     ).toEqual(["N", "O"]);
   });
 });
+
+describe("suggererEquipements — la scène, aux types L et P des catégories 1 à 4 (2026-10-17, sous-lot G)", () => {
+  const salle = (
+    typesErp: ("L" | "P" | "N" | "O")[],
+    categorieErp: "N1" | "N2" | "N3" | "N4" | "N5" | null = "N3",
+    estERP = true,
+  ) => ({
+    codeNaf: null,
+    estEtablissementTravail: true,
+    estERP,
+    estIGH: false,
+    estHabitation: false,
+    categorieErp,
+    typesErp,
+  });
+  const SCENE = "SCENE";
+
+  it("borne basse : une salle L et une salle de danse P de 1ʳᵉ à 4ᵉ catégorie se la voient proposer", () => {
+    for (const t of ["L", "P"] as const) {
+      for (const c of ["N1", "N2", "N3", "N4"] as const) {
+        expect(categories(suggererEquipements(salle([t], c))), `${t} ${c}`).toContain(SCENE);
+      }
+    }
+  });
+
+  it("proposée mais non cochée, fondée sur le dépoussiérage et la triennale", () => {
+    const s = suggererEquipements(salle(["L"])).find((e) => e.categorie === SCENE);
+    expect(s?.cocheeParDefaut).toBe(false);
+    expect(s?.raison).toContain("L 57");
+  });
+
+  it("un L déclaré en second type suffit (ADR-045)", () => {
+    expect(categories(suggererEquipements(salle(["O", "L"])))).toContain(SCENE);
+  });
+
+  it("borne haute : ni en 5ᵉ, ni un autre type, ni hors ERP", () => {
+    expect(categories(suggererEquipements(salle(["L"], "N5")))).not.toContain(SCENE);
+    expect(categories(suggererEquipements(salle(["N"], "N3")))).not.toContain(SCENE);
+    expect(categories(suggererEquipements(salle(["L"], null, false)))).not.toContain(SCENE);
+  });
+});

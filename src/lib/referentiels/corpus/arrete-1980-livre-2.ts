@@ -304,6 +304,9 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       obligations: [
         "ascenseur-erp-verification-quinquennale-as9",
         "ascenseur-erp-verification-remise-en-service-as9",
+        // 2026-10-17, sous-lot G : L 57 § 1 a est l'une des « dispositions du
+        // présent règlement » qui l'imposent (deuxième tiret).
+        "scene-erp-verifications-triennales-organisme-agree",
       ],
     },
     {
@@ -342,6 +345,10 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
         // Ajoutée le 2026-09-01 (lot C). La réserve inscrite le matin même
         // disait « LE § 2 N'EST ENCODÉ NULLE PART » ; il l'est.
         "elec-erp-presence-personne-qualifiee",
+        // 2026-10-17, sous-lot G : la sœur en 3ᵉ catégorie, salle L ou P avec
+        // scène — L 57 § 7 rend EL 18 § 2 applicable « en aggravation »
+        // (lecture probable, dite au corpus du titre II, entrée L 57).
+        "elec-erp-presence-personne-qualifiee-scene-n3",
       ],
       reserve:
         "LE § 2 EST ENCODÉ DEPUIS LE 2026-09-01 (lot C) : `elec-erp-presence-personne-qualifiee`, état permanent, porteur établissement, restreinte aux 1ʳᵉ et 2ᵉ catégories comme l'écrit la première phrase. La réserve du matin disait « aucune obligation du référentiel ne la porte, et le corpus ne la comptait pas comme manquante puisque l'article était déjà classé retenu au titre du seul § 4 » — c'est le cas d'école du manque qu'un statut « retenu » cache, et il est levé.\n\nCE QUI RESTE HORS RÉFÉRENTIEL, sur cet article. La SECONDE PHRASE du § 2 — la même mesure imposable aux 3ᵉ et 4ᵉ catégories « après avis de la commission de sécurité » — n'est pas encodée : c'est un acte administratif individuel, donc une prescription particulière (ADR-035), et l'inscrire au référentiel la donnerait à tous les ERP de 3ᵉ et 4ᵉ catégorie. Le § 1 (entretien et réparation des défectuosités dès leur constatation) et le § 3 (renvoi de l'éclairage de sécurité à EC 13 et EC 14) restent sans ligne propre : le premier est une obligation de moyens sans acte datable, le second est un renvoi dont la destination est encodée.",
@@ -2147,7 +2154,12 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       historique: "2026-10-17 — classé d'abord `obligation_manquante` par cette lecture ; ~~cause et blocage : Aucune catégorie d'équipement ne désigne les rangées de sièges rembourrés, et le rythme est renvoyé à une fiche du fabricant que le produit ne connaît pas. QUESTION posée à c6 le 2026-10-17 : ligne (défaut annuel, ADR-039), annonce, ou hors cadre par la ligne de partage 5 (cas de niche) ?~~ La question de droit est tranchée le même jour : Décision de c6 du 2026-10-17 (règle « bon sens avant le préventeur ») : niche (rangées de sièges, surtout le type L), rythme renvoyé à la fiche du fabricant : `non_couvert`, annoncé au sous-lot G.",
       statut: "non_couvert",
       motif: "Matériaux des sièges, nombre de sièges par rangée, fixation : règles d'aménagement. Mais le § 1 porte un ENTRETIEN : l'enveloppe des sièges rembourrés « doit toujours être maintenue bien close et en bon état », et « son entretien doit être effectué suivant les prescriptions d'une fiche technique fournie à l'exploitant par le fabricant ». Un entretien imposé, au rythme délégué à la fiche du fabricant ; « maintenue […] en bon état » est l'un des rythmes vagues que l'ADR-039 porte au défaut annuel. Écarté avec doute par la lecture du 2026-10-16 (constats du 2026-10-17, § 1) ; lu ici d'abord comme un acte. Vise les salles à rangées de sièges (spectacles, conférences, cultes, tribunes), rarement une TPE de la cible, mais aucun type d'ERP n'est exclu par l'article. Décision de c6 du 2026-10-17 (règle « bon sens avant le préventeur ») : niche (rangées de sièges, surtout le type L), rythme renvoyé à la fiche du fabricant : `non_couvert`, annoncé au sous-lot G." + SUITE_ANNONCE_DECIDEE,
-      declareA: "Non déclaré au 2026-10-17 : l'annonce est prévue dans l'aide de la catégorie « Scène » et du type L (sous-lot G du plan « mise à jour du référentiel »), qui n'existent pas encore.",
+      // ~~« … dans l'aide de la catégorie « Scène » et du type L (sous-lot G …),
+      // qui n'existent pas encore »~~ — 2026-10-17, sous-lot G, décision de
+      // c6 : l'aide du type L seulement (les sièges sont dans la salle, pas sur
+      // la scène), écrite au rebase sur D, qui crée `AIDE_TYPE_ERP`.
+      // [2026-10-17, rebase de G sur D : écrite.]
+      declareA: "Formulaire de l'établissement, aide du type d'ERP sous le choix du type (`src/lib/etablissements/aide-type-erp.ts`, `AIDE_TYPE_ERP.L`) : « l'entretien de l'enveloppe des sièges rembourrés, à faire suivant la fiche technique que le fabricant vous a fournie (art. AM 18 § 1), ni le bon fonctionnement des sièges qui se relèvent automatiquement (art. L 28 § 2) »",
     },
     {
       ref: "AM 19",

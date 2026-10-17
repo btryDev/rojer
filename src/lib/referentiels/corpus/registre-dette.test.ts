@@ -378,7 +378,12 @@ describe("registre de dette — les réserves de lecture", () => {
     // le registre des buts, garde le contrôle à la première installation, la
     // sécurisation des buts non fixés et l'inaccessibilité du non-conforme.
     // 114 + 1 − 0 = 115.
-    expect(n).toBe(115);
+    // 115 → 118 le 2026-10-17 (sous-lot G, `lot/ref-g-chapitre-l`, rebasé sur
+    // D et E), mesuré en appelant : 115 + 3 − 0 — `L 13` (seule la dernière
+    // phrase du § 5 est portée), `L 14` (agents de sécurité incendie et service
+    // de représentation non suivis), `L 57` (§ 7, § 1 b et § 4 classés à part ;
+    // § 1 c porté par le levage).
+    expect(n).toBe(118);
     expect(reservesDeLecture().length).toBe(n);
   });
 });

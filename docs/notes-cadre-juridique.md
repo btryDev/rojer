@@ -172,8 +172,10 @@ niche (ligne 5) décide ensuite si Rojer en fait une ligne ou l'annonce.
 - ~~**Dix chapitres du livre II, titre II non lus** (L, P, R, S, T, U, V, X, Y, J) :
   hors des secteurs cibles, à classer si la cible s'élargit.~~ [2026-10-16 :
   tous lus. L par la session du chantier multi-types
-  (`propositions/lecture-chapitre-L-2026-10-16.md`) — il n'est PAS au corpus,
-  et y entrera avec son encodage ; les neuf autres en entier,
+  (`propositions/lecture-chapitre-L-2026-10-16.md`) — ~~il n'est PAS au corpus,
+  et y entrera avec son encodage~~ [2026-10-17, sous-lot G (`lot/ref-g-chapitre-l`) :
+  relu à l'API et entré au corpus avec son encodage — catégorie `SCENE`, quatre
+  lignes, L au personnel désigné] ; les neuf autres en entier,
   classés au corpus `arrete-1980-livre-2-titre-2` (~~295~~ 296 entrées, X 1 § 2
   classé à part le 2026-10-17), avec le chapitre
   V du livre III (petits établissements de soins) — `lot/erp-chapitres-types-1016`.

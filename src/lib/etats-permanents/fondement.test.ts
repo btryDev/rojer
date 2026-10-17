@@ -178,8 +178,17 @@ describe("plusieurs types d'ERP — l'article de chacun (ADR-045, lot 3)", () =>
   });
 
   it("un type que la ligne ne cite pas n'ajoute rien", () => {
-    // L : le chapitre n'est pas cité par cette ligne.
-    expect(fondementDe(PERSONNEL, ctx("N", "N3", ["L"]))!.complement).toBeUndefined();
+    // ~~L : le chapitre n'est pas cité par cette ligne.~~ — 2026-10-17, sous-lot
+    // G : L 14 l'est désormais. V (lieux de culte), lu sans être servi, prend
+    // sa place.
+    expect(fondementDe(PERSONNEL, ctx("N", "N3", ["V"]))!.complement).toBeUndefined();
+  });
+
+  it("une salle L avec un restaurant : L 14 en complément, avec sa citation (sous-lot G)", () => {
+    const f = fondementDe(PERSONNEL, ctx("N", "N3", ["L"]))!;
+    expect(f.reference).toContain("art. N 17");
+    expect(f.complement?.map((c) => c.reference)).toEqual([expect.stringContaining("art. L 14")]);
+    expect(f.complement?.[0].extrait).toBe(INDEX.get("L 14")?.article.citationCle);
   });
 
   it("la consigne d'un hôtel-restaurant de 3ᵉ : N 20 en complément, O n'en a pas", () => {
@@ -200,5 +209,26 @@ describe("contexteFondementDe — le contexte d'un établissement qui n'est pas 
     expect(
       contexteFondementDe({ estERP: false, typeErp: "N", typesErpAutres: ["O"], categorieErp: "N3" }),
     ).toEqual({ typesErp: [], categorieErp: null });
+  });
+});
+
+describe("entrée scindée du corpus : la ligne cite le paragraphe (2026-10-17, sous-lot G)", () => {
+  // Une référence dont la clé vise une entrée scindée (« MS 70 § 5 — … »)
+  // perdait sa citation : la pastille ouvrait Légifrance sans rien citer.
+  // Éprouvé en retirant le découpage de `designation` : les trois rougissent.
+  it.each([
+    ["incendie-erp-modalites-appel-pompiers-affichees", "MS 70 § 5 — modalités d'appel des sapeurs-pompiers affichées"],
+    ["porte-auto-erp-contrat-entretien", "CO 48 § 3 e) — contrat d'entretien des portes automatiques"],
+    ["elec-erp-presence-personne-qualifiee-scene-n3", "L 57 § 7 — présence d'une personne qualifiée en 3e catégorie"],
+  ])("%s cite l'entrée « %s »", (id, ref) => {
+    const o = obligationsConformite.find((x) => x.id === id)!;
+    const attendu = INDEX.get(ref)?.article.citationCle;
+    expect(attendu).toBeTruthy();
+    expect(fondementDe(o)!.extrait).toBe(attendu);
+  });
+
+  it("la sœur de 3ᵉ ne cite pas la phrase des vérifications triennales (§ 1 a)", () => {
+    const o = obligationsConformite.find((x) => x.id === "elec-erp-presence-personne-qualifiee-scene-n3")!;
+    expect(fondementDe(o)!.extrait).not.toContain("tous les trois ans");
   });
 });
