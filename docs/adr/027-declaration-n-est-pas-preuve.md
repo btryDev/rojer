@@ -425,13 +425,14 @@ Le motif tient au lecteur, qui a changé (décision 5) : un contrôleur lit par
 texte. L'usage aide celui qui met en place ; il égarerait celui qui cherche
 l'article qu'il vient vérifier.
 
-### 10. Le compteur d'une famille dit la même chose que celui de l'en-tête
+### 10. ~~Le compteur d'une famille dit la même chose que celui de l'en-tête~~ Une phrase dit qui affirme, une fois, à l'en-tête de page
 
 Chaque famille porte son compteur, calculé comme celui de l'en-tête : il ne
 compte que les lignes en mode « état », et la somme des familles est le total
-(`queries.ts`). Sa phrase est **celle de l'en-tête, `phraseCompteur`**
+(`queries.ts`). ~~Sa phrase est **celle de l'en-tête, `phraseCompteur`**
 (`etats-permanents/phrases.ts`) : « déclarés en place par vous », et, depuis
-le lot #45, la part « établie d'après les titres déclarés » dite à part.
+le lot #45, la part « établie d'après les titres déclarés » dite à part.~~
+[2026-10-17, revue de c6 : barré, voir ci-dessous.]
 
 **Jamais « conformes », jamais un pourcentage.** Un compteur par famille est
 une affirmation de plus à l'écran ; il ne peut pas en porter une autre que
@@ -439,7 +440,7 @@ celle que le corollaire de la décision 2 autorise. Une phrase propre aux
 familles aurait été une seconde rédaction de la même chose, et ce dépôt sait
 qu'elles divergent à la première correction.
 
-[2026-10-17, revue indépendante] Le **sommaire** rendait, lui, un compteur
+~~[2026-10-17, revue indépendante] Le **sommaire** rendait, lui, un compteur
 nu — « 3 sur 8 » —, qui ne disait pas qui affirme. Il porte désormais
 `phraseSommaire` (`phrases.ts`) : plus courte que `phraseCompteur`, faute de
 place, mais avec les deux mêmes sources et les mêmes mots — « déclarés par
@@ -447,7 +448,33 @@ vous », « d'après les titres » —, testée à côté d'elle (`phrases.test.
 C'est la seconde rédaction que le paragraphe précédent redoute ; elle est
 admise parce que la première ne tient pas dans un sommaire, et le test qui
 exige l'une des deux sources sur chaque branche est ce qui l'empêche de
-diverger sur le fond.
+diverger sur le fond.~~ [2026-10-17, revue de c6 : barré, `phraseSommaire`
+retirée.]
+
+[2026-10-17, revue de c6] **La phrase qui dit qui affirme ne se lit qu'une
+fois, à l'en-tête de PAGE** (`CompteurDeLaPage`, `phraseCompteur`). Sur une
+TPE de 5ᵉ catégorie à dossier vide, l'écran la disait trois fois et en trois
+rédactions : « 0 sur 10 déclaré par vous » au sommaire — singulier fautif —,
+« 0 sur 10 · déclarés en place par vous » sous la famille, la même à l'en-tête ;
+« d'après les titres » ici, « établis d'après les titres déclarés » là. La
+seconde rédaction que le paragraphe précédent redoutait avait divergé dès le
+jour de son écriture. Désormais :
+
+- **les familles et le sommaire n'affichent que « X sur Y »** (chiffres
+  tabulaires) : l'en-tête de page, au-dessus, dit pour tous d'où vient « en
+  place » ;
+- **une seule forme par source** : « déclaré(s) en place par vous » et
+  « établi(s) d'après les titres déclarés » ;
+- **l'accord suit le nombre en place, singulier à 1 seulement** — 0 est
+  pluriel, la règle déjà retenue par `phraseFaitsDates` ; « tous » ne se dit
+  pas d'une seule ligne ;
+- le préfixe « en place : » / « tous en place : » de la variante avec titres
+  est retiré : il redisait « en place » devant « déclarés en place par vous ».
+
+`SectionsParUsage.test.tsx` rend l'en-tête, le sommaire et les familles
+ensemble et compte la phrase : une fois. `phrases.test.ts` balaie les accords
+à 0, 1 et n. Le PDF garde sa propre phrase, « par l'employeur », adressée à
+un tiers : il n'est pas touché.
 
 ### 11. Rien ne se replie, ni à la main ni tout seul
 

@@ -20,7 +20,9 @@ vi.mock("@/lib/auth/require-user", () => ({
 }));
 
 const { listerEtatsPermanents } = await import("@/lib/etats-permanents/queries");
-const { SectionsParUsage, SommaireParUsage } = await import("./SectionsParUsage");
+const { CompteurDeLaPage, SectionsParUsage, SommaireParUsage } = await import(
+  "./SectionsParUsage"
+);
 const {
   GROUPE_REPLI,
   LIBELLE_GROUPE,
@@ -104,6 +106,11 @@ async function lire(nom: keyof typeof DOSSIERS): Promise<Etats> {
 function rendre(d: Etats) {
   return render(
     <main>
+      <CompteurDeLaPage
+        enPlace={d.enPlace}
+        total={d.total}
+        parLesTitres={d.familles.reduce((n, f) => n + f.parLesTitres.enPlace, 0)}
+      />
       <SommaireParUsage familles={d.familles} />
       <SectionsParUsage
         familles={d.familles}
@@ -170,6 +177,26 @@ describe.each(Object.keys(DOSSIERS) as (keyof typeof DOSSIERS)[])(
       }
       const ids = [...container.querySelectorAll("section[id]")].map((s) => s.id);
       expect(ids).toEqual(cibles);
+    });
+
+    it("la phrase qui dit qui affirme se lit UNE fois, à l'en-tête de page (2026-10-17, revue de c6)", async () => {
+      const d = await lire(nom);
+      const { container } = rendre(d);
+      const texte = container.textContent ?? "";
+      expect(texte.match(/déclarés? en place par vous/g) ?? []).toHaveLength(1);
+      expect(texte.match(/par vous/g) ?? []).toHaveLength(1);
+      // Les familles et le sommaire disent « x sur n », et rien d'autre.
+      for (const f of d.familles) {
+        const section = container.querySelector(`#usage-${f.groupe}`)!;
+        const compte = section.querySelector("section > div > p")!;
+        expect(compte.textContent).toBe(`${f.enPlace} sur ${f.total}`);
+        expect(compte.className).toContain("tabular-nums");
+      }
+      for (const li of container.querySelectorAll('nav[aria-label="Sommaire"] li')) {
+        const span = li.querySelector("span")!;
+        expect(span.textContent).toMatch(/^\d+ sur \d+$/);
+        expect(span.className).toContain("tabular-nums");
+      }
     });
 
     it("aucune carte ne porte un sur-titre qui répète le titre, ni deux niveaux de titrage", async () => {
@@ -296,5 +323,38 @@ describe("le repli : une ligne de l'écran sans rangement (2026-10-17, revue ind
       a.getAttribute("href"),
     );
     expect(liens.at(-1)).toBe(`#usage-${GROUPE_REPLI}`);
+  });
+});
+
+describe("la part des titres : une phrase, une fois, à l'en-tête (2026-10-17, revue de c6)", () => {
+  it("« d'après les titres déclarés » ne se lit qu'à l'en-tête, ni au sommaire ni aux familles", () => {
+    const famille = (groupe: "organisation" | "quotidien", enPlace: number, titres: number) => ({
+      groupe,
+      libelle: LIBELLE_GROUPE[groupe],
+      enPlace,
+      total: 4,
+      parLesTitres: { total: titres, enPlace: titres },
+      blocs: [
+        {
+          sous: null,
+          libelle: null,
+          enPlace,
+          total: 4,
+          lignes: [{ obligation: { id: `o-${groupe}`, libelle: "Une ligne" } }],
+        },
+      ],
+    });
+    const d = {
+      enPlace: 5,
+      total: 8,
+      familles: [famille("organisation", 3, 1), famille("quotidien", 2, 1)],
+    } as unknown as Etats;
+    const { container } = rendre(d);
+    const texte = container.textContent ?? "";
+    expect(texte.match(/d'après les titres/g) ?? []).toHaveLength(1);
+    expect(texte.match(/par vous/g) ?? []).toHaveLength(1);
+    expect(texte).toContain(
+      "3 déclarés en place par vous, 2 établis d'après les titres déclarés",
+    );
   });
 });

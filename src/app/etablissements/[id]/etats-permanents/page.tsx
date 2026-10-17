@@ -8,11 +8,11 @@ import {
 } from "@/lib/etats-permanents/queries";
 import { LigneEtat } from "@/components/etats-permanents/LigneEtat";
 import {
+  CompteurDeLaPage,
   SectionsParUsage,
   SommaireParUsage,
 } from "@/components/etats-permanents/SectionsParUsage";
 import {
-  phraseCompteur,
   phraseFaitsDates,
   phraseRestantes,
 } from "@/lib/etats-permanents/phrases";
@@ -185,18 +185,16 @@ export default async function EtatsPermanentsPage({
             jusque dans les briefs eux-mêmes, trois fois sur cette page.
 
             « déclarés en place par vous », jamais « conformes » : le produit
-            assiste, il ne certifie pas (CLAUDE.md, règle 8).
+            assiste, il ne certifie pas (CLAUDE.md, règle 8). C'est ici, et
+            ici SEULEMENT, que l'écran dit qui affirme « en place » : les
+            familles et le sommaire ne portent que « x sur n » (2026-10-17,
+            revue de c6 ; ADR-027, amendement du 2026-10-17, § 10).
           */}
-          {total > 0 && (
-            <div className="shrink-0 text-right">
-              <p className="board-titre m-0 text-[20px] tabular-nums leading-none">
-                {enPlace} sur {total}
-              </p>
-              <p className="board-eyebrow m-0 mt-1.5 text-[9.5px] tracking-[0.12em] text-[color:var(--board-slate-soft)]">
-                {phraseCompteur(enPlace, total, parLesTitres.enPlace)}
-              </p>
-            </div>
-          )}
+          <CompteurDeLaPage
+            enPlace={enPlace}
+            total={total}
+            parLesTitres={parLesTitres.enPlace}
+          />
         </div>
       </header>
 

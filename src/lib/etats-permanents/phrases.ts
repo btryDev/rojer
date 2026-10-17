@@ -108,10 +108,24 @@ export function phraseFaitsDates(
 }
 
 /**
- * Le compte de l'en-tête, écrit en toutes lettres sous le chiffre.
+ * Le compte de l'en-tête de PAGE, écrit en toutes lettres sous le chiffre.
  *
  * « déclarés en place **par vous** », jamais « conformes » : le produit assiste,
  * il ne certifie pas (`CLAUDE.md`, règle 8).
+ *
+ * **La seule phrase de l'écran qui dit qui affirme, et elle n'y est qu'une
+ * fois** (2026-10-17, revue de c6). Elle se lisait aussi sous chaque famille,
+ * et une variante courte — `phraseSommaire`, retirée — dans le sommaire : trois
+ * rédactions de la même affirmation sur un même écran, qui ne s'accordaient
+ * pas entre elles (« 0 sur 10 déclaré par vous » au sommaire, « déclarés en
+ * place par vous » sous la famille, « d'après les titres » ici, « établis
+ * d'après les titres déclarés » là). Les familles et le sommaire ne portent
+ * plus que « X sur Y » ; l'en-tête de page dit pour tous d'où vient « en
+ * place ».
+ *
+ * **L'accord suit le nombre « en place », singulier à 1 seulement** — 0 est
+ * pluriel, la règle de `phraseFaitsDates` (« 2 sur 3 portent », « 1 sur 3
+ * porte »). « tous » ne se dit pas d'une seule ligne.
  */
 export function phraseCompteur(
   enPlace: number,
@@ -126,46 +140,32 @@ export function phraseCompteur(
   if (parLesTitres > 0) {
     const declares = enPlace - parLesTitres;
     const parVous =
-      declares <= 0 ? null : declares === 1 ? "1 déclaré par vous" : `${declares} déclarés par vous`;
+      declares <= 0
+        ? null
+        : declares === 1
+          ? "1 déclaré en place par vous"
+          : `${declares} déclarés en place par vous`;
     const parTitres =
       parLesTitres === 1
         ? "1 établi d'après les titres déclarés"
         : `${parLesTitres} établis d'après les titres déclarés`;
-    const detail = parVous ? `${parVous}, ${parTitres}` : parTitres;
-    return enPlace === total ? `tous en place : ${detail}` : `en place : ${detail}`;
+    // ~~« tous en place : … » / « en place : … »~~ (2026-10-17) : le
+    // préfixe redisait « en place » devant « déclarés en place par vous »,
+    // et le chiffre au-dessus dit déjà si tout l'est.
+    return parVous ? `${parVous}, ${parTitres}` : parTitres;
   }
-  if (enPlace === 0) return "déclarés en place par vous";
+  if (enPlace === 1) return "déclaré en place par vous";
   if (enPlace === total) return "tous déclarés en place par vous";
   return "déclarés en place par vous";
 }
 
-/**
- * Le compte d'une famille dans le sommaire, en tête de l'écran (2026-10-17).
- *
- * Il rendait un compteur nu, « 3 sur 8 » : le corollaire de l'ADR-027 veut
- * que tout compte d'« en place » dise QUI l'affirme — l'employeur, ou les
- * titres qu'il a déclarés —, jamais le produit (revue indépendante). Plus
- * court que `phraseCompteur`, qui suit le titre de la famille, mais avec les
- * mêmes deux sources et les mêmes mots.
+/*
+ * ~~`phraseSommaire`~~ (retirée le 2026-10-17, revue de c6) : le compte d'une
+ * famille au sommaire disait qui affirme dans une rédaction courte, seconde
+ * de `phraseCompteur`, et rendait « 0 sur 10 déclaré par vous » — singulier
+ * fautif à 0. Le sommaire ne porte plus que « X sur Y » ; la phrase n'est
+ * plus qu'à l'en-tête de page (ADR-027, amendement du 2026-10-17, § 10).
  */
-export function phraseSommaire(
-  enPlace: number,
-  total: number,
-  /** La part d'`enPlace` établie d'après les titres déclarés. */
-  parLesTitres = 0,
-): string {
-  if (total === 0) return "aucun état à déclarer";
-  if (parLesTitres <= 0) {
-    return enPlace <= 1
-      ? `${enPlace} sur ${total} déclaré par vous`
-      : `${enPlace} sur ${total} déclarés par vous`;
-  }
-  const declares = enPlace - parLesTitres;
-  if (declares <= 0) return `${enPlace} sur ${total} en place d'après les titres`;
-  const parVous =
-    declares === 1 ? "1 déclaré par vous" : `${declares} déclarés par vous`;
-  return `${enPlace} sur ${total} en place : ${parVous}, ${parLesTitres} d'après les titres`;
-}
 
 /**
  * Ce qu'une ligne déclarée affiche, verbe et date d'un seul tenant.

@@ -19,7 +19,40 @@ import type {
   LigneEtatPermanent,
 } from "@/lib/etats-permanents/queries";
 import { ancreFamille } from "@/lib/etats-permanents/ancre";
-import { phraseCompteur, phraseSommaire } from "@/lib/etats-permanents/phrases";
+import { phraseCompteur } from "@/lib/etats-permanents/phrases";
+
+/**
+ * Le compte de l'en-tête de PAGE : le chiffre, et sous lui la SEULE phrase de
+ * l'écran qui dit qui affirme « en place » (`phraseCompteur`, ADR-027,
+ * amendement du 2026-10-17, § 10). Sorti de la page pour que le test rende
+ * l'écran entier — en-tête, sommaire, familles — et compte la phrase une
+ * fois, pas trois.
+ *
+ * Le compteur est MESURÉ, jamais écrit à la main : `listerEtatsPermanents`
+ * le calcule sur ce que le moteur rend pour CE dossier.
+ */
+export function CompteurDeLaPage({
+  enPlace,
+  total,
+  parLesTitres,
+}: {
+  enPlace: number;
+  total: number;
+  /** La part d'`enPlace` établie d'après les titres déclarés. */
+  parLesTitres: number;
+}) {
+  if (total === 0) return null;
+  return (
+    <div className="shrink-0 text-right">
+      <p className="board-titre m-0 text-[20px] tabular-nums leading-none">
+        {enPlace} sur {total}
+      </p>
+      <p className="board-eyebrow m-0 mt-1.5 text-[9.5px] tracking-[0.12em] text-[color:var(--board-slate-soft)]">
+        {phraseCompteur(enPlace, total, parLesTitres)}
+      </p>
+    </div>
+  );
+}
 
 /**
  * Le sommaire : les familles PRÉSENTES sur ce dossier, et elles seules — une
@@ -50,9 +83,12 @@ export function SommaireParUsage({
               {f.libelle}
             </a>
             {/* ~~« x sur n », nu~~ (2026-10-17, revue indépendante) : le
-                compte dit qui affirme, comme celui de la famille (ADR-027). */}
+                compte dit qui affirme, comme celui de la famille (ADR-027).
+                ~~`phraseSommaire`~~ (2026-10-17, revue de c6) : « x sur n »
+                de nouveau, et cette fois parce que l'en-tête de page dit qui
+                affirme pour tout l'écran — une phrase, une fois (§ 10). */}
             <span className="text-[12.5px] tabular-nums text-[color:var(--board-slate-mid)]">
-              {phraseSommaire(f.enPlace, f.total, f.parLesTitres.enPlace)}
+              {f.enPlace} sur {f.total}
             </span>
           </li>
         ))}
@@ -85,15 +121,13 @@ export function SectionsParUsage({
             >
               {f.libelle}
             </h2>
-            {/* Le compte de la famille dit d'où vient chaque « en place »,
-                comme celui de l'en-tête et avec la même phrase : jamais
-                « conformes », jamais un pourcentage. */}
-            <p className="m-0 text-[12.5px] text-[color:var(--board-slate-mid)]">
-              <span className="tabular-nums">
-                {f.enPlace} sur {f.total}
-              </span>
-              {" · "}
-              {phraseCompteur(f.enPlace, f.total, f.parLesTitres.enPlace)}
+            {/* ~~Le compte de la famille dit d'où vient chaque « en place »,
+                comme celui de l'en-tête et avec la même phrase~~ (2026-10-17,
+                revue de c6 : la phrase se lisait autant de fois qu'il y a de
+                familles). « x sur n » seul : l'en-tête de page dit qui
+                affirme. Jamais « conformes », jamais un pourcentage. */}
+            <p className="m-0 text-[12.5px] tabular-nums text-[color:var(--board-slate-mid)]">
+              {f.enPlace} sur {f.total}
             </p>
           </div>
 
