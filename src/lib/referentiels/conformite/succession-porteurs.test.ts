@@ -105,6 +105,7 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "conduite-salarie-formation": "salarie",
   "cuisson-erp-appareils-annuelle": "equipement",
   "cuisson-erp-circuits-extraction-nettoyage": "equipement",
+  "cuisson-erp-consignes-arret-urgence": "etablissement", // 2026-10-17, sous-lot C
   "cuisson-erp-extinction-automatique-annuelle": "equipement",
   "cuisson-erp-filtres-hebdomadaire": "equipement",
   "cuisson-erp-verification-initiale": "equipement",
@@ -179,26 +180,34 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "habitation-verification-annuelle-installations-securite": "etablissement",
   "incendie-erp-5-consignes-affichees": "etablissement",
   "incendie-erp-5-instruction-personnel": "etablissement",
+  "incendie-erp-5-sommeil-avis-controle-affiche": "etablissement", // 2026-10-17, sous-lot C
   "incendie-erp-5-sommeil-consigne-chambres": "etablissement",
   "incendie-erp-5-sommeil-contrat-entretien-sdi": "etablissement",
   "incendie-erp-5-sommeil-plans-affiches": "etablissement",
   "incendie-erp-5-visite-commission": "etablissement",
   "incendie-erp-alarme-verification-hebdomadaire": "equipement",
+  "incendie-erp-avis-controle-affiche": "etablissement", // 2026-10-17, sous-lot C
   "incendie-erp-baes-annuelle": "equipement",
   "incendie-erp-desenfumage-annuelle": "equipement",
   "incendie-erp-desenfumage-triennale-mecanique-ssi": "equipement",
   "incendie-erp-eclairage-securite-autonomie-semestrielle": "equipement",
   "incendie-erp-eclairage-securite-essai-mensuel": "equipement",
+  "incendie-erp-eclairage-securite-notice-registre": "etablissement", // 2026-10-17, sous-lot C
+  "incendie-erp-exploitant-present-public": "etablissement", // 2026-10-17, sous-lot C
   "incendie-erp-extincteurs-annuelle": "equipement",
   "incendie-erp-extincteurs-revision-decennale": "equipement",
   "incendie-erp-hotel-consigne-chambres": "etablissement",
   "incendie-erp-hotel-plans-evacuation-niveaux": "etablissement",
   "incendie-erp-interdiction-fumer-affichee": "etablissement",
+  "incendie-erp-modalites-appel-pompiers-affichees": "etablissement", // 2026-10-17, sous-lot C
   "incendie-erp-pe4-entretien-installations-techniques": "etablissement",
   "incendie-erp-personnel-designe-moyens-secours": "etablissement",
+  "incendie-erp-personnel-qualifie-detection": "etablissement", // 2026-10-17, sous-lot C
+  "incendie-erp-plan-intervention-entrees": "etablissement", // 2026-10-17, sous-lot C
   "incendie-erp-ria-annuelle": "equipement",
   "incendie-erp-schema-organisation-securite": "etablissement",
   "incendie-erp-ssi-annuelle": "equipement",
+  "incendie-erp-ssi-contrat-entretien": "etablissement", // 2026-10-17, sous-lot C
   "incendie-erp-ssi-triennale": "equipement",
   "incendie-erp-visite-commission-cat1-2-quinquennale": "etablissement",
   "incendie-erp-visite-commission-cat1-2-triennale": "etablissement",
@@ -246,6 +255,7 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "locaux-etablissement-installations-sanitaires": "etablissement",
   "locaux-etablissement-local-restauration": "etablissement",
   "porte-auto-dossier-maintenance": "equipement",
+  "porte-auto-erp-contrat-entretien": "etablissement", // 2026-10-17, sous-lot C
   "porte-auto-maintien-en-etat": "equipement",
   "porte-auto-portail-piete-coulissant": "equipement",
   "porte-auto-verification-initiale": "equipement",

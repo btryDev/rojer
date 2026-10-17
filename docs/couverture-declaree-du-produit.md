@@ -163,7 +163,7 @@ sixième `??` recopié.
 C'est la limite la plus importante de ce document, et la raison directe du
 retrait de la carte.
 
-~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ ~~Les 66 articles (2026-10-07, l'IGH, les équipements sous pression et le stockage de matières dangereuses en partie retirés)~~ ~~Les 70 articles (2026-10-13, quatre manques de la cible redéfinie annoncés)~~ ~~Les 72 articles (2026-10-13, six manques de la cible redéfinie annoncés)~~ ~~Les 73 articles (2026-10-13, sept manques de la cible redéfinie annoncés)~~ ~~Les 74 articles (2026-10-14, `L. 8222-1-1` dit sur la page Prestataires)~~ ~~Les 77 articles (2026-10-14, quatre articles cités par l'aide des catégories entrés au corpus)~~ ~~Les 78 articles (2026-10-14, intégration des deux lots : 73 + 1 + 4)~~ ~~Les 76 articles (2026-10-16, lecture des chapitres de types d'ERP : 78 − 6 + 4)~~ ~~Les 82 articles (2026-10-17, titre Ier lu en entier et motifs du titre II réécrits : 76 + 6 − 0)~~ ~~Les 89 articles (2026-10-17, corrections de la revue de `lot/ref-a-corpus-titre-1` : 82 + 7 − 0)~~ ~~Les 100 articles (2026-10-17, sous-lot B `lot/ref-b-hors-cadre` : 89 + 11 − 0)~~ ~~Les 102 articles (2026-10-17, revue de B : 100 + 2 − 0)~~ Les 99 articles (2026-10-17, sous-lot F, légionelles au matériel : 102 + 0 − 3) ci-dessous sont ceux que le dépouillement a lus, qui imposent
+~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ ~~Les 66 articles (2026-10-07, l'IGH, les équipements sous pression et le stockage de matières dangereuses en partie retirés)~~ ~~Les 70 articles (2026-10-13, quatre manques de la cible redéfinie annoncés)~~ ~~Les 72 articles (2026-10-13, six manques de la cible redéfinie annoncés)~~ ~~Les 73 articles (2026-10-13, sept manques de la cible redéfinie annoncés)~~ ~~Les 74 articles (2026-10-14, `L. 8222-1-1` dit sur la page Prestataires)~~ ~~Les 77 articles (2026-10-14, quatre articles cités par l'aide des catégories entrés au corpus)~~ ~~Les 78 articles (2026-10-14, intégration des deux lots : 73 + 1 + 4)~~ ~~Les 76 articles (2026-10-16, lecture des chapitres de types d'ERP : 78 − 6 + 4)~~ ~~Les 82 articles (2026-10-17, titre Ier lu en entier et motifs du titre II réécrits : 76 + 6 − 0)~~ ~~Les 89 articles (2026-10-17, corrections de la revue de `lot/ref-a-corpus-titre-1` : 82 + 7 − 0)~~ ~~Les 100 articles (2026-10-17, sous-lot B `lot/ref-b-hors-cadre` : 89 + 11 − 0)~~ ~~Les 102 articles (2026-10-17, revue de B : 100 + 2 − 0)~~ ~~Les 99 articles (2026-10-17, sous-lot F, légionelles au matériel : 102 + 0 − 3)~~ Les 108 articles (2026-10-17, sous-lot C, rebasé sur F : 99 + 9 − 0) ci-dessous sont ceux que le dépouillement a lus, qui imposent
 quelque chose à un exploitant, et que le référentiel ne porte pas. **Rien ne les
 restreint aux établissements que leur chapitre vise** — sauf les ~~vingt-cinq
 annoncés le 2026-09-27~~ ~~trente-trois~~ trente-cinq annoncés (vingt-cinq le
@@ -347,9 +347,15 @@ les légionelles passent par le matériel — catégorie
 sa réserve : remise en service, surveillance renforcée, mesures correctives) et
 son annexe 2. Aucun n'entre. Voir § 3, « Légionelles ».
 
+**Puis 99 + 9 − 0 = 108** (2026-10-17, sous-lot C du plan « mise à jour du
+référentiel », `lot/ref-c-incendie-n1-n4`, rebasé sur B puis sur F, mesuré en appelant
+`articlesNonCouverts()`) : neuf actes du titre Ier et du livre III passent
+d'`obligation_manquante` à `non_couvert`, annoncés — voir § 3, « Titre Ier,
+annoncés par le sous-lot C ». Aucun ne sort ; `CO 10` reçoit son adresse.
+
 ---
 
-## 3. Les 99 articles lus et non portés
+## 3. Les 108 articles lus et non portés
 
 ~~Cinq familles~~ ~~Neuf familles (compte refait le 2026-09-26)~~ Dix-huit familles (compte refait le 2026-09-27, C45), une dixième étant sortie de la liste le 2026-09-01 (voir
 ci-dessous). Les motifs sont ceux du corpus, cités et non réécrits : ils ont
@@ -546,8 +552,30 @@ liste des matériels, `AS 5` dans l'aide « Ascenseur »
 (`DESCRIPTION_CATEGORIE.ASCENSEUR`), `AS 8` dans l'entrée « Escalier mécanique
 ou trottoir roulant » ; les sept autres restent **muets** :] `T 29`, `T 33`, `T 43` et `T 44`
 l'aide du type T (sous-lot D), `AM 18` l'aide de la catégorie Scène et du type
-L (sous-lot G), `CO 10` la rubrique que crée le sous-lot C, et `MS 42` n'en
-aura pas (décision de c6).
+L (sous-lot G), ~~`CO 10` la rubrique que crée le sous-lot C,~~ et `MS 42` n'en
+aura pas (décision de c6). [2026-10-17, sous-lot C : `CO 10` est dit dans la
+rubrique « Règlement de sécurité, catégories 1 à 4 » de la page « Ce que Rojer
+ne couvre pas » ; six restent muets.]
+
+### Titre Ier, annoncés par le sous-lot C le 2026-10-17 — 9 articles
+
+`MS 46 § 3 — convention avec un organisateur, annexée au registre` · `EL 23 § 2 — vérification des installations électriques semi-permanentes` · `CO 45 § 5 — inscription « sans issue » des portes en cul-de-sac` · `CO 47 § 2 — avertissement porté par les portes coupe-feu maintenues ouvertes` · `CO 59 — g) consignes affichées dans l'espace d'attente sécurisé` · `CH 52` · `GC 15` · `CH 38 — 6° avertissement affiché aux accès des filtres` · `PE 18`
+
+Venus du § 9, classés par le sous-lot C (découpage validé par c6 le
+2026-10-17). La convention de MS 46 § 3 est une faculté exercée avec un tiers ;
+la vérification d'EL 23 § 2 un acte daté par le montage, que le produit n'observe pas ; les sept autres
+sont des affichages ou des présences (lignes de partage 10 et 11) que la
+règle de niche (ligne de partage 5) fait annoncer : aucune catégorie ni aucun
+attribut ne dit l'îlot de cuisson en salle, la centrale de plus de
+10 000 m³/h, la porte coupe-feu maintenue ouverte, le local en cul-de-sac,
+l'espace d'attente sécurisé ou l'appareil à combustible liquide.
+
+Où c'est dit. Les six premiers et `CO 10` : la rubrique « Règlement de
+sécurité, catégories 1 à 4 » de la page « Ce que Rojer ne couvre pas »
+(`perimetre/manques-annonces.ts`, ERP des catégories 1 à 4). `GC 15` et
+`PE 18` : l'aide de la catégorie « Appareil de cuisson ERP » ; CH 38 6° :
+l'aide de la catégorie « Centrale de traitement d'air » — phrases posées au
+rebase sur le sous-lot B, qui tient `labels.ts` (décision Q3 de c6).
 
 ### Gaz en habitation collective — 1 article
 
@@ -1281,9 +1309,9 @@ proposition : `propositions/lecture-chapitres-types-erp-2026-10-16.md`. Même
 mécanisme que le § 8 du 2026-10-12 : le § 7 et ce § 9, disjoints, font
 ensemble les `obligation_manquante` qui touchent la cible
 (`doc-couverture.test.ts`). Chaque ligne sort d'ici quand la propriétaire l'a
-tranchée. Manquantes : ~~22 + 18 − 0 = 40~~ ~~22 + 26 − 0 = 48~~ ~~22 + 28 − 0 = **50**~~ ~~22 + 49 − 0 = **71**~~ ~~22 + 47 − 0 = **69**~~ ~~22 + 46 − 0 = **68**~~ ~~22 + 52 − 0 = **74**~~ [2026-10-17, sous-lot B : six lignes passent au § 7 — `X annexe`, `X 1 § 2`, `J 33`, `U 62`, `U 64`, `PU 5`, rayées ci-dessous ; le total ne bouge pas : § 7 22 + 6 = 28, § 9 52 − 6 = **46**, 28 + 46 = **74**, mesuré en appelant le corpus. Les autres lignes des types J, U et R (`J 35`, `U 43`, `U 41`, `PU 6`, `J 39`, `R 33`, `U 47`, `J 40`, `U 48`) restent ici jusqu'au lot « filtre à l'accueil » (plan, § 5), qui refusera J et U, et R s'il accueille des enfants : elles passeront alors à `toucheLaCible: false`.] [seconde relecture du même jour : + 6, les affichages prescrits `CO 45 § 5`, `CO 47 § 2`, `CO 59 — g)`, `CH 38 — 6°`, `CH 52` (ligne de partage 11) et `PE 18` (livre III, ligne de partage 10), 46 + 6 = 52 ; avant : corrections de la revue du même jour : − 6 annonces décidées passées `non_couvert` (`CH 23`, `CH 24`, `AS 5`, `AS 8`, `T 29`, `T 33`), + 5 (`CH 17`, `EL 17`, `GC 15`, `MS 66`, `M 35`), 47 − 6 + 5 = 46 ; avant elles : 2026-10-17, `lot/ref-a-corpus-titre-1` : + 21 actes du titre Ier lu en entier, ci-dessous, − 4 passés `non_couvert` (`CO 10`, `AM 18`, `CH 35`, `MS 42`, décision de c6), + 2 du type T (`T 29`, `T 33`, motifs réécrits) ; 28 + 21 − 4 + 2 = 47], toutes dans la cible.
+tranchée. Manquantes : ~~22 + 18 − 0 = 40~~ ~~22 + 26 − 0 = 48~~ ~~22 + 28 − 0 = **50**~~ ~~22 + 49 − 0 = **71**~~ ~~22 + 47 − 0 = **69**~~ ~~22 + 46 − 0 = **68**~~ ~~22 + 52 − 0 = **74**~~ ~~28 + 46 − 0 = **74**~~ 28 + 15 − 0 = **43** [2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`, rebasé sur B), mesuré en appelant `obligationsManquantes()` : § 9 46 − 31 = 15 — vingt-deux retenus (dix lignes nouvelles, rattachements), neuf annoncés ; rangées rayées et datées dans le tableau] [2026-10-17, sous-lot B : six lignes passent au § 7 — `X annexe`, `X 1 § 2`, `J 33`, `U 62`, `U 64`, `PU 5`, rayées ci-dessous ; le total ne bouge pas : § 7 22 + 6 = 28, § 9 52 − 6 = **46**, 28 + 46 = **74**, mesuré en appelant le corpus. Les autres lignes des types J, U et R (`J 35`, `U 43`, `U 41`, `PU 6`, `J 39`, `R 33`, `U 47`, `J 40`, `U 48`) restent ici jusqu'au lot « filtre à l'accueil » (plan, § 5), qui refusera J et U, et R s'il accueille des enfants : elles passeront alors à `toucheLaCible: false`.] [seconde relecture du même jour : + 6, les affichages prescrits `CO 45 § 5`, `CO 47 § 2`, `CO 59 — g)`, `CH 38 — 6°`, `CH 52` (ligne de partage 11) et `PE 18` (livre III, ligne de partage 10), 46 + 6 = 52 ; avant : corrections de la revue du même jour : − 6 annonces décidées passées `non_couvert` (`CH 23`, `CH 24`, `AS 5`, `AS 8`, `T 29`, `T 33`), + 5 (`CH 17`, `EL 17`, `GC 15`, `MS 66`, `M 35`), 47 − 6 + 5 = 46 ; avant elles : 2026-10-17, `lot/ref-a-corpus-titre-1` : + 21 actes du titre Ier lu en entier, ci-dessous, − 4 passés `non_couvert` (`CO 10`, `AM 18`, `CH 35`, `MS 42`, décision de c6), + 2 du type T (`T 29`, `T 33`, motifs réécrits) ; 28 + 21 − 4 + 2 = 47], toutes dans la cible.
 
-**[2026-10-17 — PASSAGE TRANSITOIRE.]** Le titre Ier du livre II est lu en entier (`lot/ref-a-corpus-titre-1`, corpus `arrete-1980-livre-2` passé `integral`, table des matières contrôlée par `table-des-matieres.test.ts`). Les ~~vingt et un~~ dix-sept actes qu'il porte [2026-10-17 : vingt et un lus, quatre passés `non_couvert` le même jour sur décision de c6] et que le référentiel ne sert pas entrent ici TRANSITOIREMENT, avec `T 29` et `T 33` (motifs du type T réécrits le même jour), à la suite du tableau, sous l'intertitre daté : le sous-lot C du plan « mise à jour du référentiel » (`propositions/plan-maj-referentiel-2026-10-17.md`, § 4) les rattache à une ligne existante ou les encode, et les retire de ce § 9 dans le même commit. Rien n'en est encodé ici.
+**[2026-10-17 — PASSAGE TRANSITOIRE.]** **[2026-10-17, sous-lot C : VIDÉ. Les actes du titre Ier ci-dessous sont rattachés, encodés ou annoncés, et leurs rangées rayées ; `M 35` reste au § 9, pour le sous-lot D (aide du type M).]** Le titre Ier du livre II est lu en entier (`lot/ref-a-corpus-titre-1`, corpus `arrete-1980-livre-2` passé `integral`, table des matières contrôlée par `table-des-matieres.test.ts`). Les ~~vingt et un~~ dix-sept actes qu'il porte [2026-10-17 : vingt et un lus, quatre passés `non_couvert` le même jour sur décision de c6] et que le référentiel ne sert pas entrent ici TRANSITOIREMENT, avec `T 29` et `T 33` (motifs du type T réécrits le même jour), à la suite du tableau, sous l'intertitre daté : le sous-lot C du plan « mise à jour du référentiel » (`propositions/plan-maj-referentiel-2026-10-17.md`, § 4) les rattache à une ligne existante ou les encode, et les retire de ce § 9 dans le même commit. Rien n'en est encodé ici.
 
 | Article | Ce qui la met dans la cible | Cause au corpus | Proposition |
 |---|---|---|---|
@@ -1308,35 +1336,35 @@ tranchée. Manquantes : ~~22 + 18 − 0 = 40~~ ~~22 + 26 − 0 = 48~~ ~~22 + 28 
 | ~~`U 64`~~ | Type U | `categorie_equipement` | ~~Catégorie « gaz médicaux » ; vérification annuelle (rythme écrit)~~ ~~[2026-10-17] **Décision** (catégorie d'équipement nouvelle) : vise les STOCKAGES et RÉSEAUX de distribution de gaz médicaux ; vérification annuelle (rythme écrit)~~ **Hors cadre (§ 7)**, sous-lot B, 2026-10-17 |
 | ~~`U 62`~~ | Type U | `categorie_equipement` | ~~Catégorie « gaz médicaux » ; consignes rappelées, défaut annuel~~ ~~[2026-10-17] **Décision**, avec U 64 : consignes rappelées, défaut annuel~~ **Hors cadre (§ 7)**, sous-lot B, 2026-10-17 |
 | ~~`PU 5`~~ | Type U de 5ᵉ catégorie à construire ou à modifier (PU 1) | `categorie_equipement` | ~~Les deux lignes des gaz médicaux étendues à la 5ᵉ, borne à trancher~~ ~~[2026-10-17] **Décision**, avec U 64 : les deux lignes étendues à la 5ᵉ ; la borne « à construire ou à modifier » n'a pas d'attribut~~ **Hors cadre (§ 7)**, sous-lot B, 2026-10-17 |
-| `MS 41` | Tout ERP des catégories 1 à 4 | ~~`libre`~~ `a_trancher` | ~~Ligne nouvelle N1–N4 : plan d'intervention à chaque entrée (porté en 5ᵉ avec sommeil seulement)~~ [2026-10-17] Attend la décision A6 (GN 10), comme PE 27 § 6 |
-| `MS 58 § 3 et § 4 — contrat d'entretien de la détection, annexé au registre` | ERP des catégories 1 à 4 avec détection | `libre` | Ligne sur `ALARME_INCENDIE` N1–N4, patron de PE 4 § 1 |
-| `EC 13 — notice annexée au registre et entretiens consignés` | ERP des catégories 1 à 4 | `libre` | Ligne d'état permanent sur `BAES` N1–N4 (notice annexée) |
-| `MS 70 § 5 — modalités d'appel des sapeurs-pompiers affichées` | ERP des catégories 1 à 4 | ~~`libre`~~ `a_trancher` | ~~Référence à la ligne de D. 4711-1, ou ligne propre~~ [2026-10-17] Attend la décision A6 (GN 10), comme PE 27 § 6 |
-| `GE 5` | ERP des catégories 1 à 4 ; 5ᵉ avec sommeil par PE 37 | `libre` | Ligne nouvelle : avis de contrôle affiché |
-| `CO 48 § 3 e) — contrat d'entretien des portes automatiques` | ERP des catégories 1 à 4 avec porte automatique | `libre` | Ligne d'état permanent sur `PORTE_AUTO` N1–N4 (le contrat) |
-| `MS 46 § 3 — convention avec un organisateur, annexée au registre` | ERP sans hébergement jusqu'à 300 personnes, hors 1ʳᵉ | `relation_tiers` | Annoncer |
-| `EL 23 § 2 — vérification des installations électriques semi-permanentes` | ERP des catégories 1 à 4 qui montent des installations temporaires | `evenement` | Annoncer, ou ligne événementielle |
+| ~~`MS 41`~~ | Tout ERP des catégories 1 à 4 | ~~`libre`~~ `a_trancher` | ~~Ligne nouvelle N1–N4 : plan d'intervention à chaque entrée (porté en 5ᵉ avec sommeil seulement)~~ [2026-10-17] Attend la décision A6 (GN 10), comme PE 27 § 6 — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, ligne nouvelle `incendie-erp-plan-intervention-entrees`.]** |
+| ~~`MS 58 § 3 et § 4 — contrat d'entretien de la détection, annexé au registre`~~ | ERP des catégories 1 à 4 avec détection | `libre` | Ligne sur `ALARME_INCENDIE` N1–N4, patron de PE 4 § 1 — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, ligne nouvelle `incendie-erp-ssi-contrat-entretien`.]** |
+| ~~`EC 13 — notice annexée au registre et entretiens consignés`~~ | ERP des catégories 1 à 4 | `libre` | Ligne d'état permanent sur `BAES` N1–N4 (notice annexée) — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, ligne nouvelle `incendie-erp-eclairage-securite-notice-registre`.]** |
+| ~~`MS 70 § 5 — modalités d'appel des sapeurs-pompiers affichées`~~ | ERP des catégories 1 à 4 | ~~`libre`~~ `a_trancher` | ~~Référence à la ligne de D. 4711-1, ou ligne propre~~ [2026-10-17] Attend la décision A6 (GN 10), comme PE 27 § 6 — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, ligne nouvelle `incendie-erp-modalites-appel-pompiers-affichees`.]** |
+| ~~`GE 5`~~ | ERP des catégories 1 à 4 ; 5ᵉ avec sommeil par PE 37 | `libre` | Ligne nouvelle : avis de contrôle affiché — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, ligne nouvelle `incendie-erp-avis-controle-affiche` (et, par PE 37, `incendie-erp-5-sommeil-avis-controle-affiche`).]** |
+| ~~`CO 48 § 3 e) — contrat d'entretien des portes automatiques`~~ | ERP des catégories 1 à 4 avec porte automatique | `libre` | Ligne d'état permanent sur `PORTE_AUTO` N1–N4 (le contrat) — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, ligne nouvelle `porte-auto-erp-contrat-entretien`.]** |
+| ~~`MS 46 § 3 — convention avec un organisateur, annexée au registre`~~ | ERP sans hébergement jusqu'à 300 personnes, hors 1ʳᵉ | `relation_tiers` | Annoncer — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, annoncé (`non_couvert`).]** |
+| ~~`EL 23 § 2 — vérification des installations électriques semi-permanentes`~~ | ERP des catégories 1 à 4 qui montent des installations temporaires | `evenement` | Annoncer, ou ligne événementielle — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, annoncé (`non_couvert`).]** |
 | **2026-10-17 — titre Ier lu en entier (transitoire, vidé par le sous-lot C)** | | | |
-| `GE 3` | Tout ERP des catégories 1 à 4 | `libre` | Rattacher le § 3 (consignes d'évacuation au registre) à `incendie-registre-securite` |
-| `GE 10` | Tout ERP des catégories 1 à 4 | `libre` | Rattacher à `incendie-registre-securite` |
-| `DF 9` | ERP des catégories 1 à 4 avec désenfumage | `libre` | Rattacher à `incendie-erp-desenfumage-annuelle`, défaut annuel dit (plan, § 4) |
-| `AS 11` | ERP des catégories 1 à 4 avec ascenseur | `libre` | Rattacher à `ascenseur-carnet-entretien` ; pancartes annoncées (plan, § 3) |
-| `GC 4` | ERP des catégories 1 à 4 avec appareil de cuisson | `libre` | Ligne `cuisson-erp-consignes-arret-urgence` (plan, § 4, ligne 9) |
-| `GC 15` | ERP des catégories 1 à 4 avec îlot de cuisson (restaurant) | `libre` | État permanent de présence du personnel de service (ligne de partage 10), sur `APPAREIL_CUISSON_ERP` |
-| `MS 66` | ERP des catégories 1 à 4 avec alarme de type 1 ou 2 | `libre` | Fondre avec MS 57 § 1 (`incendie-erp-personnel-qualifie-detection`), étendue aux alarmes temporisées |
-| `EL 17` | ERP des catégories 1 à 4 avec alimentation de sécurité | `libre` | Fondre avec la proposition de MS 66 (emplacement surveillé) |
-| `CH 17` | ERP des catégories 1 à 4 avec réservoir fixe de combustible liquide | `libre` | Rattacher le § 2 à `incendie-registre-securite`, comme MS 75 |
-| `CO 45 § 5 — inscription « sans issue » des portes en cul-de-sac` | ERP des catégories 1 à 4 avec local en cul-de-sac | `libre` | Rattacher à la signalisation de sécurité ou annoncer (règle de niche) |
-| `CO 47 § 2 — avertissement porté par les portes coupe-feu maintenues ouvertes` | ERP des catégories 1 à 4 avec porte coupe-feu maintenue ouverte | `libre` | Ligne ou annonce (règle de niche) ; aucune catégorie de porte coupe-feu |
-| `CO 59 — g) consignes affichées dans l'espace d'attente sécurisé` | ERP des catégories 1 à 4 ayant un espace d'attente sécurisé | `libre` | Ligne ou annonce (règle de niche) |
-| `CH 38 — 6° avertissement affiché aux accès des filtres` | ERP des catégories 1 à 4 avec CTA de plus de 10 000 m³/h | `libre` | Ligne sur `CTA` ou annonce dans son aide (règle de niche) |
-| `CH 52` | ERP des catégories 1 à 4 avec appareil indépendant à combustible liquide | `libre` | Ligne ou annonce (règle de niche) |
-| `PE 18` | ERP de 5ᵉ catégorie avec îlot de cuisson (restaurant) | `libre` | La ligne proposée pour GC 15, étendue à la 5ᵉ |
-| `MS 51` | Tout ERP des catégories 1 à 4 | `libre` | Rattacher à `incendie-travail-exercice-semestriel` et `incendie-registre-securite` |
-| `MS 52` | Tout ERP des catégories 1 à 4 | `libre` | Rattacher le § 1 à `incendie-registre-securite` |
-| `MS 57` | ERP des catégories 1 à 4 avec détection | `libre` | Ligne `incendie-erp-personnel-qualifie-detection`, SSI A ou B (plan, § 4, ligne 3 ; décision Q5) |
-| `MS 67` | Tout ERP des catégories 1 à 4 | `libre` | Rattacher le § 3 à `incendie-travail-exercice-semestriel` |
-| `MS 68` | ERP des catégories 1 à 4 avec SSI | `libre` | Ligne `incendie-erp-ssi-contrat-entretien`, fondue avec MS 58 § 3-4 (plan, § 4, ligne 4) |
-| `MS 72` | Tout ERP des catégories 1 à 4 | `libre` | Rattacher le § 1 à `incendie-erp-personnel-designe-moyens-secours` |
-| `MS 74` | Tout ERP des catégories 1 à 4 | `libre` | Rattacher aux lignes `incendie-erp-visite-commission-*` |
-| `MS 75` | ERP des catégories 1 à 4 avec moyens d'extinction ou SSI | `libre` | Rattacher à `incendie-registre-securite` |
+| ~~`GE 3`~~ | Tout ERP des catégories 1 à 4 | `libre` | Rattacher le § 3 (consignes d'évacuation au registre) à `incendie-registre-securite` — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, rattaché à `incendie-registre-securite`.]** |
+| ~~`GE 10`~~ | Tout ERP des catégories 1 à 4 | `libre` | Rattacher à `incendie-registre-securite` — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, rattaché à `incendie-registre-securite`.]** |
+| ~~`DF 9`~~ | ERP des catégories 1 à 4 avec désenfumage | `libre` | Rattacher à `incendie-erp-desenfumage-annuelle`, défaut annuel dit (plan, § 4) — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, rattaché à `incendie-erp-desenfumage-annuelle`.]** |
+| ~~`AS 11`~~ | ERP des catégories 1 à 4 avec ascenseur | `libre` | Rattacher à `ascenseur-carnet-entretien` ; pancartes annoncées (plan, § 3) — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, rattaché à `ascenseur-carnet-entretien`.]** |
+| ~~`GC 4`~~ | ERP des catégories 1 à 4 avec appareil de cuisson | `libre` | Ligne `cuisson-erp-consignes-arret-urgence` (plan, § 4, ligne 9) — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, ligne nouvelle `cuisson-erp-consignes-arret-urgence`.]** |
+| ~~`GC 15`~~ | ERP des catégories 1 à 4 avec îlot de cuisson (restaurant) | `libre` | État permanent de présence du personnel de service (ligne de partage 10), sur `APPAREIL_CUISSON_ERP` — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, annoncé (`non_couvert`).]** |
+| ~~`MS 66`~~ | ERP des catégories 1 à 4 avec alarme de type 1 ou 2 | `libre` | Fondre avec MS 57 § 1 (`incendie-erp-personnel-qualifie-detection`), étendue aux alarmes temporisées — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, ligne nouvelle `incendie-erp-personnel-qualifie-detection`.]** |
+| ~~`EL 17`~~ | ERP des catégories 1 à 4 avec alimentation de sécurité | `libre` | Fondre avec la proposition de MS 66 (emplacement surveillé) — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, ligne nouvelle `incendie-erp-personnel-qualifie-detection`.]** |
+| ~~`CH 17`~~ | ERP des catégories 1 à 4 avec réservoir fixe de combustible liquide | `libre` | Rattacher le § 2 à `incendie-registre-securite`, comme MS 75 — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, rattaché à `incendie-registre-securite`.]** |
+| ~~`CO 45 § 5 — inscription « sans issue » des portes en cul-de-sac`~~ | ERP des catégories 1 à 4 avec local en cul-de-sac | `libre` | Rattacher à la signalisation de sécurité ou annoncer (règle de niche) — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, annoncé (`non_couvert`).]** |
+| ~~`CO 47 § 2 — avertissement porté par les portes coupe-feu maintenues ouvertes`~~ | ERP des catégories 1 à 4 avec porte coupe-feu maintenue ouverte | `libre` | Ligne ou annonce (règle de niche) ; aucune catégorie de porte coupe-feu — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, annoncé (`non_couvert`).]** |
+| ~~`CO 59 — g) consignes affichées dans l'espace d'attente sécurisé`~~ | ERP des catégories 1 à 4 ayant un espace d'attente sécurisé | `libre` | Ligne ou annonce (règle de niche) — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, annoncé (`non_couvert`).]** |
+| ~~`CH 38 — 6° avertissement affiché aux accès des filtres`~~ | ERP des catégories 1 à 4 avec CTA de plus de 10 000 m³/h | `libre` | Ligne sur `CTA` ou annonce dans son aide (règle de niche) — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, annoncé (`non_couvert`).]** |
+| ~~`CH 52`~~ | ERP des catégories 1 à 4 avec appareil indépendant à combustible liquide | `libre` | Ligne ou annonce (règle de niche) — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, annoncé (`non_couvert`).]** |
+| ~~`PE 18`~~ | ERP de 5ᵉ catégorie avec îlot de cuisson (restaurant) | `libre` | La ligne proposée pour GC 15, étendue à la 5ᵉ — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, annoncé (`non_couvert`).]** |
+| ~~`MS 51`~~ | Tout ERP des catégories 1 à 4 | `libre` | Rattacher à `incendie-travail-exercice-semestriel` et `incendie-registre-securite` — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, rattaché à `incendie-travail-exercice-semestriel` et `incendie-registre-securite`.]** |
+| ~~`MS 52`~~ | Tout ERP des catégories 1 à 4 | `libre` | Rattacher le § 1 à `incendie-registre-securite` — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, ligne nouvelle `incendie-erp-exploitant-present-public` (présence) et `incendie-registre-securite` (§ 1, registre).]** |
+| ~~`MS 57`~~ | ERP des catégories 1 à 4 avec détection | `libre` | Ligne `incendie-erp-personnel-qualifie-detection`, SSI A ou B (plan, § 4, ligne 3 ; décision Q5) — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, ligne nouvelle `incendie-erp-personnel-qualifie-detection`.]** |
+| ~~`MS 67`~~ | Tout ERP des catégories 1 à 4 | `libre` | Rattacher le § 3 à `incendie-travail-exercice-semestriel` — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, rattaché à `incendie-travail-exercice-semestriel`.]** |
+| ~~`MS 68`~~ | ERP des catégories 1 à 4 avec SSI | `libre` | Ligne `incendie-erp-ssi-contrat-entretien`, fondue avec MS 58 § 3-4 (plan, § 4, ligne 4) — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, ligne nouvelle `incendie-erp-ssi-contrat-entretien`.]** |
+| ~~`MS 72`~~ | Tout ERP des catégories 1 à 4 | `libre` | Rattacher le § 1 à `incendie-erp-personnel-designe-moyens-secours` — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, rattaché à `incendie-erp-personnel-designe-moyens-secours`.]** |
+| ~~`MS 74`~~ | Tout ERP des catégories 1 à 4 | `libre` | Rattacher aux lignes `incendie-erp-visite-commission-*` — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, rattaché à les huit `incendie-erp-visite-commission-*` (`REFERENCES_GE4`).]** |
+| ~~`MS 75`~~ | ERP des catégories 1 à 4 avec moyens d'extinction ou SSI | `libre` | Rattacher à `incendie-registre-securite` — **[2026-10-17, sous-lot C (`lot/ref-c-incendie-n1-n4`) : sorti du § 9, rattaché à `incendie-registre-securite`.]** |

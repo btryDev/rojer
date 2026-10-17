@@ -105,7 +105,8 @@ export type CleDomaine =
   | "boissons"
   | "risque_chimique"
   | "habitation"
-  | "electricite";
+  | "electricite"
+  | "reglement_erp_1_4";
 
 type Domaine = {
   titre: string;
@@ -176,6 +177,14 @@ const DOMAINES: Record<CleDomaine, Domaine> = {
   },
   electricite: {
     titre: "Électricité",
+  },
+  // 2026-10-17, sous-lot C du plan « mise à jour du référentiel » (découpage
+  // validé par c6) : les actes du livre II, titre Ier, annoncés plutôt
+  // qu'encodés — règle de niche (notes-cadre, ligne de partage 5), ou un
+  // tiers, ou un événement que le produit n'observe pas. Chaque article dit
+  // ce qu'il ne suit pas : ils ne visent pas les mêmes établissements.
+  reglement_erp_1_4: {
+    titre: "Règlement de sécurité, catégories 1 à 4",
   },
   // ~~escaliers_mecaniques (« Escaliers mécaniques et trottoirs roulants »,
   // AS 10)~~ — 2026-10-14, décision de la propriétaire : DÉPLACÉE dans la
@@ -296,6 +305,51 @@ export const ANNONCES: Readonly<Record<string, Annonce>> = {
     phrase: `Rojer ne suit pas ${nonPorte("la vérification que les transformations de l'immeuble ne diminuent pas la réaction et la résistance au feu")}, à la charge du propriétaire, ni ${nonPorte("l'identification des places de stationnement utilisées par des personnes non résidentes")} pour une durée inférieure à trente jours consécutifs.`,
   },
   // 2026-10-13 : « hors cadre et on l'annonce », décision de la propriétaire.
+  // 2026-10-17, sous-lot C : rubrique « Règlement de sécurité, catégories 1
+  // à 4 ». Le livre II ne vise que les quatre premières catégories : la
+  // condition est `erp_1_4`.
+  "MS 46 § 3 — convention avec un organisateur, annexée au registre": {
+    domaine: "reglement_erp_1_4",
+    condition: "erp_1_4",
+    intitule: "Convention avec l'organisateur d'une manifestation",
+    phrase: `Rojer ne suit pas ${nonPorte("la convention par laquelle l'exploitant confie le service de sécurité à l'organisateur d'une manifestation, ni son annexion au registre de sécurité")}. Le texte ouvre cette faculté hors 1ʳᵉ catégorie, sans hébergement, avec une alarme générale qui ne nécessite pas de surveillance humaine et jusqu'à 300 personnes.`,
+  },
+  "EL 23 § 2 — vérification des installations électriques semi-permanentes": {
+    domaine: "reglement_erp_1_4",
+    condition: "erp_1_4",
+    intitule: "Vérification des installations électriques semi-permanentes",
+    phrase: `Rojer ne suit pas ${nonPorte("la vérification des installations électriques semi-permanentes")} — stands, scènes, installations montées pour une durée limitée —, due initialement et à chaque installation : en 1ʳᵉ, 2ᵉ et 3ᵉ catégorie, initialement par une personne ou un organisme agréé, puis par un technicien compétent ; en 4ᵉ catégorie, par un technicien compétent.`,
+  },
+  "CO 10": {
+    domaine: "reglement_erp_1_4",
+    condition: "erp_1_4",
+    intitule: "Maintenance d'un franchissement d'isolement avec des locaux occupés par des tiers",
+    phrase: `Rojer ne suit pas ${nonPorte("la maintenance d'un dispositif de franchissement ou d'un passage")} entre l'établissement et un bâtiment ou des locaux occupés par des tiers, que le texte place sous la responsabilité de l'exploitant.`,
+  },
+  "CO 45 § 5 — inscription « sans issue » des portes en cul-de-sac": {
+    domaine: "reglement_erp_1_4",
+    condition: "erp_1_4",
+    intitule: "Inscription « sans issue » des portes en cul-de-sac",
+    phrase: `Rojer ne suit pas ${nonPorte("l'inscription « sans issue »")}, non lumineuse et jamais verte, sur les portes des locaux en cul-de-sac qui risquent d'être confondues avec une issue d'évacuation.`,
+  },
+  "CO 47 § 2 — avertissement porté par les portes coupe-feu maintenues ouvertes": {
+    domaine: "reglement_erp_1_4",
+    condition: "erp_1_4",
+    intitule: "Plaque des portes coupe-feu maintenues ouvertes",
+    phrase: `Rojer ne suit pas ${nonPorte("la plaque « Porte coupe-feu. - Ne mettez pas d'obstacle à la fermeture »")}, en lettres blanches sur fond rouge ou l'inverse, sur la face apparente des portes coupe-feu maintenues ouvertes.`,
+  },
+  "CO 59 — g) consignes affichées dans l'espace d'attente sécurisé": {
+    domaine: "reglement_erp_1_4",
+    condition: "erp_1_4",
+    intitule: "Consignes affichées dans un espace d'attente sécurisé",
+    phrase: `Rojer ne suit pas ${nonPorte("les consignes disposées à l'intérieur d'un espace d'attente sécurisé")}, bien visibles, rédigées en français et dans les principales langues parlées par les usagers habituels des lieux.`,
+  },
+  "CH 52": {
+    domaine: "reglement_erp_1_4",
+    condition: "erp_1_4",
+    intitule: "Interdiction de remplir en marche un appareil à combustible liquide, rappelée près de l'appareil",
+    phrase: `Rojer ne suit pas ${nonPorte("le rappel, près d'un appareil de chauffage indépendant à combustible liquide, de l'interdiction de remplir son réservoir pendant qu'il fonctionne")}.`,
+  },
   "R. 4544-11": {
     domaine: "electricite",
     condition: "travail_electricite",

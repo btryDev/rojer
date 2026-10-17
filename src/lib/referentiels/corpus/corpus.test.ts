@@ -725,7 +725,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // (§ 9 de `docs/couverture-declaree-du-produit.md`).
       // 2026-10-17 (seconde relecture de `lot/ref-a-corpus-titre-1`) : la présence
       // du personnel pendant le fonctionnement d'un îlot de cuisson en 5ᵉ.
-      "PE 18",
+      // ~~"PE 18"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
       "PU 5",
       "PU 6",
       "CO 61",
@@ -760,14 +760,14 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // en suivant les renvois des chapitres de types, classés au corpus
       // `arrete-1980-livre-2`. Aucun n'est servi en catégories 1 à 4 ; à évaluer
       // (§ 9 de `docs/couverture-declaree-du-produit.md`).
-      "MS 41",
-      "MS 58 § 3 et § 4 — contrat d'entretien de la détection, annexé au registre",
-      "EC 13 — notice annexée au registre et entretiens consignés",
-      "MS 70 § 5 — modalités d'appel des sapeurs-pompiers affichées",
-      "GE 5",
-      "MS 46 § 3 — convention avec un organisateur, annexée au registre",
-      "EL 23 § 2 — vérification des installations électriques semi-permanentes",
-      "CO 48 § 3 e) — contrat d'entretien des portes automatiques",
+      // ~~"MS 41"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
+      // ~~"MS 58 § 3 et § 4 — contrat d'entretien de la détection, annexé au registre"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
+      // ~~"EC 13 — notice annexée au registre et entretiens consignés"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
+      // ~~"MS 70 § 5 — modalités d'appel des sapeurs-pompiers affichées"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
+      // ~~"GE 5"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
+      // ~~"MS 46 § 3 — convention avec un organisateur, annexée au registre"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
+      // ~~"EL 23 § 2 — vérification des installations électriques semi-permanentes"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
+      // ~~"CO 48 § 3 e) — contrat d'entretien des portes automatiques"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
       // 2026-10-17 — `lot/ref-a-corpus-titre-1` : le titre Ier lu en entier
       // (274 articles en vigueur et 24 abrogés ajoutés au corpus). ~~47 + 21 − 0
       // = 68~~ — compte FAUX relevé par la revue du même jour : `main` (00d21b30)
@@ -785,31 +785,31 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // ~~"T 33"~~ sont des annonces décidées, `non_couvert` ; entrent `CH 17`
       // (pièce consignée au registre), `EL 17`, `GC 15`, `MS 66` (présence,
       // ligne de partage 10) et, plus bas, `M 35`.
-      "GE 3",
-      "GE 10",
+      // ~~"GE 3"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
+      // ~~"GE 10"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
       // Seconde relecture du même jour (ligne de partage 11, un affichage prescrit
       // est un état permanent) : 68 + 6 = 74 — ces trois, `CH 38 — 6°` et
       // `CH 52` plus bas, et `PE 18` (livre III, ligne de partage 10) en tête.
-      "CO 45 § 5 — inscription « sans issue » des portes en cul-de-sac",
-      "CO 47 § 2 — avertissement porté par les portes coupe-feu maintenues ouvertes",
-      "CO 59 — g) consignes affichées dans l'espace d'attente sécurisé",
-      "DF 9",
-      "CH 17",
-      "CH 38 — 6° avertissement affiché aux accès des filtres",
-      "CH 52",
-      "EL 17",
-      "AS 11",
-      "GC 4",
-      "GC 15",
-      "MS 51",
-      "MS 52",
-      "MS 57",
-      "MS 66",
-      "MS 67",
-      "MS 68",
-      "MS 72",
-      "MS 74",
-      "MS 75",
+      // ~~"CO 45 § 5 — inscription « sans issue » des portes en cul-de-sac"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
+      // ~~"CO 47 § 2 — avertissement porté par les portes coupe-feu maintenues ouvertes"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
+      // ~~"CO 59 — g) consignes affichées dans l'espace d'attente sécurisé"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
+      // ~~"DF 9"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
+      // ~~"CH 17"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
+      // ~~"CH 38 — 6° avertissement affiché aux accès des filtres"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
+      // ~~"CH 52"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
+      // ~~"EL 17"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
+      // ~~"AS 11"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
+      // ~~"GC 4"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
+      // ~~"GC 15"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
+      // ~~"MS 51"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
+      // ~~"MS 52"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
+      // ~~"MS 57"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
+      // ~~"MS 66"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
+      // ~~"MS 67"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
+      // ~~"MS 68"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
+      // ~~"MS 72"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
+      // ~~"MS 74"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
+      // ~~"MS 75"~~ — 2026-10-17, sous-lot C : retenu (ligne ou rattachement) ou annoncé.
       // 2026-10-15 : le contrat d'entretien des machines de nettoyage à sec,
       // seul acte de M 40 § 3, classé à part et HORS CADRE (décision de la
       // propriétaire : « les conditions c'est pas nous »).
@@ -1689,7 +1689,15 @@ describe("corpus — ce qu'on ne couvre pas, et où on le dit", () => {
     // produits pétroliers) entrent `non_couvert` avec l'adresse de la liste
     // des matériels : aucun n'est muet. Restent : C (`CO 10`, −1) → 18, D
     // (`T 29`, `T 33`, `T 43`, `T 44`, −4) → 14, G (`AM 18`, −1) → 13.
-    const MUETS = 19;
+    // ~~const MUETS = 19;~~ — ~~**22 DEPUIS LE 2026-10-17**~~ — **18 DEPUIS LE SOUS-LOT C**, rebasé sur B (sous-lot C,
+    // `lot/ref-c-incendie-n1-n4`), mesuré en appelant : 19 − 1 + 0. `CO 10`
+    // reçoit son adresse, la rubrique « Règlement de sécurité, catégories 1 à
+    // 4 » de `manques-annonces.ts`. Les neuf `non_couvert` nés du même lot
+    // (`MS 46 § 3`, `EL 23 § 2`, `CO 45 § 5`, `CO 47 § 2`, `CO 59 g)`, `CH 52`,
+    // `GC 15`, `CH 38 6°`, `PE 18`) naissent avec la leur (+ 9 `non_couvert`)
+    // `non_couvert`, aucun muet de plus. Suite du chemin : D (−4) → 14,
+    // G (−1) → 13.
+    const MUETS = 18;
     // Une note interne n'est pas une annonce à l'exploitant. `declareA`
     // mélange aujourd'hui les deux natures — une adresse produit et un
     // document de travail — et cette distinction reste à trancher (lot 3) ;

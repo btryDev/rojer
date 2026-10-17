@@ -182,4 +182,43 @@ export const obligationsPortesPortails: Obligation[] = [
     notesInternes:
       "NIVEAU AUDIT DEPUIS LE 2026-10-17 (ADR-042). Décision de la propriétaire du même jour, après la relecture du préventeur, sur les propositions de passage au niveau audit qui lui avaient été soumises (`relecture-jc-2026-10/propositions-audit.json`, hors dépôt) : « toutes les suggestions sont acceptées ». Motif soumis au préventeur : « Une exigence d'installation, posée par l'installateur et contrôlée à chaque vérification semestrielle du portail, qui reste suivie. » L'OBLIGATION EST LÉGALE ET LE RESTE : les articles 2 et 5 de l'arrêté du 21 décembre 1993 restent cités et lus au corpus. Elle sort du quotidien — ni calendrier, ni « Ce qui doit être en place », ni rappel — et reste nommée, avec sa référence, sur la page « Ce que Rojer ne couvre pas », rubrique « Niveau audit », au dossier qu'elle peut concerner. Effet en base : les lignes déjà posées sont archivées si elles portent une trace, supprimées sinon. RÉACTIVER : retirer `niveau`, monter la version.\n\nDÉFAUT CONSTATÉ LE 2026-08-26, non corrigé ici parce qu'il appelle une décision. Cette obligation porte une périodicité semestrielle alors que ses deux références — les articles 2 et 5 de l'arrêté du 21 décembre 1993 — n'en fixent AUCUNE : ce sont des prescriptions techniques d'installation. La périodicité vient de l'article 9, qui n'est pas cité. Or l'ajouter fait échouer le test anti-doublon : l'obligation partagerait catégorie, périodicité et article fondateur avec `porte-auto-verification-semestrielle`, qui couvre déjà PORTAIL_AUTO au même rythme. Les deux font double emploi, et la référence manquante est ce qui le masquait. Trancher suppose de choisir : fusionner, ou restreindre celle-ci à ce que les articles 2 et 5 prescrivent vraiment — des caractéristiques d'installation, sans échéance. Troisième défaut : l'identifiant dit « piete » alors que l'article 2 vise le passage de VÉHICULES.\n\nRÉSOLU LE 2026-08-26, en suivant le texte plutôt qu'en fusionnant les deux obligations. Les articles 2 et 5 sont des PRESCRIPTIONS TECHNIQUES D'INSTALLATION : ils exigent un dispositif à sécurité positive et des détections de présence et de contact, sans fixer aucune périodicité. `periodicite` passe à `mise_en_service_uniquement` — l'exigence est due à l'installation et après modification, le contrôle périodique de son bon fonctionnement relevant de l'article 9. Le doublon d'échéance avec `porte-auto-verification-semestrielle` disparaît sans qu'aucune exigence ne soit perdue.\n\nDeux corrections de rédaction : le libellé restreignait aux portails COULISSANTS alors que l'article 2 vise toute installation destinée au passage de véhicules, sans distinguer coulissant, battant ou basculant. Et « dispositif d'arrêt d'urgence » n'est pas le vocabulaire du texte, qui dit « dispositif à sécurité positive ».\n\nL'identifiant conserve « piete » alors que l'article vise le passage de VÉHICULES : il est stocké en base sous contrainte d'unicité.\n\nNATURE : ÉTAT PERMANENT, ALORS QUE LA PÉRIODICITÉ EST `mise_en_service_uniquement` (ADR-026). La description ci-dessus l'écrit déjà : « C'est une exigence d'installation, non une échéance. » Le dispositif à sécurité positive doit ÊTRE là et le rester ; il n'y a pas d'acte à faire à la mise en service. La périodicité `mise_en_service_uniquement` a été retenue faute de mieux — ~~elle produit une ligne datable, ce que `autre` n'aurait pas fait — et le prix est une ligne qui se solde une fois pour une exigence qui ne cesse jamais. Signalé, non corrigé : changer la périodicité déplacerait des lignes chez tous les utilisateurs équipés d'un portail, et cela se décide pour soi-même.~~ [2026-10-17, ADR-042 : au niveau audit, la ligne n'en produit plus aucune ; la question de la périodicité ne se pose plus tant que le marqueur reste.]"
   },
+  // Livre II du règlement de sécurité ERP — sous-lot C du plan « mise à jour
+  // du référentiel » (2026-10-17).
+  {
+    id: "porte-auto-erp-contrat-entretien",
+    domaine: "porte_portail",
+    libelle:
+      "Contrat d'entretien des portes automatiques (ERP des quatre premières catégories)",
+    description:
+      "Dans un établissement recevant du public des quatre premières catégories, « toutes les portes automatiques doivent faire l'objet d'un contrat d'entretien » (CO 48 § 3 e), rédaction en vigueur depuis le 1er juillet 2019). Le texte n'en fixe ni la durée ni le rythme des interventions. Ce contrat s'ajoute, dans un lieu de travail, aux vérifications semestrielles et au dossier de maintenance que le Code du travail impose pour la même porte. Rojer sert cette ligne dès qu'une porte automatique est déclarée ; il ne la sert pas pour un portail automatique, que l'article ne vise pas.",
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. CO 48 § 3 e) (contrat d'entretien de toutes les portes automatiques) — livre II, établissements des quatre premières catégories",
+        article: "CO 48 § 3 e) — contrat d'entretien des portes automatiques",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000038485458",
+        note: "« § 3. Les portes automatiques sont autorisées dans les conditions suivantes : […] e) Toutes les portes automatiques doivent faire l'objet d'un contrat d'entretien. » Relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable ; égalité avec la production non vérifiée) : LEGIARTI000038485458, en vigueur depuis le 2019-07-01. Le reste de l'article (tambours, tourniquets, conditions d'autorisation, examen « grand vent », vitrages) est de la construction.",
+        versionConstatee: "2019-07-01",
+      },
+    ],
+    periodicite: "autre",
+    nature: "etat_permanent",
+    pieceAttendue: "contrat d'entretien des portes automatiques",
+    usageEcran: { groupe: "installations", sous: null },
+    realisateurs: ["exploitant"],
+    criticite: 3,
+    transmet: [],
+    typologies: { erp: { categories: ["N1", "N2", "N3", "N4"] } },
+    siEquipementDeclare: ["PORTE_AUTO"],
+    porteur: "etablissement",
+    notesInternes:
+      "TEMPORALITÉ : état permanent, sans rythme ; CO 48 § 3 e) ne fixe ni durée ni rythme du contrat, et ne cite aucune norme pour lui (la NF S 61-937 du § 3 b) porte sur l'énergie mécanique intrinsèque des portes, une règle de construction).\n\n" +
+      "CRÉÉE LE 2026-10-17 (sous-lot C du plan « mise à jour du référentiel », ligne 6 ; découpage validé par c6 le même jour). CO 48 § 3 e) relu le 2026-10-17 par l'API Légifrance (PISTE, bac à sable).\n\n" +
+      "PORTEUR ÉTABLISSEMENT SUR `PORTE_AUTO` DÉCLARÉE : « toutes les portes automatiques » font l'objet d'UN contrat, qui couvre le parc ; une ligne par porte ferait autant de cases pour une seule pièce. `PORTAIL_AUTO` n'est pas dans la condition : CO 48 est au chapitre des dégagements (portes), un portail de véhicules n'en est pas un.\n\n" +
+      "SANS RECOUVREMENT avec les quatre lignes du Code du travail (`porte-auto-verification-initiale`, `-verification-semestrielle`, `-dossier-maintenance`, `-maintien-en-etat`) : elles portent les vérifications, le dossier et le maintien en état ; celle-ci porte le contrat, que seul le règlement ERP exige.\n\n" +
+      "PAS DE RYTHME, PAS DE DÉFAUT ANNUEL : ce qui est imposé est d'AVOIR un contrat (notes-cadre, ligne de partage 9). GN 10 n'est pas cité : de l'entretien, que GN 10 § 1 maintient.\n\n" +
+      "BORNE N1–N4 écrite en littéral : `CATEGORIES_LIVRE_2` vit dans `incendie.ts`, et un fichier de données n'importe pas de valeur.\n\n" +
+      "TIERS : le réalisateur est l'exploitant (il tient le contrat) ; le domaine `porte_portail` appelle déjà un prestataire par sa vérification semestrielle (`appelleUnTiers`).",
+  },
 ];

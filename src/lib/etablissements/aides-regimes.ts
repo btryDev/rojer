@@ -112,7 +112,8 @@ export const AIDE_HABITATION =
  * appelant le moteur le même jour : en 5ᵉ, quatre lignes naissent ; en 4ᵉ, la
  * visite de la commission d'un type R passe de la colonne « sans hébergement »
  * à « avec hébergement » du tableau de GE 4 § 1 ; dans les trois premières,
- * rien ne change.
+ * rien ne change. [2026-10-17, sous-lot C : cinq lignes en 5ᵉ — l'avis de
+ * GE 5, que PE 37 rend applicable, s'ajoute ; mesuré en appelant le moteur.]
  *
  * Liste de production, comme celle de l'habitation : `aides-regimes.test.ts`
  * la confronte au moteur, catégorie par catégorie et type par type.
@@ -123,6 +124,9 @@ export const CE_QUE_CHANGE_SOMMEIL = {
     "incendie-erp-5-sommeil-contrat-entretien-sdi",
     "incendie-erp-5-sommeil-consigne-chambres",
     "incendie-erp-5-sommeil-plans-affiches",
+    // 2026-10-17, sous-lot C : l'avis relatif au contrôle de la sécurité
+    // (GE 5, rendu applicable par PE 37).
+    "incendie-erp-5-sommeil-avis-controle-affiche",
   ],
   /** Seul le type R : la ligne qui naît, et celle qu'elle remplace. */
   N4: {
@@ -137,6 +141,6 @@ export const CE_QUE_CHANGE_SOMMEIL = {
 /** La même à la fiche et au parcours, au mot près. */
 export const AIDE_LOCAUX_SOMMEIL =
   "Chambres d'hôtel, chambres d'hôtes, gîte, hébergement — des locaux où le public dort. Un logement de fonction occupé par vous ou par un salarié ne compte pas : le texte vise le sommeil du public. " +
-  "Si oui : en 5ᵉ catégorie, s'ajoutent un contrat annuel d'entretien de la détection incendie, des consignes et des plans affichés, et une visite de la commission de sécurité tous les cinq ans (arrêté du 25 juin 1980, art. PE 4, PE 33, PE 35 et PE 37) ; " +
+  "Si oui : en 5ᵉ catégorie, s'ajoutent un contrat annuel d'entretien de la détection incendie, des consignes, des plans et l'avis relatif au contrôle de la sécurité affichés, et une visite de la commission de sécurité tous les cinq ans (arrêté du 25 juin 1980, art. PE 4, PE 33, PE 35 et PE 37) ; " +
   "en 4ᵉ catégorie, un établissement d'enseignement (type R) est visité par la commission tous les trois ans au lieu de cinq (art. GE 4). " +
   "Dans les trois premières catégories, la réponse ne change pas votre calendrier.";
