@@ -538,7 +538,8 @@ export const obligationsConformite: Obligation[] = [
 // `elec-erp-presence-personne-qualifiee-scene-n3` (L 57 § 7), établissement,
 // dues dès qu'une scène est déclarée ; `scene-erp-depoussierage-annuel`
 // (L 57 § 3), une par scène ; le type L entre au personnel désigné (L 14).
-// 200 + 4 − 0 = 204 (après D et E) — par porteur : À REMESURER en appelant.
+// 200 + 4 − 0 = 204 (après D et E) ; par porteur, 95 + 1 = 96 équipement,
+// 91 + 3 = 94 établissement, 14 salarié — remesuré en appelant `porteurDe`.
 export const REFERENTIEL_VERSION = "2026-10-17.7";
 
 /**

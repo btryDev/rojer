@@ -1984,7 +1984,7 @@ describe("référentiel conformité — version et empreinte", () => {
     // c5f638a5 ; ~~202-38b9447c1d41b84~~ sur D seul),
     // relevée en appelant `empreinteReferentiel()`. Version PROVISOIRE ; D a
     // pris `.5`, E `.6`.
-    { version: "2026-10-17.7", empreinte: "EMPREINTE_A_RELEVER" },
+    { version: "2026-10-17.7", empreinte: "204-c745f7409c593fe8" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

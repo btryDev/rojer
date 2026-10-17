@@ -508,7 +508,7 @@ const RELEVE = {
   // lignes neuves sont des DONNÉES (porteur, catégorie, `siEquipementDeclare`,
   // typologie, périodicité), hachées par l'empreinte du référentiel, donc déjà
   // dans le sceau. ~~f2ac197b52d5fb32~~.
-  empreinte: "SCEAU_A_RELEVER",
+  empreinte: "1c641bc06ef51dad",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");
