@@ -642,12 +642,17 @@ révisée.]
 ~~**Ces cinq-là ont une adresse visible**~~ **[2026-10-17 : ces deux-là ; l'annexe 1 garde la page du carnet, l'article 36 l'aide du seuil.] Ils ont une adresse visible** : la page du module « Carnet
 sanitaire », qui outille le « fichier sanitaire » de l'article 3, cite le champ
 des articles 1er et 2 au lieu d'affirmer « obligatoire pour tout établissement
-avec ECS », et DIT ce que Rojer fait — rien tant qu'aucun carnet n'est ouvert,
-puis un rappel annuel de l'analyse. Pour l'article 36 de 1978 (températures du
+avec ECS », et DIT ce que Rojer fait — ~~rien tant qu'aucun carnet n'est ouvert,
+puis un rappel annuel de l'analyse~~ [2026-10-17, sous-lot F : selon que
+l'installation est déclarée — les deux lignes de l'annexe 2 au calendrier, ou
+l'invitation à la déclarer et le rappel annuel du carnet]. Pour l'article 36 de 1978 (températures du
 réseau), l'adresse est l'aide du seuil au formulaire de point de relevé. Le cliquet `MUETS` ne bouge
-pas. Ce que le produit ne sait pas dire est QUI est concerné : il ne détient ni
+pas. ~~Ce que le produit ne sait pas dire est QUI est concerné : il ne détient ni
 le caractère collectif de l'installation, ni la présence d'un point d'usage à
-risque.
+risque.~~ [2026-10-17, sous-lot F : il le sait quand le dirigeant déclare
+l'installation `EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC`, dont le libellé porte les
+deux conditions ; sans déclaration, il ne le sait toujours pas, et ne pose pas
+la question à l'accueil.]
 
 ### Travail en hauteur, tous secteurs confondus — 1 article
 

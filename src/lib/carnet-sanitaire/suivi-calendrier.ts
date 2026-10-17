@@ -27,6 +27,12 @@ export const CATEGORIE_EAU_CHAUDE_SUIVIE: CategorieEquipement =
  * rappel par acte (ADR-010, amendement du 2026-10-17). Une seule lecture,
  * pour que les deux surfaces ne puissent pas diverger.
  *
+ * ACTIVE seulement (revue indépendante du 2026-10-17) : le moteur ne voit que
+ * les équipements `actif: true` (`calendrier/passe.ts`, ADR-012). Une
+ * installation retirée du parc perd ses deux lignes ; la compter ici aussi
+ * laissait le carnet muet, la matrice en « na » et la page affirmer que Rojer
+ * suit — l'utilisateur perdait tout rappel.
+ *
  * `scope` porte le prédicat de compte (`etablissement.entreprise.userId`) :
  * la lecture ne dépend pas de la provenance de son argument.
  */
@@ -39,6 +45,7 @@ export async function eauChaudeSuivieParLeCalendrier(scope: {
       etablissementId: scope.etablissementId,
       etablissement: { ...scope.etablissement, estERP: true },
       categorie: CATEGORIE_EAU_CHAUDE_SUIVIE,
+      actif: true,
     },
   });
   return n > 0;

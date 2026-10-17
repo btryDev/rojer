@@ -58,9 +58,16 @@ describe("ce que Rojer fait, selon l'installation déclarée (2026-10-17, sous-l
     expect(annexe2).toContain("1 fois par an");
     expect(t).toContain("une fois par mois");
     expect(t).toContain("une fois par an");
-    expect(t).toContain("ne fait pas avancer la date du calendrier");
+    expect(t).toContain("ne fait pas avancer les dates du calendrier");
+    // Les deux lignes, chacune avec ce qu'il faut y déposer (revue du
+    // 2026-10-17 : la température était oubliée).
+    expect(t).toContain("sur la ligne de la température");
+    expect(t).toContain("sur la ligne de l'analyse");
     expect(t).not.toContain("un an après la dernière saisie");
     expect(quiEstVise(true, true)).not.toContain("ne sait pas");
+    // Pas de conclusion juridique (revue du 2026-10-17) : le cas visé, cité.
+    expect(quiEstVise(true, true)).not.toContain("vous concerne");
+    expect(quiEstVise(true, true)).toContain("articles 1er et 2");
   });
 
   it("ERP sans l'installation : l'échéance du module, et comment déclarer", () => {

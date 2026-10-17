@@ -14,9 +14,27 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * le carnet et le compte d'équipements, réglés par cas.
  */
 
-const { prismaMock, requireUserMock, carnetFindFirst, equipementCount } = vi.hoisted(() => {
+// Le parc de l'établissement, tel que la base le rendrait. Le faux `count`
+// APPLIQUE le filtre qu'on lui passe : le test juge un comportement — telle
+// installation fait-elle taire le carnet ? — et non la forme de la requête.
+// [2026-10-17, revue indépendante : le test de forme qui précédait avait figé
+// l'oubli de `actif`.]
+type Installation = { categorie: string; actif: boolean; estERP: boolean };
+
+const { prismaMock, requireUserMock, carnetFindFirst, parc } = vi.hoisted(() => {
   const carnetFindFirst = vi.fn();
-  const equipementCount = vi.fn();
+  const parc: { liste: Installation[] } = { liste: [] };
+  const equipementCount = vi.fn(
+    async ({ where }: { where: Record<string, unknown> }) => {
+      const etab = (where.etablissement ?? {}) as { estERP?: boolean };
+      return parc.liste.filter(
+        (e) =>
+          (where.categorie === undefined || e.categorie === where.categorie) &&
+          (where.actif === undefined || e.actif === where.actif) &&
+          (etab.estERP === undefined || e.estERP === etab.estERP),
+      ).length;
+    },
+  );
   const vide = (methode: string) =>
     vi.fn(async () =>
       methode === "findMany" ? [] : methode === "count" ? 0 : null,
@@ -32,7 +50,7 @@ const { prismaMock, requireUserMock, carnetFindFirst, equipementCount } = vi.hoi
     } as Record<string, unknown>,
     { get: (t, m: string) => (m in t ? t[m] : modele()) },
   );
-  return { prismaMock, requireUserMock: vi.fn(), carnetFindFirst, equipementCount };
+  return { prismaMock, requireUserMock: vi.fn(), carnetFindFirst, parc };
 });
 
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
@@ -56,28 +74,36 @@ beforeEach(() => {
 
 const legionelles = (l: { id: string }[]) => l.filter((e) => e.id === "legionelles-analyse");
 
+const ECS = "EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC";
+const rappels = async () => legionelles(await listerAutresEcheances(ETAB, AUJOURDHUI)).length;
+
 describe("sourceLegionelles — muette quand l'installation est déclarée", () => {
   it("sans installation de la catégorie : l'échéance du carnet est là", async () => {
-    equipementCount.mockResolvedValue(0);
-    expect(legionelles(await listerAutresEcheances(ETAB, AUJOURDHUI))).toHaveLength(1);
+    parc.liste = [];
+    expect(await rappels()).toBe(1);
   });
 
-  it("avec une installation de la catégorie : rien, le référentiel porte l'analyse", async () => {
-    equipementCount.mockResolvedValue(1);
-    expect(legionelles(await listerAutresEcheances(ETAB, AUJOURDHUI))).toHaveLength(0);
+  it("ERP avec une installation active : rien, le référentiel porte l'analyse", async () => {
+    parc.liste = [{ categorie: ECS, actif: true, estERP: true }];
+    expect(await rappels()).toBe(0);
   });
 
-  it("le compte lit la catégorie dans le périmètre du compte, en ERP seulement", async () => {
-    equipementCount.mockResolvedValue(0);
-    await listerAutresEcheances(ETAB, AUJOURDHUI);
-    expect(equipementCount).toHaveBeenCalledWith({
-      where: {
-        etablissementId: ETAB,
-        // ERP seulement : hors ERP, les lignes du référentiel ne naissent pas,
-        // et taire le carnet laisserait l'établissement sans aucun rappel.
-        etablissement: { entreprise: { userId: "user-1" }, estERP: true },
-        categorie: "EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC",
-      },
-    });
+  it("installation RETIRÉE du parc : le rappel du carnet revient", async () => {
+    // Le moteur ne voit que les actifs : les lignes `ecs-*` ont disparu avec
+    // l'installation. Le carnet doit reprendre le rappel, sinon plus rien.
+    parc.liste = [{ categorie: ECS, actif: false, estERP: true }];
+    expect(await rappels()).toBe(1);
+  });
+
+  it("hors ERP, même déclarée : le rappel du carnet reste", async () => {
+    // Les lignes ne naissent qu'en ERP ; taire le carnet laisserait
+    // l'établissement sans aucun rappel.
+    parc.liste = [{ categorie: ECS, actif: true, estERP: false }];
+    expect(await rappels()).toBe(1);
+  });
+
+  it("une autre catégorie ne fait rien taire", async () => {
+    parc.liste = [{ categorie: "DEFIBRILLATEUR", actif: true, estERP: true }];
+    expect(await rappels()).toBe(1);
   });
 });

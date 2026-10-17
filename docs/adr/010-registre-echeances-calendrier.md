@@ -174,6 +174,8 @@ source reste branchée, elle a une condition de silence de plus. Sans
 installation déclarée, elle se comporte comme avant.
 
 **Dette ouverte** (`docs/dette-chantier-porteur-echeance.md` § 7 quater) : une
-analyse saisie au carnet ne fait pas rouler la ligne du référentiel. Le
-dirigeant qui saisit ses résultats au carnet doit aussi déposer le rapport du
-laboratoire sur la ligne ; la page du carnet le dit.
+analyse ~~saisie au carnet ne fait pas rouler la ligne du référentiel~~ ou un
+relevé saisi au carnet ne fait pas rouler les lignes du référentiel [2026-10-17,
+revue indépendante : la température aussi]. Le dirigeant dépose la fiche de ses
+relevés sur la ligne mensuelle et le rapport du laboratoire sur la ligne
+annuelle ; la page du carnet le dit.

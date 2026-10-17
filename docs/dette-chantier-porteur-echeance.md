@@ -481,8 +481,12 @@ après sa naissance, alors que l'acte est fait. Même chose, chaque mois, pour l
 température.
 
 **Ce que le produit fait en attendant.** La page du carnet le dit en clair
-(`ceQueRojerFait`) : « une analyse saisie ici ne fait pas avancer la date du
-calendrier : déposez le rapport du laboratoire sur la ligne de l'analyse ». Le
+(`ceQueRojerFait`) : ~~« une analyse saisie ici ne fait pas avancer la date du
+calendrier : déposez le rapport du laboratoire sur la ligne de l'analyse »~~
+[2026-10-17, revue indépendante : la température était oubliée] « ce que vous
+y saisissez ne fait pas avancer les dates du calendrier : chaque mois, déposez
+la fiche de vos relevés de température sur la ligne de la température ; chaque
+année, le rapport du laboratoire sur la ligne de l'analyse ». Le
 sens d'erreur est celui que le dirigeant voit : une ligne en retard à tort, pas
 une ligne à jour à tort.
 

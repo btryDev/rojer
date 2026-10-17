@@ -1216,12 +1216,17 @@ describe("moteur matching — cartographie des catégories sans obligation", () 
         // est vrai : aucun texte encodé ne l'y astreint.
         "DEFIBRILLATEUR",
         // EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC, entrée le 2026-10-17 (sous-lot
-        // F, décision de la propriétaire) : ses deux lignes ne visent que les
-        // ERP — l'arrêté du 1er février 2010 borne son champ aux hôtels,
-        // campings et autres établissements recevant du public (art. 1er). Un
-        // employeur non-ERP qui la déclarerait n'a pas de point d'usage
-        // « accessible au public » (art. 2) : « aucune échéance calculée » est
-        // vrai.
+        // F, décision de la propriétaire) : ses deux lignes sont bornées aux
+        // ERP (`typologies: { erp: true }`). ~~« Un employeur non-ERP qui la
+        // déclarerait n'a pas de point d'usage accessible au public (art. 2) :
+        // « aucune échéance calculée » est vrai. »~~ [2026-10-17, revue
+        // indépendante : faux en général — l'art. 1er nomme aussi des
+        // établissements qui ne sont pas forcément déclarés ERP dans Rojer
+        // (établissements de santé, sociaux et médico-sociaux, pénitentiaires,
+        // campings). Le bornage est un choix du produit, aligné sur la cible.
+        // Hors ERP, l'appareil porte « aucune échéance calculée », et le carnet
+        // sanitaire GARDE son rappel annuel : `eauChaudeSuivieParLeCalendrier`
+        // ne répond oui qu'en ERP (`echeances-legionelles.test.ts`).]
         "EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC",
         // INSTALLATION_GAZ, entrée le 2026-10-14 (décision de la
         // propriétaire) : sa seule obligation, GZ 15, ne vise que les ERP des

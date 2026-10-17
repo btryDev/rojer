@@ -41,7 +41,10 @@ export const ENJEU_CARNET =
  */
 export function quiEstVise(estERP: boolean, installationDeclaree = false): string {
   if (estERP && installationDeclaree) {
-    return "Vous avez déclaré, dans vos équipements, une eau chaude collective alimentant des douches ou des bains à remous ouverts au public : l'arrêté vous concerne.";
+    // ~~« : l'arrêté vous concerne. »~~ — 2026-10-17, revue indépendante :
+    // une conclusion juridique. La phrase dit le cas que le texte vise, sans
+    // qualifier la situation du dirigeant.
+    return "Vous avez déclaré, dans vos équipements, une eau chaude collective alimentant des douches ou des bains à remous ouverts au public : c'est le cas que visent les articles 1er et 2.";
   }
   return estERP
     ? "Rojer ne sait pas si c'est votre cas, et ne le décide pas à votre place."
@@ -66,7 +69,12 @@ export function quiEstVise(estERP: boolean, installationDeclaree = false): strin
  */
 export function ceQueRojerFait(estERP: boolean, installationDeclaree: boolean): string {
   if (estERP && installationDeclaree) {
-    return "Rojer inscrit à votre calendrier, pour chaque installation déclarée, la mesure de la température une fois par mois et l'analyse de légionelles une fois par an, par un laboratoire accrédité. Ce carnet garde vos relevés et vos résultats ; une analyse saisie ici ne fait pas avancer la date du calendrier : déposez le rapport du laboratoire sur la ligne de l'analyse. Pas de rappel par e-mail.";
+    // ~~« une analyse saisie ici ne fait pas avancer la date du calendrier :
+    // déposez le rapport du laboratoire sur la ligne de l'analyse »~~ —
+    // 2026-10-17, revue indépendante : la ligne mensuelle n'avance, elle
+    // aussi, qu'au dépôt d'un document ; la phrase ne disait rien de la
+    // température.
+    return "Rojer inscrit à votre calendrier, pour chaque installation déclarée, la mesure de la température une fois par mois et l'analyse de légionelles une fois par an, par un laboratoire accrédité. Ce carnet garde vos relevés et vos résultats, mais ce que vous y saisissez ne fait pas avancer les dates du calendrier : chaque mois, déposez la fiche de vos relevés de température sur la ligne de la température ; chaque année, le rapport du laboratoire sur la ligne de l'analyse. Pas de rappel par e-mail.";
   }
   const duModule =
     "Rojer n'inscrit rien à votre calendrier tant que vous n'avez pas ouvert de carnet, puis y inscrit l'analyse suivante un an après la dernière saisie — sans rappel par e-mail.";
