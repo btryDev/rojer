@@ -2,9 +2,17 @@
 //
 // Le champ `usageEcran` est requis par le type, mais le type admet `null` :
 // il ne sait pas dire qu'une ligne de l'écran DOIT être rangée, ni qu'une
-// sous-catégorie appartient à sa famille. C'est ici. Une ligne de l'écran sans
+// sous-catégorie appartient à sa famille. C'est ici. ~~Une ligne de l'écran sans
 // rangement n'aurait aucune famille où s'afficher — il n'y a plus de groupe
-// « autres » pour la recueillir.
+// « autres » pour la recueillir.~~ [2026-10-17, revue indépendante : elle
+// tombe dans le repli « Autres obligations » (`familles.ts`), pour que
+// l'oubli se voie au lieu de faire lever le score, le PDF et le widget. Ce
+// test reste le garde-fou : le repli n'est qu'une ceinture.]
+//
+// « À l'écran », c'est `figureSurLEcranEnPlace` — qui, depuis le même jour,
+// écarte le niveau audit (ADR-042) comme la porte du moteur : les chiffons
+// imprégnés y passaient, portaient un rangement et servaient de borne nommée,
+// alors que l'écran ne les a jamais affichés.
 //
 // Aucune liste recopiée : la propriété se vérifie sur ce que `regle.ts` dit de
 // chaque obligation, et un ajout au référentiel entre dans le relevé de
@@ -15,6 +23,7 @@ import {
   obligationParId,
   obligationsConformite,
 } from "@/lib/referentiels/conformite";
+import { estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
 import { figureSurLEcranEnPlace } from "./regle";
 import { ORDRE_GROUPES, ORDRE_SOUS_CATEGORIES, rangementDe } from "./familles";
 
@@ -25,12 +34,16 @@ const HORS_ECRAN = obligationsConformite.filter(
 
 describe("le rangement de l'écran « Ce qui doit être en place »", () => {
   it("le relevé voit les lignes de l'écran — sinon ce test ne contrôle rien", () => {
-    // Borne basse, pas un compte : 58 obligations au 2026-10-17.
+    // Borne basse, pas un compte : ~~58~~ 57 obligations au 2026-10-17
+    // (58 − 1, les chiffons imprégnés, niveau audit).
     expect(SUR_L_ECRAN.length).toBeGreaterThanOrEqual(45);
   });
 
-  it("le relevé voit des lignes hors de l'écran, dont des titres salarié", () => {
-    expect(HORS_ECRAN.some((o) => o.porteur === "salarie")).toBe(true);
+  it("aucune ligne au niveau audit n'est comptée à l'écran — le moteur ne la rend jamais", () => {
+    // Borne basse du relevé hors écran : le référentiel en porte au moins une.
+    const audit = obligationsConformite.filter((o) => estNiveauAudit(o));
+    expect(audit.length).toBeGreaterThanOrEqual(1);
+    for (const o of audit) expect(figureSurLEcranEnPlace(o), o.id).toBe(false);
   });
 
   it.each(SUR_L_ECRAN.map((o) => [o.id, o] as const))(
@@ -61,11 +74,8 @@ describe("le rangement de l'écran « Ce qui doit être en place »", () => {
 
   it.each([
     ["information-etablissement-avis-acces-duerp", "quotidien", "informer"],
-    [
-      "incendie-travail-chiffons-impregnes-recipients-clos",
-      "incendie_secours",
-      "prevenir",
-    ],
+    // ~~chiffons imprégnés~~ (2026-10-17) : niveau audit, jamais à l'écran.
+    ["incendie-erp-interdiction-fumer-affichee", "incendie_secours", "prevenir"],
     ["incendie-registre-securite", "installations", null],
   ] as const)("borne nommée : %s → %s / %s", (id, groupe, sous) => {
     const o = obligationParId(id);

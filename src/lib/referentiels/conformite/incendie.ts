@@ -804,7 +804,9 @@ export const obligationsIncendie: Obligation[] = [
     periodicite: "autre",
     nature: "etat_permanent",
     pieceAttendue: null,
-    usageEcran: { groupe: "incendie_secours", sous: "prevenir" },
+    // Niveau audit (ADR-042) : le moteur ne la rend jamais, l'écran ne la liste
+    // pas — pas de rangement (2026-10-17, revue indépendante). ~~prevenir~~
+    usageEcran: null,
     realisateurs: ["exploitant"],
     criticite: 3,
     transmet: [],

@@ -470,7 +470,14 @@ const RELEVE = {
   // périodicité), hachée par l'empreinte du référentiel, donc déjà dans le
   // sceau : les dossiers ERP N1–N4 seront réconciliés au titre de
   // `2026-10-15.1`. ~~da691471f9fe392b~~.
-  empreinte: "8f04f49061475e71",
+  // Recopiée SANS incrément le 2026-10-17 (`lot/etats-permanents-usage`,
+  // revue indépendante) : `etats-permanents/regle.ts` fait répondre `null` à
+  // `modeSurLEcranEnPlace` pour une obligation au niveau audit. NON : ni le
+  // générateur, ni le réconciliateur, ni le moteur ne l'appellent — ses
+  // lecteurs sont les liens des fiches et `surfacesDe` —, et le moteur écarte
+  // déjà le niveau audit à sa porte (`evaluerObligation`).
+  // ~~8f04f49061475e71~~.
+  empreinte: "b28f27a9bbb75780",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

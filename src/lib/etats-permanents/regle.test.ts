@@ -23,6 +23,7 @@ import {
 } from "./regle";
 import { CATEGORIES_EQUIPEMENT } from "@/lib/referentiels/types-communs";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
+import { estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
 
 /**
  * Le point de ce lot n'est pas qu'un test passe : c'est qu'une obligation sans
@@ -93,6 +94,18 @@ describe("figureSurLEcranEnPlace — la même réponse que l'écran (2026-09-15)
         obligationsConformite.find((o) => o.id === "porte-auto-maintien-en-etat")!,
       ),
     ).toBe(true);
+  });
+
+  it("dit non au niveau audit, que la porte du moteur écarte (2026-10-17)", () => {
+    // Le test du dossier large ne le voit pas : le moteur ne rend jamais une
+    // obligation audit. Les chiffons imprégnés — état permanent, établissement,
+    // `autre` — passaient tous les autres critères.
+    const chiffons = obligationsConformite.find(
+      (o) => o.id === "incendie-travail-chiffons-impregnes-recipients-clos",
+    )!;
+    expect(estNiveauAudit(chiffons)).toBe(true);
+    expect(modeDeclaration(chiffons)).not.toBeNull();
+    expect(figureSurLEcranEnPlace(chiffons)).toBe(false);
   });
 });
 
