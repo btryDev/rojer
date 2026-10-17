@@ -45,7 +45,7 @@ export type DossierData = {
   adresse: string;
   effectifSurSite: number;
   codeNaf: string | null;
-  regimesTexte: string; // ex: "Établissement de travail, ERP type N cat. 5"
+  regimesTexte: string; // ex: "Établissement de travail, ERP type N cat. 5" ; "…, ERP types N, O cat. 3" (ADR-045)
   /** Les deux régimes qui décident des articles du registre cités en
    *  mentions légales (`mentions-registre.ts`). Requis : `regimesTexte` est
    *  une phrase, et une référence conditionnée à une phrase se casserait au

@@ -72,7 +72,9 @@ export function AutresTypesErp({
         </summary>
 
         <fieldset
-          aria-describedby="typesErpAutres-aide"
+          aria-describedby={erreur ? "typesErpAutres-aide typesErpAutres-erreur" : "typesErpAutres-aide"}
+          aria-invalid={erreur ? true : undefined}
+
           className="m-0 mt-3 flex flex-col gap-3 border-0 p-0"
         >
           <legend className="sr-only">Autres types d&apos;ERP de l&apos;établissement</legend>
@@ -109,7 +111,9 @@ export function AutresTypesErp({
         </fieldset>
       </details>
       {erreur ? (
-        <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">{erreur}</p>
+        <p id="typesErpAutres-erreur" className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
+          {erreur}
+        </p>
       ) : null}
     </div>
   );

@@ -100,3 +100,16 @@ describe("fiche établissement : les autres types d'ERP", () => {
     expect((sommeil(c2) as HTMLSelectElement).value).toBe("oui");
   });
 });
+
+describe("l'erreur des autres types est reliée au groupe de cases (revue du lot 3, R3)", () => {
+  it("aria-describedby nomme l'erreur, et le fieldset se dit invalide", async () => {
+    const { AutresTypesErp } = await import("./AutresTypesErp");
+    const { container } = render(
+      <AutresTypesErp typeErp="N" valeurs={[]} onChange={() => {}} nom="typesErpAutres" erreur="Ne doit être posé que si l'établissement est ERP" />,
+    );
+    const fs = container.querySelector("fieldset")!;
+    expect(fs.getAttribute("aria-describedby")).toContain("typesErpAutres-erreur");
+    expect(fs.getAttribute("aria-invalid")).toBe("true");
+    expect(container.querySelector("#typesErpAutres-erreur")?.textContent).toContain("ERP");
+  });
+});

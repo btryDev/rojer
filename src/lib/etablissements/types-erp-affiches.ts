@@ -18,8 +18,9 @@ export function typesErpAffiches(e: {
 }
 
 /**
- * Le régime ERP en une ligne, pour le PDF et le widget (revue du lot 3, R2) :
- * « ERP · types N, O · cat. 3 ». Une seule forme, écrite ici.
+ * Le régime ERP en une ligne, pour le widget (revue du lot 3, R2) :
+ * « ERP · types N, O · cat. 3 ». Le PDF garde sa forme à lui, sans « · » —
+ * sa ligne de régimes est une liste à virgules (`pdf/builders.ts`).
  */
 export function libelleRegimeErp(e: {
   typeErp: string | null;

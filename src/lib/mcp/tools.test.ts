@@ -117,7 +117,7 @@ describe("le serveur dit quand le calendrier n'est pas à jour", () => {
       estHabitation: false,
       typeErp: "N",
       typesErpAutres: [],
-      categorieErp: "cinq",
+      categorieErp: "N5",
       entreprise: {
         raisonSociale: "Port SARL",
         siret: "12345678900011",
@@ -177,7 +177,7 @@ describe("portée des lectures", () => {
       estHabitation: false,
       typeErp: "N",
       typesErpAutres: [],
-      categorieErp: "cinq",
+      categorieErp: "N5",
       entreprise: {
         raisonSociale: "Port SARL",
         siret: "12345678900011",
@@ -642,7 +642,7 @@ describe("provenance de la réponse", () => {
     estHabitation: false,
     typeErp: "M",
     typesErpAutres: [],
-    categorieErp: "cinq",
+    categorieErp: "N5",
     entreprise: {
       raisonSociale: "Maak",
       siret: "93476576900039",

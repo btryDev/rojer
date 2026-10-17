@@ -22,7 +22,7 @@ describe("types d'ERP affichés", () => {
   });
 });
 
-describe("le régime ERP en une ligne — même forme au PDF et au widget (revue du lot 3, R2)", () => {
+describe("le régime ERP en une ligne, au widget (revue du lot 3, R2)", () => {
   it("ERP · types N, O · cat. 3", () => {
     expect(libelleRegimeErp({ typeErp: "N", typesErpAutres: ["O"], categorieErp: "N3" })).toBe(
       "ERP · types N, O · cat. 3",

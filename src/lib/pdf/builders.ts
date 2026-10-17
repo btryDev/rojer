@@ -1,5 +1,5 @@
 import { estLignePourInformation } from "@/lib/referentiels/conformite/initiative";
-import { libelleRegimeErp } from "@/lib/etablissements/types-erp-affiches";
+import { libelleTypesErp } from "@/lib/etablissements/types-erp-affiches";
 import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
 import { prisma } from "@/lib/prisma";
 import type { AuthedUser } from "@/lib/auth/require-user";
@@ -130,7 +130,7 @@ async function chargerEtablissementDuUser(etablissementId: string, user: AuthedU
   });
 }
 
-function regimesTexte(etab: {
+export function regimesTexte(etab: {
   estEtablissementTravail: boolean;
   estERP: boolean;
   estIGH: boolean;
@@ -142,8 +142,16 @@ function regimesTexte(etab: {
 }): string {
   const out: string[] = [];
   if (etab.estEtablissementTravail) out.push("Établissement de travail");
-  // ADR-045 : tous les types déclarés ; même forme que le widget.
-  if (etab.estERP) out.push(libelleRegimeErp(etab));
+  // ADR-045 : tous les types déclarés, dans la forme d'avant — « ERP type N
+  // cat. 5 », « ERP types N, O cat. 3 ». Pas de « · » ici : la ligne du PDF
+  // sépare les régimes par des virgules (revue du lot 3).
+  if (etab.estERP) {
+    let lib = "ERP";
+    const types = libelleTypesErp(etab);
+    if (types) lib += ` ${types}`;
+    if (etab.categorieErp) lib += ` cat. ${etab.categorieErp.slice(1)}`;
+    out.push(lib);
+  }
   // Sans la classe depuis le 2026-09-03. Un document remis à un tiers est le
   // pire endroit pour une donnée que son porteur ne peut plus reprendre :
   // celui qui la lit la croit tenue à jour.
