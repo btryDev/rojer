@@ -14,6 +14,12 @@
 -- Une contrainte : pas de doublon avec `typeErp` — l'union les dédoublonne,
 -- mais un doublon en base dirait deux exploitations là où il n'y en a qu'une.
 --
+-- PAS DE CONTRAINTE CONTRE LES DOUBLONS DANS LA LISTE ('{M,M}'), et c'est
+-- voulu : un CHECK ne peut pas contenir de sous-requête, il faudrait une
+-- fonction SQL dédiée. Un doublon est sans effet — le moteur lit les types
+-- par `typesErpDe`, qui dédoublonne — et la seule voie d'écriture
+-- (`typesErpAutresCoherents`) les retire.
+--
 -- PAS DE CONTRAINTE « VIDE HORS ERP » (décision du 2026-10-17, via c6) :
 -- décocher « ERP » garde les autres types en base, comme il garde déjà
 -- `typeErp` et la catégorie — une erreur de clic ne doit rien perdre. Hors

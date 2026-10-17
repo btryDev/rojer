@@ -83,8 +83,10 @@ model Etablissement {
   typeErp                 TypeErp?
   // Les autres types d'ERP, quand l'établissement groupe plusieurs exploitations
   // (GN 2, ADR-045). Une seule catégorie pour l'ensemble. `typeErp` reste le
-  // premier type déclaré, sans portée juridique. Deux contraintes CHECK
-  // (migration 20261017120000) : vide hors ERP, et sans `typeErp` dedans.
+  // premier type déclaré, sans portée juridique. Une contrainte CHECK
+  // (migration 20261017120000) : jamais `typeErp` dedans. Hors ERP la liste
+  // est GARDÉE, comme `typeErp` (décocher « ERP » ne perd rien) ; le moteur
+  // l'ignore alors (`matchTypologie`).
   typesErpAutres          TypeErp[]          @default([])
   categorieErp            CategorieErp?
   classeIgh               ClasseIgh?
