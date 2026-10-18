@@ -95,10 +95,10 @@ déclencheur événementiel, hors règle. `periodicite` reste le rythme du texte
 « on propose tout, on relit tout ») — à lire avant toute question de
 couverture, parce que les confondre a fait raisonner deux fois de travers :
 
-1. **Refusé à l'entrée** — deux cas, et deux seulement : plus de cinquante
-   travailleurs, un ERP situé dans un IGH (section suivante, ADR-031).
+1. **Refusé à l'entrée** — ~~deux cas, et deux seulement~~ [2026-10-18, ADR-031 amendée : sept refus] : plus de cinquante
+   travailleurs, un ERP situé dans un IGH [2026-10-18 : plus de cinquante salariés dans l'entreprise, tous établissements confondus (depuis le 2026-09-26) ; et, depuis le filtre à l'accueil du 2026-10-17 (#68, `types-refuses.ts`, `refusDuFiltre`), les ERP de type J et U, les établissements spéciaux PA, CTS, SG, OA, REF, GA, EF (PS reste accepté), et le type R qui accueille des enfants — à la création comme à la modification, pour le type principal comme pour les autres types ; l'annexe du PDF du référentiel les liste par `refusAlEntree`] (section suivante, ADR-031).
 2. **Accepté** — tout le reste. L'onboarding propose **les 22 types d'ERP**
-   (GN 1) et les cinq catégories ; les régimes travail, ERP, IGH seul et
+   (GN 1) [2026-10-18 : dont neuf sont refusés par le filtre à l'accueil, et R s'il accueille des enfants] et les cinq catégories ; les régimes travail, ERP, IGH seul et
    habitation se cochent. Accepter n'est pas couvrir.
 3. **Servi** — ce que le référentiel porte réellement :
    - le Code du travail et le DUERP (référentiel sectoriel : les trois
@@ -135,7 +135,10 @@ salariés au plus peut-elle être concernée ? » se tranche article par article
   pas confondre avec `CATEGORIES_COUVERTES` (`perimetre/couverture.ts`), qui dit
   ce que le produit couvre ENTIÈREMENT, et reste `["N5"]`.
 
-### Ce qui est refusé à la création — deux cas, et deux seulement (ADR-031)
+### Ce qui est refusé à la création — ~~deux cas, et deux seulement~~ sept refus (ADR-031, amendée le 2026-10-18)
+
+[2026-10-18 : la liste ci-dessous date du 2026-09-01. S'y ajoutent plus de cinquante salariés dans l'entreprise, tous établissements confondus (depuis le 2026-09-26) ; et, depuis le filtre à l'accueil du 2026-10-17 (#68, `types-refuses.ts`, `refusDuFiltre`), les ERP de type J et U, les établissements spéciaux PA, CTS, SG, OA, REF, GA, EF (PS reste accepté), et le type R qui accueille des enfants — à la création comme à la modification, pour le type principal comme pour les autres types ; l'annexe du PDF du référentiel les liste par `refusAlEntree`. Le critère reste : on refuse ce qu'on ne sait pas servir du tout.]
+
 1. **Plus de cinquante travailleurs.** La borne compte les salariés, jamais le
    public reçu : un restaurant de huit salariés qui sert trois cents couverts
    relève de la 3ᵉ catégorie d'ERP et reste dans la cible. Elle vaut à la
@@ -146,7 +149,7 @@ salariés au plus peut-elle être concernée ? » se tranche article par article
    produit sert entièrement.
 
 **Tout le reste se déclare et ne se refuse pas** (ADR-020, ADR-031) : ICPE,
-expositions spécialisées, types d'ERP non instruits, catégories d'ERP 1 à 4.
+expositions spécialisées, types d'ERP non instruits [2026-10-18 : sauf J, U, les établissements spéciaux hors PS et R avec enfants, refusés par le filtre à l'accueil], catégories d'ERP 1 à 4.
 On refuse ce qu'on ne peut pas servir, pas ce qu'on ne couvre pas entièrement.
 
 ### Secteurs couverts (DUERP)
@@ -618,7 +621,7 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
 24. **024** — Une obligation déclare ce qu'elle implique ailleurs : le
     produit nomme la transmission, il ne la dérive jamais
 25. **025** — Ce que Rojer sert et ce qu'il refuse (**tranchée en réunion le
-    2026-09-01** : deux refus seulement, tout le reste se déclare)
+    2026-09-01** : ~~deux refus seulement~~ [2026-10-18 : deux refus à cette date ; sept depuis le filtre à l'accueil, ADR-031 amendée], tout le reste se déclare)
 26. **026** — La nature d'une obligation est un champ, pas une déduction :
     récurrente, état permanent, ponctuelle, événementielle
 27. **027** — Une déclaration n'est pas une preuve : les états permanents ont
@@ -633,7 +636,8 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
 30. **030** — Trois axes thématiques, deux entrées fonctionnelles : À faire ·
     Santé-sécurité · Équipement et bâtiment · Documentation · Paramètres
 31. **031** — Refuser à l'entrée ce qu'on ne sait pas servir *du tout*, et
-    déclarer tout le reste. Amende l'ADR-020 sans la renverser
+    déclarer tout le reste. Amende l'ADR-020 sans la renverser ; amendée le
+    2026-10-18 (filtre à l'accueil, #68 : J, U, établissements spéciaux, R avec enfants)
 32. **032** — Une demande d'assureur entre par les prescriptions, et ne devient
     jamais du droit : marquage obligatoire sur les neuf surfaces qui l'affichent
 33. **033** — Le DUERP est borné à cinq unités de travail, hors « Risques
