@@ -51,7 +51,9 @@ import {
   decompteStatuts,
   lireAnnexeRelecture,
   lireArguments,
+  legendeColonneAudit,
   lirePropositionsAudit,
+  pageDeTeteGrille,
   propositionsADecider,
   type AnnexeRelecture,
   type PropositionAudit,
@@ -637,6 +639,79 @@ function LegendeEcrans() {
 }
 
 /**
+ * « Déjà au niveau audit » : la liste de ce qui est tranché, lue au
+ * référentiel (`estNiveauAudit`). Imprimée sous les propositions quand il en
+ * reste, sur sa propre page sinon (`pageDeTeteGrille`, 2026-10-18).
+ */
+function RubriqueDejaAudit({ dejaAudit }: { dejaAudit: Obligation[] }) {
+  if (dejaAudit.length === 0) return null;
+  return (
+    <View wrap={false}>
+      <TitrePartie
+        sousTitre="Rappel"
+        titre={`Déjà au niveau audit (${dejaAudit.length})`}
+        explication="À la suite de votre relecture."
+      />
+      <View style={BOARD_PDF.carte}>
+        {dejaAudit.map((o, i) => (
+          <View
+            key={o.id}
+            style={{ flexDirection: "row", alignItems: "center", marginTop: i === 0 ? 0 : 7 }}
+          >
+            <Pastille>{referenceCourte(o)}</Pastille>
+            <Text style={{ fontSize: 10.5, color: BOARD.ardoiseEncre, flex: 1 }}>
+              {t(o.libelle)}
+            </Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+/**
+ * La page qui ouvre la grille quand il ne reste aucune proposition
+ * (`pageDeTeteGrille`, 2026-10-18) : le rappel de ce qui est au niveau audit,
+ * sans « rien n'est décidé ».
+ */
+function PageNiveauAudit({ genereLe }: { genereLe: string }) {
+  const dejaAudit = obligationsConformite.filter((o) => estNiveauAudit(o));
+  return (
+    <Page
+      size="A4"
+      style={{
+        ...stylePage,
+        backgroundColor: BOARD.canevas,
+        paddingHorizontal: 48,
+        paddingTop: 44,
+        paddingBottom: 56,
+      }}
+    >
+      <Text style={BOARD_PDF.eyebrow}>
+        {t(`Rojer · référentiel ${REFERENTIEL_VERSION} · ${genereLe}`)}
+      </Text>
+      <Text
+        style={{ fontSize: 24, fontFamily: "Helvetica-Bold", color: BOARD.encre, marginTop: 10, lineHeight: 1.2 }}
+      >
+        Les obligations au niveau audit
+      </Text>
+      <View style={[BOARD_PDF.carte, { marginTop: 14, backgroundColor: BOARD.cielPale, borderColor: BOARD.cielPale }]}>
+        <Text style={{ fontSize: 10.5, lineHeight: 1.55, color: BOARD.ardoiseEncre }}>
+          {t(
+            "Le niveau audit garde une obligation dans le référentiel, avec sa source, mais ne la suit plus au quotidien : pas d'échéance au calendrier, pas de ligne au tableau de bord. Elle reste nommée sur la page « Ce que Rojer ne couvre pas ». Rien n'est retiré.",
+          )}
+        </Text>
+        <Text style={{ fontSize: 10.5, lineHeight: 1.55, marginTop: 5, color: BOARD.ardoiseEncre, fontFamily: "Helvetica-Bold" }}>
+          {t("Aucune proposition n'est en attente : la liste ci-dessous est décidée.")}
+        </Text>
+      </View>
+      <RubriqueDejaAudit dejaAudit={dejaAudit} />
+      <PiedDePage />
+    </Page>
+  );
+}
+
+/**
  * « Nos propositions de passage au niveau audit » — en tête du document, quand
  * `--propositions-audit` est passé (2026-10-13, demande de la propriétaire :
  * la liste à part, au début, lisible par le préventeur). Le motif, qui n'est
@@ -703,28 +778,7 @@ function PagePropositions({
 
       <LegendeEcrans />
 
-      {dejaAudit.length > 0 && (
-        <View wrap={false}>
-          <TitrePartie
-            sousTitre="Rappel"
-            titre={`Déjà au niveau audit (${dejaAudit.length})`}
-            explication="Décidé le 8 octobre 2026, sur vos remarques."
-          />
-          <View style={BOARD_PDF.carte}>
-            {dejaAudit.map((o, i) => (
-              <View
-                key={o.id}
-                style={{ flexDirection: "row", alignItems: "center", marginTop: i === 0 ? 0 : 7 }}
-              >
-                <Pastille>{referenceCourte(o)}</Pastille>
-                <Text style={{ fontSize: 10.5, color: BOARD.ardoiseEncre, flex: 1 }}>
-                  {t(o.libelle)}
-                </Text>
-              </View>
-            ))}
-          </View>
-        </View>
-      )}
+      <RubriqueDejaAudit dejaAudit={dejaAudit} />
       <TitrePartie
         sousTitre={`${fermes.length} propositions`}
         titre="Nous proposons"
@@ -766,15 +820,21 @@ function GrilleDocument({
     obligations: obligationsDe(c),
   }));
   const total = obligationsConformite.length;
+  const tete = pageDeTeteGrille(
+    propositions.size,
+    obligationsConformite.filter((o) => estNiveauAudit(o)).length,
+  );
 
   return (
     <Document
       title="Rojer — grille de relecture du référentiel"
       author="Rojer"
     >
-      {propositions.size > 0 && (
+      {/* La page de tête suit l'état des propositions (2026-10-18). */}
+      {tete === "propositions" && (
         <PagePropositions propositions={propositions} genereLe={genereLe} />
       )}
+      {tete === "niveau_audit" && <PageNiveauAudit genereLe={genereLe} />}
       {annexe && <PageRemarques annexe={annexe} genereLe={genereLe} />}
 
       {/* Récapitulatif */}
@@ -812,10 +872,7 @@ function GrilleDocument({
             <Text style={{ fontFamily: "Helvetica-Bold", color: BOARD.ambreEncre }}>
               Audit
             </Text>{" "}
-            : obligation légale que nous proposons de garder au référentiel
-            sans que Rojer la suive au quotidien — ni calendrier, ni
-            alertes —, listée sur la page « Ce que Rojer ne couvre pas ».
-            Votre avis ?
+            : {t(legendeColonneAudit(propositions.size > 0))}
           </Text>
           <Text style={{ marginTop: 6 }}>
             Le document couvre les {total} obligations, rangées par ce qui les

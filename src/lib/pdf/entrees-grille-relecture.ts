@@ -186,3 +186,39 @@ export function lireArguments(
   }
   return { options, drapeaux, positionnels };
 }
+
+/**
+ * La légende de la colonne « Audit » de la grille (2026-10-18).
+ *
+ * La colonne marque d'une même mention les lignes au niveau audit ET les
+ * lignes proposées (C67). Tant qu'il reste des propositions, la légende les
+ * soumet : « que nous proposons […] Votre avis ? ». Quand il n'en reste
+ * aucune — toutes décidées, comme le 2026-10-17 —, ce texte demandait un avis
+ * sur des choses tranchées : le relecteur lisait une question qui n'en était
+ * plus une. Une seule lecture, ici, pour que la légende suive l'état des
+ * propositions au lieu d'être écrite une fois pour toutes.
+ */
+export function legendeColonneAudit(resteDesPropositions: boolean): string {
+  return resteDesPropositions
+    ? "obligation légale que nous proposons de garder au référentiel sans que Rojer la suive au quotidien — ni calendrier, ni alertes —, listée sur la page « Ce que Rojer ne couvre pas ». Votre avis ?"
+    : "obligation légale gardée au référentiel sans que Rojer la suive au quotidien — ni calendrier, ni alertes —, listée sur la page « Ce que Rojer ne couvre pas ».";
+}
+
+/**
+ * La page qui ouvre la grille (2026-10-18).
+ *
+ * Avec des propositions à décider, c'est la page des propositions, qui
+ * rappelle en dessous ce qui est déjà au niveau audit. Sans proposition, la
+ * page des propositions ne s'imprimait pas — et le rappel disparaissait avec
+ * elle : le relecteur ne voyait plus nulle part la liste de ce qui est
+ * tranché. Il a désormais sa page. Rien à rappeler, rien à proposer : pas de
+ * page.
+ */
+export function pageDeTeteGrille(
+  nbPropositions: number,
+  nbDejaAudit: number,
+): "propositions" | "niveau_audit" | null {
+  if (nbPropositions > 0) return "propositions";
+  return nbDejaAudit > 0 ? "niveau_audit" : null;
+}
+
