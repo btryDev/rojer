@@ -5,9 +5,19 @@
   `src/components/onboarding/validation.ts` (la validation client du wizard —
   elle vit sous `components/`, pas sous `lib/`),
   `src/lib/etablissements/schema.ts` (`etablissementCreationSchema`),
-  `src/lib/perimetre/exclusions.ts` (`refusAlEntree`, catalogue des deux refus),
+  `src/lib/perimetre/exclusions.ts` (`refusAlEntree`, catalogue des ~~deux~~
+  [2026-10-18 : trois] refus de taille et d'IGH),
+  `src/lib/etablissements/types-refuses.ts` (`refusDuFiltre`, le filtre à
+  l'accueil — 2026-10-18),
   `src/lib/perimetre/couverture.ts`, `src/lib/referentiels/corpus/perimetre.ts`
 - **Amende** l'ADR-020, qu'elle ne renverse pas · **Découle de** l'ADR-025
+
+> **Amendée le 2026-10-18.** Le filtre à l'accueil (#68, décisions de la
+> propriétaire du 2026-10-17) refuse aussi des types d'ERP : J, U, les
+> établissements spéciaux PA, CTS, SG, OA, REF, GA, EF, et R quand il accueille
+> des enfants. Le critère de cette ADR ne change pas — on refuse ce qu'on ne
+> sait pas servir *du tout* — et c'est lui qui fonde ces refus. Voir
+> « Amendement du 2026-10-18 » en fin de document.
 
 ## Le problème
 
@@ -36,7 +46,7 @@ Le critère est la nature du manque, pas sa taille.
 | | Refus à l'entrée | Déclaration continue |
 |---|---|---|
 | **Ce qui le déclenche** | Ce que le produit ne peut pas servir **du tout** : la structure sort de sa taille, ou son régime rouvre un règlement entier jamais dépouillé | Tout le reste — un régime servi dont une partie manque |
-| **Ce qui refuse, au 2026-09-01** | **Deux cas, et deux seulement** : plus de cinquante travailleurs ; un ERP situé dans un immeuble de grande hauteur | ERP de 1ʳᵉ à 4ᵉ catégorie, IGH seul, ICPE, tout type d'ERP non instruit, secteur de DUERP non instruit, équipement hors référentiel, obligations suspendues au public reçu, expositions spécialisées (ATEX, amiante, plomb, radon, CMR, rayonnements ionisants) |
+| **Ce qui refuse, au 2026-09-01** | ~~**Deux cas, et deux seulement**~~ [2026-10-18 : deux au 2026-09-01 ; trois depuis le 2026-09-26 (§ 1 ter) ; plus les types d'ERP du filtre à l'accueil depuis le 2026-10-17, voir « Amendement du 2026-10-18 »] : plus de cinquante travailleurs ; un ERP situé dans un immeuble de grande hauteur | ERP de 1ʳᵉ à 4ᵉ catégorie, IGH seul, ICPE, tout type d'ERP non instruit, secteur de DUERP non instruit, équipement hors référentiel, obligations suspendues au public reçu, expositions spécialisées (ATEX, amiante, plomb, radon, CMR, rayonnements ionisants) |
 | **Ce que voit le dirigeant** | La création s'arrête et dit pourquoi | Le dossier vit et le prévient en permanence |
 
 **La liste des refus est courte, et elle a été raccourcie en séance.** Un premier
@@ -82,7 +92,12 @@ intérieur et du programme annuel. La même borne (`EFFECTIF_MAX`) s'applique
 aux deux, par le même mécanisme : refus à la création (parcours d'entrée et
 création d'une entreprise), jamais en édition — une entreprise qui franchit le
 seuil en cours de route garde son dossier, qui porte le manque (axe
-`effectif` de la couverture). Les refus à l'entrée passent ainsi à trois.
+`effectif` de la couverture). ~~Les refus à l'entrée passent ainsi à trois.~~
+[2026-10-18 : ce « trois » comptait les refus de taille et d'IGH — effectif du
+site, effectif de l'entreprise, ERP situé dans un IGH (`refusAlEntree`, clés
+`effectif`, `effectif_entreprise`, `erp_en_igh`). Le filtre à l'accueil en
+ajoute d'autres, qui portent sur le type d'ERP : voir « Amendement du
+2026-10-18 ».]
 
 **2. Le refus ne borne jamais le déclenchement d'une obligation.** Les seuils du
 référentiel se lisent sur ce qu'ils visent : `personnesPresentesHabituellement`
@@ -112,12 +127,15 @@ question « quelle est la cible ? » restait listée ouverte
 **la cible du produit est ce que l'onboarding ne refuse pas** — au plus
 cinquante travailleurs (sur le site comme dans l'entreprise, décision du
 2026-09-26), et pas d'ERP situé dans un IGH. Au sens large : les TPE/PME.
+[2026-10-18 : et, depuis le filtre à l'accueil du 2026-10-17, pas d'ERP de
+type J, U, ni d'établissement spécial PA, CTS, SG, OA, REF, GA, EF, ni de type
+R qui accueille des enfants — « Amendement du 2026-10-18 ».]
 
 Trois notions, à ne pas confondre :
 
 | Notion | Ce qu'elle dit | Où elle vit |
 |---|---|---|
-| **Refusé** | La porte ne crée pas le dossier | `refusAlEntree()`, `perimetre/exclusions.ts` — trois refus |
+| **Refusé** | La porte ne crée pas le dossier | `refusAlEntree()`, `perimetre/exclusions.ts` — trois refus [2026-10-18 : de taille et d'IGH ; plus le filtre à l'accueil, `refusDuFiltre()`, `etablissements/types-refuses.ts`] |
 | **Cible** | Tout le reste : le dossier se crée, et ce qui lui manque se déclare | Le registre de dette du corpus (`toucheLaCible`) se mesure sur elle |
 | **Couvert entièrement** | Ce que le produit sert sans manque déclaré | `CATEGORIES_COUVERTES` (`perimetre/couverture.ts`), aujourd'hui `["N5"]` |
 
@@ -132,3 +150,55 @@ encodées (le chapitre hôtels, PO 1 § 3, PO 7, PO 12), ~~quatre~~ ~~six~~ sept
 annoncées (GZ 13, GZ 14, AS 10, arrêté du 23 février 2018 art. 26 § 3 ; puis,
 après la revue indépendante du même jour, arrêté du 31 janvier 1986 art. 78-1
 et 102, et R. 4544-11), ~~huit~~ ~~six~~ cinq hors cadre — `docs/couverture-declaree-du-produit.md` § 7 et § 8.
+
+## Amendement du 2026-10-18 — le filtre à l'accueil
+
+Décisions de la propriétaire du 2026-10-17, relayées par c6
+(`propositions/maj-referentiel-constats-2026-10-17.md` § 4 et § 5, hors dépôt ;
+plan de la page « Ce que Rojer ne couvre pas »,
+`propositions/plan-page-ne-couvre-pas-2026-10-17.md`), mises en code par le
+lot du filtre à l'accueil (#68). Ce qui suit est relu dans
+`src/lib/etablissements/types-refuses.ts` et ses tests, pas recopié d'une
+liste.
+
+**Le critère ne change pas.** On refuse ce que le produit ne sait pas servir
+*du tout* ; on déclare ce qu'il sert incomplètement. Ces types-là sont refusés
+parce que leurs obligations propres relèvent de textes que Rojer ne couvre
+pas, pas parce qu'un point manque.
+
+| Refus | Ce que le code refuse | Motif |
+|---|---|---|
+| **Type J** (structures pour personnes âgées ou handicapées) | `TYPES_ERP_REFUSES`, phrase `PHRASE_REFUS_J` | Hors cible, décision de la propriétaire du 2026-10-17. Ses obligations propres ne sont pas servies (J 33, gaz médicaux, classé hors cadre ; J 35, J 39, J 40 tombent avec le refus — constats § 4). |
+| **Type U** (établissements de soins) | idem, `PHRASE_REFUS_U` | Hors cible, même décision. Mêmes raisons (U 62, U 64, PU 5 hors cadre ; U 41, U 43, U 47, U 48, PU 6 tombent avec le refus). |
+| **Établissements spéciaux PA, CTS, SG, OA, REF, GA, EF** | idem, une seule phrase `PHRASE_REFUS_SPECIAUX` | Leurs dispositions propres (le « livre IV » du règlement de sécurité) n'ont jamais été lues. **PS (parcs de stationnement couverts) reste accepté.** |
+| **Type R qui accueille des enfants** (crèche, école, centre de loisirs) | `refusDuFiltre`, champ `accueilEnfants`, `PHRASE_REFUS_ENFANTS` | L'accueil d'enfants relève d'obligations propres d'autres codes (CSP, CASF, Code de l'environnement : 9 à 13 obligations pour une micro-crèche — constats § 5). **La formation pour adultes reste acceptée.** |
+
+Ce que le code fait de ces refus, et qu'il faut savoir avant d'y toucher :
+
+- **Trois portes, une règle.** Le refus est posé par
+  `etablissementCreationSchema` (création, y compris d'un second établissement,
+  ADR-028), par `onboardingSchema` (serveur du parcours) et par
+  `components/onboarding/validation.ts` (refus à l'étape), tous par
+  `appliquerFiltre`.
+- **À la modification, à la transition seulement.** `modifierEtablissement`
+  refuse un type refusé qui n'était pas déjà en base, et ne pose la question
+  des enfants qu'à l'entrée de R. Un dossier créé avant le filtre s'enregistre
+  comme avant — même logique que le § 1 bis pour l'effectif.
+- **Type principal et autres types.** Le refus vaut pour chacun des types
+  déclarés (ADR-045).
+- **Hors ERP, rien.** Un type resté en mémoire sur un établissement qui n'est
+  pas un ERP ne refuse rien.
+- **R : « oui » refuse, « non » passe, le silence redemande** (« Indiquez si
+  vous accueillez des enfants. »). La réponse **n'est pas stockée** : elle ne
+  sert qu'à refuser.
+- **Les phrases expliquent sans qualifier** : toutes commencent par « Rojer
+  ne prend pas en charge ».
+
+**Un point reste ouvert, et il est écrit ici pour ne pas se perdre.**
+`refusAlEntree()` (`perimetre/exclusions.ts`) projette la porte par des
+dossiers-sondes, et ne sonde que la taille et l'IGH : les refus du filtre n'y
+figurent pas. L'annexe du document de relecture (`detailHorsPage`) qui liste
+les refus ne les dit donc pas. Ce n'est pas un écran — la page « Ce que Rojer
+ne couvre pas » ne montre plus les refus (plan du 2026-10-17, Q5) —, mais la
+parité page ↔ document le demandera.
+

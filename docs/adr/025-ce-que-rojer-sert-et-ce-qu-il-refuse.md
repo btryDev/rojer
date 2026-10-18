@@ -30,8 +30,13 @@ affaires cessantes.
 
 **Servi** : Code du travail, ERP, habitation.
 
-**Refusé à la création d'un dossier — deux cas, et deux seulement** (arbitré en
-séance le 2026-09-01, après un premier jet beaucoup plus large) :
+**Refusé à la création d'un dossier — ~~deux cas, et deux seulement~~** (arbitré en
+séance le 2026-09-01, après un premier jet beaucoup plus large)
+[2026-10-18 : deux au 2026-09-01 ; trois depuis le 2026-09-26, l'effectif de
+l'entreprise plafonné comme celui du site ; et depuis le 2026-10-17, le filtre
+à l'accueil refuse les types J et U, les établissements spéciaux PA, CTS, SG,
+OA, REF, GA, EF, et R qui accueille des enfants — ADR-031, amendement du
+2026-10-18] :
 
 1. **plus de cinquante travailleurs** — au-delà, les obligations changent de
    nature (CSSCT dédiée, programme annuel présenté au CSE) et le produit ne les

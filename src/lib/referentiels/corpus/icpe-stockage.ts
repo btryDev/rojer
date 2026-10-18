@@ -6,8 +6,10 @@
 // recadrage tranché le 2026-09-01 (ADR-025 § 1). L'ICPE ne figure plus parmi
 // les régimes refusés : « Tout le reste se déclare et ne se refuse pas […] on
 // refuse ce qu'on ne peut pas servir, pas ce qu'on ne couvre pas entièrement. »
-// Deux refus subsistent à l'entrée d'un dossier — plus de cinquante
-// travailleurs, et un ERP situé dans un IGH — et l'ICPE n'en est pas.
+// ~~Deux refus subsistent à l'entrée d'un dossier — plus de cinquante
+// travailleurs, et un ERP situé dans un IGH —~~ [2026-10-18 : les refus à
+// l'entrée sont l'effectif (site et entreprise), l'ERP situé dans un IGH, et
+// les types d'ERP du filtre à l'accueil (ADR-031 amendée)] et l'ICPE n'en est pas.
 
 import type { Corpus } from "./types";
 

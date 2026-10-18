@@ -9,7 +9,10 @@
 //  1. **Refusé à l'entrée** — le produit ne sait pas servir ce cas *du tout*
 //     (ADR-031). ~~Deux cas, et deux seulement.~~ Trois depuis le 2026-09-26 :
 //     la propriétaire a plafonné l'effectif de l'entreprise comme celui du
-//     site (« c'est la limite de Rojer »). Projeté ci-dessous.
+//     site (« c'est la limite de Rojer »). Projeté ci-dessous. [2026-10-18 :
+//     trois refus de TAILLE et d'IGH ; le filtre à l'accueil du 2026-10-17
+//     refuse en plus des types d'ERP (`etablissements/types-refuses.ts`,
+//     ADR-031 amendée), et ce module ne les sonde pas — point ouvert.]
 //  2. **Servi partiellement et prévenu** — c'est `perimetre/couverture.ts`,
 //     et rien d'autre. Ce module ne le redit pas : la page appelle les deux.
 //  3. **Hors périmètre déclaré** — les articles que le dépouillement a lus et
@@ -110,7 +113,7 @@ function messageDeLaPorte(
  * pour tout le reste ; lui fermer la porte lui retirerait tout au motif qu'on
  * ne lui donnerait pas tout.
  *
- * Rend moins de deux entrées si le schéma a cessé de refuser : c'est un fait à
+ * Rend moins de ~~deux~~ [2026-10-18 : trois] entrées si le schéma a cessé de refuser : c'est un fait à
  * faire remonter, pas à combler.
  */
 export function refusAlEntree(): RefusAlEntree[] {
