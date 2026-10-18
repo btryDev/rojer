@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { TYPES_ERP } from "@/lib/referentiels/types-communs";
 import { exclusionsDeclarees, refusAlEntree } from "./exclusions";
 import {
   EFFECTIF_MAX,
@@ -27,19 +28,39 @@ const dossierAccepte = {
   estHabitation: false,
   natureActivite: null,
 };
+/** Un ERP de 5ᵉ catégorie que la porte accepte sous le type N. */
+const erpAccepte = {
+  ...dossierAccepte,
+  estERP: true,
+  typeErp: "N",
+  categorieErp: "N5",
+  personnesPresentesHabituellement: 30,
+};
 
 describe("les refus à l'entrée sont projetés, pas recopiés", () => {
   it("rend les refus de l'ADR-031, et eux seuls", () => {
-    // « Deux cas, et deux seulement » au 2026-09-01. Un troisième refus ajouté
-    // au schéma sans décision fera tomber ce test — c'est ce qu'on lui demande :
+    // « Deux cas, et deux seulement » au 2026-09-01. ~~Un troisième refus ajouté
+    // au schéma sans décision fera tomber ce test~~ [2026-10-18 : faux — le
+    // filtre à l'accueil (2026-10-17) a ajouté des refus au schéma sans que
+    // ce test tombe, parce que la liste ne se compose que de ce que le module
+    // SONDE, et qu'il ne sondait pas le type d'ERP. La garde qui le voit est
+    // plus bas : « la porte ne refuse aucun type que la liste ne nomme pas ».]
+    // — c'est ce qu'on lui demande :
     // « la liste des régimes refusés est un objet à relire, pas une constante
     // qu'on augmente au fil des cas gênants. »
     // Le troisième est entré par décision : la propriétaire, le 2026-09-26,
     // a plafonné l'effectif de l'entreprise comme celui du site (ADR-031).
+    // Les quatre suivants aussi : le filtre à l'accueil, décisions de la
+    // propriétaire du 2026-10-17 (J, U, établissements spéciaux, R qui
+    // accueille des enfants ; ADR-031 amendée le 2026-10-18).
     expect(refusAlEntree().map((r) => r.cle)).toEqual([
       "effectif",
       "effectif_entreprise",
       "erp_en_igh",
+      "type_j",
+      "type_u",
+      "etablissements_speciaux",
+      "r_accueil_enfants",
     ]);
   });
 
@@ -80,6 +101,34 @@ describe("les refus à l'entrée sont projetés, pas recopiés", () => {
     expect(etablissementCreationSchema.safeParse(erpCategorie3).success).toBe(
       true,
     );
+  });
+
+  it("filtre à l'accueil : la porte ne refuse aucun type d'ERP que la liste ne nomme pas", () => {
+    // La garde qui manquait (2026-10-18). Chaque type de GN 1 est soumis à la
+    // porte ; un type refusé doit l'être par une entrée de `refusAlEntree`.
+    // Un huitième refus de type ajouté au schéma sans entrée ici fait tomber
+    // ce test — c'est ce que la phrase rayée plus haut promettait.
+    const nommes = new Set(refusAlEntree().flatMap((r) => r.types ?? []));
+    // Borne basse : la liste nomme bien des types — vide, elle rendrait le
+    // test vrai pour une porte qui ne refuserait rien.
+    expect(nommes.size).toBeGreaterThanOrEqual(9);
+    for (const t of TYPES_ERP) {
+      const r = etablissementCreationSchema.safeParse({
+        ...erpAccepte,
+        typeErp: t,
+        comporteLocauxSommeilPublic: false,
+        accueilEnfants: t === "R" ? "non" : undefined,
+      });
+      const refuseSurLeType = !r.success && r.error.issues.some((i) => i.path[0] === "typeErp");
+      expect(refuseSurLeType, t).toBe(nommes.has(t));
+    }
+  });
+
+  it("filtre à l'accueil : les sondes inverses passent — PS, et R qui répond « non »", () => {
+    const ps = { ...erpAccepte, typeErp: "PS" };
+    expect(etablissementCreationSchema.safeParse(ps).success).toBe(true);
+    const rAdultes = { ...erpAccepte, typeErp: "R", comporteLocauxSommeilPublic: false, accueilEnfants: "non" };
+    expect(etablissementCreationSchema.safeParse(rAdultes).success).toBe(true);
   });
 
   it("ne laisse aucun refus sans indication — un refus n'est pas un cul-de-sac", () => {

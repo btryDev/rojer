@@ -168,9 +168,9 @@ pas, pas parce qu'un point manque.
 
 | Refus | Ce que le code refuse | Motif |
 |---|---|---|
-| **Type J** (structures pour personnes âgées ou handicapées) | `TYPES_ERP_REFUSES`, phrase `PHRASE_REFUS_J` | Hors cible, décision de la propriétaire du 2026-10-17. Ses obligations propres ne sont pas servies (J 33, gaz médicaux, classé hors cadre ; J 35, J 39, J 40 tombent avec le refus — constats § 4). |
-| **Type U** (établissements de soins) | idem, `PHRASE_REFUS_U` | Hors cible, même décision. Mêmes raisons (U 62, U 64, PU 5 hors cadre ; U 41, U 43, U 47, U 48, PU 6 tombent avec le refus). |
-| **Établissements spéciaux PA, CTS, SG, OA, REF, GA, EF** | idem, une seule phrase `PHRASE_REFUS_SPECIAUX` | Leurs dispositions propres (le « livre IV » du règlement de sécurité) n'ont jamais été lues. **PS (parcs de stationnement couverts) reste accepté.** |
+| **Type J** (structures pour personnes âgées ou handicapées) | `TYPES_ERP_REFUSES`, phrase `PHRASE_REFUS_J` | ~~Hors cible, décision de la propriétaire du 2026-10-17.~~ [2026-10-18, revue : refusé, décision de la propriétaire du 2026-10-17 — « hors cible » tournait en rond, la cible étant ce que la porte ne refuse pas.] Ses obligations propres ne sont pas servies (J 33, gaz médicaux, classé hors cadre ; J 35, J 39, J 40 tombent avec le refus — constats § 4). |
+| **Type U** (établissements de soins) | idem, `PHRASE_REFUS_U` | ~~Hors cible, même décision.~~ [2026-10-18 : refusé, même décision.] Mêmes raisons (U 62, U 64, PU 5 hors cadre ; U 41, U 43, U 47, U 48, PU 6 tombent avec le refus). |
+| **Établissements spéciaux PA, CTS, SG, OA, REF, GA, EF** | idem, une seule phrase `PHRASE_REFUS_SPECIAUX` | ~~Leurs dispositions propres (le « livre IV » du règlement de sécurité) n'ont jamais été lues.~~ [2026-10-18, revue : faux pour EF, qui n'est pas au livre IV.] Le livre IV de l'arrêté du 25 juin 1980 n'a jamais été lu pour PA, CTS, SG, OA, REF, GA — seul PS est au corpus (`arrete-1980-livre-4-parcs.ts` ; dénominateur, `docs/revues/denominateur-livre-2-erp.md` l. 193-194, qui compte au livre IV PA, CTS, SG, OA, REF, PS, GA). EF relève d'un autre texte, non lu : l'arrêté du 9 janvier 1990 relatif aux mesures de sécurité applicables dans les établissements flottants ou bateaux stationnaires et les bateaux en stationnement sur les eaux intérieures recevant du public (ERP type EF), `LEGITEXT000006075247`, en vigueur, modifié par l'arrêté du 27 octobre 2025 — contre-vérifié le 2026-10-18 sur Légifrance par le **bac à sable PISTE** (aucun MCP Légifrance chargé). **PS (parcs de stationnement couverts) reste accepté.** |
 | **Type R qui accueille des enfants** (crèche, école, centre de loisirs) | `refusDuFiltre`, champ `accueilEnfants`, `PHRASE_REFUS_ENFANTS` | L'accueil d'enfants relève d'obligations propres d'autres codes (CSP, CASF, Code de l'environnement : 9 à 13 obligations pour une micro-crèche — constats § 5). **La formation pour adultes reste acceptée.** |
 
 Ce que le code fait de ces refus, et qu'il faut savoir avant d'y toucher :
@@ -178,27 +178,48 @@ Ce que le code fait de ces refus, et qu'il faut savoir avant d'y toucher :
 - **Trois portes, une règle.** Le refus est posé par
   `etablissementCreationSchema` (création, y compris d'un second établissement,
   ADR-028), par `onboardingSchema` (serveur du parcours) et par
-  `components/onboarding/validation.ts` (refus à l'étape), tous par
-  `appliquerFiltre`.
+  `components/onboarding/validation.ts` (refus à l'étape), ~~tous par
+  `appliquerFiltre`~~ [2026-10-18, revue : faux côté client, qui appelle
+  `refusDuFiltre(...)[0]` directement] tous par `refusDuFiltre` (via
+  `appliquerFiltre` côté schémas).
 - **À la modification, à la transition seulement.** `modifierEtablissement`
   refuse un type refusé qui n'était pas déjà en base, et ne pose la question
   des enfants qu'à l'entrée de R. Un dossier créé avant le filtre s'enregistre
   comme avant — même logique que le § 1 bis pour l'effectif.
 - **Type principal et autres types.** Le refus vaut pour chacun des types
   déclarés (ADR-045).
-- **Hors ERP, rien.** Un type resté en mémoire sur un établissement qui n'est
-  pas un ERP ne refuse rien.
+- ~~**Hors ERP, rien.**~~ [2026-10-18, revue : trop large] **Hors ERP, aucun
+  type n'est refusé.** Un type resté en mémoire sur un établissement qui n'est
+  pas un ERP ne refuse rien. Mais une réponse « accueil d'enfants » envoyée là
+  où la question n'est pas posée est refusée (`appliquerFiltre`, « La question
+  de l'accueil d'enfants n'est posée qu'au type R. »).
 - **R : « oui » refuse, « non » passe, le silence redemande** (« Indiquez si
   vous accueillez des enfants. »). La réponse **n'est pas stockée** : elle ne
   sert qu'à refuser.
-- **Les phrases expliquent sans qualifier** : toutes commencent par « Rojer
-  ne prend pas en charge ».
+- **Les phrases expliquent sans qualifier** : ~~toutes commencent~~
+  [2026-10-18 : les quatre phrases de refus — J, U, spéciaux, enfants —
+  commencent] par « Rojer ne prend pas en charge ».
 
-**Un point reste ouvert, et il est écrit ici pour ne pas se perdre.**
+~~**Un point reste ouvert, et il est écrit ici pour ne pas se perdre.**
 `refusAlEntree()` (`perimetre/exclusions.ts`) projette la porte par des
 dossiers-sondes, et ne sonde que la taille et l'IGH : les refus du filtre n'y
 figurent pas. L'annexe du document de relecture (`detailHorsPage`) qui liste
 les refus ne les dit donc pas. Ce n'est pas un écran — la page « Ce que Rojer
 ne couvre pas » ne montre plus les refus (plan du 2026-10-17, Q5) —, mais la
-parité page ↔ document le demandera.
+parité page ↔ document le demandera.~~ [2026-10-18, revue : la dernière phrase
+était fausse — l'inventaire figé de la page (`inventaire-page-a493461c.ts`) ne
+porte que les trois refus de taille et d'IGH, aucun test ne réclamait ceux du
+filtre. Le point est fermé dans ce lot :]
+
+**L'annexe dit les sept refus (2026-10-18, accord de la propriétaire).**
+`refusAlEntree()` sonde aussi le filtre, sur la même porte
+(`etablissementCreationSchema`) : un ERP de 5ᵉ catégorie de type J, un U, un
+PA, un R qui répond « oui » à l'accueil d'enfants — avec la réponse « non » au
+sommeil pour J, U et R, que ces types déclenchent, pour que chaque sonde ne
+change qu'une chose. Quatre clés s'ajoutent à `CleRefus` : `type_j`, `type_u`,
+`etablissements_speciaux`, `r_accueil_enfants`. Chaque refus de type nomme ses
+types (`types`), et une garde soumet chaque type de GN 1 à la porte : les types
+refusés doivent être exactement l'union de ces listes. Les sondes inverses —
+PS, et R qui répond « non » — passent. L'annexe imprime donc sept régimes, avec
+la phrase de la porte et une indication.
 

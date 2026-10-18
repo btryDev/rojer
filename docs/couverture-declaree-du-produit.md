@@ -1335,7 +1335,10 @@ matériels nomme les deux articles des piscines à qui déclare une piscine.] [2
 ## 8. Classés le 2026-10-13 — entrés dans la cible le 2026-10-12
 
 La propriétaire a tranché le 2026-10-12 : la cible est ce que l'onboarding ne
-refuse pas — au plus cinquante travailleurs, pas d'ERP en IGH (ADR-031). Elle
+refuse pas — au plus cinquante travailleurs, pas d'ERP en IGH (ADR-031)
+[2026-10-18 : et, depuis le filtre à l'accueil du 2026-10-17, ni J, ni U, ni
+établissement spécial PA, CTS, SG, OA, REF, GA, EF, ni R qui accueille des
+enfants — ADR-031 amendée]. Elle
 n'est plus `CATEGORIES_COUVERTES = ["N5"]`. Mesuré en appelant le corpus, les
 quinze `obligation_manquante` qui étaient « hors cible » y entrent toutes :
 aucune ne vise seulement plus de cinquante travailleurs ou un ERP en IGH.

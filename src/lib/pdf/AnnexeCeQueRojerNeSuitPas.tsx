@@ -71,7 +71,10 @@ export function AnnexeCeQueRojerNeSuitPas({
         <Text style={titreSection}>{t("Refusé à l'entrée")}</Text>
         <Text style={s.small}>
           {t(
-            "Les régimes pour lesquels aucun dossier ne s'ouvre, tels que la porte de création les refuse. Ils ne figurent plus sur la page : si un dossier existe, il n'en relevait pas à sa création.",
+            // ~~« si un dossier existe, il n'en relevait pas à sa création »~~ —
+            // 2026-10-18 : faux pour un dossier ouvert avant le filtre à
+            // l'accueil (2026-10-17), que la porte ne ferme pas.
+            "Les régimes pour lesquels aucun dossier ne s'ouvre, tels que la porte de création les refuse. Ils ne figurent plus sur la page : un dossier qui existe n'en relevait pas à sa création, sauf s'il a été ouvert avant le refus.",
           )}
         </Text>
         {detail.refus.map((r) => (
