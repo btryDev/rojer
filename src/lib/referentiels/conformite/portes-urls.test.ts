@@ -32,6 +32,15 @@ describe("portes et portails : l'obligation et le corpus citent la même version
 
   it("l'art. 9 est cité par sa version en vigueur, jamais par la version close", () => {
     expect(ARTICLES_CORPUS.get("Arrêté 1993-12-21 art. 9")).toBe("LEGIARTI000054109592");
-    expect(refs.some((r) => r.legi === "LEGIARTI000006679563")).toBe(false);
+    // ~~sur `refs`, filtré par l'article du corpus~~ — revue de c6, 2026-10-18 :
+    // un libellé d'article décalé (« art 9 ») sortait du filtre avec sa version
+    // close. Le refus porte sur TOUTES les références du domaine, et sur le
+    // corpus, sans filtre.
+    const toutes = obligationsConformite
+      .filter((o) => o.domaine === "porte_portail")
+      .flatMap((o) => o.referencesLegales.map((r) => r.url ?? ""));
+    expect(toutes.length).toBeGreaterThan(0);
+    expect(toutes.filter((u) => u.includes("LEGIARTI000006679563"))).toEqual([]);
+    expect([...ARTICLES_CORPUS.values()]).not.toContain("LEGIARTI000006679563");
   });
 });

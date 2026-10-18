@@ -151,7 +151,10 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
   // dehors : la phrase s'élargit, sans dire du rideau plus que les textes.
   // ~~« …, autres fermetures automatiques ou semi-automatiques d'un passage, »~~
   // (2026-10-18 : c'était la lecture inversée, dite à l'écran).
-  PORTAIL_AUTO: "Portail motorisé de véhicule. Le rideau métallique motorisé d'une devanture et la barrière levante se déclarent aussi ici.",
+  // ~~« la barrière levante »~~ — 2026-10-18, revue de c6 : « motorisée » ;
+  // une barrière manuelle n'est pas visée par l'arrêté et recevrait le
+  // semestriel.
+  PORTAIL_AUTO: "Portail motorisé de véhicule. Le rideau métallique motorisé d'une devanture et la barrière levante motorisée se déclarent aussi ici.",
   // La seconde phrase est l'ADRESSE de non-couverture des articles de l'arrêté
   // du 20 novembre 2017 passés `non_couvert` le 2026-10-07 (relecture
   // préventeur du 30/09, décision de la propriétaire du 07/10) : leur

@@ -32,6 +32,16 @@ describe("la recherche de matériel (2026-10-14)", () => {
     expect(cats("volet roulant")).not.toContain("PORTAIL_AUTO");
   });
 
+  it("« grille » seul ne mène pas au portail — une grille de ventilation non plus (revue de c6, 2026-10-18)", () => {
+    expect(cats("grille")).not.toContain("PORTAIL_AUTO");
+    expect(cats("grille de ventilation")).not.toContain("PORTAIL_AUTO");
+    // L'expression, elle, y mène, même commencée.
+    expect(cats("grille roulante")).toContain("PORTAIL_AUTO");
+    expect(cats("grille rou")).toContain("PORTAIL_AUTO");
+    // Et l'ordre de saisie n'y change rien.
+    expect(cats("roulante grille")).toContain("PORTAIL_AUTO");
+  });
+
   it("cassure : sans son synonyme, le rideau métallique ne trouve plus le portail", () => {
     // La vraie recherche, sur une table privée du synonyme (revue du 2026-10-17 :
     // la première écriture recopiait la logique, et ne prouvait rien d'elle).

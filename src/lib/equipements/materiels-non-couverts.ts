@@ -453,22 +453,32 @@ export const MATERIELS_NON_COUVERTS: readonly MaterielNonCouvert[] = [
   },
   {
     // Décision de c6 du 2026-10-17 : pas un synonyme du portail automatique,
-    // dont l'aide dit « d'un passage ». À confirmer avec le préventeur à la
-    // prochaine relecture, avec le rideau métallique et la barrière levante.
+    // ~~dont l'aide dit « d'un passage ». À confirmer avec le préventeur à la
+    // prochaine relecture, avec le rideau métallique et la barrière levante.~~
+    // [2026-10-18, relecture de c6 : l'aide ne dit plus « d'un passage », et
+    // la question n'est plus posée au préventeur — le volet d'une fenêtre ou
+    // d'une vitrine n'est ni une porte ni un portail.]
     cle: "store_volet_roulant",
     libelle: "Store ou volet roulant motorisé",
     synonymes: ["store", "volet roulant", "store banne"],
     // ~~« Rojer ne suit pas les stores et volets roulants motorisés. » +
     // AUCUN_TEXTE_LU~~ — 2026-10-17, revue de B : phrase de c6. ~~« — à
     // confirmer avec le préventeur » en fin de phrase~~ (relecture du même
-    // jour : une note de travail, pas une phrase d'écran) — la question reste
-    // à poser au préventeur à la prochaine relecture.
+    // jour : une note de travail, pas une phrase d'écran) ~~— la question reste
+    // à poser au préventeur à la prochaine relecture~~ [2026-10-18 : plus
+    // posée, voir plus haut].
     // ~~« … ; il ne sait pas si l'arrêté du 21 décembre 1993 (portes et
     // portails automatiques) s'y applique. »~~ — 2026-10-18, relecture de c6 :
     // les textes visent les portes et portails ; un volet qui ferme l'entrée
     // est un portail, celui d'une fenêtre ou d'une vitrine non.
     phrase: `Rojer ne suit pas ${nonPorte("l'entretien des stores et volets roulants motorisés qui ferment une fenêtre ou une vitrine")} ; le code du travail (art. R. 4224-12 et R. 4224-13) et l'arrêté du 21 décembre 1993 visent les portes et portails. Un rideau ou un volet qui ferme l'entrée du commerce se déclare comme portail automatique.`,
-    references: [{ libelle: "Arrêté du 21 décembre 1993 (portes et portails automatiques)" }],
+    // R. 4224-12 et R. 4224-13 ajoutés le 2026-10-18 (revue de c6) : la
+    // phrase les cite.
+    references: [
+      { libelle: "Code du travail, art. R. 4224-12", corpus: "R. 4224-12" },
+      { libelle: "Code du travail, art. R. 4224-13", corpus: "R. 4224-13" },
+      { libelle: "Arrêté du 21 décembre 1993 (portes et portails automatiques)" },
+    ],
   },
   {
     cle: "sauna_hammam",

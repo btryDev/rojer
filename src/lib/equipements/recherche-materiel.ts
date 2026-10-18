@@ -139,10 +139,38 @@ export function normaliser(s: string): string {
     .trim();
 }
 
-/** Chaque mot de la saisie commence l'un des mots des termes. */
+/**
+ * Les synonymes qui ne valent qu'ENTIERS (revue de c6, 2026-10-18) : leurs
+ * mots ne mènent pas à la catégorie un par un. « grille » seul désignerait
+ * aussi une grille de ventilation ; seule « grille roulante » mène au portail.
+ */
+export const EXPRESSIONS_ENTIERES: ReadonlySet<string> = new Set(["grille roulante"]);
+
+/**
+ * La saisie couvre-t-elle l'expression ? Chaque mot de la saisie commence un
+ * mot de l'expression, chaque mot de l'expression sauf le dernier est écrit en
+ * entier, et le dernier est au moins commencé — « grille rou » la trouve,
+ * « grille » non.
+ */
+function couvreExpression(mots: readonly string[], expression: string): boolean {
+  const e = normaliser(expression).split(" ");
+  const dernier = e[e.length - 1];
+  return (
+    mots.every((m) => e.some((x) => x.startsWith(m))) &&
+    e.slice(0, -1).every((x) => mots.includes(x)) &&
+    mots.some((m) => dernier.startsWith(m))
+  );
+}
+
+/**
+ * Chaque mot de la saisie commence l'un des mots des termes — sauf pour les
+ * expressions entières, qui ne comptent que couvertes.
+ */
 function correspond(mots: readonly string[], termes: readonly string[]): boolean {
-  const debuts = termes.flatMap((t) => normaliser(t).split(" "));
-  return mots.every((m) => debuts.some((d) => d.startsWith(m)));
+  const libres = termes.filter((t) => !EXPRESSIONS_ENTIERES.has(t));
+  const debuts = libres.flatMap((t) => normaliser(t).split(" "));
+  if (mots.every((m) => debuts.some((d) => d.startsWith(m)))) return true;
+  return termes.some((t) => EXPRESSIONS_ENTIERES.has(t) && couvreExpression(mots, t));
 }
 
 /** Les tables où la recherche lit — injectables, pour éprouver un synonyme. */
