@@ -813,22 +813,22 @@ model Verification {
 // Prescriptions particulières propres à un établissement — ADR-014
 // ---------------------------------------------------------------------------
 
-/// Acte à l'origine de la prescription. Le PV de commission est une pièce
+/// Acte à l'origine de la prescription. ~~Le PV de commission est une pièce
 /// (avis, CCH R. 143-27) ; l'arrêté du maire ou du préfet est l'acte qui
-/// prescrit (CCH R. 143-45, R. 143-41 1°).
+/// prescrit (CCH R. 143-45, R. 143-41 1°).~~ [2026-10-18 : la distinction
+/// reste vraie en droit, mais ne se saisit plus — l'un et l'autre entrent en
+/// `autre`.] 2026-10-18, décision de la propriétaire : DEUX sources. ~~arrete_prefectoral, arrete_municipal,
+/// pv_commission_securite, arrete_icpe, inspection_travail~~ retirées : un
+/// arrêté, un PV ou une demande de l'inspection du travail reçus se saisissent
+/// en `autre` (migration `20261018090000_sources_prescription_deux`, qui y a
+/// passé les saisies anciennes en préfixant leur référence).
 ///
-/// `demande_assureur` est la seule qui ne soit pas un acte d'autorité : elle
-/// est contractuelle (ADR-032, qui amende l'ADR-014). Une échéance qui en naît
-/// est marquée partout où elle s'affiche et ne reçoit jamais de référence
-/// légale. La distinction se lit par `estSourceContractuelle()`
-/// (`src/lib/prescriptions/schema.ts`), jamais en réénumérant les valeurs
-/// dans chaque écran.
+/// `demande_assureur` est contractuelle (ADR-032, qui amende l'ADR-035) : une
+/// échéance qui en naît est marquée partout où elle s'affiche et ne reçoit
+/// jamais de référence légale. La distinction se lit par
+/// `estSourceContractuelle()` (`src/lib/prescriptions/sources.ts`), jamais en
+/// réénumérant les valeurs dans chaque écran.
 enum SourcePrescription {
-  arrete_prefectoral
-  arrete_municipal
-  pv_commission_securite
-  arrete_icpe
-  inspection_travail
   demande_assureur
   autre
 }

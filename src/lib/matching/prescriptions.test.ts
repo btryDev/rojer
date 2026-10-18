@@ -69,7 +69,7 @@ function prescription(
   partial: Partial<PrescriptionMatching> & Pick<PrescriptionMatching, "id" | "effet">,
 ): PrescriptionMatching {
   return {
-    source: "arrete_municipal",
+    source: "autre",
     reference: "AM 2026-12",
     autorite: "Mairie",
     dateDocument: new Date("2026-03-01T00:00:00Z"),
@@ -122,7 +122,9 @@ describe("prescriptions — renforce_periodicite", () => {
     expect(s["eq-ext"].periodicite).toBe("semestrielle");
     expect(s["eq-ext-2"].periodicite).toBe("semestrielle");
     expect(s["eq-ext"].prescriptionId).toBe("p1");
-    expect(s["eq-ext"].raison).toContain("arrêté municipal AM 2026-12");
+    // 2026-10-18 : deux sources ; un arrêté se saisit en « Autre », et se lit
+    // par sa référence.
+    expect(s["eq-ext"].raison).toContain("prescription AM 2026-12");
   });
 
   // 2026-10-12 (suite de C62) : le motif écrivait le code brut du rythme
@@ -438,7 +440,7 @@ describe("prescriptions — marquage des sources contractuelles (ADR-032)", () =
     );
   });
 
-  it("un acte d'autorité ne porte AUCUN marquage : il n'a rien à nuancer", () => {
+  it("un acte d'autorité (saisi en « Autre ») ne porte AUCUN marquage : il n'a rien à nuancer", () => {
     // La borne haute. Coller la mention sur un arrêté du maire sous-dirait
     // une obligation qui, elle, est bien opposable — l'erreur symétrique, et
     // celle que personne ne viendrait relever.
@@ -448,7 +450,7 @@ describe("prescriptions — marquage des sources contractuelles (ADR-032)", () =
         prescription({
           id: "p1",
           effet: "renforce_periodicite",
-          source: "arrete_municipal",
+          source: "autre",
           obligationId: extincteursAnnuelle.id,
         }),
       ],

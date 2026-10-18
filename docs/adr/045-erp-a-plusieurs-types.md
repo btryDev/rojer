@@ -117,8 +117,9 @@ pas disponible dans la session).
    commission, c'est une lecture par analogie avec GE 4 § 2, et aucun texte
    ne règle le cas** : la propriétaire a cherché, sans rien trouver, dans les
    guides préfectoraux (décision du 2026-10-16). La date fixée au PV prime
-   toujours, par une prescription particulière de source
-   `pv_commission_securite` (ADR-035).
+   toujours, par une prescription particulière ~~de source
+   `pv_commission_securite`~~ saisie en « Autre » (ADR-035 ; 2026-10-18, deux
+   sources seulement, décision de la propriétaire).
 6. **Le chapitre L** (salles) a été lu le 2026-10-16, prérequis de ce
    chantier : 85 articles. L 14 (une personne désignée, formée à la sécurité
    incendie) s'ajoute aux types de `incendie-erp-personnel-designe-moyens-secours`.

@@ -231,7 +231,7 @@ describe("validerPrescription — un acte ne se date pas dans le futur (2026-09-
   const saisie = (dateDocument: string) =>
     validerPrescription({
       effet: "renforce_periodicite",
-      source: "arrete_prefectoral",
+      source: "autre",
       reference: "Arrêté n° 1",
       dateDocument,
       periodicite: "semestrielle",

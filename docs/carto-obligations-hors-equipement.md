@@ -267,8 +267,11 @@ différentes, non isolés entre eux ; porter le DTA sur l'établissement serait 
 qu'une zone date d'une autre époque.] **Quatre porteurs, donc.**
 
 **Un septième chemin existe déjà, hors référentiel.** La prescription particulière (ADR-035,
-modèle `PrescriptionParticuliere`, enum `SourcePrescription`) : arrêté du maire ou du
-préfet, mise en demeure de l'inspection du travail, PV de commission de sécurité. Ce n'est
+modèle `PrescriptionParticuliere`, enum `SourcePrescription`) : ~~arrêté du maire ou du
+préfet, mise en demeure de l'inspection du travail, PV de commission de sécurité~~
+[2026-10-18, décision de la propriétaire : deux sources, la demande de l'assureur et
+« autre » — un arrêté, une mise en demeure ou un PV reçus se saisissent en « autre »
+(ADR-035 amendée)]. Ce n'est
 pas une lacune — c'est traité à part, et bien. Mais l'ADR doit le nommer, sinon il laissera
 croire que le référentiel est la seule source d'échéances.
 

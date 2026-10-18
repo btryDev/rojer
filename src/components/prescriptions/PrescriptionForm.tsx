@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ChampBoard } from "@/components/ui-kit";
 import {
+  EXEMPLE_REFERENCE_PRESCRIPTION,
   LABEL_SOURCE_PRESCRIPTION,
   MARQUAGE_CONTRACTUEL_LONG,
   SOURCES_PRESCRIPTION,
@@ -96,7 +97,9 @@ export function PrescriptionForm({
   action,
   obligations,
   equipements,
-  sourceInitiale = "arrete_prefectoral",
+  // ~~"arrete_prefectoral"~~ — 2026-10-18, décision de la propriétaire :
+  // deux sources ; le défaut est la demande de l'assureur.
+  sourceInitiale = "demande_assureur",
 }: Props) {
   // La source est un état — pas pour la valider, le schéma s'en charge, mais
   // parce que l'avertissement contractuel doit apparaître au moment du choix.
@@ -194,7 +197,7 @@ export function PrescriptionForm({
             name="reference"
             label="Référence"
             requis
-            placeholder="AP n° 2026-123"
+            placeholder={EXEMPLE_REFERENCE_PRESCRIPTION[source]}
             erreur={err("reference")}
           />
           {/* Le libellé suit le MÊME prédicat que le bandeau ci-dessus. Le
@@ -246,7 +249,11 @@ export function PrescriptionForm({
               lignes (« art. R. » / « 143-42) »), elle échappait à
               `citations-ecran.ts`, qui lit ligne par ligne. Le cliquet affichait
               zéro orpheline sur une citation que le corpus ne porte pas. */}
-          Un procès-verbal de commission est un avis ; l&apos;acte qui prescrit
+          {/* 2026-10-18, décision de la propriétaire : deux sources ; un acte
+              d'autorité reçu se saisit en « Autre acte », et Rojer l'applique. */}
+          Un arrêté, un procès-verbal de la commission de sécurité ou une
+          demande de l&apos;inspection du travail se saisissent en « Autre
+          acte ». Un procès-verbal de commission est un avis ; l&apos;acte qui prescrit
           est la décision que le maire notifie ensuite (CCH, art. R. 143-42).
           Rojer n&apos;enregistre qu&apos;une prescription qui
           <strong> renforce</strong>{" "}

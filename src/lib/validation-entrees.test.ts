@@ -254,7 +254,7 @@ describe("dates des mesures du DUERP — aucun contrôle avant `new Date(v)`", (
 describe("schémas de saisie — une date qui n'existe pas est refusée", () => {
   it("prescriptions : date de l'acte", () => {
     const r = prescriptionRenforceSchema.safeParse({
-      source: "arrete_municipal", reference: "A-1", dateDocument: "2025-02-29",
+      source: "autre", reference: "A-1", dateDocument: "2025-02-29",
       periodicite: "annuelle", effet: "renforce_periodicite",
     });
     expect(r.success).toBe(false);

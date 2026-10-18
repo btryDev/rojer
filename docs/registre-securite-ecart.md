@@ -170,8 +170,8 @@ Couvert pour l'essentiel (3.1 et 3.2) mais avec trois écarts :
 
 | Fiche | État |
 |---|---|
-| Contrôle des commissions de sécurité (date, représentant, observations, visa) | `PrescriptionParticuliere` avec `SourcePrescription.pv_commission_securite` couvre les **prescriptions issues** d'un PV, pas le **passage** de la commission lui-même. Un passage sans prescription n'est nulle part. |
-| Contrôle de l'administration | absent — `SourcePrescription.inspection_travail` / `arrete_prefectoral` / `arrete_municipal` sont proches |
+| Contrôle des commissions de sécurité (date, représentant, observations, visa) | `PrescriptionParticuliere` avec ~~`SourcePrescription.pv_commission_securite`~~ une source `autre` [2026-10-18 : deux sources seulement] couvre les **prescriptions issues** d'un PV, pas le **passage** de la commission lui-même. Un passage sans prescription n'est nulle part. |
+| Contrôle de l'administration | absent — ~~`SourcePrescription.inspection_travail` / `arrete_prefectoral` / `arrete_municipal` sont proches~~ [2026-10-18 : ces sources n'existent plus ; un tel acte se saisit en `autre`] |
 | Autres contrôles | absent |
 
 → **Modèle manquant : `ControleAdministratif`** (type, date, autorité
