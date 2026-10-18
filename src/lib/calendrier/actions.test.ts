@@ -171,7 +171,7 @@ function prescriptionPortail() {
   return {
     id: "presc-portail",
     actif: true,
-    source: "arrete_prefectoral",
+    source: "autre",
     effet: "renforce_periodicite",
     reference: "Arrêté n° 1",
     autorite: null,

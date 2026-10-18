@@ -16,15 +16,18 @@
  * les réexporte plus ; les écrans les prennent ici.]
  */
 
-export const SOURCES_PRESCRIPTION = [
-  "arrete_prefectoral",
-  "arrete_municipal",
-  "pv_commission_securite",
-  "arrete_icpe",
-  "inspection_travail",
-  "demande_assureur",
-  "autre",
-] as const;
+/**
+ * ~~Sept sources : arrêté préfectoral, arrêté du maire, PV de la commission de
+ * sécurité, arrêté préfectoral ICPE, inspection du travail, demande de
+ * l'assureur, autre acte.~~ — 2026-10-18, décision de la propriétaire (« pour
+ * les prescriptions on enlève les arrêtés commission (on garde assurance +
+ * autre) ») : DEUX sources. Un arrêté, un PV de commission ou une demande de
+ * l'inspection du travail reçus se saisissent en « Autre », et Rojer les
+ * applique comme avant. Les saisies anciennes sont passées en `autre`, leur
+ * ancien libellé préfixé à la référence (migration
+ * `20261018090000_sources_prescription_deux`). L'ordre est celui du sélecteur.
+ */
+export const SOURCES_PRESCRIPTION = ["demande_assureur", "autre"] as const;
 export type SourcePrescription = (typeof SOURCES_PRESCRIPTION)[number];
 
 /**
@@ -32,13 +35,30 @@ export type SourcePrescription = (typeof SOURCES_PRESCRIPTION)[number];
  * valeur ajoutée à l'enum sans libellé ne compile pas.
  */
 export const LABEL_SOURCE_PRESCRIPTION: Record<SourcePrescription, string> = {
-  arrete_prefectoral: "Arrêté préfectoral",
-  arrete_municipal: "Arrêté du maire",
-  pv_commission_securite: "Procès-verbal de la commission de sécurité",
-  arrete_icpe: "Arrêté préfectoral ICPE",
-  inspection_travail: "Demande ou mise en demeure de l'inspection du travail",
+  demande_assureur: "Demande de votre assureur",
+  // ~~« Autre acte »~~ — 2026-10-18 : l'option dit où va un arrêté reçu.
+  autre: "Autre acte (arrêté, procès-verbal de la commission de sécurité, inspection du travail…)",
+};
+
+/**
+ * Libellés de LISTE — la liste des prescriptions déclarées, où la référence
+ * suit (« Autre acte — Arrêté préfectoral — AP 2024-12 »). L'option du
+ * sélecteur dit où va un arrêté ; répétée devant chaque ligne, elle noyait
+ * la référence (revue du 2026-10-18). Même cliquet `Record`.
+ */
+export const LABEL_COURT_SOURCE_PRESCRIPTION: Record<SourcePrescription, string> = {
   demande_assureur: "Demande de votre assureur",
   autre: "Autre acte",
+};
+
+/**
+ * Exemple du champ « Référence », qui suit la source comme le champ
+ * « Autorité » : le défaut étant l'assureur, « AP n° 2026-123 » proposait un
+ * arrêté préfectoral sous une demande d'assurance (revue du 2026-10-18).
+ */
+export const EXEMPLE_REFERENCE_PRESCRIPTION: Record<SourcePrescription, string> = {
+  demande_assureur: "Avenant n° MRP-2026-4417",
+  autre: "AP n° 2026-123 (ou PV du 12/03/2026)",
 };
 
 /**

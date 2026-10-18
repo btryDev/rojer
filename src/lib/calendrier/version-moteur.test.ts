@@ -508,7 +508,20 @@ const RELEVE = {
   // lignes neuves sont des DONNÉES (porteur, catégorie, `siEquipementDeclare`,
   // typologie, périodicité), hachées par l'empreinte du référentiel, donc déjà
   // dans le sceau. ~~f2ac197b52d5fb32~~.
-  empreinte: "1c641bc06ef51dad",
+  // Recopiée SANS incrément le 2026-10-18 (`lot/prescriptions-sources`,
+  // décision de la propriétaire : deux sources) : `matching/prescriptions.ts`
+  // perd cinq entrées de `LIBELLE_SOURCE_EN_PHRASE`. NON au sens de la
+  // question : la table ne fait que la PHRASE de la raison, qui n'est pas
+  // stockée ; aucune ligne, date, statut ni archivage ne change. Les
+  // prescriptions anciennes passent en `autre` par la migration, sans toucher
+  // à leur effet. ~~1c641bc06ef51dad~~.
+  // Recopiée encore SANS incrément le 2026-10-18 (revue du lot) : une date de
+  // commentaire dans `matching/prescriptions.ts`, et dans
+  // `prescriptions/sources.ts` deux tables d'affichage neuves (libellé court
+  // de la liste, exemple du champ Référence). Rien de ce que la régénération
+  // écrit ne change. ~~46bc73090cecb299~~. Puis l'exemple « Autre » retouché
+  // (seconde relecture, même jour, même raison). ~~0dee2d0136d49c7b~~.
+  empreinte: "ec9db3e412492b88",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

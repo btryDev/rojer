@@ -223,7 +223,7 @@ describe("registre — marquage des échéances contractuelles", () => {
     // La couche voisine : toutes les lignes de prescription ne sont pas
     // contractuelles. Un arrêté est un acte d'autorité, opposable.
     const [ligne] = lignesDe([
-      verif({ prescription: { source: "arrete_prefectoral" } }),
+      verif({ prescription: { source: "autre" } }),
     ]);
     expect(ligne.contractuelle).toBe(false);
   });

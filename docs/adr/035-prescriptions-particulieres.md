@@ -1,5 +1,15 @@
 # ADR-035 — Prescriptions particulières propres à un établissement
 
+> **Amendée le 2026-10-18 — décision de la propriétaire : deux sources,
+> `demande_assureur` et `autre`** (« pour les prescriptions on enlève les
+> arrêtés commission (on garde assurance + autre) »). Un arrêté, un PV de
+> commission ou une demande de l'inspection du travail reçus se saisissent en
+> « Autre », et Rojer les applique comme avant : la source ne décidait que du
+> libellé et du marquage contractuel. Les saisies anciennes sont passées en
+> `autre`, leur ancien libellé préfixé à la référence (migration
+> `20261018090000_sources_prescription_deux`). Les passages qui énumèrent les
+> sources d'autorité sont rayés ci-dessous.
+
 > **Renumérotée le 2026-09-15, anciennement 014.** Deux ADR portaient ce
 > numéro : celle-ci, datée du 2026-08-25, et `014-provenance-navigation.md`,
 > datée du 2026-08-20. La plus récente a pris le premier numéro libre ; la
@@ -87,8 +97,9 @@ Deux contraintes issues des textes cadrent la solution :
 ### A. Une donnée d'établissement, pas une extension du référentiel
 
 Nouveau modèle `PrescriptionParticuliere`, rattaché à `Etablissement`, portant
-une source (`arrete_prefectoral`, `arrete_municipal`,
-`pv_commission_securite`, `arrete_icpe`, `inspection_travail`, `autre`), une
+une source (~~`arrete_prefectoral`, `arrete_municipal`,
+`pv_commission_securite`, `arrete_icpe`, `inspection_travail`, `autre`~~
+[2026-10-18 : `demande_assureur`, `autre`]), une
 référence documentaire (numéro, autorité, date civile au sens de l'ADR-011),
 une date de fin optionnelle (prescription levée) et un booléen `actif`.
 
@@ -173,7 +184,7 @@ prescription, il ne l'interprète pas.
   légale.
 - La criticité des obligations sur mesure est fixée par convention (4) pour
   le tri du calendrier ; ce n'est pas une cotation.
-- Une prescription `inspection_travail` à délai imposé se modélise en
+- Une prescription ~~`inspection_travail`~~ [2026-10-18 : de l'inspection du travail, saisie en `autre`] à délai imposé se modélise en
   `mise_en_service_uniquement` avec sa date ; l'outil ne calcule pas de délai
   légal.
 - Le périmètre ICPE reste celui de CLAUDE.md : le petit ICPE à déclaration

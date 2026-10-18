@@ -1,5 +1,11 @@
 # ADR-032 — Une demande d'assureur entre, et elle ne devient jamais du droit
 
+> **[2026-10-18, décision de la propriétaire, ADR-035 amendée]** Il ne reste
+> que deux sources : `demande_assureur` et `autre`. Ce que cette ADR dit des
+> « cinq actes d'autorité » et d'« une sixième source » se lit désormais :
+> l'une des deux sources, à côté d'« Autre » où se saisit un acte d'autorité
+> reçu. Le marquage contractuel ne change pas.
+
 - **Statut** : acceptée, 2026-09-01 (réunion d'équipe)
 - **Portée** : `prisma/schema.prisma` (`SourcePrescription`),
   `src/lib/prescriptions/sources.ts` (l'enum, le prédicat et les trois

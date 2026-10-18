@@ -122,12 +122,10 @@ export type ResultatPrescriptions = {
  * précisément la ligne qui doit se distinguer (ADR-032). Le cliquet est le
  * type : une source ajoutée à l'enum sans entrée ici ne compile pas.
  */
+// 2026-10-18, décision de la propriétaire : deux sources. Un arrêté saisi en
+// « Autre » se lit par sa référence, que la migration a préfixée de l'ancien
+// libellé pour les saisies anciennes (« prescription Arrêté préfectoral — … »).
 const LIBELLE_SOURCE_EN_PHRASE: Record<SourcePrescription, string> = {
-  arrete_prefectoral: "arrêté préfectoral",
-  arrete_municipal: "arrêté municipal",
-  pv_commission_securite: "PV de la commission de sécurité",
-  arrete_icpe: "arrêté préfectoral ICPE",
-  inspection_travail: "demande de l'inspection du travail",
   demande_assureur: "demande de votre assureur",
   autre: "prescription",
 };

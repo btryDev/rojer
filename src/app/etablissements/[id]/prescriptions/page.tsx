@@ -5,7 +5,7 @@ import { cleJourCivil, formaterDateFr } from "@/lib/dates";
 import { chargerPagePrescriptions } from "@/lib/prescriptions/queries";
 import { creerPrescription } from "@/lib/prescriptions/actions";
 import {
-  LABEL_SOURCE_PRESCRIPTION,
+  LABEL_COURT_SOURCE_PRESCRIPTION,
   SOURCES_PRESCRIPTION,
   estSourceContractuelle,
   type SourcePrescription,
@@ -106,14 +106,11 @@ export default async function PrescriptionsPage({
           </h1>
           <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
             Le calendrier est calculé à partir d&apos;un référentiel commun à
-            tous les établissements. Un arrêté du maire ou du préfet pris après
-            avis de la commission de sécurité, un arrêté préfectoral ICPE ou une
-            demande de l&apos;inspection du travail peuvent imposer davantage —
-            un rythme plus court, une vérification supplémentaire. Votre
-            assureur aussi peut l&apos;exiger, mais par contrat et non par le
-            droit&nbsp;: ces lignes-là portent leur mention partout où elles
-            s&apos;affichent. Déclarez-les ici&nbsp;: le calendrier les
-            reprend, avec leur référence.
+            tous les établissements. Votre assureur peut exiger davantage — un
+            rythme plus court, une vérification supplémentaire —, par contrat et
+            non par le droit&nbsp;: ces lignes-là portent leur mention partout
+            où elles s&apos;affichent. Un arrêté du maire ou du préfet reçu
+            s&apos;ajoute de même au calendrier, avec sa référence.
           </p>
         </div>
       </header>
@@ -156,8 +153,8 @@ export default async function PrescriptionsPage({
                         secondaire du board : deux tirets identiques pour deux
                         niveaux différents ne séparent plus rien. */}
                     <p className="m-0 text-[16px] font-semibold leading-[1.3] tracking-[-0.01em] text-[color:var(--board-ink)]">
-                      {LABEL_SOURCE_PRESCRIPTION[
-                        p.source as keyof typeof LABEL_SOURCE_PRESCRIPTION
+                      {LABEL_COURT_SOURCE_PRESCRIPTION[
+                        p.source as keyof typeof LABEL_COURT_SOURCE_PRESCRIPTION
                       ] ?? p.source}
                       {" — "}
                       {p.reference}
