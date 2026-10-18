@@ -1369,7 +1369,9 @@ model RegistreAccessibilite {
 
   // Étape 1 — Prestations fournies
   prestationsFournies String?              @db.Text
-  handicapsAccueillis HandicapAccessible[]
+  // `@default([])` (2026-10-18) : le registre se crée vierge, sans handicap
+  // coché ; sans DEFAULT, la création échouait (migration 20261018120000).
+  handicapsAccueillis HandicapAccessible[] @default([])
   servicesAdaptes     String?              @db.Text
 
   // Étape 2 — Pièces administratives et techniques
