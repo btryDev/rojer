@@ -22,6 +22,8 @@
 
 import type { StatutVerification } from "@prisma/client";
 import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
+import { listerBatimentsDeLEtablissement } from "@/lib/batiments/queries";
+import { estMultiBatiments } from "@/lib/batiments/filtre";
 import { listerVerifications } from "@/lib/calendrier/queries";
 import { formaterDateCourteFr } from "@/lib/dates";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
@@ -167,9 +169,12 @@ export async function lireContenuTenuAilleurs(
   // requêtes, et la mémoïsation de la page fait le reste. Le PDF, lui, passe
   // par `contenuTenuAilleursDepuis` avec un parc déjà chargé.
   if (!section.categoriesEquipement?.length) return null;
-  const [equipements, verifications, marques] = await Promise.all([
+  const [equipements, zones, verifications, marques] = await Promise.all([
     PARTIES_INVENTAIRE.has(partieId)
       ? listerEquipementsDeLEtablissement(etablissementId)
+      : Promise.resolve([]),
+    PARTIES_INVENTAIRE.has(partieId)
+      ? listerBatimentsDeLEtablissement(etablissementId)
       : Promise.resolve([]),
     PARTIES_VERIFICATIONS.has(partieId)
       ? listerVerifications(etablissementId)
@@ -184,6 +189,7 @@ export async function lireContenuTenuAilleurs(
     verifications,
     new Date(),
     retenueParPrudence(marques.parObligation),
+    estMultiBatiments(zones),
   );
 }
 
@@ -203,6 +209,11 @@ export function contenuTenuAilleursDepuis(
   /** Requise (D1 (a)) : la fiche remise en contrôle ne peint pas « en
    *  retard » une ligne que seul le silence de la fiche retient. */
   prudence: RetenueParPrudence,
+  /** L'établissement compte-t-il plusieurs ZONES (`estMultiBatiments`,
+   *  `_count.batiments > 1`) ? Requis : c'est le compte des zones qui décide
+   *  si le nom de zone s'imprime, comme au parc et dans les PDF — pas le
+   *  nombre de zones où le parc filtré se trouve rangé. */
+  multiZones: boolean,
 ): ContenuAilleurs | null {
   const categories = section.categoriesEquipement;
   if (!categories || categories.length === 0) return null;
@@ -211,17 +222,19 @@ export function contenuTenuAilleursDepuis(
 
   if (PARTIES_INVENTAIRE.has(partieId)) {
     // ~~`[e.batiment?.nom, e.localisation]` toujours~~ — 2026-10-17 (ADR-029
-    // amendée) : la zone ne se dit que si le parc en compte plusieurs, comme
-    // au parc et dans les PDF ; sous une seule, son nom stocké (« Bâtiment
-    // principal ») se lisait comme un second bâtiment.
-    const plusieursZones = new Set(equipements.map((e) => e.batiment?.nom).filter(Boolean)).size > 1;
+    // amendée) : la zone ne se dit que si l'établissement en compte
+    // plusieurs, comme au parc et dans les PDF ; sous une seule, son nom
+    // stocké (« Bâtiment principal ») se lisait comme un second bâtiment.
+    // ~~compté sur les noms de zone distincts du parc~~ — 2026-10-18 (revue) :
+    // compté sur les ZONES (`multiZones`) ; un parc rangé dans une seule de
+    // deux zones taisait la zone que l'écran du parc, lui, affiche.
     return {
       lignes: equipements
         .filter((e) => cats.has(e.categorie))
         .map((e) => ({
           id: e.id,
           titre: e.libelle,
-          meta: [plusieursZones && e.batiment ? nomDeZone(e.batiment.nom) : null, e.localisation]
+          meta: [multiZones && e.batiment ? nomDeZone(e.batiment.nom) : null, e.localisation]
             .filter(Boolean)
             .join(" · "),
           href: `${base}/equipements/${e.id}`,

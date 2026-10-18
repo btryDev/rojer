@@ -405,6 +405,7 @@ export async function construireRegistreData(
         verifs,
         now,
         retenueParPrudence(marques.parObligation),
+        multiBatiments,
       );
       return ficheDuPdf(
         due,

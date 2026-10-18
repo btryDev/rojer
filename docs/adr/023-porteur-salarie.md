@@ -301,7 +301,7 @@ qu'une échéance absente : elle se présente à un contrôle.
 ### 7. Une échéance de salarié n'a pas de lieu
 
 Elle porte `equipementId: null`, donc `porteeBatiment()` la laisse passer sous
-tous les filtres par bâtiment — comme les échéances d'établissement, et pour la
+tous les filtres par ~~bâtiment~~ zone [2026-10-18, ADR-029 amendée] — comme les échéances d'établissement, et pour la
 même raison (ADR-010 : « les masquer ferait mentir le calendrier par
 omission »).
 

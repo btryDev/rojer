@@ -35,6 +35,7 @@ import {
   type FamilleEsp,
 } from "@/lib/equipements/esp";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
+import { nomDeZone } from "@/lib/batiments/nom-zone";
 import type { EquipementActionState } from "@/lib/equipements/actions";
 
 /** La case à cocher du board : encre pleine cochée, filet d'ardoise. */
@@ -437,7 +438,7 @@ export function EquipementForm({
             >
               {batiments.map((b) => (
                 <option key={b.id} value={b.id}>
-                  {b.nom}
+                  {nomDeZone(b.nom)}
                 </option>
               ))}
             </select>

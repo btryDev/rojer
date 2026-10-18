@@ -81,19 +81,22 @@ remontant la chaîne, comme la famille se déduit du type (ADR-016). Une
 donnée dérivée ne se désynchronise pas.
 
 **Ce qui reste au niveau établissement**, sans bâtiment : le DUERP et ses
-unités de travail (une unité peut traverser les bâtiments), les
+unités de travail ~~(une unité peut traverser les bâtiments)~~ [2026-10-18 :
+une unité peut traverser les zones], les
 prestataires et leurs attestations, les signatures, les accès. Dans un
-calendrier filtré par bâtiment, ces échéances **restent visibles**,
+calendrier filtré par ~~bâtiment~~ zone [2026-10-18], ces échéances **restent visibles**,
 étiquetées « Tout l'établissement » — les masquer ferait mentir le
 calendrier par omission (ADR-010).
 
 **Tout établissement a au moins un bâtiment.** La migration en crée un par
 établissement existant (« Bâtiment principal », `ordre = 0`) et y rattache
 tous les équipements ; la création d'établissement en crée un dans la même
-transaction ; la suppression du dernier bâtiment est refusée. Tant qu'un
+transaction ; la suppression du dernier bâtiment est refusée. ~~Tant qu'un
 établissement n'a qu'un bâtiment, **l'interface n'en montre rien** : pas de
 sélecteur, pas de colonne, pas de filtre. Le mono-bâtiment ne paie pas la
-complexité du multi.
+complexité du multi.~~ [2026-10-18 : tant qu'un établissement n'a qu'une
+zone, l'interface n'en montre rien — la règle vaut pour les zones (ADR-029,
+`estMultiBatiments`) ; un établissement n'a jamais qu'un bâtiment.]
 
 ## Ce qui n'est pas décidé ici
 
@@ -103,18 +106,27 @@ entité intermédiaire `EnsembleClasse` (régimes, catégorie, effectif
 accueilli) entre l'établissement et ses bâtiments, et le matching bouclera
 par ensemble.~~ [2026-10-17, décision de la propriétaire : jamais plusieurs
 bâtiments par établissement. L'entité intermédiaire n'a plus d'objet tant que
-la décision tient ; un second bâtiment se déclare comme un autre
-établissement.] Ce n'est **pas** un `estERP` sur `Batiment` : classer chaque
+la décision tient ; ~~un second bâtiment se déclare comme un autre
+établissement~~ [2026-10-18, revue : des corps de bâtiment non isolés entre
+eux forment un seul établissement, découpé en zones ; seules des
+exploitations isolées au sens de GN 3 se déclarent comme des établissements
+distincts].] Ce n'est **pas** un `estERP` sur `Batiment` : classer chaque
 corps séparément sous-catégoriserait un ERP contigu, ce qui est pire que
 l'approximation actuelle. En attendant, la fiche bâtiment dit en une phrase
 que les obligations ERP s'appliquent à tout l'établissement.
 
-## Dettes assumées, à lever avec l'ensemble classé
+## ~~Dettes assumées, à lever avec l'ensemble classé~~ Dettes assumées
+
+[2026-10-18 : l'ensemble classé est abandonné (décision du 2026-10-17, plus
+haut) ; ces dettes ne se lèveront pas avec lui.]
 
 - `RegistreAccessibilite` est `@unique` par établissement ; il est dû par
-  ERP. Il suivra l'ensemble classé.
+  ERP. ~~Il suivra l'ensemble classé.~~ [2026-10-18 : des exploitations
+  isolées au sens de GN 3 se déclarent comme des établissements distincts ;
+  le `@unique` par établissement suit.]
 - `CarnetSanitaire` est `@unique` par établissement ; il est dû par réseau
-  d'eau, souvent un par bâtiment. Le `PointReleve.batimentId` prépare la
+  d'eau, ~~souvent un par bâtiment~~ [2026-10-18 : un établissement n'a
+  qu'un bâtiment]. Le `PointReleve.batimentId` prépare la
   lecture par ~~bâtiment~~ zone [2026-10-17] sans dédoubler le carnet.
 
 ## Conséquences

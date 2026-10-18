@@ -186,7 +186,7 @@ Plusieurs requêtes filtrent par `equipement: { batimentId }` ou
 exactement ce que l'ADR-010 et l'ADR-019 interdisent — « les masquer ferait mentir
 le calendrier par omission ».
 
-Les **quatre** filtres par bâtiment passent par `porteeBatiment()`
+Les **quatre** filtres par ~~bâtiment~~ zone [2026-10-18, ADR-029 amendée] passent par `porteeBatiment()`
 (`src/lib/calendrier/portee.ts`), qui rend
 `OR: [{ equipementId: null }, { equipement: { batimentId } }]` : la ligne
 s'affiche étiquetée « Tout l'établissement », comme les échéances de niveau
@@ -195,7 +195,7 @@ recopiée sur quatre sites — c'est ce qui la rend testable et ce qui empêche 
 cinquième site d'oublier.
 
 Un cinquième reste volontairement en jointure interne :
-`src/lib/batiments/queries.ts`, qui calcule la charge **par bâtiment**. Une
+`src/lib/batiments/queries.ts`, qui calcule la charge **par ~~bâtiment~~ zone** [2026-10-18]. Une
 échéance d'établissement n'est dans aucun bâtiment ; la compter dans chacun
 gonflerait autant de pastilles qu'il y a de corps, dans un seul serait
 arbitraire. La distinction est celle entre *lister sous un filtre* et

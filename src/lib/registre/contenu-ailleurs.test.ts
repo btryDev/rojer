@@ -58,6 +58,7 @@ function lignesDe(verifications: VerificationTenue[], now: Date = NOW) {
     verifications,
     now,
     AUCUNE_PRUDENCE,
+    false,
   );
   return contenu?.lignes ?? [];
 }
@@ -246,13 +247,14 @@ describe("D1 (a) : la fiche remise en contrôle ne peint pas « en retard » une
     const prudente = contenuTenuAilleursDepuis(
       "etab-1", "3.1", sectionExtincteurs, [], [v], NOW,
       (l) => l.obligationId === v.obligationId,
+      false,
     );
     expect(prudente?.lignes[0]?.statut).toBe("a_confirmer");
     expect(lignesDe([v])[0]?.statut).toBe("en_retard");
   });
 });
 
-describe("inventaire : la zone ne se dit que s'il y en a plusieurs (2026-10-17, ADR-029 amendée)", () => {
+describe("inventaire : la zone ne se dit que si l'établissement en compte plusieurs (2026-10-17, ADR-029 amendée)", () => {
   const sectionInventaire: SectionRegistre = {
     id: "inventaire-extinction",
     partie: "2.1",
@@ -267,17 +269,23 @@ describe("inventaire : la zone ne se dit que s'il y en a plusieurs (2026-10-17, 
     localisation,
     batiment: { nom: zone },
   });
-  const metas = (equipements: ReturnType<typeof eq>[]) =>
-    (contenuTenuAilleursDepuis("etab-1", "2.1", sectionInventaire, equipements, [], NOW, AUCUNE_PRUDENCE)?.lignes ?? []).map(
+  const metas = (equipements: ReturnType<typeof eq>[], multiZones: boolean) =>
+    (contenuTenuAilleursDepuis("etab-1", "2.1", sectionInventaire, equipements, [], NOW, AUCUNE_PRUDENCE, multiZones)?.lignes ?? []).map(
       (l) => l.meta,
     );
 
   it("une seule zone : son nom stocké (« Bâtiment principal ») ne s'imprime pas", () => {
-    expect(metas([eq("a", "Bâtiment principal"), eq("b", "Bâtiment principal")])).toEqual(["Couloir", "Couloir"]);
+    expect(metas([eq("a", "Bâtiment principal"), eq("b", "Bâtiment principal")], false)).toEqual(["Couloir", "Couloir"]);
+  });
+
+  // La revue du 2026-10-17 : compter les noms du parc taisait la zone d'un
+  // établissement à deux zones dont le parc filtré n'en occupe qu'une.
+  it("deux zones, parc rangé dans une seule : la zone s'imprime quand même", () => {
+    expect(metas([eq("a", "Cuisine"), eq("b", "Cuisine")], true)).toEqual(["Cuisine · Couloir", "Cuisine · Couloir"]);
   });
 
   it("plusieurs zones : le nom de zone s'imprime, et le nom historique se lit « Zone principale »", () => {
-    expect(metas([eq("a", "Bâtiment principal"), eq("b", "Cuisine")])).toEqual([
+    expect(metas([eq("a", "Bâtiment principal"), eq("b", "Cuisine")], true)).toEqual([
       "Zone principale · Couloir",
       "Cuisine · Couloir",
     ]);

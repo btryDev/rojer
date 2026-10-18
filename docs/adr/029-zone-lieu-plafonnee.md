@@ -63,5 +63,6 @@ n'en fera plus que trois, toutes dans le même bâtiment — l'établissement.] 
 capacité retirée, pas un réglage. Elle est retirée parce que le produit sert un
 SIRET avec un local, et que la promesse de tenir un parc immobilier n'a jamais
 été instruite : ni classement d'ensemble, ni isolement, ni tierce personne.
-L'ADR-019 réservait déjà une entité `EnsembleClasse` future pour ce sujet ; elle
-reste réservée.
+~~L'ADR-019 réservait déjà une entité `EnsembleClasse` future pour ce sujet ; elle
+reste réservée.~~ [2026-10-18 : abandonnée — un établissement n'a jamais
+qu'un bâtiment (décision de la propriétaire du 2026-10-17, ADR-019 amendée).]

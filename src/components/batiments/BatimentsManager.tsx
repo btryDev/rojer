@@ -267,7 +267,7 @@ function SaisieZone({
             label="Nom"
             requis
             maxLength={80}
-            placeholder="Ex : Réserve, Atelier, Annexe"
+            placeholder="Ex : Salle, Cuisine, Réserve"
             defaultValue={nom}
             onChange={(e) => setNom(e.target.value)}
             aria-invalid={
@@ -281,7 +281,7 @@ function SaisieZone({
           name="complementAdresse"
           label="Complément d'adresse"
           maxLength={200}
-          placeholder="Facultatif — si la zone a sa propre entrée"
+          placeholder="Facultatif — ex. : 1er étage, au fond du couloir"
           defaultValue={complement}
           onChange={(e) => setComplement(e.target.value)}
         />
@@ -325,7 +325,11 @@ function FormulaireRenommage({
             label="Nom"
             requis
             maxLength={80}
-            defaultValue={nomDeZone(batiment.nom)}
+            // Le nom STOCKÉ, pas `nomDeZone` : renommer « Bâtiment
+            // principal » en « Zone principale » sans y toucher lèverait
+            // l'unicité si une zone porte déjà ce nom (P2002) — et c'est par
+            // ce champ que le dirigeant distingue les deux (`nom-zone.ts`).
+            defaultValue={batiment.nom}
             autoFocus
           />
           <Erreur state={state} champ="nom" />
