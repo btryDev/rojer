@@ -29,8 +29,10 @@
 // verrait puisque deux constantes ne peuvent pas se contredire par un test.
 //
 // D'où la forme surprenante de `refusAlEntree()` : il **interroge la porte**
-// plutôt que de la décrire. Deux dossiers-sondes sont soumis au schéma de
-// création, et ce sont ses propres messages qui sont rendus. Si la règle
+// plutôt que de la décrire. ~~Deux dossiers-sondes sont soumis au schéma de
+// création~~ [2026-10-18 : sept dossiers-sondes sont soumis à deux schémas de
+// création — six à celui de l'établissement, un à celui de l'entreprise], et
+// ce sont ses propres messages qui sont rendus. Si la règle
 // disparaît du schéma, la sonde ne rend plus rien, et le test tombe — au lieu
 // d'une page qui continuerait d'annoncer un refus que le produit ne fait plus.
 // C'est le même geste qu'`obligationsSuspenduesAuPublicRecu`, qui rejoue le
@@ -115,7 +117,22 @@ function messageDeLaPorte(
 ): string | null {
   const r = etablissementCreationSchema.safeParse(dossier);
   if (r.success) return null;
-  return r.error.issues.find((i) => i.path[0] === champ)?.message ?? null;
+  return messageDuSeulChamp(r.error.issues, champ);
+}
+
+/**
+ * Le message porté par `champ`, à condition qu'il soit la SEULE raison de
+ * l'échec (revue du 2026-10-18). Une sonde ne change qu'une chose du dossier
+ * accepté ; si la porte la refuse aussi pour un autre champ, la sonde est
+ * cassée — elle mesurerait deux règles à la fois — et rend `null`, ce qui fait
+ * tomber le test au lieu de masquer la seconde raison.
+ */
+function messageDuSeulChamp(
+  issues: readonly { path: readonly PropertyKey[]; message: string }[],
+  champ: string,
+): string | null {
+  if (issues.some((i) => i.path[0] !== champ)) return null;
+  return issues.find((i) => i.path[0] === champ)?.message ?? null;
 }
 
 /**
@@ -160,8 +177,7 @@ export function refusAlEntree(): RefusAlEntree[] {
   });
   const effectifEntreprise = sondeEntreprise.success
     ? null
-    : (sondeEntreprise.error.issues.find((i) => i.path[0] === "effectif")
-        ?.message ?? null);
+    : messageDuSeulChamp(sondeEntreprise.error.issues, "effectif");
   if (effectifEntreprise !== null) {
     refus.push({
       cle: "effectif_entreprise",

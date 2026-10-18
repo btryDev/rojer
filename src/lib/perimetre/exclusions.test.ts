@@ -39,15 +39,15 @@ const erpAccepte = {
 
 describe("les refus à l'entrée sont projetés, pas recopiés", () => {
   it("rend les refus de l'ADR-031, et eux seuls", () => {
-    // « Deux cas, et deux seulement » au 2026-09-01. ~~Un troisième refus ajouté
-    // au schéma sans décision fera tomber ce test~~ [2026-10-18 : faux — le
-    // filtre à l'accueil (2026-10-17) a ajouté des refus au schéma sans que
-    // ce test tombe, parce que la liste ne se compose que de ce que le module
-    // SONDE, et qu'il ne sondait pas le type d'ERP. La garde qui le voit est
-    // plus bas : « la porte ne refuse aucun type que la liste ne nomme pas ».]
-    // — c'est ce qu'on lui demande :
-    // « la liste des régimes refusés est un objet à relire, pas une constante
-    // qu'on augmente au fil des cas gênants. »
+    // « Deux cas, et deux seulement » au 2026-09-01. La liste des régimes
+    // refusés est « un objet à relire, pas une constante qu'on augmente au fil
+    // des cas gênants » (ADR-031). ~~Un troisième refus ajouté au schéma sans
+    // décision fera tomber ce test — c'est ce qu'on lui demande~~ [2026-10-18 :
+    // faux — le filtre à l'accueil (2026-10-17) a ajouté des refus au schéma
+    // sans que ce test tombe, parce que la liste ne se compose que de ce que le
+    // module SONDE, et qu'il ne sondait pas le type d'ERP. La garde qui le voit
+    // est plus bas : « la porte ne refuse aucun type que la liste ne nomme
+    // pas ».]
     // Le troisième est entré par décision : la propriétaire, le 2026-09-26,
     // a plafonné l'effectif de l'entreprise comme celui du site (ADR-031).
     // Les quatre suivants aussi : le filtre à l'accueil, décisions de la

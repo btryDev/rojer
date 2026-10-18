@@ -135,7 +135,7 @@ Trois notions, à ne pas confondre :
 
 | Notion | Ce qu'elle dit | Où elle vit |
 |---|---|---|
-| **Refusé** | La porte ne crée pas le dossier | `refusAlEntree()`, `perimetre/exclusions.ts` — trois refus [2026-10-18 : de taille et d'IGH ; plus le filtre à l'accueil, `refusDuFiltre()`, `etablissements/types-refuses.ts`] |
+| **Refusé** | La porte ne crée pas le dossier | `refusAlEntree()`, `perimetre/exclusions.ts` — ~~trois refus [2026-10-18 : de taille et d'IGH ; plus le filtre à l'accueil, `refusDuFiltre()`, `etablissements/types-refuses.ts`]~~ [2026-10-18, revue : sept refus — les trois de taille et d'IGH, et les quatre du filtre à l'accueil, que `refusAlEntree()` sonde sur la porte ; la règle du filtre vit dans `refusDuFiltre()`, `etablissements/types-refuses.ts`] |
 | **Cible** | Tout le reste : le dossier se crée, et ce qui lui manque se déclare | Le registre de dette du corpus (`toucheLaCible`) se mesure sur elle |
 | **Couvert entièrement** | Ce que le produit sert sans manque déclaré | `CATEGORIES_COUVERTES` (`perimetre/couverture.ts`), aujourd'hui `["N5"]` |
 
