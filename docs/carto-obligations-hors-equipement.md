@@ -260,8 +260,11 @@ pas un régime.* Le paragraphe d'origine suit, pour le raisonnement qu'il porte.
 
 Le modèle `Batiment` existe (`prisma/schema.prisma:288`). Un
 DTA se rattache à un bâtiment — c'est l'année de son permis de construire qui déclenche —
-et un établissement peut en occuper plusieurs, d'époques différentes. Porter le DTA sur
-l'établissement serait faux dès le deuxième bâtiment. **Quatre porteurs, donc.**
+~~et un établissement peut en occuper plusieurs, d'époques différentes. Porter le DTA sur
+l'établissement serait faux dès le deuxième bâtiment.~~ [2026-10-18, ADR-029 amendée : un
+établissement n'a qu'un bâtiment, mais ses zones peuvent être des corps d'époques
+différentes, non isolés entre eux ; porter le DTA sur l'établissement serait faux dès
+qu'une zone date d'une autre époque.] **Quatre porteurs, donc.**
 
 **Un septième chemin existe déjà, hors référentiel.** La prescription particulière (ADR-035,
 modèle `PrescriptionParticuliere`, enum `SourcePrescription`) : arrêté du maire ou du

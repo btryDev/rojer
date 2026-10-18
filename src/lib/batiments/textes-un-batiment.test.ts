@@ -8,6 +8,11 @@ import { NOM_BATIMENT_PRINCIPAL } from "./schema";
 // établissement = un bâtiment ; les zones, trois au plus, en sont des
 // subdivisions ; jamais plusieurs bâtiments. Aucun texte affiché ne parle de
 // plusieurs bâtiments, ni ne nomme « bâtiment » ce qui est une zone.
+//
+// Limites connues de la garde (la lecture est textuelle, pas un parseur) :
+// - un `//` dans du texte JSX qui suit un mot (`<p>Plan A // vos bâtiments</p>`)
+//   est pris pour un commentaire, et la fin de la ligne n'est pas lue ;
+// - `src/lib/referentiels` n'est pas lu (voir `SURFACES`).
 
 /**
  * Les répertoires d'où sortent les textes affichés (écrans, PDF, registre, MCP…).
@@ -83,8 +88,12 @@ function fichiers(dossier: string): string[] {
  * commentaire l'effaçait. Les chaînes `'` et `"` s'arrêtent à la fin de la
  * ligne — une apostrophe de texte JSX (`<p>L'accueil</p>`) n'ouvre donc pas
  * une chaîne qui avalerait le fichier. Un `//` juste après `>` est du texte
- * JSX (`<p>// …</p>`), pas un commentaire. Dans le doute, le balayage GARDE le
- * texte : une fausse alerte se voit, un texte effacé non.
+ * JSX (`<p>// …</p>`), pas un commentaire. ~~Dans le doute, le balayage GARDE
+ * le texte~~ [2026-10-18, revue : faux pour un `//` de texte JSX qui suit un
+ * mot (`<p>Plan A // vos bâtiments</p>`) — le balayage ne sait pas qu'il est
+ * dans du JSX, y voit un commentaire et efface la fin de la ligne. Limite
+ * écrite en tête du fichier.] Il garde le texte dans les chaînes et après `>`,
+ * parce qu'une fausse alerte se voit et qu'un texte effacé non.
  */
 export function sansCommentaires(source: string): string {
   let out = "";

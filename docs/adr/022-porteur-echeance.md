@@ -102,7 +102,9 @@ l'un de 1970 et l'autre de 2010, dont un seul en doit un. Il est bloqué par **d
 manques distincts : un porteur bâtiment, **et** un attribut de date de construction
 que `Batiment` ne porte pas (`nom`, `complementAdresse`, `ordre`, et rien d'autre).
 
-Ce besoin **n'est pas** celui de l'`EnsembleClasse` que l'ADR-019 réserve. Cette
+Ce besoin **n'est pas** celui de ~~l'`EnsembleClasse` que l'ADR-019 réserve~~
+[2026-10-18 : l'`EnsembleClasse` que l'ADR-019 réservait, abandonnée le
+2026-10-17 — un établissement n'a qu'un bâtiment, ADR-029 amendée]. Cette
 entité est faite pour les **régimes** — flags ERP/IGH, catégorie, effectif accueilli.
 L'année du permis est une propriété physique, indépendante du régime : les deux corps
 de l'exemple ci-dessus ont un classement ERP identique. Ranger le DTA dans l'ensemble

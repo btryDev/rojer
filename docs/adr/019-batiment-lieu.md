@@ -98,7 +98,10 @@ complexité du multi.~~ [2026-10-18 : tant qu'un établissement n'a qu'une
 zone, l'interface n'en montre rien — la règle vaut pour les zones (ADR-029,
 `estMultiBatiments`) ; un établissement n'a jamais qu'un bâtiment.]
 
-## Ce qui n'est pas décidé ici
+## ~~Ce qui n'est pas décidé ici~~ Ce qui a été décidé depuis
+
+[2026-10-18 : la question est tranchée (décision de la propriétaire du
+2026-10-17) ; le titre annonçait une suite qui ne viendra pas.]
 
 **L'ensemble classé.** ~~Le jour où un utilisateur a besoin d'un bâtiment
 hors ERP sur un site ERP, ou de deux ERP isolés sur un SIRET, il faudra une
@@ -112,8 +115,10 @@ eux forment un seul établissement, découpé en zones ; seules des
 exploitations isolées au sens de GN 3 se déclarent comme des établissements
 distincts].] Ce n'est **pas** un `estERP` sur `Batiment` : classer chaque
 corps séparément sous-catégoriserait un ERP contigu, ce qui est pire que
-l'approximation actuelle. En attendant, la fiche bâtiment dit en une phrase
-que les obligations ERP s'appliquent à tout l'établissement.
+l'approximation actuelle. ~~En attendant, la fiche bâtiment dit en une phrase
+que les obligations ERP s'appliquent à tout l'établissement.~~ [2026-10-18 :
+il n'y a plus d'« en attendant » ; les obligations ERP s'appliquent à
+l'établissement, qui est l'ERP, et ses zones n'en portent aucune.]
 
 ## ~~Dettes assumées, à lever avec l'ensemble classé~~ Dettes assumées
 
