@@ -177,6 +177,9 @@ export type StatutArticle =
        * bureau, 5ᵉ catégorie d'ERP, cinquante salariés au plus~~ ce que
        * l'onboarding ne refuse pas : cinquante travailleurs au plus, pas d'ERP
        * en IGH (ADR-031 ; tranché par la propriétaire le 2026-10-12) ?
+       * [2026-10-18 : et, depuis le filtre à l'accueil du 2026-10-17, pas de
+       * type J ni U, pas d'établissement spécial PA, CTS, SG, OA, REF, GA, EF,
+       * pas de type R qui accueille des enfants — ADR-031 amendée.]
        *
        * `false` ne dit pas « sans importance » : il dit ~~qu'un hôtel, un
        * immeuble d'habitation, un ERP des quatre premières catégories ou un

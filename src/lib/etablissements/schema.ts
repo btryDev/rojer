@@ -549,7 +549,9 @@ export type EtablissementInput = z.infer<typeof etablissementSchema>;
 /**
  * Schéma de **création** d'un établissement (ADR-025 § 4, ADR-031).
  *
- * Il ne porte plus que les deux refus de périmètre de l'ADR-031.
+ * Il ne porte plus que ~~les deux refus de périmètre de l'ADR-031~~
+ * [2026-10-18 : les refus de périmètre de l'ADR-031 — effectif, ERP en IGH,
+ * et depuis le 2026-10-17 le filtre à l'accueil (`appliquerFiltre`)].
  *
  * IL A PORTÉ UNE TROISIÈME RÈGLE, ET SA DISPARITION SE RACONTE. Du 2026-09-01
  * au 2026-09-03, la FAMILLE D'HABITATION était exigée ici et nulle part
@@ -562,7 +564,8 @@ export type EtablissementInput = z.infer<typeof etablissementSchema>;
  */
 export const etablissementCreationSchema = etablissementSchema.superRefine(
   (val, ctx) => {
-    // Les deux refus de périmètre (ADR-031). Ils vivent ici et non dans
+    // ~~Les deux refus de périmètre~~ [2026-10-18 : les refus de taille et
+    // d'IGH ; le filtre à l'accueil suit, plus bas] (ADR-031). Ils vivent ici et non dans
     // `etablissementSchema` parce que ce schéma-là sert aussi à modifier un
     // dossier ancien, et un client qui passe de quarante-cinq à soixante
     // salariés reste servi — son dossier porte alors un manque de couverture,

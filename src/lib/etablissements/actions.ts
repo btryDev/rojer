@@ -191,7 +191,9 @@ export async function creerEtablissement(
   //
   // Et « le même geste » vaut aussi pour ce qu'on refuse : c'est le schéma de
   // CRÉATION qui valide ici, celui qui exige la famille d'habitation
-  // (ADR-025 § 4) et porte les deux refus de périmètre (ADR-031). Les deux
+  // (ADR-025 § 4) et porte ~~les deux refus de périmètre~~ [2026-10-18 : les
+  // refus de périmètre — effectif, ERP en IGH, et le filtre à l'accueil]
+  // (ADR-031). Les deux
   // lots ayant été écrits en parallèle, ce chemin est resté un instant sur le
   // schéma de modification — un dossier refusé à l'onboarding se serait alors
   // créé en deux clics par l'autre porte. C'est la porte, pas le parcours, qui
