@@ -88,12 +88,21 @@ describe("l'article cité sous une ligne « Ce qui doit être en place »", () =
     "elec-travail-habilitation-personnel",
     // ~~"esp-personnel-formation"~~ — retirée le 2026-10-07 (périmètre,
     // relecture préventeur du 30/09, décision de la propriétaire du 07/10).
-    "porte-auto-maintien-en-etat",
+    // ~~"porte-auto-maintien-en-etat"~~ — 2026-10-18 : ses références sont
+    // séparées, R. 4224-12 en tête, entré au corpus ; la ligne montre son
+    // texte (test plus bas).
     "ascenseur-entretien-contrat",
   ])("%s : plusieurs articles nommés, aucun texte montré", (id) => {
     const o = obligationsConformite.find((x) => x.id === id);
     expect(o, `${id} a quitté le référentiel`).toBeDefined();
     expect(fondementDe(o!)?.extrait).toBeNull();
+  });
+
+  it("porte-auto-maintien-en-etat montre R. 4224-12, le texte que sa description cite (2026-10-18)", () => {
+    const o = obligationsConformite.find((x) => x.id === "porte-auto-maintien-en-etat")!;
+    expect(fondementDe(o)?.extrait).toMatch(/^Les portes et portails sont entretenus et contrôlés régulièrement\./);
+    expect(o.description).toContain("« entretenus et contrôlés régulièrement » (R. 4224-12)");
+    expect(o.description).not.toContain("maintenus en bon état de fonctionnement");
   });
 
   it("le CSE et le règlement intérieur citent leur texte — le constat de C40", () => {

@@ -126,16 +126,35 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
   // semi-automatiques sont des fermetures automatiques et semi-automatiques »,
   // et son annexe renvoie la définition de ces termes à la norme NF P 25-362
   // (« Fermetures pour baies libres et portails »), que le dépôt n'a PAS lue.
-  // Lecture retenue : « fermeture », au sens courant de fermeture d'une baie ou
-  // d'un passage — un rideau de devanture motorisé et une barrière levante en
-  // sont. À confirmer avec le préventeur à la prochaine relecture, avec le
-  // volet roulant motorisé : une fenêtre est une baie, et la lecture pourrait
-  // l'attraper ; décision de c6 du même jour, il reste un matériel non couvert
-  // (`materiels-non-couverts.ts`, `store_volet_roulant`) et la phrase de
-  // l'aide dit « d'un passage », pas « d'une baie ». Le seul
+  // ~~Lecture retenue : « fermeture », au sens courant de fermeture d'une baie
+  // ou d'un passage — un rideau de devanture motorisé et une barrière levante
+  // en sont.~~ [2026-10-18, relecture de c6 (arrêté du 21 décembre 1993,
+  // R. 4224-11 à R. 4224-13, CO 48 ; PISTE bac à sable) : cette lecture
+  // INVERSE l'article 1er, qui dit que les portes et portails SONT des
+  // fermetures, pas que toute fermeture est une porte. Le classement tient sur
+  // un autre fondement.] Le RIDEAU DE DEVANTURE est une porte : R. 4224-11 vise
+  // « les portes et portails s'ouvrant vers le haut », et c'en est une ; motorisé,
+  // il relève de R. 4224-13 et de l'arrêté. La BARRIÈRE LEVANTE est couverte
+  // [2026-10-18, précision de c6] parce que la norme de référence de l'arrêté
+  // inclut les barrières : selon l'OPPBTP (analyse de l'art. 3), la
+  // NF EN 13241-1 a remplacé la NF P 25-362, et son champ couvre les « portes,
+  // portails et barrières » industriels, commerciaux et de garage, rideaux à
+  // lames et grilles à enroulement compris (AFNOR, guide de motorisation de la
+  // FFB). NF EN 13241 NON LUE : son champ est cité d'après l'OPPBTP et la FFB.
+  // Le même fondement appuie le rideau, en plus de R. 4224-11. ~~À confirmer avec
+  // le préventeur à la prochaine relecture, avec le volet roulant motorisé :
+  // une fenêtre est une baie, et la lecture pourrait l'attraper ;~~ [2026-10-18 :
+  // le volet d'une fenêtre ou d'une vitrine n'est ni une porte ni un portail]
+  // décision de c6 du 2026-10-17, il reste un matériel non couvert
+  // (`materiels-non-couverts.ts`, `store_volet_roulant`). Le seul
   // « Portail motorisé de véhicule » laissait croire le rideau de devanture
-  // dehors : la phrase s'élargit, sans dire du rideau plus que l'arrêté.
-  PORTAIL_AUTO: "Portail motorisé de véhicule. Le rideau métallique motorisé d'une devanture et la barrière levante, autres fermetures automatiques ou semi-automatiques d'un passage, se déclarent aussi ici.",
+  // dehors : la phrase s'élargit, sans dire du rideau plus que les textes.
+  // ~~« …, autres fermetures automatiques ou semi-automatiques d'un passage, »~~
+  // (2026-10-18 : c'était la lecture inversée, dite à l'écran).
+  // ~~« la barrière levante »~~ — 2026-10-18, revue de c6 : « motorisée » ;
+  // une barrière manuelle n'est pas visée par l'arrêté et recevrait le
+  // semestriel.
+  PORTAIL_AUTO: "Portail motorisé de véhicule. Le rideau métallique motorisé d'une devanture et la barrière levante motorisée se déclarent aussi ici.",
   // La seconde phrase est l'ADRESSE de non-couverture des articles de l'arrêté
   // du 20 novembre 2017 passés `non_couvert` le 2026-10-07 (relecture
   // préventeur du 30/09, décision de la propriétaire du 07/10) : leur

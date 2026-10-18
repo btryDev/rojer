@@ -1988,6 +1988,11 @@ describe("référentiel conformité — version et empreinte", () => {
     // du personnel désigné raccourci (R8) ; 204 + 0 − 0, relevée en appelant.
     // Version pas encore servie.
     { version: "2026-10-17.7", empreinte: "204-acb4dcf36b1e8fa3" },
+    // `lot/portes-relecture-1018` (relecture de c6, 2026-10-18) : URL de
+    // l'art. 9 de l'arrêté du 21 décembre 1993, description et références de
+    // `porte-auto-maintien-en-etat`, une limite en notesInternes. Hors
+    // empreinte : MÊME empreinte, version incrémentée (index.ts le dit).
+    { version: "2026-10-18.1", empreinte: "204-acb4dcf36b1e8fa3" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

@@ -24,14 +24,37 @@ describe("la recherche de matériel (2026-10-14)", () => {
     expect(cats("rideau métallique")).not.toContain("PORTE_AUTO");
   });
 
+  it("rideau de fer, rideau métallique motorisé, grille roulante → portail automatique (relecture du 2026-10-18)", () => {
+    for (const t of ["rideau de fer", "rideau métallique motorisé", "grille roulante"]) {
+      expect(cats(t), t).toContain("PORTAIL_AUTO");
+    }
+    // Le volet d'une fenêtre ou d'une vitrine reste un matériel non couvert.
+    expect(cats("volet roulant")).not.toContain("PORTAIL_AUTO");
+  });
+
+  it("« grille » seul ne mène pas au portail — une grille de ventilation non plus (revue de c6, 2026-10-18)", () => {
+    expect(cats("grille")).not.toContain("PORTAIL_AUTO");
+    expect(cats("grille de ventilation")).not.toContain("PORTAIL_AUTO");
+    // L'expression, elle, y mène, même commencée.
+    expect(cats("grille roulante")).toContain("PORTAIL_AUTO");
+    expect(cats("grille rou")).toContain("PORTAIL_AUTO");
+    // Et l'ordre de saisie n'y change rien.
+    expect(cats("roulante grille")).toContain("PORTAIL_AUTO");
+  });
+
   it("cassure : sans son synonyme, le rideau métallique ne trouve plus le portail", () => {
     // La vraie recherche, sur une table privée du synonyme (revue du 2026-10-17 :
     // la première écriture recopiait la logique, et ne prouvait rien d'elle).
+    // [2026-10-18] `retire` est un préfixe : « rideau métallique motorisé »
+    // contient « rideau métallique », et retirer l'un sans l'autre laissait
+    // la recherche trouver le portail.
     const sans = (retire: string) => ({
-      synonymes: { ...SYNONYMES_CATEGORIE, PORTAIL_AUTO: SYNONYMES_CATEGORIE.PORTAIL_AUTO.filter((t) => t !== retire) },
+      synonymes: { ...SYNONYMES_CATEGORIE, PORTAIL_AUTO: SYNONYMES_CATEGORIE.PORTAIL_AUTO.filter((t) => !t.startsWith(retire)) },
       materiels: MATERIELS_NON_COUVERTS,
     });
     expect(rechercherMateriel("rideau métallique", sans("rideau métallique")).categories).not.toContain("PORTAIL_AUTO");
+    expect(rechercherMateriel("rideau de fer", sans("rideau de fer")).categories).not.toContain("PORTAIL_AUTO");
+    expect(rechercherMateriel("grille roulante", sans("grille roulante")).categories).not.toContain("PORTAIL_AUTO");
     expect(rechercherMateriel("barrière levante", sans("barrière levante")).categories).not.toContain("PORTAIL_AUTO");
   });
 
