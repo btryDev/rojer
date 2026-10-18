@@ -11,6 +11,7 @@ import {
 } from "@/lib/batiments/actions";
 import { MAX_ZONES, PLAFOND_ZONES } from "@/lib/batiments/schema";
 import type { BatimentListe } from "@/lib/batiments/queries";
+import { nomDeZone } from "@/lib/batiments/nom-zone";
 
 /**
  * Les zones d'un établissement : une liste courte — trois au plus
@@ -137,7 +138,7 @@ function LigneBatiment({
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="m-0 text-[16px] font-semibold leading-[1.3] tracking-[-0.01em] text-[color:var(--board-ink)]">
-              {batiment.nom}
+              {nomDeZone(batiment.nom)}
             </p>
             <p className="board-eyebrow m-0 mt-1.5 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
               {batiment.nbEquipements === 0
@@ -266,7 +267,7 @@ function SaisieZone({
             label="Nom"
             requis
             maxLength={80}
-            placeholder="Ex : Réserve, Atelier, Annexe"
+            placeholder="Ex : Salle, Cuisine, Réserve"
             defaultValue={nom}
             onChange={(e) => setNom(e.target.value)}
             aria-invalid={
@@ -280,7 +281,7 @@ function SaisieZone({
           name="complementAdresse"
           label="Complément d'adresse"
           maxLength={200}
-          placeholder="Facultatif — si la zone a sa propre entrée"
+          placeholder="Facultatif — ex. : 1er étage, au fond du couloir"
           defaultValue={complement}
           onChange={(e) => setComplement(e.target.value)}
         />
@@ -324,6 +325,10 @@ function FormulaireRenommage({
             label="Nom"
             requis
             maxLength={80}
+            // Le nom STOCKÉ, pas `nomDeZone` : renommer « Bâtiment
+            // principal » en « Zone principale » sans y toucher lèverait
+            // l'unicité si une zone porte déjà ce nom (P2002) — et c'est par
+            // ce champ que le dirigeant distingue les deux (`nom-zone.ts`).
             defaultValue={batiment.nom}
             autoFocus
           />
@@ -376,7 +381,7 @@ function FormulaireSuppression({
       <p className="m-0 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-ink)]">
         {aContenu ? (
           <>
-            <strong>{batiment.nom}</strong> contient{" "}
+            <strong>{nomDeZone(batiment.nom)}</strong> contient{" "}
             {batiment.nbEquipements === 1
               ? "un équipement"
               : `${batiment.nbEquipements} équipements`}
@@ -385,7 +390,7 @@ function FormulaireSuppression({
           </>
         ) : (
           <>
-            Supprimer <strong>{batiment.nom}</strong>{" "}
+            Supprimer <strong>{nomDeZone(batiment.nom)}</strong>{" "}
             ? Ce qui pourrait encore
             s&apos;y rattacher (équipement retiré du parc, point de relevé,
             permis, plan de prévention) sera déplacé vers la zone que vous
@@ -406,7 +411,7 @@ function FormulaireSuppression({
         >
           {autres.map((a) => (
             <option key={a.id} value={a.id}>
-              {a.nom}
+              {nomDeZone(a.nom)}
             </option>
           ))}
         </select>

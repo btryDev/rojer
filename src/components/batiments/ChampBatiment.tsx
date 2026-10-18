@@ -1,5 +1,6 @@
 import { Label } from "@/components/ui/label";
 import type { Charte } from "@/components/ui-kit";
+import { nomDeZone } from "@/lib/batiments/nom-zone";
 
 /**
  * Le champ « Zone » des formulaires à rattachement optionnel — permis de
@@ -58,7 +59,7 @@ export function ChampBatiment({
         <option value="">Non précisé</option>
         {batiments.map((b) => (
           <option key={b.id} value={b.id}>
-            {b.nom}
+            {nomDeZone(b.nom)}
           </option>
         ))}
       </select>

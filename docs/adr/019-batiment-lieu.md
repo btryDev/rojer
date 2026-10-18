@@ -5,6 +5,12 @@
 > trois au plus. Le modèle `Batiment` et **l'invariant central de cette ADR — un
 > lieu ne porte aucun régime — sont conservés mot pour mot** ; c'est le
 > vocabulaire et le plafond qui changent.
+>
+> **[2026-10-17, décision de la propriétaire, ADR-029 amendée] Un établissement
+> = un bâtiment ; les zones, trois au plus, en sont des subdivisions ; jamais
+> plusieurs bâtiments.** Ce que cette ADR dit des « bâtiments » d'un
+> établissement vaut désormais pour ses ZONES ; les passages qui supposent
+> plusieurs bâtiments sont rayés ci-dessous.
 
 - Statut : acceptée
 - Date : 2026-08-20
@@ -22,10 +28,10 @@ de texte libre, sous trois noms, jamais indexés, jamais filtrables :
 `Equipement.localisation`, `PointReleve.localisation`, `PermisFeu.lieu`
 (requis), `PlanPrevention.lieux` (multi-lieux dans une chaîne).
 
-Un dirigeant dont le site compte plusieurs corps de bâtiment — le restaurant
-et sa réserve, la boutique et l'atelier — ne peut ni lire son calendrier par
-bâtiment, ni dire à un prestataire dans lequel intervenir, ni regrouper ses
-équipements autrement que par catégorie.
+Un dirigeant dont le site compte ~~plusieurs corps de bâtiment~~ plusieurs
+zones [2026-10-17] — le restaurant et sa réserve, la boutique et l'atelier — ne
+peut ni lire son calendrier par ~~bâtiment~~ zone, ni dire à un prestataire dans
+laquelle intervenir, ni regrouper ses équipements autrement que par catégorie.
 
 ### Ce que le droit attache à quoi
 
@@ -66,7 +72,7 @@ Ce qui s'y rattache, et comment :
 | `Equipement` | **requis** | `Restrict` | Un équipement est toujours quelque part. Supprimer un bâtiment ne doit jamais emporter un équipement et, par cascade, ses vérifications et rapports (ADR-012) : on déplace d'abord. |
 | `PointReleve` | optionnel | `SetNull` | Un point de relevé est dans un bâtiment, mais le carnet reste un par établissement (voir dettes). |
 | `PermisFeu` | optionnel | `SetNull` | Le `lieu` texte reste la précision (salle, zone). |
-| `PlanPrevention` | optionnel | `SetNull` | Une opération peut toucher plusieurs bâtiments ; `lieux` texte le dit. Un seul rattachement principal suffit au filtre. |
+| `PlanPrevention` | optionnel | `SetNull` | Une opération peut toucher plusieurs ~~bâtiments~~ zones [2026-10-17] ; `lieux` texte le dit. Un seul rattachement principal suffit au filtre. |
 
 **Ce qui se déduit, ne se stocke pas.** `Verification` et `Action` n'ont pas
 de `batimentId` : une vérification porte sur un équipement, une action sur
@@ -75,38 +81,58 @@ remontant la chaîne, comme la famille se déduit du type (ADR-016). Une
 donnée dérivée ne se désynchronise pas.
 
 **Ce qui reste au niveau établissement**, sans bâtiment : le DUERP et ses
-unités de travail (une unité peut traverser les bâtiments), les
+unités de travail ~~(une unité peut traverser les bâtiments)~~ [2026-10-18 :
+une unité peut traverser les zones], les
 prestataires et leurs attestations, les signatures, les accès. Dans un
-calendrier filtré par bâtiment, ces échéances **restent visibles**,
+calendrier filtré par ~~bâtiment~~ zone [2026-10-18], ces échéances **restent visibles**,
 étiquetées « Tout l'établissement » — les masquer ferait mentir le
 calendrier par omission (ADR-010).
 
 **Tout établissement a au moins un bâtiment.** La migration en crée un par
 établissement existant (« Bâtiment principal », `ordre = 0`) et y rattache
 tous les équipements ; la création d'établissement en crée un dans la même
-transaction ; la suppression du dernier bâtiment est refusée. Tant qu'un
+transaction ; la suppression du dernier bâtiment est refusée. ~~Tant qu'un
 établissement n'a qu'un bâtiment, **l'interface n'en montre rien** : pas de
 sélecteur, pas de colonne, pas de filtre. Le mono-bâtiment ne paie pas la
-complexité du multi.
+complexité du multi.~~ [2026-10-18 : tant qu'un établissement n'a qu'une
+zone, l'interface n'en montre rien — la règle vaut pour les zones (ADR-029,
+`estMultiBatiments`) ; un établissement n'a jamais qu'un bâtiment.]
 
-## Ce qui n'est pas décidé ici
+## ~~Ce qui n'est pas décidé ici~~ Ce qui a été décidé depuis
 
-**L'ensemble classé.** Le jour où un utilisateur a besoin d'un bâtiment
+[2026-10-18 : la question est tranchée (décision de la propriétaire du
+2026-10-17) ; le titre annonçait une suite qui ne viendra pas.]
+
+**L'ensemble classé.** ~~Le jour où un utilisateur a besoin d'un bâtiment
 hors ERP sur un site ERP, ou de deux ERP isolés sur un SIRET, il faudra une
 entité intermédiaire `EnsembleClasse` (régimes, catégorie, effectif
 accueilli) entre l'établissement et ses bâtiments, et le matching bouclera
-par ensemble. Ce n'est **pas** un `estERP` sur `Batiment` : classer chaque
+par ensemble.~~ [2026-10-17, décision de la propriétaire : jamais plusieurs
+bâtiments par établissement. L'entité intermédiaire n'a plus d'objet tant que
+la décision tient ; ~~un second bâtiment se déclare comme un autre
+établissement~~ [2026-10-18, revue : des corps de bâtiment non isolés entre
+eux forment un seul établissement, découpé en zones ; seules des
+exploitations isolées au sens de GN 3 se déclarent comme des établissements
+distincts].] Ce n'est **pas** un `estERP` sur `Batiment` : classer chaque
 corps séparément sous-catégoriserait un ERP contigu, ce qui est pire que
-l'approximation actuelle. En attendant, la fiche bâtiment dit en une phrase
-que les obligations ERP s'appliquent à tout l'établissement.
+l'approximation actuelle. ~~En attendant, la fiche bâtiment dit en une phrase
+que les obligations ERP s'appliquent à tout l'établissement.~~ [2026-10-18 :
+il n'y a plus d'« en attendant » ; les obligations ERP s'appliquent à
+l'établissement, qui est l'ERP, et ses zones n'en portent aucune.]
 
-## Dettes assumées, à lever avec l'ensemble classé
+## ~~Dettes assumées, à lever avec l'ensemble classé~~ Dettes assumées
+
+[2026-10-18 : l'ensemble classé est abandonné (décision du 2026-10-17, plus
+haut) ; ces dettes ne se lèveront pas avec lui.]
 
 - `RegistreAccessibilite` est `@unique` par établissement ; il est dû par
-  ERP. Il suivra l'ensemble classé.
+  ERP. ~~Il suivra l'ensemble classé.~~ [2026-10-18 : des exploitations
+  isolées au sens de GN 3 se déclarent comme des établissements distincts ;
+  le `@unique` par établissement suit.]
 - `CarnetSanitaire` est `@unique` par établissement ; il est dû par réseau
-  d'eau, souvent un par bâtiment. Le `PointReleve.batimentId` prépare la
-  lecture par bâtiment sans dédoubler le carnet.
+  d'eau, ~~souvent un par bâtiment~~ [2026-10-18 : un établissement n'a
+  qu'un bâtiment]. Le `PointReleve.batimentId` prépare la
+  lecture par ~~bâtiment~~ zone [2026-10-17] sans dédoubler le carnet.
 
 ## Conséquences
 

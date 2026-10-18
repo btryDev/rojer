@@ -78,6 +78,7 @@ import {
   type Completude,
 } from "@/lib/registre/completude";
 import { afficherValeur } from "@/lib/registre/valeur";
+import { nomDeZone } from "@/lib/batiments/nom-zone";
 import type { DossierData } from "./DossierConformiteDocument";
 import { blocsMaterielsNonCouverts } from "./mentions-perimetre";
 import { couvertureDuDossier } from "@/lib/perimetre/faits";
@@ -213,7 +214,7 @@ function libelleEquipementSitue(
   // Le nom se lit dans l'application, par l'employeur. Il ne s'imprime pas.
   const eq = v.equipement;
   if (!eq) return libellePorteurSansNom(v);
-  return multiBatiments ? `${eq.batiment.nom} — ${eq.libelle}` : eq.libelle;
+  return multiBatiments ? `${nomDeZone(eq.batiment.nom)} — ${eq.libelle}` : eq.libelle;
 }
 
 /**
@@ -404,6 +405,7 @@ export async function construireRegistreData(
         verifs,
         now,
         retenueParPrudence(marques.parObligation),
+        multiBatiments,
       );
       return ficheDuPdf(
         due,

@@ -105,3 +105,21 @@ describe("la borne se dit avant qu'on la heurte", () => {
     expect(screen.queryByRole("button", { name: /^Ajouter$/ })).toBeNull();
   });
 });
+
+describe("un dossier ancien : le nom stocké se lit traduit, se renomme tel quel (revue du 2026-10-17)", () => {
+  const ancien: BatimentListe[] = [
+    { id: "z0", nom: "Bâtiment principal", complementAdresse: null, ordre: 0, nbEquipements: 0 },
+    { id: "z1", nom: "Cuisine", complementAdresse: null, ordre: 1, nbEquipements: 0 },
+  ];
+
+  it("la liste dit « Zone principale », le champ de renommage préremplit « Bâtiment principal »", async () => {
+    render(<BatimentsManager etablissementId="e1" batiments={ancien} />);
+    expect(screen.getByText("Zone principale")).toBeTruthy();
+    screen.getAllByRole("button", { name: /Renommer/ })[0].click();
+    await souffler();
+    const champ = document.getElementById("nom-z0") as HTMLInputElement;
+    // Préremplir « Zone principale » ferait lever l'unicité (P2002) au
+    // dossier qui porte aussi une zone de ce nom.
+    expect(champ.value).toBe("Bâtiment principal");
+  });
+});

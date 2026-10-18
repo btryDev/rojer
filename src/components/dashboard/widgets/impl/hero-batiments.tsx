@@ -27,6 +27,7 @@ import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { BatimentCharge } from "@/lib/batiments/queries";
 import { etatCharge, libelleCharge } from "@/lib/batiments/etat-charge";
+import { nomDeZone } from "@/lib/batiments/nom-zone";
 
 type Props = {
   /** Le nom d'usage de l'établissement. L'adresse ne figure pas ici : elle
@@ -273,7 +274,7 @@ function Volume({
           volume au nom long descendent d'un cran et la rangée cesse de se lire
           comme une rangée. */}
       <span className="mt-2 line-clamp-2 min-h-[2lh] w-full text-balance text-center text-[13px] font-semibold leading-[1.25] tracking-[-0.01em] text-[color:var(--board-ink)]">
-        {batiment.nom}
+        {nomDeZone(batiment.nom)}
       </span>
       <span className="mt-0.5 text-[11.5px] text-[color:var(--board-slate-mid)]">
         {batiment.nbEquipements} équipement

@@ -102,7 +102,9 @@ l'un de 1970 et l'autre de 2010, dont un seul en doit un. Il est bloqué par **d
 manques distincts : un porteur bâtiment, **et** un attribut de date de construction
 que `Batiment` ne porte pas (`nom`, `complementAdresse`, `ordre`, et rien d'autre).
 
-Ce besoin **n'est pas** celui de l'`EnsembleClasse` que l'ADR-019 réserve. Cette
+Ce besoin **n'est pas** celui de ~~l'`EnsembleClasse` que l'ADR-019 réserve~~
+[2026-10-18 : l'`EnsembleClasse` que l'ADR-019 réservait, abandonnée le
+2026-10-17 — un établissement n'a qu'un bâtiment, ADR-029 amendée]. Cette
 entité est faite pour les **régimes** — flags ERP/IGH, catégorie, effectif accueilli.
 L'année du permis est une propriété physique, indépendante du régime : les deux corps
 de l'exemple ci-dessus ont un classement ERP identique. Ranger le DTA dans l'ensemble
@@ -186,7 +188,7 @@ Plusieurs requêtes filtrent par `equipement: { batimentId }` ou
 exactement ce que l'ADR-010 et l'ADR-019 interdisent — « les masquer ferait mentir
 le calendrier par omission ».
 
-Les **quatre** filtres par bâtiment passent par `porteeBatiment()`
+Les **quatre** filtres par ~~bâtiment~~ zone [2026-10-18, ADR-029 amendée] passent par `porteeBatiment()`
 (`src/lib/calendrier/portee.ts`), qui rend
 `OR: [{ equipementId: null }, { equipement: { batimentId } }]` : la ligne
 s'affiche étiquetée « Tout l'établissement », comme les échéances de niveau
@@ -195,7 +197,7 @@ recopiée sur quatre sites — c'est ce qui la rend testable et ce qui empêche 
 cinquième site d'oublier.
 
 Un cinquième reste volontairement en jointure interne :
-`src/lib/batiments/queries.ts`, qui calcule la charge **par bâtiment**. Une
+`src/lib/batiments/queries.ts`, qui calcule la charge **par ~~bâtiment~~ zone** [2026-10-18]. Une
 échéance d'établissement n'est dans aucun bâtiment ; la compter dans chacun
 gonflerait autant de pastilles qu'il y a de corps, dans un seul serait
 arbitraire. La distinction est celle entre *lister sous un filtre* et

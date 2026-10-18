@@ -182,6 +182,7 @@ describe("registre web — une fiche tenue ailleurs", () => {
       [ligne(prescriptionId)],
       AUJOURDHUI,
       AUCUNE_PRUDENCE,
+      false,
     )!;
 
   it("la donnée porte la mention, sauf sur une ligne surchargée", () => {

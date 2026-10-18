@@ -71,6 +71,7 @@ import {
   SUJET_ECHEANCES_DE_L_APPAREIL,
 } from "@/lib/calendrier/fraicheur";
 import { AvertissementFraicheur } from "@/components/calendrier/AvertissementFraicheur";
+import { nomDeZone } from "@/lib/batiments/nom-zone";
 
 // Le délai d'une ligne se dit en jours plutôt qu'en date (`libelleDelai`,
 // `lib/equipements/fiche`) : un retard d'un jour et un retard de six mois
@@ -300,7 +301,7 @@ export default async function EquipementDetailPage({
                   ici en annonçant qu'un appareil se déplace depuis sa fiche,
                   et la fiche ne nommait pas le lieu. Sous un seul bâtiment,
                   le nommer n'apprend rien (ADR-019). */}
-              {multiBatiments ? ` · ${eq.batiment.nom}` : null}
+              {multiBatiments ? ` · ${nomDeZone(eq.batiment.nom)}` : null}
               {eq.localisation ? ` · ${eq.localisation}` : null}
             </>
           }
@@ -482,7 +483,7 @@ export default async function EquipementDetailPage({
                   </ChampFiche>
                 ) : null}
                 {multiBatiments ? (
-                  <ChampFiche cle="Zone">{eq.batiment.nom}</ChampFiche>
+                  <ChampFiche cle="Zone">{nomDeZone(eq.batiment.nom)}</ChampFiche>
                 ) : null}
                 <ChampFiche cle="Localisation">
                   {eq.localisation ?? (

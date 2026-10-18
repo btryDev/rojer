@@ -146,7 +146,10 @@ zone est un lieu, elle ne porte aucun régime.
 
 **Cette règle est plus restrictive que le modèle : l'appliquer retire une
 capacité.** Le plafond de trois vaut à la création ; les dossiers qui portent
-déjà plus de trois bâtiments les gardent.
+déjà plus de trois ~~bâtiments~~ zones les gardent. [2026-10-17, décision de la
+propriétaire, ADR-029 amendée : un établissement = un bâtiment ; les zones, trois
+au plus, sont des subdivisions de ce bâtiment ; jamais plusieurs bâtiments. Une
+ligne `Batiment` est une zone.]
 
 ---
 
