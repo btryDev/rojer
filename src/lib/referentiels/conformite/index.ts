@@ -540,7 +540,17 @@ export const obligationsConformite: Obligation[] = [
 // (L 57 § 3), une par scène ; le type L entre au personnel désigné (L 14).
 // 200 + 4 − 0 = 204 (après D et E) ; par porteur, 95 + 1 = 96 équipement,
 // 91 + 3 = 94 établissement, 14 salarié — remesuré en appelant `porteurDe`.
-export const REFERENTIEL_VERSION = "2026-10-17.7";
+// `2026-10-18.1` (`lot/portes-relecture-1018`, relecture de c6 du
+// 2026-10-18) : aucune ligne n'entre ni ne sort, l'empreinte ne bouge pas —
+// elle exclut `description`, `referencesLegales` et `notesInternes`. Changent :
+// l'URL de l'art. 9 de l'arrêté du 21 décembre 1993 (LEGIARTI000054109592, en
+// vigueur, à la place de la version close au 2008-05-01) sous
+// `porte-auto-verification-semestrielle` et `porte-auto-dossier-maintenance` ;
+// la description de `porte-auto-maintien-en-etat`, qui cite R. 4224-12,
+// R. 4224-13 et R. 4224-17 mot pour mot, et ses références (R. 4224-12 a sa
+// ligne, entré au corpus) ; une limite écrite en `notesInternes` de
+// `porte-auto-portail-piete-coulissant`. 204 + 0 − 0 = 204.
+export const REFERENTIEL_VERSION = "2026-10-18.1";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

@@ -463,7 +463,11 @@ export const MATERIELS_NON_COUVERTS: readonly MaterielNonCouvert[] = [
     // confirmer avec le préventeur » en fin de phrase~~ (relecture du même
     // jour : une note de travail, pas une phrase d'écran) — la question reste
     // à poser au préventeur à la prochaine relecture.
-    phrase: `Rojer ne suit pas ${nonPorte("l'entretien des stores et volets roulants motorisés")} ; il ne sait pas si l'arrêté du 21 décembre 1993 (portes et portails automatiques) s'y applique.`,
+    // ~~« … ; il ne sait pas si l'arrêté du 21 décembre 1993 (portes et
+    // portails automatiques) s'y applique. »~~ — 2026-10-18, relecture de c6 :
+    // les textes visent les portes et portails ; un volet qui ferme l'entrée
+    // est un portail, celui d'une fenêtre ou d'une vitrine non.
+    phrase: `Rojer ne suit pas ${nonPorte("l'entretien des stores et volets roulants motorisés qui ferment une fenêtre ou une vitrine")} ; le code du travail (art. R. 4224-12 et R. 4224-13) et l'arrêté du 21 décembre 1993 visent les portes et portails. Un rideau ou un volet qui ferme l'entrée du commerce se déclare comme portail automatique.`,
     references: [{ libelle: "Arrêté du 21 décembre 1993 (portes et portails automatiques)" }],
   },
   {

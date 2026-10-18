@@ -65,16 +65,28 @@ import {
  *    électriques », sans en excepter aucune ; aucun texte propre à
  *    l'exploitant d'une installation photovoltaïque ou d'une borne n'a été
  *    trouvé, et la recherche n'en suppose aucun ;
- *  - rideau métallique, barrière levante → portail automatique. DÉCISION de
- *    c6 du 2026-10-17, à confirmer avec le préventeur à la prochaine relecture.
- *    L'arrêté du 21 décembre 1993, art. 1er : « les portes ou portails
- *    automatiques et semi-automatiques sont des fermetures automatiques et
- *    semi-automatiques » ; son annexe renvoie la définition de ces termes à la
- *    norme NF P 25-362, que le dépôt n'a pas lue. Lecture retenue : au sens
- *    courant de « fermeture d'une baie ou d'un passage ». L'aide de la
- *    catégorie le dit (`DESCRIPTION_CATEGORIE.PORTAIL_AUTO`). Le volet roulant
- *    motorisé n'est PAS un synonyme (décision de c6 du même jour) : il reste un
- *    matériel non couvert, à confirmer avec le préventeur dans la même note.
+ *  - rideau métallique, rideau de fer, grille roulante, barrière levante →
+ *    portail automatique. DÉCISION de c6 du 2026-10-17. L'arrêté du
+ *    21 décembre 1993, art. 1er : « les portes ou portails automatiques et
+ *    semi-automatiques sont des fermetures automatiques et semi-automatiques » ;
+ *    son annexe renvoie la définition de ces termes à la norme NF P 25-362, que
+ *    le dépôt n'a pas lue. ~~Lecture retenue : au sens courant de « fermeture
+ *    d'une baie ou d'un passage ».~~ [2026-10-18, relecture de c6 : lecture
+ *    inversée — l'article dit que les portes SONT des fermetures, pas que toute
+ *    fermeture est une porte.] Fondement : R. 4224-11 vise « les portes et
+ *    portails s'ouvrant vers le haut » — le rideau de devanture, de fer ou la
+ *    grille roulante en sont. La barrière levante est couverte [2026-10-18,
+ *    précision de c6] parce que la norme de référence de l'arrêté, selon
+ *    l'OPPBTP — la NF EN 13241-1, qui a remplacé la NF P 25-362 —, couvre les
+ *    « portes, portails et barrières », rideaux à lames et grilles à
+ *    enroulement compris (AFNOR, guide de motorisation de la FFB) ; même appui
+ *    pour le rideau. NF EN 13241 non lue, champ cité d'après l'OPPBTP et la
+ *    FFB. L'aide
+ *    de la catégorie le dit (`DESCRIPTION_CATEGORIE.PORTAIL_AUTO`). Le volet
+ *    roulant motorisé n'est PAS un synonyme (décision de c6 du même jour) : il
+ *    reste un matériel non couvert ~~, à confirmer avec le préventeur dans la
+ *    même note~~ [2026-10-18 : il ferme une fenêtre ou une vitrine, ni porte ni
+ *    portail].
  */
 export const SYNONYMES_CATEGORIE: Readonly<Record<CategorieEquipement, readonly string[]>> = {
   INSTALLATION_ELECTRIQUE: ["électricité", "tableau électrique", "TGBT", "disjoncteur", "groupe électrogène", "panneaux photovoltaïques", "onduleur", "borne de recharge", "IRVE"],
@@ -89,7 +101,7 @@ export const SYNONYMES_CATEGORIE: Readonly<Record<CategorieEquipement, readonly 
   APPAREIL_CUISSON_ERP: ["four", "friteuse", "fourneau", "piano de cuisson", "grill", "plancha", "cuisson"],
   ASCENSEUR: ["ascenseur"],
   PORTE_AUTO: ["porte automatique", "porte coulissante", "porte motorisée"],
-  PORTAIL_AUTO: ["portail", "portail motorisé", "rideau métallique", "barrière levante"],
+  PORTAIL_AUTO: ["portail", "portail motorisé", "rideau métallique", "rideau métallique motorisé", "rideau de fer", "grille roulante", "barrière levante"],
   EQUIPEMENT_SOUS_PRESSION: ["compresseur", "air comprimé", "réservoir d'air comprimé"],
   STOCKAGE_MATIERE_DANGEREUSE: ["produits chimiques", "liquides inflammables", "solvants"],
   EQUIPEMENT_LEVAGE: ["palan", "chariot élévateur", "gerbeur", "hayon élévateur", "nacelle", "treuil", "plateforme élévatrice mobile", "PEMP", "table élévatrice", "pont élévateur"],

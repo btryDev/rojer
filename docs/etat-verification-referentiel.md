@@ -4,8 +4,8 @@
      écraserait la correction, et un test compare déjà ce fichier au rendu
      du script. Pour le mettre à jour : pnpm verification --ecrire -->
 
-**Généré le** : 2026-10-17
-**Référentiel** : `2026-10-17.7`
+**Généré le** : 2026-10-18
+**Référentiel** : `2026-10-18.1`
 **Régénérer** : `pnpm verification --ecrire`
 
 Ce document répond à une question, et à une seule : **de quoi le
@@ -83,12 +83,12 @@ repose sur un texte que personne n'a ouvert.
 
 ## 2. Où en est-on
 
-**204 obligations**, **450 références** — 120 obligations en citent plus d'une.
+**204 obligations**, **451 références** — 120 obligations en citent plus d'une.
 
 | degré | obligations (au plancher) | part | dont fondements | références | part |
 | --- | --- | --- | --- | --- | --- |
 | 5 · lu à la source, verbatim relevé | 114 | 56 % | 121 | 303 | 67 % |
-| 4 · lu à la source par un agent, verbatim rapporté | 86 | 42 % | 83 | 142 | 32 % |
+| 4 · lu à la source par un agent, verbatim rapporté | 86 | 42 % | 83 | 143 | 32 % |
 | 3 · lu et daté, aucun verbatim | 3 | 1 % | 0 | 4 | 1 % |
 | 2 · lu ailleurs qu'à la source | 1 | 0 % | 0 | 1 | 0 % |
 | 1 · au corpus, aucune trace de lecture | 0 | 0 % | 0 | 0 | 0 % |
@@ -108,7 +108,7 @@ repose sur un texte que personne n'a ouvert.
 
 | ancrage | références | part |
 | --- | --- | --- |
-| ancrée | 426 | 95 % |
+| ancrée | 427 | 95 % |
 | divergente | 1 | 0 % |
 | jamais constatée | 23 | 5 % |
 
@@ -140,7 +140,7 @@ repose sur un texte que personne n'a ouvert.
 | `levage` | 11 | 30 | 10 | 1 | · | · | · | · | 11 / 11 — 100 % | 0 / 30 | 2026-08-26 → 2026-09-02 |
 | `locaux_sociaux` | 4 | 4 | 2 | 2 | · | · | · | · | 4 / 4 — 100 % | 0 / 4 | 2026-08-31 → 2026-09-26 |
 | `organisation_prevention` | 9 | 13 | 2 | 7 | · | · | · | · | 9 / 9 — 100 % | 0 / 13 | 2026-08-31 → 2026-09-27 |
-| `porte_portail` | 6 | 9 | 1 | 5 | · | · | · | · | 6 / 6 — 100 % | 0 / 9 | 2026-09-01 → 2026-10-16 |
+| `porte_portail` | 6 | 10 | 1 | 5 | · | · | · | · | 6 / 6 — 100 % | 0 / 10 | 2026-09-01 → 2026-10-18 |
 | `sante_travail` | 13 | 22 | 3 | 9 | 1 | · | · | · | 12 / 13 — 92 % | 0 / 22 | 2026-08-31 → 2026-09-26 |
 | `secours` | 7 | 14 | 3 | 4 | · | · | · | · | 7 / 7 — 100 % | 0 / 14 | 2026-08-31 → 2026-10-14 |
 | `signalisation` | 12 | 20 | 3 | 9 | · | · | · | · | 12 / 12 — 100 % | 0 / 20 | 2026-09-02 → 2026-10-17 |
@@ -158,7 +158,7 @@ Aucun domaine n'est entièrement dépourvu de verbatim.
 
 |  | obl. | réf. | 5 | 4 | 3 | 2 | 1 | 0 | vérifiées à la source | sans ancre | lu entre |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `equipement` | 96 | 200 | 62 | 33 | 1 | · | · | · | 95 / 96 — 99 % | 22 / 200 | 2026-08-26 → 2026-10-17 |
+| `equipement` | 96 | 201 | 62 | 33 | 1 | · | · | · | 95 / 96 — 99 % | 22 / 201 | 2026-08-26 → 2026-10-18 |
 | `etablissement` | 94 | 217 | 52 | 40 | 2 | · | · | · | 92 / 94 — 98 % | 0 / 217 | 2026-08-26 → 2026-10-17 |
 | `salarie` | 14 | 33 | · | 13 | · | 1 | · | · | 13 / 14 — 93 % | 1 / 33 | 2026-08-27 → 2026-10-07 |
 
@@ -184,8 +184,9 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 | 2026-10-14 | 29 | 6 % | 12 |
 | 2026-10-16 | 16 | 4 % | 12 |
 | 2026-10-17 | 48 | 11 % | 25 |
+| 2026-10-18 | 1 | 0 % | 1 |
 
-450 des 450 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-10-17.
+451 des 451 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-10-18.
 
 Ces dates ne sont pas un âge : elles disent quand quelqu'un a ouvert le
 texte, pas depuis quand la version lue est en vigueur. Une lecture d'hier
@@ -339,7 +340,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `prevention-etablissement-reglement-interieur` | organisation_prevention | etablissement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-08-31 → 2026-09-26 |
 | `prevention-etablissement-salarie-designe` | organisation_prevention | etablissement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-08-31 → 2026-09-27 |
 | `porte-auto-dossier-maintenance` | porte_portail | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 |
-| `porte-auto-maintien-en-etat` | porte_portail | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 |
+| `porte-auto-maintien-en-etat` | porte_portail | equipement | 3 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 3 | 2026-09-01 → 2026-10-18 |
 | `porte-auto-portail-piete-coulissant` | porte_portail | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
 | `porte-auto-verification-initiale` | porte_portail | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 |
 | `porte-auto-verification-semestrielle` | porte_portail | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
@@ -487,7 +488,7 @@ demande le plus de travail.
 
 ---
 
-## 9. Les 450 références, une par une
+## 9. Les 451 références, une par une
 
 `prescrit` et `verbatim` sont les deux champs du corpus qui rendent une
 lecture relisible : ce que l'article impose, en une phrase, et la phrase
@@ -728,8 +729,9 @@ refaire pour la contredire.
 | `porte-auto-verification-semestrielle` | fondement | Arrêté du 21 décembre 1993 (portes et portails automatiques), art. 9 | Arrêté 1993-12-21 art. 9 | arrete-1993-12-21-portes | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
 | `porte-auto-dossier-maintenance` | fondement | Arrêté du 21 décembre 1993 (portes et portails automatiques), art. 8 et 9 (livret d'entretien) | Arrêté 1993-12-21 art. 9 | arrete-1993-12-21-portes | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
 | `porte-auto-dossier-maintenance` | contexte 1 | R. 4224-17 | R. 4224-17 | code-travail-portes | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
-| `porte-auto-maintien-en-etat` | fondement | R. 4224-12 et R. 4224-13 | R. 4224-13 | code-travail-portes | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
-| `porte-auto-maintien-en-etat` | contexte 1 | R. 4224-17 | R. 4224-17 | code-travail-portes | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
+| `porte-auto-maintien-en-etat` | fondement | R. 4224-12 | R. 4224-12 | code-travail-portes | retenu | 2026-10-18 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
+| `porte-auto-maintien-en-etat` | contexte 1 | R. 4224-13 | R. 4224-13 | code-travail-portes | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
+| `porte-auto-maintien-en-etat` | contexte 2 | R. 4224-17 | R. 4224-17 | code-travail-portes | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
 | `porte-auto-portail-piete-coulissant` | fondement | Arrêté du 21 décembre 1993 (portes et portails automatiques), art. 2 et 5 (passages de véhicules) | Arrêté 1993-12-21 art. 2 | arrete-1993-12-21-portes | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 1994-07-13 | 1994-07-13 | 4 · agent + verbatim | ancrée |
 | `porte-auto-erp-contrat-entretien` | fondement | Arrêté du 25 juin 1980, art. CO 48 § 3 e) (contrat d'entretien de toutes les portes automatiques) — livre II, établissements des quatre premières catégories | CO 48 § 3 e) — contrat d'entretien des portes automatiques | arrete-1980-livre-2 | retenu | 2026-10-16 | api_legifrance | — | ✓ | 2019-07-01 | 2019-07-01 | 5 · première main | ancrée |
 | `esp-requalification-decennale` | fondement | Arrêté du 20 novembre 2017 (suivi en service des ESP), art. 18 et 19 | Arrêté 2017-11-20 art. 18-19 | esp-suivi-en-service | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 5 · première main | ancrée |

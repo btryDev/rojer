@@ -14,6 +14,24 @@ export const CODE_TRAVAIL_PORTES: Corpus = {
     "Section 2 « Portes et portails » (R. 4224-12, R. 4224-13) et section 4 « Maintenance, entretien et vérifications » (R. 4224-17). R. 4224-13 est un article de renvoi : il n'institue aucun examen.",
   articles: [
     {
+      // Entré le 2026-10-18 (relecture de c6) : la portée nommait R. 4224-12,
+      // la description de `porte-auto-maintien-en-etat` le citait, et
+      // l'article n'était pas au corpus. Lu le même jour sur Légifrance (PISTE,
+      // bac à sable).
+      ref: "R. 4224-12",
+      intitule: "Entretien et contrôle des portes et portails",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532211",
+      versionEnVigueur: "2008-05-01",
+      luLe: "2026-10-18",
+      lecture: "agent_verbatim",
+      prescrit:
+        "Deux phrases : les portes et portails — tous, pas seulement les automatiques — sont entretenus et contrôlés régulièrement ; lorsque leur chute peut présenter un danger, la périodicité des contrôles et les interventions sont consignées dans le dossier de R. 4224-17. Aucune périodicité chiffrée.",
+      citationCle:
+        "Les portes et portails sont entretenus et contrôlés régulièrement. Lorsque leur chute peut présenter un danger pour les travailleurs, notamment en raison de leurs dimensions, de leur poids ou de leur mode de fixation, la périodicité des contrôles et les interventions sont consignées dans le dossier prévu à l'article R. 4224-17.",
+      statut: "retenu",
+      obligations: ["porte-auto-maintien-en-etat"],
+    },
+    {
       ref: "R. 4224-13",
       intitule: "Portes et portails automatiques",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532209",

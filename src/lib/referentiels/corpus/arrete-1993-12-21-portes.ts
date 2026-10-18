@@ -35,7 +35,7 @@ export const ARRETE_1993_12_21_PORTES: Corpus = {
     {
       ref: "Arrêté 1993-12-21 art. 9",
       intitule: "Entretien et vérification périodique des portes et portails",
-      url: "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000006679563",
+      url: "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000054109592",
       versionEnVigueur: "2008-05-01",
       luLe: "2026-09-01",
       lecture: "agent_verbatim",
