@@ -3,7 +3,9 @@ import {
   decompteStatuts,
   lireAnnexeRelecture,
   lireArguments,
+  legendeColonneAudit,
   lirePropositionsAudit,
+  pageDeTeteGrille,
   propositionsADecider,
 } from "./entrees-grille-relecture";
 import { readFileSync } from "node:fs";
@@ -140,5 +142,57 @@ describe("lireArguments", () => {
     expect(() =>
       lireArguments(["--propositions-audit", "--detail"], ["propositions-audit"]),
     ).toThrow(/attend une valeur/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 2026-10-18 : toutes les propositions décidées, la grille demandait encore un
+// avis (« Votre avis ? ») et ne listait plus nulle part ce qui est tranché.
+// ---------------------------------------------------------------------------
+
+const SCRIPT = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "scripts", "generer-grille-equipements.tsx"),
+  "utf8",
+);
+
+describe("la légende de la colonne Audit suit l'état des propositions", () => {
+  it("sans proposition, elle ne demande plus d'avis et ne propose rien", () => {
+    const l = legendeColonneAudit(false);
+    expect(l).not.toMatch(/avis/i);
+    expect(l).not.toMatch(/propos/i);
+    expect(l).toMatch(/gardée au référentiel/);
+  });
+
+  it("avec des propositions, le texte d'avant ne change pas", () => {
+    // La phrase exacte de 15194077, écrite en dur dans le script avant ce lot :
+    // un `toMatch` sur le début et la fin laissait passer un milieu réécrit.
+    expect(legendeColonneAudit(true)).toBe(
+      "obligation légale que nous proposons de garder au référentiel sans que Rojer la suive au quotidien — ni calendrier, ni alertes —, listée sur la page « Ce que Rojer ne couvre pas ». Votre avis ?",
+    );
+  });
+
+  it("le script lit la légende ici, et ne l'écrit plus en dur", () => {
+    expect(SCRIPT).toMatch(/legendeColonneAudit\(propositions\.size > 0\)/);
+    expect(SCRIPT).not.toMatch(/Votre avis \?/);
+  });
+});
+
+describe("la rubrique « Déjà au niveau audit » s'imprime même sans proposition", () => {
+  it("sans proposition et avec des lignes au niveau audit, la grille s'ouvre sur leur page", () => {
+    expect(pageDeTeteGrille(0, 12)).toBe("niveau_audit");
+    expect(pageDeTeteGrille(3, 12)).toBe("propositions");
+    expect(pageDeTeteGrille(0, 0)).toBeNull();
+  });
+
+  it("le référentiel a des lignes au niveau audit : la page n'est pas vide", () => {
+    expect(obligationsConformite.filter(estNiveauAudit).length).toBeGreaterThan(0);
+  });
+
+  it("le script rend la page du niveau audit quand pageDeTeteGrille le dit, et la page porte la rubrique", () => {
+    expect(SCRIPT).toMatch(/const tete = pageDeTeteGrille\(/);
+    expect(SCRIPT).toMatch(/\{tete === "niveau_audit" && <PageNiveauAudit genereLe=\{genereLe\} \/>\}/);
+    const page = SCRIPT.slice(SCRIPT.indexOf("function PageNiveauAudit("), SCRIPT.indexOf("function PagePropositions("));
+    expect(page).toMatch(/<RubriqueDejaAudit dejaAudit=\{dejaAudit\} \/>/);
+    expect(page).toMatch(/estNiveauAudit/);
   });
 });
