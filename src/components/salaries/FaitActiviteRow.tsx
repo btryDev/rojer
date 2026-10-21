@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { repondreFaitActivite } from "@/lib/etablissements/faits-activite-actions";
 import type { ChampFaitActivite } from "@/lib/etablissements/faits-activite";
@@ -23,9 +23,15 @@ type Props = {
   intitule: string;
   pourquoi: string;
   valeur: boolean | null;
+  /**
+   * Ce que la réponse rend dû et qui se déclare ici (2026-10-21,
+   * `etats-permanents/par-les-risques.ts`) : les vignettes de « Ce qui doit
+   * être en place » nées de ce fait. Posé par la page, sous les réponses.
+   */
+  children?: ReactNode;
 };
 
-export function FaitActiviteRow({ etablissementId, champ, intitule, pourquoi, valeur }: Props) {
+export function FaitActiviteRow({ etablissementId, champ, intitule, pourquoi, valeur, children }: Props) {
   const [pending, startTransition] = useTransition();
   const [echec, setEchec] = useState(false);
   const [risqueConserve, setRisqueConserve] = useState(false);
@@ -108,6 +114,7 @@ export function FaitActiviteRow({ etablissementId, champ, intitule, pourquoi, va
           Cette réponse n&apos;a pas pu être enregistrée. Rechargez la page, puis réessayez.
         </p>
       )}
+      {children}
     </li>
   );
 }

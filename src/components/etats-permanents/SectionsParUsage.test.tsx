@@ -20,7 +20,7 @@ vi.mock("@/lib/auth/require-user", () => ({
 }));
 
 const { listerEtatsPermanents } = await import("@/lib/etats-permanents/queries");
-const { CompteurDeLaPage, SectionsParUsage, SommaireParUsage } = await import(
+const { CompteurDeLaPage, SectionsParUsage } = await import(
   "./SectionsParUsage"
 );
 const {
@@ -111,7 +111,6 @@ function rendre(d: Etats) {
         total={d.total}
         parLesTitres={d.familles.reduce((n, f) => n + f.parLesTitres.enPlace, 0)}
       />
-      <SommaireParUsage familles={d.familles} />
       <SectionsParUsage
         familles={d.familles}
         rendreLigne={(l) => <li key={l.obligation.id}>{l.obligation.libelle}</li>}
@@ -164,19 +163,13 @@ describe.each(Object.keys(DOSSIERS) as (keyof typeof DOSSIERS)[])(
       }
     });
 
-    it("chaque ancre du sommaire vise une section présente, et chaque section a la sienne", async () => {
+    it("chaque famille a sa section, à l'ancre que le widget vise (`ancreFamille`)", async () => {
+      // ~~Le sommaire~~ (retiré le 2026-10-21, code mort depuis le 2026-10-20) :
+      // le widget du tableau de bord reste le seul à viser ces ancres.
       const d = await lire(nom);
       const { container } = rendre(d);
-      const nav = container.querySelector('nav[aria-label="Sommaire"]')!;
-      const cibles = [...nav.querySelectorAll("a")].map((a) =>
-        a.getAttribute("href")!.slice(1),
-      );
-      expect(cibles.length).toBe(d.familles.length);
-      for (const id of cibles) {
-        expect(container.querySelector(`section#${id}`), id).not.toBeNull();
-      }
       const ids = [...container.querySelectorAll("section[id]")].map((s) => s.id);
-      expect(ids).toEqual(cibles);
+      expect(ids).toEqual(d.familles.map((f) => `usage-${f.groupe}`));
     });
 
     it("la phrase qui dit qui affirme se lit UNE fois, à l'en-tête de page (2026-10-17, revue de c6)", async () => {
@@ -185,17 +178,12 @@ describe.each(Object.keys(DOSSIERS) as (keyof typeof DOSSIERS)[])(
       const texte = container.textContent ?? "";
       expect(texte.match(/déclarés? en place par vous/g) ?? []).toHaveLength(1);
       expect(texte.match(/par vous/g) ?? []).toHaveLength(1);
-      // Les familles et le sommaire disent « x sur n », et rien d'autre.
+      // Les familles disent « x sur n », et rien d'autre.
       for (const f of d.familles) {
         const section = container.querySelector(`#usage-${f.groupe}`)!;
         const compte = section.querySelector("section > div > p")!;
         expect(compte.textContent).toBe(`${f.enPlace} sur ${f.total}`);
         expect(compte.className).toContain("tabular-nums");
-      }
-      for (const li of container.querySelectorAll('nav[aria-label="Sommaire"] li')) {
-        const span = li.querySelector("span")!;
-        expect(span.textContent).toMatch(/^\d+ sur \d+$/);
-        expect(span.className).toContain("tabular-nums");
       }
     });
 
@@ -235,16 +223,6 @@ describe.each(Object.keys(DOSSIERS) as (keyof typeof DOSSIERS)[])(
       }
     });
 
-    it("à 375 px, chaque entrée du sommaire passe à la ligne plutôt que de serrer deux colonnes", async () => {
-      // jsdom ne met rien en page : on vérifie la classe qui autorise le
-      // retour, comme les tests voisins vérifient `carte-board`.
-      const d = await lire(nom);
-      const { container } = rendre(d);
-      const lis = container.querySelectorAll('nav[aria-label="Sommaire"] li');
-      expect(lis.length).toBe(d.familles.length);
-      for (const li of lis) expect(li.className.split(/\s+/)).toContain("flex-wrap");
-    });
-
     it("aucune carte ne porte un sur-titre qui répète le titre, ni deux niveaux de titrage", async () => {
       const d = await lire(nom);
       const { container } = rendre(d);
@@ -252,9 +230,13 @@ describe.each(Object.keys(DOSSIERS) as (keyof typeof DOSSIERS)[])(
         const h2 = section.querySelector("h2")!.textContent;
         for (const carte of section.querySelectorAll(".carte-board")) {
           expect(carte.querySelectorAll("h2")).toHaveLength(0);
-          const h3 = carte.querySelectorAll("h3");
-          expect(h3.length).toBeLessThanOrEqual(1);
-          if (h3[0]) expect(h3[0].textContent).not.toBe(h2);
+          const h3 = [...carte.querySelectorAll("h3")];
+          // LA FRISE (2026-10-20) : incendie et secours tient en UNE carte, une
+          // étape par sous-catégorie. Ses h3 sont des étapes de même rang, pas
+          // un sur-titre au-dessus d'un titre — l'interdit 11 vise deux NIVEAUX
+          // de titrage. Ailleurs, toujours au plus un sur-titre par carte.
+          if (section.id !== "usage-incendie_secours") expect(h3.length).toBeLessThanOrEqual(1);
+          for (const h of h3) expect(h.textContent).not.toBe(h2);
         }
       }
     });
@@ -351,13 +333,18 @@ describe("le repli : une ligne de l'écran sans rangement (2026-10-17, revue ind
     const { temoin, d } = await avecUneLigneNonRangee();
     expect(d.total).toBe(temoin.total);
     expect(d.enPlace).toBe(temoin.enPlace);
-    expect(d.familles.reduce((n, f) => n + f.total, 0)).toBe(d.total);
+    // Les lignes déclarées sous une question d'activité (`parLesRisques`,
+    // 2026-10-21) sont comptées, hors familles.
+    expect(
+      d.familles.reduce((n, f) => n + f.total, 0) +
+        d.parLesRisques.filter((l) => l.compteDansLEnTete).length,
+    ).toBe(d.total);
     const repliTemoin =
       temoin.familles.find((f) => f.groupe === GROUPE_REPLI)?.total ?? 0;
     expect(d.familles.at(-1)!.total).toBe(repliTemoin + 1);
   });
 
-  it("l'écran rend le repli comme une famille sans sous-catégorie, sommaire compris", async () => {
+  it("l'écran rend le repli comme une famille sans sous-catégorie, en dernier", async () => {
     const { d } = await avecUneLigneNonRangee();
     const { container } = rendre(d);
     const h2 = [...container.querySelectorAll("h2")].map((h) => h.textContent);
@@ -365,10 +352,8 @@ describe("le repli : une ligne de l'écran sans rangement (2026-10-17, revue ind
     const section = container.querySelector(`#usage-${GROUPE_REPLI}`)!;
     expect(section).not.toBeNull();
     expect(section.querySelectorAll("h3")).toHaveLength(0);
-    const liens = [...container.querySelectorAll("nav a")].map((a) =>
-      a.getAttribute("href"),
-    );
-    expect(liens.at(-1)).toBe(`#usage-${GROUPE_REPLI}`);
+    const ids = [...container.querySelectorAll("section[id]")].map((s) => s.id);
+    expect(ids.at(-1)).toBe(`usage-${GROUPE_REPLI}`);
   });
 });
 

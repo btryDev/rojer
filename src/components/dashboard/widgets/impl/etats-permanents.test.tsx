@@ -128,6 +128,7 @@ const FABRIQUE: EtatsPermanentsDuDossier = {
       ],
     },
   ],
+  parLesRisques: [],
   faits: [
     ligne("fait-1", {
       mode: "fait",
@@ -345,8 +346,10 @@ describe.each(Object.keys(DOSSIERS))("widget « Ce qui doit être en place », d
     expect(ecran).toHaveLength(d.familles.length);
     expect(widget).toEqual(ecran);
     const r = resumeDuWidget(d);
-    expect(r.familles.reduce((n, f) => n + f.enPlace, 0)).toBe(r.enPlace);
-    expect(r.familles.reduce((n, f) => n + f.total, 0)).toBe(r.total);
+    // Les familles plus les lignes déclarées sous une question d'activité
+    // (`par-les-risques.ts`, 2026-10-21) font le compte de l'en-tête.
+    expect(r.familles.reduce((n, f) => n + f.enPlace, 0) + r.risques.enPlace).toBe(r.enPlace);
+    expect(r.familles.reduce((n, f) => n + f.total, 0) + r.risques.total).toBe(r.total);
   });
 
   it("chaque lien mène à l'écran et vise une section présente sur l'écran", async () => {
@@ -366,7 +369,7 @@ describe.each(Object.keys(DOSSIERS))("widget « Ce qui doit être en place », d
 
   it("aucune ligne individuelle, quelle que soit la variante du registre", async () => {
     const d = await DOSSIERS[nom]();
-    const libelles = [...d.familles.flatMap((f) => f.blocs.flatMap((b) => b.lignes)), ...d.faits]
+    const libelles = [...d.familles.flatMap((f) => f.blocs.flatMap((b) => b.lignes)), ...d.faits, ...d.parLesRisques]
       .map((l) => l.obligation.libelle);
     expect(libelles.length).toBeGreaterThan(d.familles.length);
     const variantes = REGISTRY["etats-permanents"].variants;
@@ -374,8 +377,10 @@ describe.each(Object.keys(DOSSIERS))("widget « Ce qui doit être en place », d
     for (const v of variantes) {
       const { container } = await rendreWidget(d, undefined, v.id);
       expect(container.querySelectorAll("[data-obligation]"), v.id).toHaveLength(0);
-      // Une entrée par famille, rien d'autre dans la liste.
-      expect(container.querySelectorAll("li"), v.id).toHaveLength(d.familles.length);
+      // Une entrée par famille, plus celle des lignes liées aux risques quand
+      // il y en a (2026-10-21) — rien d'autre dans la liste.
+      const risques = resumeDuWidget(d).risques.lignes > 0 ? 1 : 0;
+      expect(container.querySelectorAll("li"), v.id).toHaveLength(d.familles.length + risques);
       for (const l of libelles) expect(container.textContent, `${v.id} : ${l}`).not.toContain(l);
       cleanup();
     }
@@ -386,6 +391,7 @@ describe("widget sans état, ou sans réponse", () => {
   const vide: EtatsPermanentsDuDossier = {
     familles: [],
     faits: [],
+    parLesRisques: [],
     enPlace: 0,
     total: 0,
     parLesTitres: { total: 0, enPlace: 0 },

@@ -35,6 +35,7 @@ import {
   estVerificationArchivee,
 } from "@/lib/dates/retard";
 import { obligationParId } from "@/lib/referentiels/conformite";
+import { cheminDeDeclaration } from "@/lib/etats-permanents/par-les-risques";
 import type { Obligation } from "@/lib/referentiels/conformite/types";
 import {
   determineObligationsApplicables,
@@ -216,7 +217,7 @@ export function lignesAFaire(
               : `${LIBELLE_SANS_ECHEANCE} — à caler avec votre prestataire`,
         href:
           etat === "sansRendezVous" && menesALEcranEnPlace(v.obligationId)
-            ? `${base}/etats-permanents`
+            ? `${base}${cheminDeDeclaration(obligationParId(v.obligationId)!)}`
             : `${base}/verifications/${v.id}`,
       });
     }

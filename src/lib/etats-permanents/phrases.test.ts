@@ -4,7 +4,6 @@ import { basename, join } from "node:path";
 import {
   phraseCompteur,
   phraseFaitsDates,
-  phraseRestantes,
 } from "./phrases";
 
 /**
@@ -25,8 +24,6 @@ import {
 function toutesLesPhrases(): { cas: string; texte: string }[] {
   const out: { cas: string; texte: string }[] = [];
   for (const n of [0, 1, 2, 3, 12, 19]) {
-    const r = phraseRestantes(n);
-    if (r) out.push({ cas: `restantes(${n})`, texte: r });
     out.push({ cas: `compteur(0,${n})`, texte: phraseCompteur(0, n) });
     out.push({ cas: `compteur(${n},${n})`, texte: phraseCompteur(n, n) });
     if (n > 0) {
@@ -53,13 +50,6 @@ describe("les phrases assemblées", () => {
     // Ce qui l'est, c'est l'égalité : quelqu'un écrit ici la phrase telle
     // qu'elle doit se lire, et toute jonction manquée fait diverger la chaîne.
     // C'est plus long à écrire et ça ne se trompe pas.
-    expect(phraseRestantes(1)).toBe(
-      "Une ligne reste à passer en revue. Une ligne non déclarée n'est pas un manquement constaté : c'est une question à laquelle vous n'avez pas encore répondu.",
-    );
-    expect(phraseRestantes(12)).toBe(
-      "12 lignes restent à passer en revue. Une ligne non déclarée n'est pas un manquement constaté : c'est une question à laquelle vous n'avez pas encore répondu.",
-    );
-
     expect(phraseFaitsDates(1, 0)).toBe(
       "Le texte fait revenir cette obligation, sans dire à quel rythme. Elle se date donc — « fait le » — au lieu de se déclarer en place, et elle n'entre pas dans le compte de l'en-tête, qui ne parle que d'états. Elle ne porte pas encore de date.",
     );
@@ -92,10 +82,6 @@ describe("les phrases assemblées", () => {
   });
 
   it("s'accordent, et le singulier ne dit pas le pluriel", () => {
-    expect(phraseRestantes(1)).toContain("Une ligne reste");
-    expect(phraseRestantes(2)).toContain("2 lignes restent");
-    expect(phraseRestantes(0)).toBeNull();
-
     const une = phraseFaitsDates(1, 0)!;
     expect(une).toContain("cette obligation");
     expect(une).toContain("Elle se date");
@@ -357,14 +343,5 @@ describe("ce que l'employeur n'a pas déclaré ne se dit pas « par vous » (rev
 
   it("contre-épreuve : sans elle, le compteur d'avant", () => {
     expect(phraseCompteur(5, 5)).toBe("tous déclarés en place par vous");
-  });
-
-  it("restantes : une ligne établie d'après les titres n'est pas « une question sans réponse »", () => {
-    const seule = phraseRestantes(1, 1);
-    expect(seule).toContain("Une ligne établie d'après les titres déclarés n'est pas en place");
-    expect(seule).not.toContain("question à laquelle vous n'avez pas encore répondu");
-    const deux = phraseRestantes(3, 1);
-    expect(deux).toMatch(/^2 lignes restent à passer en revue\./);
-    expect(deux).toContain("Une ligne établie d'après les titres déclarés");
   });
 });

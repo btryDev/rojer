@@ -27,40 +27,12 @@
  * en a une autre.
  */
 
-/**
- * Ce qu'il reste à passer en revue, ou rien.
- *
- * `parLesTitres` : la part des restantes établie d'après les titres déclarés
- * (2026-10-16). Elle n'est pas « une question à laquelle vous n'avez pas
- * répondu » — aucun titre n'est déclaré, ou leurs échéances sont dépassées —,
- * et se dit à part.
+/*
+ * ~~`phraseRestantes`~~ (retirée le 2026-10-21, revue de code : plus aucun
+ * appelant depuis le 2026-10-20). Sa mise en garde — « une ligne non déclarée
+ * n'est pas un manquement constaté » — est dite dans l'aide de l'en-tête de
+ * l'écran et dans le dossier de conformité.
  */
-export function phraseRestantes(restantes: number, parLesTitres = 0): string | null {
-  const titres =
-    parLesTitres <= 0
-      ? null
-      : parLesTitres === 1
-        ? "Une ligne établie d'après les titres déclarés n'est pas en place : aucun titre n'y est déclaré, ou leurs échéances sont dépassées — la ligne dit lequel."
-        : `${parLesTitres} lignes établies d'après les titres déclarés ne sont pas en place : aucun titre n'y est déclaré, ou leurs échéances sont dépassées — chaque ligne dit lequel.`;
-  const declarees = phraseRestantesDeclarees(restantes - Math.max(parLesTitres, 0));
-  if (declarees && titres) return `${declarees} ${titres}`;
-  return declarees ?? titres;
-}
-
-function phraseRestantesDeclarees(restantes: number): string | null {
-  if (restantes <= 0) return null;
-  const tete =
-    restantes === 1
-      ? "Une ligne reste à passer en revue."
-      : `${restantes} lignes restent à passer en revue.`;
-  // « Non déclarée », et non « non cochée » : le contrôle de cette page est un
-  // bouton « Déclarer en place », pas une case. Le vocabulaire de la case était
-  // celui d'une version antérieure ; `LigneEtat` explique pourquoi le bouton
-  // l'a remplacée — une case suggère un formulaire qu'on valide, le geste ici
-  // est immédiat et réversible. Le mot resté en place décrivait un contrôle qui
-  // n'existe plus à l'écran.
-  return `${tete} Une ligne non déclarée n'est pas un manquement constaté : c'est une question à laquelle vous n'avez pas encore répondu.`;
-}
 
 /**
  * Ce que le second verbe recouvre, et pourquoi il ne compte pas.
@@ -206,3 +178,45 @@ export function libelleRetour(): string {
  * les lignes de l'écran. Il les résume désormais par famille (`widget.ts`) ;
  * elle n'avait pas d'autre appelant.
  */
+
+/** La première réponse de la fiche (2026-10-20) : affirmer que c'est en place, ou fait. */
+export function libelleReponseOui(mode: "etat" | "fait"): string {
+  if (mode === "etat") return "Oui, c'est en place";
+  return "Oui, c'est fait";
+}
+
+/** La troisième réponse : au premier appui elle explique, au second elle passe. */
+export function libelleReponseNeSaisPas(dejaExplique: boolean): string {
+  if (dejaExplique) return "Je verrai plus tard";
+  return "Je ne sais pas";
+}
+
+/** La phrase sous les réponses : qui affirme, ou comment revenir dessus. */
+export function phraseSousLesReponses(dejaDeclaree: boolean): string {
+  if (dejaDeclaree) return "Vous avez déjà répondu : « Pas encore » retire la déclaration.";
+  return "Votre réponse est une déclaration, datée, reprise dans votre dossier de conformité. Rojer ne la vérifie pas.";
+}
+
+/**
+ * Sous le compteur de « Ce qui doit être en place » : les lignes déclarées
+ * sous une question d'activité, dans Équipe › « Évaluer les risques de vos
+ * salariés » (`par-les-risques.ts`, 2026-10-21) — TOUTES, celles « à dater »
+ * comprises. Suivie du lien vers cette page. `null` quand il n'y en a aucune.
+ */
+export function phraseParLesRisques(n: number): string | null {
+  if (n <= 0) return null;
+  return n === 1
+    ? "Une ligne liée aux risques de vos salariés se déclare sous la question qui la rend due :"
+    : `${n} lignes liées aux risques de vos salariés se déclarent sous la question qui les rend dues :`;
+}
+
+/**
+ * Le corps de l'état vide de « Ce qui doit être en place ». Quand les seules
+ * lignes du dossier se déclarent sous une question d'activité, dire « aucune »
+ * serait faux : la phrase renvoie à la page des risques (revue du 2026-10-21).
+ */
+export function phraseRienEnPlace(seulementParLesRisques: boolean): string {
+  return seulementParLesRisques
+    ? "Les seules lignes de votre dossier sont liées aux risques de vos salariés : elles se déclarent sur « Évaluer les risques de vos salariés »."
+    : "Aucune des obligations que votre dossier déclenche n'est un état à constituer ou un fait à dater sans rythme écrit. Les autres sont au calendrier quand elles ont une date, sur « Quand ça arrive » quand elles naissent d'un événement, et sur la fiche de chaque personne quand elles la visent.";
+}

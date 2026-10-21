@@ -67,7 +67,7 @@ export function WidgetEtatsPermanents({
         <p className="m-0 mt-[18px] text-[13px] leading-[1.5] text-[color:var(--board-slate-soft)]">
           …
         </p>
-      ) : resume.familles.length === 0 ? (
+      ) : resume.familles.length === 0 && resume.risques.lignes === 0 ? (
         // ~~« elles ont toutes une date, et figurent au calendrier »~~
         // (contre-lecture du 2026-09-27) : faux pour ce qui naît d'un
         // événement (« Quand ça arrive ») et pour ce que porte un salarié
@@ -106,6 +106,27 @@ export function WidgetEtatsPermanents({
                 </span>
               </li>
             ))}
+            {/* Comptées dans l'en-tête, déclarées sous leur question
+                (`par-les-risques.ts`, 2026-10-21). `data-risques` et non
+                `data-famille` : ce n'est pas une section de l'écran. */}
+            {resume.risques.lignes > 0 && (
+              <li
+                data-risques
+                className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 border-t border-[color:var(--board-slate-line)] py-3 first:border-t-0"
+              >
+                <Link
+                  href={`/etablissements/${etablissementId}/equipe/risques`}
+                  className={CLASSES_LIEN_FAMILLE}
+                >
+                  Liées aux risques de vos salariés
+                </Link>
+                {resume.risques.total > 0 && (
+                  <span className="text-[12.5px] tabular-nums text-[color:var(--board-slate-mid)]">
+                    {resume.risques.enPlace} sur {resume.risques.total}
+                  </span>
+                )}
+              </li>
+            )}
           </ul>
         </>
       )}

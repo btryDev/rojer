@@ -72,6 +72,7 @@ function dossier(total: number, enPlace: number): EtatsPermanentsDuDossier {
       },
     ],
     faits: [],
+    parLesRisques: [],
     enPlace,
     total,
     parLesTitres: { total: 0, enPlace: 0 },

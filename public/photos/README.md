@@ -11,6 +11,7 @@ texte alternatif) pour qu'il entre dans la page.
 | --------------------- | ---------------------- | ------------ |
 | `hero-terrain.jpg`    | Hero, tuile centrale   | 4/5 vertical |
 | `etapes-atelier.jpg`  | « Trois étapes », gauche | 4/5 vertical |
+| `hero-en-place.jpg`   | Hero de « Ce qui doit être en place » (app) | 3/2 horizontal, recadré en `object-cover` |
 
 Origine de `hero-terrain.jpg` : [Pexels 8986129](https://www.pexels.com/photo/a-mechanic-using-a-cellphone-at-an-auto-repair-shop-8986129/),
 licence Pexels (usage commercial libre, sans attribution obligatoire).
@@ -46,3 +47,10 @@ Aucun n'est obligatoire : la page tient debout sans eux.
   studio — la charte est claire et calme, les photos doivent l'être aussi.
 - **Texte alternatif** : décrire ce qu'on voit, pas ce qu'on vend. « Deux
   cuisiniers au passe », pas « la sérénité au travail ».
+
+
+Origine de `hero-en-place.jpg` : [Unsplash Oyf1-w0lxbE](https://unsplash.com/photos/Oyf1-w0lxbE),
+photo de Toa Heftiba, licence Unsplash (usage commercial libre, sans
+attribution obligatoire), vérifiée sur la page de la photo le 2026-10-20.
+Référencée par la constante `PHOTO_HERO` en tête de
+`src/app/etablissements/[id]/etats-permanents/page.tsx`. 1600 px de large, 242 Ko.

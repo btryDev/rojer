@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { QuestionTransverseRow } from "@/components/duerps/QuestionTransverseRow";
+import { FaitActiviteRow } from "@/components/salaries/FaitActiviteRow";
+import { FAITS_ACTIVITE, intituleDuFait } from "@/lib/etablissements/faits-activite";
 import { WizardSteps } from "@/components/duerps/WizardSteps";
 import { activitesDuSecteur } from "@/lib/activites/reponses";
 import { construireEtapes } from "@/lib/duerps/etapes";
@@ -89,6 +91,25 @@ export default async function TransversesPage({
             />
           );
         })}
+        {/* LES FAITS D'ACTIVITÉ SANS QUESTION TRANSVERSE (2026-10-21, demande
+            de la propriétaire : les cinq questions d'« Évaluer les risques de
+            vos salariés » doivent toutes se retrouver ici). Aujourd'hui, la
+            seule est l'exposition aux CMR : elle n'a pas de risque transverse
+            associé au référentiel, donc aucun risque n'est ajouté au document
+            — c'est la même réponse, sur la même colonne d'établissement
+            (ADR-041), posée avec le même geste qu'Équipe. Elle n'entre pas
+            dans le calcul de l'étape (`etatEtapeTransverses`), qui ne lit que
+            les questions du référentiel. */}
+        {FAITS_ACTIVITE.filter((f) => !f.questionTransverse).map((f) => (
+          <FaitActiviteRow
+            key={f.champ}
+            etablissementId={duerp.etablissementId}
+            champ={f.champ}
+            intitule={intituleDuFait(f)}
+            pourquoi={f.pourquoi}
+            valeur={duerp.etablissement[f.champ]}
+          />
+        ))}
       </ul>
 
       {uniteTransverse && uniteTransverse.risques.length > 0 && (

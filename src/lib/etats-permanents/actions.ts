@@ -165,6 +165,9 @@ export async function declarerEnPlace(
   });
 
   revalidatePath(`/etablissements/${etablissementId}/etats-permanents`);
+  // Les lignes nées d'un fait d'activité se déclarent sous leur question
+  // (`par-les-risques.ts`, 2026-10-21).
+  revalidatePath(`/etablissements/${etablissementId}/equipe/risques`);
   return { status: "success" };
 }
 
@@ -183,5 +186,8 @@ export async function retirerDeclaration(
   });
 
   revalidatePath(`/etablissements/${etablissementId}/etats-permanents`);
+  // Les lignes nées d'un fait d'activité se déclarent sous leur question
+  // (`par-les-risques.ts`, 2026-10-21).
+  revalidatePath(`/etablissements/${etablissementId}/equipe/risques`);
   return { status: "success" };
 }
