@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from "vitest";
-import { cleanup, render } from "@testing-library/react";
+import { cleanup, fireEvent, render } from "@testing-library/react";
 import { PastilleFondement } from "./PastilleFondement";
 import { fondementDe } from "@/lib/etats-permanents/fondement";
 import { obligationParId, type Obligation } from "@/lib/referentiels/conformite";
@@ -9,11 +9,17 @@ import { obligationParId, type Obligation } from "@/lib/referentiels/conformite"
 // s'affiche pas sur « Ce qui doit être en place ». Le modèle de signalisation
 // de l'arrêté du 21 juillet 2025 et son format se lisent donc dans la pastille
 // de R. 3512-7, sur la ligne elle-même.
+// 2026-10-20 (allègement des écrans) : la pastille est compacte — un livre
+// « Texte » ; le modèle et son format se lisent à son ouverture, en tête du
+// panneau. Un clic, et non plus sur la ligne.
 
 afterEach(cleanup);
 
-const rendu = (o = obligationParId("signalisation-interdiction-fumer-csp")!) =>
-  render(<PastilleFondement fondement={fondementDe(o)!} />).container.textContent ?? "";
+const rendu = (o = obligationParId("signalisation-interdiction-fumer-csp")!) => {
+  const { container } = render(<PastilleFondement fondement={fondementDe(o)!} />);
+  for (const b of container.querySelectorAll("button")) fireEvent.click(b);
+  return container.textContent ?? "";
+};
 
 describe("signalisation de l'interdiction de fumer : le modèle se voit sur la ligne", () => {
   it("la pastille nomme l'arrêté du 21 juillet 2025 et le format A5", () => {

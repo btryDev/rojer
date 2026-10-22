@@ -13,13 +13,26 @@
 // qu'une carte, sans sur-titre — il ne ferait que répéter le titre posé juste
 // au-dessus (interdit 12).
 
+import Image from "next/image";
 import type { ReactNode } from "react";
 import type {
   FamilleEtatsPermanents,
   LigneEtatPermanent,
 } from "@/lib/etats-permanents/queries";
 import { ancreFamille } from "@/lib/etats-permanents/ancre";
+import { BandeauRepliable } from "./BandeauRepliable";
 import { phraseCompteur } from "@/lib/etats-permanents/phrases";
+import {
+  FOND_TEINTE,
+  illustrationDuBloc,
+  teinteDe,
+} from "@/lib/etats-permanents/illustrations";
+import {
+  DESSIN_GESTE,
+  LIBELLE_GESTE,
+  SOUS_TITRE_GESTE,
+  lignesParGeste,
+} from "@/lib/etats-permanents/gestes";
 
 /**
  * Le compte de l'en-tête de PAGE : le chiffre, et sous lui la SEULE phrase de
@@ -56,135 +69,211 @@ export function CompteurDeLaPage({
   );
 }
 
-/**
- * Le lien vers une famille, au sommaire de l'écran et dans le widget du
- * tableau de bord (2026-10-17) : la même porte a la même allure aux deux
- * endroits.
- */
+/** Le lien vers une famille, dans le widget du tableau de bord (2026-10-17). */
 export const CLASSES_LIEN_FAMILLE =
   "text-[13.5px] font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4";
 
-/**
- * Le sommaire : les familles PRÉSENTES sur ce dossier, et elles seules — une
- * ancre vers une famille absente serait un lien mort (interdit 19). Les ancres
- * et les `id` sortent de la même fonction. Le repli « Autres obligations »
- * (`familles.ts`) y entre comme une famille, en dernier, quand il porte une
- * ligne.
- *
- * Aucun défilement animé : le saut est celui du navigateur. En ajouter un
- * obligerait à le couper sous `prefers-reduced-motion` (interdit 22), pour
- * un gain nul sur une page qu'on parcourt de haut en bas.
+/*
+ * ~~`SommaireParUsage`~~ (retiré le 2026-10-21, revue de code) : le sommaire
+ * des familles n'était plus rendu depuis le hero du 2026-10-20 — les familles
+ * repliées tiennent sur un écran. Le widget du tableau de bord vise toujours
+ * les ancres des sections (`ancreFamille`).
  */
-export function SommaireParUsage({
-  familles,
+
+/** Les classes d'une section de famille : cible d'ancre, anneau de focus de la charte. */
+const CLASSES_SECTION =
+  "flex scroll-mt-8 flex-col gap-4 rounded-[30px] focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-[color:var(--board-blue-strong)]";
+
+const EYEBROW =
+  "board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]";
+
+/** Une ligne est-elle en place ? La règle du compteur (`queries.ts`). */
+function estEnPlace(l: LigneEtatPermanent): boolean {
+  return l.parLesTitres ? l.parLesTitres.enPlace : l.declareLe !== null;
+}
+
+/**
+ * Une famille hors frise (2026-10-20) : un bandeau repliable pleine largeur —
+ * le dessin, le titre et le compte toujours visibles, les lignes dépliées au
+ * clic sur deux colonnes (`BandeauRepliable`). ~~Une colonne par famille~~,
+ * puis ~~un panneau à gauche et les lignes à droite~~ : des colonnes de
+ * hauteurs inégales laissaient des trous (contrôles visuels de la propriétaire).
+ *
+ * Le titre (h2) est dans le bandeau, hors de toute carte ; chaque bloc est une
+ * carte qui porte au plus son sur-titre (charte, interdits 11 et 12).
+ */
+function Bandeau({
+  id,
+  titre,
+  sousTitre,
+  compte,
+  fond,
+  dessin,
+  blocs,
+  rendreLigne,
+  focusable,
 }: {
-  familles: FamilleEtatsPermanents[];
+  id: string;
+  titre: string;
+  sousTitre?: string;
+  compte: string;
+  fond: string;
+  dessin: string | null;
+  blocs: { cle: string; libelle: string | null; lignes: LigneEtatPermanent[] }[];
+  rendreLigne: (l: LigneEtatPermanent) => ReactNode;
+  focusable: boolean;
 }) {
-  if (familles.length === 0) return null;
   return (
-    <nav aria-label="Sommaire">
-      <ol className="m-0 flex list-none flex-wrap gap-x-7 gap-y-2 p-0">
-        {familles.map((f) => (
-          // `flex-wrap` (2026-10-17, revue de c6) : à 375 px, un libellé
-          // long et son compte se serraient en deux colonnes étroites ; le
-          // compte passe désormais sous le libellé quand la place manque.
-          <li
-            key={f.groupe}
-            className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5"
-          >
-            <a href={`#${ancreFamille(f.groupe)}`} className={CLASSES_LIEN_FAMILLE}>
-              {f.libelle}
-            </a>
-            {/* ~~« x sur n », nu~~ (2026-10-17, revue indépendante) : le
-                compte dit qui affirme, comme celui de la famille (ADR-027).
-                ~~`phraseSommaire`~~ (2026-10-17, revue de c6) : « x sur n »
-                de nouveau, et cette fois parce que l'en-tête de page dit qui
-                affirme pour tout l'écran — une phrase, une fois (§ 10). */}
-            <span className="text-[12.5px] tabular-nums text-[color:var(--board-slate-mid)]">
-              {f.enPlace} sur {f.total}
-            </span>
-          </li>
-        ))}
-      </ol>
-    </nav>
+    <BandeauRepliable
+      id={id}
+      titre={titre}
+      compte={[sousTitre, compte].filter(Boolean).join(" · ")}
+      fond={fond}
+      dessin={dessin}
+      focusable={focusable}
+      classeSection={CLASSES_SECTION}
+    >
+      {blocs.map((b) => (
+        <div key={b.cle} className="carte-board px-5 pb-5 pt-4">
+          {b.libelle && <h3 className={EYEBROW + " mb-3"}>{b.libelle}</h3>}
+          <ul className="m-0 grid list-none gap-1.5 p-0 sm:grid-cols-2">
+            {b.lignes.map((l) => rendreLigne(l))}
+          </ul>
+        </div>
+      ))}
+    </BandeauRepliable>
   );
 }
 
+/**
+ * Les familles de l'écran, par famille (2026-10-20, refonte illustrée).
+ *
+ * INCENDIE ET SECOURS se lit comme une frise — une seule carte, une étape par
+ * sous-catégorie dans l'ordre où elles servent (prévenir, alerter, éteindre,
+ * évacuer, secourir), chaque étape coiffée de son rond illustré ; un trait
+ * relie les ronds, plein quand toutes les lignes de l'étape sont en place,
+ * pointillé sinon. Les étapes sont des h3 de même rang dans la carte : une
+ * frise, pas deux niveaux de titrage. Les autres familles sont des bandeaux.
+ *
+ * Ce qui ne change pas : une section par famille, dans l'ordre que la lecture
+ * rend, son `id` d'ancre et `tabIndex={-1}`, son titre hors des cartes.
+ */
 export function SectionsParUsage({
   familles,
   rendreLigne,
 }: {
   familles: FamilleEtatsPermanents[];
-  /** La ligne telle que la page la rend (`LigneEtat`, ses liens, son dossier). */
+  /** La ligne telle que la page la rend (sa vignette). */
   rendreLigne: (l: LigneEtatPermanent) => ReactNode;
 }) {
   return (
     <>
-      {familles.map((f) => (
-        <section
-          key={f.groupe}
-          id={ancreFamille(f.groupe)}
-          aria-labelledby={`${ancreFamille(f.groupe)}-titre`}
-          // `tabIndex={-1}` (2026-10-17, revue de c6) : la section est la
-          // cible d'une ancre du sommaire. Sans lui, le saut déplace la vue
-          // mais pas le focus, et la touche Tab repart du sommaire — un
-          // lecteur au clavier ou d'écran ne suit pas le lien qu'il a suivi.
-          tabIndex={-1}
-          // L'ANNEAU DE FOCUS (2026-10-17, contrôle visuel de c6). Celui du
-          // navigateur collait au titre et aux cartes arrondies. Il prend
-          // celui de la charte — 2 px en `--board-blue-strong`, le contour de
-          // focus du board (`.champ-board`, `LegalBadge`) —, décollé de 8 px,
-          // que la gouttière (32 px au moins) et l'écart entre sections
-          // (`gap-7`) absorbent, et le rayon des cartes qu'il entoure, 30 :
-          // à 8 px de distance, le navigateur arrondit l'anneau à 38,
-          // concentrique aux cartes.
-          //
-          // `focus-visible`, pas `focus`, relevé dans Chrome (CDP, 2026-10-17) :
-          // après un saut d'ancre au CLAVIER, la section a le focus et
-          // `:focus-visible` ; après un clic de souris sur l'ancre, elle a le
-          // focus sans `:focus-visible` — et un simple clic dans le texte de
-          // la section lui donne aussi `:focus`. Avec `focus:`, l'anneau
-          // s'allumerait à chaque clic dans une section ; avec `focus-visible`,
-          // il est là pour qui suit le lien au clavier, toujours.
-          className="flex scroll-mt-8 flex-col gap-4 rounded-[30px] focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-[color:var(--board-blue-strong)]"
-        >
-          <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-            <h2
-              id={`${ancreFamille(f.groupe)}-titre`}
-              className="board-titre m-0 text-[22px]"
+      {familles.map((f) => {
+        const compte = `${f.enPlace} sur ${f.total}`;
+        if (f.groupe === "incendie_secours") {
+          return (
+            <section
+              key={f.groupe}
+              id={ancreFamille(f.groupe)}
+              aria-labelledby={`${ancreFamille(f.groupe)}-titre`}
+              tabIndex={-1}
+              className={CLASSES_SECTION}
             >
-              {f.libelle}
-            </h2>
-            {/* ~~Le compte de la famille dit d'où vient chaque « en place »,
-                comme celui de l'en-tête et avec la même phrase~~ (2026-10-17,
-                revue de c6 : la phrase se lisait autant de fois qu'il y a de
-                familles). « x sur n » seul : l'en-tête de page dit qui
-                affirme. Jamais « conformes », jamais un pourcentage. */}
-            <p className="m-0 text-[12.5px] tabular-nums text-[color:var(--board-slate-mid)]">
-              {f.enPlace} sur {f.total}
-            </p>
-          </div>
+              <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+                <h2 id={`${ancreFamille(f.groupe)}-titre`} className="board-titre m-0 text-[22px]">
+                  {f.libelle}
+                </h2>
+                <p className="m-0 text-[12.5px] tabular-nums text-[color:var(--board-slate-mid)]">{compte}</p>
+              </div>
+              <div className="carte-board px-6 pb-6 pt-7 sm:px-7">
+                <ol
+                  className="m-0 grid list-none gap-6 p-0 md:gap-0 md:[grid-template-columns:repeat(var(--etapes),minmax(0,1fr))]"
+                  style={{ ["--etapes" as string]: String(f.blocs.length) }}
+                >
+                  {f.blocs.map((b, k) => {
+                    const plein = b.lignes.length > 0 && b.lignes.every(estEnPlace);
+                    return (
+                      <li key={b.sous ?? f.groupe} className="relative flex flex-col items-center gap-2.5 md:px-1.5">
+                        {k < f.blocs.length - 1 && (
+                          <span
+                            aria-hidden
+                            className="absolute top-[46px] hidden h-0.5 md:block"
+                            style={{
+                              left: "calc(50% + 46px)",
+                              right: "calc(-50% + 46px)",
+                              background: plein
+                                ? "var(--board-slate-mid)"
+                                : "repeating-linear-gradient(90deg, var(--board-slate) 0 6px, transparent 6px 11px)",
+                            }}
+                          />
+                        )}
+                        <span
+                          className="relative z-[1] grid size-[92px] place-items-center overflow-hidden rounded-full"
+                          style={{ background: FOND_TEINTE[teinteDe(f.groupe, b.sous)] }}
+                        >
+                          <Image src={illustrationDuBloc(f.groupe, b.sous)} alt="" width={84} height={84} />
+                        </span>
+                        {b.libelle && <h3 className={EYEBROW}>{b.libelle}</h3>}
+                        <ul className="m-0 flex w-full list-none flex-col gap-1.5 p-0">
+                          {b.lignes.map((l) => rendreLigne(l))}
+                        </ul>
+                      </li>
+                    );
+                  })}
+                </ol>
+              </div>
+            </section>
+          );
+        }
+        return (
+          <Bandeau
+            key={f.groupe}
+            id={ancreFamille(f.groupe)}
+            titre={f.libelle}
+            compte={compte}
+            fond={FOND_TEINTE[teinteDe(f.groupe, null)]}
+            dessin={illustrationDuBloc(f.groupe, null)}
+            blocs={f.blocs.map((b) => ({ cle: b.sous ?? f.groupe, libelle: b.libelle, lignes: b.lignes }))}
+            rendreLigne={rendreLigne}
+            focusable
+          />
+        );
+      })}
+    </>
+  );
+}
 
-          {f.blocs.map((b) => (
-            <div
-              key={b.sous ?? f.groupe}
-              className="carte-board px-7 py-6 sm:px-8"
-            >
-              {/* Barème « sur-titre de section » (§ 3) : la sous-catégorie
-                  coiffe une carte, pas une ligne. Absent quand le bloc est la
-                  famille entière : le titre est déjà au-dessus. */}
-              {b.libelle && (
-                <h3 className="board-eyebrow m-0 mb-3 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-                  {b.libelle}
-                </h3>
-              )}
-              <ul className="m-0 list-none p-0">
-                {b.lignes.map((l) => rendreLigne(l))}
-              </ul>
-            </div>
-          ))}
-        </section>
-      ))}
+/**
+ * La seconde découpe (2026-10-20, à trancher) : les mêmes lignes, rangées par
+ * geste (`gestes.ts`), en bandeaux. Les lignes « fait le » n'y entrent pas :
+ * elles gardent leur section. Le compte suit la règle de l'en-tête.
+ */
+export function SectionsParGeste({
+  familles,
+  rendreLigne,
+}: {
+  familles: FamilleEtatsPermanents[];
+  rendreLigne: (l: LigneEtatPermanent) => ReactNode;
+}) {
+  return (
+    <>
+      {lignesParGeste(familles).map(({ geste, lignes }) => {
+        const comptees = lignes.filter((l) => l.compteDansLEnTete);
+        return (
+          <Bandeau
+            key={geste}
+            id={`geste-${geste}`}
+            titre={LIBELLE_GESTE[geste]}
+            sousTitre={SOUS_TITRE_GESTE[geste]}
+            compte={`${comptees.filter(estEnPlace).length} sur ${comptees.length}`}
+            fond="var(--board-slate-pale)"
+            dessin={DESSIN_GESTE[geste]}
+            blocs={[{ cle: geste, libelle: null, lignes }]}
+            rendreLigne={rendreLigne}
+            focusable={false}
+          />
+        );
+      })}
     </>
   );
 }

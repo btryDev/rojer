@@ -26,6 +26,7 @@ import { ancreFamille } from "./ancre";
 import type { GroupeAffichage } from "./familles";
 import { compteDeLaPage } from "./compte";
 import type { EtatsPermanentsDuDossier } from "./queries";
+import { compteParLesRisques } from "./par-les-risques";
 
 export type FamilleWidgetEtats = {
   groupe: GroupeAffichage;
@@ -41,6 +42,12 @@ export type ResumeWidgetEtats = ReturnType<typeof compteDeLaPage> & {
   familles: FamilleWidgetEtats[];
   /** Le nombre de lignes « fait le » (« Ce qui revient »), hors compte. */
   faits: number;
+  /**
+   * Les lignes comptées dans l'en-tête mais déclarées sous une question
+   * d'activité (`par-les-risques.ts`, 2026-10-21). Les familles plus ce
+   * compte font le compte de l'en-tête.
+   */
+  risques: ReturnType<typeof compteParLesRisques>;
 };
 
 export function resumeDuWidget(d: EtatsPermanentsDuDossier): ResumeWidgetEtats {
@@ -54,6 +61,7 @@ export function resumeDuWidget(d: EtatsPermanentsDuDossier): ResumeWidgetEtats {
       ancre: ancreFamille(f.groupe),
     })),
     faits: d.faits.length,
+    risques: compteParLesRisques(d.parLesRisques),
   };
 }
 

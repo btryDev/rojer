@@ -1,4 +1,5 @@
 import { FilAriane } from "@/components/navigation/FilAriane";
+import { AideEcran } from "@/components/ui-kit/AideEcran";
 import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
@@ -6,18 +7,32 @@ import {
   listerEtatsPermanents,
   type LigneEtatPermanent,
 } from "@/lib/etats-permanents/queries";
-import { LigneEtat } from "@/components/etats-permanents/LigneEtat";
+import Image from "next/image";
+import Link from "next/link";
+import { LigneCompacte } from "@/components/etats-permanents/LigneCompacte";
+import { RevueEnPlace } from "@/components/etats-permanents/RevueEnPlace";
+import { lignesParGeste } from "@/lib/etats-permanents/gestes";
+import { ancreEtatPermanent } from "@/lib/etats-permanents/ancre";
+import {
+  dessinDe,
+  etatCourtDe,
+  versFiche,
+} from "@/lib/etats-permanents/vers-fiche";
 import {
   CompteurDeLaPage,
+  SectionsParGeste,
   SectionsParUsage,
-  SommaireParUsage,
 } from "@/components/etats-permanents/SectionsParUsage";
 import { compteDeLaPage } from "@/lib/etats-permanents/compte";
 import { FocusSurAncre } from "@/components/etats-permanents/FocusSurAncre";
 import {
   phraseFaitsDates,
-  phraseRestantes,
+  phraseParLesRisques,
+  phraseRienEnPlace,
 } from "@/lib/etats-permanents/phrases";
+
+/** La photo du hero. Seule référence au fichier (`public/photos/README.md`). */
+const PHOTO_HERO = { src: "/photos/hero-en-place.jpg" } as const;
 
 export const metadata = {
   title: "Ce qui doit être en place — Rojer",
@@ -85,10 +100,16 @@ export const metadata = {
  */
 export default async function EtatsPermanentsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ decoupe?: string }>;
 }) {
   const { id } = await params;
+  // DEUX DÉCOUPES EN ESSAI (2026-10-20) : par famille (le référentiel) ou par
+  // geste (`gestes.ts`). Dans l'adresse plutôt qu'en état local, pour que
+  // chaque version ait son lien et se montre telle quelle à l'équipe.
+  const parGeste = (await searchParams)?.decoupe === "geste";
   const { etablissement } = await requireEtablissement(id);
   const equipements = await listerEquipementsDeLEtablissement(id);
 
@@ -104,82 +125,108 @@ export default async function EtatsPermanentsPage({
       > | null,
     })),
   );
-  const { familles, faits, enPlace, total, parLesTitres, faitsDates, faitsDatesRenseignes } =
-    dossier;
+  const { familles, faits, parLesRisques } = dossier;
 
-  const restantes = total - enPlace;
   // Une seule écriture de la ligne pour les deux sections : les états rangés
   // par usage et « ce qui revient ». Elle était recopiée, et deux copies des
   // mêmes props divergent à la première correction.
+  //
+  // Depuis le 2026-10-20 la ligne s'affiche en VIGNETTE (`LigneCompacte`) :
+  // dessin, libellé, état court. Au clic, la fiche (`RevueEnPlace`) reprend ce
+  // que `LigneEtat` disait et faisait — texte qui la fonde, « à confirmer »,
+  // déclaration révocable. `LigneEtat` n'est plus rendue par cet écran.
   const rendreLigne = (l: LigneEtatPermanent) => (
-    <LigneEtat
+    <LigneCompacte
       key={l.obligation.id}
-      etablissementId={id}
       obligationId={l.obligation.id}
+      ancre={ancreEtatPermanent(l.obligation.id)}
       libelle={l.obligation.libelle}
-      mode={l.mode}
-      pieceAttendue={l.pieceAttendue}
-      declareLe={l.declareLe ? l.declareLe.toISOString() : null}
-      parLesTitres={
-        l.parLesTitres
-          ? {
-              phrase: l.parLesTitres.phrase,
-              hrefEquipe: `/etablissements/${id}/equipe`,
-            }
-          : null
-      }
-      aConfirmer={
-        l.aConfirmer
-          ? {
-              phrase: l.aConfirmer,
-              entrepriseId: etablissement.entrepriseId,
-            }
-          : null
-      }
-      questionsSansReponse={
-        l.questionsSansReponse.length > 0
-          ? {
-              phrases: l.questionsSansReponse,
-              hrefFiche: `/etablissements/${id}/modifier`,
-            }
-          : null
-      }
-      fondement={l.fondement}
+      {...dessinDe(l)}
+      etat={etatCourtDe(l)}
+      aConfirmer={l.aConfirmer !== null || l.questionsSansReponse.length > 0}
     />
+  );
+  // La fiche (`RevueEnPlace`) reçoit les lignes dans l'ordre de la découpe
+  // affichée — Précédente et Suivante suivent ce que l'écran montre — puis
+  // celles de « ce qui revient ». La construction est partagée avec la page
+  // des risques (`vers-fiche.ts`).
+  const ordre = parGeste
+    ? lignesParGeste(familles).flatMap((g) => g.lignes)
+    : familles.flatMap((f) => f.blocs.flatMap((b) => b.lignes));
+  const lignesFiche = [...ordre, ...faits].map((l) =>
+    versFiche(l, { etablissementId: id, entrepriseId: etablissement.entrepriseId }),
   );
   // Les phrases qui s'accordent en nombre vivent dans `phrases.ts` et non dans
   // ce JSX. Une locution coupée par un ternaire s'y était cassée au rendu —
   // « Elles n'entrepas dans le compte » — et rien ne pouvait l'attraper tant
   // que la phrase n'existait nulle part en entier.
-  const texteRestantes = phraseRestantes(
-    restantes,
-    parLesTitres.total - parLesTitres.enPlace,
+  //
+  // Comptée sur les lignes AFFICHÉES : celles qui se déclarent sous une
+  // question d'activité (`parLesRisques`) n'ont rien à faire dans la phrase
+  // d'une section où elles ne sont pas.
+  const texteFaits = phraseFaitsDates(
+    faits.length,
+    faits.filter((l) => l.declareLe).length,
   );
-  const texteFaits = phraseFaitsDates(faitsDates, faitsDatesRenseignes);
+  // Comptées dans l'en-tête (le score, le widget et le document les portent),
+  // déclarées ailleurs : l'écran dit où, au lieu d'un compte qui ne tombe pas
+  // juste avec ce qu'on voit.
+  const texteRisques = phraseParLesRisques(parLesRisques.length);
 
   return (
+    <RevueEnPlace etablissementId={id} lignes={lignesFiche}>
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
-      <header className="border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] py-[22px]">
-        <div className="flex flex-wrap items-end justify-between gap-6">
-          <div className="min-w-0 flex-1">
+      {/* LE HERO (2026-10-20) : pleine largeur, le texte à gauche dans la
+          gouttière du board, la photo jusqu'au bord droit. Photo décorative —
+          ce qu'elle évoque est écrit à côté (`public/photos/README.md`). */}
+      <header className="grid border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] md:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+        <div className="flex min-w-0 flex-col justify-center gap-5 py-9 pl-[var(--board-gutter)] pr-[var(--board-gutter)] md:pr-10">
+          <div className="min-w-0">
             <FilAriane
               crumbs={[
                 { href: `/etablissements/${id}`, label: etablissement.raisonDisplay },
                 { label: LABEL_ITEM["etats-permanents"] },
               ]}
             />
-            <h1 className="board-titre m-0 text-[clamp(22px,2.2vw,27px)]">
+            <h1 className="board-titre m-0 text-[clamp(29px,3vw,39px)]">
               Ce qui doit être en place
             </h1>
-            <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+            <p className="m-0 mt-3 max-w-[62ch] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+              Ce qui doit exister chez vous en permanence. Touchez une ligne
+              pour ouvrir sa fiche et la déclarer.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-4">
+
+          <AideEcran titre="Comment lire cette page">
+            <p className="m-0">
               Des obligations sans date : elles ne se refont pas à échéance, il
               s&apos;agit d&apos;un état à mettre en place puis à maintenir. Une
               bonne partie est sans doute déjà vraie chez vous — de l&apos;eau au
-              robinet, des toilettes, une affiche au mur. Passez-les en revue :
-              ce que vous n&apos;aurez pas déclaré dira ce qu&apos;il vous reste
-              à faire.
+              robinet, des toilettes, une affiche au mur.
             </p>
-          </div>
+            <p className="m-0">
+              Passez-les en revue : ce que vous n&apos;aurez pas déclaré dira ce
+              qu&apos;il vous reste à faire. Une déclaration est la vôtre :
+              Rojer ne vérifie pas qu&apos;une chose est en place.
+            </p>
+            <p className="m-0">
+              Le livre « Texte » de chaque ligne ouvre l&apos;article qui la
+              fonde, avec le lien vers la source officielle.
+            </p>
+            <p className="m-0">
+              Rien n&apos;est relancé : la date de votre déclaration
+              s&apos;affiche, vous jugez vous-même si elle a vieilli. Dans le
+              dossier de conformité, une ligne que vous n&apos;avez pas déclarée
+              n&apos;est pas présentée comme un manquement.
+            </p>
+            <p className="m-0">
+              Cette page reflète ce que vous avez renseigné sur votre
+              établissement, vos équipements et vos salariés : une information
+              manquante ou inexacte change ce qui s&apos;y affiche.
+            </p>
+          </AideEcran>
 
           {/*
             Le compteur est MESURÉ, jamais écrit à la main : `listerEtatsPermanents`
@@ -196,7 +243,29 @@ export default async function EtatsPermanentsPage({
           {/* `compteDeLaPage` : la même lecture que le widget du tableau de
               bord, qui affiche ce compte au-dessus de ses familles. */}
           <CompteurDeLaPage {...compteDeLaPage(dossier)} />
+          </div>
+          {texteRisques && (
+            <p className="m-0 max-w-[62ch] text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+              {texteRisques}{" "}
+              <Link
+                href={`/etablissements/${id}/equipe/risques`}
+                className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
+              >
+                Évaluer les risques de vos salariés
+              </Link>
+            </p>
+          )}
         </div>
+        <figure className="relative m-0 hidden min-h-[300px] md:block">
+          <Image
+            src={PHOTO_HERO.src}
+            alt=""
+            fill
+            sizes="(min-width: 768px) 55vw, 100vw"
+            className="object-cover"
+            priority
+          />
+        </figure>
       </header>
 
       <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
@@ -209,19 +278,44 @@ export default async function EtatsPermanentsPage({
               <h2 className="board-titre m-0 text-[22px]">
                 Rien à mettre en place pour ce dossier
               </h2>
+              {/* Des lignes liées aux risques existent peut-être : elles se
+                  déclarent ailleurs, et la phrase de l'en-tête y mène. Dire
+                  alors « aucune » serait faux (revue du 2026-10-21). */}
               <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                Aucune des obligations que votre dossier déclenche n&apos;est un
-                état à constituer ou un fait à dater sans rythme écrit. Les
-                autres sont au calendrier quand elles ont une date, sur
-                « Quand ça arrive » quand elles naissent d&apos;un événement,
-                et sur la fiche de chaque personne quand elles la visent.
+                {phraseRienEnPlace(parLesRisques.length > 0)}
               </p>
             </div>
           </section>
         ) : (
           <>
-            <SommaireParUsage familles={familles} />
-            <SectionsParUsage familles={familles} rendreLigne={rendreLigne} />
+            <nav aria-label="Découpe" className="flex">
+              <div className="inline-flex rounded-full bg-[color:var(--board-slate-pale)] p-1">
+                {[
+                  { href: `/etablissements/${id}/etats-permanents`, label: "Par famille", actif: !parGeste },
+                  { href: `/etablissements/${id}/etats-permanents?decoupe=geste`, label: "Ce qu'il faut faire", actif: parGeste },
+                ].map((o) => (
+                  <Link
+                    key={o.label}
+                    href={o.href}
+                    scroll={false}
+                    aria-current={o.actif ? "page" : undefined}
+                    className={
+                      "rounded-full px-4 py-[7px] text-[13px] font-semibold transition-colors " +
+                      (o.actif
+                        ? "bg-[color:var(--board-card)] text-[color:var(--board-ink)] shadow-[0_1px_2px_rgba(13,18,36,.08)]"
+                        : "text-[color:var(--board-slate-mid)] hover:text-[color:var(--board-ink)]")
+                    }
+                  >
+                    {o.label}
+                  </Link>
+                ))}
+              </div>
+            </nav>
+            {parGeste ? (
+              <SectionsParGeste familles={familles} rendreLigne={rendreLigne} />
+            ) : (
+              <SectionsParUsage familles={familles} rendreLigne={rendreLigne} />
+            )}
             {/* Arrivée par un lien du widget (`next/link`) : le défilement est
                 celui de Next, le focus doit suivre (`FocusSurAncre`). */}
             <FocusSurAncre />
@@ -274,68 +368,25 @@ export default async function EtatsPermanentsPage({
                     {texteFaits}
                   </p>
                 )}
-                <ul className="m-0 mt-3 list-none p-0">
+                <ul className="m-0 mt-3 grid list-none gap-1.5 p-0 sm:grid-cols-2 lg:grid-cols-3">
                   {faits.map(rendreLigne)}
                 </ul>
               </section>
             )}
 
-            {/*
-              Ce que l'écran dit de lui-même. Le produit nomme ce qu'il ne couvre
-              pas plutôt que de se taire — c'est sa marque, et l'ADR-024 en fait
-              un mécanisme.
-
-              Les phrases sont dérivées des compteurs, jamais écrites en dur : un
-              paragraphe rédigé à la main sous une liste qui se calcule vieillit
-              tout seul, et l'écran Équipe en a fait l'expérience — son bloc
-              « ce qui n'est pas couvert » a menti pendant une journée en
-              énumérant comme absentes trois obligations affichées deux lignes
-              plus haut.
-            */}
-            <section className="carte-board px-7 py-6 sm:px-8">
-              <h2 className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-                Ce que cette page fait, et ne fait pas
-              </h2>
-              <div className="mt-3 flex max-w-[72ch] flex-col gap-2.5 text-[13px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                <p className="m-0">
-                  {/* « Déclarez », jamais « cochez » : le contrôle de cette
-                      page est un bouton « Déclarer en place ». Le vocabulaire
-                      de la case survivait à la case. */}
-                  Ce que vous déclarez ici est <strong>une déclaration</strong>,
-                  et elle est enregistrée comme telle : Rojer note que vous avez
-                  déclaré, et à quelle date. Ce n&apos;est pas une vérification,
-                  ce n&apos;est pas une pièce justificative, et cela ne rend
-                  aucun dossier conforme.
-                </p>
-                <p className="m-0">
-                  Rien n&apos;est relancé : aucun de ces textes n&apos;écrit à
-                  quel rythme revoir ce que vous avez mis en place. La date
-                  s&apos;affiche, vous jugez vous-même si elle a vieilli.
-                </p>
-                {/* Le dirigeant doit savoir où va ce qu'il déclare, et sous
-                    quels mots — c'est ce qui distingue une déclaration
-                    enregistrée d'une déclaration publiée. Les lignes NON
-                    déclarées y figurent aussi : le taire ici ferait déclarer
-                    pour « faire bonne figure » quelqu'un qui découvrirait le
-                    tableau après coup. */}
-                <p className="m-0">
-                  Ce que vous déclarez ici figure dans le dossier de conformité
-                  que vous remettez à un tiers, avec sa date — présenté comme
-                  votre déclaration, jamais comme une pièce justificative. Les
-                  lignes que vous n&apos;avez pas déclarées y figurent aussi,
-                  accompagnées de la même précision : une ligne sans déclaration
-                  n&apos;y est pas présentée comme un manquement.
-                </p>
-                {/* Une seule expression, jamais une phrase recousue dans le
-                    JSX : c'est le défaut qui a produit « Elles n'entrepas ».
-                    L'accord et la ponctuation vivent dans `phrases.ts`, où ils
-                    se lisent en entier et où toutes leurs branches se testent. */}
-                {texteRestantes && <p className="m-0">{texteRestantes}</p>}
-              </div>
-            </section>
+            {/* ~~« Ce que cette page fait, et ne fait pas », bloc de pied de page~~
+                (2026-10-20, décision de la propriétaire). Ses quatre paragraphes sont
+                redistribués là où on les lit : « une déclaration, pas une
+                vérification » et « reprise dans votre dossier de conformité » sous
+                les réponses de la fiche, au moment de déclarer
+                (`phraseSousLesReponses`) ; « rien n'est relancé » et « une ligne
+                non déclarée n'est pas un manquement » dans l'aide de l'en-tête ;
+                le reste à revoir, dans le compteur. L'ADR-027 n'exige les deux
+                mises en garde détaillées que du PDF (décision 5). */}
           </>
         )}
       </div>
     </main>
+    </RevueEnPlace>
   );
 }

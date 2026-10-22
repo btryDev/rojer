@@ -55,6 +55,15 @@ describe("« Quand ça arrive » — ce que la page présente", () => {
     expect(info?.articles[0]).toBe("L. 4141-1");
   });
 
+  it("la carte dit le fait en clair ; le texte exact reste à côté", () => {
+    const info = lignes(etab()).find(
+      (l) => l.obligation.id === "formation-securite-etablissement-information",
+    )!;
+    expect(info.quand).toBe("À l'embauche, puis chaque fois que c'est nécessaire.");
+    expect(info.fait).toBe(info.obligation.faitGenerateur);
+    expect(info.quand).not.toBe(info.fait);
+  });
+
   // Audit du 2026-10-12 : `lignesDepuis` ignorait `sansReponse`. Un dossier
   // muet sur le travail sur écran lisait « Former au travail sur écran »
   // affirmé comme dû, quand toutes les autres surfaces le disent « à

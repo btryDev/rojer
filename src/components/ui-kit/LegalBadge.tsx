@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Charte } from "./charte";
+import { LIVRE, LIVRE_REFERENCE } from "./livre";
 
 /**
  * Pastille réglementaire. Cliquable : déploie un bloc citant
@@ -98,6 +100,18 @@ type SocleLegalBadge = {
    * après. Absent : rien ne change.
    */
   avant?: ReactNode;
+  /**
+   * Forme compacte (2026-10-20, allègement des écrans) : le bouton n'affiche
+   * qu'un livre et « Texte » ; la référence complète s'imprime en tête du
+   * panneau. Pour les écrans où la pastille suit une phrase en clair et où
+   * l'intitulé de l'article, en capitales, prenait plus de place que la
+   * ligne elle-même. Le nom accessible garde la référence.
+   *
+   * `true` : le livre dit « Texte ». `{ libelle }` : il dit le sien — quand
+   * plusieurs livres se suivent sur une ligne (fondement + articles de
+   * contexte), trois « Texte » identiques ne se distinguaient pas.
+   */
+  compact?: true | { libelle: string };
 };
 
 /**
@@ -135,8 +149,16 @@ export function LegalBadge(props: SocleLegalBadge & SourceLegalBadge) {
     defaultOpen = false,
     charte = "papier",
     avant,
+    compact,
   } = props;
   const [open, setOpen] = useState(defaultOpen);
+  // Le mot du livre, ou `null` hors forme compacte.
+  const livre =
+    compact === undefined ? null : compact === true ? "Texte" : compact.libelle;
+  // Le nom accessible ne répète pas la référence quand le livre la dit déjà
+  // (« GN 10 : GN 10 »).
+  const nomAccessible =
+    livre === null || livre === reference ? undefined : `${livre} : ${reference}`;
 
   return (
     <div className={cn("inline-flex flex-col gap-2 align-top", className)}>
@@ -146,28 +168,48 @@ export function LegalBadge(props: SocleLegalBadge & SourceLegalBadge) {
         className={cn(
           // `text-left` : un bouton centre son texte ; une référence longue
           // passée à la ligne se lisait centrée (F2).
-          "group inline-flex items-center gap-2 self-start text-left transition",
-          FORME[charte],
-          BOUTON[charte],
-          BOUTON_DEPLIABLE[charte],
+          "self-start text-left",
+          // Compact : le livre, comme `TexteSource` — pas une étiquette de code.
+          livre !== null
+            ? LIVRE[charte]
+            : [
+                "inline-flex items-center gap-2 transition",
+                FORME[charte],
+                BOUTON[charte],
+                BOUTON_DEPLIABLE[charte],
+              ],
         )}
         aria-expanded={open}
+        aria-label={nomAccessible}
+        title={nomAccessible && reference}
       >
-        <span aria-hidden className="text-[0.75rem] leading-none">§</span>
-        <span>{reference}</span>
-        <span
-          aria-hidden
-          className={cn(
-            "inline-block text-[0.6rem] transition-transform",
-            open && "rotate-180",
-          )}
-        >
-          ▾
-        </span>
+        {livre !== null ? (
+          <>
+            <BookOpen aria-hidden className="size-3.5" />
+            <span>{livre}</span>
+          </>
+        ) : (
+          <>
+            <span aria-hidden className="text-[0.75rem] leading-none">§</span>
+            <span>{reference}</span>
+            <span
+              aria-hidden
+              className={cn(
+                "inline-block text-[0.6rem] transition-transform",
+                open && "rotate-180",
+              )}
+            >
+              ▾
+            </span>
+          </>
+        )}
       </button>
 
       {open && (
         <div className={PANNEAU[charte]}>
+          {livre !== null && (
+            <p className={LIVRE_REFERENCE[charte]}>{reference}</p>
+          )}
           {avant && <div className="mb-3">{avant}</div>}
           {extrait && (
             <blockquote className={CITATION[charte]}>

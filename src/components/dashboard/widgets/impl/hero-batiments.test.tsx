@@ -8,12 +8,6 @@ import { HeroBatiments } from "./hero-batiments";
 // première (« Bâtiment principal ») ne s'y lit jamais comme un second bâtiment.
 
 afterEach(cleanup);
-// jsdom n'a pas de mise en page : le hero mesure sa piste pour le défilement.
-globalThis.ResizeObserver ??= class {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-} as unknown as typeof ResizeObserver;
 
 const zone = (id: string, nom: string) => ({ id, nom, complementAdresse: null, ordre: 0, nbEquipements: 2, nbEnRetard: 0 });
 

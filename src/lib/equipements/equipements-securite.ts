@@ -35,6 +35,8 @@ import {
   type FondementLigne,
 } from "@/lib/etats-permanents/fondement";
 import { ancreEtatPermanent } from "@/lib/etats-permanents/ancre";
+import { cheminDeDeclaration } from "@/lib/etats-permanents/par-les-risques";
+import { obligationParId } from "@/lib/referentiels/conformite";
 import { modeDeclarationApplique } from "@/lib/etats-permanents/regle";
 import { phrasesAConfirmer } from "@/lib/matching/marques";
 import type { ObligationApplicable } from "@/lib/matching/types";
@@ -175,7 +177,7 @@ export function lignesEquipementsSecurite(
 /**
  * Où mène le geste d'une ligne qui n'est pas déclarée : le formulaire ouvert
  * sur la catégorie, ou la ligne de l'obligation sur « Ce qui doit être en
- * place » — l'ancre que `LigneEtat` pose (E5). Une ligne « ailleurs » n'existe
+ * place » — l'ancre que la vignette pose (`ancreEtatPermanent`, E5). Une ligne « ailleurs » n'existe
  * que si cet écran la montre (`modeDeclarationApplique`, plus haut) : l'ancre
  * vise donc une ligne réellement rendue. `null` pour une ligne déclarée.
  */
@@ -185,5 +187,9 @@ export function hrefActionSecurite(
 ): string | null {
   if (l.etat === "declare") return null;
   if (l.cible.kind === "categorie") return liens.hrefNouveau(l.cible.categorie);
-  return `${liens.base}/etats-permanents#${ancreEtatPermanent(l.obligationId)}`;
+  // La ligne née d'un fait d'activité se déclare sous sa question
+  // (`par-les-risques.ts`, 2026-10-21) : l'écran « en place » ne l'affiche plus.
+  const o = obligationParId(l.obligationId);
+  const ancre = ancreEtatPermanent(l.obligationId);
+  return `${liens.base}${o ? cheminDeDeclaration(o, ancre) : `/etats-permanents#${ancre}`}`;
 }

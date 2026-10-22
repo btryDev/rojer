@@ -37,6 +37,7 @@ import {
   type SousCategorie,
 } from "./familles";
 import { modeDeclarationApplique, type ModeDeclaration } from "./regle";
+import { faitDeLaLigne } from "./par-les-risques";
 import { ordonnerLignes } from "./ordre";
 import { contexteFondementDe, fondementDe, type FondementLigne } from "./fondement";
 import { PHRASE_SANS_REPONSE } from "@/lib/matching/sans-reponse";
@@ -139,6 +140,15 @@ export type EtatsPermanentsDuDossier = {
    * plutôt qu'en pied de page, « là où l'on arrive après avoir tout coché ».
    */
   faits: LigneEtatPermanent[];
+  /**
+   * Les lignes que seul un fait d'activité fait naître (`par-les-risques.ts`,
+   * 2026-10-21) : elles se déclarent sous leur question, dans Équipe ›
+   * « Évaluer les risques de vos salariés », et ne figurent ni dans
+   * `familles` ni dans `faits`. Elles restent COMPTÉES dans `enPlace`,
+   * `total` et `faitsDates` : ce sont des états du dossier, le score et le
+   * document les portent. Seul l'endroit où on les déclare change.
+   */
+  parLesRisques: LigneEtatPermanent[];
   /**
    * Le compteur d'en-tête. **Mesuré, jamais écrit à la main** : le brief le
    * demande, et ce dépôt s'est fait prendre plusieurs fois par des comptes
@@ -273,6 +283,7 @@ export async function listerEtatsPermanents(
   // sous-catégorie.
   const parBloc = new Map<string, LigneEtatPermanent[]>();
   const faits: LigneEtatPermanent[] = [];
+  const parLesRisques: LigneEtatPermanent[] = [];
   let enPlace = 0;
   let total = 0;
   const parLesTitresCompte = { total: 0, enPlace: 0 };
@@ -324,7 +335,9 @@ export async function listerEtatsPermanents(
       if (ligne.declareLe) faitsDatesRenseignes += 1;
     }
 
-    if (mode.mode === "fait") {
+    if (faitDeLaLigne(o)) {
+      parLesRisques.push(ligne);
+    } else if (mode.mode === "fait") {
       faits.push(ligne);
     } else {
       // ~~Pas de groupe « autres » : une ligne de l'écran sans rangement est un
@@ -422,10 +435,12 @@ export async function listerEtatsPermanents(
   // Même règle pour « ce qui revient » : un ordre qui dépend de l'état déplace
   // la ligne suivante au moment précis où on va la cliquer.
   ordonnerLignes(faits);
+  ordonnerLignes(parLesRisques);
 
   return {
     familles,
     faits,
+    parLesRisques,
     enPlace,
     total,
     parLesTitres: parLesTitresCompte,
@@ -492,6 +507,7 @@ export async function etatsPermanentsDuDossier(
     return {
       familles: [],
       faits: [],
+      parLesRisques: [],
       enPlace: 0,
       total: 0,
       parLesTitres: { total: 0, enPlace: 0 },

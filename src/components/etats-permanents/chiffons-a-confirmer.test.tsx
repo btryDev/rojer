@@ -4,10 +4,11 @@
 // ligne de `R. 4227-26` « à confirmer » — et « Ce qui doit être en place »
 // doit le DIRE, pas seulement la raison du moteur, que personne ne lit.
 // Chaîne entière : le moteur, la lecture de l'écran (`listerEtatsPermanents`),
-// puis le rendu de la ligne avec les props que la page lui passe.
+// puis le rendu de la fiche (`versFiche` → `RevueEnPlace`, 2026-10-21 : la
+// fiche a remplacé `LigneEtat` sur l'écran).
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render } from "@testing-library/react";
+import { cleanup } from "@testing-library/react";
 
 vi.mock("@/lib/prisma", () => ({
   prisma: { declarationEtatPermanent: { findMany: vi.fn(async () => []) } },
@@ -22,7 +23,8 @@ vi.mock("@/lib/etats-permanents/actions", () => ({
 
 const { listerEtatsPermanents } = await import("@/lib/etats-permanents/queries");
 const { obligationsNiveauAuditDuDossier } = await import("@/lib/perimetre/niveau-audit");
-const { LigneEtat } = await import("./LigneEtat");
+const { versFiche } = await import("@/lib/etats-permanents/vers-fiche");
+const { rendreFicheOuverte } = await import("@/test/fiche-ouverte");
 const { PHRASE_SANS_REPONSE } = await import("@/lib/matching/sans-reponse");
 
 afterEach(cleanup);
@@ -90,32 +92,19 @@ describe("« Ce qui doit être en place » — les chiffons (niveau audit, sans 
 });
 
 describe("« Ce qui doit être en place » — le rendu « à confirmer », par la question des matières", () => {
-  it("silence : une ligne retenue dit « À confirmer », sa phrase et le lien vers la fiche", async () => {
+  it("silence : la fiche d'une ligne retenue dit « À confirmer », sa phrase et le lien vers la fiche", async () => {
     const d = await listerEtatsPermanents(etab(), []);
     const l = [...d.familles.flatMap((f) => f.blocs.flatMap((b) => b.lignes)), ...d.faits].find((x) =>
       x.questionsSansReponse.includes(PHRASE_SANS_REPONSE.matieres_r4227_22),
     );
     expect(l).toBeDefined();
-    const { container, getByRole } = render(
-      <LigneEtat
-        etablissementId="etab-1"
-        obligationId={l!.obligation.id}
-        libelle={l!.obligation.libelle}
-        mode={l!.mode}
-        pieceAttendue={l!.pieceAttendue}
-        declareLe={null}
-        aConfirmer={null}
-        questionsSansReponse={{
-          phrases: l!.questionsSansReponse,
-          hrefFiche: "/etablissements/etab-1/modifier",
-        }}
-        fondement={l!.fondement}
-      />,
+    const { boite, getByRole } = rendreFicheOuverte(
+      versFiche(l!, { etablissementId: "etab-1", entrepriseId: "ent-1" }),
     );
-    expect(container.textContent).toContain("À confirmer.");
-    expect(container.textContent).toContain(PHRASE_SANS_REPONSE.matieres_r4227_22);
+    expect(boite.textContent).toContain("À confirmer.");
+    expect(boite.textContent).toContain(PHRASE_SANS_REPONSE.matieres_r4227_22);
     expect(
-      getByRole("link", { name: /fiche de l'établissement/ }).getAttribute("href"),
+      getByRole("link", { name: /fiche de l'établissement/, hidden: true }).getAttribute("href"),
     ).toBe("/etablissements/etab-1/modifier");
   });
 });

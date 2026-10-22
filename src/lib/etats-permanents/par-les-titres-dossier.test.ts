@@ -9,6 +9,7 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
+import { compteParLesRisques } from "./par-les-risques";
 
 const h = vi.hoisted(() => ({
   declarations: vi.fn(async () => [] as unknown[]),
@@ -82,7 +83,11 @@ beforeEach(() => {
 
 async function dossier() {
   const d = await listerEtatsPermanents(etab, installation, undefined, NOW);
-  const ligne = d.familles.flatMap((f) => f.blocs.flatMap((b) => b.lignes)).find((l) => l.obligation.id === HABILITATION);
+  // L'habilitation naît d'un fait d'activité : elle se déclare sous sa
+  // question (`parLesRisques`, 2026-10-21), plus dans une famille.
+  const ligne = [...d.familles.flatMap((f) => f.blocs.flatMap((b) => b.lignes)), ...d.parLesRisques].find(
+    (l) => l.obligation.id === HABILITATION,
+  );
   if (!ligne) throw new Error("l'habilitation ne s'applique plus à ce dossier");
   return { d, ligne };
 }
@@ -169,7 +174,7 @@ describe("les comptes ne disent pas « déclaré » de ce que l'employeur n'a pa
   it.each([
     ["titre à jour", "2025-03-01"],
     ["titre expiré", "2022-06-01"],
-  ])("écran, %s : les compteurs des familles s'additionnent à celui de l'en-tête", async (_cas, iso) => {
+  ])("écran, %s : les compteurs des familles et des lignes liées aux risques s'additionnent à celui de l'en-tête", async (_cas, iso) => {
     // Chaque famille dit sa part « d'après les titres » ; si elle la perdait,
     // son compteur dirait « déclarés par vous » d'une ligne que l'en-tête,
     // lui, attribue aux titres.
@@ -177,10 +182,14 @@ describe("les comptes ne disent pas « déclaré » de ce que l'employeur n'a pa
     const { d } = await dossier();
     const somme = (f: (x: (typeof d.familles)[number]) => number) =>
       d.familles.reduce((n, x) => n + f(x), 0);
-    expect(somme((f) => f.total)).toBe(d.total);
-    expect(somme((f) => f.enPlace)).toBe(d.enPlace);
-    expect(somme((f) => f.parLesTitres.total)).toBe(d.parLesTitres.total);
-    expect(somme((f) => f.parLesTitres.enPlace)).toBe(d.parLesTitres.enPlace);
+    const risques = compteParLesRisques(d.parLesRisques);
+    const titresRisques = d.parLesRisques.filter((l) => l.parLesTitres);
+    expect(somme((f) => f.total) + risques.total).toBe(d.total);
+    expect(somme((f) => f.enPlace) + risques.enPlace).toBe(d.enPlace);
+    expect(somme((f) => f.parLesTitres.total) + titresRisques.length).toBe(d.parLesTitres.total);
+    expect(
+      somme((f) => f.parLesTitres.enPlace) + titresRisques.filter((l) => l.parLesTitres?.enPlace).length,
+    ).toBe(d.parLesTitres.enPlace);
     expect(d.parLesTitres.total).toBe(1);
   });
 
@@ -188,6 +197,7 @@ describe("les comptes ne disent pas « déclaré » de ce que l'employeur n'a pa
     const bloc = blocEtatsPermanents({
       familles: [],
       faits: [],
+      parLesRisques: [],
       enPlace: 0,
       total: 0,
       parLesTitres: { total: 0, enPlace: 0 },
