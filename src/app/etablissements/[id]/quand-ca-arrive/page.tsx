@@ -6,6 +6,7 @@ import { listerQuandCaArrive } from "@/lib/quand-ca-arrive/lignes";
 import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
 import { AideEcran } from "@/components/ui-kit/AideEcran";
 import { TexteSource } from "@/components/ui-kit/TexteSource";
+import { ChevronRepli } from "@/components/ui/repli";
 
 export const metadata = {
   title: "Quand ça arrive — Rojer",
@@ -78,9 +79,10 @@ export default async function QuandCaArrivePage({
               pour que vous la connaissiez le jour venu.
             </p>
             <p className="m-0">
-              Ce qu&apos;un fait rend dû à une personne ou à un appareil se lit
-              sur sa fiche, dans Équipe et dans Équipements. Le livre de chaque
-              carte ouvre le texte exact et ses articles.
+              Cliquez sur un événement pour voir ce qu&apos;il rend dû ; le
+              livre ouvre ensuite le texte exact et ses articles. Ce qu&apos;un
+              fait rend dû à une personne ou à un appareil se lit sur sa fiche,
+              dans Équipe et dans Équipements.
             </p>
           </AideEcran>
         </div>
@@ -112,46 +114,55 @@ export default async function QuandCaArrivePage({
                 {g.lignes.map((l) => (
                   <li
                     key={l.obligation.id}
-                    className="border-t border-[color:var(--board-slate-line)] pt-5 first:border-t-0 first:pt-0"
+                    className="border-t border-[color:var(--board-slate-line)] pt-4 first:border-t-0 first:pt-0"
                   >
-                    {/* Le FAIT d'abord, en clair : c'est l'entrée par
-                        laquelle le dirigeant se reconnaît. Le texte exact est
-                        sous le livre. */}
-                    <p className="m-0 max-w-[72ch] text-[15px] font-semibold leading-[1.4] text-[color:var(--board-ink)]">
-                      {l.quand}
-                    </p>
-                    <p className="m-0 mt-1.5 max-w-[72ch] text-[14px] leading-[1.5] text-[color:var(--board-ink)]">
-                      <span className="text-[color:var(--board-slate-mid)]">
-                        →{" "}
-                      </span>
-                      {l.quoi}
-                    </p>
-                    {/* La marque des autres surfaces (D1) : la ligne est là
-                        parce que la fiche se tait, pas parce qu'elle est due
-                        à coup sûr (audit du 2026-10-12). */}
-                    {(l.aConfirmer.length > 0 || l.pieceAttendue) && (
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <MentionAConfirmer phrases={l.aConfirmer} />
-                        {l.pieceAttendue && (
-                          <span className="inline-flex items-center rounded-full bg-[color:var(--board-slate-pale)] px-2 py-[3px] text-[11px] font-medium text-[color:var(--board-slate-ink)]">
-                            Écrit à garder : {l.pieceAttendue}
+                    {/* Une ligne dépliable par fait (demande de la propriétaire
+                        du 2026-10-22) : le FAIT reste visible, c'est l'entrée
+                        par laquelle le dirigeant se reconnaît ; ce qui est dû
+                        et le texte exact se déplient. La marque « à confirmer »
+                        reste sur la ligne fermée : elle dit pourquoi la ligne
+                        est là, elle ne se cache pas (D1, audit du 2026-10-12). */}
+                    <details className="group">
+                      <summary className="flex min-h-6 cursor-pointer list-none items-start gap-2 [&::-webkit-details-marker]:hidden">
+                        <span className="mt-[3px] text-[color:var(--board-slate-ink)]">
+                          <ChevronRepli />
+                        </span>
+                        <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5">
+                          <span className="max-w-[72ch] text-[15px] font-semibold leading-[1.4] text-[color:var(--board-ink)]">
+                            {l.quand}
                           </span>
+                          <MentionAConfirmer phrases={l.aConfirmer} />
+                        </span>
+                      </summary>
+                      <div className="pl-6">
+                        <p className="m-0 mt-1.5 max-w-[72ch] text-[14px] leading-[1.5] text-[color:var(--board-ink)]">
+                          <span className="text-[color:var(--board-slate-mid)]">
+                            →{" "}
+                          </span>
+                          {l.quoi}
+                        </p>
+                        {l.pieceAttendue && (
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                            <span className="inline-flex items-center rounded-full bg-[color:var(--board-slate-pale)] px-2 py-[3px] text-[11px] font-medium text-[color:var(--board-slate-ink)]">
+                              Écrit à garder : {l.pieceAttendue}
+                            </span>
+                          </div>
                         )}
+                        <TexteSource articles={l.articles} className="mt-2">
+                          <p>
+                            <strong className="font-semibold">Quand :</strong>{" "}
+                            {l.fait}
+                          </p>
+                          <p>
+                            <strong className="font-semibold">
+                              Ce qui est dû :
+                            </strong>{" "}
+                            {l.obligation.libelle}
+                          </p>
+                          {l.description && <p>{l.description}</p>}
+                        </TexteSource>
                       </div>
-                    )}
-                    <TexteSource articles={l.articles} className="mt-2">
-                      <p>
-                        <strong className="font-semibold">Quand :</strong>{" "}
-                        {l.fait}
-                      </p>
-                      <p>
-                        <strong className="font-semibold">
-                          Ce qui est dû :
-                        </strong>{" "}
-                        {l.obligation.libelle}
-                      </p>
-                      {l.description && <p>{l.description}</p>}
-                    </TexteSource>
+                    </details>
                   </li>
                 ))}
               </ul>
