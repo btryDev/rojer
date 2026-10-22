@@ -146,7 +146,7 @@ export default async function EquipePage({
             </p>
             <p className="m-0 mt-1 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
               {sansReponse > 0
-                ? `${sansReponse} question${sansReponse > 1 ? "s" : ""} sans réponse : ${muets.map((f) => NOM_COURT[f.champ]).join(", ")}. Elles décident des formations et du suivi dus à une partie de l'effectif.`
+                ? `${sansReponse} question${sansReponse > 1 ? "s" : ""} sans réponse : ${muets.map((f) => NOM_COURT[f.champ]).join(", ")}. Elles décident des formations, du suivi et des consignes dus à une partie de l'effectif.`
                 : "Les formations et le suivi dus à une partie de l'effectif s'affichent sur la fiche de chaque personne."}
             </p>
           </div>

@@ -17,7 +17,8 @@ import {
  * transverse et que l'établissement a un DUERP, pose ou retire le risque que
  * cette question ajoute au document — dans la même transaction (ADR-041).
  *
- * C'est le SEUL écrivain des colonnes de `FAITS_ACTIVITE` : l'écran Équipe,
+ * C'est le SEUL écrivain des colonnes de `FAITS_ACTIVITE` — hors le « oui »
+ * constaté d'`epi-constate.ts` : l'écran Équipe,
  * la relance de la fiche établissement et l'étape transverse du DUERP passent
  * tous par lui, si bien que la réponse et le risque ne peuvent pas diverger
  * selon l'écran qui a répondu.
@@ -42,7 +43,14 @@ export async function ecrireFaitActivite(
   return prisma.$transaction(async (tx) => {
     await tx.etablissement.update({
       where: { id: etablissementId },
-      data: { [champ]: valeur },
+      data: {
+        [champ]: valeur,
+        // Un « non » ou un retrait efface la liste d'EPI laissée par un « oui »
+        // de l'ancienne fiche : la garder, c'est la contradiction qu'un
+        // contrôleur relèverait (règle de `reponseEpiCoherente`, retirée avec
+        // la fiche le 2026-10-22).
+        ...(champ === "epiPresents" && valeur !== true ? { epiPresentsDetail: null } : {}),
+      },
     });
     const duerp = await tx.duerp.findUnique({
       where: { etablissementId },

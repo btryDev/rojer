@@ -155,6 +155,14 @@ const h = vi.hoisted(() => {
 
 vi.mock("@/lib/prisma", () => ({ prisma: h.prisma }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+// La règle des EPI constatés vit dans `epi-constate.ts`, testée là ; ici, on
+// vérifie que chaque écriture d'équipement l'appelle, AVANT la régénération.
+vi.mock("@/lib/etablissements/epi-constate", () => ({
+  constaterEpi: vi.fn(async (id: string, opts?: { regenerer?: boolean }) => {
+    h.db.journal.push(`constat:${id}:${opts?.regenerer === false ? "sans-regen" : "regen"}`);
+    return false;
+  }),
+}));
 vi.mock("next/navigation", () => ({
   redirect: vi.fn(() => {
     throw new Error("NEXT_REDIRECT");
@@ -414,7 +422,10 @@ describe("D29 (a) : les réponses exigées d'un appareil de levage", () => {
   });
 });
 
-describe("un EPI déclaré contredit un « non » aux EPI (relecture indépendante du 2026-10-12, B2)", () => {
+// ~~« un EPI déclaré contredit un « non » aux EPI » (B2)~~ — la règle est
+// partagée depuis le 2026-10-22 (`constaterEpi`, testée dans
+// `etablissements/epi-constate.test.ts`) ; ici, l'appel et son ordre.
+describe("une écriture d'équipement fait constater les EPI, avant la régénération (B2, 2026-10-22)", () => {
   function epi(categorie: string): FormData {
     const fd = new FormData();
     fd.set("libelle", "Harnais");
@@ -422,31 +433,22 @@ describe("un EPI déclaré contredit un « non » aux EPI (relecture indépendan
     return fd;
   }
 
-  it("déclarer un EPI fait passer la réponse à « oui », AVANT la régénération", async () => {
+  it("déclarer un équipement", async () => {
     await expect(creerEquipement("etab-1", { status: "idle" }, epi("EPI"))).rejects.toThrow("NEXT_REDIRECT");
-
-    expect(h.db.etablissement.epiPresents).toBe(true);
-    expect(h.db.journal).toEqual(["epiPresents", "régénération"]);
+    expect(h.db.journal).toEqual(["constat:etab-1:sans-regen", "régénération"]);
   });
 
-  it("une réponse muette aussi : la déclaration vaut « oui »", async () => {
-    h.db.etablissement.epiPresents = null;
+  it("le modifier", async () => {
     await modifierEquipement("eq-1", { status: "idle" }, epi("EPI"));
-    expect(h.db.etablissement.epiPresents).toBe(true);
+    expect(h.db.journal).toEqual(["constat:etab-1:sans-regen", "régénération"]);
   });
 
-  it("le pré-remplissage, de même", async () => {
+  it("le pré-remplissage", async () => {
     await creerEquipementsDepuisPreRemplissage("etab-1", [
       { categorie: "EXTINCTEUR", libelle: "Extincteur" },
       { categorie: "EPI", libelle: "Gants" },
     ]);
-    expect(h.db.etablissement.epiPresents).toBe(true);
-  });
-
-  it("un équipement qui n'est pas un EPI ne touche pas à la réponse", async () => {
-    await modifierEquipement("eq-1", { status: "idle" }, epi("EXTINCTEUR"));
-    expect(h.db.etablissement.epiPresents).toBe(false);
-    expect(h.db.journal).toEqual(["régénération"]);
+    expect(h.db.journal).toEqual(["constat:etab-1:sans-regen", "régénération"]);
   });
 });
 

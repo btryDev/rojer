@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LienEffectifEntreprise } from "@/components/entreprises/LienEffectifEntreprise";
 import type { MarqueAConfirmer } from "@/lib/matching/marques";
+import { lienPourRepondre } from "@/lib/etablissements/guide-par-module";
 
 /**
  * Le bloc « à confirmer » d'une ligne, en toutes lettres, avec l'endroit où
@@ -14,17 +15,18 @@ import type { MarqueAConfirmer } from "@/lib/matching/marques";
  */
 export function BlocAConfirmer({
   marque,
-  hrefFicheEtablissement,
+  etablissementId,
   entrepriseId,
 }: {
   marque: MarqueAConfirmer;
-  hrefFicheEtablissement: string;
+  etablissementId: string;
   entrepriseId: string | null;
 }) {
   if (marque.phrases.length === 0) return null;
   // Une phrase d'effectif est la première quand elle existe
   // (`phrasesAConfirmer`) : les autres viennent d'une question de la fiche.
-  const questionsDeLaFiche = marque.phrases.length - (marque.effectif ? 1 : 0);
+  const phrasesDeQuestion = marque.effectif ? marque.phrases.slice(1) : marque.phrases;
+  const lien = lienPourRepondre(phrasesDeQuestion, etablissementId);
   return (
     <div className="text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
       {marque.phrases.map((phrase) => (
@@ -42,12 +44,12 @@ export function BlocAConfirmer({
           className="m-0 mt-1 text-[12.5px] leading-[1.5]"
         />
       )}
-      {questionsDeLaFiche > 0 && (
+      {phrasesDeQuestion.length > 0 && (
         <Link
-          href={hrefFicheEtablissement}
+          href={lien.href}
           className="mt-1 inline-block text-[12.5px] font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
         >
-          Répondre sur la fiche de l&apos;établissement
+          {lien.libelle}
         </Link>
       )}
     </div>

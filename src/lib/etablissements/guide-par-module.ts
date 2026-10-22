@@ -15,6 +15,7 @@
 // Module pur.
 
 import type { QuestionSansReponse } from "@/lib/matching/types";
+import { PHRASE_SANS_REPONSE } from "@/lib/matching/sans-reponse";
 import { CATEGORIES_ERP_QUESTION_SSI } from "./questions";
 import { questionSommeilPosee } from "./schema";
 
@@ -82,4 +83,39 @@ export function precisionsManquantes(
 export function enumerer(noms: readonly string[]): string {
   if (noms.length <= 1) return noms.join("");
   return `${noms.slice(0, -1).join(", ")} et ${noms[noms.length - 1]}`;
+}
+
+/**
+ * OÙ RÉPONDRE à des phrases « à confirmer » (2026-10-22, revue) : la page des
+ * risques des salariés quand toutes viennent d'un fait d'activité — elle les
+ * pose tous, sans exiger de DUERP —, la fiche de l'établissement sinon. Les
+ * liens écrits à la main menaient tous à la fiche, qui ne pose aucun fait
+ * d'activité depuis l'ADR-041 et plus les EPI depuis ce jour. Une phrase que
+ * la table ne connaît pas renvoie à la fiche, comme avant.
+ */
+const QUESTION_DE_LA_PHRASE = new Map<string, QuestionSansReponse>(
+  (Object.entries(PHRASE_SANS_REPONSE) as [QuestionSansReponse, string][]).map(
+    ([q, phrase]) => [phrase, q],
+  ),
+);
+
+export function lienPourRepondre(
+  phrases: readonly string[],
+  etablissementId: string,
+): { href: string; libelle: string } {
+  const toutesAuDuerp =
+    phrases.length > 0 &&
+    phrases.every((p) => {
+      const q = QUESTION_DE_LA_PHRASE.get(p);
+      return q !== undefined && FOYER_DE_LA_QUESTION[q].module === "duerp";
+    });
+  return toutesAuDuerp
+    ? {
+        href: `/etablissements/${etablissementId}/equipe/risques`,
+        libelle: "Répondre dans « Évaluer les risques de vos salariés »",
+      }
+    : {
+        href: `/etablissements/${etablissementId}/modifier`,
+        libelle: "Répondre sur la fiche de l'établissement",
+      };
 }

@@ -10,9 +10,7 @@
 
 import type { FicheLigne } from "@/components/etats-permanents/RevueEnPlace";
 import type { EtatCourt } from "@/components/etats-permanents/LigneCompacte";
-import { PHRASE_SANS_REPONSE } from "@/lib/matching/sans-reponse";
-import { POLITIQUE_ABSENCE } from "@/lib/matching/absence";
-import { FAITS_ACTIVITE } from "@/lib/etablissements/faits-activite";
+import { lienPourRepondre } from "@/lib/etablissements/guide-par-module";
 import {
   GROUPE_REPLI,
   LIBELLE_GROUPE,
@@ -24,17 +22,6 @@ import {
 import { FOND_TEINTE, illustrationDe, teinteDe } from "./illustrations";
 import { questionDe } from "./questions";
 import type { LigneEtatPermanent } from "./queries";
-
-/**
- * Les phrases « à confirmer » des faits d'activité (ADR-041), lues du registre
- * et de la table du moteur — ~~une liste de cinq écrite à la main~~ [2026-10-22 :
- * les EPI y entrent, la liste recopiée les aurait laissés renvoyer à la fiche].
- */
-const PHRASES_FAITS_ACTIVITE = new Set<string>(
-  FAITS_ACTIVITE.map((f) => PHRASE_SANS_REPONSE[POLITIQUE_ABSENCE[f.champ].question]),
-);
-const LIEN_RISQUES = "Répondre dans « Évaluer les risques de vos salariés »";
-const LIEN_FICHE = "Répondre sur la fiche de l'établissement";
 
 export function groupeDe(l: LigneEtatPermanent): GroupeAffichage {
   return l.obligation.usageEcran?.groupe ?? GROUPE_REPLI;
@@ -76,10 +63,11 @@ export function versFiche(
   // toujours à `/modifier`, qui ne pose pas les cinq questions d'activité :
   // elles vivent dans Équipe › « Évaluer les risques de vos salariés »
   // (ADR-041). Les autres questions (EPI, chambres, SSI…) restent sur la fiche.
-  const ouRepondre = (phrases: string[]) =>
-    phrases.every((p) => PHRASES_FAITS_ACTIVITE.has(p))
-      ? { phrases, href: `/etablissements/${id}/equipe/risques`, lien: LIEN_RISQUES }
-      : { phrases, href: `/etablissements/${id}/modifier`, lien: LIEN_FICHE };
+  // [2026-10-22 : la règle est partagée, `lienPourRepondre`.]
+  const ouRepondre = (phrases: string[]) => {
+    const { href, libelle } = lienPourRepondre(phrases, id);
+    return { phrases, href, lien: libelle };
+  };
   return {
     obligationId: l.obligation.id,
     libelle: l.obligation.libelle,

@@ -1,5 +1,5 @@
-// Les faits d'activité d'un établissement qui rendent dues des formations ou
-// un suivi (ADR-041).
+// Les faits d'activité d'un établissement qui rendent dues des formations, un
+// suivi ou une consigne (ADR-041 ; la consigne des EPI depuis le 2026-10-22).
 //
 // UN FAIT VIT UNE FOIS, SUR L'ÉTABLISSEMENT. C'est la définition de Rojer :
 // « le DUERP n'est pas un silo, c'est une vue spécifique sur cette donnée ».
@@ -16,7 +16,8 @@
 //     (`questionTransverse`) et y rattache son risque.
 //
 // Le registre ne porte QUE des faits qu'un article attache à une formation, un
-// titre ou un suivi — la règle de la propriétaire du 2026-10-08 : « déclenché
+// titre, un suivi ~~—~~ ou, depuis le 2026-10-22, un document (la consigne
+// d'utilisation des EPI, R. 4323-105) — la règle de la propriétaire du 2026-10-08 : « déclenché
 // par le DU et dans la législation → répercuté ». Il n'encode aucune
 // obligation : il dit quel fait déclenche celles qui existent.
 //
@@ -37,6 +38,13 @@ export type ChampFaitActivite = ActiviteDeclaree;
 
 export type FaitActivite = {
   champ: ChampFaitActivite;
+  /**
+   * Le fait dit-il une EXPOSITION des travailleurs ? Faux pour la présence
+   * d'EPI, qui dit un moyen de protection (2026-10-22, revue) : un « non » ne
+   * se grave pas au document comme un risque examiné et écarté
+   * (`versions/expositions-absentes.ts`).
+   */
+  exposition: boolean;
   /**
    * La question transverse du DUERP qui pose le même fait, s'il y en a une.
    * Son intitulé est la question affichée partout : un seul texte, relu une
@@ -71,6 +79,7 @@ export type FaitActivite = {
 export const FAITS_ACTIVITE: readonly FaitActivite[] = [
   {
     champ: "manutentionManuelle",
+    exposition: true,
     questionTransverse: "q-charges",
     pourquoi:
       "Si oui, l'employeur fait bénéficier ces travailleurs d'une formation à la sécurité portant sur les gestes et postures (art. R. 4541-8 du Code du travail).",
@@ -78,6 +87,7 @@ export const FAITS_ACTIVITE: readonly FaitActivite[] = [
   },
   {
     champ: "travailSurEcran",
+    exposition: true,
     questionTransverse: "q-ecran",
     pourquoi:
       "Si oui, l'employeur assure l'information et la formation des travailleurs sur l'utilisation de l'écran, avant la première affectation (art. R. 4542-16 du Code du travail).",
@@ -85,6 +95,7 @@ export const FAITS_ACTIVITE: readonly FaitActivite[] = [
   },
   {
     champ: "operationsElectriques",
+    exposition: true,
     questionTransverse: "q-operations-electriques",
     pourquoi:
       "Si oui, ces opérations sont réservées à des travailleurs habilités par l'employeur, après une formation théorique et pratique (art. R. 4544-9 et R. 4544-10 du Code du travail).",
@@ -95,6 +106,7 @@ export const FAITS_ACTIVITE: readonly FaitActivite[] = [
   },
   {
     champ: "conduiteEngins",
+    exposition: true,
     questionTransverse: "q-conduite-engins",
     pourquoi:
       "Si oui, la conduite est réservée aux travailleurs formés, et certains équipements exigent une autorisation de conduite de l'employeur (art. R. 4323-55 et R. 4323-56 du Code du travail).",
@@ -106,6 +118,7 @@ export const FAITS_ACTIVITE: readonly FaitActivite[] = [
   },
   {
     champ: "expositionCMR",
+    exposition: true,
     question:
       "Des travailleurs sont-ils exposés à des agents cancérogènes, mutagènes ou toxiques pour la reproduction (CMR) ?",
     pourquoi:
@@ -121,6 +134,7 @@ export const FAITS_ACTIVITE: readonly FaitActivite[] = [
   // (`epi-constate.ts`) — et la question ne reste posée qu'à défaut.
   {
     champ: "epiPresents",
+    exposition: false,
     question: "Fournissez-vous des équipements de protection individuelle à vos salariés ?",
     pourquoi:
       "Harnais, casques, gants, chaussures de sécurité, protections auditives. Si oui, l'employeur élabore une consigne d'utilisation de ces équipements (art. R. 4323-105 du Code du travail).",

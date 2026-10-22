@@ -8,6 +8,7 @@ import {
 } from "@/lib/calendrier/regeneration-sure";
 import { FAITS_ACTIVITE, type ChampFaitActivite } from "./faits-activite";
 import { ecrireFaitActivite } from "./faits-activite-ecriture";
+import { epiConstates, MESSAGE_EPI_CONSTATES } from "./epi-constate";
 import type { ReponseParametrage } from "./parametrage";
 
 const CHAMPS = new Set<string>(FAITS_ACTIVITE.map((f) => f.champ));
@@ -31,6 +32,13 @@ export async function repondreFaitActivite(
   // `boolean | null` n'est qu'un type : la valeur vient aussi du client.
   if (valeur !== true && valeur !== false && valeur !== null) {
     return { status: "error", message: "Répondez oui ou non." };
+  }
+  // Des EPI constatés au dossier font la réponse (`epi-constate.ts`) : un
+  // « non » ou un retrait la contredirait, et la consigne d'utilisation
+  // (R. 4323-105) tomberait alors que la mesure ou l'équipement est là
+  // (revue du 2026-10-22).
+  if (champ === "epiPresents" && valeur !== true && (await epiConstates(etablissementId))) {
+    return { status: "error", message: MESSAGE_EPI_CONSTATES };
   }
   const { conserve } = await ecrireFaitActivite(etablissementId, champ, valeur, "si_vierge");
   const regenere = await regenererApresMutation(etablissementId, `faits-activite/${champ}`);

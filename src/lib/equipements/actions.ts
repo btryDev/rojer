@@ -25,7 +25,6 @@ import {
 } from "./schema";
 import {
   CATEGORIES_EQUIPEMENT,
-  estCategorieEpi,
   type CategorieEquipement,
 } from "@/lib/referentiels/types-communs";
 import {
@@ -35,6 +34,7 @@ import {
   type RegimeExigence,
 } from "./reponses-exigees";
 import { MESSAGE_APPAREIL_RETIRE, estAppareilRetire } from "./retrait";
+import { constaterEpi } from "@/lib/etablissements/epi-constate";
 
 /**
  * Toute mutation d'équipement invalide le calendrier de vérifications : on
@@ -67,28 +67,10 @@ async function regenererCalendrier(
   return ok ? { ok: true } : { ok: false, message: MESSAGE_REGEN_ECHEC };
 }
 
-/**
- * Un équipement de protection individuelle déclaré contredit un « non » (ou un
- * silence) à « Fournissez-vous des équipements de protection individuelle ? »
- * (relecture indépendante du 2026-10-12, audit B2). Le « non » laissait
- * `R. 4323-105` retiré alors qu'un harnais était déclaré, et l'aide de la question
- * invite justement à les déclarer un par un. La déclaration vaut « oui » :
- * `epiPresents` passe à vrai, AVANT la régénération que l'appelant fait déjà.
- * Une seule règle, `estCategorieEpi`.
- */
-async function constaterEpiDeclare(
-  etablissementId: string,
-  categories: readonly string[],
-): Promise<void> {
-  if (!categories.some(estCategorieEpi)) return;
-  await prisma.etablissement.updateMany({
-    where: {
-      id: etablissementId,
-      OR: [{ epiPresents: false }, { epiPresents: null }],
-    },
-    data: { epiPresents: true },
-  });
-}
+// ~~`constaterEpiDeclare`~~ — remplacée le 2026-10-22 par `constaterEpi`
+// (`etablissements/epi-constate.ts`), seule règle des EPI constatés : un EPI
+// déclaré au parc et une mesure de protection individuelle en place valent
+// « oui » (audit B2 du 2026-10-12, revue du 2026-10-22).
 
 /**
  * Ce que l'exigence des réponses lit de l'établissement (`RegimeExigence`) :
@@ -200,7 +182,7 @@ export async function creerEquipement(
       materielNonCouvert: parsed.data.materielNonCouvert ?? null,
     },
   });
-  await constaterEpiDeclare(etablissementId, [parsed.data.categorie]);
+  await constaterEpi(etablissementId, { regenerer: false });
 
   const regen = await regenererCalendrier(etablissementId);
 
@@ -282,7 +264,7 @@ export async function modifierEquipement(
     },
   });
 
-  await constaterEpiDeclare(eq.etablissementId, [parsed.data.categorie]);
+  await constaterEpi(eq.etablissementId, { regenerer: false });
   const regen = await regenererCalendrier(eq.etablissementId);
 
   revalidatePath(`/etablissements/${eq.etablissementId}`);
@@ -554,10 +536,7 @@ export async function creerEquipementsDepuisPreRemplissage(
         : {}),
     })),
   });
-  await constaterEpiDeclare(
-    etablissementId,
-    entrees.map((e) => e.categorie),
-  );
+  await constaterEpi(etablissementId, { regenerer: false });
 
   const regen = await regenererCalendrier(etablissementId);
 

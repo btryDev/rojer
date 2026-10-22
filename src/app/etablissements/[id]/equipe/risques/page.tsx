@@ -77,8 +77,8 @@ export default async function RisquesSalariesPage({
           Évaluer les risques de vos salariés
         </h1>
         <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-          Ces questions décident des formations et du suivi que le Code du
-          travail rend dus à une partie de votre effectif. Répondez pour
+          Ces questions décident des formations, du suivi et des consignes que
+          le Code du travail rend dus à une partie de votre effectif. Répondez pour
           l&apos;établissement ; vous direz ensuite, sur la fiche de chaque
           personne, qui est concerné. Les mêmes réponses apparaissent dans votre
           DUERP.

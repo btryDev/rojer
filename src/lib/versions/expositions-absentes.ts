@@ -78,9 +78,9 @@ export function figerExpositionsAbsentes(
   const autresFaits = FAITS_ACTIVITE.filter((f) => !f.questionTransverse)
     .filter((f) => faits[f.champ] === false)
     .filter((f) => !(f.champ === "expositionCMR" && cmrAuDocument))
-    // Fournir ou non des EPI n'est pas une exposition : un « non » ne se grave
-    // pas comme un risque examiné et écarté (2026-10-22).
-    .filter((f) => f.champ !== "epiPresents")
+    // Un fait qui n'est pas une exposition (les EPI) ne se grave pas comme un
+    // risque examiné et écarté (2026-10-22).
+    .filter((f) => f.exposition)
     .map<ExpositionAbsenteSnapshot>((f) => ({
       id: f.champ,
       question: intituleDuFait(f),

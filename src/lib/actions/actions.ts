@@ -8,7 +8,7 @@ import { requireMesure, requireRisque } from "@/lib/auth/scope";
 import { tousRisquesConnus } from "@/lib/referentiels";
 import { statutUIVersAction } from "./mapping";
 import { assertOrigineActionValide } from "./origine";
-import { constaterEpiParLesMesures } from "@/lib/etablissements/epi-constate";
+import { constaterEpi } from "@/lib/etablissements/epi-constate";
 
 /**
  * Server actions pour l'entité `Action` — unifiée DUERP + vérifications
@@ -94,7 +94,7 @@ export async function toggleMesureReferentiel(
         leveeLe: new Date(),
       },
     });
-    await constaterEpiParLesMesures(etablissementId);
+    await constaterEpi(etablissementId);
   }
 
   revalidateMesure(duerpId, uniteId, risqueId);
@@ -156,7 +156,7 @@ export async function ajouterMesureCustom(
       leveeLe: statutAction === "levee" ? new Date() : null,
     },
   });
-  await constaterEpiParLesMesures(etablissementId);
+  await constaterEpi(etablissementId);
 
   revalidateMesure(duerpId, uniteId, risqueId);
   return { status: "success" };
@@ -200,7 +200,7 @@ export async function modifierMesure(
     data,
   });
   // Le type ou le statut a pu changer (une mesure abandonnée ne compte pas).
-  await constaterEpiParLesMesures(actuelle.etablissementId);
+  await constaterEpi(actuelle.etablissementId);
 
   if (actuelle.risqueId) {
     const { duerpId, uniteId } = await requireRisque(actuelle.risqueId);

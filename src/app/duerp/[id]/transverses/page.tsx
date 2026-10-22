@@ -93,8 +93,9 @@ export default async function TransversesPage({
         })}
         {/* LES FAITS D'ACTIVITÉ SANS QUESTION TRANSVERSE (2026-10-21, demande
             de la propriétaire : les cinq questions d'« Évaluer les risques de
-            vos salariés » doivent toutes se retrouver ici). Aujourd'hui, la
-            seule est l'exposition aux CMR : elle n'a pas de risque transverse
+            vos salariés » doivent toutes se retrouver ici). ~~Aujourd'hui, la
+            seule est l'exposition aux CMR~~ [2026-10-22 : l'exposition aux CMR
+            et la présence d'EPI] : elle n'a pas de risque transverse
             associé au référentiel, donc aucun risque n'est ajouté au document
             — c'est la même réponse, sur la même colonne d'établissement
             (ADR-041), posée avec le même geste qu'Équipe. Elle n'entre pas

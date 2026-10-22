@@ -22,7 +22,7 @@ export const PHRASE_SANS_REPONSE: Record<QuestionSansReponse, string> = {
   exposition_cmr:
     "Rojer ne sait pas si des travailleurs sont exposés à des agents cancérogènes, mutagènes ou toxiques pour la reproduction : cette ligne s'affiche tant que la réponse n'est pas « non ».",
   epi_presents:
-    "La fiche de l'établissement ne dit pas si vous fournissez des équipements de protection individuelle : cette ligne s'affiche tant que la réponse n'est pas « non ».",
+    "Rojer ne sait pas si vous fournissez des équipements de protection individuelle à vos salariés : cette ligne s'affiche tant que la réponse n'est pas « non ».",
   ssi_categorie_ab:
     "La fiche de l'établissement ne dit pas s'il dispose d'un système de sécurité incendie de catégorie A ou B : cette ligne s'affiche tant que la réponse n'est pas « non ».",
   locaux_sommeil_public:

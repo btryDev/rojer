@@ -7,7 +7,7 @@ import { requireAction, requireVerification } from "@/lib/auth/scope";
 import { estActionEnRetard, estActionOuverte } from "@/lib/dates/retard";
 import { actionVerificationSchema, cloturerActionSchema } from "./schema";
 import { assertOrigineActionValide } from "./origine";
-import { constaterEpiParLesMesures } from "@/lib/etablissements/epi-constate";
+import { constaterEpi } from "@/lib/etablissements/epi-constate";
 
 /**
  * Server actions du plan d'actions unifié (étape 8).
@@ -105,7 +105,7 @@ export async function creerActionDepuisVerification(
     },
   });
 
-  await constaterEpiParLesMesures(verif.etablissementId);
+  await constaterEpi(verif.etablissementId);
   revalidateAction(verif.etablissementId);
   revalidatePath(
     `/etablissements/${verif.etablissementId}/verifications/${verif.id}`,
@@ -171,7 +171,7 @@ export async function modifierActionPlan(
       responsable: parsed.data.responsable ?? null,
     },
   });
-  await constaterEpiParLesMesures(etablissementId);
+  await constaterEpi(etablissementId);
 
   revalidateAction(etablissementId);
   revalidatePath(`/etablissements/${etablissementId}/actions/${actionId}`);
@@ -228,6 +228,8 @@ export async function cloturerAction(
     },
   });
 
+  // Une mesure de protection individuelle levée vaut « EPI fournis ».
+  await constaterEpi(existante.etablissementId);
   revalidateAction(existante.etablissementId);
   revalidatePath(`/etablissements/${existante.etablissementId}/actions/${actionId}`);
   return { status: "success", actionId };
@@ -253,8 +255,6 @@ export async function rouvrirAction(actionId: string): Promise<void> {
       leveeRapportId: null,
     },
   });
-  // Une mesure de protection individuelle rouverte compte de nouveau.
-  await constaterEpiParLesMesures(etablissementId);
   revalidateAction(etablissementId);
   revalidatePath(`/etablissements/${etablissementId}/actions/${actionId}`);
 }

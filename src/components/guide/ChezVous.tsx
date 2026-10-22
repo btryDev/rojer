@@ -18,6 +18,7 @@ import {
   MAJ_DUERP_INFORMATION_NOUVELLE,
   enMinuscule,
 } from "@/lib/referentiels/conformite/texte-r4121-2";
+import { lienPourRepondre } from "@/lib/etablissements/guide-par-module";
 
 /**
  * « Chez vous, concrètement » — la seule section personnalisée de la page
@@ -253,12 +254,20 @@ export function ChezVous({
                         — « {l.obligation} ». {l.phrases.join(" ")}
                       </p>
                     ))}
-                    <Link
-                      href={`${base}/modifier`}
-                      className="mt-1 inline-block font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
-                    >
-                      Répondre sur la fiche de l&apos;établissement
-                    </Link>
+                    {(() => {
+                      const lien = lienPourRepondre(
+                        d.sansReponse.flatMap((l) => l.phrases),
+                        etablissementId,
+                      );
+                      return (
+                        <Link
+                          href={lien.href}
+                          className="mt-1 inline-block font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
+                        >
+                          {lien.libelle}
+                        </Link>
+                      );
+                    })()}
                   </div>
                 ) : null}
               </li>

@@ -250,7 +250,7 @@ export default async function EtablissementPage({
       ? {
           id: "duerp",
           titre: "Compléter votre DUERP",
-          pourquoi: `Il reste ${pluriel(manqueDuerp.length, "question")} sur le travail de vos salariés : ${enumerer(manqueDuerp)}. Elles décident des formations dues ; d'ici là, elles s'affichent « à confirmer ».`,
+          pourquoi: `Il reste ${pluriel(manqueDuerp.length, "question")} sur le travail de vos salariés : ${enumerer(manqueDuerp)}. Elles décident de formations et de consignes dues ; d'ici là, elles s'affichent « à confirmer ».`,
           faite: false,
           href: `/duerp/${duerpOuvertDoc.id}/transverses`,
           cta: "Compléter le DUERP",
@@ -262,7 +262,7 @@ export default async function EtablissementPage({
           // posera, et d'ici là ils retiennent des lignes (revue du 2026-10-22).
           pourquoi: `L'article R. 4121-1 du Code du travail : « L'employeur transcrit et met à jour dans un document unique les résultats de l'évaluation des risques pour la santé et la sécurité des travailleurs ». L'article ne fixe pas de seuil d'effectif. L'outil vous guide : secteur d'activité, puis unités de travail.${
             !duerpOuvert && manqueDuerp.length > 0
-              ? ` Il vous demandera aussi ${enumerer(manqueDuerp)} : d'ici là, les formations qui en dépendent s'affichent « à confirmer ».`
+              ? ` Il vous demandera aussi ${enumerer(manqueDuerp)} : d'ici là, les formations et consignes qui en dépendent s'affichent « à confirmer ».`
               : ""
           }`,
           faite: duerpOuvert,

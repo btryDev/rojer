@@ -43,7 +43,7 @@ vi.mock("@/lib/auth/scope", async (orig) => ({
   assertEtablissementOwnership: async () => undefined,
 }));
 vi.mock("next/cache", () => ({ revalidatePath: () => undefined, revalidateTag: () => undefined }));
-vi.mock("@/lib/etablissements/epi-constate", () => ({ constaterEpiParLesMesures: vi.fn(async () => false) }));
+vi.mock("@/lib/etablissements/epi-constate", () => ({ constaterEpi: vi.fn(async () => false) }));
 vi.mock("@/lib/batiments/queries", async (orig) => ({
   ...(await orig<object>()),
   batimentParDefaut: async () => ({ id: "bat1" }),

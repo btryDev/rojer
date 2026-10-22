@@ -33,7 +33,8 @@ type Props = {
 
 export function FaitActiviteRow({ etablissementId, champ, intitule, pourquoi, valeur, children }: Props) {
   const [pending, startTransition] = useTransition();
-  const [echec, setEchec] = useState(false);
+  // `true` : échec sans explication ; une chaîne : le refus dit pourquoi.
+  const [echec, setEchec] = useState<boolean | string>(false);
   const [risqueConserve, setRisqueConserve] = useState(false);
   const [avertissement, setAvertissement] = useState<string | null>(null);
 
@@ -45,7 +46,7 @@ export function FaitActiviteRow({ etablissementId, champ, intitule, pourquoi, va
     startTransition(async () => {
       try {
         const r = await repondreFaitActivite(etablissementId, champ, v);
-        if (r.status === "error") setEchec(true);
+        if (r.status === "error") setEchec(r.message || true);
         // La réponse est acquise mais le calendrier n'a pas suivi : le dire,
         // comme la fiche établissement (`MESSAGE_REGEN_ECHEC`).
         if (r.status === "success_avec_avertissement") setAvertissement(r.message);
@@ -111,7 +112,9 @@ export function FaitActiviteRow({ etablissementId, champ, intitule, pourquoi, va
       )}
       {echec && (
         <p role="alert" className="m-0 mt-3 text-[12.5px] text-[color:var(--board-signal-ink)]">
-          Cette réponse n&apos;a pas pu être enregistrée. Rechargez la page, puis réessayez.
+          {typeof echec === "string"
+            ? echec
+            : "Cette réponse n'a pas pu être enregistrée. Rechargez la page, puis réessayez."}
         </p>
       )}
       {children}
