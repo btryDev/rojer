@@ -192,11 +192,14 @@ describe("la question des matières : un seul texte, identique partout", () => {
     expect(RELANCE.lien).toEqual(LIEN_TABLEAU_CLP);
   });
 
-  it("la fiche de l'établissement transmet le lien de la relance à la checklist", () => {
-    // La checklist ne rend le lien que si la page le lui passe.
-    expect(sansCommentaires(SRC("src/app/etablissements/[id]/page.tsx"))).toContain(
-      "lien: relance.lien",
-    );
+  // ~~« la fiche de l'établissement transmet le lien de la relance à la
+  // checklist »~~ [2026-10-22, `lot/guide-par-module` : le guide ne pose plus
+  // la question, il renvoie à la fiche — décision de la propriétaire. Le lien
+  // vit là où la question se répond.]
+  it("la fiche de l'établissement affiche l'aide et son lien CLP", () => {
+    expect(
+      sansCommentaires(SRC("src/components/etablissements/EtablissementForm.tsx")),
+    ).toContain("AideQuestionMatieres");
   });
 
   it("la phrase « à confirmer » (écrans, guide, MCP) cite la question mot pour mot", () => {
