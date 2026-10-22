@@ -27,10 +27,13 @@ import type { ActiviteDeclaree } from "@/lib/referentiels/types-communs";
 
 /**
  * Les colonnes d'`Etablissement` qui portent un fait d'activité posé par ce
- * registre. `epiPresents` est aussi lu par le moteur, mais sa question vit sur
- * la fiche établissement depuis l'ADR-025 : il n'est pas reposé ici.
+ * registre. ~~`epiPresents` est aussi lu par le moteur, mais sa question vit sur
+ * la fiche établissement depuis l'ADR-025 : il n'est pas reposé ici.~~
+ * [2026-10-22, décision de la propriétaire : les EPI découlent de l'évaluation
+ * des risques (R. 4321-4, « en tant que de besoin ») — leur question quitte la
+ * fiche et rejoint les faits d'activité, posée au DUERP et dans Équipe.]
  */
-export type ChampFaitActivite = Exclude<ActiviteDeclaree, "epiPresents">;
+export type ChampFaitActivite = ActiviteDeclaree;
 
 export type FaitActivite = {
   champ: ChampFaitActivite;
@@ -111,6 +114,18 @@ export const FAITS_ACTIVITE: readonly FaitActivite[] = [
     autresFondements:
       "Cette question ne couvre pas les autres postes à risques particuliers, qui ouvrent aussi droit au suivi individuel renforcé : postes exposant à l'amiante, au plomb, aux agents biologiques des groupes 3 et 4, aux rayonnements ionisants, au risque hyperbare ou au risque de chute de hauteur lors des opérations de montage et de démontage d'échafaudages ; tout poste dont l'affectation est conditionnée à un examen d'aptitude spécifique ; et ceux que l'employeur ajoute à la liste (art. R. 4624-23 du Code du travail).",
   },
+  // 2026-10-22, décision de la propriétaire : la présence d'EPI est un fait
+  // d'activité. Le besoin naît de l'évaluation des risques (R. 4321-4) ; la
+  // réponse se constate aussi toute seule — une mesure de protection
+  // individuelle au DUERP ou au plan, un EPI déclaré au parc
+  // (`epi-constate.ts`) — et la question ne reste posée qu'à défaut.
+  {
+    champ: "epiPresents",
+    question: "Fournissez-vous des équipements de protection individuelle à vos salariés ?",
+    pourquoi:
+      "Harnais, casques, gants, chaussures de sécurité, protections auditives. Si oui, l'employeur élabore une consigne d'utilisation de ces équipements (art. R. 4323-105 du Code du travail).",
+    declencheTitres: [],
+  },
 ];
 
 /**
@@ -159,6 +174,7 @@ export const SELECT_FAITS_ACTIVITE = {
   operationsElectriques: true,
   conduiteEngins: true,
   expositionCMR: true,
+  epiPresents: true,
 } as const satisfies Record<ChampFaitActivite, true>;
 
 /**

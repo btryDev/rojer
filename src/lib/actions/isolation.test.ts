@@ -43,6 +43,7 @@ vi.mock("@/lib/auth/require-user", () => ({
   getOptionalUser: vi.fn(),
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+vi.mock("@/lib/etablissements/epi-constate", () => ({ constaterEpiParLesMesures: vi.fn(async () => false) }));
 
 import {
   ajouterMesureCustom,

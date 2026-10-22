@@ -185,13 +185,8 @@ export default async function EtablissementPage({
     typesErpAutres: etab.typesErpAutres,
     categorieErp: etab.categorieErp,
   };
-  const manqueFiche = precisionsManquantes(
-    "fiche",
-    questionsMuettes,
-    questionRepondue(etab.epiPresents),
-    regimeFiche,
-  );
-  const manqueDuerp = precisionsManquantes("duerp", questionsMuettes, true, regimeFiche);
+  const manqueFiche = precisionsManquantes("fiche", questionsMuettes, regimeFiche);
+  const manqueDuerp = precisionsManquantes("duerp", questionsMuettes, regimeFiche);
   // Les appareils NOMMÉS : la liste des équipements ne marque pas ceux à qui
   // une réponse manque, l'étape doit donc dire lesquels (revue du 2026-10-22).
   const appareilsAPreciser = [

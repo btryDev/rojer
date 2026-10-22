@@ -46,6 +46,7 @@ export default async function EquipePage({
     operationsElectriques: "électricité",
     conduiteEngins: "engins",
     expositionCMR: "CMR",
+    epiPresents: "EPI",
   };
   const muets = faits ? FAITS_ACTIVITE.filter((f) => faits[f.champ] === null) : [];
   const sansReponse = muets.length;

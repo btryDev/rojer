@@ -17,7 +17,7 @@ const SILENCE: ReponsesFaitsActivite = {
   travailSurEcran: null,
   operationsElectriques: null,
   conduiteEngins: null,
-  expositionCMR: null,
+  expositionCMR: null, epiPresents: null
 };
 
 const intitule = (id: string) =>
@@ -69,7 +69,7 @@ describe("figerExpositionsAbsentes — le « non » seul", () => {
   });
 
   it("grave le CMR, que porte un fait sans question transverse", () => {
-    const g = figerExpositionsAbsentes([], null, { ...SILENCE, expositionCMR: false });
+    const g = figerExpositionsAbsentes([], null, { ...SILENCE, expositionCMR: false, epiPresents: false });
     expect(g).toHaveLength(1);
     expect(g[0].id).toBe("expositionCMR");
     expect(g[0].question).toMatch(/cancérogènes, mutagènes ou toxiques/);
@@ -106,7 +106,7 @@ describe("figerExpositionsAbsentes — le document ne se contredit pas", () => {
 
   it("un CMR « non » n'est pas dit absent si un risque gravé porte l'exposition", () => {
     const unite: UniteSnapshot = { ...transverse(risque("x", true)), estTransverse: false };
-    const g = figerExpositionsAbsentes([unite], null, { ...SILENCE, expositionCMR: false });
+    const g = figerExpositionsAbsentes([unite], null, { ...SILENCE, expositionCMR: false, epiPresents: false });
     expect(g).toEqual([]);
   });
 });

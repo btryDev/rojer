@@ -12,7 +12,7 @@ const FAITS: ReponsesFaitsActivite = {
   travailSurEcran: null,
   operationsElectriques: null,
   conduiteEngins: null,
-  expositionCMR: null,
+  expositionCMR: null, epiPresents: null
 };
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { supposeUnTiers } from "@/lib/prestataires/domaines";
@@ -244,7 +244,7 @@ describe("rapprochement des transmissions (ADR-024)", () => {
     const signal = (faits: Partial<ReponsesFaitsActivite>) =>
       rapprocher([liste], [], [], NOW, titresEcartesParLesFaits({ ...FAITS, ...faits }))
         .obligationsSupposantUnePersonne;
-    expect(signal({ expositionCMR: false })).toHaveLength(signal({}).length);
+    expect(signal({ expositionCMR: false, epiPresents: false })).toHaveLength(signal({}).length);
   });
 
   it("vaut aussi pour le levage : le « non » à la conduite fait taire, le silence non", () => {

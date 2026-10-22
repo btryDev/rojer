@@ -18,7 +18,6 @@ import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import {
   etablissementCreationSchema,
   etablissementSchema,
-  reponseEpiCoherente,
   reponseSommeilSuivantLeType,
   typesErpAutresCoherents,
 } from "./schema";
@@ -72,10 +71,9 @@ const CHAMPS_STRUCTURANTS = [
   // ici laisserait la réponse sans effet visible jusqu'à la prochaine
   // modification d'un autre champ.
   "comporteLocauxSommeilPublic",
-  // Depuis l'ADR-041, la présence d'EPI conditionne la consigne d'utilisation
-  // (R. 4323-105) ; la fiche la corrige depuis le 2026-10-12 (audit B2), et la
-  // checklist régénérait déjà après sa réponse.
-  "epiPresents",
+  // ~~"epiPresents"~~ — retiré le 2026-10-22 : la fiche ne pose plus la
+  // question des EPI, devenue un fait d'activité (DUERP, Équipe), dont
+  // l'écrivain régénère lui-même le calendrier.
   // DF 10 § 3 (2026-10-12) : la réponse retire ou fixe la triennale du
   // désenfumage mécanique.
   "ssiCategorieAouB",
@@ -163,12 +161,6 @@ function normaliserFormData(fd: FormData): Record<string, unknown> {
     ...(raw.comporteLocauxSommeilPublic === undefined
       ? {}
       : { comporteLocauxSommeilPublic: raw.comporteLocauxSommeilPublic }),
-    // Même protection : la fiche de création ne pose pas la question des EPI,
-    // et un champ non posté ne doit rien écrire.
-    ...(raw.epiPresents === undefined ? {} : { epiPresents: raw.epiPresents }),
-    ...(raw.epiPresentsDetail === undefined
-      ? {}
-      : { epiPresentsDetail: raw.epiPresentsDetail }),
     // Même protection : la question n'est rendue qu'aux ERP des quatre
     // premières catégories ; ailleurs, rien n'est posté et rien ne s'écrit.
     ...(raw.ssiCategorieAouB === undefined
@@ -353,7 +345,6 @@ export async function modifierEtablissement(
       personnesPresentesHabituellement: true,
       manipuleMatieresR422722: true,
       comporteLocauxSommeilPublic: true,
-      epiPresents: true,
       ssiCategorieAouB: true,
     },
   });
@@ -398,9 +389,10 @@ export async function modifierEtablissement(
   // Les autres types d'abord : la réponse sur le sommeil se lit sur
   // l'ensemble des types (ADR-045), y compris ceux que le formulaire n'a pas
   // postés et que la base garde.
-  const donnees = reponseEpiCoherente(
-    reponseSommeilSuivantLeType({ ...saisie, typesErpAutres: typesErpAutresApres }),
-  );
+  const donnees = reponseSommeilSuivantLeType({
+    ...saisie,
+    typesErpAutres: typesErpAutresApres,
+  });
   const etab = await prisma.etablissement.update({
     where: { id },
     data: donnees,

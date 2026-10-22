@@ -25,20 +25,15 @@ describe("guide par module", () => {
 
   it("ne range que les questions muettes du module", () => {
     expect(
-      precisionsManquantes("fiche", ["matieres_r4227_22", "manutention_manuelle"], true, TRAVAIL),
+      precisionsManquantes("fiche", ["matieres_r4227_22", "manutention_manuelle"], TRAVAIL),
     ).toEqual(["matières inflammables"]);
-    expect(precisionsManquantes("duerp", ["matieres_r4227_22"], false, TRAVAIL)).toEqual([]);
-  });
-
-  it("relance la présence d'EPI tant qu'elle n'a pas de réponse, même non marquée", () => {
-    expect(precisionsManquantes("fiche", [], false, TRAVAIL)).toEqual(["équipements de protection"]);
-    expect(precisionsManquantes("fiche", [], true, TRAVAIL)).toEqual([]);
+    expect(precisionsManquantes("duerp", ["matieres_r4227_22"], TRAVAIL)).toEqual([]);
   });
 
   it("n'annonce pas une question que la fiche ne pose pas à cet établissement", () => {
     const muettes: QuestionSansReponse[] = ["locaux_sommeil_public", "ssi_categorie_ab"];
-    expect(precisionsManquantes("fiche", muettes, true, TRAVAIL)).toEqual([]);
-    expect(precisionsManquantes("fiche", muettes, true, HOTEL_N3)).toEqual([
+    expect(precisionsManquantes("fiche", muettes, TRAVAIL)).toEqual([]);
+    expect(precisionsManquantes("fiche", muettes, HOTEL_N3)).toEqual([
       "système de sécurité incendie",
       "hébergement de nuit",
     ]);

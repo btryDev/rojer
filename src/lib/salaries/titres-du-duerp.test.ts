@@ -16,7 +16,7 @@ const AUCUN: ReponsesFaitsActivite = {
   travailSurEcran: null,
   operationsElectriques: null,
   conduiteEngins: null,
-  expositionCMR: null,
+  expositionCMR: null, epiPresents: null
 };
 
 describe("une seule surface par titre", () => {
@@ -70,7 +70,7 @@ describe("titresDuDuerpPourUnePersonne", () => {
   });
 
   it("le CMR déclaré fait apparaître le suivi individuel renforcé (R. 4624-23, I, 3°)", () => {
-    const q = trouver(titresDuDuerpPourUnePersonne({ ...AUCUN, expositionCMR: true }, []), "expositionCMR");
+    const q = trouver(titresDuDuerpPourUnePersonne({ ...AUCUN, expositionCMR: true, epiPresents: true }, []), "expositionCMR");
     expect(q.titres.map((t) => t.obligation.id)).toContain("sante-travail-salarie-sir");
   });
 });

@@ -227,25 +227,9 @@ const reponseTroisEtats = (v: unknown) =>
           ? undefined
           : null;
 
-/** Le détail des EPI : borné comme les autres textes libres du modèle. Lu
- *  par la fiche et par la question de la checklist (`parametrage.ts`). */
-export const DETAIL_EPI = z
-  .string()
-  .trim()
-  .max(1000, "1000 caractères au maximum");
-
-/**
- * Un « non » (ou un « je ne sais pas ») efface le détail laissé par un « oui »
- * précédent : le garder ferait subsister une liste d'EPI sous une déclaration
- * d'absence d'EPI, et c'est la contradiction qu'un contrôleur relèverait.
- * Règle unique de la checklist et de la fiche (2026-10-12, audit B2).
- */
-export function reponseEpiCoherente<
-  T extends { epiPresents?: boolean | null; epiPresentsDetail?: string | null },
->(d: T): T {
-  if (d.epiPresents === undefined) return d;
-  return d.epiPresents === true ? d : { ...d, epiPresentsDetail: null };
-}
+// ~~`DETAIL_EPI`, `reponseEpiCoherente`~~ — retirés le 2026-10-22 avec la
+// question EPI de la fiche : plus aucun écran ne saisit le détail. La colonne
+// `epiPresentsDetail` reste en base, inerte, comme `chiffonsImpregnes`.
 
 /**
  * Schéma de validation d'un établissement. La typologie est faite de flags
@@ -358,16 +342,6 @@ export const etablissementSchema = z
       reponseTroisEtats,
       z.boolean().nullable().optional(),
     ),
-    // Présence d'EPI (ADR-041 : elle conditionne la consigne d'utilisation de
-    // R. 4323-105). Posée d'abord par la checklist, qui s'efface une fois
-    // répondue : un « non » ne se corrigeait plus nulle part (audit du
-    // 2026-10-12, B2). La fiche la pose désormais en modification, comme les
-    // matières et le sommeil. La fiche de CRÉATION ne la pose pas : le champ
-    // n'est pas posté et `undefined` n'écrit rien.
-    epiPresents: z.preprocess(
-      reponseTroisEtats,
-      z.boolean().nullable().optional(),
-    ),
     // SSI de catégorie A ou B (DF 10 § 3), 2026-10-12. Trois états, et la
     // réponse n'est PAS exigée : le silence retient la triennale du
     // désenfumage mécanique « à confirmer » (ADR-022). `undefined` traverse —
@@ -376,15 +350,6 @@ export const etablissementSchema = z
     ssiCategorieAouB: z.preprocess(
       reponseTroisEtats,
       z.boolean().nullable().optional(),
-    ),
-    epiPresentsDetail: z.preprocess(
-      (v) =>
-        v === undefined
-          ? undefined
-          : typeof v === "string"
-            ? v.trim() || null
-            : (v ?? null),
-      DETAIL_EPI.nullable().optional(),
     ),
 
     // Renseignements de la fiche « Renseignements généraux » du registre de

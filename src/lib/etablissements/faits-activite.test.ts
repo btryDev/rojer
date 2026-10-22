@@ -25,7 +25,7 @@ const AUCUN: ReponsesFaitsActivite = {
   travailSurEcran: null,
   operationsElectriques: null,
   conduiteEngins: null,
-  expositionCMR: null,
+  expositionCMR: null, epiPresents: null
 };
 
 /** Ce que le fait cite : sa raison, et le risque que sa question ajoute au DUERP. */

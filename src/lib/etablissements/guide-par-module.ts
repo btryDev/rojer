@@ -5,7 +5,7 @@
 // Chaque question dont le silence retient une ligne « à confirmer » a un
 // foyer où elle se répond déjà :
 //   - les faits d'activité → l'étape « Risques transverses » du DUERP, qui les
-//     pose tous les cinq sur la même colonne d'établissement (ADR-041) ;
+//     pose tous sur la même colonne d'établissement (ADR-041) ;
 //   - les autres → la fiche de l'établissement (`EtablissementForm`).
 // Les précisions d'équipement se répondent sur la fiche de l'appareil.
 //
@@ -29,7 +29,7 @@ export const FOYER_DE_LA_QUESTION: Record<
   operations_electriques: { module: "duerp", nomCourt: "électricité" },
   conduite_engins: { module: "duerp", nomCourt: "engins" },
   exposition_cmr: { module: "duerp", nomCourt: "CMR" },
-  epi_presents: { module: "fiche", nomCourt: "équipements de protection" },
+  epi_presents: { module: "duerp", nomCourt: "équipements de protection" },
   ssi_categorie_ab: { module: "fiche", nomCourt: "système de sécurité incendie" },
   locaux_sommeil_public: { module: "fiche", nomCourt: "hébergement de nuit" },
   matieres_r4227_22: { module: "fiche", nomCourt: "matières inflammables" },
@@ -65,22 +65,16 @@ export function poseeSurLaFiche(q: QuestionSansReponse, regime: RegimeDeLaFiche)
 
 /**
  * Les noms courts des questions muettes d'un module, dans l'ordre de la table.
- * `epiRepondue` : la présence d'EPI se relance même quand le moteur ne la
- * marque pas — elle conditionne la consigne d'utilisation, et le guide la
- * demandait déjà comme étape à part.
  */
 export function precisionsManquantes(
   module: ModuleDuGuide,
   questionsMuettes: readonly QuestionSansReponse[],
-  epiRepondue: boolean,
   regime: RegimeDeLaFiche,
 ): string[] {
   return (Object.keys(FOYER_DE_LA_QUESTION) as QuestionSansReponse[])
     .filter((q) => FOYER_DE_LA_QUESTION[q].module === module)
     .filter((q) => module !== "fiche" || poseeSurLaFiche(q, regime))
-    .filter((q) =>
-      questionsMuettes.includes(q) || (q === "epi_presents" && !epiRepondue),
-    )
+    .filter((q) => questionsMuettes.includes(q))
     .map((q) => FOYER_DE_LA_QUESTION[q].nomCourt);
 }
 

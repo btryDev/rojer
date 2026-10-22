@@ -11,8 +11,10 @@
  *
  * Rien ne change au moteur ni au compte : la ligne reste un état permanent du
  * dossier, comptée dans l'en-tête, le score, le widget et le PDF. Seul l'endroit
- * où on la voit change. `epiPresents` n'en est pas : sa question vit sur la
- * fiche établissement (ADR-025), sa ligne reste sur l'écran « en place ».
+ * où on la voit change. ~~`epiPresents` n'en est pas : sa question vit sur la
+ * fiche établissement (ADR-025), sa ligne reste sur l'écran « en place ».~~
+ * [2026-10-22 : `epiPresents` est un fait d'activité, sa consigne se déclare
+ * sous sa question comme les autres.]
  *
  * Module pur.
  */

@@ -11,6 +11,8 @@
 import type { FicheLigne } from "@/components/etats-permanents/RevueEnPlace";
 import type { EtatCourt } from "@/components/etats-permanents/LigneCompacte";
 import { PHRASE_SANS_REPONSE } from "@/lib/matching/sans-reponse";
+import { POLITIQUE_ABSENCE } from "@/lib/matching/absence";
+import { FAITS_ACTIVITE } from "@/lib/etablissements/faits-activite";
 import {
   GROUPE_REPLI,
   LIBELLE_GROUPE,
@@ -23,17 +25,13 @@ import { FOND_TEINTE, illustrationDe, teinteDe } from "./illustrations";
 import { questionDe } from "./questions";
 import type { LigneEtatPermanent } from "./queries";
 
-/** Les phrases « à confirmer » des cinq faits d'activité (ADR-041). */
+/**
+ * Les phrases « à confirmer » des faits d'activité (ADR-041), lues du registre
+ * et de la table du moteur — ~~une liste de cinq écrite à la main~~ [2026-10-22 :
+ * les EPI y entrent, la liste recopiée les aurait laissés renvoyer à la fiche].
+ */
 const PHRASES_FAITS_ACTIVITE = new Set<string>(
-  (
-    [
-      "manutention_manuelle",
-      "travail_ecran",
-      "operations_electriques",
-      "conduite_engins",
-      "exposition_cmr",
-    ] as const
-  ).map((q) => PHRASE_SANS_REPONSE[q]),
+  FAITS_ACTIVITE.map((f) => PHRASE_SANS_REPONSE[POLITIQUE_ABSENCE[f.champ].question]),
 );
 const LIEN_RISQUES = "Répondre dans « Évaluer les risques de vos salariés »";
 const LIEN_FICHE = "Répondre sur la fiche de l'établissement";

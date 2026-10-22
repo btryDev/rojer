@@ -27,6 +27,7 @@ vi.mock("@/lib/auth/require-user", () => ({
   getOptionalUser: vi.fn(),
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+vi.mock("@/lib/etablissements/epi-constate", () => ({ constaterEpiParLesMesures: vi.fn(async () => false) }));
 vi.mock("next/navigation", async (orig) => ({
   ...(await orig<typeof import("next/navigation")>()),
   redirect: redirectMock,

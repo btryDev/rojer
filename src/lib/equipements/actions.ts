@@ -71,7 +71,7 @@ async function regenererCalendrier(
  * Un équipement de protection individuelle déclaré contredit un « non » (ou un
  * silence) à « Fournissez-vous des équipements de protection individuelle ? »
  * (relecture indépendante du 2026-10-12, audit B2). Le « non » laissait
- * `R. 4323-105` retiré alors qu'un harnais était déclaré, et `AIDE_EPI`
+ * `R. 4323-105` retiré alors qu'un harnais était déclaré, et l'aide de la question
  * invite justement à les déclarer un par un. La déclaration vaut « oui » :
  * `epiPresents` passe à vrai, AVANT la régénération que l'appelant fait déjà.
  * Une seule règle, `estCategorieEpi`.
