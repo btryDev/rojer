@@ -73,8 +73,6 @@ export const QUESTIONS_EXIGEES_PAR_DECISION: readonly {
   champ: ChampTriEtat;
   /** Le refus du formulaire. */
   message: string;
-  /** La raison de la relance du tableau de bord. */
-  pourquoi: string;
 }[] = [
   // Décision du 2026-10-08, point 5 : « Désenfumage mécanique : réponse
   // exigée ».
@@ -83,8 +81,6 @@ export const QUESTIONS_EXIGEES_PAR_DECISION: readonly {
     champ: "estDesenfumageMecanique",
     message:
       "Répondez oui ou non : la réponse décide de la vérification tous les trois ans par un organisme agréé (arrêté du 25 juin 1980, art. DF 10 § 3).",
-    pourquoi:
-      "Un désenfumage mécanique est vérifié tous les trois ans par un organisme agréé quand l'établissement dispose aussi d'un système de sécurité incendie de catégorie A ou B (arrêté du 25 juin 1980, art. DF 10 § 3). Tant que la réponse manque, cette vérification n'apparaît pas au calendrier.",
   },
   // Décision du 2026-10-13 : « la réponse à `aGroupeElectrogene` devient
   // EXIGÉE pour une INSTALLATION_ELECTRIQUE en ERP, exactement comme
@@ -94,8 +90,6 @@ export const QUESTIONS_EXIGEES_PAR_DECISION: readonly {
     champ: "aGroupeElectrogene",
     message:
       "Répondez oui ou non : la réponse décide de la vérification des niveaux toutes les deux semaines et de l'essai chaque mois du groupe électrogène de sécurité (arrêté du 25 juin 1980, art. EL 18 § 4).",
-    pourquoi:
-      "Un groupe électrogène de sécurité fait l'objet d'une vérification des niveaux toutes les deux semaines et d'un essai chaque mois (arrêté du 25 juin 1980, art. EL 18 § 4). Tant que la réponse manque, ces vérifications n'apparaissent pas au calendrier.",
   },
 ];
 

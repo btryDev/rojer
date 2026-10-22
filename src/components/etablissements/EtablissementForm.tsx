@@ -308,7 +308,7 @@ export function EtablissementForm({
               reconnaissait dans la classification de R. 4227-22. La question
               se répond désormais étiquette en main ; libellé et aide viennent
               de `etablissements/questions.ts` (`QUESTION_MATIERES`,
-              `AideQuestionMatieres`), partagés avec le parcours, la relance et
+              `AideQuestionMatieres`), partagés avec le parcours, ~~la relance~~ [retirée le 2026-10-22] et
               la phrase « à confirmer ». La condition reste celle de
               R. 4227-34, et la dernière phrase sur l'entreposage demeure.] */}
           <div className="sm:col-span-2">

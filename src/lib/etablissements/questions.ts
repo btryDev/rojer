@@ -33,7 +33,7 @@ export const EXEMPLE_DETAIL_EPI =
 
 /**
  * LA QUESTION DU SSI DE CATÉGORIE A OU B, SES MOTS UNE FOIS — la fiche la
- * pose, la relance la reprend (2026-10-12, décision de la propriétaire du
+ * pose, ~~la relance la reprend~~ [2026-10-22, `lot/guide-par-module` : relance retirée, le guide renvoie à la fiche] (2026-10-12, décision de la propriétaire du
  * 2026-10-08 : « une seule question sur la fiche établissement, au lieu d'une
  * par désenfumage »). Elle n'est posée qu'aux catégories d'ERP où une
  * obligation la lit : DF 10 est au livre II, que PE 1 § 1 écarte en 5ᵉ
@@ -139,7 +139,7 @@ export const AIDE_SSI =
  * ~~aide § 1 : « Sur l'étiquette, la mention « extrêmement inflammable »
  * accompagne une flamme dans un losange bordé de rouge : gaz (H220), aérosol
  * (H222), liquide (H224). Une flamme seule, sans cette mention, ne suffit
- * pas. »~~ La relance de la checklist n'affiche que ce § 1 : un détenteur
+ * pas. »~~ La relance de la checklist n'affichait que ce § 1 [2026-10-22, `lot/guide-par-module` : relance retirée, le guide renvoie à la fiche] : un détenteur
  * d'un produit H250, flamme seule, y lisait « non », alors que le § 2 le fait
  * entrer. H250 passe au § 1, qui se suffit à lui-même ; le § 2 y renvoie.
  * ~~aide § 2 : « La question vise aussi les matières qui, dans l'état où
@@ -161,7 +161,8 @@ export const AIDE_SSI =
  * texte.
  *
  * UN SEUL TEXTE : la fiche (`EtablissementForm`), le parcours de création
- * (`StepTypologie`), la relance de la checklist (`relance.ts`) et la phrase
+ * (`StepTypologie`), ~~la relance de la checklist (`relance.ts`)~~
+ * [2026-10-22, `lot/guide-par-module` : relance retirée, le guide renvoie à la fiche] et la phrase
  * « à confirmer » (`PHRASE_SANS_REPONSE` — écrans, guide, MCP) l'importent
  * d'ici. `question-matieres.test.tsx` le vérifie surface par surface.
  */

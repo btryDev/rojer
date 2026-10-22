@@ -14,8 +14,8 @@ const CHAMPS = new Set<string>(FAITS_ACTIVITE.map((f) => f.champ));
 
 /**
  * Répond à un fait d'activité depuis un écran qui n'est pas le DUERP — l'écran
- * « Évaluer les risques de vos salariés » d'Équipe, ou la relance de la fiche
- * établissement (ADR-041). `null` retire la réponse.
+ * « Évaluer les risques de vos salariés » d'Équipe~~, ou la relance de la fiche
+ * établissement~~ [2026-10-22, `lot/guide-par-module` : relance retirée, le guide renvoie à la fiche] (ADR-041). `null` retire la réponse.
  *
  * Le calendrier est régénéré : la réponse ajoute ou retire des obligations,
  * comme une réponse de la fiche (`parametrage.ts`).

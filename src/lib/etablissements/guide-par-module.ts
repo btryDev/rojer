@@ -15,6 +15,8 @@
 // Module pur.
 
 import type { QuestionSansReponse } from "@/lib/matching/types";
+import { CATEGORIES_ERP_QUESTION_SSI } from "./questions";
+import { questionSommeilPosee } from "./schema";
 
 export type ModuleDuGuide = "duerp" | "fiche";
 
@@ -35,6 +37,32 @@ export const FOYER_DE_LA_QUESTION: Record<
   personnes_presentes: { module: "fiche", nomCourt: "personnes présentes" },
 };
 
+/** Ce que la fiche lit pour décider des questions qu'elle pose. */
+export type RegimeDeLaFiche = {
+  estERP: boolean;
+  typeErp: string | null;
+  typesErpAutres: readonly string[];
+  categorieErp: string | null;
+};
+
+/**
+ * La fiche pose-t-elle cette question à cet établissement ? Mêmes règles que
+ * `EtablissementForm` : les locaux à sommeil selon les types
+ * (`questionSommeilPosee`), le SSI aux quatre premières catégories d'ERP. Une
+ * question que la fiche ne pose pas n'est pas annoncée : l'étape renverrait à
+ * un champ absent et ne se fermerait jamais (revue du 2026-10-22).
+ */
+export function poseeSurLaFiche(q: QuestionSansReponse, regime: RegimeDeLaFiche): boolean {
+  if (q === "locaux_sommeil_public") return questionSommeilPosee(regime);
+  if (q === "ssi_categorie_ab") {
+    return (
+      regime.estERP &&
+      (CATEGORIES_ERP_QUESTION_SSI as readonly string[]).includes(regime.categorieErp ?? "")
+    );
+  }
+  return true;
+}
+
 /**
  * Les noms courts des questions muettes d'un module, dans l'ordre de la table.
  * `epiRepondue` : la présence d'EPI se relance même quand le moteur ne la
@@ -45,9 +73,11 @@ export function precisionsManquantes(
   module: ModuleDuGuide,
   questionsMuettes: readonly QuestionSansReponse[],
   epiRepondue: boolean,
+  regime: RegimeDeLaFiche,
 ): string[] {
   return (Object.keys(FOYER_DE_LA_QUESTION) as QuestionSansReponse[])
     .filter((q) => FOYER_DE_LA_QUESTION[q].module === module)
+    .filter((q) => module !== "fiche" || poseeSurLaFiche(q, regime))
     .filter((q) =>
       questionsMuettes.includes(q) || (q === "epi_presents" && !epiRepondue),
     )

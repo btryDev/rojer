@@ -135,8 +135,8 @@ export default async function EtablissementPage({
     // (`cinqProchaines`, plus bas).
     listerEcheancesAnnoncables(id, batimentFiltre),
     listerRapportsRecents(id, 4),
-    // Les marques « à confirmer » : pour les échéances du board comme pour la
-    // relance plus bas — un seul calcul, partagé avec les fenêtres
+    // Les marques « à confirmer » : pour les échéances du board comme pour le
+    // guide plus bas, par module — un seul calcul, partagé avec les fenêtres
     // d'événements ci-dessus par `cache()`.
     marquesAConfirmerDuRendu(id),
   ]);
@@ -160,11 +160,16 @@ export default async function EtablissementPage({
     stats: statsEquipements.get(e.id),
   });
 
-  const duerpDernier = etab.duerps[0] ?? null;
   // Fait observable fiable : le secteur a été choisi par l'utilisateur.
   // L'existence seule d'un Duerp ne prouve rien (créations silencieuses
-  // historiques par les pages relais).
-  const duerpOuvert = duerpDernier?.referentielSecteurId != null;
+  // historiques par les pages relais). ~~Le plus récent seulement~~
+  // [2026-10-22, revue : `duerps` est trié par `updatedAt` ; un DUERP créé en
+  // silence après celui qui porte le secteur masquait l'ouverture et envoyait
+  // « Compléter » vers un document sans secteur. On cherche celui qui en a un.]
+  const duerpDernier = etab.duerps[0] ?? null;
+  const duerpOuvertDoc =
+    etab.duerps.find((d) => d.referentielSecteurId != null) ?? null;
+  const duerpOuvert = duerpOuvertDoc !== null;
 
   // Checklist onboarding : uniquement les étapes actionnables par l'user.
   //
@@ -174,14 +179,26 @@ export default async function EtablissementPage({
   // la fiche de l'appareil (`guide-par-module.ts`) — et l'étape du module
   // reste ouverte tant qu'il en manque une.
   const questionsMuettes = marquesDuDossier.questions;
+  const regimeFiche = {
+    estERP: etab.estERP,
+    typeErp: etab.typeErp,
+    typesErpAutres: etab.typesErpAutres,
+    categorieErp: etab.categorieErp,
+  };
   const manqueFiche = precisionsManquantes(
     "fiche",
     questionsMuettes,
     questionRepondue(etab.epiPresents),
+    regimeFiche,
   );
-  const manqueDuerp = precisionsManquantes("duerp", questionsMuettes, true);
-  const appareils = appareilsMuets(equipements, etab);
-  const appareilsAPreciser = [...new Set(appareils.map((a) => a.equipementId))];
+  const manqueDuerp = precisionsManquantes("duerp", questionsMuettes, true, regimeFiche);
+  // Les appareils NOMMÉS : la liste des équipements ne marque pas ceux à qui
+  // une réponse manque, l'étape doit donc dire lesquels (revue du 2026-10-22).
+  const appareilsAPreciser = [
+    ...new Map(
+      appareilsMuets(equipements, etab).map((a) => [a.equipementId, a.libelle]),
+    ),
+  ];
   const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? "s" : ""}`;
 
   const etapesOnboarding: EtapeOnboarding[] = [
@@ -207,13 +224,13 @@ export default async function EtablissementPage({
           : "Déclarer vos équipements",
       pourquoi:
         equipements.length > 0 && appareilsAPreciser.length > 0
-          ? `Une précision manque sur ${pluriel(appareilsAPreciser.length, "équipement")}. Elle décide de certaines de leurs vérifications.`
+          ? `Une réponse manque sur ${enumerer(appareilsAPreciser.map(([, libelle]) => `« ${libelle} »`))}. Elle décide de certaines de leurs vérifications.`
           : "Installation électrique, extincteurs, hotte, ascenseur… Ce sont eux qui déclenchent les vérifications périodiques à faire.",
       faite: equipements.length > 0 && appareilsAPreciser.length === 0,
       // Un seul appareil à préciser : on y va directement.
       href:
         appareilsAPreciser.length === 1
-          ? `/etablissements/${id}/equipements/${appareilsAPreciser[0]}/modifier`
+          ? `/etablissements/${id}/equipements/${appareilsAPreciser[0][0]}/modifier`
           : `/etablissements/${id}/equipements`,
       cta:
         equipements.length === 0
@@ -234,20 +251,25 @@ export default async function EtablissementPage({
       href: `/etablissements/${id}/calendrier`,
       cta: nbVerifs === 0 ? "Ouvrir le calendrier" : undefined,
     },
-    duerpOuvert && duerpDernier && manqueDuerp.length > 0
+    duerpOuvertDoc && manqueDuerp.length > 0
       ? {
           id: "duerp",
           titre: "Compléter votre DUERP",
           pourquoi: `Il reste ${pluriel(manqueDuerp.length, "question")} sur le travail de vos salariés : ${enumerer(manqueDuerp)}. Elles décident des formations dues ; d'ici là, elles s'affichent « à confirmer ».`,
           faite: false,
-          href: `/duerp/${duerpDernier.id}/transverses`,
+          href: `/duerp/${duerpOuvertDoc.id}/transverses`,
           cta: "Compléter le DUERP",
         }
       : {
           id: "duerp",
           titre: "Ouvrir votre DUERP",
-          pourquoi:
-            "L'article R. 4121-1 du Code du travail : « L'employeur transcrit et met à jour dans un document unique les résultats de l'évaluation des risques pour la santé et la sécurité des travailleurs ». L'article ne fixe pas de seuil d'effectif. L'outil vous guide : secteur d'activité, puis unités de travail.",
+          // Les faits muets se disent aussi avant l'ouverture : le DUERP les
+          // posera, et d'ici là ils retiennent des lignes (revue du 2026-10-22).
+          pourquoi: `L'article R. 4121-1 du Code du travail : « L'employeur transcrit et met à jour dans un document unique les résultats de l'évaluation des risques pour la santé et la sécurité des travailleurs ». L'article ne fixe pas de seuil d'effectif. L'outil vous guide : secteur d'activité, puis unités de travail.${
+            !duerpOuvert && manqueDuerp.length > 0
+              ? ` Il vous demandera aussi ${enumerer(manqueDuerp)} : d'ici là, les formations qui en dépendent s'affichent « à confirmer ».`
+              : ""
+          }`,
           faite: duerpOuvert,
           href: `/etablissements/${id}/duerp`,
           cta: !duerpOuvert ? "Ouvrir le DUERP" : undefined,

@@ -120,8 +120,8 @@ export default async function QuandCaArrivePage({
                         du 2026-10-22) : le FAIT reste visible, c'est l'entrée
                         par laquelle le dirigeant se reconnaît ; ce qui est dû
                         et le texte exact se déplient. La marque « à confirmer »
-                        reste sur la ligne fermée : elle dit pourquoi la ligne
-                        est là, elle ne se cache pas (D1, audit du 2026-10-12). */}
+                        (D1, audit du 2026-10-12) et l'écrit à garder restent
+                        sur la ligne fermée : ils ne se cachent pas. */}
                     <details className="group">
                       <summary className="flex min-h-6 cursor-pointer list-none items-start gap-2 [&::-webkit-details-marker]:hidden">
                         <span className="mt-[3px] text-[color:var(--board-slate-ink)]">
@@ -132,6 +132,11 @@ export default async function QuandCaArrivePage({
                             {l.quand}
                           </span>
                           <MentionAConfirmer phrases={l.aConfirmer} />
+                          {l.pieceAttendue && (
+                            <span className="inline-flex items-center rounded-full bg-[color:var(--board-slate-pale)] px-2 py-[3px] text-[11px] font-medium text-[color:var(--board-slate-ink)]">
+                              Écrit à garder : {l.pieceAttendue}
+                            </span>
+                          )}
                         </span>
                       </summary>
                       <div className="pl-6">
@@ -141,13 +146,6 @@ export default async function QuandCaArrivePage({
                           </span>
                           {l.quoi}
                         </p>
-                        {l.pieceAttendue && (
-                          <div className="mt-2 flex flex-wrap items-center gap-2">
-                            <span className="inline-flex items-center rounded-full bg-[color:var(--board-slate-pale)] px-2 py-[3px] text-[11px] font-medium text-[color:var(--board-slate-ink)]">
-                              Écrit à garder : {l.pieceAttendue}
-                            </span>
-                          </div>
-                        )}
                         <TexteSource articles={l.articles} className="mt-2">
                           <p>
                             <strong className="font-semibold">Quand :</strong>{" "}
