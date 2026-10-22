@@ -4,11 +4,11 @@
 // description, que l'écran « Ce qui doit être en place » n'affiche pas. Une
 // ligne qui cite GN 10 le dit désormais sous son article. Chaîne entière : le
 // référentiel (`porteGn10`), la lecture de l'écran (`listerEtatsPermanents` →
-// `fondementDe`), puis le rendu de la ligne avec les props que la page lui
-// passe.
+// `fondementDe`), puis le rendu de la fiche (`versFiche` → `RevueEnPlace`,
+// 2026-10-21 : la fiche a remplacé `LigneEtat` sur l'écran).
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render } from "@testing-library/react";
+import { cleanup, fireEvent } from "@testing-library/react";
 
 vi.mock("@/lib/prisma", () => ({
   prisma: { declarationEtatPermanent: { findMany: vi.fn(async () => []) } },
@@ -22,7 +22,8 @@ vi.mock("@/lib/etats-permanents/actions", () => ({
 }));
 
 const { listerEtatsPermanents } = await import("@/lib/etats-permanents/queries");
-const { LigneEtat } = await import("./LigneEtat");
+const { versFiche } = await import("@/lib/etats-permanents/vers-fiche");
+const { rendreFicheOuverte } = await import("@/test/fiche-ouverte");
 const { obligationsConformite } = await import("@/lib/referentiels/conformite");
 const { fondementDe } = await import("@/lib/etats-permanents/fondement");
 const { porteGn10, MENTION_GN_10, MENTION_GN_10_COURTE, GESTE_GN_10, CITATION_GN_10 } = await import(
@@ -64,17 +65,10 @@ async function lignes(e: never) {
 }
 
 function rendre(l: Awaited<ReturnType<typeof lignes>>[number]) {
-  return render(
-    <LigneEtat
-      etablissementId="etab-1"
-      obligationId={l.obligation.id}
-      libelle={l.obligation.libelle}
-      mode={l.mode}
-      pieceAttendue={l.pieceAttendue}
-      declareLe={null}
-      fondement={l.fondement}
-    />,
+  const r = rendreFicheOuverte(
+    versFiche(l, { etablissementId: "etab-1", entrepriseId: "ent-1" }),
   );
+  return { ...r, container: r.boite };
 }
 
 describe("GN 10 à l'écran — une ligne qui le cite le dit", () => {
@@ -137,7 +131,9 @@ describe("GN 10 à l'écran — une ligne qui le cite le dit", () => {
       (x) => x.obligation.id === "incendie-erp-plan-intervention-entrees",
     )!;
     const { getByRole, container } = rendre(l);
-    fireEvent.click(getByRole("button", { name: /GN 10/ }));
+    // Le nom accessible ne répète pas la référence : « GN 10 », pas « GN 10 : GN 10 ».
+    const livre = getByRole("button", { name: "GN 10", hidden: true });
+    fireEvent.click(livre);
     const t = container.textContent ?? "";
     // Au dépli : la phrase longue, puis le verbatim, puis le geste.
     const [i, j, k] = [t.indexOf(MENTION_GN_10), t.indexOf(CITATION_GN_10), t.indexOf(GESTE_GN_10)];

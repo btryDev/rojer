@@ -32,6 +32,7 @@ import {
 import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
 import { phrasesAConfirmer } from "@/lib/matching/marques";
 import { estDeclencheeParUnFait } from "@/lib/etats-permanents/regle";
+import { EN_CLAIR } from "./en-clair";
 import {
   porteurDe,
   type DomaineObligation,
@@ -42,6 +43,12 @@ export type LigneQuandCaArrive = {
   obligation: Obligation;
   /** Le fait, dans les mots du texte. Jamais vide : voir `estPresentable`. */
   fait: string;
+  /**
+   * Ce que la carte affiche (`en-clair.ts`, 2026-10-20) : le fait et le geste
+   * en clair, sinon le texte et le libellé. Le texte exact reste sous le livre.
+   */
+  quand: string;
+  quoi: string;
   /** L'écrit que le texte nomme, s'il en nomme un. */
   pieceAttendue: string | null;
   /**
@@ -119,9 +126,12 @@ export function lignesDepuis(
     // Une ligne sans son fait n'aurait rien à dire. Le test du référentiel
     // interdit le cas ; on ne l'affiche pas à moitié s'il survenait.
     if (!o.faitGenerateur) continue;
+    const clair = EN_CLAIR[o.id];
     lignes.push({
       obligation: o,
       fait: o.faitGenerateur,
+      quand: clair?.quand ?? o.faitGenerateur,
+      quoi: clair?.quoi ?? o.libelle,
       pieceAttendue: o.pieceAttendue,
       articles: o.referencesLegales.map((r) => r.article ?? r.reference),
       description: memeTexte(o.description ?? "", o.faitGenerateur) ? null : (o.description ?? null),

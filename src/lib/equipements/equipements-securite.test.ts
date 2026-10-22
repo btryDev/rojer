@@ -185,7 +185,7 @@ describe("le geste de chaque ligne", () => {
     expect(hrefActionSecurite(l, liens)).toBeNull();
   });
 
-  it("ailleurs : la ligne de l'obligation sur « Ce qui doit être en place », par l'ancre que LigneEtat pose", () => {
+  it("ailleurs : la ligne de l'obligation sur « Ce qui doit être en place », par l'ancre que la vignette pose", () => {
     const l = section(RESTAURANT_N3, []).find((x) => x.obligationId === "secours-etablissement-materiel")!;
     expect(hrefActionSecurite(l, liens)).toBe(
       `/etablissements/e/etats-permanents#${ancreEtatPermanent("secours-etablissement-materiel")}`,

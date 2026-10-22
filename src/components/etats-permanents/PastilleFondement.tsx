@@ -30,11 +30,16 @@ export function PastilleFondement({
   // sous son article, avec le texte entier au dépli — sur l'écran, le widget
   // et la section des équipements, qui lisent tous ce composant.
   if (fondement.gn10)
+    // Fragment : dans une rangée flexible (la ligne de l'écran), la mention
+    // passe à la ligne et repart du bord gauche (`basis-full`) ; ailleurs,
+    // elle se pose simplement sous la pastille.
     return (
-      <div className="flex flex-col items-start gap-1.5">
+      <>
         <PastillesDeLaLigne fondement={fondement} />
-        <MentionGn10 />
-      </div>
+        <div className="mt-1 basis-full">
+          <MentionGn10 />
+        </div>
+      </>
     );
   return <PastillesDeLaLigne fondement={fondement} />;
 }
@@ -47,12 +52,13 @@ export function PastilleFondement({
  */
 function MentionGn10() {
   return (
-    <div className="max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+    <div className="flex max-w-[66ch] flex-wrap items-center gap-x-2 gap-y-1 text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
       <p className="m-0">{MENTION_GN_10_COURTE}</p>
-      <div className="mt-1">
+      <div>
         <LegalBadge
           charte="board"
           reference="GN 10"
+          compact={{ libelle: "GN 10" }}
           href={URL_GN_10}
           avant={<p className="m-0">{MENTION_GN_10}</p>}
           extrait={CITATION_GN_10}
@@ -72,27 +78,46 @@ function PastillesDeLaLigne({ fondement }: { fondement: FondementLigne }) {
     return (
       <span className="inline-flex flex-wrap items-center gap-1.5">
         <PastilleSeule fondement={fondement} />
+        {/* Chaque livre de contexte porte sa référence (« N 20 », « O 18 ») :
+            plusieurs « Texte » identiques ne se distinguaient pas. */}
         {fondement.complement.map((c) => (
-          <PastilleSeule key={c.reference} fondement={c} />
+          <PastilleSeule
+            key={c.reference}
+            fondement={c}
+            libelle={c.article ?? c.reference}
+          />
         ))}
       </span>
     );
   return <PastilleSeule fondement={fondement} />;
 }
 
-function PastilleSeule({ fondement }: { fondement: FondementLigne }) {
-  const { reference, href } = fondement;
-  if (fondement.extrait !== null)
+function PastilleSeule({
+  fondement,
+  libelle,
+}: {
+  fondement: FondementLigne;
+  /** Le mot du livre ; « Texte » par défaut. */
+  libelle?: string;
+}) {
+  const { reference, href, extrait } = fondement;
+  // Ce que le livre déplie : l'extrait (et la source s'il y en a une), sinon
+  // la seule source. Ni l'un ni l'autre : la référence s'écrit en texte.
+  const source =
+    extrait !== null
+      ? { extrait, href: href ?? undefined }
+      : href !== null
+        ? { href }
+        : null;
+  if (source)
     return (
       <LegalBadge
         charte="board"
         reference={reference}
-        href={href ?? undefined}
-        extrait={fondement.extrait}
+        {...source}
+        compact={libelle ? { libelle } : true}
       />
     );
-  if (href !== null)
-    return <LegalBadge charte="board" reference={reference} href={href} />;
   return (
     <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-[color:var(--board-slate-soft)]">
       {reference}

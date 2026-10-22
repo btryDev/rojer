@@ -4,6 +4,8 @@ import { requireEtablissement } from "@/lib/auth/scope";
 import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
 import { listerQuandCaArrive } from "@/lib/quand-ca-arrive/lignes";
 import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
+import { AideEcran } from "@/components/ui-kit/AideEcran";
+import { TexteSource } from "@/components/ui-kit/TexteSource";
 
 export const metadata = {
   title: "Quand ça arrive — Rojer",
@@ -45,29 +47,42 @@ export default async function QuandCaArrivePage({
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
       <header className="border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] py-[22px]">
-        <div className="min-w-0">
-          <FilAriane
-            crumbs={[
-              { href: `/etablissements/${id}`, label: etablissement.raisonDisplay },
-              { label: LABEL_ITEM["quand-ca-arrive"] },
-            ]}
-          />
-          <h1 className="board-titre m-0 text-[clamp(22px,2.2vw,27px)]">
-            Quand ça arrive
-          </h1>
-          <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-            Des obligations qui n&apos;ont pas de date : elles deviennent dues
-            quand un fait survient — une embauche, une première affectation à
-            un travail sur écran, une opération de chargement ou de
-            déchargement par une entreprise extérieure, la fin
-            de certains arrêts de travail, un accident du travail grave, un
-            épisode de chaleur intense. Rojer ne
-            sait pas quand ce fait arrive ; il ne peut donc ni vous le rappeler,
-            ni vous dire où vous en êtes. Il vous dit la règle, pour que vous la
-            connaissiez le jour venu. Ce qu&apos;un fait rend dû à une personne
-            ou à un appareil se lit sur sa fiche, dans Équipe et dans
-            Équipements.
-          </p>
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <FilAriane
+              crumbs={[
+                { href: `/etablissements/${id}`, label: etablissement.raisonDisplay },
+                { label: LABEL_ITEM["quand-ca-arrive"] },
+              ]}
+            />
+            <h1 className="board-titre m-0 text-[clamp(22px,2.2vw,27px)]">
+              Quand ça arrive
+            </h1>
+            <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+              Ce que vous devez faire quand un événement se produit : une
+              embauche, un accident, une livraison, une canicule…
+            </p>
+          </div>
+          <AideEcran titre="Comment lire cette page">
+            <p className="m-0">
+              Ces obligations n&apos;ont pas de date : elles deviennent dues
+              quand un fait survient — une embauche, une première affectation à
+              un travail sur écran, une opération de chargement ou de
+              déchargement par une entreprise extérieure, la fin de certains
+              arrêts de travail, un accident du travail grave, un épisode de
+              chaleur intense.
+            </p>
+            <p className="m-0">
+              Rojer ne sait pas quand ce fait arrive ; il ne peut donc ni vous
+              le rappeler, ni vous dire où vous en êtes. Il vous dit la règle,
+              pour que vous la connaissiez le jour venu.
+            </p>
+            <p className="m-0">
+              Ce qu&apos;un fait rend dû à une personne ou à un appareil se lit
+              sur sa fiche, dans Équipe et dans Équipements. Le livre de chaque
+              carte ouvre le texte exact et ses articles.
+            </p>
+          </AideEcran>
         </div>
       </header>
 
@@ -99,40 +114,44 @@ export default async function QuandCaArrivePage({
                     key={l.obligation.id}
                     className="border-t border-[color:var(--board-slate-line)] pt-5 first:border-t-0 first:pt-0"
                   >
-                    {/* Le FAIT d'abord : c'est l'entrée par laquelle le
-                        dirigeant se reconnaît. L'obligation vient ensuite. */}
-                    <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
-                      Quand
+                    {/* Le FAIT d'abord, en clair : c'est l'entrée par
+                        laquelle le dirigeant se reconnaît. Le texte exact est
+                        sous le livre. */}
+                    <p className="m-0 max-w-[72ch] text-[15px] font-semibold leading-[1.4] text-[color:var(--board-ink)]">
+                      {l.quand}
                     </p>
-                    <p className="m-0 mt-1 max-w-[72ch] text-[14.5px] font-semibold leading-[1.45] text-[color:var(--board-ink)]">
-                      {l.fait}
-                    </p>
-                    <p className="board-eyebrow m-0 mt-3 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
-                      Ce qui est dû
-                    </p>
-                    <p className="m-0 mt-1 max-w-[72ch] text-[14px] leading-[1.5] text-[color:var(--board-ink)]">
-                      {l.obligation.libelle}
+                    <p className="m-0 mt-1.5 max-w-[72ch] text-[14px] leading-[1.5] text-[color:var(--board-ink)]">
+                      <span className="text-[color:var(--board-slate-mid)]">
+                        →{" "}
+                      </span>
+                      {l.quoi}
                     </p>
                     {/* La marque des autres surfaces (D1) : la ligne est là
                         parce que la fiche se tait, pas parce qu'elle est due
                         à coup sûr (audit du 2026-10-12). */}
-                    <MentionAConfirmer
-                      phrases={l.aConfirmer}
-                      className="mt-1.5"
-                    />
-                    {l.description && (
-                      <p className="m-0 mt-1.5 max-w-[72ch] text-[13px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                        {l.description}
-                      </p>
+                    {(l.aConfirmer.length > 0 || l.pieceAttendue) && (
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <MentionAConfirmer phrases={l.aConfirmer} />
+                        {l.pieceAttendue && (
+                          <span className="inline-flex items-center rounded-full bg-[color:var(--board-slate-pale)] px-2 py-[3px] text-[11px] font-medium text-[color:var(--board-slate-ink)]">
+                            Écrit à garder : {l.pieceAttendue}
+                          </span>
+                        )}
+                      </div>
                     )}
-                    {l.pieceAttendue && (
-                      <p className="m-0 mt-2 text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-                        Le texte attend un écrit : {l.pieceAttendue}.
+                    <TexteSource articles={l.articles} className="mt-2">
+                      <p>
+                        <strong className="font-semibold">Quand :</strong>{" "}
+                        {l.fait}
                       </p>
-                    )}
-                    <p className="m-0 mt-2 text-[12px] leading-[1.5] text-[color:var(--board-slate-soft)]">
-                      {l.articles.join(" · ")}
-                    </p>
+                      <p>
+                        <strong className="font-semibold">
+                          Ce qui est dû :
+                        </strong>{" "}
+                        {l.obligation.libelle}
+                      </p>
+                      {l.description && <p>{l.description}</p>}
+                    </TexteSource>
                   </li>
                 ))}
               </ul>

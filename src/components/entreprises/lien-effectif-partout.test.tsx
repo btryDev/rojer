@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+//
 // TOUTE SURFACE QUI DIT « METTEZ-LE À JOUR SUR LA FICHE DE L'ENTREPRISE » MÈNE
 // À CETTE FICHE (revue finale de l'intégration d, 2026-09-26).
 //
@@ -26,6 +28,7 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
+import { cleanup } from "@testing-library/react";
 
 vi.mock("@/lib/etats-permanents/actions", () => ({
   declarerEnPlace: vi.fn(),
@@ -37,7 +40,7 @@ const { CarteMiseAJour } = await import("@/components/duerps/CarteMiseAJour");
 const { BandeauCouverture } = await import(
   "@/components/perimetre/BandeauCouverture"
 );
-const { LigneEtat } = await import("@/components/etats-permanents/LigneEtat");
+const { rendreFicheOuverte } = await import("@/test/fiche-ouverte");
 const { construireChezVous } = await import("@/lib/guide/chez-vous");
 const { couvertureDeLEtablissement } = await import(
   "@/lib/perimetre/couverture"
@@ -165,25 +168,30 @@ describe("la consigne « fiche de l'entreprise » porte son lien", () => {
     exigerLeLien(html);
   });
 
-  it("« Ce qui doit être en place » : la ligne retenue par prudence", () => {
-    const html = renderToStaticMarkup(
-      <LigneEtat
-        etablissementId="etab-1"
-        obligationId="prevention-etablissement-cse"
-        libelle="Mise en place du comité social et économique (11 salariés)"
-        mode="etat"
-        pieceAttendue={null}
-        declareLe={null}
-        aConfirmer={{
-          phrase: phraseEffectifAConfirmer(
-            { entreprise: 9, site: 12 },
-            "cette obligation ne vous concerne pas",
-          ),
-          entrepriseId: ENTREPRISE,
-        }}
-      />,
-    );
-    exigerLeLien(html);
+  it("« Ce qui doit être en place » : la fiche de la ligne retenue par prudence", () => {
+    const { boite } = rendreFicheOuverte({
+      obligationId: "prevention-etablissement-cse",
+      libelle: "Mise en place du comité social et économique (11 salariés)",
+      question: "Avez-vous mis en place le CSE ?",
+      surTitre: "Organisation",
+      illustration: "/x.png",
+      fond: "#fff",
+      mode: "etat",
+      declareLe: null,
+      pieceAttendue: null,
+      fondement: null,
+      parLesTitres: null,
+      aConfirmer: {
+        phrase: phraseEffectifAConfirmer(
+          { entreprise: 9, site: 12 },
+          "cette obligation ne vous concerne pas",
+        ),
+        entrepriseId: ENTREPRISE,
+      },
+      questionsSansReponse: null,
+    });
+    exigerLeLien(boite.outerHTML);
+    cleanup();
   });
 });
 
@@ -245,7 +253,7 @@ describe("recensement des appelants de phraseEffectifAConfirmer (borne haute)", 
     //  chez-vous.ts       → guide (1er test)
     //  mise-a-jour.ts     → carte des trois cas (2e test)
     //  couverture.ts      → bandeau (3e test)
-    //  etats-permanents/queries.ts → LigneEtat (4e test)
+    //  etats-permanents/queries.ts → fiche RevueEnPlace (4e test)
     //  matching/marques.ts → BlocAConfirmer (test ci-dessus, 2026-09-27)
     expect(appelants.sort()).toEqual(
       [

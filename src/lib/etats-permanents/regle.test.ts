@@ -430,7 +430,7 @@ describe("aucune surface de dépôt sur cet écran", () => {
    * les messages diffèrent.
    *
    * Éprouvée en réinjectant le défaut : un `<EvidenceDropzone />` ajouté à
-   * `LigneEtat.tsx` fait tomber ce test, avec le nom du fichier fautif.
+   * `LigneEtat.tsx` (aujourd'hui `RevueEnPlace.tsx`) fait tomber ce test, avec le nom du fichier fautif.
    */
   const CHEMINS_DE_L_ECRAN = [
     /^lib\/etats-permanents\//,

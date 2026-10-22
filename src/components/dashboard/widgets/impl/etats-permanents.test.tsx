@@ -172,13 +172,6 @@ vi.mock("@/lib/etats-permanents/queries", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/etats-permanents/queries")>()),
   listerEtatsPermanents: async () => courant.d,
 }));
-// La ligne de l'écran porte des actions serveur ; seul son identifiant compte
-// ici — il sert à prouver que le widget n'en rend aucune.
-vi.mock("@/components/etats-permanents/LigneEtat", () => ({
-  LigneEtat: ({ obligationId }: { obligationId: string }) => (
-    <li data-obligation={obligationId} />
-  ),
-}));
 
 // Le widget demande son résumé à une action serveur ; ici, elle rend ce que
 // `resumeDuWidget` tire du même dossier — ce que fait l'action réelle
@@ -376,7 +369,6 @@ describe.each(Object.keys(DOSSIERS))("widget « Ce qui doit être en place », d
     expect(variantes.length).toBeGreaterThan(0);
     for (const v of variantes) {
       const { container } = await rendreWidget(d, undefined, v.id);
-      expect(container.querySelectorAll("[data-obligation]"), v.id).toHaveLength(0);
       // Une entrée par famille, plus celle des lignes liées aux risques quand
       // il y en a (2026-10-21) — rien d'autre dans la liste.
       const risques = resumeDuWidget(d).risques.lignes > 0 ? 1 : 0;

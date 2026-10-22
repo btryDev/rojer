@@ -40,6 +40,11 @@ export type FondementLigne = {
   /** La `citationCle` du corpus ; `null` si le corpus n'en porte pas. */
   extrait: string | null;
   /**
+   * L'article seul (« N 20 »), quand la référence en nomme un : le mot court
+   * d'un livre de contexte, là où `reference` porte aussi son champ.
+   */
+  article?: string;
+  /**
    * Les articles de CONTEXTE propres aux types de l'établissement, montrés à
    * côté du fondement (2026-10-14) : `N 20` sur la consigne du Code du
    * travail, pour un restaurant de type N des catégories 1 à 4. Depuis
@@ -258,5 +263,10 @@ function ligneDe(r: ReferenceLegale): FondementLigne {
     lu && lu.article.statut !== "non_depouille" && lu.article.citationCle
       ? lu.article.citationCle
       : null;
-  return { reference: r.reference, href: r.url ?? null, extrait };
+  return {
+    reference: r.reference,
+    href: r.url ?? null,
+    extrait,
+    ...(r.article ? { article: r.article } : {}),
+  };
 }

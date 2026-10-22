@@ -177,7 +177,7 @@ export function lignesEquipementsSecurite(
 /**
  * Où mène le geste d'une ligne qui n'est pas déclarée : le formulaire ouvert
  * sur la catégorie, ou la ligne de l'obligation sur « Ce qui doit être en
- * place » — l'ancre que `LigneEtat` pose (E5). Une ligne « ailleurs » n'existe
+ * place » — l'ancre que la vignette pose (`ancreEtatPermanent`, E5). Une ligne « ailleurs » n'existe
  * que si cet écran la montre (`modeDeclarationApplique`, plus haut) : l'ancre
  * vise donc une ligne réellement rendue. `null` pour une ligne déclarée.
  */
