@@ -177,14 +177,6 @@ export const AIDE_MATIERES: readonly string[] = [
   "Si oui, l'alarme sonore, la consigne incendie et les exercices semestriels sont dus quel que soit l'effectif (art. R. 4227-34, R. 4227-37 et R. 4227-39 du Code du travail). Si non, ces lignes sont retirées, sauf là où plus de cinquante personnes sont habituellement présentes : ce seuil suffit à les rendre dues. Tant que la question n'a pas de réponse, elles s'affichent « à confirmer ».",
 ];
 
-/**
- * Le renvoi de la relance (2026-10-13, revue de `e6ba53d9`) : la checklist ne
- * reprend que le premier paragraphe — l'aide entière y faisait environ 1 400
- * signes — et renvoie au reste, que la fiche affiche en entier.
- */
-export const RENVOI_AIDE_MATIERES =
-  "Les exemples, les articles visés et ce que change votre réponse sont détaillés sous la question, sur la fiche de l'établissement.";
-
 /** Le lien de l'aide : le tableau CLP de l'INERIS, relu le 2026-10-13. */
 export const LIEN_TABLEAU_CLP = {
   intro: "Les pictogrammes et les mentions de danger, classe par classe :",

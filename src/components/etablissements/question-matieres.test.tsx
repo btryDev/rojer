@@ -7,14 +7,11 @@ import {
   AIDE_MATIERES,
   LIEN_TABLEAU_CLP,
   QUESTION_MATIERES,
-  RENVOI_AIDE_MATIERES,
 } from "@/lib/etablissements/questions";
-import { RELANCES } from "@/lib/etablissements/relance";
 import { PHRASE_SANS_REPONSE } from "@/lib/matching/sans-reponse";
 import { EtablissementForm } from "./EtablissementForm";
 import { StepTypologie } from "@/components/onboarding/StepTypologie";
 import { VALEURS_INITIALES } from "@/components/onboarding/types";
-import { OnboardingChecklist } from "@/components/layout/OnboardingChecklist";
 
 /**
  * La question posée au dirigeant doit décrire l'article que le moteur teste.
@@ -38,7 +35,8 @@ import { OnboardingChecklist } from "@/components/layout/OnboardingChecklist";
  * CE QUI S'AJOUTE LE 2026-10-13. La question est reformulée pour se répondre
  * étiquette en main, et ses mots n'existent qu'à un endroit
  * (`etablissements/questions.ts`). Les surfaces qui l'affichent — la fiche, le
- * parcours de création, la relance de la checklist, la phrase « à confirmer »
+ * parcours de création, ~~la relance de la checklist~~ [retirée le 2026-10-22,
+ * `lot/guide-par-module`], la phrase « à confirmer »
  * (écrans, guide « Comprendre », MCP) — sont RENDUES ou lues ici et confrontées
  * à ce texte unique ; puis tout `src` est balayé pour qu'aucune copie ne
  * survive ailleurs.
@@ -87,7 +85,6 @@ function texte(html: string): string {
 const reduire = (s: string) => s.replace(/\s+/g, " ");
 
 const AIDE = AIDE_MATIERES.join(" ");
-const RELANCE = RELANCES.matieres_r4227_22;
 
 /** Un fragment propre à chaque paragraphe de l'aide, et au renvoi de la relance. */
 const FRAGMENTS_DE_L_AIDE = [
@@ -114,28 +111,9 @@ const HTML_FICHE = renderToStaticMarkup(
 const HTML_PARCOURS = renderToStaticMarkup(
   <StepTypologie state={VALEURS_INITIALES} update={() => {}} />,
 );
-// L'étape telle que la fiche de l'établissement la construit depuis la
-// relance (`app/etablissements/[id]/page.tsx`) ; le passage du lien y est
-// vérifié dans le source, plus bas.
-const HTML_CHECKLIST = renderToStaticMarkup(
-  <OnboardingChecklist
-    etablissementRaison="Le Bistrot"
-    etapes={[
-      {
-        id: "relance-matieres_r4227_22",
-        titre: RELANCE.titre,
-        pourquoi: RELANCE.pourquoi,
-        lien: RELANCE.lien,
-        faite: false,
-      },
-    ]}
-  />,
-);
-
 const SURFACES_RENDUES: [string, string][] = [
   ["fiche (EtablissementForm)", HTML_FICHE],
   ["parcours de création (StepTypologie)", HTML_PARCOURS],
-  ["relance de la checklist (OnboardingChecklist)", HTML_CHECKLIST],
 ];
 /**
  * Les surfaces qui portent l'aide ENTIÈRE. ~~La checklist aussi.~~
@@ -154,27 +132,6 @@ describe("la question des matières : un seul texte, identique partout", () => {
     for (const p of AIDE_MATIERES) expect(t, p.slice(0, 50)).toContain(p);
   });
 
-  it("la relance affiche le premier paragraphe de l'aide, puis le renvoi à la fiche — et pas le reste", () => {
-    const t = texte(HTML_CHECKLIST);
-    expect(t).toContain(AIDE_MATIERES[0]);
-    expect(t).toContain(RENVOI_AIDE_MATIERES);
-    for (const p of AIDE_MATIERES.slice(1)) expect(t, p.slice(0, 50)).not.toContain(p);
-  });
-
-  it("la relance, seule à l'écran, n'exclut pas un produit H250", () => {
-    // Revue de `8ffc560a` : la relance n'affiche que le § 1. Il finissait par
-    // « Une flamme seule, sans cette mention, ne suffit pas. » et ne nommait
-    // pas H250 — flamme seule, mention « S'enflamme spontanément au contact
-    // de l'air » —, que le § 2 fait pourtant entrer : son détenteur lisait
-    // « non ». Le texte affiché doit nommer H250 parmi les mentions qui
-    // suffisent, et ne plus exclure toute flamme sans « extrêmement
-    // inflammable ».
-    const t = texte(HTML_CHECKLIST);
-    expect(t).toContain("« S'enflamme spontanément au contact de l'air » (H250)");
-    expect(t).toContain("Une flamme seule, sans l'une de ces mentions, ne suffit pas.");
-    expect(t).not.toContain("sans cette mention, ne suffit pas");
-  });
-
   it.each(SURFACES_RENDUES)("%s affiche le lien vers le tableau CLP de l'INERIS", (_, html) => {
     expect(html).toContain(`href="${LIEN_TABLEAU_CLP.url}"`);
     expect(texte(html)).toContain(LIEN_TABLEAU_CLP.libelle);
@@ -183,13 +140,6 @@ describe("la question des matières : un seul texte, identique partout", () => {
   it("la fiche relie l'aide au champ (aria-describedby)", () => {
     expect(HTML_FICHE).toContain('aria-describedby="manipuleMatieresR422722-aide"');
     expect(HTML_FICHE).toMatch(/<div id="manipuleMatieresR422722-aide"/);
-  });
-
-  it("la relance : son titre EST la question, sa raison EST le premier paragraphe et le renvoi, son lien EST celui de l'aide", () => {
-    expect(RELANCE.titre).toBe(QUESTION_MATIERES);
-    // ~~`toBe(AIDE)`~~ [2026-10-13, revue : forme courte].
-    expect(RELANCE.pourquoi).toBe(`${AIDE_MATIERES[0]} ${RENVOI_AIDE_MATIERES}`);
-    expect(RELANCE.lien).toEqual(LIEN_TABLEAU_CLP);
   });
 
   // ~~« la fiche de l'établissement transmet le lien de la relance à la
@@ -431,8 +381,6 @@ describe("aucune phrase ne qualifie la situation du dirigeant", () => {
     ["libellé", QUESTION_MATIERES],
     ["aide", AIDE],
     ["lien", `${LIEN_TABLEAU_CLP.intro} ${LIEN_TABLEAU_CLP.libelle}`],
-    ["titre de la relance", RELANCE.titre],
-    ["raison de la relance", RELANCE.pourquoi],
     ["phrase « à confirmer »", PHRASE_SANS_REPONSE.matieres_r4227_22],
   ];
 

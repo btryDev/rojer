@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import {
   MESSAGE_REGEN_ECHEC,
@@ -42,25 +41,4 @@ export async function repondreFaitActivite(
     ? { status: "success" }
     : { status: "success_avec_avertissement", message: MESSAGE_REGEN_ECHEC };
   return conserve ? { ...base, risqueConserve: true } : base;
-}
-
-const reponseBooleenne = z.enum(["oui", "non"]);
-
-/** La même, au format du composant `QuestionParametrage` (relances de la fiche). */
-export async function repondreFaitActiviteFormulaire(
-  etablissementId: string,
-  champ: ChampFaitActivite,
-  _prev: ReponseParametrage,
-  formData: FormData,
-): Promise<ReponseParametrage> {
-  const parsed = reponseBooleenne.safeParse(formData.get("reponse"));
-  if (!parsed.success) return { status: "error", message: "Répondez oui ou non." };
-  // La relance de la fiche n'affiche pas l'avertissement du risque conservé :
-  // l'étape transverse du DUERP le dit, à l'endroit où l'on peut agir.
-  const r = await repondreFaitActivite(etablissementId, champ, parsed.data === "oui");
-  return r.status === "success_avec_avertissement"
-    ? { status: r.status, message: r.message }
-    : r.status === "error"
-      ? { status: "error", message: r.message }
-      : { status: r.status };
 }

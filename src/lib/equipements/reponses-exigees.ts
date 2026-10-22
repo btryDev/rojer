@@ -249,17 +249,6 @@ export function questionsExigeesParCategorie(
   return out;
 }
 
-/**
- * La raison de la relance d'un appareil muet. Celle de D29 était écrite dans
- * la page ; elle vit ici depuis que deux décisions relancent (2026-10-12).
- */
-export function pourquoiRelanceAppareil(champ: ChampTriEtat): string {
-  return (
-    QUESTIONS_EXIGEES_PAR_DECISION.find((d) => d.champ === champ)?.pourquoi ??
-    "La réponse décide du rythme de sa vérification générale périodique — trois, six ou douze mois (arrêté du 1er mars 2004, art. 23). Tant qu'elle manque, Rojer retient le rythme le plus court."
-  );
-}
-
 /** Ce que le refus dit au dirigeant, pour une question exigée. */
 export function messageReponseExigee(champ: ChampTriEtat): string {
   return (
@@ -290,9 +279,11 @@ export function reponsesManquantes(
  *
  * Un appareil ANCIEN sans réponse n'est pas bloqué en silence : sa fiche de
  * modification lui pose la question, et c'est l'enregistrement qui l'exige —
- * modifier son libellé suppose d'y répondre, ce que la décision veut. La
+ * modifier son libellé suppose d'y répondre, ce que la décision veut. ~~La
  * relance du tableau de bord (`repondreQuestionEquipement`) la pose aussi,
- * une par une, sans passer par le formulaire.
+ * une par une, sans passer par le formulaire.~~ [2026-10-22,
+ * `lot/guide-par-module` : le guide renvoie à la fiche de l'appareil, la
+ * relance en place est retirée.]
  */
 export const MESSAGE_REPONSE_EXIGEE =
   "Répondez oui ou non : la réponse décide du rythme de la vérification générale périodique (arrêté du 1er mars 2004, art. 23).";
