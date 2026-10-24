@@ -923,6 +923,12 @@ async function main(): Promise<void> {
       dateAutorisationOuverture: jour("2015-07-02"),
       dateCertificatConformite: jour("2015-06-24"),
 
+      // Faits d'activité (ADR-041) : l'installation électrique est déclarée
+      // au parc, mais aucun salarié n'intervient dessus — c'est l'électricien
+      // extérieur. « Non » : pas d'habilitation ni de carnet de prescriptions
+      // (R. 4544-9 et s.), les vérifications de l'installation restent dues
+      // (décision de la propriétaire du 2026-10-24).
+      operationsElectriques: false,
       epiPresents: true,
       epiPresentsDetail:
         "Chaussures de sécurité antidérapantes, gants anti-coupure, gants de manutention chaude, gants chimiques pour la plonge.",
