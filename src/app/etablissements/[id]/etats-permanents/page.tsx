@@ -27,7 +27,6 @@ import { compteDeLaPage } from "@/lib/etats-permanents/compte";
 import { FocusSurAncre } from "@/components/etats-permanents/FocusSurAncre";
 import {
   phraseFaitsDates,
-  phraseParLesRisques,
   phraseRienEnPlace,
 } from "@/lib/etats-permanents/phrases";
 
@@ -168,10 +167,9 @@ export default async function EtatsPermanentsPage({
     faits.length,
     faits.filter((l) => l.declareLe).length,
   );
-  // Comptées dans l'en-tête (le score, le widget et le document les portent),
-  // déclarées ailleurs : l'écran dit où, au lieu d'un compte qui ne tombe pas
-  // juste avec ce qu'on voit.
-  const texteRisques = phraseParLesRisques(parLesRisques.length);
+  // ~~Comptées dans l'en-tête, déclarées ailleurs : l'écran disait où.~~
+  // [2026-10-22, décision de la propriétaire : elles ne sont plus comptées
+  // ici (`compteDeLaPage`), la phrase et son lien sont retirés.]
 
   return (
     <RevueEnPlace etablissementId={id} lignes={lignesFiche}>
@@ -244,17 +242,6 @@ export default async function EtatsPermanentsPage({
               bord, qui affiche ce compte au-dessus de ses familles. */}
           <CompteurDeLaPage {...compteDeLaPage(dossier)} />
           </div>
-          {texteRisques && (
-            <p className="m-0 max-w-[62ch] text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-              {texteRisques}{" "}
-              <Link
-                href={`/etablissements/${id}/equipe/risques`}
-                className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
-              >
-                Évaluer les risques de vos salariés
-              </Link>
-            </p>
-          )}
         </div>
         <figure className="relative m-0 hidden min-h-[300px] md:block">
           <Image

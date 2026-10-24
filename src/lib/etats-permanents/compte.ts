@@ -21,5 +21,17 @@ export function compteDeLaPage(d: EtatsPermanentsDuDossier): {
   /** La part d'`enPlace` établie d'après les titres déclarés. */
   parLesTitres: number;
 } {
-  return { enPlace: d.enPlace, total: d.total, parLesTitres: d.parLesTitres.enPlace };
+  // Les lignes liées aux risques des salariés ne s'affichent pas sur la page
+  // et ne s'y comptent plus (décision de la propriétaire du 2026-10-22) :
+  // elles se déclarent et se comptent sur « Évaluer les risques de vos
+  // salariés ». Le score, le PDF et `d.total` les gardent.
+  const risques = d.parLesRisques.filter((l) => l.compteDansLEnTete);
+  const enPlace = (l: (typeof risques)[number]) =>
+    l.parLesTitres ? l.parLesTitres.enPlace : l.declareLe !== null;
+  return {
+    enPlace: d.enPlace - risques.filter(enPlace).length,
+    total: d.total - risques.length,
+    parLesTitres:
+      d.parLesTitres.enPlace - risques.filter((l) => l.parLesTitres?.enPlace).length,
+  };
 }

@@ -197,18 +197,9 @@ export function phraseSousLesReponses(dejaDeclaree: boolean): string {
   return "Votre réponse est une déclaration, datée, reprise dans votre dossier de conformité. Rojer ne la vérifie pas.";
 }
 
-/**
- * Sous le compteur de « Ce qui doit être en place » : les lignes déclarées
- * sous une question d'activité, dans Équipe › « Évaluer les risques de vos
- * salariés » (`par-les-risques.ts`, 2026-10-21) — TOUTES, celles « à dater »
- * comprises. Suivie du lien vers cette page. `null` quand il n'y en a aucune.
- */
-export function phraseParLesRisques(n: number): string | null {
-  if (n <= 0) return null;
-  return n === 1
-    ? "Une ligne liée aux risques de vos salariés se déclare sous la question qui la rend due :"
-    : `${n} lignes liées aux risques de vos salariés se déclarent sous la question qui les rend dues :`;
-}
+// ~~`phraseParLesRisques`~~ — retirée le 2026-10-22 : les lignes liées aux
+// risques ne sont plus comptées sur « Ce qui doit être en place », la phrase
+// qui justifiait l'écart n'a plus lieu d'être.
 
 /**
  * Le corps de l'état vide de « Ce qui doit être en place ». Quand les seules
