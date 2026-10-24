@@ -117,6 +117,55 @@ const DELIVRENT_UN_AVIS_D_APTITUDE = new Set([
  */
 const SANS_DUREE = new Set<Periodicite>(["autre", "mise_en_service_uniquement"]);
 
+/**
+ * Les titres que le droit interdit de cumuler avec un titre déjà déclaré
+ * (2026-10-24, retour de la propriétaire). ~~Ils restaient dans la liste,
+ * grisés, chacun avec son motif~~ : trois lignes mortes au milieu de la liste
+ * pour le cas le plus courant. Ils en sortent, et UNE ligne en bas les nomme
+ * — le silence reste refusé : un dirigeant qui cherche « Suivi individuel
+ * renforcé » et ne le trouve pas conclurait que Rojer ne le connaît pas, alors
+ * que le droit le lui interdit ici, et c'est ce qu'il a besoin de savoir.
+ */
+function TitresEcartes({ catalogue }: { catalogue: TitreDuCatalogue[] }) {
+  const parBloquant = new Map<string, TitreDuCatalogue[]>();
+  for (const o of catalogue) {
+    if (!o.bloquePar) continue;
+    parBloquant.set(o.bloquePar.libelle, [...(parBloquant.get(o.bloquePar.libelle) ?? []), o]);
+  }
+  if (parBloquant.size === 0) return null;
+  return (
+    <div className="mt-5 flex flex-col gap-2 border-t border-[color:var(--board-slate-line)] px-1 pt-4">
+      {[...parBloquant].map(([bloquant, titres]) => (
+        <details key={bloquant} className="text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+          <summary className="cursor-pointer">
+            {titres.length === 1
+              ? "1 titre n'est pas proposé"
+              : `${titres.length} titres ne sont pas proposés`}{" "}
+            : {titres.length === 1 ? "il ne se cumule" : "ils ne se cumulent"} pas avec
+            « {bloquant} », déjà déclaré.{" "}
+            <span className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4">
+              Pourquoi
+            </span>
+          </summary>
+          <ul className="m-0 mt-2 flex list-none flex-col gap-2 p-0">
+            {titres.map((o) => (
+              <li key={o.id}>
+                <span className="font-semibold text-[color:var(--board-slate-ink)]">{o.libelle}</span>
+                {" — "}
+                {o.bloquePar!.motif}
+              </li>
+            ))}
+          </ul>
+          <p className="m-0 mt-2">
+            Si cette personne relève de l&apos;un de ces titres, retirez d&apos;abord
+            « {bloquant} » de sa fiche, puis déclarez-le.
+          </p>
+        </details>
+      ))}
+    </div>
+  );
+}
+
 export function FormulaireTitre({
   catalogue,
   action,
@@ -181,7 +230,7 @@ export function FormulaireTitre({
       <fieldset className="m-0 min-w-0 border-0 bg-[color:var(--board-slate-pale)] px-5 py-6 sm:px-6">
         <legend className="sr-only">Quel titre ?</legend>
         {ORDRE_GROUPES.map((g) => {
-          const titres = catalogue.filter((o) => o.groupe === g);
+          const titres = catalogue.filter((o) => o.groupe === g && !o.bloquePar);
           if (titres.length === 0) return null;
           return (
             <div key={g} className="mb-5 last:mb-0">
@@ -190,19 +239,9 @@ export function FormulaireTitre({
               </p>
               <div className="flex flex-col gap-1">
                 {titres.map((o) => (
-                  /* Le titre exclu reste AFFICHÉ, désactivé, avec la raison. Le
-                     retirer de la liste aurait été le silence que ce dépôt
-                     refuse : un dirigeant qui cherche « Visite d'information et
-                     de prévention » et ne la trouve pas conclut que Rojer ne la
-                     connaît pas, alors que le droit la lui interdit ici — et
-                     c'est précisément ce qu'il a besoin de savoir. */
                   <label
                     key={o.id}
-                    className={
-                      o.bloquePar
-                        ? "flex items-start gap-3 rounded-[18px] px-2.5 py-2 opacity-60"
-                        : "flex cursor-pointer items-center gap-3 rounded-[18px] px-2.5 py-2 transition-colors hover:bg-[color:var(--board-card)] has-[:checked]:bg-[color:var(--board-card)] has-[:checked]:shadow-[0_0_0_1.5px_var(--board-ink)] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-[color:var(--board-blue-strong)]"
-                    }
+                    className="flex cursor-pointer items-center gap-3 rounded-[18px] px-2.5 py-2 transition-colors hover:bg-[color:var(--board-card)] has-[:checked]:bg-[color:var(--board-card)] has-[:checked]:shadow-[0_0_0_1.5px_var(--board-ink)] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-[color:var(--board-blue-strong)]"
                   >
                     <input
                       type="radio"
@@ -210,7 +249,6 @@ export function FormulaireTitre({
                       value={o.id}
                       checked={choisi === o.id}
                       onChange={() => setChoisi(o.id)}
-                      disabled={o.bloquePar !== undefined}
                       className="sr-only"
                     />
                     <span
@@ -225,24 +263,8 @@ export function FormulaireTitre({
                         {o.libelle}
                       </span>
                       <span className="mt-0.5 block text-[11.5px] leading-[1.4] text-[color:var(--board-slate-mid)]">
-                        {o.bloquePar
-                          ? `Incompatible avec « ${o.bloquePar.libelle} », déjà déclaré.`
-                          : dejaDeclares.includes(o.id)
-                            ? `Déjà déclaré · ${o.rythme}`
-                            : o.rythme}
+                        {dejaDeclares.includes(o.id) ? `Déjà déclaré · ${o.rythme}` : o.rythme}
                       </span>
-                      {/* Le motif cite le texte qui écarte le cumul : il se
-                          déplie, il ne remplit pas la liste. */}
-                      {o.bloquePar && (
-                        <details className="mt-1 text-[11.5px] leading-[1.45]">
-                          <summary className="cursor-pointer text-[color:var(--board-blue-ink)]">
-                            Pourquoi
-                          </summary>
-                          <span className="mt-1 block text-[color:var(--board-slate-mid)]">
-                            {o.bloquePar.motif}
-                          </span>
-                        </details>
-                      )}
                     </span>
                   </label>
                 ))}
@@ -250,6 +272,7 @@ export function FormulaireTitre({
             </div>
           );
         })}
+        <TitresEcartes catalogue={catalogue} />
         {err("obligationId") && (
           <p className="m-0 mt-1.5 text-[12.5px] text-[color:var(--board-signal-ink)]">
             {err("obligationId")}
