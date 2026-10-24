@@ -33,8 +33,13 @@ const schema = z.object({
     z.string().min(1, "Décrivez votre besoin en quelques mots").max(MESSAGE_MAX),
   ),
   telephone: texte(TELEPHONE_MAX),
-  contexte: texte(CONTEXTE_MAX),
-  page: z.string().max(512),
+  // Champs cachés, nés des données de la page : ils se tronquent, jamais ne
+  // refusent — l'utilisateur ne pourrait rien y corriger (revue du 2026-10-24).
+  contexte: z.preprocess(
+    (v) => (typeof v === "string" ? v.trim().slice(0, CONTEXTE_MAX) || undefined : undefined),
+    z.string().optional(),
+  ),
+  page: z.preprocess((v) => (typeof v === "string" && v.length <= 512 ? v : ""), z.string()),
   etablissementId: texte(64),
 });
 

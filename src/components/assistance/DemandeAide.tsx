@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useCallback, useState } from "react";
+import { useActionState, useCallback, useId, useState } from "react";
 import { usePathname } from "next/navigation";
 import { LifeBuoy } from "lucide-react";
 import type { CategorieAssistance } from "@prisma/client";
@@ -118,6 +118,9 @@ function Formulaire({
 }) {
   const page = usePathname();
   const categorieInitiale = categorie ?? categorieDeLaPage(page);
+  // Des identifiants propres au panneau : il se pose au-dessus d'une page
+  // qui peut avoir ses propres champs « categorie », « message »…
+  const ids = { categorie: useId(), message: useId(), telephone: useId() };
   const [state, action, pending] = useActionState<DemandeAssistanceState, FormData>(demanderAssistance, {
     status: "idle",
   });
@@ -159,10 +162,10 @@ function Formulaire({
       {etablissementId && <input type="hidden" name="etablissementId" value={etablissementId} />}
       {contexte && <input type="hidden" name="contexte" value={contexte} />}
       <div>
-        <label className="label-board" htmlFor="categorie">
+        <label className="label-board" htmlFor={ids.categorie}>
           Votre besoin
         </label>
-        <select id="categorie" name="categorie" className="champ-board" defaultValue={categorieInitiale}>
+        <select id={ids.categorie} name="categorie" className="champ-board" defaultValue={categorieInitiale}>
           {CATEGORIES_ASSISTANCE.map((c) => (
             <option key={c} value={c}>
               {LABEL_CATEGORIE_ASSISTANCE[c]}
@@ -171,11 +174,11 @@ function Formulaire({
         </select>
       </div>
       <div>
-        <label className="label-board" htmlFor="message">
+        <label className="label-board" htmlFor={ids.message}>
           Votre question *
         </label>
         <textarea
-          id="message"
+          id={ids.message}
           name="message"
           rows={4}
           required
@@ -186,15 +189,17 @@ function Formulaire({
         {err("message") && <p className="m-0 mt-1 text-[12px] text-[color:var(--board-signal-ink)]">{err("message")}</p>}
       </div>
       <div>
-        <label className="label-board" htmlFor="telephone">
+        <label className="label-board" htmlFor={ids.telephone}>
           Téléphone (facultatif)
         </label>
-        <input id="telephone" name="telephone" type="tel" maxLength={TELEPHONE_MAX} className="champ-board" />
+        <input id={ids.telephone} name="telephone" type="tel" maxLength={TELEPHONE_MAX} className="champ-board" />
         <p className="m-0 mt-1.5 text-[12px] text-[color:var(--board-slate-mid)]">
           Sinon, nous vous répondons à l&apos;adresse de votre compte.
         </p>
       </div>
-      {state.status === "error" && !state.fieldErrors && (
+      {/* Une erreur sur un autre champ que la question n'a pas de place à
+          l'écran : le message général la dit. */}
+      {state.status === "error" && (!state.fieldErrors || !state.fieldErrors.message) && (
         <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">{state.message}</p>
       )}
       <div className="flex items-center gap-3">

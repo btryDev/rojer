@@ -716,6 +716,8 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     l'équipement qu'il concerne (2026-10-24)
 49. **049** — Un contrôle a un prestataire attitré et un rendez-vous, qui ne
     le datent pas (2026-10-24)
+50. **050** — Une demande d'assistance s'enregistre là où le doute naît, et
+    ne part pas encore (2026-10-24)
 
 [2026-10-15, ménage des ADR : 037, 038 et 043 manquaient à cette liste ;
 **il n'existe pas d'ADR-044** — annoncée dans

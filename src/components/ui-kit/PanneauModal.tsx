@@ -2,8 +2,10 @@
 
 // Le panneau modal du board : fond qui ferme, Échap qui ferme, focus posé
 // sur le panneau. Volontairement simple (pas de pile) — sorti d'`AideEcran`
-// le 2026-10-24 pour servir aussi « Besoin d'aide ? ». Rendu dans `body`
-// (portail) : posé dans un formulaire, il y aurait imbriqué le sien.
+// le 2026-10-24 pour servir aussi « Besoin d'aide ? ». Rendu en portail
+// (posé dans un formulaire, il y aurait imbriqué le sien) : dans un
+// `<dialog>` ouvert s'il y en a un — `showModal()` rend inerte tout ce qui
+// est hors de lui, top layer compris —, sinon dans `body`.
 
 import { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
@@ -72,6 +74,6 @@ export function PanneauModal({
         </div>
       </div>
     </div>,
-    document.body,
+    document.querySelector<HTMLDialogElement>("dialog[open]") ?? document.body,
   );
 }

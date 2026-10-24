@@ -70,6 +70,13 @@ describe("demanderAssistance", () => {
     expect(ecrit().page).toBe("");
   });
 
+  it("un contexte trop long se tronque au lieu de rendre la demande impossible", async () => {
+    const r = await demanderAssistance(IDLE, fd({ contexte: "x".repeat(400), page: "/" + "p".repeat(600) }));
+    expect(r.status).toBe("success");
+    expect((ecrit().contexte as string).length).toBe(300);
+    expect(ecrit().page).toBe("");
+  });
+
   it("refuse un message vide et une catégorie inconnue", async () => {
     expect((await demanderAssistance(IDLE, fd({ message: "   " }))).status).toBe("error");
     expect((await demanderAssistance(IDLE, fd({ categorie: "pirate" }))).status).toBe("error");
