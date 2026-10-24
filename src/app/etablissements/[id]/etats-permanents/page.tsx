@@ -24,9 +24,11 @@ import {
   SectionsParUsage,
 } from "@/components/etats-permanents/SectionsParUsage";
 import { compteDeLaPage } from "@/lib/etats-permanents/compte";
+import { manquesDeLaFiche } from "@/lib/etablissements/guide-par-module";
 import { FocusSurAncre } from "@/components/etats-permanents/FocusSurAncre";
 import {
   phraseFaitsDates,
+  phraseFicheIncomplete,
   phraseRienEnPlace,
 } from "@/lib/etats-permanents/phrases";
 
@@ -167,6 +169,26 @@ export default async function EtatsPermanentsPage({
     faits.length,
     faits.filter((l) => l.declareLe).length,
   );
+  // LA FICHE INCOMPLÈTE (2026-10-22, décision de la propriétaire) : les
+  // lignes affichées « à confirmer » faute d'une réponse de la fiche, et ce
+  // qui y manque — mêmes noms et même règle que le guide du tableau de bord.
+  const regimeFiche = {
+    estERP: etablissement.estERP,
+    typeErp: etablissement.typeErp,
+    typesErpAutres: etablissement.typesErpAutres,
+    categorieErp: etablissement.categorieErp,
+  };
+  const lignesAffichees = [...ordre, ...faits];
+  const lignesSansFiche = lignesAffichees.filter(
+    (l) => manquesDeLaFiche(l.questionsSansReponse, regimeFiche).length > 0,
+  );
+  const texteFiche = phraseFicheIncomplete(
+    lignesSansFiche.length,
+    manquesDeLaFiche(
+      lignesSansFiche.flatMap((l) => l.questionsSansReponse),
+      regimeFiche,
+    ),
+  );
   // ~~Comptées dans l'en-tête, déclarées ailleurs : l'écran disait où.~~
   // [2026-10-22, décision de la propriétaire : elles ne sont plus comptées
   // ici (`compteDeLaPage`), la phrase et son lien sont retirés.]
@@ -242,6 +264,17 @@ export default async function EtatsPermanentsPage({
               bord, qui affiche ce compte au-dessus de ses familles. */}
           <CompteurDeLaPage {...compteDeLaPage(dossier)} />
           </div>
+          {texteFiche && (
+            <p className="m-0 max-w-[62ch] text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+              {texteFiche}{" "}
+              <Link
+                href={`/etablissements/${id}/modifier`}
+                className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
+              >
+                Compléter la fiche
+              </Link>
+            </p>
+          )}
         </div>
         <figure className="relative m-0 hidden min-h-[300px] md:block">
           <Image

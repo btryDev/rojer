@@ -1,3 +1,4 @@
+import { enumerer } from "@/lib/etablissements/guide-par-module";
 /**
  * Les phrases de l'écran qui s'accordent en nombre, sorties du JSX.
  *
@@ -210,4 +211,20 @@ export function phraseRienEnPlace(seulementParLesRisques: boolean): string {
   return seulementParLesRisques
     ? "Les seules lignes de votre dossier sont liées aux risques de vos salariés : elles se déclarent sur « Évaluer les risques de vos salariés »."
     : "Aucune des obligations que votre dossier déclenche n'est un état à constituer ou un fait à dater sans rythme écrit. Les autres sont au calendrier quand elles ont une date, sur « Quand ça arrive » quand elles naissent d'un événement, et sur la fiche de chaque personne quand elles la visent.";
+}
+
+/**
+ * Sous le compteur de « Ce qui doit être en place » : des lignes AFFICHÉES
+ * sont « à confirmer » faute d'une réponse de la fiche de l'établissement
+ * (décision de la propriétaire du 2026-10-22). Suivie du lien vers la fiche.
+ * `null` quand aucune ligne n'en dépend.
+ */
+export function phraseFicheIncomplete(
+  nLignes: number,
+  manques: readonly string[],
+): string | null {
+  if (nLignes <= 0 || manques.length === 0) return null;
+  const debut =
+    nLignes === 1 ? "Une ligne est à confirmer" : `${nLignes} lignes sont à confirmer`;
+  return `${debut} : il manque ${enumerer(manques)} sur la fiche de l'établissement.`;
 }

@@ -119,3 +119,25 @@ export function lienPourRepondre(
         libelle: "Répondre sur la fiche de l'établissement",
       };
 }
+
+/**
+ * Les noms courts des questions DE LA FICHE derrière des phrases « à
+ * confirmer », sans doublon, dans l'ordre de la table — seulement celles que
+ * la fiche pose à cet établissement (`poseeSurLaFiche`). Lu par le bandeau de
+ * « Ce qui doit être en place » (2026-10-22).
+ */
+export function manquesDeLaFiche(
+  phrases: readonly string[],
+  regime: RegimeDeLaFiche,
+): string[] {
+  const questions = new Set(
+    phrases.flatMap((p) => {
+      const q = QUESTION_DE_LA_PHRASE.get(p);
+      return q ? [q] : [];
+    }),
+  );
+  return (Object.keys(FOYER_DE_LA_QUESTION) as QuestionSansReponse[])
+    .filter((q) => questions.has(q))
+    .filter((q) => FOYER_DE_LA_QUESTION[q].module === "fiche" && poseeSurLaFiche(q, regime))
+    .map((q) => FOYER_DE_LA_QUESTION[q].nomCourt);
+}

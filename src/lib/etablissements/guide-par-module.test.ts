@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { POLITIQUE_ABSENCE } from "@/lib/matching/absence";
 import type { QuestionSansReponse } from "@/lib/matching/types";
+import { PHRASE_SANS_REPONSE } from "@/lib/matching/sans-reponse";
+import { phraseFicheIncomplete } from "@/lib/etats-permanents/phrases";
 import { FAITS_ACTIVITE } from "./faits-activite";
 import {
   enumerer,
   FOYER_DE_LA_QUESTION,
+  lienPourRepondre,
+  manquesDeLaFiche,
   poseeSurLaFiche,
   precisionsManquantes,
   type RegimeDeLaFiche,
@@ -45,5 +49,38 @@ describe("guide par module", () => {
     expect(enumerer(["a"])).toBe("a");
     expect(enumerer(["a", "b"])).toBe("a et b");
     expect(enumerer(["a", "b", "c"])).toBe("a, b et c");
+  });
+
+  it("manquesDeLaFiche : les questions de la fiche derrière des phrases, sans doublon ni fait d'activité", () => {
+    const phrases = [
+      PHRASE_SANS_REPONSE.matieres_r4227_22,
+      PHRASE_SANS_REPONSE.manutention_manuelle,
+      PHRASE_SANS_REPONSE.matieres_r4227_22,
+      "une phrase inconnue",
+    ];
+    expect(manquesDeLaFiche(phrases, TRAVAIL)).toEqual(["matières inflammables"]);
+    // Une question que la fiche ne pose pas à cet établissement n'est pas dite.
+    expect(manquesDeLaFiche([PHRASE_SANS_REPONSE.ssi_categorie_ab], TRAVAIL)).toEqual([]);
+  });
+
+  it("lienPourRepondre : la page des risques pour les seuls faits d'activité, la fiche sinon", () => {
+    expect(lienPourRepondre([PHRASE_SANS_REPONSE.epi_presents], "e").href).toBe(
+      "/etablissements/e/equipe/risques",
+    );
+    expect(
+      lienPourRepondre([PHRASE_SANS_REPONSE.epi_presents, PHRASE_SANS_REPONSE.matieres_r4227_22], "e").href,
+    ).toBe("/etablissements/e/modifier");
+    expect(lienPourRepondre([], "e").href).toBe("/etablissements/e/modifier");
+  });
+
+  it("phraseFicheIncomplete : rien sans ligne ni manque, accordée sinon", () => {
+    expect(phraseFicheIncomplete(0, ["a"])).toBeNull();
+    expect(phraseFicheIncomplete(2, [])).toBeNull();
+    expect(phraseFicheIncomplete(1, ["a"])).toBe(
+      "Une ligne est à confirmer : il manque a sur la fiche de l'établissement.",
+    );
+    expect(phraseFicheIncomplete(3, ["a", "b"])).toBe(
+      "3 lignes sont à confirmer : il manque a et b sur la fiche de l'établissement.",
+    );
   });
 });
