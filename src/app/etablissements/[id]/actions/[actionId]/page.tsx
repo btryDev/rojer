@@ -77,9 +77,11 @@ export default async function ActionDetailPage({
   // rapport d'origine, la fiche ne lui en prête aucun — le plus récent peut
   // être un contrôle conforme postérieur.
   const dernierRapport = point ? a.rapportOrigine : (a.verification?.rapports[0] ?? null);
+  // Un point sans rapport d'origine n'a pas de date de constat : la date
+  // prévue de la ligne est l'échéance À VENIR (ADR-034), pas un fait passé.
   const dateConstat =
     dernierRapport?.dateRapport ??
-    a.verification?.datePrevue ??
+    (point ? null : a.verification?.datePrevue) ??
     null;
   const boundCloture = cloturerAction.bind(null, actionId);
   const estOuverte = estActionOuverte(a);
