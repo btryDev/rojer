@@ -54,7 +54,12 @@ export default async function RisquesSalariesPage({
     const champ = faitDeLaLigne(l.obligation);
     if (champ) parFait.set(champ, [...(parFait.get(champ) ?? []), l]);
   }
-  const lignesDuFait = (champ: ChampFaitActivite) => parFait.get(champ) ?? [];
+  // Les obligations d'une question ne s'affichent qu'après un « oui »
+  // (décision de la propriétaire du 2026-10-22) : sans réponse, le moteur les
+  // retient « à confirmer », mais les montrer sous la question avant qu'on y
+  // ait répondu laissait croire qu'elles étaient déjà dues.
+  const lignesDuFait = (champ: ChampFaitActivite) =>
+    faits[champ] === true ? (parFait.get(champ) ?? []) : [];
   // L'ordre de la fiche suit celui des questions : Précédente et Suivante
   // parcourent ce que l'écran montre.
   const lignesFiche = FAITS_ACTIVITE.flatMap((f) =>
