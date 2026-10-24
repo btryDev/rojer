@@ -1,4 +1,5 @@
 import { AppTopbar } from "@/components/layout/AppTopbar";
+import { DemandeAide } from "@/components/assistance/DemandeAide";
 import {
   LegalBadge,
   PastilleFiche,
@@ -431,6 +432,19 @@ export default async function CarnetSanitairePage({
             </div>
             <AjoutAnalyseForm etablissementId={id} />
           </header>
+
+          {/* La dernière analyse dépasse le seuil : un risque sanitaire, et
+              une intervention qu'aucun écran ne fait (2026-10-24). */}
+          {derniereAnalyse && resultatAnalyse(derniereAnalyse.valeurUfcParL) === "limite_atteinte" ? (
+            <DemandeAide
+              variante="encart"
+              accroche="Seuil de légionelles atteint : faites-vous accompagner pour le diagnostic du réseau et les mesures à prendre."
+              libelle="Être accompagné"
+              categorie="diagnostic"
+              contexte="Analyse légionelles au-dessus du seuil"
+              etablissementId={id}
+            />
+          ) : null}
 
           {!carnet || carnet.analyses.length === 0 ? (
             <div className="rounded-[22px] bg-[color:var(--board-slate-pale)] px-6 py-6 text-center">

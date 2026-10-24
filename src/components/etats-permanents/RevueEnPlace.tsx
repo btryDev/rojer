@@ -20,6 +20,7 @@
 // Une ligne établie d'après les titres ne se déclare pas (`par-les-titres.ts`) :
 // la fiche dit pourquoi et mène à Équipe, comme la ligne le faisait.
 
+import { DemandeAide } from "@/components/assistance/DemandeAide";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -267,6 +268,16 @@ export function RevueEnPlace({
                   </p>
                   {l.fondement?.extrait && <p className="m-0">« {l.fondement.extrait} »</p>}
                   {l.pieceAttendue && <p className="m-0">Écrit à garder : {l.pieceAttendue}</p>}
+                  {/* « Je ne sais pas » : le doute est déclaré (2026-10-24). */}
+                  <p className="m-0">
+                    <DemandeAide
+                      variante="lien"
+                      libelle="Toujours un doute ? Un expert peut vérifier sur place."
+                      categorie="diagnostic"
+                      contexte={l.question}
+                      etablissementId={etablissementId}
+                    />
+                  </p>
                 </div>
               ) : (
                 <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">{l.libelle}</p>

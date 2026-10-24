@@ -99,6 +99,8 @@ export default async function CotationPage({
 
         <CotationForm
           risqueId={risqueId}
+          etablissementId={risque.unite.duerp.etablissementId}
+          libelleRisque={risque.libelle}
           initial={{
             gravite: risque.gravite,
             probabilite: risque.probabilite,

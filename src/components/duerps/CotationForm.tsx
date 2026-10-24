@@ -1,5 +1,6 @@
 "use client";
 
+import { DemandeAide } from "@/components/assistance/DemandeAide";
 import { useEffect, useMemo, useState, useActionState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -15,6 +16,9 @@ import { RENOUVELLEMENT_MESURAGE_BRUIT } from "@/lib/referentiels/conformite/tex
 
 type Props = {
   risqueId: string;
+  /** Pour « Besoin d'aide ? » : le dossier et le risque concernés. */
+  etablissementId: string;
+  libelleRisque: string;
   initial: {
     gravite: number;
     probabilite: number;
@@ -37,6 +41,8 @@ const titreAxe: Record<string, string> = {
 
 export function CotationForm({
   risqueId,
+  etablissementId,
+  libelleRisque,
   initial,
   cotationSaisie,
   hrefRetourUnite,
@@ -310,6 +316,17 @@ export function CotationForm({
               Passer aux mesures malgré tout →
             </Link>
           </div>
+          {/* Le doute est formulé par l'outil : on propose un humain, en
+              une ligne (2026-10-24). */}
+          <p className="m-0 mt-3 text-[12.5px] text-[color:var(--board-slate-mid)]">
+            <DemandeAide
+              variante="lien"
+              libelle="Pas sûr de votre cotation ? Un préventeur peut l'évaluer avec vous."
+              categorie="duerp"
+              contexte={`Cotation : ${libelleRisque}`}
+              etablissementId={etablissementId}
+            />
+          </p>
         </div>
       )}
 
