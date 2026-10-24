@@ -868,6 +868,24 @@ Les étapes 0 à 11 de `spec/PLAN.md` sont livrées. Le travail actuel dépasse 
     Le document a toujours quelques heures de retard, et il ne vaut que ce que
     vaut sa dernière rature.
 
+12. **Tests en local : ciblés ; la suite complète, c'est la CI** (décision de
+    la propriétaire du 2026-10-25 — la machine est partagée par plusieurs
+    sessions, et la suite complète, ~6 700 tests, la sature une minute).
+    - Pendant le travail : les tests des fichiers touchés
+      (`pnpm exec vitest run <chemins>`), ou `pnpm test:lot`
+      (`vitest run --changed origin/main`).
+    - **Les gardes transversales ne s'importent pas, elles relisent le code**
+      (portée au compte `tenancy-*`, RLS `migrations-rls`, `fraicheur-sorties`,
+      `espaces-avalees`, `portee`, `fichiers`, `entetes-servis`,
+      `version-moteur`…) : `--changed` ne les lance pas. Lancer à la main
+      celles que le lot concerne (une table neuve → `migrations-rls` ; une
+      lecture neuve → `tenancy-lectures` ; du texte d'écran →
+      `espaces-avalees`).
+    - La suite complète tourne en CI à chaque PR, sur les machines de GitHub.
+      **Aucun merge sans CI verte.** Un gros lot (moteur, schéma, refonte) peut
+      la lancer une fois en local avant la PR — une seule, jamais en même temps
+      qu'une autre tâche lourde (build, revue, autre suite).
+
 ## Ce qu'il ne faut pas faire
 
 - Traiter Rojer comme « le DUERP + des extras » — le DUERP est un module parmi d'autres, pas le centre
