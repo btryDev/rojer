@@ -103,6 +103,10 @@ const REQUETES_DE_LECTURE = new Set([
  * d'échéance calculée.
  */
 const EXEMPTES: Record<string, string> = {
+  // Les contrôles dont le prestataire est attitré (ADR-049) : leur nom et le
+  // rendez-vous, colonnes qu'aucune régénération n'écrit ; aucune échéance.
+  "src/app/etablissements/[id]/prestataires/[prestataireId]/page.tsx":
+    "prestataire attitré et rendez-vous seulement, jamais l'échéance",
   // Les deux pages d'entrée RÉPARENT le calendrier avant de le lire : elles
   // n'ont pas à dire un âge qu'elles viennent de remettre à zéro. Vérifié par
   // le second bloc — un `await` autonome, avant tout autre.

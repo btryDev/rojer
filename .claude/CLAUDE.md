@@ -712,6 +712,12 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     (#50) et écrans (#51) fusionnés — un établissement déclare ses autres
     types (`typesErpDe`) ; lot 4 (chapitre L, catégorie Scène) déplacé vers
     la mise à jour du référentiel]
+48. **048** — Un point à corriger se rattache à son rapport et vit sur
+    l'équipement qu'il concerne (2026-10-24)
+49. **049** — Un contrôle a un prestataire attitré et un rendez-vous, qui ne
+    le datent pas (2026-10-24)
+50. **050** — Une demande d'assistance s'enregistre là où le doute naît, et
+    ne part pas encore (2026-10-24)
 
 [2026-10-15, ménage des ADR : 037, 038 et 043 manquaient à cette liste ;
 **il n'existe pas d'ADR-044** — annoncée dans

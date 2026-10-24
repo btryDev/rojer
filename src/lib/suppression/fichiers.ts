@@ -35,6 +35,8 @@ export const CLES_STOCKEES = {
   AnalyseLegionelle: ["rapportCle"],
   // Les pièces de prestataire remplacées (2026-10-12).
   PiecePrestataire: ["fichierCle"],
+  // La pièce qui prouve la correction d'un point (ADR-048).
+  Action: ["leveeFichierCle"],
 } as const;
 
 /**
@@ -84,6 +86,14 @@ export const COLONNES_ECARTEES: Record<
     motif: "Métadonnée du fichier (son type), pas une clé de stockage.",
     jamaisEcrite: false,
   },
+  "Action.leveeFichierNom": {
+    motif: "Métadonnée de la pièce d'un point corrigé (son nom d'origine), pas une clé de stockage.",
+    jamaisEcrite: false,
+  },
+  "Action.leveeFichierMime": {
+    motif: "Métadonnée de la pièce d'un point corrigé (son type), pas une clé de stockage.",
+    jamaisEcrite: false,
+  },
 };
 
 type Client = Prisma.TransactionClient;
@@ -102,7 +112,7 @@ export async function clesDesEtablissements(
 ): Promise<string[]> {
   if (etablissementIds.length === 0) return [];
   const dans = { in: etablissementIds };
-  const [rapports, prestataires, analyses, piecesPrecedentes] = await Promise.all([
+  const [rapports, prestataires, analyses, piecesPrecedentes, pieces] = await Promise.all([
     tx.rapportVerification.findMany({
       where: { etablissementId: dans },
       select: { fichierCle: true },
@@ -119,12 +129,17 @@ export async function clesDesEtablissements(
       where: { prestataire: { etablissementId: dans } },
       select: { fichierCle: true },
     }),
+    tx.action.findMany({
+      where: { etablissementId: dans, leveeFichierCle: { not: null } },
+      select: { leveeFichierCle: true },
+    }),
   ]);
   return nonNulles([
     ...rapports.map((r) => r.fichierCle),
     ...prestataires.flatMap((p) => [p.attestationUrssafCle, p.assuranceRcProCle, p.kbisCle]),
     ...analyses.map((a) => a.rapportCle),
     ...piecesPrecedentes.map((p) => p.fichierCle),
+    ...pieces.map((p) => p.leveeFichierCle),
   ]);
 }
 

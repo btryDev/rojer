@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { DemandeAide } from "@/components/assistance/DemandeAide";
+import { notFound, redirect } from "next/navigation";
 import { ArrowUpRight } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -16,6 +17,7 @@ import {
 import { BadgeOrigine } from "@/components/actions/BadgeOrigine";
 import { BadgeStatutAction } from "@/components/actions/BadgeStatutAction";
 import { CloturerActionForm } from "@/components/actions/CloturerActionForm";
+import { LIBELLE_CORRIGE, LIBELLE_JUSTIFICATIF, LIBELLE_POINT } from "@/lib/points-a-corriger/libelles";
 import { GesteStatutActionButton } from "@/components/actions/GesteStatutActionButton";
 import { SupprimerActionButton } from "@/components/actions/SupprimerActionButton";
 import { LigneTitreDeLaMesure } from "@/components/salaries/LigneTitreDeLaMesure";
@@ -28,39 +30,58 @@ import { classerDate, type RegistreLigne } from "@/lib/calendrier/etats";
 import { formaterDateFr, formaterDateLongueFr } from "@/lib/dates";
 import { estActionEnRetard, estActionOuverte } from "@/lib/dates/retard";
 import { avecProvenance, lireProvenance } from "@/lib/navigation/provenance";
+import { appareilDeLAction, avecParametres, cheminAction, cheminControle } from "@/lib/navigation/chemins";
 import { libellePorteur } from "@/lib/calendrier/labels";
 
 export default async function ActionDetailPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ id: string; actionId: string }>;
+  // `equipementId` : la même fiche, servie sous celle de son appareil
+  // (`equipements/[equipementId]/points/[actionId]`).
+  params: Promise<{ id: string; actionId: string; equipementId?: string }>;
   searchParams: Promise<{ de?: string }>;
 }) {
-  const { id, actionId } = await params;
+  const { id, actionId, equipementId } = await params;
   const { de } = await searchParams;
   const a = await getAction(actionId);
   if (!a || a.etablissementId !== id) notFound();
 
+  // Une seule adresse par fiche : sous l'appareil pour un point qui en
+  // désigne un, au plan d'actions sinon (`chemins.ts`).
+  const depuisCetteFiche = cheminAction(id, { id: a.id, appareilId: appareilDeLAction(a) });
+  const ici = equipementId
+    ? `/etablissements/${id}/equipements/${equipementId}/points/${actionId}`
+    : `/etablissements/${id}/actions/${actionId}`;
+  if (ici !== depuisCetteFiche) redirect(avecParametres(depuisCetteFiche, { de }));
+
   // D'où l'on vient (calendrier, tableau de bord, une vérification…), et où
-  // cette fiche vit de toute façon — le plan d'actions.
+  // cette fiche vit de toute façon : une mesure du DUERP au plan d'actions ;
+  // un point à corriger (ADR-048) sur son appareil, à défaut sur son contrôle.
   const provenance = lireProvenance(de, id);
-  const planActions = {
-    href: `/etablissements/${id}/actions`,
-    label: "Plan d'actions",
-  };
-  // Les liens que cette fiche pose s'annoncent eux-mêmes, sans réexpédier
-  // la provenance reçue : la chaîne reste bornée à un saut.
-  const depuisCetteFiche = `/etablissements/${id}/actions/${actionId}`;
+  const point = a.verificationId !== null;
+  const appareil = a.verification?.equipement ?? a.equipement ?? null;
+  const canonique = !point
+    ? { href: `/etablissements/${id}/actions`, label: "Plan d'actions" }
+    : appareil
+      ? { href: `/etablissements/${id}/equipements/${appareil.id}`, label: appareil.libelle }
+      : { href: `/etablissements/${id}/verifications/${a.verificationId}`, label: a.verification?.libelleObligation ?? "Contrôle" };
+  // Les liens que cette fiche pose s'annoncent eux-mêmes (`depuisCetteFiche`),
+  // sans réexpédier la provenance reçue : la chaîne reste bornée à un saut.
 
   const origine = origineDeLAction(a);
   // La vérification d'origine : le rapport le plus récent (trié desc par la
   // requête) porte le constat ; à défaut, la date de réalisation, puis la
   // date prévue.
-  const dernierRapport = a.verification?.rapports[0] ?? null;
+  // Pour un point, le rapport qui l'a relevé, et lui seul (ADR-048) : sans
+  // rapport d'origine, la fiche ne lui en prête aucun — le plus récent peut
+  // être un contrôle conforme postérieur.
+  const dernierRapport = point ? a.rapportOrigine : (a.verification?.rapports[0] ?? null);
+  // Un point sans rapport d'origine n'a pas de date de constat : la date
+  // prévue de la ligne est l'échéance À VENIR (ADR-034), pas un fait passé.
   const dateConstat =
     dernierRapport?.dateRapport ??
-    a.verification?.datePrevue ??
+    (point ? null : a.verification?.datePrevue) ??
     null;
   const boundCloture = cloturerAction.bind(null, actionId);
   const estOuverte = estActionOuverte(a);
@@ -110,17 +131,21 @@ export default async function ActionDetailPage({
   });
 
   return (
-    <EcranFiche provenance={provenance} canonique={planActions}>
+    <EcranFiche provenance={provenance} canonique={canonique}>
       <HeroFiche
         date={a.echeance}
         etat={etat}
         famille="travaux"
-        surtitre="Correction · Plan d'actions"
+        surtitre={
+          point
+            ? `${LIBELLE_POINT}${a.verification ? ` · ${a.verification.libelleObligation}` : ""}`
+            : "Mesure de prévention · Plan d'actions"
+        }
         titre={a.libelle}
         faits={faits}
         pastilles={
           <>
-            <BadgeStatutAction statut={a.statut} />
+            <BadgeStatutAction statut={a.statut} point={point} />
             {enRetard && a.echeance ? (
               <PastilleRetard echeance={a.echeance} maintenant={maintenant} />
             ) : null}
@@ -132,7 +157,7 @@ export default async function ActionDetailPage({
             {corrigeableIci ? (
               <>
                 <Link
-                  href={`/etablissements/${id}/actions/${actionId}/modifier`}
+                  href={`${depuisCetteFiche}/modifier`}
                   className={buttonVariants({
                     variant: "boardClair",
                     size: "boardSm",
@@ -140,7 +165,7 @@ export default async function ActionDetailPage({
                 >
                   Modifier
                 </Link>
-                <GesteStatutActionButton id={a.id} geste="abandonner" />
+                <GesteStatutActionButton id={a.id} geste="abandonner" point={point} />
               </>
             ) : null}
             {!estOuverte ? (
@@ -148,11 +173,12 @@ export default async function ActionDetailPage({
                 id={a.id}
                 geste="rouvrir"
                 avecJustificatif={a.statut === "levee"}
+                point={point}
               />
             ) : null}
             <SupprimerActionButton
               id={a.id}
-              redirectTo={(provenance ?? planActions).href}
+              redirectTo={(provenance ?? canonique).href}
             />
           </>
         }
@@ -168,7 +194,7 @@ export default async function ActionDetailPage({
                 </p>
               ) : (
                 <p className="m-0 text-[14px] text-[color:var(--board-slate-soft)]">
-                  Aucune description n&apos;a été saisie pour cette action.
+                  Aucune description n&apos;a été saisie{point ? "" : " pour cette action"}.
                 </p>
               )}
 
@@ -225,8 +251,8 @@ export default async function ActionDetailPage({
                         vers une fiche datée de plusieurs mois ne surprenne pas. */}
                     <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
                       {dateConstat
-                        ? `Origine · écart constaté le ${formaterDateFr(dateConstat)}`
-                        : "Origine · écart constaté lors d'une vérification"}
+                        ? `Relevé par le contrôle du ${formaterDateFr(dateConstat)}`
+                        : "Relevé lors d'un contrôle"}
                     </p>
                     <p className="m-0 mt-1.5 text-[14px] font-semibold leading-[1.35]">
                       {a.verification.libelleObligation}
@@ -242,7 +268,7 @@ export default async function ActionDetailPage({
                     </p>
                     <Link
                       href={avecProvenance(
-                        `/etablissements/${id}/verifications/${a.verification.id}`,
+                        cheminControle(id, a.verification),
                         depuisCetteFiche,
                       )}
                       className="mt-2.5 inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
@@ -260,13 +286,26 @@ export default async function ActionDetailPage({
             {/* La clôture d'une action levée n'est plus un formulaire mais
                 une preuve : elle reste sur la fiche, à demeure. */}
             {a.statut === "levee" ? (
-              <CarteFiche titre="Clôture">
+              <CarteFiche titre={point ? LIBELLE_CORRIGE : "Clôture"}>
                 <ChampsFiche>
-                  <ChampFiche cle="Levée le">
+                  <ChampFiche cle={point ? "Corrigé le" : "Levée le"}>
                     {a.leveeLe ? formaterDateLongueFr(a.leveeLe) : "—"}
                   </ChampFiche>
+                  {a.leveeFichierNom ? (
+                    <ChampFiche cle="Pièce">
+                      <a
+                        href={`/api/points/${a.id}/piece`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
+                      >
+                        {a.leveeFichierNom}
+                        <ArrowUpRight className="size-3.5" />
+                      </a>
+                    </ChampFiche>
+                  ) : null}
                   {a.leveeCommentaire ? (
-                    <ChampFiche cle="Justificatif">
+                    <ChampFiche cle={point ? LIBELLE_JUSTIFICATIF : "Justificatif"}>
                       <span className="whitespace-pre-wrap">
                         {a.leveeCommentaire}
                       </span>
@@ -275,7 +314,7 @@ export default async function ActionDetailPage({
                   {/* Le rapport choisi à la clôture était enregistré et
                       montré nulle part (audit du 2026-10-12). */}
                   {a.leveeRapportId ? (
-                    <ChampFiche cle="Rapport de levée">
+                    <ChampFiche cle={point ? "Rapport de contre-visite" : "Rapport de levée"}>
                       {a.leveeRapport ? (
                         <a
                           href={`/api/rapports/${a.leveeRapport.id}/fichier`}
@@ -300,7 +339,8 @@ export default async function ActionDetailPage({
         }
         cote={
           estOuverte ? (
-            <CarteFiche titre="Clôturer cette action">
+            <>
+            <CarteFiche titre={point ? "Marquer comme corrigé" : "Clôturer cette action"}>
               <p className="m-0 mb-4 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                 Décrivez ce qui a été fait et son résultat. Le justificatif
                 reste attaché à la fiche&nbsp;: c&apos;est lui qu&apos;on
@@ -308,6 +348,7 @@ export default async function ActionDetailPage({
               </p>
               <CloturerActionForm
                 action={boundCloture}
+                point={point}
                 rapportsDisponibles={a.verification?.rapports.map((r) => ({
                   id: r.id,
                   label: `${formaterDateFr(r.dateRapport)} — ${
@@ -316,11 +357,25 @@ export default async function ActionDetailPage({
                 }))}
               />
             </CarteFiche>
+            {/* Un point en retard : quelqu'un doit le corriger, et on ne sait
+                pas toujours qui (2026-10-24). */}
+            {point && enRetard ? (
+              <DemandeAide
+                variante="encart"
+                accroche="Besoin de quelqu'un pour corriger ce point ? Nous vous orientons vers le bon intervenant."
+                libelle="Trouver un intervenant"
+                categorie="prestataire"
+                contexte={a.libelle}
+                etablissementId={id}
+              />
+            ) : null}
+            </>
           ) : a.statut === "abandonnee" ? (
             <CarteFiche titre="État">
               <p className="m-0 text-[13.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                Cette action a été abandonnée. Elle reste au dossier&nbsp;: une
-                mesure écartée fait partie de la traçabilité.
+                {point
+                  ? "Ce point a été abandonné. Il reste au dossier : un point écarté fait partie de la traçabilité."
+                  : "Cette action a été abandonnée. Elle reste au dossier : une mesure écartée fait partie de la traçabilité."}
               </p>
             </CarteFiche>
           ) : null

@@ -70,7 +70,7 @@ const LONGUEUR_MAX = 512;
  * antislashs (que certains navigateurs normalisent en `/`) et tout ce qui
  * ne commence pas par `/`.
  */
-function decouperCheminInterne(
+export function decouperCheminInterne(
   brut: string,
 ): { pathname: string; search: string } | null {
   if (!brut || brut.length > LONGUEUR_MAX) return null;

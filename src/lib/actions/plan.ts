@@ -8,13 +8,28 @@ import { estActionEnRetard, estActionOuverte } from "@/lib/dates/retard";
 import { actionVerificationSchema, cloturerActionSchema } from "./schema";
 import { assertOrigineActionValide } from "./origine";
 import { constaterEpi } from "@/lib/etablissements/epi-constate";
+import { obligationParId } from "@/lib/referentiels/conformite";
+import {
+  clePieceDePoint,
+  getStorage,
+  MESSAGE_DEPOT_NON_CONFIGURE,
+  MESSAGE_ECHEC_ENREGISTREMENT,
+  stockageEnService,
+} from "@/lib/storage";
+import { validerFichier } from "@/lib/rapports/validator";
+import { libererFichiers } from "@/lib/suppression/fichiers";
+import {
+  appareilDesignable,
+  estControleDEnsemble,
+  recoitDesPoints,
+} from "@/lib/points-a-corriger/regles";
 
 /**
  * Server actions du plan d'actions unifié (étape 8).
  *
  * Ces actions complètent `src/lib/actions/actions.ts` (qui gère les
  * mesures DUERP via le wizard) en couvrant les parcours :
- *   - création d'une action corrective depuis une vérification (écart)
+ *   - création d'un point à corriger depuis un contrôle (ADR-048)
  *   - ~~modification d'une action (statut, échéance, responsable, type)~~
  *     [2026-10-12 : `modifierActionPlan` prenait un patch que nul écran
  *     n'envoyait ; il reprend désormais le formulaire et le schéma de la
@@ -44,10 +59,13 @@ export type ActionPlanState =
     }
   | { status: "success"; actionId: string };
 
+/**
+ * Une action se lit sur le plan, le calendrier, le tableau de bord, la fiche
+ * de son contrôle et celle de son appareil (ADR-048) : tout le dossier est
+ * revalidé, plutôt qu'une liste de chemins qu'un écran neuf rendrait fausse.
+ */
 function revalidateAction(etablissementId: string): void {
-  revalidatePath(`/etablissements/${etablissementId}`);
-  revalidatePath(`/etablissements/${etablissementId}/actions`);
-  revalidatePath(`/etablissements/${etablissementId}/calendrier`);
+  revalidatePath(`/etablissements/${etablissementId}`, "layout");
 }
 
 /** Le formulaire d'une action, lu par la création et par la correction :
@@ -63,11 +81,28 @@ function lireFormulaireAction(formData: FormData) {
   });
 }
 
-export async function creerActionDepuisVerification(
-  verificationId: string,
+/**
+ * Crée un POINT À CORRIGER (ADR-048) — une action issue d'une vérification.
+ *
+ * Le contrôle vient du formulaire (`verificationId`) : la fiche d'un
+ * équipement propose ses contrôles et les contrôles d'ensemble qui le
+ * couvrent. Tout ce qui vient du client est revérifié ici :
+ *   - le contrôle appartient au compte (`requireVerification`) et reçoit des
+ *     points (`recoitDesPoints` : ni titre de salarié, ni ligne éteinte, ni
+ *     appareil retiré) ;
+ *   - le rapport d'origine, s'il est donné, est un rapport DE CE contrôle ;
+ *   - l'appareil, s'il est donné, n'est admis que pour un contrôle
+ *     d'ensemble, et seulement s'il est actif, du même établissement et d'une
+ *     catégorie que le contrôle couvre (`appareilDesignable`).
+ */
+export async function creerPointACorriger(
   _prev: ActionPlanState,
   formData: FormData,
 ): Promise<ActionPlanState> {
+  const verificationId = formData.get("verificationId");
+  if (typeof verificationId !== "string" || verificationId === "") {
+    return { status: "error", message: "Choisissez le contrôle qui a relevé ce point." };
+  }
   const { verification: verif } = await requireVerification(verificationId);
 
   const parsed = lireFormulaireAction(formData);
@@ -77,6 +112,41 @@ export async function creerActionDepuisVerification(
       message: "Formulaire invalide",
       fieldErrors: parsed.error.flatten().fieldErrors,
     };
+  }
+
+  // Trois lectures indépendantes, en une fois : l'appareil de la ligne, le
+  // rapport d'origine (borné à CE contrôle), l'appareil désigné (borné à CET
+  // établissement, et seulement pour un contrôle d'ensemble).
+  const rapportOrigineId = champFacultatif(formData.get("rapportOrigineId"));
+  const equipementId = champFacultatif(formData.get("equipementId"));
+  const [equipementDeLaLigne, rapport, appareil] = await Promise.all([
+    verif.equipementId
+      ? prisma.equipement.findUnique({ where: { id: verif.equipementId }, select: { actif: true } })
+      : null,
+    rapportOrigineId
+      ? prisma.rapportVerification.findFirst({
+          where: { id: rapportOrigineId, verificationId: verif.id },
+          select: { id: true },
+        })
+      : null,
+    equipementId && estControleDEnsemble(verif)
+      ? prisma.equipement.findFirst({
+          where: { id: equipementId, etablissementId: verif.etablissementId },
+          select: { categorie: true, actif: true },
+        })
+      : null,
+  ]);
+  if (!recoitDesPoints({ ...verif, appareilActif: equipementDeLaLigne?.actif ?? null })) {
+    return { status: "error", message: "Ce contrôle ne reçoit plus de point à corriger." };
+  }
+  if (rapportOrigineId && !rapport) {
+    return { status: "error", message: "Rapport d'origine introuvable." };
+  }
+  if (equipementId) {
+    const obligation = obligationParId(verif.obligationId);
+    if (!obligation || !appareil || !appareilDesignable(obligation, appareil)) {
+      return { status: "error", message: "Cet appareil ne peut pas être désigné par ce contrôle." };
+    }
   }
 
   // Statut initial : une action dont l'échéance est déjà passée naît « en
@@ -95,6 +165,8 @@ export async function creerActionDepuisVerification(
     data: {
       etablissementId: verif.etablissementId,
       verificationId: verif.id,
+      rapportOrigineId,
+      equipementId,
       libelle: parsed.data.libelle,
       description: parsed.data.description,
       type: parsed.data.type,
@@ -107,10 +179,12 @@ export async function creerActionDepuisVerification(
 
   await constaterEpi(verif.etablissementId);
   revalidateAction(verif.etablissementId);
-  revalidatePath(
-    `/etablissements/${verif.etablissementId}/verifications/${verif.id}`,
-  );
   return { status: "success", actionId: a.id };
+}
+
+/** Un champ facultatif d'identifiant : chaîne vide ou absente → `null`. */
+function champFacultatif(v: FormDataEntryValue | null): string | null {
+  return typeof v === "string" && v.trim() !== "" ? v.trim() : null;
 }
 
 /**
@@ -174,7 +248,6 @@ export async function modifierActionPlan(
   await constaterEpi(etablissementId);
 
   revalidateAction(etablissementId);
-  revalidatePath(`/etablissements/${etablissementId}/actions/${actionId}`);
   redirect(`/etablissements/${etablissementId}/actions/${actionId}`);
 }
 
@@ -197,8 +270,13 @@ export async function cloturerAction(
     };
   }
 
+  // Avant toute écriture au stockage : une action levée, ou abandonnée (dans
+  // un autre onglet), ne se clôture pas — l'abandon se défait d'abord.
   if (existante.statut === "levee") {
-    return { status: "error", message: "Action déjà clôturée" };
+    return { status: "error", message: "Déjà corrigée" };
+  }
+  if (!estActionOuverte(existante)) {
+    return { status: "error", message: "Abandonnée : rouvrez-la avant de la marquer corrigée." };
   }
 
   // `rapportId` vient lui aussi du formulaire : sans contrôle, une clôture
@@ -218,21 +296,81 @@ export async function cloturerAction(
     }
   }
 
-  await prisma.action.update({
-    where: { id: actionId },
-    data: {
-      statut: "levee",
-      leveeLe: new Date(),
-      leveeCommentaire: parsed.data.commentaire,
-      leveeRapportId: parsed.data.rapportId,
-    },
-  });
+  // LA PIÈCE (ADR-048) : facultative, pour un point à corriger seulement, aux
+  // règles du fichier d'un rapport (`validerFichier` : type réel, taille).
+  // Écrite AVANT la base, effacée si la base refuse — comme un rapport.
+  const piece = await lirePiece(formData, existante);
+  if (piece.status === "error") return piece;
+
+  // `updateMany` borné aux statuts OUVERTS (`estActionOuverte`) : deux
+  // clôtures simultanées (double envoi, deux onglets) ne s'écrasent pas, et
+  // un point abandonné dans un autre onglet ne se corrige pas sans être
+  // rouvert. La seconde ne trouve plus de ligne, et sa pièce, que plus rien
+  // ne référencerait, est libérée.
+  let ecrites: number;
+  try {
+    ({ count: ecrites } = await prisma.action.updateMany({
+      where: { id: actionId, statut: { in: ["ouverte", "en_cours"] } },
+      data: {
+        statut: "levee",
+        leveeLe: new Date(),
+        leveeCommentaire: parsed.data.commentaire,
+        leveeRapportId: parsed.data.rapportId,
+        ...(piece.status === "piece"
+          ? {
+              leveeFichierCle: piece.cle,
+              leveeFichierNom: piece.nom,
+              leveeFichierMime: piece.mime,
+              leveeFichierTaille: piece.taille,
+            }
+          : {}),
+      },
+    }));
+  } catch (err) {
+    if (piece.status === "piece") await libererFichiers([piece.cle], "points/correction");
+    throw err;
+  }
+  if (ecrites === 0) {
+    if (piece.status === "piece") await libererFichiers([piece.cle], "points/correction");
+    return { status: "error", message: "Déjà corrigée" };
+  }
 
   // Une mesure de protection individuelle levée vaut « EPI fournis ».
   await constaterEpi(existante.etablissementId);
   revalidateAction(existante.etablissementId);
-  revalidatePath(`/etablissements/${existante.etablissementId}/actions/${actionId}`);
   return { status: "success", actionId };
+}
+
+type LecturePiece =
+  | { status: "aucune" }
+  | { status: "piece"; cle: string; nom: string; mime: string; taille: number }
+  | { status: "error"; message: string; fieldErrors?: Record<string, string[]> };
+
+/** La pièce d'une correction, validée et stockée — ou aucune. */
+async function lirePiece(
+  formData: FormData,
+  action: { id: string; etablissementId: string; verificationId: string | null },
+): Promise<LecturePiece> {
+  const fichier = formData.get("piece");
+  if (!(fichier instanceof File) || fichier.size === 0) return { status: "aucune" };
+  if (action.verificationId === null) {
+    return { status: "error", message: "Une mesure du DUERP ne porte pas de pièce ici." };
+  }
+  if (!stockageEnService()) {
+    return { status: "error", message: MESSAGE_DEPOT_NON_CONFIGURE };
+  }
+  const val = await validerFichier(fichier);
+  if (!val.ok) {
+    return { status: "error", message: val.erreur, fieldErrors: { piece: [val.erreur] } };
+  }
+  const cle = clePieceDePoint(action.etablissementId, action.id, fichier.name);
+  try {
+    await getStorage().put(cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
+  } catch (e) {
+    console.error(`[points/correction] écriture de la pièce impossible (${cle})`, e);
+    return { status: "error", message: MESSAGE_ECHEC_ENREGISTREMENT };
+  }
+  return { status: "piece", cle, nom: fichier.name, mime: val.mime, taille: val.taille };
 }
 
 /**
@@ -246,17 +384,28 @@ export async function rouvrirAction(actionId: string): Promise<void> {
   const { action, etablissementId } = await requireAction(actionId);
   if (estActionOuverte(action)) return;
 
-  await prisma.action.update({
-    where: { id: actionId },
+  // Borné à ce qui a été lu (statut, pièce) : si le point a été rouvert puis
+  // corrigé de nouveau entre-temps, avec une autre pièce, on n'efface pas
+  // cette pièce-là en libérant l'ancienne — elle resterait orpheline.
+  const { count } = await prisma.action.updateMany({
+    where: { id: actionId, statut: action.statut, leveeFichierCle: action.leveeFichierCle },
     data: {
       statut: "ouverte",
       leveeLe: null,
       leveeCommentaire: null,
       leveeRapportId: null,
+      leveeFichierCle: null,
+      leveeFichierNom: null,
+      leveeFichierMime: null,
+      leveeFichierTaille: null,
     },
   });
+  // La pièce de la correction défaite part avec elle — après la base
+  // (`suppression/fichiers.ts`).
+  if (count > 0 && action.leveeFichierCle) {
+    await libererFichiers([action.leveeFichierCle], "points/reouverture");
+  }
   revalidateAction(etablissementId);
-  revalidatePath(`/etablissements/${etablissementId}/actions/${actionId}`);
 }
 
 /**
@@ -281,12 +430,14 @@ export async function abandonnerAction(actionId: string): Promise<void> {
     data: { statut: "abandonnee" },
   });
   revalidateAction(etablissementId);
-  revalidatePath(`/etablissements/${etablissementId}/actions/${actionId}`);
 }
 
 export async function supprimerActionPlan(actionId: string): Promise<void> {
-  const { etablissementId } = await requireAction(actionId);
+  const { action, etablissementId } = await requireAction(actionId);
 
   await prisma.action.delete({ where: { id: actionId } });
+  if (action.leveeFichierCle) {
+    await libererFichiers([action.leveeFichierCle], "points/suppression");
+  }
   revalidateAction(etablissementId);
 }

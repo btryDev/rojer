@@ -53,6 +53,7 @@
 
 import { Fragment, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import { DemandeAide } from "@/components/assistance/DemandeAide";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
   PanelLeftClose,
@@ -183,6 +184,11 @@ export function AppSidebar({
             </Fragment>
           ))}
         </nav>
+
+        {/* « Besoin d'aide ? », en permanence (décision du 2026-10-24). */}
+        <div className="shrink-0 px-2 pb-2">
+          <DemandeAide variante="rail" libelle="Aide" etablissementId={etablissement.id} />
+        </div>
 
         {/* Le bouton de dépliage ne s'offre que s'il y a quelque chose à
             déplier : sur le tableau de bord, il ouvrirait le vide. */}

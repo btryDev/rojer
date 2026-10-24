@@ -118,6 +118,9 @@ const h = vi.hoisted(() => {
     verification: {
       count: async () => db.nbTraces,
     },
+    // Les points qu'un contrôle d'ensemble a désignés sur l'appareil
+    // (ADR-048) : aucun ici, les traces sont celles des vérifications.
+    action: { count: async () => 0 },
     etablissement: {
       updateMany: async ({
         where,

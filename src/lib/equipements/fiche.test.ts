@@ -57,16 +57,16 @@ describe("phraseSansEcheance — le chapeau d'une fiche où rien n'a de date", (
     );
     // Une correction se date dans l'application : « fixée », pas « connue ».
     expect(phraseSansEcheance(0, 1)).toBe(
-      "Une correction est ouverte sur cet appareil, sans échéance fixée",
+      "Un point à corriger est ouvert sur cet appareil, sans échéance fixée",
     );
     expect(phraseSansEcheance(0, 2)).toBe(
-      "Des corrections sont ouvertes sur cet appareil, sans échéance fixée",
+      "Des points à corriger sont ouverts sur cet appareil, sans échéance fixée",
     );
     expect(phraseSansEcheance(1, 1)).toBe(
-      "Une vérification et une correction sont ouvertes sur cet appareil, sans échéance connue pour l'instant",
+      "Une vérification et un point à corriger sont ouverts sur cet appareil, sans échéance connue pour l'instant",
     );
     expect(phraseSansEcheance(2, 1)).toBe(
-      "Des vérifications et une correction sont ouvertes sur cet appareil, sans échéance connue pour l'instant",
+      "Des vérifications et un point à corriger sont ouverts sur cet appareil, sans échéance connue pour l'instant",
     );
   });
 });
@@ -92,6 +92,7 @@ function fiche(
   }>,
 ): FicheEquipement {
   return {
+    id: "eq-1",
     verifications: verifs.map((v) => ({
       id: v.id,
       obligationId: v.obligationId ?? "extincteurs-annuelle",
@@ -135,7 +136,9 @@ describe("lignesAFaire", () => {
     expect(lignes).toHaveLength(1);
     expect(lignes[0].date).toEqual(jour("2027-01-22"));
     expect(lignes[0].etat).toBe("lointain");
-    expect(lignes[0].href).toBe("/etablissements/e1/verifications/v1");
+    // Ce qui reste à faire, c'est le rapport : la ligne ouvre le dépôt,
+    // sous la fiche de l'appareil (ADR-048).
+    expect(lignes[0].href).toBe("/etablissements/e1/equipements/eq-1/controles/v1?deposer=1#depot");
   });
 
   it("garde le rendez-vous suivant d'une rangée SOLDÉE d'avant l'ADR-034", () => {
@@ -242,7 +245,7 @@ describe("lignesAFaire", () => {
       AUJOURDHUI, AUCUNE_PRUDENCE
     );
     expect(ligne.etat).toBe("sansRendezVous");
-    expect(ligne.href).toBe("/etablissements/e1/verifications/v-apres-modification");
+    expect(ligne.href).toBe("/etablissements/e1/equipements/eq-1/controles/v-apres-modification?deposer=1#depot");
   });
 
   it("un retard sans date passe EN TÊTE, devant une échéance lointaine", () => {
@@ -364,6 +367,8 @@ function ficheRiche(o: {
     archiveLe?: string;
     rapports?: Array<{ id: string; date: string; resultat?: string; organisme?: string }>;
     actions?: number;
+    /** Les points rattachés à un rapport (ADR-048) : identifiant du rapport. */
+    pointsDuRapport?: string[];
   }>;
 }): FicheEquipement {
   return {
@@ -383,13 +388,24 @@ function ficheRiche(o: {
         resultat: r.resultat ?? "conforme",
         organismeVerif: r.organisme ?? "APAVE",
       })),
-      actions: Array.from({ length: v.actions ?? 0 }, (_, i) => ({
-        id: `${v.id}-a${i}`,
-        libelle: "Remplacer la goupille",
-        statut: "ouverte",
-        echeance: null,
-        responsable: null,
-      })),
+      actions: [
+        ...Array.from({ length: v.actions ?? 0 }, (_, i) => ({
+          id: `${v.id}-a${i}`,
+          libelle: "Remplacer la goupille",
+          statut: "ouverte",
+          echeance: null,
+          responsable: null,
+          rapportOrigineId: null,
+        })),
+        ...(v.pointsDuRapport ?? []).map((rapportOrigineId, i) => ({
+          id: `${v.id}-p${i}`,
+          libelle: "Remplacer la goupille",
+          statut: "ouverte",
+          echeance: null,
+          responsable: null,
+          rapportOrigineId,
+        })),
+      ],
     })),
   } as unknown as FicheEquipement;
 }
@@ -423,7 +439,7 @@ describe("chapeauAFaire — le nombre et le genre de ce qui est ouvert (2026-09-
   it("hors retard, ne compte que les lignes sans date, et au bon genre", () => {
     const aFaire = [l(null, "aPlanifier"), l(null, "aPlanifier", "action")];
     expect(chapeauAFaire(aFaire, null, AUJOURDHUI)).toBe(
-      "Une vérification et une correction sont ouvertes sur cet appareil, sans échéance connue pour l'instant",
+      "Une vérification et un point à corriger sont ouverts sur cet appareil, sans échéance connue pour l'instant",
     );
   });
 
@@ -541,9 +557,9 @@ describe("lignesHistoire", () => {
     expect(h[0].detail).toContain("aucun rapport");
   });
 
-  it("rattache les actions au seul rapport le plus récent", () => {
-    // Les actions sont portées par la ligne de suivi, pas par un dépôt : les
-    // répéter sur chaque rapport ferait lire plusieurs fois les mêmes écarts.
+  it("rattache les points sans rapport d'origine au seul rapport le plus récent", () => {
+    // Les points d'avant l'ADR-048 n'ont pas de rapport d'origine : les
+    // répéter sur chaque rapport ferait lire plusieurs fois les mêmes points.
     const h = lignesHistoire(
       ficheRiche({
         verifs: [
@@ -560,10 +576,29 @@ describe("lignesHistoire", () => {
       }),
       "/base",
     );
-    expect(h.find((l) => l.cle === "r-recent")?.detail).toContain(
-      "2 actions correctives",
+    expect(h.find((l) => l.cle === "r-recent")?.detail).toContain("2 points à corriger");
+    expect(h.find((l) => l.cle === "r-ancien")?.detail).not.toContain("point");
+  });
+
+  it("chaque rapport annonce les points qu'il a relevés (ADR-048)", () => {
+    const h = lignesHistoire(
+      ficheRiche({
+        verifs: [
+          {
+            id: "v1",
+            datePrevue: "2027-03-01",
+            pointsDuRapport: ["ancien", "ancien", "recent"],
+            rapports: [
+              { id: "recent", date: "2026-03-02" },
+              { id: "ancien", date: "2025-03-02" },
+            ],
+          },
+        ],
+      }),
+      "/base",
     );
-    expect(h.find((l) => l.cle === "r-ancien")?.detail).not.toContain("action");
+    expect(h.find((l) => l.cle === "r-recent")?.detail).toContain("1 point à corriger");
+    expect(h.find((l) => l.cle === "r-ancien")?.detail).toContain("2 points à corriger");
   });
 
   it("reporte le résultat consigné, qui décide de la couleur du jalon", () => {

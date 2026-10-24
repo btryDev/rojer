@@ -3,7 +3,6 @@ import type { OrigineAction } from "@/lib/actions/queries";
 const LABEL: Record<OrigineAction, string> = {
   duerp: "DUERP",
   verification: "Vérification",
-  libre: "Libre",
 };
 
 // L'origine n'est pas un état : elle ne prend donc aucun champ du

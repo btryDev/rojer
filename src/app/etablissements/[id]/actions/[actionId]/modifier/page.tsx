@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { CreerActionVerifForm } from "@/components/actions/CreerActionVerifForm";
+import { FormulairePoint } from "@/components/points-a-corriger/FormulairePoint";
 import { getAction } from "@/lib/actions/queries";
 import { modifierActionPlan } from "@/lib/actions/plan";
 import { cleJourCivil } from "@/lib/dates";
 import { estActionOuverte } from "@/lib/dates/retard";
+import { appareilDeLAction, cheminAction } from "@/lib/navigation/chemins";
 
 /**
  * Corriger une action du plan.
@@ -22,14 +23,19 @@ import { estActionOuverte } from "@/lib/dates/retard";
 export default async function ModifierActionPage({
   params,
 }: {
-  params: Promise<{ id: string; actionId: string }>;
+  params: Promise<{ id: string; actionId: string; equipementId?: string }>;
 }) {
-  const { id, actionId } = await params;
+  const { id, actionId, equipementId } = await params;
   const a = await getAction(actionId);
   if (!a || a.etablissementId !== id) notFound();
 
-  const fiche = `/etablissements/${id}/actions/${actionId}`;
+  // Sous l'appareil pour un point qui en désigne un (`chemins.ts`).
+  const fiche = cheminAction(id, { id: a.id, appareilId: appareilDeLAction(a) });
   if (a.risqueId || !estActionOuverte(a)) redirect(fiche);
+  const ici = equipementId
+    ? `/etablissements/${id}/equipements/${equipementId}/points/${actionId}/modifier`
+    : `/etablissements/${id}/actions/${actionId}/modifier`;
+  if (ici !== `${fiche}/modifier`) redirect(`${fiche}/modifier`);
 
   const action = modifierActionPlan.bind(null, actionId);
 
@@ -44,13 +50,13 @@ export default async function ModifierActionPage({
           {a.libelle}
         </Link>
         <h1 className="board-titre m-0 mt-2.5 text-[clamp(22px,2.2vw,27px)]">
-          Corriger l&apos;action
+          Modifier le point à corriger
         </h1>
       </header>
 
       <div className="px-[var(--board-gutter)] pt-6">
         <div className="carte-board max-w-[760px] px-7 py-7 sm:px-8">
-          <CreerActionVerifForm
+          <FormulairePoint
             action={action}
             defauts={{
               libelle: a.libelle,

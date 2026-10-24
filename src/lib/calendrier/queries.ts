@@ -100,6 +100,8 @@ export async function listerVerifications(
       // la prescription, et celle qui l'oubliait présentait un engagement
       // d'assurance comme une obligation légale sans que rien ne le signale.
       prescription: { select: { source: true } },
+      // Le prestataire attitré (ADR-049), nommé à côté du rendez-vous.
+      prestataire: { select: { raisonSociale: true } },
     },
     orderBy: [{ datePrevue: "asc" }],
   });
@@ -140,6 +142,10 @@ export async function getVerification(id: string) {
       // Même raison que dans `listerVerifications` : la fiche d'une échéance
       // est l'écran où l'on vient chercher ce qu'elle engage (ADR-032).
       prescription: { select: { source: true, reference: true } },
+      // Le prestataire attitré (ADR-049) : ce que la carte de suivi montre.
+      prestataire: {
+        select: { id: true, raisonSociale: true, contactNom: true, contactTelephone: true, contactEmail: true },
+      },
     },
   });
   if (v === null) return null;

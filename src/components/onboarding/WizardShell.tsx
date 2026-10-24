@@ -1,5 +1,6 @@
 "use client";
 
+import { DemandeAide } from "@/components/assistance/DemandeAide";
 import { useActionState, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -500,6 +501,19 @@ export function WizardShell({ email }: { email?: string | null }) {
             )}
           </div>
         </form>
+        {/* Un refus à l'entrée est le moment où l'on perd quelqu'un : on lui
+            propose un humain (2026-10-24). Hors du formulaire de création —
+            un formulaire ne s'imbrique pas dans un autre. */}
+        {refusPerimetre ? (
+          <div className="mt-6 max-w-[720px]">
+            <DemandeAide
+              variante="encart"
+              accroche="Rojer ne suit pas encore votre situation, mais nos experts, si. Décrivez-nous votre établissement."
+              libelle="Être accompagné"
+              categorie="hors_couverture"
+            />
+          </div>
+        ) : null}
       </div>
     </div>
   );

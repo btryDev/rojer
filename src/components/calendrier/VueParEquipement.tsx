@@ -38,6 +38,8 @@
 //     nommés, les compteurs et le tiroir du mois visé. La règle reste
 //     visible dans les deux : c'est elle qu'on est venu lire.
 
+import { MentionRendezVous } from "@/components/rendez-vous/MentionRendezVous";
+import type { PastilleRendezVous } from "@/lib/rendez-vous/regles";
 import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
 import { useState } from "react";
 import { LienProvenance } from "@/components/navigation/LienProvenance";
@@ -137,6 +139,8 @@ export type OccurrenceEquipement = {
   rythmeRetenu?: MentionRythme | null;
   /** Les phrases « à confirmer » de l'occurrence (revue du lot 1). */
   aConfirmer?: readonly string[];
+  /** Le rendez-vous pris (ADR-049), en pastille : `meta` est tronqué. */
+  rendezVous?: PastilleRendezVous | null;
   etat: RegistreLigne;
   /** Statut PEINT de vérification — absent hors du parc, où il n'existe pas. */
   statut?: StatutPeint;
@@ -513,6 +517,7 @@ function CarteEquipement({
                         {o.contractuelle && <MentionContractuelle />}
                         <MentionRythmeRetenu mention={o.rythmeRetenu} />
                         <MentionAConfirmer phrases={o.aConfirmer ?? []} />
+                        <MentionRendezVous pastille={o.rendezVous ?? null} />
                       </span>
                     </span>
                     {o.statut ? (
