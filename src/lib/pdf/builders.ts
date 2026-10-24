@@ -292,6 +292,35 @@ export function ligneVerif(
   };
 }
 
+/** Un rapport tel que les PDF l'impriment (registre, dossier), ses points
+ *  à corriger et leur correction compris (ADR-048, lot 3). */
+function versLigneRapport(
+  r: Awaited<ReturnType<typeof listerRapportsDeLEtablissement>>[number],
+  multiBatiments: boolean,
+): LigneRapport {
+  return {
+    id: r.id,
+    dateRapport: r.dateRapport,
+    resultat: r.resultat,
+    organismeVerif: r.organismeVerif,
+    libelleObligation: r.verification.libelleObligation,
+    equipementLibelle: libelleEquipementSitue(r.verification, multiBatiments),
+    domaine: obligationParId(r.verification.obligationId)?.domaine ?? null,
+    fichierNomOriginal: r.fichierNomOriginal,
+    commentaires: r.commentaires,
+    // Un point abandonné n'est pas une correction : il ne s'imprime pas.
+    points: r.pointsACorriger
+      .filter((p) => p.statut !== "abandonnee")
+      .map((p) => ({
+        id: p.id,
+        libelle: p.libelle,
+        corrigeLe: p.statut === "levee" ? p.leveeLe : null,
+        justification: p.statut === "levee" ? p.leveeCommentaire : null,
+        pieceJointe: p.statut === "levee" && p.leveeFichierNom !== null,
+      })),
+  };
+}
+
 export async function construirePlanActionsData(
   etablissementId: string,
   user: AuthedUser,
@@ -397,20 +426,7 @@ export async function construireRegistreData(
     }),
   ]);
 
-  const lignesRapports: LigneRapport[] = rapports.map((r) => ({
-    id: r.id,
-    dateRapport: r.dateRapport,
-    resultat: r.resultat,
-    organismeVerif: r.organismeVerif,
-    libelleObligation: r.verification.libelleObligation,
-    equipementLibelle: libelleEquipementSitue(
-      r.verification,
-      multiBatiments,
-    ),
-    domaine: obligationParId(r.verification.obligationId)?.domaine ?? null,
-    fichierNomOriginal: r.fichierNomOriginal,
-    commentaires: r.commentaires,
-  }));
+  const lignesRapports: LigneRapport[] = rapports.map((r) => versLigneRapport(r, multiBatiments));
 
   // « En attente » = toute échéance encore attendue — ouverte et non purgée
   // (`estEnAttenteDeRapport`), rapports passés ou non, quelle que soit la
@@ -697,20 +713,9 @@ export async function construireDossierConformiteData(
         null,
       ) ?? null;
 
-  const rapportsRecents: LigneRapport[] = rapports.slice(0, 10).map((r) => ({
-    id: r.id,
-    dateRapport: r.dateRapport,
-    resultat: r.resultat,
-    organismeVerif: r.organismeVerif,
-    libelleObligation: r.verification.libelleObligation,
-    equipementLibelle: libelleEquipementSitue(
-      r.verification,
-      multiBatiments,
-    ),
-    domaine: obligationParId(r.verification.obligationId)?.domaine ?? null,
-    fichierNomOriginal: r.fichierNomOriginal,
-    commentaires: r.commentaires,
-  }));
+  const rapportsRecents: LigneRapport[] = rapports
+    .slice(0, 10)
+    .map((r) => versLigneRapport(r, multiBatiments));
 
   return {
     entreprise: etab.entreprise.raisonSociale,

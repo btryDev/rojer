@@ -30,6 +30,19 @@ export async function listerRapportsDeLEtablissement(
           salarie: { select: { nom: true, prenom: true } },
         },
       },
+      // Les points que ce rapport a relevés, et leur correction (ADR-048,
+      // lot 3) : le registre les reprend sous le rapport.
+      pointsACorriger: {
+        select: {
+          id: true,
+          libelle: true,
+          statut: true,
+          leveeLe: true,
+          leveeCommentaire: true,
+          leveeFichierNom: true,
+        },
+        orderBy: { createdAt: "asc" },
+      },
     },
     orderBy: ORDRE_RAPPORT_PLUS_RECENT,
   });

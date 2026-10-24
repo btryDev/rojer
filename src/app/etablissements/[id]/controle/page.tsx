@@ -203,8 +203,8 @@ export default async function ControlePage({
         dashboard.compteurs.actionsOuvertes +
           dashboard.compteurs.actionsEnCours >
         0
-          ? `${dashboard.compteurs.actionsOuvertes + dashboard.compteurs.actionsEnCours} action${dashboard.compteurs.actionsOuvertes + dashboard.compteurs.actionsEnCours > 1 ? "s" : ""} en cours.`
-          : "Aucune action en cours.",
+          ? `${dashboard.compteurs.actionsOuvertes + dashboard.compteurs.actionsEnCours} mesure${dashboard.compteurs.actionsOuvertes + dashboard.compteurs.actionsEnCours > 1 ? "s" : ""} du DUERP en cours. Les points à corriger relevés par les contrôles sont au dossier de conformité.`
+          : "Aucune mesure du DUERP en cours. Les points à corriger relevés par les contrôles sont au dossier de conformité.",
       present: true,
       etat: selonCalendrier(
         dashboard.compteurs.actionsEnRetard > 0 ? "en_retard" : "a_jour",

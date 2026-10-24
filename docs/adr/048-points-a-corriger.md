@@ -52,5 +52,12 @@ pouvaient désigner aucun appareil.
 - La création et la levée d'un point passent par un seul formulaire et une
   seule action serveur chacune ; l'ancien formulaire d'action de
   vérification est retiré.
-- Le plan d'actions ne montrera plus que les mesures du DUERP (lot 3 du
-  plan), le registre reprendra les corrections (lot 3).
+- ~~Le plan d'actions ne montrera plus que les mesures du DUERP (lot 3 du
+  plan), le registre reprendra les corrections (lot 3).~~ [2026-10-24, lot 3
+  fait] Le plan d'actions (écran, PDF, compteurs) ne montre que les mesures
+  du DUERP ; le dossier de conformité imprime les points à corriger à part ;
+  le registre (écran et PDF) reprend sous chaque rapport ses points et leur
+  correction — pour l'électricité, au titre de R. 4226-19 (« les
+  justifications des travaux et modifications effectués pour porter remède
+  aux défectuosités constatées sont consignés sur un registre », vérifié sur
+  Légifrance le 2026-10-24). Le score garde toutes les actions (décision 7).

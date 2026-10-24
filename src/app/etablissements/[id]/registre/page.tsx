@@ -1,4 +1,5 @@
 import { estAppareilRetire } from "@/lib/equipements/retrait";
+import { PointsDuRapport } from "@/components/points-a-corriger/PointsDuRapport";
 import { DemandeAide } from "@/components/assistance/DemandeAide";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -402,6 +403,13 @@ export default async function RegistrePage({
                             {r.commentaires}
                           </p>
                         )}
+                        {/* Les points relevés par ce rapport et leur
+                            correction (ADR-048, lot 3) ; R. 4226-19 les veut
+                            au registre pour l'électricité. */}
+                        <PointsDuRapport
+                          points={r.pointsACorriger}
+                          electricite={dom === "electricite"}
+                        />
                       </div>
                       <BadgeResultat resultat={r.resultat} />
                       <div className="flex flex-none flex-wrap items-center gap-2">
