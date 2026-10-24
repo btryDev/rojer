@@ -3,7 +3,8 @@
  *
  * Module pur. Il ne décide que d'un dessin et d'un fond : l'état d'un titre,
  * son échéance, restent ceux de `etat-titre.ts`. Les dessins sont ceux de « Ce
- * qui doit être en place » (`public/illustrations/en-place/`), décoratifs
+ * qui doit être en place » (`public/illustrations/en-place/`), plus trois de
+ * la planche 3 (`personne`, `chariot-elevateur`, `casque-securite`), décoratifs
  * (`alt=""`) — tout ce qu'ils évoquent est écrit à côté.
  *
  * `illustration-titre.test.ts` tient la table : chaque titre du catalogue a son
@@ -31,10 +32,10 @@ export const DESSIN_PAR_TITRE: Readonly<Record<string, DessinTitre>> = {
   "conduite-salarie-attestation-medicale": { sujet: "sante-travail", teinte: "secours" },
   "elec-salarie-attestation-medicale-voisinage": { sujet: "sante-travail", teinte: "secours" },
   // Les formations et habilitations au poste.
-  "formation-securite-salarie-accueil": { sujet: "formation-incendie", teinte: "quotidien" },
+  "formation-securite-salarie-accueil": { sujet: "casque-securite", teinte: "quotidien" },
   "elec-salarie-habilitation": { sujet: "badge-electrique", teinte: "quotidien" },
-  "conduite-salarie-formation": { sujet: "salarie-designe", teinte: "quotidien" },
-  "conduite-salarie-autorisation": { sujet: "salarie-designe", teinte: "quotidien" },
+  "conduite-salarie-formation": { sujet: "chariot-elevateur", teinte: "quotidien" },
+  "conduite-salarie-autorisation": { sujet: "chariot-elevateur", teinte: "quotidien" },
   "secours-salarie-secouriste": { sujet: "trousse-secours", teinte: "secours" },
   // La prévention organisée.
   "formation-securite-salarie-cse-sst": { sujet: "cse", teinte: "organisation" },

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { FOND_TEINTE } from "@/lib/etats-permanents/illustrations";
+import Image from "next/image";
+import { DOSSIER_ILLUSTRATIONS, FOND_TEINTE } from "@/lib/etats-permanents/illustrations";
 
 /**
  * La tête de la fiche d'une personne (refonte du 2026-10-24) : un portrait,
@@ -8,7 +9,8 @@ import { FOND_TEINTE } from "@/lib/etats-permanents/illustrations";
  * prolonge pas une ligne.
  *
  * Le portrait est un buste neutre dans le trait des illustrations de « Ce qui
- * doit être en place » — sans visage, sans genre, sans âge : Rojer ne sait de
+ * doit être en place » (planche 3, `personne.png`) — sans visage, sans genre,
+ * sans âge : Rojer ne sait de
  * cette personne que son nom et son poste, et un dessin qui en dirait plus
  * affirmerait ce qu'on ignore.
  */
@@ -24,19 +26,13 @@ export function PortraitPersonne({ taille = 84 }: { taille?: number }) {
         background: FOND_TEINTE.organisation,
       }}
     >
-      <svg viewBox="0 0 64 64" width={taille * 0.72} height={taille * 0.72}>
-        {/* L'ombre plate, décalée en bas à droite, comme les autres dessins. */}
-        <g fill="#0b1636">
-          <circle cx="34.5" cy="23.5" r="11" />
-          <path d="M14.5 58.5c0-11.6 9-19.5 20-19.5s20 7.9 20 19.5z" />
-        </g>
-        <g stroke="#0b1636" strokeWidth="2.2" strokeLinejoin="round">
-          <path d="M12 56c0-11.6 9-19.5 20-19.5S52 44.4 52 56z" fill="#ffffff" />
-          <path d="M24 38.6 32 47l8-8.4" fill="#6b7cff" />
-          <circle cx="32" cy="21" r="11" fill="#ffffff" />
-        </g>
-        <path d="M24.5 14.5c2-2.4 4.6-3.6 7.5-3.6" stroke="#c9d4e6" strokeWidth="2.2" strokeLinecap="round" fill="none" />
-      </svg>
+      <Image
+        src={`${DOSSIER_ILLUSTRATIONS}/personne.png`}
+        alt=""
+        width={Math.round(taille * 0.78)}
+        height={Math.round(taille * 0.78)}
+        priority
+      />
     </span>
   );
 }

@@ -38,3 +38,19 @@ conditions d'usage commercial du générateur employé et les écrire ici.
 - **Découpe** : chaque case de la planche est détourée, les grains isolés
   retirés (îlots de moins de 60 px, fragments touchant le bord de la case),
   puis recadrée au carré avec 10 % de marge.
+
+## Planche 3 — la fiche salarié (2026-10-24)
+
+`docs/illustrations/planches/planche-3-fiche-salarie.png`, générée par la
+propriétaire sur le même style, découpée le même jour (fond blanc retiré par
+l'extérieur seulement, pour garder les blancs intérieurs ; îlots de moins de
+60 px retirés ; carré à 10 % de marge ; 240 × 240, 96 couleurs) :
+
+- `personne.png` : le portrait de la fiche salarié (`HeroSalarie.tsx`) ;
+- `chariot-elevateur.png` : la formation et l'autorisation de conduite ;
+- `casque-securite.png` : la formation à la sécurité au poste.
+
+Référencés par `src/lib/salaries/illustration-titre.ts` (titres) et
+`HeroSalarie.tsx` (portrait), pas par `illustrations.ts` : aucune ligne de
+« Ce qui doit être en place » ne les montre. Même réserve de licence que
+ci-dessus.
