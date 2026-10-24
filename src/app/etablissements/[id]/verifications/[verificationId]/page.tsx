@@ -77,6 +77,7 @@ import {
 import { uploadRapport } from "@/lib/rapports/actions";
 import { avecParametres, cheminControle } from "@/lib/navigation/chemins";
 import { SuiviControle } from "@/components/rendez-vous/SuiviControle";
+import { DemandeAide } from "@/components/assistance/DemandeAide";
 import { enregistrerSuiviControle } from "@/lib/rendez-vous/actions";
 import { prestatairesProposables } from "@/lib/rendez-vous/queries";
 import { recoitUnSuivi, rendezVousEnAttenteDeRapport } from "@/lib/rendez-vous/regles";
@@ -655,6 +656,20 @@ export default async function VerificationDetailPage({
         </section>
       ) : null}
 
+      {/* « Besoin d'aide ? » (2026-10-24) : la visite de la commission de
+          sécurité, que l'exploitant subit sans la faire — l'échéance la plus
+          anxiogène du dossier. */}
+      {pourInformation ? (
+        <DemandeAide
+          variante="encart"
+          accroche="La commission de sécurité va passer ? Nos experts la préparent avec vous : registre, consignes, levée des prescriptions."
+          libelle="Préparer la visite"
+          categorie="commission_securite"
+          contexte={v.libelleObligation}
+          etablissementId={id}
+        />
+      ) : null}
+
       {/* ── Le prestataire attitré et le rendez-vous (ADR-049) ───── */}
       {suivi ? (
         <SuiviControle
@@ -940,6 +955,21 @@ export default async function VerificationDetailPage({
         titre={v.equipement ? "Relevés par ce contrôle" : "Relevés par ce contrôle d'ensemble"}
         compte={points.length}
       />
+      {/* Un écart majeur au dernier rapport : le doute après un contrôle,
+          qu'aucun écran ne tranche (2026-10-24). */}
+      {/* Pas juste après le dépôt : l'invitation à noter les points est
+          déjà là, et trois encarts à la suite pèsent (contrôle visuel). Elle
+          porte alors le lien d'aide. */}
+      {recoit && v.rapports[0]?.resultat === "ecart_majeur" && !rapportApres ? (
+        <DemandeAide
+          variante="encart"
+          accroche="Un écart majeur relevé ? Un expert vous dit quoi corriger, et dans quel ordre."
+          libelle="Faire le point avec un expert"
+          categorie="rapport"
+          contexte={v.libelleObligation}
+          etablissementId={id}
+        />
+      ) : null}
       {points.length > 0 && (
         <ListePoints
           points={points}
@@ -973,6 +1003,17 @@ export default async function VerificationDetailPage({
                 <p className="m-0 max-w-[62ch] text-[13.5px] leading-[1.55] text-[color:var(--board-ink)]">
                   {INVITATION_APRES_RAPPORT}
                 </p>
+                {rapportApres.resultat === "ecart_majeur" && (
+                  <p className="m-0 text-[12.5px] text-[color:var(--board-slate-mid)]">
+                    <DemandeAide
+                      variante="lien"
+                      libelle="Un écart majeur ? Un expert vous dit quoi corriger, et dans quel ordre."
+                      categorie="rapport"
+                      contexte={v.libelleObligation}
+                      etablissementId={id}
+                    />
+                  </p>
+                )}
               </>
             )}
             <FormulairePoint

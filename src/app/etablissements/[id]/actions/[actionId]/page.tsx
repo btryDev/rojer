@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DemandeAide } from "@/components/assistance/DemandeAide";
 import { notFound, redirect } from "next/navigation";
 import { ArrowUpRight } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
@@ -338,6 +339,7 @@ export default async function ActionDetailPage({
         }
         cote={
           estOuverte ? (
+            <>
             <CarteFiche titre={point ? "Marquer comme corrigé" : "Clôturer cette action"}>
               <p className="m-0 mb-4 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                 Décrivez ce qui a été fait et son résultat. Le justificatif
@@ -355,6 +357,19 @@ export default async function ActionDetailPage({
                 }))}
               />
             </CarteFiche>
+            {/* Un point en retard : quelqu'un doit le corriger, et on ne sait
+                pas toujours qui (2026-10-24). */}
+            {point && enRetard ? (
+              <DemandeAide
+                variante="encart"
+                accroche="Besoin de quelqu'un pour corriger ce point ? Nous vous orientons vers le bon intervenant."
+                libelle="Trouver un intervenant"
+                categorie="prestataire"
+                contexte={a.libelle}
+                etablissementId={id}
+              />
+            ) : null}
+            </>
           ) : a.statut === "abandonnee" ? (
             <CarteFiche titre="État">
               <p className="m-0 text-[13.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">

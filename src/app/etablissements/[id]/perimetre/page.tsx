@@ -36,6 +36,7 @@
 // Il ne déclare rien : chaque bloc projette un module. Une phrase écrite ici
 // serait une source de vérité de plus sur ce que le produit couvre.
 
+import { DemandeAide } from "@/components/assistance/DemandeAide";
 import Link from "next/link";
 import { FilAriane } from "@/components/navigation/FilAriane";
 import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
@@ -212,6 +213,16 @@ export default async function PerimetrePage({
             ))}
           </ul>
         </section>
+
+        {/* La page des limites : un seul encart, en fin de page (2026-10-24). */}
+        <DemandeAide
+          variante="encart"
+          accroche="Ce que Rojer ne suit pas, nos experts peuvent le prendre en charge avec vous."
+          libelle="En parler à un expert"
+          categorie="hors_couverture"
+          contexte="Ce que Rojer ne couvre pas"
+          etablissementId={id}
+        />
 
         <p className="m-0 max-w-[68ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           Les documents que vous devez tenir, y compris ceux que Rojer ne

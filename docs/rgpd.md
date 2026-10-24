@@ -280,6 +280,16 @@ L'authentification est **en place** (ADR-005) : elle repose sur Supabase Auth,
 qui détient l'identité (email, mot de passe haché). Il n'y a pas de modèle
 `User` en base applicative ; `Entreprise.userId` fait le lien.
 
+### 2.8 Demandes d'assistance (« Besoin d'aide ? », ADR-050, 2026-10-24)
+
+Le dirigeant peut demander l'aide d'un expert depuis l'application
+(`DemandeAssistance`) : une catégorie, sa question en texte libre, un
+téléphone **facultatif**, la page d'où il écrit. Base légale : sa demande
+(mesures précontractuelles, 6.1.b), jamais un consentement à la prospection.
+Rien n'est envoyé hors de la base tant que l'e-mail n'est pas branché. Le
+texte libre peut contenir ce que l'utilisateur y écrit : l'écran ne
+l'invite à aucune donnée de santé ni de salarié.
+
 ---
 
 ## 3. Hébergement
@@ -317,6 +327,7 @@ ne dit pas :
 | **Salarié — titres et échéances** | Durée de la relation de travail | ~~Jusqu'au terme du délai de prescription de l'action en responsabilité~~ **Aucune durée fixée** : les titres restent jusqu'à ce que l'employeur les supprime, et la suppression est définitive | Pendant l'emploi : obligation légale de l'employeur (6.1.c, audit E8). Copie d'une attestation médicale : « pendant toute sa durée de validité » (`R. 4323-56`, `R. 4544-11-1`). ~~`D. 4711-3` par analogie~~ — décision de la propriétaire, 2026-09-27 : aucune conservation par analogie |
 | Actions correctives | Tant que la vérification liée existe | — | Suppression en cascade |
 | Fichiers physiques des rapports | Idem rapports | — | Supprimés avec la ligne |
+| Demandes d'assistance (ADR-050) | **3 ans à compter de la demande** — durée proposée, **à valider** ; pas encore de purge automatique | — | Suppression en cascade avec l'établissement |
 
 ### 4.1 Correction d'une erreur de la version précédente
 
