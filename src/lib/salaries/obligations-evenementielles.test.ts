@@ -5,7 +5,6 @@ import { obligationsDeclencheesParUnFait } from "./obligations-evenementielles";
 import { cataloguerTitres } from "./catalogue";
 import { titresGouvernesParUnFait } from "@/lib/etablissements/faits-activite";
 
-const jour = (iso: string) => new Date(`${iso}T00:00:00.000Z`);
 
 describe("ce qu'un fait rend dû à une personne", () => {
   it("rend des obligations, et rien d'autre que des événementielles sans rythme", () => {
@@ -28,13 +27,15 @@ describe("ce qu'un fait rend dû à une personne", () => {
     // obligation salarié événementielle au référentiel sans qu'elle atteigne
     // la fiche fait tomber ce test tout seul.
     //
-    // Depuis l'ADR-038, la fiche a DEUX surfaces pour ces obligations : cette
-    // carte, et celle des faits d'activité (ADR-041) pour ce qu'un fait gouverne.
-    // La borne porte donc sur leur réunion, confrontée au référentiel : une
-    // obligation retenue par la règle qui n'est rendue ici ET qu'aucune
-    // question ne gouverne fait tomber le test. Que la carte du DUERP NOMME
-    // bien les titres gouvernés, dans chaque état, est éprouvé sur le rendu
-    // (`components/salaries/CarteTitresDuDuerp.test.tsx`), pas ici.
+    // Depuis l'ADR-038, ces obligations ont DEUX chemins : cette liste, et
+    // les faits d'activité (ADR-041) pour ce qu'un fait gouverne. La borne
+    // porte donc sur leur réunion, confrontée au référentiel : une obligation
+    // retenue par la règle qui n'est rendue ici ET qu'aucune question ne
+    // gouverne fait tomber le test. ~~Que la carte du DUERP NOMME bien les
+    // titres gouvernés est éprouvé sur le rendu
+    // (`CarteTitresDuDuerp.test.tsx`).~~ [2026-10-24 : la carte est retirée
+    // de la fiche (refonte de la fiche salarié) ; un titre gouverné se
+    // déclare depuis la modale « Ajouter un titre ».]
     const gouvernes = titresGouvernesParUnFait();
     const rendues = new Set(
       obligationsDeclencheesParUnFait().map((l) => l.obligation.id),
@@ -67,44 +68,5 @@ describe("ce qu'un fait rend dû à une personne", () => {
         `${o.id} (${o.nature}) n'a rien à faire sur cette carte`,
       ).toBe(false);
     }
-  });
-
-  it("ne varie pas d'une personne à l'autre — seule la date jointe varie", () => {
-    // C'est exact et non grossier : le moteur ne dérive rien d'un porteur
-    // salarié (ADR-023), et la formation à la sécurité est due à TOUS les
-    // travailleurs. Restreindre la liste demanderait de deviner qui conduit un
-    // engin.
-    const sansTitre = obligationsDeclencheesParUnFait([]);
-    const avecTitre = obligationsDeclencheesParUnFait([
-      { obligationId: sansTitre[0].obligation.id, delivreLe: jour("2026-03-12") },
-    ]);
-    expect(avecTitre.map((l) => l.obligation.id)).toEqual(
-      sansTitre.map((l) => l.obligation.id),
-    );
-    expect(sansTitre[0].dernierTitreLe).toBeNull();
-    expect(avecTitre[0].dernierTitreLe).toEqual(jour("2026-03-12"));
-  });
-
-  it("garde le titre le plus récent quand la personne en porte deux", () => {
-    // Un renouvellement ne remplace pas la ligne précédente en base : la
-    // personne porte deux titres pour la même obligation. Afficher le plus
-    // ancien laisserait croire que rien n'a bougé depuis.
-    const id = obligationsDeclencheesParUnFait()[0].obligation.id;
-    const lignes = obligationsDeclencheesParUnFait([
-      { obligationId: id, delivreLe: jour("2024-05-02") },
-      { obligationId: id, delivreLe: jour("2026-01-30") },
-    ]);
-    expect(lignes[0].dernierTitreLe).toEqual(jour("2026-01-30"));
-  });
-
-  it("ignore un titre dont l'obligation a quitté le référentiel", () => {
-    // Le sens de lecture de `etats-permanents/queries.ts` : on part des
-    // obligations et on joint les déclarations. Une déclaration orpheline ne
-    // fabrique donc aucune ligne fantôme — elle n'affirme rien tant que
-    // personne ne la lit.
-    const lignes = obligationsDeclencheesParUnFait([
-      { obligationId: "obligation-qui-nexiste-pas", delivreLe: jour("2026-01-30") },
-    ]);
-    expect(lignes.every((l) => l.dernierTitreLe === null)).toBe(true);
   });
 });

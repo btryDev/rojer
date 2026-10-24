@@ -11,7 +11,7 @@
  *
  * **Le premier article, et lui seul** : `referencesLegales[0]`, celui que le
  * référentiel place en tête — la même règle que la fiche d'un salarié
- * (`equipe/[salarieId]/page.tsx`, `slice(0, 1)`). Les suivants restent sur la
+ * (`ReferenceFondatrice`, le premier article). Les suivants restent sur la
  * fiche de l'obligation ; une ligne qui en porterait trois ne se lirait plus.
  * [2026-10-14 : sauf une ligne fondée sur un chapitre de type du livre II,
  * titre II, qui montre l'article du type de l'établissement ; et un article

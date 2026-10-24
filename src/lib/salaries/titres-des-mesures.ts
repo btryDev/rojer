@@ -41,7 +41,7 @@
  *   la VIP est due à tous, pas à cause de l'écran.
  * - Les formations Prap / gestes et postures, conflits, RPS, extincteurs,
  *   cuisson, forte chaleur, FDS : soit l'obligation est portée par
- *   l'établissement (R. 4541-8, `formationsDuFait`), soit aucun titre
+ *   l'établissement (R. 4541-8), soit aucun titre
  *   nominatif ne lui correspond au catalogue.
  */
 

@@ -3,7 +3,6 @@ import { Plus } from "lucide-react";
 import { FilAriane } from "@/components/navigation/FilAriane";
 import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
 import { buttonVariants } from "@/components/ui/button";
-import { LegalBadge } from "@/components/ui-kit";
 import { SalarieCard } from "@/components/salaries/SalarieCard";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { listerEquipe, libellesTitresDeclares } from "@/lib/salaries/queries";
@@ -225,87 +224,45 @@ export default async function EquipePage({
             tout seul, et il vieillit en affirmant le contraire de ce qu'on lit
             juste au-dessus. Ce qui reste ci-dessous est donc formulé sans
             énumération figée. */}
-        <section className="carte-board px-7 py-6 sm:px-8">
-          <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-            Ce que couvre cet écran
-          </p>
-          <h2 className="board-titre m-0 mt-2 text-[22px]">
+        {/* Le pied de l'écran Équipe (2026-10-24, retour de la propriétaire :
+            deux cartes pour deux phrases). ~~« Ce que couvre cet écran », en
+            carte : la liste des titres, le CACES, le suivi nominatif~~ — reste
+            la limite, sans quoi un silence se lirait comme une couverture.
+            ~~« Informer les personnes suivies », en carte~~ — reste en une
+            ligne : l'obligation est réelle (art. 13 RGPD, L. 1222-4 du Code du
+            travail) et incombe à l'employeur ; la carte n'apparaît que s'il y a
+            quelqu'un à informer. */}
+        {/* Une ligne, qui se replie sur un écran étroit (2026-10-24). */}
+        <footer className="flex flex-wrap items-baseline gap-x-2 gap-y-1 border-t border-[color:var(--board-slate-line)] pt-4 text-[12px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          {actifs > 0 && (
+            <span>
+              {actifs} personne{actifs > 1 ? "s" : ""} dans l&apos;effectif
+              {equipe.length > actifs &&
+                `, ${equipe.length - actifs} sortie${equipe.length - actifs > 1 ? "s" : ""} conservée${equipe.length - actifs > 1 ? "s" : ""} pour la preuve`}
+              {" · "}
+            </span>
+          )}
+          <span>
+            {/* Le compte est celui du CATALOGUE, pas des titres déclarés ici
+                (revue indépendante du 2026-10-24). */}
             {catalogue.length === 1
-              ? "Un seul titre au catalogue, pour l'instant"
+              ? actifs > 0 ? "un seul titre au catalogue" : "Un seul titre au catalogue"
               : `${catalogue.length} titres au catalogue`}
-          </h2>
-          <p className="m-0 mt-3 max-w-[68ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-            Rojer ne propose que les titres dont il a lu le texte fondateur à
-            la source. Aujourd&apos;hui :{" "}
-            {catalogue.map((o) => o.libelle).join(", ")}.
-          </p>
-          <p className="m-0 mt-3 max-w-[68ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-            Cette liste n&apos;est pas tout ce qui existe en droit. D&apos;autres
-            titres et suivis nominatifs peuvent vous concerner sans figurer ici,
-            parce que le texte qui les porte n&apos;a pas encore été dépouillé.{" "}
-            <strong>Continuez à suivre par vos moyens habituels ce que vous ne
-            retrouvez pas dans cette liste.</strong>
-          </p>
-          <p className="m-0 mt-3 max-w-[68ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-            Un cas mérite d&apos;être dit, parce qu&apos;on le cherche souvent
-            ici : le <strong>CACES</strong>{" "}
-            n&apos;y figure pas et n&apos;y
-            figurera pas. Il ne relève pas du Code du travail — c&apos;est un
-            dispositif conventionnel de l&apos;assurance maladie. Ce que le Code
-            impose, lui, est dans la liste : une formation adéquate à la
-            conduite et une autorisation de conduite délivrée par
-            l&apos;employeur.
-          </p>
-          <p className="m-0 mt-3 max-w-[68ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-            Un titre est nominatif : le Code fait délivrer l&apos;habilitation à
-            un travailleur désigné, pas à un poste. Un suivi par fonction
-            produirait un compteur — « deux caristes à habiliter » — et ne
-            prouverait rien devant un contrôle.
-          </p>
-          <div className="mt-4">
-            <LegalBadge
-              charte="board"
-              reference="Art. R. 4544-10 CT"
-              href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000051500368"
+            , suivez par vos moyens habituels ceux qui n&apos;y figurent pas
+            {equipe.length > 0 && " · "}
+          </span>
+          {equipe.length > 0 && (
+            <TexteInformation
+              texte={texteInformation({
+                raisonSociale: etablissement.raisonDisplay,
+                // Les titres RÉELLEMENT déclarés ici, jamais le catalogue : un
+                // document d'information qui décrit un traitement qui n'a pas
+                // lieu est faux, et il est remis à des personnes.
+                titresSuivis: titresDeclares,
+              })}
             />
-          </div>
-        </section>
-
-        {/* L'information des personnes (art. 13 RGPD). Elle est due, et elle
-            incombe à l'employeur — l'outil ne peut pas informer à sa place.
-            La carte n'apparaît que s'il y a quelqu'un à informer : avant, elle
-            réclamerait un geste sans objet. */}
-        {equipe.length > 0 && (
-          <section className="carte-board px-7 py-6 sm:px-8">
-            <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-              Votre obligation envers eux
-            </p>
-            <h2 className="board-titre m-0 mt-2 text-[22px]">
-              Informer les personnes suivies
-            </h2>
-            <div className="mt-3">
-              <TexteInformation
-                texte={texteInformation({
-                  raisonSociale: etablissement.raisonDisplay,
-                  // Les titres RÉELLEMENT déclarés ici, jamais le
-                  // catalogue : un document d'information qui décrit un
-                  // traitement qui n'a pas lieu est faux, et il est remis à
-                  // des personnes.
-                  titresSuivis: titresDeclares,
-                })}
-              />
-            </div>
-          </section>
-        )}
-
-        {actifs > 0 && (
-          <p className="m-0 px-1 text-[12px] text-[color:var(--board-slate-soft)]">
-            {actifs} personne{actifs > 1 ? "s" : ""}{" "}
-            dans l&apos;effectif
-            {equipe.length > actifs &&
-              ` · ${equipe.length - actifs} sortie${equipe.length - actifs > 1 ? "s" : ""}, conservée${equipe.length - actifs > 1 ? "s" : ""} pour la preuve`}
-          </p>
-        )}
+          )}
+        </footer>
       </div>
     </main>
   );

@@ -1,8 +1,11 @@
+import type { ReactNode } from "react";
+import { Vignette } from "@/components/ui-kit/Vignette";
 import Link from "next/link";
 import { CarteFiche, PastilleFiche, PastilleRetard } from "@/components/ui-kit";
 import { formaterDateLongueFr } from "@/lib/dates";
 import { delaiEnPhrase } from "@/lib/referentiels/conformite/mention-rythme";
 import { etatDuManque, type Manque } from "@/lib/salaries/du-a-la-personne";
+import { dessinDuTitre } from "@/lib/salaries/illustration-titre";
 import { ReferenceFondatrice } from "./ReferenceFondatrice";
 
 /**
@@ -66,20 +69,26 @@ export function CarteCeQuiManque({
   manques,
   now,
   lienModifier,
+  geste,
 }: {
   manques: readonly Manque[];
   now: Date;
   /** La page où se renseigne la date d'entrée. */
   lienModifier: string;
+  /**
+   * Le bouton de la ligne (« Déclarer »), posé par la fiche : il ouvre la
+   * modale de déclaration, qui vit au niveau de la page. Absent, la ligne
+   * n'en a pas — c'est le cas du rendu en test.
+   */
+  geste?: (m: Manque, enRetard: boolean) => ReactNode;
 }) {
   if (manques.length === 0) return null;
   const sansDate = manques.some((m) => m.origine.type === "entree" && m.echeance === null);
   return (
     <CarteFiche titreFort="À déclarer pour cette personne">
       <p className="m-0 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-        Ce que l&apos;employeur doit à cette personne au titre du Code du
-        travail, et qu&apos;aucun titre déclaré ne porte encore. Une fois le titre déclaré ci-dessous, il suit
-        son propre rythme.
+        Ce que l&apos;employeur doit à cette personne et qu&apos;aucun titre
+        déclaré ne porte encore.
         {sansDate && (
           <>
             {" "}
@@ -87,39 +96,54 @@ export function CarteCeQuiManque({
               href={lienModifier}
               className="text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline"
             >
-              Renseigner la date d&apos;entrée →
+              Renseigner la date d&apos;entrée
             </Link>
           </>
         )}
       </p>
       <ul className="m-0 mt-4 flex list-none flex-col gap-2 p-0">
-        {manques.map((m) => (
-          <li
-            key={m.obligation.id}
-            className="rounded-[22px] bg-[color:var(--board-slate-pale)] px-4 py-3.5"
-          >
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="m-0 text-[13.5px] font-semibold leading-tight text-[color:var(--board-slate-ink)]">
-                {m.obligation.libelle}
-              </p>
-              <Etat m={m} now={now} />
-            </div>
-            <p className="m-0 mt-1.5 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-              {phraseDuManque(m)}
-            </p>
-            {/* Le délai d'entrée cite l'article qui le pose (R. 4624-10 pour
-                la VIP, pas le renouvellement) ; un titre appelé cite son
-                propre fondement. */}
-            <ReferenceFondatrice
-              obligation={m.obligation}
-              article={
-                m.origine.type === "entree"
-                  ? m.obligation.premierDelaiFonde?.article
-                  : undefined
+        {manques.map((m) => {
+          const enRetard = etatDuManque(m, now) === "enRetard";
+          const dessin = dessinDuTitre(m.obligation.id);
+          return (
+            <li
+              key={m.obligation.id}
+              className={
+                "flex gap-4 rounded-[22px] px-4 py-4 " +
+                (enRetard
+                  ? "bg-[color:var(--board-signal-wash)]"
+                  : "bg-[color:var(--board-slate-pale)]")
               }
-            />
-          </li>
-        ))}
+            >
+              <Vignette src={dessin.src} fond={dessin.fond} />
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="m-0 text-[15px] font-semibold leading-[1.3] tracking-[-0.01em] text-[color:var(--board-ink)]">
+                    {m.obligation.libelle}
+                  </p>
+                  <Etat m={m} now={now} />
+                </div>
+                <p className="m-0 mt-1.5 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                  {phraseDuManque(m)}
+                </p>
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                  {/* Le délai d'entrée cite l'article qui le pose (R. 4624-10
+                      pour la VIP, pas le renouvellement) ; un titre appelé
+                      cite son propre fondement. */}
+                  <ReferenceFondatrice
+                    obligation={m.obligation}
+                    article={
+                      m.origine.type === "entree"
+                        ? m.obligation.premierDelaiFonde?.article
+                        : undefined
+                    }
+                  />
+                  {geste?.(m, enRetard)}
+                </div>
+              </div>
+            </li>
+          );
+        })}
       </ul>
     </CarteFiche>
   );

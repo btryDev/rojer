@@ -1,5 +1,29 @@
 # ADR-038 — Ce que le DUERP rend dû à une partie de l'effectif
 
+> **Amendement du 2026-10-24 — la carte quitte la fiche salarié** (décision de
+> la propriétaire, refonte de la fiche, `lot/fiche-salarie`). Les questions du
+> DUERP portent sur l'établissement, et Rojer ne sait pas qui fait la tâche
+> (ADR-023) : sur un restaurant qui répond « oui » aux opérations électriques,
+> la carte « Formations liées aux risques du poste » proposait l'habilitation
+> à un responsable de salle. Elle répétait aussi ce qui vit ailleurs — les
+> « non » (rien à faire pour la personne), les formations d'établissement
+> (« Ce qui doit être en place », Équipe › Formations), l'habilitation du
+> personnel (établie d'après les titres de toute l'équipe, `par-les-titres.ts`)
+> et les titres qu'un titre déclaré appelle (« À déclarer », ADR-043).
+> Retirés : `CarteTitresDuDuerp`, `salaries/titres-du-duerp.ts` et leurs
+> tests. **Reste en vigueur** : la question, `declencheTitres`, la lecture du
+> fait par le moteur (ADR-041) et par le tableau de bord. ~~**Ouvert** : un
+> « oui » à la conduite d'engins n'a plus de rappel visible quand personne ne
+> détient de titre de conduite — aucune ligne d'établissement n'en est le
+> double, contrairement à l'habilitation. Sa place serait Équipe › Formations ;
+> à décider.~~ [2026-10-24, décision de la propriétaire, même lot : Équipe ›
+> Formations porte l'alerte « Votre DUERP le signale, personne n'a le titre »
+> (`salaries/titres-sans-porteur.ts`) — sur un « oui », pour chaque titre que
+> la question déclenche et qu'aucun salarié présent ne détient, hors pièces
+> médicales, titres appelés par un autre et doubles d'une ligne
+> d'établissement. Le titre se déclare sur la fiche de qui fait la tâche,
+> depuis « Ajouter un titre », que Rojer le sache ou non.]
+
 - **Statut** : **CODÉE SUR SA BRANCHE le 2026-10-05** (`lot/duerp-questions-titres`),
   ~~non fusionnée, en attente de revue indépendante.~~ [2026-10-15, ménage des
   ADR : **FUSIONNÉE le 2026-10-07** (PR #13, `0299e288`). La source des faits

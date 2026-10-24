@@ -13,21 +13,11 @@ import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { questionsDetectionTransverses, tousRisquesConnus } from "@/lib/referentiels";
 import { matchTypologie, type EtablissementMatching } from "@/lib/matching";
 import { titreParId } from "@/lib/salaries/catalogue";
-import { titresDuDuerpPourUnePersonne } from "@/lib/salaries/titres-du-duerp";
-import { FAITS_ACTIVITE, type ReponsesFaitsActivite } from "./faits-activite";
+import { FAITS_ACTIVITE } from "./faits-activite";
 
 const ARTICLE = /\b[LRD]\. ?\d{4}-\d+(?:-\d+)*/g;
 const articlesCites = (texte: string) =>
   new Set((texte.match(ARTICLE) ?? []).map((a) => a.replace(/\s+/g, " ")));
-
-const AUCUN: ReponsesFaitsActivite = {
-  manutentionManuelle: null,
-  travailSurEcran: null,
-  operationsElectriques: null,
-  conduiteEngins: null,
-  expositionCMR: null,
-  epiPresents: null,
-};
 
 /** Ce que le fait cite : sa raison, et le risque que sa question ajoute au DUERP. */
 function citesDuFait(f: (typeof FAITS_ACTIVITE)[number]): Set<string> {
@@ -78,15 +68,6 @@ describe("le registre — chaque lien est fondé", () => {
         // serait une question à vide — le défaut même que l'ADR-041 corrige.
         const obligations = obligationsConformite.filter((o) => o.typologies.activite === f.champ);
         expect(obligations.length + f.declencheTitres.length).toBeGreaterThan(0);
-      });
-
-      it("sur un « oui », la fiche montre exactement ses titres", () => {
-        if (f.declencheTitres.length === 0) return;
-        const fiche = titresDuDuerpPourUnePersonne({ ...AUCUN, [f.champ]: true }, []);
-        const ligne = fiche.find((x) => x.champ === f.champ)!;
-        expect(ligne.reponse).toBe("oui");
-        expect(ligne.titres.map((t) => t.obligation.id).sort()).toEqual([...f.declencheTitres].sort());
-        expect(fiche.filter((x) => x.reponse === "oui").map((x) => x.champ)).toEqual([f.champ]);
       });
     });
   }

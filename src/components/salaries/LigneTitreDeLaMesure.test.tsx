@@ -1,5 +1,5 @@
 // La ligne « Se déclare salarié par salarié », RENDUE : la table peut être
-// juste et l'écran la taire (même leçon que `CarteTitresDuDuerp.test.tsx`).
+// juste et l'écran la taire.
 
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
