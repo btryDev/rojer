@@ -1,15 +1,13 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { FormulairePoint } from "@/components/points-a-corriger/FormulairePoint";
-import { creerPointACorriger } from "@/lib/actions/plan";
-import { INVITATION_APRES_RAPPORT } from "@/lib/points-a-corriger/libelles";
+import { useActionState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { LABEL_RESULTAT, RESULTATS } from "@/lib/rapports/resultats";
 import type { UploadRapportState } from "@/lib/rapports/actions";
 import {
+  FORMATS_ACCEPTES,
   MIME_AUTORISES,
   TAILLE_MAX_OCTETS,
 } from "@/lib/rapports/validator";
@@ -25,55 +23,14 @@ type Props = {
     formData: FormData,
   ) => Promise<UploadRapportState>;
   labelAnnuler?: { libelle: string; href: string };
-  /**
-   * Le contrôle, pour noter ses points à corriger juste après le dépôt d'un
-   * rapport non conforme (ADR-048) ; `appareils` : ceux qu'un point d'un
-   * contrôle d'ensemble peut désigner.
-   */
-  points?: { verificationId: string; appareils: { id: string; libelle: string }[] };
 };
 
-export function UploadRapportForm({ action, labelAnnuler, points }: Props) {
-  // Le résultat déposé, lu dans le formulaire envoyé : il décide de
-  // l'invitation qui suit le dépôt.
-  const [resultatDepose, setResultatDepose] = useState<string | null>(null);
-  const [state, formAction, pending] = useActionState<UploadRapportState, FormData>(
-    async (prev, fd) => {
-      setResultatDepose(typeof fd.get("resultat") === "string" ? (fd.get("resultat") as string) : null);
-      return action(prev, fd);
-    },
-    { status: "idle" },
-  );
-
-  // Après un rapport qui relève quelque chose — ni conforme, ni non
-  // vérifiable —, on propose de noter ses points, rattachés à CE rapport.
-  if (
-    state.status === "success" &&
-    points &&
-    resultatDepose !== null &&
-    resultatDepose !== "conforme" &&
-    resultatDepose !== "non_verifiable"
-  ) {
-    return (
-      <div className="space-y-4">
-        <p role="status" className="m-0 text-[13px] text-[color:var(--board-green-ink)]">
-          Rapport enregistré.
-        </p>
-        <p className="m-0 max-w-[62ch] text-[13.5px] leading-[1.55] text-[color:var(--board-ink)]">
-          {INVITATION_APRES_RAPPORT}
-        </p>
-        <FormulairePoint
-          action={creerPointACorriger}
-          rattachement={{
-            mode: "fixe",
-            verificationId: points.verificationId,
-            rapportOrigineId: state.rapportId,
-          }}
-          appareils={points.appareils}
-        />
-      </div>
-    );
-  }
+export function UploadRapportForm({ action, labelAnnuler }: Props) {
+  // Un rapport qui relève des points ne revient pas ici : l'action serveur
+  // ramène à la section des points de la page, invitation comprise (ADR-048).
+  const [state, formAction, pending] = useActionState<UploadRapportState, FormData>(action, {
+    status: "idle",
+  });
 
   const err = (champ: string) =>
     state.status === "error" ? state.fieldErrors?.[champ]?.[0] : undefined;
@@ -86,7 +43,7 @@ export function UploadRapportForm({ action, labelAnnuler, points }: Props) {
         <label className="label-board" htmlFor="fichier">
           Fichier du rapport *
           <InfoTooltip>
-            Formats acceptés : PDF, PNG, JPEG, DOCX. Taille max {tailleMaxMo} Mo.
+            Formats acceptés : {FORMATS_ACCEPTES}. Taille max {tailleMaxMo} Mo.
           </InfoTooltip>
         </label>
         <input

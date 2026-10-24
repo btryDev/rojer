@@ -293,11 +293,27 @@ describe("uploadRapport — un rapport réalisé : la ligne se recalcule sur lui
   });
 
   it("un résultat avec écart fait courir le rythme pareil : le résultat vit sur le rapport", async () => {
-    await deposer("ecart_majeur", "2026-06-01");
+    // Un rapport qui relève des points ramène à leur section (ADR-048).
+    await expect(deposer("ecart_majeur", "2026-06-01")).rejects.toThrow("NEXT_REDIRECT");
 
     expect(rapports()[0].resultat).toBe("ecart_majeur");
     expect(ligne().statut).toBe("planifiee");
     expect(ligne().datePrevue).toEqual(d("2027-06-01"));
+  });
+
+  it("un rapport qui relève des points ramène à leur section, CE rapport désigné (ADR-048)", async () => {
+    const { redirect } = await import("next/navigation");
+    await expect(deposer("observations_mineures", "2026-06-01")).rejects.toThrow("NEXT_REDIRECT");
+    const cible = vi.mocked(redirect).mock.calls.at(-1)?.[0];
+    expect(cible).toBe(`/etablissements/etab-1/verifications/v-1?apres=${rapports()[0].id}#points`);
+  });
+
+  it("un rapport conforme ne redirige pas : le formulaire dit « enregistré »", async () => {
+    const { redirect } = await import("next/navigation");
+    vi.mocked(redirect).mockClear();
+    const r = await deposer("conforme", "2026-06-01");
+    expect(r.status).toBe("success");
+    expect(redirect).not.toHaveBeenCalled();
   });
 
   it("un rapport ANTIDATÉ entre au registre sans faire reculer la ligne", async () => {

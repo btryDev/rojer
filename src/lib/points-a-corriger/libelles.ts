@@ -5,6 +5,8 @@
  * objet sur des écrans différents. Module pur : le PDF l'importe.
  */
 
+import { FORMATS_ACCEPTES, TAILLE_MAX_OCTETS } from "@/lib/rapports/validator";
+
 export const LIBELLE_POINT = "Point à corriger";
 export const LIBELLE_POINTS = "Points à corriger";
 export const LIBELLE_CORRIGE = "Corrigé";
@@ -22,5 +24,4 @@ export const LIBELLE_JUSTIFICATIF = "Ce qui a été fait";
 export const AIDE_JUSTIFICATIF =
   "Décrivez la correction : ce qui a été fait, par qui, quand. Le texte est repris au registre.";
 export const LIBELLE_PIECE = "Pièce justificative (facultatif)";
-export const AIDE_PIECE =
-  "Photo, facture ou attestation. PDF, PNG ou JPEG, 20 Mo au plus. Elle ne remplace pas le rapport du prochain contrôle.";
+export const AIDE_PIECE = `Photo, facture ou attestation (${FORMATS_ACCEPTES}, ${TAILLE_MAX_OCTETS / 1024 / 1024} Mo au plus). Elle ne remplace pas le rapport du prochain contrôle.`;

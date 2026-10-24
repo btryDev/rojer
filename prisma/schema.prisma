@@ -1049,9 +1049,10 @@ model Action {
   rapportOrigine   RapportVerification? @relation("PointsDuRapport", fields: [rapportOrigineId], references: [id], onDelete: SetNull)
   // L'appareil concerné, SEULEMENT pour un point relevé par un contrôle
   // d'ensemble (porteur établissement) : pour le contrôle d'un appareil,
-  // l'appareil se lit par la vérification. Garde applicative
-  // (`points-a-corriger.ts`). Pas de `batimentId` : la zone se lit par
-  // l'appareil (ADR-019).
+  // l'appareil se lit par la vérification. Garde APPLICATIVE seulement
+  // (`creerPointACorriger`, règles de `lib/points-a-corriger/regles.ts`) ; la
+  // base n'exige que `verificationId` (CHECK `Action_point_equipement`). Pas
+  // de `batimentId` : la zone se lit par l'appareil (ADR-019).
   equipementId String?
   equipement   Equipement? @relation(fields: [equipementId], references: [id], onDelete: SetNull)
 

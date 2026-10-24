@@ -28,6 +28,7 @@ import {
 } from "./derniere-realisation";
 import { rapportMetadataSchema } from "./schema";
 import { estResultatRealise } from "./resultats";
+import { resultatRelevePoints } from "@/lib/points-a-corriger/regles";
 import { validerFichier } from "./validator";
 
 export type UploadRapportState =
@@ -313,6 +314,15 @@ export async function uploadRapport(
   revalidatePath(`/etablissements/${verif.etablissementId}/verifications/${verif.id}`);
   revalidatePath(`/etablissements/${verif.etablissementId}`);
 
+  // Un rapport qui relève quelque chose invite à noter ses points à corriger
+  // (ADR-048, décision 6). Une REDIRECTION, et non un état du formulaire : le
+  // dépôt d'un premier rapport change la page (le formulaire qui le portait
+  // disparaît au rendu suivant), l'invitation doit donc venir du serveur.
+  if (resultatRelevePoints(resultat)) {
+    redirect(
+      `/etablissements/${verif.etablissementId}/verifications/${verif.id}?apres=${rapportId}#points`,
+    );
+  }
   return { status: "success", rapportId };
 }
 

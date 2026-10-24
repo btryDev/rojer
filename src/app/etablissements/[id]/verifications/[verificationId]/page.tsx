@@ -8,9 +8,13 @@ import { SupprimerRapportButton } from "@/components/rapports/SupprimerRapportBu
 import { UploadRapportForm } from "@/components/rapports/UploadRapportForm";
 import { FormulairePoint } from "@/components/points-a-corriger/FormulairePoint";
 import { ListePoints } from "@/components/points-a-corriger/ListePoints";
-import { appareilsDesignables, listerPointsDuControle } from "@/lib/points-a-corriger/queries";
-import { recoitDesPoints } from "@/lib/points-a-corriger/regles";
-import { LIBELLE_POINTS } from "@/lib/points-a-corriger/libelles";
+import {
+  RAPPORTS_PROPOSES,
+  appareilsDesignables,
+  listerPointsDuControle,
+} from "@/lib/points-a-corriger/queries";
+import { recoitDesPoints, resultatRelevePoints } from "@/lib/points-a-corriger/regles";
+import { INVITATION_APRES_RAPPORT, LIBELLE_POINTS } from "@/lib/points-a-corriger/libelles";
 import { getVerification } from "@/lib/calendrier/queries";
 import { MentionContractuelle } from "@/components/prescriptions/MentionContractuelle";
 import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeRetenu";
@@ -115,10 +119,10 @@ export default async function VerificationDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string; verificationId: string }>;
-  searchParams: Promise<{ de?: string }>;
+  searchParams: Promise<{ de?: string; apres?: string }>;
 }) {
   const { id, verificationId } = await params;
-  const { de } = await searchParams;
+  const { de, apres } = await searchParams;
   const v = await getVerification(verificationId);
   if (!v || v.etablissementId !== id) notFound();
 
@@ -163,6 +167,16 @@ export default async function VerificationDetailPage({
     appareilsDesignables(v.id),
   ]);
   const recoit = recoitDesPoints({ ...v, appareilActif: v.equipement?.actif ?? null });
+  const rapportsProposes = v.rapports
+    .slice(0, RAPPORTS_PROPOSES)
+    .map(({ id: rid, dateRapport, resultat }) => ({ id: rid, dateRapport, resultat }));
+  // Juste après le dépôt d'un rapport qui relève quelque chose,
+  // `uploadRapport` ramène ici (`?apres=`) : l'invitation à noter ses points,
+  // rattachés à CE rapport. L'identifiant vient de l'URL : il ne vaut que
+  // s'il désigne un rapport de ce contrôle.
+  const rapportApres = recoit
+    ? rapportsProposes.find((r) => r.id === apres && resultatRelevePoints(r.resultat))
+    : undefined;
   const boundUpload = uploadRapport.bind(null, v.id);
 
   // Signatures posées sur chaque rapport de cette vérification.
@@ -632,7 +646,7 @@ export default async function VerificationDetailPage({
                         l&apos;application.
                       </p>
                     ) : (
-                      <UploadRapportForm action={boundUpload} points={recoit ? { verificationId: v.id, appareils } : undefined} />
+                      <UploadRapportForm action={boundUpload} />
                     )}
                   </div>
                 </div>
@@ -777,7 +791,6 @@ export default async function VerificationDetailPage({
                 </p>
               ) : (
                 <UploadRapportForm
-                  points={recoit ? { verificationId: v.id, appareils } : undefined}
                   action={boundUpload}
                   labelAnnuler={{
                     libelle: "Annuler",
@@ -842,6 +855,7 @@ export default async function VerificationDetailPage({
       )}
 
       {/* ── Les points à corriger (ADR-048) ──────────────────────── */}
+      <div id="points" className="scroll-mt-6" />
       <TitreSection
         surtitre={LIBELLE_POINTS}
         titre={v.equipement ? "Relevés par ce contrôle" : "Relevés par ce contrôle d'ensemble"}
@@ -867,7 +881,7 @@ export default async function VerificationDetailPage({
         />
       )}
       {recoit ? (
-        <details className="group">
+        <details className="group" open={rapportApres !== undefined}>
           <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-[22px] bg-[color:var(--board-slate-pale)] px-6 py-5">
             <p className="m-0 text-[13.5px] text-[color:var(--board-slate-mid)]">
               {points.length === 0
@@ -879,13 +893,24 @@ export default async function VerificationDetailPage({
               <span className="hidden group-open:inline">Fermer</span>
             </span>
           </summary>
-          <div className="carte-board mt-4 px-7 py-6">
+          <div className="carte-board mt-4 space-y-4 px-7 py-6">
+            {rapportApres && (
+              <>
+                <p role="status" className="m-0 text-[13px] text-[color:var(--board-green-ink)]">
+                  Rapport enregistré.
+                </p>
+                <p className="m-0 max-w-[62ch] text-[13.5px] leading-[1.55] text-[color:var(--board-ink)]">
+                  {INVITATION_APRES_RAPPORT}
+                </p>
+              </>
+            )}
             <FormulairePoint
               action={creerPointACorriger}
               rattachement={{
                 mode: "fixe",
                 verificationId: v.id,
-                rapportOrigineId: v.rapports[0]?.id ?? null,
+                rapports: rapportsProposes,
+                rapportImpose: rapportApres,
               }}
               appareils={appareils}
             />

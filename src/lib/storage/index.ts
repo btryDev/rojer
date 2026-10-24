@@ -142,23 +142,23 @@ export function __oublierPiloteStockage(): void {
   _storage = null;
 }
 
-/**
- * Construit la clé de stockage d'un rapport. Stable (évite d'inclure le
- * timestamp) pour permettre un upsert ultérieur si nécessaire, mais inclut
- * le rapportId qui est un cuid unique.
- */
+/** La clé de la pièce qui prouve la correction d'un point (ADR-048). */
 export function clePieceDePoint(
   etablissementId: string,
   actionId: string,
   nomFichier: string,
 ): string {
-  // La pièce qui prouve la correction d'un point (ADR-048). Le suffixe
-  // aléatoire distingue deux pièces successives d'un même point (réouvert
+  // Le suffixe aléatoire distingue deux pièces successives d'un même point (réouvert
   // puis corrigé de nouveau) : la clé n'est jamais réécrite.
   const safe = segmentCleStockage(nomFichier);
   return `points/${etablissementId}/${actionId}-${randomUUID()}-${safe}`;
 }
 
+/**
+ * Construit la clé de stockage d'un rapport. Stable (évite d'inclure le
+ * timestamp) pour permettre un upsert ultérieur si nécessaire, mais inclut
+ * le rapportId qui est un cuid unique.
+ */
 export function cleRapport(
   etablissementId: string,
   rapportId: string,

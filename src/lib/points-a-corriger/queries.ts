@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import { ORDRE_RAPPORT_PLUS_RECENT } from "@/lib/rapports/derniere-realisation";
+import type { Resultat } from "@/lib/rapports/resultats";
 import { appareilDesignable, estControleDEnsemble, recoitDesPoints } from "./regles";
 
 /**
@@ -62,12 +63,21 @@ export async function listerPointsDuControle(verificationId: string) {
   });
 }
 
-/** Un contrôle auquel on peut rattacher un point, et son dernier rapport. */
+/** Un rapport qu'on peut désigner comme celui qui a relevé le point. */
+export type RapportPourUnPoint = { id: string; dateRapport: Date; resultat: Resultat };
+
+/**
+ * Combien de rapports récents le formulaire propose. Un point se note dans
+ * les jours qui suivent le contrôle ; au-delà, « pas de rapport précis ».
+ */
+export const RAPPORTS_PROPOSES = 5;
+
+/** Un contrôle auquel on peut rattacher un point, et ses rapports récents. */
 export type ControlePourUnPoint = {
   verificationId: string;
   libelle: string;
   ensemble: boolean;
-  dernierRapport: { id: string; dateRapport: Date } | null;
+  rapports: RapportPourUnPoint[];
 };
 
 /**
@@ -96,7 +106,11 @@ export async function controlesPourUnPoint(equipementId: string): Promise<Contro
       equipementId: true,
       salarieId: true,
       archiveLe: true,
-      rapports: { orderBy: ORDRE_RAPPORT_PLUS_RECENT, take: 1, select: { id: true, dateRapport: true } },
+      rapports: {
+        orderBy: ORDRE_RAPPORT_PLUS_RECENT,
+        take: RAPPORTS_PROPOSES,
+        select: { id: true, dateRapport: true, resultat: true },
+      },
     },
     orderBy: { libelleObligation: "asc" },
   });
@@ -113,7 +127,7 @@ export async function controlesPourUnPoint(equipementId: string): Promise<Contro
       verificationId: v.id,
       libelle: v.libelleObligation,
       ensemble: estControleDEnsemble(v),
-      dernierRapport: v.rapports[0] ?? null,
+      rapports: v.rapports,
     }));
 }
 

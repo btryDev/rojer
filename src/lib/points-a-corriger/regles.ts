@@ -5,6 +5,7 @@
  */
 
 import type { Obligation } from "@/lib/referentiels/conformite";
+import type { Resultat } from "@/lib/rapports/resultats";
 
 /** Le porteur d'une ligne de suivi, tel que la base le dit. */
 type PorteurLigne = { equipementId: string | null; salarieId: string | null };
@@ -51,4 +52,12 @@ export function appareilDesignable(
   appareil: { categorie: string; actif: boolean },
 ): boolean {
   return appareil.actif && categoriesCouvertes(o).includes(appareil.categorie);
+}
+
+/**
+ * Un rapport dont le résultat relève des points à corriger : ni conforme, ni
+ * non vérifiable (le contrôle n'a pas eu lieu). Il invite à les noter.
+ */
+export function resultatRelevePoints(r: Resultat): boolean {
+  return r === "observations_mineures" || r === "ecart_majeur";
 }

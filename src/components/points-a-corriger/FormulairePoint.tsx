@@ -10,7 +10,8 @@ import type { ActionPlanState } from "@/lib/actions/plan";
 import { ORDRE_SELON_L4121_2 } from "@/lib/verbatim/l4121-2-ordre";
 import type { TypeAction } from "@prisma/client";
 import { formaterDateCourteFr } from "@/lib/dates";
-import type { ControlePourUnPoint } from "@/lib/points-a-corriger/queries";
+import { LABEL_RESULTAT } from "@/lib/rapports/resultats";
+import type { ControlePourUnPoint, RapportPourUnPoint } from "@/lib/points-a-corriger/queries";
 
 /**
  * Valeurs de départ, pour corriger une action existante avec le formulaire
@@ -29,16 +30,24 @@ export type DefautsAction = {
 
 /**
  * À quoi le point se rattache, à la création (ADR-048) :
- *   - `fixe` : le contrôle et le rapport sont connus (après un dépôt, sur la
- *     page d'un contrôle) ;
+ *   - `fixe` : le contrôle est connu (la page d'un contrôle) ;
  *   - `choix` : la fiche d'un équipement propose ses contrôles et les
- *     contrôles d'ensemble qui le couvrent ; le point se rattache au dernier
- *     rapport du contrôle choisi.
+ *     contrôles d'ensemble qui le couvrent.
+ * Le rapport d'origine se CHOISIT parmi les rapports récents du contrôle,
+ * « pas de rapport précis » par défaut : le rattacher d'office au dernier
+ * rapport attribuait à un contrôle conforme d'hier le point d'un vieux
+ * rapport (revue du 2026-10-24). `rapportImpose` : seulement juste après le
+ * dépôt d'un rapport, quand on sait lequel a relevé le point.
  * `appareils` : pour un contrôle d'ensemble, les appareils que le point peut
  * désigner. `appareilImpose` : la fiche d'un équipement désigne le sien.
  */
 export type RattachementPoint =
-  | { mode: "fixe"; verificationId: string; rapportOrigineId: string | null }
+  | {
+      mode: "fixe";
+      verificationId: string;
+      rapports: RapportPourUnPoint[];
+      rapportImpose?: RapportPourUnPoint;
+    }
   | { mode: "choix"; controles: ControlePourUnPoint[]; appareilImpose: string };
 
 type Props = {
@@ -95,9 +104,7 @@ function Formulaire({
       {rattachement?.mode === "fixe" && (
         <>
           <input type="hidden" name="verificationId" value={rattachement.verificationId} />
-          {rattachement.rapportOrigineId && (
-            <input type="hidden" name="rapportOrigineId" value={rattachement.rapportOrigineId} />
-          )}
+          <RapportOrigine rapports={rattachement.rapports} impose={rattachement.rapportImpose} />
         </>
       )}
       {rattachement?.mode === "choix" && (
@@ -120,19 +127,16 @@ function Formulaire({
               </option>
             ))}
           </select>
-          {controleChoisi?.dernierRapport && (
-            <>
-              <input type="hidden" name="rapportOrigineId" value={controleChoisi.dernierRapport.id} />
-              <p className="m-0 mt-1.5 text-[12px] text-[color:var(--board-slate-mid)]">
-                Rattaché au rapport du {formaterDateCourteFr(controleChoisi.dernierRapport.dateRapport)}.
-              </p>
-            </>
-          )}
           {/* Un contrôle d'ensemble désigne l'appareil de cette fiche. */}
           {controleChoisi?.ensemble && (
             <input type="hidden" name="equipementId" value={rattachement.appareilImpose} />
           )}
         </div>
+      )}
+      {rattachement?.mode === "choix" && controleChoisi && (
+        // Remonté à chaque changement de contrôle : un rapport choisi ne
+        // survit pas au contrôle qui l'a produit.
+        <RapportOrigine key={controleChoisi.verificationId} rapports={controleChoisi.rapports} />
       )}
       {appareils && appareils.length > 0 && (
         <div>
@@ -279,5 +283,49 @@ function Formulaire({
         )}
       </div>
     </form>
+  );
+}
+
+/** Libellé d'un rapport : sa date et son résultat. */
+function libelleRapport(r: RapportPourUnPoint): string {
+  return `Rapport du ${formaterDateCourteFr(r.dateRapport)} · ${LABEL_RESULTAT[r.resultat]}`;
+}
+
+/**
+ * Le rapport qui a relevé le point : imposé juste après un dépôt, choisi
+ * sinon, jamais deviné.
+ */
+function RapportOrigine({
+  rapports,
+  impose,
+}: {
+  rapports: RapportPourUnPoint[];
+  impose?: RapportPourUnPoint;
+}) {
+  if (impose) {
+    return (
+      <>
+        <input type="hidden" name="rapportOrigineId" value={impose.id} />
+        <p className="m-0 text-[12.5px] text-[color:var(--board-slate-mid)]">
+          Relevé dans le {libelleRapport(impose).replace(/^Rapport/, "rapport")}.
+        </p>
+      </>
+    );
+  }
+  if (rapports.length === 0) return null;
+  return (
+    <div>
+      <label className="label-board" htmlFor="rapportOrigineId">
+        Relevé dans le rapport
+      </label>
+      <select id="rapportOrigineId" name="rapportOrigineId" className="champ-board" defaultValue="">
+        <option value="">— Pas de rapport précis —</option>
+        {rapports.map((r) => (
+          <option key={r.id} value={r.id}>
+            {libelleRapport(r)}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }

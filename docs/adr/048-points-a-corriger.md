@@ -31,8 +31,10 @@ pouvaient désigner aucun appareil.
    l'appareil concerné, **seulement** pour un point relevé par un contrôle
    porté par l'établissement, et seulement parmi les appareils actifs des
    catégories que ce contrôle couvre (`equipementsEnContexte`). Pour le
-   contrôle d'un appareil, l'appareil se lit par la vérification. Gardes en
-   base (CHECK) et dans l'action serveur.
+   contrôle d'un appareil, l'appareil se lit par la vérification. La base
+   exige seulement qu'un appareil ou un rapport d'origine ne figure que sur un
+   point issu d'une vérification (CHECK) ; le reste de la règle est tenu par
+   l'action serveur (`creerPointACorriger`).
 4. **La preuve.** Corriger un point peut joindre une pièce (photo, facture),
    aux règles du fichier d'un rapport. Elle ne fait **pas** avancer
    l'échéance : seul un rapport de contrôle le fait (ADR-036).

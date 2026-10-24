@@ -59,10 +59,13 @@ export type ActionPlanState =
     }
   | { status: "success"; actionId: string };
 
+/**
+ * Une action se lit sur le plan, le calendrier, le tableau de bord, la fiche
+ * de son contrôle et celle de son appareil (ADR-048) : tout le dossier est
+ * revalidé, plutôt qu'une liste de chemins qu'un écran neuf rendrait fausse.
+ */
 function revalidateAction(etablissementId: string): void {
-  revalidatePath(`/etablissements/${etablissementId}`);
-  revalidatePath(`/etablissements/${etablissementId}/actions`);
-  revalidatePath(`/etablissements/${etablissementId}/calendrier`);
+  revalidatePath(`/etablissements/${etablissementId}`, "layout");
 }
 
 /** Le formulaire d'une action, lu par la création et par la correction :
@@ -111,34 +114,36 @@ export async function creerPointACorriger(
     };
   }
 
-  const equipementDeLaLigne = verif.equipementId
-    ? await prisma.equipement.findUnique({
-        where: { id: verif.equipementId },
-        select: { actif: true },
-      })
-    : null;
-  if (!recoitDesPoints({ ...verif, appareilActif: equipementDeLaLigne?.actif ?? null })) {
-    return { status: "error", message: "Ce contrôle ne reçoit plus de point à corriger." };
-  }
-
+  // Trois lectures indépendantes, en une fois : l'appareil de la ligne, le
+  // rapport d'origine (borné à CE contrôle), l'appareil désigné (borné à CET
+  // établissement, et seulement pour un contrôle d'ensemble).
   const rapportOrigineId = champFacultatif(formData.get("rapportOrigineId"));
-  if (rapportOrigineId) {
-    const rapport = await prisma.rapportVerification.findFirst({
-      where: { id: rapportOrigineId, verificationId: verif.id },
-      select: { id: true },
-    });
-    if (!rapport) return { status: "error", message: "Rapport d'origine introuvable." };
-  }
-
   const equipementId = champFacultatif(formData.get("equipementId"));
-  if (equipementId) {
-    const obligation = obligationParId(verif.obligationId);
-    const appareil = estControleDEnsemble(verif)
-      ? await prisma.equipement.findFirst({
+  const [equipementDeLaLigne, rapport, appareil] = await Promise.all([
+    verif.equipementId
+      ? prisma.equipement.findUnique({ where: { id: verif.equipementId }, select: { actif: true } })
+      : null,
+    rapportOrigineId
+      ? prisma.rapportVerification.findFirst({
+          where: { id: rapportOrigineId, verificationId: verif.id },
+          select: { id: true },
+        })
+      : null,
+    equipementId && estControleDEnsemble(verif)
+      ? prisma.equipement.findFirst({
           where: { id: equipementId, etablissementId: verif.etablissementId },
           select: { categorie: true, actif: true },
         })
-      : null;
+      : null,
+  ]);
+  if (!recoitDesPoints({ ...verif, appareilActif: equipementDeLaLigne?.actif ?? null })) {
+    return { status: "error", message: "Ce contrôle ne reçoit plus de point à corriger." };
+  }
+  if (rapportOrigineId && !rapport) {
+    return { status: "error", message: "Rapport d'origine introuvable." };
+  }
+  if (equipementId) {
+    const obligation = obligationParId(verif.obligationId);
     if (!obligation || !appareil || !appareilDesignable(obligation, appareil)) {
       return { status: "error", message: "Cet appareil ne peut pas être désigné par ce contrôle." };
     }
@@ -173,26 +178,13 @@ export async function creerPointACorriger(
   });
 
   await constaterEpi(verif.etablissementId);
-  revalidatePoint(verif.etablissementId, verif.id, verif.equipementId ?? equipementId);
+  revalidateAction(verif.etablissementId);
   return { status: "success", actionId: a.id };
 }
 
 /** Un champ facultatif d'identifiant : chaîne vide ou absente → `null`. */
 function champFacultatif(v: FormDataEntryValue | null): string | null {
   return typeof v === "string" && v.trim() !== "" ? v.trim() : null;
-}
-
-/** Ce qu'un point touche : son contrôle, son appareil, le calendrier. */
-function revalidatePoint(
-  etablissementId: string,
-  verificationId: string,
-  equipementId: string | null,
-): void {
-  revalidateAction(etablissementId);
-  revalidatePath(`/etablissements/${etablissementId}/verifications/${verificationId}`);
-  if (equipementId) {
-    revalidatePath(`/etablissements/${etablissementId}/equipements/${equipementId}`);
-  }
 }
 
 /**
@@ -256,7 +248,6 @@ export async function modifierActionPlan(
   await constaterEpi(etablissementId);
 
   revalidateAction(etablissementId);
-  revalidatePath(`/etablissements/${etablissementId}/actions/${actionId}`);
   redirect(`/etablissements/${etablissementId}/actions/${actionId}`);
 }
 
@@ -306,9 +297,13 @@ export async function cloturerAction(
   const piece = await lirePiece(formData, existante);
   if (piece.status === "error") return piece;
 
+  // `updateMany` borné au statut : deux clôtures simultanées (double envoi,
+  // deux onglets) ne s'écrasent pas — la seconde ne trouve plus de ligne à
+  // clore, et sa pièce, que plus rien ne référencerait, est libérée.
+  let ecrites: number;
   try {
-    await prisma.action.update({
-      where: { id: actionId },
+    ({ count: ecrites } = await prisma.action.updateMany({
+      where: { id: actionId, statut: { not: "levee" } },
       data: {
         statut: "levee",
         leveeLe: new Date(),
@@ -323,19 +318,19 @@ export async function cloturerAction(
             }
           : {}),
       },
-    });
+    }));
   } catch (err) {
     if (piece.status === "piece") await libererFichiers([piece.cle], "points/correction");
     throw err;
+  }
+  if (ecrites === 0) {
+    if (piece.status === "piece") await libererFichiers([piece.cle], "points/correction");
+    return { status: "error", message: "Déjà corrigée" };
   }
 
   // Une mesure de protection individuelle levée vaut « EPI fournis ».
   await constaterEpi(existante.etablissementId);
   revalidateAction(existante.etablissementId);
-  revalidatePath(`/etablissements/${existante.etablissementId}/actions/${actionId}`);
-  if (existante.verificationId) {
-    revalidatePoint(existante.etablissementId, existante.verificationId, existante.equipementId);
-  }
   return { status: "success", actionId };
 }
 
@@ -401,7 +396,6 @@ export async function rouvrirAction(actionId: string): Promise<void> {
     await libererFichiers([action.leveeFichierCle], "points/reouverture");
   }
   revalidateAction(etablissementId);
-  revalidatePath(`/etablissements/${etablissementId}/actions/${actionId}`);
 }
 
 /**
@@ -426,7 +420,6 @@ export async function abandonnerAction(actionId: string): Promise<void> {
     data: { statut: "abandonnee" },
   });
   revalidateAction(etablissementId);
-  revalidatePath(`/etablissements/${etablissementId}/actions/${actionId}`);
 }
 
 export async function supprimerActionPlan(actionId: string): Promise<void> {

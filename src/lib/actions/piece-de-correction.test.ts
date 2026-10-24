@@ -8,7 +8,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const h = vi.hoisted(() => ({
   action: {
     findFirst: vi.fn(),
-    update: vi.fn(),
+    updateMany: vi.fn(),
   },
   stockageEnService: vi.fn(() => true),
   put: vi.fn(async () => {}),
@@ -53,7 +53,7 @@ function formulaire(avecPiece: boolean): FormData {
 beforeEach(() => {
   vi.clearAllMocks();
   h.action.findFirst.mockResolvedValue(POINT);
-  h.action.update.mockResolvedValue({});
+  h.action.updateMany.mockResolvedValue({ count: 1 });
   h.stockageEnService.mockReturnValue(true);
 });
 
@@ -62,7 +62,7 @@ describe("cloturerAction — la pièce d'un point corrigé", () => {
     const r = await cloturerAction("a1", { status: "idle" }, formulaire(false));
     expect(r.status).toBe("success");
     expect(h.put).not.toHaveBeenCalled();
-    expect(h.action.update.mock.calls[0][0].data.leveeFichierCle).toBeUndefined();
+    expect(h.action.updateMany.mock.calls[0][0].data.leveeFichierCle).toBeUndefined();
   });
 
   it("avec pièce : la valide, l'écrit, puis l'enregistre", async () => {
@@ -70,7 +70,7 @@ describe("cloturerAction — la pièce d'un point corrigé", () => {
     expect(r.status).toBe("success");
     expect(h.valider).toHaveBeenCalled();
     expect(h.put).toHaveBeenCalledWith("points/e1/a1-facture.pdf", expect.any(Buffer), "application/pdf");
-    expect(h.action.update.mock.calls[0][0].data).toMatchObject({
+    expect(h.action.updateMany.mock.calls[0][0].data).toMatchObject({
       leveeFichierCle: "points/e1/a1-facture.pdf",
       leveeFichierNom: "facture.pdf",
       leveeFichierMime: "application/pdf",
@@ -83,14 +83,14 @@ describe("cloturerAction — la pièce d'un point corrigé", () => {
     const r = await cloturerAction("a1", { status: "idle" }, formulaire(true));
     expect(r.status).toBe("error");
     expect(h.put).not.toHaveBeenCalled();
-    expect(h.action.update).not.toHaveBeenCalled();
+    expect(h.action.updateMany).not.toHaveBeenCalled();
   });
 
   it("refuse une pièce quand le stockage n'est pas configuré", async () => {
     h.stockageEnService.mockReturnValue(false);
     const r = await cloturerAction("a1", { status: "idle" }, formulaire(true));
     expect(r).toMatchObject({ status: "error", message: "stockage absent" });
-    expect(h.action.update).not.toHaveBeenCalled();
+    expect(h.action.updateMany).not.toHaveBeenCalled();
   });
 
   it("refuse un fichier que la validation rejette", async () => {
@@ -100,8 +100,16 @@ describe("cloturerAction — la pièce d'un point corrigé", () => {
     expect(h.put).not.toHaveBeenCalled();
   });
 
+  it("deux corrections simultanées : la seconde n'écrase rien et libère sa pièce", async () => {
+    h.action.updateMany.mockResolvedValue({ count: 0 });
+    const r = await cloturerAction("a1", { status: "idle" }, formulaire(true));
+    expect(r).toMatchObject({ status: "error", message: "Déjà corrigée" });
+    expect(h.action.updateMany.mock.calls[0][0].where).toMatchObject({ statut: { not: "levee" } });
+    expect(h.liberer).toHaveBeenCalledWith(["points/e1/a1-facture.pdf"], "points/correction");
+  });
+
   it("libère la pièce si la base refuse l'écriture", async () => {
-    h.action.update.mockRejectedValue(new Error("base indisponible"));
+    h.action.updateMany.mockRejectedValue(new Error("base indisponible"));
     await expect(cloturerAction("a1", { status: "idle" }, formulaire(true))).rejects.toThrow("base indisponible");
     expect(h.liberer).toHaveBeenCalledWith(["points/e1/a1-facture.pdf"], "points/correction");
   });
