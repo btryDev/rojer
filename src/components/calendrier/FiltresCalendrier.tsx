@@ -259,6 +259,8 @@ export function FiltresCalendrier({
     appliquer({
       ...f,
       famille,
+      // Un type d'échéance remplace « Formations des salariés » : même groupe.
+      formation: false,
       // Quitter les contrôles lâche leur domaine.
       domaine: famille && famille !== "controle" ? undefined : f.domaine,
     });
@@ -332,7 +334,7 @@ export function FiltresCalendrier({
               <Option
                 forme="radio"
                 name="filtre-famille"
-                actif={!f.famille}
+                actif={!f.famille && !f.formation}
                 onChoisir={() => choisirFamille(undefined)}
               >
                 Tout le calendrier
@@ -349,6 +351,17 @@ export function FiltresCalendrier({
                   {LABEL_FAMILLE_LONG[fam]}
                 </Option>
               ))}
+              {/* Les formations, un type parmi les autres (2026-10-24) — elles
+                  réunissent des titres de salariés et des échéances
+                  d'établissement, d'où un choix à part plutôt qu'une famille. */}
+              <Option
+                forme="radio"
+                name="filtre-famille"
+                actif={f.formation === true}
+                onChoisir={() => appliquer({ ...f, famille: undefined, formation: true })}
+              >
+                Formations des salariés
+              </Option>
             </fieldset>
             </div>
             <div>
@@ -418,17 +431,6 @@ export function FiltresCalendrier({
               </Option>
             </fieldset>
 
-            <div className="mx-2.5 mt-2 border-t border-[color:rgba(10,10,10,.08)]" />
-            <fieldset className="m-0 border-0 p-0">
-              <TitreGroupe>Sujet</TitreGroupe>
-              <Option
-                forme="case"
-                actif={f.formation === true}
-                onChoisir={() => appliquer({ ...f, formation: !f.formation })}
-              >
-                Formations seulement
-              </Option>
-            </fieldset>
 
             </div>
             </div>
@@ -474,7 +476,7 @@ export function FiltresCalendrier({
       ) : null}
       {f.formation ? (
         <Chip onRetirer={() => appliquer({ ...f, formation: false })}>
-          Formations seulement
+          Formations des salariés
         </Chip>
       ) : null}
       {f.batiment ? (
