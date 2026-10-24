@@ -97,6 +97,7 @@ import {
   type FaitFiche,
 } from "@/components/ui-kit";
 import { lireProvenance } from "@/lib/navigation/provenance";
+import { instantDuRendu } from "@/lib/dates/instant-du-rendu";
 import { listSignatures } from "@/lib/signatures/queries";
 import {
   fraicheurCalendrier,
@@ -201,7 +202,11 @@ export default async function VerificationDetailPage({
   // s'il désigne un rapport de ce contrôle.
   // Lu sur TOUS les rapports : un rapport antidaté déposé à l'instant n'est
   // pas parmi les plus récents.
-  const trouve = v.rapports.find((r) => r.id === apres);
+  // Et déposé à l'instant : l'adresse garde `?apres=` après d'autres
+  // enregistrements sur la page, la confirmation ne doit pas la suivre.
+  const trouve = v.rapports.find(
+    (r) => r.id === apres && instantDuRendu().getTime() - r.createdAt.getTime() < 10 * 60 * 1000,
+  );
   // Ce que le formulaire (client) reçoit : jamais la ligne entière du rapport.
   const rapportDepose = trouve
     ? { id: trouve.id, dateRapport: trouve.dateRapport, resultat: trouve.resultat }
@@ -699,7 +704,7 @@ export default async function VerificationDetailPage({
             compte={v.rapports.length}
             droite={
               depotOuvert ? (
-              <details id="depot" className="group scroll-mt-6" open={deposer === "1"}>
+              <details className="group">
                 <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-full px-[18px] py-2.5 text-[12.5px] font-semibold text-[color:var(--board-ink)] ring-1 ring-[color:rgba(10,10,10,.18)] transition-colors hover:bg-[color:var(--board-slate-pale)]">
                   <span className="group-open:hidden">+ Nouveau rapport</span>
                   <span className="hidden group-open:inline">Annuler</span>
@@ -732,6 +737,14 @@ export default async function VerificationDetailPage({
               ) : undefined
             }
           />
+
+          {/* Arrivé par une ligne « à faire » (`?deposer=1`) : le formulaire
+              s'ouvre en pleine largeur, pas dans la colonne du titre. */}
+          {deposer === "1" && depotOuvert && !pieceMedicale ? (
+            <CarteFiche id="depot" titre="Nouveau rapport">
+              <UploadRapportForm action={boundUpload} organismeParDefaut={v.prestataire?.raisonSociale} />
+            </CarteFiche>
+          ) : null}
 
           <ul className="m-0 flex list-none flex-col gap-[22px] p-0">
             {v.rapports.map((r, idx) => {

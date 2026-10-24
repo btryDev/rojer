@@ -86,9 +86,9 @@ export function SuiviControle({
             style={{ color: enAttenteDeRapport ? "var(--board-signal-ink)" : undefined }}
           >
             {rendezVousLe
-              ? enAttenteDeRapport
-                ? `Le rendez-vous du ${formaterDateHeureFr(rendezVousLe)} est passé : déposez son rapport.`
-                : `Rendez-vous le ${formaterDateHeureFr(rendezVousLe)}${rendezVousNote ? ` — ${rendezVousNote}` : ""}`
+              ? (enAttenteDeRapport
+                  ? `Le rendez-vous du ${formaterDateHeureFr(rendezVousLe)} est passé : déposez son rapport.`
+                  : `Rendez-vous le ${formaterDateHeureFr(rendezVousLe)}`) + (rendezVousNote ? ` — ${rendezVousNote}` : "")
               : "Pas de rendez-vous pris."}
           </p>
           <p className="m-0 mt-1.5 text-[12px] text-[color:var(--board-slate-soft)]">
