@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { Info } from "lucide-react";
 import Link from "next/link";
 import { RevueEnPlace, type FicheLigne } from "@/components/etats-permanents/RevueEnPlace";
 import type { EtatCourt } from "@/components/etats-permanents/LigneCompacte";
@@ -39,11 +39,8 @@ export function FormationsAOrganiser({
   fiches,
   sansPorteur,
   personnePresente,
-  batiment,
 }: {
   etablissementId: string;
-  /** La planche du bâtiment (`sourceIllustrationBatiment`) : « pour l'établissement ». */
-  batiment: string;
   formations: readonly FormationAOrganiser[];
   /** Les fiches que la ligne ouvre (`versFiche`). */
   fiches: FicheLigne[];
@@ -58,47 +55,43 @@ export function FormationsAOrganiser({
   return (
     // Un panneau bleu glacier, pas une carte blanche de plus (retour de la
     // propriétaire, 2026-10-24) : le registre « calme et actif » de la charte
-    // (§ 1.3), et le bâtiment en tête — ce qui suit est pour l'établissement,
-    // pas pour une personne de la grille au-dessus.
+    // (§ 1.3) — ce qui suit est pour l'établissement, pas pour une personne
+    // de la grille au-dessus.
     <section
       id="formations"
       aria-labelledby="formations-titre"
       className="scroll-mt-6 rounded-[30px] bg-[color:var(--board-blue-pale)]/55 px-5 py-6 sm:px-8"
     >
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-        <Image
-          src={batiment}
-          alt=""
-          width={88}
-          height={77}
-          className="flex-none"
-        />
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <h2 id="formations-titre" className="board-titre m-0 text-[22px]">
-              Formations à organiser
-            </h2>
-            {aOrganiser > 0 && (
-              <span className="pastille-board bg-[color:var(--board-amber)] text-[color:var(--board-amber-ink)]">
-                {aOrganiser} à organiser
-              </span>
-            )}
-          </div>
-          <p className="m-0 mt-1.5 max-w-[68ch] text-[13.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-            Dues à vos salariés sans que Rojer sache lesquels : c&apos;est vous
-            qui savez qui est concerné, et vous qui les organisez. Elles ne sont
-            donc sur aucune fiche. Touchez une ligne pour la déclarer.
-          </p>
-        </div>
+      {/* Trois niveaux, trois registres (retour de la propriétaire,
+          2026-10-24) : le titre et son compte ; l'explication en ligne
+          d'aide, bleue, icône en tête ; le contenu, en pastilles blanches
+          sous un filet. ~~La planche du bâtiment en tête~~ — retirée. */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <h2 id="formations-titre" className="board-titre m-0 text-[24px]">
+          Formations à organiser
+        </h2>
+        {aOrganiser > 0 && (
+          <span className="pastille-board bg-[color:var(--board-amber)] text-[color:var(--board-amber-ink)]">
+            {aOrganiser} à organiser
+          </span>
+        )}
       </div>
+      <p className="m-0 mt-2.5 flex max-w-[66ch] items-start gap-2 text-[12.5px] leading-[1.55] text-[color:var(--board-blue-ink)]">
+        <Info className="mt-[2px] size-3.5 flex-none" aria-hidden />
+        <span>
+          Rojer ne sait pas quels salariés sont concernés : ces formations ne
+          sont sur aucune fiche, c&apos;est vous qui les organisez. Touchez une
+          ligne pour la déclarer.
+        </span>
+      </p>
 
       {vide ? (
-        <p className="m-0 mt-4 text-[13px] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 mt-5 border-t border-[color:var(--board-blue-soft)]/60 pt-5 text-[13px] text-[color:var(--board-slate-mid)]">
           Aucune formation à organiser pour l&apos;établissement aujourd&apos;hui.
         </p>
       ) : (
         <RevueEnPlace etablissementId={etablissementId} lignes={fiches} parcours={false}>
-          <ul className="m-0 mt-5 flex list-none flex-col gap-2 p-0">
+          <ul className="m-0 mt-5 flex list-none flex-col gap-2 border-t border-[color:var(--board-blue-soft)]/60 p-0 pt-5">
             {formations.map((f) => (
               <LigneFormation key={f.obligationId} {...f} />
             ))}
