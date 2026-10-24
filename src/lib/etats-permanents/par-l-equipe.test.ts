@@ -6,6 +6,7 @@ import {
   cheminDeDeclaration,
   formationsEnAttenteDeReponse,
   lignesFormationAffichees,
+  pourquoiALEtablissement,
 } from "./par-l-equipe";
 import type { LigneEtatPermanent } from "./queries";
 
@@ -52,7 +53,7 @@ describe("où une ligne se déclare", () => {
   it("une formation dans Équipe › Formations, un document sur « Ce qui doit être en place »", () => {
     const manutention = o("formation-securite-etablissement-manutention");
     const carnet = o("elec-travail-carnet-prescriptions");
-    expect(cheminDeDeclaration(manutention, "etat-x")).toBe("/equipe/formations#etat-x");
+    expect(cheminDeDeclaration(manutention, "etat-x")).toBe("/equipe#etat-x");
     expect(cheminDeDeclaration(carnet)).toBe("/etats-permanents");
   });
 });
@@ -73,5 +74,41 @@ describe("Équipe › Formations n'affiche pas une formation qui attend une rép
   it("cache la ligne qui ne tient qu'à un fait d'activité sans réponse, et la compte à part", () => {
     expect(lignesFormationAffichees([muette, repondue, parLaFiche])).toEqual([repondue, parLaFiche]);
     expect(formationsEnAttenteDeReponse([muette, repondue, parLaFiche])).toBe(1);
+  });
+});
+
+describe("pourquoi une formation est due à l'établissement", () => {
+  const ligne = (
+    id: string,
+    over: Partial<Pick<LigneEtatPermanent, "parLesTitres" | "questionsSansReponse">> = {},
+  ) => ({ obligation: o(id), parLesTitres: null, questionsSansReponse: [], ...over });
+
+  it("d'après les titres : la phrase qui les compte", () => {
+    const phrase = "Établi d'après les titres déclarés : aucun titre.";
+    expect(
+      pourquoiALEtablissement(
+        ligne("elec-travail-habilitation-personnel", {
+          parLesTitres: { enPlace: false, phrase, phraseSansNom: phrase },
+        }),
+      ),
+    ).toBe(phrase);
+  });
+
+  it("née d'un fait du DUERP : le DUERP le signale", () => {
+    expect(pourquoiALEtablissement(ligne("formation-securite-etablissement-manutention"))).toMatch(
+      /^Votre DUERP le signale/,
+    );
+  });
+
+  it("question sans réponse : à confirmer, pas due", () => {
+    expect(
+      pourquoiALEtablissement(
+        ligne("formation-securite-etablissement-manutention", { questionsSansReponse: ["x"] }),
+      ),
+    ).toMatch(/^À confirmer/);
+  });
+
+  it("sans fait ni titre : due au personnel", () => {
+    expect(pourquoiALEtablissement(ligne("incendie-erp-5-instruction-personnel"))).toMatch(/personnel/);
   });
 });

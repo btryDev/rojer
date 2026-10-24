@@ -1,0 +1,127 @@
+import Link from "next/link";
+import { RevueEnPlace, type FicheLigne } from "@/components/etats-permanents/RevueEnPlace";
+import type { EtatCourt } from "@/components/etats-permanents/LigneCompacte";
+import { Vignette } from "@/components/ui-kit/Vignette";
+import { dessinDuTitre } from "@/lib/salaries/illustration-titre";
+import type { FaitSansPorteur } from "@/lib/salaries/titres-sans-porteur";
+import { LigneFormation } from "./LigneFormation";
+
+/**
+ * « Formations à organiser » — sous les personnes, sur la page Équipe
+ * (2026-10-24, décision de la propriétaire ; amende l'ADR-047 : l'onglet
+ * Formations devient cette section).
+ *
+ * Sa raison d'être, dite par son chapeau : les formations DUES À VOS SALARIÉS
+ * QUAND ROJER NE SAIT PAS LESQUELS. Elles ne peuvent pas aller sur une fiche ;
+ * c'est l'établissement qui les organise. Ce qui a une personne — un titre
+ * manquant — reste sur sa fiche ; ce qui a une date reste au calendrier ; ce
+ * qu'un événement déclenche reste dans « Ce qui doit être en place › En cas
+ * de… ». Pas de doublon ici.
+ *
+ * Deux sortes de lignes : les formations d'établissement (déclarées depuis la
+ * fiche de `RevueEnPlace`), et ce que le DUERP signale sans que personne ait
+ * le titre (`titres-sans-porteur.ts`) — on sait qu'il en faut, pas qui : la
+ * ligne renvoie vers l'équipe.
+ */
+export type FormationAOrganiser = {
+  obligationId: string;
+  ancre: string;
+  libelle: string;
+  pourquoi: string;
+  etat: EtatCourt;
+  dessin: { src: string; fond: string };
+};
+
+export function FormationsAOrganiser({
+  etablissementId,
+  formations,
+  fiches,
+  sansPorteur,
+  personnePresente,
+}: {
+  etablissementId: string;
+  formations: readonly FormationAOrganiser[];
+  /** Les fiches que la ligne ouvre (`versFiche`). */
+  fiches: FicheLigne[];
+  sansPorteur: readonly FaitSansPorteur[];
+  personnePresente: boolean;
+}) {
+  const aOrganiser =
+    formations.filter((f) => f.etat === "a-declarer" || f.etat === "titres-manquants").length +
+    sansPorteur.reduce((n, f) => n + f.titres.length, 0);
+  const vide = formations.length === 0 && sansPorteur.length === 0;
+
+  return (
+    <section id="formations" aria-labelledby="formations-titre" className="scroll-mt-6">
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <h2 id="formations-titre" className="board-titre m-0 text-[22px]">
+          Formations à organiser
+        </h2>
+        {aOrganiser > 0 && (
+          <span className="pastille-board bg-[color:var(--board-amber)] text-[color:var(--board-amber-ink)]">
+            {aOrganiser} à organiser
+          </span>
+        )}
+      </div>
+      <p className="m-0 mt-1.5 max-w-[68ch] text-[13.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+        Dues à vos salariés sans que Rojer sache lesquels : c&apos;est vous qui
+        savez qui est concerné, et vous qui les organisez. Elles ne sont donc
+        sur aucune fiche. Touchez une ligne pour la déclarer.
+      </p>
+
+      {vide ? (
+        <p className="m-0 mt-4 text-[13px] text-[color:var(--board-slate-mid)]">
+          Aucune formation à organiser pour l&apos;établissement aujourd&apos;hui.
+        </p>
+      ) : (
+        <RevueEnPlace etablissementId={etablissementId} lignes={fiches} parcours={false}>
+          <ul className="m-0 mt-3 flex list-none flex-col gap-1 rounded-[22px] bg-[color:var(--board-slate-pale)]/60 p-1.5">
+            {formations.map((f) => (
+              <LigneFormation key={f.obligationId} {...f} />
+            ))}
+            {sansPorteur.flatMap((fait) =>
+              fait.titres.map((t) => {
+                const d = dessinDuTitre(t.obligation.id);
+                return (
+                  <li
+                    key={t.obligation.id}
+                    className="grid list-none grid-cols-[44px_minmax(0,1fr)] items-center gap-x-4 gap-y-2 rounded-[18px] px-3 py-3 sm:grid-cols-[44px_minmax(0,1fr)_auto]"
+                  >
+                    <Vignette src={d.src} fond={d.fond} taille={44} />
+                    <span className="min-w-0">
+                      <span className="block text-[14px] font-semibold leading-[1.35] text-[color:var(--board-ink)]">
+                        {t.obligation.libelle}
+                      </span>
+                      <span className="mt-0.5 block text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+                        Votre DUERP le signale, et personne n&apos;a ce titre.{" "}
+                        {t.condition}{" "}
+                        <Link
+                          href={`/etablissements/${etablissementId}/equipe/risques#${fait.champ}`}
+                          className="text-[color:var(--board-blue-ink)] underline underline-offset-4"
+                        >
+                          Modifier la réponse
+                        </Link>
+                      </span>
+                      {fait.horsQuestion && (
+                        <span className="mt-1 block text-[12px] leading-[1.5] text-[color:var(--board-slate-soft)]">
+                          {fait.horsQuestion}
+                        </span>
+                      )}
+                    </span>
+                    {/* Sans personne présente, la porte est d'en ajouter une. */}
+                    <Link
+                      href={`/etablissements/${etablissementId}/equipe${personnePresente ? "#personnes" : "/nouveau"}`}
+                      className="pastille-board col-start-2 justify-self-start bg-[color:var(--board-amber)] sm:col-start-3 sm:justify-self-end text-[color:var(--board-amber-ink)] underline-offset-4 hover:underline"
+                    >
+                      {personnePresente ? "Déclarer sur une fiche" : "Ajouter la personne"}
+                    </Link>
+                  </li>
+                );
+              }),
+            )}
+          </ul>
+        </RevueEnPlace>
+      )}
+    </section>
+  );
+}

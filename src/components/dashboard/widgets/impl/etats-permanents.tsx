@@ -107,7 +107,8 @@ export function WidgetEtatsPermanents({
               </li>
             ))}
             {/* Les formations de l'équipe (`par-l-equipe.ts`, 2026-10-24),
-                déclarées dans Équipe › Formations. `data-risques` et non
+                déclarées dans la section « Formations à organiser »
+                d'Équipe (2026-10-24). `data-risques` et non
                 `data-famille` : ce n'est pas une section de l'écran. */}
             {resume.risques.lignes > 0 && (
               <li
@@ -115,7 +116,7 @@ export function WidgetEtatsPermanents({
                 className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 border-t border-[color:var(--board-slate-line)] py-3 first:border-t-0"
               >
                 <Link
-                  href={`/etablissements/${etablissementId}/equipe/formations`}
+                  href={`/etablissements/${etablissementId}/equipe#formations`}
                   className={CLASSES_LIEN_FAMILLE}
                 >
                   Formations de votre équipe

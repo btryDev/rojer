@@ -181,7 +181,9 @@ describe("les pages d'entrée disent leur rangement par un fil d'Ariane", () => 
   // [2026-10-24, revue] Plus les ONGLETS d'une page d'entrée, un cran plus
   // bas — ils sont des pages d'entrée au même titre —, moins les anciennes
   // adresses qui ne font que rediriger.
-  const ONGLETS = ["etats-permanents/en-cas-de", "equipe/formations"];
+  // [2026-10-24 : « equipe/formations » n'est plus un onglet mais une
+  // redirection vers la section de la page Équipe.]
+  const ONGLETS = ["etats-permanents/en-cas-de"];
   const REDIRECTIONS = ["quand-ca-arrive"];
   const pages = [
     ...readdirSync(RACINE, { withFileTypes: true })
@@ -266,7 +268,6 @@ describe("les pages d'entrée disent leur rangement par un fil d'Ariane", () => 
     "prestataires",
     "etats-permanents/en-cas-de",
     "registre",
-    "equipe/formations",
   ])("%s : un fil d'Ariane vers l'établissement", (dossier) => {
     // La page, ou l'en-tête auquel elle délègue (`HeroEnPlace`, 2026-10-24).
     const source = lire(dossier);
