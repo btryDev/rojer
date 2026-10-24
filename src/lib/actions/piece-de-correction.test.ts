@@ -104,7 +104,7 @@ describe("cloturerAction — la pièce d'un point corrigé", () => {
     h.action.updateMany.mockResolvedValue({ count: 0 });
     const r = await cloturerAction("a1", { status: "idle" }, formulaire(true));
     expect(r).toMatchObject({ status: "error", message: "Déjà corrigée" });
-    expect(h.action.updateMany.mock.calls[0][0].where).toMatchObject({ statut: { not: "levee" } });
+    expect(h.action.updateMany.mock.calls[0][0].where).toMatchObject({ statut: { in: ["ouverte", "en_cours"] } });
     expect(h.liberer).toHaveBeenCalledWith(["points/e1/a1-facture.pdf"], "points/correction");
   });
 

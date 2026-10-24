@@ -179,11 +179,13 @@ export default async function VerificationDetailPage({
       : [];
   // Les points à corriger de ce contrôle (ADR-048) ; pour un contrôle
   // d'ensemble, les appareils qu'un point peut désigner.
+  const recoit = recoitDesPoints({ ...v, appareilActif: v.equipement?.actif ?? null });
+  // `v` est déjà lu dans le périmètre du compte ; les appareils ne servent
+  // qu'au formulaire, absent quand le contrôle ne reçoit pas de points.
   const [points, appareils] = await Promise.all([
     listerPointsDuControle(v.id),
-    appareilsDesignables(v.id),
+    recoit ? appareilsDesignables(v) : Promise.resolve([]),
   ]);
-  const recoit = recoitDesPoints({ ...v, appareilActif: v.equipement?.actif ?? null });
   const rapportsProposes = v.rapports
     .slice(0, RAPPORTS_PROPOSES)
     .map(({ id: rid, dateRapport, resultat }) => ({ id: rid, dateRapport, resultat }));
@@ -191,7 +193,13 @@ export default async function VerificationDetailPage({
   // `uploadRapport` ramène ici (`?apres=`) : l'invitation à noter ses points,
   // rattachés à CE rapport. L'identifiant vient de l'URL : il ne vaut que
   // s'il désigne un rapport de ce contrôle.
-  const rapportDepose = rapportsProposes.find((r) => r.id === apres);
+  // Lu sur TOUS les rapports : un rapport antidaté déposé à l'instant n'est
+  // pas parmi les plus récents.
+  const trouve = v.rapports.find((r) => r.id === apres);
+  // Ce que le formulaire (client) reçoit : jamais la ligne entière du rapport.
+  const rapportDepose = trouve
+    ? { id: trouve.id, dateRapport: trouve.dateRapport, resultat: trouve.resultat }
+    : undefined;
   const rapportApres =
     recoit && rapportDepose && resultatRelevePoints(rapportDepose.resultat) ? rapportDepose : undefined;
   const boundUpload = uploadRapport.bind(null, v.id);

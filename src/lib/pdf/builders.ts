@@ -1,3 +1,4 @@
+import { estActionOuverte } from "@/lib/dates/retard";
 import { LABEL_RESULTAT } from "@/lib/rapports/resultats";
 import { estLignePourInformation } from "@/lib/referentiels/conformite/initiative";
 import { libelleTypesErp, numeroCategorie } from "@/lib/etablissements/types-erp-affiches";
@@ -359,7 +360,7 @@ export async function construirePointsEquipementData(
     adresse: etab.adresse,
     appareil: appareil.libelle,
     genereLe: new Date(),
-    ouverts: points.filter((p) => p.statut === "ouverte" || p.statut === "en_cours").map(ligne),
+    ouverts: points.filter(estActionOuverte).map(ligne),
     corriges: points.filter((p) => p.statut === "levee").map(ligne),
   };
 }

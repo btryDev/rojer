@@ -3,7 +3,7 @@ import { BadgeStatutAction } from "@/components/actions/BadgeStatutAction";
 import { formaterDateCourteFr } from "@/lib/dates";
 import { estActionEnRetard } from "@/lib/dates/retard";
 import { avecProvenance } from "@/lib/navigation/provenance";
-import { cheminAction } from "@/lib/navigation/chemins";
+import { appareilDeLAction, cheminAction } from "@/lib/navigation/chemins";
 import { LABEL_RESULTAT } from "@/lib/rapports/resultats";
 import type { PointListe } from "@/lib/points-a-corriger/queries";
 
@@ -51,7 +51,11 @@ export function ListePoints({
               href={avecProvenance(
                 cheminAction(etablissementId, {
                   id: p.id,
-                  appareilId: p.verification?.equipementId ?? p.equipement?.id ?? null,
+                  appareilId: appareilDeLAction({
+                    verificationId: p.verification?.id ?? null,
+                    equipementId: p.equipement?.id ?? null,
+                    verification: p.verification,
+                  }),
                 }),
                 provenance,
               )}

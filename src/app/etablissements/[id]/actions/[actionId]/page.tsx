@@ -72,8 +72,10 @@ export default async function ActionDetailPage({
   // La vérification d'origine : le rapport le plus récent (trié desc par la
   // requête) porte le constat ; à défaut, la date de réalisation, puis la
   // date prévue.
-  // Pour un point, le rapport qui l'a relevé, quand il est connu (ADR-048).
-  const dernierRapport = a.rapportOrigine ?? a.verification?.rapports[0] ?? null;
+  // Pour un point, le rapport qui l'a relevé, et lui seul (ADR-048) : sans
+  // rapport d'origine, la fiche ne lui en prête aucun — le plus récent peut
+  // être un contrôle conforme postérieur.
+  const dernierRapport = point ? a.rapportOrigine : (a.verification?.rapports[0] ?? null);
   const dateConstat =
     dernierRapport?.dateRapport ??
     a.verification?.datePrevue ??

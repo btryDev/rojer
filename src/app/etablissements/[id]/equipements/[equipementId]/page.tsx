@@ -128,7 +128,7 @@ export default async function EquipementDetailPage({
     // qu'un contrôle d'ensemble a désignés sur lui (ADR-048) ; et les
     // contrôles auxquels un point neuf peut se rattacher.
     listerPointsDeLEquipement(equipementId),
-    controlesPourUnPoint(equipementId),
+    controlesPourUnPoint(eq),
   ]);
   const aFaire = lignesAFaire(
     eq,

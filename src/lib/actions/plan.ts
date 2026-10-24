@@ -297,13 +297,15 @@ export async function cloturerAction(
   const piece = await lirePiece(formData, existante);
   if (piece.status === "error") return piece;
 
-  // `updateMany` borné au statut : deux clôtures simultanées (double envoi,
-  // deux onglets) ne s'écrasent pas — la seconde ne trouve plus de ligne à
-  // clore, et sa pièce, que plus rien ne référencerait, est libérée.
+  // `updateMany` borné aux statuts OUVERTS (`estActionOuverte`) : deux
+  // clôtures simultanées (double envoi, deux onglets) ne s'écrasent pas, et
+  // un point abandonné dans un autre onglet ne se corrige pas sans être
+  // rouvert. La seconde ne trouve plus de ligne, et sa pièce, que plus rien
+  // ne référencerait, est libérée.
   let ecrites: number;
   try {
     ({ count: ecrites } = await prisma.action.updateMany({
-      where: { id: actionId, statut: { not: "levee" } },
+      where: { id: actionId, statut: { in: ["ouverte", "en_cours"] } },
       data: {
         statut: "levee",
         leveeLe: new Date(),
@@ -377,8 +379,11 @@ export async function rouvrirAction(actionId: string): Promise<void> {
   const { action, etablissementId } = await requireAction(actionId);
   if (estActionOuverte(action)) return;
 
-  await prisma.action.update({
-    where: { id: actionId },
+  // Borné à ce qui a été lu (statut, pièce) : si le point a été rouvert puis
+  // corrigé de nouveau entre-temps, avec une autre pièce, on n'efface pas
+  // cette pièce-là en libérant l'ancienne — elle resterait orpheline.
+  const { count } = await prisma.action.updateMany({
+    where: { id: actionId, statut: action.statut, leveeFichierCle: action.leveeFichierCle },
     data: {
       statut: "ouverte",
       leveeLe: null,
@@ -392,7 +397,7 @@ export async function rouvrirAction(actionId: string): Promise<void> {
   });
   // La pièce de la correction défaite part avec elle — après la base
   // (`suppression/fichiers.ts`).
-  if (action.leveeFichierCle) {
+  if (count > 0 && action.leveeFichierCle) {
     await libererFichiers([action.leveeFichierCle], "points/reouverture");
   }
   revalidateAction(etablissementId);

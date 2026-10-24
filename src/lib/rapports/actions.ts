@@ -312,10 +312,10 @@ export async function uploadRapport(
   // reprend, et le dépôt reste ce qu'il est : acquis.
   await regenererApresMutation(verif.etablissementId, "rapports/upload");
 
-  revalidatePath(`/etablissements/${verif.etablissementId}/calendrier`);
-  revalidatePath(`/etablissements/${verif.etablissementId}/registre`);
-  revalidatePath(`/etablissements/${verif.etablissementId}/verifications/${verif.id}`);
-  revalidatePath(`/etablissements/${verif.etablissementId}`);
+  // Tout l'établissement : le contrôle vit sous son appareil ou au
+  // calendrier (`chemins.ts`), et la fiche de l'appareil, le registre et le
+  // calendrier lisent le rapport.
+  revalidatePath(`/etablissements/${verif.etablissementId}`, "layout");
 
   // Le dépôt ramène à la fiche du contrôle, qui le confirme (`?apres=`) ; un
   // rapport qui relève quelque chose y invite à noter ses points à corriger

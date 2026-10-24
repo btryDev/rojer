@@ -85,16 +85,21 @@ export type ControlePourUnPoint = {
  * propres lignes, et les contrôles d'ensemble qui couvrent sa catégorie. Ni
  * ligne éteinte, ni appareil retiré (`recoitDesPoints`).
  */
-export async function controlesPourUnPoint(equipementId: string): Promise<ControlePourUnPoint[]> {
+export async function controlesPourUnPoint(eq: {
+  /** L'appareil déjà lu par la page : la portée est rétablie dans la requête. */
+  id: string;
+  etablissementId: string;
+  categorie: Parameters<typeof appareilDesignable>[1]["categorie"];
+  actif: boolean;
+}): Promise<ControlePourUnPoint[]> {
+  if (!eq.actif) return [];
+  // La portée reste DANS la requête (`tenancy-lectures.test.ts`) : l'appareil
+  // reçu n'en dispense pas. `requireUser` est mémoïsé par requête.
   const user = await requireUser();
-  const eq = await prisma.equipement.findFirst({
-    where: { id: equipementId, etablissement: { entreprise: { userId: user.id } } },
-    select: { id: true, etablissementId: true, categorie: true, actif: true },
-  });
-  if (!eq || !eq.actif) return [];
   const lignes = await prisma.verification.findMany({
     where: {
       etablissementId: eq.etablissementId,
+      etablissement: { entreprise: { userId: user.id } },
       archiveLe: null,
       salarieId: null,
       OR: [{ equipementId: eq.id }, { equipementId: null }],
@@ -138,17 +143,23 @@ export async function controlesPourUnPoint(equipementId: string): Promise<Contro
  * de l'établissement, d'une catégorie que le contrôle couvre. Vide pour le
  * contrôle d'un appareil.
  */
-export async function appareilsDesignables(verificationId: string) {
-  const user = await requireUser();
-  const v = await prisma.verification.findFirst({
-    where: { id: verificationId, etablissement: { entreprise: { userId: user.id } } },
-    select: { etablissementId: true, obligationId: true, equipementId: true, salarieId: true },
-  });
-  if (!v || !estControleDEnsemble(v)) return [];
+export async function appareilsDesignables(v: {
+  /** La ligne déjà lue par la page : la portée est rétablie dans la requête. */
+  etablissementId: string;
+  obligationId: string;
+  equipementId: string | null;
+  salarieId: string | null;
+}) {
+  if (!estControleDEnsemble(v)) return [];
   const o = obligationParId(v.obligationId);
   if (!o) return [];
+  const user = await requireUser();
   const appareils = await prisma.equipement.findMany({
-    where: { etablissementId: v.etablissementId, actif: true },
+    where: {
+      etablissementId: v.etablissementId,
+      etablissement: { entreprise: { userId: user.id } },
+      actif: true,
+    },
     select: { id: true, libelle: true, categorie: true, actif: true },
     orderBy: { libelle: "asc" },
   });

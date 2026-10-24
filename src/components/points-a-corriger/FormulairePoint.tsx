@@ -69,9 +69,32 @@ type Props = {
  * souvent plusieurs.
  */
 export function FormulairePoint(props: Props) {
-  // La clé change à chaque création réussie : le formulaire repart vide.
+  // La clé change à chaque création réussie : le formulaire repart vide de
+  // ce qui décrit le point, mais garde le RATTACHEMENT choisi (contrôle,
+  // rapport, appareil) — le point suivant vient presque toujours du même
+  // rapport (revue du 2026-10-24).
   const [serie, setSerie] = useState(0);
-  return <Formulaire key={serie} {...props} surCree={() => setSerie((n) => n + 1)} creesAvant={serie} />;
+  const [garde, setGarde] = useState<Rattache>({});
+  return (
+    <Formulaire
+      key={serie}
+      {...props}
+      garde={garde}
+      surCree={(r) => {
+        setGarde(r);
+        setSerie((n) => n + 1);
+      }}
+      creesAvant={serie}
+    />
+  );
+}
+
+/** Le rattachement d'un point créé, repris par le suivant. */
+type Rattache = { verificationId?: string; rapportOrigineId?: string; equipementId?: string };
+
+function champ(fd: FormData, nom: string): string | undefined {
+  const v = fd.get(nom);
+  return typeof v === "string" && v !== "" ? v : undefined;
 }
 
 function Formulaire({
@@ -80,20 +103,31 @@ function Formulaire({
   defauts,
   rattachement,
   appareils,
+  garde,
   surCree,
   creesAvant,
-}: Props & { surCree: () => void; creesAvant: number }) {
+}: Props & { garde: Rattache; surCree: (r: Rattache) => void; creesAvant: number }) {
   const correction = defauts !== undefined;
   const [state, formAction, pending] = useActionState<ActionPlanState, FormData>(
     async (prev, fd) => {
       const r = await action(prev, fd);
-      if (r.status === "success" && !correction) surCree();
+      if (r.status === "success" && !correction) {
+        surCree({
+          verificationId: champ(fd, "verificationId"),
+          rapportOrigineId: champ(fd, "rapportOrigineId"),
+          equipementId: champ(fd, "equipementId"),
+        });
+      }
       return r;
     },
     { status: "idle" },
   );
   const controles = rattachement?.mode === "choix" ? rattachement.controles : [];
-  const [controleId, setControleId] = useState(controles[0]?.verificationId ?? "");
+  const [controleId, setControleId] = useState(
+    controles.find((c) => c.verificationId === garde.verificationId)?.verificationId ??
+      controles[0]?.verificationId ??
+      "",
+  );
   const controleChoisi = controles.find((c) => c.verificationId === controleId);
 
   const err = (champ: string) =>
@@ -104,7 +138,11 @@ function Formulaire({
       {rattachement?.mode === "fixe" && (
         <>
           <input type="hidden" name="verificationId" value={rattachement.verificationId} />
-          <RapportOrigine rapports={rattachement.rapports} impose={rattachement.rapportImpose} />
+          <RapportOrigine
+            rapports={rattachement.rapports}
+            impose={rattachement.rapportImpose}
+            defaut={garde.rapportOrigineId}
+          />
         </>
       )}
       {rattachement?.mode === "choix" && (
@@ -143,14 +181,23 @@ function Formulaire({
       {rattachement?.mode === "choix" && controleChoisi && (
         // Remonté à chaque changement de contrôle : un rapport choisi ne
         // survit pas au contrôle qui l'a produit.
-        <RapportOrigine key={controleChoisi.verificationId} rapports={controleChoisi.rapports} />
+        <RapportOrigine
+          key={controleChoisi.verificationId}
+          rapports={controleChoisi.rapports}
+          defaut={garde.rapportOrigineId}
+        />
       )}
       {appareils && appareils.length > 0 && (
         <div>
           <label className="label-board" htmlFor="equipementId">
             Appareil concerné
           </label>
-          <select id="equipementId" name="equipementId" className="champ-board" defaultValue="">
+          <select
+            id="equipementId"
+            name="equipementId"
+            className="champ-board"
+            defaultValue={appareils.some((a) => a.id === garde.equipementId) ? garde.equipementId : ""}
+          >
             <option value="">— Aucun appareil précis —</option>
             {appareils.map((a) => (
               <option key={a.id} value={a.id}>
@@ -305,9 +352,12 @@ function libelleRapport(r: RapportPourUnPoint): string {
 function RapportOrigine({
   rapports,
   impose,
+  defaut,
 }: {
   rapports: RapportPourUnPoint[];
   impose?: RapportPourUnPoint;
+  /** Le rapport du point précédent, s'il est de ce contrôle. */
+  defaut?: string;
 }) {
   if (impose) {
     return (
@@ -325,7 +375,12 @@ function RapportOrigine({
       <label className="label-board" htmlFor="rapportOrigineId">
         Relevé dans le rapport
       </label>
-      <select id="rapportOrigineId" name="rapportOrigineId" className="champ-board" defaultValue="">
+      <select
+        id="rapportOrigineId"
+        name="rapportOrigineId"
+        className="champ-board"
+        defaultValue={rapports.some((r) => r.id === defaut) ? defaut : ""}
+      >
         <option value="">— Pas de rapport précis —</option>
         {rapports.map((r) => (
           <option key={r.id} value={r.id}>

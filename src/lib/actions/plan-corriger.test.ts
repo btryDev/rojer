@@ -15,6 +15,9 @@ const { prismaMock, requireUserMock, redirectMock } = vi.hoisted(() => ({
     action: {
       findFirst: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn<(a: { where: Record<string, unknown> }) => Promise<{ count: number }>>(
+        async () => ({ count: 1 }),
+      ),
     },
   },
   requireUserMock: vi.fn(),
@@ -122,8 +125,8 @@ describe("rouvrirAction", () => {
       action({ statut: "levee", leveeRapportId: "rap1" }),
     );
     await rouvrirAction("a1");
-    expect(prismaMock.action.update).toHaveBeenCalledWith({
-      where: { id: "a1" },
+    expect(prismaMock.action.updateMany).toHaveBeenCalledWith({
+      where: { id: "a1", statut: "levee", leveeFichierCle: undefined },
       data: {
         statut: "ouverte",
         leveeLe: null,
@@ -144,15 +147,27 @@ describe("rouvrirAction", () => {
     );
     await rouvrirAction("a1");
     expect(liberer).toHaveBeenCalledWith(["points/e1/a1-x-facture.pdf"], "points/reouverture");
-    expect(prismaMock.action.update.mock.invocationCallOrder[0]).toBeLessThan(
+    expect(prismaMock.action.updateMany.mock.invocationCallOrder[0]).toBeLessThan(
       liberer.mock.invocationCallOrder[0],
     );
+  });
+
+  it("rien n'est libéré si le point a changé entre-temps (rouvert puis recorrigé avec une autre pièce)", async () => {
+    prismaMock.action.findFirst.mockResolvedValue(
+      action({ statut: "levee", leveeFichierCle: "points/e1/a1-x-facture.pdf" }),
+    );
+    prismaMock.action.updateMany.mockResolvedValueOnce({ count: 0 });
+    await rouvrirAction("a1");
+    expect(prismaMock.action.updateMany.mock.calls[0]?.[0]?.where).toMatchObject({
+      leveeFichierCle: "points/e1/a1-x-facture.pdf",
+    });
+    expect(liberer).not.toHaveBeenCalled();
   });
 
   it("ne touche pas une action déjà ouverte", async () => {
     prismaMock.action.findFirst.mockResolvedValue(action({ statut: "en_cours" }));
     await rouvrirAction("a1");
-    expect(prismaMock.action.update).not.toHaveBeenCalled();
+    expect(prismaMock.action.updateMany).not.toHaveBeenCalled();
   });
 });
 
