@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
 import { CarteFiche } from "@/components/ui-kit";
-import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeRetenu";
 import { CHAMP_ETAT, ENCRE_ETAT, type RegistreLigne } from "@/lib/calendrier/etats";
 import type { MentionRythme } from "@/lib/referentiels/conformite/mention-rythme";
 import type { ReferenceLegale } from "@/lib/referentiels/conformite";
@@ -26,10 +25,11 @@ export type LigneTitre = {
   id: string;
   obligationId: string;
   libelle: string;
-  /** « Délivré le 6 mai 2024 ». */
-  delivre: string;
-  /** D'où vient l'échéance : la pièce, un calcul, ou rien (composé par la fiche). */
-  echeance: string;
+  /**
+   * Une ligne : la délivrance et l'échéance, et d'où vient celle-ci — la
+   * pièce, un calcul, ou rien (composée par la fiche).
+   */
+  dates: string;
   etat: RegistreLigne;
   /** Le mot de l'état, de la table de la fiche (`MOT_DE_L_ETAT`). */
   mot: string;
@@ -148,9 +148,7 @@ export function CarteTitresDetenus({
                 {t.libelle}
               </p>
               <p className="m-0 mt-1.5 text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-                {t.delivre}
-                <br />
-                {t.echeance}
+                {t.dates}
               </p>
               <Jauge jauge={t.jauge} etat={t.etat} />
               {t.renvoiAuxNormes && (
@@ -158,9 +156,13 @@ export function CarteTitresDetenus({
                   {t.renvoiAuxNormes}
                 </p>
               )}
+              {/* ADR-039 : un rythme que le texte n'écrit pas se dit comme
+                  tel. Sur une ligne (retour de la propriétaire, 2026-10-24) :
+                  la phrase entière reste lue par un lecteur d'écran. */}
               {t.rythmeRetenu && (
-                <p className="m-0 mt-2">
-                  <MentionRythmeRetenu mention={t.rythmeRetenu} />
+                <p className="m-0 mt-1.5 truncate text-[11.5px] font-medium text-[color:var(--board-slate-soft)]">
+                  <span aria-hidden>{t.rythmeRetenu.court}</span>
+                  <span className="sr-only">{t.rythmeRetenu.long}</span>
                 </p>
               )}
               {t.redevientDue && (

@@ -19,7 +19,7 @@ import {
 import { requireEtablissement } from "@/lib/auth/scope";
 import { LIBELLE_SANS_RENDEZ_VOUS, type RegistreLigne } from "@/lib/calendrier/etats";
 import { LABEL_PERIODICITE } from "@/lib/calendrier/labels";
-import { formaterDateLongueFr } from "@/lib/dates";
+import { formaterDateCourteFr, formaterDateLongueFr } from "@/lib/dates";
 import { lireProvenance } from "@/lib/navigation/provenance";
 import { mentionRythmeRetenu } from "@/lib/referentiels/conformite/mention-rythme";
 import { renvoiAuxNormes } from "@/lib/referentiels/conformite/renvoi-aux-normes";
@@ -177,12 +177,13 @@ export default async function SalarieDetailPage({
     // la date de la pièce. Et elle dit le CALCUL, pas « la durée écrite dans
     // le texte » : pour la formation du membre du CSE, L. 2315-17 pose une
     // borne liée au mandat, pas une durée depuis la délivrance.
-    delivre: `Délivré le ${formaterDateLongueFr(t.delivreLe)}`,
-    echeance: t.echeanceLe
-      ? `Valable jusqu'au ${formaterDateLongueFr(t.echeanceLe)}`
-      : t.echeance && t.periodicite
-        ? `Échéance calculée au ${formaterDateLongueFr(t.echeance)} (délivrance + ${LABEL_PERIODICITE[t.periodicite].toLowerCase()}), sans date de fin sur la pièce`
-        : "Aucune date de fin portée sur le titre",
+    dates:
+      `Délivré le ${formaterDateCourteFr(t.delivreLe)} · ` +
+      (t.echeanceLe
+        ? `jusqu'au ${formaterDateCourteFr(t.echeanceLe)}`
+        : t.echeance && t.periodicite
+          ? `jusqu'au ${formaterDateCourteFr(t.echeance)} (calculé : ${LABEL_PERIODICITE[t.periodicite].toLowerCase()})`
+          : "sans date de fin"),
     etat: t.etat,
     mot:
       t.echeanceLe === null && (t.etat === "enRetard" || t.etat === "proche")
