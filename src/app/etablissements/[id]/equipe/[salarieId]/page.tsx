@@ -167,7 +167,6 @@ export default async function SalarieDetailPage({
 
   const lignes: LigneTitre[] = s.titres.map((t) => ({
     id: t.id,
-    obligationId: t.obligationId,
     libelle: t.libelle,
     // TROIS CAS, ET LE DEUXIÈME MANQUAIT. La ligne disait « aucune date de fin
     // portée sur le titre » dès que `echeanceLe` était vide — y compris sur

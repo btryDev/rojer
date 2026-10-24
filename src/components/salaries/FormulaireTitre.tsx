@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
-import Image from "next/image";
+import { useActionState, useEffect, useState } from "react";
+import { Vignette } from "@/components/ui-kit/Vignette";
 import { ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ChampBoard } from "@/components/ui-kit";
@@ -203,19 +203,10 @@ export function FormulaireTitre({
   const renouvellement = dejaDeclares.includes(choisi);
   const bloque = titre?.bloquePar;
 
-  const formRef = useRef<HTMLFormElement>(null);
+  // Au succès, la modale se ferme ; elle remonte le formulaire à la
+  // prochaine ouverture (`key`), donc rien à vider ici.
   useEffect(() => {
-    // Vider le formulaire après un enregistrement réussi : sans cela, les
-    // dates de la déclaration précédente restent dans les champs et la
-    // suivante part d'une valeur qui n'a rien à voir.
-    //
-    // `form.reset()` plutôt qu'une clé de remontage incrémentée dans l'effet :
-    // appeler `setState` depuis un effet déclenche un second rendu en cascade,
-    // et ici il n'y a rien à recalculer — seulement des champs à vider.
-    if (state.status === "success") {
-      formRef.current?.reset();
-      onSucces?.();
-    }
+    if (state.status === "success") onSucces?.();
   }, [state, onSucces]);
 
   const err = (champ: string) =>
@@ -223,7 +214,6 @@ export function FormulaireTitre({
 
   return (
     <form
-      ref={formRef}
       action={formAction}
       className="grid grid-cols-1 md:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]"
     >
@@ -251,13 +241,7 @@ export function FormulaireTitre({
                       onChange={() => setChoisi(o.id)}
                       className="sr-only"
                     />
-                    <span
-                      aria-hidden
-                      className="grid size-10 flex-none place-items-center rounded-[13px]"
-                      style={{ background: o.dessin.fond }}
-                    >
-                      <Image src={o.dessin.src} alt="" width={30} height={30} />
-                    </span>
+                    <Vignette src={o.dessin.src} fond={o.dessin.fond} taille={40} />
                     <span className="min-w-0">
                       <span className="block text-[13px] font-semibold leading-[1.3] text-[color:var(--board-ink)]">
                         {o.libelle}
@@ -284,13 +268,7 @@ export function FormulaireTitre({
       <div className="flex min-w-0 flex-col gap-5 self-start px-6 py-6 sm:px-8 md:sticky md:top-0">
         {titre && (
           <div className="flex items-start gap-4">
-            <span
-              aria-hidden
-              className="grid size-[68px] flex-none place-items-center rounded-[23px]"
-              style={{ background: titre.dessin.fond }}
-            >
-              <Image src={titre.dessin.src} alt="" width={52} height={52} />
-            </span>
+            <Vignette src={titre.dessin.src} fond={titre.dessin.fond} taille={68} />
             <div className="min-w-0">
               <h3 className="board-titre m-0 text-[19px]">{titre.libelle}</h3>
               <p className="m-0 mt-1 text-[12.5px] text-[color:var(--board-slate-mid)]">

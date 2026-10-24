@@ -28,7 +28,7 @@ describe("ce que le DUERP signale et que personne ne porte", () => {
     expect(ids(r)).toEqual(["conduite-salarie-autorisation", "conduite-salarie-formation"]);
     // La condition de l'autorisation se dit : elle ne vaut pas pour tout engin.
     const autorisation = r[0].titres.find((t) => t.obligation.id === "conduite-salarie-autorisation");
-    expect(autorisation?.condition).toContain("R. 4323-57");
+    expect(autorisation?.condition).toMatch(/^Dû s'il conduit .*R\. 4323-57\)\.$/);
   });
 
   it("un « oui » au CMR rappelle le suivi renforcé, dû au poste à risque (R. 4624-22)", () => {

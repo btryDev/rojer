@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import Image from "next/image";
+import { Vignette } from "@/components/ui-kit/Vignette";
 import Link from "next/link";
 import { CarteFiche, PastilleFiche, PastilleRetard } from "@/components/ui-kit";
 import { formaterDateLongueFr } from "@/lib/dates";
@@ -115,13 +115,7 @@ export function CarteCeQuiManque({
                   : "bg-[color:var(--board-slate-pale)]")
               }
             >
-              <span
-                aria-hidden
-                className="grid size-[52px] flex-none place-items-center rounded-[18px]"
-                style={{ background: dessin.fond }}
-              >
-                <Image src={dessin.src} alt="" width={40} height={40} />
-              </span>
+              <Vignette src={dessin.src} fond={dessin.fond} />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="m-0 text-[15px] font-semibold leading-[1.3] tracking-[-0.01em] text-[color:var(--board-ink)]">

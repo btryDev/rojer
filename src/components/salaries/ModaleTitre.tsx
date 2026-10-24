@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useMemo,
   useRef,
   useState,
   type ComponentProps,
@@ -45,9 +46,11 @@ export function DeclarationTitre({ personne, children, ...formulaire }: Props) {
     if (!boite.current?.open) boite.current?.showModal?.();
   }, []);
   const fermer = useCallback(() => boite.current?.close(), []);
+  // Mémoïsée : sans quoi chaque bouton consommateur se re-rend à l'ouverture.
+  const valeur = useMemo(() => ({ ouvrir }), [ouvrir]);
 
   return (
-    <Contexte.Provider value={{ ouvrir }}>
+    <Contexte.Provider value={valeur}>
       {children}
       <dialog
         ref={boite}

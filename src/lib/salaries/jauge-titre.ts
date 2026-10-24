@@ -12,7 +12,7 @@
  * et la phrase le dit. Module pur : `now` est passé.
  */
 import { composantesCiviles, joursCivilsEntre } from "@/lib/dates";
-import { estEnRetard } from "@/lib/dates/retard";
+import { joursDeRetard } from "@/lib/dates/retard";
 
 export type JaugeTitre = {
   /** Part écoulée, dans [0, 1] ; `null` quand le titre n'a pas d'échéance. */
@@ -46,9 +46,10 @@ export function jaugeDuTitre(
     return { ecoule: null, phrase: "Sans échéance" };
   }
   // La règle du retard est celle du calendrier (ADR-011) : jour civil.
-  if (estEnRetard(titre.echeance, now)) {
-    const jours = joursCivilsEntre(titre.echeance, now);
-    return { ecoule: 1, phrase: `Dépassée depuis ${pluriel(jours, "jour")}` };
+  // « Dépassée », pas « en retard » : le mot des titres (`MOT_DE_L_ETAT`).
+  const retard = joursDeRetard(titre.echeance, now);
+  if (retard > 0) {
+    return { ecoule: 1, phrase: `Dépassée depuis ${pluriel(retard, "jour")}` };
   }
   const total = titre.echeance.getTime() - titre.delivreLe.getTime();
   const fait = now.getTime() - titre.delivreLe.getTime();

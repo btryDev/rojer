@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import Image from "next/image";
+import { Vignette } from "@/components/ui-kit/Vignette";
 import { DOSSIER_ILLUSTRATIONS, FOND_TEINTE } from "@/lib/etats-permanents/illustrations";
 
 /**
@@ -14,29 +14,6 @@ import { DOSSIER_ILLUSTRATIONS, FOND_TEINTE } from "@/lib/etats-permanents/illus
  * cette personne que son nom et son poste, et un dessin qui en dirait plus
  * affirmerait ce qu'on ignore.
  */
-export function PortraitPersonne({ taille = 84 }: { taille?: number }) {
-  return (
-    <span
-      aria-hidden
-      className="grid flex-none place-items-center"
-      style={{
-        width: taille,
-        height: taille,
-        borderRadius: Math.round(taille * 0.34),
-        background: FOND_TEINTE.organisation,
-      }}
-    >
-      <Image
-        src={`${DOSSIER_ILLUSTRATIONS}/personne.png`}
-        alt=""
-        width={Math.round(taille * 0.78)}
-        height={Math.round(taille * 0.78)}
-        priority
-      />
-    </span>
-  );
-}
-
 export function HeroSalarie({
   nom,
   surtitre,
@@ -52,7 +29,12 @@ export function HeroSalarie({
 }) {
   return (
     <div className="flex flex-wrap items-start gap-x-6 gap-y-5">
-      <PortraitPersonne />
+      <Vignette
+        src={`${DOSSIER_ILLUSTRATIONS}/personne.png`}
+        fond={FOND_TEINTE.organisation}
+        taille={84}
+        priority
+      />
       <div className="min-w-[240px] flex-1">
         <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
           {surtitre}

@@ -235,8 +235,7 @@ export default async function FormationsEquipePage({
                         </p>
                         {t.condition && (
                           <p className="m-0 mt-0.5 max-w-[68ch] text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-                            {/^ils? /.test(t.condition) ? "Dû s'" : "Dû si "}
-                            {t.condition}.
+                            {t.condition}
                           </p>
                         )}
                       </li>

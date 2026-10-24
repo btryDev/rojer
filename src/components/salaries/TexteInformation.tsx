@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * Le texte d'information à remettre aux salariés — art. 13 du RGPD.
@@ -20,6 +20,12 @@ export function TexteInformation({ texte }: { texte: string }) {
   const [ouvert, setOuvert] = useState(false);
   // Le navigateur peut refuser (page non sécurisée, permission) : on le dit,
   // et « lire le texte » reste la porte pour le copier à la main.
+  // Une minuterie à la fois, annulée au démontage : deux clics rapprochés ne
+  // remettent pas le libellé trop tôt.
+  const minuterie = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (minuterie.current) clearTimeout(minuterie.current);
+  }, []);
   const copier = async () => {
     try {
       await navigator.clipboard.writeText(texte);
@@ -27,7 +33,8 @@ export function TexteInformation({ texte }: { texte: string }) {
     } catch {
       setCopie("refus");
     }
-    setTimeout(() => setCopie("non"), 2400);
+    if (minuterie.current) clearTimeout(minuterie.current);
+    minuterie.current = setTimeout(() => setCopie("non"), 2400);
   };
   const lien =
     "cursor-pointer font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4";

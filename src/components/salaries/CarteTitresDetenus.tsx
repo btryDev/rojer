@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import Image from "next/image";
 import { CarteFiche } from "@/components/ui-kit";
-import { CHAMP_ETAT, ENCRE_ETAT, type RegistreLigne } from "@/lib/calendrier/etats";
+import { Vignette } from "@/components/ui-kit/Vignette";
+import { ENCRE_ETAT, POINT_ETAT, type RegistreLigne } from "@/lib/calendrier/etats";
 import type { MentionRythme } from "@/lib/referentiels/conformite/mention-rythme";
 import type { ReferenceLegale } from "@/lib/referentiels/conformite";
 import type { JaugeTitre } from "@/lib/salaries/jauge-titre";
@@ -17,13 +17,12 @@ import { ReferenceFondatrice } from "./ReferenceFondatrice";
  * serraient et le téléphone n'en laissait rien — retour de la propriétaire.]
  *
  * La couleur d'une jauge est celle de l'état (`CHAMP_ETAT`), jamais une
- * teinte locale. Un titre sans échéance a une barre qui s'estompe : il n'a
+ * teinte locale ; le point, celui de `POINT_ETAT`. Un titre sans échéance a une barre qui s'estompe : il n'a
  * pas de terme écrit, et la jauge ne lui en invente pas.
  */
 
 export type LigneTitre = {
   id: string;
-  obligationId: string;
   libelle: string;
   /**
    * Une ligne : la délivrance et l'échéance, et d'où vient celle-ci — la
@@ -49,18 +48,8 @@ export type LigneTitre = {
   retirer: ReactNode;
 };
 
-/**
- * Le champ d'une jauge. Celui de l'état, sauf « à planifier » : son champ est
- * l'ardoise pâle de la piste elle-même, et la barre d'un titre sans échéance
- * disparaissait dedans (contrôle visuel du 2026-10-24). L'ardoise de
- * graduation la rend visible sans en faire une encre.
- */
-function champDeLaJauge(etat: RegistreLigne): string {
-  return etat === "aPlanifier" ? "var(--board-slate)" : CHAMP_ETAT[etat];
-}
-
 function Jauge({ jauge, etat }: { jauge: JaugeTitre; etat: RegistreLigne }) {
-  const champ = champDeLaJauge(etat);
+  const champ = POINT_ETAT[etat];
   return (
     <div className="mt-3">
       {/* La piste est blanche : la carte du titre est déjà sur l'ardoise pâle. */}
@@ -123,13 +112,7 @@ export function CarteTitresDetenus({
               }
             >
               <div className="flex items-start justify-between gap-3">
-                <span
-                  aria-hidden
-                  className="grid size-[52px] flex-none place-items-center rounded-[18px]"
-                  style={{ background: t.dessin.fond }}
-                >
-                  <Image src={t.dessin.src} alt="" width={40} height={40} />
-                </span>
+                <Vignette src={t.dessin.src} fond={t.dessin.fond} />
                 {/* Le point porte l'état, le mot le nomme : une signalétique
                     qui tient à une couleur disparaît en niveaux de gris et
                     pour qui n'y voit pas. */}
@@ -140,7 +123,7 @@ export function CarteTitresDetenus({
                   <span
                     aria-hidden
                     className="mt-[4px] size-[7px] flex-none rounded-full"
-                    style={{ background: champDeLaJauge(t.etat) }}
+                    style={{ background: POINT_ETAT[t.etat] }}
                   />
                   {t.mot}
                 </span>

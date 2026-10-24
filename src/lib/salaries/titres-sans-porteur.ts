@@ -52,18 +52,33 @@ export type FaitSansPorteur = {
   horsQuestion: string | null;
   titres: {
     obligation: ObligationPorteeParSalarie;
-    /** À quelle condition le titre est dû — lue, jamais réécrite. */
+    /**
+     * À quelle condition le titre est dû, en phrase (« Dû si … ») — lue dans
+     * `OBLIGATION_EMPLOYEUR`, jamais réécrite.
+     */
     condition: string | null;
   }[];
 };
 
-/** Les titres qu'une autre surface suit déjà (voir l'en-tête). */
+/**
+ * Les titres qu'une autre surface suit déjà (voir l'en-tête). Calculé une
+ * fois : le référentiel est figé (ADR-003), comme `LUS_PAR_LA_FICHE`.
+ */
+let SUIVIS_AILLEURS: ReadonlySet<string> | undefined;
 function suivisAilleurs(): ReadonlySet<string> {
-  const doubles = obligationsConformite.flatMap((o) => {
-    const t = titreDuDouble(o);
-    return t ? [t] : [];
-  });
-  return new Set([...titresLusParLaFiche(), ...doubles]);
+  SUIVIS_AILLEURS ??= new Set([
+    ...titresLusParLaFiche(),
+    ...obligationsConformite.flatMap((o) => {
+      const t = titreDuDouble(o);
+      return t ? [t] : [];
+    }),
+  ]);
+  return SUIVIS_AILLEURS;
+}
+
+/** « Dû si … » / « Dû s'il … » — la condition lue, mise en phrase. */
+function dueSi(condition: string): string {
+  return `${/^ils? /.test(condition) ? "Dû s'" : "Dû si "}${condition}.`;
 }
 
 export type PersonneLue = {
@@ -89,8 +104,9 @@ export function titresSansPorteur(
       if (ailleurs.has(id) || detenus.has(id)) return [];
       if (OBLIGATION_EMPLOYEUR[id]?.nature === "piece_a_conserver") return [];
       const obligation = titreParId(id);
+      const condition = OBLIGATION_EMPLOYEUR[id]?.condition;
       return obligation
-        ? [{ obligation, condition: OBLIGATION_EMPLOYEUR[id]?.condition ?? null }]
+        ? [{ obligation, condition: condition ? dueSi(condition) : null }]
         : [];
     });
     return titres.length > 0

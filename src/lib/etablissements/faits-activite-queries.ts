@@ -4,8 +4,8 @@ import { SELECT_FAITS_ACTIVITE, type ReponsesFaitsActivite } from "./faits-activ
 
 /**
  * Les faits d'activité d'un établissement (ADR-041), pour un écran qui n'est
- * pas la fiche établissement — la fiche d'un salarié, l'écran « Évaluer les
- * risques » d'Équipe.
+ * pas la fiche établissement — Équipe et son écran « Évaluer les risques ».
+ * ~~La fiche d'un salarié~~ [2026-10-24 : elle ne les lit plus.]
  *
  * `null` : l'établissement n'appartient pas à l'utilisateur. L'appartenance
  * est portée dans le `where`, même quand l'appelant vient de la vérifier
