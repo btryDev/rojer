@@ -107,8 +107,12 @@ export const cloturerActionSchema = z.object({
     .trim()
     .min(5, "Justificatif requis (minimum 5 caractères)")
     .max(2000),
+  // Un champ ABSENT arrive `null` (`FormData.get`) : le formulaire ne pose le
+  // choix du rapport que s'il y en a. `null` passait tel quel et refusait la
+  // levée (« Formulaire invalide ») — relevé par les tests de la pièce, le
+  // 2026-10-24.
   rapportId: z.preprocess(
-    (v) => (typeof v === "string" ? v.trim() || undefined : v),
+    (v) => (typeof v === "string" ? v.trim() || undefined : undefined),
     z.string().optional(),
   ),
 });

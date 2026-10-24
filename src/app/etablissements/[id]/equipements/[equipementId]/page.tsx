@@ -4,6 +4,11 @@ import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { mentionRythmeRetenu } from "@/lib/referentiels/conformite/mention-rythme";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import Link from "next/link";
+import { FormulairePoint } from "@/components/points-a-corriger/FormulairePoint";
+import { ListePoints } from "@/components/points-a-corriger/ListePoints";
+import { controlesPourUnPoint, listerPointsDeLEquipement } from "@/lib/points-a-corriger/queries";
+import { LIBELLE_POINTS, nombreDePoints } from "@/lib/points-a-corriger/libelles";
+import { creerPointACorriger } from "@/lib/actions/plan";
 import { notFound } from "next/navigation";
 import { ArrowUpRight } from "lucide-react";
 import {
@@ -116,15 +121,21 @@ export default async function EquipementDetailPage({
   // Et l'âge des lignes que cette fiche lit sans les réparer — ouverte par
   // lien direct, elle passe avant le tableau de bord et le calendrier, seuls
   // à réparer (`regeneration-sure.ts`, `docs/chantiers-ouverts.md` § 12).
-  const [marques, fraicheur] = await Promise.all([
+  const [marques, fraicheur, points, controles] = await Promise.all([
     marquesAConfirmerDuRendu(id),
     fraicheurCalendrier(id),
+    // Les points à corriger de l'appareil, ceux de ses contrôles et ceux
+    // qu'un contrôle d'ensemble a désignés sur lui (ADR-048) ; et les
+    // contrôles auxquels un point neuf peut se rattacher.
+    listerPointsDeLEquipement(equipementId),
+    controlesPourUnPoint(eq),
   ]);
   const aFaire = lignesAFaire(
     eq,
     base,
     maintenant,
     retenueParPrudence(marques.parObligation),
+    points.filter((p) => p.verification?.equipementId !== eq.id),
   );
   // Plus d'horloge : l'historique ne classe plus, il constate. Depuis que
   // l'archivage prend le pas dans `classerVerification`, cette liste teste le
@@ -225,7 +236,7 @@ export default async function EquipementDetailPage({
       // Sur la rangée basse, l'étiquette porte sa propre date : elle est
       // seule de sa ligne et n'a pas le sur-titre mois des autres.
       libelle: `${formaterJourMoisFr(tete.date)} · ${
-        tete.genre === "action" ? "écart à lever" : "vérification"
+        tete.genre === "action" ? "point à corriger" : "vérification"
       }`,
       etat: tete.etat,
       vedette: true,
@@ -321,7 +332,7 @@ export default async function EquipementDetailPage({
               )}
               {ecarts > 0 && (
                 <PastilleFiche ton={ecartsEnRetard ? "retard" : "proche"}>
-                  {ecarts} écart{ecarts > 1 ? "s" : ""} à lever
+                  {nombreDePoints(ecarts)}
                 </PastilleFiche>
               )}
               {eq.dateMiseEnService && (
@@ -530,6 +541,50 @@ export default async function EquipementDetailPage({
               </ChampsFiche>
             </CarteFiche>
 
+            {/* Les points à corriger (ADR-048) : l'appareil les centralise. */}
+            <CarteFiche
+              titreFort={LIBELLE_POINTS}
+              droite={
+                points.length > 0 ? (
+                  <a
+                    href={`/api/etablissements/${id}/equipements/${equipementId}/points-a-corriger/pdf`}
+                    className={buttonVariants({ variant: "boardClair", size: "boardSm" })}
+                  >
+                    PDF
+                  </a>
+                ) : undefined
+              }
+              corpsClassName="px-7 pb-6 pt-3 sm:px-8"
+            >
+              {points.length === 0 ? (
+                <p className="m-0 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                  Aucun point à corriger enregistré sur cet appareil.
+                </p>
+              ) : (
+                <ListePoints
+                  points={points}
+                  etablissementId={id}
+                  provenance={depuisCetteFiche}
+                  aujourdhui={maintenant}
+                  avecControle
+                />
+              )}
+              {!retire && controles.length > 0 && (
+                <details className="group mt-4">
+                  <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-full px-[18px] py-2.5 text-[12.5px] font-semibold text-[color:var(--board-ink)] ring-1 ring-[color:rgba(10,10,10,.18)] transition-colors hover:bg-[color:var(--board-slate-pale)] [&::-webkit-details-marker]:hidden">
+                    <span className="group-open:hidden">+ Ajouter un point</span>
+                    <span className="hidden group-open:inline">Fermer</span>
+                  </summary>
+                  <div className="mt-4">
+                    <FormulairePoint
+                      action={creerPointACorriger}
+                      rattachement={{ mode: "choix", controles, appareilImpose: eq.id }}
+                    />
+                  </div>
+                </details>
+              )}
+            </CarteFiche>
+
             {/* CE QUI EST DÛ SANS JAMAIS TOMBER À UNE DATE.
 
               La carte ne se pose QUE si le moteur en rend une, et c'est le
@@ -637,7 +692,7 @@ export default async function EquipementDetailPage({
                 <p className="m-0 px-7 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)] sm:px-8">
                   Rien n&apos;est ouvert sur cet appareil. Cela ne veut pas dire
                   qu&apos;il est conforme&nbsp;: cela veut dire qu&apos;aucune
-                  échéance ni aucun écart n&apos;est enregistré à ce jour.
+                  échéance ni aucun point à corriger n&apos;est enregistré à ce jour.
                 </p>
               ) : (
                 <>

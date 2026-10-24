@@ -188,8 +188,21 @@ function formulaire(resultat: string, dateRapport: string): FormData {
  *  remplacé l'objet). */
 const ligne = (id = "v-1") => db.verifications.find((v) => v.id === id)!;
 const rapports = (id = "v-1") => ligne(id).rapports ?? [];
-const deposer = (resultat: string, date: string, id = "v-1") =>
-  uploadRapport(id, { status: "idle" }, formulaire(resultat, date));
+/**
+ * Un dépôt réussi REDIRIGE vers la fiche du contrôle (ADR-048) : l'aide rend
+ * « redirige » et l'adresse visée, ou l'état d'erreur de l'action.
+ */
+const deposer = async (resultat: string, date: string, id = "v-1") => {
+  const { redirect } = await import("next/navigation");
+  try {
+    return await uploadRapport(id, { status: "idle" }, formulaire(resultat, date));
+  } catch (e) {
+    if (e instanceof Error && e.message === "NEXT_REDIRECT") {
+      return { status: "redirige" as const, vers: vi.mocked(redirect).mock.calls.at(-1)?.[0] };
+    }
+    throw e;
+  }
+};
 const retirer = (rapportId: string) =>
   expect(supprimerRapport(rapportId)).rejects.toThrow("NEXT_REDIRECT");
 
@@ -237,7 +250,7 @@ describe("uploadRapport — résultat « non vérifiable »", () => {
   it("ne change aucun fait de date : la ligne reste où elle est, en retard", async () => {
     const res = await deposer("non_verifiable", "2026-06-01");
 
-    expect(res.status).toBe("success");
+    expect(res.status).toBe("redirige");
     expect(ligne().datePrevue).toEqual(ORIGINE);
     expect(ligne().statut).toBe("a_planifier");
     expect(enRetard()).toBe(true);
@@ -300,6 +313,22 @@ describe("uploadRapport — un rapport réalisé : la ligne se recalcule sur lui
     expect(ligne().datePrevue).toEqual(d("2027-06-01"));
   });
 
+  it("un rapport qui relève des points ramène à leur section, sous l'appareil, CE rapport désigné (ADR-048)", async () => {
+    const r = await deposer("observations_mineures", "2026-06-01");
+    expect(r).toEqual({
+      status: "redirige",
+      vers: `/etablissements/etab-1/equipements/eq-1/controles/v-1?apres=${rapports()[0].id}#points`,
+    });
+  });
+
+  it("un rapport conforme ramène aussi à la fiche, qui dit « Rapport enregistré »", async () => {
+    const r = await deposer("conforme", "2026-06-01");
+    expect(r).toEqual({
+      status: "redirige",
+      vers: `/etablissements/etab-1/equipements/eq-1/controles/v-1?apres=${rapports()[0].id}#rapports`,
+    });
+  });
+
   it("un rapport ANTIDATÉ entre au registre sans faire reculer la ligne", async () => {
     poserLigne({
       datePrevue: d("2027-06-01"),
@@ -309,7 +338,7 @@ describe("uploadRapport — un rapport réalisé : la ligne se recalcule sur lui
 
     const res = await deposer("conforme", "2025-05-01");
 
-    expect(res.status).toBe("success");
+    expect(res.status).toBe("redirige");
     expect(rapports()).toHaveLength(2);
     const antidate = rapports().find((r) => r.id !== "rap-2026")!;
     expect(antidate.echeanceHonoree).toBeNull();
@@ -348,7 +377,7 @@ describe("uploadRapport — un rapport réalisé : la ligne se recalcule sur lui
 
     const res = await deposer("conforme", "2026-06-01", "v-portail");
 
-    expect(res.status).toBe("success");
+    expect(res.status).toBe("redirige");
     expect(ligne("v-portail").statut).toBe("realisee_conforme");
     expect(ligne("v-portail").datePrevue).toEqual(d("2021-03-01"));
     await attendreConfluence("v-portail");
@@ -517,7 +546,7 @@ describe("uploadRapport — la frontière médicale, tenue côté serveur", () =
 describe("uploadRapport — la date du rapport", () => {
   it("un contrôle daté d'AUJOURD'HUI est accepté", async () => {
     const res = await deposer("conforme", cleJourCivil(new Date()));
-    expect(res.status).toBe("success");
+    expect(res.status).toBe("redirige");
     expect(rapports()).toHaveLength(1);
   });
 

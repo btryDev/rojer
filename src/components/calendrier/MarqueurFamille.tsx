@@ -113,7 +113,8 @@ export const LABEL_TYPE: Record<TypeEcheance, string> = {
   // l'habilitation et le CACES (ADR-023 § 1).
   "titre-salarie": "Titre salarié",
   "action-duerp": "Action DUERP",
-  "action-verification": "Action vérification",
+  // ADR-048 : les mots de l'objet.
+  "action-verification": "Point à corriger",
   "permis-feu": "Permis de feu",
   "plan-prevention": "Plan de prévention",
   "duerp-maj": "DUERP",

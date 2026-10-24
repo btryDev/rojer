@@ -7,6 +7,7 @@ import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { LABEL_RESULTAT, RESULTATS } from "@/lib/rapports/resultats";
 import type { UploadRapportState } from "@/lib/rapports/actions";
 import {
+  FORMATS_ACCEPTES,
   MIME_AUTORISES,
   TAILLE_MAX_OCTETS,
 } from "@/lib/rapports/validator";
@@ -25,10 +26,11 @@ type Props = {
 };
 
 export function UploadRapportForm({ action, labelAnnuler }: Props) {
-  const [state, formAction, pending] = useActionState<
-    UploadRapportState,
-    FormData
-  >(action, { status: "idle" });
+  // Un dépôt réussi ne revient pas ici : l'action serveur ramène à la fiche
+  // du contrôle, qui dit « Rapport enregistré » (ADR-048).
+  const [state, formAction, pending] = useActionState<UploadRapportState, FormData>(action, {
+    status: "idle",
+  });
 
   const err = (champ: string) =>
     state.status === "error" ? state.fieldErrors?.[champ]?.[0] : undefined;
@@ -41,7 +43,7 @@ export function UploadRapportForm({ action, labelAnnuler }: Props) {
         <label className="label-board" htmlFor="fichier">
           Fichier du rapport *
           <InfoTooltip>
-            Formats acceptés : PDF, PNG, JPEG, DOCX. Taille max {tailleMaxMo} Mo.
+            Formats acceptés : {FORMATS_ACCEPTES}. Taille max {tailleMaxMo} Mo.
           </InfoTooltip>
         </label>
         <input
@@ -135,7 +137,7 @@ export function UploadRapportForm({ action, labelAnnuler }: Props) {
           name="commentaires"
           rows={3}
           className="champ-board"
-          placeholder="Observations, remarques, points à lever…"
+          placeholder="Observations, remarques, points à corriger…"
         />
         {err("commentaires") && (
           <p className="mt-1.5 text-[12.5px] text-[color:var(--board-signal-ink)]">
@@ -147,11 +149,6 @@ export function UploadRapportForm({ action, labelAnnuler }: Props) {
       {state.status === "error" && !state.fieldErrors && (
         <p className="text-[13px] text-[color:var(--board-signal-ink)]">
           {state.message}
-        </p>
-      )}
-      {state.status === "success" && (
-        <p className="text-[13px] text-[color:var(--board-green-ink)]">
-          Rapport enregistré.
         </p>
       )}
 

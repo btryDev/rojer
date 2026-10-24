@@ -1,13 +1,20 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ArrowUpRight, ChevronDown, FileText } from "lucide-react";
 import { BadgeStatut } from "@/components/calendrier/BadgeStatut";
 import { mentionDelaiDeGrace } from "@/lib/calendrier/grace";
 import { BadgeResultat } from "@/components/rapports/BadgeResultat";
 import { SupprimerRapportButton } from "@/components/rapports/SupprimerRapportButton";
 import { UploadRapportForm } from "@/components/rapports/UploadRapportForm";
-import { BadgeStatutAction } from "@/components/actions/BadgeStatutAction";
-import { CreerActionVerifForm } from "@/components/actions/CreerActionVerifForm";
+import { FormulairePoint } from "@/components/points-a-corriger/FormulairePoint";
+import { ListePoints } from "@/components/points-a-corriger/ListePoints";
+import {
+  RAPPORTS_PROPOSES,
+  appareilsDesignables,
+  listerPointsDuControle,
+} from "@/lib/points-a-corriger/queries";
+import { recoitDesPoints, resultatRelevePoints } from "@/lib/points-a-corriger/regles";
+import { INVITATION_APRES_RAPPORT, LIBELLE_POINTS } from "@/lib/points-a-corriger/libelles";
 import { getVerification } from "@/lib/calendrier/queries";
 import { MentionContractuelle } from "@/components/prescriptions/MentionContractuelle";
 import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeRetenu";
@@ -22,7 +29,6 @@ import { referencesCitees } from "@/lib/referentiels/conformite/rythme-retenu";
 import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
 import { BlocAConfirmer } from "@/components/calendrier/BlocAConfirmer";
 import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
-import { listerActionsDeLaVerification } from "@/lib/actions/queries";
 import {
   MARQUAGE_CONTRACTUEL,
   MARQUAGE_CONTRACTUEL_LONG,
@@ -35,7 +41,6 @@ import {
   joursCivilsEntre,
 } from "@/lib/dates";
 import {
-  estActionEnRetard,
   estVerificationRealisee,
 } from "@/lib/dates/retard";
 import {
@@ -70,7 +75,8 @@ import {
   LIBELLE_SOURCE,
 } from "@/lib/referentiels/conformite/types";
 import { uploadRapport } from "@/lib/rapports/actions";
-import { creerActionDepuisVerification } from "@/lib/actions/plan";
+import { avecParametres, cheminControle } from "@/lib/navigation/chemins";
+import { creerPointACorriger } from "@/lib/actions/plan";
 import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
 import { DemanderSignatureForm } from "@/components/signatures/DemanderSignatureForm";
 import {
@@ -84,7 +90,7 @@ import {
   TitreSection,
   type FaitFiche,
 } from "@/components/ui-kit";
-import { avecProvenance, lireProvenance } from "@/lib/navigation/provenance";
+import { lireProvenance } from "@/lib/navigation/provenance";
 import { listSignatures } from "@/lib/signatures/queries";
 import {
   fraicheurCalendrier,
@@ -113,13 +119,25 @@ export default async function VerificationDetailPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ id: string; verificationId: string }>;
-  searchParams: Promise<{ de?: string }>;
+  // `equipementId` : la même fiche, servie sous celle de son appareil
+  // (`equipements/[equipementId]/controles/[verificationId]`).
+  params: Promise<{ id: string; verificationId: string; equipementId?: string }>;
+  // `deposer=1` : la ligne « à faire » d'une fiche d'appareil ouvre la page
+  // sur le formulaire de dépôt, le geste le plus fréquent.
+  searchParams: Promise<{ de?: string; apres?: string; deposer?: string }>;
 }) {
-  const { id, verificationId } = await params;
-  const { de } = await searchParams;
+  const { id, verificationId, equipementId } = await params;
+  const { de, apres, deposer } = await searchParams;
   const v = await getVerification(verificationId);
   if (!v || v.etablissementId !== id) notFound();
+
+  // Une seule adresse par contrôle : celle de l'appareil qui le porte, sinon
+  // le calendrier (`chemins.ts`). L'autre redirige, paramètres gardés.
+  const depuisCetteFiche = cheminControle(id, v);
+  const ici = equipementId
+    ? `/etablissements/${id}/equipements/${equipementId}/controles/${verificationId}`
+    : `/etablissements/${id}/verifications/${verificationId}`;
+  if (ici !== depuisCetteFiche) redirect(avecParametres(depuisCetteFiche, { de, apres, deposer }));
 
   // Une vérification s'ouvre depuis le calendrier, mais aussi depuis le
   // registre de sécurité, une action corrective ou le tableau de bord.
@@ -130,7 +148,11 @@ export default async function VerificationDetailPage({
     href: `/etablissements/${id}/calendrier`,
     label: LABEL_ITEM.calendrier,
   };
-  const depuisCetteFiche = `/etablissements/${id}/verifications/${verificationId}`;
+  // Le contrôle d'un appareil vit sur sa fiche ; un contrôle d'ensemble, au
+  // calendrier (ADR-048).
+  const canonique = v.equipement
+    ? { href: `/etablissements/${id}/equipements/${v.equipement.id}`, label: v.equipement.libelle }
+    : calendrier;
 
   const obligation = obligationParId(v.obligationId);
   // La ligne est-elle retenue par prudence ? Même calcul que le calendrier
@@ -155,8 +177,31 @@ export default async function VerificationDetailPage({
     obligation && !estPorteeParEquipement(obligation)
       ? (obligation.equipementsEnContexte ?? [])
       : [];
-  const actionsLiees = await listerActionsDeLaVerification(v.id);
-  const boundCreerAction = creerActionDepuisVerification.bind(null, v.id);
+  // Les points à corriger de ce contrôle (ADR-048) ; pour un contrôle
+  // d'ensemble, les appareils qu'un point peut désigner.
+  const recoit = recoitDesPoints({ ...v, appareilActif: v.equipement?.actif ?? null });
+  // `v` est déjà lu dans le périmètre du compte ; les appareils ne servent
+  // qu'au formulaire, absent quand le contrôle ne reçoit pas de points.
+  const [points, appareils] = await Promise.all([
+    listerPointsDuControle(v.id),
+    recoit ? appareilsDesignables(v) : Promise.resolve([]),
+  ]);
+  const rapportsProposes = v.rapports
+    .slice(0, RAPPORTS_PROPOSES)
+    .map(({ id: rid, dateRapport, resultat }) => ({ id: rid, dateRapport, resultat }));
+  // Juste après le dépôt d'un rapport qui relève quelque chose,
+  // `uploadRapport` ramène ici (`?apres=`) : l'invitation à noter ses points,
+  // rattachés à CE rapport. L'identifiant vient de l'URL : il ne vaut que
+  // s'il désigne un rapport de ce contrôle.
+  // Lu sur TOUS les rapports : un rapport antidaté déposé à l'instant n'est
+  // pas parmi les plus récents.
+  const trouve = v.rapports.find((r) => r.id === apres);
+  // Ce que le formulaire (client) reçoit : jamais la ligne entière du rapport.
+  const rapportDepose = trouve
+    ? { id: trouve.id, dateRapport: trouve.dateRapport, resultat: trouve.resultat }
+    : undefined;
+  const rapportApres =
+    recoit && rapportDepose && resultatRelevePoints(rapportDepose.resultat) ? rapportDepose : undefined;
   const boundUpload = uploadRapport.bind(null, v.id);
 
   // Signatures posées sur chaque rapport de cette vérification.
@@ -385,7 +430,7 @@ export default async function VerificationDetailPage({
   }
 
   return (
-    <EcranFiche provenance={provenance} canonique={calendrier}>
+    <EcranFiche provenance={provenance} canonique={canonique}>
       <HeroFiche
         // Pas de tuile-date sans date arrêtée : la tuile est un rendez-vous
         // posé, et poser la date de génération y donnait à lire un jour où
@@ -595,13 +640,24 @@ export default async function VerificationDetailPage({
       {/* ── Le dossier : les rapports déposés ─────────────────────── */}
       {aUnRapport ? (
         <>
+          <div id="rapports" className="scroll-mt-6" />
+          {/* Le dépôt ramène ici (`uploadRapport`) ; s'il relève des points,
+              c'est la section des points qui le confirme. */}
+          {rapportDepose && !rapportApres ? (
+            <p
+              role="status"
+              className="m-0 rounded-[18px] bg-[color:var(--board-green)] px-6 py-4 text-[13.5px] font-semibold text-[color:var(--board-green-ink)]"
+            >
+              Rapport enregistré.
+            </p>
+          ) : null}
           <TitreSection
             surtitre="Dossier"
             titre="Rapports déposés"
             compte={v.rapports.length}
             droite={
               depotOuvert ? (
-              <details className="group">
+              <details id="depot" className="group scroll-mt-6" open={deposer === "1"}>
                 <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-full px-[18px] py-2.5 text-[12.5px] font-semibold text-[color:var(--board-ink)] ring-1 ring-[color:rgba(10,10,10,.18)] transition-colors hover:bg-[color:var(--board-slate-pale)]">
                   <span className="group-open:hidden">+ Nouveau rapport</span>
                   <span className="hidden group-open:inline">Annuler</span>
@@ -756,6 +812,7 @@ export default async function VerificationDetailPage({
         <CorpsFiche
           principal={
             <CarteFiche
+              id="depot"
               titre={
                 pieceMedicale ? "Ce que l'outil suit" : "Déposer le rapport"
               }
@@ -834,88 +891,61 @@ export default async function VerificationDetailPage({
         />
       )}
 
-      {/* ── Les écarts à lever ────────────────────────────────────── */}
+      {/* ── Les points à corriger (ADR-048) ──────────────────────── */}
+      <div id="points" className="scroll-mt-6" />
       <TitreSection
-        surtitre="Levées d'écart"
-        titre="Actions correctives"
-        compte={actionsLiees.length}
-        droite={
-          actionsLiees.length > 0 ? (
-            <details className="group">
-              <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-full px-[18px] py-2.5 text-[12.5px] font-semibold text-[color:var(--board-ink)] ring-1 ring-[color:rgba(10,10,10,.18)] transition-colors hover:bg-[color:var(--board-slate-pale)]">
-                <span className="group-open:hidden">+ Créer une action</span>
-                <span className="hidden group-open:inline">Annuler</span>
-              </summary>
-              <div className="carte-board mt-4 px-7 py-6 md:min-w-[520px]">
-                <CreerActionVerifForm action={boundCreerAction} />
-              </div>
-            </details>
-          ) : undefined
-        }
+        surtitre={LIBELLE_POINTS}
+        titre={v.equipement ? "Relevés par ce contrôle" : "Relevés par ce contrôle d'ensemble"}
+        compte={points.length}
       />
-
-      {actionsLiees.length > 0 ? (
-        <ul className="m-0 grid list-none grid-cols-1 gap-4 p-0 md:grid-cols-2">
-          {actionsLiees.map((a) => {
-            // Même prédicat que le plan d'actions : une action dont
-            // l'échéance tombe aujourd'hui n'est pas en retard, et une
-            // action abandonnée ne l'est jamais non plus.
-            const enRetardAction = estActionEnRetard(a, aujourdhui);
-            return (
-              <li key={a.id}>
-                <Link
-                  href={avecProvenance(
-                    `/etablissements/${id}/actions/${a.id}`,
-                    depuisCetteFiche,
-                  )}
-                  className="carte-board block h-full px-6 py-5 transition-colors hover:bg-[color:var(--board-slate-pale)]"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="m-0 text-[14.5px] font-semibold leading-[1.35]">
-                      {a.libelle}
-                    </p>
-                    <BadgeStatutAction statut={a.statut} />
-                  </div>
-                  <p
-                    className="m-0 mt-3 text-[12.5px]"
-                    style={{
-                      color: enRetardAction
-                        ? "var(--board-signal-ink)"
-                        : "var(--board-slate-mid)",
-                    }}
-                  >
-                    {a.echeance
-                      ? `Échéance ${formatDateCourte(a.echeance)}`
-                      : "Pas d'échéance"}
-                    {a.responsable ? ` · ${a.responsable}` : ""}
-                  </p>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      ) : (
-        <details className="group">
+      {points.length > 0 && (
+        <ListePoints
+          points={points}
+          etablissementId={id}
+          provenance={depuisCetteFiche}
+          aujourdhui={aujourdhui}
+          avecAppareil={!v.equipement}
+        />
+      )}
+      {recoit ? (
+        <details className="group" open={rapportApres !== undefined}>
           <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-[22px] bg-[color:var(--board-slate-pale)] px-6 py-5">
-            <div>
-              <p className="m-0 text-[14.5px] font-semibold">
-                Aucun écart à lever pour l&apos;instant.
-              </p>
-              <p className="m-0 mt-1 text-[13px] text-[color:var(--board-slate-mid)]">
-                Créez une action corrective si le rapport mentionne une
-                observation à traiter.
-              </p>
-            </div>
+            <p className="m-0 text-[13.5px] text-[color:var(--board-slate-mid)]">
+              {rapportApres
+                ? "Les points relevés par ce rapport"
+                : points.length === 0
+                  ? "Aucun point à corriger. Le rapport en relève ? Notez-les ici."
+                  : "Un autre point relevé par ce contrôle ?"}
+            </p>
             <span className="inline-flex flex-none items-center gap-2 rounded-full bg-[color:var(--board-ink)] px-[18px] py-2.5 text-[12.5px] font-semibold text-white">
-              <span className="group-open:hidden">+ Créer</span>
-              <span className="hidden group-open:inline">Annuler</span>
+              <span className="group-open:hidden">+ Ajouter</span>
+              <span className="hidden group-open:inline">Fermer</span>
             </span>
           </summary>
-          <div className="carte-board mt-4 px-7 py-6">
-            <CreerActionVerifForm action={boundCreerAction} />
+          <div className="carte-board mt-4 space-y-4 px-7 py-6">
+            {rapportApres && (
+              <>
+                <p role="status" className="m-0 text-[13px] text-[color:var(--board-green-ink)]">
+                  Rapport enregistré.
+                </p>
+                <p className="m-0 max-w-[62ch] text-[13.5px] leading-[1.55] text-[color:var(--board-ink)]">
+                  {INVITATION_APRES_RAPPORT}
+                </p>
+              </>
+            )}
+            <FormulairePoint
+              action={creerPointACorriger}
+              rattachement={{
+                mode: "fixe",
+                verificationId: v.id,
+                rapports: rapportsProposes,
+                rapportImpose: rapportApres,
+              }}
+              appareils={appareils}
+            />
           </div>
         </details>
-      )}
+      ) : null}
     </EcranFiche>
   );
 }

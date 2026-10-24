@@ -577,6 +577,8 @@ model Equipement {
   materielNonCouvert String?
 
   verifications              Verification[]
+  /** Points à corriger qu'un contrôle d'ensemble a désignés sur cet appareil (ADR-048). */
+  pointsACorriger            Action[]
   prescriptionsParticulieres PrescriptionParticuliere[]
 
   createdAt DateTime @default(now())
@@ -960,6 +962,9 @@ model RapportVerification {
 
   createdAt DateTime @default(now())
 
+  /** Les points à corriger que ce rapport a relevés (ADR-048). */
+  pointsACorriger Action[] @relation("PointsDuRapport")
+
   @@index([etablissementId, dateRapport])
   @@index([verificationId])
 }
@@ -1027,6 +1032,29 @@ model Action {
   leveeLe          DateTime?
   leveeCommentaire String?
   leveeRapportId   String?
+  // La pièce qui prouve la correction d'un point à corriger — photo, facture
+  // (ADR-048). Facultative ; mêmes règles que le fichier d'un rapport
+  // (`rapports/validator.ts`), clé sous `points/<établissement>/…`.
+  leveeFichierCle    String?
+  leveeFichierNom    String?
+  leveeFichierMime   String?
+  leveeFichierTaille Int?
+
+  // POINT À CORRIGER (ADR-048) — une action issue d'une vérification.
+  // `rapportOrigineId` : le rapport qui a relevé le point (l'occurrence du
+  // contrôle, ADR-034) ; nul pour les points antérieurs, qu'on ne sait pas
+  // réattribuer. `SetNull` : supprimer un rapport ne supprime pas la trace
+  // de ce qu'il a fait corriger.
+  rapportOrigineId String?
+  rapportOrigine   RapportVerification? @relation("PointsDuRapport", fields: [rapportOrigineId], references: [id], onDelete: SetNull)
+  // L'appareil concerné, SEULEMENT pour un point relevé par un contrôle
+  // d'ensemble (porteur établissement) : pour le contrôle d'un appareil,
+  // l'appareil se lit par la vérification. Garde APPLICATIVE seulement
+  // (`creerPointACorriger`, règles de `lib/points-a-corriger/regles.ts`) ; la
+  // base n'exige que `verificationId` (CHECK `Action_point_equipement`). Pas
+  // de `batimentId` : la zone se lit par l'appareil (ADR-019).
+  equipementId String?
+  equipement   Equipement? @relation(fields: [equipementId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1034,6 +1062,8 @@ model Action {
   @@unique([risqueId, referentielMesureId])
   @@index([etablissementId, statut])
   @@index([verificationId])
+  @@index([rapportOrigineId])
+  @@index([equipementId])
 }
 
 // Valeurs snake_case pour préserver la compatibilité avec les snapshots JSON

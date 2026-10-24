@@ -105,6 +105,8 @@ export const SOURCES_FICHIERS_DEPOSES = [
   "/api/analyses-legionelles/:id/rapport",
   "/api/prestataires/:id/pieces/:piece",
   "/api/prestataires/:id/pieces-precedentes/:pieceId",
+  // La pièce qui prouve la correction d'un point (ADR-048).
+  "/api/points/:id/piece",
 ] as const;
 
 /** La CSP d'un fichier déposé : n'exécute rien dans notre origine, ne s'encadre pas. */
