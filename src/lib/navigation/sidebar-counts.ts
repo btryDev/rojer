@@ -35,7 +35,8 @@ export async function chargerSidebarCounts(
   const [retards, actions, vigilance, equipements, titresEnRetard, fraicheur] =
     await Promise.all([
       compterEnRetardParFamille(etablissementId, now),
-      compterActions(etablissementId, now),
+      // Le plan d'actions, ce sont les mesures du DUERP (ADR-048, lot 3).
+      compterActions(etablissementId, now, { origine: "duerp" }),
       compterVigilanceParGravite(etablissementId),
       // `actif: true`, comme `listerEquipementsDeLEtablissement` : c'est le
       // parc en service que l'écran Équipements montre. Sans ce filtre, un

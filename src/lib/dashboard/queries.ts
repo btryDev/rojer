@@ -14,6 +14,7 @@ import "server-only";
 // recommandations (même réflexe que `statsActionsEnRetard`, qui refuse de
 // moyenner un retard sur une liste coupée).
 
+import { appareilDeLAction, cheminAction } from "@/lib/navigation/chemins";
 import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
 import { registrePrudent, retenueParPrudence } from "@/lib/calendrier/prudence";
 import { couvertureDuDossier } from "@/lib/perimetre/faits";
@@ -743,6 +744,7 @@ export const getDashboardData = cache(async function getDashboardData(
     verifications,
     actionsOuvertes,
     compteursActions,
+    compteursMesures,
     actionsTotal,
     duerp,
     nbEquipements,
@@ -820,6 +822,12 @@ export const getDashboardData = cache(async function getDashboardData(
       },
       select: {
         id: true,
+        // La fiche d'un point vit sous son appareil (ADR-048) ; le plan
+        // d'actions ne compte que les mesures du DUERP (lot 3).
+        risqueId: true,
+        verificationId: true,
+        equipementId: true,
+        verification: { select: { equipementId: true } },
         statut: true,
         echeance: true,
         libelle: true,
@@ -827,7 +835,10 @@ export const getDashboardData = cache(async function getDashboardData(
       orderBy: { echeance: "asc" },
     }),
     compterActions(etablissementId),
-    prisma.action.count({ where: scope }),
+    // Le plan d'actions, ce sont les mesures du DUERP (ADR-048, lot 3) : ses
+    // compteurs à l'écran ; le score, lui, garde toutes les actions.
+    compterActions(etablissementId, now, { origine: "duerp" }),
+    prisma.action.count({ where: { ...scope, risqueId: { not: null } } }),
     prisma.duerp.findFirst({
       where: {
         etablissementId,
@@ -944,6 +955,8 @@ export const getDashboardData = cache(async function getDashboardData(
         statut: a.statut,
         echeance: a.echeance,
         libelle: a.libelle,
+        point: a.verificationId !== null,
+        href: cheminAction(etablissementId, { id: a.id, appareilId: appareilDeLAction(a) }),
       })),
       duerp: etatDuerp,
       duerpId: duerp?.id,
@@ -963,10 +976,12 @@ export const getDashboardData = cache(async function getDashboardData(
       verifsSous30j: etatVerifs.aVenir.length,
       verifsRealisees12m: etatVerifs.realisees12m.length,
       rapports12m,
-      actionsOuvertes: compteursActions.ouvertes,
-      actionsEnCours: compteursActions.enCours,
-      actionsEnRetard,
-      actionsLeveesRecemment: compteursActions.leveesRecemment,
+      actionsOuvertes: compteursMesures.ouvertes,
+      actionsEnCours: compteursMesures.enCours,
+      // Recalculé sur la liste, comme le reste (même prédicat que la file de
+      // propositions) — mesures du DUERP seules.
+      actionsEnRetard: actionsOuvertes.filter((a) => a.risqueId !== null && estActionEnRetard(a, now)).length,
+      actionsLeveesRecemment: compteursMesures.leveesRecemment,
       actionsTotal,
     },
     titresDusEnRetard: titresDusEnRetard(transmissions),

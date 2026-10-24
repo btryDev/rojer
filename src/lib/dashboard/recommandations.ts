@@ -207,6 +207,13 @@ export type EntreeRecos = {
     statut: "ouverte" | "en_cours" | "levee" | "abandonnee" | string;
     echeance: Date | null;
     libelle: string;
+    /**
+     * Où vit sa fiche (`cheminAction`), et si c'est un point à corriger
+     * (ADR-048) — une mesure du DUERP sinon. Facultatifs : absent, l'action
+     * se lit comme une mesure, au plan d'actions.
+     */
+    href?: string;
+    point?: boolean;
   }>;
   /** État d'ancienneté du DUERP (cf. `./duerp`). Absent = pas de DUERP. */
   duerp?: EtatDuerp;
@@ -313,8 +320,8 @@ export function genererRecommandations(
       kind: "action_en_retard",
       cle: `action-en-retard:${a.id}`,
       titre: a.libelle,
-      sousTitre: "Action corrective en retard",
-      href: `/etablissements/${etab}/actions/${a.id}`,
+      sousTitre: a.point ? "Point à corriger en retard" : "Mesure du plan d'actions en retard",
+      href: a.href ?? `/etablissements/${etab}/actions/${a.id}`,
       priorite: 2,
       date: a.echeance ?? undefined,
     });
@@ -344,8 +351,10 @@ export function genererRecommandations(
       kind: "action_proche",
       cle: `action-proche:${a.id}`,
       titre: a.libelle,
-      sousTitre: `Action à réaliser sous ${JOURS_ACTION_PROCHE} jours`,
-      href: `/etablissements/${etab}/actions/${a.id}`,
+      sousTitre: a.point
+        ? `Point à corriger sous ${JOURS_ACTION_PROCHE} jours`
+        : `Mesure à réaliser sous ${JOURS_ACTION_PROCHE} jours`,
+      href: a.href ?? `/etablissements/${etab}/actions/${a.id}`,
       priorite: 4,
       date: a.echeance,
     });
