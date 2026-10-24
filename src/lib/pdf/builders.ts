@@ -6,7 +6,7 @@ import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/menti
 import { prisma } from "@/lib/prisma";
 import type { AuthedUser } from "@/lib/auth/require-user";
 import { compterActions, listerActions, origineDeLAction, type ActionListee } from "@/lib/actions/queries";
-import { LIBELLE_POINT } from "@/lib/points-a-corriger/libelles";
+import { LIBELLE_POINT, versPointDuRapport } from "@/lib/points-a-corriger/libelles";
 import { listerVerifications, type VerificationListee } from "@/lib/calendrier/queries";
 import { libellePorteurSansNom } from "@/lib/calendrier/labels";
 import { listerRapportsDeLEtablissement } from "@/lib/rapports/queries";
@@ -308,16 +308,8 @@ function versLigneRapport(
     domaine: obligationParId(r.verification.obligationId)?.domaine ?? null,
     fichierNomOriginal: r.fichierNomOriginal,
     commentaires: r.commentaires,
-    // Un point abandonné n'est pas une correction : il ne s'imprime pas.
-    points: r.pointsACorriger
-      .filter((p) => p.statut !== "abandonnee")
-      .map((p) => ({
-        id: p.id,
-        libelle: p.libelle,
-        corrigeLe: p.statut === "levee" ? p.leveeLe : null,
-        justification: p.statut === "levee" ? p.leveeCommentaire : null,
-        pieceJointe: p.statut === "levee" && p.leveeFichierNom !== null,
-      })),
+    // La même ligne que l'écran ; un point abandonné ne s'imprime pas.
+    points: r.pointsACorriger.flatMap((p) => versPointDuRapport(p) ?? []),
   };
 }
 
@@ -595,7 +587,6 @@ export async function construireDossierConformiteData(
   // la liste d'un filtre TypeScript portant sur d'autres statuts — le PDF
   // annonçait « 5 vérifications en retard » puis en détaillait 3.
   const [
-    compteursActions,
     compteursMesures,
     compteursPoints,
     pointsOuverts,
@@ -611,9 +602,9 @@ export async function construireDossierConformiteData(
     fraicheur,
     marques,
   ] = await Promise.all([
-      // TOUTES les actions pour le score, qui ne change pas (ADR-048,
-      // décision 7) ; mesures et points comptés à part pour l'affichage.
-      compterActions(etablissementId),
+      // Mesures et points comptés à part pour l'affichage ; le score garde
+      // TOUTES les actions (ADR-048, décision 7) — leur somme, l'origine
+      // étant exclusive (`Action_origine_xor`).
       compterActions(etablissementId, new Date(), { origine: "duerp" }),
       compterActions(etablissementId, new Date(), { origine: "verification" }),
       listerActions(etablissementId, { origine: "verification", enCoursSeulement: true }),
@@ -692,8 +683,8 @@ export async function construireDossierConformiteData(
       enRetard: etatVerifs.enRetard.length,
     },
     actions: {
-      ouvertesTotal: compteursActions.totalACouvrir,
-      enRetard: compteursActions.enRetard,
+      ouvertesTotal: compteursMesures.totalACouvrir + compteursPoints.totalACouvrir,
+      enRetard: compteursMesures.enRetard + compteursPoints.enRetard,
     },
     duerp: etatDuerp.ouvert ? etatDuerp : null,
     etatsPermanents: {

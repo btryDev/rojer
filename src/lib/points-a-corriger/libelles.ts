@@ -36,3 +36,51 @@ export const AIDE_JUSTIFICATIF =
   "Décrivez la correction : ce qui a été fait, par qui, quand. Le texte est repris au registre.";
 export const LIBELLE_PIECE = "Pièce justificative (facultatif)";
 export const AIDE_PIECE = `Photo, facture ou attestation (${FORMATS_ACCEPTES}, ${TAILLE_MAX_OCTETS / 1024 / 1024} Mo au plus). Elle ne remplace pas le rapport du prochain contrôle.`;
+
+/** Un point relevé par un rapport, tel que le registre le consigne. */
+export type PointDuRapport = {
+  id: string;
+  libelle: string;
+  /** « À corriger », « En cours », ou la correction faite. */
+  etat: "a_corriger" | "en_cours" | "corrige";
+  corrigeLe: Date | null;
+  /** Ce qui a été fait — la justification des travaux. */
+  justification: string | null;
+  pieceJointe: boolean;
+};
+
+/**
+ * D'un point lu en base à sa ligne de registre — écran et PDF lisent la même
+ * (revue du 2026-10-24). Un point abandonné n'est pas une correction : `null`.
+ */
+export function versPointDuRapport(p: {
+  id: string;
+  libelle: string;
+  statut: "ouverte" | "en_cours" | "levee" | "abandonnee";
+  leveeLe: Date | null;
+  leveeCommentaire: string | null;
+  leveeFichierNom: string | null;
+}): PointDuRapport | null {
+  if (p.statut === "abandonnee") return null;
+  const corrige = p.statut === "levee";
+  return {
+    id: p.id,
+    libelle: p.libelle,
+    etat: corrige ? "corrige" : p.statut === "en_cours" ? "en_cours" : "a_corriger",
+    corrigeLe: corrige ? p.leveeLe : null,
+    justification: corrige ? p.leveeCommentaire : null,
+    pieceJointe: corrige && p.leveeFichierNom !== null,
+  };
+}
+
+/** « corrigé le 20 oct. 2026 : ce qui a été fait (pièce jointe) », « en cours », « à corriger ». */
+export function texteDuPoint(p: PointDuRapport, formaterDate: (d: Date) => string): string {
+  if (p.etat === "corrige") {
+    const quand = p.corrigeLe ? ` le ${formaterDate(p.corrigeLe)}` : "";
+    return `${LIBELLE_CORRIGE.toLowerCase()}${quand}${p.justification ? ` : ${p.justification}` : ""}${p.pieceJointe ? " (pièce jointe)" : ""}`;
+  }
+  return p.etat === "en_cours" ? LABEL_STATUT_POINT.en_cours.toLowerCase() : LABEL_STATUT_POINT.ouverte.toLowerCase();
+}
+
+/** La mention que R. 4226-19 appelle sous un rapport électrique (vérifié sur Légifrance le 2026-10-24). */
+export const MENTION_R4226_19 = "Consigné au registre (art. R. 4226-19 du Code du travail).";

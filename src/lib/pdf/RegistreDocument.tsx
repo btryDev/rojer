@@ -1,5 +1,10 @@
 import { MENTION_POUR_INFORMATION } from "@/lib/referentiels/conformite/initiative";
-import { LIBELLE_CORRIGE, LIBELLE_POINT } from "@/lib/points-a-corriger/libelles";
+import {
+  LIBELLE_POINT,
+  MENTION_R4226_19,
+  texteDuPoint,
+  type PointDuRapport,
+} from "@/lib/points-a-corriger/libelles";
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import type { ManqueCouverture } from "@/lib/perimetre/couverture";
 import { phraseFraicheur, type FraicheurCalendrier } from "@/lib/calendrier/fraicheur";
@@ -35,17 +40,6 @@ export type LigneRapport = {
   commentaires: string | null;
   /** Les points relevés par ce rapport et leur correction (ADR-048). */
   points: PointDuRapport[];
-};
-
-/** Un point relevé par un rapport, tel que le registre le consigne. */
-export type PointDuRapport = {
-  id: string;
-  libelle: string;
-  /** La date de correction, `null` tant qu'il reste à corriger. */
-  corrigeLe: Date | null;
-  /** Ce qui a été fait — la justification des travaux. */
-  justification: string | null;
-  pieceJointe: boolean;
 };
 
 export type LigneVerif = {
@@ -706,7 +700,10 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
             </View>
             {data.rapports.map((r) => (
               // `flexWrap` : les points du rapport passent sous sa ligne.
-              <View key={r.id} style={[s.row, { flexWrap: "wrap" }]} wrap={false}>
+              // Sans point, une ligne insécable ; avec ses points, elle peut
+              // passer la page — un rapport à trente corrections ne tiendrait
+              // pas sur une seule (revue du 2026-10-24).
+              <View key={r.id} style={[s.row, { flexWrap: "wrap" }]} wrap={r.points.length > 0}>
                 <Text style={[s.td, { width: "14%" }]}>
                   {formatDateCourte(r.dateRapport)}
                 </Text>
@@ -736,17 +733,11 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
                   <View style={{ width: "100%", paddingLeft: "14%", marginTop: 3 }}>
                     {r.points.map((p) => (
                       <Text key={p.id} style={[s.small, { marginTop: 1 }]}>
-                        {`${LIBELLE_POINT} : ${p.libelle} — ${
-                          p.corrigeLe
-                            ? `${LIBELLE_CORRIGE.toLowerCase()} le ${formatDateCourte(p.corrigeLe)}${p.justification ? ` : ${p.justification}` : ""}${p.pieceJointe ? " (pièce au dossier)" : ""}`
-                            : "à corriger"
-                        }`}
+                        {`${LIBELLE_POINT} : ${p.libelle} — ${texteDuPoint(p, formatDateCourte)}`}
                       </Text>
                     ))}
                     {r.domaine === "electricite" && (
-                      <Text style={[s.small, { marginTop: 1 }]}>
-                        Consigné au registre (art. R. 4226-19 du Code du travail).
-                      </Text>
+                      <Text style={[s.small, { marginTop: 1 }]}>{MENTION_R4226_19}</Text>
                     )}
                   </View>
                 )}

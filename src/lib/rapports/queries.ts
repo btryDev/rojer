@@ -11,6 +11,16 @@ export type FiltresRegistre = {
   recherche?: string; // sur libelleObligation + organismeVerif + equipement.libelle
 };
 
+/** Ce que le registre lit d'un point à corriger (ADR-048, lot 3). */
+const SELECTION_POINT_DU_RAPPORT = {
+  id: true,
+  libelle: true,
+  statut: true,
+  leveeLe: true,
+  leveeCommentaire: true,
+  leveeFichierNom: true,
+} as const;
+
 export async function listerRapportsDeLEtablissement(
   etablissementId: string,
   filtres: FiltresRegistre = {},
@@ -32,22 +42,36 @@ export async function listerRapportsDeLEtablissement(
       },
       // Les points que ce rapport a relevés, et leur correction (ADR-048,
       // lot 3) : le registre les reprend sous le rapport.
-      pointsACorriger: {
-        select: {
-          id: true,
-          libelle: true,
-          statut: true,
-          leveeLe: true,
-          leveeCommentaire: true,
-          leveeFichierNom: true,
-        },
-        orderBy: { createdAt: "asc" },
-      },
+      pointsACorriger: { select: SELECTION_POINT_DU_RAPPORT, orderBy: { createdAt: "asc" } },
     },
     orderBy: ORDRE_RAPPORT_PLUS_RECENT,
   });
 
-  let out = rapports;
+  // Les points SANS rapport d'origine (antérieurs à l'ADR-048, ou dont le
+  // rapport a été retiré) se disent sous le rapport le plus récent de leur
+  // contrôle — la règle de la fiche d'un appareil (`fiche.ts`) : sans elle,
+  // ils manqueraient au registre (revue du 2026-10-24).
+  const sansOrigine = rapports.length
+    ? await prisma.action.findMany({
+        where: {
+          etablissementId,
+          etablissement: { entreprise: { userId: user.id } },
+          rapportOrigineId: null,
+          verificationId: { in: [...new Set(rapports.map((r) => r.verificationId))] },
+        },
+        select: { ...SELECTION_POINT_DU_RAPPORT, verificationId: true },
+        orderBy: { createdAt: "asc" },
+      })
+    : [];
+  const dejaPose = new Set<string>();
+  let out = rapports.map((r) => {
+    // Les rapports arrivent du plus récent au plus ancien : le premier de
+    // chaque contrôle reçoit ses points sans origine.
+    if (dejaPose.has(r.verificationId)) return r;
+    dejaPose.add(r.verificationId);
+    const siens = sansOrigine.filter((p) => p.verificationId === r.verificationId);
+    return siens.length ? { ...r, pointsACorriger: [...r.pointsACorriger, ...siens] } : r;
+  });
 
   if (filtres.domaine) {
     out = out.filter(

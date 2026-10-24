@@ -1053,7 +1053,7 @@ export default async function CalendrierPage({
               href={`/etablissements/${id}/actions`}
               className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
             >
-              Toutes les actions, datées ou non, sont dans le plan d&apos;actions.
+              Les mesures du DUERP, datées ou non, sont dans le plan d&apos;actions ; les points à corriger, sur la fiche de leur équipement ou de leur contrôle.
             </Link>
           </>
         ) : filtreFamille

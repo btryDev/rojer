@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { compterActions } from "@/lib/actions/queries";
 import { AppTopbar } from "@/components/layout/AppTopbar";
 import { LegalBadge, WhyCard, StatusPill } from "@/components/ui-kit";
 import { requireEtablissement } from "@/lib/auth/scope";
@@ -80,6 +81,7 @@ export default async function ControlePage({
     fraicheur,
     couverture,
     registre,
+    points,
   ] = await Promise.all([
     getDashboardData(id),
     compterVigilanceParGravite(id),
@@ -96,6 +98,9 @@ export default async function ControlePage({
     // Les fiches du registre, comptées comme l'écran du registre les compte
     // (`completudesDuRegistre`, audit du 2026-10-12, B3).
     composerRegistreDeLEtablissement(id),
+    // Les points à corriger, que le plan d'actions ne compte plus (ADR-048,
+    // lot 3) : un écart électrique en retard doit se voir ici.
+    compterActions(id, maintenant, { origine: "verification" }),
   ]);
 
   // LE PATRON `etat-charge.ts`, APPLIQUÉ À UN ÉCRAN : la question « sait-on ? »
@@ -203,11 +208,11 @@ export default async function ControlePage({
         dashboard.compteurs.actionsOuvertes +
           dashboard.compteurs.actionsEnCours >
         0
-          ? `${dashboard.compteurs.actionsOuvertes + dashboard.compteurs.actionsEnCours} mesure${dashboard.compteurs.actionsOuvertes + dashboard.compteurs.actionsEnCours > 1 ? "s" : ""} du DUERP en cours. Les points à corriger relevés par les contrôles sont au dossier de conformité.`
-          : "Aucune mesure du DUERP en cours. Les points à corriger relevés par les contrôles sont au dossier de conformité.",
+          ? `${dashboard.compteurs.actionsOuvertes + dashboard.compteurs.actionsEnCours} mesure${dashboard.compteurs.actionsOuvertes + dashboard.compteurs.actionsEnCours > 1 ? "s" : ""} du DUERP en cours. ${phrasePoints(points)}`
+          : `Aucune mesure du DUERP en cours. ${phrasePoints(points)}`,
       present: true,
       etat: selonCalendrier(
-        dashboard.compteurs.actionsEnRetard > 0 ? "en_retard" : "a_jour",
+        dashboard.compteurs.actionsEnRetard > 0 || points.enRetard > 0 ? "en_retard" : "a_jour",
       ),
       reference: "Art. L. 4121-2 CT",
     },
@@ -538,4 +543,11 @@ export default async function ControlePage({
       </main>
     </>
   );
+}
+
+/** Les points à corriger ouverts, dits avec le plan d'actions (ADR-048, lot 3). */
+function phrasePoints(p: { totalACouvrir: number; enRetard: number }): string {
+  if (p.totalACouvrir === 0) return "Aucun point à corriger ouvert.";
+  const retard = p.enRetard > 0 ? `, dont ${p.enRetard} en retard` : "";
+  return `${p.totalACouvrir} point${p.totalACouvrir > 1 ? "s" : ""} à corriger ouvert${p.totalACouvrir > 1 ? "s" : ""}${retard}, au dossier de conformité.`;
 }

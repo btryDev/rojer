@@ -33,8 +33,13 @@ describe("PointsDuRapport — sous un rapport du registre (ADR-048, lot 3)", () 
         ]}
       />,
     );
-    expect(screen.getByText(/à corriger$/)).toBeTruthy();
+    expect(screen.getAllByText(/à corriger$/).length).toBeGreaterThan(0);
     expect(screen.getByText(/corrigé le .* : Fait par l'électricien \(pièce jointe\)/)).toBeTruthy();
+  });
+
+  it("dit « en cours » pour un point en cours, comme sa fiche", () => {
+    render(<PointsDuRapport electricite={false} points={[point({ statut: "en_cours" })]} />);
+    expect(screen.getByText(/en cours$/)).toBeTruthy();
   });
 
   it("tait un point abandonné, et cite R. 4226-19 pour l'électricité seulement", () => {

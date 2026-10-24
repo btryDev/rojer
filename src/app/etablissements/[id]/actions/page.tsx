@@ -156,12 +156,21 @@ export default async function PlanActionsPage({
             </h1>
             <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
               Les mesures de prévention prévues dans votre DUERP. Les points
-              à corriger relevés par les contrôles se suivent sur{" "}
+              à corriger relevés par les contrôles se suivent sur la fiche de
+              leur{" "}
               <Link
                 href={`/etablissements/${id}/equipements`}
                 className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
               >
-                vos équipements
+                équipement
+              </Link>{" "}
+              ou, pour un contrôle de l&apos;ensemble du site, de leur contrôle
+              au{" "}
+              <Link
+                href={`/etablissements/${id}/calendrier`}
+                className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
+              >
+                calendrier
               </Link>
               .
             </p>
@@ -261,7 +270,7 @@ export default async function PlanActionsPage({
             <EmptyState
               titre="Le plan d'actions reprend les mesures de votre DUERP"
               pourquoi="Chaque mesure de prévention prévue dans votre DUERP remonte ici, avec son échéance et son responsable. Une mesure mise en place se clôture avec ce qui a été fait."
-              quoiFaire="remplissez votre DUERP : les mesures s'ajouteront seules. Les points à corriger relevés par un contrôle, eux, se notent sur la fiche du contrôle et se suivent sur l'équipement."
+              quoiFaire="remplissez votre DUERP : les mesures s'ajouteront seules. Les points à corriger relevés par un contrôle, eux, se notent et se suivent sur la fiche du contrôle ou de l'équipement."
               ctaSecondary={{
                 libelle: "Voir les équipements",
                 href: `/etablissements/${id}/equipements`,

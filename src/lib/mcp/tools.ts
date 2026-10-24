@@ -375,7 +375,7 @@ const outilActions: OutilMcp<typeof schemaActions> = {
     // part avec lui.
     // ~~« ou d'une saisie libre »~~ (2026-10-24) : une action sans origine
     // est impossible (CHECK `Action_origine_xor`, ADR-002).
-    "Actions de l'établissement : les mesures de prévention du DUERP et les points à corriger relevés par un rapport de vérification : libellé, statut, criticité, échéance et retard éventuel. Filtrable par origine, statut, criticité, actions en cours ou en retard. " +
+    "Actions de l'établissement : les mesures de prévention du DUERP et les points à corriger relevés par un rapport de vérification : libellé, statut, criticité, échéance et retard éventuel. Filtrable par statut, criticité, actions en cours ou en retard. " +
     "Attention : les échéances rendues ici sont des échéances de **traitement**, que l'établissement se fixe. Elles sont distinctes des échéances des obligations suivies, rendues par l'outil `verifications`. Avant de conclure qu'une date n'existe pas dans le dossier, interroger les deux.",
   schema: schemaActions,
   executer: async (ctx, args) => {
