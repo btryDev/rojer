@@ -60,8 +60,9 @@ export default async function RisquesSalariesPage({
   // ait répondu laissait croire qu'elles étaient déjà dues.
   const lignesDuFait = (champ: ChampFaitActivite) =>
     faits[champ] === true ? (parFait.get(champ) ?? []) : [];
-  // L'ordre de la fiche suit celui des questions : Précédente et Suivante
-  // parcourent ce que l'écran montre.
+  // L'ordre de la fiche suit celui des questions. ~~Précédente et Suivante
+  // parcourent ce que l'écran montre.~~ [2026-10-24 : pas de parcours sur
+  // cette page, une carte s'ouvre seule — `parcours={false}`.]
   const lignesFiche = FAITS_ACTIVITE.flatMap((f) =>
     lignesDuFait(f.champ).map((l) =>
       versFiche(l, { ...contexte, surTitre: "Évaluer les risques de vos salariés" }),
@@ -89,7 +90,7 @@ export default async function RisquesSalariesPage({
           DUERP.
         </p>
       </header>
-      <RevueEnPlace etablissementId={id} lignes={lignesFiche}>
+      <RevueEnPlace etablissementId={id} lignes={lignesFiche} parcours={false}>
       <ul className="m-0 flex list-none flex-col gap-3 px-[var(--board-gutter)] pt-6">
         {FAITS_ACTIVITE.map((f) => {
           const lignes = lignesDuFait(f.champ);
