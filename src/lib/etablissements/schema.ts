@@ -544,6 +544,7 @@ export const etablissementCreationSchema = etablissementSchema.superRefine(
         code: "custom",
         path: ["effectifSurSite"],
         message: `Rojer prend en charge les structures jusqu'à ${EFFECTIF_MAX} salariés.`,
+        params: { perimetre: true },
       });
     }
 
@@ -556,6 +557,7 @@ export const etablissementCreationSchema = etablissementSchema.superRefine(
         path: ["estIGH"],
         message:
           "Un établissement recevant du public situé dans un immeuble de grande hauteur relève du règlement de sécurité des IGH, que Rojer ne couvre pas.",
+        params: { perimetre: true },
       });
     }
 

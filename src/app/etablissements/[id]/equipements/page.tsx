@@ -1,4 +1,11 @@
 import { notFound } from "next/navigation";
+import { AussiCouvertPar, ControlesDEnsembleDuDomaine } from "@/components/equipements/ControlesDEnsembleDuDomaine";
+import { controlesDEnsemble, type ControleDEnsemble } from "@/lib/equipements/controles-d-ensemble";
+import { DOMAINE_DE_CATEGORIE, comparerDomaines } from "@/lib/equipements/domaines";
+import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
+import { CarteRepliable } from "@/components/ui-kit/CarteRepliable";
+import { instantDuRendu } from "@/lib/dates/instant-du-rendu";
+import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
 import { EmptyState } from "@/components/layout/EmptyState";
 import { BandeauParc } from "@/components/equipements/BandeauParc";
 import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
@@ -81,7 +88,7 @@ export default async function EquipementsPage({
   // + `notFound`) : les bâtiments étaient lus seuls, puis le reste — aucune
   // des ~~quatre~~ cinq autres ne dépend du filtre (audit Next.js du 2026-10-14, M4).
   const user = await requireUser();
-  const [batiments, equipements, etatsVerifs, sansEcheance, fraicheur, dossier] =
+  const [batiments, equipements, etatsVerifs, sansEcheance, fraicheur, dossier, ensembles] =
     await Promise.all([
       listerBatimentsDeLEtablissement(id),
       listerEquipementsDeLEtablissement(id),
@@ -102,6 +109,9 @@ export default async function EquipementsPage({
       // « Équipements de sécurité ». Lecture bornée au compte (prédicat
       // `entreprise.userId` dans la requête), partagée avec le reste du rendu.
       obligationsApplicablesDuDossier(id, user.id),
+      // Les contrôles d'ensemble, rangés en tête de leur domaine (points à
+      // corriger, lot 2).
+      controlesDEnsemble(id, instantDuRendu()),
     ]);
   const multiBatiments = estMultiBatiments(batiments);
   const batimentFiltre = resoudreFiltreBatiment(batiments, batiment);
@@ -184,6 +194,36 @@ export default async function EquipementsPage({
     equipements.map((eq) => [eq.id, resumerEquipement(etatsVerifs.get(eq.id))]),
   );
 
+  // Un appareil tel que les cartes de catégorie le montrent — le parc et
+  // « Équipements de sécurité » en lisent la même forme (2026-10-24).
+  const versAppareil = (eq: (typeof equipements)[number]): AppareilListe => ({
+    id: eq.id,
+    libelle: eq.libelle,
+    // Le « où » de la vitrine, à deux étages depuis l'ADR-019 : un
+    // bâtiment, et une précision dans ce bâtiment.
+    lieu: montrerBatiment ? nomDeZone(eq.batiment.nom) : eq.localisation,
+    precision: montrerBatiment ? eq.localisation : null,
+    resume: resumes.get(eq.id) ?? resumerEquipement(undefined),
+    // Le motif se pose AU-DESSUS des signaux, il ne les remplace pas :
+    // un appareil sans échéance à venir garde ses vérifications
+    // réalisées, et c'est la seule chose qu'il ait à montrer en cas de
+    // contrôle.
+    horsReferentiel: (() => {
+      const motif = sansEcheance.get(eq.id);
+      return motif
+        ? {
+            libelle: LIBELLE_SANS_ECHEANCE[motif],
+            // 2026-10-14 : la phrase propre au matériel non suivi.
+            explication: explicationSansEcheance(motif, eq.materielNonCouvert),
+          }
+        : null;
+    })(),
+    href: avecProvenance(`${base}/equipements/${eq.id}`, origine),
+  });
+  const parId = new Map(equipements.map((eq) => [eq.id, eq]));
+  const periodicitesDe = (liste: { id: string }[]) =>
+    liste.flatMap((eq) => etatsVerifs.get(eq.id)?.periodicites ?? []);
+
   // La section « Équipements de sécurité » (2026-10-15) se lit, comme les
   // suggestions, sur le parc ENTIER : un DAE déclaré dans une autre zone est
   // déclaré. Un regroupement d'affichage, rien de plus (`equipements-securite.ts`).
@@ -191,57 +231,36 @@ export default async function EquipementsPage({
     dossier
       ? lignesEquipementsSecurite(dossier.applicables, equipements, contexteFondementDe(etab))
       : []
-  ).map((l) => ({
-    ...l,
-    appareils: l.appareils.map((a) => ({
-      id: a.id,
-      libelle: a.libelle,
-      signal: resumes.get(a.id)?.signaux[0]?.libelle ?? null,
-      href: avecProvenance(`${base}/equipements/${a.id}`, origine),
-    })),
-    hrefAction: hrefActionSecurite(l, { base, hrefNouveau }),
-  }));
+  ).map((l) => {
+    const declares = l.appareils.flatMap((a) => {
+      const eq = parId.get(a.id);
+      return eq ? [eq] : [];
+    });
+    return {
+      ...l,
+      appareils: declares.map(versAppareil),
+      periodicites: periodicitesDe(declares),
+      hrefAction: hrefActionSecurite(l, { base, hrefNouveau }),
+      hrefAjouter: l.cible.kind === "categorie" ? hrefNouveau(l.cible.categorie) : null,
+    };
+  });
 
   // Une section par catégorie, la plus en peine en tête : sur un parc de
   // quinze appareils, l'ordre alphabétique enterrait le seul retard.
   const sections = [...parCategorie.entries()]
-    .map(([categorie, liste]) => {
-      const appareils: AppareilListe[] = liste.map((eq) => ({
-        id: eq.id,
-        libelle: eq.libelle,
-        // Le « où » de la vitrine, à deux étages depuis l'ADR-019 : un
-        // bâtiment, et une précision dans ce bâtiment.
-        lieu: montrerBatiment ? nomDeZone(eq.batiment.nom) : eq.localisation,
-        precision: montrerBatiment ? eq.localisation : null,
-        resume: resumes.get(eq.id) ?? resumerEquipement(undefined),
-        // Le motif se pose AU-DESSUS des signaux, il ne les remplace pas :
-        // un appareil sans échéance à venir garde ses vérifications
-        // réalisées, et c'est la seule chose qu'il ait à montrer en cas de
-        // contrôle.
-        horsReferentiel: (() => {
-          const motif = sansEcheance.get(eq.id);
-          return motif
-            ? {
-                libelle: LIBELLE_SANS_ECHEANCE[motif],
-                // 2026-10-14 : la phrase propre au matériel non suivi.
-                explication: explicationSansEcheance(motif, eq.materielNonCouvert),
-              }
-            : null;
-        })(),
-        href: avecProvenance(`${base}/equipements/${eq.id}`, origine),
-      }));
-      const periodicites = liste.flatMap(
-        (eq) => etatsVerifs.get(eq.id)?.periodicites ?? [],
-      );
-      return {
-        categorie: categorie as CategorieEquipement,
-        appareils,
-        periodicites,
-      };
-    })
+    .map(([categorie, liste]) => ({
+      categorie: categorie as CategorieEquipement,
+      appareils: liste.map(versAppareil),
+      periodicites: periodicitesDe(liste),
+    }))
     .sort(
       (a, b) => urgenceCategorie(b.appareils) - urgenceCategorie(a.appareils),
     );
+
+  const domaines = parDomaine(sections, ensembles);
+  // S'ouvre le premier domaine qui a du dépassé — contrôles d'ensemble
+  // compris —, à défaut le premier.
+  const domaineOuvert = (domaines.find((d) => d.depassees > 0) ?? domaines[0])?.domaine;
 
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
@@ -340,17 +359,91 @@ export default async function EquipementsPage({
             depuis sa fiche, en changeant sa zone.
           </p>
         ) : (
-          sections.map((s) => (
-            <CarteCategorie
-              key={s.categorie}
-              categorie={s.categorie}
-              appareils={s.appareils}
-              periodicites={s.periodicites}
-              hrefAjouter={hrefNouveau(s.categorie)}
-            />
-          ))
+          // Les catégories rangées sous leur domaine (lot 2, 2026-10-24), le
+          // domaine le plus en peine en tête — l'ordre de sa première
+          // catégorie. En tête de chaque domaine, ses contrôles d'ensemble.
+          domaines.map(({ domaine, sections: ss, propres, depassees }) => {
+            const nbAppareils = ss.reduce((n, s) => n + s.appareils.length, 0);
+            return (
+            // Un domaine = une carte repliable, la forme d'« Équipements de
+            // sécurité » (décision de la propriétaire du 2026-10-24) ; le plus
+            // en peine s'ouvre.
+            <CarteRepliable
+              key={domaine ?? "autre"}
+              titre={domaine ? LABEL_DOMAINE[domaine] : "Autres équipements"}
+              compte={
+                nbAppareils > 0
+                  ? `${nbAppareils} équipement${nbAppareils > 1 ? "s" : ""}`
+                  : `${propres.length} contrôle${propres.length > 1 ? "s" : ""} d'ensemble`
+              }
+              alerte={depassees > 0 ? `${depassees} ${depassees > 1 ? "dépassées" : "dépassée"}` : null}
+              ouverte={domaine === domaineOuvert}
+            >
+              {domaine && (
+                <ControlesDEnsembleDuDomaine
+                  controles={propres}
+                  etablissementId={id}
+                  provenance={origine}
+                />
+              )}
+              {ss.map((s) => (
+                <CarteCategorie
+                  key={s.categorie}
+                  categorie={s.categorie}
+                  appareils={s.appareils}
+                  periodicites={s.periodicites}
+                  hrefAjouter={hrefNouveau(s.categorie)}
+                />
+              ))}
+              {domaine && (
+                <AussiCouvertPar
+                  controles={ensembles.filter((c) => c.aussi.includes(domaine))}
+                  etablissementId={id}
+                  provenance={origine}
+                />
+              )}
+            </CarteRepliable>
+            );
+          })
         )}
       </div>
     </main>
   );
+}
+
+/**
+ * Les domaines de la page : ceux de ses catégories, et ceux d'un contrôle
+ * d'ensemble sans appareil déclaré (la signalisation, une aération sans VMC :
+ * revue du 2026-10-24 — sinon ils n'apparaissaient nulle part). Rangés par la
+ * même règle que le calendrier (`comparerDomaines`, sur les appareils) ; le
+ * compte « dépassées » ajoute les contrôles d'ensemble.
+ */
+function parDomaine<S extends { categorie: CategorieEquipement; appareils: AppareilListe[] }>(
+  sections: S[],
+  ensembles: ControleDEnsemble[],
+) {
+  const groupes = new Map<DomaineObligation | null, S[]>();
+  for (const s of sections) {
+    const d = DOMAINE_DE_CATEGORIE[s.categorie];
+    groupes.set(d, [...(groupes.get(d) ?? []), s]);
+  }
+  for (const c of ensembles) if (!groupes.has(c.domaine)) groupes.set(c.domaine, []);
+  const compte = (ss: S[], cle: "enRetard" | "proche") =>
+    ss.reduce(
+      (n, s) => n + s.appareils.reduce((m, a) => m + (a.resume.signaux.find((g) => g.cle === cle)?.nb ?? 0), 0),
+      0,
+    );
+  return [...groupes.entries()]
+    .map(([domaine, ss]) => {
+      const propres = domaine ? ensembles.filter((c) => c.domaine === domaine) : [];
+      const enRetard = compte(ss, "enRetard");
+      return {
+        domaine,
+        sections: ss,
+        propres,
+        depassees: enRetard + propres.filter((c) => c.etat === "enRetard").length,
+        poids: { libelle: domaine ? LABEL_DOMAINE[domaine] : null, enRetard, proche: compte(ss, "proche") },
+      };
+    })
+    .sort((a, b) => comparerDomaines(a.poids, b.poids));
 }
