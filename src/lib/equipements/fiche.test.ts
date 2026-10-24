@@ -92,6 +92,7 @@ function fiche(
   }>,
 ): FicheEquipement {
   return {
+    id: "eq-1",
     verifications: verifs.map((v) => ({
       id: v.id,
       obligationId: v.obligationId ?? "extincteurs-annuelle",
@@ -135,7 +136,9 @@ describe("lignesAFaire", () => {
     expect(lignes).toHaveLength(1);
     expect(lignes[0].date).toEqual(jour("2027-01-22"));
     expect(lignes[0].etat).toBe("lointain");
-    expect(lignes[0].href).toBe("/etablissements/e1/verifications/v1");
+    // Ce qui reste à faire, c'est le rapport : la ligne ouvre le dépôt,
+    // sous la fiche de l'appareil (ADR-048).
+    expect(lignes[0].href).toBe("/etablissements/e1/equipements/eq-1/controles/v1?deposer=1#depot");
   });
 
   it("garde le rendez-vous suivant d'une rangée SOLDÉE d'avant l'ADR-034", () => {
@@ -242,7 +245,7 @@ describe("lignesAFaire", () => {
       AUJOURDHUI, AUCUNE_PRUDENCE
     );
     expect(ligne.etat).toBe("sansRendezVous");
-    expect(ligne.href).toBe("/etablissements/e1/verifications/v-apres-modification");
+    expect(ligne.href).toBe("/etablissements/e1/equipements/eq-1/controles/v-apres-modification?deposer=1#depot");
   });
 
   it("un retard sans date passe EN TÊTE, devant une échéance lointaine", () => {

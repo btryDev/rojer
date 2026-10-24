@@ -11,6 +11,17 @@ export const LIBELLE_POINT = "Point à corriger";
 export const LIBELLE_POINTS = "Points à corriger";
 export const LIBELLE_CORRIGE = "Corrigé";
 
+/**
+ * Le statut d'un point, au masculin du mot « point » : « Ouverte » et
+ * « Levée » sont ceux d'une mesure du DUERP (contrôle visuel du 2026-10-24).
+ */
+export const LABEL_STATUT_POINT = {
+  ouverte: "À corriger",
+  en_cours: "En cours",
+  levee: LIBELLE_CORRIGE,
+  abandonnee: "Abandonné",
+} as const;
+
 /** « 1 point à corriger », « 3 points à corriger ». */
 export function nombreDePoints(n: number): string {
   return `${n} ${n > 1 ? "points" : "point"} à corriger`;

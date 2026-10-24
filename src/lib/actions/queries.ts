@@ -105,7 +105,7 @@ export async function getAction(id: string) {
       // ADR-048 : l'appareil qu'un contrôle d'ensemble a désigné, et le
       // rapport qui a relevé le point.
       equipement: { select: { id: true, libelle: true } },
-      rapportOrigine: { select: { id: true, dateRapport: true } },
+      rapportOrigine: { select: { id: true, dateRapport: true, resultat: true } },
     },
   });
   if (!action) return null;

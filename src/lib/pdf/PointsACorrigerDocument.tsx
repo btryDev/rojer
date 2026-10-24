@@ -1,6 +1,5 @@
 import { Document, Page, Text, View } from "@react-pdf/renderer";
-import { LABEL_STATUT_ACTION } from "@/lib/actions/labels";
-import { LIBELLE_CORRIGE, LIBELLE_POINTS } from "@/lib/points-a-corriger/libelles";
+import { LABEL_STATUT_POINT, LIBELLE_CORRIGE, LIBELLE_POINTS } from "@/lib/points-a-corriger/libelles";
 import { COULEUR_STATUT } from "./PlanActionsDocument";
 import { formatDateCourte, formatDateLongue, stylesCommuns as s } from "./styles";
 import type { StatutAction } from "@prisma/client";
@@ -40,8 +39,12 @@ export function PointsACorrigerDocument({ data }: { data: PointsACorrigerData })
     <Document>
       <Page size="A4" style={s.page}>
         <View>
-          <Text style={s.h1}>{LIBELLE_POINTS} — {data.appareil}</Text>
-          <Text style={s.metaLigne}>{data.entreprise}</Text>
+          {/* Un titre long passe à la ligne : l'interligne par défaut de
+              react-pdf faisait chevaucher les deux lignes. */}
+          <Text style={[s.h1, { lineHeight: 1.25 }]}>{LIBELLE_POINTS} — {data.appareil}</Text>
+          {/* L'entreprise porte souvent le nom de son établissement : on ne
+              l'imprime pas deux fois. */}
+          {data.entreprise !== data.etablissement && <Text style={s.metaLigne}>{data.entreprise}</Text>}
           <Text style={s.metaLigne}>
             {data.etablissement} — {data.adresse}
           </Text>
@@ -71,7 +74,7 @@ export function PointsACorrigerDocument({ data }: { data: PointsACorrigerData })
                 <Text
                   style={{ width: "18%", fontSize: 9, color: COULEUR_STATUT[p.statut], fontFamily: "Helvetica-Bold" }}
                 >
-                  {LABEL_STATUT_ACTION[p.statut]}
+                  {LABEL_STATUT_POINT[p.statut]}
                 </Text>
               </View>
             ))}

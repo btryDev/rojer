@@ -29,6 +29,7 @@ import {
 import { rapportMetadataSchema } from "./schema";
 import { estResultatRealise } from "./resultats";
 import { resultatRelevePoints } from "@/lib/points-a-corriger/regles";
+import { cheminControle } from "@/lib/navigation/chemins";
 import { validerFichier } from "./validator";
 
 export type UploadRapportState =
@@ -37,8 +38,9 @@ export type UploadRapportState =
       status: "error";
       message: string;
       fieldErrors?: Record<string, string[]>;
-    }
-  | { status: "success"; rapportId: string };
+    };
+// ~~`{ status: "success"; rapportId }`~~ — retiré le 2026-10-24 : un dépôt
+// réussi redirige toujours vers la fiche du contrôle (ADR-048).
 
 // `LigneModifieeEntreTemps` vit dans `calendrier/recalcul-ligne.ts` depuis la
 // bascule de l'ADR-036 : un module `"use server"` n'exporte que des fonctions
@@ -148,6 +150,7 @@ export async function uploadRapport(
       etablissementId: true,
       salarieId: true,
       archiveLe: true,
+      equipementId: true,
       equipement: { select: { actif: true } },
     },
   });
@@ -314,16 +317,13 @@ export async function uploadRapport(
   revalidatePath(`/etablissements/${verif.etablissementId}/verifications/${verif.id}`);
   revalidatePath(`/etablissements/${verif.etablissementId}`);
 
-  // Un rapport qui relève quelque chose invite à noter ses points à corriger
+  // Le dépôt ramène à la fiche du contrôle, qui le confirme (`?apres=`) ; un
+  // rapport qui relève quelque chose y invite à noter ses points à corriger
   // (ADR-048, décision 6). Une REDIRECTION, et non un état du formulaire : le
-  // dépôt d'un premier rapport change la page (le formulaire qui le portait
-  // disparaît au rendu suivant), l'invitation doit donc venir du serveur.
-  if (resultatRelevePoints(resultat)) {
-    redirect(
-      `/etablissements/${verif.etablissementId}/verifications/${verif.id}?apres=${rapportId}#points`,
-    );
-  }
-  return { status: "success", rapportId };
+  // dépôt change la page (le formulaire qui le portait se replie ou
+  // disparaît au rendu suivant), la confirmation doit venir du serveur.
+  const ancre = resultatRelevePoints(resultat) ? "points" : "rapports";
+  redirect(`${cheminControle(verif.etablissementId, verif)}?apres=${rapportId}#${ancre}`);
 }
 
 // ~~`rouler`~~ — retirée le 2026-09-19 (ADR-036, lot 4) : la date d'une ligne

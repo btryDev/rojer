@@ -26,8 +26,8 @@ type Props = {
 };
 
 export function UploadRapportForm({ action, labelAnnuler }: Props) {
-  // Un rapport qui relève des points ne revient pas ici : l'action serveur
-  // ramène à la section des points de la page, invitation comprise (ADR-048).
+  // Un dépôt réussi ne revient pas ici : l'action serveur ramène à la fiche
+  // du contrôle, qui dit « Rapport enregistré » (ADR-048).
   const [state, formAction, pending] = useActionState<UploadRapportState, FormData>(action, {
     status: "idle",
   });
@@ -137,7 +137,7 @@ export function UploadRapportForm({ action, labelAnnuler }: Props) {
           name="commentaires"
           rows={3}
           className="champ-board"
-          placeholder="Observations, remarques, points à lever…"
+          placeholder="Observations, remarques, points à corriger…"
         />
         {err("commentaires") && (
           <p className="mt-1.5 text-[12.5px] text-[color:var(--board-signal-ink)]">
@@ -149,11 +149,6 @@ export function UploadRapportForm({ action, labelAnnuler }: Props) {
       {state.status === "error" && !state.fieldErrors && (
         <p className="text-[13px] text-[color:var(--board-signal-ink)]">
           {state.message}
-        </p>
-      )}
-      {state.status === "success" && (
-        <p className="text-[13px] text-[color:var(--board-green-ink)]">
-          Rapport enregistré.
         </p>
       )}
 

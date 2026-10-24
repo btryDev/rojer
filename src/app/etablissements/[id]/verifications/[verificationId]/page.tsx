@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ArrowUpRight, ChevronDown, FileText } from "lucide-react";
 import { BadgeStatut } from "@/components/calendrier/BadgeStatut";
 import { mentionDelaiDeGrace } from "@/lib/calendrier/grace";
@@ -75,6 +75,7 @@ import {
   LIBELLE_SOURCE,
 } from "@/lib/referentiels/conformite/types";
 import { uploadRapport } from "@/lib/rapports/actions";
+import { avecParametres, cheminControle } from "@/lib/navigation/chemins";
 import { creerPointACorriger } from "@/lib/actions/plan";
 import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
 import { DemanderSignatureForm } from "@/components/signatures/DemanderSignatureForm";
@@ -89,7 +90,7 @@ import {
   TitreSection,
   type FaitFiche,
 } from "@/components/ui-kit";
-import { avecProvenance, lireProvenance } from "@/lib/navigation/provenance";
+import { lireProvenance } from "@/lib/navigation/provenance";
 import { listSignatures } from "@/lib/signatures/queries";
 import {
   fraicheurCalendrier,
@@ -118,13 +119,25 @@ export default async function VerificationDetailPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ id: string; verificationId: string }>;
-  searchParams: Promise<{ de?: string; apres?: string }>;
+  // `equipementId` : la même fiche, servie sous celle de son appareil
+  // (`equipements/[equipementId]/controles/[verificationId]`).
+  params: Promise<{ id: string; verificationId: string; equipementId?: string }>;
+  // `deposer=1` : la ligne « à faire » d'une fiche d'appareil ouvre la page
+  // sur le formulaire de dépôt, le geste le plus fréquent.
+  searchParams: Promise<{ de?: string; apres?: string; deposer?: string }>;
 }) {
-  const { id, verificationId } = await params;
-  const { de, apres } = await searchParams;
+  const { id, verificationId, equipementId } = await params;
+  const { de, apres, deposer } = await searchParams;
   const v = await getVerification(verificationId);
   if (!v || v.etablissementId !== id) notFound();
+
+  // Une seule adresse par contrôle : celle de l'appareil qui le porte, sinon
+  // le calendrier (`chemins.ts`). L'autre redirige, paramètres gardés.
+  const depuisCetteFiche = cheminControle(id, v);
+  const ici = equipementId
+    ? `/etablissements/${id}/equipements/${equipementId}/controles/${verificationId}`
+    : `/etablissements/${id}/verifications/${verificationId}`;
+  if (ici !== depuisCetteFiche) redirect(avecParametres(depuisCetteFiche, { de, apres, deposer }));
 
   // Une vérification s'ouvre depuis le calendrier, mais aussi depuis le
   // registre de sécurité, une action corrective ou le tableau de bord.
@@ -135,7 +148,11 @@ export default async function VerificationDetailPage({
     href: `/etablissements/${id}/calendrier`,
     label: LABEL_ITEM.calendrier,
   };
-  const depuisCetteFiche = `/etablissements/${id}/verifications/${verificationId}`;
+  // Le contrôle d'un appareil vit sur sa fiche ; un contrôle d'ensemble, au
+  // calendrier (ADR-048).
+  const canonique = v.equipement
+    ? { href: `/etablissements/${id}/equipements/${v.equipement.id}`, label: v.equipement.libelle }
+    : calendrier;
 
   const obligation = obligationParId(v.obligationId);
   // La ligne est-elle retenue par prudence ? Même calcul que le calendrier
@@ -174,9 +191,9 @@ export default async function VerificationDetailPage({
   // `uploadRapport` ramène ici (`?apres=`) : l'invitation à noter ses points,
   // rattachés à CE rapport. L'identifiant vient de l'URL : il ne vaut que
   // s'il désigne un rapport de ce contrôle.
-  const rapportApres = recoit
-    ? rapportsProposes.find((r) => r.id === apres && resultatRelevePoints(r.resultat))
-    : undefined;
+  const rapportDepose = rapportsProposes.find((r) => r.id === apres);
+  const rapportApres =
+    recoit && rapportDepose && resultatRelevePoints(rapportDepose.resultat) ? rapportDepose : undefined;
   const boundUpload = uploadRapport.bind(null, v.id);
 
   // Signatures posées sur chaque rapport de cette vérification.
@@ -405,7 +422,7 @@ export default async function VerificationDetailPage({
   }
 
   return (
-    <EcranFiche provenance={provenance} canonique={calendrier}>
+    <EcranFiche provenance={provenance} canonique={canonique}>
       <HeroFiche
         // Pas de tuile-date sans date arrêtée : la tuile est un rendez-vous
         // posé, et poser la date de génération y donnait à lire un jour où
@@ -615,13 +632,24 @@ export default async function VerificationDetailPage({
       {/* ── Le dossier : les rapports déposés ─────────────────────── */}
       {aUnRapport ? (
         <>
+          <div id="rapports" className="scroll-mt-6" />
+          {/* Le dépôt ramène ici (`uploadRapport`) ; s'il relève des points,
+              c'est la section des points qui le confirme. */}
+          {rapportDepose && !rapportApres ? (
+            <p
+              role="status"
+              className="m-0 rounded-[18px] bg-[color:var(--board-green)] px-6 py-4 text-[13.5px] font-semibold text-[color:var(--board-green-ink)]"
+            >
+              Rapport enregistré.
+            </p>
+          ) : null}
           <TitreSection
             surtitre="Dossier"
             titre="Rapports déposés"
             compte={v.rapports.length}
             droite={
               depotOuvert ? (
-              <details className="group">
+              <details id="depot" className="group scroll-mt-6" open={deposer === "1"}>
                 <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-full px-[18px] py-2.5 text-[12.5px] font-semibold text-[color:var(--board-ink)] ring-1 ring-[color:rgba(10,10,10,.18)] transition-colors hover:bg-[color:var(--board-slate-pale)]">
                   <span className="group-open:hidden">+ Nouveau rapport</span>
                   <span className="hidden group-open:inline">Annuler</span>
@@ -776,6 +804,7 @@ export default async function VerificationDetailPage({
         <CorpsFiche
           principal={
             <CarteFiche
+              id="depot"
               titre={
                 pieceMedicale ? "Ce que l'outil suit" : "Déposer le rapport"
               }
@@ -860,16 +889,6 @@ export default async function VerificationDetailPage({
         surtitre={LIBELLE_POINTS}
         titre={v.equipement ? "Relevés par ce contrôle" : "Relevés par ce contrôle d'ensemble"}
         compte={points.length}
-        droite={
-          v.equipement ? (
-            <Link
-              href={avecProvenance(`/etablissements/${id}/equipements/${v.equipement.id}`, depuisCetteFiche)}
-              className="text-[12.5px] font-semibold text-[color:var(--board-blue-ink)] underline underline-offset-4"
-            >
-              Voir sur la fiche de l&apos;appareil
-            </Link>
-          ) : undefined
-        }
       />
       {points.length > 0 && (
         <ListePoints
@@ -884,9 +903,11 @@ export default async function VerificationDetailPage({
         <details className="group" open={rapportApres !== undefined}>
           <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-[22px] bg-[color:var(--board-slate-pale)] px-6 py-5">
             <p className="m-0 text-[13.5px] text-[color:var(--board-slate-mid)]">
-              {points.length === 0
-                ? "Aucun point à corriger. Le rapport en relève ? Notez-les ici."
-                : "Un autre point relevé par ce contrôle ?"}
+              {rapportApres
+                ? "Les points relevés par ce rapport"
+                : points.length === 0
+                  ? "Aucun point à corriger. Le rapport en relève ? Notez-les ici."
+                  : "Un autre point relevé par ce contrôle ?"}
             </p>
             <span className="inline-flex flex-none items-center gap-2 rounded-full bg-[color:var(--board-ink)] px-[18px] py-2.5 text-[12.5px] font-semibold text-white">
               <span className="group-open:hidden">+ Ajouter</span>

@@ -121,12 +121,19 @@ function Formulaire({
             onChange={(e) => setControleId(e.currentTarget.value)}
           >
             {controles.map((c) => (
+              // « Ensemble » en tête : un libellé long se coupe à la largeur
+              // du champ, et la fin de l'option ne se lisait plus.
               <option key={c.verificationId} value={c.verificationId}>
-                {c.libelle}
-                {c.ensemble ? " (contrôle d'ensemble)" : ""}
+                {c.ensemble ? `Ensemble · ${c.libelle}` : c.libelle}
               </option>
             ))}
           </select>
+          {controleChoisi && (
+            <p className="m-0 mt-1.5 text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+              {controleChoisi.libelle}
+              {controleChoisi.ensemble ? " — contrôle d'ensemble, le point désigne cet appareil." : ""}
+            </p>
+          )}
           {/* Un contrôle d'ensemble désigne l'appareil de cette fiche. */}
           {controleChoisi?.ensemble && (
             <input type="hidden" name="equipementId" value={rattachement.appareilImpose} />
@@ -162,7 +169,7 @@ function Formulaire({
         name="libelle"
         label="Ce qu'il faut corriger"
         requis
-        placeholder="Ex : Remettre en état le BAES de l'entrée principale"
+        placeholder="Ex : Remplacer la pièce signalée par le rapport"
         defaultValue={defauts?.libelle}
         erreur={err("libelle")}
       />

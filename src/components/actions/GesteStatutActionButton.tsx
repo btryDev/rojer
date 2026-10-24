@@ -20,18 +20,49 @@ export function GesteStatutActionButton({
   id,
   geste,
   avecJustificatif = false,
+  point = false,
 }: {
   id: string;
   geste: Geste;
   /** Rouvrir une action levée efface son justificatif : la question le dit. */
   avecJustificatif?: boolean;
+  /** Un point à corriger (ADR-048) : ses mots, pas ceux du plan d'actions. */
+  point?: boolean;
 }) {
   const [pending, startTransition] = useTransition();
   const router = useRouter();
   const { demander, confirmation } = useConfirmation();
 
   const question =
-    geste === "rouvrir"
+    point && geste === "rouvrir"
+      ? {
+          titre: "Rouvrir ce point ?",
+          detail: avecJustificatif
+            ? "Il redevient à corriger. Sa date de correction, sa pièce, ce " +
+              "qui a été fait et le rapport de contre-visite sont effacés : il " +
+              "faudra le marquer corrigé de nouveau."
+            : "Il redevient à corriger.",
+          agir: "Rouvrir le point",
+          alors: () =>
+            startTransition(async () => {
+              await rouvrirAction(id);
+              router.refresh();
+            }),
+        }
+      : point
+      ? {
+          titre: "Abandonner ce point ?",
+          detail:
+            "Il ne compte plus parmi les points à corriger ni en retard. Il " +
+            "reste au dossier, et peut être rouvert.",
+          agir: "Abandonner le point",
+          alors: () =>
+            startTransition(async () => {
+              await abandonnerAction(id);
+              router.refresh();
+            }),
+        }
+      : geste === "rouvrir"
       ? {
           titre: "Rouvrir cette action ?",
           detail: avecJustificatif

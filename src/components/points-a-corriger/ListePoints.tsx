@@ -3,6 +3,7 @@ import { BadgeStatutAction } from "@/components/actions/BadgeStatutAction";
 import { formaterDateCourteFr } from "@/lib/dates";
 import { estActionEnRetard } from "@/lib/dates/retard";
 import { avecProvenance } from "@/lib/navigation/provenance";
+import { cheminAction } from "@/lib/navigation/chemins";
 import { LABEL_RESULTAT } from "@/lib/rapports/resultats";
 import type { PointListe } from "@/lib/points-a-corriger/queries";
 
@@ -47,7 +48,13 @@ export function ListePoints({
         return (
           <li key={p.id}>
             <Link
-              href={avecProvenance(`/etablissements/${etablissementId}/actions/${p.id}`, provenance)}
+              href={avecProvenance(
+                cheminAction(etablissementId, {
+                  id: p.id,
+                  appareilId: p.verification?.equipementId ?? p.equipement?.id ?? null,
+                }),
+                provenance,
+              )}
               className="carte-board block h-full px-6 py-5 transition-colors hover:bg-[color:var(--board-slate-pale)]"
             >
               <div className="flex items-start justify-between gap-3">

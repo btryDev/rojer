@@ -224,13 +224,15 @@ export function lignesAFaire(
         href:
           etat === "sansRendezVous" && menesALEcranEnPlace(v.obligationId)
             ? `${base}${cheminDeDeclaration(obligationParId(v.obligationId)!)}`
-            : `${base}/verifications/${v.id}`,
+            : // Ce qui reste à faire sur un contrôle, c'est son rapport : la
+              // ligne ouvre la page sur le formulaire de dépôt.
+              `${base}/equipements/${eq.id}/controles/${v.id}?deposer=1#depot`,
       });
     }
 
-    for (const a of v.actions) lignes.push(...ligneDePoint(a, base, maintenant));
+    for (const a of v.actions) lignes.push(...ligneDePoint(a, `${base}/equipements/${eq.id}`, maintenant));
   }
-  for (const a of pointsDesignes) lignes.push(...ligneDePoint(a, base, maintenant));
+  for (const a of pointsDesignes) lignes.push(...ligneDePoint(a, `${base}/equipements/${eq.id}`, maintenant));
 
   return lignes.sort(comparerParUrgence);
 }
@@ -238,8 +240,11 @@ export function lignesAFaire(
 /** Ce que « à faire » lit d'un point à corriger. */
 export type PointAFaire = Pick<ActionFiche, "id" | "libelle" | "statut" | "echeance" | "responsable">;
 
-/** Un point ouvert devient une ligne « à faire » ; un point clos, aucune. */
-function ligneDePoint(a: PointAFaire, base: string, maintenant: Date): LigneAFaire[] {
+/**
+ * Un point ouvert devient une ligne « à faire » ; un point clos, aucune.
+ * `fiche` : le chemin de la fiche de l'appareil, sous laquelle le point vit.
+ */
+function ligneDePoint(a: PointAFaire, fiche: string, maintenant: Date): LigneAFaire[] {
   if (!estActionOuverte(a)) return [];
   return [
     {
@@ -254,7 +259,7 @@ function ligneDePoint(a: PointAFaire, base: string, maintenant: Date): LigneAFai
       surtitre: LIBELLE_POINT,
       libelle: a.libelle,
       detail: a.responsable ? `Responsable : ${a.responsable}` : "Responsable non désigné",
-      href: `${base}/actions/${a.id}`,
+      href: `${fiche}/points/${a.id}`,
     },
   ];
 }
@@ -478,7 +483,7 @@ export function lignesHistoire(
   const lignes: LigneHistoire[] = [];
 
   for (const v of eq.verifications) {
-    const href = `${base}/verifications/${v.id}`;
+    const href = `${base}/equipements/${eq.id}/controles/${v.id}`;
 
     if (v.rapports.length > 0) {
       // Chaque rapport annonce les points qu'il a relevés (ADR-048,

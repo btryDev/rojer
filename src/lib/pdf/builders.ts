@@ -1,3 +1,4 @@
+import { LABEL_RESULTAT } from "@/lib/rapports/resultats";
 import { estLignePourInformation } from "@/lib/referentiels/conformite/initiative";
 import { libelleTypesErp, numeroCategorie } from "@/lib/etablissements/types-erp-affiches";
 import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
@@ -342,7 +343,9 @@ export async function construirePointsEquipementData(
     responsable: p.responsable,
     origine: [
       p.verification?.libelleObligation,
-      p.rapportOrigine ? `rapport du ${formatDateCourte(p.rapportOrigine.dateRapport)}` : null,
+      p.rapportOrigine
+        ? `rapport du ${formatDateCourte(p.rapportOrigine.dateRapport)} (${LABEL_RESULTAT[p.rapportOrigine.resultat]})`
+        : null,
     ]
       .filter(Boolean)
       .join(" · "),

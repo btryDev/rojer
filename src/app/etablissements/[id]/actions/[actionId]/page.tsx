@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ArrowUpRight } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -29,19 +29,30 @@ import { classerDate, type RegistreLigne } from "@/lib/calendrier/etats";
 import { formaterDateFr, formaterDateLongueFr } from "@/lib/dates";
 import { estActionEnRetard, estActionOuverte } from "@/lib/dates/retard";
 import { avecProvenance, lireProvenance } from "@/lib/navigation/provenance";
+import { appareilDeLAction, avecParametres, cheminAction, cheminControle } from "@/lib/navigation/chemins";
 import { libellePorteur } from "@/lib/calendrier/labels";
 
 export default async function ActionDetailPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ id: string; actionId: string }>;
+  // `equipementId` : la même fiche, servie sous celle de son appareil
+  // (`equipements/[equipementId]/points/[actionId]`).
+  params: Promise<{ id: string; actionId: string; equipementId?: string }>;
   searchParams: Promise<{ de?: string }>;
 }) {
-  const { id, actionId } = await params;
+  const { id, actionId, equipementId } = await params;
   const { de } = await searchParams;
   const a = await getAction(actionId);
   if (!a || a.etablissementId !== id) notFound();
+
+  // Une seule adresse par fiche : sous l'appareil pour un point qui en
+  // désigne un, au plan d'actions sinon (`chemins.ts`).
+  const depuisCetteFiche = cheminAction(id, { id: a.id, appareilId: appareilDeLAction(a) });
+  const ici = equipementId
+    ? `/etablissements/${id}/equipements/${equipementId}/points/${actionId}`
+    : `/etablissements/${id}/actions/${actionId}`;
+  if (ici !== depuisCetteFiche) redirect(avecParametres(depuisCetteFiche, { de }));
 
   // D'où l'on vient (calendrier, tableau de bord, une vérification…), et où
   // cette fiche vit de toute façon : une mesure du DUERP au plan d'actions ;
@@ -54,15 +65,15 @@ export default async function ActionDetailPage({
     : appareil
       ? { href: `/etablissements/${id}/equipements/${appareil.id}`, label: appareil.libelle }
       : { href: `/etablissements/${id}/verifications/${a.verificationId}`, label: a.verification?.libelleObligation ?? "Contrôle" };
-  // Les liens que cette fiche pose s'annoncent eux-mêmes, sans réexpédier
-  // la provenance reçue : la chaîne reste bornée à un saut.
-  const depuisCetteFiche = `/etablissements/${id}/actions/${actionId}`;
+  // Les liens que cette fiche pose s'annoncent eux-mêmes (`depuisCetteFiche`),
+  // sans réexpédier la provenance reçue : la chaîne reste bornée à un saut.
 
   const origine = origineDeLAction(a);
   // La vérification d'origine : le rapport le plus récent (trié desc par la
   // requête) porte le constat ; à défaut, la date de réalisation, puis la
   // date prévue.
-  const dernierRapport = a.verification?.rapports[0] ?? null;
+  // Pour un point, le rapport qui l'a relevé, quand il est connu (ADR-048).
+  const dernierRapport = a.rapportOrigine ?? a.verification?.rapports[0] ?? null;
   const dateConstat =
     dernierRapport?.dateRapport ??
     a.verification?.datePrevue ??
@@ -141,7 +152,7 @@ export default async function ActionDetailPage({
             {corrigeableIci ? (
               <>
                 <Link
-                  href={`/etablissements/${id}/actions/${actionId}/modifier`}
+                  href={`${depuisCetteFiche}/modifier`}
                   className={buttonVariants({
                     variant: "boardClair",
                     size: "boardSm",
@@ -149,7 +160,7 @@ export default async function ActionDetailPage({
                 >
                   Modifier
                 </Link>
-                <GesteStatutActionButton id={a.id} geste="abandonner" />
+                <GesteStatutActionButton id={a.id} geste="abandonner" point={point} />
               </>
             ) : null}
             {!estOuverte ? (
@@ -157,6 +168,7 @@ export default async function ActionDetailPage({
                 id={a.id}
                 geste="rouvrir"
                 avecJustificatif={a.statut === "levee"}
+                point={point}
               />
             ) : null}
             <SupprimerActionButton
@@ -177,7 +189,7 @@ export default async function ActionDetailPage({
                 </p>
               ) : (
                 <p className="m-0 text-[14px] text-[color:var(--board-slate-soft)]">
-                  Aucune description n&apos;a été saisie pour cette action.
+                  Aucune description n&apos;a été saisie{point ? "" : " pour cette action"}.
                 </p>
               )}
 
@@ -234,7 +246,7 @@ export default async function ActionDetailPage({
                         vers une fiche datée de plusieurs mois ne surprenne pas. */}
                     <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
                       {dateConstat
-                        ? `Relevé par le contrôle du ${formaterDateFr(a.rapportOrigine?.dateRapport ?? dateConstat)}`
+                        ? `Relevé par le contrôle du ${formaterDateFr(dateConstat)}`
                         : "Relevé lors d'un contrôle"}
                     </p>
                     <p className="m-0 mt-1.5 text-[14px] font-semibold leading-[1.35]">
@@ -251,7 +263,7 @@ export default async function ActionDetailPage({
                     </p>
                     <Link
                       href={avecProvenance(
-                        `/etablissements/${id}/verifications/${a.verification.id}`,
+                        cheminControle(id, a.verification),
                         depuisCetteFiche,
                       )}
                       className="mt-2.5 inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
@@ -297,7 +309,7 @@ export default async function ActionDetailPage({
                   {/* Le rapport choisi à la clôture était enregistré et
                       montré nulle part (audit du 2026-10-12). */}
                   {a.leveeRapportId ? (
-                    <ChampFiche cle="Rapport de levée">
+                    <ChampFiche cle={point ? "Rapport de contre-visite" : "Rapport de levée"}>
                       {a.leveeRapport ? (
                         <a
                           href={`/api/rapports/${a.leveeRapport.id}/fichier`}

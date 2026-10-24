@@ -20,8 +20,11 @@ export function CarteFiche({
   children,
   className = "",
   corpsClassName = "",
+  id,
 }: {
   titre?: string;
+  /** Une ancre, quand un lien mène à la carte (`#depot`). */
+  id?: string;
   /**
    * Titre plein, quand la carte est un chapitre et non une rubrique : le
    * sur-titre mono suffit pour « Clôture » ou « État », il est trop discret
@@ -36,7 +39,7 @@ export function CarteFiche({
   corpsClassName?: string;
 }) {
   return (
-    <section className={"carte-board overflow-hidden " + className}>
+    <section id={id} className={"carte-board overflow-hidden scroll-mt-6 " + className}>
       {titre || titreFort || droite ? (
         <div
           className={
