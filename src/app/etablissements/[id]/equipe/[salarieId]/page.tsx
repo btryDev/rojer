@@ -387,38 +387,39 @@ export default async function SalarieDetailPage({
             `docs/rgpd.md` § 5.2 promettrait un droit que rien ne sert.
             Posé en pied de fiche, hors carte : c'est une information de
             tenue du dossier, pas un geste de prévention. */}
-        <section className="mt-2 grid grid-cols-1 gap-x-10 gap-y-4 border-t border-[color:var(--board-slate-line)] pt-6 lg:grid-cols-[minmax(0,1fr)_auto]">
+        <section className="mt-2 flex flex-wrap items-center justify-between gap-x-10 gap-y-3 border-t border-[color:var(--board-slate-line)] pt-5">
           <div className="max-w-[72ch]">
-            <h2 className="m-0 text-[14px] font-semibold text-[color:var(--board-slate-ink)]">
-              Ce que Rojer enregistre sur cette personne
-            </h2>
-            <p className="m-0 mt-1.5 text-[12.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-              Son nom, son poste, sa date d&apos;entrée, et pour chaque titre
-              sa nature et ses dates. Rien d&apos;autre — pas de date de
-              naissance, pas de numéro de sécurité sociale, aucune donnée de
-              santé : d&apos;une visite ou d&apos;une attestation médicale,
-              Rojer ne garde que l&apos;existence et les dates, le document
-              reste chez vous.
+            <p className="m-0 text-[12.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+              Rojer garde son nom, son poste, sa date d&apos;entrée et les dates
+              de ses titres — aucune donnée de santé.
             </p>
-            <p className="m-0 mt-1.5 text-[12px] leading-[1.55] text-[color:var(--board-slate-soft)]">
-              Pendant l&apos;emploi, le droit à l&apos;effacement est limité :
-              l&apos;article 17.3.b du RGPD excepte le traitement nécessaire
-              au respect d&apos;une obligation légale. Une sortie de
-              l&apos;effectif garde ses titres ; la durée de conservation
-              après un départ n&apos;est pas fixée par un texte que Rojer ait
-              identifié. Un titre que vous retirez est effacé
-              définitivement. Fiche créée le {formaterDateLongueFr(s.createdAt)}.
-            </p>
+            {/* [2026-10-24, retour de la propriétaire : ce paragraphe
+                s'affichait en entier. Rien ne l'impose à l'écran — l'information
+                du salarié (art. 13) incombe à l'employeur et se sert par le
+                texte d'Équipe ; l'accès (art. 15), par le bouton. Il reste, au
+                dépli, parce qu'il dit ce que Rojer ne prétend pas.] */}
+            <details className="mt-1 text-[12px] leading-[1.55] text-[color:var(--board-slate-soft)]">
+              <summary className="cursor-pointer text-[color:var(--board-blue-ink)]">
+                En savoir plus
+              </summary>
+              <p className="m-0 mt-1.5">
+                Pendant l&apos;emploi, le droit à l&apos;effacement est limité :
+                l&apos;article 17.3.b du RGPD excepte le traitement nécessaire
+                au respect d&apos;une obligation légale. Une sortie de
+                l&apos;effectif garde ses titres ; la durée de conservation
+                après un départ n&apos;est pas fixée par un texte que Rojer ait
+                identifié. Un titre que vous retirez est effacé
+                définitivement. Fiche créée le {formaterDateLongueFr(s.createdAt)}.
+              </p>
+            </details>
           </div>
-          <div className="self-start">
-            <Link
-              href={`/api/etablissements/${id}/equipe/${s.id}/donnees`}
-              className={buttonVariants({ variant: "boardClair", size: "boardSm" })}
-            >
-              <Download className="size-3.5" aria-hidden />
-              Éditer ses données
-            </Link>
-          </div>
+          <Link
+            href={`/api/etablissements/${id}/equipe/${s.id}/donnees`}
+            className={buttonVariants({ variant: "boardClair", size: "boardSm" })}
+          >
+            <Download className="size-3.5" aria-hidden />
+            Éditer ses données
+          </Link>
         </section>
       </EcranFiche>
     </DeclarationTitre>

@@ -3,7 +3,6 @@ import { Plus } from "lucide-react";
 import { FilAriane } from "@/components/navigation/FilAriane";
 import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
 import { buttonVariants } from "@/components/ui/button";
-import { LegalBadge } from "@/components/ui-kit";
 import { SalarieCard } from "@/components/salaries/SalarieCard";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { listerEquipe, libellesTitresDeclares } from "@/lib/salaries/queries";
@@ -225,50 +224,25 @@ export default async function EquipePage({
             tout seul, et il vieillit en affirmant le contraire de ce qu'on lit
             juste au-dessus. Ce qui reste ci-dessous est donc formulé sans
             énumération figée. */}
-        <section className="carte-board px-7 py-6 sm:px-8">
-          <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-            Ce que couvre cet écran
+        {/* [2026-10-24, retour de la propriétaire : le bloc tenait quatre
+            paragraphes — la liste des titres, que la modale « Ajouter un
+            titre » montre déjà, et une justification du suivi nominatif qui
+            parlait du produit plutôt qu'à l'utilisateur. Restent ce qui sert :
+            le compte, la limite, le CACES qu'on cherche ici.] */}
+        <section className="rounded-[22px] bg-[color:var(--board-slate-pale)] px-6 py-5">
+          <p className="m-0 max-w-[72ch] text-[13px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+            <strong className="font-semibold text-[color:var(--board-ink)]">
+              {catalogue.length === 1
+                ? "Un seul titre suivi"
+                : `${catalogue.length} titres suivis`}
+            </strong>
+            , ceux dont Rojer a lu le texte. D&apos;autres peuvent vous
+            concerner : suivez-les par vos moyens habituels. Le{" "}
+            <strong className="font-semibold">CACES</strong>{" "}
+            n&apos;en fait pas partie — ce n&apos;est pas une obligation du Code du travail, qui
+            exige une formation à la conduite et une autorisation de
+            l&apos;employeur, toutes deux dans la liste.
           </p>
-          <h2 className="board-titre m-0 mt-2 text-[22px]">
-            {catalogue.length === 1
-              ? "Un seul titre au catalogue, pour l'instant"
-              : `${catalogue.length} titres au catalogue`}
-          </h2>
-          <p className="m-0 mt-3 max-w-[68ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-            Rojer ne propose que les titres dont il a lu le texte fondateur à
-            la source. Aujourd&apos;hui :{" "}
-            {catalogue.map((o) => o.libelle).join(", ")}.
-          </p>
-          <p className="m-0 mt-3 max-w-[68ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-            Cette liste n&apos;est pas tout ce qui existe en droit. D&apos;autres
-            titres et suivis nominatifs peuvent vous concerner sans figurer ici,
-            parce que le texte qui les porte n&apos;a pas encore été dépouillé.{" "}
-            <strong>Continuez à suivre par vos moyens habituels ce que vous ne
-            retrouvez pas dans cette liste.</strong>
-          </p>
-          <p className="m-0 mt-3 max-w-[68ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-            Un cas mérite d&apos;être dit, parce qu&apos;on le cherche souvent
-            ici : le <strong>CACES</strong>{" "}
-            n&apos;y figure pas et n&apos;y
-            figurera pas. Il ne relève pas du Code du travail — c&apos;est un
-            dispositif conventionnel de l&apos;assurance maladie. Ce que le Code
-            impose, lui, est dans la liste : une formation adéquate à la
-            conduite et une autorisation de conduite délivrée par
-            l&apos;employeur.
-          </p>
-          <p className="m-0 mt-3 max-w-[68ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-            Un titre est nominatif : le Code fait délivrer l&apos;habilitation à
-            un travailleur désigné, pas à un poste. Un suivi par fonction
-            produirait un compteur — « deux caristes à habiliter » — et ne
-            prouverait rien devant un contrôle.
-          </p>
-          <div className="mt-4">
-            <LegalBadge
-              charte="board"
-              reference="Art. R. 4544-10 CT"
-              href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000051500368"
-            />
-          </div>
         </section>
 
         {/* L'information des personnes (art. 13 RGPD). Elle est due, et elle
