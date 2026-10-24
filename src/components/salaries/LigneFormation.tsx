@@ -47,7 +47,7 @@ export function LigneFormation({
         aria-haspopup="dialog"
         // Sur un téléphone, l'état passe sous le texte : à droite, il
         // écrasait la colonne de texte à quelques mots par ligne.
-        className="grid w-full grid-cols-[44px_minmax(0,1fr)] items-center gap-x-4 gap-y-2 rounded-[18px] px-3 py-3 text-left sm:grid-cols-[44px_minmax(0,1fr)_auto] transition-colors hover:bg-[color:var(--board-card)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--board-blue-strong)]"
+        className="grid w-full grid-cols-[44px_minmax(0,1fr)] items-center gap-x-4 gap-y-2 rounded-[18px] bg-[color:var(--board-card)] px-3 py-3 text-left transition-shadow hover:shadow-[0_0_0_1.5px_var(--board-blue-soft)] sm:grid-cols-[44px_minmax(0,1fr)_auto] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--board-blue-strong)]"
       >
         <Vignette src={dessin.src} fond={dessin.fond} taille={44} />
         <span className="min-w-0">

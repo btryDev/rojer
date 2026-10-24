@@ -20,6 +20,10 @@ import {
 } from "@/lib/etats-permanents/par-l-equipe";
 import { dessinDe, etatCourtDe, versFiche } from "@/lib/etats-permanents/vers-fiche";
 import { titresSansPorteur } from "@/lib/salaries/titres-sans-porteur";
+import {
+  illustrationBatiment,
+  sourceIllustrationBatiment,
+} from "@/lib/etablissements/illustration";
 import { etatsPermanentsDuDossier } from "@/lib/etats-permanents/queries";
 
 /**
@@ -237,6 +241,7 @@ export default async function EquipePage({
           fiches={fiches}
           sansPorteur={sansPorteur}
           personnePresente={actifs > 0}
+          batiment={sourceIllustrationBatiment(illustrationBatiment(etablissement))}
         />
 
         {/* Ce que l'écran ne couvre pas, dit par l'écran lui-même. Taire

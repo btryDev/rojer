@@ -1,7 +1,9 @@
 # Illustrations de bâtiment
 
 Les deux planches affichées sur la plaque des bâtiments, en tête de tableau
-de bord. Elles ne sont référencées qu'à un endroit : `sourceIllustrationBatiment`
+de bord, et — depuis le 2026-10-24 — en tête de la section « Formations à
+organiser » de la page Équipe, pour dire « pour l'établissement ». Elles ne
+sont référencées qu'à un endroit : `sourceIllustrationBatiment`
 dans `src/lib/etablissements/illustration.ts`, qui choisit laquelle poser à
 partir du type ERP déclaré, puis de la division NAF.
 

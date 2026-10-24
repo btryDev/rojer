@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { RevueEnPlace, type FicheLigne } from "@/components/etats-permanents/RevueEnPlace";
 import type { EtatCourt } from "@/components/etats-permanents/LigneCompacte";
@@ -38,8 +39,11 @@ export function FormationsAOrganiser({
   fiches,
   sansPorteur,
   personnePresente,
+  batiment,
 }: {
   etablissementId: string;
+  /** La planche du bâtiment (`sourceIllustrationBatiment`) : « pour l'établissement ». */
+  batiment: string;
   formations: readonly FormationAOrganiser[];
   /** Les fiches que la ligne ouvre (`versFiche`). */
   fiches: FicheLigne[];
@@ -52,22 +56,41 @@ export function FormationsAOrganiser({
   const vide = formations.length === 0 && sansPorteur.length === 0;
 
   return (
-    <section id="formations" aria-labelledby="formations-titre" className="scroll-mt-6">
-      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h2 id="formations-titre" className="board-titre m-0 text-[22px]">
-          Formations à organiser
-        </h2>
-        {aOrganiser > 0 && (
-          <span className="pastille-board bg-[color:var(--board-amber)] text-[color:var(--board-amber-ink)]">
-            {aOrganiser} à organiser
-          </span>
-        )}
+    // Un panneau bleu glacier, pas une carte blanche de plus (retour de la
+    // propriétaire, 2026-10-24) : le registre « calme et actif » de la charte
+    // (§ 1.3), et le bâtiment en tête — ce qui suit est pour l'établissement,
+    // pas pour une personne de la grille au-dessus.
+    <section
+      id="formations"
+      aria-labelledby="formations-titre"
+      className="scroll-mt-6 rounded-[30px] bg-[color:var(--board-blue-pale)]/55 px-5 py-6 sm:px-8"
+    >
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+        <Image
+          src={batiment}
+          alt=""
+          width={88}
+          height={77}
+          className="flex-none"
+        />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h2 id="formations-titre" className="board-titre m-0 text-[22px]">
+              Formations à organiser
+            </h2>
+            {aOrganiser > 0 && (
+              <span className="pastille-board bg-[color:var(--board-amber)] text-[color:var(--board-amber-ink)]">
+                {aOrganiser} à organiser
+              </span>
+            )}
+          </div>
+          <p className="m-0 mt-1.5 max-w-[68ch] text-[13.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+            Dues à vos salariés sans que Rojer sache lesquels : c&apos;est vous
+            qui savez qui est concerné, et vous qui les organisez. Elles ne sont
+            donc sur aucune fiche. Touchez une ligne pour la déclarer.
+          </p>
+        </div>
       </div>
-      <p className="m-0 mt-1.5 max-w-[68ch] text-[13.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-        Dues à vos salariés sans que Rojer sache lesquels : c&apos;est vous qui
-        savez qui est concerné, et vous qui les organisez. Elles ne sont donc
-        sur aucune fiche. Touchez une ligne pour la déclarer.
-      </p>
 
       {vide ? (
         <p className="m-0 mt-4 text-[13px] text-[color:var(--board-slate-mid)]">
@@ -75,7 +98,7 @@ export function FormationsAOrganiser({
         </p>
       ) : (
         <RevueEnPlace etablissementId={etablissementId} lignes={fiches} parcours={false}>
-          <ul className="m-0 mt-3 flex list-none flex-col gap-1 rounded-[22px] bg-[color:var(--board-slate-pale)]/60 p-1.5">
+          <ul className="m-0 mt-5 flex list-none flex-col gap-2 p-0">
             {formations.map((f) => (
               <LigneFormation key={f.obligationId} {...f} />
             ))}
@@ -85,7 +108,7 @@ export function FormationsAOrganiser({
                 return (
                   <li
                     key={t.obligation.id}
-                    className="grid list-none grid-cols-[44px_minmax(0,1fr)] items-center gap-x-4 gap-y-2 rounded-[18px] px-3 py-3 sm:grid-cols-[44px_minmax(0,1fr)_auto]"
+                    className="grid list-none grid-cols-[44px_minmax(0,1fr)] items-center gap-x-4 gap-y-2 rounded-[18px] bg-[color:var(--board-card)] px-3 py-3 sm:grid-cols-[44px_minmax(0,1fr)_auto]"
                   >
                     <Vignette src={d.src} fond={d.fond} taille={44} />
                     <span className="min-w-0">
