@@ -28,6 +28,7 @@ const TOUS_NON: ReponsesFaitsActivite = {
   operationsElectriques: false,
   conduiteEngins: false,
   expositionCMR: false,
+  epiPresents: false,
 };
 
 /** Un « non » écrit au DUERP pour chaque question qui ne pose pas de fait. */
@@ -149,6 +150,7 @@ describe("étape « Questions transverses » — calculée, plus stockée (§ 17
           operationsElectriques: null,
           conduiteEngins: null,
           expositionCMR: null,
+          epiPresents: null,
         },
       }),
     );

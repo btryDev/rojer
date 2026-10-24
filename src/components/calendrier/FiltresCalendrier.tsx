@@ -29,6 +29,11 @@ export type FiltresActifs = {
   famille?: FamilleEcheance;
   domaine?: string;
   urgent: boolean;
+  /**
+   * « Personnel et formations » (2026-10-24) : la famille `personnel` et les
+   * formations d'établissement (`estFormation`).
+   */
+  formation?: boolean;
   /** Une zone (ADR-029) — n'existe qu'à partir de deux. */
   batiment?: string;
 };
@@ -39,6 +44,7 @@ function construireHref(
     famille?: string;
     domaine?: string;
     urgent?: boolean;
+    formation?: boolean;
     batiment?: string;
     /**
      * La lecture en cours (mois ou équipement). Elle n'est pas un filtre,
@@ -58,6 +64,7 @@ function construireHref(
   if (filtres.famille) p.set("famille", filtres.famille);
   if (filtres.domaine) p.set("domaine", filtres.domaine);
   if (filtres.urgent) p.set("urgent", "1");
+  if (filtres.formation) p.set("formation", "1");
   if (filtres.batiment) p.set("batiment", filtres.batiment);
   if (filtres.vue) p.set("vue", filtres.vue);
   if (filtres.annee) p.set("annee", filtres.annee);
@@ -224,6 +231,7 @@ export function FiltresCalendrier({
     (f.famille ? 1 : 0) +
     (f.domaine ? 1 : 0) +
     (f.urgent ? 1 : 0) +
+    (f.formation ? 1 : 0) +
     (f.batiment ? 1 : 0);
 
   const appliquer = (suivants: FiltresActifs) => {
@@ -250,6 +258,8 @@ export function FiltresCalendrier({
     appliquer({
       ...f,
       famille,
+      // Un type d'échéance remplace « Personnel et formations » : même groupe.
+      formation: false,
       // Quitter les contrôles lâche leur domaine.
       domaine: famille && famille !== "controle" ? undefined : f.domaine,
     });
@@ -311,19 +321,25 @@ export function FiltresCalendrier({
           <div
             role="dialog"
             aria-label="Filtres du calendrier"
-            className="absolute left-0 top-full z-30 mt-2 w-[300px] rounded-[18px] bg-[color:var(--board-card)] p-2.5 shadow-[0_1px_2px_rgba(13,18,36,.06),0_18px_44px_-16px_rgba(13,18,36,.28)] ring-1 ring-[color:rgba(13,18,36,.08)]"
+            className="absolute left-0 top-full z-30 mt-2 w-[min(92vw,880px)] max-h-[80vh] overflow-y-auto rounded-[18px] bg-[color:var(--board-card)] p-2.5 shadow-[0_1px_2px_rgba(13,18,36,.06),0_18px_44px_-16px_rgba(13,18,36,.28)] ring-1 ring-[color:rgba(13,18,36,.08)]"
           >
+            {/* À l'horizontale (2026-10-24, demande de la propriétaire) : trois
+                colonnes dès l'écran moyen — type, domaine, le reste —, au lieu
+                d'une colonne qu'il fallait faire défiler. */}
+            <div className="grid gap-x-2 md:grid-cols-3">
+            <div>
             <fieldset className="m-0 border-0 p-0">
               <TitreGroupe>Type d&apos;échéance</TitreGroupe>
               <Option
                 forme="radio"
                 name="filtre-famille"
-                actif={!f.famille}
+                actif={!f.famille && !f.formation}
                 onChoisir={() => choisirFamille(undefined)}
               >
                 Tout le calendrier
               </Option>
-              {famillesDisponibles.map((fam) => (
+              {/* `personnel` est absorbé par « Personnel et formations ». */}
+              {famillesDisponibles.filter((fam) => fam !== "personnel").map((fam) => (
                 <Option
                   key={fam}
                   forme="radio"
@@ -335,9 +351,23 @@ export function FiltresCalendrier({
                   {LABEL_FAMILLE_LONG[fam]}
                 </Option>
               ))}
+              {/* « Personnel et formations » (2026-10-24) : les titres et
+                  visites des salariés et les formations d'établissement, un
+                  choix parmi les autres. Remplace « Titres du personnel ». */}
+              <Option
+                forme="radio"
+                name="filtre-famille"
+                actif={f.formation === true}
+                onChoisir={() => appliquer({ ...f, famille: undefined, formation: true })}
+                // Le marqueur de la famille qu'il absorbe : même dessin que
+                // l'ancien « Titres du personnel ».
+                icone={<MarqueurFamille famille="personnel" className="size-4" />}
+              >
+                Personnel et formations
+              </Option>
             </fieldset>
-
-            <div className="mx-2.5 mt-2 border-t border-[color:rgba(10,10,10,.08)]" />
+            </div>
+            <div>
             <fieldset className="m-0 border-0 p-0">
               <TitreGroupe>Domaine des contrôles</TitreGroupe>
               <Option
@@ -360,10 +390,11 @@ export function FiltresCalendrier({
                 </Option>
               ))}
             </fieldset>
+            </div>
+            <div>
 
             {multiBatiments ? (
               <>
-                <div className="mx-2.5 mt-2 border-t border-[color:rgba(10,10,10,.08)]" />
                 <fieldset className="m-0 border-0 p-0">
                   <TitreGroupe>Zone</TitreGroupe>
                   <Option
@@ -389,7 +420,9 @@ export function FiltresCalendrier({
               </>
             ) : null}
 
-            <div className="mx-2.5 mt-2 border-t border-[color:rgba(10,10,10,.08)]" />
+            {multiBatiments ? (
+              <div className="mx-2.5 mt-2 border-t border-[color:rgba(10,10,10,.08)]" />
+            ) : null}
             <fieldset className="m-0 border-0 p-0">
               <TitreGroupe>Urgence</TitreGroupe>
               <Option
@@ -400,6 +433,10 @@ export function FiltresCalendrier({
                 En retard seulement
               </Option>
             </fieldset>
+
+
+            </div>
+            </div>
 
             {nbActifs > 0 ? (
               <>
@@ -438,6 +475,14 @@ export function FiltresCalendrier({
           ton="alerte"
         >
           En retard seulement
+        </Chip>
+      ) : null}
+      {f.formation ? (
+        <Chip
+          onRetirer={() => appliquer({ ...f, formation: false })}
+          icone={<MarqueurFamille famille="personnel" className="size-3" />}
+        >
+          Personnel et formations
         </Chip>
       ) : null}
       {f.batiment ? (

@@ -1,3 +1,4 @@
+import { enumerer } from "@/lib/etablissements/guide-par-module";
 /**
  * Les phrases de l'écran qui s'accordent en nombre, sorties du JSX.
  *
@@ -197,26 +198,33 @@ export function phraseSousLesReponses(dejaDeclaree: boolean): string {
   return "Votre réponse est une déclaration, datée, reprise dans votre dossier de conformité. Rojer ne la vérifie pas.";
 }
 
-/**
- * Sous le compteur de « Ce qui doit être en place » : les lignes déclarées
- * sous une question d'activité, dans Équipe › « Évaluer les risques de vos
- * salariés » (`par-les-risques.ts`, 2026-10-21) — TOUTES, celles « à dater »
- * comprises. Suivie du lien vers cette page. `null` quand il n'y en a aucune.
- */
-export function phraseParLesRisques(n: number): string | null {
-  if (n <= 0) return null;
-  return n === 1
-    ? "Une ligne liée aux risques de vos salariés se déclare sous la question qui la rend due :"
-    : `${n} lignes liées aux risques de vos salariés se déclarent sous la question qui les rend dues :`;
-}
+// ~~`phraseParLesRisques`~~ — retirée le 2026-10-22 : les lignes liées aux
+// risques ne sont plus comptées sur « Ce qui doit être en place », la phrase
+// qui justifiait l'écart n'a plus lieu d'être.
 
 /**
  * Le corps de l'état vide de « Ce qui doit être en place ». Quand les seules
  * lignes du dossier se déclarent sous une question d'activité, dire « aucune »
  * serait faux : la phrase renvoie à la page des risques (revue du 2026-10-21).
  */
-export function phraseRienEnPlace(seulementParLesRisques: boolean): string {
-  return seulementParLesRisques
-    ? "Les seules lignes de votre dossier sont liées aux risques de vos salariés : elles se déclarent sur « Évaluer les risques de vos salariés »."
-    : "Aucune des obligations que votre dossier déclenche n'est un état à constituer ou un fait à dater sans rythme écrit. Les autres sont au calendrier quand elles ont une date, sur « Quand ça arrive » quand elles naissent d'un événement, et sur la fiche de chaque personne quand elles la visent.";
+export function phraseRienEnPlace(seulementDansLEquipe: boolean): string {
+  return seulementDansLEquipe
+    ? "Les seules lignes de votre dossier sont des formations de vos salariés : elles se déclarent dans Équipe, onglet Formations."
+    : "Aucune des obligations que votre dossier déclenche n'est un état à constituer ou un fait à dater sans rythme écrit. Les autres sont au calendrier quand elles ont une date, dans l'onglet « En cas de… » quand elles naissent d'un événement, et sur la fiche de chaque personne quand elles la visent.";
+}
+
+/**
+ * Sous le compteur de « Ce qui doit être en place » : des lignes AFFICHÉES
+ * sont « à confirmer » faute d'une réponse de la fiche de l'établissement
+ * (décision de la propriétaire du 2026-10-22). Suivie du lien vers la fiche.
+ * `null` quand aucune ligne n'en dépend.
+ */
+export function phraseFicheIncomplete(
+  nLignes: number,
+  manques: readonly string[],
+): string | null {
+  if (nLignes <= 0 || manques.length === 0) return null;
+  const debut =
+    nLignes === 1 ? "Une ligne est à confirmer" : `${nLignes} lignes sont à confirmer`;
+  return `${debut} : il manque ${enumerer(manques)} sur la fiche de l'établissement.`;
 }

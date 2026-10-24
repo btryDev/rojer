@@ -18,6 +18,7 @@ import {
   MAJ_DUERP_INFORMATION_NOUVELLE,
   enMinuscule,
 } from "@/lib/referentiels/conformite/texte-r4121-2";
+import { lienPourRepondre } from "@/lib/etablissements/guide-par-module";
 
 /**
  * « Chez vous, concrètement » — la seule section personnalisée de la page
@@ -68,7 +69,7 @@ export function ChezVous({
           règle du DUERP cite sa source ci-dessous. Une vérification datée
           cite la sienne sur sa fiche de vérification, une obligation qui
           vise une personne sur sa fiche dans l&apos;équipe, une obligation
-          qui naît d&apos;un événement sur la page « Quand ça arrive », et
+          qui naît d&apos;un événement dans l&apos;onglet « En cas de… » de « Ce qui doit être en place », et
           une obligation à mettre en place sous sa ligne, sur l&apos;écran
           « Ce qui doit être en place ». Modifiez vos déclarations et cette
           section se recalcule.
@@ -253,12 +254,20 @@ export function ChezVous({
                         — « {l.obligation} ». {l.phrases.join(" ")}
                       </p>
                     ))}
-                    <Link
-                      href={`${base}/modifier`}
-                      className="mt-1 inline-block font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
-                    >
-                      Répondre sur la fiche de l&apos;établissement
-                    </Link>
+                    {(() => {
+                      const lien = lienPourRepondre(
+                        d.sansReponse.flatMap((l) => l.phrases),
+                        etablissementId,
+                      );
+                      return (
+                        <Link
+                          href={lien.href}
+                          className="mt-1 inline-block font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
+                        >
+                          {lien.libelle}
+                        </Link>
+                      );
+                    })()}
                   </div>
                 ) : null}
               </li>

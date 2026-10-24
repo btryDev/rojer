@@ -660,9 +660,12 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     la fonction ne lit aucune horloge, et le réconciliateur ne garde que ses
     protections. La bascule est en production depuis le 2026-09-19 (moteur 3)
 37. **037** — Dire ce qu'un fait rend dû, sans jamais le dater : la page
-    « Quand ça arrive » sert les obligations événementielles du porteur
+    ~~« Quand ça arrive »~~ [2026-10-24 : l'onglet « En cas de… » de « Ce qui
+    doit être en place »] sert les obligations événementielles du porteur
     établissement — ni date, ni état, ni compteur (**fusionnée le 2026-09-21**,
-    `cf5ae396` ; l'issue de ses quatre questions du § 7 n'est écrite nulle part)
+    `cf5ae396` ; ~~l'issue de ses quatre questions du § 7 n'est écrite nulle
+    part~~ [2026-10-24 : Q1 tranchée, amendement en tête de l'ADR ; Q2 à Q4 à
+    confirmer])
 38. **038** — Ce que le DUERP rend dû à une partie de l'effectif : une
     question transverse du DUERP déclenche des titres (`declencheTitres`),
     carte « Formations liées aux risques du poste » sur la fiche salarié
@@ -759,7 +762,7 @@ consulté du produit, le ranger sous un axe le mettrait à deux clics de son
 usage quotidien (ADR-030).
 
 - **La marque « Rojer »**, en tête de rail : le retour au **tableau de bord**, qui n'a pas d'entrée de navigation — un résumé n'est pas une des questions du dirigeant, il y répond toutes (ADR-015, seconde révision)
-- **À faire** (→ Calendrier) : Calendrier · Plan d'actions · **Ce qui doit être en place** · **Quand ça arrive** (ADR-037, depuis le 2026-09-21 ; son emplacement est la question Q1 de l'ADR, à valider) — que des **activités**, jamais l'état filtré d'une autre entrée ; un filtre vit dans l'écran. Le troisième item sert la **deuxième nature** d'obligation de l'ADR-022 — les états permanents, que le générateur écarte faute de rendez-vous et qui n'avaient donc aucune surface (ADR-027). Ce n'est pas un filtre du calendrier : `estSansRendezVous` fait que ces lignes ne peuvent pas y exister
+- **À faire** (→ Calendrier) : Calendrier · Plan d'actions · **Ce qui doit être en place** (onglets « En permanence » et « En cas de… ») · ~~**Quand ça arrive** (ADR-037, depuis le 2026-09-21 ; son emplacement est la question Q1 de l'ADR, à valider)~~ [2026-10-24 : Q1 tranchée, devenue l'onglet « En cas de… » de « Ce qui doit être en place », ADR-037 amendée] — que des **activités**, jamais l'état filtré d'une autre entrée ; un filtre vit dans l'écran. Le troisième item sert la **deuxième nature** d'obligation de l'ADR-022 — les états permanents, que le générateur écarte faute de rendez-vous et qui n'avaient donc aucune surface (ADR-027). Ce n'est pas un filtre du calendrier : `estSansRendezVous` fait que ces lignes ne peuvent pas y exister
 - **Santé-sécurité** (→ DUERP) : DUERP · Équipe · Prescriptions · Permis de feu · Plans de prévention · **Ce que Rojer ne couvre pas** — les personnes et les actes de prévention. Les deux opérations ponctuelles y sont rangées et non avec le lieu : un permis de feu naît d'un chantier daté et meurt clos (ADR-017), c'est un acte de prévention, pas une propriété du bâtiment
 - **Équipement et bâtiment** (→ Équipements) : Équipements · Zones · Prestataires · Registre de sécurité · Accessibilité · Carnet sanitaire — le lieu et ce qu'il contient. Le registre de sécurité y est parce que son contenu est celui du parc ; l'ADR-030 dit que c'est son choix le plus fragile, et qu'il se corrige en déplaçant une entrée, pas en rouvrant la découpe
 - **Documentation** (→ Documents obligatoires) : Documents obligatoires · Préparer un contrôle · Comprendre — ce qui parle du dossier plutôt que du lieu. « Préparer un contrôle » y est rangé **une seule fois** : sa sortie est un jeu de documents, et une entrée présente deux fois laisse chercher laquelle est la bonne

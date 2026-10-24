@@ -66,8 +66,6 @@ export default async function ModifierEtablissementPage({
               typesErpAutres: etab.typesErpAutres,
               categorieErp: etab.categorieErp,
               comporteLocauxSommeilPublic: etab.comporteLocauxSommeilPublic,
-              epiPresents: etab.epiPresents,
-              epiPresentsDetail: etab.epiPresentsDetail,
               ssiCategorieAouB: etab.ssiCategorieAouB,
               natureActivite: etab.natureActivite,
               effectifPublicAdmis: etab.effectifPublicAdmis,

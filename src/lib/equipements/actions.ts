@@ -16,11 +16,9 @@ import {
   regenererApresMutation,
 } from "@/lib/calendrier/regeneration-sure";
 import {
-  CHAMPS_TRI_ETAT,
   equipementSchema,
   libelleEquipementSchema,
   normaliserFormDataEquipement,
-  normaliserTriEtat,
   preRemplissageSchema,
   serialiserCaracteristiques,
   type ChampTriEtat,
@@ -36,8 +34,8 @@ import {
   reponsesExigeesManquantes,
   type RegimeExigence,
 } from "./reponses-exigees";
-import type { ReponseParametrage } from "@/lib/etablissements/parametrage";
 import { MESSAGE_APPAREIL_RETIRE, estAppareilRetire } from "./retrait";
+import { constaterEpi } from "@/lib/etablissements/epi-constate";
 
 /**
  * Toute mutation d'équipement invalide le calendrier de vérifications : on
@@ -70,28 +68,10 @@ async function regenererCalendrier(
   return ok ? { ok: true } : { ok: false, message: MESSAGE_REGEN_ECHEC };
 }
 
-/**
- * Un équipement de protection individuelle déclaré contredit un « non » (ou un
- * silence) à « Fournissez-vous des équipements de protection individuelle ? »
- * (relecture indépendante du 2026-10-12, audit B2). Le « non » laissait
- * `R. 4323-105` retiré alors qu'un harnais était déclaré, et `AIDE_EPI`
- * invite justement à les déclarer un par un. La déclaration vaut « oui » :
- * `epiPresents` passe à vrai, AVANT la régénération que l'appelant fait déjà.
- * Une seule règle, `estCategorieEpi`.
- */
-async function constaterEpiDeclare(
-  etablissementId: string,
-  categories: readonly string[],
-): Promise<void> {
-  if (!categories.some(estCategorieEpi)) return;
-  await prisma.etablissement.updateMany({
-    where: {
-      id: etablissementId,
-      OR: [{ epiPresents: false }, { epiPresents: null }],
-    },
-    data: { epiPresents: true },
-  });
-}
+// ~~`constaterEpiDeclare`~~ — remplacée le 2026-10-22 par `constaterEpi`
+// (`etablissements/epi-constate.ts`), seule règle des EPI constatés : un EPI
+// déclaré au parc et une mesure de protection individuelle en place valent
+// « oui » (audit B2 du 2026-10-12, revue du 2026-10-22).
 
 /**
  * Ce que l'exigence des réponses lit de l'établissement (`RegimeExigence`) :
@@ -203,7 +183,9 @@ export async function creerEquipement(
       materielNonCouvert: parsed.data.materielNonCouvert ?? null,
     },
   });
-  await constaterEpiDeclare(etablissementId, [parsed.data.categorie]);
+  if (estCategorieEpi(parsed.data.categorie)) {
+    await constaterEpi(etablissementId, { regenerer: false });
+  }
 
   const regen = await regenererCalendrier(etablissementId);
 
@@ -285,7 +267,9 @@ export async function modifierEquipement(
     },
   });
 
-  await constaterEpiDeclare(eq.etablissementId, [parsed.data.categorie]);
+  if (estCategorieEpi(parsed.data.categorie)) {
+    await constaterEpi(eq.etablissementId, { regenerer: false });
+  }
   const regen = await regenererCalendrier(eq.etablissementId);
 
   revalidatePath(`/etablissements/${eq.etablissementId}`);
@@ -557,10 +541,9 @@ export async function creerEquipementsDepuisPreRemplissage(
         : {}),
     })),
   });
-  await constaterEpiDeclare(
-    etablissementId,
-    entrees.map((e) => e.categorie),
-  );
+  if (entrees.some((e) => estCategorieEpi(e.categorie))) {
+    await constaterEpi(etablissementId, { regenerer: false });
+  }
 
   const regen = await regenererCalendrier(etablissementId);
 
@@ -572,95 +555,4 @@ export async function creerEquipementsDepuisPreRemplissage(
     created: result.count,
     ...(regen.ok ? {} : { avertissement: regen.message }),
   };
-}
-
-/**
- * La relance d'un appareil muet (D29 (a)) : une question exigée, répondue
- * depuis le tableau de bord. Même patron que les questions de la fiche
- * (`etablissements/parametrage.ts`) : l'appartenance d'abord, par
- * l'établissement de l'appareil ; « oui » ou « non », jamais de repli ; la
- * propriété écrite dans le JSON sans toucher aux autres ; le calendrier
- * régénéré, et son échec dit plutôt que tu.
- */
-export async function repondreQuestionEquipement(
-  equipementId: string,
-  champ: ChampTriEtat,
-  _prev: ReponseParametrage,
-  formData: FormData,
-): Promise<ReponseParametrage> {
-  const eq = await appareilDuCompte(equipementId);
-  if (estAppareilRetire(eq)) {
-    return { status: "error", message: MESSAGE_APPAREIL_RETIRE };
-  }
-
-  // Seule une question que la décision exige pour CETTE catégorie : l'action
-  // n'écrit pas n'importe quelle clé qu'on lui poste.
-  if (
-    !(CHAMPS_TRI_ETAT as readonly string[]).includes(champ) ||
-    !questionsExigeesPour(eq.categorie as CategorieEquipement, await regimeDe(eq.etablissementId)).includes(champ)
-  ) {
-    return { status: "error", message: "Question inconnue pour cet appareil." };
-  }
-  const brut = formData.get("reponse");
-  const reponse = brut === "oui" || brut === "non" ? normaliserTriEtat(brut) : undefined;
-  if (reponse === undefined) {
-    return { status: "error", message: "Répondez oui ou non." };
-  }
-
-  // UNE CLÉ, ÉCRITE PAR LA BASE (reprise des suites du lot 3, 2026-10-13). La
-  // fusion lecture-puis-écriture de tout l'objet JSON écrasait une écriture
-  // concurrente : deux relances répondues ensemble (deux onglets, deux
-  // questions du même appareil), ou une fiche enregistrée entre la lecture
-  // ci-dessus et l'écriture, et l'une des deux réponses redevenait un silence.
-  // Même contrat que `ecrireReponseFermee` (`duerps/ecrire-reponse-fermee.ts`),
-  // la politique sœur du dépôt : un seul UPDATE pose UNE clé par `jsonb_set`
-  // (`create_missing` à vrai), repart d'un objet vide si la colonne n'en est
-  // pas un (NULL tant que rien n'est déclaré), garde un booléen JSON, lie la
-  // clé, la valeur et les identifiants sans les concaténer, et horodate la
-  // ligne — le `@updatedAt` de Prisma est appliqué par le client, pas par la
-  // base. Scopé par l'appareil ET l'établissement dont l'appartenance vient
-  // d'être contrôlée. `champ` est une clé fermée : elle a passé le filtre de
-  // `questionsExigeesPour` plus haut.
-  //
-  // Revue du 2026-10-13 : `AND "actif" = true` (R2) — un appareil retiré
-  // entre la lecture et l'écriture est en lecture seule (`retrait.ts`), la
-  // garde de plus haut ne voyait que la photo. `NOW() AT TIME ZONE 'UTC'`
-  // (R3) — `updatedAt` est un TIMESTAMP(3) sans fuseau où Prisma range des
-  // instants UTC (ADR-011 § 1) ; `NOW()` seul y écrirait l'heure locale de la
-  // session.
-  const lignes = await prisma.$executeRaw`
-    UPDATE "Equipement"
-       SET "caracteristiques" = jsonb_set(
-             CASE
-               WHEN jsonb_typeof("caracteristiques") = 'object'
-               THEN "caracteristiques"
-               ELSE '{}'::jsonb
-             END,
-             ARRAY[${champ}]::text[],
-             to_jsonb(${reponse}::boolean),
-             true
-           ),
-           "updatedAt" = NOW() AT TIME ZONE 'UTC'
-     WHERE "id" = ${equipementId}
-       AND "etablissementId" = ${eq.etablissementId}
-       AND "actif" = true`;
-  // L'appareil vient d'être lu : zéro ligne veut dire qu'il a disparu ou
-  // quitté le parc entre-temps. Se taire afficherait une réponse que rien
-  // n'a enregistrée.
-  if (lignes === 0) {
-    return {
-      status: "error",
-      message:
-        "Cet équipement a été supprimé ou retiré du parc entre-temps : la réponse n'a pas été enregistrée.",
-    };
-  }
-
-  const regen = await regenererCalendrier(eq.etablissementId);
-  revalidatePath(`/etablissements/${eq.etablissementId}`);
-  revalidatePath(`/etablissements/${eq.etablissementId}/equipements`);
-  revalidatePath(`/etablissements/${eq.etablissementId}/equipements/${equipementId}`);
-  revalidatePath(`/etablissements/${eq.etablissementId}/calendrier`);
-  return regen.ok
-    ? { status: "success" }
-    : { status: "success_avec_avertissement", message: regen.message };
 }

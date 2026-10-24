@@ -106,6 +106,7 @@ import {
   joursCivilsEntre,
 } from "@/lib/dates";
 import { obligationParId } from "@/lib/referentiels/conformite";
+import { estFormation } from "@/lib/referentiels/conformite/types";
 import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
 import {
   domainesPresents,
@@ -265,10 +266,11 @@ export default async function CalendrierPage({
     vue?: string;
     batiment?: string;
     annee?: string;
+    formation?: string;
   }>;
 }) {
   const { id } = await params;
-  const { domaine, urgent, famille, batiment, annee } = await searchParams;
+  const { domaine, urgent, famille, batiment, annee, formation } = await searchParams;
 
   // Rattrapage à l'affichage, AVANT toute lecture : un calendrier jamais
   // généré, périmé par un échec, ou calculé sur une version antérieure du
@@ -335,9 +337,12 @@ export default async function CalendrierPage({
   const multiBatiments = estMultiBatiments(batiments);
   const filtreBatiment = resoudreFiltreBatiment(batiments, batiment);
 
-  const filtreFamille = FAMILLES_FILTRABLES.includes(famille as FamilleEcheance)
-    ? (famille as FamilleEcheance)
-    : undefined;
+  // « Personnel et formations » (2026-10-24) absorbe la famille `personnel` :
+  // un ancien lien `?famille=personnel` y mène.
+  const filtreFamille =
+    famille !== "personnel" && FAMILLES_FILTRABLES.includes(famille as FamilleEcheance)
+      ? (famille as FamilleEcheance)
+      : undefined;
   // Le domaine est un attribut des contrôles : il n'a de sens que sur
   // eux (filtre famille « Tout » ou « Contrôles »).
   const filtreDomaine =
@@ -346,6 +351,10 @@ export default async function CalendrierPage({
       ? (domaine as DomaineObligation)
       : undefined;
   const filtreUrgent = urgent === "1";
+  // « Personnel et formations » (décision de la propriétaire du 2026-10-24) :
+  // les titres et visites des salariés (famille `personnel`) et les
+  // formations d'établissement (`estFormation`), lus ligne par ligne.
+  const filtreFormation = formation === "1" || famille === "personnel";
 
   // Second temps : ce que le filtre borne.
   const [verifsBruts, etat, verifsDuLieu] = await Promise.all([
@@ -384,18 +393,27 @@ export default async function CalendrierPage({
   // Le flux des vérifications porte DEUX familles (ADR-016, ADR-023) : le
   // filtre s'y lit ligne par ligne, sur la famille déduite du porteur, et
   // non en gardant ou jetant le flux entier.
-  const verifsVisibles = filtreFamille
-    ? verifsBruts.filter(
-        (v) => FAMILLE_DE_TYPE[typeDeVerification(v)] === filtreFamille,
-      )
-    : verifsBruts;
+  const verifsVisibles = (
+    filtreFamille
+      ? verifsBruts.filter(
+          (v) => FAMILLE_DE_TYPE[typeDeVerification(v)] === filtreFamille,
+        )
+      : verifsBruts
+  ).filter((v) => {
+    if (!filtreFormation) return true;
+    if (FAMILLE_DE_TYPE[typeDeVerification(v)] === "personnel") return true;
+    const o = obligationParId(v.obligationId);
+    return o !== undefined && estFormation(o);
+  });
   // Les échéances du registre suivent le filtre famille — y compris la
   // famille « controle » (analyses légionelles). Seul le filtre domaine
   // les écarte : il qualifie le référentiel d'équipements, rien d'autre.
   // Le bâtiment, lui, laisse passer ce qui concerne tout l'établissement
   // (ADR-019) : masquer la mise à jour du DUERP sous « Réserve » ferait
   // mentir le calendrier par omission.
-  const autresVisibles = filtreDomaine
+  // Les échéances du registre (DUERP, permis de feu…) ne sont pas des
+  // formations : le filtre Formations les écarte aussi.
+  const autresVisibles = filtreDomaine || filtreFormation
     ? []
     : filtrerParBatiment(
         autresEcheances.filter(
@@ -1121,6 +1139,7 @@ export default async function CalendrierPage({
           famille: filtreFamille,
           domaine: filtreDomaine,
           urgent: filtreUrgent,
+          formation: filtreFormation,
           batiment: filtreBatiment,
         }}
       />

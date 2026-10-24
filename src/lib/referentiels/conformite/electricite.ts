@@ -160,6 +160,7 @@ export const obligationsElectricite: Obligation[] = [
   },
   {
     id: "elec-travail-habilitation-personnel",
+    formation: true,
     domaine: "electricite",
     libelle: "Habilitation électrique du personnel opérant sur ou à proximité d'installations électriques",
     description:
@@ -295,6 +296,7 @@ export const obligationsElectricite: Obligation[] = [
   // ---------------------------------------------------------------------------
   {
     id: "elec-salarie-habilitation",
+    formation: true,
     domaine: "electricite",
     libelle: "Habilitation électrique du travailleur désigné",
     description:

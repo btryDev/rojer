@@ -1,8 +1,8 @@
 /**
  * D'une ligne d'état permanent à ce que la vignette et la fiche reçoivent
  * (`LigneCompacte`, `RevueEnPlace`). Partagé par l'écran « en place » et par
- * Équipe › « Évaluer les risques de vos salariés », où se déclarent les lignes
- * nées d'un fait d'activité (`par-les-risques.ts`) : une seule fiche, écrite
+ * Équipe › Formations, où se déclarent les formations (`par-l-equipe.ts`,
+ * ADR-047) : une seule fiche, écrite
  * une fois — deux copies des mêmes props divergent à la première correction.
  *
  * Tout est sérialisé : dates en ISO.
@@ -10,7 +10,7 @@
 
 import type { FicheLigne } from "@/components/etats-permanents/RevueEnPlace";
 import type { EtatCourt } from "@/components/etats-permanents/LigneCompacte";
-import { PHRASE_SANS_REPONSE } from "@/lib/matching/sans-reponse";
+import { lienPourRepondre } from "@/lib/etablissements/guide-par-module";
 import {
   GROUPE_REPLI,
   LIBELLE_GROUPE,
@@ -22,21 +22,6 @@ import {
 import { FOND_TEINTE, illustrationDe, teinteDe } from "./illustrations";
 import { questionDe } from "./questions";
 import type { LigneEtatPermanent } from "./queries";
-
-/** Les phrases « à confirmer » des cinq faits d'activité (ADR-041). */
-const PHRASES_FAITS_ACTIVITE = new Set<string>(
-  (
-    [
-      "manutention_manuelle",
-      "travail_ecran",
-      "operations_electriques",
-      "conduite_engins",
-      "exposition_cmr",
-    ] as const
-  ).map((q) => PHRASE_SANS_REPONSE[q]),
-);
-const LIEN_RISQUES = "Répondre dans « Évaluer les risques de vos salariés »";
-const LIEN_FICHE = "Répondre sur la fiche de l'établissement";
 
 export function groupeDe(l: LigneEtatPermanent): GroupeAffichage {
   return l.obligation.usageEcran?.groupe ?? GROUPE_REPLI;
@@ -77,11 +62,13 @@ export function versFiche(
   // OÙ RÉPONDRE (2026-10-20, relevé par la propriétaire). Le lien menait
   // toujours à `/modifier`, qui ne pose pas les cinq questions d'activité :
   // elles vivent dans Équipe › « Évaluer les risques de vos salariés »
-  // (ADR-041). Les autres questions (EPI, chambres, SSI…) restent sur la fiche.
-  const ouRepondre = (phrases: string[]) =>
-    phrases.every((p) => PHRASES_FAITS_ACTIVITE.has(p))
-      ? { phrases, href: `/etablissements/${id}/equipe/risques`, lien: LIEN_RISQUES }
-      : { phrases, href: `/etablissements/${id}/modifier`, lien: LIEN_FICHE };
+  // (ADR-041). Les autres questions (~~EPI,~~ chambres, SSI…) restent sur la
+  // fiche. [2026-10-22 : la question des EPI a quitté la fiche, c'est un fait d'activité, posé au DUERP et dans Équipe.]
+  // [2026-10-22 : la règle est partagée, `lienPourRepondre`.]
+  const ouRepondre = (phrases: string[]) => {
+    const { href, libelle } = lienPourRepondre(phrases, id);
+    return { phrases, href, lien: libelle };
+  };
   return {
     obligationId: l.obligation.id,
     libelle: l.obligation.libelle,

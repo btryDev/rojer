@@ -18,6 +18,7 @@ const tous = (v: boolean | null): ReponsesFaitsActivite => ({
   operationsElectriques: v,
   conduiteEngins: v,
   expositionCMR: v,
+  epiPresents: null,
 });
 
 const rendre = (faits: ReponsesFaitsActivite) => {
@@ -85,8 +86,8 @@ describe("CarteTitresDuDuerp — ce que l'écran nomme", () => {
 
   it("après un « non », ne renvoie pas à une ligne que le moteur a retirée", () => {
     for (const nature of ["etat_permanent", "evenementielle"]) {
-      expect(phraseFormation("non", nature)).not.toMatch(/Ce qui doit être en place|Quand ça arrive/);
-      expect(phraseFormation("oui", nature)).toMatch(/Ce qui doit être en place|Quand ça arrive/);
+      expect(phraseFormation("non", nature)).not.toContain(nature === "evenementielle" ? "En cas de…" : "Ce qui doit être en place");
+      expect(phraseFormation("oui", nature)).toContain(nature === "evenementielle" ? "En cas de…" : "Ce qui doit être en place");
     }
   });
 

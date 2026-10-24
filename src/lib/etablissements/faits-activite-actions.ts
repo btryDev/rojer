@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import {
   MESSAGE_REGEN_ECHEC,
@@ -9,14 +8,15 @@ import {
 } from "@/lib/calendrier/regeneration-sure";
 import { FAITS_ACTIVITE, type ChampFaitActivite } from "./faits-activite";
 import { ecrireFaitActivite } from "./faits-activite-ecriture";
+import { epiConstates, MESSAGE_EPI_CONSTATES } from "./epi-constate";
 import type { ReponseParametrage } from "./parametrage";
 
 const CHAMPS = new Set<string>(FAITS_ACTIVITE.map((f) => f.champ));
 
 /**
  * Répond à un fait d'activité depuis un écran qui n'est pas le DUERP — l'écran
- * « Évaluer les risques de vos salariés » d'Équipe, ou la relance de la fiche
- * établissement (ADR-041). `null` retire la réponse.
+ * « Évaluer les risques de vos salariés » d'Équipe~~, ou la relance de la fiche
+ * établissement~~ [2026-10-22, `lot/guide-par-module` : relance retirée, le guide renvoie à la fiche] (ADR-041). `null` retire la réponse.
  *
  * Le calendrier est régénéré : la réponse ajoute ou retire des obligations,
  * comme une réponse de la fiche (`parametrage.ts`).
@@ -33,6 +33,13 @@ export async function repondreFaitActivite(
   if (valeur !== true && valeur !== false && valeur !== null) {
     return { status: "error", message: "Répondez oui ou non." };
   }
+  // Des EPI constatés au dossier font la réponse (`epi-constate.ts`) : un
+  // « non » ou un retrait la contredirait, et la consigne d'utilisation
+  // (R. 4323-105) tomberait alors que la mesure ou l'équipement est là
+  // (revue du 2026-10-22).
+  if (champ === "epiPresents" && valeur !== true && (await epiConstates(etablissementId))) {
+    return { status: "error", message: MESSAGE_EPI_CONSTATES };
+  }
   const { conserve } = await ecrireFaitActivite(etablissementId, champ, valeur, "si_vierge");
   const regenere = await regenererApresMutation(etablissementId, `faits-activite/${champ}`);
   revalidatePath(`/etablissements/${etablissementId}`, "layout");
@@ -42,25 +49,4 @@ export async function repondreFaitActivite(
     ? { status: "success" }
     : { status: "success_avec_avertissement", message: MESSAGE_REGEN_ECHEC };
   return conserve ? { ...base, risqueConserve: true } : base;
-}
-
-const reponseBooleenne = z.enum(["oui", "non"]);
-
-/** La même, au format du composant `QuestionParametrage` (relances de la fiche). */
-export async function repondreFaitActiviteFormulaire(
-  etablissementId: string,
-  champ: ChampFaitActivite,
-  _prev: ReponseParametrage,
-  formData: FormData,
-): Promise<ReponseParametrage> {
-  const parsed = reponseBooleenne.safeParse(formData.get("reponse"));
-  if (!parsed.success) return { status: "error", message: "Répondez oui ou non." };
-  // La relance de la fiche n'affiche pas l'avertissement du risque conservé :
-  // l'étape transverse du DUERP le dit, à l'endroit où l'on peut agir.
-  const r = await repondreFaitActivite(etablissementId, champ, parsed.data === "oui");
-  return r.status === "success_avec_avertissement"
-    ? { status: r.status, message: r.message }
-    : r.status === "error"
-      ? { status: "error", message: r.message }
-      : { status: r.status };
 }

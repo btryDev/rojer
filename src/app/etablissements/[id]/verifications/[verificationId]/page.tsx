@@ -485,7 +485,7 @@ export default async function VerificationDetailPage({
         <section className="carte-board px-7 py-5 sm:px-8">
           <BlocAConfirmer
             marque={marque}
-            hrefFicheEtablissement={`/etablissements/${id}/modifier`}
+            etablissementId={id}
             entrepriseId={marques.entrepriseId}
           />
         </section>

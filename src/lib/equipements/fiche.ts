@@ -35,7 +35,7 @@ import {
   estVerificationArchivee,
 } from "@/lib/dates/retard";
 import { obligationParId } from "@/lib/referentiels/conformite";
-import { cheminDeDeclaration } from "@/lib/etats-permanents/par-les-risques";
+import { cheminDeDeclaration } from "@/lib/etats-permanents/par-l-equipe";
 import type { Obligation } from "@/lib/referentiels/conformite/types";
 import {
   determineObligationsApplicables,

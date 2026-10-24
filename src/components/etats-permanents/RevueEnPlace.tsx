@@ -77,10 +77,18 @@ const ERREUR_ENREGISTREMENT =
 export function RevueEnPlace({
   etablissementId,
   lignes,
+  parcours = true,
   children,
 }: {
   etablissementId: string;
   lignes: FicheLigne[];
+  /**
+   * Précédente, Suivante, le « n / N » et les flèches : une REVUE qui passe
+   * les lignes l'une après l'autre (« en place »). Faux sur « Évaluer les
+   * risques », où une carte s'ouvre seule sous sa question (décision de la
+   * propriétaire du 2026-10-24).
+   */
+  parcours?: boolean;
   children: ReactNode;
 }) {
   const boite = useRef<HTMLDialogElement>(null);
@@ -131,7 +139,7 @@ export function RevueEnPlace({
       if (!l || pending) return;
       if (r === "nsp") {
         if (!explique) setExplique(true);
-        else if (index !== null && index < lignes.length - 1) aller(index + 1);
+        else if (parcours && index !== null && index < lignes.length - 1) aller(index + 1);
         else fermer();
         return;
       }
@@ -162,7 +170,7 @@ export function RevueEnPlace({
         }
       });
     },
-    [l, pending, explique, index, lignes.length, aller, fermer, declare, etablissementId],
+    [l, pending, explique, index, lignes.length, aller, fermer, declare, etablissementId, parcours],
   );
 
   // Raccourcis de la maquette : 1, 2, 3, et les flèches.
@@ -173,12 +181,12 @@ export function RevueEnPlace({
       if (e.key === "1") repondre("oui");
       else if (e.key === "2") repondre("non");
       else if (e.key === "3") repondre("nsp");
-      else if (e.key === "ArrowRight") aller(index + 1);
-      else if (e.key === "ArrowLeft") aller(index - 1);
+      else if (parcours && e.key === "ArrowRight") aller(index + 1);
+      else if (parcours && e.key === "ArrowLeft") aller(index - 1);
     };
     window.addEventListener("keydown", touche);
     return () => window.removeEventListener("keydown", touche);
-  }, [index, repondre, aller]);
+  }, [index, repondre, aller, parcours]);
 
   const pastilleEtat = !l ? null : l.parLesTitres ? (
     <span className={CLASSE_ETAT + (l.parLesTitres.enPlace ? ETAT_ON : ETAT_A)}>
@@ -236,7 +244,9 @@ export function RevueEnPlace({
               <div className="flex items-start justify-between gap-3">
                 <p className="board-eyebrow m-0 pt-2 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
                   {l.surTitre}
-                  <span className="tabular-nums"> · {index + 1} / {lignes.length}</span>
+                  {parcours && (
+                    <span className="tabular-nums"> · {index + 1} / {lignes.length}</span>
+                  )}
                 </p>
                 <button
                   type="button"
@@ -324,14 +334,16 @@ export function RevueEnPlace({
                 {phraseSousLesReponses(declare)}
               </p>
 
-              <div className="flex items-center justify-between gap-2">
-                <button type="button" disabled={index === 0} onClick={() => aller(index - 1)} className={NAV}>
-                  ← Précédente
-                </button>
-                <button type="button" disabled={index === lignes.length - 1} onClick={() => aller(index + 1)} className={NAV}>
-                  Suivante →
-                </button>
-              </div>
+              {parcours && (
+                <div className="flex items-center justify-between gap-2">
+                  <button type="button" disabled={index === 0} onClick={() => aller(index - 1)} className={NAV}>
+                    ← Précédente
+                  </button>
+                  <button type="button" disabled={index === lignes.length - 1} onClick={() => aller(index + 1)} className={NAV}>
+                    Suivante →
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}

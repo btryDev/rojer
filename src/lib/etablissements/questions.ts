@@ -18,28 +18,24 @@ export function questionRepondue(valeur: boolean | null | undefined): boolean {
   return valeur === true || valeur === false;
 }
 
-/**
- * LA QUESTION DES EPI, SES MOTS UNE FOIS — la checklist du tableau de bord la
- * pose, la fiche la corrige (2026-10-12, audit B2 : la checklist s'efface une
- * fois répondue, et un « non » ne se corrigeait plus nulle part).
- */
-export const QUESTION_EPI =
-  "Fournissez-vous des équipements de protection individuelle ?";
-export const AIDE_EPI =
-  "Harnais, casques, gants, chaussures de sécurité, protections auditives. Si oui, l'employeur élabore une consigne d'utilisation de ces équipements (art. R. 4323-105 du Code du travail) : elle s'affiche tant que la réponse n'est pas « non ». Vous pouvez aussi les déclarer un par un dans vos équipements, avec leur marque et leur lieu.";
-export const LIBELLE_DETAIL_EPI = "Lesquels ? (facultatif)";
-export const EXEMPLE_DETAIL_EPI =
-  "Harnais antichute, gants anti-coupure, chaussures…";
+// ~~LA QUESTION DES EPI (`QUESTION_EPI`, `AIDE_EPI`, détail)~~ — retirée le
+// 2026-10-22 : la question est un fait d'activité, ses mots vivent dans
+// `faits-activite.ts`.
 
 /**
  * LA QUESTION DU SSI DE CATÉGORIE A OU B, SES MOTS UNE FOIS — la fiche la
- * pose, la relance la reprend (2026-10-12, décision de la propriétaire du
+ * pose, ~~la relance la reprend~~ [2026-10-22, `lot/guide-par-module` : relance retirée, le guide renvoie à la fiche] (2026-10-12, décision de la propriétaire du
  * 2026-10-08 : « une seule question sur la fiche établissement, au lieu d'une
  * par désenfumage »). Elle n'est posée qu'aux catégories d'ERP où une
  * obligation la lit : DF 10 est au livre II, que PE 1 § 1 écarte en 5ᵉ
  * catégorie. `questions.test.ts` confronte la liste au référentiel.
  */
 export const CATEGORIES_ERP_QUESTION_SSI = ["N1", "N2", "N3", "N4"] as const;
+
+/** La fiche pose-t-elle la question du SSI A/B ? Seule lecture de la règle. */
+export function questionSsiPosee(d: { estERP: boolean | null; categorieErp: string | null }): boolean {
+  return d.estERP === true && (CATEGORIES_ERP_QUESTION_SSI as readonly string[]).includes(d.categorieErp ?? "");
+}
 export const QUESTION_SSI =
   "L'établissement dispose-t-il d'un système de sécurité incendie (SSI) de catégorie A ou B ?";
 export const AIDE_SSI =
@@ -139,7 +135,7 @@ export const AIDE_SSI =
  * ~~aide § 1 : « Sur l'étiquette, la mention « extrêmement inflammable »
  * accompagne une flamme dans un losange bordé de rouge : gaz (H220), aérosol
  * (H222), liquide (H224). Une flamme seule, sans cette mention, ne suffit
- * pas. »~~ La relance de la checklist n'affiche que ce § 1 : un détenteur
+ * pas. »~~ La relance de la checklist n'affichait que ce § 1 [2026-10-22, `lot/guide-par-module` : relance retirée, le guide renvoie à la fiche] : un détenteur
  * d'un produit H250, flamme seule, y lisait « non », alors que le § 2 le fait
  * entrer. H250 passe au § 1, qui se suffit à lui-même ; le § 2 y renvoie.
  * ~~aide § 2 : « La question vise aussi les matières qui, dans l'état où
@@ -161,7 +157,8 @@ export const AIDE_SSI =
  * texte.
  *
  * UN SEUL TEXTE : la fiche (`EtablissementForm`), le parcours de création
- * (`StepTypologie`), la relance de la checklist (`relance.ts`) et la phrase
+ * (`StepTypologie`), ~~la relance de la checklist (`relance.ts`)~~
+ * [2026-10-22, `lot/guide-par-module` : relance retirée, le guide renvoie à la fiche] et la phrase
  * « à confirmer » (`PHRASE_SANS_REPONSE` — écrans, guide, MCP) l'importent
  * d'ici. `question-matieres.test.tsx` le vérifie surface par surface.
  */
@@ -176,14 +173,6 @@ export const AIDE_MATIERES: readonly string[] = [
   "L'art. R. 4227-22 du Code du travail nomme les matières explosives, comburantes ou extrêmement inflammables. L'art. R. 4227-34 ne vise, parmi elles, que les matières inflammables, dans les établissements où elles sont « manipulées et mises en œuvre ». Les explosifs et les comburants n'entrent donc pas dans cette question, et les matières inflammables non plus quand on se contente de les entreposer sans les mettre en œuvre. Ces cas relèvent des art. R. 4227-22 à R. 4227-25, que Rojer ne suit pas et qu'il signale sur la page « Ce que Rojer ne couvre pas ».",
   "Si oui, l'alarme sonore, la consigne incendie et les exercices semestriels sont dus quel que soit l'effectif (art. R. 4227-34, R. 4227-37 et R. 4227-39 du Code du travail). Si non, ces lignes sont retirées, sauf là où plus de cinquante personnes sont habituellement présentes : ce seuil suffit à les rendre dues. Tant que la question n'a pas de réponse, elles s'affichent « à confirmer ».",
 ];
-
-/**
- * Le renvoi de la relance (2026-10-13, revue de `e6ba53d9`) : la checklist ne
- * reprend que le premier paragraphe — l'aide entière y faisait environ 1 400
- * signes — et renvoie au reste, que la fiche affiche en entier.
- */
-export const RENVOI_AIDE_MATIERES =
-  "Les exemples, les articles visés et ce que change votre réponse sont détaillés sous la question, sur la fiche de l'établissement.";
 
 /** Le lien de l'aide : le tableau CLP de l'INERIS, relu le 2026-10-13. */
 export const LIEN_TABLEAU_CLP = {

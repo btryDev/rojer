@@ -26,6 +26,7 @@ const AUCUN: ReponsesFaitsActivite = {
   operationsElectriques: null,
   conduiteEngins: null,
   expositionCMR: null,
+  epiPresents: null,
 };
 
 /** Ce que le fait cite : sa raison, et le risque que sa question ajoute au DUERP. */
@@ -110,9 +111,10 @@ describe("le moteur lit le fait — la règle du non-renseigné", () => {
     }
   });
 
-  it("la consigne EPI, conditionnée par `epiPresents` (hors registre), est fondée sur R. 4323-105", () => {
-    // `epiPresents` n'est pas au registre (sa question vit sur la fiche) : la
-    // garde de fondement du registre ne le voit pas, celle-ci si.
+  it("la consigne EPI, conditionnée par `epiPresents`, est fondée sur R. 4323-105", () => {
+    // ~~`epiPresents` n'est pas au registre (sa question vit sur la fiche)~~
+    // [2026-10-22 : il y est, fait d'activité] : la garde reste, et nomme
+    // l'article de la consigne.
     const epi = conditionnees.filter((o) => o.typologies.activite === "epiPresents");
     expect(epi.length).toBeGreaterThan(0);
     for (const o of epi) {

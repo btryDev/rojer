@@ -1784,6 +1784,7 @@ export const obligationsIncendie: Obligation[] = [
 
   {
     id: "incendie-erp-5-instruction-personnel",
+    formation: true,
     domaine: "incendie",
     libelle:
       "Personnel instruit des conduites à tenir en cas d'incendie et entraîné à la manœuvre des moyens de secours (ERP de 5ᵉ catégorie)",
@@ -1823,6 +1824,7 @@ export const obligationsIncendie: Obligation[] = [
 
   {
     id: "incendie-hotel-po-instruction-personnel-semestrielle",
+    formation: true,
     domaine: "incendie",
     libelle:
       "Séances d'instruction et d'entraînement du personnel, deux fois par an (hôtel de 5ᵉ catégorie)",
@@ -1907,6 +1909,7 @@ export const obligationsIncendie: Obligation[] = [
 
   {
     id: "incendie-erp-personnel-designe-moyens-secours",
+    formation: true,
     domaine: "incendie",
     libelle:
       // ~~« … (ERP des quatre premières catégories : restaurants, magasins, hôtels,

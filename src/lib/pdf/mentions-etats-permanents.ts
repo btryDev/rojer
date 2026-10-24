@@ -307,12 +307,12 @@ function ligne(l: {
 export function blocEtatsPermanents(
   d: EtatsPermanentsDuDossier,
 ): BlocEtatsPermanents {
-  // Les lignes déclarées sous une question d'activité (`parLesRisques`,
+  // Les lignes déclarées sous une question d'activité (`parLEquipe`,
   // 2026-10-21) quittent l'écran, pas le document : chacune y reprend sa
   // place selon son verbe.
   const etats = [
     ...d.familles.flatMap((f) => f.blocs.flatMap((b) => b.lignes)),
-    ...d.parLesRisques.filter((l) => l.mode !== "fait"),
+    ...d.parLEquipe.filter((l) => l.mode !== "fait"),
   ]
     .sort(
       (a, b) =>
@@ -322,7 +322,7 @@ export function blocEtatsPermanents(
         ) || comparerLignes(a, b),
     )
     .map(ligne);
-  const faits = [...d.faits, ...d.parLesRisques.filter((l) => l.mode === "fait")].map(ligne);
+  const faits = [...d.faits, ...d.parLEquipe.filter((l) => l.mode === "fait")].map(ligne);
 
   if (etats.length === 0 && faits.length === 0) {
     return {

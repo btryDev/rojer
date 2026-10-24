@@ -35,7 +35,7 @@ import {
   type FondementLigne,
 } from "@/lib/etats-permanents/fondement";
 import { ancreEtatPermanent } from "@/lib/etats-permanents/ancre";
-import { cheminDeDeclaration } from "@/lib/etats-permanents/par-les-risques";
+import { cheminDeDeclaration } from "@/lib/etats-permanents/par-l-equipe";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import { modeDeclarationApplique } from "@/lib/etats-permanents/regle";
 import { phrasesAConfirmer } from "@/lib/matching/marques";
@@ -187,8 +187,8 @@ export function hrefActionSecurite(
 ): string | null {
   if (l.etat === "declare") return null;
   if (l.cible.kind === "categorie") return liens.hrefNouveau(l.cible.categorie);
-  // La ligne née d'un fait d'activité se déclare sous sa question
-  // (`par-les-risques.ts`, 2026-10-21) : l'écran « en place » ne l'affiche plus.
+  // Une formation se déclare dans Équipe › Formations (`par-l-equipe.ts`,
+  // ADR-047) : l'écran « en place » ne l'affiche pas.
   const o = obligationParId(l.obligationId);
   const ancre = ancreEtatPermanent(l.obligationId);
   return `${liens.base}${o ? cheminDeDeclaration(o, ancre) : `/etats-permanents#${ancre}`}`;

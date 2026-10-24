@@ -5,31 +5,15 @@ import {
   type EtapeOnboarding,
 } from "@/components/layout/OnboardingChecklist";
 import { QuestionParametrage } from "@/components/layout/QuestionParametrage";
-import {
-  AIDE_EPI,
-  EXEMPLE_DETAIL_EPI,
-  LIBELLE_DETAIL_EPI,
-  questionRepondue,
-} from "@/lib/etablissements/questions";
-import {
-  repondreDemandesAssureur,
-  repondreEpiPresents,
-  repondreMatieres,
-  repondreSommeil,
-  repondreSsi,
-  type ReponseParametrage,
-} from "@/lib/etablissements/parametrage";
-import { relancesDuDossier, type Relance } from "@/lib/etablissements/relance";
-import { estChampFaitActivite, type ChampFaitActivite } from "@/lib/etablissements/faits-activite";
+import { questionRepondue } from "@/lib/etablissements/questions";
+import { repondreDemandesAssureur } from "@/lib/etablissements/parametrage";
+import { enumerer, precisionsManquantes } from "@/lib/etablissements/guide-par-module";
 import { DashboardGrid } from "@/components/dashboard/widgets/DashboardGrid";
 import { BlocBrief } from "@/components/dashboard/widgets/impl/board";
 import type { DashboardBundle } from "@/components/dashboard/widgets/types";
 import { getEtablissement } from "@/lib/etablissements/queries";
 import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
-import { appareilsMuets, pourquoiRelanceAppareil } from "@/lib/equipements/reponses-exigees";
-import { LIBELLE_CARACTERISTIQUE } from "@/lib/equipements/caracteristiques";
-import { repondreQuestionEquipement } from "@/lib/equipements/actions";
-import { repondreFaitActiviteFormulaire } from "@/lib/etablissements/faits-activite-actions";
+import { appareilsMuets } from "@/lib/equipements/reponses-exigees";
 import {
   listerBatimentsAvecCharge,
   porteursDeLaPlaqueZones,
@@ -151,8 +135,8 @@ export default async function EtablissementPage({
     // (`cinqProchaines`, plus bas).
     listerEcheancesAnnoncables(id, batimentFiltre),
     listerRapportsRecents(id, 4),
-    // Les marques « à confirmer » : pour les échéances du board comme pour la
-    // relance plus bas — un seul calcul, partagé avec les fenêtres
+    // Les marques « à confirmer » : pour les échéances du board comme pour le
+    // guide plus bas, par module — un seul calcul, partagé avec les fenêtres
     // d'événements ci-dessus par `cache()`.
     marquesAConfirmerDuRendu(id),
   ]);
@@ -176,29 +160,76 @@ export default async function EtablissementPage({
     stats: statsEquipements.get(e.id),
   });
 
-  const duerpDernier = etab.duerps[0] ?? null;
   // Fait observable fiable : le secteur a été choisi par l'utilisateur.
   // L'existence seule d'un Duerp ne prouve rien (créations silencieuses
-  // historiques par les pages relais).
+  // historiques par les pages relais). Un seul DUERP par établissement
+  // (`Duerp.etablissementId` est unique) : ~~la recherche « de celui qui porte
+  // un secteur » ajoutée le 2026-10-22~~ visait un cas impossible, retirée.
+  const duerpDernier = etab.duerps[0] ?? null;
   const duerpOuvert = duerpDernier?.referentielSecteurId != null;
 
   // Checklist onboarding : uniquement les étapes actionnables par l'user.
+  //
+  // Une étape par MODULE, jamais une question par ligne (décision de la
+  // propriétaire du 2026-10-22). Les questions dont le silence retient une
+  // ligne « à confirmer » se répondent dans leur module — la fiche, le DUERP,
+  // la fiche de l'appareil (`guide-par-module.ts`) — et l'étape du module
+  // reste ouverte tant qu'il en manque une.
+  const questionsMuettes = marquesDuDossier.questions;
+  const regimeFiche = {
+    estERP: etab.estERP,
+    typeErp: etab.typeErp,
+    typesErpAutres: etab.typesErpAutres,
+    categorieErp: etab.categorieErp,
+  };
+  const manqueFiche = precisionsManquantes("fiche", questionsMuettes, regimeFiche);
+  const manqueDuerp = precisionsManquantes("duerp", questionsMuettes, regimeFiche);
+  // Les appareils NOMMÉS : la liste des équipements ne marque pas ceux à qui
+  // une réponse manque, l'étape doit donc dire lesquels (revue du 2026-10-22).
+  const appareilsAPreciser = [
+    ...new Map(
+      appareilsMuets(equipements, etab).map((a) => [a.equipementId, a.libelle]),
+    ),
+  ];
+  const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? "s" : ""}`;
+
   const etapesOnboarding: EtapeOnboarding[] = [
     {
       id: "etablissement",
-      titre: "Décrire votre établissement",
+      titre:
+        manqueFiche.length === 0
+          ? "Décrire votre établissement"
+          : "Compléter la fiche de votre établissement",
       pourquoi:
-        "Adresse, effectif sur site et régimes (ERP, IGH, travail). Ces informations conditionnent les obligations qui vous sont applicables.",
-      faite: true,
+        manqueFiche.length === 0
+          ? "Adresse, effectif sur site et régimes (ERP, IGH, travail). Ces informations conditionnent les obligations qui vous sont applicables."
+          : `Il manque : ${enumerer(manqueFiche)}. Ces réponses décident de certaines obligations ; d'ici là, elles s'affichent « à confirmer ».`,
+      faite: manqueFiche.length === 0,
+      href: `/etablissements/${id}/modifier`,
+      cta: manqueFiche.length > 0 ? "Compléter la fiche" : undefined,
     },
     {
       id: "equipements",
-      titre: "Déclarer vos équipements",
+      titre:
+        equipements.length > 0 && appareilsAPreciser.length > 0
+          ? "Compléter vos équipements"
+          : "Déclarer vos équipements",
       pourquoi:
-        "Installation électrique, extincteurs, hotte, ascenseur… Ce sont eux qui déclenchent les vérifications périodiques à faire.",
-      faite: equipements.length > 0,
-      href: `/etablissements/${id}/equipements`,
-      cta: equipements.length === 0 ? "Commencer la déclaration" : undefined,
+        equipements.length > 0 && appareilsAPreciser.length > 0
+          ? `Une réponse manque sur ${enumerer(appareilsAPreciser.map(([, libelle]) => `« ${libelle} »`))}. Elle décide de certaines de leurs vérifications.`
+          : "Installation électrique, extincteurs, hotte, ascenseur… Ce sont eux qui déclenchent les vérifications périodiques à faire.",
+      faite: equipements.length > 0 && appareilsAPreciser.length === 0,
+      // Un seul appareil à préciser : on y va directement.
+      href:
+        appareilsAPreciser.length === 1
+          ? `/etablissements/${id}/equipements/${appareilsAPreciser[0][0]}/modifier`
+          : `/etablissements/${id}/equipements`,
+      cta:
+        equipements.length === 0
+          ? "Commencer la déclaration"
+          : appareilsAPreciser.length > 0
+            ? "Compléter les équipements"
+            : undefined,
     },
     {
       id: "calendrier",
@@ -212,26 +243,36 @@ export default async function EtablissementPage({
       href: `/etablissements/${id}/calendrier`,
       cta: nbVerifs === 0 ? "Ouvrir le calendrier" : undefined,
     },
-    {
-      id: "duerp",
-      titre: "Ouvrir votre DUERP",
-      pourquoi:
-        "L'article R. 4121-1 du Code du travail : « L'employeur transcrit et met à jour dans un document unique les résultats de l'évaluation des risques pour la santé et la sécurité des travailleurs ». L'article ne fixe pas de seuil d'effectif. L'outil vous guide : secteur d'activité, puis unités de travail.",
-      faite: duerpOuvert,
-      href: `/etablissements/${id}/duerp`,
-      cta: !duerpOuvert ? "Ouvrir le DUERP" : undefined,
-    },
-    // ── Les deux questions de paramétrage (ADR-025 § 7, ADR-032) ──────
-    //
-    // Elles se posent ici faute d'écran de réglage : « Paramètres » pointe la
-    // page de connexion d'un assistant. La checklist est le seul endroit du
-    // produit qui sait poser une question et s'effacer une fois répondue —
-    // le lot A8, qui refait la navigation, leur donnera leur foyer.
+    duerpOuvert && duerpDernier && manqueDuerp.length > 0
+      ? {
+          id: "duerp",
+          titre: "Compléter votre DUERP",
+          pourquoi: `Il reste ${pluriel(manqueDuerp.length, "question")} sur le travail de vos salariés : ${enumerer(manqueDuerp)}. Elles décident de formations et de consignes dues ; d'ici là, elles s'affichent « à confirmer ».`,
+          faite: false,
+          href: `/duerp/${duerpDernier.id}/transverses`,
+          cta: "Compléter le DUERP",
+        }
+      : {
+          id: "duerp",
+          titre: "Ouvrir votre DUERP",
+          // Les faits muets se disent aussi avant l'ouverture : le DUERP les
+          // posera, et d'ici là ils retiennent des lignes (revue du 2026-10-22).
+          pourquoi: `L'article R. 4121-1 du Code du travail : « L'employeur transcrit et met à jour dans un document unique les résultats de l'évaluation des risques pour la santé et la sécurité des travailleurs ». L'article ne fixe pas de seuil d'effectif. L'outil vous guide : secteur d'activité, puis unités de travail.${
+            !duerpOuvert && manqueDuerp.length > 0
+              ? ` Il vous demandera aussi ${enumerer(manqueDuerp)} : d'ici là, les formations et consignes qui en dépendent s'affichent « à confirmer ».`
+              : ""
+          }`,
+          faite: duerpOuvert,
+          href: `/etablissements/${id}/duerp`,
+          cta: !duerpOuvert ? "Ouvrir le DUERP" : undefined,
+        },
+    // La demande d'assureur reste une question posée ici (ADR-025 § 7,
+    // ADR-032) : aucun autre écran ne la pose, et sa réponse « non » n'a
+    // nulle part ailleurs où se donner.
     //
     // `faite` observe **une réponse donnée**, jamais une valeur : `null` veut
     // dire « pas encore répondu » (migration 20260901170000), et un `=== true`
-    // aurait rouvert la question indéfiniment à qui a répondu « non » — c'est
-    // la majorité des dossiers, donc la majorité des utilisateurs.
+    // aurait rouvert la question indéfiniment à qui a répondu « non ».
     {
       id: "assureur",
       titre: "Dire si votre assureur impose des vérifications",
@@ -253,136 +294,7 @@ export default async function EtablissementPage({
         />
       ),
     },
-    {
-      id: "epi",
-      titre: "Dire si vous fournissez des équipements de protection",
-      // Les mots sont ceux de la fiche, qui corrige la réponse une fois
-      // cette étape effacée (2026-10-12, audit B2).
-      pourquoi: AIDE_EPI,
-      faite: questionRepondue(etab.epiPresents),
-      question: (
-        <QuestionParametrage
-          action={repondreEpiPresents.bind(null, id)}
-          labelOui="Oui, nous en fournissons"
-          labelNon="Non, aucun"
-          detailSiOui={{
-            label: LIBELLE_DETAIL_EPI,
-            placeholder: EXEMPLE_DETAIL_EPI,
-          }}
-        />
-      ),
-    },
   ];
-  // ── La relance des dossiers muets (analyse du 2026-09-27, étape 3) ──
-  //
-  // Toute question de la fiche dont le silence retient une ligne « à
-  // confirmer » CHEZ CE DOSSIER — la table `RELANCES` est indexée par
-  // `QuestionSansReponse`, donc une question que le moteur marquerait sans
-  // relance ne compile pas (revue du lot 1 : la première version n'en
-  // relançait que deux sur cinq). Une question oui/non se répond ici et reste
-  // cochée ; une question à nombre renvoie à la fiche et s'efface quand le
-  // silence cesse.
-  const questionsMuettes = marquesDuDossier.questions;
-  // Les relances des questions propres à la fiche ont chacune leur action
-  // serveur ; celles des faits d'activité (ADR-041) passent par l'écrivain
-  // unique, qui pose aussi le risque du DUERP. Toutes sont des RÉFÉRENCES
-  // d'actions serveur liées par `.bind` : une fermeture écrite ici ne se
-  // sérialise pas vers `QuestionParametrage`, composant client (relecture du
-  // 2026-10-08, B1 — la fiche plantait dès qu'une relance de fait s'affichait).
-  // Indexée par la COLONNE, et non par la question : le garde de type
-  // `estChampFaitActivite` réduit l'autre branche aux colonnes propres à la
-  // fiche, si bien qu'une question oubliée ici ne compile pas (contre-relecture
-  // du 2026-10-08 : un `as keyof` aurait planté au rendu).
-  const ACTIONS_DE_LA_FICHE: Record<
-    Exclude<Extract<Relance, { mode: "oui_non" }>["champ"], ChampFaitActivite>,
-    (id: string, prev: ReponseParametrage, fd: FormData) => Promise<ReponseParametrage>
-  > = {
-    manipuleMatieresR422722: repondreMatieres,
-    comporteLocauxSommeilPublic: repondreSommeil,
-    epiPresents: repondreEpiPresents,
-    ssiCategorieAouB: repondreSsi,
-  };
-  const actionDeRelance = (relance: Extract<Relance, { mode: "oui_non" }>) => {
-    const champ = relance.champ;
-    return estChampFaitActivite(champ)
-      ? repondreFaitActiviteFormulaire.bind(null, id, champ)
-      : ACTIONS_DE_LA_FICHE[champ].bind(null, id);
-  };
-  for (const { question, relance, faite } of relancesDuDossier(questionsMuettes, {
-    manipuleMatieresR422722: etab.manipuleMatieresR422722,
-    comporteLocauxSommeilPublic: etab.comporteLocauxSommeilPublic,
-    manutentionManuelle: etab.manutentionManuelle,
-    travailSurEcran: etab.travailSurEcran,
-    operationsElectriques: etab.operationsElectriques,
-    conduiteEngins: etab.conduiteEngins,
-    expositionCMR: etab.expositionCMR,
-    epiPresents: etab.epiPresents,
-    ssiCategorieAouB: etab.ssiCategorieAouB,
-  })) {
-    // La présence d'EPI a déjà son étape, ci-dessus, avec le détail : la
-    // relance la doublerait.
-    if (question === "epi_presents") continue;
-    etapesOnboarding.push(
-      relance.mode === "oui_non"
-        ? {
-            id: `relance-${question}`,
-            titre: relance.titre,
-            pourquoi: relance.pourquoi,
-            lien: relance.lien,
-            faite,
-            question: (
-              <QuestionParametrage
-                action={actionDeRelance(relance)}
-                labelOui="Oui"
-                labelNon="Non"
-              />
-            ),
-          }
-        : {
-            id: `relance-${question}`,
-            titre: relance.titre,
-            pourquoi: relance.pourquoi,
-            faite,
-            href: `/etablissements/${id}/modifier`,
-            cta: "Répondre sur la fiche",
-          },
-    );
-  }
-  // ── La relance des appareils muets (D29 (a), 2026-09-28) ──
-  //
-  // Un appareil de levage sans réponse sur une question dont le silence change
-  // le rythme de sa VGP : le moteur retient le rythme le plus court, et la
-  // question se répond ici, appareil par appareil. ~~Les appareils nés du
-  // pré-remplissage, sans caractéristiques, arrivent tous par ici.~~
-  // [2026-10-13, reprise des suites du lot 3 : faux — ~~le pré-remplissage ne
-  // propose aucune catégorie dont une réponse est exigée (vérifié en appelant
-  // `suggererEquipements` sur 288 contextes, puis `questionsExigeesPour` sur
-  // 16 régimes : zéro), et~~ [rayé le 2026-10-13 (`lot/conditions-equipement`,
-  // ed036f18) : faux depuis que la réponse au groupe électrogène est exigée
-  // en ERP — le pré-remplissage propose l'installation électrique à tout ERP,
-  // et son panneau POSE la question (`PreRemplissagePanel`)]
-  // `creerEquipementsDepuisPreRemplissage` refuse un appareil créé sans les
-  // réponses exigées, POST forgé compris. Arrivent ici les appareils
-  // enregistrés avant que leur réponse ne soit exigée.]
-  // [2026-10-12 : et un désenfumage d'ERP des quatre premières catégories
-  // muet sur « mécanique » — la décision du 2026-10-08 rend la réponse
-  // exigée là où elle fait naître la triennale de DF 10 § 3. Le régime de
-  // l'établissement en décide, d'où `etab`.]
-  for (const { equipementId, libelle, champ } of appareilsMuets(equipements, etab)) {
-    etapesOnboarding.push({
-      id: `relance-equipement-${equipementId}-${champ}`,
-      titre: `« ${libelle} » — ${LIBELLE_CARACTERISTIQUE[champ]} ?`,
-      pourquoi: pourquoiRelanceAppareil(champ),
-      faite: false,
-      question: (
-        <QuestionParametrage
-          action={repondreQuestionEquipement.bind(null, equipementId, champ)}
-          labelOui="Oui"
-          labelNon="Non"
-        />
-      ),
-    });
-  }
   const onboardingFini = etapesOnboarding.every((e) => e.faite);
 
   // Ancienneté du dernier rapport, en **jours civils** (Europe/Paris) :

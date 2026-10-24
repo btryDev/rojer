@@ -17,15 +17,15 @@ import type { ReponseParametrage } from "@/lib/etablissements/parametrage";
  * saisir sa prescription sans que la question soit répondue — la checklist
  * rouvrirait la question à son retour, avec la prescription déjà là.
  *
- * `detailSiOui` ouvre un texte libre quand il est fourni (les EPI présents).
- * Il n'est demandé qu'après le clic sur « Oui », pour que la question ferme
- * quand la réponse est « non » — la plupart des dossiers.
+ * ~~`detailSiOui` ouvre un texte libre quand il est fourni (les EPI présents).~~
+ * [2026-10-22, `lot/guide-par-module` : la question des EPI ~~se répond sur la
+ * fiche~~ est un fait d'activité, posé au DUERP et dans Équipe ; le texte libre
+ * est retiré d'ici.]
  */
 export function QuestionParametrage({
   action,
   labelOui = "Oui",
   labelNon = "Non",
-  detailSiOui,
   suite,
 }: {
   action: (
@@ -34,16 +34,14 @@ export function QuestionParametrage({
   ) => Promise<ReponseParametrage>;
   labelOui?: string;
   labelNon?: string;
-  /** Étiquette et exemple du texte libre ouvert par « Oui ». */
-  detailSiOui?: { label: string; placeholder: string };
   /** Où aller une fois « oui » enregistré. */
   suite?: { href: string; libelle: string };
 }) {
   const [state, formAction, pending] = useActionState(action, {
     status: "idle",
   });
-  // `null` = personne n'a encore cliqué. Distinct de « a répondu non » :
-  // le même booléen pour les deux rouvrirait le détail à chaque rendu.
+  // `null` = personne n'a encore cliqué : la suite n'apparaît qu'après un
+  // « oui » enregistré.
   const [choix, setChoix] = useState<"oui" | "non" | null>(null);
 
   if (state.status === "success" || state.status === "success_avec_avertissement") {
@@ -66,58 +64,25 @@ export function QuestionParametrage({
 
   return (
     <form action={formAction} className="mt-3 flex flex-col gap-3">
-      {detailSiOui && choix === "oui" && (
-        <div className="max-w-[52ch]">
-          <label className="label-board" htmlFor="detail-parametrage">
-            {detailSiOui.label}
-          </label>
-          <textarea
-            id="detail-parametrage"
-            name="detail"
-            rows={2}
-            className="champ-board"
-            placeholder={detailSiOui.placeholder}
-          />
-        </div>
-      )}
-
       <div className="flex flex-wrap items-center gap-2.5">
         {/* Des boutons de soumission, et non un radio puis un « Valider » :
             la question a deux réponses, chacune est un geste, et c'est le
             `name`/`value` du bouton cliqué qui part dans le FormData.
-            Exception quand un détail est demandé : le premier clic sur
-            « Oui » ne soumet pas, il ouvre le champ — sinon la réponse
-            partirait avant que le texte libre ait pu être écrit. */}
-        {detailSiOui && choix !== "oui" ? (
-          <button
-            type="button"
-            onClick={() => setChoix("oui")}
-            className={buttonVariants({
-              variant: "boardClair",
-              size: "boardSm",
-            })}
-          >
-            {labelOui}
-          </button>
-        ) : (
-          <button
-            type="submit"
-            name="reponse"
-            value="oui"
-            disabled={pending}
-            onClick={() => setChoix("oui")}
-            // Même poids pour « Oui » et « Non » tant que rien n'est répondu :
-            // l'un plein, l'autre cerné se lisait comme un choix déjà fait
-            // (contrôle visuel du 2026-10-13). Seul « Enregistrer », qui
-            // valide le détail ouvert par « Oui », est l'action principale.
-            className={buttonVariants({
-              variant: detailSiOui ? "board" : "boardClair",
-              size: "boardSm",
-            })}
-          >
-            {detailSiOui ? "Enregistrer" : labelOui}
-          </button>
-        )}
+            Même poids pour « Oui » et « Non » : l'un plein, l'autre cerné se
+            lisait comme un choix déjà fait (contrôle visuel du 2026-10-13). */}
+        <button
+          type="submit"
+          name="reponse"
+          value="oui"
+          disabled={pending}
+          onClick={() => setChoix("oui")}
+          className={buttonVariants({
+            variant: "boardClair",
+            size: "boardSm",
+          })}
+        >
+          {labelOui}
+        </button>
         <button
           type="submit"
           name="reponse"

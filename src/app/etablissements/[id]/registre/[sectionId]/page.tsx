@@ -28,6 +28,7 @@ import {
 import { AvertissementFraicheur } from "@/components/calendrier/AvertissementFraicheur";
 import { ajouterLigneJournal, enregistrerFiche } from "@/lib/registre/actions";
 import { avecProvenance, lireProvenance } from "@/lib/navigation/provenance";
+import { lienPourRepondre } from "@/lib/etablissements/guide-par-module";
 
 export default async function FicheDuRegistrePage({
   params,
@@ -131,7 +132,7 @@ export default async function FicheDuRegistrePage({
               attendu={courante.due.section.attendu}
               raisons={courante.due.raisons}
               aConfirmer={courante.due.aConfirmer}
-              hrefFiche={`/etablissements/${id}/modifier`}
+              lienReponse={lienPourRepondre(courante.due.aConfirmer, id)}
               completude={courante.completude}
             />
             <CorpsFicheRegistre

@@ -224,7 +224,7 @@ describe("la fiche d'une ligne « à confirmer » (2026-09-27)", () => {
     const html = renderToStaticMarkup(
       <BlocAConfirmer
         marque={marque!}
-        hrefFicheEtablissement="/etablissements/etab-1/modifier"
+        etablissementId="etab-1"
         entrepriseId={ENTREPRISE}
       />,
     );

@@ -193,7 +193,10 @@ décisions qui dormaient dans le texte des ADR, remontées ici.]
     posées en **A2** de `docs/revues/decisions-en-attente-2026-09-20.md`
     (recommandation : « les quatre telles que recommandées »), jamais
     tranchées par écrit ; le code les suit depuis le 2026-09-21. Confirmer, et
-    rayer A2 avec l'ADR.
+    rayer A2 avec l'ADR. [2026-10-24, `lot/guide-par-module` : **Q1 tranchée
+    par la propriétaire** — onglet « En cas de… » de « Ce qui doit être en
+    place », plus d'entrée de rail (ADR-037 amendée). Q2 à Q4 restent à
+    confirmer.]
 16. **Le dossier `referentiels/duerp/` de l'ADR-003** : jamais créé. Déplacer
     les quatre fichiers ou écrire l'abandon.
 17. **ADR-044, règle « À renseigner »** (dossier neuf, appareil ancien,

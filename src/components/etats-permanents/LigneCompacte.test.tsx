@@ -59,9 +59,9 @@ const etatDe = (l: FicheLigne) => (l.declareLe === null ? ETAT_A : ETAT_ON);
 const ETAT_A = "a-declarer" as const;
 const ETAT_ON = "declare" as const;
 
-function rendre(lignes = LIGNES) {
+function rendre(lignes = LIGNES, parcours = true) {
   return render(
-    <RevueEnPlace etablissementId="etab-1" lignes={lignes}>
+    <RevueEnPlace etablissementId="etab-1" lignes={lignes} parcours={parcours}>
       <ul>
         {lignes.map((l) => (
           <LigneCompacte
@@ -141,5 +141,15 @@ describe("la fiche", () => {
     const { container, getAllByRole } = rendre();
     fireEvent.click(getAllByRole("button", { name: /Libellé officiel o-1/ })[0]);
     expect(container.querySelectorAll("#etat-o-1")).toHaveLength(1);
+  });
+
+  it("sans parcours (« Évaluer les risques ») : ni Précédente, ni Suivante, ni « n / N », ni flèches", () => {
+    const { getAllByRole, queryByRole, getByRole, queryByText } = rendre(LIGNES, false);
+    fireEvent.click(getAllByRole("button", { name: /Libellé officiel o-1/ })[0]);
+    expect(queryByRole("button", { name: /Suivante/, hidden: true })).toBeNull();
+    expect(queryByRole("button", { name: /Précédente/, hidden: true })).toBeNull();
+    expect(queryByText(/1 \/ 2/)).toBeNull();
+    fireEvent.keyDown(window, { key: "ArrowRight" });
+    expect(getByRole("heading", { name: /extincteurs/, hidden: true })).toBeTruthy();
   });
 });

@@ -19,7 +19,7 @@ export function TeteFicheRegistre({
   attendu,
   raisons,
   aConfirmer = [],
-  hrefFiche,
+  lienReponse,
   completude,
 }: {
   partie: { id: string; titre: string };
@@ -30,8 +30,8 @@ export function TeteFicheRegistre({
   raisons?: readonly string[];
   /** Les phrases « à confirmer » de la fiche (`SectionDue.aConfirmer`). */
   aConfirmer?: readonly string[];
-  /** La fiche de l'établissement, où l'on répond. */
-  hrefFiche?: string;
+  /** Où répondre aux phrases « à confirmer » (`lienPourRepondre`). */
+  lienReponse?: { href: string; libelle: string };
   completude: Completude;
 }) {
   return (
@@ -76,12 +76,12 @@ export function TeteFicheRegistre({
               {phrase}
             </p>
           ))}
-          {hrefFiche && (
+          {lienReponse && (
             <Link
-              href={hrefFiche}
+              href={lienReponse.href}
               className="mt-1 inline-block font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
             >
-              Répondre sur la fiche de l&apos;établissement
+              {lienReponse.libelle}
             </Link>
           )}
         </div>

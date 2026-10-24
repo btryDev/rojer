@@ -239,6 +239,11 @@ export const SUJET_VERIFICATIONS_DE_LA_FICHE: SujetFraicheur = {
   texte: "Les vérifications reprises sur cette fiche",
   pluriel: true,
 };
+/** Équipe › Formations, qui liste les formations datées (2026-10-24). */
+export const SUJET_FORMATIONS_AU_CALENDRIER: SujetFraicheur = {
+  texte: "Les formations reprises du calendrier",
+  pluriel: true,
+};
 /** Le parc, qui compte les retards par appareil. */
 export const SUJET_COMPTEURS_DU_PARC: SujetFraicheur = {
   texte: "Les compteurs de vérification de cet écran",

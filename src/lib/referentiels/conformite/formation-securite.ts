@@ -61,6 +61,7 @@ export const obligationsFormationSecurite: Obligation[] = [
   // ---------------------------------------------------------------------------
   {
     id: "formation-securite-etablissement-organisation",
+    formation: true,
     domaine: "formation_securite",
     libelle: "Organiser la formation à la sécurité des salariés",
     description:
@@ -156,6 +157,7 @@ export const obligationsFormationSecurite: Obligation[] = [
 
   {
     id: "formation-securite-salarie-accueil",
+    formation: true,
     domaine: "formation_securite",
     libelle: "Formation à la sécurité reçue par le salarié",
     description:
@@ -290,6 +292,7 @@ export const obligationsFormationSecurite: Obligation[] = [
   // ---------------------------------------------------------------------------
   {
     id: "conduite-salarie-formation",
+    formation: true,
     domaine: "formation_securite",
     libelle: "Formation à la conduite d'équipements mobiles ou de levage",
     description:
@@ -388,6 +391,7 @@ export const obligationsFormationSecurite: Obligation[] = [
   // ---------------------------------------------------------------------------
   {
     id: "formation-securite-etablissement-manutention",
+    formation: true,
     domaine: "formation_securite",
     libelle: "Formation à la manutention manuelle (gestes et postures)",
     description:
@@ -417,6 +421,7 @@ export const obligationsFormationSecurite: Obligation[] = [
 
   {
     id: "formation-securite-etablissement-travail-sur-ecran",
+    formation: true,
     domaine: "formation_securite",
     libelle: "L'employeur assure l'information et la formation des travailleurs sur les modalités d'utilisation de l'écran et de l'équipement de travail dans lequel cet écran est intégré",
     description:
@@ -449,6 +454,7 @@ export const obligationsFormationSecurite: Obligation[] = [
 
   {
     id: "formation-securite-salarie-cse-sst",
+    formation: true,
     domaine: "formation_securite",
     libelle:
       "Formation en santé, sécurité et conditions de travail (membre du CSE)",
@@ -497,6 +503,7 @@ export const obligationsFormationSecurite: Obligation[] = [
 
   {
     id: "formation-securite-salarie-designe-competent",
+    formation: true,
     domaine: "formation_securite",
     libelle:
       "Formation en santé au travail du salarié désigné compétent",
@@ -554,6 +561,7 @@ export const obligationsFormationSecurite: Obligation[] = [
 
   {
     id: "formation-securite-etablissement-apres-accident-grave",
+    formation: true,
     domaine: "formation_securite",
     libelle:
       "Analyse des conditions de circulation ou de travail ; formations à la sécurité, s'il y a lieu",
@@ -586,6 +594,7 @@ export const obligationsFormationSecurite: Obligation[] = [
 
   {
     id: "formation-securite-etablissement-modification-circulation-exploitation",
+    formation: true,
     domaine: "formation_securite",
     libelle:
       "Analyse des nouvelles conditions de circulation et d'exploitation ; formation à la sécurité, s'il y a lieu",

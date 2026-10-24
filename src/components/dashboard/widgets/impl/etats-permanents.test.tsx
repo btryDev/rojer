@@ -128,7 +128,7 @@ const FABRIQUE: EtatsPermanentsDuDossier = {
       ],
     },
   ],
-  parLesRisques: [],
+  parLEquipe: [],
   faits: [
     ligne("fait-1", {
       mode: "fait",
@@ -182,6 +182,7 @@ vi.mock("@/lib/etats-permanents/lecture-widget", () => ({
 }));
 
 import EtatsPermanentsPage from "@/app/etablissements/[id]/etats-permanents/page";
+import { compteDeLaPage } from "@/lib/etats-permanents/compte";
 import { resumeDuWidget } from "@/lib/etats-permanents/widget";
 import { REGISTRY } from "../registry";
 
@@ -323,9 +324,11 @@ describe.each(Object.keys(DOSSIERS))("widget « Ce qui doit être en place », d
 
     // Borne basse : l'écran affiche bien SON compte, mesuré sur le dossier —
     // sans quoi deux relevés vides seraient égaux.
-    expect(ecran).toContain(`${d.enPlace} sur ${d.total}`);
-    if (d.parLesTitres.enPlace > 0) {
-      expect(ecran).toMatch(new RegExp(`${d.parLesTitres.enPlace} établis? d'après les titres`));
+    // [2026-10-22 : le compte de la page, hors lignes liées aux risques.]
+    const c = compteDeLaPage(d);
+    expect(ecran).toContain(`${c.enPlace} sur ${c.total}`);
+    if (c.parLesTitres > 0) {
+      expect(ecran).toMatch(new RegExp(`${c.parLesTitres} établis? d'après les titres`));
     }
     expect(widget).toBe(ecran);
   });
@@ -339,10 +342,13 @@ describe.each(Object.keys(DOSSIERS))("widget « Ce qui doit être en place », d
     expect(ecran).toHaveLength(d.familles.length);
     expect(widget).toEqual(ecran);
     const r = resumeDuWidget(d);
-    // Les familles plus les lignes déclarées sous une question d'activité
-    // (`par-les-risques.ts`, 2026-10-21) font le compte de l'en-tête.
-    expect(r.familles.reduce((n, f) => n + f.enPlace, 0) + r.risques.enPlace).toBe(r.enPlace);
-    expect(r.familles.reduce((n, f) => n + f.total, 0) + r.risques.total).toBe(r.total);
+    // ~~Les familles plus les lignes déclarées sous une question d'activité
+    // font le compte de l'en-tête.~~ [2026-10-22 : les familles seules —
+    // les lignes liées aux risques ne sont plus comptées sur la page.]
+    expect(r.familles.reduce((n, f) => n + f.enPlace, 0)).toBe(r.enPlace);
+    expect(r.familles.reduce((n, f) => n + f.total, 0)).toBe(r.total);
+    // Et elles existent bien ailleurs : le dossier en porte, le score les garde.
+    expect(d.total).toBe(r.total + r.risques.total);
   });
 
   it("chaque lien mène à l'écran et vise une section présente sur l'écran", async () => {
@@ -362,7 +368,7 @@ describe.each(Object.keys(DOSSIERS))("widget « Ce qui doit être en place », d
 
   it("aucune ligne individuelle, quelle que soit la variante du registre", async () => {
     const d = await DOSSIERS[nom]();
-    const libelles = [...d.familles.flatMap((f) => f.blocs.flatMap((b) => b.lignes)), ...d.faits, ...d.parLesRisques]
+    const libelles = [...d.familles.flatMap((f) => f.blocs.flatMap((b) => b.lignes)), ...d.faits, ...d.parLEquipe]
       .map((l) => l.obligation.libelle);
     expect(libelles.length).toBeGreaterThan(d.familles.length);
     const variantes = REGISTRY["etats-permanents"].variants;
@@ -383,7 +389,7 @@ describe("widget sans état, ou sans réponse", () => {
   const vide: EtatsPermanentsDuDossier = {
     familles: [],
     faits: [],
-    parLesRisques: [],
+    parLEquipe: [],
     enPlace: 0,
     total: 0,
     parLesTitres: { total: 0, enPlace: 0 },

@@ -11,6 +11,13 @@
   Deux écarts à ce texte, écrits au § 8. Quatre questions
   attendent la propriétaire (§ 7) ; les recommandations y sont écrites, et
   l'ADR se lit « acceptée telle que recommandée » si elle les retient toutes.
+- **Amendée le 2026-10-24** (décision de la propriétaire, `lot/guide-par-module`) :
+  **Q1 tranchée** — la page n'est plus une entrée du rail « À faire ». Elle
+  devient l'onglet **« En cas de… »** de « Ce qui doit être en place », à côté
+  de « En permanence » (`etats-permanents/en-cas-de`, `OngletsEnPlace`) ;
+  `/quand-ca-arrive` redirige. Motif : c'est de l'informatif — ni date, ni
+  état, ni compteur, ce que l'onglet garde —, et le dirigeant trouve au même
+  endroit ce qui doit exister et ce qu'il devra faire si tel événement arrive.
 - **Amende** : l'ADR-022 (qui nomme l'axe « événement » sans mécanisme) et
   l'ADR-026 (qui pose les natures `evenementielle` et `ponctuelle` sans leur
   donner d'écran). **Ne renverse rien** : il n'y a toujours pas de sixième
@@ -143,7 +150,7 @@ calendriers à l'ouverture, sans qu'aucune échéance ne bouge.
 
 | # | Question | Recommandation |
 |---|---|---|
-| **Q1** | Où vit la page ? | Sous **« À faire »**, quatrième entrée du panneau, après « Ce qui doit être en place ». Elle répond à « qu'est-ce que je dois faire » — à une condition près. Pas sous « Comprendre » : ce n'est pas de la lecture générale, la liste dépend du dossier. |
+| **Q1** | Où vit la page ? | ~~Sous **« À faire »**, quatrième entrée du panneau, après « Ce qui doit être en place ».~~ [Tranchée le 2026-10-24 : onglet « En cas de… » de « Ce qui doit être en place », voir l'amendement en tête.] Elle répond à « qu'est-ce que je dois faire » — à une condition près. Pas sous « Comprendre » : ce n'est pas de la lecture générale, la liste dépend du dossier. |
 | **Q2** | Les obligations **ponctuelles** (dues une fois : la qualification ICPE avant exploitation) y vont-elles ? | **Non, pas dans ce lot.** Une ponctuelle se SOLDE : elle appelle un « fait le », donc une déclaration au sens de l'ADR-027 — un autre mécanisme. Trois inscriptions restent à `SANS_SURFACE`, nommées. |
 | **Q3** | Le dirigeant peut-il noter qu'un fait est survenu ? | **Non.** Voir § 4. Si le besoin se confirme, il se discutera contre l'ADR-018, pas en passant. |
 | **Q4** | Encoder les neuf dans le même lot que la page, ou après ? | **Après, en un lot à part.** La page se livre sur les trois obligations déjà au référentiel : elle se juge à l'écran avant qu'on y verse neuf lignes. |

@@ -8,6 +8,7 @@
  */
 
 import type { EtatsPermanentsDuDossier } from "./queries";
+import { compteParLEquipe } from "./par-l-equipe";
 
 /**
  * Les trois nombres de l'en-tête de PAGE (`CompteurDeLaPage`), lus d'une seule
@@ -21,5 +22,16 @@ export function compteDeLaPage(d: EtatsPermanentsDuDossier): {
   /** La part d'`enPlace` établie d'après les titres déclarés. */
   parLesTitres: number;
 } {
-  return { enPlace: d.enPlace, total: d.total, parLesTitres: d.parLesTitres.enPlace };
+  // Les formations ne s'affichent pas sur la page et ne s'y comptent pas : elles
+  // se déclarent et se comptent dans Équipe › Formations (ADR-047). Le score,
+  // le PDF et `d.total` les gardent. Même règle de compte (`compteParLEquipe`).
+  const risques = compteParLEquipe(d.parLEquipe);
+  const titresDesRisques = d.parLEquipe.filter(
+    (l) => l.compteDansLEnTete && l.parLesTitres?.enPlace,
+  ).length;
+  return {
+    enPlace: d.enPlace - risques.enPlace,
+    total: d.total - risques.total,
+    parLesTitres: d.parLesTitres.enPlace - titresDesRisques,
+  };
 }

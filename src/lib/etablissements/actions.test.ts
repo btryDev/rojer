@@ -494,54 +494,24 @@ describe("modifierEtablissement — la réponse sur le sommeil suit le type (202
   });
 });
 
-describe("modifierEtablissement — la présence d'EPI se corrige à la fiche (2026-10-12, audit B2)", () => {
-  // La checklist pose la question et s'efface une fois répondue : un « non »
-  // ne se corrigeait plus nulle part, et la consigne d'utilisation de
-  // R. 4323-105 (ADR-041) restait retirée. La fiche la corrige, régénère le
-  // calendrier comme après les matières, et applique la règle du détail.
-  it("un « non » repassé à « oui » s'écrit, avec son détail, et régénère le calendrier", async () => {
-    h.db.etablissement.epiPresents = false;
-    const res = await modifierEtablissement(
-      "etab-1",
-      { status: "idle" },
-      formulaire({ epiPresents: "oui", epiPresentsDetail: "  gants anti-coupure " }),
-    );
-    expect(res.status).toBe("success");
-    expect(h.db.etablissement.epiPresents).toBe(true);
-    expect(h.db.etablissement.epiPresentsDetail).toBe("gants anti-coupure");
-    expect(h.genererCalendrier).toHaveBeenCalledWith("etab-1");
-  });
-
-  it("un « non » efface le détail laissé par un « oui »", async () => {
-    h.db.etablissement.epiPresents = true;
-    h.db.etablissement.epiPresentsDetail = "harnais";
-    await modifierEtablissement(
-      "etab-1",
-      { status: "idle" },
-      formulaire({ epiPresents: "non", epiPresentsDetail: "harnais" }),
-    );
-    expect(h.db.etablissement.epiPresents).toBe(false);
-    expect(h.db.etablissement.epiPresentsDetail).toBeNull();
-  });
-
-  it("un formulaire qui ne pose pas la question n'écrit rien", async () => {
-    // La fiche de création ne la pose pas : le champ absent ne vaut pas « je
-    // ne sais pas encore ».
+// ~~« la présence d'EPI se corrige à la fiche (2026-10-12, audit B2) »~~
+// [2026-10-22 : la question quitte la fiche, devenue un fait d'activité.]
+describe("modifierEtablissement — la fiche n'écrit plus la présence d'EPI (2026-10-22)", () => {
+  // Les EPI découlent de l'évaluation des risques : la réponse se donne au
+  // DUERP ou dans Équipe (`ecrireFaitActivite`), ou se constate par une mesure
+  // (`epi-constate.ts`). Un champ forgé ne doit rien écrire ici.
+  it("un epiPresents posté est ignoré, et ne régénère rien", async () => {
     h.db.etablissement.epiPresents = false;
     h.db.etablissement.epiPresentsDetail = null;
-    await modifierEtablissement("etab-1", { status: "idle" }, formulaire());
-    expect(h.db.etablissement.epiPresents).toBe(false);
-    expect(h.genererCalendrier).not.toHaveBeenCalled();
-  });
-
-  it("le détail est borné comme à la checklist", async () => {
-    h.db.etablissement.epiPresents = true;
     const res = await modifierEtablissement(
       "etab-1",
       { status: "idle" },
-      formulaire({ epiPresents: "oui", epiPresentsDetail: "x".repeat(1001) }),
+      formulaire({ epiPresents: "oui", epiPresentsDetail: "gants" }),
     );
-    expect(res.status).toBe("error");
+    expect(res.status).toBe("success");
+    expect(h.db.etablissement.epiPresents).toBe(false);
+    expect(h.db.etablissement.epiPresentsDetail).toBeNull();
+    expect(h.genererCalendrier).not.toHaveBeenCalled();
   });
 });
 

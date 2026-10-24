@@ -17,6 +17,7 @@ const AUCUN: ReponsesFaitsActivite = {
   operationsElectriques: null,
   conduiteEngins: null,
   expositionCMR: null,
+  epiPresents: null,
 };
 
 describe("une seule surface par titre", () => {

@@ -1163,6 +1163,22 @@ type ObligationCommune = {
    */
   usageEcran: UsageEcran | null;
   /**
+   * **Une formation des salariés** — formation, instruction ou entraînement
+   * que le texte impose à l'employeur envers ses travailleurs (décision de la
+   * propriétaire du 2026-10-24). Lu par `estFormation` seulement :
+   *   - Équipe › Formations les rassemble, et les états permanents marqués y
+   *     quittent « Ce qui doit être en place » (`queries.ts`) ;
+   *   - le calendrier les filtre (`?formation=1`).
+   *
+   * Posé obligation par obligation, sur le texte : pas d'information, pas
+   * d'affichage, pas d'exercice d'évacuation (qui essaie aussi le matériel),
+   * pas d'autorisation de conduite (un acte de l'employeur, pas une formation).
+   *
+   * **N'entre pas dans `empreinteReferentiel()`** : il ne change ni le nombre
+   * de lignes ni leurs dates, seulement l'écran où elles se lisent.
+   */
+  formation?: true;
+  /**
    * **Le fait qui rend l'obligation due**, dans les mots du texte — la phrase
    * « quand… » d'une obligation `evenementielle` (ADR-037).
    *
@@ -1493,4 +1509,9 @@ export function estPorteeParSalarie(
   o: Obligation,
 ): o is ObligationPorteeParSalarie {
   return porteurDe(o) === "salarie";
+}
+
+/** Une formation des salariés ? Seule lecture de `Obligation.formation`. */
+export function estFormation(o: Pick<Obligation, "formation">): boolean {
+  return o.formation === true;
 }

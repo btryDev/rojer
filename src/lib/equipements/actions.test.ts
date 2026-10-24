@@ -155,6 +155,14 @@ const h = vi.hoisted(() => {
 
 vi.mock("@/lib/prisma", () => ({ prisma: h.prisma }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+// La règle des EPI constatés vit dans `epi-constate.ts`, testée là ; ici, on
+// vérifie que chaque écriture d'équipement l'appelle, AVANT la régénération.
+vi.mock("@/lib/etablissements/epi-constate", () => ({
+  constaterEpi: vi.fn(async (id: string, opts?: { regenerer?: boolean }) => {
+    h.db.journal.push(`constat:${id}:${opts?.regenerer === false ? "sans-regen" : "regen"}`);
+    return false;
+  }),
+}));
 vi.mock("next/navigation", () => ({
   redirect: vi.fn(() => {
     throw new Error("NEXT_REDIRECT");
@@ -181,7 +189,6 @@ const {
   creerEquipement,
   creerEquipementsDepuisPreRemplissage,
   modifierEquipement,
-  repondreQuestionEquipement,
   supprimerEquipement,
 } = await import("./actions");
 const { questionsExigeesPour, CATEGORIES_A_REPONSE_EXIGEE, REGIME_TRAVAIL } = await import(
@@ -317,19 +324,6 @@ describe("un appareil retiré du parc est en lecture seule (décision du 2026-10
     );
   });
 
-  it("répondre à une question : refusé", async () => {
-    Object.assign(h.db.equipements[0], {
-      categorie: CATEGORIES_A_REPONSE_EXIGEE[0],
-      caracteristiques: {},
-    });
-    const [champ] = questionsExigeesPour(CATEGORIES_A_REPONSE_EXIGEE[0], REGIME_TRAVAIL);
-    const fd = new FormData();
-    fd.set("reponse", "non");
-    const r = await repondreQuestionEquipement("eq-1", champ, { status: "idle" }, fd);
-    expect(r).toEqual({ status: "error", message: MESSAGE_APPAREIL_RETIRE });
-    expect(h.db.equipements[0]).toMatchObject({ caracteristiques: {} });
-  });
-
   it("retirer à nouveau : refusé, même sans trace — l'appareil n'est jamais détruit après coup", async () => {
     h.db.nbTraces = 0;
     const r = await supprimerEquipement("eq-1");
@@ -428,131 +422,10 @@ describe("D29 (a) : les réponses exigées d'un appareil de levage", () => {
   });
 });
 
-describe("repondreQuestionEquipement : la relance d'un appareil muet (D29 (a))", () => {
-  const LEVAGE = CATEGORIES_A_REPONSE_EXIGEE[0];
-  const [champ] = questionsExigeesPour(LEVAGE, REGIME_TRAVAIL);
-  const reponse = (v: string) => {
-    const fd = new FormData();
-    fd.set("reponse", v);
-    return fd;
-  };
-  beforeEach(() => {
-    Object.assign(h.db.equipements[0], {
-      etablissementId: "etab-1",
-      categorie: LEVAGE,
-      caracteristiques: { notes: "garder" },
-    });
-  });
-
-  it("contrôle l'appartenance par l'établissement de l'appareil, écrit la réponse sans rien effacer, régénère", async () => {
-    const r = await repondreQuestionEquipement("eq-1", champ, { status: "idle" }, reponse("non"));
-    expect(r.status).toBe("success");
-    expect(h.prisma.equipement.findFirst).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { id: "eq-1", etablissement: { entreprise: { userId: "user-1" } } },
-      }),
-    );
-    expect((h.db.equipements[0] as { caracteristiques?: unknown }).caracteristiques).toEqual({ notes: "garder", [champ]: false });
-    expect(h.genererCalendrier).toHaveBeenCalled();
-  });
-
-  it("refuse une réponse vide — pas de repli sur « non »", async () => {
-    const r = await repondreQuestionEquipement("eq-1", champ, { status: "idle" }, reponse(""));
-    expect(r.status).toBe("error");
-    expect((h.db.equipements[0] as { caracteristiques?: unknown }).caracteristiques).toEqual({ notes: "garder" });
-  });
-
-  it("refuse une question que la décision n'exige pas pour cet appareil", async () => {
-    const r = await repondreQuestionEquipement(
-      "eq-1",
-      "aGroupeElectrogene",
-      { status: "idle" },
-      reponse("oui"),
-    );
-    expect(r.status).toBe("error");
-  });
-
-  it("régénération ratée : la réponse est acquise, et on le dit", async () => {
-    h.genererCalendrier.mockImplementationOnce(async () => {
-      throw new Error("base indisponible");
-    });
-    const r = await repondreQuestionEquipement("eq-1", champ, { status: "idle" }, reponse("oui"));
-    expect(r.status).toBe("success_avec_avertissement");
-  });
-});
-
-describe("relance d'un appareil muet : une clé écrite par la base (reprise des suites du lot 3)", () => {
-  // La fusion lecture-puis-écriture de tout l'objet JSON écrasait une
-  // écriture concurrente. Éprouvé en remettant la fusion naïve
-  // (`equipement.update` avec `{ ...avant, [champ]: reponse }`).
-  const LEVAGE = CATEGORIES_A_REPONSE_EXIGEE[0];
-  const [champ, autre] = questionsExigeesPour(LEVAGE, REGIME_TRAVAIL);
-  const reponse = (v: string) => {
-    const fd = new FormData();
-    fd.set("reponse", v);
-    return fd;
-  };
-  beforeEach(() => {
-    Object.assign(h.db.equipements[0], {
-      etablissementId: "etab-1",
-      categorie: LEVAGE,
-      caracteristiques: { notes: "garder" },
-    });
-  });
-
-  it("deux réponses simultanées : celle écrite entre la lecture et l'écriture survit", async () => {
-    // La seconde relance du même appareil, répondue pendant que la première
-    // est entre sa lecture et son écriture.
-    h.db.apresLecture = () => {
-      const e = h.db.equipements[0] as { caracteristiques?: Record<string, unknown> };
-      e.caracteristiques = { ...(e.caracteristiques ?? {}), [autre]: true };
-    };
-    const r = await repondreQuestionEquipement("eq-1", champ, { status: "idle" }, reponse("non"));
-    expect(r.status).toBe("success");
-    expect((h.db.equipements[0] as { caracteristiques?: unknown }).caracteristiques).toEqual({
-      notes: "garder",
-      [autre]: true,
-      [champ]: false,
-    });
-  });
-
-  it("lie la clé, le booléen et les deux identifiants, sans les concaténer dans le SQL", async () => {
-    await repondreQuestionEquipement("eq-1", champ, { status: "idle" }, reponse("oui"));
-    expect(h.db.requetes).toHaveLength(1);
-    const [{ sql, valeurs }] = h.db.requetes;
-    expect(valeurs).toEqual([champ, true, "eq-1", "etab-1"]);
-    expect(sql).not.toContain(champ);
-    expect(sql).toContain("jsonb_set");
-    expect(sql).toContain("\"updatedAt\" = NOW() AT TIME ZONE 'UTC'");
-  });
-
-  it("aucune ligne touchée : l'erreur est dite, rien n'est régénéré", async () => {
-    h.db.apresLecture = () => {
-      h.db.equipements = [];
-    };
-    const r = await repondreQuestionEquipement("eq-1", champ, { status: "idle" }, reponse("oui"));
-    expect(r.status).toBe("error");
-    expect(h.genererCalendrier).not.toHaveBeenCalled();
-  });
-
-  // Revue du 2026-10-13, R2 : la garde `estAppareilRetire` lit la photo ;
-  // un retrait entre la lecture et l'écriture passait. Éprouvé en retirant
-  // `AND "actif" = true` du WHERE.
-  it("appareil retiré entre la lecture et l'écriture : zéro ligne, l'erreur est dite, rien n'est écrit ni régénéré", async () => {
-    h.db.apresLecture = () => {
-      h.db.equipements[0].actif = false;
-    };
-    const r = await repondreQuestionEquipement("eq-1", champ, { status: "idle" }, reponse("oui"));
-    expect(r.status).toBe("error");
-    expect((r as { message?: string }).message).toContain("retiré du parc");
-    expect((h.db.equipements[0] as { caracteristiques?: unknown }).caracteristiques).toEqual({
-      notes: "garder",
-    });
-    expect(h.genererCalendrier).not.toHaveBeenCalled();
-  });
-});
-
-describe("un EPI déclaré contredit un « non » aux EPI (relecture indépendante du 2026-10-12, B2)", () => {
+// ~~« un EPI déclaré contredit un « non » aux EPI » (B2)~~ — la règle est
+// partagée depuis le 2026-10-22 (`constaterEpi`, testée dans
+// `etablissements/epi-constate.test.ts`) ; ici, l'appel et son ordre.
+describe("une écriture d'équipement fait constater les EPI, avant la régénération (B2, 2026-10-22)", () => {
   function epi(categorie: string): FormData {
     const fd = new FormData();
     fd.set("libelle", "Harnais");
@@ -560,31 +433,22 @@ describe("un EPI déclaré contredit un « non » aux EPI (relecture indépendan
     return fd;
   }
 
-  it("déclarer un EPI fait passer la réponse à « oui », AVANT la régénération", async () => {
+  it("déclarer un équipement", async () => {
     await expect(creerEquipement("etab-1", { status: "idle" }, epi("EPI"))).rejects.toThrow("NEXT_REDIRECT");
-
-    expect(h.db.etablissement.epiPresents).toBe(true);
-    expect(h.db.journal).toEqual(["epiPresents", "régénération"]);
+    expect(h.db.journal).toEqual(["constat:etab-1:sans-regen", "régénération"]);
   });
 
-  it("une réponse muette aussi : la déclaration vaut « oui »", async () => {
-    h.db.etablissement.epiPresents = null;
+  it("le modifier", async () => {
     await modifierEquipement("eq-1", { status: "idle" }, epi("EPI"));
-    expect(h.db.etablissement.epiPresents).toBe(true);
+    expect(h.db.journal).toEqual(["constat:etab-1:sans-regen", "régénération"]);
   });
 
-  it("le pré-remplissage, de même", async () => {
+  it("le pré-remplissage", async () => {
     await creerEquipementsDepuisPreRemplissage("etab-1", [
       { categorie: "EXTINCTEUR", libelle: "Extincteur" },
       { categorie: "EPI", libelle: "Gants" },
     ]);
-    expect(h.db.etablissement.epiPresents).toBe(true);
-  });
-
-  it("un équipement qui n'est pas un EPI ne touche pas à la réponse", async () => {
-    await modifierEquipement("eq-1", { status: "idle" }, epi("EXTINCTEUR"));
-    expect(h.db.etablissement.epiPresents).toBe(false);
-    expect(h.db.journal).toEqual(["régénération"]);
+    expect(h.db.journal).toEqual(["constat:etab-1:sans-regen", "régénération"]);
   });
 });
 
@@ -613,18 +477,6 @@ describe("décision du 2026-10-08 : « désenfumage mécanique » exigé là où
     h.db.regime = { estERP: true, typeErp: "M", categorieErp: "N5", ssiCategorieAouB: null };
     await expect(creerEquipement("etab-1", { status: "idle" }, desenfumage())).rejects.toThrow("NEXT_REDIRECT");
   });
-
-  it("la relance du tableau de bord accepte la question là où elle est exigée", async () => {
-    h.db.regime = { estERP: true, typeErp: "M", categorieErp: "N2", ssiCategorieAouB: null };
-    Object.assign(h.db.equipements[0], { categorie: "DESENFUMAGE", caracteristiques: null });
-    const fd = new FormData();
-    fd.set("reponse", "oui");
-    const r = await repondreQuestionEquipement("eq-1", "estDesenfumageMecanique", { status: "idle" }, fd);
-    expect(r.status).toBe("success");
-    expect((h.db.equipements[0] as { caracteristiques?: unknown }).caracteristiques).toEqual({
-      estDesenfumageMecanique: true,
-    });
-  });
 });
 
 /**
@@ -652,10 +504,6 @@ describe("périmètre : absent et hors compte répondent pareil", () => {
   const ACTIONS: [string, (id: string) => Promise<unknown>][] = [
     ["modifierEquipement", (id) => modifierEquipement(id, { status: "idle" }, fd())],
     ["supprimerEquipement", (id) => supprimerEquipement(id)],
-    [
-      "repondreQuestionEquipement",
-      (id) => repondreQuestionEquipement(id, "estDesenfumageMecanique", { status: "idle" }, fd()),
-    ],
   ];
 
   it.each(ACTIONS)("%s", async (_nom, action) => {
@@ -706,18 +554,6 @@ describe("décision du 2026-10-13 : « groupe électrogène » exigé pour une i
 
   it("hors ERP : la question reste facultative", async () => {
     await expect(creerEquipement("etab-1", { status: "idle" }, installation())).rejects.toThrow("NEXT_REDIRECT");
-  });
-
-  it("la relance du tableau de bord accepte la question en ERP", async () => {
-    h.db.regime = { estERP: true, typeErp: "N", categorieErp: "N2", ssiCategorieAouB: null };
-    Object.assign(h.db.equipements[0], { categorie: "INSTALLATION_ELECTRIQUE", caracteristiques: null });
-    const fd = new FormData();
-    fd.set("reponse", "non");
-    const r = await repondreQuestionEquipement("eq-1", "aGroupeElectrogene", { status: "idle" }, fd);
-    expect(r.status).toBe("success");
-    expect((h.db.equipements[0] as { caracteristiques?: unknown }).caracteristiques).toEqual({
-      aGroupeElectrogene: false,
-    });
   });
 });
 

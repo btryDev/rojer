@@ -76,6 +76,7 @@ export const obligationsStockageDangereux: Obligation[] = [
     // (porteur équipement, `OBLIGATIONS_RETIREES`) — une ligne par
     // établissement, due dès qu'un stockage est déclaré.
     id: "stockage-dangereux-etablissement-formation-personnel",
+    formation: true,
     domaine: "stockage_dangereux",
     libelle: "Formation du personnel manipulant des matières dangereuses",
     description:

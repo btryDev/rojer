@@ -178,9 +178,18 @@ describe("les pages d'entrée disent leur rangement par un fil d'Ariane", () => 
   // Les fiches de détail (`[actionId]`, `[permisFeuId]`…) et les écrans de
   // saisie (`nouveau`, `modifier` d'une fiche) sont plus profonds : leur
   // retour suit la provenance (ADR-014), pas cette règle.
-  const pages = readdirSync(RACINE, { withFileTypes: true })
-    .filter((e) => e.isDirectory() && !e.name.startsWith("["))
-    .map((e) => e.name)
+  // [2026-10-24, revue] Plus les ONGLETS d'une page d'entrée, un cran plus
+  // bas — ils sont des pages d'entrée au même titre —, moins les anciennes
+  // adresses qui ne font que rediriger.
+  const ONGLETS = ["etats-permanents/en-cas-de", "equipe/formations"];
+  const REDIRECTIONS = ["quand-ca-arrive"];
+  const pages = [
+    ...readdirSync(RACINE, { withFileTypes: true })
+      .filter((e) => e.isDirectory() && !e.name.startsWith("["))
+      .map((e) => e.name)
+      .filter((nom) => !REDIRECTIONS.includes(nom)),
+    ...ONGLETS,
+  ]
     .filter((nom) => existsSync(path.join(RACINE, nom, "page.tsx")))
     .sort();
   const lire = (dossier: string) =>
@@ -255,10 +264,20 @@ describe("les pages d'entrée disent leur rangement par un fil d'Ariane", () => 
     "perimetre",
     "prescriptions",
     "prestataires",
-    "quand-ca-arrive",
+    "etats-permanents/en-cas-de",
     "registre",
+    "equipe/formations",
   ])("%s : un fil d'Ariane vers l'établissement", (dossier) => {
-    expect(portUnFil(lire(dossier))).toBe(true);
+    // La page, ou l'en-tête auquel elle délègue (`HeroEnPlace`, 2026-10-24).
+    const source = lire(dossier);
+    const delegues = analyser(source)
+      .statements.filter(ts.isImportDeclaration)
+      .map((i) => (i.moduleSpecifier as ts.StringLiteral).text)
+      .filter((m) => m.startsWith("@/components/"))
+      .map(resoudre)
+      .filter((f): f is string => !!f && f.endsWith(".tsx"))
+      .map((f) => readFileSync(f, "utf8"));
+    expect([source, ...delegues].some(portUnFil)).toBe(true);
   });
 });
 
