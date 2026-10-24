@@ -178,7 +178,9 @@ export function RevueEnPlace({
   useEffect(() => {
     if (index === null) return;
     const touche = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLElement && e.target.closest("input,textarea,select")) return;
+      // Ni dans un champ, ni dans un panneau ouvert par-dessus (« Besoin
+      // d'aide ? ») : la touche ne répond pas à la question d'en dessous.
+      if (e.target instanceof HTMLElement && e.target.closest("input,textarea,select,[data-panneau-modal]")) return;
       if (e.key === "1") repondre("oui");
       else if (e.key === "2") repondre("non");
       else if (e.key === "3") repondre("nsp");

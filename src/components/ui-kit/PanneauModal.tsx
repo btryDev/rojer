@@ -31,7 +31,13 @@ export function PanneauModal({
     if (!ouvert) return;
     panneau.current?.focus();
     const surTouche = (e: KeyboardEvent) => {
-      if (e.key === "Escape") surFermer();
+      if (e.key !== "Escape") return;
+      // Échap ferme CE panneau, et lui seul : sans quoi le `<dialog>` qui le
+      // porte se fermerait aussi (son annulation est l'action par défaut de
+      // la touche), avec ce qui y a été saisi.
+      e.preventDefault();
+      e.stopPropagation();
+      surFermer();
     };
     document.addEventListener("keydown", surTouche);
     return () => document.removeEventListener("keydown", surTouche);
@@ -42,6 +48,9 @@ export function PanneauModal({
     <div
       role="dialog"
       aria-modal="true"
+      // Repère des raccourcis clavier d'un écran sous-jacent (RevueEnPlace) :
+      // une touche frappée dans le panneau ne leur appartient pas.
+      data-panneau-modal=""
       aria-labelledby={titreId}
       // Au-dessus des autres couches fixes (revue « en place », z-50) : un
       // panneau s'ouvre souvent depuis l'une d'elles.
@@ -74,6 +83,7 @@ export function PanneauModal({
         </div>
       </div>
     </div>,
-    document.querySelector<HTMLDialogElement>("dialog[open]") ?? document.body,
+    // Le dernier `<dialog>` ouvert : le plus haut de la pile.
+    [...document.querySelectorAll<HTMLDialogElement>("dialog[open]")].at(-1) ?? document.body,
   );
 }
