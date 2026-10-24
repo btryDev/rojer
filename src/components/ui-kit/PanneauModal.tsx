@@ -41,7 +41,9 @@ export function PanneauModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby={titreId}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      // Au-dessus des autres couches fixes (revue « en place », z-50) : un
+      // panneau s'ouvre souvent depuis l'une d'elles.
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4"
     >
       <div aria-hidden onClick={surFermer} className="absolute inset-0 bg-[rgba(10,10,10,.35)]" />
       <div

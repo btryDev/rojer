@@ -92,7 +92,8 @@ export function DemandeAide({
         {/* Monté à l'ouverture : chaque ouverture repart d'un formulaire neuf. */}
         {ouvert && (
           <Formulaire
-            categorie={categorie}
+            // Le rail ne sait pas d'où on l'ouvre : la page le dira.
+            categorie={variante === "rail" ? null : categorie}
             contexte={contexte}
             etablissementId={etablissementId}
             surFermer={fermer}
@@ -109,12 +110,14 @@ function Formulaire({
   etablissementId,
   surFermer,
 }: {
-  categorie: CategorieAssistance;
+  /** `null` : la déduire de la page. */
+  categorie: CategorieAssistance | null;
   contexte?: string;
   etablissementId?: string;
   surFermer: () => void;
 }) {
   const page = usePathname();
+  const categorieInitiale = categorie ?? categorieDeLaPage(page);
   const [state, action, pending] = useActionState<DemandeAssistanceState, FormData>(demanderAssistance, {
     status: "idle",
   });
@@ -137,9 +140,7 @@ function Formulaire({
   }
 
   return (
-    // Le portail sort le formulaire du DOM d'un éventuel formulaire parent,
-    // pas de son arbre React : l'envoi ne doit pas remonter jusqu'à lui.
-    <form action={action} onSubmit={(e) => e.stopPropagation()} className="space-y-4">
+    <>
       <p className="m-0">
         {QUI_REPOND}{" "}
         <a
@@ -151,6 +152,9 @@ function Formulaire({
           Qui sommes-nous ?
         </a>
       </p>
+    {/* Le portail sort le formulaire du DOM d'un éventuel formulaire parent,
+        pas de son arbre React : l'envoi ne doit pas remonter jusqu'à lui. */}
+    <form action={action} onSubmit={(e) => e.stopPropagation()} className="space-y-4">
       <input type="hidden" name="page" value={page} />
       {etablissementId && <input type="hidden" name="etablissementId" value={etablissementId} />}
       {contexte && <input type="hidden" name="contexte" value={contexte} />}
@@ -158,7 +162,7 @@ function Formulaire({
         <label className="label-board" htmlFor="categorie">
           Votre besoin
         </label>
-        <select id="categorie" name="categorie" className="champ-board" defaultValue={categorie}>
+        <select id="categorie" name="categorie" className="champ-board" defaultValue={categorieInitiale}>
           {CATEGORIES_ASSISTANCE.map((c) => (
             <option key={c} value={c}>
               {LABEL_CATEGORIE_ASSISTANCE[c]}
@@ -202,5 +206,17 @@ function Formulaire({
         </Button>
       </div>
     </form>
+    </>
   );
+}
+
+/** La catégorie probable d'une demande ouverte depuis le rail, selon la page. */
+export function categorieDeLaPage(chemin: string | null): CategorieAssistance {
+  if (!chemin) return "autre";
+  if (/\/prestataires(\/|$)/.test(chemin)) return "prestataire";
+  if (chemin.startsWith("/duerp") || /\/(duerp|equipe)(\/|$)/.test(chemin)) return "duerp";
+  if (/\/perimetre(\/|$)/.test(chemin)) return "hors_couverture";
+  if (/\/(verifications|controles|registre)(\/|$)/.test(chemin)) return "rapport";
+  if (/\/controle(\/|$)/.test(chemin)) return "commission_securite";
+  return "autre";
 }

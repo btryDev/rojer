@@ -956,7 +956,10 @@ export default async function VerificationDetailPage({
       />
       {/* Un écart majeur au dernier rapport : le doute après un contrôle,
           qu'aucun écran ne tranche (2026-10-24). */}
-      {recoit && v.rapports[0]?.resultat === "ecart_majeur" ? (
+      {/* Pas juste après le dépôt : l'invitation à noter les points est
+          déjà là, et trois encarts à la suite pèsent (contrôle visuel). Elle
+          porte alors le lien d'aide. */}
+      {recoit && v.rapports[0]?.resultat === "ecart_majeur" && !rapportApres ? (
         <DemandeAide
           variante="encart"
           accroche="Un écart majeur relevé ? Un expert vous dit quoi corriger, et dans quel ordre."
@@ -999,6 +1002,17 @@ export default async function VerificationDetailPage({
                 <p className="m-0 max-w-[62ch] text-[13.5px] leading-[1.55] text-[color:var(--board-ink)]">
                   {INVITATION_APRES_RAPPORT}
                 </p>
+                {rapportApres.resultat === "ecart_majeur" && (
+                  <p className="m-0 text-[12.5px] text-[color:var(--board-slate-mid)]">
+                    <DemandeAide
+                      variante="lien"
+                      libelle="Un écart majeur ? Un expert vous dit quoi corriger, et dans quel ordre."
+                      categorie="rapport"
+                      contexte={v.libelleObligation}
+                      etablissementId={id}
+                    />
+                  </p>
+                )}
               </>
             )}
             <FormulairePoint

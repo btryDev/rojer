@@ -47,6 +47,16 @@ describe("demanderAssistance", () => {
     });
   });
 
+  it("sans établissement donné, celui de la page est retenu, s'il est du compte", async () => {
+    await demanderAssistance(IDLE, fd({ page: "/etablissements/e1/modifier" }));
+    expect(ecrit().etablissementId).toBe("e1");
+    vi.clearAllMocks();
+    await expect(demanderAssistance(IDLE, fd({ page: "/etablissements/autre/modifier" }))).rejects.toThrow(
+      "NEXT_NOT_FOUND",
+    );
+    expect(h.create).not.toHaveBeenCalled();
+  });
+
   it("l'établissement d'un autre compte n'est pas écrit (404)", async () => {
     await expect(demanderAssistance(IDLE, fd({ etablissementId: "autre" }))).rejects.toThrow("NEXT_NOT_FOUND");
     expect(h.create).not.toHaveBeenCalled();

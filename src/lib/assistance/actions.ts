@@ -62,10 +62,12 @@ export async function demanderAssistance(
   }
   const d = parsed.data;
 
-  // 404 pour l'établissement d'un autre compte, comme partout.
-  const etablissementId = d.etablissementId
-    ? (await requireEtablissement(d.etablissementId)).etablissement.id
-    : null;
+  // L'établissement donné, à défaut celui de la page (« /etablissements/{id}/… ») ;
+  // 404 pour celui d'un autre compte, comme partout.
+  const chemin = decouperCheminInterne(d.page);
+  const deLaPage = chemin ? /^\/etablissements\/([^/]+)/.exec(chemin.pathname)?.[1] : undefined;
+  const voulu = d.etablissementId ?? (deLaPage && deLaPage !== "nouveau" ? deLaPage : undefined);
+  const etablissementId = voulu ? (await requireEtablissement(voulu)).etablissement.id : null;
 
   const depuis = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const recentes = await prisma.demandeAssistance.count({
@@ -78,7 +80,6 @@ export async function demanderAssistance(
     };
   }
 
-  const chemin = decouperCheminInterne(d.page);
   await prisma.demandeAssistance.create({
     data: {
       userId: user.id,
