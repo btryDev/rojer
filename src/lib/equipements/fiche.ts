@@ -12,6 +12,7 @@
 // été fait, et les obligations qui expliquent pourquoi. Rien n'est
 // recalculé côté vue.
 
+import { LIBELLE_POINT, nombreDePoints } from "@/lib/points-a-corriger/libelles";
 import type { ResultatVerification } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { ORDRE_RAPPORT_PLUS_RECENT } from "@/lib/rapports/derniere-realisation";
@@ -180,6 +181,11 @@ export function lignesAFaire(
    * le rail et la vue du parc ne comptent plus (D1 (a)).
    */
   prudence: RetenueParPrudence,
+  /**
+   * Les points à corriger qu'un contrôle d'ENSEMBLE a désignés sur cet
+   * appareil (ADR-048) : ils ne pendent pas à ses lignes, d'où le paramètre.
+   */
+  pointsDesignes: readonly PointAFaire[] = [],
 ): LigneAFaire[] {
   const lignes: LigneAFaire[] = [];
 
@@ -222,28 +228,35 @@ export function lignesAFaire(
       });
     }
 
-    for (const a of v.actions) {
-      if (!estActionOuverte(a)) continue;
-      lignes.push({
-        cle: `a-${a.id}`,
-        genre: "action",
-        date: a.echeance,
-        etat: !a.echeance
-          ? "aPlanifier"
-          : estActionEnRetard(a, maintenant)
-            ? "enRetard"
-            : classerDate(a.echeance, maintenant),
-        surtitre: "Correction",
-        libelle: a.libelle,
-        detail: a.responsable
-          ? `Responsable : ${a.responsable}`
-          : "Responsable non désigné",
-        href: `${base}/actions/${a.id}`,
-      });
-    }
+    for (const a of v.actions) lignes.push(...ligneDePoint(a, base, maintenant));
   }
+  for (const a of pointsDesignes) lignes.push(...ligneDePoint(a, base, maintenant));
 
   return lignes.sort(comparerParUrgence);
+}
+
+/** Ce que « à faire » lit d'un point à corriger. */
+export type PointAFaire = Pick<ActionFiche, "id" | "libelle" | "statut" | "echeance" | "responsable">;
+
+/** Un point ouvert devient une ligne « à faire » ; un point clos, aucune. */
+function ligneDePoint(a: PointAFaire, base: string, maintenant: Date): LigneAFaire[] {
+  if (!estActionOuverte(a)) return [];
+  return [
+    {
+      cle: `a-${a.id}`,
+      genre: "action",
+      date: a.echeance,
+      etat: !a.echeance
+        ? "aPlanifier"
+        : estActionEnRetard(a, maintenant)
+          ? "enRetard"
+          : classerDate(a.echeance, maintenant),
+      surtitre: LIBELLE_POINT,
+      libelle: a.libelle,
+      detail: a.responsable ? `Responsable : ${a.responsable}` : "Responsable non désigné",
+      href: `${base}/actions/${a.id}`,
+    },
+  ];
 }
 
 /**
@@ -340,11 +353,14 @@ export function libelleDelai(
 export function phraseSansEcheance(nbVerifications: number, nbCorrections: number): string {
   const verifs =
     nbVerifications > 1 ? "des vérifications" : nbVerifications === 1 ? "une vérification" : null;
+  // ADR-048 : « point à corriger », masculin — l'accord suit : un sujet qui
+  // compte un point s'accorde au masculin (« sont ouverts »).
   const corrections =
-    nbCorrections > 1 ? "des corrections" : nbCorrections === 1 ? "une correction" : null;
+    nbCorrections > 1 ? "des points à corriger" : nbCorrections === 1 ? "un point à corriger" : null;
   const pluriel = nbVerifications + nbCorrections > 1;
   const sujet = [verifs, corrections].filter((s) => s !== null).join(" et ");
-  const verbe = pluriel ? "sont ouvertes" : "est ouverte";
+  const genre = nbCorrections > 0 ? "s" : "es";
+  const verbe = pluriel ? `sont ouvert${genre}` : nbCorrections > 0 ? "est ouvert" : "est ouverte";
   // Une correction se date dans l'application : son échéance n'est pas
   // « inconnue », elle n'est pas encore fixée. Une vérification, elle, attend
   // un rapport pour en avoir une.
@@ -374,7 +390,7 @@ export function chapeauAFaire(
 ): string {
   if (tete?.date) {
     return tete.genre === "action"
-      ? `Un écart reste à lever ${libelleDelai(tete, maintenant, "phrase")}`
+      ? `Un point reste à corriger ${libelleDelai(tete, maintenant, "phrase")}`
       : `Une vérification est attendue ${libelleDelai(tete, maintenant, "phrase")}`;
   }
   // Une CORRECTION en retard en tête n'est pas « une vérification due » : elle
@@ -465,13 +481,15 @@ export function lignesHistoire(
     const href = `${base}/verifications/${v.id}`;
 
     if (v.rapports.length > 0) {
-      // Les actions correctives d'une ligne de suivi sont rattachées à la
-      // ligne, pas au rapport : impossible de dire lequel des dépôts les a
-      // fait naître. On les annonce donc sur le plus récent (les rapports
-      // arrivent triés décroissants), et sur lui seul — les répéter à
-      // chaque dépôt ferait lire plusieurs fois les mêmes écarts.
-      const nbActions = v.actions.length;
+      // Chaque rapport annonce les points qu'il a relevés (ADR-048,
+      // `rapportOrigineId`). Les points d'avant, sans rapport d'origine, se
+      // disent sur le plus récent — les rapports arrivent triés décroissants —,
+      // et sur lui seul : les répéter à chaque dépôt ferait lire plusieurs fois
+      // les mêmes points.
+      const sansOrigine = v.actions.filter((a) => a.rapportOrigineId === null).length;
       v.rapports.forEach((r, i) => {
+        const nbPoints =
+          v.actions.filter((a) => a.rapportOrigineId === r.id).length + (i === 0 ? sansOrigine : 0);
         lignes.push({
           cle: `r-${r.id}`,
           date: r.dateRapport,
@@ -481,9 +499,7 @@ export function lignesHistoire(
           detail: [
             "Rapport déposé",
             r.organismeVerif,
-            i === 0 && nbActions > 0
-              ? `${nbActions} action${nbActions > 1 ? "s" : ""} corrective${nbActions > 1 ? "s" : ""}`
-              : null,
+            nbPoints > 0 ? nombreDePoints(nbPoints) : null,
           ]
             .filter(Boolean)
             .join(" · "),

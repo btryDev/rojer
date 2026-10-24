@@ -6,8 +6,11 @@ import { mentionDelaiDeGrace } from "@/lib/calendrier/grace";
 import { BadgeResultat } from "@/components/rapports/BadgeResultat";
 import { SupprimerRapportButton } from "@/components/rapports/SupprimerRapportButton";
 import { UploadRapportForm } from "@/components/rapports/UploadRapportForm";
-import { BadgeStatutAction } from "@/components/actions/BadgeStatutAction";
-import { CreerActionVerifForm } from "@/components/actions/CreerActionVerifForm";
+import { FormulairePoint } from "@/components/points-a-corriger/FormulairePoint";
+import { ListePoints } from "@/components/points-a-corriger/ListePoints";
+import { appareilsDesignables, listerPointsDuControle } from "@/lib/points-a-corriger/queries";
+import { recoitDesPoints } from "@/lib/points-a-corriger/regles";
+import { LIBELLE_POINTS } from "@/lib/points-a-corriger/libelles";
 import { getVerification } from "@/lib/calendrier/queries";
 import { MentionContractuelle } from "@/components/prescriptions/MentionContractuelle";
 import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeRetenu";
@@ -22,7 +25,6 @@ import { referencesCitees } from "@/lib/referentiels/conformite/rythme-retenu";
 import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
 import { BlocAConfirmer } from "@/components/calendrier/BlocAConfirmer";
 import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
-import { listerActionsDeLaVerification } from "@/lib/actions/queries";
 import {
   MARQUAGE_CONTRACTUEL,
   MARQUAGE_CONTRACTUEL_LONG,
@@ -35,7 +37,6 @@ import {
   joursCivilsEntre,
 } from "@/lib/dates";
 import {
-  estActionEnRetard,
   estVerificationRealisee,
 } from "@/lib/dates/retard";
 import {
@@ -70,7 +71,7 @@ import {
   LIBELLE_SOURCE,
 } from "@/lib/referentiels/conformite/types";
 import { uploadRapport } from "@/lib/rapports/actions";
-import { creerActionDepuisVerification } from "@/lib/actions/plan";
+import { creerPointACorriger } from "@/lib/actions/plan";
 import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
 import { DemanderSignatureForm } from "@/components/signatures/DemanderSignatureForm";
 import {
@@ -155,8 +156,13 @@ export default async function VerificationDetailPage({
     obligation && !estPorteeParEquipement(obligation)
       ? (obligation.equipementsEnContexte ?? [])
       : [];
-  const actionsLiees = await listerActionsDeLaVerification(v.id);
-  const boundCreerAction = creerActionDepuisVerification.bind(null, v.id);
+  // Les points à corriger de ce contrôle (ADR-048) ; pour un contrôle
+  // d'ensemble, les appareils qu'un point peut désigner.
+  const [points, appareils] = await Promise.all([
+    listerPointsDuControle(v.id),
+    appareilsDesignables(v.id),
+  ]);
+  const recoit = recoitDesPoints({ ...v, appareilActif: v.equipement?.actif ?? null });
   const boundUpload = uploadRapport.bind(null, v.id);
 
   // Signatures posées sur chaque rapport de cette vérification.
@@ -626,7 +632,7 @@ export default async function VerificationDetailPage({
                         l&apos;application.
                       </p>
                     ) : (
-                      <UploadRapportForm action={boundUpload} />
+                      <UploadRapportForm action={boundUpload} points={recoit ? { verificationId: v.id, appareils } : undefined} />
                     )}
                   </div>
                 </div>
@@ -771,6 +777,7 @@ export default async function VerificationDetailPage({
                 </p>
               ) : (
                 <UploadRapportForm
+                  points={recoit ? { verificationId: v.id, appareils } : undefined}
                   action={boundUpload}
                   labelAnnuler={{
                     libelle: "Annuler",
@@ -834,88 +841,57 @@ export default async function VerificationDetailPage({
         />
       )}
 
-      {/* ── Les écarts à lever ────────────────────────────────────── */}
+      {/* ── Les points à corriger (ADR-048) ──────────────────────── */}
       <TitreSection
-        surtitre="Levées d'écart"
-        titre="Actions correctives"
-        compte={actionsLiees.length}
+        surtitre={LIBELLE_POINTS}
+        titre={v.equipement ? "Relevés par ce contrôle" : "Relevés par ce contrôle d'ensemble"}
+        compte={points.length}
         droite={
-          actionsLiees.length > 0 ? (
-            <details className="group">
-              <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-full px-[18px] py-2.5 text-[12.5px] font-semibold text-[color:var(--board-ink)] ring-1 ring-[color:rgba(10,10,10,.18)] transition-colors hover:bg-[color:var(--board-slate-pale)]">
-                <span className="group-open:hidden">+ Créer une action</span>
-                <span className="hidden group-open:inline">Annuler</span>
-              </summary>
-              <div className="carte-board mt-4 px-7 py-6 md:min-w-[520px]">
-                <CreerActionVerifForm action={boundCreerAction} />
-              </div>
-            </details>
+          v.equipement ? (
+            <Link
+              href={avecProvenance(`/etablissements/${id}/equipements/${v.equipement.id}`, depuisCetteFiche)}
+              className="text-[12.5px] font-semibold text-[color:var(--board-blue-ink)] underline underline-offset-4"
+            >
+              Voir sur la fiche de l&apos;appareil
+            </Link>
           ) : undefined
         }
       />
-
-      {actionsLiees.length > 0 ? (
-        <ul className="m-0 grid list-none grid-cols-1 gap-4 p-0 md:grid-cols-2">
-          {actionsLiees.map((a) => {
-            // Même prédicat que le plan d'actions : une action dont
-            // l'échéance tombe aujourd'hui n'est pas en retard, et une
-            // action abandonnée ne l'est jamais non plus.
-            const enRetardAction = estActionEnRetard(a, aujourdhui);
-            return (
-              <li key={a.id}>
-                <Link
-                  href={avecProvenance(
-                    `/etablissements/${id}/actions/${a.id}`,
-                    depuisCetteFiche,
-                  )}
-                  className="carte-board block h-full px-6 py-5 transition-colors hover:bg-[color:var(--board-slate-pale)]"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="m-0 text-[14.5px] font-semibold leading-[1.35]">
-                      {a.libelle}
-                    </p>
-                    <BadgeStatutAction statut={a.statut} />
-                  </div>
-                  <p
-                    className="m-0 mt-3 text-[12.5px]"
-                    style={{
-                      color: enRetardAction
-                        ? "var(--board-signal-ink)"
-                        : "var(--board-slate-mid)",
-                    }}
-                  >
-                    {a.echeance
-                      ? `Échéance ${formatDateCourte(a.echeance)}`
-                      : "Pas d'échéance"}
-                    {a.responsable ? ` · ${a.responsable}` : ""}
-                  </p>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      ) : (
+      {points.length > 0 && (
+        <ListePoints
+          points={points}
+          etablissementId={id}
+          provenance={depuisCetteFiche}
+          aujourdhui={aujourdhui}
+          avecAppareil={!v.equipement}
+        />
+      )}
+      {recoit ? (
         <details className="group">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-[22px] bg-[color:var(--board-slate-pale)] px-6 py-5">
-            <div>
-              <p className="m-0 text-[14.5px] font-semibold">
-                Aucun écart à lever pour l&apos;instant.
-              </p>
-              <p className="m-0 mt-1 text-[13px] text-[color:var(--board-slate-mid)]">
-                Créez une action corrective si le rapport mentionne une
-                observation à traiter.
-              </p>
-            </div>
+            <p className="m-0 text-[13.5px] text-[color:var(--board-slate-mid)]">
+              {points.length === 0
+                ? "Aucun point à corriger. Le rapport en relève ? Notez-les ici."
+                : "Un autre point relevé par ce contrôle ?"}
+            </p>
             <span className="inline-flex flex-none items-center gap-2 rounded-full bg-[color:var(--board-ink)] px-[18px] py-2.5 text-[12.5px] font-semibold text-white">
-              <span className="group-open:hidden">+ Créer</span>
-              <span className="hidden group-open:inline">Annuler</span>
+              <span className="group-open:hidden">+ Ajouter</span>
+              <span className="hidden group-open:inline">Fermer</span>
             </span>
           </summary>
           <div className="carte-board mt-4 px-7 py-6">
-            <CreerActionVerifForm action={boundCreerAction} />
+            <FormulairePoint
+              action={creerPointACorriger}
+              rattachement={{
+                mode: "fixe",
+                verificationId: v.id,
+                rapportOrigineId: v.rapports[0]?.id ?? null,
+              }}
+              appareils={appareils}
+            />
           </div>
         </details>
-      )}
+      ) : null}
     </EcranFiche>
   );
 }

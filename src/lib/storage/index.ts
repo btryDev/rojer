@@ -3,6 +3,7 @@
 // par un module vide côté serveur, et par une erreur de compilation côté
 // client (2026-09-27).
 import "server-only";
+import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { createClient } from "@supabase/supabase-js";
 import { LocalFileStorage } from "./local";
@@ -146,6 +147,18 @@ export function __oublierPiloteStockage(): void {
  * timestamp) pour permettre un upsert ultérieur si nécessaire, mais inclut
  * le rapportId qui est un cuid unique.
  */
+export function clePieceDePoint(
+  etablissementId: string,
+  actionId: string,
+  nomFichier: string,
+): string {
+  // La pièce qui prouve la correction d'un point (ADR-048). Le suffixe
+  // aléatoire distingue deux pièces successives d'un même point (réouvert
+  // puis corrigé de nouveau) : la clé n'est jamais réécrite.
+  const safe = segmentCleStockage(nomFichier);
+  return `points/${etablissementId}/${actionId}-${randomUUID()}-${safe}`;
+}
+
 export function cleRapport(
   etablissementId: string,
   rapportId: string,

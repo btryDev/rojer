@@ -80,6 +80,9 @@ import {
 import { afficherValeur } from "@/lib/registre/valeur";
 import { nomDeZone } from "@/lib/batiments/nom-zone";
 import type { DossierData } from "./DossierConformiteDocument";
+import type { LignePointPdf, PointsACorrigerData } from "./PointsACorrigerDocument";
+import { listerPointsDeLEquipement } from "@/lib/points-a-corriger/queries";
+import { formatDateCourte } from "./styles";
 import { blocsMaterielsNonCouverts } from "./mentions-perimetre";
 import { couvertureDuDossier } from "@/lib/perimetre/faits";
 import { faitInventaire } from "@/lib/perimetre/couverture";
@@ -310,6 +313,51 @@ export async function construirePlanActionsData(
     totalEnCours: compteurs.enCours,
     totalLevees: compteurs.leveesRecemment,
     actions: lignes,
+  };
+}
+
+/**
+ * Les points à corriger d'un appareil, pour son PDF (ADR-048). Borné au
+ * compte : l'établissement et l'appareil sont relus dans son périmètre.
+ */
+export async function construirePointsEquipementData(
+  etablissementId: string,
+  equipementId: string,
+  user: AuthedUser,
+): Promise<PointsACorrigerData | null> {
+  const etab = await chargerEtablissementDuUser(etablissementId, user);
+  if (!etab) return null;
+  const appareil = await prisma.equipement.findFirst({
+    where: { id: equipementId, etablissementId },
+    select: { libelle: true },
+  });
+  if (!appareil) return null;
+  const points = await listerPointsDeLEquipement(equipementId);
+  const ligne = (p: (typeof points)[number]): LignePointPdf => ({
+    id: p.id,
+    libelle: p.libelle,
+    description: p.description,
+    statut: p.statut,
+    echeance: p.echeance,
+    responsable: p.responsable,
+    origine: [
+      p.verification?.libelleObligation,
+      p.rapportOrigine ? `rapport du ${formatDateCourte(p.rapportOrigine.dateRapport)}` : null,
+    ]
+      .filter(Boolean)
+      .join(" · "),
+    leveeLe: p.leveeLe,
+    leveeCommentaire: p.leveeCommentaire,
+    pieceJointe: p.leveeFichierNom !== null,
+  });
+  return {
+    entreprise: etab.entreprise.raisonSociale,
+    etablissement: etab.raisonDisplay,
+    adresse: etab.adresse,
+    appareil: appareil.libelle,
+    genereLe: new Date(),
+    ouverts: points.filter((p) => p.statut === "ouverte" || p.statut === "en_cours").map(ligne),
+    corriges: points.filter((p) => p.statut === "levee").map(ligne),
   };
 }
 

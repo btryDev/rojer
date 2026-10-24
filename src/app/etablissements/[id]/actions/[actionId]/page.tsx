@@ -16,6 +16,7 @@ import {
 import { BadgeOrigine } from "@/components/actions/BadgeOrigine";
 import { BadgeStatutAction } from "@/components/actions/BadgeStatutAction";
 import { CloturerActionForm } from "@/components/actions/CloturerActionForm";
+import { LIBELLE_CORRIGE, LIBELLE_JUSTIFICATIF, LIBELLE_POINT } from "@/lib/points-a-corriger/libelles";
 import { GesteStatutActionButton } from "@/components/actions/GesteStatutActionButton";
 import { SupprimerActionButton } from "@/components/actions/SupprimerActionButton";
 import { LigneTitreDeLaMesure } from "@/components/salaries/LigneTitreDeLaMesure";
@@ -43,12 +44,16 @@ export default async function ActionDetailPage({
   if (!a || a.etablissementId !== id) notFound();
 
   // D'où l'on vient (calendrier, tableau de bord, une vérification…), et où
-  // cette fiche vit de toute façon — le plan d'actions.
+  // cette fiche vit de toute façon : une mesure du DUERP au plan d'actions ;
+  // un point à corriger (ADR-048) sur son appareil, à défaut sur son contrôle.
   const provenance = lireProvenance(de, id);
-  const planActions = {
-    href: `/etablissements/${id}/actions`,
-    label: "Plan d'actions",
-  };
+  const point = a.verificationId !== null;
+  const appareil = a.verification?.equipement ?? a.equipement ?? null;
+  const canonique = !point
+    ? { href: `/etablissements/${id}/actions`, label: "Plan d'actions" }
+    : appareil
+      ? { href: `/etablissements/${id}/equipements/${appareil.id}`, label: appareil.libelle }
+      : { href: `/etablissements/${id}/verifications/${a.verificationId}`, label: a.verification?.libelleObligation ?? "Contrôle" };
   // Les liens que cette fiche pose s'annoncent eux-mêmes, sans réexpédier
   // la provenance reçue : la chaîne reste bornée à un saut.
   const depuisCetteFiche = `/etablissements/${id}/actions/${actionId}`;
@@ -110,17 +115,21 @@ export default async function ActionDetailPage({
   });
 
   return (
-    <EcranFiche provenance={provenance} canonique={planActions}>
+    <EcranFiche provenance={provenance} canonique={canonique}>
       <HeroFiche
         date={a.echeance}
         etat={etat}
         famille="travaux"
-        surtitre="Correction · Plan d'actions"
+        surtitre={
+          point
+            ? `${LIBELLE_POINT}${a.verification ? ` · ${a.verification.libelleObligation}` : ""}`
+            : "Mesure de prévention · Plan d'actions"
+        }
         titre={a.libelle}
         faits={faits}
         pastilles={
           <>
-            <BadgeStatutAction statut={a.statut} />
+            <BadgeStatutAction statut={a.statut} point={point} />
             {enRetard && a.echeance ? (
               <PastilleRetard echeance={a.echeance} maintenant={maintenant} />
             ) : null}
@@ -152,7 +161,7 @@ export default async function ActionDetailPage({
             ) : null}
             <SupprimerActionButton
               id={a.id}
-              redirectTo={(provenance ?? planActions).href}
+              redirectTo={(provenance ?? canonique).href}
             />
           </>
         }
@@ -225,8 +234,8 @@ export default async function ActionDetailPage({
                         vers une fiche datée de plusieurs mois ne surprenne pas. */}
                     <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
                       {dateConstat
-                        ? `Origine · écart constaté le ${formaterDateFr(dateConstat)}`
-                        : "Origine · écart constaté lors d'une vérification"}
+                        ? `Relevé par le contrôle du ${formaterDateFr(a.rapportOrigine?.dateRapport ?? dateConstat)}`
+                        : "Relevé lors d'un contrôle"}
                     </p>
                     <p className="m-0 mt-1.5 text-[14px] font-semibold leading-[1.35]">
                       {a.verification.libelleObligation}
@@ -260,13 +269,26 @@ export default async function ActionDetailPage({
             {/* La clôture d'une action levée n'est plus un formulaire mais
                 une preuve : elle reste sur la fiche, à demeure. */}
             {a.statut === "levee" ? (
-              <CarteFiche titre="Clôture">
+              <CarteFiche titre={point ? LIBELLE_CORRIGE : "Clôture"}>
                 <ChampsFiche>
-                  <ChampFiche cle="Levée le">
+                  <ChampFiche cle={point ? "Corrigé le" : "Levée le"}>
                     {a.leveeLe ? formaterDateLongueFr(a.leveeLe) : "—"}
                   </ChampFiche>
+                  {a.leveeFichierNom ? (
+                    <ChampFiche cle="Pièce">
+                      <a
+                        href={`/api/points/${a.id}/piece`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
+                      >
+                        {a.leveeFichierNom}
+                        <ArrowUpRight className="size-3.5" />
+                      </a>
+                    </ChampFiche>
+                  ) : null}
                   {a.leveeCommentaire ? (
-                    <ChampFiche cle="Justificatif">
+                    <ChampFiche cle={point ? LIBELLE_JUSTIFICATIF : "Justificatif"}>
                       <span className="whitespace-pre-wrap">
                         {a.leveeCommentaire}
                       </span>
@@ -300,7 +322,7 @@ export default async function ActionDetailPage({
         }
         cote={
           estOuverte ? (
-            <CarteFiche titre="Clôturer cette action">
+            <CarteFiche titre={point ? "Marquer comme corrigé" : "Clôturer cette action"}>
               <p className="m-0 mb-4 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                 Décrivez ce qui a été fait et son résultat. Le justificatif
                 reste attaché à la fiche&nbsp;: c&apos;est lui qu&apos;on
@@ -308,6 +330,7 @@ export default async function ActionDetailPage({
               </p>
               <CloturerActionForm
                 action={boundCloture}
+                point={point}
                 rapportsDisponibles={a.verification?.rapports.map((r) => ({
                   id: r.id,
                   label: `${formaterDateFr(r.dateRapport)} — ${

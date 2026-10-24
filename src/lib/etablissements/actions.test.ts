@@ -84,6 +84,10 @@ const h = vi.hoisted(() => {
     piecePrestataire: {
       findMany: async () => [{ fichierCle: "presta/urssaf-ancienne.pdf" }],
     },
+    // La pièce d'un point corrigé (ADR-048) : elle part aussi.
+    action: {
+      findMany: async () => [{ leveeFichierCle: "points/piece.pdf" }],
+    },
     // Transaction sans isolation : le corps reçoit le même client. Suffisant
     // pour l'ordre des écritures, qui est ce que ces tests regardent.
     $transaction: async <T,>(fn: (tx: unknown) => Promise<T>) => fn(prisma),
@@ -355,6 +359,7 @@ describe("supprimerEtablissement — conservation 40 ans", () => {
 describe("supprimerEtablissement — les fichiers stockés partent avec (2026-09-27)", () => {
   const TOUTES = [
     "leg/analyse.pdf",
+    "points/piece.pdf",
     "presta/kbis.pdf",
     "presta/urssaf-ancienne.pdf",
     "presta/urssaf.pdf",

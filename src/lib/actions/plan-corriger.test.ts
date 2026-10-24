@@ -27,6 +27,8 @@ vi.mock("@/lib/auth/require-user", () => ({
   getOptionalUser: vi.fn(),
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+const { liberer } = vi.hoisted(() => ({ liberer: vi.fn(async () => ({ liberes: 1, echecs: 0 })) }));
+vi.mock("@/lib/suppression/fichiers", () => ({ libererFichiers: liberer }));
 vi.mock("@/lib/etablissements/epi-constate", () => ({ constaterEpi: vi.fn(async () => false) }));
 vi.mock("next/navigation", async (orig) => ({
   ...(await orig<typeof import("next/navigation")>()),
@@ -127,8 +129,24 @@ describe("rouvrirAction", () => {
         leveeLe: null,
         leveeCommentaire: null,
         leveeRapportId: null,
+        leveeFichierCle: null,
+        leveeFichierNom: null,
+        leveeFichierMime: null,
+        leveeFichierTaille: null,
       },
     });
+    expect(liberer).not.toHaveBeenCalled();
+  });
+
+  it("la pièce de la correction défaite est libérée, après la base (ADR-048)", async () => {
+    prismaMock.action.findFirst.mockResolvedValue(
+      action({ statut: "levee", leveeFichierCle: "points/e1/a1-x-facture.pdf" }),
+    );
+    await rouvrirAction("a1");
+    expect(liberer).toHaveBeenCalledWith(["points/e1/a1-x-facture.pdf"], "points/reouverture");
+    expect(prismaMock.action.update.mock.invocationCallOrder[0]).toBeLessThan(
+      liberer.mock.invocationCallOrder[0],
+    );
   });
 
   it("ne touche pas une action déjà ouverte", async () => {

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { CreerActionVerifForm } from "@/components/actions/CreerActionVerifForm";
+import { FormulairePoint } from "@/components/points-a-corriger/FormulairePoint";
 import { getAction } from "@/lib/actions/queries";
 import { modifierActionPlan } from "@/lib/actions/plan";
 import { cleJourCivil } from "@/lib/dates";
@@ -50,7 +50,7 @@ export default async function ModifierActionPage({
 
       <div className="px-[var(--board-gutter)] pt-6">
         <div className="carte-board max-w-[760px] px-7 py-7 sm:px-8">
-          <CreerActionVerifForm
+          <FormulairePoint
             action={action}
             defauts={{
               libelle: a.libelle,

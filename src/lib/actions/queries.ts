@@ -102,6 +102,10 @@ export async function getAction(id: string) {
       etablissement: {
         select: { id: true, raisonDisplay: true },
       },
+      // ADR-048 : l'appareil qu'un contrôle d'ensemble a désigné, et le
+      // rapport qui a relevé le point.
+      equipement: { select: { id: true, libelle: true } },
+      rapportOrigine: { select: { id: true, dateRapport: true } },
     },
   });
   if (!action) return null;
@@ -306,14 +310,5 @@ export async function statsActionsEnRetard(
   };
 }
 
-/**
- * Les actions correctives nées d'une vérification, pour sa fiche (audit
- * Next.js du 2026-10-14, B6 — la page les lisait elle-même).
- */
-export async function listerActionsDeLaVerification(verificationId: string) {
-  const user = await requireUser();
-  return prisma.action.findMany({
-    where: { verificationId, etablissement: { entreprise: { userId: user.id } } },
-    orderBy: [{ statut: "asc" }, { echeance: "asc" }],
-  });
-}
+// ~~`listerActionsDeLaVerification`~~ — remplacée le 2026-10-24 par
+// `listerPointsDuControle` (`points-a-corriger/queries.ts`, ADR-048).

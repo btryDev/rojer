@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ChampBoard } from "@/components/ui-kit";
@@ -9,6 +9,8 @@ import { LABEL_TYPE_ACTION } from "@/lib/actions/labels";
 import type { ActionPlanState } from "@/lib/actions/plan";
 import { ORDRE_SELON_L4121_2 } from "@/lib/verbatim/l4121-2-ordre";
 import type { TypeAction } from "@prisma/client";
+import { formaterDateCourteFr } from "@/lib/dates";
+import type { ControlePourUnPoint } from "@/lib/points-a-corriger/queries";
 
 /**
  * Valeurs de départ, pour corriger une action existante avec le formulaire
@@ -25,32 +27,136 @@ export type DefautsAction = {
   responsable: string | null;
 };
 
+/**
+ * À quoi le point se rattache, à la création (ADR-048) :
+ *   - `fixe` : le contrôle et le rapport sont connus (après un dépôt, sur la
+ *     page d'un contrôle) ;
+ *   - `choix` : la fiche d'un équipement propose ses contrôles et les
+ *     contrôles d'ensemble qui le couvrent ; le point se rattache au dernier
+ *     rapport du contrôle choisi.
+ * `appareils` : pour un contrôle d'ensemble, les appareils que le point peut
+ * désigner. `appareilImpose` : la fiche d'un équipement désigne le sien.
+ */
+export type RattachementPoint =
+  | { mode: "fixe"; verificationId: string; rapportOrigineId: string | null }
+  | { mode: "choix"; controles: ControlePourUnPoint[]; appareilImpose: string };
+
 type Props = {
   action: (
     prev: ActionPlanState,
     formData: FormData,
   ) => Promise<ActionPlanState>;
   labelAnnuler?: { libelle: string; href: string };
-  /** Présent : le formulaire corrige l'action au lieu d'en créer une. */
+  /** Présent : le formulaire corrige un point au lieu d'en créer un. */
   defauts?: DefautsAction;
+  /** Requis à la création. */
+  rattachement?: RattachementPoint;
+  appareils?: { id: string; libelle: string }[];
 };
 
-export function CreerActionVerifForm({ action, labelAnnuler, defauts }: Props) {
+/**
+ * Le formulaire d'un point à corriger — création et correction (ADR-048).
+ * Après une création, il se vide pour le point suivant : un rapport en relève
+ * souvent plusieurs.
+ */
+export function FormulairePoint(props: Props) {
+  // La clé change à chaque création réussie : le formulaire repart vide.
+  const [serie, setSerie] = useState(0);
+  return <Formulaire key={serie} {...props} surCree={() => setSerie((n) => n + 1)} creesAvant={serie} />;
+}
+
+function Formulaire({
+  action,
+  labelAnnuler,
+  defauts,
+  rattachement,
+  appareils,
+  surCree,
+  creesAvant,
+}: Props & { surCree: () => void; creesAvant: number }) {
   const correction = defauts !== undefined;
-  const [state, formAction, pending] = useActionState<
-    ActionPlanState,
-    FormData
-  >(action, { status: "idle" });
+  const [state, formAction, pending] = useActionState<ActionPlanState, FormData>(
+    async (prev, fd) => {
+      const r = await action(prev, fd);
+      if (r.status === "success" && !correction) surCree();
+      return r;
+    },
+    { status: "idle" },
+  );
+  const controles = rattachement?.mode === "choix" ? rattachement.controles : [];
+  const [controleId, setControleId] = useState(controles[0]?.verificationId ?? "");
+  const controleChoisi = controles.find((c) => c.verificationId === controleId);
 
   const err = (champ: string) =>
     state.status === "error" ? state.fieldErrors?.[champ]?.[0] : undefined;
 
   return (
     <form action={formAction} className="space-y-5">
+      {rattachement?.mode === "fixe" && (
+        <>
+          <input type="hidden" name="verificationId" value={rattachement.verificationId} />
+          {rattachement.rapportOrigineId && (
+            <input type="hidden" name="rapportOrigineId" value={rattachement.rapportOrigineId} />
+          )}
+        </>
+      )}
+      {rattachement?.mode === "choix" && (
+        <div>
+          <label className="label-board" htmlFor="verificationId">
+            Relevé par le contrôle *
+          </label>
+          <select
+            id="verificationId"
+            name="verificationId"
+            required
+            className="champ-board"
+            value={controleId}
+            onChange={(e) => setControleId(e.currentTarget.value)}
+          >
+            {controles.map((c) => (
+              <option key={c.verificationId} value={c.verificationId}>
+                {c.libelle}
+                {c.ensemble ? " (contrôle d'ensemble)" : ""}
+              </option>
+            ))}
+          </select>
+          {controleChoisi?.dernierRapport && (
+            <>
+              <input type="hidden" name="rapportOrigineId" value={controleChoisi.dernierRapport.id} />
+              <p className="m-0 mt-1.5 text-[12px] text-[color:var(--board-slate-mid)]">
+                Rattaché au rapport du {formaterDateCourteFr(controleChoisi.dernierRapport.dateRapport)}.
+              </p>
+            </>
+          )}
+          {/* Un contrôle d'ensemble désigne l'appareil de cette fiche. */}
+          {controleChoisi?.ensemble && (
+            <input type="hidden" name="equipementId" value={rattachement.appareilImpose} />
+          )}
+        </div>
+      )}
+      {appareils && appareils.length > 0 && (
+        <div>
+          <label className="label-board" htmlFor="equipementId">
+            Appareil concerné
+          </label>
+          <select id="equipementId" name="equipementId" className="champ-board" defaultValue="">
+            <option value="">— Aucun appareil précis —</option>
+            {appareils.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.libelle}
+              </option>
+            ))}
+          </select>
+          <p className="m-0 mt-1.5 text-[12px] text-[color:var(--board-slate-mid)]">
+            Choisi, le point s&apos;affiche sur la fiche de l&apos;appareil.
+          </p>
+        </div>
+      )}
+
       <ChampBoard
         id="libelle"
         name="libelle"
-        label="Libellé de l'action"
+        label="Ce qu'il faut corriger"
         requis
         placeholder="Ex : Remettre en état le BAES de l'entrée principale"
         defaultValue={defauts?.libelle}
@@ -144,9 +250,9 @@ export function CreerActionVerifForm({ action, labelAnnuler, defauts }: Props) {
       )}
       {/* Une correction réussie rouvre la fiche (`redirect`) : pas de
           message de succès à poser ici. */}
-      {state.status === "success" && !correction && (
-        <p className="m-0 text-[12.5px] text-[color:var(--board-green-ink)]">
-          Action créée.
+      {!correction && creesAvant > 0 && state.status === "idle" && (
+        <p role="status" className="m-0 text-[12.5px] text-[color:var(--board-green-ink)]">
+          {creesAvant > 1 ? `${creesAvant} points ajoutés.` : "Point ajouté."} Ajoutez-en un autre si besoin.
         </p>
       )}
 
@@ -157,8 +263,8 @@ export function CreerActionVerifForm({ action, labelAnnuler, defauts }: Props) {
               ? "Enregistrement…"
               : "Enregistrer la correction"
             : pending
-              ? "Création…"
-              : "Créer l'action"}
+              ? "Ajout…"
+              : "Ajouter le point"}
         </Button>
         {labelAnnuler && (
           <Link

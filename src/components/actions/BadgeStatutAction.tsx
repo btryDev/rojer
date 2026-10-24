@@ -1,5 +1,6 @@
 import type { StatutAction } from "@prisma/client";
 import { LABEL_STATUT_ACTION } from "@/lib/actions/labels";
+import { LIBELLE_CORRIGE } from "@/lib/points-a-corriger/libelles";
 
 // Champs du board, mêmes que `BadgeStatut` (vérifications) : une action
 // et une vérification affichées côte à côte — elles le sont, dans la
@@ -19,10 +20,14 @@ const CLASSE: Record<StatutAction, string> = {
     "bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-mid)]",
 };
 
-export function BadgeStatutAction({ statut }: { statut: StatutAction }) {
+/**
+ * `point` : un point à corriger (ADR-048) dit « Corrigé » là où une mesure du
+ * DUERP dit « Levée » — le même statut, les mots de l'objet.
+ */
+export function BadgeStatutAction({ statut, point = false }: { statut: StatutAction; point?: boolean }) {
   return (
     <span className={`pastille-board ${CLASSE[statut]}`}>
-      {LABEL_STATUT_ACTION[statut]}
+      {point && statut === "levee" ? LIBELLE_CORRIGE : LABEL_STATUT_ACTION[statut]}
     </span>
   );
 }
