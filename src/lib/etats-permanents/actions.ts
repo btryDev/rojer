@@ -165,9 +165,10 @@ export async function declarerEnPlace(
   });
 
   revalidatePath(`/etablissements/${etablissementId}/etats-permanents`);
-  // Les lignes nées d'un fait d'activité se déclarent sous leur question
-  // (`par-les-risques.ts`, 2026-10-21).
-  revalidatePath(`/etablissements/${etablissementId}/equipe/risques`);
+  // ~~Les lignes nées d'un fait d'activité se déclarent sous leur question
+  // (2026-10-21).~~ [2026-10-24, ADR-047 : les formations se déclarent dans
+  // Équipe › Formations, et leur nombre s'affiche sur l'onglet d'Équipe.]
+  revalidatePath(`/etablissements/${etablissementId}/equipe`, "layout");
   return { status: "success" };
 }
 
@@ -186,8 +187,9 @@ export async function retirerDeclaration(
   });
 
   revalidatePath(`/etablissements/${etablissementId}/etats-permanents`);
-  // Les lignes nées d'un fait d'activité se déclarent sous leur question
-  // (`par-les-risques.ts`, 2026-10-21).
-  revalidatePath(`/etablissements/${etablissementId}/equipe/risques`);
+  // ~~Les lignes nées d'un fait d'activité se déclarent sous leur question
+  // (2026-10-21).~~ [2026-10-24, ADR-047 : les formations se déclarent dans
+  // Équipe › Formations, et leur nombre s'affiche sur l'onglet d'Équipe.]
+  revalidatePath(`/etablissements/${etablissementId}/equipe`, "layout");
   return { status: "success" };
 }

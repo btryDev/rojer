@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, type ReactNode } from "react";
+import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { repondreFaitActivite } from "@/lib/etablissements/faits-activite-actions";
 import type { ChampFaitActivite } from "@/lib/etablissements/faits-activite";
@@ -23,15 +23,11 @@ type Props = {
   intitule: string;
   pourquoi: string;
   valeur: boolean | null;
-  /**
-   * Ce que la réponse rend dû et qui se déclare ici (2026-10-21,
-   * `etats-permanents/par-l-equipe.ts`) : les vignettes de « Ce qui doit
-   * être en place » nées de ce fait. Posé par la page, sous les réponses.
-   */
-  children?: ReactNode;
+  // ~~`children` : les vignettes nées du fait, sous les réponses (2026-10-21)~~
+  // [retiré le 2026-10-24, ADR-047 : la page ne pose plus que la question].
 };
 
-export function FaitActiviteRow({ etablissementId, champ, intitule, pourquoi, valeur, children }: Props) {
+export function FaitActiviteRow({ etablissementId, champ, intitule, pourquoi, valeur }: Props) {
   const [pending, startTransition] = useTransition();
   // `true` : échec sans explication ; une chaîne : le refus dit pourquoi.
   const [echec, setEchec] = useState<boolean | string>(false);
@@ -117,7 +113,6 @@ export function FaitActiviteRow({ etablissementId, champ, intitule, pourquoi, va
             : "Cette réponse n'a pas pu être enregistrée. Rechargez la page, puis réessayez."}
         </p>
       )}
-      {children}
     </li>
   );
 }

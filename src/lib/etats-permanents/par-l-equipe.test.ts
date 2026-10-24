@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { obligationParId, obligationsConformite } from "@/lib/referentiels/conformite";
 import { estFormation } from "@/lib/referentiels/conformite/types";
-import { cheminDeDeclaration, seSuitDansLEquipe } from "./par-l-equipe";
+import { PHRASE_SANS_REPONSE } from "@/lib/matching/sans-reponse";
+import {
+  cheminDeDeclaration,
+  formationsEnAttenteDeReponse,
+  lignesFormationAffichees,
+} from "./par-l-equipe";
+import type { LigneEtatPermanent } from "./queries";
 
 const o = (id: string) => {
   const ob = obligationParId(id);
@@ -46,9 +52,26 @@ describe("où une ligne se déclare", () => {
   it("une formation dans Équipe › Formations, un document sur « Ce qui doit être en place »", () => {
     const manutention = o("formation-securite-etablissement-manutention");
     const carnet = o("elec-travail-carnet-prescriptions");
-    expect(seSuitDansLEquipe(manutention)).toBe(true);
-    expect(seSuitDansLEquipe(carnet)).toBe(false);
     expect(cheminDeDeclaration(manutention, "etat-x")).toBe("/equipe/formations#etat-x");
     expect(cheminDeDeclaration(carnet)).toBe("/etats-permanents");
+  });
+});
+
+describe("Équipe › Formations n'affiche pas une formation qui attend une réponse", () => {
+  const ligne = (id: string, phrases: string[]) =>
+    ({ obligation: o(id), questionsSansReponse: phrases }) as unknown as LigneEtatPermanent;
+  const muette = ligne("formation-securite-etablissement-manutention", [
+    PHRASE_SANS_REPONSE.manutention_manuelle,
+  ]);
+  const repondue = ligne("formation-securite-etablissement-manutention", []);
+  // Une question de la FICHE muette n'empêche pas l'affichage : la ligne est
+  // due sous réserve, et la fiche se complète d'ici.
+  const parLaFiche = ligne("incendie-erp-5-instruction-personnel", [
+    PHRASE_SANS_REPONSE.locaux_sommeil_public,
+  ]);
+
+  it("cache la ligne qui ne tient qu'à un fait d'activité sans réponse, et la compte à part", () => {
+    expect(lignesFormationAffichees([muette, repondue, parLaFiche])).toEqual([repondue, parLaFiche]);
+    expect(formationsEnAttenteDeReponse([muette, repondue, parLaFiche])).toBe(1);
   });
 });

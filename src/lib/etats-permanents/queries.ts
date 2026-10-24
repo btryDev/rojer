@@ -37,7 +37,7 @@ import {
   type SousCategorie,
 } from "./familles";
 import { modeDeclarationApplique, type ModeDeclaration } from "./regle";
-import { seSuitDansLEquipe } from "./par-l-equipe";
+import { estFormation } from "@/lib/referentiels/conformite/types";
 import { ordonnerLignes } from "./ordre";
 import { contexteFondementDe, fondementDe, type FondementLigne } from "./fondement";
 import { PHRASE_SANS_REPONSE } from "@/lib/matching/sans-reponse";
@@ -141,9 +141,9 @@ export type EtatsPermanentsDuDossier = {
    */
   faits: LigneEtatPermanent[];
   /**
-   * Les lignes que seul un fait d'activité fait naître (`par-les-risques.ts`,
-   * 2026-10-21) : elles se déclarent sous leur question, dans Équipe ›
-   * « Évaluer les risques de vos salariés », et ne figurent ni dans
+   * Les formations des salariés (`estFormation`, ADR-047 — ~~les lignes nées
+   * d'un fait d'activité, déclarées sous leur question, 2026-10-21~~) : elles
+   * se déclarent dans Équipe › Formations, et ne figurent ni dans
    * `familles` ni dans `faits`. Elles restent COMPTÉES dans `enPlace`,
    * `total` et `faitsDates` : ce sont des états du dossier, le score et le
    * document les portent. Seul l'endroit où on les déclare change.
@@ -335,7 +335,8 @@ export async function listerEtatsPermanents(
       if (ligne.declareLe) faitsDatesRenseignes += 1;
     }
 
-    if (seSuitDansLEquipe(o)) {
+    // ADR-047 : une formation se suit dans Équipe › Formations.
+    if (estFormation(o)) {
       parLEquipe.push(ligne);
     } else if (mode.mode === "fait") {
       faits.push(ligne);

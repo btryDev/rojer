@@ -1,8 +1,8 @@
 /**
  * D'une ligne d'état permanent à ce que la vignette et la fiche reçoivent
  * (`LigneCompacte`, `RevueEnPlace`). Partagé par l'écran « en place » et par
- * Équipe › « Évaluer les risques de vos salariés », où se déclarent les lignes
- * nées d'un fait d'activité (`par-les-risques.ts`) : une seule fiche, écrite
+ * Équipe › Formations, où se déclarent les formations (`par-l-equipe.ts`,
+ * ADR-047) : une seule fiche, écrite
  * une fois — deux copies des mêmes props divergent à la première correction.
  *
  * Tout est sérialisé : dates en ISO.

@@ -14,7 +14,7 @@ import { CHAMP_ETAT, ENCRE_ETAT } from "@/lib/calendrier/etats";
 import { FAITS_ACTIVITE } from "@/lib/etablissements/faits-activite";
 import { chargerFaitsActivite } from "@/lib/etablissements/faits-activite-queries";
 import { OngletsEquipe } from "@/components/salaries/OngletsEquipe";
-import { compteParLEquipe } from "@/lib/etats-permanents/par-l-equipe";
+import { compteParLEquipe, lignesFormationAffichees } from "@/lib/etats-permanents/par-l-equipe";
 import { etatsPermanentsDuDossier } from "@/lib/etats-permanents/queries";
 
 /**
@@ -37,13 +37,16 @@ export default async function EquipePage({
   const { id } = await params;
   const { user, etablissement } = await requireEtablissement(id);
   const now = new Date();
-  const equipe = await listerEquipe(id, now);
-  const titresDeclares = await libellesTitresDeclares(id);
+  // Lectures indépendantes, en parallèle ; la dernière donne l'alerte de
+  // l'onglet Formations (ADR-047).
+  const [equipe, titresDeclares, faits, dossier] = await Promise.all([
+    listerEquipe(id, now),
+    libellesTitresDeclares(id),
+    chargerFaitsActivite(id),
+    etatsPermanentsDuDossier(id, user.id),
+  ]);
   const catalogue = cataloguerTitres();
-  const faits = await chargerFaitsActivite(id);
-  // L'alerte de l'onglet Formations : les formations à mettre en place non
-  // déclarées (2026-10-24).
-  const formations = compteParLEquipe((await etatsPermanentsDuDossier(id, user.id)).parLEquipe);
+  const formations = compteParLEquipe(lignesFormationAffichees(dossier.parLEquipe));
   // Les faits sans réponse, NOMMÉS : la passe Chrome du 2026-10-08 a vu le
   // bandeau compter juste et lister les cinq, réponses comprises.
   const NOM_COURT: Record<(typeof FAITS_ACTIVITE)[number]["champ"], string> = {

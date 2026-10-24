@@ -6,7 +6,13 @@ import { RevueEnPlace } from "@/components/etats-permanents/RevueEnPlace";
 import { OngletsEquipe } from "@/components/salaries/OngletsEquipe";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { ancreEtatPermanent } from "@/lib/etats-permanents/ancre";
-import { compteParLEquipe } from "@/lib/etats-permanents/par-l-equipe";
+import {
+  compteParLEquipe,
+  formationsEnAttenteDeReponse,
+  lignesFormationAffichees,
+} from "@/lib/etats-permanents/par-l-equipe";
+import { marquesAConfirmerDuRendu } from "@/lib/dashboard/queries";
+import { registrePrudent, retenueParPrudence } from "@/lib/calendrier/prudence";
 import { etatsPermanentsDuDossier } from "@/lib/etats-permanents/queries";
 import { dessinDe, etatCourtDe, versFiche } from "@/lib/etats-permanents/vers-fiche";
 import { lienPourRepondre } from "@/lib/etablissements/guide-par-module";
@@ -56,16 +62,22 @@ export default async function FormationsEquipePage({
   const aujourdhui = instantDuRendu();
   // L'âge du calendrier, avec sa liste : un calendrier jamais calculé rendrait
   // une liste vide, lue comme « rien à prévoir » (`fraicheur-sorties.test.ts`).
-  const [dossier, echeances, equipe, equipements, fraicheur] = await Promise.all([
+  const [dossier, echeances, equipe, equipements, fraicheur, marques] = await Promise.all([
     etatsPermanentsDuDossier(id, user.id),
     listerEcheancesAnnoncables(id, undefined),
     listerEquipe(id, aujourdhui),
     listerEquipementsDeLEtablissement(id),
     fraicheurCalendrier(id),
+    // La prudence du calendrier (D26) : une ligne retenue faute de réponse
+    // se dit « à confirmer », pas « en retard » — le même registre que la
+    // page Calendrier vers laquelle on renvoie.
+    marquesAConfirmerDuRendu(id),
   ]);
+  const prudence = retenueParPrudence(marques.parObligation);
 
   // 1. À mettre en place.
-  const lignes = dossier.parLEquipe;
+  const lignes = lignesFormationAffichees(dossier.parLEquipe);
+  const enAttente = formationsEnAttenteDeReponse(dossier.parLEquipe);
   const compte = compteParLEquipe(lignes);
   const lignesFiche = lignes.map((l) =>
     versFiche(l, {
@@ -82,9 +94,9 @@ export default async function FormationsEquipePage({
   const datees = echeances
     .filter((v) => {
       const o = obligationParId(v.obligationId);
-      return o !== undefined && estFormation(o) && v.archiveLe == null;
+      return o !== undefined && estFormation(o);
     })
-    .map((v) => ({ v, etat: classerVerification(v, aujourdhui) }))
+    .map((v) => ({ v, etat: registrePrudent(classerVerification(v, aujourdhui), v, prudence) }))
     .filter(({ etat }) => etat !== "archivee" && etat !== "faite");
 
   // 3. Quand un fait survient.
@@ -139,6 +151,20 @@ export default async function FormationsEquipePage({
           phrase={phraseFraicheur(fraicheur, SUJET_FORMATIONS_AU_CALENDRIER)}
           hrefCalendrier={`/etablissements/${id}/calendrier`}
         />
+        {/* Les réponses qui décident des formations restent modifiables d'ici
+            (revue du 2026-10-24) : le bloc d'Équipe disparaît une fois tout
+            répondu. */}
+        <p className="m-0 text-[12.5px] text-[color:var(--board-slate-mid)]">
+          {enAttente > 0
+            ? `${enAttente === 1 ? "Une formation peut s'ajouter" : `${enAttente} formations peuvent s'ajouter`} selon vos réponses sur le travail de vos salariés. `
+            : "Vos réponses sur le travail de vos salariés décident de ces formations. "}
+          <Link
+            href={`/etablissements/${id}/equipe/risques`}
+            className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
+          >
+            {enAttente > 0 ? "Répondre aux questions" : "Revoir vos réponses"}
+          </Link>
+        </p>
         {rien ? (
           <section className="carte-board px-7 py-8 sm:px-8">
             <h2 className="board-titre m-0 text-[22px]">Aucune formation pour ce dossier</h2>

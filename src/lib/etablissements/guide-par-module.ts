@@ -136,3 +136,16 @@ export function manquesDeLaFiche(
     .filter((q) => FOYER_DE_LA_QUESTION[q].module === "fiche" && poseeSurLaFiche(q, regime))
     .map((q) => FOYER_DE_LA_QUESTION[q].nomCourt);
 }
+
+/**
+ * L'une de ces phrases « à confirmer » vient-elle d'un fait d'activité sans
+ * réponse ? Une formation qui n'existe qu'à cause d'une question muette ne
+ * s'affiche pas comme due (décision de la propriétaire du 2026-10-22) : on
+ * pose la question d'abord.
+ */
+export function dependDUnFaitMuet(phrases: readonly string[]): boolean {
+  return phrases.some((p) => {
+    const q = QUESTION_DE_LA_PHRASE.get(p);
+    return q !== undefined && FOYER_DE_LA_QUESTION[q].module === "duerp";
+  });
+}

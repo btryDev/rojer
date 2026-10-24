@@ -22,11 +22,9 @@ export function compteDeLaPage(d: EtatsPermanentsDuDossier): {
   /** La part d'`enPlace` établie d'après les titres déclarés. */
   parLesTitres: number;
 } {
-  // Les lignes liées aux risques des salariés ne s'affichent pas sur la page
-  // et ne s'y comptent plus (décision de la propriétaire du 2026-10-22) :
-  // elles se déclarent et se comptent sur « Évaluer les risques de vos
-  // salariés ». Le score, le PDF et `d.total` les gardent.
-  // Même règle de compte que la page des risques (`compteParLEquipe`).
+  // Les formations ne s'affichent pas sur la page et ne s'y comptent pas : elles
+  // se déclarent et se comptent dans Équipe › Formations (ADR-047). Le score,
+  // le PDF et `d.total` les gardent. Même règle de compte (`compteParLEquipe`).
   const risques = compteParLEquipe(d.parLEquipe);
   const titresDesRisques = d.parLEquipe.filter(
     (l) => l.compteDansLEnTete && l.parLesTitres?.enPlace,

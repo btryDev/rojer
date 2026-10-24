@@ -20,11 +20,7 @@
 import type { Obligation } from "@/lib/referentiels/conformite";
 import { estFormation } from "@/lib/referentiels/conformite/types";
 import type { LigneEtatPermanent } from "./queries";
-
-/** La ligne se suit-elle dans Équipe › Formations ? */
-export function seSuitDansLEquipe(o: Obligation): boolean {
-  return estFormation(o);
-}
+import { dependDUnFaitMuet } from "@/lib/etablissements/guide-par-module";
 
 /**
  * Le chemin, sous `/etablissements/<id>`, de l'endroit où une ligne de « Ce
@@ -35,7 +31,7 @@ export function seSuitDansLEquipe(o: Obligation): boolean {
  * ligne qu'il n'affiche pas.
  */
 export function cheminDeDeclaration(o: Obligation, ancre?: string): string {
-  const base = seSuitDansLEquipe(o) ? "/equipe/formations" : "/etats-permanents";
+  const base = estFormation(o) ? "/equipe/formations" : "/etats-permanents";
   return ancre ? `${base}#${ancre}` : base;
 }
 
@@ -57,4 +53,25 @@ export function compteParLEquipe(
     /** Toutes les lignes, celles « à dater » comprises (hors compte). */
     lignes: lignes.length,
   };
+}
+
+/**
+ * Les lignes qu'Équipe › Formations AFFICHE et compte : pas celles qui ne
+ * tiennent qu'à une question d'activité sans réponse (« à confirmer » par un
+ * fait muet). Les montrer avant la réponse laissait croire qu'elles étaient
+ * déjà dues (décision de la propriétaire du 2026-10-22, revue du 2026-10-24).
+ * Elles restent comptées par le score et le PDF, comme toute ligne retenue
+ * par prudence.
+ */
+export function lignesFormationAffichees(
+  lignes: readonly LigneEtatPermanent[],
+): LigneEtatPermanent[] {
+  return lignes.filter((l) => !dependDUnFaitMuet(l.questionsSansReponse));
+}
+
+/** Combien de lignes attendent une réponse avant de s'afficher. */
+export function formationsEnAttenteDeReponse(
+  lignes: readonly LigneEtatPermanent[],
+): number {
+  return lignes.length - lignesFormationAffichees(lignes).length;
 }
