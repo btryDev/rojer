@@ -725,6 +725,7 @@ export default async function EquipementDetailPage({
                             }}
                           >
                             {libelleDelai(l, maintenant, "ligne")}
+                            {l.rendezVous ? ` · ${l.rendezVous}` : ""}
                           </span>
                         }
                       />

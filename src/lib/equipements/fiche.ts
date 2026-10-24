@@ -12,6 +12,7 @@
 // été fait, et les obligations qui expliquent pourquoi. Rien n'est
 // recalculé côté vue.
 
+import { mentionRendezVous } from "@/lib/rendez-vous/regles";
 import { LIBELLE_POINT, nombreDePoints } from "@/lib/points-a-corriger/libelles";
 import type { ResultatVerification } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -146,6 +147,8 @@ export type LigneAFaire = {
   surtitre: string;
   libelle: string;
   detail: string;
+  /** Le rendez-vous pris pour un contrôle (ADR-049), sinon absent. */
+  rendezVous?: string | null;
   href: string;
 };
 
@@ -210,6 +213,8 @@ export function lignesAFaire(
         etat,
         surtitre: "Vérification",
         libelle: v.libelleObligation,
+        // Le rendez-vous pris (ADR-049), dit à côté du délai.
+        rendezVous: mentionRendezVous(v, maintenant),
         detail: aUnRendezVous(v, maintenant)
           ? "Échéance portée au calendrier"
           : etat === "enRetard"

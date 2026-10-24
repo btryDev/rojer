@@ -291,6 +291,13 @@ export async function uploadRapport(
       // LA LIGNE SE RECALCULE DEPUIS SES FAITS — le rapport qu'on vient de
       // créer compris —, par la même décision que la régénération (ADR-036).
       await recalculerLigne(tx, verif.id);
+
+      // Le rendez-vous est consommé par le rapport qu'il annonçait ; le
+      // prestataire attitré reste pour le passage suivant (ADR-049).
+      await tx.verification.updateMany({
+        where: { id: verif.id, etablissementId: verif.etablissementId },
+        data: { rendezVousLe: null, rendezVousNote: null },
+      });
     });
   } catch (err) {
     // Nettoyage best-effort du fichier si la DB a échoué.

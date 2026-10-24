@@ -14,6 +14,8 @@ import { lireProvenance } from "@/lib/navigation/provenance";
 import { VigilancePiecePill } from "@/components/prestataires/VigilancePills";
 import { SupprimerPrestataireButton } from "@/components/prestataires/SupprimerPrestataireButton";
 import { getPrestataire } from "@/lib/prestataires/queries";
+import { controlesSuivisPar } from "@/lib/rendez-vous/queries";
+import { cheminControle } from "@/lib/navigation/chemins";
 import {
   LIBELLE_PIECE,
   PIECES,
@@ -35,7 +37,7 @@ import {
 } from "@/lib/prestataires/vigilance";
 import { enregistrerDatesAttestation } from "@/lib/prestataires/actions";
 import { FormulaireDatesAttestation } from "@/components/prestataires/FormulaireDatesAttestation";
-import { cleJourCivil, formaterDateLongueFr } from "@/lib/dates";
+import { cleJourCivil, formaterDateHeureFr, formaterDateLongueFr } from "@/lib/dates";
 
 /**
  * La fiche d'un prestataire, en charte board (`docs/charte-board.md`).
@@ -75,7 +77,10 @@ export default async function PrestataireDetailPage({
 }) {
   const { id, prestataireId } = await params;
   const { de } = await searchParams;
-  const p = await getPrestataire(id, prestataireId);
+  const [p, suivis] = await Promise.all([
+    getPrestataire(id, prestataireId),
+    controlesSuivisPar(id, prestataireId),
+  ]);
   if (!p) notFound();
 
   // Une fiche prestataire s'ouvre depuis l'annuaire, mais aussi depuis le
@@ -185,6 +190,34 @@ export default async function PrestataireDetailPage({
                 </ChampFiche>
               </ChampsFiche>
             </CarteFiche>
+
+            {/* Les contrôles dont il est attitré (ADR-049). */}
+            {suivis.length > 0 && (
+              <CarteFiche titreFort="Contrôles suivis">
+                <ul className="m-0 flex list-none flex-col gap-3 p-0">
+                  {suivis.map((c) => (
+                    <li key={c.id}>
+                      <Link
+                        href={cheminControle(id, c)}
+                        className="text-[13.5px] font-semibold text-[color:var(--board-ink)] hover:underline"
+                      >
+                        {c.libelleObligation}
+                      </Link>
+                      <p className="m-0 mt-0.5 text-[12.5px] text-[color:var(--board-slate-mid)]">
+                        {[
+                          c.equipement?.libelle ?? "Tout l'établissement",
+                          // Le rendez-vous, jamais l'échéance : elle se lit
+                          // sur la fiche du contrôle, avec son âge.
+                          c.rendezVousLe
+                            ? `RDV le ${formaterDateHeureFr(c.rendezVousLe)}`
+                            : "Pas de rendez-vous pris",
+                        ].join(" · ")}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </CarteFiche>
+            )}
 
             <CarteFiche titreFort="Obligation de vigilance">
               <div className="flex flex-col gap-2">

@@ -7,6 +7,7 @@ import { FilAriane } from "@/components/navigation/FilAriane";
 import { LegalBadge } from "@/components/ui-kit/LegalBadge";
 import { BadgeStatut } from "@/components/calendrier/BadgeStatut";
 import { mentionDelaiDeGrace } from "@/lib/calendrier/grace";
+import { mentionRendezVous } from "@/lib/rendez-vous/regles";
 import { MentionContractuelle } from "@/components/prescriptions/MentionContractuelle";
 import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeRetenu";
 import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
@@ -543,7 +544,8 @@ export default async function CalendrierPage({
       titre: v.libelleObligation,
       meta:
         LABEL_PERIODICITE[v.periodicite] +
-        (o ? ` · ${LABEL_DOMAINE[o.domaine]}` : ""),
+        (o ? ` · ${LABEL_DOMAINE[o.domaine]}` : "") +
+        (mentionRendezVous(v, aujourdhui) ? ` · ${mentionRendezVous(v, aujourdhui)}` : ""),
       contractuelle: estEcheanceContractuelle(v),
       rythmeRetenu: mentionRythmeDeVerification(v),
       aConfirmer:
@@ -1373,6 +1375,11 @@ export default async function CalendrierPage({
                                 // planifier », jamais à la place d'une date.
                                 (mentionDelaiDeGrace(v, aujourdhui)
                                   ? ` · ${mentionDelaiDeGrace(v, aujourdhui)}`
+                                  : "") +
+                                // Le rendez-vous pris (ADR-049), à côté de
+                                // l'échéance, jamais à sa place.
+                                (mentionRendezVous(v, aujourdhui)
+                                  ? ` · ${mentionRendezVous(v, aujourdhui)}`
                                   : "")
                               }
                               contractuelle={estEcheanceContractuelle(v)}

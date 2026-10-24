@@ -76,6 +76,11 @@ import {
 } from "@/lib/referentiels/conformite/types";
 import { uploadRapport } from "@/lib/rapports/actions";
 import { avecParametres, cheminControle } from "@/lib/navigation/chemins";
+import { SuiviControle } from "@/components/rendez-vous/SuiviControle";
+import { enregistrerSuiviControle } from "@/lib/rendez-vous/actions";
+import { prestatairesProposables } from "@/lib/rendez-vous/queries";
+import { recoitUnSuivi, rendezVousEnAttenteDeRapport } from "@/lib/rendez-vous/regles";
+import { AUCUN_TIERS_ATTENDU, DOMAINES_PRESTATAIRE_ATTENDUS } from "@/lib/prestataires/domaines";
 import { creerPointACorriger } from "@/lib/actions/plan";
 import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
 import { DemanderSignatureForm } from "@/components/signatures/DemanderSignatureForm";
@@ -203,6 +208,14 @@ export default async function VerificationDetailPage({
   const rapportApres =
     recoit && rapportDepose && resultatRelevePoints(rapportDepose.resultat) ? rapportDepose : undefined;
   const boundUpload = uploadRapport.bind(null, v.id);
+
+  // Le prestataire attitré et le rendez-vous (ADR-049) : proposés d'abord
+  // ceux de l'annuaire qui couvrent le domaine du contrôle.
+  const suivi = recoitUnSuivi(v);
+  const attendus = obligation ? DOMAINES_PRESTATAIRE_ATTENDUS[obligation.domaine] : AUCUN_TIERS_ATTENDU;
+  const proposables = suivi
+    ? await prestatairesProposables(id, attendus === AUCUN_TIERS_ATTENDU ? [] : attendus)
+    : [];
 
   // Signatures posées sur chaque rapport de cette vérification.
   const signaturesParRapport = new Map<
@@ -637,6 +650,20 @@ export default async function VerificationDetailPage({
         </section>
       ) : null}
 
+      {/* ── Le prestataire attitré et le rendez-vous (ADR-049) ───── */}
+      {suivi ? (
+        <SuiviControle
+          action={enregistrerSuiviControle.bind(null, v.id)}
+          prestataire={v.prestataire}
+          rendezVousLe={v.rendezVousLe}
+          rendezVousNote={v.rendezVousNote}
+          enAttenteDeRapport={rendezVousEnAttenteDeRapport(v.rendezVousLe, aujourdhui)}
+          proposables={proposables}
+          hrefNouveauPrestataire={`/etablissements/${id}/prestataires/nouveau`}
+          hrefPrestataire={v.prestataire ? `/etablissements/${id}/prestataires/${v.prestataire.id}` : null}
+        />
+      ) : null}
+
       {/* ── Le dossier : les rapports déposés ─────────────────────── */}
       {aUnRapport ? (
         <>
@@ -682,7 +709,7 @@ export default async function VerificationDetailPage({
                         l&apos;application.
                       </p>
                     ) : (
-                      <UploadRapportForm action={boundUpload} />
+                      <UploadRapportForm action={boundUpload} organismeParDefaut={v.prestataire?.raisonSociale} />
                     )}
                   </div>
                 </div>
@@ -829,6 +856,7 @@ export default async function VerificationDetailPage({
               ) : (
                 <UploadRapportForm
                   action={boundUpload}
+                  organismeParDefaut={v.prestataire?.raisonSociale}
                   labelAnnuler={{
                     libelle: "Annuler",
                     href: `/etablissements/${id}/calendrier`,

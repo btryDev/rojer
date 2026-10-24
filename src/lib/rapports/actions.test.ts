@@ -438,7 +438,23 @@ describe("uploadRapport — un rapport réalisé : la ligne se recalcule sur lui
     expect(ligne().datePrevue).toEqual(d("2027-06-01"));
     expect(ligne("v-2").datePrevue).toEqual(d("2030-01-01"));
     expect(ligne("v-2").statut).toBe("planifiee");
-    expect(db.journal.filter((j) => j.operation === "verification.updateMany")).toHaveLength(1);
+    // Aucune écriture sur la voisine ; la ligne visée en reçoit deux — son
+    // recalcul, puis le rendez-vous consommé (ADR-049).
+    const ecritures = db.journal.filter((j) => j.operation === "verification.updateMany") as {
+      where: { id: string };
+    }[];
+    expect(ecritures.filter((j) => j.where.id !== "v-1")).toEqual([]);
+    expect(ecritures.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("le rapport consomme le rendez-vous et garde le prestataire attitré (ADR-049)", async () => {
+    Object.assign(ligne(), {
+      prestataireId: "presta-1",
+      rendezVousLe: d("2026-05-30"),
+      rendezVousNote: "accès par la cour",
+    });
+    await deposer("conforme", "2026-06-01");
+    expect(ligne()).toMatchObject({ prestataireId: "presta-1", rendezVousLe: null, rendezVousNote: null });
   });
 
   it("l'écriture reste conditionnée à la date et au statut LUS : une ligne modifiée entre-temps annule tout", async () => {
