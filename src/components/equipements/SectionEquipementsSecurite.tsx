@@ -38,7 +38,9 @@ export function SectionEquipementsSecurite({
   lignes: LigneSecuriteAffichee[];
 }) {
   if (lignes.length === 0) return null;
-  const aDeclarer = lignes.filter((l) => l.etat !== "declare").length;
+  // Seul « pas encore déclaré » manque : « ailleurs » se déclare sur un autre
+  // écran, que cette section ne lit pas (revue du 2026-10-24).
+  const aDeclarer = lignes.filter((l) => l.etat === "pas_encore_declare").length;
 
   // Ouverte tant qu'un matériel obligatoire reste à déclarer.
   return (

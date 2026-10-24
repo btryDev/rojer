@@ -37,6 +37,12 @@ describe("controlesDEnsemble", () => {
     expect(c.aussi).not.toContain("aeration");
   });
 
+  it("écarte un état permanent (sans rendez-vous) : il se tient ailleurs", async () => {
+    h.lignes = [ligne({ periodicite: "autre", statut: "a_planifier" })];
+    const r = await controlesDEnsemble("e1", new Date("2026-10-24T10:00:00Z"));
+    expect(r.every((c) => c.etat !== "sansRendezVous")).toBe(true);
+  });
+
   it("écarte une ligne d'établissement qui ne vise aucun appareil, et une obligation inconnue", async () => {
     h.lignes = [ligne({ obligationId: "obligation-qui-n-existe-pas" })];
     expect(await controlesDEnsemble("e1", new Date())).toEqual([]);

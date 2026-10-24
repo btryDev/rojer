@@ -30,6 +30,8 @@ export type EtablissementActionState =
       status: "error";
       message: string;
       fieldErrors?: Record<string, string[]>;
+      /** Un refus de périmètre (ADR-031), pas une saisie à corriger. */
+      refusPerimetre?: boolean;
     }
   | { status: "success"; id: string }
   | { status: "success_avec_avertissement"; id: string; message: string };
@@ -213,6 +215,11 @@ export async function creerEtablissement(
       status: "error",
       message: "Formulaire invalide",
       fieldErrors: parsed.error.flatten().fieldErrors,
+      // Marqués par le schéma (`params.perimetre`) : l'écran propose alors
+      // un accompagnement, pas pour une simple réponse manquante.
+      refusPerimetre: parsed.error.issues.some(
+        (i) => i.code === "custom" && (i as { params?: { perimetre?: boolean } }).params?.perimetre === true,
+      ),
     };
   }
 
@@ -376,6 +383,7 @@ export async function modifierEtablissement(
     refus.push({
       champ: "accueilEnfants",
       message: "La question de l'accueil d'enfants n'est posée qu'à l'entrée du type R.",
+      perimetre: false,
     });
   }
   if (refus.length > 0) {

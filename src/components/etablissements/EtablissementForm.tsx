@@ -90,9 +90,6 @@ type Props = {
 };
 
 
-/** Les champs qui portent un refus de périmètre (ADR-031), pas une saisie à corriger. */
-const CHAMPS_DE_PERIMETRE = ["effectifSurSite", "estIGH", "typeErp", "typesErpAutres"] as const;
-
 export function EtablissementForm({
   action,
   valeursInitiales,
@@ -158,6 +155,9 @@ export function EtablissementForm({
 
   return (
     <form
+      // `method="post"` : un envoi avant l'hydratation part en POST, jamais en
+      // GET (les champs finiraient dans l'URL et l'historique).
+      method="post"
       // Envoi à la main plutôt que `action={…}` : React 19 vide un formulaire
       // après une action, et un refus (plus de cinquante salariés…) obligeait
       // à tout ressaisir (contrôle visuel du 2026-10-24). La validation native
@@ -816,10 +816,7 @@ export function EtablissementForm({
       {/* Un refus de périmètre à la création (effectif, ERP en IGH, types
           refusés) : le moment où l'on perd quelqu'un, comme à l'accueil
           (2026-10-24). */}
-      {enCreation &&
-        state.status === "error" &&
-        state.fieldErrors &&
-        CHAMPS_DE_PERIMETRE.some((c) => state.fieldErrors?.[c]?.length) && (
+      {enCreation && state.status === "error" && state.refusPerimetre && (
           <p className="m-0 text-[12.5px] text-[color:var(--board-slate-mid)]">
             <DemandeAide
               variante="lien"

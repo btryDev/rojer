@@ -262,6 +262,9 @@ function LigneEcheance({
   );
 }
 
+/** L'intitulé des groupes sans domaine, dans la vue « par équipement ». */
+const AUTRES = "Autres";
+
 export default async function CalendrierPage({
   params,
   searchParams,
@@ -736,9 +739,11 @@ export default async function CalendrierPage({
     const poids = new Map<string, PoidsDomaine>();
     for (const g of groupesEquipement) {
       const d = DOMAINE_DE_CATEGORIE[g.categorieCode as CategorieEquipement];
-      g.domaine = d ? LABEL_DOMAINE[d] : undefined;
-      const cle = g.domaine ?? "";
-      const p = poids.get(cle) ?? { libelle: g.domaine ?? null, enRetard: 0, proche: 0 };
+      // Sans domaine (catégorie « Autre ») : un intitulé « Autres » quand
+      // même, sinon le groupe se lirait sous le domaine précédent (revue).
+      g.domaine = d ? LABEL_DOMAINE[d] : AUTRES;
+      const cle = g.domaine;
+      const p = poids.get(cle) ?? { libelle: d ? g.domaine : null, enRetard: 0, proche: 0 };
       p.enRetard += g.enRetard;
       p.proche += g.proche;
       poids.set(cle, p);
@@ -746,7 +751,7 @@ export default async function CalendrierPage({
     const rang = new Map(
       [...poids.entries()].sort(([, a], [, b]) => comparerDomaines(a, b)).map(([cle], i) => [cle, i]),
     );
-    groupesEquipement.sort((a, b) => rang.get(a.domaine ?? "")! - rang.get(b.domaine ?? "")!);
+    groupesEquipement.sort((a, b) => rang.get(a.domaine ?? AUTRES)! - rang.get(b.domaine ?? AUTRES)!);
   }
 
   // Ce qui ne tient à aucun appareil — attestation de prestataire,
@@ -867,6 +872,7 @@ export default async function CalendrierPage({
     groupesEquipement.push({
       categorie: "Autres échéances",
       categorieCode: "AUTRES",
+      domaine: AUTRES,
       uniteLigne: "famille",
       lignes: lignesAutres,
       enRetard: lignesAutres.reduce((n, l) => n + l.enRetard, 0),

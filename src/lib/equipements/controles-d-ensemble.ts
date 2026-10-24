@@ -58,8 +58,17 @@ export async function controlesDEnsemble(etablissementId: string, maintenant: Da
   const out: ControleDEnsemble[] = [];
   for (const v of datees) {
     const o = obligationParId(v.obligationId);
-    const categories = o && "equipementsEnContexte" in o ? (o.equipementsEnContexte ?? []) : [];
+    // Les catégories que la ligne vise (`equipementsEnContexte`) ou qui la
+    // font naître (`siEquipementDeclare`).
+    const categories =
+      o && !("categoriesEquipement" in o && o.categoriesEquipement)
+        ? [...(o.equipementsEnContexte ?? []), ...(o.siEquipementDeclare ?? [])]
+        : [];
     if (!o || categories.length === 0) continue;
+    const etat = classerVerification(v, maintenant);
+    // Un contrôle est un rendez-vous : un état permanent, sans rendez-vous,
+    // se tient sur « Ce qui doit être en place », pas ici.
+    if (etat === "sansRendezVous") continue;
     const couverts = new Set(
       categories.map((c) => DOMAINE_DE_CATEGORIE[c]).filter((d): d is DomaineObligation => d !== null),
     );
@@ -68,7 +77,7 @@ export async function controlesDEnsemble(etablissementId: string, maintenant: Da
       id: v.id,
       libelle: v.libelleObligation,
       datePrevue: v.datePrevue,
-      etat: classerVerification(v, maintenant),
+      etat,
       echeanceConnue: aUnRendezVous(v, maintenant),
       pointsOuverts: v._count.actions,
       domaine: o.domaine,

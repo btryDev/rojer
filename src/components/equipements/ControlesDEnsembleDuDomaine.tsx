@@ -7,9 +7,6 @@ import { nombreDePoints } from "@/lib/points-a-corriger/libelles";
 import { avecProvenance } from "@/lib/navigation/provenance";
 import type { ControleDEnsemble } from "@/lib/equipements/controles-d-ensemble";
 
-/** L'ancre d'un domaine sur la page Équipements. */
-export const ancreDomaine = (d: DomaineObligation) => `domaine-${d}`;
-
 const lien = "font-semibold text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline";
 
 /** Ce qu'un contrôle d'ensemble dit de son état, au singulier. */
@@ -17,6 +14,8 @@ function etatDuControle(c: ControleDEnsemble): string {
   if (!c.echeanceConnue) {
     return c.etat === "enRetard" ? "Aucune vérification enregistrée" : "À planifier";
   }
+  // Fait : un contrôle soldé n'a plus de date à annoncer.
+  if (c.etat === "faite") return "Fait";
   const mot = LIBELLE_ETAT[c.etat].un;
   return `${mot.charAt(0).toUpperCase()}${mot.slice(1)} · ${formaterDateCourteFr(c.datePrevue)}`;
 }
@@ -63,18 +62,16 @@ export function ControlesDEnsembleDuDomaine({
 
 /**
  * En pied d'un domaine : les contrôles d'ensemble d'AUTRES domaines qui le
- * couvrent, nommés par leur domaine (un nom court, une fois chacun), en lien
- * vers ce domaine sur la page — ou vers le contrôle, si son domaine n'y est
- * pas (contrôle visuel du 2026-10-24 : les titres longs se répétaient).
+ * couvrent, nommés par leur domaine (un nom court, une fois chacun), chacun
+ * en lien vers son contrôle (contrôle visuel du 2026-10-24 : les titres longs
+ * se répétaient ; revue : une ancre vers une carte repliée ne l'ouvrait pas).
  */
 export function AussiCouvertPar({
   controles,
-  domainesAffiches,
   etablissementId,
   provenance,
 }: {
   controles: ControleDEnsemble[];
-  domainesAffiches: ReadonlySet<DomaineObligation>;
   etablissementId: string;
   provenance: string;
 }) {
@@ -88,11 +85,7 @@ export function AussiCouvertPar({
         <span key={d}>
           {i > 0 ? ", " : ""}
           <Link
-            href={
-              domainesAffiches.has(d)
-                ? `#${ancreDomaine(d)}`
-                : avecProvenance(`/etablissements/${etablissementId}/verifications/${c.id}`, provenance)
-            }
+            href={avecProvenance(`/etablissements/${etablissementId}/verifications/${c.id}`, provenance)}
             className={lien}
           >
             {LABEL_DOMAINE[d]}

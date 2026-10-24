@@ -1,10 +1,6 @@
 import { notFound } from "next/navigation";
-import {
-  AussiCouvertPar,
-  ControlesDEnsembleDuDomaine,
-  ancreDomaine,
-} from "@/components/equipements/ControlesDEnsembleDuDomaine";
-import { controlesDEnsemble } from "@/lib/equipements/controles-d-ensemble";
+import { AussiCouvertPar, ControlesDEnsembleDuDomaine } from "@/components/equipements/ControlesDEnsembleDuDomaine";
+import { controlesDEnsemble, type ControleDEnsemble } from "@/lib/equipements/controles-d-ensemble";
 import { DOMAINE_DE_CATEGORIE, comparerDomaines } from "@/lib/equipements/domaines";
 import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
 import { CarteRepliable } from "@/components/ui-kit/CarteRepliable";
@@ -261,6 +257,11 @@ export default async function EquipementsPage({
       (a, b) => urgenceCategorie(b.appareils) - urgenceCategorie(a.appareils),
     );
 
+  const domaines = parDomaine(sections, ensembles);
+  // S'ouvre le premier domaine qui a du dépassé — contrôles d'ensemble
+  // compris —, à défaut le premier.
+  const domaineOuvert = (domaines.find((d) => d.depassees > 0) ?? domaines[0])?.domaine;
+
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
       <BandeauParc
@@ -361,30 +362,22 @@ export default async function EquipementsPage({
           // Les catégories rangées sous leur domaine (lot 2, 2026-10-24), le
           // domaine le plus en peine en tête — l'ordre de sa première
           // catégorie. En tête de chaque domaine, ses contrôles d'ensemble.
-          parDomaine(sections).map(({ domaine, sections: ss }, i, tous) => {
-            const propres = domaine ? ensembles.filter((c) => c.domaine === domaine) : [];
+          domaines.map(({ domaine, sections: ss, propres, depassees }) => {
             const nbAppareils = ss.reduce((n, s) => n + s.appareils.length, 0);
-            const depassees =
-              ss.reduce(
-                (n, s) =>
-                  n +
-                  s.appareils.reduce(
-                    (m, a) => m + (a.resume.signaux.find((g) => g.cle === "enRetard")?.nb ?? 0),
-                    0,
-                  ),
-                0,
-              ) + propres.filter((c) => c.etat === "enRetard").length;
             return (
             // Un domaine = une carte repliable, la forme d'« Équipements de
             // sécurité » (décision de la propriétaire du 2026-10-24) ; le plus
             // en peine s'ouvre.
             <CarteRepliable
               key={domaine ?? "autre"}
-              id={domaine ? ancreDomaine(domaine) : undefined}
               titre={domaine ? LABEL_DOMAINE[domaine] : "Autres équipements"}
-              compte={`${nbAppareils} équipement${nbAppareils > 1 ? "s" : ""}`}
+              compte={
+                nbAppareils > 0
+                  ? `${nbAppareils} équipement${nbAppareils > 1 ? "s" : ""}`
+                  : `${propres.length} contrôle${propres.length > 1 ? "s" : ""} d'ensemble`
+              }
               alerte={depassees > 0 ? `${depassees} ${depassees > 1 ? "dépassées" : "dépassée"}` : null}
-              ouverte={i === 0}
+              ouverte={domaine === domaineOuvert}
             >
               {domaine && (
                 <ControlesDEnsembleDuDomaine
@@ -405,13 +398,6 @@ export default async function EquipementsPage({
               {domaine && (
                 <AussiCouvertPar
                   controles={ensembles.filter((c) => c.aussi.includes(domaine))}
-                  domainesAffiches={
-                    new Set(
-                      tous
-                        .map((g) => g.domaine)
-                        .filter((d): d is DomaineObligation => d !== null && ensembles.some((c) => c.domaine === d)),
-                    )
-                  }
                   etablissementId={id}
                   provenance={origine}
                 />
@@ -426,33 +412,38 @@ export default async function EquipementsPage({
 }
 
 /**
- * Les sections de catégorie regroupées par domaine, rangés par la même règle
- * que le calendrier (`comparerDomaines`) : lignes dépassées, puis sous
- * 30 jours, des appareils du domaine.
+ * Les domaines de la page : ceux de ses catégories, et ceux d'un contrôle
+ * d'ensemble sans appareil déclaré (la signalisation, une aération sans VMC :
+ * revue du 2026-10-24 — sinon ils n'apparaissaient nulle part). Rangés par la
+ * même règle que le calendrier (`comparerDomaines`, sur les appareils) ; le
+ * compte « dépassées » ajoute les contrôles d'ensemble.
  */
 function parDomaine<S extends { categorie: CategorieEquipement; appareils: AppareilListe[] }>(
   sections: S[],
-): { domaine: DomaineObligation | null; sections: S[] }[] {
+  ensembles: ControleDEnsemble[],
+) {
   const groupes = new Map<DomaineObligation | null, S[]>();
   for (const s of sections) {
     const d = DOMAINE_DE_CATEGORIE[s.categorie];
     groupes.set(d, [...(groupes.get(d) ?? []), s]);
   }
+  for (const c of ensembles) if (!groupes.has(c.domaine)) groupes.set(c.domaine, []);
   const compte = (ss: S[], cle: "enRetard" | "proche") =>
     ss.reduce(
       (n, s) => n + s.appareils.reduce((m, a) => m + (a.resume.signaux.find((g) => g.cle === cle)?.nb ?? 0), 0),
       0,
     );
   return [...groupes.entries()]
-    .map(([domaine, ss]) => ({
-      domaine,
-      sections: ss,
-      poids: {
-        libelle: domaine ? LABEL_DOMAINE[domaine] : null,
-        enRetard: compte(ss, "enRetard"),
-        proche: compte(ss, "proche"),
-      },
-    }))
-    .sort((a, b) => comparerDomaines(a.poids, b.poids))
-    .map(({ domaine, sections: ss }) => ({ domaine, sections: ss }));
+    .map(([domaine, ss]) => {
+      const propres = domaine ? ensembles.filter((c) => c.domaine === domaine) : [];
+      const enRetard = compte(ss, "enRetard");
+      return {
+        domaine,
+        sections: ss,
+        propres,
+        depassees: enRetard + propres.filter((c) => c.etat === "enRetard").length,
+        poids: { libelle: domaine ? LABEL_DOMAINE[domaine] : null, enRetard, proche: compte(ss, "proche") },
+      };
+    })
+    .sort((a, b) => comparerDomaines(a.poids, b.poids));
 }
