@@ -17,21 +17,40 @@ import { Button } from "@/components/ui/button";
  * téléchargement : l'employeur doit pouvoir le lire avant de le diffuser, et
  * répondre s'il en est questionné.
  */
-export function TexteInformation({ texte }: { texte: string }) {
+export function TexteInformation({
+  texte,
+  compact = false,
+}: {
+  texte: string;
+  /**
+   * Une ligne au lieu d'un paragraphe (2026-10-24, retour de la
+   * propriétaire : une carte entière pour un texte à copier). L'obligation
+   * reste dite — elle est réelle, et elle incombe à l'employeur.
+   */
+  compact?: boolean;
+}) {
   const [copie, setCopie] = useState(false);
   const [ouvert, setOuvert] = useState(false);
 
   return (
     <div>
-      <p className="m-0 max-w-[64ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-        Vos salariés doivent être informés que vous suivez leurs titres, sur
-        quelle base et pour combien de temps. C&apos;est à vous de le faire —
-        vous êtes le responsable de ce traitement. Voici le texte, écrit sur ce
-        que Rojer enregistre réellement : remettez-le, affichez-le, ou joignez-le
-        au livret d&apos;accueil.
-      </p>
+      {compact ? null : (
+        <p className="m-0 max-w-[64ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+          Vos salariés doivent être informés que vous suivez leurs titres, sur
+          quelle base et pour combien de temps. C&apos;est à vous de le faire —
+          vous êtes le responsable de ce traitement. Voici le texte, écrit sur ce
+          que Rojer enregistre réellement : remettez-le, affichez-le, ou joignez-le
+          au livret d&apos;accueil.
+        </p>
+      )}
 
-      <div className="mt-4 flex flex-wrap items-center gap-3">
+      <div className={(compact ? "" : "mt-4 ") + "flex flex-wrap items-center gap-x-3 gap-y-2"}>
+        {compact && (
+          <p className="m-0 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+            Vos salariés doivent être informés de ce suivi : c&apos;est à vous de
+            leur remettre ce texte.
+          </p>
+        )}
         <Button
           variant="boardClair"
           size="boardSm"

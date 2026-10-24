@@ -224,53 +224,33 @@ export default async function EquipePage({
             tout seul, et il vieillit en affirmant le contraire de ce qu'on lit
             juste au-dessus. Ce qui reste ci-dessous est donc formulé sans
             énumération figée. */}
-        {/* [2026-10-24, retour de la propriétaire : le bloc tenait quatre
-            paragraphes — la liste des titres, que la modale « Ajouter un
-            titre » montre déjà, et une justification du suivi nominatif qui
-            parlait du produit plutôt qu'à l'utilisateur. Restent ce qui sert :
-            le compte, la limite, le CACES qu'on cherche ici.] */}
-        <section className="rounded-[22px] bg-[color:var(--board-slate-pale)] px-6 py-5">
-          <p className="m-0 max-w-[72ch] text-[13px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-            <strong className="font-semibold text-[color:var(--board-ink)]">
-              {catalogue.length === 1
-                ? "Un seul titre suivi"
-                : `${catalogue.length} titres suivis`}
-            </strong>
+        {/* Le pied de l'écran Équipe (2026-10-24, retour de la propriétaire :
+            deux cartes pour deux phrases). ~~« Ce que couvre cet écran », en
+            carte : la liste des titres, le CACES, le suivi nominatif~~ — reste
+            la limite, sans quoi un silence se lirait comme une couverture.
+            ~~« Informer les personnes suivies », en carte~~ — reste en une
+            ligne : l'obligation est réelle (art. 13 RGPD, L. 1222-4 du Code du
+            travail) et incombe à l'employeur ; la carte n'apparaît que s'il y a
+            quelqu'un à informer. */}
+        <section className="flex flex-col gap-3 border-t border-[color:var(--board-slate-line)] pt-5">
+          <p className="m-0 max-w-[72ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+            {catalogue.length === 1 ? "Un seul titre suivi" : `${catalogue.length} titres suivis`}
             , ceux dont Rojer a lu le texte. D&apos;autres peuvent vous
-            concerner : suivez-les par vos moyens habituels. Le{" "}
-            <strong className="font-semibold">CACES</strong>{" "}
-            n&apos;en fait pas partie — ce n&apos;est pas une obligation du Code du travail, qui
-            exige une formation à la conduite et une autorisation de
-            l&apos;employeur, toutes deux dans la liste.
+            concerner : suivez-les par vos moyens habituels.
           </p>
+          {equipe.length > 0 && (
+            <TexteInformation
+              compact
+              texte={texteInformation({
+                raisonSociale: etablissement.raisonDisplay,
+                // Les titres RÉELLEMENT déclarés ici, jamais le catalogue : un
+                // document d'information qui décrit un traitement qui n'a pas
+                // lieu est faux, et il est remis à des personnes.
+                titresSuivis: titresDeclares,
+              })}
+            />
+          )}
         </section>
-
-        {/* L'information des personnes (art. 13 RGPD). Elle est due, et elle
-            incombe à l'employeur — l'outil ne peut pas informer à sa place.
-            La carte n'apparaît que s'il y a quelqu'un à informer : avant, elle
-            réclamerait un geste sans objet. */}
-        {equipe.length > 0 && (
-          <section className="carte-board px-7 py-6 sm:px-8">
-            <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-              Votre obligation envers eux
-            </p>
-            <h2 className="board-titre m-0 mt-2 text-[22px]">
-              Informer les personnes suivies
-            </h2>
-            <div className="mt-3">
-              <TexteInformation
-                texte={texteInformation({
-                  raisonSociale: etablissement.raisonDisplay,
-                  // Les titres RÉELLEMENT déclarés ici, jamais le
-                  // catalogue : un document d'information qui décrit un
-                  // traitement qui n'a pas lieu est faux, et il est remis à
-                  // des personnes.
-                  titresSuivis: titresDeclares,
-                })}
-              />
-            </div>
-          </section>
-        )}
 
         {actifs > 0 && (
           <p className="m-0 px-1 text-[12px] text-[color:var(--board-slate-soft)]">
