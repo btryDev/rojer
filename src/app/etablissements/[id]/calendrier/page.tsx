@@ -1047,14 +1047,23 @@ export default async function CalendrierPage({
         {filtreFamille === "travaux" ? (
           <>
             {DESCRIPTION_FAMILLE.travaux}{" "}
-            {/* Le pendant du lien du plan d'actions (2026-10-24) : les
-                actions sans échéance n'ont pas de place ici. */}
+            {/* Deux liens, deux lieux (contrôle visuel du 2026-10-25) : la
+                phrase entière menait au plan d'actions, points compris. */}
+            Les mesures du DUERP, datées ou non, sont dans le{" "}
             <Link
               href={`/etablissements/${id}/actions`}
               className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
             >
-              Les mesures du DUERP, datées ou non, sont dans le plan d&apos;actions ; les points à corriger, sur la fiche de leur équipement ou de leur contrôle.
-            </Link>
+              plan d&apos;actions
+            </Link>{" "}
+            ; les points à corriger, sur la fiche de leur{" "}
+            <Link
+              href={`/etablissements/${id}/equipements`}
+              className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
+            >
+              équipement
+            </Link>{" "}
+            ou de leur contrôle.
           </>
         ) : filtreFamille
           ? DESCRIPTION_FAMILLE[filtreFamille]

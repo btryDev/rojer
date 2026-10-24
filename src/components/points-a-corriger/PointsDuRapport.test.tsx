@@ -34,7 +34,9 @@ describe("PointsDuRapport — sous un rapport du registre (ADR-048, lot 3)", () 
       />,
     );
     expect(screen.getAllByText(/à corriger$/).length).toBeGreaterThan(0);
-    expect(screen.getByText(/corrigé le .* : Fait par l'électricien \(pièce jointe\)/)).toBeTruthy();
+    expect(screen.getByText(/corrigé le .* : Fait par l'électricien/)).toBeTruthy();
+    // La pièce s'ouvre depuis le registre (2026-10-25).
+    expect(screen.getByRole("link", { name: "(pièce jointe)" }).getAttribute("href")).toBe("/api/points/b/piece");
   });
 
   it("dit « en cours » pour un point en cours, comme sa fiche", () => {

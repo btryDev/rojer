@@ -30,7 +30,21 @@ export function PointsDuRapport({
             {LIBELLE_POINT} : {p.libelle}
           </span>
           {" — "}
-          {texteDuPoint(p, formaterDateCourteFr)}
+          {texteDuPoint(p, formaterDateCourteFr, false)}
+          {/* La pièce s'ouvre d'ici (contrôle visuel du 2026-10-25). */}
+          {p.pieceJointe && (
+            <>
+              {" "}
+              <a
+                href={`/api/points/${p.id}/piece`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-[color:var(--board-blue-ink)] underline underline-offset-4"
+              >
+                (pièce jointe)
+              </a>
+            </>
+          )}
         </li>
       ))}
       {electricite && <li className="text-[12px]">{MENTION_R4226_19}</li>}

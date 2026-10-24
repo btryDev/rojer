@@ -57,7 +57,7 @@ export const PIECES_A_L_ECRAN: readonly {
   { cle: "duerp", titre: "DUERP versionné" },
   { cle: "registre", titre: "Registre de sécurité" },
   { cle: "rapports", titre: "Fichiers des rapports de vérification" },
-  { cle: "plan", titre: "Plan d'actions correctives" },
+  { cle: "plan", titre: "Plan d'actions" },
   { cle: "accessibilite", titre: "Registre d'accessibilité ERP" },
   { cle: "permisFeu", titre: "Permis de feu (12 derniers mois)" },
   { cle: "plansPrevention", titre: "Plans de prévention (12 derniers mois)" },
