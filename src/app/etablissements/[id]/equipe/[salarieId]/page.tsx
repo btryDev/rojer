@@ -1,51 +1,42 @@
-import { mentionRythmeRetenu } from "@/lib/referentiels/conformite/mention-rythme";
-import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeRetenu";
-import { renvoiAuxNormes } from "@/lib/referentiels/conformite/renvoi-aux-normes";
-import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import { notFound } from "next/navigation";
-import {
-  CarteFiche,
-  ChampFiche,
-  ChampsFiche,
-  CorpsFiche,
-  EcranFiche,
-  LegalBadge,
-  PastilleFiche,
-} from "@/components/ui-kit";
+import Link from "next/link";
+import { Download } from "lucide-react";
+import { EcranFiche, PastilleFiche } from "@/components/ui-kit";
+import { buttonVariants } from "@/components/ui/button";
 import {
   BasculerEffectif,
   RetirerTitreButton,
   SupprimerSalarieButton,
 } from "@/components/salaries/ActionsSalarie";
-import { perimetreSuppressionSalarie } from "@/lib/salaries/suppression";
-import { FormulaireTitre } from "@/components/salaries/FormulaireTitre";
-import { lireProvenance } from "@/lib/navigation/provenance";
+import { CarteCeQuiManque } from "@/components/salaries/CarteCeQuiManque";
+import { CarteTitresDetenus, type LigneTitre } from "@/components/salaries/CarteTitresDetenus";
+import { HeroSalarie } from "@/components/salaries/HeroSalarie";
+import {
+  BoutonAjouterTitre,
+  BoutonDeclarer,
+  DeclarationTitre,
+} from "@/components/salaries/ModaleTitre";
 import { requireEtablissement } from "@/lib/auth/scope";
-import { getSalarie } from "@/lib/salaries/queries";
+import { LIBELLE_SANS_RENDEZ_VOUS, type RegistreLigne } from "@/lib/calendrier/etats";
+import { LABEL_PERIODICITE } from "@/lib/calendrier/labels";
+import { formaterDateLongueFr } from "@/lib/dates";
+import { lireProvenance } from "@/lib/navigation/provenance";
+import { mentionRythmeRetenu } from "@/lib/referentiels/conformite/mention-rythme";
+import { renvoiAuxNormes } from "@/lib/referentiels/conformite/renvoi-aux-normes";
+import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
+import { declarerTitre } from "@/lib/salaries/actions";
 import {
   cataloguerTitres,
   conflitsExclusion,
   exclusionsDuTitre,
 } from "@/lib/salaries/catalogue";
-import { declarerTitre } from "@/lib/salaries/actions";
+import { ceQuiManqueALaPersonne, etatDuManque } from "@/lib/salaries/du-a-la-personne";
+import { friseDesTitres } from "@/lib/salaries/frise-titres";
+import { dessinDuTitre } from "@/lib/salaries/illustration-titre";
 import { obligationsDeclencheesParUnFait } from "@/lib/salaries/obligations-evenementielles";
-import { titresDuDuerpPourUnePersonne } from "@/lib/salaries/titres-du-duerp";
-import { chargerFaitsActivite } from "@/lib/etablissements/faits-activite-queries";
-import { CarteTitresDuDuerp } from "@/components/salaries/CarteTitresDuDuerp";
-import { CarteCeQuiManque } from "@/components/salaries/CarteCeQuiManque";
-import { ceQuiManqueALaPersonne } from "@/lib/salaries/du-a-la-personne";
-import { ReferenceFondatrice } from "@/components/salaries/ReferenceFondatrice";
-import {
-  CHAMP_ETAT,
-  ENCRE_ETAT,
-  LIBELLE_SANS_RENDEZ_VOUS,
-  type RegistreLigne,
-} from "@/lib/calendrier/etats";
-import { LABEL_PERIODICITE } from "@/lib/calendrier/labels";
-import { formaterDateLongueFr } from "@/lib/dates";
-import { Download } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
-import Link from "next/link";
+import { getSalarie } from "@/lib/salaries/queries";
+import { rythmeEnBref } from "@/lib/salaries/rythme-en-bref";
+import { perimetreSuppressionSalarie } from "@/lib/salaries/suppression";
 
 /**
  * La fiche d'une personne : ce qu'elle détient, et jusqu'à quand.
@@ -144,439 +135,298 @@ export default async function SalarieDetailPage({
   // personne passe réellement.
   const conflits = conflitsExclusion(dejaDeclares);
 
-  // Ce qu'un fait rend dû, joint aux titres de cette personne. La liste est la
-  // même pour tout l'effectif, et c'est exact : le moteur ne dérive rien d'un
-  // porteur salarié (ADR-023), et la formation à la sécurité de `L. 4141-2` est
-  // due à TOUS les travailleurs. Ce qui varie d'une fiche à l'autre est la date
-  // du dernier titre déclaré, pas la liste.
-  const toutesDeclenchees = obligationsDeclencheesParUnFait(s.titres);
-
   // Ce qui manque à cette personne (ADR-043) : les titres dus à l'entrée et
   // ceux qu'un titre déclaré appelle, jamais déclarés. La même fonction que le
-  // badge d'Équipe ; les autres cartes la lisent pour ne pas se contredire.
+  // badge d'Équipe.
   const manques = ceQuiManqueALaPersonne(s, s.titres);
   const manquants = new Set(manques.map((m) => m.obligation.id));
-  // UNE carte par obligation, jamais deux (relevé de l'intégration du
-  // 2026-10-12) : la formation à la sécurité jamais déclarée est datée dans
-  // « À déclarer » ; une fois déclarée, elle revient ici comme fait qui la
-  // redéclenchera. Les deux cartes se relaient, elles ne se doublent pas.
-  const declenchees = toutesDeclenchees.filter(
-    (d) => !manquants.has(d.obligation.id),
+
+  // Les titres qu'un fait redéclenche — la formation à la sécurité, due de
+  // nouveau à un changement de poste ou de technique. ~~Une carte « Ce qui se
+  // déclenche pour cette personne » les listait~~ [2026-10-24, refonte de la
+  // fiche : jamais déclaré, le titre est dans « À déclarer » ; déclaré, la
+  // ligne du titre dit qu'il redeviendra dû. La carte répétait l'un ou
+  // l'autre.]
+  const redeclenches = new Set(
+    obligationsDeclencheesParUnFait().map((d) => d.obligation.id),
   );
 
-  // Ce que les faits d'activité de l'établissement rendent dû à une partie de
-  // l'effectif (ADR-038, ADR-041). Lus sur l'établissement : un dossier sans
-  // DUERP y répond depuis Équipe, et la carte mène à cet écran.
-  const faits = await chargerFaitsActivite(id);
-  if (!faits) notFound();
-  const duerpDeLaFiche = titresDuDuerpPourUnePersonne(faits, s.titres);
-  // Le même classement que la liste des titres plus bas (`t.etat`), et ses
-  // mots : la carte ne dit pas seulement « déclaré » d'un titre que la liste
-  // marque « Échéance déclarée/calculée dépassée ».
-  const depassees = new Map(
-    s.titres.flatMap((t) =>
-      t.etat === "enRetard" && t.echeance
-        ? [[t.obligationId, { le: t.echeance, calculee: t.echeanceLe === null }] as const]
-        : [],
-    ),
-  );
-  const lienVersLaQuestion = (champ: string) =>
-    `/etablissements/${id}/equipe/risques#${champ}`;
+  // ~~La carte « Formations liées aux risques du poste » (ADR-038)~~
+  // [2026-10-24, décision de la propriétaire : retirée de la fiche. Les
+  // questions portent sur l'établissement, et Rojer ne sait pas qui fait la
+  // tâche (ADR-023) : sur la fiche d'un serveur, elle proposait l'habilitation
+  // électrique. Ce qu'elle disait vit ailleurs — les questions sur
+  // « Évaluer les risques de vos salariés », les formations et l'habilitation
+  // du personnel sur Équipe › Formations, les manques ci-dessous.]
 
   const action = declarerTitre.bind(null, id, salarieId);
   const provenance = lireProvenance(de, id);
   const annuaire = { href: `/etablissements/${id}/equipe`, label: "Équipe" };
+  const nom = `${s.prenom} ${s.nom}`;
+
+  const frise = friseDesTitres({
+    entreLe: s.entreLe,
+    titres: s.titres.map((t) => ({ cle: t.id, delivreLe: t.delivreLe, echeance: t.echeance })),
+    now,
+  });
+
+  const lignes: LigneTitre[] = s.titres.map((t) => ({
+    id: t.id,
+    obligationId: t.obligationId,
+    libelle: t.libelle,
+    // TROIS CAS, ET LE DEUXIÈME MANQUAIT. La ligne disait « aucune date de fin
+    // portée sur le titre » dès que `echeanceLe` était vide — y compris sur
+    // une VIP dont le calendrier inscrivait bel et bien la visite suivante,
+    // calculée depuis la délivrance. L'échéance affichée est celle de
+    // `echeanceDuTitre`, la même que le calendrier, et la phrase dit d'où elle
+    // vient : une date calculée sur un plafond légal ne se présente pas comme
+    // la date de la pièce. Et elle dit le CALCUL, pas « la durée écrite dans
+    // le texte » : pour la formation du membre du CSE, L. 2315-17 pose une
+    // borne liée au mandat, pas une durée depuis la délivrance.
+    dates:
+      `Délivré le ${formaterDateLongueFr(t.delivreLe)}` +
+      (t.echeanceLe
+        ? `, valable jusqu'au ${formaterDateLongueFr(t.echeanceLe)}.`
+        : t.echeance && t.periodicite
+          ? `. Pas de date de fin sur la pièce : échéance calculée au ${formaterDateLongueFr(t.echeance)} (délivrance + ${LABEL_PERIODICITE[t.periodicite].toLowerCase()}).`
+          : ". Aucune date de fin portée sur le titre."),
+    etat: t.etat,
+    mot:
+      t.echeanceLe === null && (t.etat === "enRetard" || t.etat === "proche")
+        ? MOT_DE_L_ECHEANCE_CALCULEE[t.etat]
+        : t.etat === "aPlanifier" && t.renvoiAuxNormes
+          ? // « Sans terme écrit » est vrai du Code et incomplet : il renvoie
+            // le rythme aux normes (revue de fidélité du 2026-10-07).
+            t.renvoiAuxNormes.court
+          : MOT_DE_L_ETAT[t.etat],
+    dessin: dessinDuTitre(t.obligationId),
+    referencesLegales: t.referencesLegales,
+    // ADR-039 : un rythme que le texte n'écrit pas se dit comme tel, à côté
+    // de l'échéance qu'il calcule.
+    rythmeRetenu: t.rythmeRetenu,
+    renvoiAuxNormes: t.renvoiAuxNormes && !t.echeanceLe ? t.renvoiAuxNormes.long : null,
+    note: t.note,
+    redevientDue: s.actif && redeclenches.has(t.obligationId),
+    geste:
+      s.actif && (t.etat === "enRetard" || t.etat === "proche") ? (
+        <BoutonDeclarer obligationId={t.obligationId} plein={t.etat === "enRetard"}>
+          Renouveler
+        </BoutonDeclarer>
+      ) : null,
+    retirer: (
+      <RetirerTitreButton
+        etablissementId={id}
+        salarieId={s.id}
+        titreId={t.id}
+        libelle={t.libelle}
+      />
+    ),
+  }));
+
+  const manquesEnRetard = manques.filter((m) => etatDuManque(m, now) === "enRetard").length;
+  const depasses = s.titres.filter((t) => t.etat === "enRetard").length;
 
   return (
-    <EcranFiche provenance={provenance} canonique={annuaire}>
-      <CorpsFiche
-        principal={
-          <>
-            <section className="carte-board px-7 py-6 sm:px-8">
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-                    {s.poste ?? "Poste non renseigné"}
-                  </p>
-                  <h1 className="board-titre m-0 mt-2 max-w-[30ch] text-[clamp(23px,2.1vw,30px)]">
-                    {s.prenom} {s.nom}
-                  </h1>
-                  <div className="mt-3.5 flex flex-wrap items-center gap-2">
-                    {!s.actif && (
-                      <PastilleFiche ton="neutre">
-                        Sortie de l&apos;effectif
-                      </PastilleFiche>
-                    )}
-                    <PastilleFiche ton={s.titres.length > 0 ? "bleu" : "neutre"}>
-                      {s.titres.length === 0
-                        ? "Aucun titre déclaré"
-                        : `${s.titres.length} titre${s.titres.length > 1 ? "s" : ""}`}
-                    </PastilleFiche>
-                  </div>
-                </div>
-                <div className="flex flex-none flex-wrap items-center gap-2">
-                  <Link
-                    href={`/etablissements/${id}/equipe/${s.id}/modifier`}
-                    className={buttonVariants({
-                      variant: "boardClair",
-                      size: "boardSm",
-                    })}
-                  >
-                    Corriger
-                  </Link>
-                  <BasculerEffectif
-                    etablissementId={id}
-                    salarieId={s.id}
-                    actif={s.actif}
-                  />
-                  {perimetre && (
-                    <SupprimerSalarieButton
-                      etablissementId={id}
-                      salarieId={s.id}
-                      nom={`${s.prenom} ${s.nom}`}
-                      perimetre={perimetre}
-                    />
-                  )}
-                </div>
-              </div>
-
-              {!s.actif && (
-                <p className="m-0 mt-4 max-w-[64ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                  Cette personne ne fait plus partie de l&apos;effectif. Sa fiche
-                  et ses titres restent enregistrés tant que vous ne la
-                  supprimez pas : « Supprimer ce salarié » les efface
-                  définitivement.
-                </p>
-              )}
-            </section>
-
-            {/* Au-dessus de tout, « Titres détenus » compris : ce que le droit
-                doit à cette personne et qu'aucun titre ne porte — le geste à
-                faire avant l'inventaire (passage visuel du 2026-10-12, la
-                carte venait après une liste « Rien de déclaré »). Daté quand
-                Rojer a de quoi le dater. */}
-            <CarteCeQuiManque
-              manques={manques}
-              now={now}
-              lienModifier={`/etablissements/${id}/equipe/${s.id}/modifier`}
-            />
-
-            <CarteFiche titreFort="Titres détenus">
-              {conflits.length > 0 && (
-                <div className="mb-4 flex flex-col gap-3">
-                  {conflits.map((c) => (
-                    <div
-                      key={c.titres.map((t) => t.id).join("|")}
-                      className="rounded-[18px] bg-[color:var(--board-signal-pale)] px-4 py-3.5"
-                    >
-                      <p className="m-0 text-[12.5px] font-semibold leading-[1.5] text-[color:var(--board-signal-ink)]">
-                        Ces deux titres ne peuvent pas se cumuler : «{" "}
-                        {c.titres[0].libelle} » et « {c.titres[1].libelle} ».
-                      </p>
-                      <p className="m-0 mt-1.5 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                        {c.motif}
-                      </p>
-                      {/* Rojer ne retire pas le titre de lui-même : lui seul
-                          sait lequel des deux s'applique à cette personne, et
-                          effacer une déclaration à sa place serait décider
-                          d'une conformité qu'on ne constate pas. */}
-                      <p className="m-0 mt-1.5 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                        Tant que les deux sont déclarés, votre calendrier porte
-                        un rendez-vous que le texte ne prévoit pas. Retirez
-                        celui qui ne s&apos;applique pas à cette personne.
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {s.titres.length === 0 ? (
-                <p className="m-0 max-w-[64ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                  Rien de déclaré pour l&apos;instant. Rojer ne peut pas le
-                  deviner : rien dans un intitulé de poste ne dit qu&apos;une
-                  personne conduit un chariot, travaille au voisinage de pièces
-                  sous tension, est formée au secourisme ou relève d&apos;un
-                  suivi médical renforcé.
-                </p>
-              ) : (
-                <ul className="m-0 flex list-none flex-col gap-2 p-0">
-                  {s.titres.map((t) => (
-                    <li
-                      key={t.id}
-                      className="flex flex-wrap items-start justify-between gap-3 rounded-[18px] bg-[color:var(--board-slate-pale)] px-4 py-3"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="m-0 text-[13.5px] font-semibold leading-tight text-[color:var(--board-slate-ink)]">
-                          {t.libelle}
-                        </p>
-                        <p className="m-0 mt-1 text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-                          Délivré le {formaterDateLongueFr(t.delivreLe)}
-                          {/* TROIS CAS, ET LE DEUXIÈME MANQUAIT. La ligne
-                              disait « aucune date de fin portée sur le titre »
-                              dès que `echeanceLe` était vide — y compris sur
-                              une VIP dont le calendrier inscrivait bel et bien
-                              la visite suivante, calculée depuis la
-                              délivrance. L'échéance affichée est désormais
-                              celle de `echeanceDuTitre`, la même que le
-                              calendrier, et la phrase dit d'où elle vient :
-                              une date calculée sur un plafond légal ne se
-                              présente pas comme la date de la pièce. Et elle
-                              dit le CALCUL, pas « la durée écrite dans le
-                              texte » : pour la formation du membre du CSE,
-                              L. 2315-17 pose une borne liée au mandat, pas une
-                              durée depuis la délivrance (relecture du lot). */}
-                          {t.echeanceLe
-                            ? ` · valable jusqu'au ${formaterDateLongueFr(t.echeanceLe)}`
-                            : t.echeance && t.periodicite
-                              ? ` · pas de date de fin sur la pièce · échéance calculée au ${formaterDateLongueFr(t.echeance)} (délivrance + ${LABEL_PERIODICITE[t.periodicite].toLowerCase()})`
-                              : " · aucune date de fin portée sur le titre"}
-                        </p>
-                        {/* ADR-039 : un rythme que le texte n'écrit pas se
-                            dit comme tel, à côté de l'échéance qu'il calcule. */}
-                        {t.renvoiAuxNormes && !t.echeanceLe && (
-                          <p className="m-0 mt-1 text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-                            {t.renvoiAuxNormes.long}
-                          </p>
-                        )}
-                        {t.rythmeRetenu && (
-                          <p className="m-0 mt-1.5">
-                            <MentionRythmeRetenu mention={t.rythmeRetenu} />
-                          </p>
-                        )}
-                        {t.note && (
-                          <p className="m-0 mt-1 text-[12px] leading-[1.5] text-[color:var(--board-slate-soft)]">
-                            {t.note}
-                          </p>
-                        )}
-                        {t.pieceMedicale && (
-                          <p className="m-0 mt-1.5 text-[11.5px] leading-[1.45] text-[color:var(--board-slate-soft)]">
-                            Rojer n&apos;enregistre que l&apos;existence de cette
-                            attestation et ses dates. Le document reste chez vous.
-                          </p>
-                        )}
-                        <div className="mt-2 flex flex-wrap items-center gap-3">
-                          {/* `ReferenceLegale.url` est optionnel : une
-                              référence sans URL rendait une pastille muette —
-                              l'apparence d'un lien, rien dessous. Le type de
-                              `LegalBadge` l'interdit désormais. Sans URL, la
-                              référence s'écrit donc en texte : elle dit d'où
-                              vient la contrainte sans promettre de l'ouvrir. */}
-                          {t.referencesLegales.slice(0, 1).map((r) =>
-                            r.url ? (
-                              <LegalBadge
-                                key={r.article ?? r.reference}
-                                charte="board"
-                                reference={r.reference}
-                                href={r.url}
-                              />
-                            ) : (
-                              <span
-                                key={r.article ?? r.reference}
-                                className="font-mono text-[10.5px] font-medium uppercase tracking-[0.16em] text-[color:var(--board-slate-soft)]"
-                              >
-                                § {r.reference}
-                              </span>
-                            ),
-                          )}
-                          <RetirerTitreButton
-                            etablissementId={id}
-                            salarieId={s.id}
-                            titreId={t.id}
-                            libelle={t.libelle}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Le point porte l'état, le mot le nomme : une
-                          signalétique qui tient à une couleur disparaît en
-                          niveaux de gris et pour qui n'y voit pas. */}
-                      <span
-                        className="inline-flex flex-none items-center gap-1.5 whitespace-nowrap text-[11.5px] font-semibold"
-                        style={{ color: ENCRE_ETAT[t.etat] }}
-                      >
-                        <span
-                          aria-hidden
-                          className="size-[7px] flex-none rounded-full"
-                          style={{ background: CHAMP_ETAT[t.etat] }}
-                        />
-                        {t.echeanceLe === null &&
-                        (t.etat === "enRetard" || t.etat === "proche")
-                          ? MOT_DE_L_ECHEANCE_CALCULEE[t.etat]
-                          : t.etat === "aPlanifier" && t.renvoiAuxNormes
-                            ? // « Sans terme écrit » est vrai du Code et
-                              // incomplet : il renvoie le rythme aux normes
-                              // (revue de fidélité du 2026-10-07).
-                              t.renvoiAuxNormes.court
-                            : MOT_DE_L_ETAT[t.etat]}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CarteFiche>
-
-            {/* CE QUE LE CALENDRIER NE PEUT PAS PORTER, ET QUI EST DÛ QUAND
-                MÊME. Les obligations du catalogue `evenementielle` et `autre`
-                qu'aucune question du DUERP ne gouverne (ADR-038) : elles reviennent, sans qu'aucun texte n'écrive de
-                rythme, sur un fait que le produit n'observe pas. Le générateur
-                ne leur ouvre donc aucune occurrence et « Ce qui doit être en
-                place » les refuse — jusqu'ici elles n'existaient que dans le
-                menu déroulant ci-dessous, c'est-à-dire comme une OPTION DE
-                SAISIE et jamais comme une obligation due.
-
-                L'ADR-022 dit où elles vivent : une obligation se porte sur un
-                sujet, et le sujet est la personne. Elles sont donc ici, sur sa
-                fiche, et **au-dessus** du formulaire : on lit ce qui est dû
-                avant de lire ce qu'on peut saisir. */}
-            {/* Masquée quand tout ce qu'elle listerait est daté plus haut (« À
-                déclarer ») : la carte vide dirait « rien n'est encodé », ce qui
-                est faux. */}
-            {(declenchees.length > 0 || toutesDeclenchees.length === 0) && (
-            <CarteFiche titreFort="Ce qui se déclenche pour cette personne">
-              {declenchees.length === 0 ? (
-                <p className="m-0 max-w-[64ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                  Aucune obligation de ce genre n&apos;est encodée au
-                  référentiel aujourd&apos;hui.
-                </p>
+    <DeclarationTitre
+      personne={nom}
+      action={action}
+      dejaDeclares={dejaDeclares}
+      catalogue={catalogue.map((o) => {
+        // Un titre déjà déclaré n'est pas bloqué par lui-même : le redéclarer
+        // est un renouvellement.
+        const bloquant = exclusionsDuTitre(o.id).find(
+          (x) => x.titre.id !== o.id && dejaDeclares.includes(x.titre.id),
+        );
+        return {
+          id: o.id,
+          libelle: o.libelle,
+          description: o.description,
+          pieceMedicale: o.pieceMedicale,
+          periodicite: periodiciteEffective(o),
+          rythmeRetenu: mentionRythmeRetenu(o)?.long ?? null,
+          renvoiAuxNormes: renvoiAuxNormes(o)?.long ?? null,
+          bloquePar: bloquant
+            ? { libelle: bloquant.titre.libelle, motif: bloquant.motif }
+            : undefined,
+          groupe: manquants.has(o.id) ? "attendu" : o.pieceMedicale ? "medical" : "poste",
+          dessin: dessinDuTitre(o.id),
+          rythme: rythmeEnBref(o),
+        };
+      })}
+    >
+      <EcranFiche
+        provenance={provenance}
+        canonique={annuaire}
+        bandeau={
+          <HeroSalarie
+            nom={nom}
+            surtitre={s.poste ?? "Poste non renseigné"}
+            chapeau={
+              s.entreLe ? (
+                `Dans l'effectif depuis le ${formaterDateLongueFr(s.entreLe)}.`
               ) : (
                 <>
-                  <p className="m-0 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                    Ces obligations ne tombent à aucune date : elles sont dues à
-                    un <strong className="font-semibold">fait</strong>{" "}
-                    — une embauche, un changement de poste ou de technique.{" "}
-                    {/* ~~Rojer ne voit aucun de ces faits~~ [2026-10-12,
-                        ADR-043 : il voit l'embauche, par la date d'entrée.] */}
-                    {/* Vrai sur toute fiche, y compris d'une personne sortie
-                        ou déjà formée, où rien n'est daté plus haut
-                        (relecture R4) : la phrase dit la règle, pas l'état. */}
-                    Rojer ne voit que l&apos;embauche, par la date
-                    d&apos;entrée : tant qu&apos;aucun titre n&apos;est déclaré
-                    pour une personne présente, la première formation est datée
-                    dans « À déclarer pour cette personne ». Les suivantes
-                    n&apos;ont ni échéance ni retard ; vous seul savez quand le
-                    poste change.
-                  </p>
-                  <ul className="m-0 mt-4 flex list-none flex-col gap-2 p-0">
-                    {declenchees.map(({ obligation, dernierTitreLe }) => (
-                      <li
-                        key={obligation.id}
-                        className="rounded-[22px] bg-[color:var(--board-slate-pale)] px-4 py-3.5"
-                      >
-                        <p className="m-0 text-[13.5px] font-semibold leading-tight text-[color:var(--board-slate-ink)]">
-                          {obligation.libelle}
-                        </p>
-                        {/* La phrase du RÉFÉRENTIEL, pas une reformulation.
-                            C'est elle qui nomme le déclencheur — « lors de son
-                            embauche, lors d'un changement de poste » — et une
-                            paraphrase écrite ici finirait par dire autre chose
-                            que le texte relu. */}
-                        <p className="m-0 mt-1.5 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                          {obligation.description}
-                        </p>
-                        <p className="m-0 mt-2 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-soft)]">
-                          {dernierTitreLe
-                            ? `Un titre est déclaré pour cette obligation, délivré le ${formaterDateLongueFr(dernierTitreLe)}. Il ne la referme pas : elle redevient due au fait suivant.`
-                            : "Aucun titre n'est déclaré pour cette obligation. Ce n'est pas un retard : aucune date ne dit quand elle était due."}
-                        </p>
-                        <ReferenceFondatrice obligation={obligation} />
-                      </li>
-                    ))}
-                  </ul>
+                  Date d&apos;entrée non renseignée.{" "}
+                  <Link
+                    href={`/etablissements/${id}/equipe/${s.id}/modifier`}
+                    className="text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline"
+                  >
+                    La renseigner
+                  </Link>
                 </>
-              )}
-            </CarteFiche>
-            )}
-
-            {/* Ce que le DUERP rend dû à une partie de l'effectif (ADR-038) :
-                au-dessus du formulaire, comme la carte précédente — on lit ce
-                qui est dû avant ce qu'on peut saisir. */}
-            <CarteTitresDuDuerp
-              questions={duerpDeLaFiche}
-              lienVersLaQuestion={lienVersLaQuestion}
-              manquants={manquants}
-              depassees={depassees}
-            />
-
-            <CarteFiche titreFort="Déclarer un titre">
-              {catalogue.length === 0 ? (
-                <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                  Aucun titre n&apos;est encore encodé au référentiel.
-                </p>
-              ) : (
-                <FormulaireTitre
-                  catalogue={catalogue.map((o) => {
-                    // Un titre déjà déclaré n'est pas bloqué par lui-même :
-                    // le redéclarer est un renouvellement.
-                    const bloquant = exclusionsDuTitre(o.id).find(
-                      (x) => x.titre.id !== o.id && dejaDeclares.includes(x.titre.id),
-                    );
-                    return {
-                      id: o.id,
-                      libelle: o.libelle,
-                      description: o.description,
-                      pieceMedicale: o.pieceMedicale,
-                      periodicite: periodiciteEffective(o),
-                      rythmeRetenu: mentionRythmeRetenu(o)?.long ?? null,
-                      renvoiAuxNormes: renvoiAuxNormes(o)?.long ?? null,
-                      bloquePar: bloquant
-                        ? { libelle: bloquant.titre.libelle, motif: bloquant.motif }
-                        : undefined,
-                    };
-                  })}
-                  action={action}
-                  dejaDeclares={dejaDeclares}
-                />
-              )}
-            </CarteFiche>
-
-            {/* Le droit d'accès de la personne suivie (art. 15 RGPD). Elle n'a
-                pas accès à l'outil : elle demande à son employeur, qui est le
-                responsable de traitement. Sans ce bouton, l'employeur devrait
-                recopier un écran à la main pour honorer une demande — et
-                `docs/rgpd.md` § 5.2 promettrait un droit que rien ne sert. */}
-            <CarteFiche titre="Ce que Rojer enregistre sur cette personne">
-              <p className="m-0 max-w-[64ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                Son nom, son poste, sa date d&apos;entrée, et pour chaque titre
-                sa nature et ses dates. Rien d&apos;autre — pas de date de
-                naissance, pas de numéro de sécurité sociale, aucune donnée de
-                santé. Si elle vous demande ce que vous détenez sur elle, vous
-                pouvez le lui remettre :
-              </p>
-              <div className="mt-4">
+              )
+            }
+            pastilles={
+              <>
+                {!s.actif && (
+                  <PastilleFiche ton="neutre">Sortie de l&apos;effectif</PastilleFiche>
+                )}
+                {manques.length > 0 && (
+                  <PastilleFiche ton={manquesEnRetard > 0 ? "retard" : "neutre"}>
+                    {manques.length} à déclarer
+                  </PastilleFiche>
+                )}
+                {depasses > 0 && (
+                  <PastilleFiche ton="retard">
+                    {depasses} échéance{depasses > 1 ? "s" : ""} dépassée{depasses > 1 ? "s" : ""}
+                  </PastilleFiche>
+                )}
+                <PastilleFiche ton={s.titres.length > 0 ? "bleu" : "neutre"}>
+                  {s.titres.length === 0
+                    ? "Aucun titre déclaré"
+                    : `${s.titres.length} titre${s.titres.length > 1 ? "s" : ""}`}
+                </PastilleFiche>
+              </>
+            }
+            actions={
+              <>
                 <Link
-                  href={`/api/etablissements/${id}/equipe/${s.id}/donnees`}
-                  className={buttonVariants({
-                    variant: "boardClair",
-                    size: "boardSm",
-                  })}
+                  href={`/etablissements/${id}/equipe/${s.id}/modifier`}
+                  className={buttonVariants({ variant: "boardClair", size: "boardSm" })}
                 >
-                  <Download className="size-3.5" aria-hidden />
-                  Éditer ses données
+                  Corriger
                 </Link>
-              </div>
-              <p className="m-0 mt-3 max-w-[64ch] text-[12px] leading-[1.55] text-[color:var(--board-slate-soft)]">
-                Pendant l&apos;emploi, le droit à l&apos;effacement est limité :
-                l&apos;article 17.3.b du RGPD excepte le traitement nécessaire
-                au respect d&apos;une obligation légale. Une sortie de
-                l&apos;effectif garde ses titres ; la durée de conservation
-                après un départ n&apos;est pas fixée par un texte que Rojer ait
-                identifié. Un titre que vous retirez est effacé
-                définitivement.
-              </p>
-            </CarteFiche>
-
-            <CarteFiche titre="Repères">
-              <ChampsFiche>
-                <ChampFiche cle="Entrée dans l'effectif">
-                  {s.entreLe ? formaterDateLongueFr(s.entreLe) : "Non renseignée"}
-                </ChampFiche>
-                <ChampFiche cle="Fiche créée le">
-                  {formaterDateLongueFr(s.createdAt)}
-                </ChampFiche>
-              </ChampsFiche>
-            </CarteFiche>
-          </>
+                <BasculerEffectif etablissementId={id} salarieId={s.id} actif={s.actif} />
+                {perimetre && (
+                  <SupprimerSalarieButton
+                    etablissementId={id}
+                    salarieId={s.id}
+                    nom={nom}
+                    perimetre={perimetre}
+                  />
+                )}
+              </>
+            }
+          />
         }
-      />
-    </EcranFiche>
+      >
+        {!s.actif && (
+          <p className="m-0 max-w-[64ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+            Cette personne ne fait plus partie de l&apos;effectif. Sa fiche et
+            ses titres restent enregistrés tant que vous ne la supprimez pas :
+            « Supprimer ce salarié » les efface définitivement.
+          </p>
+        )}
+
+        {/* Au-dessus de tout, « Titres détenus » compris : ce que le droit
+            doit à cette personne et qu'aucun titre ne porte — le geste à
+            faire avant l'inventaire (passage visuel du 2026-10-12). */}
+        <CarteCeQuiManque
+          manques={manques}
+          now={now}
+          lienModifier={`/etablissements/${id}/equipe/${s.id}/modifier`}
+          geste={(m, enRetard) => (
+            <BoutonDeclarer obligationId={m.obligation.id} plein={enRetard}>
+              Déclarer
+            </BoutonDeclarer>
+          )}
+        />
+
+        <CarteTitresDetenus
+          lignes={lignes}
+          frise={frise}
+          ajouter={<BoutonAjouterTitre />}
+          avant={
+            conflits.length > 0 && (
+              <div className="mb-4 flex flex-col gap-3">
+                {conflits.map((c) => (
+                  <div
+                    key={c.titres.map((t) => t.id).join("|")}
+                    className="rounded-[18px] bg-[color:var(--board-signal-pale)] px-4 py-3.5"
+                  >
+                    <p className="m-0 text-[12.5px] font-semibold leading-[1.5] text-[color:var(--board-signal-ink)]">
+                      Ces deux titres ne peuvent pas se cumuler : «{" "}
+                      {c.titres[0].libelle} » et « {c.titres[1].libelle} ».
+                    </p>
+                    <p className="m-0 mt-1.5 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                      {c.motif}
+                    </p>
+                    {/* Rojer ne retire pas le titre de lui-même : lui seul
+                        sait lequel des deux s'applique à cette personne, et
+                        effacer une déclaration à sa place serait décider
+                        d'une conformité qu'on ne constate pas. */}
+                    <p className="m-0 mt-1.5 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                      Tant que les deux sont déclarés, votre calendrier porte
+                      un rendez-vous que le texte ne prévoit pas. Retirez
+                      celui qui ne s&apos;applique pas à cette personne.
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )
+          }
+          vide={
+            <p className="m-0 max-w-[64ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+              Rien de déclaré pour l&apos;instant. Rojer ne peut pas le
+              deviner : rien dans un intitulé de poste ne dit qu&apos;une
+              personne conduit un chariot, travaille au voisinage de pièces
+              sous tension, est formée au secourisme ou relève d&apos;un
+              suivi médical renforcé.
+            </p>
+          }
+        />
+
+        {/* Le droit d'accès de la personne suivie (art. 15 RGPD). Elle n'a
+            pas accès à l'outil : elle demande à son employeur, qui est le
+            responsable de traitement. Sans ce bouton, l'employeur devrait
+            recopier un écran à la main pour honorer une demande — et
+            `docs/rgpd.md` § 5.2 promettrait un droit que rien ne sert.
+            Posé en pied de fiche, hors carte : c'est une information de
+            tenue du dossier, pas un geste de prévention. */}
+        <section className="mt-2 grid grid-cols-1 gap-x-10 gap-y-4 border-t border-[color:var(--board-slate-line)] pt-6 lg:grid-cols-[minmax(0,1fr)_auto]">
+          <div className="max-w-[72ch]">
+            <h2 className="m-0 text-[14px] font-semibold text-[color:var(--board-slate-ink)]">
+              Ce que Rojer enregistre sur cette personne
+            </h2>
+            <p className="m-0 mt-1.5 text-[12.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+              Son nom, son poste, sa date d&apos;entrée, et pour chaque titre
+              sa nature et ses dates. Rien d&apos;autre — pas de date de
+              naissance, pas de numéro de sécurité sociale, aucune donnée de
+              santé : d&apos;une visite ou d&apos;une attestation médicale,
+              Rojer ne garde que l&apos;existence et les dates, le document
+              reste chez vous.
+            </p>
+            <p className="m-0 mt-1.5 text-[12px] leading-[1.55] text-[color:var(--board-slate-soft)]">
+              Pendant l&apos;emploi, le droit à l&apos;effacement est limité :
+              l&apos;article 17.3.b du RGPD excepte le traitement nécessaire
+              au respect d&apos;une obligation légale. Une sortie de
+              l&apos;effectif garde ses titres ; la durée de conservation
+              après un départ n&apos;est pas fixée par un texte que Rojer ait
+              identifié. Un titre que vous retirez est effacé
+              définitivement. Fiche créée le {formaterDateLongueFr(s.createdAt)}.
+            </p>
+          </div>
+          <div className="self-start">
+            <Link
+              href={`/api/etablissements/${id}/equipe/${s.id}/donnees`}
+              className={buttonVariants({ variant: "boardClair", size: "boardSm" })}
+            >
+              <Download className="size-3.5" aria-hidden />
+              Éditer ses données
+            </Link>
+          </div>
+        </section>
+      </EcranFiche>
+    </DeclarationTitre>
   );
 }

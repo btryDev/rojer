@@ -28,13 +28,15 @@ describe("ce qu'un fait rend dû à une personne", () => {
     // obligation salarié événementielle au référentiel sans qu'elle atteigne
     // la fiche fait tomber ce test tout seul.
     //
-    // Depuis l'ADR-038, la fiche a DEUX surfaces pour ces obligations : cette
-    // carte, et celle des faits d'activité (ADR-041) pour ce qu'un fait gouverne.
-    // La borne porte donc sur leur réunion, confrontée au référentiel : une
-    // obligation retenue par la règle qui n'est rendue ici ET qu'aucune
-    // question ne gouverne fait tomber le test. Que la carte du DUERP NOMME
-    // bien les titres gouvernés, dans chaque état, est éprouvé sur le rendu
-    // (`components/salaries/CarteTitresDuDuerp.test.tsx`), pas ici.
+    // Depuis l'ADR-038, ces obligations ont DEUX chemins : cette liste, et
+    // les faits d'activité (ADR-041) pour ce qu'un fait gouverne. La borne
+    // porte donc sur leur réunion, confrontée au référentiel : une obligation
+    // retenue par la règle qui n'est rendue ici ET qu'aucune question ne
+    // gouverne fait tomber le test. ~~Que la carte du DUERP NOMME bien les
+    // titres gouvernés est éprouvé sur le rendu
+    // (`CarteTitresDuDuerp.test.tsx`).~~ [2026-10-24 : la carte est retirée
+    // de la fiche (refonte de la fiche salarié) ; un titre gouverné se
+    // déclare depuis la modale « Ajouter un titre ».]
     const gouvernes = titresGouvernesParUnFait();
     const rendues = new Set(
       obligationsDeclencheesParUnFait().map((l) => l.obligation.id),

@@ -18,9 +18,10 @@
  *
  * ~~Deux obligations~~ — depuis l'ADR-038 (2026-10-05), seules celles qu'AUCUNE
  * question transverse du DUERP ne gouverne : la formation à la conduite a
- * quitté cette liste pour `titres-du-duerp.ts`, où elle n'apparaît que si
- * l'établissement déclare que des travailleurs conduisent des engins (fait
- * d'activité, ADR-041). Ce qui reste ici est
+ * quitté cette liste : elle est gouvernée par un fait d'activité (ADR-041),
+ * celui de la conduite d'engins. ~~Elle apparaissait dans `titres-du-duerp.ts`~~
+ * [2026-10-24 : module retiré avec la carte « Formations liées aux risques du
+ * poste », refonte de la fiche salarié.] Ce qui reste ici est
  * dû à tout l'effectif.
  *
  * Elle est la même pour tout le monde, et c'est exact plutôt que grossier.

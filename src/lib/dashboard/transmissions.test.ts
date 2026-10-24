@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { rapprocher, titresDusEnRetard, type PersonneDeclaree } from "./transmissions";
 import { ceQuiManqueALaPersonne } from "@/lib/salaries/du-a-la-personne";
-import { phraseTitre } from "@/components/salaries/CarteTitresDuDuerp";
 import {
   titresEcartesParLesFaits,
   type ReponsesFaitsActivite,
@@ -750,8 +749,9 @@ describe("la VIP manquante atteint le tableau de bord (relecture du 2026-10-12, 
 describe("un titre déclaré l'emporte sur un « non » au fait, partout (contre-relecture du 2026-10-12)", () => {
   // Une autorisation de conduite est déclarée, le fait « conduite d'engins »
   // est à « non ». L'attestation médicale conditionne la validité de
-  // l'autorisation (R. 4323-56) : la fiche la date, la carte DUERP ne dit pas
-  // « Non dû », le tableau de bord la compte. Trois surfaces, une réponse.
+  // l'autorisation (R. 4323-56) : la fiche la date, le tableau de bord la
+  // compte. ~~Trois surfaces~~ [2026-10-24 : deux — la carte DUERP de la
+  // fiche est retirée (refonte de la fiche salarié).] Une réponse.
   const claire = personne("2026-01-01", [
     "conduite-salarie-autorisation",
     "sante-travail-salarie-vip",
@@ -764,10 +764,9 @@ describe("un titre déclaré l'emporte sur un « non » au fait, partout (contre
     expect(ecartes.has(ATTESTATION)).toBe(true);
   });
 
-  it("fiche, carte DUERP et tableau de bord disent la même chose", () => {
+  it("fiche et tableau de bord disent la même chose", () => {
     const fiche = ceQuiManqueALaPersonne(claire, claire.titres).map((m) => m.obligation.id);
     expect(fiche).toContain(ATTESTATION);
-    expect(phraseTitre("non", null, true)).not.toContain("Non dû");
     const t = rapprocher([], [], [claire], NOW, ecartes);
     expect(t.titresDusNonDeclares.map((c) => c.titre)).toContain(ATTESTATION);
   });

@@ -10,8 +10,10 @@
 // lecteurs :
 //   - le moteur (`matching/`), qui retire sur un « non » déclaré les
 //     obligations que le fait conditionne (`TypologieApplication.activite`) ;
-//   - la fiche salarié, qui présente les titres que le fait rend dus
-//     (`salaries/titres-du-duerp.ts`) ;
+//   - ~~la fiche salarié, qui présente les titres que le fait rend dus
+//     (`salaries/titres-du-duerp.ts`)~~ [2026-10-24 : retiré de la fiche,
+//     refonte de la fiche salarié ; la réponse est lue par Équipe ›
+//     Formations] ;
 //   - le DUERP, dont l'étape transverse affiche et modifie la même réponse
 //     (`questionTransverse`) et y rattache son risque.
 //
