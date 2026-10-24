@@ -5,7 +5,7 @@ import {
   AIDE_NOMBRE_DE_PERSONNES,
   LIBELLE_NOMBRE_DE_PERSONNES,
 } from "@/lib/matching/personnes-presentes";
-import { useActionState, useState } from "react";
+import { startTransition, useActionState, useState } from "react";
 import Link from "next/link";
 import { LienEffectifEntreprise } from "@/components/entreprises/LienEffectifEntreprise";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -157,7 +157,18 @@ export function EtablissementForm({
     state.status === "error" ? state.fieldErrors?.[champ]?.[0] : undefined;
 
   return (
-    <form action={formAction} className="flex flex-col gap-8">
+    <form
+      // Envoi à la main plutôt que `action={…}` : React 19 vide un formulaire
+      // après une action, et un refus (plus de cinquante salariés…) obligeait
+      // à tout ressaisir (contrôle visuel du 2026-10-24). La validation native
+      // du navigateur passe toujours avant `submit`.
+      onSubmit={(e) => {
+        e.preventDefault();
+        const donnees = new FormData(e.currentTarget);
+        startTransition(() => formAction(donnees));
+      }}
+      className="flex flex-col gap-8"
+    >
       {/* Identité */}
       <section className="flex flex-col gap-5">
         <ChampBoard

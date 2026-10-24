@@ -5,7 +5,7 @@ import {
   ancreDomaine,
 } from "@/components/equipements/ControlesDEnsembleDuDomaine";
 import { controlesDEnsemble } from "@/lib/equipements/controles-d-ensemble";
-import { DOMAINE_DE_CATEGORIE } from "@/lib/equipements/domaines";
+import { DOMAINE_DE_CATEGORIE, comparerDomaines } from "@/lib/equipements/domaines";
 import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
 import { CarteRepliable } from "@/components/ui-kit/CarteRepliable";
 import { instantDuRendu } from "@/lib/dates/instant-du-rendu";
@@ -426,10 +426,11 @@ export default async function EquipementsPage({
 }
 
 /**
- * Les sections de catégorie regroupées par domaine, dans l'ordre où leur
- * première catégorie apparaît (les sections arrivent triées par urgence).
+ * Les sections de catégorie regroupées par domaine, rangés par la même règle
+ * que le calendrier (`comparerDomaines`) : lignes dépassées, puis sous
+ * 30 jours, des appareils du domaine.
  */
-function parDomaine<S extends { categorie: CategorieEquipement }>(
+function parDomaine<S extends { categorie: CategorieEquipement; appareils: AppareilListe[] }>(
   sections: S[],
 ): { domaine: DomaineObligation | null; sections: S[] }[] {
   const groupes = new Map<DomaineObligation | null, S[]>();
@@ -437,8 +438,21 @@ function parDomaine<S extends { categorie: CategorieEquipement }>(
     const d = DOMAINE_DE_CATEGORIE[s.categorie];
     groupes.set(d, [...(groupes.get(d) ?? []), s]);
   }
-  // « Autres équipements » ferme la page, quel que soit son état.
+  const compte = (ss: S[], cle: "enRetard" | "proche") =>
+    ss.reduce(
+      (n, s) => n + s.appareils.reduce((m, a) => m + (a.resume.signaux.find((g) => g.cle === cle)?.nb ?? 0), 0),
+      0,
+    );
   return [...groupes.entries()]
-    .sort(([a], [b]) => Number(a === null) - Number(b === null))
-    .map(([domaine, ss]) => ({ domaine, sections: ss }));
+    .map(([domaine, ss]) => ({
+      domaine,
+      sections: ss,
+      poids: {
+        libelle: domaine ? LABEL_DOMAINE[domaine] : null,
+        enRetard: compte(ss, "enRetard"),
+        proche: compte(ss, "proche"),
+      },
+    }))
+    .sort((a, b) => comparerDomaines(a.poids, b.poids))
+    .map(({ domaine, sections: ss }) => ({ domaine, sections: ss }));
 }

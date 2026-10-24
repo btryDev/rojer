@@ -41,3 +41,18 @@ export const DOMAINE_DE_CATEGORIE: Record<CategorieEquipement, DomaineObligation
   SCENE: "incendie",
   AUTRE: null,
 };
+
+/** Ce qu'un domaine pèse, pour le ranger. */
+export type PoidsDomaine = { libelle: string | null; enRetard: number; proche: number };
+
+/**
+ * L'ordre des domaines, le même sur la page Équipements et dans la vue « par
+ * équipement » du calendrier (contrôle visuel du 2026-10-24 : les deux
+ * écrans les rangeaient autrement). Le plus de lignes dépassées d'abord, puis
+ * le plus d'échéances sous 30 jours, puis l'ordre alphabétique ; un groupe
+ * sans domaine (« Autres ») en dernier.
+ */
+export function comparerDomaines(a: PoidsDomaine, b: PoidsDomaine): number {
+  if ((a.libelle === null) !== (b.libelle === null)) return a.libelle === null ? 1 : -1;
+  return b.enRetard - a.enRetard || b.proche - a.proche || (a.libelle ?? "").localeCompare(b.libelle ?? "");
+}

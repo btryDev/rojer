@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { DOMAINE_DE_CATEGORIE } from "@/lib/equipements/domaines";
+import { DOMAINE_DE_CATEGORIE, comparerDomaines, type PoidsDomaine } from "@/lib/equipements/domaines";
 import type { CategorieEquipement } from "@prisma/client";
 import { notFound } from "next/navigation";
 import { ArrowUpRight, ChevronRight } from "lucide-react";
@@ -729,19 +729,24 @@ export default async function CalendrierPage({
       b.proche - a.proche ||
       a.categorie.localeCompare(b.categorie),
   );
-  // Rangés par domaine (lot 2 des points à corriger), le domaine le plus en
-  // peine en tête — l'ordre de sa première catégorie, que le tri ci-dessus
-  // a mise devant. Un tri stable par rang de domaine suffit.
+  // Rangés par domaine (lot 2 des points à corriger), par la même règle que
+  // la page Équipements (`comparerDomaines`) ; dans un domaine, l'ordre
+  // ci-dessus. Un tri stable par rang de domaine suffit.
   {
-    const rang = new Map<string, number>();
+    const poids = new Map<string, PoidsDomaine>();
     for (const g of groupesEquipement) {
       const d = DOMAINE_DE_CATEGORIE[g.categorieCode as CategorieEquipement];
       g.domaine = d ? LABEL_DOMAINE[d] : undefined;
-      if (g.domaine && !rang.has(g.domaine)) rang.set(g.domaine, rang.size);
+      const cle = g.domaine ?? "";
+      const p = poids.get(cle) ?? { libelle: g.domaine ?? null, enRetard: 0, proche: 0 };
+      p.enRetard += g.enRetard;
+      p.proche += g.proche;
+      poids.set(cle, p);
     }
-    groupesEquipement.sort(
-      (a, b) => (rang.get(a.domaine ?? "") ?? rang.size) - (rang.get(b.domaine ?? "") ?? rang.size),
+    const rang = new Map(
+      [...poids.entries()].sort(([, a], [, b]) => comparerDomaines(a, b)).map(([cle], i) => [cle, i]),
     );
+    groupesEquipement.sort((a, b) => rang.get(a.domaine ?? "")! - rang.get(b.domaine ?? "")!);
   }
 
   // Ce qui ne tient à aucun appareil — attestation de prestataire,
