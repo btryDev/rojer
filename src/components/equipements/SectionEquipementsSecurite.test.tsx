@@ -7,15 +7,25 @@ import {
 } from "./SectionEquipementsSecurite";
 
 // Ce que la section pose : le bouton dit ce que la ligne affiche (contrôle
-// visuel E3), « Déclarer » mène à la ligne de l'obligation (E5), et le compte
-// d'appareils est en chiffres tabulaires (charte).
+// visuel E3), « Déclarer » mène à la ligne de l'obligation (E5), et les
+// appareils déclarés se montrent dans les cartes du parc (2026-10-24).
 
 afterEach(cleanup);
 
 const commun = {
   fondement: null,
-  aConfirmer: false,
-} as const;
+  aConfirmer: false as const,
+  periodicites: [] as LigneSecuriteAffichee["periodicites"],
+};
+
+const appareil = (id: string, libelle: string, href: string) => ({
+  id,
+  libelle,
+  lieu: null,
+  resume: { etat: "aPlanifier" as const, signaux: [], aConfirmer: [] },
+  horsReferentiel: null,
+  href,
+});
 
 const alarme: LigneSecuriteAffichee = {
   ...commun,
@@ -25,6 +35,7 @@ const alarme: LigneSecuriteAffichee = {
   etat: "pas_encore_declare",
   appareils: [],
   hrefAction: "/nouveau?categorie=ALARME_INCENDIE",
+  hrefAjouter: "/nouveau?categorie=ALARME_INCENDIE",
 };
 
 const secours: LigneSecuriteAffichee = {
@@ -35,6 +46,7 @@ const secours: LigneSecuriteAffichee = {
   etat: "ailleurs",
   appareils: [],
   hrefAction: "/e/etats-permanents#etat-secours-etablissement-materiel",
+  hrefAjouter: null,
 };
 
 const dae: LigneSecuriteAffichee = {
@@ -43,11 +55,9 @@ const dae: LigneSecuriteAffichee = {
   libelle: "Défibrillateur (DAE)",
   cible: { kind: "categorie", categorie: "DEFIBRILLATEUR" },
   etat: "declare",
-  appareils: [
-    { id: "a", libelle: "DAE accueil", signal: "1 à planifier", href: "/a" },
-    { id: "b", libelle: "DAE salle", signal: null, href: "/b" },
-  ],
+  appareils: [appareil("a", "DAE accueil", "/a"), appareil("b", "DAE salle", "/b")],
   hrefAction: null,
+  hrefAjouter: "/nouveau?categorie=DEFIBRILLATEUR",
 };
 
 describe("SectionEquipementsSecurite", () => {
@@ -65,9 +75,9 @@ describe("SectionEquipementsSecurite", () => {
     expect(lien.getAttribute("href")).toBe(secours.hrefAction);
   });
 
-  it("une ligne déclarée liste ses appareils et compte en chiffres tabulaires", () => {
-    const { container } = render(<SectionEquipementsSecurite lignes={[dae]} />);
-    expect(screen.getByRole("link", { name: "DAE accueil" }).getAttribute("href")).toBe("/a");
-    expect(container.querySelector(".tabular-nums")?.textContent).toBe("2");
+  it("une ligne déclarée montre ses appareils en cartes, comme le parc (2026-10-24)", () => {
+    render(<SectionEquipementsSecurite lignes={[dae]} />);
+    expect(screen.getByRole("link", { name: /DAE accueil/ }).getAttribute("href")).toBe("/a");
+    expect(screen.getByText(/2 équipements/)).toBeTruthy();
   });
 });

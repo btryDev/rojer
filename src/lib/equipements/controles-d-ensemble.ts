@@ -3,7 +3,7 @@ import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { obligationParId } from "@/lib/referentiels/conformite";
-import { classerVerification, type RegistreLigne } from "@/lib/calendrier/etats";
+import { aUnRendezVous, classerVerification, type RegistreLigne } from "@/lib/calendrier/etats";
 import { joindreDernieresRealisations } from "@/lib/rapports/joindre-realisations";
 import { STATUTS_ACTION_OUVERTE } from "@/lib/dates/retard";
 import { DOMAINE_DE_CATEGORIE } from "./domaines";
@@ -14,6 +14,8 @@ export type ControleDEnsemble = {
   libelle: string;
   datePrevue: Date;
   etat: RegistreLigne;
+  /** Faux : aucune échéance connue (aucun rapport) — la date n'en est pas une. */
+  echeanceConnue: boolean;
   pointsOuverts: number;
   /** Son domaine propre, celui sous lequel il se range en tête. */
   domaine: DomaineObligation;
@@ -67,6 +69,7 @@ export async function controlesDEnsemble(etablissementId: string, maintenant: Da
       libelle: v.libelleObligation,
       datePrevue: v.datePrevue,
       etat: classerVerification(v, maintenant),
+      echeanceConnue: aUnRendezVous(v, maintenant),
       pointsOuverts: v._count.actions,
       domaine: o.domaine,
       aussi: [...couverts],

@@ -1,8 +1,13 @@
 import { notFound } from "next/navigation";
-import { ControlesDEnsembleDuDomaine } from "@/components/equipements/ControlesDEnsembleDuDomaine";
+import {
+  AussiCouvertPar,
+  ControlesDEnsembleDuDomaine,
+  ancreDomaine,
+} from "@/components/equipements/ControlesDEnsembleDuDomaine";
 import { controlesDEnsemble } from "@/lib/equipements/controles-d-ensemble";
 import { DOMAINE_DE_CATEGORIE } from "@/lib/equipements/domaines";
 import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
+import { CarteRepliable } from "@/components/ui-kit/CarteRepliable";
 import { instantDuRendu } from "@/lib/dates/instant-du-rendu";
 import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
 import { EmptyState } from "@/components/layout/EmptyState";
@@ -193,6 +198,36 @@ export default async function EquipementsPage({
     equipements.map((eq) => [eq.id, resumerEquipement(etatsVerifs.get(eq.id))]),
   );
 
+  // Un appareil tel que les cartes de catégorie le montrent — le parc et
+  // « Équipements de sécurité » en lisent la même forme (2026-10-24).
+  const versAppareil = (eq: (typeof equipements)[number]): AppareilListe => ({
+    id: eq.id,
+    libelle: eq.libelle,
+    // Le « où » de la vitrine, à deux étages depuis l'ADR-019 : un
+    // bâtiment, et une précision dans ce bâtiment.
+    lieu: montrerBatiment ? nomDeZone(eq.batiment.nom) : eq.localisation,
+    precision: montrerBatiment ? eq.localisation : null,
+    resume: resumes.get(eq.id) ?? resumerEquipement(undefined),
+    // Le motif se pose AU-DESSUS des signaux, il ne les remplace pas :
+    // un appareil sans échéance à venir garde ses vérifications
+    // réalisées, et c'est la seule chose qu'il ait à montrer en cas de
+    // contrôle.
+    horsReferentiel: (() => {
+      const motif = sansEcheance.get(eq.id);
+      return motif
+        ? {
+            libelle: LIBELLE_SANS_ECHEANCE[motif],
+            // 2026-10-14 : la phrase propre au matériel non suivi.
+            explication: explicationSansEcheance(motif, eq.materielNonCouvert),
+          }
+        : null;
+    })(),
+    href: avecProvenance(`${base}/equipements/${eq.id}`, origine),
+  });
+  const parId = new Map(equipements.map((eq) => [eq.id, eq]));
+  const periodicitesDe = (liste: { id: string }[]) =>
+    liste.flatMap((eq) => etatsVerifs.get(eq.id)?.periodicites ?? []);
+
   // La section « Équipements de sécurité » (2026-10-15) se lit, comme les
   // suggestions, sur le parc ENTIER : un DAE déclaré dans une autre zone est
   // déclaré. Un regroupement d'affichage, rien de plus (`equipements-securite.ts`).
@@ -200,54 +235,28 @@ export default async function EquipementsPage({
     dossier
       ? lignesEquipementsSecurite(dossier.applicables, equipements, contexteFondementDe(etab))
       : []
-  ).map((l) => ({
-    ...l,
-    appareils: l.appareils.map((a) => ({
-      id: a.id,
-      libelle: a.libelle,
-      signal: resumes.get(a.id)?.signaux[0]?.libelle ?? null,
-      href: avecProvenance(`${base}/equipements/${a.id}`, origine),
-    })),
-    hrefAction: hrefActionSecurite(l, { base, hrefNouveau }),
-  }));
+  ).map((l) => {
+    const declares = l.appareils.flatMap((a) => {
+      const eq = parId.get(a.id);
+      return eq ? [eq] : [];
+    });
+    return {
+      ...l,
+      appareils: declares.map(versAppareil),
+      periodicites: periodicitesDe(declares),
+      hrefAction: hrefActionSecurite(l, { base, hrefNouveau }),
+      hrefAjouter: l.cible.kind === "categorie" ? hrefNouveau(l.cible.categorie) : null,
+    };
+  });
 
   // Une section par catégorie, la plus en peine en tête : sur un parc de
   // quinze appareils, l'ordre alphabétique enterrait le seul retard.
   const sections = [...parCategorie.entries()]
-    .map(([categorie, liste]) => {
-      const appareils: AppareilListe[] = liste.map((eq) => ({
-        id: eq.id,
-        libelle: eq.libelle,
-        // Le « où » de la vitrine, à deux étages depuis l'ADR-019 : un
-        // bâtiment, et une précision dans ce bâtiment.
-        lieu: montrerBatiment ? nomDeZone(eq.batiment.nom) : eq.localisation,
-        precision: montrerBatiment ? eq.localisation : null,
-        resume: resumes.get(eq.id) ?? resumerEquipement(undefined),
-        // Le motif se pose AU-DESSUS des signaux, il ne les remplace pas :
-        // un appareil sans échéance à venir garde ses vérifications
-        // réalisées, et c'est la seule chose qu'il ait à montrer en cas de
-        // contrôle.
-        horsReferentiel: (() => {
-          const motif = sansEcheance.get(eq.id);
-          return motif
-            ? {
-                libelle: LIBELLE_SANS_ECHEANCE[motif],
-                // 2026-10-14 : la phrase propre au matériel non suivi.
-                explication: explicationSansEcheance(motif, eq.materielNonCouvert),
-              }
-            : null;
-        })(),
-        href: avecProvenance(`${base}/equipements/${eq.id}`, origine),
-      }));
-      const periodicites = liste.flatMap(
-        (eq) => etatsVerifs.get(eq.id)?.periodicites ?? [],
-      );
-      return {
-        categorie: categorie as CategorieEquipement,
-        appareils,
-        periodicites,
-      };
-    })
+    .map(([categorie, liste]) => ({
+      categorie: categorie as CategorieEquipement,
+      appareils: liste.map(versAppareil),
+      periodicites: periodicitesDe(liste),
+    }))
     .sort(
       (a, b) => urgenceCategorie(b.appareils) - urgenceCategorie(a.appareils),
     );
@@ -352,15 +361,34 @@ export default async function EquipementsPage({
           // Les catégories rangées sous leur domaine (lot 2, 2026-10-24), le
           // domaine le plus en peine en tête — l'ordre de sa première
           // catégorie. En tête de chaque domaine, ses contrôles d'ensemble.
-          parDomaine(sections).map(({ domaine, sections: ss }) => (
-            <section key={domaine ?? "autre"} className="flex flex-col gap-6">
-              <p className="board-eyebrow m-0 border-b border-[color:var(--board-slate-line)] pb-2 text-[11px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-                {domaine ? LABEL_DOMAINE[domaine] : "Autres équipements"}
-              </p>
+          parDomaine(sections).map(({ domaine, sections: ss }, i, tous) => {
+            const propres = domaine ? ensembles.filter((c) => c.domaine === domaine) : [];
+            const nbAppareils = ss.reduce((n, s) => n + s.appareils.length, 0);
+            const depassees =
+              ss.reduce(
+                (n, s) =>
+                  n +
+                  s.appareils.reduce(
+                    (m, a) => m + (a.resume.signaux.find((g) => g.cle === "enRetard")?.nb ?? 0),
+                    0,
+                  ),
+                0,
+              ) + propres.filter((c) => c.etat === "enRetard").length;
+            return (
+            // Un domaine = une carte repliable, la forme d'« Équipements de
+            // sécurité » (décision de la propriétaire du 2026-10-24) ; le plus
+            // en peine s'ouvre.
+            <CarteRepliable
+              key={domaine ?? "autre"}
+              id={domaine ? ancreDomaine(domaine) : undefined}
+              titre={domaine ? LABEL_DOMAINE[domaine] : "Autres équipements"}
+              compte={`${nbAppareils} équipement${nbAppareils > 1 ? "s" : ""}`}
+              alerte={depassees > 0 ? `${depassees} ${depassees > 1 ? "dépassées" : "dépassée"}` : null}
+              ouverte={i === 0}
+            >
               {domaine && (
                 <ControlesDEnsembleDuDomaine
-                  propres={ensembles.filter((c) => c.domaine === domaine)}
-                  aussi={ensembles.filter((c) => c.aussi.includes(domaine))}
+                  controles={propres}
                   etablissementId={id}
                   provenance={origine}
                 />
@@ -374,8 +402,23 @@ export default async function EquipementsPage({
                   hrefAjouter={hrefNouveau(s.categorie)}
                 />
               ))}
-            </section>
-          ))
+              {domaine && (
+                <AussiCouvertPar
+                  controles={ensembles.filter((c) => c.aussi.includes(domaine))}
+                  domainesAffiches={
+                    new Set(
+                      tous
+                        .map((g) => g.domaine)
+                        .filter((d): d is DomaineObligation => d !== null && ensembles.some((c) => c.domaine === d)),
+                    )
+                  }
+                  etablissementId={id}
+                  provenance={origine}
+                />
+              )}
+            </CarteRepliable>
+            );
+          })
         )}
       </div>
     </main>

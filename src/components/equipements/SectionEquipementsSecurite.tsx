@@ -7,28 +7,29 @@
 // interdits 16 et 17). La logique vit dans `equipements-securite.ts`, pure et
 // testée ; ce composant ne fait que la poser, depuis un seul modèle de vue
 // que la page construit (revue c6, point 5).
+//
+// [2026-10-24, décision de la propriétaire] Une carte repliable comme les
+// domaines du parc, et dedans les MÊMES cartes de catégorie (CarteCategorie) :
+// une seule charte sur la page.
 
 import Link from "next/link";
-import { BriefcaseMedical, Plus } from "lucide-react";
-import { MarqueCategorie, MarqueIcone } from "@/components/equipements/MarqueCategorie";
+import { BriefcaseMedical } from "lucide-react";
+import { CarteCategorie, type AppareilListe } from "@/components/equipements/CarteCategorie";
+import { MarqueIcone } from "@/components/equipements/MarqueCategorie";
 import { PastilleFondement } from "@/components/etats-permanents/PastilleFondement";
 import { buttonVariants } from "@/components/ui/button";
-import { LignesFiche, LigneFiche, PastilleFiche } from "@/components/ui-kit";
+import { CarteRepliable } from "@/components/ui-kit/CarteRepliable";
 import type { LigneEquipementSecurite } from "@/lib/equipements/equipements-securite";
+import type { Periodicite } from "@/lib/referentiels/types-communs";
 
-export type AppareilAffiche = {
-  id: string;
-  libelle: string;
-  /** Le premier signal de l'appareil (« 1 à planifier »), ou `null`. */
-  signal: string | null;
-  href: string;
-};
-
-/** Une ligne prête à poser : ses appareils affichables et l'adresse de son geste. */
+/** Une ligne prête à poser : ses appareils, comme le parc les montre. */
 export type LigneSecuriteAffichee = Omit<LigneEquipementSecurite, "appareils"> & {
-  appareils: AppareilAffiche[];
-  /** « Ajouter » ou « Déclarer » (`hrefActionSecurite`) ; `null` si déclaré. */
+  appareils: AppareilListe[];
+  periodicites: Periodicite[];
+  /** « Déclarer » (`hrefActionSecurite`) pour le matériel hors parc ; l'ajout
+   *  d'un appareil de la catégorie sinon. */
   hrefAction: string | null;
+  hrefAjouter: string | null;
 };
 
 export function SectionEquipementsSecurite({
@@ -37,89 +38,69 @@ export function SectionEquipementsSecurite({
   lignes: LigneSecuriteAffichee[];
 }) {
   if (lignes.length === 0) return null;
+  const aDeclarer = lignes.filter((l) => l.etat !== "declare").length;
 
+  // Ouverte tant qu'un matériel obligatoire reste à déclarer.
   return (
-    <section className="carte-board pt-6" aria-labelledby="equipements-securite">
-      <div className="px-7 pb-3 sm:px-8">
-        <h2 id="equipements-securite" className="board-titre m-0 text-[22px]">
-          Équipements de sécurité
-        </h2>
-        <p className="m-0 mt-2 max-w-[62ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-          Le matériel dont un texte exige la présence dans votre établissement.
-          Cette liste dit ce qui est déclaré dans Rojer, pas ce qui est en place
-          chez vous : une déclaration n&apos;est pas une vérification.
-        </p>
-      </div>
+    <CarteRepliable
+      titre="Équipements de sécurité"
+      compte={`${lignes.length} obligatoire${lignes.length > 1 ? "s" : ""}`}
+      alerte={aDeclarer > 0 ? `${aDeclarer} à déclarer` : null}
+      ouverte={aDeclarer > 0}
+    >
+      {/* Une ligne (2026-10-24). « Déclaré » reste un fait de saisie, jamais
+          un verdict (ADR-027). */}
+      <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+        Le matériel qu&apos;un texte vous impose ici — déclaré dans Rojer ne veut pas dire vérifié.
+      </p>
 
-      <LignesFiche>
-        {lignes.map((l) => (
-          <LigneFiche
-            key={l.obligationId}
-            tuile={
-              l.cible.kind === "categorie" ? (
-                <MarqueCategorie categorie={l.cible.categorie} taille={44} />
-              ) : (
-                <MarqueIcone icone={BriefcaseMedical} label={l.libelle} taille={44} />
-              )
-            }
-            surtitre={l.aConfirmer ? "À confirmer ici" : "Obligatoire ici"}
-            titre={
-              <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                {l.libelle}
-                {l.fondement ? <PastilleFondement fondement={l.fondement} /> : null}
+      {lignes.map((l) => {
+        const mention = (
+          <>
+            {l.aConfirmer ? (
+              <span className="board-eyebrow text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
+                À confirmer ici
               </span>
-            }
-            detail={
-              l.etat === "declare" ? (
-                <span className="flex flex-col gap-1">
-                  {l.appareils.map((a) => (
-                    <span key={a.id}>
-                      <Link
-                        href={a.href}
-                        className="font-medium text-[color:var(--board-ink)] underline decoration-[color:var(--board-slate)] underline-offset-2 hover:text-[color:var(--board-blue-ink)]"
-                      >
-                        {a.libelle}
-                      </Link>
-                      {" — "}
-                      {a.signal ?? "aucune vérification rattachée"}
-                    </span>
-                  ))}
-                </span>
-              ) : l.etat === "pas_encore_declare" ? (
-                "Aucun appareil de cette catégorie n'est déclaré dans Rojer."
-              ) : (
-                "Ce matériel se déclare sur l'écran « Ce qui doit être en place »."
-              )
-            }
-            droite={
-              l.hrefAction === null ? (
-                <PastilleFiche ton="bleu">
-                  <span className="tabular-nums">{l.appareils.length}</span> déclaré
-                  {l.appareils.length > 1 ? "s" : ""}
-                </PastilleFiche>
-              ) : (
-                <Link
-                  href={l.hrefAction}
-                  className={buttonVariants({ variant: "boardClair", size: "boardSm" })}
-                >
-                  {l.cible.kind === "categorie" ? (
-                    <>
-                      <Plus aria-hidden />
-                      Ajouter
-                    </>
-                  ) : (
-                    "Déclarer"
-                  )}
-                  {/* Le libellé de la ligne, pas celui de la catégorie : le
-                      bouton dit ce que la ligne affiche (contrôle visuel E3). */}
+            ) : null}
+            {l.fondement ? <PastilleFondement fondement={l.fondement} /> : null}
+          </>
+        );
+        return l.cible.kind === "categorie" && l.hrefAjouter ? (
+          <CarteCategorie
+            key={l.obligationId}
+            categorie={l.cible.categorie}
+            titre={l.libelle}
+            mention={mention}
+            appareils={l.appareils}
+            periodicites={l.periodicites}
+            hrefAjouter={l.hrefAjouter}
+          />
+        ) : (
+          // Le matériel qui ne se déclare pas au parc (premiers secours) :
+          // l'en-tête d'une carte de catégorie, et son geste.
+          <section key={l.obligationId}>
+            <div className="flex items-center gap-3.5 border-b border-[color:var(--board-slate-line)] pb-3.5">
+              <MarqueIcone icone={BriefcaseMedical} label={l.libelle} taille={44} />
+              <div className="min-w-0 flex-1">
+                <h2 className="board-titre m-0 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[22px]">
+                  {l.libelle}
+                  {mention}
+                </h2>
+                <p className="m-0 mt-1 text-[12.5px] text-[color:var(--board-slate-mid)]">
+                  Ce matériel se déclare sur l&apos;écran « Ce qui doit être en place ».
+                </p>
+              </div>
+              {l.hrefAction ? (
+                <Link href={l.hrefAction} className={buttonVariants({ variant: "boardClair", size: "boardSm" })}>
+                  Déclarer
                   <span className="sr-only"> — {enMinuscule(l.libelle)}</span>
                 </Link>
-              )
-            }
-          />
-        ))}
-      </LignesFiche>
-    </section>
+              ) : null}
+            </div>
+          </section>
+        );
+      })}
+    </CarteRepliable>
   );
 }
 

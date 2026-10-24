@@ -1,77 +1,105 @@
 import Link from "next/link";
 import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
 import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
-import { CHAMP_ETAT, libelleEtatCourtCapitale } from "@/lib/calendrier/etats";
+import { CHAMP_ETAT, LIBELLE_ETAT } from "@/lib/calendrier/etats";
 import { formaterDateCourteFr } from "@/lib/dates";
 import { nombreDePoints } from "@/lib/points-a-corriger/libelles";
 import { avecProvenance } from "@/lib/navigation/provenance";
 import type { ControleDEnsemble } from "@/lib/equipements/controles-d-ensemble";
 
+/** L'ancre d'un domaine sur la page Équipements. */
+export const ancreDomaine = (d: DomaineObligation) => `domaine-${d}`;
+
+const lien = "font-semibold text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline";
+
+/** Ce qu'un contrôle d'ensemble dit de son état, au singulier. */
+function etatDuControle(c: ControleDEnsemble): string {
+  if (!c.echeanceConnue) {
+    return c.etat === "enRetard" ? "Aucune vérification enregistrée" : "À planifier";
+  }
+  const mot = LIBELLE_ETAT[c.etat].un;
+  return `${mot.charAt(0).toUpperCase()}${mot.slice(1)} · ${formaterDateCourteFr(c.datePrevue)}`;
+}
+
 /**
- * En tête d'un domaine de la page Équipements : ses contrôles d'ensemble
- * (points à corriger, lot 2 — ADR-048), et ceux d'un autre domaine qui le
- * couvrent aussi, en lien court. Rien s'il n'y en a aucun.
+ * En tête d'un domaine de la page Équipements, ses contrôles d'ensemble
+ * (points à corriger, lot 2 — ADR-048). Rien s'il n'en a pas.
  */
 export function ControlesDEnsembleDuDomaine({
-  propres,
-  aussi,
+  controles,
   etablissementId,
   provenance,
 }: {
-  propres: ControleDEnsemble[];
-  /** Les contrôles d'un autre domaine qui couvrent celui-ci. */
-  aussi: ControleDEnsemble[];
+  controles: ControleDEnsemble[];
   etablissementId: string;
   provenance: string;
 }) {
-  if (propres.length === 0 && aussi.length === 0) return null;
-  const href = (c: ControleDEnsemble) =>
-    avecProvenance(`/etablissements/${etablissementId}/verifications/${c.id}`, provenance);
+  if (controles.length === 0) return null;
   return (
     <div className="rounded-[22px] bg-[color:var(--board-slate-pale)] px-6 py-4">
-      {propres.length > 0 && (
-        <>
-          <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
-            {propres.length > 1 ? "Contrôles d'ensemble" : "Contrôle d'ensemble"}
-          </p>
-          <ul className="m-0 mt-2 flex list-none flex-col gap-2 p-0">
-            {propres.map((c) => (
-              <li key={c.id} className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <span
-                  aria-hidden
-                  className="inline-block size-2.5 flex-none rounded-full"
-                  style={{ background: CHAMP_ETAT[c.etat] }}
-                />
-                <Link
-                  href={href(c)}
-                  className="text-[13.5px] font-semibold text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline"
-                >
-                  {c.libelle}
-                </Link>
-                <span className="text-[12.5px] text-[color:var(--board-slate-mid)]">
-                  {libelleEtatCourtCapitale(c.etat)}
-                  {c.etat !== "aPlanifier" ? ` · ${formaterDateCourteFr(c.datePrevue)}` : ""}
-                  {c.pointsOuverts > 0 ? ` · ${nombreDePoints(c.pointsOuverts)}` : ""}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-      {aussi.length > 0 && (
-        <p className={"m-0 text-[12.5px] text-[color:var(--board-slate-mid)]" + (propres.length > 0 ? " mt-3" : "")}>
-          Aussi couvert par{" "}
-          {aussi.map((c, i) => (
-            <span key={c.id}>
-              {i > 0 ? ", " : ""}
-              <Link href={href(c)} className="font-semibold text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline">
-                {c.libelle}
-              </Link>
-              <span> ({LABEL_DOMAINE[c.domaine as DomaineObligation]})</span>
+      <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
+        {controles.length > 1 ? "Contrôles d'ensemble" : "Contrôle d'ensemble"}
+      </p>
+      <ul className="m-0 mt-2 flex list-none flex-col gap-2 p-0">
+        {controles.map((c) => (
+          <li key={c.id} className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span aria-hidden className="inline-block size-2.5 flex-none rounded-full" style={{ background: CHAMP_ETAT[c.etat] }} />
+            <Link
+              href={avecProvenance(`/etablissements/${etablissementId}/verifications/${c.id}`, provenance)}
+              className={`text-[13.5px] ${lien}`}
+            >
+              {c.libelle}
+            </Link>
+            <span className="text-[12.5px] text-[color:var(--board-slate-mid)]">
+              {etatDuControle(c)}
+              {c.pointsOuverts > 0 ? ` · ${nombreDePoints(c.pointsOuverts)}` : ""}
             </span>
-          ))}
-        </p>
-      )}
+          </li>
+        ))}
+      </ul>
     </div>
+  );
+}
+
+/**
+ * En pied d'un domaine : les contrôles d'ensemble d'AUTRES domaines qui le
+ * couvrent, nommés par leur domaine (un nom court, une fois chacun), en lien
+ * vers ce domaine sur la page — ou vers le contrôle, si son domaine n'y est
+ * pas (contrôle visuel du 2026-10-24 : les titres longs se répétaient).
+ */
+export function AussiCouvertPar({
+  controles,
+  domainesAffiches,
+  etablissementId,
+  provenance,
+}: {
+  controles: ControleDEnsemble[];
+  domainesAffiches: ReadonlySet<DomaineObligation>;
+  etablissementId: string;
+  provenance: string;
+}) {
+  const parDomaine = new Map<DomaineObligation, ControleDEnsemble>();
+  for (const c of controles) if (!parDomaine.has(c.domaine)) parDomaine.set(c.domaine, c);
+  if (parDomaine.size === 0) return null;
+  return (
+    <p className="m-0 text-[12.5px] text-[color:var(--board-slate-mid)]">
+      Aussi vérifié par les contrôles d&apos;ensemble{" "}
+      {[...parDomaine.entries()].map(([d, c], i) => (
+        <span key={d}>
+          {i > 0 ? ", " : ""}
+          <Link
+            href={
+              domainesAffiches.has(d)
+                ? `#${ancreDomaine(d)}`
+                : avecProvenance(`/etablissements/${etablissementId}/verifications/${c.id}`, provenance)
+            }
+            className={lien}
+          >
+            {LABEL_DOMAINE[d]}
+          </Link>
+        </span>
+      ))}
+      .
+    </p>
   );
 }
