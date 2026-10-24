@@ -1,12 +1,10 @@
-import { FilAriane } from "@/components/navigation/FilAriane";
-import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
 import { listerQuandCaArrive } from "@/lib/quand-ca-arrive/lignes";
 import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
 import { AideEcran } from "@/components/ui-kit/AideEcran";
 import { TexteSource } from "@/components/ui-kit/TexteSource";
-import { OngletsEnPlace } from "@/components/etats-permanents/OngletsEnPlace";
+import { HeroEnPlace } from "@/components/etats-permanents/HeroEnPlace";
 import { ChevronRepli } from "@/components/ui/repli";
 
 export const metadata = {
@@ -29,12 +27,16 @@ export const metadata = {
  * Elle ne dit pas non plus que rien n'est dû en ce moment — le produit ne sait
  * pas si le fait est survenu. D'où le chapeau, et l'absence de tout vert.
  */
-export default async function QuandCaArrivePage({
+export default async function EnCasDePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ decoupe?: string }>;
 }) {
   const { id } = await params;
+  // La découpe de l'autre onglet, reconduite par les liens d'onglet.
+  const { decoupe } = await searchParams;
   const { etablissement } = await requireEtablissement(id);
   const equipements = await listerEquipementsDeLEtablissement(id);
   const groupes = listerQuandCaArrive(
@@ -52,50 +54,36 @@ export default async function QuandCaArrivePage({
 
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
-      <header className="border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] py-[22px]">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <FilAriane
-              crumbs={[
-                { href: `/etablissements/${id}`, label: etablissement.raisonDisplay },
-                { href: `/etablissements/${id}/etats-permanents`, label: LABEL_ITEM["etats-permanents"] },
-                { label: "En cas de…" },
-              ]}
-            />
-            <h1 className="board-titre m-0 text-[clamp(22px,2.2vw,27px)]">
-              {LABEL_ITEM["etats-permanents"]}
-            </h1>
-            <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-              Ce que vous devez faire quand un événement se produit : une
-              embauche, un accident, une livraison, une canicule…
-            </p>
-          </div>
-          <AideEcran titre="Comment lire cette page">
-            <p className="m-0">
-              Ces obligations n&apos;ont pas de date : elles deviennent dues
-              quand un fait survient — une embauche, une première affectation à
-              un travail sur écran, une opération de chargement ou de
-              déchargement par une entreprise extérieure, la fin de certains
-              arrêts de travail, un accident du travail grave, un épisode de
-              chaleur intense.
-            </p>
-            <p className="m-0">
-              Rojer ne sait pas quand ce fait arrive ; il ne peut donc ni vous
-              le rappeler, ni vous dire où vous en êtes. Il vous dit la règle,
-              pour que vous la connaissiez le jour venu.
-            </p>
-            <p className="m-0">
-              Cliquez sur un événement pour voir ce qu&apos;il rend dû ; le
-              livre ouvre ensuite le texte exact et ses articles. Ce qu&apos;un
-              fait rend dû à une personne ou à un appareil se lit sur sa fiche,
-              dans Équipe et dans Équipements.
-            </p>
-          </AideEcran>
-        </div>
-        <div className="mt-5">
-          <OngletsEnPlace etablissementId={id} actif="evenement" />
-        </div>
-      </header>
+      <HeroEnPlace
+        etablissementId={id}
+        raisonDisplay={etablissement.raisonDisplay}
+        actif="evenement"
+        decoupe={decoupe === "geste" ? "geste" : undefined}
+        intro="Ce que vous devez faire quand un événement se produit : une embauche, un accident, une livraison, une canicule…"
+        outils={
+            <AideEcran titre="Comment lire cette page">
+              <p className="m-0">
+                Ces obligations n&apos;ont pas de date : elles deviennent dues
+                quand un fait survient — une embauche, une première affectation à
+                un travail sur écran, une opération de chargement ou de
+                déchargement par une entreprise extérieure, la fin de certains
+                arrêts de travail, un accident du travail grave, un épisode de
+                chaleur intense.
+              </p>
+              <p className="m-0">
+                Rojer ne sait pas quand ce fait arrive ; il ne peut donc ni vous
+                le rappeler, ni vous dire où vous en êtes. Il vous dit la règle,
+                pour que vous la connaissiez le jour venu.
+              </p>
+              <p className="m-0">
+                Cliquez sur un événement pour voir ce qu&apos;il rend dû ; le
+                livre ouvre ensuite le texte exact et ses articles. Ce qu&apos;un
+                fait rend dû à une personne ou à un appareil se lit sur sa fiche,
+                dans Équipe et dans Équipements.
+              </p>
+            </AideEcran>
+        }
+      />
 
       <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
         {groupes.length === 0 ? (

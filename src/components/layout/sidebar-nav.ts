@@ -270,8 +270,6 @@ export function deduireActif(
   if (pathname.startsWith(`${base}/plan-prevention`)) return "plan-prevention";
   if (pathname.startsWith(`${base}/carnet-sanitaire`)) return "carnet-sanitaire";
   if (pathname.startsWith(`${base}/etats-permanents`)) return "etats-permanents";
-  // L'ancienne adresse de « Quand ça arrive » redirige vers l'onglet.
-  if (pathname.startsWith(`${base}/quand-ca-arrive`)) return "etats-permanents";
   if (pathname.startsWith(`${base}/controle`)) return "controle";
   if (pathname.startsWith(`${base}/duerp`)) return "duerp";
   if (pathname.startsWith(`${base}/guide`)) return "guide";

@@ -1,3 +1,4 @@
+import { LABEL_SURFACE_EN_CAS_DE } from "@/lib/etats-permanents/libelles-onglets";
 // Textes de la grille et du dossier de relecture
 // (`scripts/generer-grille-equipements.tsx`), sortis du script pour être
 // testés : le script rend un PDF dès qu'on l'importe.
@@ -352,7 +353,8 @@ export function pourHelvetica(s: string): string {
 export const LIBELLE_SURFACE: Record<Surface, string> = {
   calendrier: "Calendrier",
   etats_permanents: "Ce qui doit être en place",
-  faits: "En cas de…",
+  // L'écran et son onglet, nommés comme la fiche salarié (`LABEL_SURFACE_EN_CAS_DE`).
+  faits: LABEL_SURFACE_EN_CAS_DE,
   niveau_audit: "Ce que Rojer ne couvre pas (niveau audit)",
   fiche_salarie: "Fiche salarié",
 };

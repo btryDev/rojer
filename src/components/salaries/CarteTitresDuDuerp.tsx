@@ -4,6 +4,7 @@ import { formaterDateLongueFr } from "@/lib/dates";
 import type { QuestionDeLaFiche } from "@/lib/salaries/titres-du-duerp";
 import type { ReponseTransverse } from "@/lib/transverses/etat";
 import { ReferenceFondatrice } from "./ReferenceFondatrice";
+import { LABEL_SURFACE_EN_CAS_DE } from "@/lib/etats-permanents/libelles-onglets";
 
 /**
  * CE QUE LE DUERP REND DÛ À UNE PARTIE DE L'EFFECTIF (ADR-038).
@@ -40,7 +41,7 @@ export function phraseFormation(reponse: ReponseTransverse, nature: string): str
   if (reponse === "non") {
     return "Retirée de vos obligations : vous avez répondu non. Si cette personne est pourtant concernée, corrigez la réponse.";
   }
-  const ecran = nature === "evenementielle" ? "Ce qui doit être en place › En cas de…" : "Ce qui doit être en place";
+  const ecran = nature === "evenementielle" ? LABEL_SURFACE_EN_CAS_DE : "Ce qui doit être en place";
   const suivi = reponse === "oui" ? `Suivie dans « ${ecran} ».` : `Affichée « à confirmer » dans « ${ecran} » tant que vous n'avez pas répondu.`;
   return `Formation que l'établissement organise pour les travailleurs concernés — à faire suivre à cette personne si elle l'est. ${suivi}`;
 }

@@ -660,9 +660,12 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     la fonction ne lit aucune horloge, et le réconciliateur ne garde que ses
     protections. La bascule est en production depuis le 2026-09-19 (moteur 3)
 37. **037** — Dire ce qu'un fait rend dû, sans jamais le dater : la page
-    « Quand ça arrive » sert les obligations événementielles du porteur
+    ~~« Quand ça arrive »~~ [2026-10-24 : l'onglet « En cas de… » de « Ce qui
+    doit être en place »] sert les obligations événementielles du porteur
     établissement — ni date, ni état, ni compteur (**fusionnée le 2026-09-21**,
-    `cf5ae396` ; l'issue de ses quatre questions du § 7 n'est écrite nulle part)
+    `cf5ae396` ; ~~l'issue de ses quatre questions du § 7 n'est écrite nulle
+    part~~ [2026-10-24 : Q1 tranchée, amendement en tête de l'ADR ; Q2 à Q4 à
+    confirmer])
 38. **038** — Ce que le DUERP rend dû à une partie de l'effectif : une
     question transverse du DUERP déclenche des titres (`declencheTitres`),
     carte « Formations liées aux risques du poste » sur la fiche salarié

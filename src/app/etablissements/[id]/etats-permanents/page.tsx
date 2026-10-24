@@ -1,13 +1,10 @@
-import { FilAriane } from "@/components/navigation/FilAriane";
 import { AideEcran } from "@/components/ui-kit/AideEcran";
-import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
 import {
   listerEtatsPermanents,
   type LigneEtatPermanent,
 } from "@/lib/etats-permanents/queries";
-import Image from "next/image";
 import Link from "next/link";
 import { LigneCompacte } from "@/components/etats-permanents/LigneCompacte";
 import { RevueEnPlace } from "@/components/etats-permanents/RevueEnPlace";
@@ -24,7 +21,8 @@ import {
   SectionsParUsage,
 } from "@/components/etats-permanents/SectionsParUsage";
 import { compteDeLaPage } from "@/lib/etats-permanents/compte";
-import { OngletsEnPlace } from "@/components/etats-permanents/OngletsEnPlace";
+import { HeroEnPlace } from "@/components/etats-permanents/HeroEnPlace";
+import { OngletsPage } from "@/components/ui-kit/OngletsPage";
 import { manquesDeLaFiche } from "@/lib/etablissements/guide-par-module";
 import { FocusSurAncre } from "@/components/etats-permanents/FocusSurAncre";
 import {
@@ -34,8 +32,6 @@ import {
 } from "@/lib/etats-permanents/phrases";
 
 /** La photo du hero. Seule référence au fichier (`public/photos/README.md`). */
-const PHOTO_HERO = { src: "/photos/hero-en-place.jpg" } as const;
-
 export const metadata = {
   title: "Ce qui doit être en place — Rojer",
 };
@@ -196,100 +192,75 @@ export default async function EtatsPermanentsPage({
   return (
     <RevueEnPlace etablissementId={id} lignes={lignesFiche}>
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
-      {/* LE HERO (2026-10-20) : pleine largeur, le texte à gauche dans la
-          gouttière du board, la photo jusqu'au bord droit. Photo décorative —
-          ce qu'elle évoque est écrit à côté (`public/photos/README.md`). */}
-      <header className="grid border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] md:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
-        <div className="flex min-w-0 flex-col justify-center gap-5 py-9 pl-[var(--board-gutter)] pr-[var(--board-gutter)] md:pr-10">
-          <div className="min-w-0">
-            <FilAriane
-              crumbs={[
-                { href: `/etablissements/${id}`, label: etablissement.raisonDisplay },
-                { label: LABEL_ITEM["etats-permanents"] },
-              ]}
-            />
-            <h1 className="board-titre m-0 text-[clamp(29px,3vw,39px)]">
-              Ce qui doit être en place
-            </h1>
-            <p className="m-0 mt-3 max-w-[62ch] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-              Ce qui doit exister chez vous en permanence. Touchez une ligne
-              pour ouvrir sa fiche et la déclarer.
-            </p>
-            <div className="mt-5">
-              <OngletsEnPlace etablissementId={id} actif="permanence" />
-            </div>
-          </div>
+      <HeroEnPlace
+        etablissementId={id}
+        raisonDisplay={etablissement.raisonDisplay}
+        actif="permanence"
+        decoupe={parGeste ? "geste" : undefined}
+        intro="Ce qui doit exister chez vous en permanence. Touchez une ligne pour ouvrir sa fiche et la déclarer."
+        outils={
+          <>
+              <AideEcran titre="Comment lire cette page">
+                <p className="m-0">
+                  Des obligations sans date : elles ne se refont pas à échéance, il
+                  s&apos;agit d&apos;un état à mettre en place puis à maintenir. Une
+                  bonne partie est sans doute déjà vraie chez vous — de l&apos;eau au
+                  robinet, des toilettes, une affiche au mur.
+                </p>
+                <p className="m-0">
+                  Passez-les en revue : ce que vous n&apos;aurez pas déclaré dira ce
+                  qu&apos;il vous reste à faire. Une déclaration est la vôtre :
+                  Rojer ne vérifie pas qu&apos;une chose est en place.
+                </p>
+                <p className="m-0">
+                  Le livre « Texte » de chaque ligne ouvre l&apos;article qui la
+                  fonde, avec le lien vers la source officielle.
+                </p>
+                <p className="m-0">
+                  Rien n&apos;est relancé : la date de votre déclaration
+                  s&apos;affiche, vous jugez vous-même si elle a vieilli. Dans le
+                  dossier de conformité, une ligne que vous n&apos;avez pas déclarée
+                  n&apos;est pas présentée comme un manquement.
+                </p>
+                <p className="m-0">
+                  Cette page reflète ce que vous avez renseigné sur votre
+                  établissement, vos équipements et vos salariés : une information
+                  manquante ou inexacte change ce qui s&apos;y affiche.
+                </p>
+              </AideEcran>
+              {/*
+                Le compteur est MESURÉ, jamais écrit à la main : `listerEtatsPermanents`
+                le calcule sur ce que le moteur rend pour CE dossier. Le brief l'exige,
+                et ce dépôt s'est fait prendre plusieurs fois par des comptes recopiés —
+                jusque dans les briefs eux-mêmes, trois fois sur cette page.
 
-          <div className="flex flex-wrap items-center justify-between gap-4">
-
-          <AideEcran titre="Comment lire cette page">
-            <p className="m-0">
-              Des obligations sans date : elles ne se refont pas à échéance, il
-              s&apos;agit d&apos;un état à mettre en place puis à maintenir. Une
-              bonne partie est sans doute déjà vraie chez vous — de l&apos;eau au
-              robinet, des toilettes, une affiche au mur.
-            </p>
-            <p className="m-0">
-              Passez-les en revue : ce que vous n&apos;aurez pas déclaré dira ce
-              qu&apos;il vous reste à faire. Une déclaration est la vôtre :
-              Rojer ne vérifie pas qu&apos;une chose est en place.
-            </p>
-            <p className="m-0">
-              Le livre « Texte » de chaque ligne ouvre l&apos;article qui la
-              fonde, avec le lien vers la source officielle.
-            </p>
-            <p className="m-0">
-              Rien n&apos;est relancé : la date de votre déclaration
-              s&apos;affiche, vous jugez vous-même si elle a vieilli. Dans le
-              dossier de conformité, une ligne que vous n&apos;avez pas déclarée
-              n&apos;est pas présentée comme un manquement.
-            </p>
-            <p className="m-0">
-              Cette page reflète ce que vous avez renseigné sur votre
-              établissement, vos équipements et vos salariés : une information
-              manquante ou inexacte change ce qui s&apos;y affiche.
-            </p>
-          </AideEcran>
-
-          {/*
-            Le compteur est MESURÉ, jamais écrit à la main : `listerEtatsPermanents`
-            le calcule sur ce que le moteur rend pour CE dossier. Le brief l'exige,
-            et ce dépôt s'est fait prendre plusieurs fois par des comptes recopiés —
-            jusque dans les briefs eux-mêmes, trois fois sur cette page.
-
-            « déclarés en place par vous », jamais « conformes » : le produit
-            assiste, il ne certifie pas (CLAUDE.md, règle 8). C'est ici, et
-            ici SEULEMENT, que l'écran dit qui affirme « en place » : les
-            familles et le sommaire ne portent que « x sur n » (2026-10-17,
-            revue de c6 ; ADR-027, amendement du 2026-10-17, § 10).
-          */}
-          {/* `compteDeLaPage` : la même lecture que le widget du tableau de
-              bord, qui affiche ce compte au-dessus de ses familles. */}
-          <CompteurDeLaPage {...compteDeLaPage(dossier)} />
-          </div>
-          {texteFiche && (
-            <p className="m-0 max-w-[62ch] text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-              {texteFiche}{" "}
-              <Link
-                href={`/etablissements/${id}/modifier`}
-                className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
-              >
-                Compléter la fiche
-              </Link>
-            </p>
-          )}
-        </div>
-        <figure className="relative m-0 hidden min-h-[300px] md:block">
-          <Image
-            src={PHOTO_HERO.src}
-            alt=""
-            fill
-            sizes="(min-width: 768px) 55vw, 100vw"
-            className="object-cover"
-            priority
-          />
-        </figure>
-      </header>
+                « déclarés en place par vous », jamais « conformes » : le produit
+                assiste, il ne certifie pas (CLAUDE.md, règle 8). C'est ici, et
+                ici SEULEMENT, que l'écran dit qui affirme « en place » : les
+                familles et le sommaire ne portent que « x sur n » (2026-10-17,
+                revue de c6 ; ADR-027, amendement du 2026-10-17, § 10).
+              */}
+              {/* `compteDeLaPage` : la même lecture que le widget du tableau de
+                  bord, qui affiche ce compte au-dessus de ses familles. */}
+              <CompteurDeLaPage {...compteDeLaPage(dossier)} />
+          </>
+        }
+        apres={
+          <>
+              {texteFiche && (
+                <p className="m-0 max-w-[62ch] text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+                  {texteFiche}{" "}
+                  <Link
+                    href={`/etablissements/${id}/modifier`}
+                    className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
+                  >
+                    Compléter la fiche
+                  </Link>
+                </p>
+              )}
+          </>
+        }
+      />
 
       <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
         {/* Vide seulement quand il n'y a NI état NI fait : la page testait
@@ -311,29 +282,15 @@ export default async function EtatsPermanentsPage({
           </section>
         ) : (
           <>
-            <nav aria-label="Découpe" className="flex">
-              <div className="inline-flex rounded-full bg-[color:var(--board-slate-pale)] p-1">
-                {[
-                  { href: `/etablissements/${id}/etats-permanents`, label: "Par famille", actif: !parGeste },
-                  { href: `/etablissements/${id}/etats-permanents?decoupe=geste`, label: "Ce qu'il faut faire", actif: parGeste },
-                ].map((o) => (
-                  <Link
-                    key={o.label}
-                    href={o.href}
-                    scroll={false}
-                    aria-current={o.actif ? "page" : undefined}
-                    className={
-                      "rounded-full px-4 py-[7px] text-[13px] font-semibold transition-colors " +
-                      (o.actif
-                        ? "bg-[color:var(--board-card)] text-[color:var(--board-ink)] shadow-[0_1px_2px_rgba(13,18,36,.08)]"
-                        : "text-[color:var(--board-slate-mid)] hover:text-[color:var(--board-ink)]")
-                    }
-                  >
-                    {o.label}
-                  </Link>
-                ))}
-              </div>
-            </nav>
+            {/* Le même composant que les onglets de l'écran (revue du
+                2026-10-24) : une seule écriture du patron. */}
+            <OngletsPage
+              libelle="Découpe"
+              onglets={[
+                { href: `/etablissements/${id}/etats-permanents`, label: "Par famille", actif: !parGeste },
+                { href: `/etablissements/${id}/etats-permanents?decoupe=geste`, label: "Ce qu'il faut faire", actif: parGeste },
+              ]}
+            />
             {parGeste ? (
               <SectionsParGeste familles={familles} rendreLigne={rendreLigne} />
             ) : (

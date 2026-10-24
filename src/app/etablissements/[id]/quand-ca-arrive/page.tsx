@@ -1,4 +1,4 @@
-import { permanentRedirect } from "next/navigation";
+import { redirect } from "next/navigation";
 
 /**
  * ~~« Quand ça arrive »~~ est devenu l'onglet « En cas de… » de « Ce qui doit
@@ -11,5 +11,7 @@ export default async function AncienneAdresse({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  permanentRedirect(`/etablissements/${id}/etats-permanents/en-cas-de`);
+  // Temporaire (307) et non 308 : la place vient d'être tranchée, un
+  // navigateur ne doit pas mettre la redirection en cache (revue du 2026-10-24).
+  redirect(`/etablissements/${id}/etats-permanents/en-cas-de`);
 }
