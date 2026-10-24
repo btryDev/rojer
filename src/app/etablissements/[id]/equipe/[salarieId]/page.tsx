@@ -177,13 +177,12 @@ export default async function SalarieDetailPage({
     // la date de la pièce. Et elle dit le CALCUL, pas « la durée écrite dans
     // le texte » : pour la formation du membre du CSE, L. 2315-17 pose une
     // borne liée au mandat, pas une durée depuis la délivrance.
-    dates:
-      `Délivré le ${formaterDateLongueFr(t.delivreLe)}` +
-      (t.echeanceLe
-        ? `, valable jusqu'au ${formaterDateLongueFr(t.echeanceLe)}.`
-        : t.echeance && t.periodicite
-          ? `. Pas de date de fin sur la pièce : échéance calculée au ${formaterDateLongueFr(t.echeance)} (délivrance + ${LABEL_PERIODICITE[t.periodicite].toLowerCase()}).`
-          : ". Aucune date de fin portée sur le titre."),
+    delivre: `Délivré le ${formaterDateLongueFr(t.delivreLe)}`,
+    echeance: t.echeanceLe
+      ? `Valable jusqu'au ${formaterDateLongueFr(t.echeanceLe)}`
+      : t.echeance && t.periodicite
+        ? `Échéance calculée au ${formaterDateLongueFr(t.echeance)} (délivrance + ${LABEL_PERIODICITE[t.periodicite].toLowerCase()}), sans date de fin sur la pièce`
+        : "Aucune date de fin portée sur le titre",
     etat: t.etat,
     mot:
       t.echeanceLe === null && (t.etat === "enRetard" || t.etat === "proche")

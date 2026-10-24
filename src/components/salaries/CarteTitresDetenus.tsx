@@ -26,8 +26,10 @@ export type LigneTitre = {
   id: string;
   obligationId: string;
   libelle: string;
-  /** La phrase des dates, déjà composée par la fiche. */
-  dates: string;
+  /** « Délivré le 6 mai 2024 ». */
+  delivre: string;
+  /** D'où vient l'échéance : la pièce, un calcul, ou rien (composé par la fiche). */
+  echeance: string;
   etat: RegistreLigne;
   /** Le mot de l'état, de la table de la fiche (`MOT_DE_L_ETAT`). */
   mot: string;
@@ -60,7 +62,8 @@ function Jauge({ jauge, etat }: { jauge: JaugeTitre; etat: RegistreLigne }) {
   const champ = champDeLaJauge(etat);
   return (
     <div className="mt-3">
-      <div aria-hidden className="relative h-2 overflow-hidden rounded-full bg-[color:var(--board-slate-pale)]">
+      {/* La piste est blanche : la carte du titre est déjà sur l'ardoise pâle. */}
+      <div aria-hidden className="relative h-2 overflow-hidden rounded-full bg-[color:var(--board-card)]">
         <div
           className="absolute inset-y-0 left-0 rounded-full"
           style={
@@ -104,74 +107,78 @@ export function CarteTitresDetenus({
       {lignes.length === 0 ? (
         vide
       ) : (
-        <ul className="m-0 flex list-none flex-col gap-2 p-0">
+        // Une carte par titre (retour de la propriétaire, 2026-10-24) : la
+        // grille se lit d'un coup d'œil, et une carte tient seule sur un
+        // téléphone.
+        <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 xl:grid-cols-3">
           {lignes.map((t) => (
             <li
               key={t.id}
               className={
-                "flex gap-3 rounded-[22px] px-4 py-4 sm:gap-4 " +
+                "flex flex-col rounded-[22px] p-4 " +
                 (t.etat === "enRetard"
-                  ? "bg-[color:var(--board-signal-wash)]"
-                  : "bg-[color:var(--board-slate-pale)]/60")
+                  ? "bg-[color:var(--board-signal-wash)] shadow-[inset_0_0_0_1px_var(--board-signal-pale)]"
+                  : "bg-[color:var(--board-slate-pale)]/70")
               }
             >
-              <span
-                aria-hidden
-                className="grid size-10 flex-none place-items-center rounded-[14px] sm:size-[52px] sm:rounded-[18px]"
-                style={{ background: t.dessin.fond }}
-              >
-                <Image src={t.dessin.src} alt="" width={40} height={40} className="size-8 sm:size-10" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
-                  <p className="m-0 text-[15px] font-semibold leading-[1.3] tracking-[-0.01em] text-[color:var(--board-ink)]">
-                    {t.libelle}
-                  </p>
-                  {/* Le point porte l'état, le mot le nomme : une
-                      signalétique qui tient à une couleur disparaît en
-                      niveaux de gris et pour qui n'y voit pas. */}
+              <div className="flex items-start justify-between gap-3">
+                <span
+                  aria-hidden
+                  className="grid size-[52px] flex-none place-items-center rounded-[18px]"
+                  style={{ background: t.dessin.fond }}
+                >
+                  <Image src={t.dessin.src} alt="" width={40} height={40} />
+                </span>
+                {/* Le point porte l'état, le mot le nomme : une signalétique
+                    qui tient à une couleur disparaît en niveaux de gris et
+                    pour qui n'y voit pas. */}
+                <span
+                  className="inline-flex max-w-[60%] items-start gap-1.5 text-[11.5px] font-semibold leading-[1.3]"
+                  style={{ color: ENCRE_ETAT[t.etat] }}
+                >
                   <span
-                    className="inline-flex flex-none items-center gap-1.5 whitespace-nowrap text-[11.5px] font-semibold"
-                    style={{ color: ENCRE_ETAT[t.etat] }}
-                  >
-                    <span
-                      aria-hidden
-                      className="size-[7px] flex-none rounded-full"
-                      style={{ background: champDeLaJauge(t.etat) }}
-                    />
-                    {t.mot}
-                  </span>
-                </div>
-                <p className="m-0 mt-1 text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-                  {t.dates}
+                    aria-hidden
+                    className="mt-[4px] size-[7px] flex-none rounded-full"
+                    style={{ background: champDeLaJauge(t.etat) }}
+                  />
+                  {t.mot}
+                </span>
+              </div>
+              <p className="m-0 mt-3 text-[15px] font-semibold leading-[1.3] tracking-[-0.01em] text-[color:var(--board-ink)]">
+                {t.libelle}
+              </p>
+              <p className="m-0 mt-1.5 text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+                {t.delivre}
+                <br />
+                {t.echeance}
+              </p>
+              <Jauge jauge={t.jauge} etat={t.etat} />
+              {t.renvoiAuxNormes && (
+                <p className="m-0 mt-1.5 text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+                  {t.renvoiAuxNormes}
                 </p>
-                <Jauge jauge={t.jauge} etat={t.etat} />
-                {t.renvoiAuxNormes && (
-                  <p className="m-0 mt-1.5 text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-                    {t.renvoiAuxNormes}
-                  </p>
-                )}
-                {t.rythmeRetenu && (
-                  <p className="m-0 mt-1.5">
-                    <MentionRythmeRetenu mention={t.rythmeRetenu} />
-                  </p>
-                )}
-                {t.redevientDue && (
-                  <p className="m-0 mt-1.5 text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-                    Redevient due à chaque changement de poste ou de
-                    technique : déclarez alors la nouvelle formation.
-                  </p>
-                )}
-                {t.note && (
-                  <p className="m-0 mt-1 text-[12px] leading-[1.5] text-[color:var(--board-slate-soft)]">
-                    {t.note}
-                  </p>
-                )}
-                <div className="mt-3 flex flex-wrap items-center gap-3">
-                  <ReferenceFondatrice obligation={t} />
-                  {t.geste}
-                  {t.retirer}
-                </div>
+              )}
+              {t.rythmeRetenu && (
+                <p className="m-0 mt-2">
+                  <MentionRythmeRetenu mention={t.rythmeRetenu} />
+                </p>
+              )}
+              {t.redevientDue && (
+                <p className="m-0 mt-1.5 text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+                  Redevient due à chaque changement de poste ou de technique :
+                  déclarez alors la nouvelle formation.
+                </p>
+              )}
+              {t.note && (
+                <p className="m-0 mt-1.5 text-[12px] leading-[1.5] text-[color:var(--board-slate-soft)]">
+                  {t.note}
+                </p>
+              )}
+              {/* Les gestes en pied de carte, alignés d'une carte à l'autre. */}
+              <div className="mt-auto flex flex-wrap items-center gap-3 pt-4">
+                <ReferenceFondatrice obligation={t} />
+                {t.geste}
+                {t.retirer}
               </div>
             </li>
           ))}
