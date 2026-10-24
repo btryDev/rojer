@@ -232,15 +232,25 @@ export default async function EquipePage({
             ligne : l'obligation est réelle (art. 13 RGPD, L. 1222-4 du Code du
             travail) et incombe à l'employeur ; la carte n'apparaît que s'il y a
             quelqu'un à informer. */}
-        <section className="flex flex-col gap-3 border-t border-[color:var(--board-slate-line)] pt-5">
-          <p className="m-0 max-w-[72ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-            {catalogue.length === 1 ? "Un seul titre suivi" : `${catalogue.length} titres suivis`}
-            , ceux dont Rojer a lu le texte. D&apos;autres peuvent vous
-            concerner : suivez-les par vos moyens habituels.
-          </p>
+        {/* Une ligne, qui se replie sur un écran étroit (2026-10-24). */}
+        <footer className="flex flex-wrap items-baseline gap-x-2 gap-y-1 border-t border-[color:var(--board-slate-line)] pt-4 text-[12px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          {actifs > 0 && (
+            <span>
+              {actifs} personne{actifs > 1 ? "s" : ""} dans l&apos;effectif
+              {equipe.length > actifs &&
+                `, ${equipe.length - actifs} sortie${equipe.length - actifs > 1 ? "s" : ""} conservée${equipe.length - actifs > 1 ? "s" : ""} pour la preuve`}
+              {" · "}
+            </span>
+          )}
+          <span>
+            {catalogue.length === 1
+              ? actifs > 0 ? "un seul titre suivi" : "Un seul titre suivi"
+              : `${catalogue.length} titres suivis`}
+            , d&apos;autres peuvent vous concerner
+            {equipe.length > 0 && " · "}
+          </span>
           {equipe.length > 0 && (
             <TexteInformation
-              compact
               texte={texteInformation({
                 raisonSociale: etablissement.raisonDisplay,
                 // Les titres RÉELLEMENT déclarés ici, jamais le catalogue : un
@@ -250,16 +260,7 @@ export default async function EquipePage({
               })}
             />
           )}
-        </section>
-
-        {actifs > 0 && (
-          <p className="m-0 px-1 text-[12px] text-[color:var(--board-slate-soft)]">
-            {actifs} personne{actifs > 1 ? "s" : ""}{" "}
-            dans l&apos;effectif
-            {equipe.length > actifs &&
-              ` · ${equipe.length - actifs} sortie${equipe.length - actifs > 1 ? "s" : ""}, conservée${equipe.length - actifs > 1 ? "s" : ""} pour la preuve`}
-          </p>
-        )}
+        </footer>
       </div>
     </main>
   );
