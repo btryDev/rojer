@@ -11,11 +11,14 @@
  * fiche de qui conduit, depuis « Ajouter un titre ».
  *
  * Trois sortes de titres sont laissées dehors :
- * - les pièces médicales (`pieceMedicale`) : une attestation d'absence de
- *   contre-indication conditionne la VALIDITÉ d'un autre titre (R. 4323-56
- *   pour l'autorisation de conduite, R. 4544-11-1 pour l'habilitation au
- *   voisinage), elle n'est pas due à l'établissement. Celle de l'habilitation
- *   ne vaut même que pour certaines habilitations, ce que Rojer ignore ;
+ * - les pièces qui conditionnent la VALIDITÉ d'un autre titre (nature
+ *   `piece_a_conserver` d'`OBLIGATION_EMPLOYEUR`) : l'attestation médicale de
+ *   la conduite (R. 4323-56) et celle du voisinage sous tension
+ *   (R. 4544-11-1). Sans le premier titre, rien à réclamer ; celle de
+ *   l'habilitation ne vaut même que pour certaines habilitations. ~~Toute
+ *   pièce médicale (`pieceMedicale`)~~ [2026-10-24, revue indépendante : le
+ *   filtre retirait aussi le suivi individuel renforcé, que R. 4624-22 rend
+ *   dû directement au poste à risque — un « oui » au CMR ne rappelait rien] ;
  * - ceux qu'un AUTRE titre appelle avec un délai : la fiche de la personne
  *   qui détient le premier les date (`titresLusParLaFiche`, ADR-043) ;
  * - ceux dont une ligne d'établissement est le double (l'habilitation
@@ -29,6 +32,7 @@ import {
   FAITS_ACTIVITE,
   intituleDuFait,
   type ChampFaitActivite,
+  type FaitActivite,
   type ReponsesFaitsActivite,
 } from "@/lib/etablissements/faits-activite";
 import {
@@ -44,6 +48,8 @@ export type FaitSansPorteur = {
   champ: ChampFaitActivite;
   /** La question, telle que l'écran des risques la pose. */
   question: string;
+  /** Ce que la question ne couvre pas (`autresFondements`), à dire avec elle. */
+  horsQuestion: string | null;
   titres: {
     obligation: ObligationPorteeParSalarie;
     /** À quelle condition le titre est dû — lue, jamais réécrite. */
@@ -60,20 +66,35 @@ function suivisAilleurs(): ReadonlySet<string> {
   return new Set([...titresLusParLaFiche(), ...doubles]);
 }
 
+export type PersonneLue = {
+  actif: boolean;
+  titres: readonly { obligationId: string }[];
+};
+
 export function titresSansPorteur(
   faits: ReponsesFaitsActivite,
-  /** Les titres déclarés par au moins un salarié PRÉSENT dans l'effectif. */
-  detenus: ReadonlySet<string>,
+  /** L'équipe : seuls les titres des personnes PRÉSENTES comptent. */
+  equipe: readonly PersonneLue[],
+  /** Le registre des faits — le défaut ; un autre n'existe que pour les tests. */
+  registre: readonly FaitActivite[] = FAITS_ACTIVITE,
 ): FaitSansPorteur[] {
   const ailleurs = suivisAilleurs();
-  return FAITS_ACTIVITE.filter((f) => faits[f.champ] === true).flatMap((f) => {
+  // Un titre détenu par une personne sortie de l'effectif ne couvre plus
+  // personne : il ne fait pas taire l'alerte.
+  const detenus = new Set(
+    equipe.filter((p) => p.actif).flatMap((p) => p.titres.map((t) => t.obligationId)),
+  );
+  return registre.filter((f) => faits[f.champ] === true).flatMap((f) => {
     const titres = f.declencheTitres.flatMap((id) => {
       if (ailleurs.has(id) || detenus.has(id)) return [];
+      if (OBLIGATION_EMPLOYEUR[id]?.nature === "piece_a_conserver") return [];
       const obligation = titreParId(id);
-      return obligation && !obligation.pieceMedicale
+      return obligation
         ? [{ obligation, condition: OBLIGATION_EMPLOYEUR[id]?.condition ?? null }]
         : [];
     });
-    return titres.length > 0 ? [{ champ: f.champ, question: intituleDuFait(f), titres }] : [];
+    return titres.length > 0
+      ? [{ champ: f.champ, question: intituleDuFait(f), horsQuestion: f.autresFondements ?? null, titres }]
+      : [];
   });
 }

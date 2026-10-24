@@ -34,7 +34,8 @@ export type LigneTitre = {
   /** Le mot de l'état, de la table de la fiche (`MOT_DE_L_ETAT`). */
   mot: string;
   dessin: { src: string; fond: string };
-  jauge: JaugeTitre;
+  /** `null` : pas de jauge — l'obligation ne s'applique plus. */
+  jauge: JaugeTitre | null;
   referencesLegales: readonly ReferenceLegale[];
   rythmeRetenu: MentionRythme | null;
   /** La phrase du renvoi aux normes, quand aucune date n'est portée. */
@@ -150,7 +151,7 @@ export function CarteTitresDetenus({
               <p className="m-0 mt-1.5 text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
                 {t.dates}
               </p>
-              <Jauge jauge={t.jauge} etat={t.etat} />
+              {t.jauge && <Jauge jauge={t.jauge} etat={t.etat} />}
               {t.renvoiAuxNormes && (
                 <p className="m-0 mt-1.5 text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
                   {t.renvoiAuxNormes}

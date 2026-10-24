@@ -16,12 +16,18 @@ import { useState } from "react";
  * répondre s'il en est questionné.
  */
 export function TexteInformation({ texte }: { texte: string }) {
-  const [copie, setCopie] = useState(false);
+  const [copie, setCopie] = useState<"non" | "oui" | "refus">("non");
   const [ouvert, setOuvert] = useState(false);
+  // Le navigateur peut refuser (page non sécurisée, permission) : on le dit,
+  // et « lire le texte » reste la porte pour le copier à la main.
   const copier = async () => {
-    await navigator.clipboard.writeText(texte);
-    setCopie(true);
-    setTimeout(() => setCopie(false), 2400);
+    try {
+      await navigator.clipboard.writeText(texte);
+      setCopie("oui");
+    } catch {
+      setCopie("refus");
+    }
+    setTimeout(() => setCopie("non"), 2400);
   };
   const lien =
     "cursor-pointer font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4";
@@ -40,13 +46,17 @@ export function TexteInformation({ texte }: { texte: string }) {
         </button>
         {" · "}
         <button type="button" className={lien} onClick={copier}>
-          {copie ? "copié" : "le copier"}
+          {copie === "oui" ? "copié" : copie === "refus" ? "copie impossible, lisez-le" : "le copier"}
         </button>
       </span>
       {/* Une confirmation visuelle ne suffit pas : le changement de libellé
           n'est pas annoncé par un lecteur d'écran. */}
       <span role="status" className="sr-only">
-        {copie ? "Texte copié dans le presse-papier" : ""}
+        {copie === "oui"
+          ? "Texte copié dans le presse-papier"
+          : copie === "refus"
+            ? "La copie a échoué : ouvrez le texte pour le copier"
+            : ""}
       </span>
       {ouvert && (
         <pre className="m-0 mt-2 max-h-[420px] w-full basis-full overflow-auto whitespace-pre-wrap rounded-[18px] bg-[color:var(--board-slate-pale)] px-5 py-4 font-mono text-[11.5px] leading-[1.65] text-[color:var(--board-slate-ink)]">

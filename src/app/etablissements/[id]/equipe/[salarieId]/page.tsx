@@ -134,6 +134,7 @@ export default async function SalarieDetailPage({
   // la place du dirigeant — lui seul sait laquelle des deux visites cette
   // personne passe réellement.
   const conflits = conflitsExclusion(dejaDeclares);
+  const enConflit = new Set(conflits.flatMap((c) => c.titres.map((t) => t.id)));
 
   // Ce qui manque à cette personne (ADR-043) : les titres dus à l'entrée et
   // ceux qu'un titre déclaré appelle, jamais déclarés. La même fonction que le
@@ -194,7 +195,10 @@ export default async function SalarieDetailPage({
             t.renvoiAuxNormes.court
           : MOT_DE_L_ETAT[t.etat],
     dessin: dessinDuTitre(t.obligationId),
-    jauge: jaugeDuTitre(t, now),
+    // Personne sortie, obligation qui ne s'applique plus : pas de jauge. Elle
+    // annoncerait « Dépassée » à côté de « Ne s'applique plus » (revue
+    // indépendante du 2026-10-24).
+    jauge: t.etat === "archivee" ? null : jaugeDuTitre(t, now),
     referencesLegales: t.referencesLegales,
     // ADR-039 : un rythme que le texte n'écrit pas se dit comme tel, à côté
     // de l'échéance qu'il calcule.
@@ -202,8 +206,11 @@ export default async function SalarieDetailPage({
     renvoiAuxNormes: t.renvoiAuxNormes && !t.echeanceLe ? t.renvoiAuxNormes.long : null,
     note: t.note,
     redevientDue: s.actif && redeclenches.has(t.obligationId),
+    // Pas de « Renouveler » sur un titre en cumul exclu : la modale le refuse
+    // et retomberait en silence sur un autre titre. L'encart de conflit dit
+    // le geste — retirer celui qui ne s'applique pas.
     geste:
-      s.actif && (t.etat === "enRetard" || t.etat === "proche") ? (
+      s.actif && (t.etat === "enRetard" || t.etat === "proche") && !enConflit.has(t.obligationId) ? (
         <BoutonDeclarer obligationId={t.obligationId} plein={t.etat === "enRetard"}>
           Renouveler
         </BoutonDeclarer>

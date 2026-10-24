@@ -243,10 +243,12 @@ export default async function EquipePage({
             </span>
           )}
           <span>
+            {/* Le compte est celui du CATALOGUE, pas des titres déclarés ici
+                (revue indépendante du 2026-10-24). */}
             {catalogue.length === 1
-              ? actifs > 0 ? "un seul titre suivi" : "Un seul titre suivi"
-              : `${catalogue.length} titres suivis`}
-            , d&apos;autres peuvent vous concerner
+              ? actifs > 0 ? "un seul titre au catalogue" : "Un seul titre au catalogue"
+              : `${catalogue.length} titres au catalogue`}
+            , suivez par vos moyens habituels ceux qui n&apos;y figurent pas
             {equipe.length > 0 && " · "}
           </span>
           {equipe.length > 0 && (

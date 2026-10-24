@@ -131,10 +131,8 @@ export default async function FormationsEquipePage({
   // propriétaire du 2026-10-24) : « oui » à la conduite d'engins, et aucun
   // salarié présent n'a de formation à la conduite déclarée. Rojer ne sait
   // pas qui conduit — il ne sait que personne ne l'est.
-  const detenus = new Set(
-    equipe.filter((s) => s.actif).flatMap((s) => s.titres.map((t) => t.obligationId)),
-  );
-  const sansPorteur = faits ? titresSansPorteur(faits, detenus) : [];
+  const sansPorteur = faits ? titresSansPorteur(faits, equipe) : [];
+  const personnePresente = equipe.some((s) => s.actif);
 
   const rien =
     sansPorteur.length === 0 &&
@@ -244,11 +242,20 @@ export default async function FormationsEquipePage({
                       </li>
                     ))}
                   </ul>
+                  {f.horsQuestion && (
+                    <p className="m-0 mt-2.5 max-w-[68ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-soft)]">
+                      {f.horsQuestion}
+                    </p>
+                  )}
+                  {/* Sans personne présente, il n'y a personne à choisir :
+                      la porte est d'en ajouter une. */}
                   <Link
-                    href={`/etablissements/${id}/equipe`}
+                    href={`/etablissements/${id}/equipe${personnePresente ? "" : "/nouveau"}`}
                     className="mt-3 inline-block text-[12.5px] font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
                   >
-                    Choisir la personne dans l&apos;équipe
+                    {personnePresente
+                      ? "Choisir la personne dans l'équipe"
+                      : "Ajouter la personne à l'équipe"}
                   </Link>
                   </div>
                 </li>

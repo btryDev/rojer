@@ -1,21 +1,29 @@
 import { describe, expect, it } from "vitest";
 import {
   FAITS_ACTIVITE,
+  type FaitActivite,
   type ReponsesFaitsActivite,
 } from "@/lib/etablissements/faits-activite";
-import { titresSansPorteur } from "./titres-sans-porteur";
+import { titresSansPorteur, type PersonneLue } from "./titres-sans-porteur";
 
 const AUCUN = Object.fromEntries(
   FAITS_ACTIVITE.map((f) => [f.champ, null]),
 ) as ReponsesFaitsActivite;
-const RIEN = new Set<string>();
+const TOUT = Object.fromEntries(
+  FAITS_ACTIVITE.map((f) => [f.champ, true]),
+) as ReponsesFaitsActivite;
+const PERSONNE: readonly PersonneLue[] = [];
+const presente = (...ids: string[]): PersonneLue => ({
+  actif: true,
+  titres: ids.map((obligationId) => ({ obligationId })),
+});
 
 const ids = (r: ReturnType<typeof titresSansPorteur>) =>
   r.flatMap((f) => f.titres.map((t) => t.obligation.id)).sort();
 
 describe("ce que le DUERP signale et que personne ne porte", () => {
   it("un « oui » à la conduite, personne de formé : formation et autorisation", () => {
-    const r = titresSansPorteur({ ...AUCUN, conduiteEngins: true }, RIEN);
+    const r = titresSansPorteur({ ...AUCUN, conduiteEngins: true }, PERSONNE);
     expect(r.map((f) => f.champ)).toEqual(["conduiteEngins"]);
     expect(ids(r)).toEqual(["conduite-salarie-autorisation", "conduite-salarie-formation"]);
     // La condition de l'autorisation se dit : elle ne vaut pas pour tout engin.
@@ -23,43 +31,56 @@ describe("ce que le DUERP signale et que personne ne porte", () => {
     expect(autorisation?.condition).toContain("R. 4323-57");
   });
 
-  it("aucune pièce médicale n'est réclamée à l'établissement", () => {
-    // Elles conditionnent la validité d'un autre titre (R. 4323-56,
-    // R. 4544-11-1) : sans titre, pas d'attestation à réclamer.
-    const tout = Object.fromEntries(
-      FAITS_ACTIVITE.map((f) => [f.champ, true]),
-    ) as ReponsesFaitsActivite;
-    for (const f of titresSansPorteur(tout, RIEN)) {
-      for (const t of f.titres) expect(t.obligation.pieceMedicale, t.obligation.id).toBe(false);
-    }
+  it("un « oui » au CMR rappelle le suivi renforcé, dû au poste à risque (R. 4624-22)", () => {
+    // Revue indépendante du 2026-10-24 : un filtre sur toute pièce médicale
+    // le retirait, et le « oui » ne rappelait plus rien.
+    const r = titresSansPorteur({ ...AUCUN, expositionCMR: true }, PERSONNE);
+    expect(ids(r)).toEqual(["sante-travail-salarie-sir"]);
+    // Ce que la question ne couvre pas se dit avec elle.
+    expect(r[0].horsQuestion).toContain("amiante");
   });
 
-  it("un titre détenu par quelqu'un éteint son alerte, l'autre reste", () => {
-    const r = titresSansPorteur(
-      { ...AUCUN, conduiteEngins: true },
-      new Set(["conduite-salarie-formation"]),
+  it("aucune pièce qui conditionne un autre titre n'est réclamée à l'établissement", () => {
+    // R. 4323-56, R. 4544-11-1 : sans autorisation ni habilitation, pas
+    // d'attestation à réclamer.
+    expect(ids(titresSansPorteur(TOUT, PERSONNE))).not.toContain("conduite-salarie-attestation-medicale");
+    expect(ids(titresSansPorteur(TOUT, PERSONNE))).not.toContain(
+      "elec-salarie-attestation-medicale-voisinage",
     );
+  });
+
+  it("un titre qu'un autre appelle n'est pas réclamé : la fiche de qui détient le premier le date", () => {
+    // Un fait fictif qui déclencherait la visite intermédiaire : elle n'est
+    // due qu'à qui relève du suivi renforcé (ADR-043).
+    const fictif: FaitActivite = {
+      ...FAITS_ACTIVITE.find((f) => f.champ === "expositionCMR")!,
+      declencheTitres: ["sante-travail-salarie-sir-visite-intermediaire"],
+    };
+    expect(titresSansPorteur({ ...AUCUN, expositionCMR: true }, PERSONNE, [fictif])).toEqual([]);
+  });
+
+  it("un titre détenu par une personne présente éteint son alerte, l'autre reste", () => {
+    const r = titresSansPorteur({ ...AUCUN, conduiteEngins: true }, [
+      presente("conduite-salarie-formation"),
+    ]);
     expect(ids(r)).toEqual(["conduite-salarie-autorisation"]);
+  });
+
+  it("un titre détenu par une personne sortie de l'effectif ne couvre plus personne", () => {
+    const r = titresSansPorteur({ ...AUCUN, conduiteEngins: true }, [
+      { ...presente("conduite-salarie-formation"), actif: false },
+    ]);
+    expect(ids(r)).toContain("conduite-salarie-formation");
   });
 
   it("l'électricité ne double pas la ligne d'habilitation établie d'après les titres", () => {
     // La ligne « Habilitation électrique du personnel » dit déjà « aucun
-    // titre » ; l'attestation de voisinage est une pièce médicale.
-    expect(titresSansPorteur({ ...AUCUN, operationsElectriques: true }, RIEN)).toEqual([]);
+    // titre » ; l'attestation de voisinage conditionne l'habilitation.
+    expect(titresSansPorteur({ ...AUCUN, operationsElectriques: true }, PERSONNE)).toEqual([]);
   });
 
   it("seul un « oui » alerte : ni le silence ni un « non »", () => {
-    expect(titresSansPorteur(AUCUN, RIEN)).toEqual([]);
-    expect(titresSansPorteur({ ...AUCUN, conduiteEngins: false }, RIEN)).toEqual([]);
-  });
-
-  it("le « oui » à tout ne fait parler que des faits qui déclenchent un titre", () => {
-    const tout = Object.fromEntries(
-      FAITS_ACTIVITE.map((f) => [f.champ, true]),
-    ) as ReponsesFaitsActivite;
-    for (const f of titresSansPorteur(tout, RIEN)) {
-      const fait = FAITS_ACTIVITE.find((x) => x.champ === f.champ)!;
-      for (const t of f.titres) expect(fait.declencheTitres).toContain(t.obligation.id);
-    }
+    expect(titresSansPorteur(AUCUN, PERSONNE)).toEqual([]);
+    expect(titresSansPorteur({ ...AUCUN, conduiteEngins: false }, PERSONNE)).toEqual([]);
   });
 });

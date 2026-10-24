@@ -59,6 +59,7 @@ export default async function RisquesSalariesPage({
             champ={f.champ}
             intitule={intituleDuFait(f)}
             pourquoi={f.pourquoi}
+            horsQuestion={f.autresFondements}
             valeur={faits[f.champ]}
           />
         ))}
