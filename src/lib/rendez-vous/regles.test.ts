@@ -26,26 +26,36 @@ describe("le rendez-vous d'un contrôle (ADR-049)", () => {
   });
 
   it("posée au jour du rendez-vous, la pastille dit l'échéance ; après l'échéance, elle dit le rendez-vous en rose", () => {
+    const now = t("2026-11-01T08:00");
     const avant = { rendezVousLe: t("2026-11-05T09:30"), datePrevue: t("2027-10-20T00:00"), prestataire: null };
-    expect(pastilleRendezVous(avant, t("2026-11-01T08:00"))).toMatchObject({ passe: false, court: expect.stringMatching(/^Échéance /) });
+    expect(pastilleRendezVous(avant, now, true)).toMatchObject({ passe: false, court: expect.stringMatching(/^Échéance /) });
     const apres = { rendezVousLe: t("2027-12-12T09:30"), datePrevue: t("2027-10-20T00:00"), prestataire: null };
-    expect(pastilleRendezVous(apres, t("2026-11-01T08:00"))).toMatchObject({ passe: true, court: expect.stringMatching(/après l'échéance$/) });
-    expect(pastilleRendezVous(avant, t("2026-11-20T08:00"))).toMatchObject({ court: "RDV passé", passe: true });
-    expect(pastilleRendezVous({ rendezVousLe: null, datePrevue: t("2027-10-20T00:00") }, t("2026-11-01T08:00"))).toBeNull();
+    expect(pastilleRendezVous(apres, now, true)).toMatchObject({ passe: true, court: expect.stringMatching(/après l'échéance$/) });
+    expect(pastilleRendezVous(avant, t("2026-11-20T08:00"), true)).toMatchObject({ court: "RDV passé", passe: true });
+    expect(pastilleRendezVous({ rendezVousLe: null, datePrevue: t("2027-10-20T00:00") }, now, true)).toBeNull();
   });
 
-  it("le calendrier pose l'échéance ouverte au jour d'un rendez-vous qui la précède, et seulement alors", () => {
+  it("une ligne « à planifier » n'a pas d'échéance à dépasser : le rendez-vous n'y est jamais « après »", () => {
+    const v = { rendezVousLe: t("2026-11-12T09:00"), datePrevue: t("2026-09-01T00:00"), prestataire: null };
+    expect(pastilleRendezVous(v, t("2026-10-24T08:00"), false)).toMatchObject({ passe: false, court: expect.stringMatching(/^RDV /) });
+    expect(datePoseeAuCalendrier(v, { date: v.datePrevue, lecture: "courante", registre: "aPlanifier" }, t("2026-10-24T08:00"))).toBe(
+      v.rendezVousLe,
+    );
+  });
+
+  it("le calendrier pose l'échéance ouverte au jour d'un rendez-vous À VENIR qui la précède, et seulement alors", () => {
+    const now = t("2026-10-24T08:00");
     const v = { rendezVousLe: t("2026-11-05T09:30"), datePrevue: t("2027-10-20T00:00") };
     const courante = { date: v.datePrevue, lecture: "courante", registre: "planifiee" };
-    expect(datePoseeAuCalendrier(v, courante)).toBe(v.rendezVousLe);
+    expect(datePoseeAuCalendrier(v, courante, now)).toBe(v.rendezVousLe);
     // Le jour même de l'échéance : encore avant.
-    expect(datePoseeAuCalendrier({ ...v, rendezVousLe: t("2027-10-20T15:00") }, courante).getTime()).toBe(
-      t("2027-10-20T15:00").getTime(),
-    );
-    // Après l'échéance, en retard, ou pour un rapport fait : la date de la lecture.
-    expect(datePoseeAuCalendrier({ ...v, rendezVousLe: t("2027-10-21T09:00") }, courante)).toBe(v.datePrevue);
-    expect(datePoseeAuCalendrier(v, { ...courante, registre: "enRetard" })).toBe(v.datePrevue);
-    expect(datePoseeAuCalendrier(v, { ...courante, lecture: "realisation" })).toBe(v.datePrevue);
+    const jourJ = { ...v, rendezVousLe: t("2027-10-20T15:00") };
+    expect(datePoseeAuCalendrier(jourJ, courante, now)).toBe(jourJ.rendezVousLe);
+    // Après l'échéance, en retard, pour un rapport fait, ou passé sans rapport : la date de la lecture.
+    expect(datePoseeAuCalendrier({ ...v, rendezVousLe: t("2027-10-21T09:00") }, courante, now)).toBe(v.datePrevue);
+    expect(datePoseeAuCalendrier(v, { ...courante, registre: "enRetard" }, now)).toBe(v.datePrevue);
+    expect(datePoseeAuCalendrier(v, { ...courante, lecture: "realisation" }, now)).toBe(v.datePrevue);
+    expect(datePoseeAuCalendrier(v, courante, t("2026-11-20T08:00"))).toBe(v.datePrevue);
   });
 
   it("le formulaire signale un rendez-vous après l'échéance ou très en avance, sans bloquer", () => {

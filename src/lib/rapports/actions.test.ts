@@ -457,6 +457,12 @@ describe("uploadRapport — un rapport réalisé : la ligne se recalcule sur lui
     expect(ligne()).toMatchObject({ prestataireId: "presta-1", rendezVousLe: null, rendezVousNote: null });
   });
 
+  it("un rapport « non vérifiable » ne consomme pas le rendez-vous (ADR-049)", async () => {
+    Object.assign(ligne(), { rendezVousLe: d("2026-05-30"), rendezVousNote: "accès par la cour" });
+    await deposer("non_verifiable", "2026-06-01");
+    expect((ligne() as { rendezVousLe?: Date | null }).rendezVousLe).toEqual(d("2026-05-30"));
+  });
+
   it("l'écriture reste conditionnée à la date et au statut LUS : une ligne modifiée entre-temps annule tout", async () => {
     // Sans bouchon : la ligne change DANS le magasin juste après la lecture
     // de `recalculerLigne` (`apresLecture`), et c'est la condition de

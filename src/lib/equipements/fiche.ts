@@ -119,6 +119,8 @@ export async function getFicheEquipement(id: string) {
         include: {
           rapports: { orderBy: ORDRE_RAPPORT_PLUS_RECENT },
           actions: true,
+          // Le prestataire attitré, nommé avec le rendez-vous (ADR-049).
+          prestataire: { select: { raisonSociale: true } },
         },
       },
     },

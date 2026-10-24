@@ -44,15 +44,21 @@ export type PastilleRendezVous = { court: string; complet: string; passe: boolea
 /**
  * Posée au jour du rendez-vous, la ligne dit son échéance ; restée à
  * l'échéance (rendez-vous après elle), elle dit le rendez-vous, en rose.
+ * `echeanceConnue` : faux pour une ligne « à planifier », dont `datePrevue`
+ * n'est que la date de génération — tout rendez-vous y est bienvenu.
  */
 export function pastilleRendezVous(
   v: { rendezVousLe: Date | null; datePrevue: Date; prestataire?: { raisonSociale: string } | null },
   maintenant: Date,
+  echeanceConnue: boolean,
 ): PastilleRendezVous | null {
   const complet = mentionRendezVous(v, maintenant);
   if (!v.rendezVousLe || !complet) return null;
   if (rendezVousEnAttenteDeRapport(v.rendezVousLe, maintenant)) {
     return { court: "RDV passé", complet, passe: true };
+  }
+  if (!echeanceConnue) {
+    return { court: `RDV ${formaterJourMoisFr(v.rendezVousLe)}`, complet, passe: false };
   }
   if (rendezVousAvantEcheance(v)) {
     return {
@@ -82,15 +88,21 @@ export function rendezVousAvantEcheance(
 
 /**
  * La date où le calendrier pose une lecture : celle du rendez-vous pour
- * l'échéance ouverte quand il la précède, sinon celle de la lecture.
+ * l'échéance ouverte quand il est À VENIR et la précède (ou que la ligne
+ * est « à planifier »), sinon celle de la lecture. Un rendez-vous passé
+ * sans rapport ne déplace rien : la ligne reste où son état la met.
  * Affichage seulement : retards et compteurs restent sur l'échéance.
  */
 export function datePoseeAuCalendrier(
   v: { rendezVousLe?: Date | null; datePrevue: Date },
   lecture: { date: Date; lecture: string; registre: string },
+  maintenant: Date,
 ): Date {
-  if (lecture.lecture === "realisation" || lecture.registre === "enRetard") return lecture.date;
-  return rendezVousAvantEcheance(v) ? v.rendezVousLe! : lecture.date;
+  if (!v.rendezVousLe || lecture.lecture === "realisation" || lecture.registre === "enRetard") {
+    return lecture.date;
+  }
+  if (rendezVousEnAttenteDeRapport(v.rendezVousLe, maintenant)) return lecture.date;
+  return lecture.registre === "aPlanifier" || rendezVousAvantEcheance(v) ? v.rendezVousLe : lecture.date;
 }
 
 /** Les écarts que le formulaire signale à la saisie, sans bloquer. */

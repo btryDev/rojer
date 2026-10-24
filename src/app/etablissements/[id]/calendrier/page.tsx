@@ -552,7 +552,10 @@ export default async function CalendrierPage({
         (o ? ` · ${LABEL_DOMAINE[o.domaine]}` : ""),
       // Sur l'échéance ouverte seulement : un rapport fait n'a plus de
       // rendez-vous à venir.
-      rendezVous: lec.lecture === "realisation" ? null : pastilleRendezVous(v, aujourdhui),
+      rendezVous:
+        lec.lecture === "realisation"
+          ? null
+          : pastilleRendezVous(v, aujourdhui, aUnRendezVous(v, aujourdhui)),
       contractuelle: estEcheanceContractuelle(v),
       rythmeRetenu: mentionRythmeDeVerification(v),
       aConfirmer:
@@ -570,7 +573,7 @@ export default async function CalendrierPage({
         ...lecBrute,
         registre: registrePrudent(lecBrute.registre, v, prudence),
         // Au jour du rendez-vous s'il précède l'échéance (ADR-049).
-        date: datePoseeAuCalendrier(v, lecBrute),
+        date: datePoseeAuCalendrier(v, lecBrute, aujourdhui),
       };
       if (lec.registre === "aPlanifier") {
         e.aPlanifier += 1;
@@ -604,7 +607,9 @@ export default async function CalendrierPage({
       }
       // `dates` sert la « prochaine échéance », qui n'est bornée par
       // aucune année : une dette de l'an dernier compte toujours.
-      e.dates.push({ date: lec.date, etat });
+      // Sur l'ÉCHÉANCE, pas le rendez-vous : le compte à rebours de
+      // l'appareil reste celui de la date légale (ADR-049).
+      e.dates.push({ date: lecBrute.date, etat });
 
       // Les compteurs décrivent l'APPAREIL, pas l'année : une dette de
       // l'an dernier reste une dette, et une vérification faite en
@@ -1394,7 +1399,7 @@ export default async function CalendrierPage({
                               rendezVous={
                                 ligne.lecture === "realisation"
                                   ? null
-                                  : pastilleRendezVous(v, aujourdhui)
+                                  : pastilleRendezVous(v, aujourdhui, aUnRendezVous(v, aujourdhui))
                               }
                               contractuelle={estEcheanceContractuelle(v)}
                               rythmeRetenu={mentionRythmeDeVerification(v)}

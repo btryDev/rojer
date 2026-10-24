@@ -49,7 +49,10 @@ export async function enregistrerSuiviControle(
   const rendezVousLe = parsed.data.rendezVousLe ? depuisSaisieDateHeure(parsed.data.rendezVousLe) : null;
   // Une date absurde, pas une date gênante : après l'échéance ou très en
   // avance se signale à l'écran, et s'accepte.
-  if (rendezVousLe) {
+  // Un rendez-vous déjà enregistré (manqué, par exemple) ne se refuse pas :
+  // on doit pouvoir changer le prestataire sans l'effacer.
+  const inchange = rendezVousLe !== null && v.rendezVousLe?.getTime() === rendezVousLe.getTime();
+  if (rendezVousLe && !inchange) {
     const ecart = joursCivilsEntre(new Date(), rendezVousLe);
     if (ecart < -31 || ecart > 2 * 366) {
       return {
