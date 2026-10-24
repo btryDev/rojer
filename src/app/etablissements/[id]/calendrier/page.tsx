@@ -7,7 +7,8 @@ import { FilAriane } from "@/components/navigation/FilAriane";
 import { LegalBadge } from "@/components/ui-kit/LegalBadge";
 import { BadgeStatut } from "@/components/calendrier/BadgeStatut";
 import { mentionDelaiDeGrace } from "@/lib/calendrier/grace";
-import { mentionRendezVous } from "@/lib/rendez-vous/regles";
+import { pastilleRendezVous, type PastilleRendezVous } from "@/lib/rendez-vous/regles";
+import { MentionRendezVous } from "@/components/rendez-vous/MentionRendezVous";
 import { MentionContractuelle } from "@/components/prescriptions/MentionContractuelle";
 import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeRetenu";
 import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
@@ -155,6 +156,7 @@ function LigneEcheance({
   contractuelle,
   rythmeRetenu,
   aConfirmer = [],
+  rendezVous = null,
   pastille,
   registre,
 }: {
@@ -191,6 +193,8 @@ function LigneEcheance({
    * `meta` est tronqué.
    */
   aConfirmer?: readonly string[];
+  /** Le rendez-vous pris (ADR-049), en pastille : `meta` est tronqué. */
+  rendezVous?: PastilleRendezVous | null;
   pastille: React.ReactNode;
   registre: RegistreLigne;
 }) {
@@ -240,6 +244,7 @@ function LigneEcheance({
           {contractuelle && <MentionContractuelle />}
           <MentionRythmeRetenu mention={rythmeRetenu} />
           <MentionAConfirmer phrases={aConfirmer} />
+          <MentionRendezVous pastille={rendezVous} />
         </p>
         {/* Nature puis complément. Le mot est visible : une icône seule
             disparaît en niveaux de gris et pour qui n'y voit pas. */}
@@ -544,8 +549,8 @@ export default async function CalendrierPage({
       titre: v.libelleObligation,
       meta:
         LABEL_PERIODICITE[v.periodicite] +
-        (o ? ` · ${LABEL_DOMAINE[o.domaine]}` : "") +
-        (mentionRendezVous(v, aujourdhui) ? ` · ${mentionRendezVous(v, aujourdhui)}` : ""),
+        (o ? ` · ${LABEL_DOMAINE[o.domaine]}` : ""),
+      rendezVous: pastilleRendezVous(v, aujourdhui),
       contractuelle: estEcheanceContractuelle(v),
       rythmeRetenu: mentionRythmeDeVerification(v),
       aConfirmer:
@@ -1375,13 +1380,11 @@ export default async function CalendrierPage({
                                 // planifier », jamais à la place d'une date.
                                 (mentionDelaiDeGrace(v, aujourdhui)
                                   ? ` · ${mentionDelaiDeGrace(v, aujourdhui)}`
-                                  : "") +
-                                // Le rendez-vous pris (ADR-049), à côté de
-                                // l'échéance, jamais à sa place.
-                                (mentionRendezVous(v, aujourdhui)
-                                  ? ` · ${mentionRendezVous(v, aujourdhui)}`
                                   : "")
                               }
+                              // Le rendez-vous pris (ADR-049), à côté de
+                              // l'échéance, jamais à sa place.
+                              rendezVous={pastilleRendezVous(v, aujourdhui)}
                               contractuelle={estEcheanceContractuelle(v)}
                               rythmeRetenu={mentionRythmeDeVerification(v)}
                               aConfirmer={

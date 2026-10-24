@@ -199,7 +199,7 @@ export default async function PrestataireDetailPage({
                     <li key={c.id}>
                       <Link
                         href={cheminControle(id, c)}
-                        className="text-[13.5px] font-semibold text-[color:var(--board-ink)] hover:underline"
+                        className="text-[13.5px] font-semibold text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline"
                       >
                         {c.libelleObligation}
                       </Link>

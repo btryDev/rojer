@@ -3,7 +3,7 @@
  * l'action serveur lisent les mêmes fonctions.
  */
 
-import { formaterDateHeureFr, joursCivilsEntre } from "@/lib/dates";
+import { formaterDateHeureFr, formaterJourMoisFr, joursCivilsEntre } from "@/lib/dates";
 
 /**
  * Un contrôle reçoit un prestataire et un rendez-vous s'il est ouvert et
@@ -36,4 +36,17 @@ export function mentionRendezVous(
   return rendezVousEnAttenteDeRapport(v.rendezVousLe, maintenant)
     ? `RDV du ${formaterDateHeureFr(v.rendezVousLe)} passé : rapport attendu`
     : `RDV le ${formaterDateHeureFr(v.rendezVousLe)}${avec}`;
+}
+
+/** La pastille d'un rendez-vous dans une liste tronquée (calendrier). */
+export type PastilleRendezVous = { court: string; complet: string; passe: boolean };
+
+export function pastilleRendezVous(
+  v: { rendezVousLe: Date | null; prestataire?: { raisonSociale: string } | null },
+  maintenant: Date,
+): PastilleRendezVous | null {
+  const complet = mentionRendezVous(v, maintenant);
+  if (!v.rendezVousLe || !complet) return null;
+  const passe = rendezVousEnAttenteDeRapport(v.rendezVousLe, maintenant);
+  return { court: passe ? "RDV passé" : `RDV ${formaterJourMoisFr(v.rendezVousLe)}`, complet, passe };
 }
