@@ -821,3 +821,16 @@ describe("filtre à l'accueil — création et fiche (2026-10-17)", () => {
     expect(champs(force as never)).toEqual(["accueilEnfants"]);
   });
 });
+
+describe("creerEtablissement — un refus de périmètre se distingue d'une saisie à corriger (2026-10-24)", () => {
+  it("plus de cinquante salariés : refus de périmètre", async () => {
+    const r = await creerEtablissement("ent-1", { status: "idle" }, creation({ effectifSurSite: "60" }));
+    expect(r).toMatchObject({ status: "error", refusPerimetre: true });
+  });
+
+  it("un ERP sans type : une réponse manquante, pas un refus de périmètre", async () => {
+    const r = await creerEtablissement("ent-1", { status: "idle" }, creation({ estERP: "oui" }));
+    expect(r.status).toBe("error");
+    expect(r.status === "error" && r.refusPerimetre).toBe(false);
+  });
+});

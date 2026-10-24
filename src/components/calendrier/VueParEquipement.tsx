@@ -38,6 +38,7 @@
 //     nommés, les compteurs et le tiroir du mois visé. La règle reste
 //     visible dans les deux : c'est elle qu'on est venu lire.
 
+import { Fragment } from "react";
 import { MentionRendezVous } from "@/components/rendez-vous/MentionRendezVous";
 import type { PastilleRendezVous } from "@/lib/rendez-vous/regles";
 import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
@@ -67,6 +68,11 @@ export type GroupeEquipement = {
   categorie: string;
   /** Code de la catégorie, pour son picto. */
   categorieCode: string;
+  /**
+   * Le domaine sous lequel la catégorie se range (« Incendie / sécurité »,
+   * lot 2 des points à corriger) ; absent pour « Autres échéances ».
+   */
+  domaine?: string;
   /**
    * Ce que compte le groupe, au singulier : « appareil » dans le parc,
    * « famille » pour les échéances qui n'ont pas d'appareil. Un groupe
@@ -188,8 +194,15 @@ export function VueParEquipement({
   return (
     <div className="flex flex-col gap-10">
       {groupes.map((g, i) => (
+        <Fragment key={g.categorieCode}>
+        {/* Le domaine, au premier groupe qui le porte (les groupes
+            arrivent rangés par domaine). */}
+        {g.domaine && g.domaine !== groupes[i - 1]?.domaine ? (
+          <p className="board-eyebrow -mb-6 m-0 border-b border-[color:var(--board-slate-line)] pb-2 text-[11px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
+            {g.domaine}
+          </p>
+        ) : null}
         <GroupeCategorie
-          key={g.categorieCode}
           groupe={g}
           annee={annee}
           moisCourant={moisCourant}
@@ -199,6 +212,7 @@ export function VueParEquipement({
           // premier, et ça n'oblige pas à dérouler pour le savoir.
           ouvertParDefaut={i === 0}
         />
+        </Fragment>
       ))}
 
       {/* Ce que la lecture par appareil laisse forcément dehors. Le taire
