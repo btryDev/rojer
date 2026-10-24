@@ -210,7 +210,7 @@ export function phraseSousLesReponses(dejaDeclaree: boolean): string {
 export function phraseRienEnPlace(seulementDansLEquipe: boolean): string {
   return seulementDansLEquipe
     ? "Les seules lignes de votre dossier sont des formations de vos salariés : elles se déclarent dans Équipe, onglet Formations."
-    : "Aucune des obligations que votre dossier déclenche n'est un état à constituer ou un fait à dater sans rythme écrit. Les autres sont au calendrier quand elles ont une date, sur « Quand ça arrive » quand elles naissent d'un événement, et sur la fiche de chaque personne quand elles la visent.";
+    : "Aucune des obligations que votre dossier déclenche n'est un état à constituer ou un fait à dater sans rythme écrit. Les autres sont au calendrier quand elles ont une date, dans l'onglet « En cas de… » quand elles naissent d'un événement, et sur la fiche de chaque personne quand elles la visent.";
 }
 
 /**

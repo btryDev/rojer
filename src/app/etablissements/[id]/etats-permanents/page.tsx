@@ -24,6 +24,7 @@ import {
   SectionsParUsage,
 } from "@/components/etats-permanents/SectionsParUsage";
 import { compteDeLaPage } from "@/lib/etats-permanents/compte";
+import { OngletsEnPlace } from "@/components/etats-permanents/OngletsEnPlace";
 import { manquesDeLaFiche } from "@/lib/etablissements/guide-par-module";
 import { FocusSurAncre } from "@/components/etats-permanents/FocusSurAncre";
 import {
@@ -214,6 +215,9 @@ export default async function EtatsPermanentsPage({
               Ce qui doit exister chez vous en permanence. Touchez une ligne
               pour ouvrir sa fiche et la déclarer.
             </p>
+            <div className="mt-5">
+              <OngletsEnPlace etablissementId={id} actif="permanence" />
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-4">

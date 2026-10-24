@@ -40,7 +40,7 @@ export function phraseFormation(reponse: ReponseTransverse, nature: string): str
   if (reponse === "non") {
     return "Retirée de vos obligations : vous avez répondu non. Si cette personne est pourtant concernée, corrigez la réponse.";
   }
-  const ecran = nature === "evenementielle" ? "Quand ça arrive" : "Ce qui doit être en place";
+  const ecran = nature === "evenementielle" ? "Ce qui doit être en place › En cas de…" : "Ce qui doit être en place";
   const suivi = reponse === "oui" ? `Suivie dans « ${ecran} ».` : `Affichée « à confirmer » dans « ${ecran} » tant que vous n'avez pas répondu.`;
   return `Formation que l'établissement organise pour les travailleurs concernés — à faire suivre à cette personne si elle l'est. ${suivi}`;
 }

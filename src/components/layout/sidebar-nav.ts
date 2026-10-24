@@ -56,7 +56,6 @@ import {
   CircleCheck,
   CircleSlash,
   Compass,
-  CornerDownRight,
   Droplets,
   FileCheck2,
   FileText,
@@ -90,7 +89,6 @@ export type SidebarActive =
   | "carnet-sanitaire"
   | "controle"
   | "etats-permanents"
-  | "quand-ca-arrive"
   | "duerp"
   | "guide"
   | "connecter";
@@ -123,9 +121,8 @@ export const LABEL_ITEM: Record<SidebarItemId, string> = {
   // route gardent le terme technique — c'est le rôle de cette table que de les
   // découpler.
   "etats-permanents": "Ce qui doit être en place",
-  // Le pendant du précédent pour la troisième nature (ADR-037) : ce qu'un
-  // fait rend dû. Les mots du dirigeant, pas « obligations événementielles ».
-  "quand-ca-arrive": "Quand ça arrive",
+  // ~~« Quand ça arrive »~~ — devenu l'onglet « En cas de… » de « Ce qui doit
+  // être en place » (2026-10-24, ADR-037 amendée), sans entrée de rail.
   guide: "Comprendre",
   perimetre: "Ce que Rojer ne couvre pas",
   documents: "Documents obligatoires",
@@ -273,7 +270,8 @@ export function deduireActif(
   if (pathname.startsWith(`${base}/plan-prevention`)) return "plan-prevention";
   if (pathname.startsWith(`${base}/carnet-sanitaire`)) return "carnet-sanitaire";
   if (pathname.startsWith(`${base}/etats-permanents`)) return "etats-permanents";
-  if (pathname.startsWith(`${base}/quand-ca-arrive`)) return "quand-ca-arrive";
+  // L'ancienne adresse de « Quand ça arrive » redirige vers l'onglet.
+  if (pathname.startsWith(`${base}/quand-ca-arrive`)) return "etats-permanents";
   if (pathname.startsWith(`${base}/controle`)) return "controle";
   if (pathname.startsWith(`${base}/duerp`)) return "duerp";
   if (pathname.startsWith(`${base}/guide`)) return "guide";
@@ -338,18 +336,9 @@ export function construireSections({
       href: href("/etats-permanents"),
       Icon: CircleCheck,
     },
-    // ADR-037, question Q1 — À VALIDER PAR LA PROPRIÉTAIRE. « À faire » ne
-    // porte que des activités ; celle-ci en est une À UNE CONDITION PRÈS : ce
-    // qu'il faudra faire le jour où le fait survient. Ce n'est pas une lecture
-    // générale (la liste dépend du dossier), et ce n'est pas un filtre du
-    // calendrier (ces lignes ne peuvent pas y exister). Pas de `count` : rien
-    // n'y est jamais en retard.
-    {
-      id: "quand-ca-arrive",
-      label: LABEL_ITEM["quand-ca-arrive"],
-      href: href("/quand-ca-arrive"),
-      Icon: CornerDownRight,
-    },
+    // ~~ADR-037, question Q1 — « Quand ça arrive » en entrée du rail~~ —
+    // tranchée le 2026-10-24 par la propriétaire : un onglet de « Ce qui doit
+    // être en place » (« En cas de… »), qui garde ce surlignage.
   ];
 
   const equipementBatiment: NavItem[] = [

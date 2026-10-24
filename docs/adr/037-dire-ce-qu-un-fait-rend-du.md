@@ -11,6 +11,13 @@
   Deux écarts à ce texte, écrits au § 8. Quatre questions
   attendent la propriétaire (§ 7) ; les recommandations y sont écrites, et
   l'ADR se lit « acceptée telle que recommandée » si elle les retient toutes.
+- **Amendée le 2026-10-24** (décision de la propriétaire, `lot/guide-par-module`) :
+  **Q1 tranchée** — la page n'est plus une entrée du rail « À faire ». Elle
+  devient l'onglet **« En cas de… »** de « Ce qui doit être en place », à côté
+  de « En permanence » (`etats-permanents/en-cas-de`, `OngletsEnPlace`) ;
+  `/quand-ca-arrive` redirige. Motif : c'est de l'informatif — ni date, ni
+  état, ni compteur, ce que l'onglet garde —, et le dirigeant trouve au même
+  endroit ce qui doit exister et ce qu'il devra faire si tel événement arrive.
 - **Amende** : l'ADR-022 (qui nomme l'axe « événement » sans mécanisme) et
   l'ADR-026 (qui pose les natures `evenementielle` et `ponctuelle` sans leur
   donner d'écran). **Ne renverse rien** : il n'y a toujours pas de sixième

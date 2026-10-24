@@ -293,10 +293,10 @@ export default async function FormationsEquipePage({
                 Quand un événement survient
               </h2>
               <Link
-                href={`/etablissements/${id}/quand-ca-arrive`}
+                href={`/etablissements/${id}/etats-permanents/en-cas-de`}
                 className="text-[12.5px] font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
               >
-                Voir « Quand ça arrive »
+                Voir « En cas de… »
               </Link>
             </div>
             <ul className="m-0 mt-3 flex list-none flex-col gap-3 p-0">

@@ -69,7 +69,7 @@ export function ChezVous({
           règle du DUERP cite sa source ci-dessous. Une vérification datée
           cite la sienne sur sa fiche de vérification, une obligation qui
           vise une personne sur sa fiche dans l&apos;équipe, une obligation
-          qui naît d&apos;un événement sur la page « Quand ça arrive », et
+          qui naît d&apos;un événement dans l&apos;onglet « En cas de… » de « Ce qui doit être en place », et
           une obligation à mettre en place sous sa ligne, sur l&apos;écran
           « Ce qui doit être en place ». Modifiez vos déclarations et cette
           section se recalcule.

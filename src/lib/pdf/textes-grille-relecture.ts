@@ -352,7 +352,7 @@ export function pourHelvetica(s: string): string {
 export const LIBELLE_SURFACE: Record<Surface, string> = {
   calendrier: "Calendrier",
   etats_permanents: "Ce qui doit être en place",
-  faits: "Quand ça arrive",
+  faits: "En cas de…",
   niveau_audit: "Ce que Rojer ne couvre pas (niveau audit)",
   fiche_salarie: "Fiche salarié",
 };

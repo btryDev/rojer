@@ -255,7 +255,7 @@ describe("les pages d'entrée disent leur rangement par un fil d'Ariane", () => 
     "perimetre",
     "prescriptions",
     "prestataires",
-    "quand-ca-arrive",
+    "etats-permanents/en-cas-de",
     "registre",
   ])("%s : un fil d'Ariane vers l'établissement", (dossier) => {
     expect(portUnFil(lire(dossier))).toBe(true);
