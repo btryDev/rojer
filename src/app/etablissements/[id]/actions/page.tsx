@@ -31,7 +31,6 @@ function formatDate(d: Date | null): string {
 const ORIGINES_UI: { key: OrigineAction; label: string }[] = [
   { key: "duerp", label: "DUERP" },
   { key: "verification", label: "Vérifications" },
-  { key: "libre", label: "Libres" },
 ];
 
 // La pilule de filtre du board : encre pleine quand elle est active, contour
@@ -167,12 +166,22 @@ export default async function PlanActionsPage({
                 { label: LABEL_ITEM.actions },
               ]}
             />
+            {/* Le nom du rail, pas « Actions correctives » : le titre et
+                l'entrée de menu disaient deux choses (2026-10-24). */}
             <h1 className="board-titre m-0 text-[clamp(22px,2.2vw,27px)]">
-              Actions correctives
+              {LABEL_ITEM.actions}
             </h1>
             <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-              Vue unifiée des actions issues du DUERP (mesures de prévention
-              prévues) et des rapports de vérification (levées d&apos;écart).
+              Les actions à mener : les mesures de prévention prévues dans
+              votre DUERP et les corrections des écarts relevés par les
+              vérifications. Celles qui ont une échéance apparaissent aussi{" "}
+              <Link
+                href={`/etablissements/${id}/calendrier?famille=travaux`}
+                className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
+              >
+                au calendrier
+              </Link>
+              .
             </p>
             <div className="mt-3.5 flex flex-wrap gap-2">
               <LegalBadge

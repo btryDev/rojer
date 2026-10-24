@@ -1,5 +1,6 @@
 "use client";
 
+import { DemandeAide } from "@/components/assistance/DemandeAide";
 import {
   AIDE_NOMBRE_DE_PERSONNES,
   LIBELLE_NOMBRE_DE_PERSONNES,
@@ -603,7 +604,14 @@ export function EtablissementForm({
                       id="ssiCategorieAouB-aide"
                       className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
                     >
-                      {AIDE_SSI}
+                      {AIDE_SSI}{" "}
+                      {/* Doute technique typique (2026-10-24) : une ligne. */}
+                      <DemandeAide
+                        variante="lien"
+                        libelle="Vous ne savez pas ? Un technicien peut l'identifier."
+                        categorie="diagnostic"
+                        contexte="Catégorie du SSI (A ou B)"
+                      />
                     </p>
                     <Erreur message={err("ssiCategorieAouB")} />
                   </div>

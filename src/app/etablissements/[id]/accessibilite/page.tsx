@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DemandeAide } from "@/components/assistance/DemandeAide";
 import { AppTopbar } from "@/components/layout/AppTopbar";
 import { LegalBadge, PastilleFiche, WhyCard } from "@/components/ui-kit";
 import { buttonVariants } from "@/components/ui/button";
@@ -320,6 +321,20 @@ export default async function AccessibilitePage({
                   : null
               }
             />
+            {/* Hors conformité sans Ad'AP : l'utilisateur se déclare en défaut,
+                et l'outil n'a pas de suite à lui proposer (2026-10-24). */}
+            {registre?.conformiteRegime === "non_conforme_sans_adap" ? (
+              <div className="mt-5">
+                <DemandeAide
+                  variante="encart"
+                  accroche="Pas encore conforme, sans Ad'AP ? Un diagnostic accessibilité est la première étape."
+                  libelle="Demander un diagnostic"
+                  categorie="diagnostic"
+                  contexte="Accessibilité : non conforme sans Ad'AP"
+                  etablissementId={id}
+                />
+              </div>
+            ) : null}
           </Section>
 
           <Section

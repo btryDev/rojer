@@ -15,6 +15,9 @@ const { prismaMock, requireUserMock, redirectMock } = vi.hoisted(() => ({
     action: {
       findFirst: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn<(a: { where: Record<string, unknown> }) => Promise<{ count: number }>>(
+        async () => ({ count: 1 }),
+      ),
     },
   },
   requireUserMock: vi.fn(),
@@ -27,6 +30,8 @@ vi.mock("@/lib/auth/require-user", () => ({
   getOptionalUser: vi.fn(),
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+const { liberer } = vi.hoisted(() => ({ liberer: vi.fn(async () => ({ liberes: 1, echecs: 0 })) }));
+vi.mock("@/lib/suppression/fichiers", () => ({ libererFichiers: liberer }));
 vi.mock("@/lib/etablissements/epi-constate", () => ({ constaterEpi: vi.fn(async () => false) }));
 vi.mock("next/navigation", async (orig) => ({
   ...(await orig<typeof import("next/navigation")>()),
@@ -120,21 +125,49 @@ describe("rouvrirAction", () => {
       action({ statut: "levee", leveeRapportId: "rap1" }),
     );
     await rouvrirAction("a1");
-    expect(prismaMock.action.update).toHaveBeenCalledWith({
-      where: { id: "a1" },
+    expect(prismaMock.action.updateMany).toHaveBeenCalledWith({
+      where: { id: "a1", statut: "levee", leveeFichierCle: undefined },
       data: {
         statut: "ouverte",
         leveeLe: null,
         leveeCommentaire: null,
         leveeRapportId: null,
+        leveeFichierCle: null,
+        leveeFichierNom: null,
+        leveeFichierMime: null,
+        leveeFichierTaille: null,
       },
     });
+    expect(liberer).not.toHaveBeenCalled();
+  });
+
+  it("la pièce de la correction défaite est libérée, après la base (ADR-048)", async () => {
+    prismaMock.action.findFirst.mockResolvedValue(
+      action({ statut: "levee", leveeFichierCle: "points/e1/a1-x-facture.pdf" }),
+    );
+    await rouvrirAction("a1");
+    expect(liberer).toHaveBeenCalledWith(["points/e1/a1-x-facture.pdf"], "points/reouverture");
+    expect(prismaMock.action.updateMany.mock.invocationCallOrder[0]).toBeLessThan(
+      liberer.mock.invocationCallOrder[0],
+    );
+  });
+
+  it("rien n'est libéré si le point a changé entre-temps (rouvert puis recorrigé avec une autre pièce)", async () => {
+    prismaMock.action.findFirst.mockResolvedValue(
+      action({ statut: "levee", leveeFichierCle: "points/e1/a1-x-facture.pdf" }),
+    );
+    prismaMock.action.updateMany.mockResolvedValueOnce({ count: 0 });
+    await rouvrirAction("a1");
+    expect(prismaMock.action.updateMany.mock.calls[0]?.[0]?.where).toMatchObject({
+      leveeFichierCle: "points/e1/a1-x-facture.pdf",
+    });
+    expect(liberer).not.toHaveBeenCalled();
   });
 
   it("ne touche pas une action déjà ouverte", async () => {
     prismaMock.action.findFirst.mockResolvedValue(action({ statut: "en_cours" }));
     await rouvrirAction("a1");
-    expect(prismaMock.action.update).not.toHaveBeenCalled();
+    expect(prismaMock.action.updateMany).not.toHaveBeenCalled();
   });
 });
 

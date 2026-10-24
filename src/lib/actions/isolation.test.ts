@@ -32,6 +32,7 @@ const { prismaMock, requireUserMock } = vi.hoisted(() => {
       action: modele(),
       verification: modele(),
       rapportVerification: modele(),
+      equipement: modele(),
     },
     requireUserMock: vi.fn(),
   };
@@ -54,7 +55,7 @@ import {
 import {
   abandonnerAction,
   cloturerAction,
-  creerActionDepuisVerification,
+  creerPointACorriger,
   modifierActionPlan,
   rouvrirAction,
   supprimerActionPlan,
@@ -75,8 +76,9 @@ function aucuneEcriture(): void {
   }
 }
 
-function formulaireActionVerif(echeance?: string): FormData {
+function formulaireActionVerif(echeance?: string, verificationId = "v1"): FormData {
   const fd = new FormData();
+  fd.set("verificationId", verificationId);
   fd.set("libelle", "Remplacer le bloc de secours défectueux");
   fd.set("description", "");
   fd.set("type", "protection_collective");
@@ -85,6 +87,16 @@ function formulaireActionVerif(echeance?: string): FormData {
   fd.set("responsable", "");
   return fd;
 }
+
+/** Un contrôle d'ensemble (porteur établissement) qui couvre les hottes. */
+const LIGNE_ENSEMBLE = {
+  id: "v1",
+  etablissementId: "e1",
+  obligationId: "aeration-controle-installations-r4222-20",
+  equipementId: null,
+  salarieId: null,
+  archiveLe: null,
+};
 
 function formulaireMesure(): FormData {
   const fd = new FormData();
@@ -139,13 +151,9 @@ describe("mesures du wizard DUERP — identifiant d'un autre client", () => {
 });
 
 describe("plan d'actions — identifiant d'un autre client", () => {
-  it("creerActionDepuisVerification refuse sur une vérification tierce", async () => {
+  it("creerPointACorriger refuse sur une vérification tierce", async () => {
     await expect(
-      creerActionDepuisVerification(
-        "verif-autre-client",
-        { status: "idle" },
-        formulaireActionVerif(),
-      ),
+      creerPointACorriger({ status: "idle" }, formulaireActionVerif(undefined, "verif-autre-client")),
     ).rejects.toSatisfy(estNotFound);
     aucuneEcriture();
   });
@@ -216,7 +224,7 @@ describe("cloturerAction — justificatif d'un autre client", () => {
   });
 });
 
-describe("creerActionDepuisVerification — statut initial et origine", () => {
+describe("creerPointACorriger — statut initial et origine", () => {
   // Horloge figée au 10 août 2026 à 08:00 heure de Paris (06:00 UTC, on est
   // en heure d'été). C'est exactement la configuration qui piégeait l'ancien
   // calcul : il est 08:00 pour l'utilisateur, mais une échéance du jour est
@@ -224,10 +232,7 @@ describe("creerActionDepuisVerification — statut initial et origine", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-08-10T06:00:00.000Z"));
-    prismaMock.verification.findFirst.mockResolvedValue({
-      id: "v1",
-      etablissementId: "e1",
-    });
+    prismaMock.verification.findFirst.mockResolvedValue(LIGNE_ENSEMBLE);
     prismaMock.action.create.mockResolvedValue({ id: "a1" });
   });
 
@@ -239,11 +244,7 @@ describe("creerActionDepuisVerification — statut initial et origine", () => {
     // `estActionEnRetard` (lib/dates/retard, ADR-011) borne le retard au
     // début du jour civil de Paris : aujourd'hui n'est jamais en retard,
     // l'utilisateur a toute sa journée.
-    const res = await creerActionDepuisVerification(
-      "v1",
-      { status: "idle" },
-      formulaireActionVerif("2026-08-10"),
-    );
+    const res = await creerPointACorriger({ status: "idle" }, formulaireActionVerif("2026-08-10"));
 
     expect(res.status).toBe("success");
     expect(prismaMock.action.create.mock.calls[0][0].data.statut).toBe(
@@ -252,11 +253,7 @@ describe("creerActionDepuisVerification — statut initial et origine", () => {
   });
 
   it("une échéance d'hier naît « en cours »", async () => {
-    await creerActionDepuisVerification(
-      "v1",
-      { status: "idle" },
-      formulaireActionVerif("2026-08-09"),
-    );
+    await creerPointACorriger({ status: "idle" }, formulaireActionVerif("2026-08-09"));
 
     expect(prismaMock.action.create.mock.calls[0][0].data.statut).toBe(
       "en_cours",
@@ -264,11 +261,7 @@ describe("creerActionDepuisVerification — statut initial et origine", () => {
   });
 
   it("une action sans échéance naît « ouverte »", async () => {
-    await creerActionDepuisVerification(
-      "v1",
-      { status: "idle" },
-      formulaireActionVerif(),
-    );
+    await creerPointACorriger({ status: "idle" }, formulaireActionVerif());
 
     expect(prismaMock.action.create.mock.calls[0][0].data.statut).toBe(
       "ouverte",
@@ -276,14 +269,88 @@ describe("creerActionDepuisVerification — statut initial et origine", () => {
   });
 
   it("respecte le XOR d'origine : vérification renseignée, risque absent", async () => {
-    await creerActionDepuisVerification(
-      "v1",
-      { status: "idle" },
-      formulaireActionVerif(),
-    );
+    await creerPointACorriger({ status: "idle" }, formulaireActionVerif());
 
     const data = prismaMock.action.create.mock.calls[0][0].data;
     expect(data.verificationId).toBe("v1");
     expect(data.risqueId).toBeUndefined();
+  });
+});
+
+describe("creerPointACorriger — ce qui vient du formulaire est revérifié (ADR-048)", () => {
+  beforeEach(() => {
+    prismaMock.verification.findFirst.mockResolvedValue(LIGNE_ENSEMBLE);
+    prismaMock.action.create.mockResolvedValue({ id: "a1" });
+  });
+
+  it("refuse un rapport qui n'est pas celui de ce contrôle", async () => {
+    prismaMock.rapportVerification.findFirst.mockResolvedValue(null);
+    const fd = formulaireActionVerif();
+    fd.set("rapportOrigineId", "rapport-d-un-autre-controle");
+    const res = await creerPointACorriger({ status: "idle" }, fd);
+    expect(res.status).toBe("error");
+    // La lecture est bornée au contrôle, pas seulement à l'identifiant.
+    expect(prismaMock.rapportVerification.findFirst.mock.calls[0][0].where).toEqual({
+      id: "rapport-d-un-autre-controle",
+      verificationId: "v1",
+    });
+    expect(prismaMock.action.create).not.toHaveBeenCalled();
+  });
+
+  it("refuse un appareil d'une catégorie que le contrôle ne couvre pas", async () => {
+    prismaMock.equipement.findFirst.mockResolvedValue({ categorie: "EXTINCTEUR", actif: true });
+    const fd = formulaireActionVerif();
+    fd.set("equipementId", "eq-extincteur");
+    const res = await creerPointACorriger({ status: "idle" }, fd);
+    expect(res.status).toBe("error");
+    expect(prismaMock.action.create).not.toHaveBeenCalled();
+  });
+
+  it("refuse un appareil d'un autre établissement (lu dans celui du contrôle)", async () => {
+    prismaMock.equipement.findFirst.mockResolvedValue(null);
+    const fd = formulaireActionVerif();
+    fd.set("equipementId", "eq-ailleurs");
+    const res = await creerPointACorriger({ status: "idle" }, fd);
+    expect(res.status).toBe("error");
+    expect(prismaMock.equipement.findFirst.mock.calls[0][0].where).toEqual({
+      id: "eq-ailleurs",
+      etablissementId: "e1",
+    });
+  });
+
+  it("accepte un appareil couvert, et l'écrit avec le rapport d'origine", async () => {
+    prismaMock.rapportVerification.findFirst.mockResolvedValue({ id: "r1" });
+    prismaMock.equipement.findFirst.mockResolvedValue({ categorie: "HOTTE_PRO", actif: true });
+    const fd = formulaireActionVerif();
+    fd.set("rapportOrigineId", "r1");
+    fd.set("equipementId", "eq-hotte");
+    const res = await creerPointACorriger({ status: "idle" }, fd);
+    expect(res.status).toBe("success");
+    const data = prismaMock.action.create.mock.calls[0][0].data;
+    expect(data).toMatchObject({ rapportOrigineId: "r1", equipementId: "eq-hotte" });
+  });
+
+  it("refuse de désigner un appareil depuis le contrôle d'un appareil", async () => {
+    prismaMock.verification.findFirst.mockResolvedValue({ ...LIGNE_ENSEMBLE, equipementId: "eq-1" });
+    prismaMock.equipement.findUnique.mockResolvedValue({ actif: true });
+    const fd = formulaireActionVerif();
+    fd.set("equipementId", "eq-hotte");
+    const res = await creerPointACorriger({ status: "idle" }, fd);
+    expect(res.status).toBe("error");
+    expect(prismaMock.action.create).not.toHaveBeenCalled();
+  });
+
+  it("refuse un contrôle éteint", async () => {
+    prismaMock.verification.findFirst.mockResolvedValue({ ...LIGNE_ENSEMBLE, archiveLe: new Date() });
+    const res = await creerPointACorriger({ status: "idle" }, formulaireActionVerif());
+    expect(res.status).toBe("error");
+    expect(prismaMock.action.create).not.toHaveBeenCalled();
+  });
+
+  it("refuse sans contrôle choisi", async () => {
+    const fd = formulaireActionVerif();
+    fd.delete("verificationId");
+    const res = await creerPointACorriger({ status: "idle" }, fd);
+    expect(res.status).toBe("error");
   });
 });

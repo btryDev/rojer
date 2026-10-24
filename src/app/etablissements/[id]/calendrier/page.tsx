@@ -7,6 +7,8 @@ import { FilAriane } from "@/components/navigation/FilAriane";
 import { LegalBadge } from "@/components/ui-kit/LegalBadge";
 import { BadgeStatut } from "@/components/calendrier/BadgeStatut";
 import { mentionDelaiDeGrace } from "@/lib/calendrier/grace";
+import { datePoseeAuCalendrier, pastilleRendezVous, type PastilleRendezVous } from "@/lib/rendez-vous/regles";
+import { MentionRendezVous } from "@/components/rendez-vous/MentionRendezVous";
 import { MentionContractuelle } from "@/components/prescriptions/MentionContractuelle";
 import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeRetenu";
 import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
@@ -154,6 +156,7 @@ function LigneEcheance({
   contractuelle,
   rythmeRetenu,
   aConfirmer = [],
+  rendezVous = null,
   pastille,
   registre,
 }: {
@@ -190,6 +193,8 @@ function LigneEcheance({
    * `meta` est tronqué.
    */
   aConfirmer?: readonly string[];
+  /** Le rendez-vous pris (ADR-049), en pastille : `meta` est tronqué. */
+  rendezVous?: PastilleRendezVous | null;
   pastille: React.ReactNode;
   registre: RegistreLigne;
 }) {
@@ -239,6 +244,7 @@ function LigneEcheance({
           {contractuelle && <MentionContractuelle />}
           <MentionRythmeRetenu mention={rythmeRetenu} />
           <MentionAConfirmer phrases={aConfirmer} />
+          <MentionRendezVous pastille={rendezVous} />
         </p>
         {/* Nature puis complément. Le mot est visible : une icône seule
             disparaît en niveaux de gris et pour qui n'y voit pas. */}
@@ -544,6 +550,12 @@ export default async function CalendrierPage({
       meta:
         LABEL_PERIODICITE[v.periodicite] +
         (o ? ` · ${LABEL_DOMAINE[o.domaine]}` : ""),
+      // Sur l'échéance ouverte seulement : un rapport fait n'a plus de
+      // rendez-vous à venir.
+      rendezVous:
+        lec.lecture === "realisation"
+          ? null
+          : pastilleRendezVous(v, aujourdhui, aUnRendezVous(v, aujourdhui)),
       contractuelle: estEcheanceContractuelle(v),
       rythmeRetenu: mentionRythmeDeVerification(v),
       aConfirmer:
@@ -560,6 +572,8 @@ export default async function CalendrierPage({
       const lec = {
         ...lecBrute,
         registre: registrePrudent(lecBrute.registre, v, prudence),
+        // Au jour du rendez-vous s'il précède l'échéance (ADR-049).
+        date: datePoseeAuCalendrier(v, lecBrute, aujourdhui, aUnRendezVous(v, aujourdhui)),
       };
       if (lec.registre === "aPlanifier") {
         e.aPlanifier += 1;
@@ -593,7 +607,9 @@ export default async function CalendrierPage({
       }
       // `dates` sert la « prochaine échéance », qui n'est bornée par
       // aucune année : une dette de l'an dernier compte toujours.
-      e.dates.push({ date: lec.date, etat });
+      // Sur l'ÉCHÉANCE, pas le rendez-vous : le compte à rebours de
+      // l'appareil reste celui de la date légale (ADR-049).
+      e.dates.push({ date: lecBrute.date, etat });
 
       // Les compteurs décrivent l'APPAREIL, pas l'année : une dette de
       // l'an dernier reste une dette, et une vérification faite en
@@ -1001,7 +1017,19 @@ export default async function CalendrierPage({
           revendiquer d'exclusivité : le relevé « Dépassées » du tableau de bord
           réunit lui aussi toutes les familles. */}
       <p className="m-0 mt-[11px] max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-        {filtreFamille
+        {filtreFamille === "travaux" ? (
+          <>
+            {DESCRIPTION_FAMILLE.travaux}{" "}
+            {/* Le pendant du lien du plan d'actions (2026-10-24) : les
+                actions sans échéance n'ont pas de place ici. */}
+            <Link
+              href={`/etablissements/${id}/actions`}
+              className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
+            >
+              Toutes les actions, datées ou non, sont dans le plan d&apos;actions.
+            </Link>
+          </>
+        ) : filtreFamille
           ? DESCRIPTION_FAMILLE[filtreFamille]
           : `Vos échéances datées, toutes réunies : ${enumererFamilles()}. Le parc et les zones, eux, ne comptent que ce que portent vos équipements.`}
       </p>
@@ -1339,7 +1367,10 @@ export default async function CalendrierPage({
                                  daté d'un rapport, lui, garde sa date. */
                               date={
                                 ligne.lecture === "realisation" ||
-                                aUnRendezVous(v, aujourdhui)
+                                aUnRendezVous(v, aujourdhui) ||
+                                // Posée au jour du rendez-vous (ADR-049).
+                                (v.rendezVousLe !== null &&
+                                  ligne.date.getTime() === v.rendezVousLe.getTime())
                                   ? ligne.date
                                   : null
                               }
@@ -1362,6 +1393,13 @@ export default async function CalendrierPage({
                                 (mentionDelaiDeGrace(v, aujourdhui)
                                   ? ` · ${mentionDelaiDeGrace(v, aujourdhui)}`
                                   : "")
+                              }
+                              // Le rendez-vous pris (ADR-049), à côté de
+                              // l'échéance, jamais à sa place.
+                              rendezVous={
+                                ligne.lecture === "realisation"
+                                  ? null
+                                  : pastilleRendezVous(v, aujourdhui, aUnRendezVous(v, aujourdhui))
                               }
                               contractuelle={estEcheanceContractuelle(v)}
                               rythmeRetenu={mentionRythmeDeVerification(v)}

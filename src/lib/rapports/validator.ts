@@ -23,6 +23,15 @@ export const MIME_AUTORISES = [
 
 export type MimeAutorise = (typeof MIME_AUTORISES)[number];
 
+/** Les formats acceptés, dits au dirigeant — dérivés de la liste, jamais recopiés. */
+const NOM_FORMAT: Record<MimeAutorise, string> = {
+  "application/pdf": "PDF",
+  "image/png": "PNG",
+  "image/jpeg": "JPEG",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "DOCX",
+};
+export const FORMATS_ACCEPTES = MIME_AUTORISES.map((m) => NOM_FORMAT[m]).join(", ");
+
 export const TAILLE_MAX_OCTETS = 20 * 1024 * 1024; // 20 Mo
 
 export type ValidationFichierOk = {

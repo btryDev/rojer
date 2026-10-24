@@ -37,7 +37,7 @@ export type PlanActionsData = {
   actions: LignePlanActions[];
 };
 
-const COULEUR_STATUT: Record<StatutAction, string> = {
+export const COULEUR_STATUT: Record<StatutAction, string> = {
   ouverte: BOARD.ambreEncre,
   en_cours: "#1e3a8a",
   levee: BOARD.vertEncre,
@@ -52,7 +52,6 @@ const PLAN_ACTIONS_AUCUNE_EN_COURS =
 const LIBELLE_ORIGINE: Record<OrigineAction, string> = {
   duerp: "DUERP",
   verification: "Vérification",
-  libre: "Libre",
 };
 
 export function PlanActionsDocument({ data }: { data: PlanActionsData }) {

@@ -230,6 +230,7 @@ model Etablissement {
   fichesRegistre             FicheRegistre[]
   salaries                   Salarie[]
   etatsDeclares              DeclarationEtatPermanent[]
+  demandesAssistance         DemandeAssistance[]
 
   /**
    * Version du référentiel de conformité avec laquelle le calendrier de cet
@@ -577,6 +578,8 @@ model Equipement {
   materielNonCouvert String?
 
   verifications              Verification[]
+  /** Points à corriger qu'un contrôle d'ensemble a désignés sur cet appareil (ADR-048). */
+  pointsACorriger            Action[]
   prescriptionsParticulieres PrescriptionParticuliere[]
 
   createdAt DateTime @default(now())
@@ -769,6 +772,15 @@ model Verification {
   // SQL `urgenceSeule` (`calendrier/portee.ts`).
   graceJusquAu DateTime?
 
+  // Le prestataire attitré et le rendez-vous pris (ADR-049). Ni l'un ni
+  // l'autre ne date la ligne : l'échéance reste celle des faits (ADR-036).
+  // Le rendez-vous est consommé au dépôt d'un rapport ; le prestataire reste.
+  // Le moteur du calendrier ne les écrit jamais.
+  prestataireId  String?
+  prestataire    Prestataire? @relation(fields: [prestataireId], references: [id], onDelete: SetNull)
+  rendezVousLe   DateTime?
+  rendezVousNote String?
+
   rapports RapportVerification[]
   actions  Action[]
 
@@ -807,6 +819,7 @@ model Verification {
   @@index([equipementId])
   @@index([statut])
   @@index([prescriptionId])
+  @@index([prestataireId])
 }
 
 // ---------------------------------------------------------------------------
@@ -960,6 +973,9 @@ model RapportVerification {
 
   createdAt DateTime @default(now())
 
+  /** Les points à corriger que ce rapport a relevés (ADR-048). */
+  pointsACorriger Action[] @relation("PointsDuRapport")
+
   @@index([etablissementId, dateRapport])
   @@index([verificationId])
 }
@@ -1027,6 +1043,29 @@ model Action {
   leveeLe          DateTime?
   leveeCommentaire String?
   leveeRapportId   String?
+  // La pièce qui prouve la correction d'un point à corriger — photo, facture
+  // (ADR-048). Facultative ; mêmes règles que le fichier d'un rapport
+  // (`rapports/validator.ts`), clé sous `points/<établissement>/…`.
+  leveeFichierCle    String?
+  leveeFichierNom    String?
+  leveeFichierMime   String?
+  leveeFichierTaille Int?
+
+  // POINT À CORRIGER (ADR-048) — une action issue d'une vérification.
+  // `rapportOrigineId` : le rapport qui a relevé le point (l'occurrence du
+  // contrôle, ADR-034) ; nul pour les points antérieurs, qu'on ne sait pas
+  // réattribuer. `SetNull` : supprimer un rapport ne supprime pas la trace
+  // de ce qu'il a fait corriger.
+  rapportOrigineId String?
+  rapportOrigine   RapportVerification? @relation("PointsDuRapport", fields: [rapportOrigineId], references: [id], onDelete: SetNull)
+  // L'appareil concerné, SEULEMENT pour un point relevé par un contrôle
+  // d'ensemble (porteur établissement) : pour le contrôle d'un appareil,
+  // l'appareil se lit par la vérification. Garde APPLICATIVE seulement
+  // (`creerPointACorriger`, règles de `lib/points-a-corriger/regles.ts`) ; la
+  // base n'exige que `verificationId` (CHECK `Action_point_equipement`). Pas
+  // de `batimentId` : la zone se lit par l'appareil (ADR-019).
+  equipementId String?
+  equipement   Equipement? @relation(fields: [equipementId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1034,6 +1073,8 @@ model Action {
   @@unique([risqueId, referentielMesureId])
   @@index([etablissementId, statut])
   @@index([verificationId])
+  @@index([rapportOrigineId])
+  @@index([equipementId])
 }
 
 // Valeurs snake_case pour préserver la compatibilité avec les snapshots JSON
@@ -1113,6 +1154,8 @@ model Prestataire {
   // Les pièces REMPLACÉES (2026-10-12) : la fiche ne porte que la pièce en
   // cours, une colonne par type ; l'ancienne s'inscrit ici au remplacement.
   piecesPrecedentes PiecePrestataire[]
+  /** Les contrôles dont il est le prestataire attitré (ADR-049). */
+  controlesSuivis   Verification[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -2086,3 +2129,42 @@ model DeclarationEtatPermanent {
   /// unique ci-dessus, qui sert donc déjà `WHERE etablissementId = ?`.
   @@unique([etablissementId, obligationId])
 }
+
+// ----------------------------------------------------------------------------
+// Demande d'assistance (« Besoin d'aide ? ») — décision de la propriétaire du
+// 2026-10-24. Un utilisateur demande l'aide d'un expert depuis l'endroit où il
+// doute ; la demande est enregistrée, l'envoi par e-mail viendra plus tard.
+// `etablissementId` est nul quand la demande naît avant tout dossier (une
+// création refusée à l'accueil). Données personnelles : le message et le
+// téléphone, saisis par l'utilisateur (base légale : sa demande).
+// ----------------------------------------------------------------------------
+
+enum CategorieAssistance {
+  diagnostic
+  commission_securite
+  duerp
+  prestataire
+  rapport
+  hors_couverture
+  autre
+}
+
+model DemandeAssistance {
+  id              String              @id @default(cuid())
+  /// L'utilisateur Supabase qui demande (ADR-005 : pas de modèle User).
+  userId          String
+  etablissementId String?
+  etablissement   Etablissement?      @relation(fields: [etablissementId], references: [id], onDelete: Cascade)
+  categorie       CategorieAssistance
+  message         String
+  telephone       String?
+  /// La page d'où vient la demande (chemin interne) et ce qu'elle regardait.
+  page            String
+  contexte        String?
+  traiteeLe       DateTime?
+  createdAt       DateTime            @default(now())
+
+  @@index([userId, createdAt])
+  @@index([etablissementId])
+}
+

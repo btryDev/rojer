@@ -329,9 +329,16 @@ export async function supprimerEquipement(
   // La définition partagée d'une preuve (`portantUnePreuve`), jamais recopiée :
   // celle d'ici ignorait le statut réalisé, seul témoin d'une obligation
   // consommée dont la colonne est éteinte.
-  const nbTraces = await prisma.verification.count({
-    where: toutesLesConditions({ equipementId: id }, portantUnePreuve()),
-  });
+  // Et les points à corriger qu'un contrôle d'ensemble a désignés sur lui
+  // (ADR-048) : ils ne pendent pas à ses lignes, mais ils sont sa trace —
+  // une suppression physique les détacherait de lui en silence.
+  const [nbLignes, nbPointsDesignes] = await Promise.all([
+    prisma.verification.count({
+      where: toutesLesConditions({ equipementId: id }, portantUnePreuve()),
+    }),
+    prisma.action.count({ where: { equipementId: id } }),
+  ]);
+  const nbTraces = nbLignes + nbPointsDesignes;
 
   let resultat: SuppressionEquipementResult;
   if (nbTraces === 0) {

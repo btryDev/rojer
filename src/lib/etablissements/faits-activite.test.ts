@@ -13,20 +13,11 @@ import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { questionsDetectionTransverses, tousRisquesConnus } from "@/lib/referentiels";
 import { matchTypologie, type EtablissementMatching } from "@/lib/matching";
 import { titreParId } from "@/lib/salaries/catalogue";
-import { FAITS_ACTIVITE, type ReponsesFaitsActivite } from "./faits-activite";
+import { FAITS_ACTIVITE } from "./faits-activite";
 
 const ARTICLE = /\b[LRD]\. ?\d{4}-\d+(?:-\d+)*/g;
 const articlesCites = (texte: string) =>
   new Set((texte.match(ARTICLE) ?? []).map((a) => a.replace(/\s+/g, " ")));
-
-const AUCUN: ReponsesFaitsActivite = {
-  manutentionManuelle: null,
-  travailSurEcran: null,
-  operationsElectriques: null,
-  conduiteEngins: null,
-  expositionCMR: null,
-  epiPresents: null,
-};
 
 /** Ce que le fait cite : sa raison, et le risque que sa question ajoute au DUERP. */
 function citesDuFait(f: (typeof FAITS_ACTIVITE)[number]): Set<string> {

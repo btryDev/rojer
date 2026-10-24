@@ -1,4 +1,5 @@
 import { estAppareilRetire } from "@/lib/equipements/retrait";
+import { DemandeAide } from "@/components/assistance/DemandeAide";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FilAriane } from "@/components/navigation/FilAriane";
@@ -210,17 +211,10 @@ export default async function RegistrePage({
             >
               Exporter le registre
             </a>
-            <a
-              href="https://www.btry.fr/solution/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={buttonVariants({
-                variant: "boardClair",
-                size: "board",
-              })}
-            >
-              Prendre rendez-vous
-            </a>
+            {/* L'ancien « Prendre rendez-vous » vers btry.fr, toujours affiché :
+                le même besoin passe désormais par « Besoin d'aide ? »
+                (2026-10-24), qui garde l'utilisateur dans Rojer. */}
+            <DemandeAide variante="lien" libelle="Besoin d'aide ?" categorie="commission_securite" contexte="Registre de sécurité" etablissementId={id} />
             {aide}
           </div>
         </div>
@@ -359,10 +353,6 @@ export default async function RegistrePage({
                   quoiFaire="ouvrez une vérification dans votre calendrier, déposez le fichier (PDF, photo, DOCX) et indiquez le résultat. L'outil met automatiquement à jour la prochaine échéance."
                   cta="Ouvrir le calendrier"
                   ctaHref={`${base}/calendrier`}
-                  ctaSecondary={{
-                    libelle: "Prendre rendez-vous",
-                    href: "https://www.btry.fr/solution/",
-                  }}
                 />
               )
             ) : (
