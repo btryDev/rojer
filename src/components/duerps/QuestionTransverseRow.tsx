@@ -17,9 +17,10 @@ import type { ReponseTransverse } from "@/lib/transverses/etat";
  * afficherait une réponse que personne n'a donnée, sur un document à valeur
  * légale. « Retirer ma réponse » ramène au silence.
  *
- * Le `id` de la ligne est celui de la question : la fiche d'un salarié y
+ * Le `id` de la ligne est celui de la question. ~~La fiche d'un salarié y
  * renvoie directement quand la réponse manque (« Formations liées aux risques
- * du poste »). Un seul questionnaire, celui du document unique.
+ * du poste »).~~ [2026-10-24 : la carte a quitté la fiche salarié.] Un seul
+ * questionnaire, celui du document unique.
  */
 type Props = {
   duerpId: string;

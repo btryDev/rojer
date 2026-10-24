@@ -22,12 +22,18 @@ type Props = {
   champ: ChampFaitActivite;
   intitule: string;
   pourquoi: string;
+  /**
+   * Ce que la question ne couvre pas (`autresFondements`). ~~La carte de la
+   * fiche salarié le disait~~ [2026-10-24 : carte retirée ; la phrase vit
+   * avec sa question, quelle que soit la réponse — revue indépendante.]
+   */
+  horsQuestion?: string;
   valeur: boolean | null;
   // ~~`children` : les vignettes nées du fait, sous les réponses (2026-10-21)~~
   // [retiré le 2026-10-24, ADR-047 : la page ne pose plus que la question].
 };
 
-export function FaitActiviteRow({ etablissementId, champ, intitule, pourquoi, valeur }: Props) {
+export function FaitActiviteRow({ etablissementId, champ, intitule, pourquoi, horsQuestion, valeur }: Props) {
   const [pending, startTransition] = useTransition();
   // `true` : échec sans explication ; une chaîne : le refus dit pourquoi.
   const [echec, setEchec] = useState<boolean | string>(false);
@@ -61,6 +67,11 @@ export function FaitActiviteRow({ etablissementId, champ, intitule, pourquoi, va
       <p className="m-0 mt-1.5 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
         {pourquoi}
       </p>
+      {horsQuestion && (
+        <p className="m-0 mt-1.5 max-w-[66ch] text-[12px] leading-[1.55] text-[color:var(--board-slate-soft)]">
+          {horsQuestion}
+        </p>
+      )}
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <Button
           variant={valeur === true ? "board" : "boardClair"}

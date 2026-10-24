@@ -130,6 +130,20 @@ export const CHAMP_ETAT: Record<RegistreLigne, string> = {
   aConfirmer: "var(--board-slate-pale)",
 };
 
+/**
+ * Le POINT d'un état — une pastille ou une barre posée sur une surface
+ * d'ardoise pâle (2026-10-24, revue qualité de la fiche salarié). Les états
+ * « éteints » ont pour champ l'ardoise pâle elle-même : posé dessus, leur
+ * point disparaissait. L'ardoise de graduation les rend visibles sans en
+ * faire une encre (charte, § 1.4).
+ */
+export const POINT_ETAT: Record<RegistreLigne, string> = Object.fromEntries(
+  Object.entries(CHAMP_ETAT).map(([etat, champ]) => [
+    etat,
+    champ === "var(--board-slate-pale)" ? "var(--board-slate)" : champ,
+  ]),
+) as Record<RegistreLigne, string>;
+
 /** Encre lisible sur le champ correspondant. Jamais de blanc sur le rose. */
 export const ENCRE_ETAT: Record<RegistreLigne, string> = {
   enRetard: "var(--board-signal-ink)",

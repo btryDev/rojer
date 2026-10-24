@@ -80,8 +80,9 @@ export async function repondreQuestionTransverse(
 
   revalidatePath(`/duerp/${duerpId}/transverses`);
   revalidatePath(`/duerp/${duerpId}/synthese`);
-  // Les fiches salarié lisent ces réponses (« Formations liées aux risques du
-  // poste ») ; le tableau de bord aussi (`dashboard/transmissions.ts`).
+  // Équipe › Formations lit ces réponses ; le tableau de bord aussi
+  // (`dashboard/transmissions.ts`). ~~Les fiches salarié (« Formations liées
+  // aux risques du poste »)~~ [2026-10-24 : carte retirée de la fiche.]
   revalidatePath(`/etablissements/${duerp.etablissementId}`, "layout");
 }
 

@@ -18,9 +18,10 @@
  *
  * ~~Deux obligations~~ — depuis l'ADR-038 (2026-10-05), seules celles qu'AUCUNE
  * question transverse du DUERP ne gouverne : la formation à la conduite a
- * quitté cette liste pour `titres-du-duerp.ts`, où elle n'apparaît que si
- * l'établissement déclare que des travailleurs conduisent des engins (fait
- * d'activité, ADR-041). Ce qui reste ici est
+ * quitté cette liste : elle est gouvernée par un fait d'activité (ADR-041),
+ * celui de la conduite d'engins. ~~Elle apparaissait dans `titres-du-duerp.ts`~~
+ * [2026-10-24 : module retiré avec la carte « Formations liées aux risques du
+ * poste », refonte de la fiche salarié.] Ce qui reste ici est
  * dû à tout l'effectif.
  *
  * Elle est la même pour tout le monde, et c'est exact plutôt que grossier.
@@ -46,53 +47,18 @@ import { titresGouvernesParUnFait } from "@/lib/etablissements/faits-activite";
 import { cataloguerTitres } from "./catalogue";
 
 /**
- * Une obligation que le poste d'une personne rend due, avec ce que le dossier
- * en porte déjà.
+ * Une obligation qu'un fait redéclenche. ~~Avec la date du dernier titre de la
+ * personne (`dernierTitreLe`)~~ [2026-10-24, revue qualité : la carte « Ce qui
+ * se déclenche » qui la lisait est retirée de la fiche ; la fiche ne garde que
+ * la liste, pour dire sous le titre déclaré qu'il redeviendra dû.]
  */
 export type ObligationDeclenchee = {
   obligation: ObligationPorteeParSalarie;
-  /**
-   * Le titre le plus récemment délivré pour cette obligation, s'il en existe
-   * un. `null` se lit « rien de déclaré », jamais « en retard » : aucune date
-   * ne dit quand la formation était due.
-   */
-  dernierTitreLe: Date | null;
 };
 
-/** La forme minimale d'un titre déclaré que ce module a besoin de lire. */
-export type TitreLu = { obligationId: string; delivreLe: Date };
-
-/**
- * Les obligations événementielles du catalogue, jointes aux titres d'une
- * personne.
- *
- * Le sens de lecture est celui de `etats-permanents/queries.ts` : on part des
- * obligations et on y joint les déclarations, jamais l'inverse. Un titre dont
- * l'obligation a quitté le référentiel n'a plus rien à quoi se joindre, donc
- * il ne fabrique pas de ligne fantôme.
- *
- * L'ordre est celui du catalogue — alphabétique —, pas celui des titres : deux
- * fiches voisines doivent présenter les mêmes lignes dans le même ordre.
- */
-export function obligationsDeclencheesParUnFait(
-  titres: readonly TitreLu[] = [],
-): ObligationDeclenchee[] {
+export function obligationsDeclencheesParUnFait(): ObligationDeclenchee[] {
   const gouvernes = titresGouvernesParUnFait();
   return cataloguerTitres()
     .filter((o) => estDeclencheeParUnFait(o) && !gouvernes.has(o.id))
-    .map((obligation) => ({
-      obligation,
-      dernierTitreLe: dateDuDernierTitre(titres, obligation.id),
-    }));
-}
-
-/** La délivrance la plus récente d'un titre parmi ceux d'une personne, ou `null`. */
-export function dateDuDernierTitre(
-  titres: readonly TitreLu[],
-  obligationId: string,
-): Date | null {
-  const dates = titres
-    .filter((t) => t.obligationId === obligationId)
-    .map((t) => t.delivreLe);
-  return dates.length === 0 ? null : dates.reduce((a, b) => (b > a ? b : a));
+    .map((obligation) => ({ obligation }));
 }

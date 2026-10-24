@@ -1,8 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { Copy, Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * Le texte d'information à remettre aux salariés — art. 13 du RGPD.
@@ -18,62 +16,60 @@ import { Button } from "@/components/ui/button";
  * répondre s'il en est questionné.
  */
 export function TexteInformation({ texte }: { texte: string }) {
-  const [copie, setCopie] = useState(false);
+  const [copie, setCopie] = useState<"non" | "oui" | "refus">("non");
   const [ouvert, setOuvert] = useState(false);
+  // Le navigateur peut refuser (page non sécurisée, permission) : on le dit,
+  // et « lire le texte » reste la porte pour le copier à la main.
+  // Une minuterie à la fois, annulée au démontage : deux clics rapprochés ne
+  // remettent pas le libellé trop tôt.
+  const minuterie = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (minuterie.current) clearTimeout(minuterie.current);
+  }, []);
+  const copier = async () => {
+    try {
+      await navigator.clipboard.writeText(texte);
+      setCopie("oui");
+    } catch {
+      setCopie("refus");
+    }
+    if (minuterie.current) clearTimeout(minuterie.current);
+    minuterie.current = setTimeout(() => setCopie("non"), 2400);
+  };
+  const lien =
+    "cursor-pointer font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4";
 
+  // ~~Une carte, un paragraphe et deux boutons pleins~~ [2026-10-24, retour
+  // de la propriétaire : une ligne du pied d'Équipe]. L'obligation reste
+  // dite — elle est réelle et incombe à l'employeur. Le composant se pose
+  // dans un pied qui se replie (`flex-wrap`) : des liens, et le texte ouvert
+  // prend toute la largeur dessous.
   return (
-    <div>
-      <p className="m-0 max-w-[64ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-        Vos salariés doivent être informés que vous suivez leurs titres, sur
-        quelle base et pour combien de temps. C&apos;est à vous de le faire —
-        vous êtes le responsable de ce traitement. Voici le texte, écrit sur ce
-        que Rojer enregistre réellement : remettez-le, affichez-le, ou joignez-le
-        au livret d&apos;accueil.
-      </p>
-
-      <div className="mt-4 flex flex-wrap items-center gap-3">
-        <Button
-          variant="boardClair"
-          size="boardSm"
-          type="button"
-          onClick={() => setOuvert((o) => !o)}
-        >
-          {ouvert ? "Masquer le texte" : "Lire le texte"}
-        </Button>
-        <Button
-          variant="board"
-          size="boardSm"
-          type="button"
-          onClick={async () => {
-            await navigator.clipboard.writeText(texte);
-            setCopie(true);
-            setTimeout(() => setCopie(false), 2400);
-          }}
-        >
-          {copie ? (
-            <>
-              <Check className="size-3.5" aria-hidden />
-              Copié
-            </>
-          ) : (
-            <>
-              <Copy className="size-3.5" aria-hidden />
-              Copier le texte
-            </>
-          )}
-        </Button>
-        {/* Une confirmation visuelle ne suffit pas : le changement de libellé
-            du bouton n'est pas annoncé par un lecteur d'écran. */}
-        <span role="status" className="sr-only">
-          {copie ? "Texte copié dans le presse-papier" : ""}
-        </span>
-      </div>
-
+    <>
+      <span>
+        Vos salariés doivent être informés de ce suivi :{" "}
+        <button type="button" className={lien} onClick={() => setOuvert((o) => !o)}>
+          {ouvert ? "masquer le texte" : "lire le texte"}
+        </button>
+        {" · "}
+        <button type="button" className={lien} onClick={copier}>
+          {copie === "oui" ? "copié" : copie === "refus" ? "copie impossible, lisez-le" : "le copier"}
+        </button>
+      </span>
+      {/* Une confirmation visuelle ne suffit pas : le changement de libellé
+          n'est pas annoncé par un lecteur d'écran. */}
+      <span role="status" className="sr-only">
+        {copie === "oui"
+          ? "Texte copié dans le presse-papier"
+          : copie === "refus"
+            ? "La copie a échoué : ouvrez le texte pour le copier"
+            : ""}
+      </span>
       {ouvert && (
-        <pre className="mt-4 max-h-[420px] overflow-auto whitespace-pre-wrap rounded-[18px] bg-[color:var(--board-slate-pale)] px-5 py-4 font-mono text-[11.5px] leading-[1.65] text-[color:var(--board-slate-ink)]">
+        <pre className="m-0 mt-2 max-h-[420px] w-full basis-full overflow-auto whitespace-pre-wrap rounded-[18px] bg-[color:var(--board-slate-pale)] px-5 py-4 font-mono text-[11.5px] leading-[1.65] text-[color:var(--board-slate-ink)]">
           {texte}
         </pre>
       )}
-    </div>
+    </>
   );
 }
