@@ -175,10 +175,14 @@ export function CarteTitresDetenus({
                 </p>
               )}
               {/* Les gestes en pied de carte, alignés d'une carte à l'autre. */}
-              <div className="mt-auto flex flex-wrap items-center gap-3 pt-4">
+              <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-4">
                 <ReferenceFondatrice obligation={t} />
-                {t.geste}
-                {t.retirer}
+                {/* Les gestes à droite, la référence à gauche (retour de la
+                    propriétaire, 2026-10-24). */}
+                <div className="ml-auto flex items-center gap-3">
+                  {t.retirer}
+                  {t.geste}
+                </div>
               </div>
             </li>
           ))}
