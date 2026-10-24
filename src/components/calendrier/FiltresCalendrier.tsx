@@ -359,6 +359,9 @@ export function FiltresCalendrier({
                 name="filtre-famille"
                 actif={f.formation === true}
                 onChoisir={() => appliquer({ ...f, famille: undefined, formation: true })}
+                // Le marqueur de la famille qu'il absorbe : même dessin que
+                // l'ancien « Titres du personnel ».
+                icone={<MarqueurFamille famille="personnel" className="size-4" />}
               >
                 Personnel et formations
               </Option>
@@ -475,7 +478,10 @@ export function FiltresCalendrier({
         </Chip>
       ) : null}
       {f.formation ? (
-        <Chip onRetirer={() => appliquer({ ...f, formation: false })}>
+        <Chip
+          onRetirer={() => appliquer({ ...f, formation: false })}
+          icone={<MarqueurFamille famille="personnel" className="size-3" />}
+        >
           Personnel et formations
         </Chip>
       ) : null}
