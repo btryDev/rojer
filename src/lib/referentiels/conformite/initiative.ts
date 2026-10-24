@@ -60,6 +60,13 @@ export const OBLIGATIONS_A_L_INITIATIVE_DE_L_ADMINISTRATION: ReadonlySet<string>
 export const MENTION_POUR_INFORMATION =
   "Visite de l'administration : c'est elle qui en fixe la date, vous n'avez rien à réserver";
 
+/**
+ * La même, pour ce qui SORT du produit — registre, dossier PDF, README du ZIP,
+ * MCP : sans « vous », lu par un tiers (revue de justesse du 2026-10-24).
+ */
+export const MENTION_POUR_INFORMATION_DOCUMENT =
+  "Visite de l'administration : c'est la commission de sécurité qui en fixe la date";
+
 /** Le libellé court d'une pastille. */
 export const LIBELLE_POUR_INFORMATION = "Visite de l'administration";
 

@@ -18,7 +18,7 @@ export type EtatCourt = "declare" | "titres" | "titres-manquants" | "a-declarer"
 const MOT_ETAT: Record<EtatCourt, string> = {
   declare: "Déclaré",
   titres: "D'après votre équipe",
-  "titres-manquants": "À déclarer dans Équipe",
+  "titres-manquants": "À déclarer sur une fiche",
   "a-declarer": "À déclarer",
 };
 

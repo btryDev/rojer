@@ -529,7 +529,7 @@ describe("équipements et calendrier", () => {
 
     const texte = await outil("verifications").executer(ctx, {});
 
-    expect(texte).toContain("plus due");
+    expect(texte).toContain("plus suivie");
     expect(texte).toContain("aucune en retard");
     expect(texte).not.toContain("jour(s) de retard");
     // Et le libellé sort NU : le marqueur texte a disparu des libellés au N3,

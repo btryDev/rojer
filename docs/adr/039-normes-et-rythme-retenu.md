@@ -1,5 +1,17 @@
 # ADR-039 — Une norme peut donner le rythme, et un rythme vague devient annuel, déclaré comme tel
 
+> **Amendement du 2026-10-24 — les mots de la mention** (décision de la
+> propriétaire, `lot/mentions-claires`). Le dirigeant ne connaît pas la règle
+> de l'an : ~~« Rythme retenu par défaut »~~ devient « 1 fois par an (choix de
+> Rojer) », et la phrase longue « Le texte … ne fixe pas de rythme : Rojer la
+> met au calendrier au moins une fois par an, par défaut. » ~~« Rythme de la
+> norme X, relevé par le préventeur »~~ devient « Tous les 3 ans (norme X) » ;
+> le préventeur, la date et les mots du relevé ne s'affichent plus
+> (`releveParPreventeur` reste au référentiel et au dossier de relecture),
+> mais la limite du § 8 reste dite : « (norme non relue par Rojer) ». La règle
+> (défaut annuel, norme distinguée d'une loi) ne change pas.
+
+
 - **Statut** : acceptée, 2026-10-07 — décisions de la propriétaire (a) et (b)
   du même jour, à la suite de la relecture du préventeur
   (`relecture-jc-2026-10/`). Lot 2 de cette relecture : **le modèle seul**.

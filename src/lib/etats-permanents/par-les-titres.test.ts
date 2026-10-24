@@ -55,7 +55,7 @@ describe("etatParLesTitres — ce que la ligne affirme", () => {
       NOW,
     );
     expect(e.enPlace).toBe(true);
-    expect(e.phrase).toBe("D'après votre équipe : 1 personne l'a déclaré, aucune échéance dépassée.");
+    expect(e.phrase).toBe("D'après votre équipe : déclaré pour 1 personne, aucune échéance dépassée.");
   });
 
   it("le seul titre a dépassé ses 3 ans : PAS en place, et la personne est nommée", () => {
@@ -68,7 +68,7 @@ describe("etatParLesTitres — ce que la ligne affirme", () => {
     );
     expect(e.enPlace).toBe(false);
     expect(e.phrase).toMatch(
-      /^D'après votre équipe : 1 personne l'a déclaré ; Léa Martin : échéance calculée dépassée le 0?1\/06\/2025\.$/,
+      /^D'après votre équipe : déclaré pour 1 personne ; Léa Martin : échéance calculée dépassée le 0?1\/06\/2025\.$/,
     );
   });
 
@@ -101,7 +101,7 @@ describe("etatParLesTitres — ce que la ligne affirme", () => {
       NOW,
     );
     expect(e.enPlace).toBe(true);
-    expect(e.phrase).toMatch(/: 2 personnes l'ont déclaré ; Tom Petit : échéance calculée dépassée le/);
+    expect(e.phrase).toMatch(/: déclaré pour 2 personnes ; Tom Petit : échéance calculée dépassée le/);
   });
 
   it("ne dit jamais que tout le personnel est habilité : Rojer ne sait pas qui intervient", () => {

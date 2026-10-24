@@ -33,7 +33,7 @@ import {
   LIBELLE_SANS_ECHEANCE,
   LIBELLE_SANS_RENDEZ_VOUS,
 } from "@/lib/calendrier/etats";
-import { MENTION_POUR_INFORMATION } from "@/lib/referentiels/conformite/initiative";
+import { MENTION_POUR_INFORMATION_DOCUMENT } from "@/lib/referentiels/conformite/initiative";
 import { ageEnMois, EFFECTIF_MAJ_ANNUELLE } from "@/lib/dashboard/duerp";
 import { mentionAConfirmer } from "@/lib/matching/effectif-entreprise";
 import {
@@ -500,7 +500,7 @@ const LIBELLE_ETAT: Record<VerificationLue["etat"], string> = {
   // restée sans réponse, que la mention « à confirmer » nomme.
   a_confirmer: "à confirmer",
   // C64 : la phrase même des autres surfaces, en minuscule d'attaque.
-  pour_information: `${MENTION_POUR_INFORMATION.charAt(0).toLowerCase()}${MENTION_POUR_INFORMATION.slice(1)}`,
+  pour_information: `${MENTION_POUR_INFORMATION_DOCUMENT.charAt(0).toLowerCase()}${MENTION_POUR_INFORMATION_DOCUMENT.slice(1)}`,
 };
 
 function formaterVerifications(verifs: VerificationLue[], filtre = true): string {

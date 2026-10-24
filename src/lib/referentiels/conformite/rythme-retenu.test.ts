@@ -341,7 +341,7 @@ describe("la mention", () => {
     const d = mentionRythmeRetenu(formationDefaut())!;
     expect(d.court).toBe("1 fois par an (choix de Rojer)");
     expect(d.long).toBe(
-      "Le texte dit « répétée périodiquement » sans fixer de rythme : Rojer vous le rappelle au moins une fois par an.",
+      "Le texte dit « répétée périodiquement » sans fixer de rythme : Rojer la met au calendrier au moins une fois par an, par défaut.",
     );
     expect(mentionRythmeRetenu(obligationParId("incendie-erp-extincteurs-annuelle")!)).toBeNull();
   });
@@ -369,7 +369,7 @@ describe("la mention", () => {
     // référentiel, l'écran dit le rythme et sa source.
     const m = mentionRythmeRetenu(obligationParId("elec-salarie-habilitation")!)!;
     expect(m.court).toBe("Tous les 3 ans (norme NF C 18-510)");
-    expect(m.long).toMatch(/^Le texte dit « selon les modalités .* » sans fixer de rythme : Rojer suit celui de la norme NF C 18-510.*, tous les 3 ans\. Une norme n'est pas une loi\.$/);
+    expect(m.long).toMatch(/^Le texte dit « selon les modalités .* » sans fixer de rythme : Rojer suit celui de la norme NF C 18-510.*, tous les 3 ans \(norme non relue par Rojer\)\. Une norme n'est pas une loi\.$/);
     expect(m.long).not.toMatch(/préventeur/);
   });
 

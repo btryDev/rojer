@@ -1,4 +1,4 @@
-import { MENTION_POUR_INFORMATION } from "@/lib/referentiels/conformite/initiative";
+import { MENTION_POUR_INFORMATION_DOCUMENT } from "@/lib/referentiels/conformite/initiative";
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import type { ManqueCouverture } from "@/lib/perimetre/couverture";
 import { phraseFraicheur, type FraicheurCalendrier } from "@/lib/calendrier/fraicheur";
@@ -160,7 +160,7 @@ const LIBELLE_STATUT_VERIF: Record<StatutPeint, string> = {
   a_confirmer: "À confirmer",
   // C64 : la visite de la commission de sécurité, à l'initiative de
   // l'administration — la phrase longue, écrite une fois (`initiative.ts`).
-  pour_information: MENTION_POUR_INFORMATION,
+  pour_information: MENTION_POUR_INFORMATION_DOCUMENT,
   realisee_conforme: "Conforme",
   realisee_observations: "Observations",
   realisee_ecart_majeur: "Écart majeur",

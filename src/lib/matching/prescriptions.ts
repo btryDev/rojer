@@ -258,7 +258,7 @@ export function appliquerPrescriptions(
           // minimum tant qu'elle n'est pas levée.
           raison:
             oa.porteur === "etablissement"
-              ? "Cette obligation vise l'établissement entier, pas un appareil : Rojer ne sait pas encore y appliquer le rythme plus court demandé. Suivez cette date vous-même pour l'instant."
+              ? "Cette obligation vise l'établissement entier, pas un appareil : Rojer ne sait pas encore y appliquer le rythme plus court demandé. Suivez ce rythme vous-même pour l'instant."
               : "L'équipement visé n'est pas (ou plus) un déclencheur de cette obligation.",
         });
         continue;

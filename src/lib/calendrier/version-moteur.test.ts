@@ -529,7 +529,10 @@ const RELEVE = {
   // d'une prescription écartée (`prescriptions.ts`), les mots d'état
   // (`etats.ts`). La régénération n'écrit aucune d'elles en base : NON,
   // empreinte recopiée, version inchangée.
-  empreinte: "087d213dc560e003",
+  // ~~087d213dc560e003~~. Puis les corrections des deux revues du même
+  // lot (« plus suivie », mention de rythme, `mentionDelaiDeGrace` sans
+  // variante d'en-tête) : affichage seul, NON, empreinte recopiée.
+  empreinte: "beaa0a5547ff8503",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

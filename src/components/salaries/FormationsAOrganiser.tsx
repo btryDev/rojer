@@ -79,9 +79,10 @@ export function FormationsAOrganiser({
       <p className="m-0 mt-2.5 flex max-w-[var(--board-mesure)] items-start gap-2 text-[12.5px] leading-[1.55] text-[color:var(--board-blue-ink)]">
         <Info className="mt-[2px] size-3.5 flex-none" aria-hidden />
         <span>
-          D&apos;après ce que vous avez déclaré, chacune de ces formations est
-          due à au moins un de vos salariés. Rojer ne sait pas lesquels : une
-          fois la formation organisée, touchez sa ligne pour le déclarer.
+          D&apos;après ce que vous avez déclaré, ces formations concernent au
+          moins un de vos salariés, sauf celles marquées « à confirmer ».
+          Rojer ne sait pas lesquels. Touchez une ligne pour la déclarer ou
+          voir d&apos;où vient son état.
         </span>
       </p>
 

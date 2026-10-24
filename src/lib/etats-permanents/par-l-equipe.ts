@@ -93,12 +93,16 @@ export function pourquoiALEtablissement(
     return "À confirmer : elle dépend de votre effectif, qui ne se lit pas pareil sur la fiche de l'entreprise et sur ce site. Le détail est dans la fiche.";
   }
   if (l.questionsSansReponse.length > 0) {
-    return "À confirmer : une question du DUERP qui la décide n'a pas encore de réponse.";
+    // Les questions du DUERP muettes cachent la ligne
+    // (`lignesFormationAffichees`) : il ne reste ici que celles de la fiche.
+    return "À confirmer : une question de la fiche de l'établissement n'a pas encore de réponse.";
   }
   if (l.obligation.typologies.activite) {
     return "Votre DUERP le signale : à organiser pour les salariés concernés.";
   }
-  return "Due pour le personnel de l'établissement, quel que soit le poste.";
+  // Neutre : certaines visent tout le personnel, d'autres des agents désignés
+  // (M 29, N 17) — revue de justesse du 2026-10-24.
+  return "Due par l'établissement : Rojer ne sait pas quels salariés sont concernés.";
 }
 
 /**

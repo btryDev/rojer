@@ -232,7 +232,10 @@ export const LIBELLE_ETAT: Record<
   // [2026-10-24, retour de la propriétaire : des mots que le dirigeant peut
   // lire seul. ~~« ne s'applique plus », « sans rendez-vous », « pour
   // information »~~.]
-  archivee: { un: "plus due", plusieurs: "plus dues" },
+  // « plus suivie », pas « plus due » (revue de justesse du 2026-10-24) : une
+  // ligne s'éteint aussi quand Rojer cesse de suivre une obligation qui reste
+  // légale (niveau audit, obligation retirée) — « plus due » rassurerait à tort.
+  archivee: { un: "plus suivie", plusieurs: "plus suivies" },
   // « Sans date fixée », pas « à tenir en permanence » : l'état couvre aussi
   // ce qui se refait sans rythme et ce qu'un événement déclenche.
   sansRendezVous: { un: "sans date fixée", plusieurs: "sans date fixée" },
@@ -256,9 +259,9 @@ export const LIBELLE_ETAT_COURT: Record<RegistreLigne, string> = {
   lointain: "au-delà",
   faite: "faites",
   aPlanifier: "à planif.",
-  archivee: "plus dues",
+  archivee: "plus suivies",
   sansRendezVous: "sans date",
-  pourInformation: "administration",
+  pourInformation: "visites admin.",
   aConfirmer: "à confirmer",
 };
 

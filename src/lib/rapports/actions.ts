@@ -176,7 +176,7 @@ export async function uploadRapport(
     return {
       status: "error",
       message:
-        "Cette obligation n'est plus due : on ne peut plus y déposer de " +
+        "Rojer ne suit plus cette obligation : on ne peut plus y déposer de " +
         "rapport.",
     };
   }

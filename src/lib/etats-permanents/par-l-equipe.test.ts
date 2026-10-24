@@ -127,7 +127,10 @@ describe("pourquoi une formation est due à l'établissement", () => {
     ).toMatch(/^À confirmer : elle dépend de votre effectif/);
   });
 
-  it("sans fait ni titre : due au personnel", () => {
-    expect(pourquoiALEtablissement(ligne("incendie-erp-5-instruction-personnel"))).toMatch(/personnel/);
+  it("sans fait ni titre : due par l'établissement, sans dire qui", () => {
+    // Neutre : M 29 / N 17 visent des agents désignés, pas tout le personnel.
+    expect(pourquoiALEtablissement(ligne("incendie-erp-5-instruction-personnel"))).toMatch(
+      /^Due par l'établissement : Rojer ne sait pas quels salariés/,
+    );
   });
 });

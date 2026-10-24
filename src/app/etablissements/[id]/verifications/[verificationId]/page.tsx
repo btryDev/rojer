@@ -345,10 +345,10 @@ export default async function VerificationDetailPage({
     archivee && v.archiveLe
       ? {
           cle: "Obligation",
-          valeur: "Plus due",
+          valeur: "Plus suivie",
           // [2026-10-24 : la cause et le geste, que « Ne s'applique plus »
           // ne disait pas.]
-          note: `Depuis le ${formaterDateCourteFr(v.archiveLe)} : vos déclarations ou les règles suivies par Rojer ont changé. Rien à faire ; la fiche reste pour les rapports qu'elle porte.`,
+          note: `Depuis le ${formaterDateCourteFr(v.archiveLe)} : vos déclarations ont changé, ou Rojer ne suit plus cette obligation. Cela ne veut pas dire qu'elle n'est plus due. La fiche reste pour les rapports qu'elle porte.`,
         }
       : // Sans rendez-vous, la ligne n'a pas de « prochaine échéance » à
         // annoncer : elle a un contrôle dû et pas de date. Écrire la date de
@@ -492,7 +492,7 @@ export default async function VerificationDetailPage({
             {/* Pas de pastille de statut sur une ligne éteinte : le statut y
                 est GELÉ dans son dernier état connu, et « Planifiée » ou
                 « Conforme » y dirait une chose qui n'est plus attendue. Le fait
-                « Plus due » (ex « Ne s'applique plus »), au-dessus, dit ce qui est vrai. */}
+                « Plus suivie » (ex « Ne s'applique plus »), au-dessus, dit ce qui est vrai. */}
             {/* L'ÉTAT DU JOUR, pas le statut stocké (`statutAffiche`) : une
                 rangée périodique gelée affichait « Conforme » à côté de la
                 pastille « En retard de N j » (relecture du 2026-09-13). */}
@@ -504,7 +504,7 @@ export default async function VerificationDetailPage({
                 date rien. */}
             {mentionDelaiDeGrace(v, aujourdhui) ? (
               <PastilleFiche>
-                {mentionDelaiDeGrace(v, aujourdhui, { enTete: true })}
+                {mentionDelaiDeGrace(v, aujourdhui)}
               </PastilleFiche>
             ) : null}
             {enRetard && sansRendezVous ? (

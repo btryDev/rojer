@@ -75,7 +75,7 @@ export function etatParLesTitres(
     // « établi » sont des mots de l'outil.]
     const phrase = `D'après votre équipe : personne n'a « ${titre.libelle} » déclaré sur sa fiche Équipe.`;
     // Le dossier sort du produit et se lit par un tiers : pas de « votre ».
-    const phraseSansNom = `D'après les titres déclarés par l'employeur : personne n'a « ${titre.libelle} ».`;
+    const phraseSansNom = `D'après les titres déclarés par l'employeur : aucune personne n'a « ${titre.libelle} » de déclaré.`;
     return { enPlace: false, phrase, phraseSansNom };
   }
   // Les mots de la fiche salarié (`equipe/[salarieId]/page.tsx`,
@@ -98,8 +98,9 @@ export function etatParLesTitres(
       depasseesSansNom.push(quoi);
     }
   }
+  // Déclaré POUR la personne, par l'employeur (revue de justesse).
   const compte =
-    titres.length === 1 ? "1 personne l'a déclaré" : `${titres.length} personnes l'ont déclaré`;
+    titres.length === 1 ? "déclaré pour 1 personne" : `déclaré pour ${titres.length} personnes`;
   const suite = (liste: string[]) =>
     liste.length === 0 ? ", aucune échéance dépassée" : ` ; ${liste.join(" ; ")}`;
   return {

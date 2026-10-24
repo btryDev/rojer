@@ -75,8 +75,8 @@ function ligne(
 
 const TITRE_EN_PLACE = {
   enPlace: true,
-  phrase: "D'après votre équipe : 1 personne l'a déclaré, aucune échéance dépassée.",
-  phraseSansNom: "D'après les titres déclarés par l'employeur : 1 personne l'a déclaré, aucune échéance dépassée.",
+  phrase: "D'après votre équipe : déclaré pour 1 personne, aucune échéance dépassée.",
+  phraseSansNom: "D'après les titres déclarés par l'employeur : déclaré pour 1 personne, aucune échéance dépassée.",
 };
 
 // Deux familles, l'une à deux blocs ; une ligne déclarée — dans le SECOND bloc,

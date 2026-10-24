@@ -117,8 +117,12 @@ const capitale = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
  * ~~« Rythme de la norme NF S 61-919 »~~ [2026-10-24 : le rythme d'abord,
  * la norme entre parenthèses.]
  */
-export function pastilleNorme(norme: string, p: PeriodiciteRetenue): string {
-  return `${capitale(RYTHME_EN_PHRASE[p])} (norme ${norme})`;
+export function pastilleNorme(
+  norme: string,
+  p: PeriodiciteRetenue,
+  premierDelai?: Periodicite,
+): string {
+  return `${capitale(rythmeEnPhrase(p, premierDelai))} (norme ${norme})`;
 }
 
 export function mentionRythmeRetenu(o: AvecRythme): MentionRythme | null {
@@ -135,17 +139,22 @@ export function mentionRythmeRetenu(o: AvecRythme): MentionRythme | null {
     // relue~~ [2026-10-24, décision de la propriétaire : « les gens s'en
     // foutent ». Le relevé reste au référentiel (`releveParPreventeur`) et
     // au dossier de relecture ; l'écran dit le rythme et sa source, une
-    // norme, distinguée d'une loi.]
+    // norme, distinguée d'une loi. La LIMITE reste dite, en quelques mots
+    // (revue de justesse du même jour) : Rojer n'a pas relu une norme dont le
+    // rythme lui a été indiqué.]
+    const nonRelue = r.releveParPreventeur ? " (norme non relue par Rojer)" : "";
     return {
       motif: "norme",
-      court: pastilleNorme(r.norme, r.periodicite),
-      long: `${leTexte} : Rojer suit celui de la norme ${r.reference.reference}, ${rythmeEnPhrase(r.periodicite, o.premierDelai)}. Une norme n'est pas une loi.`,
+      court: pastilleNorme(r.norme, r.periodicite, o.premierDelai),
+      long: `${leTexte} : Rojer suit celui de la norme ${r.reference.reference}, ${rythmeEnPhrase(r.periodicite, o.premierDelai)}${nonRelue}. Une norme n'est pas une loi.`,
     };
   }
   return {
     motif: "defaut_annuel",
     court: PASTILLE_DEFAUT_ANNUEL,
-    long: `${leTexte} : Rojer vous le rappelle au moins une fois par an.`,
+    // Ni « vous » (la phrase part au PDF, au ZIP, au MCP) ni « rappelle »
+    // (Rojer n'envoie aucune relance) — revue de justesse du 2026-10-24.
+    long: `${leTexte} : Rojer la met au calendrier au moins une fois par an, par défaut.`,
   };
 }
 
