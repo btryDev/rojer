@@ -31,7 +31,7 @@ import {
   exclusionsDuTitre,
 } from "@/lib/salaries/catalogue";
 import { ceQuiManqueALaPersonne, etatDuManque } from "@/lib/salaries/du-a-la-personne";
-import { friseDesTitres } from "@/lib/salaries/frise-titres";
+import { jaugeDuTitre } from "@/lib/salaries/jauge-titre";
 import { dessinDuTitre } from "@/lib/salaries/illustration-titre";
 import { obligationsDeclencheesParUnFait } from "@/lib/salaries/obligations-evenementielles";
 import { getSalarie } from "@/lib/salaries/queries";
@@ -164,12 +164,6 @@ export default async function SalarieDetailPage({
   const annuaire = { href: `/etablissements/${id}/equipe`, label: "Équipe" };
   const nom = `${s.prenom} ${s.nom}`;
 
-  const frise = friseDesTitres({
-    entreLe: s.entreLe,
-    titres: s.titres.map((t) => ({ cle: t.id, delivreLe: t.delivreLe, echeance: t.echeance })),
-    now,
-  });
-
   const lignes: LigneTitre[] = s.titres.map((t) => ({
     id: t.id,
     obligationId: t.obligationId,
@@ -200,6 +194,7 @@ export default async function SalarieDetailPage({
             t.renvoiAuxNormes.court
           : MOT_DE_L_ETAT[t.etat],
     dessin: dessinDuTitre(t.obligationId),
+    jauge: jaugeDuTitre(t, now),
     referencesLegales: t.referencesLegales,
     // ADR-039 : un rythme que le texte n'écrit pas se dit comme tel, à côté
     // de l'échéance qu'il calcule.
@@ -344,7 +339,6 @@ export default async function SalarieDetailPage({
 
         <CarteTitresDetenus
           lignes={lignes}
-          frise={frise}
           ajouter={<BoutonAjouterTitre />}
           avant={
             conflits.length > 0 && (
