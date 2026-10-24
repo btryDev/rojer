@@ -49,18 +49,14 @@ export const COULEUR_STATUT: Record<StatutAction, string> = {
 const PLAN_ACTIONS_AUCUNE_EN_COURS =
   "Aucune action ouverte ou en cours à la date d'édition.";
 
-const LIBELLE_ORIGINE: Record<OrigineAction, string> = {
-  duerp: "DUERP",
-  verification: "Vérification",
-};
-
 export function PlanActionsDocument({ data }: { data: PlanActionsData }) {
   return (
     <Document>
       <Page size="A4" style={s.page}>
         <View>
           <Text style={s.h1}>Plan d&apos;actions de conformité</Text>
-          <Text style={s.metaLigne}>{data.entreprise}</Text>
+          {/* L'entreprise porte souvent le nom de son établissement : pas deux fois. */}
+          {data.entreprise !== data.etablissement && <Text style={s.metaLigne}>{data.entreprise}</Text>}
           <Text style={s.metaLigne}>
             {data.etablissement} — {data.adresse}
           </Text>
@@ -90,7 +86,7 @@ export function PlanActionsDocument({ data }: { data: PlanActionsData }) {
           <View>
             <View style={s.thead}>
               <Text style={[s.th, { width: "38%" }]}>Action</Text>
-              <Text style={[s.th, { width: "17%" }]}>Type / Origine</Text>
+              <Text style={[s.th, { width: "17%" }]}>Type</Text>
               <Text style={[s.th, { width: "13%" }]}>Échéance</Text>
               <Text style={[s.th, { width: "15%" }]}>Responsable</Text>
               <Text style={[s.th, { width: "17%" }]}>Statut</Text>
@@ -110,10 +106,10 @@ export function PlanActionsDocument({ data }: { data: PlanActionsData }) {
                 </View>
                 <View style={{ width: "17%", paddingRight: 4 }}>
                   <Text style={s.td}>{LABEL_TYPE_ACTION[a.type]}</Text>
-                  <Text style={[s.small, { marginTop: 2 }]}>
-                    {LIBELLE_ORIGINE[a.origine]}
-                    {a.criticite !== null ? ` · crit. ${a.criticite}` : ""}
-                  </Text>
+                  {/* Toutes du DUERP (ADR-048, lot 3) : l'origine ne se répète plus. */}
+                  {a.criticite !== null && (
+                    <Text style={[s.small, { marginTop: 2 }]}>{`crit. ${a.criticite}`}</Text>
+                  )}
                 </View>
                 <Text style={[s.td, { width: "13%" }]}>
                   {formatDateCourte(a.echeance)}
@@ -154,7 +150,7 @@ export function PlanActionsDocument({ data }: { data: PlanActionsData }) {
           </Text>
           <Text style={{ marginTop: 4 }}>
             Ce document ne vaut pas certification de conformité. Il
-            récapitule les actions correctives en cours à la date
+            récapitule les mesures de prévention du DUERP en cours à la date
             d&apos;édition.
           </Text>
         </View>

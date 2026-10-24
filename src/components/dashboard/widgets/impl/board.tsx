@@ -1986,16 +1986,17 @@ export function BlocPlanActions({ bundle }: { bundle: DashboardBundle }) {
       </div>
 
       <p className="mt-[22px] border-t border-[color:rgba(10,10,10,.10)] pt-[18px] text-[13px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+        {/* Le plan d'actions, ce sont les mesures du DUERP (ADR-048, lot 3). */}
         {ouvertes === 0
-          ? "Aucune action ouverte sur cet établissement."
+          ? "Aucune mesure ouverte sur cet établissement."
           : c.actionsEnRetard === 0
-            ? "Aucune action ne dépasse son échéance."
+            ? "Aucune mesure ne dépasse son échéance."
             : // Le possessif s'accorde avec les actions, pas avec l'échéance :
               // « 2 actions sur 5 dépassent LEUR échéance ». Il était figé au
               // singulier là où le verbe, lui, était déjà accordé — donc faux
               // dès la deuxième action en retard, et sur le premier écran du
               // produit.
-              `${c.actionsEnRetard} action${c.actionsEnRetard > 1 ? "s" : ""} sur ${ouvertes} dépasse${c.actionsEnRetard > 1 ? "nt leur" : " son"} échéance.`}
+              `${c.actionsEnRetard} mesure${c.actionsEnRetard > 1 ? "s" : ""} sur ${ouvertes} dépasse${c.actionsEnRetard > 1 ? "nt leur" : " son"} échéance.`}
       </p>
     </CarteBoard>
   );

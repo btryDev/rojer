@@ -74,10 +74,15 @@ export function versPointDuRapport(p: {
 }
 
 /** « corrigé le 20 oct. 2026 : ce qui a été fait (pièce jointe) », « en cours », « à corriger ». */
-export function texteDuPoint(p: PointDuRapport, formaterDate: (d: Date) => string): string {
+export function texteDuPoint(
+  p: PointDuRapport,
+  formaterDate: (d: Date) => string,
+  /** Faux : l'écran pose la pièce en lien, à part (2026-10-25). */
+  avecPiece = true,
+): string {
   if (p.etat === "corrige") {
     const quand = p.corrigeLe ? ` le ${formaterDate(p.corrigeLe)}` : "";
-    return `${LIBELLE_CORRIGE.toLowerCase()}${quand}${p.justification ? ` : ${p.justification}` : ""}${p.pieceJointe ? " (pièce jointe)" : ""}`;
+    return `${LIBELLE_CORRIGE.toLowerCase()}${quand}${p.justification ? ` : ${p.justification}` : ""}${avecPiece && p.pieceJointe ? " (pièce jointe)" : ""}`;
   }
   return p.etat === "en_cours" ? LABEL_STATUT_POINT.en_cours.toLowerCase() : LABEL_STATUT_POINT.ouverte.toLowerCase();
 }

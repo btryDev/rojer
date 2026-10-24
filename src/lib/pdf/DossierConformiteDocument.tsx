@@ -672,9 +672,13 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
       {/* Mesures et points à corriger en cours (ADR-048, lot 3) */}
       <Page size="A4" style={s.page}>
         <Text style={s.h1}>Mesures de prévention en cours</Text>
-        <TableActions actions={data.actionsEnCours} vide="Aucune mesure en cours." />
-        <Text style={s.h2}>Points à corriger ouverts</Text>
-        <TableActions actions={data.pointsEnCours} vide="Aucun point à corriger ouvert." />
+        <TableActions actions={data.actionsEnCours} colonne="Mesure" vide="Aucune mesure en cours." />
+        {/* `minPresenceAhead` : le titre ne reste pas seul en bas de page,
+            loin de ses lignes (contrôle visuel du 2026-10-25). */}
+        <Text style={s.h2} minPresenceAhead={60}>
+          Points à corriger ouverts
+        </Text>
+        <TableActions actions={data.pointsEnCours} colonne="Point à corriger" vide="Aucun point à corriger ouvert." />
         <Text
           style={s.footer}
           render={({ pageNumber, totalPages }) =>
@@ -792,14 +796,23 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
 }
 
 /** Une table d'actions : les mesures du DUERP, ou les points à corriger. */
-function TableActions({ actions, vide }: { actions: LignePlanActions[]; vide: string }) {
+function TableActions({
+  actions,
+  colonne,
+  vide,
+}: {
+  actions: LignePlanActions[];
+  /** L'intitulé de la première colonne : « Mesure », « Point à corriger ». */
+  colonne: string;
+  vide: string;
+}) {
   if (actions.length === 0) {
     return <Text style={[s.small, { marginTop: 12 }]}>{vide}</Text>;
   }
   return (
     <View>
       <View style={s.thead}>
-        <Text style={[s.th, { width: "40%" }]}>Action</Text>
+        <Text style={[s.th, { width: "40%" }]}>{colonne}</Text>
         <Text style={[s.th, { width: "18%" }]}>Type</Text>
         <Text style={[s.th, { width: "14%" }]}>Échéance</Text>
         <Text style={[s.th, { width: "14%" }]}>Responsable</Text>
