@@ -22,8 +22,18 @@ prestataires existait sans lien avec les contrôles.
    `rendezVousNote` (une ligne, 300 caractères au plus, CHECK). Une note sans
    rendez-vous n'est pas écrite.
 3. **Ni l'un ni l'autre ne date la ligne.** L'échéance reste celle des faits
-   (ADR-036) ; le moteur du calendrier ne lit ni n'écrit ces colonnes. Le
-   rendez-vous s'affiche à côté de l'échéance, jamais à sa place.
+   (ADR-036) ; le moteur du calendrier ne lit ni n'écrit ces colonnes.
+   ~~Le rendez-vous s'affiche à côté de l'échéance, jamais à sa place.~~
+   [2026-10-24, décision de la propriétaire : « à la place de la date
+   d'échéance on met le rdv, mais il faut qu'il soit autour de
+   l'échéance ».] Un rendez-vous fixé au plus tard le jour de l'échéance
+   **pose la ligne au calendrier à sa date**, l'échéance légale écrite à côté
+   (`datePoseeAuCalendrier`) ; après l'échéance, la ligne reste à
+   l'échéance et passe en retard comme toute autre, le rendez-vous signalé
+   en rose. Affichage seulement : retards, compteurs et « dans les 30 jours »
+   restent sur l'échéance. Le formulaire signale un rendez-vous après
+   l'échéance ou à plus de trois mois avant, sans bloquer ; il refuse une
+   date absurde (plus d'un mois passé, plus de deux ans d'ici).
 4. **Le rapport consomme le rendez-vous.** Le dépôt d'un rapport l'efface
    (dans la transaction du dépôt) et pré-remplit l'organisme avec le
    prestataire attitré. Un rendez-vous passé sans rapport se dit

@@ -681,6 +681,7 @@ export default async function VerificationDetailPage({
           proposables={proposables}
           hrefNouveauPrestataire={`/etablissements/${id}/prestataires/nouveau`}
           hrefPrestataire={v.prestataire ? `/etablissements/${id}/prestataires/${v.prestataire.id}` : null}
+          echeance={aUnRendezVous(v, aujourdhui) ? v.datePrevue : null}
         />
       ) : null}
 

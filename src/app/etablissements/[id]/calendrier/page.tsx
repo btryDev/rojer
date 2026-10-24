@@ -7,7 +7,7 @@ import { FilAriane } from "@/components/navigation/FilAriane";
 import { LegalBadge } from "@/components/ui-kit/LegalBadge";
 import { BadgeStatut } from "@/components/calendrier/BadgeStatut";
 import { mentionDelaiDeGrace } from "@/lib/calendrier/grace";
-import { pastilleRendezVous, type PastilleRendezVous } from "@/lib/rendez-vous/regles";
+import { datePoseeAuCalendrier, pastilleRendezVous, type PastilleRendezVous } from "@/lib/rendez-vous/regles";
 import { MentionRendezVous } from "@/components/rendez-vous/MentionRendezVous";
 import { MentionContractuelle } from "@/components/prescriptions/MentionContractuelle";
 import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeRetenu";
@@ -569,6 +569,8 @@ export default async function CalendrierPage({
       const lec = {
         ...lecBrute,
         registre: registrePrudent(lecBrute.registre, v, prudence),
+        // Au jour du rendez-vous s'il précède l'échéance (ADR-049).
+        date: datePoseeAuCalendrier(v, lecBrute),
       };
       if (lec.registre === "aPlanifier") {
         e.aPlanifier += 1;
@@ -1360,7 +1362,10 @@ export default async function CalendrierPage({
                                  daté d'un rapport, lui, garde sa date. */
                               date={
                                 ligne.lecture === "realisation" ||
-                                aUnRendezVous(v, aujourdhui)
+                                aUnRendezVous(v, aujourdhui) ||
+                                // Posée au jour du rendez-vous (ADR-049).
+                                (v.rendezVousLe !== null &&
+                                  ligne.date.getTime() === v.rendezVousLe.getTime())
                                   ? ligne.date
                                   : null
                               }
