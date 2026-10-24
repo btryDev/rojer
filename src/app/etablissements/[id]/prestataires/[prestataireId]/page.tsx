@@ -15,6 +15,8 @@ import { VigilancePiecePill } from "@/components/prestataires/VigilancePills";
 import { SupprimerPrestataireButton } from "@/components/prestataires/SupprimerPrestataireButton";
 import { getPrestataire } from "@/lib/prestataires/queries";
 import { controlesSuivisPar } from "@/lib/rendez-vous/queries";
+import { mentionRendezVous } from "@/lib/rendez-vous/regles";
+import { instantDuRendu } from "@/lib/dates/instant-du-rendu";
 import { cheminControle } from "@/lib/navigation/chemins";
 import {
   LIBELLE_PIECE,
@@ -37,7 +39,7 @@ import {
 } from "@/lib/prestataires/vigilance";
 import { enregistrerDatesAttestation } from "@/lib/prestataires/actions";
 import { FormulaireDatesAttestation } from "@/components/prestataires/FormulaireDatesAttestation";
-import { cleJourCivil, formaterDateHeureFr, formaterDateLongueFr } from "@/lib/dates";
+import { cleJourCivil, formaterDateLongueFr } from "@/lib/dates";
 
 /**
  * La fiche d'un prestataire, en charte board (`docs/charte-board.md`).
@@ -82,6 +84,7 @@ export default async function PrestataireDetailPage({
     controlesSuivisPar(id, prestataireId),
   ]);
   if (!p) notFound();
+  const maintenant = instantDuRendu();
 
   // Une fiche prestataire s'ouvre depuis l'annuaire, mais aussi depuis le
   // calendrier — une attestation qui expire y est une échéance.
@@ -208,9 +211,7 @@ export default async function PrestataireDetailPage({
                           c.equipement?.libelle ?? "Tout l'établissement",
                           // Le rendez-vous, jamais l'échéance : elle se lit
                           // sur la fiche du contrôle, avec son âge.
-                          c.rendezVousLe
-                            ? `RDV le ${formaterDateHeureFr(c.rendezVousLe)}`
-                            : "Pas de rendez-vous pris",
+                          mentionRendezVous(c, maintenant) ?? "Pas de rendez-vous pris",
                         ].join(" · ")}
                       </p>
                     </li>

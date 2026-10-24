@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { formaterDateHeureFr, versSaisieDateHeure } from "@/lib/dates";
 import type { SuiviControleState } from "@/lib/rendez-vous/actions";
@@ -42,10 +43,23 @@ export function SuiviControle({
   hrefPrestataire: string | null;
 }) {
   const [ouvert, setOuvert] = useState(false);
+  const router = useRouter();
+  const chemin = usePathname();
+  const parametres = useSearchParams();
   const [state, formAction, pending] = useActionState<SuiviControleState, FormData>(
     async (prev, fd) => {
       const r = await action(prev, fd);
-      if (r.status === "success") setOuvert(false);
+      if (r.status === "success") {
+        setOuvert(false);
+        // L'adresse portait peut-être la confirmation d'un dépôt (`?apres=`) :
+        // elle ne doit pas survivre à un autre enregistrement.
+        // Les autres paramètres (la provenance) restent.
+        if (parametres.has("apres")) {
+          const q = new URLSearchParams(parametres);
+          q.delete("apres");
+          router.replace(q.size ? `${chemin}?${q}` : chemin, { scroll: false });
+        }
+      }
       return r;
     },
     { status: "idle" },
@@ -86,11 +100,14 @@ export function SuiviControle({
             style={{ color: enAttenteDeRapport ? "var(--board-signal-ink)" : undefined }}
           >
             {rendezVousLe
-              ? (enAttenteDeRapport
-                  ? `Le rendez-vous du ${formaterDateHeureFr(rendezVousLe)} est passé : déposez son rapport.`
-                  : `Rendez-vous le ${formaterDateHeureFr(rendezVousLe)}`) + (rendezVousNote ? ` — ${rendezVousNote}` : "")
+              ? enAttenteDeRapport
+                ? `Le rendez-vous du ${formaterDateHeureFr(rendezVousLe)} est passé : déposez son rapport.`
+                : `Rendez-vous le ${formaterDateHeureFr(rendezVousLe)}`
               : "Pas de rendez-vous pris."}
           </p>
+          {rendezVousLe && rendezVousNote && (
+            <p className="m-0 mt-0.5 text-[12.5px] text-[color:var(--board-slate-mid)]">{rendezVousNote}</p>
+          )}
           <p className="m-0 mt-1.5 text-[12px] text-[color:var(--board-slate-soft)]">
             Le rendez-vous ne change pas l&apos;échéance : seul le rapport la fait avancer.
           </p>
