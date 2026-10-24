@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireVerification } from "@/lib/auth/scope";
-import { depuisSaisieDateHeure } from "@/lib/dates";
+import { depuisSaisieDateHeure, joursCivilsEntre } from "@/lib/dates";
 import { resoudrePrestataireOptionnel } from "@/lib/prestataires/queries";
 import { suiviControleSchema } from "./schema";
 import { recoitUnSuivi } from "./regles";
@@ -47,6 +47,18 @@ export async function enregistrerSuiviControle(
   if (!prestataire.ok) return { status: "error", message: "Prestataire introuvable" };
 
   const rendezVousLe = parsed.data.rendezVousLe ? depuisSaisieDateHeure(parsed.data.rendezVousLe) : null;
+  // Une date absurde, pas une date gênante : après l'échéance ou très en
+  // avance se signale à l'écran, et s'accepte.
+  if (rendezVousLe) {
+    const ecart = joursCivilsEntre(new Date(), rendezVousLe);
+    if (ecart < -31 || ecart > 2 * 366) {
+      return {
+        status: "error",
+        message: "Formulaire invalide",
+        fieldErrors: { rendezVousLe: ["Entre le mois dernier et deux ans d'ici"] },
+      };
+    }
+  }
   await prisma.verification.updateMany({
     where: { id: v.id, etablissementId },
     data: {

@@ -4,7 +4,8 @@ import { useActionState, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { formaterDateHeureFr, versSaisieDateHeure } from "@/lib/dates";
+import { depuisSaisieDateHeure, estSaisieDateHeureReelle, formaterDateHeureFr, versSaisieDateHeure } from "@/lib/dates";
+import { avertissementRendezVous } from "@/lib/rendez-vous/regles";
 import type { SuiviControleState } from "@/lib/rendez-vous/actions";
 import type { PrestataireProposable } from "@/lib/rendez-vous/queries";
 import { NOTE_RENDEZ_VOUS_MAX } from "@/lib/rendez-vous/schema";
@@ -31,7 +32,10 @@ export function SuiviControle({
   proposables,
   hrefNouveauPrestataire,
   hrefPrestataire,
+  echeance,
 }: {
+  /** L'échéance légale, quand la ligne en a une : le formulaire compare. */
+  echeance: Date | null;
   action: (prev: SuiviControleState, fd: FormData) => Promise<SuiviControleState>;
   prestataire: Prestataire | null;
   rendezVousLe: Date | null;
@@ -64,6 +68,11 @@ export function SuiviControle({
     },
     { status: "idle" },
   );
+  const [saisieRdv, setSaisieRdv] = useState(rendezVousLe ? versSaisieDateHeure(rendezVousLe) : "");
+  const avertissement =
+    saisieRdv && estSaisieDateHeureReelle(saisieRdv)
+      ? avertissementRendezVous(depuisSaisieDateHeure(saisieRdv), echeance)
+      : null;
   const err = (champ: string) => (state.status === "error" ? state.fieldErrors?.[champ]?.[0] : undefined);
   const couvrants = proposables.filter((p) => p.couvre);
   const autres = proposables.filter((p) => !p.couvre);
@@ -168,8 +177,12 @@ export function SuiviControle({
                 name="rendezVousLe"
                 type="datetime-local"
                 className="champ-board"
-                defaultValue={rendezVousLe ? versSaisieDateHeure(rendezVousLe) : undefined}
+                value={saisieRdv}
+                onChange={(e) => setSaisieRdv(e.currentTarget.value)}
               />
+              {avertissement && (
+                <p className="m-0 mt-1 text-[12px] text-[color:var(--board-amber-ink)]">{avertissement}</p>
+              )}
               {err("rendezVousLe") && (
                 <p className="m-0 mt-1 text-[12px] text-[color:var(--board-signal-ink)]">{err("rendezVousLe")}</p>
               )}

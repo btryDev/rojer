@@ -5,6 +5,7 @@
 // la page Calendrier, où aucun test ne l'atteignait ; il en est sorti le
 // 2026-09-15 avec la correction du rangement des opérations en cours.
 
+import { datePoseeAuCalendrier } from "@/lib/rendez-vous/regles";
 import { composantesCiviles } from "@/lib/dates";
 import type { VerificationDatee } from "@/lib/dates/retard";
 // `import type` : `echeances.ts` ouvre la base.
@@ -119,7 +120,9 @@ export function lignesDuCalendrier<V extends VerificationLue>(
     ...verifs.flatMap((v) =>
       lecturesCalendrier(v, now).map((lec) => ({
         genre: "verif" as const,
-        date: lec.date,
+        // Au jour du rendez-vous s'il précède l'échéance (ADR-049) : on
+        // regarde son mois pour voir qui passe.
+        date: datePoseeAuCalendrier(v, lec),
         v,
         registre: registrePrudent(lec.registre, v, prudence),
         lecture: lec.lecture,

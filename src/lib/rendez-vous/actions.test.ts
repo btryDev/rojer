@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Le prestataire attitré et le rendez-vous d'un contrôle (ADR-049) : ce que
 // l'action écrit, et ce qu'elle refuse.
@@ -30,8 +30,15 @@ const data = () => (h.updateMany.mock.calls[0] as unknown as [{ data: Record<str
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // Les bornes de date se lisent sur l'horloge : on la fixe.
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-10-24T10:00:00Z"));
   h.ligne.archiveLe = null;
   h.ligne.salarieId = null;
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe("enregistrerSuiviControle", () => {
@@ -55,6 +62,14 @@ describe("enregistrerSuiviControle", () => {
   it("des champs vidés retirent prestataire et rendez-vous ; une note sans rendez-vous ne s'écrit pas", async () => {
     await enregistrerSuiviControle("v1", IDLE, fd({ prestataireId: "", rendezVousLe: "", rendezVousNote: "orpheline" }));
     expect(data()).toEqual({ prestataireId: null, rendezVousLe: null, rendezVousNote: null });
+  });
+
+  it("refuse une date absurde (plus d'un mois passé, plus de deux ans d'ici), accepte une date gênante", async () => {
+    expect((await enregistrerSuiviControle("v1", IDLE, fd({ rendezVousLe: "2026-09-01T09:00" }))).status).toBe("error");
+    expect((await enregistrerSuiviControle("v1", IDLE, fd({ rendezVousLe: "2029-01-01T09:00" }))).status).toBe("error");
+    expect(h.updateMany).not.toHaveBeenCalled();
+    // Après l'échéance ou très en avance : accepté, l'écran le signale.
+    expect((await enregistrerSuiviControle("v1", IDLE, fd({ rendezVousLe: "2028-06-01T09:00" }))).status).toBe("success");
   });
 
   it("refuse une date-heure qui n'existe pas", async () => {

@@ -3,7 +3,7 @@
  * l'action serveur lisent les mêmes fonctions.
  */
 
-import { formaterDateHeureFr, formaterJourMoisFr, joursCivilsEntre } from "@/lib/dates";
+import { formaterDateCourteFr, formaterDateHeureFr, formaterJourMoisFr, joursCivilsEntre } from "@/lib/dates";
 
 /**
  * Un contrôle reçoit un prestataire et un rendez-vous s'il est ouvert et
@@ -41,12 +41,64 @@ export function mentionRendezVous(
 /** La pastille d'un rendez-vous dans une liste tronquée (calendrier). */
 export type PastilleRendezVous = { court: string; complet: string; passe: boolean };
 
+/**
+ * Posée au jour du rendez-vous, la ligne dit son échéance ; restée à
+ * l'échéance (rendez-vous après elle), elle dit le rendez-vous, en rose.
+ */
 export function pastilleRendezVous(
-  v: { rendezVousLe: Date | null; prestataire?: { raisonSociale: string } | null },
+  v: { rendezVousLe: Date | null; datePrevue: Date; prestataire?: { raisonSociale: string } | null },
   maintenant: Date,
 ): PastilleRendezVous | null {
   const complet = mentionRendezVous(v, maintenant);
   if (!v.rendezVousLe || !complet) return null;
-  const passe = rendezVousEnAttenteDeRapport(v.rendezVousLe, maintenant);
-  return { court: passe ? "RDV passé" : `RDV ${formaterJourMoisFr(v.rendezVousLe)}`, complet, passe };
+  if (rendezVousEnAttenteDeRapport(v.rendezVousLe, maintenant)) {
+    return { court: "RDV passé", complet, passe: true };
+  }
+  if (rendezVousAvantEcheance(v)) {
+    return {
+      court: `Échéance ${formaterDateCourteFr(v.datePrevue)}`,
+      complet: `${complet} — échéance légale le ${formaterDateCourteFr(v.datePrevue)}`,
+      passe: false,
+    };
+  }
+  return {
+    court: `RDV ${formaterJourMoisFr(v.rendezVousLe)}, après l'échéance`,
+    complet: `${complet} — après l'échéance du ${formaterDateCourteFr(v.datePrevue)}`,
+    passe: true,
+  };
+}
+
+/**
+ * Le rendez-vous se tient-il au plus tard le jour de l'échéance ? Alors la
+ * ligne se place au calendrier à la date du rendez-vous, l'échéance écrite à
+ * côté (décision de la propriétaire du 2026-10-24). Après l'échéance, la
+ * ligne reste à l'échéance : le retard doit se voir.
+ */
+export function rendezVousAvantEcheance(
+  v: { rendezVousLe?: Date | null; datePrevue: Date },
+): boolean {
+  return !!v.rendezVousLe && joursCivilsEntre(v.rendezVousLe, v.datePrevue) >= 0;
+}
+
+/**
+ * La date où le calendrier pose une lecture : celle du rendez-vous pour
+ * l'échéance ouverte quand il la précède, sinon celle de la lecture.
+ * Affichage seulement : retards et compteurs restent sur l'échéance.
+ */
+export function datePoseeAuCalendrier(
+  v: { rendezVousLe?: Date | null; datePrevue: Date },
+  lecture: { date: Date; lecture: string; registre: string },
+): Date {
+  if (lecture.lecture === "realisation" || lecture.registre === "enRetard") return lecture.date;
+  return rendezVousAvantEcheance(v) ? v.rendezVousLe! : lecture.date;
+}
+
+/** Les écarts que le formulaire signale à la saisie, sans bloquer. */
+export function avertissementRendezVous(rendezVousLe: Date, echeance: Date | null): string | null {
+  if (!echeance) return null;
+  const avance = joursCivilsEntre(rendezVousLe, echeance);
+  if (avance < 0) return "Après l'échéance : le contrôle sera en retard d'ici là.";
+  if (avance > 92)
+    return "Bien en avance sur l'échéance : la prochaine échéance repartira de la date de ce rapport.";
+  return null;
 }
