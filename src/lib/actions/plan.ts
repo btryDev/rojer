@@ -270,8 +270,13 @@ export async function cloturerAction(
     };
   }
 
+  // Avant toute écriture au stockage : une action levée, ou abandonnée (dans
+  // un autre onglet), ne se clôture pas — l'abandon se défait d'abord.
   if (existante.statut === "levee") {
     return { status: "error", message: "Déjà corrigée" };
+  }
+  if (!estActionOuverte(existante)) {
+    return { status: "error", message: "Abandonnée : rouvrez-la avant de la marquer corrigée." };
   }
 
   // `rapportId` vient lui aussi du formulaire : sans contrôle, une clôture

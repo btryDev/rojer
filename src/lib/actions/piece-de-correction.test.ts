@@ -78,6 +78,13 @@ describe("cloturerAction — la pièce d'un point corrigé", () => {
     });
   });
 
+  it("un point abandonné ne se corrige pas, et rien n'est écrit au stockage", async () => {
+    h.action.findFirst.mockResolvedValue({ ...POINT, statut: "abandonnee" });
+    const r = await cloturerAction("a1", { status: "idle" }, formulaire(true));
+    expect(r).toMatchObject({ status: "error", message: expect.stringMatching(/^Abandonnée/) });
+    expect(h.put).not.toHaveBeenCalled();
+  });
+
   it("refuse une pièce sur une mesure du DUERP", async () => {
     h.action.findFirst.mockResolvedValue({ ...POINT, verificationId: null, risqueId: "r1" });
     const r = await cloturerAction("a1", { status: "idle" }, formulaire(true));
