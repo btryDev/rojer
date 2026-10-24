@@ -320,8 +320,13 @@ export function FiltresCalendrier({
           <div
             role="dialog"
             aria-label="Filtres du calendrier"
-            className="absolute left-0 top-full z-30 mt-2 w-[300px] rounded-[18px] bg-[color:var(--board-card)] p-2.5 shadow-[0_1px_2px_rgba(13,18,36,.06),0_18px_44px_-16px_rgba(13,18,36,.28)] ring-1 ring-[color:rgba(13,18,36,.08)]"
+            className="absolute left-0 top-full z-30 mt-2 w-[min(92vw,880px)] max-h-[80vh] overflow-y-auto rounded-[18px] bg-[color:var(--board-card)] p-2.5 shadow-[0_1px_2px_rgba(13,18,36,.06),0_18px_44px_-16px_rgba(13,18,36,.28)] ring-1 ring-[color:rgba(13,18,36,.08)]"
           >
+            {/* À l'horizontale (2026-10-24, demande de la propriétaire) : trois
+                colonnes dès l'écran moyen — type, domaine, le reste —, au lieu
+                d'une colonne qu'il fallait faire défiler. */}
+            <div className="grid gap-x-2 md:grid-cols-3">
+            <div>
             <fieldset className="m-0 border-0 p-0">
               <TitreGroupe>Type d&apos;échéance</TitreGroupe>
               <Option
@@ -345,8 +350,8 @@ export function FiltresCalendrier({
                 </Option>
               ))}
             </fieldset>
-
-            <div className="mx-2.5 mt-2 border-t border-[color:rgba(10,10,10,.08)]" />
+            </div>
+            <div>
             <fieldset className="m-0 border-0 p-0">
               <TitreGroupe>Domaine des contrôles</TitreGroupe>
               <Option
@@ -369,10 +374,11 @@ export function FiltresCalendrier({
                 </Option>
               ))}
             </fieldset>
+            </div>
+            <div>
 
             {multiBatiments ? (
               <>
-                <div className="mx-2.5 mt-2 border-t border-[color:rgba(10,10,10,.08)]" />
                 <fieldset className="m-0 border-0 p-0">
                   <TitreGroupe>Zone</TitreGroupe>
                   <Option
@@ -398,7 +404,9 @@ export function FiltresCalendrier({
               </>
             ) : null}
 
-            <div className="mx-2.5 mt-2 border-t border-[color:rgba(10,10,10,.08)]" />
+            {multiBatiments ? (
+              <div className="mx-2.5 mt-2 border-t border-[color:rgba(10,10,10,.08)]" />
+            ) : null}
             <fieldset className="m-0 border-0 p-0">
               <TitreGroupe>Urgence</TitreGroupe>
               <Option
@@ -421,6 +429,9 @@ export function FiltresCalendrier({
                 Formations seulement
               </Option>
             </fieldset>
+
+            </div>
+            </div>
 
             {nbActifs > 0 ? (
               <>
