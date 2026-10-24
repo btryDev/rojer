@@ -43,7 +43,7 @@ export function EmptyState({
 }) {
   return (
     <div className="carte-board px-7 py-8 sm:px-8">
-      <div className="max-w-[62ch] space-y-4">
+      <div className="max-w-[var(--board-mesure)] space-y-4">
         <p
           className={
             "board-eyebrow m-0 text-[10.5px] tracking-[0.18em] " +

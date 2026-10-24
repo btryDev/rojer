@@ -144,10 +144,10 @@ export default async function SynthesePage({
               style={{ color: ENCRE_ETAT[etatMaj] }}
             >
               {jamaisValide
-                ? "Aucune version validée · art. R. 4121-1"
+                ? "Aucune version de votre DUERP n'est validée"
                 : majAnnuelleAConfirmer
-                  ? "Mise à jour à confirmer · art. R. 4121-2"
-                  : "Mise à jour requise · art. R. 4121-2"}
+                  ? "Mise à jour annuelle peut-être due"
+                  : "Mise à jour annuelle due"}
             </p>
             {/* L'effectif ne se montre que là où il décide de quelque
                 chose — c'est-à-dire sur l'échéance annuelle du 1°. Sur un
@@ -165,7 +165,7 @@ export default async function SynthesePage({
             )}
           </div>
           <p
-            className="m-0 mt-2.5 max-w-[68ch] text-[13.5px] leading-[1.6]"
+            className="m-0 mt-2.5 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6]"
             style={{ color: ENCRE_ETAT[etatMaj] }}
           >
             {jamaisValide ? (
@@ -205,7 +205,7 @@ export default async function SynthesePage({
         <h2 className="board-titre m-0 mt-2 text-[clamp(29px,3vw,39px)]">
           Synthèse générale
         </h2>
-        <p className="m-0 mt-3 max-w-[62ch] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           Vue d&apos;ensemble de votre évaluation et plan d&apos;actions
           priorisé. Chaque validation fige un exemplaire consultable et
           téléchargeable.
@@ -490,7 +490,7 @@ export default async function SynthesePage({
               // (`mentionSansReponseIsolee`), qui n'avait pas été transposé à
               // l'écran.
               couverture.etat === "aucun_manque_identifie" ? (
-                <p className="m-0 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+                <p className="m-0 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                   Vous avez répondu «&nbsp;non&nbsp;» à{" "}
                   {couverture.activitesEcartees.length > 1
                     ? `chacune des ${couverture.activitesEcartees.length} questions`
@@ -499,7 +499,7 @@ export default async function SynthesePage({
                   déclarée.
                 </p>
               ) : (
-                <p className="m-0 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+                <p className="m-0 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                   Aucune activité hors référentiel n&apos;a été déclarée, et{" "}
                   {perimetreSansReponse.length > 1
                     ? `${perimetreSansReponse.length} questions de périmètre n'ont pas été tranchées`
@@ -510,7 +510,7 @@ export default async function SynthesePage({
               )
             ) : (
               <>
-                <p className="m-0 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+                <p className="m-0 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                   Vous avez déclaré exercer {perimetreDeclare.length} activité
                   {perimetreDeclare.length > 1 ? "s" : ""}{" "}
                   que le référentiel
@@ -526,7 +526,7 @@ export default async function SynthesePage({
                       <p className="m-0 text-[14px] font-medium leading-[1.45] text-[color:var(--board-ink)]">
                         {a.libelle}
                       </p>
-                      <p className="m-0 mt-1 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                      <p className="m-0 mt-1 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                         {a.cequiManque}
                       </p>
                     </li>
@@ -535,7 +535,7 @@ export default async function SynthesePage({
               </>
             )}
             {perimetreSansReponse.length > 0 && perimetreDeclare.length > 0 && (
-              <p className="m-0 mt-4 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+              <p className="m-0 mt-4 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                 {perimetreSansReponse.length} question
                 {perimetreSansReponse.length > 1 ? "s" : ""} sur le périmètre
                 {perimetreSansReponse.length > 1 ? " restent" : " reste"}{" "}
@@ -583,14 +583,14 @@ export default async function SynthesePage({
             Aperçu PDF brouillon ↗
           </a>
         </div>
-        <p className="m-0 mt-3 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           L&apos;aperçu télécharge un PDF estampillé{" "}
           <span className="font-semibold">« Document non validé »</span> sur
           chaque page, sans créer de version. Pour un PDF officiel consultable
           et archivé, validez une version ci-dessous.
         </p>
         {versions.length === 0 ? (
-          <p className="m-0 mt-4 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 mt-4 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
             Aucune version validée pour l&apos;instant. L&apos;aperçu
             ci-dessus vous permet toutefois de vérifier le rendu avant de
             figer une version.
@@ -732,7 +732,7 @@ function AlerteItem({
         >
           {intitule}
         </p>
-        <p className="m-0 mt-1 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 mt-1 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           {detail}
         </p>
       </div>

@@ -7,7 +7,7 @@
  * fiche d'une personne ne peut pas lui réclamer le titre. Mais si la réponse
  * est « oui » et que PERSONNE dans l'effectif ne le détient, le trou est
  * certain, quel que soit le conducteur : il se dit une fois, pour
- * l'établissement, sur Équipe › Formations. Le titre se déclare ensuite sur la
+ * l'établissement, sur ~~Équipe › Formations~~ [2026-10-24 : section « Formations à organiser » d'Équipe]. Le titre se déclare ensuite sur la
  * fiche de qui conduit, depuis « Ajouter un titre ».
  *
  * Trois sortes de titres sont laissées dehors :

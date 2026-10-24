@@ -138,7 +138,7 @@ export function FormulairePermisFeu({
           désactivé, l'écran dit pourquoi, la zone reste ouverte. */}
       {scelle && (
         <section className="rounded-[22px] bg-[color:var(--board-slate-pale)] px-6 py-5">
-          <p className="m-0 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-ink)]">
+          <p className="m-0 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-ink)]">
             {scelle}
           </p>
           <div className="mt-4">
@@ -152,7 +152,7 @@ export function FormulairePermisFeu({
         </section>
       )}
       {!scelle && avisLiens && (
-        <p className="m-0 max-w-[66ch] rounded-[22px] bg-[color:var(--board-slate-pale)] px-6 py-5 text-[13.5px] leading-[1.6] text-[color:var(--board-ink)]">
+        <p className="m-0 max-w-[var(--board-mesure)] rounded-[22px] bg-[color:var(--board-slate-pale)] px-6 py-5 text-[13.5px] leading-[1.6] text-[color:var(--board-ink)]">
           {avisLiens}
         </p>
       )}
@@ -451,7 +451,7 @@ export function FormulairePermisFeu({
               </label>
             ))}
           </div>
-          <p className="m-0 mt-2 max-w-[62ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
             L&apos;INRS (ED 6030)&nbsp;: «&nbsp;Surveillance à réaliser
             pendant 2 h au moins après l&apos;arrêt des travaux.&nbsp;»
             «&nbsp;Standard&nbsp;», «&nbsp;renforcé&nbsp;» et

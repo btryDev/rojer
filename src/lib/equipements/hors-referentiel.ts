@@ -100,21 +100,24 @@ export type MotifSansEcheance =
  * n'est pas non plus une absence : la règle existe, elle n'a simplement pas de
  * date à poser — d'où le mot « obligation », gardé en tête de la pastille.
  */
+// [2026-10-24, retour de la propriétaire : « référentiel » et « niveau
+// audit » sont des mots de l'outil, pas du dirigeant. Les pastilles disent ce
+// qui est dû et ce que Rojer suit.]
 export const LIBELLE_SANS_ECHEANCE: Record<MotifSansEcheance, string> = {
-  categorie_hors_referentiel: "Hors référentiel",
+  categorie_hors_referentiel: "Non suivi par Rojer",
   aucune_obligation_applicable: "Aucune échéance calculée",
-  aucune_echeance_datable: "Obligation sans rythme écrit",
-  niveau_audit: "Obligation au niveau audit",
+  aucune_echeance_datable: "Dû, sans date fixée par le texte",
+  niveau_audit: "Dû, non suivi par Rojer",
 };
 
 /** La phrase longue, celle qui dit le fait complet. */
 export const EXPLICATION_SANS_ECHEANCE: Record<MotifSansEcheance, string> = {
   categorie_hors_referentiel:
-    "Aucune échéance n'est calculée pour cet équipement : sa catégorie n'est couverte par aucune obligation du référentiel. Cela ne veut pas dire qu'aucune vérification ne lui est due.",
+    "Rojer ne suit pas ce type d'équipement : aucune échéance n'est calculée. Cela ne veut pas dire qu'aucune vérification ne lui est due — suivez-le par vos moyens habituels.",
   aucune_obligation_applicable:
-    "Aucune échéance n'est calculée pour cet équipement : aucune obligation du référentiel ne s'applique à lui compte tenu de la typologie de l'établissement et de ses caractéristiques. Cela ne veut pas dire qu'aucune vérification ne lui est due.",
+    "Pour votre type d'établissement et ce que vous avez déclaré, Rojer ne lui connaît pas de vérification obligatoire. Cela ne veut pas dire qu'aucune ne lui est due.",
   aucune_echeance_datable:
-    "Aucun texte n'écrit de rythme pour les obligations qui visent cet équipement : le référentiel n'en tire aucune date, il n'y a donc rien à poser sur le calendrier. Elles s'appliquent malgré tout.",
+    "Des obligations visent cet équipement, mais aucun texte ne leur fixe de rythme : rien n'est mis au calendrier. Elles s'appliquent quand même.",
   // ~~« …mais Rojer la tient au niveau audit : … la page « Ce que Rojer ne
   // couvre pas » la nomme, avec son texte. »~~ — 2026-10-17, revue de l'ADR-046 :
   // la page ne montre plus le texte (la référence est à l'annexe du PDF du

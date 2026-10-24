@@ -23,7 +23,7 @@ export function compteDeLaPage(d: EtatsPermanentsDuDossier): {
   parLesTitres: number;
 } {
   // Les formations ne s'affichent pas sur la page et ne s'y comptent pas : elles
-  // se déclarent et se comptent dans Équipe › Formations (ADR-047). Le score,
+  // se déclarent et se comptent dans ~~Équipe › Formations~~ [2026-10-24 : section « Formations à organiser » d'Équipe] (ADR-047). Le score,
   // le PDF et `d.total` les gardent. Même règle de compte (`compteParLEquipe`).
   const risques = compteParLEquipe(d.parLEquipe);
   const titresDesRisques = d.parLEquipe.filter(

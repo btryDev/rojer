@@ -113,13 +113,13 @@ export function useConfirmation(): {
       >
         <p
           id={idTitre}
-          className="m-0 max-w-[62ch] text-[14px] font-semibold leading-[1.4] text-[color:var(--board-ink)]"
+          className="m-0 max-w-[var(--board-mesure)] text-[14px] font-semibold leading-[1.4] text-[color:var(--board-ink)]"
         >
           {question.titre}
         </p>
         <p
           id={idDetail}
-          className="m-0 mt-1.5 max-w-[62ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]"
+          className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]"
         >
           {question.detail}
         </p>

@@ -22,12 +22,12 @@ describe("AideCategorie", () => {
     }
   });
 
-  it("sur la fiche, l'aide prend le corps explicatif de la charte (12,5 px, 1,55, 62ch)", () => {
+  it("sur la fiche, l'aide prend le corps explicatif de la charte (12,5 px, 1,55, la mesure)", () => {
     const { container } = render(<AideCategorie categorie="DEFIBRILLATEUR" gabarit="fiche" />);
     const cls = container.querySelector("p")!.className;
     expect(cls).toContain("text-[12.5px]");
     expect(cls).toContain("leading-[1.55]");
-    expect(cls).toContain("max-w-[62ch]");
+    expect(cls).toContain("max-w-[var(--board-mesure)]");
   });
 
   it("la fiche de l'appareil pose l'aide de sa catégorie", () => {

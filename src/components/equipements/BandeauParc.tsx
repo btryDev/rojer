@@ -172,7 +172,7 @@ export function BandeauParc({
               <h1 className="board-titre m-0 text-[clamp(22px,2.2vw,27px)]">
                 Équipements
               </h1>
-              <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+              <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
                 Ce que vous avez, et où. Chaque appareil porte ses
                 vérifications, ses rapports et ses papiers&nbsp;: ouvrez sa
                 fiche pour les voir.

@@ -345,8 +345,10 @@ export default async function VerificationDetailPage({
     archivee && v.archiveLe
       ? {
           cle: "Obligation",
-          valeur: "Ne s'applique plus",
-          note: `Depuis le ${formaterDateCourteFr(v.archiveLe)}. La fiche est conservée pour les rapports qu'elle porte.`,
+          valeur: "Plus suivie",
+          // [2026-10-24 : la cause et le geste, que « Ne s'applique plus »
+          // ne disait pas.]
+          note: `Depuis le ${formaterDateCourteFr(v.archiveLe)} : vos déclarations ont changé, ou Rojer ne suit plus cette obligation. Cela ne veut pas dire qu'elle n'est plus due. La fiche reste pour les rapports qu'elle porte.`,
         }
       : // Sans rendez-vous, la ligne n'a pas de « prochaine échéance » à
         // annoncer : elle a un contrôle dû et pas de date. Écrire la date de
@@ -364,9 +366,10 @@ export default async function VerificationDetailPage({
             // Au verbe de l'écran qui la liste (« en place » ou « fait le »),
             // et sans le nommer s'il ne la liste pas.
             note: {
-              etat: "Cette obligation n'a pas de rythme : elle se tient en place, sur « Ce qui doit être en place ».",
-              fait: "Cette obligation revient sans rythme écrit : sa dernière réalisation se déclare sur « Ce qui doit être en place ».",
-              aucun: "Cette obligation n'a pas de rythme : aucun contrôle n'est attendu à une date.",
+              // [2026-10-24 : sans « se tient en place » ni « rythme écrit ».]
+              etat: "Le texte ne fixe pas de date : elle doit être vraie en permanence. Déclarez-la sur « Ce qui doit être en place ».",
+              fait: "Le texte demande de la refaire de temps en temps, sans fixer de rythme : notez la date de la dernière fois sur « Ce qui doit être en place ».",
+              aucun: "Le texte ne fixe pas de date : aucun contrôle n'est attendu à un jour précis.",
             }[
               (obligation === undefined ? null : modeSurLEcranEnPlace(obligation)) ??
                 "aucun"
@@ -405,7 +408,7 @@ export default async function VerificationDetailPage({
         ? {
             cle: "Salarié",
             valeur: `${v.salarie.prenom} ${v.salarie.nom}`.trim(),
-            note: "L'obligation est nominative : elle vise cette personne, pas un appareil (ADR-023).",
+            note: "Cette obligation vise cette personne, pas un appareil.",
           }
         : {
             cle: "Portée",
@@ -489,7 +492,7 @@ export default async function VerificationDetailPage({
             {/* Pas de pastille de statut sur une ligne éteinte : le statut y
                 est GELÉ dans son dernier état connu, et « Planifiée » ou
                 « Conforme » y dirait une chose qui n'est plus attendue. Le fait
-                « Ne s'applique plus », au-dessus, dit ce qui est vrai. */}
+                « Plus suivie » (ex « Ne s'applique plus »), au-dessus, dit ce qui est vrai. */}
             {/* L'ÉTAT DU JOUR, pas le statut stocké (`statutAffiche`) : une
                 rangée périodique gelée affichait « Conforme » à côté de la
                 pastille « En retard de N j » (relecture du 2026-09-13). */}
@@ -501,7 +504,7 @@ export default async function VerificationDetailPage({
                 date rien. */}
             {mentionDelaiDeGrace(v, aujourdhui) ? (
               <PastilleFiche>
-                {mentionDelaiDeGrace(v, aujourdhui, { enTete: true })}
+                {mentionDelaiDeGrace(v, aujourdhui)}
               </PastilleFiche>
             ) : null}
             {enRetard && sansRendezVous ? (
@@ -1000,7 +1003,7 @@ export default async function VerificationDetailPage({
                 <p role="status" className="m-0 text-[13px] text-[color:var(--board-green-ink)]">
                   Rapport enregistré.
                 </p>
-                <p className="m-0 max-w-[62ch] text-[13.5px] leading-[1.55] text-[color:var(--board-ink)]">
+                <p className="m-0 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.55] text-[color:var(--board-ink)]">
                   {INVITATION_APRES_RAPPORT}
                 </p>
                 {rapportApres.resultat === "ecart_majeur" && (

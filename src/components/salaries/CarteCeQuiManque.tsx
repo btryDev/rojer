@@ -86,7 +86,7 @@ export function CarteCeQuiManque({
   const sansDate = manques.some((m) => m.origine.type === "entree" && m.echeance === null);
   return (
     <CarteFiche titreFort="À déclarer pour cette personne">
-      <p className="m-0 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+      <p className="m-0 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
         Ce que l&apos;employeur doit à cette personne et qu&apos;aucun titre
         déclaré ne porte encore.
         {sansDate && (
@@ -123,7 +123,7 @@ export function CarteCeQuiManque({
                   </p>
                   <Etat m={m} now={now} />
                 </div>
-                <p className="m-0 mt-1.5 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                   {phraseDuManque(m)}
                 </p>
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-3">

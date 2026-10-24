@@ -51,14 +51,14 @@ const TITRE: Record<Charte, string> = {
 const ENJEU: Record<Charte, string> = {
   papier: "mt-3 text-[0.95rem] leading-relaxed text-[color:var(--ink)]",
   board:
-    "m-0 mt-3 max-w-[68ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]",
+    "m-0 mt-3 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]",
 };
 
 const CORPS: Record<Charte, string> = {
   papier:
     "mt-4 text-[0.9rem] leading-relaxed text-[color:var(--muted-foreground)]",
   board:
-    "mt-4 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]",
+    "mt-4 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]",
 };
 
 export function WhyCard({

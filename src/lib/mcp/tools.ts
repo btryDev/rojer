@@ -28,7 +28,12 @@ import { z } from "zod";
 import type { StatutAction } from "@prisma/client";
 import { formaterDateFr } from "@/lib/dates";
 import { estVerificationRealisee } from "@/lib/dates/retard";
-import { LIBELLE_SANS_ECHEANCE } from "@/lib/calendrier/etats";
+import {
+  LIBELLE_ETAT as LIBELLE_ETAT_CALENDRIER,
+  LIBELLE_SANS_ECHEANCE,
+  LIBELLE_SANS_RENDEZ_VOUS,
+} from "@/lib/calendrier/etats";
+import { MENTION_POUR_INFORMATION_DOCUMENT } from "@/lib/referentiels/conformite/initiative";
 import { ageEnMois, EFFECTIF_MAJ_ANNUELLE } from "@/lib/dashboard/duerp";
 import { mentionAConfirmer } from "@/lib/matching/effectif-entreprise";
 import {
@@ -488,14 +493,16 @@ const LIBELLE_ETAT: Record<VerificationLue["etat"], string> = {
   realisee: "réalisée",
   // Dit ce que l'application constate, sans le qualifier en droit : le
   // serveur rend des faits, jamais de conclusion (cf. ses instructions).
-  ne_s_applique_plus: "ne s'applique plus",
+  // [2026-10-24, revue qualité : importés, plus recopiés — la copie avait
+  // déjà divergé une fois.]
+  ne_s_applique_plus: LIBELLE_ETAT_CALENDRIER.archivee.un,
   // Le mot du calendrier (`LIBELLE_SANS_RENDEZ_VOUS`), en minuscule.
-  sans_rendez_vous: "sans rendez-vous",
+  sans_rendez_vous: LIBELLE_SANS_RENDEZ_VOUS.toLowerCase(),
   // D1 (a) : ni « en retard » ni un verdict — la ligne tient à une question
   // restée sans réponse, que la mention « à confirmer » nomme.
   a_confirmer: "à confirmer",
   // C64 : la phrase même des autres surfaces, en minuscule d'attaque.
-  pour_information: "pour information — visite à l'initiative de l'administration",
+  pour_information: `${MENTION_POUR_INFORMATION_DOCUMENT.charAt(0).toLowerCase()}${MENTION_POUR_INFORMATION_DOCUMENT.slice(1)}`,
 };
 
 function formaterVerifications(verifs: VerificationLue[], filtre = true): string {

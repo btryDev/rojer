@@ -57,8 +57,8 @@ afterEach(cleanup);
 
 const MENTION: MentionRythme = {
   motif: "norme",
-  court: "Rythme de la norme NF S 61-919",
-  long: "Rythme de la norme NF S 61-919 (août 2001), § 5.1.1 : tous les ans.",
+  court: "Tous les ans (norme NF S 61-919)",
+  long: "Le texte ne fixe pas de rythme : Rojer suit celui de la norme NF S 61-919 (août 2001), § 5.1.1, tous les ans. Une norme n'est pas une loi.",
 };
 const COURT = MENTION.court;
 
@@ -186,16 +186,16 @@ describe("registre web — une fiche tenue ailleurs", () => {
     )!;
 
   it("la donnée porte la mention, sauf sur une ligne surchargée", () => {
-    expect(contenu(null).lignes[0].rythmeRetenu?.court).toMatch(/^Rythme de la norme/);
+    expect(contenu(null).lignes[0].rythmeRetenu?.court).toMatch(/\(norme /);
     expect(contenu("p1").lignes[0].rythmeRetenu).toBeNull();
   });
 
   it("l'écran la rend", () => {
     expect(renderToStaticMarkup(<ContenuTenuAilleurs {...contenu(null)} />)).toContain(
-      "Rythme de la norme",
+      "(norme NF S 61-919)",
     );
     expect(renderToStaticMarkup(<ContenuTenuAilleurs {...contenu("p1")} />)).not.toContain(
-      "Rythme de la norme",
+      "(norme NF S 61-919)",
     );
   });
 });
@@ -236,7 +236,7 @@ describe("guide « Comprendre » — chez vous", () => {
     const data = construireChezVous(etab, [extincteur], 8);
     const incendie = data.domaines.find((d) => d.domaine === "incendie")!;
     expect(incendie.rythmesRetenus.map((r) => r.mention.court)).toContain(
-      "Rythme de la norme NF S 61-919",
+      "Tous les ans (norme NF S 61-919)",
     );
     const html = renderToStaticMarkup(
       <ChezVous
@@ -247,7 +247,7 @@ describe("guide « Comprendre » — chez vous", () => {
         regimes={["Travail"]}
       />,
     );
-    expect(html).toContain("Rythme de la norme NF S 61-919");
+    expect(html).toContain("Tous les ans (norme NF S 61-919)");
   });
 
   it("un domaine rythmé par les seuls textes ne porte aucune mention", () => {

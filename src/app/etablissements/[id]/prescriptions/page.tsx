@@ -104,7 +104,7 @@ export default async function PrescriptionsPage({
           <h1 className="board-titre m-0 text-[clamp(22px,2.2vw,27px)]">
             Ce qu&apos;on vous a prescrit, à vous seul
           </h1>
-          <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
             Le calendrier est calculé à partir d&apos;un référentiel commun à
             tous les établissements. Votre assureur peut exiger davantage — un
             rythme plus court, une vérification supplémentaire —, par contrat et
@@ -189,7 +189,7 @@ export default async function PrescriptionsPage({
                         l'ISO affichait la veille. */}
                     acte du {formaterDateFr(p.dateDocument)}
                   </p>
-                  <p className="m-0 mt-1.5 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-ink)]">
+                  <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-ink)]">
                     {p.etat.detail}
                   </p>
                   <div className="pt-3">

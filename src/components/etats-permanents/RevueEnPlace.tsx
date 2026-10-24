@@ -193,7 +193,7 @@ export function RevueEnPlace({
 
   const pastilleEtat = !l ? null : l.parLesTitres ? (
     <span className={CLASSE_ETAT + (l.parLesTitres.enPlace ? ETAT_ON : ETAT_A)}>
-      {l.parLesTitres.enPlace && CHECK}D&apos;après les titres
+      {l.parLesTitres.enPlace && CHECK}D&apos;après votre équipe
     </span>
   ) : declare ? (
     <span className={CLASSE_ETAT + ETAT_ON}>

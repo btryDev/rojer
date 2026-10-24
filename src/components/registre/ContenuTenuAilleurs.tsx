@@ -25,7 +25,7 @@ export function ContenuTenuAilleurs({ lignes, source, vide }: ContenuAilleurs) {
   return (
     <div className="flex flex-col gap-4">
       {lignes.length === 0 ? (
-        <p className="m-0 max-w-[62ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
           {vide}
         </p>
       ) : (

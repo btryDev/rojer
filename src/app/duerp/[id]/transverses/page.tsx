@@ -58,11 +58,11 @@ export default async function TransversesPage({
     <div className="flex flex-col gap-[22px]">
       <WizardSteps etapes={etapes} />
 
-      <header className="max-w-[68ch]">
+      <header className="max-w-[var(--board-mesure)]">
         <h2 className="board-titre m-0 text-[clamp(23px,2.1vw,30px)]">
           Questions transverses
         </h2>
-        <p className="m-0 mt-3 max-w-[62ch] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           Ces questions couvrent des risques présents dans la plupart des
           entreprises, quel que soit le métier. Chaque « oui » ajoute
           automatiquement le risque correspondant à votre DUERP — vous pourrez

@@ -75,8 +75,8 @@ function ligne(
 
 const TITRE_EN_PLACE = {
   enPlace: true,
-  phrase: "Établi d'après les titres déclarés : 1 titre, aucune échéance dépassée.",
-  phraseSansNom: "Établi d'après les titres déclarés : 1 titre, aucune échéance dépassée.",
+  phrase: "D'après votre équipe : déclaré pour 1 personne, aucune échéance dépassée.",
+  phraseSansNom: "D'après les titres déclarés par l'employeur : déclaré pour 1 personne, aucune échéance dépassée.",
 };
 
 // Deux familles, l'une à deux blocs ; une ligne déclarée — dans le SECOND bloc,
@@ -328,7 +328,7 @@ describe.each(Object.keys(DOSSIERS))("widget « Ce qui doit être en place », d
     const c = compteDeLaPage(d);
     expect(ecran).toContain(`${c.enPlace} sur ${c.total}`);
     if (c.parLesTitres > 0) {
-      expect(ecran).toMatch(new RegExp(`${c.parLesTitres} établis? d'après les titres`));
+      expect(ecran).toMatch(new RegExp(`${c.parLesTitres} remplis? d'après les formations et habilitations`));
     }
     expect(widget).toBe(ecran);
   });

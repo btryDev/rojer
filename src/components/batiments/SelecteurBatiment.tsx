@@ -28,16 +28,17 @@ const CLASSES_ETIQUETTE: Record<TonSelecteurBatiment, string> = {
 };
 
 /**
- * `max-w-[66ch]` dans les deux tons : la légende est du texte courant, et elle
+ * ~~`max-w-[66ch]`~~ [2026-10-24 : la mesure commune, `--board-mesure`] dans
+ * les deux tons : la légende est du texte courant, et elle
  * courait jusqu'au bord — une phrase de deux lignes s'étalait sur 1 200 px d'un
  * seul trait, quand les autres phrases de périmètre du produit tiennent entre
  * 46 et 68 caractères. La mesure se pose ici plutôt que chez chaque appelant :
  * il y en a deux, et le second l'aurait oubliée.
  */
 const CLASSES_LEGENDE: Record<TonSelecteurBatiment, string> = {
-  papier: "m-0 max-w-[66ch] text-[0.8rem] leading-relaxed text-muted-foreground",
+  papier: "m-0 max-w-[var(--board-mesure)] text-[0.8rem] leading-relaxed text-muted-foreground",
   board:
-    "m-0 max-w-[66ch] text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]",
+    "m-0 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]",
 };
 
 export function SelecteurBatiment({

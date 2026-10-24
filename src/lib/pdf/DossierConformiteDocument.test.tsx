@@ -306,7 +306,7 @@ describe("D1 (a) : la ligne retenue par prudence s'imprime à part, marquée (20
     expect(t).toContain(mention);
   });
 
-  it("C64 : la visite de la commission s'imprime « Pour information », à part des retards", () => {
+  it("C64 : la visite de la commission s'imprime « Visites de l'administration », à part des retards", () => {
     const visite = {
       ...ligne,
       id: "v-commission",
@@ -316,11 +316,11 @@ describe("D1 (a) : la ligne retenue par prudence s'imprime à part, marquée (20
       pourInformation: true,
     };
     const avec = textes({ ...dossier(bloc(2)), verifsPourInformation: [visite] });
-    expect(avec).toContain("Pour information");
+    expect(avec).toContain("Visites de l'administration");
     expect(avec).toContain(visite.libelleObligation);
     const sans = textes({ ...dossier(bloc(2)), verifsPourInformation: [] });
     expect(sans).not.toContain(visite.libelleObligation);
-    expect(sans).not.toContain("Pour information");
+    expect(sans).not.toContain("Visites de l'administration");
   });
 
   it("présente : le titre et la mention « À confirmer » sont rendus", () => {

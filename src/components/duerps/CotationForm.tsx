@@ -129,7 +129,7 @@ export function CotationForm({
                 <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-blue-ink)]">
                   À lire avant de cocher
                 </p>
-                <p className="m-0 mt-1.5 max-w-[66ch] text-[12.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
+                <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
                   La maîtrise décrit l&apos;état{" "}
                   <span className="font-semibold">actuel</span> de votre
                   prévention pour ce risque.{" "}
@@ -211,13 +211,13 @@ export function CotationForm({
             {criticiteLive !== null ? "Formule retenue" : "En attente"}
           </p>
           {criticiteLive !== null ? (
-            <p className="m-0 mt-1.5 max-w-[66ch] text-[12.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
+            <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
               (gravité × probabilité) ÷ maîtrise — arrondi à l&apos;entier et
               borné entre 1 et 16. Plus la note est haute, plus le risque est
               prioritaire.
             </p>
           ) : (
-            <p className="m-0 mt-1.5 max-w-[66ch] text-[12.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+            <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
               Répondez aux{" "}
               <span className="tabular-nums">
                 {[gravite, probabilite, maitrise].filter((v) => v > 0).length}
@@ -234,7 +234,7 @@ export function CotationForm({
         <legend className="board-eyebrow px-2 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
           Informations complémentaires · facultatives
         </legend>
-        <p className="m-0 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           Utiles à la traçabilité de l&apos;évaluation.
         </p>
 
@@ -279,7 +279,7 @@ export function CotationForm({
             <span className="block text-[14px] font-semibold tracking-[-0.01em] text-[color:var(--board-ink)]">
               Exposition à un agent CMR
             </span>
-            <span className="block max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+            <span className="block max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
               Cancérogène, Mutagène ou toxique pour la Reproduction
               (art. R. 4412-59 et suivants). À cocher si un ou plusieurs
               salariés sont exposés. Cocher la case déclare aussi
@@ -298,10 +298,10 @@ export function CotationForm({
           <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-signal-ink)]">
             Écart avec le repère indicatif
           </p>
-          <p className="m-0 mt-2 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
+          <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
             {state.alerte}
           </p>
-          <p className="m-0 mt-3 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
             Vous pouvez rester ici et ajuster vos réponses, ou enchaîner vers
             les mesures si vous assumez la cotation.
           </p>
@@ -402,7 +402,7 @@ export function CotationForm({
         </div>
 
         {hrefSuivant && cotationSaisie && (
-          <p className="m-0 max-w-[66ch] text-center text-[12px] leading-[1.55] text-[color:var(--board-slate-soft)] sm:mx-auto">
+          <p className="m-0 max-w-[var(--board-mesure)] text-center text-[12px] leading-[1.55] text-[color:var(--board-slate-soft)] sm:mx-auto">
             Ou passez directement au{" "}
             <Link
               href={hrefSuivant}

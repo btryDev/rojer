@@ -522,9 +522,17 @@ const RELEVE = {
   // écrit ne change. ~~46bc73090cecb299~~. Puis l'exemple « Autre » retouché
   // (seconde relecture, même jour, même raison). ~~0dee2d0136d49c7b~~.
   // 2026-10-24 : `estFormation` ajoutée à `types.ts`, lue par l'affichage
-  // seulement (Équipe › Formations, filtre du calendrier) : NON, empreinte
-  // recopiée, version inchangée.
-  empreinte: "bd0b031ddeb11659",
+  // seulement (~~Équipe › Formations~~ [2026-10-24 : section « Formations à organiser » d'Équipe], filtre du calendrier) : NON, empreinte
+  // recopiée, version inchangée. ~~bd0b031ddeb11659~~.
+  // 2026-10-24 (soir), `lot/mentions-claires` : des PHRASES d'affichage
+  // réécrites — la mention de rythme retenu (`mention-rythme.ts`), le motif
+  // d'une prescription écartée (`prescriptions.ts`), les mots d'état
+  // (`etats.ts`). La régénération n'écrit aucune d'elles en base : NON,
+  // empreinte recopiée, version inchangée.
+  // ~~087d213dc560e003~~. Puis les corrections des deux revues du même
+  // lot (« plus suivie », mention de rythme, `mentionDelaiDeGrace` sans
+  // variante d'en-tête) : affichage seul, NON, empreinte recopiée.
+  empreinte: "beaa0a5547ff8503",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

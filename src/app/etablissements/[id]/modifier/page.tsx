@@ -98,7 +98,7 @@ export default async function ModifierEtablissementPage({
           <h2 className="m-0 text-[13.5px] font-semibold text-[color:var(--board-signal-ink)]">
             Zone sensible
           </h2>
-          <p className="m-0 mt-1.5 max-w-[64ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
             La suppression efface l&apos;établissement et tout son dossier. Elle
             est refusée dès qu&apos;une version de son DUERP est archivée : le
             Code du travail les fait conserver 40 ans à compter de leur élaboration (art. R. 4121-4).

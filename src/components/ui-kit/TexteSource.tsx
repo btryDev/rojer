@@ -42,7 +42,7 @@ export function TexteSource({
         <BookOpen aria-hidden className="size-3.5" />
         {libelle}
       </summary>
-      <div className="mt-2 max-w-[72ch] border-l-2 border-[color:var(--board-slate-line)] pl-4">
+      <div className="mt-2 max-w-[var(--board-mesure)] border-l-2 border-[color:var(--board-slate-line)] pl-4">
         {children ? (
           <div className="text-[12.5px] leading-[1.6] text-[color:var(--board-slate-mid)] [&>p]:m-0 [&>p+p]:mt-2">
             {children}

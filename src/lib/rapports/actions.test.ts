@@ -495,7 +495,7 @@ describe("uploadRapport — une obligation éteinte ne reçoit pas de rapport", 
 
   it("refuse, avant tout stockage et toute écriture", async () => {
     const res = await deposer("conforme", "2026-06-01");
-    expect(res.status === "error" && res.message).toMatch(/ne s'applique plus/i);
+    expect(res.status === "error" && res.message).toMatch(/ne suit plus cette obligation/i);
     expect(stockage.fichiers.size).toBe(0);
     expect(rapports()).toEqual([]);
     expect(ligne().datePrevue).toEqual(ORIGINE);

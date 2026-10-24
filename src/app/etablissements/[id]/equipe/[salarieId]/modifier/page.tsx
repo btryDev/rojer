@@ -42,7 +42,7 @@ export default async function ModifierSalariePage({
         <h1 className="board-titre m-0 mt-2.5 text-[clamp(22px,2.2vw,27px)]">
           Corriger la fiche
         </h1>
-        <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
           Une personne peut vous demander la correction de ce que vous
           enregistrez sur elle : c&apos;est un droit, et vous devez pouvoir
           l&apos;honorer. Les dates de ses titres se corrigent, elles, sur sa

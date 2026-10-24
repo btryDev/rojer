@@ -55,11 +55,20 @@ export const OBLIGATIONS_A_L_INITIATIVE_DE_L_ADMINISTRATION: ReadonlySet<string>
   ]);
 
 /** La phrase, écrite une fois pour toutes les surfaces. */
+// [2026-10-24, retour de la propriétaire : « pour information » ne disait ni
+// ce qu'est la ligne, ni qu'il n'y a rien à réserver.]
 export const MENTION_POUR_INFORMATION =
-  "Pour information — visite à l'initiative de l'administration";
+  "Visite de l'administration : c'est elle qui en fixe la date, vous n'avez rien à réserver";
+
+/**
+ * La même, pour ce qui SORT du produit — registre, dossier PDF, README du ZIP,
+ * MCP : sans « vous », lu par un tiers (revue de justesse du 2026-10-24).
+ */
+export const MENTION_POUR_INFORMATION_DOCUMENT =
+  "Visite de l'administration : c'est la commission de sécurité qui en fixe la date";
 
 /** Le libellé court d'une pastille. */
-export const LIBELLE_POUR_INFORMATION = "Pour information";
+export const LIBELLE_POUR_INFORMATION = "Visite de l'administration";
 
 /** Le réalisateur affiché, à la place de « Organisme agréé ». */
 export const REALISATEUR_POUR_INFORMATION = "Commission de sécurité";

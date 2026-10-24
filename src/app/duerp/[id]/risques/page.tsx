@@ -71,7 +71,7 @@ export default async function RisquesOverviewPage({
     <div className="flex flex-col gap-[22px]">
       <WizardSteps etapes={etapes} />
 
-      <header className="max-w-[68ch]">
+      <header className="max-w-[var(--board-mesure)]">
         <p className="board-eyebrow m-0 inline-flex items-center text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
           Risques par unité
           <InfoTooltip align="left">
@@ -186,7 +186,7 @@ export default async function RisquesOverviewPage({
                       {u.nom}
                     </p>
                     {u.description && (
-                      <p className="m-0 mt-1 max-w-[62ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                      <p className="m-0 mt-1 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                         {u.description}
                       </p>
                     )}
@@ -235,17 +235,16 @@ export default async function RisquesOverviewPage({
         // creux, sans champ de couleur.
         <div className="rounded-[22px] bg-[color:var(--board-slate-pale)] px-7 py-5 sm:px-8">
           <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-            Hors référentiel sectoriel
+            Unités sans modèle
           </p>
-          <p className="m-0 mt-2 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
+          <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
             {horsRef.length > 1
               ? `${horsRef.length} unités ne correspondent`
               : "1 unité ne correspond"}{" "}
-            à aucune unité type du référentiel sectoriel chargé pour votre
-            activité —{" "}
-            {horsRef.map((u) => u.nom).join(", ")}. Aucun risque type n&apos;y
-            est proposé : leur inventaire, leur cotation et leurs mesures sont
-            entièrement à votre main. Le DUERP généré en portera la mention.
+            à aucun modèle de Rojer pour votre secteur —{" "}
+            {horsRef.map((u) => u.nom).join(", ")}. Aucun risque n&apos;y est
+            proposé d&apos;avance : c&apos;est à vous de les lister, de les
+            coter et de choisir les mesures. Le DUERP généré le mentionnera.
           </p>
         </div>
       )}
@@ -257,7 +256,7 @@ export default async function RisquesOverviewPage({
           <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-signal-ink)]">
             Avertissement
           </p>
-          <p className="m-0 mt-2 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
+          <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
             {unitesSansRisqueSansJustif.length} unité
             {unitesSansRisqueSansJustif.length > 1 ? "s n'ont" : " n'a"} aucun
             risque coché. Vous pouvez continuer, mais il est recommandé de

@@ -42,7 +42,7 @@ export function EcranIncident({
           {surTitre}
         </p>
         <h1 className="board-titre m-0 mt-3 text-[clamp(29px,3vw,39px)]">{titre}</h1>
-        <div className="m-0 mt-4 max-w-[62ch] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+        <div className="m-0 mt-4 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           {children}
         </div>
         <div className="mt-8 flex flex-wrap items-center gap-3">{actions}</div>

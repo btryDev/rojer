@@ -88,6 +88,12 @@
      puis plafonne à 140 px pour laisser respirer les très grands
      écrans. */
   --board-gutter: clamp(32px, calc((100vw - 1560px) / 2 + 32px), 140px);
+  /* La mesure de lecture, unique (2026-10-24, décision de la propriétaire).
+     ~~62 / 66 / 68 caractères, recopiés à la main dans chaque écran~~ : la
+     mesure d'un livre, qui coupait en trois lignes une phrase d'aide sur un
+     écran de 1400 px. Un seul chiffre, pour toute l'app — `max-w-[var(--board-mesure)]`
+     (`scripts/mesure-texte.sh`). Les bornes plus étroites (titres) restent. */
+  --board-mesure: 110ch;
   /* Famille bleu ciel (H205) — palette relevée sur la maquette d'août
      2026 (capture « Rojer » ). Le principe des versions précédentes
      — champ pastel + marque saturée — est abandonné : les champs sont

@@ -77,7 +77,7 @@ export function SupprimerEntrepriseButton({
           <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-signal-ink)]">
             Suppression refusée · conservation légale
           </p>
-          <p className="m-0 mt-2 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-ink)]">
+          <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-ink)]">
             {refus.message}
           </p>
           <Link

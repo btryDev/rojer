@@ -119,7 +119,7 @@ export default async function AccessibilitePage({
             <h1 className="board-titre m-0 mt-2 text-[clamp(22px,2.2vw,27px)]">
               Cet établissement n&apos;est pas un ERP
             </h1>
-            <p className="m-0 mt-3 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+            <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
               Le registre d&apos;accessibilité est une obligation qui ne concerne
               que les <strong>Établissements Recevant du Public</strong>{" "}
               (restaurants, commerces, bureaux ouverts au public…). Vous pouvez
@@ -127,7 +127,7 @@ export default async function AccessibilitePage({
               déclaré ERP.
             </p>
             {registreAncien?.publie && (
-              <p className="m-0 mt-3 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+              <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                 Le registre publié quand l&apos;établissement était déclaré ERP
                 reste enregistré, mais sa page publique et son affiche ne sont
                 plus servies. Elles reviennent si l&apos;établissement est de
@@ -262,7 +262,7 @@ export default async function AccessibilitePage({
             <p className="m-0 text-[16px] font-semibold leading-[1.3] tracking-[-0.01em] text-[color:var(--board-ink)]">
               {libelleProgression(progression).titre}
             </p>
-            <p className="m-0 mt-1 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+            <p className="m-0 mt-1 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
               {libelleProgression(progression).phrase}
             </p>
           </div>

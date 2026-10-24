@@ -229,12 +229,20 @@ export const LIBELLE_ETAT: Record<
   },
   faite: { un: "faite", plusieurs: "faites" },
   aPlanifier: { un: "à planifier", plusieurs: "à planifier" },
-  archivee: {
-    un: "ne s'applique plus",
-    plusieurs: "ne s'appliquent plus",
+  // [2026-10-24, retour de la propriétaire : des mots que le dirigeant peut
+  // lire seul. ~~« ne s'applique plus », « sans rendez-vous », « pour
+  // information »~~.]
+  // « plus suivie », pas « plus due » (revue de justesse du 2026-10-24) : une
+  // ligne s'éteint aussi quand Rojer cesse de suivre une obligation qui reste
+  // légale (niveau audit, obligation retirée) — « plus due » rassurerait à tort.
+  archivee: { un: "plus suivie", plusieurs: "plus suivies" },
+  // « Sans date fixée », pas « à tenir en permanence » : l'état couvre aussi
+  // ce qui se refait sans rythme et ce qu'un événement déclenche.
+  sansRendezVous: { un: "sans date fixée", plusieurs: "sans date fixée" },
+  pourInformation: {
+    un: "visite de l'administration",
+    plusieurs: "visites de l'administration",
   },
-  sansRendezVous: { un: "sans rendez-vous", plusieurs: "sans rendez-vous" },
-  pourInformation: { un: "pour information", plusieurs: "pour information" },
   aConfirmer: { un: "à confirmer", plusieurs: "à confirmer" },
 };
 
@@ -251,9 +259,9 @@ export const LIBELLE_ETAT_COURT: Record<RegistreLigne, string> = {
   lointain: "au-delà",
   faite: "faites",
   aPlanifier: "à planif.",
-  archivee: "sans objet",
-  sansRendezVous: "sans rendez-vous",
-  pourInformation: "pour information",
+  archivee: "plus suivies",
+  sansRendezVous: "sans date",
+  pourInformation: "visites admin.",
   aConfirmer: "à confirmer",
 };
 
@@ -602,7 +610,7 @@ export function statutDeLaLecture(
 export const LIBELLE_SANS_ECHEANCE = "Sans échéance connue";
 /** Une ligne dont l'obligation s'applique sans aucun rythme : rien n'est dû à
  *  une date, l'état se tient en place (ADR-027 ; limite 1, 2026-09-15). */
-export const LIBELLE_SANS_RENDEZ_VOUS = "Sans rendez-vous";
+export const LIBELLE_SANS_RENDEZ_VOUS = "Sans date fixée";
 export const LIBELLE_AUCUNE_VERIFICATION = "Aucune vérification enregistrée";
 
 /**

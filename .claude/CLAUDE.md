@@ -674,8 +674,9 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
 39. **039** — Une norme peut donner le rythme, et un rythme vague devient
     annuel, déclaré comme tel (**acceptée le 2026-10-07**, décisions (a) et (b)
     de la propriétaire). Source `NORME`, corpus `normes`, `rythmeRetenu` à côté
-    de `periodicite`, `periodiciteEffective(o)`, mention « Rythme de la norme … »
-    / « Rythme retenu par défaut ». Amende les ADR-003, 023 § 6, 026 § 2, 027
+    de `periodicite`, `periodiciteEffective(o)`, mention ~~« Rythme de la norme … »
+    / « Rythme retenu par défaut »~~ [2026-10-24 : « Tous les 3 ans (norme …) »
+    / « 1 fois par an (choix de Rojer) », amendement en tête de l'ADR]. Amende les ADR-003, 023 § 6, 026 § 2, 027
     et 032. § 8 (2026-10-08) : une norme non lue donne un rythme s'il est
     relevé par le préventeur (`releveParPreventeur`) — NF C 18-510, 3 ans
 40. **040** — Une ligne « à planifier » née d'un changement du référentiel

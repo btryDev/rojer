@@ -26,7 +26,7 @@ export default async function BatimentsPage({
           <h1 className="board-titre m-0 text-[clamp(22px,2.2vw,27px)]">
             Zones
           </h1>
-          <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
             Si votre établissement se découpe en plusieurs endroits — une
             réserve, un atelier, une annexe — déclarez-les ici, jusqu&apos;à
             trois. Vous pourrez ensuite situer chaque équipement et lire vos

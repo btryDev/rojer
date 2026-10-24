@@ -44,7 +44,7 @@ describe("etatParLesTitres — ce que la ligne affirme", () => {
   it("aucun titre déclaré : pas en place, et la phrase dit où les déclarer", () => {
     const e = etatParLesTitres(habilitation, [], NOW);
     expect(e.enPlace).toBe(false);
-    expect(e.phrase).toContain("aucun titre « Habilitation électrique du travailleur désigné »");
+    expect(e.phrase).toContain("personne n'a « Habilitation électrique du travailleur désigné » déclaré sur sa fiche");
     expect(e.phrase).toContain("fiche Équipe");
   });
 
@@ -55,7 +55,7 @@ describe("etatParLesTitres — ce que la ligne affirme", () => {
       NOW,
     );
     expect(e.enPlace).toBe(true);
-    expect(e.phrase).toBe("Établi d'après les titres déclarés : 1 titre, aucune échéance dépassée.");
+    expect(e.phrase).toBe("D'après votre équipe : déclaré pour 1 personne, aucune échéance dépassée.");
   });
 
   it("le seul titre a dépassé ses 3 ans : PAS en place, et la personne est nommée", () => {
@@ -68,7 +68,7 @@ describe("etatParLesTitres — ce que la ligne affirme", () => {
     );
     expect(e.enPlace).toBe(false);
     expect(e.phrase).toMatch(
-      /^Établi d'après les titres déclarés : 1 titre ; Léa Martin : échéance calculée dépassée le 0?1\/06\/2025\.$/,
+      /^D'après votre équipe : déclaré pour 1 personne ; Léa Martin : échéance calculée dépassée le 0?1\/06\/2025\.$/,
     );
   });
 
@@ -101,7 +101,7 @@ describe("etatParLesTitres — ce que la ligne affirme", () => {
       NOW,
     );
     expect(e.enPlace).toBe(true);
-    expect(e.phrase).toMatch(/: 2 titres ; Tom Petit : échéance calculée dépassée le/);
+    expect(e.phrase).toMatch(/: déclaré pour 2 personnes ; Tom Petit : échéance calculée dépassée le/);
   });
 
   it("ne dit jamais que tout le personnel est habilité : Rojer ne sait pas qui intervient", () => {
@@ -110,7 +110,7 @@ describe("etatParLesTitres — ce que la ligne affirme", () => {
       [{ personne: "Léa Martin", delivreLe: jour("2025-03-01"), echeanceLe: null }],
       NOW,
     );
-    expect(e.phrase).toMatch(/^Établi d'après les titres déclarés/);
+    expect(e.phrase).toMatch(/^D'après votre équipe/);
     // Ni « à jour » (affirmation de conformité), ni « expiré » (état de
     // droit, quand le triennal vient d'une norme) : les mots de la fiche.
     for (const titres of [

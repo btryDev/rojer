@@ -154,7 +154,7 @@ export default async function PlanActionsPage({
             <h1 className="board-titre m-0 text-[clamp(22px,2.2vw,27px)]">
               {LABEL_ITEM.actions}
             </h1>
-            <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+            <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
               Les mesures de prévention prévues dans votre DUERP. Les points
               à corriger relevés par les contrôles se suivent sur la fiche de
               leur{" "}
@@ -320,7 +320,7 @@ export default async function PlanActionsPage({
                       )}
                     </p>
                     {a.description && (
-                      <p className="m-0 mt-1.5 max-w-[66ch] text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                      <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                         {a.description}
                       </p>
                     )}

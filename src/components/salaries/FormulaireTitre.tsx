@@ -278,7 +278,7 @@ export function FormulaireTitre({
           </div>
         )}
         {titre?.description && (
-          <p className="m-0 max-w-[62ch] text-[12.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
             {titre.description}
           </p>
         )}

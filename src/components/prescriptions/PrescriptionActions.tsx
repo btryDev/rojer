@@ -107,7 +107,7 @@ export function PrescriptionActions({
             {pendingAutre ? "Suppression…" : "Supprimer"}
           </Button>
         ) : (
-          <p className="m-0 max-w-[62ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 max-w-[var(--board-mesure)] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
             {`Suppression indisponible : ${raisonDuRefus(
               { effet, acte: dateDocument, levee: estLevee },
               lignesAvecPreuve,

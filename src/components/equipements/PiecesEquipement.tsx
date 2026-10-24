@@ -56,7 +56,7 @@ export function CartePhotos({ photos = [] }: { photos?: PieceEquipement[] }) {
       }
       corpsClassName="px-7 pb-7 pt-3 sm:px-8"
     >
-      <p className="m-0 max-w-[62ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+      <p className="m-0 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
         La plaque signalétique, l&apos;emplacement, l&apos;état constaté. Une
         photo datée vaut mieux qu&apos;une description quand il faut retrouver
         l&apos;appareil ou justifier son remplacement.
@@ -110,7 +110,7 @@ export function CarteDocuments({
       }
       corpsClassName="px-7 pb-7 pt-3 sm:px-8"
     >
-      <p className="m-0 max-w-[62ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+      <p className="m-0 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
         Les papiers de l&apos;appareil&nbsp;: notice, facture, contrat
         d&apos;entretien. Les rapports de vérification, eux, restent au registre
         de sécurité — c&apos;est là qu&apos;on va les chercher en cas de

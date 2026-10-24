@@ -66,7 +66,7 @@ export function QuestionActiviteRow({
         {question}
       </p>
       {aide && (
-        <p className="m-0 mt-1.5 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           {aide}
         </p>
       )}
@@ -120,7 +120,7 @@ export function QuestionActiviteRow({
       )}
 
       {exercee === true && (
-        <div className="mt-4 max-w-[66ch] border-l-2 border-[color:var(--board-slate-line)] pl-4">
+        <div className="mt-4 max-w-[var(--board-mesure)] border-l-2 border-[color:var(--board-slate-line)] pl-4">
           <p className="m-0 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
             Ce que le référentiel de votre secteur ne propose pas pour cette
             activité&nbsp;: {cequiManque}

@@ -125,7 +125,7 @@ export default async function EnCasDePage({
                           <ChevronRepli />
                         </span>
                         <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5">
-                          <span className="max-w-[72ch] text-[15px] font-semibold leading-[1.4] text-[color:var(--board-ink)]">
+                          <span className="max-w-[var(--board-mesure)] text-[15px] font-semibold leading-[1.4] text-[color:var(--board-ink)]">
                             {l.quand}
                           </span>
                           <MentionAConfirmer phrases={l.aConfirmer} />
@@ -137,7 +137,7 @@ export default async function EnCasDePage({
                         </span>
                       </summary>
                       <div className="pl-6">
-                        <p className="m-0 mt-1.5 max-w-[72ch] text-[14px] leading-[1.5] text-[color:var(--board-ink)]">
+                        <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[14px] leading-[1.5] text-[color:var(--board-ink)]">
                           <span className="text-[color:var(--board-slate-mid)]">
                             →{" "}
                           </span>

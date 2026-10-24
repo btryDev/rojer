@@ -51,13 +51,13 @@ export function phraseFaitsDates(
 
   const quoi =
     faitsDates === 1
-      ? "Le texte fait revenir cette obligation, sans dire à quel rythme."
-      : `Les textes font revenir ces ${faitsDates} obligations, sans dire à quel rythme.`;
+      ? "Le texte demande de la refaire de temps en temps, sans fixer de rythme."
+      : `Les textes demandent de refaire ces ${faitsDates} obligations de temps en temps, sans fixer de rythme.`;
 
   const consequence =
     faitsDates === 1
-      ? "Elle se date donc — « fait le » — au lieu de se déclarer en place, et elle n'entre pas dans le compte de l'en-tête, qui ne parle que d'états."
-      : "Elles se datent donc — « fait le » — au lieu de se déclarer en place, et elles n'entrent pas dans le compte de l'en-tête, qui ne parle que d'états.";
+      ? "Notez la date chaque fois que vous la faites. Elle ne compte pas dans le total en haut de page."
+      : "Notez la date chaque fois que vous les faites. Elles ne comptent pas dans le total en haut de page.";
 
   const etat =
     renseignes === 0
@@ -124,8 +124,8 @@ export function phraseCompteur(
           : `${declares} déclarés en place par vous`;
     const parTitres =
       parLesTitres === 1
-        ? "1 établi d'après les titres déclarés"
-        : `${parLesTitres} établis d'après les titres déclarés`;
+        ? "1 rempli d'après les formations et habilitations de votre équipe"
+        : `${parLesTitres} remplis d'après les formations et habilitations de votre équipe`;
     // ~~« tous en place : … » / « en place : … »~~ (2026-10-17) : le
     // préfixe redisait « en place » devant « déclarés en place par vous »,
     // et le chiffre au-dessus dit déjà si tout l'est.
@@ -209,8 +209,8 @@ export function phraseSousLesReponses(dejaDeclaree: boolean): string {
  */
 export function phraseRienEnPlace(seulementDansLEquipe: boolean): string {
   return seulementDansLEquipe
-    ? "Les seules lignes de votre dossier sont des formations de vos salariés : elles se déclarent dans Équipe, onglet Formations."
-    : "Aucune des obligations que votre dossier déclenche n'est un état à constituer ou un fait à dater sans rythme écrit. Les autres sont au calendrier quand elles ont une date, dans l'onglet « En cas de… » quand elles naissent d'un événement, et sur la fiche de chaque personne quand elles la visent.";
+    ? "Les seules lignes de votre dossier sont des formations de vos salariés : elles se déclarent dans Équipe, section « Formations à organiser »."
+    : "Rien à tenir en permanence pour votre établissement. Vos autres obligations sont au calendrier quand elles ont une date, dans l'onglet « En cas de… » quand un événement les déclenche, et sur la fiche de chaque salarié quand elles le visent.";
 }
 
 /**

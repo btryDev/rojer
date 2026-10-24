@@ -97,13 +97,13 @@ export default async function ConnecterPage({
           <h2 className="board-titre m-0 mt-2.5 max-w-[24ch] text-[22px]">
             Poser vos questions à un assistant, sur vos propres données
           </h2>
-          <p className="m-0 mt-4 max-w-[68ch] text-[14.5px] leading-[1.55] text-[color:var(--board-ink)]">
+          <p className="m-0 mt-4 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-ink)]">
             Vous pouvez ouvrir une fenêtre de lecture sur ce dossier depuis un
             assistant comme Claude, et lui demander « où en est mon DUERP ? » ou
             « quelles actions sont en retard ? » sans naviguer dans
             l&apos;application. L&apos;assistant lit, il n&apos;écrit jamais.
           </p>
-          <p className="m-0 mt-3.5 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 mt-3.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
             Le programme tourne <strong>sur votre machine</strong>{" "}
             et n&apos;est
             accessible qu&apos;à l&apos;application qui le lance : rien
@@ -148,7 +148,7 @@ export default async function ConnecterPage({
             <h2 className="board-titre m-0 mt-1.5 text-[22px]">
               Ce que l&apos;assistant peut lire
             </h2>
-            <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+            <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
               {NOMBRE_EN_LETTRES[OUTILS.length] ?? OUTILS.length} outils, tous en lecture seule, tous limités à{" "}
               <strong>{etablissement.raisonDisplay}</strong>. L&apos;assistant
               ne peut ni modifier une donnée, ni consulter un autre
@@ -178,7 +178,7 @@ export default async function ConnecterPage({
                       {outil.nom}
                     </span>
                   </div>
-                  <p className="m-0 mt-1.5 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                  <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                     {outil.detail}
                   </p>
                 </div>
@@ -204,7 +204,7 @@ export default async function ConnecterPage({
             <h2 className="board-titre m-0 mt-1.5 text-[22px]">
               Brancher l&apos;assistant
             </h2>
-            <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+            <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
               Les chemins ci-dessous sont ceux de cette installation, et
               l&apos;identifiant est déjà celui de {etablissement.raisonDisplay}{" "}
               : il n&apos;y a rien à remplacer.
@@ -216,7 +216,7 @@ export default async function ConnecterPage({
               <h3 className="m-0 text-[16px] font-semibold leading-[1.3] tracking-[-0.01em] text-[color:var(--board-ink)]">
                 Claude Desktop
               </h3>
-              <p className="m-0 mt-1.5 mb-3.5 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+              <p className="m-0 mt-1.5 mb-3.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                 Réglages → Développeur → Modifier la configuration. Collez ce
                 bloc dans{" "}
                 <code className="font-mono">claude_desktop_config.json</code>,
@@ -235,7 +235,7 @@ export default async function ConnecterPage({
               <h3 className="m-0 text-[16px] font-semibold leading-[1.3] tracking-[-0.01em] text-[color:var(--board-ink)]">
                 Claude Code
               </h3>
-              <p className="m-0 mt-1.5 mb-3.5 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+              <p className="m-0 mt-1.5 mb-3.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                 Une commande à lancer dans un terminal.
               </p>
               <BlocConfig
@@ -245,7 +245,7 @@ export default async function ConnecterPage({
               />
             </div>
 
-            <p className="m-0 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+            <p className="m-0 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
               Pour vérifier que tout fonctionne, demandez à l&apos;assistant :
               «&nbsp;quel établissement suis-tu&nbsp;?&nbsp;». Il doit répondre{" "}
               {etablissement.raisonDisplay}. Pour couper la connexion, supprimez

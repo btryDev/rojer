@@ -58,7 +58,7 @@ export function HeroEnPlace({
           <h1 className="board-titre m-0 text-[clamp(29px,3vw,39px)]">
             {LABEL_ITEM["etats-permanents"]}
           </h1>
-          <p className="m-0 mt-3 max-w-[62ch] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
             {intro}
           </p>
           <div className="mt-5">

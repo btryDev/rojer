@@ -33,7 +33,7 @@ export default async function UnitesPage({
     <div className="flex flex-col gap-[22px]">
       <WizardSteps etapes={etapes} />
 
-      <header className="max-w-[68ch]">
+      <header className="max-w-[var(--board-mesure)]">
         <p className="board-eyebrow m-0 inline-flex items-center text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
           Unités de travail
           <InfoTooltip align="left">
@@ -46,7 +46,7 @@ export default async function UnitesPage({
         <h2 className="board-titre m-0 mt-3 text-[clamp(23px,2.1vw,30px)]">
           Vérifiez, ajustez, complétez.
         </h2>
-        <p className="m-0 mt-3 max-w-[62ch] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           Une unité regroupe des salariés exposés aux mêmes risques (un poste,
           une zone, une activité). Les unités ci-dessous ont été pré-remplies
           selon votre secteur. Vous pouvez les renommer, les supprimer, ou en

@@ -4,7 +4,7 @@ import {
   estLignePourInformation,
   estPourInformation,
   libelleRealisateurs,
-  MENTION_POUR_INFORMATION,
+  MENTION_POUR_INFORMATION_DOCUMENT,
   OBLIGATIONS_A_L_INITIATIVE_DE_L_ADMINISTRATION,
   REALISATEUR_POUR_INFORMATION,
 } from "./initiative";
@@ -162,9 +162,9 @@ describe("le ZIP de contrôle l'annonce", () => {
       piecesPrestatairesManquantes: 0,
       piecesPrestataires: { attestation: 0, rcPro: 0, kbis: 0 },
     } as Parameters<typeof genererReadme>[0];
-    expect(genererReadme(base)).not.toContain(MENTION_POUR_INFORMATION);
+    expect(genererReadme(base)).not.toContain(MENTION_POUR_INFORMATION_DOCUMENT);
     expect(genererReadme({ ...base, visitesPourInformation: new Set(["v1"]) })).toContain(
-      MENTION_POUR_INFORMATION,
+      MENTION_POUR_INFORMATION_DOCUMENT,
     );
   });
 });

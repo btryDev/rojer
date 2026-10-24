@@ -69,7 +69,7 @@ export default async function ImportDuerpPage({
           <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
             Format attendu
           </p>
-          <ul className="m-0 mt-3 flex max-w-[68ch] list-none flex-col gap-1.5 p-0 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-ink)]">
+          <ul className="m-0 mt-3 flex max-w-[var(--board-mesure)] list-none flex-col gap-1.5 p-0 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-ink)]">
             <li>
               <strong>Colonnes obligatoires :</strong> Unité de travail · Risque
               · Gravité (1-4) · Probabilité (1-4) · Maîtrise (1-4)

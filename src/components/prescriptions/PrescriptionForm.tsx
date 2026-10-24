@@ -226,7 +226,7 @@ export function PrescriptionForm({
             erreur={err("dateDocument")}
           />
         </div>
-        <p className="m-0 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           {/* ~~« CCH, art. R. 143-45 »~~ — corrigé le 2026-09-20, les deux
               articles relus à la source. R. 143-45 existe, mais c'est celui de
               la FERMETURE d'un établissement exploité en infraction ; il ne

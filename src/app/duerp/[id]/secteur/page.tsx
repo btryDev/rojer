@@ -67,11 +67,11 @@ export default async function SecteurPage({
 
       {refRecommande ? (
         <>
-          <header className="max-w-[68ch]">
+          <header className="max-w-[var(--board-mesure)]">
             <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
               Secteur d&apos;activité
             </p>
-            <p className="m-0 mt-3 max-w-[62ch] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+            <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
               À partir du code NAF{" "}
               <span className="font-mono tabular-nums text-[color:var(--board-ink)]">
                 {duerp.entreprise.codeNaf}
@@ -91,7 +91,7 @@ export default async function SecteurPage({
                 <h3 className="board-titre m-0 text-[clamp(23px,2.1vw,30px)]">
                   {refRecommande.nom}
                 </h3>
-                <p className="m-0 mt-3 max-w-[62ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+                <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                   {descriptionPourSecteur(refRecommande.id)}
                 </p>
 
@@ -134,11 +134,11 @@ export default async function SecteurPage({
         </>
       ) : (
         <>
-          <header className="max-w-[68ch]">
+          <header className="max-w-[var(--board-mesure)]">
             <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
               Secteur d&apos;activité
             </p>
-            <p className="m-0 mt-3 max-w-[62ch] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+            <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
               Le code NAF{" "}
               <span className="font-mono tabular-nums text-[color:var(--board-ink)]">
                 {duerp.entreprise.codeNaf}

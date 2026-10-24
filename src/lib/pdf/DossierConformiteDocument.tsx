@@ -1,5 +1,5 @@
 import { Document, Page, Text, View } from "@react-pdf/renderer";
-import { MENTION_POUR_INFORMATION } from "@/lib/referentiels/conformite/initiative";
+import { MENTION_POUR_INFORMATION_DOCUMENT } from "@/lib/referentiels/conformite/initiative";
 import type { FraicheurCalendrier } from "@/lib/calendrier/fraicheur";
 import { faitRetards } from "./fait-retards";
 import type { LignePlanActions } from "./PlanActionsDocument";
@@ -641,9 +641,9 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
             l'administration — montrée avec sa date, sans compter. */}
         {data.verifsPourInformation.length > 0 && (
           <View style={{ marginTop: 16 }}>
-            <Text style={s.h2}>Pour information</Text>
+            <Text style={s.h2}>Visites de l&apos;administration</Text>
             <Text style={s.small}>
-              {MENTION_POUR_INFORMATION}. Ces visites ne sont comptées ni en
+              {MENTION_POUR_INFORMATION_DOCUMENT}. Ces visites ne sont comptées ni en
               retard ni dans l&apos;indice ; leur procès-verbal se dépose au
               registre.
             </Text>

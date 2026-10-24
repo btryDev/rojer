@@ -128,7 +128,7 @@ describe("registre — une ligne sans rendez-vous (limite 1, 2026-09-15)", () =>
         datePrevue: new Date("2026-03-01T00:00:00Z"),
       }),
     ]);
-    expect(ligne.meta).toContain("sans rendez-vous");
+    expect(ligne.meta).toContain("sans date fixée");
     expect(ligne.meta).not.toContain("sans échéance connue");
     expect(ligne.statut).toBeUndefined();
   });
@@ -193,7 +193,7 @@ describe("registre — une obligation éteinte ne se présente pas en retard", (
 
   it("dit qu'elle ne s'applique plus, et n'annonce aucune prochaine échéance", () => {
     const [ligne] = lignesDe([eteinte()]);
-    expect(ligne.meta).toContain("ne s'applique plus depuis le 01 févr. 2026");
+    expect(ligne.meta).toContain("plus suivie depuis le 01 févr. 2026");
     expect(ligne.meta).not.toContain("prochaine");
   });
 

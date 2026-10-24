@@ -52,13 +52,13 @@ export function TeteFicheRegistre({
       </div>
 
       {attendu && (
-        <p className="m-0 mt-3 max-w-[64ch] text-[14px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14px] leading-[1.6] text-[color:var(--board-slate-mid)]">
           {attendu}
         </p>
       )}
 
       {raisons && raisons.length > 0 && (
-        <p className="m-0 mt-4 max-w-[64ch] border-t border-[color:var(--board-slate-line)] pt-3.5 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-soft)]">
+        <p className="m-0 mt-4 max-w-[var(--board-mesure)] border-t border-[color:var(--board-slate-line)] pt-3.5 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-soft)]">
           <span className="font-semibold text-[color:var(--board-slate-mid)]">
             Elle vous est due parce que&nbsp;:
           </span>{" "}
@@ -67,7 +67,7 @@ export function TeteFicheRegistre({
       )}
 
       {aConfirmer.length > 0 && (
-        <div className="m-0 mt-2 max-w-[64ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+        <div className="m-0 mt-2 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           {aConfirmer.map((phrase) => (
             <p key={phrase} className="m-0">
               <strong className="font-semibold text-[color:var(--board-ink)]">

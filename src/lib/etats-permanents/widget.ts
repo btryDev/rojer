@@ -43,7 +43,7 @@ export type ResumeWidgetEtats = ReturnType<typeof compteDeLaPage> & {
   /** Le nombre de lignes « fait le » (« Ce qui revient »), hors compte. */
   faits: number;
   /**
-   * Les formations, déclarées dans Équipe › Formations (`par-l-equipe.ts`,
+   * Les formations, déclarées dans ~~Équipe › Formations~~ [2026-10-24 : section « Formations à organiser » d'Équipe] (`par-l-equipe.ts`,
    * ADR-047), affichées à part par le widget. ~~Les familles plus ce
    * compte font le compte de l'en-tête.~~ [2026-10-22 : l'en-tête ne les
    * compte plus, `compteDeLaPage` ; les familles seules le font.]
@@ -62,6 +62,10 @@ export function resumeDuWidget(d: EtatsPermanentsDuDossier): ResumeWidgetEtats {
       ancre: ancreFamille(f.groupe),
     })),
     faits: d.faits.length,
+    // TOUTES les lignes, celles qu'une réponse manquante cache comprises : le
+    // total du dossier (et du score) les compte, et `etats-permanents.test`
+    // tient l'égalité. La section d'Équipe, elle, compte ce qu'elle affiche
+    // (`aOrganiserALEtablissement`) — revue qualité du 2026-10-24.
     risques: compteParLEquipe(d.parLEquipe),
   };
 }

@@ -9,7 +9,7 @@
 //
 // Module **pur** : la route lui passe ce qu'elle a lu.
 
-import { MENTION_POUR_INFORMATION } from "@/lib/referentiels/conformite/initiative";
+import { MENTION_POUR_INFORMATION_DOCUMENT } from "@/lib/referentiels/conformite/initiative";
 import type { CompteFichiers } from "@/lib/controle/fichiers-zip";
 import { NB_ANALYSES_DU_DOSSIER, PIECES_ZIP } from "@/lib/controle/pieces-zip";
 import { MARQUAGE_CONTRACTUEL } from "@/lib/prescriptions/sources";
@@ -423,7 +423,7 @@ export function genererReadme(args: {
       "────────────────────────────────────────────────────────────",
       "",
       ` ${n} ligne${n > 1 ? "s" : ""} de ce dossier ${n > 1 ? "portent" : "porte"} la mention`,
-      ` « ${MENTION_POUR_INFORMATION} ».`,
+      ` « ${MENTION_POUR_INFORMATION_DOCUMENT} ».`,
       " La visite est déclenchée par l'administration : elle figure",
       " avec son rythme, n'est comptée ni dans les retards ni dans",
       " l'indice, et son procès-verbal se dépose au registre.",

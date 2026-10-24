@@ -72,7 +72,7 @@ export default async function MesuresPage({
         </Link>
       </nav>
 
-      <header className="max-w-[68ch]">
+      <header className="max-w-[var(--board-mesure)]">
         <div className="board-eyebrow flex flex-wrap items-baseline gap-2 text-[10.5px] tracking-[0.18em]">
           <span className="text-[color:var(--board-ink)]">
             Évaluation du risque
@@ -172,7 +172,7 @@ export default async function MesuresPage({
           </span>
         </div>
 
-        <div className="max-w-[66ch] space-y-2.5">
+        <div className="max-w-[var(--board-mesure)] space-y-2.5">
           <p className="m-0 text-[14.5px] font-medium leading-[1.55] text-[color:var(--board-ink)]">
             Sélectionnez les mesures déjà en place et celles que vous comptez
             mettre en œuvre.
@@ -200,7 +200,7 @@ export default async function MesuresPage({
                 ? "Protection collective · art. L. 4121-2, 8°"
                 : "Réduction à la source · art. L. 4121-2, 3°"}
             </p>
-            <p className="m-0 mt-2 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
+            <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
               Les mesures retenues ne comportent que des EPI, de la formation
               ou de l&apos;organisation. Avez-vous étudié une solution
               collective ou une réduction à la source&nbsp;? Art. L. 4121-2,{" "}
@@ -351,7 +351,7 @@ export default async function MesuresPage({
           </div>
         </div>
 
-        <p className="m-0 max-w-[66ch] text-center text-[12px] leading-[1.55] text-[color:var(--board-slate-soft)] sm:mx-auto">
+        <p className="m-0 max-w-[var(--board-mesure)] text-center text-[12px] leading-[1.55] text-[color:var(--board-slate-soft)] sm:mx-auto">
           Les mesures sont enregistrées au fur et à mesure. « Risque suivant »
           vous fait reprendre l&apos;évaluation sur le risque suivant de
           l&apos;unité.

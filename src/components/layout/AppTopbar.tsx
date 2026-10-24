@@ -114,7 +114,7 @@ export function AppTopbar({
             })}
           </div>
         ) : subtitle ? (
-          <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
             {subtitle}
           </p>
         ) : null}

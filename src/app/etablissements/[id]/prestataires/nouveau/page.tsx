@@ -27,7 +27,7 @@ export default async function NouveauPrestatairePage({
         <h1 className="board-titre m-0 mt-2.5 text-[clamp(22px,2.2vw,27px)]">
           Ajouter un prestataire
         </h1>
-        <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
           L&apos;identité et le contact suffisent pour commencer —{" "}
           {etablissement.raisonDisplay}{" "}
           pourra recevoir les pièces plus tard.

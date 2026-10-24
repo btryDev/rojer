@@ -652,7 +652,7 @@ function axeEquipements(
       eq.nbEquipements > 0 ? `, sur ${eq.nbEquipements} en service` : ""
     }.`,
     consequence:
-      "Leur catégorie n'est citée par aucune règle que le référentiel porte, ou aucune ne s'applique compte tenu de la typologie de l'établissement. Cela ne veut pas dire qu'aucune vérification ne leur est due : le détail, appareil par appareil, se lit sur la page Équipements.",
+      "Rojer ne suit pas leur type d'équipement, ou ne leur connaît pas de vérification obligatoire pour votre établissement. Cela ne veut pas dire qu'aucune vérification ne leur est due : le détail, appareil par appareil, est sur la page Équipements.",
   });
 }
 

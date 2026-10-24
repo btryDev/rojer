@@ -61,8 +61,8 @@ function menesALEcranEnPlace(obligationId: string): boolean {
 function detailSansRendezVous(obligationId: string): string {
   const o = obligationParId(obligationId);
   const mode = o === undefined ? null : modeSurLEcranEnPlace(o);
-  if (mode === "etat") return `${LIBELLE_SANS_RENDEZ_VOUS} — à tenir en place`;
-  if (mode === "fait") return `${LIBELLE_SANS_RENDEZ_VOUS} — à déclarer faite`;
+  if (mode === "etat") return `${LIBELLE_SANS_RENDEZ_VOUS} — à tenir en permanence`;
+  if (mode === "fait") return `${LIBELLE_SANS_RENDEZ_VOUS} — notez la date quand c'est fait`;
   return LIBELLE_SANS_RENDEZ_VOUS;
 }
 
@@ -435,8 +435,8 @@ export function chapeauAFaire(
   const sansRendezVous = aFaire.filter((l) => l.etat === "sansRendezVous").length;
   if (sansRendezVous > 0) {
     return sansRendezVous > 1
-      ? "Des obligations sans rendez-vous sont ouvertes sur cet appareil, sans contrôle attendu à une date"
-      : "Une obligation sans rendez-vous est ouverte sur cet appareil, sans contrôle attendu à une date";
+      ? "Des obligations visent cet appareil sans date fixée par le texte : aucun contrôle n'est attendu à un jour précis"
+      : "Une obligation vise cet appareil sans date fixée par le texte : aucun contrôle n'est attendu à un jour précis";
   }
   return "Aucune échéance n'est ouverte sur cet appareil à ce jour";
 }

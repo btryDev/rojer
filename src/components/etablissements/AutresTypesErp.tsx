@@ -88,7 +88,7 @@ export function AutresTypesErp({
           <legend className="sr-only">Autres types d&apos;ERP de l&apos;établissement</legend>
           <p
             id="typesErpAutres-aide"
-            className="m-0 max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
+            className="m-0 max-w-[var(--board-mesure)] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
           >
             Des exploitations groupées dans un même bâtiment, sans être isolées
             entre elles, forment un seul établissement : cochez les autres types

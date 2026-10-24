@@ -101,5 +101,9 @@ export function phraseEffectifAConfirmer(
  * il y a la place de dire de quoi conclure.
  */
 export function mentionAConfirmer(seuil: number): string {
-  return `à confirmer : l'entreprise est déclarée sous ${seuil} salariés, ce site en compte ${seuil} ou plus`;
+  // [2026-10-24 : « mais » dit la contradiction. Le geste n'y est pas : la
+  // mention part au DUERP PDF et à la checklist, lus par un tiers ; la phrase
+  // longue (`phraseEffectifAConfirmer`) le dit là où il y a la place — revue
+  // de justesse du même jour.]
+  return `à confirmer : l'entreprise est déclarée sous ${seuil} salariés, mais ce site en compte ${seuil} ou plus`;
 }

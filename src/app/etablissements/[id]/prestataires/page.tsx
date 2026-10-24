@@ -62,7 +62,7 @@ export default async function PrestatairesPage({
             <h1 className="board-titre m-0 text-[clamp(22px,2.2vw,27px)]">
               Prestataires
             </h1>
-            <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+            <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
               Les entreprises qui interviennent chez vous, et l&apos;état de
               leurs pièces administratives. Une attestation signale son
               expiration trente jours avant l&apos;échéance.
@@ -149,7 +149,7 @@ export default async function PrestatairesPage({
           <h2 className="board-titre m-0 mt-2 text-[22px]">
             Votre obligation de vigilance
           </h2>
-          <p className="m-0 mt-3 max-w-[68ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
             Pour tout contrat d&apos;au moins <strong>5 000 € HT</strong>, vous
             vous faites remettre <strong>tous les six mois</strong>{" "}
             l&apos;attestation
@@ -162,7 +162,7 @@ export default async function PrestatairesPage({
               2026-12-26 : « fin décembre 2026 » reste juste des deux côtés.
               Adresse du `declareA` de L. 8222-1-1 au corpus, tenue par
               `vigilance-sous-traitant.test.ts`. */}
-          <p className="m-0 mt-2 max-w-[62ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
             Si votre prestataire fait intervenir un sous-traitant que vous
             acceptez, pour un contrat de sous-traitance d&apos;un montant
             minimal, vous devez aussi vérifier périodiquement, au plus tard à

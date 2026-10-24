@@ -143,7 +143,7 @@ export type EtatsPermanentsDuDossier = {
   /**
    * Les formations des salariés (`estFormation`, ADR-047 — ~~les lignes nées
    * d'un fait d'activité, déclarées sous leur question, 2026-10-21~~) : elles
-   * se déclarent dans Équipe › Formations, et ne figurent ni dans
+   * se déclarent dans ~~Équipe › Formations~~ [2026-10-24 : section « Formations à organiser » d'Équipe], et ne figurent ni dans
    * `familles` ni dans `faits`. Elles restent COMPTÉES dans `enPlace`,
    * `total` et `faitsDates` : ce sont des états du dossier, le score et le
    * document les portent. Seul l'endroit où on les déclare change.
@@ -335,7 +335,7 @@ export async function listerEtatsPermanents(
       if (ligne.declareLe) faitsDatesRenseignes += 1;
     }
 
-    // ADR-047 : une formation se suit dans Équipe › Formations.
+    // ADR-047 : une formation se suit dans ~~Équipe › Formations~~ [2026-10-24 : section « Formations à organiser » d'Équipe].
     if (estFormation(o)) {
       parLEquipe.push(ligne);
     } else if (mode.mode === "fait") {

@@ -43,7 +43,7 @@ export default async function CotationPage({
         </Link>
       </nav>
 
-      <header className="max-w-[68ch]">
+      <header className="max-w-[var(--board-mesure)]">
         <div className="board-eyebrow flex flex-wrap items-baseline gap-2 text-[10.5px] tracking-[0.18em]">
           <span className="text-[color:var(--board-ink)]">
             Évaluation du risque
@@ -67,7 +67,7 @@ export default async function CotationPage({
           {risque.libelle}
         </h2>
         {risque.description && (
-          <p className="m-0 mt-2.5 max-w-[62ch] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 mt-2.5 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
             {risque.description}
           </p>
         )}

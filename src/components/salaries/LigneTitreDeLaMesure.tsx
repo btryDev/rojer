@@ -23,7 +23,7 @@ export function LigneTitreDeLaMesure({
   if (!titre) return null;
   return (
     <p
-      className={`m-0 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)] ${className}`}
+      className={`m-0 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)] ${className}`}
     >
       Se déclare salarié par salarié&nbsp;:{" "}
       <span className="font-medium text-[color:var(--board-ink)]">

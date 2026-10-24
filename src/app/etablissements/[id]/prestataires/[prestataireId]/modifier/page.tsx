@@ -37,7 +37,7 @@ export default async function ModifierPrestatairePage({
         <h1 className="board-titre m-0 mt-2.5 text-[clamp(22px,2.2vw,27px)]">
           Modifier le prestataire
         </h1>
-        <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
           Une nouvelle attestation se saisit ici avec sa pièce, sa validité et
           ses dates de remise et d&apos;émission : c&apos;est la plus proche de
           la validité et de la remise suivante qui fixe son statut.

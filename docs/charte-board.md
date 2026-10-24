@@ -219,9 +219,9 @@ Trois polices, chargées dans `src/app/layout.tsx` :
 | Titre de section / carte | `board-titre m-0 text-[22px]` |
 | Sur-titre de section | `board-eyebrow text-[10.5px] tracking-[0.18em]` + `--board-slate-soft` |
 | Sur-titre de ligne | `board-eyebrow text-[10px] tracking-[0.16em]` + `--board-slate-soft` |
-| Chapeau de page | `text-[14.5px] leading-[1.55]` + `--board-slate-mid` + `max-w-[62ch]` |
+| Chapeau de page | `text-[14.5px] leading-[1.55]` + `--board-slate-mid` + `max-w-[var(--board-mesure)]` |
 | Corps de carte | `text-[13.5px] leading-[1.6]` + `--board-slate-mid` |
-| Corps explicatif | `text-[12.5px] leading-[1.55]` + `max-w-[62ch]` |
+| Corps explicatif | `text-[12.5px] leading-[1.55]` + `max-w-[var(--board-mesure)]` |
 | Titre de ligne | `text-[16px] font-semibold leading-[1.3] tracking-[-0.01em]` + `--board-ink` |
 | Méta de ligne | `text-[12.5px]` + `--board-slate-mid` |
 | Clé de champ (`dt`) | `text-[12.5px]` + `--board-slate-mid`, `sm:w-[168px]` |
@@ -234,7 +234,15 @@ Négatif (−0.01 → −0.032em) sur les titres. Rien entre les deux.
 
 **Les chiffres portent toujours `tabular-nums`.**
 
-Les largeurs de texte sont bornées : `max-w-[62ch]` / `[66ch]` / `[68ch]`.
+~~Les largeurs de texte sont bornées : `max-w-[62ch]` / `[66ch]` / `[68ch]`.~~
+[2026-10-24, décision de la propriétaire] **Une seule mesure de lecture** :
+`max-w-[var(--board-mesure)]`, le jeton `--board-mesure` de `globals.css`
+(110 caractères). Les trois bornes recopiées à la main faisaient la mesure
+d'un livre et coupaient en trois lignes une phrase d'aide sur un écran large.
+Pour changer la mesure de toute l'app, on change ce chiffre ; un écran neuf
+ne recopie jamais un nombre de caractères. `scripts/mesure-texte.sh`
+ramène sur le jeton les anciennes bornes qu'un merge réintroduirait. Les
+bornes plus étroites (titres, étiquettes, sous 60 caractères) restent.
 
 ---
 
@@ -338,7 +346,7 @@ fiche, un formulaire pleine page.
 2. **Le document de lecture suivie** — le DUERP. `duerp/[id]/layout.tsx` garde
    `max-w-5xl`, et l'argument tient : ces pages se lisent comme un document, en
    phrases longues, et une ligne de texte de 1400 px ne se lit pas. C'est la
-   même raison qui borne les paragraphes à `62/66/68ch` partout ailleurs — ici
+   même raison qui borne les paragraphes à la mesure (`--board-mesure`) partout ailleurs — ici
    la borne porte sur l'enveloppe parce que c'est tout le contenu qui est de la
    prose.
 

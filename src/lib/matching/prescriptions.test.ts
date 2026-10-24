@@ -585,8 +585,8 @@ describe("motif d'une prescription non retenue (revue du 2026-10-07)", () => {
     // en atelier hors ERP garde un rythme de la norme.
     const retenue = obligationParId("incendie-travail-extincteurs-revision-atelier-decennale")!;
     const m = motifPrescriptionNonRetenue(retenue);
-    expect(m).toContain("Rojer retient déjà « tous les 10 ans »");
-    expect(m).toContain("(rythme de la norme NF S 61-919 ; le texte n'écrit pas de rythme)");
+    expect(m).toContain("Rojer suit déjà « tous les 10 ans » (norme NF S 61-919)");
+    expect(m).toMatch(/^Le texte ne fixe pas de rythme/);
     expect(m).not.toMatch(/impose/);
   });
 

@@ -1,5 +1,21 @@
 # ADR-047 — Une formation des salariés se suit dans Équipe
 
+> **Amendement du 2026-10-24 (soir) — l'onglet devient une section**
+> (décision de la propriétaire, `lot/fiche-salarie`). L'onglet Formations
+> regroupait surtout ce qui se voit ailleurs (titres manquants : les fiches ;
+> lignes datées : le calendrier ; événementielles : « En cas de… »), et ne
+> disait pas pourquoi une formation y était. Sa raison d'être est désormais
+> écrite : **les formations dues aux salariés quand Rojer ne sait pas
+> lesquels** — elles ne peuvent pas aller sur une fiche, l'établissement les
+> organise. Elles forment la section « Formations à organiser » de la page
+> Équipe, sous les personnes, chaque ligne disant pourquoi elle est là
+> (`pourquoiALEtablissement`), avec ce que le DUERP signale sans que personne
+> ait le titre (`titres-sans-porteur.ts`). Retirés de cet endroit : les lignes
+> datées, les événementielles, les titres manquants par personne. Les onglets
+> (`OngletsEquipe`) disparaissent ; `/equipe/formations` redirige vers
+> `/equipe#formations` ; `cheminDeDeclaration` vise `/equipe`. Le § 2
+> ci-dessous est amendé d'autant ; la marque `formation` et le § 3 restent.
+
 - **Statut** : acceptée, 2026-10-24 — décisions de la propriétaire des
   2026-10-22 et 2026-10-24, branche `lot/guide-par-module`.
 - **Amende** : ADR-041 (les faits d'activité : ce que leur réponse rend dû ne

@@ -12,8 +12,15 @@ import { TexteInformation } from "@/components/salaries/TexteInformation";
 import { CHAMP_ETAT, ENCRE_ETAT } from "@/lib/calendrier/etats";
 import { FAITS_ACTIVITE } from "@/lib/etablissements/faits-activite";
 import { chargerFaitsActivite } from "@/lib/etablissements/faits-activite-queries";
-import { OngletsEquipe } from "@/components/salaries/OngletsEquipe";
-import { compteParLEquipe, lignesFormationAffichees } from "@/lib/etats-permanents/par-l-equipe";
+import { FormationsAOrganiser } from "@/components/salaries/FormationsAOrganiser";
+import { ancreEtatPermanent } from "@/lib/etats-permanents/ancre";
+import {
+  aOrganiserALEtablissement,
+  lignesFormationAffichees,
+  pourquoiALEtablissement,
+} from "@/lib/etats-permanents/par-l-equipe";
+import { etatCourtDe, versFiche } from "@/lib/etats-permanents/vers-fiche";
+import { titresSansPorteur } from "@/lib/salaries/titres-sans-porteur";
 import { etatsPermanentsDuDossier } from "@/lib/etats-permanents/queries";
 
 /**
@@ -36,8 +43,8 @@ export default async function EquipePage({
   const { id } = await params;
   const { user, etablissement } = await requireEtablissement(id);
   const now = new Date();
-  // Lectures indépendantes, en parallèle ; la dernière donne l'alerte de
-  // l'onglet Formations (ADR-047).
+  // Lectures indépendantes, en parallèle ; la dernière donne les formations
+  // à organiser (ADR-047, amendée le 2026-10-24).
   const [equipe, titresDeclares, faits, dossier] = await Promise.all([
     listerEquipe(id, now),
     libellesTitresDeclares(id),
@@ -45,7 +52,32 @@ export default async function EquipePage({
     etatsPermanentsDuDossier(id, user.id),
   ]);
   const catalogue = cataloguerTitres();
-  const formations = compteParLEquipe(lignesFormationAffichees(dossier.parLEquipe));
+  // « Formations à organiser » : dues aux salariés sans qu'on sache lesquels.
+  // Une seule passe : la ligne de la section et la fiche qu'elle ouvre
+  // (revue qualité du 2026-10-24 — le dessin se calculait deux fois).
+  const fiches = lignesFormationAffichees(dossier.parLEquipe).map((l) => ({
+    ligne: l,
+    fiche: versFiche(l, {
+      etablissementId: id,
+      entrepriseId: etablissement.entrepriseId,
+      surTitre: l.parLesTitres
+        ? "Formation · d'après les titres de votre équipe"
+        : "Formation à organiser pour l'établissement",
+    }),
+  }));
+  const formations = fiches.map(({ ligne, fiche }) => ({
+    obligationId: fiche.obligationId,
+    ancre: ancreEtatPermanent(fiche.obligationId),
+    libelle: fiche.libelle,
+    pourquoi: pourquoiALEtablissement(ligne),
+    etat: etatCourtDe(ligne),
+    dessin: { src: fiche.illustration, fond: fiche.fond },
+  }));
+  const sansPorteur = faits ? titresSansPorteur(faits, equipe) : [];
+  const aOrganiser = aOrganiserALEtablissement(
+    dossier.parLEquipe,
+    sansPorteur.reduce((n, f) => n + f.titres.length, 0),
+  );
   // Les faits sans réponse, NOMMÉS : la passe Chrome du 2026-10-08 a vu le
   // bandeau compter juste et lister les cinq, réponses comprises.
   const NOM_COURT: Record<(typeof FAITS_ACTIVITE)[number]["champ"], string> = {
@@ -84,7 +116,7 @@ export default async function EquipePage({
             <h1 className="board-titre m-0 text-[clamp(22px,2.2vw,27px)]">
               Équipe
             </h1>
-            <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+            <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
               Les personnes de votre effectif et les titres qu&apos;elles
               détiennent — habilitation, attestation, certificat. Un titre porte
               une échéance nominative : c&apos;est la personne qui est habilitée,
@@ -139,13 +171,6 @@ export default async function EquipePage({
             </Link>
           </div>
         </div>
-        <div className="mt-5">
-          <OngletsEquipe
-            etablissementId={id}
-            actif="personnes"
-            aDeclarer={formations.total - formations.enPlace}
-          />
-        </div>
       </header>
 
       <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
@@ -155,10 +180,10 @@ export default async function EquipePage({
         {/* [2026-10-24, décision de la propriétaire] Le bloc ne s'affiche
             que tant qu'une question reste sans réponse : une fois tout répondu,
             les réponses se revoient dans le DUERP, et les formations qui en
-            découlent dans l'onglet Formations. */}
+            découlent dans la section « Formations à organiser ». */}
         {sansReponse > 0 && (
         <section className="carte-board flex flex-wrap items-center justify-between gap-4 px-7 py-5 sm:px-8">
-          <div className="min-w-0 max-w-[64ch]">
+          <div className="min-w-0 max-w-[var(--board-mesure)]">
             <p className="m-0 text-[14px] font-semibold leading-[1.4] text-[color:var(--board-ink)]">
               Évaluez les risques de vos salariés
             </p>
@@ -205,12 +230,21 @@ export default async function EquipePage({
             </div>
           </section>
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div id="personnes" className="grid scroll-mt-6 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {equipe.map((s) => (
               <SalarieCard key={s.id} etablissementId={id} salarie={s} />
             ))}
           </div>
         )}
+
+        <FormationsAOrganiser
+          etablissementId={id}
+          formations={formations}
+          fiches={fiches.map((f) => f.fiche)}
+          aOrganiser={aOrganiser}
+          sansPorteur={sansPorteur}
+          personnePresente={actifs > 0}
+        />
 
         {/* Ce que l'écran ne couvre pas, dit par l'écran lui-même. Taire
             l'écart tromperait l'utilisateur sur sa propre couverture.

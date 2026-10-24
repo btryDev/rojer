@@ -373,7 +373,7 @@ export function EquipementForm({
                ce que Rojer ne suit pas pour lui. `BlocCreux` du kit (revue
                du lot, point 6), aucune couleur d'état — ce n'est ni un
                retard ni une faute. */
-            <div id="categorie-aide" className="mt-3 max-w-[66ch]">
+            <div id="categorie-aide" className="mt-3 max-w-[var(--board-mesure)]">
             <BlocCreux>
               <p className="m-0 text-[13.5px] font-semibold leading-[1.4] text-[color:var(--board-ink)]">
                 {/* ~~« Vous pouvez l'ajouter. »~~ — 2026-10-17, contrôle
@@ -511,7 +511,7 @@ export function EquipementForm({
             <h2 className="board-titre m-0 text-[17px]">
               Caractéristiques spécifiques
             </h2>
-            <p className="m-0 mt-1.5 max-w-[64ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+            <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
               Ces informations conditionnent la génération des vérifications
               réglementaires applicables (étape suivante).
             </p>
@@ -532,7 +532,7 @@ export function EquipementForm({
                   <p className="m-0 text-[14px] font-semibold leading-[1.35] text-[color:var(--board-ink)]">
                     Local à pollution spécifique
                   </p>
-                  <p className="m-0 mt-1 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                  <p className="m-0 mt-1 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                     Poussières, gaz, vapeurs, aérosols. Contrôle annuel du débit
                     d&apos;air extrait, des pressions et de l&apos;état de
                     l&apos;installation (arrêté du 8 octobre 1987, art. 4 § 2
@@ -555,7 +555,7 @@ export function EquipementForm({
                   <p className="m-0 text-[14px] font-semibold leading-[1.35] text-[color:var(--board-ink)]">
                     L&apos;installation recycle l&apos;air
                   </p>
-                  <p className="m-0 mt-1 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                  <p className="m-0 mt-1 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                     Une partie de l&apos;air extrait est réintroduite dans le
                     local. S&apos;ajoute alors au contrôle annuel un contrôle
                     tous les six mois de la concentration en poussières dans les
@@ -815,7 +815,7 @@ function ChampsEsp({
     /* Sous-bloc creux : la plaque constructeur est un aparté technique dans
        la section, pas une carte de plus. */
     <div className="flex flex-col gap-4 rounded-[22px] bg-[color:var(--board-slate-pale)] px-5 py-5">
-      <p className="m-0 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+      <p className="m-0 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
         Plaque constructeur : la famille, la pression maximale admissible (PS)
         et le volume (V) déterminent si l&apos;équipement relève du suivi en
         service (C. env., art. R. 557-14-1). Le verdict ci-dessous est indicatif
@@ -873,7 +873,7 @@ function ChampsEsp({
           erreur={err("volumeLitres")}
         />
       </div>
-      <p className="m-0 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-ink)]">
+      <p className="m-0 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-ink)]">
         <span className="board-eyebrow text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
           Verdict indicatif ·{" "}
         </span>

@@ -51,7 +51,7 @@ export default async function PermisFeuListePage({
             <h1 className="board-titre m-0 text-[clamp(22px,2.2vw,27px)]">
               Permis de feu
             </h1>
-            <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+            <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
               {/* ~~« L'INRS (ED 6030) écrit : « La rédaction du permis de feu
                   est obligatoire… » »~~ — même attribué, « obligatoire » en
                   tête de page se lit comme une obligation, et la page dit plus
@@ -80,7 +80,7 @@ export default async function PermisFeuListePage({
           /* État vide, pas état d'erreur : il dit ce que l'écran fera, d'où
              viendront les données, et ouvre une porte (charte § 6). */
           <section className="carte-board px-7 py-8 sm:px-8">
-            <div className="flex max-w-[62ch] flex-col gap-3">
+            <div className="flex max-w-[var(--board-mesure)] flex-col gap-3">
               <h2 className="board-titre m-0 text-[22px]">
                 Vos permis de feu
               </h2>

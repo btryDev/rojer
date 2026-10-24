@@ -4,8 +4,9 @@ import { estFormation } from "@/lib/referentiels/conformite/types";
 import { PHRASE_SANS_REPONSE } from "@/lib/matching/sans-reponse";
 import {
   cheminDeDeclaration,
-  formationsEnAttenteDeReponse,
+  aOrganiserALEtablissement,
   lignesFormationAffichees,
+  pourquoiALEtablissement,
 } from "./par-l-equipe";
 import type { LigneEtatPermanent } from "./queries";
 
@@ -49,15 +50,15 @@ describe("la marque « formation » (décision du 2026-10-24)", () => {
 });
 
 describe("où une ligne se déclare", () => {
-  it("une formation dans Équipe › Formations, un document sur « Ce qui doit être en place »", () => {
+  it("une formation dans la section « Formations à organiser », un document sur « Ce qui doit être en place »", () => {
     const manutention = o("formation-securite-etablissement-manutention");
     const carnet = o("elec-travail-carnet-prescriptions");
-    expect(cheminDeDeclaration(manutention, "etat-x")).toBe("/equipe/formations#etat-x");
+    expect(cheminDeDeclaration(manutention, "etat-x")).toBe("/equipe#etat-x");
     expect(cheminDeDeclaration(carnet)).toBe("/etats-permanents");
   });
 });
 
-describe("Équipe › Formations n'affiche pas une formation qui attend une réponse", () => {
+describe("« Formations à organiser » n'affiche pas une formation qui attend une réponse", () => {
   const ligne = (id: string, phrases: string[]) =>
     ({ obligation: o(id), questionsSansReponse: phrases }) as unknown as LigneEtatPermanent;
   const muette = ligne("formation-securite-etablissement-manutention", [
@@ -70,8 +71,66 @@ describe("Équipe › Formations n'affiche pas une formation qui attend une rép
     PHRASE_SANS_REPONSE.locaux_sommeil_public,
   ]);
 
-  it("cache la ligne qui ne tient qu'à un fait d'activité sans réponse, et la compte à part", () => {
+  it("cache la ligne qui ne tient qu'à un fait d'activité sans réponse", () => {
     expect(lignesFormationAffichees([muette, repondue, parLaFiche])).toEqual([repondue, parLaFiche]);
-    expect(formationsEnAttenteDeReponse([muette, repondue, parLaFiche])).toBe(1);
+  });
+
+  it("le compte « à organiser » ne compte que les lignes affichées, en mode état, non en place", () => {
+    const etat = (l: LigneEtatPermanent, enPlace: boolean, compteDansLEnTete = true) =>
+      ({ ...l, compteDansLEnTete, parLesTitres: null, declareLe: enPlace ? new Date() : null }) as LigneEtatPermanent;
+    const lignes = [
+      etat(muette, false), // cachée : ne compte pas
+      etat(repondue, false), // due
+      etat(parLaFiche, true), // en place
+      etat(repondue, false, false), // mode « fait » : hors compte
+    ];
+    expect(aOrganiserALEtablissement(lignes)).toBe(1);
+    // Plus les titres que le DUERP signale et que personne ne porte.
+    expect(aOrganiserALEtablissement(lignes, 2)).toBe(3);
+  });
+});
+
+describe("pourquoi une formation est due à l'établissement", () => {
+  const ligne = (
+    id: string,
+    over: Partial<Pick<LigneEtatPermanent, "parLesTitres" | "questionsSansReponse">> = {},
+  ) => ({ obligation: o(id), parLesTitres: null, questionsSansReponse: [], aConfirmer: null, ...over });
+
+  it("d'après les titres : la phrase qui les compte", () => {
+    const phrase = "Établi d'après les titres déclarés : aucun titre.";
+    expect(
+      pourquoiALEtablissement(
+        ligne("elec-travail-habilitation-personnel", {
+          parLesTitres: { enPlace: false, phrase, phraseSansNom: phrase },
+        }),
+      ),
+    ).toBe(phrase);
+  });
+
+  it("née d'un fait du DUERP : le DUERP le signale", () => {
+    expect(pourquoiALEtablissement(ligne("formation-securite-etablissement-manutention"))).toMatch(
+      /^Votre DUERP le signale/,
+    );
+  });
+
+  it("question sans réponse : à confirmer, pas due", () => {
+    expect(
+      pourquoiALEtablissement(
+        ligne("formation-securite-etablissement-manutention", { questionsSansReponse: ["x"] }),
+      ),
+    ).toMatch(/^À confirmer/);
+  });
+
+  it("retenue sous réserve d'effectif : à confirmer, pas due sans réserve", () => {
+    expect(
+      pourquoiALEtablissement({ ...ligne("incendie-erp-5-instruction-personnel"), aConfirmer: "x" }),
+    ).toMatch(/^À confirmer : elle dépend de votre effectif/);
+  });
+
+  it("sans fait ni titre : due par l'établissement, sans dire qui", () => {
+    // Neutre : M 29 / N 17 visent des agents désignés, pas tout le personnel.
+    expect(pourquoiALEtablissement(ligne("incendie-erp-5-instruction-personnel"))).toMatch(
+      /^Due par l'établissement : Rojer ne sait pas quels salariés/,
+    );
   });
 });

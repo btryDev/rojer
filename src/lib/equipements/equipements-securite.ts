@@ -187,7 +187,7 @@ export function hrefActionSecurite(
 ): string | null {
   if (l.etat === "declare") return null;
   if (l.cible.kind === "categorie") return liens.hrefNouveau(l.cible.categorie);
-  // Une formation se déclare dans Équipe › Formations (`par-l-equipe.ts`,
+  // Une formation se déclare dans ~~Équipe › Formations~~ [2026-10-24 : section « Formations à organiser » d'Équipe] (`par-l-equipe.ts`,
   // ADR-047) : l'écran « en place » ne l'affiche pas.
   const o = obligationParId(l.obligationId);
   const ancre = ancreEtatPermanent(l.obligationId);

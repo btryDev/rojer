@@ -18,6 +18,7 @@ import {
 } from "@/components/salaries/ModaleTitre";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { LIBELLE_SANS_RENDEZ_VOUS, type RegistreLigne } from "@/lib/calendrier/etats";
+import { LIBELLE_POUR_INFORMATION } from "@/lib/referentiels/conformite/initiative";
 import { LABEL_PERIODICITE } from "@/lib/calendrier/labels";
 import { formaterDateCourteFr, formaterDateLongueFr } from "@/lib/dates";
 import { lireProvenance } from "@/lib/navigation/provenance";
@@ -52,7 +53,7 @@ const MOT_DE_L_ETAT: Record<RegistreLigne, string> = {
   // preuve qu'elle porte (ADR-012). Ni « à jour » — ce serait s'attribuer une
   // conformité —, ni « dépassée » — ce serait annoncer un retard sur ce qui
   // n'est plus dû.
-  archivee: "Ne s'applique plus",
+  archivee: "Plus suivi",
   proche: "Échéance déclarée proche",
   enRetard: "Échéance déclarée dépassée",
   // Pas « en retard » : un titre sans terme écrit n'a pas de rendez-vous
@@ -65,7 +66,7 @@ const MOT_DE_L_ETAT: Record<RegistreLigne, string> = {
   // sur les états d'une ligne, et le mot est le même que celui du calendrier.
   sansRendezVous: LIBELLE_SANS_RENDEZ_VOUS,
   // Un titre ne l'est jamais non plus — la table est fermée (C64).
-  pourInformation: "Pour information",
+  pourInformation: LIBELLE_POUR_INFORMATION,
   // Ni celui-là : la prudence ne vise que les lignes du calendrier (D26).
   aConfirmer: "À confirmer",
 };
@@ -158,7 +159,7 @@ export default async function SalarieDetailPage({
   // tâche (ADR-023) : sur la fiche d'un serveur, elle proposait l'habilitation
   // électrique. Ce qu'elle disait vit ailleurs — les questions sur
   // « Évaluer les risques de vos salariés », les formations et l'habilitation
-  // du personnel sur Équipe › Formations, les manques ci-dessous.]
+  // du personnel sur ~~Équipe › Formations~~ [2026-10-24 : section « Formations à organiser » d'Équipe], les manques ci-dessous.]
 
   const action = declarerTitre.bind(null, id, salarieId);
   const provenance = lireProvenance(de, id);
@@ -322,7 +323,7 @@ export default async function SalarieDetailPage({
         }
       >
         {!s.actif && (
-          <p className="m-0 max-w-[64ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
             Cette personne ne fait plus partie de l&apos;effectif. Sa fiche et
             ses titres restent enregistrés tant que vous ne la supprimez pas :
             « Supprimer ce salarié » les efface définitivement.
@@ -376,7 +377,7 @@ export default async function SalarieDetailPage({
             )
           }
           vide={
-            <p className="m-0 max-w-[64ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+            <p className="m-0 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
               Rien de déclaré pour l&apos;instant. Rojer ne peut pas le
               deviner : rien dans un intitulé de poste ne dit qu&apos;une
               personne conduit un chariot, travaille au voisinage de pièces
@@ -394,7 +395,7 @@ export default async function SalarieDetailPage({
             Posé en pied de fiche, hors carte : c'est une information de
             tenue du dossier, pas un geste de prévention. */}
         <section className="mt-2 flex flex-wrap items-center justify-between gap-x-10 gap-y-3 border-t border-[color:var(--board-slate-line)] pt-5">
-          <div className="max-w-[72ch]">
+          <div className="max-w-[var(--board-mesure)]">
             <p className="m-0 text-[12.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
               Rojer garde son nom, son poste, sa date d&apos;entrée et les dates
               de ses titres — aucune donnée de santé.

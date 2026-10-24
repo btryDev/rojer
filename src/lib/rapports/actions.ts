@@ -176,8 +176,8 @@ export async function uploadRapport(
     return {
       status: "error",
       message:
-        "Cette obligation ne s'applique plus à cette ligne : aucun rapport ne " +
-        "s'y dépose.",
+        "Rojer ne suit plus cette obligation : on ne peut plus y déposer de " +
+        "rapport.",
     };
   }
 

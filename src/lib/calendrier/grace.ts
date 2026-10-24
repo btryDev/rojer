@@ -55,16 +55,21 @@ export function graceANaissance(
 }
 
 /**
- * Ce que l'écran dit d'une ligne EN GRÂCE : « délai jusqu'au 15/04/2027 »,
+ * Ce que l'écran dit d'une ligne EN GRÂCE : ~~« délai jusqu'au 15/04/2027 »~~
+ * « Rojer ne la compte pas en retard avant le 15/04/2027 : … » (2026-10-24),
  * à côté de « à planifier » — jamais une échéance, la ligne n'en a pas.
  * `null` hors grâce. Une phrase, une source : `delaiDeGrace`.
  */
 export function mentionDelaiDeGrace(
   v: VerificationDatee,
   now: Date,
-  { enTete = false }: { enTete?: boolean } = {},
 ): string | null {
   const fin = delaiDeGrace(v, now);
   if (fin === null) return null;
-  return `${enTete ? "Délai" : "délai"} jusqu'au ${formaterDateFr(fin)}`;
+  // [2026-10-24 : ~~« délai jusqu'au … »~~ — un délai pour faire quoi ? La
+  // mention dit ce que la date change, et le geste.]
+  // « Rojer ne la compte pas » : l'échéance réglementaire, elle, ne bouge pas
+  // (ADR-040) — « pas comptée en retard » pouvait se lire « pas en retard ».
+  // Commence par « Rojer » : plus de variante de casse pour l'en-tête.
+  return `Rojer ne la compte pas en retard avant le ${formaterDateFr(fin)} : planifiez-la d'ici là`;
 }

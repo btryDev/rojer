@@ -248,7 +248,7 @@ export default async function EtatsPermanentsPage({
         apres={
           <>
               {texteFiche && (
-                <p className="m-0 max-w-[62ch] text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+                <p className="m-0 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
                   {texteFiche}{" "}
                   <Link
                     href={`/etablissements/${id}/modifier`}
@@ -344,7 +344,7 @@ export default async function EtatsPermanentsPage({
                   Ce qui revient, sans rythme écrit
                 </h2>
                 {texteFaits && (
-                  <p className="m-0 mt-2 max-w-[72ch] text-[13px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+                  <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                     {texteFaits}
                   </p>
                 )}

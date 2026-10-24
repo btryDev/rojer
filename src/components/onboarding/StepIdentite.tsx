@@ -54,7 +54,7 @@ export function StepIdentite({ state, update, errors, blocage }: StepProps) {
         <h2 className="board-titre m-0 text-[clamp(22px,2.2vw,27px)]">
           Décrivez votre établissement
         </h2>
-        <p className="m-0 mt-2.5 max-w-[62ch] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 mt-2.5 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           Ces informations servent à identifier vos obligations
           réglementaires.
         </p>
@@ -365,7 +365,7 @@ export function StepIdentite({ state, update, errors, blocage }: StepProps) {
                   aria-hidden
                   className="mt-px size-4 flex-none text-[color:var(--board-signal-ink)]"
                 />
-                <p className="m-0 max-w-[62ch] text-[12.5px] leading-[1.55] text-[color:var(--board-signal-ink)]">
+                <p className="m-0 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-signal-ink)]">
                   {refus.message}
                 </p>
               </div>
@@ -381,7 +381,7 @@ export function StepIdentite({ state, update, errors, blocage }: StepProps) {
                   aria-hidden
                   className="mt-px size-4 flex-none text-[color:var(--board-signal-ink)]"
                 />
-                <p className="m-0 max-w-[62ch] text-[12.5px] leading-[1.55] text-[color:var(--board-signal-ink)]">
+                <p className="m-0 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-signal-ink)]">
                   {refusEntreprise.message}
                 </p>
               </div>
@@ -395,7 +395,7 @@ export function StepIdentite({ state, update, errors, blocage }: StepProps) {
                 <strong className="block text-[13.5px] font-semibold text-[color:var(--board-ink)]">
                   {repere.titre}
                 </strong>
-                <span className="mt-1 block max-w-[62ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                <span className="mt-1 block max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                   {repere.corps}
                 </span>
               </BlocCreux>

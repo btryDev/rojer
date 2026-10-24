@@ -103,9 +103,8 @@ describe("delaiDeGrace et les prédicats de retard — la table J+n", () => {
   }
 
   it("la mention dit le dernier jour, au format civil", () => {
-    expect(mentionDelaiDeGrace(ligne(), jour(1))).toBe("délai jusqu'au 15/04/2027");
-    expect(mentionDelaiDeGrace(ligne(), jour(1), { enTete: true })).toBe(
-      "Délai jusqu'au 15/04/2027",
+    expect(mentionDelaiDeGrace(ligne(), jour(1))).toBe(
+      "Rojer ne la compte pas en retard avant le 15/04/2027 : planifiez-la d'ici là",
     );
     expect(mentionDelaiDeGrace(ligne(), jour(91))).toBeNull();
   });

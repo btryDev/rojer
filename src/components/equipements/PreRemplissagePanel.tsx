@@ -178,7 +178,7 @@ export function PreRemplissagePanel({
         <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
           Pré-remplissage suggéré
         </p>
-        <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
           D&apos;après le code NAF et les régimes de cet établissement, les
           catégories d&apos;équipement ci-dessous sont typiquement présentes.
           Décochez celles qui ne s&apos;appliquent pas, puis validez pour créer
@@ -226,7 +226,7 @@ export function PreRemplissagePanel({
                     >
                       {LABEL_CATEGORIE_EQUIPEMENT[s.categorie]}
                     </p>
-                    <p className="m-0 mt-1 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                    <p className="m-0 mt-1 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                       {s.libelle} — {s.raison}
                       {s.mention ? ` ${s.mention}` : null}
                     </p>

@@ -58,7 +58,7 @@ export function HeroEquipement({
             {titre}
           </h1>
           {chapeau ? (
-            <p className="m-0 mt-2.5 max-w-[66ch] text-[14px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+            <p className="m-0 mt-2.5 max-w-[var(--board-mesure)] text-[14px] leading-[1.5] text-[color:var(--board-slate-mid)]">
               {chapeau}
             </p>
           ) : null}

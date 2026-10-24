@@ -34,7 +34,7 @@ export function RubriqueHorsQuotidien({
         <h2 className="board-titre m-0 mt-2 text-[22px]">
           {TITRE_HORS_QUOTIDIEN}
         </h2>
-        <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
           Rojer garde ces obligations dans son référentiel, avec leur texte,
           mais ne les suit pas au quotidien : ni calendrier, ni rappel à
           l&apos;écran. Elles sont nommées ici parce qu&apos;elles peuvent
@@ -51,12 +51,12 @@ export function RubriqueHorsQuotidien({
             </h3>
             <p
               data-geste
-              className="m-0 mt-3 max-w-[68ch] text-[13.5px] font-semibold leading-[1.6] text-[color:var(--board-slate-ink)]"
+              className="m-0 mt-3 max-w-[var(--board-mesure)] text-[13.5px] font-semibold leading-[1.6] text-[color:var(--board-slate-ink)]"
             >
               {o.geste}
             </p>
             {o.porteePar ? (
-              <p className="m-0 mt-1 max-w-[68ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+              <p className="m-0 mt-1 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                 {o.porteePar}
               </p>
             ) : null}
