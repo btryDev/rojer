@@ -7,7 +7,10 @@ import { cache } from "react";
 import { JOURS_HORIZON_PROCHE, ajouterJours, debutDuJour } from "@/lib/dates";
 import { STATUTS_ACTION_OUVERTE, joursDeRetard } from "@/lib/dates/retard";
 
-export type OrigineAction = "duerp" | "verification" | "libre";
+// ~~`"libre"`~~ — retirée le 2026-10-24 : une action sans origine est
+// impossible (CHECK `Action_origine_xor`, ADR-002), le filtre « Libres » ne
+// pouvait rien montrer.
+export type OrigineAction = "duerp" | "verification";
 
 export type FiltresPlanActions = {
   origine?: OrigineAction;
@@ -74,9 +77,9 @@ export function origineDeLAction(a: {
   risqueId: string | null;
   verificationId: string | null;
 }): OrigineAction {
-  if (a.risqueId) return "duerp";
-  if (a.verificationId) return "verification";
-  return "libre";
+  // XOR garanti par la base (`Action_origine_xor`) : sans risque, c'est une
+  // vérification.
+  return a.risqueId ? "duerp" : "verification";
 }
 
 export async function getAction(id: string) {
@@ -141,7 +144,6 @@ export async function getAction(id: string) {
 function clauseOrigine(origine: OrigineAction | undefined) {
   if (origine === "duerp") return { risqueId: { not: null } };
   if (origine === "verification") return { verificationId: { not: null } };
-  if (origine === "libre") return { risqueId: null, verificationId: null };
   return {};
 }
 

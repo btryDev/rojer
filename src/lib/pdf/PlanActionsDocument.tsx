@@ -52,7 +52,6 @@ const PLAN_ACTIONS_AUCUNE_EN_COURS =
 const LIBELLE_ORIGINE: Record<OrigineAction, string> = {
   duerp: "DUERP",
   verification: "Vérification",
-  libre: "Libre",
 };
 
 export function PlanActionsDocument({ data }: { data: PlanActionsData }) {

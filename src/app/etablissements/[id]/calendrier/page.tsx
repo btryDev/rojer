@@ -1001,7 +1001,19 @@ export default async function CalendrierPage({
           revendiquer d'exclusivité : le relevé « Dépassées » du tableau de bord
           réunit lui aussi toutes les familles. */}
       <p className="m-0 mt-[11px] max-w-[62ch] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-        {filtreFamille
+        {filtreFamille === "travaux" ? (
+          <>
+            {DESCRIPTION_FAMILLE.travaux}{" "}
+            {/* Le pendant du lien du plan d'actions (2026-10-24) : les
+                actions sans échéance n'ont pas de place ici. */}
+            <Link
+              href={`/etablissements/${id}/actions`}
+              className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
+            >
+              Toutes les actions, datées ou non, sont dans le plan d&apos;actions.
+            </Link>
+          </>
+        ) : filtreFamille
           ? DESCRIPTION_FAMILLE[filtreFamille]
           : `Vos échéances datées, toutes réunies : ${enumererFamilles()}. Le parc et les zones, eux, ne comptent que ce que portent vos équipements.`}
       </p>
