@@ -18,6 +18,7 @@ import {
 } from "@/components/salaries/ModaleTitre";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { LIBELLE_SANS_RENDEZ_VOUS, type RegistreLigne } from "@/lib/calendrier/etats";
+import { LIBELLE_POUR_INFORMATION } from "@/lib/referentiels/conformite/initiative";
 import { LABEL_PERIODICITE } from "@/lib/calendrier/labels";
 import { formaterDateCourteFr, formaterDateLongueFr } from "@/lib/dates";
 import { lireProvenance } from "@/lib/navigation/provenance";
@@ -65,7 +66,7 @@ const MOT_DE_L_ETAT: Record<RegistreLigne, string> = {
   // sur les états d'une ligne, et le mot est le même que celui du calendrier.
   sansRendezVous: LIBELLE_SANS_RENDEZ_VOUS,
   // Un titre ne l'est jamais non plus — la table est fermée (C64).
-  pourInformation: "Pour information",
+  pourInformation: LIBELLE_POUR_INFORMATION,
   // Ni celui-là : la prudence ne vise que les lignes du calendrier (D26).
   aConfirmer: "À confirmer",
 };
@@ -158,7 +159,7 @@ export default async function SalarieDetailPage({
   // tâche (ADR-023) : sur la fiche d'un serveur, elle proposait l'habilitation
   // électrique. Ce qu'elle disait vit ailleurs — les questions sur
   // « Évaluer les risques de vos salariés », les formations et l'habilitation
-  // du personnel sur Équipe › Formations, les manques ci-dessous.]
+  // du personnel sur ~~Équipe › Formations~~ [2026-10-24 : section « Formations à organiser » d'Équipe], les manques ci-dessous.]
 
   const action = declarerTitre.bind(null, id, salarieId);
   const provenance = lireProvenance(de, id);

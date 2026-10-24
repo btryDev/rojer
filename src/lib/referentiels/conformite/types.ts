@@ -1166,7 +1166,7 @@ type ObligationCommune = {
    * **Une formation des salariés** — formation, instruction ou entraînement
    * que le texte impose à l'employeur envers ses travailleurs (décision de la
    * propriétaire du 2026-10-24). Lu par `estFormation` seulement :
-   *   - Équipe › Formations les rassemble, et les états permanents marqués y
+   *   - ~~Équipe › Formations~~ [2026-10-24 : section « Formations à organiser » d'Équipe] les rassemble, et les états permanents marqués y
    *     quittent « Ce qui doit être en place » (`queries.ts`) ;
    *   - le calendrier les filtre (`?formation=1`).
    *

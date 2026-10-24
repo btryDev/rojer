@@ -522,7 +522,7 @@ const RELEVE = {
   // écrit ne change. ~~46bc73090cecb299~~. Puis l'exemple « Autre » retouché
   // (seconde relecture, même jour, même raison). ~~0dee2d0136d49c7b~~.
   // 2026-10-24 : `estFormation` ajoutée à `types.ts`, lue par l'affichage
-  // seulement (Équipe › Formations, filtre du calendrier) : NON, empreinte
+  // seulement (~~Équipe › Formations~~ [2026-10-24 : section « Formations à organiser » d'Équipe], filtre du calendrier) : NON, empreinte
   // recopiée, version inchangée. ~~bd0b031ddeb11659~~.
   // 2026-10-24 (soir), `lot/mentions-claires` : des PHRASES d'affichage
   // réécrites — la mention de rythme retenu (`mention-rythme.ts`), le motif

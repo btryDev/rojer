@@ -35,6 +35,7 @@ import {
 } from "@/lib/dates/retard";
 import {
   aUnRendezVous,
+  LIBELLE_ETAT,
   LIBELLE_SANS_ECHEANCE,
   LIBELLE_SANS_RENDEZ_VOUS,
   type StatutPeint,
@@ -264,7 +265,7 @@ export function contenuTenuAilleursDepuis(
             // contrôle. La preuve, elle, reste — c'est tout l'objet de la
             // conservation (ADR-012).
             v.archiveLe
-              ? `ne s'applique plus depuis le ${formaterDateCourteFr(v.archiveLe)}`
+              ? `${LIBELLE_ETAT.archivee.un} depuis le ${formaterDateCourteFr(v.archiveLe)}`
               : null,
             // Le fait, lu sur le dernier rapport (ADR-034) — UNE fois. Écrit en
             // deux membres (rapport, puis repli), une ligne imprimait « faite

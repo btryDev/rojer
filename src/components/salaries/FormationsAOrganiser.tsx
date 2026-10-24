@@ -39,17 +39,17 @@ export function FormationsAOrganiser({
   fiches,
   sansPorteur,
   personnePresente,
+  aOrganiser,
 }: {
   etablissementId: string;
+  /** Le compte de la pastille (`aOrganiserALEtablissement`, le même que le widget). */
+  aOrganiser: number;
   formations: readonly FormationAOrganiser[];
   /** Les fiches que la ligne ouvre (`versFiche`). */
   fiches: FicheLigne[];
   sansPorteur: readonly FaitSansPorteur[];
   personnePresente: boolean;
 }) {
-  const aOrganiser =
-    formations.filter((f) => f.etat === "a-declarer" || f.etat === "titres-manquants").length +
-    sansPorteur.reduce((n, f) => n + f.titres.length, 0);
   const vide = formations.length === 0 && sansPorteur.length === 0;
 
   return (
@@ -96,11 +96,11 @@ export function FormationsAOrganiser({
               <LigneFormation key={f.obligationId} {...f} />
             ))}
             {sansPorteur.flatMap((fait) =>
-              fait.titres.map((t) => {
+              fait.titres.map((t, i) => {
                 const d = dessinDuTitre(t.obligation.id);
                 return (
                   <li
-                    key={t.obligation.id}
+                    key={`${fait.champ}:${t.obligation.id}`}
                     className="grid list-none grid-cols-[44px_minmax(0,1fr)] items-center gap-x-4 gap-y-2 rounded-[18px] bg-[color:var(--board-card)] px-3 py-3 sm:grid-cols-[44px_minmax(0,1fr)_auto]"
                   >
                     <Vignette src={d.src} fond={d.fond} taille={44} />
@@ -118,7 +118,8 @@ export function FormationsAOrganiser({
                           Modifier la réponse
                         </Link>
                       </span>
-                      {fait.horsQuestion && (
+                      {/* Une fois par question, sous son premier titre. */}
+                      {i === 0 && fait.horsQuestion && (
                         <span className="mt-1 block text-[12px] leading-[1.5] text-[color:var(--board-slate-soft)]">
                           {fait.horsQuestion}
                         </span>
@@ -127,7 +128,7 @@ export function FormationsAOrganiser({
                     {/* Sans personne présente, la porte est d'en ajouter une. */}
                     <Link
                       href={`/etablissements/${etablissementId}/equipe${personnePresente ? "#personnes" : "/nouveau"}`}
-                      className="pastille-board col-start-2 justify-self-start bg-[color:var(--board-amber)] sm:col-start-3 sm:justify-self-end text-[color:var(--board-amber-ink)] underline-offset-4 hover:underline"
+                      className="pastille-board col-start-2 justify-self-start bg-[color:var(--board-amber)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--board-blue-strong)] sm:col-start-3 sm:justify-self-end text-[color:var(--board-amber-ink)] underline-offset-4 hover:underline"
                     >
                       {personnePresente ? "Déclarer sur une fiche" : "Ajouter la personne"}
                     </Link>

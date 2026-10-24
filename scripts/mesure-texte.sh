@@ -8,6 +8,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 grep -rlE 'max-w-\[(62|64|66|68|70|72)ch\]' src \
   | while IFS= read -r f; do
-      perl -pi -e 's/max-w-\[(62|64|66|68|70|72)ch\]/max-w-[var(--board-mesure)]/g' "$f"
+      # Les lignes de commentaire ne sont pas des classes : les laisser
+      # (revue qualité, 2026-10-24 — un commentaire réécrit se contredisait).
+      perl -pi -e 'next if /^\s*(\*|\/\/|\{\/\*)/; s/max-w-\[(62|64|66|68|70|72)ch\]/max-w-[var(--board-mesure)]/g' "$f"
     done
 grep -rcE 'max-w-\[var\(--board-mesure\)\]' src | awk -F: '{n+=$2} END {print n " paragraphes sur la mesure"}'

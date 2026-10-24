@@ -47,7 +47,7 @@ export default async function RisquesSalariesPage({
           Ces questions décident des formations, du suivi et des consignes que
           le Code du travail rend dus à une partie de votre effectif. Répondez pour
           l&apos;établissement ; les formations qui en découlent se suivent dans
-          l&apos;onglet Formations d&apos;Équipe. Les mêmes réponses apparaissent
+          la section « Formations à organiser » d&apos;Équipe. Les mêmes réponses apparaissent
           dans votre DUERP.
         </p>
       </header>

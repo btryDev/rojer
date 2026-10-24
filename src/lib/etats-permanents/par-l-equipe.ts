@@ -57,7 +57,7 @@ export function compteParLEquipe(
 }
 
 /**
- * Les lignes qu'Équipe › Formations AFFICHE et compte : pas celles qui ne
+ * Les lignes qu'~~Équipe › Formations~~ [2026-10-24 : section « Formations à organiser » d'Équipe] AFFICHE et compte : pas celles qui ne
  * tiennent qu'à une question d'activité sans réponse (« à confirmer » par un
  * fait muet). Les montrer avant la réponse laissait croire qu'elles étaient
  * déjà dues (décision de la propriétaire du 2026-10-22, revue du 2026-10-24).
@@ -70,12 +70,10 @@ export function lignesFormationAffichees(
   return lignes.filter((l) => !dependDUnFaitMuet(l.questionsSansReponse));
 }
 
-/** Combien de lignes attendent une réponse avant de s'afficher. */
-export function formationsEnAttenteDeReponse(
-  lignes: readonly LigneEtatPermanent[],
-): number {
-  return lignes.length - lignesFormationAffichees(lignes).length;
-}
+/*
+ * ~~`formationsEnAttenteDeReponse`~~ (retirée le 2026-10-24, revue qualité :
+ * plus d'appelant depuis que l'onglet Formations est devenu une section).
+ */
 
 /**
  * POURQUOI une formation est due à l'établissement et non sur une fiche, en
@@ -84,11 +82,16 @@ export function formationsEnAttenteDeReponse(
  * concerné ; la phrase dit d'où vient l'obligation.
  */
 export function pourquoiALEtablissement(
-  l: Pick<LigneEtatPermanent, "parLesTitres" | "questionsSansReponse" | "obligation">,
+  l: Pick<LigneEtatPermanent, "parLesTitres" | "questionsSansReponse" | "obligation" | "aConfirmer">,
 ): string {
   // Établie d'après les titres de toute l'équipe : la phrase de
   // `par-les-titres.ts`, qui compte les titres et nomme les échéances.
   if (l.parLesTitres) return l.parLesTitres.phrase;
+  // Retenue sous réserve d'effectif (revue qualité du 2026-10-24 : la réserve
+  // ne se lisait qu'en ouvrant la fiche, qui en donne le détail).
+  if (l.aConfirmer) {
+    return "À confirmer : elle dépend de votre effectif, qui ne se lit pas pareil sur la fiche de l'entreprise et sur ce site. Le détail est dans la fiche.";
+  }
   if (l.questionsSansReponse.length > 0) {
     return "À confirmer : une question du DUERP qui la décide n'a pas encore de réponse.";
   }
@@ -96,4 +99,20 @@ export function pourquoiALEtablissement(
     return "Votre DUERP le signale : à organiser pour les salariés concernés.";
   }
   return "Due pour le personnel de l'établissement, quel que soit le poste.";
+}
+
+/**
+ * Combien de formations restent à organiser pour l'établissement — le compte
+ * de la section « Formations à organiser » (revue qualité du 2026-10-24 : la
+ * section recopiait une formule). Le widget compte, lui, toutes les lignes du
+ * dossier, cachées comprises, comme le score. Les lignes affichées (`lignesFormationAffichees`), comptées comme
+ * l'en-tête (`compteParLEquipe`, mode « état » seul), plus les titres que le
+ * DUERP signale et que personne ne porte.
+ */
+export function aOrganiserALEtablissement(
+  lignes: readonly LigneEtatPermanent[],
+  titresSansPorteur = 0,
+): number {
+  const c = compteParLEquipe(lignesFormationAffichees(lignes));
+  return c.total - c.enPlace + titresSansPorteur;
 }

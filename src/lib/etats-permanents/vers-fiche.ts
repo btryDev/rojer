@@ -1,7 +1,7 @@
 /**
  * D'une ligne d'état permanent à ce que la vignette et la fiche reçoivent
  * (`LigneCompacte`, `RevueEnPlace`). Partagé par l'écran « en place » et par
- * Équipe › Formations, où se déclarent les formations (`par-l-equipe.ts`,
+ * ~~Équipe › Formations~~ [2026-10-24 : section « Formations à organiser » d'Équipe], où se déclarent les formations (`par-l-equipe.ts`,
  * ADR-047) : une seule fiche, écrite
  * une fois — deux copies des mêmes props divergent à la première correction.
  *
@@ -91,7 +91,9 @@ export function versFiche(
     parLesTitres: l.parLesTitres
       ? {
           phrase: l.parLesTitres.phrase,
-          hrefEquipe: `/etablissements/${id}/equipe`,
+          // Vers les personnes : la fiche s'ouvre aussi sur Équipe, et un lien
+          // vers la page où l'on est ne mène nulle part (revue qualité).
+          hrefEquipe: `/etablissements/${id}/equipe#personnes`,
           enPlace: l.parLesTitres.enPlace,
         }
       : null,

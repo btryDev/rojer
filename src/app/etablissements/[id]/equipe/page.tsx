@@ -15,10 +15,11 @@ import { chargerFaitsActivite } from "@/lib/etablissements/faits-activite-querie
 import { FormationsAOrganiser } from "@/components/salaries/FormationsAOrganiser";
 import { ancreEtatPermanent } from "@/lib/etats-permanents/ancre";
 import {
+  aOrganiserALEtablissement,
   lignesFormationAffichees,
   pourquoiALEtablissement,
 } from "@/lib/etats-permanents/par-l-equipe";
-import { dessinDe, etatCourtDe, versFiche } from "@/lib/etats-permanents/vers-fiche";
+import { etatCourtDe, versFiche } from "@/lib/etats-permanents/vers-fiche";
 import { titresSansPorteur } from "@/lib/salaries/titres-sans-porteur";
 import { etatsPermanentsDuDossier } from "@/lib/etats-permanents/queries";
 
@@ -52,26 +53,31 @@ export default async function EquipePage({
   ]);
   const catalogue = cataloguerTitres();
   // « Formations à organiser » : dues aux salariés sans qu'on sache lesquels.
-  const lignesFormation = lignesFormationAffichees(dossier.parLEquipe);
-  const formations = lignesFormation.map((l) => {
-    const d = dessinDe(l);
-    return {
-      obligationId: l.obligation.id,
-      ancre: ancreEtatPermanent(l.obligation.id),
-      libelle: l.obligation.libelle,
-      pourquoi: pourquoiALEtablissement(l),
-      etat: etatCourtDe(l),
-      dessin: { src: d.illustration, fond: d.fond },
-    };
-  });
-  const fiches = lignesFormation.map((l) =>
-    versFiche(l, {
+  // Une seule passe : la ligne de la section et la fiche qu'elle ouvre
+  // (revue qualité du 2026-10-24 — le dessin se calculait deux fois).
+  const fiches = lignesFormationAffichees(dossier.parLEquipe).map((l) => ({
+    ligne: l,
+    fiche: versFiche(l, {
       etablissementId: id,
       entrepriseId: etablissement.entrepriseId,
-      surTitre: "Formation à organiser pour l'établissement",
+      surTitre: l.parLesTitres
+        ? "Formation · d'après les titres de votre équipe"
+        : "Formation à organiser pour l'établissement",
     }),
-  );
+  }));
+  const formations = fiches.map(({ ligne, fiche }) => ({
+    obligationId: fiche.obligationId,
+    ancre: ancreEtatPermanent(fiche.obligationId),
+    libelle: fiche.libelle,
+    pourquoi: pourquoiALEtablissement(ligne),
+    etat: etatCourtDe(ligne),
+    dessin: { src: fiche.illustration, fond: fiche.fond },
+  }));
   const sansPorteur = faits ? titresSansPorteur(faits, equipe) : [];
+  const aOrganiser = aOrganiserALEtablissement(
+    dossier.parLEquipe,
+    sansPorteur.reduce((n, f) => n + f.titres.length, 0),
+  );
   // Les faits sans réponse, NOMMÉS : la passe Chrome du 2026-10-08 a vu le
   // bandeau compter juste et lister les cinq, réponses comprises.
   const NOM_COURT: Record<(typeof FAITS_ACTIVITE)[number]["champ"], string> = {
@@ -234,7 +240,8 @@ export default async function EquipePage({
         <FormationsAOrganiser
           etablissementId={id}
           formations={formations}
-          fiches={fiches}
+          fiches={fiches.map((f) => f.fiche)}
+          aOrganiser={aOrganiser}
           sansPorteur={sansPorteur}
           personnePresente={actifs > 0}
         />

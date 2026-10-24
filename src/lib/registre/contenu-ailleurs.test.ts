@@ -193,7 +193,7 @@ describe("registre — une obligation éteinte ne se présente pas en retard", (
 
   it("dit qu'elle ne s'applique plus, et n'annonce aucune prochaine échéance", () => {
     const [ligne] = lignesDe([eteinte()]);
-    expect(ligne.meta).toContain("ne s'applique plus depuis le 01 févr. 2026");
+    expect(ligne.meta).toContain("plus due depuis le 01 févr. 2026");
     expect(ligne.meta).not.toContain("prochaine");
   });
 

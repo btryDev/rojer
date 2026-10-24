@@ -28,7 +28,8 @@ const CLASSES_ETIQUETTE: Record<TonSelecteurBatiment, string> = {
 };
 
 /**
- * `max-w-[var(--board-mesure)]` dans les deux tons : la légende est du texte courant, et elle
+ * ~~`max-w-[66ch]`~~ [2026-10-24 : la mesure commune, `--board-mesure`] dans
+ * les deux tons : la légende est du texte courant, et elle
  * courait jusqu'au bord — une phrase de deux lignes s'étalait sur 1 200 px d'un
  * seul trait, quand les autres phrases de périmètre du produit tiennent entre
  * 46 et 68 caractères. La mesure se pose ici plutôt que chez chaque appelant :

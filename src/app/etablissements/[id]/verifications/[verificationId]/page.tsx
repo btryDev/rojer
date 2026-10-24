@@ -492,7 +492,7 @@ export default async function VerificationDetailPage({
             {/* Pas de pastille de statut sur une ligne éteinte : le statut y
                 est GELÉ dans son dernier état connu, et « Planifiée » ou
                 « Conforme » y dirait une chose qui n'est plus attendue. Le fait
-                « Ne s'applique plus », au-dessus, dit ce qui est vrai. */}
+                « Plus due » (ex « Ne s'applique plus »), au-dessus, dit ce qui est vrai. */}
             {/* L'ÉTAT DU JOUR, pas le statut stocké (`statutAffiche`) : une
                 rangée périodique gelée affichait « Conforme » à côté de la
                 pastille « En retard de N j » (relecture du 2026-09-13). */}

@@ -80,7 +80,7 @@ export async function repondreQuestionTransverse(
 
   revalidatePath(`/duerp/${duerpId}/transverses`);
   revalidatePath(`/duerp/${duerpId}/synthese`);
-  // Équipe › Formations lit ces réponses ; le tableau de bord aussi
+  // ~~Équipe › Formations~~ [2026-10-24 : section « Formations à organiser » d'Équipe] lit ces réponses ; le tableau de bord aussi
   // (`dashboard/transmissions.ts`). ~~Les fiches salarié (« Formations liées
   // aux risques du poste »)~~ [2026-10-24 : carte retirée de la fiche.]
   revalidatePath(`/etablissements/${duerp.etablissementId}`, "layout");
