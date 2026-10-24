@@ -550,7 +550,9 @@ export default async function CalendrierPage({
       meta:
         LABEL_PERIODICITE[v.periodicite] +
         (o ? ` · ${LABEL_DOMAINE[o.domaine]}` : ""),
-      rendezVous: pastilleRendezVous(v, aujourdhui),
+      // Sur l'échéance ouverte seulement : un rapport fait n'a plus de
+      // rendez-vous à venir.
+      rendezVous: lec.lecture === "realisation" ? null : pastilleRendezVous(v, aujourdhui),
       contractuelle: estEcheanceContractuelle(v),
       rythmeRetenu: mentionRythmeDeVerification(v),
       aConfirmer:
@@ -1384,7 +1386,11 @@ export default async function CalendrierPage({
                               }
                               // Le rendez-vous pris (ADR-049), à côté de
                               // l'échéance, jamais à sa place.
-                              rendezVous={pastilleRendezVous(v, aujourdhui)}
+                              rendezVous={
+                                ligne.lecture === "realisation"
+                                  ? null
+                                  : pastilleRendezVous(v, aujourdhui)
+                              }
                               contractuelle={estEcheanceContractuelle(v)}
                               rythmeRetenu={mentionRythmeDeVerification(v)}
                               aConfirmer={
