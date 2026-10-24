@@ -354,8 +354,9 @@ export default async function ActionDetailPage({
           ) : a.statut === "abandonnee" ? (
             <CarteFiche titre="État">
               <p className="m-0 text-[13.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                Cette action a été abandonnée. Elle reste au dossier&nbsp;: une
-                mesure écartée fait partie de la traçabilité.
+                {point
+                  ? "Ce point a été abandonné. Il reste au dossier : un point écarté fait partie de la traçabilité."
+                  : "Cette action a été abandonnée. Elle reste au dossier : une mesure écartée fait partie de la traçabilité."}
               </p>
             </CarteFiche>
           ) : null

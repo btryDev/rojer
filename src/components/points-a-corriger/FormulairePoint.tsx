@@ -272,7 +272,7 @@ function Formulaire({
           {correction
             ? pending
               ? "Enregistrement…"
-              : "Enregistrer la correction"
+              : "Enregistrer les modifications"
             : pending
               ? "Ajout…"
               : "Ajouter le point"}

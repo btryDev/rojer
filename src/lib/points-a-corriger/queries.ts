@@ -114,6 +114,7 @@ export async function controlesPourUnPoint(equipementId: string): Promise<Contro
     },
     orderBy: { libelleObligation: "asc" },
   });
+  // Les contrôles de l'appareil d'abord, puis les contrôles d'ensemble.
   return lignes
     .filter((v) => {
       // L'appareil de la fiche est actif (vérifié plus haut) ; une ligne
@@ -128,7 +129,8 @@ export async function controlesPourUnPoint(equipementId: string): Promise<Contro
       libelle: v.libelleObligation,
       ensemble: estControleDEnsemble(v),
       rapports: v.rapports,
-    }));
+    }))
+    .sort((a, b) => Number(a.ensemble) - Number(b.ensemble));
 }
 
 /**

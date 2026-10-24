@@ -33,7 +33,14 @@ export function FilRetour({
   // l'un porte des filtres : la provenance ne s'ajoute que si elle mène
   // ailleurs.
   const ailleurs = retourDistinct(provenance, canonique.href);
-  const retour = provenance ?? canonique;
+  // Une provenance qui mène au parent garde son adresse (ses filtres) mais
+  // prend son nom : « ← Équipement » quand la page sait dire « ← BAES salle »
+  // (contrôle visuel du 2026-10-24).
+  const retour = !provenance
+    ? canonique
+    : ailleurs
+      ? provenance
+      : { href: provenance.href, label: canonique.label };
 
   return (
     <nav
