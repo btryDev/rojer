@@ -291,6 +291,17 @@ export async function uploadRapport(
       // LA LIGNE SE RECALCULE DEPUIS SES FAITS — le rapport qu'on vient de
       // créer compris —, par la même décision que la régénération (ADR-036).
       await recalculerLigne(tx, verif.id);
+
+      // Le rendez-vous est consommé par le rapport qu'il annonçait — celui
+      // qui honore l'échéance ouverte. Un rapport antidaté (archive) ou
+      // « non vérifiable » le laisse en place. Le prestataire attitré reste
+      // pour le passage suivant (ADR-049).
+      if (echeanceHonoree !== null) {
+        await tx.verification.updateMany({
+          where: { id: verif.id, etablissementId: verif.etablissementId },
+          data: { rendezVousLe: null, rendezVousNote: null },
+        });
+      }
     });
   } catch (err) {
     // Nettoyage best-effort du fichier si la DB a échoué.

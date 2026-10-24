@@ -76,6 +76,11 @@ import {
 } from "@/lib/referentiels/conformite/types";
 import { uploadRapport } from "@/lib/rapports/actions";
 import { avecParametres, cheminControle } from "@/lib/navigation/chemins";
+import { SuiviControle } from "@/components/rendez-vous/SuiviControle";
+import { enregistrerSuiviControle } from "@/lib/rendez-vous/actions";
+import { prestatairesProposables } from "@/lib/rendez-vous/queries";
+import { recoitUnSuivi, rendezVousEnAttenteDeRapport } from "@/lib/rendez-vous/regles";
+import { AUCUN_TIERS_ATTENDU, DOMAINES_PRESTATAIRE_ATTENDUS } from "@/lib/prestataires/domaines";
 import { creerPointACorriger } from "@/lib/actions/plan";
 import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
 import { DemanderSignatureForm } from "@/components/signatures/DemanderSignatureForm";
@@ -91,6 +96,7 @@ import {
   type FaitFiche,
 } from "@/components/ui-kit";
 import { lireProvenance } from "@/lib/navigation/provenance";
+import { instantDuRendu } from "@/lib/dates/instant-du-rendu";
 import { listSignatures } from "@/lib/signatures/queries";
 import {
   fraicheurCalendrier,
@@ -195,7 +201,11 @@ export default async function VerificationDetailPage({
   // s'il désigne un rapport de ce contrôle.
   // Lu sur TOUS les rapports : un rapport antidaté déposé à l'instant n'est
   // pas parmi les plus récents.
-  const trouve = v.rapports.find((r) => r.id === apres);
+  // Et déposé à l'instant : l'adresse garde `?apres=` après d'autres
+  // enregistrements sur la page, la confirmation ne doit pas la suivre.
+  const trouve = v.rapports.find(
+    (r) => r.id === apres && instantDuRendu().getTime() - r.createdAt.getTime() < 10 * 60 * 1000,
+  );
   // Ce que le formulaire (client) reçoit : jamais la ligne entière du rapport.
   const rapportDepose = trouve
     ? { id: trouve.id, dateRapport: trouve.dateRapport, resultat: trouve.resultat }
@@ -203,6 +213,14 @@ export default async function VerificationDetailPage({
   const rapportApres =
     recoit && rapportDepose && resultatRelevePoints(rapportDepose.resultat) ? rapportDepose : undefined;
   const boundUpload = uploadRapport.bind(null, v.id);
+
+  // Le prestataire attitré et le rendez-vous (ADR-049) : proposés d'abord
+  // ceux de l'annuaire qui couvrent le domaine du contrôle.
+  const suivi = recoitUnSuivi(v);
+  const attendus = obligation ? DOMAINES_PRESTATAIRE_ATTENDUS[obligation.domaine] : AUCUN_TIERS_ATTENDU;
+  const proposables = suivi
+    ? await prestatairesProposables(id, attendus === AUCUN_TIERS_ATTENDU ? [] : attendus)
+    : [];
 
   // Signatures posées sur chaque rapport de cette vérification.
   const signaturesParRapport = new Map<
@@ -637,6 +655,21 @@ export default async function VerificationDetailPage({
         </section>
       ) : null}
 
+      {/* ── Le prestataire attitré et le rendez-vous (ADR-049) ───── */}
+      {suivi ? (
+        <SuiviControle
+          action={enregistrerSuiviControle.bind(null, v.id)}
+          prestataire={v.prestataire}
+          rendezVousLe={v.rendezVousLe}
+          rendezVousNote={v.rendezVousNote}
+          enAttenteDeRapport={rendezVousEnAttenteDeRapport(v.rendezVousLe, aujourdhui)}
+          proposables={proposables}
+          hrefNouveauPrestataire={`/etablissements/${id}/prestataires/nouveau`}
+          hrefPrestataire={v.prestataire ? `/etablissements/${id}/prestataires/${v.prestataire.id}` : null}
+          echeance={aUnRendezVous(v, aujourdhui) ? v.datePrevue : null}
+        />
+      ) : null}
+
       {/* ── Le dossier : les rapports déposés ─────────────────────── */}
       {aUnRapport ? (
         <>
@@ -657,7 +690,7 @@ export default async function VerificationDetailPage({
             compte={v.rapports.length}
             droite={
               depotOuvert ? (
-              <details id="depot" className="group scroll-mt-6" open={deposer === "1"}>
+              <details className="group">
                 <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-full px-[18px] py-2.5 text-[12.5px] font-semibold text-[color:var(--board-ink)] ring-1 ring-[color:rgba(10,10,10,.18)] transition-colors hover:bg-[color:var(--board-slate-pale)]">
                   <span className="group-open:hidden">+ Nouveau rapport</span>
                   <span className="hidden group-open:inline">Annuler</span>
@@ -682,7 +715,7 @@ export default async function VerificationDetailPage({
                         l&apos;application.
                       </p>
                     ) : (
-                      <UploadRapportForm action={boundUpload} />
+                      <UploadRapportForm action={boundUpload} organismeParDefaut={v.prestataire?.raisonSociale} />
                     )}
                   </div>
                 </div>
@@ -690,6 +723,14 @@ export default async function VerificationDetailPage({
               ) : undefined
             }
           />
+
+          {/* Arrivé par une ligne « à faire » (`?deposer=1`) : le formulaire
+              s'ouvre en pleine largeur, pas dans la colonne du titre. */}
+          {deposer === "1" && depotOuvert && !pieceMedicale ? (
+            <CarteFiche id="depot" titre="Nouveau rapport">
+              <UploadRapportForm action={boundUpload} organismeParDefaut={v.prestataire?.raisonSociale} />
+            </CarteFiche>
+          ) : null}
 
           <ul className="m-0 flex list-none flex-col gap-[22px] p-0">
             {v.rapports.map((r, idx) => {
@@ -829,6 +870,7 @@ export default async function VerificationDetailPage({
               ) : (
                 <UploadRapportForm
                   action={boundUpload}
+                  organismeParDefaut={v.prestataire?.raisonSociale}
                   labelAnnuler={{
                     libelle: "Annuler",
                     href: `/etablissements/${id}/calendrier`,

@@ -771,6 +771,15 @@ model Verification {
   // SQL `urgenceSeule` (`calendrier/portee.ts`).
   graceJusquAu DateTime?
 
+  // Le prestataire attitré et le rendez-vous pris (ADR-049). Ni l'un ni
+  // l'autre ne date la ligne : l'échéance reste celle des faits (ADR-036).
+  // Le rendez-vous est consommé au dépôt d'un rapport ; le prestataire reste.
+  // Le moteur du calendrier ne les écrit jamais.
+  prestataireId  String?
+  prestataire    Prestataire? @relation(fields: [prestataireId], references: [id], onDelete: SetNull)
+  rendezVousLe   DateTime?
+  rendezVousNote String?
+
   rapports RapportVerification[]
   actions  Action[]
 
@@ -809,6 +818,7 @@ model Verification {
   @@index([equipementId])
   @@index([statut])
   @@index([prescriptionId])
+  @@index([prestataireId])
 }
 
 // ---------------------------------------------------------------------------
@@ -1143,6 +1153,8 @@ model Prestataire {
   // Les pièces REMPLACÉES (2026-10-12) : la fiche ne porte que la pièce en
   // cours, une colonne par type ; l'ancienne s'inscrit ici au remplacement.
   piecesPrecedentes PiecePrestataire[]
+  /** Les contrôles dont il est le prestataire attitré (ADR-049). */
+  controlesSuivis   Verification[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -23,9 +23,11 @@ type Props = {
     formData: FormData,
   ) => Promise<UploadRapportState>;
   labelAnnuler?: { libelle: string; href: string };
+  /** Le prestataire attitré du contrôle (ADR-049), proposé comme organisme. */
+  organismeParDefaut?: string;
 };
 
-export function UploadRapportForm({ action, labelAnnuler }: Props) {
+export function UploadRapportForm({ action, labelAnnuler, organismeParDefaut }: Props) {
   // Un dépôt réussi ne revient pas ici : l'action serveur ramène à la fiche
   // du contrôle, qui dit « Rapport enregistré » (ADR-048).
   const [state, formAction, pending] = useActionState<UploadRapportState, FormData>(action, {
@@ -119,6 +121,7 @@ export function UploadRapportForm({ action, labelAnnuler }: Props) {
           name="organismeVerif"
           className="champ-board"
           placeholder="Ex : Apave, Bureau Veritas, Socotec…"
+          defaultValue={organismeParDefaut}
           aria-invalid={Boolean(err("organismeVerif"))}
         />
         {err("organismeVerif") && (
