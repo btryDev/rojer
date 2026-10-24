@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { FilAriane } from "@/components/navigation/FilAriane";
 import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
@@ -28,6 +29,9 @@ import { AvertissementFraicheur } from "@/components/calendrier/AvertissementFra
 import { instantDuRendu } from "@/lib/dates/instant-du-rendu";
 import { listerEquipe } from "@/lib/salaries/queries";
 import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
+import { chargerFaitsActivite } from "@/lib/etablissements/faits-activite-queries";
+import { titresSansPorteur } from "@/lib/salaries/titres-sans-porteur";
+import { dessinDuTitre } from "@/lib/salaries/illustration-titre";
 import { listerQuandCaArrive } from "@/lib/quand-ca-arrive/lignes";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import { estFormation } from "@/lib/referentiels/conformite/types";
@@ -62,7 +66,7 @@ export default async function FormationsEquipePage({
   const aujourdhui = instantDuRendu();
   // L'âge du calendrier, avec sa liste : un calendrier jamais calculé rendrait
   // une liste vide, lue comme « rien à prévoir » (`fraicheur-sorties.test.ts`).
-  const [dossier, echeances, equipe, equipements, fraicheur, marques] = await Promise.all([
+  const [dossier, echeances, equipe, equipements, fraicheur, marques, faits] = await Promise.all([
     etatsPermanentsDuDossier(id, user.id),
     listerEcheancesAnnoncables(id, undefined),
     listerEquipe(id, aujourdhui),
@@ -72,6 +76,7 @@ export default async function FormationsEquipePage({
     // se dit « à confirmer », pas « en retard » — le même registre que la
     // page Calendrier vers laquelle on renvoie.
     marquesAConfirmerDuRendu(id),
+    chargerFaitsActivite(id),
   ]);
   const prudence = retenueParPrudence(marques.parObligation);
 
@@ -122,7 +127,17 @@ export default async function FormationsEquipePage({
       .map((m) => ({ ...m, salarie: s })),
   );
 
+  // 5. Ce que le DUERP signale et que personne ne porte (décision de la
+  // propriétaire du 2026-10-24) : « oui » à la conduite d'engins, et aucun
+  // salarié présent n'a de formation à la conduite déclarée. Rojer ne sait
+  // pas qui conduit — il ne sait que personne ne l'est.
+  const detenus = new Set(
+    equipe.filter((s) => s.actif).flatMap((s) => s.titres.map((t) => t.obligationId)),
+  );
+  const sansPorteur = faits ? titresSansPorteur(faits, detenus) : [];
+
   const rien =
+    sansPorteur.length === 0 &&
     lignes.length === 0 && datees.length === 0 && evenementielles.length === 0 && manques.length === 0;
 
   return (
@@ -175,6 +190,72 @@ export default async function FormationsEquipePage({
             </p>
           </section>
         ) : null}
+
+        {sansPorteur.length > 0 && (
+          // L'ambre, pas le rose : rien ici n'a d'échéance passée, c'est un
+          // titre que personne ne porte (charte, interdits 3 et 4).
+          <section className="rounded-[30px] bg-[color:var(--board-amber-wash)] px-7 py-6 shadow-[inset_0_0_0_1px_var(--board-amber)] sm:px-8">
+            <h2 className="board-titre m-0 text-[20px]">
+              Votre DUERP le signale, personne n&apos;a le titre
+            </h2>
+            <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+              Rojer ne sait pas qui, dans l&apos;équipe, fait la tâche. Il sait
+              seulement qu&apos;aucune personne présente n&apos;a ce titre
+              déclaré. Déclarez-le sur la fiche de qui est concerné, depuis
+              « Ajouter un titre ».
+            </p>
+            <ul className="m-0 mt-4 flex list-none flex-col gap-3 p-0">
+              {sansPorteur.map((f) => (
+                <li key={f.champ} className="flex gap-4 rounded-[22px] bg-[color:var(--board-card)] px-5 py-4">
+                  {(() => {
+                    const d = dessinDuTitre(f.titres[0].obligation.id);
+                    return (
+                      <span
+                        aria-hidden
+                        className="grid size-[52px] flex-none place-items-center rounded-[18px]"
+                        style={{ background: d.fond }}
+                      >
+                        <Image src={d.src} alt="" width={40} height={40} />
+                      </span>
+                    );
+                  })()}
+                  <div className="min-w-0 flex-1">
+                  <p className="m-0 text-[12.5px] text-[color:var(--board-slate-mid)]">
+                    Vous avez répondu oui : « {f.question} »{" "}
+                    <Link
+                      href={`/etablissements/${id}/equipe/risques#${f.champ}`}
+                      className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
+                    >
+                      Modifier la réponse
+                    </Link>
+                  </p>
+                  <ul className="m-0 mt-2.5 flex list-none flex-col gap-2 p-0">
+                    {f.titres.map((t) => (
+                      <li key={t.obligation.id}>
+                        <p className="m-0 text-[14px] font-semibold text-[color:var(--board-ink)]">
+                          {t.obligation.libelle}
+                        </p>
+                        {t.condition && (
+                          <p className="m-0 mt-0.5 max-w-[68ch] text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+                            {/^ils? /.test(t.condition) ? "Dû s'" : "Dû si "}
+                            {t.condition}.
+                          </p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    href={`/etablissements/${id}/equipe`}
+                    className="mt-3 inline-block text-[12.5px] font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
+                  >
+                    Choisir la personne dans l&apos;équipe
+                  </Link>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {lignes.length > 0 && (
           <RevueEnPlace etablissementId={id} lignes={lignesFiche} parcours={false}>
