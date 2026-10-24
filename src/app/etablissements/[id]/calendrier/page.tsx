@@ -337,9 +337,12 @@ export default async function CalendrierPage({
   const multiBatiments = estMultiBatiments(batiments);
   const filtreBatiment = resoudreFiltreBatiment(batiments, batiment);
 
-  const filtreFamille = FAMILLES_FILTRABLES.includes(famille as FamilleEcheance)
-    ? (famille as FamilleEcheance)
-    : undefined;
+  // « Personnel et formations » (2026-10-24) absorbe la famille `personnel` :
+  // un ancien lien `?famille=personnel` y mène.
+  const filtreFamille =
+    famille !== "personnel" && FAMILLES_FILTRABLES.includes(famille as FamilleEcheance)
+      ? (famille as FamilleEcheance)
+      : undefined;
   // Le domaine est un attribut des contrôles : il n'a de sens que sur
   // eux (filtre famille « Tout » ou « Contrôles »).
   const filtreDomaine =
@@ -348,9 +351,10 @@ export default async function CalendrierPage({
       ? (domaine as DomaineObligation)
       : undefined;
   const filtreUrgent = urgent === "1";
-  // Les seules formations des salariés (2026-10-24) : une marque de
-  // l'obligation (`estFormation`), lue ligne par ligne, toutes familles.
-  const filtreFormation = formation === "1";
+  // « Personnel et formations » (décision de la propriétaire du 2026-10-24) :
+  // les titres et visites des salariés (famille `personnel`) et les
+  // formations d'établissement (`estFormation`), lus ligne par ligne.
+  const filtreFormation = formation === "1" || famille === "personnel";
 
   // Second temps : ce que le filtre borne.
   const [verifsBruts, etat, verifsDuLieu] = await Promise.all([
@@ -397,6 +401,7 @@ export default async function CalendrierPage({
       : verifsBruts
   ).filter((v) => {
     if (!filtreFormation) return true;
+    if (FAMILLE_DE_TYPE[typeDeVerification(v)] === "personnel") return true;
     const o = obligationParId(v.obligationId);
     return o !== undefined && estFormation(o);
   });

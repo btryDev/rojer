@@ -43,8 +43,10 @@ qu'il n'affichait pas ; et une formation se cherche là où sont les salariés.
 4. **« Évaluer les risques de vos salariés » ne pose que les questions.** Son
    bloc dans Équipe disparaît une fois tout répondu ; les réponses se revoient
    dans le DUERP.
-5. **Le calendrier filtre les formations** (`?formation=1`), toutes familles
-   confondues.
+5. **Le calendrier filtre « Personnel et formations »** (`?formation=1`) :
+   les titres et visites des salariés (famille `personnel`) et les formations
+   d'établissement. Un choix de « Type d'échéance », qui remplace « Titres du
+   personnel » ; `?famille=personnel` y mène.
 6. **La manutention se suit pour l'établissement** (« à organiser pour
    l'établissement »), pas par personne : R. 4541-8 vise chaque travailleur
    concerné, et le suivi nominatif serait un titre salarié — à décider plus

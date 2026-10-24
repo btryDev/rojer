@@ -30,9 +30,8 @@ export type FiltresActifs = {
   domaine?: string;
   urgent: boolean;
   /**
-   * Les seules formations des salariés (`estFormation`, 2026-10-24) — toutes
-   * familles confondues : une formation est un titre de salarié comme une
-   * échéance d'établissement.
+   * « Personnel et formations » (2026-10-24) : la famille `personnel` et les
+   * formations d'établissement (`estFormation`).
    */
   formation?: boolean;
   /** Une zone (ADR-029) — n'existe qu'à partir de deux. */
@@ -259,7 +258,7 @@ export function FiltresCalendrier({
     appliquer({
       ...f,
       famille,
-      // Un type d'échéance remplace « Formations des salariés » : même groupe.
+      // Un type d'échéance remplace « Personnel et formations » : même groupe.
       formation: false,
       // Quitter les contrôles lâche leur domaine.
       domaine: famille && famille !== "controle" ? undefined : f.domaine,
@@ -339,7 +338,8 @@ export function FiltresCalendrier({
               >
                 Tout le calendrier
               </Option>
-              {famillesDisponibles.map((fam) => (
+              {/* `personnel` est absorbé par « Personnel et formations ». */}
+              {famillesDisponibles.filter((fam) => fam !== "personnel").map((fam) => (
                 <Option
                   key={fam}
                   forme="radio"
@@ -351,16 +351,16 @@ export function FiltresCalendrier({
                   {LABEL_FAMILLE_LONG[fam]}
                 </Option>
               ))}
-              {/* Les formations, un type parmi les autres (2026-10-24) — elles
-                  réunissent des titres de salariés et des échéances
-                  d'établissement, d'où un choix à part plutôt qu'une famille. */}
+              {/* « Personnel et formations » (2026-10-24) : les titres et
+                  visites des salariés et les formations d'établissement, un
+                  choix parmi les autres. Remplace « Titres du personnel ». */}
               <Option
                 forme="radio"
                 name="filtre-famille"
                 actif={f.formation === true}
                 onChoisir={() => appliquer({ ...f, famille: undefined, formation: true })}
               >
-                Formations des salariés
+                Personnel et formations
               </Option>
             </fieldset>
             </div>
@@ -476,7 +476,7 @@ export function FiltresCalendrier({
       ) : null}
       {f.formation ? (
         <Chip onRetirer={() => appliquer({ ...f, formation: false })}>
-          Formations des salariés
+          Personnel et formations
         </Chip>
       ) : null}
       {f.batiment ? (
