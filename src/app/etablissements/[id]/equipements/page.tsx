@@ -1,4 +1,10 @@
 import { notFound } from "next/navigation";
+import { ControlesDEnsembleDuDomaine } from "@/components/equipements/ControlesDEnsembleDuDomaine";
+import { controlesDEnsemble } from "@/lib/equipements/controles-d-ensemble";
+import { DOMAINE_DE_CATEGORIE } from "@/lib/equipements/domaines";
+import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
+import { instantDuRendu } from "@/lib/dates/instant-du-rendu";
+import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
 import { EmptyState } from "@/components/layout/EmptyState";
 import { BandeauParc } from "@/components/equipements/BandeauParc";
 import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
@@ -81,7 +87,7 @@ export default async function EquipementsPage({
   // + `notFound`) : les bâtiments étaient lus seuls, puis le reste — aucune
   // des ~~quatre~~ cinq autres ne dépend du filtre (audit Next.js du 2026-10-14, M4).
   const user = await requireUser();
-  const [batiments, equipements, etatsVerifs, sansEcheance, fraicheur, dossier] =
+  const [batiments, equipements, etatsVerifs, sansEcheance, fraicheur, dossier, ensembles] =
     await Promise.all([
       listerBatimentsDeLEtablissement(id),
       listerEquipementsDeLEtablissement(id),
@@ -102,6 +108,9 @@ export default async function EquipementsPage({
       // « Équipements de sécurité ». Lecture bornée au compte (prédicat
       // `entreprise.userId` dans la requête), partagée avec le reste du rendu.
       obligationsApplicablesDuDossier(id, user.id),
+      // Les contrôles d'ensemble, rangés en tête de leur domaine (points à
+      // corriger, lot 2).
+      controlesDEnsemble(id, instantDuRendu()),
     ]);
   const multiBatiments = estMultiBatiments(batiments);
   const batimentFiltre = resoudreFiltreBatiment(batiments, batiment);
@@ -340,17 +349,53 @@ export default async function EquipementsPage({
             depuis sa fiche, en changeant sa zone.
           </p>
         ) : (
-          sections.map((s) => (
-            <CarteCategorie
-              key={s.categorie}
-              categorie={s.categorie}
-              appareils={s.appareils}
-              periodicites={s.periodicites}
-              hrefAjouter={hrefNouveau(s.categorie)}
-            />
+          // Les catégories rangées sous leur domaine (lot 2, 2026-10-24), le
+          // domaine le plus en peine en tête — l'ordre de sa première
+          // catégorie. En tête de chaque domaine, ses contrôles d'ensemble.
+          parDomaine(sections).map(({ domaine, sections: ss }) => (
+            <section key={domaine ?? "autre"} className="flex flex-col gap-6">
+              <p className="board-eyebrow m-0 border-b border-[color:var(--board-slate-line)] pb-2 text-[11px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
+                {domaine ? LABEL_DOMAINE[domaine] : "Autres équipements"}
+              </p>
+              {domaine && (
+                <ControlesDEnsembleDuDomaine
+                  propres={ensembles.filter((c) => c.domaine === domaine)}
+                  aussi={ensembles.filter((c) => c.aussi.includes(domaine))}
+                  etablissementId={id}
+                  provenance={origine}
+                />
+              )}
+              {ss.map((s) => (
+                <CarteCategorie
+                  key={s.categorie}
+                  categorie={s.categorie}
+                  appareils={s.appareils}
+                  periodicites={s.periodicites}
+                  hrefAjouter={hrefNouveau(s.categorie)}
+                />
+              ))}
+            </section>
           ))
         )}
       </div>
     </main>
   );
+}
+
+/**
+ * Les sections de catégorie regroupées par domaine, dans l'ordre où leur
+ * première catégorie apparaît (les sections arrivent triées par urgence).
+ */
+function parDomaine<S extends { categorie: CategorieEquipement }>(
+  sections: S[],
+): { domaine: DomaineObligation | null; sections: S[] }[] {
+  const groupes = new Map<DomaineObligation | null, S[]>();
+  for (const s of sections) {
+    const d = DOMAINE_DE_CATEGORIE[s.categorie];
+    groupes.set(d, [...(groupes.get(d) ?? []), s]);
+  }
+  // « Autres équipements » ferme la page, quel que soit son état.
+  return [...groupes.entries()]
+    .sort(([a], [b]) => Number(a === null) - Number(b === null))
+    .map(([domaine, ss]) => ({ domaine, sections: ss }));
 }

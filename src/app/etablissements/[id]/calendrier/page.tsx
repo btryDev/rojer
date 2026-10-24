@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { DOMAINE_DE_CATEGORIE } from "@/lib/equipements/domaines";
+import type { CategorieEquipement } from "@prisma/client";
 import { notFound } from "next/navigation";
 import { ArrowUpRight, ChevronRight } from "lucide-react";
 import { AideEcran } from "@/components/ui-kit/AideEcran";
@@ -727,6 +729,20 @@ export default async function CalendrierPage({
       b.proche - a.proche ||
       a.categorie.localeCompare(b.categorie),
   );
+  // Rangés par domaine (lot 2 des points à corriger), le domaine le plus en
+  // peine en tête — l'ordre de sa première catégorie, que le tri ci-dessus
+  // a mise devant. Un tri stable par rang de domaine suffit.
+  {
+    const rang = new Map<string, number>();
+    for (const g of groupesEquipement) {
+      const d = DOMAINE_DE_CATEGORIE[g.categorieCode as CategorieEquipement];
+      g.domaine = d ? LABEL_DOMAINE[d] : undefined;
+      if (g.domaine && !rang.has(g.domaine)) rang.set(g.domaine, rang.size);
+    }
+    groupesEquipement.sort(
+      (a, b) => (rang.get(a.domaine ?? "") ?? rang.size) - (rang.get(b.domaine ?? "") ?? rang.size),
+    );
+  }
 
   // Ce qui ne tient à aucun appareil — attestation de prestataire,
   // correction du plan d'actions, analyse du carnet sanitaire — se rangeait

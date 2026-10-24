@@ -89,6 +89,10 @@ type Props = {
   entreprise: { id: string; effectif: number };
 };
 
+
+/** Les champs qui portent un refus de périmètre (ADR-031), pas une saisie à corriger. */
+const CHAMPS_DE_PERIMETRE = ["effectifSurSite", "estIGH", "typeErp", "typesErpAutres"] as const;
+
 export function EtablissementForm({
   action,
   valeursInitiales,
@@ -798,6 +802,22 @@ export function EtablissementForm({
             "un champ est à corriger plus haut."}
         </p>
       )}
+      {/* Un refus de périmètre à la création (effectif, ERP en IGH, types
+          refusés) : le moment où l'on perd quelqu'un, comme à l'accueil
+          (2026-10-24). */}
+      {enCreation &&
+        state.status === "error" &&
+        state.fieldErrors &&
+        CHAMPS_DE_PERIMETRE.some((c) => state.fieldErrors?.[c]?.length) && (
+          <p className="m-0 text-[12.5px] text-[color:var(--board-slate-mid)]">
+            <DemandeAide
+              variante="lien"
+              libelle="Rojer ne suit pas encore ce cas ? Nos experts, si : être accompagné."
+              categorie="hors_couverture"
+              contexte="Création d'établissement refusée"
+            />
+          </p>
+        )}
       {state.status === "success" && (
         <p className="m-0 text-[12.5px] text-[color:var(--board-green-ink)]">
           Enregistré.
