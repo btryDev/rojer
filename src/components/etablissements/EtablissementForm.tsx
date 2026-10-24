@@ -317,7 +317,7 @@ export function EtablissementForm({
             </select>
             <AideQuestionMatieres
               id="manipuleMatieresR422722-aide"
-              className="mt-1.5 max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
+              className="mt-1.5 max-w-[var(--board-mesure)] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
             />
           </div>
 
@@ -356,7 +356,7 @@ export function EtablissementForm({
                 <p className="m-0 text-[14px] font-semibold leading-[1.35] text-[color:var(--board-ink)]">
                   Établissement de travail
                 </p>
-                <p className="m-0 mt-1 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                <p className="m-0 mt-1 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                   Au moins un salarié présent. Obligations DUERP + vérifications
                   électriques / aération / incendie au titre du Code du travail.
                 </p>
@@ -379,7 +379,7 @@ export function EtablissementForm({
                   <p className="m-0 text-[14px] font-semibold leading-[1.35] text-[color:var(--board-ink)]">
                     Établissement Recevant du Public (ERP)
                   </p>
-                  <p className="m-0 mt-1 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                  <p className="m-0 mt-1 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                     Accueille du public (clients, patients, visiteurs…).
                     Règlement de sécurité du 25 juin 1980 — obligations
                     supplémentaires selon type et catégorie.
@@ -516,7 +516,7 @@ export function EtablissementForm({
                         une infobulle n'existe pas au doigt. */}
                     <p
                       id="categorieErp-aide"
-                      className="m-0 mt-1.5 max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
+                      className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
                     >
                       La catégorie dépend du nombre total de personnes (public, et
                       personnel qui n&apos;occupe pas des locaux indépendants
@@ -601,7 +601,7 @@ export function EtablissementForm({
                     </select>
                     <p
                       id="ssiCategorieAouB-aide"
-                      className="m-0 mt-1.5 max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
+                      className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
                     >
                       {AIDE_SSI}
                     </p>
@@ -653,7 +653,7 @@ export function EtablissementForm({
                     </select>
                     <p
                       id="comporteLocauxSommeilPublic-aide"
-                      className="m-0 mt-1.5 max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
+                      className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
                     >
                       {AIDE_LOCAUX_SOMMEIL}
                     </p>
@@ -683,7 +683,7 @@ export function EtablissementForm({
                       activités) »~~ — l'inverse de R. 146-3, corrigé le
                       2026-10-12 (audit B1). L'aide est celle du parcours,
                       écrite une fois (`etablissements/aides-regimes.ts`). */}
-                  <p className="m-0 mt-1 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                  <p className="m-0 mt-1 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                     {AIDE_IGH}
                   </p>
                 </div>
@@ -740,7 +740,7 @@ export function EtablissementForm({
                       ces lignes ne naît de la réponse (2026-10-12, audit).
                       L'aide dit ce que « oui » déclenche, confronté au
                       référentiel par son test (`aides-regimes.ts`). */}
-                  <p className="m-0 mt-1 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                  <p className="m-0 mt-1 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                     {AIDE_HABITATION}
                   </p>
                 </div>

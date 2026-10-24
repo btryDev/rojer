@@ -139,7 +139,7 @@ function Bloc({
               >
                 {e.motif}
               </p>
-              <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
+              <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
                 {suite}
               </p>
               {lien ? (

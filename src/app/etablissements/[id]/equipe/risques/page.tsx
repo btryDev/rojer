@@ -43,7 +43,7 @@ export default async function RisquesSalariesPage({
         <h1 className="board-titre m-0 mt-2.5 text-[clamp(22px,2.2vw,27px)]">
           Évaluer les risques de vos salariés
         </h1>
-        <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
           Ces questions décident des formations, du suivi et des consignes que
           le Code du travail rend dus à une partie de votre effectif. Répondez pour
           l&apos;établissement ; les formations qui en découlent se suivent dans

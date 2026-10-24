@@ -57,7 +57,7 @@ export default async function PlanPreventionListePage({
             <h1 className="board-titre m-0 text-[clamp(22px,2.2vw,27px)]">
               Plans de prévention
             </h1>
-            <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+            <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
               Obligatoire pour toute entreprise extérieure qui intervient chez
               vous.
             </p>
@@ -78,7 +78,7 @@ export default async function PlanPreventionListePage({
           /* État vide, pas état d'erreur : il dit ce que l'écran fera, d'où
              viendront les données, et ouvre une porte (charte § 6). */
           <section className="carte-board px-7 py-8 sm:px-8">
-            <div className="flex max-w-[62ch] flex-col gap-3">
+            <div className="flex max-w-[var(--board-mesure)] flex-col gap-3">
               <h2 className="board-titre m-0 text-[22px]">
                 Vos plans de prévention
               </h2>

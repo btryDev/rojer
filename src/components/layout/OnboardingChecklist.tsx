@@ -76,7 +76,7 @@ export function OnboardingChecklist({
           <h2 className="board-titre m-0 mt-2 text-[22px]">
             Quelques étapes pour couvrir l&apos;essentiel de {etablissementRaison}
           </h2>
-          <p className="m-0 mt-2 max-w-[62ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
             Pas d&apos;urgence : chaque étape se traite à votre rythme.
             L&apos;outil met simplement en lumière les éléments qu&apos;un
             contrôle (inspection du travail, commission de sécurité,
@@ -174,7 +174,7 @@ export function OnboardingChecklist({
                 >
                   {e.titre}
                 </p>
-                <p className="m-0 mt-1 max-w-[62ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                <p className="m-0 mt-1 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                   {e.pourquoi}
                 </p>
 

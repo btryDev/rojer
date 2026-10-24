@@ -37,7 +37,7 @@ export function DeclarerAucunRisqueForm({
       <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
         Déclaration — aucun risque significatif
       </p>
-      <p className="m-0 mt-2.5 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+      <p className="m-0 mt-2.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
         Cette déclaration sera reprise dans le DUERP généré. Précisez la
         nature de l&apos;évaluation (ex : « poste purement administratif, pas
         d&apos;exposition physique identifiée hors risques transverses »).

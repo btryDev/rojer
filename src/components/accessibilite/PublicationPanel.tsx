@@ -72,7 +72,7 @@ export function PublicationPanel({
         <h3 className="board-titre m-0 mt-2 text-[22px]">
           Votre registre n&apos;est pas encore public
         </h3>
-        <p className="m-0 mt-2 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
           Dès que les sections <strong>1 (prestations)</strong> et{" "}
           <strong>2 (conformité)</strong>{" "}
           sont remplies, vous pouvez publier. Une
@@ -109,7 +109,7 @@ export function PublicationPanel({
         <PastilleFiche ton="fait">Publié</PastilleFiche>
         <p
           role="alert"
-          className="m-0 mt-3 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-signal-ink)]"
+          className="m-0 mt-3 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-signal-ink)]"
         >
           {urlIndisponible}
         </p>
@@ -153,7 +153,7 @@ export function PublicationPanel({
             <h3 className="board-titre m-0 mt-2.5 text-[22px]">
               Votre registre est accessible en un clic
             </h3>
-            <p className="m-0 mt-2 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+            <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
               Collez le QR code à l&apos;entrée ou à l&apos;accueil : les
               visiteurs scannent avec leur téléphone et accèdent à votre
               registre en 2 secondes.

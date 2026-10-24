@@ -71,7 +71,7 @@ export default async function RisquesOverviewPage({
     <div className="flex flex-col gap-[22px]">
       <WizardSteps etapes={etapes} />
 
-      <header className="max-w-[68ch]">
+      <header className="max-w-[var(--board-mesure)]">
         <p className="board-eyebrow m-0 inline-flex items-center text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
           Risques par unité
           <InfoTooltip align="left">
@@ -186,7 +186,7 @@ export default async function RisquesOverviewPage({
                       {u.nom}
                     </p>
                     {u.description && (
-                      <p className="m-0 mt-1 max-w-[62ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                      <p className="m-0 mt-1 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                         {u.description}
                       </p>
                     )}
@@ -237,7 +237,7 @@ export default async function RisquesOverviewPage({
           <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
             Hors référentiel sectoriel
           </p>
-          <p className="m-0 mt-2 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
+          <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
             {horsRef.length > 1
               ? `${horsRef.length} unités ne correspondent`
               : "1 unité ne correspond"}{" "}
@@ -257,7 +257,7 @@ export default async function RisquesOverviewPage({
           <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-signal-ink)]">
             Avertissement
           </p>
-          <p className="m-0 mt-2 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
+          <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
             {unitesSansRisqueSansJustif.length} unité
             {unitesSansRisqueSansJustif.length > 1 ? "s n'ont" : " n'a"} aucun
             risque coché. Vous pouvez continuer, mais il est recommandé de

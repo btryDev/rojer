@@ -237,7 +237,7 @@ export function Cadran({ chiffres }: { chiffres: ChiffresReferentielSuivi }) {
             >
               Ce que Rojer tient à jour
             </h2>
-            <p className="lp-lede mt-4 max-w-[72ch]">
+            <p className="lp-lede mt-4 max-w-[var(--board-mesure)]">
               Six documents que vous ne rédigez pas : ils se remplissent au fil
               de ce que vous déclarez et des rapports que vous déposez.
             </p>
@@ -419,7 +419,7 @@ function CadranListe({ chiffres }: { chiffres: ChiffresReferentielSuivi }) {
         >
           Ce que Rojer tient à jour
         </h2>
-        <p className="lp-lede mt-4 max-w-[72ch]">
+        <p className="lp-lede mt-4 max-w-[var(--board-mesure)]">
           Six documents que vous ne rédigez pas : ils se remplissent au fil de
           ce que vous déclarez et des rapports que vous déposez.
         </p>

@@ -75,7 +75,7 @@ export function CorpsFicheRegistre({
         // plutôt que de rendre une carte vide qui passerait pour une fiche
         // sans contenu.
         return (
-          <p className="m-0 max-w-[62ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
             Cette fiche se tient depuis {completude.alimentee?.libelle}.
           </p>
         );
@@ -84,7 +84,7 @@ export function CorpsFicheRegistre({
       // taire ferait croire le registre complet.
       return (
         <div className="rounded-[20px] border border-dashed border-[color:var(--board-slate-line)] px-5 py-4">
-          <p className="m-0 max-w-[62ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
+          <p className="m-0 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
             <strong className="font-semibold text-[color:var(--board-ink)]">
               Cette fiche est à tenir de votre côté.
             </strong>{" "}
@@ -92,7 +92,7 @@ export function CorpsFicheRegistre({
             recueillir : conservez-la sur le support que vous voulez — un
             classeur, un fichier — et présentez-la avec le reste du registre.
           </p>
-          <p className="m-0 mt-2.5 max-w-[62ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 mt-2.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
             Elle figure ici, et non pas nulle part, pour que vous sachiez ce
             qui manquerait lors d&apos;une visite.
           </p>

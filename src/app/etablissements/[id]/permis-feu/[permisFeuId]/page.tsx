@@ -206,7 +206,7 @@ export default async function PermisFeuDetailPage({
               }
             />
 
-            <p className="m-0 -mt-2 max-w-[68ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+            <p className="m-0 -mt-2 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
               «&nbsp;Prioritaire&nbsp;» est un classement de Rojer&nbsp;:
               l&apos;INRS ne classe pas ces mesures.
               {anterieur ? (

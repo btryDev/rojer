@@ -105,7 +105,7 @@ export default async function EtablissementDuerpPage({
         </WhyCard>
 
         <div className="carte-board flex flex-wrap items-center justify-between gap-4 px-7 py-6 sm:px-8">
-          <p className="m-0 max-w-[62ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
             Première étape : choisir votre secteur d&apos;activité
             (restauration, commerce ou bureau — 3 secteurs couverts).
           </p>

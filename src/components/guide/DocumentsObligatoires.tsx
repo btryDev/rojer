@@ -54,7 +54,7 @@ export function DocumentsObligatoires() {
             y compris ailleurs qu&apos;ici.
           </span>
         </h2>
-        <p className="mt-5 max-w-[68ch] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+        <p className="mt-5 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           {/* Insécable devant le deux-points, comme les quarante autres
               endroits du dépôt qui l'écrivent déjà. Avec une espace ordinaire,
               la ligne cassait entre « compte » et « : », et le deux-points
@@ -100,7 +100,7 @@ function BlocDocuments({
       <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
         {surTitre}
       </p>
-      <p className="mt-2 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+      <p className="mt-2 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
         {chapeau}
       </p>
 

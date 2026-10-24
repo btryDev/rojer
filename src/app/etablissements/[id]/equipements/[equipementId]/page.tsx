@@ -551,7 +551,7 @@ export default async function EquipementDetailPage({
               les caractéristiques déclarées juste au-dessus qui la bornent. */}
             {declenchees.length > 0 && (
               <CarteFiche titreFort="Ce qui se déclenche sur cet appareil">
-                <p className="m-0 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+                <p className="m-0 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                   {declenchees.length > 1
                     ? "Aucun texte n'écrit de rythme pour ces obligations : elles sont dues à un "
                     : "Aucun texte n'écrit de rythme pour cette obligation : elle est due à un "}
@@ -574,7 +574,7 @@ export default async function EquipementDetailPage({
                       {/* La phrase du RÉFÉRENTIEL, pas une reformulation :
                           c'est elle qui nomme le fait déclencheur — « toute
                           modification affectant le circuit frigorifique ». */}
-                      <p className="m-0 mt-1.5 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                      <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                         {obligation.description}
                       </p>
                       {/* Le mode *explain* du moteur, tel qu'il l'écrit. Il
@@ -582,7 +582,7 @@ export default async function EquipementDetailPage({
                           et pas le voisin — et une phrase réécrite à la main
                           finirait par dire autre chose que le calcul. */}
                       {raisons.length > 0 && (
-                        <p className="m-0 mt-2 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-soft)]">
+                        <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-soft)]">
                           Pourquoi elle vise cet appareil : {raisons.join(" · ")}.
                         </p>
                       )}

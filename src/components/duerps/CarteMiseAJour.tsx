@@ -54,7 +54,7 @@ export function CarteMiseAJour({
       <h3 className="board-titre m-0 mt-1.5 text-[22px]">
         Quand ce document doit être mis à jour
       </h3>
-      <p className="m-0 mt-3 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+      <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
         {CHAPEAU_MISE_A_JOUR}
       </p>
       <ul className="m-0 mt-4 list-none p-0">
@@ -71,7 +71,7 @@ export function CarteMiseAJour({
             </span>
             <div className="min-w-0 flex-1">
               <p
-                className={`m-0 max-w-[62ch] text-[14px] font-medium leading-[1.45] ${
+                className={`m-0 max-w-[var(--board-mesure)] text-[14px] font-medium leading-[1.45] ${
                   d.applicable
                     ? "text-[color:var(--board-ink)]"
                     : "text-[color:var(--board-slate-mid)]"
@@ -86,7 +86,7 @@ export function CarteMiseAJour({
                 </span>
                 {d.quand}
               </p>
-              <p className="m-0 mt-1 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+              <p className="m-0 mt-1 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                 {d.portee}
               </p>
               {d.aConfirmer ? (
@@ -100,7 +100,7 @@ export function CarteMiseAJour({
           </li>
         ))}
       </ul>
-      <p className="m-0 mt-4 max-w-[66ch] border-t border-[color:var(--board-slate-line)] pt-4 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+      <p className="m-0 mt-4 max-w-[var(--board-mesure)] border-t border-[color:var(--board-slate-line)] pt-4 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
         {PIED_MISE_A_JOUR}
       </p>
     </section>

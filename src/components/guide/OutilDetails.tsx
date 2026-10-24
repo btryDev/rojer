@@ -138,7 +138,7 @@ function bordureCouleur(c: Couleur): string {
 export function OutilDetails({ etablissementId }: { etablissementId: string }) {
   return (
     <section>
-      <header className="mb-10 max-w-[64ch]">
+      <header className="mb-10 max-w-[var(--board-mesure)]">
         <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">§ Détail — ce que dit la loi · ce que fait l&apos;app</p>
         <h2 className="board-titre text-[clamp(22px,2.2vw,27px)] mt-3">
           Pour chaque outil, <span className="text-[color:var(--board-blue-ink)]">deux colonnes</span>.

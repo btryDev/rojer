@@ -44,7 +44,7 @@ export function SectionEquipementsSecurite({
         <h2 id="equipements-securite" className="board-titre m-0 text-[22px]">
           Équipements de sécurité
         </h2>
-        <p className="m-0 mt-2 max-w-[62ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
           Le matériel dont un texte exige la présence dans votre établissement.
           Cette liste dit ce qui est déclaré dans Rojer, pas ce qui est en place
           chez vous : une déclaration n&apos;est pas une vérification.

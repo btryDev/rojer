@@ -76,7 +76,7 @@ export function FormationsAOrganiser({
           </span>
         )}
       </div>
-      <p className="m-0 mt-2.5 flex max-w-[66ch] items-start gap-2 text-[12.5px] leading-[1.55] text-[color:var(--board-blue-ink)]">
+      <p className="m-0 mt-2.5 flex max-w-[var(--board-mesure)] items-start gap-2 text-[12.5px] leading-[1.55] text-[color:var(--board-blue-ink)]">
         <Info className="mt-[2px] size-3.5 flex-none" aria-hidden />
         <span>
           D&apos;après ce que vous avez déclaré, chacune de ces formations est

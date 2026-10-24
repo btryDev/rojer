@@ -113,7 +113,7 @@ function Etape({
           {titre}
         </p>
       </div>
-      <p className="m-0 mt-2 max-w-[62ch] text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)] sm:pl-[44px]">
+      <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)] sm:pl-[44px]">
         {corps}
       </p>
     </li>

@@ -105,7 +105,7 @@ export default async function PerimetrePage({
           <h1 className="board-titre m-0 text-[clamp(29px,3vw,39px)]">
             Ce que Rojer ne couvre pas
           </h1>
-          <p className="m-0 mt-[11px] max-w-[62ch] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 mt-[11px] max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
             Ce qui manque à ce dossier, ce qui peut vous concerner et que
             Rojer ne suit pas, les obligations qu&apos;il ne suit pas au
             quotidien, et ce qu&apos;il ne gère pas. Rien ici n&apos;est compté
@@ -123,7 +123,7 @@ export default async function PerimetrePage({
             <h2 className="board-titre m-0 mt-2 text-[22px]">
               Ce que l&apos;outil ne sait pas vous dire de cet établissement
             </h2>
-            <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+            <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
               Ces phrases sont calculées sur ce que vous avez déclaré : elles
               changent quand le dossier change. Les mêmes se lisent en tête de
               votre {porte("registre de sécurité")}, avant son contenu.
@@ -143,7 +143,7 @@ export default async function PerimetrePage({
             // jamais « le dossier est complet ». Le référentiel a un
             // périmètre, le droit n'en a pas.
             <div className="carte-board px-7 py-6 sm:px-8">
-              <p className="m-0 max-w-[68ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+              <p className="m-0 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                 Aucun manque n&apos;est identifié sur ce dossier à ce jour.
                 Cela ne veut pas dire qu&apos;il est complet : les parties
                 ci-dessous disent ce que l&apos;outil ne suit pas, et le droit
@@ -164,7 +164,7 @@ export default async function PerimetrePage({
               <h2 className="board-titre m-0 mt-2 text-[22px]">
                 {TITRE_ANNONCES}
               </h2>
-              <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+              <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                 Nommé ici parce que cela peut concerner votre établissement ;
                 rien n&apos;est tranché pour vous.
               </p>
@@ -180,7 +180,7 @@ export default async function PerimetrePage({
                   <h3 className="m-0 text-[15px] font-semibold leading-[1.3] tracking-[-0.01em] text-[color:var(--board-ink)]">
                     {d.titre}
                   </h3>
-                  <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+                  <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                     {d.phrasePage}
                   </p>
                 </li>
@@ -213,7 +213,7 @@ export default async function PerimetrePage({
           </ul>
         </section>
 
-        <p className="m-0 max-w-[68ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           Les documents que vous devez tenir, y compris ceux que Rojer ne
           produit pas, se lisent sur la page{" "}
           <Link

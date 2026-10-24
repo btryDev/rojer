@@ -110,7 +110,7 @@ export default async function EquipePage({
             <h1 className="board-titre m-0 text-[clamp(22px,2.2vw,27px)]">
               Équipe
             </h1>
-            <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+            <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
               Les personnes de votre effectif et les titres qu&apos;elles
               détiennent — habilitation, attestation, certificat. Un titre porte
               une échéance nominative : c&apos;est la personne qui est habilitée,
@@ -177,7 +177,7 @@ export default async function EquipePage({
             découlent dans la section « Formations à organiser ». */}
         {sansReponse > 0 && (
         <section className="carte-board flex flex-wrap items-center justify-between gap-4 px-7 py-5 sm:px-8">
-          <div className="min-w-0 max-w-[64ch]">
+          <div className="min-w-0 max-w-[var(--board-mesure)]">
             <p className="m-0 text-[14px] font-semibold leading-[1.4] text-[color:var(--board-ink)]">
               Évaluez les risques de vos salariés
             </p>

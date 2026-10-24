@@ -47,7 +47,7 @@ export function FormSection3({
             Le personnel d&apos;accueil a été formé à l&apos;accueil des
             personnes en situation de handicap
           </p>
-          <p className="m-0 mt-1 max-w-[64ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 mt-1 max-w-[var(--board-mesure)] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
             L&apos;arrêté du 19-04-2017 impose de décrire les actions de formation
             du personnel en contact avec le public.
           </p>

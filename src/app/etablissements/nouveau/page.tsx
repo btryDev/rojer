@@ -58,7 +58,7 @@ export default async function EtablissementNouveauPage() {
         </h1>
         {/* Dire ce que la création déclenche, avant de la déclencher : un
             dossier neuf, pas une ligne d'annuaire. */}
-        <p className="m-0 mt-2 max-w-[66ch] text-[13.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           Un dossier de conformité complet sera ouvert pour ce site — calendrier
           d&apos;obligations, registres et DUERP lui sont propres. Les régimes et
           l&apos;effectif déclarés ici déterminent les obligations qui
@@ -68,7 +68,7 @@ export default async function EtablissementNouveauPage() {
             cesse le plus souvent d'être juste : il est rappelé ici, avec le
             chemin pour le corriger (C37). Les seuils du comité social et
             économique et du règlement intérieur se comptent sur lui. */}
-        <p className="m-0 mt-2 max-w-[66ch] text-[13.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           Les seuils du comité social et économique, du règlement intérieur
           et de la mise à jour annuelle du document unique se comptent sur
           l&apos;effectif de l&apos;entreprise, tous établissements confondus :

@@ -1000,7 +1000,7 @@ export default async function CalendrierPage({
           l'écart dans le sens utile — ce que le parc laisse dehors — sans
           revendiquer d'exclusivité : le relevé « Dépassées » du tableau de bord
           réunit lui aussi toutes les familles. */}
-      <p className="m-0 mt-[11px] max-w-[62ch] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+      <p className="m-0 mt-[11px] max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
         {filtreFamille
           ? DESCRIPTION_FAMILLE[filtreFamille]
           : `Vos échéances datées, toutes réunies : ${enumererFamilles()}. Le parc et les zones, eux, ne comptent que ce que portent vos équipements.`}

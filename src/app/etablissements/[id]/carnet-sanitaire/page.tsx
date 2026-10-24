@@ -103,7 +103,7 @@ export default async function CarnetSanitairePage({
               dirigeant. Et il dit ce qu'il FAIT, en clair et non en
               commentaire : c'est l'adresse (`declareA`) des entrées
               `non_couvert` du corpus. */}
-          <p className="m-0 mt-3 max-w-[72ch] text-[13px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[13px] leading-[1.6] text-[color:var(--board-slate-mid)]">
             <strong>Êtes-vous concerné ?</strong>{" "}
             L&apos;arrêté du 1er février
             2010 vise les « installations collectives de production, de
@@ -224,7 +224,7 @@ export default async function CarnetSanitairePage({
               <h2 className="board-titre m-0 mt-1.5 text-[22px]">
                 Vos installations
               </h2>
-              <p className="m-0 mt-1.5 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+              <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                 Déclarez chaque point où vous mesurez la température (points de
                 puisage les plus éloignés du ballon, points sensibles).
               </p>
@@ -424,7 +424,7 @@ export default async function CarnetSanitairePage({
               <h2 className="board-titre m-0 mt-1.5 text-[22px]">
                 Prélèvements et résultats laboratoire
               </h2>
-              <p className="m-0 mt-1.5 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+              <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                 L&apos;arrêté du 1er février 2010 fixe au minimum une analyse par
                 an et par point de surveillance (annexes 1 et 2).
               </p>
@@ -455,7 +455,7 @@ export default async function CarnetSanitairePage({
                         )}
                       </p>
                       {a.commentaire && (
-                        <p className="m-0 mt-1.5 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                        <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                           {a.commentaire}
                         </p>
                       )}

@@ -57,7 +57,7 @@ export function StepResume({ state }: StepProps) {
         <h2 className="board-titre m-0 text-[clamp(22px,2.2vw,27px)]">
           Vérification
         </h2>
-        <p className="m-0 mt-2.5 max-w-[62ch] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 mt-2.5 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           Tout est bon ? En créant l&apos;espace, on enregistre votre
           établissement. La suite se joue en une étape : déclarer vos
           équipements — ce sont eux qui alimentent votre calendrier de
@@ -108,7 +108,7 @@ export function StepResume({ state }: StepProps) {
       <section className="carte-board px-7 py-6 sm:px-8">
         <div>
           <h3 className="board-titre m-0 text-[22px]">La suite, concrètement</h3>
-          <p className="m-0 mt-2 max-w-[62ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
             Dès que vous déclarerez vos équipements, le calendrier des
             vérifications se remplira automatiquement.
           </p>

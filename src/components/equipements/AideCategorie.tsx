@@ -10,12 +10,12 @@ import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
  *  champ (`EquipementForm`) et par l'aide en plusieurs blocs au-dessus des
  *  questions exigées du levage. */
 export const CLASSE_AIDE =
-  "m-0 mt-1.5 max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]";
+  "m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]";
 
 /** Le « corps explicatif » de la charte (`docs/charte-board.md`, barème) :
  *  l'aide posée sur la fiche, hors d'un champ de formulaire. */
 const CLASSE_CORPS_EXPLICATIF =
-  "m-0 mt-1.5 max-w-[62ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]";
+  "m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]";
 
 export function AideCategorie({
   categorie,

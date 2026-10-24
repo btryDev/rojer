@@ -161,7 +161,7 @@ export function JaugeRegistre({ bilan }: { bilan: BilanRegistre }) {
         />
       </div>
 
-      <p className="m-0 mt-6 max-w-[72ch] border-t border-[color:var(--board-slate-line)] pt-5 text-[12px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+      <p className="m-0 mt-6 max-w-[var(--board-mesure)] border-t border-[color:var(--board-slate-line)] pt-5 text-[12px] leading-[1.6] text-[color:var(--board-slate-mid)]">
         Ce compteur dit ce que{" "}
         <strong className="font-semibold text-[color:var(--board-ink)]">
           l&apos;application recueille

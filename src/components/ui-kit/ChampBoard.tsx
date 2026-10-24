@@ -100,7 +100,7 @@ export function SectionChamps({
       <header>
         <h2 className="board-titre m-0 text-[17px]">{titre}</h2>
         {chapeau && (
-          <p className="m-0 mt-1.5 max-w-[64ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
             {chapeau}
           </p>
         )}

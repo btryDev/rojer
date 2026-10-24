@@ -80,7 +80,7 @@ export function ImportDuerpWizard({
           <h3 className="board-titre m-0 mt-2 text-[22px]">
             Téléversez votre DUERP existant
           </h3>
-          <p className="m-0 mt-1.5 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
             Format Excel (.xlsx, .xls) ou CSV. Vous pouvez partir du{" "}
             <a
               href="/api/duerp/import/template"
@@ -166,7 +166,7 @@ export function ImportDuerpWizard({
                 ? "Prêt à importer"
                 : `${previewState.nbErreurs} ligne${previewState.nbErreurs > 1 ? "s" : ""} à corriger`}
             </h3>
-            <p className="m-0 mt-1.5 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+            <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
               Fichier{" "}
               <span className="font-mono text-[color:var(--board-ink)]">
                 {previewState.nomFichier}
@@ -274,7 +274,7 @@ export function ImportDuerpWizard({
                   ? "Import en cours…"
                   : `Importer ${previewState.nbRisques} risque${previewState.nbRisques > 1 ? "s" : ""}`}
               </button>
-              <p className="m-0 max-w-[62ch] text-[12px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+              <p className="m-0 max-w-[var(--board-mesure)] text-[12px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                 Les lignes en erreur seront ignorées. Vous pourrez compléter et
                 retyper chaque action après import.
               </p>

@@ -16,7 +16,7 @@ export function AideTypesErp({
   const aides = aidesDesTypes(types, categorieErp);
   if (aides.length === 0) return null;
   return (
-    <div className="mt-2 flex max-w-[66ch] flex-col gap-1.5" data-aide-types-erp="">
+    <div className="mt-2 flex max-w-[var(--board-mesure)] flex-col gap-1.5" data-aide-types-erp="">
       {aides.map(({ type, aide }) => (
         <p
           key={type}

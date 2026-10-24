@@ -196,7 +196,7 @@ export default async function RegistrePage({
             <h1 className="board-titre m-0 text-[clamp(29px,3vw,39px)]">
               Registre de sécurité
             </h1>
-            <p className="m-0 mt-[11px] max-w-[62ch] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+            <p className="m-0 mt-[11px] max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
               Le document que vous présentez à l&apos;inspection du travail et
               à la commission de sécurité, tenu au fil de l&apos;eau.
             </p>

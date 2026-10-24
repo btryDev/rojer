@@ -62,7 +62,7 @@ export default async function ActivitesPage({
     <div className="flex flex-col gap-[22px]">
       <WizardSteps etapes={etapes} />
 
-      <header className="max-w-[68ch]">
+      <header className="max-w-[var(--board-mesure)]">
         <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
           Périmètre du référentiel
         </p>
@@ -70,13 +70,13 @@ export default async function ActivitesPage({
           Ce que {referentiel ? `le référentiel « ${referentiel.nom} »` : "le référentiel retenu"}{" "}
           ne couvre pas
         </h2>
-        <p className="m-0 mt-3 max-w-[62ch] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           Un référentiel sectoriel est bâti sur une activité type. Le vôtre ne
           connaît ni les ateliers, ni les métiers annexes que vous exercez
           peut-être en plus. Les questions ci-dessous servent uniquement à le
           savoir.
         </p>
-        <p className="m-0 mt-3 max-w-[62ch] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           Répondre «&nbsp;oui&nbsp;» ne bloque rien, n&apos;ajoute aucun risque
           et n&apos;en retire aucun. Cela enregistre un fait sur le périmètre de
           votre dossier, qui sera repris dans le DUERP généré : le lecteur du
@@ -102,7 +102,7 @@ export default async function ActivitesPage({
           verdict sur le dossier et sans taux de complétude — un pourcentage
           laisserait croire à une mesure de la qualité du DUERP. */}
       {sansReponse.length > 0 && (
-        <p className="m-0 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           {sansReponse.length} question{sansReponse.length > 1 ? "s" : ""}{" "}
           sans
           réponse. Vous pouvez continuer sans répondre&nbsp;: le document ne

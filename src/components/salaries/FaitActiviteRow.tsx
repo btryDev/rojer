@@ -64,11 +64,11 @@ export function FaitActiviteRow({ etablissementId, champ, intitule, pourquoi, ho
       <p className="m-0 text-[16px] font-semibold leading-[1.3] tracking-[-0.01em] text-[color:var(--board-ink)]">
         {intitule}
       </p>
-      <p className="m-0 mt-1.5 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+      <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
         {pourquoi}
       </p>
       {horsQuestion && (
-        <p className="m-0 mt-1.5 max-w-[66ch] text-[12px] leading-[1.55] text-[color:var(--board-slate-soft)]">
+        <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12px] leading-[1.55] text-[color:var(--board-slate-soft)]">
           {horsQuestion}
         </p>
       )}
@@ -105,7 +105,7 @@ export function FaitActiviteRow({ etablissementId, champ, intitule, pourquoi, ho
         )}
       </div>
       {risqueConserve && (
-        <p className="m-0 mt-3 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           Votre réponse est enregistrée. Votre DUERP garde un risque qui dit le
           contraire — déjà coté, avec des actions, ou coché « exposition CMR ».
           Rojer ne modifie pas ce travail sans vous : corrigez-le dans le DUERP
@@ -113,7 +113,7 @@ export function FaitActiviteRow({ etablissementId, champ, intitule, pourquoi, ho
         </p>
       )}
       {avertissement && (
-        <p role="status" className="m-0 mt-3 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+        <p role="status" className="m-0 mt-3 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           {avertissement}
         </p>
       )}

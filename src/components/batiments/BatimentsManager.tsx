@@ -112,7 +112,7 @@ function PlafondAtteint() {
       <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
         Ajouter une zone
       </p>
-      <p className="m-0 mt-2 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+      <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
         {PLAFOND_ZONES}
       </p>
     </div>
@@ -378,7 +378,7 @@ function FormulaireSuppression({
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="m-0 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-ink)]">
+      <p className="m-0 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-ink)]">
         {aContenu ? (
           <>
             <strong>{nomDeZone(batiment.nom)}</strong> contient{" "}

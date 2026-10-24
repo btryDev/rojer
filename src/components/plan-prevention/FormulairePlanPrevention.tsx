@@ -265,7 +265,7 @@ export function FormulairePlanPrevention({
           et l'écran dit pourquoi ; la zone, hors empreinte, reste ouverte. */}
       {scelle && (
         <section className="rounded-[22px] bg-[color:var(--board-slate-pale)] px-6 py-5">
-          <p className="m-0 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-ink)]">
+          <p className="m-0 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-ink)]">
             {scelle}
           </p>
           <div className="mt-4">
@@ -279,7 +279,7 @@ export function FormulairePlanPrevention({
         </section>
       )}
       {!scelle && avisLiens && (
-        <p className="m-0 max-w-[66ch] rounded-[22px] bg-[color:var(--board-slate-pale)] px-6 py-5 text-[13.5px] leading-[1.6] text-[color:var(--board-ink)]">
+        <p className="m-0 max-w-[var(--board-mesure)] rounded-[22px] bg-[color:var(--board-slate-pale)] px-6 py-5 text-[13.5px] leading-[1.6] text-[color:var(--board-ink)]">
           {avisLiens}
         </p>
       )}
@@ -311,7 +311,7 @@ export function FormulairePlanPrevention({
               ? "Plan dû, durée non renseignée"
               : "Plan dû, écrit non imposé"}
         </h2>
-        <p className="m-0 mt-2 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
+        <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
           {diagnostic.recommandation}
         </p>
         {diagnostic.raisons.length > 0 && (
@@ -769,7 +769,7 @@ export function FormulairePlanPrevention({
           <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
             1° — {RUBRIQUES_R4512_8[0].titre}
           </p>
-          <p className="m-0 mt-1.5 max-w-[70ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
             « {RUBRIQUES_R4512_8[0].verbatim}. » À distinguer des risques
             d&apos;interférence ci-dessus : ceux-là naissent de la co-activité,
             les phases dangereuses sont celles de l&apos;opération elle-même.
@@ -860,7 +860,7 @@ export function FormulairePlanPrevention({
               <label className="label-board" htmlFor={r.name}>
                 {r.numero}° — {rubrique.titre}
               </label>
-              <p className="m-0 mb-2 mt-1 max-w-[70ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+              <p className="m-0 mb-2 mt-1 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                 « {rubrique.verbatim}. »
               </p>
               <textarea
@@ -910,7 +910,7 @@ export function FormulairePlanPrevention({
             <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
               Art. {a.ref}
             </p>
-            <p className="m-0 mt-1.5 max-w-[70ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+            <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
               « {a.texte} » {a.constat}
             </p>
             <div className="mt-2">

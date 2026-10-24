@@ -45,7 +45,7 @@ export function CreerVersionForm({
         <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
           Nouvelle version
         </p>
-        <p className="m-0 mt-2 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           Rojer demande le motif de chaque mise à jour, pour que l&apos;historique
           des versions dise pourquoi chacune a été faite. Choisissez la raison
           qui déclenche cette nouvelle version.

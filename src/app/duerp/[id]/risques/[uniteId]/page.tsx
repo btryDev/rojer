@@ -57,7 +57,7 @@ export default async function RisquesUnitePage({
         </Link>
       </nav>
 
-      <header className="max-w-[68ch]">
+      <header className="max-w-[var(--board-mesure)]">
         <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
           Unité de travail
         </p>
@@ -65,7 +65,7 @@ export default async function RisquesUnitePage({
           {unite.nom}
         </h2>
         {unite.description && (
-          <p className="m-0 mt-2.5 max-w-[62ch] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 mt-2.5 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
             {unite.description}
           </p>
         )}
@@ -161,7 +161,7 @@ export default async function RisquesUnitePage({
               </p>
               {/* Renvoyer vers « la liste du référentiel plus bas » quand elle
                   n'existe pas enverrait le dirigeant chercher un écran vide. */}
-              <p className="m-0 mt-1.5 max-w-[62ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+              <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                 {horsReferentiel ? (
                   <>
                     Aucun risque type n&apos;est proposé pour cette unité :
@@ -219,7 +219,7 @@ export default async function RisquesUnitePage({
               >
                 Évaluer chaque risque retenu
               </p>
-              <p className="m-0 mt-1.5 max-w-[62ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+              <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                 Pour chaque risque, en deux temps :{" "}
                 <span className="font-semibold text-[color:var(--board-ink)]">
                   01 · coter (gravité, probabilité, maîtrise)
@@ -304,7 +304,7 @@ export default async function RisquesUnitePage({
                     {r.libelle}
                   </p>
                   {r.description && (
-                    <p className="m-0 mt-1 max-w-[62ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                    <p className="m-0 mt-1 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                       {r.description}
                     </p>
                   )}
@@ -515,7 +515,7 @@ export default async function RisquesUnitePage({
         </Link>
       </div>
 
-      <p className="m-0 max-w-[66ch] text-center text-[12px] leading-[1.55] text-[color:var(--board-slate-soft)] sm:mx-auto">
+      <p className="m-0 max-w-[var(--board-mesure)] text-center text-[12px] leading-[1.55] text-[color:var(--board-slate-soft)] sm:mx-auto">
         Toutes vos modifications sont enregistrées au fur et à mesure.
         &laquo;&nbsp;Valider et revenir&nbsp;&raquo; vous ramène à la liste
         des unités.

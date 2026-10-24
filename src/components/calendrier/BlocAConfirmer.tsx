@@ -30,7 +30,7 @@ export function BlocAConfirmer({
   return (
     <div className="text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
       {marque.phrases.map((phrase) => (
-        <p key={phrase} className="m-0 max-w-[66ch]">
+        <p key={phrase} className="m-0 max-w-[var(--board-mesure)]">
           <strong className="font-semibold text-[color:var(--board-ink)]">
             À confirmer.
           </strong>{" "}

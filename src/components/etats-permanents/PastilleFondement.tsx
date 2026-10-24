@@ -52,7 +52,7 @@ export function PastilleFondement({
  */
 function MentionGn10() {
   return (
-    <div className="flex max-w-[66ch] flex-wrap items-center gap-x-2 gap-y-1 text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+    <div className="flex max-w-[var(--board-mesure)] flex-wrap items-center gap-x-2 gap-y-1 text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
       <p className="m-0">{MENTION_GN_10_COURTE}</p>
       <div>
         <LegalBadge

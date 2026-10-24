@@ -89,7 +89,7 @@ export function FormulairePrestataire({ etablissementId, action, initial }: Prop
       <section className="space-y-4">
         <header>
           <h2 className="board-titre m-0 text-[17px]">Identité du prestataire</h2>
-          <p className="m-0 mt-1.5 max-w-[64ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
             L&apos;entreprise qui intervient chez vous. SIRET facultatif mais fortement
             recommandé (facilite la vérification d&apos;identité légale).
           </p>
@@ -181,7 +181,7 @@ export function FormulairePrestataire({ etablissementId, action, initial }: Prop
       <section className="space-y-4">
         <header>
           <h2 className="board-titre m-0 text-[17px]">Contact principal</h2>
-          <p className="m-0 mt-1.5 max-w-[64ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
             L&apos;interlocuteur que vous sollicitez habituellement. Son adresse est
             enregistrée sur la fiche du prestataire.
           </p>

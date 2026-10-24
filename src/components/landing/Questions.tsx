@@ -94,7 +94,7 @@ export function Questions() {
                     <span className="absolute h-3 w-px bg-[color:var(--board-ink)] transition-transform duration-300 group-open:rotate-90 group-open:opacity-0" />
                   </span>
                 </summary>
-                <p className="lp-texte max-w-[62ch] pb-6 pr-10">{item.r}</p>
+                <p className="lp-texte max-w-[var(--board-mesure)] pb-6 pr-10">{item.r}</p>
               </details>
             </Reveal>
           ))}

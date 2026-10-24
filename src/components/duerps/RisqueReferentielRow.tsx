@@ -44,7 +44,7 @@ export function RisqueReferentielRow({
           {libelle}
         </p>
         {description && (
-          <p className="m-0 mt-0.5 max-w-[62ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 mt-0.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
             {description}
           </p>
         )}

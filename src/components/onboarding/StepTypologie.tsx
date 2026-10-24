@@ -102,7 +102,7 @@ export function StepTypologie({
         <h2 className="board-titre m-0 text-[clamp(22px,2.2vw,27px)]">
           Quelques questions pour cadrer les obligations applicables.
         </h2>
-        <p className="m-0 mt-2.5 max-w-[62ch] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 mt-2.5 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           {/* « et deux précisions » : il y en a quatre — type et catégorie
               d'ERP, nature de l'immeuble IGH, famille d'habitation. Le
               chapeau comptait les précisions du seul « oui » à l'ERP.
@@ -123,7 +123,7 @@ export function StepTypologie({
               <h3 className="board-titre m-0 text-[22px]">
                 Accueillez-vous du public sur ce lieu ?
               </h3>
-              <p className="m-0 mt-2 max-w-[62ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+              <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                 Clients, patients, élèves, visiteurs… Si oui, votre
                 établissement est un ERP (Établissement Recevant du
                 Public) et des règles incendie spécifiques s&apos;appliquent.
@@ -428,7 +428,7 @@ export function StepTypologie({
                   le bâtiment, et place l'habitation à 50 mètres. Question et
                   aide sont celles de la fiche (`aides-regimes.ts`). */}
               <h3 className="board-titre m-0 text-[22px]">{QUESTION_IGH}</h3>
-              <p className="m-0 mt-2 max-w-[62ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+              <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                 {AIDE_IGH}
               </p>
             </div>
@@ -470,7 +470,7 @@ export function StepTypologie({
               </h3>
               {/* ~~« (ramonage, VMC-Gaz…) »~~ — le ramonage n'a aucune
                   ligne (2026-10-12, audit). Aide partagée avec la fiche. */}
-              <p className="m-0 mt-2 max-w-[62ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+              <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                 {AIDE_HABITATION}
               </p>
             </div>
@@ -519,7 +519,7 @@ export function StepTypologie({
               <h3 className="board-titre m-0 text-[22px]">
                 Ce qui se fait dans vos locaux
               </h3>
-              <p className="m-0 mt-2 max-w-[62ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+              <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                 Une question dont la réponse ajoute ou retire des
                 obligations. Si vous hésitez, laissez « Je ne sais pas encore » :
                 les lignes concernées s&apos;afficheront « à confirmer », et vous
@@ -580,7 +580,7 @@ function SousQuestion({
         {question}
       </p>
       {aide ? (
-        <div className="m-0 mt-1.5 max-w-[62ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+        <div className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           {aide}
         </div>
       ) : null}

@@ -45,7 +45,7 @@ export function FormSection1({
         <legend className="label-board">
           Types de handicaps pour lesquels l&apos;établissement est adapté
         </legend>
-        <p className="m-0 mb-2 max-w-[64ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 mb-2 max-w-[var(--board-mesure)] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
           Cochez les catégories concernées — l&apos;arrêté du 19-04-2017 impose
           d&apos;informer le public sur ce point.
         </p>

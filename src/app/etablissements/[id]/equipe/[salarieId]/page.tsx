@@ -322,7 +322,7 @@ export default async function SalarieDetailPage({
         }
       >
         {!s.actif && (
-          <p className="m-0 max-w-[64ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
             Cette personne ne fait plus partie de l&apos;effectif. Sa fiche et
             ses titres restent enregistrés tant que vous ne la supprimez pas :
             « Supprimer ce salarié » les efface définitivement.
@@ -376,7 +376,7 @@ export default async function SalarieDetailPage({
             )
           }
           vide={
-            <p className="m-0 max-w-[64ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+            <p className="m-0 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
               Rien de déclaré pour l&apos;instant. Rojer ne peut pas le
               deviner : rien dans un intitulé de poste ne dit qu&apos;une
               personne conduit un chariot, travaille au voisinage de pièces
@@ -394,7 +394,7 @@ export default async function SalarieDetailPage({
             Posé en pied de fiche, hors carte : c'est une information de
             tenue du dossier, pas un geste de prévention. */}
         <section className="mt-2 flex flex-wrap items-center justify-between gap-x-10 gap-y-3 border-t border-[color:var(--board-slate-line)] pt-5">
-          <div className="max-w-[72ch]">
+          <div className="max-w-[var(--board-mesure)]">
             <p className="m-0 text-[12.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
               Rojer garde son nom, son poste, sa date d&apos;entrée et les dates
               de ses titres — aucune donnée de santé.
