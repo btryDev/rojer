@@ -97,12 +97,19 @@ export function datePoseeAuCalendrier(
   v: { rendezVousLe?: Date | null; datePrevue: Date },
   lecture: { date: Date; lecture: string; registre: string },
   maintenant: Date,
+  /**
+   * La ligne a-t-elle une échéance connue (`aUnRendezVous`) ? Sans elle (« à
+   * planifier », en retard ou non), tout rendez-vous à venir la pose : il
+   * n'y a pas d'échéance à dépasser, et son état — retard compris — reste
+   * celui de la ligne (revue du 2026-10-24).
+   */
+  echeanceConnue: boolean,
 ): Date {
-  if (!v.rendezVousLe || lecture.lecture === "realisation" || lecture.registre === "enRetard") {
-    return lecture.date;
-  }
+  if (!v.rendezVousLe || lecture.lecture === "realisation") return lecture.date;
   if (rendezVousEnAttenteDeRapport(v.rendezVousLe, maintenant)) return lecture.date;
-  return lecture.registre === "aPlanifier" || rendezVousAvantEcheance(v) ? v.rendezVousLe : lecture.date;
+  if (!echeanceConnue) return v.rendezVousLe;
+  if (lecture.registre === "enRetard") return lecture.date;
+  return rendezVousAvantEcheance(v) ? v.rendezVousLe : lecture.date;
 }
 
 /** Les écarts que le formulaire signale à la saisie, sans bloquer. */
@@ -111,6 +118,6 @@ export function avertissementRendezVous(rendezVousLe: Date, echeance: Date | nul
   const avance = joursCivilsEntre(rendezVousLe, echeance);
   if (avance < 0) return "Après l'échéance : le contrôle sera en retard d'ici là.";
   if (avance > 92)
-    return "Bien en avance sur l'échéance : la prochaine échéance repartira de la date de ce rapport.";
+    return "Bien en avance sur l'échéance : la suivante sera comptée à partir de ce contrôle.";
   return null;
 }

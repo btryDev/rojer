@@ -52,6 +52,7 @@ export function SuiviControle({
   const parametres = useSearchParams();
   const [state, formAction, pending] = useActionState<SuiviControleState, FormData>(
     async (prev, fd) => {
+      setSaisieEnvoyee(typeof fd.get("rendezVousLe") === "string" ? (fd.get("rendezVousLe") as string) : "");
       const r = await action(prev, fd);
       if (r.status === "success") {
         setOuvert(false);
@@ -69,6 +70,7 @@ export function SuiviControle({
     { status: "idle" },
   );
   const [saisieRdv, setSaisieRdv] = useState(rendezVousLe ? versSaisieDateHeure(rendezVousLe) : "");
+  const [saisieEnvoyee, setSaisieEnvoyee] = useState<string | null>(null);
   const avertissement =
     saisieRdv && estSaisieDateHeureReelle(saisieRdv)
       ? avertissementRendezVous(depuisSaisieDateHeure(saisieRdv), echeance)
@@ -183,7 +185,8 @@ export function SuiviControle({
               {avertissement && (
                 <p className="m-0 mt-1 text-[12px] text-[color:var(--board-amber-ink)]">{avertissement}</p>
               )}
-              {err("rendezVousLe") && (
+              {/* Le refus porte sur la date envoyée : il s'efface dès qu'on la change. */}
+              {err("rendezVousLe") && saisieRdv === saisieEnvoyee && (
                 <p className="m-0 mt-1 text-[12px] text-[color:var(--board-signal-ink)]">{err("rendezVousLe")}</p>
               )}
             </div>

@@ -58,7 +58,7 @@ export async function enregistrerSuiviControle(
       return {
         status: "error",
         message: "Formulaire invalide",
-        fieldErrors: { rendezVousLe: ["Entre le mois dernier et deux ans d'ici"] },
+        fieldErrors: { rendezVousLe: ["Choisissez une date entre le mois dernier et dans deux ans."] },
       };
     }
   }

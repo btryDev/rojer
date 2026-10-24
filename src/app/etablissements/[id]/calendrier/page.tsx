@@ -573,7 +573,7 @@ export default async function CalendrierPage({
         ...lecBrute,
         registre: registrePrudent(lecBrute.registre, v, prudence),
         // Au jour du rendez-vous s'il précède l'échéance (ADR-049).
-        date: datePoseeAuCalendrier(v, lecBrute, aujourdhui),
+        date: datePoseeAuCalendrier(v, lecBrute, aujourdhui, aUnRendezVous(v, aujourdhui)),
       };
       if (lec.registre === "aPlanifier") {
         e.aPlanifier += 1;

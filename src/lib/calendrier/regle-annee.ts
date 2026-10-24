@@ -122,7 +122,7 @@ export function lignesDuCalendrier<V extends VerificationLue>(
         genre: "verif" as const,
         // Au jour du rendez-vous s'il précède l'échéance (ADR-049) : on
         // regarde son mois pour voir qui passe.
-        date: datePoseeAuCalendrier(v, lec, now),
+        date: datePoseeAuCalendrier(v, lec, now, aUnRendezVous(v, now)),
         v,
         registre: registrePrudent(lec.registre, v, prudence),
         lecture: lec.lecture,

@@ -38,7 +38,12 @@ describe("le rendez-vous d'un contrôle (ADR-049)", () => {
   it("une ligne « à planifier » n'a pas d'échéance à dépasser : le rendez-vous n'y est jamais « après »", () => {
     const v = { rendezVousLe: t("2026-11-12T09:00"), datePrevue: t("2026-09-01T00:00"), prestataire: null };
     expect(pastilleRendezVous(v, t("2026-10-24T08:00"), false)).toMatchObject({ passe: false, court: expect.stringMatching(/^RDV /) });
-    expect(datePoseeAuCalendrier(v, { date: v.datePrevue, lecture: "courante", registre: "aPlanifier" }, t("2026-10-24T08:00"))).toBe(
+    expect(datePoseeAuCalendrier(v, { date: v.datePrevue, lecture: "courante", registre: "aPlanifier" }, t("2026-10-24T08:00"), false)).toBe(
+      v.rendezVousLe,
+    );
+    // Restée « à planifier » au-delà du lendemain, elle est en retard : le
+    // rendez-vous la pose quand même, son état reste celui de la ligne.
+    expect(datePoseeAuCalendrier(v, { date: v.datePrevue, lecture: "courante", registre: "enRetard" }, t("2026-10-24T08:00"), false)).toBe(
       v.rendezVousLe,
     );
   });
@@ -47,15 +52,15 @@ describe("le rendez-vous d'un contrôle (ADR-049)", () => {
     const now = t("2026-10-24T08:00");
     const v = { rendezVousLe: t("2026-11-05T09:30"), datePrevue: t("2027-10-20T00:00") };
     const courante = { date: v.datePrevue, lecture: "courante", registre: "planifiee" };
-    expect(datePoseeAuCalendrier(v, courante, now)).toBe(v.rendezVousLe);
+    expect(datePoseeAuCalendrier(v, courante, now, true)).toBe(v.rendezVousLe);
     // Le jour même de l'échéance : encore avant.
     const jourJ = { ...v, rendezVousLe: t("2027-10-20T15:00") };
-    expect(datePoseeAuCalendrier(jourJ, courante, now)).toBe(jourJ.rendezVousLe);
+    expect(datePoseeAuCalendrier(jourJ, courante, now, true)).toBe(jourJ.rendezVousLe);
     // Après l'échéance, en retard, pour un rapport fait, ou passé sans rapport : la date de la lecture.
-    expect(datePoseeAuCalendrier({ ...v, rendezVousLe: t("2027-10-21T09:00") }, courante, now)).toBe(v.datePrevue);
-    expect(datePoseeAuCalendrier(v, { ...courante, registre: "enRetard" }, now)).toBe(v.datePrevue);
-    expect(datePoseeAuCalendrier(v, { ...courante, lecture: "realisation" }, now)).toBe(v.datePrevue);
-    expect(datePoseeAuCalendrier(v, courante, t("2026-11-20T08:00"))).toBe(v.datePrevue);
+    expect(datePoseeAuCalendrier({ ...v, rendezVousLe: t("2027-10-21T09:00") }, courante, now, true)).toBe(v.datePrevue);
+    expect(datePoseeAuCalendrier(v, { ...courante, registre: "enRetard" }, now, true)).toBe(v.datePrevue);
+    expect(datePoseeAuCalendrier(v, { ...courante, lecture: "realisation" }, now, true)).toBe(v.datePrevue);
+    expect(datePoseeAuCalendrier(v, courante, t("2026-11-20T08:00"), true)).toBe(v.datePrevue);
   });
 
   it("le formulaire signale un rendez-vous après l'échéance ou très en avance, sans bloquer", () => {
