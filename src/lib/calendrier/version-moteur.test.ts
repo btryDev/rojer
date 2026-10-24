@@ -521,7 +521,10 @@ const RELEVE = {
   // de la liste, exemple du champ Référence). Rien de ce que la régénération
   // écrit ne change. ~~46bc73090cecb299~~. Puis l'exemple « Autre » retouché
   // (seconde relecture, même jour, même raison). ~~0dee2d0136d49c7b~~.
-  empreinte: "ec9db3e412492b88",
+  // 2026-10-24 : `estFormation` ajoutée à `types.ts`, lue par l'affichage
+  // seulement (Équipe › Formations, filtre du calendrier) : NON, empreinte
+  // recopiée, version inchangée.
+  empreinte: "bd0b031ddeb11659",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

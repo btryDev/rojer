@@ -37,7 +37,7 @@ import {
   type SousCategorie,
 } from "./familles";
 import { modeDeclarationApplique, type ModeDeclaration } from "./regle";
-import { faitDeLaLigne } from "./par-les-risques";
+import { seSuitDansLEquipe } from "./par-l-equipe";
 import { ordonnerLignes } from "./ordre";
 import { contexteFondementDe, fondementDe, type FondementLigne } from "./fondement";
 import { PHRASE_SANS_REPONSE } from "@/lib/matching/sans-reponse";
@@ -148,7 +148,7 @@ export type EtatsPermanentsDuDossier = {
    * `total` et `faitsDates` : ce sont des états du dossier, le score et le
    * document les portent. Seul l'endroit où on les déclare change.
    */
-  parLesRisques: LigneEtatPermanent[];
+  parLEquipe: LigneEtatPermanent[];
   /**
    * Le compteur d'en-tête. **Mesuré, jamais écrit à la main** : le brief le
    * demande, et ce dépôt s'est fait prendre plusieurs fois par des comptes
@@ -283,7 +283,7 @@ export async function listerEtatsPermanents(
   // sous-catégorie.
   const parBloc = new Map<string, LigneEtatPermanent[]>();
   const faits: LigneEtatPermanent[] = [];
-  const parLesRisques: LigneEtatPermanent[] = [];
+  const parLEquipe: LigneEtatPermanent[] = [];
   let enPlace = 0;
   let total = 0;
   const parLesTitresCompte = { total: 0, enPlace: 0 };
@@ -335,8 +335,8 @@ export async function listerEtatsPermanents(
       if (ligne.declareLe) faitsDatesRenseignes += 1;
     }
 
-    if (faitDeLaLigne(o)) {
-      parLesRisques.push(ligne);
+    if (seSuitDansLEquipe(o)) {
+      parLEquipe.push(ligne);
     } else if (mode.mode === "fait") {
       faits.push(ligne);
     } else {
@@ -435,12 +435,12 @@ export async function listerEtatsPermanents(
   // Même règle pour « ce qui revient » : un ordre qui dépend de l'état déplace
   // la ligne suivante au moment précis où on va la cliquer.
   ordonnerLignes(faits);
-  ordonnerLignes(parLesRisques);
+  ordonnerLignes(parLEquipe);
 
   return {
     familles,
     faits,
-    parLesRisques,
+    parLEquipe,
     enPlace,
     total,
     parLesTitres: parLesTitresCompte,
@@ -507,7 +507,7 @@ export async function etatsPermanentsDuDossier(
     return {
       familles: [],
       faits: [],
-      parLesRisques: [],
+      parLEquipe: [],
       enPlace: 0,
       total: 0,
       parLesTitres: { total: 0, enPlace: 0 },

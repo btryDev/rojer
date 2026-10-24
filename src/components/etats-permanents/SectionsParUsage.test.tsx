@@ -333,11 +333,11 @@ describe("le repli : une ligne de l'écran sans rangement (2026-10-17, revue ind
     const { temoin, d } = await avecUneLigneNonRangee();
     expect(d.total).toBe(temoin.total);
     expect(d.enPlace).toBe(temoin.enPlace);
-    // Les lignes déclarées sous une question d'activité (`parLesRisques`,
+    // Les lignes déclarées sous une question d'activité (`parLEquipe`,
     // 2026-10-21) sont comptées, hors familles.
     expect(
       d.familles.reduce((n, f) => n + f.total, 0) +
-        d.parLesRisques.filter((l) => l.compteDansLEnTete).length,
+        d.parLEquipe.filter((l) => l.compteDansLEnTete).length,
     ).toBe(d.total);
     const repliTemoin =
       temoin.familles.find((f) => f.groupe === GROUPE_REPLI)?.total ?? 0;

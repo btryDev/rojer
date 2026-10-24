@@ -71,6 +71,7 @@ export const obligationsSecours: Obligation[] = [
 
   {
     id: "secours-salarie-secouriste",
+    formation: true,
     domaine: "secours",
     libelle: "Membre du personnel formé au secourisme (SST)",
     description:

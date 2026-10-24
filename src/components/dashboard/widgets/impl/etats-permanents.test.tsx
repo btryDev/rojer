@@ -128,7 +128,7 @@ const FABRIQUE: EtatsPermanentsDuDossier = {
       ],
     },
   ],
-  parLesRisques: [],
+  parLEquipe: [],
   faits: [
     ligne("fait-1", {
       mode: "fait",
@@ -368,7 +368,7 @@ describe.each(Object.keys(DOSSIERS))("widget « Ce qui doit être en place », d
 
   it("aucune ligne individuelle, quelle que soit la variante du registre", async () => {
     const d = await DOSSIERS[nom]();
-    const libelles = [...d.familles.flatMap((f) => f.blocs.flatMap((b) => b.lignes)), ...d.faits, ...d.parLesRisques]
+    const libelles = [...d.familles.flatMap((f) => f.blocs.flatMap((b) => b.lignes)), ...d.faits, ...d.parLEquipe]
       .map((l) => l.obligation.libelle);
     expect(libelles.length).toBeGreaterThan(d.familles.length);
     const variantes = REGISTRY["etats-permanents"].variants;
@@ -389,7 +389,7 @@ describe("widget sans état, ou sans réponse", () => {
   const vide: EtatsPermanentsDuDossier = {
     familles: [],
     faits: [],
-    parLesRisques: [],
+    parLEquipe: [],
     enPlace: 0,
     total: 0,
     parLesTitres: { total: 0, enPlace: 0 },

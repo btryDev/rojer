@@ -13,6 +13,9 @@ import { TexteInformation } from "@/components/salaries/TexteInformation";
 import { CHAMP_ETAT, ENCRE_ETAT } from "@/lib/calendrier/etats";
 import { FAITS_ACTIVITE } from "@/lib/etablissements/faits-activite";
 import { chargerFaitsActivite } from "@/lib/etablissements/faits-activite-queries";
+import { OngletsEquipe } from "@/components/salaries/OngletsEquipe";
+import { compteParLEquipe } from "@/lib/etats-permanents/par-l-equipe";
+import { etatsPermanentsDuDossier } from "@/lib/etats-permanents/queries";
 
 /**
  * L'annuaire de l'équipe — le troisième porteur d'échéance (ADR-023).
@@ -32,12 +35,15 @@ export default async function EquipePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { etablissement } = await requireEtablissement(id);
+  const { user, etablissement } = await requireEtablissement(id);
   const now = new Date();
   const equipe = await listerEquipe(id, now);
   const titresDeclares = await libellesTitresDeclares(id);
   const catalogue = cataloguerTitres();
   const faits = await chargerFaitsActivite(id);
+  // L'alerte de l'onglet Formations : les formations à mettre en place non
+  // déclarées (2026-10-24).
+  const formations = compteParLEquipe((await etatsPermanentsDuDossier(id, user.id)).parLEquipe);
   // Les faits sans réponse, NOMMÉS : la passe Chrome du 2026-10-08 a vu le
   // bandeau compter juste et lister les cinq, réponses comprises.
   const NOM_COURT: Record<(typeof FAITS_ACTIVITE)[number]["champ"], string> = {
@@ -131,35 +137,41 @@ export default async function EquipePage({
             </Link>
           </div>
         </div>
+        <div className="mt-5">
+          <OngletsEquipe
+            etablissementId={id}
+            actif="personnes"
+            aDeclarer={formations.total - formations.enPlace}
+          />
+        </div>
       </header>
 
       <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
         {/* La porte d'entrée unique des faits d'activité (ADR-041) : tant
             qu'une question reste sans réponse, les formations qu'elle
             conditionne s'affichent « à confirmer ». */}
+        {/* [2026-10-24, décision de la propriétaire] Le bloc ne s'affiche
+            que tant qu'une question reste sans réponse : une fois tout répondu,
+            les réponses se revoient dans le DUERP, et les formations qui en
+            découlent dans l'onglet Formations. */}
+        {sansReponse > 0 && (
         <section className="carte-board flex flex-wrap items-center justify-between gap-4 px-7 py-5 sm:px-8">
           <div className="min-w-0 max-w-[64ch]">
             <p className="m-0 text-[14px] font-semibold leading-[1.4] text-[color:var(--board-ink)]">
-              {sansReponse > 0
-                ? "Évaluez les risques de vos salariés"
-                : "Risques de vos salariés : répondu"}
+              Évaluez les risques de vos salariés
             </p>
             <p className="m-0 mt-1 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-              {sansReponse > 0
-                ? `${sansReponse} question${sansReponse > 1 ? "s" : ""} sans réponse : ${muets.map((f) => NOM_COURT[f.champ]).join(", ")}. Elles décident des formations, du suivi et des consignes dus à une partie de l'effectif.`
-                : "Les formations et le suivi dus à une partie de l'effectif s'affichent sur la fiche de chaque personne."}
+              {`${sansReponse} question${sansReponse > 1 ? "s" : ""} sans réponse : ${muets.map((f) => NOM_COURT[f.champ]).join(", ")}. Elles décident des formations, du suivi et des consignes dus à une partie de l'effectif.`}
             </p>
           </div>
           <Link
             href={`/etablissements/${id}/equipe/risques`}
-            className={buttonVariants({
-              variant: sansReponse > 0 ? "board" : "boardClair",
-              size: "boardSm",
-            })}
+            className={buttonVariants({ variant: "board", size: "boardSm" })}
           >
-            {sansReponse > 0 ? "Évaluer les risques →" : "Revoir les réponses"}
+            Évaluer les risques →
           </Link>
         </section>
+        )}
 
         {equipe.length === 0 ? (
           <section className="carte-board px-7 py-8 sm:px-8">

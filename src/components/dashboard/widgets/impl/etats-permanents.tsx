@@ -106,8 +106,8 @@ export function WidgetEtatsPermanents({
                 </span>
               </li>
             ))}
-            {/* Comptées dans l'en-tête, déclarées sous leur question
-                (`par-les-risques.ts`, 2026-10-21). `data-risques` et non
+            {/* Les formations de l'équipe (`par-l-equipe.ts`, 2026-10-24),
+                déclarées dans Équipe › Formations. `data-risques` et non
                 `data-famille` : ce n'est pas une section de l'écran. */}
             {resume.risques.lignes > 0 && (
               <li
@@ -115,10 +115,10 @@ export function WidgetEtatsPermanents({
                 className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 border-t border-[color:var(--board-slate-line)] py-3 first:border-t-0"
               >
                 <Link
-                  href={`/etablissements/${etablissementId}/equipe/risques`}
+                  href={`/etablissements/${etablissementId}/equipe/formations`}
                   className={CLASSES_LIEN_FAMILLE}
                 >
-                  Liées aux risques de vos salariés
+                  Formations de votre équipe
                 </Link>
                 {resume.risques.total > 0 && (
                   <span className="text-[12.5px] tabular-nums text-[color:var(--board-slate-mid)]">

@@ -61,7 +61,9 @@ function erp(categorieErp: string, typeErp = "N", comporteLocauxSommeilPublic: b
 
 async function lignes(e: never) {
   const d = await listerEtatsPermanents(e, []);
-  return [...d.familles.flatMap((f) => f.blocs.flatMap((b) => b.lignes)), ...d.faits];
+  // Et les lignes suivies dans Équipe › Formations (2026-10-24) : elles
+  // s'ouvrent dans la même fiche.
+  return [...d.familles.flatMap((f) => f.blocs.flatMap((b) => b.lignes)), ...d.faits, ...d.parLEquipe];
 }
 
 function rendre(l: Awaited<ReturnType<typeof lignes>>[number]) {

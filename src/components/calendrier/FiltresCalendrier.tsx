@@ -29,6 +29,12 @@ export type FiltresActifs = {
   famille?: FamilleEcheance;
   domaine?: string;
   urgent: boolean;
+  /**
+   * Les seules formations des salariés (`estFormation`, 2026-10-24) — toutes
+   * familles confondues : une formation est un titre de salarié comme une
+   * échéance d'établissement.
+   */
+  formation?: boolean;
   /** Une zone (ADR-029) — n'existe qu'à partir de deux. */
   batiment?: string;
 };
@@ -39,6 +45,7 @@ function construireHref(
     famille?: string;
     domaine?: string;
     urgent?: boolean;
+    formation?: boolean;
     batiment?: string;
     /**
      * La lecture en cours (mois ou équipement). Elle n'est pas un filtre,
@@ -58,6 +65,7 @@ function construireHref(
   if (filtres.famille) p.set("famille", filtres.famille);
   if (filtres.domaine) p.set("domaine", filtres.domaine);
   if (filtres.urgent) p.set("urgent", "1");
+  if (filtres.formation) p.set("formation", "1");
   if (filtres.batiment) p.set("batiment", filtres.batiment);
   if (filtres.vue) p.set("vue", filtres.vue);
   if (filtres.annee) p.set("annee", filtres.annee);
@@ -224,6 +232,7 @@ export function FiltresCalendrier({
     (f.famille ? 1 : 0) +
     (f.domaine ? 1 : 0) +
     (f.urgent ? 1 : 0) +
+    (f.formation ? 1 : 0) +
     (f.batiment ? 1 : 0);
 
   const appliquer = (suivants: FiltresActifs) => {
@@ -401,6 +410,18 @@ export function FiltresCalendrier({
               </Option>
             </fieldset>
 
+            <div className="mx-2.5 mt-2 border-t border-[color:rgba(10,10,10,.08)]" />
+            <fieldset className="m-0 border-0 p-0">
+              <TitreGroupe>Sujet</TitreGroupe>
+              <Option
+                forme="case"
+                actif={f.formation === true}
+                onChoisir={() => appliquer({ ...f, formation: !f.formation })}
+              >
+                Formations seulement
+              </Option>
+            </fieldset>
+
             {nbActifs > 0 ? (
               <>
                 <div className="mx-2.5 mt-2 border-t border-[color:rgba(10,10,10,.08)]" />
@@ -438,6 +459,11 @@ export function FiltresCalendrier({
           ton="alerte"
         >
           En retard seulement
+        </Chip>
+      ) : null}
+      {f.formation ? (
+        <Chip onRetirer={() => appliquer({ ...f, formation: false })}>
+          Formations seulement
         </Chip>
       ) : null}
       {f.batiment ? (

@@ -25,7 +25,7 @@ type Props = {
   valeur: boolean | null;
   /**
    * Ce que la réponse rend dû et qui se déclare ici (2026-10-21,
-   * `etats-permanents/par-les-risques.ts`) : les vignettes de « Ce qui doit
+   * `etats-permanents/par-l-equipe.ts`) : les vignettes de « Ce qui doit
    * être en place » nées de ce fait. Posé par la page, sous les réponses.
    */
   children?: ReactNode;

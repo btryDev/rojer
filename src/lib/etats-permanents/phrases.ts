@@ -207,9 +207,9 @@ export function phraseSousLesReponses(dejaDeclaree: boolean): string {
  * lignes du dossier se déclarent sous une question d'activité, dire « aucune »
  * serait faux : la phrase renvoie à la page des risques (revue du 2026-10-21).
  */
-export function phraseRienEnPlace(seulementParLesRisques: boolean): string {
-  return seulementParLesRisques
-    ? "Les seules lignes de votre dossier sont liées aux risques de vos salariés : elles se déclarent sur « Évaluer les risques de vos salariés »."
+export function phraseRienEnPlace(seulementDansLEquipe: boolean): string {
+  return seulementDansLEquipe
+    ? "Les seules lignes de votre dossier sont des formations de vos salariés : elles se déclarent dans Équipe, onglet Formations."
     : "Aucune des obligations que votre dossier déclenche n'est un état à constituer ou un fait à dater sans rythme écrit. Les autres sont au calendrier quand elles ont une date, sur « Quand ça arrive » quand elles naissent d'un événement, et sur la fiche de chaque personne quand elles la visent.";
 }
 

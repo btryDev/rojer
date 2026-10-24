@@ -35,7 +35,7 @@ import {
   type FondementLigne,
 } from "@/lib/etats-permanents/fondement";
 import { ancreEtatPermanent } from "@/lib/etats-permanents/ancre";
-import { cheminDeDeclaration } from "@/lib/etats-permanents/par-les-risques";
+import { cheminDeDeclaration } from "@/lib/etats-permanents/par-l-equipe";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import { modeDeclarationApplique } from "@/lib/etats-permanents/regle";
 import { phrasesAConfirmer } from "@/lib/matching/marques";

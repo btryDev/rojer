@@ -126,7 +126,7 @@ export default async function EtatsPermanentsPage({
       > | null,
     })),
   );
-  const { familles, faits, parLesRisques } = dossier;
+  const { familles, faits, parLEquipe } = dossier;
 
   // Une seule écriture de la ligne pour les deux sections : les états rangés
   // par usage et « ce qui revient ». Elle était recopiée, et deux copies des
@@ -163,7 +163,7 @@ export default async function EtatsPermanentsPage({
   // que la phrase n'existait nulle part en entier.
   //
   // Comptée sur les lignes AFFICHÉES : celles qui se déclarent sous une
-  // question d'activité (`parLesRisques`) n'ont rien à faire dans la phrase
+  // question d'activité (`parLEquipe`) n'ont rien à faire dans la phrase
   // d'une section où elles ne sont pas.
   const texteFaits = phraseFaitsDates(
     faits.length,
@@ -301,7 +301,7 @@ export default async function EtatsPermanentsPage({
                   déclarent ailleurs, et la phrase de l'en-tête y mène. Dire
                   alors « aucune » serait faux (revue du 2026-10-21). */}
               <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                {phraseRienEnPlace(parLesRisques.length > 0)}
+                {phraseRienEnPlace(parLEquipe.length > 0)}
               </p>
             </div>
           </section>

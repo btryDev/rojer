@@ -9,7 +9,7 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
-import { compteParLesRisques } from "./par-les-risques";
+import { compteParLEquipe } from "./par-l-equipe";
 
 const h = vi.hoisted(() => ({
   declarations: vi.fn(async () => [] as unknown[]),
@@ -84,8 +84,8 @@ beforeEach(() => {
 async function dossier() {
   const d = await listerEtatsPermanents(etab, installation, undefined, NOW);
   // L'habilitation naît d'un fait d'activité : elle se déclare sous sa
-  // question (`parLesRisques`, 2026-10-21), plus dans une famille.
-  const ligne = [...d.familles.flatMap((f) => f.blocs.flatMap((b) => b.lignes)), ...d.parLesRisques].find(
+  // question (`parLEquipe`, 2026-10-21), plus dans une famille.
+  const ligne = [...d.familles.flatMap((f) => f.blocs.flatMap((b) => b.lignes)), ...d.parLEquipe].find(
     (l) => l.obligation.id === HABILITATION,
   );
   if (!ligne) throw new Error("l'habilitation ne s'applique plus à ce dossier");
@@ -182,8 +182,8 @@ describe("les comptes ne disent pas « déclaré » de ce que l'employeur n'a pa
     const { d } = await dossier();
     const somme = (f: (x: (typeof d.familles)[number]) => number) =>
       d.familles.reduce((n, x) => n + f(x), 0);
-    const risques = compteParLesRisques(d.parLesRisques);
-    const titresRisques = d.parLesRisques.filter((l) => l.parLesTitres);
+    const risques = compteParLEquipe(d.parLEquipe);
+    const titresRisques = d.parLEquipe.filter((l) => l.parLesTitres);
     expect(somme((f) => f.total) + risques.total).toBe(d.total);
     expect(somme((f) => f.enPlace) + risques.enPlace).toBe(d.enPlace);
     expect(somme((f) => f.parLesTitres.total) + titresRisques.length).toBe(d.parLesTitres.total);
@@ -197,7 +197,7 @@ describe("les comptes ne disent pas « déclaré » de ce que l'employeur n'a pa
     const bloc = blocEtatsPermanents({
       familles: [],
       faits: [],
-      parLesRisques: [],
+      parLEquipe: [],
       enPlace: 0,
       total: 0,
       parLesTitres: { total: 0, enPlace: 0 },

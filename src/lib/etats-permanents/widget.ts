@@ -26,7 +26,7 @@ import { ancreFamille } from "./ancre";
 import type { GroupeAffichage } from "./familles";
 import { compteDeLaPage } from "./compte";
 import type { EtatsPermanentsDuDossier } from "./queries";
-import { compteParLesRisques } from "./par-les-risques";
+import { compteParLEquipe } from "./par-l-equipe";
 
 export type FamilleWidgetEtats = {
   groupe: GroupeAffichage;
@@ -48,7 +48,7 @@ export type ResumeWidgetEtats = ReturnType<typeof compteDeLaPage> & {
    * compte font le compte de l'en-tête.~~ [2026-10-22 : l'en-tête ne les
    * compte plus, `compteDeLaPage` ; les familles seules le font.]
    */
-  risques: ReturnType<typeof compteParLesRisques>;
+  risques: ReturnType<typeof compteParLEquipe>;
 };
 
 export function resumeDuWidget(d: EtatsPermanentsDuDossier): ResumeWidgetEtats {
@@ -62,7 +62,7 @@ export function resumeDuWidget(d: EtatsPermanentsDuDossier): ResumeWidgetEtats {
       ancre: ancreFamille(f.groupe),
     })),
     faits: d.faits.length,
-    risques: compteParLesRisques(d.parLesRisques),
+    risques: compteParLEquipe(d.parLEquipe),
   };
 }
 

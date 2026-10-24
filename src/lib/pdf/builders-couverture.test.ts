@@ -54,7 +54,7 @@ vi.mock("@/lib/etats-permanents/queries", async (orig) => ({
   etatsPermanentsDuDossier: async () => ({
     familles: [],
     faits: [],
-    parLesRisques: [],
+    parLEquipe: [],
     total: 0,
     enPlace: 0,
     parLesTitres: { total: 0, enPlace: 0 },

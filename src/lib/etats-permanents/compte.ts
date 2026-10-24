@@ -8,7 +8,7 @@
  */
 
 import type { EtatsPermanentsDuDossier } from "./queries";
-import { compteParLesRisques } from "./par-les-risques";
+import { compteParLEquipe } from "./par-l-equipe";
 
 /**
  * Les trois nombres de l'en-tête de PAGE (`CompteurDeLaPage`), lus d'une seule
@@ -26,9 +26,9 @@ export function compteDeLaPage(d: EtatsPermanentsDuDossier): {
   // et ne s'y comptent plus (décision de la propriétaire du 2026-10-22) :
   // elles se déclarent et se comptent sur « Évaluer les risques de vos
   // salariés ». Le score, le PDF et `d.total` les gardent.
-  // Même règle de compte que la page des risques (`compteParLesRisques`).
-  const risques = compteParLesRisques(d.parLesRisques);
-  const titresDesRisques = d.parLesRisques.filter(
+  // Même règle de compte que la page des risques (`compteParLEquipe`).
+  const risques = compteParLEquipe(d.parLEquipe);
+  const titresDesRisques = d.parLEquipe.filter(
     (l) => l.compteDansLEnTete && l.parLesTitres?.enPlace,
   ).length;
   return {
