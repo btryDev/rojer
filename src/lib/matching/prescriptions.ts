@@ -17,7 +17,6 @@ import {
 import { estPeriodicitePlusStricte } from "@/lib/calendrier/periodicite";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import type { Obligation } from "@/lib/referentiels/conformite/types";
-import { mentionRythmeRetenu } from "@/lib/referentiels/conformite/mention-rythme";
 import { raisonObligationRetiree } from "./obligation-retiree";
 import type {
   EquipementMatching,
@@ -100,9 +99,11 @@ export function motifPrescriptionNonRetenue(
   o: Pick<Obligation, "periodicite" | "rythmeRetenu" | "premierDelai">,
 ): string {
   const p = periodiciteEffective(o);
-  const mention = mentionRythmeRetenu(o);
-  return mention
-    ? `Rojer retient déjà « ${LABEL_PERIODICITE[p]} » pour cette obligation (${mention.court.charAt(0).toLowerCase()}${mention.court.slice(1)} ; le texte n'écrit pas de rythme) et garde ce rythme face à une prescription moins stricte.`
+  const r = o.rythmeRetenu;
+  // 2026-10-24 : la phrase ne recopie plus la pastille de la mention, qui dit
+  // désormais le rythme lui-même ; elle dit d'où il vient.
+  return r
+    ? `Le texte ne fixe pas de rythme : Rojer suit déjà « ${LABEL_PERIODICITE[p]} » (${r.motif === "norme" ? `norme ${r.norme}` : "son choix par défaut"}) et garde ce rythme face à une prescription moins stricte.`
     : `Le référentiel impose déjà un rythme au moins aussi strict (« ${LABEL_PERIODICITE[p]} »).`;
 }
 
@@ -257,7 +258,7 @@ export function appliquerPrescriptions(
           // minimum tant qu'elle n'est pas levée.
           raison:
             oa.porteur === "etablissement"
-              ? "Cette obligation porte sur l'établissement et non sur un appareil : le renforcement de périodicité ne sait pas encore s'y appliquer (ADR-022)."
+              ? "Cette obligation vise l'établissement entier, pas un appareil : Rojer ne sait pas encore y appliquer le rythme plus court demandé. Suivez cette date vous-même pour l'instant."
               : "L'équipement visé n'est pas (ou plus) un déclencheur de cette obligation.",
         });
         continue;

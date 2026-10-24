@@ -71,8 +71,12 @@ export function etatParLesTitres(
   now: Date,
 ): EtatParLesTitres {
   if (titres.length === 0) {
-    const phrase = `Établi d'après les titres déclarés : aucun titre « ${titre.libelle} » sur la fiche Équipe.`;
-    return { enPlace: false, phrase, phraseSansNom: phrase };
+    // [2026-10-24 : ~~« Établi d'après les titres déclarés »~~ — « titre » et
+    // « établi » sont des mots de l'outil.]
+    const phrase = `D'après votre équipe : personne n'a « ${titre.libelle} » déclaré sur sa fiche Équipe.`;
+    // Le dossier sort du produit et se lit par un tiers : pas de « votre ».
+    const phraseSansNom = `D'après les titres déclarés par l'employeur : personne n'a « ${titre.libelle} ».`;
+    return { enPlace: false, phrase, phraseSansNom };
   }
   // Les mots de la fiche salarié (`equipe/[salarieId]/page.tsx`,
   // `MOT_DE_L_ETAT`), jamais « expiré » ni « à jour » : le triennal de
@@ -94,12 +98,13 @@ export function etatParLesTitres(
       depasseesSansNom.push(quoi);
     }
   }
-  const compte = titres.length === 1 ? "1 titre" : `${titres.length} titres`;
+  const compte =
+    titres.length === 1 ? "1 personne l'a déclaré" : `${titres.length} personnes l'ont déclaré`;
   const suite = (liste: string[]) =>
     liste.length === 0 ? ", aucune échéance dépassée" : ` ; ${liste.join(" ; ")}`;
   return {
     enPlace: depassees.length < titres.length,
-    phrase: `Établi d'après les titres déclarés : ${compte}${suite(depassees)}.`,
-    phraseSansNom: `Établi d'après les titres déclarés : ${compte}${suite(depasseesSansNom)}.`,
+    phrase: `D'après votre équipe : ${compte}${suite(depassees)}.`,
+    phraseSansNom: `D'après les titres déclarés par l'employeur : ${compte}${suite(depasseesSansNom)}.`,
   };
 }

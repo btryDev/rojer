@@ -382,10 +382,10 @@ describe("la part des titres : une phrase, une fois, à l'en-tête (2026-10-17, 
     } as unknown as Etats;
     const { container } = rendre(d);
     const texte = container.textContent ?? "";
-    expect(texte.match(/d'après les titres/g) ?? []).toHaveLength(1);
+    expect(texte.match(/d'après les formations et habilitations/g) ?? []).toHaveLength(1);
     expect(texte.match(/par vous/g) ?? []).toHaveLength(1);
     expect(texte).toContain(
-      "3 déclarés en place par vous, 2 établis d'après les titres déclarés",
+      "3 déclarés en place par vous, 2 remplis d'après les formations et habilitations de votre équipe",
     );
   });
 });

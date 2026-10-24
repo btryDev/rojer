@@ -112,7 +112,7 @@ describe("habilitation : l'état vient des titres, plus de la case", () => {
     );
     // Sans nom : le document sort du produit (`docs/rgpd.md` § 6).
     expect(imprimee?.declaration).toMatch(
-      /^Établi d'après les titres déclarés : 1 titre ; échéance calculée dépassée le 0?1\/06\/2025\.$/,
+      /^D'après les titres déclarés par l'employeur : 1 personne l'a déclaré ; échéance calculée dépassée le 0?1\/06\/2025\.$/,
     );
   });
 
@@ -128,7 +128,7 @@ describe("habilitation : l'état vient des titres, plus de la case", () => {
     const { d, ligne } = await dossier();
     expect(ligne.parLesTitres?.enPlace).toBe(true);
     expect(d.enPlace).toBe(d.total);
-    expect(ligne.parLesTitres?.phrase).toBe("Établi d'après les titres déclarés : 1 titre, aucune échéance dépassée.");
+    expect(ligne.parLesTitres?.phrase).toBe("D'après votre équipe : 1 personne l'a déclaré, aucune échéance dépassée.");
   });
 
   it("ne lit que les titres des personnes actives de CE dossier", async () => {

@@ -128,7 +128,7 @@ describe("registre — une ligne sans rendez-vous (limite 1, 2026-09-15)", () =>
         datePrevue: new Date("2026-03-01T00:00:00Z"),
       }),
     ]);
-    expect(ligne.meta).toContain("sans rendez-vous");
+    expect(ligne.meta).toContain("sans date fixée");
     expect(ligne.meta).not.toContain("sans échéance connue");
     expect(ligne.statut).toBeUndefined();
   });

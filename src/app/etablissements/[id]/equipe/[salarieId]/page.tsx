@@ -52,7 +52,7 @@ const MOT_DE_L_ETAT: Record<RegistreLigne, string> = {
   // preuve qu'elle porte (ADR-012). Ni « à jour » — ce serait s'attribuer une
   // conformité —, ni « dépassée » — ce serait annoncer un retard sur ce qui
   // n'est plus dû.
-  archivee: "Ne s'applique plus",
+  archivee: "Plus dû",
   proche: "Échéance déclarée proche",
   enRetard: "Échéance déclarée dépassée",
   // Pas « en retard » : un titre sans terme écrit n'a pas de rendez-vous

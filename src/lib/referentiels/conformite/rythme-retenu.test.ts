@@ -334,12 +334,15 @@ describe("préséance avec une prescription (ADR-039 § 3)", () => {
 describe("la mention", () => {
   it("dit la norme comme norme, et le défaut comme défaut, avec le mot du texte", () => {
     const n = mentionRythmeRetenu(extincteursNorme())!;
-    expect(n.court).toBe("Rythme de la norme NF S 61-919");
+    // 2026-10-24 : le rythme d'abord, la source entre parenthèses.
+    expect(n.court).toBe("Tous les ans (norme NF S 61-919)");
     expect(n.long).toContain("NF S 61-919 (août 2001), § 5.1.1");
-    expect(n.long).toContain("pas un article de loi");
+    expect(n.long).toContain("Une norme n'est pas une loi.");
     const d = mentionRythmeRetenu(formationDefaut())!;
-    expect(d.court).toBe("Rythme retenu par défaut");
-    expect(d.long).toBe("Le texte dit « répétée périodiquement » ; rythme retenu par défaut : annuel.");
+    expect(d.court).toBe("1 fois par an (choix de Rojer)");
+    expect(d.long).toBe(
+      "Le texte dit « répétée périodiquement » sans fixer de rythme : Rojer vous le rappelle au moins une fois par an.",
+    );
     expect(mentionRythmeRetenu(obligationParId("incendie-erp-extincteurs-annuelle")!)).toBeNull();
   });
 
@@ -357,18 +360,17 @@ describe("la mention", () => {
     expect(m.long).toContain("première échéance à 5 ans, puis tous les 10 ans");
     expect(m.long).not.toMatch(/périodicité tous/);
     // Sans premier délai, le rythme seul.
-    expect(mentionRythmeRetenu(extincteursNorme())!.long).toContain(" : tous les ans.");
+    expect(mentionRythmeRetenu(extincteursNorme())!.long).toContain(", tous les ans.");
   });
 
-  it("dit le relevé du préventeur et que Rojer n'a pas relu la norme (C66)", () => {
+  it("dit le rythme de la norme, sans le relevé du préventeur (2026-10-24)", () => {
+    // ~~C66 : la mention nommait le préventeur, la date et ses mots~~ —
+    // décision de la propriétaire du 2026-10-24 : le relevé reste au
+    // référentiel, l'écran dit le rythme et sa source.
     const m = mentionRythmeRetenu(obligationParId("elec-salarie-habilitation")!)!;
-    expect(m.court).toBe("Rythme de la norme NF C 18-510, relevé par le préventeur");
-    expect(m.long).toBe(
-      "Le texte dit « selon les modalités contenues dans les normes mentionnées à l'article R. 4544-3 » ; " +
-        "Rythme de la norme NF C 18-510 (tous les 3 ans), relevé par le préventeur le 05/10/2026 : " +
-        "« Fréquence et validité recommandées (Norme NF C 18-510) • Cas général : Un recyclage (Maintien et Actualisation des Compétences - MAC) est conseillé tous les 3 ans. » " +
-        "— norme non relue par Rojer. C'est une norme, citée comme norme, pas un article de loi.",
-    );
+    expect(m.court).toBe("Tous les 3 ans (norme NF C 18-510)");
+    expect(m.long).toMatch(/^Le texte dit « selon les modalités .* » sans fixer de rythme : Rojer suit celui de la norme NF C 18-510.*, tous les 3 ans\. Une norme n'est pas une loi\.$/);
+    expect(m.long).not.toMatch(/préventeur/);
   });
 
   it("ne qualifie rien", () => {

@@ -144,10 +144,10 @@ export default async function SynthesePage({
               style={{ color: ENCRE_ETAT[etatMaj] }}
             >
               {jamaisValide
-                ? "Aucune version validée · art. R. 4121-1"
+                ? "Aucune version de votre DUERP n'est validée"
                 : majAnnuelleAConfirmer
-                  ? "Mise à jour à confirmer · art. R. 4121-2"
-                  : "Mise à jour requise · art. R. 4121-2"}
+                  ? "Mise à jour annuelle peut-être due"
+                  : "Mise à jour annuelle due"}
             </p>
             {/* L'effectif ne se montre que là où il décide de quelque
                 chose — c'est-à-dire sur l'échéance annuelle du 1°. Sur un

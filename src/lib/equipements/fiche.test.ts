@@ -202,9 +202,9 @@ describe("lignesAFaire", () => {
     );
     expect(ligne.etat).toBe("sansRendezVous");
     expect(ligne.date).toBeNull();
-    expect(ligne.detail).toBe("Sans rendez-vous — à tenir en place");
+    expect(ligne.detail).toBe("Sans date fixée — à tenir en permanence");
     expect(ligne.href).toBe("/etablissements/e1/etats-permanents");
-    expect(libelleDelai(ligne, AUJOURDHUI, "ligne")).toBe("sans rendez-vous");
+    expect(libelleDelai(ligne, AUJOURDHUI, "ligne")).toBe("sans date fixée");
   });
 
   it("n'écrit « à tenir en place » que si l'écran la liste en mode « état »", () => {
@@ -217,14 +217,14 @@ describe("lignesAFaire", () => {
         AUJOURDHUI, AUCUNE_PRUDENCE
       )[0].detail;
     // Événementielle : pas sur l'écran, pas de verbe.
-    expect(detail("froid-controle-etancheite-apres-modification")).toBe("Sans rendez-vous");
+    expect(detail("froid-controle-etancheite-apres-modification")).toBe("Sans date fixée");
     // Échéance récurrente sans rythme écrit : sur l'écran, sous « fait le ».
     // ~~`stockage-dangereux-verification-etancheite`~~ — retirée le 2026-10-07
     // (relecture préventeur du 30/09) ; ~~même nature et même rythme :
     // `stockage-dangereux-formation-personnel`~~ — rythme retenu annuel depuis
     // le lot 3 (ADR-039). Cas fabriqué, voir `ID_FAIT_FABRIQUE`.
     expect(detail(ID_FAIT_FABRIQUE)).toBe(
-      "Sans rendez-vous — à déclarer faite",
+      "Sans date fixée — notez la date quand c'est fait",
     );
   });
 
@@ -448,7 +448,7 @@ describe("chapeauAFaire — le nombre et le genre de ce qui est ouvert (2026-09-
     const chapeau = chapeauAFaire(aFaire, null, AUJOURDHUI);
     expect(chapeau).not.toContain("pour l'instant");
     expect(chapeau).toBe(
-      "Une obligation sans rendez-vous est ouverte sur cet appareil, sans contrôle attendu à une date",
+      "Une obligation vise cet appareil sans date fixée par le texte : aucun contrôle n'est attendu à un jour précis",
     );
   });
 

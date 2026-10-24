@@ -10,23 +10,25 @@
 import { QUESTION_MATIERES } from "@/lib/etablissements/questions";
 import type { QuestionSansReponse } from "./types";
 
+// [2026-10-24 : « par prudence » dit pourquoi la ligne reste, « vous n'avez
+// pas répondu » dit que la réponse vous appartient.]
 export const PHRASE_SANS_REPONSE: Record<QuestionSansReponse, string> = {
   manutention_manuelle:
-    "Rojer ne sait pas si des travailleurs portent, poussent ou tirent des charges à la main : cette ligne s'affiche tant que la réponse n'est pas « non ».",
+    "Rojer ne sait pas si des travailleurs portent, poussent ou tirent des charges à la main : par prudence, cette ligne reste affichée tant que vous n'avez pas répondu « non ».",
   travail_ecran:
-    "Rojer ne sait pas si des travailleurs utilisent un écran de façon habituelle : cette ligne s'affiche tant que la réponse n'est pas « non ».",
+    "Rojer ne sait pas si des travailleurs utilisent un écran de façon habituelle : par prudence, cette ligne reste affichée tant que vous n'avez pas répondu « non ».",
   operations_electriques:
-    "Rojer ne sait pas si des travailleurs effectuent des opérations sur les installations électriques ou dans leur voisinage : cette ligne s'affiche tant que la réponse n'est pas « non ».",
+    "Rojer ne sait pas si des travailleurs effectuent des opérations sur les installations électriques ou dans leur voisinage : par prudence, cette ligne reste affichée tant que vous n'avez pas répondu « non ».",
   conduite_engins:
-    "Rojer ne sait pas si des travailleurs conduisent des équipements de travail mobiles automoteurs ou servant au levage : cette ligne s'affiche tant que la réponse n'est pas « non ».",
+    "Rojer ne sait pas si des travailleurs conduisent des équipements de travail mobiles automoteurs ou servant au levage : par prudence, cette ligne reste affichée tant que vous n'avez pas répondu « non ».",
   exposition_cmr:
-    "Rojer ne sait pas si des travailleurs sont exposés à des agents cancérogènes, mutagènes ou toxiques pour la reproduction : cette ligne s'affiche tant que la réponse n'est pas « non ».",
+    "Rojer ne sait pas si des travailleurs sont exposés à des agents cancérogènes, mutagènes ou toxiques pour la reproduction : par prudence, cette ligne reste affichée tant que vous n'avez pas répondu « non ».",
   epi_presents:
-    "Rojer ne sait pas si vous fournissez des équipements de protection individuelle à vos salariés : cette ligne s'affiche tant que la réponse n'est pas « non ».",
+    "Rojer ne sait pas si vous fournissez des équipements de protection individuelle à vos salariés : par prudence, cette ligne reste affichée tant que vous n'avez pas répondu « non ».",
   ssi_categorie_ab:
-    "La fiche de l'établissement ne dit pas s'il dispose d'un système de sécurité incendie de catégorie A ou B : cette ligne s'affiche tant que la réponse n'est pas « non ».",
+    "La fiche de l'établissement ne dit pas s'il dispose d'un système de sécurité incendie de catégorie A ou B : par prudence, cette ligne reste affichée tant que vous n'avez pas répondu « non ».",
   locaux_sommeil_public:
-    "La fiche de l'établissement ne dit pas s'il comporte des locaux à sommeil pour le public : cette ligne s'affiche tant que la réponse n'est pas « non ».",
+    "La fiche de l'établissement ne dit pas s'il comporte des locaux à sommeil pour le public : par prudence, cette ligne reste affichée tant que vous n'avez pas répondu « non ».",
   // Inatteignable en production depuis la contrainte CHECK
   // `Etablissement_erp_type_categorie_requis` (2026-09-27) : un ERP porte
   // toujours son type. Gardée parce que le moteur sait émettre la marque —
@@ -41,5 +43,5 @@ export const PHRASE_SANS_REPONSE: Record<QuestionSansReponse, string> = {
   // `lot/question-matieres` : la question reformulée est citée mot pour mot,
   // depuis son unique définition — la phrase voyage jusqu'au guide et au
   // MCP, qui la reconnaissent ainsi.]
-  matieres_r4227_22: `La fiche de l'établissement ne répond pas encore à la question « ${QUESTION_MATIERES} » : cette ligne s'affiche tant que la réponse n'est pas « non ».`,
+  matieres_r4227_22: `La fiche de l'établissement ne répond pas encore à la question « ${QUESTION_MATIERES} » : par prudence, cette ligne reste affichée tant que vous n'avez pas répondu « non ».`,
 };

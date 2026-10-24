@@ -51,16 +51,16 @@ describe("les phrases assemblées", () => {
     // qu'elle doit se lire, et toute jonction manquée fait diverger la chaîne.
     // C'est plus long à écrire et ça ne se trompe pas.
     expect(phraseFaitsDates(1, 0)).toBe(
-      "Le texte fait revenir cette obligation, sans dire à quel rythme. Elle se date donc — « fait le » — au lieu de se déclarer en place, et elle n'entre pas dans le compte de l'en-tête, qui ne parle que d'états. Elle ne porte pas encore de date.",
+      "Le texte demande de la refaire de temps en temps, sans fixer de rythme. Notez la date chaque fois que vous la faites. Elle ne compte pas dans le total en haut de page. Elle ne porte pas encore de date.",
     );
     expect(phraseFaitsDates(1, 1)).toBe(
-      "Le texte fait revenir cette obligation, sans dire à quel rythme. Elle se date donc — « fait le » — au lieu de se déclarer en place, et elle n'entre pas dans le compte de l'en-tête, qui ne parle que d'états. Elle porte une date.",
+      "Le texte demande de la refaire de temps en temps, sans fixer de rythme. Notez la date chaque fois que vous la faites. Elle ne compte pas dans le total en haut de page. Elle porte une date.",
     );
     expect(phraseFaitsDates(3, 1)).toBe(
-      "Les textes font revenir ces 3 obligations, sans dire à quel rythme. Elles se datent donc — « fait le » — au lieu de se déclarer en place, et elles n'entrent pas dans le compte de l'en-tête, qui ne parle que d'états. 1 sur 3 porte une date.",
+      "Les textes demandent de refaire ces 3 obligations de temps en temps, sans fixer de rythme. Notez la date chaque fois que vous les faites. Elles ne comptent pas dans le total en haut de page. 1 sur 3 porte une date.",
     );
     expect(phraseFaitsDates(3, 3)).toBe(
-      "Les textes font revenir ces 3 obligations, sans dire à quel rythme. Elles se datent donc — « fait le » — au lieu de se déclarer en place, et elles n'entrent pas dans le compte de l'en-tête, qui ne parle que d'états. Toutes portent une date.",
+      "Les textes demandent de refaire ces 3 obligations de temps en temps, sans fixer de rythme. Notez la date chaque fois que vous les faites. Elles ne comptent pas dans le total en haut de page. Toutes portent une date.",
     );
   });
 
@@ -83,15 +83,15 @@ describe("les phrases assemblées", () => {
 
   it("s'accordent, et le singulier ne dit pas le pluriel", () => {
     const une = phraseFaitsDates(1, 0)!;
-    expect(une).toContain("cette obligation");
-    expect(une).toContain("Elle se date");
-    expect(une).toContain("elle n'entre pas");
+    expect(une).toContain("la refaire");
+    expect(une).toContain("vous la faites");
+    expect(une).toContain("Elle ne compte pas");
     expect(une).not.toContain("Elles");
 
     const deux = phraseFaitsDates(2, 0)!;
     expect(deux).toContain("ces 2 obligations");
-    expect(deux).toContain("Elles se datent");
-    expect(deux).toContain("elles n'entrent pas");
+    expect(deux).toContain("vous les faites");
+    expect(deux).toContain("Elles ne comptent pas");
   });
 
   it("dit l'état des dates sans se contredire", () => {
@@ -131,10 +131,10 @@ describe("les phrases assemblées", () => {
     expect(phraseCompteur(10, 10)).toBe("tous déclarés en place par vous");
     // Avec la part des titres, chaque nombre accorde son participe.
     expect(phraseCompteur(2, 10, 1)).toBe(
-      "1 déclaré en place par vous, 1 établi d'après les titres déclarés",
+      "1 déclaré en place par vous, 1 rempli d'après les formations et habilitations de votre équipe",
     );
     expect(phraseCompteur(5, 10, 2)).toBe(
-      "3 déclarés en place par vous, 2 établis d'après les titres déclarés",
+      "3 déclarés en place par vous, 2 remplis d'après les formations et habilitations de votre équipe",
     );
   });
 
@@ -171,12 +171,12 @@ describe("les phrases assemblées", () => {
             const avant = texte.slice(0, m.index);
             expect(avant, cas).toMatch(/déclarés? en place $/);
           }
-          for (const m of texte.matchAll(/d'après les titres/g)) {
-            expect(texte.slice(m.index), cas).toMatch(/^d'après les titres déclarés/);
-            expect(texte.slice(0, m.index), cas).toMatch(/établis? $/);
+          for (const m of texte.matchAll(/d'après les formations/g)) {
+            expect(texte.slice(m.index), cas).toMatch(/^d'après les formations et habilitations de votre équipe/);
+            expect(texte.slice(0, m.index), cas).toMatch(/remplis? $/);
           }
           // L'une des deux sources, toujours (corollaire de l'ADR-027).
-          expect(texte, cas).toMatch(/par vous|d'après les titres déclarés/);
+          expect(texte, cas).toMatch(/par vous|d'après les formations et habilitations/);
         }
       }
     }
@@ -333,12 +333,12 @@ describe("ce que l'employeur n'a pas déclaré ne se dit pas « par vous » (rev
     // ~~« tous en place : … » / « en place : … »~~ (2026-10-17) : le préfixe
     // redisait « en place » devant « déclarés en place par vous ».
     expect(phraseCompteur(5, 5, 1)).toBe(
-      "4 déclarés en place par vous, 1 établi d'après les titres déclarés",
+      "4 déclarés en place par vous, 1 rempli d'après les formations et habilitations de votre équipe",
     );
     expect(phraseCompteur(3, 5, 1)).toBe(
-      "2 déclarés en place par vous, 1 établi d'après les titres déclarés",
+      "2 déclarés en place par vous, 1 rempli d'après les formations et habilitations de votre équipe",
     );
-    expect(phraseCompteur(1, 1, 1)).toBe("1 établi d'après les titres déclarés");
+    expect(phraseCompteur(1, 1, 1)).toBe("1 rempli d'après les formations et habilitations de votre équipe");
   });
 
   it("contre-épreuve : sans elle, le compteur d'avant", () => {

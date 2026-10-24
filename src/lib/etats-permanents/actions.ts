@@ -135,7 +135,7 @@ export async function declarerEnPlace(
     return {
       status: "error",
       message:
-        "Cette obligation ne se déclare pas : son état s'établit d'après les titres déclarés sur la fiche Équipe.",
+        "Cette ligne ne se coche pas : elle se remplit d'après les formations et habilitations déclarées sur les fiches de votre équipe.",
     };
   }
   if (!declarable) {

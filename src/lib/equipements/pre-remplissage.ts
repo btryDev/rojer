@@ -141,7 +141,7 @@ export type Entree = {
  * de la 5ᵉ, sans rien affirmer des quatre premières.
  */
 export const MENTION_SUR_APPLICATION_5E =
-  "En 5ᵉ catégorie, l'échéance est maintenue par sur-application assumée : le détail est sur la fiche de l'obligation.";
+  "En 5ᵉ catégorie, cette vérification peut ne pas vous être imposée ; Rojer la garde par prudence. Le détail est sur la fiche de l'obligation.";
 
 /**
  * Ce qu'une règle de suggestion déclare : le motif en langage courant, et les

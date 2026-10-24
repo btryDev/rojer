@@ -81,11 +81,6 @@ function rythmeEnPhrase(p: PeriodiciteRetenue, premierDelai?: Periodicite): stri
     : RYTHME_EN_PHRASE[p];
 }
 
-/** « 2026-10-05 » → « 05/10/2026 », sans horloge ni fuseau : une clé de jour. */
-function dateFr(cle: string): string {
-  const [a, m, j] = cle.split("-");
-  return `${j}/${m}/${a}`;
-}
 
 // -----------------------------------------------------------------------------
 // La mention
@@ -101,45 +96,56 @@ function dateFr(cle: string): string {
  */
 export type MentionRythme = {
   motif: MotifRythmeRetenu;
-  /** Pastille, colonne étroite : « Rythme de la norme NF S 61-919 ». */
+  /** Pastille, colonne étroite : « Tous les ans (norme NF S 61-919) ». */
   court: string;
   /** Phrase entière : la référence de la norme, ou le mot du texte. */
   long: string;
 };
 
-/** Libellé court du défaut, pour les pastilles. */
-export const PASTILLE_DEFAUT_ANNUEL = "Rythme retenu par défaut";
+/**
+ * Libellé court du défaut, pour les pastilles. ~~« Rythme retenu par
+ * défaut »~~ [2026-10-24, retour de la propriétaire : le dirigeant ne
+ * connaît pas la règle de l'an (ADR-039) ; la pastille dit le rythme et qui
+ * l'a choisi.]
+ */
+export const PASTILLE_DEFAUT_ANNUEL = "1 fois par an (choix de Rojer)";
 
-/** Le libellé court d'une norme : « Rythme de la norme NF S 61-919 ». */
-export function pastilleNorme(norme: string): string {
-  return `Rythme de la norme ${norme}`;
+const capitale = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
+
+/**
+ * Le libellé court d'une norme : « Tous les 3 ans (norme NF C 18-510) ».
+ * ~~« Rythme de la norme NF S 61-919 »~~ [2026-10-24 : le rythme d'abord,
+ * la norme entre parenthèses.]
+ */
+export function pastilleNorme(norme: string, p: PeriodiciteRetenue): string {
+  return `${capitale(RYTHME_EN_PHRASE[p])} (norme ${norme})`;
 }
 
 export function mentionRythmeRetenu(o: AvecRythme): MentionRythme | null {
   const r = o.rythmeRetenu;
   if (!r) return null;
+  // Ce que le texte dit, quand il dit quelque chose de vague ; sinon, qu'il
+  // ne fixe rien. La mention ne qualifie pas (`sans-qualification.test.ts`).
+  const leTexte = r.texteVague
+    ? `Le texte dit « ${r.texteVague} » sans fixer de rythme`
+    : "Le texte ne fixe pas de rythme";
   if (r.motif === "norme") {
-    const vague = r.texteVague ? `Le texte dit « ${r.texteVague} » ; ` : "";
-    // ADR-039 § 8 (2026-10-08, C66) : une norme que Rojer n'a pas lue, dont
-    // le préventeur a relevé le rythme. La mention le dit, et cite ses mots.
-    const releve = r.releveParPreventeur;
-    if (releve) {
-      return {
-        motif: "norme",
-        court: `${pastilleNorme(r.norme)}, relevé par le préventeur`,
-        long: `${vague}Rythme de la norme ${r.norme} (${rythmeEnPhrase(r.periodicite, o.premierDelai)}), relevé par le préventeur le ${dateFr(releve.date)} : « ${releve.citation.replace(/\s*\n\s*/g, " ")} » — norme non relue par Rojer. C'est une norme, citée comme norme, pas un article de loi.`,
-      };
-    }
+    // ~~ADR-039 § 8 : la mention nommait le préventeur qui a relevé le
+    // rythme, la date du relevé et ses mots, et que la norme n'était pas
+    // relue~~ [2026-10-24, décision de la propriétaire : « les gens s'en
+    // foutent ». Le relevé reste au référentiel (`releveParPreventeur`) et
+    // au dossier de relecture ; l'écran dit le rythme et sa source, une
+    // norme, distinguée d'une loi.]
     return {
       motif: "norme",
-      court: pastilleNorme(r.norme),
-      long: `${vague}Rythme de la norme ${r.reference.reference} : ${rythmeEnPhrase(r.periodicite, o.premierDelai)}. C'est une norme, citée comme norme, pas un article de loi.`,
+      court: pastilleNorme(r.norme, r.periodicite),
+      long: `${leTexte} : Rojer suit celui de la norme ${r.reference.reference}, ${rythmeEnPhrase(r.periodicite, o.premierDelai)}. Une norme n'est pas une loi.`,
     };
   }
   return {
     motif: "defaut_annuel",
     court: PASTILLE_DEFAUT_ANNUEL,
-    long: `Le texte dit « ${r.texteVague} » ; rythme retenu par défaut : annuel.`,
+    long: `${leTexte} : Rojer vous le rappelle au moins une fois par an.`,
   };
 }
 

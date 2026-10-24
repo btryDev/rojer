@@ -101,5 +101,6 @@ export function phraseEffectifAConfirmer(
  * il y a la place de dire de quoi conclure.
  */
 export function mentionAConfirmer(seuil: number): string {
-  return `à confirmer : l'entreprise est déclarée sous ${seuil} salariés, ce site en compte ${seuil} ou plus`;
+  // [2026-10-24 : la contradiction, et le geste.]
+  return `à vérifier : l'entreprise est déclarée sous ${seuil} salariés, mais ce site en compte ${seuil} ou plus — corrigez l'effectif de l'entreprise s'il n'est plus juste`;
 }

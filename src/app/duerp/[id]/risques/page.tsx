@@ -235,17 +235,16 @@ export default async function RisquesOverviewPage({
         // creux, sans champ de couleur.
         <div className="rounded-[22px] bg-[color:var(--board-slate-pale)] px-7 py-5 sm:px-8">
           <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-            Hors référentiel sectoriel
+            Unités sans modèle
           </p>
           <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
             {horsRef.length > 1
               ? `${horsRef.length} unités ne correspondent`
               : "1 unité ne correspond"}{" "}
-            à aucune unité type du référentiel sectoriel chargé pour votre
-            activité —{" "}
-            {horsRef.map((u) => u.nom).join(", ")}. Aucun risque type n&apos;y
-            est proposé : leur inventaire, leur cotation et leurs mesures sont
-            entièrement à votre main. Le DUERP généré en portera la mention.
+            à aucun modèle de Rojer pour votre secteur —{" "}
+            {horsRef.map((u) => u.nom).join(", ")}. Aucun risque n&apos;y est
+            proposé d&apos;avance : c&apos;est à vous de les lister, de les
+            coter et de choisir les mesures. Le DUERP généré le mentionnera.
           </p>
         </div>
       )}

@@ -486,14 +486,15 @@ const LIBELLE_ETAT: Record<VerificationLue["etat"], string> = {
   realisee: "réalisée",
   // Dit ce que l'application constate, sans le qualifier en droit : le
   // serveur rend des faits, jamais de conclusion (cf. ses instructions).
-  ne_s_applique_plus: "ne s'applique plus",
+  // [2026-10-24 : les mots du calendrier, réécrits le même jour.]
+  ne_s_applique_plus: "plus due",
   // Le mot du calendrier (`LIBELLE_SANS_RENDEZ_VOUS`), en minuscule.
-  sans_rendez_vous: "sans rendez-vous",
+  sans_rendez_vous: "sans date fixée",
   // D1 (a) : ni « en retard » ni un verdict — la ligne tient à une question
   // restée sans réponse, que la mention « à confirmer » nomme.
   a_confirmer: "à confirmer",
   // C64 : la phrase même des autres surfaces, en minuscule d'attaque.
-  pour_information: "pour information — visite à l'initiative de l'administration",
+  pour_information: "visite de l'administration : c'est elle qui en fixe la date, rien à réserver",
 };
 
 function formaterVerifications(verifs: VerificationLue[], filtre = true): string {

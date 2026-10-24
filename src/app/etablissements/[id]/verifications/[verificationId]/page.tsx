@@ -345,8 +345,10 @@ export default async function VerificationDetailPage({
     archivee && v.archiveLe
       ? {
           cle: "Obligation",
-          valeur: "Ne s'applique plus",
-          note: `Depuis le ${formaterDateCourteFr(v.archiveLe)}. La fiche est conservée pour les rapports qu'elle porte.`,
+          valeur: "Plus due",
+          // [2026-10-24 : la cause et le geste, que « Ne s'applique plus »
+          // ne disait pas.]
+          note: `Depuis le ${formaterDateCourteFr(v.archiveLe)} : vos déclarations ou les règles suivies par Rojer ont changé. Rien à faire ; la fiche reste pour les rapports qu'elle porte.`,
         }
       : // Sans rendez-vous, la ligne n'a pas de « prochaine échéance » à
         // annoncer : elle a un contrôle dû et pas de date. Écrire la date de
@@ -364,9 +366,10 @@ export default async function VerificationDetailPage({
             // Au verbe de l'écran qui la liste (« en place » ou « fait le »),
             // et sans le nommer s'il ne la liste pas.
             note: {
-              etat: "Cette obligation n'a pas de rythme : elle se tient en place, sur « Ce qui doit être en place ».",
-              fait: "Cette obligation revient sans rythme écrit : sa dernière réalisation se déclare sur « Ce qui doit être en place ».",
-              aucun: "Cette obligation n'a pas de rythme : aucun contrôle n'est attendu à une date.",
+              // [2026-10-24 : sans « se tient en place » ni « rythme écrit ».]
+              etat: "Le texte ne fixe pas de date : elle doit être vraie en permanence. Déclarez-la sur « Ce qui doit être en place ».",
+              fait: "Le texte demande de la refaire de temps en temps, sans fixer de rythme : notez la date de la dernière fois sur « Ce qui doit être en place ».",
+              aucun: "Le texte ne fixe pas de date : aucun contrôle n'est attendu à un jour précis.",
             }[
               (obligation === undefined ? null : modeSurLEcranEnPlace(obligation)) ??
                 "aucun"
@@ -405,7 +408,7 @@ export default async function VerificationDetailPage({
         ? {
             cle: "Salarié",
             valeur: `${v.salarie.prenom} ${v.salarie.nom}`.trim(),
-            note: "L'obligation est nominative : elle vise cette personne, pas un appareil (ADR-023).",
+            note: "Cette obligation vise cette personne, pas un appareil.",
           }
         : {
             cle: "Portée",

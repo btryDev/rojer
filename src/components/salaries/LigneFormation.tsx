@@ -15,8 +15,8 @@ import { Vignette } from "@/components/ui-kit/Vignette";
  */
 const MOT_ETAT: Record<EtatCourt, string> = {
   declare: "Déclarée organisée",
-  titres: "D'après les titres",
-  "titres-manquants": "Titres à déclarer",
+  titres: "D'après votre équipe",
+  "titres-manquants": "À déclarer sur une fiche",
   "a-declarer": "À organiser",
 };
 

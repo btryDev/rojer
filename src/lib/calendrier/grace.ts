@@ -66,5 +66,7 @@ export function mentionDelaiDeGrace(
 ): string | null {
   const fin = delaiDeGrace(v, now);
   if (fin === null) return null;
-  return `${enTete ? "Délai" : "délai"} jusqu'au ${formaterDateFr(fin)}`;
+  // [2026-10-24 : ~~« délai jusqu'au … »~~ — un délai pour faire quoi ? La
+  // mention dit ce que la date change, et le geste.]
+  return `${enTete ? "Pas" : "pas"} comptée en retard avant le ${formaterDateFr(fin)} : planifiez-la d'ici là`;
 }

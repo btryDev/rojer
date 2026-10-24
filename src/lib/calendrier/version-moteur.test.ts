@@ -523,8 +523,13 @@ const RELEVE = {
   // (seconde relecture, même jour, même raison). ~~0dee2d0136d49c7b~~.
   // 2026-10-24 : `estFormation` ajoutée à `types.ts`, lue par l'affichage
   // seulement (Équipe › Formations, filtre du calendrier) : NON, empreinte
-  // recopiée, version inchangée.
-  empreinte: "bd0b031ddeb11659",
+  // recopiée, version inchangée. ~~bd0b031ddeb11659~~.
+  // 2026-10-24 (soir), `lot/mentions-claires` : des PHRASES d'affichage
+  // réécrites — la mention de rythme retenu (`mention-rythme.ts`), le motif
+  // d'une prescription écartée (`prescriptions.ts`), les mots d'état
+  // (`etats.ts`). La régénération n'écrit aucune d'elles en base : NON,
+  // empreinte recopiée, version inchangée.
+  empreinte: "087d213dc560e003",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

@@ -17,8 +17,8 @@ export type EtatCourt = "declare" | "titres" | "titres-manquants" | "a-declarer"
 /** Le mot sous le libellé. Jamais « conforme » : une déclaration n'est pas une preuve. */
 const MOT_ETAT: Record<EtatCourt, string> = {
   declare: "Déclaré",
-  titres: "D'après les titres",
-  "titres-manquants": "Titres à déclarer",
+  titres: "D'après votre équipe",
+  "titres-manquants": "À déclarer dans Équipe",
   "a-declarer": "À déclarer",
 };
 
