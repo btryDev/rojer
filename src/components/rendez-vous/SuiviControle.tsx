@@ -47,6 +47,8 @@ export function SuiviControle({
   hrefPrestataire: string | null;
 }) {
   const [ouvert, setOuvert] = useState(false);
+  const [saisieRdv, setSaisieRdv] = useState(rendezVousLe ? versSaisieDateHeure(rendezVousLe) : "");
+  const [saisieEnvoyee, setSaisieEnvoyee] = useState<string | null>(null);
   const router = useRouter();
   const chemin = usePathname();
   const parametres = useSearchParams();
@@ -69,8 +71,6 @@ export function SuiviControle({
     },
     { status: "idle" },
   );
-  const [saisieRdv, setSaisieRdv] = useState(rendezVousLe ? versSaisieDateHeure(rendezVousLe) : "");
-  const [saisieEnvoyee, setSaisieEnvoyee] = useState<string | null>(null);
   const avertissement =
     saisieRdv && estSaisieDateHeureReelle(saisieRdv)
       ? avertissementRendezVous(depuisSaisieDateHeure(saisieRdv), echeance)
