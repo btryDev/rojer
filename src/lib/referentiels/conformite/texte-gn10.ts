@@ -59,8 +59,13 @@ export function porteGn10(o: { description?: string | null }): boolean {
  * (décision de c6, 2026-10-17 : la phrase longue répétée sur onze lignes d'un
  * N3 faisait trop de texte). La phrase longue et le verbatim vont au dépli.
  */
+// ~~« Peut ne pas s'appliquer à un établissement existant (art. GN 10). »~~
+// [2026-10-24, retour de la propriétaire : « ça c'est pas clair » — le
+// dirigeant ne pouvait rien en faire. La phrase dit maintenant à quoi tient
+// l'exception : l'ouverture avant la règle. Les travaux (GN 10 § 2) restent
+// au dépli, avec le texte entier : la phrase courte ne les résume pas.]
 export const MENTION_GN_10_COURTE =
-  "Peut ne pas s'appliquer à un établissement existant (art. GN 10).";
+  "Si votre établissement a ouvert avant cette règle, elle peut ne pas s'imposer à vous (art. GN 10).";
 
 /** Le geste, au dépli, après le verbatim : sans qualification. */
 export const GESTE_GN_10 =
