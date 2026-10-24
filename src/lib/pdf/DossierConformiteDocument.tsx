@@ -5,6 +5,7 @@ import { faitRetards } from "./fait-retards";
 import type { LignePlanActions } from "./PlanActionsDocument";
 import type { LigneRapport, LigneVerif } from "./RegistreDocument";
 import { LABEL_STATUT_ACTION, LABEL_TYPE_ACTION } from "@/lib/actions/labels";
+import { LABEL_STATUT_POINT } from "@/lib/points-a-corriger/libelles";
 import { LABEL_RESULTAT } from "@/lib/rapports/resultats";
 import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
 import { MARQUAGE_CONTRACTUEL } from "@/lib/prescriptions/sources";
@@ -105,8 +106,12 @@ export type DossierData = {
     verifsEnRetard: number;
     verifsPlanifiees: number;
     verifsRealisees12m: number;
+    /** Les mesures du DUERP (le plan d'actions). */
     actionsOuvertes: number;
     actionsEnRetard: number;
+    /** Les points à corriger relevés par les contrôles (ADR-048). */
+    pointsOuverts: number;
+    pointsEnRetard: number;
   };
   rapportsRecents: LigneRapport[]; // 10 plus récents
   verifsEnRetard: LigneVerif[]; // toutes
@@ -123,6 +128,8 @@ export type DossierData = {
    */
   verifsPourInformation: LigneVerif[];
   actionsEnCours: LignePlanActions[]; // toutes
+  /** Les points à corriger ouverts, à part des mesures (ADR-048). */
+  pointsEnCours: LignePlanActions[];
 };
 
 /**
@@ -421,7 +428,7 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
         </View>
 
         <View>
-          <Text style={s.h2}>Vérifications et actions</Text>
+          <Text style={s.h2}>Vérifications, mesures et points à corriger</Text>
           <View style={{ flexDirection: "row", gap: 16 }}>
             <View>
               <Text style={s.small}>Vérifs en retard</Text>
@@ -441,25 +448,29 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
                 {data.compteurs.verifsRealisees12m}
               </Text>
             </View>
-            <View>
-              <Text style={s.small}>Actions ouvertes</Text>
-              <Text style={{ fontSize: 16, fontFamily: "Helvetica-Bold" }}>
-                {data.compteurs.actionsOuvertes}
-              </Text>
-            </View>
-            <View>
-              <Text style={s.small}>Actions en retard</Text>
-              <Text
-                style={{
-                  fontSize: 16,
-                  fontFamily: "Helvetica-Bold",
-                  color:
-                    data.compteurs.actionsEnRetard > 0 ? BOARD.signalEncre : undefined,
-                }}
-              >
-                {data.compteurs.actionsEnRetard}
-              </Text>
-            </View>
+            {/* Mesures du DUERP et points à corriger, comptés à part
+                (ADR-048, lot 3). */}
+            {(
+              [
+                ["Mesures ouvertes", data.compteurs.actionsOuvertes, false],
+                ["Mesures en retard", data.compteurs.actionsEnRetard, true],
+                ["Points à corriger", data.compteurs.pointsOuverts, false],
+                ["Points en retard", data.compteurs.pointsEnRetard, true],
+              ] as const
+            ).map(([legende, valeur, signal]) => (
+              <View key={legende}>
+                <Text style={s.small}>{legende}</Text>
+                <Text
+                  style={{
+                    fontSize: 16,
+                    fontFamily: "Helvetica-Bold",
+                    color: signal && valeur > 0 ? BOARD.signalEncre : undefined,
+                  }}
+                >
+                  {valeur}
+                </Text>
+              </View>
+            ))}
           </View>
         </View>
 
@@ -658,49 +669,12 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
         />
       </Page>
 
-      {/* Actions en cours */}
+      {/* Mesures et points à corriger en cours (ADR-048, lot 3) */}
       <Page size="A4" style={s.page}>
-        <Text style={s.h1}>Actions correctives en cours</Text>
-        {data.actionsEnCours.length === 0 ? (
-          <Text style={[s.small, { marginTop: 12 }]}>
-            Aucune action en cours.
-          </Text>
-        ) : (
-          <View>
-            <View style={s.thead}>
-              <Text style={[s.th, { width: "40%" }]}>Action</Text>
-              <Text style={[s.th, { width: "18%" }]}>Type</Text>
-              <Text style={[s.th, { width: "14%" }]}>Échéance</Text>
-              <Text style={[s.th, { width: "14%" }]}>Responsable</Text>
-              <Text style={[s.th, { width: "14%" }]}>Statut</Text>
-            </View>
-            {data.actionsEnCours.map((a) => (
-              <View key={a.id} style={s.row} wrap={false}>
-                <View style={{ width: "40%", paddingRight: 4 }}>
-                  <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 9.5 }}>
-                    {a.libelle}
-                  </Text>
-                  <Text style={[s.small, { marginTop: 2 }]}>
-                    {a.contexte}
-                  </Text>
-                </View>
-                <Text style={[s.td, { width: "18%" }]}>
-                  {LABEL_TYPE_ACTION[a.type]}
-                </Text>
-                <Text style={[s.td, { width: "14%" }]}>
-                  {formatDateCourte(a.echeance)}
-                </Text>
-                <Text style={[s.td, { width: "14%" }]}>
-                  {a.responsable ?? "—"}
-                </Text>
-                <Text style={[s.td, { width: "14%" }]}>
-                  {LABEL_STATUT_ACTION[a.statut]}
-                </Text>
-              </View>
-            ))}
-          </View>
-        )}
-
+        <Text style={s.h1}>Mesures de prévention en cours</Text>
+        <TableActions actions={data.actionsEnCours} vide="Aucune mesure en cours." />
+        <Text style={s.h2}>Points à corriger ouverts</Text>
+        <TableActions actions={data.pointsEnCours} vide="Aucun point à corriger ouvert." />
         <Text
           style={s.footer}
           render={({ pageNumber, totalPages }) =>
@@ -814,5 +788,47 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
         />
       </Page>
     </Document>
+  );
+}
+
+/** Une table d'actions : les mesures du DUERP, ou les points à corriger. */
+function TableActions({ actions, vide }: { actions: LignePlanActions[]; vide: string }) {
+  if (actions.length === 0) {
+    return <Text style={[s.small, { marginTop: 12 }]}>{vide}</Text>;
+  }
+  return (
+    <View>
+      <View style={s.thead}>
+        <Text style={[s.th, { width: "40%" }]}>Action</Text>
+        <Text style={[s.th, { width: "18%" }]}>Type</Text>
+        <Text style={[s.th, { width: "14%" }]}>Échéance</Text>
+        <Text style={[s.th, { width: "14%" }]}>Responsable</Text>
+        <Text style={[s.th, { width: "14%" }]}>Statut</Text>
+      </View>
+      {actions.map((a) => (
+        <View key={a.id} style={s.row} wrap={false}>
+          <View style={{ width: "40%", paddingRight: 4 }}>
+            <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 9.5 }}>
+              {a.libelle}
+            </Text>
+            <Text style={[s.small, { marginTop: 2 }]}>
+              {a.contexte}
+            </Text>
+          </View>
+          <Text style={[s.td, { width: "18%" }]}>
+            {LABEL_TYPE_ACTION[a.type]}
+          </Text>
+          <Text style={[s.td, { width: "14%" }]}>
+            {formatDateCourte(a.echeance)}
+          </Text>
+          <Text style={[s.td, { width: "14%" }]}>
+            {a.responsable ?? "—"}
+          </Text>
+          <Text style={[s.td, { width: "14%" }]}>
+            {a.origine === "verification" ? LABEL_STATUT_POINT[a.statut] : LABEL_STATUT_ACTION[a.statut]}
+          </Text>
+        </View>
+      ))}
+    </View>
   );
 }

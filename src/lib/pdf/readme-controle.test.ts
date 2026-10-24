@@ -282,7 +282,7 @@ describe("contre-lecture du 2026-09-26 : ce que le README affirmait sans l'avoir
     expect(t).toContain("lu en entier (conseil de Rojer)");
     expect(t).not.toContain("(10 min)");
     expect(t).not.toContain("priorisés");
-    expect(t).toContain("Actions ouvertes puis en cours, chacune par échéance puis criticité");
+    expect(t).toContain("Mesures du DUERP ouvertes puis en cours, par échéance puis criticité");
     expect(t).toContain("Installations et dispositifs techniques et de sécurité");
   });
 

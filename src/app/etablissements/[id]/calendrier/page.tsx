@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { DOMAINE_DE_CATEGORIE, comparerDomaines, type PoidsDomaine } from "@/lib/equipements/domaines";
+import type { CategorieEquipement } from "@prisma/client";
 import { notFound } from "next/navigation";
 import { ArrowUpRight, ChevronRight } from "lucide-react";
 import { AideEcran } from "@/components/ui-kit/AideEcran";
@@ -259,6 +261,9 @@ function LigneEcheance({
     </LienProvenance>
   );
 }
+
+/** L'intitulé des groupes sans domaine, dans la vue « par équipement ». */
+const AUTRES = "Autres";
 
 export default async function CalendrierPage({
   params,
@@ -727,6 +732,27 @@ export default async function CalendrierPage({
       b.proche - a.proche ||
       a.categorie.localeCompare(b.categorie),
   );
+  // Rangés par domaine (lot 2 des points à corriger), par la même règle que
+  // la page Équipements (`comparerDomaines`) ; dans un domaine, l'ordre
+  // ci-dessus. Un tri stable par rang de domaine suffit.
+  {
+    const poids = new Map<string, PoidsDomaine>();
+    for (const g of groupesEquipement) {
+      const d = DOMAINE_DE_CATEGORIE[g.categorieCode as CategorieEquipement];
+      // Sans domaine (catégorie « Autre ») : un intitulé « Autres » quand
+      // même, sinon le groupe se lirait sous le domaine précédent (revue).
+      g.domaine = d ? LABEL_DOMAINE[d] : AUTRES;
+      const cle = g.domaine;
+      const p = poids.get(cle) ?? { libelle: d ? g.domaine : null, enRetard: 0, proche: 0 };
+      p.enRetard += g.enRetard;
+      p.proche += g.proche;
+      poids.set(cle, p);
+    }
+    const rang = new Map(
+      [...poids.entries()].sort(([, a], [, b]) => comparerDomaines(a, b)).map(([cle], i) => [cle, i]),
+    );
+    groupesEquipement.sort((a, b) => rang.get(a.domaine ?? AUTRES)! - rang.get(b.domaine ?? AUTRES)!);
+  }
 
   // Ce qui ne tient à aucun appareil — attestation de prestataire,
   // correction du plan d'actions, analyse du carnet sanitaire — se rangeait
@@ -846,6 +872,7 @@ export default async function CalendrierPage({
     groupesEquipement.push({
       categorie: "Autres échéances",
       categorieCode: "AUTRES",
+      domaine: AUTRES,
       uniteLigne: "famille",
       lignes: lignesAutres,
       enRetard: lignesAutres.reduce((n, l) => n + l.enRetard, 0),
@@ -1026,7 +1053,7 @@ export default async function CalendrierPage({
               href={`/etablissements/${id}/actions`}
               className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
             >
-              Toutes les actions, datées ou non, sont dans le plan d&apos;actions.
+              Les mesures du DUERP, datées ou non, sont dans le plan d&apos;actions ; les points à corriger, sur la fiche de leur équipement ou de leur contrôle.
             </Link>
           </>
         ) : filtreFamille

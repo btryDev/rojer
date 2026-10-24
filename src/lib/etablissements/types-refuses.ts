@@ -115,9 +115,17 @@ export const champAccueilEnfants = z.preprocess(
  */
 export function appliquerFiltre(
   val: Types & { accueilEnfants?: boolean | null },
-  ctx: { addIssue: (i: { code: "custom"; path: string[]; message: string }) => void },
+  ctx: {
+    addIssue: (i: { code: "custom"; path: string[]; message: string; params?: { perimetre: true } }) => void;
+  },
 ): void {
-  for (const r of refusDuFiltre(val)) ctx.addIssue({ code: "custom", path: [r.champ], message: r.message });
+  for (const r of refusDuFiltre(val))
+    ctx.addIssue({
+      code: "custom",
+      path: [r.champ],
+      message: r.message,
+      ...(r.perimetre ? { params: { perimetre: true as const } } : {}),
+    });
   if (val.accueilEnfants !== undefined && !questionEnfantsPosee(val)) {
     ctx.addIssue({
       code: "custom",
@@ -134,7 +142,15 @@ export function sansReponseEnfants<T extends { accueilEnfants?: unknown }>(d: T)
   return copie as Omit<T, "accueilEnfants">;
 }
 
-export type RefusFiltre = { champ: "typeErp" | "typesErpAutres" | "accueilEnfants"; message: string };
+/**
+ * `perimetre` : un refus de ce que Rojer sert (ADR-031), et non une réponse
+ * manquante — l'écran propose alors un accompagnement (2026-10-24).
+ */
+export type RefusFiltre = {
+  champ: "typeErp" | "typesErpAutres" | "accueilEnfants";
+  message: string;
+  perimetre: boolean;
+};
 
 /**
  * Ce que le filtre refuse dans une saisie, champ par champ. `avant` (la fiche
@@ -156,13 +172,14 @@ export function refusDuFiltre(
   const principal = d.typeErp && !dejaLa.has(d.typeErp) ? typesRefusesDe(d.typeErp, []) : [];
   const autres = typesRefusesDe(null, (d.typesErpAutres ?? []).filter((t) => !dejaLa.has(t)));
   const p = phraseRefusTypes(principal);
-  if (p) refus.push({ champ: "typeErp", message: p });
+  if (p) refus.push({ champ: "typeErp", message: p, perimetre: true });
   const a = phraseRefusTypes(autres);
-  if (a) refus.push({ champ: "typesErpAutres", message: a });
+  if (a) refus.push({ champ: "typesErpAutres", message: a, perimetre: true });
   if (rEntre(d, avant)) {
-    if (d.accueilEnfants === true) refus.push({ champ: "accueilEnfants", message: PHRASE_REFUS_ENFANTS });
+    if (d.accueilEnfants === true)
+      refus.push({ champ: "accueilEnfants", message: PHRASE_REFUS_ENFANTS, perimetre: true });
     else if (d.accueilEnfants !== false)
-      refus.push({ champ: "accueilEnfants", message: "Indiquez si vous accueillez des enfants." });
+      refus.push({ champ: "accueilEnfants", message: "Indiquez si vous accueillez des enfants.", perimetre: false });
   }
   return refus;
 }

@@ -1,4 +1,3 @@
-import { libellePorteur } from "@/lib/calendrier/labels";
 import Link from "next/link";
 import { FilAriane } from "@/components/navigation/FilAriane";
 import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
@@ -6,16 +5,10 @@ import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/layout/EmptyState";
 import { LegalBadge, PastilleRetard } from "@/components/ui-kit";
-import { BadgeOrigine } from "@/components/actions/BadgeOrigine";
 import { BadgeStatutAction } from "@/components/actions/BadgeStatutAction";
 import { getEtablissement } from "@/lib/etablissements/queries";
 import { exigenceEcheanceActions } from "@/lib/actions/echeance-exigee";
-import {
-  compterActions,
-  listerActions,
-  origineDeLAction,
-  type OrigineAction,
-} from "@/lib/actions/queries";
+import { compterActions, listerActions } from "@/lib/actions/queries";
 import { LABEL_TYPE_ACTION } from "@/lib/actions/labels";
 import { formaterDateCourteFr } from "@/lib/dates";
 import { estActionEnRetard } from "@/lib/dates/retard";
@@ -28,17 +21,11 @@ function formatDate(d: Date | null): string {
   return formaterDateCourteFr(d);
 }
 
-const ORIGINES_UI: { key: OrigineAction; label: string }[] = [
-  { key: "duerp", label: "DUERP" },
-  { key: "verification", label: "Vérifications" },
-];
-
 // La pilule de filtre du board : encre pleine quand elle est active, contour
 // discret sinon (même geste que la barre de filtres du calendrier). Le mot
 // porte l'état, la couleur ne fait que l'appuyer.
 const CHIP_BASE =
   "inline-flex items-center rounded-full border px-4 py-[7px] text-[12.5px] font-semibold transition-colors";
-const CHIP_ACTIF = "border-transparent bg-[color:var(--board-ink)] text-white";
 const CHIP_INACTIF =
   "border-[color:rgba(10,10,10,.16)] bg-[color:var(--board-card)] text-[color:var(--board-ink)] hover:bg-[color:var(--board-blue-pale)]";
 
@@ -106,27 +93,25 @@ export default async function PlanActionsPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ origine?: string; enCours?: string }>;
+  searchParams: Promise<{ enCours?: string }>;
 }) {
   const { id } = await params;
-  const { origine, enCours } = await searchParams;
+  const { enCours } = await searchParams;
   const etab = await getEtablissement(id);
   if (!etab) notFound();
 
-  const origineFiltre = ORIGINES_UI.find((o) => o.key === origine)?.key;
   // Défaut : plan d'actions = ce qu'il reste à faire (ouverte/en_cours).
   // L'utilisateur peut passer `?enCours=0` pour inclure les levées/abandons
   // dans une vue audit (même route, cf. toggle ci-dessous).
   const enCoursSeulement = enCours !== "0";
 
+  // Le plan d'actions, ce sont les mesures du DUERP, et elles seules
+  // (ADR-048, lot 3, décision de la propriétaire du 2026-10-24) : les points
+  // à corriger vivent sur les équipements. Liste et compteurs sur le même
+  // filtre, sinon l'en-tête annonce ce que la liste ne montre pas.
   const [actions, compteurs] = await Promise.all([
-    listerActions(id, {
-      origine: origineFiltre,
-      enCoursSeulement,
-    }),
-    // Les compteurs suivent le filtre : sinon l'en-tête annonce un nombre
-    // que la liste sous lui ne montre pas.
-    compterActions(id, new Date(), { origine: origineFiltre }),
+    listerActions(id, { origine: "duerp", enCoursSeulement }),
+    compterActions(id, new Date(), { origine: "duerp" }),
   ]);
   // Un seul `new Date()` pour toute la page — composant serveur, l'horloge
   // est lue une fois par requête : la pastille de retard compte ses jours
@@ -142,11 +127,9 @@ export default async function PlanActionsPage({
   });
   // Ce que les fiches ouvertes d'ici devront savoir pour y revenir : le
   // plan d'actions *avec ses filtres*, pas la liste par défaut.
-  const depuisCetteListe = origineDepuis(baseHref, { origine, enCours });
-  const makeHref = (over: { origine?: string; enCours?: string }): string => {
+  const depuisCetteListe = origineDepuis(baseHref, { enCours });
+  const makeHref = (over: { enCours?: string }): string => {
     const p = new URLSearchParams();
-    const o = over.origine ?? origineFiltre;
-    if (o) p.set("origine", o);
     // L'état "en cours seulement" est le défaut implicite (pas de param).
     // Seul le mode "tout afficher" est explicite via ?enCours=0.
     const e = over.enCours ?? (enCoursSeulement ? undefined : "0");
@@ -172,14 +155,22 @@ export default async function PlanActionsPage({
               {LABEL_ITEM.actions}
             </h1>
             <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-              Les actions à mener : les mesures de prévention prévues dans
-              votre DUERP et les corrections des écarts relevés par les
-              vérifications. Celles qui ont une échéance apparaissent aussi{" "}
+              Les mesures de prévention prévues dans votre DUERP. Les points
+              à corriger relevés par les contrôles se suivent sur la fiche de
+              leur{" "}
               <Link
-                href={`/etablissements/${id}/calendrier?famille=travaux`}
+                href={`/etablissements/${id}/equipements`}
                 className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
               >
-                au calendrier
+                équipement
+              </Link>{" "}
+              ou, pour un contrôle de l&apos;ensemble du site, de leur contrôle
+              au{" "}
+              <Link
+                href={`/etablissements/${id}/calendrier`}
+                className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
+              >
+                calendrier
               </Link>
               .
             </p>
@@ -237,33 +228,8 @@ export default async function PlanActionsPage({
           </div>
         </section>
 
-        {/* Filtres */}
+        {/* Filtre */}
         <section className="flex flex-wrap items-center gap-2">
-          <span className="board-eyebrow mr-1 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
-            Origine :
-          </span>
-          <Link
-            href={makeHref({ origine: "" })}
-            aria-current={!origineFiltre ? "page" : undefined}
-            className={`${CHIP_BASE} ${!origineFiltre ? CHIP_ACTIF : CHIP_INACTIF}`}
-          >
-            Toutes
-          </Link>
-          {ORIGINES_UI.map((o) => (
-            <Link
-              key={o.key}
-              href={makeHref({ origine: o.key })}
-              // Sans lui, l'état actif ne tient qu'à la couleur : au lecteur
-              // d'écran, les quatre puces sont indiscernables et rien ne dit
-              // laquelle est appliquée (charte, interdit 10).
-              aria-current={origineFiltre === o.key ? "page" : undefined}
-              className={`${CHIP_BASE} ${
-                origineFiltre === o.key ? CHIP_ACTIF : CHIP_INACTIF
-              }`}
-            >
-              {o.label}
-            </Link>
-          ))}
           {/* Second axe de filtre, et non un état : il porte le glacier —
               le registre « calme et actif » — quand il quitte son défaut,
               pas l'ambre qui appartient à l'attention. */}
@@ -274,7 +240,7 @@ export default async function PlanActionsPage({
                 : makeHref({ enCours: "" }) // retour au défaut
             }
             className={
-              `${CHIP_BASE} ml-4 ` +
+              `${CHIP_BASE} ` +
               (enCoursSeulement
                 ? CHIP_INACTIF
                 : "border-transparent bg-[color:var(--board-blue-pale)] text-[color:var(--board-blue-ink)]")
@@ -287,12 +253,7 @@ export default async function PlanActionsPage({
         </section>
 
         {actions.length === 0 ? (
-          origineFiltre ? (
-            <p className="carte-board m-0 px-7 py-5 text-[14px] leading-[1.6] text-[color:var(--board-slate-mid)] sm:px-8">
-              Aucune action ne correspond à ce filtre — retirez-le pour revoir
-              tout le plan.
-            </p>
-          ) : enCoursSeulement && compteurs.leveesRecemment > 0 ? (
+          enCoursSeulement && compteurs.leveesRecemment > 0 ? (
             <p className="carte-board m-0 px-7 py-5 text-[14px] leading-[1.6] text-[color:var(--board-slate-mid)] sm:px-8">
               Aucune action à couvrir actuellement.{" "}
               <Link
@@ -307,19 +268,18 @@ export default async function PlanActionsPage({
             </p>
           ) : (
             <EmptyState
-              titre="Le plan d'actions regroupe ce que vous avez à corriger"
-              pourquoi="Deux origines possibles. (1) Les mesures de prévention prévues dans votre DUERP — elles remontent automatiquement ici. (2) Les écarts détectés sur un rapport de vérification — vous créez l'action depuis la page de la vérification concernée. Dans les deux cas, vous pouvez les clôturer avec un commentaire de levée."
-              quoiFaire="depuis une vérification avec un résultat « observations » ou « écart majeur », cliquez sur « + Créer une action corrective ». Ou continuez à remplir votre DUERP — les mesures s'ajouteront seules."
+              titre="Le plan d'actions reprend les mesures de votre DUERP"
+              pourquoi="Chaque mesure de prévention prévue dans votre DUERP remonte ici, avec son échéance et son responsable. Une mesure mise en place se clôture avec ce qui a été fait."
+              quoiFaire="remplissez votre DUERP : les mesures s'ajouteront seules. Les points à corriger relevés par un contrôle, eux, se notent et se suivent sur la fiche du contrôle ou de l'équipement."
               ctaSecondary={{
-                libelle: "Ouvrir le registre de sécurité",
-                href: `/etablissements/${id}/registre`,
+                libelle: "Voir les équipements",
+                href: `/etablissements/${id}/equipements`,
               }}
             />
           )
         ) : (
           <ul className="carte-board m-0 list-none p-0">
             {actions.map((a) => {
-              const origine = origineDeLAction(a);
               // LE prédicat, pas une comparaison d'instants : le jour dit, dès
               // 2 h à Paris, la pastille disait « En retard » quand le compteur
               // de la même page ne la comptait pas (ADR-011, relecture système
@@ -358,14 +318,6 @@ export default async function PlanActionsPage({
                           Criticité {a.criticite}
                         </>
                       )}
-                      {a.verification && (
-                        <>
-                          <span className="mx-2 text-[color:var(--board-slate)]">
-                            ·
-                          </span>
-                          {libellePorteur(a.verification)}
-                        </>
-                      )}
                     </p>
                     {a.description && (
                       <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
@@ -380,7 +332,6 @@ export default async function PlanActionsPage({
                   </div>
                   <div className="flex flex-none flex-col items-end gap-2">
                     <div className="flex flex-wrap items-center justify-end gap-2">
-                      <BadgeOrigine origine={origine} />
                       <BadgeStatutAction statut={a.statut} />
                       {/* Le retard s'ajoute au statut, il ne le remplace
                           pas — et il dit le nombre de jours, que personne

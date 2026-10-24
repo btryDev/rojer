@@ -92,12 +92,15 @@ function dossier(etatsPermanents: BlocEtatsPermanents): DossierData {
       verifsRealisees12m: 0,
       actionsOuvertes: 0,
       actionsEnRetard: 0,
+      pointsOuverts: 0,
+      pointsEnRetard: 0,
     },
     rapportsRecents: [],
     verifsEnRetard: [],
     verifsAConfirmer: [],
     verifsPourInformation: [],
     actionsEnCours: [],
+    pointsEnCours: [],
   };
 }
 

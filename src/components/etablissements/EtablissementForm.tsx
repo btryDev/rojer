@@ -5,7 +5,7 @@ import {
   AIDE_NOMBRE_DE_PERSONNES,
   LIBELLE_NOMBRE_DE_PERSONNES,
 } from "@/lib/matching/personnes-presentes";
-import { useActionState, useState } from "react";
+import { startTransition, useActionState, useState } from "react";
 import Link from "next/link";
 import { LienEffectifEntreprise } from "@/components/entreprises/LienEffectifEntreprise";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -89,6 +89,7 @@ type Props = {
   entreprise: { id: string; effectif: number };
 };
 
+
 export function EtablissementForm({
   action,
   valeursInitiales,
@@ -153,7 +154,21 @@ export function EtablissementForm({
     state.status === "error" ? state.fieldErrors?.[champ]?.[0] : undefined;
 
   return (
-    <form action={formAction} className="flex flex-col gap-8">
+    <form
+      // `method="post"` : un envoi avant l'hydratation part en POST, jamais en
+      // GET (les champs finiraient dans l'URL et l'historique).
+      method="post"
+      // Envoi à la main plutôt que `action={…}` : React 19 vide un formulaire
+      // après une action, et un refus (plus de cinquante salariés…) obligeait
+      // à tout ressaisir (contrôle visuel du 2026-10-24). La validation native
+      // du navigateur passe toujours avant `submit`.
+      onSubmit={(e) => {
+        e.preventDefault();
+        const donnees = new FormData(e.currentTarget);
+        startTransition(() => formAction(donnees));
+      }}
+      className="flex flex-col gap-8"
+    >
       {/* Identité */}
       <section className="flex flex-col gap-5">
         <ChampBoard
@@ -798,6 +813,19 @@ export function EtablissementForm({
             "un champ est à corriger plus haut."}
         </p>
       )}
+      {/* Un refus de périmètre à la création (effectif, ERP en IGH, types
+          refusés) : le moment où l'on perd quelqu'un, comme à l'accueil
+          (2026-10-24). */}
+      {enCreation && state.status === "error" && state.refusPerimetre && (
+          <p className="m-0 text-[12.5px] text-[color:var(--board-slate-mid)]">
+            <DemandeAide
+              variante="lien"
+              libelle="Rojer ne suit pas encore ce cas ? Nos experts, si : être accompagné."
+              categorie="hors_couverture"
+              contexte="Création d'établissement refusée"
+            />
+          </p>
+        )}
       {state.status === "success" && (
         <p className="m-0 text-[12.5px] text-[color:var(--board-green-ink)]">
           Enregistré.

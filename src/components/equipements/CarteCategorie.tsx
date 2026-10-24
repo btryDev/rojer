@@ -8,6 +8,7 @@
 // La jauge en tête compte, elle ne mesure pas : un segment par appareil,
 // coloré par les jetons d'état du board.
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { MarqueCategorie } from "@/components/equipements/MarqueCategorie";
@@ -73,8 +74,15 @@ export function CarteCategorie({
   appareils,
   periodicites,
   hrefAjouter,
+  titre,
+  mention,
 }: {
   categorie: CategorieEquipement;
+  /** Le titre, s'il n'est pas celui de la catégorie (« Équipements de
+   *  sécurité » nomme le matériel exigé par le texte). */
+  titre?: string;
+  /** À côté du titre : le fondement du texte, une marque. */
+  mention?: ReactNode;
   appareils: AppareilListe[];
   /** Les rythmes réellement portés par les lignes de suivi générées. */
   periodicites: Periodicite[];
@@ -96,8 +104,9 @@ export function CarteCategorie({
       <div className="flex items-center gap-3.5 border-b border-[color:var(--board-slate-line)] pb-3.5">
         <MarqueCategorie categorie={categorie} taille={44} />
         <div className="min-w-0 flex-1">
-          <h2 className="board-titre m-0 text-[22px]">
-            {LABEL_CATEGORIE_EQUIPEMENT[categorie]}
+          <h2 className="board-titre m-0 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[22px]">
+            {titre ?? LABEL_CATEGORIE_EQUIPEMENT[categorie]}
+            {mention}
           </h2>
           <p className="board-eyebrow m-0 mt-1 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
             {appareils.length} équipement{appareils.length > 1 ? "s" : ""}
@@ -141,7 +150,9 @@ export function CarteCategorie({
         className="mt-3 flex items-center justify-center gap-2 rounded-[18px] border border-dashed border-[color:var(--board-slate)] py-3 text-[12.5px] font-semibold text-[color:var(--board-slate-soft)] transition-colors hover:border-[color:var(--board-blue-strong)] hover:text-[color:var(--board-blue-ink)]"
       >
         <Plus className="size-4" aria-hidden />
-        Ajouter — {LABEL_CATEGORIE_EQUIPEMENT[categorie].toLowerCase()}
+        {/* Le titre de la carte, s'il est donné : le bouton dit ce que la
+            carte affiche (contrôle visuel E3). */}
+        Ajouter — {(titre ?? LABEL_CATEGORIE_EQUIPEMENT[categorie]).toLowerCase()}
       </Link>
     </section>
   );

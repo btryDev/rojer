@@ -5,7 +5,8 @@ import { libelleTypesErp, numeroCategorie } from "@/lib/etablissements/types-erp
 import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
 import { prisma } from "@/lib/prisma";
 import type { AuthedUser } from "@/lib/auth/require-user";
-import { compterActions, listerActions, origineDeLAction } from "@/lib/actions/queries";
+import { compterActions, listerActions, origineDeLAction, type ActionListee } from "@/lib/actions/queries";
+import { LIBELLE_POINT, versPointDuRapport } from "@/lib/points-a-corriger/libelles";
 import { listerVerifications, type VerificationListee } from "@/lib/calendrier/queries";
 import { libellePorteurSansNom } from "@/lib/calendrier/labels";
 import { listerRapportsDeLEtablissement } from "@/lib/rapports/queries";
@@ -179,16 +180,32 @@ function contexteAction(a: {
   if (a.risque) {
     return `DUERP — ${a.risque.unite.nom} · ${a.risque.libelle}`;
   }
-  if (a.verification) {
-    // Sans équipement, l'échéance porte sur l'établissement (ADR-022) : on
-    // imprime l'obligation elle-même. Écrire « Vérification — » suivi de rien
-    // laisserait un inspecteur devant une ligne qui ne dit pas sur quoi elle
-    // porte.
-    return a.verification.equipement
-      ? `Vérification — ${a.verification.equipement.libelle}`
-      : `Vérification — ${a.verification.libelleObligation}`;
-  }
-  return "Libre";
+  // Un point à corriger (ADR-048). Sans équipement, l'échéance porte sur
+  // l'établissement (ADR-022) : on imprime l'obligation elle-même — « Point à
+  // corriger — » suivi de rien ne dirait pas sur quoi la ligne porte. La base
+  // garantit risque XOR vérification (`Action_origine_xor`).
+  const v = a.verification;
+  return v?.equipement
+    ? `${LIBELLE_POINT} — ${v.equipement.libelle}`
+    : `${LIBELLE_POINT} — ${v?.libelleObligation ?? ""}`;
+}
+
+/** Une action telle que les PDF l'impriment (plan, dossier). */
+function versLignePlan(a: ActionListee): LignePlanActions {
+  return {
+    id: a.id,
+    libelle: a.libelle,
+    description: a.description,
+    type: a.type,
+    statut: a.statut,
+    criticite: a.criticite,
+    echeance: a.echeance,
+    responsable: a.responsable,
+    origine: origineDeLAction(a),
+    contexte: contexteAction(a),
+    leveeLe: a.leveeLe,
+    leveeCommentaire: a.leveeCommentaire,
+  };
 }
 
 /**
@@ -275,6 +292,27 @@ export function ligneVerif(
   };
 }
 
+/** Un rapport tel que les PDF l'impriment (registre, dossier), ses points
+ *  à corriger et leur correction compris (ADR-048, lot 3). */
+function versLigneRapport(
+  r: Awaited<ReturnType<typeof listerRapportsDeLEtablissement>>[number],
+  multiBatiments: boolean,
+): LigneRapport {
+  return {
+    id: r.id,
+    dateRapport: r.dateRapport,
+    resultat: r.resultat,
+    organismeVerif: r.organismeVerif,
+    libelleObligation: r.verification.libelleObligation,
+    equipementLibelle: libelleEquipementSitue(r.verification, multiBatiments),
+    domaine: obligationParId(r.verification.obligationId)?.domaine ?? null,
+    fichierNomOriginal: r.fichierNomOriginal,
+    commentaires: r.commentaires,
+    // La même ligne que l'écran ; un point abandonné ne s'imprime pas.
+    points: r.pointsACorriger.flatMap((p) => versPointDuRapport(p) ?? []),
+  };
+}
+
 export async function construirePlanActionsData(
   etablissementId: string,
   user: AuthedUser,
@@ -286,25 +324,14 @@ export async function construirePlanActionsData(
   // d'édition (cf. mentions légales : « actions correctives en cours »).
   // On exclut donc les levées/abandons de la table — les compteurs de
   // levées restent exposés dans la synthèse pour donner de la visibilité.
+  // Les mesures du DUERP seules (ADR-048, lot 3) : les points à corriger
+  // s'impriment sur le PDF de leur équipement et au dossier.
   const [actions, compteurs] = await Promise.all([
-    listerActions(etablissementId, { enCoursSeulement: true }),
-    compterActions(etablissementId),
+    listerActions(etablissementId, { origine: "duerp", enCoursSeulement: true }),
+    compterActions(etablissementId, new Date(), { origine: "duerp" }),
   ]);
 
-  const lignes: LignePlanActions[] = actions.map((a) => ({
-    id: a.id,
-    libelle: a.libelle,
-    description: a.description,
-    type: a.type,
-    statut: a.statut,
-    criticite: a.criticite,
-    echeance: a.echeance,
-    responsable: a.responsable,
-    origine: origineDeLAction(a),
-    contexte: contexteAction(a),
-    leveeLe: a.leveeLe,
-    leveeCommentaire: a.leveeCommentaire,
-  }));
+  const lignes: LignePlanActions[] = actions.map(versLignePlan);
 
   return {
     entreprise: etab.entreprise.raisonSociale,
@@ -391,20 +418,7 @@ export async function construireRegistreData(
     }),
   ]);
 
-  const lignesRapports: LigneRapport[] = rapports.map((r) => ({
-    id: r.id,
-    dateRapport: r.dateRapport,
-    resultat: r.resultat,
-    organismeVerif: r.organismeVerif,
-    libelleObligation: r.verification.libelleObligation,
-    equipementLibelle: libelleEquipementSitue(
-      r.verification,
-      multiBatiments,
-    ),
-    domaine: obligationParId(r.verification.obligationId)?.domaine ?? null,
-    fichierNomOriginal: r.fichierNomOriginal,
-    commentaires: r.commentaires,
-  }));
+  const lignesRapports: LigneRapport[] = rapports.map((r) => versLigneRapport(r, multiBatiments));
 
   // « En attente » = toute échéance encore attendue — ouverte et non purgée
   // (`estEnAttenteDeRapport`), rapports passés ou non, quelle que soit la
@@ -573,7 +587,9 @@ export async function construireDossierConformiteData(
   // la liste d'un filtre TypeScript portant sur d'autres statuts — le PDF
   // annonçait « 5 vérifications en retard » puis en détaillait 3.
   const [
-    compteursActions,
+    compteursMesures,
+    compteursPoints,
+    pointsOuverts,
     plan,
     rapports,
     verifs,
@@ -586,7 +602,12 @@ export async function construireDossierConformiteData(
     fraicheur,
     marques,
   ] = await Promise.all([
-      compterActions(etablissementId),
+      // Mesures et points comptés à part pour l'affichage ; le score garde
+      // TOUTES les actions (ADR-048, décision 7) — leur somme, l'origine
+      // étant exclusive (`Action_origine_xor`).
+      compterActions(etablissementId, new Date(), { origine: "duerp" }),
+      compterActions(etablissementId, new Date(), { origine: "verification" }),
+      listerActions(etablissementId, { origine: "verification", enCoursSeulement: true }),
       construirePlanActionsData(etablissementId, user),
       listerRapportsDeLEtablissement(etablissementId),
       listerVerifications(etablissementId),
@@ -662,8 +683,8 @@ export async function construireDossierConformiteData(
       enRetard: etatVerifs.enRetard.length,
     },
     actions: {
-      ouvertesTotal: compteursActions.totalACouvrir,
-      enRetard: compteursActions.enRetard,
+      ouvertesTotal: compteursMesures.totalACouvrir + compteursPoints.totalACouvrir,
+      enRetard: compteursMesures.enRetard + compteursPoints.enRetard,
     },
     duerp: etatDuerp.ouvert ? etatDuerp : null,
     etatsPermanents: {
@@ -683,20 +704,9 @@ export async function construireDossierConformiteData(
         null,
       ) ?? null;
 
-  const rapportsRecents: LigneRapport[] = rapports.slice(0, 10).map((r) => ({
-    id: r.id,
-    dateRapport: r.dateRapport,
-    resultat: r.resultat,
-    organismeVerif: r.organismeVerif,
-    libelleObligation: r.verification.libelleObligation,
-    equipementLibelle: libelleEquipementSitue(
-      r.verification,
-      multiBatiments,
-    ),
-    domaine: obligationParId(r.verification.obligationId)?.domaine ?? null,
-    fichierNomOriginal: r.fichierNomOriginal,
-    commentaires: r.commentaires,
-  }));
+  const rapportsRecents: LigneRapport[] = rapports
+    .slice(0, 10)
+    .map((r) => versLigneRapport(r, multiBatiments));
 
   return {
     entreprise: etab.entreprise.raisonSociale,
@@ -738,8 +748,10 @@ export async function construireDossierConformiteData(
       verifsEnRetard: etatVerifs.enRetard.length,
       verifsPlanifiees: etatVerifs.aVenir.length,
       verifsRealisees12m: etatVerifs.realisees12m.length,
-      actionsOuvertes: compteursActions.ouvertes + compteursActions.enCours,
-      actionsEnRetard: compteursActions.enRetard,
+      actionsOuvertes: compteursMesures.totalACouvrir,
+      actionsEnRetard: compteursMesures.enRetard,
+      pointsOuverts: compteursPoints.totalACouvrir,
+      pointsEnRetard: compteursPoints.enRetard,
     },
     rapportsRecents,
     // Exactement les occurrences comptées juste au-dessus, projetées en
@@ -764,5 +776,7 @@ export async function construireDossierConformiteData(
       plan?.actions.filter(
         (a) => a.statut === "ouverte" || a.statut === "en_cours",
       ) ?? [],
+    // Les points à corriger, à part des mesures de prévention (ADR-048).
+    pointsEnCours: pointsOuverts.map(versLignePlan),
   };
 }
