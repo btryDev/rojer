@@ -46,7 +46,7 @@ prestataires existait sans lien avec les contrôles.
 
 ## Conséquences
 
-- Migration additive `20261024190748_prestataire_rendez_vous`.
+- Migration additive `20261024190803_prestataire_rendez_vous`.
 - Une ligne que la régénération supprime (obligation qui ne s'applique plus,
   sans trace) emporte son rendez-vous : il n'a plus d'objet.
 - Pas de relance par e-mail : l'envoi est gelé. Le dépôt du rapport par le

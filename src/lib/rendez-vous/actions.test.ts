@@ -4,7 +4,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 // l'action écrit, et ce qu'elle refuse.
 
 const h = vi.hoisted(() => ({
-  ligne: { id: "v1", etablissementId: "e1", archiveLe: null as Date | null, salarieId: null as string | null },
+  ligne: {
+    id: "v1",
+    etablissementId: "e1",
+    archiveLe: null as Date | null,
+    salarieId: null as string | null,
+    rendezVousLe: null as Date | null,
+  },
   updateMany: vi.fn(async () => ({ count: 1 })),
   resoudre: vi.fn(async (_e: string, id: string | null | undefined) =>
     !id ? { ok: true as const, id: null } : id === "presta-e1" ? { ok: true as const, id } : { ok: false as const },
@@ -70,6 +76,13 @@ describe("enregistrerSuiviControle", () => {
     expect(h.updateMany).not.toHaveBeenCalled();
     // Après l'échéance ou très en avance : accepté, l'écran le signale.
     expect((await enregistrerSuiviControle("v1", IDLE, fd({ rendezVousLe: "2028-06-01T09:00" }))).status).toBe("success");
+  });
+
+  it("un rendez-vous déjà enregistré, même manqué depuis longtemps, ne bloque pas la modification", async () => {
+    Object.assign(h.ligne, { rendezVousLe: new Date("2026-09-01T07:00:00Z") });
+    const r = await enregistrerSuiviControle("v1", IDLE, fd({ prestataireId: "presta-e1", rendezVousLe: "2026-09-01T09:00" }));
+    expect(r.status).toBe("success");
+    Object.assign(h.ligne, { rendezVousLe: null });
   });
 
   it("refuse une date-heure qui n'existe pas", async () => {
