@@ -16,7 +16,7 @@
 
 import type { QuestionSansReponse } from "@/lib/matching/types";
 import { PHRASE_SANS_REPONSE } from "@/lib/matching/sans-reponse";
-import { CATEGORIES_ERP_QUESTION_SSI } from "./questions";
+import { questionSsiPosee } from "./questions";
 import { questionSommeilPosee } from "./schema";
 
 export type ModuleDuGuide = "duerp" | "fiche";
@@ -55,12 +55,7 @@ export type RegimeDeLaFiche = {
  */
 export function poseeSurLaFiche(q: QuestionSansReponse, regime: RegimeDeLaFiche): boolean {
   if (q === "locaux_sommeil_public") return questionSommeilPosee(regime);
-  if (q === "ssi_categorie_ab") {
-    return (
-      regime.estERP &&
-      (CATEGORIES_ERP_QUESTION_SSI as readonly string[]).includes(regime.categorieErp ?? "")
-    );
-  }
+  if (q === "ssi_categorie_ab") return questionSsiPosee(regime);
   return true;
 }
 

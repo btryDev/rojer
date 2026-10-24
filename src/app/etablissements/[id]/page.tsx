@@ -162,14 +162,11 @@ export default async function EtablissementPage({
 
   // Fait observable fiable : le secteur a été choisi par l'utilisateur.
   // L'existence seule d'un Duerp ne prouve rien (créations silencieuses
-  // historiques par les pages relais). ~~Le plus récent seulement~~
-  // [2026-10-22, revue : `duerps` est trié par `updatedAt` ; un DUERP créé en
-  // silence après celui qui porte le secteur masquait l'ouverture et envoyait
-  // « Compléter » vers un document sans secteur. On cherche celui qui en a un.]
+  // historiques par les pages relais). Un seul DUERP par établissement
+  // (`Duerp.etablissementId` est unique) : ~~la recherche « de celui qui porte
+  // un secteur » ajoutée le 2026-10-22~~ visait un cas impossible, retirée.
   const duerpDernier = etab.duerps[0] ?? null;
-  const duerpOuvertDoc =
-    etab.duerps.find((d) => d.referentielSecteurId != null) ?? null;
-  const duerpOuvert = duerpOuvertDoc !== null;
+  const duerpOuvert = duerpDernier?.referentielSecteurId != null;
 
   // Checklist onboarding : uniquement les étapes actionnables par l'user.
   //
@@ -246,13 +243,13 @@ export default async function EtablissementPage({
       href: `/etablissements/${id}/calendrier`,
       cta: nbVerifs === 0 ? "Ouvrir le calendrier" : undefined,
     },
-    duerpOuvertDoc && manqueDuerp.length > 0
+    duerpOuvert && duerpDernier && manqueDuerp.length > 0
       ? {
           id: "duerp",
           titre: "Compléter votre DUERP",
           pourquoi: `Il reste ${pluriel(manqueDuerp.length, "question")} sur le travail de vos salariés : ${enumerer(manqueDuerp)}. Elles décident de formations et de consignes dues ; d'ici là, elles s'affichent « à confirmer ».`,
           faite: false,
-          href: `/duerp/${duerpOuvertDoc.id}/transverses`,
+          href: `/duerp/${duerpDernier.id}/transverses`,
           cta: "Compléter le DUERP",
         }
       : {

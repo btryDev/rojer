@@ -8,7 +8,7 @@ import { assertEtablissementOwnership } from "@/lib/auth/scope";
 /**
  * ~~Les deux questions de paramétrage~~ La question de paramétrage — ADR-025 § 7, ADR-032.
  * [2026-10-22, `lot/guide-par-module` : le guide renvoie aux modules ; celle
- * des EPI se répond sur la fiche et son action est retirée, comme les
+ * des EPI ~~se répond sur la fiche~~ [2026-10-22 : la question des EPI a quitté la fiche, c'est un fait d'activité, posé au DUERP et dans Équipe.] et son action est retirée, comme les
  * relances des questions de la fiche. Reste l'assureur, qu'aucun autre écran
  * ne pose.]
  *

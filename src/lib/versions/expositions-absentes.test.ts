@@ -17,7 +17,8 @@ const SILENCE: ReponsesFaitsActivite = {
   travailSurEcran: null,
   operationsElectriques: null,
   conduiteEngins: null,
-  expositionCMR: null, epiPresents: null
+  expositionCMR: null,
+  epiPresents: null,
 };
 
 const intitule = (id: string) =>

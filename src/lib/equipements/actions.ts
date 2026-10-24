@@ -25,6 +25,7 @@ import {
 } from "./schema";
 import {
   CATEGORIES_EQUIPEMENT,
+  estCategorieEpi,
   type CategorieEquipement,
 } from "@/lib/referentiels/types-communs";
 import {
@@ -182,7 +183,9 @@ export async function creerEquipement(
       materielNonCouvert: parsed.data.materielNonCouvert ?? null,
     },
   });
-  await constaterEpi(etablissementId, { regenerer: false });
+  if (estCategorieEpi(parsed.data.categorie)) {
+    await constaterEpi(etablissementId, { regenerer: false });
+  }
 
   const regen = await regenererCalendrier(etablissementId);
 
@@ -264,7 +267,9 @@ export async function modifierEquipement(
     },
   });
 
-  await constaterEpi(eq.etablissementId, { regenerer: false });
+  if (estCategorieEpi(parsed.data.categorie)) {
+    await constaterEpi(eq.etablissementId, { regenerer: false });
+  }
   const regen = await regenererCalendrier(eq.etablissementId);
 
   revalidatePath(`/etablissements/${eq.etablissementId}`);
@@ -536,7 +541,9 @@ export async function creerEquipementsDepuisPreRemplissage(
         : {}),
     })),
   });
-  await constaterEpi(etablissementId, { regenerer: false });
+  if (entrees.some((e) => estCategorieEpi(e.categorie))) {
+    await constaterEpi(etablissementId, { regenerer: false });
+  }
 
   const regen = await regenererCalendrier(etablissementId);
 

@@ -69,7 +69,8 @@ export async function constaterEpi(
   if (count === 0) return false;
   if (regenerer) {
     await regenererApresMutation(etablissementId, "epi/constate");
-    revalidatePath(`/etablissements/${etablissementId}`);
+    // Tout le dossier : calendrier, « en place », risques des salariés.
+    revalidatePath(`/etablissements/${etablissementId}`, "layout");
   }
   return true;
 }

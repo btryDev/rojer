@@ -178,14 +178,13 @@ export default async function EtatsPermanentsPage({
     typesErpAutres: etablissement.typesErpAutres,
     categorieErp: etablissement.categorieErp,
   };
-  const lignesAffichees = [...ordre, ...faits];
-  const lignesSansFiche = lignesAffichees.filter(
-    (l) => manquesDeLaFiche(l.questionsSansReponse, regimeFiche).length > 0,
+  const manquesParLigne = [...ordre, ...faits].map((l) =>
+    manquesDeLaFiche(l.questionsSansReponse, regimeFiche),
   );
   const texteFiche = phraseFicheIncomplete(
-    lignesSansFiche.length,
+    manquesParLigne.filter((m) => m.length > 0).length,
     manquesDeLaFiche(
-      lignesSansFiche.flatMap((l) => l.questionsSansReponse),
+      [...ordre, ...faits].flatMap((l) => l.questionsSansReponse),
       regimeFiche,
     ),
   );

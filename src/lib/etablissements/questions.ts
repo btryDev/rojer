@@ -31,6 +31,11 @@ export function questionRepondue(valeur: boolean | null | undefined): boolean {
  * catégorie. `questions.test.ts` confronte la liste au référentiel.
  */
 export const CATEGORIES_ERP_QUESTION_SSI = ["N1", "N2", "N3", "N4"] as const;
+
+/** La fiche pose-t-elle la question du SSI A/B ? Seule lecture de la règle. */
+export function questionSsiPosee(d: { estERP: boolean | null; categorieErp: string | null }): boolean {
+  return d.estERP === true && (CATEGORIES_ERP_QUESTION_SSI as readonly string[]).includes(d.categorieErp ?? "");
+}
 export const QUESTION_SSI =
   "L'établissement dispose-t-il d'un système de sécurité incendie (SSI) de catégorie A ou B ?";
 export const AIDE_SSI =

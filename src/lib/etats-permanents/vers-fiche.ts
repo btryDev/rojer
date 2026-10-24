@@ -62,7 +62,8 @@ export function versFiche(
   // OÙ RÉPONDRE (2026-10-20, relevé par la propriétaire). Le lien menait
   // toujours à `/modifier`, qui ne pose pas les cinq questions d'activité :
   // elles vivent dans Équipe › « Évaluer les risques de vos salariés »
-  // (ADR-041). Les autres questions (EPI, chambres, SSI…) restent sur la fiche.
+  // (ADR-041). Les autres questions (~~EPI,~~ chambres, SSI…) restent sur la
+  // fiche. [2026-10-22 : la question des EPI a quitté la fiche, c'est un fait d'activité, posé au DUERP et dans Équipe.]
   // [2026-10-22 : la règle est partagée, `lienPourRepondre`.]
   const ouRepondre = (phrases: string[]) => {
     const { href, libelle } = lienPourRepondre(phrases, id);

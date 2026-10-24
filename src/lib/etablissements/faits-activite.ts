@@ -144,8 +144,8 @@ export const FAITS_ACTIVITE: readonly FaitActivite[] = [
 
 /**
  * L'intitulé d'un fait : celui de sa question transverse, sinon le sien. C'est
- * le SEUL texte de la question, affiché par Équipe, la relance de la fiche et
- * le DUERP — une reformulation par écran avait rétréci la manutention à
+ * le SEUL texte de la question, affiché par Équipe, ~~la relance de la fiche~~
+ * [retirée le 2026-10-22] et le DUERP — une reformulation par écran avait rétréci la manutention à
  * « portent des charges » (relecture du 2026-10-08, R1).
  */
 export function intituleDuFait(f: FaitActivite): string {

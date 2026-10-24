@@ -7,7 +7,8 @@ const AUCUN_FAIT: ReponsesFaitsActivite = {
   travailSurEcran: null,
   operationsElectriques: null,
   conduiteEngins: null,
-  expositionCMR: null, epiPresents: null
+  expositionCMR: null,
+  epiPresents: null,
 };
 
 const parId = (actifs: string[], brut: unknown, faits = AUCUN_FAIT) =>

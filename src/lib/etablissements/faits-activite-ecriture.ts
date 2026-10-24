@@ -19,7 +19,7 @@ import {
  *
  * C'est le SEUL écrivain des colonnes de `FAITS_ACTIVITE` — hors le « oui »
  * constaté d'`epi-constate.ts` : l'écran Équipe,
- * la relance de la fiche établissement et l'étape transverse du DUERP passent
+ * ~~la relance de la fiche établissement~~ [retirée le 2026-10-22] et l'étape transverse du DUERP passent
  * tous par lui, si bien que la réponse et le risque ne peuvent pas diverger
  * selon l'écran qui a répondu.
  *

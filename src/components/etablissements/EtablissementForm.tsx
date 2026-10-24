@@ -25,7 +25,7 @@ import { AIDE_HABITATION, AIDE_IGH, AIDE_LOCAUX_SOMMEIL } from "@/lib/etablissem
 import { AideTypesErp } from "./AideTypesErp";
 import {
   AIDE_SSI,
-  CATEGORIES_ERP_QUESTION_SSI,
+  questionSsiPosee,
   QUESTION_MATIERES,
   QUESTION_SSI,
 } from "@/lib/etablissements/questions";
@@ -141,9 +141,7 @@ export function EtablissementForm({
   const [categorieErp, setCategorieErp] = useState<string>(
     valeursInitiales?.categorieErp ?? "",
   );
-  const poseSsi =
-    estERP === true &&
-    (CATEGORIES_ERP_QUESTION_SSI as readonly string[]).includes(categorieErp);
+  const poseSsi = questionSsiPosee({ estERP, categorieErp });
   const [estHabitation, setEstHabitation] = useState<boolean | null>(
     valeursInitiales?.estHabitation ?? (enCreation ? null : false),
   );

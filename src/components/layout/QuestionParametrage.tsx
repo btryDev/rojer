@@ -18,8 +18,9 @@ import type { ReponseParametrage } from "@/lib/etablissements/parametrage";
  * rouvrirait la question à son retour, avec la prescription déjà là.
  *
  * ~~`detailSiOui` ouvre un texte libre quand il est fourni (les EPI présents).~~
- * [2026-10-22, `lot/guide-par-module` : la question des EPI se répond sur la
- * fiche, le guide y renvoie ; le texte libre est retiré d'ici.]
+ * [2026-10-22, `lot/guide-par-module` : la question des EPI ~~se répond sur la
+ * fiche~~ est un fait d'activité, posé au DUERP et dans Équipe ; le texte libre
+ * est retiré d'ici.]
  */
 export function QuestionParametrage({
   action,

@@ -17,7 +17,8 @@ const tous = (v: boolean | null): ReponsesFaitsActivite => ({
   travailSurEcran: v,
   operationsElectriques: v,
   conduiteEngins: v,
-  expositionCMR: v, epiPresents: null
+  expositionCMR: v,
+  epiPresents: null,
 });
 
 const rendre = (faits: ReponsesFaitsActivite) => {

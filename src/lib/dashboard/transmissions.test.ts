@@ -12,7 +12,8 @@ const FAITS: ReponsesFaitsActivite = {
   travailSurEcran: null,
   operationsElectriques: null,
   conduiteEngins: null,
-  expositionCMR: null, epiPresents: null
+  expositionCMR: null,
+  epiPresents: null,
 };
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { supposeUnTiers } from "@/lib/prestataires/domaines";
