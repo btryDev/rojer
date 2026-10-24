@@ -1,4 +1,10 @@
 import { MENTION_POUR_INFORMATION } from "@/lib/referentiels/conformite/initiative";
+import {
+  LIBELLE_POINT,
+  MENTION_R4226_19,
+  texteDuPoint,
+  type PointDuRapport,
+} from "@/lib/points-a-corriger/libelles";
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import type { ManqueCouverture } from "@/lib/perimetre/couverture";
 import { phraseFraicheur, type FraicheurCalendrier } from "@/lib/calendrier/fraicheur";
@@ -32,6 +38,8 @@ export type LigneRapport = {
   domaine: DomaineObligation | null;
   fichierNomOriginal: string;
   commentaires: string | null;
+  /** Les points relevés par ce rapport et leur correction (ADR-048). */
+  points: PointDuRapport[];
 };
 
 export type LigneVerif = {
@@ -691,7 +699,11 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
               <Text style={[s.th, { width: "14%" }]}>Résultat</Text>
             </View>
             {data.rapports.map((r) => (
-              <View key={r.id} style={s.row} wrap={false}>
+              // `flexWrap` : les points du rapport passent sous sa ligne.
+              // Sans point, une ligne insécable ; avec ses points, elle peut
+              // passer la page — un rapport à trente corrections ne tiendrait
+              // pas sur une seule (revue du 2026-10-24).
+              <View key={r.id} style={[s.row, { flexWrap: "wrap" }]} wrap={r.points.length > 0}>
                 <Text style={[s.td, { width: "14%" }]}>
                   {formatDateCourte(r.dateRapport)}
                 </Text>
@@ -712,6 +724,23 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
                 <Text style={[s.td, { width: "14%" }]}>
                   {LABEL_RESULTAT[r.resultat]}
                 </Text>
+                {/* Sous le rapport, ses points et leur correction (ADR-048) :
+                    pour les installations électriques, R. 4226-19 veut sur le
+                    registre « les justifications des travaux et modifications
+                    effectués pour porter remède aux défectuosités
+                    constatées ». */}
+                {r.points.length > 0 && (
+                  <View style={{ width: "100%", paddingLeft: "14%", marginTop: 3 }}>
+                    {r.points.map((p) => (
+                      <Text key={p.id} style={[s.small, { marginTop: 1 }]}>
+                        {`${LIBELLE_POINT} : ${p.libelle} — ${texteDuPoint(p, formatDateCourte)}`}
+                      </Text>
+                    ))}
+                    {r.domaine === "electricite" && (
+                      <Text style={[s.small, { marginTop: 1 }]}>{MENTION_R4226_19}</Text>
+                    )}
+                  </View>
+                )}
               </View>
             ))}
           </View>

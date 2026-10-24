@@ -127,7 +127,8 @@ export default async function EtablissementPage({
     listerEvenementsCalendrier(id, { batimentId: batimentFiltre }, aujourdhui),
     listerEvenementsFenetre(id, 7, { batimentId: batimentFiltre }),
     listerEvenementsFenetre(id, 30, { batimentId: batimentFiltre }),
-    statsActionsEnRetard(id),
+    // Le widget mène au plan d'actions : les mesures du DUERP seules.
+    statsActionsEnRetard(id, new Date(), { origine: "duerp" }),
     getModulesMatrice(id, etab.estERP),
     compterVerificationsDuDossier(id),
     compterRapportsDuDossier(id),

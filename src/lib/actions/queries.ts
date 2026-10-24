@@ -274,6 +274,8 @@ export type StatsRetardActions = {
 export async function statsActionsEnRetard(
   etablissementId: string,
   now: Date = new Date(),
+  /** Le widget du plan d'actions lit les mesures du DUERP (ADR-048, lot 3). */
+  filtres: { origine?: OrigineAction } = {},
 ): Promise<StatsRetardActions> {
   const user = await requireUser();
 
@@ -281,6 +283,7 @@ export async function statsActionsEnRetard(
     where: {
       etablissementId,
       etablissement: { entreprise: { userId: user.id } },
+      ...clauseOrigine(filtres.origine),
       statut: { in: [...STATUTS_ACTION_OUVERTE] as StatutAction[] },
       echeance: { lt: debutDuJour(now) },
     },

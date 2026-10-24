@@ -52,6 +52,10 @@ type LigneAction = {
   statut: string;
   echeance: Date | null;
   libelle: string;
+  /** Une mesure du DUERP par défaut : le plan d'actions ne compte qu'elles
+   *  (ADR-048, lot 3). */
+  risqueId: string | null;
+  verificationId: string | null;
 };
 
 const h = vi.hoisted(() => {
@@ -338,6 +342,8 @@ function action(p: Partial<LigneAction> & { id: string }): LigneAction {
     statut: "ouverte",
     echeance: null,
     libelle: `Action ${p.id}`,
+    risqueId: "r1",
+    verificationId: null,
     ...p,
   };
 }

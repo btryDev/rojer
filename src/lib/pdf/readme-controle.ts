@@ -215,7 +215,9 @@ export function genererReadme(args: {
             "   documents nominatifs, conservés dans l'application.",
           ]
         : []),
-    ligne(PIECES_ZIP.plan, "Actions ouvertes puis en cours, chacune par échéance puis criticité", "Non inclus"),
+    // Les mesures du DUERP seules ; les points à corriger relevés par les
+    // contrôles sont au dossier de conformité (ADR-048, lot 3).
+    ligne(PIECES_ZIP.plan, "Mesures du DUERP ouvertes puis en cours, par échéance puis criticité", "Non inclus"),
     // Tous sur `zip.files` (contre-lecture du 2026-09-26 : 05 à 08 et
     // Prestataires/ restaient calculés sur des compteurs).
     // ~~« Non inclus (registre non publié) »~~ pour tout absent : un registre
