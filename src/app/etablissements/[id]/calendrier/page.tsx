@@ -224,8 +224,11 @@ function LigneEcheance({
             <span className="board-titre text-[18px] leading-none tabular-nums text-white">
               {FMT_JOUR.format(date)}
             </span>
-            <span className="mt-1 font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-white/70">
-              {FMT_MOIS_COURT.format(date)}
+            {/* Sans le point d'abréviation (« OCT », pas « OCT. »), et
+                recentré : l'interlettrage ajoute un blanc après la dernière
+                lettre, que le retrait de même valeur compense. */}
+            <span className="mt-1 indent-[0.1em] font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-white/70">
+              {FMT_MOIS_COURT.format(date).replace(/\.$/, "")}
             </span>
           </>
         ) : (
