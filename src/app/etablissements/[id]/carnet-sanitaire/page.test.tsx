@@ -33,7 +33,6 @@ vi.mock("@/lib/carnet-sanitaire/actions", () =>
     has: () => true,
   }),
 );
-vi.mock("@/components/layout/AppTopbar", () => ({ AppTopbar: () => null }));
 
 import CarnetSanitairePage from "./page";
 

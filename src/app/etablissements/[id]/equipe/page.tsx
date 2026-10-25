@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CompteurEtat } from "@/components/ui-kit/CompteurEtat";
 import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import { BarreDeListe } from "@/components/ui-kit/BarreDeListe";
 import { Plus } from "lucide-react";
@@ -116,41 +117,27 @@ export default async function EquipePage({
           resume={
             <>
               {enRetard > 0 && (
-                <span
-                  className="inline-flex items-center gap-2 rounded-full px-4 py-[9px]"
-                  style={{
-                    background: CHAMP_ETAT.enRetard,
-                    color: ENCRE_ETAT.enRetard,
-                  }}
-                >
-                  <span className="board-titre text-[20px] tabular-nums leading-none">
-                    {enRetard}
-                  </span>
-                  <span className="board-eyebrow text-[9.5px] tracking-[0.12em]">
-                    {enRetard > 1 ? "titres à renouveler" : "titre à renouveler"}
-                  </span>
-                </span>
+                <CompteurEtat
+                  nombre={enRetard}
+                  legende={enRetard > 1 ? "titres à renouveler" : "titre à renouveler"}
+                  champ={CHAMP_ETAT.enRetard}
+                  encre={ENCRE_ETAT.enRetard}
+                />
               )}
+              {/* « en retard » dit : la pastille ne compte que les retards — un
+                  manque « bientôt dû » ou non daté est aussi dû, et n'y est
+                  pas (relecture C4). */}
               {manquesEnRetard > 0 && (
-                <span
-                  className="inline-flex items-center gap-2 rounded-full px-4 py-[9px]"
-                  style={{
-                    background: CHAMP_ETAT.enRetard,
-                    color: ENCRE_ETAT.enRetard,
-                  }}
-                >
-                  <span className="board-titre text-[20px] tabular-nums leading-none">
-                    {manquesEnRetard}
-                  </span>
-                  <span className="board-eyebrow text-[9.5px] tracking-[0.12em]">
-                    {/* « en retard » dit : la pastille ne compte que les retards — un
-                        manque « bientôt dû » ou non daté est aussi dû, et n'y
-                        est pas (relecture C4). */}
-                    {manquesEnRetard > 1
+                <CompteurEtat
+                  nombre={manquesEnRetard}
+                  legende={
+                    manquesEnRetard > 1
                       ? "titres non déclarés, en retard"
-                      : "titre non déclaré, en retard"}
-                  </span>
-                </span>
+                      : "titre non déclaré, en retard"
+                  }
+                  champ={CHAMP_ETAT.enRetard}
+                  encre={ENCRE_ETAT.enRetard}
+                />
               )}
             </>
           }

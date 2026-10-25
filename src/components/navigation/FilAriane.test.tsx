@@ -229,7 +229,10 @@ describe("les pages d'entrée disent leur rangement par un fil d'Ariane", () => 
   });
 
   it("lit aussi les bandeaux délégués (borne basse)", () => {
-    expect(bandeaux.map((f) => path.basename(f))).toContain("BandeauParc.tsx");
+    // ~~`BandeauParc.tsx`~~ [2026-10-25 : le parc a perdu son titre au profit
+    // de l'en-tête commun ; c'est lui, désormais, le bandeau délégué qui
+    // porte le `<h1>` des pages d'entrée.]
+    expect(bandeaux.map((f) => path.basename(f))).toContain("EnTetePage.tsx");
   });
 
   it.each(pages)(

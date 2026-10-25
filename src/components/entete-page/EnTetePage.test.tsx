@@ -38,13 +38,6 @@ describe("EnTetePage", () => {
     expect(panneau.style.backgroundColor).toBe(attendu.style.backgroundColor);
   });
 
-  it("une page sans dessin n'ouvre pas de panneau teinté vide", () => {
-    // « equipements » n'a pas encore d'illustration (migration par section).
-    expect(ITEMS_ILLUSTRES).not.toContain("equipements");
-    const { container } = render(<EnTetePage item="equipements" description="Une phrase." />);
-    expect(container.querySelector("[data-teinte-section]")).toBeNull();
-  });
-
   it("deux pages d'une même section portent la même teinte", () => {
     expect(categorieDeItem("calendrier")).toBe(categorieDeItem("etats-permanents"));
     const fond = (item: "calendrier" | "etats-permanents") => {

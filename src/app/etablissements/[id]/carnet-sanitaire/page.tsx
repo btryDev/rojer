@@ -1,5 +1,5 @@
-import { AppTopbar } from "@/components/layout/AppTopbar";
 import { DemandeAide } from "@/components/assistance/DemandeAide";
+import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import {
   LegalBadge,
   PastilleFiche,
@@ -73,13 +73,10 @@ export default async function CarnetSanitairePage({
 
   return (
     <>
-      <AppTopbar
-        title="Carnet sanitaire eau"
-        subtitle="Surveillance des légionelles — due aux établissements recevant du public dont l'eau chaude collective alimente des points d'usage à risque."
-        crumbs={[
-          { href: `/etablissements/${id}`, label: etablissement.raisonDisplay },
-          { label: "Carnet sanitaire" },
-        ]}
+      <EnTetePage
+        item="carnet-sanitaire"
+        titre="Carnet sanitaire eau"
+        description="La surveillance des légionelles : relevés de température et analyses. Elle est due aux établissements recevant du public dont l'eau chaude collective alimente des points d'usage à risque."
       />
 
       {/* Écran d'application plein : la gouttière règle la largeur utile,

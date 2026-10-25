@@ -2,15 +2,21 @@ import type { ComponentType } from "react";
 
 import type { SidebarItemId } from "@/components/layout/sidebar-nav";
 
+import { IllustrationAccessibilite } from "./Accessibilite";
 import { IllustrationCalendrier } from "./Calendrier";
+import { IllustrationCarnetSanitaire } from "./CarnetSanitaire";
 import { IllustrationDuerp } from "./Duerp";
 import { IllustrationEnPlace } from "./EnPlace";
 import { IllustrationEquipe } from "./Equipe";
+import { IllustrationEquipements } from "./Equipements";
 import { IllustrationPerimetre } from "./Perimetre";
 import { IllustrationPermisFeu } from "./PermisFeu";
 import { IllustrationPlanActions } from "./PlanActions";
 import { IllustrationPlansPrevention } from "./PlansPrevention";
 import { IllustrationPrescriptions } from "./Prescriptions";
+import { IllustrationPrestataires } from "./Prestataires";
+import { IllustrationRegistre } from "./Registre";
+import { IllustrationZones } from "./Zones";
 
 /**
  * L'illustration de chaque page d'entrée. Une page sans illustration rend
@@ -34,6 +40,12 @@ const ILLUSTRATIONS: Partial<Record<SidebarItemId, ComponentType>> = {
   "permis-feu": IllustrationPermisFeu,
   "plan-prevention": IllustrationPlansPrevention,
   perimetre: IllustrationPerimetre,
+  equipements: IllustrationEquipements,
+  batiments: IllustrationZones,
+  prestataires: IllustrationPrestataires,
+  registre: IllustrationRegistre,
+  accessibilite: IllustrationAccessibilite,
+  "carnet-sanitaire": IllustrationCarnetSanitaire,
 };
 
 /** La page a-t-elle son dessin ? Sans lui, l'en-tête n'ouvre pas de

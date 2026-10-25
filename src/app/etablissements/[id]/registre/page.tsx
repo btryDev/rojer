@@ -1,10 +1,10 @@
 import { estAppareilRetire } from "@/lib/equipements/retrait";
+import { EnTetePage } from "@/components/entete-page/EnTetePage";
+import { BarreDeListe } from "@/components/ui-kit/BarreDeListe";
 import { PointsDuRapport } from "@/components/points-a-corriger/PointsDuRapport";
 import { DemandeAide } from "@/components/assistance/DemandeAide";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { FilAriane } from "@/components/navigation/FilAriane";
-import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
 import { AideEcran } from "@/components/ui-kit/AideEcran";
 import { LegalBadge } from "@/components/ui-kit/LegalBadge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -179,49 +179,33 @@ export default async function RegistrePage({
 
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
-      {/* La bande de titre — l'identité de l'écran, et rien d'autre. Même
-          strate que le calendrier : rail de contexte en mono, titre en grand,
-          une phrase. Les commandes vivent plus bas, avec ce qu'elles
-          règlent. */}
-      <div className="border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] pb-8 pt-[26px]">
-        <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-2">
-          <FilAriane
-            crumbs={[
-              { href: base, label: etab.raisonDisplay },
-              { label: LABEL_ITEM.registre },
-            ]}
-          />
-        </div>
-
-        <div className="mt-1.5 flex flex-wrap items-start justify-between gap-x-8 gap-y-4">
-          <div className="min-w-0 flex-1">
-            <h1 className="board-titre m-0 text-[clamp(29px,3vw,39px)]">
-              Registre de sécurité
-            </h1>
-            <p className="m-0 mt-[11px] max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-              Le document que vous présentez à l&apos;inspection du travail et
-              à la commission de sécurité, tenu au fil de l&apos;eau.
-            </p>
-          </div>
-          <div className="flex flex-none flex-wrap items-center gap-2.5">
-            <a
-              href={`/api/etablissements/${id}/registre/pdf`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={buttonVariants({ variant: "board", size: "board" })}
-            >
-              Exporter le registre
-            </a>
-            {/* L'ancien « Prendre rendez-vous » vers btry.fr, toujours affiché :
-                le même besoin passe désormais par « Besoin d'aide ? »
-                (2026-10-24), qui garde l'utilisateur dans Rojer. */}
-            <DemandeAide variante="lien" libelle="Besoin d'aide ?" categorie="commission_securite" contexte="Registre de sécurité" etablissementId={id} />
-            {aide}
-          </div>
-        </div>
-      </div>
+      <EnTetePage
+        item="registre"
+        description="Le document que vous présentez à l'inspection du travail et à la commission de sécurité, tenu au fil de l'eau."
+      />
 
       <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-7">
+        {/* L'export, l'aide et la demande d'assistance, au-dessus du
+            registre qu'ils concernent : l'en-tête ne porte que la bascule de
+            vue (2026-10-25). L'ancien « Prendre rendez-vous » vers btry.fr
+            passe par « Besoin d'aide ? » (2026-10-24), qui garde
+            l'utilisateur dans Rojer. */}
+        <BarreDeListe
+          action={
+            <div className="flex flex-wrap items-center gap-2.5">
+              <a
+                href={`/api/etablissements/${id}/registre/pdf`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={buttonVariants({ variant: "board", size: "board" })}
+              >
+                Exporter le registre
+              </a>
+              <DemandeAide variante="lien" libelle="Besoin d'aide ?" categorie="commission_securite" contexte="Registre de sécurité" etablissementId={id} />
+              {aide}
+            </div>
+          }
+        />
         {couverture && (
           <BandeauCouverture
             couverture={couverture}

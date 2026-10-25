@@ -1,6 +1,6 @@
 import Link from "next/link";
+import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import { DemandeAide } from "@/components/assistance/DemandeAide";
-import { AppTopbar } from "@/components/layout/AppTopbar";
 import { LegalBadge, PastilleFiche, WhyCard } from "@/components/ui-kit";
 import { buttonVariants } from "@/components/ui/button";
 import { FormSection1 } from "@/components/accessibilite/FormSection1";
@@ -89,6 +89,11 @@ function Section({
   );
 }
 
+/** Le même descriptif sur les deux branches (ERP ou non) : l'en-tête dit ce
+ *  qu'est le registre, la page dit ensuite si l'établissement le doit. */
+const DESCRIPTION =
+  "Le registre public d'accessibilité : ce que vous avez prévu pour accueillir une personne en situation de handicap. Tout établissement recevant du public le tient à disposition du public.";
+
 export default async function AccessibilitePage({
   params,
 }: {
@@ -104,13 +109,7 @@ export default async function AccessibilitePage({
     const registreAncien = await getRegistreAccessibilite(id);
     return (
       <>
-        <AppTopbar
-          title="Registre d'accessibilité"
-          crumbs={[
-            { href: `/etablissements/${id}`, label: etablissement.raisonDisplay },
-            { label: "Accessibilité" },
-          ]}
-        />
+        <EnTetePage item="accessibilite" titre="Registre d'accessibilité" description={DESCRIPTION} />
         <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] px-[var(--board-gutter)] pt-7 pb-16">
           <section className="carte-board px-7 py-8 sm:px-8">
             <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
@@ -180,14 +179,7 @@ export default async function AccessibilitePage({
 
   return (
     <>
-      <AppTopbar
-        title="Registre d'accessibilité"
-        subtitle="Document obligatoire pour tout ERP — à tenir à disposition du public."
-        crumbs={[
-          { href: `/etablissements/${id}`, label: etablissement.raisonDisplay },
-          { label: "Accessibilité" },
-        ]}
-      />
+      <EnTetePage item="accessibilite" titre="Registre d'accessibilité" description={DESCRIPTION} />
 
       <main className="flex flex-1 flex-col gap-7 bg-[color:var(--board-canvas)] px-[var(--board-gutter)] pt-7 pb-16">
         {/* Why */}

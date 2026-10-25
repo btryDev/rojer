@@ -7,8 +7,8 @@ import { CarteRepliable } from "@/components/ui-kit/CarteRepliable";
 import { instantDuRendu } from "@/lib/dates/instant-du-rendu";
 import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
 import { EmptyState } from "@/components/layout/EmptyState";
-import { BandeauParc } from "@/components/equipements/BandeauParc";
-import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
+import { BarreParc } from "@/components/equipements/BarreParc";
+import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import {
   CarteCategorie,
   urgenceCategorie,
@@ -264,16 +264,15 @@ export default async function EquipementsPage({
 
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
-      <BandeauParc
-        crumbs={[
-          { href: base, label: etab.raisonDisplay },
-          { label: LABEL_ITEM.equipements },
-        ]}
+      <EnTetePage
+        item="equipements"
+        description="Ce que vous avez, et où. Chaque appareil porte ses vérifications, ses rapports et ses papiers : ouvrez sa fiche pour les voir."
+      />
+      <BarreParc
         hrefCalendrier={`${base}/calendrier`}
         enRetard={compteurs.enRetard}
         proches={compteurs.proches}
         aPlanifier={compteurs.aPlanifier}
-        total={equipementsAffiches.length}
         hrefAjouter={hrefAjouter}
         suggestions={
           suggestionsRestantes.length > 0
@@ -292,7 +291,7 @@ export default async function EquipementsPage({
       />
 
       <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
-        {/* Sous le bandeau qui titre l'écran, comme sur « Préparer un
+        {/* Sous l'en-tête et la barre du parc, comme sur « Préparer un
             contrôle ». Le parc ne montre que des compteurs : la phrase les
             nomme, pas « les échéances ci-dessous ». */}
         <AvertissementFraicheur
