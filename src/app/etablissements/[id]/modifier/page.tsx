@@ -24,11 +24,9 @@ export default async function ModifierEtablissementPage({
 
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
-      {/* Le fil d'Ariane porte le nom de l'établissement et l'entrée du rail
-          (« Fiche établissement »), le titre porte le geste : il évite
-          d'écrire deux fois la même raison sociale. Un fil et non une flèche
-          de retour : c'est une page d'entrée, elle dit où elle est rangée
-          (ADR-014). */}
+      {/* ~~Le fil d'Ariane porte le nom de l'établissement et l'entrée du
+          rail, le titre porte le geste.~~ [2026-10-25 : plus de fil
+          d'Ariane ; le titre est l'entrée du rail, « Fiche établissement ».] */}
       <EnTetePage
         item="fiche"
         description="Ce que vous déclarez de votre établissement — régimes, effectif, classement — décide des obligations que Rojer vous présente. Mettez-le à jour dès qu'il change."

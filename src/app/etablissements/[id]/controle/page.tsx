@@ -314,13 +314,13 @@ export default async function ControlePage({
   // titre honnête, « indicateur interne ».
 
   return (
-    <>
+    <main className="flex flex-1 flex-col">
       <EnTetePage
         item="controle"
         description="Les pièces que Rojer tient pour votre établissement, réunies en un seul dossier ZIP. Vérifiez l'état de chaque pièce, puis téléchargez le dossier."
       />
 
-      <main className="flex flex-1 flex-col gap-7 bg-[color:var(--board-canvas)] px-[var(--board-gutter)] py-7 pb-16">
+      <div className="flex flex-1 flex-col gap-7 bg-[color:var(--board-canvas)] px-[var(--board-gutter)] py-7 pb-16">
         {/* HERO — statut de préparation + gros CTA */}
         <section className="carte-board relative overflow-hidden">
           <div className="grid gap-0 md:grid-cols-[1fr_auto]">
@@ -538,8 +538,8 @@ export default async function ControlePage({
             Consulter le guide →
           </Link>
         </footer>
-      </main>
-    </>
+      </div>
+    </main>
   );
 }
 

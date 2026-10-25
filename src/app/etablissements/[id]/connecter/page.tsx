@@ -73,13 +73,13 @@ export default async function ConnecterPage({
   -- ${executable} ${serveur}`;
 
   return (
-    <>
+    <main className="flex flex-1 flex-col">
       <EnTetePage
         item="connecter"
         description="Consultez ce dossier depuis un assistant, en lecture seule : il lit vos données, il ne peut rien y modifier."
       />
 
-      <main className="flex flex-1 flex-col gap-7 bg-[color:var(--board-canvas)] px-[var(--board-gutter)] pt-7 pb-20">
+      <div className="flex flex-1 flex-col gap-7 bg-[color:var(--board-canvas)] px-[var(--board-gutter)] pt-7 pb-20">
         {/* HERO */}
         <section className="carte-board px-7 py-8 sm:px-8">
           {/* Le filet d'impulsion navy du papier n'a pas d'équivalent : le
@@ -259,7 +259,7 @@ export default async function ConnecterPage({
             Consulter le guide →
           </Link>
         </footer>
-      </main>
-    </>
+      </div>
+    </main>
   );
 }

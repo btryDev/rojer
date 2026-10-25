@@ -88,6 +88,11 @@
      puis plafonne à 140 px pour laisser respirer les très grands
      écrans. */
   --board-gutter: clamp(32px, calc((100vw - 1560px) / 2 + 32px), 140px);
+  /* La place de la gélule de compte (`BarreCompte`, 48 px à 12 px du haut,
+     plus son air) : réservée en tête de la colonne de contenu par les deux
+     shells, rendue par ce qui a le droit de passer dessous — un fond ou une
+     image (`.sous-la-gelule`). Par défaut, rien ne s'y glisse. */
+  --reserve-gelule: 72px;
   /* La mesure de lecture, unique (2026-10-24, décision de la propriétaire).
      ~~62 / 66 / 68 caractères, recopiés à la main dans chaque écran~~ : la
      mesure d'un livre, qui coupait en trois lignes une phrase d'aide sur un
@@ -620,6 +625,13 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .g-stamp-ring { animation: none; }
+}
+
+/* Un bloc à fond qui remonte sous la gélule de compte : l'en-tête commun
+   (`EnTetePage`), le brief du tableau de bord. Tout le reste commence sous
+   la réserve (`--reserve-gelule`). */
+.sous-la-gelule {
+  margin-top: calc(-1 * var(--reserve-gelule));
 }
 
 /* Illustrations d'en-tête de page (`src/components/entete-page`) — une

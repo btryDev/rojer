@@ -64,7 +64,10 @@ export default async function EtablissementLayout({
         modules={modules}
       />
       {/* `relative` : la gélule de compte s'y positionne, en haut à droite. */}
-      <div className="relative flex min-w-0 flex-col lg:overflow-y-auto">
+      {/* `pt-[var(--reserve-gelule)]` : la place de la gélule, réservée par
+          défaut ; un en-tête à fond la reprend (`.sous-la-gelule`). Sans
+          elle, un formulaire ou une fiche passait sous la gélule. */}
+      <div className="relative flex min-w-0 flex-col pt-[var(--reserve-gelule)] lg:overflow-y-auto">
         {/* Gélule de compte : la sidebar porte la hiérarchie du produit, la
             gélule les utilitaires de session. Elle flotte au-dessus du
             contenu, sans bande à elle. Cf. `BarreCompte`. */}

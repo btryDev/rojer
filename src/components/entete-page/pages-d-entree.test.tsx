@@ -161,9 +161,9 @@ describe("les pages d'entrée s'ouvrent sur l'en-tête commun, sans retour écri
   // Les bandeaux auxquels une page d'entrée délègue son en-tête : les
   // composants qu'elle importe et qui portent le `<h1>` (~~`BandeauParc`~~
   // [2026-10-25 : `EnTetePage`] pour les équipements, dont le bouton rond
-  // « Retour à Mon établissement » avait échappé à la première garde). `AppTopbar` est le chrome commun : son « ← »
-  // est le retour de provenance des fiches (ADR-014), et la règle qui le vise
-  // ici est qu'aucune page d'entrée ne lui passe de `retour`.
+  // « Retour à Mon établissement » avait échappé à la première garde).
+  // ~~`AppTopbar` est le chrome commun : son « ← » est le retour de
+  // provenance des fiches.~~ [2026-10-25 : AppTopbar est supprimé.]
   const resoudre = (specifieur: string) =>
     ["", ".tsx", ".ts", "/index.tsx", "/index.ts"]
       .map((ext) => path.join(SRC, specifieur.slice("@/".length) + ext))
@@ -226,6 +226,32 @@ describe("les pages d'entrée s'ouvrent sur l'en-tête commun, sans retour écri
     );
     expect(importeEnTete && /<EnTetePage\b/.test(sansCommentaires(source))).toBe(true);
   });
+
+  // Le titre de la page dans le repère principal (relecture du 2026-10-25) :
+  // rendu hors de `<main>`, il échappait à qui saute au contenu principal, et
+  // la moitié des écrans le faisaient — l'un n'avait même pas de `<main>`.
+  it.each(pages)("%s : l'en-tête est dans <main>", (dossier) => {
+    const racine = analyser(sansCommentaires(lire(dossier)));
+    const dansMain: boolean[] = [];
+    const visiter = (n: ts.Node) => {
+      if ((ts.isJsxSelfClosingElement(n) || ts.isJsxOpeningElement(n)) && n.tagName.getText() === "EnTetePage") {
+        let p: ts.Node | undefined = n.parent;
+        let trouve = false;
+        while (p) {
+          if (ts.isJsxElement(p) && p.openingElement.tagName.getText() === "main") {
+            trouve = true;
+            break;
+          }
+          p = p.parent;
+        }
+        dansMain.push(trouve);
+      }
+      ts.forEachChild(n, visiter);
+    };
+    visiter(racine);
+    expect(dansMain.length).toBeGreaterThan(0);
+    expect(dansMain.every(Boolean)).toBe(true);
+  });
 });
 
 describe("la garde elle-même", () => {
@@ -287,7 +313,7 @@ describe("la garde elle-même", () => {
     expect(
       retoursEnDur(
         `export const P = () => <p>Texte</p>; // l'ancien « ← LE COMPTOIR DES HALLES »\n` +
-          `export const Q = () => <div>{/* « ← » */}<FilAriane crumbs={[]} /></div>;`,
+          `export const Q = () => <div>{/* « ← » */}<p>Calendrier</p></div>;`,
       ),
     ).toEqual([]);
   });

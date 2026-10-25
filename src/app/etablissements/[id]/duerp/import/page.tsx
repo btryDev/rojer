@@ -18,14 +18,14 @@ export default async function ImportDuerpPage({
   await requireEtablissement(id);
 
   return (
-    <>
+    <main className="flex flex-1 flex-col">
       <EnTetePage
         item="duerp"
         titre="Importer un DUERP"
         description="Si vous avez déjà un DUERP sous Excel, téléversez-le pour démarrer plus vite."
       />
 
-      <main className="flex flex-1 flex-col gap-[22px] bg-[color:var(--board-canvas)] px-[var(--board-gutter)] pb-16 pt-6">
+      <div className="flex flex-1 flex-col gap-[22px] bg-[color:var(--board-canvas)] px-[var(--board-gutter)] pb-16 pt-6">
         {/* Le chemin du retour : l'en-tête commun n'a plus de fil d'Ariane. */}
         <BarreDeListe
           action={
@@ -84,7 +84,7 @@ export default async function ImportDuerpPage({
             </li>
           </ul>
         </div>
-      </main>
-    </>
+      </div>
+    </main>
   );
 }

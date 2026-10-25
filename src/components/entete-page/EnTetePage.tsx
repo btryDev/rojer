@@ -64,7 +64,7 @@ export function EnTetePage({
     // contenu et l'illustration est coupée par le bloc suivant.
     <header
       className={
-        "grid flex-none bg-[color:var(--board-card)] " +
+        "sous-la-gelule grid flex-none bg-[color:var(--board-card)] " +
         (illustree ? "md:min-h-[320px] md:grid-cols-[minmax(0,1fr)_minmax(340px,42%)]" : "")
       }
     >

@@ -78,13 +78,18 @@ export function Crayon({
   style?: CSSProperties;
 }) {
   return (
-    <g transform={transform} className={className} style={style}>
-      <polygon points="79.9,148.4 69.5,139 141.8,58.7 152.2,68.1" />
-      <path d="M74.7,143.7 L147,63.4" fill="none" strokeWidth={1.4} />
-      <polygon points="60,160 79.9,148.4 69.5,139" />
-      <polygon points="60,160 66.4,156.3 63.1,153.3" fill="#0a0a0a" />
-      <polygon points="152.2,68.1 141.8,58.7 147.2,52.8 157.6,62.2" />
-      <polygon points="157.6,62.2 147.2,52.8 155.2,43.8 165.6,53.2" fill="#0a0a0a" />
+    // Deux groupes, et non un : une animation CSS qui anime `transform`
+    // écrase l'attribut SVG `transform` du même élément — le crayon animé
+    // perdait son placement (relecture du 2026-10-25).
+    <g transform={transform}>
+      <g className={className} style={style}>
+        <polygon points="79.9,148.4 69.5,139 141.8,58.7 152.2,68.1" />
+        <path d="M74.7,143.7 L147,63.4" fill="none" strokeWidth={1.4} />
+        <polygon points="60,160 79.9,148.4 69.5,139" />
+        <polygon points="60,160 66.4,156.3 63.1,153.3" fill="#0a0a0a" />
+        <polygon points="152.2,68.1 141.8,58.7 147.2,52.8 157.6,62.2" />
+        <polygon points="157.6,62.2 147.2,52.8 155.2,43.8 165.6,53.2" fill="#0a0a0a" />
+      </g>
     </g>
   );
 }

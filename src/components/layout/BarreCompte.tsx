@@ -153,6 +153,11 @@ export function BarreCompte({
     // c'est le conteneur de droite des deux shells, qui défile, si bien que
     // la gélule défile avec la page au lieu de la masquer en restant collée.
     //
+    // Sa place est réservée en tête de la colonne de contenu
+    // (`--reserve-gelule`, posée par les deux shells) : rien ne passe dessous,
+    // sauf un bloc à fond qui la reprend (`.sous-la-gelule` — l'en-tête
+    // commun, le brief du tableau de bord).
+    //
     // `z-50` : au-dessus des barres collantes (celle de l'année du calendrier,
     // `z-20` ; ~~`AppTopbar`~~, supprimée le 2026-10-25) et des
     // widgets du board — voir `panneau` plus haut.

@@ -108,16 +108,17 @@ export default async function AccessibilitePage({
     // Le dire ici, où le bouton de retrait n'est plus proposé.
     const registreAncien = await getRegistreAccessibilite(id);
     return (
-      <>
+      <main className="flex flex-1 flex-col">
         <EnTetePage item="accessibilite" description={DESCRIPTION} />
-        <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] px-[var(--board-gutter)] pt-7 pb-16">
+        <div className="flex flex-1 flex-col bg-[color:var(--board-canvas)] px-[var(--board-gutter)] pt-7 pb-16">
           <section className="carte-board px-7 py-8 sm:px-8">
             <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
               Non applicable
             </p>
-            <h1 className="board-titre m-0 mt-2 text-[clamp(22px,2.2vw,27px)]">
+            {/* Un `h2` : le titre de la page est celui de l'en-tête. */}
+            <h2 className="board-titre m-0 mt-2 text-[clamp(22px,2.2vw,27px)]">
               Cet établissement n&apos;est pas un ERP
-            </h1>
+            </h2>
             <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
               Le registre d&apos;accessibilité est une obligation qui ne concerne
               que les <strong>Établissements Recevant du Public</strong>{" "}
@@ -145,8 +146,8 @@ export default async function AccessibilitePage({
               </Link>
             </div>
           </section>
-        </main>
-      </>
+        </div>
+      </main>
     );
   }
 
@@ -178,10 +179,10 @@ export default async function AccessibilitePage({
   );
 
   return (
-    <>
+    <main className="flex flex-1 flex-col">
       <EnTetePage item="accessibilite" description={DESCRIPTION} />
 
-      <main className="flex flex-1 flex-col gap-7 bg-[color:var(--board-canvas)] px-[var(--board-gutter)] pt-7 pb-16">
+      <div className="flex flex-1 flex-col gap-7 bg-[color:var(--board-canvas)] px-[var(--board-gutter)] pt-7 pb-16">
         {/* Why */}
         <WhyCard
           charte="board"
@@ -371,7 +372,7 @@ export default async function AccessibilitePage({
             />
           </Section>
         </div>
-      </main>
-    </>
+      </div>
+    </main>
   );
 }

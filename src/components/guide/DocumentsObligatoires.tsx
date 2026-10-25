@@ -75,9 +75,10 @@ function BlocDocuments({
 }) {
   return (
     <div>
-      <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
-        {surTitre}
-      </p>
+      {/* Un `h2` : depuis que la page a l'en-tête commun (2026-10-25), ce
+          sont les titres de ses deux parties — un sur-titre en `p` laissait
+          le plan sauter du `h1` aux `h3` des documents. */}
+      <h2 className="board-titre m-0 text-[20px]">{surTitre}</h2>
       <p className="mt-2 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
         {chapeau}
       </p>

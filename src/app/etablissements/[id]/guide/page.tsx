@@ -72,7 +72,7 @@ export default async function GuidePage({
   if (etab.estHabitation) regimes.push("Habitation");
 
   return (
-    <>
+    <main className="flex flex-1 flex-col">
       {/* Le guide dit ce qu'il est, et ce qu'il n'est pas : la seconde phrase
           est la limite de tout l'outil (CLAUDE.md, règle 8). */}
       <EnTetePage
@@ -87,37 +87,34 @@ export default async function GuidePage({
             illustration de documents) est retiré le 2026-10-25 : il doublait
             le titre de l'en-tête, et c'était le second `h1` de l'écran. */}
         <BarreDeListe
-          aide={<PrintButton />}
           action={
             <div className="flex flex-wrap items-center gap-2.5">
-                {/* La porte de la page des éléments exclus. Elle vit ici en
-                    attendant que le lot A8 range les écrans par axe : le guide
-                    est aujourd'hui le seul endroit où le produit parle de ce
-                    qu'il couvre, donc le seul d'où l'on peut aller lire ce
-                    qu'il ne couvre pas. */}
-                {/* Les documents obligatoires ont leur page depuis que l'axe
-                    Documentation existe (ADR-030). Le guide y renvoie au lieu
-                    d'en garder une copie : deux montages du même composant, ce
-                    n'est pas deux vérités, mais c'est deux endroits où l'on croit
-                    l'avoir lue. */}
-                <Link
-                  href={`/etablissements/${id}/documents`}
-                  className={buttonVariants({ variant: "outline", size: "sm" })}
-                >
-                  Documents obligatoires
-                </Link>
-                <Link
-                  href={`/etablissements/${id}/perimetre`}
-                  className={buttonVariants({ variant: "outline", size: "sm" })}
-                >
-                  Ce que Rojer ne couvre pas
-                </Link>
-                <Link
-                  href={`/etablissements/${id}/controle`}
-                  className={buttonVariants({ size: "sm" })}
-                >
-                  Préparer un contrôle →
-                </Link>
+              <PrintButton />
+              {/* Les documents obligatoires ont leur page depuis que l'axe
+                  Documentation existe (ADR-030). Le guide y renvoie au lieu
+                  d'en garder une copie : deux montages du même composant, ce
+                  n'est pas deux vérités, mais c'est deux endroits où l'on croit
+                  l'avoir lue. */}
+              <Link
+                href={`/etablissements/${id}/documents`}
+                className={buttonVariants({ variant: "outline", size: "sm" })}
+              >
+                Documents obligatoires
+              </Link>
+              {/* La porte de la page des éléments exclus : le guide parle de
+                  ce que l'outil couvre, il mène à ce qu'il ne couvre pas. */}
+              <Link
+                href={`/etablissements/${id}/perimetre`}
+                className={buttonVariants({ variant: "outline", size: "sm" })}
+              >
+                Ce que Rojer ne couvre pas
+              </Link>
+              <Link
+                href={`/etablissements/${id}/controle`}
+                className={buttonVariants({ size: "sm" })}
+              >
+                Préparer un contrôle →
+              </Link>
             </div>
           }
         />
@@ -165,6 +162,6 @@ export default async function GuidePage({
           {REFERENTIEL_VERSION}
         </footer>
       </div>
-    </>
+    </main>
   );
 }

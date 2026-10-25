@@ -78,6 +78,7 @@ import {
   lecturesCalendrier,
   type EtatEcheance,
   type LectureCalendrier,
+  type RegistreLigne,
 } from "@/lib/calendrier/etats";
 import { nomDeZone } from "@/lib/batiments/nom-zone";
 import {
@@ -147,6 +148,21 @@ const FMT_AUJOURDHUI = new Intl.DateTimeFormat("fr-FR", {
   month: "long",
   year: "numeric",
 });
+
+/**
+ * L'état d'une ligne en mots, sur son champ : « Sous 30 jours », « Au-delà de
+ * 30 jours »… Une seule écriture pour les deux familles de lignes.
+ */
+function PastilleEtat({ etat }: { etat: RegistreLigne }) {
+  return (
+    <span
+      className="inline-flex items-center whitespace-nowrap rounded-full px-[13px] py-[6px] text-[12px] font-semibold"
+      style={{ background: CHAMP_ETAT[etat], color: ENCRE_ETAT[etat] }}
+    >
+      {libelleEtatCapitale(etat)}
+    </span>
+  );
+}
 
 /**
  * ~~La tuile-date porte la couleur de l'état parce que c'est l'objet que
@@ -976,52 +992,41 @@ export default async function CalendrierPage({
     etat.aVenir === 0 &&
     etat.realisees12m === 0;
 
-  // L'en-tête de page (`EnTetePage`, 2026-10-25) : le fil, le titre, une
-  // phrase. Il remplace la bande de titre, qui avait été un bandeau ciel,
+  // L'en-tête de page (`EnTetePage`, 2026-10-25) : ~~le fil,~~ le titre,
+  // une phrase [2026-10-25 : plus de fil d'Ariane]. Il remplace la bande de titre, qui avait été un bandeau ciel,
   // une carte du bento, un aplat d'encre puis un blanc plat.
   //
   // La phrase change avec le filtre de famille : elle dit ce que la page
   // montre, filtre compris. Sans filtre, ce qu'on voit puis ce qu'on y fait.
   // Ce qu'elle disait en plus — les familles réunies, l'écart avec les
   // compteurs du parc — est passé dans l'aide.
-  const enTete = (
-    <EnTetePage
-      item="calendrier"
-      description={
-        filtreFamille === "travaux" ? (
-          <>
-            {DESCRIPTION_FAMILLE.travaux}{" "}
-            {/* Deux liens, deux lieux (contrôle visuel du 2026-10-25) : la
-                phrase entière menait au plan d'actions, points compris. */}
-            Les mesures du DUERP, datées ou non, sont dans le{" "}
-            <Link
-              href={`/etablissements/${id}/actions`}
-              className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
-            >
-              plan d&apos;actions
-            </Link>{" "}
-            ; les points à corriger, sur la fiche de leur{" "}
-            <Link
-              href={`/etablissements/${id}/equipements`}
-              className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
-            >
-              équipement
-            </Link>{" "}
-            ou de leur contrôle.
-          </>
-        ) : filtreFamille ? (
-          DESCRIPTION_FAMILLE[filtreFamille]
-        ) : (
-          "Toutes vos échéances datées, au même endroit. Ouvrez-en une pour la planifier ou déposer son rapport."
-        )
-      }
-    >
-      {/* La seule commande de l'en-tête : elle change la vue de la page.
-          Deux onglets sur du vide seraient un décor — la bascule
-          n'apparaît que si le calendrier a des lignes à lire. */}
-      {lignes.length > 0 ? <SelecteurLecture /> : null}
-    </EnTetePage>
-  );
+  const descriptionEnTete =
+    filtreFamille === "travaux" ? (
+      <>
+        {DESCRIPTION_FAMILLE.travaux}{" "}
+        {/* Deux liens, deux lieux (contrôle visuel du 2026-10-25) : la
+            phrase entière menait au plan d'actions, points compris. */}
+        Les mesures du DUERP, datées ou non, sont dans le{" "}
+        <Link
+          href={`/etablissements/${id}/actions`}
+          className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
+        >
+          plan d&apos;actions
+        </Link>{" "}
+        ; les points à corriger, sur la fiche de leur{" "}
+        <Link
+          href={`/etablissements/${id}/equipements`}
+          className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
+        >
+          équipement
+        </Link>{" "}
+        ou de leur contrôle.
+      </>
+    ) : filtreFamille ? (
+      DESCRIPTION_FAMILLE[filtreFamille]
+    ) : (
+      "Toutes vos échéances datées, au même endroit. Ouvrez-en une pour la planifier ou déposer son rapport."
+    );
 
   // Le zéro de l'instrument. « En retard », « sous 30 jours » et « à venir »
   // se mesurent tous depuis ce jour-là (ADR-011) : la page les colorait sans
@@ -1181,12 +1186,17 @@ export default async function CalendrierPage({
   );
 
   return (
-    <>
+    <main className="flex flex-1 flex-col">
       {/* L'identité, puis l'instrument — et l'instrument porte ses propres
           commandes dans une barre qui suit le défilement. Deux strates au
           lieu de quatre : la page ne fait plus attendre trois bandes
           claires avant sa première donnée. */}
-      {enTete}
+      <EnTetePage item="calendrier" description={descriptionEnTete}>
+        {/* La seule commande de l'en-tête : elle change la vue de la page.
+            Deux onglets sur du vide seraient un décor — la bascule
+            n'apparaît que si le calendrier a des lignes à lire. */}
+        {lignes.length > 0 ? <SelecteurLecture /> : null}
+      </EnTetePage>
 
       <div
         className={
@@ -1428,12 +1438,23 @@ export default async function CalendrierPage({
                                 // Sans le cas « realisation », une tuile verte
                                 // « fait le 1er juin » affichait « En retard »
                                 // dès que l'échéance suivante était passée.
-                                <BadgeStatut
-                                  // D26 : « à confirmer » vient du registre de
-                                  // la ligne (`registrePrudent`), comme
-                                  // l'en-tête du mois qui la compte.
-                                  statut={statutDeLaLecture(ligne, v)}
-                                />
+                                // [2026-10-25] À venir, la vérification dit
+                                // son horizon (« Sous 30 jours », « Au-delà »)
+                                // et non « Planifiée » : la tuile-date ne le
+                                // colore plus, la pastille est le seul endroit
+                                // où l'urgence se lit.
+                                ligne.lecture !== "realisation" &&
+                                (ligne.registre === "proche" ||
+                                  ligne.registre === "lointain") ? (
+                                  <PastilleEtat etat={ligne.registre} />
+                                ) : (
+                                  <BadgeStatut
+                                    // D26 : « à confirmer » vient du registre de
+                                    // la ligne (`registrePrudent`), comme
+                                    // l'en-tête du mois qui la compte.
+                                    statut={statutDeLaLecture(ligne, v)}
+                                  />
+                                )
                               }
                             />
                           </li>
@@ -1466,15 +1487,7 @@ export default async function CalendrierPage({
                                   En retard
                                 </span>
                               ) : (
-                                <span
-                                  className="inline-flex items-center whitespace-nowrap rounded-full px-[13px] py-[6px] text-[12px] font-semibold"
-                                  style={{
-                                    background: CHAMP_ETAT[ligne.etat],
-                                    color: ENCRE_ETAT[ligne.etat],
-                                  }}
-                                >
-                                  {libelleEtatCapitale(ligne.etat)}
-                                </span>
+                                <PastilleEtat etat={ligne.etat} />
                               )
                             }
                           />
@@ -1488,6 +1501,6 @@ export default async function CalendrierPage({
           </div>
         )}
       </div>
-    </>
+    </main>
   );
 }

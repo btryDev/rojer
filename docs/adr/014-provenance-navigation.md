@@ -1,5 +1,16 @@
 # ADR-014 — Le retour dit d'où l'on vient, le fil d'Ariane dit où la fiche vit
 
+> **Amendement du 2026-10-25 (décision de la propriétaire, lot
+> `lot/entete-ilot`).** Les pages d'entrée du rail n'ont plus de fil
+> d'Ariane : elles s'ouvrent sur l'en-tête commun (`EnTetePage`), et ce sont
+> la marque du rail et la gélule de compte qui mènent à l'établissement. Le
+> composant `FilAriane` et `AppTopbar` sont supprimés. **La moitié « retour »
+> de cette décision est intacte** : une fiche dit d'où l'on vient par
+> `FilRetour` et la provenance (`src/lib/navigation/provenance.ts`), jamais
+> par un lien écrit en dur. Les mentions d'`AppTopbar` et du fil d'Ariane
+> ci-dessous décrivent l'état d'avant cet amendement. La garde vit désormais
+> dans `src/components/entete-page/pages-d-entree.test.tsx`.
+
 - Statut : acceptée
 - Date : 2026-08-20
 - Portée : `src/lib/navigation/`, `src/components/ui-kit/FilRetour.tsx`,
