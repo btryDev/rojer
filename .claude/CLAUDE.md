@@ -775,11 +775,24 @@ usage quotidien (ADR-030).
 - **Documentation** (→ Documents obligatoires) : Documents obligatoires · Préparer un contrôle · Comprendre · **Ce que Rojer ne couvre pas** [2026-10-25] — ce qui parle du dossier plutôt que du lieu. « Préparer un contrôle » y est rangé **une seule fois** : sa sortie est un jeu de documents, et une entrée présente deux fois laisse chercher laquelle est la bonne
 - **Paramètres** (→ Fiche établissement) : Fiche établissement · Connecter un assistant — le réglage du dossier, d'où la césure du rail. Le panneau est né d'une régression : la fiche ayant pris la place d'entrée, « Connecter » n'était plus listé nulle part et n'était atteignable qu'en tapant son URL
 
-Le **compte** a quitté le pied de rail pour la barre haute (`BarreCompte`), qui
-porte aussi le **sélecteur d'établissement** depuis l'ADR-028. La sidebar porte
-la hiérarchie du produit, la barre haute les utilitaires de session — et
+Le **compte** a quitté le pied de rail pour ~~la barre haute~~ [2026-10-25 : une
+**gélule** flottante en haut à droite — la bande a été retirée] (`BarreCompte`),
+qui porte aussi le **sélecteur d'établissement** depuis l'ADR-028. La sidebar
+porte la hiérarchie du produit, la gélule les utilitaires de session — et
 commuter d'établissement répond à « où je travaille », qui est un repère de
-session au même titre que « qui je suis ».
+session au même titre que « qui je suis ». Sa place est réservée en tête de
+page (`--reserve-gelule`) : rien n'y passe dessous qu'un fond ou une image.
+
+**L'en-tête de page** (2026-10-25, décisions de la propriétaire) : toutes les
+pages d'entrée s'ouvrent sur `EnTetePage` — titre, une phrase (ce qu'on voit,
+ce qu'on y fait), et la **seule bascule de vue** ; à droite l'illustration de
+la page sur la **teinte de sa section** (`entete-page/teintes.ts` : À faire
+pêche, Santé-sécurité eau, Équipement et bâtiment glacier, Documentation et
+Paramètres un même gris). **Pas de fil d'Ariane** (ADR-014 amendée) ; année,
+filtres, aide, export, ajout descendent sur le bloc qu'ils règlent
+(`BarreDeListe`), sous une autre forme que la bascule. La teinte ne vit que
+dans l'en-tête : la couleur du corps de page reste aux états. Détail :
+`docs/charte-board.md`, § « En-tête de page ».
 
 Le **guide « Comprendre »** a **retrouvé une entrée**, sous « Documentation ».
 Il l'avait perdue en août faute d'endroit juste — une lecture n'est pas une des
@@ -805,7 +818,7 @@ handicapées), que l'ADR-004 avait perdu en écrivant la liste de mémoire. Deux
 cinquante travailleurs, et un ERP situé en IGH (ADR-031).
 
 Les établissements **suivants** ne passent pas par là : ils s'ouvrent depuis le
-sélecteur de la barre haute (`/etablissements/nouveau`), et c'est cette
+sélecteur de la ~~barre haute~~ gélule de compte (`/etablissements/nouveau`), et c'est cette
 porte-là qui porte les mêmes règles de périmètre — une règle posée sur un
 parcours se contourne en changeant de parcours.
 
