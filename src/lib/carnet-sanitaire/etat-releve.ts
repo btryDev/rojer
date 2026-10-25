@@ -13,6 +13,7 @@
  * l'afficher comme un état présent, c'est rassurer sur un fait que personne
  * n'a constaté. Le même défaut que `batiments/etat-charge.ts` (une zone vide
  * annoncée « À jour »), et le même remède.
+ * [2026-10-25 : fichier retiré avec la plaque des zones du hero ; le patron reste.]
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * QUATRE ÉTATS FERMÉS, ÉVALUÉS DANS CET ORDRE

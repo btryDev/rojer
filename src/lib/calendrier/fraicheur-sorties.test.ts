@@ -360,7 +360,8 @@ describe("toute sortie qui lit le calendrier en dit l'âge", () => {
       "compterEtatCalendrier",
       "listerEvenementsCalendrier",
       "compterVerifsParEquipement",
-      "listerBatimentsAvecCharge",
+      // ~~"listerBatimentsAvecCharge"~~ [2026-10-25 : retirée avec la plaque
+      // des zones du hero — le tableau de bord ne lit plus la charge par zone].
       // `getModulesMatrice`, citée par la revue, n'y est pas : elle compte des
       // permis de feu, des plans de prévention et le registre d'accessibilité,
       // jamais `Verification` (relu le 2026-10-13, `dashboard/queries.ts`).
@@ -448,7 +449,8 @@ describe("toute sortie qui lit le calendrier en dit l'âge", () => {
  * [2026-10-13, revue.] La première rédaction comparait des POSITIONS dans le
  * texte : la réparation devait précéder le premier appel d'une liste de
  * lecteurs. Deux mutants y passaient au vert — la réparation déplacée après
- * `listerBatimentsAvecCharge` (qui lit `Verification` sans être sur la liste),
+ * `listerBatimentsAvecCharge` (qui lit `Verification` sans être sur la liste ;
+ * retirée le 2026-10-25),
  * et la réparation SANS `await` en tête d'un `Promise.all`, où elle tourne
  * en même temps que les lectures. La règle est maintenant syntaxique : la
  * réparation est une instruction `await assurerCalendrierAJour(…);`

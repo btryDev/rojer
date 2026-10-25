@@ -75,7 +75,8 @@ import { SCEAU_CALENDRIER } from "./version-moteur";
 /**
  * Ce qu'on sait de l'âge du calendrier d'un dossier.
  *
- * Union fermée, sur le patron de `EtatCharge` (`src/lib/batiments/etat-charge.ts`) :
+ * Union fermée, sur le patron de `EtatCharge` (`src/lib/batiments/etat-charge.ts`,
+ * retiré le 2026-10-25 avec la plaque des zones du hero) :
  * un `switch` exhaustif casse à la compilation le jour où un cas s'ajoute, là
  * où un booléen « à jour ? » aurait forcé à ranger « jamais généré » avec l'un
  * des deux autres — c'est exactement l'amalgame qui a produit le défaut.

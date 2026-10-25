@@ -4,7 +4,7 @@
 // L'ordre et le choix de variant sont pilotés par l'utilisateur via
 // localStorage (voir useLayoutPerso).
 
-import type { BatimentCharge } from "@/lib/batiments/queries";
+import type { BatimentListe } from "@/lib/batiments/queries";
 import type { IllustrationBatiment } from "@/lib/etablissements/illustration";
 import type { ComponentType } from "react";
 import type { SidebarItemId } from "@/components/layout/sidebar-nav";
@@ -183,9 +183,9 @@ type DuerpLite = {
 
 export type DashboardBundle = {
   etablissementId: string;
-  /** Les bâtiments de l'établissement (ADR-019) — un seul le plus souvent.
-   *  Le hero en affiche une carte chacun, avec son parc et sa charge. */
-  batiments: BatimentCharge[];
+  /** Les zones de l'établissement (ADR-019, ADR-029) et leur parc, nommées
+   *  dans la fiche du hero. */
+  batiments: BatimentListe[];
   /** Le bâtiment filtré, ou `null` = tout l'établissement. Les widgets
    *  d'échéances et le parc reçoivent une donnée déjà réduite ; ce champ
    *  leur permet de le dire. */

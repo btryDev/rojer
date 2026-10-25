@@ -14,7 +14,7 @@ import type { DashboardBundle } from "@/components/dashboard/widgets/types";
 import { getEtablissement } from "@/lib/etablissements/queries";
 import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
 import { appareilsMuets } from "@/lib/equipements/reponses-exigees";
-import { listerBatimentsAvecCharge } from "@/lib/batiments/queries";
+import { listerBatimentsDeLEtablissement } from "@/lib/batiments/queries";
 import { estMultiBatiments, resoudreFiltreBatiment } from "@/lib/batiments/filtre";
 import { SelecteurBatiment } from "@/components/batiments/SelecteurBatiment";
 import {
@@ -61,7 +61,8 @@ export default async function EtablissementPage({
   // génération à la création), un calendrier périmé par un échec ou par un
   // changement de référentiel s'y affichaient faux tant que personne n'ouvrait
   // la page Calendrier. Même réparation qu'elle, AVANT la première lecture —
-  // la charge par bâtiment, juste en dessous, lit déjà les lignes.
+  // ~~la charge par bâtiment, juste en dessous, lit déjà les lignes~~
+  // [2026-10-25 : la charge par zone est retirée avec la plaque du hero].
   // [2026-10-13] Avant TOUT autre `await`, y compris `getEtablissement` : la
   // garde de `fraicheur-sorties.test.ts` l'exige, parce qu'elle ne sait pas
   // dire quelle lecture touche aux lignes. Sans risque de tenancy : la
@@ -75,8 +76,7 @@ export default async function EtablissementPage({
   // Date de référence unique, figée côté serveur : tous les blocs qui
   // calculent un « dans N jours » partent de la même valeur, ce qui évite les
   // écarts d'hydratation et rend les rendus reproductibles (ADR-011). Elle est
-  // prise ici, avant la première lecture qui en dépend — la charge par
-  // bâtiment affichée dans le hero se calcule à cette seconde-là.
+  // prise ici, avant la première lecture qui en dépend.
   // [2026-10-14, audit Next.js H2] L'instant DU RENDU, que la barre latérale
   // lit aussi : les lectures indépendantes des lignes (registre des autres
   // échéances, compteurs d'actions) ne partent qu'une fois pour les deux.
@@ -88,7 +88,11 @@ export default async function EtablissementPage({
   // documents) n'est jamais filtré : un score « du bâtiment B » n'aurait pas
   // de sens réglementaire, les obligations sont celles de l'établissement.
   // C'est ce que dit la légende du sélecteur, plus bas.
-  const batiments = await listerBatimentsAvecCharge(id, aujourdhui);
+  // Les zones et leur parc, sans leurs échéances : ni le filtre ni la fiche du
+  // hero ne lisent de charge [2026-10-25 : `listerBatimentsAvecCharge`, qui
+  // lisait toutes les lignes de l'établissement pour une pastille par zone,
+  // est retirée avec cette pastille].
+  const batiments = await listerBatimentsDeLEtablissement(id);
   const multiBatiments = estMultiBatiments(batiments);
   // La résolution passe par `resoudreFiltreBatiment` — les mêmes deux règles
   // que le parc et le calendrier, écrites une fois et testées là-bas.

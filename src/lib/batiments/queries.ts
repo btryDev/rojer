@@ -1,18 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
-import { repartirVerifications } from "@/lib/pdf/etat-verifications";
-import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
-import {
-  AUCUNE_PRUDENCE,
-  retenueParPrudence,
-  type RetenueParPrudence,
-} from "@/lib/calendrier/prudence";
-import {
-  porteursComptesPar,
-  type LigneSondee,
-} from "@/lib/perimetre/porteurs-comptes";
-import type { PorteurObligation } from "@/lib/referentiels/conformite";
 
 /**
  * Lectures des bâtiments d'un établissement (ADR-019).
@@ -57,8 +45,11 @@ export async function listerBatimentsDeLEtablissement(
  * d'invariant, pas un cas à rattraper en silence.
  *
  * « Périmètre déjà vérifié » décrit l'usage, pas une dispense : le prédicat
- * est porté ici aussi, pour la raison écrite plus bas dans
- * `listerBatimentsAvecCharge`. Un établissement d'un autre compte lève donc
+ * est porté ici aussi — sans RLS (ADR-005, Prisma en rôle postgres),
+ * l'isolation est une convention applicative, et une lecture qui ne la porte
+ * pas devient une fuite le jour où un appelant nouveau ne vérifie pas
+ * [2026-10-25 : la raison était écrite dans `listerBatimentsAvecCharge`,
+ * retirée avec la plaque des zones du hero]. Un établissement d'un autre compte lève donc
  * l'erreur d'invariant plutôt que de rendre son bâtiment — c'est le bon
  * refus : bruyant, et sans rien divulguer de l'autre dossier.
  */
@@ -114,178 +105,3 @@ export async function resoudreBatimentOptionnel(
 // `estMultiBatiments` et la résolution du filtre d'URL vivent dans
 // `./filtre` : ce sont des règles pures, elles n'ont rien à faire dans un
 // module qui ouvre la base.
-
-/**
- * Les bâtiments avec leur charge de travail — ce que le hero du tableau de
- * bord affiche sur chaque carte-bâtiment.
- *
- * Requête distincte de `listerBatimentsDeLEtablissement` à dessein : celle-ci
- * lit toutes les occurrences de vérification de l'établissement, ce que les
- * autres appelants (sélecteur, formulaires) n'ont aucune raison de payer.
- *
- * Les compteurs passent par `repartirVerifications`, donc par les prédicats
- * canoniques de `@/lib/dates/retard` (ADR-011). Recompter « en retard » à la
- * main ici aurait fabriqué une septième définition du retard — exactement ce
- * que ce module a été écrit pour empêcher : le hero et le calendrier
- * annonceraient deux chiffres différents sur la même donnée.
- *
- * L'horloge est injectée : le rendu reste déterministe et testable.
- */
-export type BatimentCharge = BatimentListe & {
-  /** Occurrences dont l'échéance est passée sans réalisation. */
-  nbEnRetard: number;
-};
-
-export async function listerBatimentsAvecCharge(
-  etablissementId: string,
-  now: Date,
-): Promise<BatimentCharge[]> {
-  const [user, batiments, marques] = await Promise.all([
-    requireUser(),
-    listerBatimentsDeLEtablissement(etablissementId),
-    // D1 (a) : la pastille d'une zone ne compte pas en retard une ligne que
-    // seul le silence de la fiche retient — même compte que le calendrier.
-    marquesAConfirmerDuRendu(etablissementId),
-  ]);
-
-  const verifs = await prisma.verification.findMany({
-    where: {
-      etablissementId,
-      // Le prédicat d'appartenance est porté même si `listerBatimentsDeLEtablissement`
-      // vient de le vérifier : sans RLS (ADR-005, Prisma en rôle postgres),
-      // l'isolation est une convention applicative, et une lecture qui ne la
-      // porte pas devient une fuite le jour où quelqu'un rend `verifs`.
-      etablissement: { entreprise: { userId: user.id } },
-    },
-    select: {
-      statut: true,
-      datePrevue: true,
-      // Le rythme : sans lui, un statut réalisé d'avant l'ADR-034 sur une
-      // obligation périodique sortirait la ligne de la charge de sa zone
-      // (`estVerificationRealisee`). Son absence du `select` ne compile plus.
-      periodicite: true,
-      // L'archivage (ADR-034) : une ligne dont l'obligation ne s'applique plus
-      // ne pèse pas sur la charge d'un bâtiment. Il se lisait dans le libellé
-      // par `startsWith` ; c'est un champ depuis le N3, et son absence du
-      // `select` ne compile plus.
-      archiveLe: true,
-      graceJusquAu: true,
-      libelleObligation: true,
-      obligationId: true,
-      // La prudence ne vaut pas pour une ligne rythmée par une prescription.
-      prescriptionId: true,
-      equipement: { select: { batimentId: true, actif: true } },
-    },
-  });
-
-  return grouperChargeParBatiment(
-    batiments,
-    verifs,
-    now,
-    retenueParPrudence(marques.parObligation),
-  );
-}
-
-/**
- * Ce que la charge par zone retient, et ce qu'elle jette — **en TypeScript, et
- * en un seul endroit**.
- *
- * La restriction vivait auparavant dans le `where` de la lecture ci-dessus, sous
- * la forme `equipement: { actif: true }`, c'est-à-dire une jointure interne. Elle
- * y était juste et elle y reste juste — une échéance portée par l'établissement
- * (ADR-022) n'est dans aucune zone : la compter dans chacune gonflerait autant de
- * pastilles qu'il y a de volumes, la compter dans une seule serait arbitraire.
- *
- * Ce qui a changé, c'est **où** elle est écrite, et pour une raison précise :
- * une exclusion posée en SQL n'est pas sondable. La plaque des zones affirme au
- * dirigeant ce qu'elle compte, et cette affirmation doit pouvoir se rapprocher
- * mécaniquement de ce qui se passe (`perimetre/porteurs-comptes.ts`) — ce qui
- * suppose une fonction qu'on puisse appeler avec une ligne de chaque porteur. Le
- * `where` gardait deux gardes qui disaient la même chose sans qu'aucun test ne
- * puisse le vérifier ; il n'en reste qu'une, et c'est celle-ci.
- *
- * Le coût est de lire quelques lignes de plus — celles d'établissement et de
- * salarié, jetées ici plutôt qu'en base. Sur un dossier, c'est quelques dizaines
- * de lignes.
- */
-export function grouperChargeParBatiment<
-  B extends { id: string },
-  V extends {
-    statut: string;
-    datePrevue: Date;
-    periodicite: string;
-    archiveLe: Date | null;
-    /** Délai de grâce (ADR-040) — lu par `delaiDeGrace`. */
-    graceJusquAu: Date | null;
-    libelleObligation: string;
-    obligationId: string;
-    prescriptionId: string | null;
-    equipement: { batimentId: string; actif: boolean } | null;
-  },
->(
-  batiments: B[],
-  verifs: readonly V[],
-  now: Date,
-  prudence: RetenueParPrudence,
-): (B & { nbEnRetard: number })[] {
-  const parBatiment = new Map<string, V[]>();
-  for (const v of verifs) {
-    // Sans équipement, pas de zone : c'est ici, et nulle part ailleurs, que
-    // les échéances de l'établissement et des salariés sortent du compte.
-    // Un appareil retiré (ADR-012) sort par la même porte.
-    if (!v.equipement || !v.equipement.actif) continue;
-    const cle = v.equipement.batimentId;
-    const liste = parBatiment.get(cle);
-    if (liste) liste.push(v);
-    else parBatiment.set(cle, [v]);
-  }
-
-  return batiments.map((b) => {
-    // `derniereRealisation: null` est un choix : seul `enRetard` est lu
-    // ci-dessous, et il ne dépend pas de ce qui a été fait (ADR-034). Lire les
-    // rapports coûterait une requête pour un compte qu'on jette.
-    const etat = repartirVerifications(
-      (parBatiment.get(b.id) ?? []).map((v) => ({
-        ...v,
-        derniereRealisation: null,
-      })),
-      now,
-      prudence,
-    );
-    // Seul le retard est rendu : la pastille d'un volume ne dit qu'une
-    // chose. `nbSous30j` était calculé, typé et sérialisé jusqu'au client
-    // sans qu'aucun écran ne le lise — un compteur en sommeil finit par
-    // diverger de celui qui compte vraiment.
-    return { ...b, nbEnRetard: etat.enRetard.length };
-  });
-}
-
-/**
- * Ce que la plaque des zones compte vraiment, **mesuré** en faisant tourner son
- * agrégation sur une ligne par porteur.
- *
- * La sonde d'équipement est rattachée à une zone fictive et déclarée active ;
- * les deux autres n'ont pas d'équipement, donc pas de zone. Ce que
- * `grouperChargeParBatiment` en fait décide de la phrase affichée sous la
- * plaque — et le jour où elle en fera autre chose, la phrase suivra.
- */
-export function porteursDeLaPlaqueZones(
-  now: Date = new Date(),
-): Set<PorteurObligation> {
-  const ZONE = "sonde-zone";
-  return porteursComptesPar(
-    (lignes: LigneSondee[]) =>
-      grouperChargeParBatiment(
-        [{ id: ZONE }],
-        lignes.map((l) => ({
-          ...l,
-          equipement: l.equipementId
-            ? { batimentId: ZONE, actif: true }
-            : null,
-        })),
-        now,
-        AUCUNE_PRUDENCE,
-      ).reduce((n, b) => n + b.nbEnRetard, 0),
-    now,
-  );
-}

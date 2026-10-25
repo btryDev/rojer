@@ -879,7 +879,8 @@ constat qui ne rejoint pas cette liste se perd** — c'est la leçon du § 7.
   dernière valeur mesurée, il se lit comme un état courant. Même famille que
   « À jour sur une zone à zéro équipement », corrigé le 2026-09-04 — et cette
   famille-là a déjà sa forme de correction : trois états fermés dont un
-  `sansObjet` évalué avant tout comptage (`lib/batiments/etat-charge.ts`).
+  `sansObjet` évalué avant tout comptage (`lib/batiments/etat-charge.ts`
+  [2026-10-25 : retiré avec la plaque des zones du hero, lot/board-hero]).
   [2026-10-13, contrôle visuel (session de l'autre Mac) : `next build` + `next start` en local, `main` à 4f6de986, base Docker locale, dossier « Le Comptoir des Halles » déjà semé — DÉFAUT CONFIRMÉ : relevé du 04/08/2026, soit 70 jours, et
   la pastille verte « Dans la plage » sur les trois points.]
   [2026-10-13 : CLOS, `16a0d7f0` (`lib/carnet-sanitaire/etat-releve.ts`, trois
@@ -1099,7 +1100,9 @@ bord, 19 sur la carte de zone, « 22 datées · 5 à planifier » au calendrier,
   `LARGEUR_PLANCHER = 116` et une prop `souple`. Relevé par la session distante,
   non rouvert ici.
 - ~~« À jour » affiché sur une zone à **zéro équipement** — on certifie à jour un
-  lieu où rien n'a jamais été déclaré.~~ **CLOS.** `lib/batiments/etat-charge.ts`
+  lieu où rien n'a jamais été déclaré.~~ **CLOS.** [2026-10-25 : la pastille de
+  zone n'existe plus — plaque des zones retirée du hero, lot/board-hero ; la
+  fiche du hero dit « aucun équipement ».] `lib/batiments/etat-charge.ts`
   pose trois états fermés et `:75` retourne `sansObjet` **avant tout comptage** :
   il n'existe plus de chemin qui mène à `aJour` avec un parc vide. Rouvert le
   2026-09-07.

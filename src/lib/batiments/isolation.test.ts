@@ -1,7 +1,8 @@
 // Cloisonnement des deux lectures de bâtiment qui reçoivent un identifiant nu.
 //
-// `charge.test.ts` couvre déjà `listerBatimentsAvecCharge`, mais par une
-// assertion de **forme** sur le `where` émis. Les deux fonctions testées ici
+// ~~`charge.test.ts` couvre déjà `listerBatimentsAvecCharge`, mais par une
+// assertion de **forme** sur le `where` émis.~~ [2026-10-25 : la fonction et
+// son test sont retirés avec la plaque des zones du hero.] Les deux fonctions testées ici
 // n'étaient couvertes par rien : retirer leur prédicat laissait les 1568 tests
 // verts. Elles sont pourtant celles où la fuite serait la plus concrète —
 // `resoudreBatimentOptionnel` est ce qui **valide** un `batimentId` avant

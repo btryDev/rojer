@@ -587,7 +587,8 @@ dashboard, duerps, entreprises, equipements, etablissements, prescriptions,
 rapports, registre, risques, salaries, versions.
 
 ⚠️ *Attention au cas de `batiments`* : ce module **porte** la doctrine (le
-commentaire de `listerBatimentsAvecCharge`) et l'enfreignait tout de même sur
+commentaire de `listerBatimentsAvecCharge`, retirée le 2026-10-25 ; la
+doctrine est désormais écrite sur `batimentParDefaut`) et l'enfreignait tout de même sur
 deux lectures — `batimentParDefaut` et `resoudreBatimentOptionnel`, corrigées
 le 2026-08-28. Une doctrine écrite dans un fichier ne s'applique pas d'elle-même
 au reste du fichier.

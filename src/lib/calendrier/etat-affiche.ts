@@ -7,7 +7,8 @@
 // toute la colonne. Le silence était rendu comme une conformité, à la seule
 // personne qui n'a aucun moyen de le recouper.
 //
-// LE PATRON EST CELUI DE `src/lib/batiments/etat-charge.ts` : la question
+// LE PATRON EST CELUI DE `src/lib/batiments/etat-charge.ts` (retiré le
+// 2026-10-25 avec la plaque des zones du hero ; le patron reste) : la question
 // « sait-on ? » se tranche AVANT tout comptage. Là-bas, une zone sans
 // équipement est `sansObjet` quoi que dise le comptage de retard ; ici, un
 // calendrier incertain interdit d'affirmer « à jour » quoi que dise le

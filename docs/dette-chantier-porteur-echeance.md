@@ -459,8 +459,10 @@ Ces superlatifs se périment à chaque dépouillement : **aucun ne devrait être
 
 La mention « à confirmer » atteint toutes les surfaces qui LISTENT des
 échéances (calendrier, fiche d'une ligne, tableau de bord, parc, dossier PDF et
-ZIP, registre, guide, MCP — revue du lot 1). Les bâtiments ne listent rien :
-`grouperChargeParBatiment` (`batiments/queries.ts`) ne rend qu'un compte,
+ZIP, registre, guide, MCP — revue du lot 1). ~~Les bâtiments ne listent rien :
+`grouperChargeParBatiment` (`batiments/queries.ts`) ne rend qu'un compte,~~
+[2026-10-25 : sans objet — la charge par zone est retirée avec la plaque du
+hero, lot/board-hero.] Les bâtiments ne listaient rien : `grouperChargeParBatiment` ne rendait qu'un compte,
 `nbEnRetard`. Une ligne retenue par prudence y est comptée comme les autres. La
 porter supposerait un second compte (« dont N à confirmer ») ; c'est la même
 question que D1 du dossier des décisions du lot 2 (les lignes « à confirmer »
