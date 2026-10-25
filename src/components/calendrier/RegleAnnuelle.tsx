@@ -20,7 +20,7 @@
 // c'est la même, vue de loin.
 //
 // Ce composant ne porte QUE la mesure : les douze graduations et leur
-// légende, sur leur sol de canvas. Le réglage — le cadran d'année, la
+// légende, sur le blanc de l'instrument. Le réglage — le cadran d'année, la
 // bascule de lecture, les filtres — vit dans la barre collante que
 // `AnneeCalendrier` pose au-dessus. La séparation n'est pas cosmétique :
 // la barre doit rester à l'écran pendant tout le défilement de la liste
@@ -31,7 +31,6 @@
 import {
   CHAMP_ETAT,
   compteEtat,
-  ENCRE_ETAT,
   type EtatEcheance,
 } from "@/lib/calendrier/etats";
 
@@ -56,8 +55,8 @@ const H_MAX = 92;
  * d'une échéance isolée compte plus que l'exactitude du rapport 1/19.
  */
 const H_MIN_SEGMENT = 9;
-/** Hauteur du trait d'un mois sans aucune échéance. */
-const H_VIDE = 6;
+/** Hauteur de l'étiquette du mois, sous la ligne de base. */
+const H_ETIQUETTE = 38;
 
 type Segment = { cle: string; hauteur: number; fond: string };
 
@@ -101,14 +100,14 @@ export function RegleAnnuelle({
   mois,
   moisOuvert,
   onChoisirMois,
-  sansDate,
+  cleMoisCourant,
 }: {
   mois: MoisRegle[];
   /** Clé `AAAA-MM` du mois actuellement déplié, s'il est dans l'année. */
   moisOuvert: string | null;
   onChoisirMois: (cle: string) => void;
-  /** Occurrences sans date — hors règle par nature, jamais oubliées. */
-  sansDate: number;
+  /** Clé `AAAA-MM` du mois en cours : ceux d'avant s'estompent. */
+  cleMoisCourant: string;
 }) {
   const maxTotal = Math.max(1, ...mois.map(totalDuMois));
 
@@ -125,19 +124,30 @@ export function RegleAnnuelle({
   );
 
   return (
-    // La bande de mesure : pleine largeur, sur le canvas — un cran sous le
-    // blanc de la page. Les marges négatives annulent la gouttière pour
-    // toucher les bords ; c'est le bloc de la lecture par mois qui soude
-    // la mesure à la barre de réglage, en annulant l'écart de la colonne.
-    <div className="-mx-[var(--board-gutter)] flex flex-col bg-[color:var(--board-canvas)] px-[var(--board-gutter)] pb-5 pt-6">
+    // La bande de mesure, pleine largeur, sur le même blanc que la barre de
+    // réglage collée au-dessus (v3, 2026-10-25) : les deux font un seul
+    // instrument, fermé par un filet. Elle était sur le canvas, du même gris
+    // que la liste des mois dessous, et la règle se confondait avec le
+    // détail. Les marges négatives annulent la gouttière pour toucher les
+    // bords.
+    <div className="-mx-[var(--board-gutter)] flex flex-col border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] pb-5 pt-3">
       {/* L'instrument. Chaque graduation est un bouton : c'est bien une
           commande, pas une image — le clavier doit y arriver. */}
-      <div className="grid grid-cols-12 gap-1.5">
+      <div className="relative grid grid-cols-12 gap-1.5">
+        {/* La ligne de base : les barres s'y posent, un mois vide y marque
+            son point. Elle passe sous les colonnes, à hauteur fixe de leur
+            pied — l'étiquette du mois a une hauteur fixe pour ça. */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 h-px bg-[color:var(--board-slate-line)]"
+          style={{ bottom: H_ETIQUETTE }}
+        />
         {mois.map((m) => {
           const nb = totalDuMois(m);
           const segments = segmentsDuMois(m, maxTotal);
           const actif = m.cle === moisOuvert;
           const vide = nb === 0;
+          const passe = m.cle < cleMoisCourant;
 
           const resume = `${m.labelLong} — ${
             vide
@@ -156,15 +166,15 @@ export function RegleAnnuelle({
               aria-pressed={actif}
               aria-label={resume}
               className={
-                "flex flex-col items-center gap-2 rounded-[14px] px-1 pb-2 pt-1 transition-colors " +
+                "relative flex flex-col items-center rounded-[14px] px-1 pt-1 transition-colors " +
                 (vide
                   ? "cursor-default"
                   : actif
-                    // Le mois visé garde son champ — blanc sur le canvas
-                    // de la bande : le curseur d'encre du label ne
-                    // suffisait pas à retrouver d'un regard où on en était.
-                    ? "bg-[color:var(--board-card)] shadow-[0_1px_3px_rgba(13,18,36,.10)]"
-                    : "hover:bg-white/60")
+                    // Le mois visé garde son champ : le curseur d'encre du
+                    // label ne suffisait pas à retrouver d'un regard où on
+                    // en était.
+                    ? "bg-[color:var(--board-slate-pale)]"
+                    : "hover:bg-[color:var(--board-canvas)]")
               }
             >
               {/* Le compte voyage avec sa barre — posé en haut de la
@@ -172,73 +182,67 @@ export function RegleAnnuelle({
                   saurait plus lequel il chiffre. La hauteur donne l'ordre
                   de grandeur, le chiffre donne la valeur. */}
               <span
-                className="flex w-full flex-col items-center justify-end gap-1.5"
-                style={{ height: H_MAX + 18 }}
+                className="flex w-full flex-col items-center justify-end gap-2"
+                style={{ height: H_MAX + 22 }}
               >
                 <span
                   aria-hidden
                   className={
-                    "font-mono text-[11px] tabular-nums leading-none " +
+                    "board-titre tabular-nums leading-none " +
                     (vide
-                      ? "text-transparent"
+                      ? "text-[13px] text-transparent"
                       : actif
-                        ? "font-semibold text-[color:var(--board-ink)]"
-                        : "text-[color:var(--board-slate-mid)]")
+                        ? "text-[15px] text-[color:var(--board-ink)]"
+                        : passe
+                          ? "text-[13px] text-[color:var(--board-slate-soft)]"
+                          : "text-[13px] text-[color:var(--board-slate-ink)]")
                   }
                 >
                   {vide ? "0" : nb}
                 </span>
                 {vide ? (
+                  // Le point d'un mois vide, centré SUR la ligne de base :
+                  // la moitié de sa hauteur passe dessous.
                   <span
-                    className="w-full max-w-[34px] rounded bg-[color:var(--board-slate-line)]"
-                    style={{ height: H_VIDE }}
+                    className={
+                      "relative z-[1] size-[9px] flex-none rounded-full bg-[color:var(--board-card)] ring-[1.5px] " +
+                      (passe
+                        ? "ring-[color:var(--board-slate-line)]"
+                        : "ring-[color:var(--board-slate)]")
+                    }
+                    style={{ marginBottom: -4.5 }}
                   />
                 ) : (
-                  segments.map((s, i) => (
-                    <span
-                      key={s.cle}
-                      className="w-full max-w-[34px]"
-                      style={{
-                        height: s.hauteur,
-                        background: s.fond,
-                        borderTopLeftRadius: i === 0 ? 6 : 0,
-                        borderTopRightRadius: i === 0 ? 6 : 0,
-                        borderBottomLeftRadius:
-                          i === segments.length - 1 ? 6 : 0,
-                        borderBottomRightRadius:
-                          i === segments.length - 1 ? 6 : 0,
-                      }}
-                    />
-                  ))
+                  // Une barre arrondie d'un bloc ; ses états s'empilent,
+                  // séparés d'un fin jour.
+                  <span className="relative z-[1] flex w-full max-w-[30px] flex-col gap-[2px] overflow-hidden rounded-[9px]">
+                    {segments.map((s) => (
+                      <span
+                        key={s.cle}
+                        className="w-full"
+                        style={{ height: s.hauteur, background: s.fond }}
+                      />
+                    ))}
+                  </span>
                 )}
               </span>
 
-              {/* La réglette : trait long sur un mois porteur, court
-                  sinon. Le mois ouvert prend le curseur d'encre. */}
               <span
-                aria-hidden
-                className={
-                  "w-px " +
-                  (actif
-                    ? "h-3.5 bg-[color:var(--board-ink)]"
-                    : vide
-                      ? "h-1.5 bg-[color:var(--board-slate)]"
-                      : "h-2.5 bg-[color:var(--board-slate-soft)]")
-                }
-                style={actif ? { width: 2 } : undefined}
-              />
-
-              <span
-                className={
-                  "font-mono text-[10.5px] uppercase tracking-[0.1em] " +
-                  (actif
-                    ? "rounded-full bg-[color:var(--board-ink)] px-2.5 py-1 font-semibold text-white"
-                    : vide
-                      ? "py-1 text-[color:var(--board-slate)]"
-                      : "py-1 text-[color:var(--board-slate-ink)]")
-                }
+                className="flex items-center justify-center"
+                style={{ height: H_ETIQUETTE }}
               >
-                {m.label}
+                <span
+                  className={
+                    "font-mono text-[10.5px] uppercase tracking-[0.1em] " +
+                    (actif
+                      ? "rounded-full bg-[color:var(--board-ink)] px-2.5 py-1 font-semibold text-white"
+                      : vide || passe
+                        ? "text-[color:var(--board-slate-soft)]"
+                        : "text-[color:var(--board-slate-ink)]")
+                  }
+                >
+                  {m.label}
+                </span>
               </span>
             </button>
           );
@@ -246,33 +250,19 @@ export function RegleAnnuelle({
       </div>
 
       {/* La légende. Elle nomme les champs : sans elle, trois couleurs
-          côte à côte se lisent comme une échelle de gravité continue. */}
-      <div className="mt-3.5 flex flex-wrap items-center gap-x-9 gap-y-2.5 border-t border-[color:var(--board-slate-line)] pt-4">
+          côte à côte se lisent comme une échelle de gravité continue. Le
+          compte « sans date » a rejoint l'année, dans la barre de réglage
+          (2026-10-25) : il chiffre l'année, pas une couleur. */}
+      <div className="mt-3 flex flex-wrap items-center gap-x-7 gap-y-2.5">
         <Cle etat="enRetard" valeur={totaux.enRetard} />
         <Cle etat="proche" valeur={totaux.proche} />
         <Cle etat="lointain" valeur={totaux.lointain} />
         <Cle etat="faite" valeur={totaux.faite} />
-        {/* « Hors année » n'a plus de badge : les flèches du cadran font
-            le voyage que le badge se contentait d'annoncer. Le badge dit
-            « sans date » et non « à planifier » : il compte aussi les
-            retards sans échéance connue, et un « 12 à planifier » à côté
-            d'un bandeau « 12 en retard » se lisait comme deux listes
-            (relecture, 2026-09-14). */}
-        {sansDate > 0 ? (
-          <span className="ml-auto rounded-full bg-[color:var(--board-card)] px-3 py-1.5 text-[12px] font-semibold text-[color:var(--board-slate-mid)]">
-            {sansDate} sans date
-          </span>
-        ) : null}
       </div>
     </div>
   );
 }
 
-/**
- * Une clé de légende : le solde dans un cercle qui porte la couleur de
- * l'état — la pastille et la valeur ne font qu'un, le chiffre est SUR sa
- * couleur, et l'œil n'a plus à apparier deux petits objets.
- */
 /**
  * Une entrée de légende : le champ de l'état, son solde, son mot.
  *
@@ -294,15 +284,18 @@ function Cle({
   /** Le solde de l'état sur l'année affichée. */
   valeur: number;
 }) {
-
   return (
-    <span className="flex items-center gap-2 text-[12px] text-[color:var(--board-slate-mid)]">
+    <span className="flex items-center gap-2 text-[12.5px] text-[color:var(--board-slate-ink)]">
+      {/* Un carré du champ, comme un segment de barre : la légende montre
+          la couleur telle que la règle la pose. */}
       <span
-        className="flex h-[22px] min-w-[22px] items-center justify-center rounded-full px-1.5 text-[11px] font-semibold leading-none tabular-nums"
-        style={{ background: CHAMP_ETAT[etat], color: ENCRE_ETAT[etat] }}
-      >
+        aria-hidden
+        className="size-3 flex-none rounded-[4px]"
+        style={{ background: CHAMP_ETAT[etat] }}
+      />
+      <strong className="font-semibold tabular-nums text-[color:var(--board-ink)]">
         {valeur}
-      </span>
+      </strong>
       {/* `compteEtat` et non `LIBELLE_ETAT[…].plusieurs` : la première version
           du correctif posait le pluriel à côté du badge, ce qui rendait
           « 1dépassées » — sans espace, et au mauvais nombre. Le mot ET son

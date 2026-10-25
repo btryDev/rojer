@@ -72,12 +72,12 @@ import {
 import {
   CHAMP_ETAT,
   ENCRE_ETAT,
+  libelleEtatCapitale,
   PRIORITE_ETAT,
   avecMentionFin,
   lecturesCalendrier,
   type EtatEcheance,
   type LectureCalendrier,
-  type RegistreLigne,
 } from "@/lib/calendrier/etats";
 import { nomDeZone } from "@/lib/batiments/nom-zone";
 import {
@@ -142,11 +142,13 @@ const FMT_AUJOURDHUI = new Intl.DateTimeFormat("fr-FR", {
 });
 
 /**
- * La tuile-date porte la couleur de l'état parce que c'est l'objet que
+ * ~~La tuile-date porte la couleur de l'état parce que c'est l'objet que
  * l'œil trouve en premier dans une liste de vingt lignes : la date EST
- * l'information urgente. La pastille de droite garde, elle, le
- * vocabulaire de statut de l'application (« Conforme », « À planifier »…),
- * qui dit autre chose que le retard.
+ * l'information urgente.~~ [2026-10-25, v3, décision de la propriétaire : la
+ * tuile-date est à l'encre pour toutes les lignes, et c'est la pastille de
+ * droite qui dit l'état — une seule fois par ligne. Chaque ligne en porte
+ * donc une désormais, y compris « sous 30 jours » et « au-delà », que seule
+ * la couleur de la tuile disait jusque-là.]
  */
 function LigneEcheance({
   href,
@@ -159,7 +161,6 @@ function LigneEcheance({
   aConfirmer = [],
   rendezVous = null,
   pastille,
-  registre,
 }: {
   href: string;
   /**
@@ -197,7 +198,6 @@ function LigneEcheance({
   /** Le rendez-vous pris (ADR-049), en pastille : `meta` est tronqué. */
   rendezVous?: PastilleRendezVous | null;
   pastille: React.ReactNode;
-  registre: RegistreLigne;
 }) {
   return (
     // `LienProvenance` et non `Link` : la fiche ouverte doit pouvoir
@@ -208,9 +208,11 @@ function LigneEcheance({
       href={href}
       className="-mx-3 flex items-center gap-4 rounded-[20px] px-3 py-3 transition-colors hover:bg-[color:var(--board-slate-pale)]"
     >
+      {/* La date en encre, quel que soit l'état (v3, 2026-10-25) : l'état
+          est dit en bout de ligne par la pastille ; colorer aussi la date le
+          disait deux fois, et une liste de retards devenait un mur rose. */}
       <span
-        className="flex size-[50px] flex-none flex-col items-center justify-center rounded-[17px]"
-        style={{ background: CHAMP_ETAT[registre] }}
+        className="flex size-[50px] flex-none flex-col items-center justify-center rounded-[16px] bg-[color:var(--board-ink)] text-white"
         // « Sans date », et plus « à dater » ni « Date à renseigner » : aucun
         // écran ne permet de dater une vérification à la main. Seul le dépôt
         // d'un rapport lui donne une échéance — le mot promettait un geste qui
@@ -222,17 +224,13 @@ function LigneEcheance({
             <span className="board-titre text-[18px] leading-none tabular-nums">
               {FMT_JOUR.format(date)}
             </span>
-            <span
-              className="mt-1 font-mono text-[9px] font-semibold uppercase tracking-[0.1em]"
-              style={{ color: ENCRE_ETAT[registre] }}
-            >
+            <span className="mt-1 font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-white/70">
               {FMT_MOIS_COURT.format(date)}
             </span>
           </>
         ) : (
           <span
-            className="font-mono text-[9px] font-semibold uppercase leading-[1.3] tracking-[0.08em]"
-            style={{ color: ENCRE_ETAT[registre] }}
+            className="font-mono text-[9px] font-semibold uppercase leading-[1.3] tracking-[0.08em] text-white/80"
             aria-hidden
           >
             sans<br />date
@@ -1007,7 +1005,12 @@ export default async function CalendrierPage({
           "Toutes vos échéances datées, au même endroit. Ouvrez-en une pour la planifier ou déposer son rapport."
         )
       }
-    />
+    >
+      {/* La seule commande de l'en-tête : elle change la vue de la page.
+          Deux onglets sur du vide seraient un décor — la bascule
+          n'apparaît que si le calendrier a des lignes à lire. */}
+      {lignes.length > 0 ? <SelecteurLecture /> : null}
+    </EnTetePage>
   );
 
   // Le zéro de l'instrument. « En retard », « sous 30 jours » et « à venir »
@@ -1129,10 +1132,12 @@ export default async function CalendrierPage({
     </AideEcran>
   );
 
-  // Les commandes de l'écran — bascule de lecture, filtres, aide. Elles ne
+  // Les commandes de la règle — date du jour, filtres, aide. Elles ne
   // forment plus une strate à elles : elles voyagent dans la barre de
-  // réglage de l'instrument (`AnneeCalendrier`), à droite du cadran
-  // d'année, et restent donc collées en tête du défilement.
+  // réglage de l'instrument (`AnneeCalendrier`), à droite de l'année, et
+  // restent donc collées en tête du défilement. La bascule de lecture n'en
+  // est plus (2026-10-25) : elle change la vue de la page, elle vit dans
+  // l'en-tête.
   //
   // C'est ce que la page devait à l'usage : descendre jusqu'à une date
   // puis vouloir filtrer obligeait à remonter chercher une rangée de
@@ -1140,21 +1145,11 @@ export default async function CalendrierPage({
   // son défilement n'est pas atteignable.
   //
   // L'ordre de gauche à droite porte la règle qui les lie : quelle année,
-  // puis quelle lecture, puis quel filtre. L'aide part à l'opposé — elle
-  // ne règle rien.
+  // à gauche, puis, à droite, depuis quand on compte, quel filtre, et l'aide
+  // en dernier — elle ne règle rien.
   const commandes = (
-    <div className="flex flex-1 flex-wrap items-center gap-x-3 gap-y-2.5">
-      {/* Deux onglets sur du vide seraient un décor : la bascule
-          n'apparaît que si le calendrier a des lignes à lire. */}
-      {lignes.length > 0 ? (
-        <>
-          <SelecteurLecture />
-          <span
-            aria-hidden
-            className="mx-1 h-[18px] w-px flex-none bg-[color:rgba(13,18,36,.14)]"
-          />
-        </>
-      ) : null}
+    <div className="ml-auto flex flex-wrap items-center justify-end gap-x-3 gap-y-2.5">
+      {aujourdhuiAffiche}
       <FiltresCalendrier
         baseHref={baseHref}
         famillesDisponibles={famillesPresentes}
@@ -1171,10 +1166,7 @@ export default async function CalendrierPage({
           batiment: filtreBatiment,
         }}
       />
-      <span className="ml-auto flex flex-none items-center gap-4">
-        {aujourdhuiAffiche}
-        {aide}
-      </span>
+      {aide}
     </div>
   );
 
@@ -1186,7 +1178,14 @@ export default async function CalendrierPage({
           claires avant sa première donnée. */}
       {enTete}
 
-      <div className="flex flex-1 flex-col bg-[color:var(--board-card)] px-[var(--board-gutter)] pb-14 pt-7">
+      <div
+        className={
+          // Collée à l'en-tête quand l'instrument est là : la règle prend
+          // le relais sans bande blanche entre les deux (2026-10-25).
+          "flex flex-1 flex-col bg-[color:var(--board-canvas)] px-[var(--board-gutter)] pb-14 " +
+          (lignes.length > 0 ? "pt-0" : "pt-7")
+        }
+      >
         {/* PAS DE BANDEAU DE COUVERTURE ICI, et c'est une décision de la
             propriétaire (2026-09-02). Il y a vécu tant qu'il portait l'axe
             « public reçu » — le calendrier étant l'écran qu'on suit pour
@@ -1426,7 +1425,6 @@ export default async function CalendrierPage({
                                   statut={statutDeLaLecture(ligne, v)}
                                 />
                               }
-                              registre={ligne.registre}
                             />
                           </li>
                         );
@@ -1445,10 +1443,9 @@ export default async function CalendrierPage({
                             type={e.type}
                             titre={e.libelle}
                             meta={avecMentionFin(metaAutre(e), ligne.fin)}
-                            // La tuile-date suffit pour le futur : seule
-                            // l'alerte mérite une pastille. Une date absente
-                            // porte l'ardoise et son mot, jamais « En retard ».
-                            registre={e.sansEcheance ? "aPlanifier" : ligne.etat}
+                            // Une date absente porte l'ardoise et son mot,
+                            // jamais « En retard ». Les autres disent leur
+                            // état : la tuile-date ne le colore plus (v3).
                             pastille={
                               e.sansEcheance ? (
                                 <span className="inline-flex items-center whitespace-nowrap rounded-full bg-[color:var(--board-slate-pale)] px-[13px] py-[6px] text-[12px] font-semibold text-[color:var(--board-slate-ink)]">
@@ -1458,7 +1455,17 @@ export default async function CalendrierPage({
                                 <span className="inline-flex items-center whitespace-nowrap rounded-full bg-[color:var(--board-signal)] px-[13px] py-[6px] text-[12px] font-semibold text-[color:var(--board-signal-ink)]">
                                   En retard
                                 </span>
-                              ) : null
+                              ) : (
+                                <span
+                                  className="inline-flex items-center whitespace-nowrap rounded-full px-[13px] py-[6px] text-[12px] font-semibold"
+                                  style={{
+                                    background: CHAMP_ETAT[ligne.etat],
+                                    color: ENCRE_ETAT[ligne.etat],
+                                  }}
+                                >
+                                  {libelleEtatCapitale(ligne.etat)}
+                                </span>
+                              )
                             }
                           />
                         </li>

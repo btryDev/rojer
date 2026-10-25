@@ -115,7 +115,10 @@ export const TON_REGISTRE: Record<RegistreLigne, "alerte" | "warn" | "ok"> = {
 export const CHAMP_ETAT: Record<RegistreLigne, string> = {
   enRetard: "var(--board-signal)",
   proche: "var(--board-amber)",
-  lointain: "var(--board-blue-soft)",
+  // Gris et non plus bleu (2026-10-25, décision de la propriétaire) : « au-
+  // delà de 30 jours », c'est rien à faire pour l'instant — le bleu ajoutait
+  // une couleur à un état qui n'appelle aucun geste.
+  lointain: "var(--board-lointain)",
   faite: "var(--board-green)",
   aPlanifier: "var(--board-slate-pale)",
   // L'ardoise éteinte, comme « à planifier » : ni vert (ce serait
@@ -148,7 +151,7 @@ export const POINT_ETAT: Record<RegistreLigne, string> = Object.fromEntries(
 export const ENCRE_ETAT: Record<RegistreLigne, string> = {
   enRetard: "var(--board-signal-ink)",
   proche: "var(--board-amber-ink)",
-  lointain: "var(--board-blue-ink)",
+  lointain: "var(--board-slate-ink)",
   faite: "var(--board-green-ink)",
   aPlanifier: "var(--board-slate-mid)",
   archivee: "var(--board-slate-mid)",
@@ -281,6 +284,17 @@ export function compteEtat(n: number, etat: RegistreLigne): string {
  */
 export function libelleEtatCourtCapitale(etat: RegistreLigne): string {
   const mot = LIBELLE_ETAT_COURT[etat];
+  return mot.charAt(0).toUpperCase() + mot.slice(1);
+}
+
+/**
+ * Le mot long d'UNE ligne, avec sa capitale — la pastille d'état en bout de
+ * ligne du calendrier (« Sous 30 jours », « Au-delà de 30 jours »), depuis que
+ * la tuile-date ne colore plus l'état (2026-10-25). Même raison d'être une
+ * fonction que la précédente.
+ */
+export function libelleEtatCapitale(etat: RegistreLigne): string {
+  const mot = LIBELLE_ETAT[etat].un;
   return mot.charAt(0).toUpperCase() + mot.slice(1);
 }
 

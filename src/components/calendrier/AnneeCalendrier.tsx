@@ -310,7 +310,7 @@ export function AnneeCalendrier({
           mois={regle.mois}
           moisOuvert={ouvert}
           onChoisirMois={viser}
-          sansDate={sansDate}
+          cleMoisCourant={cleMoisCourant}
         />
 
         {/* Les années révolues d'abord : une dette de 2024 se lit avant les
@@ -440,19 +440,18 @@ function BarreAnnee({
   return (
     <div
       className={
-        // Le même bloc que la règle annuelle dessous (`--board-canvas`), un
-        // cran plus soutenu (`--board-slate-pale`) : la barre se lit comme
-        // l'en-tête de l'instrument, plus comme une bande blanche entre
-        // l'en-tête de page et la règle (2026-10-25). Collée en haut, elle
-        // garde sa teinte en verre, et seulement là son filet.
-        "-mx-[var(--board-gutter)] flex flex-wrap items-center gap-x-4 gap-y-3 border-b px-[var(--board-gutter)] py-[13px] transition-[background-color,box-shadow,backdrop-filter] duration-300 ease-out " +
+        // Le haut de l'instrument, sur le même blanc que la règle qu'il
+        // règle (v3, 2026-10-25) : un filet le sépare de l'en-tête de page,
+        // et c'est tout — plus de bande grise entre les deux. Collé en
+        // haut, il passe en verre et prend son filet bas.
+        "-mx-[var(--board-gutter)] flex flex-wrap items-center gap-x-4 gap-y-3 border-b border-t border-t-[color:var(--board-slate-line)] px-[var(--board-gutter)] py-3 transition-[background-color,box-shadow,backdrop-filter] duration-300 ease-out " +
         (collee
-          ? "border-[color:var(--board-slate-line)] bg-[color:rgba(237,242,245,.86)] shadow-[0_14px_30px_-24px_rgba(13,18,36,.55)] backdrop-blur-xl backdrop-saturate-150"
-          : "border-transparent bg-[color:var(--board-slate-pale)]")
+          ? "border-b-[color:var(--board-slate-line)] bg-[color:rgba(255,255,255,.86)] shadow-[0_14px_30px_-24px_rgba(13,18,36,.55)] backdrop-blur-xl backdrop-saturate-150"
+          : "border-b-transparent bg-[color:var(--board-card)]")
       }
     >
-      {/* Le titre existe pour les lecteurs d'écran ; à l'œil, l'instrument
-          se présente seul — sa clé de lecture (hauteur = volume, couleur =
+      {/* Le titre existe pour les lecteurs d'écran ; à l'œil, l'année se
+          présente seule — sa clé de lecture (hauteur = volume, couleur =
           état) vit dans l'aide d'écran, avec le reste des explications. */}
       <h2 id={titreId} className="sr-only">
         L&apos;année d&apos;un bloc — {total} échéance{total > 1 ? "s" : ""}{" "}
@@ -462,37 +461,29 @@ function BarreAnnee({
           : ""}
       </h2>
       {montrerCadran ? (
-        <div className="flex flex-none items-center gap-2">
+        // L'année est un titre entre deux flèches nues, et non une pilule :
+        // la piste arrondie est la forme de la bascule de vue, dans
+        // l'en-tête ; ici on règle, on ne change pas de vue (2026-10-25).
+        <div className="flex flex-none items-center gap-1">
           <FlecheAnnee
             direction="precedente"
             cible={annee - 1}
             onClick={onAnneePrecedente}
           />
-          {/* Millésime et compte dans un même champ, posés sur la même
-              ligne : empilés, la pilule devenait un bloc de 56 px de
-              haut au milieu d'une barre — c'est ce qui le faisait flotter.
-              Le compte voyage avec le millésime, il ne s'en détache pas.
-              Neutre (2026-10-25) : piste blanche et encre, comme le
-              sélecteur de lecture voisin — le bleu glacier ajoutait une
-              couleur à une barre posée au-dessus d'une règle dont chaque
-              couleur dit un état. */}
-          <p className="m-0 flex items-baseline gap-2.5 rounded-full bg-[color:var(--board-card)] px-[18px] py-[7px] shadow-[0_0_0_1px_rgba(13,18,36,.08)]">
-            <span className="board-titre text-[19px] leading-none tabular-nums tracking-[-0.02em] text-[color:var(--board-ink)]">
-              {annee}
-            </span>
-            <span className="font-mono text-[10px] font-semibold uppercase leading-none tracking-[0.1em] text-[color:var(--board-slate-mid)]">
-              {libelleTotalAnnee(total, sansDate)}
-            </span>
+          <p
+            aria-hidden
+            className="board-titre m-0 px-1 text-[26px] leading-none tabular-nums tracking-[-0.03em]"
+          >
+            {annee}
           </p>
           <FlecheAnnee
             direction="suivante"
             cible={annee + 1}
             onClick={onAnneeSuivante}
           />
-          <span
-            aria-hidden
-            className="ml-2 h-[18px] w-px flex-none bg-[color:rgba(13,18,36,.14)]"
-          />
+          <span aria-hidden className="ml-2.5 text-[13px] text-[color:var(--board-slate-mid)]">
+            {libelleTotalAnnee(total, sansDate)}
+          </span>
         </div>
       ) : null}
       {commandes}
@@ -518,7 +509,7 @@ function FlecheAnnee({
       onClick={onClick}
       disabled={!onClick}
       aria-label={`Afficher l'année ${cible}`}
-      className="flex size-8 flex-none items-center justify-center rounded-full border border-[color:rgba(10,10,10,.16)] text-[color:var(--board-ink)] transition-colors hover:bg-[color:var(--board-card)] disabled:cursor-default disabled:opacity-30 disabled:hover:bg-transparent"
+      className="flex size-8 flex-none items-center justify-center rounded-full text-[color:var(--board-ink)] transition-colors hover:bg-[color:var(--board-slate-pale)] disabled:cursor-default disabled:opacity-30 disabled:hover:bg-transparent"
     >
       <Chevron className="size-4" />
     </button>

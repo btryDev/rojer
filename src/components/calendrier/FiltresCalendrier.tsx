@@ -81,14 +81,14 @@ function Puce({ actif, forme }: { actif: boolean; forme: "radio" | "case" }) {
         "flex size-4 flex-none items-center justify-center border transition-colors " +
         (forme === "radio" ? "rounded-full " : "rounded-[5px] ") +
         (actif
-          ? "border-[color:var(--board-blue-ink)] "
+          ? "border-[color:var(--board-ink)] "
           : "border-[color:rgba(10,10,10,.28)] ")
       }
     >
       {actif ? (
         <span
           className={
-            "bg-[color:var(--board-blue-ink)] " +
+            "bg-[color:var(--board-ink)] " +
             (forme === "radio"
               ? "size-2 rounded-full"
               : "size-2 rounded-[2px]")
@@ -123,9 +123,9 @@ function Option({
   return (
     <label
       className={
-        "flex w-full cursor-pointer items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-[13px] transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[color:var(--board-blue-ink)] " +
+        "flex w-full cursor-pointer items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-[13px] transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[color:var(--board-ink)] " +
         (actif
-          ? "bg-[color:var(--board-blue-pale)] font-semibold text-[color:var(--board-blue-ink)]"
+          ? "bg-[color:var(--board-slate-pale)] font-semibold text-[color:var(--board-ink)]"
           : "text-[color:var(--board-slate-ink)] hover:bg-[color:var(--board-slate-pale)]")
       }
     >
@@ -171,7 +171,7 @@ function Chip({
         "inline-flex items-center gap-1.5 rounded-full px-3 py-[6px] text-[11.5px] font-semibold transition-opacity hover:opacity-80 " +
         (ton === "alerte"
           ? "bg-[color:var(--board-signal)] text-[color:var(--board-signal-ink)]"
-          : "bg-[color:var(--board-blue-pale)] text-[color:var(--board-blue-ink)]")
+          : "bg-[color:var(--board-slate-pale)] text-[color:var(--board-ink)]")
       }
     >
       {icone}
@@ -291,10 +291,14 @@ export function FiltresCalendrier({
           aria-expanded={ouvert}
           aria-haspopup="dialog"
           className={
-            "inline-flex items-center gap-2 rounded-full border px-4 py-[9px] text-[12.5px] font-semibold transition-colors " +
+            // Bouton à contour aux coins à peine arrondis : une autre forme
+            // que la bascule de vue de l'en-tête (piste arrondie), parce que
+            // ce n'est pas la même commande — celle-ci règle ce que la règle
+            // montre, l'autre change la vue (2026-10-25).
+            "inline-flex h-9 items-center gap-2 rounded-[10px] border px-3.5 text-[13px] font-semibold transition-colors " +
             (ouvert
               ? "border-transparent bg-[color:var(--board-ink)] text-white"
-              : "border-[color:rgba(10,10,10,.16)] bg-[color:var(--board-card)] text-[color:var(--board-ink)] hover:bg-[color:var(--board-blue-pale)]")
+              : "border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] text-[color:var(--board-ink)] hover:bg-[color:var(--board-slate-pale)]")
           }
         >
           {enCours ? (
@@ -321,7 +325,7 @@ export function FiltresCalendrier({
           <div
             role="dialog"
             aria-label="Filtres du calendrier"
-            className="absolute left-0 top-full z-30 mt-2 w-[min(92vw,880px)] max-h-[80vh] overflow-y-auto rounded-[18px] bg-[color:var(--board-card)] p-2.5 shadow-[0_1px_2px_rgba(13,18,36,.06),0_18px_44px_-16px_rgba(13,18,36,.28)] ring-1 ring-[color:rgba(13,18,36,.08)]"
+            className="absolute right-0 top-full z-30 mt-2 w-[min(92vw,880px)] max-h-[80vh] overflow-y-auto rounded-[18px] bg-[color:var(--board-card)] p-2.5 shadow-[0_1px_2px_rgba(13,18,36,.06),0_18px_44px_-16px_rgba(13,18,36,.28)] ring-1 ring-[color:rgba(13,18,36,.08)]"
           >
             {/* À l'horizontale (2026-10-24, demande de la propriétaire) : trois
                 colonnes dès l'écran moyen — type, domaine, le reste —, au lieu

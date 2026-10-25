@@ -163,6 +163,11 @@
   --board-signal-ink: #8a2a23;
   --board-signal-on: #0a0a0a;
   --board-green: #bdfdb5;
+  /* Champ de l'état « au-delà de 30 jours » (2026-10-25) : un gris, parce
+     que l'état n'appelle aucun geste. Il était bleu (`--board-blue-soft`) et
+     faisait une couleur de plus au milieu des trois qui, elles, disent quoi
+     faire. Encre : `--board-slate-ink` (7,6 dessus). */
+  --board-lointain: #c9d3da;
   --board-green-ink: #216037;
   --board-green-ink-soft: #2e7a45;
 
