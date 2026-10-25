@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChevronDown } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { CHAMP_ETAT, ENCRE_ETAT } from "@/lib/calendrier/etats";
 
@@ -110,94 +111,39 @@ export function OnboardingChecklist({
         </div>
       </div>
 
-      {/* Liste des étapes */}
-      <ol className="divide-y divide-[color:var(--board-slate-line)]">
-        {etapes.map((e, i) => {
-          const prochaine = i === indexProchaine;
-          return (
-            <li
-              key={e.id}
-              className={
-                "flex items-start gap-4 px-7 py-5 sm:px-8 " +
-                (prochaine ? "bg-[color:var(--board-slate-pale)]" : "")
-              }
-            >
-              {/* Puce de statut. Le vert vient des jetons d'état : c'est le
-                  même « fait » qu'ailleurs, champ et encre ensemble. */}
-              <div
-                aria-hidden
-                className={
-                  "mt-1 flex size-6 shrink-0 items-center justify-center rounded-full border " +
-                  (e.faite || prochaine
-                    ? "border-transparent"
-                    : "border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] text-[color:var(--board-slate-mid)]")
-                }
-                style={
-                  e.faite
-                    ? { background: CHAMP_ETAT.faite, color: ENCRE_ETAT.faite }
-                    : prochaine
-                      ? {
-                          background: "var(--board-ink)",
-                          color: "var(--board-card)",
-                        }
-                      : undefined
-                }
-              >
-                {e.faite ? (
-                  <svg
-                    viewBox="0 0 16 16"
-                    className="size-3.5"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="3 8.5 6.5 12 13 5" />
-                  </svg>
-                ) : (
-                  <span className="font-mono text-[0.62rem] font-bold tabular-nums">
-                    {i + 1}
-                  </span>
-                )}
-              </div>
-
-              {/* Contenu */}
-              <div className="min-w-0 flex-1">
-                <p
-                  className={
-                    "m-0 text-[16px] font-semibold leading-[1.3] tracking-[-0.01em] " +
-                    (e.faite
-                      ? "text-[color:var(--board-slate-mid)] line-through"
-                      : "text-[color:var(--board-ink)]")
-                  }
-                >
-                  {e.titre}
-                </p>
-                <p className="m-0 mt-1 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                  {e.pourquoi}
-                </p>
-
-                {!e.faite && e.question}
-
-                {!e.faite && e.href && e.cta && (
-                  <div className="mt-3">
-                    <Link
-                      href={e.href}
-                      className={buttonVariants({
-                        variant: prochaine ? "board" : "boardClair",
-                        size: "boardSm",
-                      })}
-                    >
-                      {e.cta} →
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </li>
-          );
-        })}
+      {/* La prochaine étape seule, à plat ; les autres derrière un
+          « Voir les N autres étapes » (2026-10-25, demande de la
+          propriétaire) : six étapes dépliées repoussaient le board d'un écran
+          entier, pour n'en traiter qu'une à la fois. `<details>` natif : pas
+          de JavaScript, et le clavier comme le lecteur d'écran savent
+          l'ouvrir. */}
+      <ol className="m-0 list-none p-0">
+        <LigneEtape etape={etapes[indexProchaine]} rang={indexProchaine} prochaine />
       </ol>
+
+      {total > 1 ? (
+        <details className="group border-t border-[color:var(--board-slate-line)]">
+          <summary className="flex cursor-pointer list-none items-center gap-2 px-7 py-3.5 text-[13px] font-semibold text-[color:var(--board-ink)] hover:bg-[color:var(--board-slate-pale)] sm:px-8 [&::-webkit-details-marker]:hidden">
+            <ChevronDown
+              aria-hidden
+              className="size-4 transition-transform group-open:rotate-180"
+            />
+            <span className="group-open:hidden">
+              Voir les {total - 1} autres étapes
+            </span>
+            <span className="hidden group-open:inline">
+              Masquer les autres étapes
+            </span>
+          </summary>
+          <ol className="m-0 list-none divide-y divide-[color:var(--board-slate-line)] border-t border-[color:var(--board-slate-line)] p-0">
+            {etapes.map((e, i) =>
+              i === indexProchaine ? null : (
+                <LigneEtape key={e.id} etape={e} rang={i} prochaine={false} />
+              ),
+            )}
+          </ol>
+        </details>
+      ) : null}
 
       {/* Bandeau bas rassurance */}
       <div className="border-t border-[color:var(--board-slate-line)] bg-[color:var(--board-slate-pale)] px-7 py-3.5 sm:px-8">
@@ -206,5 +152,98 @@ export function OnboardingChecklist({
         </p>
       </div>
     </section>
+  );
+}
+
+/** Une étape : sa puce de statut, son titre, son pourquoi, et son geste. */
+function LigneEtape({
+  etape: e,
+  rang: i,
+  prochaine,
+}: {
+  etape: EtapeOnboarding;
+  rang: number;
+  prochaine: boolean;
+}) {
+  return (
+    <li
+      className={
+        "flex items-start gap-4 px-7 py-5 sm:px-8 " +
+        (prochaine ? "bg-[color:var(--board-slate-pale)]" : "")
+      }
+    >
+      {/* Puce de statut. Le vert vient des jetons d'état : c'est le
+          même « fait » qu'ailleurs, champ et encre ensemble. */}
+      <div
+        aria-hidden
+        className={
+          "mt-1 flex size-6 shrink-0 items-center justify-center rounded-full border " +
+          (e.faite || prochaine
+            ? "border-transparent"
+            : "border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] text-[color:var(--board-slate-mid)]")
+        }
+        style={
+          e.faite
+            ? { background: CHAMP_ETAT.faite, color: ENCRE_ETAT.faite }
+            : prochaine
+              ? {
+                  background: "var(--board-ink)",
+                  color: "var(--board-card)",
+                }
+              : undefined
+        }
+      >
+        {e.faite ? (
+          <svg
+            viewBox="0 0 16 16"
+            className="size-3.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="3 8.5 6.5 12 13 5" />
+          </svg>
+        ) : (
+          <span className="font-mono text-[0.62rem] font-bold tabular-nums">
+            {i + 1}
+          </span>
+        )}
+      </div>
+
+      {/* Contenu */}
+      <div className="min-w-0 flex-1">
+        <p
+          className={
+            "m-0 text-[16px] font-semibold leading-[1.3] tracking-[-0.01em] " +
+            (e.faite
+              ? "text-[color:var(--board-slate-mid)] line-through"
+              : "text-[color:var(--board-ink)]")
+          }
+        >
+          {e.titre}
+        </p>
+        <p className="m-0 mt-1 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          {e.pourquoi}
+        </p>
+
+        {!e.faite && e.question}
+
+        {!e.faite && e.href && e.cta && (
+          <div className="mt-3">
+            <Link
+              href={e.href}
+              className={buttonVariants({
+                variant: prochaine ? "board" : "boardClair",
+                size: "boardSm",
+              })}
+            >
+              {e.cta} →
+            </Link>
+          </div>
+        )}
+      </div>
+    </li>
   );
 }
