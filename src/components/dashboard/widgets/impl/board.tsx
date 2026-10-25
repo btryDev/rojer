@@ -486,7 +486,7 @@ export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
 
           `.sous-la-gelule` : le brief remonte sous la gélule de compte, que
           son fond a le droit de porter. */}
-      <div className="sous-la-gelule fond-pointille border-b border-[color:rgba(13,18,36,.06)] px-[var(--board-gutter)] pb-10 pt-[56px]">
+      <div className="sous-la-gelule fond-pointille border-b border-[color:rgba(13,18,36,.06)] px-[var(--board-gutter)] pb-14 pt-[104px]">
         <div>
             <p className="board-eyebrow m-0 mb-3 text-[color:var(--board-slate-ink)]">
               {brief.datePill}

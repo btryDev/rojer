@@ -457,7 +457,7 @@ calculent sur ce qui est réellement affiché, filtre compris.
 Le tableau de bord n'a pas l'en-tête des autres pages : c'est le seul écran qui
 résume tout le dossier, et son hero le dit autrement.
 
-- **Fond** : `.fond-pointille` (gris chaud piqué d'une trame de points, « table
+- **Fond** : `.fond-pointille` (bleu pâle piqué d'une trame de points, « table
   à dessin ») à la place du bleu ciel. Ce qui se lit dessus pose sa surface
   blanche (les trois relevés sont sur une carte).
 - **À gauche** : la date, le titre du brief (masqué, sauf pour les lecteurs

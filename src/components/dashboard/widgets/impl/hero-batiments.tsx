@@ -134,8 +134,10 @@ export function HeroEtablissement({
     <div className="relative">
       {/* Décoratif : tout ce que le dessin évoque est écrit dans la fiche.
           Au-dessus de la fiche sur petit écran ; à partir de `lg`, posé sur
-          son extrémité droite, qui lui réserve la place (`lg:pr-…`). Il peut
-          monter sous la gélule de compte : une image y a droit. */}
+          son extrémité droite, qui lui réserve la place (`lg:pr-…`), et il
+          déborde sous la fiche plutôt qu'au-dessus : monté plus haut, il se
+          faisait couper par le haut du hero et passait sous la gélule de
+          compte. */}
       <Image
         src={`/illustrations/batiments/${illustration}.webp`}
         alt=""
@@ -144,10 +146,10 @@ export function HeroEtablissement({
         height={planche.hauteur}
         sizes="(min-width: 1024px) 440px, 320px"
         priority
-        className="pointer-events-none relative z-10 mx-auto mb-4 block h-auto w-[clamp(220px,60vw,320px)] select-none lg:absolute lg:bottom-5 lg:right-[-1%] lg:mb-0 lg:w-[clamp(300px,30vw,440px)]"
+        className="pointer-events-none relative z-10 mx-auto mb-4 block h-auto w-[clamp(220px,60vw,320px)] select-none lg:absolute lg:bottom-[-28px] lg:right-[-1%] lg:mb-0 lg:w-[clamp(280px,26vw,400px)]"
       />
 
-      <div className="rounded-[24px] bg-[color:var(--board-card)] p-6 ring-1 ring-[color:rgba(13,18,36,.10)] sm:p-7 lg:pr-[clamp(260px,29vw,420px)]">
+      <div className="rounded-[24px] bg-[color:var(--board-card)] p-6 ring-1 ring-[color:rgba(13,18,36,.10)] sm:p-7 lg:pr-[clamp(260px,27vw,400px)]">
         <div className="flex min-w-0 items-center gap-3.5">
           <span
             aria-hidden

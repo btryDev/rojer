@@ -99,7 +99,7 @@ export function DashboardGridClient({
           tiroir « Ajouter un widget » en a besoin. */}
       <div
         className={
-          "px-[var(--board-gutter)] pt-[calc(var(--board-gutter)-8px)] " +
+          "px-[var(--board-gutter)] pt-6 " +
           (enEdition ? "" : "flex justify-end")
         }
       >
