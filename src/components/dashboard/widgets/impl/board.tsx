@@ -603,16 +603,6 @@ export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
               </div>
             </div>
 
-            {/* Ce que ces chiffres comptent, sous les chiffres.
-                « Dépassées » est le plus large des compteurs du produit —
-                toutes familles, tout l'établissement — et c'est justement pour
-                ça qu'il devait le dire : il est celui que le dirigeant compare
-                aux 19 de la page Équipements, sans que rien nulle part ne lui
-                explique l'écart. La phrase se dérive du type fermé des
-                familles (`enumererFamilles`), jamais recopiée. */}
-            <p className="m-0 mt-5 max-w-[480px] text-[12px] leading-[1.5] text-[color:var(--board-slate-ink)]">
-              {bundle.perimetreHero.releves}
-            </p>
           </div>
 
           {/* Le bâtiment du genre de lieu, et l'établissement présenté

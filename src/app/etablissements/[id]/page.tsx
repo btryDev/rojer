@@ -14,11 +14,7 @@ import type { DashboardBundle } from "@/components/dashboard/widgets/types";
 import { getEtablissement } from "@/lib/etablissements/queries";
 import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
 import { appareilsMuets } from "@/lib/equipements/reponses-exigees";
-import {
-  listerBatimentsAvecCharge,
-  porteursDeLaPlaqueZones,
-} from "@/lib/batiments/queries";
-import { legendePlaqueZones } from "@/lib/perimetre/porteurs-comptes";
+import { listerBatimentsAvecCharge } from "@/lib/batiments/queries";
 import { estMultiBatiments, resoudreFiltreBatiment } from "@/lib/batiments/filtre";
 import { SelecteurBatiment } from "@/components/batiments/SelecteurBatiment";
 import {
@@ -43,7 +39,7 @@ import {
 } from "@/lib/calendrier/queries";
 import { composantesCiviles, joursCivilsEntre } from "@/lib/dates";
 import { instantDuRendu } from "@/lib/dates/instant-du-rendu";
-import { enumererFamilles, libellePorteur } from "@/lib/calendrier/labels";
+import { libellePorteur } from "@/lib/calendrier/labels";
 import { libelleEtatCourtCapitale } from "@/lib/calendrier/etats";
 import { echeancesDuTableauDeBord } from "@/lib/calendrier/prochaine-echeance";
 import { illustrationBatiment } from "@/lib/etablissements/illustration";
@@ -313,28 +309,11 @@ export default async function EtablissementPage({
     etablissementId: id,
     batiments,
     batimentFiltre: batiments.find((b) => b.id === batimentFiltre) ?? null,
-    // Les deux périmètres du hero, dits en clair — cf. `DashboardBundle`.
-    // Le premier se dérive du type fermé des familles, le second d'un appel à
-    // l'agrégation des zones : aucun des deux n'est une phrase écrite à la
-    // main au-dessus d'un chiffre qu'elle ne décrit plus.
-    //
-    // LA MOITIÉ DROITE DE LA PREMIÈRE EST PARTIE. Elle disait « — pour
-    // l'établissement entier, filtre de zone compris », et la légende du
-    // sélecteur de zone, 200 px plus bas, disait déjà le même fait avec
-    // d'autres mots. Le fait est donc énoncé une fois, à l'endroit où la
-    // question se pose : sous le filtre qui la fait naître. Sans filtre, il n'y
-    // a pas de périmètre de zone à distinguer, et la phrase n'avait rien à
-    // annoncer.
-    //
-    // Les deux relevés sont NOMMÉS par la table d'états, pas recopiés : le jour
-    // où le mot change, la phrase qui le cite change avec lui.
-    perimetreHero: {
-      releves: `« ${libelleEtatCourtCapitale("enRetard")} » et « ${libelleEtatCourtCapitale("proche")} » réunissent toutes les familles — ${enumererFamilles()}.`,
-      plaqueZones: legendePlaqueZones({
-        comptes: porteursDeLaPlaqueZones(aujourdhui),
-        libelleReleveComplet: libelleEtatCourtCapitale("enRetard"),
-      }),
-    },
+    // [2026-10-25] `perimetreHero` est retiré : ses deux phrases (« Dépassées
+    // et Sous 30 j réunissent toutes les familles… », légende de la plaque des
+    // zones) ne s'affichent plus — décision de la propriétaire, la première
+    // redisait ce que l'agrégat porte déjà ; la seconde légendait une plaque
+    // qui n'existe plus.
     illustrationHero: illustrationBatiment(etab),
     etablissement: {
       id: etab.id,

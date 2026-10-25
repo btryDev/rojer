@@ -191,23 +191,6 @@ export type DashboardBundle = {
    *  leur permet de le dire. */
   batimentFiltre: { id: string; nom: string } | null;
   /**
-   * Ce que les deux compteurs du hero comptent, en toutes lettres.
-   *
-   * **Dérivées côté serveur, et transportées** — pas calculées ici. Les deux
-   * phrases sortent de `perimetre/porteurs-comptes.ts`, qui lit le référentiel
-   * et fait tourner l'agrégation des zones pour savoir ce qu'elle retient
-   * vraiment ; rien de tout cela n'a à traverser vers le navigateur, et le
-   * board est un composant client.
-   *
-   * Elles existent parce que le hero pose côte à côte deux nombres qui ne
-   * comptent pas la même chose : le relevé « Dépassées » réunit toutes les
-   * familles de tout l'établissement, les pastilles des zones ne comptent que
-   * ce que portent les équipements. Les deux sont justes ; c'est le seul
-   * endroit du produit où l'écart se constate d'un coup d'œil, donc le seul où
-   * il doit s'expliquer sur place.
-   */
-  perimetreHero: { releves: string; plaqueZones: string };
-  /**
    * Le dessin du hero (`illustrationBatiment`), choisi côté serveur : la
    * reconnaissance par code NAF lit les référentiels sectoriels, qui n'ont
    * pas à partir dans le bundle du board.
