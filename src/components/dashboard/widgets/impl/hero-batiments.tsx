@@ -99,7 +99,7 @@ function BoutonGuide({ guide }: { guide: GuideFiche }) {
       <button
         type="button"
         onClick={() => setOuvert(true)}
-        className={buttonVariants({ variant: "board", size: "boardSm" }) + " flex-none"}
+        className={buttonVariants({ variant: "board", size: "board" }) + " flex-none"}
       >
         Finir de compléter les infos de l&apos;établissement
       </button>
@@ -229,7 +229,7 @@ export function HeroEtablissement({
     {/* Hors des cartes, en bas à droite du hero (demande de la
         propriétaire) : le geste vaut pour le dossier, pas pour la fiche. */}
     {guide ? (
-      <div className="mt-4 flex justify-end">
+      <div className="mt-7 flex justify-end">
         <BoutonGuide guide={guide} />
       </div>
     ) : null}
