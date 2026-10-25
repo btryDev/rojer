@@ -162,10 +162,18 @@ describe("construireSections — structure", () => {
     expect(idsVisibles()).toContain("guide");
   });
 
-  it("ouvre la santé-sécurité par le DUERP et la ferme par ce qui n'est pas couvert", () => {
+  it("ouvre la santé-sécurité par le DUERP", () => {
     const ids = santeSecurite().map((i) => i.id);
     expect(ids[0]).toBe("duerp");
+    expect(ids).not.toContain("perimetre");
+  });
+
+  // 2026-10-25, ADR-025 § 8 amendée : la page parle du dossier entier, elle
+  // ferme la documentation et sa tuile s'allume sur « Documentation ».
+  it("ferme la documentation par ce que Rojer ne couvre pas", () => {
+    const ids = itemsDe("Documentation").map((i) => i.id);
     expect(ids[ids.length - 1]).toBe("perimetre");
+    expect(categorieDeItem("perimetre")).toBe("documentation");
   });
 
   it("garde les registres du lieu à plat, le registre de sécurité en tête", () => {
