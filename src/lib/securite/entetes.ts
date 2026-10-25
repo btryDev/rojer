@@ -107,6 +107,8 @@ export const SOURCES_FICHIERS_DEPOSES = [
   "/api/prestataires/:id/pieces-precedentes/:pieceId",
   // La pièce qui prouve la correction d'un point (ADR-048).
   "/api/points/:id/piece",
+  // La photo du lieu, dans le hero du tableau de bord (2026-10-25).
+  "/api/etablissements/:id/photo",
 ] as const;
 
 /** La CSP d'un fichier déposé : n'exécute rien dans notre origine, ne s'encadre pas. */

@@ -301,7 +301,9 @@ reconnaissable »). Deux mesures la gardent de le devenir :
 
 - **les métadonnées EXIF sont retirées avant l'envoi** : le navigateur
   ré-encode l'image (`CartePhotoLieu`), ce qui efface la position GPS et
-  l'appareil qu'un téléphone inscrit dans le fichier ;
+  l'appareil qu'un téléphone inscrit dans le fichier. C'est le navigateur qui
+  le garantit, pas le serveur : un envoi qui contournerait l'écran garderait
+  ses métadonnées — mais la photo n'est servie qu'à son propre déposant ;
 - **elle n'est jamais publique** : servie par
   `/api/etablissements/[id]/photo` au seul compte propriétaire, libérée du
   stockage au remplacement, au retrait et à la suppression de l'établissement
