@@ -85,7 +85,8 @@ export default async function DuerpLayout({
         modules={modules}
       />
 
-      <div className="flex min-w-0 flex-col bg-[color:var(--board-canvas)] lg:overflow-y-auto">
+      {/* `relative` : la gélule de compte s'y positionne, en haut à droite. */}
+      <div className="relative flex min-w-0 flex-col bg-[color:var(--board-canvas)] lg:overflow-y-auto">
         {/* Le compte se tient en haut à droite ici aussi : le shell DUERP
             partage la même sidebar, donc la même règle. */}
         <BarreCompte

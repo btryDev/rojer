@@ -61,11 +61,11 @@ export default async function EtablissementLayout({
         counts={counts}
         modules={modules}
       />
-      <div className="flex min-w-0 flex-col lg:overflow-y-auto">
-        {/* Barre de compte : la sidebar porte la hiérarchie du produit, la
-            barre haute porte les utilitaires de session. Ce partage est ce
-            qui justifie la barre — sans le compte, elle n'aurait rien à
-            porter et serait une bande vide. Cf. `BarreCompte`. */}
+      {/* `relative` : la gélule de compte s'y positionne, en haut à droite. */}
+      <div className="relative flex min-w-0 flex-col lg:overflow-y-auto">
+        {/* Gélule de compte : la sidebar porte la hiérarchie du produit, la
+            gélule les utilitaires de session. Elle flotte au-dessus du
+            contenu, sans bande à elle. Cf. `BarreCompte`. */}
         <BarreCompte
           etablissementId={etab.id}
           email={user.email ?? null}
