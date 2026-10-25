@@ -67,7 +67,7 @@ export type PersistedLayout = {
 
 /* ─── Bundle de données consommé par tous les widgets ─────── */
 
-type EtablissementLite = {
+export type EtablissementLite = {
   id: string;
   raisonDisplay: string;
   entrepriseId: string;

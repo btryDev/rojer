@@ -38,7 +38,7 @@ import {
   LIBELLE_ETAT_COURT,
   LIBELLE_SANS_ECHEANCE,
 } from "@/lib/calendrier/etats";
-import { Enseigne, HeroBatiments } from "./hero-batiments";
+import { HeroBatiments } from "./hero-batiments";
 import { CarteBoard } from "@/components/dashboard/CarteBoard";
 import type { Recommandation } from "@/lib/dashboard/recommandations";
 import { occupePlaceReservee } from "@/lib/dashboard/place-reservee";
@@ -514,7 +514,7 @@ export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
   // le badge de la barre latérale : toutes familles confondues.
   const totalUrgent = retards.total;
 
-  const { etablissement, batiments } = bundle;
+  const { etablissement } = bundle;
 
   return (
     <>
@@ -534,12 +534,7 @@ export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
               trait que les cartes de widgets du dessous et le hero perdait
               son statut de bandeau — c'est une bannière, pas une carte. */}
           <div className="lg:pl-8 xl:pl-12">
-            <Enseigne
-              nom={etablissement.raisonDisplay}
-              // Pas encore de logo en base — cf. la note dans `Enseigne`.
-              logoUrl={null}
-            />
-            <p className="board-eyebrow m-0 mb-3 mt-6 text-[color:var(--board-slate-ink)]">
+            <p className="board-eyebrow m-0 mb-3 text-[color:var(--board-slate-ink)]">
               {brief.datePill}
             </p>
 
@@ -562,9 +557,8 @@ export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
             <div className="mt-7 inline-flex items-stretch rounded-[20px] bg-[color:var(--board-card)] px-[22px] py-4 ring-1 ring-[color:rgba(13,18,36,.08)]">
               <div className="pr-[22px]">
                 {/* Le mot vient de la table d'états (`LIBELLE_ETAT_COURT`),
-                    comme celui de l'étiquette de zone et celui du bandeau du
-                    parc à un clic : les trois écrivaient trois mots
-                    différents pour cet état-là. */}
+                    comme celui du bandeau du parc à un clic : les deux
+                    écrivaient deux mots différents pour cet état-là. */}
                 <Releve
                   valeur={totalUrgent}
                   libelle={LIBELLE_ETAT_COURT.enRetard}
@@ -586,9 +580,9 @@ export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
               </div>
               <div className="w-px bg-[color:rgba(10,10,10,.1)]" />
               <div className="pl-[22px]">
-                {/* Le parc entier, comme les deux relevés d'à côté et
-                    comme les étiquettes des zones : trois chiffres alignés
-                    sous un même titre ne peuvent pas avoir trois portées. */}
+                {/* Le parc entier, comme les deux relevés d'à côté : trois
+                    chiffres alignés sous un même titre ne peuvent pas avoir
+                    trois portées. */}
                 <Releve
                   valeur={bundle.equipementsEtablissement.length}
                   libelle="Équipements"
@@ -608,13 +602,11 @@ export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
             </p>
           </div>
 
-          {/* Le bâtiment et ses zones (ADR-019, ADR-029) — un état, pas une
-              commande : le filtre reste au sélecteur posé sous le hero, qui
-              porte sa porte de sortie. */}
+          {/* Le bâtiment du genre de lieu, et l'établissement présenté
+              autour : son nom, son régime, son effectif. */}
           <HeroBatiments
-            batiments={batiments}
+            etablissement={etablissement}
             illustration={bundle.illustrationHero}
-            legende={bundle.perimetreHero.plaqueZones}
           />
         </div>
       </div>
