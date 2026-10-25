@@ -113,39 +113,38 @@ export function OnboardingChecklist({
         </div>
       </div>
 
-      {/* La prochaine étape seule, à plat ; les autres derrière un
-          « Voir les N autres étapes » (2026-10-25, demande de la
-          propriétaire) : six étapes dépliées repoussaient le board d'un écran
-          entier, pour n'en traiter qu'une à la fois. `<details>` natif : pas
-          de JavaScript, et le clavier comme le lecteur d'écran savent
-          l'ouvrir. */}
-      <ol className="m-0 list-none p-0">
-        <LigneEtape etape={etapes[indexProchaine]} rang={indexProchaine} prochaine />
-      </ol>
-
-      {total > 1 ? (
-        <details className="group border-t border-[color:var(--board-slate-line)]">
-          <summary className="flex cursor-pointer list-none items-center gap-2 px-7 py-3.5 text-[13px] font-semibold text-[color:var(--board-ink)] hover:bg-[color:var(--board-slate-pale)] sm:px-8 [&::-webkit-details-marker]:hidden">
-            <ChevronDown
-              aria-hidden
-              className="size-4 transition-transform group-open:rotate-180"
+      {/* Deux temps (2026-10-25, demande de la propriétaire) : d'abord
+          l'introduction et la progression, puis, au clic, toutes les étapes —
+          faites et à faire. Dépliées d'office, elles repoussaient le board
+          d'un écran entier. `<details>` natif : pas de JavaScript, et le
+          clavier comme le lecteur d'écran savent l'ouvrir. */}
+      <details className="group">
+        <summary
+          className={
+            "mx-7 my-5 w-fit cursor-pointer list-none sm:mx-8 [&::-webkit-details-marker]:hidden " +
+            buttonVariants({ variant: "board", size: "boardSm" })
+          }
+        >
+          <span className="group-open:hidden">
+            Voir les étapes · {total - faites} à faire
+          </span>
+          <span className="hidden group-open:inline">Masquer les étapes</span>
+          <ChevronDown
+            aria-hidden
+            className="size-4 transition-transform group-open:rotate-180"
+          />
+        </summary>
+        <ol className="m-0 list-none divide-y divide-[color:var(--board-slate-line)] border-t border-[color:var(--board-slate-line)] p-0">
+          {etapes.map((e, i) => (
+            <LigneEtape
+              key={e.id}
+              etape={e}
+              rang={i}
+              prochaine={i === indexProchaine}
             />
-            <span className="group-open:hidden">
-              Voir les {total - 1} autres étapes
-            </span>
-            <span className="hidden group-open:inline">
-              Masquer les autres étapes
-            </span>
-          </summary>
-          <ol className="m-0 list-none divide-y divide-[color:var(--board-slate-line)] border-t border-[color:var(--board-slate-line)] p-0">
-            {etapes.map((e, i) =>
-              i === indexProchaine ? null : (
-                <LigneEtape key={e.id} etape={e} rang={i} prochaine={false} />
-              ),
-            )}
-          </ol>
-        </details>
-      ) : null}
+          ))}
+        </ol>
+      </details>
 
       {/* Bandeau bas rassurance */}
       <div className="border-t border-[color:var(--board-slate-line)] bg-[color:var(--board-slate-pale)] px-7 py-3.5 sm:px-8">

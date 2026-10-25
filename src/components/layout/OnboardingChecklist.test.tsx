@@ -17,18 +17,13 @@ function rendu(etapes: EtapeOnboarding[]) {
     .container;
 }
 
-describe("guide de mise en place : une étape à la fois", () => {
-  it("montre la prochaine étape à plat, les autres derrière le dépliant", () => {
+describe("guide de mise en place : en deux temps", () => {
+  it("toutes les étapes sont derrière le bouton, faites comprises", () => {
     const c = rendu([etape("a", true), etape("b", false), etape("c", false)]);
     const aPlat = [...c.querySelectorAll("li")].filter((li) => !li.closest("details"));
-    expect(aPlat.map((li) => li.textContent)).toEqual([expect.stringContaining("Étape b")]);
-    const replies = c.querySelectorAll("details li");
-    expect(replies).toHaveLength(2);
-    expect(c.querySelector("summary")?.textContent).toContain("Voir les 2 autres étapes");
-  });
-
-  it("pas de dépliant pour une étape unique", () => {
-    expect(rendu([etape("a", false)]).querySelector("details")).toBeNull();
+    expect(aPlat).toHaveLength(0);
+    expect(c.querySelectorAll("details li")).toHaveLength(3);
+    expect(c.querySelector("summary")?.textContent).toContain("Voir les étapes · 2 à faire");
   });
 
   it("disparaît quand tout est fait", () => {
