@@ -19,12 +19,9 @@ import type { DashboardBundle } from "./types";
  */
 export async function DashboardGrid({
   bundle,
-  entete,
   filtre,
 }: {
   bundle: DashboardBundle;
-  /** Le guide de mise en place, en tête du board (cf. le client). */
-  entete?: React.ReactNode;
   /** Le filtre de zone, sur la rangée de « Personnaliser » (cf. le client). */
   filtre?: React.ReactNode;
 }) {
@@ -36,7 +33,6 @@ export async function DashboardGrid({
       key={bundle.etablissementId}
       bundle={bundle}
       layoutCookie={layoutCookie}
-      entete={entete}
       filtre={filtre}
     />
   );

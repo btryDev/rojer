@@ -470,6 +470,12 @@ résume tout le dossier, et son hero le dit autrement.
 - **Le bâtiment**, dans sa propre carte à côté de la fiche, contenu sans
   recadrage : le genre de lieu (`illustrationBatiment` : type ERP, puis secteur
   du code NAF, puis local générique). La carte recevra une vraie photo.
+- **Le guide de mise en place** n'a plus de bloc à lui : tant qu'il reste des
+  étapes, la fiche porte « Informations incomplètes » et, sous les cartes à
+  droite, « Finir de compléter les infos de l'établissement » ouvre les étapes
+  dans un `PanneauModal`.
+- **La photo du lieu**, déposée par le dirigeant, remplace l'illustration dans
+  sa carte (« Ajouter une photo », « Changer », « Retirer »).
 - **Interdit** : rien n'est épinglé sur le dessin. Un plan du lieu, puis une
   étiquette par zone, ont été essayés et refusés : un emplacement dessiné se
   lit comme celui du client, que le produit ne connaît pas.

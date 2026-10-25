@@ -32,22 +32,15 @@ import type { DashboardBundle, WidgetId } from "./types";
 export function DashboardGridClient({
   bundle,
   layoutCookie,
-  entete,
   filtre,
 }: {
   bundle: DashboardBundle;
   /** Valeur du cookie de disposition, lue au serveur (`DashboardGrid`). */
   layoutCookie: string | null;
   /**
-   * Un bloc hors registre posé en tête du board, pleine largeur — le guide
-   * de mise en place. Ni déplaçable ni retirable : il disparaît de lui-même
-   * quand ses étapes sont faites.
-   */
-  entete?: React.ReactNode;
-  /**
    * Le filtre de zone, posé sur la rangée de « Personnaliser », à sa gauche :
    * les deux règlent les widgets du dessous (2026-10-25, demande de la
-   * propriétaire : « Personnaliser » sous le guide).
+   * propriétaire).
    */
   filtre?: React.ReactNode;
 }) {
@@ -97,10 +90,6 @@ export function DashboardGridClient({
 
   return (
     <div className="flex flex-col">
-      {entete ? (
-        <div className="px-[var(--board-gutter)] pt-6">{entete}</div>
-      ) : null}
-
       {/* Le contrôle occupe sa propre rangée : posé en flottant il
           chevauchait le premier widget. Hors édition il se range à droite
           du filtre de zone ; en édition il prend la pleine largeur — le

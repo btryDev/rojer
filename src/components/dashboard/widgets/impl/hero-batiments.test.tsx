@@ -8,7 +8,7 @@ vi.mock("@/lib/etablissements/photo", () => ({
   deposerPhotoEtablissement: vi.fn(),
   retirerPhotoEtablissement: vi.fn(),
 }));
-import { cleanup, render } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { ILLUSTRATIONS_BATIMENT } from "@/lib/etablissements/illustration";
 import { HeroEtablissement } from "./hero-batiments";
 
@@ -37,10 +37,10 @@ const zones = [
   { id: "z2", nom: "Terrasse", nbEquipements: 0 },
 ];
 
-function texte(e = etab) {
+function texte(e = etab, guide: Parameters<typeof HeroEtablissement>[0]["guide"] = null) {
   return (
     render(
-      <HeroEtablissement etablissement={e} illustration="restaurant" photo={null} nbEquipe={6} nbEquipements={7} zones={zones} />,
+      <HeroEtablissement etablissement={e} illustration="restaurant" photo={null} guide={guide} nbEquipe={6} nbEquipements={7} zones={zones} />,
     ).container.textContent ?? ""
   );
 }
@@ -77,6 +77,31 @@ describe("hero : la fiche de l'établissement", () => {
     expect(t).toContain("Zone principale");
     expect(t).not.toContain("Bâtiment principal");
     expect(t).toContain("aucun équipement");
+  });
+});
+
+describe("hero : le guide de mise en place, depuis la fiche", () => {
+  it("dossier incomplet : la fiche le dit et offre de finir", () => {
+    const t = texte(etab, { aFaire: 2, contenu: <p>Les étapes</p> });
+    expect(t).toContain("Informations incomplètes");
+    expect(t).toContain("Finir de compléter les infos de l'établissement");
+    // Les étapes ne sont pas montrées tant qu'on ne les demande pas.
+    expect(t).not.toContain("Les étapes");
+  });
+
+  it("le bouton ouvre les étapes dans un panneau", () => {
+    render(
+      <HeroEtablissement etablissement={etab} illustration="restaurant" photo={null} guide={{ aFaire: 2, contenu: <p>Les étapes</p> }} nbEquipe={6} nbEquipements={7} zones={zones} />,
+    );
+    fireEvent.click(screen.getByText("Finir de compléter les infos de l'établissement"));
+    expect(screen.getByRole("dialog").textContent).toContain("Les étapes");
+    expect(screen.getByRole("dialog").textContent).toContain("2 étapes pour couvrir l'essentiel");
+  });
+
+  it("dossier complet : ni mention ni bouton", () => {
+    const t = texte();
+    expect(t).not.toContain("Informations incomplètes");
+    expect(t).not.toContain("Finir de compléter");
   });
 });
 

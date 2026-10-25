@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
 import {
-  OnboardingChecklist,
+  EtapesMiseEnPlace,
   type EtapeOnboarding,
 } from "@/components/layout/OnboardingChecklist";
 import { QuestionParametrage } from "@/components/layout/QuestionParametrage";
@@ -464,7 +464,20 @@ export default async function EtablissementPage({
     <>
       {/* Le brief : le hero du tableau de bord, sur le fond pointillé — la
           date, la fiche de l'établissement et son bâtiment. */}
-      <BlocBrief bundle={bundle} />
+      <BlocBrief
+        bundle={bundle}
+        // Les étapes de mise en place, ouvertes depuis la fiche du hero
+        // (« Finir de compléter les infos de l'établissement ») — rendues
+        // ici, au serveur : certaines posent leur question sur place.
+        guide={
+          onboardingFini
+            ? null
+            : {
+                aFaire: etapesOnboarding.filter((e) => !e.faite).length,
+                contenu: <EtapesMiseEnPlace etapes={etapesOnboarding} />,
+              }
+        }
+      />
 
 
       {/* Le fond du board — `flex-1` pour qu'il descende jusqu'au bas du
@@ -476,11 +489,6 @@ export default async function EtablissementPage({
       <div className="flex flex-1 flex-col bg-[color:var(--board-card)] pb-10">
         <DashboardGrid
           bundle={bundle}
-          entete={
-            onboardingFini ? null : (
-              <OnboardingChecklist etapes={etapesOnboarding} />
-            )
-          }
           filtre={filtreZones}
         />
 

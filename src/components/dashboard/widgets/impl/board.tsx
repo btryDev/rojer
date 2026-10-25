@@ -38,7 +38,7 @@ import {
   LIBELLE_AUCUNE_VERIFICATION,
   LIBELLE_SANS_ECHEANCE,
 } from "@/lib/calendrier/etats";
-import { HeroEtablissement } from "./hero-batiments";
+import { HeroEtablissement, type GuideFiche } from "./hero-batiments";
 import { CarteBoard } from "@/components/dashboard/CarteBoard";
 import type { Recommandation } from "@/lib/dashboard/recommandations";
 import { occupePlaceReservee } from "@/lib/dashboard/place-reservee";
@@ -426,7 +426,15 @@ function CarteTache({
   );
 }
 
-export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
+export function BlocBrief({
+  bundle,
+  guide,
+}: {
+  bundle: DashboardBundle;
+  /** Le guide de mise en place, ouvert depuis la fiche du hero ; `null`
+   *  quand tout est fait. */
+  guide: GuideFiche | null;
+}) {
   const { aujourdhui, dashboard, echeancesEtablissement } = bundle;
   // L'agrégat du titre porte sur l'**établissement**, filtre de zone ignoré :
   // le hero parle du site ; le filtre gouverne ce qui est sous le hero.
@@ -509,6 +517,7 @@ export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
               etablissement={etablissement}
               illustration={bundle.illustrationHero}
               photo={bundle.photoHero}
+              guide={guide}
               nbEquipe={bundle.nbEquipe}
               nbEquipements={bundle.equipementsEtablissement.length}
               zones={bundle.batiments}
