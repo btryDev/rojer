@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
@@ -63,8 +64,9 @@ export function OnboardingChecklist({
   return (
     <section
       aria-labelledby="onboarding-heading"
-      className="carte-board relative overflow-hidden"
+      className="carte-board relative grid overflow-hidden md:grid-cols-[minmax(0,1fr)_minmax(240px,30%)]"
     >
+      <div className="min-w-0">
       {/* Bandeau haut */}
       <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[color:var(--board-slate-line)] px-7 pt-6 pb-5 sm:px-8">
         <div className="min-w-0">
@@ -150,6 +152,22 @@ export function OnboardingChecklist({
         <p className="board-eyebrow m-0 text-[10px] tracking-[0.14em] text-[color:var(--board-slate-soft)]">
           Ce guide disparaîtra automatiquement une fois les étapes complétées.
         </p>
+      </div>
+      </div>
+
+      {/* [2026-10-25] Une photo, à la demande de la propriétaire : le guide
+          est le seul bloc du board qui s'adresse à la personne plutôt qu'au
+          dossier. Décorative — `alt=""` —, et absente sur petit écran, où
+          elle repoussait la première étape sous le pli. Origine et licence :
+          `public/photos/README.md`. */}
+      <div className="relative hidden md:block">
+        <Image
+          src="/photos/guide-ordinateur.jpg"
+          alt=""
+          fill
+          sizes="(min-width: 768px) 30vw, 0px"
+          className="object-cover object-[60%_center]"
+        />
       </div>
     </section>
   );

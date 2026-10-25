@@ -419,19 +419,14 @@ export default async function EtablissementPage({
     moisCourant: composantesCiviles(aujourdhui).mois - 1,
   };
 
-  return (
-    <>
-      {/* Le brief : le hero du tableau de bord, sur le fond pointillé — la
-          date, la fiche de l'établissement et son bâtiment. */}
-      <BlocBrief bundle={bundle} />
-
-      {/* Le filtre par bâtiment (ADR-019) reste ici, sous le hero, et non sur
-          les cartes-bâtiments : un dessin qui filtre au clic n'annonce pas
+  /* Le filtre par bâtiment (ADR-019) [2026-10-25] posé sous le guide de mise
+     en place, juste au-dessus des widgets qu'il filtre (demande de la
+     propriétaire) — et non sur les cartes-bâtiments : un dessin qui filtre au clic n'annonce pas
           comment en sortir, et le sélecteur, lui, porte son « Tout
           l'établissement ». Le hero montre l'état du parc, il ne le commande
-          pas. */}
-      {multiBatiments ? (
-        <div className="bg-[color:var(--board-card)] px-[var(--board-gutter)] pt-8">
+          pas. */
+  const filtreZones = multiBatiments ? (
+        <div>
           <SelecteurBatiment
             // Sans lui, le sélecteur rend en papier — son défaut — au milieu
             // d'un bandeau posé sur `--board-canvas`. L'oubli est silencieux :
@@ -461,7 +456,14 @@ export default async function EtablissementPage({
             }
           />
         </div>
-      ) : null}
+      ) : null;
+
+  return (
+    <>
+      {/* Le brief : le hero du tableau de bord, sur le fond pointillé — la
+          date, la fiche de l'établissement et son bâtiment. */}
+      <BlocBrief bundle={bundle} />
+
 
       {/* Le fond du board — `flex-1` pour qu'il descende jusqu'au bas du
           conteneur de défilement, même quand les widgets sont courts.
@@ -473,11 +475,16 @@ export default async function EtablissementPage({
         <DashboardGrid
           bundle={bundle}
           entete={
-            onboardingFini ? null : (
-              <OnboardingChecklist
-                etapes={etapesOnboarding}
-                etablissementRaison={etab.raisonDisplay}
-              />
+            onboardingFini && !filtreZones ? null : (
+              <div className="flex flex-col gap-6">
+                {onboardingFini ? null : (
+                  <OnboardingChecklist
+                    etapes={etapesOnboarding}
+                    etablissementRaison={etab.raisonDisplay}
+                  />
+                )}
+                {filtreZones}
+              </div>
             )
           }
         />
