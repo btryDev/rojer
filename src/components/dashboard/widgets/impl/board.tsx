@@ -547,14 +547,27 @@ export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
                 (« 14 vérifications dépassées, 22 à programmer… »), et
                 l'état du DUERP, qui a son propre widget. Trois chiffres se
                 lisent d'un coup d'œil ; la même chose en prose, non. */}
-            <h1 className="board-titre max-w-[480px] text-pretty text-[clamp(28px,2.9vw,40px)] leading-[1.06] tracking-[-0.035em]">
+            {/* [2026-10-25] Quand des échéances sont dépassées, le titre
+                (« 36 échéances sont dues, dont 30 sans date connue ») redit
+                les relevés juste dessous, précision comprise : il ne reste
+                que pour les lecteurs d'écran, à qui il résume la page. Ses
+                autres formes — titres de salariés en retard, dossier calme,
+                étape d'amorçage — disent ce que les chiffres ne disent pas,
+                et restent affichées. */}
+            <h1
+              className={
+                totalUrgent > 0
+                  ? "sr-only"
+                  : "board-titre m-0 mb-7 max-w-[480px] text-pretty text-[clamp(28px,2.9vw,40px)] leading-[1.06] tracking-[-0.035em]"
+              }
+            >
               {titre}
             </h1>
 
             {/* Les relevés, sur une carte blanche posée sur le pointillé.
                 Séparateurs en filet plutôt qu'en gouttière : trois chiffres
                 alignés sans trait se lisent comme un seul nombre. */}
-            <div className="mt-7 inline-flex items-stretch rounded-[20px] bg-[color:var(--board-card)] px-[22px] py-4 ring-1 ring-[color:rgba(13,18,36,.08)]">
+            <div className="inline-flex items-stretch rounded-[20px] bg-[color:var(--board-card)] px-[22px] py-4 ring-1 ring-[color:rgba(13,18,36,.08)]">
               <div className="pr-[22px]">
                 {/* Le mot vient de la table d'états (`LIBELLE_ETAT_COURT`),
                     comme celui du bandeau du parc à un clic : les deux
