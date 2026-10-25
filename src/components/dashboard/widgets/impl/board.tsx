@@ -587,7 +587,9 @@ export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
           140 px, et le hero, resté à 46, débordait des cartes de widgets
           d'une centaine de pixels de chaque côté. Sur un grand écran, rien
           ne s'alignait verticalement d'un bloc à l'autre. */}
-      <div className="bg-[color:var(--board-sky)] px-[var(--board-gutter)] pb-[52px] pt-[56px]">
+      {/* `.sous-la-gelule` : le brief remonte sous la gélule de compte, que
+          son fond a le droit de porter. */}
+      <div className="sous-la-gelule bg-[color:var(--board-sky)] px-[var(--board-gutter)] pb-[52px] pt-[56px]">
         <div className="grid items-center gap-x-12 gap-y-10 lg:grid-cols-2">
           {/* Rentré de la gouttière : collé au bord, le titre partait du même
               trait que les cartes de widgets du dessous et le hero perdait

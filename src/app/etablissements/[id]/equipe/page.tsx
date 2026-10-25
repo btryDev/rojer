@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { CompteurEtat } from "@/components/ui-kit/CompteurEtat";
+import { EnTetePage } from "@/components/entete-page/EnTetePage";
+import { BarreDeListe } from "@/components/ui-kit/BarreDeListe";
 import { Plus } from "lucide-react";
-import { FilAriane } from "@/components/navigation/FilAriane";
-import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
 import { buttonVariants } from "@/components/ui/button";
 import { SalarieCard } from "@/components/salaries/SalarieCard";
 import { requireEtablissement } from "@/lib/auth/scope";
@@ -104,64 +105,41 @@ export default async function EquipePage({
 
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
-      <header className="border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] py-[22px]">
-        <div className="flex flex-wrap items-end justify-between gap-6">
-          <div className="min-w-0 flex-1">
-            <FilAriane
-              crumbs={[
-                { href: `/etablissements/${id}`, label: etablissement.raisonDisplay },
-                { label: LABEL_ITEM.equipe },
-              ]}
-            />
-            <h1 className="board-titre m-0 text-[clamp(22px,2.2vw,27px)]">
-              Équipe
-            </h1>
-            <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-              Les personnes de votre effectif et les titres qu&apos;elles
-              détiennent — habilitation, attestation, certificat. Un titre porte
-              une échéance nominative : c&apos;est la personne qui est habilitée,
-              pas le poste.
-            </p>
-          </div>
+      <EnTetePage
+        item="equipe"
+        description="Les personnes de votre effectif et les titres qu'elles détiennent : habilitation, attestation, certificat. Chaque titre a son échéance, au nom de la personne."
+      />
 
-          <div className="flex flex-wrap items-center gap-3">
-            {enRetard > 0 && (
-              <span
-                className="inline-flex items-center gap-2 rounded-full px-4 py-[9px]"
-                style={{
-                  background: CHAMP_ETAT.enRetard,
-                  color: ENCRE_ETAT.enRetard,
-                }}
-              >
-                <span className="board-titre text-[20px] tabular-nums leading-none">
-                  {enRetard}
-                </span>
-                <span className="board-eyebrow text-[9.5px] tracking-[0.12em]">
-                  {enRetard > 1 ? "titres à renouveler" : "titre à renouveler"}
-                </span>
-              </span>
-            )}
-            {manquesEnRetard > 0 && (
-              <span
-                className="inline-flex items-center gap-2 rounded-full px-4 py-[9px]"
-                style={{
-                  background: CHAMP_ETAT.enRetard,
-                  color: ENCRE_ETAT.enRetard,
-                }}
-              >
-                <span className="board-titre text-[20px] tabular-nums leading-none">
-                  {manquesEnRetard}
-                </span>
-                <span className="board-eyebrow text-[9.5px] tracking-[0.12em]">
-                  {/* « en retard » dit : la pastille ne compte que les retards — un
-                      manque « bientôt dû » ou non daté est aussi dû, et n'y
-                      est pas (relecture C4). */}
-                  {manquesEnRetard > 1
-                    ? "titres non déclarés, en retard"
-                    : "titre non déclaré, en retard"}
-                </span>
-              </span>
-            )}
+      <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
+        <BarreDeListe
+          resume={
+            <>
+              {enRetard > 0 && (
+                <CompteurEtat
+                  nombre={enRetard}
+                  legende={enRetard > 1 ? "titres à renouveler" : "titre à renouveler"}
+                  champ={CHAMP_ETAT.enRetard}
+                  encre={ENCRE_ETAT.enRetard}
+                />
+              )}
+              {/* « en retard » dit : la pastille ne compte que les retards — un
+                  manque « bientôt dû » ou non daté est aussi dû, et n'y est
+                  pas (relecture C4). */}
+              {manquesEnRetard > 0 && (
+                <CompteurEtat
+                  nombre={manquesEnRetard}
+                  legende={
+                    manquesEnRetard > 1
+                      ? "titres non déclarés, en retard"
+                      : "titre non déclaré, en retard"
+                  }
+                  champ={CHAMP_ETAT.enRetard}
+                  encre={ENCRE_ETAT.enRetard}
+                />
+              )}
+            </>
+          }
+          action={
             <Link
               href={`/etablissements/${id}/equipe/nouveau`}
               className={buttonVariants({ variant: "board", size: "board" })}
@@ -169,11 +147,8 @@ export default async function EquipePage({
               <Plus className="size-3.5" aria-hidden />
               Ajouter une personne
             </Link>
-          </div>
-        </div>
-      </header>
-
-      <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
+          }
+        />
         {/* La porte d'entrée unique des faits d'activité (ADR-041) : tant
             qu'une question reste sans réponse, les formations qu'elle
             conditionne s'affichent « à confirmer ». */}

@@ -7,8 +7,8 @@ import { CarteRepliable } from "@/components/ui-kit/CarteRepliable";
 import { instantDuRendu } from "@/lib/dates/instant-du-rendu";
 import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
 import { EmptyState } from "@/components/layout/EmptyState";
-import { BandeauParc } from "@/components/equipements/BandeauParc";
-import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
+import { BarreParc } from "@/components/equipements/BarreParc";
+import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import {
   CarteCategorie,
   urgenceCategorie,
@@ -134,17 +134,18 @@ export default async function EquipementsPage({
 
   const suggestions = suggererEquipements(contexteDesSuggestions(etab));
 
-  // Les chiffres du bandeau ne comptent que le parc AFFICHÉ. Le compteur
+  // Les chiffres de la barre du parc ne comptent que le parc AFFICHÉ. Le compteur
   // de l'établissement (`compterEtatCalendrier`) embrasse aussi les
   // vérifications des équipements retirés — elles survivent au retrait dès
   // qu'elles portent un rapport ou une action (ADR-012). Après le retrait
-  // d'un appareil en retard, le bandeau annonçait « 1 en retard » alors
+  // d'un appareil en retard, la barre annonçait « 1 en retard » alors
   // qu'aucune carte de l'écran n'en montrait : un en-tête ne doit jamais
   // contredire ce qu'il coiffe.
   //
   // Un bâtiment filtré, c'est la même exigence d'un cran plus fin : la
-  // somme se fait sur les appareils affichés, donc le bandeau suit le
-  // filtre — les trois chiffres comme le total. La légende sous le
+  // somme se fait sur les appareils affichés, donc la barre suit le
+  // filtre — les trois chiffres ~~comme le total~~ [2026-10-25 : le total
+  // « au parc » est retiré, seuls restent les comptes d'état]. La légende sous le
   // sélecteur l'annonce en toutes lettres, dans les deux sens.
   const compteurs = equipementsAffiches.reduce(
     (acc, eq) => {
@@ -264,16 +265,15 @@ export default async function EquipementsPage({
 
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
-      <BandeauParc
-        crumbs={[
-          { href: base, label: etab.raisonDisplay },
-          { label: LABEL_ITEM.equipements },
-        ]}
+      <EnTetePage
+        item="equipements"
+        description="Ce que vous avez, et où. Chaque appareil porte ses vérifications, ses rapports et ses papiers : ouvrez sa fiche pour les voir."
+      />
+      <BarreParc
         hrefCalendrier={`${base}/calendrier`}
         enRetard={compteurs.enRetard}
         proches={compteurs.proches}
         aPlanifier={compteurs.aPlanifier}
-        total={equipementsAffiches.length}
         hrefAjouter={hrefAjouter}
         suggestions={
           suggestionsRestantes.length > 0
@@ -292,7 +292,7 @@ export default async function EquipementsPage({
       />
 
       <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
-        {/* Sous le bandeau qui titre l'écran, comme sur « Préparer un
+        {/* Sous l'en-tête et la barre du parc, comme sur « Préparer un
             contrôle ». Le parc ne montre que des compteurs : la phrase les
             nomme, pas « les échéances ci-dessous ». */}
         <AvertissementFraicheur

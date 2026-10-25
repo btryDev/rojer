@@ -4,7 +4,8 @@ import { listerQuandCaArrive } from "@/lib/quand-ca-arrive/lignes";
 import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
 import { AideEcran } from "@/components/ui-kit/AideEcran";
 import { TexteSource } from "@/components/ui-kit/TexteSource";
-import { HeroEnPlace } from "@/components/etats-permanents/HeroEnPlace";
+import { EnTetePage } from "@/components/entete-page/EnTetePage";
+import { OngletsEnPlace } from "@/components/etats-permanents/OngletsEnPlace";
 import { ChevronRepli } from "@/components/ui/repli";
 
 export const metadata = {
@@ -54,38 +55,45 @@ export default async function EnCasDePage({
 
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
-      <HeroEnPlace
-        etablissementId={id}
-        raisonDisplay={etablissement.raisonDisplay}
-        actif="evenement"
-        decoupe={decoupe === "geste" ? "geste" : undefined}
-        intro="Ce que vous devez faire quand un événement se produit : une embauche, un accident, une livraison, une canicule…"
-        outils={
-            <AideEcran titre="Comment lire cette page">
-              <p className="m-0">
-                Ces obligations n&apos;ont pas de date : elles deviennent dues
-                quand un fait survient — une embauche, une première affectation à
-                un travail sur écran, une opération de chargement ou de
-                déchargement par une entreprise extérieure, la fin de certains
-                arrêts de travail, un accident du travail grave, un épisode de
-                chaleur intense.
-              </p>
-              <p className="m-0">
-                Rojer ne sait pas quand ce fait arrive ; il ne peut donc ni vous
-                le rappeler, ni vous dire où vous en êtes. Il vous dit la règle,
-                pour que vous la connaissiez le jour venu.
-              </p>
-              <p className="m-0">
-                Cliquez sur un événement pour voir ce qu&apos;il rend dû ; le
-                livre ouvre ensuite le texte exact et ses articles. Ce qu&apos;un
-                fait rend dû à une personne ou à un appareil se lit sur sa fiche,
-                dans Équipe et dans Équipements.
-              </p>
-            </AideEcran>
-        }
-      />
+      {/* L'en-tête de « Ce qui doit être en place » : un onglet, pas une
+          page — l'onglet actif dit qu'on est sur le second. */}
+      <EnTetePage
+        item="etats-permanents"
+        description="Ce que vous devez faire quand un événement se produit : une embauche, un accident, une livraison, une canicule…"
+      >
+        <OngletsEnPlace
+          etablissementId={id}
+          actif="evenement"
+          decoupe={decoupe === "geste" ? "geste" : undefined}
+        />
+      </EnTetePage>
 
       <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
+        {/* L'aide parle de la liste, elle vit au-dessus d'elle : l'en-tête ne
+            porte que la bascule de vue (2026-10-25). */}
+        <div className="flex justify-end">
+          <AideEcran titre="Comment lire cette page">
+            <p className="m-0">
+              Ces obligations n&apos;ont pas de date : elles deviennent dues
+              quand un fait survient — une embauche, une première affectation à
+              un travail sur écran, une opération de chargement ou de
+              déchargement par une entreprise extérieure, la fin de certains
+              arrêts de travail, un accident du travail grave, un épisode de
+              chaleur intense.
+            </p>
+            <p className="m-0">
+              Rojer ne sait pas quand ce fait arrive ; il ne peut donc ni vous
+              le rappeler, ni vous dire où vous en êtes. Il vous dit la règle,
+              pour que vous la connaissiez le jour venu.
+            </p>
+            <p className="m-0">
+              Cliquez sur un événement pour voir ce qu&apos;il rend dû ; le
+              livre ouvre ensuite le texte exact et ses articles. Ce qu&apos;un
+              fait rend dû à une personne ou à un appareil se lit sur sa fiche,
+              dans Équipe et dans Équipements.
+            </p>
+          </AideEcran>
+        </div>
         {groupes.length === 0 ? (
           <section className="carte-board px-7 py-8 sm:px-8">
             <div className="flex max-w-[600px] flex-col gap-3">

@@ -52,7 +52,9 @@ export function SectionMois({
       id={ancre}
       // `scroll-mt` : la carte visée s'arrête sous la barre haute
       // collante au lieu de se glisser dessous.
-      className="scroll-mt-24 rounded-[30px] bg-[color:var(--board-card)] px-7 py-[26px] shadow-[0_1px_2px_rgba(13,18,36,.04),0_12px_32px_-14px_rgba(13,18,36,.10)] ring-1 ring-[color:rgba(13,18,36,.06)]"
+      // Une carte légère (v3, 2026-10-25) : un filet, sans ombre portée —
+      // empilées, les ombres des douze mois alourdissaient la page.
+      className="scroll-mt-24 rounded-[24px] bg-[color:var(--board-card)] px-7 py-[22px] ring-1 ring-[color:var(--board-slate-line)]"
     >
       {/* Le bouton vit DANS le h2 (l'inverse est du HTML invalide — un
           bouton n'accepte que du contenu phrasé) : le plan de titres
@@ -65,11 +67,17 @@ export function SectionMois({
           className="flex w-full items-center gap-3 text-left"
         >
           <span className="board-titre text-[22px] capitalize">{titre}</span>
-          <span className="inline-block rounded-full bg-[color:var(--board-blue-pale)] px-[13px] py-[6px] text-[12px] font-semibold text-[color:var(--board-blue-ink)]">
+          {/* Le volume est un compte, pas un état : du texte, et plus une
+              pilule bleue (2026-10-25). */}
+          <span className="text-[13px] text-[color:var(--board-slate-mid)]">
             {nb} ce mois-ci
           </span>
           {nbEnRetard > 0 ? (
-            <span className="inline-block rounded-full bg-[color:var(--board-signal)] px-[13px] py-[6px] text-[12px] font-semibold text-[color:var(--board-signal-ink)]">
+            // Le retard garde sa couleur, en champ pâle et point plein : la
+            // pastille saturée criait plus fort que les lignes qu'elle
+            // résume, qui portent déjà chacune leur « En retard ».
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--board-signal-pale)] px-[11px] py-[5px] text-[12px] font-semibold text-[color:var(--board-signal-ink)]">
+              <span aria-hidden className="size-[7px] rounded-full bg-[color:var(--board-signal-line)]" />
               {nbEnRetard} en retard
             </span>
           ) : null}

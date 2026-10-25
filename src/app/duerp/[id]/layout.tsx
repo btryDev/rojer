@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { AppSidebar } from "@/components/layout/AppSidebar";
-import { AppTopbar } from "@/components/layout/AppTopbar";
+import { EnTetePage } from "@/components/entete-page/EnTetePage";
+import { BarreDeListe } from "@/components/ui-kit/BarreDeListe";
 import { BarreCompte } from "@/components/layout/BarreCompte";
 import { getDuerp } from "@/lib/duerps/queries";
 import { getOptionalUser } from "@/lib/auth/require-user";
@@ -55,7 +56,7 @@ export default async function DuerpLayout({
     chargerSidebarCounts(etab.id),
     listerEtablissementsDeLEntreprise(etab.entrepriseId),
   ]);
-  // Secteur affiché en pill : celui choisi dans le wizard en priorité,
+  // Secteur affiché dans le contexte : celui choisi dans le wizard en priorité,
   // sinon suggestion par NAF (même règle que la page secteur elle-même).
   const refChoisi = duerp.referentielSecteurId
     ? trouverReferentielParId(duerp.referentielSecteurId)
@@ -64,11 +65,11 @@ export default async function DuerpLayout({
   const ref = refChoisi ?? refParNaf;
 
   const effectif = duerp.entreprise.effectif;
-  const subtitleSegments: Array<string | { pill: string }> = [
+  const contexte = [
     `NAF ${duerp.entreprise.codeNaf}`,
+    ...(ref ? [ref.nom] : []),
+    `${effectif} salarié${effectif > 1 ? "s" : ""}`,
   ];
-  if (ref) subtitleSegments.push({ pill: ref.nom });
-  subtitleSegments.push(`${effectif} salarié${effectif > 1 ? "s" : ""}`);
 
   return (
     <div className="grid min-h-screen grid-cols-1 lg:h-screen lg:grid-cols-[auto_1fr] lg:overflow-hidden">
@@ -85,7 +86,10 @@ export default async function DuerpLayout({
         modules={modules}
       />
 
-      <div className="flex min-w-0 flex-col bg-[color:var(--board-canvas)] lg:overflow-y-auto">
+      {/* `relative` : la gélule de compte s'y positionne, en haut à droite. */}
+      {/* La place de la gélule, réservée par défaut (voir le shell
+          d'établissement). */}
+      <div className="relative flex min-w-0 flex-col bg-[color:var(--board-canvas)] pt-[var(--reserve-gelule)] lg:overflow-y-auto">
         {/* Le compte se tient en haut à droite ici aussi : le shell DUERP
             partage la même sidebar, donc la même règle. */}
         <BarreCompte
@@ -96,48 +100,33 @@ export default async function DuerpLayout({
             raisonDisplay: e.raisonDisplay,
           }))}
         />
-        {/* PAS DE `kicker` ICI, ET C'EST UNE CORRECTION DU 2026-09-03.
-            Il portait `Établissements / ${raisonDisplay.split(" ")[0]}…`, ce
-            qui donnait « ÉTABLISSEMENTS / LE… » pour « Le Comptoir des
-            Halles » : le `split(" ")[0]` prend le PREMIER MOT, donc l'article
-            pour la plupart des enseignes françaises. Deux lettres et des
-            points de suspension, au-dessus d'un fil d'Ariane qui écrivait le
-            nom en entier juste en dessous.
-
-            Le remède n'est pas de mieux tronquer, c'est de reconnaître que
-            cette ligne n'avait pas lieu d'être. L'ADR-014 nomme deux
-            affirmations de navigation, et deux seulement : le fil d'Ariane dit
-            où la fiche VIT, le retour dit d'où l'on ARRIVE. `kicker` n'est ni
-            l'un ni l'autre — c'est un intitulé éditorial, et TOUS les autres
-            du dépôt le confirment : « Pourquoi cette page », « Obligation »,
-            « Bon à savoir », « Ce que vous signez ». Le shell DUERP était le
-            seul à y loger un chemin, et le seul à le rendre illisible.
-
-            Le fil d'Ariane reste, entier et cliquable ; l'emplacement du
-            `retour` reste libre pour la provenance le jour où le wizard la
-            lira (ADR-014, dernière conséquence). */}
-        <AppTopbar
-          title="DUERP"
-          crumbs={[
-            {
-              href: `/etablissements/${etab.id}`,
-              label: etab.raisonDisplay,
-            },
-            { label: "DUERP" },
-          ]}
-          subtitleSegments={subtitleSegments}
-          actions={
-            <Link
-              href={`/duerp/${id}/pdf/preview`}
-              className={buttonVariants({
-                variant: "boardClair",
-                size: "boardSm",
-              })}
-            >
-              PDF DUERP ↓
-            </Link>
-          }
+        {/* Le grand en-tête, sur chaque étape de l'assistant (décision de la
+            propriétaire du 2026-10-25) — le même que la porte d'entrée
+            (`etablissements/[id]/duerp`), pour que passer de l'une à
+            l'autre ne se lise pas comme changer de page. Il remplace
+            `AppTopbar`, son fil d'Ariane et sa pilule de secteur. */}
+        <EnTetePage
+          item="duerp"
+          description="Votre évaluation des risques, unité de travail par unité. Tout est enregistré au fur et à mesure : vous pouvez vous arrêter et reprendre."
         />
+        {/* Le contexte du document et sa sortie, au-dessus de l'étape : ce
+            que l'en-tête portait à droite, il ne le porte plus. */}
+        <div className="px-[var(--board-gutter)] pt-6">
+          <BarreDeListe
+            contexte={contexte}
+            action={
+              <Link
+                href={`/duerp/${id}/pdf/preview`}
+                className={buttonVariants({
+                  variant: "boardClair",
+                  size: "boardSm",
+                })}
+              >
+                PDF DUERP ↓
+              </Link>
+            }
+          />
+        </div>
 
         <div className="mx-auto w-full max-w-5xl px-6 py-12 sm:px-10 sm:py-14">
           {children}

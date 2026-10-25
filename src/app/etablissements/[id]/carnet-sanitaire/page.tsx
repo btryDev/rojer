@@ -1,5 +1,5 @@
-import { AppTopbar } from "@/components/layout/AppTopbar";
 import { DemandeAide } from "@/components/assistance/DemandeAide";
+import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import {
   LegalBadge,
   PastilleFiche,
@@ -72,19 +72,15 @@ export default async function CarnetSanitairePage({
   const derniereAnalyse = carnet?.analyses[0];
 
   return (
-    <>
-      <AppTopbar
-        title="Carnet sanitaire eau"
-        subtitle="Surveillance des légionelles — due aux établissements recevant du public dont l'eau chaude collective alimente des points d'usage à risque."
-        crumbs={[
-          { href: `/etablissements/${id}`, label: etablissement.raisonDisplay },
-          { label: "Carnet sanitaire" },
-        ]}
+    <main className="flex flex-1 flex-col">
+      <EnTetePage
+        item="carnet-sanitaire"
+        description="La surveillance des légionelles : relevés de température et analyses. Elle est due aux établissements recevant du public dont l'eau chaude collective alimente des points d'usage à risque."
       />
 
       {/* Écran d'application plein : la gouttière règle la largeur utile,
           pas un `max-w-*` centré (charte § 5). */}
-      <main className="flex flex-1 flex-col gap-7 bg-[color:var(--board-canvas)] px-[var(--board-gutter)] pt-7 pb-20">
+      <div className="flex flex-1 flex-col gap-7 bg-[color:var(--board-canvas)] px-[var(--board-gutter)] pt-7 pb-20">
         {/* Why */}
         <WhyCard
           charte="board"
@@ -557,8 +553,8 @@ export default async function CarnetSanitairePage({
             </ul>
           )}
         </section>
-      </main>
-    </>
+      </div>
+    </main>
   );
 }
 

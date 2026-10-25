@@ -1,5 +1,4 @@
-import { FilAriane } from "@/components/navigation/FilAriane";
-import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
+import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { cleJourCivil, formaterDateFr } from "@/lib/dates";
 import { chargerPagePrescriptions } from "@/lib/prescriptions/queries";
@@ -78,42 +77,17 @@ export default async function PrescriptionsPage({
   // que le renvoi promettait d'éviter.
   const { source: sourceBrute } = await searchParams;
   const sourceInitiale = sourceDemandee(sourceBrute);
-  const { etablissement } = await requireEtablissement(id);
+  await requireEtablissement(id);
   const { prescriptions, obligations, equipements } =
     await chargerPagePrescriptions(id);
   const action = creerPrescription.bind(null, id);
 
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
-      <header className="border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] py-[22px]">
-        <div className="min-w-0">
-          <FilAriane
-            crumbs={[
-              { href: `/etablissements/${id}`, label: etablissement.raisonDisplay },
-              { label: LABEL_ITEM.prescriptions },
-            ]}
-          />
-          {/* « Ce qu'une autorité vous a prescrit » : le formulaire de cette
-              page propose « Demande de votre assureur », et un assureur n'est
-              pas une autorité. Le titre rangeait donc sous le mot « autorité »
-              la seule source que l'ADR-032 existe pour en distinguer — et il
-              le faisait au-dessus du marquage qui dit le contraire. Ce qui
-              compte ici est « à vous seul » : le propre de cette page est la
-              prescription particulière, opposée au référentiel commun ; qui
-              l'a prescrite se lit ligne par ligne. */}
-          <h1 className="board-titre m-0 text-[clamp(22px,2.2vw,27px)]">
-            Ce qu&apos;on vous a prescrit, à vous seul
-          </h1>
-          <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-            Le calendrier est calculé à partir d&apos;un référentiel commun à
-            tous les établissements. Votre assureur peut exiger davantage — un
-            rythme plus court, une vérification supplémentaire —, par contrat et
-            non par le droit&nbsp;: ces lignes-là portent leur mention partout
-            où elles s&apos;affichent. Un arrêté du maire ou du préfet reçu
-            s&apos;ajoute de même au calendrier, avec sa référence.
-          </p>
-        </div>
-      </header>
+      <EnTetePage
+        item="prescriptions"
+        description="Ce qu'un arrêté du maire ou du préfet, ou une demande de votre assureur, ajoute au référentiel commun : ces lignes entrent à votre calendrier. Une demande d'assureur vient d'un contrat, pas du droit, et le dit partout où elle s'affiche."
+      />
 
       <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
         <section className="flex flex-col gap-4">

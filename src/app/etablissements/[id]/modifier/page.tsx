@@ -1,5 +1,4 @@
-import { FilAriane } from "@/components/navigation/FilAriane";
-import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
+import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import { notFound } from "next/navigation";
 import { EtablissementForm } from "@/components/etablissements/EtablissementForm";
 import { modifierEtablissement } from "@/lib/etablissements/actions";
@@ -25,22 +24,13 @@ export default async function ModifierEtablissementPage({
 
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
-      {/* Le fil d'Ariane porte le nom de l'établissement et l'entrée du rail
-          (« Fiche établissement »), le titre porte le geste : il évite
-          d'écrire deux fois la même raison sociale. Un fil et non une flèche
-          de retour : c'est une page d'entrée, elle dit où elle est rangée
-          (ADR-014). */}
-      <header className="border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] py-[22px]">
-        <FilAriane
-          crumbs={[
-            { href: `/etablissements/${id}`, label: etab.raisonDisplay },
-            { label: LABEL_ITEM.fiche },
-          ]}
-        />
-        <h1 className="board-titre m-0 text-[clamp(22px,2.2vw,27px)]">
-          Modifier l&apos;établissement
-        </h1>
-      </header>
+      {/* ~~Le fil d'Ariane porte le nom de l'établissement et l'entrée du
+          rail, le titre porte le geste.~~ [2026-10-25 : plus de fil
+          d'Ariane ; le titre est l'entrée du rail, « Fiche établissement ».] */}
+      <EnTetePage
+        item="fiche"
+        description="Ce que vous déclarez de votre établissement — régimes, effectif, classement — décide des obligations que Rojer vous présente. Mettez-le à jour dès qu'il change."
+      />
 
       <div className="px-[var(--board-gutter)] pt-6">
         <div className="carte-board max-w-[880px] px-7 py-7 sm:px-8">

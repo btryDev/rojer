@@ -88,6 +88,11 @@
      puis plafonne à 140 px pour laisser respirer les très grands
      écrans. */
   --board-gutter: clamp(32px, calc((100vw - 1560px) / 2 + 32px), 140px);
+  /* La place de la gélule de compte (`BarreCompte`, 48 px à 12 px du haut,
+     plus son air) : réservée en tête de la colonne de contenu par les deux
+     shells, rendue par ce qui a le droit de passer dessous — un fond ou une
+     image (`.sous-la-gelule`). Par défaut, rien ne s'y glisse. */
+  --reserve-gelule: 72px;
   /* La mesure de lecture, unique (2026-10-24, décision de la propriétaire).
      ~~62 / 66 / 68 caractères, recopiés à la main dans chaque écran~~ : la
      mesure d'un livre, qui coupait en trois lignes une phrase d'aide sur un
@@ -163,6 +168,11 @@
   --board-signal-ink: #8a2a23;
   --board-signal-on: #0a0a0a;
   --board-green: #bdfdb5;
+  /* Champ de l'état « au-delà de 30 jours » (2026-10-25) : un gris, parce
+     que l'état n'appelle aucun geste. Il était bleu (`--board-blue-soft`) et
+     faisait une couleur de plus au milieu des trois qui, elles, disent quoi
+     faire. Encre : `--board-slate-ink` (7,6 dessus). */
+  --board-lointain: #c9d3da;
   --board-green-ink: #216037;
   --board-green-ink-soft: #2e7a45;
 
@@ -615,6 +625,64 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .g-stamp-ring { animation: none; }
+}
+
+/* Un bloc à fond qui remonte sous la gélule de compte : l'en-tête commun
+   (`EnTetePage`), le brief du tableau de bord. Tout le reste commence sous
+   la réserve (`--reserve-gelule`). */
+.sous-la-gelule {
+  margin-top: calc(-1 * var(--reserve-gelule));
+}
+
+/* Illustrations d'en-tête de page (`src/components/entete-page`) — une
+   seule séquence, jouée UNE fois au chargement : c'est le moment fort de
+   l'en-tête, pas un décor qui bouge en permanence. Chaque dessin règle ses
+   délais en style en ligne. L'état final est l'état de repos : sans
+   animation, le dessin est complet. */
+.ep-trace {
+  stroke-dasharray: 1;
+  animation: ep-trace 0.45s ease-out both;
+}
+@keyframes ep-trace {
+  from { stroke-dashoffset: 1; }
+  to   { stroke-dashoffset: 0; }
+}
+.ep-pop {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: ep-pop 0.45s cubic-bezier(.3,1.6,.5,1) both;
+}
+@keyframes ep-pop {
+  from { transform: scale(0); }
+  to   { transform: scale(1); }
+}
+.ep-lueur { animation: ep-lueur 0.8s ease-in-out both; }
+@keyframes ep-lueur {
+  0%, 100% { opacity: 1; }
+  20% { opacity: .25; }
+  40% { opacity: 1; }
+  60% { opacity: .4; }
+}
+.ep-crayon { animation: ep-crayon 0.7s ease-in-out both; }
+@keyframes ep-crayon {
+  0%, 100% { transform: translate(0, 0); }
+  35% { transform: translate(5px, -4px); }
+  70% { transform: translate(-2px, 2px); }
+}
+.ep-cle {
+  transform-box: fill-box;
+  transform-origin: 0% 50%;
+  animation: ep-cle 0.8s ease-in-out both;
+}
+@keyframes ep-cle {
+  0%, 100% { transform: rotate(0); }
+  30% { transform: rotate(-14deg); }
+  65% { transform: rotate(6deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ep-trace, .ep-pop, .ep-lueur, .ep-crayon, .ep-cle {
+    animation: none;
+  }
 }
 
 /* =============================================================

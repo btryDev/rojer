@@ -27,7 +27,7 @@ export function SelecteurLecture() {
   const lecture = lectureDesParams(useSearchParams());
 
   return (
-    <div className="flex flex-none items-center gap-1 rounded-full bg-[color:var(--board-slate-pale)] p-1">
+    <div className="flex flex-none items-center gap-1 rounded-full bg-[color:var(--board-card)] p-1 shadow-[0_0_0_1px_rgba(13,18,36,.08)]">
       <Onglet actif={lecture === "mois"} onClick={() => ecrireLecture("mois")}>
         Par mois
       </Onglet>

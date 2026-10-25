@@ -38,8 +38,7 @@
 
 import { DemandeAide } from "@/components/assistance/DemandeAide";
 import Link from "next/link";
-import { FilAriane } from "@/components/navigation/FilAriane";
-import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
+import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import { BandeauCouverture } from "@/components/perimetre/BandeauCouverture";
 import { requireEtablissement } from "@/lib/auth/scope";
 import {
@@ -94,27 +93,12 @@ export default async function PerimetrePage({
 
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
-      <div className="border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] pb-8 pt-[26px]">
-        <FilAriane
-          crumbs={[
-            { href: base, label: etablissement.raisonDisplay },
-            { label: LABEL_ITEM.perimetre },
-          ]}
-        />
-
-        <div className="mt-1.5">
-          <h1 className="board-titre m-0 text-[clamp(29px,3vw,39px)]">
-            Ce que Rojer ne couvre pas
-          </h1>
-          <p className="m-0 mt-[11px] max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-            Ce qui manque à ce dossier, ce qui peut vous concerner et que
-            Rojer ne suit pas, les obligations qu&apos;il ne suit pas au
-            quotidien, et ce qu&apos;il ne gère pas. Rien ici n&apos;est compté
-            ni additionné — une obligation que cet outil ne traite pas reste
-            due si un texte l&apos;impose.
-          </p>
-        </div>
-      </div>
+      {/* La seconde phrase est la garde de toute la page : ce qui n'est pas
+          suivi ici reste dû si un texte l'impose. */}
+      <EnTetePage
+        item="perimetre"
+        description="Ce que Rojer ne suit pas pour ce dossier, et pourquoi. Une obligation que l'outil ne traite pas reste due si un texte l'impose."
+      />
 
       <div className="flex flex-col gap-10 px-[var(--board-gutter)] pt-7">
         {/* ─── A. Ce dossier-ci ──────────────────────────────────────── */}

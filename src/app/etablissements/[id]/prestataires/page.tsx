@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { EnTetePage } from "@/components/entete-page/EnTetePage";
+import { BarreDeListe } from "@/components/ui-kit/BarreDeListe";
+import { CompteurEtat } from "@/components/ui-kit/CompteurEtat";
 import { Plus } from "lucide-react";
-import { FilAriane } from "@/components/navigation/FilAriane";
-import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
 import { buttonVariants } from "@/components/ui/button";
 import { LegalBadge } from "@/components/ui-kit";
 import { PrestataireCard } from "@/components/prestataires/PrestataireCard";
@@ -27,7 +28,7 @@ export default async function PrestatairesPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { etablissement } = await requireEtablissement(id);
+  await requireEtablissement(id);
   const prestataires = await listPrestataires(id);
 
   // Le compteur porte le volume, mais la COULEUR vient de l'état le plus grave
@@ -50,44 +51,26 @@ export default async function PrestatairesPage({
 
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
-      <header className="border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] py-[22px]">
-        <div className="flex flex-wrap items-end justify-between gap-6">
-          <div className="min-w-0 flex-1">
-            <FilAriane
-              crumbs={[
-                { href: `/etablissements/${id}`, label: etablissement.raisonDisplay },
-                { label: LABEL_ITEM.prestataires },
-              ]}
-            />
-            <h1 className="board-titre m-0 text-[clamp(22px,2.2vw,27px)]">
-              Prestataires
-            </h1>
-            <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-              Les entreprises qui interviennent chez vous, et l&apos;état de
-              leurs pièces administratives. Une attestation signale son
-              expiration trente jours avant l&apos;échéance.
-            </p>
-          </div>
+      <EnTetePage
+        item="prestataires"
+        description="Les entreprises qui interviennent chez vous, et l'état de leurs pièces administratives. Une attestation signale son expiration trente jours avant l'échéance."
+      />
 
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Le compteur ne s'affiche qu'en cas d'alerte : un « 0 à
-                régulariser » permanent occupe la place sans rien apprendre. */}
-            {etatDuLot !== null && (
-              <span
-                className="inline-flex items-center gap-2 rounded-full px-4 py-[9px]"
-                style={{
-                  background: CHAMP_ETAT[etatDuLot],
-                  color: ENCRE_ETAT[etatDuLot],
-                }}
-              >
-                <span className="board-titre text-[20px] tabular-nums leading-none">
-                  {nbAlertes}
-                </span>
-                <span className="board-eyebrow text-[9.5px] tracking-[0.12em]">
-                  {nbAlertes > 1 ? "pièces à demander" : "pièce à demander"}
-                </span>
-              </span>
-            )}
+      <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
+        {/* Le compteur ne s'affiche qu'en cas d'alerte : un « 0 à
+            régulariser » permanent occupe la place sans rien apprendre. */}
+        <BarreDeListe
+          resume={
+            etatDuLot !== null ? (
+              <CompteurEtat
+                nombre={nbAlertes}
+                legende={nbAlertes > 1 ? "pièces à demander" : "pièce à demander"}
+                champ={CHAMP_ETAT[etatDuLot]}
+                encre={ENCRE_ETAT[etatDuLot]}
+              />
+            ) : null
+          }
+          action={
             <Link
               href={`/etablissements/${id}/prestataires/nouveau`}
               className={buttonVariants({ variant: "board", size: "board" })}
@@ -95,11 +78,8 @@ export default async function PrestatairesPage({
               <Plus className="size-3.5" aria-hidden />
               Ajouter un prestataire
             </Link>
-          </div>
-        </div>
-      </header>
-
-      <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
+          }
+        />
         {prestataires.length === 0 ? (
           /* État vide, pas état d'erreur : il dit ce que l'écran fera, d'où
              viendront les données, et ouvre une porte (charte § 6). */

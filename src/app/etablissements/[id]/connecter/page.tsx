@@ -1,6 +1,6 @@
 import path from "node:path";
 import Link from "next/link";
-import { AppTopbar } from "@/components/layout/AppTopbar";
+import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import { BlocConfig } from "@/components/mcp/BlocConfig";
 import { WhyCard } from "@/components/ui-kit";
 import { requireEtablissement } from "@/lib/auth/scope";
@@ -73,17 +73,13 @@ export default async function ConnecterPage({
   -- ${executable} ${serveur}`;
 
   return (
-    <>
-      <AppTopbar
-        title="Connecter"
-        subtitle="Consulter ce dossier depuis un assistant, en lecture seule."
-        crumbs={[
-          { href: `/etablissements/${id}`, label: etablissement.raisonDisplay },
-          { label: "Connecter" },
-        ]}
+    <main className="flex flex-1 flex-col">
+      <EnTetePage
+        item="connecter"
+        description="Consultez ce dossier depuis un assistant, en lecture seule : il lit vos données, il ne peut rien y modifier."
       />
 
-      <main className="flex flex-1 flex-col gap-7 bg-[color:var(--board-canvas)] px-[var(--board-gutter)] pt-7 pb-20">
+      <div className="flex flex-1 flex-col gap-7 bg-[color:var(--board-canvas)] px-[var(--board-gutter)] pt-7 pb-20">
         {/* HERO */}
         <section className="carte-board px-7 py-8 sm:px-8">
           {/* Le filet d'impulsion navy du papier n'a pas d'équivalent : le
@@ -263,7 +259,7 @@ export default async function ConnecterPage({
             Consulter le guide →
           </Link>
         </footer>
-      </main>
-    </>
+      </div>
+    </main>
   );
 }

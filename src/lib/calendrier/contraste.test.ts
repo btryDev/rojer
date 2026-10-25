@@ -84,7 +84,10 @@ describe("contraste des couples champ/encre", () => {
   const PLANCHER: Record<RegistreLigne, number> = {
     enRetard: 4.338, // mesuré 4,3383. Sous 4,5 — à trancher au niveau de la charte.
     proche: 4.5, // mesuré 6,65
-    lointain: 3.82, // mesuré 3,8201. Le plus bas des cinq.
+    // ~~3,82, mesuré 3,8201 — le plus bas des cinq~~ [2026-10-25 : le champ
+    // passe du bleu au gris (`--board-lointain`), l'encre à l'ardoise ;
+    // mesuré 6,99, le couple rejoint le seuil commun.]
+    lointain: 4.5,
     faite: 4.5, // mesuré 6,40
     aPlanifier: 4.5, // mesuré 6,02
     // Même couple que `aPlanifier` — l'ardoise éteinte —, donc même plancher.
@@ -109,7 +112,9 @@ describe("contraste des couples champ/encre", () => {
     }
   });
 
-  it("deux couples restent sous le seuil du texte courant, et c'est écrit", () => {
+  // ~~Deux couples~~ [2026-10-25 : un seul — « lointain » est passé au-dessus
+  // du seuil avec son champ gris.]
+  it("un couple reste sous le seuil du texte courant, et c'est écrit", () => {
     // La liste est figée : un troisième couple qui passerait sous le seuil fait
     // tomber ce test. Et si l'un des deux est corrigé un jour, il tombe aussi —
     // ce sera le moment de relever son plancher et de retirer l'exception.
@@ -118,7 +123,7 @@ describe("contraste des couples champ/encre", () => {
         contraste(resoudre(ENCRE_ETAT[e], table), resoudre(CHAMP_ETAT[e], table)) <
         4.5,
     );
-    expect(sousLeSeuil.sort()).toEqual(["enRetard", "lointain"]);
+    expect(sousLeSeuil.sort()).toEqual(["enRetard"]);
   });
 
   it("chaque encre reste lisible sur la surface creuse", () => {

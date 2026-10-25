@@ -349,7 +349,7 @@ describe("aucun écran ne rouvre un second vocabulaire", () => {
   const SURFACES = [
     "src/lib/batiments/etat-charge.ts",
     "src/lib/equipements/etat-verifications.ts",
-    "src/components/equipements/BandeauParc.tsx",
+    "src/components/equipements/BarreParc.tsx",
     "src/components/equipements/VitrineEquipement.tsx",
     "src/components/calendrier/VueParEquipement.tsx",
     "src/components/calendrier/RegleAnnuelle.tsx",

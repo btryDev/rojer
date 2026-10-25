@@ -13,6 +13,7 @@
 // Le guide n'en garde donc pas de copie : il y renvoie.
 
 import { DocumentsObligatoires } from "@/components/guide/DocumentsObligatoires";
+import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import { requireEtablissement } from "@/lib/auth/scope";
 
 export const metadata = {
@@ -28,8 +29,12 @@ export default async function DocumentsPage({
   await requireEtablissement(id);
 
   return (
-    <main className="min-h-screen bg-[color:var(--board-canvas)] px-[var(--board-gutter)] py-10">
-      <div className="mx-auto max-w-[var(--board-max)]">
+    <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
+      <EnTetePage
+        item="documents"
+        description="Les documents que vous devez tenir, y compris ceux que Rojer ne produit pas, chacun avec le texte qui le fonde. Plusieurs ne sont dus que dans certains cas : la liste dit ce que les textes demandent, pas votre situation."
+      />
+      <div className="px-[var(--board-gutter)] pt-8">
         <DocumentsObligatoires />
       </div>
     </main>

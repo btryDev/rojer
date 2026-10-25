@@ -227,7 +227,7 @@ Trois polices, chargées dans `src/app/layout.tsx` :
 | Clé de champ (`dt`) | `text-[12.5px]` + `--board-slate-mid`, `sm:w-[168px]` |
 | Valeur de champ (`dd`) | `text-[14px] leading-[1.45]` + `--board-ink` |
 | Fil de retour | `font-mono text-[10.5px] uppercase tracking-[0.16em]` |
-| Fil d'Ariane | `text-[12.5px]` + `--board-slate-mid`, page courante en `--board-ink` `font-medium`, chevron `›` en `--board-slate` — `FilAriane`, seul composant (ADR-014 : où la page est rangée) |
+| ~~Fil d'Ariane~~ | ~~`text-[12.5px]` + `--board-slate-mid`, page courante en `--board-ink` `font-medium`, chevron `›` en `--board-slate` — `FilAriane`, seul composant (ADR-014 : où la page est rangée)~~ [2026-10-25 : retiré des pages d'entrée avec le composant, décision de la propriétaire — la marque du rail et la gélule de compte mènent à l'établissement ; le retour de provenance des fiches reste `FilRetour`.] |
 
 **Règle de `tracking`** : positif (0.1 → 0.2em) uniquement en mono capitales.
 Négatif (−0.01 → −0.032em) sur les titres. Rien entre les deux.
@@ -411,16 +411,43 @@ porte la surface et le rayon, la table n'a ni fond ni bordure propres.
 
 ```
 <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
-  <BandeauParc … />                                        ← en-tête
+  <EnTetePage item="equipements" description="…" />     ← en-tête commun
+  <BarreParc … />                                          ← comptes, ajout, zones
   <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
      … état vide, ou sections de cartes
   </div>
 </main>
 ```
 
-L'en-tête : `border-b border-[--board-slate-line] bg-[--board-card]
+~~L'en-tête : `border-b border-[--board-slate-line] bg-[--board-card]
 px-[var(--board-gutter)] py-[22px]`, avec à gauche un chevron rond, le `h1` et
-son chapeau ; à droite les compteurs et le bouton d'action.
+son chapeau ; à droite les compteurs et le bouton d'action.~~
+[2026-10-25 : l'en-tête est `EnTetePage`, commun à toutes les pages d'entrée
+— voir « En-tête de page » ci-dessous. Les compteurs et le bouton d'action
+descendent au-dessus de la liste, dans `BarreDeListe` (ou la barre propre au
+module, comme `BarreParc`).]
+
+### En-tête de page — `components/entete-page/EnTetePage.tsx` (2026-10-25)
+
+Une seule façon d'ouvrir une page d'entrée du rail :
+
+- **Le titre** est le nom du rail (`LABEL_ITEM`), sauf les quelques pages de
+  `TITRE_EN_TETE` ; **une phrase** dit ce qu'on voit puis ce qu'on peut y
+  faire ; **pas de fil d'Ariane** — la sidebar et la gélule de compte disent
+  où l'on est.
+- **Seule la bascule de vue** y vit (« Par mois / Par équipement »,
+  « En permanence / En cas de… »). Année, filtres, aide, export, ajout
+  descendent sur le bloc qu'ils règlent, **sous une autre forme** que la
+  bascule (contour fin, coins à peine arrondis).
+- **À droite, l'illustration** de la page sur un panneau de la **teinte de
+  sa section** (`teintes.ts`), pleine hauteur, bord à bord. La teinte ne vit
+  que là : jamais sur une carte, un bouton ou une pastille. Pas de dessin,
+  pas de panneau.
+- **Le coin haut droit est à la gélule de compte**, qui flotte au-dessus :
+  rien n'y passe dessous qu'un fond ou une image.
+- Les illustrations partagent leur cadre et leurs motifs
+  (`illustrations/motifs.tsx`) ; une seule animation, jouée une fois, aucune
+  si le visiteur a demandé moins de mouvement.
 
 **Un en-tête ne doit jamais contredire ce qu'il coiffe** : les compteurs se
 calculent sur ce qui est réellement affiché, filtre compris.

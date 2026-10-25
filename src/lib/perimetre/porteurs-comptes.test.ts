@@ -10,7 +10,7 @@ import {
   sondes,
   type LigneSondee,
 } from "./porteurs-comptes";
-import { porteursDuBandeauParc } from "@/lib/equipements/etat-verifications";
+import { porteursDuParc } from "@/lib/equipements/etat-verifications";
 import { porteursDeLaPlaqueZones } from "@/lib/batiments/queries";
 import {
   enumererFamilles,
@@ -98,7 +98,7 @@ describe("la légende du bandeau du parc", () => {
     for (const zone of ["sansObjet", "toutes", "cette"] as const) {
       const { perimetre, horsCompte } = legendeParc({
         zone,
-        comptes: porteursDuBandeauParc(),
+        comptes: porteursDuParc(),
       });
       expect(horsCompte).not.toBeNull();
       expect(perimetre).not.toMatch(/tout l'établissement/i);
@@ -109,7 +109,7 @@ describe("la légende du bandeau du parc", () => {
   it("nomme les porteurs laissés dehors, et où les lire", () => {
     const { horsCompte } = legendeParc({
       zone: "toutes",
-      comptes: porteursDuBandeauParc(),
+      comptes: porteursDuParc(),
     });
     expect(horsCompte).toBe(
       "Ce qui est dû au titre de l'établissement lui-même ou de vos salariés n'y figure pas.",
@@ -117,7 +117,7 @@ describe("la légende du bandeau du parc", () => {
   });
 
   it("dit la zone, et seulement quand il y en a une à dire", () => {
-    const comptes = porteursDuBandeauParc();
+    const comptes = porteursDuParc();
     expect(legendeParc({ zone: "cette", comptes }).perimetre).toMatch(
       /de cette zone/,
     );
@@ -161,7 +161,7 @@ describe("la légende du bandeau du parc", () => {
     const servis = new Set<PorteurObligation>(["equipement", "etablissement"]);
     const { horsCompte } = legendeParc({
       zone: "toutes",
-      comptes: porteursDuBandeauParc(),
+      comptes: porteursDuParc(),
       porteursServis: servis,
     });
     expect(horsCompte).toBe(
@@ -200,12 +200,12 @@ describe("les deux agrégations sondées", () => {
    * sur le même dossier et ne se doivent aucune divergence silencieuse.
    */
   it("le bandeau du parc et la plaque des zones comptent le même porteur", () => {
-    expect([...porteursDuBandeauParc()]).toEqual(["equipement"]);
+    expect([...porteursDuParc()]).toEqual(["equipement"]);
     expect([...porteursDeLaPlaqueZones()]).toEqual(["equipement"]);
   });
 
   it("aucune des deux ne couvre ce que le référentiel porte", () => {
-    expect(porteursHorsCompte(porteursDuBandeauParc())).toEqual([
+    expect(porteursHorsCompte(porteursDuParc())).toEqual([
       "etablissement",
       "salarie",
     ]);

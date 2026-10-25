@@ -14,8 +14,10 @@ import { listerEtablissementsDeLEntreprise } from "@/lib/etablissements/queries"
  *      sidebar déduit l'item actif depuis le pathname (cf. AppSidebar).
  *   3. Fait le scroll container à droite pour que la sidebar reste sticky.
  *
- * Chaque page garde la liberté de rendre sa propre AppTopbar si elle
- * veut un en-tête avec actions contextuelles.
+ * ~~Chaque page garde la liberté de rendre sa propre AppTopbar si elle
+ * veut un en-tête avec actions contextuelles.~~ [2026-10-25 : les pages
+ * d'entrée rendent l'en-tête commun (`EnTetePage`) ; leurs actions
+ * descendent au-dessus de leur liste (`BarreDeListe`).]
  */
 export default async function EtablissementLayout({
   children,
@@ -61,11 +63,14 @@ export default async function EtablissementLayout({
         counts={counts}
         modules={modules}
       />
-      <div className="flex min-w-0 flex-col lg:overflow-y-auto">
-        {/* Barre de compte : la sidebar porte la hiérarchie du produit, la
-            barre haute porte les utilitaires de session. Ce partage est ce
-            qui justifie la barre — sans le compte, elle n'aurait rien à
-            porter et serait une bande vide. Cf. `BarreCompte`. */}
+      {/* `relative` : la gélule de compte s'y positionne, en haut à droite. */}
+      {/* `pt-[var(--reserve-gelule)]` : la place de la gélule, réservée par
+          défaut ; un en-tête à fond la reprend (`.sous-la-gelule`). Sans
+          elle, un formulaire ou une fiche passait sous la gélule. */}
+      <div className="relative flex min-w-0 flex-col pt-[var(--reserve-gelule)] lg:overflow-y-auto">
+        {/* Gélule de compte : la sidebar porte la hiérarchie du produit, la
+            gélule les utilitaires de session. Elle flotte au-dessus du
+            contenu, sans bande à elle. Cf. `BarreCompte`. */}
         <BarreCompte
           etablissementId={etab.id}
           email={user.email ?? null}

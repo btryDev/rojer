@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { FilAriane } from "@/components/navigation/FilAriane";
-import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
+import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import { notFound, redirect } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { WhyCard } from "@/components/ui-kit/WhyCard";
@@ -41,20 +40,10 @@ export default async function EtablissementDuerpPage({
     // L'exception de largeur de la charte porte sur le wizard lui-même
     // (`duerp/[id]/layout.tsx`), pas sur cette porte d'entrée.
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
-      <header className="border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] py-[22px]">
-        <FilAriane
-          crumbs={[
-            { href: `/etablissements/${id}`, label: etab.raisonDisplay },
-            { label: LABEL_ITEM.duerp },
-          ]}
-        />
-        <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-          Document unique
-        </p>
-        <h1 className="board-titre m-0 mt-1.5 text-[clamp(22px,2.2vw,27px)]">
-          Votre DUERP
-        </h1>
-      </header>
+      <EnTetePage
+        item="duerp"
+        description="Votre évaluation des risques, transcrite dans un document unique et tenue à jour. Décrivez votre activité : l'outil vous propose les risques typiques de votre secteur."
+      />
 
       <div className="flex flex-col gap-[22px] px-[var(--board-gutter)] pt-6">
         <WhyCard

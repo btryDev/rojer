@@ -1,4 +1,10 @@
-// Le bandeau du parc — clair, pleine largeur, bord à bord.
+// La barre du parc — sous l'en-tête de page, pleine largeur, bord à bord.
+//
+// [2026-10-25 : ~~le bandeau du parc~~ — le titre et sa phrase ont rejoint
+// l'en-tête commun des pages d'entrée (`EnTetePage`), qui ne porte que la
+// bascule de vue. Il reste ici ce que le bandeau comptait et commandait :
+// les chiffres, l'ajout, le filtre par zone et sa légende, les suggestions.
+// Le fichier s'appelait `BandeauParc.tsx`.]
 //
 // Il portait un aplat d'encre : le noir posait une troisième bande sombre
 // dans un parcours qui en compte déjà deux (la barre latérale, la bande du
@@ -34,7 +40,7 @@
 //
 // La légende dit donc désormais **ses deux axes** — la zone, et la restriction
 // par porteur — et elle n'est plus écrite : elle est **dérivée** de ce que
-// l'agrégation compte pour de bon (`legendeParc`, `porteursDuBandeauParc`).
+// l'agrégation compte pour de bon (`legendeParc`, `porteursDuParc`).
 // Personne ne peut plus écrire « tout » au-dessus d'un compteur qui compte une
 // part, parce que personne n'écrit plus cette phrase.
 //
@@ -44,61 +50,32 @@
 // disparaissait exactement chez ceux qui n'ont qu'un lieu.
 
 import Link from "next/link";
-import { FilAriane, type Crumb } from "@/components/navigation/FilAriane";
 import { SelecteurBatiment } from "@/components/batiments/SelecteurBatiment";
 import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { BarreDeListe } from "@/components/ui-kit/BarreDeListe";
+import { CompteurEtat } from "@/components/ui-kit/CompteurEtat";
 import {
   CHAMP_ETAT,
   ENCRE_ETAT,
   LIBELLE_ETAT,
   LIBELLE_ETAT_COURT,
 } from "@/lib/calendrier/etats";
-import { porteursDuBandeauParc } from "@/lib/equipements/etat-verifications";
+import { porteursDuParc } from "@/lib/equipements/etat-verifications";
 import { legendeParc } from "@/lib/perimetre/porteurs-comptes";
 
-function Compteur({
-  nombre,
-  legende,
-  champ,
-  encre,
-}: {
-  nombre: number;
-  legende: string;
-  champ: string;
-  encre: string;
-}) {
-  return (
-    <span
-      className="inline-flex items-baseline gap-2 rounded-full px-4 py-[9px]"
-      style={{ background: champ }}
-    >
-      <span className="board-titre text-[20px] leading-none tabular-nums">
-        {nombre}
-      </span>
-      <span
-        className="board-eyebrow text-[9.5px] tracking-[0.12em]"
-        style={{ color: encre }}
-      >
-        {legende}
-      </span>
-    </span>
-  );
-}
+/** Un lien posé dans une phrase de la barre — légende et suggestions. */
+const LIEN_DANS_PHRASE =
+  "font-semibold text-[color:var(--board-ink)] underline underline-offset-2 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--board-ink)]";
 
-export function BandeauParc({
-  crumbs,
+export function BarreParc({
   hrefCalendrier,
   enRetard,
   proches,
   aPlanifier,
-  total,
   hrefAjouter,
   suggestions,
   filtreBatiment,
 }: {
-  /** Où la page est rangée : l'établissement, puis l'entrée du rail. */
-  crumbs: Crumb[];
   /** Où se lit ce que ces chiffres ne comptent pas. La légende y renvoie :
    *  nommer un manque sans dire où le trouver le laisse entier. */
   hrefCalendrier: string;
@@ -113,7 +90,6 @@ export function BandeauParc({
    * cartes qui disaient toutes « 3 à planifier ».
    */
   aPlanifier: number;
-  total: number;
   hrefAjouter: string;
   /** Ce que le référentiel propose encore de déclarer, et où le lire. */
   suggestions?: { nombre: number; href: string } | null;
@@ -139,7 +115,7 @@ export function BandeauParc({
       : filtreBatiment.actif
         ? "cette"
         : "toutes",
-    comptes: porteursDuBandeauParc(),
+    comptes: porteursDuParc(),
   });
   const legende = (
     <>
@@ -150,7 +126,7 @@ export function BandeauParc({
           {horsCompte}{" "}
           <Link
             href={hrefCalendrier}
-            className="font-semibold text-[color:var(--board-blue-ink)] underline-offset-2 hover:text-[color:var(--board-ink)] hover:underline"
+            className={LIEN_DANS_PHRASE}
           >
             Voir le calendrier →
           </Link>
@@ -161,70 +137,52 @@ export function BandeauParc({
 
   return (
     <>
-      <header className="border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] py-[22px]">
-        <div className="flex flex-wrap items-start justify-between gap-x-8 gap-y-5">
-          <div className="flex min-w-0 items-start gap-4">
-            <div className="min-w-0">
-              {/* Un fil d'Ariane et non un bouton rond de retour (2026-10-13) :
-                  c'est une page d'entrée, elle dit où elle est rangée, pas
-                  d'où l'on vient (ADR-014) — le même idiome que ses sœurs. */}
-              <FilAriane crumbs={crumbs} />
-              <h1 className="board-titre m-0 text-[clamp(22px,2.2vw,27px)]">
-                Équipements
-              </h1>
-              <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-                Ce que vous avez, et où. Chaque appareil porte ses
-                vérifications, ses rapports et ses papiers&nbsp;: ouvrez sa
-                fiche pour les voir.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-none flex-wrap items-center gap-2.5">
-            {/* Les mots viennent de la table d'états, comme les couleurs
-                juste à côté — ce bandeau écrivait « en retard » pendant que
-                le relevé du tableau de bord, à un clic, écrivait
-                « DÉPASSÉES » sur le même état. */}
-            <Compteur
-              nombre={enRetard}
-              legende={LIBELLE_ETAT_COURT.enRetard}
-              champ={CHAMP_ETAT.enRetard}
-              encre={ENCRE_ETAT.enRetard}
-            />
-            <Compteur
-              nombre={proches}
-              legende={LIBELLE_ETAT_COURT.proche}
-              champ={CHAMP_ETAT.proche}
-              encre={ENCRE_ETAT.proche}
-            />
-            {aPlanifier > 0 ? (
-              <Compteur
-                nombre={aPlanifier}
-                legende={LIBELLE_ETAT.aPlanifier.plusieurs}
-                champ={CHAMP_ETAT.aPlanifier}
-                encre={ENCRE_ETAT.aPlanifier}
+      {/* Une barre et non plus un bandeau titré : le titre et sa phrase
+          sont dans l'en-tête de page. Le volume (« 12 au parc ») est parti
+          avec : seuls restent les comptes d'état, qui appellent un geste
+          (décision de la propriétaire du 2026-10-25). */}
+      <section
+        aria-label="Le parc"
+        className="border-y border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] py-[18px]"
+      >
+        <BarreDeListe
+          resume={
+            <>
+              {/* Les mots viennent de la table d'états, comme les couleurs
+                  juste à côté — ce bandeau écrivait « en retard » pendant que
+                  le relevé du tableau de bord, à un clic, écrivait
+                  « DÉPASSÉES » sur le même état. */}
+              <CompteurEtat
+                nombre={enRetard}
+                legende={LIBELLE_ETAT_COURT.enRetard}
+                champ={CHAMP_ETAT.enRetard}
+                encre={ENCRE_ETAT.enRetard}
               />
-            ) : null}
-            <Compteur
-              nombre={total}
-              legende="au parc"
-              champ="var(--board-slate-pale)"
-              encre="var(--board-slate-mid)"
-            />
+              <CompteurEtat
+                nombre={proches}
+                legende={LIBELLE_ETAT_COURT.proche}
+                champ={CHAMP_ETAT.proche}
+                encre={ENCRE_ETAT.proche}
+              />
+              {aPlanifier > 0 ? (
+                <CompteurEtat
+                  nombre={aPlanifier}
+                  legende={LIBELLE_ETAT.aPlanifier.plusieurs}
+                  champ={CHAMP_ETAT.aPlanifier}
+                  encre={ENCRE_ETAT.aPlanifier}
+                />
+              ) : null}
+            </>
+          }
+          action={
             <Link
               href={hrefAjouter}
-              className={cn(
-                buttonVariants({
-                  variant: "board",
-                  size: "board",
-                  className: "ml-1.5 flex-none",
-                }),
-              )}
+              className={buttonVariants({ variant: "board", size: "board" })}
             >
               + Ajouter un équipement
             </Link>
-          </div>
-        </div>
+          }
+        />
 
         {filtreBatiment ? (
           <div className="mt-[18px] border-t border-[color:var(--board-slate-line)] pt-[15px]">
@@ -252,13 +210,13 @@ export function BandeauParc({
             {legende}
           </p>
         )}
-      </header>
+      </section>
 
       {suggestions && suggestions.nombre > 0 ? (
         <div className="flex items-center gap-2.5 border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-slate-pale)] px-[var(--board-gutter)] py-[11px]">
           <span
             aria-hidden
-            className="size-1.5 flex-none rounded-full bg-[color:var(--board-blue-mid)]"
+            className="size-1.5 flex-none rounded-full bg-[color:var(--board-slate-soft)]"
           />
           <p className="m-0 text-[12.5px] text-[color:var(--board-slate-mid)]">
             {suggestions.nombre > 1
@@ -266,7 +224,7 @@ export function BandeauParc({
               : "D'après votre secteur et vos régimes, une catégorie d'équipement reste à examiner."}{" "}
             <Link
               href={suggestions.href}
-              className="font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
+              className={LIEN_DANS_PHRASE}
             >
               Voir les suggestions →
             </Link>

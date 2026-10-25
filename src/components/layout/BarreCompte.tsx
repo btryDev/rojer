@@ -2,6 +2,11 @@
 
 // La barre de compte — en haut à droite du shell d'établissement.
 //
+// **Ce n'est plus une barre** depuis le 2026-10-25 : la bande a été retirée,
+// seule la gélule reste, flottante au-dessus du contenu (voir le rendu). Le
+// nom est gardé parce que les ADR-015, 028 et 030 citent ce fichier ; « barre
+// haute » s'y lit désormais « gélule de compte ».
+//
 // **Pourquoi elle existe.** La règle qui régit la cohabitation d'une sidebar
 // et d'une barre haute est un partage des rôles, pas un remplissage : la
 // sidebar porte la **hiérarchie de navigation du produit**, la barre haute
@@ -133,30 +138,37 @@ export function BarreCompte({
   // (`WidgetShell.tsx`). Le sélecteur d'établissement devenait donc illisible
   // dès qu'il s'ouvrait au-dessus d'une carte, c'est-à-dire toujours.
   //
-  // 50 et non 21 : la barre haute coiffe l'application entière et doit passer
+  // 50 et non 21 : la gélule coiffe l'application entière et doit passer
   // devant n'importe quelle surface, pas seulement devant celles qu'on connaît
   // aujourd'hui. Un écart d'un cran se referme au premier widget qui monte.
   const panneau =
     "absolute right-0 top-[52px] z-50 min-w-[228px] rounded-[18px] bg-[color:var(--board-card)] p-2 shadow-[0_0_0_1px_rgba(13,18,36,.08),0_18px_40px_-20px_rgba(13,18,36,.35)]";
 
   return (
-    // 67 px : la hauteur du bloc de marque du rail, filet compris. Les deux
-    // traits se rejoignent donc au même pixel, et la barre se lit comme le
-    // prolongement de l'en-tête de la sidebar plutôt que comme un objet posé
-    // à côté. Toute autre valeur fabrique un décrochement visible sur toute
-    // la largeur de l'écran.
+    // Plus de bande (2026-10-25, demande de la propriétaire) : la barre de
+    // 67 px, fond de carte et filet, laissait une bande blanche vide sur toute
+    // la largeur au-dessus de chaque page. Il ne reste que la gélule, posée en
+    // haut à droite AU-DESSUS du contenu — l'en-tête de page monte donc
+    // jusqu'en haut de l'écran. Le parent doit être positionné (`relative`) :
+    // c'est le conteneur de droite des deux shells, qui défile, si bien que
+    // la gélule défile avec la page au lieu de la masquer en restant collée.
     //
-    // `flex-none` n'est pas décoratif : le conteneur de droite est un
-    // `flex flex-col` de hauteur contrainte (`h-screen`), et en colonne
-    // `flex-shrink` vaut 1 par défaut et porte sur la **hauteur**. Sans lui,
-    // la barre est écrasée à la taille de son contenu et sa hauteur déclarée
-    // n'a aucun effet, quelle que soit la valeur.
-    <div className="flex h-[67px] flex-none items-center justify-end border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)]">
+    // Sa place est réservée en tête de la colonne de contenu
+    // (`--reserve-gelule`, posée par les deux shells) : rien ne passe dessous,
+    // sauf un bloc à fond qui la reprend (`.sous-la-gelule` — l'en-tête
+    // commun, le brief du tableau de bord).
+    //
+    // `z-50` : au-dessus des barres collantes (celle de l'année du calendrier,
+    // `z-20` ; ~~`AppTopbar`~~, supprimée le 2026-10-25) et des
+    // widgets du board — voir `panneau` plus haut.
+    <div className="absolute right-[var(--board-gutter)] top-3 z-50">
       {/* La gélule : le lieu où l'on revient, celui où l'on travaille, et
           celui à qui l'on revient. Les trois sont des repères de session —
           les séparer les ferait lire comme des fonctions sans rapport. */}
       <div ref={zone} className="relative">
-        <div className="flex items-center gap-2 rounded-full bg-[color:var(--board-slate-pale)] p-1.5 ring-1 ring-inset ring-[color:rgba(13,18,36,.06)]">
+        {/* L'ombre remplace la bande : posée sur une photo ou une carte,
+            la gélule doit se lire comme un objet flottant. */}
+        <div className="flex items-center gap-2 rounded-full bg-[color:var(--board-slate-pale)] p-1.5 shadow-[0_1px_2px_rgba(13,18,36,.06),0_8px_24px_-12px_rgba(13,18,36,.28)] ring-1 ring-inset ring-[color:rgba(13,18,36,.06)]">
           <Link
             href={`/etablissements/${etablissementId}`}
             aria-label="Retour au tableau de bord"
