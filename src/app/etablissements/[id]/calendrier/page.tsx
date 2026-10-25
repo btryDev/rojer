@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { ArrowUpRight, ChevronRight } from "lucide-react";
 import { AideEcran } from "@/components/ui-kit/AideEcran";
 import { LienProvenance } from "@/components/navigation/LienProvenance";
-import { FilAriane } from "@/components/navigation/FilAriane";
+import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import { LegalBadge } from "@/components/ui-kit/LegalBadge";
 import { BadgeStatut } from "@/components/calendrier/BadgeStatut";
 import { mentionDelaiDeGrace } from "@/lib/calendrier/grace";
@@ -93,7 +93,6 @@ import {
   LABEL_FAMILLE,
   MarqueurEcheance,
 } from "@/components/calendrier/MarqueurFamille";
-import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
 import { FiltresCalendrier } from "@/components/calendrier/FiltresCalendrier";
 import { SelecteurLecture } from "@/components/calendrier/SelecteurLecture";
 import {
@@ -969,82 +968,20 @@ export default async function CalendrierPage({
     etat.aVenir === 0 &&
     etat.realisees12m === 0;
 
-  // La bande de titre — l'identité de l'écran, et rien d'autre.
+  // L'en-tête de page (`EnTetePage`, 2026-10-25) : le fil, le titre, une
+  // phrase. Il remplace la bande de titre, qui avait été un bandeau ciel,
+  // une carte du bento, un aplat d'encre puis un blanc plat.
   //
-  // Elle a été un bandeau ciel, puis une carte du bento, puis un aplat
-  // d'encre, puis un blanc plat. Le blanc plat était le pire : la barre de
-  // compte au-dessus est déjà une bande claire à filet, et la rangée de
-  // filtres en dessous une troisième — trois strates pâles se suivaient
-  // sans rien pour les hiérarchiser, et la bande ne portait que deux
-  // niveaux de texte (le titre, un paragraphe gris).
-  //
-  // Elle en porte quatre, du plus discret au plus haut : le rail de
-  // contexte (où la page est rangée, depuis quand on compte), le titre
-  // en grand, la phrase. Les commandes, elles, sont parties dans la barre
-  // de réglage de l'instrument — voir `commandes` plus bas.
-  //
-  // L'espacement suit le même contraste : serré entre le rail et le titre,
-  // serré entre le titre et sa phrase, ouvert avant le filet.
-  const bandeTitre = (
-    <div className="border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] pb-8 pt-[26px]">
-      {/* Le rail de contexte : où la page est rangée à gauche, depuis quand
-          on compte à droite. Deux registres distincts pour qu'ils ne se
-          lisent pas comme une même taxonomie — le fil d'Ariane est
-          cliquable, la date est une valeur, étiquette grise puis chiffre
-          en encre. */}
-      <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-2">
-        {/* Nommer l'établissement dit de quel dossier la page est le
-            calendrier. Un fil d'Ariane et non un chevron de retour (2026-10-13) :
-            c'est une page d'entrée, elle dit où elle est rangée, pas d'où
-            l'on vient (ADR-014). */}
-        <FilAriane
-          crumbs={[
-            { href: `/etablissements/${id}`, label: etab.raisonDisplay },
-            { label: LABEL_ITEM.calendrier },
-          ]}
-        />
-
-        {/* Le zéro de l'instrument. « En retard », « sous 30 jours » et
-            « à venir » se mesurent tous depuis ce jour-là (ADR-011) : la
-            page les colorait sans jamais dire depuis quand. */}
-        <p className="m-0 flex flex-none items-baseline gap-2.5 font-mono text-[10.5px] leading-none">
-          <span className="uppercase tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-            Aujourd&apos;hui
-          </span>
-          <time
-            /* Le fuseau de référence, pas UTC (ADR-011) : `toISOString`
-               rendrait la veille pour toute la première heure de la
-               journée, et l'attribut contredirait la date affichée. */
-            dateTime={`${civilesAujourdhui.annee}-${String(civilesAujourdhui.mois).padStart(2, "0")}-${String(civilesAujourdhui.jour).padStart(2, "0")}`}
-            className="tabular-nums tracking-[0.02em] text-[color:var(--board-ink)]"
-          >
-            {FMT_AUJOURDHUI.format(aujourdhui)}
-          </time>
-        </p>
-      </div>
-
-      {/* Le titre prend la taille de son rang : c'est la page, pas l'en-tête
-          d'une carte. À 27 px il pesait le même poids qu'un titre de mois
-          dans la liste juste dessous. */}
-      <h1 className="board-titre m-0 mt-1.5 text-[clamp(29px,3vw,39px)]">
-        {LABEL_ITEM.calendrier}
-      </h1>
-      {/* « Calendrier » ne dit pas ce qu'on y trouve : les familles y sont
-          réunies depuis l'ADR-010. La phrase les nomme — et rien de plus :
-          « cliquez une ligne pour la traiter » décrivait un clic que la ligne
-          annonce déjà toute seule.
-
-          Elle les nommait de mémoire, et quatre sur cinq : `personnel` est née
-          avec l'ADR-023 sans que personne rouvre la phrase. Elle se dérive
-          désormais de `FAMILLES_FILTRABLES` (`enumererFamilles`).
-
-          La seconde phrase est là parce que le dirigeant arrive souvent ici
-          depuis un compteur d'équipement qui annonce un autre nombre. Elle dit
-          l'écart dans le sens utile — ce que le parc laisse dehors — sans
-          revendiquer d'exclusivité : le relevé « Dépassées » du tableau de bord
-          réunit lui aussi toutes les familles. */}
-      <p className="m-0 mt-[11px] max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-        {filtreFamille === "travaux" ? (
+  // La phrase change avec le filtre de famille : elle dit ce que la page
+  // montre, filtre compris. Sans filtre, ce qu'on voit puis ce qu'on y fait.
+  // Ce qu'elle disait en plus — les familles réunies, l'écart avec les
+  // compteurs du parc — est passé dans l'aide.
+  const enTete = (
+    <EnTetePage
+      item="calendrier"
+      etablissement={{ id, raisonDisplay: etab.raisonDisplay }}
+      description={
+        filtreFamille === "travaux" ? (
           <>
             {DESCRIPTION_FAMILLE.travaux}{" "}
             {/* Deux liens, deux lieux (contrôle visuel du 2026-10-25) : la
@@ -1065,11 +1002,34 @@ export default async function CalendrierPage({
             </Link>{" "}
             ou de leur contrôle.
           </>
-        ) : filtreFamille
-          ? DESCRIPTION_FAMILLE[filtreFamille]
-          : `Vos échéances datées, toutes réunies : ${enumererFamilles()}. Le parc et les zones, eux, ne comptent que ce que portent vos équipements.`}
-      </p>
-    </div>
+        ) : filtreFamille ? (
+          DESCRIPTION_FAMILLE[filtreFamille]
+        ) : (
+          "Toutes vos échéances datées, au même endroit. Ouvrez-en une pour la planifier ou déposer son rapport."
+        )
+      }
+    />
+  );
+
+  // Le zéro de l'instrument. « En retard », « sous 30 jours » et « à venir »
+  // se mesurent tous depuis ce jour-là (ADR-011) : la page les colorait sans
+  // jamais dire depuis quand. Il vivait en haut à droite de l'en-tête — le
+  // coin de la gélule de compte ; il voyage désormais avec les commandes.
+  const aujourdhuiAffiche = (
+    <p className="m-0 flex flex-none items-baseline gap-2.5 font-mono text-[10.5px] leading-none">
+      <span className="uppercase tracking-[0.18em] text-[color:var(--board-slate-soft)]">
+        Aujourd&apos;hui
+      </span>
+      <time
+        /* Le fuseau de référence, pas UTC (ADR-011) : `toISOString`
+           rendrait la veille pour toute la première heure de la
+           journée, et l'attribut contredirait la date affichée. */
+        dateTime={`${civilesAujourdhui.annee}-${String(civilesAujourdhui.mois).padStart(2, "0")}-${String(civilesAujourdhui.jour).padStart(2, "0")}`}
+        className="tabular-nums tracking-[0.02em] text-[color:var(--board-ink)]"
+      >
+        {FMT_AUJOURDHUI.format(aujourdhui)}
+      </time>
+    </p>
   );
 
   // Ce que la page doit expliquer mais qu'on ne lit qu'une fois — d'où
@@ -1080,6 +1040,11 @@ export default async function CalendrierPage({
   // et les autres pages rangeront les leurs au même endroit (`AideEcran`).
   const aide = (
     <AideEcran titre="Comment lire cette page">
+      <p className="m-0">
+        Le calendrier réunit vos échéances datées : {enumererFamilles()}. Le
+        parc et les zones, eux, ne comptent que ce que portent vos
+        équipements.
+      </p>
       <p className="m-0">
         Le calendrier se met à jour tout seul dès que vous ajoutez ou modifiez
         un équipement — chaque occurrence cite son obligation légale et le
@@ -1207,7 +1172,10 @@ export default async function CalendrierPage({
           batiment: filtreBatiment,
         }}
       />
-      <span className="ml-auto flex-none">{aide}</span>
+      <span className="ml-auto flex flex-none items-center gap-4">
+        {aujourdhuiAffiche}
+        {aide}
+      </span>
     </div>
   );
 
@@ -1217,7 +1185,7 @@ export default async function CalendrierPage({
           commandes dans une barre qui suit le défilement. Deux strates au
           lieu de quatre : la page ne fait plus attendre trois bandes
           claires avant sa première donnée. */}
-      {bandeTitre}
+      {enTete}
 
       <div className="flex flex-1 flex-col bg-[color:var(--board-card)] px-[var(--board-gutter)] pb-14 pt-7">
         {/* PAS DE BANDEAU DE COUVERTURE ICI, et c'est une décision de la

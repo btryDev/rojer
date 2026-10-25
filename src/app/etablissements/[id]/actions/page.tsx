@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { FilAriane } from "@/components/navigation/FilAriane";
-import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
+import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/layout/EmptyState";
@@ -140,70 +139,58 @@ export default async function PlanActionsPage({
 
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
-      <header className="border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] py-[22px]">
-        <div className="flex flex-wrap items-end justify-between gap-6">
-          <div className="min-w-0 flex-1">
-            <FilAriane
-              crumbs={[
-                { href: `/etablissements/${id}`, label: etab.raisonDisplay },
-                { label: LABEL_ITEM.actions },
-              ]}
-            />
-            {/* Le nom du rail, pas « Actions correctives » : le titre et
-                l'entrée de menu disaient deux choses (2026-10-24). */}
-            <h1 className="board-titre m-0 text-[clamp(22px,2.2vw,27px)]">
-              {LABEL_ITEM.actions}
-            </h1>
-            <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-              Les mesures de prévention prévues dans votre DUERP. Les points
-              à corriger relevés par les contrôles se suivent sur la fiche de
-              leur{" "}
-              <Link
-                href={`/etablissements/${id}/equipements`}
-                className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
-              >
-                équipement
-              </Link>{" "}
-              ou, pour un contrôle de l&apos;ensemble du site, de leur contrôle
-              au{" "}
-              <Link
-                href={`/etablissements/${id}/calendrier`}
-                className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
-              >
-                calendrier
-              </Link>
-              .
-            </p>
-            <div className="mt-3.5 flex flex-wrap gap-2">
-              <LegalBadge
-                charte="board"
-                reference="Art. L. 4121-2 CT"
-                href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000033019913"
-                extrait="L'employeur met en oeuvre les mesures prévues à l'article L. 4121-1 sur le fondement des principes généraux de prévention suivants : 1° Eviter les risques ; 2° Evaluer les risques qui ne peuvent pas être évités ; 3° Combattre les risques à la source ; […]"
-              >
-                <p>
-                  {ORDRE_SELON_L4121_2}{" "}
-                  Rojer signale les risques du DUERP
-                  traités uniquement par des EPI, de la formation ou de
-                  l&apos;organisation.
-                </p>
-              </LegalBadge>
-            </div>
-          </div>
+      {/* Le titre est le nom du rail (2026-10-24) ; la phrase dit ce que la
+          liste porte et où vit ce qu'elle ne porte pas : les points à
+          corriger d'un contrôle se suivent sur leur équipement (ADR-048). */}
+      <EnTetePage
+        item="actions"
+        etablissement={{ id, raisonDisplay: etab.raisonDisplay }}
+        description={
+          <>
+            Les mesures de prévention prévues dans votre DUERP, à suivre
+            jusqu&apos;au bout. Les points relevés par un contrôle se suivent,
+            eux, sur la fiche de leur{" "}
+            <Link
+              href={`/etablissements/${id}/equipements`}
+              className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
+            >
+              équipement
+            </Link>{" "}
+            ou, pour un contrôle de tout le site, de leur contrôle au{" "}
+            <Link
+              href={`/etablissements/${id}/calendrier`}
+              className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
+            >
+              calendrier
+            </Link>
+            .
+          </>
+        }
+      >
+        <div className="flex flex-wrap items-center gap-3">
           <a
             href={`/api/etablissements/${id}/plan-actions/pdf`}
             target="_blank"
             rel="noopener noreferrer"
-            className={buttonVariants({
-              variant: "boardClair",
-              size: "board",
-              className: "flex-none",
-            })}
+            className={buttonVariants({ variant: "boardClair", size: "board" })}
           >
             Exporter PDF
           </a>
+          <LegalBadge
+            charte="board"
+            reference="Art. L. 4121-2 CT"
+            href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000033019913"
+            extrait="L'employeur met en oeuvre les mesures prévues à l'article L. 4121-1 sur le fondement des principes généraux de prévention suivants : 1° Eviter les risques ; 2° Evaluer les risques qui ne peuvent pas être évités ; 3° Combattre les risques à la source ; […]"
+          >
+            <p>
+              {ORDRE_SELON_L4121_2}{" "}
+              Rojer signale les risques du DUERP
+              traités uniquement par des EPI, de la formation ou de
+              l&apos;organisation.
+            </p>
+          </LegalBadge>
         </div>
-      </header>
+      </EnTetePage>
 
       <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
         {/* Indicateurs */}

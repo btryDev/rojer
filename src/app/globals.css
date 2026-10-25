@@ -617,6 +617,77 @@
   .g-stamp-ring { animation: none; }
 }
 
+/* Illustrations d'en-tête de page (`src/components/entete-page`) — une
+   seule séquence, jouée UNE fois au chargement : c'est le moment fort de
+   l'en-tête, pas un décor qui bouge en permanence. Chaque dessin règle ses
+   délais en style en ligne. L'état final est l'état de repos : sans
+   animation, le dessin est complet. */
+.ep-trace {
+  stroke-dasharray: 1;
+  animation: ep-trace 0.45s ease-out both;
+}
+.ep-trace.ep-lent { animation-duration: 0.7s; }
+@keyframes ep-trace {
+  from { stroke-dashoffset: 1; }
+  to   { stroke-dashoffset: 0; }
+}
+.ep-feuille {
+  transform-box: view-box;
+  animation: ep-feuille 0.9s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes ep-feuille {
+  from { transform: scaleY(.2); }
+  to   { transform: scaleY(1); }
+}
+.ep-saute {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: ep-saute 0.7s ease-out both;
+}
+@keyframes ep-saute {
+  0%, 100% { transform: translateY(0); }
+  35% { transform: translateY(-12px); }
+  65% { transform: translateY(0); }
+  80% { transform: translateY(-4px); }
+}
+.ep-pop {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: ep-pop 0.45s cubic-bezier(.3,1.6,.5,1) both;
+}
+@keyframes ep-pop {
+  from { transform: scale(0); }
+  to   { transform: scale(1); }
+}
+.ep-lueur { animation: ep-lueur 0.8s ease-in-out both; }
+@keyframes ep-lueur {
+  0%, 100% { opacity: 1; }
+  20% { opacity: .25; }
+  40% { opacity: 1; }
+  60% { opacity: .4; }
+}
+.ep-crayon { animation: ep-crayon 0.7s ease-in-out both; }
+@keyframes ep-crayon {
+  0%, 100% { transform: translate(0, 0); }
+  35% { transform: translate(5px, -4px); }
+  70% { transform: translate(-2px, 2px); }
+}
+.ep-cle {
+  transform-box: fill-box;
+  transform-origin: 0% 50%;
+  animation: ep-cle 0.8s ease-in-out both;
+}
+@keyframes ep-cle {
+  0%, 100% { transform: rotate(0); }
+  30% { transform: rotate(-14deg); }
+  65% { transform: rotate(6deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ep-trace, .ep-feuille, .ep-saute, .ep-pop, .ep-lueur, .ep-crayon, .ep-cle {
+    animation: none;
+  }
+}
+
 /* =============================================================
    Page publique (landing) — « le ciel ne couvre pas, il ponctue »
    -------------------------------------------------------------

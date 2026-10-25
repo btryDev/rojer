@@ -21,7 +21,8 @@ import {
   SectionsParUsage,
 } from "@/components/etats-permanents/SectionsParUsage";
 import { compteDeLaPage } from "@/lib/etats-permanents/compte";
-import { HeroEnPlace } from "@/components/etats-permanents/HeroEnPlace";
+import { EnTetePage } from "@/components/entete-page/EnTetePage";
+import { OngletsEnPlace } from "@/components/etats-permanents/OngletsEnPlace";
 import { OngletsPage } from "@/components/ui-kit/OngletsPage";
 import { manquesDeLaFiche } from "@/lib/etablissements/guide-par-module";
 import { FocusSurAncre } from "@/components/etats-permanents/FocusSurAncre";
@@ -31,7 +32,6 @@ import {
   phraseRienEnPlace,
 } from "@/lib/etats-permanents/phrases";
 
-/** La photo du hero. Seule référence au fichier (`public/photos/README.md`). */
 export const metadata = {
   title: "Ce qui doit être en place — Rojer",
 };
@@ -192,14 +192,16 @@ export default async function EtatsPermanentsPage({
   return (
     <RevueEnPlace etablissementId={id} lignes={lignesFiche}>
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
-      <HeroEnPlace
-        etablissementId={id}
-        raisonDisplay={etablissement.raisonDisplay}
-        actif="permanence"
-        decoupe={parGeste ? "geste" : undefined}
-        intro="Ce qui doit exister chez vous en permanence. Touchez une ligne pour ouvrir sa fiche et la déclarer."
-        outils={
-          <>
+      {/* Le même en-tête sur les deux onglets — le titre, l'illustration, les
+          onglets au même endroit : changer d'onglet ne se lit pas comme
+          changer de page (revue du 2026-10-24). */}
+      <EnTetePage
+        item="etats-permanents"
+        etablissement={{ id, raisonDisplay: etablissement.raisonDisplay }}
+        description="Ce qui doit exister chez vous en permanence. Touchez une ligne pour ouvrir sa fiche et la déclarer."
+      >
+        <OngletsEnPlace etablissementId={id} actif="permanence" decoupe={parGeste ? "geste" : undefined} />
+        <div className="flex w-full flex-wrap items-center justify-between gap-4">
               <AideEcran titre="Comment lire cette page">
                 <p className="m-0">
                   Des obligations sans date : elles ne se refont pas à échéance, il
@@ -243,10 +245,7 @@ export default async function EtatsPermanentsPage({
               {/* `compteDeLaPage` : la même lecture que le widget du tableau de
                   bord, qui affiche ce compte au-dessus de ses familles. */}
               <CompteurDeLaPage {...compteDeLaPage(dossier)} />
-          </>
-        }
-        apres={
-          <>
+        </div>
               {texteFiche && (
                 <p className="m-0 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
                   {texteFiche}{" "}
@@ -258,9 +257,7 @@ export default async function EtatsPermanentsPage({
                   </Link>
                 </p>
               )}
-          </>
-        }
-      />
+      </EnTetePage>
 
       <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
         {/* Vide seulement quand il n'y a NI état NI fait : la page testait

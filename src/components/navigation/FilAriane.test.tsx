@@ -269,7 +269,7 @@ describe("les pages d'entrée disent leur rangement par un fil d'Ariane", () => 
     "etats-permanents/en-cas-de",
     "registre",
   ])("%s : un fil d'Ariane vers l'établissement", (dossier) => {
-    // La page, ou l'en-tête auquel elle délègue (`HeroEnPlace`, 2026-10-24).
+    // La page, ou l'en-tête auquel elle délègue (`EnTetePage`, 2026-10-25).
     const source = lire(dossier);
     const delegues = analyser(source)
       .statements.filter(ts.isImportDeclaration)

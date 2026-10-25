@@ -4,7 +4,10 @@ import { listerQuandCaArrive } from "@/lib/quand-ca-arrive/lignes";
 import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
 import { AideEcran } from "@/components/ui-kit/AideEcran";
 import { TexteSource } from "@/components/ui-kit/TexteSource";
-import { HeroEnPlace } from "@/components/etats-permanents/HeroEnPlace";
+import { EnTetePage } from "@/components/entete-page/EnTetePage";
+import { OngletsEnPlace } from "@/components/etats-permanents/OngletsEnPlace";
+import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
+import { LABEL_ONGLET_EN_CAS_DE } from "@/lib/etats-permanents/libelles-onglets";
 import { ChevronRepli } from "@/components/ui/repli";
 
 export const metadata = {
@@ -54,13 +57,23 @@ export default async function EnCasDePage({
 
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
-      <HeroEnPlace
-        etablissementId={id}
-        raisonDisplay={etablissement.raisonDisplay}
-        actif="evenement"
-        decoupe={decoupe === "geste" ? "geste" : undefined}
-        intro="Ce que vous devez faire quand un événement se produit : une embauche, un accident, une livraison, une canicule…"
-        outils={
+      {/* L'en-tête de « Ce qui doit être en place » : un onglet, pas une
+          page — le fil seul dit qu'on est sur le second. */}
+      <EnTetePage
+        item="etats-permanents"
+        etablissement={{ id, raisonDisplay: etablissement.raisonDisplay }}
+        crumbs={[
+          { href: `/etablissements/${id}`, label: etablissement.raisonDisplay },
+          { href: `/etablissements/${id}/etats-permanents`, label: LABEL_ITEM["etats-permanents"] },
+          { label: LABEL_ONGLET_EN_CAS_DE },
+        ]}
+        description="Ce que vous devez faire quand un événement se produit : une embauche, un accident, une livraison, une canicule…"
+      >
+        <OngletsEnPlace
+          etablissementId={id}
+          actif="evenement"
+          decoupe={decoupe === "geste" ? "geste" : undefined}
+        />
             <AideEcran titre="Comment lire cette page">
               <p className="m-0">
                 Ces obligations n&apos;ont pas de date : elles deviennent dues
@@ -82,8 +95,7 @@ export default async function EnCasDePage({
                 dans Équipe et dans Équipements.
               </p>
             </AideEcran>
-        }
-      />
+      </EnTetePage>
 
       <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
         {groupes.length === 0 ? (
