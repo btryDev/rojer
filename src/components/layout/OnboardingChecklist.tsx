@@ -66,6 +66,7 @@ export function OnboardingChecklist({ etapes }: { etapes: EtapeOnboarding[] }) {
       className="overflow-hidden rounded-[30px] ring-1 ring-[color:rgba(13,18,36,.10)]"
     >
       <GuideDepliant
+        ouvertAuDepart={!(prochaine.href && prochaine.cta)}
         bandeau={
           <div className="flex min-w-0 items-center gap-5">
             {/* Décorative — la personne au travail ; origine et licence :

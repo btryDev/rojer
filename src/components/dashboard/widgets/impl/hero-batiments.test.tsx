@@ -47,7 +47,7 @@ describe("hero : la fiche de l'établissement", () => {
     expect(t).toContain("Le Comptoir des Halles");
     expect(t).toContain("Restaurant · 12 rue Montorgueil, 75001 Paris");
     expect(t).toContain("ERP · type N · cat. 5");
-    expect(t).toContain("+ établissement de travail");
+    expect(t).toContain("+ Établissement de travail");
     expect(t).toContain("8 salariés");
     expect(t).toContain("6 fiches");
     expect(t).toContain("7 déclarés");
@@ -57,7 +57,13 @@ describe("hero : la fiche de l'établissement", () => {
   it("hors ERP, le régime travail, sans précision redondante", () => {
     const t = texte({ ...etab, estERP: false });
     expect(t).toContain("Établissement de travail");
-    expect(t).not.toContain("+ établissement de travail");
+    expect(t).not.toContain("+ Établissement de travail");
+  });
+
+  it("n'affirme jamais un régime non déclaré : IGH seul", () => {
+    const t = texte({ ...etab, estERP: false, estEtablissementTravail: false, estIGH: true });
+    expect(t).toContain("IGH");
+    expect(t).not.toContain("Établissement de travail");
   });
 
   it("les zones sont nommées comme zones, et une zone vide le dit", () => {

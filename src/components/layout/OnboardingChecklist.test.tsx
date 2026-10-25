@@ -10,6 +10,8 @@ const etape = (id: string, faite: boolean): EtapeOnboarding => ({
   titre: `Étape ${id}`,
   pourquoi: "",
   faite,
+  href: `/${id}`,
+  cta: "Y aller",
 });
 
 function rendu(etapes: EtapeOnboarding[]) {
@@ -34,6 +36,12 @@ describe("guide de mise en place : un bandeau, la prochaine étape d'abord", () 
     fireEvent.click(bouton);
     expect(bouton.getAttribute("aria-expanded")).toBe("true");
     expect(c.querySelector("ol")!.parentElement!.hidden).toBe(false);
+  });
+
+  it("une prochaine étape sans lien (question sur place) ouvre la liste d'emblée", () => {
+    const c = rendu([{ ...etape("q", false), href: undefined, cta: undefined, question: <p>La question</p> }]);
+    expect(c.querySelector("ol")!.parentElement!.hidden).toBe(false);
+    expect(c.textContent).toContain("La question");
   });
 
   it("disparaît quand tout est fait", () => {

@@ -16,16 +16,23 @@ import { ChevronDown } from "lucide-react";
 export function GuideDepliant({
   bandeau,
   action,
+  ouvertAuDepart = false,
   children,
 }: {
   /** La partie gauche du bandeau : photo, étape en cours, progression. */
   bandeau: ReactNode;
   /** Le geste de la prochaine étape, posé après le bouton — ou rien. */
   action: ReactNode;
+  /**
+   * Déplié d'emblée — quand la prochaine étape n'a pas de lien et se règle
+   * dans la liste (une question posée sur place) : replié, le bandeau
+   * annonçait une étape sans offrir de geste (relecture du 2026-10-25).
+   */
+  ouvertAuDepart?: boolean;
   /** La liste des étapes, montrée dépliée. */
   children: ReactNode;
 }) {
-  const [ouvert, setOuvert] = useState(false);
+  const [ouvert, setOuvert] = useState(ouvertAuDepart);
   const idListe = useId();
   return (
     <>

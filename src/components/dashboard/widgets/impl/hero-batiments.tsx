@@ -12,7 +12,8 @@ import Image from "next/image";
 import { DoorOpen, IdCard, Users, Wrench } from "lucide-react";
 import { nomDeZone } from "@/lib/batiments/nom-zone";
 import type { IllustrationBatiment } from "@/lib/etablissements/illustration";
-import { libelleRegimeErp } from "@/lib/etablissements/types-erp-affiches";
+import { regimesAffiches } from "@/lib/etablissements/types-erp-affiches";
+import { pluriel } from "@/lib/rendu/pluriel";
 import type { EtablissementLite } from "../types";
 
 /**
@@ -45,22 +46,6 @@ const ACTIVITE: Record<IllustrationBatiment, string | null> = {
   "salle-sport": "Salle de sport",
   local: null,
 };
-
-const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? "s" : ""}`;
-
-/** Les autres régimes cochés, à côté de l'ERP — ou le seul, hors ERP. */
-function regimes(etab: EtablissementLite): { principal: string; autres: string | null } {
-  const autres = [
-    etab.estERP && etab.estEtablissementTravail ? "établissement de travail" : null,
-    etab.estIGH ? "IGH" : null,
-    etab.estHabitation ? "habitation" : null,
-  ].filter((r): r is string => r !== null);
-  return {
-    // ADR-045 : tous les types déclarés, même forme que le widget d'identité.
-    principal: etab.estERP ? libelleRegimeErp(etab) : "Établissement de travail",
-    autres: autres.length > 0 ? `+ ${autres.join(", ")}` : null,
-  };
-}
 
 function Fait({
   Icone,
@@ -112,7 +97,7 @@ export function HeroEtablissement({
   nbEquipements: number;
   zones: readonly { id: string; nom: string; nbEquipements: number }[];
 }) {
-  const { principal, autres } = regimes(etab);
+  const [principal = "Régime non renseigné", ...autres] = regimesAffiches(etab);
   const activite = ACTIVITE[illustration];
 
   return (
@@ -136,7 +121,12 @@ export function HeroEtablissement({
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-[color:var(--board-slate-line)] pt-5 xl:grid-cols-4">
-          <Fait Icone={DoorOpen} libelle="Régime" valeur={principal} precision={autres} />
+          <Fait
+            Icone={DoorOpen}
+            libelle="Régime"
+            valeur={principal}
+            precision={autres.length > 0 ? `+ ${autres.join(", ")}` : null}
+          />
           <Fait
             Icone={Users}
             libelle="Effectif"
@@ -152,7 +142,7 @@ export function HeroEtablissement({
           <Fait
             Icone={Wrench}
             libelle="Équipements"
-            valeur={`${nbEquipements} déclaré${nbEquipements > 1 ? "s" : ""}`}
+            valeur={pluriel(nbEquipements, "déclaré")}
             precision={`dans ${pluriel(zones.length, "zone")}`}
           />
         </div>

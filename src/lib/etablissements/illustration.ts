@@ -16,6 +16,7 @@
 // sectoriels, qui n'ont pas à partir dans le bundle du board. Le choix arrive
 // au client tout fait (`DashboardBundle.illustrationHero`).
 
+import "server-only";
 import { trouverReferentielParNaf } from "@/lib/referentiels";
 import { typesErpDe } from "@/lib/matching/types-erp";
 import { nafEffectif } from "@/lib/perimetre/secteur";

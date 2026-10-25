@@ -43,6 +43,7 @@ import { libellePorteur } from "@/lib/calendrier/labels";
 import { echeancesDuTableauDeBord } from "@/lib/calendrier/prochaine-echeance";
 import { illustrationBatiment } from "@/lib/etablissements/illustration";
 import { compterEquipe } from "@/lib/salaries/queries";
+import { pluriel } from "@/lib/rendu/pluriel";
 
 export default async function EtablissementPage({
   params,
@@ -192,7 +193,6 @@ export default async function EtablissementPage({
       appareilsMuets(equipements, etab).map((a) => [a.equipementId, a.libelle]),
     ),
   ];
-  const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? "s" : ""}`;
 
   const etapesOnboarding: EtapeOnboarding[] = [
     {
