@@ -16,20 +16,6 @@ import { libelleRegimeErp } from "@/lib/etablissements/types-erp-affiches";
 import type { EtablissementLite } from "../types";
 
 /**
- * Les planches de `public/illustrations/batiments/` et leurs dimensions, pour
- * le `width`/`height` de next/image. Un `Record` sur le type fermé : une
- * planche ajoutée sans ses dimensions ne compile pas.
- */
-export const PLANCHES: Record<IllustrationBatiment, { largeur: number; hauteur: number }> = {
-  restaurant: { largeur: 1000, hauteur: 772 },
-  magasin: { largeur: 461, hauteur: 352 },
-  bureaux: { largeur: 507, hauteur: 413 },
-  hotel: { largeur: 421, hauteur: 476 },
-  "salle-sport": { largeur: 614, hauteur: 376 },
-  local: { largeur: 469, hauteur: 354 },
-};
-
-/**
  * Le monogramme de repli, quand aucun logo n'est déposé.
  *
  * Les initiales des deux premiers mots, ou les deux premières lettres d'un
@@ -126,30 +112,12 @@ export function HeroEtablissement({
   nbEquipements: number;
   zones: readonly { id: string; nom: string; nbEquipements: number }[];
 }) {
-  const planche = PLANCHES[illustration];
   const { principal, autres } = regimes(etab);
   const activite = ACTIVITE[illustration];
 
   return (
-    <div className="relative">
-      {/* Décoratif : tout ce que le dessin évoque est écrit dans la fiche.
-          Au-dessus de la fiche sur petit écran ; à partir de `lg`, posé sur
-          son extrémité droite, qui lui réserve la place (`lg:pr-…`), et il
-          déborde sous la fiche plutôt qu'au-dessus : monté plus haut, il se
-          faisait couper par le haut du hero et passait sous la gélule de
-          compte. */}
-      <Image
-        src={`/illustrations/batiments/${illustration}.webp`}
-        alt=""
-        aria-hidden
-        width={planche.largeur}
-        height={planche.hauteur}
-        sizes="(min-width: 1024px) 440px, 320px"
-        priority
-        className="pointer-events-none relative z-10 mx-auto mb-4 block h-auto w-[clamp(220px,60vw,320px)] select-none lg:absolute lg:bottom-[-28px] lg:right-[-1%] lg:mb-0 lg:w-[clamp(280px,26vw,400px)]"
-      />
-
-      <div className="rounded-[24px] bg-[color:var(--board-card)] p-6 ring-1 ring-[color:rgba(13,18,36,.10)] sm:p-7 lg:pr-[clamp(260px,27vw,400px)]">
+    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_clamp(260px,24vw,380px)]">
+      <div className="min-w-0 rounded-[24px] bg-[color:var(--board-card)] p-6 ring-1 ring-[color:rgba(13,18,36,.10)] sm:p-7">
         <div className="flex min-w-0 items-center gap-3.5">
           <span
             aria-hidden
@@ -205,6 +173,23 @@ export function HeroEtablissement({
             </span>
           ))}
         </div>
+      </div>
+
+      {/* [2026-10-25] Le dessin dans sa propre carte (demande de la
+          propriétaire), à côté de la fiche et à sa hauteur. Il y est
+          contenu, jamais recadré ; la carte est prête à recevoir une vraie
+          photo de l'établissement, qui la remplira (à venir). Décoratif :
+          tout ce que le dessin évoque est écrit dans la fiche. */}
+      <div className="relative min-h-[220px] overflow-hidden rounded-[24px] bg-[color:var(--board-card)] ring-1 ring-[color:rgba(13,18,36,.10)]">
+        <Image
+          src={`/illustrations/batiments/${illustration}.webp`}
+          alt=""
+          aria-hidden
+          fill
+          sizes="(min-width: 1024px) 380px, 100vw"
+          priority
+          className="select-none object-contain p-5"
+        />
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render } from "@testing-library/react";
 import { ILLUSTRATIONS_BATIMENT } from "@/lib/etablissements/illustration";
-import { HeroEtablissement, PLANCHES } from "./hero-batiments";
+import { HeroEtablissement } from "./hero-batiments";
 
 afterEach(cleanup);
 
@@ -69,17 +69,10 @@ describe("hero : la fiche de l'établissement", () => {
 });
 
 describe("planches du bâtiment", () => {
-  // Les dimensions déclarées servent au `width`/`height` de next/image : un
-  // fichier remplacé sans elles déformerait le dessin.
-  it.each(ILLUSTRATIONS_BATIMENT)("%s : le fichier existe et a les dimensions déclarées", (nom) => {
+  // La règle de choix (`illustrationBatiment`) ne rend que des planches qui
+  // existent : un fichier manquant laisserait la carte vide.
+  it.each(ILLUSTRATIONS_BATIMENT)("%s : le fichier existe et est un WebP", (nom) => {
     const octets = readFileSync(join(process.cwd(), "public/illustrations/batiments", `${nom}.webp`));
-    // En-tête WebP étendu (VP8X) : largeur et hauteur moins un, sur 24 bits.
-    expect(octets.toString("ascii", 12, 16)).toBe("VP8X");
-    const largeur = octets.readUIntLE(24, 3) + 1;
-    const hauteur = octets.readUIntLE(27, 3) + 1;
-    expect({ largeur, hauteur }).toEqual({
-      largeur: PLANCHES[nom].largeur,
-      hauteur: PLANCHES[nom].hauteur,
-    });
+    expect(octets.toString("ascii", 8, 12)).toBe("WEBP");
   });
 });
