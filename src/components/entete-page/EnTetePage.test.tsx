@@ -39,9 +39,9 @@ describe("EnTetePage", () => {
   });
 
   it("une page sans dessin n'ouvre pas de panneau teinté vide", () => {
-    // « equipe » n'a pas encore d'illustration (migration par section).
-    expect(ITEMS_ILLUSTRES).not.toContain("equipe");
-    const { container } = render(<EnTetePage item="equipe" description="Une phrase." />);
+    // « equipements » n'a pas encore d'illustration (migration par section).
+    expect(ITEMS_ILLUSTRES).not.toContain("equipements");
+    const { container } = render(<EnTetePage item="equipements" description="Une phrase." />);
     expect(container.querySelector("[data-teinte-section]")).toBeNull();
   });
 

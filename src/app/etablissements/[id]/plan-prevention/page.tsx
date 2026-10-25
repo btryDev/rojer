@@ -1,6 +1,7 @@
 import Link from "next/link";
+import { EnTetePage } from "@/components/entete-page/EnTetePage";
+import { BarreDeListe } from "@/components/ui-kit/BarreDeListe";
 import { Plus } from "lucide-react";
-import { FilAriane } from "@/components/navigation/FilAriane";
 import { buttonVariants } from "@/components/ui/button";
 import {
   CarteFiche,
@@ -39,41 +40,32 @@ export default async function PlanPreventionListePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { etablissement } = await requireEtablissement(id);
+  // La garde d'appartenance (404 si l'établissement n'est pas au compte).
+  await requireEtablissement(id);
   const plans = await listPlansPrevention(id);
   const maintenant = new Date();
 
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
-      <header className="border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] py-[22px]">
-        <div className="flex flex-wrap items-end justify-between gap-6">
-          <div className="min-w-0 flex-1">
-            <FilAriane
-              crumbs={[
-                { href: `/etablissements/${id}`, label: etablissement.raisonDisplay },
-                { label: "Plans de prévention" },
-              ]}
-            />
-            <h1 className="board-titre m-0 text-[clamp(22px,2.2vw,27px)]">
-              Plans de prévention
-            </h1>
-            <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-              Obligatoire pour toute entreprise extérieure qui intervient chez
-              vous.
-            </p>
-          </div>
-
-          <Link
-            href={`/etablissements/${id}/plan-prevention/nouveau`}
-            className={buttonVariants({ variant: "board", size: "board" })}
-          >
-            <Plus className="size-3.5" aria-hidden />
-            Nouveau plan
-          </Link>
-        </div>
-      </header>
+      <EnTetePage
+        item="plan-prevention"
+        description="Obligatoire pour toute entreprise extérieure qui intervient chez vous."
+      />
 
       <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
+        {/* Le geste de la liste, au-dessus d'elle : l'en-tête ne porte que
+            la bascule de vue (2026-10-25). */}
+        <BarreDeListe
+          action={
+            <Link
+              href={`/etablissements/${id}/plan-prevention/nouveau`}
+              className={buttonVariants({ variant: "board", size: "board" })}
+            >
+              <Plus className="size-3.5" aria-hidden />
+              Nouveau plan
+            </Link>
+          }
+        />
         {plans.length === 0 ? (
           /* État vide, pas état d'erreur : il dit ce que l'écran fera, d'où
              viendront les données, et ouvre une porte (charte § 6). */

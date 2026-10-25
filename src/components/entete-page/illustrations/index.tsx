@@ -3,8 +3,14 @@ import type { ComponentType } from "react";
 import type { SidebarItemId } from "@/components/layout/sidebar-nav";
 
 import { IllustrationCalendrier } from "./Calendrier";
+import { IllustrationDuerp } from "./Duerp";
 import { IllustrationEnPlace } from "./EnPlace";
+import { IllustrationEquipe } from "./Equipe";
+import { IllustrationPerimetre } from "./Perimetre";
+import { IllustrationPermisFeu } from "./PermisFeu";
 import { IllustrationPlanActions } from "./PlanActions";
+import { IllustrationPlansPrevention } from "./PlansPrevention";
+import { IllustrationPrescriptions } from "./Prescriptions";
 
 /**
  * L'illustration de chaque page d'entrée. Une page sans illustration rend
@@ -22,6 +28,12 @@ const ILLUSTRATIONS: Partial<Record<SidebarItemId, ComponentType>> = {
   calendrier: IllustrationCalendrier,
   actions: IllustrationPlanActions,
   "etats-permanents": IllustrationEnPlace,
+  duerp: IllustrationDuerp,
+  equipe: IllustrationEquipe,
+  prescriptions: IllustrationPrescriptions,
+  "permis-feu": IllustrationPermisFeu,
+  "plan-prevention": IllustrationPlansPrevention,
+  perimetre: IllustrationPerimetre,
 };
 
 /** La page a-t-elle son dessin ? Sans lui, l'en-tête n'ouvre pas de
