@@ -24,7 +24,7 @@
 export default function ChargementEtablissement() {
   return (
     <main
-      className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16"
+      className="flex flex-1 flex-col bg-[color:var(--board-card)] pb-16"
       aria-busy="true"
     >
       <div className="border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] py-[22px]">

@@ -18,9 +18,12 @@ import type { RailCategorieId } from "@/components/layout/sidebar-nav";
  * saumon), pas de vert franc (« à jour »). Une section jaune se lirait
  * « bientôt dû ». [2026-10-25 : le pêche est admis pour « À faire », choix
  * de la propriétaire — à 24° du rose comme du paille, au-delà de l'écart
- * minimal que la garde exige (`EnTetePage.test.tsx`). Rien ne le place à
+ * minimal que la garde exige (`EnTetePage.test.tsx`). ~~Rien ne le place à
  * côté du rose qu'un retard affiche : la teinte ne vit que dans le panneau
- * de l'illustration.]
+ * de l'illustration.~~ [2026-10-25 : faux depuis la coiffe des cartes du
+ * tableau de bord — le pêche y voisine le rose d'un retard, sur la même
+ * carte. Les 24° d'écart sont ce qui les sépare ; la garde ne mesure que
+ * l'en-tête.]]
  *
  * Le tableau de bord n'a pas de section : il les résume toutes.
  *

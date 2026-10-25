@@ -45,7 +45,8 @@ export function CarteBoard({
   return (
     <div
       className={
-        // Sur canvas quasi blanc, l'aplat ne sépare plus rien : c'est le
+        // Sur le fond du board (blanc depuis le 2026-10-25), l'aplat ne
+        // sépare rien : c'est le
         // filet cheveu et l'ombre douce qui détachent la carte — bento.
         "flex h-full flex-col " +
         (ton === "sombre"

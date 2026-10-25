@@ -213,11 +213,10 @@ export type DashboardBundle = {
    */
   echeances: EtatEcheances;
   /**
-   * Le même état, **filtre bâtiment ignoré**. Pour le hero, qui parle de
-   * l'établissement : la plaque des bâtiments y liste tous les volumes avec
-   * la charge de chacun, et les relevés d'à côté suivaient le filtre. Sur un
-   * site filtré, « Dépassées 3 » voisinait donc des cartes qui en totalisent
-   * sept, sans que rien n'explique l'écart.
+   * Le même état, **filtre bâtiment ignoré**. Pour le titre du hero, qui
+   * parle de l'établissement. [2026-10-25 : la plaque des zones et les
+   * relevés chiffrés, qui en faisaient le premier lecteur, ont quitté le
+   * hero.]
    *
    * Le filtre gouverne ce qui est *sous* le hero — la file de travail, le
    * calendrier, le parc. La légende du sélecteur le dit.

@@ -60,15 +60,15 @@ function Fait({
 }) {
   return (
     <div className="flex min-w-0 flex-col gap-1">
-      <span className="flex items-center gap-1.5 text-[11.5px] text-[color:var(--board-slate-mid)]">
+      <dt className="flex items-center gap-1.5 text-[11.5px] text-[color:var(--board-slate-mid)]">
         <Icone aria-hidden className="size-3.5 flex-none" />
         {libelle}
-      </span>
-      <span className="text-[15px] font-semibold tracking-[-0.01em] text-[color:var(--board-ink)]">
+      </dt>
+      <dd className="m-0 text-[15px] font-semibold tracking-[-0.01em] text-[color:var(--board-ink)]">
         {valeur}
-      </span>
+      </dd>
       {precision ? (
-        <span className="text-[12px] text-[color:var(--board-slate-mid)]">{precision}</span>
+        <dd className="m-0 text-[12px] text-[color:var(--board-slate-mid)]">{precision}</dd>
       ) : null}
     </div>
   );
@@ -120,7 +120,7 @@ export function HeroEtablissement({
           </div>
         </div>
 
-        <div className="mt-5 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-[color:var(--board-slate-line)] pt-5 xl:grid-cols-4">
+        <dl className="m-0 mt-5 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-[color:var(--board-slate-line)] pt-5 xl:grid-cols-4">
           <Fait
             Icone={DoorOpen}
             libelle="Régime"
@@ -145,7 +145,7 @@ export function HeroEtablissement({
             valeur={pluriel(nbEquipements, "déclaré")}
             precision={`dans ${pluriel(zones.length, "zone")}`}
           />
-        </div>
+        </dl>
 
         <div className="mt-5 flex flex-wrap items-center gap-2">
           <span className="board-eyebrow mr-1 text-[10px] text-[color:var(--board-slate-mid)]">

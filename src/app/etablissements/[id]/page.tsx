@@ -423,17 +423,15 @@ export default async function EtablissementPage({
     moisCourant: composantesCiviles(aujourdhui).mois - 1,
   };
 
-  /* Le filtre par bâtiment (ADR-019) [2026-10-25] posé sous le guide de mise
-     en place, juste au-dessus des widgets qu'il filtre (demande de la
-     propriétaire) — et non sur les cartes-bâtiments : un dessin qui filtre au clic n'annonce pas
-          comment en sortir, et le sélecteur, lui, porte son « Tout
-          l'établissement ». Le hero montre l'état du parc, il ne le commande
-          pas. */
+  /* Le filtre par zone (ADR-019, ADR-029), posé sur la rangée de
+     « Personnaliser », sous le guide de mise en place, juste au-dessus des
+     widgets qu'il filtre (2026-10-25, demande de la propriétaire). Jamais sur
+     le dessin du hero : un dessin qui filtre au clic n'annonce pas comment en
+     sortir, et le sélecteur, lui, porte son « Tout l'établissement ». */
   const filtreZones = multiBatiments ? (
-        <div>
           <SelecteurBatiment
             // Sans lui, le sélecteur rend en papier — son défaut — au milieu
-            // d'un bandeau posé sur `--board-canvas`. L'oubli est silencieux :
+            // du board. L'oubli est silencieux :
             // ni erreur ni avertissement, juste un rayon de 6 px et un gris
             // d'une autre famille.
             ton="board"
@@ -446,20 +444,13 @@ export default async function EtablissementPage({
             //
             // [2026-10-25] Les relevés « Dépassées » et « Sous 30 j » ont quitté
             // le hero : la phrase qui les nommait est retirée avec eux.
-            //
-            // « Le bandeau du haut » a été remplacé par le nom des deux
-            // relevés. Le bandeau du haut porte aussi la plaque des zones, qui
-            // compte zone par zone : la phrase affirmait donc « toujours sur
-            // l'établissement entier » d'un objet dont la moitié ne l'est pas.
-            // Nommer les relevés dit vrai et parle la même langue que la
-            // légende posée sous eux.
+
             legende={
               batimentFiltre
                 ? "Les échéances, équipements et opérations affichés sont ceux de cette zone, plus ce qui concerne tout l'établissement. L'indice d'avancement et l'état des documents portent toujours sur l'établissement entier."
                 : undefined
             }
           />
-        </div>
       ) : null;
 
   return (
@@ -473,8 +464,8 @@ export default async function EtablissementPage({
           conteneur de défilement, même quand les widgets sont courts.
           [2026-10-25] Blanc, et non plus le canvas quasi blanc (choix de la
           propriétaire) : sous le hero bleu pâle, le gris faisait une troisième
-          surface. Les cartes s'en détachent par leur filet, renforcé
-          (`CarteBoard`, `.carte-board`), et leur ombre douce. */}
+          surface. Les cartes s'en détachent par leur filet (`CarteBoard`) et
+          leur ombre douce. */}
       <div className="flex flex-1 flex-col bg-[color:var(--board-card)] pb-10">
         <DashboardGrid
           bundle={bundle}

@@ -3,7 +3,8 @@
 // Blocs du « board éditorial » — direction 4a du design Rojer.
 //
 // Chaque bloc est un widget du registre : il reçoit le bundle et rend une
-// carte à grand rayon sur le canvas quasi blanc — blanche à filet et
+// carte à grand rayon sur le fond du board (blanc depuis le 2026-10-25) —
+// blanche à filet et
 // ombre douce (bento), sauf les deux qui passent au noir (voir
 // `CarteBoard`). Le système de
 // personnalisation (DashboardGrid + EditToolbar, le « ⠿ Personnaliser » du
@@ -480,10 +481,10 @@ export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
                 une troisième et casse le bloc.
 
                 Le paragraphe du brief a été retiré d'ici : il énumérait en
-                toutes lettres les mêmes nombres que les relevés ci-dessous
-                (« 14 vérifications dépassées, 22 à programmer… »), et
-                l'état du DUERP, qui a son propre widget. Trois chiffres se
-                lisent d'un coup d'œil ; la même chose en prose, non. */}
+                toutes lettres ~~les mêmes nombres que les relevés ci-dessous~~
+                des nombres que les widgets portent [2026-10-25 : les relevés
+                ont quitté le hero] (« 14 vérifications dépassées, 22 à
+                programmer… »), et l'état du DUERP, qui a son propre widget. */}
             {/* [2026-10-25] Quand des échéances sont dépassées, le titre
                 (« 36 échéances sont dues, dont 30 sans date connue ») est
                 masqué — décision de la propriétaire : les compteurs sont aux
