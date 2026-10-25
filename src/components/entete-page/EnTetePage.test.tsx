@@ -12,7 +12,7 @@ import {
 
 import { EnTetePage } from "./EnTetePage";
 import { ITEMS_ILLUSTRES } from "./illustrations";
-import { TEINTE_SECTION } from "./teintes";
+import { SECTIONS_TEINTEES, TEINTE_SECTION } from "./teintes";
 
 afterEach(cleanup);
 
@@ -99,9 +99,16 @@ describe("les teintes de section", () => {
     expect(TEINTE_SECTION.tableau).toBeNull();
   });
 
-  it("deux sections ne partagent pas une teinte", () => {
-    const teintes = Object.values(TEINTE_SECTION).filter(Boolean);
+  it("deux sections thématiques ne partagent pas une teinte", () => {
+    const teintes = SECTIONS_TEINTEES.map((s) => TEINTE_SECTION[s]);
     expect(new Set(teintes).size).toBe(teintes.length);
+  });
+
+  it("Documentation et Paramètres partagent un gris, distinct des sections thématiques", () => {
+    expect(TEINTE_SECTION.documentation).toBe(TEINTE_SECTION.parametres);
+    expect(SECTIONS_TEINTEES.map((s) => TEINTE_SECTION[s])).not.toContain(
+      TEINTE_SECTION.documentation,
+    );
   });
 
   // La règle qui empêche le carnaval : une teinte de section ne doit pas se

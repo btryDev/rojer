@@ -21,11 +21,22 @@ import type { RailCategorieId } from "@/components/layout/sidebar-nav";
  * (`src/lib/etats-permanents/illustrations.ts`) : posées en style en ligne,
  * une variable que nulle classe n'emploie serait retirée du CSS servi.
  */
+//
+// Trois sections thématiques portent une teinte ; Documentation et Paramètres
+// n'en sont pas vraiment (décision de la propriétaire du 2026-10-25) : elles
+// partagent le même gris neutre. La lavande d'« À faire » a été retirée le
+// même jour (trop présente) au profit du pêche, qui était celui de
+// Documentation.
+const GRIS_NEUTRE = "#ebebea";
+
 export const TEINTE_SECTION: Record<RailCategorieId, string | null> = {
   tableau: null,
-  "a-faire": "#e6e1fa", // lavande
+  "a-faire": "#efe6d8", // pêche
   "sante-securite": "#d5f0ec", // eau
   "equipement-batiment": "#dceaf6", // glacier
-  documentation: "#efe6d8", // sable
-  parametres: "#e9eef2", // ardoise
+  documentation: GRIS_NEUTRE,
+  parametres: GRIS_NEUTRE,
 };
+
+/** Les sections qui ont une teinte propre — les autres prennent le gris. */
+export const SECTIONS_TEINTEES = ["a-faire", "sante-securite", "equipement-batiment"] as const;
