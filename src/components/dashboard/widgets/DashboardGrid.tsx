@@ -17,7 +17,14 @@ import type { DashboardBundle } from "./types";
  * La clé remonte l'état à chaque établissement : la disposition de l'un ne
  * peut pas être écrite dans le cookie de l'autre.
  */
-export async function DashboardGrid({ bundle }: { bundle: DashboardBundle }) {
+export async function DashboardGrid({
+  bundle,
+  entete,
+}: {
+  bundle: DashboardBundle;
+  /** Posé en première rangée de la grille, pleine largeur (cf. le client). */
+  entete?: React.ReactNode;
+}) {
   const layoutCookie =
     (await cookies()).get(nomCookieLayout(bundle.etablissementId))?.value ??
     null;
@@ -26,6 +33,7 @@ export async function DashboardGrid({ bundle }: { bundle: DashboardBundle }) {
       key={bundle.etablissementId}
       bundle={bundle}
       layoutCookie={layoutCookie}
+      entete={entete}
     />
   );
 }

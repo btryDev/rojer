@@ -32,10 +32,20 @@ import type { DashboardBundle, WidgetId } from "./types";
 export function DashboardGridClient({
   bundle,
   layoutCookie,
+  entete,
 }: {
   bundle: DashboardBundle;
   /** Valeur du cookie de disposition, lue au serveur (`DashboardGrid`). */
   layoutCookie: string | null;
+  /**
+   * Un bloc hors registre posé en tête de grille, pleine largeur — le guide
+   * de mise en place. Dans la grille et non au-dessus (2026-10-25) : posé
+   * à part, il gardait ses propres marges et la rangée « Personnaliser »
+   * entre lui et les widgets, et se lisait détaché du board. Ici il prend
+   * l'espacement des cartes. Ni déplaçable ni retirable : il disparaît de
+   * lui-même quand ses étapes sont faites.
+   */
+  entete?: React.ReactNode;
 }) {
   const {
     layout,
@@ -103,6 +113,7 @@ export function DashboardGridClient({
       >
         <SortableContext items={ids} strategy={rectSortingStrategy}>
           <div className="grid grid-cols-1 gap-5 px-[var(--board-gutter)] pb-[var(--board-gutter)] pt-3 sm:grid-cols-2 lg:grid-cols-6 [grid-auto-flow:dense]">
+            {entete ? <div className="col-span-full">{entete}</div> : null}
             {layout.items.map((item) => {
               const def = REGISTRY[item.widgetId];
               if (!def) return null;

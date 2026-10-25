@@ -40,7 +40,6 @@ import {
 import { composantesCiviles, joursCivilsEntre } from "@/lib/dates";
 import { instantDuRendu } from "@/lib/dates/instant-du-rendu";
 import { libellePorteur } from "@/lib/calendrier/labels";
-import { libelleEtatCourtCapitale } from "@/lib/calendrier/etats";
 import { echeancesDuTableauDeBord } from "@/lib/calendrier/prochaine-echeance";
 import { illustrationBatiment } from "@/lib/etablissements/illustration";
 
@@ -417,9 +416,8 @@ export default async function EtablissementPage({
 
   return (
     <>
-      {/* Le brief est une section à part entière : panneau bleu ciel à
-          grand rayon posé dans la gouttière — la seule grande surface
-          colorée de la page — qui annonce la file de travail du jour. */}
+      {/* Le brief : le hero du tableau de bord, sur le fond pointillé — la
+          date, la fiche de l'établissement et son bâtiment. */}
       <BlocBrief bundle={bundle} />
 
       {/* Le filtre par bâtiment (ADR-019) reste ici, sous le hero, et non sur
@@ -442,6 +440,9 @@ export default async function EtablissementPage({
             // laisse hors de sa portée — et c'est ici qu'elle doit être, sous
             // la commande qui pose la question.
             //
+            // [2026-10-25] Les relevés « Dépassées » et « Sous 30 j » ont quitté
+            // le hero : la phrase qui les nommait est retirée avec eux.
+            //
             // « Le bandeau du haut » a été remplacé par le nom des deux
             // relevés. Le bandeau du haut porte aussi la plaque des zones, qui
             // compte zone par zone : la phrase affirmait donc « toujours sur
@@ -450,7 +451,7 @@ export default async function EtablissementPage({
             // légende posée sous eux.
             legende={
               batimentFiltre
-                ? `Les échéances, équipements et opérations affichés sont ceux de cette zone, plus ce qui concerne tout l'établissement. Les relevés « ${libelleEtatCourtCapitale("enRetard")} » et « ${libelleEtatCourtCapitale("proche")} », l'indice d'avancement et l'état des documents portent toujours sur l'établissement entier.`
+                ? "Les échéances, équipements et opérations affichés sont ceux de cette zone, plus ce qui concerne tout l'établissement. L'indice d'avancement et l'état des documents portent toujours sur l'établissement entier."
                 : undefined
             }
           />
@@ -463,16 +464,17 @@ export default async function EtablissementPage({
           (bento), pas par l'aplat. Le reste de l'app garde la palette
           « papier ». */}
       <div className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-10">
-        {!onboardingFini ? (
-          <div className="p-[var(--board-gutter)] pb-0">
-            <OnboardingChecklist
-              etapes={etapesOnboarding}
-              etablissementRaison={etab.raisonDisplay}
-            />
-          </div>
-        ) : null}
-
-        <DashboardGrid bundle={bundle} />
+        <DashboardGrid
+          bundle={bundle}
+          entete={
+            onboardingFini ? null : (
+              <OnboardingChecklist
+                etapes={etapesOnboarding}
+                etablissementRaison={etab.raisonDisplay}
+              />
+            )
+          }
+        />
 
         <footer className="flex flex-wrap items-center justify-between gap-6 px-[calc(var(--board-gutter)+4px)] pt-2 text-[11.5px] text-[color:var(--board-blue-ink)]">
           <p className="m-0 max-w-[640px] leading-[1.55]">
