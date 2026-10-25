@@ -33,19 +33,23 @@ export function DashboardGridClient({
   bundle,
   layoutCookie,
   entete,
+  filtre,
 }: {
   bundle: DashboardBundle;
   /** Valeur du cookie de disposition, lue au serveur (`DashboardGrid`). */
   layoutCookie: string | null;
   /**
-   * Un bloc hors registre posé en tête de grille, pleine largeur — le guide
-   * de mise en place. Dans la grille et non au-dessus (2026-10-25) : posé
-   * à part, il gardait ses propres marges et la rangée « Personnaliser »
-   * entre lui et les widgets, et se lisait détaché du board. Ici il prend
-   * l'espacement des cartes. Ni déplaçable ni retirable : il disparaît de
-   * lui-même quand ses étapes sont faites.
+   * Un bloc hors registre posé en tête du board, pleine largeur — le guide
+   * de mise en place. Ni déplaçable ni retirable : il disparaît de lui-même
+   * quand ses étapes sont faites.
    */
   entete?: React.ReactNode;
+  /**
+   * Le filtre de zone, posé sur la rangée de « Personnaliser », à sa gauche :
+   * les deux règlent les widgets du dessous (2026-10-25, demande de la
+   * propriétaire : « Personnaliser » sous le guide).
+   */
+  filtre?: React.ReactNode;
 }) {
   const {
     layout,
@@ -93,17 +97,22 @@ export function DashboardGridClient({
 
   return (
     <div className="flex flex-col">
-      {/* Le contrôle occupe sa propre rangée en tête du board : posé en
-          flottant il chevauchait le premier widget. Hors édition il se
-          range à droite ; en édition il prend la pleine largeur — le
+      {entete ? (
+        <div className="px-[var(--board-gutter)] pt-6">{entete}</div>
+      ) : null}
+
+      {/* Le contrôle occupe sa propre rangée : posé en flottant il
+          chevauchait le premier widget. Hors édition il se range à droite
+          du filtre de zone ; en édition il prend la pleine largeur — le
           tiroir « Ajouter un widget » en a besoin. */}
       <div
         className={
-          "px-[var(--board-gutter)] pt-6 " +
-          (enEdition ? "" : "flex justify-end")
+          "flex flex-wrap items-start gap-4 px-[var(--board-gutter)] pt-6 " +
+          (enEdition ? "flex-col" : "justify-between")
         }
       >
-        {toolbar}
+        {filtre ?? <span aria-hidden />}
+        <div className={enEdition ? "w-full" : ""}>{toolbar}</div>
       </div>
 
       <DndContext
@@ -113,7 +122,6 @@ export function DashboardGridClient({
       >
         <SortableContext items={ids} strategy={rectSortingStrategy}>
           <div className="grid grid-cols-1 gap-5 px-[var(--board-gutter)] pb-[var(--board-gutter)] pt-3 sm:grid-cols-2 lg:grid-cols-6 [grid-auto-flow:dense]">
-            {entete ? <div className="col-span-full">{entete}</div> : null}
             {layout.items.map((item) => {
               const def = REGISTRY[item.widgetId];
               if (!def) return null;

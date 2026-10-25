@@ -475,15 +475,11 @@ export default async function EtablissementPage({
         <DashboardGrid
           bundle={bundle}
           entete={
-            onboardingFini && !filtreZones ? null : (
-              <div className="flex flex-col gap-6">
-                {onboardingFini ? null : (
-                  <OnboardingChecklist etapes={etapesOnboarding} />
-                )}
-                {filtreZones}
-              </div>
+            onboardingFini ? null : (
+              <OnboardingChecklist etapes={etapesOnboarding} />
             )
           }
+          filtre={filtreZones}
         />
 
         <footer className="flex flex-wrap items-center justify-between gap-6 px-[calc(var(--board-gutter)+4px)] pt-2 text-[11.5px] text-[color:var(--board-blue-ink)]">

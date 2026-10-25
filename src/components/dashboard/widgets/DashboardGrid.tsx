@@ -20,10 +20,13 @@ import type { DashboardBundle } from "./types";
 export async function DashboardGrid({
   bundle,
   entete,
+  filtre,
 }: {
   bundle: DashboardBundle;
-  /** Posé en première rangée de la grille, pleine largeur (cf. le client). */
+  /** Le guide de mise en place, en tête du board (cf. le client). */
   entete?: React.ReactNode;
+  /** Le filtre de zone, sur la rangée de « Personnaliser » (cf. le client). */
+  filtre?: React.ReactNode;
 }) {
   const layoutCookie =
     (await cookies()).get(nomCookieLayout(bundle.etablissementId))?.value ??
@@ -34,6 +37,7 @@ export async function DashboardGrid({
       bundle={bundle}
       layoutCookie={layoutCookie}
       entete={entete}
+      filtre={filtre}
     />
   );
 }
