@@ -221,7 +221,7 @@ function LigneEcheance({
       >
         {date ? (
           <>
-            <span className="board-titre text-[18px] leading-none tabular-nums">
+            <span className="board-titre text-[18px] leading-none tabular-nums text-white">
               {FMT_JOUR.format(date)}
             </span>
             <span className="mt-1 font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-white/70">
