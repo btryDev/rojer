@@ -35,10 +35,9 @@ import {
 import { construireBrief } from "@/lib/dashboard/brief";
 import {
   LIBELLE_AUCUNE_VERIFICATION,
-  LIBELLE_ETAT_COURT,
   LIBELLE_SANS_ECHEANCE,
 } from "@/lib/calendrier/etats";
-import { HeroBatiments } from "./hero-batiments";
+import { FicheEtablissement, HeroBatiments } from "./hero-batiments";
 import { CarteBoard } from "@/components/dashboard/CarteBoard";
 import type { Recommandation } from "@/lib/dashboard/recommandations";
 import { occupePlaceReservee } from "@/lib/dashboard/place-reservee";
@@ -426,47 +425,6 @@ function CarteTache({
   );
 }
 
-/* — Un relevé du hero : un chiffre, son libellé.
- *
- * Trois d'entre eux cadrent le titre — celui-ci dit ce qui presse, ceux-là
- * disent de combien il s'agit en tout. Mêmes agrégats que `construireBrief`,
- * pour que les deux ne puissent pas diverger.
- */
-function Releve({
-  valeur,
-  libelle,
-  alerte = false,
-  precision = null,
-}: {
-  valeur: number;
-  libelle: string;
-  alerte?: boolean;
-  /** Ce que le nombre contient et que le mot ne dit pas — « dont 5 sans date
-   *  connue » (`Brief.precisionReleveRetard`, 2026-09-15). */
-  precision?: string | null;
-}) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <span
-        className={
-          "board-titre text-[30px] leading-none tabular-nums " +
-          (alerte ? "text-[color:var(--board-signal-ink)]" : "")
-        }
-      >
-        {valeur}
-      </span>
-      <span className="board-eyebrow text-[color:var(--board-slate-mid)]">
-        {libelle}
-      </span>
-      {precision ? (
-        <span className="text-[11.5px] leading-[1.3] tabular-nums text-[color:var(--board-slate-mid)]">
-          {precision}
-        </span>
-      ) : null}
-    </div>
-  );
-}
-
 export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
   const { aujourdhui, dashboard, echeancesEtablissement, nbRapports } = bundle;
   const { duerp, recommandations } = dashboard;
@@ -548,12 +506,11 @@ export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
                 l'état du DUERP, qui a son propre widget. Trois chiffres se
                 lisent d'un coup d'œil ; la même chose en prose, non. */}
             {/* [2026-10-25] Quand des échéances sont dépassées, le titre
-                (« 36 échéances sont dues, dont 30 sans date connue ») redit
-                les relevés juste dessous, précision comprise : il ne reste
-                que pour les lecteurs d'écran, à qui il résume la page. Ses
-                autres formes — titres de salariés en retard, dossier calme,
-                étape d'amorçage — disent ce que les chiffres ne disent pas,
-                et restent affichées. */}
+                (« 36 échéances sont dues, dont 30 sans date connue ») est
+                masqué — décision de la propriétaire : les compteurs sont aux
+                widgets. Il reste pour les lecteurs d'écran, à qui il résume
+                la page. Ses autres formes — titres de salariés en retard,
+                dossier calme, étape d'amorçage — restent affichées. */}
             <h1
               className={
                 totalUrgent > 0
@@ -564,53 +521,15 @@ export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
               {titre}
             </h1>
 
-            {/* Les relevés, sur une carte blanche posée sur le pointillé.
-                Séparateurs en filet plutôt qu'en gouttière : trois chiffres
-                alignés sans trait se lisent comme un seul nombre. */}
-            <div className="inline-flex items-stretch rounded-[20px] bg-[color:var(--board-card)] px-[22px] py-4 ring-1 ring-[color:rgba(13,18,36,.08)]">
-              <div className="pr-[22px]">
-                {/* Le mot vient de la table d'états (`LIBELLE_ETAT_COURT`),
-                    comme celui du bandeau du parc à un clic : les deux
-                    écrivaient deux mots différents pour cet état-là. */}
-                <Releve
-                  valeur={totalUrgent}
-                  libelle={LIBELLE_ETAT_COURT.enRetard}
-                  alerte={totalUrgent > 0}
-                  // La part sans date connue que le titre nomme : sans elle,
-                  // « DÉPASSÉES 14 » contredisait « dont cinq sans date
-                  // connue » juste au-dessus (2026-09-15).
-                  precision={brief.precisionReleveRetard}
-                />
-              </div>
-              <div className="w-px bg-[color:rgba(10,10,10,.1)]" />
-              <div className="px-[22px]">
-                {/* Toutes familles, comme le relevé d'à côté : ce
-                    compteur-ci ne comptait que les vérifications. */}
-                <Releve
-                  valeur={sous30j.total}
-                  libelle={LIBELLE_ETAT_COURT.proche}
-                />
-              </div>
-              <div className="w-px bg-[color:rgba(10,10,10,.1)]" />
-              <div className="pl-[22px]">
-                {/* Le parc entier, comme les deux relevés d'à côté : trois
-                    chiffres alignés sous un même titre ne peuvent pas avoir
-                    trois portées. */}
-                <Releve
-                  valeur={bundle.equipementsEtablissement.length}
-                  libelle="Équipements"
-                />
-              </div>
-            </div>
-
+            {/* [2026-10-25] La fiche de l'établissement, à la place des trois
+                relevés (« Dépassées », « Sous 30 j », « Équipements ») :
+                décision de la propriétaire. Les compteurs vivent dans les
+                widgets du dessous, qui les ventilent et y mènent. */}
+            <FicheEtablissement etablissement={etablissement} />
           </div>
 
-          {/* Le bâtiment du genre de lieu, et l'établissement présenté
-              autour : son nom, son régime, son effectif. */}
-          <HeroBatiments
-            etablissement={etablissement}
-            illustration={bundle.illustrationHero}
-          />
+          {/* Le bâtiment du genre de lieu — un emblème, pas un portrait. */}
+          <HeroBatiments illustration={bundle.illustrationHero} />
         </div>
       </div>
     </>

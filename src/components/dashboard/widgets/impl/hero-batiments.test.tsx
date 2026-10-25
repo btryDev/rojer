@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render } from "@testing-library/react";
 import { ILLUSTRATIONS_BATIMENT } from "@/lib/etablissements/illustration";
-import { HeroBatiments, PLANCHES } from "./hero-batiments";
+import { FicheEtablissement, PLANCHES } from "./hero-batiments";
 
 afterEach(cleanup);
 
@@ -24,14 +24,14 @@ const etab = {
   categorieErp: "N5",
   classeIgh: null,
   entreprise: { raisonSociale: "SARL", siret: null, codeNaf: "56.10A", effectif: 8 },
-} as unknown as Parameters<typeof HeroBatiments>[0]["etablissement"];
+} as unknown as Parameters<typeof FicheEtablissement>[0]["etablissement"];
 
 function texte(e = etab) {
-  return render(<HeroBatiments etablissement={e} illustration="restaurant" />).container.textContent ?? "";
+  return render(<FicheEtablissement etablissement={e} />).container.textContent ?? "";
 }
 
-// 2026-10-25 : une seule fiche, qui présente l'établissement — jamais ses
-// zones, qu'un dessin épinglé ferait lire comme des emplacements.
+// 2026-10-25 : la fiche présente l'établissement — à la place des trois
+// relevés du hero.
 describe("hero : la fiche de l'établissement", () => {
   it("nomme l'établissement, son régime, son effectif et sa ville", () => {
     const t = texte();
@@ -48,8 +48,7 @@ describe("hero : la fiche de l'établissement", () => {
 
 describe("planches du bâtiment", () => {
   // Les dimensions déclarées servent au `width`/`height` de next/image : un
-  // fichier remplacé sans elles déformerait le dessin, et les points
-  // d'accroche, posés en pourcentage, tomberaient à côté.
+  // fichier remplacé sans elles déformerait le dessin.
   it.each(ILLUSTRATIONS_BATIMENT)("%s : le fichier existe et a les dimensions déclarées", (nom) => {
     const octets = readFileSync(join(process.cwd(), "public/illustrations/batiments", `${nom}.webp`));
     // En-tête WebP étendu (VP8X) : largeur et hauteur moins un, sur 24 bits.

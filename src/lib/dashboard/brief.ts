@@ -97,16 +97,6 @@ export type GesteBrief = {
 export type Brief = {
   datePill: string;
   titre: string;
-  /**
-   * La légende du relevé « Dépassées » : « dont 5 sans date connue », « toutes
-   * sans date connue » (« sans date connue » pour une seule), ou `null` quand
-   * toutes les échéances comptées sont datées. Le titre nomme la part sans
-   * date ; le relevé posé dessous gardait son seul nombre, et « DÉPASSÉES 14 »
-   * contredisait « dont cinq sans date connue » soixante pixels plus haut
-   * (2026-09-15). Le mot de l'état ne change pas (`LIBELLE_ETAT`) : la légende
-   * précise ce qu'il compte.
-   */
-  precisionReleveRetard: string | null;
   paragraphe: string;
   gestes: GesteBrief[];
 };
@@ -197,7 +187,7 @@ const TONS_ALERTE: ReadonlySet<RecoBrief["kind"]> = new Set([
 
 /**
  * Parmi les retards, ceux qui n'ont pas d'échéance connue — la part que le
- * titre et la légende du relevé nomment. Bornée par le total : les deux
+ * titre nomme. Bornée par le total : les deux
  * compteurs sortent de lectures distinctes.
  */
 function retardsSansDate(e: EntreeBrief): number {
@@ -239,9 +229,10 @@ function retardsSansDate(e: EntreeBrief): number {
  * SAUF QUAND DES VÉRIFICATIONS N'ONT PAS D'ÉCHÉANCE CONNUE (2026-09-14) : leur
  * date n'est qu'une date de génération, et « ont dépassé leur date » y serait
  * faux. Le titre dit alors « sont dues », qui vaut pour toutes, et nomme la
- * part sans date. Le relevé « DÉPASSÉES » garde son mot et son nombre : c'est
+ * part sans date. ~~Le relevé « DÉPASSÉES » garde son mot et son nombre : c'est
  * l'état du registre d'états, compté sur le ton — et, depuis le 2026-09-15,
- * une légende qui nomme la même part (`precisionReleveRetard`).
+ * une légende qui nomme la même part (`precisionReleveRetard`).~~ [2026-10-25 :
+ * les relevés ont quitté le hero, et leur légende avec eux.]
  *
  * IL PORTE LE VERBE DU RELEVÉ QU'IL COIFFE, et pas son adjectif : « Onze
  * échéances dépassées » aurait recopié mot pour mot, à soixante pixels d'écart,
@@ -461,34 +452,9 @@ export function construireBrief(e: EntreeBrief): Brief {
     titre = TITRE_AMORCE[premiere.kind] ?? titre;
   }
 
-  const sansDate = retardsSansDate(e);
-  // « toutes » quand aucune n'est datée : « DÉPASSÉES 5, dont 5 sans date
-  // connue » se lisait comme deux ensembles (relecture, 2026-09-15). Et pour
-  // une seule, ni « toutes » ni « dont 1 » : « sans date connue ».
-  const precisionSansDate =
-    sansDate === 0
-      ? null
-      : sansDate < e.retards.total
-        ? `dont ${sansDate} sans date connue`
-        : sansDate > 1
-          ? "toutes sans date connue"
-          : "sans date connue";
-  // « hors » : le relevé ne les compte pas (ADR-043 § 3 (a)), il dit qu'ils
-  // existent (audit du 2026-10-12).
-  const n = e.titresDusEnRetard;
-  // Des couples personne × titre, comme le titre ci-dessus (2026-10-12).
-  const precisionTitres =
-    n === 0
-      ? null
-      : n > 1
-        ? `hors ${n} titres dus non déclarés, en retard, comptés personne par personne`
-        : "hors 1 titre dû non déclaré, en retard";
   return {
     datePill: formaterDate(e.aujourdhui),
     titre,
-    precisionReleveRetard:
-      [precisionSansDate, precisionTitres].filter((p) => p !== null).join(" · ") ||
-      null,
     paragraphe: construireParagraphe(e),
     gestes,
   };

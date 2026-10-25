@@ -87,38 +87,6 @@ describe("construireBrief — titre", () => {
     expect(une.titre).toBe("Une vérification est due, sans date connue");
   });
 
-  it("la légende du relevé « Dépassées » nomme la même part sans date que le titre", () => {
-    // 2026-09-15 : le titre disait « 14 échéances sont dues, dont cinq sans
-    // date connue » au-dessus d'un relevé « DÉPASSÉES 14 » sans rien d'autre.
-    const mixte = construireBrief({
-      ...CALME,
-      retards: ventil({ controle: 6, travaux: 5, operations: 3 }),
-      verifsEnRetardSansEcheance: 5,
-    });
-    expect(mixte.precisionReleveRetard).toBe("dont 5 sans date connue");
-
-    const datees = construireBrief({
-      ...CALME,
-      retards: ventil({ controle: 6 }),
-    });
-    expect(datees.precisionReleveRetard).toBeNull();
-    expect(construireBrief(CALME).precisionReleveRetard).toBeNull();
-
-    const toutes = construireBrief({
-      ...CALME,
-      retards: ventil({ controle: 5 }),
-      verifsEnRetardSansEcheance: 5,
-    });
-    expect(toutes.precisionReleveRetard).toBe("toutes sans date connue");
-
-    const une = construireBrief({
-      ...CALME,
-      retards: ventil({ controle: 1 }),
-      verifsEnRetardSansEcheance: 1,
-    });
-    expect(une.precisionReleveRetard).toBe("sans date connue");
-  });
-
   it("le paragraphe ne compte pas « dépassées » les vérifications sans date connue", () => {
     const b = construireBrief({
       ...CALME,
@@ -425,7 +393,7 @@ describe("construireBrief — gestes raccourcis", () => {
 
 describe("brief — les titres dus en retard (ADR-043 (d), audit du 2026-10-12)", () => {
   // La carte « Titres dus à vos salariés » est rangée parmi les retards, mais
-  // ni le titre ni le relevé « Dépassées » ne les comptent (ADR-043 § 3 (a)) :
+  // le titre ne les compte pas (ADR-043 § 3 (a)) :
   // le bandeau disait « Rien ne presse » au-dessus d'une carte en retard.
   it("sans autre retard, le titre les nomme au lieu du calme", () => {
     const b = construireBrief({ ...CALME, titresDusEnRetard: 2 });
@@ -433,22 +401,14 @@ describe("brief — les titres dus en retard (ADR-043 (d), audit du 2026-10-12)"
     expect(b.titre).toBe(
       "Deux titres dus à vos salariés, non déclarés, sont en retard — comptés personne par personne",
     );
-    expect(b.precisionReleveRetard).toBe(
-      "hors 2 titres dus non déclarés, en retard, comptés personne par personne",
-    );
   });
 
-  it("le relevé ne change pas de nombre : il les dit à part", () => {
+  it("avec d'autres retards, le titre ne les compte pas", () => {
     const b = construireBrief({
       ...CALME,
       retards: ventil({ controle: 3 }),
       titresDusEnRetard: 1,
     });
     expect(b.titre).toBe("Trois échéances ont dépassé leur date");
-    expect(b.precisionReleveRetard).toBe("hors 1 titre dû non déclaré, en retard");
-  });
-
-  it("aucun titre en retard : rien ne change", () => {
-    expect(construireBrief(CALME).precisionReleveRetard).toBeNull();
   });
 });

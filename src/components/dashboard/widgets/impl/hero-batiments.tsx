@@ -1,17 +1,12 @@
-// Le bâtiment du hero, et la fiche de l'établissement qui pointe dessus.
+// Le hero du tableau de bord : le bâtiment, et la fiche de l'établissement.
 //
 // **Ce que le dessin dit, et ne dit pas.** L'application ne sait rien du bâti
 // — ni hauteur, ni étages, ni forme. Le dessin est l'emblème du genre de lieu
-// (`illustrationBatiment`), et les étiquettes s'accrochent à des points fixes
-// de chaque planche, les mêmes pour tous les dossiers : elles présentent
-// l'établissement, elles ne désignent rien sur le dessin. [2026-10-25 : une
-// seule fiche, une seule tige — demande de la propriétaire.]
-//
-// [2026-10-25] Les étiquettes portaient d'abord les zones et leur charge ;
-// retiré à la demande de la propriétaire (« autour du dessin ça n'a pas de
-// sens ») : une zone épinglée sur un dessin se lit comme un emplacement. Le
-// nom et les caractéristiques de l'établissement sont, eux, vrais du dessin
-// entier. Un plan du lieu avait été refusé pour la même raison.
+// (`illustrationBatiment`), jamais un portrait : rien n'y est épinglé.
+// [2026-10-25] Un plan du lieu, puis des étiquettes de zone autour du dessin,
+// ont été essayés et refusés par la propriétaire : un emplacement dessiné se
+// lit comme celui du client, et le produit ne le connaît pas. Ce qu'on sait
+// de l'établissement est écrit dans sa fiche, à gauche.
 
 import Image from "next/image";
 import { DoorOpen, MapPin, Users } from "lucide-react";
@@ -20,21 +15,17 @@ import { libelleRegimeErp } from "@/lib/etablissements/types-erp-affiches";
 import type { EtablissementLite } from "../types";
 
 /**
- * Les planches de `public/illustrations/batiments/` : leurs dimensions, et le
- * point d'accroche de la fiche, en pourcentage de l'image — sur le flanc
- * droit du bâtiment, du côté où la fiche est posée. Un `Record` sur le type
- * fermé : une planche ajoutée sans son accroche ne compile pas.
+ * Les planches de `public/illustrations/batiments/` et leurs dimensions, pour
+ * le `width`/`height` de next/image. Un `Record` sur le type fermé : une
+ * planche ajoutée sans ses dimensions ne compile pas.
  */
-export const PLANCHES: Record<
-  IllustrationBatiment,
-  { largeur: number; hauteur: number; ancre: readonly [x: number, y: number] }
-> = {
-  restaurant: { largeur: 507, hauteur: 384, ancre: [78, 48] },
-  magasin: { largeur: 461, hauteur: 352, ancre: [80, 52] },
-  bureaux: { largeur: 507, hauteur: 413, ancre: [84, 44] },
-  hotel: { largeur: 421, hauteur: 476, ancre: [74, 44] },
-  "salle-sport": { largeur: 614, hauteur: 376, ancre: [78, 50] },
-  local: { largeur: 469, hauteur: 354, ancre: [80, 54] },
+export const PLANCHES: Record<IllustrationBatiment, { largeur: number; hauteur: number }> = {
+  restaurant: { largeur: 507, hauteur: 384 },
+  magasin: { largeur: 461, hauteur: 352 },
+  bureaux: { largeur: 507, hauteur: 413 },
+  hotel: { largeur: 421, hauteur: 476 },
+  "salle-sport": { largeur: 614, hauteur: 376 },
+  local: { largeur: 469, hauteur: 354 },
 };
 
 /**
@@ -61,15 +52,12 @@ function ville(adresse: string): string {
   return /^\d{5}\s+(.+)$/.exec(fin)?.[1] ?? (fin || adresse);
 }
 
-export function HeroBatiments({
-  etablissement: etab,
-  illustration,
-}: {
-  etablissement: EtablissementLite;
-  illustration: IllustrationBatiment;
-}) {
-  const planche = PLANCHES[illustration];
-  const [ax, ay] = planche.ancre;
+/**
+ * La fiche de l'établissement, dans la colonne de gauche du hero : son nom
+ * et ce qui le caractérise — régime, effectif, ville. Tout ce qu'elle dit se
+ * lit sur la fiche établissement, d'où elle vient.
+ */
+export function FicheEtablissement({ etablissement: etab }: { etablissement: EtablissementLite }) {
   const lignes: { cle: string; Icone: typeof Users; texte: string }[] = [
     {
       cle: "regime",
@@ -87,74 +75,46 @@ export function HeroBatiments({
   ];
 
   return (
-    // `lg:pr-64` réserve la place de la fiche, posée hors de l'image : sans
-    // elle, elle débordait du hero et s'y faisait couper.
-    <figure className="m-0 mx-auto w-fit max-w-full lg:pr-64">
-      <div className="relative w-[clamp(220px,24vw,340px)]">
-        {/* Décoratif : tout ce que le dessin évoque est écrit dans la fiche. */}
-        <Image
-          src={`/illustrations/batiments/${illustration}.webp`}
-          alt=""
-          aria-hidden
-          width={planche.largeur}
-          height={planche.hauteur}
-          sizes="340px"
-          priority
-          className="block h-auto w-full select-none"
-        />
-
-        {/* La tige : du point d'accroche au bord gauche de la fiche, centrée
-            sur sa hauteur. Repère en pourcentage de l'image, trait
-            d'épaisseur constante. */}
-        <svg
-          aria-hidden
-          viewBox="0 0 100 100"
-          preserveAspectRatio="none"
-          className="pointer-events-none absolute inset-0 hidden size-full overflow-visible lg:block"
-        >
-          <line
-            x1={ax}
-            y1={ay}
-            x2={100}
-            y2={50}
-            stroke="var(--board-ink)"
-            strokeWidth={1.2}
-            vectorEffect="non-scaling-stroke"
-          />
-        </svg>
+    <div className="w-full max-w-[340px] rounded-[20px] bg-[color:var(--board-card)] p-5 ring-1 ring-[color:rgba(13,18,36,.08)]">
+      <div className="flex min-w-0 items-center gap-3">
         <span
           aria-hidden
-          className="absolute hidden size-[7px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[color:var(--board-ink)] lg:block"
-          style={{ left: `${ax}%`, top: `${ay}%` }}
-        />
-
-        {/* La fiche : sous le dessin sur petit écran, à droite de l'image et
-            reliée par la tige au-delà. */}
-        <div className="mt-4 w-full max-w-64 rounded-[18px] bg-[color:var(--board-card)] p-4 ring-1 ring-[color:var(--board-ink)] lg:absolute lg:left-full lg:top-1/2 lg:mt-0 lg:w-64 lg:-translate-y-1/2">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <span
-              aria-hidden
-              className="flex size-9 flex-none items-center justify-center rounded-[11px] bg-[color:var(--board-ink)] indent-[0.06em] font-mono text-[11px] font-medium tracking-[0.06em] text-white"
-            >
-              {monogramme(etab.raisonDisplay)}
-            </span>
-            <p className="m-0 min-w-0 text-[15px] font-semibold leading-[1.25] tracking-[-0.015em] text-[color:var(--board-ink)]">
-              {etab.raisonDisplay}
-            </p>
-          </div>
-          <ul className="m-0 mt-3 flex list-none flex-col gap-1.5 border-t border-[color:var(--board-slate-line)] p-0 pt-3">
-            {lignes.map(({ cle, Icone, texte }) => (
-              <li
-                key={cle}
-                className="flex min-w-0 items-center gap-2 text-[12.5px] text-[color:var(--board-slate-ink)]"
-              >
-                <Icone aria-hidden className="size-3.5 flex-none text-[color:var(--board-slate-mid)]" />
-                <span className="min-w-0 truncate">{texte}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+          className="flex size-10 flex-none items-center justify-center rounded-[12px] bg-[color:var(--board-ink)] indent-[0.06em] font-mono text-[12px] font-medium tracking-[0.06em] text-white"
+        >
+          {monogramme(etab.raisonDisplay)}
+        </span>
+        <p className="m-0 min-w-0 text-[17px] font-semibold leading-[1.25] tracking-[-0.02em] text-[color:var(--board-ink)]">
+          {etab.raisonDisplay}
+        </p>
       </div>
-    </figure>
+      <ul className="m-0 mt-4 flex list-none flex-col gap-2 border-t border-[color:var(--board-slate-line)] p-0 pt-4">
+        {lignes.map(({ cle, Icone, texte }) => (
+          <li
+            key={cle}
+            className="flex min-w-0 items-center gap-2.5 text-[13px] text-[color:var(--board-slate-ink)]"
+          >
+            <Icone aria-hidden className="size-4 flex-none text-[color:var(--board-slate-mid)]" />
+            <span className="min-w-0 truncate">{texte}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** Le bâtiment du hero — décoratif : tout ce qu'il évoque est écrit dans la fiche. */
+export function HeroBatiments({ illustration }: { illustration: IllustrationBatiment }) {
+  const planche = PLANCHES[illustration];
+  return (
+    <Image
+      src={`/illustrations/batiments/${illustration}.webp`}
+      alt=""
+      aria-hidden
+      width={planche.largeur}
+      height={planche.hauteur}
+      sizes="380px"
+      priority
+      className="mx-auto block h-auto w-[clamp(220px,28vw,380px)] select-none"
+    />
   );
 }

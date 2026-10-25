@@ -460,16 +460,15 @@ résume tout le dossier, et son hero le dit autrement.
 - **Fond** : `.fond-pointille` (gris chaud piqué d'une trame de points, « table
   à dessin ») à la place du bleu ciel. Ce qui se lit dessus pose sa surface
   blanche (les trois relevés sont sur une carte).
-- **À gauche** : l'enseigne (logo ou monogramme, nom), la date, le titre du
-  brief, les trois relevés.
+- **À gauche** : la date, le titre du brief (masqué, sauf pour les lecteurs
+  d'écran, quand des échéances sont dépassées : les compteurs sont aux
+  widgets), et la **fiche de l'établissement** — monogramme, nom, régime,
+  effectif, ville.
 - **À droite** : le bâtiment du genre de lieu (`illustrationBatiment` : type
-  ERP, puis secteur du code NAF, puis local générique) et **une étiquette par
-  zone** — rond d'état, nom, état de charge — reliée par une tige à un point
-  fixe de la planche.
-- **Interdit** : un dessin qui prétend montrer les lieux du client (un plan, un
-  étage, l'emplacement d'une zone). Les points d'accroche sont les mêmes pour
-  tous les dossiers ; l'étiquette dit qu'une zone existe et ce qu'elle porte,
-  jamais où elle est.
+  ERP, puis secteur du code NAF, puis local générique), seul.
+- **Interdit** : rien n'est épinglé sur le dessin. Un plan du lieu, puis une
+  étiquette par zone, ont été essayés et refusés : un emplacement dessiné se
+  lit comme celui du client, que le produit ne connaît pas.
 
 **Les cartes du tableau de bord sont coiffées de leur section** (2026-10-25) :
 une bande à la teinte de la section du rail (`TEINTE_SECTION`), avec son nom,
@@ -483,7 +482,9 @@ Hors du tableau de bord, `CarteBoard` n'a pas de coiffe.
 1. **`.fond-pointille`** — un fond, jamais une carte.
 2. **L'étiquette épinglée** — tige d'encre fine depuis un point noir, gélule
    blanche cerclée d'encre, rond à la couleur d'état (chiffre, ✓ ou –), libellé
-   court. À poser sur une illustration générique, pas sur un plan.
+   court. À poser sur un objet générique dont l'étiquette dit vrai (un
+   appareil, une pièce de dossier), jamais sur un dessin qui passerait pour le
+   lieu du client. Pas d'emploi aujourd'hui.
 
 ### Fiche — modèle : `app/etablissements/[id]/registre/[sectionId]/page.tsx`
 
