@@ -440,10 +440,15 @@ function BarreAnnee({
   return (
     <div
       className={
-        "-mx-[var(--board-gutter)] flex flex-wrap items-center gap-x-4 gap-y-3 border-b border-[color:var(--board-slate-line)] px-[var(--board-gutter)] py-[13px] transition-[background-color,box-shadow,backdrop-filter] duration-300 ease-out " +
+        // Le même bloc que la règle annuelle dessous (`--board-canvas`), un
+        // cran plus soutenu (`--board-slate-pale`) : la barre se lit comme
+        // l'en-tête de l'instrument, plus comme une bande blanche entre
+        // l'en-tête de page et la règle (2026-10-25). Collée en haut, elle
+        // garde sa teinte en verre, et seulement là son filet.
+        "-mx-[var(--board-gutter)] flex flex-wrap items-center gap-x-4 gap-y-3 border-b px-[var(--board-gutter)] py-[13px] transition-[background-color,box-shadow,backdrop-filter] duration-300 ease-out " +
         (collee
-          ? "bg-[color:rgba(255,255,255,.82)] shadow-[0_14px_30px_-24px_rgba(13,18,36,.55)] backdrop-blur-xl backdrop-saturate-150"
-          : "bg-[color:var(--board-card)]")
+          ? "border-[color:var(--board-slate-line)] bg-[color:rgba(237,242,245,.86)] shadow-[0_14px_30px_-24px_rgba(13,18,36,.55)] backdrop-blur-xl backdrop-saturate-150"
+          : "border-transparent bg-[color:var(--board-slate-pale)]")
       }
     >
       {/* Le titre existe pour les lecteurs d'écran ; à l'œil, l'instrument
