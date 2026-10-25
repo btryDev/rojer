@@ -22,7 +22,8 @@ export const metadata = {
  *
  * L'écran était en charte papier : `AppTopbar`, colonne centrée
  * `max-w-4xl`, `cartouche`, et un `EmptyState` qui porte la même dette. Il
- * suit désormais le patron de liste du board — bandeau bord à bord,
+ * suit désormais le patron de liste du board — ~~bandeau bord à bord~~
+ * [2026-10-25 : l'en-tête commun `EnTetePage`, puis `BarreDeListe`],
  * gouttière `--board-gutter`, lignes du kit `fiche/`.
  *
  * Le « pourquoi cette page » est passé en pied, comme sur l'annuaire des
@@ -35,7 +36,6 @@ export default async function PermisFeuListePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  // La garde d'appartenance (404 si l'établissement n'est pas au compte).
   await requireEtablissement(id);
   const permis = await listPermisFeu(id);
 
@@ -47,8 +47,6 @@ export default async function PermisFeuListePage({
       />
 
       <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
-        {/* Le geste de la liste, au-dessus d'elle : l'en-tête ne porte que
-            la bascule de vue (2026-10-25). */}
         <BarreDeListe
           action={
             <Link

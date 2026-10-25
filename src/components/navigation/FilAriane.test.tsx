@@ -169,7 +169,7 @@ function retoursEnDur(source: string): string[] {
 
 const portUnFil = (source: string) => /<FilAriane\b|\bcrumbs=\{/.test(sansCommentaires(source));
 
-describe("les pages d'entrée disent leur rangement par un fil d'Ariane", () => {
+describe("les pages d'entrée disent leur rangement par un fil d'Ariane, ou par l'en-tête commun", () => {
   const SRC = path.resolve(__dirname, "../..");
   const RACINE = path.join(SRC, "app/etablissements/[id]");
   // Toutes les pages d'entrée de module : chaque dossier direct sous
@@ -198,9 +198,9 @@ describe("les pages d'entrée disent leur rangement par un fil d'Ariane", () => 
     readFileSync(path.join(RACINE, dossier, "page.tsx"), "utf8");
 
   // Les bandeaux auxquels une page d'entrée délègue son en-tête : les
-  // composants qu'elle importe et qui portent le `<h1>` (`BandeauParc` pour
-  // les équipements, dont le bouton rond « Retour à Mon établissement » avait
-  // échappé à la première garde). `AppTopbar` est le chrome commun : son « ← »
+  // composants qu'elle importe et qui portent le `<h1>` (~~`BandeauParc`~~
+  // [2026-10-25 : `EnTetePage`] pour les équipements, dont le bouton rond
+  // « Retour à Mon établissement » avait échappé à la première garde). `AppTopbar` est le chrome commun : son « ← »
   // est le retour de provenance des fiches (ADR-014), et la règle qui le vise
   // ici est qu'aucune page d'entrée ne lui passe de `retour`.
   const resoudre = (specifieur: string) =>

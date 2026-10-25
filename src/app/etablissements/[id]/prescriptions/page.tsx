@@ -77,7 +77,6 @@ export default async function PrescriptionsPage({
   // que le renvoi promettait d'éviter.
   const { source: sourceBrute } = await searchParams;
   const sourceInitiale = sourceDemandee(sourceBrute);
-  // La garde d'appartenance (404 si l'établissement n'est pas au compte).
   await requireEtablissement(id);
   const { prescriptions, obligations, equipements } =
     await chargerPagePrescriptions(id);
@@ -85,14 +84,8 @@ export default async function PrescriptionsPage({
 
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
-      {/* « Ce qu'on vous a prescrit, à vous seul » plutôt que le nom du rail :
-          ce qui compte ici est « à vous seul » — la prescription particulière,
-          opposée au référentiel commun ; qui l'a prescrite se lit ligne par
-          ligne. « Une autorité » n'allait pas : un assureur n'en est pas une
-          (ADR-032). */}
       <EnTetePage
         item="prescriptions"
-        titre="Ce qu'on vous a prescrit, à vous seul"
         description="Ce qu'un arrêté du maire ou du préfet, ou une demande de votre assureur, ajoute au référentiel commun : ces lignes entrent à votre calendrier. Une demande d'assureur vient d'un contrat, pas du droit, et le dit partout où elle s'affiche."
       />
 

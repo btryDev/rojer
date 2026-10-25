@@ -111,8 +111,6 @@ export default async function EquipePage({
       />
 
       <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
-        {/* Les alertes et l'ajout, au-dessus de la liste qu'ils concernent :
-            l'en-tête ne porte que la bascule de vue (2026-10-25). */}
         <BarreDeListe
           resume={
             <>

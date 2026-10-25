@@ -109,7 +109,7 @@ export default async function AccessibilitePage({
     const registreAncien = await getRegistreAccessibilite(id);
     return (
       <>
-        <EnTetePage item="accessibilite" titre="Registre d'accessibilité" description={DESCRIPTION} />
+        <EnTetePage item="accessibilite" description={DESCRIPTION} />
         <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] px-[var(--board-gutter)] pt-7 pb-16">
           <section className="carte-board px-7 py-8 sm:px-8">
             <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
@@ -179,7 +179,7 @@ export default async function AccessibilitePage({
 
   return (
     <>
-      <EnTetePage item="accessibilite" titre="Registre d'accessibilité" description={DESCRIPTION} />
+      <EnTetePage item="accessibilite" description={DESCRIPTION} />
 
       <main className="flex flex-1 flex-col gap-7 bg-[color:var(--board-canvas)] px-[var(--board-gutter)] pt-7 pb-16">
         {/* Why */}

@@ -40,7 +40,7 @@
 //
 // La légende dit donc désormais **ses deux axes** — la zone, et la restriction
 // par porteur — et elle n'est plus écrite : elle est **dérivée** de ce que
-// l'agrégation compte pour de bon (`legendeParc`, `porteursDuBandeauParc`).
+// l'agrégation compte pour de bon (`legendeParc`, `porteursDuParc`).
 // Personne ne peut plus écrire « tout » au-dessus d'un compteur qui compte une
 // part, parce que personne n'écrit plus cette phrase.
 //
@@ -60,8 +60,12 @@ import {
   LIBELLE_ETAT,
   LIBELLE_ETAT_COURT,
 } from "@/lib/calendrier/etats";
-import { porteursDuBandeauParc } from "@/lib/equipements/etat-verifications";
+import { porteursDuParc } from "@/lib/equipements/etat-verifications";
 import { legendeParc } from "@/lib/perimetre/porteurs-comptes";
+
+/** Un lien posé dans une phrase de la barre — légende et suggestions. */
+const LIEN_DANS_PHRASE =
+  "font-semibold text-[color:var(--board-ink)] underline underline-offset-2 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--board-ink)]";
 
 export function BarreParc({
   hrefCalendrier,
@@ -111,7 +115,7 @@ export function BarreParc({
       : filtreBatiment.actif
         ? "cette"
         : "toutes",
-    comptes: porteursDuBandeauParc(),
+    comptes: porteursDuParc(),
   });
   const legende = (
     <>
@@ -122,7 +126,7 @@ export function BarreParc({
           {horsCompte}{" "}
           <Link
             href={hrefCalendrier}
-            className="font-semibold text-[color:var(--board-ink)] underline underline-offset-2"
+            className={LIEN_DANS_PHRASE}
           >
             Voir le calendrier →
           </Link>
@@ -220,7 +224,7 @@ export function BarreParc({
               : "D'après votre secteur et vos régimes, une catégorie d'équipement reste à examiner."}{" "}
             <Link
               href={suggestions.href}
-              className="font-semibold text-[color:var(--board-ink)] underline underline-offset-2"
+              className={LIEN_DANS_PHRASE}
             >
               Voir les suggestions →
             </Link>

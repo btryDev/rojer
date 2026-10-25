@@ -28,7 +28,6 @@ export default async function PrestatairesPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  // La garde d'appartenance (404 si l'établissement n'est pas au compte).
   await requireEtablissement(id);
   const prestataires = await listPrestataires(id);
 
@@ -58,10 +57,8 @@ export default async function PrestatairesPage({
       />
 
       <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
-        {/* L'alerte et l'ajout, au-dessus de la liste qu'ils concernent :
-            l'en-tête ne porte que la bascule de vue (2026-10-25). Le
-            compteur ne s'affiche qu'en cas d'alerte : un « 0 à régulariser »
-            permanent occupe la place sans rien apprendre. */}
+        {/* Le compteur ne s'affiche qu'en cas d'alerte : un « 0 à
+            régulariser » permanent occupe la place sans rien apprendre. */}
         <BarreDeListe
           resume={
             etatDuLot !== null ? (

@@ -29,6 +29,10 @@ export async function requireEntreprise(entrepriseId: string) {
  * ou 404. Utilisé par toutes les pages /etablissements/[id]/... et les
  * actions qui reçoivent un etablissementId.
  *
+ * Appelée sans lire son résultat, elle reste la garde d'appartenance : une
+ * page qui n'a besoin d'aucun champ de l'établissement l'appelle pour le 404
+ * (depuis le 2026-10-25, le fil d'Ariane ne lui demande plus son nom).
+ *
  * Mémoïsé par `cache()` sur le rendu (audit Next.js du 2026-10-14, H2) : la
  * barre latérale (vigilance prestataires) et la page le demandent dans le même
  * rendu. Clé primitive, portée de la requête HTTP ; hors rendu RSC — une

@@ -258,7 +258,7 @@ export function repartirParEquipement(
  * ligne fabriquée est en retard, et c'est le seul état que les quatre écrans
  * annoncent tous.
  */
-export function porteursDuBandeauParc(
+export function porteursDuParc(
   now: Date = new Date(),
 ): Set<PorteurObligation> {
   return porteursComptesPar(

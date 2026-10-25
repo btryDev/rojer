@@ -42,7 +42,6 @@ export default async function EtablissementDuerpPage({
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
       <EnTetePage
         item="duerp"
-        titre="Votre DUERP"
         description="Votre évaluation des risques, transcrite dans un document unique et tenue à jour. Décrivez votre activité : l'outil vous propose les risques typiques de votre secteur."
       />
 

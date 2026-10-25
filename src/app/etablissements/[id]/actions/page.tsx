@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BarreDeListe } from "@/components/ui-kit/BarreDeListe";
 import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
@@ -168,32 +169,33 @@ export default async function PlanActionsPage({
       />
 
       <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
-        {/* L'export et l'article qui fonde la liste parlent de la liste : ils
-            vivent au-dessus d'elle — l'en-tête ne porte que la bascule de vue
-            (décision de la propriétaire du 2026-10-25). */}
-        <div className="flex flex-wrap items-center justify-end gap-3">
-          <a
-            href={`/api/etablissements/${id}/plan-actions/pdf`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={buttonVariants({ variant: "boardClair", size: "board" })}
-          >
-            Exporter PDF
-          </a>
-          <LegalBadge
-            charte="board"
-            reference="Art. L. 4121-2 CT"
-            href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000033019913"
-            extrait="L'employeur met en oeuvre les mesures prévues à l'article L. 4121-1 sur le fondement des principes généraux de prévention suivants : 1° Eviter les risques ; 2° Evaluer les risques qui ne peuvent pas être évités ; 3° Combattre les risques à la source ; […]"
-          >
-            <p>
-              {ORDRE_SELON_L4121_2}{" "}
-              Rojer signale les risques du DUERP
-              traités uniquement par des EPI, de la formation ou de
-              l&apos;organisation.
-            </p>
-          </LegalBadge>
-        </div>
+        <BarreDeListe
+          aide={
+            <LegalBadge
+              charte="board"
+              reference="Art. L. 4121-2 CT"
+              href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000033019913"
+              extrait="L'employeur met en oeuvre les mesures prévues à l'article L. 4121-1 sur le fondement des principes généraux de prévention suivants : 1° Eviter les risques ; 2° Evaluer les risques qui ne peuvent pas être évités ; 3° Combattre les risques à la source ; […]"
+            >
+              <p>
+                {ORDRE_SELON_L4121_2}{" "}
+                Rojer signale les risques du DUERP
+                traités uniquement par des EPI, de la formation ou de
+                l&apos;organisation.
+              </p>
+            </LegalBadge>
+          }
+          action={
+            <a
+              href={`/api/etablissements/${id}/plan-actions/pdf`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={buttonVariants({ variant: "boardClair", size: "board" })}
+            >
+              Exporter PDF
+            </a>
+          }
+        />
         {/* Indicateurs */}
         <section className="carte-board px-7 py-6 sm:px-8">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">

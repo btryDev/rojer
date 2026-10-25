@@ -75,7 +75,6 @@ export default async function CarnetSanitairePage({
     <>
       <EnTetePage
         item="carnet-sanitaire"
-        titre="Carnet sanitaire eau"
         description="La surveillance des légionelles : relevés de température et analyses. Elle est due aux établissements recevant du public dont l'eau chaude collective alimente des points d'usage à risque."
       />
 

@@ -10,7 +10,6 @@ export default async function BatimentsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  // La garde d'appartenance (404 si l'établissement n'est pas au compte).
   await requireEtablissement(id);
   const batiments = await listerBatimentsDeLEtablissement(id);
 

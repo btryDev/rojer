@@ -28,8 +28,9 @@ export const metadata = {
 
 /**
  * Le registre des plans de prévention, en charte board — jumeau de l'écran
- * des permis de feu, et bâti sur le même patron de liste : bandeau bord à
- * bord, gouttière `--board-gutter`, lignes du kit `fiche/`.
+ * des permis de feu, et bâti sur le même patron de liste : ~~bandeau bord à
+ * bord~~ [2026-10-25 : l'en-tête commun `EnTetePage`, puis `BarreDeListe`],
+ * gouttière `--board-gutter`, lignes du kit `fiche/`.
  *
  * Ce qu'il remplace : `AppTopbar`, colonne `max-w-4xl`, `cartouche` coiffé
  * d'un filet de couleur, et un `EmptyState` en charte papier.
@@ -40,7 +41,6 @@ export default async function PlanPreventionListePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  // La garde d'appartenance (404 si l'établissement n'est pas au compte).
   await requireEtablissement(id);
   const plans = await listPlansPrevention(id);
   const maintenant = new Date();
@@ -53,8 +53,6 @@ export default async function PlanPreventionListePage({
       />
 
       <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
-        {/* Le geste de la liste, au-dessus d'elle : l'en-tête ne porte que
-            la bascule de vue (2026-10-25). */}
         <BarreDeListe
           action={
             <Link

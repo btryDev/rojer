@@ -14,8 +14,10 @@ import { listerEtablissementsDeLEntreprise } from "@/lib/etablissements/queries"
  *      sidebar déduit l'item actif depuis le pathname (cf. AppSidebar).
  *   3. Fait le scroll container à droite pour que la sidebar reste sticky.
  *
- * Chaque page garde la liberté de rendre sa propre AppTopbar si elle
- * veut un en-tête avec actions contextuelles.
+ * ~~Chaque page garde la liberté de rendre sa propre AppTopbar si elle
+ * veut un en-tête avec actions contextuelles.~~ [2026-10-25 : les pages
+ * d'entrée rendent l'en-tête commun (`EnTetePage`) ; leurs actions
+ * descendent au-dessus de leur liste (`BarreDeListe`).]
  */
 export default async function EtablissementLayout({
   children,

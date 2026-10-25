@@ -105,23 +105,13 @@ export default async function DuerpLayout({
             `AppTopbar`, son fil d'Ariane et sa pilule de secteur. */}
         <EnTetePage
           item="duerp"
-          titre="Votre DUERP"
           description="Votre évaluation des risques, unité de travail par unité. Tout est enregistré au fur et à mesure : vous pouvez vous arrêter et reprendre."
         />
         {/* Le contexte du document et sa sortie, au-dessus de l'étape : ce
             que l'en-tête portait à droite, il ne le porte plus. */}
         <div className="px-[var(--board-gutter)] pt-6">
           <BarreDeListe
-            resume={
-              <p className="m-0 flex flex-wrap items-center gap-x-2 text-[13px] text-[color:var(--board-slate-mid)]">
-                {contexte.map((c, i) => (
-                  <span key={c} className="flex items-center gap-x-2">
-                    {i > 0 ? <span aria-hidden>·</span> : null}
-                    {c}
-                  </span>
-                ))}
-              </p>
-            }
+            contexte={contexte}
             action={
               <Link
                 href={`/duerp/${id}/pdf/preview`}

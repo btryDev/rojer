@@ -185,25 +185,24 @@ export default async function RegistrePage({
       />
 
       <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-7">
-        {/* L'export, l'aide et la demande d'assistance, au-dessus du
-            registre qu'ils concernent : l'en-tête ne porte que la bascule de
-            vue (2026-10-25). L'ancien « Prendre rendez-vous » vers btry.fr
-            passe par « Besoin d'aide ? » (2026-10-24), qui garde
-            l'utilisateur dans Rojer. */}
+        {/* L'ancien « Prendre rendez-vous » vers btry.fr passe par « Besoin
+            d'aide ? » (2026-10-24), qui garde l'utilisateur dans Rojer. */}
         <BarreDeListe
-          action={
-            <div className="flex flex-wrap items-center gap-2.5">
-              <a
-                href={`/api/etablissements/${id}/registre/pdf`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={buttonVariants({ variant: "board", size: "board" })}
-              >
-                Exporter le registre
-              </a>
+          aide={
+            <>
               <DemandeAide variante="lien" libelle="Besoin d'aide ?" categorie="commission_securite" contexte="Registre de sécurité" etablissementId={id} />
               {aide}
-            </div>
+            </>
+          }
+          action={
+            <a
+              href={`/api/etablissements/${id}/registre/pdf`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={buttonVariants({ variant: "board", size: "board" })}
+            >
+              Exporter le registre
+            </a>
           }
         />
         {couverture && (
