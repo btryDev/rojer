@@ -223,13 +223,12 @@ export function WidgetEquipements({ bundle }: { bundle: DashboardBundle }) {
 
   // Deux lectures : la grille de tuiles (un appareil = une carte) ou le
   // regroupement par type — plus lisible quand le parc répète les mêmes
-  // catégories. Défaut : la vue regroupée dès qu'un type compte
-  // plusieurs appareils ; le choix de l'utilisateur, lui, est mémorisé
-  // et prime sur ce défaut (relu après montage — le localStorage
+  // catégories. Défaut : ~~la vue regroupée dès qu'un type compte
+  // plusieurs appareils~~ la grille de cartes, toujours [2026-10-25,
+  // demande de la propriétaire] ; le choix de l'utilisateur, lui, est
+  // mémorisé et prime sur ce défaut (relu après montage — le localStorage
   // n'existe pas côté serveur).
-  const [vueTypes, setVueTypes] = useState(
-    groupes.some((g) => g.nb > 1),
-  );
+  const [vueTypes, setVueTypes] = useState(false);
   useEffect(() => {
     // Même motif d'hydratation que useLayoutPerso : le premier rendu
     // (SSR compris) sert le défaut, le storage n'est relu qu'après
