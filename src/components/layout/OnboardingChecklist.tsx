@@ -146,12 +146,6 @@ export function OnboardingChecklist({
         </ol>
       </details>
 
-      {/* Bandeau bas rassurance */}
-      <div className="border-t border-[color:var(--board-slate-line)] bg-[color:var(--board-slate-pale)] px-7 py-3.5 sm:px-8">
-        <p className="board-eyebrow m-0 text-[10px] tracking-[0.14em] text-[color:var(--board-slate-soft)]">
-          Ce guide disparaîtra automatiquement une fois les étapes complétées.
-        </p>
-      </div>
       </div>
 
       {/* [2026-10-25] Une photo, à la demande de la propriétaire : le guide
