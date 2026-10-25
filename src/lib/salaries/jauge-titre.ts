@@ -12,6 +12,7 @@
  * et la phrase le dit. Module pur : `now` est passé.
  */
 import { composantesCiviles, joursCivilsEntre } from "@/lib/dates";
+import { pluriel } from "@/lib/rendu/pluriel";
 import { joursDeRetard } from "@/lib/dates/retard";
 
 export type JaugeTitre = {
@@ -21,8 +22,6 @@ export type JaugeTitre = {
   phrase: string;
 };
 
-const pluriel = (n: number, mot: string, motPluriel = `${mot}s`) =>
-  `${n} ${n > 1 ? motPluriel : mot}`;
 
 /** Le temps qui reste, en années et mois — en jours sous un mois. */
 function dureeRestante(de: Date, a: Date): string {

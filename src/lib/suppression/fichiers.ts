@@ -37,6 +37,8 @@ export const CLES_STOCKEES = {
   PiecePrestataire: ["fichierCle"],
   // La pièce qui prouve la correction d'un point (ADR-048).
   Action: ["leveeFichierCle"],
+  // La photo du lieu, dans le hero du tableau de bord (2026-10-25).
+  Etablissement: ["photoCle"],
 } as const;
 
 /**
@@ -112,7 +114,7 @@ export async function clesDesEtablissements(
 ): Promise<string[]> {
   if (etablissementIds.length === 0) return [];
   const dans = { in: etablissementIds };
-  const [rapports, prestataires, analyses, piecesPrecedentes, pieces] = await Promise.all([
+  const [rapports, prestataires, analyses, piecesPrecedentes, pieces, photos] = await Promise.all([
     tx.rapportVerification.findMany({
       where: { etablissementId: dans },
       select: { fichierCle: true },
@@ -133,6 +135,10 @@ export async function clesDesEtablissements(
       where: { etablissementId: dans, leveeFichierCle: { not: null } },
       select: { leveeFichierCle: true },
     }),
+    tx.etablissement.findMany({
+      where: { id: dans, photoCle: { not: null } },
+      select: { photoCle: true },
+    }),
   ]);
   return nonNulles([
     ...rapports.map((r) => r.fichierCle),
@@ -140,6 +146,7 @@ export async function clesDesEtablissements(
     ...analyses.map((a) => a.rapportCle),
     ...piecesPrecedentes.map((p) => p.fichierCle),
     ...pieces.map((p) => p.leveeFichierCle),
+    ...photos.map((p) => p.photoCle),
   ]);
 }
 

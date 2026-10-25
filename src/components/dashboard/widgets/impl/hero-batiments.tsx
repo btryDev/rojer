@@ -1,43 +1,26 @@
-// Le bloc « lieu » du hero — l'identité de l'établissement et ses zones.
-//
-// **Ce que ce bloc est, et n'est pas.** Une plaque unique : en tête l'enseigne
-// (logo, nom, nombre de zones), dessous UN dessin — l'établissement est un
-// bâtiment (2026-10-17) — et la liste de ses zones avec leur parc et leur
-// charge. C'est un **état**, pas une commande : rien ne s'y clique pour
-// filtrer. Le filtre par zone reste piloté par le sélecteur posé sous le
-// hero, qui porte son propre « Tout l'établissement ».
+"use client";
+
+// Le hero du tableau de bord : la fiche de l'établissement, la carte du lieu
+// (photo déposée, ou illustration du genre de lieu) et le bouton du guide.
 //
 // **Ce que le dessin dit, et ne dit pas.** L'application ne sait rien du bâti
-// — ni hauteur, ni étages, ni forme. Le dessin est donc décoratif ; ce qui
-// varie d'une zone à l'autre est ce qu'on sait vraiment : le nom, le parc et
-// la charge.
+// — ni hauteur, ni étages, ni forme. Le dessin est l'emblème du genre de lieu
+// (`illustrationBatiment`), jamais un portrait : rien n'y est épinglé.
+// [2026-10-25] Un plan du lieu, puis des étiquettes de zone autour du dessin,
+// ont été essayés et refusés par la propriétaire : un emplacement dessiné se
+// lit comme celui du client, et le produit ne le connaît pas. Ce qu'on sait
+// de l'établissement est écrit dans sa fiche, sur laquelle le dessin est posé.
 
-import Image from "next/image";
-import type { BatimentCharge } from "@/lib/batiments/queries";
-import { etatCharge, libelleCharge } from "@/lib/batiments/etat-charge";
+import { DoorOpen, IdCard, Users, Wrench } from "lucide-react";
 import { nomDeZone } from "@/lib/batiments/nom-zone";
-
-type Props = {
-  /** Le nom d'usage de l'établissement. L'adresse ne figure pas ici : elle
-   *  est celle de l'établissement, et au-dessus de la liste des zones
-   *  elle se lirait comme celle de l'une d'elles. */
-  nomEtablissement: string;
-  /** Le logo de l'entreprise, quand elle en a déposé un. `null` → monogramme.
-   *  Cf. la note d'implémentation sous `Enseigne`. */
-  logoUrl: string | null;
-  batiments: BatimentCharge[];
-  /** Le dessin de l'établissement. */
-  srcIllustration: string;
-  /**
-   * Ce que les pastilles comptent, et ce qu'elles laissent au relevé d'à côté.
-   *
-   * Elle arrive toute faite depuis le serveur (`DashboardBundle.perimetreHero`)
-   * et non calculée ici : sa dérivation passe par le référentiel des
-   * obligations, qui n'a rien à faire dans un composant client — et la plaque
-   * n'a pas à savoir comment on obtient une phrase, seulement à la porter.
-   */
-  legende: string;
-};
+import { CartePhotoLieu } from "./CartePhotoLieu";
+import type { IllustrationBatiment } from "@/lib/etablissements/illustration";
+import { regimesAffiches } from "@/lib/etablissements/types-erp-affiches";
+import { pluriel } from "@/lib/rendu/pluriel";
+import { useCallback, useState, type ReactNode } from "react";
+import { buttonVariants } from "@/components/ui/button";
+import { PanneauModal } from "@/components/ui-kit/PanneauModal";
+import type { EtablissementLite } from "../types";
 
 /**
  * Le monogramme de repli, quand aucun logo n'est déposé.
@@ -45,6 +28,10 @@ type Props = {
  * Les initiales des deux premiers mots, ou les deux premières lettres d'un
  * mot unique. Dérivé du nom, donc jamais faux — là où une icône générique
  * de bâtiment aurait fait croire à un logo par défaut.
+ *
+ * NOTE D'IMPLÉMENTATION — le logo n'est pas encore persisté : `Entreprise`
+ * n'a pas de colonne pour lui et aucun écran ne permet d'en déposer un. Le
+ * jour où il arrive, il prend la place du monogramme dans la fiche.
  */
 export function monogramme(nom: string): string {
   const mots = nom.trim().split(/\s+/).filter(Boolean);
@@ -53,178 +40,203 @@ export function monogramme(nom: string): string {
   return (mots[0][0] + mots[1][0]).toUpperCase();
 }
 
-/* — L'enseigne : logo, nom, nombre de zones. ─────────────────────
- *
- * NOTE D'IMPLÉMENTATION — le logo n'est pas encore persisté. `Entreprise`
- * n'a pas de colonne pour lui et aucun écran ne permet d'en déposer un ;
- * `logoUrl` vaut donc `null` partout aujourd'hui, et le monogramme s'affiche.
- * L'emplacement existe pour que le jour où le champ arrive, seule la valeur
- * change — pas la composition.
+/**
+ * Le genre de lieu que dit le dessin, en un mot — repris sous le nom de la
+ * fiche. `null` pour le local générique : « local » n'apprend rien.
  */
-function Enseigne({
-  nom,
-  logoUrl,
-  nbZones,
+const ACTIVITE: Record<IllustrationBatiment, string | null> = {
+  restaurant: "Restaurant",
+  magasin: "Commerce",
+  bureaux: "Bureaux",
+  hotel: "Hôtel",
+  "salle-sport": "Salle de sport",
+  local: null,
+};
+
+function Fait({
+  Icone,
+  libelle,
+  valeur,
+  precision,
 }: {
-  nom: string;
-  logoUrl: string | null;
-  nbZones: number;
+  Icone: typeof Users;
+  libelle: string;
+  valeur: string;
+  precision: string | null;
 }) {
   return (
-    <div className="flex min-w-0 items-center gap-3">
-      {logoUrl != null ? (
-        <Image
-          src={logoUrl}
-          alt=""
-          aria-hidden
-          width={88}
-          height={88}
-          className="size-11 flex-none rounded-[13px] object-contain"
-        />
-      ) : (
-        <span
-          aria-hidden
-          className="flex size-11 flex-none items-center justify-center rounded-[13px] bg-[color:var(--board-ink)] indent-[0.06em] font-mono text-[13px] font-medium leading-none tracking-[0.06em] text-white"
-        >
-          {monogramme(nom)}
-        </span>
-      )}
-
-      <div className="min-w-0">
-        <p className="m-0 truncate text-[17px] font-semibold tracking-[-0.02em] text-[color:var(--board-ink)]">
-          {nom}
-        </p>
-        <p className="board-eyebrow m-0 mt-1 text-[color:var(--board-slate-soft)]">
-          {nbZones} zone{nbZones > 1 ? "s" : ""}
-        </p>
-      </div>
+    <div className="flex min-w-0 flex-col gap-1">
+      <dt className="flex items-center gap-1.5 text-[11.5px] text-[color:var(--board-slate-mid)]">
+        <Icone aria-hidden className="size-3.5 flex-none" />
+        {libelle}
+      </dt>
+      <dd className="m-0 text-[15px] font-semibold tracking-[-0.01em] text-[color:var(--board-ink)]">
+        {valeur}
+      </dd>
+      {precision ? (
+        <dd className="m-0 text-[12px] text-[color:var(--board-slate-mid)]">{precision}</dd>
+      ) : null}
     </div>
   );
 }
 
+/** Le guide de mise en place, tel que la fiche l'ouvre. */
+export type GuideFiche = {
+  /** Le nombre d'étapes qui restent. */
+  aFaire: number;
+  /** Les étapes, rendues au serveur (`EtapesMiseEnPlace`). */
+  contenu: ReactNode;
+};
+
 /**
- * La pastille de charge — trois états, jamais deux.
- *
- * La règle est dans `lib/batiments/etat-charge.ts`, avec la raison : une zone
- * sans équipement déclaré n'est ni à jour ni en retard, elle est **sans objet**,
- * et l'annoncer « à jour » était une affirmation fausse sur un écran de
- * conformité. Le composant ne rejuge rien, il rend l'état qu'on lui donne.
+ * « Finir de compléter les infos de l'établissement » : ouvre les étapes de
+ * mise en place dans un panneau (2026-10-25, décision de la propriétaire —
+ * le guide n'occupe plus de place en tête du board tant qu'on ne le demande
+ * pas).
  */
-function PastilleCharge({
+function BoutonGuide({ guide }: { guide: GuideFiche }) {
+  const [ouvert, setOuvert] = useState(false);
+  const fermer = useCallback(() => setOuvert(false), []);
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOuvert(true)}
+        className={buttonVariants({ variant: "board", size: "board" }) + " flex-none"}
+      >
+        Finir de compléter les infos de l&apos;établissement
+      </button>
+      <PanneauModal
+        ouvert={ouvert}
+        surFermer={fermer}
+        surtitre="Guide de mise en place"
+        titre={`Encore ${pluriel(guide.aFaire, "étape")} pour couvrir l'essentiel`}
+      >
+        {guide.contenu}
+      </PanneauModal>
+    </>
+  );
+}
+
+/**
+ * Le hero du tableau de bord : la fiche de l'établissement, étirée sur la
+ * largeur, ~~et le bâtiment du genre de lieu posé sur son extrémité droite~~
+ * (planche 6 de l'artefact, retenue par la propriétaire le 2026-10-25)
+ * [2026-10-25 : le lieu a sa propre carte, à côté — `CartePhotoLieu`].
+ *
+ * Tout ce que la fiche dit vient de la fiche établissement, de l'équipe et
+ * du parc ; rien n'y est un état de conformité — les compteurs sont aux
+ * widgets du dessous. Les zones sont de l'information, pas un filtre : le
+ * filtre reste le sélecteur posé sous le hero.
+ */
+export function HeroEtablissement({
+  etablissement: etab,
+  illustration,
+  photo,
+  guide,
+  nbEquipe,
   nbEquipements,
-  nbEnRetard,
+  zones,
 }: {
+  etablissement: EtablissementLite;
+  illustration: IllustrationBatiment;
+  /** L'adresse de la photo du lieu, ou `null` (`DashboardBundle.photoHero`). */
+  photo: string | null;
+  /** Le guide de mise en place, ou `null` quand tout est fait. */
+  guide: GuideFiche | null;
+  nbEquipe: number;
   nbEquipements: number;
-  nbEnRetard: number;
+  zones: readonly { id: string; nom: string; nbEquipements: number }[];
 }) {
-  const etat = etatCharge({ nbEquipements, nbEnRetard });
-
-  if (etat.nature === "sansObjet") {
-    // Ardoise, et non le blanc de « À jour » : la pastille claire se lit comme
-    // un feu vert au milieu des autres zones. Ici il n'y a pas de feu — il
-    // n'y a rien à quoi l'allumer.
-    return (
-      <span className="inline-flex items-center rounded-full bg-[color:var(--board-slate-pale)] px-2.5 py-1 text-[11px] font-medium text-[color:var(--board-slate-mid)]">
-        {libelleCharge(etat)}
-      </span>
-    );
-  }
-
-  if (etat.nature === "aJour") {
-    return (
-      <span className="inline-flex items-center rounded-full bg-white/70 px-2.5 py-1 text-[11px] font-semibold text-[color:var(--board-slate-ink)]">
-        {libelleCharge(etat)}
-      </span>
-    );
-  }
+  const [principal = "Régime non renseigné", ...autres] = regimesAffiches(etab);
+  const activite = ACTIVITE[illustration];
 
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--board-signal-pale)] py-1 pl-1 pr-2.5 text-[11px] font-semibold text-[color:var(--board-signal-ink)]">
-      {/* `--board-signal-on` et non `--board-signal-ink` : l'encre est faite
-          pour le champ pâle, pas pour le rouge plein. À 9,5 px gras, elle
-          tombait sous le seuil AA — et c'est le seul endroit de la pastille
-          où le nombre se lit. */}
-      <span className="flex size-4 items-center justify-center rounded-full bg-[color:var(--board-signal)] text-[9.5px] font-bold text-[color:var(--board-signal-on)]">
-        {etat.nbEnRetard}
-      </span>
-      {libelleCharge(etat)}
-    </span>
-  );
-}
+    <div>
+    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_clamp(260px,24vw,380px)]">
+      <div className="min-w-0 rounded-[24px] bg-[color:var(--board-card)] p-6 ring-1 ring-[color:rgba(13,18,36,.10)] sm:p-7">
+        <div className="flex min-w-0 items-center gap-3.5">
+          <span
+            aria-hidden
+            className="flex size-12 flex-none items-center justify-center rounded-[14px] bg-[color:var(--board-ink)] indent-[0.06em] font-mono text-[13px] font-medium tracking-[0.06em] text-white"
+          >
+            {monogramme(etab.raisonDisplay)}
+          </span>
+          <div className="min-w-0">
+            <p className="m-0 text-[22px] font-semibold leading-[1.2] tracking-[-0.025em] text-[color:var(--board-ink)]">
+              {etab.raisonDisplay}
+            </p>
+            <p className="m-0 mt-0.5 truncate text-[13px] text-[color:var(--board-slate-mid)]">
+              {[activite, etab.adresse].filter(Boolean).join(" · ")}
+            </p>
+          </div>
+          {guide ? (
+            <span className="ml-auto inline-flex flex-none items-center gap-1.5 self-start rounded-full bg-[color:var(--board-amber)] px-3 py-1 text-[12px] font-semibold text-[color:var(--board-amber-ink)]">
+              Informations incomplètes
+            </span>
+          ) : null}
+        </div>
 
-/**
- * Une zone, en une ligne : son nom, son parc, sa charge.
- *
- * 2026-10-20 — un seul dessin pour tout l'établissement. La rangée d'un
- * volume par zone (ADR-019, puis ADR-029) dessinait trois immeubles pour un
- * restaurant découpé en trois zones : le texte disait « zones », l'image
- * disait « bâtiments ». Depuis la décision du 2026-10-17 (un établissement =
- * un bâtiment), le dessin est celui de l'établissement, et les zones en sont
- * la liste.
- */
-function LigneZone({ batiment }: { batiment: BatimentCharge }) {
-  return (
-    <li className="flex items-center justify-between gap-4 py-2.5">
-      <div className="min-w-0">
-        <p className="m-0 break-words text-[14px] font-semibold leading-[1.25] tracking-[-0.01em] text-[color:var(--board-ink)]">
-          {nomDeZone(batiment.nom)}
-        </p>
-        <p className="m-0 mt-0.5 text-[11.5px] text-[color:var(--board-slate-mid)]">
-          {batiment.nbEquipements} équipement
-          {batiment.nbEquipements > 1 ? "s" : ""}
-        </p>
-      </div>
-      <div className="flex-none">
-        <PastilleCharge
-          nbEquipements={batiment.nbEquipements}
-          nbEnRetard={batiment.nbEnRetard}
-        />
-      </div>
-    </li>
-  );
-}
+        <dl className="m-0 mt-5 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-[color:var(--board-slate-line)] pt-5 xl:grid-cols-4">
+          <Fait
+            Icone={DoorOpen}
+            libelle="Régime"
+            valeur={principal}
+            precision={autres.length > 0 ? `+ ${autres.join(", ")}` : null}
+          />
+          <Fait
+            Icone={Users}
+            libelle="Effectif"
+            valeur={pluriel(etab.effectifSurSite, "salarié")}
+            precision="sur site"
+          />
+          <Fait
+            Icone={IdCard}
+            libelle="Équipe"
+            valeur={pluriel(nbEquipe, "fiche")}
+            precision="dans l'équipe"
+          />
+          <Fait
+            Icone={Wrench}
+            libelle="Équipements"
+            valeur={pluriel(nbEquipements, "déclaré")}
+            precision={`dans ${pluriel(zones.length, "zone")}`}
+          />
+        </dl>
 
-export function HeroBatiments({
-  nomEtablissement,
-  logoUrl,
-  batiments,
-  srcIllustration,
-  legende,
-}: Props) {
-  return (
-    // Verre givré, en une seule plaque. Le dégradé du haut vers le bas donne
-    // le galbe ; les deux reflets intérieurs font lire une épaisseur.
-    <div className="mx-auto w-fit max-w-full rounded-[34px] border border-white/65 bg-gradient-to-b from-white/62 to-white/34 px-6 pb-7 pt-5 shadow-[inset_0_1px_0_rgba(255,255,255,.95),inset_0_-1px_0_rgba(255,255,255,.42),0_22px_48px_-26px_rgba(13,18,36,.30)] backdrop-blur-[26px] backdrop-saturate-[125%]">
-      <Enseigne
-        nom={nomEtablissement}
-        logoUrl={logoUrl}
-        nbZones={batiments.length}
-      />
-
-      <div className="mt-5 flex flex-wrap items-center gap-x-7 gap-y-4">
-        {/* Décoratif : un seul dessin, celui de l'établissement. `sizes` : la
-            planche est rendue à 168 px au plus, densité double comprise. */}
-        <Image
-          src={srcIllustration}
-          alt=""
-          aria-hidden
-          width={760}
-          height={668}
-          sizes="168px"
-          priority
-          className="h-auto w-[132px] flex-none select-none sm:w-[168px]"
-        />
-        <ul className="m-0 min-w-[220px] flex-1 list-none divide-y divide-[color:rgba(10,10,10,.08)] p-0">
-          {batiments.map((b) => (
-            <LigneZone key={b.id} batiment={b} />
+        <div className="mt-5">
+          <div className="flex flex-wrap items-center gap-2">
+          <span className="board-eyebrow mr-1 text-[10px] text-[color:var(--board-slate-mid)]">
+            Zones
+          </span>
+          {zones.map((z) => (
+            <span
+              key={z.id}
+              className="inline-flex items-center gap-2 rounded-[12px] bg-[color:var(--board-slate-pale)] px-3 py-1.5 text-[12.5px]"
+            >
+              <span className="font-semibold text-[color:var(--board-ink)]">{nomDeZone(z.nom)}</span>
+              <span className="text-[color:var(--board-slate-mid)]">
+                {z.nbEquipements > 0 ? pluriel(z.nbEquipements, "équipement") : "aucun équipement"}
+              </span>
+            </span>
           ))}
-        </ul>
+          </div>
+        </div>
       </div>
 
-      {/* Ce que les pastilles comptent — et ce qu'elles ne comptent pas. */}
-      <p className="m-0 mt-4 max-w-[46ch] text-[11.5px] leading-[1.5] text-[color:var(--board-slate-ink)]">
-        {legende}
-      </p>
+      {/* [2026-10-25] Le lieu dans sa propre carte, à côté de la fiche et à
+          sa hauteur : la photo déposée par le dirigeant, ou l'illustration
+          du genre de lieu. */}
+      <CartePhotoLieu etablissementId={etab.id} photo={photo} illustration={illustration} />
+    </div>
+
+    {/* Hors des cartes, en bas à droite du hero (demande de la
+        propriétaire) : le geste vaut pour le dossier, pas pour la fiche. */}
+    {guide ? (
+      <div className="mt-7 flex justify-end">
+        <BoutonGuide guide={guide} />
+      </div>
+    ) : null}
     </div>
   );
 }

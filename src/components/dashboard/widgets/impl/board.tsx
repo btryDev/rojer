@@ -3,7 +3,8 @@
 // Blocs du « board éditorial » — direction 4a du design Rojer.
 //
 // Chaque bloc est un widget du registre : il reçoit le bundle et rend une
-// carte à grand rayon sur le canvas quasi blanc — blanche à filet et
+// carte à grand rayon sur le fond du board (blanc depuis le 2026-10-25) —
+// blanche à filet et
 // ombre douce (bento), sauf les deux qui passent au noir (voir
 // `CarteBoard`). Le système de
 // personnalisation (DashboardGrid + EditToolbar, le « ⠿ Personnaliser » du
@@ -35,14 +36,10 @@ import {
 import { construireBrief } from "@/lib/dashboard/brief";
 import {
   LIBELLE_AUCUNE_VERIFICATION,
-  LIBELLE_ETAT_COURT,
   LIBELLE_SANS_ECHEANCE,
 } from "@/lib/calendrier/etats";
-import {
-  illustrationBatiment,
-  sourceIllustrationBatiment,
-} from "@/lib/etablissements/illustration";
-import { HeroBatiments } from "./hero-batiments";
+import { HeroEtablissement, type GuideFiche } from "./hero-batiments";
+import { CarteBoard } from "@/components/dashboard/CarteBoard";
 import type { Recommandation } from "@/lib/dashboard/recommandations";
 import { occupePlaceReservee } from "@/lib/dashboard/place-reservee";
 import {
@@ -84,72 +81,21 @@ import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeReten
 
 /* ─── Primitives partagées ──────────────────────────────────── */
 
-/**
- * Le design distingue deux rayons : 26 px sur les cartes-chiffre, 30 px
- * sur les grands blocs. Le rayon est donc un paramètre, pas une classe
- * qu'on écraserait depuis l'appelant (l'ordre des classes Tailwind ne
- * décide pas de la priorité).
- */
-export function CarteBoard({
-  children,
-  className = "",
-  rayon = 30,
-  ton = "clair",
-}: {
-  children: React.ReactNode;
-  className?: string;
-  rayon?: 26 | 30;
-  /**
-   * Les blocs sombres sont l'exception : la préparation d'un contrôle
-   * (la porte à pousser quand un inspecteur se présente) et, hors
-   * défaut, la carte-compteur « Prochaine échéance ». Le reste du board
-   * les entoure et les explique ; leur position par défaut vient de
-   * `ORDRE_DEFAUT` (registry), et l'utilisateur peut les déplacer.
-   *
-   * Sur fond noir, aucune encre foncée ne passe : le texte est blanc ou
-   * ardoise, et les champs colorés restent les champs clairs de la
-   * palette — ils y gagnent même en présence.
-   */
-  ton?: "clair" | "sombre";
-}) {
-  return (
-    <div
-      className={
-        // Sur canvas quasi blanc, l'aplat ne sépare plus rien : c'est le
-        // filet cheveu et l'ombre douce qui détachent la carte — bento.
-        "flex h-full flex-col " +
-        (ton === "sombre"
-          ? "bg-[color:var(--board-ink)] shadow-[0_1px_2px_rgba(13,18,36,.06),0_16px_40px_-16px_rgba(13,18,36,.22)] "
-          : "bg-[color:var(--board-card)] ring-1 ring-[color:rgba(13,18,36,.06)] shadow-[0_1px_2px_rgba(13,18,36,.04),0_12px_32px_-14px_rgba(13,18,36,.10)] ") +
-        (rayon === 26 ? "rounded-[26px] " : "rounded-[30px] ") +
-        className
-      }
-    >
-      {children}
-    </div>
-  );
-}
-
-/** En-tête standard d'un bloc du board : famille + titre 26 px +
- *  sous-titre, et à droite soit la porte ronde (href), soit des contrôles
- *  libres (actions) — exporté pour que les widgets hors de ce fichier
- *  (équipements) n'aient pas à recopier le motif. */
+/** En-tête standard d'un bloc du board : titre 26 px + sous-titre, et à
+ *  droite soit la porte ronde (href), soit des contrôles libres (actions) —
+ *  exporté pour que les widgets hors de ce fichier (équipements) n'aient pas
+ *  à recopier le motif.
+ *
+ *  [2026-10-25] Le sur-titre « famille » (« PRIORITÉS », « SUIVI »…) est
+ *  retiré : la coiffe de section de `CarteBoard` dit désormais de quoi parle
+ *  la carte, et deux repères empilés au-dessus d'un titre se lisaient comme
+ *  deux niveaux qui n'existent pas. */
 export function TitreBloc({
-  famille,
   titre,
   sousTitre,
   href,
   actions,
 }: {
-  /**
-   * Sur-titre mono, repris du cadran de la page publique : il dit de
-   * quelle famille relève le bloc (« ÉCHÉANCES », « SUIVI », « PREUVE »)
-   * avant que le titre ne dise ce qu'il montre. C'est un repère de
-   * lecture, pas une décoration — un board de douze cartes se parcourt
-   * mieux quand chacune annonce son registre. Les blocs dont le titre
-   * porte déjà sa famille s'en passent.
-   */
-  famille?: string;
   titre: string;
   sousTitre?: React.ReactNode;
   href?: string;
@@ -158,9 +104,6 @@ export function TitreBloc({
   return (
     <div className="flex items-start gap-4">
       <div className="min-w-0">
-        {famille ? (
-          <p className="board-eyebrow m-0 mb-2">{famille}</p>
-        ) : null}
         <h2 className="board-titre m-0 text-[26px]">{titre}</h2>
         {sousTitre ? (
           <p className="mt-[7px] text-[13.5px] text-[color:var(--board-slate-mid)]">
@@ -483,56 +426,19 @@ function CarteTache({
   );
 }
 
-/* — Un relevé du hero : un chiffre, son libellé.
- *
- * Trois d'entre eux cadrent le titre — celui-ci dit ce qui presse, ceux-là
- * disent de combien il s'agit en tout. Mêmes agrégats que `construireBrief`,
- * pour que les deux ne puissent pas diverger.
- */
-function Releve({
-  valeur,
-  libelle,
-  alerte = false,
-  precision = null,
+export function BlocBrief({
+  bundle,
+  guide,
 }: {
-  valeur: number;
-  libelle: string;
-  alerte?: boolean;
-  /** Ce que le nombre contient et que le mot ne dit pas — « dont 5 sans date
-   *  connue » (`Brief.precisionReleveRetard`, 2026-09-15). */
-  precision?: string | null;
+  bundle: DashboardBundle;
+  /** Le guide de mise en place, ouvert depuis la fiche du hero ; `null`
+   *  quand tout est fait. */
+  guide: GuideFiche | null;
 }) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <span
-        className={
-          "board-titre text-[30px] leading-none tabular-nums " +
-          (alerte ? "text-[color:var(--board-signal-ink)]" : "")
-        }
-      >
-        {valeur}
-      </span>
-      <span className="board-eyebrow text-[color:var(--board-slate-mid)]">
-        {libelle}
-      </span>
-      {precision ? (
-        <span className="text-[11.5px] leading-[1.3] tabular-nums text-[color:var(--board-slate-mid)]">
-          {precision}
-        </span>
-      ) : null}
-    </div>
-  );
-}
-
-export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
-  const { aujourdhui, dashboard, echeancesEtablissement, nbRapports } = bundle;
-  const { duerp, recommandations } = dashboard;
-  // Un seul agrégat pour le titre comme pour les relevés chiffrés — et il
-  // porte sur l'**établissement**, filtre bâtiment ignoré. Le hero dit l'état
-  // du site : sa plaque de droite liste tous les volumes avec la charge de
-  // chacun, et des relevés filtrés annonçaient « Dépassées 3 » à côté de
-  // cartes qui en totalisent sept. Le filtre gouverne ce qui est sous le
-  // hero. Cf. `DashboardBundle.echeancesEtablissement`.
+  const { aujourdhui, dashboard, echeancesEtablissement } = bundle;
+  // L'agrégat du titre porte sur l'**établissement**, filtre de zone ignoré :
+  // le hero parle du site ; le filtre gouverne ce qui est sous le hero.
+  // Cf. `DashboardBundle.echeancesEtablissement`.
   const { retards, sous30j } = echeancesEtablissement;
 
   const brief = construireBrief({
@@ -543,20 +449,7 @@ export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
     verifsEnRetardSansEcheance: echeancesEtablissement.verifsEnRetardSansEcheance,
     // Nommés, pas comptés (ADR-043 § 3 (a)) : lus sur les comptes des cartes.
     titresDusEnRetard: dashboard.titresDusEnRetard,
-    // `etat` transmis : sans lui le brief se rabattait sur sa formulation de
-    // repli et n'annonçait jamais « aucune version validée » — il disait
-    // « votre DUERP a plus de douze mois » à quelqu'un qui venait de l'ouvrir.
-    duerp: {
-      existe: duerp.existe,
-      estAJour: duerp.estAJour,
-      etat: duerp.etat,
-    },
-    recommandations: recommandations.map((r) => ({
-      kind: r.kind,
-      titre: r.titre,
-      href: r.href,
-    })),
-    nbRapports,
+    recommandations: dashboard.recommandations.map((r) => ({ kind: r.kind })),
   });
 
   // Le titre est celui de `construireBrief`, dérivé des **compteurs** de
@@ -571,30 +464,22 @@ export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
   // le badge de la barre latérale : toutes familles confondues.
   const totalUrgent = retards.total;
 
-  const { etablissement, batiments } = bundle;
-  const srcIllustration = sourceIllustrationBatiment(
-    illustrationBatiment(etablissement),
-  );
+  const { etablissement } = bundle;
 
   return (
     <>
-      {/* Fonds inversés : le hero porte le ciel en bandeau pleine largeur,
-          sans rayon. Le bandeau s'arrête après les bâtiments — les widgets
-          vivent sur le canvas quasi blanc.
+      {/* Le fond pointillé de la table à dessin (`.fond-pointille`) et non
+          plus le bleu ciel : la couleur du corps de page est aux états, et le
+          bandeau bleu était le dernier grand aplat qui ne disait rien.
 
-          La gouttière est celle du board (`--board-gutter`) et non plus
-          46 px fixes : au-delà de 1560 px de viewport elle s'ouvre jusqu'à
-          140 px, et le hero, resté à 46, débordait des cartes de widgets
-          d'une centaine de pixels de chaque côté. Sur un grand écran, rien
-          ne s'alignait verticalement d'un bloc à l'autre. */}
-      {/* `.sous-la-gelule` : le brief remonte sous la gélule de compte, que
+          La gouttière est celle du board (`--board-gutter`) : au-delà de
+          1560 px de viewport elle s'ouvre jusqu'à 140 px, et un hero resté à
+          46 px débordait des cartes de widgets de chaque côté.
+
+          `.sous-la-gelule` : le brief remonte sous la gélule de compte, que
           son fond a le droit de porter. */}
-      <div className="sous-la-gelule bg-[color:var(--board-sky)] px-[var(--board-gutter)] pb-[52px] pt-[56px]">
-        <div className="grid items-center gap-x-12 gap-y-10 lg:grid-cols-2">
-          {/* Rentré de la gouttière : collé au bord, le titre partait du même
-              trait que les cartes de widgets du dessous et le hero perdait
-              son statut de bandeau — c'est une bannière, pas une carte. */}
-          <div className="lg:pl-8 xl:pl-12">
+      <div className="sous-la-gelule fond-pointille border-b border-[color:rgba(13,18,36,.06)] px-[var(--board-gutter)] pb-14 pt-[104px]">
+        <div>
             <p className="board-eyebrow m-0 mb-3 text-[color:var(--board-slate-ink)]">
               {brief.datePill}
             </p>
@@ -604,88 +489,42 @@ export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
                 une troisième et casse le bloc.
 
                 Le paragraphe du brief a été retiré d'ici : il énumérait en
-                toutes lettres les mêmes nombres que les relevés ci-dessous
-                (« 14 vérifications dépassées, 22 à programmer… »), et
-                l'état du DUERP, qui a son propre widget. Trois chiffres se
-                lisent d'un coup d'œil ; la même chose en prose, non. */}
-            <h1 className="board-titre max-w-[480px] text-pretty text-[clamp(28px,2.9vw,40px)] leading-[1.06] tracking-[-0.035em]">
+                toutes lettres ~~les mêmes nombres que les relevés ci-dessous~~
+                des nombres que les widgets portent [2026-10-25 : les relevés
+                ont quitté le hero] (« 14 vérifications dépassées, 22 à
+                programmer… »), et l'état du DUERP, qui a son propre widget. */}
+            {/* [2026-10-25] Quand des échéances sont dépassées, le titre
+                (« 36 échéances sont dues, dont 30 sans date connue ») est
+                masqué — décision de la propriétaire : les compteurs sont aux
+                widgets. Il reste pour les lecteurs d'écran, à qui il résume
+                la page. Ses autres formes — titres de salariés en retard,
+                dossier calme, étape d'amorçage — restent affichées. */}
+            <h1
+              className={
+                totalUrgent > 0
+                  ? "sr-only"
+                  : "board-titre m-0 mb-5 max-w-[480px] text-pretty text-[clamp(28px,2.9vw,40px)] leading-[1.06] tracking-[-0.035em]"
+              }
+            >
               {titre}
             </h1>
 
-            {/* Les relevés. Séparateurs en filet plutôt qu'en gouttière :
-                trois chiffres alignés sans trait se lisent comme un seul
-                nombre. */}
-            <div className="mt-7 flex items-stretch">
-              <div className="pr-[26px]">
-                {/* Le mot vient de la table d'états (`LIBELLE_ETAT_COURT`),
-                    comme celui de la pastille de zone à 200 px d'ici et celui
-                    du bandeau du parc à un clic : les trois écrivaient trois
-                    mots différents pour cet état-là. */}
-                <Releve
-                  valeur={totalUrgent}
-                  libelle={LIBELLE_ETAT_COURT.enRetard}
-                  alerte={totalUrgent > 0}
-                  // La part sans date connue que le titre nomme : sans elle,
-                  // « DÉPASSÉES 14 » contredisait « dont cinq sans date
-                  // connue » juste au-dessus (2026-09-15).
-                  precision={brief.precisionReleveRetard}
-                />
-              </div>
-              <div className="w-px bg-[color:rgba(10,10,10,.12)]" />
-              <div className="px-[26px]">
-                {/* Toutes familles, comme le relevé d'à côté : ce
-                    compteur-ci ne comptait que les vérifications. */}
-                <Releve
-                  valeur={sous30j.total}
-                  libelle={LIBELLE_ETAT_COURT.proche}
-                />
-              </div>
-              <div className="w-px bg-[color:rgba(10,10,10,.12)]" />
-              <div className="pl-[26px]">
-                {/* Le parc entier, comme les deux relevés d'à côté et
-                    comme les cartes de la plaque : trois chiffres alignés
-                    sous un même titre ne peuvent pas avoir trois portées. */}
-                <Releve
-                  valeur={bundle.equipementsEtablissement.length}
-                  libelle="Équipements"
-                />
-              </div>
-            </div>
-
-            {/* Ce que ces chiffres comptent, sous les chiffres.
-                « Dépassées » est le plus large des compteurs du produit —
-                toutes familles, tout l'établissement — et c'est justement pour
-                ça qu'il devait le dire : il est celui que le dirigeant compare
-                aux 19 de la page Équipements, sans que rien nulle part ne lui
-                explique l'écart. La phrase se dérive du type fermé des
-                familles (`enumererFamilles`), jamais recopiée. */}
-            <p className="m-0 mt-5 max-w-[480px] text-[12px] leading-[1.5] text-[color:var(--board-slate-ink)]">
-              {bundle.perimetreHero.releves}
-            </p>
-          </div>
-
-          {/* Les bâtiments déclarés (ADR-019) — un état, pas une commande :
-              le filtre reste au sélecteur posé sous le hero, qui porte sa
-              porte de sortie.
-
-              La plaque occupe toute sa colonne. Calée à droite sur sa seule
-              largeur de contenu, elle se serrait contre le bord de l'écran
-              pendant que la colonne de gauche gardait son air : les deux
-              moitiés du hero ne pesaient pas le même poids. */}
-          <div className="w-full">
-            <HeroBatiments
-              nomEtablissement={etablissement.raisonDisplay}
-              // Pas encore de logo en base — cf. la note dans `Enseigne`.
-              logoUrl={null}
-              batiments={batiments}
-              srcIllustration={srcIllustration}
-              legende={bundle.perimetreHero.plaqueZones}
+            {/* [2026-10-25] La fiche de l'établissement, à la place des trois
+                relevés (« Dépassées », « Sous 30 j », « Équipements ») :
+                décision de la propriétaire. Les compteurs vivent dans les
+                widgets du dessous, qui les ventilent et y mènent. */}
+            <HeroEtablissement
+              etablissement={etablissement}
+              illustration={bundle.illustrationHero}
+              photo={bundle.photoHero}
+              guide={guide}
+              nbEquipe={bundle.nbEquipe}
+              nbEquipements={bundle.equipementsEtablissement.length}
+              zones={bundle.batiments}
             />
-          </div>
         </div>
       </div>
-
-      </>
+    </>
   );
 }
 
@@ -1013,7 +852,6 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
     <CarteBoard className="px-[30px] pb-5 pt-[26px]">
       <div className="flex items-start gap-4">
         <div>
-          <p className="board-eyebrow m-0 mb-2">Échéances</p>
           <h2 className="board-titre m-0 text-[30px]">
             {vue === "calendrier"
               ? "Votre calendrier"
@@ -1572,7 +1410,6 @@ export function BlocAFaire({ bundle }: { bundle: DashboardBundle }) {
   return (
     <CarteBoard className="px-7 py-[26px]">
       <TitreBloc
-        famille="Priorités"
         titre="À faire"
         sousTitre={
           resteUrgent > 0
@@ -1928,7 +1765,6 @@ export function BlocPlanActions({ bundle }: { bundle: DashboardBundle }) {
   return (
     <CarteBoard className="px-7 py-[26px]">
       <TitreBloc
-        famille="Suivi"
         titre="Où en est le plan d'actions"
         href={`/etablissements/${bundle.etablissementId}/actions`}
       />
@@ -2028,7 +1864,6 @@ export function BlocCeQuiAChange({ bundle }: { bundle: DashboardBundle }) {
   return (
     <CarteBoard className="px-7 py-[26px]">
       <TitreBloc
-        famille="Preuve"
         titre="Ce qui a changé"
         sousTitre="Les derniers mouvements sur votre dossier."
         href={`/etablissements/${etablissementId}/registre`}
@@ -2136,7 +1971,7 @@ export function BlocDocuments({ bundle }: { bundle: DashboardBundle }) {
 
   return (
     <CarteBoard className="px-7 py-[26px]">
-      <TitreBloc famille="Dossier" titre="Vos documents, en un coup d'œil" />
+      <TitreBloc titre="Vos documents, en un coup d'œil" />
 
       <div className="mt-[22px] grid grid-cols-[1.6fr_1fr_1fr_1fr] items-center gap-[7px]">
         <span className="rounded-full bg-[color:var(--board-blue-ink)] px-3.5 py-2 text-center font-mono text-[11px] font-semibold uppercase tracking-[0.06em] text-white">

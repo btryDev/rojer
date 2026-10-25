@@ -74,7 +74,7 @@ vers 1190 px — puis plafonne à 140 px.
 
 | Token | Valeur | Rôle |
 |---|---|---|
-| `--board-canvas` | `#f6f9fb` | Fond de page, **derrière** les cartes |
+| `--board-canvas` | `#f6f9fb` | Fond de page, **derrière** les cartes (sauf le tableau de bord, blanc sous son hero depuis le 2026-10-25) |
 | `--board-card` | `#ffffff` | Surface de carte, bandeaux d'en-tête |
 | `--board-ink` | `#0a0a0a` | Encre principale, boutons pleins |
 
@@ -452,6 +452,51 @@ Une seule façon d'ouvrir une page d'entrée du rail :
 **Un en-tête ne doit jamais contredire ce qu'il coiffe** : les compteurs se
 calculent sur ce qui est réellement affiché, filtre compris.
 
+### Hero du tableau de bord — `BlocBrief` + `HeroEtablissement` (2026-10-25)
+
+Le tableau de bord n'a pas l'en-tête des autres pages : c'est le seul écran qui
+résume tout le dossier, et son hero le dit autrement.
+
+- **Fond** : `.fond-pointille` (bleu pâle piqué d'une trame de points, « table
+  à dessin ») à la place du bleu ciel. Ce qui se lit dessus pose sa surface
+  blanche. Sous le hero, le fond du board est blanc.
+- **Le titre** du brief, sous la date, est masqué — sauf pour les lecteurs
+  d'écran — quand des échéances sont dépassées : les compteurs sont aux
+  widgets. Aucun relevé chiffré dans le hero.
+- **La fiche de l'établissement**, pleine largeur : monogramme, nom, activité
+  et adresse ; régime, effectif, équipe, équipements ; les zones, en
+  information — le filtre de zone est ailleurs, sur la rangée de
+  « Personnaliser ».
+- **Le bâtiment**, dans sa propre carte à côté de la fiche, contenu sans
+  recadrage : le genre de lieu (`illustrationBatiment` : type ERP, puis secteur
+  du code NAF, puis local générique). ~~La carte recevra une vraie photo.~~
+  [2026-10-25 : livrée — voir « La photo du lieu » ci-dessous.]
+- **Le guide de mise en place** n'a plus de bloc à lui : tant qu'il reste des
+  étapes, la fiche porte « Informations incomplètes » et, sous les cartes à
+  droite, « Finir de compléter les infos de l'établissement » ouvre les étapes
+  dans un `PanneauModal`.
+- **La photo du lieu**, déposée par le dirigeant, remplace l'illustration dans
+  sa carte (« Ajouter une photo », « Changer », « Retirer »).
+- **Interdit** : rien n'est épinglé sur le dessin. Un plan du lieu, puis une
+  étiquette par zone, ont été essayés et refusés : un emplacement dessiné se
+  lit comme celui du client, que le produit ne connaît pas.
+
+**Les cartes du tableau de bord sont coiffées de leur section** (2026-10-25) :
+une bande à la teinte de la section du rail (`TEINTE_SECTION`), avec son nom,
+en tête de `CarteBoard`. Un widget ne choisit pas sa couleur : il déclare la
+page dont il est l'extrait (`WidgetDefinition.page`), et la section se déduit
+de `categorieDeItem`. Le sur-titre bleu « famille » de `TitreBloc` est retiré.
+Hors du tableau de bord, `CarteBoard` n'a pas de coiffe.
+
+**Deux motifs réutilisables**, retenus par la propriétaire :
+
+1. **`.fond-pointille`** — un fond, jamais une carte.
+2. **L'étiquette épinglée** — tige d'encre fine depuis un point noir, gélule
+   blanche cerclée d'encre, rond à la couleur d'état (chiffre, ✓ ou –), libellé
+   court. À poser sur un objet générique dont l'étiquette dit vrai (un
+   appareil, une pièce de dossier), jamais sur un dessin qui passerait pour le
+   lieu du client. Pas d'emploi aujourd'hui.
+
 ### Fiche — modèle : `app/etablissements/[id]/registre/[sectionId]/page.tsx`
 
 ```
@@ -596,8 +641,8 @@ Chacun vient d'un commentaire du code, souvent écrit après le bug qu'il évite
 
 ## Une checklist, pour finir
 
-1. `bg-[color:var(--board-canvas)]` et `px-[var(--board-gutter)]` — jamais
-   `mx-auto max-w-*`.
+1. `bg-[color:var(--board-canvas)]` (le tableau de bord : blanc) et
+   `px-[var(--board-gutter)]` — jamais `mx-auto max-w-*`.
 2. Rythme vertical : `gap-[22px]` en fiche, `gap-7` en liste.
 3. Cartes : `.carte-board` + `px-7 py-6 sm:px-8`.
 4. Pastilles : `.pastille-board` + un ton de `PastilleFiche`.

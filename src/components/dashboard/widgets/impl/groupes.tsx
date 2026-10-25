@@ -7,6 +7,7 @@
 // composer eux-mêmes.
 
 import { BentoCell } from "@/components/dashboard/BentoCell";
+import { CarteBoard } from "@/components/dashboard/CarteBoard";
 import type { DashboardBundle } from "../types";
 
 type Tone = "alert" | "amber" | "navy" | "green" | "neutral";
@@ -143,7 +144,7 @@ export function WidgetIndicateurs({ bundle }: { bundle: DashboardBundle }) {
   ];
 
   return (
-    <section className="carte-board px-7 py-6 sm:px-8">
+    <CarteBoard className="px-7 py-6 sm:px-8">
       <header className="flex items-start justify-between gap-3">
         <div>
           <h3 className="v2-title">Indicateurs</h3>
@@ -158,7 +159,7 @@ export function WidgetIndicateurs({ bundle }: { bundle: DashboardBundle }) {
           <Kpi key={k.k} def={k} first={i === 0} />
         ))}
       </div>
-    </section>
+    </CarteBoard>
   );
 }
 

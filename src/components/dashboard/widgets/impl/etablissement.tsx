@@ -1,22 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { libelleRegimeErp } from "@/lib/etablissements/types-erp-affiches";
+import { regimesAffiches } from "@/lib/etablissements/types-erp-affiches";
 import { Pencil, Phone } from "lucide-react";
 import type { DashboardBundle } from "../types";
 import { hrefEffectifEntreprise } from "@/components/entreprises/LienEffectifEntreprise";
-
-function regimes(etab: DashboardBundle["etablissement"]): string[] {
-  const out: string[] = [];
-  if (etab.estEtablissementTravail) out.push("Établissement de travail");
-  // ADR-045 : tous les types déclarés ; même forme que le PDF.
-  if (etab.estERP) out.push(libelleRegimeErp(etab));
-  // Sans la classe depuis le 2026-09-03 : elle n'est plus demandée ni
-  // corrigible, et la carte d'identité ne doit montrer que ce qui se saisit.
-  if (etab.estIGH) out.push("IGH");
-  if (etab.estHabitation) out.push("Habitation");
-  return out;
-}
 
 function extraireVille(adresse: string): string {
   const parts = adresse.split(",");
@@ -33,7 +21,7 @@ function extraireVille(adresse: string): string {
  */
 export function WidgetEtablissement({ bundle }: { bundle: DashboardBundle }) {
   const etab = bundle.etablissement;
-  const regs = regimes(etab);
+  const regs = regimesAffiches(etab);
   const naf = etab.codeNaf ?? etab.entreprise.codeNaf;
   const ville = extraireVille(etab.adresse);
   const chiffreEffectif = String(etab.effectifSurSite).padStart(2, "0");

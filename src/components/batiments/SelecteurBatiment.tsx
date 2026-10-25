@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ListFilter } from "lucide-react";
 import type { ReactNode } from "react";
 import { LABEL_TOUT_ETABLISSEMENT } from "@/lib/calendrier/labels";
 import { nomDeZone } from "@/lib/batiments/nom-zone";
@@ -64,7 +65,25 @@ export function SelecteurBatiment({
   return (
     <nav aria-label="Filtrer par zone" className="space-y-2">
       <div className="flex flex-wrap items-center gap-2">
-        <span className={CLASSES_ETIQUETTE[ton]}>Zone</span>
+        {ton === "board" ? (
+          // [2026-10-25] « Zone » seul, devant des pilules grises, ne se
+          // lisait pas comme un filtre (contrôle visuel de la propriétaire) :
+          // le verbe le dit, et les options se rangent dans un même cadre,
+          // comme une commande à choix unique.
+          <span className="mr-1 inline-flex items-center gap-1.5 text-[12.5px] font-medium text-[color:var(--board-slate-ink)]">
+            <ListFilter aria-hidden className="size-4" />
+            Filtrer par zone
+          </span>
+        ) : (
+          <span className={CLASSES_ETIQUETTE[ton]}>Zone</span>
+        )}
+        <span
+          className={
+            ton === "board"
+              ? "inline-flex flex-wrap items-center gap-1 rounded-full bg-[color:var(--board-card)] p-1 ring-1 ring-[color:rgba(13,18,36,.12)]"
+              : "contents"
+          }
+        >
         <Chip href={baseHref} actif={!actif} ton={ton}>
           {LABEL_TOUT_ETABLISSEMENT}
         </Chip>
@@ -83,6 +102,7 @@ export function SelecteurBatiment({
             ) : null}
           </Chip>
         ))}
+        </span>
       </div>
       {legende ? <p className={CLASSES_LEGENDE[ton]}>{legende}</p> : null}
     </nav>
@@ -91,7 +111,9 @@ export function SelecteurBatiment({
 
 /** Les classes de chaque ton, choisi et au repos. La chip « board »
  *  reprend la pilule des compteurs du bandeau, encrée quand elle est
- *  choisie : le filtre et les chiffres qu'il gouverne ont le même objet. */
+ *  choisie : le filtre et les chiffres qu'il gouverne ont le même objet.
+ *  [2026-10-25] Au repos, sans fond, dans le cadre commun : des pilules
+ *  grises séparées se lisaient comme des étiquettes. */
 const CLASSES_CHIP: Record<
   TonSelecteurBatiment,
   { commun: string; actif: string; repos: string }
@@ -106,7 +128,7 @@ const CLASSES_CHIP: Record<
       "rounded-full px-3.5 py-[7px] text-[12.5px] font-semibold transition-colors",
     actif: "bg-[color:var(--board-ink)] text-white",
     repos:
-      "bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-mid)] hover:bg-[color:var(--board-blue-pale)] hover:text-[color:var(--board-blue-ink)]",
+      "text-[color:var(--board-slate-ink)] hover:bg-[color:var(--board-slate-pale)] hover:text-[color:var(--board-ink)]",
   },
 };
 

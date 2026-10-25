@@ -42,6 +42,18 @@ const SELECTION_TITRE = {
   note: true,
 } as const;
 
+/**
+ * Le nombre de personnes présentes dans l'équipe (fiches actives), pour la
+ * fiche de l'établissement du tableau de bord. Un compte, jamais un nom :
+ * le hero n'a pas à porter de donnée de personne.
+ */
+export async function compterEquipe(etablissementId: string): Promise<number> {
+  const etablissement = await portee();
+  return prisma.salarie.count({
+    where: { etablissementId, etablissement, actif: true },
+  });
+}
+
 export async function listerEquipe(etablissementId: string, now: Date) {
   const etablissement = await portee();
   const salaries = await prisma.salarie.findMany({

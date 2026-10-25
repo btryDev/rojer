@@ -5,19 +5,25 @@ import type { RailCategorieId } from "@/components/layout/sidebar-nav";
  * 2026-10-25). Elle dit OÙ l'on est : deux pages d'une même section portent
  * la même.
  *
- * **Un seul endroit la porte : le fond de l'en-tête de page.** Ni carte, ni
- * bouton, ni pastille — la couleur dans le corps de page reste aux états
- * (`src/lib/calendrier/etats.ts`). C'est ce qui empêche la teinte de section
- * de devenir un troisième code couleur concurrent.
+ * ~~**Un seul endroit la porte : le fond de l'en-tête de page.** Ni carte, ni
+ * bouton, ni pastille~~ [2026-10-25, décision de la propriétaire : **deux
+ * endroits** — le fond de l'en-tête de page, et la coiffe des cartes du
+ * tableau de bord (`CarteBoard`), qui dit de quelle section chaque carte est
+ * l'extrait. Toujours ni bouton ni pastille] — la couleur dans le corps de
+ * page reste aux états (`src/lib/calendrier/etats.ts`). C'est ce qui empêche
+ * la teinte de section de devenir un troisième code couleur concurrent.
  *
  * **Hors de la famille des états, par construction.** Pas de jaune (le
  * « proche » est paille), pas de rose ~~ni de pêche~~ (le « en retard » est
  * saumon), pas de vert franc (« à jour »). Une section jaune se lirait
  * « bientôt dû ». [2026-10-25 : le pêche est admis pour « À faire », choix
  * de la propriétaire — à 24° du rose comme du paille, au-delà de l'écart
- * minimal que la garde exige (`EnTetePage.test.tsx`). Rien ne le place à
+ * minimal que la garde exige (`EnTetePage.test.tsx`). ~~Rien ne le place à
  * côté du rose qu'un retard affiche : la teinte ne vit que dans le panneau
- * de l'illustration.]
+ * de l'illustration.~~ [2026-10-25 : faux depuis la coiffe des cartes du
+ * tableau de bord — le pêche y voisine le rose d'un retard, sur la même
+ * carte. Les 24° d'écart sont ce qui les sépare ; la garde ne mesure que
+ * l'en-tête.]]
  *
  * Le tableau de bord n'a pas de section : il les résume toutes.
  *

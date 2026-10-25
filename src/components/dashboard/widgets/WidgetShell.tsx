@@ -12,7 +12,9 @@ import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Check, GripVertical, Shuffle, X } from "lucide-react";
+import { categorieDeItem } from "@/components/layout/sidebar-nav";
 import { REGISTRY } from "./registry";
+import { FournisseurSectionDuWidget } from "./section-du-widget";
 import type { WidgetId } from "./types";
 
 export function WidgetShell({
@@ -74,7 +76,9 @@ export function WidgetShell({
           : "")
       }
     >
-      {children}
+      <FournisseurSectionDuWidget value={categorieDeItem(def.page)}>
+        {children}
+      </FournisseurSectionDuWidget>
 
       {enEdition ? (
         <ShellOverlay

@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
 import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
 import {
-  OnboardingChecklist,
+  EtapesMiseEnPlace,
   type EtapeOnboarding,
-} from "@/components/layout/OnboardingChecklist";
+} from "@/components/layout/EtapesMiseEnPlace";
 import { QuestionParametrage } from "@/components/layout/QuestionParametrage";
 import { questionRepondue } from "@/lib/etablissements/questions";
 import { repondreDemandesAssureur } from "@/lib/etablissements/parametrage";
@@ -14,11 +14,7 @@ import type { DashboardBundle } from "@/components/dashboard/widgets/types";
 import { getEtablissement } from "@/lib/etablissements/queries";
 import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
 import { appareilsMuets } from "@/lib/equipements/reponses-exigees";
-import {
-  listerBatimentsAvecCharge,
-  porteursDeLaPlaqueZones,
-} from "@/lib/batiments/queries";
-import { legendePlaqueZones } from "@/lib/perimetre/porteurs-comptes";
+import { listerBatimentsDeLEtablissement } from "@/lib/batiments/queries";
 import { estMultiBatiments, resoudreFiltreBatiment } from "@/lib/batiments/filtre";
 import { SelecteurBatiment } from "@/components/batiments/SelecteurBatiment";
 import {
@@ -43,9 +39,11 @@ import {
 } from "@/lib/calendrier/queries";
 import { composantesCiviles, joursCivilsEntre } from "@/lib/dates";
 import { instantDuRendu } from "@/lib/dates/instant-du-rendu";
-import { enumererFamilles, libellePorteur } from "@/lib/calendrier/labels";
-import { libelleEtatCourtCapitale } from "@/lib/calendrier/etats";
+import { libellePorteur } from "@/lib/calendrier/labels";
 import { echeancesDuTableauDeBord } from "@/lib/calendrier/prochaine-echeance";
+import { illustrationBatiment } from "@/lib/etablissements/illustration";
+import { compterEquipe } from "@/lib/salaries/queries";
+import { pluriel } from "@/lib/rendu/pluriel";
 
 export default async function EtablissementPage({
   params,
@@ -63,7 +61,8 @@ export default async function EtablissementPage({
   // génération à la création), un calendrier périmé par un échec ou par un
   // changement de référentiel s'y affichaient faux tant que personne n'ouvrait
   // la page Calendrier. Même réparation qu'elle, AVANT la première lecture —
-  // la charge par bâtiment, juste en dessous, lit déjà les lignes.
+  // ~~la charge par bâtiment, juste en dessous, lit déjà les lignes~~
+  // [2026-10-25 : la charge par zone est retirée avec la plaque du hero].
   // [2026-10-13] Avant TOUT autre `await`, y compris `getEtablissement` : la
   // garde de `fraicheur-sorties.test.ts` l'exige, parce qu'elle ne sait pas
   // dire quelle lecture touche aux lignes. Sans risque de tenancy : la
@@ -77,8 +76,7 @@ export default async function EtablissementPage({
   // Date de référence unique, figée côté serveur : tous les blocs qui
   // calculent un « dans N jours » partent de la même valeur, ce qui évite les
   // écarts d'hydratation et rend les rendus reproductibles (ADR-011). Elle est
-  // prise ici, avant la première lecture qui en dépend — la charge par
-  // bâtiment affichée dans le hero se calcule à cette seconde-là.
+  // prise ici, avant la première lecture qui en dépend.
   // [2026-10-14, audit Next.js H2] L'instant DU RENDU, que la barre latérale
   // lit aussi : les lectures indépendantes des lignes (registre des autres
   // échéances, compteurs d'actions) ne partent qu'une fois pour les deux.
@@ -90,7 +88,11 @@ export default async function EtablissementPage({
   // documents) n'est jamais filtré : un score « du bâtiment B » n'aurait pas
   // de sens réglementaire, les obligations sont celles de l'établissement.
   // C'est ce que dit la légende du sélecteur, plus bas.
-  const batiments = await listerBatimentsAvecCharge(id, aujourdhui);
+  // Les zones et leur parc, sans leurs échéances : ni le filtre ni la fiche du
+  // hero ne lisent de charge [2026-10-25 : `listerBatimentsAvecCharge`, qui
+  // lisait toutes les lignes de l'établissement pour une pastille par zone,
+  // est retirée avec cette pastille].
+  const batiments = await listerBatimentsDeLEtablissement(id);
   const multiBatiments = estMultiBatiments(batiments);
   // La résolution passe par `resoudreFiltreBatiment` — les mêmes deux règles
   // que le parc et le calendrier, écrites une fois et testées là-bas.
@@ -112,6 +114,7 @@ export default async function EtablissementPage({
     prochainesVerifs,
     rapportsRecents,
     marquesDuDossier,
+    nbEquipe,
   ] = await Promise.all([
     listerEquipementsDeLEtablissement(id),
     compterVerifsParEquipement(id),
@@ -140,6 +143,8 @@ export default async function EtablissementPage({
     // guide plus bas, par module — un seul calcul, partagé avec les fenêtres
     // d'événements ci-dessus par `cache()`.
     marquesAConfirmerDuRendu(id),
+    // Le nombre de fiches de l'équipe, pour la fiche du hero.
+    compterEquipe(id),
   ]);
 
   // Le filtre bâtiment se pose ici, une fois, sur la liste chargée entière —
@@ -192,7 +197,6 @@ export default async function EtablissementPage({
       appareilsMuets(equipements, etab).map((a) => [a.equipementId, a.libelle]),
     ),
   ];
-  const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? "s" : ""}`;
 
   const etapesOnboarding: EtapeOnboarding[] = [
     {
@@ -312,28 +316,20 @@ export default async function EtablissementPage({
     etablissementId: id,
     batiments,
     batimentFiltre: batiments.find((b) => b.id === batimentFiltre) ?? null,
-    // Les deux périmètres du hero, dits en clair — cf. `DashboardBundle`.
-    // Le premier se dérive du type fermé des familles, le second d'un appel à
-    // l'agrégation des zones : aucun des deux n'est une phrase écrite à la
-    // main au-dessus d'un chiffre qu'elle ne décrit plus.
-    //
-    // LA MOITIÉ DROITE DE LA PREMIÈRE EST PARTIE. Elle disait « — pour
-    // l'établissement entier, filtre de zone compris », et la légende du
-    // sélecteur de zone, 200 px plus bas, disait déjà le même fait avec
-    // d'autres mots. Le fait est donc énoncé une fois, à l'endroit où la
-    // question se pose : sous le filtre qui la fait naître. Sans filtre, il n'y
-    // a pas de périmètre de zone à distinguer, et la phrase n'avait rien à
-    // annoncer.
-    //
-    // Les deux relevés sont NOMMÉS par la table d'états, pas recopiés : le jour
-    // où le mot change, la phrase qui le cite change avec lui.
-    perimetreHero: {
-      releves: `« ${libelleEtatCourtCapitale("enRetard")} » et « ${libelleEtatCourtCapitale("proche")} » réunissent toutes les familles — ${enumererFamilles()}.`,
-      plaqueZones: legendePlaqueZones({
-        comptes: porteursDeLaPlaqueZones(aujourdhui),
-        libelleReleveComplet: libelleEtatCourtCapitale("enRetard"),
-      }),
-    },
+    // [2026-10-25] `perimetreHero` est retiré : ses deux phrases (« Dépassées
+    // et Sous 30 j réunissent toutes les familles… », légende de la plaque des
+    // zones) ne s'affichent plus — décision de la propriétaire, la première
+    // redisait ce que l'agrégat porte déjà ; la seconde légendait une plaque
+    // qui n'existe plus.
+    illustrationHero: illustrationBatiment(etab),
+    // L'adresse de la photo du lieu, versionnée par sa date de dépôt (un
+    // remplacement change l'adresse, le cache du navigateur ne ressert pas
+    // l'ancienne). La clé de stockage, elle, ne quitte pas le serveur.
+    photoHero:
+      etab.photoCle && etab.photoDeposeeLe
+        ? `/api/etablissements/${etab.id}/photo?v=${etab.photoDeposeeLe.getTime()}`
+        : null,
+    nbEquipe,
     etablissement: {
       id: etab.id,
       raisonDisplay: etab.raisonDisplay,
@@ -434,23 +430,16 @@ export default async function EtablissementPage({
     moisCourant: composantesCiviles(aujourdhui).mois - 1,
   };
 
-  return (
-    <>
-      {/* Le brief est une section à part entière : panneau bleu ciel à
-          grand rayon posé dans la gouttière — la seule grande surface
-          colorée de la page — qui annonce la file de travail du jour. */}
-      <BlocBrief bundle={bundle} />
-
-      {/* Le filtre par bâtiment (ADR-019) reste ici, sous le hero, et non sur
-          les cartes-bâtiments : un dessin qui filtre au clic n'annonce pas
-          comment en sortir, et le sélecteur, lui, porte son « Tout
-          l'établissement ». Le hero montre l'état du parc, il ne le commande
-          pas. */}
-      {multiBatiments ? (
-        <div className="bg-[color:var(--board-canvas)] px-[var(--board-gutter)] pt-2">
+  /* Le filtre par zone (ADR-019, ADR-029), posé sur la rangée de
+     « Personnaliser », ~~sous le guide de mise en place~~ [2026-10-25 : le
+     guide s'ouvre désormais depuis le hero], juste au-dessus des
+     widgets qu'il filtre (2026-10-25, demande de la propriétaire). Jamais sur
+     le dessin du hero : un dessin qui filtre au clic n'annonce pas comment en
+     sortir, et le sélecteur, lui, porte son « Tout l'établissement ». */
+  const filtreZones = multiBatiments ? (
           <SelecteurBatiment
             // Sans lui, le sélecteur rend en papier — son défaut — au milieu
-            // d'un bandeau posé sur `--board-canvas`. L'oubli est silencieux :
+            // du board. L'oubli est silencieux :
             // ni erreur ni avertissement, juste un rayon de 6 px et un gris
             // d'une autre famille.
             ton="board"
@@ -461,37 +450,48 @@ export default async function EtablissementPage({
             // laisse hors de sa portée — et c'est ici qu'elle doit être, sous
             // la commande qui pose la question.
             //
-            // « Le bandeau du haut » a été remplacé par le nom des deux
-            // relevés. Le bandeau du haut porte aussi la plaque des zones, qui
-            // compte zone par zone : la phrase affirmait donc « toujours sur
-            // l'établissement entier » d'un objet dont la moitié ne l'est pas.
-            // Nommer les relevés dit vrai et parle la même langue que la
-            // légende posée sous eux.
+            // [2026-10-25] Les relevés « Dépassées » et « Sous 30 j » ont quitté
+            // le hero : la phrase qui les nommait est retirée avec eux.
+
             legende={
               batimentFiltre
-                ? `Les échéances, équipements et opérations affichés sont ceux de cette zone, plus ce qui concerne tout l'établissement. Les relevés « ${libelleEtatCourtCapitale("enRetard")} » et « ${libelleEtatCourtCapitale("proche")} », l'indice d'avancement et l'état des documents portent toujours sur l'établissement entier.`
+                ? "Les échéances, équipements et opérations affichés sont ceux de cette zone, plus ce qui concerne tout l'établissement. L'indice d'avancement et l'état des documents portent toujours sur l'établissement entier."
                 : undefined
             }
           />
-        </div>
-      ) : null}
+      ) : null;
 
-      {/* Canvas quasi blanc du board — `flex-1` pour qu'il descende
-          jusqu'au bas du conteneur de défilement, même quand les widgets
-          sont courts. Les cartes s'en détachent par filet et ombre douce
-          (bento), pas par l'aplat. Le reste de l'app garde la palette
-          « papier ». */}
-      <div className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-10">
-        {!onboardingFini ? (
-          <div className="p-[var(--board-gutter)] pb-0">
-            <OnboardingChecklist
-              etapes={etapesOnboarding}
-              etablissementRaison={etab.raisonDisplay}
-            />
-          </div>
-        ) : null}
+  return (
+    <>
+      {/* Le brief : le hero du tableau de bord, sur le fond pointillé — la
+          date, la fiche de l'établissement et son bâtiment. */}
+      <BlocBrief
+        bundle={bundle}
+        // Les étapes de mise en place, ouvertes depuis la fiche du hero
+        // (« Finir de compléter les infos de l'établissement ») — rendues
+        // ici, au serveur : certaines posent leur question sur place.
+        guide={
+          onboardingFini
+            ? null
+            : {
+                aFaire: etapesOnboarding.filter((e) => !e.faite).length,
+                contenu: <EtapesMiseEnPlace etapes={etapesOnboarding} />,
+              }
+        }
+      />
 
-        <DashboardGrid bundle={bundle} />
+
+      {/* Le fond du board — `flex-1` pour qu'il descende jusqu'au bas du
+          conteneur de défilement, même quand les widgets sont courts.
+          [2026-10-25] Blanc, et non plus le canvas quasi blanc (choix de la
+          propriétaire) : sous le hero bleu pâle, le gris faisait une troisième
+          surface. Les cartes s'en détachent par leur filet (`CarteBoard`) et
+          leur ombre douce. */}
+      <div className="flex flex-1 flex-col bg-[color:var(--board-card)] pb-10">
+        <DashboardGrid
+          bundle={bundle}
+          filtre={filtreZones}
+        />
 
         <footer className="flex flex-wrap items-center justify-between gap-6 px-[calc(var(--board-gutter)+4px)] pt-2 text-[11.5px] text-[color:var(--board-blue-ink)]">
           <p className="m-0 max-w-[640px] leading-[1.55]">

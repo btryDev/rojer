@@ -603,6 +603,19 @@ export type RailCategorieId =
   | "documentation"
   | "parametres";
 
+/**
+ * Le nom de chaque section du rail, en un seul endroit : le rail l'affiche,
+ * la coiffe des cartes du tableau de bord aussi (`CarteBoard`).
+ */
+export const LABEL_CATEGORIE: Record<RailCategorieId, string> = {
+  tableau: LABEL_ITEM.tableau,
+  "a-faire": "À faire",
+  "sante-securite": "Santé-sécurité",
+  "equipement-batiment": "Équipement et bâtiment",
+  documentation: "Documentation",
+  parametres: "Paramètres",
+};
+
 export type RailCategorie = {
   id: RailCategorieId;
   /** Libellé complet — panneau et aria-label. */
@@ -683,7 +696,7 @@ export function construireRail(params: {
   return [
     {
       id: "a-faire",
-      label: "À faire",
+      label: LABEL_CATEGORIE["a-faire"],
       labelCourt: "À faire",
       Icon: ListTodo,
       href: `${base}/calendrier`,
@@ -695,7 +708,7 @@ export function construireRail(params: {
       // d'entrée : c'est de lui que part l'évaluation, et c'est l'écran que
       // le dirigeant cite quand on lui parle de sécurité.
       id: "sante-securite",
-      label: "Santé-sécurité",
+      label: LABEL_CATEGORIE["sante-securite"],
       labelCourt: "Sécurité",
       Icon: HardHat,
       href: `${base}/duerp`,
@@ -706,7 +719,7 @@ export function construireRail(params: {
       // Le lieu et ce qu'il contient — le parc, les zones, ceux qui y
       // interviennent, et les registres qui en consignent l'état.
       id: "equipement-batiment",
-      label: "Équipement et bâtiment",
+      label: LABEL_CATEGORIE["equipement-batiment"],
       labelCourt: "Équipement",
       Icon: Building2,
       href: `${base}/equipements`,
@@ -716,7 +729,7 @@ export function construireRail(params: {
     {
       // Ce qui parle du dossier plutôt que du lieu.
       id: "documentation",
-      label: "Documentation",
+      label: LABEL_CATEGORIE["documentation"],
       labelCourt: "Documents",
       Icon: Archive,
       href: `${base}/documents`,
@@ -731,7 +744,7 @@ export function construireRail(params: {
       // part — un écran atteignable seulement en tapant son URL. Une entrée de
       // rail qui déplace une page sans lui en rendre une autre la supprime.
       id: "parametres",
-      label: "Paramètres",
+      label: LABEL_CATEGORIE["parametres"],
       labelCourt: "Paramètres",
       Icon: Settings,
       href: `${base}/modifier`,

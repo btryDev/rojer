@@ -9,7 +9,6 @@ import {
   type RegistreLigne,
 } from "./etats";
 import { JOURS_HORIZON_PROCHE } from "@/lib/dates";
-import { etatCharge, libelleCharge } from "@/lib/batiments/etat-charge";
 import { resumerEquipement } from "@/lib/equipements/etat-verifications";
 
 /**
@@ -37,7 +36,7 @@ import { resumerEquipement } from "@/lib/equipements/etat-verifications";
  *      n'aurait rien empêché tant qu'un écran pouvait écrire le sien à côté.
  *
  * POURQUOI LE POINT 3 SE VÉRIFIE SUR LE TEXTE DES FICHIERS. Les deux modules de
- * calcul (`etat-charge`, `etat-verifications`) rendent des chaînes : on les
+ * calcul (`etat-charge` [retiré le 2026-10-25], `etat-verifications`) rendent des chaînes : on les
  * appelle, et l'appel suffit. Les deux autres surfaces rendent du JSX qu'aucun
  * test de ce dépôt ne monte. Le texte du fichier est alors ce qui reste — et il
  * se lit COMMENTAIRES RETIRÉS, sinon la garde compterait ses propres
@@ -148,21 +147,9 @@ describe("les écrans prennent leurs mots dans la table", () => {
     ]),
   );
 
-  it("la pastille d'une zone n'a plus de mot à elle pour le dépassement", () => {
-    // « à traiter » était le quatrième mot du même état. Les deux autres
-    // libellés de cette pastille restent hors table, et c'est voulu : ce sont
-    // des états de ZONE (rien de déclaré / rien de dépassé), pas des états
-    // d'échéance. La garde le dit plutôt que de les laisser passer en silence.
-    expect(libelleCharge(etatCharge({ nbEquipements: 3, nbEnRetard: 5 }))).toBe(
-      LIBELLE_ETAT_COURT.enRetard,
-    );
-    expect(libelleCharge(etatCharge({ nbEquipements: 3, nbEnRetard: 0 }))).toBe(
-      "À jour",
-    );
-    expect(libelleCharge(etatCharge({ nbEquipements: 0, nbEnRetard: 0 }))).toBe(
-      "Sans objet",
-    );
-  });
+  // ~~« la pastille d'une zone n'a plus de mot à elle pour le dépassement »~~
+  // [2026-10-25 : la pastille de zone (`batiments/etat-charge.ts`) est retirée
+  // avec la plaque des zones du hero — plus de mot à garder.]
 
   it("chaque signal d'une carte d'appareil porte un mot de la table", () => {
     // Toutes les branches d'un coup, y compris celles qu'un dossier réel ne
@@ -347,7 +334,8 @@ describe("aucun écran ne rouvre un second vocabulaire", () => {
    * RECEVOIR un mot d'état, quel qu'il soit.
    */
   const SURFACES = [
-    "src/lib/batiments/etat-charge.ts",
+    // ~~"src/lib/batiments/etat-charge.ts"~~ [2026-10-25 : retiré avec la
+    // plaque des zones du hero].
     "src/lib/equipements/etat-verifications.ts",
     "src/components/equipements/BarreParc.tsx",
     "src/components/equipements/VitrineEquipement.tsx",
@@ -367,21 +355,8 @@ describe("aucun écran ne rouvre un second vocabulaire", () => {
     }
   });
 
-  it("le relevé du tableau de bord nomme ses deux états par la table", () => {
-    // `board.tsx` porte une dizaine de widgets, dont plusieurs ont leur propre
-    // vocabulaire légitime : on ne balaie pas le fichier, on vérifie les deux
-    // relevés du hero, qui sont ce qui a divergé. Ils sont écrits en JSX, que
-    // ce dépôt ne monte dans aucun test — le texte du fichier est ce qui reste.
-    const code = codeSansCommentaires(
-      "src/components/dashboard/widgets/impl/board.tsx",
-    );
-    expect(code).toContain("libelle={LIBELLE_ETAT_COURT.enRetard}");
-    expect(code).toContain("libelle={LIBELLE_ETAT_COURT.proche}");
-    expect(code, "le relevé écrivait « Dépassées » à la main").not.toContain(
-      'libelle="Dépassées"',
-    );
-    expect(code, "le relevé écrivait « Sous 30 j » à la main").not.toContain(
-      'libelle="Sous 30 j"',
-    );
-  });
+  // ~~« le relevé du tableau de bord nomme ses deux états par la table »~~
+  // [2026-10-25 : les relevés « Dépassées » / « Sous 30 j » ont quitté le hero
+  // (décision de la propriétaire) ; ce qu'ils nommaient vit dans les widgets,
+  // qui prennent leurs mots dans la même table.]
 });

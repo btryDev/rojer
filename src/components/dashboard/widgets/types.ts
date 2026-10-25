@@ -4,8 +4,10 @@
 // L'ordre et le choix de variant sont pilotés par l'utilisateur via
 // localStorage (voir useLayoutPerso).
 
-import type { BatimentCharge } from "@/lib/batiments/queries";
+import type { BatimentListe } from "@/lib/batiments/queries";
+import type { IllustrationBatiment } from "@/lib/etablissements/illustration";
 import type { ComponentType } from "react";
+import type { SidebarItemId } from "@/components/layout/sidebar-nav";
 import type {
   BarMois,
   BarresAnnee,
@@ -65,7 +67,7 @@ export type PersistedLayout = {
 
 /* ─── Bundle de données consommé par tous les widgets ─────── */
 
-type EtablissementLite = {
+export type EtablissementLite = {
   id: string;
   raisonDisplay: string;
   entrepriseId: string;
@@ -181,30 +183,24 @@ type DuerpLite = {
 
 export type DashboardBundle = {
   etablissementId: string;
-  /** Les bâtiments de l'établissement (ADR-019) — un seul le plus souvent.
-   *  Le hero en affiche une carte chacun, avec son parc et sa charge. */
-  batiments: BatimentCharge[];
+  /** Les zones de l'établissement (ADR-019, ADR-029) et leur parc, nommées
+   *  dans la fiche du hero. */
+  batiments: BatimentListe[];
   /** Le bâtiment filtré, ou `null` = tout l'établissement. Les widgets
    *  d'échéances et le parc reçoivent une donnée déjà réduite ; ce champ
    *  leur permet de le dire. */
   batimentFiltre: { id: string; nom: string } | null;
   /**
-   * Ce que les deux compteurs du hero comptent, en toutes lettres.
-   *
-   * **Dérivées côté serveur, et transportées** — pas calculées ici. Les deux
-   * phrases sortent de `perimetre/porteurs-comptes.ts`, qui lit le référentiel
-   * et fait tourner l'agrégation des zones pour savoir ce qu'elle retient
-   * vraiment ; rien de tout cela n'a à traverser vers le navigateur, et le
-   * board est un composant client.
-   *
-   * Elles existent parce que le hero pose côte à côte deux nombres qui ne
-   * comptent pas la même chose : le relevé « Dépassées » réunit toutes les
-   * familles de tout l'établissement, les pastilles des zones ne comptent que
-   * ce que portent les équipements. Les deux sont justes ; c'est le seul
-   * endroit du produit où l'écart se constate d'un coup d'œil, donc le seul où
-   * il doit s'expliquer sur place.
+   * Le dessin du hero (`illustrationBatiment`), choisi côté serveur : la
+   * reconnaissance par code NAF lit les référentiels sectoriels, qui n'ont
+   * pas à partir dans le bundle du board.
    */
-  perimetreHero: { releves: string; plaqueZones: string };
+  illustrationHero: IllustrationBatiment;
+  /** L'adresse de la photo du lieu déposée par le dirigeant, ou `null` :
+   *  le hero montre alors l'illustration. */
+  photoHero: string | null;
+  /** Les fiches actives de l'équipe (`compterEquipe`), pour la fiche du hero. */
+  nbEquipe: number;
   etablissement: EtablissementLite;
   dashboard: DashboardData;
   /**
@@ -220,11 +216,10 @@ export type DashboardBundle = {
    */
   echeances: EtatEcheances;
   /**
-   * Le même état, **filtre bâtiment ignoré**. Pour le hero, qui parle de
-   * l'établissement : la plaque des bâtiments y liste tous les volumes avec
-   * la charge de chacun, et les relevés d'à côté suivaient le filtre. Sur un
-   * site filtré, « Dépassées 3 » voisinait donc des cartes qui en totalisent
-   * sept, sans que rien n'explique l'écart.
+   * Le même état, **filtre bâtiment ignoré**. Pour le titre du hero, qui
+   * parle de l'établissement. [2026-10-25 : la plaque des zones et les
+   * relevés chiffrés, qui en faisaient le premier lecteur, ont quitté le
+   * hero.]
    *
    * Le filtre gouverne ce qui est *sous* le hero — la file de travail, le
    * calendrier, le parc. La légende du sélecteur le dit.
@@ -301,6 +296,13 @@ export type Variant = { id: string; label: string };
 export type WidgetDefinition = {
   id: WidgetId;
   titre: string;
+  /**
+   * La page où le widget mène — celle dont il est l'extrait. Sa section du
+   * rail en découle (`categorieDeItem`), et avec elle la coiffe teintée de
+   * sa carte (`CarteBoard`) : un widget ne déclare pas de couleur, il dit
+   * de quoi il parle.
+   */
+  page: SidebarItemId;
   /** Phrase courte affichée dans le tiroir « Ajouter un widget » */
   description: string;
   taille: Taille;

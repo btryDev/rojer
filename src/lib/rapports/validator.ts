@@ -135,24 +135,39 @@ const FORMATS: Record<MimeAutorise, Format> = {
   },
 };
 
+/**
+ * Ce qu'un dépôt accepte. Par défaut, la règle des rapports ; un dépôt plus
+ * étroit (la photo d'un établissement : des images, 2 Mo) passe la sienne —
+ * mêmes contrôles de nom et d'octets, jamais une seconde copie du validateur.
+ */
+export type RegleDepot = {
+  types: readonly MimeAutorise[];
+  tailleMax: number;
+};
+
+const REGLE_RAPPORT: RegleDepot = { types: MIME_AUTORISES, tailleMax: TAILLE_MAX_OCTETS };
+
 export async function validerFichier(
   fichier: File | null,
+  regle: RegleDepot = REGLE_RAPPORT,
 ): Promise<ResultatValidationFichier> {
   if (!fichier || fichier.size === 0) {
     return { ok: false, erreur: "Aucun fichier sélectionné" };
   }
-  if (fichier.size > TAILLE_MAX_OCTETS) {
+  if (fichier.size > regle.tailleMax) {
     return {
       ok: false,
       erreur: `Fichier trop volumineux (max ${Math.round(
-        TAILLE_MAX_OCTETS / 1024 / 1024,
+        regle.tailleMax / 1024 / 1024,
       )} Mo)`,
     };
   }
-  if (!MIME_AUTORISES.includes(fichier.type as MimeAutorise)) {
+  if (!regle.types.includes(fichier.type as MimeAutorise)) {
     return {
       ok: false,
-      erreur: `Type de fichier non accepté (${fichier.type || "inconnu"}). Acceptés : PDF, PNG, JPEG, DOCX.`,
+      erreur: `Type de fichier non accepté (${fichier.type || "inconnu"}). Acceptés : ${regle.types
+        .map((m) => NOM_FORMAT[m])
+        .join(", ")}.`,
     };
   }
   const mime = fichier.type as MimeAutorise;

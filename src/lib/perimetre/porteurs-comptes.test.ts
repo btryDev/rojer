@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import {
   legendeParc,
-  legendePlaqueZones,
   phraseHorsCompte,
   porteursComptesPar,
   porteursDuReferentiel,
@@ -11,7 +10,6 @@ import {
   type LigneSondee,
 } from "./porteurs-comptes";
 import { porteursDuParc } from "@/lib/equipements/etat-verifications";
-import { porteursDeLaPlaqueZones } from "@/lib/batiments/queries";
 import {
   enumererFamilles,
   FAMILLES_NOMMEES,
@@ -170,46 +168,18 @@ describe("la légende du bandeau du parc", () => {
   });
 });
 
-describe("la légende de la plaque des zones", () => {
-  it("renvoie au relevé voisin, en le nommant tel qu'il est écrit", () => {
-    const phrase = legendePlaqueZones({
-      comptes: porteursDeLaPlaqueZones(),
-      libelleReleveComplet: "Dépassées",
-    });
-    expect(phrase).toBe(
-      "Chaque zone ne compte que ce qui est en retard sur vos équipements. " +
-        "Ce qui est dû au titre de l'établissement lui-même ou de vos salariés " +
-        "n'a pas de zone : c'est compté dans « Dépassées ».",
-    );
-  });
-
-  it("se tait sur le renvoi le jour où la plaque compte tout", () => {
-    const phrase = legendePlaqueZones({
-      comptes: porteursComptesPar(compteTout),
-      libelleReleveComplet: "Dépassées",
-    });
-    expect(phrase).not.toMatch(/n'a pas de zone/);
-  });
-});
-
-describe("les deux agrégations sondées", () => {
+describe("l'agrégation sondée du parc", () => {
   /**
-   * Ce que les deux écrans d'équipement comptent, mesuré et non déclaré. Si
-   * l'un des deux se met un jour à compter autre chose que l'autre, ce test
-   * tombe — et c'est bien le défaut à attraper : ils affichent le même nombre
-   * sur le même dossier et ne se doivent aucune divergence silencieuse.
+   * Ce que le bandeau du parc compte, mesuré et non déclaré. [2026-10-25 :
+   * la plaque des zones du hero, qui comptait le même porteur, est retirée ;
+   * sa sonde et sa légende avec elle.]
    */
-  it("le bandeau du parc et la plaque des zones comptent le même porteur", () => {
+  it("le bandeau du parc compte les équipements", () => {
     expect([...porteursDuParc()]).toEqual(["equipement"]);
-    expect([...porteursDeLaPlaqueZones()]).toEqual(["equipement"]);
   });
 
-  it("aucune des deux ne couvre ce que le référentiel porte", () => {
+  it("il ne couvre pas tout ce que le référentiel porte", () => {
     expect(porteursHorsCompte(porteursDuParc())).toEqual([
-      "etablissement",
-      "salarie",
-    ]);
-    expect(porteursHorsCompte(porteursDeLaPlaqueZones())).toEqual([
       "etablissement",
       "salarie",
     ]);

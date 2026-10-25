@@ -634,6 +634,19 @@
   margin-top: calc(-1 * var(--reserve-gelule));
 }
 
+/* Le fond « table à dessin » : un aplat clair piqué d'une trame de points
+   (2026-10-25, motif retenu par la propriétaire pour le hero du tableau de
+   bord, à reprendre par endroits). Un fond, jamais une carte : ce qui se lit
+   dessus pose sa propre surface blanche. */
+.fond-pointille {
+  /* [2026-10-25] Bleu pâle et non plus gris chaud (#f4f4f2 / #d6d6d1),
+     choix de la propriétaire : le beige « papier » réchauffait le bâtiment
+     en couleur jusqu'à le ternir. Un fond, pas une couleur de rôle. */
+  background-color: #eef4f8;
+  background-image: radial-gradient(#cbd9e4 1px, transparent 1.2px);
+  background-size: 18px 18px;
+}
+
 /* Illustrations d'en-tête de page (`src/components/entete-page`) — une
    seule séquence, jouée UNE fois au chargement : c'est le moment fort de
    l'en-tête, pas un décor qui bouge en permanence. Chaque dessin règle ses

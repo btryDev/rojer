@@ -39,6 +39,31 @@ export function libelleRegimeErp(e: {
     .join(" · ");
 }
 
+/**
+ * Les régimes cochés, chacun en un libellé — l'ERP en tête, parce que c'est
+ * le plus précis (types, catégorie). Une seule écriture pour le widget
+ * d'identité et la fiche du hero (relecture du 2026-10-25 : le hero la
+ * recopiait, et annonçait « Établissement de travail » à un dossier IGH ou
+ * habitation seul). Sans la classe d'IGH ni la famille d'habitation, qui ne
+ * sont plus demandées depuis le 2026-09-03.
+ */
+export function regimesAffiches(e: {
+  estEtablissementTravail: boolean;
+  estERP: boolean;
+  estIGH: boolean;
+  estHabitation: boolean;
+  typeErp: string | null;
+  typesErpAutres: readonly string[];
+  categorieErp: string | null;
+}): string[] {
+  return [
+    e.estERP ? libelleRegimeErp(e) : null,
+    e.estEtablissementTravail ? "Établissement de travail" : null,
+    e.estIGH ? "IGH" : null,
+    e.estHabitation ? "Habitation" : null,
+  ].filter((r): r is string => r !== null);
+}
+
 /** « type N », « types N, O, L », ou `null` sans type. */
 export function libelleTypesErp(e: {
   typeErp: string | null;

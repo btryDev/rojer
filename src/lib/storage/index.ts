@@ -155,6 +155,15 @@ export function clePieceDePoint(
 }
 
 /**
+ * La clé de la photo d'un établissement (2026-10-25). Le suffixe aléatoire
+ * distingue deux photos successives : la clé n'est jamais réécrite, l'ancienne
+ * est libérée une fois la nouvelle enregistrée en base.
+ */
+export function clePhotoEtablissement(etablissementId: string, nomFichier: string): string {
+  return `photos/${etablissementId}/${randomUUID()}-${segmentCleStockage(nomFichier)}`;
+}
+
+/**
  * Construit la clé de stockage d'un rapport. Stable (évite d'inclure le
  * timestamp) pour permettre un upsert ultérieur si nécessaire, mais inclut
  * le rapportId qui est un cuid unique.

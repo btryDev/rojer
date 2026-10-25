@@ -271,34 +271,3 @@ export function legendeParc({
   return { perimetre, horsCompte: phraseHorsCompte(absents) };
 }
 
-/**
- * La légende de la plaque des zones, sur le tableau de bord.
- *
- * Elle a un voisin que le bandeau du parc n'a pas : le relevé « Dépassées »,
- * à un empan de là, qui compte TOUT. Le dirigeant a donc les deux nombres sous
- * les yeux en même temps — c'est le seul endroit du produit où l'écart se
- * constate sans naviguer, et donc le seul où il doit s'expliquer sur place.
- */
-export function legendePlaqueZones({
-  comptes,
-  libelleReleveComplet,
-  porteursServis,
-}: {
-  comptes: Set<PorteurObligation>;
-  /** Le mot exact du relevé voisin, pour que le renvoi désigne ce qu'on voit. */
-  libelleReleveComplet: string;
-  porteursServis?: Set<PorteurObligation>;
-}): string {
-  const absents = porteursHorsCompte(comptes, porteursServis);
-  const retenus = ORDRE_PORTEURS.filter((p) => comptes.has(p)).map(
-    (p) => LIBELLE_PORTEUR[p],
-  );
-  const premiere =
-    retenus.length === 0
-      ? "Aucune zone ne compte quoi que ce soit."
-      : `Chaque zone ne compte que ce qui est en retard sur ${enumerer(retenus)}.`;
-  if (absents.length === 0) return premiere;
-  return `${premiere} Ce qui est dû au titre ${enumererApresDe(
-    absents.map((p) => LIBELLE_PORTEUR[p]),
-  )} n'a pas de zone : c'est compté dans « ${libelleReleveComplet} ».`;
-}

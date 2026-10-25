@@ -1,41 +1,44 @@
 # Illustrations de bâtiment
 
-Les deux planches affichées sur la plaque des bâtiments, en tête de tableau
-de bord. Elles ne sont référencées qu'à un endroit : `sourceIllustrationBatiment`
-dans `src/lib/etablissements/illustration.ts`, qui choisit laquelle poser à
-partir du type ERP déclaré, puis de la division NAF.
+Les six planches du hero du tableau de bord, dans `batiments/`. Le choix se
+fait à un seul endroit : `illustrationBatiment`
+(`src/lib/etablissements/illustration.ts`), d'après le type ERP déclaré, puis
+le secteur du code NAF, puis le local générique.
 
-| Fichier                  | Quand elle s'affiche                          | Dimensions |
-| ------------------------ | --------------------------------------------- | ---------- |
-| `batiment-commerce.png`  | ERP de type M ou N, ou NAF 47.xx / 56.xx      | 760 × 668  |
-| `batiment-neutre.png`    | tous les autres cas, y compris les bureaux    | 760 × 668  |
+| Fichier                     | Quand elle s'affiche                                  |
+| --------------------------- | ----------------------------------------------------- |
+| `batiments/restaurant.webp` | ERP de type N, ou NAF du référentiel restauration     |
+| `batiments/magasin.webp`    | ERP de type M, ou NAF du référentiel commerce         |
+| `batiments/hotel.webp`      | ERP de type O                                         |
+| `batiments/salle-sport.webp`| ERP de type X                                         |
+| `batiments/bureaux.webp`    | ERP de type W, ou NAF du référentiel bureau           |
+| `batiments/local.webp`      | tous les autres cas                                   |
 
-Le dessin ne fait varier que l'usage du rez-de-chaussée, jamais le gabarit :
-l'application ne sait rien du bâti (`Batiment` ne porte qu'un nom, un
-complément d'adresse et un rang, ADR-019), et un dessin qui changerait la
-hauteur affirmerait ce qu'on ignore. Les deux sont décoratives — `alt=""`,
-`aria-hidden` — parce que tout ce qu'elles évoquent est écrit sous elles.
+Le dessin est l'**emblème du genre de lieu**, jamais un portrait : l'application
+ne sait rien du bâti (`Batiment` ne porte qu'un nom, un complément d'adresse et
+un rang, ADR-019). Il est posé dans sa propre carte, à côté de la fiche de
+l'établissement (`HeroEtablissement`, `hero-batiments.tsx`), contenu sans être
+recadré ; rien n'y est épinglé. Les planches sont décoratives — `alt=""`,
+`aria-hidden` — parce que tout ce qu'elles évoquent est écrit dans la fiche.
 
 ## Origine
 
-**À documenter.** Les deux fichiers sont entrés dans le dépôt sans mention de
-leur provenance, et rien ici ne permet de l'établir. Avant toute mise en
-ligne publique, compléter les deux lignes ci-dessous comme le fait
-`public/photos/README.md` pour chaque photo :
-
-- Origine de `batiment-commerce.png` : _(source, auteur, licence)_
-- Origine de `batiment-neutre.png` : _(source, auteur, licence)_
-
-La règle est la même que pour les photos : uniquement des visuels dont on
-détient les droits, ou sous licence libre commerciale. Une illustration sans
-provenance connue ne part pas en production.
+Générées par la propriétaire (planche « isométrique de bâtiments monochromes »,
+2026-10-25), découpées et détourées depuis une seule planche pour garder le
+même angle, le même trait et la même échelle. Provisoires : des versions
+définitives viendront au même cadrage. [2026-10-25 : `restaurant.webp` vient
+d'une seconde génération de la propriétaire, « café pastel isométrique avec
+terrasse », aux couleurs des sections.]
 
 ## Consignes
 
-- **Format** : PNG à fond transparent, 760 px de large, rendu entre 156 et
-  232 px selon le nombre de volumes — d'où le `sizes` posé sur le composant.
-- **Poids** : viser moins de 60 Ko. Les deux planches actuelles ont été
-  recompressées de 270 à 50 Ko sans perte visible à la taille d'affichage.
+- **Format** : WebP à fond transparent, détouré au ras du dessin. La carte le
+  contient (`object-contain`) : n'importe quel ratio tient, sans dimension à
+  recopier dans le code.
+- **Couleurs** : les teintes des sections (pêche, eau, glacier), un crème, le
+  noir — jamais le rouge, le jaune ni le vert des états. `restaurant.webp` est
+  la première planche dans cette palette ; les cinq autres sont encore en gris.
+- **Poids** : viser moins de 100 Ko (1000 px de large suffisent).
 - **Ajouter une planche** : déposer le fichier ici ne l'affiche pas. Il faut
-  étendre le type `IllustrationBatiment` et la règle de choix dans
-  `illustration.ts`, qui est déterministe et testée — pas de repli implicite.
+  l'ajouter à `ILLUSTRATIONS_BATIMENT` et à la règle de choix ; un test
+  vérifie que chaque planche déclarée existe.

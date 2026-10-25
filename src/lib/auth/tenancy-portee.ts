@@ -8,7 +8,8 @@
 //  1. `normaliser` — `fonctions` ne voit ni `export const x = cache(async
 //     function x(`, ni `export function f<T>(`. Trois lectures exportées de
 //     `*/queries.ts` lui échappaient (`getDashboardData`,
-//     `composerRegistreDeLEtablissement`, `grouperChargeParBatiment`). On
+//     `composerRegistreDeLEtablissement`, `grouperChargeParBatiment` — retirée
+//     le 2026-10-25 avec la plaque des zones du hero). On
 //     réécrit ces formes en déclarations ordinaires avant de découper.
 //  2. `PORTEE_RELATIONNELLE` — le prédicat `entreprise: { userId …` posé hors
 //     d'un littéral `where: {` (une variable `scope`, un argument de

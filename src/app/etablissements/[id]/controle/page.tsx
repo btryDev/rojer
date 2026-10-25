@@ -103,7 +103,8 @@ export default async function ControlePage({
     compterActions(id, maintenant, { origine: "verification" }),
   ]);
 
-  // LE PATRON `etat-charge.ts`, APPLIQUÉ À UN ÉCRAN : la question « sait-on ? »
+  // LE PATRON `etat-charge.ts` [2026-10-25 : fichier retiré avec la plaque
+  // des zones du hero ; le patron reste], APPLIQUÉ À UN ÉCRAN : la question « sait-on ? »
   // se tranche AVANT tout comptage. Un calendrier jamais calculé rend zéro
   // retard, et zéro retard se lit comme une bonne nouvelle — c'est exactement
   // le défaut que ce fichier portait. Tant qu'on ne sait pas, aucune ligne

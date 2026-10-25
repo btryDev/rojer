@@ -32,10 +32,18 @@ import type { DashboardBundle, WidgetId } from "./types";
 export function DashboardGridClient({
   bundle,
   layoutCookie,
+  filtre,
 }: {
   bundle: DashboardBundle;
   /** Valeur du cookie de disposition, lue au serveur (`DashboardGrid`). */
   layoutCookie: string | null;
+  /**
+   * Le filtre de zone, posé sur la rangée de « Personnaliser », à sa gauche :
+   * les deux règlent les widgets du dessous (2026-10-25, demande de la
+   * propriétaire : ~~« Personnaliser » sous le guide~~ [le guide a quitté
+   * le board pour une fenêtre ouverte depuis le hero]).
+   */
+  filtre?: React.ReactNode;
 }) {
   const {
     layout,
@@ -83,17 +91,18 @@ export function DashboardGridClient({
 
   return (
     <div className="flex flex-col">
-      {/* Le contrôle occupe sa propre rangée en tête du board : posé en
-          flottant il chevauchait le premier widget. Hors édition il se
-          range à droite ; en édition il prend la pleine largeur — le
+      {/* Le contrôle occupe sa propre rangée : posé en flottant il
+          chevauchait le premier widget. Hors édition il se range à droite
+          du filtre de zone ; en édition il prend la pleine largeur — le
           tiroir « Ajouter un widget » en a besoin. */}
       <div
         className={
-          "px-[var(--board-gutter)] pt-[calc(var(--board-gutter)-8px)] " +
-          (enEdition ? "" : "flex justify-end")
+          "flex flex-wrap items-start gap-4 px-[var(--board-gutter)] pt-6 " +
+          (enEdition ? "flex-col" : "justify-between")
         }
       >
-        {toolbar}
+        {filtre ?? <span aria-hidden />}
+        <div className={enEdition ? "w-full" : ""}>{toolbar}</div>
       </div>
 
       <DndContext
