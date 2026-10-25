@@ -431,7 +431,7 @@ export default async function EtablissementPage({
           l'établissement ». Le hero montre l'état du parc, il ne le commande
           pas. */}
       {multiBatiments ? (
-        <div className="bg-[color:var(--board-canvas)] px-[var(--board-gutter)] pt-2">
+        <div className="bg-[color:var(--board-card)] px-[var(--board-gutter)] pt-8">
           <SelecteurBatiment
             // Sans lui, le sélecteur rend en papier — son défaut — au milieu
             // d'un bandeau posé sur `--board-canvas`. L'oubli est silencieux :
@@ -463,12 +463,13 @@ export default async function EtablissementPage({
         </div>
       ) : null}
 
-      {/* Canvas quasi blanc du board — `flex-1` pour qu'il descende
-          jusqu'au bas du conteneur de défilement, même quand les widgets
-          sont courts. Les cartes s'en détachent par filet et ombre douce
-          (bento), pas par l'aplat. Le reste de l'app garde la palette
-          « papier ». */}
-      <div className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-10">
+      {/* Le fond du board — `flex-1` pour qu'il descende jusqu'au bas du
+          conteneur de défilement, même quand les widgets sont courts.
+          [2026-10-25] Blanc, et non plus le canvas quasi blanc (choix de la
+          propriétaire) : sous le hero bleu pâle, le gris faisait une troisième
+          surface. Les cartes s'en détachent par leur filet, renforcé
+          (`CarteBoard`, `.carte-board`), et leur ombre douce. */}
+      <div className="flex flex-1 flex-col bg-[color:var(--board-card)] pb-10">
         <DashboardGrid
           bundle={bundle}
           entete={

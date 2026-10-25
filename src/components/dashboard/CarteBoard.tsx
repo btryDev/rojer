@@ -50,7 +50,7 @@ export function CarteBoard({
         "flex h-full flex-col " +
         (ton === "sombre"
           ? "bg-[color:var(--board-ink)] shadow-[0_1px_2px_rgba(13,18,36,.06),0_16px_40px_-16px_rgba(13,18,36,.22)] "
-          : "bg-[color:var(--board-card)] ring-1 ring-[color:rgba(13,18,36,.06)] shadow-[0_1px_2px_rgba(13,18,36,.04),0_12px_32px_-14px_rgba(13,18,36,.10)] ") +
+          : "bg-[color:var(--board-card)] ring-1 ring-[color:rgba(13,18,36,.10)] shadow-[0_1px_2px_rgba(13,18,36,.04),0_12px_32px_-14px_rgba(13,18,36,.10)] ") +
         (rayon === 26 ? "rounded-[26px]" : "rounded-[30px]")
       }
     >
