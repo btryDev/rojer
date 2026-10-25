@@ -1,12 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { useActionState, useRef, useState, useTransition } from "react";
+import { useId, useRef, useState, useTransition } from "react";
 import { Camera, Trash2 } from "lucide-react";
 import {
   deposerPhotoEtablissement,
   retirerPhotoEtablissement,
-  type EtatPhoto,
 } from "@/lib/etablissements/photo";
 import { COTE_MAX_PHOTO } from "@/lib/etablissements/photo-regle";
 import type { IllustrationBatiment } from "@/lib/etablissements/illustration";
@@ -22,13 +21,31 @@ import type { IllustrationBatiment } from "@/lib/etablissements/illustration";
  * ses métadonnées EXIF — dont la position GPS qu'un téléphone y inscrit.
  * Le serveur revalide de toute façon type, contenu et taille.
  */
+async function decoder(fichier: File): Promise<ImageBitmap> {
+  try {
+    return await createImageBitmap(fichier, { imageOrientation: "from-image" });
+  } catch (e) {
+    // Un navigateur qui ne connaît pas encore cette valeur lève une
+    // TypeError : on décode sans, l'orientation du téléphone peut alors
+    // être perdue, mais la photo part.
+    if (e instanceof TypeError) return createImageBitmap(fichier);
+    throw e;
+  }
+}
+
 async function reencoder(fichier: File): Promise<File> {
-  const image = await createImageBitmap(fichier, { imageOrientation: "from-image" });
+  const image = await decoder(fichier);
   const echelle = Math.min(1, COTE_MAX_PHOTO / Math.max(image.width, image.height));
   const canvas = document.createElement("canvas");
   canvas.width = Math.round(image.width * echelle);
   canvas.height = Math.round(image.height * echelle);
-  canvas.getContext("2d")?.drawImage(image, 0, 0, canvas.width, canvas.height);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("canvas indisponible");
+  // Fond blanc d'abord : le JPEG n'a pas d'alpha, et un PNG transparent
+  // (logo, photo détourée) ressortait sur fond noir.
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
   image.close();
   const blob = await new Promise<Blob | null>((ok) => canvas.toBlob(ok, "image/jpeg", 0.85));
   if (!blob) throw new Error("ré-encodage impossible");
@@ -48,34 +65,48 @@ export function CartePhotoLieu({
   photo: string | null;
   illustration: IllustrationBatiment;
 }) {
-  const [etat, deposer, depotEnCours] = useActionState<EtatPhoto, FormData>(
-    deposerPhotoEtablissement.bind(null, etablissementId),
-    { status: "idle" },
-  );
+  const [depotEnCours, lancerDepot] = useTransition();
   const [retraitEnCours, lancerRetrait] = useTransition();
-  const [erreurLocale, setErreurLocale] = useState<string | null>(null);
-  const [, lancerDepot] = useTransition();
+  // Une seule erreur affichée, remise à zéro à chaque geste : celle de la
+  // lecture locale, du dépôt ou du retrait.
+  const [erreur, setErreur] = useState<string | null>(null);
+  // Le ré-encodage d'une grande photo prend une à deux secondes : le bouton
+  // est occupé dès le choix du fichier, pas seulement pendant l'envoi.
+  const [preparation, setPreparation] = useState(false);
   const champ = useRef<HTMLInputElement>(null);
-  const occupe = depotEnCours || retraitEnCours;
+  const idConseil = useId();
+  const occupe = preparation || depotEnCours || retraitEnCours;
 
   async function choisir(e: React.ChangeEvent<HTMLInputElement>) {
     const fichier = e.target.files?.[0];
     e.target.value = "";
     if (!fichier) return;
-    setErreurLocale(null);
+    setErreur(null);
+    setPreparation(true);
     let pret: File;
     try {
       pret = await reencoder(fichier);
     } catch {
-      setErreurLocale("Cette image n'a pas pu être lue. Essayez une photo JPEG ou PNG.");
+      setErreur("Cette image n'a pas pu être lue. Essayez une photo JPEG ou PNG.");
       return;
+    } finally {
+      setPreparation(false);
     }
     const fd = new FormData();
     fd.set("photo", pret);
-    lancerDepot(() => deposer(fd));
+    lancerDepot(async () => {
+      const r = await deposerPhotoEtablissement(etablissementId, fd);
+      if (r.status === "error") setErreur(r.message);
+    });
   }
 
-  const erreur = erreurLocale ?? (etat.status === "error" ? etat.message : null);
+  function retirer() {
+    setErreur(null);
+    lancerRetrait(async () => {
+      const r = await retirerPhotoEtablissement(etablissementId);
+      if (r.status === "error") setErreur(r.message);
+    });
+  }
 
   return (
     <div className="relative min-h-[220px] overflow-hidden rounded-[24px] bg-[color:var(--board-card)] ring-1 ring-[color:rgba(13,18,36,.10)]">
@@ -87,6 +118,8 @@ export function CartePhotoLieu({
           alt="Photo de l'établissement"
           fill
           unoptimized
+          // Le premier plan du hero : chargée d'emblée, comme l'illustration.
+          priority
           sizes="(min-width: 1024px) 380px, 100vw"
           className="object-cover"
         />
@@ -115,23 +148,30 @@ export function CartePhotoLieu({
         />
         {/* Le conseil RGPD en infobulle, pas sur l'image (demande de la
             propriétaire) : une vue du lieu n'a pas à montrer de personne
-            reconnaissable. */}
+            reconnaissable. Doublé d'une description pour le clavier et les
+            lecteurs d'écran, que l'infobulle ne sert pas. */}
+        <span id={idConseil} className="sr-only">
+          Une vue du lieu, sans personne reconnaissable.
+        </span>
         <button
           type="button"
           className={BOUTON}
           disabled={occupe}
           title="Une vue du lieu, sans personne reconnaissable"
+          aria-label={photo ? "Changer la photo" : "Ajouter une photo"}
+          aria-describedby={idConseil}
           onClick={() => champ.current?.click()}
         >
           <Camera aria-hidden className="size-3.5" />
-          {depotEnCours ? "Envoi…" : photo ? "Changer" : "Ajouter une photo"}
+          {preparation ? "Préparation…" : depotEnCours ? "Envoi…" : photo ? "Changer" : "Ajouter une photo"}
         </button>
         {photo ? (
           <button
             type="button"
             className={BOUTON}
             disabled={occupe}
-            onClick={() => lancerRetrait(() => retirerPhotoEtablissement(etablissementId))}
+            aria-label="Retirer la photo"
+            onClick={retirer}
           >
             <Trash2 aria-hidden className="size-3.5" />
             Retirer

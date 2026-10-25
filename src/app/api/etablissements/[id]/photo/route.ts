@@ -21,10 +21,18 @@ export async function GET(
   const { etablissement } = await requireEtablissement(id);
   if (!etablissement.photoCle || !etablissement.photoMime) notFound();
   const extension = etablissement.photoMime === "image/png" ? "png" : "jpg";
-  return servirFichier({
+  const reponse = await servirFichier({
     cle: etablissement.photoCle,
     nomOriginal: `photo-etablissement.${extension}`,
     mime: etablissement.photoMime,
     contexte: `etablissements/photo ${id}`,
   });
+  // L'adresse est versionnée par la date de dépôt (`?v=`, `photoHero`) : une
+  // photo remplacée change d'adresse. Le navigateur peut donc garder celle-ci
+  // — privée, jamais dans un cache partagé — au lieu de la retélécharger à
+  // chaque passage sur le tableau de bord (`no-store` de `servirFichier`).
+  if (reponse.ok) {
+    reponse.headers.set("Cache-Control", "private, max-age=31536000, immutable");
+  }
+  return reponse;
 }

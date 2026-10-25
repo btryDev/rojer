@@ -469,7 +469,8 @@ résume tout le dossier, et son hero le dit autrement.
   « Personnaliser ».
 - **Le bâtiment**, dans sa propre carte à côté de la fiche, contenu sans
   recadrage : le genre de lieu (`illustrationBatiment` : type ERP, puis secteur
-  du code NAF, puis local générique). La carte recevra une vraie photo.
+  du code NAF, puis local générique). ~~La carte recevra une vraie photo.~~
+  [2026-10-25 : livrée — voir « La photo du lieu » ci-dessous.]
 - **Le guide de mise en place** n'a plus de bloc à lui : tant qu'il reste des
   étapes, la fiche porte « Informations incomplètes » et, sous les cartes à
   droite, « Finir de compléter les infos de l'établissement » ouvre les étapes

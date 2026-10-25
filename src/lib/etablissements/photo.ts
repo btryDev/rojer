@@ -24,19 +24,20 @@ import { REGLE_PHOTO } from "./photo-regle";
  * nouvelle enregistrée. L'appartenance est établie par `requireEtablissement`
  * et reportée dans le `where` de chaque écriture.
  *
- * Le navigateur ré-encode l'image avant l'envoi (`CartePhoto`) : bornée à
+ * Le navigateur ré-encode l'image avant l'envoi (`CartePhotoLieu`) : bornée à
  * 1600 px, en JPEG, sans métadonnées EXIF — donc sans la position GPS qu'un
  * téléphone y inscrit. La règle du serveur (`REGLE_PHOTO`, 2 Mo) tient même
  * si ce ré-encodage est contourné.
  */
 
-export type EtatPhoto = { status: "idle" } | { status: "ok" } | { status: "error"; message: string };
+/** Ce que rend un geste sur la photo : jamais une exception, qui ferait
+ *  tomber la page entière depuis la transition qui l'appelle. */
+export type ResultatPhoto = { status: "ok" } | { status: "error"; message: string };
 
 export async function deposerPhotoEtablissement(
   etablissementId: string,
-  _prev: EtatPhoto,
   formData: FormData,
-): Promise<EtatPhoto> {
+): Promise<ResultatPhoto> {
   const { user, etablissement } = await requireEtablissement(etablissementId);
   const fichier = formData.get("photo");
   if (!(fichier instanceof File) || fichier.size === 0) {
@@ -55,19 +56,23 @@ export async function deposerPhotoEtablissement(
     return { status: "error", message: MESSAGE_ECHEC_ENREGISTREMENT };
   }
 
+  // Borné à la photo lue : de deux dépôts simultanés, le second ne trouve
+  // plus la même et libère la sienne, au lieu d'écraser la clé du premier
+  // et de la laisser orpheline dans le stockage.
   const ancienne = etablissement.photoCle;
+  let enregistree = false;
   try {
     const { count } = await prisma.etablissement.updateMany({
-      where: { id: etablissement.id, entreprise: { userId: user.id } },
+      where: { id: etablissement.id, entreprise: { userId: user.id }, photoCle: ancienne },
       data: { photoCle: cle, photoMime: val.mime, photoDeposeeLe: new Date() },
     });
-    if (count === 0) {
-      await libererFichiers([cle], "etablissements/photo");
-      return { status: "error", message: MESSAGE_ECHEC_ENREGISTREMENT };
-    }
+    enregistree = count > 0;
   } catch (err) {
+    console.error("[etablissements/photo] enregistrement impossible", err);
+  }
+  if (!enregistree) {
     await libererFichiers([cle], "etablissements/photo");
-    throw err;
+    return { status: "error", message: MESSAGE_ECHEC_ENREGISTREMENT };
   }
   if (ancienne) await libererFichiers([ancienne], "etablissements/photo-remplacee");
 
@@ -75,19 +80,27 @@ export async function deposerPhotoEtablissement(
   return { status: "ok" };
 }
 
-export async function retirerPhotoEtablissement(etablissementId: string): Promise<void> {
+export async function retirerPhotoEtablissement(
+  etablissementId: string,
+): Promise<ResultatPhoto> {
   const { user, etablissement } = await requireEtablissement(etablissementId);
-  if (!etablissement.photoCle) return;
+  if (!etablissement.photoCle) return { status: "ok" };
   // Borné à la clé lue : un dépôt concurrent qui l'aurait déjà remplacée
   // n'est pas effacé par ce retrait.
-  const { count } = await prisma.etablissement.updateMany({
-    where: {
-      id: etablissement.id,
-      entreprise: { userId: user.id },
-      photoCle: etablissement.photoCle,
-    },
-    data: { photoCle: null, photoMime: null, photoDeposeeLe: null },
-  });
-  if (count > 0) await libererFichiers([etablissement.photoCle], "etablissements/photo-retiree");
+  try {
+    const { count } = await prisma.etablissement.updateMany({
+      where: {
+        id: etablissement.id,
+        entreprise: { userId: user.id },
+        photoCle: etablissement.photoCle,
+      },
+      data: { photoCle: null, photoMime: null, photoDeposeeLe: null },
+    });
+    if (count > 0) await libererFichiers([etablissement.photoCle], "etablissements/photo-retiree");
+  } catch (err) {
+    console.error("[etablissements/photo] retrait impossible", err);
+    return { status: "error", message: MESSAGE_ECHEC_ENREGISTREMENT };
+  }
   revalidatePath(`/etablissements/${etablissement.id}`);
+  return { status: "ok" };
 }

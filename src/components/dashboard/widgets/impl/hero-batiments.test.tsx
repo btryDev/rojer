@@ -95,7 +95,7 @@ describe("hero : le guide de mise en place, depuis la fiche", () => {
     );
     fireEvent.click(screen.getByText("Finir de compléter les infos de l'établissement"));
     expect(screen.getByRole("dialog").textContent).toContain("Les étapes");
-    expect(screen.getByRole("dialog").textContent).toContain("2 étapes pour couvrir l'essentiel");
+    expect(screen.getByRole("dialog").textContent).toContain("Encore 2 étapes pour couvrir l'essentiel");
   });
 
   it("dossier complet : ni mention ni bouton", () => {

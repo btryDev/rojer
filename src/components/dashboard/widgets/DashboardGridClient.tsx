@@ -40,7 +40,8 @@ export function DashboardGridClient({
   /**
    * Le filtre de zone, posé sur la rangée de « Personnaliser », à sa gauche :
    * les deux règlent les widgets du dessous (2026-10-25, demande de la
-   * propriétaire).
+   * propriétaire : ~~« Personnaliser » sous le guide~~ [le guide a quitté
+   * le board pour une fenêtre ouverte depuis le hero]).
    */
   filtre?: React.ReactNode;
 }) {

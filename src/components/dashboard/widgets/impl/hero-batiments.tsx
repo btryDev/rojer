@@ -1,4 +1,7 @@
-// Le hero du tableau de bord : la fiche de l'établissement et son bâtiment.
+"use client";
+
+// Le hero du tableau de bord : la fiche de l'établissement, la carte du lieu
+// (photo déposée, ou illustration du genre de lieu) et le bouton du guide.
 //
 // **Ce que le dessin dit, et ne dit pas.** L'application ne sait rien du bâti
 // — ni hauteur, ni étages, ni forme. Le dessin est l'emblème du genre de lieu
@@ -107,7 +110,7 @@ function BoutonGuide({ guide }: { guide: GuideFiche }) {
         ouvert={ouvert}
         surFermer={fermer}
         surtitre="Guide de mise en place"
-        titre={`${pluriel(guide.aFaire, "étape")} pour couvrir l'essentiel`}
+        titre={`Encore ${pluriel(guide.aFaire, "étape")} pour couvrir l'essentiel`}
       >
         {guide.contenu}
       </PanneauModal>
@@ -117,8 +120,9 @@ function BoutonGuide({ guide }: { guide: GuideFiche }) {
 
 /**
  * Le hero du tableau de bord : la fiche de l'établissement, étirée sur la
- * largeur, et le bâtiment du genre de lieu posé sur son extrémité droite
- * (planche 6 de l'artefact, retenue par la propriétaire le 2026-10-25).
+ * largeur, ~~et le bâtiment du genre de lieu posé sur son extrémité droite~~
+ * (planche 6 de l'artefact, retenue par la propriétaire le 2026-10-25)
+ * [2026-10-25 : le lieu a sa propre carte, à côté — `CartePhotoLieu`].
  *
  * Tout ce que la fiche dit vient de la fiche établissement, de l'équipe et
  * du parc ; rien n'y est un état de conformité — les compteurs sont aux

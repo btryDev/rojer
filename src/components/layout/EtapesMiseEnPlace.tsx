@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { pluriel } from "@/lib/rendu/pluriel";
 import { buttonVariants } from "@/components/ui/button";
 import { CHAMP_ETAT, ENCRE_ETAT } from "@/lib/calendrier/etats";
 
@@ -67,8 +68,7 @@ export function EtapesMiseEnPlace({ etapes }: { etapes: EtapeOnboarding[] }) {
     <div>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <p className="m-0 text-[13px] text-[color:var(--board-slate-ink)]">
-          <span className="font-semibold text-[color:var(--board-ink)]">{faites}</span> étape
-          {faites > 1 ? "s" : ""} faite{faites > 1 ? "s" : ""} sur {total}
+          {pluriel(faites, "étape faite", "étapes faites")} sur {total}
         </p>
         <div className="flex w-[min(220px,100%)] gap-1" aria-hidden>
           {etapes.map((e, i) => (

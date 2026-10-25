@@ -3,7 +3,7 @@ import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/menti
 import {
   EtapesMiseEnPlace,
   type EtapeOnboarding,
-} from "@/components/layout/OnboardingChecklist";
+} from "@/components/layout/EtapesMiseEnPlace";
 import { QuestionParametrage } from "@/components/layout/QuestionParametrage";
 import { questionRepondue } from "@/lib/etablissements/questions";
 import { repondreDemandesAssureur } from "@/lib/etablissements/parametrage";
@@ -431,7 +431,8 @@ export default async function EtablissementPage({
   };
 
   /* Le filtre par zone (ADR-019, ADR-029), posé sur la rangée de
-     « Personnaliser », sous le guide de mise en place, juste au-dessus des
+     « Personnaliser », ~~sous le guide de mise en place~~ [2026-10-25 : le
+     guide s'ouvre désormais depuis le hero], juste au-dessus des
      widgets qu'il filtre (2026-10-25, demande de la propriétaire). Jamais sur
      le dessin du hero : un dessin qui filtre au clic n'annonce pas comment en
      sortir, et le sélecteur, lui, porte son « Tout l'établissement ». */

@@ -19,11 +19,11 @@ Origine de `etapes-atelier.jpg` : [Pexels 6790046](https://www.pexels.com/photo/
 même licence. Référencée par la constante `PHOTO_ETAPES` en tête de
 `src/components/landing/Etapes.tsx`.
 
-~~Origine de `guide-ordinateur.jpg`~~ [2026-10-25 : retirée avec le bandeau du
-guide, devenu une fenêtre ouverte depuis la fiche du hero] : [Pexels 3874620](https://www.pexels.com/photo/young-businesswoman-working-remotely-with-laptop-in-cafe-during-daytime-3874620/),
+~~Origine de `guide-ordinateur.jpg` : [Pexels 3874620](https://www.pexels.com/photo/young-businesswoman-working-remotely-with-laptop-in-cafe-during-daytime-3874620/),
 photo de Gustavo Fring, licence Pexels. Référencée par le guide de mise en
 place du tableau de bord (`src/components/layout/OnboardingChecklist.tsx`),
-à droite de la carte, à partir de `md`.
+à droite de la carte, à partir de `md`.~~ [2026-10-25 : retirée avec le bandeau du guide, devenu une fenêtre
+ouverte depuis la fiche du hero.]
 
 `hero-cuisine.jpg` n'est plus référencé : la bande « Sur le terrain » qui
 l'accueillait a été fusionnée dans la section noire, désormais en frise sans
