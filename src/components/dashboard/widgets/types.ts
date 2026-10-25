@@ -7,6 +7,7 @@
 import type { BatimentCharge } from "@/lib/batiments/queries";
 import type { IllustrationBatiment } from "@/lib/etablissements/illustration";
 import type { ComponentType } from "react";
+import type { SidebarItemId } from "@/components/layout/sidebar-nav";
 import type {
   BarMois,
   BarresAnnee,
@@ -308,6 +309,13 @@ export type Variant = { id: string; label: string };
 export type WidgetDefinition = {
   id: WidgetId;
   titre: string;
+  /**
+   * La page où le widget mène — celle dont il est l'extrait. Sa section du
+   * rail en découle (`categorieDeItem`), et avec elle la coiffe teintée de
+   * sa carte (`CarteBoard`) : un widget ne déclare pas de couleur, il dit
+   * de quoi il parle.
+   */
+  page: SidebarItemId;
   /** Phrase courte affichée dans le tiroir « Ajouter un widget » */
   description: string;
   taille: Taille;

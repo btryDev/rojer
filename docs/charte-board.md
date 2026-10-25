@@ -471,6 +471,13 @@ résume tout le dossier, et son hero le dit autrement.
   tous les dossiers ; l'étiquette dit qu'une zone existe et ce qu'elle porte,
   jamais où elle est.
 
+**Les cartes du tableau de bord sont coiffées de leur section** (2026-10-25) :
+une bande à la teinte de la section du rail (`TEINTE_SECTION`), avec son nom,
+en tête de `CarteBoard`. Un widget ne choisit pas sa couleur : il déclare la
+page dont il est l'extrait (`WidgetDefinition.page`), et la section se déduit
+de `categorieDeItem`. Le sur-titre bleu « famille » de `TitreBloc` est retiré.
+Hors du tableau de bord, `CarteBoard` n'a pas de coiffe.
+
 **Deux motifs réutilisables**, retenus par la propriétaire :
 
 1. **`.fond-pointille`** — un fond, jamais une carte.

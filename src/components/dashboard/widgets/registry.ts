@@ -44,6 +44,7 @@ import type { LayoutItem, WidgetDefinition, WidgetId } from "./types";
 export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   etablissement: {
     id: "etablissement",
+    page: "fiche",
     titre: "Identité établissement",
     description:
       "Carte d'identité de l'établissement — raison, adresse, effectif, NAF/SIRET, régimes, avec un CTA vers un préventeur.",
@@ -55,6 +56,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   },
   score: {
     id: "score",
+    page: "calendrier",
     // ~~« Score de conformité »~~ — décision de la propriétaire, 2026-09-26 :
     // aligné sur l'accueil. L'`id` reste `score` : les préférences stockées
     // le portent.
@@ -72,6 +74,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   },
   indicateurs: {
     id: "indicateurs",
+    page: "calendrier",
     titre: "Indicateurs",
     description:
       "Vue d'ensemble en 6 chiffres : en retard · à planifier · sous 30 j, puis actions en cours · rapports 12 m · délai depuis le dernier rapport.",
@@ -82,6 +85,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   },
   echeances: {
     id: "echeances",
+    page: "calendrier",
     titre: "Échéances (séparé)",
     description:
       "Compteurs vérifications isolés — déjà inclus dans le widget « Indicateurs ».",
@@ -93,6 +97,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   },
   activite: {
     id: "activite",
+    page: "registre",
     titre: "Activité (séparé)",
     description:
       "Compteurs actions & rapports isolés — déjà inclus dans le widget « Indicateurs ».",
@@ -104,6 +109,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   },
   "kpi-en-retard": {
     id: "kpi-en-retard",
+    page: "calendrier",
     titre: "KPI · En retard",
     description:
       "Compteur isolé des vérifications dépassées (déjà présent dans Échéances).",
@@ -115,6 +121,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   },
   "kpi-sous-30j": {
     id: "kpi-sous-30j",
+    page: "calendrier",
     titre: "KPI · Échéances sous 30 j",
     description:
       "Compteur isolé des vérifications à planifier sous un mois (déjà présent dans Échéances).",
@@ -126,6 +133,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   },
   "kpi-actions": {
     id: "kpi-actions",
+    page: "actions",
     titre: "KPI · Actions en cours",
     description:
       "Compteur isolé des actions ouvertes (déjà présent dans Activité).",
@@ -137,6 +145,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   },
   "kpi-rapports": {
     id: "kpi-rapports",
+    page: "registre",
     titre: "KPI · Rapports 12 mois",
     description:
       "Compteur isolé des rapports déposés sur 12 mois (déjà présent dans Activité).",
@@ -148,6 +157,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   },
   "bars-obligations": {
     id: "bars-obligations",
+    page: "calendrier",
     titre: "Obligations · volumes",
     description:
       "Volume d'obligations par mois, réparti par statut. Vue chiffrée complémentaire à la frise « Calendrier ».",
@@ -162,6 +172,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   },
   "prochaines-echeances": {
     id: "prochaines-echeances",
+    page: "calendrier",
     titre: "Prochaines échéances",
     description:
       "Les 5 prochaines vérifications — en liste ou sur une frise horizontale.",
@@ -175,6 +186,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   },
   "par-ou-commencer": {
     id: "par-ou-commencer",
+    page: "calendrier",
     titre: "Par où commencer",
     description:
       "Les deux premières choses à traiter, extraites de ce qui a dépassé son échéance, avec le solde à trente jours.",
@@ -188,6 +200,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   },
   "a-faire": {
     id: "a-faire",
+    page: "calendrier",
     titre: "À faire",
     description:
       "La to-do du dossier : vérifications et actions mélangées, triées par urgence, avec date et retard. Remplace les cartes « Prochaine échéance » et « Actions en retard ».",
@@ -198,6 +211,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   },
   "plan-actions": {
     id: "plan-actions",
+    page: "actions",
     titre: "Où en est le plan d'actions",
     description:
       "Répartition des actions en anneau — ouvertes, en cours, clôturées ce mois — avec le nombre d'échéances dépassées.",
@@ -208,6 +222,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   },
   "actions-retard": {
     id: "actions-retard",
+    page: "actions",
     titre: "Actions en retard",
     description:
       "Compteur des actions dépassées, retard moyen et plus ancienne — déjà couvert par la liste « À faire ».",
@@ -219,6 +234,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   },
   controle: {
     id: "controle",
+    page: "controle",
     titre: "Préparer un contrôle",
     description:
       "Raccourci vers le dossier à présenter en cas de visite — inspection, assurance, bailleur.",
@@ -229,6 +245,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   },
   registre: {
     id: "registre",
+    page: "registre",
     titre: "Registre — dernières entrées",
     description: "Les 4 derniers rapports déposés au registre de sécurité.",
     taille: "medium",
@@ -238,6 +255,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   },
   "equipements-grid": {
     id: "equipements-grid",
+    page: "equipements",
     titre: "Équipements",
     description: "Grille des équipements déclarés + bouton d'ajout rapide.",
     taille: "medium",
@@ -248,6 +266,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   },
   documents: {
     id: "documents",
+    page: "documents",
     titre: "Vos documents, en un coup d'œil",
     description:
       "Matrice en ronds — en place, à jour, sans retard — pour le DUERP, le registre, les vérifications, le plan d'actions, et chaque registre actif chez vous (accessibilité, permis de feu, plans de prévention, carnet sanitaire, prestataires).",
@@ -258,6 +277,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   },
   duerp: {
     id: "duerp",
+    page: "duerp",
     titre: "DUERP",
     description:
       "Accès rapide à la dernière version du Document Unique (déjà inclus dans le hub « Vos documents »).",
@@ -269,6 +289,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   },
   guide: {
     id: "guide",
+    page: "guide",
     titre: "Guide pédagogique",
     description:
       "Rappel des obligations, du rythme annuel et des rôles — lien vers la page Comprendre.",
@@ -279,6 +300,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   },
   recos: {
     id: "recos",
+    page: "calendrier",
     titre: "À faire en priorité",
     description:
       "Les 3 actions les plus urgentes (vérif dépassée, action en retard, DUERP à jour). Masqué par défaut car redondant avec les prochaines échéances.",
@@ -290,6 +312,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   },
   "calendrier-type": {
     id: "calendrier-type",
+    page: "calendrier",
     titre: "Votre calendrier",
     description:
       "Vue calendrier de vos vérifications — grille mensuelle ou année entière — avec bascule en frise horizontale défilante (3 mois en arrière à 24 mois en avant, zoom 90 jours / 12 mois).",
@@ -304,6 +327,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   },
   countdown: {
     id: "countdown",
+    page: "calendrier",
     titre: "Prochaine échéance",
     description:
       "La vérification la plus proche, avec le nombre de jours restants en gros chiffre — déjà couverte par la liste « À faire ».",
@@ -315,6 +339,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   },
   anciennete: {
     id: "anciennete",
+    page: "documents",
     titre: "Âge des documents",
     description:
       "DUERP et dernier rapport : depuis combien de jours ? Ton rouge / ambre / vert selon le seuil.",
@@ -325,6 +350,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   },
   semaine: {
     id: "semaine",
+    page: "calendrier",
     titre: "Semaine en cours",
     description:
       "Mini-agenda 7 jours — échéance(s) par jour, aujourd'hui mis en évidence.",
@@ -335,6 +361,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   },
   "flux-registre": {
     id: "flux-registre",
+    page: "registre",
     titre: "Ce qui a changé",
     description:
       "Les derniers rapports déposés au registre, avec leur résultat, et le premier « à faire » du moteur de recommandations.",
@@ -345,6 +372,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   },
   meteo: {
     id: "meteo",
+    page: "calendrier",
     // L'identifiant `meteo` reste : il est la clé des tableaux de bord déjà
     // personnalisés. Le nom, lui, était trompeur (2026-09-14).
     titre: "30 prochains jours",
@@ -357,6 +385,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   },
   "etats-permanents": {
     id: "etats-permanents",
+    page: "etats-permanents",
     titre: "Ce qui doit être en place",
     description:
       // ~~« … avec leur état et l'article qui les fonde »~~ (2026-10-17,

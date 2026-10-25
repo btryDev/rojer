@@ -19,7 +19,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { CarteBoard, TitreBloc } from "./board";
+import { CarteBoard } from "@/components/dashboard/CarteBoard";
+import { TitreBloc } from "./board";
 import {
   CLASSES_LIEN_FAMILLE,
   CompteurDeLaPage,
@@ -54,7 +55,6 @@ export function WidgetEtatsPermanents({
   return (
     <CarteBoard className="px-7 py-[26px]">
       <TitreBloc
-        famille="Sans date"
         titre={LABEL_ITEM["etats-permanents"]}
         href={href}
       />

@@ -39,6 +39,7 @@ import {
   LIBELLE_SANS_ECHEANCE,
 } from "@/lib/calendrier/etats";
 import { Enseigne, HeroBatiments } from "./hero-batiments";
+import { CarteBoard } from "@/components/dashboard/CarteBoard";
 import type { Recommandation } from "@/lib/dashboard/recommandations";
 import { occupePlaceReservee } from "@/lib/dashboard/place-reservee";
 import {
@@ -80,72 +81,21 @@ import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeReten
 
 /* ─── Primitives partagées ──────────────────────────────────── */
 
-/**
- * Le design distingue deux rayons : 26 px sur les cartes-chiffre, 30 px
- * sur les grands blocs. Le rayon est donc un paramètre, pas une classe
- * qu'on écraserait depuis l'appelant (l'ordre des classes Tailwind ne
- * décide pas de la priorité).
- */
-export function CarteBoard({
-  children,
-  className = "",
-  rayon = 30,
-  ton = "clair",
-}: {
-  children: React.ReactNode;
-  className?: string;
-  rayon?: 26 | 30;
-  /**
-   * Les blocs sombres sont l'exception : la préparation d'un contrôle
-   * (la porte à pousser quand un inspecteur se présente) et, hors
-   * défaut, la carte-compteur « Prochaine échéance ». Le reste du board
-   * les entoure et les explique ; leur position par défaut vient de
-   * `ORDRE_DEFAUT` (registry), et l'utilisateur peut les déplacer.
-   *
-   * Sur fond noir, aucune encre foncée ne passe : le texte est blanc ou
-   * ardoise, et les champs colorés restent les champs clairs de la
-   * palette — ils y gagnent même en présence.
-   */
-  ton?: "clair" | "sombre";
-}) {
-  return (
-    <div
-      className={
-        // Sur canvas quasi blanc, l'aplat ne sépare plus rien : c'est le
-        // filet cheveu et l'ombre douce qui détachent la carte — bento.
-        "flex h-full flex-col " +
-        (ton === "sombre"
-          ? "bg-[color:var(--board-ink)] shadow-[0_1px_2px_rgba(13,18,36,.06),0_16px_40px_-16px_rgba(13,18,36,.22)] "
-          : "bg-[color:var(--board-card)] ring-1 ring-[color:rgba(13,18,36,.06)] shadow-[0_1px_2px_rgba(13,18,36,.04),0_12px_32px_-14px_rgba(13,18,36,.10)] ") +
-        (rayon === 26 ? "rounded-[26px] " : "rounded-[30px] ") +
-        className
-      }
-    >
-      {children}
-    </div>
-  );
-}
-
-/** En-tête standard d'un bloc du board : famille + titre 26 px +
- *  sous-titre, et à droite soit la porte ronde (href), soit des contrôles
- *  libres (actions) — exporté pour que les widgets hors de ce fichier
- *  (équipements) n'aient pas à recopier le motif. */
+/** En-tête standard d'un bloc du board : titre 26 px + sous-titre, et à
+ *  droite soit la porte ronde (href), soit des contrôles libres (actions) —
+ *  exporté pour que les widgets hors de ce fichier (équipements) n'aient pas
+ *  à recopier le motif.
+ *
+ *  [2026-10-25] Le sur-titre « famille » (« PRIORITÉS », « SUIVI »…) est
+ *  retiré : la coiffe de section de `CarteBoard` dit désormais de quoi parle
+ *  la carte, et deux repères empilés au-dessus d'un titre se lisaient comme
+ *  deux niveaux qui n'existent pas. */
 export function TitreBloc({
-  famille,
   titre,
   sousTitre,
   href,
   actions,
 }: {
-  /**
-   * Sur-titre mono, repris du cadran de la page publique : il dit de
-   * quelle famille relève le bloc (« ÉCHÉANCES », « SUIVI », « PREUVE »)
-   * avant que le titre ne dise ce qu'il montre. C'est un repère de
-   * lecture, pas une décoration — un board de douze cartes se parcourt
-   * mieux quand chacune annonce son registre. Les blocs dont le titre
-   * porte déjà sa famille s'en passent.
-   */
-  famille?: string;
   titre: string;
   sousTitre?: React.ReactNode;
   href?: string;
@@ -154,9 +104,6 @@ export function TitreBloc({
   return (
     <div className="flex items-start gap-4">
       <div className="min-w-0">
-        {famille ? (
-          <p className="board-eyebrow m-0 mb-2">{famille}</p>
-        ) : null}
         <h2 className="board-titre m-0 text-[26px]">{titre}</h2>
         {sousTitre ? (
           <p className="mt-[7px] text-[13.5px] text-[color:var(--board-slate-mid)]">
@@ -999,7 +946,6 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
     <CarteBoard className="px-[30px] pb-5 pt-[26px]">
       <div className="flex items-start gap-4">
         <div>
-          <p className="board-eyebrow m-0 mb-2">Échéances</p>
           <h2 className="board-titre m-0 text-[30px]">
             {vue === "calendrier"
               ? "Votre calendrier"
@@ -1558,7 +1504,6 @@ export function BlocAFaire({ bundle }: { bundle: DashboardBundle }) {
   return (
     <CarteBoard className="px-7 py-[26px]">
       <TitreBloc
-        famille="Priorités"
         titre="À faire"
         sousTitre={
           resteUrgent > 0
@@ -1914,7 +1859,6 @@ export function BlocPlanActions({ bundle }: { bundle: DashboardBundle }) {
   return (
     <CarteBoard className="px-7 py-[26px]">
       <TitreBloc
-        famille="Suivi"
         titre="Où en est le plan d'actions"
         href={`/etablissements/${bundle.etablissementId}/actions`}
       />
@@ -2014,7 +1958,6 @@ export function BlocCeQuiAChange({ bundle }: { bundle: DashboardBundle }) {
   return (
     <CarteBoard className="px-7 py-[26px]">
       <TitreBloc
-        famille="Preuve"
         titre="Ce qui a changé"
         sousTitre="Les derniers mouvements sur votre dossier."
         href={`/etablissements/${etablissementId}/registre`}
@@ -2122,7 +2065,7 @@ export function BlocDocuments({ bundle }: { bundle: DashboardBundle }) {
 
   return (
     <CarteBoard className="px-7 py-[26px]">
-      <TitreBloc famille="Dossier" titre="Vos documents, en un coup d'œil" />
+      <TitreBloc titre="Vos documents, en un coup d'œil" />
 
       <div className="mt-[22px] grid grid-cols-[1.6fr_1fr_1fr_1fr] items-center gap-[7px]">
         <span className="rounded-full bg-[color:var(--board-blue-ink)] px-3.5 py-2 text-center font-mono text-[11px] font-semibold uppercase tracking-[0.06em] text-white">

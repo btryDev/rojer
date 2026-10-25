@@ -13,7 +13,8 @@ import { LienProvenance } from "@/components/navigation/LienProvenance";
 import { ChevronDown, ChevronRight, Layers, LayoutGrid } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { BentoCell } from "@/components/dashboard/BentoCell";
-import { CarteBoard, TitreBloc } from "@/components/dashboard/widgets/impl/board";
+import { CarteBoard } from "@/components/dashboard/CarteBoard";
+import { TitreBloc } from "@/components/dashboard/widgets/impl/board";
 import { MarqueCategorie } from "@/components/equipements/MarqueCategorie";
 import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
 import { formaterDateFr, formaterJourMoisFr } from "@/lib/dates";
@@ -263,7 +264,6 @@ export function WidgetEquipements({ bundle }: { bundle: DashboardBundle }) {
   return (
     <CarteBoard className="gap-6 px-7 py-[26px]">
       <TitreBloc
-        famille="Inventaire"
         titre="Équipements"
         sousTitre={
           /* `totalEq` compte des appareils, pas des types — le compte
@@ -553,10 +553,7 @@ export function WidgetGuide({ bundle }: { bundle: DashboardBundle }) {
     // rayon 30, encre du board. Elle était restée en rayon 14 sur l'ancien
     // `--ink`, avec un bleu lavande hors palette — deux cartes noires côte à
     // côte qui ne se ressemblaient pas.
-    <section
-      className="relative flex h-full flex-col gap-3 overflow-hidden rounded-[30px] px-7 py-[26px]"
-      style={{ background: "var(--board-ink)", color: "#fff" }}
-    >
+    <CarteBoard ton="sombre" className="relative gap-3 px-7 py-[26px] text-white">
       <p className="board-eyebrow m-0 text-[color:var(--board-blue-soft)]">
         Guide pédagogique
       </p>
@@ -603,7 +600,7 @@ export function WidgetGuide({ bundle }: { bundle: DashboardBundle }) {
       >
         Lire le guide complet →
       </Link>
-    </section>
+    </CarteBoard>
   );
 }
 

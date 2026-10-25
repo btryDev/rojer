@@ -12,6 +12,7 @@
 
 import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
 import { BentoCell } from "@/components/dashboard/BentoCell";
+import { CarteBoard } from "@/components/dashboard/CarteBoard";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { formaterDateFr } from "@/lib/dates";
 import type { DashboardBundle } from "../types";
@@ -199,7 +200,7 @@ export function WidgetScore({
   const niveauPill = PILL_PAR_NIVEAU[dashboard.score.niveau];
 
   return (
-    <section className="carte-board px-7 py-6 sm:px-8">
+    <CarteBoard className="px-7 py-6 sm:px-8">
       <header className="flex items-start justify-between gap-3">
         <div>
           <h3 className="v2-title inline-flex items-center">
@@ -294,7 +295,7 @@ export function WidgetScore({
           )}
         </div>
       </div>
-    </section>
+    </CarteBoard>
   );
 }
 
