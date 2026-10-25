@@ -272,7 +272,7 @@ source, qui a fait croire à une périodicité annuelle générale.
 **Dans la documentation** : la liste des documents obligatoires, y compris ceux
 que le produit ne produit pas.
 
-**Dans la santé-sécurité** : ce qui est exclu du périmètre, avec des indications.
+~~**Dans la santé-sécurité**~~ **Dans la documentation** [2026-10-25] : ce qui est exclu du périmètre, avec des indications.
 Cette page distingue **trois statuts**, et la distinction est le fond du sujet :
 refusé à l'entrée / servi partiellement et prévenu (les ERP de 1re à 4e
 catégorie) / hors périmètre déclaré.
@@ -289,6 +289,15 @@ catégorie) / hors périmètre déclaré.
 > l'entrée~~ et ~~hors périmètre déclaré, article par article~~ ont quitté
 > la page pour l'annexe du PDF du référentiel complet, avec toutes les
 > références.
+
+> **Amendé le 2026-10-25 (décision de la propriétaire)** — la page quitte
+> « Santé-sécurité » pour fermer « Documentation ». Depuis l'ADR-046, elle
+> parle du dossier entier — catégorie et types d'ERP, obligations
+> d'équipement et d'établissement hors du quotidien, familles non gérées —,
+> pas des personnes ni des actes de prévention ; l'argument « l'axe qui dit
+> ce que le produit fait pour la sécurité dit où il s'arrête » ne tenait
+> plus. Les deux interfaces de ce paragraphe vivent désormais sous le même
+> axe. L'URL (`/perimetre`) ne change pas.
 
 C'est le point où le produit était le plus avancé : le bandeau de périmètre du
 calendrier dit déjà ce qui n'est pas couvert, sur six axes au 2026-09-03

@@ -414,9 +414,8 @@ export function construireSections({
   // d'une autorité ou d'un assureur ; les deux opérations ponctuelles
   // (ADR-017) sont des actes de prévention datés, pas des registres.
   //
-  // « Ce que Rojer ne couvre pas » ferme la liste, et c'est l'ADR-025 § 8 qui
-  // le veut ici : l'axe qui dit ce que le produit fait pour la sécurité est
-  // celui qui doit dire où il s'arrête.
+  // ~~« Ce que Rojer ne couvre pas » ferme la liste (ADR-025 § 8).~~
+  // [2026-10-25 : passée sous « Documentation », ADR-025 § 8 amendée.]
   const santeSecurite: NavItem[] = [
     {
       id: "duerp",
@@ -443,12 +442,6 @@ export function construireSections({
       Icon: FileText,
     },
     ...operations,
-    {
-      id: "perimetre",
-      label: LABEL_ITEM.perimetre,
-      href: href("/perimetre"),
-      Icon: CircleSlash,
-    },
   ];
 
   // ─── Documentation ─────────────────────────────────────────────────────
@@ -476,6 +469,17 @@ export function construireSections({
       label: LABEL_ITEM.guide,
       href: href("/guide"),
       Icon: Compass,
+    },
+    // Ferme la documentation (2026-10-25, ADR-025 § 8 amendée) : la page
+    // parle du dossier entier — catégorie et types d'ERP, obligations
+    // d'équipement et d'établissement hors du quotidien, familles non
+    // gérées —, pas des seules personnes. Elle répond à « Documents
+    // obligatoires », l'autre interface qui dit ce qui manque.
+    {
+      id: "perimetre",
+      label: LABEL_ITEM.perimetre,
+      href: href("/perimetre"),
+      Icon: CircleSlash,
     },
   ];
 
@@ -644,6 +648,7 @@ export function categorieDeItem(id: SidebarItemId): RailCategorieId | null {
     case "guide":
     case "documents":
     case "controle":
+    case "perimetre":
       return "documentation";
     case "equipements":
     case "batiments":
@@ -657,7 +662,6 @@ export function categorieDeItem(id: SidebarItemId): RailCategorieId | null {
     case "prescriptions":
     case "permis-feu":
     case "plan-prevention":
-    case "perimetre":
       return "sante-securite";
     default:
       return "a-faire";

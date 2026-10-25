@@ -36,9 +36,9 @@ et pourquoi.
 | Entrée | Nature | Page d'entrée | Ce qu'elle recueille |
 |---|---|---|---|
 | À faire | fonctionnelle | calendrier | calendrier, plan d'actions, ce qui doit être en place |
-| Santé-sécurité | thématique | DUERP | DUERP, équipe et titres, prescriptions, permis de feu, plans de prévention, ce que Rojer ne couvre pas |
+| Santé-sécurité | thématique | DUERP | DUERP, équipe et titres, prescriptions, permis de feu, plans de prévention, ~~ce que Rojer ne couvre pas~~ [2026-10-25 : passée sous Documentation, ADR-025 § 8 amendée] |
 | Équipement et bâtiment | thématique | équipements | équipements, zones, prestataires, registre de sécurité, accessibilité, carnet sanitaire |
-| Documentation | thématique | documents obligatoires | documents obligatoires, préparer un contrôle, comprendre (le guide) |
+| Documentation | thématique | documents obligatoires | documents obligatoires, préparer un contrôle, comprendre (le guide), ce que Rojer ne couvre pas [2026-10-25] |
 | Paramètres | fonctionnelle | fiche établissement | rien — entrée sans panneau |
 
 **L'écart à la lettre de la directive est assumé et il est motivé.** Les trois
