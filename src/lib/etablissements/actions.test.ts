@@ -64,6 +64,8 @@ const h = vi.hoisted(() => {
         db.supprimes.push(where.id);
         return db.etablissement;
       },
+      // La photo du lieu (2026-10-25) : elle part aussi.
+      findMany: async () => [{ photoCle: "photos/lieu.jpg" }],
     },
     duerpVersion: {
       count: async () => db.nbVersionsDuerp,
@@ -359,6 +361,7 @@ describe("supprimerEtablissement — conservation 40 ans", () => {
 describe("supprimerEtablissement — les fichiers stockés partent avec (2026-09-27)", () => {
   const TOUTES = [
     "leg/analyse.pdf",
+    "photos/lieu.jpg",
     "points/piece.pdf",
     "presta/kbis.pdf",
     "presta/urssaf-ancienne.pdf",

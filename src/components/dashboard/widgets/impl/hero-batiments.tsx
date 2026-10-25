@@ -8,9 +8,9 @@
 // lit comme celui du client, et le produit ne le connaît pas. Ce qu'on sait
 // de l'établissement est écrit dans sa fiche, sur laquelle le dessin est posé.
 
-import Image from "next/image";
 import { DoorOpen, IdCard, Users, Wrench } from "lucide-react";
 import { nomDeZone } from "@/lib/batiments/nom-zone";
+import { CartePhotoLieu } from "./CartePhotoLieu";
 import type { IllustrationBatiment } from "@/lib/etablissements/illustration";
 import { regimesAffiches } from "@/lib/etablissements/types-erp-affiches";
 import { pluriel } from "@/lib/rendu/pluriel";
@@ -87,12 +87,15 @@ function Fait({
 export function HeroEtablissement({
   etablissement: etab,
   illustration,
+  photo,
   nbEquipe,
   nbEquipements,
   zones,
 }: {
   etablissement: EtablissementLite;
   illustration: IllustrationBatiment;
+  /** L'adresse de la photo du lieu, ou `null` (`DashboardBundle.photoHero`). */
+  photo: string | null;
   nbEquipe: number;
   nbEquipements: number;
   zones: readonly { id: string; nom: string; nbEquipements: number }[];
@@ -165,22 +168,10 @@ export function HeroEtablissement({
         </div>
       </div>
 
-      {/* [2026-10-25] Le dessin dans sa propre carte (demande de la
-          propriétaire), à côté de la fiche et à sa hauteur. Il y est
-          contenu, jamais recadré ; la carte est prête à recevoir une vraie
-          photo de l'établissement, qui la remplira (à venir). Décoratif :
-          tout ce que le dessin évoque est écrit dans la fiche. */}
-      <div className="relative min-h-[220px] overflow-hidden rounded-[24px] bg-[color:var(--board-card)] ring-1 ring-[color:rgba(13,18,36,.10)]">
-        <Image
-          src={`/illustrations/batiments/${illustration}.webp`}
-          alt=""
-          aria-hidden
-          fill
-          sizes="(min-width: 1024px) 380px, 100vw"
-          priority
-          className="select-none object-contain p-5"
-        />
-      </div>
+      {/* [2026-10-25] Le lieu dans sa propre carte, à côté de la fiche et à
+          sa hauteur : la photo déposée par le dirigeant, ou l'illustration
+          du genre de lieu. */}
+      <CartePhotoLieu etablissementId={etab.id} photo={photo} illustration={illustration} />
     </div>
   );
 }

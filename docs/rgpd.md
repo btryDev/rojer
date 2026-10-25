@@ -292,6 +292,21 @@ l'invite à aucune donnée de santé ni de salarié.
 
 ---
 
+### 2.9 Photo du lieu (2026-10-25)
+
+Le dirigeant peut déposer une photo de son établissement, affichée dans le
+hero du tableau de bord. Ce n'est pas une donnée personnelle par destination —
+une vue du lieu —, et le produit le dit au moment du dépôt (« sans personne
+reconnaissable »). Deux mesures la gardent de le devenir :
+
+- **les métadonnées EXIF sont retirées avant l'envoi** : le navigateur
+  ré-encode l'image (`CartePhotoLieu`), ce qui efface la position GPS et
+  l'appareil qu'un téléphone inscrit dans le fichier ;
+- **elle n'est jamais publique** : servie par
+  `/api/etablissements/[id]/photo` au seul compte propriétaire, libérée du
+  stockage au remplacement, au retrait et à la suppression de l'établissement
+  (`suppression/fichiers.ts`).
+
 ## 3. Hébergement
 
 - Base de données et authentification : **Supabase**, région UE (Francfort).

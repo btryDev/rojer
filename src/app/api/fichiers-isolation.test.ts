@@ -58,7 +58,19 @@ const h = vi.hoisted(() => {
       );
     }) ?? null;
 
+  // La photo du lieu (2026-10-25), portée par l'établissement lui-même.
+  const etablissements = [
+    { id: "etab-a", photoCle: "photos/etab-a/p.jpg", photoMime: "image/jpeg" },
+    { id: "etab-b", photoCle: "photos/etab-b/p.jpg", photoMime: "image/jpeg" },
+    { id: "etab-a-sans", photoCle: null, photoMime: null },
+  ];
+  etabs.push({ id: "etab-a-sans", userId: "user-a" });
+  type WE = { id?: string; entreprise?: { userId?: string } };
+  const trouverEtablissement = async ({ where }: { where: WE }) =>
+    etablissements.find((x) => ok(where.id, x.id) && ok(where.entreprise?.userId, userDe(x.id))) ?? null;
+
   const prisma = {
+    etablissement: { findFirst: trouverEtablissement },
     piecePrestataire: { findFirst: trouverPrecedente },
     rapportVerification: { findFirst: trouver(rapports, (w) => w.etablissement?.entreprise?.userId) },
     prestataire: { findFirst: vi.fn(trouver(prestataires, (w) => w.etablissement?.entreprise?.userId)) },
@@ -79,6 +91,7 @@ const rapport = await import("./rapports/[id]/fichier/route");
 const analyse = await import("./analyses-legionelles/[id]/rapport/route");
 const piece = await import("./prestataires/[id]/pieces/[piece]/route");
 const precedente = await import("./prestataires/[id]/pieces-precedentes/[pieceId]/route");
+const photo = await import("./etablissements/[id]/photo/route");
 const { FichierIntrouvable, StockageNonConfigure } = await import("@/lib/storage");
 
 const req = {} as never;
@@ -88,6 +101,7 @@ const appel = {
   piece: (id: string, p: string) => piece.GET(req, { params: Promise.resolve({ id, piece: p }) }),
   precedente: (id: string, pieceId: string) =>
     precedente.GET(req, { params: Promise.resolve({ id, pieceId }) }),
+  photo: (id: string) => photo.GET(req, { params: Promise.resolve({ id }) }),
 };
 
 /** `notFound()` de Next lève une erreur porteuse d'un digest 404. */
@@ -111,6 +125,7 @@ describe("chaque route sert le fichier de son propriétaire, et seulement lui", 
     ["pièce URSSAF", () => appel.piece("pre-a", "urssaf"), "presta/etab-a/u.pdf", "application/pdf"],
     ["pièce Kbis", () => appel.piece("pre-a", "kbis"), "presta/etab-a/k.png", "image/png"],
     ["pièce précédente", () => appel.precedente("pre-a", "pp-a"), "presta/etab-a/u-ancienne.pdf", "application/pdf"],
+    ["photo de l'établissement", () => appel.photo("etab-a"), "photos/etab-a/p.jpg", "image/jpeg"],
   ])("%s à soi : 200, le contenu, le bon type", async (_n, f, cle, mime) => {
     const r = await f();
     expect(r.status).toBe(200);
@@ -123,6 +138,7 @@ describe("chaque route sert le fichier de son propriétaire, et seulement lui", 
     ["analyse", () => appel.analyse("ana-b")],
     ["pièce", () => appel.piece("pre-b", "urssaf")],
     ["pièce précédente", () => appel.precedente("pre-b", "pp-b")],
+    ["photo de l'établissement", () => appel.photo("etab-b")],
   ])("%s d'un autre utilisateur : 404, et le stockage n'est pas lu", async (_n, f) => {
     await refuse404(f);
     expect(h.get).not.toHaveBeenCalled();
@@ -138,6 +154,12 @@ describe("chaque route sert le fichier de son propriétaire, et seulement lui", 
     await refuse404(() => appel.analyse("inexistante"));
     await refuse404(() => appel.piece("inexistant", "urssaf"));
     await refuse404(() => appel.precedente("pre-a", "inexistante"));
+    await refuse404(() => appel.photo("inexistant"));
+  });
+
+  it("établissement à soi sans photo : 404, et le stockage n'est pas lu", async () => {
+    await refuse404(() => appel.photo("etab-a-sans"));
+    expect(h.get).not.toHaveBeenCalled();
   });
 
   it("à soi mais sans fichier : 404 ; type de pièce inconnu : 404", async () => {

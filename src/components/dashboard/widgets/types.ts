@@ -196,6 +196,9 @@ export type DashboardBundle = {
    * pas à partir dans le bundle du board.
    */
   illustrationHero: IllustrationBatiment;
+  /** L'adresse de la photo du lieu déposée par le dirigeant, ou `null` :
+   *  le hero montre alors l'illustration. */
+  photoHero: string | null;
   /** Les fiches actives de l'équipe (`compterEquipe`), pour la fiche du hero. */
   nbEquipe: number;
   etablissement: EtablissementLite;

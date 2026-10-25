@@ -1,7 +1,13 @@
 // @vitest-environment jsdom
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+// Les actions serveur de la photo ouvrent la base : hors sujet ici.
+vi.mock("@/lib/etablissements/photo", () => ({
+  deposerPhotoEtablissement: vi.fn(),
+  retirerPhotoEtablissement: vi.fn(),
+}));
 import { cleanup, render } from "@testing-library/react";
 import { ILLUSTRATIONS_BATIMENT } from "@/lib/etablissements/illustration";
 import { HeroEtablissement } from "./hero-batiments";
@@ -34,7 +40,7 @@ const zones = [
 function texte(e = etab) {
   return (
     render(
-      <HeroEtablissement etablissement={e} illustration="restaurant" nbEquipe={6} nbEquipements={7} zones={zones} />,
+      <HeroEtablissement etablissement={e} illustration="restaurant" photo={null} nbEquipe={6} nbEquipements={7} zones={zones} />,
     ).container.textContent ?? ""
   );
 }

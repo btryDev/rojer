@@ -508,6 +508,7 @@ export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
             <HeroEtablissement
               etablissement={etablissement}
               illustration={bundle.illustrationHero}
+              photo={bundle.photoHero}
               nbEquipe={bundle.nbEquipe}
               nbEquipements={bundle.equipementsEtablissement.length}
               zones={bundle.batiments}

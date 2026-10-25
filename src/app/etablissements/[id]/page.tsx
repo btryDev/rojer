@@ -322,6 +322,13 @@ export default async function EtablissementPage({
     // redisait ce que l'agrégat porte déjà ; la seconde légendait une plaque
     // qui n'existe plus.
     illustrationHero: illustrationBatiment(etab),
+    // L'adresse de la photo du lieu, versionnée par sa date de dépôt (un
+    // remplacement change l'adresse, le cache du navigateur ne ressert pas
+    // l'ancienne). La clé de stockage, elle, ne quitte pas le serveur.
+    photoHero:
+      etab.photoCle && etab.photoDeposeeLe
+        ? `/api/etablissements/${etab.id}/photo?v=${etab.photoDeposeeLe.getTime()}`
+        : null,
     nbEquipe,
     etablissement: {
       id: etab.id,

@@ -71,6 +71,16 @@ model Etablissement {
   codeNaf         String?
   effectifSurSite Int
 
+  // La photo du lieu, déposée par le dirigeant (2026-10-25) — affichée dans
+  // le hero du tableau de bord à la place de l'illustration. Clé du stockage
+  // (`clePhotoEtablissement`), libérée au remplacement, au retrait et à la
+  // suppression de l'établissement (`suppression/fichiers.ts`). Le fichier est
+  // ré-encodé côté navigateur avant envoi (taille bornée, métadonnées EXIF —
+  // dont la position GPS — retirées) et revalidé au serveur.
+  photoCle       String?
+  photoMime      String?
+  photoDeposeeLe DateTime?
+
   // Régimes — cf. ADR-004
   estEtablissementTravail Boolean            @default(true)
   estERP                  Boolean            @default(false)
