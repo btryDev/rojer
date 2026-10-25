@@ -113,7 +113,7 @@ export default async function EquipePage({
         {/* Les alertes et l'ajout, au-dessus de la liste qu'ils concernent :
             l'en-tête ne porte que la bascule de vue (2026-10-25). */}
         <BarreDeListe
-          alertes={
+          resume={
             <>
               {enRetard > 0 && (
                 <span
