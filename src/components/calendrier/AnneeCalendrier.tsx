@@ -471,12 +471,16 @@ function BarreAnnee({
           {/* Millésime et compte dans un même champ, posés sur la même
               ligne : empilés, la pilule devenait un bloc de 56 px de
               haut au milieu d'une barre — c'est ce qui le faisait flotter.
-              Le compte voyage avec le millésime, il ne s'en détache pas. */}
-          <p className="m-0 flex items-baseline gap-2.5 rounded-full bg-[color:var(--board-blue-pale)] px-[18px] py-[7px]">
-            <span className="board-titre text-[19px] leading-none tabular-nums tracking-[-0.02em] text-[color:var(--board-blue-ink)]">
+              Le compte voyage avec le millésime, il ne s'en détache pas.
+              Neutre (2026-10-25) : piste blanche et encre, comme le
+              sélecteur de lecture voisin — le bleu glacier ajoutait une
+              couleur à une barre posée au-dessus d'une règle dont chaque
+              couleur dit un état. */}
+          <p className="m-0 flex items-baseline gap-2.5 rounded-full bg-[color:var(--board-card)] px-[18px] py-[7px] shadow-[0_0_0_1px_rgba(13,18,36,.08)]">
+            <span className="board-titre text-[19px] leading-none tabular-nums tracking-[-0.02em] text-[color:var(--board-ink)]">
               {annee}
             </span>
-            <span className="font-mono text-[10px] font-semibold uppercase leading-none tracking-[0.1em] text-[color:var(--board-blue-ink)]">
+            <span className="font-mono text-[10px] font-semibold uppercase leading-none tracking-[0.1em] text-[color:var(--board-slate-mid)]">
               {libelleTotalAnnee(total, sansDate)}
             </span>
           </p>
@@ -514,7 +518,7 @@ function FlecheAnnee({
       onClick={onClick}
       disabled={!onClick}
       aria-label={`Afficher l'année ${cible}`}
-      className="flex size-8 flex-none items-center justify-center rounded-full border border-[color:rgba(10,10,10,.16)] text-[color:var(--board-ink)] transition-colors hover:bg-[color:var(--board-blue-pale)] hover:text-[color:var(--board-blue-ink)] disabled:cursor-default disabled:opacity-30 disabled:hover:bg-transparent"
+      className="flex size-8 flex-none items-center justify-center rounded-full border border-[color:rgba(10,10,10,.16)] text-[color:var(--board-ink)] transition-colors hover:bg-[color:var(--board-card)] disabled:cursor-default disabled:opacity-30 disabled:hover:bg-transparent"
     >
       <Chevron className="size-4" />
     </button>
