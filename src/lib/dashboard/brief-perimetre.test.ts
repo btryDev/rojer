@@ -98,9 +98,7 @@ const CALME: EntreeBrief = {
   verifsAPlanifier: 0,
   verifsEnRetardSansEcheance: 0,
   titresDusEnRetard: 0,
-  duerp: { existe: true, estAJour: true },
   recommandations: [],
-  nbRapports: 0,
 };
 
 describe("le compteur que le titre coiffe", () => {

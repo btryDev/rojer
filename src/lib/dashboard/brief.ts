@@ -1,6 +1,9 @@
-// Construction du « brief » — le bloc éditorial en tête du tableau de bord
-// (direction 4a du design Rojer) : une phrase qui dit où on en est, un
-// paragraphe qui la justifie, et les deux gestes à faire maintenant.
+// Construction du « brief » — le titre et la date en tête du tableau de bord
+// (direction 4a du design Rojer). ~~Une phrase qui dit où on en est, un
+// paragraphe qui la justifie, et les deux gestes à faire maintenant.~~
+// [2026-10-25 : le paragraphe et les gestes n'avaient plus de lecteur — le
+// hero ne porte plus que la date, le titre et la fiche de l'établissement ;
+// retirés avec la phrase du DUERP, que seul le paragraphe disait.]
 //
 // Tout est dérivé des compteurs réels de l'établissement. Aucune chaîne
 // n'est décorative : si un chiffre est à zéro, la clause disparaît plutôt
@@ -15,11 +18,7 @@
 // qui tirerait Prisma) pour rester testable en environnement `node`.
 
 import { FUSEAU_REFERENCE } from "@/lib/dates";
-import { EFFECTIF_MAJ_ANNUELLE } from "./duerp";
-import { mentionAConfirmer } from "@/lib/matching/effectif-entreprise";
 import type { FamilleEcheance } from "@/lib/calendrier/echeances";
-import { raccourcirLibelle } from "./libelles";
-import type { EtatDuerp } from "./duerp";
 import type { Recommandation } from "./recommandations";
 
 /**
@@ -32,25 +31,9 @@ export type VentilationBrief = {
   total: number;
 };
 
-export type DuerpBrief = {
-  existe: boolean;
-  /** Aucune échéance de mise à jour dépassée — faux tant qu'aucune version
-   *  n'a été validée. */
-  estAJour: boolean;
-  /**
-   * État détaillé (cf. `./duerp`). Optionnel le temps que tous les appelants
-   * le transmettent : sans lui, le brief se rabat sur une formulation vraie
-   * dans les deux cas plutôt que d'affirmer une ancienneté qu'il ne connaît
-   * pas.
-   */
-  etat?: EtatDuerp;
-};
-
 export type RecoBrief = {
   /** Aligné sur le moteur de reco — une seule source de vérité. */
   kind: Recommandation["kind"];
-  titre: string;
-  href: string;
 };
 
 export type EntreeBrief = {
@@ -78,27 +61,14 @@ export type EntreeBrief = {
    * ne presse » au-dessus d'une carte en retard (audit du 2026-10-12).
    */
   titresDusEnRetard: number;
-  duerp: DuerpBrief;
+  /** Les recommandations du moteur : la première décide du titre
+   *  d'amorçage d'un dossier calme (`TITRE_AMORCE`). */
   recommandations: RecoBrief[];
-  nbRapports: number;
-};
-
-export type GesteBrief = {
-  /** Sujet, raccourci pour tenir dans la pastille. */
-  tag: string;
-  /** Libellé complet, pour l'infobulle. */
-  tagComplet: string;
-  /** Verbe — ce qu'il y a à faire. */
-  label: string;
-  href: string;
-  ton: "neutre" | "alerte";
 };
 
 export type Brief = {
   datePill: string;
   titre: string;
-  paragraphe: string;
-  gestes: GesteBrief[];
 };
 
 const UNITES = [
@@ -134,26 +104,6 @@ function formaterDate(d: Date): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-/** Verbe d'action associé à chaque type de recommandation. */
-const VERBE: Record<RecoBrief["kind"], string> = {
-  verif_depassee: "Programmer l'intervention",
-  action_en_retard: "Replanifier",
-  verif_proche: "Planifier",
-  action_proche: "Suivre l'action",
-  duerp_a_jour: "Mettre à jour",
-  amorce_equipements: "Déclarer",
-  amorce_duerp: "Ouvrir",
-  amorce_rapport: "Déposer",
-  // Un verbe qui invite, pas qui somme : ceux-là nomment un écart, pas une
-  // échéance (ADR-024).
-  transmission_prestataire: "Compléter l'annuaire",
-  transmission_salarie: "Voir l'équipe",
-  // Le seul des trois qui puisse désigner une obligation non remplie et pas
-  // seulement une saisie manquante — d'où un verbe qui ne présume pas que le
-  // service existe déjà. « Compléter l'annuaire » l'aurait présumé.
-  transmission_tiers_obligatoire: "Déclarer le service",
-};
-
 /**
  * Le titre du dossier calme.
  *
@@ -179,11 +129,6 @@ const TITRE_AMORCE: Partial<Record<RecoBrief["kind"], string>> = {
   amorce_duerp: "Prochaine étape : votre DUERP",
   amorce_rapport: "Votre calendrier est en place",
 };
-
-const TONS_ALERTE: ReadonlySet<RecoBrief["kind"]> = new Set([
-  "verif_depassee",
-  "action_en_retard",
-]);
 
 /**
  * Parmi les retards, ceux qui n'ont pas d'échéance connue — la part que le
@@ -238,7 +183,9 @@ function retardsSansDate(e: EntreeBrief): number {
  * échéances dépassées » aurait recopié mot pour mot, à soixante pixels d'écart,
  * ce que « DÉPASSÉES · 11 » affiche déjà. « ont dépassé leur date » ajoute ce
  * que le titre avait justement faux — de quelle date il s'agit — et parle la
- * même langue que le registre d'états.
+ * même langue que le registre d'états. [2026-10-25 : le relevé n'est plus
+ * affiché, et le titre ne l'est plus quand des échéances sont dépassées — il
+ * reste lu par les lecteurs d'écran ; le verbe garde sa raison.]
  *
  * La garde qui tient la mesure est dans `brief-perimetre.test.ts` : elle fait
  * compter une occurrence de quatre mois et vérifie qu'elle entre bien dans le
@@ -297,155 +244,7 @@ function construireTitre(e: EntreeBrief): string {
   return TITRE_CALME;
 }
 
-/**
- * Comment se nomme le retard de chaque famille, au singulier et au pluriel.
- *
- * Le paragraphe ne peut pas se contenter du total : « il reste 25 échéances »
- * ne dit pas s'il s'agit de contrôles à faire venir ou de papiers à
- * redemander, et ces deux-là ne se règlent pas du tout de la même façon.
- * Les libellés d'interface (`LABEL_FAMILLE`) vivent dans un composant, que
- * ce module ne peut pas importer sans tirer React : ce sont les mêmes mots,
- * accordés pour une phrase.
- */
-const NOM_RETARD: Record<FamilleEcheance, [string, string]> = {
-  controle: ["vérification dépassée", "vérifications dépassées"],
-  travaux: ["correction en retard", "corrections en retard"],
-  operations: ["opération en retard", "opérations en retard"],
-  papiers: ["document à renouveler", "documents à renouveler"],
-  // La famille ne portait aucune ligne quand ces mots ont été écrits : ils
-  // n'étaient jamais lus. Elle en porte depuis l'ADR-023 — les titres des
-  // salariés — et la phrase doit se tenir.
-  personnel: ["titre de salarié dépassé", "titres de salariés dépassés"],
-};
-
-/** Ordre de lecture du paragraphe — celui du calendrier. */
-const ORDRE_FAMILLES: FamilleEcheance[] = [
-  "controle",
-  "travaux",
-  "operations",
-  "papiers",
-  "personnel",
-];
-
-/**
- * Ce que le brief a le droit de dire du DUERP.
- *
- * Trois situations, trois phrases — et surtout pas une seule. Le brief
- * annonçait « Votre DUERP a plus de douze mois » à un dirigeant qui venait
- * de l'ouvrir (aucune version validée ⇒ âge inconnu ⇒ « pas à jour ») et le
- * répétait à une entreprise de quatre salariés, que l'art. R. 4121-2 ne
- * soumet pas à la mise à jour annuelle.
- *
- * Sans `etat`, on ne peut pas trancher : la phrase de repli est alors la
- * seule vraie dans tous les cas — « pas de version validée de moins de douze
- * mois » l'est aussi bien pour un DUERP sans version que pour une version
- * périmée.
- */
-// Exportée pour `maj-a-confirmer.test.ts`.
-export function phraseDuerp(duerp: DuerpBrief): string | null {
-  if (!duerp.existe) return "Votre DUERP n'est pas encore ouvert.";
-  if (duerp.estAJour) return null;
-
-  const etat = duerp.etat;
-  if (!etat) return "Votre DUERP n'a pas de version validée de moins de douze mois.";
-  if (etat.jamaisValide) {
-    return "Aucune version de votre DUERP n'a encore été validée.";
-  }
-  // Soumis par la seule prudence (C37) : le fait d'ancienneté reste vrai, la
-  // mise à jour annuelle est dite à confirmer.
-  if (etat.majAnnuelleAConfirmer) {
-    return `La dernière version de votre DUERP a plus de douze mois ; mise à jour annuelle ${mentionAConfirmer(EFFECTIF_MAJ_ANNUELLE)}.`;
-  }
-  return "La dernière version de votre DUERP a plus de douze mois.";
-}
-
-function construireParagraphe(e: EntreeBrief): string {
-  const { duerp } = e;
-
-  const acquis: string[] = [];
-  // « À jour » n'est affirmé que sur une version réellement récente : pour
-  // une entreprise non soumise à la mise à jour annuelle, une version de
-  // quatre cents ans ne serait pas un retard, mais l'annoncer « à jour »
-  // dirait davantage que ce qu'on sait.
-  const versionRecente = duerp.etat
-    ? duerp.etat.versionRecente
-    : duerp.estAJour;
-  if (duerp.estAJour && versionRecente) acquis.push("votre DUERP est à jour");
-  if (e.nbRapports > 0) {
-    acquis.push(
-      `le registre compte ${e.nbRapports} rapport${e.nbRapports > 1 ? "s" : ""}`,
-    );
-  }
-
-  const restes: string[] = [];
-  for (const famille of ORDRE_FAMILLES) {
-    let n = e.retards.parFamille[famille];
-    if (n === 0) continue;
-    // Les vérifications sans échéance connue ne sont pas « dépassées » : leur
-    // date n'est qu'une date de génération. Même partage que le titre
-    // (contrôle visuel en production, 2026-09-14). Elles vivent dans les
-    // contrôles — un titre de salarié naît avec la date de sa pièce.
-    if (famille === "controle") {
-      const sansEcheance = Math.min(e.verifsEnRetardSansEcheance, n);
-      n -= sansEcheance;
-      if (n > 0) {
-        restes.push(`${n} ${n > 1 ? NOM_RETARD.controle[1] : NOM_RETARD.controle[0]}`);
-      }
-      if (sansEcheance > 0) {
-        restes.push(
-          `${sansEcheance} vérification${sansEcheance > 1 ? "s" : ""} due${sansEcheance > 1 ? "s" : ""} sans date connue`,
-        );
-      }
-      continue;
-    }
-    const [singulier, pluriel] = NOM_RETARD[famille];
-    restes.push(`${n} ${n > 1 ? pluriel : singulier}`);
-  }
-  if (e.verifsAPlanifier > 0) {
-    restes.push(
-      // « À planifier », le mot du statut partout ailleurs : « à programmer »
-      // disait la même chose avec un autre mot (relecture des libellés).
-      `${e.verifsAPlanifier} vérification${e.verifsAPlanifier > 1 ? "s" : ""} à planifier`,
-    );
-  }
-
-  const phrases: string[] = [];
-
-  const duerpPhrase = phraseDuerp(duerp);
-  if (duerpPhrase) phrases.push(duerpPhrase);
-
-  if (acquis.length > 0) {
-    const t = acquis.join(" et ");
-    phrases.push(t.charAt(0).toUpperCase() + t.slice(1) + ".");
-  }
-
-  if (restes.length > 0) {
-    phrases.push(`Il reste ${enumerer(restes)}.`);
-  } else if (e.duerp.existe) {
-    // Dire explicitement que rien ne traîne : sur un dossier sain, le
-    // silence se lit comme un oubli de l'outil plutôt que comme une
-    // bonne nouvelle.
-    phrases.push("Rien n'est en retard sur votre dossier.");
-  }
-
-  return phrases.join(" ");
-}
-
-/** « a, b et c » — énumération française. */
-function enumerer(items: string[]): string {
-  if (items.length === 1) return items[0];
-  return `${items.slice(0, -1).join(", ")} et ${items[items.length - 1]}`;
-}
-
 export function construireBrief(e: EntreeBrief): Brief {
-  const gestes: GesteBrief[] = e.recommandations.slice(0, 2).map((r) => ({
-    tag: raccourcirLibelle(r.titre),
-    tagComplet: r.titre,
-    label: VERBE[r.kind],
-    href: r.href,
-    ton: TONS_ALERTE.has(r.kind) ? "alerte" : "neutre",
-  }));
-
   let titre = construireTitre(e);
   const premiere = e.recommandations[0];
   if (titre === TITRE_CALME && premiere) {
@@ -455,7 +254,5 @@ export function construireBrief(e: EntreeBrief): Brief {
   return {
     datePill: formaterDate(e.aujourdhui),
     titre,
-    paragraphe: construireParagraphe(e),
-    gestes,
   };
 }

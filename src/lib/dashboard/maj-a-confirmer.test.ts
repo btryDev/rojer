@@ -12,7 +12,6 @@ const { mentionAConfirmer } = await import(
 const { ligneDuerp } = await import("@/lib/pdf/checklist-controle");
 const { formaterEtatDuerp } = await import("@/lib/mcp/tools");
 const { genererRecommandations } = await import("./recommandations");
-const { phraseDuerp } = await import("./brief");
 
 /**
  * LA MISE À JOUR ANNUELLE RETENUE PAR PRUDENCE SE DIT « À CONFIRMER » PARTOUT
@@ -90,11 +89,8 @@ describe("chaque sortie le dit « à confirmer », dans les mêmes mots", () => 
     expect(r?.sousTitre).toContain(MENTION);
   });
 
-  it("brief du tableau de bord", () => {
-    expect(phraseDuerp({ existe: true, estAJour: false, etat })).toContain(
-      MENTION,
-    );
-  });
+  // ~~« brief du tableau de bord »~~ [2026-10-25 : le paragraphe du brief, seul
+  // à dire l'état du DUERP, est retiré — plus de sortie à garder ici.]
 
   it("et rien de tout cela quand l'entreprise établit le seuil", () => {
     const franc = evaluerEtatDuerp(

@@ -426,14 +426,10 @@ function CarteTache({
 }
 
 export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
-  const { aujourdhui, dashboard, echeancesEtablissement, nbRapports } = bundle;
-  const { duerp, recommandations } = dashboard;
-  // Un seul agrégat pour le titre comme pour les relevés chiffrés — et il
-  // porte sur l'**établissement**, filtre bâtiment ignoré. Le hero dit l'état
-  // du site : sa plaque de droite liste tous les volumes avec la charge de
-  // chacun, et des relevés filtrés annonçaient « Dépassées 3 » à côté de
-  // cartes qui en totalisent sept. Le filtre gouverne ce qui est sous le
-  // hero. Cf. `DashboardBundle.echeancesEtablissement`.
+  const { aujourdhui, dashboard, echeancesEtablissement } = bundle;
+  // L'agrégat du titre porte sur l'**établissement**, filtre de zone ignoré :
+  // le hero parle du site ; le filtre gouverne ce qui est sous le hero.
+  // Cf. `DashboardBundle.echeancesEtablissement`.
   const { retards, sous30j } = echeancesEtablissement;
 
   const brief = construireBrief({
@@ -444,20 +440,7 @@ export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
     verifsEnRetardSansEcheance: echeancesEtablissement.verifsEnRetardSansEcheance,
     // Nommés, pas comptés (ADR-043 § 3 (a)) : lus sur les comptes des cartes.
     titresDusEnRetard: dashboard.titresDusEnRetard,
-    // `etat` transmis : sans lui le brief se rabattait sur sa formulation de
-    // repli et n'annonçait jamais « aucune version validée » — il disait
-    // « votre DUERP a plus de douze mois » à quelqu'un qui venait de l'ouvrir.
-    duerp: {
-      existe: duerp.existe,
-      estAJour: duerp.estAJour,
-      etat: duerp.etat,
-    },
-    recommandations: recommandations.map((r) => ({
-      kind: r.kind,
-      titre: r.titre,
-      href: r.href,
-    })),
-    nbRapports,
+    recommandations: dashboard.recommandations.map((r) => ({ kind: r.kind })),
   });
 
   // Le titre est celui de `construireBrief`, dérivé des **compteurs** de
