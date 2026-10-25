@@ -3,47 +3,72 @@
 // **Ce qu'il dit, et ce qu'il ne dit pas.** L'application connaît l'activité
 // déclarée (type ERP, code NAF) ; elle ne connaît rien du bâti — ni hauteur,
 // ni nombre d'étages, ni forme. `Batiment` (ADR-019) ne porte qu'un nom, un
-// complément d'adresse et un rang. Le dessin ne fait donc varier que l'usage
-// du rez-de-chaussée, jamais le gabarit : une boucherie au pied d'un immeuble
-// de six étages est un cas courant, et un dessin qui changerait la hauteur
-// affirmerait ce qu'on ignore.
+// complément d'adresse et un rang. Le dessin est donc un **emblème du genre de
+// lieu**, jamais un portrait : il rappelle qu'on parle d'un restaurant ou d'un
+// hôtel, il ne prétend pas montrer celui-ci.
 //
-// C'est une illustration, pas un plan : elle rappelle de quel genre de lieu
-// il s'agit, elle ne le décrit pas.
+// [2026-10-25] Six planches au lieu de deux (« commerce », « neutre ») : le
+// hero du tableau de bord s'est construit autour du dessin (décision de la
+// propriétaire), et une devanture unique pour un restaurant et un magasin,
+// un même cube pour un bureau et un hôtel, ne disaient plus le genre de lieu.
+//
+// Module **serveur** : la reconnaissance par code NAF lit les référentiels
+// sectoriels, qui n'ont pas à partir dans le bundle du board. Le choix arrive
+// au client tout fait (`DashboardBundle.illustrationHero`).
 
-import { typesErpDe } from "./types-erp-affiches";
+import { trouverReferentielParNaf } from "@/lib/referentiels";
+import { typesErpDe } from "@/lib/matching/types-erp";
+import { nafEffectif } from "@/lib/perimetre/secteur";
 
-/** Les planches disponibles dans `public/illustrations/`. */
-export type IllustrationBatiment = "neutre" | "commerce";
+/** Les planches de `public/illustrations/batiments/`, une par fichier. */
+export const ILLUSTRATIONS_BATIMENT = [
+  "restaurant",
+  "magasin",
+  "bureaux",
+  "hotel",
+  "salle-sport",
+  "local",
+] as const;
+
+export type IllustrationBatiment = (typeof ILLUSTRATIONS_BATIMENT)[number];
 
 /**
- * Types ERP dont l'activité se tient derrière une devanture — les deux seuls
- * de la nomenclature qui correspondent aux secteurs couverts par le DUERP
- * (commerce de détail, restauration).
+ * Les types ERP qui ont leur planche, **dans l'ordre où ils l'emportent**
+ * quand un établissement en porte plusieurs (ADR-045).
  *
- * - `M` — magasins de vente, centres commerciaux
- * - `N` — restaurants et débits de boissons
- *
- * Le type `W` (bureaux) n'y est pas : le troisième secteur couvert n'a pas de
- * devanture, il retombe sur la planche neutre.
+ * Un ordre fixe, et non celui de la saisie : le dessin ne doit pas changer
+ * parce que le dirigeant a coché les types dans un autre ordre. La devanture
+ * passe en tête — un hôtel qui exploite un restaurant se voit d'abord depuis
+ * la rue par sa salle —, puis ce qui reçoit le public, puis le bureau.
  */
-const TYPES_ERP_DEVANTURE = new Set(["M", "N"]);
+const PLANCHE_PAR_TYPE_ERP: ReadonlyArray<readonly [string, IllustrationBatiment]> = [
+  ["N", "restaurant"],
+  ["M", "magasin"],
+  ["O", "hotel"],
+  ["X", "salle-sport"],
+  ["W", "bureaux"],
+];
 
 /**
- * Divisions NAF de repli, quand aucun type ERP n'est déclaré — un
- * établissement soumis au seul régime « travail » n'en a pas.
- *
- * - `47` — commerce de détail
- * - `56` — restauration
+ * Le référentiel sectoriel du DUERP que désigne le code NAF, quand aucun type
+ * ERP n'a de planche. On réutilise sa table de codes plutôt qu'une liste de
+ * divisions recopiée ici : le jour où le référentiel « bureau » couvre un code
+ * de plus, le dessin le suit.
  */
-const DIVISIONS_NAF_DEVANTURE = new Set(["47", "56"]);
+const PLANCHE_PAR_SECTEUR: Readonly<Record<string, IllustrationBatiment>> = {
+  restauration: "restaurant",
+  commerce: "magasin",
+  bureau: "bureaux",
+};
 
 /**
- * Choisit la planche à afficher. Déterministe, sans repli implicite : tout ce
- * qui n'est pas explicitement une devanture reçoit le dessin neutre.
+ * Choisit la planche à afficher. Déterministe : le type ERP déclaré d'abord
+ * (il qualifie le local reçu du public, là où le code NAF ne dit que
+ * l'activité de l'entreprise), puis le secteur du code NAF, puis le local
+ * générique.
  *
  * `codeNaf` est celui de l'établissement s'il en a un, sinon celui de
- * l'entreprise — l'établissement ne renseigne le sien que lorsqu'il diffère.
+ * l'entreprise (`nafEffectif`).
  */
 export function illustrationBatiment(etab: {
   typeErp: string | null;
@@ -51,29 +76,12 @@ export function illustrationBatiment(etab: {
   codeNaf: string | null;
   entreprise: { codeNaf: string };
 }): IllustrationBatiment {
-  // Le type ERP tranche seul dès qu'il est déclaré : il qualifie le local
-  // reçu du public, là où le code NAF ne dit que l'activité de l'entreprise.
-  // Sans cette priorité, un établissement de type W dont l'entreprise porte
-  // un NAF de commerce recevait la devanture.
-  // ADR-045 : sur l'ensemble des types — un hôtel qui exploite un restaurant
-  // a une devanture.
-  const types = typesErpDe(etab);
-  if (types.length > 0) {
-    return types.some((t) => TYPES_ERP_DEVANTURE.has(t)) ? "commerce" : "neutre";
-  }
+  const types = new Set(typesErpDe(etab));
+  const parType = PLANCHE_PAR_TYPE_ERP.find(([t]) => types.has(t));
+  if (parType) return parType[1];
 
-  const naf = etab.codeNaf ?? etab.entreprise.codeNaf;
-  // Les codes NAF s'écrivent « 47.11Z » ou « 4711Z » selon la saisie : on ne
-  // lit que les deux premiers chiffres, qui portent la division.
-  const division = naf.replace(/\D/g, "").slice(0, 2);
-  if (DIVISIONS_NAF_DEVANTURE.has(division)) return "commerce";
-
-  return "neutre";
-}
-
-/** Le chemin public de la planche. */
-export function sourceIllustrationBatiment(
-  illustration: IllustrationBatiment,
-): string {
-  return `/illustrations/batiment-${illustration}.png`;
+  const secteur = trouverReferentielParNaf(
+    nafEffectif({ etablissement: etab.codeNaf, entreprise: etab.entreprise.codeNaf }),
+  );
+  return (secteur && PLANCHE_PAR_SECTEUR[secteur.id]) ?? "local";
 }

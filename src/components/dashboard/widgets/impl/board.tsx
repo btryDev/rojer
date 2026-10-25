@@ -38,11 +38,7 @@ import {
   LIBELLE_ETAT_COURT,
   LIBELLE_SANS_ECHEANCE,
 } from "@/lib/calendrier/etats";
-import {
-  illustrationBatiment,
-  sourceIllustrationBatiment,
-} from "@/lib/etablissements/illustration";
-import { HeroBatiments } from "./hero-batiments";
+import { Enseigne, HeroBatiments } from "./hero-batiments";
 import type { Recommandation } from "@/lib/dashboard/recommandations";
 import { occupePlaceReservee } from "@/lib/dashboard/place-reservee";
 import {
@@ -572,30 +568,31 @@ export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
   const totalUrgent = retards.total;
 
   const { etablissement, batiments } = bundle;
-  const srcIllustration = sourceIllustrationBatiment(
-    illustrationBatiment(etablissement),
-  );
 
   return (
     <>
-      {/* Fonds inversés : le hero porte le ciel en bandeau pleine largeur,
-          sans rayon. Le bandeau s'arrête après les bâtiments — les widgets
-          vivent sur le canvas quasi blanc.
+      {/* Le fond pointillé de la table à dessin (`.fond-pointille`) et non
+          plus le bleu ciel : la couleur du corps de page est aux états, et le
+          bandeau bleu était le dernier grand aplat qui ne disait rien.
 
-          La gouttière est celle du board (`--board-gutter`) et non plus
-          46 px fixes : au-delà de 1560 px de viewport elle s'ouvre jusqu'à
-          140 px, et le hero, resté à 46, débordait des cartes de widgets
-          d'une centaine de pixels de chaque côté. Sur un grand écran, rien
-          ne s'alignait verticalement d'un bloc à l'autre. */}
-      {/* `.sous-la-gelule` : le brief remonte sous la gélule de compte, que
+          La gouttière est celle du board (`--board-gutter`) : au-delà de
+          1560 px de viewport elle s'ouvre jusqu'à 140 px, et un hero resté à
+          46 px débordait des cartes de widgets de chaque côté.
+
+          `.sous-la-gelule` : le brief remonte sous la gélule de compte, que
           son fond a le droit de porter. */}
-      <div className="sous-la-gelule bg-[color:var(--board-sky)] px-[var(--board-gutter)] pb-[52px] pt-[56px]">
-        <div className="grid items-center gap-x-12 gap-y-10 lg:grid-cols-2">
+      <div className="sous-la-gelule fond-pointille border-b border-[color:rgba(13,18,36,.06)] px-[var(--board-gutter)] pb-[48px] pt-[56px]">
+        <div className="grid items-center gap-x-10 gap-y-10 lg:grid-cols-[minmax(0,1fr)_auto]">
           {/* Rentré de la gouttière : collé au bord, le titre partait du même
               trait que les cartes de widgets du dessous et le hero perdait
               son statut de bandeau — c'est une bannière, pas une carte. */}
           <div className="lg:pl-8 xl:pl-12">
-            <p className="board-eyebrow m-0 mb-3 text-[color:var(--board-slate-ink)]">
+            <Enseigne
+              nom={etablissement.raisonDisplay}
+              // Pas encore de logo en base — cf. la note dans `Enseigne`.
+              logoUrl={null}
+            />
+            <p className="board-eyebrow m-0 mb-3 mt-6 text-[color:var(--board-slate-ink)]">
               {brief.datePill}
             </p>
 
@@ -612,15 +609,15 @@ export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
               {titre}
             </h1>
 
-            {/* Les relevés. Séparateurs en filet plutôt qu'en gouttière :
-                trois chiffres alignés sans trait se lisent comme un seul
-                nombre. */}
-            <div className="mt-7 flex items-stretch">
-              <div className="pr-[26px]">
+            {/* Les relevés, sur une carte blanche posée sur le pointillé.
+                Séparateurs en filet plutôt qu'en gouttière : trois chiffres
+                alignés sans trait se lisent comme un seul nombre. */}
+            <div className="mt-7 inline-flex items-stretch rounded-[20px] bg-[color:var(--board-card)] px-[22px] py-4 ring-1 ring-[color:rgba(13,18,36,.08)]">
+              <div className="pr-[22px]">
                 {/* Le mot vient de la table d'états (`LIBELLE_ETAT_COURT`),
-                    comme celui de la pastille de zone à 200 px d'ici et celui
-                    du bandeau du parc à un clic : les trois écrivaient trois
-                    mots différents pour cet état-là. */}
+                    comme celui de l'étiquette de zone et celui du bandeau du
+                    parc à un clic : les trois écrivaient trois mots
+                    différents pour cet état-là. */}
                 <Releve
                   valeur={totalUrgent}
                   libelle={LIBELLE_ETAT_COURT.enRetard}
@@ -631,8 +628,8 @@ export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
                   precision={brief.precisionReleveRetard}
                 />
               </div>
-              <div className="w-px bg-[color:rgba(10,10,10,.12)]" />
-              <div className="px-[26px]">
+              <div className="w-px bg-[color:rgba(10,10,10,.1)]" />
+              <div className="px-[22px]">
                 {/* Toutes familles, comme le relevé d'à côté : ce
                     compteur-ci ne comptait que les vérifications. */}
                 <Releve
@@ -640,10 +637,10 @@ export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
                   libelle={LIBELLE_ETAT_COURT.proche}
                 />
               </div>
-              <div className="w-px bg-[color:rgba(10,10,10,.12)]" />
-              <div className="pl-[26px]">
+              <div className="w-px bg-[color:rgba(10,10,10,.1)]" />
+              <div className="pl-[22px]">
                 {/* Le parc entier, comme les deux relevés d'à côté et
-                    comme les cartes de la plaque : trois chiffres alignés
+                    comme les étiquettes des zones : trois chiffres alignés
                     sous un même titre ne peuvent pas avoir trois portées. */}
                 <Releve
                   valeur={bundle.equipementsEtablissement.length}
@@ -664,28 +661,17 @@ export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
             </p>
           </div>
 
-          {/* Les bâtiments déclarés (ADR-019) — un état, pas une commande :
-              le filtre reste au sélecteur posé sous le hero, qui porte sa
-              porte de sortie.
-
-              La plaque occupe toute sa colonne. Calée à droite sur sa seule
-              largeur de contenu, elle se serrait contre le bord de l'écran
-              pendant que la colonne de gauche gardait son air : les deux
-              moitiés du hero ne pesaient pas le même poids. */}
-          <div className="w-full">
-            <HeroBatiments
-              nomEtablissement={etablissement.raisonDisplay}
-              // Pas encore de logo en base — cf. la note dans `Enseigne`.
-              logoUrl={null}
-              batiments={batiments}
-              srcIllustration={srcIllustration}
-              legende={bundle.perimetreHero.plaqueZones}
-            />
-          </div>
+          {/* Le bâtiment et ses zones (ADR-019, ADR-029) — un état, pas une
+              commande : le filtre reste au sélecteur posé sous le hero, qui
+              porte sa porte de sortie. */}
+          <HeroBatiments
+            batiments={batiments}
+            illustration={bundle.illustrationHero}
+            legende={bundle.perimetreHero.plaqueZones}
+          />
         </div>
       </div>
-
-      </>
+    </>
   );
 }
 

@@ -46,6 +46,7 @@ import { instantDuRendu } from "@/lib/dates/instant-du-rendu";
 import { enumererFamilles, libellePorteur } from "@/lib/calendrier/labels";
 import { libelleEtatCourtCapitale } from "@/lib/calendrier/etats";
 import { echeancesDuTableauDeBord } from "@/lib/calendrier/prochaine-echeance";
+import { illustrationBatiment } from "@/lib/etablissements/illustration";
 
 export default async function EtablissementPage({
   params,
@@ -334,6 +335,7 @@ export default async function EtablissementPage({
         libelleReleveComplet: libelleEtatCourtCapitale("enRetard"),
       }),
     },
+    illustrationHero: illustrationBatiment(etab),
     etablissement: {
       id: etab.id,
       raisonDisplay: etab.raisonDisplay,

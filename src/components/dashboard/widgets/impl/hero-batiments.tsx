@@ -1,42 +1,42 @@
-// Le bloc « lieu » du hero — l'identité de l'établissement et ses zones.
+// Le bâtiment du hero et ses zones, posées autour en étiquettes.
 //
-// **Ce que ce bloc est, et n'est pas.** Une plaque unique : en tête l'enseigne
-// (logo, nom, nombre de zones), dessous UN dessin — l'établissement est un
-// bâtiment (2026-10-17) — et la liste de ses zones avec leur parc et leur
-// charge. C'est un **état**, pas une commande : rien ne s'y clique pour
-// filtrer. Le filtre par zone reste piloté par le sélecteur posé sous le
-// hero, qui porte son propre « Tout l'établissement ».
+// **Ce que ce bloc est, et n'est pas.** Un **état**, pas une commande : rien
+// ne s'y clique pour filtrer. Le filtre par zone reste piloté par le
+// sélecteur posé sous le hero, qui porte son propre « Tout l'établissement ».
 //
 // **Ce que le dessin dit, et ne dit pas.** L'application ne sait rien du bâti
-// — ni hauteur, ni étages, ni forme. Le dessin est donc décoratif ; ce qui
-// varie d'une zone à l'autre est ce qu'on sait vraiment : le nom, le parc et
-// la charge.
+// — ni hauteur, ni étages, ni forme, ni où se trouve la cuisine. Le dessin est
+// l'emblème du genre de lieu (`illustrationBatiment`), et les étiquettes
+// s'accrochent à des points fixes de chaque planche, les mêmes quel que soit
+// le dossier : elles disent qu'une zone existe et ce qu'elle porte, jamais
+// où elle est. [2026-10-25] Un plan du lieu avait été proposé et refusé pour
+// cette raison — il ne peut pas correspondre aux lieux du client.
 
 import Image from "next/image";
+import { Check } from "lucide-react";
+import type { CSSProperties } from "react";
 import type { BatimentCharge } from "@/lib/batiments/queries";
-import { etatCharge, libelleCharge } from "@/lib/batiments/etat-charge";
+import { etatCharge, libelleCharge, type EtatCharge } from "@/lib/batiments/etat-charge";
 import { nomDeZone } from "@/lib/batiments/nom-zone";
+import type { IllustrationBatiment } from "@/lib/etablissements/illustration";
 
-type Props = {
-  /** Le nom d'usage de l'établissement. L'adresse ne figure pas ici : elle
-   *  est celle de l'établissement, et au-dessus de la liste des zones
-   *  elle se lirait comme celle de l'une d'elles. */
-  nomEtablissement: string;
-  /** Le logo de l'entreprise, quand elle en a déposé un. `null` → monogramme.
-   *  Cf. la note d'implémentation sous `Enseigne`. */
-  logoUrl: string | null;
-  batiments: BatimentCharge[];
-  /** Le dessin de l'établissement. */
-  srcIllustration: string;
-  /**
-   * Ce que les pastilles comptent, et ce qu'elles laissent au relevé d'à côté.
-   *
-   * Elle arrive toute faite depuis le serveur (`DashboardBundle.perimetreHero`)
-   * et non calculée ici : sa dérivation passe par le référentiel des
-   * obligations, qui n'a rien à faire dans un composant client — et la plaque
-   * n'a pas à savoir comment on obtient une phrase, seulement à la porter.
-   */
-  legende: string;
+/**
+ * Les planches de `public/illustrations/batiments/` : leurs dimensions, et
+ * trois points d'accroche en pourcentage de l'image — un sur le toit, un sur
+ * la façade, un sur le côté. Trois parce qu'un établissement n'a jamais plus
+ * de trois zones (ADR-029). Un `Record` sur le type fermé : une planche
+ * ajoutée sans ses accroches ne compile pas.
+ */
+export const PLANCHES: Record<
+  IllustrationBatiment,
+  { largeur: number; hauteur: number; ancres: readonly (readonly [number, number])[] }
+> = {
+  restaurant: { largeur: 507, hauteur: 384, ancres: [[42, 22], [20, 46], [78, 50]] },
+  magasin: { largeur: 461, hauteur: 352, ancres: [[55, 24], [25, 55], [82, 62]] },
+  bureaux: { largeur: 507, hauteur: 413, ancres: [[45, 18], [24, 42], [88, 48]] },
+  hotel: { largeur: 421, hauteur: 476, ancres: [[40, 14], [30, 40], [78, 50]] },
+  "salle-sport": { largeur: 614, hauteur: 376, ancres: [[55, 22], [26, 44], [80, 56]] },
+  local: { largeur: 469, hauteur: 354, ancres: [[55, 28], [24, 56], [86, 62]] },
 };
 
 /**
@@ -53,7 +53,7 @@ export function monogramme(nom: string): string {
   return (mots[0][0] + mots[1][0]).toUpperCase();
 }
 
-/* — L'enseigne : logo, nom, nombre de zones. ─────────────────────
+/* — L'enseigne : logo, nom. ─────────────────────────────────────
  *
  * NOTE D'IMPLÉMENTATION — le logo n'est pas encore persisté. `Entreprise`
  * n'a pas de colonne pour lui et aucun écran ne permet d'en déposer un ;
@@ -61,15 +61,7 @@ export function monogramme(nom: string): string {
  * L'emplacement existe pour que le jour où le champ arrive, seule la valeur
  * change — pas la composition.
  */
-function Enseigne({
-  nom,
-  logoUrl,
-  nbZones,
-}: {
-  nom: string;
-  logoUrl: string | null;
-  nbZones: number;
-}) {
+export function Enseigne({ nom, logoUrl }: { nom: string; logoUrl: string | null }) {
   return (
     <div className="flex min-w-0 items-center gap-3">
       {logoUrl != null ? (
@@ -77,154 +69,172 @@ function Enseigne({
           src={logoUrl}
           alt=""
           aria-hidden
-          width={88}
-          height={88}
-          className="size-11 flex-none rounded-[13px] object-contain"
+          width={80}
+          height={80}
+          className="size-10 flex-none rounded-[12px] object-contain"
         />
       ) : (
         <span
           aria-hidden
-          className="flex size-11 flex-none items-center justify-center rounded-[13px] bg-[color:var(--board-ink)] indent-[0.06em] font-mono text-[13px] font-medium leading-none tracking-[0.06em] text-white"
+          className="flex size-10 flex-none items-center justify-center rounded-[12px] bg-[color:var(--board-ink)] indent-[0.06em] font-mono text-[12px] font-medium leading-none tracking-[0.06em] text-white"
         >
           {monogramme(nom)}
         </span>
       )}
-
-      <div className="min-w-0">
-        <p className="m-0 truncate text-[17px] font-semibold tracking-[-0.02em] text-[color:var(--board-ink)]">
-          {nom}
-        </p>
-        <p className="board-eyebrow m-0 mt-1 text-[color:var(--board-slate-soft)]">
-          {nbZones} zone{nbZones > 1 ? "s" : ""}
-        </p>
-      </div>
+      <p className="m-0 min-w-0 truncate text-[16px] font-semibold tracking-[-0.02em] text-[color:var(--board-ink)]">
+        {nom}
+      </p>
     </div>
   );
 }
 
 /**
- * La pastille de charge — trois états, jamais deux.
+ * Le rond d'état de l'étiquette — trois états, jamais deux.
  *
  * La règle est dans `lib/batiments/etat-charge.ts`, avec la raison : une zone
  * sans équipement déclaré n'est ni à jour ni en retard, elle est **sans objet**,
- * et l'annoncer « à jour » était une affirmation fausse sur un écran de
+ * et l'annoncer « à jour » serait une affirmation fausse sur un écran de
  * conformité. Le composant ne rejuge rien, il rend l'état qu'on lui donne.
  */
-function PastilleCharge({
-  nbEquipements,
-  nbEnRetard,
-}: {
-  nbEquipements: number;
-  nbEnRetard: number;
-}) {
-  const etat = etatCharge({ nbEquipements, nbEnRetard });
-
-  if (etat.nature === "sansObjet") {
-    // Ardoise, et non le blanc de « À jour » : la pastille claire se lit comme
-    // un feu vert au milieu des autres zones. Ici il n'y a pas de feu — il
-    // n'y a rien à quoi l'allumer.
-    return (
-      <span className="inline-flex items-center rounded-full bg-[color:var(--board-slate-pale)] px-2.5 py-1 text-[11px] font-medium text-[color:var(--board-slate-mid)]">
-        {libelleCharge(etat)}
-      </span>
-    );
+function RondEtat({ etat }: { etat: EtatCharge }) {
+  const base =
+    "flex size-[18px] flex-none items-center justify-center rounded-full text-[10px] font-bold tabular-nums";
+  switch (etat.nature) {
+    case "sansObjet":
+      return (
+        <span aria-hidden className={base + " bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-mid)]"}>
+          –
+        </span>
+      );
+    case "aJour":
+      return (
+        <span aria-hidden className={base + " bg-[color:var(--board-green)] text-[color:var(--board-ink)]"}>
+          <Check className="size-3" strokeWidth={3} />
+        </span>
+      );
+    case "enRetard":
+      // `--board-signal-on` (noir) et non l'encre rouge : sur le rose plein,
+      // seule l'encre noire tient l'AA à cette taille.
+      return (
+        <span aria-hidden className={base + " bg-[color:var(--board-signal)] text-[color:var(--board-signal-on)]"}>
+          {etat.nbEnRetard}
+        </span>
+      );
   }
-
-  if (etat.nature === "aJour") {
-    return (
-      <span className="inline-flex items-center rounded-full bg-white/70 px-2.5 py-1 text-[11px] font-semibold text-[color:var(--board-slate-ink)]">
-        {libelleCharge(etat)}
-      </span>
-    );
-  }
-
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--board-signal-pale)] py-1 pl-1 pr-2.5 text-[11px] font-semibold text-[color:var(--board-signal-ink)]">
-      {/* `--board-signal-on` et non `--board-signal-ink` : l'encre est faite
-          pour le champ pâle, pas pour le rouge plein. À 9,5 px gras, elle
-          tombait sous le seuil AA — et c'est le seul endroit de la pastille
-          où le nombre se lit. */}
-      <span className="flex size-4 items-center justify-center rounded-full bg-[color:var(--board-signal)] text-[9.5px] font-bold text-[color:var(--board-signal-on)]">
-        {etat.nbEnRetard}
-      </span>
-      {libelleCharge(etat)}
-    </span>
-  );
 }
 
-/**
- * Une zone, en une ligne : son nom, son parc, sa charge.
- *
- * 2026-10-20 — un seul dessin pour tout l'établissement. La rangée d'un
- * volume par zone (ADR-019, puis ADR-029) dessinait trois immeubles pour un
- * restaurant découpé en trois zones : le texte disait « zones », l'image
- * disait « bâtiments ». Depuis la décision du 2026-10-17 (un établissement =
- * un bâtiment), le dessin est celui de l'établissement, et les zones en sont
- * la liste.
- */
-function LigneZone({ batiment }: { batiment: BatimentCharge }) {
-  return (
-    <li className="flex items-center justify-between gap-4 py-2.5">
-      <div className="min-w-0">
-        <p className="m-0 break-words text-[14px] font-semibold leading-[1.25] tracking-[-0.01em] text-[color:var(--board-ink)]">
-          {nomDeZone(batiment.nom)}
-        </p>
-        <p className="m-0 mt-0.5 text-[11.5px] text-[color:var(--board-slate-mid)]">
-          {batiment.nbEquipements} équipement
-          {batiment.nbEquipements > 1 ? "s" : ""}
-        </p>
-      </div>
-      <div className="flex-none">
-        <PastilleCharge
-          nbEquipements={batiment.nbEquipements}
-          nbEnRetard={batiment.nbEnRetard}
-        />
-      </div>
-    </li>
-  );
+/** Le texte que lit un lecteur d'écran à la place du rond. */
+function libelleLu(etat: EtatCharge): string {
+  return etat.nature === "enRetard"
+    ? `${etat.nbEnRetard} ${libelleCharge(etat)}`
+    : libelleCharge(etat);
+}
+
+/** Hauteur de l'étiquette `i` sur `n`, en pourcentage : réparties à
+ *  intervalles égaux, jamais collées aux bords. */
+function rangee(i: number, n: number): number {
+  return ((i + 1) / (n + 1)) * 100;
 }
 
 export function HeroBatiments({
-  nomEtablissement,
-  logoUrl,
   batiments,
-  srcIllustration,
+  illustration,
   legende,
-}: Props) {
-  return (
-    // Verre givré, en une seule plaque. Le dégradé du haut vers le bas donne
-    // le galbe ; les deux reflets intérieurs font lire une épaisseur.
-    <div className="mx-auto w-fit max-w-full rounded-[34px] border border-white/65 bg-gradient-to-b from-white/62 to-white/34 px-6 pb-7 pt-5 shadow-[inset_0_1px_0_rgba(255,255,255,.95),inset_0_-1px_0_rgba(255,255,255,.42),0_22px_48px_-26px_rgba(13,18,36,.30)] backdrop-blur-[26px] backdrop-saturate-[125%]">
-      <Enseigne
-        nom={nomEtablissement}
-        logoUrl={logoUrl}
-        nbZones={batiments.length}
-      />
+}: {
+  batiments: BatimentCharge[];
+  illustration: IllustrationBatiment;
+  /**
+   * Ce que les étiquettes comptent, et ce qu'elles laissent au relevé d'à
+   * côté. Elle arrive toute faite depuis le serveur
+   * (`DashboardBundle.perimetreHero`) : sa dérivation passe par le
+   * référentiel des obligations, qui n'a rien à faire dans un composant
+   * client.
+   */
+  legende: string;
+}) {
+  const planche = PLANCHES[illustration];
+  const zones = batiments.map((b, i) => ({
+    batiment: b,
+    etat: etatCharge({ nbEquipements: b.nbEquipements, nbEnRetard: b.nbEnRetard }),
+    ancre: planche.ancres[i % planche.ancres.length],
+    y: rangee(i, batiments.length),
+  }));
 
-      <div className="mt-5 flex flex-wrap items-center gap-x-7 gap-y-4">
-        {/* Décoratif : un seul dessin, celui de l'établissement. `sizes` : la
-            planche est rendue à 168 px au plus, densité double comprise. */}
+  return (
+    // `lg:pr-52` réserve la colonne des étiquettes, posées hors de l'image :
+    // sans elle, elles débordaient du hero et s'y faisaient couper.
+    <figure className="m-0 mx-auto w-fit max-w-full lg:pr-52">
+      <div className="relative w-[clamp(220px,24vw,340px)]">
+        {/* Décoratif : tout ce que le dessin évoque est écrit à côté. */}
         <Image
-          src={srcIllustration}
+          src={`/illustrations/batiments/${illustration}.webp`}
           alt=""
           aria-hidden
-          width={760}
-          height={668}
-          sizes="168px"
+          width={planche.largeur}
+          height={planche.hauteur}
+          sizes="340px"
           priority
-          className="h-auto w-[132px] flex-none select-none sm:w-[168px]"
+          className="block h-auto w-full select-none"
         />
-        <ul className="m-0 min-w-[220px] flex-1 list-none divide-y divide-[color:rgba(10,10,10,.08)] p-0">
-          {batiments.map((b) => (
-            <LigneZone key={b.id} batiment={b} />
+
+        {/* Les tiges : du point d'accroche au bord gauche de l'étiquette.
+            Repère en pourcentage de l'image, trait d'épaisseur constante. */}
+        <svg
+          aria-hidden
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          className="pointer-events-none absolute inset-0 hidden size-full overflow-visible lg:block"
+        >
+          {zones.map(({ batiment, ancre, y }) => (
+            <line
+              key={batiment.id}
+              x1={ancre[0]}
+              y1={ancre[1]}
+              x2={100}
+              y2={y}
+              stroke="var(--board-ink)"
+              strokeWidth={1.2}
+              vectorEffect="non-scaling-stroke"
+            />
+          ))}
+        </svg>
+        {zones.map(({ batiment, ancre }) => (
+          <span
+            key={batiment.id}
+            aria-hidden
+            className="absolute hidden size-[7px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[color:var(--board-ink)] lg:block"
+            style={{ left: `${ancre[0]}%`, top: `${ancre[1]}%` }}
+          />
+        ))}
+
+        {/* Les étiquettes : en liste sous le dessin sur petit écran, posées
+            à droite de l'image et reliées par leur tige au-delà. */}
+        <ul className="m-0 mt-4 flex list-none flex-col gap-2 p-0 lg:absolute lg:inset-y-0 lg:left-full lg:mt-0 lg:block lg:w-52">
+          {zones.map(({ batiment, etat, y }) => (
+            <li
+              key={batiment.id}
+              className="flex w-fit max-w-full items-center gap-2 rounded-full bg-[color:var(--board-card)] py-1 pl-1 pr-3 text-[12.5px] ring-1 ring-[color:var(--board-ink)] lg:absolute lg:top-[var(--y)] lg:-translate-y-1/2"
+              style={{ "--y": `${y}%` } as CSSProperties}
+            >
+              <RondEtat etat={etat} />
+              <span className="min-w-0 truncate">
+                <span className="font-semibold text-[color:var(--board-ink)]">
+                  {nomDeZone(batiment.nom)}
+                </span>
+                <span className="text-[color:var(--board-slate-mid)]">
+                  {" · "}
+                  <span className="sr-only">{libelleLu(etat)}</span>
+                  <span aria-hidden>{libelleCharge(etat)}</span>
+                </span>
+              </span>
+            </li>
           ))}
         </ul>
       </div>
 
-      {/* Ce que les pastilles comptent — et ce qu'elles ne comptent pas. */}
-      <p className="m-0 mt-4 max-w-[46ch] text-[11.5px] leading-[1.5] text-[color:var(--board-slate-ink)]">
+      <figcaption className="m-0 mt-4 max-w-[46ch] text-[11.5px] leading-[1.5] text-[color:var(--board-slate-ink)] lg:mt-6">
         {legende}
-      </p>
-    </div>
+      </figcaption>
+    </figure>
   );
 }

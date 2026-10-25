@@ -452,6 +452,32 @@ Une seule façon d'ouvrir une page d'entrée du rail :
 **Un en-tête ne doit jamais contredire ce qu'il coiffe** : les compteurs se
 calculent sur ce qui est réellement affiché, filtre compris.
 
+### Hero du tableau de bord — `BlocBrief` + `HeroBatiments` (2026-10-25)
+
+Le tableau de bord n'a pas l'en-tête des autres pages : c'est le seul écran qui
+résume tout le dossier, et son hero le dit autrement.
+
+- **Fond** : `.fond-pointille` (gris chaud piqué d'une trame de points, « table
+  à dessin ») à la place du bleu ciel. Ce qui se lit dessus pose sa surface
+  blanche (les trois relevés sont sur une carte).
+- **À gauche** : l'enseigne (logo ou monogramme, nom), la date, le titre du
+  brief, les trois relevés.
+- **À droite** : le bâtiment du genre de lieu (`illustrationBatiment` : type
+  ERP, puis secteur du code NAF, puis local générique) et **une étiquette par
+  zone** — rond d'état, nom, état de charge — reliée par une tige à un point
+  fixe de la planche.
+- **Interdit** : un dessin qui prétend montrer les lieux du client (un plan, un
+  étage, l'emplacement d'une zone). Les points d'accroche sont les mêmes pour
+  tous les dossiers ; l'étiquette dit qu'une zone existe et ce qu'elle porte,
+  jamais où elle est.
+
+**Deux motifs réutilisables**, retenus par la propriétaire :
+
+1. **`.fond-pointille`** — un fond, jamais une carte.
+2. **L'étiquette épinglée** — tige d'encre fine depuis un point noir, gélule
+   blanche cerclée d'encre, rond à la couleur d'état (chiffre, ✓ ou –), libellé
+   court. À poser sur une illustration générique, pas sur un plan.
+
 ### Fiche — modèle : `app/etablissements/[id]/registre/[sectionId]/page.tsx`
 
 ```

@@ -5,6 +5,7 @@
 // localStorage (voir useLayoutPerso).
 
 import type { BatimentCharge } from "@/lib/batiments/queries";
+import type { IllustrationBatiment } from "@/lib/etablissements/illustration";
 import type { ComponentType } from "react";
 import type {
   BarMois,
@@ -205,6 +206,12 @@ export type DashboardBundle = {
    * il doit s'expliquer sur place.
    */
   perimetreHero: { releves: string; plaqueZones: string };
+  /**
+   * Le dessin du hero (`illustrationBatiment`), choisi côté serveur : la
+   * reconnaissance par code NAF lit les référentiels sectoriels, qui n'ont
+   * pas à partir dans le bundle du board.
+   */
+  illustrationHero: IllustrationBatiment;
   etablissement: EtablissementLite;
   dashboard: DashboardData;
   /**
