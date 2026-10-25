@@ -21,7 +21,7 @@ export function IllustrationEnPlace() {
   return (
     <svg
       viewBox="-20 30 370 395"
-      className="h-auto w-[clamp(200px,21vw,290px)]"
+      className="h-auto w-[clamp(220px,24vw,330px)]"
       aria-hidden
       focusable="false"
     >

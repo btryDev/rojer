@@ -25,9 +25,10 @@ import { TEINTE_SECTION } from "./teintes";
  *
  * **Le coin haut droit est réservé** à la gélule de compte (`BarreCompte`),
  * qui flotte au-dessus. Le fil occupe la ligne de la gélule, à gauche ; la
- * colonne de droite ne porte que l'illustration, qui a le droit de passer
- * dessous. Aucun texte ni commande ne peut donc s'y glisser. Sur téléphone,
- * où l'illustration disparaît, la ligne du fil garde une marge à droite.
+ * colonne de droite ne porte que le panneau teinté et son illustration, qui
+ * ont le droit de passer dessous. Aucun texte ni commande ne peut donc s'y
+ * glisser. Sur téléphone, où le panneau disparaît, la ligne du fil garde une
+ * marge à droite.
  */
 export function EnTetePage({
   item,
@@ -56,16 +57,27 @@ export function EnTetePage({
   ];
 
   return (
-    <header
-      className="grid gap-x-10 bg-[color:var(--board-card)] px-[var(--board-gutter)] md:grid-cols-[minmax(0,1fr)_auto]"
-      style={fond ? { backgroundColor: fond } : undefined}
-    >
-      <div className="flex min-w-0 flex-col pb-9 pt-3">
+    // `flex-none` n'est pas décoratif : la colonne de contenu du shell est un
+    // `flex flex-col` de hauteur contrainte (`h-screen`), où `flex-shrink`
+    // vaut 1 et porte sur la HAUTEUR. Sans lui, l'en-tête est écrasé sous son
+    // contenu et l'illustration est coupée par le bloc suivant.
+    //
+    // La teinte ne colore que le panneau de l'illustration, sur toute la
+    // hauteur et jusqu'au bord droit ; le texte reste sur la surface de carte
+    // (choix de la propriétaire du 2026-10-25, « variante A2 » : posée sur un
+    // fond teinté de toute la largeur, l'illustration flottait à côté du
+    // texte). Sur téléphone, où le panneau disparaît, un liseré de la teinte
+    // garde le repère de section.
+    <header className="grid flex-none border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] md:min-h-[360px] md:grid-cols-[minmax(0,1fr)_minmax(320px,38%)]">
+      {fond ? (
+        <div aria-hidden className="h-1.5 md:hidden" style={{ backgroundColor: fond }} />
+      ) : null}
+      <div className="flex min-w-0 flex-col pb-12 pl-[var(--board-gutter)] pr-[var(--board-gutter)] pt-3 md:pr-12">
         {/* 48 px à 12 px du haut : la hauteur et la place de la gélule. */}
         <div className="flex h-12 min-w-0 items-center pr-36 md:pr-0">
           <FilAriane crumbs={fil} />
         </div>
-        <h1 className="board-titre m-0 mt-4 text-[clamp(29px,3vw,39px)]">
+        <h1 className="board-titre m-0 mt-8 text-[clamp(29px,3vw,39px)]">
           {titre ?? LABEL_ITEM[item]}
         </h1>
         <p className="m-0 mt-3 max-w-[62ch] text-[15px] leading-[1.6] text-[color:var(--board-slate-ink)]">
@@ -75,7 +87,12 @@ export function EnTetePage({
           <div className="mt-6 flex flex-col items-start gap-4">{children}</div>
         ) : null}
       </div>
-      <div className="hidden items-end justify-end pb-6 pt-16 md:flex">
+      {/* Le panneau passe sous la gélule de compte : un fond y a droit. */}
+      <div
+        data-teinte-section
+        className="hidden items-end justify-center overflow-hidden px-8 pb-8 pt-20 md:flex [&>*]:max-w-full"
+        style={fond ? { backgroundColor: fond } : undefined}
+      >
         <IllustrationEnTete item={item} />
       </div>
     </header>

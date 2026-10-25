@@ -10,7 +10,7 @@ export function IllustrationPlanActions() {
   return (
     <svg
       viewBox="-70 30 430 290"
-      className="h-auto w-[clamp(240px,27vw,370px)]"
+      className="h-auto w-[clamp(260px,30vw,420px)]"
       aria-hidden
       focusable="false"
     >

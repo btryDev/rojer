@@ -30,15 +30,15 @@ describe("EnTetePage", () => {
     );
   });
 
-  it("porte la teinte de la section de la page", () => {
+  it("le panneau de l'illustration porte la teinte de la section", () => {
     const { container } = render(
       <EnTetePage item="equipe" etablissement={ETAB} description="Une phrase." />,
     );
-    const header = container.querySelector("header") as HTMLElement;
+    const panneau = container.querySelector("[data-teinte-section]") as HTMLElement;
     // jsdom normalise la couleur en rgb() : on compare sur la même forme.
     const attendu = document.createElement("div");
     attendu.style.backgroundColor = TEINTE_SECTION["sante-securite"] as string;
-    expect(header.style.backgroundColor).toBe(attendu.style.backgroundColor);
+    expect(panneau.style.backgroundColor).toBe(attendu.style.backgroundColor);
   });
 
   it("deux pages d'une même section portent la même teinte", () => {
@@ -47,7 +47,7 @@ describe("EnTetePage", () => {
       const { container } = render(
         <EnTetePage item={item} etablissement={ETAB} description="x" />,
       );
-      const valeur = (container.querySelector("header") as HTMLElement).style.backgroundColor;
+      const valeur = (container.querySelector("[data-teinte-section]") as HTMLElement).style.backgroundColor;
       cleanup();
       return valeur;
     };
@@ -78,7 +78,7 @@ describe("EnTetePage", () => {
 
   it("l'illustration est décorative : masquée aux lecteurs d'écran", () => {
     const { container } = render(
-      <EnTetePage item="calendrier" etablissement={ETAB} description="x" />,
+      <EnTetePage item="actions" etablissement={ETAB} description="x" />,
     );
     const svg = container.querySelector("svg");
     expect(svg).not.toBeNull();

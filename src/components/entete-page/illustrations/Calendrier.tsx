@@ -16,7 +16,7 @@ export function IllustrationCalendrier() {
   return (
     <svg
       viewBox="0 -100 500 415"
-      className="h-auto w-[clamp(240px,26vw,360px)]"
+      className="h-auto w-[clamp(260px,29vw,410px)]"
       aria-hidden
       focusable="false"
     >
