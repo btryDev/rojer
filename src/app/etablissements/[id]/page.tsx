@@ -478,10 +478,7 @@ export default async function EtablissementPage({
             onboardingFini && !filtreZones ? null : (
               <div className="flex flex-col gap-6">
                 {onboardingFini ? null : (
-                  <OnboardingChecklist
-                    etapes={etapesOnboarding}
-                    etablissementRaison={etab.raisonDisplay}
-                  />
+                  <OnboardingChecklist etapes={etapesOnboarding} />
                 )}
                 {filtreZones}
               </div>

@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { CHAMP_ETAT, ENCRE_ETAT } from "@/lib/calendrier/etats";
+import { GuideDepliant } from "./GuideDepliant";
 
 /**
  * Guide de mise en place progressif, affiché sur la page "Vue d'ensemble"
@@ -47,121 +47,82 @@ export type EtapeOnboarding = {
   question?: React.ReactNode;
 };
 
-export function OnboardingChecklist({
-  etapes,
-  etablissementRaison,
-}: {
-  etapes: EtapeOnboarding[];
-  etablissementRaison: string;
-}) {
+export function OnboardingChecklist({ etapes }: { etapes: EtapeOnboarding[] }) {
   const faites = etapes.filter((e) => e.faite).length;
   const total = etapes.length;
   if (faites === total) return null;
 
   // Première étape pas faite → c'est celle qu'on met en avant
   const indexProchaine = etapes.findIndex((e) => !e.faite);
+  const prochaine = etapes[indexProchaine];
 
+  // [2026-10-25] Un bandeau, la prochaine étape d'abord (planche C de
+  // l'artefact, retenue par la propriétaire) : l'introduction et ses six
+  // étapes dépliées repoussaient le board d'un écran entier, pour n'en
+  // traiter qu'une à la fois. Les autres se déplient sous le bandeau.
   return (
     <section
       aria-labelledby="onboarding-heading"
-      className="carte-board relative grid overflow-hidden md:grid-cols-[minmax(0,1fr)_minmax(240px,30%)]"
+      className="overflow-hidden rounded-[30px] ring-1 ring-[color:rgba(13,18,36,.10)]"
     >
-      <div className="min-w-0">
-      {/* Bandeau haut */}
-      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[color:var(--board-slate-line)] px-7 pt-6 pb-5 sm:px-8">
-        <div className="min-w-0">
-          <p
-            id="onboarding-heading"
-            className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]"
-          >
-            Guide de mise en place
-          </p>
-          <h2 className="board-titre m-0 mt-2 text-[22px]">
-            Quelques étapes pour couvrir l&apos;essentiel de {etablissementRaison}
-          </h2>
-          <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-            Pas d&apos;urgence : chaque étape se traite à votre rythme.
-            L&apos;outil met simplement en lumière les éléments qu&apos;un
-            contrôle (inspection du travail, commission de sécurité,
-            assureur, bailleur) pourrait vous demander.
-          </p>
-        </div>
-
-        {/* Progression numérique + segments */}
-        <div className="flex min-w-[160px] flex-col items-start gap-2 sm:items-end">
-          <p className="board-eyebrow m-0 text-[10px] tabular-nums tracking-[0.16em] text-[color:var(--board-slate-soft)]">
-            {/* Numéro de l'étape courante (le composant retourne null quand
-                tout est fait, donc indexProchaine >= 0 ici). */}
-            Étape {indexProchaine + 1}{" "}
-            <span className="text-[color:var(--board-ink)]">sur {total}</span>
-          </p>
-          <div className="flex gap-1" aria-hidden>
-            {etapes.map((e, i) => (
-              <span
-                key={e.id}
-                className="h-[5px] w-8 rounded-full"
-                style={{
-                  background: e.faite
-                    ? CHAMP_ETAT.faite
-                    : i === indexProchaine
-                      ? "var(--board-ink)"
-                      : "var(--board-slate)",
-                }}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Deux temps (2026-10-25, demande de la propriétaire) : d'abord
-          l'introduction et la progression, puis, au clic, toutes les étapes —
-          faites et à faire. Dépliées d'office, elles repoussaient le board
-          d'un écran entier. `<details>` natif : pas de JavaScript, et le
-          clavier comme le lecteur d'écran savent l'ouvrir. */}
-      <details className="group">
-        <summary
-          className={
-            "mx-7 my-5 w-fit cursor-pointer list-none sm:mx-8 [&::-webkit-details-marker]:hidden " +
-            buttonVariants({ variant: "board", size: "boardSm" })
-          }
-        >
-          <span className="group-open:hidden">
-            Voir les étapes · {total - faites} à faire
-          </span>
-          <span className="hidden group-open:inline">Masquer les étapes</span>
-          <ChevronDown
-            aria-hidden
-            className="size-4 transition-transform group-open:rotate-180"
-          />
-        </summary>
-        <ol className="m-0 list-none divide-y divide-[color:var(--board-slate-line)] border-t border-[color:var(--board-slate-line)] p-0">
-          {etapes.map((e, i) => (
-            <LigneEtape
-              key={e.id}
-              etape={e}
-              rang={i}
-              prochaine={i === indexProchaine}
+      <GuideDepliant
+        bandeau={
+          <div className="flex min-w-0 items-center gap-5">
+            {/* Décorative — la personne au travail ; origine et licence :
+                `public/photos/README.md`. */}
+            <Image
+              src="/photos/guide-ordinateur.jpg"
+              alt=""
+              width={96}
+              height={96}
+              sizes="96px"
+              className="size-20 flex-none rounded-[20px] object-cover object-[62%_center] sm:size-24"
             />
+            <div className="min-w-0">
+              <p
+                id="onboarding-heading"
+                className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-white/65"
+              >
+                Guide de mise en place · étape {indexProchaine + 1} sur {total}
+              </p>
+              <h2 className="m-0 mt-2 text-[20px] font-semibold leading-[1.25] tracking-[-0.02em] text-white">
+                Prochaine étape : {prochaine.titre}
+              </h2>
+              <div className="mt-3 flex w-[min(280px,100%)] gap-1" aria-hidden>
+                {etapes.map((e, i) => (
+                  <span
+                    key={e.id}
+                    className="h-[5px] flex-1 rounded-full"
+                    style={{
+                      background: e.faite
+                        ? CHAMP_ETAT.faite
+                        : i === indexProchaine
+                          ? "#ffffff"
+                          : "rgba(255,255,255,.18)",
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        }
+        action={
+          prochaine.href && prochaine.cta ? (
+            <Link
+              href={prochaine.href}
+              className="inline-flex h-10 items-center rounded-full bg-white px-4 text-[13px] font-semibold text-[color:var(--board-ink)] transition-colors hover:bg-white/90"
+            >
+              {prochaine.cta} →
+            </Link>
+          ) : null
+        }
+      >
+        <ol className="m-0 list-none divide-y divide-[color:var(--board-slate-line)] bg-[color:var(--board-card)] p-0">
+          {etapes.map((e, i) => (
+            <LigneEtape key={e.id} etape={e} rang={i} prochaine={i === indexProchaine} />
           ))}
         </ol>
-      </details>
-
-      </div>
-
-      {/* [2026-10-25] Une photo, à la demande de la propriétaire : le guide
-          est le seul bloc du board qui s'adresse à la personne plutôt qu'au
-          dossier. Décorative — `alt=""` —, et absente sur petit écran, où
-          elle repoussait la première étape sous le pli. Origine et licence :
-          `public/photos/README.md`. */}
-      <div className="relative hidden md:block">
-        <Image
-          src="/photos/guide-ordinateur.jpg"
-          alt=""
-          fill
-          sizes="(min-width: 768px) 30vw, 0px"
-          className="object-cover object-[60%_center]"
-        />
-      </div>
+      </GuideDepliant>
     </section>
   );
 }
