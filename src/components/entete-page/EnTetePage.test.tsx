@@ -16,24 +16,21 @@ import { SECTIONS_TEINTEES, TEINTE_SECTION } from "./teintes";
 
 afterEach(cleanup);
 
-const ETAB = { id: "e1", raisonDisplay: "Le Comptoir des Halles" };
-
 describe("EnTetePage", () => {
-  it("déduit le titre et le fil de l'entrée du rail", () => {
-    render(<EnTetePage item="calendrier" etablissement={ETAB} description="Une phrase." />);
+  it("déduit le titre de l'entrée du rail", () => {
+    render(<EnTetePage item="calendrier" description="Une phrase." />);
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(LABEL_ITEM.calendrier);
-    const fil = screen.getByRole("navigation", { name: "Fil d'Ariane" });
-    expect(fil.textContent).toContain(ETAB.raisonDisplay);
-    expect(fil.textContent).toContain(LABEL_ITEM.calendrier);
-    expect(screen.getByRole("link", { name: ETAB.raisonDisplay }).getAttribute("href")).toBe(
-      "/etablissements/e1",
-    );
+  });
+
+  // Décision de la propriétaire du 2026-10-25 (maquette v3 du Calendrier) :
+  // la sidebar et la gélule de compte disent déjà où l'on est.
+  it("ne porte pas de fil d'Ariane", () => {
+    render(<EnTetePage item="calendrier" description="Une phrase." />);
+    expect(screen.queryByRole("navigation", { name: "Fil d'Ariane" })).toBeNull();
   });
 
   it("le panneau de l'illustration porte la teinte de la section", () => {
-    const { container } = render(
-      <EnTetePage item="equipe" etablissement={ETAB} description="Une phrase." />,
-    );
+    const { container } = render(<EnTetePage item="equipe" description="Une phrase." />);
     const panneau = container.querySelector("[data-teinte-section]") as HTMLElement;
     // jsdom normalise la couleur en rgb() : on compare sur la même forme.
     const attendu = document.createElement("div");
@@ -44,9 +41,7 @@ describe("EnTetePage", () => {
   it("deux pages d'une même section portent la même teinte", () => {
     expect(categorieDeItem("calendrier")).toBe(categorieDeItem("etats-permanents"));
     const fond = (item: "calendrier" | "etats-permanents") => {
-      const { container } = render(
-        <EnTetePage item={item} etablissement={ETAB} description="x" />,
-      );
+      const { container } = render(<EnTetePage item={item} description="x" />);
       const valeur = (container.querySelector("[data-teinte-section]") as HTMLElement).style.backgroundColor;
       cleanup();
       return valeur;
@@ -54,35 +49,27 @@ describe("EnTetePage", () => {
     expect(fond("calendrier")).toBe(fond("etats-permanents"));
   });
 
-  it("un fil fourni remplace le fil par défaut (onglet à adresse propre)", () => {
+  it("rend la bascule de vue que la page lui passe, sous le descriptif", () => {
     render(
-      <EnTetePage
-        item="etats-permanents"
-        etablissement={ETAB}
-        crumbs={[{ href: "/a", label: "A" }, { href: "/b", label: "B" }, { label: "C" }]}
-        description="x"
-      />,
-    );
-    const fil = screen.getByRole("navigation", { name: "Fil d'Ariane" });
-    expect(fil.textContent).toBe("A›B›C");
-  });
-
-  it("rend ce que la page y ajoute, sous le descriptif", () => {
-    render(
-      <EnTetePage item="actions" etablissement={ETAB} description="x">
-        <button type="button">Exporter PDF</button>
+      <EnTetePage item="calendrier" description="x">
+        <button type="button">Par mois</button>
       </EnTetePage>,
     );
-    expect(screen.getByRole("button", { name: "Exporter PDF" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Par mois" })).toBeTruthy();
   });
 
-  it("l'illustration est décorative : masquée aux lecteurs d'écran", () => {
-    const { container } = render(
-      <EnTetePage item="actions" etablissement={ETAB} description="x" />,
-    );
+  it("une illustration dessinée est décorative : masquée aux lecteurs d'écran", () => {
+    const { container } = render(<EnTetePage item="actions" description="x" />);
     const svg = container.querySelector("svg");
     expect(svg).not.toBeNull();
     expect(svg?.getAttribute("aria-hidden")).toBe("true");
+  });
+
+  it("une illustration en image l'est aussi : texte alternatif vide", () => {
+    const { container } = render(<EnTetePage item="calendrier" description="x" />);
+    const img = container.querySelector("img");
+    expect(img).not.toBeNull();
+    expect(img?.getAttribute("alt")).toBe("");
   });
 });
 

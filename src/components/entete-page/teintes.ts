@@ -31,7 +31,7 @@ const GRIS_NEUTRE = "#ebebea";
 
 export const TEINTE_SECTION: Record<RailCategorieId, string | null> = {
   tableau: null,
-  "a-faire": "#efe6d8", // pêche
+  "a-faire": "#eed6c4", // pêche
   "sante-securite": "#d5f0ec", // eau
   "equipement-batiment": "#dceaf6", // glacier
   documentation: GRIS_NEUTRE,

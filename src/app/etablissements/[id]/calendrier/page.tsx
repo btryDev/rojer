@@ -979,7 +979,6 @@ export default async function CalendrierPage({
   const enTete = (
     <EnTetePage
       item="calendrier"
-      etablissement={{ id, raisonDisplay: etab.raisonDisplay }}
       description={
         filtreFamille === "travaux" ? (
           <>

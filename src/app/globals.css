@@ -626,29 +626,9 @@
   stroke-dasharray: 1;
   animation: ep-trace 0.45s ease-out both;
 }
-.ep-trace.ep-lent { animation-duration: 0.7s; }
 @keyframes ep-trace {
   from { stroke-dashoffset: 1; }
   to   { stroke-dashoffset: 0; }
-}
-.ep-feuille {
-  transform-box: view-box;
-  animation: ep-feuille 0.9s cubic-bezier(.2,.8,.2,1) both;
-}
-@keyframes ep-feuille {
-  from { transform: scaleY(.2); }
-  to   { transform: scaleY(1); }
-}
-.ep-saute {
-  transform-box: fill-box;
-  transform-origin: 50% 100%;
-  animation: ep-saute 0.7s ease-out both;
-}
-@keyframes ep-saute {
-  0%, 100% { transform: translateY(0); }
-  35% { transform: translateY(-12px); }
-  65% { transform: translateY(0); }
-  80% { transform: translateY(-4px); }
 }
 .ep-pop {
   transform-box: fill-box;
@@ -683,7 +663,7 @@
   65% { transform: rotate(6deg); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ep-trace, .ep-feuille, .ep-saute, .ep-pop, .ep-lueur, .ep-crayon, .ep-cle {
+  .ep-trace, .ep-pop, .ep-lueur, .ep-crayon, .ep-cle {
     animation: none;
   }
 }

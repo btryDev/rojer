@@ -268,9 +268,15 @@ describe("les pages d'entrée disent leur rangement par un fil d'Ariane", () => 
     "prestataires",
     "etats-permanents/en-cas-de",
     "registre",
-  ])("%s : un fil d'Ariane vers l'établissement", (dossier) => {
-    // La page, ou l'en-tête auquel elle délègue (`EnTetePage`, 2026-10-25).
+  ])("%s : un fil d'Ariane vers l'établissement, ou l'en-tête commun", (dossier) => {
+    // La page, ou l'en-tête auquel elle délègue. EXCEPTION depuis le
+    // 2026-10-25 : l'en-tête commun des pages d'entrée (`EnTetePage`) ne
+    // porte plus de fil, par décision de la propriétaire (maquette v3 du
+    // Calendrier) — la sidebar et la gélule de compte disent où l'on est.
+    // Une page passée à cet en-tête satisfait la garde ; une page qui
+    // retire son fil SANS y passer la fait toujours tomber.
     const source = lire(dossier);
+    if (/from "@\/components\/entete-page\/EnTetePage"/.test(source)) return;
     const delegues = analyser(source)
       .statements.filter(ts.isImportDeclaration)
       .map((i) => (i.moduleSpecifier as ts.StringLiteral).text)

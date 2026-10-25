@@ -144,7 +144,6 @@ export default async function PlanActionsPage({
           corriger d'un contrôle se suivent sur leur équipement (ADR-048). */}
       <EnTetePage
         item="actions"
-        etablissement={{ id, raisonDisplay: etab.raisonDisplay }}
         description={
           <>
             Les mesures de prévention prévues dans votre DUERP, à suivre

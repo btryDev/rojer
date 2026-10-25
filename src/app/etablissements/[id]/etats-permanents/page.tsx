@@ -197,7 +197,6 @@ export default async function EtatsPermanentsPage({
           changer de page (revue du 2026-10-24). */}
       <EnTetePage
         item="etats-permanents"
-        etablissement={{ id, raisonDisplay: etablissement.raisonDisplay }}
         description="Ce qui doit exister chez vous en permanence. Touchez une ligne pour ouvrir sa fiche et la déclarer."
       >
         <OngletsEnPlace etablissementId={id} actif="permanence" decoupe={parGeste ? "geste" : undefined} />

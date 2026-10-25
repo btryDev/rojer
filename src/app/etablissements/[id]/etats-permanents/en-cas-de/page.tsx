@@ -6,8 +6,6 @@ import { AideEcran } from "@/components/ui-kit/AideEcran";
 import { TexteSource } from "@/components/ui-kit/TexteSource";
 import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import { OngletsEnPlace } from "@/components/etats-permanents/OngletsEnPlace";
-import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
-import { LABEL_ONGLET_EN_CAS_DE } from "@/lib/etats-permanents/libelles-onglets";
 import { ChevronRepli } from "@/components/ui/repli";
 
 export const metadata = {
@@ -58,15 +56,9 @@ export default async function EnCasDePage({
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
       {/* L'en-tête de « Ce qui doit être en place » : un onglet, pas une
-          page — le fil seul dit qu'on est sur le second. */}
+          page — l'onglet actif dit qu'on est sur le second. */}
       <EnTetePage
         item="etats-permanents"
-        etablissement={{ id, raisonDisplay: etablissement.raisonDisplay }}
-        crumbs={[
-          { href: `/etablissements/${id}`, label: etablissement.raisonDisplay },
-          { href: `/etablissements/${id}/etats-permanents`, label: LABEL_ITEM["etats-permanents"] },
-          { label: LABEL_ONGLET_EN_CAS_DE },
-        ]}
         description="Ce que vous devez faire quand un événement se produit : une embauche, un accident, une livraison, une canicule…"
       >
         <OngletsEnPlace

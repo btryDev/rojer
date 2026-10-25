@@ -13,7 +13,8 @@ import { IllustrationPlanActions } from "./PlanActions";
  *
  * Le style est commun à toutes : trait noir d'épaisseur constante, aplats
  * noirs ponctuels, objets blancs en perspective isométrique, posés sur la
- * teinte de la section — pas de fond propre. Une seule animation par dessin,
+ * teinte de la section — pas de fond propre. Une seule animation par dessin
+ * vectoriel (une image générée, comme celle du Calendrier, reste fixe),
  * jouée une fois au chargement (`ep-*` dans `globals.css`), aucune si le
  * visiteur a demandé moins de mouvement.
  */
