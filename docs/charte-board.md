@@ -227,7 +227,7 @@ Trois polices, chargées dans `src/app/layout.tsx` :
 | Clé de champ (`dt`) | `text-[12.5px]` + `--board-slate-mid`, `sm:w-[168px]` |
 | Valeur de champ (`dd`) | `text-[14px] leading-[1.45]` + `--board-ink` |
 | Fil de retour | `font-mono text-[10.5px] uppercase tracking-[0.16em]` |
-| Fil d'Ariane | `text-[12.5px]` + `--board-slate-mid`, page courante en `--board-ink` `font-medium`, chevron `›` en `--board-slate` — `FilAriane`, seul composant (ADR-014 : où la page est rangée) |
+| ~~Fil d'Ariane~~ | ~~`text-[12.5px]` + `--board-slate-mid`, page courante en `--board-ink` `font-medium`, chevron `›` en `--board-slate` — `FilAriane`, seul composant (ADR-014 : où la page est rangée)~~ [2026-10-25 : retiré des pages d'entrée avec le composant, décision de la propriétaire — la marque du rail et la gélule de compte mènent à l'établissement ; le retour de provenance des fiches reste `FilRetour`.] |
 
 **Règle de `tracking`** : positif (0.1 → 0.2em) uniquement en mono capitales.
 Négatif (−0.01 → −0.032em) sur les titres. Rien entre les deux.

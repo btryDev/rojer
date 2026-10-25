@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { construireChezVous } from "@/lib/guide/chez-vous";
 import type { EtablissementMatching } from "@/lib/matching";
@@ -70,52 +70,29 @@ describe("le guide ne contredit pas le produit", () => {
   });
 });
 
-describe("l'illustration du guide n'affiche aucune donnée", () => {
-  it("aucun texte chiffré dans le SVG décoratif", () => {
-    // Le défaut : le tampon portait « v3 · 04/26 » et le post-it « 22 juin ».
-    // Sur un dossier créé depuis dix minutes, l'en-tête du guide montrait donc
-    // une version validée et une échéance datée que le dossier n'avait pas —
-    // et la section suivante promet « calculé depuis votre dossier ».
-    //
-    // `aria-hidden` protège les lecteurs d'écran, pas les yeux : un dirigeant
-    // ne distingue pas un chiffre dessiné d'un chiffre calculé.
-    //
-    // La garde vise une FORME, pas les deux valeurs retirées : une liste
-    // n'aurait attrapé que les fautes déjà connues.
-    //
-    // Elle a d'abord interdit tout chiffre, et c'était trop large — sa
-    // première exécution a signalé « Art. L. 4121-1 », le badge Code du
-    // travail. Une référence d'article n'est pas une donnée de dossier : elle
-    // est vraie pour tout le monde, elle ne prétend rien sur le lecteur, et
-    // c'est même ce que le produit affiche partout ailleurs. Ce qui est
-    // interdit, ce sont les valeurs qui se lisent comme l'ÉTAT DU DOSSIER —
-    // une date, un numéro de version.
-    const svg = SRC("src/components/guide/IllustrationDocuments.tsx");
-    const textes = [...svg.matchAll(/<text\b[^>]*>([\s\S]*?)<\/text>/g)].map(
-      (m) => m[1].trim(),
-    );
-    expect(
-      textes.length,
-      "Plus aucun `<text>` dans l'illustration : la garde ne garde plus rien.",
-    ).toBeGreaterThan(0);
+describe("les illustrations d'en-tête n'affichent aucune donnée", () => {
+  // Le défaut d'origine : l'illustration du guide portait « v3 · 04/26 » et
+  // « 22 juin ». Sur un dossier créé depuis dix minutes, l'en-tête montrait
+  // une version validée et une échéance datée que le dossier n'avait pas —
+  // `aria-hidden` protège les lecteurs d'écran, pas les yeux.
+  //
+  // ~~La garde lisait `guide/IllustrationDocuments.tsx` et refusait les
+  // dates et numéros de version parmi ses `<text>`.~~ [2026-10-25 : ce dessin
+  // est retiré avec le hero du guide. Toutes les pages d'entrée ont désormais
+  // une illustration d'en-tête, sans aucun texte : la garde passe de la forme
+  // « pas de date » à la règle plus simple « pas de texte du tout », sur
+  // toute la série.]
+  const DOSSIER = "src/components/entete-page/illustrations";
+  const dessins = readdirSync(join(process.cwd(), DOSSIER)).filter((f) =>
+    f.endsWith(".tsx"),
+  );
 
-    const MOIS =
-      "janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre";
-    const RESSEMBLE_A_UNE_DONNEE = [
-      new RegExp(`\\d{1,2}\\s+(${MOIS})`, "i"), // « 22 juin »
-      /\d{1,2}\/\d{2,4}/, // « 04/26 »
-      /\bv\s?\d+\b/i, // « v3 »
-      /\d{4}-\d{2}-\d{2}/, // une clé de jour civil
-    ];
-    const fabriquees = textes.filter((t) =>
-      RESSEMBLE_A_UNE_DONNEE.some((r) => r.test(t)),
-    );
-    expect(
-      fabriquees,
-      "Une date ou un numéro de version dans l'illustration décorative du " +
-        "guide se lit comme une donnée du dossier. Soit la valeur se calcule, " +
-        "soit elle disparaît.",
-    ).toEqual([]);
+  it("balaie bien la série (borne basse)", () => {
+    expect(dessins.length).toBeGreaterThanOrEqual(20);
+  });
+
+  it.each(dessins)("%s : aucun texte dessiné", (fichier) => {
+    expect(SRC(`${DOSSIER}/${fichier}`)).not.toMatch(/<text\b/);
   });
 });
 

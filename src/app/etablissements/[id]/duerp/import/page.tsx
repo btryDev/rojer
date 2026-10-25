@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { AppTopbar } from "@/components/layout/AppTopbar";
+import { EnTetePage } from "@/components/entete-page/EnTetePage";
+import { BarreDeListe } from "@/components/ui-kit/BarreDeListe";
 import { LegalBadge, WhyCard } from "@/components/ui-kit";
 import { ImportDuerpWizard } from "@/components/duerps/ImportDuerpWizard";
 import { requireEtablissement } from "@/lib/auth/scope";
@@ -14,29 +15,28 @@ export default async function ImportDuerpPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { etablissement } = await requireEtablissement(id);
+  await requireEtablissement(id);
 
   return (
     <>
-      <AppTopbar
-        title="Importer un DUERP"
-        subtitle="Si vous avez déjà un DUERP Excel, téléversez-le pour démarrer plus vite."
-        crumbs={[
-          { href: `/etablissements/${id}`, label: etablissement.raisonDisplay },
-          { href: `/etablissements/${id}/duerp`, label: "DUERP" },
-          { label: "Importer" },
-        ]}
-        actions={
-          <Link
-            href={`/etablissements/${id}/duerp`}
-            className="board-eyebrow text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)] transition-colors hover:text-[color:var(--board-ink)]"
-          >
-            Retour au DUERP →
-          </Link>
-        }
+      <EnTetePage
+        item="duerp"
+        titre="Importer un DUERP"
+        description="Si vous avez déjà un DUERP sous Excel, téléversez-le pour démarrer plus vite."
       />
 
       <main className="flex flex-1 flex-col gap-[22px] bg-[color:var(--board-canvas)] px-[var(--board-gutter)] pb-16 pt-6">
+        {/* Le chemin du retour : l'en-tête commun n'a plus de fil d'Ariane. */}
+        <BarreDeListe
+          action={
+            <Link
+              href={`/etablissements/${id}/duerp`}
+              className="text-[13px] font-semibold text-[color:var(--board-ink)] underline underline-offset-2"
+            >
+              Retour au DUERP
+            </Link>
+          }
+        />
         <WhyCard
           charte="board"
           kicker="Pourquoi importer"

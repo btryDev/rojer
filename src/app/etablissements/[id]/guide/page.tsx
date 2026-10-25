@@ -2,10 +2,10 @@ import Link from "next/link";
 import { REFERENTIEL_VERSION } from "@/lib/referentiels/conformite";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
-import { AppTopbar } from "@/components/layout/AppTopbar";
+import { EnTetePage } from "@/components/entete-page/EnTetePage";
+import { BarreDeListe } from "@/components/ui-kit/BarreDeListe";
 import { ChezVous } from "@/components/guide/ChezVous";
 import { GReveal } from "@/components/guide/GReveal";
-import { GuideHero } from "@/components/guide/GuideHero";
 import { OutilsConformite } from "@/components/guide/OutilsConformite";
 import { ParMetier } from "@/components/guide/ParMetier";
 import { OutilDetails } from "@/components/guide/OutilDetails";
@@ -73,52 +73,54 @@ export default async function GuidePage({
 
   return (
     <>
-      <AppTopbar
-        title="Comprendre vos obligations"
-        subtitle="Ce que la loi attend d'un employeur, traduit simplement. La plateforme vous aide à tenir le fil — elle ne certifie pas votre conformité."
-        crumbs={[
-          { href: `/etablissements/${id}`, label: etab.raisonDisplay },
-          { label: "Comprendre" },
-        ]}
-        actions={
-          <>
-            <PrintButton />
-            {/* La porte de la page des éléments exclus. Elle vit ici en
-                attendant que le lot A8 range les écrans par axe : le guide
-                est aujourd'hui le seul endroit où le produit parle de ce
-                qu'il couvre, donc le seul d'où l'on peut aller lire ce
-                qu'il ne couvre pas. */}
-            {/* Les documents obligatoires ont leur page depuis que l'axe
-                Documentation existe (ADR-030). Le guide y renvoie au lieu
-                d'en garder une copie : deux montages du même composant, ce
-                n'est pas deux vérités, mais c'est deux endroits où l'on croit
-                l'avoir lue. */}
-            <Link
-              href={`/etablissements/${id}/documents`}
-              className={buttonVariants({ variant: "outline", size: "sm" })}
-            >
-              Documents obligatoires
-            </Link>
-            <Link
-              href={`/etablissements/${id}/perimetre`}
-              className={buttonVariants({ variant: "outline", size: "sm" })}
-            >
-              Ce que Rojer ne couvre pas
-            </Link>
-            <Link
-              href={`/etablissements/${id}/controle`}
-              className={buttonVariants({ size: "sm" })}
-            >
-              Préparer un contrôle →
-            </Link>
-          </>
-        }
+      {/* Le guide dit ce qu'il est, et ce qu'il n'est pas : la seconde phrase
+          est la limite de tout l'outil (CLAUDE.md, règle 8). */}
+      <EnTetePage
+        item="guide"
+        description="Ce que la loi attend d'un employeur, traduit simplement, et comment votre établissement est concerné. Rojer vous aide à tenir le fil ; il ne certifie pas votre conformité."
       />
 
       <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-20 px-6 py-10 pb-16 sm:gap-24 sm:px-10 sm:py-12">
-        <GReveal delay={0}>
-          <GuideHero />
-        </GReveal>
+        {/* L'impression et les portes vers les pages voisines, au-dessus du
+            guide : l'en-tête ne porte que la bascule de vue. Le hero
+            éditorial (« Vos obligations… au clair », trois pastilles, une
+            illustration de documents) est retiré le 2026-10-25 : il doublait
+            le titre de l'en-tête, et c'était le second `h1` de l'écran. */}
+        <BarreDeListe
+          aide={<PrintButton />}
+          action={
+            <div className="flex flex-wrap items-center gap-2.5">
+                {/* La porte de la page des éléments exclus. Elle vit ici en
+                    attendant que le lot A8 range les écrans par axe : le guide
+                    est aujourd'hui le seul endroit où le produit parle de ce
+                    qu'il couvre, donc le seul d'où l'on peut aller lire ce
+                    qu'il ne couvre pas. */}
+                {/* Les documents obligatoires ont leur page depuis que l'axe
+                    Documentation existe (ADR-030). Le guide y renvoie au lieu
+                    d'en garder une copie : deux montages du même composant, ce
+                    n'est pas deux vérités, mais c'est deux endroits où l'on croit
+                    l'avoir lue. */}
+                <Link
+                  href={`/etablissements/${id}/documents`}
+                  className={buttonVariants({ variant: "outline", size: "sm" })}
+                >
+                  Documents obligatoires
+                </Link>
+                <Link
+                  href={`/etablissements/${id}/perimetre`}
+                  className={buttonVariants({ variant: "outline", size: "sm" })}
+                >
+                  Ce que Rojer ne couvre pas
+                </Link>
+                <Link
+                  href={`/etablissements/${id}/controle`}
+                  className={buttonVariants({ size: "sm" })}
+                >
+                  Préparer un contrôle →
+                </Link>
+            </div>
+          }
+        />
 
         <GReveal delay={60}>
           <ChezVous

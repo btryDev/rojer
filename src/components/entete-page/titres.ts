@@ -16,4 +16,5 @@ export const TITRE_EN_TETE: Partial<Record<SidebarItemId, string>> = {
   prescriptions: "Ce qu'on vous a prescrit, à vous seul",
   accessibilite: "Registre d'accessibilité",
   "carnet-sanitaire": "Carnet sanitaire eau",
+  guide: "Comprendre vos obligations",
 };

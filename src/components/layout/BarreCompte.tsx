@@ -153,7 +153,8 @@ export function BarreCompte({
     // c'est le conteneur de droite des deux shells, qui défile, si bien que
     // la gélule défile avec la page au lieu de la masquer en restant collée.
     //
-    // `z-50` : au-dessus des en-têtes collants (`AppTopbar`, `z-10`) et des
+    // `z-50` : au-dessus des barres collantes (celle de l'année du calendrier,
+    // `z-20` ; ~~`AppTopbar`~~, supprimée le 2026-10-25) et des
     // widgets du board — voir `panneau` plus haut.
     <div className="absolute right-[var(--board-gutter)] top-3 z-50">
       {/* La gélule : le lieu où l'on revient, celui où l'on travaille, et

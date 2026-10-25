@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { compterActions } from "@/lib/actions/queries";
-import { AppTopbar } from "@/components/layout/AppTopbar";
+import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import { LegalBadge, WhyCard, StatusPill } from "@/components/ui-kit";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { getDashboardData } from "@/lib/dashboard/queries";
@@ -315,13 +315,9 @@ export default async function ControlePage({
 
   return (
     <>
-      <AppTopbar
-        title="Préparer un contrôle"
-        subtitle="Un ZIP, un dossier, 30 secondes."
-        crumbs={[
-          { href: `/etablissements/${id}`, label: etablissement.raisonDisplay },
-          { label: "Contrôle" },
-        ]}
+      <EnTetePage
+        item="controle"
+        description="Les pièces que Rojer tient pour votre établissement, réunies en un seul dossier ZIP. Vérifiez l'état de chaque pièce, puis téléchargez le dossier."
       />
 
       <main className="flex flex-1 flex-col gap-7 bg-[color:var(--board-canvas)] px-[var(--board-gutter)] py-7 pb-16">
@@ -331,9 +327,11 @@ export default async function ControlePage({
             {/* Gauche : statut */}
             <div className="border-b border-[color:var(--board-slate-line)] px-8 py-8 md:border-b-0 md:border-r md:px-10 md:py-10">
               <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">Dossier 1 clic</p>
-              <h1 className="mt-3 text-[clamp(22px,2.2vw,27px)] font-semibold leading-tight tracking-[-0.025em]">
+              {/* Un `h2` : le titre de la page est celui de l'en-tête. Il y
+                  avait deux `h1` sur cet écran. */}
+              <h2 className="mt-3 text-[clamp(22px,2.2vw,27px)] font-semibold leading-tight tracking-[-0.025em]">
                 Préparer votre dossier
-              </h1>
+              </h2>
               <p className="mt-4 max-w-prose text-[0.95rem] leading-relaxed text-[color:var(--board-ink)]/80">
                 {/* ~~« tout ce qu'un inspecteur du travail, une commission de
                     sécurité, un assureur ou un bailleur peut demander »~~ —

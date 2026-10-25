@@ -39,33 +39,11 @@ export function DocumentsObligatoires() {
 
   return (
     <section id={ANCRE_DOCUMENTS} className="scroll-mt-8">
-      <header className="mb-10">
-        <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-          § Les documents obligatoires
-        </p>
-        <h2 className="board-titre mt-3 max-w-[20ch] text-[clamp(22px,2.2vw,27px)]">
-          {/* ~~« Ce que vous devez tenir »~~ — promettait la liste complète
-              sur neuf documents ; la liste est une décision de la
-              propriétaire (audit du 2026-10-12, § 4.7). Le titre ne promet
-              plus l'exhaustivité. */}
-          Des documents que vous devez tenir,
-          <br />
-          <span className="text-[color:var(--board-blue-ink)]">
-            y compris ailleurs qu&apos;ici.
-          </span>
-        </h2>
-        <p className="mt-5 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-          {/* Insécable devant le deux-points, comme les quarante autres
-              endroits du dépôt qui l'écrivent déjà. Avec une espace ordinaire,
-              la ligne cassait entre « compte » et « : », et le deux-points
-              ouvrait la ligne suivante — un défaut intermittent, qui ne se voit
-              qu'à la largeur où la coupure tombe là. */}
-          Chaque ligne cite le texte qui la fonde, ouvrable sur Légifrance. La
-          liste n&apos;est pas un compte&nbsp;: plusieurs de ces documents ne
-          sont dus que dans certains cas, dits ligne par ligne. Et elle ne dit
-          rien de votre situation — seulement ce que les textes demandent.
-        </p>
-      </header>
+      {/* ~~L'en-tête de la section (sur-titre, titre en deux lignes, chapeau)~~
+          [2026-10-25 : il est devenu l'en-tête commun de la page
+          (`EnTetePage`, page « Documents obligatoires ») ; son chapeau y est
+          repris en deux phrases. Le titre ne promet toujours pas
+          l'exhaustivité (audit du 2026-10-12, § 4.7).] */}
 
       <div className="flex flex-col gap-10">
         <BlocDocuments
