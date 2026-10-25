@@ -1,4 +1,4 @@
-// Le hero du tableau de bord : le bâtiment, et la fiche de l'établissement.
+// Le hero du tableau de bord : la fiche de l'établissement et son bâtiment.
 //
 // **Ce que le dessin dit, et ne dit pas.** L'application ne sait rien du bâti
 // — ni hauteur, ni étages, ni forme. Le dessin est l'emblème du genre de lieu
@@ -6,10 +6,11 @@
 // [2026-10-25] Un plan du lieu, puis des étiquettes de zone autour du dessin,
 // ont été essayés et refusés par la propriétaire : un emplacement dessiné se
 // lit comme celui du client, et le produit ne le connaît pas. Ce qu'on sait
-// de l'établissement est écrit dans sa fiche, à gauche.
+// de l'établissement est écrit dans sa fiche, sur laquelle le dessin est posé.
 
 import Image from "next/image";
-import { DoorOpen, MapPin, Users } from "lucide-react";
+import { DoorOpen, IdCard, Users, Wrench } from "lucide-react";
+import { nomDeZone } from "@/lib/batiments/nom-zone";
 import type { IllustrationBatiment } from "@/lib/etablissements/illustration";
 import { libelleRegimeErp } from "@/lib/etablissements/types-erp-affiches";
 import type { EtablissementLite } from "../types";
@@ -20,7 +21,7 @@ import type { EtablissementLite } from "../types";
  * planche ajoutée sans ses dimensions ne compile pas.
  */
 export const PLANCHES: Record<IllustrationBatiment, { largeur: number; hauteur: number }> = {
-  restaurant: { largeur: 507, hauteur: 384 },
+  restaurant: { largeur: 1000, hauteur: 772 },
   magasin: { largeur: 461, hauteur: 352 },
   bureaux: { largeur: 507, hauteur: 413 },
   hotel: { largeur: 421, hauteur: 476 },
@@ -46,75 +47,163 @@ export function monogramme(nom: string): string {
   return (mots[0][0] + mots[1][0]).toUpperCase();
 }
 
-/** Ville d'une adresse « …, 75001 Paris » ; l'adresse entière à défaut. */
-function ville(adresse: string): string {
-  const fin = adresse.split(",").pop()?.trim() ?? "";
-  return /^\d{5}\s+(.+)$/.exec(fin)?.[1] ?? (fin || adresse);
+/**
+ * Le genre de lieu que dit le dessin, en un mot — repris sous le nom de la
+ * fiche. `null` pour le local générique : « local » n'apprend rien.
+ */
+const ACTIVITE: Record<IllustrationBatiment, string | null> = {
+  restaurant: "Restaurant",
+  magasin: "Commerce",
+  bureaux: "Bureaux",
+  hotel: "Hôtel",
+  "salle-sport": "Salle de sport",
+  local: null,
+};
+
+const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? "s" : ""}`;
+
+/** Les autres régimes cochés, à côté de l'ERP — ou le seul, hors ERP. */
+function regimes(etab: EtablissementLite): { principal: string; autres: string | null } {
+  const autres = [
+    etab.estERP && etab.estEtablissementTravail ? "établissement de travail" : null,
+    etab.estIGH ? "IGH" : null,
+    etab.estHabitation ? "habitation" : null,
+  ].filter((r): r is string => r !== null);
+  return {
+    // ADR-045 : tous les types déclarés, même forme que le widget d'identité.
+    principal: etab.estERP ? libelleRegimeErp(etab) : "Établissement de travail",
+    autres: autres.length > 0 ? `+ ${autres.join(", ")}` : null,
+  };
 }
 
-/**
- * La fiche de l'établissement, dans la colonne de gauche du hero : son nom
- * et ce qui le caractérise — régime, effectif, ville. Tout ce qu'elle dit se
- * lit sur la fiche établissement, d'où elle vient.
- */
-export function FicheEtablissement({ etablissement: etab }: { etablissement: EtablissementLite }) {
-  const lignes: { cle: string; Icone: typeof Users; texte: string }[] = [
-    {
-      cle: "regime",
-      Icone: DoorOpen,
-      // ADR-045 : tous les types déclarés, même forme que le widget
-      // d'identité. Hors ERP, le régime travail.
-      texte: etab.estERP ? libelleRegimeErp(etab) : "Établissement de travail",
-    },
-    {
-      cle: "effectif",
-      Icone: Users,
-      texte: `${etab.effectifSurSite} salarié${etab.effectifSurSite > 1 ? "s" : ""} sur site`,
-    },
-    { cle: "lieu", Icone: MapPin, texte: ville(etab.adresse) },
-  ];
-
+function Fait({
+  Icone,
+  libelle,
+  valeur,
+  precision,
+}: {
+  Icone: typeof Users;
+  libelle: string;
+  valeur: string;
+  precision: string | null;
+}) {
   return (
-    <div className="w-full max-w-[340px] rounded-[20px] bg-[color:var(--board-card)] p-5 ring-1 ring-[color:rgba(13,18,36,.08)]">
-      <div className="flex min-w-0 items-center gap-3">
-        <span
-          aria-hidden
-          className="flex size-10 flex-none items-center justify-center rounded-[12px] bg-[color:var(--board-ink)] indent-[0.06em] font-mono text-[12px] font-medium tracking-[0.06em] text-white"
-        >
-          {monogramme(etab.raisonDisplay)}
-        </span>
-        <p className="m-0 min-w-0 text-[17px] font-semibold leading-[1.25] tracking-[-0.02em] text-[color:var(--board-ink)]">
-          {etab.raisonDisplay}
-        </p>
-      </div>
-      <ul className="m-0 mt-4 flex list-none flex-col gap-2 border-t border-[color:var(--board-slate-line)] p-0 pt-4">
-        {lignes.map(({ cle, Icone, texte }) => (
-          <li
-            key={cle}
-            className="flex min-w-0 items-center gap-2.5 text-[13px] text-[color:var(--board-slate-ink)]"
-          >
-            <Icone aria-hidden className="size-4 flex-none text-[color:var(--board-slate-mid)]" />
-            <span className="min-w-0 truncate">{texte}</span>
-          </li>
-        ))}
-      </ul>
+    <div className="flex min-w-0 flex-col gap-1">
+      <span className="flex items-center gap-1.5 text-[11.5px] text-[color:var(--board-slate-mid)]">
+        <Icone aria-hidden className="size-3.5 flex-none" />
+        {libelle}
+      </span>
+      <span className="text-[15px] font-semibold tracking-[-0.01em] text-[color:var(--board-ink)]">
+        {valeur}
+      </span>
+      {precision ? (
+        <span className="text-[12px] text-[color:var(--board-slate-mid)]">{precision}</span>
+      ) : null}
     </div>
   );
 }
 
-/** Le bâtiment du hero — décoratif : tout ce qu'il évoque est écrit dans la fiche. */
-export function HeroBatiments({ illustration }: { illustration: IllustrationBatiment }) {
+/**
+ * Le hero du tableau de bord : la fiche de l'établissement, étirée sur la
+ * largeur, et le bâtiment du genre de lieu posé sur son extrémité droite
+ * (planche 6 de l'artefact, retenue par la propriétaire le 2026-10-25).
+ *
+ * Tout ce que la fiche dit vient de la fiche établissement, de l'équipe et
+ * du parc ; rien n'y est un état de conformité — les compteurs sont aux
+ * widgets du dessous. Les zones sont de l'information, pas un filtre : le
+ * filtre reste le sélecteur posé sous le hero.
+ */
+export function HeroEtablissement({
+  etablissement: etab,
+  illustration,
+  nbEquipe,
+  nbEquipements,
+  zones,
+}: {
+  etablissement: EtablissementLite;
+  illustration: IllustrationBatiment;
+  nbEquipe: number;
+  nbEquipements: number;
+  zones: readonly { id: string; nom: string; nbEquipements: number }[];
+}) {
   const planche = PLANCHES[illustration];
+  const { principal, autres } = regimes(etab);
+  const activite = ACTIVITE[illustration];
+
   return (
-    <Image
-      src={`/illustrations/batiments/${illustration}.webp`}
-      alt=""
-      aria-hidden
-      width={planche.largeur}
-      height={planche.hauteur}
-      sizes="380px"
-      priority
-      className="mx-auto block h-auto w-[clamp(220px,28vw,380px)] select-none"
-    />
+    <div className="relative">
+      {/* Décoratif : tout ce que le dessin évoque est écrit dans la fiche.
+          Au-dessus de la fiche sur petit écran ; à partir de `lg`, posé sur
+          son extrémité droite, qui lui réserve la place (`lg:pr-…`). Il peut
+          monter sous la gélule de compte : une image y a droit. */}
+      <Image
+        src={`/illustrations/batiments/${illustration}.webp`}
+        alt=""
+        aria-hidden
+        width={planche.largeur}
+        height={planche.hauteur}
+        sizes="(min-width: 1024px) 440px, 320px"
+        priority
+        className="pointer-events-none relative z-10 mx-auto mb-4 block h-auto w-[clamp(220px,60vw,320px)] select-none lg:absolute lg:bottom-5 lg:right-[-1%] lg:mb-0 lg:w-[clamp(300px,30vw,440px)]"
+      />
+
+      <div className="rounded-[24px] bg-[color:var(--board-card)] p-6 ring-1 ring-[color:rgba(13,18,36,.10)] sm:p-7 lg:pr-[clamp(260px,29vw,420px)]">
+        <div className="flex min-w-0 items-center gap-3.5">
+          <span
+            aria-hidden
+            className="flex size-12 flex-none items-center justify-center rounded-[14px] bg-[color:var(--board-ink)] indent-[0.06em] font-mono text-[13px] font-medium tracking-[0.06em] text-white"
+          >
+            {monogramme(etab.raisonDisplay)}
+          </span>
+          <div className="min-w-0">
+            <p className="m-0 text-[22px] font-semibold leading-[1.2] tracking-[-0.025em] text-[color:var(--board-ink)]">
+              {etab.raisonDisplay}
+            </p>
+            <p className="m-0 mt-0.5 truncate text-[13px] text-[color:var(--board-slate-mid)]">
+              {[activite, etab.adresse].filter(Boolean).join(" · ")}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-5 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-[color:var(--board-slate-line)] pt-5 xl:grid-cols-4">
+          <Fait Icone={DoorOpen} libelle="Régime" valeur={principal} precision={autres} />
+          <Fait
+            Icone={Users}
+            libelle="Effectif"
+            valeur={pluriel(etab.effectifSurSite, "salarié")}
+            precision="sur site"
+          />
+          <Fait
+            Icone={IdCard}
+            libelle="Équipe"
+            valeur={pluriel(nbEquipe, "fiche")}
+            precision="dans l'équipe"
+          />
+          <Fait
+            Icone={Wrench}
+            libelle="Équipements"
+            valeur={`${nbEquipements} déclaré${nbEquipements > 1 ? "s" : ""}`}
+            precision={`dans ${pluriel(zones.length, "zone")}`}
+          />
+        </div>
+
+        <div className="mt-5 flex flex-wrap items-center gap-2">
+          <span className="board-eyebrow mr-1 text-[10px] text-[color:var(--board-slate-mid)]">
+            Zones
+          </span>
+          {zones.map((z) => (
+            <span
+              key={z.id}
+              className="inline-flex items-center gap-2 rounded-[12px] bg-[color:var(--board-slate-pale)] px-3 py-1.5 text-[12.5px]"
+            >
+              <span className="font-semibold text-[color:var(--board-ink)]">{nomDeZone(z.nom)}</span>
+              <span className="text-[color:var(--board-slate-mid)]">
+                {z.nbEquipements > 0 ? pluriel(z.nbEquipements, "équipement") : "aucun équipement"}
+              </span>
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }

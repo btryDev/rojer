@@ -42,6 +42,7 @@ import { instantDuRendu } from "@/lib/dates/instant-du-rendu";
 import { libellePorteur } from "@/lib/calendrier/labels";
 import { echeancesDuTableauDeBord } from "@/lib/calendrier/prochaine-echeance";
 import { illustrationBatiment } from "@/lib/etablissements/illustration";
+import { compterEquipe } from "@/lib/salaries/queries";
 
 export default async function EtablissementPage({
   params,
@@ -108,6 +109,7 @@ export default async function EtablissementPage({
     prochainesVerifs,
     rapportsRecents,
     marquesDuDossier,
+    nbEquipe,
   ] = await Promise.all([
     listerEquipementsDeLEtablissement(id),
     compterVerifsParEquipement(id),
@@ -136,6 +138,8 @@ export default async function EtablissementPage({
     // guide plus bas, par module — un seul calcul, partagé avec les fenêtres
     // d'événements ci-dessus par `cache()`.
     marquesAConfirmerDuRendu(id),
+    // Le nombre de fiches de l'équipe, pour la fiche du hero.
+    compterEquipe(id),
   ]);
 
   // Le filtre bâtiment se pose ici, une fois, sur la liste chargée entière —
@@ -314,6 +318,7 @@ export default async function EtablissementPage({
     // redisait ce que l'agrégat porte déjà ; la seconde légendait une plaque
     // qui n'existe plus.
     illustrationHero: illustrationBatiment(etab),
+    nbEquipe,
     etablissement: {
       id: etab.id,
       raisonDisplay: etab.raisonDisplay,

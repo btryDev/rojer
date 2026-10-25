@@ -37,7 +37,7 @@ import {
   LIBELLE_AUCUNE_VERIFICATION,
   LIBELLE_SANS_ECHEANCE,
 } from "@/lib/calendrier/etats";
-import { FicheEtablissement, HeroBatiments } from "./hero-batiments";
+import { HeroEtablissement } from "./hero-batiments";
 import { CarteBoard } from "@/components/dashboard/CarteBoard";
 import type { Recommandation } from "@/lib/dashboard/recommandations";
 import { occupePlaceReservee } from "@/lib/dashboard/place-reservee";
@@ -486,12 +486,8 @@ export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
 
           `.sous-la-gelule` : le brief remonte sous la gélule de compte, que
           son fond a le droit de porter. */}
-      <div className="sous-la-gelule fond-pointille border-b border-[color:rgba(13,18,36,.06)] px-[var(--board-gutter)] pb-[48px] pt-[56px]">
-        <div className="grid items-center gap-x-10 gap-y-10 lg:grid-cols-[minmax(0,1fr)_auto]">
-          {/* Rentré de la gouttière : collé au bord, le titre partait du même
-              trait que les cartes de widgets du dessous et le hero perdait
-              son statut de bandeau — c'est une bannière, pas une carte. */}
-          <div className="lg:pl-8 xl:pl-12">
+      <div className="sous-la-gelule fond-pointille border-b border-[color:rgba(13,18,36,.06)] px-[var(--board-gutter)] pb-10 pt-[56px]">
+        <div>
             <p className="board-eyebrow m-0 mb-3 text-[color:var(--board-slate-ink)]">
               {brief.datePill}
             </p>
@@ -515,7 +511,7 @@ export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
               className={
                 totalUrgent > 0
                   ? "sr-only"
-                  : "board-titre m-0 mb-7 max-w-[480px] text-pretty text-[clamp(28px,2.9vw,40px)] leading-[1.06] tracking-[-0.035em]"
+                  : "board-titre m-0 mb-5 max-w-[480px] text-pretty text-[clamp(28px,2.9vw,40px)] leading-[1.06] tracking-[-0.035em]"
               }
             >
               {titre}
@@ -525,11 +521,13 @@ export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
                 relevés (« Dépassées », « Sous 30 j », « Équipements ») :
                 décision de la propriétaire. Les compteurs vivent dans les
                 widgets du dessous, qui les ventilent et y mènent. */}
-            <FicheEtablissement etablissement={etablissement} />
-          </div>
-
-          {/* Le bâtiment du genre de lieu — un emblème, pas un portrait. */}
-          <HeroBatiments illustration={bundle.illustrationHero} />
+            <HeroEtablissement
+              etablissement={etablissement}
+              illustration={bundle.illustrationHero}
+              nbEquipe={bundle.nbEquipe}
+              nbEquipements={bundle.equipementsEtablissement.length}
+              zones={bundle.batiments}
+            />
         </div>
       </div>
     </>

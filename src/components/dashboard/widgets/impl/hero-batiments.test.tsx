@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render } from "@testing-library/react";
 import { ILLUSTRATIONS_BATIMENT } from "@/lib/etablissements/illustration";
-import { FicheEtablissement, PLANCHES } from "./hero-batiments";
+import { HeroEtablissement, PLANCHES } from "./hero-batiments";
 
 afterEach(cleanup);
 
@@ -24,25 +24,47 @@ const etab = {
   categorieErp: "N5",
   classeIgh: null,
   entreprise: { raisonSociale: "SARL", siret: null, codeNaf: "56.10A", effectif: 8 },
-} as unknown as Parameters<typeof FicheEtablissement>[0]["etablissement"];
+} as unknown as Parameters<typeof HeroEtablissement>[0]["etablissement"];
+
+const zones = [
+  { id: "z1", nom: "Bâtiment principal", nbEquipements: 7 },
+  { id: "z2", nom: "Terrasse", nbEquipements: 0 },
+];
 
 function texte(e = etab) {
-  return render(<FicheEtablissement etablissement={e} />).container.textContent ?? "";
+  return (
+    render(
+      <HeroEtablissement etablissement={e} illustration="restaurant" nbEquipe={6} nbEquipements={7} zones={zones} />,
+    ).container.textContent ?? ""
+  );
 }
 
-// 2026-10-25 : la fiche présente l'établissement — à la place des trois
-// relevés du hero.
+// 2026-10-25 : la fiche du hero présente l'établissement — à la place des
+// trois relevés. Rien n'y est un état de conformité.
 describe("hero : la fiche de l'établissement", () => {
-  it("nomme l'établissement, son régime, son effectif et sa ville", () => {
+  it("nomme l'établissement, son activité, son régime, son effectif, son équipe et son parc", () => {
     const t = texte();
     expect(t).toContain("Le Comptoir des Halles");
+    expect(t).toContain("Restaurant · 12 rue Montorgueil, 75001 Paris");
     expect(t).toContain("ERP · type N · cat. 5");
-    expect(t).toContain("8 salariés sur site");
-    expect(t).toContain("Paris");
+    expect(t).toContain("+ établissement de travail");
+    expect(t).toContain("8 salariés");
+    expect(t).toContain("6 fiches");
+    expect(t).toContain("7 déclarés");
+    expect(t).toContain("dans 2 zones");
   });
 
-  it("hors ERP, le régime travail", () => {
-    expect(texte({ ...etab, estERP: false })).toContain("Établissement de travail");
+  it("hors ERP, le régime travail, sans précision redondante", () => {
+    const t = texte({ ...etab, estERP: false });
+    expect(t).toContain("Établissement de travail");
+    expect(t).not.toContain("+ établissement de travail");
+  });
+
+  it("les zones sont nommées comme zones, et une zone vide le dit", () => {
+    const t = texte();
+    expect(t).toContain("Zone principale");
+    expect(t).not.toContain("Bâtiment principal");
+    expect(t).toContain("aucun équipement");
   });
 });
 

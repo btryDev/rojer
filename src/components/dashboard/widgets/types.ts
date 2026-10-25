@@ -196,6 +196,8 @@ export type DashboardBundle = {
    * pas à partir dans le bundle du board.
    */
   illustrationHero: IllustrationBatiment;
+  /** Les fiches actives de l'équipe (`compterEquipe`), pour la fiche du hero. */
+  nbEquipe: number;
   etablissement: EtablissementLite;
   dashboard: DashboardData;
   /**
