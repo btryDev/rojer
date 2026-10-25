@@ -165,8 +165,13 @@ export default async function PlanActionsPage({
             .
           </>
         }
-      >
-        <div className="flex flex-wrap items-center gap-3">
+      />
+
+      <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
+        {/* L'export et l'article qui fonde la liste parlent de la liste : ils
+            vivent au-dessus d'elle — l'en-tête ne porte que la bascule de vue
+            (décision de la propriétaire du 2026-10-25). */}
+        <div className="flex flex-wrap items-center justify-end gap-3">
           <a
             href={`/api/etablissements/${id}/plan-actions/pdf`}
             target="_blank"
@@ -189,9 +194,6 @@ export default async function PlanActionsPage({
             </p>
           </LegalBadge>
         </div>
-      </EnTetePage>
-
-      <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
         {/* Indicateurs */}
         <section className="carte-board px-7 py-6 sm:px-8">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">

@@ -30,12 +30,19 @@ describe("EnTetePage", () => {
   });
 
   it("le panneau de l'illustration porte la teinte de la section", () => {
-    const { container } = render(<EnTetePage item="equipe" description="Une phrase." />);
+    const { container } = render(<EnTetePage item="actions" description="Une phrase." />);
     const panneau = container.querySelector("[data-teinte-section]") as HTMLElement;
     // jsdom normalise la couleur en rgb() : on compare sur la même forme.
     const attendu = document.createElement("div");
-    attendu.style.backgroundColor = TEINTE_SECTION["sante-securite"] as string;
+    attendu.style.backgroundColor = TEINTE_SECTION["a-faire"] as string;
     expect(panneau.style.backgroundColor).toBe(attendu.style.backgroundColor);
+  });
+
+  it("une page sans dessin n'ouvre pas de panneau teinté vide", () => {
+    // « equipe » n'a pas encore d'illustration (migration par section).
+    expect(ITEMS_ILLUSTRES).not.toContain("equipe");
+    const { container } = render(<EnTetePage item="equipe" description="Une phrase." />);
+    expect(container.querySelector("[data-teinte-section]")).toBeNull();
   });
 
   it("deux pages d'une même section portent la même teinte", () => {

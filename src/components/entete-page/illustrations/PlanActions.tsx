@@ -29,7 +29,10 @@ export function IllustrationPlanActions() {
             <path d="M64,170H160M64,220H144" strokeWidth={3.2} vectorEffect="non-scaling-stroke" />
             <path d="M33,69 l5,5 l10,-11" strokeWidth={3} vectorEffect="non-scaling-stroke" />
             <path d="M33,119 l5,5 l10,-11" strokeWidth={3} vectorEffect="non-scaling-stroke" />
-            <path className="ep-trace" style={{ animationDelay: "0.7s" }} pathLength={1} d="M33,169 l5,5 l10,-11" strokeWidth={3} vectorEffect="non-scaling-stroke" />
+            {/* Sans `non-scaling-stroke` : il applique les tirets dans le
+                repère de l'écran, où `pathLength` ne normalise plus — la
+                coche pouvait rester en pointillés après son tracé. */}
+            <path className="ep-trace" style={{ animationDelay: "0.7s" }} pathLength={1} d="M33,169 l5,5 l10,-11" strokeWidth={3.4} />
           </g>
         </g>
         {/* La pince */}

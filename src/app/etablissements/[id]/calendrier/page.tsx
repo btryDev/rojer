@@ -127,6 +127,13 @@ const FMT_MOIS_COURT = new Intl.DateTimeFormat("fr-FR", {
   timeZone: FUSEAU_REFERENCE,
   month: "short",
 });
+
+/**
+ * Le mois court d'une tuile-date, sans le point d'abréviation : « OCT », et
+ * non « OCT. » (2026-10-25). Une fonction pour les deux lectures — par mois
+ * et par équipement — qui posent la même tuile.
+ */
+const moisDeTuile = (date: Date) => FMT_MOIS_COURT.format(date).replace(/\.$/, "");
 /**
  * La date de référence, en toutes lettres. Tout ce que cette page colore
  * — dépassé, sous 30 jours, à venir — se calcule depuis aujourd'hui
@@ -228,7 +235,7 @@ function LigneEcheance({
                 recentré : l'interlettrage ajoute un blanc après la dernière
                 lettre, que le retrait de même valeur compense. */}
             <span className="mt-1 indent-[0.1em] font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-white/70">
-              {FMT_MOIS_COURT.format(date).replace(/\.$/, "")}
+              {moisDeTuile(date)}
             </span>
           </>
         ) : (
@@ -550,7 +557,7 @@ export default async function CalendrierPage({
       href: `/etablissements/${id}/verifications/${v.id}`,
       mois,
       jour: FMT_JOUR.format(lec.date),
-      moisCourt: FMT_MOIS_COURT.format(lec.date),
+      moisCourt: moisDeTuile(lec.date),
       titre: v.libelleObligation,
       meta:
         LABEL_PERIODICITE[v.periodicite] +
@@ -812,7 +819,7 @@ export default async function CalendrierPage({
         href: e.href,
         mois: c.mois,
         jour: FMT_JOUR.format(l.date),
-        moisCourt: FMT_MOIS_COURT.format(l.date),
+        moisCourt: moisDeTuile(l.date),
         titre: e.libelle,
         meta: avecMentionFin(metaAutre(e), l.fin),
         etat,

@@ -57,6 +57,13 @@ const H_MAX = 92;
 const H_MIN_SEGMENT = 9;
 /** Hauteur de l'étiquette du mois, sous la ligne de base. */
 const H_ETIQUETTE = 38;
+/**
+ * Hauteur de la colonne au-dessus de la ligne de base : le compte (15 px au
+ * plus), son écart (8), la barre — qui peut dépasser `H_MAX` des planchers de
+ * ses segments (`H_MIN_SEGMENT`) — et ses trois jours de 2 px. Trop juste, la
+ * barre la plus chargée poussait son compte hors de la colonne.
+ */
+const H_COLONNE = H_MAX + 15 + 8 + 3 * H_MIN_SEGMENT + 3 * 2;
 
 type Segment = { cle: string; hauteur: number; fond: string };
 
@@ -134,14 +141,6 @@ export function RegleAnnuelle({
       {/* L'instrument. Chaque graduation est un bouton : c'est bien une
           commande, pas une image — le clavier doit y arriver. */}
       <div className="relative grid grid-cols-12 gap-1.5">
-        {/* La ligne de base : les barres s'y posent, un mois vide y marque
-            son point. Elle passe sous les colonnes, à hauteur fixe de leur
-            pied — l'étiquette du mois a une hauteur fixe pour ça. */}
-        <span
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 h-px bg-[color:var(--board-slate-line)]"
-          style={{ bottom: H_ETIQUETTE }}
-        />
         {mois.map((m) => {
           const nb = totalDuMois(m);
           const segments = segmentsDuMois(m, maxTotal);
@@ -183,7 +182,7 @@ export function RegleAnnuelle({
                   de grandeur, le chiffre donne la valeur. */}
               <span
                 className="flex w-full flex-col items-center justify-end gap-2"
-                style={{ height: H_MAX + 22 }}
+                style={{ height: H_COLONNE }}
               >
                 <span
                   aria-hidden
@@ -247,6 +246,16 @@ export function RegleAnnuelle({
             </button>
           );
         })}
+        {/* La ligne de base : les barres s'y posent, un mois vide y marque
+            son point, à hauteur fixe du pied des colonnes — l'étiquette du
+            mois a une hauteur fixe pour ça. Rendue APRÈS les colonnes : le
+            fond d'un mois survolé ou ouvert ne la coupe pas ; barres et
+            points (`z-[1]`) passent, eux, devant elle. */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 h-px bg-[color:var(--board-slate-line)]"
+          style={{ bottom: H_ETIQUETTE }}
+        />
       </div>
 
       {/* La légende. Elle nomme les champs : sans elle, trois couleurs

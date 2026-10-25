@@ -24,6 +24,12 @@ const ILLUSTRATIONS: Partial<Record<SidebarItemId, ComponentType>> = {
   "etats-permanents": IllustrationEnPlace,
 };
 
+/** La page a-t-elle son dessin ? Sans lui, l'en-tête n'ouvre pas de
+ *  panneau : un aplat teinté vide occuperait la moitié droite. */
+export function aUneIllustration(item: SidebarItemId): boolean {
+  return item in ILLUSTRATIONS;
+}
+
 export function IllustrationEnTete({ item }: { item: SidebarItemId }) {
   const Dessin = ILLUSTRATIONS[item];
   return Dessin ? <Dessin /> : null;

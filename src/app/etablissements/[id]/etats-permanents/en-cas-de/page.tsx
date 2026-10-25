@@ -66,30 +66,34 @@ export default async function EnCasDePage({
           actif="evenement"
           decoupe={decoupe === "geste" ? "geste" : undefined}
         />
-            <AideEcran titre="Comment lire cette page">
-              <p className="m-0">
-                Ces obligations n&apos;ont pas de date : elles deviennent dues
-                quand un fait survient — une embauche, une première affectation à
-                un travail sur écran, une opération de chargement ou de
-                déchargement par une entreprise extérieure, la fin de certains
-                arrêts de travail, un accident du travail grave, un épisode de
-                chaleur intense.
-              </p>
-              <p className="m-0">
-                Rojer ne sait pas quand ce fait arrive ; il ne peut donc ni vous
-                le rappeler, ni vous dire où vous en êtes. Il vous dit la règle,
-                pour que vous la connaissiez le jour venu.
-              </p>
-              <p className="m-0">
-                Cliquez sur un événement pour voir ce qu&apos;il rend dû ; le
-                livre ouvre ensuite le texte exact et ses articles. Ce qu&apos;un
-                fait rend dû à une personne ou à un appareil se lit sur sa fiche,
-                dans Équipe et dans Équipements.
-              </p>
-            </AideEcran>
       </EnTetePage>
 
       <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
+        {/* L'aide parle de la liste, elle vit au-dessus d'elle : l'en-tête ne
+            porte que la bascule de vue (2026-10-25). */}
+        <div className="flex justify-end">
+          <AideEcran titre="Comment lire cette page">
+            <p className="m-0">
+              Ces obligations n&apos;ont pas de date : elles deviennent dues
+              quand un fait survient — une embauche, une première affectation à
+              un travail sur écran, une opération de chargement ou de
+              déchargement par une entreprise extérieure, la fin de certains
+              arrêts de travail, un accident du travail grave, un épisode de
+              chaleur intense.
+            </p>
+            <p className="m-0">
+              Rojer ne sait pas quand ce fait arrive ; il ne peut donc ni vous
+              le rappeler, ni vous dire où vous en êtes. Il vous dit la règle,
+              pour que vous la connaissiez le jour venu.
+            </p>
+            <p className="m-0">
+              Cliquez sur un événement pour voir ce qu&apos;il rend dû ; le
+              livre ouvre ensuite le texte exact et ses articles. Ce qu&apos;un
+              fait rend dû à une personne ou à un appareil se lit sur sa fiche,
+              dans Équipe et dans Équipements.
+            </p>
+          </AideEcran>
+        </div>
         {groupes.length === 0 ? (
           <section className="carte-board px-7 py-8 sm:px-8">
             <div className="flex max-w-[600px] flex-col gap-3">

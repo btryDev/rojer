@@ -200,65 +200,70 @@ export default async function EtatsPermanentsPage({
         description="Ce qui doit exister chez vous en permanence. Touchez une ligne pour ouvrir sa fiche et la déclarer."
       >
         <OngletsEnPlace etablissementId={id} actif="permanence" decoupe={parGeste ? "geste" : undefined} />
-        <div className="flex w-full flex-wrap items-center justify-between gap-4">
-              <AideEcran titre="Comment lire cette page">
-                <p className="m-0">
-                  Des obligations sans date : elles ne se refont pas à échéance, il
-                  s&apos;agit d&apos;un état à mettre en place puis à maintenir. Une
-                  bonne partie est sans doute déjà vraie chez vous — de l&apos;eau au
-                  robinet, des toilettes, une affiche au mur.
-                </p>
-                <p className="m-0">
-                  Passez-les en revue : ce que vous n&apos;aurez pas déclaré dira ce
-                  qu&apos;il vous reste à faire. Une déclaration est la vôtre :
-                  Rojer ne vérifie pas qu&apos;une chose est en place.
-                </p>
-                <p className="m-0">
-                  Le livre « Texte » de chaque ligne ouvre l&apos;article qui la
-                  fonde, avec le lien vers la source officielle.
-                </p>
-                <p className="m-0">
-                  Rien n&apos;est relancé : la date de votre déclaration
-                  s&apos;affiche, vous jugez vous-même si elle a vieilli. Dans le
-                  dossier de conformité, une ligne que vous n&apos;avez pas déclarée
-                  n&apos;est pas présentée comme un manquement.
-                </p>
-                <p className="m-0">
-                  Cette page reflète ce que vous avez renseigné sur votre
-                  établissement, vos équipements et vos salariés : une information
-                  manquante ou inexacte change ce qui s&apos;y affiche.
-                </p>
-              </AideEcran>
-              {/*
-                Le compteur est MESURÉ, jamais écrit à la main : `listerEtatsPermanents`
-                le calcule sur ce que le moteur rend pour CE dossier. Le brief l'exige,
-                et ce dépôt s'est fait prendre plusieurs fois par des comptes recopiés —
-                jusque dans les briefs eux-mêmes, trois fois sur cette page.
-
-                « déclarés en place par vous », jamais « conformes » : le produit
-                assiste, il ne certifie pas (CLAUDE.md, règle 8). C'est ici, et
-                ici SEULEMENT, que l'écran dit qui affirme « en place » : les
-                familles et le sommaire ne portent que « x sur n » (2026-10-17,
-                revue de c6 ; ADR-027, amendement du 2026-10-17, § 10).
-              */}
-              {/* `compteDeLaPage` : la même lecture que le widget du tableau de
-                  bord, qui affiche ce compte au-dessus de ses familles. */}
-              <CompteurDeLaPage {...compteDeLaPage(dossier)} />
-        </div>
-              {texteFiche && (
-                <p className="m-0 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-                  {texteFiche}{" "}
-                  <Link
-                    href={`/etablissements/${id}/modifier`}
-                    className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
-                  >
-                    Compléter la fiche
-                  </Link>
-                </p>
-              )}
       </EnTetePage>
 
       <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
+        {/* L'aide, le compte et la fiche incomplète : ils parlent de la liste,
+            ils vivent au-dessus d'elle — l'en-tête ne porte que la bascule
+            de vue (décision de la propriétaire du 2026-10-25). */}
+        <div className="flex flex-col gap-3">
+          <div className="flex w-full flex-wrap items-center justify-between gap-4">
+                <AideEcran titre="Comment lire cette page">
+                  <p className="m-0">
+                    Des obligations sans date : elles ne se refont pas à échéance, il
+                    s&apos;agit d&apos;un état à mettre en place puis à maintenir. Une
+                    bonne partie est sans doute déjà vraie chez vous — de l&apos;eau au
+                    robinet, des toilettes, une affiche au mur.
+                  </p>
+                  <p className="m-0">
+                    Passez-les en revue : ce que vous n&apos;aurez pas déclaré dira ce
+                    qu&apos;il vous reste à faire. Une déclaration est la vôtre :
+                    Rojer ne vérifie pas qu&apos;une chose est en place.
+                  </p>
+                  <p className="m-0">
+                    Le livre « Texte » de chaque ligne ouvre l&apos;article qui la
+                    fonde, avec le lien vers la source officielle.
+                  </p>
+                  <p className="m-0">
+                    Rien n&apos;est relancé : la date de votre déclaration
+                    s&apos;affiche, vous jugez vous-même si elle a vieilli. Dans le
+                    dossier de conformité, une ligne que vous n&apos;avez pas déclarée
+                    n&apos;est pas présentée comme un manquement.
+                  </p>
+                  <p className="m-0">
+                    Cette page reflète ce que vous avez renseigné sur votre
+                    établissement, vos équipements et vos salariés : une information
+                    manquante ou inexacte change ce qui s&apos;y affiche.
+                  </p>
+                </AideEcran>
+                {/*
+                  Le compteur est MESURÉ, jamais écrit à la main : `listerEtatsPermanents`
+                  le calcule sur ce que le moteur rend pour CE dossier. Le brief l'exige,
+                  et ce dépôt s'est fait prendre plusieurs fois par des comptes recopiés —
+                  jusque dans les briefs eux-mêmes, trois fois sur cette page.
+
+                  « déclarés en place par vous », jamais « conformes » : le produit
+                  assiste, il ne certifie pas (CLAUDE.md, règle 8). C'est ici, et
+                  ici SEULEMENT, que l'écran dit qui affirme « en place » : les
+                  familles et le sommaire ne portent que « x sur n » (2026-10-17,
+                  revue de c6 ; ADR-027, amendement du 2026-10-17, § 10).
+                */}
+                {/* `compteDeLaPage` : la même lecture que le widget du tableau de
+                    bord, qui affiche ce compte au-dessus de ses familles. */}
+                <CompteurDeLaPage {...compteDeLaPage(dossier)} />
+          </div>
+                {texteFiche && (
+                  <p className="m-0 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+                    {texteFiche}{" "}
+                    <Link
+                      href={`/etablissements/${id}/modifier`}
+                      className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
+                    >
+                      Compléter la fiche
+                    </Link>
+                  </p>
+                )}
+        </div>
         {/* Vide seulement quand il n'y a NI état NI fait : la page testait
             les seuls états, et un dossier qui n'avait que des lignes « fait
             le » se voyait dire « Rien à mettre en place » au-dessus d'elles. */}

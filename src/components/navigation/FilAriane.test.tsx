@@ -276,7 +276,15 @@ describe("les pages d'entrée disent leur rangement par un fil d'Ariane", () => 
     // Une page passée à cet en-tête satisfait la garde ; une page qui
     // retire son fil SANS y passer la fait toujours tomber.
     const source = lire(dossier);
-    if (/from "@\/components\/entete-page\/EnTetePage"/.test(source)) return;
+    // Importé ET rendu, lus comme le reste de la garde — par l'arbre de
+    // syntaxe et sans les commentaires : un import laissé en commentaire
+    // ne compte pas plus qu'un fil laissé en commentaire.
+    const importeEnTete = analyser(source).statements.some(
+      (i) =>
+        ts.isImportDeclaration(i) &&
+        (i.moduleSpecifier as ts.StringLiteral).text === "@/components/entete-page/EnTetePage",
+    );
+    if (importeEnTete && /<EnTetePage\b/.test(sansCommentaires(source))) return;
     const delegues = analyser(source)
       .statements.filter(ts.isImportDeclaration)
       .map((i) => (i.moduleSpecifier as ts.StringLiteral).text)

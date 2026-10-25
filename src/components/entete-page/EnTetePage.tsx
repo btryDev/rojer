@@ -6,7 +6,7 @@ import {
   type SidebarItemId,
 } from "@/components/layout/sidebar-nav";
 
-import { IllustrationEnTete } from "./illustrations";
+import { IllustrationEnTete, aUneIllustration } from "./illustrations";
 import { TEINTE_SECTION } from "./teintes";
 
 /**
@@ -53,13 +53,19 @@ export function EnTetePage({
   children?: ReactNode;
 }) {
   const fond = TEINTE_SECTION[categorieDeItem(item) ?? "tableau"];
+  const illustree = aUneIllustration(item);
 
   return (
     // `flex-none` n'est pas décoratif : la colonne de contenu du shell est un
     // `flex flex-col` de hauteur contrainte (`h-screen`), où `flex-shrink`
     // vaut 1 et porte sur la HAUTEUR. Sans lui, l'en-tête est écrasé sous son
     // contenu et l'illustration est coupée par le bloc suivant.
-    <header className="grid flex-none bg-[color:var(--board-card)] md:min-h-[320px] md:grid-cols-[minmax(0,1fr)_minmax(340px,42%)]">
+    <header
+      className={
+        "grid flex-none bg-[color:var(--board-card)] " +
+        (illustree ? "md:min-h-[320px] md:grid-cols-[minmax(0,1fr)_minmax(340px,42%)]" : "")
+      }
+    >
       {fond ? (
         <div aria-hidden className="h-1.5 md:hidden" style={{ backgroundColor: fond }} />
       ) : null}
@@ -74,14 +80,17 @@ export function EnTetePage({
           <div className="mt-6 flex flex-col items-start gap-4">{children}</div>
         ) : null}
       </div>
-      {/* Le panneau passe sous la gélule de compte : un fond y a droit. */}
-      <div
-        data-teinte-section
-        className="hidden items-end justify-center overflow-hidden px-8 pb-5 pt-16 md:flex [&>*]:max-w-full"
-        style={fond ? { backgroundColor: fond } : undefined}
-      >
-        <IllustrationEnTete item={item} />
-      </div>
+      {/* Le panneau passe sous la gélule de compte : un fond y a droit. Sans
+          dessin, pas de panneau — l'en-tête tient sur une colonne. */}
+      {illustree ? (
+        <div
+          data-teinte-section
+          className="hidden items-end justify-center overflow-hidden px-8 pb-5 pt-16 md:flex [&>*]:max-w-full"
+          style={fond ? { backgroundColor: fond } : undefined}
+        >
+          <IllustrationEnTete item={item} />
+        </div>
+      ) : null}
     </header>
   );
 }
