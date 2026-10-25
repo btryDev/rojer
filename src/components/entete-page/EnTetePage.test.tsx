@@ -102,7 +102,7 @@ describe("les teintes de section", () => {
   // lire comme un état. On la confronte aux champs des trois états qui
   // portent un sens fort — en retard (rose), proche (paille), fait (vert) —,
   // lus dans `globals.css` et non recopiés. Elle passe si sa teinte (hue)
-  // s'écarte d'au moins 25°, ou si elle est nettement plus éteinte (moins de
+  // s'écarte d'au moins ECART_MIN, ou si elle est nettement plus éteinte (moins de
   // 60 % de la saturation de l'état) : le sable reste du côté du papier, pas
   // du « bientôt dû ».
   const css = readFileSync(path.join(process.cwd(), "src/app/globals.css"), "utf8");
@@ -128,6 +128,12 @@ describe("les teintes de section", () => {
     return { h, s };
   };
   const ecartTeinte = (a: number, b: number) => Math.min(Math.abs(a - b), 360 - Math.abs(a - b));
+  // ~~25°~~ [2026-10-25 : 20°. Le pêche d'« À faire », voulu par la
+  // propriétaire aussi clair et coloré que l'eau et le glacier, se loge
+  // entre le rose et le paille, à 24° de chacun : à 25°, aucun pêche vif
+  // ne passait, et l'éteindre le rendait « marronnasse ». 20° écarte encore
+  // un jaune paille comme celui du test d'épreuve (4° du paille).]
+  const ECART_MIN = 20;
   const etats = ["board-signal", "board-amber", "board-green"].map((n) => [n, jeton(n)] as const);
   const sections = Object.entries(TEINTE_SECTION).filter(
     (e): e is [string, string] => e[1] !== null,
@@ -137,7 +143,7 @@ describe("les teintes de section", () => {
     const t = hsl(teinte);
     for (const [nom, champ] of etats) {
       const e = hsl(champ);
-      const lisibleCommeEtat = ecartTeinte(t.h, e.h) < 25 && t.s >= 0.6 * e.s;
+      const lisibleCommeEtat = ecartTeinte(t.h, e.h) < ECART_MIN && t.s >= 0.6 * e.s;
       expect(lisibleCommeEtat, `${teinte} trop proche de --${nom} (${champ})`).toBe(false);
     }
   });
