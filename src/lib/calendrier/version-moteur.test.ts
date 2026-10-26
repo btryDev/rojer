@@ -532,7 +532,11 @@ const RELEVE = {
   // ~~087d213dc560e003~~. Puis les corrections des deux revues du même
   // lot (« plus suivie », mention de rythme, `mentionDelaiDeGrace` sans
   // variante d'en-tête) : affichage seul, NON, empreinte recopiée.
-  empreinte: "beaa0a5547ff8503",
+  // ~~beaa0a5547ff8503~~. Puis le vocabulaire « établissement » au lieu de
+  // « site » dans deux raisons du moteur (`engine.ts`, `personnes-presentes.ts`,
+  // 2026-10-26, PR #93) : les raisons s'affichent, aucune colonne ne les
+  // garde — NON, empreinte recopiée, version inchangée.
+  empreinte: "95a676563de275cc",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");
