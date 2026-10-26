@@ -2,7 +2,7 @@ import { z } from "zod";
 
 /**
  * Le SIRET identifie un établissement : les neuf premiers chiffres sont le
- * SIREN de l'entreprise, les cinq derniers (le NIC) désignent le site.
+ * SIREN de l'entreprise, les cinq derniers (le NIC) désignent l'établissement.
  *
  * Module pur, partagé par le parcours d'onboarding (client et serveur) et par
  * la fiche établissement : une seule règle de validation pour les deux portes.

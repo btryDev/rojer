@@ -72,7 +72,7 @@ export function WizardShell({
   entreprisesConnues,
 }: {
   email?: string | null;
-  /** Les entreprises du compte (une par SIREN), pour rattacher un nouveau site. */
+  /** Les entreprises du compte (une par SIREN), pour rattacher un nouvel établissement. */
   entreprisesConnues: readonly EntrepriseConnue[];
 }) {
   const router = useRouter();

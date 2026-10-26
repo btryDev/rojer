@@ -289,7 +289,7 @@ describe("finaliserOnboarding — une entreprise par SIREN, rattachée dans le c
     expect(h.tx.etablissement.create).not.toHaveBeenCalled();
   });
 
-  it("un SIREN nouveau crée l'entreprise ; le SIRET et le NAF vont au site", async () => {
+  it("un SIREN nouveau crée l'entreprise ; le SIRET et le NAF vont à l'établissement", async () => {
     await expect(
       finaliserOnboarding({ status: "idle" }, formulaire({ siret: "120 027 016 00357" })),
     ).rejects.toThrow("NEXT_REDIRECT");
@@ -305,7 +305,7 @@ describe("finaliserOnboarding — une entreprise par SIREN, rattachée dans le c
     expect(etab?.batiments).toEqual({ create: { nom: NOM_BATIMENT_PRINCIPAL, ordre: 0 } });
   });
 
-  it("un second site du même SIREN rejoint l'entreprise et n'en réécrit rien", async () => {
+  it("un second établissement du même SIREN rejoint l'entreprise et n'en réécrit rien", async () => {
     await expect(finaliserOnboarding({ status: "idle" }, formulaire())).rejects.toThrow("NEXT_REDIRECT");
     await expect(
       finaliserOnboarding(
@@ -335,14 +335,14 @@ describe("finaliserOnboarding — une entreprise par SIREN, rattachée dans le c
     expect(h.entreprises.size).toBe(2);
   });
 
-  it("refuse un site dont l'entreprise reprise dépasse la borne, même si le formulaire poste moins", async () => {
+  it("refuse un établissement dont l'entreprise reprise dépasse la borne, même si le formulaire poste moins", async () => {
     h.entreprises.set("user-1|120027016", { id: "ent-9", raisonSociale: "Grande SARL", effectif: 60 });
     const res = await finaliserOnboarding({ status: "idle" }, formulaire({ effectifEntreprise: "5" }));
     expect(res.status === "error" && res.fieldErrors?.effectifEntreprise?.[0]).toBeTruthy();
     expect(h.tx.etablissement.create).not.toHaveBeenCalled();
   });
 
-  it("pose le cookie de l'établissement actif sur le site créé, avant la redirection", async () => {
+  it("pose le cookie de l'établissement actif sur l'établissement créé, avant la redirection", async () => {
     await expect(finaliserOnboarding({ status: "idle" }, formulaire())).rejects.toThrow("NEXT_REDIRECT");
     const i = h.ordre.indexOf("cookie:etab-1");
     expect(i).toBeGreaterThan(h.ordre.indexOf("commit"));

@@ -27,7 +27,7 @@ export const MESSAGE_EFFECTIF_ENTREPRISE =
 /**
  * Schéma fusionné du parcours d'onboarding — couvre l'établissement et, si
  * son SIREN est nouveau pour le compte, son entreprise, en une seule
- * validation. Le SIRET et le NAF vont au site ; la raison sociale, l'effectif
+ * validation. Le SIRET et le NAF vont à l'établissement ; la raison sociale, l'effectif
  * de l'entreprise et l'adresse (siège) à l'entreprise quand elle naît.
  *
  * Les règles de cohérence flags ↔ précisions (ADR-004) sont recyclées
@@ -53,10 +53,10 @@ export const onboardingSchema = z
       .trim()
       .min(1, "La raison sociale est obligatoire")
       .max(200, "200 caractères maximum"),
-    // Obligatoire depuis le 2026-10-26 : c'est lui qui rattache le site à son
+    // Obligatoire depuis le 2026-10-26 : c'est lui qui rattache l'établissement à son
     // entreprise (SIREN), et il figure en tête des documents.
     siret: siretSchema,
-    // Le nom d'usage du site, facultatif : la raison sociale à défaut.
+    // Le nom d'usage de l'établissement, facultatif : la raison sociale à défaut.
     nomUsage: z.preprocess(
       (v) => (typeof v === "string" ? v.trim() || undefined : v),
       z.string().max(200, "200 caractères maximum").optional(),

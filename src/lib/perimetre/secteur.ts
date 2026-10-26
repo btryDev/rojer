@@ -19,7 +19,7 @@
 import { trouverReferentielParNaf } from "@/lib/referentiels";
 
 // ~~`NafDuDossier` et `nafEffectif` — le repli du NAF de l'établissement sur
-// celui de l'entreprise~~ [2026-10-26 : retirés. Le NAF appartient au site et
+// celui de l'entreprise~~ [2026-10-26 : retirés. Le NAF appartient à l'établissement et
 // y est obligatoire (migration `entreprise_par_siren`) ; il n'y a plus rien à
 // replier, et `Entreprise.codeNaf` n'est plus lu.]
 

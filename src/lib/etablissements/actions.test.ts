@@ -20,7 +20,7 @@ const h = vi.hoisted(() => {
       siret: "12002701600357" as string | null,
       codeNaf: "56.10A",
       effectifSurSite: 5,
-      // L'entreprise du site, lue par la modification (SIREN, 2026-10-26).
+      // L'entreprise de l'établissement, lue par la modification (SIREN, 2026-10-26).
       entreprise: { siren: "120027016" as string | null },
       estEtablissementTravail: true,
       estERP: false,
@@ -315,7 +315,7 @@ describe("supprimerEtablissement — conservation 40 ans", () => {
 
   it("supprime l'entreprise avec son dernier établissement, et elle seule", async () => {
     // Restée seule, elle garderait un SIREN et un effectif que plus rien
-    // n'affiche, et qu'un futur site du même SIREN reprendrait tels quels.
+    // n'affiche, et qu'un futur établissement du même SIREN reprendrait tels quels.
     h.db.nbEtablissementsRestants = 0;
     await expect(supprimerEtablissement("etab-1")).rejects.toThrow("NEXT_REDIRECT");
     expect(h.db.entreprisesSupprimees).toEqual(["ent-1"]);
@@ -753,7 +753,7 @@ describe("modifierEtablissement — le SIRET reste dans son entreprise (2026-10-
     expect(h.db.etablissement.siret).toBe("12002701600357");
   });
 
-  it("exige le SIRET d'un site ancien qui n'en a pas", async () => {
+  it("exige le SIRET d'un établissement ancien qui n'en a pas", async () => {
     h.db.etablissement.siret = null;
     const res = await modifierEtablissement("etab-1", { status: "idle" }, formulaire({ siret: "" }));
     expect(res.status === "error" && res.fieldErrors?.siret?.[0]).toBeTruthy();
@@ -768,7 +768,7 @@ describe("modifierEtablissement — le SIRET reste dans son entreprise (2026-10-
 
   it("rejoint l'entreprise du compte qui porte ce SIREN, et retire celle qu'il quitte si elle est vide", async () => {
     // Un dossier d'avant le SIRET obligatoire, dont la société a été ouverte
-    // depuis par un second site : le site rejoint son entreprise.
+    // depuis par un second établissement : l'établissement rejoint son entreprise.
     h.db.etablissement.entreprise = { siren: null };
     h.db.autreEntrepriseDuSiren = { id: "ent-2" };
     h.db.nbEtablissementsRestants = 0;

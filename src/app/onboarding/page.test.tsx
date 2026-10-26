@@ -4,7 +4,7 @@
  * ~~Elle ne s'ouvre pas pour un compte qui a déjà son dossier (contrôle visuel
  * du 2026-10-13).~~ [2026-10-26 : chaque établissement passe par ce parcours ;
  * un compte qui en a déjà s'y voit proposer ses entreprises, pour rattacher le
- * nouveau site par son SIREN.]
+ * nouvel établissement par son SIREN.]
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 

@@ -44,7 +44,7 @@ export function EntrepriseForm({
         erreur={err("raisonSociale")}
       />
 
-      {/* ~~SIRET et code NAF~~ [2026-10-26 : ils appartiennent au site et se
+      {/* ~~SIRET et code NAF~~ [2026-10-26 : ils appartiennent à l'établissement et se
           saisissent sur la fiche de l'établissement.] */}
 
       <ChampBoard

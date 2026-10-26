@@ -660,13 +660,13 @@ describe("filtre à l'accueil — le refus s'écrit dans le vrai parcours (revue
   });
 });
 
-describe("un nouveau site d'une entreprise déjà suivie (2026-10-26)", () => {
+describe("un nouvel établissement d'une entreprise déjà suivie (2026-10-26)", () => {
   const CONNUES = [{ siren: "120027016", raisonSociale: "SARL Le Comptoir", effectif: 13 }];
   const champ = (label: RegExp | string) => screen.getByLabelText(label) as HTMLInputElement;
 
   it("le SIRET d'un SIREN connu reprend la raison sociale et l'effectif, en lecture seule", async () => {
     render(<WizardShell entreprisesConnues={CONNUES} />);
-    expect(screen.queryByLabelText(/Nom du site/)).toBeNull();
+    expect(screen.queryByLabelText(/Nom de l'établissement/)).toBeNull();
 
     saisir("SIRET", "120 027 016 00357");
     await souffler();
@@ -675,8 +675,8 @@ describe("un nouveau site d'une entreprise déjà suivie (2026-10-26)", () => {
     expect(champ(/Raison sociale/).readOnly).toBe(true);
     expect(champ(/Salariés de l'entreprise/).value).toBe("13");
     expect(champ(/Salariés de l'entreprise/).readOnly).toBe(true);
-    // Deux sites d'une même société : le nom d'usage les distingue.
-    expect(screen.getByLabelText(/Nom du site/)).toBeTruthy();
+    // Deux établissements d'une même société : le nom d'usage les distingue.
+    expect(screen.getByLabelText(/Nom de l'établissement/)).toBeTruthy();
   });
 
   it("corriger le SIRET vers un SIREN inconnu vide ce qui venait de l'autre société", async () => {
@@ -695,6 +695,6 @@ describe("un nouveau site d'une entreprise déjà suivie (2026-10-26)", () => {
     saisir("SIRET", "35600000000048");
     await souffler();
     expect(champ(/Raison sociale/).readOnly).toBe(false);
-    expect(screen.queryByLabelText(/Nom du site/)).toBeNull();
+    expect(screen.queryByLabelText(/Nom de l'établissement/)).toBeNull();
   });
 });

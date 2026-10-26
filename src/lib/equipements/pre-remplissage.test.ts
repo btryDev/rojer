@@ -389,10 +389,10 @@ describe("suggererEquipements — une citation du livre II dit la sur-applicatio
 });
 
 // ~~« un second établissement sans NAF propre (2026-09-27, A1) » — le repli
-// sur le NAF de l'entreprise~~ [2026-10-26 : le NAF du site est obligatoire,
+// sur le NAF de l'entreprise~~ [2026-10-26 : le NAF de l'établissement est obligatoire,
 // plus de repli à éprouver. Reste la garantie qui comptait : le NAF que lit le
-// contexte est celui du site.]
-describe("le NAF des suggestions est celui du site", () => {
+// contexte est celui de l'établissement.]
+describe("le NAF des suggestions est celui de l'établissement", () => {
   const restaurant = {
     codeNaf: "56.10A",
     estEtablissementTravail: true,
@@ -404,13 +404,13 @@ describe("le NAF des suggestions est celui du site", () => {
     typesErpAutres: [],
   };
 
-  it("donne les suggestions sectorielles de l'activité du site", () => {
+  it("donne les suggestions sectorielles de l'activité de l'établissement", () => {
     const cats = categories(suggererEquipements(contexteDesSuggestions(restaurant)));
     expect(cats).toContain("HOTTE_PRO");
     expect(cats).toContain("APPAREIL_CUISSON_ERP");
   });
 
-  it("passe le NAF du site tel quel", () => {
+  it("passe le NAF de l'établissement tel quel", () => {
     expect(
       contexteDesSuggestions({ ...restaurant, codeNaf: "47.11B" }).codeNaf,
     ).toBe("47.11B");

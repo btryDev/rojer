@@ -38,7 +38,7 @@ export const getEtablissement = cache(async function getEtablissement(
  * Les établissements du compte, toutes entreprises confondues — ce que liste le
  * sélecteur de la gélule. Un compte suit plusieurs entreprises depuis le
  * 2026-10-26 (une par SIREN) : lister ceux d'une seule entreprise cacherait les
- * sites d'une autre société.
+ * établissements d'une autre société.
  *
  * Mémoïsé sur le rendu : sans argument, une entrée par requête HTTP.
  */

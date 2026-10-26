@@ -24,7 +24,7 @@ export default async function OnboardingPage() {
   // ~~Un compte = une entreprise : le parcours ne se joue qu'une fois.~~
   // [2026-10-26 : chaque établissement passe par ce parcours. Un compte suit
   // plusieurs entreprises, une par SIREN ; un SIRET qui reprend le SIREN de
-  // l'une d'elles y rattache le nouveau site (`finaliserOnboarding`).]
+  // l'une d'elles y rattache le nouvel établissement (`finaliserOnboarding`).]
   const entreprisesConnues = await listerEntreprisesConnues();
   return <WizardShell email={user.email} entreprisesConnues={entreprisesConnues} />;
 }

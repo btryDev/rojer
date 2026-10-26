@@ -21,22 +21,22 @@ dossier complet et ses zones (trois au plus, ADR-029).
   index sur `userId` le remplacent. La racine de tenancy reste
   `entreprise.userId` : elle n'a jamais exigé l'unicité, seulement que chaque
   `where` y remonte — les 109 filtres du produit n'ont pas bougé.
-- **Le SIRET et le NAF appartiennent au site.** `Etablissement.siret`
+- **Le SIRET et le NAF appartiennent à l'établissement.** `Etablissement.siret`
   (obligatoire à la saisie, clé de contrôle vérifiée, pas d'unicité) et
   `Etablissement.codeNaf` (obligatoire, plus de repli sur l'entreprise). Le
-  SIRET d'une entreprise à deux sites était faux pour l'un des deux.
+  SIRET d'une entreprise à deux établissements était faux pour l'un des deux.
 - **Une seule porte de création : le parcours d'onboarding**, rejoué pour
   chaque établissement (lien « Ajouter un établissement » de la gélule). Un
-  SIRET dont le SIREN est déjà suivi par le compte rattache le site à cette
+  SIRET dont le SIREN est déjà suivi par le compte rattache l'établissement à cette
   entreprise : sa raison sociale et son effectif sont repris, en lecture
-  seule ; sinon l'entreprise naît avec le site. La conséquence 3 ci-dessous
+  seule ; sinon l'entreprise naît avec l'établissement. La conséquence 3 ci-dessous
   (`creerEtablissement`) est **retirée** avec `/etablissements/nouveau`.
 - Un SIRET modifié sur la fiche reste dans le SIREN de son entreprise :
   changer de société, c'est ouvrir un établissement.
 - Supprimer le dernier établissement d'une entreprise supprime l'entreprise.
 
 **Ce qui reste ouvert** (décision de la propriétaire, à trancher plus tard) :
-l'effectif de l'entreprise est aujourd'hui **commun aux sites d'un même
+l'effectif de l'entreprise est aujourd'hui **commun aux établissements d'un même
 SIREN** — c'est le chiffre que L. 2311-2 (CSE) et L. 1311-2 (règlement
 intérieur) comptent. S'il devait devenir propre à chaque établissement, il
 se déplace sur `Etablissement` par une migration additive, sans rien remettre

@@ -1,18 +1,18 @@
 -- Une entreprise par SIREN, plusieurs par compte (2026-10-26, ADR-028 amendée).
 --
 -- Une Entreprise devient l'unité légale (SIREN) et un compte en porte autant que
--- de sociétés suivies. Le SIRET et le NAF passent au site (Etablissement), où ils
--- ont toujours appartenu : le SIRET d'une entreprise à deux sites était faux pour
+-- de sociétés suivies. Le SIRET et le NAF passent à l'établissement (Etablissement), où ils
+-- ont toujours appartenu : le SIRET d'une entreprise à deux établissements était faux pour
 -- l'un des deux.
 --
 -- Premier temps d'un retrait en deux : `Entreprise.siret` et `Entreprise.codeNaf`
 -- restent en colonne (le second devient nullable) parce que l'ancien code, servi
 -- pendant le build Vercel, les lit encore. La migration suivante les supprime.
 --
--- Une seule transaction : une recopie à moitié faite laisserait des sites sans
+-- Une seule transaction : une recopie à moitié faite laisserait des établissements sans
 -- NAF devant une contrainte NOT NULL.
 --
--- CE QUE LE RETRAIT EN DEUX TEMPS NE COUVRE PAS : le `NOT NULL` du NAF du site
+-- CE QUE LE RETRAIT EN DEUX TEMPS NE COUVRE PAS : le `NOT NULL` du NAF de l'établissement
 -- est posé dès ce premier temps. Pendant le build, l'ancien code peut encore
 -- créer un second établissement sans NAF (« si vide, le NAF de l'entreprise ») :
 -- l'insertion échouerait. Risque accepté, fenêtre de quelques minutes sur une
@@ -40,7 +40,7 @@ LANGUAGE sql IMMUTABLE AS $$
   )
 $$;
 
--- 1. Le SIRET va au site. Il ne désignait qu'un site, et rien ne dit lequel :
+-- 1. Le SIRET va à l'établissement. Il ne désignait qu'un établissement, et rien ne dit lequel :
 --    on le donne au plus ancien, celui que l'onboarding a créé avec lui. Les
 --    autres restent sans SIRET plutôt que d'en recevoir un faux ; la fiche le
 --    demande au prochain enregistrement. Un SIRET ancien invalide n'est pas
@@ -66,7 +66,7 @@ UPDATE "Entreprise"
 SET "siren" = substring("siret" FROM 1 FOR 9)
 WHERE pg_temp.siret_valide("siret");
 
--- 3. Le NAF du site devient obligatoire. Il n'était renseigné que s'il différait
+-- 3. Le NAF de l'établissement devient obligatoire. Il n'était renseigné que s'il différait
 --    de celui de l'entreprise : le vide recevait donc celui de l'entreprise.
 UPDATE "Etablissement" e
 SET "codeNaf" = en."codeNaf"

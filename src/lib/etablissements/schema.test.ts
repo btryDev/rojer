@@ -93,7 +93,7 @@ describe("etablissementSchema — typologie (ADR-004)", () => {
   });
 
   // ~~« accepte un code NAF vide (hérite de l'entreprise) »~~ [2026-10-26 :
-  // le NAF du site est obligatoire, plus de repli.]
+  // le NAF de l'établissement est obligatoire, plus de repli.]
   it("refuse un code NAF vide", () => {
     const res = etablissementSchema.safeParse({ ...base, codeNaf: "" });
     expect(res.success).toBe(false);

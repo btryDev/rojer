@@ -11,9 +11,9 @@ export type OnboardingState = {
   raisonSociale: string;
   siret: string;
   /**
-   * Le nom d'usage du site (l'enseigne), facultatif — la raison sociale par
-   * défaut. Proposé quand le site rejoint une entreprise déjà suivie : deux
-   * sites d'une même société porteraient sinon le même nom au sélecteur.
+   * Le nom d'usage de l'établissement (l'enseigne), facultatif — la raison sociale par
+   * défaut. Proposé quand l'établissement rejoint une entreprise déjà suivie : deux
+   * établissements d'une même société porteraient sinon le même nom au sélecteur.
    */
   nomUsage: string;
 
@@ -112,7 +112,7 @@ export type StepProps = {
   blocage?: Blocage | null;
   /**
    * Les entreprises que le compte suit déjà (une par SIREN) : un SIRET qui en
-   * reprend le SIREN rattache le nouveau site à l'une d'elles.
+   * reprend le SIREN rattache le nouvel établissement à l'une d'elles.
    */
   entreprisesConnues: readonly EntrepriseConnue[];
 };

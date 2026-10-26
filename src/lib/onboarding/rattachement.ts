@@ -2,7 +2,7 @@ import { estSiretValide, normaliserSiret, sirenDuSiret } from "@/lib/etablisseme
 
 /**
  * Une entreprise déjà suivie par le compte, telle que le parcours la montre
- * quand un nouveau site lui appartient. Rien d'autre ne quitte le serveur :
+ * quand un nouvel établissement lui appartient. Rien d'autre ne quitte le serveur :
  * ni identifiant, ni adresse.
  */
 export type EntrepriseConnue = {
@@ -12,7 +12,7 @@ export type EntrepriseConnue = {
 };
 
 /**
- * L'entreprise du compte à laquelle ce SIRET rattache le nouveau site, ou
+ * L'entreprise du compte à laquelle ce SIRET rattache le nouvel établissement, ou
  * `null` : SIRET incomplet, invalide, ou SIREN encore inconnu du compte.
  *
  * Module pur, lu par le parcours (préremplissage) ; le serveur refait le

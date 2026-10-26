@@ -15,14 +15,14 @@ import { poserEtablissementActif } from "./etablissement-actif";
 import { sirenDuSiret } from "./siret";
 import { supprimerEntrepriseSiVide } from "@/lib/entreprises/cycle-de-vie";
 
-/** Le refus d'un SIRET dont le SIREN n'est pas celui de l'entreprise du site. */
+/** Le refus d'un SIRET dont le SIREN n'est pas celui de l'entreprise de l'établissement. */
 function refusSiretAutreEntreprise(): EtablissementActionState {
   return {
     status: "error",
     message: "Formulaire invalide",
     fieldErrors: {
       siret: [
-        "Ce SIRET relève d'une société que votre compte ne suit pas encore. Pour suivre un site d'une autre société, ajoutez un établissement.",
+        "Ce SIRET relève d'une société que votre compte ne suit pas encore. Pour suivre un établissement d'une autre entreprise, ajoutez-le depuis « Ajouter un établissement ».",
       ],
     },
   };
@@ -277,11 +277,11 @@ export async function modifierEtablissement(
 
   // UN SITE APPARTIENT À L'ENTREPRISE DE SON SIREN (2026-10-26), dans le
   // compte — la même règle qu'au parcours. Trois cas quand le SIREN du SIRET
-  // n'est pas celui de l'entreprise du site :
-  //  - une autre entreprise du compte porte ce SIREN : le site la rejoint.
+  // n'est pas celui de l'entreprise de l'établissement :
+  //  - une autre entreprise du compte porte ce SIREN : l'établissement la rejoint.
   //    C'est le cas d'un dossier ancien, d'avant le SIRET obligatoire, dont la
-  //    société a été ouverte depuis par un second site ;
-  //  - l'entreprise du site n'a pas de SIREN (dossier ancien) : elle le reçoit ;
+  //    société a été ouverte depuis par un second établissement ;
+  //  - l'entreprise de l'établissement n'a pas de SIREN (dossier ancien) : elle le reçoit ;
   //  - sinon, refus : passer sous une société que le compte ne suit pas
   //    demanderait sa raison sociale et son effectif, qui fixent des seuils —
   //    ce que la fiche ne demande pas. On ouvre alors un établissement.
@@ -355,15 +355,15 @@ export async function modifierEtablissement(
         where: { id },
         data: changeDEntreprise ? { ...donnees, entrepriseId: entrepriseCible } : donnees,
       });
-      // Le site a rejoint l'entreprise de son SIREN : celle qu'il quitte part
-      // si elle n'a plus de site.
+      // L'établissement a rejoint l'entreprise de son SIREN : celle qu'il quitte part
+      // si elle n'a plus d'établissement.
       if (changeDEntreprise) await supprimerEntrepriseSiVide(tx, avant.entrepriseId);
       return ecrit;
     });
   } catch (e) {
     // Une autre entreprise du compte a pris ce SIREN entre la lecture et
     // l'écriture : l'unicité `(userId, siren)` tranche. Rare (deux onglets) ;
-    // un nouvel enregistrement rattachera le site à cette entreprise.
+    // un nouvel enregistrement rattachera l'établissement à cette entreprise.
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
       return refusSiretAutreEntreprise();
     }

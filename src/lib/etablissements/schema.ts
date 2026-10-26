@@ -277,16 +277,16 @@ export const etablissementSchema = z
       .min(1, "Le nom de l'établissement est obligatoire")
       .max(200),
     adresse: z.string().trim().min(1, "Adresse requise").max(300),
-    // Le SIRET du site, obligatoire (2026-10-26). Un site enregistré avant
+    // Le SIRET de l'établissement, obligatoire (2026-10-26). Un établissement enregistré avant
     // cette date le reçoit au prochain enregistrement de sa fiche.
     siret: siretSchema,
     // ~~Facultatif : le NAF de l'entreprise à défaut~~ [2026-10-26 : le NAF
-    // du site, obligatoire — plus de repli sur l'entreprise.]
+    // de l'établissement, obligatoire — plus de repli sur l'entreprise.]
     codeNaf: z
-      .string({ message: "Indiquez le code NAF du site." })
+      .string({ message: "Indiquez le code NAF de l'établissement." })
       .trim()
       .toUpperCase()
-      .min(1, "Indiquez le code NAF du site.")
+      .min(1, "Indiquez le code NAF de l'établissement.")
       .regex(nafRegex, "Code NAF invalide (ex. 56.10A)"),
     effectifSurSite: z.coerce
       .number()

@@ -32,10 +32,10 @@ export function StepIdentite({
   blocage,
   entreprisesConnues,
 }: StepProps) {
-  // Le site rejoint-il une entreprise que le compte suit déjà (même SIREN) ?
+  // L'établissement rejoint-il une entreprise que le compte suit déjà (même SIREN) ?
   // Alors la raison sociale et l'effectif de l'entreprise sont les siens :
   // repris et affichés en lecture seule, parce qu'ils appartiennent à
-  // l'entreprise et non à ce site — le serveur ne lit pas ces deux champs dans
+  // l'entreprise et non à cet établissement — le serveur ne lit pas ces deux champs dans
   // ce cas. Ils se modifient depuis la fiche de l'entreprise.
   const rattachee = entrepriseRattachee(state.siret, entreprisesConnues);
   const saisirSiret = (siret: string) => {
@@ -138,7 +138,7 @@ export function StepIdentite({
               >
                 {rattachee
                   ? `Même entreprise que vos établissements existants (SIREN ${rattachee.siren}) : sa raison sociale et son effectif sont repris, et se modifient depuis la fiche de l'entreprise.`
-                  : "Le SIRET de ce site, 14 chiffres."}
+                  : "Le SIRET de cet établissement, 14 chiffres."}
               </p>
               {messagePour("siret") && (
                 <p
@@ -150,18 +150,18 @@ export function StepIdentite({
               )}
             </div>
 
-            {/* Deux sites d'une même société porteraient le même nom au
+            {/* Deux établissements d'une même société porteraient le même nom au
                 sélecteur : le nom d'usage les distingue. Facultatif. */}
             {rattachee && (
               <ChampBoard
                 className="sm:col-span-2"
                 id="nomUsage"
                 name="nomUsage"
-                label="Nom du site"
+                label="Nom de l'établissement"
                 value={state.nomUsage}
                 onChange={(e) => update({ nomUsage: e.target.value })}
                 placeholder="Ex : Le Comptoir Gare"
-                aide="Facultatif. Le nom sous lequel ce site apparaît dans Rojer ; à défaut, la raison sociale."
+                aide="Facultatif. Le nom sous lequel cet établissement apparaît dans Rojer ; à défaut, la raison sociale."
                 erreur={messagePour("nomUsage")}
               />
             )}

@@ -146,7 +146,7 @@ export async function faitsDeCouverture(
       // couverte par aucun test — une mutation qui la remplaçait par `true`
       // constant passait au vert.
       //
-      // ~~Les DEUX codes NAF~~ [2026-10-26 : le NAF du site seul, obligatoire
+      // ~~Les DEUX codes NAF~~ [2026-10-26 : le NAF de l'établissement seul, obligatoire
       // depuis la migration `entreprise_par_siren` — plus de repli sur
       // l'entreprise].
       correspondance: correspondanceSecteur(

@@ -199,7 +199,7 @@ export type ContexteEtablissement = {
  * Le contexte des suggestions, depuis un établissement ET son entreprise.
  *
  * ~~LE NAF SE LIT AVEC SON REPLI (2026-09-27, A1 de l'analyse de la réponse
- * absente).~~ [2026-10-26 : plus de repli — le NAF du site est obligatoire
+ * absente).~~ [2026-10-26 : plus de repli — le NAF de l'établissement est obligatoire
  * depuis la migration `entreprise_par_siren`. Ce qui suit dit pourquoi il
  * l'était.] La page du parc passait `etab.codeNaf` nu, alors que ce champ n'est
  * renseigné que s'il diffère de celui de l'entreprise — le formulaire le dit :

@@ -190,28 +190,28 @@ export function EtablissementForm({
         />
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          {/* Le SIRET du site (2026-10-26). Un site créé avant cette date n'en
+          {/* Le SIRET de l'établissement (2026-10-26). Un établissement créé avant cette date n'en
               a pas : le champ vide est exigé au prochain enregistrement. */}
           <ChampBoard
             id="siret"
             name="siret"
-            label="SIRET du site"
+            label="SIRET de l'établissement"
             requis
             inputMode="numeric"
             defaultValue={valeursInitiales.siret ?? ""}
             placeholder="812 456 789 00021"
-            aide="14 chiffres. Les neuf premiers sont le SIREN de l'entreprise de ce site."
+            aide="14 chiffres. Les neuf premiers sont le SIREN de l'entreprise de cet établissement."
             erreur={err("siret")}
           />
 
           <ChampBoard
             id="codeNaf"
             name="codeNaf"
-            label="Code NAF du site"
+            label="Code NAF de l'établissement"
             requis
             defaultValue={valeursInitiales.codeNaf ?? ""}
             placeholder="ex. 56.10A"
-            aide="L'activité exercée sur ce site."
+            aide="L'activité exercée dans cet établissement."
             erreur={err("codeNaf")}
           />
 

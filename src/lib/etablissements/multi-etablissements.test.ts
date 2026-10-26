@@ -252,7 +252,7 @@ describe("deux établissements d'une même entreprise ne se mêlent pas", () => 
   it("la fratrie se liste entière, toutes entreprises du compte, et s'arrête au compte", async () => {
     const fratrie = await listerEtablissementsDuCompte();
 
-    // Les deux sites de la première société, puis celui de la seconde.
+    // Les deux établissements de la première société, puis celui de la seconde.
     expect(fratrie.map((e) => e.id)).toEqual(["etab-A", "etab-B", "etab-C"]);
     // La borne haute : l'établissement du voisin n'y est pas, alors qu'il
     // porterait le même écran s'il y entrait.

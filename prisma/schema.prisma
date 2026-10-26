@@ -24,7 +24,7 @@ datasource db {
 // ~~Invariant produit « 1 utilisateur = 1 entreprise »~~ [2026-10-26 : retiré,
 // ADR-028 amendée.] Une Entreprise est l'unité légale, identifiée par son SIREN,
 // et un compte en porte autant que de sociétés suivies : `@@unique([userId,
-// siren])`. Deux sites d'une même société se rattachent à la même Entreprise ;
+// siren])`. Deux établissements d'une même société se rattachent à la même Entreprise ;
 // deux sociétés distinctes ne partagent rien. Le cloisonnement ne change pas :
 // tout `where` remonte à `entreprise.userId`, qui désigne le compte sans
 // supposer qu'il n'a qu'une entreprise.
@@ -33,7 +33,7 @@ datasource db {
 // NULL pour distincts, l'unicité ne les contraint donc pas.
 //
 // `siret` et `codeNaf` sont en sursis : le SIRET et le NAF appartiennent au
-// site (`Etablissement`). Plus aucun code ne les lit ni ne les écrit ; ils
+// établissement (`Etablissement`). Plus aucun code ne les lit ni ne les écrit ; ils
 // tombent dans la migration suivante (retrait en deux temps : l'ancien code
 // encore servi pendant le build Vercel les lit toujours).
 
@@ -83,15 +83,15 @@ model Etablissement {
   entreprise   Entreprise @relation(fields: [entrepriseId], references: [id], onDelete: Cascade)
 
   // Nom d'usage (l'enseigne) : la raison sociale par défaut, et ce qui
-  // distingue deux sites d'une même société dans le sélecteur.
+  // distingue deux établissements d'une même société dans le sélecteur.
   raisonDisplay   String
   adresse         String
-  // Le SIRET identifie le site (SIREN de l'entreprise + NIC). Obligatoire à la
-  // saisie (`siretSchema`) ; nullable en colonne pour les sites créés avant le
+  // Le SIRET identifie l'établissement (SIREN de l'entreprise + NIC). Obligatoire à la
+  // saisie (`siretSchema`) ; nullable en colonne pour les établissements créés avant le
   // 2026-10-26, qui n'en ont pas et le reçoivent au prochain enregistrement.
   // Pas d'unicité : la propriétaire accepte deux dossiers sous un même SIRET.
   siret           String?
-  // Le NAF de l'activité exercée sur ce site (APET). Obligatoire depuis le
+  // Le NAF de l'activité exercée sur cet établissement (APET). Obligatoire depuis le
   // 2026-10-26 : c'est lui que lisent le DUERP et le périmètre, sans repli sur
   // l'entreprise.
   codeNaf         String

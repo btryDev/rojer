@@ -73,7 +73,7 @@ export type EtablissementLite = {
   entrepriseId: string;
   adresse: string;
   effectifSurSite: number;
-  /** Le SIRET du site — absent des sites créés avant le 2026-10-26. */
+  /** Le SIRET de l'établissement — absent des établissements créés avant le 2026-10-26. */
   siret: string | null;
   codeNaf: string;
   estEtablissementTravail: boolean;

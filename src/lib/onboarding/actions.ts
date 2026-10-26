@@ -26,8 +26,8 @@ import { saisieOnboardingDepuisFormData } from "./saisie";
  * obligations d'établissement est déjà généré, les équipements y ajoutent
  * les leurs, le dashboard vient après.
  *
- * Le SIRET et le NAF vont au site. La raison sociale, l'effectif et l'adresse
- * (le siège, par défaut celle du site) vont à l'entreprise quand elle naît ;
+ * Le SIRET et le NAF vont à l'établissement. La raison sociale, l'effectif et l'adresse
+ * (le siège, par défaut celle de l'établissement) vont à l'entreprise quand elle naît ;
  * quand elle existe, elle garde les siens et le formulaire ne les lit pas.
  */
 export type OnboardingActionState =
@@ -45,7 +45,7 @@ class RefusEffectifEntreprise extends Error {}
 /**
  * Rejoue une fois une création heurtée par une transaction concurrente sur la
  * même entreprise : P2002, deux parcours ont créé le même SIREN au même
- * instant ; P2003, l'entreprise a été supprimée avec son dernier site pendant
+ * instant ; P2003, l'entreprise a été supprimée avec son dernier établissement pendant
  * qu'on y rattachait celui-ci (`supprimerEntrepriseSiVide`). Au second passage,
  * l'`upsert` trouve l'entreprise, ou la recrée.
  */
@@ -108,7 +108,7 @@ export async function finaliserOnboarding(
           siren,
           raisonSociale: d.raisonSociale,
           // L'effectif de l'ENTREPRISE, apprentis non compris, demandé pour
-          // lui-même (C37, 2026-09-26). Il était recopié de l'effectif du site,
+          // lui-même (C37, 2026-09-26). Il était recopié de l'effectif de l'établissement,
           // « salariés + apprentis » : les seuils du CSE et du règlement
           // intérieur, qui se comptent sur l'entreprise sans les apprentis
           // (L. 2311-2 → L. 1111-2, L. 1111-3), lisaient un autre nombre.

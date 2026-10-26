@@ -19,7 +19,7 @@ export const entrepriseSchema = z.object({
     .trim()
     .min(1, "La raison sociale est obligatoire")
     .max(200, "200 caractères maximum"),
-  // ~~siret, codeNaf~~ [2026-10-26 : au site (`etablissementSchema`).]
+  // ~~siret, codeNaf~~ [2026-10-26 : à l'établissement (`etablissementSchema`).]
   // Zéro est une réponse : l'effectif compte les salariés de l'entreprise
   // apprentis non compris (L. 1111-3), et une entreprise peut n'employer qu'un
   // apprenti (C37). Le vide n'en est pas une — `z.coerce` en ferait un zéro.
