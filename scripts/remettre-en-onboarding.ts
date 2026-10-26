@@ -117,7 +117,7 @@ async function main(): Promise<void> {
 
   console.log(`Compte    : ${userId}`);
   console.log(
-    `Entreprise: ${entreprise.raisonSociale} (SIRET ${entreprise.siret ?? "—"})`,
+    `Entreprise: ${entreprise.raisonSociale} (SIREN ${entreprise.siren ?? "—"})`,
   );
   console.log(
     `Établ.    : ${entreprise.etablissements.length} — ` +

@@ -180,7 +180,10 @@ const SUIVI_DEPUIS = jours(-240);
 
 const ENTREPRISE = {
   raisonSociale: "Le Comptoir des Halles",
+  // SIRET du premier établissement ; le second (`entrepriseHote`) porte le
+  // même SIREN et son propre NIC, clé de contrôle comprise.
   siret: "84219753600027",
+  siretSecond: "84219753600035",
   codeNaf: "56.10A", // Restauration traditionnelle
   adresse: "14 rue des Halles, 44000 Nantes",
   effectif: 9,
@@ -870,9 +873,8 @@ async function main(): Promise<void> {
     : await prisma.entreprise.create({
     data: {
       userId,
+      siren: ENTREPRISE.siret.slice(0, 9),
       raisonSociale: ENTREPRISE.raisonSociale,
-      siret: ENTREPRISE.siret,
-      codeNaf: ENTREPRISE.codeNaf,
       effectif: ENTREPRISE.effectif,
       adresse: ENTREPRISE.adresse,
     },
@@ -894,6 +896,7 @@ async function main(): Promise<void> {
       entrepriseId: entreprise.id,
       raisonDisplay: nomDuDossier,
       adresse: adresseDuDossier,
+      siret: entrepriseHote ? ENTREPRISE.siretSecond : ENTREPRISE.siret,
       codeNaf: ENTREPRISE.codeNaf,
       effectifSurSite: ENTREPRISE.effectif,
 
@@ -1201,8 +1204,8 @@ async function main(): Promise<void> {
     referentielSecteurId: restauration.id,
     entreprise: {
       raisonSociale: entreprise.raisonSociale,
-      siret: entreprise.siret,
-      codeNaf: etablissement.codeNaf ?? entreprise.codeNaf,
+      siret: etablissement.siret,
+      codeNaf: etablissement.codeNaf,
       effectif: etablissement.effectifSurSite,
       adresse: etablissement.adresse,
     },
@@ -1517,7 +1520,7 @@ async function main(): Promise<void> {
       etablissementId: etablissement.id,
       // Le slug est calculé comme dans l'app, depuis la raison sociale et le
       // SIRET : l'URL publique est donc reproductible d'une machine à l'autre.
-      slugPublic: genererSlug(etablissement.raisonDisplay, entreprise.siret),
+      slugPublic: genererSlug(etablissement.raisonDisplay, etablissement.siret),
       prestationsFournies:
         "Restauration sur place, service en salle et en terrasse couverte, vente à emporter au comptoir.",
       handicapsAccueillis: ["moteur", "visuel", "auditif", "mental"],
