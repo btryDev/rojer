@@ -207,7 +207,7 @@ export default async function EtablissementPage({
           : "Compléter la fiche de votre établissement",
       pourquoi:
         manqueFiche.length === 0
-          ? "Adresse, effectif sur site et régimes (ERP, IGH, travail). Ces informations conditionnent les obligations qui vous sont applicables."
+          ? "Adresse, effectif de l'établissement et régimes (ERP, IGH, travail). Ces informations conditionnent les obligations qui vous sont applicables."
           : `Il manque : ${enumerer(manqueFiche)}. Ces réponses décident de certaines obligations ; d'ici là, elles s'affichent « à confirmer ».`,
       faite: manqueFiche.length === 0,
       href: `/etablissements/${id}/modifier`,
@@ -336,6 +336,7 @@ export default async function EtablissementPage({
       entrepriseId: etab.entrepriseId,
       adresse: etab.adresse,
       effectifSurSite: etab.effectifSurSite,
+      siret: etab.siret,
       codeNaf: etab.codeNaf,
       estEtablissementTravail: etab.estEtablissementTravail,
       estERP: etab.estERP,
@@ -347,8 +348,6 @@ export default async function EtablissementPage({
       classeIgh: etab.classeIgh,
       entreprise: {
         raisonSociale: etab.entreprise.raisonSociale,
-        siret: etab.entreprise.siret,
-        codeNaf: etab.entreprise.codeNaf,
         effectif: etab.entreprise.effectif,
       },
     },

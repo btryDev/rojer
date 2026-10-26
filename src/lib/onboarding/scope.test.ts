@@ -102,7 +102,7 @@ describe("la porte d'onboarding ne se ferme plus sur le secteur", () => {
   // vraiment, puisque la server action ne crée rien sans lui.
   const base = {
     raisonSociale: "Hôtel du Port",
-    siret: "",
+    siret: "12002701600357",
     adresse: "12 rue du Port, 29200 Brest",
     effectifSurSite: "4",
     effectifEntreprise: "4",

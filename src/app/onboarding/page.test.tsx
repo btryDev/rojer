@@ -1,42 +1,60 @@
 /**
- * `/onboarding` ne s'ouvre pas pour un compte qui a déjà son dossier.
+ * `/onboarding` — la seule porte de création d'un établissement.
  *
- * Contrôle visuel du 2026-10-13 : la page s'affichait, et seule l'action
- * finale renvoyait au dossier, après les trois étapes remplies pour rien.
+ * ~~Elle ne s'ouvre pas pour un compte qui a déjà son dossier (contrôle visuel
+ * du 2026-10-13).~~ [2026-10-26 : chaque établissement passe par ce parcours ;
+ * un compte qui en a déjà s'y voit proposer ses entreprises, pour rattacher le
+ * nouvel établissement par son SIREN.]
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const redirect = vi.fn((url: string) => {
-  throw new Error(`REDIRECT ${url}`);
-});
-vi.mock("next/navigation", () => ({ redirect: (u: string) => redirect(u) }));
+const h = vi.hoisted(() => ({
+  redirect: vi.fn((url: string) => {
+    throw new Error(`REDIRECT ${url}`);
+  }),
+  connues: vi.fn(),
+  props: null as Record<string, unknown> | null,
+}));
+
+vi.mock("next/navigation", () => ({ redirect: (u: string) => h.redirect(u) }));
 vi.mock("@/lib/auth/require-user", () => ({
   requireUser: async () => ({ id: "u1", email: "dirigeant@example.test" }),
 }));
-const etablissement = vi.fn();
-vi.mock("@/lib/auth/scope", () => ({
-  getOptionalUserEtablissement: () => etablissement(),
+vi.mock("@/lib/entreprises/queries", () => ({
+  listerEntreprisesConnues: () => h.connues(),
 }));
 vi.mock("@/components/onboarding/WizardShell", () => ({
-  WizardShell: () => null,
+  WizardShell: (props: Record<string, unknown>) => {
+    h.props = props;
+    return null;
+  },
 }));
 
 import OnboardingPage from "./page";
 
 beforeEach(() => {
-  redirect.mockClear();
-  etablissement.mockReset();
+  h.redirect.mockClear();
+  h.connues.mockReset();
+  h.props = null;
 });
 
 describe("/onboarding", () => {
-  it("un compte qui a déjà un établissement est renvoyé à son dossier", async () => {
-    etablissement.mockResolvedValue({ id: "etab-1" });
-    await expect(OnboardingPage()).rejects.toThrow("REDIRECT /etablissements/etab-1");
+  it("s'ouvre pour un compte qui a déjà des établissements, sans le renvoyer ailleurs", async () => {
+    const connues = [{ siren: "120027016", raisonSociale: "SARL A", effectif: 13 }];
+    h.connues.mockResolvedValue(connues);
+    const element = await OnboardingPage();
+    expect(h.redirect).not.toHaveBeenCalled();
+    expect((element as { props: Record<string, unknown> }).props).toMatchObject({
+      email: "dirigeant@example.test",
+      entreprisesConnues: connues,
+    });
   });
 
-  it("un compte sans dossier voit le parcours", async () => {
-    etablissement.mockResolvedValue(null);
-    await expect(OnboardingPage()).resolves.toBeTruthy();
-    expect(redirect).not.toHaveBeenCalled();
+  it("s'ouvre pour un compte neuf, sans entreprise à reprendre", async () => {
+    h.connues.mockResolvedValue([]);
+    const element = await OnboardingPage();
+    expect((element as { props: Record<string, unknown> }).props).toMatchObject({
+      entreprisesConnues: [],
+    });
   });
 });

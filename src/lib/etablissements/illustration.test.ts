@@ -4,9 +4,8 @@ import { illustrationBatiment } from "./illustration";
 const base = {
   typeErp: null as string | null,
   typesErpAutres: [] as string[],
-  codeNaf: null as string | null,
   // Une activité qu'aucun référentiel sectoriel ne vise (NAF 01, culture).
-  entreprise: { codeNaf: "01.11Z" },
+  codeNaf: "01.11Z",
 };
 
 describe("illustrationBatiment — le type ERP d'abord", () => {
@@ -42,15 +41,10 @@ describe("illustrationBatiment — le code NAF ensuite", () => {
     expect(illustrationBatiment({ ...base, codeNaf: "4711Z" })).toBe("magasin");
   });
 
-  it("se rabat sur le code NAF de l'entreprise faute de celui de l'établissement", () => {
-    expect(
-      illustrationBatiment({ ...base, codeNaf: null, entreprise: { codeNaf: "56.10C" } }),
-    ).toBe("restaurant");
-  });
 
   it("ne renvoie jamais de vide : tout le reste est le local générique", () => {
     expect(illustrationBatiment(base)).toBe("local");
-    expect(illustrationBatiment({ ...base, entreprise: { codeNaf: "" } })).toBe("local");
+    expect(illustrationBatiment({ ...base, codeNaf: "" })).toBe("local");
   });
 });
 

@@ -39,11 +39,15 @@ describe.skipIf(!URL_BASE || !local)("registre d'accessibilité — établisseme
     const e = await prisma.entreprise.create({
       data: {
         raisonSociale: marque,
-        codeNaf: "56.10A",
         effectif: 3,
         adresse: "1 rue du Test, 75000 Paris",
         etablissements: {
-          create: { raisonDisplay: marque, adresse: "1 rue du Test, 75000 Paris", effectifSurSite: 3 },
+          create: {
+            raisonDisplay: marque,
+            adresse: "1 rue du Test, 75000 Paris",
+            codeNaf: "56.10A",
+            effectifSurSite: 3,
+          },
         },
       },
       include: { etablissements: true },

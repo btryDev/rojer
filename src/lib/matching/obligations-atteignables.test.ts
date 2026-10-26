@@ -65,7 +65,7 @@ function profilsInscription(): EtablissementMatching[] {
     const plausible = erp !== null && (TYPES_ERP_A_SOMMEIL_PLAUSIBLE as readonly string[]).includes(erp.t);
     for (const so of plausible ? tri : [undefined]) {
       const r = onboardingSchema.safeParse({
-        raisonSociale: "X", adresse: "1 rue A, 75001 Paris", codeNaf: "56.10A",
+        raisonSociale: "X", siret: "12002701600357", adresse: "1 rue A, 75001 Paris", codeNaf: "56.10A",
         effectifSurSite: es, effectifEntreprise: ee,
         estEtablissementTravail: trav, estERP: erp !== null, estIGH: igh, estHabitation: hab,
         typeErp: erp?.t, typesErpAutres: [], categorieErp: erp?.c,

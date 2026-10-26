@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { getOptionalUserEtablissement } from "@/lib/auth/scope";
-import { getEntrepriseDuUser } from "@/lib/entreprises/queries";
 import { requireUser } from "@/lib/auth/require-user";
 
 /**
@@ -13,8 +12,10 @@ export default async function EntrepriseDetailPage() {
   await requireUser();
   const etab = await getOptionalUserEtablissement();
   if (etab) redirect(`/etablissements/${etab.id}`);
-  // Même garde que `/entreprises` : un compte sans établissement peut avoir
-  // gardé son entreprise, et l'onboarding la recréerait (P2002, 500).
-  const entreprise = await getEntrepriseDuUser();
-  redirect(entreprise ? "/etablissements/nouveau" : "/onboarding");
+  // ~~Un compte peut garder son entreprise sans établissement, et l'onboarding
+  // la recréerait (P2002).~~ [2026-10-26 : plus d'entreprise sans
+  // établissement — supprimer le dernier supprime l'entreprise —, et le
+  // parcours rattache par SIREN au lieu de recréer.] Sans établissement, on
+  // en ouvre un.
+  redirect("/onboarding");
 }

@@ -6,6 +6,46 @@
   `src/components/layout/BarreCompte.tsx`
 - **Rend de nouveau effective** l'ADR-001 · **Amende** l'ADR-013 · **Découle
   de** l'ADR-025
+- **Amendée le 2026-10-26** (décision de la propriétaire) — voir ci-dessous
+
+## Amendement du 2026-10-26 — une entreprise par SIREN, un onboarding par établissement
+
+**Ce qui change.** ~~Un utilisateur possède une entreprise ; une entreprise
+porte autant d'établissements qu'elle en a.~~ Un compte suit **autant
+d'entreprises que de sociétés** — une `Entreprise` est l'unité légale,
+identifiée par son SIREN —, et chaque entreprise porte ses établissements.
+Dans l'interface, rien ne change : on parle d'établissements, chacun avec son
+dossier complet et ses zones (trois au plus, ADR-029).
+
+- `Entreprise.userId` **n'est plus unique** ; `@@unique([userId, siren])` et un
+  index sur `userId` le remplacent. La racine de tenancy reste
+  `entreprise.userId` : elle n'a jamais exigé l'unicité, seulement que chaque
+  `where` y remonte — les 109 filtres du produit n'ont pas bougé.
+- **Le SIRET et le NAF appartiennent à l'établissement.** `Etablissement.siret`
+  (obligatoire à la saisie, clé de contrôle vérifiée, pas d'unicité) et
+  `Etablissement.codeNaf` (obligatoire, plus de repli sur l'entreprise). Le
+  SIRET d'une entreprise à deux établissements était faux pour l'un des deux.
+- **Une seule porte de création : le parcours d'onboarding**, rejoué pour
+  chaque établissement (lien « Ajouter un établissement » de la gélule). Un
+  SIRET dont le SIREN est déjà suivi par le compte rattache l'établissement à cette
+  entreprise : sa raison sociale et son effectif sont repris, en lecture
+  seule ; sinon l'entreprise naît avec l'établissement. La conséquence 3 ci-dessous
+  (`creerEtablissement`) est **retirée** avec `/etablissements/nouveau`.
+- Un SIRET modifié sur la fiche reste dans le SIREN de son entreprise :
+  changer de société, c'est ouvrir un établissement.
+- Supprimer le dernier établissement d'une entreprise supprime l'entreprise.
+
+**Ce qui reste ouvert** (décision de la propriétaire, à trancher plus tard) :
+l'effectif de l'entreprise est aujourd'hui **commun aux établissements d'un même
+SIREN** — c'est le chiffre que L. 2311-2 (CSE) et L. 1311-2 (règlement
+intérieur) comptent. S'il devait devenir propre à chaque établissement, il
+se déplace sur `Etablissement` par une migration additive, sans rien remettre
+en cause du reste.
+
+**Retrait en deux temps.** `Entreprise.siret` et `Entreprise.codeNaf` restent
+en colonne, plus lus ni écrits, le temps que l'ancien code servi pendant le
+build Vercel disparaisse ; la migration suivante les supprime.
+
 
 ## Le problème
 

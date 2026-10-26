@@ -388,14 +388,13 @@ describe("suggererEquipements — une citation du livre II dit la sur-applicatio
   });
 });
 
-describe("un second établissement sans NAF propre (2026-09-27, A1)", () => {
-  // `Etablissement.codeNaf` n'est renseigné que s'il diffère de celui de
-  // l'entreprise. La page du parc le passait nu : un second restaurant sans
-  // NAF propre perdait la hotte, la cuisson et le froid. Éprouvé en passant
-  // `etab.codeNaf` seul dans `contexteDesSuggestions`.
-  const secondRestaurant = {
-    codeNaf: null,
-    entreprise: { codeNaf: "56.10A" },
+// ~~« un second établissement sans NAF propre (2026-09-27, A1) » — le repli
+// sur le NAF de l'entreprise~~ [2026-10-26 : le NAF de l'établissement est obligatoire,
+// plus de repli à éprouver. Reste la garantie qui comptait : le NAF que lit le
+// contexte est celui de l'établissement.]
+describe("le NAF des suggestions est celui de l'établissement", () => {
+  const restaurant = {
+    codeNaf: "56.10A",
     estEtablissementTravail: true,
     estERP: true,
     estIGH: false,
@@ -405,15 +404,15 @@ describe("un second établissement sans NAF propre (2026-09-27, A1)", () => {
     typesErpAutres: [],
   };
 
-  it("hérite du NAF de l'entreprise, et de ses suggestions sectorielles", () => {
-    const cats = categories(suggererEquipements(contexteDesSuggestions(secondRestaurant)));
+  it("donne les suggestions sectorielles de l'activité de l'établissement", () => {
+    const cats = categories(suggererEquipements(contexteDesSuggestions(restaurant)));
     expect(cats).toContain("HOTTE_PRO");
     expect(cats).toContain("APPAREIL_CUISSON_ERP");
   });
 
-  it("un NAF propre l'emporte sur celui de l'entreprise", () => {
+  it("passe le NAF de l'établissement tel quel", () => {
     expect(
-      contexteDesSuggestions({ ...secondRestaurant, codeNaf: "47.11B" }).codeNaf,
+      contexteDesSuggestions({ ...restaurant, codeNaf: "47.11B" }).codeNaf,
     ).toBe("47.11B");
   });
 });
@@ -454,8 +453,7 @@ describe("suggererEquipements — le défibrillateur, aux seuls ERP des catégor
   it("la catégorie lue sur l'établissement passe dans le contexte", () => {
     expect(
       contexteDesSuggestions({
-        codeNaf: null,
-        entreprise: { codeNaf: null },
+        codeNaf: "69.20Z",
         estEtablissementTravail: true,
         estERP: true,
         estIGH: false,
@@ -507,8 +505,7 @@ describe("suggererEquipements — l'eau chaude collective, aux types O et X (202
   it("les types lus sur l'établissement passent dans le contexte, premier puis autres", () => {
     expect(
       contexteDesSuggestions({
-        codeNaf: null,
-        entreprise: { codeNaf: null },
+        codeNaf: "69.20Z",
         estEtablissementTravail: true,
         estERP: true,
         estIGH: false,

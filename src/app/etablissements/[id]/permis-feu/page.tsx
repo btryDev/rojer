@@ -75,7 +75,7 @@ export default async function PermisFeuListePage({
               </p>
               <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                 Créez votre premier permis dès qu&apos;un soudeur, un plombier
-                au chalumeau, un couvreur au fer chaud intervient sur site.
+                au chalumeau, un couvreur au fer chaud intervient sur place.
               </p>
               <div className="mt-2">
                 <Link

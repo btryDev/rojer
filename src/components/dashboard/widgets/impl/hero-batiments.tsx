@@ -188,7 +188,7 @@ export function HeroEtablissement({
             Icone={Users}
             libelle="Effectif"
             valeur={pluriel(etab.effectifSurSite, "salarié")}
-            precision="sur site"
+            precision="dans l'établissement"
           />
           <Fait
             Icone={IdCard}

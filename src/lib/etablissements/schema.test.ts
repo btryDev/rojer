@@ -1,15 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { cleJourCivil } from "@/lib/dates";
 import { TYPES_ERP } from "@/lib/referentiels/types-communs";
-import {
-  TYPE_ERP,
-  etablissementCreationSchema,
-  etablissementSchema,
-} from "./schema";
+import { onboardingSchema } from "@/lib/onboarding/schema";
+import { TYPE_ERP, etablissementSchema } from "./schema";
 
 const base = {
   raisonDisplay: "Restaurant du Marché",
   adresse: "12 rue des Halles, 75001 Paris",
+  siret: "12002701600357",
+  codeNaf: "56.10A",
   effectifSurSite: 8,
   estEtablissementTravail: true,
   estERP: false,
@@ -93,12 +92,16 @@ describe("etablissementSchema — typologie (ADR-004)", () => {
     expect(res.success).toBe(false);
   });
 
-  it("accepte un code NAF vide (hérite de l'entreprise)", () => {
-    const res = etablissementSchema.safeParse({
-      ...base,
-      codeNaf: "",
-    });
-    expect(res.success).toBe(true);
+  // ~~« accepte un code NAF vide (hérite de l'entreprise) »~~ [2026-10-26 :
+  // le NAF de l'établissement est obligatoire, plus de repli.]
+  it("refuse un code NAF vide", () => {
+    const res = etablissementSchema.safeParse({ ...base, codeNaf: "" });
+    expect(res.success).toBe(false);
+  });
+
+  it("exige un SIRET valide (2026-10-26)", () => {
+    expect(etablissementSchema.safeParse({ ...base, siret: "" }).success).toBe(false);
+    expect(etablissementSchema.safeParse({ ...base, siret: "12002701600358" }).success).toBe(false);
   });
 });
 
@@ -185,17 +188,27 @@ describe("etablissementSchema — dates civiles (registre, fiche renseignements)
 /**
  * Les refus de périmètre sur la PORTE, pas sur le parcours (ADR-031).
  *
- * Depuis l'ADR-028, un second établissement se crée par `/etablissements/nouveau`
- * et non par le wizard. Une règle posée sur le parcours se contournerait donc
- * en changeant de parcours — c'est exactement ce qui a failli arriver : les
- * deux lots ayant été écrits en parallèle, ce chemin est resté un instant sur
- * le schéma de modification, et un dossier refusé à l'onboarding se serait créé
- * en deux clics par l'autre porte.
+ * ~~Depuis l'ADR-028, un second établissement se crée par `/etablissements/nouveau`
+ * et non par le wizard.~~ [2026-10-26 : une seule porte de création, le
+ * parcours d'onboarding, pour tout établissement. Ces refus s'éprouvent donc
+ * sur `onboardingSchema` ; le schéma de la fiche, lui, ne les porte pas.]
  */
+const creation = {
+  raisonSociale: "Restaurant du Marché",
+  siret: "12002701600357",
+  adresse: "12 rue des Halles, 75001 Paris",
+  codeNaf: "56.10A",
+  effectifSurSite: 8,
+  effectifEntreprise: 8,
+  estEtablissementTravail: true,
+  estERP: false,
+  estIGH: false,
+  estHabitation: false,
+};
 describe("refus de périmètre — création seulement", () => {
   it("refuse plus de 50 travailleurs à la création", () => {
-    const res = etablissementCreationSchema.safeParse({
-      ...base,
+    const res = onboardingSchema.safeParse({
+      ...creation,
       effectifSurSite: 51,
     });
     expect(res.success).toBe(false);
@@ -206,7 +219,7 @@ describe("refus de périmètre — création seulement", () => {
 
   it("accepte 50 travailleurs", () => {
     expect(
-      etablissementCreationSchema.safeParse({ ...base, effectifSurSite: 50 })
+      onboardingSchema.safeParse({ ...creation, effectifSurSite: 50 })
         .success,
     ).toBe(true);
   });
@@ -223,8 +236,8 @@ describe("refus de périmètre — création seulement", () => {
     // La catégorie mesure le public, la borne mesure les salariés. Les
     // confondre reviendrait à refuser la cible du produit.
     expect(
-      etablissementCreationSchema.safeParse({
-        ...base,
+      onboardingSchema.safeParse({
+        ...creation,
         effectifSurSite: 8,
         estERP: true,
         typeErp: "N",
@@ -239,24 +252,24 @@ describe("refus de périmètre — création seulement", () => {
   // ce test restait vert quand on retirait la règle (vérification ASVS du
   // 2026-10-13, mutation M8).
   const erpAccepte = {
-    ...base,
+    ...creation,
     estERP: true,
     typeErp: "M",
     categorieErp: "N3",
   };
 
   it("la fixture du refus IGH est acceptée sans l'IGH", () => {
-    expect(etablissementCreationSchema.safeParse(erpAccepte).success).toBe(true);
+    expect(onboardingSchema.safeParse(erpAccepte).success).toBe(true);
   });
 
   it("filtre à l'accueil : la réponse « accueil d'enfants » postée sur un type autre que R est refusée (revue du 2026-10-17)", () => {
-    const res = etablissementCreationSchema.safeParse({ ...erpAccepte, accueilEnfants: "non" });
+    const res = onboardingSchema.safeParse({ ...erpAccepte, accueilEnfants: "non" });
     expect(res.success).toBe(false);
     if (!res.success) expect(res.error.issues.map((i) => i.path.join("."))).toEqual(["accueilEnfants"]);
   });
 
   it("refuse un ERP situé dans un IGH — et pour cette seule raison", () => {
-    const res = etablissementCreationSchema.safeParse({ ...erpAccepte, estIGH: true });
+    const res = onboardingSchema.safeParse({ ...erpAccepte, estIGH: true });
     expect(res.success).toBe(false);
     if (!res.success) {
       expect(res.error.issues.map((i) => i.path.join("."))).toEqual(["estIGH"]);
@@ -265,8 +278,8 @@ describe("refus de périmètre — création seulement", () => {
 
   it("accepte un IGH qui n'est pas un ERP", () => {
     expect(
-      etablissementCreationSchema.safeParse({
-        ...base,
+      onboardingSchema.safeParse({
+        ...creation,
         estIGH: true,
       }).success,
     ).toBe(true);
@@ -276,7 +289,7 @@ describe("refus de périmètre — création seulement", () => {
 describe("etablissementSchema — nombre de personnes (2026-09-20)", () => {
   const restaurant = { ...base, estERP: true, typeErp: "N", categorieErp: "N5" };
 
-  it("l'exige d'un ERP sous les deux bornes — la seconde porte de création passe par ici", () => {
+  it("l'exige d'un ERP sous les deux bornes — la fiche passe par ici", () => {
     const res = etablissementSchema.safeParse(restaurant);
     expect(res.success).toBe(false);
     if (!res.success)

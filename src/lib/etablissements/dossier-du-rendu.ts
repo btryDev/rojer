@@ -57,7 +57,7 @@ export const chargerEtablissementEtParc = cache(
     return prisma.etablissement.findFirst({
       where: { id: etablissementId, entreprise: { userId } },
       include: {
-        entreprise: { select: { effectif: true, codeNaf: true } },
+        entreprise: { select: { effectif: true } },
         equipements: { where: { actif: true } },
       },
     });

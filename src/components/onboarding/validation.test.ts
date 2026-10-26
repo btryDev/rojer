@@ -22,6 +22,7 @@ const texte = (b: Blocage | null) => (b === null ? null : b.message);
 const complet: OnboardingState = {
   ...VALEURS_INITIALES,
   raisonSociale: "Hôtel du Port",
+  siret: "12002701600357",
   adresseRue: "12 rue du Port",
   adresseCodePostal: "29200",
   adresseVille: "Brest",

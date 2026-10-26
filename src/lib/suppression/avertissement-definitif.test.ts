@@ -20,9 +20,15 @@ const lire = (chemin: string) => readFileSync(join(RACINE, chemin), "utf8");
 
 describe("au geste de suppression, l'employeur lit que c'est définitif", () => {
   it("l'établissement : l'équipe et ses titres sont nommés, et c'est définitif", () => {
-    const t = detailSuppressionEtablissement({ nom: "Atelier", lignes: 12, versionsDuerp: 0 });
+    const t = detailSuppressionEtablissement({ nom: "Atelier", lignes: 12, versionsDuerp: 0, entrepriseEmportee: null });
     expect(t).toMatch(/fiches de l'équipe avec leurs titres/);
     expect(t).toMatch(/supprimé définitivement/);
+    expect(t).not.toMatch(/l'entreprise est supprimée/);
+  });
+
+  it("le dernier établissement d'une entreprise : elle part avec lui, et la phrase le dit (2026-10-26)", () => {
+    const t = detailSuppressionEtablissement({ nom: "Atelier", lignes: 12, versionsDuerp: 0, entrepriseEmportee: "SARL Atelier" });
+    expect(t).toMatch(/dernier établissement de SARL Atelier : l'entreprise est supprimée avec lui/);
   });
 
   it.each([0, 1, 2])("l'entreprise, %i établissement(s) : idem", (n) => {

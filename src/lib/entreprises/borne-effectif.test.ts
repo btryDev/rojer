@@ -4,7 +4,7 @@ import { onboardingSchema } from "@/lib/onboarding/schema";
 import { validerIdentite } from "@/components/onboarding/validation";
 import { VALEURS_INITIALES } from "@/components/onboarding/types";
 import { couvertureDeLEtablissement } from "@/lib/perimetre/couverture";
-import { entrepriseCreationSchema, entrepriseSchema } from "./schema";
+import { entrepriseSchema } from "./schema";
 
 /**
  * LA BORNE DU PRODUIT SUR L'EFFECTIF DE L'ENTREPRISE (décision de la
@@ -18,7 +18,7 @@ import { entrepriseCreationSchema, entrepriseSchema } from "./schema";
 
 const ONBOARDING = {
   raisonSociale: "Bistrot du marché SARL",
-  siret: "",
+  siret: "12002701600357",
   adresse: "12 rue des halles, 44000 Nantes",
   codeNaf: "56.10A",
   effectifSurSite: 8,
@@ -29,12 +29,12 @@ const ONBOARDING = {
 };
 const ENTREPRISE = {
   raisonSociale: "Bistrot du marché SARL",
-  codeNaf: "56.10A",
   adresse: "12 rue des halles, 44000 Nantes",
 };
 const ETAPE_1 = {
   ...VALEURS_INITIALES,
   raisonSociale: "Bistrot du marché",
+  siret: "12002701600357",
   adresseRue: "12 rue des Halles",
   adresseCodePostal: "44000",
   adresseVille: "Nantes",
@@ -88,23 +88,9 @@ describe("à la création : parcours d'entrée (client, porte fermée avant le c
   });
 });
 
-describe("à la création : une entreprise créée hors du parcours", () => {
-  it(`accepte ${EFFECTIF_MAX}, refuse ${EFFECTIF_MAX + 1} et le vide`, () => {
-    expect(
-      entrepriseCreationSchema.safeParse({ ...ENTREPRISE, effectif: EFFECTIF_MAX })
-        .success,
-    ).toBe(true);
-    expect(
-      entrepriseCreationSchema.safeParse({
-        ...ENTREPRISE,
-        effectif: EFFECTIF_MAX + 1,
-      }).success,
-    ).toBe(false);
-    expect(
-      entrepriseCreationSchema.safeParse({ ...ENTREPRISE, effectif: "" }).success,
-    ).toBe(false);
-  });
-});
+// ~~« à la création : une entreprise créée hors du parcours »~~ [2026-10-26 :
+// cette porte n'existe plus — une entreprise naît avec son premier
+// établissement, au parcours, éprouvé plus haut.]
 
 describe("en édition : le dossier reste ouvert, la couverture le dit (ADR-031 § 1 bis)", () => {
   it(`une entreprise passée à ${EFFECTIF_MAX + 1} n'est pas refusée`, () => {

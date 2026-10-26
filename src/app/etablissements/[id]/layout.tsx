@@ -3,7 +3,7 @@ import { AppSidebar } from "@/components/layout/AppSidebar";
 import { BarreCompte } from "@/components/layout/BarreCompte";
 import { chargerSidebarCounts } from "@/lib/navigation/sidebar-counts";
 import { getEtatModules } from "@/lib/etablissements/modules";
-import { listerEtablissementsDeLEntreprise } from "@/lib/etablissements/queries";
+import { listerEtablissementsDuCompte } from "@/lib/etablissements/queries";
 
 /**
  * Layout imbriqué pour toutes les pages d'un établissement.
@@ -53,7 +53,7 @@ export default async function EtablissementLayout({
   const [counts, modules, fratrie] = await Promise.all([
     chargerSidebarCounts(id),
     getEtatModules(id, etab.estERP),
-    listerEtablissementsDeLEntreprise(etab.entrepriseId),
+    listerEtablissementsDuCompte(),
   ]);
 
   return (
@@ -74,10 +74,7 @@ export default async function EtablissementLayout({
         <BarreCompte
           etablissementId={etab.id}
           email={user.email ?? null}
-          etablissements={fratrie.map((e) => ({
-            id: e.id,
-            raisonDisplay: e.raisonDisplay,
-          }))}
+          etablissements={fratrie}
         />
         {children}
       </div>

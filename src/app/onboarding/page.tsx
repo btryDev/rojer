@@ -1,7 +1,6 @@
-import { redirect } from "next/navigation";
 import { WizardShell } from "@/components/onboarding/WizardShell";
 import { requireUser } from "@/lib/auth/require-user";
-import { getOptionalUserEtablissement } from "@/lib/auth/scope";
+import { listerEntreprisesConnues } from "@/lib/entreprises/queries";
 
 /**
  * Parcours de mise en place — wizard mono-page (client component) qui
@@ -10,7 +9,8 @@ import { getOptionalUserEtablissement } from "@/lib/auth/scope";
  *   2. Typologie (ERP / IGH / habitation, via assistant)
  *   3. Résumé + création transactionnelle
  *
- * Entreprise + premier Etablissement sont créés atomiquement à la fin.
+ * L'établissement est créé à la fin, avec son entreprise si le SIREN est
+ * nouveau pour le compte, rattaché à l'existante sinon — en une transaction.
  * Nom d'usage de l'établissement = raison sociale par défaut, modifiable
  * plus tard depuis la page établissement.
  *
@@ -21,13 +21,10 @@ import { getOptionalUserEtablissement } from "@/lib/auth/scope";
  */
 export default async function OnboardingPage() {
   const user = await requireUser();
-  // Un compte = une entreprise (ADR-005, ADR-028) : le parcours ne se joue
-  // qu'une fois. L'action d'enregistrement le refusait déjà
-  // (`finaliserOnboarding`), mais seulement APRÈS les trois étapes — le
-  // dirigeant remplissait tout pour être renvoyé à son dossier (contrôle
-  // visuel du 2026-10-13). La même garde, à l'ouverture. Les établissements
-  // suivants naissent de `/etablissements/nouveau`.
-  const existant = await getOptionalUserEtablissement();
-  if (existant) redirect(`/etablissements/${existant.id}`);
-  return <WizardShell email={user.email} />;
+  // ~~Un compte = une entreprise : le parcours ne se joue qu'une fois.~~
+  // [2026-10-26 : chaque établissement passe par ce parcours. Un compte suit
+  // plusieurs entreprises, une par SIREN ; un SIRET qui reprend le SIREN de
+  // l'une d'elles y rattache le nouvel établissement (`finaliserOnboarding`).]
+  const entreprisesConnues = await listerEntreprisesConnues();
+  return <WizardShell email={user.email} entreprisesConnues={entreprisesConnues} />;
 }

@@ -19,7 +19,6 @@
 import "server-only";
 import { trouverReferentielParNaf } from "@/lib/referentiels";
 import { typesErpDe } from "@/lib/matching/types-erp";
-import { nafEffectif } from "@/lib/perimetre/secteur";
 
 /** Les planches de `public/illustrations/batiments/`, une par fichier. */
 export const ILLUSTRATIONS_BATIMENT = [
@@ -68,21 +67,17 @@ const PLANCHE_PAR_SECTEUR: Readonly<Record<string, IllustrationBatiment>> = {
  * l'activité de l'entreprise), puis le secteur du code NAF, puis le local
  * générique.
  *
- * `codeNaf` est celui de l'établissement s'il en a un, sinon celui de
- * l'entreprise (`nafEffectif`).
+ * `codeNaf` est celui de l'établissement, obligatoire depuis le 2026-10-26.
  */
 export function illustrationBatiment(etab: {
   typeErp: string | null;
   typesErpAutres: readonly string[];
-  codeNaf: string | null;
-  entreprise: { codeNaf: string };
+  codeNaf: string;
 }): IllustrationBatiment {
   const types = new Set(typesErpDe(etab));
   const parType = PLANCHE_PAR_TYPE_ERP.find(([t]) => types.has(t));
   if (parType) return parType[1];
 
-  const secteur = trouverReferentielParNaf(
-    nafEffectif({ etablissement: etab.codeNaf, entreprise: etab.entreprise.codeNaf }),
-  );
+  const secteur = trouverReferentielParNaf(etab.codeNaf);
   return (secteur && PLANCHE_PAR_SECTEUR[secteur.id]) ?? "local";
 }

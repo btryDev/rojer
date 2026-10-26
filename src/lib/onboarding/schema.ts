@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { siretSchema } from "@/lib/etablissements/siret";
 import {
   CATEGORIES_ERP,
   EFFECTIF_MAX,
@@ -24,18 +25,16 @@ export const MESSAGE_EFFECTIF_ENTREPRISE =
   "Indiquez l'effectif de l'entreprise, apprentis non compris (0 ou plus).";
 
 /**
- * Schéma fusionné du parcours d'onboarding — couvre Entreprise + premier
- * Etablissement en une seule validation.
- *
- * Les champs sont mutualisés : adresse / codeNaf / effectif sont saisis
- * UNE fois et copiés dans les deux entités côté server action.
+ * Schéma fusionné du parcours d'onboarding — couvre l'établissement et, si
+ * son SIREN est nouveau pour le compte, son entreprise, en une seule
+ * validation. Le SIRET et le NAF vont à l'établissement ; la raison sociale, l'effectif
+ * de l'entreprise et l'adresse (siège) à l'entreprise quand elle naît.
  *
  * Les règles de cohérence flags ↔ précisions (ADR-004) sont recyclées
  * ici depuis `etablissements/schema.ts` — pas de duplication.
  */
 
 
-const siretRegex = /^\d{14}$/;
 const nafRegex = /^\d{2}\.?\d{2}[A-Z]?$/;
 // Adresse recomposée côté client : "12 rue des Halles, 44000 Nantes".
 // On revalide ici la forme finale pour détecter un client-side bypass.
@@ -54,13 +53,13 @@ export const onboardingSchema = z
       .trim()
       .min(1, "La raison sociale est obligatoire")
       .max(200, "200 caractères maximum"),
-    siret: z.preprocess(
-      (v) =>
-        typeof v === "string" ? v.trim() || undefined : v,
-      z
-        .string()
-        .regex(siretRegex, "SIRET = 14 chiffres")
-        .optional(),
+    // Obligatoire depuis le 2026-10-26 : c'est lui qui rattache l'établissement à son
+    // entreprise (SIREN), et il figure en tête des documents.
+    siret: siretSchema,
+    // Le nom d'usage de l'établissement, facultatif : la raison sociale à défaut.
+    nomUsage: z.preprocess(
+      (v) => (typeof v === "string" ? v.trim() || undefined : v),
+      z.string().max(200, "200 caractères maximum").optional(),
     ),
     adresse: z
       .string()
@@ -272,7 +271,7 @@ export const onboardingSchema = z
     }
 
     // Le filtre à l'accueil (2026-10-17, `etablissements/types-refuses.ts`) :
-    // la même règle que `etablissementCreationSchema` et que le client
+    // la même règle que la fiche (à la transition) et que le client
     // (`components/onboarding/validation.ts`).
     appliquerFiltre(val, ctx);
 

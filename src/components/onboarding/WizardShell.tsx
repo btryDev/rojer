@@ -1,5 +1,6 @@
 "use client";
 
+import type { EntrepriseConnue } from "@/lib/onboarding/rattachement";
 import { DemandeAide } from "@/components/assistance/DemandeAide";
 import { useActionState, useState } from "react";
 import Link from "next/link";
@@ -66,7 +67,14 @@ const ETAPES: Etape[] = [
   },
 ];
 
-export function WizardShell({ email }: { email?: string | null }) {
+export function WizardShell({
+  email,
+  entreprisesConnues,
+}: {
+  email?: string | null;
+  /** Les entreprises du compte (une par SIREN), pour rattacher un nouvel établissement. */
+  entreprisesConnues: readonly EntrepriseConnue[];
+}) {
   const router = useRouter();
   const [state, setState] = useState<OnboardingState>(VALEURS_INITIALES);
   const [etapeIdx, setEtapeIdx] = useState(0);
@@ -416,6 +424,7 @@ export function WizardShell({ email }: { email?: string | null }) {
               update={update}
               errors={serverErrors}
               blocage={blocageAffiche}
+              entreprisesConnues={entreprisesConnues}
             />
           </div>
 
@@ -496,7 +505,7 @@ export function WizardShell({ email }: { email?: string | null }) {
                 size="board"
                 disabled={submitting}
               >
-                {submitting ? "Création en cours…" : "Créer mon espace →"}
+                {submitting ? "Création en cours…" : "Créer l'établissement →"}
               </Button>
             )}
           </div>
@@ -553,6 +562,7 @@ export function ChampsCaches({ state }: { state: OnboardingState }) {
     <>
       <input type="hidden" name="raisonSociale" value={state.raisonSociale} />
       <input type="hidden" name="siret" value={state.siret} />
+      <input type="hidden" name="nomUsage" value={state.nomUsage} />
       <input type="hidden" name="adresse" value={adresseComplete} />
       <input type="hidden" name="codeNaf" value={state.codeNaf} />
       <input

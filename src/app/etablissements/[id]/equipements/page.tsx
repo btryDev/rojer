@@ -305,7 +305,7 @@ export default async function EquipementsPage({
         {bienvenue === "1" && (
           <div className="carte-board px-7 py-5 sm:px-8">
             <p className="m-0 text-[14.5px] leading-[1.6] text-[color:var(--board-ink)]">
-              <strong>Votre espace est créé.</strong>{" "}
+              <strong>Votre établissement est créé.</strong>{" "}
               Dernière étape de la mise
               en place&nbsp;: déclarez les équipements présents chez vous. Votre
               calendrier de vérifications se génère dans la foulée — chaque

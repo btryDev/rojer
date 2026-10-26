@@ -370,7 +370,11 @@ cohérence du référentiel
   et la sur-application théorique sur un bureau qui déclarerait une hotte est
   assumée.
 - **Frontière 4ᵉ / 5ᵉ catégorie ERP : encodée pour dix types, demandée pour
-  les autres** (amendement 2026-08-25). La table `SEUILS_5E_CATEGORIE` de
+  les autres** (amendement 2026-08-25). [2026-10-26 : le module est retiré,
+  sans appelant depuis que le parcours ne déduit plus la catégorie
+  (2026-09-01, ADR-045 § 4) ; la table et ses sources restent dans
+  l'historique git, `src/lib/onboarding/deduction-erp.ts` avant le commit qui
+  le retire.] La table `SEUILS_5E_CATEGORIE` de
   `src/lib/onboarding/deduction-erp.ts` porte, pour N, M, W, T, S, Y, X, V,
   O et P, le seuil de l'article « 1 » des dispositions particulières relu sur
   Légifrance (sous-sol / étages / total, effectif du **public seul**), avec

@@ -13,6 +13,7 @@
 //
 // Module **pur** : ni Prisma, ni React.
 
+import { normaliserSiret, refusSiret } from "@/lib/etablissements/siret";
 import { evaluerScopeSecteur } from "@/lib/onboarding/scope";
 import { questionSommeilPosee } from "@/lib/etablissements/schema";
 import {
@@ -123,6 +124,10 @@ export function validerIdentite(s: OnboardingState): Blocage | null {
       champ: "raisonSociale",
       message: "Indiquez la raison sociale pour continuer.",
     };
+  // Même règle que le serveur (`siretSchema`) : obligatoire depuis le
+  // 2026-10-26, et la clé de contrôle se vérifie avant de passer l'étape.
+  const refusDuSiret = refusSiret(normaliserSiret(s.siret));
+  if (refusDuSiret) return { champ: "siret", message: refusDuSiret };
   if (s.adresseRue.trim().length < 3)
     return { champ: "adresseRue", message: "Indiquez le numéro et la rue." };
   if (!/^\d{5}$/.test(s.adresseCodePostal.trim()))

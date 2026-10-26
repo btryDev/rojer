@@ -710,11 +710,11 @@ export async function construireDossierConformiteData(
 
   return {
     entreprise: etab.entreprise.raisonSociale,
-    siret: etab.entreprise.siret,
+    siret: etab.siret,
     etablissement: etab.raisonDisplay,
     adresse: etab.adresse,
     effectifSurSite: etab.effectifSurSite,
-    codeNaf: etab.codeNaf ?? etab.entreprise.codeNaf,
+    codeNaf: etab.codeNaf,
     regimesTexte: regimesTexte(etab),
     regime: { estERP: etab.estERP, estIGH: etab.estIGH },
     genereLe: now,

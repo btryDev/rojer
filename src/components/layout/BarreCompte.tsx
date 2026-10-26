@@ -50,7 +50,7 @@ type MenuOuvert = null | "etablissements" | "compte";
 function LienAjouter({ onNavigate }: { onNavigate: () => void }) {
   return (
     <Link
-      href="/etablissements/nouveau"
+      href="/onboarding"
       role="menuitem"
       onClick={onNavigate}
       className="flex w-full items-center gap-2.5 rounded-full px-3 py-2 text-left text-[13px] text-[color:var(--board-slate-ink)] transition-colors hover:bg-[color:var(--board-slate-pale)] hover:text-[color:var(--board-ink)]"

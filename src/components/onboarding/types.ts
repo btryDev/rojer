@@ -1,3 +1,4 @@
+import type { EntrepriseConnue } from "@/lib/onboarding/rattachement";
 import type { Blocage } from "./validation";
 
 /**
@@ -9,6 +10,12 @@ import type { Blocage } from "./validation";
 export type OnboardingState = {
   raisonSociale: string;
   siret: string;
+  /**
+   * Le nom d'usage de l'établissement (l'enseigne), facultatif — la raison sociale par
+   * défaut. Proposé quand l'établissement rejoint une entreprise déjà suivie : deux
+   * établissements d'une même société porteraient sinon le même nom au sélecteur.
+   */
+  nomUsage: string;
 
   // Adresse structurée — validée champ par champ côté client, recomposée
   // en chaîne unique au submit pour alimenter Entreprise.adresse /
@@ -71,6 +78,7 @@ export type OnboardingState = {
 export const VALEURS_INITIALES: OnboardingState = {
   raisonSociale: "",
   siret: "",
+  nomUsage: "",
   adresseRue: "",
   adresseCodePostal: "",
   adresseVille: "",
@@ -102,4 +110,9 @@ export type StepProps = {
    * pixels sous le contrôle qu'il désigne se lit en regardant autre chose.
    */
   blocage?: Blocage | null;
+  /**
+   * Les entreprises que le compte suit déjà (une par SIREN) : un SIRET qui en
+   * reprend le SIREN rattache le nouvel établissement à l'une d'elles.
+   */
+  entreprisesConnues: readonly EntrepriseConnue[];
 };

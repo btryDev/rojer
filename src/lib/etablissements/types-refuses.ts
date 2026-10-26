@@ -13,9 +13,10 @@
  * Le refus vaut pour le type principal ET pour chacun des autres types
  * déclarés (ADR-045).
  *
- * TROIS PORTES, UNE RÈGLE. Ce module est lu par `etablissementCreationSchema`
- * (création, y compris d'un second établissement), par `onboardingSchema`
- * (serveur du parcours) et par `components/onboarding/validation.ts` (client,
+ * ~~TROIS PORTES, UNE RÈGLE. Ce module est lu par `etablissementCreationSchema`
+ * (création, y compris d'un second établissement), par~~ [2026-10-26 : deux
+ * surfaces de création, une porte. Ce module est lu par] `onboardingSchema`
+ * (serveur du parcours, seule porte de création) et par `components/onboarding/validation.ts` (client,
  * refus à l'étape) ; la fiche (`modifierEtablissement`) l'applique à la
  * TRANSITION : un type refusé qui n'était pas en base. Un dossier créé avant
  * le filtre s'enregistre comme avant (données factices en prod au
@@ -116,7 +117,7 @@ export const champAccueilEnfants = z.preprocess(
 export function appliquerFiltre(
   val: Types & { accueilEnfants?: boolean | null },
   ctx: {
-    addIssue: (i: { code: "custom"; path: string[]; message: string; params?: { perimetre: true } }) => void;
+    addIssue: (i: { code: "custom"; path: string[]; message: string }) => void;
   },
 ): void {
   for (const r of refusDuFiltre(val))
@@ -124,7 +125,8 @@ export function appliquerFiltre(
       code: "custom",
       path: [r.champ],
       message: r.message,
-      ...(r.perimetre ? { params: { perimetre: true as const } } : {}),
+      // ~~`params: { perimetre: true }`~~ [2026-10-26 : son seul lecteur,
+      // `creerEtablissement`, est retiré.]
     });
   if (val.accueilEnfants !== undefined && !questionEnfantsPosee(val)) {
     ctx.addIssue({
@@ -143,13 +145,14 @@ export function sansReponseEnfants<T extends { accueilEnfants?: unknown }>(d: T)
 }
 
 /**
- * `perimetre` : un refus de ce que Rojer sert (ADR-031), et non une réponse
- * manquante — l'écran propose alors un accompagnement (2026-10-24).
+ * ~~`perimetre` : un refus de ce que Rojer sert (ADR-031)~~ [2026-10-26 :
+ * retiré avec son seul lecteur, le formulaire de création d'établissement ;
+ * le parcours distingue les deux natures de refus par lui-même
+ * (`components/onboarding/validation.ts`).]
  */
 export type RefusFiltre = {
   champ: "typeErp" | "typesErpAutres" | "accueilEnfants";
   message: string;
-  perimetre: boolean;
 };
 
 /**
@@ -172,14 +175,14 @@ export function refusDuFiltre(
   const principal = d.typeErp && !dejaLa.has(d.typeErp) ? typesRefusesDe(d.typeErp, []) : [];
   const autres = typesRefusesDe(null, (d.typesErpAutres ?? []).filter((t) => !dejaLa.has(t)));
   const p = phraseRefusTypes(principal);
-  if (p) refus.push({ champ: "typeErp", message: p, perimetre: true });
+  if (p) refus.push({ champ: "typeErp", message: p });
   const a = phraseRefusTypes(autres);
-  if (a) refus.push({ champ: "typesErpAutres", message: a, perimetre: true });
+  if (a) refus.push({ champ: "typesErpAutres", message: a });
   if (rEntre(d, avant)) {
     if (d.accueilEnfants === true)
-      refus.push({ champ: "accueilEnfants", message: PHRASE_REFUS_ENFANTS, perimetre: true });
+      refus.push({ champ: "accueilEnfants", message: PHRASE_REFUS_ENFANTS });
     else if (d.accueilEnfants !== false)
-      refus.push({ champ: "accueilEnfants", message: "Indiquez si vous accueillez des enfants.", perimetre: false });
+      refus.push({ champ: "accueilEnfants", message: "Indiquez si vous accueillez des enfants." });
   }
   return refus;
 }

@@ -117,7 +117,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { CORPUS, type ArticleDepouille } from "./corpus";
 import { CLASSES_IGH } from "./types-communs";
-import { etablissementCreationSchema } from "@/lib/etablissements/schema";
+import { etablissementSchema } from "@/lib/etablissements/schema";
 import { onboardingSchema } from "@/lib/onboarding/schema";
 
 /** L'entrée de corpus qui porte la nomenclature. */
@@ -447,11 +447,15 @@ describe("classes d'IGH — la liste du modèle est celle de l'article R. 146-4"
     // validerait ni l'un ni l'autre.
     for (const [ou, schema, identite] of [
       [
-        "`etablissementCreationSchema`",
-        etablissementCreationSchema,
+        // ~~`etablissementCreationSchema`~~ [2026-10-26 : porte retirée ; la
+        // fiche est l'autre surface qui écrit l'établissement.]
+        "`etablissementSchema`",
+        etablissementSchema,
         {
           raisonDisplay: "Tour Témoin",
           adresse: "1 place de la Défense, 92400 Courbevoie",
+          siret: "12002701600357",
+          codeNaf: "70.22Z",
         },
       ],
       [
@@ -459,6 +463,7 @@ describe("classes d'IGH — la liste du modèle est celle de l'article R. 146-4"
         onboardingSchema,
         {
           raisonSociale: "Tour Témoin",
+          siret: "12002701600357",
           adresse: "1 place de la Défense, 92400 Courbevoie",
           codeNaf: "70.22Z",
         },

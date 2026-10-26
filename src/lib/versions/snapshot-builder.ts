@@ -120,8 +120,11 @@ export async function construireSnapshot(
     referentielSecteurId: duerp.referentielSecteurId,
     entreprise: {
       raisonSociale: ent.raisonSociale,
-      siret: ent.siret,
-      codeNaf: etab.codeNaf ?? ent.codeNaf,
+      // Le SIRET et le NAF de l'établissement (2026-10-26) — la forme figée ne change
+      // pas, elle garde sa clé `entreprise` : les versions déjà archivées
+      // restent lisibles telles quelles.
+      siret: etab.siret,
+      codeNaf: etab.codeNaf,
       effectif: etab.effectifSurSite,
       effectifEntreprise: ent.effectif,
       adresse: etab.adresse,

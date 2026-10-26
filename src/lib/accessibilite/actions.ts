@@ -34,12 +34,12 @@ async function obtenirOuCreer(etablissementId: string) {
     where: { id: etablissementId },
     select: {
       raisonDisplay: true,
-      entreprise: { select: { siret: true } },
+      siret: true,
     },
   });
   if (!etab) throw new Error("Établissement introuvable");
 
-  const base = genererSlug(etab.raisonDisplay, etab.entreprise.siret);
+  const base = genererSlug(etab.raisonDisplay, etab.siret);
   const pris = await prisma.registreAccessibilite.findMany({
     where: { slugPublic: { startsWith: base } },
     select: { slugPublic: true },

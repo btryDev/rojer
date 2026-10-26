@@ -3,7 +3,7 @@ import { onboardingSchema } from "./schema";
 
 const base = {
   raisonSociale: "Bistrot du marché SARL",
-  siret: "",
+  siret: "12002701600357",
   adresse: "12 rue des halles, 44000 Nantes",
   codeNaf: "56.10A",
   effectifSurSite: 8,
@@ -20,24 +20,27 @@ describe("onboardingSchema", () => {
     expect(res.success).toBe(true);
   });
 
-  it("accepte un SIRET valide à 14 chiffres", () => {
-    const res = onboardingSchema.safeParse({
-      ...base,
-      siret: "12345678901234",
-    });
+  it("accepte un SIRET valide, espaces retirés", () => {
+    const res = onboardingSchema.safeParse({ ...base, siret: "120 027 016 00357" });
     expect(res.success).toBe(true);
-    if (res.success) expect(res.data.siret).toBe("12345678901234");
+    if (res.success) expect(res.data.siret).toBe("12002701600357");
   });
 
-  it("refuse un SIRET invalide", () => {
+  it("refuse un SIRET de 14 chiffres dont la clé de contrôle est fausse", () => {
+    // « 14 chiffres » ne suffisait pas : ce numéro passait jusqu'au 2026-10-26.
+    const res = onboardingSchema.safeParse({ ...base, siret: "12345678901234" });
+    expect(res.success).toBe(false);
+  });
+
+  it("refuse un SIRET trop court", () => {
     const res = onboardingSchema.safeParse({ ...base, siret: "12345" });
     expect(res.success).toBe(false);
   });
 
-  it("accepte un SIRET vide (optionnel)", () => {
+  // ~~« accepte un SIRET vide (optionnel) »~~ [2026-10-26 : obligatoire.]
+  it("refuse un SIRET vide : il est obligatoire", () => {
     const res = onboardingSchema.safeParse({ ...base, siret: "" });
-    expect(res.success).toBe(true);
-    if (res.success) expect(res.data.siret).toBeUndefined();
+    expect(res.success).toBe(false);
   });
 
   it("normalise le code NAF en majuscules", () => {

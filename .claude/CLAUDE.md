@@ -555,7 +555,7 @@ est nulle, la conservation reste à la charge de l'employeur hors de l'outil.
 - **RH non-SST** : DPAE, registre unique du personnel, BDESE, index égapro, DOETH
 - Dépôt du DUERP sur le portail national dématérialisé
 - Signature électronique **qualifiée** (la signature simple existe)
-- Multi-utilisateurs internes par entreprise (rôles, permissions fines) — l'accès externe prestataire par token existe, lui. **À ne pas confondre avec le multi-établissements, qui est entré au périmètre le 2026-09-01** (ADR-028) : un compte reste une entreprise et un utilisateur, mais cette entreprise porte autant d'établissements qu'elle en a
+- Multi-utilisateurs internes par entreprise (rôles, permissions fines) — l'accès externe prestataire par token existe, lui. **À ne pas confondre avec le multi-établissements, qui est entré au périmètre le 2026-09-01** (ADR-028) : ~~un compte reste une entreprise et un utilisateur, mais cette entreprise porte autant d'établissements qu'elle en a~~ [2026-10-26, ADR-028 amendée : un compte reste un utilisateur ; il suit autant d'entreprises que de SIREN, chacune avec ses établissements]
 - Notifications de relance (email/push/SMS) — seuls les emails transactionnels existent (OTP, liens d'accès)
 - Paiement / abonnement / gestion commerciale
 - Intégration SIRENE pour auto-complétion SIRET
@@ -627,9 +627,12 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
 27. **027** — Une déclaration n'est pas une preuve : les états permanents ont
     leur écran et leur support (`DeclarationEtatPermanent`), et ce que
     l'employeur y coche n'améliore aucune valeur — depuis le 2026-09-01 une déclaration lève une indétermination du score sans faire monter la note, et rien n'y est jamais présenté comme vérifié
-28. **028** — Un utilisateur tient plusieurs établissements : `Entreprise.userId`
-    reste unique, `Etablissement.entrepriseId` ne l'est plus. Sélecteur en barre
-    haute, cookie `etablissement-actif` revalidé par le scoping à chaque lecture
+28. **028** — Un utilisateur tient plusieurs établissements : ~~`Entreprise.userId`
+    reste unique,~~ `Etablissement.entrepriseId` ne l'est plus. Sélecteur en barre
+    haute, cookie `etablissement-actif` revalidé par le scoping à chaque lecture.
+    [2026-10-26, amendée : une entreprise par SIREN (`@@unique([userId, siren])`),
+    plusieurs par compte ; SIRET et NAF sur l'établissement ; un onboarding par
+    établissement, seule porte de création]
 29. **029** — La zone remplace le bâtiment, et il n'y en a jamais plus de trois.
     Le modèle `Batiment` reste en base sous ce nom ; l'invariant de l'ADR-019 —
     un lieu ne porte aucun régime — est conservé mot pour mot
@@ -804,7 +807,7 @@ la tuile s'allume dessus.
 Le tableau de bord est un **board personnalisable de widgets** (`src/components/dashboard/widgets/`) : un registre central de widgets avec variants de visualisation, un layout par défaut éditorial, un tiroir « Ajouter un widget », drag-and-drop, persistance versionnée en localStorage (`useLayoutPerso`). Le widget Équipements est épinglé (obligatoire). Un bandeau « brief » en tête liste les éléments à traiter.
 
 ### Onboarding
-Compte → entreprise et **premier** établissement, créés ensemble en trois étapes (identité et lieu, typologie, résumé — aucune ne déclare d'équipement) → le calendrier des obligations d'établissement est généré à la création (`regenererApresMutation`, avant la redirection) → arrivée sur la page Équipements (`/etablissements/[id]/equipements?bienvenue=1`), où chaque équipement déclaré ajoute ses obligations au calendrier. *(Corrigé le 2026-09-26 : la phrase annonçait une « déclaration guidée des équipements » dans le parcours, qui n'existe plus.)*
+Compte → ~~entreprise et **premier** établissement~~ [2026-10-26 : chaque établissement, et son entreprise si son SIREN est nouveau pour le compte], créés ensemble en trois étapes (identité et lieu, typologie, résumé — aucune ne déclare d'équipement) → le calendrier des obligations d'établissement est généré à la création (`regenererApresMutation`, avant la redirection) → arrivée sur la page Équipements (`/etablissements/[id]/equipements?bienvenue=1`), où chaque équipement déclaré ajoute ses obligations au calendrier. *(Corrigé le 2026-09-26 : la phrase annonçait une « déclaration guidée des équipements » dans le parcours, qui n'existe plus.)*
 
 Le parcours **ne déduit plus rien** depuis le 2026-09-01 : le type et la
 catégorie d'ERP sont **déclarés** par le dirigeant — son classement figure sur
@@ -817,10 +820,15 @@ oubliaient un, le type J (structures d'accueil pour personnes âgées et
 handicapées), que l'ADR-004 avait perdu en écrivant la liste de mémoire. Deux réponses arrêtent la création : plus de
 cinquante travailleurs, et un ERP situé en IGH (ADR-031).
 
-Les établissements **suivants** ne passent pas par là : ils s'ouvrent depuis le
+~~Les établissements **suivants** ne passent pas par là : ils s'ouvrent depuis le
 sélecteur de la ~~barre haute~~ gélule de compte (`/etablissements/nouveau`), et c'est cette
 porte-là qui porte les mêmes règles de périmètre — une règle posée sur un
-parcours se contourne en changeant de parcours.
+parcours se contourne en changeant de parcours.~~ [2026-10-26, ADR-028 amendée :
+les établissements suivants passent par le même parcours (« Ajouter un
+établissement » de la gélule → `/onboarding`), seule porte de création. Le
+SIRET est obligatoire ; un SIRET dont le SIREN est déjà suivi par le compte
+rattache le site à son entreprise, dont la raison sociale et l'effectif sont
+repris en lecture seule.]
 
 ### Garde-fous (jamais bloquants, toujours informatifs)
 - Hiérarchie des mesures de prévention (L. 4121-2) : alerte si seulement EPI/formation

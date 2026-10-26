@@ -5,18 +5,30 @@ import {
   libererFichiers,
 } from "@/lib/suppression/fichiers";
 import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { NOM_BATIMENT_PRINCIPAL } from "@/lib/batiments/schema";
 import {
-  COOKIE_ETABLISSEMENT_ACTIF,
-  assertEntrepriseOwnership,
   assertEtablissementOwnership,
 } from "@/lib/auth/scope";
+import { poserEtablissementActif } from "./etablissement-actif";
+import { sirenDuSiret } from "./siret";
+import { supprimerEntrepriseSiVide } from "@/lib/entreprises/cycle-de-vie";
+
+/** Le refus d'un SIRET dont le SIREN n'est pas celui de l'entreprise de l'établissement. */
+function refusSiretAutreEntreprise(): EtablissementActionState {
+  return {
+    status: "error",
+    message: "Formulaire invalide",
+    fieldErrors: {
+      siret: [
+        "Ce SIRET relève d'une société que votre compte ne suit pas encore. Pour suivre un établissement d'une autre entreprise, ajoutez-le depuis « Ajouter un établissement ».",
+      ],
+    },
+  };
+}
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import {
-  etablissementCreationSchema,
   etablissementSchema,
   reponseSommeilSuivantLeType,
   typesErpAutresCoherents,
@@ -30,8 +42,6 @@ export type EtablissementActionState =
       status: "error";
       message: string;
       fieldErrors?: Record<string, string[]>;
-      /** Un refus de périmètre (ADR-031), pas une saisie à corriger. */
-      refusPerimetre?: boolean;
     }
   | { status: "success"; id: string }
   | { status: "success_avec_avertissement"; id: string; message: string };
@@ -117,6 +127,7 @@ function normaliserFormData(fd: FormData): Record<string, unknown> {
   return {
     raisonDisplay: raw.raisonDisplay,
     adresse: raw.adresse,
+    siret: raw.siret,
     codeNaf: raw.codeNaf,
     effectifSurSite: raw.effectifSurSite,
     personnesPresentesHabituellement: raw.personnesPresentesHabituellement,
@@ -171,108 +182,11 @@ function normaliserFormData(fd: FormData): Record<string, unknown> {
   };
 }
 
-export async function creerEtablissement(
-  entrepriseId: string,
-  _prev: EtablissementActionState,
-  formData: FormData,
-): Promise<EtablissementActionState> {
-  await assertEntrepriseOwnership(entrepriseId);
-
-  // ADR-028 : le verrou qui redirigeait vers l'établissement existant plutôt
-  // que d'en créer un second est parti avec l'invariant qu'il gardait. Une
-  // entreprise porte autant d'établissements qu'elle en a ; créer le deuxième
-  // est le même geste que créer le premier.
-  //
-  // Et « le même geste » vaut aussi pour ce qu'on refuse : c'est le schéma de
-  // CRÉATION qui valide ici, celui qui exige la famille d'habitation
-  // (ADR-025 § 4) et porte ~~les deux refus de périmètre~~ [2026-10-18 : les
-  // refus de périmètre — effectif, ERP en IGH, et le filtre à l'accueil]
-  // (ADR-031). Les deux
-  // lots ayant été écrits en parallèle, ce chemin est resté un instant sur le
-  // schéma de modification — un dossier refusé à l'onboarding se serait alors
-  // créé en deux clics par l'autre porte. C'est la porte, pas le parcours, qui
-  // doit porter la règle.
-  // EN CRÉATION, LES TROIS RÉGIMES EXIGENT UNE RÉPONSE (2026-09-27, A2) : le
-  // formulaire les pose en Oui / Non sans présélection, et la porte refuse
-  // leur absence au lieu de la lire « non » — même règle qu'à l'onboarding.
-  const regimesSansReponse = (["estERP", "estIGH", "estHabitation"] as const).filter(
-    (k) => formData.get(k) !== "oui" && formData.get(k) !== "non",
-  );
-  if (regimesSansReponse.length > 0) {
-    return {
-      status: "error",
-      message: "Formulaire invalide",
-      fieldErrors: Object.fromEntries(
-        regimesSansReponse.map((k) => [k, ["Répondez oui ou non."]]),
-      ),
-    };
-  }
-  const parsed = etablissementCreationSchema.safeParse(
-    normaliserFormData(formData),
-  );
-  if (!parsed.success) {
-    return {
-      status: "error",
-      message: "Formulaire invalide",
-      fieldErrors: parsed.error.flatten().fieldErrors,
-      // Marqués par le schéma (`params.perimetre`) : l'écran propose alors
-      // un accompagnement, pas pour une simple réponse manquante.
-      refusPerimetre: parsed.error.issues.some(
-        (i) => i.code === "custom" && (i as { params?: { perimetre?: boolean } }).params?.perimetre === true,
-      ),
-    };
-  }
-
-  // La réponse « accueil d'enfants » ne s'écrit pas : elle ne sert qu'au
-  // filtre (`types-refuses.ts`, choix assumé du 2026-10-17).
-  const saisie = sansReponseEnfants(parsed.data);
-  const etab = await prisma.etablissement.create({
-    data: {
-      entrepriseId,
-      ...reponseSommeilSuivantLeType({
-        ...saisie,
-        typesErpAutres: typesErpAutresCoherents(saisie),
-      }),
-      // ADR-019 : tout établissement naît avec son bâtiment principal.
-      batiments: { create: { nom: NOM_BATIMENT_PRINCIPAL, ordre: 0 } },
-    },
-  });
-
-  // Le calendrier naît avec l'établissement, comme à l'onboarding : sans
-  // équipement, les obligations d'établissement sont dues quand même
-  // (ADR-022). Raté, il reste marqué périmé et le premier affichage le reprend.
-  await regenererApresMutation(etab.id, "etablissements/creation");
-
-  revalidatePath(`/entreprises/${entrepriseId}`);
-  // On vient de le créer et on y atterrit : c'est lui, l'établissement actif.
-  // Sans ce trait, le second établissement se créerait puis l'accueil
-  // renverrait au premier — l'utilisateur aurait rempli un formulaire pour se
-  // retrouver ailleurs.
-  await poserEtablissementActif(etab.id);
-  redirect(`/etablissements/${etab.id}`);
-}
-
-/**
- * Pose le cookie de l'établissement actif (ADR-028).
- *
- * `httpOnly` : rien côté client n'a à le lire. Il ne porte aucun droit — le
- * scoping le revalide à chaque lecture (`getOptionalUserEtablissement`) — mais
- * un cookie que du JavaScript peut écrire est un cookie qu'une extension ou un
- * script tiers écrit aussi, et le premier symptôme serait un dirigeant qui
- * atterrit chez lui sur le mauvais dossier sans comprendre pourquoi.
- *
- * Un an : c'est une préférence de navigateur, pas une session. La reperdre à
- * chaque déconnexion obligerait à recommuter à chaque retour.
- */
-async function poserEtablissementActif(etablissementId: string): Promise<void> {
-  (await cookies()).set(COOKIE_ETABLISSEMENT_ACTIF, etablissementId, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 365,
-  });
-}
+// ~~`creerEtablissement` — la seconde porte de création (ADR-028)~~
+// [2026-10-26 : retirée. Tout établissement naît du parcours d'onboarding
+// (`finaliserOnboarding`), qui porte les mêmes refus de périmètre : une seule
+// porte, une seule règle.] `poserEtablissementActif` a rejoint
+// `etablissement-actif.ts`, partagé avec le parcours.
 
 /**
  * Commute l'établissement actif — l'action du sélecteur de `BarreCompte`.
@@ -311,7 +225,7 @@ export async function modifierEtablissement(
   _prev: EtablissementActionState,
   formData: FormData,
 ): Promise<EtablissementActionState> {
-  await assertEtablissementOwnership(id);
+  const user = await assertEtablissementOwnership(id);
   const brut = normaliserFormData(formData);
   const parsed = etablissementSchema.safeParse(brut);
   if (!parsed.success) {
@@ -353,11 +267,39 @@ export async function modifierEtablissement(
       manipuleMatieresR422722: true,
       comporteLocauxSommeilPublic: true,
       ssiCategorieAouB: true,
+      entrepriseId: true,
+      entreprise: { select: { siren: true } },
     },
   });
   if (!avant) {
     return { status: "error", message: "Établissement introuvable" };
   }
+
+  // UN SITE APPARTIENT À L'ENTREPRISE DE SON SIREN (2026-10-26), dans le
+  // compte — la même règle qu'au parcours. Trois cas quand le SIREN du SIRET
+  // n'est pas celui de l'entreprise de l'établissement :
+  //  - une autre entreprise du compte porte ce SIREN : l'établissement la rejoint.
+  //    C'est le cas d'un dossier ancien, d'avant le SIRET obligatoire, dont la
+  //    société a été ouverte depuis par un second établissement ;
+  //  - l'entreprise de l'établissement n'a pas de SIREN (dossier ancien) : elle le reçoit ;
+  //  - sinon, refus : passer sous une société que le compte ne suit pas
+  //    demanderait sa raison sociale et son effectif, qui fixent des seuils —
+  //    ce que la fiche ne demande pas. On ouvre alors un établissement.
+  // La recherche est bornée au compte de la session : un SIREN suivi par un
+  // autre compte n'est ni lu ni signalé.
+  const siren = sirenDuSiret(parsed.data.siret);
+  let entrepriseCible = avant.entrepriseId;
+  let sirenAPoser = false;
+  if (avant.entreprise.siren !== siren) {
+    const autre = await prisma.entreprise.findFirst({
+      where: { userId: user.id, siren },
+      select: { id: true },
+    });
+    if (autre) entrepriseCible = autre.id;
+    else if (avant.entreprise.siren === null) sirenAPoser = true;
+    else return refusSiretAutreEntreprise();
+  }
+  const changeDEntreprise = entrepriseCible !== avant.entrepriseId;
 
   // LE FILTRE À L'ACCUEIL, À LA TRANSITION (2026-10-17, `types-refuses.ts`).
   // Un type refusé qui n'était pas en base, ou un R qui entre sans réponse ou
@@ -383,7 +325,6 @@ export async function modifierEtablissement(
     refus.push({
       champ: "accueilEnfants",
       message: "La question de l'accueil d'enfants n'est posée qu'à l'entrée du type R.",
-      perimetre: false,
     });
   }
   if (refus.length > 0) {
@@ -401,15 +342,40 @@ export async function modifierEtablissement(
     ...saisie,
     typesErpAutres: typesErpAutresApres,
   });
-  const etab = await prisma.etablissement.update({
-    where: { id },
-    data: donnees,
-  });
+  let etab;
+  try {
+    etab = await prisma.$transaction(async (tx) => {
+      if (sirenAPoser) {
+        await tx.entreprise.update({
+          where: { id: avant.entrepriseId },
+          data: { siren },
+        });
+      }
+      const ecrit = await tx.etablissement.update({
+        where: { id },
+        data: changeDEntreprise ? { ...donnees, entrepriseId: entrepriseCible } : donnees,
+      });
+      // L'établissement a rejoint l'entreprise de son SIREN : celle qu'il quitte part
+      // si elle n'a plus d'établissement.
+      if (changeDEntreprise) await supprimerEntrepriseSiVide(tx, avant.entrepriseId);
+      return ecrit;
+    });
+  } catch (e) {
+    // Une autre entreprise du compte a pris ce SIREN entre la lecture et
+    // l'écriture : l'unicité `(userId, siren)` tranche. Rare (deux onglets) ;
+    // un nouvel enregistrement rattachera l'établissement à cette entreprise.
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+      return refusSiretAutreEntreprise();
+    }
+    throw e;
+  }
 
   revalidatePath(`/entreprises/${etab.entrepriseId}`);
   revalidatePath(`/etablissements/${id}`);
 
-  if (typologieAChange(avant, donnees)) {
+  // Changer d'entreprise change l'effectif sur lequel se comptent le CSE et le
+  // règlement intérieur : le calendrier se recalcule comme pour la typologie.
+  if (changeDEntreprise || typologieAChange(avant, donnees)) {
     // Le garde est celui de `calendrier/regeneration-sure`, comme partout
     // ailleurs. Il était ici recopié à la main — c'est en migrant les six
     // appels qui n'en avaient AUCUN qu'on a vu que deux autres en avaient un,
@@ -518,6 +484,8 @@ export async function supprimerEtablissement(
     cles = await prisma.$transaction(async (tx) => {
       const c = await clesDesEtablissements(tx, [id]);
       await tx.etablissement.delete({ where: { id } });
+      // Le dernier parti, l'entreprise part avec lui (2026-10-26).
+      await supprimerEntrepriseSiVide(tx, etab.entrepriseId);
       return c;
     });
   } catch (err) {
@@ -540,5 +508,6 @@ export async function supprimerEtablissement(
   await libererFichiers(cles, "etablissements/suppression");
 
   revalidatePath(`/entreprises/${etab.entrepriseId}`);
-  redirect(`/entreprises/${etab.entrepriseId}`);
+  // L'aiguilleur : l'établissement actif s'il en reste un, sinon l'onboarding.
+  redirect("/entreprises");
 }

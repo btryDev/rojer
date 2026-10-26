@@ -63,7 +63,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { CORPUS, type ArticleDepouille } from "./corpus";
 import { FAMILLES_HABITATION } from "./types-communs";
-import { etablissementCreationSchema } from "@/lib/etablissements/schema";
+import { etablissementSchema } from "@/lib/etablissements/schema";
 import { onboardingSchema } from "@/lib/onboarding/schema";
 
 /** L'entrée de corpus qui porte la nomenclature. */
@@ -299,11 +299,15 @@ describe("familles d'habitation — la liste du modèle est celle de l'article 3
     };
     for (const [ou, schema, identite] of [
       [
-        "`etablissementCreationSchema`",
-        etablissementCreationSchema,
+        // ~~`etablissementCreationSchema`~~ [2026-10-26 : porte retirée ; la
+        // fiche est l'autre surface qui écrit l'établissement.]
+        "`etablissementSchema`",
+        etablissementSchema,
         {
           raisonDisplay: "Syndic Témoin",
           adresse: "3 rue des Lilas, 75020 Paris",
+          siret: "12002701600357",
+          codeNaf: "68.32A",
         },
       ],
       [
@@ -311,6 +315,7 @@ describe("familles d'habitation — la liste du modèle est celle de l'article 3
         onboardingSchema,
         {
           raisonSociale: "Syndic Témoin",
+          siret: "12002701600357",
           adresse: "3 rue des Lilas, 75020 Paris",
           codeNaf: "68.32A",
         },
@@ -341,9 +346,11 @@ describe("familles d'habitation — la liste du modèle est celle de l'article 3
     // accepté à la création, ce qui était impossible entre le 2026-09-01 et
     // ce jour.
     expect(
-      etablissementCreationSchema.safeParse({
-        raisonDisplay: "Syndic Témoin",
+      onboardingSchema.safeParse({
+        raisonSociale: "Syndic Témoin",
+        siret: "12002701600357",
         adresse: "3 rue des Lilas, 75020 Paris",
+        codeNaf: "68.32A",
         ...regime,
       }).success,
     ).toBe(true);

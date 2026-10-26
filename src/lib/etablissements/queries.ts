@@ -34,13 +34,21 @@ export const getEtablissement = cache(async function getEtablissement(
   });
 });
 
-export async function listerEtablissementsDeLEntreprise(entrepriseId: string) {
-  const user = await requireUser();
-  return prisma.etablissement.findMany({
-    where: { entrepriseId, entreprise: { userId: user.id } },
-    orderBy: { createdAt: "asc" },
-    include: {
-      _count: { select: { duerps: true } },
-    },
-  });
-}
+/**
+ * Les établissements du compte, toutes entreprises confondues — ce que liste le
+ * sélecteur de la gélule. Un compte suit plusieurs entreprises depuis le
+ * 2026-10-26 (une par SIREN) : lister ceux d'une seule entreprise cacherait les
+ * établissements d'une autre société.
+ *
+ * Mémoïsé sur le rendu : sans argument, une entrée par requête HTTP.
+ */
+export const listerEtablissementsDuCompte = cache(
+  async function listerEtablissementsDuCompte() {
+    const user = await requireUser();
+    return prisma.etablissement.findMany({
+      where: { entreprise: { userId: user.id } },
+      orderBy: { createdAt: "asc" },
+      select: { id: true, raisonDisplay: true },
+    });
+  },
+);

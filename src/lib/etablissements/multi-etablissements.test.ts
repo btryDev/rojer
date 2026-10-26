@@ -39,6 +39,8 @@ const donnees = () => ({
   entreprise: [
     { id: "ent-1", userId: "user-1" },
     { id: "ent-2", userId: "user-2" },
+    // Une seconde société du même compte (2026-10-26) : un autre SIREN.
+    { id: "ent-3", userId: "user-1" },
   ],
   etablissement: [
     {
@@ -52,6 +54,12 @@ const donnees = () => ({
       entrepriseId: "ent-1",
       raisonDisplay: "La Cave",
       createdAt: T1,
+    },
+    {
+      id: "etab-C",
+      entrepriseId: "ent-3",
+      raisonDisplay: "L'Épicerie",
+      createdAt: new Date("2026-07-01T09:00:00Z"),
     },
     {
       id: "etab-Z",
@@ -204,7 +212,7 @@ const {
   requireEtablissement,
   requireVerification,
 } = await import("@/lib/auth/scope");
-const { listerEtablissementsDeLEntreprise } = await import("./queries");
+const { listerEtablissementsDuCompte } = await import("./queries");
 
 beforeEach(() => {
   h.cookie = undefined;
@@ -241,10 +249,11 @@ describe("deux établissements d'une même entreprise ne se mêlent pas", () => 
     expect(b.etablissementId).toBe("etab-B");
   });
 
-  it("la fratrie se liste entière, et s'arrête à l'entreprise", async () => {
-    const fratrie = await listerEtablissementsDeLEntreprise("ent-1");
+  it("la fratrie se liste entière, toutes entreprises du compte, et s'arrête au compte", async () => {
+    const fratrie = await listerEtablissementsDuCompte();
 
-    expect(fratrie.map((e) => e.id)).toEqual(["etab-A", "etab-B"]);
+    // Les deux établissements de la première société, puis celui de la seconde.
+    expect(fratrie.map((e) => e.id)).toEqual(["etab-A", "etab-B", "etab-C"]);
     // La borne haute : l'établissement du voisin n'y est pas, alors qu'il
     // porterait le même écran s'il y entrait.
     expect(fratrie.map((e) => e.id)).not.toContain("etab-Z");

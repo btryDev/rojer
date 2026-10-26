@@ -146,13 +146,11 @@ export async function faitsDeCouverture(
       // couverte par aucun test — une mutation qui la remplaçait par `true`
       // constant passait au vert.
       //
-      // Les DEUX codes NAF, et c'est le type qui l'impose désormais :
-      // `Etablissement.codeNaf` est optionnel, renseigné seulement s'il
-      // diffère de celui de l'entreprise. Passer le premier seul faisait taire
-      // l'axe sur tout établissement secondaire sans NAF propre — le cas
-      // courant, et précisément celui qu'il devait signaler.
+      // ~~Les DEUX codes NAF~~ [2026-10-26 : le NAF de l'établissement seul, obligatoire
+      // depuis la migration `entreprise_par_siren` — plus de repli sur
+      // l'entreprise].
       correspondance: correspondanceSecteur(
-        { etablissement: etab.codeNaf, entreprise: etab.entreprise.codeNaf },
+        etab.codeNaf,
         duerp?.referentielSecteurId,
       ),
     },

@@ -22,7 +22,6 @@ function extraireVille(adresse: string): string {
 export function WidgetEtablissement({ bundle }: { bundle: DashboardBundle }) {
   const etab = bundle.etablissement;
   const regs = regimesAffiches(etab);
-  const naf = etab.codeNaf ?? etab.entreprise.codeNaf;
   const ville = extraireVille(etab.adresse);
   const chiffreEffectif = String(etab.effectifSurSite).padStart(2, "0");
 
@@ -67,7 +66,7 @@ export function WidgetEtablissement({ bundle }: { bundle: DashboardBundle }) {
                 <span className="font-mono text-[0.82rem] tabular-nums text-[color:var(--board-ink)]">
                   {chiffreEffectif}
                 </span>{" "}
-                sur site
+                dans l&apos;établissement
               </span>
             }
           />
@@ -95,16 +94,16 @@ export function WidgetEtablissement({ bundle }: { bundle: DashboardBundle }) {
             label="NAF"
             value={
               <span className="font-mono tabular-nums tracking-[0.04em] text-[color:var(--board-ink)]">
-                {naf}
+                {etab.codeNaf}
               </span>
             }
           />
-          {etab.entreprise.siret && (
+          {etab.siret && (
             <Ligne
               label="SIRET"
               value={
                 <span className="font-mono text-[0.7rem] tabular-nums tracking-[0.04em] text-[color:var(--board-ink)]">
-                  {etab.entreprise.siret}
+                  {etab.siret}
                 </span>
               }
             />

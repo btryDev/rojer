@@ -16,8 +16,10 @@
 //
 //     jeton.sub → Entreprise.userId → Etablissement.id
 //
-// `Entreprise.userId` est unique (ADR-005) : le premier maillon reste
-// univoque, et c'est lui qui cloisonne. Le second ne l'est plus. Depuis
+// ~~`Entreprise.userId` est unique (ADR-005) : le premier maillon reste
+// univoque~~ [2026-10-26 : un compte suit plusieurs entreprises, une par
+// SIREN ; le premier maillon se lit en filtre — `entreprise: { userId }` —,
+// et c'est toujours lui qui cloisonne]. Le second n'est pas univoque non plus. Depuis
 // l'ADR-028 une entreprise porte autant d'établissements qu'elle en a, et la
 // phrase qui tenait ici — « il n'y a qu'un chemin, donc rien à négocier » —
 // est devenue fausse : elle décrivait une contrainte de base qui n'existe plus.
