@@ -679,6 +679,17 @@ describe("un nouveau site d'une entreprise déjà suivie (2026-10-26)", () => {
     expect(screen.getByLabelText(/Nom du site/)).toBeTruthy();
   });
 
+  it("corriger le SIRET vers un SIREN inconnu vide ce qui venait de l'autre société", async () => {
+    render(<WizardShell entreprisesConnues={CONNUES} />);
+    saisir("SIRET", "12002701600357");
+    await souffler();
+    saisir("SIRET", "35600000000048");
+    await souffler();
+    expect(champ(/Raison sociale/).value).toBe("");
+    expect(champ(/Raison sociale/).readOnly).toBe(false);
+    expect(champ(/Salariés de l'entreprise/).value).toBe("");
+  });
+
   it("un SIREN inconnu laisse la saisie libre", async () => {
     render(<WizardShell entreprisesConnues={CONNUES} />);
     saisir("SIRET", "35600000000048");

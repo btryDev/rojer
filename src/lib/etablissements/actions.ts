@@ -14,9 +14,18 @@ import {
 import { poserEtablissementActif } from "./etablissement-actif";
 import { sirenDuSiret } from "./siret";
 
-/** Un SIRET dont le SIREN n'est pas celui de l'entreprise du site. */
-const MESSAGE_SIRET_AUTRE_ENTREPRISE =
-  "Ce SIRET appartient à une autre entreprise que celle de cet établissement. Pour suivre un site d'une autre société, ajoutez un établissement.";
+/** Le refus d'un SIRET dont le SIREN n'est pas celui de l'entreprise du site. */
+function refusSiretAutreEntreprise(): EtablissementActionState {
+  return {
+    status: "error",
+    message: "Formulaire invalide",
+    fieldErrors: {
+      siret: [
+        "Ce SIRET appartient à une autre entreprise que celle de cet établissement. Pour suivre un site d'une autre société, ajoutez un établissement.",
+      ],
+    },
+  };
+}
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import {
   etablissementSchema,
@@ -215,7 +224,7 @@ export async function modifierEtablissement(
   _prev: EtablissementActionState,
   formData: FormData,
 ): Promise<EtablissementActionState> {
-  await assertEtablissementOwnership(id);
+  const user = await assertEtablissementOwnership(id);
   const brut = normaliserFormData(formData);
   const parsed = etablissementSchema.safeParse(brut);
   if (!parsed.success) {
@@ -258,7 +267,7 @@ export async function modifierEtablissement(
       comporteLocauxSommeilPublic: true,
       ssiCategorieAouB: true,
       entrepriseId: true,
-      entreprise: { select: { siren: true, userId: true } },
+      entreprise: { select: { siren: true } },
     },
   });
   if (!avant) {
@@ -274,25 +283,15 @@ export async function modifierEtablissement(
   // une autre entreprise du compte le porte déjà.
   const siren = sirenDuSiret(parsed.data.siret);
   const sirenAPoser = avant.entreprise.siren === null;
-  if (!sirenAPoser && avant.entreprise.siren !== siren) {
-    return {
-      status: "error",
-      message: "Formulaire invalide",
-      fieldErrors: { siret: [MESSAGE_SIRET_AUTRE_ENTREPRISE] },
-    };
-  }
+  if (!sirenAPoser && avant.entreprise.siren !== siren) return refusSiretAutreEntreprise();
   if (sirenAPoser) {
+    // Borné au compte de la session : un SIREN suivi par un autre compte
+    // n'est ni lu ni signalé.
     const dejaPris = await prisma.entreprise.findFirst({
-      where: { userId: avant.entreprise.userId, siren, NOT: { id: avant.entrepriseId } },
+      where: { userId: user.id, siren, NOT: { id: avant.entrepriseId } },
       select: { id: true },
     });
-    if (dejaPris) {
-      return {
-        status: "error",
-        message: "Formulaire invalide",
-        fieldErrors: { siret: [MESSAGE_SIRET_AUTRE_ENTREPRISE] },
-      };
-    }
+    if (dejaPris) return refusSiretAutreEntreprise();
   }
 
   // LE FILTRE À L'ACCUEIL, À LA TRANSITION (2026-10-17, `types-refuses.ts`).
@@ -351,11 +350,7 @@ export async function modifierEtablissement(
     // Une autre entreprise du compte a pris ce SIREN entre la vérification et
     // l'écriture : l'unicité `(userId, siren)` tranche, on le dit.
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-      return {
-        status: "error",
-        message: "Formulaire invalide",
-        fieldErrors: { siret: [MESSAGE_SIRET_AUTRE_ENTREPRISE] },
-      };
+      return refusSiretAutreEntreprise();
     }
     throw e;
   }

@@ -40,11 +40,15 @@ export function StepIdentite({
   const rattachee = entrepriseRattachee(state.siret, entreprisesConnues);
   const saisirSiret = (siret: string) => {
     const r = entrepriseRattachee(siret, entreprisesConnues);
-    update(
-      r
-        ? { siret, raisonSociale: r.raisonSociale, effectifEntreprise: String(r.effectif) }
-        : { siret },
-    );
+    if (r) {
+      update({ siret, raisonSociale: r.raisonSociale, effectifEntreprise: String(r.effectif) });
+    } else if (rattachee) {
+      // Le SIRET quitte l'entreprise reprise : ses valeurs, en lecture seule
+      // jusque-là, ne sont pas celles de la société qu'on saisit maintenant.
+      update({ siret, raisonSociale: "", effectifEntreprise: "", nomUsage: "" });
+    } else {
+      update({ siret });
+    }
   };
   const scope =
     state.codeNaf.trim().length > 0

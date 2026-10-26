@@ -21,7 +21,7 @@ const h = vi.hoisted(() => {
       codeNaf: "56.10A",
       effectifSurSite: 5,
       // L'entreprise du site, lue par la modification (SIREN, 2026-10-26).
-      entreprise: { siren: "120027016" as string | null, userId: "user-1" },
+      entreprise: { siren: "120027016" as string | null },
       estEtablissementTravail: true,
       estERP: false,
       estIGH: false,
@@ -193,7 +193,7 @@ beforeEach(() => {
   h.db.entreprisesSupprimees = [];
   h.db.sirensPoses = [];
   h.db.etablissement.siret = "12002701600357";
-  h.db.etablissement.entreprise = { siren: "120027016", userId: "user-1" };
+  h.db.etablissement.entreprise = { siren: "120027016" };
   h.db.supprimes = [];
   h.db.crees = [];
   h.db.cookiePose = null;
@@ -749,14 +749,14 @@ describe("modifierEtablissement — le SIRET reste dans son entreprise (2026-10-
   });
 
   it("donne son SIREN à une entreprise ancienne qui n'en a pas", async () => {
-    h.db.etablissement.entreprise = { siren: null, userId: "user-1" };
+    h.db.etablissement.entreprise = { siren: null };
     const res = await modifierEtablissement("etab-1", { status: "idle" }, formulaire());
     expect(res.status).toBe("success");
     expect(h.db.sirensPoses).toEqual(["120027016"]);
   });
 
   it("refuse le SIREN qu'une autre entreprise du compte porte déjà", async () => {
-    h.db.etablissement.entreprise = { siren: null, userId: "user-1" };
+    h.db.etablissement.entreprise = { siren: null };
     h.db.autreEntrepriseDuSiren = { id: "ent-2" };
     const res = await modifierEtablissement("etab-1", { status: "idle" }, formulaire());
     expect(res.status === "error" && res.fieldErrors?.siret?.[0]).toMatch(/autre entreprise/);

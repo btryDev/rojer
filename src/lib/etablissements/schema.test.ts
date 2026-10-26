@@ -289,7 +289,7 @@ describe("refus de périmètre — création seulement", () => {
 describe("etablissementSchema — nombre de personnes (2026-09-20)", () => {
   const restaurant = { ...base, estERP: true, typeErp: "N", categorieErp: "N5" };
 
-  it("l'exige d'un ERP sous les deux bornes — la seconde porte de création passe par ici", () => {
+  it("l'exige d'un ERP sous les deux bornes — la fiche passe par ici", () => {
     const res = etablissementSchema.safeParse(restaurant);
     expect(res.success).toBe(false);
     if (!res.success)
