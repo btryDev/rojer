@@ -519,7 +519,7 @@ function evaluerEffectif(
   if (t.effectifMax !== undefined && n > t.effectifMax) return { ok: false };
   return {
     ok: true,
-    raison: `effectif sur site ${n} — obligation applicable ${seuil}`,
+    raison: `effectif de l'établissement ${n} — obligation applicable ${seuil}`,
   };
 }
 

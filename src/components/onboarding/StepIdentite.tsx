@@ -111,7 +111,7 @@ export function StepIdentite({
                   champ tout en entrant dans son nom accessible. */}
               <span className="flex items-center gap-1">
                 <label className="label-board" htmlFor="siret">
-                  SIRET
+                  SIRET *
                 </label>
                 <InfoTooltip>
                   Le SIRET figurera en en-tête de vos documents officiels.
@@ -170,7 +170,7 @@ export function StepIdentite({
       </section>
 
       <section className="carte-board px-7 py-6 sm:px-8">
-        <SectionChamps titre="Le site principal">
+        <SectionChamps titre="L'établissement">
           <div className="grid grid-cols-1 gap-x-5 gap-y-4">
             <ChampBoard
               id="adresseRue"
@@ -336,7 +336,7 @@ export function StepIdentite({
               <ChampBoard
                 id="effectifSurSite"
                 name="effectifSurSite"
-                label="Travailleurs sur ce site"
+                label="Travailleurs dans l'établissement"
                 requis
                 inputMode="numeric"
                 value={state.effectifSurSite}

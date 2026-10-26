@@ -88,12 +88,12 @@ function saisir(label: RegExp | string, valeur: string) {
 
 function remplirEtape1() {
   saisir(/Raison sociale/, "Bistrot du marché");
-  saisir("SIRET", "12002701600357");
+  saisir(/^SIRET/, "12002701600357");
   saisir(/Numéro et rue/, "12 rue des Halles");
   saisir(/Code postal/, "75011");
   saisir(/^Ville/, "Paris");
   saisir(/Code NAF/, "56.10A");
-  saisir(/Travailleurs sur ce site/, "8");
+  saisir(/Travailleurs dans l'établissement/, "8");
   saisir(/Salariés de l'entreprise/, "8");
 }
 
@@ -157,7 +157,7 @@ describe("le formulaire ne se soumet qu'à la dernière étape", () => {
     }
     screen.getByRole("button", { name: /Suivant/ }).click();
     await souffler();
-    expect(screen.getByRole("button", { name: /Créer mon espace/ })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Créer l'établissement/ })).toBeTruthy();
 
     container
       .querySelector("form")!
@@ -205,7 +205,7 @@ describe("un clic sur « Suivant » à l'étape 2 ne crée rien, même rendu ava
     }
 
     // L'étape 3 est affichée, et rien n'est parti.
-    expect(screen.getByRole("button", { name: /Créer mon espace/ })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Créer l'établissement/ })).toBeTruthy();
     expect(appels).toEqual([]);
   });
 });
@@ -214,7 +214,7 @@ describe("le refus de périmètre ferme la porte avant le clic", () => {
   it("cinquante et un salariés : « Suivant » est désactivé", async () => {
     render(<WizardShell entreprisesConnues={[]} />);
     remplirEtape1();
-    saisir(/Travailleurs sur ce site/, "51");
+    saisir(/Travailleurs dans l'établissement/, "51");
     await souffler();
 
     const suivant = screen.getByRole("button", {
@@ -226,7 +226,7 @@ describe("le refus de périmètre ferme la porte avant le clic", () => {
   it("cinquante salariés : elle reste ouverte", async () => {
     render(<WizardShell entreprisesConnues={[]} />);
     remplirEtape1();
-    saisir(/Travailleurs sur ce site/, "50");
+    saisir(/Travailleurs dans l'établissement/, "50");
     await souffler();
 
     expect(
@@ -282,10 +282,10 @@ describe("le refus de périmètre est aussi lisible sans le voir", () => {
     // une moitié.
     render(<WizardShell entreprisesConnues={[]} />);
     remplirEtape1();
-    saisir(/Travailleurs sur ce site/, "51");
+    saisir(/Travailleurs dans l'établissement/, "51");
     await souffler();
 
-    const champ = screen.getByLabelText(/Travailleurs sur ce site/);
+    const champ = screen.getByLabelText(/Travailleurs dans l'établissement/);
     const decrit = champ.getAttribute("aria-describedby") ?? "";
     expect(decrit.split(" ")).toContain("effectifSurSite-aide");
     expect(decrit.split(" ")).toContain("effectifSurSite-refus");
@@ -668,7 +668,7 @@ describe("un nouvel établissement d'une entreprise déjà suivie (2026-10-26)",
     render(<WizardShell entreprisesConnues={CONNUES} />);
     expect(screen.queryByLabelText(/Nom de l'établissement/)).toBeNull();
 
-    saisir("SIRET", "120 027 016 00357");
+    saisir(/^SIRET/, "120 027 016 00357");
     await souffler();
 
     expect(champ(/Raison sociale/).value).toBe("SARL Le Comptoir");
@@ -681,9 +681,9 @@ describe("un nouvel établissement d'une entreprise déjà suivie (2026-10-26)",
 
   it("corriger le SIRET vers un SIREN inconnu vide ce qui venait de l'autre société", async () => {
     render(<WizardShell entreprisesConnues={CONNUES} />);
-    saisir("SIRET", "12002701600357");
+    saisir(/^SIRET/, "12002701600357");
     await souffler();
-    saisir("SIRET", "35600000000048");
+    saisir(/^SIRET/, "35600000000048");
     await souffler();
     expect(champ(/Raison sociale/).value).toBe("");
     expect(champ(/Raison sociale/).readOnly).toBe(false);
@@ -692,7 +692,7 @@ describe("un nouvel établissement d'une entreprise déjà suivie (2026-10-26)",
 
   it("un SIREN inconnu laisse la saisie libre", async () => {
     render(<WizardShell entreprisesConnues={CONNUES} />);
-    saisir("SIRET", "35600000000048");
+    saisir(/^SIRET/, "35600000000048");
     await souffler();
     expect(champ(/Raison sociale/).readOnly).toBe(false);
     expect(screen.queryByLabelText(/Nom de l'établissement/)).toBeNull();

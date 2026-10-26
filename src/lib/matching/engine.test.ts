@@ -2222,7 +2222,7 @@ describe("moteur matching — champ disjonctif de R. 4227-34 (personnes présent
     );
     expect(idsObligations(res)).toContain(EXERCICE);
     const raison = res.find((r) => r.obligation.id === EXERCICE)!.raisons.join(" ");
-    expect(raison).toContain("51 salariés sur site");
+    expect(raison).toContain("51 salariés dans l'établissement");
     expect(raison).toContain("franchi par l'effectif seul");
   });
 

@@ -58,6 +58,11 @@ export type PerimetreEtablissement = {
   /** Enregistrements emportés, l'établissement lui-même exclu. */
   lignes: number;
   versionsDuerp: number;
+  /**
+   * L'entreprise qui part avec lui, quand il est son dernier établissement
+   * (2026-10-26, `supprimerEntrepriseSiVide`), sinon `null`.
+   */
+  entrepriseEmportee: string | null;
 };
 
 /**
@@ -127,6 +132,9 @@ export function detailSuppressionEtablissement(
     `${p.nom} part, et avec lui les ${groupeLignes(p.lignes)} de son ` +
     "dossier : équipements, vérifications, rapports téléversés, plan " +
     "d'actions, registre, et les fiches de l'équipe avec leurs titres. " +
+    (p.entrepriseEmportee
+      ? `C'est le dernier établissement de ${p.entrepriseEmportee} : l'entreprise est supprimée avec lui. `
+      : "") +
     `Rien ne se récupère ensuite : tout est supprimé définitivement. ${clauseConservation(p.versionsDuerp)}`
   );
 }

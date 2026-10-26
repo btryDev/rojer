@@ -505,7 +505,7 @@ export function WizardShell({
                 size="board"
                 disabled={submitting}
               >
-                {submitting ? "Création en cours…" : "Créer mon espace →"}
+                {submitting ? "Création en cours…" : "Créer l'établissement →"}
               </Button>
             )}
           </div>

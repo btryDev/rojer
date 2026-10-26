@@ -1,5 +1,6 @@
 "use client";
 
+import { entrepriseRattachee } from "@/lib/onboarding/rattachement";
 import { PastilleFiche } from "@/components/ui-kit/fiche";
 import type { StepProps } from "./types";
 import { LABEL_TYPE_ERP } from "@/lib/etablissements/labels";
@@ -13,7 +14,12 @@ import type { TYPE_ERP } from "@/lib/etablissements/schema";
  * de contenu pré-généré : le calendrier vient des équipements déclarés,
  * le DUERP s'ouvre ensuite, le registre se remplit avec les rapports).
  */
-export function StepResume({ state }: StepProps) {
+export function StepResume({ state, entreprisesConnues }: StepProps) {
+  // L'établissement rejoint-il une entreprise déjà suivie (même SIREN) ?
+  const rattachee = entrepriseRattachee(state.siret, entreprisesConnues);
+  // Le nom sous lequel l'établissement apparaîtra : le nom d'usage, sinon la
+  // raison sociale (`finaliserOnboarding`).
+  const nomAffiche = state.nomUsage.trim() || state.raisonSociale;
   const typeErpLabel =
     LABEL_TYPE_ERP[state.typeErp as (typeof TYPE_ERP)[number]] ??
     state.typeErp;
@@ -58,8 +64,7 @@ export function StepResume({ state }: StepProps) {
           Vérification
         </h2>
         <p className="m-0 mt-2.5 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-          Tout est bon ? En créant l&apos;espace, on enregistre votre
-          établissement. La suite se joue en une étape : déclarer vos
+          Tout est bon ? En validant, on enregistre cet établissement. La suite se joue en une étape : déclarer vos
           équipements — ce sont eux qui alimentent votre calendrier de
           vérifications.
         </p>
@@ -69,8 +74,13 @@ export function StepResume({ state }: StepProps) {
       <section className="carte-board px-7 py-6 sm:px-8">
         <div>
           <strong className="board-titre block text-[22px]">
-            {state.raisonSociale || "—"}
+            {nomAffiche || "—"}
           </strong>
+          {nomAffiche !== state.raisonSociale ? (
+            <span className="mt-1.5 block text-[13px] text-[color:var(--board-slate-mid)]">
+              {state.raisonSociale}
+            </span>
+          ) : null}
           {state.siret ? (
             <span className="mt-1.5 block font-mono text-[11.5px] tabular-nums text-[color:var(--board-slate-mid)]">
               SIRET {state.siret}
@@ -81,7 +91,7 @@ export function StepResume({ state }: StepProps) {
           <SumLigne label="Adresse" valeur={adresseComplete || "—"} />
           <SumLigne label="Code NAF" valeur={state.codeNaf || "—"} />
           <SumLigne
-            label="Travailleurs sur ce site"
+            label="Travailleurs dans l'établissement"
             valeur={
               state.effectifSurSite
                 ? `${state.effectifSurSite}, apprentis compris`
@@ -115,7 +125,9 @@ export function StepResume({ state }: StepProps) {
         </div>
         <ul className="m-0 mt-4 flex list-none flex-col gap-2.5 p-0 text-[13.5px] leading-[1.5] text-[color:var(--board-slate-ink)]">
           <ForecastLi>
-            Espace entreprise + premier établissement liés
+            {rattachee
+              ? `L'établissement rattaché à ${rattachee.raisonSociale}`
+              : "L'entreprise et son établissement, liés"}
           </ForecastLi>
           <ForecastLi>
             Votre calendrier de vérifications, généré dès la déclaration de

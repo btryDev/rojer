@@ -219,7 +219,7 @@ export function EtablissementForm({
           <ChampBoard
             id="effectifSurSite"
             name="effectifSurSite"
-            label="Travailleurs sur ce site"
+            label="Travailleurs dans l'établissement"
             requis
             aide="Salariés et apprentis qui y travaillent régulièrement. L'effectif de l'entreprise, sur lequel se comptent les seuils du comité social et économique, du règlement intérieur et de la mise à jour annuelle du document unique, se modifie sur la fiche de l'entreprise — lien ci-dessous."
             // Un champ `type="number"` change de valeur à la molette, sur une

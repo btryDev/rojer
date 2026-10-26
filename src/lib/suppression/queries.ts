@@ -65,7 +65,12 @@ export async function mesurerPerimetreEtablissement(
 
   const etablissement = await prisma.etablissement.findUniqueOrThrow({
     where: { id: etablissementId },
-    select: { raisonDisplay: true },
+    select: {
+      raisonDisplay: true,
+      entreprise: {
+        select: { raisonSociale: true, _count: { select: { etablissements: true } } },
+      },
+    },
   });
 
   const emporte = await cascadeDepuis(prisma, "Etablissement", [
@@ -80,5 +85,9 @@ export async function mesurerPerimetreEtablissement(
     nom: etablissement.raisonDisplay,
     lignes: compterLignes(emporte, ["Etablissement"]),
     versionsDuerp,
+    entrepriseEmportee:
+      etablissement.entreprise._count.etablissements === 1
+        ? etablissement.entreprise.raisonSociale
+        : null,
   };
 }

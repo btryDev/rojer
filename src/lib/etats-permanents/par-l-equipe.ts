@@ -90,7 +90,7 @@ export function pourquoiALEtablissement(
   // Retenue sous réserve d'effectif (revue qualité du 2026-10-24 : la réserve
   // ne se lisait qu'en ouvrant la fiche, qui en donne le détail).
   if (l.aConfirmer) {
-    return "À confirmer : elle dépend de votre effectif, qui ne se lit pas pareil sur la fiche de l'entreprise et sur ce site. Le détail est dans la fiche.";
+    return "À confirmer : elle dépend de votre effectif, qui ne se lit pas pareil sur la fiche de l'entreprise et dans cet établissement. Le détail est dans la fiche.";
   }
   if (l.questionsSansReponse.length > 0) {
     // Les questions du DUERP muettes cachent la ligne

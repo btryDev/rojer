@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  MESSAGE_SIRET_FORMAT,
   MESSAGE_SIRET_INVALIDE,
   MESSAGE_SIRET_REQUIS,
   estSiretValide,
@@ -60,6 +61,11 @@ describe("siretSchema", () => {
       expect(r.success).toBe(false);
       expect(r.error?.issues[0]?.message).toBe(MESSAGE_SIRET_REQUIS);
     }
+  });
+
+  it("dit « 14 chiffres » quand le compte n'y est pas, et seulement alors", () => {
+    expect(siretSchema.safeParse("1200270160035").error?.issues[0]?.message).toBe(MESSAGE_SIRET_FORMAT);
+    expect(siretSchema.safeParse("1200270160035A").error?.issues[0]?.message).toBe(MESSAGE_SIRET_FORMAT);
   });
 
   it("refuse une clé fausse avec le message dédié", () => {

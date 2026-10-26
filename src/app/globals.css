@@ -965,6 +965,16 @@
     outline-offset: 1px;
     background: var(--board-card);
   }
+  /* Lecture seule (2026-10-26, contrôle visuel de la PR #93) : une valeur
+     reprise, que le champ montre sans la laisser changer. Même rendu qu'un
+     champ modifiable, elle invitait à une saisie qui ne prenait pas. Pas de
+     creux : un filet pointillé et l'encre adoucie, le texte reste lisible. */
+  .champ-board[readonly] {
+    background: transparent;
+    border-style: dashed;
+    color: var(--board-slate-mid);
+    cursor: default;
+  }
 
   .label-board {
     display: block;

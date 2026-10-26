@@ -163,7 +163,7 @@ function formaterFiche(f: FicheEtablissement, parc: FaitParc): string {
   return [
     `Adresse : ${f.adresse}`,
     `Régimes : ${formaterRegimes(f)}`,
-    `Effectif sur site : ${f.effectifSurSite}`,
+    `Effectif de l'établissement : ${f.effectifSurSite}`,
     `Code NAF : ${tiret(f.codeNaf)}`,
     `SIRET : ${tiret(f.siret)}`,
     "",

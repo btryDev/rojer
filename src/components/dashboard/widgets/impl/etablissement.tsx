@@ -66,7 +66,7 @@ export function WidgetEtablissement({ bundle }: { bundle: DashboardBundle }) {
                 <span className="font-mono text-[0.82rem] tabular-nums text-[color:var(--board-ink)]">
                   {chiffreEffectif}
                 </span>{" "}
-                sur site
+                dans l&apos;établissement
               </span>
             }
           />

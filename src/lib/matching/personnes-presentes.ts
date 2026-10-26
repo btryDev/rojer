@@ -139,7 +139,7 @@ export function evaluerPersonnesPresentes(
           raison:
             total === declare
               ? `${declare} personnes habituellement présentes (seuil ${seuil})`
-              : `${etab.effectifSurSite} salariés sur site, au-delà des ${declare} personnes déclarées — seuil de ${seuil} franchi par l'effectif seul`,
+              : `${etab.effectifSurSite} salariés dans l'établissement, au-delà des ${declare} personnes déclarées — seuil de ${seuil} franchi par l'effectif seul`,
         }
       : { etat: "non_atteint" };
   }
@@ -162,7 +162,7 @@ export function evaluerPersonnesPresentes(
   if (etab.effectifSurSite >= seuil) {
     return {
       etat: "atteint",
-      raison: `${etab.effectifSurSite} salariés sur site, seuil de ${seuil} personnes présentes franchi par l'effectif seul`,
+      raison: `${etab.effectifSurSite} salariés dans l'établissement, seuil de ${seuil} personnes présentes franchi par l'effectif seul`,
     };
   }
 

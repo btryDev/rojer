@@ -48,14 +48,25 @@ export function sirenDuSiret(siret: string): string {
 }
 
 export const MESSAGE_SIRET_REQUIS = "Le SIRET de l'établissement est obligatoire.";
+/** Le SIRET n'a pas 14 chiffres. */
+export const MESSAGE_SIRET_FORMAT =
+  "Le SIRET compte 14 chiffres, tels qu'ils figurent sur votre avis de situation INSEE ou votre Kbis.";
+/** Quatorze chiffres, mais la clé de contrôle ne correspond pas. */
 export const MESSAGE_SIRET_INVALIDE =
-  "SIRET invalide : 14 chiffres, tels qu'ils figurent sur votre avis de situation INSEE ou votre Kbis.";
+  "Ce SIRET n'existe pas : un chiffre est probablement erroné. Vérifiez-le sur votre avis de situation INSEE ou votre Kbis.";
+
+/** Le message du refus, ou `null` si le SIRET (normalisé) est valide. */
+export function refusSiret(siret: string): string | null {
+  if (siret === "") return MESSAGE_SIRET_REQUIS;
+  if (!/^\d{14}$/.test(siret)) return MESSAGE_SIRET_FORMAT;
+  return estSiretValide(siret) ? null : MESSAGE_SIRET_INVALIDE;
+}
 
 /** Champ SIRET obligatoire : espaces retirés, 14 chiffres, clé de contrôle. */
 export const siretSchema = z.preprocess(
   (v) => (typeof v === "string" ? normaliserSiret(v) : v),
-  z
-    .string({ message: MESSAGE_SIRET_REQUIS })
-    .min(1, MESSAGE_SIRET_REQUIS)
-    .refine(estSiretValide, MESSAGE_SIRET_INVALIDE),
+  z.string({ message: MESSAGE_SIRET_REQUIS }).superRefine((siret, ctx) => {
+    const message = refusSiret(siret);
+    if (message) ctx.addIssue({ code: "custom", message });
+  }),
 );
