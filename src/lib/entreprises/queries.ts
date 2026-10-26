@@ -26,9 +26,12 @@ export async function listerEntreprisesConnues(): Promise<EntrepriseConnue[]> {
     orderBy: { createdAt: "asc" },
     select: { siren: true, raisonSociale: true, effectif: true },
   });
-  return entreprises.flatMap((e) =>
-    e.siren ? [{ siren: e.siren, raisonSociale: e.raisonSociale, effectif: e.effectif }] : [],
-  );
+  // `siren` non nul : le `where` le garantit, le type Prisma ne le sait pas.
+  return entreprises.map((e) => ({
+    siren: e.siren as string,
+    raisonSociale: e.raisonSociale,
+    effectif: e.effectif,
+  }));
 }
 
 export async function getEntreprise(id: string) {

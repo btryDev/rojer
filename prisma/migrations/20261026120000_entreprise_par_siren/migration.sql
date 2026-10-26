@@ -11,21 +11,47 @@
 --
 -- Une seule transaction : une recopie à moitié faite laisserait des sites sans
 -- NAF devant une contrainte NOT NULL.
+--
+-- CE QUE LE RETRAIT EN DEUX TEMPS NE COUVRE PAS : le `NOT NULL` du NAF du site
+-- est posé dès ce premier temps. Pendant le build, l'ancien code peut encore
+-- créer un second établissement sans NAF (« si vide, le NAF de l'entreprise ») :
+-- l'insertion échouerait. Risque accepté, fenêtre de quelques minutes sur une
+-- production sans clients (2026-10-26) ; le reporter au second temps laisserait
+-- le schéma Prisma et la base en désaccord pendant tout l'intervalle.
 
 BEGIN;
+
+-- Un SIRET valide : 14 chiffres et la clé de Luhn, ou, pour La Poste (SIREN
+-- 356000000), une somme des chiffres multiple de 5. La même règle que
+-- `src/lib/etablissements/siret.ts`. L'ancien schéma ne vérifiait que les 14
+-- chiffres : un SIRET mal saisi donnerait un SIREN faux, que plus aucun écran
+-- ne corrige, et ferait refuser le vrai SIRET au premier enregistrement.
+CREATE FUNCTION pg_temp.siret_valide(s TEXT) RETURNS BOOLEAN
+LANGUAGE sql IMMUTABLE AS $$
+  SELECT s ~ '^[0-9]{14}$' AND (
+    (SELECT sum(
+       CASE WHEN (14 - i) % 2 = 1
+         THEN (substr(s, i, 1)::int * 2) - CASE WHEN substr(s, i, 1)::int * 2 > 9 THEN 9 ELSE 0 END
+         ELSE substr(s, i, 1)::int
+       END) % 10 = 0
+     FROM generate_series(1, 14) AS i)
+    OR (left(s, 9) = '356000000'
+        AND (SELECT sum(substr(s, i, 1)::int) % 5 = 0 FROM generate_series(1, 14) AS i))
+  )
+$$;
 
 -- 1. Le SIRET va au site. Il ne désignait qu'un site, et rien ne dit lequel :
 --    on le donne au plus ancien, celui que l'onboarding a créé avec lui. Les
 --    autres restent sans SIRET plutôt que d'en recevoir un faux ; la fiche le
---    demande au prochain enregistrement. Un SIRET ancien mal formé n'est pas
---    recopié : la colonne ne porte que des numéros à 14 chiffres.
+--    demande au prochain enregistrement. Un SIRET ancien invalide n'est pas
+--    recopié : la colonne ne porte que des numéros valides.
 ALTER TABLE "Etablissement" ADD COLUMN "siret" TEXT;
 
 UPDATE "Etablissement" e
 SET "siret" = en."siret"
 FROM "Entreprise" en
 WHERE e."entrepriseId" = en."id"
-  AND en."siret" ~ '^[0-9]{14}$'
+  AND pg_temp.siret_valide(en."siret")
   AND e."id" = (
     SELECT e2."id" FROM "Etablissement" e2
     WHERE e2."entrepriseId" = en."id"
@@ -38,7 +64,7 @@ ALTER TABLE "Entreprise" ADD COLUMN "siren" TEXT;
 
 UPDATE "Entreprise"
 SET "siren" = substring("siret" FROM 1 FOR 9)
-WHERE "siret" ~ '^[0-9]{14}$';
+WHERE pg_temp.siret_valide("siret");
 
 -- 3. Le NAF du site devient obligatoire. Il n'était renseigné que s'il différait
 --    de celui de l'entreprise : le vide recevait donc celui de l'entreprise.

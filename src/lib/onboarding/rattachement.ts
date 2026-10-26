@@ -27,3 +27,11 @@ export function entrepriseRattachee(
   const siren = sirenDuSiret(siret);
   return connues.find((e) => e.siren === siren) ?? null;
 }
+
+/**
+ * Ce que le parcours ajoute au refus de la borne quand l'effectif vient d'une
+ * entreprise reprise : le champ est alors en lecture seule, il faut dire où le
+ * corriger.
+ */
+export const MESSAGE_EFFECTIF_REPRIS =
+  "Cet effectif est celui de l'entreprise que vos établissements existants déclarent : s'il a changé, corrigez-le depuis la fiche de l'un d'eux (« Mettre à jour l'effectif de l'entreprise »).";

@@ -13,6 +13,7 @@ import {
 } from "@/lib/auth/scope";
 import { poserEtablissementActif } from "./etablissement-actif";
 import { sirenDuSiret } from "./siret";
+import { supprimerEntrepriseSiVide } from "@/lib/entreprises/cycle-de-vie";
 
 /** Le refus d'un SIRET dont le SIREN n'est pas celui de l'entreprise du site. */
 function refusSiretAutreEntreprise(): EtablissementActionState {
@@ -21,7 +22,7 @@ function refusSiretAutreEntreprise(): EtablissementActionState {
     message: "Formulaire invalide",
     fieldErrors: {
       siret: [
-        "Ce SIRET appartient à une autre entreprise que celle de cet établissement. Pour suivre un site d'une autre société, ajoutez un établissement.",
+        "Ce SIRET relève d'une société que votre compte ne suit pas encore. Pour suivre un site d'une autre société, ajoutez un établissement.",
       ],
     },
   };
@@ -274,25 +275,31 @@ export async function modifierEtablissement(
     return { status: "error", message: "Établissement introuvable" };
   }
 
-  // LE SIRET RESTE DANS SON ENTREPRISE (2026-10-26). Ses neuf premiers
-  // chiffres sont le SIREN de l'entreprise qui porte ce site : un SIRET d'une
-  // autre société ferait passer le site sous une autre entreprise sans le dire
-  // — avec sa raison sociale et son effectif, qui fixent des seuils. Ce
-  // changement-là ne se fait pas en corrigeant un champ : on ouvre un
-  // établissement. Une entreprise ancienne sans SIREN le reçoit ici, sauf si
-  // une autre entreprise du compte le porte déjà.
+  // UN SITE APPARTIENT À L'ENTREPRISE DE SON SIREN (2026-10-26), dans le
+  // compte — la même règle qu'au parcours. Trois cas quand le SIREN du SIRET
+  // n'est pas celui de l'entreprise du site :
+  //  - une autre entreprise du compte porte ce SIREN : le site la rejoint.
+  //    C'est le cas d'un dossier ancien, d'avant le SIRET obligatoire, dont la
+  //    société a été ouverte depuis par un second site ;
+  //  - l'entreprise du site n'a pas de SIREN (dossier ancien) : elle le reçoit ;
+  //  - sinon, refus : passer sous une société que le compte ne suit pas
+  //    demanderait sa raison sociale et son effectif, qui fixent des seuils —
+  //    ce que la fiche ne demande pas. On ouvre alors un établissement.
+  // La recherche est bornée au compte de la session : un SIREN suivi par un
+  // autre compte n'est ni lu ni signalé.
   const siren = sirenDuSiret(parsed.data.siret);
-  const sirenAPoser = avant.entreprise.siren === null;
-  if (!sirenAPoser && avant.entreprise.siren !== siren) return refusSiretAutreEntreprise();
-  if (sirenAPoser) {
-    // Borné au compte de la session : un SIREN suivi par un autre compte
-    // n'est ni lu ni signalé.
-    const dejaPris = await prisma.entreprise.findFirst({
-      where: { userId: user.id, siren, NOT: { id: avant.entrepriseId } },
+  let entrepriseCible = avant.entrepriseId;
+  let sirenAPoser = false;
+  if (avant.entreprise.siren !== siren) {
+    const autre = await prisma.entreprise.findFirst({
+      where: { userId: user.id, siren },
       select: { id: true },
     });
-    if (dejaPris) return refusSiretAutreEntreprise();
+    if (autre) entrepriseCible = autre.id;
+    else if (avant.entreprise.siren === null) sirenAPoser = true;
+    else return refusSiretAutreEntreprise();
   }
+  const changeDEntreprise = entrepriseCible !== avant.entrepriseId;
 
   // LE FILTRE À L'ACCUEIL, À LA TRANSITION (2026-10-17, `types-refuses.ts`).
   // Un type refusé qui n'était pas en base, ou un R qui entre sans réponse ou
@@ -344,11 +351,19 @@ export async function modifierEtablissement(
           data: { siren },
         });
       }
-      return tx.etablissement.update({ where: { id }, data: donnees });
+      const ecrit = await tx.etablissement.update({
+        where: { id },
+        data: changeDEntreprise ? { ...donnees, entrepriseId: entrepriseCible } : donnees,
+      });
+      // Le site a rejoint l'entreprise de son SIREN : celle qu'il quitte part
+      // si elle n'a plus de site.
+      if (changeDEntreprise) await supprimerEntrepriseSiVide(tx, avant.entrepriseId);
+      return ecrit;
     });
   } catch (e) {
-    // Une autre entreprise du compte a pris ce SIREN entre la vérification et
-    // l'écriture : l'unicité `(userId, siren)` tranche, on le dit.
+    // Une autre entreprise du compte a pris ce SIREN entre la lecture et
+    // l'écriture : l'unicité `(userId, siren)` tranche. Rare (deux onglets) ;
+    // un nouvel enregistrement rattachera le site à cette entreprise.
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
       return refusSiretAutreEntreprise();
     }
@@ -358,7 +373,9 @@ export async function modifierEtablissement(
   revalidatePath(`/entreprises/${etab.entrepriseId}`);
   revalidatePath(`/etablissements/${id}`);
 
-  if (typologieAChange(avant, donnees)) {
+  // Changer d'entreprise change l'effectif sur lequel se comptent le CSE et le
+  // règlement intérieur : le calendrier se recalcule comme pour la typologie.
+  if (changeDEntreprise || typologieAChange(avant, donnees)) {
     // Le garde est celui de `calendrier/regeneration-sure`, comme partout
     // ailleurs. Il était ici recopié à la main — c'est en migrant les six
     // appels qui n'en avaient AUCUN qu'on a vu que deux autres en avaient un,
@@ -467,16 +484,8 @@ export async function supprimerEtablissement(
     cles = await prisma.$transaction(async (tx) => {
       const c = await clesDesEtablissements(tx, [id]);
       await tx.etablissement.delete({ where: { id } });
-      // Une entreprise n'existe que par ses établissements (2026-10-26) : le
-      // dernier parti, elle part avec lui. Restée seule, elle garderait un
-      // SIREN, une raison sociale et un effectif que plus rien n'affiche ni
-      // ne corrige — et qu'un futur site du même SIREN reprendrait tels quels.
-      const restants = await tx.etablissement.count({
-        where: { entrepriseId: etab.entrepriseId },
-      });
-      if (restants === 0) {
-        await tx.entreprise.delete({ where: { id: etab.entrepriseId } });
-      }
+      // Le dernier parti, l'entreprise part avec lui (2026-10-26).
+      await supprimerEntrepriseSiVide(tx, etab.entrepriseId);
       return c;
     });
   } catch (err) {

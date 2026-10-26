@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { NOM_BATIMENT_PRINCIPAL } from "@/lib/batiments/schema";
 import { requireUser } from "@/lib/auth/require-user";
@@ -10,6 +11,7 @@ import { sirenDuSiret } from "@/lib/etablissements/siret";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import { onboardingSchema } from "./schema";
 import { MESSAGE_REFUS_EFFECTIF_ENTREPRISE } from "@/lib/entreprises/schema";
+import { MESSAGE_EFFECTIF_REPRIS } from "./rattachement";
 import { EFFECTIF_MAX } from "@/lib/etablissements/schema";
 import { typesErpAutresCoherents } from "@/lib/etablissements/schema";
 import { saisieOnboardingDepuisFormData } from "./saisie";
@@ -39,6 +41,27 @@ export type OnboardingActionState =
 
 /** L'entreprise reprise dépasse la borne du produit (ADR-031). */
 class RefusEffectifEntreprise extends Error {}
+
+/**
+ * Rejoue une fois une création heurtée par une transaction concurrente sur la
+ * même entreprise : P2002, deux parcours ont créé le même SIREN au même
+ * instant ; P2003, l'entreprise a été supprimée avec son dernier site pendant
+ * qu'on y rattachait celui-ci (`supprimerEntrepriseSiVide`). Au second passage,
+ * l'`upsert` trouve l'entreprise, ou la recrée.
+ */
+async function avecUneReprise<T>(creer: () => Promise<T>): Promise<T> {
+  try {
+    return await creer();
+  } catch (e) {
+    if (
+      e instanceof Prisma.PrismaClientKnownRequestError &&
+      (e.code === "P2002" || e.code === "P2003")
+    ) {
+      return creer();
+    }
+    throw e;
+  }
+}
 
 export async function finaliserOnboarding(
   _prev: OnboardingActionState,
@@ -70,7 +93,7 @@ export async function finaliserOnboarding(
 
   let result;
   try {
-    result = await prisma.$transaction(async (tx) => {
+    result = await avecUneReprise(() => prisma.$transaction(async (tx) => {
       // L'entreprise du SIREN, dans CE compte — jamais ailleurs : la clé porte
       // `userId`, un SIREN suivi par un autre compte n'est ni lu ni touché.
       // `upsert` sur l'unicité `(userId, siren)` : deux parcours finis au même
@@ -164,13 +187,18 @@ export async function finaliserOnboarding(
       });
 
       return etablissement;
-    });
+    }));
   } catch (err) {
     if (err instanceof RefusEffectifEntreprise) {
+      // Le champ est en lecture seule dans ce cas : le message dit où agir.
       return {
         status: "error",
         message: "Formulaire invalide",
-        fieldErrors: { effectifEntreprise: [MESSAGE_REFUS_EFFECTIF_ENTREPRISE] },
+        fieldErrors: {
+          effectifEntreprise: [
+            `${MESSAGE_REFUS_EFFECTIF_ENTREPRISE} ${MESSAGE_EFFECTIF_REPRIS}`,
+          ],
+        },
       };
     }
     throw err;

@@ -5,7 +5,7 @@ import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { ChampBoard, SectionChamps } from "@/components/ui-kit";
 import { BlocCreux } from "@/components/ui-kit/fiche";
 import { evaluerScopeSecteur } from "@/lib/onboarding/scope";
-import { entrepriseRattachee } from "@/lib/onboarding/rattachement";
+import { MESSAGE_EFFECTIF_REPRIS, entrepriseRattachee } from "@/lib/onboarding/rattachement";
 import { refusEffectif, refusEffectifEntreprise } from "./validation";
 import type { StepProps } from "./types";
 
@@ -429,6 +429,9 @@ export function StepIdentite({
                 />
                 <p className="m-0 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-signal-ink)]">
                   {refusEntreprise.message}
+                  {/* Repris d'une entreprise suivie, le champ est en lecture
+                      seule : le refus dit où le corriger. */}
+                  {rattachee ? ` ${MESSAGE_EFFECTIF_REPRIS}` : null}
                 </p>
               </div>
             ) : null}

@@ -42,6 +42,8 @@ const h = vi.hoisted(() => {
     nbEtablissementsRestants: 0,
     // Une autre entreprise du compte qui porterait déjà le SIREN saisi.
     autreEntrepriseDuSiren: null as { id: string } | null,
+    // Ce que l'établissement a reçu comme entreprise, et les verrous posés.
+    verrous: [] as string[],
     entreprisesSupprimees: [] as string[],
     sirensPoses: [] as string[],
     supprimes: [] as string[],
@@ -113,6 +115,11 @@ const h = vi.hoisted(() => {
     // Transaction sans isolation : le corps reçoit le même client. Suffisant
     // pour l'ordre des écritures, qui est ce que ces tests regardent.
     $transaction: async <T,>(fn: (tx: unknown) => Promise<T>) => fn(prisma),
+    // Le verrou de `supprimerEntrepriseSiVide` : on note l'entreprise visée.
+    $queryRaw: async (_t: TemplateStringsArray, id: string) => {
+      db.verrous.push(id);
+      return [];
+    },
   };
 
   const stockage = { delete: vi.fn<(cle: string) => Promise<void>>(async () => {}) };
@@ -192,6 +199,8 @@ beforeEach(() => {
   h.db.autreEntrepriseDuSiren = null;
   h.db.entreprisesSupprimees = [];
   h.db.sirensPoses = [];
+  h.db.verrous = [];
+  h.db.etablissement.entrepriseId = "ent-1";
   h.db.etablissement.siret = "12002701600357";
   h.db.etablissement.entreprise = { siren: "120027016" };
   h.db.supprimes = [];
@@ -310,6 +319,8 @@ describe("supprimerEtablissement — conservation 40 ans", () => {
     h.db.nbEtablissementsRestants = 0;
     await expect(supprimerEtablissement("etab-1")).rejects.toThrow("NEXT_REDIRECT");
     expect(h.db.entreprisesSupprimees).toEqual(["ent-1"]);
+    // Verrouillée avant le comptage : un rattachement concurrent est attendu.
+    expect(h.db.verrous).toEqual(["ent-1"]);
   });
 
   it("garde l'entreprise tant qu'un autre de ses établissements reste", async () => {
@@ -738,7 +749,7 @@ describe("modifierEtablissement — le SIRET reste dans son entreprise (2026-10-
       { status: "idle" },
       formulaire({ siret: "35600000000048" }),
     );
-    expect(res.status === "error" && res.fieldErrors?.siret?.[0]).toMatch(/autre entreprise/);
+    expect(res.status === "error" && res.fieldErrors?.siret?.[0]).toMatch(/ne suit pas encore/);
     expect(h.db.etablissement.siret).toBe("12002701600357");
   });
 
@@ -755,11 +766,29 @@ describe("modifierEtablissement — le SIRET reste dans son entreprise (2026-10-
     expect(h.db.sirensPoses).toEqual(["120027016"]);
   });
 
-  it("refuse le SIREN qu'une autre entreprise du compte porte déjà", async () => {
+  it("rejoint l'entreprise du compte qui porte ce SIREN, et retire celle qu'il quitte si elle est vide", async () => {
+    // Un dossier d'avant le SIRET obligatoire, dont la société a été ouverte
+    // depuis par un second site : le site rejoint son entreprise.
     h.db.etablissement.entreprise = { siren: null };
     h.db.autreEntrepriseDuSiren = { id: "ent-2" };
+    h.db.nbEtablissementsRestants = 0;
     const res = await modifierEtablissement("etab-1", { status: "idle" }, formulaire());
-    expect(res.status === "error" && res.fieldErrors?.siret?.[0]).toMatch(/autre entreprise/);
+    expect(res.status).toBe("success");
+    expect(h.db.etablissement.entrepriseId).toBe("ent-2");
     expect(h.db.sirensPoses).toEqual([]);
+    expect(h.db.entreprisesSupprimees).toEqual(["ent-1"]);
+    // Changer d'entreprise change l'effectif des seuils : le calendrier suit.
+    expect(h.genererCalendrier).toHaveBeenCalledWith("etab-1");
+  });
+
+  it("rejoint aussi une entreprise suivie quand la sienne a un autre SIREN", async () => {
+    h.db.autreEntrepriseDuSiren = { id: "ent-2" };
+    const res = await modifierEtablissement(
+      "etab-1",
+      { status: "idle" },
+      formulaire({ siret: "35600000000048" }),
+    );
+    expect(res.status).toBe("success");
+    expect(h.db.etablissement.entrepriseId).toBe("ent-2");
   });
 });

@@ -375,3 +375,25 @@ describe("finaliserOnboarding — filtre à l'accueil (2026-10-17)", () => {
     expect(h.tx.etablissement.create).not.toHaveBeenCalled();
   });
 });
+
+describe("finaliserOnboarding — une création heurtée se rejoue une fois (2026-10-26)", () => {
+  it("rejoue après P2002 (même SIREN créé au même instant) ou P2003 (entreprise supprimée)", async () => {
+    const { Prisma } = await import("@prisma/client");
+    for (const code of ["P2002", "P2003"]) {
+      h.tx.etablissement.create.mockClear();
+      h.tx.etablissement.create.mockImplementationOnce(async () => {
+        throw new Prisma.PrismaClientKnownRequestError("collision", { code, clientVersion: "test" });
+      });
+      await expect(finaliserOnboarding({ status: "idle" }, formulaire())).rejects.toThrow("NEXT_REDIRECT");
+      expect(h.tx.etablissement.create).toHaveBeenCalledTimes(2);
+    }
+  });
+
+  it("ne rejoue pas une autre erreur", async () => {
+    h.tx.etablissement.create.mockImplementationOnce(async () => {
+      throw new Error("base indisponible");
+    });
+    await expect(finaliserOnboarding({ status: "idle" }, formulaire())).rejects.toThrow("base indisponible");
+    expect(h.tx.etablissement.create).toHaveBeenCalledTimes(1);
+  });
+});

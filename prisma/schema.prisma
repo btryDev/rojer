@@ -66,9 +66,11 @@ model Entreprise {
 // explicite. La relation inverse était déjà typée en liste, elle porte
 // désormais ce qu'elle annonçait.
 //
-// Ce qui ne bouge pas : `Entreprise.userId` reste @unique. Un compte reste une
+// ~~Ce qui ne bouge pas : `Entreprise.userId` reste @unique. Un compte reste une
 // entreprise — racine de tenancy de l'ADR-005 —, et le multi-utilisateur reste
-// hors roadmap.
+// hors roadmap.~~ [2026-10-26 : un compte suit plusieurs entreprises, une par
+// SIREN (cf. le modèle `Entreprise`). La racine de tenancy reste
+// `entreprise.userId` ; le multi-utilisateur reste hors roadmap.]
 //
 // Ce que le retrait déplace, en revanche : « l'établissement du compte » cesse
 // d'être une notion définie. Partout où le code en désignait un sans avoir à le
