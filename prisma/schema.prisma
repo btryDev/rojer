@@ -32,18 +32,15 @@ datasource db {
 // `siren` est nullable pour les dossiers anciens sans SIRET ; Postgres tient les
 // NULL pour distincts, l'unicité ne les contraint donc pas.
 //
-// `siret` et `codeNaf` sont en sursis : le SIRET et le NAF appartiennent au
-// établissement (`Etablissement`). Plus aucun code ne les lit ni ne les écrit ; ils
-// tombent dans la migration suivante (retrait en deux temps : l'ancien code
-// encore servi pendant le build Vercel les lit toujours).
+// ~~`siret` et `codeNaf` sont en sursis~~ [2026-10-27 : retirés par la
+// migration `retrait_siret_naf_entreprise`, second temps du retrait. Le SIRET
+// et le NAF appartiennent à l'établissement (`Etablissement`).]
 
 model Entreprise {
   id             String          @id @default(cuid())
   userId         String?         @db.Uuid
   siren          String?
   raisonSociale  String
-  siret          String?
-  codeNaf        String?
   effectif       Int
   adresse        String
   etablissements Etablissement[]
