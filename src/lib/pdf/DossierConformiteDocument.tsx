@@ -296,7 +296,7 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
         <View style={{ marginTop: 60 }}>
           <Text style={s.metaLigne}>Adresse : {data.adresse}</Text>
           <Text style={s.metaLigne}>
-            Travailleurs dans l'établissement : {data.effectifSurSite}, apprentis
+            Travailleurs dans l&apos;établissement : {data.effectifSurSite}, apprentis
             compris
           </Text>
           {data.codeNaf && (
