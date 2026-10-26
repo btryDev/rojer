@@ -73,7 +73,9 @@ export type EtablissementLite = {
   entrepriseId: string;
   adresse: string;
   effectifSurSite: number;
-  codeNaf: string | null;
+  /** Le SIRET du site — absent des sites créés avant le 2026-10-26. */
+  siret: string | null;
+  codeNaf: string;
   estEtablissementTravail: boolean;
   estERP: boolean;
   estIGH: boolean;
@@ -84,8 +86,6 @@ export type EtablissementLite = {
   classeIgh: string | null;
   entreprise: {
     raisonSociale: string;
-    siret: string | null;
-    codeNaf: string;
     /** L'effectif déclaré de l'entreprise (C37), rappelé sous celui du site. */
     effectif: number;
   };

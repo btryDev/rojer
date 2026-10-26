@@ -12,6 +12,7 @@ export function saisieOnboardingDepuisFormData(formData: FormData) {
   return {
     raisonSociale: raw.raisonSociale,
     siret: raw.siret,
+    nomUsage: raw.nomUsage,
     adresse: raw.adresse,
     codeNaf: raw.codeNaf,
     effectifSurSite: raw.effectifSurSite,

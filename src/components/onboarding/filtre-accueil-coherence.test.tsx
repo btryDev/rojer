@@ -51,6 +51,7 @@ function etat(c: Cas): OnboardingState {
   const s: OnboardingState = {
     ...VALEURS_INITIALES,
     raisonSociale: "X",
+    siret: "12002701600357",
     adresseRue: "1 rue",
     adresseCodePostal: "44000",
     adresseVille: "Nantes",

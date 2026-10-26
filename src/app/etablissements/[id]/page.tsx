@@ -336,6 +336,7 @@ export default async function EtablissementPage({
       entrepriseId: etab.entrepriseId,
       adresse: etab.adresse,
       effectifSurSite: etab.effectifSurSite,
+      siret: etab.siret,
       codeNaf: etab.codeNaf,
       estEtablissementTravail: etab.estEtablissementTravail,
       estERP: etab.estERP,
@@ -347,8 +348,6 @@ export default async function EtablissementPage({
       classeIgh: etab.classeIgh,
       entreprise: {
         raisonSociale: etab.entreprise.raisonSociale,
-        siret: etab.entreprise.siret,
-        codeNaf: etab.entreprise.codeNaf,
         effectif: etab.entreprise.effectif,
       },
     },

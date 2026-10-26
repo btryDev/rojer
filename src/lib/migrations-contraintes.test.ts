@@ -260,10 +260,13 @@ describe("contraintes SQL non représentables dans schema.prisma", () => {
  * erreur mais un dirigeant à deux commerces qui ne peut plus créer le second,
  * avec un message Prisma parlant de contrainte unique.
  *
- * Le couple des deux assertions dit la décision entière, et c'est ce qui rend
+ * ~~Le couple des deux assertions dit la décision entière, et c'est ce qui rend
  * le test lisible : `Etablissement.entrepriseId` NON, `Entreprise.userId` OUI.
  * Retirer la seconde par symétrie ferait tomber la racine de tenancy de
- * l'ADR-005.
+ * l'ADR-005.~~ [2026-10-26 : `Entreprise.userId` n'est plus unique non plus —
+ * une entreprise par SIREN, plusieurs par compte. La racine de tenancy reste
+ * `entreprise.userId` ; elle n'a jamais exigé l'unicité, seulement que chaque
+ * `where` y remonte.]
  */
 describe("plusieurs établissements par entreprise (ADR-028)", () => {
   const migrations = lireMigrations();
@@ -326,21 +329,40 @@ describe("plusieurs établissements par entreprise (ADR-028)", () => {
     ).not.toContain("@unique");
   });
 
-  it("Entreprise.userId reste @unique — la racine de tenancy ne bouge pas", () => {
-    // La moitié qu'on n'a PAS décidée. Un compte reste une entreprise : c'est
-    // ce qui permet aux dix helpers de `auth/scope.ts` de borner par
-    // `entreprise.userId`, et au serveur MCP de résoudre `jeton.sub` sans
-    // ambiguïté sur le premier maillon.
+  // ~~« Entreprise.userId reste @unique — la racine de tenancy ne bouge pas »~~
+  // [2026-10-26 : renversé, ADR-028 amendée. Une Entreprise est l'unité légale
+  // (SIREN) et un compte en porte plusieurs. Le cloisonnement n'en dépendait
+  // pas : tout `where` filtre `entreprise: { userId }`, qui reste juste avec N
+  // entreprises. Seuls les `findUnique({ where: { userId } })` supposaient
+  // l'unicité, et le typage Prisma les refuse désormais.]
+  it("un compte porte plusieurs entreprises, une seule par SIREN", () => {
     const corps = corpsDuModele("Entreprise");
     const ligne = corps.match(/^\s*userId\s+String.*$/m);
 
     expect(ligne, "champ `userId` introuvable").not.toBeNull();
     expect(
       ligne![0],
-      "`Entreprise.userId` a perdu son `@unique`. L'ADR-028 ne décide PAS le " +
-        "multi-utilisateur : sans cette unicité, `jeton.sub → Entreprise` " +
-        "cesse d'être univoque et tout le cloisonnement applicatif avec lui.",
-    ).toContain("@unique");
+      "Le `@unique` est revenu sur `Entreprise.userId` : un compte ne pourrait " +
+        "plus suivre deux sociétés (ADR-028 amendée le 2026-10-26).",
+    ).not.toContain("@unique");
+    expect(corps).toMatch(/@@unique\(\[userId,\s*siren\]\)/);
+    // Chaque lecture cloisonnée remonte à `userId` : l'index simple remplace
+    // celui que portait l'unicité.
+    expect(corps).toMatch(/@@index\(\[userId\]\)/);
+  });
+
+  it("la migration qui ouvre plusieurs entreprises par compte repose l'index", () => {
+    const migration = migrations.find((m) => m.nom.endsWith("_entreprise_par_siren"));
+    expect(migration, "la migration du 2026-10-26 est absente").toBeDefined();
+
+    const sql = normaliser(migration!.sql);
+    expect(sql).toMatch(/DROP INDEX (IF EXISTS )?"Entreprise_userId_key"/i);
+    expect(sql).toMatch(
+      /CREATE INDEX (IF NOT EXISTS )?"Entreprise_userId_idx" ON "Entreprise"\("userId"\)/i,
+    );
+    expect(sql).toMatch(
+      /CREATE UNIQUE INDEX (IF NOT EXISTS )?"Entreprise_userId_siren_key" ON "Entreprise"\("userId", "siren"\)/i,
+    );
   });
 });
 

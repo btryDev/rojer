@@ -13,7 +13,7 @@ afterEach(cleanup);
 
 function Hote({ initial }: { initial: Partial<OnboardingState> }) {
   const [state, setState] = useState<OnboardingState>({ ...VALEURS_INITIALES, estERP: true, categorieErp: "N3", ...initial });
-  return <StepTypologie state={state} update={(p) => setState((s) => ({ ...s, ...p }))} errors={{}} blocage={null} />;
+  return <StepTypologie state={state} update={(p) => setState((s) => ({ ...s, ...p }))} errors={{}} blocage={null} entreprisesConnues={[]} />;
 }
 
 describe("accueil : la question de l'accueil d'enfants", () => {

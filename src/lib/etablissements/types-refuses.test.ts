@@ -60,11 +60,11 @@ describe("le type R et l'accueil d'enfants", () => {
 
   it("oui refuse, non passe, sans réponse se réclame", () => {
     expect(refusDuFiltre({ estERP: true, typeErp: "R", accueilEnfants: true })).toEqual([
-      { champ: "accueilEnfants", message: PHRASE_REFUS_ENFANTS, perimetre: true },
+      { champ: "accueilEnfants", message: PHRASE_REFUS_ENFANTS },
     ]);
     expect(refusDuFiltre({ estERP: true, typeErp: "R", accueilEnfants: false })).toEqual([]);
     // Sans réponse : une question à poser, pas un refus de périmètre.
-    expect(refusDuFiltre({ estERP: true, typeErp: "R" })).toMatchObject([{ champ: "accueilEnfants", perimetre: false }]);
+    expect(refusDuFiltre({ estERP: true, typeErp: "R" })).toMatchObject([{ champ: "accueilEnfants" }]);
   });
 });
 

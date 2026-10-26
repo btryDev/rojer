@@ -18,34 +18,10 @@
 
 import { trouverReferentielParNaf } from "@/lib/referentiels";
 
-/**
- * D'où vient le code NAF de l'établissement.
- *
- * Les deux champs, et pas seulement celui de l'établissement.
- * `Etablissement.codeNaf` est **optionnel** : il n'est renseigné que lorsqu'il
- * diffère de celui de l'entreprise (cf. `etablissements/illustration.ts`), et
- * `Entreprise.codeNaf` est requis. Cinq modules du dépôt appliquent déjà le
- * repli — `pdf/builders.ts`, `versions/snapshot-builder.ts`, `mcp/tools.ts`,
- * le widget d'identité, l'illustration.
- *
- * Le prendre en paramètre au lieu de recevoir une chaîne déjà résolue est
- * délibéré : la première version acceptait `codeNaf: string | null` et son
- * seul appelant passait `etab.codeNaf` nu. Un établissement secondaire sans
- * NAF propre — le cas courant, le champ étant facultatif au formulaire —
- * rendait alors « indéterminable », et l'axe se taisait sur exactement le
- * dossier qu'il devait signaler. Le type interdit maintenant cet oubli.
- */
-export type NafDuDossier = {
-  /** `Etablissement.codeNaf` — renseigné seulement s'il diffère. */
-  etablissement: string | null | undefined;
-  /** `Entreprise.codeNaf` — requis en base, mais on tolère l'absence. */
-  entreprise: string | null | undefined;
-};
-
-/** Le code effectivement applicable, ou `null` si aucun n'est renseigné. */
-export function nafEffectif(naf: NafDuDossier): string | null {
-  return naf.etablissement?.trim() || naf.entreprise?.trim() || null;
-}
+// ~~`NafDuDossier` et `nafEffectif` — le repli du NAF de l'établissement sur
+// celui de l'entreprise~~ [2026-10-26 : retirés. Le NAF appartient au site et
+// y est obligatoire (migration `entreprise_par_siren`) ; il n'y a plus rien à
+// replier, et `Entreprise.codeNaf` n'est plus lu.]
 
 /**
  * Le rapport entre le secteur retenu et celui que le code NAF désigne.
@@ -63,8 +39,8 @@ export function nafEffectif(naf: NafDuDossier): string | null {
  */
 export type CorrespondanceSecteur =
   /**
-   * Aucun code NAF nulle part — ni sur l'établissement, ni sur l'entreprise.
-   * Rien ne peut être dit du référentiel qui conviendrait.
+   * Aucun code NAF (chaîne vide d'un dossier ancien). Rien ne peut être dit du
+   * référentiel qui conviendrait.
    *
    * Distinct de `sans_secteur_retenu` dont le `referentielDuNaf` vaut `null` :
    * là, on a regardé et il n'y en a pas ; ici, on n'a pas de quoi regarder.
@@ -96,10 +72,10 @@ export type CorrespondanceSecteur =
     };
 
 export function correspondanceSecteur(
-  naf: NafDuDossier,
+  codeNaf: string,
   referentielSecteurId: string | null | undefined,
 ): CorrespondanceSecteur {
-  const code = nafEffectif(naf);
+  const code = codeNaf.trim();
   if (!code) return { statut: "sans_naf" };
 
   const ref = trouverReferentielParNaf(code);

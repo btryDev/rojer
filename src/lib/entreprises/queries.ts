@@ -1,41 +1,34 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
+import type { EntrepriseConnue } from "@/lib/onboarding/rattachement";
 
 // ADR-005 : toutes les lectures d'Entreprise passent par requireUser() et
 // filtrent sur userId. Les entreprises orphelines (userId = NULL, héritage
 // avant auth) sont donc invisibles.
 
-export async function listerEntreprises() {
-  const user = await requireUser();
-  return prisma.entreprise.findMany({
-    where: { userId: user.id },
-    orderBy: { updatedAt: "desc" },
-    include: {
-      etablissements: {
-        include: {
-          _count: { select: { duerps: true } },
-        },
-      },
-    },
-  });
-}
+// ~~`listerEntreprises`~~ [2026-10-26 : retirée, aucun appelant.]
+
+// ~~`getEntrepriseDuUser` — « l'entreprise du compte »~~ [2026-10-26 : retirée.
+// Un compte suit plusieurs entreprises (une par SIREN) ; la notion n'existe plus.]
 
 /**
- * L'entreprise du user connecté, ou `null` si l'onboarding n'a pas eu lieu.
- *
- * `Entreprise.userId` reste `@unique` après l'ADR-028 — c'est ce que cette
- * ADR ne touche pas —, donc « l'entreprise du compte » est toujours une notion
- * définie, là où « l'établissement du compte » a cessé de l'être. C'est elle
- * qu'il faut pour ouvrir un établissement de plus : le formulaire de création a
- * besoin du parent, pas d'un frère.
+ * Les entreprises du compte que le parcours peut reprendre : celles dont le
+ * SIREN est connu. Le moins possible quitte le serveur — ni identifiant, ni
+ * adresse —, et la lecture est bornée au compte : un SIREN ne se cherche
+ * jamais dans toute la base, sinon un compte apprendrait qu'un autre suit la
+ * même société.
  */
-export async function getEntrepriseDuUser() {
+export async function listerEntreprisesConnues(): Promise<EntrepriseConnue[]> {
   const user = await requireUser();
-  return prisma.entreprise.findFirst({
-    where: { userId: user.id },
-    select: { id: true, raisonSociale: true, effectif: true },
+  const entreprises = await prisma.entreprise.findMany({
+    where: { userId: user.id, siren: { not: null } },
+    orderBy: { createdAt: "asc" },
+    select: { siren: true, raisonSociale: true, effectif: true },
   });
+  return entreprises.flatMap((e) =>
+    e.siren ? [{ siren: e.siren, raisonSociale: e.raisonSociale, effectif: e.effectif }] : [],
+  );
 }
 
 export async function getEntreprise(id: string) {

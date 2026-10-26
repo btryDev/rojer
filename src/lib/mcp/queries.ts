@@ -108,6 +108,7 @@ export async function getFicheEtablissement(etablissementId: string) {
     select: {
       raisonDisplay: true,
       adresse: true,
+      siret: true,
       codeNaf: true,
       effectifSurSite: true,
       estEtablissementTravail: true,
@@ -120,8 +121,6 @@ export async function getFicheEtablissement(etablissementId: string) {
       entreprise: {
         select: {
           raisonSociale: true,
-          siret: true,
-          codeNaf: true,
           effectif: true,
           adresse: true,
         },

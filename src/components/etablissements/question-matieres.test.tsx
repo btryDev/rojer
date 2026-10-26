@@ -104,12 +104,13 @@ const FRAGMENTS_DE_L_AIDE = [
 const HTML_FICHE = renderToStaticMarkup(
   <EtablissementForm
     action={async (s) => s}
+    valeursInitiales={{ typesErpAutres: [] }}
     libelleSubmit="Enregistrer"
     entreprise={{ id: "ent", effectif: 3 }}
   />,
 );
 const HTML_PARCOURS = renderToStaticMarkup(
-  <StepTypologie state={VALEURS_INITIALES} update={() => {}} />,
+  <StepTypologie state={VALEURS_INITIALES} update={() => {}} entreprisesConnues={[]} />,
 );
 const SURFACES_RENDUES: [string, string][] = [
   ["fiche (EtablissementForm)", HTML_FICHE],

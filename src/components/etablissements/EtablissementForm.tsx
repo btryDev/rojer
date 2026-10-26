@@ -51,7 +51,8 @@ function Erreur({ message }: { message?: string }) {
 type Valeurs = {
   raisonDisplay?: string;
   adresse?: string;
-  codeNaf?: string | null;
+  siret?: string | null;
+  codeNaf?: string;
   effectifSurSite?: number;
   personnesPresentesHabituellement?: number | null;
   manipuleMatieresR422722?: boolean | null;
@@ -78,7 +79,7 @@ type Props = {
     prev: EtablissementActionState,
     formData: FormData,
   ) => Promise<EtablissementActionState>;
-  valeursInitiales?: Valeurs;
+  valeursInitiales: Valeurs;
   libelleSubmit: string;
   labelAnnuler?: { libelle: string; href: string };
   /**
@@ -104,32 +105,30 @@ export function EtablissementForm({
 
   // États locaux pour le dépliage conditionnel ERP/IGH — cohérence UI
   // immédiate sans tour serveur.
-  // EN CRÉATION, AUCUNE RÉPONSE DE RÉGIME N'EST PRÉSÉLECTIONNÉE (2026-09-27,
-  // A2 — même règle qu'au parcours de création, relevée par la contre-lecture
-  // du lot) : une case vide valait « non », et un second établissement qui
-  // recevait du public naissait non-ERP en silence. En modification, la
-  // réponse est en base : la case la montre.
-  const enCreation = valeursInitiales === undefined;
+  // ~~EN CRÉATION, AUCUNE RÉPONSE DE RÉGIME N'EST PRÉSÉLECTIONNÉE~~
+  // [2026-10-26 : ce formulaire ne crée plus — tout établissement naît du
+  // parcours d'onboarding, qui exige ces réponses. En modification, la
+  // réponse est en base : la case la montre.]
   const [estERP, setEstERP] = useState<boolean | null>(
-    valeursInitiales?.estERP ?? (enCreation ? null : false),
+    valeursInitiales.estERP ?? false,
   );
   // Le type est suivi en état depuis le 2026-09-20 : la question du sommeil
   // n'existe que pour certains types, et doit apparaître ou disparaître au
   // moment où le dirigeant en change, pas au rechargement.
   const [typeErp, setTypeErp] = useState<string>(
-    valeursInitiales?.typeErp ?? "",
+    valeursInitiales.typeErp ?? "",
   );
   // Les autres types (ADR-045), suivis en état pour la même raison que le
   // premier : la question du sommeil apparaît dès que L'UN d'eux l'appelle.
   const [typesErpAutres, setTypesErpAutres] = useState<string[]>([
-    ...(valeursInitiales?.typesErpAutres ?? []),
+    ...(valeursInitiales.typesErpAutres ?? []),
   ]);
   const [signalAutres, setSignalAutres] = useState(0);
   // Filtre à l'accueil (2026-10-17) : R entre-t-il ? Présent dans la saisie,
   // absent de la fiche enregistrée (rien n'est enregistré à la création).
   const rEntreIci = rEntre(
     { estERP: estERP === true, typeErp, typesErpAutres },
-    valeursInitiales?.estERP === true
+    valeursInitiales.estERP === true
       ? { typeErp: valeursInitiales.typeErp ?? null, typesErpAutres: valeursInitiales.typesErpAutres ?? [] }
       : null,
   );
@@ -141,14 +140,14 @@ export function EtablissementForm({
   // La catégorie aussi, depuis le 2026-10-12 : la question du SSI A/B n'est
   // posée qu'aux quatre premières catégories (DF 10, livre II).
   const [categorieErp, setCategorieErp] = useState<string>(
-    valeursInitiales?.categorieErp ?? "",
+    valeursInitiales.categorieErp ?? "",
   );
   const poseSsi = questionSsiPosee({ estERP, categorieErp });
   const [estHabitation, setEstHabitation] = useState<boolean | null>(
-    valeursInitiales?.estHabitation ?? (enCreation ? null : false),
+    valeursInitiales.estHabitation ?? false,
   );
   const [estIGH, setEstIGH] = useState<boolean | null>(
-    valeursInitiales?.estIGH ?? (enCreation ? null : false),
+    valeursInitiales.estIGH ?? false,
   );
   const err = (champ: string) =>
     state.status === "error" ? state.fieldErrors?.[champ]?.[0] : undefined;
@@ -176,7 +175,7 @@ export function EtablissementForm({
           name="raisonDisplay"
           label="Nom de l'établissement"
           requis
-          defaultValue={valeursInitiales?.raisonDisplay}
+          defaultValue={valeursInitiales.raisonDisplay}
           placeholder="Ex : Restaurant du Marché, Bureau de Nantes"
           erreur={err("raisonDisplay")}
         />
@@ -186,18 +185,33 @@ export function EtablissementForm({
           name="adresse"
           label="Adresse"
           requis
-          defaultValue={valeursInitiales?.adresse}
+          defaultValue={valeursInitiales.adresse}
           erreur={err("adresse")}
         />
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          {/* Le SIRET du site (2026-10-26). Un site créé avant cette date n'en
+              a pas : le champ vide est exigé au prochain enregistrement. */}
+          <ChampBoard
+            id="siret"
+            name="siret"
+            label="SIRET du site"
+            requis
+            inputMode="numeric"
+            defaultValue={valeursInitiales.siret ?? ""}
+            placeholder="812 456 789 00021"
+            aide="14 chiffres. Les neuf premiers sont le SIREN de l'entreprise de ce site."
+            erreur={err("siret")}
+          />
+
           <ChampBoard
             id="codeNaf"
             name="codeNaf"
             label="Code NAF du site"
-            defaultValue={valeursInitiales?.codeNaf ?? ""}
+            requis
+            defaultValue={valeursInitiales.codeNaf ?? ""}
             placeholder="ex. 56.10A"
-            aide="Facultatif. Si vide, on utilise le code NAF de l'entreprise. À renseigner si ce site a une activité distincte de celle du siège."
+            aide="L'activité exercée sur ce site."
             erreur={err("codeNaf")}
           />
 
@@ -213,7 +227,7 @@ export function EtablissementForm({
             // borne reste au serveur, où il est de toute façon rejoué.
             type="text"
             inputMode="numeric"
-            defaultValue={valeursInitiales?.effectifSurSite}
+            defaultValue={valeursInitiales.effectifSurSite}
             erreur={err("effectifSurSite")}
           />
           {/* Un lien et non un champ : l'entreprise a sa propre fiche, et
@@ -237,7 +251,7 @@ export function EtablissementForm({
               id="natureActivite"
               name="natureActivite"
               rows={2}
-              defaultValue={valeursInitiales?.natureActivite ?? ""}
+              defaultValue={valeursInitiales.natureActivite ?? ""}
               className="champ-board"
               aria-invalid={Boolean(err("natureActivite"))}
               aria-describedby="natureActivite-aide"
@@ -270,7 +284,7 @@ export function EtablissementForm({
             type="text"
             inputMode="numeric"
             defaultValue={
-              valeursInitiales?.personnesPresentesHabituellement ?? ""
+              valeursInitiales.personnesPresentesHabituellement ?? ""
             }
             aide={`${AIDE_NOMBRE_DE_PERSONNES} Ce nombre vous est demandé si vous recevez du public et que ni votre catégorie d'ERP ni votre effectif n'établissent le seuil ; sinon vous pouvez le laisser vide.`}
             erreur={err("personnesPresentesHabituellement")}
@@ -320,9 +334,9 @@ export function EtablissementForm({
               className="champ-board"
               aria-describedby="manipuleMatieresR422722-aide"
               defaultValue={
-                valeursInitiales?.manipuleMatieresR422722 === true
+                valeursInitiales.manipuleMatieresR422722 === true
                   ? "oui"
-                  : valeursInitiales?.manipuleMatieresR422722 === false
+                  : valeursInitiales.manipuleMatieresR422722 === false
                     ? "non"
                     : ""
               }
@@ -364,7 +378,7 @@ export function EtablissementForm({
                 type="checkbox"
                 name="estEtablissementTravail"
                 defaultChecked={
-                  valeursInitiales?.estEtablissementTravail ?? true
+                  valeursInitiales.estEtablissementTravail ?? true
                 }
                 className={CASE_A_COCHER}
               />
@@ -382,15 +396,13 @@ export function EtablissementForm({
             {/* ERP */}
             <div className="flex flex-col gap-3">
               <label className="flex cursor-pointer items-start gap-3">
-                {enCreation ? null : (
-                  <input
-                    type="checkbox"
-                    name="estERP"
-                    checked={estERP === true}
-                    onChange={(e) => setEstERP(e.currentTarget.checked)}
-                    className={CASE_A_COCHER}
-                  />
-                )}
+                <input
+                  type="checkbox"
+                  name="estERP"
+                  checked={estERP === true}
+                  onChange={(e) => setEstERP(e.currentTarget.checked)}
+                  className={CASE_A_COCHER}
+                />
                 <div className="min-w-0 flex-1">
                   <p className="m-0 text-[14px] font-semibold leading-[1.35] text-[color:var(--board-ink)]">
                     Établissement Recevant du Public (ERP)
@@ -402,14 +414,6 @@ export function EtablissementForm({
                   </p>
                 </div>
               </label>
-              {enCreation && (
-                <ReponseOuiNon
-                  name="estERP"
-                  valeur={estERP}
-                  onChange={setEstERP}
-                  erreur={err("estERP")}
-                />
-              )}
 
               {estERP && (
                 /* TYPE ET CATÉGORIE PRENNENT LA LIGNE ENTIÈRE, ET C'EST UNE
@@ -560,7 +564,7 @@ export function EtablissementForm({
                     label="Effectif du public susceptible d'être admis"
                     type="text"
                     inputMode="numeric"
-                    defaultValue={valeursInitiales?.effectifPublicAdmis ?? ""}
+                    defaultValue={valeursInitiales.effectifPublicAdmis ?? ""}
                     aide="Le chiffre retenu à votre classement ERP — distinct de votre effectif salarié et des personnes présentes."
                     erreur={err("effectifPublicAdmis")}
                   />
@@ -571,7 +575,7 @@ export function EtablissementForm({
                     label="Autorisation d'ouverture donnée le"
                     type="date"
                     defaultValue={
-                      valeursInitiales?.dateAutorisationOuverture ?? ""
+                      valeursInitiales.dateAutorisationOuverture ?? ""
                     }
                     erreur={err("dateAutorisationOuverture")}
                   />
@@ -582,7 +586,7 @@ export function EtablissementForm({
                     label="Certificat de conformité délivré le"
                     type="date"
                     defaultValue={
-                      valeursInitiales?.dateCertificatConformite ?? ""
+                      valeursInitiales.dateCertificatConformite ?? ""
                     }
                     erreur={err("dateCertificatConformite")}
                   />
@@ -604,9 +608,9 @@ export function EtablissementForm({
                       className="champ-board"
                       aria-describedby="ssiCategorieAouB-aide"
                       defaultValue={
-                        valeursInitiales?.ssiCategorieAouB === true
+                        valeursInitiales.ssiCategorieAouB === true
                           ? "oui"
-                          : valeursInitiales?.ssiCategorieAouB === false
+                          : valeursInitiales.ssiCategorieAouB === false
                             ? "non"
                             : ""
                       }
@@ -660,9 +664,9 @@ export function EtablissementForm({
                       required
                       aria-describedby="comporteLocauxSommeilPublic-aide"
                       defaultValue={
-                        valeursInitiales?.comporteLocauxSommeilPublic === true
+                        valeursInitiales.comporteLocauxSommeilPublic === true
                           ? "oui"
-                          : valeursInitiales?.comporteLocauxSommeilPublic ===
+                          : valeursInitiales.comporteLocauxSommeilPublic ===
                               false
                             ? "non"
                             : ""
@@ -689,15 +693,13 @@ export function EtablissementForm({
             {/* IGH */}
             <div className="flex flex-col gap-3">
               <label className="flex cursor-pointer items-start gap-3">
-                {enCreation ? null : (
-                  <input
-                    type="checkbox"
-                    name="estIGH"
-                    checked={estIGH === true}
-                    onChange={(e) => setEstIGH(e.currentTarget.checked)}
-                    className={CASE_A_COCHER}
-                  />
-                )}
+                <input
+                  type="checkbox"
+                  name="estIGH"
+                  checked={estIGH === true}
+                  onChange={(e) => setEstIGH(e.currentTarget.checked)}
+                  className={CASE_A_COCHER}
+                />
                 <div className="min-w-0 flex-1">
                   <p className="m-0 text-[14px] font-semibold leading-[1.35] text-[color:var(--board-ink)]">
                     Immeuble de Grande Hauteur (IGH)
@@ -711,14 +713,6 @@ export function EtablissementForm({
                   </p>
                 </div>
               </label>
-              {enCreation && (
-                <ReponseOuiNon
-                  name="estIGH"
-                  valeur={estIGH}
-                  onChange={setEstIGH}
-                  erreur={err("estIGH")}
-                />
-              )}
 
               {/* LA QUESTION « CLASSE IGH » A ÉTÉ RETIRÉE LE 2026-09-03.
                   Elle était obligatoire, offrait les dix classes de R. 146-4,
@@ -746,15 +740,13 @@ export function EtablissementForm({
             {/* Habitation */}
             <div className="flex flex-col gap-3">
               <label className="flex cursor-pointer items-start gap-3">
-                {enCreation ? null : (
-                  <input
-                    type="checkbox"
-                    name="estHabitation"
-                    checked={estHabitation === true}
-                    onChange={(e) => setEstHabitation(e.currentTarget.checked)}
-                    className={CASE_A_COCHER}
-                  />
-                )}
+                <input
+                  type="checkbox"
+                  name="estHabitation"
+                  checked={estHabitation === true}
+                  onChange={(e) => setEstHabitation(e.currentTarget.checked)}
+                  className={CASE_A_COCHER}
+                />
                 <div className="min-w-0 flex-1">
                   <p className="m-0 text-[14px] font-semibold leading-[1.35] text-[color:var(--board-ink)]">
                     Immeuble d&apos;habitation
@@ -768,14 +760,6 @@ export function EtablissementForm({
                   </p>
                 </div>
               </label>
-              {enCreation && (
-                <ReponseOuiNon
-                  name="estHabitation"
-                  valeur={estHabitation}
-                  onChange={setEstHabitation}
-                  erreur={err("estHabitation")}
-                />
-              )}
 
               {/* LA QUESTION « FAMILLE D'HABITATION » A ÉTÉ RETIRÉE LE
                   2026-09-03, trois jours après avoir été posée. Elle offrait
@@ -813,19 +797,6 @@ export function EtablissementForm({
             "un champ est à corriger plus haut."}
         </p>
       )}
-      {/* Un refus de périmètre à la création (effectif, ERP en IGH, types
-          refusés) : le moment où l'on perd quelqu'un, comme à l'accueil
-          (2026-10-24). */}
-      {enCreation && state.status === "error" && state.refusPerimetre && (
-          <p className="m-0 text-[12.5px] text-[color:var(--board-slate-mid)]">
-            <DemandeAide
-              variante="lien"
-              libelle="Rojer ne suit pas encore ce cas ? Nos experts, si : être accompagné."
-              categorie="hors_couverture"
-              contexte="Création d'établissement refusée"
-            />
-          </p>
-        )}
       {state.status === "success" && (
         <p className="m-0 text-[12.5px] text-[color:var(--board-green-ink)]">
           Enregistré.
@@ -852,43 +823,3 @@ export function EtablissementForm({
   );
 }
 
-/**
- * Oui / Non, sans réponse présélectionnée et exigé (2026-09-27, A2). Posté
- * « oui » ou « non » ; rien tant qu'aucun n'est choisi, et la porte refuse.
- */
-function ReponseOuiNon({
-  name,
-  valeur,
-  onChange,
-  erreur,
-}: {
-  name: string;
-  valeur: boolean | null;
-  onChange: (v: boolean) => void;
-  erreur?: string;
-}) {
-  return (
-    <div className="flex flex-col gap-1.5 pl-1">
-      <div className="flex gap-5 text-[13px] text-[color:var(--board-ink)]">
-        {(["oui", "non"] as const).map((v) => (
-          <label key={v} className="flex cursor-pointer items-center gap-2">
-            <input
-              type="radio"
-              name={name}
-              value={v}
-              required
-              checked={valeur === (v === "oui")}
-              onChange={() => onChange(v === "oui")}
-            />
-            {v === "oui" ? "Oui" : "Non"}
-          </label>
-        ))}
-      </div>
-      {erreur && (
-        <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
-          {erreur}
-        </p>
-      )}
-    </div>
-  );
-}

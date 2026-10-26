@@ -43,6 +43,7 @@ export default async function ModifierEtablissementPage({
             valeursInitiales={{
               raisonDisplay: etab.raisonDisplay,
               adresse: etab.adresse,
+              siret: etab.siret,
               codeNaf: etab.codeNaf,
               effectifSurSite: etab.effectifSurSite,
               personnesPresentesHabituellement:

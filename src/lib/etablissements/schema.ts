@@ -2,10 +2,11 @@ import {
   MESSAGE_NOMBRE_DE_PERSONNES,
   nombreDePersonnesADemander,
 } from "@/lib/matching/personnes-presentes";
+import { siretSchema } from "./siret";
 import { z } from "zod";
 import { depuisCleJourCivil, estJourCivilReel } from "@/lib/dates";
 import { TYPES_ERP_A_SOMMEIL_PLAUSIBLE } from "@/lib/referentiels/types-communs";
-import { appliquerFiltre, champAccueilEnfants } from "./types-refuses";
+import { champAccueilEnfants } from "./types-refuses";
 
 // Enums reflétant le schéma Prisma. Si on ajoute une valeur côté Prisma,
 // pensez à la refléter ici — pas d'import direct de @prisma/client pour
@@ -276,16 +277,17 @@ export const etablissementSchema = z
       .min(1, "Le nom de l'établissement est obligatoire")
       .max(200),
     adresse: z.string().trim().min(1, "Adresse requise").max(300),
-    codeNaf: z.preprocess(
-      (v) =>
-        typeof v === "string"
-          ? v.trim().toUpperCase() || undefined
-          : v,
-      z
-        .string()
-        .regex(nafRegex, "Code NAF invalide (ex. 56.10A)")
-        .optional(),
-    ),
+    // Le SIRET du site, obligatoire (2026-10-26). Un site enregistré avant
+    // cette date le reçoit au prochain enregistrement de sa fiche.
+    siret: siretSchema,
+    // ~~Facultatif : le NAF de l'entreprise à défaut~~ [2026-10-26 : le NAF
+    // du site, obligatoire — plus de repli sur l'entreprise.]
+    codeNaf: z
+      .string({ message: "Indiquez le code NAF du site." })
+      .trim()
+      .toUpperCase()
+      .min(1, "Indiquez le code NAF du site.")
+      .regex(nafRegex, "Code NAF invalide (ex. 56.10A)"),
     effectifSurSite: z.coerce
       .number()
       .int("Effectif entier")
@@ -390,8 +392,9 @@ export const etablissementSchema = z
     // LA RÉPONSE SUR LE SOMMEIL EST DUE À LA PORTE, PAS SEULEMENT À L'ÉCRAN
     // (2026-09-20, relevé par la revue du lot). Le `required` du formulaire ne
     // tenait que dans le navigateur : ce schéma — qui sert la modification ET,
-    // par `etablissementCreationSchema`, la création d'un second établissement
-    // — laissait passer un hôtel muet. `actions.ts` l'écrit : « c'est la
+    // ~~par `etablissementCreationSchema`, la création d'un second
+    // établissement~~ [2026-10-26 : la modification seule] — laissait passer
+    // un hôtel muet. `actions.ts` l'écrit : « c'est la
     // porte, pas le parcours, qui doit porter la règle ». Même contrôle que
     // celui d'`onboarding/schema.ts`. Hors de la liste, rien n'est refusé : la
     // valeur est remise à `null` par `reponseSommeilSuivantLeType`.
@@ -420,7 +423,8 @@ export const etablissementSchema = z
 
     // LE NOMBRE DE PERSONNES EST DÛ LÀ OÙ LE MOTEUR NE SAIT PAS CONCLURE SANS LUI
     // (2026-09-20). Même règle qu'au parcours de création, par la même
-    // fonction : `/etablissements/nouveau` passe par ce schéma-ci, et une
+    // fonction : ~~`/etablissements/nouveau` passe par ce schéma-ci~~
+    // [2026-10-26 : porte retirée ; la fiche passe par ce schéma-ci], et une
     // règle posée sur un seul parcours se contourne en changeant de porte.
     // Ici le champ reste ACCEPTÉ de tous — la fiche le montre à tous, et un
     // nombre déclaré tranche dans les deux sens.
@@ -511,59 +515,9 @@ export const etablissementSchema = z
 
 export type EtablissementInput = z.infer<typeof etablissementSchema>;
 
-/**
- * Schéma de **création** d'un établissement (ADR-025 § 4, ADR-031).
- *
- * Il ne porte plus que ~~les deux refus de périmètre de l'ADR-031~~
- * [2026-10-18 : les refus de périmètre de l'ADR-031 — effectif, ERP en IGH,
- * et depuis le 2026-10-17 le filtre à l'accueil (`appliquerFiltre`)].
- *
- * IL A PORTÉ UNE TROISIÈME RÈGLE, ET SA DISPARITION SE RACONTE. Du 2026-09-01
- * au 2026-09-03, la FAMILLE D'HABITATION était exigée ici et nulle part
- * ailleurs — dissymétrie création / modification voulue, pour qu'une règle
- * neuve ne rende pas inutilisables les dossiers saisis avant elle. Elle tombe
- * avec la question : l'arrêté du 31 janvier 1986 a été dépouillé, son unique
- * obligation périodique (article 101) ne mentionne aucune famille, et aucune
- * obligation du référentiel n'en dépend. Exiger à la création une donnée qui ne
- * décide de rien, c'est ajouter une étape au parcours pour rien.
- */
-export const etablissementCreationSchema = etablissementSchema.superRefine(
-  (val, ctx) => {
-    // ~~Les deux refus de périmètre~~ [2026-10-18 : les refus de taille et
-    // d'IGH ; le filtre à l'accueil suit, plus bas] (ADR-031). Ils vivent ici et non dans
-    // `etablissementSchema` parce que ce schéma-là sert aussi à modifier un
-    // dossier ancien, et un client qui passe de quarante-cinq à soixante
-    // salariés reste servi — son dossier porte alors un manque de couverture,
-    // il ne se ferme pas.
-    //
-    // Ils vivent ici et PAS SEULEMENT dans le wizard : depuis l'ADR-028, un
-    // second établissement se crée par un autre chemin. Une règle posée sur le
-    // parcours et non sur la porte se contourne en changeant de parcours.
-    if (val.effectifSurSite > EFFECTIF_MAX) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["effectifSurSite"],
-        message: `Rojer prend en charge les structures jusqu'à ${EFFECTIF_MAX} salariés.`,
-        params: { perimetre: true },
-      });
-    }
-
-    // La borne compte les TRAVAILLEURS. Le public reçu ne la déclenche jamais :
-    // un restaurant de huit salariés qui peut accueillir quatre cents personnes à la fois est classé
-    // en 3ᵉ catégorie d'ERP et reste dans la cible.
-    if (val.estERP && val.estIGH) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["estIGH"],
-        message:
-          "Un établissement recevant du public situé dans un immeuble de grande hauteur relève du règlement de sécurité des IGH, que Rojer ne couvre pas.",
-        params: { perimetre: true },
-      });
-    }
-
-    // Le filtre à l'accueil (2026-10-17, `types-refuses.ts`) : types J, U,
-    // établissements spéciaux, et R qui accueille des enfants. La modification
-    // de la fiche l'applique à la transition, dans `modifierEtablissement`.
-    appliquerFiltre(val, ctx);
-  },
-);
+// ~~`etablissementCreationSchema` — le schéma de création d'un établissement
+// (ADR-025 § 4, ADR-031)~~ [2026-10-26 : retiré avec `/etablissements/nouveau`.
+// Tout établissement naît du parcours d'onboarding, dont le schéma
+// (`onboardingSchema`) porte les refus de périmètre de l'ADR-031 et le filtre
+// à l'accueil. Ce schéma-ci ne sert plus qu'à modifier une fiche, où ces refus
+// ne s'appliquent pas — sauf le filtre, à la transition (`modifierEtablissement`).]

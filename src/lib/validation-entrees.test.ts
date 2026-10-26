@@ -57,7 +57,7 @@ import { renommerUnite, declarerAucunRisque } from "@/lib/duerps/actions";
 import { creerEquipementsDepuisPreRemplissage } from "@/lib/equipements/actions";
 import { suggererEquipements } from "@/lib/equipements/pre-remplissage";
 import { questionsExigeesPour, REGIME_TRAVAIL } from "@/lib/equipements/reponses-exigees";
-import { entrepriseSchema, entrepriseCreationSchema } from "@/lib/entreprises/schema";
+import { entrepriseSchema } from "@/lib/entreprises/schema";
 import { leverPrescription } from "@/lib/prescriptions/actions";
 import { ajouterMesureCustom, modifierMesure } from "@/lib/mesures/actions";
 import { CATEGORIES_EQUIPEMENT, estCategorieEpi, type CategorieEquipement } from "@/lib/referentiels/types-communs";
@@ -189,7 +189,7 @@ describe("creerEquipementsDepuisPreRemplissage — une entrée par catégorie au
 });
 
 describe("entrepriseSchema — bornes de l'adresse et de l'effectif", () => {
-  const base = { raisonSociale: "X", codeNaf: "56.10A", effectif: "3", adresse: "1 rue, 75000 Paris" };
+  const base = { raisonSociale: "X", effectif: "3", adresse: "1 rue, 75000 Paris" };
   it("refuse une adresse d'1 Mo et un effectif de 10^12", () => {
     expect(entrepriseSchema.safeParse({ ...base, adresse: "a".repeat(1_000_000) }).success).toBe(false);
     expect(entrepriseSchema.safeParse({ ...base, effectif: "1000000000000" }).success).toBe(false);
@@ -198,9 +198,10 @@ describe("entrepriseSchema — bornes de l'adresse et de l'effectif", () => {
     expect(entrepriseSchema.safeParse({ ...base, effectif: "2147483647" }).success).toBe(true);
     expect(entrepriseSchema.safeParse({ ...base, effectif: "2147483648" }).success).toBe(false);
   });
-  it("une entreprise existante qui passe 50 salariés reste modifiable ; la création, elle, refuse", () => {
+  it("une entreprise existante qui passe 50 salariés reste modifiable", () => {
+    // La création, elle, refuse — au parcours (`onboardingSchema`,
+    // `borne-effectif.test.ts`), seule porte depuis le 2026-10-26.
     expect(entrepriseSchema.safeParse({ ...base, effectif: "60" }).success).toBe(true);
-    expect(entrepriseCreationSchema.safeParse({ ...base, effectif: "60" }).success).toBe(false);
   });
   it("accepte une adresse de 300 caractères, refuse 301", () => {
     expect(entrepriseSchema.safeParse({ ...base, adresse: "a".repeat(300) }).success).toBe(true);

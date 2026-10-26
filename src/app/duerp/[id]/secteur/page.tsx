@@ -22,7 +22,7 @@ export default async function SecteurPage({
   const duerp = await getDuerp(id);
   if (!duerp) notFound();
 
-  const refRecommande = trouverReferentielParNaf(duerp.entreprise.codeNaf);
+  const refRecommande = trouverReferentielParNaf(duerp.etablissement.codeNaf);
   const secteurChoisi = duerp.referentielSecteurId;
 
   const etapes = construireEtapes(id, "secteur", {
@@ -74,7 +74,7 @@ export default async function SecteurPage({
             <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
               À partir du code NAF{" "}
               <span className="font-mono tabular-nums text-[color:var(--board-ink)]">
-                {duerp.entreprise.codeNaf}
+                {duerp.etablissement.codeNaf}
               </span>
               , le secteur ci-dessous a été détecté. Confirmez pour charger
               les unités et risques types.
@@ -141,7 +141,7 @@ export default async function SecteurPage({
             <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
               Le code NAF{" "}
               <span className="font-mono tabular-nums text-[color:var(--board-ink)]">
-                {duerp.entreprise.codeNaf}
+                {duerp.etablissement.codeNaf}
               </span>{" "}
               n&apos;est pas couvert par un référentiel dédié. Choisissez le
               secteur le plus proche — vous pourrez décocher les risques non

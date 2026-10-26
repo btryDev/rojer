@@ -1,10 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { TYPES_ERP } from "@/lib/referentiels/types-communs";
 import { exclusionsDeclarees, refusAlEntree } from "./exclusions";
-import {
-  EFFECTIF_MAX,
-  etablissementCreationSchema,
-} from "@/lib/etablissements/schema";
+import { EFFECTIF_MAX } from "@/lib/etablissements/schema";
+import { onboardingSchema } from "@/lib/onboarding/schema";
 import { CORPUS, EXCLUSIONS, articlesNonCouverts } from "@/lib/referentiels/corpus";
 import { manquesAnnoncesDuDossier } from "./manques-annonces";
 import { couvertureDuRegime, REGLEMENT_IGH_NON_TRAITE } from "./couverture";
@@ -16,17 +14,18 @@ import { couvertureDuRegime, REGLEMENT_IGH_NON_TRAITE } from "./couverture";
  * elle-même. Les deux doivent diverger pour que le test le voie.
  */
 const dossierAccepte = {
-  raisonDisplay: "Sonde de test",
+  raisonSociale: "Sonde de test",
+  siret: "12002701600357",
   adresse: "2 rue du Test, 75000 Paris",
   codeNaf: "47.24Z",
   effectifSurSite: 3,
+  effectifEntreprise: 3,
   personnesPresentesHabituellement: null,
   manipuleMatieresR422722: null,
   estEtablissementTravail: true,
   estERP: false,
   estIGH: false,
   estHabitation: false,
-  natureActivite: null,
 };
 /** Un ERP de 5ᵉ catégorie que la porte accepte sous le type N. */
 const erpAccepte = {
@@ -78,16 +77,15 @@ describe("les refus à l'entrée sont projetés, pas recopiés", () => {
     // d'eux se mettait à être refusé, la page annoncerait deux refus pendant
     // que le produit en ferait trois.
     const auSeuil = { ...dossierAccepte, effectifSurSite: EFFECTIF_MAX };
-    expect(etablissementCreationSchema.safeParse(auSeuil).success).toBe(true);
+    expect(onboardingSchema.safeParse(auSeuil).success).toBe(true);
 
     // L'IGH SEUL n'est pas refusé : un employeur locataire de bureaux dans une
     // tour relève du Code du travail, que le produit sert entièrement.
     const ighSeul = {
       ...dossierAccepte,
       estIGH: true,
-      classeIgh: "GHW1",
     };
-    expect(etablissementCreationSchema.safeParse(ighSeul).success).toBe(true);
+    expect(onboardingSchema.safeParse(ighSeul).success).toBe(true);
 
     // Et l'ERP de 3ᵉ catégorie : la catégorie mesure le public, la borne
     // mesure les salariés. Il est servi partiellement, pas refusé.
@@ -96,9 +94,10 @@ describe("les refus à l'entrée sont projetés, pas recopiés", () => {
       estERP: true,
       typeErp: "N",
       categorieErp: "N3",
-      personnesPresentesHabituellement: 300,
+      // Pas de nombre de personnes : la 3ᵉ catégorie établit le seuil, et le
+      // parcours refuse un nombre qu'il ne demande pas.
     };
-    expect(etablissementCreationSchema.safeParse(erpCategorie3).success).toBe(
+    expect(onboardingSchema.safeParse(erpCategorie3).success).toBe(
       true,
     );
   });
@@ -113,7 +112,7 @@ describe("les refus à l'entrée sont projetés, pas recopiés", () => {
     // test vrai pour une porte qui ne refuserait rien.
     expect(nommes.size).toBeGreaterThanOrEqual(9);
     for (const t of TYPES_ERP) {
-      const r = etablissementCreationSchema.safeParse({
+      const r = onboardingSchema.safeParse({
         ...erpAccepte,
         typeErp: t,
         comporteLocauxSommeilPublic: false,
@@ -126,9 +125,9 @@ describe("les refus à l'entrée sont projetés, pas recopiés", () => {
 
   it("filtre à l'accueil : les sondes inverses passent — PS, et R qui répond « non »", () => {
     const ps = { ...erpAccepte, typeErp: "PS" };
-    expect(etablissementCreationSchema.safeParse(ps).success).toBe(true);
+    expect(onboardingSchema.safeParse(ps).success).toBe(true);
     const rAdultes = { ...erpAccepte, typeErp: "R", comporteLocauxSommeilPublic: false, accueilEnfants: "non" };
-    expect(etablissementCreationSchema.safeParse(rAdultes).success).toBe(true);
+    expect(onboardingSchema.safeParse(rAdultes).success).toBe(true);
   });
 
   it("ne laisse aucun refus sans indication — un refus n'est pas un cul-de-sac", () => {

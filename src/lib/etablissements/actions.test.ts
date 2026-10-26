@@ -8,7 +8,6 @@
 //     doit lire une explication, pas une erreur Prisma.
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { NOM_BATIMENT_PRINCIPAL } from "@/lib/batiments/schema";
 import { CHAMP_TEMOIN_TYPES_ERP_AUTRES } from "@/lib/etablissements/types-erp-affiches";
 
 const h = vi.hoisted(() => {
@@ -18,8 +17,11 @@ const h = vi.hoisted(() => {
       entrepriseId: "ent-1",
       raisonDisplay: "Le Bistrot",
       adresse: "1 rue des Lilas",
+      siret: "12002701600357" as string | null,
       codeNaf: "56.10A",
       effectifSurSite: 5,
+      // L'entreprise du site, lue par la modification (SIREN, 2026-10-26).
+      entreprise: { siren: "120027016" as string | null, userId: "user-1" },
       estEtablissementTravail: true,
       estERP: false,
       estIGH: false,
@@ -36,6 +38,12 @@ const h = vi.hoisted(() => {
       epiPresentsDetail: null as string | null,
     },
     nbVersionsDuerp: 0,
+    // Les autres établissements de l'entreprise, vus par la suppression.
+    nbEtablissementsRestants: 0,
+    // Une autre entreprise du compte qui porterait déjà le SIREN saisi.
+    autreEntrepriseDuSiren: null as { id: string } | null,
+    entreprisesSupprimees: [] as string[],
+    sirensPoses: [] as string[],
     supprimes: [] as string[],
     crees: [] as Record<string, unknown>[],
     // Ce que le cookie d'établissement actif a reçu (ADR-028).
@@ -66,6 +74,18 @@ const h = vi.hoisted(() => {
       },
       // La photo du lieu (2026-10-25) : elle part aussi.
       findMany: async () => [{ photoCle: "photos/lieu.jpg" }],
+      count: async () => db.nbEtablissementsRestants,
+    },
+    entreprise: {
+      findFirst: async () => db.autreEntrepriseDuSiren,
+      update: async ({ data }: { data: { siren: string } }) => {
+        db.sirensPoses.push(data.siren);
+        return {};
+      },
+      delete: async ({ where }: { where: { id: string } }) => {
+        db.entreprisesSupprimees.push(where.id);
+        return {};
+      },
     },
     duerpVersion: {
       count: async () => db.nbVersionsDuerp,
@@ -136,22 +156,15 @@ vi.mock("@/lib/calendrier/reconciliation", () => ({
   marquerCalendrierPerime: h.marquerCalendrierPerime,
 }));
 
-const { creerEtablissement, modifierEtablissement, supprimerEtablissement } =
-  await import("./actions");
+const { modifierEtablissement, supprimerEtablissement } = await import("./actions");
 
 /** Le formulaire poste toutes ses cases : les non cochées sont absentes. */
-/**
- * Le formulaire de CRÉATION : les trois régimes y sont répondus en Oui / Non
- * (2026-09-27, A2) — sans réponse, la porte refuse.
- */
-function creation(over: Record<string, string> = {}): FormData {
-  return formulaire({ estERP: "non", estIGH: "non", estHabitation: "non", ...over });
-}
 
 function formulaire(over: Record<string, string> = {}): FormData {
   const fd = new FormData();
   fd.set("raisonDisplay", "Le Bistrot");
   fd.set("adresse", "1 rue des Lilas");
+  fd.set("siret", "12002701600357");
   fd.set("codeNaf", "56.10A");
   fd.set("effectifSurSite", "5");
   fd.set("estEtablissementTravail", "on");
@@ -175,82 +188,16 @@ beforeEach(() => {
   h.db.etablissement.epiPresents = null;
   h.db.etablissement.epiPresentsDetail = null;
   h.db.nbVersionsDuerp = 0;
+  h.db.nbEtablissementsRestants = 0;
+  h.db.autreEntrepriseDuSiren = null;
+  h.db.entreprisesSupprimees = [];
+  h.db.sirensPoses = [];
+  h.db.etablissement.siret = "12002701600357";
+  h.db.etablissement.entreprise = { siren: "120027016", userId: "user-1" };
   h.db.supprimes = [];
   h.db.crees = [];
   h.db.cookiePose = null;
   h.genererCalendrier.mockClear();
-});
-
-describe("creerEtablissement — le second dossier d'un compte (ADR-028)", () => {
-  /**
-   * Le verrou retiré ici ne refusait pas : il REDIRIGEAIT vers l'établissement
-   * existant. Un dirigeant qui remplissait le formulaire pour son deuxième
-   * commerce se retrouvait sur la fiche du premier, sans un mot — sa saisie
-   * était perdue et rien ne disait pourquoi.
-   *
-   * Vérifié en le cassant : en remettant le `findFirst` + `redirect`, ces deux
-   * tests tombent, et eux seuls.
-   */
-  it("crée, au lieu de renvoyer vers l'établissement existant", async () => {
-    // Le faux Prisma rend TOUJOURS un établissement sur `findFirst` : c'est
-    // exactement l'état qui déclenchait l'ancien renvoi.
-    await expect(
-      creerEtablissement("ent-1", { status: "idle" }, creation()),
-    ).rejects.toThrow("NEXT_REDIRECT");
-
-    expect(h.db.crees).toHaveLength(1);
-    expect(h.db.crees[0]).toMatchObject({ entrepriseId: "ent-1" });
-  });
-
-  it("ouvre le bâtiment principal du nouveau site (ADR-019)", async () => {
-    // Tout établissement naît avec le sien : sans lui, les équipements du
-    // second site n'auraient nulle part où être rangés.
-    await expect(
-      creerEtablissement("ent-1", { status: "idle" }, creation()),
-    ).rejects.toThrow("NEXT_REDIRECT");
-
-    expect(h.db.crees[0].batiments).toEqual({
-      create: { nom: NOM_BATIMENT_PRINCIPAL, ordre: 0 },
-    });
-  });
-
-  it("bascule l'établissement actif sur celui qu'on vient de créer", async () => {
-    // Sans ce trait, l'accueil renverrait au premier site juste après la
-    // création du second : on aurait rempli un formulaire pour atterrir
-    // ailleurs.
-    await expect(
-      creerEtablissement("ent-1", { status: "idle" }, creation()),
-    ).rejects.toThrow("NEXT_REDIRECT");
-
-    expect(h.db.cookiePose).toEqual({
-      nom: "etablissement-actif",
-      valeur: "etab-1",
-    });
-  });
-
-  it("génère le calendrier du nouvel établissement avant d'y conduire", async () => {
-    // Revue du 2026-09-14 : le calendrier n'était généré qu'à la première
-    // déclaration d'équipement ou à l'ouverture de la page Calendrier. Un site
-    // sans appareil doit pourtant ses obligations d'établissement (ADR-022), et
-    // son tableau de bord se disait vide en attendant.
-    await expect(
-      creerEtablissement("ent-1", { status: "idle" }, creation()),
-    ).rejects.toThrow("NEXT_REDIRECT");
-
-    expect(h.genererCalendrier).toHaveBeenCalledWith("etab-1");
-  });
-
-  it("refuse un formulaire invalide sans rien créer", async () => {
-    // La borne basse : lever le verrou n'a pas levé la validation.
-    const res = await creerEtablissement(
-      "ent-1",
-      { status: "idle" },
-      formulaire({ raisonDisplay: "" }),
-    );
-
-    expect(res.status).toBe("error");
-    expect(h.db.crees).toHaveLength(0);
-  });
 });
 
 describe("modifierEtablissement — recalcul des obligations", () => {
@@ -355,6 +302,20 @@ describe("supprimerEtablissement — conservation 40 ans", () => {
       "NEXT_REDIRECT",
     );
     expect(h.db.supprimes).toEqual(["etab-1"]);
+  });
+
+  it("supprime l'entreprise avec son dernier établissement, et elle seule", async () => {
+    // Restée seule, elle garderait un SIREN et un effectif que plus rien
+    // n'affiche, et qu'un futur site du même SIREN reprendrait tels quels.
+    h.db.nbEtablissementsRestants = 0;
+    await expect(supprimerEtablissement("etab-1")).rejects.toThrow("NEXT_REDIRECT");
+    expect(h.db.entreprisesSupprimees).toEqual(["ent-1"]);
+  });
+
+  it("garde l'entreprise tant qu'un autre de ses établissements reste", async () => {
+    h.db.nbEtablissementsRestants = 1;
+    await expect(supprimerEtablissement("etab-1")).rejects.toThrow("NEXT_REDIRECT");
+    expect(h.db.entreprisesSupprimees).toEqual([]);
   });
 });
 
@@ -523,31 +484,6 @@ describe("modifierEtablissement — la fiche n'écrit plus la présence d'EPI (2
   });
 });
 
-describe("creerEtablissement — aucun régime lu « non » sans réponse (2026-09-27, A2)", () => {
-  // La case vide valait « non » : un second établissement recevant du public
-  // naissait non-ERP. Éprouvé en retirant le refus `regimesSansReponse`.
-  it.each(["estERP", "estIGH", "estHabitation"])("%s absent : refus, rien n'est créé", async (champ) => {
-    const fd = creation();
-    fd.delete(champ);
-    const res = await creerEtablissement("ent-1", { status: "idle" }, fd);
-    expect(res.status).toBe("error");
-    expect(res.status === "error" && res.fieldErrors?.[champ]).toBeTruthy();
-  });
-
-  it("« oui » à l'ERP s'écrit vrai, « non » faux", async () => {
-    const avant = h.db.crees.length;
-    await creerEtablissement(
-      "ent-1",
-      { status: "idle" },
-      creation({ estERP: "oui", typeErp: "N", categorieErp: "N5" }),
-    ).catch(() => undefined);
-    const data = h.db.crees[avant] as Record<string, unknown>;
-    expect(data.estERP).toBe(true);
-    expect(data.estIGH).toBe(false);
-    expect(data.estHabitation).toBe(false);
-  });
-});
-
 /** Le formulaire, avec une ou plusieurs cases « autres types » cochées (ADR-045). */
 function avecAutresTypes(fd: FormData, types: string[]): FormData {
   for (const t of types) fd.append("typesErpAutres", t);
@@ -674,27 +610,6 @@ describe("plusieurs types d'ERP — l'écriture respecte les contraintes de la b
     expect(res.status).toBe("error");
   });
 
-  it("à la création, la question du sommeil est due dès qu'un des types l'appelle", async () => {
-    const sansReponse = await creerEtablissement(
-      "ent-1",
-      { status: "idle" },
-      avecAutresTypes(creation({ estERP: "oui", typeErp: "N", categorieErp: "N3" }), ["O"]),
-    );
-    expect(sansReponse.status).toBe("error");
-    expect(h.db.crees).toEqual([]);
-
-    await expect(
-      creerEtablissement(
-        "ent-1",
-        { status: "idle" },
-        avecAutresTypes(
-          creation({ estERP: "oui", typeErp: "N", categorieErp: "N3", comporteLocauxSommeilPublic: "oui" }),
-          ["O"],
-        ),
-      ),
-    ).rejects.toThrow("NEXT_REDIRECT");
-    expect(h.db.crees[0]).toMatchObject({ typeErp: "N", typesErpAutres: ["O"], comporteLocauxSommeilPublic: true });
-  });
 });
 
 describe("plusieurs types d'ERP — la fiche poste la liste entière, avec son témoin (ADR-045, lot 3)", () => {
@@ -730,7 +645,7 @@ describe("plusieurs types d'ERP — la fiche poste la liste entière, avec son t
   });
 });
 
-describe("filtre à l'accueil — création et fiche (2026-10-17)", () => {
+describe("filtre à l'accueil — la fiche (2026-10-17 ; la création est au parcours d'onboarding)", () => {
   const avecAutres = (fd: FormData, autres: string[]) => {
     fd.set(CHAMP_TEMOIN_TYPES_ERP_AUTRES, "1");
     for (const t of autres) fd.append("typesErpAutres", t);
@@ -738,27 +653,6 @@ describe("filtre à l'accueil — création et fiche (2026-10-17)", () => {
   };
   const champs = (res: { status: string; fieldErrors?: Record<string, unknown> }) =>
     Object.keys(res.fieldErrors ?? {});
-
-  it("création : un type J est refusé, rien n'est écrit", async () => {
-    const res = await creerEtablissement("ent-1", { status: "idle" }, creation({ estERP: "oui", typeErp: "J", categorieErp: "N4" }));
-    expect(res.status).toBe("error");
-    expect(champs(res as never)).toContain("typeErp");
-    expect(h.db.crees).toHaveLength(0);
-  });
-
-  it("création : un R sans enfants passe, et la réponse n'est pas écrite", async () => {
-    await expect(
-      creerEtablissement("ent-1", { status: "idle" }, creation({ estERP: "oui", typeErp: "R", categorieErp: "N5", accueilEnfants: "non", comporteLocauxSommeilPublic: "non" })),
-    ).rejects.toThrow("NEXT_REDIRECT");
-    expect(h.db.crees).toHaveLength(1);
-    expect(h.db.crees[0]).not.toHaveProperty("accueilEnfants");
-  });
-
-  it("création : un R qui accueille des enfants est refusé", async () => {
-    const res = await creerEtablissement("ent-1", { status: "idle" }, creation({ estERP: "oui", typeErp: "R", categorieErp: "N5", accueilEnfants: "oui", comporteLocauxSommeilPublic: "non" }));
-    expect(champs(res as never)).toContain("accueilEnfants");
-    expect(h.db.crees).toHaveLength(0);
-  });
 
   it("fiche : un restaurant qui passe en J est refusé, la base ne bouge pas", async () => {
     h.db.etablissement.estERP = true;
@@ -825,15 +719,47 @@ describe("filtre à l'accueil — création et fiche (2026-10-17)", () => {
   });
 });
 
-describe("creerEtablissement — un refus de périmètre se distingue d'une saisie à corriger (2026-10-24)", () => {
-  it("plus de cinquante salariés : refus de périmètre", async () => {
-    const r = await creerEtablissement("ent-1", { status: "idle" }, creation({ effectifSurSite: "60" }));
-    expect(r).toMatchObject({ status: "error", refusPerimetre: true });
+
+describe("modifierEtablissement — le SIRET reste dans son entreprise (2026-10-26)", () => {
+  it("un SIRET du même SIREN s'enregistre", async () => {
+    // Le NIC change, le SIREN non : même entreprise.
+    const res = await modifierEtablissement(
+      "etab-1",
+      { status: "idle" },
+      formulaire({ siret: "120 027 016 00365" }),
+    );
+    expect(res.status).toBe("success");
+    expect(h.db.etablissement.siret).toBe("12002701600365");
   });
 
-  it("un ERP sans type : une réponse manquante, pas un refus de périmètre", async () => {
-    const r = await creerEtablissement("ent-1", { status: "idle" }, creation({ estERP: "oui" }));
-    expect(r.status).toBe("error");
-    expect(r.status === "error" && r.refusPerimetre).toBe(false);
+  it("refuse un SIRET d'une autre entreprise, et n'écrit rien", async () => {
+    const res = await modifierEtablissement(
+      "etab-1",
+      { status: "idle" },
+      formulaire({ siret: "35600000000048" }),
+    );
+    expect(res.status === "error" && res.fieldErrors?.siret?.[0]).toMatch(/autre entreprise/);
+    expect(h.db.etablissement.siret).toBe("12002701600357");
+  });
+
+  it("exige le SIRET d'un site ancien qui n'en a pas", async () => {
+    h.db.etablissement.siret = null;
+    const res = await modifierEtablissement("etab-1", { status: "idle" }, formulaire({ siret: "" }));
+    expect(res.status === "error" && res.fieldErrors?.siret?.[0]).toBeTruthy();
+  });
+
+  it("donne son SIREN à une entreprise ancienne qui n'en a pas", async () => {
+    h.db.etablissement.entreprise = { siren: null, userId: "user-1" };
+    const res = await modifierEtablissement("etab-1", { status: "idle" }, formulaire());
+    expect(res.status).toBe("success");
+    expect(h.db.sirensPoses).toEqual(["120027016"]);
+  });
+
+  it("refuse le SIREN qu'une autre entreprise du compte porte déjà", async () => {
+    h.db.etablissement.entreprise = { siren: null, userId: "user-1" };
+    h.db.autreEntrepriseDuSiren = { id: "ent-2" };
+    const res = await modifierEtablissement("etab-1", { status: "idle" }, formulaire());
+    expect(res.status === "error" && res.fieldErrors?.siret?.[0]).toMatch(/autre entreprise/);
+    expect(h.db.sirensPoses).toEqual([]);
   });
 });

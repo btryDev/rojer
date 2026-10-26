@@ -98,25 +98,10 @@ const EXEMPTIONS = new Map<string, Exemption>([
       raison: "Mot de passe oublié, appelant non connecté : la seule écriture est le compteur de limitation de débit.",
     },
   ],
-  [
-    "lib/entreprises/actions.ts:creerEntreprise",
-    {
-      garde: "requireUser",
-      raison:
-        "Crée la racine de la tenancy POUR SOI — `data: { userId: user.id }` " +
-        "— : il n'y a pas encore d'appartenance à confronter, c'est cette " +
-        "écriture qui la fonde.",
-    },
-  ],
-  [
-    "lib/onboarding/actions.ts:finaliserOnboarding",
-    {
-      garde: "requireUser",
-      raison:
-        "Même cas : l'entreprise et son premier établissement naissent dans " +
-        "la même transaction, sous le `userId` du compte connecté.",
-    },
-  ],
+  // ~~`creerEntreprise` et `finaliserOnboarding`, exemptées : elles fondaient
+  // la racine de la tenancy~~ [2026-10-26 : la première est retirée ; la
+  // seconde borne désormais par elle-même — son `upsert` cherche l'entreprise
+  // par `(userId, siren)`, l'identifiant du compte connecté en clé.]
   [
     "lib/signatures/actions.ts:poserSignatureAvecToken",
     {

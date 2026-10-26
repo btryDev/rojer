@@ -20,7 +20,8 @@ const etab = {
   entrepriseId: "ent",
   adresse: "12 rue Montorgueil, 75001 Paris",
   effectifSurSite: 8,
-  codeNaf: null,
+  siret: null,
+  codeNaf: "56.10A",
   estEtablissementTravail: true,
   estERP: true,
   estIGH: false,
@@ -29,7 +30,7 @@ const etab = {
   typesErpAutres: [],
   categorieErp: "N5",
   classeIgh: null,
-  entreprise: { raisonSociale: "SARL", siret: null, codeNaf: "56.10A", effectif: 8 },
+  entreprise: { raisonSociale: "SARL", effectif: 8 },
 } as unknown as Parameters<typeof HeroEtablissement>[0]["etablissement"];
 
 const zones = [

@@ -63,9 +63,11 @@ export function creerVerificateurSupabase(
 /**
  * Résout les établissements d'un utilisateur Supabase.
  *
- * `Entreprise.userId` est unique (ADR-005) : le `findUnique` reste juste, et
+ * ~~`Entreprise.userId` est unique (ADR-005) : le `findUnique` reste juste, et
  * c'est ce maillon-là qui cloisonne — un porteur ne peut voir que le contenu de
- * SON entreprise, quelle que soit la suite.
+ * SON entreprise, quelle que soit la suite.~~ [2026-10-26 : un compte porte
+ * plusieurs entreprises (une par SIREN). Le maillon qui cloisonne est le même,
+ * `entreprise.userId`, lu en filtre et non plus en clé unique.]
  *
  * Ce qui a changé le 2026-09-01 (ADR-028) : la relation `etablissements` peut
  * en porter plusieurs. Cette fonction rendait auparavant
@@ -81,25 +83,19 @@ export function creerVerificateurSupabase(
  * refus, pas une erreur.
  *
  * L'ordre est celui de la création, comme partout ailleurs dans le produit
- * (`listerEtablissementsDeLEntreprise`, `getOptionalUserEtablissement`) : un
+ * (`listerEtablissementsDuCompte`, `getOptionalUserEtablissement`) : un
  * ordre stable, sinon la liste rendue à un porteur qui doit choisir changerait
  * d'un appel à l'autre.
  */
 export const chercherEtablissementDeUtilisateur: ChercheurEtablissement =
   async (userId) => {
-    const db = dbMcp();
-    const entreprise = await db.entreprise.findUnique({
-      where: { userId },
-      select: {
-        etablissements: {
-          select: { id: true, raisonDisplay: true },
-          orderBy: { createdAt: "asc" },
-        },
-      },
+    // Tous les établissements du porteur, quelle que soit l'entreprise qui
+    // les porte : un compte en suit plusieurs depuis le 2026-10-26.
+    const etablissements = await dbMcp().etablissement.findMany({
+      where: { entreprise: { userId } },
+      select: { id: true, raisonDisplay: true },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
     });
 
-    return (entreprise?.etablissements ?? []).map((e) => ({
-      id: e.id,
-      nom: e.raisonDisplay,
-    }));
+    return etablissements.map((e) => ({ id: e.id, nom: e.raisonDisplay }));
   };

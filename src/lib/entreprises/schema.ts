@@ -13,26 +13,13 @@ export const MESSAGE_REFUS_EFFECTIF_ENTREPRISE = `Rojer prend en charge les stru
  *  (int4) : au-delà, l'écriture échoue. */
 const EFFECTIF_COLONNE_MAX = 2_147_483_647;
 
-const siretRegex = /^\d{14}$/;
-const nafRegex = /^\d{2}\.?\d{2}[A-Z]?$/;
-
 export const entrepriseSchema = z.object({
   raisonSociale: z
     .string()
     .trim()
     .min(1, "La raison sociale est obligatoire")
     .max(200, "200 caractères maximum"),
-  siret: z
-    .string()
-    .trim()
-    .regex(siretRegex, "SIRET = 14 chiffres")
-    .optional()
-    .or(z.literal("").transform(() => undefined)),
-  codeNaf: z
-    .string()
-    .trim()
-    .toUpperCase()
-    .regex(nafRegex, "Code NAF invalide (ex. 56.10A)"),
+  // ~~siret, codeNaf~~ [2026-10-26 : au site (`etablissementSchema`).]
   // Zéro est une réponse : l'effectif compte les salariés de l'entreprise
   // apprentis non compris (L. 1111-3), et une entreprise peut n'employer qu'un
   // apprenti (C37). Le vide n'en est pas une — `z.coerce` en ferait un zéro.
@@ -45,8 +32,8 @@ export const entrepriseSchema = z.object({
       // La borne de la COLONNE, pas celle du produit (ASVS V2.2.1,
       // 2026-10-13) : 10^12 passait le schéma, puis Postgres le refusait en
       // erreur 500. Les cinquante salariés de l'ADR-031 ne valent qu'à la
-      // création (`entrepriseCreationSchema`) ; une entreprise existante qui
-      // les dépasse reste modifiable.
+      // création (`onboardingSchema`) ; une entreprise existante qui les
+      // dépasse reste modifiable.
       .max(EFFECTIF_COLONNE_MAX, "Effectif hors limites"),
   ),
   // Même borne que l'adresse d'un établissement et que celle du parcours.
@@ -59,21 +46,8 @@ export const entrepriseSchema = z.object({
 
 export type EntrepriseInput = z.infer<typeof entrepriseSchema>;
 
-/**
- * La porte de CRÉATION d'une entreprise : la borne s'y ajoute. Le schéma de
- * base sert aussi à MODIFIER une entreprise existante, et celle-là n'est jamais
- * refusée : comme le site (ADR-031 § 1 bis), une entreprise qui passe de
- * quarante-cinq à soixante salariés reste servie, et son dossier porte le
- * manque (`perimetre/couverture.ts`, axe `effectif`).
- */
-export const entrepriseCreationSchema = entrepriseSchema.superRefine(
-  (val, ctx) => {
-    if (val.effectif > EFFECTIF_MAX) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["effectif"],
-        message: MESSAGE_REFUS_EFFECTIF_ENTREPRISE,
-      });
-    }
-  },
-);
+// ~~`entrepriseCreationSchema` — la porte de création d'une entreprise~~
+// [2026-10-26 : retirée avec `/entreprises/nouvelle`. Une entreprise naît avec
+// son premier établissement, et la borne de l'ADR-031 se fait respecter au
+// parcours (`onboardingSchema`, effectif de l'entreprise) et, pour une
+// entreprise reprise, par `finaliserOnboarding`.]

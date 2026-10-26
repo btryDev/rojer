@@ -13,6 +13,12 @@
 //
 // Module **pur** : ni Prisma, ni React.
 
+import {
+  MESSAGE_SIRET_INVALIDE,
+  MESSAGE_SIRET_REQUIS,
+  estSiretValide,
+  normaliserSiret,
+} from "@/lib/etablissements/siret";
 import { evaluerScopeSecteur } from "@/lib/onboarding/scope";
 import { questionSommeilPosee } from "@/lib/etablissements/schema";
 import {
@@ -123,6 +129,11 @@ export function validerIdentite(s: OnboardingState): Blocage | null {
       champ: "raisonSociale",
       message: "Indiquez la raison sociale pour continuer.",
     };
+  // Même règle que le serveur (`siretSchema`) : obligatoire depuis le
+  // 2026-10-26, et la clé de contrôle se vérifie avant de passer l'étape.
+  const siret = normaliserSiret(s.siret);
+  if (siret === "") return { champ: "siret", message: MESSAGE_SIRET_REQUIS };
+  if (!estSiretValide(siret)) return { champ: "siret", message: MESSAGE_SIRET_INVALIDE };
   if (s.adresseRue.trim().length < 3)
     return { champ: "adresseRue", message: "Indiquez le numéro et la rue." };
   if (!/^\d{5}$/.test(s.adresseCodePostal.trim()))

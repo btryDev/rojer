@@ -164,10 +164,10 @@ function formaterFiche(f: FicheEtablissement, parc: FaitParc): string {
     `Adresse : ${f.adresse}`,
     `Régimes : ${formaterRegimes(f)}`,
     `Effectif sur site : ${f.effectifSurSite}`,
-    `Code NAF : ${tiret(f.codeNaf ?? f.entreprise.codeNaf)}`,
+    `Code NAF : ${tiret(f.codeNaf)}`,
+    `SIRET : ${tiret(f.siret)}`,
     "",
     `Entreprise : ${f.entreprise.raisonSociale}`,
-    `SIRET : ${tiret(f.entreprise.siret)}`,
     `Effectif entreprise : ${f.entreprise.effectif}`,
     "",
     // En service seulement, comme l'axe `inventaire` : un appareil retiré du

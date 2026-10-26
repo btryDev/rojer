@@ -56,6 +56,8 @@ describe("fiche établissement : la question du SSI A ou B (DF 10 § 3)", () => 
     const base = {
       raisonDisplay: "Magasin",
       adresse: "1 rue",
+      siret: "12002701600357",
+      codeNaf: "47.11B",
       effectifSurSite: 10,
       estEtablissementTravail: true,
       estERP: true,

@@ -7,28 +7,52 @@
 // vide tant que personne n'ouvrait la page Calendrier.
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { NOM_BATIMENT_PRINCIPAL } from "@/lib/batiments/schema";
 
 const h = vi.hoisted(() => {
   const ordre: string[] = [];
+  // Les entreprises en base, par `(userId, siren)` — la clé de l'upsert.
+  const entreprises = new Map<
+    string,
+    { id: string; raisonSociale: string; effectif: number }
+  >();
+  type ArgsUpsert = {
+    where: { userId_siren: { userId: string; siren: string } };
+    create: Record<string, unknown>;
+    update: Record<string, unknown>;
+  };
   const tx = {
     entreprise: {
-      create: vi.fn(async (args: { data: Record<string, unknown> }) => {
-        void args;
-        ordre.push("entreprise");
-        return { id: "ent-1" };
+      upsert: vi.fn(async (args: ArgsUpsert) => {
+        const { userId, siren } = args.where.userId_siren;
+        const cle = `${userId}|${siren}`;
+        let e = entreprises.get(cle);
+        if (!e) {
+          e = {
+            id: `ent-${entreprises.size + 1}`,
+            raisonSociale: String(args.create.raisonSociale),
+            effectif: Number(args.create.effectif),
+          };
+          entreprises.set(cle, e);
+          ordre.push("entreprise");
+        }
+        return { ...e };
       }),
     },
     etablissement: {
       create: vi.fn(async (args: { data: Record<string, unknown> }) => {
-        void args;
         ordre.push("etablissement");
-        return { id: "etab-1", entrepriseId: "ent-1" };
+        return { id: "etab-1", entrepriseId: String(args.data.entrepriseId) };
       }),
     },
   };
   return {
     ordre,
+    entreprises,
     tx,
+    poserEtablissementActif: vi.fn(async (id: string) => {
+      ordre.push(`cookie:${id}`);
+    }),
     regenererApresMutation: vi.fn(async () => {
       ordre.push("generation");
       return true;
@@ -51,8 +75,8 @@ vi.mock("@/lib/prisma", () => ({
 vi.mock("@/lib/auth/require-user", () => ({
   requireUser: vi.fn(async () => ({ id: "user-1" })),
 }));
-vi.mock("@/lib/auth/scope", () => ({
-  getOptionalUserEtablissement: vi.fn(async () => null),
+vi.mock("@/lib/etablissements/etablissement-actif", () => ({
+  poserEtablissementActif: h.poserEtablissementActif,
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/navigation", () => ({
@@ -70,6 +94,8 @@ const { finaliserOnboarding } = await import("./actions");
 function formulaire(over: Record<string, string> = {}): FormData {
   const fd = new FormData();
   fd.set("raisonSociale", "Cabinet Martin");
+  // Le SIRET public du siège de l'INSEE : une clé de contrôle juste.
+  fd.set("siret", "12002701600357");
   fd.set("adresse", "12 rue des halles, 44000 Nantes");
   fd.set("codeNaf", "69.10Z");
   fd.set("effectifSurSite", "6");
@@ -86,6 +112,8 @@ function formulaire(over: Record<string, string> = {}): FormData {
 
 beforeEach(() => {
   h.ordre.length = 0;
+  h.entreprises.clear();
+  h.tx.entreprise.upsert.mockClear();
   h.regenererApresMutation.mockClear();
   h.tx.etablissement.create.mockClear();
 });
@@ -102,6 +130,7 @@ describe("finaliserOnboarding — le calendrier naît avec l'établissement", ()
       "etablissement",
       "commit",
       "generation",
+      "cookie:etab-1",
       "redirection",
     ]);
   });
@@ -174,7 +203,7 @@ describe("les deux effectifs (C37)", () => {
         formulaire({ effectifSurSite: "12", effectifEntreprise: "10" }),
       ),
     ).rejects.toThrow("NEXT_REDIRECT");
-    const entreprise = h.tx.entreprise.create.mock.calls.at(-1)?.[0].data;
+    const entreprise = h.tx.entreprise.upsert.mock.calls.at(-1)?.[0].create;
     const etablissement = h.tx.etablissement.create.mock.calls.at(-1)?.[0].data;
     expect(entreprise?.effectif).toBe(10);
     expect(etablissement?.effectifSurSite).toBe(12);
@@ -247,5 +276,102 @@ describe("finaliserOnboarding — matières « oui », pas de nombre exigé (rev
         formulaire({ estERP: "true", typeErp: "N", categorieErp: "N5", manipuleMatieresR422722: "oui" }),
       ),
     ).rejects.toThrow("NEXT_REDIRECT");
+  });
+});
+
+describe("finaliserOnboarding — une entreprise par SIREN, rattachée dans le compte (2026-10-26)", () => {
+  it("exige un SIRET valide, et ne crée rien sans lui", async () => {
+    for (const siret of ["", "12002701600358"]) {
+      const res = await finaliserOnboarding({ status: "idle" }, formulaire({ siret }));
+      expect(res.status === "error" && res.fieldErrors?.siret?.[0]).toBeTruthy();
+    }
+    expect(h.tx.entreprise.upsert).not.toHaveBeenCalled();
+    expect(h.tx.etablissement.create).not.toHaveBeenCalled();
+  });
+
+  it("un SIREN nouveau crée l'entreprise ; le SIRET et le NAF vont au site", async () => {
+    await expect(
+      finaliserOnboarding({ status: "idle" }, formulaire({ siret: "120 027 016 00357" })),
+    ).rejects.toThrow("NEXT_REDIRECT");
+    const appel = h.tx.entreprise.upsert.mock.calls.at(-1)?.[0];
+    expect(appel?.where).toEqual({ userId_siren: { userId: "user-1", siren: "120027016" } });
+    expect(appel?.create).toMatchObject({ userId: "user-1", siren: "120027016", raisonSociale: "Cabinet Martin" });
+    expect(appel?.create).not.toHaveProperty("siret");
+    expect(appel?.create).not.toHaveProperty("codeNaf");
+    const etab = h.tx.etablissement.create.mock.calls.at(-1)?.[0].data;
+    expect(etab).toMatchObject({ siret: "12002701600357", codeNaf: "69.10Z", raisonDisplay: "Cabinet Martin" });
+    // ADR-019 : tout établissement naît avec son bâtiment principal — venu des
+    // tests de `creerEtablissement`, retirée.
+    expect(etab?.batiments).toEqual({ create: { nom: NOM_BATIMENT_PRINCIPAL, ordre: 0 } });
+  });
+
+  it("un second site du même SIREN rejoint l'entreprise et n'en réécrit rien", async () => {
+    await expect(finaliserOnboarding({ status: "idle" }, formulaire())).rejects.toThrow("NEXT_REDIRECT");
+    await expect(
+      finaliserOnboarding(
+        { status: "idle" },
+        formulaire({
+          siret: "12002701600357",
+          raisonSociale: "Autre nom posté",
+          effectifEntreprise: "2",
+          nomUsage: "Cabinet Martin — Gare",
+        }),
+      ),
+    ).rejects.toThrow("NEXT_REDIRECT");
+    expect(h.entreprises.size).toBe(1);
+    // Rien n'est écrit sur l'entreprise existante : ni le nom ni l'effectif postés.
+    expect(h.tx.entreprise.upsert.mock.calls.at(-1)?.[0].update).toEqual({});
+    expect([...h.entreprises.values()][0]).toMatchObject({ raisonSociale: "Cabinet Martin", effectif: 6 });
+    const [premier, second] = h.tx.etablissement.create.mock.calls.map((c) => c[0].data);
+    expect(second.entrepriseId).toBe(premier.entrepriseId);
+    expect(second.raisonDisplay).toBe("Cabinet Martin — Gare");
+  });
+
+  it("un autre SIREN ouvre une seconde entreprise", async () => {
+    await expect(finaliserOnboarding({ status: "idle" }, formulaire())).rejects.toThrow("NEXT_REDIRECT");
+    await expect(
+      finaliserOnboarding({ status: "idle" }, formulaire({ siret: "35600000000048" })),
+    ).rejects.toThrow("NEXT_REDIRECT");
+    expect(h.entreprises.size).toBe(2);
+  });
+
+  it("refuse un site dont l'entreprise reprise dépasse la borne, même si le formulaire poste moins", async () => {
+    h.entreprises.set("user-1|120027016", { id: "ent-9", raisonSociale: "Grande SARL", effectif: 60 });
+    const res = await finaliserOnboarding({ status: "idle" }, formulaire({ effectifEntreprise: "5" }));
+    expect(res.status === "error" && res.fieldErrors?.effectifEntreprise?.[0]).toBeTruthy();
+    expect(h.tx.etablissement.create).not.toHaveBeenCalled();
+  });
+
+  it("pose le cookie de l'établissement actif sur le site créé, avant la redirection", async () => {
+    await expect(finaliserOnboarding({ status: "idle" }, formulaire())).rejects.toThrow("NEXT_REDIRECT");
+    const i = h.ordre.indexOf("cookie:etab-1");
+    expect(i).toBeGreaterThan(h.ordre.indexOf("commit"));
+    expect(i).toBeLessThan(h.ordre.indexOf("redirection"));
+  });
+});
+
+// Venus de `creerEtablissement` (retiré le 2026-10-26) : la seule porte de
+// création porte le filtre à l'accueil.
+describe("finaliserOnboarding — filtre à l'accueil (2026-10-17)", () => {
+  const erp = (over: Record<string, string>) =>
+    formulaire({ estERP: "true", categorieErp: "N5", personnesPresentesHabituellement: "30", ...over });
+
+  it("un type J est refusé, rien n'est écrit", async () => {
+    const res = await finaliserOnboarding({ status: "idle" }, erp({ typeErp: "J", categorieErp: "N4", comporteLocauxSommeilPublic: "non" }));
+    expect(res.status === "error" && res.fieldErrors?.typeErp?.[0]).toBeTruthy();
+    expect(h.tx.etablissement.create).not.toHaveBeenCalled();
+  });
+
+  it("un R sans enfants passe, et la réponse n'est pas écrite", async () => {
+    await expect(
+      finaliserOnboarding({ status: "idle" }, erp({ typeErp: "R", accueilEnfants: "non", comporteLocauxSommeilPublic: "non" })),
+    ).rejects.toThrow("NEXT_REDIRECT");
+    expect(h.tx.etablissement.create.mock.calls.at(-1)?.[0].data).not.toHaveProperty("accueilEnfants");
+  });
+
+  it("un R qui accueille des enfants est refusé", async () => {
+    const res = await finaliserOnboarding({ status: "idle" }, erp({ typeErp: "R", accueilEnfants: "oui", comporteLocauxSommeilPublic: "non" }));
+    expect(res.status === "error" && res.fieldErrors?.accueilEnfants?.[0]).toBeTruthy();
+    expect(h.tx.etablissement.create).not.toHaveBeenCalled();
   });
 });

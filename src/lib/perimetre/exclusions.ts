@@ -30,8 +30,11 @@
 //
 // D'où la forme surprenante de `refusAlEntree()` : il **interroge la porte**
 // plutôt que de la décrire. ~~Deux dossiers-sondes sont soumis au schéma de
-// création~~ [2026-10-18 : sept dossiers-sondes sont soumis à deux schémas de
-// création — six à celui de l'établissement, un à celui de l'entreprise], et
+// création~~ ~~[2026-10-18 : sept dossiers-sondes sont soumis à deux schémas de
+// création — six à celui de l'établissement, un à celui de l'entreprise]~~
+// [2026-10-26 : sept dossiers-sondes sont soumis à LA porte de création, le
+// schéma du parcours d'onboarding — les deux autres portes ont été retirées
+// avec `/etablissements/nouveau` et `/entreprises/nouvelle`], et
 // ce sont ses propres messages qui sont rendus. Si la règle
 // disparaît du schéma, la sonde ne rend plus rien, et le test tombe — au lieu
 // d'une page qui continuerait d'annoncer un refus que le produit ne fait plus.
@@ -41,11 +44,8 @@
 // Ce module a des arêtes sortantes au runtime (Zod, le corpus) : c'est
 // justement pour cela qu'il n'est PAS dans `couverture.ts`, qui reste pur.
 
-import {
-  EFFECTIF_MAX,
-  etablissementCreationSchema,
-} from "@/lib/etablissements/schema";
-import { entrepriseCreationSchema } from "@/lib/entreprises/schema";
+import { EFFECTIF_MAX } from "@/lib/etablissements/schema";
+import { onboardingSchema } from "@/lib/onboarding/schema";
 import { CORPUS, EXCLUSIONS } from "@/lib/referentiels/corpus";
 import type { MotifExclusion } from "@/lib/referentiels/corpus";
 import { nonPorte } from "./non-couverture";
@@ -87,19 +87,23 @@ export type RefusAlEntree = {
   types?: readonly string[];
 };
 
-/** Un dossier que la porte accepte : chaque sonde n'en change qu'une chose. */
+/**
+ * Un dossier que la porte accepte : chaque sonde n'en change qu'une chose.
+ * Le SIRET est celui, public, du siège de l'INSEE.
+ */
 const DOSSIER_SONDE = {
-  raisonDisplay: "Sonde de périmètre",
+  raisonSociale: "Sonde de périmètre",
+  siret: "12002701600357",
   adresse: "1 rue de la Sonde, 75000 Paris",
   codeNaf: "56.10A",
   effectifSurSite: 1,
+  effectifEntreprise: 1,
   personnesPresentesHabituellement: null,
   manipuleMatieresR422722: null,
   estEtablissementTravail: true,
   estERP: false,
   estIGH: false,
   estHabitation: false,
-  natureActivite: null,
 };
 
 /**
@@ -115,7 +119,7 @@ function messageDeLaPorte(
   dossier: Record<string, unknown>,
   champ: string,
 ): string | null {
-  const r = etablissementCreationSchema.safeParse(dossier);
+  const r = onboardingSchema.safeParse(dossier);
   if (r.success) return null;
   return messageDuSeulChamp(r.error.issues, champ);
 }
@@ -167,17 +171,14 @@ export function refusAlEntree(): RefusAlEntree[] {
 
   // La même borne, sur l'effectif de l'ENTREPRISE (décision de la
   // propriétaire du 2026-09-26, ADR-031 : « c'est la limite de Rojer »).
-  // Interrogée sur SA porte — la création d'une entreprise —, comme les deux
-  // autres, pour que la page ne l'annonce que tant que la porte la fait.
-  const sondeEntreprise = entrepriseCreationSchema.safeParse({
-    raisonSociale: "Sonde de périmètre",
-    codeNaf: "56.10A",
-    effectif: EFFECTIF_MAX + 1,
-    adresse: "1 rue de la Sonde, 75000 Paris",
-  });
-  const effectifEntreprise = sondeEntreprise.success
-    ? null
-    : messageDuSeulChamp(sondeEntreprise.error.issues, "effectif");
+  // ~~Interrogée sur SA porte — la création d'une entreprise~~ [2026-10-26 :
+  // une entreprise naît avec son premier établissement, à la même porte que
+  // les autres refus], pour que la page ne l'annonce que tant que la porte la
+  // fait.
+  const effectifEntreprise = messageDeLaPorte(
+    { ...DOSSIER_SONDE, effectifEntreprise: EFFECTIF_MAX + 1 },
+    "effectifEntreprise",
+  );
   if (effectifEntreprise !== null) {
     refus.push({
       cle: "effectif_entreprise",
@@ -198,7 +199,6 @@ export function refusAlEntree(): RefusAlEntree[] {
       // chose » cesserait d'être vrai.
       personnesPresentesHabituellement: 30,
       estIGH: true,
-      classeIgh: "GHA",
     },
     "estIGH",
   );

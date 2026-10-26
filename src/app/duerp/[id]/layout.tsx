@@ -8,7 +8,7 @@ import { BarreCompte } from "@/components/layout/BarreCompte";
 import { getDuerp } from "@/lib/duerps/queries";
 import { getOptionalUser } from "@/lib/auth/require-user";
 import { getEtatModules } from "@/lib/etablissements/modules";
-import { listerEtablissementsDeLEntreprise } from "@/lib/etablissements/queries";
+import { listerEtablissementsDuCompte } from "@/lib/etablissements/queries";
 import { chargerSidebarCounts } from "@/lib/navigation/sidebar-counts";
 import {
   trouverReferentielParId,
@@ -54,19 +54,19 @@ export default async function DuerpLayout({
   const [modules, counts, fratrie] = await Promise.all([
     getEtatModules(etab.id, etab.estERP),
     chargerSidebarCounts(etab.id),
-    listerEtablissementsDeLEntreprise(etab.entrepriseId),
+    listerEtablissementsDuCompte(),
   ]);
   // Secteur affiché dans le contexte : celui choisi dans le wizard en priorité,
   // sinon suggestion par NAF (même règle que la page secteur elle-même).
   const refChoisi = duerp.referentielSecteurId
     ? trouverReferentielParId(duerp.referentielSecteurId)
     : null;
-  const refParNaf = trouverReferentielParNaf(duerp.entreprise.codeNaf);
+  const refParNaf = trouverReferentielParNaf(duerp.etablissement.codeNaf);
   const ref = refChoisi ?? refParNaf;
 
   const effectif = duerp.entreprise.effectif;
   const contexte = [
-    `NAF ${duerp.entreprise.codeNaf}`,
+    `NAF ${duerp.etablissement.codeNaf}`,
     ...(ref ? [ref.nom] : []),
     `${effectif} salarié${effectif > 1 ? "s" : ""}`,
   ];
@@ -95,10 +95,7 @@ export default async function DuerpLayout({
         <BarreCompte
           etablissementId={etab.id}
           email={user?.email ?? null}
-          etablissements={fratrie.map((e) => ({
-            id: e.id,
-            raisonDisplay: e.raisonDisplay,
-          }))}
+          etablissements={fratrie}
         />
         {/* Le grand en-tête, sur chaque étape de l'assistant (décision de la
             propriétaire du 2026-10-25) — le même que la porte d'entrée

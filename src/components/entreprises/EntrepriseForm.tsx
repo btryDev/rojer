@@ -8,8 +8,6 @@ import type { ActionState } from "@/lib/entreprises/actions";
 
 type Valeurs = {
   raisonSociale?: string;
-  siret?: string | null;
-  codeNaf?: string;
   effectif?: number;
   adresse?: string;
 };
@@ -46,30 +44,8 @@ export function EntrepriseForm({
         erreur={err("raisonSociale")}
       />
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        <ChampBoard
-          id="siret"
-          name="siret"
-          label="SIRET"
-          inputMode="numeric"
-          pattern="\d{14}"
-          defaultValue={valeursInitiales?.siret ?? ""}
-          placeholder="14 chiffres"
-          aide="Numéro à 14 chiffres identifiant votre établissement. Facultatif ici — figurera en en-tête du DUERP s'il est renseigné."
-          erreur={err("siret")}
-        />
-
-        <ChampBoard
-          id="codeNaf"
-          name="codeNaf"
-          label="Code NAF"
-          requis
-          defaultValue={valeursInitiales?.codeNaf}
-          placeholder="ex. 56.10A"
-          aide="Code d'activité INSEE (ex : 56.10A pour restauration, 47.11A pour commerce alimentaire, 71.12B pour bureau d'études). Il sert à pré-remplir les risques types de votre secteur."
-          erreur={err("codeNaf")}
-        />
-      </div>
+      {/* ~~SIRET et code NAF~~ [2026-10-26 : ils appartiennent au site et se
+          saisissent sur la fiche de l'établissement.] */}
 
       <ChampBoard
         id="effectif"

@@ -5,6 +5,7 @@ import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { ChampBoard, SectionChamps } from "@/components/ui-kit";
 import { BlocCreux } from "@/components/ui-kit/fiche";
 import { evaluerScopeSecteur } from "@/lib/onboarding/scope";
+import { entrepriseRattachee } from "@/lib/onboarding/rattachement";
 import { refusEffectif, refusEffectifEntreprise } from "./validation";
 import type { StepProps } from "./types";
 
@@ -24,7 +25,27 @@ const SUGGESTIONS_NAF = [
  * remplissent dans l'ordre qu'on veut — la numérotation n'y portait aucune
  * information (cf. `SectionChamps`).
  */
-export function StepIdentite({ state, update, errors, blocage }: StepProps) {
+export function StepIdentite({
+  state,
+  update,
+  errors,
+  blocage,
+  entreprisesConnues,
+}: StepProps) {
+  // Le site rejoint-il une entreprise que le compte suit déjà (même SIREN) ?
+  // Alors la raison sociale et l'effectif de l'entreprise sont les siens :
+  // repris et affichés en lecture seule, parce qu'ils appartiennent à
+  // l'entreprise et non à ce site — le serveur ne lit pas ces deux champs dans
+  // ce cas. Ils se modifient depuis la fiche de l'entreprise.
+  const rattachee = entrepriseRattachee(state.siret, entreprisesConnues);
+  const saisirSiret = (siret: string) => {
+    const r = entrepriseRattachee(siret, entreprisesConnues);
+    update(
+      r
+        ? { siret, raisonSociale: r.raisonSociale, effectifEntreprise: String(r.effectif) }
+        : { siret },
+    );
+  };
   const scope =
     state.codeNaf.trim().length > 0
       ? evaluerScopeSecteur(state.codeNaf)
@@ -74,6 +95,7 @@ export function StepIdentite({ state, update, errors, blocage }: StepProps) {
               requis
               value={state.raisonSociale}
               onChange={(e) => update({ raisonSociale: e.target.value })}
+              readOnly={rattachee !== null}
               placeholder="Ex : Bistrot du marché SARL"
               autoFocus
               erreur={messagePour("raisonSociale")}
@@ -96,30 +118,49 @@ export function StepIdentite({ state, update, errors, blocage }: StepProps) {
                 id="siret"
                 name="siret"
                 value={state.siret}
-                onChange={(e) => update({ siret: e.target.value })}
+                onChange={(e) => saisirSiret(e.target.value)}
                 placeholder="812 456 789 00021"
                 inputMode="numeric"
-                pattern="\d{14}"
-                aria-invalid={Boolean(errors?.siret)}
+                required
+                aria-required
+                aria-invalid={Boolean(messagePour("siret"))}
                 aria-describedby={
-                  errors?.siret ? "siret-aide siret-erreur" : "siret-aide"
+                  messagePour("siret") ? "siret-aide siret-erreur" : "siret-aide"
                 }
               />
               <p
                 id="siret-aide"
                 className="m-0 mt-1.5 text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
               >
-                14 chiffres — facultatif
+                {rattachee
+                  ? `Même entreprise que vos établissements existants (SIREN ${rattachee.siren}) : sa raison sociale et son effectif sont repris, et se modifient depuis la fiche de l'entreprise.`
+                  : "Le SIRET de ce site, 14 chiffres."}
               </p>
-              {errors?.siret && (
+              {messagePour("siret") && (
                 <p
                   id="siret-erreur"
                   className="m-0 mt-1.5 text-[12.5px] text-[color:var(--board-signal-ink)]"
                 >
-                  {errors.siret}
+                  {messagePour("siret")}
                 </p>
               )}
             </div>
+
+            {/* Deux sites d'une même société porteraient le même nom au
+                sélecteur : le nom d'usage les distingue. Facultatif. */}
+            {rattachee && (
+              <ChampBoard
+                className="sm:col-span-2"
+                id="nomUsage"
+                name="nomUsage"
+                label="Nom du site"
+                value={state.nomUsage}
+                onChange={(e) => update({ nomUsage: e.target.value })}
+                placeholder="Ex : Le Comptoir Gare"
+                aide="Facultatif. Le nom sous lequel ce site apparaît dans Rojer ; à défaut, la raison sociale."
+                erreur={messagePour("nomUsage")}
+              />
+            )}
           </div>
         </SectionChamps>
       </section>
@@ -329,6 +370,7 @@ export function StepIdentite({ state, update, errors, blocage }: StepProps) {
                 inputMode="numeric"
                 value={state.effectifEntreprise}
                 onChange={(e) => update({ effectifEntreprise: e.target.value })}
+                readOnly={rattachee !== null}
                 placeholder="8"
                 aide="Tous établissements confondus, apprentis non compris (art. L. 1111-3). C'est sur lui que se comptent les seuils du comité social et économique, du règlement intérieur et de la mise à jour annuelle du document unique. À partir de 50, le document unique alimente aussi un programme annuel de prévention (art. L. 4121-3-1) que l'outil ne porte pas."
                 erreur={

@@ -88,6 +88,7 @@ function saisir(label: RegExp | string, valeur: string) {
 
 function remplirEtape1() {
   saisir(/Raison sociale/, "Bistrot du marché");
+  saisir("SIRET", "12002701600357");
   saisir(/Numéro et rue/, "12 rue des Halles");
   saisir(/Code postal/, "75011");
   saisir(/^Ville/, "Paris");
@@ -111,7 +112,7 @@ const souffler = () => new Promise((r) => setTimeout(r, 30));
 
 describe("le formulaire ne se soumet qu'à la dernière étape", () => {
   it("une soumission provoquée à l'étape 1 ne crée rien", async () => {
-    const { container } = render(<WizardShell />);
+    const { container } = render(<WizardShell entreprisesConnues={[]} />);
     const form = container.querySelector("form")!;
 
     form.dispatchEvent(
@@ -125,7 +126,7 @@ describe("le formulaire ne se soumet qu'à la dernière étape", () => {
   });
 
   it("une soumission provoquée à l'étape 2 ne crée rien", async () => {
-    const { container } = render(<WizardShell />);
+    const { container } = render(<WizardShell entreprisesConnues={[]} />);
     remplirEtape1();
     await souffler();
     screen.getByRole("button", { name: /Suivant/ }).click();
@@ -143,7 +144,7 @@ describe("le formulaire ne se soumet qu'à la dernière étape", () => {
   it("la même soumission, à l'étape 3, crée l'espace", async () => {
     // La borne haute du même garde-fou : sans elle, le test passerait aussi
     // sur un formulaire qui ne se soumet jamais.
-    const { container } = render(<WizardShell />);
+    const { container } = render(<WizardShell entreprisesConnues={[]} />);
     remplirEtape1();
     await souffler();
     screen.getByRole("button", { name: /Suivant/ }).click();
@@ -184,7 +185,7 @@ describe("un clic sur « Suivant » à l'étape 2 ne crée rien, même rendu ava
   // Éprouvé en cassant : les `key` des deux boutons retirées (le même nœud DOM
   // change de type) — rouge, `appels` vaut ["creation"].
   it("le rendu de l'étape 3 s'intercale avant l'activation : aucune création", async () => {
-    render(<WizardShell />);
+    render(<WizardShell entreprisesConnues={[]} />);
     remplirEtape1();
     await souffler();
     screen.getByRole("button", { name: /Suivant/ }).click();
@@ -211,7 +212,7 @@ describe("un clic sur « Suivant » à l'étape 2 ne crée rien, même rendu ava
 
 describe("le refus de périmètre ferme la porte avant le clic", () => {
   it("cinquante et un salariés : « Suivant » est désactivé", async () => {
-    render(<WizardShell />);
+    render(<WizardShell entreprisesConnues={[]} />);
     remplirEtape1();
     saisir(/Travailleurs sur ce site/, "51");
     await souffler();
@@ -223,7 +224,7 @@ describe("le refus de périmètre ferme la porte avant le clic", () => {
   });
 
   it("cinquante salariés : elle reste ouverte", async () => {
-    render(<WizardShell />);
+    render(<WizardShell entreprisesConnues={[]} />);
     remplirEtape1();
     saisir(/Travailleurs sur ce site/, "50");
     await souffler();
@@ -237,7 +238,7 @@ describe("le refus de périmètre ferme la porte avant le clic", () => {
   it("un champ oublié, lui, laisse le bouton actif — c'est le clic qui l'apprend", async () => {
     // La couche voisine : si le bouton se désactivait à la moindre erreur,
     // l'utilisateur n'aurait plus aucun moyen d'apprendre ce qui manque.
-    render(<WizardShell />);
+    render(<WizardShell entreprisesConnues={[]} />);
     await souffler();
 
     const suivant = screen.getByRole("button", {
@@ -253,7 +254,7 @@ describe("le refus de périmètre ferme la porte avant le clic", () => {
 
 describe("le refus se rend au champ qu'il vise", () => {
   it("étape 2 : « Précisez le type de votre ERP » est rendu au champ", async () => {
-    render(<WizardShell />);
+    render(<WizardShell entreprisesConnues={[]} />);
     remplirEtape1();
     await souffler();
     screen.getByRole("button", { name: /Suivant/ }).click();
@@ -279,7 +280,7 @@ describe("le refus de périmètre est aussi lisible sans le voir", () => {
     // l'erreur. Le refus vivant hors de `ChampBoard`, la chaîne est écrite à
     // la main — et une chaîne écrite à la main est exactement celle qui perd
     // une moitié.
-    render(<WizardShell />);
+    render(<WizardShell entreprisesConnues={[]} />);
     remplirEtape1();
     saisir(/Travailleurs sur ce site/, "51");
     await souffler();
@@ -307,7 +308,7 @@ describe("le refus de périmètre est aussi lisible sans le voir", () => {
  */
 describe("on peut sortir de la mise en place", () => {
   it("sans rien avoir saisi, « Quitter » s'en va sans poser de question", async () => {
-    render(<WizardShell email="paul@exemple.fr" />);
+    render(<WizardShell email="paul@exemple.fr" entreprisesConnues={[]} />);
     screen.getByRole("button", { name: "Quitter" }).click();
     await souffler();
 
@@ -315,7 +316,7 @@ describe("on peut sortir de la mise en place", () => {
   });
 
   it("une saisie commencée : la question est posée DANS la page, et elle mène dehors", async () => {
-    render(<WizardShell email="paul@exemple.fr" />);
+    render(<WizardShell email="paul@exemple.fr" entreprisesConnues={[]} />);
     remplirEtape1();
     await souffler();
 
@@ -335,7 +336,7 @@ describe("on peut sortir de la mise en place", () => {
 
   it("« Reprendre la saisie » referme la question et ne navigue pas", async () => {
     // La borne basse : sans elle, un panneau qui navigue toujours passerait.
-    render(<WizardShell email="paul@exemple.fr" />);
+    render(<WizardShell email="paul@exemple.fr" entreprisesConnues={[]} />);
     remplirEtape1();
     await souffler();
     screen.getByRole("button", { name: "Quitter" }).click();
@@ -353,7 +354,7 @@ describe("on peut sortir de la mise en place", () => {
   });
 
   it("la déconnexion est atteignable depuis l'écran", async () => {
-    render(<WizardShell email="paul@exemple.fr" />);
+    render(<WizardShell email="paul@exemple.fr" entreprisesConnues={[]} />);
 
     screen.getAllByRole("button", { name: /Déconnexion/ })[0].click();
     await souffler();
@@ -365,7 +366,7 @@ describe("on peut sortir de la mise en place", () => {
 describe("la question des locaux à sommeil au parcours (2026-09-09)", () => {
   /** Amène le wizard à l'étape 2, ERP coché, sur le type demandé. */
   async function allerEtape2AvecType(type: string) {
-    render(<WizardShell />);
+    render(<WizardShell entreprisesConnues={[]} />);
     remplirEtape1();
     await souffler();
     screen.getByRole("button", { name: /Suivant/ }).click();
@@ -381,7 +382,7 @@ describe("la question des locaux à sommeil au parcours (2026-09-09)", () => {
   it("n'est pas posée avant qu'un type soit choisi", () => {
     // Elle a besoin de la réponse au type pour savoir si elle doit exister :
     // c'est la seule question du parcours dont la PRÉSENCE dépend d'une autre.
-    render(<WizardShell />);
+    render(<WizardShell entreprisesConnues={[]} />);
     expect(
       screen.queryByLabelText(/Hébergement du public pour la nuit/),
     ).toBeNull();
@@ -428,7 +429,7 @@ describe("plusieurs types d'ERP au parcours (ADR-045, lot 3)", () => {
   // ouvrant le lien par défaut et en lisant le sommeil sur le premier type
   // seul : rouge.
   async function allerEtape2AvecType(type: string) {
-    render(<WizardShell />);
+    render(<WizardShell entreprisesConnues={[]} />);
     remplirEtape1();
     await souffler();
     screen.getByRole("button", { name: /Suivant/ }).click();
@@ -518,7 +519,7 @@ describe("la question du nombre de personnes au parcours (2026-09-20)", () => {
 
   /** Étape 2, ERP coché, restaurant, sur la catégorie demandée (effectif 8). */
   async function allerEtape2EnCategorie(categorie: string) {
-    render(<WizardShell />);
+    render(<WizardShell entreprisesConnues={[]} />);
     remplirEtape1();
     await souffler();
     screen.getByRole("button", { name: /Suivant/ }).click();
@@ -577,7 +578,7 @@ describe("la question du nombre de personnes au parcours (2026-09-20)", () => {
 
 describe("aucune réponse de régime présélectionnée (2026-09-27, A2)", () => {
   it("à l'étape 2, aucun bouton Oui/Non n'est actif, et « Suivant » retient au champ ERP", async () => {
-    render(<WizardShell />);
+    render(<WizardShell entreprisesConnues={[]} />);
     remplirEtape1();
     await souffler();
     screen.getByRole("button", { name: /Suivant/ }).click();
@@ -600,7 +601,7 @@ describe("filtre à l'accueil — le refus s'écrit dans le vrai parcours (revue
   // `blocage` n'était posé qu'au clic, que le bouton désactivé empêche. Il
   // valait déjà pour l'ERP en IGH.
   async function etape2ERP() {
-    render(<WizardShell />);
+    render(<WizardShell entreprisesConnues={[]} />);
     remplirEtape1();
     await souffler();
     screen.getByRole("button", { name: /Suivant/ }).click();
@@ -656,5 +657,33 @@ describe("filtre à l'accueil — le refus s'écrit dans le vrai parcours (revue
     choisir(/Type d'ERP/, "N");
     await souffler();
     expect(cache()).toBeNull();
+  });
+});
+
+describe("un nouveau site d'une entreprise déjà suivie (2026-10-26)", () => {
+  const CONNUES = [{ siren: "120027016", raisonSociale: "SARL Le Comptoir", effectif: 13 }];
+  const champ = (label: RegExp | string) => screen.getByLabelText(label) as HTMLInputElement;
+
+  it("le SIRET d'un SIREN connu reprend la raison sociale et l'effectif, en lecture seule", async () => {
+    render(<WizardShell entreprisesConnues={CONNUES} />);
+    expect(screen.queryByLabelText(/Nom du site/)).toBeNull();
+
+    saisir("SIRET", "120 027 016 00357");
+    await souffler();
+
+    expect(champ(/Raison sociale/).value).toBe("SARL Le Comptoir");
+    expect(champ(/Raison sociale/).readOnly).toBe(true);
+    expect(champ(/Salariés de l'entreprise/).value).toBe("13");
+    expect(champ(/Salariés de l'entreprise/).readOnly).toBe(true);
+    // Deux sites d'une même société : le nom d'usage les distingue.
+    expect(screen.getByLabelText(/Nom du site/)).toBeTruthy();
+  });
+
+  it("un SIREN inconnu laisse la saisie libre", async () => {
+    render(<WizardShell entreprisesConnues={CONNUES} />);
+    saisir("SIRET", "35600000000048");
+    await souffler();
+    expect(champ(/Raison sociale/).readOnly).toBe(false);
+    expect(screen.queryByLabelText(/Nom du site/)).toBeNull();
   });
 });
