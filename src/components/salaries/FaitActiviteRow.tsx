@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
+import { ANNEAU_A_COMPLETER } from "@/components/ui-kit/CadreACompleter";
 import { repondreFaitActivite } from "@/lib/etablissements/faits-activite-actions";
 import type { ChampFaitActivite } from "@/lib/etablissements/faits-activite";
 
@@ -29,11 +30,14 @@ type Props = {
    */
   horsQuestion?: string;
   valeur: boolean | null;
+  /** Sans réponse et retenant des obligations « à confirmer » : cerclée
+   *  d'ambre (2026-10-27). */
+  aCompleter?: boolean;
   // ~~`children` : les vignettes nées du fait, sous les réponses (2026-10-21)~~
   // [retiré le 2026-10-24, ADR-047 : la page ne pose plus que la question].
 };
 
-export function FaitActiviteRow({ etablissementId, champ, intitule, pourquoi, horsQuestion, valeur }: Props) {
+export function FaitActiviteRow({ etablissementId, champ, intitule, pourquoi, horsQuestion, valeur, aCompleter = false }: Props) {
   const [pending, startTransition] = useTransition();
   // `true` : échec sans explication ; une chaîne : le refus dit pourquoi.
   const [echec, setEchec] = useState<boolean | string>(false);
@@ -60,7 +64,7 @@ export function FaitActiviteRow({ etablissementId, champ, intitule, pourquoi, ho
   };
 
   return (
-    <li id={champ} className="carte-board scroll-mt-6 px-7 py-6 sm:px-8">
+    <li id={champ} className={`carte-board scroll-mt-6 px-7 py-6 sm:px-8 ${aCompleter ? ANNEAU_A_COMPLETER : ""}`}>
       <p className="m-0 text-[16px] font-semibold leading-[1.3] tracking-[-0.01em] text-[color:var(--board-ink)]">
         {intitule}
       </p>

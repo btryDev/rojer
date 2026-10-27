@@ -1,5 +1,6 @@
 "use client";
 
+import { ANNEAU_A_COMPLETER } from "@/components/ui-kit/CadreACompleter";
 import { DemandeAide } from "@/components/assistance/DemandeAide";
 import {
   AIDE_NOMBRE_DE_PERSONNES,
@@ -88,6 +89,12 @@ type Props = {
    * renvoie, et une consigne sans chemin ne se suit pas.
    */
   entreprise: { id: string; effectif: number };
+  /**
+   * Les champs restés sans réponse dont le silence retient des obligations
+   * « à confirmer » (`questionsManquantes`, module fiche) : cerclés d'ambre
+   * (2026-10-27). Vide par défaut.
+   */
+  aCompleter?: readonly string[];
 };
 
 
@@ -97,7 +104,9 @@ export function EtablissementForm({
   libelleSubmit,
   labelAnnuler,
   entreprise,
+  aCompleter = [],
 }: Props) {
+  const anneau = (champ: string) => (aCompleter.includes(champ) ? ANNEAU_A_COMPLETER : undefined);
   const [state, formAction, pending] = useActionState<
     EtablissementActionState,
     FormData
@@ -288,6 +297,7 @@ export function EtablissementForm({
             }
             aide={`${AIDE_NOMBRE_DE_PERSONNES} Ce nombre vous est demandé si vous recevez du public et que ni votre catégorie d'ERP ni votre effectif n'établissent le seuil ; sinon vous pouvez le laisser vide.`}
             erreur={err("personnesPresentesHabituellement")}
+            champClassName={anneau("personnesPresentesHabituellement")}
           />
 
           {/* LA QUESTION DÉCRIT DÉSORMAIS L'ARTICLE QU'ELLE SERT, ET NON CELUI
@@ -331,7 +341,7 @@ export function EtablissementForm({
             <select
               id="manipuleMatieresR422722"
               name="manipuleMatieresR422722"
-              className="champ-board"
+              className={`champ-board ${anneau("manipuleMatieresR422722") ?? ""}`}
               aria-describedby="manipuleMatieresR422722-aide"
               defaultValue={
                 valeursInitiales.manipuleMatieresR422722 === true
@@ -605,7 +615,7 @@ export function EtablissementForm({
                     <select
                       id="ssiCategorieAouB"
                       name="ssiCategorieAouB"
-                      className="champ-board"
+                      className={`champ-board ${anneau("ssiCategorieAouB") ?? ""}`}
                       aria-describedby="ssiCategorieAouB-aide"
                       defaultValue={
                         valeursInitiales.ssiCategorieAouB === true
@@ -660,7 +670,7 @@ export function EtablissementForm({
                     <select
                       id="comporteLocauxSommeilPublic"
                       name="comporteLocauxSommeilPublic"
-                      className="champ-board"
+                      className={`champ-board ${anneau("comporteLocauxSommeilPublic") ?? ""}`}
                       required
                       aria-describedby="comporteLocauxSommeilPublic-aide"
                       defaultValue={

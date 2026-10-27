@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { POLITIQUE_ABSENCE } from "@/lib/matching/absence";
 import type { QuestionSansReponse } from "@/lib/matching/types";
@@ -6,6 +8,7 @@ import { phraseFicheIncomplete } from "@/lib/etats-permanents/phrases";
 import { FAITS_ACTIVITE } from "./faits-activite";
 import {
   enumerer,
+  faitsManquants,
   FOYER_DE_LA_QUESTION,
   lienPourRepondre,
   manquesDeLaFiche,
@@ -19,6 +22,31 @@ const HOTEL_N3: RegimeDeLaFiche = { estERP: true, typeErp: "O", typesErpAutres: 
 const TOUTES = Object.keys(FOYER_DE_LA_QUESTION) as QuestionSansReponse[];
 
 describe("guide par module", () => {
+  // Les ancres du bandeau « À compléter » (2026-10-27) : chaque question mène
+  // à un champ qui existe, sans quoi le lien ne descend nulle part.
+  it("ancre chaque fait d'activité sur son propre champ", () => {
+    for (const f of FAITS_ACTIVITE) {
+      const q = POLITIQUE_ABSENCE[f.champ].question;
+      expect(FOYER_DE_LA_QUESTION[q].champ, q).toBe(f.champ);
+    }
+  });
+
+  it("ancre chaque question de la fiche sur un champ du formulaire", () => {
+    const formulaire = readFileSync(
+      join(__dirname, "..", "..", "components", "etablissements", "EtablissementForm.tsx"),
+      "utf8",
+    );
+    for (const q of TOUTES.filter((x) => FOYER_DE_LA_QUESTION[x].module === "fiche")) {
+      expect(formulaire, q).toContain(`id="${FOYER_DE_LA_QUESTION[q].champ}"`);
+    }
+  });
+
+  it("rend les faits muets, dans l'ordre de la table, sans les questions de la fiche", () => {
+    expect(
+      faitsManquants(["epi_presents", "matieres_r4227_22", "manutention_manuelle"], TRAVAIL).map((f) => f.champ),
+    ).toEqual(["manutentionManuelle", "epiPresents"]);
+  });
+
   it("renvoie au DUERP la question de chaque fait d'activité, et rien d'autre", () => {
     // La clé de question vient de la table du moteur, pas d'une liste recopiée.
     const questionsDesFaits = FAITS_ACTIVITE.map((f) => POLITIQUE_ABSENCE[f.champ].question);

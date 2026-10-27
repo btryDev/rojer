@@ -6,6 +6,11 @@ import { getEtablissement } from "@/lib/etablissements/queries";
 import { SupprimerEtablissementButton } from "@/components/etablissements/SupprimerEtablissementButton";
 import { mesurerPerimetreEtablissement } from "@/lib/suppression/queries";
 import { cleJourCivil } from "@/lib/dates";
+import { CadreACompleter, ListeACompleter } from "@/components/ui-kit/CadreACompleter";
+import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
+import { FOYER_DE_LA_QUESTION, questionsManquantes } from "@/lib/etablissements/guide-par-module";
+
+const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export default async function ModifierEtablissementPage({
   params,
@@ -20,7 +25,13 @@ export default async function ModifierEtablissementPage({
 
   // Cf. la note de `SupprimerEtablissementButton` : la mesure se fait au rendu,
   // pas au clic, pour que la carte de confirmation s'ouvre sans délai.
-  const perimetre = await mesurerPerimetreEtablissement(id);
+  const [perimetre, marques] = await Promise.all([
+    mesurerPerimetreEtablissement(id),
+    marquesAConfirmerDuRendu(id),
+  ]);
+  // Ce que la fiche n'a pas dit et qui retient des obligations « à confirmer »
+  // — les questions que l'étape du board nomme (2026-10-27).
+  const manques = questionsManquantes("fiche", marques.questions, etab);
 
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
@@ -33,6 +44,22 @@ export default async function ModifierEtablissementPage({
       />
 
       <div className="px-[var(--board-gutter)] pt-6">
+        {manques.length > 0 ? (
+          <CadreACompleter
+            id="fiche-a-completer"
+            titre="À compléter"
+            phrase="Sans ces réponses, certaines obligations restent « à confirmer »."
+            className="mb-6 max-w-[880px]"
+          >
+            <ListeACompleter
+              items={manques.map((q) => ({
+                cle: q,
+                texte: majuscule(FOYER_DE_LA_QUESTION[q].nomCourt),
+                href: `#${FOYER_DE_LA_QUESTION[q].champ}`,
+              }))}
+            />
+          </CadreACompleter>
+        ) : null}
         <div className="carte-board max-w-[880px] px-7 py-7 sm:px-8">
           <EtablissementForm
             action={action}
@@ -71,6 +98,7 @@ export default async function ModifierEtablissementPage({
                 ? cleJourCivil(etab.dateCertificatConformite)
                 : null,
             }}
+            aCompleter={manques.map((q) => FOYER_DE_LA_QUESTION[q].champ)}
             libelleSubmit="Enregistrer"
             labelAnnuler={{
               libelle: "Annuler",

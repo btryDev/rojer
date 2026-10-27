@@ -5,6 +5,7 @@
 
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
+import { CadreACompleter } from "@/components/ui-kit/CadreACompleter";
 import { GESTE_DATE, GESTE_USAGE } from "@/lib/equipements/reste-a-faire";
 
 const LIEN =
@@ -30,17 +31,7 @@ export function AFaireSurLEquipement({
   if (questions.length === 0 && aDater.length === 0) return null;
 
   return (
-    <section
-      aria-labelledby="a-faire-equipement"
-      className="mt-4 rounded-[30px] bg-[color:var(--board-amber-wash)] px-7 py-5 shadow-[inset_0_0_0_1px_var(--board-amber)] sm:px-8"
-    >
-      <h2
-        id="a-faire-equipement"
-        className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-amber-ink)]"
-      >
-        À faire sur cet équipement
-      </h2>
-
+    <CadreACompleter id="a-faire-equipement" titre="À faire sur cet équipement" className="mt-4">
       <div className="mt-3 flex flex-col divide-y divide-[color:var(--board-amber)]">
         {questions.length > 0 ? (
           <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3 py-3 first:pt-0">
@@ -96,6 +87,6 @@ export function AFaireSurLEquipement({
           </div>
         ) : null}
       </div>
-    </section>
+    </CadreACompleter>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
+import { ANNEAU_A_COMPLETER } from "@/components/ui-kit/CadreACompleter";
 import { useConfirmation } from "@/components/ui-kit/Confirmation";
 import { repondreQuestionTransverse } from "@/lib/transverses/actions";
 import type { ReponseTransverse } from "@/lib/transverses/etat";
@@ -32,6 +33,9 @@ type Props = {
   risqueConserve?: boolean;
   /** La réponse est « oui » mais le risque n'est pas au document. */
   risqueManquant?: boolean;
+  /** Sans réponse et retenant des obligations « à confirmer » : cerclée
+   *  d'ambre (2026-10-27). */
+  aCompleter?: boolean;
 };
 
 const VALEUR: Record<ReponseTransverse, boolean | null> = {
@@ -48,6 +52,7 @@ export function QuestionTransverseRow({
   reponse,
   risqueConserve = false,
   risqueManquant = false,
+  aCompleter = false,
 }: Props) {
   const [pending, startTransition] = useTransition();
   const [echec, setEchec] = useState(false);
@@ -96,7 +101,7 @@ export function QuestionTransverseRow({
   };
 
   return (
-    <li id={questionId} className="carte-board scroll-mt-6 px-7 py-6 sm:px-8">
+    <li id={questionId} className={`carte-board scroll-mt-6 px-7 py-6 sm:px-8 ${aCompleter ? ANNEAU_A_COMPLETER : ""}`}>
       <p className="m-0 text-[16px] font-semibold leading-[1.3] tracking-[-0.01em] text-[color:var(--board-ink)]">
         {intitule}
       </p>
