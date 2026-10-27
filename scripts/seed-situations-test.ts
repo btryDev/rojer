@@ -24,24 +24,30 @@
 //     le plan que cette première passe écrira (`lireEntrees` + `planifier`, en
 //     lecture seule), pour qu'on sache avant ce que Julien verra.
 //
-// TROIS RÈGLES, parce qu'il peut écrire en production :
-//   1. Il n'écrit que dans le compte nommé, et que ce qu'il crée.
+// QUATRE RÈGLES, parce qu'il peut écrire en production :
+//   1. Il n'écrit que dans un compte qui existe (`auth.users`, vérifié avant
+//      toute écriture), et que ce qu'il crée.
 //   2. Idempotent : une situation dont le SIREN est déjà suivi par le compte
-//      est sautée.
-//   3. Réversible : `--annuler` supprime les entreprises de ces SIREN dans ce
-//      compte, et rien d'autre.
+//      est sautée. Une création interrompue est défaite (l'entreprise et sa
+//      cascade), pour qu'une relance ne saute pas un établissement incomplet.
+//   3. Réversible, sans fard : `--annuler` supprime les entreprises de ces SIREN
+//      dans ce compte AVEC TOUT CE QU'ELLES CONTIENNENT — y compris ce que le
+//      compte y a ajouté depuis. Il montre d'abord ce qui partirait, ligne par
+//      modèle, refuse si un DUERP validé (conservation de quarante ans) l'en
+//      empêche, et libère les fichiers stockés comme le fait l'app.
+//   4. À blanc par défaut : sans `--ecrire`, il ne fait que dire ce qu'il ferait,
+//      création comme annulation. La base visée est affichée d'abord
+//      (`DATABASE_URL`).
 //
-// Sans `--ecrire` (ou `--annuler`), il ne fait que valider et dire ce qu'il ferait.
-// La base visée est affichée avant toute écriture : c'est `DATABASE_URL`.
-//
-//   pnpm seed:situations --user <uuid>              # à blanc
+//   pnpm seed:situations --user <uuid>                     # création, à blanc
 //   pnpm seed:situations --user <uuid> --ecrire
-//   pnpm seed:situations --user <uuid> --annuler
+//   pnpm seed:situations --user <uuid> --annuler           # annulation, à blanc
+//   pnpm seed:situations --user <uuid> --annuler --ecrire
 
 import { prisma } from "@/lib/prisma";
 import { onboardingSchema } from "@/lib/onboarding/schema";
 import { creerEtablissementOnboarding } from "@/lib/onboarding/creation";
-import { sirenDuSiret } from "@/lib/etablissements/siret";
+import { normaliserSiret, sirenDuSiret } from "@/lib/etablissements/siret";
 import { constaterEpi } from "@/lib/etablissements/epi-constate";
 import {
   equipementSchema,
@@ -51,6 +57,8 @@ import {
 import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
 import { estCategorieEpi } from "@/lib/referentiels/types-communs";
 import { lireEntrees, planifier } from "@/lib/calendrier/passe";
+import { bloqueraient, cascadeDepuis } from "@/lib/suppression/cascade";
+import { clesDesEtablissements, libererFichiers } from "@/lib/suppression/fichiers";
 import type { Prisma } from "@prisma/client";
 import { SITUATIONS, type EquipementSituation, type Situation } from "./situations-test/julien-2026-10";
 
@@ -88,7 +96,15 @@ function saisieEquipement(e: EquipementSituation) {
  */
 function parserOnboarding(s: Situation) {
   const r = onboardingSchema.safeParse(s.onboarding);
-  if (r.success || !s.nombreDePersonnesNonDonne) return r;
+  // Seulement si la fiche est MUETTE sur ce champ : un nombre présent mais
+  // invalide (0, par exemple) reste refusé, il ne s'efface pas en silence.
+  if (
+    r.success ||
+    !s.nombreDePersonnesNonDonne ||
+    s.onboarding.personnesPresentesHabituellement !== undefined
+  ) {
+    return r;
+  }
   const champs = Object.keys(r.error.flatten().fieldErrors);
   if (champs.length !== 1 || champs[0] !== "personnesPresentesHabituellement") return r;
   const relu = onboardingSchema.safeParse({
@@ -125,37 +141,108 @@ function validerTout() {
   return valides;
 }
 
-async function apercuCalendrier(etablissementId: string) {
-  return prisma.$transaction(async (tx) => {
-    await tx.$executeRaw`SET TRANSACTION READ ONLY`;
-    const plan = planifier(await lireEntrees(tx, etablissementId), new Date());
-    return plan.aCreer.length;
+/** Le nombre de lignes que la première régénération écrira — affichage seul :
+ *  un échec ne doit ni défaire la création ni couper les situations suivantes. */
+async function apercuCalendrier(etablissementId: string): Promise<string> {
+  try {
+    const n = await prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SET TRANSACTION READ ONLY`;
+      return planifier(await lireEntrees(tx, etablissementId), new Date()).aCreer.length;
+    });
+    return `${n} ligne(s) au calendrier à la première ouverture`;
+  } catch (err) {
+    console.error(`  aperçu du calendrier indisponible pour ${etablissementId}`, err);
+    return "aperçu du calendrier indisponible";
+  }
+}
+
+/**
+ * Le compte existe-t-il ? Un UUID bien formé mais faux rattacherait les
+ * entreprises à personne. `auth.users` n'existe que sur une base Supabase :
+ * ailleurs (base locale de test), on le dit et on continue.
+ */
+async function compteExiste(userId: string): Promise<boolean | "inverifiable"> {
+  try {
+    const r = await prisma.$queryRaw<{ n: bigint }[]>`
+      SELECT count(*) AS n FROM auth.users WHERE id = ${userId}::uuid`;
+    return Number(r[0].n) > 0;
+  } catch (err) {
+    const code = (err as { meta?: { code?: string } }).meta?.code;
+    if (code === "42P01" || code === "3F000") return "inverifiable";
+    throw err;
+  }
+}
+
+async function annuler(userId: string, sirens: string[], ecrire: boolean) {
+  const entreprises = await prisma.entreprise.findMany({
+    where: { userId, siren: { in: sirens } },
+    select: { id: true, raisonSociale: true, etablissements: { select: { id: true } } },
   });
+  if (entreprises.length === 0) {
+    console.log("Aucune entreprise de ces SIREN dans ce compte : rien à supprimer.");
+    return;
+  }
+  const emporte = await cascadeDepuis(prisma, "Entreprise", entreprises.map((e) => e.id));
+  const etabIds = entreprises.flatMap((e) => e.etablissements.map((x) => x.id));
+  const cles = await clesDesEtablissements(prisma, etabIds);
+  console.log(`Partiraient : ${entreprises.map((e) => e.raisonSociale).join(", ")}`);
+  for (const [modele, ids] of emporte) {
+    if (ids.size > 0) console.log(`  ${modele.padEnd(28)} ${ids.size}`);
+  }
+  console.log(`  fichiers stockés             ${cles.length}`);
+
+  const bloquants = await bloqueraient(prisma, emporte);
+  if (bloquants.length > 0) {
+    console.error(
+      "Suppression refusée — des lignes conservées l'en empêchent : " +
+        bloquants.map((b) => `${b.relation.enfant} (${b.nombre})`).join(", ") +
+        ". Supprimer depuis l'app.",
+    );
+    process.exitCode = 1;
+    return;
+  }
+  if (!ecrire) {
+    console.log("\nÀ blanc : rien n'est supprimé. Relancer avec --annuler --ecrire.");
+    return;
+  }
+  const { count } = await prisma.entreprise.deleteMany({
+    where: { id: { in: entreprises.map((e) => e.id) } },
+  });
+  const f = await libererFichiers(cles, "seed-situations/annuler");
+  console.log(
+    `${count} entreprise(s) supprimée(s) avec tout leur contenu ; ` +
+      `${f.liberes} fichier(s) libéré(s), ${f.echecs} échec(s).`,
+  );
 }
 
 async function main() {
   const userId = argument("--user");
   const ecrire = process.argv.includes("--ecrire");
-  const annuler = process.argv.includes("--annuler");
+  const modeAnnuler = process.argv.includes("--annuler");
   if (!userId || !UUID.test(userId)) {
     console.error("--user <uuid> requis : l'UID Supabase du compte.");
-    process.exit(1);
-  }
-  if (ecrire && annuler) {
-    console.error("--ecrire et --annuler s'excluent.");
     process.exit(1);
   }
 
   console.log(`Base visée : ${hoteDeLaBase()}`);
   console.log(`Compte     : ${userId}`);
-  const sirens = SITUATIONS.map((s) => sirenDuSiret(String(s.onboarding.siret)));
+  // Le SIREN du SIRET NORMALISÉ, comme à la création (`siretSchema`).
+  const sirens = SITUATIONS.map((s) =>
+    sirenDuSiret(normaliserSiret(String(s.onboarding.siret))),
+  );
 
-  if (annuler) {
-    const { count } = await prisma.entreprise.deleteMany({
-      where: { userId, siren: { in: sirens } },
-    });
-    console.log(`${count} entreprise(s) supprimée(s), avec leurs établissements.`);
+  if (modeAnnuler) {
+    await annuler(userId, sirens, ecrire);
     return;
+  }
+
+  const existe = await compteExiste(userId);
+  if (existe === false) {
+    console.error("Aucun compte Supabase avec cet UID : rien n'est écrit.");
+    process.exit(1);
+  }
+  if (existe === "inverifiable") {
+    console.log("(pas de schéma auth sur cette base : compte non vérifié)");
   }
 
   const valides = validerTout();
@@ -178,35 +265,50 @@ async function main() {
     }
 
     const etab = await creerEtablissementOnboarding(userId, onboarding!);
-    const batiment = await prisma.batiment.findFirstOrThrow({
-      where: { etablissementId: etab.id },
-      orderBy: [{ ordre: "asc" }, { createdAt: "asc" }],
-      select: { id: true },
-    });
-    for (const e of equipements) {
-      const caracs = serialiserCaracteristiques(e!);
-      await prisma.equipement.create({
-        data: {
-          etablissementId: etab.id,
-          batimentId: batiment.id,
-          libelle: e!.libelle,
-          categorie: e!.categorie,
-          caracteristiques: (caracs ?? undefined) as Prisma.InputJsonValue | undefined,
-        },
-      });
+    try {
+      await completer(etab.id, equipements);
+    } catch (err) {
+      // Défaire la création : sans quoi la relance la dirait « déjà présente »
+      // et laisserait un établissement sans ses équipements.
+      await prisma.entreprise.delete({ where: { id: etab.entrepriseId } });
+      console.error(`${titre} : création interrompue, défaite.`);
+      throw err;
     }
-    // Comme `creerEquipement` : un EPI déclaré fait constater les EPI.
-    if (equipements.some((e) => estCategorieEpi(e!.categorie))) {
-      await constaterEpi(etab.id, { regenerer: false });
-    }
-    const lignes = await apercuCalendrier(etab.id);
     console.log(
       `${titre} : créée (${etab.id}), ${equipements.length} équipement(s), ` +
-        `${lignes} ligne(s) au calendrier à la première ouverture.`,
+        `${await apercuCalendrier(etab.id)}.`,
     );
   }
 
   if (!ecrire) console.log("\nÀ blanc : rien n'est écrit. Relancer avec --ecrire.");
+}
+
+/** Les équipements d'un établissement tout juste créé, comme le formulaire. */
+async function completer(
+  etablissementId: string,
+  equipements: ReturnType<typeof validerTout>[number]["equipements"],
+) {
+  const batiment = await prisma.batiment.findFirstOrThrow({
+    where: { etablissementId },
+    orderBy: [{ ordre: "asc" }, { createdAt: "asc" }],
+    select: { id: true },
+  });
+  for (const e of equipements) {
+    const caracs = serialiserCaracteristiques(e!);
+    await prisma.equipement.create({
+      data: {
+        etablissementId,
+        batimentId: batiment.id,
+        libelle: e!.libelle,
+        categorie: e!.categorie,
+        caracteristiques: (caracs ?? undefined) as Prisma.InputJsonValue | undefined,
+      },
+    });
+  }
+  // Comme `creerEquipement` : un EPI déclaré fait constater les EPI.
+  if (equipements.some((e) => estCategorieEpi(e!.categorie))) {
+    await constaterEpi(etablissementId, { regenerer: false });
+  }
 }
 
 main()
