@@ -25,6 +25,12 @@
 //
 // ── LA LÉGENDE A DEUX AXES, ET N'EN DISAIT QU'UN ────────────────────────
 //
+// [2026-10-27 : LA LÉGENDE EST RETIRÉE, décision de la propriétaire — « Ces
+// chiffres et les familles ci-dessous ne comptent que ce que portent vos
+// équipements… Voir le calendrier → » chargeait la barre sans guider. Avec
+// elle partent `legendeParc` et `porteursDuParc`, qui ne servaient qu'à elle.
+// Le récit ci-dessous dit pourquoi elle avait été écrite.]
+//
 // Elle a longtemps tenu en un ternaire : « ne portent que sur cette zone » /
 // « portent sur tout l'établissement ». L'intention était juste — un compteur
 // réglable d'un clic doit dire son réglage — mais « tout l'établissement » y
@@ -60,12 +66,8 @@ import {
   LIBELLE_ETAT,
   LIBELLE_ETAT_COURT,
 } from "@/lib/calendrier/etats";
-import { porteursDuParc } from "@/lib/equipements/etat-verifications";
-import { legendeParc } from "@/lib/perimetre/porteurs-comptes";
-import { LIEN_DANS_PHRASE } from "./lien-dans-phrase";
 
 export function BarreParc({
-  hrefCalendrier,
   enRetard,
   proches,
   aPlanifier,
@@ -73,9 +75,6 @@ export function BarreParc({
   suggestions,
   filtreBatiment,
 }: {
-  /** Où se lit ce que ces chiffres ne comptent pas. La légende y renvoie :
-   *  nommer un manque sans dire où le trouver le laisse entier. */
-  hrefCalendrier: string;
   enRetard: number;
   proches: number;
   /**
@@ -107,35 +106,6 @@ export function BarreParc({
     actif: string | undefined;
   } | null;
 }) {
-  // Les deux axes, dérivés — jamais recopiés. Le second sort d'un appel à
-  // l'agrégation elle-même : c'est elle qui décide du périmètre, c'est donc
-  // elle qui doit dicter la phrase.
-  const { perimetre, horsCompte } = legendeParc({
-    zone: !filtreBatiment
-      ? "sansObjet"
-      : filtreBatiment.actif
-        ? "cette"
-        : "toutes",
-    comptes: porteursDuParc(),
-  });
-  const legende = (
-    <>
-      {perimetre}
-      {horsCompte ? (
-        <>
-          {" "}
-          {horsCompte}{" "}
-          <Link
-            href={hrefCalendrier}
-            className={LIEN_DANS_PHRASE}
-          >
-            Voir le calendrier →
-          </Link>
-        </>
-      ) : null}
-    </>
-  );
-
   return (
     <>
       {/* Une barre et non plus un bandeau titré : le titre et sa phrase
@@ -197,20 +167,9 @@ export function BarreParc({
                   filtreBatiment.batiments.map((b) => [b.id, b.nbEquipements]),
                 )
               }
-              // Un compteur doit dire sur quoi il compte, surtout quand le
-              // périmètre est réglable d'un clic juste à côté — et surtout
-              // quand l'autre moitié de son périmètre, elle, ne se règle pas.
-              legende={legende}
             />
           </div>
-        ) : (
-          /* Mono-zone : pas de sélecteur, donc pas de légende de sélecteur —
-             mais la restriction par porteur, elle, s'applique pareil. Elle
-             prend sa propre ligne plutôt que de disparaître. */
-          <p className="m-0 mt-[18px] border-t border-[color:var(--board-slate-line)] pt-[15px] text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-            {legende}
-          </p>
-        )}
+        ) : null}
       </section>
 
       {suggestions ? (

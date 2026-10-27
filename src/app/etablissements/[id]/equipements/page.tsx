@@ -315,7 +315,6 @@ export default async function EquipementsPage({
         description="Ce que vous avez, et où. Chaque appareil porte ses vérifications, ses rapports et ses papiers : ouvrez sa fiche pour les voir."
       />
       <BarreParc
-        hrefCalendrier={`${base}/calendrier`}
         enRetard={compteurs.enRetard}
         proches={compteurs.proches}
         aPlanifier={compteurs.aPlanifier}

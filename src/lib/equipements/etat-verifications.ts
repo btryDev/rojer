@@ -22,11 +22,6 @@ import {
 } from "@/lib/calendrier/etats";
 import { prochaineEcheanceConnue } from "@/lib/calendrier/prochaine-echeance";
 import { estCyclique } from "@/lib/calendrier/periodicite";
-import {
-  porteursComptesPar,
-  type LigneSondee,
-} from "@/lib/perimetre/porteurs-comptes";
-import type { PorteurObligation } from "@/lib/referentiels/conformite";
 import type { Periodicite } from "@/lib/referentiels/types-communs";
 
 export type EtatEquipement = {
@@ -253,33 +248,6 @@ export function repartirParEquipement(
   }
 
   return parEquipement;
-}
-
-/**
- * Ce que le bandeau du parc compte vraiment, **mesuré** en faisant tourner son
- * agrégation sur une ligne par porteur.
- *
- * Pas une déclaration : un appel. `repartirParEquipement` saute les lignes sans
- * `equipementId` — c'est la ligne 106, et c'est tout ce qui décide du périmètre
- * de l'écran. La sonde le constate au lieu de le paraphraser, si bien qu'une
- * agrégation qui se met un jour à compter les échéances d'établissement change
- * la légende de l'écran sans que personne ait à y penser.
- *
- * Le compte agrégé est `enRetard` : c'est celui qui sert de sonde parce que la
- * ligne fabriquée est en retard, et c'est le seul état que les quatre écrans
- * annoncent tous.
- */
-export function porteursDuParc(
-  now: Date = new Date(),
-): Set<PorteurObligation> {
-  return porteursComptesPar(
-    (lignes: LigneSondee[]) =>
-      [...repartirParEquipement(lignes, now).values()].reduce(
-        (n, e) => n + e.enRetard,
-        0,
-      ),
-    now,
-  );
 }
 
 /**

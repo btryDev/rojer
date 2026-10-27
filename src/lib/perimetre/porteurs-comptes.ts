@@ -183,12 +183,6 @@ export function porteursHorsCompte(
   return ORDRE_PORTEURS.filter((p) => porteursServis.has(p) && !comptes.has(p));
 }
 
-/** « A », « A ou B », « A, B ou C ». */
-function enumerer(morceaux: string[]): string {
-  if (morceaux.length <= 1) return morceaux[0] ?? "";
-  return `${morceaux.slice(0, -1).join(", ")} ou ${morceaux[morceaux.length - 1]}`;
-}
-
 /**
  * La même énumération après « au titre de », où la préposition se répète.
  *
@@ -218,56 +212,5 @@ export function phraseHorsCompte(absents: PorteurObligation[]): string | null {
   return `Ce qui est dû au titre ${enumererApresDe(
     absents.map((p) => LIBELLE_PORTEUR[p]),
   )} n'y figure pas.`;
-}
-
-/**
- * Le périmètre géographique d'un compteur d'écran (ADR-019).
- *
- * `sansObjet` quand l'établissement n'a qu'une zone : il n'y a alors pas de
- * périmètre à annoncer, et le dire quand même ferait porter au mono-zone la
- * complexité du multi.
- */
-export type PerimetreZone = "sansObjet" | "toutes" | "cette";
-
-/**
- * La légende du bandeau du parc, dérivée de ses deux axes.
- *
- * Deux phrases, et pas un ternaire à quatre branches : les deux axes sont
- * indépendants — la zone est un réglage de l'écran, la restriction par porteur
- * est la définition de l'écran — et les fondre produisait des variantes
- * illisibles dont trois sur quatre n'auraient jamais été relues.
- *
- * La seconde est `null` quand il n'y a rien à restreindre : c'est le jour où le
- * parc comptera tout, et il n'aura alors plus rien à avouer.
- */
-export function legendeParc({
-  zone,
-  comptes,
-  porteursServis,
-}: {
-  zone: PerimetreZone;
-  comptes: Set<PorteurObligation>;
-  porteursServis?: Set<PorteurObligation>;
-}): { perimetre: string; horsCompte: string | null } {
-  const absents = porteursHorsCompte(comptes, porteursServis);
-  // Le sujet de la phrase est ce que le compteur retient, nommé par les mêmes
-  // libellés que ce qu'il écarte : les deux moitiés se lisent l'une contre
-  // l'autre.
-  const retenus = ORDRE_PORTEURS.filter((p) => comptes.has(p)).map(
-    (p) => LIBELLE_PORTEUR[p],
-  );
-  // Un compteur qui ne retient rien ne se décrit pas par une liste vide : la
-  // phrase change de forme plutôt que de perdre son sujet. Le cas n'arrive pas
-  // en production, mais c'est celui qu'on obtient en cassant la garde, et une
-  // garde qu'on casse doit rendre une phrase lisible.
-  const perimetre =
-    retenus.length === 0
-      ? "Ces chiffres et les familles ci-dessous ne comptent rien."
-      : zone === "cette"
-        ? `Ces chiffres et les familles ci-dessous ne comptent que ce que portent ${enumerer(retenus)} de cette zone.`
-        : zone === "toutes"
-          ? `Ces chiffres et les familles ci-dessous ne comptent que ce que portent ${enumerer(retenus)}, dans toutes vos zones.`
-          : `Ces chiffres et les familles ci-dessous ne comptent que ce que portent ${enumerer(retenus)}.`;
-  return { perimetre, horsCompte: phraseHorsCompte(absents) };
 }
 

@@ -1,22 +1,18 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  legendeParc,
   phraseHorsCompte,
   porteursComptesPar,
   porteursDuReferentiel,
-  porteursHorsCompte,
   sondes,
   type LigneSondee,
 } from "./porteurs-comptes";
-import { porteursDuParc } from "@/lib/equipements/etat-verifications";
 import {
   enumererFamilles,
   FAMILLES_NOMMEES,
   LABEL_FAMILLE_PROSE,
 } from "@/lib/calendrier/labels";
 import { FAMILLES_FILTRABLES } from "@/lib/calendrier/echeances";
-import type { PorteurObligation } from "@/lib/referentiels/conformite";
 
 /**
  * ÉPROUVER LA GARDE EN LA CASSANT.
@@ -79,110 +75,6 @@ describe("porteursComptesPar — la sonde", () => {
     for (const { ligne } of s) {
       expect(ligne.datePrevue.getTime()).toBeLessThan(now.getTime());
     }
-  });
-});
-
-describe("la légende du bandeau du parc", () => {
-  /**
-   * LA RÉGRESSION D'ORIGINE, ÉCRITE COMME UNE PROPRIÉTÉ.
-   *
-   * La phrase remplacée était « Les chiffres ci-dessus et les familles
-   * ci-dessous portent sur tout l'établissement. » Elle parlait de zones et se
-   * lisait comme une complétude. Aucune légende ne peut plus revendiquer un
-   * « tout » tant qu'il reste un porteur dehors — et c'est une propriété du
-   * générateur, pas une chaîne interdite quelque part.
-   */
-  it("ne revendique jamais une totalité quand un porteur reste dehors", () => {
-    for (const zone of ["sansObjet", "toutes", "cette"] as const) {
-      const { perimetre, horsCompte } = legendeParc({
-        zone,
-        comptes: porteursDuParc(),
-      });
-      expect(horsCompte).not.toBeNull();
-      expect(perimetre).not.toMatch(/tout l'établissement/i);
-      expect(perimetre).toMatch(/ne comptent que/);
-    }
-  });
-
-  it("nomme les porteurs laissés dehors, et où les lire", () => {
-    const { horsCompte } = legendeParc({
-      zone: "toutes",
-      comptes: porteursDuParc(),
-    });
-    expect(horsCompte).toBe(
-      "Ce qui est dû au titre de l'établissement lui-même ou de vos salariés n'y figure pas.",
-    );
-  });
-
-  it("dit la zone, et seulement quand il y en a une à dire", () => {
-    const comptes = porteursDuParc();
-    expect(legendeParc({ zone: "cette", comptes }).perimetre).toMatch(
-      /de cette zone/,
-    );
-    expect(legendeParc({ zone: "toutes", comptes }).perimetre).toMatch(
-      /dans toutes vos zones/,
-    );
-    // Mono-zone : pas de périmètre géographique à annoncer, mais la
-    // restriction par porteur tient toujours.
-    const monoZone = legendeParc({ zone: "sansObjet", comptes });
-    expect(monoZone.perimetre).not.toMatch(/zone/);
-    expect(monoZone.horsCompte).not.toBeNull();
-  });
-
-  /** LA CASSE : une agrégation qui compterait tout perd sa réserve. */
-  it("perd sa réserve le jour où le compteur compte tout", () => {
-    const { perimetre, horsCompte } = legendeParc({
-      zone: "toutes",
-      comptes: porteursComptesPar(compteTout),
-    });
-    expect(horsCompte).toBeNull();
-    expect(perimetre).toMatch(
-      /vos équipements, l'établissement lui-même ou vos salariés/,
-    );
-  });
-
-  /** L'AUTRE CASSE : une agrégation qui ne compte rien ne promet rien. */
-  it("n'affirme rien quand le compteur ne compte rien", () => {
-    const { perimetre, horsCompte } = legendeParc({
-      zone: "toutes",
-      comptes: porteursComptesPar(compteRien),
-    });
-    expect(perimetre).toBe(
-      "Ces chiffres et les familles ci-dessous ne comptent rien.",
-    );
-    expect(horsCompte).toMatch(/vos équipements/);
-  });
-
-  it("suit un porteur qui disparaîtrait du référentiel", () => {
-    // Le jour où plus aucune obligation ne serait portée par un salarié, la
-    // phrase cesse de le nommer — sans qu'une ligne d'écran bouge.
-    const servis = new Set<PorteurObligation>(["equipement", "etablissement"]);
-    const { horsCompte } = legendeParc({
-      zone: "toutes",
-      comptes: porteursDuParc(),
-      porteursServis: servis,
-    });
-    expect(horsCompte).toBe(
-      "Ce qui est dû au titre de l'établissement lui-même n'y figure pas.",
-    );
-  });
-});
-
-describe("l'agrégation sondée du parc", () => {
-  /**
-   * Ce que le bandeau du parc compte, mesuré et non déclaré. [2026-10-25 :
-   * la plaque des zones du hero, qui comptait le même porteur, est retirée ;
-   * sa sonde et sa légende avec elle.]
-   */
-  it("le bandeau du parc compte les équipements", () => {
-    expect([...porteursDuParc()]).toEqual(["equipement"]);
-  });
-
-  it("il ne couvre pas tout ce que le référentiel porte", () => {
-    expect(porteursHorsCompte(porteursDuParc())).toEqual([
-      "etablissement",
-      "salarie",
-    ]);
   });
 });
 
