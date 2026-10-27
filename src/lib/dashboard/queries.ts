@@ -19,6 +19,12 @@ import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu"
 import { registrePrudent, retenueParPrudence } from "@/lib/calendrier/prudence";
 import { couvertureDuDossier } from "@/lib/perimetre/faits";
 import { cache } from "react";
+import { comptesModulesDuRendu } from "@/lib/etablissements/modules";
+import { prestatairesDuRendu } from "@/lib/prestataires/queries";
+import { JOURS_APRES } from "./frise";
+import { instantDuRendu } from "@/lib/dates/instant-du-rendu";
+import { comptesParcDuRendu } from "@/lib/equipements/queries";
+import { compterRapportsDuDossier } from "@/lib/rapports/queries";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { compterActions } from "@/lib/actions/queries";
@@ -84,21 +90,6 @@ import {
  * registre de sécurité en dépend) et qu'aucune requête d'échéances ne doit
  * ramener.
  */
-
-/** Statuts d'un permis de feu / plan de prévention encore ouvert : tout sauf
- *  l'état final ou l'abandon. */
-const STATUTS_PERMIS_OUVERTS = [
-  "brouillon",
-  "attente_signatures",
-  "valide",
-  "en_cours",
-] as const;
-const STATUTS_PLAN_OUVERTS = [
-  "brouillon",
-  "inspection_faite",
-  "attente_signatures",
-  "valide",
-] as const;
 
 // Le type vit avec la répartition pure (`barres-mois.ts`) ; réexporté ici pour
 // les widgets qui le prenaient à ce module.
@@ -171,6 +162,58 @@ export type EvenementFenetre = {
 export { marquesAConfirmerDuRendu };
 
 /**
+ * Les lignes que lisent les fenêtres d'événements (`listerEvenementsFenetre`),
+ * bornées à la frise, mémoïsées sur le rendu (`cache()`, clés primitives).
+ */
+export const lignesEvenementsDuRendu = cache(async function lignesEvenementsDuRendu(
+  etablissementId: string,
+  debutDuJourMs: number,
+  batimentId: string | null,
+  urgentsSeulement: boolean,
+) {
+  const user = await requireUser();
+  // La borne de la plus longue fenêtre (la frise, `JOURS_APRES`) reste dans la requête : les
+  // fenêtres plus courtes se coupent en mémoire, mais rien au-delà de la frise
+  // n'est lu (revue du lot 1).
+  const finMax = ajouterJours(new Date(debutDuJourMs), JOURS_APRES);
+  return prisma.verification.findMany({
+    // Composées et non diffusées, comme `listerVerifications` : la portée par
+    // bâtiment pose un `OR`, et ce site n'échappait à l'écrasement que parce
+    // que sa condition d'urgence porte `statut` et non `OR` — un accident, pas
+    // une garantie (cf. `toutesLesConditions`).
+    where: toutesLesConditions(
+      {
+        etablissementId,
+        etablissement: { entreprise: { userId: user.id } },
+        datePrevue: { lte: finMax },
+      },
+      porteeBatiment(batimentId ?? undefined),
+      // La même clause que `listerVerifications`, prise au même endroit : la
+      // liste locale `a_planifier + depassee` datait d'avant le N2 et manquait
+      // toute ligne roulée — « planifiée » à date passée — c'est-à-dire la
+      // forme normale du retard depuis l'ADR-034.
+      urgentsSeulement ? urgenceSeule(new Date(debutDuJourMs)) : {},
+    ),
+    include: {
+      equipement: {
+        select: {
+          libelle: true,
+          batiment: { select: { id: true, nom: true } },
+        },
+      },
+      // Le porteur salarié (ADR-023) : sans cette sélection, la ligne
+      // d'une personne s'afficherait « Tout l'établissement ».
+      salarie: { select: { nom: true, prenom: true } },
+      // La source de la prescription : les vues calendrier du board affichent
+      // des libellés d'échéance comme les autres surfaces, et doivent donc
+      // pouvoir dire lesquelles sont contractuelles (ADR-032).
+      prescription: { select: { source: true } },
+    },
+    orderBy: { datePrevue: "asc" },
+  });
+});
+
+/**
  * Liste tous les événements de vérification sur une fenêtre glissante
  * de `joursHorizon` jours à partir d'aujourd'hui. Utilisé par les
  * widgets « Semaine » (7 j) et « 30 prochains jours », et par le flux calendrier.
@@ -199,52 +242,32 @@ export async function listerEvenementsFenetre(
     batimentId?: string;
   },
 ): Promise<EvenementFenetre[]> {
-  const user = await requireUser();
-  const now = new Date();
+  if (joursHorizon > JOURS_APRES) {
+    throw new Error(`Fenêtre de ${joursHorizon} jours : au-delà de la frise (${JOURS_APRES}).`);
+  }
+  // L'instant du rendu, partagé : les lectures mémoïsées par jour civil
+  // tombent sur la même clé (revue du lot 1).
+  const now = instantDuRendu();
   // Borne haute prise en jours civils : la fenêtre « 30 jours » couvre le
   // trentième jour en entier, changements d'heure compris.
   const fin = ajouterJours(debutDuJour(now), joursHorizon);
 
-  // Les marques « à confirmer » (revue du lot 1), sous la même portée, lues en
-  // même temps que les lignes : elles n'en dépendent pas.
-  const [verifs, marques] = await Promise.all([
-    prisma.verification.findMany({
-    // Composées et non diffusées, comme `listerVerifications` : la portée par
-    // bâtiment pose un `OR`, et ce site n'échappait à l'écrasement que parce
-    // que sa condition d'urgence porte `statut` et non `OR` — un accident, pas
-    // une garantie (cf. `toutesLesConditions`).
-    where: toutesLesConditions(
-      {
-        etablissementId,
-        etablissement: { entreprise: { userId: user.id } },
-        datePrevue: { lte: fin },
-      },
-      porteeBatiment(filtres?.batimentId),
-      // La même clause que `listerVerifications`, prise au même endroit : la
-      // liste locale `a_planifier + depassee` datait d'avant le N2 et manquait
-      // toute ligne roulée — « planifiée » à date passée — c'est-à-dire la
-      // forme normale du retard depuis l'ADR-034.
-      filtres?.urgentsSeulement ? urgenceSeule(debutDuJour(now)) : {},
+  // Une lecture par rendu pour toutes les fenêtres (7 j, 30 j, frise) : la
+  // borne de l'horizon se pose ici, en mémoire, sur la même condition que la
+  // requête portait (`datePrevue <= fin`). [2026-10-27, plan performance,
+  // lot 1 : trois lectures des mêmes lignes à chaque tableau de bord.] La
+  // lecture partagée est bornée à la frise (`JOURS_APRES`).
+  // Les marques « à confirmer » (revue du lot 1), lues en même temps.
+  const [toutes, marques] = await Promise.all([
+    lignesEvenementsDuRendu(
+      etablissementId,
+      debutDuJour(now).getTime(),
+      filtres?.batimentId ?? null,
+      filtres?.urgentsSeulement ?? false,
     ),
-    include: {
-      equipement: {
-        select: {
-          libelle: true,
-          batiment: { select: { id: true, nom: true } },
-        },
-      },
-      // Le porteur salarié (ADR-023) : sans cette sélection, la ligne
-      // d'une personne s'afficherait « Tout l'établissement ».
-      salarie: { select: { nom: true, prenom: true } },
-      // La source de la prescription : les vues calendrier du board affichent
-      // des libellés d'échéance comme les autres surfaces, et doivent donc
-      // pouvoir dire lesquelles sont contractuelles (ADR-032).
-      prescription: { select: { source: true } },
-    },
-    orderBy: { datePrevue: "asc" },
-    }),
     marquesAConfirmerDuRendu(etablissementId),
   ]);
+  const verifs = toutes.filter((v) => v.datePrevue.getTime() <= fin.getTime());
 
   // Filtre par domaine côté TS, comme `listerVerifications` : le domaine
   // est porté par l'obligation en référentiel, pas en base.
@@ -311,7 +334,9 @@ export async function compterVerifsParEquipement(
   etablissementId: string,
 ): Promise<Map<string, StatsEquipement>> {
   const user = await requireUser();
-  const now = new Date();
+  // L'instant du rendu, partagé : les lectures mémoïsées par jour civil
+  // tombent sur la même clé (revue du lot 1).
+  const now = instantDuRendu();
   const debutFenetreHistorique = debutDuJour(
     ajouterMois(now, -MOIS_FENETRE_HISTORIQUE),
   );
@@ -534,64 +559,24 @@ export async function getModulesMatrice(
     etablissementId,
     etablissement: { entreprise: { userId: user.id } },
   } as const;
-  const now = new Date();
-  // Échu = la date de fin est **antérieure au jour courant**. Comparer à
-  // `now` brut faisait passer « échu » un permis qui court encore jusqu'à
-  // ce soir.
-  const debutJour = debutDuJour(now);
+  // L'instant du rendu, partagé : les lectures mémoïsées par jour civil
+  // tombent sur la même clé (revue du lot 1).
+  const now = instantDuRendu();
 
-  const [
-    accessibilite,
-    nbPermis,
-    nbPermisEchus,
-    nbPlans,
-    nbPlansSansInspection,
-    nbPlansEchus,
-    carnet,
-    prestataires,
-    suiviParLeCalendrier,
-  ] = await Promise.all([
+  const [accessibilite, comptes, prestataires, suiviParLeCalendrier] = await Promise.all([
     prisma.registreAccessibilite.findFirst({
       where: scope,
       select: { publie: true },
     }),
-    prisma.permisFeu.count({ where: scope }),
-    prisma.permisFeu.count({
-      where: {
-        ...scope,
-        dateFin: { lt: debutJour },
-        statut: { in: [...STATUTS_PERMIS_OUVERTS] },
-      },
-    }),
-    prisma.planPrevention.count({ where: scope }),
-    prisma.planPrevention.count({
-      where: {
-        ...scope,
-        statut: { in: [...STATUTS_PLAN_OUVERTS] },
-        inspectionDate: null,
-      },
-    }),
-    prisma.planPrevention.count({
-      where: {
-        ...scope,
-        dateFin: { lt: debutJour },
-        statut: { in: [...STATUTS_PLAN_OUVERTS] },
-      },
-    }),
-    prisma.carnetSanitaire.findFirst({
-      where: scope,
-      select: {
-        id: true,
-        analyses: {
-          orderBy: { dateAnalyse: "desc" },
-          take: 1,
-          select: { dateAnalyse: true },
-        },
-      },
-    }),
-    prisma.prestataire.findMany({ where: scope }),
+    // Permis, plans et carnet : partagés avec la barre latérale, lus une fois
+    // par rendu (plan performance, lot 1). Échu = la date de fin est
+    // **antérieure au jour courant** : comparer à l'instant brut faisait passer
+    // « échu » un permis qui court encore jusqu'à ce soir.
+    comptesModulesDuRendu(etablissementId, debutDuJour(now).getTime()),
+    prestatairesDuRendu(etablissementId),
     eauChaudeSuivieParLeCalendrier(scope),
   ]);
+  const carnet = comptes.carnet;
 
   // Fraîcheur du carnet sanitaire : mesurée **point par point**.
   //
@@ -646,12 +631,8 @@ export async function getModulesMatrice(
       existe: accessibilite !== null,
       publie: accessibilite?.publie ?? false,
     },
-    permisFeu: { total: nbPermis, echusNonClos: nbPermisEchus },
-    plansPrevention: {
-      total: nbPlans,
-      sansInspection: nbPlansSansInspection,
-      echusNonClos: nbPlansEchus,
-    },
+    permisFeu: comptes.permisFeu,
+    plansPrevention: comptes.plansPrevention,
     carnetSanitaire: {
       existe: carnet !== null,
       nbPoints,
@@ -751,7 +732,9 @@ export const getDashboardData = cache(async function getDashboardData(
     etablissementId,
     etablissement: { entreprise: { userId: user.id } },
   } as const;
-  const now = new Date();
+  // L'instant du rendu, partagé : les lectures mémoïsées par jour civil
+  // tombent sur la même clé (revue du lot 1).
+  const now = instantDuRendu();
   const debutFenetreHistorique = debutDuJour(
     ajouterMois(now, -MOIS_FENETRE_HISTORIQUE),
   );
@@ -873,15 +856,15 @@ export const getDashboardData = cache(async function getDashboardData(
         },
       },
     }),
-    prisma.equipement.count({ where: scope }),
+    // Le parc compté une fois par rendu, partagé avec la barre latérale.
+    comptesParcDuRendu(etablissementId).then((c) => c.total),
     // Dans le `Promise.all` et non derrière lui : le rapprochement ne dépend
     // que de `etablissementId` et `user.id`, tous deux disponibles avant.
     // Placé après, il ajoutait trois requêtes sérialisées derrière tout le
     // reste du tableau de bord (ADR-024).
     chargerTransmissions(etablissementId, user.id, now),
-    prisma.rapportVerification.count({
-      where: { verification: scope },
-    }),
+    // Le même nombre que la carte du tableau de bord, lu une fois par rendu.
+    compterRapportsDuDossier(etablissementId),
     // Le score ne peut pas conclure « satisfaisante » en ignorant ce que
     // l'écran « Ce qui doit être en place » affiche : un bureau de six
     // personnes sortait à 100 avec treize états non renseignés. Lu par la même

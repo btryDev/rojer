@@ -123,10 +123,11 @@ L'entrée reste donc **toujours visible et toujours cliquable**, mais porte son
 qui concerne l'établissement remonte en tête, le reste suit.
 
 Le signal vient de `getEtatModules()` (`src/lib/etablissements/modules.ts`),
-volontairement pauvre — trois comptages, pas de jointure : il tourne dans le
+volontairement pauvre — ~~trois comptages, pas de jointure~~ — : il tourne dans le
 layout, donc sur chaque page. `getModulesMatrice` reste la source riche du
-tableau de bord ; les deux partagent les règles d'applicabilité, pas les
-requêtes.
+tableau de bord ; ~~les deux partagent les règles d'applicabilité, pas les
+requêtes~~ [2026-10-27, plan performance, lot 1 : les deux partagent leurs
+lectures — une requête de comptage et une du carnet, mémoïsées sur le rendu].
 
 ### Reste à faire : activer un module a posteriori
 

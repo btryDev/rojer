@@ -5,7 +5,13 @@ import { requireUser } from "@/lib/auth/require-user";
 import type { StatutAction } from "@prisma/client";
 import { cache } from "react";
 import { JOURS_HORIZON_PROCHE, ajouterJours, debutDuJour } from "@/lib/dates";
-import { STATUTS_ACTION_OUVERTE, joursDeRetard } from "@/lib/dates/retard";
+import {
+  STATUTS_ACTION_OUVERTE,
+  estActionEnRetard,
+  estActionSansEcheance,
+  joursDeRetard,
+} from "@/lib/dates/retard";
+import { instantDuRendu } from "@/lib/dates/instant-du-rendu";
 
 // ~~`"libre"`~~ — retirée le 2026-10-24 : une action sans origine est
 // impossible (CHECK `Action_origine_xor`, ADR-002), le filtre « Libres » ne
@@ -129,8 +135,11 @@ export async function getAction(id: string) {
 
 /**
  * Compteurs du plan d'actions (tableau de bord, en-tête de la page,
- * synthèses PDF). Agrégats calculés en base pour rester performants même
- * à volume.
+ * synthèses PDF). ~~Agrégats calculés en base pour rester performants même
+ * à volume.~~ [2026-10-27, plan performance, lot 1 : comptés en mémoire sur
+ * UNE lecture des actions suivies — ouvertes ou en cours, et levées des
+ * trente derniers jours —, partagée sur le rendu. Bornée par les actions à
+ * traiter, pas par l'historique : les actions closes ne sont pas lues.]
  *
  * Toutes les bornes de date sont prises au **début du jour civil de
  * Paris** (ADR-011). Comparer `echeance` à `new Date()` brut faisait
@@ -145,6 +154,7 @@ export async function getAction(id: string) {
  * plus diverger : ils divergeaient, et l'écran affichait « 12 en retard » en
  * rose au-dessus de trois lignes filtrées.
  */
+// Sa forme en mémoire, pour les compteurs : `estDOrigine`, plus bas.
 function clauseOrigine(origine: OrigineAction | undefined) {
   if (origine === "duerp") return { risqueId: { not: null } };
   if (origine === "verification") return { verificationId: { not: null } };
@@ -153,7 +163,7 @@ function clauseOrigine(origine: OrigineAction | undefined) {
 
 export async function compterActions(
   etablissementId: string,
-  now: Date = new Date(),
+  now: Date = instantDuRendu(),
   /**
    * Le filtre appliqué à la liste que ces compteurs coiffent. Par défaut
    * aucun — les appelants qui résument l'ensemble du plan (sidebar, PDF) ne
@@ -165,90 +175,131 @@ export async function compterActions(
    */
   filtres: { origine?: OrigineAction } = {},
 ) {
-  return compteursActionsDuRendu(
-    etablissementId,
-    debutDuJour(now).getTime(),
+  const debut = debutDuJour(now);
+  return compterLesActions(
+    await actionsSuiviesDuRendu(etablissementId, debut.getTime()),
+    debut,
     filtres.origine,
   );
 }
 
+/** Ce que les compteurs et les retards lisent d'une action. */
+type ActionSuivie = {
+  id: string;
+  libelle: string;
+  statut: StatutAction;
+  echeance: Date | null;
+  leveeLe: Date | null;
+  risqueId: string | null;
+  verificationId: string | null;
+};
+
+/** La règle de `clauseOrigine`, sur une action déjà lue : les deux formes
+ *  restent côte à côte en esprit — la liste filtre en base, les compteurs en
+ *  mémoire — et se citent l'une l'autre pour ne pas diverger. */
+const estDOrigine = (a: ActionSuivie, origine: OrigineAction | undefined) =>
+  origine === "duerp"
+    ? a.risqueId !== null
+    : origine === "verification"
+      ? a.verificationId !== null
+      : true;
+
 /**
- * Le corps de `compterActions`, mémoïsé par `cache()` sur le rendu (audit
- * Next.js du 2026-10-14, H2) : la barre latérale et le tableau de bord en
- * demandaient chacun les cinq comptages, dans le même rendu.
+ * Les actions que les compteurs et les retards lisent — ouvertes ou en cours,
+ * plus les levées des trente derniers jours —, toutes origines confondues, en
+ * UNE requête mémoïsée sur le rendu (`cache()`).
+ *
+ * [2026-10-27, plan performance, lot 1] Remplace cinq `count` par origine
+ * demandée, plus la lecture des retards : le tableau de bord et la barre
+ * latérale en faisaient dix, plus une. Les actions closes depuis plus de
+ * trente jours, l'historique qui grossit, ne sont pas lues.
  *
  * LA CLÉ EST LE DÉBUT DU JOUR, EN MILLISECONDES, et non l'instant : c'est la
  * seule chose que le calcul lit de l'horloge. Deux appelants qui prennent
  * chacun leur `new Date()` à quelques millisecondes d'écart tombent donc sur
- * la même entrée — et sur le même résultat, puisque le calcul ne pouvait pas
- * les distinguer. `cache()` compare par identité : un `Date` ne serait jamais
+ * la même entrée. `cache()` compare par identité : un `Date` ne serait jamais
  * deux fois le même. Hors rendu RSC (PDF, actions), rien n'est mémoïsé.
- *
- * Plus d'actions ne naissent ni ne bougent pendant un rendu : le partage entre
- * le layout et la page, rendus en parallèle, ne lit rien de périmé.
  */
-const compteursActionsDuRendu = cache(async function compteursActionsDuRendu(
+export const actionsSuiviesDuRendu = cache(async function actionsSuiviesDuRendu(
   etablissementId: string,
   debutDuJourMs: number,
+): Promise<ActionSuivie[]> {
+  const user = await requireUser();
+  return prisma.action.findMany({
+    where: {
+      etablissementId,
+      etablissement: { entreprise: { userId: user.id } },
+      OR: [
+        // Le module de dates expose la liste en `readonly string[]` — il reste
+        // utilisable côté client, sans importer l'enum Prisma. Le cast
+        // n'élargit rien : les deux littéraux sont bien des `StatutAction`.
+        { statut: { in: [...STATUTS_ACTION_OUVERTE] as StatutAction[] } },
+        {
+          statut: "levee",
+          leveeLe: { gte: ajouterJours(new Date(debutDuJourMs), -JOURS_HORIZON_PROCHE) },
+        },
+      ],
+    },
+    select: {
+      id: true,
+      libelle: true,
+      statut: true,
+      echeance: true,
+      leveeLe: true,
+      risqueId: true,
+      verificationId: true,
+    },
+  });
+});
+
+/**
+ * Les compteurs des deux origines — mesures du DUERP, points relevés par un
+ * rapport — sur UNE lecture des actions suivies. Pour les appelants hors
+ * rendu (PDF), où `cache()` ne mémoïse pas et où deux `compterActions`
+ * liraient deux fois les mêmes actions (revue du lot 1).
+ */
+export async function compterActionsParOrigine(
+  etablissementId: string,
+  now: Date = instantDuRendu(),
+) {
+  const debut = debutDuJour(now);
+  const actions = await actionsSuiviesDuRendu(etablissementId, debut.getTime());
+  return {
+    duerp: compterLesActions(actions, debut, "duerp"),
+    verification: compterLesActions(actions, debut, "verification"),
+  };
+}
+
+/** Les compteurs du plan d'actions sur les actions suivies. Pure. */
+function compterLesActions(
+  actions: readonly ActionSuivie[],
+  debut: Date,
   origine: OrigineAction | undefined,
 ) {
-  const user = await requireUser();
-  const scope = {
-    etablissementId,
-    etablissement: { entreprise: { userId: user.id } },
-    ...clauseOrigine(origine),
-  } as const;
-  const debut = new Date(debutDuJourMs);
-  // Le module de dates expose la liste en `readonly string[]` — il reste
-  // utilisable côté client, sans importer l'enum Prisma. Le cast n'élargit
-  // rien : les deux littéraux sont bien des `StatutAction`.
-  const ouvertesOuEnCours = {
-    in: [...STATUTS_ACTION_OUVERTE] as StatutAction[],
-  };
-
-  const [ouvertes, enCours, enRetard, sansEcheance, leveesRecemment] =
-    await Promise.all([
-      prisma.action.count({
-        where: { ...scope, statut: "ouverte" },
-      }),
-      prisma.action.count({
-        where: { ...scope, statut: "en_cours" },
-      }),
-      prisma.action.count({
-        where: {
-          ...scope,
-          statut: ouvertesOuEnCours,
-          echeance: { lt: debut },
-        },
-      }),
-      // Angle mort du plan d'actions : sans date, une action n'apparaît
-      // ni au calendrier, ni dans la frise, ni dans les « 30 prochains
-      // jours », et ne peut par construction jamais être « en retard ».
-      // Elle n'est pas fautive — elle est invisible. Ce compteur permet à
-      // l'interface d'inviter à la dater, sur le modèle du « sans date »
-      // déjà affiché pour les vérifications à planifier.
-      prisma.action.count({
-        where: { ...scope, statut: ouvertesOuEnCours, echeance: null },
-      }),
-      prisma.action.count({
-        where: {
-          ...scope,
-          statut: "levee",
-          leveeLe: { gte: ajouterJours(debut, -JOURS_HORIZON_PROCHE) },
-        },
-      }),
-    ]);
-
+  const retenues = actions.filter((a) => estDOrigine(a, origine));
+  const ouvertes = retenues.filter((a) => a.statut === "ouverte").length;
+  const enCours = retenues.filter((a) => a.statut === "en_cours").length;
+  const limiteLevee = ajouterJours(debut, -JOURS_HORIZON_PROCHE).getTime();
   return {
     ouvertes,
     enCours,
-    enRetard,
+    // Les prédicats partagés du plan d'actions (`dates/retard.ts`) : la borne
+    // est le début du jour civil, que `debut` est déjà.
+    enRetard: retenues.filter((a) => estActionEnRetard(a, debut)).length,
+    // Angle mort du plan d'actions : sans date, une action n'apparaît ni au
+    // calendrier, ni dans la frise, ni dans les « 30 prochains jours », et ne
+    // peut par construction jamais être « en retard ». Elle n'est pas fautive
+    // — elle est invisible. Ce compteur permet à l'interface d'inviter à la
+    // dater, sur le modèle du « sans date » déjà affiché pour les
+    // vérifications à planifier.
     /** Actions ouvertes qu'aucune date ne porte — à dater, pas à traiter. */
-    sansEcheance,
-    leveesRecemment, // sur 30 derniers jours
+    sansEcheance: retenues.filter(estActionSansEcheance).length,
+    leveesRecemment: retenues.filter(
+      (a) => a.statut === "levee" && a.leveeLe !== null && a.leveeLe.getTime() >= limiteLevee,
+    ).length, // sur 30 derniers jours
     totalACouvrir: ouvertes + enCours,
   };
-});
+}
 
 export type StatsRetardActions = {
   nb: number;
@@ -273,23 +324,19 @@ export type StatsRetardActions = {
  */
 export async function statsActionsEnRetard(
   etablissementId: string,
-  now: Date = new Date(),
+  now: Date = instantDuRendu(),
   /** Le widget du plan d'actions lit les mesures du DUERP (ADR-048, lot 3). */
   filtres: { origine?: OrigineAction } = {},
 ): Promise<StatsRetardActions> {
-  const user = await requireUser();
-
-  const enRetard = await prisma.action.findMany({
-    where: {
-      etablissementId,
-      etablissement: { entreprise: { userId: user.id } },
-      ...clauseOrigine(filtres.origine),
-      statut: { in: [...STATUTS_ACTION_OUVERTE] as StatutAction[] },
-      echeance: { lt: debutDuJour(now) },
-    },
-    select: { id: true, libelle: true, echeance: true },
-    orderBy: { echeance: "asc" },
-  });
+  // Les mêmes actions que les compteurs, lues une fois par rendu (lot 1 du
+  // plan performance) : en retard = ouverte ou en cours, échéance avant le
+  // début du jour civil, la plus ancienne d'abord.
+  const debut = debutDuJour(now);
+  const enRetard = (await actionsSuiviesDuRendu(etablissementId, debut.getTime()))
+    .filter(
+      (a) => estDOrigine(a, filtres.origine) && estActionEnRetard(a, debut),
+    )
+    .sort((a, b) => (a.echeance as Date).getTime() - (b.echeance as Date).getTime());
 
   if (enRetard.length === 0) {
     return { nb: 0, retardMoyenJours: 0, plusAncienne: null };

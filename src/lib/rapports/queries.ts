@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { ORDRE_RAPPORT_PLUS_RECENT } from "./derniere-realisation";
 import { requireUser } from "@/lib/auth/require-user";
@@ -182,13 +183,17 @@ export async function listerRapportsDUneVerification(verificationId: string) {
   });
 }
 
-/** Tableau de bord : combien de rapports sont archivés (audit Next.js du 2026-10-14, B6). */
-export async function compterRapportsDuDossier(etablissementId: string) {
+/** Tableau de bord : combien de rapports sont archivés (audit Next.js du 2026-10-14, B6).
+ *  Mémoïsé sur le rendu : la page et `getDashboardData` le demandent (plan
+ *  performance, lot 1). */
+export const compterRapportsDuDossier = cache(async function compterRapportsDuDossier(
+  etablissementId: string,
+) {
   const user = await requireUser();
   return prisma.rapportVerification.count({
     where: { etablissementId, etablissement: { entreprise: { userId: user.id } } },
   });
-}
+});
 
 /** Tableau de bord : les derniers rapports, du plus récent au plus ancien (B6). */
 export async function listerRapportsRecents(etablissementId: string, nombre: number) {

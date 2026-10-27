@@ -36,6 +36,11 @@ vi.mock("@/lib/prisma", () => ({
 vi.mock("@/lib/actions/queries", async (orig) => ({
   ...(await orig<typeof import("@/lib/actions/queries")>()),
   compterActions: async () => ({ totalACouvrir: 0, enRetard: 0, ouvertes: 0, enCours: 0, leveesRecemment: 0 }),
+  // Les deux origines sur une seule lecture (plan performance, lot 1).
+  compterActionsParOrigine: async () => {
+    const vide = { totalACouvrir: 0, enRetard: 0, ouvertes: 0, enCours: 0, leveesRecemment: 0, sansEcheance: 0 };
+    return { duerp: vide, verification: vide };
+  },
   listerActions: async () => [],
 }));
 vi.mock("@/lib/rapports/queries", async (orig) => ({

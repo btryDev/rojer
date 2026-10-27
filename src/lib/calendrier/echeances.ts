@@ -1,7 +1,9 @@
-import type { StatutPermisFeu, StatutPlanPrevention } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { cache } from "react";
+import { prestatairesDuRendu } from "@/lib/prestataires/queries";
+import { carnetDuRendu } from "@/lib/etablissements/modules";
+import { STATUTS_PERMIS_FEU_CLOS, STATUTS_PLAN_PREVENTION_CLOS } from "./statuts-operations";
 import { JOURS_APRES } from "@/lib/dashboard/frise";
 import {
   MOIS_PERIODE_ANNUELLE,
@@ -278,19 +280,11 @@ export const MOIS_MAJ_DUERP = MOIS_PERIODE_ANNUELLE;
  *  par le module carnet sanitaire). Même arithmétique calendaire. */
 export const MOIS_ANALYSE_LEGIONELLES = MOIS_PERIODE_ANNUELLE;
 
-/** Statuts qui soldent un permis de feu — au-delà, plus rien à faire.
- *  Miroir exact des `permisOuverts` du tableau de bord : les deux écrans
- *  doivent parler du même ensemble. Le `satisfies` garantit qu'un statut
- *  ajouté à l'enum ne passe pas inaperçu ici. */
-export const STATUTS_PERMIS_FEU_CLOS = [
-  "termine",
-  "annule",
-] as const satisfies readonly StatutPermisFeu[];
-/** Idem pour une opération avec entreprise extérieure. */
-export const STATUTS_PLAN_PREVENTION_CLOS = [
-  "clos",
-  "annule",
-] as const satisfies readonly StatutPlanPrevention[];
+// ~~`STATUTS_PERMIS_FEU_CLOS` et `STATUTS_PLAN_PREVENTION_CLOS` vivaient ici,
+// « miroir exact des `permisOuverts` du tableau de bord ».~~ [2026-10-27, plan
+// performance, lot 1 : déplacés dans `statuts-operations.ts`, que les comptages
+// de modules lisent aussi — le tableau de bord n'a plus de liste « ouverts » à
+// tenir en miroir, il compte le complément.]
 
 /** Le statut lu depuis une donnée non typée (test, snapshot) est une
  *  chaîne : on compare sans forcer l'enum. */
@@ -737,23 +731,12 @@ const sourceDuerp: SourceEcheances = async ({
 };
 
 const sourcePrestataires: SourceEcheances = async ({
-  scope,
   aujourdhui,
   etablissementId,
 }) => {
-  const prestataires = await prisma.prestataire.findMany({
-    where: scope,
-    select: {
-      id: true,
-      raisonSociale: true,
-      attestationUrssafCle: true,
-      attestationUrssafValableJusquA: true,
-      attestationUrssafRemiseLe: true,
-      attestationUrssafEmiseLe: true,
-      updatedAt: true,
-      assuranceRcProValableJusquA: true,
-    },
-  });
+  // L'annuaire du rendu, partagé (plan performance, lot 1) ; il porte la
+  // portée au compte dans sa requête.
+  const prestataires = await prestatairesDuRendu(etablissementId);
   return prestataires.flatMap((p) =>
     echeancesPrestataire(p, aujourdhui, etablissementId),
   );
@@ -827,17 +810,10 @@ const sourceLegionelles: SourceEcheances = async ({
   // déterminée. Le départage des analyses, lui, ne l'est pas — deux
   // analyses peuvent porter la même `dateAnalyse` (deux points de relevé
   // le même jour) : on tranche par ordre d'enregistrement.
+  // Le carnet et sa dernière analyse : la lecture que la barre latérale et la
+  // matrice partagent (`carnetDuRendu`, plan performance, lot 1).
   const [carnet, suivieParLeCalendrier] = await Promise.all([
-    prisma.carnetSanitaire.findFirst({
-      where: scope,
-      select: {
-        analyses: {
-          orderBy: [{ dateAnalyse: "desc" }, { createdAt: "desc" }],
-          take: 1,
-          select: { dateAnalyse: true },
-        },
-      },
-    }),
+    carnetDuRendu(etablissementId),
     eauChaudeSuivieParLeCalendrier(scope),
   ]);
   const e = echeanceLegionelles({

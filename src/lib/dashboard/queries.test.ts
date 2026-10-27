@@ -206,7 +206,12 @@ const h = vi.hoisted(() => {
         db.actions.filter((a) => correspond(a, args.where)).length,
     },
     duerp: { findFirst: async () => db.duerp },
-    equipement: { count: async () => db.nbEquipements },
+    // Le parc, compté une fois par rendu (`comptesParcDuRendu`, `groupBy` sur
+    // `actif`) : tout en service ici.
+    equipement: {
+      count: async () => db.nbEquipements,
+      groupBy: async () => [{ actif: true, _count: { _all: db.nbEquipements } }],
+    },
     rapportVerification: {
       /**
        * Deux comptes passent par ici : le total des rapports du dossier, et

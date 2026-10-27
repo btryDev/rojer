@@ -226,6 +226,68 @@ Reste, rangé dans les lots suivants :
 - **Cible : board ≤ 40 requêtes, barre latérale ≤ 8** — à vérifier par le lot 0.
   Gain sur tous les écrans, puisque la barre est partout.
 
+#### Résultats du lot 1 (2026-10-27)
+
+Méthode d'attribution : un traçage temporaire du client Prisma (pile d'appel
+capturée à l'appel, `next dev`), retiré avant commit, a ventilé chaque requête
+du tableau de bord par fonction. Le relevé a guidé les fusions ; il n'est pas
+resté dans le code.
+
+Fait — chaque lecture partagée est mémoïsée sur le rendu (`cache()`, clés
+primitives) et porte sa portée au compte dans sa requête :
+- compteurs du plan d'actions et retards : UNE lecture des actions suivies
+  (ouvertes, en cours, levées des trente derniers jours) au lieu de cinq
+  `count` par origine demandée, plus la lecture des retards
+  (`actionsSuiviesDuRendu`) — 11 requêtes → 1 pour les compteurs et le widget
+  des retards ; `getDashboardData` garde ses propres lectures d'actions (avec
+  l'appareil de la vérification, une relation) ;
+- ~~état du calendrier : partagé entre la barre latérale et la page
+  (`etatCalendrierDuRendu`) ;~~ [2026-10-27, revue du lot 1 : retiré. La page
+  répare le calendrier avant de lire, la barre non ; partager leur lecture
+  servait à la page les compteurs d'avant réparation. Voir le commentaire de
+  `navigation/sidebar-counts.ts`.]
+- fenêtres d'événements 7 j, 30 j et frise : une lecture, horizon posé en
+  mémoire (`lignesEvenementsDuRendu`) ;
+- permis, plans, carnet : partagés entre la barre et la matrice
+  (`comptesModulesDuRendu`, `carnetDuRendu`), comptés dans la base en une
+  requête — les
+  permis et plans s'accumulent, on ne les lit pas pour les compter
+  (équivalence aux `count` Prisma tenue contre une vraie base,
+  `comptes-modules.integration.test.ts`, éprouvé en cassant deux conditions) ;
+- prestataires : un annuaire lu une fois (`prestatairesDuRendu`) pour la
+  vigilance, la matrice, les transmissions et le calendrier ;
+- parc : un `groupBy` sur `actif` (`comptesParcDuRendu`) pour la barre, le
+  tableau de bord et la couverture ; eau chaude suivie, nombre de rapports :
+  mémoïsés.
+
+| Gros dossier (après les revues) | SQL avant → après | Total (ms) avant → après |
+|---|---|---|
+| Tableau de bord | 110 → 74 | 145 → 143 |
+| Page la plus simple (Documents) | 35 → 28 | ≈ 43 → 37 |
+| Calendrier | 54 → 47 | 123 → 115 |
+
+**Lecture honnête de ces chiffres.** En local, un aller-retour SQL coûte
+≈ 0,1 ms : retirer 36 requêtes ne se voit pas au chronomètre. Le gain est
+pour la production, où chaque aller-retour paie le réseau. L'écart restant
+entre le gros dossier et la démo (144 contre 73 ms au tableau de bord) ne
+vient plus de la base : c'est du calcul et du rendu (390 Ko de HTML, 280 Ko de
+RSC) — lots 3 et 6, à profiler avant de toucher.
+
+Non atteint, et pourquoi :
+- **≤ 40 requêtes au tableau de bord** : 74. Il reste sept lectures de lignes
+  de suivi aux formes différentes (frise, prochaines échéances, état, parc,
+  barres, score, compte) ; les fondre en une demande de réécrire leurs
+  projections — un lot à part, à ne lancer que si la production montre que
+  ces allers-retours pèsent.
+- **≤ 8 requêtes pour la barre latérale** : ≈ 28. La pastille « en retard »
+  lit toutes les sources d'échéances (calendrier, permis, plans, DUERP,
+  carnet, actions, prestataires) sur chaque page. Descendre sous ce seuil
+  demande soit de retirer la pastille de certaines pages (décision produit),
+  soit un cache partagé entre requêtes (hors plan : hébergement).
+- Les actions de la source du calendrier ne sont pas fondues dans la lecture
+  partagée : elles ont besoin de la vérification et de sa zone, une relation
+  qui coûte en SQL autant qu'elle économise.
+
 ### Lot 2 — Même traitement pour les autres écrans lourds (M)
 
 Calendrier, registre, équipements, DUERP, dans cet ordre (le plus consulté

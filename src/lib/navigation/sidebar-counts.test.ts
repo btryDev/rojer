@@ -31,7 +31,16 @@ vi.mock("@/lib/salaries/queries", () => ({
   compterTitresEnRetard: async () => 0,
 }));
 vi.mock("@/lib/prisma", () => ({
-  prisma: { equipement: { count: async () => 4 } },
+  // Le parc compté par `comptesParcDuRendu` (`groupBy` sur `actif`) : quatre
+  // en service, un retiré — qui ne doit pas compter.
+  prisma: {
+    equipement: {
+      groupBy: async () => [
+        { actif: true, _count: { _all: 4 } },
+        { actif: false, _count: { _all: 1 } },
+      ],
+    },
+  },
 }));
 vi.mock("@/lib/auth/require-user", () => ({
   requireUser: async () => ({ id: "user-1" }),

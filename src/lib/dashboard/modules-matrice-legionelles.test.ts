@@ -21,8 +21,11 @@ const { prismaMock, suivie } = vi.hoisted(() => {
     new Proxy({} as Record<string, unknown>, {
       get: (t, m: string) => (t[m] ??= vide(m)),
     });
+  // Les comptages agrégés des modules passent par une requête brute
+  // (`comptesModulesDuRendu`) : des comptes à zéro.
+  const queryRaw = vi.fn(async () => [{ total: BigInt(0), echus: BigInt(0), sansInspection: BigInt(0) }]);
   const prismaMock = new Proxy({} as Record<string, unknown>, {
-    get: (t, m: string) => (t[m] ??= modele()),
+    get: (t, m: string) => (m === "$queryRaw" ? queryRaw : (t[m] ??= modele())),
   });
   return { prismaMock, suivie: vi.fn() };
 });
