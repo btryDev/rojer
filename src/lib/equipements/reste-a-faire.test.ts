@@ -69,4 +69,23 @@ describe("resteAFaireDuParc", () => {
       resteAFaireDuParc({ appareilsMuets: [], nbEquipements: 0, nbSuggestions: 0, hrefModifier: href }),
     ).toEqual([]);
   });
+
+  it("nomme les contrôles sans échéance connue, après les réponses, et mène à la fiche", () => {
+    const lignes = resteAFaireDuParc({
+      appareilsMuets: [{ equipementId: "a", libelle: "Minipelle", champ: "sertAuLevageDePersonnes" }],
+      aDater: [
+        { equipementId: "x", libelle: "Extincteurs", nombre: 1 },
+        { equipementId: "y", libelle: "Hotte", nombre: 0 },
+      ],
+      nbEquipements: 3,
+      nbSuggestions: 0,
+      hrefModifier: href,
+      hrefFiche: (id) => `/e/${id}`,
+    });
+    expect(lignes.map((l) => l.genre)).toEqual(["questions", "dates"]);
+    expect(lignes[1]).toMatchObject({
+      titre: "Extincteurs : renseigner la date du dernier contrôle",
+      href: "/e/x",
+    });
+  });
 });

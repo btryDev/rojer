@@ -29,7 +29,9 @@ import {
   LIBELLE_SANS_RENDEZ_VOUS,
   type RegistreLigne,
 } from "@/lib/calendrier/etats";
-import { joursCivilsEntre } from "@/lib/dates";
+import { formaterDateCourteFr, joursCivilsEntre } from "@/lib/dates";
+import { estResultatRealise } from "@/lib/rapports/resultats";
+import { recoitUneDateDeclaree } from "@/lib/dernier-controle/regles";
 import { registrePrudent, type RetenueParPrudence } from "@/lib/calendrier/prudence";
 import {
   estActionEnRetard,
@@ -175,6 +177,46 @@ export type LigneHistoire = {
  * liste — il y a bien quelque chose à faire — mais sans tuile-date, et elle
  * se range après les échéances datées.
  */
+/**
+ * La date de dernier contrôle déclarée (ADR-051) QUAND c'est elle qui date la
+ * ligne : aucun rapport réalisé ne la supplante. Sinon `null`.
+ */
+function dateDeclareeSeule(v: {
+  dernierControleDeclareLe?: Date | null;
+  rapports: readonly { resultat: ResultatVerification }[];
+}): Date | null {
+  if (v.dernierControleDeclareLe == null) return null;
+  return v.rapports.some((r) => estResultatRealise(r.resultat)) ? null : v.dernierControleDeclareLe;
+}
+
+/** Un contrôle dont la date du dernier passage peut se déclarer (ADR-051). */
+export type ControleADater = {
+  id: string;
+  libelle: string;
+  /** La date déjà déclarée, sinon `null`. */
+  declareLe: Date | null;
+};
+
+/**
+ * Les contrôles de l'appareil que la fiche propose de dater : à rythme, sans
+ * rapport réalisé, et soit sans échéance connue — « à planifier » —, soit déjà
+ * datés par une déclaration, qui reste modifiable. Lu sur les lignes « à
+ * faire » : une ligne sans date y porte `date: null`.
+ */
+export function controlesADater(
+  eq: { verifications: readonly (VerificationFiche & { dernierControleDeclareLe?: Date | null })[] },
+  aFaire: readonly Pick<LigneAFaire, "cle" | "genre" | "date">[],
+): ControleADater[] {
+  const sansDate = new Set(
+    aFaire.filter((l) => l.genre === "verification" && l.date === null).map((l) => l.cle),
+  );
+  return eq.verifications
+    .filter((v) => recoitUneDateDeclaree(v))
+    .filter((v) => !v.rapports.some((r) => estResultatRealise(r.resultat)))
+    .filter((v) => sansDate.has(`v-${v.id}`) || v.dernierControleDeclareLe != null)
+    .map((v) => ({ id: v.id, libelle: v.libelleObligation, declareLe: v.dernierControleDeclareLe ?? null }));
+}
+
 export function lignesAFaire(
   eq: FicheEquipement,
   base: string,
@@ -218,7 +260,11 @@ export function lignesAFaire(
         // Le rendez-vous pris (ADR-049), dit à côté du délai.
         rendezVous: mentionRendezVous(v, maintenant),
         detail: aUnRendezVous(v, maintenant)
-          ? "Échéance portée au calendrier"
+          ? // ADR-051 : une échéance tirée d'une date DÉCLARÉE le dit — elle
+            // n'est adossée à aucune pièce.
+            dateDeclareeSeule(v) !== null
+            ? `Calculée d'après le dernier contrôle déclaré le ${formaterDateCourteFr(dateDeclareeSeule(v)!)}, sans rapport`
+            : "Échéance portée au calendrier"
           : etat === "enRetard"
             ? LIBELLE_AUCUNE_VERIFICATION
             : // SANS RENDEZ-VOUS (limite 1, 2026-09-15) : « à caler avec votre

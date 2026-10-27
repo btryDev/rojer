@@ -48,7 +48,10 @@ import {
   chapeauAFaire,
   LIGNES_A_FAIRE_VISIBLES,
   mentionResteAFaire,
+  controlesADater,
 } from "@/lib/equipements/fiche";
+import { DateDernierControle } from "@/components/equipements/DateDernierControle";
+import { declarerDernierControle } from "@/lib/dernier-controle/actions";
 import { caracteristiquesLisibles } from "@/lib/equipements/caracteristiques";
 import {
   construireFrise,
@@ -63,6 +66,7 @@ import { LABEL_PERIODICITE, LABEL_REALISATEUR } from "@/lib/calendrier/labels";
 import { LABEL_RESULTAT } from "@/lib/rapports/resultats";
 import type { RegistreLigne } from "@/lib/calendrier/etats";
 import {
+  cleJourCivil,
   formaterDateLongueFr,
   formaterJourMoisFr,
   formaterMoisAnneeFr,
@@ -141,6 +145,10 @@ export default async function EquipementDetailPage({
   // l'archivage prend le pas dans `classerVerification`, cette liste teste le
   // FAIT (`estRealisee`) et non l'état du jour.
   const histoire = lignesHistoire(eq, base);
+  // ADR-051 : les contrôles à rythme dont la date du dernier passage peut se
+  // déclarer — sans échéance connue, ou déjà datés par une déclaration.
+  const aDater = retire ? [] : controlesADater(eq, aFaire);
+  const aDaterSansDate = aDater.filter((c) => c.declareLe === null).length;
   const obligations = obligationsDeLEquipement(eq);
 
   // Ce qui vise cet appareil sans jamais tomber à une date. Lu au MOTEUR et
@@ -752,6 +760,47 @@ export default async function EquipementDetailPage({
                 </>
               )}
             </CarteFiche>
+
+            {/* ADR-051 (2026-10-27) : tant qu'un contrôle n'a pas d'échéance
+                connue, la fiche dit pourquoi et ce qui la donne. */}
+            {aDater.length > 0 && (
+              <CarteFiche titre="Date du dernier contrôle" corpsClassName="px-7 pb-6 pt-3 sm:px-8">
+                <p className="m-0 text-[13px] leading-[1.55] text-[color:var(--board-slate-ink)]">
+                  {aDaterSansDate > 0
+                    ? "Date du dernier contrôle inconnue : Rojer ne peut pas calculer le prochain. Renseignez-la."
+                    : "Échéance calculée d'après une date déclarée, sans rapport. Déposez le rapport quand vous l'avez : c'est lui qui prouve le contrôle."}
+                </p>
+                {aDaterSansDate > 0 ? (
+                  eq.dateMiseEnService ? (
+                    <p className="m-0 mt-2 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                      {`La mise en service du ${formaterDateLongueFr(eq.dateMiseEnService)} ne date pas ce contrôle\u00a0: le premier tombait avant le début du suivi dans Rojer.`}
+                    </p>
+                  ) : (
+                    <p className="m-0 mt-2 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                      Appareil neuf, jamais contrôlé&nbsp;?{" "}
+                      <Link
+                        href={`${base}/equipements/${equipementId}/modifier`}
+                        className="font-semibold text-[color:var(--board-blue-ink)] underline underline-offset-2 hover:text-[color:var(--board-ink)]"
+                      >
+                        Renseignez plutôt sa date de mise en service
+                      </Link>
+                      &nbsp;: le premier contrôle se calcule à partir d&apos;elle.
+                    </p>
+                  )
+                ) : null}
+                <div className="mt-4">
+                  <DateDernierControle
+                    aujourdhui={cleJourCivil(maintenant)}
+                    lignes={aDater.map((c) => ({
+                      id: c.id,
+                      libelle: c.libelle,
+                      declareLe: c.declareLe ? cleJourCivil(c.declareLe) : null,
+                      action: declarerDernierControle.bind(null, c.id),
+                    }))}
+                  />
+                </div>
+              </CarteFiche>
+            )}
 
             <CarteFiche titre="Ce qui a été fait" corpsClassName="pb-6 pt-3">
               {histoire.length === 0 ? (

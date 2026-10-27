@@ -21,6 +21,7 @@ import {
   type RegistreLigne,
 } from "@/lib/calendrier/etats";
 import { prochaineEcheanceConnue } from "@/lib/calendrier/prochaine-echeance";
+import { estCyclique } from "@/lib/calendrier/periodicite";
 import {
   porteursComptesPar,
   type LigneSondee,
@@ -71,6 +72,12 @@ export type EtatEquipement = {
    * (revue du lot 1 : le parc listait ces échéances sans la mention).
    */
   aConfirmer: string[];
+  /**
+   * Contrôles À RYTHME sans échéance connue — « à planifier », en retard ou
+   * non : la date de leur dernier passage les daterait (ADR-051). La page
+   * Équipements en fait une ligne « à faire » (2026-10-27).
+   */
+  aDater: number;
 };
 
 /**
@@ -168,8 +175,12 @@ export function repartirParEquipement(
       faites: 0,
       periodicites: [],
       aConfirmer: [],
+      aDater: 0,
     };
 
+    if (v.archiveLe === null && v.statut === "a_planifier" && estCyclique(v.periodicite)) {
+      courant.aDater += 1;
+    }
     if (!courant.periodicites.includes(v.periodicite)) {
       courant.periodicites.push(v.periodicite);
     }

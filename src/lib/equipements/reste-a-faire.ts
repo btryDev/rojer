@@ -45,6 +45,13 @@ export type LigneResteAFaire =
       href: string;
     }
   | {
+      genre: "dates";
+      cle: string;
+      titre: string;
+      detail: string;
+      href: string;
+    }
+  | {
       genre: "suggestions";
       cle: "suggestions";
       titre: string;
@@ -63,14 +70,20 @@ export type LigneResteAFaire =
  */
 export function resteAFaireDuParc({
   appareilsMuets,
+  aDater = [],
   nbEquipements,
   nbSuggestions,
   hrefModifier,
+  hrefFiche = hrefModifier,
 }: {
   appareilsMuets: readonly { equipementId: string; libelle: string; champ: ChampTriEtat }[];
+  /** Appareils dont des contrôles à rythme n'ont pas d'échéance connue (ADR-051). */
+  aDater?: readonly { equipementId: string; libelle: string; nombre: number }[];
   nbEquipements: number;
   nbSuggestions: number;
   hrefModifier: (equipementId: string) => string;
+  /** La fiche de l'appareil, où se déclare la date du dernier contrôle. */
+  hrefFiche?: (equipementId: string) => string;
 }): LigneResteAFaire[] {
   const parAppareil = new Map<string, { libelle: string; champs: ChampTriEtat[] }>();
   for (const a of appareilsMuets) {
@@ -89,6 +102,21 @@ export function resteAFaireDuParc({
     questions: champs.map((c) => QUESTION_COURTE[c]),
     href: hrefModifier(id),
   }));
+
+  // Après les réponses : une réponse peut changer le rythme, donc la date
+  // qu'une déclaration donnerait.
+  for (const a of aDater) {
+    if (a.nombre <= 0) continue;
+    lignes.push({
+      genre: "dates",
+      cle: `dates-${a.equipementId}`,
+      titre: `${a.libelle} : renseigner la date du dernier contrôle`,
+      detail: `${
+        a.nombre > 1 ? `${a.nombre} contrôles n'ont pas d'échéance connue` : "Un contrôle n'a pas d'échéance connue"
+      } : la date du dernier passage calcule le prochain. Appareil neuf ? Sa date de mise en service suffit.`,
+      href: hrefFiche(a.equipementId),
+    });
+  }
 
   if (nbEquipements === 0 && nbSuggestions > 0) {
     lignes.push({

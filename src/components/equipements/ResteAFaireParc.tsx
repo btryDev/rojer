@@ -49,9 +49,9 @@ export function ResteAFaireParc({
                 </p>
               )}
             </div>
-            {l.genre === "questions" ? (
+            {l.genre === "questions" || l.genre === "dates" ? (
               <Link href={l.href} className={buttonVariants({ variant: "board", size: "boardSm" })}>
-                Répondre
+                {l.genre === "questions" ? "Répondre" : "Renseigner"}
               </Link>
             ) : (
               <SuggestionsEnFenetre {...suggestions} forme="bouton" libelle="Voir les suggestions" />

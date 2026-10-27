@@ -722,6 +722,9 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     le datent pas (2026-10-24)
 50. **050** — Une demande d'assistance s'enregistre là où le doute naît, et
     ne part pas encore (2026-10-24)
+51. **051** — Une date de dernier contrôle déclarée date l'échéance suivante
+    sans rien prouver : règle 3 après le rapport et l'héritage, jamais une
+    réalisation (2026-10-27)
 
 [2026-10-15, ménage des ADR : 037, 038 et 043 manquaient à cette liste ;
 **il n'existe pas d'ADR-044** — annoncée dans

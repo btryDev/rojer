@@ -188,10 +188,18 @@ export default async function EquipementsPage({
   };
   const resteAFaire = resteAFaireDuParc({
     appareilsMuets: appareilsMuets(equipements, etab),
+    aDater: equipements
+      .filter((eq) => eq.actif)
+      .map((eq) => ({
+        equipementId: eq.id,
+        libelle: eq.libelle,
+        nombre: etatsVerifs.get(eq.id)?.aDater ?? 0,
+      })),
     nbEquipements: equipements.length,
     nbSuggestions: suggestionsRestantes.length,
     hrefModifier: (eqId) =>
       avecProvenance(`${base}/equipements/${eqId}/modifier`, origine),
+    hrefFiche: (eqId) => avecProvenance(`${base}/equipements/${eqId}`, origine),
   });
 
   // Ajouter depuis un parc filtré ouvre le formulaire sur ce bâtiment :
