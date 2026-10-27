@@ -234,10 +234,11 @@ export function HeroEtablissement({
       <CartePhotoLieu etablissementId={etab.id} photo={photo} illustration={illustration} />
     </div>
 
-    {/* Hors des cartes, en bas à droite du hero (demande de la
-        propriétaire) : le geste vaut pour le dossier, pas pour la fiche. */}
+    {/* Hors des cartes, ~~en bas à droite~~ [2026-10-27 : centré] du hero
+        (demandes de la propriétaire) : le geste vaut pour le dossier, pas
+        pour la fiche. */}
     {guide ? (
-      <div className="mt-7 flex justify-end">
+      <div className="mt-7 flex justify-center">
         <BoutonGuide guide={guide} />
       </div>
     ) : null}
