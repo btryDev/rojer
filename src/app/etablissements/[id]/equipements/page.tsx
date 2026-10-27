@@ -19,7 +19,12 @@ import {
   OuvrirSuggestions,
 } from "@/components/equipements/SuggestionsEnFenetre";
 import { ResteAFaireParc } from "@/components/equipements/ResteAFaireParc";
-import { resteAFaireDuParc } from "@/lib/equipements/reste-a-faire";
+import {
+  GESTE_DATE,
+  GESTE_USAGE,
+  gestesDeLAppareil,
+  resteAFaireDuParc,
+} from "@/lib/equipements/reste-a-faire";
 import {
   SectionEquipementsSecurite,
   type LigneSecuriteAffichee,
@@ -189,21 +194,28 @@ export default async function EquipementsPage({
     suggestions: suggestionsRestantes,
     questionsExigees: questionsExigeesParCategorie(etab),
   };
+  // Les gestes de chaque appareil (tuile « À compléter ») et, comptés, ceux
+  // du parc (la liste) : une seule lecture des deux faits.
+  const questionsSansReponse = new Map<string, number>();
+  for (const m of appareilsMuets(equipements, etab)) {
+    questionsSansReponse.set(m.equipementId, (questionsSansReponse.get(m.equipementId) ?? 0) + 1);
+  }
+  const gestes = new Map(
+    equipements.map((eq) => [
+      eq.id,
+      gestesDeLAppareil({
+        questionsSansReponse: questionsSansReponse.get(eq.id) ?? 0,
+        controlesSansDate: etatsVerifs.get(eq.id)?.aDater ?? 0,
+      }),
+    ]),
+  );
   const resteAFaire = resteAFaireDuParc({
-    appareilsMuets: appareilsMuets(equipements, etab),
-    aDater: equipements
-      .filter((eq) => eq.actif)
-      .map((eq) => ({
-        equipementId: eq.id,
-        libelle: eq.libelle,
-        nombre: etatsVerifs.get(eq.id)?.aDater ?? 0,
-      })),
+    nbAPreciser: [...gestes.values()].filter((g) => g.includes(GESTE_USAGE)).length,
+    nbADater: [...gestes.values()].filter((g) => g.includes(GESTE_DATE)).length,
     nbEquipements: equipements.length,
     nbSuggestions: suggestionsRestantes.length,
-    hrefModifier: (eqId) =>
-      avecProvenance(`${base}/equipements/${eqId}/modifier`, origine),
-    hrefFiche: (eqId) => avecProvenance(`${base}/equipements/${eqId}`, origine),
   });
+
 
   // Ajouter depuis un parc filtré ouvre le formulaire sur ce bâtiment :
   // sinon le nouvel appareil part au bâtiment principal et disparaît de
@@ -237,6 +249,7 @@ export default async function EquipementsPage({
     lieu: montrerBatiment ? nomDeZone(eq.batiment.nom) : eq.localisation,
     precision: montrerBatiment ? eq.localisation : null,
     resume: resumes.get(eq.id) ?? resumerEquipement(undefined),
+    aCompleter: gestes.get(eq.id) ?? [],
     // Le motif se pose AU-DESSUS des signaux, il ne les remplace pas :
     // un appareil sans échéance à venir garde ses vérifications
     // réalisées, et c'est la seule chose qu'il ait à montrer en cas de

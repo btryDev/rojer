@@ -1,91 +1,39 @@
 import { describe, expect, it } from "vitest";
-import { resteAFaireDuParc } from "./reste-a-faire";
+import { GESTE_DATE, GESTE_USAGE, gestesDeLAppareil, resteAFaireDuParc } from "./reste-a-faire";
 
-const href = (id: string) => `/e/${id}/modifier`;
-
-describe("resteAFaireDuParc", () => {
-  it("nomme la question et mène à la fiche de l'appareil", () => {
-    const lignes = resteAFaireDuParc({
-      appareilsMuets: [{ equipementId: "a", libelle: "Minipelle", champ: "sertAuLevageDePersonnes" }],
-      nbEquipements: 1,
-      nbSuggestions: 0,
-      hrefModifier: href,
-    });
-    expect(lignes).toEqual([
+describe("resteAFaireDuParc — une ligne par geste, jamais par appareil", () => {
+  it("compte les équipements concernés par geste", () => {
+    expect(resteAFaireDuParc({ nbAPreciser: 2, nbADater: 5, nbEquipements: 7, nbSuggestions: 3 })).toEqual([
+      { cle: "usage", texte: "Préciser l'usage de 2 équipements" },
       {
-        genre: "questions",
-        cle: "questions-a",
-        titre: "Minipelle : répondre à une question",
-        questions: ["L'appareil sert-il à lever des personnes ?"],
-        href: "/e/a/modifier",
+        cle: "dates",
+        texte: "Renseigner la date du dernier contrôle (ou de mise en service) de 5 équipements",
       },
     ]);
   });
 
-  it("regroupe les questions d'un même appareil, une ligne par appareil", () => {
-    const lignes = resteAFaireDuParc({
-      appareilsMuets: [
-        { equipementId: "a", libelle: "Minipelle", champ: "sertAuLevageDePersonnes" },
-        { equipementId: "a", libelle: "Minipelle", champ: "estMuParForceHumaine" },
-        { equipementId: "b", libelle: "Nacelle", champ: "estMuParForceHumaine" },
-      ],
-      nbEquipements: 2,
-      nbSuggestions: 0,
-      hrefModifier: href,
-    });
-    expect(lignes.map((l) => l.titre)).toEqual([
-      "Minipelle : répondre à 2 questions",
-      "Nacelle : répondre à une question",
+  it("accorde au singulier", () => {
+    expect(resteAFaireDuParc({ nbAPreciser: 1, nbADater: 0, nbEquipements: 1, nbSuggestions: 0 })).toEqual([
+      { cle: "usage", texte: "Préciser l'usage de 1 équipement" },
     ]);
   });
 
   it("propose les suggestions tant qu'aucun équipement n'est déclaré", () => {
-    const lignes = resteAFaireDuParc({
-      appareilsMuets: [],
-      nbEquipements: 0,
-      nbSuggestions: 3,
-      hrefModifier: href,
-    });
-    expect(lignes).toHaveLength(1);
-    expect(lignes[0]).toMatchObject({
-      genre: "suggestions",
-      detail: "3 équipements souvent présents dans votre activité : cochez ceux que vous avez.",
-    });
+    expect(resteAFaireDuParc({ nbAPreciser: 0, nbADater: 0, nbEquipements: 0, nbSuggestions: 3 })).toEqual([
+      { cle: "suggestions", texte: "Déclarer vos équipements" },
+    ]);
   });
 
   // Le défaut relevé le 2026-10-27 : une suggestion écartée restait à vie.
   it("ne garde plus les suggestions dès le premier équipement déclaré", () => {
-    const lignes = resteAFaireDuParc({
-      appareilsMuets: [],
-      nbEquipements: 1,
-      nbSuggestions: 3,
-      hrefModifier: href,
-    });
-    expect(lignes).toEqual([]);
+    expect(resteAFaireDuParc({ nbAPreciser: 0, nbADater: 0, nbEquipements: 1, nbSuggestions: 3 })).toEqual([]);
   });
+});
 
-  it("ne dit rien quand il ne reste rien", () => {
-    expect(
-      resteAFaireDuParc({ appareilsMuets: [], nbEquipements: 0, nbSuggestions: 0, hrefModifier: href }),
-    ).toEqual([]);
-  });
-
-  it("nomme les contrôles sans échéance connue, après les réponses, et mène à la fiche", () => {
-    const lignes = resteAFaireDuParc({
-      appareilsMuets: [{ equipementId: "a", libelle: "Minipelle", champ: "sertAuLevageDePersonnes" }],
-      aDater: [
-        { equipementId: "x", libelle: "Extincteurs", nombre: 1 },
-        { equipementId: "y", libelle: "Hotte", nombre: 0 },
-      ],
-      nbEquipements: 3,
-      nbSuggestions: 0,
-      hrefModifier: href,
-      hrefFiche: (id) => `/e/${id}`,
-    });
-    expect(lignes.map((l) => l.genre)).toEqual(["questions", "dates"]);
-    expect(lignes[1]).toMatchObject({
-      titre: "Extincteurs : renseigner la date du dernier contrôle",
-      href: "/e/x",
-    });
+describe("gestesDeLAppareil", () => {
+  it("l'usage d'abord, puis la date ; rien quand tout est rempli", () => {
+    expect(gestesDeLAppareil({ questionsSansReponse: 2, controlesSansDate: 1 })).toEqual([GESTE_USAGE, GESTE_DATE]);
+    expect(gestesDeLAppareil({ questionsSansReponse: 0, controlesSansDate: 3 })).toEqual([GESTE_DATE]);
+    expect(gestesDeLAppareil({ questionsSansReponse: 0, controlesSansDate: 0 })).toEqual([]);
   });
 });

@@ -1,22 +1,23 @@
-// Ce qu'il reste à faire sur le parc d'équipements, une ligne par geste.
+// Ce qu'il reste à faire sur le parc d'équipements : une ligne par GESTE, pas
+// par appareil.
 //
-// Le board dit « Compléter vos équipements » et nomme les appareils ; il ne
-// disait pas QUOI compléter, et la page Équipements ne marquait aucun appareil
-// (retour de la propriétaire du 2026-10-27, compte de test du préventeur). Cette
-// liste nomme la question, et mène à l'écran où elle se répond.
-//
-// Une ligne disparaît dès que son geste est fait : il n'y a pas d'étape cochée,
-// la liste ne garde que ce qui reste.
+// Le board dit « Compléter vos équipements » ; la page Équipements ne disait pas
+// quoi compléter (retour de la propriétaire du 2026-10-27, compte de test du
+// préventeur). Seconde passe, même jour : une ligne par appareil faisait « liste
+// à rallonge ». La liste annonce donc les catégories de gestes, et chaque
+// appareil concerné porte sur sa tuile la pastille « À compléter » et son geste.
 //
 // Module pur : ni Prisma, ni React.
 
 import type { ChampTriEtat } from "./schema";
-import { pluriel } from "@/lib/rendu/pluriel";
+
+/** Les gestes, dits une fois : la tuile, la liste et la fiche les lisent ici. */
+export const GESTE_USAGE = "Préciser son usage";
+export const GESTE_DATE = "Renseigner la date du dernier contrôle";
 
 /**
- * La question, courte, posée à l'appareil. Le formulaire la pose en entier avec
- * son aide (`EquipementForm`) ; la fiche relit la réponse sous un libellé
- * (`LIBELLE_CARACTERISTIQUE`). Ici, on dit ce qu'il faut répondre.
+ * La question, courte, posée à l'appareil — pour le bandeau de sa fiche. Le
+ * formulaire la pose en entier avec son aide (`EquipementForm`).
  */
 export const QUESTION_COURTE: Record<ChampTriEtat, string> = {
   aGroupeElectrogene: "Un groupe électrogène de sécurité est-il présent ?",
@@ -36,96 +37,55 @@ export const QUESTION_COURTE: Record<ChampTriEtat, string> = {
   estDesenfumageMecanique: "Le désenfumage est-il mécanique ?",
 };
 
-export type LigneResteAFaire =
-  | {
-      genre: "questions";
-      cle: string;
-      titre: string;
-      questions: string[];
-      href: string;
-    }
-  | {
-      genre: "dates";
-      cle: string;
-      titre: string;
-      detail: string;
-      href: string;
-    }
-  | {
-      genre: "suggestions";
-      cle: "suggestions";
-      titre: string;
-      detail: string;
-    };
+/**
+ * Les gestes d'un appareil, dans l'ordre où ils se font : l'usage d'abord — une
+ * réponse peut changer le rythme, donc la date qu'une déclaration donnerait.
+ * Vide = rien à compléter.
+ */
+export function gestesDeLAppareil(a: { questionsSansReponse: number; controlesSansDate: number }): string[] {
+  return [
+    ...(a.questionsSansReponse > 0 ? [GESTE_USAGE] : []),
+    ...(a.controlesSansDate > 0 ? [GESTE_DATE] : []),
+  ];
+}
+
+export type LigneResteAFaire = {
+  cle: "usage" | "dates" | "suggestions";
+  texte: string;
+};
+
+const equipements = (n: number) => `${n} équipement${n > 1 ? "s" : ""}`;
 
 /**
- * Les lignes, dans l'ordre où elles se traitent : les réponses qui décident
- * d'un rythme d'abord, puis la déclaration du parc.
- *
- * LES SUGGESTIONS ne sont une ligne que tant qu'aucun équipement n'est déclaré
- * (décision de la propriétaire du 2026-10-27, « masquer seulement ») : rien ne
- * retient « je n'en ai pas », et une suggestion écartée restait affichée à
- * vie. Après le premier appareil, elles ne vivent plus que derrière le lien de
- * la barre du parc, qui ouvre la même fenêtre.
+ * Les lignes de la liste, une par geste. Les SUGGESTIONS n'en sont une que tant
+ * qu'aucun équipement n'est déclaré (décision du 2026-10-27, « masquer
+ * seulement ») : rien ne retient « je n'en ai pas ».
  */
 export function resteAFaireDuParc({
-  appareilsMuets,
-  aDater = [],
+  nbAPreciser,
+  nbADater,
   nbEquipements,
   nbSuggestions,
-  hrefModifier,
-  hrefFiche = hrefModifier,
 }: {
-  appareilsMuets: readonly { equipementId: string; libelle: string; champ: ChampTriEtat }[];
+  /** Appareils auxquels manque une réponse exigée. */
+  nbAPreciser: number;
   /** Appareils dont des contrôles à rythme n'ont pas d'échéance connue (ADR-051). */
-  aDater?: readonly { equipementId: string; libelle: string; nombre: number }[];
+  nbADater: number;
   nbEquipements: number;
   nbSuggestions: number;
-  hrefModifier: (equipementId: string) => string;
-  /** La fiche de l'appareil, où se déclare la date du dernier contrôle. */
-  hrefFiche?: (equipementId: string) => string;
 }): LigneResteAFaire[] {
-  const parAppareil = new Map<string, { libelle: string; champs: ChampTriEtat[] }>();
-  for (const a of appareilsMuets) {
-    const deja = parAppareil.get(a.equipementId);
-    if (deja) {
-      if (!deja.champs.includes(a.champ)) deja.champs.push(a.champ);
-    } else {
-      parAppareil.set(a.equipementId, { libelle: a.libelle, champs: [a.champ] });
-    }
+  const lignes: LigneResteAFaire[] = [];
+  if (nbAPreciser > 0) {
+    lignes.push({ cle: "usage", texte: `Préciser l'usage de ${equipements(nbAPreciser)}` });
   }
-
-  const lignes: LigneResteAFaire[] = [...parAppareil].map(([id, { libelle, champs }]) => ({
-    genre: "questions",
-    cle: `questions-${id}`,
-    titre: `${libelle} : ${champs.length > 1 ? `répondre à ${champs.length} questions` : "répondre à une question"}`,
-    questions: champs.map((c) => QUESTION_COURTE[c]),
-    href: hrefModifier(id),
-  }));
-
-  // Après les réponses : une réponse peut changer le rythme, donc la date
-  // qu'une déclaration donnerait.
-  for (const a of aDater) {
-    if (a.nombre <= 0) continue;
+  if (nbADater > 0) {
     lignes.push({
-      genre: "dates",
-      cle: `dates-${a.equipementId}`,
-      titre: `${a.libelle} : renseigner la date du dernier contrôle`,
-      detail: `${
-        a.nombre > 1 ? `${a.nombre} contrôles n'ont pas d'échéance connue` : "Un contrôle n'a pas d'échéance connue"
-      } : la date du dernier passage calcule le prochain. Appareil neuf ? Sa date de mise en service suffit.`,
-      href: hrefFiche(a.equipementId),
+      cle: "dates",
+      texte: `Renseigner la date du dernier contrôle (ou de mise en service) de ${equipements(nbADater)}`,
     });
   }
-
   if (nbEquipements === 0 && nbSuggestions > 0) {
-    lignes.push({
-      genre: "suggestions",
-      cle: "suggestions",
-      titre: "Déclarer vos équipements",
-      detail: `${pluriel(nbSuggestions, "équipement souvent présent", "équipements souvent présents")} dans votre activité : cochez ceux que vous avez.`,
-    });
+    lignes.push({ cle: "suggestions", texte: "Déclarer vos équipements" });
   }
-
   return lignes;
 }

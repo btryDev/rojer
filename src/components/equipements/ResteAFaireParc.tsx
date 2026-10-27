@@ -1,52 +1,46 @@
 // « Ce qu'il reste à faire » en tête de la page Équipements : une ligne par
-// geste, et le bouton qui y mène. La liste est calculée par
-// `resteAFaireDuParc` ; elle ne se pose pas quand elle est vide.
+// geste (`resteAFaireDuParc`), jamais une par appareil — les appareils
+// concernés portent la pastille « À compléter » sur leur tuile. Ambre : c'est
+// l'attention, pas le retard (charte board, couleur § 4). Ne se pose pas quand
+// la liste est vide.
 
-import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
 import type { LigneResteAFaire } from "@/lib/equipements/reste-a-faire";
 import { OuvrirSuggestions } from "./SuggestionsEnFenetre";
 
 export function ResteAFaireParc({ lignes }: { lignes: LigneResteAFaire[] }) {
   if (lignes.length === 0) return null;
+  const pastille = lignes.some((l) => l.cle !== "suggestions");
 
   return (
-    <section aria-labelledby="reste-a-faire-titre" className="carte-board px-7 py-6 sm:px-8">
-      <h2 id="reste-a-faire-titre" className="board-titre m-0 text-[18px]">
+    <section
+      aria-labelledby="reste-a-faire-titre"
+      className="rounded-[30px] bg-[color:var(--board-amber-wash)] px-7 py-5 shadow-[inset_0_0_0_1px_var(--board-amber)] sm:px-8"
+    >
+      <h2
+        id="reste-a-faire-titre"
+        className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-amber-ink)]"
+      >
         Ce qu&apos;il reste à faire
       </h2>
-      <ul className="-mx-7 m-0 mt-4 list-none divide-y divide-[color:var(--board-slate-line)] border-t border-[color:var(--board-slate-line)] p-0 sm:-mx-8">
+      <ul className="m-0 mt-3 flex list-none flex-col gap-2 p-0">
         {lignes.map((l) => (
-          <li
-            key={l.cle}
-            className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-7 py-4 sm:px-8"
-          >
-            <div className="min-w-[220px] flex-1">
-              <p className="m-0 text-[14px] font-semibold leading-[1.4] text-[color:var(--board-ink)]">
-                {l.titre}
-              </p>
-              {l.genre === "questions" ? (
-                <ul className="m-0 mt-1 list-none p-0 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                  {l.questions.map((q) => (
-                    <li key={q}>{q}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="m-0 mt-1 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                  {l.detail}
-                </p>
-              )}
-            </div>
-            {l.genre === "questions" || l.genre === "dates" ? (
-              <Link href={l.href} className={buttonVariants({ variant: "board", size: "boardSm" })}>
-                {l.genre === "questions" ? "Répondre" : "Renseigner"}
-              </Link>
-            ) : (
-              <OuvrirSuggestions forme="bouton" libelle="Voir les suggestions" />
-            )}
+          <li key={l.cle} className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <span className="flex items-center gap-2.5 text-[14px] font-semibold text-[color:var(--board-ink)]">
+              <span
+                aria-hidden
+                className="size-[8px] flex-none rounded-full bg-[color:var(--board-amber)] shadow-[inset_0_0_0_1px_var(--board-amber-ink)]"
+              />
+              {l.texte}
+            </span>
+            {l.cle === "suggestions" ? <OuvrirSuggestions forme="bouton" libelle="Voir les suggestions" /> : null}
           </li>
         ))}
       </ul>
+      {pastille ? (
+        <p className="m-0 mt-3 text-[12.5px] text-[color:var(--board-slate-mid)]">
+          Les équipements concernés portent la pastille « À compléter » ci-dessous.
+        </p>
+      ) : null}
     </section>
   );
 }

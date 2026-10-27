@@ -38,6 +38,8 @@ export type AppareilListe = {
   /** Quand le référentiel ne produit aucune échéance pour cet appareil :
    *  un fait sur l'outil, jamais sur le droit (cf. `hors-referentiel.ts`). */
   horsReferentiel: { libelle: string; explication: string } | null;
+  /** Les gestes qui manquent (`gestesDeLAppareil`) ; vide = complet. */
+  aCompleter: readonly string[];
   href: string;
 };
 
@@ -136,6 +138,7 @@ export function CarteCategorie({
             signaux={a.resume.signaux}
             aConfirmer={a.resume.aConfirmer}
             horsReferentiel={a.horsReferentiel}
+            aCompleter={a.aCompleter}
             href={a.href}
           />
         ))}

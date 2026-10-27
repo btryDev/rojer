@@ -33,6 +33,7 @@ import { formaterDateCourteFr, joursCivilsEntre } from "@/lib/dates";
 import { estResultatRealise } from "@/lib/rapports/resultats";
 import { recoitUneDateDeclaree } from "@/lib/dernier-controle/regles";
 import { PREFIXE_PRESCRIPTION } from "@/lib/matching/prescriptions";
+import { GESTE_DATE } from "./reste-a-faire";
 import { registrePrudent, type RetenueParPrudence } from "@/lib/calendrier/prudence";
 import {
   estActionEnRetard,
@@ -203,9 +204,10 @@ export type ControleADater = {
 
 /**
  * Les contrôles de l'appareil que la fiche propose de dater : à rythme, sans
- * rapport réalisé, et soit sans échéance connue — « à planifier » —, soit déjà
- * datés par une déclaration, qui reste modifiable. Lu sur les lignes « à
- * faire » : une ligne sans date y porte `date: null`.
+ * rapport réalisé et sans échéance connue — « à planifier ». Lu sur les lignes
+ * « à faire » : une ligne sans date y porte `date: null`. ~~Ou déjà datés par
+ * une déclaration, qui restait modifiable.~~ [2026-10-27 : le bandeau « À faire
+ * sur cet équipement » disparaît quand tout est rempli.]
  */
 export function controlesADater(
   eq: { verifications: readonly VerificationFiche[] },
@@ -217,7 +219,7 @@ export function controlesADater(
   return eq.verifications
     .filter((v) => recoitUneDateDeclaree(v))
     .filter((v) => !v.rapports.some((r) => estResultatRealise(r.resultat)))
-    .filter((v) => sansDate.has(`v-${v.id}`) || v.dernierControleDeclareLe !== null)
+    .filter((v) => sansDate.has(`v-${v.id}`))
     .map((v) => ({
       id: v.id,
       libelle: v.libelleObligation,
@@ -275,7 +277,11 @@ export function lignesAFaire(
             declaree !== null
             ? `Calculée d'après le dernier contrôle déclaré le ${formaterDateCourteFr(declaree)}, sans rapport`
             : "Échéance portée au calendrier"
-          : etat === "enRetard"
+          : // ADR-051 : sans date et datable, la ligne dit le geste qui la
+            // datera, plutôt que ce qui manque (2026-10-27).
+            recoitUneDateDeclaree(v)
+            ? GESTE_DATE
+            : etat === "enRetard"
             ? LIBELLE_AUCUNE_VERIFICATION
             : // SANS RENDEZ-VOUS (limite 1, 2026-09-15) : « à caler avec votre
               // prestataire » promettait un rendez-vous que l'obligation n'a
