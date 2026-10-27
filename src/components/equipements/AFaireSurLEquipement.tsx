@@ -90,7 +90,7 @@ export function AFaireSurLEquipement({
               </p>
             ) : miseEnService ? (
               <p className="m-0 mt-3 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                {`La mise en service du ${miseEnService.connue} ne date pas ce contrôle : le premier tombait avant le début du suivi dans Rojer.`}
+                {`La mise en service du ${miseEnService.connue} ne date pas ${aDater.length > 1 ? "ces contrôles" : "ce contrôle"} : le premier tombait avant le début du suivi dans Rojer.`}
               </p>
             ) : null}
           </div>

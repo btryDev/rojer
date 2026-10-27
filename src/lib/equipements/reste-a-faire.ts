@@ -54,7 +54,8 @@ export type LigneResteAFaire = {
   texte: string;
 };
 
-const equipements = (n: number) => `${n} équipement${n > 1 ? "s" : ""}`;
+/** « d'un équipement », « de 5 équipements » : la préposition suit le nombre. */
+const deNEquipements = (n: number) => (n > 1 ? `de ${n} équipements` : "d'un équipement");
 
 /**
  * Les lignes de la liste, une par geste. Les SUGGESTIONS n'en sont une que tant
@@ -76,12 +77,12 @@ export function resteAFaireDuParc({
 }): LigneResteAFaire[] {
   const lignes: LigneResteAFaire[] = [];
   if (nbAPreciser > 0) {
-    lignes.push({ cle: "usage", texte: `Préciser l'usage de ${equipements(nbAPreciser)}` });
+    lignes.push({ cle: "usage", texte: `Préciser l'usage ${deNEquipements(nbAPreciser)}` });
   }
   if (nbADater > 0) {
     lignes.push({
       cle: "dates",
-      texte: `Déposer le rapport du dernier contrôle (ou renseigner la mise en service) de ${equipements(nbADater)}`,
+      texte: `Déposer le rapport du dernier contrôle (ou renseigner la mise en service) ${deNEquipements(nbADater)}`,
     });
   }
   if (nbEquipements === 0 && nbSuggestions > 0) {

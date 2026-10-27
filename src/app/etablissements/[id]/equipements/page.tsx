@@ -216,7 +216,6 @@ export default async function EquipementsPage({
     nbSuggestions: suggestionsRestantes.length,
   });
 
-
   // Ajouter depuis un parc filtré ouvre le formulaire sur ce bâtiment :
   // sinon le nouvel appareil part au bâtiment principal et disparaît de
   // l'écran d'où on vient de le déclarer.

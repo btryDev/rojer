@@ -14,7 +14,7 @@ describe("resteAFaireDuParc — une ligne par geste, jamais par appareil", () =>
 
   it("accorde au singulier", () => {
     expect(resteAFaireDuParc({ nbAPreciser: 1, nbADater: 0, nbEquipements: 1, nbSuggestions: 0 })).toEqual([
-      { cle: "usage", texte: "Préciser l'usage de 1 équipement" },
+      { cle: "usage", texte: "Préciser l'usage d'un équipement" },
     ]);
   });
 
