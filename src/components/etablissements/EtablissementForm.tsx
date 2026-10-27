@@ -1,6 +1,6 @@
 "use client";
 
-import { ANNEAU_A_COMPLETER } from "@/components/ui-kit/CadreACompleter";
+import { ANNEAU_A_COMPLETER } from "@/components/ui-kit/anneau-a-completer";
 import { DemandeAide } from "@/components/assistance/DemandeAide";
 import {
   AIDE_NOMBRE_DE_PERSONNES,
@@ -473,7 +473,7 @@ export function EtablissementForm({
                         setTypeErp(t);
                       }}
                       required={estERP === true}
-                      className="champ-board"
+                      className={`champ-board ${anneau("typeErp") ?? ""}`}
                       aria-invalid={Boolean(err("typeErp"))}
                     >
                       <option value="">— Sélectionner —</option>

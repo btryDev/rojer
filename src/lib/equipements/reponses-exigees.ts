@@ -311,18 +311,17 @@ export function appareilsMuets(
     caracteristiques: unknown;
   }[],
   regime: RegimeExigence,
+  /** La carte de `questionsExigeesParCategorie`, quand l'appelant l'a déjà :
+   *  la page Équipements la calcule pour le panneau des suggestions. */
+  exigeesParCategorie?: Partial<Record<CategorieEquipement, readonly ChampTriEtat[]>>,
 ): { equipementId: string; libelle: string; champ: ChampTriEtat }[] {
   // Une fois par CATÉGORIE, pas par appareil : une question nommée par une
   // décision fait tourner le moteur deux fois (`exigeeDansCeRegime`), et la
   // page Équipements appelle ceci sur tout le parc à chaque rendu (2026-10-27).
-  const parCategorie = new Map<CategorieEquipement, readonly ChampTriEtat[]>();
+  const carte = exigeesParCategorie ?? questionsExigeesParCategorie(regime);
   return equipements.flatMap((e) => {
     const categorie = e.categorie as CategorieEquipement;
-    let exigees = parCategorie.get(categorie);
-    if (!exigees) {
-      exigees = questionsExigeesPour(categorie, regime);
-      parCategorie.set(categorie, exigees);
-    }
+    const exigees = carte[categorie] ?? [];
     return reponsesManquantes(categorie, e.caracteristiques, regime, exigees).map((champ) => ({
       equipementId: e.id,
       libelle: e.libelle,

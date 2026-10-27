@@ -53,7 +53,7 @@ export function ListeACompleter({ items }: { items: { cle: string; texte: string
         <li key={i.cle}>
           <Link
             href={i.href}
-            className="inline-flex items-center gap-2.5 text-[14px] font-semibold text-[color:var(--board-ink)] underline-offset-2 hover:underline"
+            className="inline-flex items-center gap-2.5 text-[14px] font-semibold text-[color:var(--board-ink)] underline decoration-[color:var(--board-amber-ink)] underline-offset-4 hover:text-[color:var(--board-amber-ink)]"
           >
             <PuceACompleter />
             {i.texte}
@@ -63,6 +63,3 @@ export function ListeACompleter({ items }: { items: { cle: string; texte: string
     </ul>
   );
 }
-
-/** L'anneau ambre d'un champ resté sans réponse. */
-export const ANNEAU_A_COMPLETER = "ring-2 ring-[color:var(--board-amber-ink)] ring-offset-2";

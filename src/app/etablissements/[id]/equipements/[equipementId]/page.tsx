@@ -156,7 +156,7 @@ export default async function EquipementDetailPage({
       );
   // La phrase sur la mise en service ne vaut que pour une ligne du
   // référentiel : une prescription particulière n'est jamais datée par elle.
-  const miseEnServiceSansEffet = aDater.some((c) => !c.surMesure);
+  const aDaterParMiseEnService = aDater.filter((c) => !c.surMesure).length;
   const obligations = obligationsDeLEquipement(eq);
 
   // Ce qui vise cet appareil sans jamais tomber à une date. Lu au MOTEUR et
@@ -479,10 +479,10 @@ export default async function EquipementDetailPage({
             hrefDepot: avecProvenance(c.hrefDepot, depuisCetteFiche),
           }))}
           miseEnService={
-            !miseEnServiceSansEffet
+            aDaterParMiseEnService === 0
               ? null
               : eq.dateMiseEnService
-                ? { connue: formaterDateLongueFr(eq.dateMiseEnService) }
+                ? { connue: formaterDateLongueFr(eq.dateMiseEnService), nombre: aDaterParMiseEnService }
                 : { inconnue: true }
           }
         />

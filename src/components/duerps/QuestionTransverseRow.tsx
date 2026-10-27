@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
-import { ANNEAU_A_COMPLETER } from "@/components/ui-kit/CadreACompleter";
+import { ANNEAU_A_COMPLETER } from "@/components/ui-kit/anneau-a-completer";
 import { useConfirmation } from "@/components/ui-kit/Confirmation";
 import { repondreQuestionTransverse } from "@/lib/transverses/actions";
 import type { ReponseTransverse } from "@/lib/transverses/etat";

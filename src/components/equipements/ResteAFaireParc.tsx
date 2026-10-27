@@ -8,18 +8,32 @@ import type { LigneResteAFaire } from "@/lib/equipements/reste-a-faire";
 import { CadreACompleter, PuceACompleter } from "@/components/ui-kit/CadreACompleter";
 import { OuvrirSuggestions } from "./SuggestionsEnFenetre";
 
-export function ResteAFaireParc({ lignes }: { lignes: LigneResteAFaire[] }) {
+export function ResteAFaireParc({
+  lignes,
+  toutesZones = false,
+}: {
+  lignes: LigneResteAFaire[];
+  /**
+   * Un filtre de zone est actif : la liste compte quand même tout le parc — une
+   * réponse manquante ne se cache pas derrière un filtre de lieu —, et le dit,
+   * sans quoi elle annonce des pastilles que l'écran filtré ne montre pas
+   * (revue du 2026-10-27).
+   */
+  toutesZones?: boolean;
+}) {
   if (lignes.length === 0) return null;
   const pastille = lignes.some((l) => l.cle !== "suggestions");
+  // La phrase dit ce que manquer coûte, et seulement ce qui est vrai : sans
+  // rapport ni mise en service, pas d'échéance ; sans réponse sur l'usage,
+  // l'échéance existe mais son rythme peut changer (revue du 2026-10-27).
+  const phrase = lignes.some((l) => l.cle === "dates")
+    ? "Sans ces informations, Rojer ne peut pas calculer vos échéances."
+    : lignes.some((l) => l.cle === "usage")
+      ? "Ces réponses décident du rythme de vos vérifications."
+      : undefined;
 
   return (
-    <CadreACompleter
-      id="reste-a-faire-titre"
-      titre="Ce qu'il reste à faire"
-      // Pourquoi, en une phrase (2026-10-27). Les suggestions seules n'en
-      // relèvent pas : déclarer, c'est autre chose que dater.
-      phrase={pastille ? "Sans ces informations, Rojer ne peut pas calculer vos échéances." : undefined}
-    >
+    <CadreACompleter id="reste-a-faire-titre" titre="Ce qu'il reste à faire" phrase={phrase}>
       <ul className="m-0 mt-3 flex list-none flex-col gap-2 p-0">
         {lignes.map((l) => (
           <li key={l.cle} className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -33,7 +47,9 @@ export function ResteAFaireParc({ lignes }: { lignes: LigneResteAFaire[] }) {
       </ul>
       {pastille ? (
         <p className="m-0 mt-3 text-[12.5px] text-[color:var(--board-slate-mid)]">
-          Les équipements concernés portent la pastille « À compléter » ci-dessous.
+          {toutesZones
+            ? "Compté sur toutes vos zones. Les équipements concernés portent la pastille « À compléter »."
+            : "Les équipements concernés portent la pastille « À compléter » ci-dessous."}
         </p>
       ) : null}
     </CadreACompleter>

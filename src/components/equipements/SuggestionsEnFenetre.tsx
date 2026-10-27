@@ -6,15 +6,17 @@
 // plus posée dans la page — elle y restait à vie, rien ne retenant « je n'en ai
 // pas ». Le panneau (`PreRemplissagePanel`) est inchangé : seul son lieu change.
 //
-// UNE SEULE FENÊTRE, MONTÉE EN PERMANENCE PAR LA PAGE (revue du 2026-10-27).
-// Portée par le lien qui l'ouvre, elle disparaissait avec lui : créer les
-// équipements fait tomber la ligne « Déclarer vos équipements » (le parc n'est
-// plus vide) et le lien de la barre (plus rien à suggérer), et le panneau
-// perdait son message et l'avertissement d'un calendrier non recalculé — le
-// défaut que la revue du 2026-10-14 avait fermé en gardant le panneau monté.
-// Les déclencheurs ne font que l'ouvrir, par un événement de la page.
+// UNE SEULE FENÊTRE, POSÉE PAR LA PAGE (revue du 2026-10-27). Portée par le
+// lien qui l'ouvre, elle disparaissait avec lui pendant qu'on la lisait : créer
+// les équipements fait tomber la ligne « Déclarer vos équipements » et le lien
+// de la barre, et le panneau perdait son message et l'avertissement d'un
+// calendrier non recalculé. Posée par la page, elle reste ouverte sur ce
+// résultat jusqu'à ce qu'on la ferme ; fermée, le panneau est démonté
+// (`PanneauModal`) et le message part avec elle — il a été lu. Les déclencheurs
+// ne font que l'ouvrir, par un événement de la page, et le focus leur revient
+// à la fermeture.
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { PanneauModal } from "@/components/ui-kit/PanneauModal";
 import { buttonVariants } from "@/components/ui/button";
 import { PreRemplissagePanel } from "./PreRemplissagePanel";
@@ -25,9 +27,16 @@ const OUVRIR = "rojer:ouvrir-suggestions";
 /** La fenêtre. À poser une fois, hors de tout bloc conditionnel. */
 export function FenetreSuggestions(props: React.ComponentProps<typeof PreRemplissagePanel>) {
   const [ouvert, setOuvert] = useState(false);
-  const fermer = useCallback(() => setOuvert(false), []);
+  const declencheur = useRef<HTMLElement | null>(null);
+  const fermer = useCallback(() => {
+    setOuvert(false);
+    declencheur.current?.focus();
+  }, []);
   useEffect(() => {
-    const ouvrir = () => setOuvert(true);
+    const ouvrir = (e: Event) => {
+      declencheur.current = e instanceof CustomEvent && e.detail instanceof HTMLElement ? e.detail : null;
+      setOuvert(true);
+    };
     window.addEventListener(OUVRIR, ouvrir);
     return () => window.removeEventListener(OUVRIR, ouvrir);
   }, []);
@@ -49,7 +58,7 @@ export function OuvrirSuggestions({ forme, libelle }: { forme: "lien" | "bouton"
   return (
     <button
       type="button"
-      onClick={() => window.dispatchEvent(new Event(OUVRIR))}
+      onClick={(e) => window.dispatchEvent(new CustomEvent(OUVRIR, { detail: e.currentTarget }))}
       aria-haspopup="dialog"
       className={forme === "bouton" ? buttonVariants({ variant: "board", size: "boardSm" }) : LIEN_DANS_PHRASE}
     >

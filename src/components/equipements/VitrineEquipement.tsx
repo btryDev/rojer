@@ -18,6 +18,7 @@ import Link from "next/link";
 import { MapPin } from "lucide-react";
 import { CHAMP_ETAT, ENCRE_ETAT } from "@/lib/calendrier/etats";
 import type { SignalEquipement } from "@/lib/equipements/etat-verifications";
+import { GESTE_DATE } from "@/lib/equipements/reste-a-faire";
 
 /* La table de correspondance qui vivait ici a disparu avec sa cause. Elle
    traduisait la clé `aVenir` — qui réunissait `proche` et `lointain` — en un
@@ -83,15 +84,18 @@ export function VitrineEquipement({
   horsReferentiel?: { libelle: string; explication: string } | null;
   /**
    * Les gestes qui manquent à l'appareil (`gestesDeLAppareil`, 2026-10-27).
-   * Non vide : la tuile dit ce qu'il faut faire, en ambre, au lieu de
-   * « à planifier » — c'est ce geste qui donnera une date. Le retard, lui,
-   * reste affiché.
+   * Non vide : la tuile dit ce qu'il faut faire, en ambre ; avec le geste
+   * « date », au lieu de « à planifier ». Le retard, lui, reste affiché.
    */
   aCompleter?: readonly string[];
   href: string;
 }) {
-  const signauxAffiches =
-    aCompleter.length > 0 ? signaux.filter((s) => s.cle !== "aPlanifier") : signaux;
+  // Le geste « date » remplace « à planifier » : c'est lui qui donnera la date.
+  // « Préciser son usage » n'en donne aucune — le signal reste (revue du
+  // 2026-10-27).
+  const signauxAffiches = aCompleter.includes(GESTE_DATE)
+    ? signaux.filter((s) => s.cle !== "aPlanifier")
+    : signaux;
   return (
     <Link
       href={href}

@@ -189,15 +189,16 @@ export default async function EquipementsPage({
   // Ce qu'il reste à faire sur le parc (retour du 2026-10-27) : sur tout
   // l'établissement, pas sur la zone filtrée — une réponse manquante ne se
   // cache pas derrière un filtre de lieu.
+  const questionsExigees = questionsExigeesParCategorie(etab);
   const panneauSuggestions = {
     etablissementId: id,
     suggestions: suggestionsRestantes,
-    questionsExigees: questionsExigeesParCategorie(etab),
+    questionsExigees,
   };
   // Les gestes de chaque appareil (tuile « À compléter ») et, comptés, ceux
   // du parc (la liste) : une seule lecture des deux faits.
   const questionsSansReponse = new Map<string, number>();
-  for (const m of appareilsMuets(equipements, etab)) {
+  for (const m of appareilsMuets(equipements, etab, questionsExigees)) {
     questionsSansReponse.set(m.equipementId, (questionsSansReponse.get(m.equipementId) ?? 0) + 1);
   }
   const gestes = new Map(
@@ -363,8 +364,8 @@ export default async function EquipementsPage({
         {/* ~~Le panneau des suggestions, toujours rendu ici~~ [2026-10-27 :
             il vit dans une fenêtre, ouverte depuis la barre du parc ou depuis
             la liste ci-dessous (`SuggestionsEnFenetre`).] */}
-        <ResteAFaireParc lignes={resteAFaire} />
-        {/* Montée en permanence : la ligne ou le lien qui l'ouvre peut
+        <ResteAFaireParc lignes={resteAFaire} toutesZones={Boolean(batimentFiltre)} />
+        {/* Posée par la page : la ligne ou le lien qui l'ouvre peut
             disparaître pendant qu'elle affiche son résultat. */}
         <FenetreSuggestions {...panneauSuggestions} />
 

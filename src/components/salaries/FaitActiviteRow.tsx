@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
-import { ANNEAU_A_COMPLETER } from "@/components/ui-kit/CadreACompleter";
+import { ANNEAU_A_COMPLETER } from "@/components/ui-kit/anneau-a-completer";
 import { repondreFaitActivite } from "@/lib/etablissements/faits-activite-actions";
 import type { ChampFaitActivite } from "@/lib/etablissements/faits-activite";
 
