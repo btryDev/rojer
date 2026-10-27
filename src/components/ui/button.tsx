@@ -35,6 +35,12 @@ const classesBrutes = cva(
           "normal-case tracking-[-0.01em] [font-family:var(--font-body)] font-semibold bg-[color:var(--board-ink)] text-white hover:opacity-85",
         boardClair:
           "normal-case tracking-[-0.01em] [font-family:var(--font-body)] font-semibold bg-transparent text-[color:var(--board-ink)] shadow-[inset_0_0_0_1px_rgba(10,10,10,.18)] hover:bg-[color:var(--board-slate-pale)]",
+        // L'attention, pas le retard (charte § 1.5 et § 7, règles 3 et 4) :
+        // champ et encre ambre, jamais l'un sans l'autre. Pour ce qui reste à
+        // faire sans échéance — une fiche à compléter n'est pas en retard, le
+        // rose lui est interdit (décision de la propriétaire du 2026-10-27).
+        boardAttention:
+          "normal-case tracking-[-0.01em] [font-family:var(--font-body)] font-semibold bg-[color:var(--board-amber)] text-[color:var(--board-amber-ink)] shadow-[inset_0_0_0_1px_rgba(117,77,10,.22)] hover:brightness-[.97]",
       },
       size: {
         default: "h-9 gap-2 px-4 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",

@@ -322,8 +322,10 @@ fichier se vide, il ne se remplit pas.
 
 ### Boutons
 
-`variant="board"` (encre pleine) et `variant="boardClair"` (contour),
-`size="board"` (h-10) ou `"boardSm"` (h-8). Les variantes historiques parlent en
+`variant="board"` (encre pleine), `variant="boardClair"` (contour) et
+`variant="boardAttention"` (champ et encre ambre, 2026-10-27 : ce qui reste à
+faire sans échéance — le guide de mise en place du hero ; jamais le rose, § 7
+règle 3), `size="board"` (h-10) ou `"boardSm"` (h-8). Les variantes historiques parlent en
 petites capitales monospacées — c'est le registre « document administratif », il
 cohabite le temps que les écrans passent au board.
 

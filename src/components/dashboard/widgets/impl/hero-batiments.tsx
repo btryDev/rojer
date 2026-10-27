@@ -92,7 +92,8 @@ export type GuideFiche = {
  * « Finir de compléter les infos de l'établissement » : ouvre les étapes de
  * mise en place dans un panneau (2026-10-25, décision de la propriétaire —
  * le guide n'occupe plus de place en tête du board tant qu'on ne le demande
- * pas).
+ * pas). En ambre depuis le 2026-10-27 (décision de la propriétaire) : il
+ * doit se voir, sans se faire lire comme un retard.
  */
 function BoutonGuide({ guide }: { guide: GuideFiche }) {
   const [ouvert, setOuvert] = useState(false);
@@ -102,7 +103,7 @@ function BoutonGuide({ guide }: { guide: GuideFiche }) {
       <button
         type="button"
         onClick={() => setOuvert(true)}
-        className={buttonVariants({ variant: "board", size: "board" }) + " flex-none"}
+        className={buttonVariants({ variant: "boardAttention", size: "board" }) + " flex-none"}
       >
         Finir de compléter les infos de l&apos;établissement
       </button>
