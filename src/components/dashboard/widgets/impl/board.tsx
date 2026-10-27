@@ -460,10 +460,6 @@ export function BlocBrief({
   // l'outil minorait la non-conformité, ce qu'il s'interdit.
   const titre = brief.titre;
 
-  // Le même agrégat que le titre, la pastille du widget « Échéances » et
-  // le badge de la barre latérale : toutes familles confondues.
-  const totalUrgent = retards.total;
-
   const { etablissement } = bundle;
 
   return (
@@ -499,15 +495,11 @@ export function BlocBrief({
                 widgets. Il reste pour les lecteurs d'écran, à qui il résume
                 la page. Ses autres formes — titres de salariés en retard,
                 dossier calme, étape d'amorçage — restent affichées. */}
-            <h1
-              className={
-                totalUrgent > 0
-                  ? "sr-only"
-                  : "board-titre m-0 mb-5 max-w-[480px] text-pretty text-[clamp(28px,2.9vw,40px)] leading-[1.06] tracking-[-0.035em]"
-              }
-            >
-              {titre}
-            </h1>
+            {/* [2026-10-27, décision de la propriétaire] Le titre n'est plus
+                affiché, quelle que soit sa forme (« Six vérifications restent
+                à planifier »…) : il reste pour les lecteurs d'écran, à qui il
+                résume la page. */}
+            <h1 className="sr-only">{titre}</h1>
 
             {/* [2026-10-25] La fiche de l'établissement, à la place des trois
                 relevés (« Dépassées », « Sous 30 j », « Équipements ») :
