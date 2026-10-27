@@ -539,8 +539,11 @@ describe("la question du nombre de personnes au parcours (2026-09-20)", () => {
     expect(screen.queryByLabelText(LIBELLE)).toBeNull();
   });
 
-  it("« Suivant » retient sans le nombre, et le refus est rendu AU champ", async () => {
+  // [2026-10-27 : le nombre est facultatif — seule une saisie fausse retient.]
+  it("« Suivant » retient une saisie fausse, et le refus est rendu AU champ", async () => {
     await allerEtape2EnCategorie("N5");
+    saisir(LIBELLE, "0");
+    await souffler();
     screen.getByRole("button", { name: /Suivant/ }).click();
     await souffler();
     expect(screen.getByLabelText(LIBELLE).getAttribute("aria-invalid")).toBe(
@@ -564,10 +567,12 @@ describe("la question du nombre de personnes au parcours (2026-09-20)", () => {
 
   it("depuis l'étape 1, le rail mène à l'étape qui refuse au lieu de ne rien montrer", async () => {
     await allerEtape2EnCategorie("N5");
+    saisir(LIBELLE, "0");
+    await souffler();
     screen.getByRole("button", { name: /Précédent|Retour/ }).click();
     await souffler();
     expect(screen.queryByLabelText(LIBELLE)).toBeNull();
-    // Le rail, vers l'étape 3 : l'étape 2 refuse (nombre absent).
+    // Le rail, vers l'étape 3 : l'étape 2 refuse (nombre faux).
     screen.getByRole("button", { name: /Résumé/ }).click();
     await souffler();
     expect(screen.getByLabelText(LIBELLE).getAttribute("aria-invalid")).toBe(

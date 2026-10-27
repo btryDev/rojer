@@ -361,14 +361,15 @@ describe("nombre de personnes au parcours (2026-09-20)", () => {
       : res.error.flatten().fieldErrors.personnesPresentesHabituellement;
   };
 
-  it("EXIGE le nombre d'un ERP que ni sa catégorie ni son effectif ne portent au seuil", () => {
+  // ~~EXIGE le nombre~~ [2026-10-27, décision de la propriétaire : facultatif.]
+  it("accepte sans le nombre un ERP que ni sa catégorie ni son effectif ne portent au seuil", () => {
     for (const vide of ["", null, undefined]) {
       expect(
         erreurs({ ...restaurant, personnesPresentesHabituellement: vide }),
         String(vide),
-      ).toBeDefined();
+      ).toBeUndefined();
     }
-    expect(erreurs({ ...restaurant, categorieErp: "N4" })).toBeDefined();
+    expect(erreurs({ ...restaurant, categorieErp: "N4" })).toBeUndefined();
   });
 
   it("le lit comme un nombre, dans les deux sens du seuil", () => {

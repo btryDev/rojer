@@ -258,10 +258,12 @@ export function validerTypologie(s: OnboardingState): Blocage | null {
     };
   if (nombreDePersonnesDemande(s)) {
     const saisie = s.personnesPresentesHabituellement.trim();
-    const n = saisie === "" ? NaN : Number(saisie);
+    const n = Number(saisie);
     // Mêmes bornes que le schéma serveur (1 à 99 999, entier) : ce qui passe
     // ici doit passer là-bas, sinon le refus tombe à l'étape 3, hors de vue.
-    if (!Number.isInteger(n) || n < 1 || n > 99999)
+    // [2026-10-27 : facultatif — vide, rien n'est refusé ; décision de la
+    // propriétaire.]
+    if (saisie !== "" && (!Number.isInteger(n) || n < 1 || n > 99999))
       return {
         champ: "personnesPresentesHabituellement",
         message: MESSAGE_NOMBRE_DE_PERSONNES,
