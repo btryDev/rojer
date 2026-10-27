@@ -22,6 +22,13 @@ export function ResteAFaireParc({ lignes }: { lignes: LigneResteAFaire[] }) {
       >
         Ce qu&apos;il reste à faire
       </h2>
+      {/* Pourquoi, en une phrase (retour du 2026-10-27). Les suggestions
+          seules n'en relèvent pas : déclarer, c'est autre chose que dater. */}
+      {pastille ? (
+        <p className="m-0 mt-1.5 text-[13px] text-[color:var(--board-slate-ink)]">
+          Sans ces informations, Rojer ne peut pas calculer vos échéances.
+        </p>
+      ) : null}
       <ul className="m-0 mt-3 flex list-none flex-col gap-2 p-0">
         {lignes.map((l) => (
           <li key={l.cle} className="flex flex-wrap items-center gap-x-4 gap-y-2">
