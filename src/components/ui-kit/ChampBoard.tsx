@@ -28,6 +28,7 @@ export function ChampBoard({
   aide,
   requis,
   className,
+  champClassName,
   ...props
 }: {
   id: string;
@@ -38,6 +39,8 @@ export function ChampBoard({
    *  infobulle n'existe pas au doigt. */
   aide?: ReactNode;
   requis?: boolean;
+  /** Une classe de plus sur le champ lui-même — l'anneau « à compléter ». */
+  champClassName?: string;
 } & InputHTMLAttributes<HTMLInputElement>) {
   const idAide = aide ? `${id}-aide` : undefined;
   const idErreur = erreur ? `${id}-erreur` : undefined;
@@ -51,7 +54,7 @@ export function ChampBoard({
       </label>
       <input
         id={id}
-        className="champ-board"
+        className={champClassName ? `champ-board ${champClassName}` : "champ-board"}
         aria-invalid={Boolean(erreur)}
         aria-describedby={decrit}
         required={requis}

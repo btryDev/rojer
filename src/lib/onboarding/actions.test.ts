@@ -171,17 +171,13 @@ describe("finaliserOnboarding — le nombre de personnes atteint la base (2026-0
     expect(ecrit().personnesPresentesHabituellement).toBe(40);
   });
 
-  it("refuse le même restaurant s'il ne répond pas, et ne crée rien", async () => {
-    const res = await finaliserOnboarding(
-      { status: "idle" },
-      formulaire(restaurant),
-    );
-    expect(res.status).toBe("error");
-    expect(
-      res.status === "error" &&
-        res.fieldErrors?.personnesPresentesHabituellement?.[0],
-    ).toMatch(/combien de personnes/i);
-    expect(h.tx.etablissement.create).not.toHaveBeenCalled();
+  // ~~refuse le même restaurant s'il ne répond pas~~ [2026-10-27, décision de
+  // la propriétaire : le nombre est facultatif.]
+  it("crée le même restaurant s'il ne répond pas, sans écrire de nombre", async () => {
+    await expect(
+      finaliserOnboarding({ status: "idle" }, formulaire(restaurant)),
+    ).rejects.toThrow("NEXT_REDIRECT");
+    expect(ecrit()).not.toHaveProperty("personnesPresentesHabituellement");
   });
 
   it("n'écrit RIEN pour un bureau, à qui la question n'est pas posée", async () => {

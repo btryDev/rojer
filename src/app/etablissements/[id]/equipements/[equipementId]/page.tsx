@@ -48,7 +48,11 @@ import {
   chapeauAFaire,
   LIGNES_A_FAIRE_VISIBLES,
   mentionResteAFaire,
+  controlesADater,
 } from "@/lib/equipements/fiche";
+import { AFaireSurLEquipement } from "@/components/equipements/AFaireSurLEquipement";
+import { reponsesManquantes } from "@/lib/equipements/reponses-exigees";
+import { QUESTION_COURTE } from "@/lib/equipements/reste-a-faire";
 import { caracteristiquesLisibles } from "@/lib/equipements/caracteristiques";
 import {
   construireFrise,
@@ -141,6 +145,18 @@ export default async function EquipementDetailPage({
   // l'archivage prend le pas dans `classerVerification`, cette liste teste le
   // FAIT (`estRealisee`) et non l'état du jour.
   const histoire = lignesHistoire(eq, base);
+  // Les contrôles à rythme sans échéance connue : le rapport de leur dernier
+  // passage les datera (2026-10-27).
+  const aDater = retire ? [] : controlesADater(eq, aFaire, base);
+  // Les questions exigées restées sans réponse, en clair (D29 ; 2026-10-27).
+  const questionsSansReponse = retire
+    ? []
+    : reponsesManquantes(eq.categorie, eq.caracteristiques, eq.etablissement).map(
+        (champ) => QUESTION_COURTE[champ],
+      );
+  // La phrase sur la mise en service ne vaut que pour une ligne du
+  // référentiel : une prescription particulière n'est jamais datée par elle.
+  const aDaterParMiseEnService = aDater.filter((c) => !c.surMesure).length;
   const obligations = obligationsDeLEquipement(eq);
 
   // Ce qui vise cet appareil sans jamais tomber à une date. Lu au MOTEUR et
@@ -452,6 +468,23 @@ export default async function EquipementDetailPage({
           phrase={phraseFraicheur(fraicheur, SUJET_ECHEANCES_DE_L_APPAREIL)}
           hrefCalendrier={`${base}/calendrier`}
           className="mt-4"
+        />
+        {/* Ce qui manque à l'appareil, en ambre sous le titre (2026-10-27). */}
+        <AFaireSurLEquipement
+          questions={questionsSansReponse}
+          hrefModifier={`${base}/equipements/${equipementId}/modifier`}
+          aDater={aDater.map((c) => ({
+            id: c.id,
+            libelle: c.libelle,
+            hrefDepot: avecProvenance(c.hrefDepot, depuisCetteFiche),
+          }))}
+          miseEnService={
+            aDaterParMiseEnService === 0
+              ? null
+              : eq.dateMiseEnService
+                ? { connue: formaterDateLongueFr(eq.dateMiseEnService), nombre: aDaterParMiseEnService }
+                : { inconnue: true }
+          }
         />
         </>
       }

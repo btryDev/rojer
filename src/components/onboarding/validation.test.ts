@@ -342,10 +342,10 @@ describe("étape 2 — les deux questions dont la présence dépend d'une autre 
     personnesPresentesHabituellement: "",
   };
 
-  it("retient un restaurant de 5ᵉ catégorie qui n'a pas donné le nombre, sur SON champ", () => {
-    expect(validerTypologie(restaurant)?.champ).toBe(
-      "personnesPresentesHabituellement",
-    );
+  // [2026-10-27 : le nombre est facultatif — vide, il passe ; une saisie
+  // fausse reste retenue sur son champ.]
+  it("laisse passer un restaurant de 5ᵉ catégorie sans le nombre, retient une saisie fausse sur SON champ", () => {
+    expect(validerTypologie(restaurant)).toBeNull();
     for (const n of ["0", "abc", "12.5"])
       expect(
         validerTypologie({ ...restaurant, personnesPresentesHabituellement: n })

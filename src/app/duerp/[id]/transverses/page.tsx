@@ -4,6 +4,9 @@ import { buttonVariants } from "@/components/ui/button";
 import { QuestionTransverseRow } from "@/components/duerps/QuestionTransverseRow";
 import { FaitActiviteRow } from "@/components/salaries/FaitActiviteRow";
 import { FAITS_ACTIVITE, intituleDuFait } from "@/lib/etablissements/faits-activite";
+import { CadreACompleter, ListeACompleter } from "@/components/ui-kit/CadreACompleter";
+import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
+import { faitsManquants } from "@/lib/etablissements/guide-par-module";
 import { WizardSteps } from "@/components/duerps/WizardSteps";
 import { activitesDuSecteur } from "@/lib/activites/reponses";
 import { construireEtapes } from "@/lib/duerps/etapes";
@@ -54,6 +57,14 @@ export default async function TransversesPage({
 
   const risquesParId = new Map(risquesTransverses.map((r) => [r.id, r]));
 
+  // Les faits d'activité dont le silence retient des obligations « à
+  // confirmer » — ceux que l'étape du board nomme (2026-10-27). Un fait se
+  // répond ici sur sa question transverse quand il en a une, sinon sur sa
+  // propre ligne.
+  const marques = await marquesAConfirmerDuRendu(duerp.etablissementId);
+  const manques = faitsManquants(marques.questions, duerp.etablissement);
+  const ancresACompleter = new Set(manques.map((f) => f.questionTransverse ?? f.champ));
+
   return (
     <div className="flex flex-col gap-[22px]">
       <WizardSteps etapes={etapes} />
@@ -69,6 +80,22 @@ export default async function TransversesPage({
           ensuite le coter comme les autres.
         </p>
       </header>
+
+      {manques.length > 0 ? (
+        <CadreACompleter
+          id="transverses-a-completer"
+          titre="À compléter"
+          phrase="Sans ces réponses, certaines formations et consignes restent « à confirmer »."
+        >
+          <ListeACompleter
+            items={manques.map((f) => ({
+              cle: f.champ,
+              texte: intituleDuFait(f),
+              href: `#${f.questionTransverse ?? f.champ}`,
+            }))}
+          />
+        </CadreACompleter>
+      ) : null}
 
       <ul className="m-0 flex list-none flex-col gap-3 p-0">
         {repondues.map(({ question: q, reponse }) => {
@@ -88,6 +115,7 @@ export default async function TransversesPage({
               // L'inverse : le fait vaut « oui » (répondu depuis Équipe) mais le
               // document n'a pas le risque — un DUERP d'avant la réponse.
               risqueManquant={reponse === "oui" && !actifs.includes(q.risqueIdAssocie)}
+              aCompleter={ancresACompleter.has(q.id)}
             />
           );
         })}
@@ -109,6 +137,7 @@ export default async function TransversesPage({
             intitule={intituleDuFait(f)}
             pourquoi={f.pourquoi}
             valeur={duerp.etablissement[f.champ]}
+            aCompleter={ancresACompleter.has(f.champ)}
           />
         ))}
       </ul>

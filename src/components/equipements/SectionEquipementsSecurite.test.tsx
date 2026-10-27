@@ -24,6 +24,7 @@ const appareil = (id: string, libelle: string, href: string) => ({
   lieu: null,
   resume: { etat: "aPlanifier" as const, signaux: [], aConfirmer: [] },
   horsReferentiel: null,
+  aCompleter: [],
   href,
 });
 

@@ -165,6 +165,7 @@ describe("les écrans prennent leurs mots dans la table", () => {
       faites: 2,
       periodicites: [],
       aConfirmer: [],
+      aDater: 0,
     });
 
     expect(resume.signaux.map((s) => s.cle)).toEqual([
@@ -192,6 +193,7 @@ describe("les écrans prennent leurs mots dans la table", () => {
       faites: 1,
       periodicites: [],
       aConfirmer: [],
+      aDater: 0,
     });
     expect(seul.signaux.map((s) => s.libelle)).toEqual(["1 dépassée", "1 faite"]);
   });

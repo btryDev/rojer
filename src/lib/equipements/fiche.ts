@@ -30,6 +30,10 @@ import {
   type RegistreLigne,
 } from "@/lib/calendrier/etats";
 import { joursCivilsEntre } from "@/lib/dates";
+import { estCyclique } from "@/lib/calendrier/periodicite";
+import type { Periodicite } from "@/lib/referentiels/types-communs";
+import { PREFIXE_PRESCRIPTION } from "@/lib/matching/prescriptions";
+import { GESTE_DATE } from "./reste-a-faire";
 import { registrePrudent, type RetenueParPrudence } from "@/lib/calendrier/prudence";
 import {
   estActionEnRetard,
@@ -175,6 +179,50 @@ export type LigneHistoire = {
  * liste — il y a bien quelque chose à faire — mais sans tuile-date, et elle
  * se range après les échéances datées.
  */
+/**
+ * Un contrôle qui attend le rapport de son dernier passage pour être daté :
+ * ouvert, matériel (pas l'échéance d'une personne, que le titre date) et À
+ * RYTHME. Le seul fait accepté sans pièce est la mise en service de l'appareil
+ * (décision de la propriétaire du 2026-10-27).
+ */
+function attendSonRapport(v: { archiveLe: Date | null; salarieId: string | null; periodicite: Periodicite }): boolean {
+  return v.archiveLe === null && v.salarieId === null && estCyclique(v.periodicite);
+}
+
+/** Un contrôle sans échéance connue, que le rapport de son dernier passage datera. */
+export type ControleADater = {
+  id: string;
+  libelle: string;
+  /** Le dépôt du rapport sur ce contrôle. */
+  hrefDepot: string;
+  /** Ligne d'une prescription particulière (ADR-035) : la mise en service de
+   *  l'appareil ne la date jamais. */
+  surMesure: boolean;
+};
+
+/**
+ * Les contrôles de l'appareil sans échéance connue — « à planifier » —, que le
+ * bandeau « À faire sur cet équipement » propose de dater par leur rapport. Lu
+ * sur les lignes « à faire » : une ligne sans date y porte `date: null`.
+ */
+export function controlesADater(
+  eq: { id: string; verifications: readonly VerificationFiche[] },
+  aFaire: readonly Pick<LigneAFaire, "cle" | "genre" | "date">[],
+  base: string,
+): ControleADater[] {
+  const sansDate = new Set(
+    aFaire.filter((l) => l.genre === "verification" && l.date === null).map((l) => l.cle),
+  );
+  return eq.verifications
+    .filter((v) => attendSonRapport(v) && sansDate.has(`v-${v.id}`))
+    .map((v) => ({
+      id: v.id,
+      libelle: v.libelleObligation,
+      hrefDepot: `${base}/equipements/${eq.id}/controles/${v.id}?deposer=1#depot`,
+      surMesure: v.obligationId.startsWith(PREFIXE_PRESCRIPTION),
+    }));
+}
+
 export function lignesAFaire(
   eq: FicheEquipement,
   base: string,
@@ -219,7 +267,11 @@ export function lignesAFaire(
         rendezVous: mentionRendezVous(v, maintenant),
         detail: aUnRendezVous(v, maintenant)
           ? "Échéance portée au calendrier"
-          : etat === "enRetard"
+          : // Sans date et à rythme, la ligne dit le geste qui la datera,
+            // plutôt que ce qui manque (2026-10-27).
+            attendSonRapport(v)
+            ? GESTE_DATE
+            : etat === "enRetard"
             ? LIBELLE_AUCUNE_VERIFICATION
             : // SANS RENDEZ-VOUS (limite 1, 2026-09-15) : « à caler avec votre
               // prestataire » promettait un rendez-vous que l'obligation n'a

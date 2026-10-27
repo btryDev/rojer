@@ -69,7 +69,7 @@ export function PreRemplissagePanel({
   if (suggestions.length === 0) {
     if (!message && !avertissement) return null;
     return (
-      <section className="carte-board px-7 py-6 sm:px-8">
+      <section>
         {message && (
           <p className="m-0 text-[12.5px] text-[color:var(--board-green-ink)]">
             {message}
@@ -173,12 +173,11 @@ export function PreRemplissagePanel({
   };
 
   return (
-    <section className="carte-board px-7 py-6 sm:px-8">
+    <section>
       <header className="border-b border-[color:var(--board-slate-line)] pb-5">
-        <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-          Pré-remplissage suggéré
-        </p>
-        <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+        {/* 2026-10-27 : le panneau vit dans une fenêtre (`SuggestionsEnFenetre`),
+            qui porte le surtitre et le titre ; il n'est plus une carte. */}
+        <p className="m-0 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
           D&apos;après le code NAF et les régimes de cet établissement, les
           catégories d&apos;équipement ci-dessous sont typiquement présentes.
           Décochez celles qui ne s&apos;appliquent pas, puis validez pour créer

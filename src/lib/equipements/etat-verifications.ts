@@ -21,11 +21,7 @@ import {
   type RegistreLigne,
 } from "@/lib/calendrier/etats";
 import { prochaineEcheanceConnue } from "@/lib/calendrier/prochaine-echeance";
-import {
-  porteursComptesPar,
-  type LigneSondee,
-} from "@/lib/perimetre/porteurs-comptes";
-import type { PorteurObligation } from "@/lib/referentiels/conformite";
+import { estCyclique } from "@/lib/calendrier/periodicite";
 import type { Periodicite } from "@/lib/referentiels/types-communs";
 
 export type EtatEquipement = {
@@ -71,6 +67,12 @@ export type EtatEquipement = {
    * (revue du lot 1 : le parc listait ces échéances sans la mention).
    */
   aConfirmer: string[];
+  /**
+   * Contrôles À RYTHME sans échéance connue — « à planifier », en retard ou
+   * non : le rapport de leur dernier passage les daterait. La page
+   * Équipements en fait une ligne « à faire » (2026-10-27).
+   */
+  aDater: number;
 };
 
 /**
@@ -168,8 +170,12 @@ export function repartirParEquipement(
       faites: 0,
       periodicites: [],
       aConfirmer: [],
+      aDater: 0,
     };
 
+    if (v.archiveLe === null && v.statut === "a_planifier" && estCyclique(v.periodicite)) {
+      courant.aDater += 1;
+    }
     if (!courant.periodicites.includes(v.periodicite)) {
       courant.periodicites.push(v.periodicite);
     }
@@ -242,33 +248,6 @@ export function repartirParEquipement(
   }
 
   return parEquipement;
-}
-
-/**
- * Ce que le bandeau du parc compte vraiment, **mesuré** en faisant tourner son
- * agrégation sur une ligne par porteur.
- *
- * Pas une déclaration : un appel. `repartirParEquipement` saute les lignes sans
- * `equipementId` — c'est la ligne 106, et c'est tout ce qui décide du périmètre
- * de l'écran. La sonde le constate au lieu de le paraphraser, si bien qu'une
- * agrégation qui se met un jour à compter les échéances d'établissement change
- * la légende de l'écran sans que personne ait à y penser.
- *
- * Le compte agrégé est `enRetard` : c'est celui qui sert de sonde parce que la
- * ligne fabriquée est en retard, et c'est le seul état que les quatre écrans
- * annoncent tous.
- */
-export function porteursDuParc(
-  now: Date = new Date(),
-): Set<PorteurObligation> {
-  return porteursComptesPar(
-    (lignes: LigneSondee[]) =>
-      [...repartirParEquipement(lignes, now).values()].reduce(
-        (n, e) => n + e.enRetard,
-        0,
-      ),
-    now,
-  );
 }
 
 /**

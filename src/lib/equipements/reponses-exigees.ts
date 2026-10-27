@@ -256,12 +256,14 @@ export function reponsesManquantes(
   categorie: CategorieEquipement,
   caracteristiques: unknown,
   regime: RegimeExigence,
+  /** Les questions exigées de la catégorie, déjà calculées par l'appelant. */
+  exigees: readonly ChampTriEtat[] = questionsExigeesPour(categorie, regime),
 ): ChampTriEtat[] {
   const c =
     caracteristiques !== null && typeof caracteristiques === "object" && !Array.isArray(caracteristiques)
       ? (caracteristiques as Record<string, unknown>)
       : {};
-  return questionsExigeesPour(categorie, regime).filter((champ) => typeof c[champ] !== "boolean");
+  return exigees.filter((champ) => typeof c[champ] !== "boolean");
 }
 
 /**
@@ -309,10 +311,21 @@ export function appareilsMuets(
     caracteristiques: unknown;
   }[],
   regime: RegimeExigence,
+  /** La carte de `questionsExigeesParCategorie`, quand l'appelant l'a déjà :
+   *  la page Équipements la calcule pour le panneau des suggestions. */
+  exigeesParCategorie?: Partial<Record<CategorieEquipement, readonly ChampTriEtat[]>>,
 ): { equipementId: string; libelle: string; champ: ChampTriEtat }[] {
-  return equipements.flatMap((e) =>
-    reponsesManquantes(e.categorie as CategorieEquipement, e.caracteristiques, regime).map(
-      (champ) => ({ equipementId: e.id, libelle: e.libelle, champ }),
-    ),
-  );
+  // Une fois par CATÉGORIE, pas par appareil : une question nommée par une
+  // décision fait tourner le moteur deux fois (`exigeeDansCeRegime`), et la
+  // page Équipements appelle ceci sur tout le parc à chaque rendu (2026-10-27).
+  const carte = exigeesParCategorie ?? questionsExigeesParCategorie(regime);
+  return equipements.flatMap((e) => {
+    const categorie = e.categorie as CategorieEquipement;
+    const exigees = carte[categorie] ?? [];
+    return reponsesManquantes(categorie, e.caracteristiques, regime, exigees).map((champ) => ({
+      equipementId: e.id,
+      libelle: e.libelle,
+      champ,
+    }));
+  });
 }

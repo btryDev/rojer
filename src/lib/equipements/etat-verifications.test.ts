@@ -37,6 +37,21 @@ const verif = (
 });
 
 describe("repartirParEquipement", () => {
+  // Ce que la page Équipements propose de dater par un rapport (2026-10-27).
+  it("compte les contrôles à rythme sans échéance connue, en retard ou non, pas les ponctuels", () => {
+    const m = repartirParEquipement(
+      [
+        verif("eq1", "2026-08-01", { statut: "a_planifier" }),
+        verif("eq1", "2026-12-01", { statut: "a_planifier" }),
+        verif("eq1", "2026-08-01", { statut: "a_planifier", periodicite: "mise_en_service_uniquement" }),
+        verif("eq1", "2026-09-01"),
+        verif("eq1", "2026-08-01", { statut: "a_planifier", archiveLe: "2026-08-05" }),
+      ],
+      AUJOURDHUI,
+    );
+    expect(m.get("eq1")?.aDater).toBe(2);
+  });
+
   it("compte les dépassées par appareil", () => {
     const m = repartirParEquipement(
       [

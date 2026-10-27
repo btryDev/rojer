@@ -4,6 +4,9 @@ import { ArrowLeft } from "lucide-react";
 import { FaitActiviteRow } from "@/components/salaries/FaitActiviteRow";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { FAITS_ACTIVITE, intituleDuFait } from "@/lib/etablissements/faits-activite";
+import { CadreACompleter, ListeACompleter } from "@/components/ui-kit/CadreACompleter";
+import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
+import { faitsManquants } from "@/lib/etablissements/guide-par-module";
 import { chargerFaitsActivite } from "@/lib/etablissements/faits-activite-queries";
 
 /**
@@ -27,8 +30,12 @@ export default async function RisquesSalariesPage({
 }) {
   const { id } = await params;
   const { etablissement } = await requireEtablissement(id);
-  const faits = await chargerFaitsActivite(id);
+  const [faits, marques] = await Promise.all([chargerFaitsActivite(id), marquesAConfirmerDuRendu(id)]);
   if (!faits) notFound();
+  // Les questions dont le silence retient des obligations « à confirmer » —
+  // celles que l'étape du board nomme (2026-10-27).
+  const manques = faitsManquants(marques.questions, etablissement);
+  const champsACompleter = new Set(manques.map((f) => f.champ));
 
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
@@ -51,6 +58,19 @@ export default async function RisquesSalariesPage({
           dans votre DUERP.
         </p>
       </header>
+      {manques.length > 0 ? (
+        <div className="px-[var(--board-gutter)] pt-6">
+          <CadreACompleter
+            id="risques-a-completer"
+            titre="À compléter"
+            phrase="Sans ces réponses, certaines formations et consignes restent « à confirmer »."
+          >
+            <ListeACompleter
+              items={manques.map((f) => ({ cle: f.champ, texte: intituleDuFait(f), href: `#${f.champ}` }))}
+            />
+          </CadreACompleter>
+        </div>
+      ) : null}
       <ul className="m-0 flex list-none flex-col gap-3 px-[var(--board-gutter)] pt-6">
         {FAITS_ACTIVITE.map((f) => (
           <FaitActiviteRow
@@ -61,6 +81,7 @@ export default async function RisquesSalariesPage({
             pourquoi={f.pourquoi}
             horsQuestion={f.autresFondements}
             valeur={faits[f.champ]}
+            aCompleter={champsACompleter.has(f.champ)}
           />
         ))}
       </ul>

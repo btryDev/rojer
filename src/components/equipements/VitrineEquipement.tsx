@@ -18,6 +18,7 @@ import Link from "next/link";
 import { MapPin } from "lucide-react";
 import { CHAMP_ETAT, ENCRE_ETAT } from "@/lib/calendrier/etats";
 import type { SignalEquipement } from "@/lib/equipements/etat-verifications";
+import { GESTE_DATE } from "@/lib/equipements/reste-a-faire";
 
 /* La table de correspondance qui vivait ici a disparu avec sa cause. Elle
    traduisait la clé `aVenir` — qui réunissait `proche` et `lointain` — en un
@@ -62,6 +63,7 @@ export function VitrineEquipement({
   signaux,
   aConfirmer = [],
   horsReferentiel,
+  aCompleter = [],
   href,
 }: {
   libelle: string;
@@ -80,8 +82,20 @@ export function VitrineEquipement({
    *  mention, un appareil muet et un appareil à jour affichent la même
    *  chose — rien. */
   horsReferentiel?: { libelle: string; explication: string } | null;
+  /**
+   * Les gestes qui manquent à l'appareil (`gestesDeLAppareil`, 2026-10-27).
+   * Non vide : la tuile dit ce qu'il faut faire, en ambre ; avec le geste
+   * « date », au lieu de « à planifier ». Le retard, lui, reste affiché.
+   */
+  aCompleter?: readonly string[];
   href: string;
 }) {
+  // Le geste « date » remplace « à planifier » : c'est lui qui donnera la date.
+  // « Préciser son usage » n'en donne aucune — le signal reste (revue du
+  // 2026-10-27).
+  const signauxAffiches = aCompleter.includes(GESTE_DATE)
+    ? signaux.filter((s) => s.cle !== "aPlanifier")
+    : signaux;
   return (
     <Link
       href={href}
@@ -117,9 +131,21 @@ export function VitrineEquipement({
       </span>
 
       <span className="flex flex-1 flex-col px-4 pb-4 pt-3.5">
-        <span className="text-[15px] font-semibold leading-[1.25] text-[color:var(--board-ink)]">
-          {libelle}
+        <span className="flex flex-wrap items-start justify-between gap-2">
+          <span className="text-[15px] font-semibold leading-[1.25] text-[color:var(--board-ink)]">
+            {libelle}
+          </span>
+          {aCompleter.length > 0 ? (
+            <span className="pastille-board flex-none bg-[color:var(--board-amber)] text-[color:var(--board-amber-ink)]">
+              À compléter
+            </span>
+          ) : null}
         </span>
+        {aCompleter.map((g) => (
+          <span key={g} className="mt-1.5 block text-[12.5px] font-semibold leading-[1.4] text-[color:var(--board-amber-ink)]">
+            → {g}
+          </span>
+        ))}
         <span className="mt-auto flex flex-wrap gap-1.5 pt-3">
           {/* Le motif passe devant : c'est le seul état que la carte ne
               pouvait pas montrer. Il s'ajoute aux signaux, il ne les
@@ -135,9 +161,9 @@ export function VitrineEquipement({
             </span>
           ) : null}
           <MentionAConfirmer phrases={aConfirmer} />
-          {signaux.length > 0 ? (
-            signaux.map((s) => <Signal key={s.cle} signal={s} />)
-          ) : horsReferentiel ? null : (
+          {signauxAffiches.length > 0 ? (
+            signauxAffiches.map((s) => <Signal key={s.cle} signal={s} />)
+          ) : horsReferentiel || aCompleter.length > 0 ? null : (
             <span className="text-[12px] text-[color:var(--board-slate-soft)]">
               Aucune vérification rattachée
             </span>

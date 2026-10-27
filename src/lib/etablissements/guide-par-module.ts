@@ -18,24 +18,33 @@ import type { QuestionSansReponse } from "@/lib/matching/types";
 import { PHRASE_SANS_REPONSE } from "@/lib/matching/sans-reponse";
 import { questionSsiPosee } from "./questions";
 import { questionSommeilPosee } from "./schema";
+import { estChampFaitActivite, faitParChamp, type FaitActivite } from "./faits-activite";
 
 export type ModuleDuGuide = "duerp" | "fiche";
 
 export const FOYER_DE_LA_QUESTION: Record<
   QuestionSansReponse,
-  { module: ModuleDuGuide; nomCourt: string }
+  {
+    module: ModuleDuGuide;
+    nomCourt: string;
+    /**
+     * Le champ qui la pose : l'ancre du bandeau « À compléter » (2026-10-27) —
+     * l'`id` du champ de la fiche, ou celui de la ligne du fait d'activité.
+     */
+    champ: string;
+  }
 > = {
-  manutention_manuelle: { module: "duerp", nomCourt: "manutention" },
-  travail_ecran: { module: "duerp", nomCourt: "écran" },
-  operations_electriques: { module: "duerp", nomCourt: "électricité" },
-  conduite_engins: { module: "duerp", nomCourt: "engins" },
-  exposition_cmr: { module: "duerp", nomCourt: "CMR" },
-  epi_presents: { module: "duerp", nomCourt: "équipements de protection" },
-  ssi_categorie_ab: { module: "fiche", nomCourt: "système de sécurité incendie" },
-  locaux_sommeil_public: { module: "fiche", nomCourt: "hébergement de nuit" },
-  matieres_r4227_22: { module: "fiche", nomCourt: "matières inflammables" },
-  type_erp: { module: "fiche", nomCourt: "type d'ERP" },
-  personnes_presentes: { module: "fiche", nomCourt: "personnes présentes" },
+  manutention_manuelle: { module: "duerp", nomCourt: "manutention", champ: "manutentionManuelle" },
+  travail_ecran: { module: "duerp", nomCourt: "écran", champ: "travailSurEcran" },
+  operations_electriques: { module: "duerp", nomCourt: "électricité", champ: "operationsElectriques" },
+  conduite_engins: { module: "duerp", nomCourt: "engins", champ: "conduiteEngins" },
+  exposition_cmr: { module: "duerp", nomCourt: "CMR", champ: "expositionCMR" },
+  epi_presents: { module: "duerp", nomCourt: "équipements de protection", champ: "epiPresents" },
+  ssi_categorie_ab: { module: "fiche", nomCourt: "système de sécurité incendie", champ: "ssiCategorieAouB" },
+  locaux_sommeil_public: { module: "fiche", nomCourt: "hébergement de nuit", champ: "comporteLocauxSommeilPublic" },
+  matieres_r4227_22: { module: "fiche", nomCourt: "matières inflammables", champ: "manipuleMatieresR422722" },
+  type_erp: { module: "fiche", nomCourt: "type d'ERP", champ: "typeErp" },
+  personnes_presentes: { module: "fiche", nomCourt: "personnes présentes", champ: "personnesPresentesHabituellement" },
 };
 
 /** Ce que la fiche lit pour décider des questions qu'elle pose. */
@@ -60,18 +69,41 @@ export function poseeSurLaFiche(q: QuestionSansReponse, regime: RegimeDeLaFiche)
 }
 
 /**
- * Les noms courts des questions muettes d'un module, dans l'ordre de la table.
+ * Les questions muettes d'un module, dans l'ordre de la table.
  */
+export function questionsManquantes(
+  module: ModuleDuGuide,
+  questionsMuettes: readonly QuestionSansReponse[],
+  regime: RegimeDeLaFiche,
+): QuestionSansReponse[] {
+  return (Object.keys(FOYER_DE_LA_QUESTION) as QuestionSansReponse[])
+    .filter((q) => FOYER_DE_LA_QUESTION[q].module === module)
+    .filter((q) => module !== "fiche" || poseeSurLaFiche(q, regime))
+    .filter((q) => questionsMuettes.includes(q));
+}
+
+/**
+ * Les faits d'activité restés muets (module DUERP), dans l'ordre de la table —
+ * ce que « Évaluer les risques de vos salariés » et l'étape transverse du DUERP
+ * signalent (2026-10-27).
+ */
+export function faitsManquants(
+  questionsMuettes: readonly QuestionSansReponse[],
+  regime: RegimeDeLaFiche,
+): FaitActivite[] {
+  return questionsManquantes("duerp", questionsMuettes, regime).flatMap((q) => {
+    const champ = FOYER_DE_LA_QUESTION[q].champ;
+    return estChampFaitActivite(champ) ? [faitParChamp(champ)] : [];
+  });
+}
+
+/** Leurs noms courts — l'étape du board les énumère. */
 export function precisionsManquantes(
   module: ModuleDuGuide,
   questionsMuettes: readonly QuestionSansReponse[],
   regime: RegimeDeLaFiche,
 ): string[] {
-  return (Object.keys(FOYER_DE_LA_QUESTION) as QuestionSansReponse[])
-    .filter((q) => FOYER_DE_LA_QUESTION[q].module === module)
-    .filter((q) => module !== "fiche" || poseeSurLaFiche(q, regime))
-    .filter((q) => questionsMuettes.includes(q))
-    .map((q) => FOYER_DE_LA_QUESTION[q].nomCourt);
+  return questionsManquantes(module, questionsMuettes, regime).map((q) => FOYER_DE_LA_QUESTION[q].nomCourt);
 }
 
 /** « a », « a et b », « a, b et c ». */

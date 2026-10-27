@@ -163,9 +163,11 @@ export const onboardingSchema = z
     //
     // Elle n'est donc posée QU'À CEUX DONT LA RÉPONSE CHANGE QUELQUE CHOSE —
     // `nombreDePersonnesADemander` : un ERP que ni sa catégorie ni son effectif
-    // ne portent au-dessus du seuil de R. 4227-34. Pour eux elle est
-    // obligatoire ; pour tous les autres elle n'est pas à l'écran et n'est pas
-    // acceptée. ~~`manipuleMatieresR422722` ne revient PAS : sa décision de champ
+    // ne portent au-dessus du seuil de R. 4227-34. ~~Pour eux elle est
+    // obligatoire~~ [2026-10-27, décision de la propriétaire : facultative —
+    // sans réponse, la consigne, l'alarme et les exercices restent « à
+    // confirmer », et la fiche la redemande dans « À compléter »] ; pour tous
+    // les autres elle n'est pas à l'écran et n'est pas acceptée. ~~`manipuleMatieresR422722` ne revient PAS : sa décision de champ
     // est en attente, et le silence n'y retire rien à personne.~~ [2026-09-27 :
     // prémisse fausse depuis le 2026-09-03 — le silence retirait R. 4227-37 et
     // -39 au travail seul sous le seuil. La question revient, voir plus bas.]
@@ -291,7 +293,7 @@ export const onboardingSchema = z
       });
     }
 
-    // LE NOMBRE DE PERSONNES : dû là où il est demandé, refusé ailleurs. Même
+    // LE NOMBRE DE PERSONNES : ~~dû~~ accepté là où il est demandé, refusé ailleurs. Même
     // forme que les locaux à sommeil ci-dessus, et même raison dans les deux
     // sens — un `required` de navigateur ne tient rien, et un champ absent de
     // l'écran ne doit pas pouvoir être posté.
@@ -303,13 +305,8 @@ export const onboardingSchema = z
       // objet, ici comme à la fiche (revue du lot 1).
       manipuleMatieresR422722: val.manipuleMatieresR422722,
     });
-    if (nombreDemande && val.personnesPresentesHabituellement === undefined) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["personnesPresentesHabituellement"],
-        message: MESSAGE_NOMBRE_DE_PERSONNES,
-      });
-    }
+    // ~~Exigé là où il est demandé.~~ [2026-10-27 : facultatif, décision de
+    // la propriétaire. Seul le refus hors de l'écran demeure.]
     if (!nombreDemande && val.personnesPresentesHabituellement !== undefined) {
       // « la consigne, l'alarme et les exercices », pas « les mêmes
       // obligations » : le TYPE de l'alarme (arrêté du 4 novembre 1993,

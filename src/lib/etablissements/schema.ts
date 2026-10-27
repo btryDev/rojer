@@ -1,7 +1,3 @@
-import {
-  MESSAGE_NOMBRE_DE_PERSONNES,
-  nombreDePersonnesADemander,
-} from "@/lib/matching/personnes-presentes";
 import { siretSchema } from "./siret";
 import { z } from "zod";
 import { depuisCleJourCivil, estJourCivilReel } from "@/lib/dates";
@@ -429,25 +425,14 @@ export const etablissementSchema = z
     // Ici le champ reste ACCEPTÉ de tous — la fiche le montre à tous, et un
     // nombre déclaré tranche dans les deux sens.
     //
-    // Conséquence voulue pour un dossier ancien resté muet : sa fiche ne
-    // s'enregistre plus sans le nombre. C'est le seul endroit où il peut
+    // ~~Conséquence voulue pour un dossier ancien resté muet : sa fiche ne
+    // s'enregistre plus sans le nombre.~~ C'est le seul endroit où il peut
     // lever le « à confirmer » de sa consigne incendie et de son exercice
     // semestriel.
-    if (
-      val.personnesPresentesHabituellement == null &&
-      nombreDePersonnesADemander({
-        estERP: val.estERP,
-        categorieErp: val.categorieErp ?? null,
-        effectifSurSite: val.effectifSurSite,
-        manipuleMatieresR422722: val.manipuleMatieresR422722,
-      })
-    ) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["personnesPresentesHabituellement"],
-        message: MESSAGE_NOMBRE_DE_PERSONNES,
-      });
-    }
+    // [2026-10-27, décision de la propriétaire : ~~exigé ici~~ facultatif. La
+    // fiche s'enregistre sans le nombre ; sans lui, la consigne, l'alarme et
+    // les exercices restent « à confirmer », et le cadre « À compléter » de la
+    // fiche le redemande.]
 
     // Règle ADR-004 : les précisions sont alignées sur les flags.
     if (val.estERP) {
