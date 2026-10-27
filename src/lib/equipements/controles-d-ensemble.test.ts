@@ -9,7 +9,7 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/lib/prisma", () => ({ prisma: { verification: { findMany: vi.fn(async () => h.lignes) } } }));
 vi.mock("@/lib/auth/require-user", () => ({ requireUser: vi.fn(async () => ({ id: "u1" })) }));
 vi.mock("@/lib/rapports/joindre-realisations", () => ({
-  joindreDernieresRealisations: async (l: object[]) => l.map((x) => ({ ...x, derniereRealisation: null, dernierResultat: null })),
+  joindreDernieresRealisations: async (_e: string, l: object[]) => l.map((x) => ({ ...x, derniereRealisation: null, dernierResultat: null })),
 }));
 
 const { controlesDEnsemble } = await import("./controles-d-ensemble");

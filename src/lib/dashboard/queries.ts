@@ -47,7 +47,11 @@ import {
 import { prochaineEcheanceConnue } from "@/lib/calendrier/prochaine-echeance";
 import { repartirParMois, type BarMois, type BarresAnnee } from "./barres-mois";
 import { WHERE_RAPPORT_REALISE } from "@/lib/rapports/derniere-realisation";
-import { joindreDernieresRealisations } from "@/lib/rapports/joindre-realisations";
+import {
+  dernieresRealisationsDeLEtablissement,
+  joindreDernieresRealisations,
+} from "@/lib/rapports/joindre-realisations";
+import { projeterDernieresRealisations } from "@/lib/rapports/projeter-realisations";
 import {
   typeDeVerification,
   type BatimentEcheance,
@@ -312,7 +316,7 @@ export async function compterVerifsParEquipement(
     ajouterMois(now, -MOIS_FENETRE_HISTORIQUE),
   );
 
-  const [lignes, marques] = await Promise.all([
+  const [lignes, marques, dernieres] = await Promise.all([
     prisma.verification.findMany({
       where: {
         etablissementId,
@@ -339,8 +343,9 @@ export async function compterVerifsParEquipement(
       },
     }),
     marquesAConfirmerDuRendu(etablissementId),
+    dernieresRealisationsDeLEtablissement(etablissementId),
   ]);
-  const verifs = await joindreDernieresRealisations(lignes);
+  const verifs = projeterDernieresRealisations(lignes, dernieres);
   const prudence = retenueParPrudence(marques.parObligation);
 
   const map = new Map<string, StatsEquipement>();
@@ -422,10 +427,13 @@ export async function compterVerifsParEquipement(
  * en UTC, une échéance du 1er du mois à minuit basculait dans le mois
  * précédent.
  *
- * UNE SEULE LECTURE : les rapports réalisés viennent avec leurs lignes, par la
+ * ~~UNE SEULE LECTURE : les rapports réalisés viennent avec leurs lignes, par la
  * relation, et non par une requête par ligne ni par la jointure « dernière
  * réalisation » — qui ne rend que le plus récent, et coûtait un second
- * aller-retour.
+ * aller-retour.~~ [2026-10-27, plan performance, lot 1a : DEUX lectures — les
+ * lignes avec leurs rapports de l'année, et, en parallèle, la dernière
+ * réalisation de chaque ligne de l'établissement. Une requête de plus contre
+ * dix ans d'historique de moins.]
  */
 export async function compterObligationsParMois(
   etablissementId: string,
@@ -435,7 +443,7 @@ export async function compterObligationsParMois(
   const debut = instantCivil(annee, 1, 1);
   const fin = instantCivil(annee + 1, 1, 1);
 
-  const [verifs, marques] = await Promise.all([prisma.verification.findMany({
+  const [verifs, marques, dernieres] = await Promise.all([prisma.verification.findMany({
     where: {
       etablissementId,
       etablissement: { entreprise: { userId: user.id } },
@@ -478,12 +486,13 @@ export async function compterObligationsParMois(
       libelleObligation: true,
       obligationId: true,
       prescriptionId: true,
-      // TOUS les rapports réalisés de la ligne, et pas seulement ceux de
-      // l'année : un rapport hors de l'année suffit à écarter le repli sur
-      // `datePrevue` d'une ponctuelle consommée (`repartirParMois`). Une date
-      // par rapport ; un hebdomadaire en produit une cinquantaine par an.
+      // Les rapports réalisés DE L'ANNÉE seulement : ce sont eux que la barre
+      // pose. [2026-10-27, plan performance, lot 1a : la clause lisait tous
+      // les rapports de la ligne — dix ans d'historique pour douze mois — afin
+      // de savoir si un rapport existait hors de l'année. La dernière
+      // réalisation, lue en parallèle en une ligne par échéance, le dit.]
       rapports: {
-        where: WHERE_RAPPORT_REALISE,
+        where: { ...WHERE_RAPPORT_REALISE, dateRapport: { gte: debut, lt: fin } },
         select: { dateRapport: true },
       },
     },
@@ -491,12 +500,19 @@ export async function compterObligationsParMois(
     // D1 (a) : les barres et l'anneau lisent la même prudence que le bandeau
     // (contre-lecture du lot 3 — ils comptaient encore la ligne en retard).
     marquesAConfirmerDuRendu(etablissementId),
+    // En parallèle de la lecture des lignes, et non après : indexée par ligne,
+    // pour tout l'établissement (revue du lot 1a).
+    dernieresRealisationsDeLEtablissement(etablissementId),
   ]);
 
   // Les mêmes lectures que le calendrier (`lecturesCalendrier`) pour
-  // l'échéance ouverte ; tous les rapports pour l'historique.
+  // l'échéance ouverte ; les rapports de l'année pour les barres.
   return repartirParMois(
-    verifs.map(({ rapports, ...v }) => ({ ...v, rapportsRealises: rapports })),
+    verifs.map(({ rapports, ...v }) => ({
+      ...v,
+      rapportsRealises: rapports,
+      derniereRealisation: dernieres.get(v.id)?.dateRapport ?? null,
+    })),
     annee,
     new Date(),
     retenueParPrudence(marques.parObligation),
@@ -895,7 +911,7 @@ export const getDashboardData = cache(async function getDashboardData(
   // ensembles disjoints, dont la somme sert de dénominateur au score. Les
   // lignes retenues par prudence en sortent (D1 (a)).
   const etatVerifs = repartirVerifications(
-    await joindreDernieresRealisations(verifications),
+    await joindreDernieresRealisations(etablissementId, verifications),
     now,
     retenueParPrudence(marquesDossier.parObligation),
   );

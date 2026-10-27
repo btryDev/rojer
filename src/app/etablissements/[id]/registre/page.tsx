@@ -25,16 +25,26 @@ import {
 } from "@/lib/registre/completude";
 import { BandeauCouverture } from "@/components/perimetre/BandeauCouverture";
 import { couvertureDuDossier } from "@/lib/perimetre/faits";
-import { listerRapportsDeLEtablissement } from "@/lib/rapports/queries";
+import { anneesDuRegistre, listerRapportsDeLEtablissement } from "@/lib/rapports/queries";
 import {
   LABEL_DOMAINE,
   libellePorteur,
 } from "@/lib/calendrier/labels";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
-import { formaterDateCourteFr } from "@/lib/dates";
+import { composantesCiviles, formaterDateCourteFr } from "@/lib/dates";
 
 const DOMAINES_P1: DomaineObligation[] = ["electricite", "incendie", "aeration"];
+
+/** Une pastille de filtre du bloc des rapports, active ou non. */
+function classePastille(active: boolean): string {
+  return (
+    "pastille-board transition-colors " +
+    (active
+      ? "bg-[color:var(--board-ink)] text-white"
+      : "bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-mid)] hover:text-[color:var(--board-ink)]")
+  );
+}
 
 function formatTaille(octets: number): string {
   if (octets < 1024) return `${octets} o`;
@@ -47,10 +57,10 @@ export default async function RegistrePage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ domaine?: string; q?: string }>;
+  searchParams: Promise<{ domaine?: string; q?: string; annee?: string }>;
 }) {
   const { id } = await params;
-  const { domaine, q } = await searchParams;
+  const { domaine, q, annee: anneeParam } = await searchParams;
   const etab = await getEtablissement(id);
   if (!etab) notFound();
 
@@ -60,16 +70,28 @@ export default async function RegistrePage({
   const filtreDomaine = DOMAINES_P1.includes(domaine as DomaineObligation)
     ? (domaine as DomaineObligation)
     : undefined;
+  // Une année à la fois, l'année en cours par défaut (plan performance,
+  // lot 1a) : comme le calendrier. L'export reste complet.
+  const anneeEnCours = composantesCiviles(new Date()).annee;
+  const anneeLue = Number(anneeParam);
+  // Toute année plausible est servie — y compris une année future qu'un
+  // rapport mal daté aurait ouverte au sélecteur (revue du lot 1a).
+  const annee =
+    Number.isInteger(anneeLue) && anneeLue >= 1900 && anneeLue <= 9999
+      ? anneeLue
+      : anneeEnCours;
 
   // Trois lectures indépendantes, lancées ensemble APRÈS la garde
   // (`getEtablissement` + `notFound` ci-dessus) : elles se suivaient, chacune
   // attendant la précédente pour rien (audit Next.js du 2026-10-14, M4). Le
   // gain n'existe que sur un pool de plus d'une connexion.
-  const [rapports, registre, couverture] = await Promise.all([
+  const [rapports, annees, registre, couverture] = await Promise.all([
     listerRapportsDeLEtablissement(id, {
       domaine: filtreDomaine,
       recherche: q,
+      annee,
     }),
+    anneesDuRegistre(id, anneeEnCours),
     composerRegistreDeLEtablissement(id),
     // Ce que l'outil couvre, et ce qu'il ne couvre pas. Se lit AVANT le
     // registre : un dirigeant hors périmètre doit savoir que ce qui suit est
@@ -90,13 +112,19 @@ export default async function RegistrePage({
   // Le registre n'est pas le parent d'une vérification — le calendrier
   // l'est. Le lien emporte donc le registre, filtres compris, pour que le
   // retour ne renvoie pas ailleurs.
-  const depuisCeRegistre = origineDepuis(baseHref, { domaine, q });
-  const makeHref = (over: { domaine?: string; q?: string }) => {
+  // L'année en cours ne s'écrit pas dans l'adresse : une seule règle, pour les
+  // liens comme pour la provenance.
+  const paramAnnee = (a: number) => (a === anneeEnCours ? undefined : String(a));
+  const anneeHref = paramAnnee(annee);
+  const depuisCeRegistre = origineDepuis(baseHref, { domaine, q, annee: anneeHref });
+  const makeHref = (over: { domaine?: string; q?: string; annee?: number }) => {
     const p = new URLSearchParams();
     const d = over.domaine ?? filtreDomaine;
     const qq = over.q ?? q ?? "";
+    const a = paramAnnee(over.annee ?? annee);
     if (d) p.set("domaine", d);
     if (qq) p.set("q", qq);
+    if (a) p.set("annee", a);
     const s = p.toString();
     return s ? `${baseHref}?${s}` : baseHref;
   };
@@ -250,7 +278,7 @@ export default async function RegistrePage({
           <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-3">
             <h2 className="board-titre m-0 text-[17px]">Rapports archivés</h2>
             <p className="m-0 text-[12px] text-[color:var(--board-slate-mid)]">
-              {rapports.length} {rapports.length > 1 ? "rapports" : "rapport"}
+              {rapports.length} {rapports.length > 1 ? "rapports" : "rapport"} en {annee}
               {(q || filtreDomaine) && " pour ces filtres"}
             </p>
           </div>
@@ -260,6 +288,7 @@ export default async function RegistrePage({
               {filtreDomaine && (
                 <input type="hidden" name="domaine" value={filtreDomaine} />
               )}
+              {anneeHref && <input type="hidden" name="annee" value={anneeHref} />}
               <input
                 type="search"
                 name="q"
@@ -280,12 +309,7 @@ export default async function RegistrePage({
 
             <Link
               href={makeHref({ domaine: "" })}
-              className={
-                "pastille-board transition-colors " +
-                (!filtreDomaine
-                  ? "bg-[color:var(--board-ink)] text-white"
-                  : "bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-mid)] hover:text-[color:var(--board-ink)]")
-              }
+              className={classePastille(!filtreDomaine)}
             >
               Tous
             </Link>
@@ -293,17 +317,28 @@ export default async function RegistrePage({
               <Link
                 key={d}
                 href={makeHref({ domaine: d })}
-                className={
-                  "pastille-board transition-colors " +
-                  (filtreDomaine === d
-                    ? "bg-[color:var(--board-ink)] text-white"
-                    : "bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-mid)] hover:text-[color:var(--board-ink)]")
-                }
+                className={classePastille(filtreDomaine === d)}
               >
                 {LABEL_DOMAINE[d]}
               </Link>
             ))}
           </div>
+
+          {/* Une année à la fois : dix ans de rapports d'un coup faisaient une
+              page de plusieurs dizaines de mégaoctets. L'export, lui, reste
+              complet. */}
+          <nav aria-label="Année des rapports" className="mt-3 flex flex-wrap items-center gap-2">
+            {annees.map((a) => (
+              <Link
+                key={a}
+                href={makeHref({ annee: a })}
+                aria-current={a === annee ? "page" : undefined}
+                className={classePastille(a === annee)}
+              >
+                {a}
+              </Link>
+            ))}
+          </nav>
 
           {/* ~~« L'article L. 4711-1 impose de le tenir à disposition d'un
               contrôleur »~~ — corrigé le 2026-09-20. L. 4711-1 dit que ces
@@ -327,8 +362,16 @@ export default async function RegistrePage({
             {rapports.length === 0 ? (
               q || filtreDomaine ? (
                 <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                  Aucun rapport ne correspond à ces filtres — essayez de les
-                  retirer.
+                  Aucun rapport en {annee} ne correspond à ces filtres — essayez
+                  de les retirer, ou une autre année juste au-dessus.
+                </p>
+              ) : annees.some((a) => a !== annee) ? (
+                // D'autres années portent des rapports (`anneesDuRegistre` ne
+                // rend que des années réelles, plus l'année en cours) : ce
+                // n'est pas un registre vide, c'est une année sans rapport.
+                <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+                  Aucun rapport en {annee}. Les autres années se choisissent
+                  juste au-dessus.
                 </p>
               ) : (
                 <EmptyState

@@ -69,10 +69,16 @@ export function repartirParMois(
       obligationId: string;
       /** Une ligne rythmée par une prescription n'est jamais prudente. */
       prescriptionId: string | null;
-      /** Les dates de TOUS les rapports réalisés de la ligne, pas seulement
-       *  ceux de l'année : l'existence d'un rapport hors de l'année décide du
-       *  repli ci-dessus. */
+      /** Les dates des rapports réalisés de la ligne DANS L'ANNÉE : ce sont
+       *  eux que la barre pose. [2026-10-27, plan performance, lot 1a : la
+       *  liste portait tous les rapports de la ligne, dix ans d'historique
+       *  relus pour douze mois affichés.] Un rapport d'une autre année n'est
+       *  pas posé — `poser` l'écartait déjà. */
       rapportsRealises: ReadonlyArray<{ dateRapport: Date }>;
+      /** Le dernier rapport réalisé de la ligne, toutes années confondues
+       *  (`joindreDernieresRealisations`) : la lecture du calendrier en part,
+       *  et son absence décide du repli ci-dessus. */
+      derniereRealisation: Date | null;
     }
   >,
   annee: number,
@@ -99,19 +105,12 @@ export function repartirParMois(
   };
 
   for (const v of lignes) {
-    let derniere: Date | null = null;
-    for (const r of v.rapportsRealises) {
-      if (derniere === null || r.dateRapport.getTime() > derniere.getTime()) {
-        derniere = r.dateRapport;
-      }
-    }
-
-    for (const lec of lecturesCalendrier({ ...v, derniereRealisation: derniere }, now)) {
+    for (const lec of lecturesCalendrier(v, now)) {
       if (lec.lecture === "realisation") {
         // La lecture ne pose que le DERNIER fait ; la barre les pose tous. Sans
         // rapport, c'est le repli d'une ponctuelle consommée : la date de la
         // lecture est la seule trace.
-        if (v.rapportsRealises.length === 0) poser(lec.date, "couvert");
+        if (v.derniereRealisation === null) poser(lec.date, "couvert");
         else for (const r of v.rapportsRealises) poser(r.dateRapport, "couvert");
         continue;
       }

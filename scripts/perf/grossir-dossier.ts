@@ -11,7 +11,7 @@
  *   - le parc porté à ≈ 100 équipements (copies des appareils de la démo,
  *     réparties sur les trois zones — caractéristiques déjà validées) ;
  *   - l'effectif porté à 50 salariés, avec les titres des salariés de la démo ;
- *   - le calendrier régénéré par la vraie fonction du produit ;
+ *   - le calendrier régénéré par le script de maintenance du produit ;
  *   - dix ans d'historique : rapports au rythme de chaque ligne, actions
  *     levées, relevés de température hebdomadaires, une version de DUERP
  *     par an.
@@ -21,8 +21,9 @@
  */
 import { Prisma, type Periodicite } from "@prisma/client";
 
+import { execFileSync } from "node:child_process";
+
 import { prisma } from "../../src/lib/prisma";
-import { regenererSansControleDeSession } from "../../src/lib/calendrier/actions";
 
 const CIBLE_EQUIPEMENTS = 100;
 const CIBLE_SALARIES = 50;
@@ -151,9 +152,13 @@ async function main(): Promise<void> {
   await lots(nouveaux, 50);
   console.log(`  effectif : ${salaries.length} + ${Math.max(0, CIBLE_SALARIES - salaries.length)} salariés`);
 
-  // 3. Calendrier — par la fonction du produit.
-  const r = await regenererSansControleDeSession(etablissementId);
-  console.log(`  calendrier régénéré : ${JSON.stringify(r)}`);
+  // 3. Calendrier — par le script de maintenance, seule porte hors session
+  // (`regeneration-hors-session.test.ts`).
+  execFileSync(
+    "pnpm",
+    ["exec", "tsx", "--import", "./scripts/server-only-hors-next.mjs", "scripts/regenerer-calendriers.ts", "--ecrire", "--tous"],
+    { stdio: "inherit", env: process.env },
+  );
 
   // 4. Historique — rapports au rythme de chaque ligne, sur dix ans.
   const lignes = await prisma.verification.findMany({

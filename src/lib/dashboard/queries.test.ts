@@ -232,22 +232,6 @@ const h = vi.hoisted(() => {
               (resultat === undefined || resultat.in.includes(r.resultat)),
           ).length;
       },
-      /** La jointure « dernière réalisation » (ADR-034) : les rapports que
-       *  portent les lignes factices, filtrés comme en base. */
-      findMany: async (args: { where: Record<string, unknown> }) => {
-        const { verificationId, ...reste } = args.where as {
-          verificationId: { in: string[] };
-        };
-        return db.verifications
-          .filter((v) => verificationId.in.includes(v.id as string))
-          .flatMap((v) =>
-            ((v.rapports ?? []) as Record<string, unknown>[]).map((r) => ({
-              ...r,
-              verificationId: v.id,
-            })),
-          )
-          .filter((r) => correspond(r, reste));
-      },
     },
   };
 
@@ -262,6 +246,19 @@ const h = vi.hoisted(() => {
 });
 
 vi.mock("@/lib/prisma", () => ({ prisma: h.prisma }));
+// La « dernière réalisation » (ADR-034) est lue par la base en une ligne par
+// échéance : rendue ici depuis les rapports des lignes factices.
+vi.mock("@/lib/rapports/joindre-realisations", async () =>
+  (await import("@/lib/rapports/faux-dernieres-realisations")).fauxModuleDernieresRealisations(
+    () =>
+      h.db.verifications.flatMap((v) =>
+        ((v.rapports ?? []) as { dateRapport: Date; resultat?: string }[]).map((r) => ({
+          ...r,
+          verificationId: v.id as string,
+        })),
+      ),
+  ),
+);
 // Les marques « à confirmer » ont leur propre porte (`marques-du-rendu.ts`) ;
 // ce fichier ne les éprouve pas, `h.marques` les pose quand un test le veut.
 vi.mock("@/lib/perimetre/faits", () => ({

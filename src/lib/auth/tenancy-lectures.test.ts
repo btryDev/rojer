@@ -128,9 +128,12 @@ const EXEMPTIONS = new Map<string, Exemption>([
       garde: "objetId",
       raison:
         "Contrat d'appel : la clé (objetType, objetId) vient d'un objet déjà " +
-        "chargé par une query scopée. Un seul appelant au 2026-10-13 " +
+        "chargé par une query scopée. ~~Un seul appelant au 2026-10-13 " +
         "(`verifications/[verificationId]/page.tsx`, `r.id` d'une vérification " +
-        "scopée). Dette : la doctrine du module veut le prédicat dans la requête.",
+        "scopée).~~ [2026-10-27 : cette page passe par `listSignaturesDesObjets`, " +
+        "scopée dans la requête ; restent `permis-feu/queries.ts` et " +
+        "`plan-prevention/queries.ts`, objets chargés scopés.] Dette : la doctrine " +
+        "du module veut le prédicat dans la requête.",
     },
   ],
   ...(

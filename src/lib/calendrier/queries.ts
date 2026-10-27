@@ -9,7 +9,11 @@ import {
   derniereRealisation,
   ORDRE_RAPPORT_PLUS_RECENT,
 } from "@/lib/rapports/derniere-realisation";
-import { joindreDernieresRealisations } from "@/lib/rapports/joindre-realisations";
+import {
+  dernieresRealisationsDeLEtablissement,
+  joindreDernieresRealisations,
+} from "@/lib/rapports/joindre-realisations";
+import { projeterDernieresRealisations } from "@/lib/rapports/projeter-realisations";
 // Module **pur** : c'est lui qui détient la partition en quatre ensembles
 // disjoints (retard / à planifier / à venir / réalisées 12 mois), déjà
 // utilisée par les documents générés. Le compteur du calendrier passe par
@@ -114,7 +118,7 @@ export async function listerVerifications(
       )
     : verifs;
   // Le « fait le … » de chaque ligne se lit sur ses rapports (ADR-034).
-  return joindreDernieresRealisations(retenues);
+  return joindreDernieresRealisations(etablissementId, retenues);
 }
 
 export type VerificationListee = Awaited<
@@ -188,7 +192,7 @@ export async function compterEtatCalendrier(
   // ni dans la sidebar, ni au bandeau, ni au tableau de bord — les trois
   // lisent ce compte. Mémoïsées sur le rendu : la page qui les lit aussi ne
   // les recalcule pas.
-  const [lignes, marques] = await Promise.all([
+  const [lignes, marques, dernieres] = await Promise.all([
     prisma.verification.findMany({
       where: toutesLesConditions(
         {
@@ -225,8 +229,10 @@ export async function compterEtatCalendrier(
       },
     }),
     marquesAConfirmerDuRendu(etablissementId),
+    // En parallèle des lignes : la barre latérale passe ici sur chaque écran.
+    dernieresRealisationsDeLEtablissement(etablissementId),
   ]);
-  const verifs = await joindreDernieresRealisations(lignes);
+  const verifs = projeterDernieresRealisations(lignes, dernieres);
 
   const etat = repartirVerifications(
     verifs,

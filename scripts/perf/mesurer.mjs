@@ -89,7 +89,13 @@ const RE_PARAMS = new RegExp(String.raw`\] ${DB} DETAIL:\s+Parameters: (.*)$`);
 
 /** Requêtes d'une fenêtre de journal : nombre, temps, et détail par texte SQL. */
 function analyser(journal) {
-  const lignes = journal.split("\n");
+  // Une requête écrite sur plusieurs lignes (SQL brut) continue sur des lignes
+  // sans horodatage : elles sont recollées à leur ligne de journal.
+  const lignes = [];
+  for (const l of journal.split("\n")) {
+    if (/^\d{4}-\d{2}-\d{2} /.test(l) || lignes.length === 0) lignes.push(l);
+    else lignes[lignes.length - 1] += ` ${l.trim()}`;
+  }
   const requetes = [];
   let tempsSql = 0;
   for (let i = 0; i < lignes.length; i++) {
@@ -100,7 +106,7 @@ function analyser(journal) {
     // Une requête = une exécution (protocole étendu) ou une instruction simple.
     if (phase === "execute" || phase === undefined) {
       const p = RE_PARAMS.exec(lignes[i + 1] ?? "");
-      requetes.push({ sql: sql.trim(), duree: Number(duree), params: p ? p[1] : null });
+      requetes.push({ sql: sql.replace(/\s+/g, " ").trim(), duree: Number(duree), params: p ? p[1] : null });
     } else if (phase === "parse" || phase === "bind") {
       // Le temps de parse/bind est compté dans le total, pas comme requête.
     }
@@ -113,6 +119,15 @@ function analyser(journal) {
 function pagesAMesurer() {
   const etab = psql(DB, `SELECT id FROM "Etablissement" ORDER BY "createdAt" LIMIT 1`);
   const duerp = psql(DB, `SELECT id FROM "Duerp" WHERE "etablissementId" = '${etab}' LIMIT 1`);
+  // L'appareil et le contrôle qui portent le plus de rapports : les fiches
+  // qui relisent un historique y paient le plus.
+  const [equipement, controle] = psql(
+    DB,
+    `SELECT v."equipementId" || '|' || v.id FROM "Verification" v
+       JOIN "RapportVerification" r ON r."verificationId" = v.id
+      WHERE v."etablissementId" = '${etab}' AND v."equipementId" IS NOT NULL
+      GROUP BY v.id ORDER BY count(*) DESC LIMIT 1`,
+  ).split("|");
   const e = `/etablissements/${etab}`;
   return [
     ["Tableau de bord", e],
@@ -126,6 +141,12 @@ function pagesAMesurer() {
     ["Documents", `${e}/documents`],
     ["DUERP (unités)", `/duerp/${duerp}/unites`],
     ["DUERP (synthèse)", `/duerp/${duerp}/synthese`],
+    ...(equipement
+      ? [
+          ["Fiche équipement", `${e}/equipements/${equipement}`],
+          ["Fiche contrôle", `${e}/equipements/${equipement}/controles/${controle}`],
+        ]
+      : []),
   ];
 }
 

@@ -98,7 +98,7 @@ import {
 } from "@/components/ui-kit";
 import { lireProvenance } from "@/lib/navigation/provenance";
 import { instantDuRendu } from "@/lib/dates/instant-du-rendu";
-import { listSignatures } from "@/lib/signatures/queries";
+import { listSignaturesDesObjets } from "@/lib/signatures/queries";
 import {
   fraicheurCalendrier,
   phraseFraicheur,
@@ -189,9 +189,20 @@ export default async function VerificationDetailPage({
   const recoit = recoitDesPoints({ ...v, appareilActif: v.equipement?.actif ?? null });
   // `v` est déjà lu dans le périmètre du compte ; les appareils ne servent
   // qu'au formulaire, absent quand le contrôle ne reçoit pas de points.
-  const [points, appareils] = await Promise.all([
+  // Le prestataire attitré et le rendez-vous (ADR-049) : proposés d'abord
+  // ceux de l'annuaire qui couvrent le domaine du contrôle.
+  const suivi = recoitUnSuivi(v);
+  const attendus = obligation ? DOMAINES_PRESTATAIRE_ATTENDUS[obligation.domaine] : AUCUN_TIERS_ATTENDU;
+  // Lectures indépendantes, lancées ensemble (plan performance, lot 1a) : les
+  // signatures de chaque rapport en une requête — une par rapport, à la suite,
+  // avant ce lot.
+  const [points, appareils, proposables, signaturesParRapport] = await Promise.all([
     listerPointsDuControle(v.id),
     recoit ? appareilsDesignables(v) : Promise.resolve([]),
+    suivi
+      ? prestatairesProposables(id, attendus === AUCUN_TIERS_ATTENDU ? [] : attendus)
+      : Promise.resolve([]),
+    listSignaturesDesObjets("rapport_verification", v.rapports.map((r) => r.id)),
   ]);
   const rapportsProposes = v.rapports
     .slice(0, RAPPORTS_PROPOSES)
@@ -215,25 +226,6 @@ export default async function VerificationDetailPage({
     recoit && rapportDepose && resultatRelevePoints(rapportDepose.resultat) ? rapportDepose : undefined;
   const boundUpload = uploadRapport.bind(null, v.id);
 
-  // Le prestataire attitré et le rendez-vous (ADR-049) : proposés d'abord
-  // ceux de l'annuaire qui couvrent le domaine du contrôle.
-  const suivi = recoitUnSuivi(v);
-  const attendus = obligation ? DOMAINES_PRESTATAIRE_ATTENDUS[obligation.domaine] : AUCUN_TIERS_ATTENDU;
-  const proposables = suivi
-    ? await prestatairesProposables(id, attendus === AUCUN_TIERS_ATTENDU ? [] : attendus)
-    : [];
-
-  // Signatures posées sur chaque rapport de cette vérification.
-  const signaturesParRapport = new Map<
-    string,
-    Awaited<ReturnType<typeof listSignatures>>
-  >();
-  for (const r of v.rapports) {
-    signaturesParRapport.set(
-      r.id,
-      await listSignatures("rapport_verification", r.id),
-    );
-  }
 
   // Horloge lue une fois pour toute la page : deux appels à `new Date()`
   // séparés par un await peuvent tomber de part et d'autre de minuit.

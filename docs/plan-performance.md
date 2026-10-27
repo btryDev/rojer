@@ -150,6 +150,63 @@ celui qui « ne tiendra pas » en premier.
   RSC avec le parc, et ne sérialiser que ce qui est affiché.
 - Cible : temps et poids du gros dossier ramenés près de ceux de la démo.
 
+#### Résultats du lot 1a (2026-10-27, gros dossier, même méthode)
+
+Fait :
+- `joindreDernieresRealisations` : `DISTINCT ON`, une ligne par échéance ;
+  équivalence au départage du moteur tenue contre une vraie base
+  (`joindre-realisations.integration.test.ts`, éprouvé en inversant le
+  départage : rouge).
+- Barres du tableau de bord : les rapports de l'année seulement, plus la
+  dernière réalisation (`compterObligationsParMois`, `repartirParMois`).
+- Registre : une année à la fois (`?annee=`, pastilles d'années sur le bloc des
+  rapports) ; l'export PDF reste complet. Les points sans rapport d'origine
+  restent sous le plus récent de TOUT l'historique.
+- **Trouvé en mesurant les fiches** : la fiche d'un contrôle lisait les
+  signatures rapport par rapport, l'une après l'autre — **564 requêtes** pour
+  un contrôle hebdomadaire tenu dix ans. Une seule requête désormais
+  (`listSignaturesDesObjets`, portée au propriétaire dans la requête).
+
+| Page (gros dossier) | SQL avant → après | 1er octet avant → après (ms) | HTML avant → après |
+|---|---|---|---|
+| Tableau de bord | 113 → 110 | 205 → 128 | 394 Ko → 394 Ko |
+| Calendrier | 57 → 54 | 165 → 92 (total 174 → 123) | 1 447 Ko → 1 447 Ko |
+| Registre | 53 → 54 | 80 → 41 (total 1 019 → 116) | **57 585 Ko → 3 947 Ko** |
+| Fiche contrôle | **564 → 44** | 53 → 95 (total 296 → 112) | 3 679 Ko → 3 678 Ko |
+| Pages simples | stables | ≈ 80 → 36-49 | stables |
+
+Après les deux revues (code medium, qualité) : une seule lecture « dernière
+réalisation » par établissement et par affichage (`cache()`), lancée en
+parallèle des lignes sur la barre latérale et le tableau de bord ; portée au
+propriétaire en SQL par un prédicat complet (`requireProprietaireSql`,
+`scope.ts`) ; registre : un seul mécanisme pour les points sans origine, lu en
+parallèle ; fiche contrôle : lectures indépendantes en un `Promise.all`,
+signatures réduites aux champs de la preuve.
+
+Écarté à la revue de qualité : nommer le prédicat SQL `portee…` pour éviter
+son exclusion nommée dans `scope-proprietaire.test.ts` — la garde devrait alors
+reconnaître `portee\w*(`, et `porteeBatiment(` (un filtre de zone, pas une
+portée au compte) passerait pour une preuve de propriété.
+
+Mesuré et écarté : un index composite `(verificationId, dateRapport DESC,
+createdAt DESC)` avec une jointure `LATERAL` ne gagne qu'≈ 1 ms par appel sur
+le gros dossier — pas de migration pour si peu.
+
+Reste, rangé dans les lots suivants :
+- le tableau de bord du gros dossier reste à 3× la démo (149 contre 48 ms) :
+  c'est le lot 1 ;
+- **question à la propriétaire** : rattacher les points à corriger sans
+  rapport d'origine à leur rapport le plus récent DÈS L'ÉCRITURE (reprise, et à
+  la suppression d'un rapport), plutôt qu'à chaque lecture — touche le sens de
+  l'ADR-048 ;
+- le poids par rapport affiché (≈ 5 Ko de HTML chacun) : un registre d'une année
+  chargée pèse encore 3,9 Mo, la fiche d'un contrôle hebdomadaire tenu dix ans
+  3,7 Mo — lot 6 (poids envoyé) ; **question à la propriétaire** : la fiche
+  d'un contrôle doit-elle montrer tout son historique, ou les plus récents et
+  un renvoi au registre ?
+- calendrier (1,4 Mo) et équipements (0,8 Mo) grossissent avec le parc, pas
+  avec l'historique : lot 6.
+
 ### Lot 1 — Une lecture, des projections : board + barre latérale (M)
 
 - Un chargeur mémoïsé par rendu (`cache()`), `echeancesDuRendu(id)` : les lignes

@@ -89,6 +89,7 @@ export async function etatVerificationsParEquipement(
   const user = await requireUser();
   // Le « fait le … » de chaque ligne se lit sur ses rapports (ADR-034).
   const verifs = await joindreDernieresRealisations(
+    etablissementId,
     await prisma.verification.findMany({
       where: {
         etablissementId,

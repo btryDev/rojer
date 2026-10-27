@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
-import type { ObjetSignable } from "@prisma/client";
+import { requireUser } from "@/lib/auth/require-user";
+import type { ObjetSignable, Prisma } from "@prisma/client";
 
 /**
  * Lit les signatures posées sur un objet (rapport, permis de feu, plan de
@@ -33,6 +34,38 @@ const SELECT_PREUVE = {
   hashDocument: true,
   nomDocument: true,
 } as const;
+
+/**
+ * Les signatures de plusieurs objets d'un même type, en UNE requête, rangées
+ * par objet dans l'ordre de dépôt — seulement les champs de la preuve
+ * (`SELECT_PREUVE`), ceux qu'affiche `SignatureBlock`. La portée au
+ * propriétaire est dans la requête — la doctrine du module, que
+ * `listSignatures` porte encore en dette (`tenancy-lectures.test.ts`).
+ *
+ * [2026-10-27, plan performance, lot 1a] La fiche d'un contrôle appelait
+ * `listSignatures` rapport par rapport, l'une après l'autre : 521 requêtes à la
+ * suite pour un contrôle hebdomadaire tenu dix ans.
+ */
+export async function listSignaturesDesObjets(
+  objetType: ObjetSignable,
+  objetIds: readonly string[],
+) {
+  type Preuve = Prisma.SignatureGetPayload<{ select: typeof SELECT_PREUVE }>;
+  const parObjet = new Map<string, Preuve[]>(objetIds.map((id) => [id, []]));
+  if (objetIds.length === 0) return parObjet;
+  const user = await requireUser();
+  const signatures = await prisma.signature.findMany({
+    where: {
+      objetType,
+      objetId: { in: [...objetIds] },
+      etablissement: { entreprise: { userId: user.id } },
+    },
+    select: { ...SELECT_PREUVE, objetId: true },
+    orderBy: { horodatageIso: "asc" },
+  });
+  for (const { objetId, ...preuve } of signatures) parObjet.get(objetId)?.push(preuve);
+  return parObjet;
+}
 
 /**
  * Lit une signature par son identifiant, **sans authentification**.

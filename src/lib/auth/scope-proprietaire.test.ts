@@ -99,6 +99,14 @@ function estNotFound(e: unknown): boolean {
 }
 
 const HELPERS = helpersDAppartenance();
+/**
+ * Les helpers qui chargent UNE LIGNE par son identifiant — tous, sauf
+ * `requireProprietaireSql`, qui ne charge rien : il fabrique le prédicat
+ * propriétaire d'une requête SQL brute, et s'éprouve plus bas sur ce qu'il
+ * fabrique. Le retirer d'ici par son nom, et lui seul, garde le relevé
+ * automatique pour tout helper ajouté demain.
+ */
+const HELPERS_DE_LIGNE = HELPERS.filter((nom) => nom !== "requireProprietaireSql");
 
 function helperNomme(nom: string): (id: string) => Promise<unknown> {
   return (scope as unknown as Record<string, (id: string) => Promise<unknown>>)[nom];
@@ -121,19 +129,19 @@ describe("les helpers d'appartenance de scope.ts", () => {
     }
   });
 
-  it.each(HELPERS)("%s rend la ligne à son propriétaire", async (nom) => {
+  it.each(HELPERS_DE_LIGNE)("%s rend la ligne à son propriétaire", async (nom) => {
     h.requireUser.mockResolvedValue({ id: PROPRIETAIRE });
     const helper = helperNomme(nom);
     await expect(helper("cible-1")).resolves.toBeTruthy();
   });
 
-  it.each(HELPERS)("%s répond notFound à un autre compte", async (nom) => {
+  it.each(HELPERS_DE_LIGNE)("%s répond notFound à un autre compte", async (nom) => {
     h.requireUser.mockResolvedValue({ id: AUTRE });
     const helper = helperNomme(nom);
     await expect(helper("cible-1")).rejects.toSatisfy(estNotFound);
   });
 
-  it.each(HELPERS)("%s pose l'identifiant ET le propriétaire dans le même where", async (nom) => {
+  it.each(HELPERS_DE_LIGNE)("%s pose l'identifiant ET le propriétaire dans le même where", async (nom) => {
     h.requireUser.mockResolvedValue({ id: PROPRIETAIRE });
     const helper = helperNomme(nom);
     await helper("cible-1");
@@ -141,6 +149,25 @@ describe("les helpers d'appartenance de scope.ts", () => {
     const where = JSON.stringify(h.etat.appels[0].where);
     expect(where).toContain('"id":"cible-1"');
     expect(where).toContain(`"userId":"${PROPRIETAIRE}"`);
+  });
+});
+
+describe("requireProprietaireSql (prédicat d'une requête SQL brute)", () => {
+  it("borne la colonne d'établissement à l'utilisateur de la session, typé uuid", async () => {
+    h.requireUser.mockResolvedValue({ id: PROPRIETAIRE });
+    const p = await scope.requireProprietaireSql('r."etablissementId"');
+    const sql = p.sql.replace(/\s+/g, " ");
+    expect(sql).toContain('e_p."id" = r."etablissementId"');
+    expect(sql).toContain('en_p."userId" = ?::uuid');
+    expect(p.values).toEqual([PROPRIETAIRE]);
+    // Un autre compte : son identifiant, jamais celui du propriétaire.
+    h.requireUser.mockResolvedValue({ id: AUTRE });
+    expect((await scope.requireProprietaireSql('r."etablissementId"')).values).toEqual([AUTRE]);
+  });
+
+  it("refuse ce qui ne serait pas une colonne SQL", async () => {
+    h.requireUser.mockResolvedValue({ id: PROPRIETAIRE });
+    await expect(scope.requireProprietaireSql('r."id" OR 1=1 --')).rejects.toThrow(/Colonne SQL invalide/);
   });
 });
 
