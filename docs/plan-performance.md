@@ -195,15 +195,18 @@ le gros dossier — pas de migration pour si peu.
 Reste, rangé dans les lots suivants :
 - le tableau de bord du gros dossier reste à 3× la démo (149 contre 48 ms) :
   c'est le lot 1 ;
-- **question à la propriétaire** : rattacher les points à corriger sans
+- ~~**question à la propriétaire** : rattacher les points à corriger sans
   rapport d'origine à leur rapport le plus récent DÈS L'ÉCRITURE (reprise, et à
   la suppression d'un rapport), plutôt qu'à chaque lecture — touche le sens de
-  l'ADR-048 ;
+  l'ADR-048 ;~~ [2026-10-27, la propriétaire : **à trancher plus tard**. Rien ne
+  change d'ici là : la règle reste appliquée à la lecture.]
 - le poids par rapport affiché (≈ 5 Ko de HTML chacun) : un registre d'une année
   chargée pèse encore 3,9 Mo, la fiche d'un contrôle hebdomadaire tenu dix ans
-  3,7 Mo — lot 6 (poids envoyé) ; **question à la propriétaire** : la fiche
+  3,7 Mo — lot 6 (poids envoyé) ; ~~**question à la propriétaire** : la fiche
   d'un contrôle doit-elle montrer tout son historique, ou les plus récents et
-  un renvoi au registre ?
+  un renvoi au registre ?~~ [2026-10-27, la propriétaire : **des filtres sur
+  l'historique de la fiche d'un contrôle, plus tard** — à faire, pas encore
+  planifié.]
 - calendrier (1,4 Mo) et équipements (0,8 Mo) grossissent avec le parc, pas
   avec l'historique : lot 6.
 
