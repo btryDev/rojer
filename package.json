@@ -24,6 +24,7 @@
     "mcp:test": "tsx --import ./scripts/server-only-hors-next.mjs scripts/mcp-http-test.ts",
     "seed:demo": "tsx --import ./scripts/server-only-hors-next.mjs scripts/seed-demo.ts",
     "seed:salaries": "tsx --import ./scripts/server-only-hors-next.mjs scripts/seed-salaries-demo.ts",
+    "seed:situations": "tsx --import ./scripts/server-only-hors-next.mjs --env-file=.env scripts/seed-situations-test.ts",
     "seed:complet": "tsx --import ./scripts/server-only-hors-next.mjs --env-file=.env scripts/seed-dossier-complet.ts",
     "fix:libelles": "tsx --import ./scripts/server-only-hors-next.mjs scripts/corriger-libelles-demo.ts",
     "mesure:score": "tsx --import ./scripts/server-only-hors-next.mjs scripts/mesure-score-adr034.ts",

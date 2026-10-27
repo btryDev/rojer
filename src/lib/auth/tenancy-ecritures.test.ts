@@ -103,6 +103,18 @@ const EXEMPTIONS = new Map<string, Exemption>([
   // seconde borne désormais par elle-même — son `upsert` cherche l'entreprise
   // par `(userId, siren)`, l'identifiant du compte connecté en clé.]
   [
+    "lib/onboarding/actions.ts:finaliserOnboarding",
+    {
+      garde: "creerEtablissementOnboarding",
+      raison:
+        "Création pour soi. L'écriture est sortie dans `onboarding/creation.ts` " +
+        "le 2026-10-27, pour que le seed des situations de test passe par le même " +
+        "code : l'`upsert` y cherche l'entreprise par `(userId, siren)`, et " +
+        "l'action lui passe l'identifiant tenu de `requireUser`, jamais du client. " +
+        "Le calendrier régénéré ensuite est celui de l'établissement qu'elle vient de créer.",
+    },
+  ],
+  [
     "lib/signatures/actions.ts:poserSignatureAvecToken",
     {
       garde: "verifierAccessToken",
