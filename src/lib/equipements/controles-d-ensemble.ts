@@ -54,7 +54,7 @@ export async function controlesDEnsemble(etablissementId: string, maintenant: Da
     },
     orderBy: { libelleObligation: "asc" },
   });
-  const datees = await joindreDernieresRealisations(lignes);
+  const datees = await joindreDernieresRealisations(etablissementId, lignes);
   const out: ControleDEnsemble[] = [];
   for (const v of datees) {
     const o = obligationParId(v.obligationId);

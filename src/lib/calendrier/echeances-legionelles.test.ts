@@ -47,6 +47,11 @@ const { prismaMock, requireUserMock, carnetFindFirst, parc } = vi.hoisted(() => 
     {
       carnetSanitaire: modele({ findFirst: carnetFindFirst }),
       equipement: modele({ count: equipementCount }),
+      // Les comptages agrégés des modules (`comptesModulesDuRendu`, qui lit
+      // aussi le carnet) passent par une requête brute : des comptes à zéro.
+      $queryRaw: vi.fn(async () => [
+        { total: BigInt(0), echus: BigInt(0), sansInspection: BigInt(0) },
+      ]),
     } as Record<string, unknown>,
     { get: (t, m: string) => (m in t ? t[m] : modele()) },
   );

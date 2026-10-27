@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
@@ -88,3 +89,23 @@ export function grouperParCategorie(
   }
   return out;
 }
+
+/**
+ * Les comptes du parc — tout, en service, retirés —, en UNE requête par rendu
+ * (`groupBy` sur `actif`, `cache()`). La barre latérale, le tableau de bord et
+ * la couverture du dossier les comptaient chacun. [2026-10-27, plan
+ * performance, lot 1.] Portée au compte dans la requête.
+ */
+export const comptesParcDuRendu = cache(async function comptesParcDuRendu(
+  etablissementId: string,
+) {
+  const user = await requireUser();
+  const groupes = await prisma.equipement.groupBy({
+    by: ["actif"],
+    where: { etablissementId, etablissement: { entreprise: { userId: user.id } } },
+    _count: { _all: true },
+  });
+  const enService = groupes.find((g) => g.actif)?._count._all ?? 0;
+  const retires = groupes.find((g) => !g.actif)?._count._all ?? 0;
+  return { total: enService + retires, enService, retires };
+});

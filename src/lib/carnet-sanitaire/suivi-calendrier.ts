@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import type { CategorieEquipement } from "@prisma/client";
 
@@ -40,13 +41,24 @@ export async function eauChaudeSuivieParLeCalendrier(scope: {
   etablissementId: string;
   etablissement: { entreprise: { userId: string } };
 }): Promise<boolean> {
+  return eauChaudeSuivieDuRendu(scope.etablissementId, scope.etablissement.entreprise.userId);
+}
+
+/** Le corps, mémoïsé sur le rendu (clés primitives) : la matrice du tableau
+ *  de bord et les échéances du carnet le demandaient chacune (plan
+ *  performance, lot 1). Le compte vient de la portée de l'appelant, comme
+ *  avant : `getModulesMatrice` éprouve que le prédicat y est lu. */
+const eauChaudeSuivieDuRendu = cache(async function eauChaudeSuivieDuRendu(
+  etablissementId: string,
+  userId: string,
+): Promise<boolean> {
   const n = await prisma.equipement.count({
     where: {
-      etablissementId: scope.etablissementId,
-      etablissement: { ...scope.etablissement, estERP: true },
+      etablissementId,
+      etablissement: { entreprise: { userId }, estERP: true },
       categorie: CATEGORIE_EAU_CHAUDE_SUIVIE,
       actif: true,
     },
   });
   return n > 0;
-}
+});

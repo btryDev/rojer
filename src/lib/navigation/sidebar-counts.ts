@@ -9,7 +9,7 @@
 // Elle remplace aussi l'appel à `getDashboardData` du layout, qui
 // chargeait tout le board pour n'en lire que deux compteurs.
 
-import { prisma } from "@/lib/prisma";
+import { comptesParcDuRendu } from "@/lib/equipements/queries";
 import type { SidebarCounts } from "@/components/layout/sidebar-nav";
 import { compterEnRetardParFamille } from "@/lib/calendrier/retards";
 import { compterActions } from "@/lib/actions/queries";
@@ -42,7 +42,7 @@ export async function chargerSidebarCounts(
       // parc en service que l'écran Équipements montre. Sans ce filtre, un
       // appareil retiré du parc restait dans la pastille — badge à 13,
       // page à 12.
-      prisma.equipement.count({ where: { etablissementId, actif: true } }),
+      comptesParcDuRendu(etablissementId).then((c) => c.enService),
       compterTitresEnRetard(etablissementId, now),
       // L'âge des lignes que la pastille « en retard » compte. Le layout qui
       // nous appelle ne répare pas — il tourne EN PARALLÈLE de la page, et

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { instantCivil } from "@/lib/dates";
 import { repartirParMois } from "./barres-mois";
 import { AUCUNE_PRUDENCE } from "@/lib/calendrier/prudence";
+import { derniereRealisation } from "@/lib/rapports/derniere-realisation";
 
 /** 10 septembre 2026, 8 h à Paris. */
 const NOW = instantCivil(2026, 9, 10, 8);
@@ -23,7 +24,12 @@ const ligne = (o: {
   libelleObligation: "Vérification trimestrielle",
   obligationId: "o-trimestrielle",
   prescriptionId: null as string | null,
+  // La requête ne rend que les rapports de l'année ; `poser` écarte les autres,
+  // si bien que passer la liste entière ici ne change rien au résultat.
   rapportsRealises: (o.rapports ?? []).map((dateRapport) => ({ dateRapport })),
+  derniereRealisation: derniereRealisation(
+    (o.rapports ?? []).map((dateRapport) => ({ dateRapport })),
+  ),
 });
 
 const segments = (b: { couvert: number; aVenir: number; retard: number }) => [

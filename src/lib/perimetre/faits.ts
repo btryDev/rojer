@@ -13,6 +13,7 @@
 // DUERP vit dans `duerps/couverture.ts`.
 
 import { prisma } from "@/lib/prisma";
+import { comptesParcDuRendu } from "@/lib/equipements/queries";
 import { requireUser } from "@/lib/auth/require-user";
 import {
   chargerEtablissementEtParc,
@@ -72,9 +73,9 @@ export async function faitsDeCouverture(
     }),
     // Les retirés, comptés à part : ils portent des preuves que le registre
     // imprime (axe `inventaire`, `couverture.ts`).
-    prisma.equipement.count({
-      where: { etablissementId: etab.id, actif: false },
-    }),
+    // Partagé avec la barre latérale et le tableau de bord (plan
+    // performance, lot 1), portée au compte dans sa requête.
+    comptesParcDuRendu(etab.id).then((c) => c.retires),
   ]);
 
   const equipementsMatching = equipementsPourLeMoteur(etab.equipements);

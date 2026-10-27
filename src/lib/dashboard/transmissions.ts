@@ -22,6 +22,7 @@
 import type { DomainePrestataire } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { obligationsApplicablesDuDossier } from "@/lib/etablissements/dossier-du-rendu";
+import { prestatairesDuRendu } from "@/lib/prestataires/queries";
 import { LABEL_DOMAINE as LABEL_DOMAINE_OBLIGATION } from "@/lib/calendrier/labels";
 import { domainesSansPrestataire } from "@/lib/prestataires/domaines";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
@@ -363,10 +364,8 @@ export async function chargerTransmissions(
     // par la lecture ci-dessus, et c'est SON identifiant qu'on propage — pas
     // celui reçu de l'appelant. La garantie ne dépend donc pas de ce que
     // l'appelant a vérifié avant.
-    prisma.prestataire.findMany({
-      where: { etablissementId: etab.id },
-      select: { domaines: true },
-    }),
+    // L'annuaire du rendu, partagé (plan performance, lot 1).
+    prestatairesDuRendu(etab.id),
     // ~~`groupBy` et non `count` : on a besoin de SAVOIR lesquels sont
     // déclarés, pas combien.~~ [2026-10-12, ADR-043 : on a besoin de savoir
     // lesquels, ET à qui. Les personnes actives avec leurs titres ; l'ensemble

@@ -9,15 +9,94 @@
 // dans le seul serveur stdio. La séparation reste juste : en stdio, ce module
 // interrogerait le client commun, qui écrit ses requêtes sur stdout en dev.]
 
+import { cache } from "react";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { requireProprietaireSql } from "@/lib/auth/scope";
 import {
-  indexerDernieresRealisations,
-  WHERE_RAPPORT_REALISE,
+  ORDRE_RAPPORT_PLUS_RECENT,
+  type DerniereRealisation,
 } from "./derniere-realisation";
+import { projeterDernieresRealisations } from "./projeter-realisations";
+import { RESULTATS_REALISES } from "./resultats";
 
 /**
- * Joint à des lignes DÉJÀ LUES — et déjà scopées par leur appelant — la date
- * de leur dernier rapport réalisé, en UNE requête pour tout le lot.
+ * `ORDRE_RAPPORT_PLUS_RECENT` en SQL, DÉRIVÉ de la constante et non recopié :
+ * l'ordre était déjà recopié à huit endroits avant l'audit du 2026-09-19, et
+ * une copie qui perd son second terme désigne un autre « dernier rapport » que
+ * le moteur.
+ */
+function ordreRapportPlusRecentSql(alias: string): Prisma.Sql {
+  return Prisma.raw(
+    ORDRE_RAPPORT_PLUS_RECENT.flatMap((terme) =>
+      Object.entries(terme).map(([colonne, sens]) => `${alias}."${colonne}" ${sens.toUpperCase()}`),
+    ).join(", "),
+  );
+}
+
+/** Le dernier rapport d'une ligne : son identifiant, sa date, son résultat. */
+export type DernierRapport = { id: string } & DerniereRealisation;
+
+/**
+ * Le dernier rapport de chaque ligne d'un établissement — réalisé seulement,
+ * ou tout résultat —, une ligne par échéance, calculé par la base
+ * (`DISTINCT ON`). La portée au propriétaire est DANS la requête
+ * (`requireProprietaireSql`) : elle ne compte pas sur ses appelants.
+ *
+ * [2026-10-27, plan performance, lot 1a] Remplace la lecture de TOUS les
+ * rapports réalisés départagés en mémoire : sur dix ans d'historique, 290
+ * lignes au lieu de 7 888 rapports, sur chaque écran (la barre latérale y
+ * passe). Le `distinct` de Prisma 6 se fait en mémoire côté moteur et ne
+ * réduisait rien, d'où le SQL. « Réalisé » vient de `RESULTATS_REALISES`, la
+ * source de `WHERE_RAPPORT_REALISE` ; l'ordre, d'`ordreRapportPlusRecentSql`.
+ * L'équivalence au départage du moteur (`indexerDernieresRealisations`) est
+ * tenue contre une vraie base par `joindre-realisations.integration.test.ts`.
+ */
+async function lireDerniersRapports(
+  etablissementId: string,
+  realisesSeulement: boolean,
+): Promise<Map<string, DernierRapport>> {
+  const proprietaire = await requireProprietaireSql('r."etablissementId"');
+  const lignes = await prisma.$queryRaw<
+    { verificationId: string; id: string; dateRapport: Date; resultat: string }[]
+  >`
+    SELECT DISTINCT ON (r."verificationId")
+      r."verificationId", r."id", r."dateRapport", r."resultat"::text AS "resultat"
+    FROM "RapportVerification" r
+    WHERE r."etablissementId" = ${etablissementId}
+      AND ${proprietaire}
+      AND (${!realisesSeulement} OR r."resultat"::text = ANY(${[...RESULTATS_REALISES]}::text[]))
+    ORDER BY r."verificationId", ${ordreRapportPlusRecentSql("r")}
+  `;
+  return new Map(
+    lignes.map((l) => [
+      l.verificationId,
+      { id: l.id, dateRapport: l.dateRapport, resultat: l.resultat },
+    ]),
+  );
+}
+
+/**
+ * La dernière RÉALISATION de chaque ligne de l'établissement, indexée par
+ * ligne. Mémoïsée sur le rendu (`cache()`) : la barre latérale, le tableau de
+ * bord, le calendrier et le parc la demandent tous — une seule requête par
+ * affichage, lançable en parallèle de la lecture des lignes.
+ */
+export const dernieresRealisationsDeLEtablissement = cache(
+  (etablissementId: string) => lireDerniersRapports(etablissementId, true),
+);
+
+/**
+ * Le dernier rapport de chaque ligne, QUEL QUE SOIT son résultat : celui sous
+ * lequel le registre pose les points sans rapport d'origine (`rapports/queries.ts`).
+ */
+export const derniersRapportsDeLEtablissement = cache(
+  (etablissementId: string) => lireDerniersRapports(etablissementId, false),
+);
+
+/**
+ * Joint à des lignes déjà lues de l'établissement la date et le résultat de
+ * leur dernier rapport réalisé — une projection sur l'index mémoïsé.
  *
  * Préféré à un `rapports: { …, take: 1 }` dans l'`include` quand la forme de la
  * ligne circule loin : un champ `rapports` réduit à un seul élément, dans un
@@ -25,37 +104,15 @@ import {
  * complète.
  */
 export async function joindreDernieresRealisations<T extends { id: string }>(
+  etablissementId: string,
   lignes: T[],
 ): Promise<
   Array<T & { derniereRealisation: Date | null; dernierResultat: string | null }>
 > {
   if (lignes.length === 0) return [];
-  // Tous les rapports réalisés du lot, et non le dernier de chaque ligne : le
-  // `distinct` de Prisma se fait en mémoire côté moteur, donc il ne
-  // ramènerait pas moins de lignes, et un `groupBy _max(dateRapport)` perdrait
-  // le RÉSULTAT dont le statut d'un one-shot dépend. Deux colonnes par
-  // rapport ; un hebdomadaire en produit une cinquantaine par an.
-  const index = indexerDernieresRealisations(
-    await prisma.rapportVerification.findMany({
-      where: {
-        verificationId: { in: lignes.map((l) => l.id) },
-        ...WHERE_RAPPORT_REALISE,
-      },
-      // `createdAt` départage deux rapports du même jour.
-      select: {
-        verificationId: true,
-        dateRapport: true,
-        createdAt: true,
-        resultat: true,
-      },
-    }),
+  return projeterDernieresRealisations(
+    lignes,
+    await dernieresRealisationsDeLEtablissement(etablissementId),
   );
-  return lignes.map((l) => {
-    const derniere = index.get(l.id) ?? null;
-    return {
-      ...l,
-      derniereRealisation: derniere?.dateRapport ?? null,
-      dernierResultat: derniere?.resultat ?? null,
-    };
-  });
 }
+

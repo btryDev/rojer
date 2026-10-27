@@ -5,7 +5,13 @@ import { libelleTypesErp, numeroCategorie } from "@/lib/etablissements/types-erp
 import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
 import { prisma } from "@/lib/prisma";
 import type { AuthedUser } from "@/lib/auth/require-user";
-import { compterActions, listerActions, origineDeLAction, type ActionListee } from "@/lib/actions/queries";
+import {
+  compterActions,
+  compterActionsParOrigine,
+  listerActions,
+  origineDeLAction,
+  type ActionListee,
+} from "@/lib/actions/queries";
 import { LIBELLE_POINT, versPointDuRapport } from "@/lib/points-a-corriger/libelles";
 import { listerVerifications, type VerificationListee } from "@/lib/calendrier/queries";
 import { libellePorteurSansNom } from "@/lib/calendrier/labels";
@@ -587,8 +593,7 @@ export async function construireDossierConformiteData(
   // la liste d'un filtre TypeScript portant sur d'autres statuts — le PDF
   // annonçait « 5 vérifications en retard » puis en détaillait 3.
   const [
-    compteursMesures,
-    compteursPoints,
+    { duerp: compteursMesures, verification: compteursPoints },
     pointsOuverts,
     plan,
     rapports,
@@ -605,8 +610,9 @@ export async function construireDossierConformiteData(
       // Mesures et points comptés à part pour l'affichage ; le score garde
       // TOUTES les actions (ADR-048, décision 7) — leur somme, l'origine
       // étant exclusive (`Action_origine_xor`).
-      compterActions(etablissementId, new Date(), { origine: "duerp" }),
-      compterActions(etablissementId, new Date(), { origine: "verification" }),
+      // Les deux origines sur une seule lecture des actions (plan
+      // performance, lot 1) : hors rendu, rien n'est mémoïsé.
+      compterActionsParOrigine(etablissementId),
       listerActions(etablissementId, { origine: "verification", enCoursSeulement: true }),
       construirePlanActionsData(etablissementId, user),
       listerRapportsDeLEtablissement(etablissementId),

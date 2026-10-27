@@ -1,15 +1,48 @@
 import "server-only";
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { ORDRE_RAPPORT_PLUS_RECENT } from "./derniere-realisation";
 import { requireUser } from "@/lib/auth/require-user";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
 import { libellePorteur } from "@/lib/calendrier/labels";
+import { FUSEAU_REFERENCE, instantCivil } from "@/lib/dates";
+import { derniersRapportsDeLEtablissement, type DernierRapport } from "./joindre-realisations";
+import { requireProprietaireSql } from "@/lib/auth/scope";
 
 export type FiltresRegistre = {
   domaine?: DomaineObligation;
   recherche?: string; // sur libelleObligation + organismeVerif + equipement.libelle
+  /** L'année civile (Paris) des rapports. Absente : tout l'historique — ce que
+   *  lisent les exports, qui restent complets. L'écran du registre la pose
+   *  toujours [2026-10-27, plan performance, lot 1a : il affichait dix ans de
+   *  rapports d'un coup, 57 Mo de page sur le gros dossier de mesure]. */
+  annee?: number;
 };
+
+/**
+ * Les années (civiles, Paris) qui portent au moins un rapport, plus l'année en
+ * cours, de la plus récente à la plus ancienne : ce que le sélecteur du
+ * registre propose. Seulement des années réelles — un rapport isolé en 2005
+ * n'ouvre pas vingt pastilles vides (revue du lot 1a).
+ *
+ * `anneeEnCours` vient de la page : une seule lecture de l'horloge par rendu,
+ * sans quoi la page et la liste pouvaient se contredire à minuit le 31/12.
+ */
+export async function anneesDuRegistre(
+  etablissementId: string,
+  anneeEnCours: number,
+): Promise<number[]> {
+  const proprietaire = await requireProprietaireSql('r."etablissementId"');
+  // `dateRapport` est un instant UTC sans fuseau : lu dans le fuseau de
+  // référence, comme `composantesCiviles`.
+  const lignes = await prisma.$queryRaw<{ annee: number }[]>`
+    SELECT DISTINCT EXTRACT(YEAR FROM (r."dateRapport" AT TIME ZONE 'UTC') AT TIME ZONE ${FUSEAU_REFERENCE})::int AS "annee"
+    FROM "RapportVerification" r
+    WHERE r."etablissementId" = ${etablissementId} AND ${proprietaire}
+  `;
+  return [...new Set([anneeEnCours, ...lignes.map((l) => Number(l.annee))])].sort((a, b) => b - a);
+}
 
 /** Ce que le registre lit d'un point à corriger (ADR-048, lot 3). */
 const SELECTION_POINT_DU_RAPPORT = {
@@ -30,6 +63,14 @@ export async function listerRapportsDeLEtablissement(
     where: {
       etablissementId,
       etablissement: { entreprise: { userId: user.id } },
+      ...(filtres.annee === undefined
+        ? {}
+        : {
+            dateRapport: {
+              gte: instantCivil(filtres.annee, 1, 1),
+              lt: instantCivil(filtres.annee + 1, 1, 1),
+            },
+          }),
     },
     include: {
       verification: {
@@ -51,24 +92,30 @@ export async function listerRapportsDeLEtablissement(
   // rapport a été retiré) se disent sous le rapport le plus récent de leur
   // contrôle — la règle de la fiche d'un appareil (`fiche.ts`) : sans elle,
   // ils manqueraient au registre (revue du 2026-10-24).
-  const sansOrigine = rapports.length
-    ? await prisma.action.findMany({
-        where: {
-          etablissementId,
-          etablissement: { entreprise: { userId: user.id } },
-          rapportOrigineId: null,
-          verificationId: { in: [...new Set(rapports.map((r) => r.verificationId))] },
-        },
-        select: { ...SELECTION_POINT_DU_RAPPORT, verificationId: true },
-        orderBy: { createdAt: "asc" },
-      })
-    : [];
-  const dejaPose = new Set<string>();
+  //
+  // [2026-10-27, plan performance, lot 1a] « Le plus récent » se lit sur le
+  // dernier rapport de chaque contrôle dans TOUT l'historique
+  // (`derniersRapportsDeLEtablissement`, lu en parallèle) et non plus sur le
+  // premier de la liste : filtrée sur une année, la liste ne porte pas
+  // forcément le plus récent, et les points se seraient posés sous un rapport
+  // de chaque année consultée.
+  const [sansOrigine, derniers] = rapports.length
+    ? await Promise.all([
+        prisma.action.findMany({
+          where: {
+            etablissementId,
+            etablissement: { entreprise: { userId: user.id } },
+            rapportOrigineId: null,
+            verificationId: { in: [...new Set(rapports.map((r) => r.verificationId))] },
+          },
+          select: { ...SELECTION_POINT_DU_RAPPORT, verificationId: true },
+          orderBy: { createdAt: "asc" },
+        }),
+        derniersRapportsDeLEtablissement(etablissementId),
+      ])
+    : [[], new Map<string, DernierRapport>()];
   let out = rapports.map((r) => {
-    // Les rapports arrivent du plus récent au plus ancien : le premier de
-    // chaque contrôle reçoit ses points sans origine.
-    if (dejaPose.has(r.verificationId)) return r;
-    dejaPose.add(r.verificationId);
+    if (derniers.get(r.verificationId)?.id !== r.id) return r;
     const siens = sansOrigine.filter((p) => p.verificationId === r.verificationId);
     return siens.length ? { ...r, pointsACorriger: [...r.pointsACorriger, ...siens] } : r;
   });
@@ -136,13 +183,17 @@ export async function listerRapportsDUneVerification(verificationId: string) {
   });
 }
 
-/** Tableau de bord : combien de rapports sont archivés (audit Next.js du 2026-10-14, B6). */
-export async function compterRapportsDuDossier(etablissementId: string) {
+/** Tableau de bord : combien de rapports sont archivés (audit Next.js du 2026-10-14, B6).
+ *  Mémoïsé sur le rendu : la page et `getDashboardData` le demandent (plan
+ *  performance, lot 1). */
+export const compterRapportsDuDossier = cache(async function compterRapportsDuDossier(
+  etablissementId: string,
+) {
   const user = await requireUser();
   return prisma.rapportVerification.count({
     where: { etablissementId, etablissement: { entreprise: { userId: user.id } } },
   });
-}
+});
 
 /** Tableau de bord : les derniers rapports, du plus récent au plus ancien (B6). */
 export async function listerRapportsRecents(etablissementId: string, nombre: number) {

@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { requireUser } from "@/lib/auth/require-user";
@@ -8,12 +9,26 @@ import {
   type VigilanceSnapshot,
 } from "./vigilance";
 
-export async function listPrestataires(etablissementId: string) {
-  const { etablissement } = await requireEtablissement(etablissementId);
-  const prestataires = await prisma.prestataire.findMany({
-    where: { etablissementId: etablissement.id },
+/**
+ * L'annuaire des prestataires d'un établissement, lu une fois par rendu
+ * (`cache()`) : la barre latérale (vigilance), la matrice du tableau de bord,
+ * les transmissions et les échéances du calendrier le lisaient chacune.
+ * [2026-10-27, plan performance, lot 1.] Un annuaire, borné : pas
+ * d'historique relu. Portée au compte dans la requête.
+ */
+export const prestatairesDuRendu = cache(async function prestatairesDuRendu(
+  etablissementId: string,
+) {
+  const user = await requireUser();
+  return prisma.prestataire.findMany({
+    where: { etablissementId, etablissement: { entreprise: { userId: user.id } } },
     orderBy: [{ raisonSociale: "asc" }],
   });
+});
+
+export async function listPrestataires(etablissementId: string) {
+  const { etablissement } = await requireEtablissement(etablissementId);
+  const prestataires = await prestatairesDuRendu(etablissement.id);
   return prestataires.map((p) => ({
     ...p,
     vigilance: computeVigilance(p),

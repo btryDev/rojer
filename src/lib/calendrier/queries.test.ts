@@ -25,16 +25,20 @@ const { prismaMock, requireUserMock } = vi.hoisted(() => ({
     etablissement: {
       findFirst: vi.fn().mockResolvedValue(null),
     },
-    // La jointure « dernière réalisation » (ADR-034). Ces tests éprouvent les
-    // clauses envoyées sur les lignes ; aucun rapport n'y est posé.
-    rapportVerification: {
-      findMany: vi.fn().mockResolvedValue([]),
-    },
+    // La jointure « dernière réalisation » (ADR-034), lue par la base en une
+    // ligne par échéance (faux module plus bas). Les rapports factices se
+    // posent dans `rapportsFactices` ; aucun par défaut.
+    rapportsFactices: [] as { verificationId: string; dateRapport: Date; resultat: string }[],
   },
   requireUserMock: vi.fn(),
 }));
 
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
+vi.mock("@/lib/rapports/joindre-realisations", async () =>
+  (await import("@/lib/rapports/faux-dernieres-realisations")).fauxModuleDernieresRealisations(
+    () => prismaMock.rapportsFactices,
+  ),
+);
 vi.mock("@/lib/auth/require-user", () => ({
   requireUser: requireUserMock,
   getOptionalUser: vi.fn(),
@@ -66,7 +70,7 @@ beforeEach(() => {
   prismaMock.verification.findFirst.mockClear().mockResolvedValue(null);
   // Le fait d'un contrôle se lit sur les rapports (ADR-034, N5) : les tests
   // qui en posent un le font ici, et il ne fuit pas vers le suivant.
-  prismaMock.rapportVerification.findMany.mockClear().mockResolvedValue([]);
+  prismaMock.rapportsFactices = [];
   prismaMock.etablissement.findFirst.mockClear().mockResolvedValue(null);
   requireUserMock.mockResolvedValue({ id: "user-1" });
 });
@@ -224,10 +228,10 @@ describe("compterEtatCalendrier", () => {
     ]);
     // Leur fait, sur leurs rapports : l'un dans la fenêtre de douze mois,
     // l'autre non.
-    prismaMock.rapportVerification.findMany.mockResolvedValue([
+    prismaMock.rapportsFactices = [
       { verificationId: "realisee_conforme-2026-02-01-eq", dateRapport: jour("2026-02-03"), resultat: "conforme" },
       { verificationId: "realisee_conforme-2025-02-01-eq", dateRapport: jour("2025-02-03"), resultat: "conforme" },
-    ]);
+    ];
 
     const etat = await compterEtatCalendrier("etab-1", NOW);
     expect(etat).toEqual({
@@ -296,9 +300,9 @@ describe("compterEtatCalendrier", () => {
     prismaMock.verification.findMany.mockResolvedValue([
       verif("realisee_conforme", "2026-01-01", null, "mise_en_service_uniquement"),
     ]);
-    prismaMock.rapportVerification.findMany.mockResolvedValue([
+    prismaMock.rapportsFactices = [
       { verificationId: "realisee_conforme-2026-01-01-eq", dateRapport: jour("2026-01-15"), resultat: "conforme" },
-    ]);
+    ];
     const etat = await compterEtatCalendrier("etab-1", NOW);
     expect(etat.enRetard).toBe(0);
     expect(etat.realisees12m).toBe(1);

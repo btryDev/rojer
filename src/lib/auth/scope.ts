@@ -4,6 +4,7 @@ import "server-only";
 // appartient bien au user connecté. On passe par ces helpers pour éviter de
 // dupliquer les WHERE clauses un peu partout.
 
+import { Prisma } from "@prisma/client";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -225,6 +226,32 @@ export async function requirePiecePrestataire(pieceId: string, prestataireId: st
   });
   if (!piece) notFound();
   return { user, piece };
+}
+
+/**
+ * Le prédicat propriétaire d'une requête SQL brute (`$queryRaw`) : la ligne
+ * dont `colonneEtablissement` désigne l'établissement appartient à
+ * l'utilisateur de la session. La forme SQL de
+ * `etablissement: { entreprise: { userId } }`, pour les lectures que Prisma
+ * n'exprime pas (`DISTINCT ON`…) — prédicat complet, sans jointure à écrire
+ * chez l'appelant. Écrit une fois ici : la garde de tenancy ne lit pas le SQL
+ * d'un gabarit, elle reconnaît l'appel de ce helper.
+ *
+ *   const proprietaire = await requireProprietaireSql('r."etablissementId"');
+ *   prisma.$queryRaw`SELECT … FROM "RapportVerification" r WHERE ${proprietaire}`
+ *
+ * [2026-10-27, plan performance, lot 1a.]
+ */
+export async function requireProprietaireSql(colonneEtablissement: string): Promise<Prisma.Sql> {
+  if (!/^[A-Za-z_]\w*\."[A-Za-z_]\w*"$/.test(colonneEtablissement)) {
+    throw new Error(`Colonne SQL invalide : « ${colonneEtablissement} »`);
+  }
+  const user = await requireUser();
+  return Prisma.sql`EXISTS (
+    SELECT 1 FROM "Etablissement" e_p
+    JOIN "Entreprise" en_p ON en_p."id" = e_p."entrepriseId"
+    WHERE e_p."id" = ${Prisma.raw(colonneEtablissement)} AND en_p."userId" = ${user.id}::uuid
+  )`;
 }
 
 /**
