@@ -829,6 +829,9 @@ export type OccurrenceExistante = {
    * désormais une ligne existante qui arrive sans elle.
    */
   suiviDepuis: Date;
+  /** La date du dernier contrôle déclarée, sans rapport (ADR-051).
+   *  Optionnelle : absente, rien n'est déclaré. */
+  dernierControleDeclare?: Date | null;
 };
 
 /** Ce qu'il faut écrire sur une ligne existante. `id` n'y figure jamais en

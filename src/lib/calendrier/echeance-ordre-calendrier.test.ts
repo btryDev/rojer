@@ -24,6 +24,7 @@ function faits(p: Partial<FaitsDeLigne> & { periodicite?: Periodicite }): FaitsD
     dateDuTitre: null,
     realisation: null,
     realisationHeritee: null,
+    dernierControleDeclare: null,
     miseEnService: null,
     origine: J("2026-01-01"),
     ...p,

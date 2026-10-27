@@ -55,6 +55,8 @@ type Declaration = {
   miseEnService?: string | Date;
   rapport?: { le: string | Date; resultat?: string };
   heritee?: string | Date;
+  /** La date du dernier contrôle déclarée, sans rapport (ADR-051). */
+  declare?: string | Date;
   titre?: Date | null;
 };
 
@@ -82,6 +84,7 @@ function ligne(d: Declaration): FaitsDeLigne {
         }
       : null,
     realisationHeritee: d.heritee === undefined ? null : date(d.heritee),
+    dernierControleDeclare: d.declare === undefined ? null : date(d.declare),
     miseEnService: d.miseEnService === undefined ? null : date(d.miseEnService),
     origine: date(d.origine),
   };
@@ -1061,6 +1064,64 @@ const TABLE: Rangee[] = [
     },
     retard: { au: NOW_RECONCILIATION, jours: 0 },
   },
+  // ADR-051 (2026-10-27) : la date du dernier contrôle déclarée, sans rapport.
+  {
+    cas: "ADR-051 — une date déclarée date l'échéance suivante",
+    recit:
+      "Des extincteurs suivis depuis le 2026-10-27, jamais rapportés : l'exploitant déclare un dernier contrôle au 2026-03-15. L'annuelle tombe le 2027-03-15, planifiée — et non « à planifier » à l'origine.",
+    faits: ligne({ rythme: "annuelle", origine: "2026-10-27", declare: "2026-03-15" }),
+    attendu: { jour: "2027-03-15", statut: "planifiee", source: "declaration" },
+  },
+  {
+    cas: "ADR-051 — une date déclarée ancienne laisse l'échéance passée, donc en retard",
+    recit:
+      "Déclaré au 2024-05-02 sur une annuelle : l'échéance est le 2025-05-02, passée au jour du suivi. Elle est rendue telle quelle ; le retard se lit à l'affichage, sur la date.",
+    faits: ligne({ rythme: "annuelle", origine: "2026-10-27", declare: "2024-05-02" }),
+    attendu: { jour: "2025-05-02", statut: "planifiee", source: "declaration" },
+  },
+  {
+    cas: "ADR-051 — un rapport réalisé l'emporte sur la date déclarée, même plus ancien",
+    recit:
+      "Une déclaration n'atteste rien : un rapport réalisé au 2025-11-10 date l'échéance au 2026-11-10, quand bien même l'exploitant a déclaré un contrôle plus récent, au 2026-03-15.",
+    faits: ligne({
+      rythme: "annuelle",
+      origine: "2026-01-01",
+      rapport: { le: "2025-11-10" },
+      declare: "2026-03-15",
+    }),
+    attendu: { jour: "2026-11-10", statut: "planifiee", source: "rapport" },
+  },
+  {
+    cas: "ADR-051 — l'héritage l'emporte sur la date déclarée",
+    recit:
+      "La réalisation léguée par une succession est un contrôle attesté : elle passe devant la déclaration.",
+    faits: ligne({
+      rythme: "annuelle",
+      origine: "2026-01-01",
+      heritee: "2025-06-01",
+      declare: "2026-03-15",
+    }),
+    attendu: { jour: "2026-06-01", statut: "planifiee", source: "heritage" },
+  },
+  {
+    cas: "ADR-051 — la date déclarée passe devant la mise en service",
+    recit:
+      "Un appareil mis en service le 2026-09-01 (premier contrôle au 2027-09-01) dont l'exploitant déclare un contrôle au 2026-10-01 : le dernier contrôle connu date la suite, au 2027-10-01.",
+    faits: ligne({
+      rythme: "annuelle",
+      origine: "2026-10-27",
+      miseEnService: "2026-09-01",
+      declare: "2026-10-01",
+    }),
+    attendu: { jour: "2027-10-01", statut: "planifiee", source: "declaration" },
+  },
+  {
+    cas: "ADR-051 — un contrôle ponctuel ne se solde pas par une date déclarée",
+    recit:
+      "Une vérification de mise en service n'a pas de rendez-vous suivant : seule une pièce la solde. La date déclarée n'y est pas lue, la ligne reste ouverte à l'origine.",
+    faits: ligne({ rythme: "mise_en_service_uniquement", origine: "2026-10-27", declare: "2026-03-15" }),
+    attendu: { jour: "2026-10-27", statut: "a_planifier", source: "ponctuel_ouvert" },
+  },
 ];
 
 describe("echeanceDeLigne — la table de vérité (ADR-036)", () => {
@@ -1069,7 +1130,7 @@ describe("echeanceDeLigne — la table de vérité (ADR-036)", () => {
     // `TABLE` vidé par une mauvaise fusion rendrait le `it.each` muet.
     expect(TABLE.length).toBeGreaterThanOrEqual(60);
     expect(new Set(TABLE.map((r) => r.cas)).size).toBe(TABLE.length);
-    // Les sept sources sont toutes atteintes par une rangée au moins.
+    // ~~Les sept sources~~ Les huit sources [2026-10-27 : + `declaration`, ADR-051] sont toutes atteintes par une rangée au moins.
     expect(new Set(TABLE.map((r) => r.attendu.source))).toEqual(
       new Set<SourceEcheance>([
         "titre",
@@ -1077,6 +1138,7 @@ describe("echeanceDeLigne — la table de vérité (ADR-036)", () => {
         "ponctuel_ouvert",
         "rapport",
         "heritage",
+        "declaration",
         "mise_en_service",
         "origine",
       ]),
@@ -1313,7 +1375,7 @@ describe("echeanceDeLigne — propriétés", () => {
     let eprouvees = 0;
     for (const r of TABLE) {
       const rendu = echeanceDeLigne(r.faits);
-      if (rendu.source === "rapport" || rendu.source === "heritage") {
+      if (rendu.source === "rapport" || rendu.source === "heritage" || rendu.source === "declaration") {
         expect(echeanceDeLigne({ ...r.faits, ...ailleurs }), r.cas).toEqual(rendu);
         eprouvees += 1;
       }

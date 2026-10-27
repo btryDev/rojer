@@ -38,6 +38,7 @@ function faits(over: Partial<FaitsDeLigne> & { origine: Date }): FaitsDeLigne {
     dateDuTitre: null,
     realisation: null,
     realisationHeritee: null,
+    dernierControleDeclare: null,
     miseEnService: null,
     ...over,
   };

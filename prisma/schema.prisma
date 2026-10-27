@@ -789,6 +789,14 @@ model Verification {
   // stratégie qui s'en sert (`deciderParFaits`) n'est branchée qu'au lot 4.
   suiviDepuis DateTime @default(now())
 
+  // Date du dernier contrôle DÉCLARÉE par l'exploitant, sans rapport
+  // (ADR-051, décision de la propriétaire du 2026-10-27). Elle date l'échéance
+  // suivante d'une ligne à rythme quand aucun rapport réalisé ni hérité ne le
+  // fait — règle 3 de `echeanceDeLigne`. Ce n'est PAS une réalisation : la
+  // ligne n'est jamais soldée par elle, rien n'entre au registre, et un rapport
+  // réalisé la supplante toujours. `null` = rien de déclaré.
+  dernierControleDeclareLe DateTime?
+
   // Délai de grâce (ADR-040, décision de la propriétaire du 2026-10-08) : le
   // jour jusqu'auquel une ligne « à planifier » N'EST PAS comptée en retard.
   //

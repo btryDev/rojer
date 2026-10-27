@@ -166,6 +166,11 @@ export function classerEcart(e: EntreeClassement): Categorie {
         return "rythme";
       }
       break;
+    case "declaration":
+      if (rythmeQuiExplique(avant.datePrevue, faits.dernierControleDeclare, faits.periodicite)) {
+        return "rythme";
+      }
+      break;
     case "mise_en_service":
     case "origine":
       if (rythmeQuiExplique(avant.datePrevue, faits.miseEnService, faits.premierPas)) {
@@ -313,6 +318,7 @@ export function comparerAuMoteur(lecture: LecturePasse, now: Date): Comparaison 
             dateDuTitre: null,
             realisation: null,
             realisationHeritee: null,
+            dernierControleDeclare: ex.dernierControleDeclare ?? null,
             miseEnService: null,
             origine: ex.suiviDepuis,
           }

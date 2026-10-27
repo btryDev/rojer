@@ -536,7 +536,13 @@ const RELEVE = {
   // « site » dans deux raisons du moteur (`engine.ts`, `personnes-presentes.ts`,
   // 2026-10-26, PR #93) : les raisons s'affichent, aucune colonne ne les
   // garde — NON, empreinte recopiée, version inchangée.
-  empreinte: "95a676563de275cc",
+  // ~~95a676563de275cc~~. 2026-10-27, ADR-051 : la règle 3 lit une date de
+  // dernier contrôle DÉCLARÉE (`Verification.dernierControleDeclareLe`). La
+  // colonne naît vide sur toutes les lignes : sur un dossier existant, la
+  // régénération écrit exactement ce qu'elle écrivait — NON, empreinte
+  // recopiée, version inchangée. La ligne dont l'exploitant déclare une date
+  // est recalculée à l'instant de la déclaration (`recalculerLigne`).
+  empreinte: "395df3f17c076d68",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");
