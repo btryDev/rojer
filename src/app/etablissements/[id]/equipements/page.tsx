@@ -324,7 +324,7 @@ export default async function EquipementsPage({
           suggestionsRestantes.length > 0 ? (
             <OuvrirSuggestions
               forme="lien"
-              libelle={`Équipements souvent présents dans votre activité (${suggestionsRestantes.length}) →`}
+              libelle={`Voir les suggestions (${suggestionsRestantes.length}) →`}
             />
           ) : null
         }
@@ -378,7 +378,7 @@ export default async function EquipementsPage({
             pourquoi="Électricité, extincteurs, hotte, ascenseur… Chaque équipement déclenche des vérifications périodiques qui doivent être faites par un organisme ou un technicien. C'est la déclaration ici qui dit à l'outil quoi mettre dans votre calendrier."
             quoiFaire={
               suggestionsRestantes.length > 0
-                ? "ouvrez les équipements souvent présents dans votre activité (ci-dessus), cochez ceux que vous avez, ou ajoutez-en un via le bouton en haut."
+                ? "ouvrez les suggestions (ci-dessus), cochez les équipements que vous avez, ou ajoutez-en un via le bouton en haut."
                 : "ajoutez un premier équipement via le bouton « + Ajouter un équipement » en haut de la page."
             }
             cta="Ajouter un équipement"

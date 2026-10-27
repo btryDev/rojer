@@ -36,8 +36,8 @@ export function FenetreSuggestions(props: React.ComponentProps<typeof PreRemplis
     <PanneauModal
       ouvert={ouvert}
       surFermer={fermer}
-      surtitre="Suggestions"
-      titre="Équipements souvent présents dans votre activité"
+      surtitre="D'après votre activité"
+      titre="Suggestions d'équipements"
     >
       <PreRemplissagePanel {...props} />
     </PanneauModal>
