@@ -53,7 +53,6 @@ import {
 import { AFaireSurLEquipement } from "@/components/equipements/AFaireSurLEquipement";
 import { reponsesManquantes } from "@/lib/equipements/reponses-exigees";
 import { QUESTION_COURTE } from "@/lib/equipements/reste-a-faire";
-import { declarerDernierControle } from "@/lib/dernier-controle/actions";
 import { caracteristiquesLisibles } from "@/lib/equipements/caracteristiques";
 import {
   construireFrise,
@@ -68,7 +67,6 @@ import { LABEL_PERIODICITE, LABEL_REALISATEUR } from "@/lib/calendrier/labels";
 import { LABEL_RESULTAT } from "@/lib/rapports/resultats";
 import type { RegistreLigne } from "@/lib/calendrier/etats";
 import {
-  cleJourCivil,
   formaterDateLongueFr,
   formaterJourMoisFr,
   formaterMoisAnneeFr,
@@ -147,9 +145,9 @@ export default async function EquipementDetailPage({
   // l'archivage prend le pas dans `classerVerification`, cette liste teste le
   // FAIT (`estRealisee`) et non l'état du jour.
   const histoire = lignesHistoire(eq, base);
-  // ADR-051 : les contrôles à rythme dont la date du dernier passage peut se
-  // déclarer — sans échéance connue, ou déjà datés par une déclaration.
-  const aDater = retire ? [] : controlesADater(eq, aFaire);
+  // Les contrôles à rythme sans échéance connue : le rapport de leur dernier
+  // passage les datera (2026-10-27).
+  const aDater = retire ? [] : controlesADater(eq, aFaire, base);
   // Les questions exigées restées sans réponse, en clair (D29 ; 2026-10-27).
   const questionsSansReponse = retire
     ? []
@@ -158,7 +156,7 @@ export default async function EquipementDetailPage({
       );
   // La phrase sur la mise en service ne vaut que pour une ligne du
   // référentiel : une prescription particulière n'est jamais datée par elle.
-  const miseEnServiceSansEffet = aDater.some((c) => c.declareLe === null && !c.surMesure);
+  const miseEnServiceSansEffet = aDater.some((c) => !c.surMesure);
   const obligations = obligationsDeLEquipement(eq);
 
   // Ce qui vise cet appareil sans jamais tomber à une date. Lu au MOTEUR et
@@ -475,12 +473,10 @@ export default async function EquipementDetailPage({
         <AFaireSurLEquipement
           questions={questionsSansReponse}
           hrefModifier={`${base}/equipements/${equipementId}/modifier`}
-          aujourdhui={cleJourCivil(maintenant)}
           aDater={aDater.map((c) => ({
             id: c.id,
             libelle: c.libelle,
-            declareLe: c.declareLe ? cleJourCivil(c.declareLe) : null,
-            action: declarerDernierControle.bind(null, c.id),
+            hrefDepot: avecProvenance(c.hrefDepot, depuisCetteFiche),
           }))}
           miseEnService={
             !miseEnServiceSansEffet

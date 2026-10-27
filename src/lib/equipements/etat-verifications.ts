@@ -74,7 +74,7 @@ export type EtatEquipement = {
   aConfirmer: string[];
   /**
    * Contrôles À RYTHME sans échéance connue — « à planifier », en retard ou
-   * non : la date de leur dernier passage les daterait (ADR-051). La page
+   * non : le rapport de leur dernier passage les daterait. La page
    * Équipements en fait une ligne « à faire » (2026-10-27).
    */
   aDater: number;

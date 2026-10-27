@@ -121,7 +121,6 @@ export function faitsDeLigne(
     dateDuTitre: g.sources.dateDuTitre,
     realisation: ex === null ? null : realisationPropre(ex),
     realisationHeritee: heritee,
-    dernierControleDeclare: ex?.dernierControleDeclare ?? null,
     miseEnService: g.sources.miseEnService,
     origine: ex === null ? now : ex.suiviDepuis,
   };

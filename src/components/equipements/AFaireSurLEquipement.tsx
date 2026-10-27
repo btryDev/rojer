@@ -6,7 +6,6 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { GESTE_DATE, GESTE_USAGE } from "@/lib/equipements/reste-a-faire";
-import { DateDernierControle, type LigneDateDeclaree } from "./DateDernierControle";
 
 const LIEN =
   "font-semibold text-[color:var(--board-amber-ink)] underline underline-offset-2 hover:text-[color:var(--board-ink)]";
@@ -15,15 +14,13 @@ export function AFaireSurLEquipement({
   questions,
   hrefModifier,
   aDater,
-  aujourdhui,
   miseEnService,
 }: {
   /** Les questions exigées restées sans réponse, en clair. */
   questions: string[];
   hrefModifier: string;
-  /** Les contrôles à rythme sans échéance connue (ADR-051). */
-  aDater: LigneDateDeclaree[];
-  aujourdhui: string;
+  /** Les contrôles à rythme sans échéance connue, et où déposer leur rapport. */
+  aDater: { id: string; libelle: string; hrefDepot: string }[];
   /**
    * Ce que la fiche dit de la mise en service sous les dates : `null` quand
    * aucun contrôle sans date n'est du référentiel ; sinon la phrase.
@@ -71,12 +68,18 @@ export function AFaireSurLEquipement({
           <div className="py-3 first:pt-0 last:pb-0">
             <p className="m-0 text-[14px] font-semibold text-[color:var(--board-ink)]">{GESTE_DATE}</p>
             <p className="m-0 mt-0.5 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-              Sans elle, Rojer ne peut pas calculer le prochain. Une date déclarée, sans rapport, ne prouve pas le
-              contrôle : déposez le rapport quand vous l&apos;avez.
+              Sa date calcule le prochain contrôle.
             </p>
-            <div className="mt-3">
-              <DateDernierControle lignes={aDater} aujourdhui={aujourdhui} />
-            </div>
+            <ul className="m-0 mt-3 flex list-none flex-col gap-2 p-0">
+              {aDater.map((c) => (
+                <li key={c.id} className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+                  <span className="text-[13px] leading-[1.4] text-[color:var(--board-slate-ink)]">{c.libelle}</span>
+                  <Link href={c.hrefDepot} className={buttonVariants({ variant: "boardClair", size: "boardSm" })}>
+                    Déposer le rapport
+                  </Link>
+                </li>
+              ))}
+            </ul>
             {miseEnService && "inconnue" in miseEnService ? (
               <p className="m-0 mt-3 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-ink)]">
                 Appareil neuf, jamais contrôlé&nbsp;?{" "}

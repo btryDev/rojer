@@ -37,7 +37,7 @@ const verif = (
 });
 
 describe("repartirParEquipement", () => {
-  // ADR-051 : ce que la page Équipements propose de dater.
+  // Ce que la page Équipements propose de dater par un rapport (2026-10-27).
   it("compte les contrôles à rythme sans échéance connue, en retard ou non, pas les ponctuels", () => {
     const m = repartirParEquipement(
       [

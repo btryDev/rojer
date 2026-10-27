@@ -13,7 +13,7 @@ import type { ChampTriEtat } from "./schema";
 
 /** Les gestes, dits une fois : la tuile, la liste et la fiche les lisent ici. */
 export const GESTE_USAGE = "Préciser son usage";
-export const GESTE_DATE = "Renseigner la date du dernier contrôle";
+export const GESTE_DATE = "Déposer le rapport du dernier contrôle";
 
 /**
  * La question, courte, posée à l'appareil — pour le bandeau de sa fiche. Le
@@ -69,7 +69,7 @@ export function resteAFaireDuParc({
 }: {
   /** Appareils auxquels manque une réponse exigée. */
   nbAPreciser: number;
-  /** Appareils dont des contrôles à rythme n'ont pas d'échéance connue (ADR-051). */
+  /** Appareils dont des contrôles à rythme n'ont pas d'échéance connue. */
   nbADater: number;
   nbEquipements: number;
   nbSuggestions: number;
@@ -81,7 +81,7 @@ export function resteAFaireDuParc({
   if (nbADater > 0) {
     lignes.push({
       cle: "dates",
-      texte: `Renseigner la date du dernier contrôle (ou de mise en service) de ${equipements(nbADater)}`,
+      texte: `Déposer le rapport du dernier contrôle (ou renseigner la mise en service) de ${equipements(nbADater)}`,
     });
   }
   if (nbEquipements === 0 && nbSuggestions > 0) {

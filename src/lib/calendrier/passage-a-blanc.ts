@@ -134,12 +134,7 @@ export function dateExpliqueeParUnFait(date: Date, f: FaitsDeLigne): boolean {
   }
   if (f.miseEnService !== null && memeInstant(date, f.miseEnService)) return true;
   if (f.dateDuTitre !== null && memeInstant(date, f.dateDuTitre)) return true;
-  const ancres = [
-    f.miseEnService,
-    f.realisation?.date ?? null,
-    f.realisationHeritee,
-    f.dernierControleDeclare,
-  ];
+  const ancres = [f.miseEnService, f.realisation?.date ?? null, f.realisationHeritee];
   return ancres.some((a) => rythmeQuiExplique(date, a, null) !== null);
 }
 
@@ -171,11 +166,6 @@ export function classerEcart(e: EntreeClassement): Categorie {
         return "rythme";
       }
       break;
-    case "declaration":
-      if (rythmeQuiExplique(avant.datePrevue, faits.dernierControleDeclare, faits.periodicite)) {
-        return "rythme";
-      }
-      break;
     case "mise_en_service":
     case "origine":
       if (rythmeQuiExplique(avant.datePrevue, faits.miseEnService, faits.premierPas)) {
@@ -188,7 +178,7 @@ export function classerEcart(e: EntreeClassement): Categorie {
     // § 5 le nomme, « une périodicité devenue PONCTUELLE solde une ligne
     // roulée » —, et c'est bien un changement de rythme qui la déplace.
     //
-    // ~~Les trois ancres~~ Les quatre ancres [2026-10-27 : + la date déclarée, ADR-051] sont essayées, parce qu'on ne sait pas laquelle datait
+    // Les trois ancres sont essayées, parce qu'on ne sait pas laquelle datait
     // la ligne du temps où elle était cyclique. `saufRythme` vaut `null` : le
     // rythme effectif est ici sans pas (`mise_en_service_uniquement`), donc il
     // n'y a aucun rythme à exclure de la recherche.
@@ -197,7 +187,6 @@ export function classerEcart(e: EntreeClassement): Categorie {
       if (
         rythmeQuiExplique(avant.datePrevue, faits.realisation?.date ?? null, null) !== null ||
         rythmeQuiExplique(avant.datePrevue, faits.realisationHeritee, null) !== null ||
-        rythmeQuiExplique(avant.datePrevue, faits.dernierControleDeclare, null) !== null ||
         rythmeQuiExplique(avant.datePrevue, faits.miseEnService, null) !== null
       ) {
         return "rythme";
@@ -324,7 +313,6 @@ export function comparerAuMoteur(lecture: LecturePasse, now: Date): Comparaison 
             dateDuTitre: null,
             realisation: null,
             realisationHeritee: null,
-            dernierControleDeclare: ex.dernierControleDeclare ?? null,
             miseEnService: null,
             origine: ex.suiviDepuis,
           }

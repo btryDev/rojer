@@ -148,8 +148,6 @@ export async function lireEntrees(client: ClientLecture, etablissementId: string
       // `echeanceDeLigne` lit pour dater un « à planifier » et borner la
       // première échéance d'une mise en service.
       suiviDepuis: true,
-      // La date déclarée du dernier contrôle (ADR-051) : un fait de la règle 3.
-      dernierControleDeclareLe: true,
       _count: { select: { rapports: true, actions: true } },
     },
   });
@@ -187,7 +185,6 @@ export async function lireEntrees(client: ClientLecture, etablissementId: string
     porteUnePreuve: v._count.rapports > 0 || v._count.actions > 0,
     prescriptionId: v.prescriptionId,
     suiviDepuis: v.suiviDepuis,
-    dernierControleDeclare: v.dernierControleDeclareLe,
   }));
 
   return { etab, titresBruts, existantes };

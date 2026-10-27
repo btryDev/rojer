@@ -106,14 +106,6 @@ export type FaitsDeLigne = {
    *  PLUS ANCIENNE (`reprendreLaRealisation`). Une réalisation propre prime
    *  toujours sur elle. */
   realisationHeritee: Date | null;
-  /**
-   * La date du dernier contrôle DÉCLARÉE par l'exploitant, sans rapport
-   * (`Verification.dernierControleDeclareLe`, ADR-051). Lue par la règle 3
-   * seule, et après le rapport réalisé et l'héritage : une déclaration date
-   * l'échéance suivante, elle ne vaut jamais réalisation. `null` = rien de
-   * déclaré.
-   */
-  dernierControleDeclare: Date | null;
   /** `null` pour un porteur établissement ou salarié, pour une ligne sur mesure,
    *  et pour un appareil dont la date n'a pas été saisie. */
   miseEnService: Date | null;
@@ -137,7 +129,6 @@ export type SourceEcheance =
   | "ponctuel_ouvert"
   | "rapport"
   | "heritage"
-  | "declaration"
   | "mise_en_service"
   | "origine";
 
@@ -250,10 +241,7 @@ export function echeanceDeLigne(f: FaitsDeLigne): EcheanceDeLigne {
   //    2024-01-10 ») étaient l'artefact d'un calcul à état. Le RYTHME, jamais le
   //    premier délai : sans quoi le premier cycle se rejouerait à chaque dépôt.
   //    « Planifiée », passée ou non : le retard se lit sur la date.
-  //    PUIS LA DATE DÉCLARÉE (ADR-051) : en dernier, parce qu'elle n'atteste
-  //    rien. Un rapport réalisé l'emporte même s'il est plus ancien qu'elle —
-  //    une déclaration ne repousse pas l'échéance que prouve une pièce.
-  const dernier = realisee ?? f.realisationHeritee ?? f.dernierControleDeclare;
+  const dernier = realisee ?? f.realisationHeritee;
   if (dernier !== null) {
     const prochaine = prochaineEcheance(dernier, f.periodicite);
     // `null` est inatteignable ici — le rythme est cyclique —, et retomber sur
@@ -262,12 +250,7 @@ export function echeanceDeLigne(f: FaitsDeLigne): EcheanceDeLigne {
       return {
         datePrevue: prochaine,
         statut: "planifiee",
-        source:
-          realisee !== null
-            ? "rapport"
-            : f.realisationHeritee !== null
-              ? "heritage"
-              : "declaration",
+        source: realisee !== null ? "rapport" : "heritage",
       };
     }
   }

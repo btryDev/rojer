@@ -29,9 +29,9 @@ import {
   LIBELLE_SANS_RENDEZ_VOUS,
   type RegistreLigne,
 } from "@/lib/calendrier/etats";
-import { formaterDateCourteFr, joursCivilsEntre } from "@/lib/dates";
-import { estResultatRealise } from "@/lib/rapports/resultats";
-import { recoitUneDateDeclaree } from "@/lib/dernier-controle/regles";
+import { joursCivilsEntre } from "@/lib/dates";
+import { estCyclique } from "@/lib/calendrier/periodicite";
+import type { Periodicite } from "@/lib/referentiels/types-communs";
 import { PREFIXE_PRESCRIPTION } from "@/lib/matching/prescriptions";
 import { GESTE_DATE } from "./reste-a-faire";
 import { registrePrudent, type RetenueParPrudence } from "@/lib/calendrier/prudence";
@@ -180,50 +180,45 @@ export type LigneHistoire = {
  * se range après les échéances datées.
  */
 /**
- * La date de dernier contrôle déclarée (ADR-051) QUAND c'est elle qui date la
- * ligne : aucun rapport réalisé ne la supplante. Sinon `null`.
+ * Un contrôle qui attend le rapport de son dernier passage pour être daté :
+ * ouvert, matériel (pas l'échéance d'une personne, que le titre date) et À
+ * RYTHME. Le seul fait accepté sans pièce est la mise en service de l'appareil
+ * (décision de la propriétaire du 2026-10-27).
  */
-function dateDeclareeSeule(v: {
-  dernierControleDeclareLe: Date | null;
-  rapports: readonly { resultat: ResultatVerification }[];
-}): Date | null {
-  if (v.dernierControleDeclareLe === null) return null;
-  return v.rapports.some((r) => estResultatRealise(r.resultat)) ? null : v.dernierControleDeclareLe;
+function attendSonRapport(v: { archiveLe: Date | null; salarieId: string | null; periodicite: Periodicite }): boolean {
+  return v.archiveLe === null && v.salarieId === null && estCyclique(v.periodicite);
 }
 
-/** Un contrôle dont la date du dernier passage peut se déclarer (ADR-051). */
+/** Un contrôle sans échéance connue, que le rapport de son dernier passage datera. */
 export type ControleADater = {
   id: string;
   libelle: string;
-  /** La date déjà déclarée, sinon `null`. */
-  declareLe: Date | null;
+  /** Le dépôt du rapport sur ce contrôle. */
+  hrefDepot: string;
   /** Ligne d'une prescription particulière (ADR-035) : la mise en service de
    *  l'appareil ne la date jamais. */
   surMesure: boolean;
 };
 
 /**
- * Les contrôles de l'appareil que la fiche propose de dater : à rythme, sans
- * rapport réalisé et sans échéance connue — « à planifier ». Lu sur les lignes
- * « à faire » : une ligne sans date y porte `date: null`. ~~Ou déjà datés par
- * une déclaration, qui restait modifiable.~~ [2026-10-27 : le bandeau « À faire
- * sur cet équipement » disparaît quand tout est rempli.]
+ * Les contrôles de l'appareil sans échéance connue — « à planifier » —, que le
+ * bandeau « À faire sur cet équipement » propose de dater par leur rapport. Lu
+ * sur les lignes « à faire » : une ligne sans date y porte `date: null`.
  */
 export function controlesADater(
-  eq: { verifications: readonly VerificationFiche[] },
+  eq: { id: string; verifications: readonly VerificationFiche[] },
   aFaire: readonly Pick<LigneAFaire, "cle" | "genre" | "date">[],
+  base: string,
 ): ControleADater[] {
   const sansDate = new Set(
     aFaire.filter((l) => l.genre === "verification" && l.date === null).map((l) => l.cle),
   );
   return eq.verifications
-    .filter((v) => recoitUneDateDeclaree(v))
-    .filter((v) => !v.rapports.some((r) => estResultatRealise(r.resultat)))
-    .filter((v) => sansDate.has(`v-${v.id}`))
+    .filter((v) => attendSonRapport(v) && sansDate.has(`v-${v.id}`))
     .map((v) => ({
       id: v.id,
       libelle: v.libelleObligation,
-      declareLe: v.dernierControleDeclareLe,
+      hrefDepot: `${base}/equipements/${eq.id}/controles/${v.id}?deposer=1#depot`,
       surMesure: v.obligationId.startsWith(PREFIXE_PRESCRIPTION),
     }));
 }
@@ -248,7 +243,6 @@ export function lignesAFaire(
   const lignes: LigneAFaire[] = [];
 
   for (const v of eq.verifications) {
-    const declaree = dateDeclareeSeule(v);
     // UNE LIGNE, UNE ÉCHÉANCE (ADR-034, N4). Elle en portait deux — le fait
     // passé et le rendez-vous suivant —, et cette liste devait donc la déplier
     // pour ne pas faire disparaître les échéances d'un appareil à jour. Depuis
@@ -272,14 +266,10 @@ export function lignesAFaire(
         // Le rendez-vous pris (ADR-049), dit à côté du délai.
         rendezVous: mentionRendezVous(v, maintenant),
         detail: aUnRendezVous(v, maintenant)
-          ? // ADR-051 : une échéance tirée d'une date DÉCLARÉE le dit — elle
-            // n'est adossée à aucune pièce.
-            declaree !== null
-            ? `Calculée d'après le dernier contrôle déclaré le ${formaterDateCourteFr(declaree)}, sans rapport`
-            : "Échéance portée au calendrier"
-          : // ADR-051 : sans date et datable, la ligne dit le geste qui la
-            // datera, plutôt que ce qui manque (2026-10-27).
-            recoitUneDateDeclaree(v)
+          ? "Échéance portée au calendrier"
+          : // Sans date et à rythme, la ligne dit le geste qui la datera,
+            // plutôt que ce qui manque (2026-10-27).
+            attendSonRapport(v)
             ? GESTE_DATE
             : etat === "enRetard"
             ? LIBELLE_AUCUNE_VERIFICATION

@@ -131,9 +131,6 @@ export type LigneFausse = {
   /** Délai de grâce (ADR-040). Nullable en base ; `undefined` ici = ligne
    *  posée par une fixture d'avant la colonne, lue comme `null`. */
   graceJusquAu?: Date | null;
-  /** La date du dernier contrôle déclarée (ADR-051). Nullable en base ;
-   *  `undefined` ici = rien de déclaré, lu comme `null`. */
-  dernierControleDeclareLe?: Date | null;
   /** Les rapports attachés à la ligne, avec leur résultat — ce que la
    *  réconciliation lit pour connaître la dernière réalisation (ADR-034).
    *  Indépendant de `nbRapports`, qui est le compte brut. */
@@ -163,7 +160,6 @@ const COLONNES_LIGNE: ReadonlySet<string> = new Set([
   "archiveLe",
   "suiviDepuis",
   "graceJusquAu",
-  "dernierControleDeclareLe",
 ]);
 
 export type Magasin = {

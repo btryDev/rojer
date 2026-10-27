@@ -457,14 +457,6 @@ describe("uploadRapport — un rapport réalisé : la ligne se recalcule sur lui
     expect(ligne()).toMatchObject({ prestataireId: "presta-1", rendezVousLe: null, rendezVousNote: null });
   });
 
-  it("un rapport réalisé efface la date déclarée du dernier contrôle ; « non vérifiable » la garde (ADR-051)", async () => {
-    Object.assign(ligne(), { dernierControleDeclareLe: d("2026-03-15") });
-    await deposer("non_verifiable", "2026-06-01");
-    expect(ligne().dernierControleDeclareLe).toEqual(d("2026-03-15"));
-    await deposer("conforme", "2026-06-02");
-    expect(ligne().dernierControleDeclareLe).toBeNull();
-  });
-
   it("un rapport « non vérifiable » ne consomme pas le rendez-vous (ADR-049)", async () => {
     Object.assign(ligne(), { rendezVousLe: d("2026-05-30"), rendezVousNote: "accès par la cour" });
     await deposer("non_verifiable", "2026-06-01");

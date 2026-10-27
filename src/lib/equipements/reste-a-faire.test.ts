@@ -7,7 +7,7 @@ describe("resteAFaireDuParc — une ligne par geste, jamais par appareil", () =>
       { cle: "usage", texte: "Préciser l'usage de 2 équipements" },
       {
         cle: "dates",
-        texte: "Renseigner la date du dernier contrôle (ou de mise en service) de 5 équipements",
+        texte: "Déposer le rapport du dernier contrôle (ou renseigner la mise en service) de 5 équipements",
       },
     ]);
   });
