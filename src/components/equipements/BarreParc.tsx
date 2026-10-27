@@ -91,8 +91,12 @@ export function BarreParc({
    */
   aPlanifier: number;
   hrefAjouter: string;
-  /** Ce que le référentiel propose encore de déclarer, et où le lire. */
-  suggestions?: { nombre: number; href: string } | null;
+  /**
+   * Le lien qui ouvre la fenêtre des suggestions (`SuggestionsEnFenetre`),
+   * posé par la page. ~~Un compte et une ancre vers le panneau de la page~~
+   * [2026-10-27 : le panneau a quitté la page pour une fenêtre].
+   */
+  suggestions?: React.ReactNode;
   /**
    * Le filtre par zone (ADR-029). Absent tant que l'établissement n'a
    * qu'une zone : le mono-zone ne paie pas la complexité du multi.
@@ -212,22 +216,14 @@ export function BarreParc({
         )}
       </section>
 
-      {suggestions && suggestions.nombre > 0 ? (
+      {suggestions ? (
         <div className="flex items-center gap-2.5 border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-slate-pale)] px-[var(--board-gutter)] py-[11px]">
           <span
             aria-hidden
             className="size-1.5 flex-none rounded-full bg-[color:var(--board-slate-soft)]"
           />
           <p className="m-0 text-[12.5px] text-[color:var(--board-slate-mid)]">
-            {suggestions.nombre > 1
-              ? `D'après votre secteur et vos régimes, ${suggestions.nombre} catégories d'équipement restent à examiner.`
-              : "D'après votre secteur et vos régimes, une catégorie d'équipement reste à examiner."}{" "}
-            <Link
-              href={suggestions.href}
-              className={LIEN_DANS_PHRASE}
-            >
-              Voir les suggestions →
-            </Link>
+            {suggestions}
           </p>
         </div>
       ) : null}

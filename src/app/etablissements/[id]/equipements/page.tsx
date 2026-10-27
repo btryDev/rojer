@@ -14,7 +14,9 @@ import {
   urgenceCategorie,
   type AppareilListe,
 } from "@/components/equipements/CarteCategorie";
-import { PreRemplissagePanel } from "@/components/equipements/PreRemplissagePanel";
+import { SuggestionsEnFenetre } from "@/components/equipements/SuggestionsEnFenetre";
+import { ResteAFaireParc } from "@/components/equipements/ResteAFaireParc";
+import { resteAFaireDuParc } from "@/lib/equipements/reste-a-faire";
 import {
   SectionEquipementsSecurite,
   type LigneSecuriteAffichee,
@@ -51,7 +53,10 @@ import {
   equipementsSansEcheance,
 } from "@/lib/equipements/hors-referentiel";
 import { avecProvenance, origineDepuis } from "@/lib/navigation/provenance";
-import { questionsExigeesParCategorie } from "@/lib/equipements/reponses-exigees";
+import {
+  appareilsMuets,
+  questionsExigeesParCategorie,
+} from "@/lib/equipements/reponses-exigees";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
 import {
   fraicheurCalendrier,
@@ -173,6 +178,22 @@ export default async function EquipementsPage({
   // précision qui distingue encore deux appareils, passerait en second.
   const montrerBatiment = multiBatiments && !batimentFiltre;
 
+  // Ce qu'il reste à faire sur le parc (retour du 2026-10-27) : sur tout
+  // l'établissement, pas sur la zone filtrée — une réponse manquante ne se
+  // cache pas derrière un filtre de lieu.
+  const panneauSuggestions = {
+    etablissementId: id,
+    suggestions: suggestionsRestantes,
+    questionsExigees: questionsExigeesParCategorie(etab),
+  };
+  const resteAFaire = resteAFaireDuParc({
+    appareilsMuets: appareilsMuets(equipements, etab),
+    nbEquipements: equipements.length,
+    nbSuggestions: suggestionsRestantes.length,
+    hrefModifier: (eqId) =>
+      avecProvenance(`${base}/equipements/${eqId}/modifier`, origine),
+  });
+
   // Ajouter depuis un parc filtré ouvre le formulaire sur ce bâtiment :
   // sinon le nouvel appareil part au bâtiment principal et disparaît de
   // l'écran d'où on vient de le déclarer.
@@ -276,9 +297,13 @@ export default async function EquipementsPage({
         aPlanifier={compteurs.aPlanifier}
         hrefAjouter={hrefAjouter}
         suggestions={
-          suggestionsRestantes.length > 0
-            ? { nombre: suggestionsRestantes.length, href: "#suggestions" }
-            : null
+          suggestionsRestantes.length > 0 ? (
+            <SuggestionsEnFenetre
+              {...panneauSuggestions}
+              forme="lien"
+              libelle={`Équipements souvent présents dans votre activité (${suggestionsRestantes.length}) →`}
+            />
+          ) : null
         }
         filtreBatiment={
           multiBatiments
@@ -314,26 +339,10 @@ export default async function EquipementsPage({
           </div>
         )}
 
-        {/* ~~`suggestionsRestantes.length > 0 &&`~~ — 2026-10-14 (revue du
-            lot, point 2) : le panneau est TOUJOURS rendu, au même endroit.
-            Créer la dernière suggestion vide la liste ; démonté, le panneau
-            perdait son état, et l'avertissement d'un calendrier non recalculé
-            avec lui. Vide et sans résultat à dire, il ne rend rien. */}
-        <div
-          id="suggestions"
-          // Vide (ni suggestion ni résultat), le panneau ne rend rien : en
-          // `contents`, le div ne crée pas d'écart dans la pile — sans être
-          // démonté, ce qui garderait l'état du panneau (revue du 2026-10-15).
-          className={suggestionsRestantes.length > 0 ? "scroll-mt-6" : "contents"}
-        >
-          <PreRemplissagePanel
-            etablissementId={id}
-            suggestions={suggestionsRestantes}
-            // 2026-10-13 (option 2) : les questions exigées dans le régime
-            // de l'établissement, que le panneau pose à côté de la case.
-            questionsExigees={questionsExigeesParCategorie(etab)}
-          />
-        </div>
+        {/* ~~Le panneau des suggestions, toujours rendu ici~~ [2026-10-27 :
+            il vit dans une fenêtre, ouverte depuis la barre du parc ou depuis
+            la liste ci-dessous (`SuggestionsEnFenetre`).] */}
+        <ResteAFaireParc lignes={resteAFaire} suggestions={panneauSuggestions} />
 
         <SectionEquipementsSecurite lignes={lignesSecurite} />
 
@@ -343,7 +352,7 @@ export default async function EquipementsPage({
             pourquoi="Électricité, extincteurs, hotte, ascenseur… Chaque équipement déclenche des vérifications périodiques qui doivent être faites par un organisme ou un technicien. C'est la déclaration ici qui dit à l'outil quoi mettre dans votre calendrier."
             quoiFaire={
               suggestionsRestantes.length > 0
-                ? "parcourez les suggestions ci-dessus (elles sont basées sur votre secteur d'activité) et cochez celles qui s'appliquent, ou ajoutez manuellement via le bouton en haut."
+                ? "ouvrez les équipements souvent présents dans votre activité (ci-dessus), cochez ceux que vous avez, ou ajoutez-en un via le bouton en haut."
                 : "ajoutez un premier équipement via le bouton « + Ajouter un équipement » en haut de la page."
             }
             cta="Ajouter un équipement"
