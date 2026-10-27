@@ -99,9 +99,23 @@ const EXEMPTIONS = new Map<string, Exemption>([
     },
   ],
   // ~~`creerEntreprise` et `finaliserOnboarding`, exemptées : elles fondaient
-  // la racine de la tenancy~~ [2026-10-26 : la première est retirée ; la
+  // la racine de la tenancy~~ [2026-10-26 : la première est retirée ; ~~la
   // seconde borne désormais par elle-même — son `upsert` cherche l'entreprise
-  // par `(userId, siren)`, l'identifiant du compte connecté en clé.]
+  // par `(userId, siren)`, l'identifiant du compte connecté en clé.~~
+  // 2026-10-27 : la seconde est de nouveau exemptée, son écriture étant sortie
+  // dans `onboarding/creation.ts` — voir l'entrée ci-dessous.]
+  [
+    "lib/onboarding/actions.ts:finaliserOnboarding",
+    {
+      garde: "creerEtablissementOnboarding",
+      raison:
+        "Création pour soi. L'écriture est sortie dans `onboarding/creation.ts` " +
+        "le 2026-10-27, pour que le seed des situations de test passe par le même " +
+        "code : l'`upsert` y cherche l'entreprise par `(userId, siren)`, et " +
+        "l'action lui passe l'identifiant tenu de `requireUser`, jamais du client. " +
+        "Le calendrier régénéré ensuite est celui de l'établissement qu'elle vient de créer.",
+    },
+  ],
   [
     "lib/signatures/actions.ts:poserSignatureAvecToken",
     {
