@@ -11,7 +11,7 @@
 // lit comme celui du client, et le produit ne le connaît pas. Ce qu'on sait
 // de l'établissement est écrit dans sa fiche, sur laquelle le dessin est posé.
 
-import { DoorOpen, IdCard, Users, Wrench } from "lucide-react";
+import { ArrowRight, DoorOpen, IdCard, Users, Wrench } from "lucide-react";
 import { nomDeZone } from "@/lib/batiments/nom-zone";
 import { CartePhotoLieu } from "./CartePhotoLieu";
 import type { IllustrationBatiment } from "@/lib/etablissements/illustration";
@@ -103,9 +103,12 @@ function BoutonGuide({ guide }: { guide: GuideFiche }) {
       <button
         type="button"
         onClick={() => setOuvert(true)}
-        className={buttonVariants({ variant: "boardAttention", size: "board" }) + " flex-none"}
+        // La flèche et le curseur disent que c'est un bouton : l'ambre seul se
+        // confondait avec les pastilles de la même couleur (2026-10-27).
+        className={buttonVariants({ variant: "boardAttention", size: "board" }) + " flex-none cursor-pointer"}
       >
         Finir de compléter les infos de l&apos;établissement
+        <ArrowRight className="size-4" aria-hidden />
       </button>
       <PanneauModal
         ouvert={ouvert}
@@ -231,10 +234,11 @@ export function HeroEtablissement({
       <CartePhotoLieu etablissementId={etab.id} photo={photo} illustration={illustration} />
     </div>
 
-    {/* Hors des cartes, en bas à droite du hero (demande de la
-        propriétaire) : le geste vaut pour le dossier, pas pour la fiche. */}
+    {/* Hors des cartes, ~~en bas à droite~~ [2026-10-27 : centré] du hero
+        (demandes de la propriétaire) : le geste vaut pour le dossier, pas
+        pour la fiche. */}
     {guide ? (
-      <div className="mt-7 flex justify-end">
+      <div className="mt-7 flex justify-center">
         <BoutonGuide guide={guide} />
       </div>
     ) : null}
