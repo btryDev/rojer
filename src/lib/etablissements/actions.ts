@@ -264,6 +264,7 @@ export async function modifierEtablissement(
       familleHabitation: true,
       effectifSurSite: true,
       personnesPresentesHabituellement: true,
+      effectifPublicAdmis: true,
       manipuleMatieresR422722: true,
       comporteLocauxSommeilPublic: true,
       ssiCategorieAouB: true,

@@ -24,7 +24,7 @@ import {
   EFFECTIF_MAX,
   MESSAGE_EFFECTIF_ENTREPRISE,
 } from "@/lib/onboarding/schema";
-import type { CategorieErp } from "@/lib/referentiels/types-communs";
+import type { CategorieErp, TypeErp } from "@/lib/referentiels/types-communs";
 import type { OnboardingState } from "./types";
 import { refusDuFiltre } from "@/lib/etablissements/types-refuses";
 
@@ -178,6 +178,9 @@ export function nombreDePersonnesDemande(s: OnboardingState): boolean {
     // Même règle que le serveur (`onboarding/schema.ts`) : matières « oui »,
     // le nombre est sans objet (revue du lot 1).
     manipuleMatieresR422722: s.manipuleMatieresR422722 === "oui",
+    // 2026-10-27 : une 4ᵉ catégorie se tranche par son type, comme au serveur.
+    typeErp: (s.typeErp || null) as TypeErp | null,
+    typesErpAutres: s.typesErpAutres as TypeErp[],
   });
 }
 

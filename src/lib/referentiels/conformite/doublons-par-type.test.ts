@@ -45,6 +45,7 @@ const sonde = (
   classeIgh: null,
   familleHabitation: null,
   personnesPresentesHabituellement: null,
+  effectifPublicAdmis: null,
   manipuleMatieresR422722: null,
   comporteLocauxSommeilPublic,
   manutentionManuelle: null,

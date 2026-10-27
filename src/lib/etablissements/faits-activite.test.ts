@@ -77,7 +77,7 @@ describe("le moteur lit le fait — la règle du non-renseigné", () => {
   const etab = (over: Partial<EtablissementMatching>): EtablissementMatching => ({
     id: "e", effectifSurSite: 4, effectifEntreprise: 4, estEtablissementTravail: true,
     estERP: false, estIGH: false, estHabitation: false, typeErp: null, typesErpAutres: [], categorieErp: null,
-    classeIgh: null, familleHabitation: null, personnesPresentesHabituellement: null,
+    classeIgh: null, familleHabitation: null, personnesPresentesHabituellement: null, effectifPublicAdmis: null,
     manipuleMatieresR422722: null, comporteLocauxSommeilPublic: null,
     manutentionManuelle: null, travailSurEcran: null, operationsElectriques: null,
     conduiteEngins: null, expositionCMR: null, epiPresents: null, ssiCategorieAouB: null,

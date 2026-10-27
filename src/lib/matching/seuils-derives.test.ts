@@ -17,7 +17,7 @@ import type { EtablissementMatching } from "./types";
 const etab = (p: Partial<EtablissementMatching> = {}): EtablissementMatching => ({
   id: "e", effectifSurSite: 10, effectifEntreprise: 10, estEtablissementTravail: true,
   estERP: false, estIGH: false, estHabitation: false, typeErp: null, typesErpAutres: [], categorieErp: null,
-  classeIgh: null, familleHabitation: null, personnesPresentesHabituellement: null,
+  classeIgh: null, familleHabitation: null, personnesPresentesHabituellement: null, effectifPublicAdmis: null,
   manipuleMatieresR422722: false, comporteLocauxSommeilPublic: null, manutentionManuelle: null, travailSurEcran: null, operationsElectriques: null, conduiteEngins: null, expositionCMR: null, epiPresents: null, ssiCategorieAouB: null, ...p,
 });
 const ok = (id: string, e: EtablissementMatching) => {

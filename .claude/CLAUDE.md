@@ -481,6 +481,12 @@ rentré dans le rang le 2026-09-03. `personnesPresentesHabituellement` absent ne
 plus sur `effectifSurSite` : le moteur en déduit une **borne basse** — le plancher de
 public de la catégorie d'ERP, qui franchit à lui seul le seuil de `R. 4227-34` dès la
 3ᵉ catégorie, puis l'effectif salarié — et une borne basse ne conclut que vers le haut.
+[2026-10-27, version 7 du moteur, décision de la propriétaire : la 4ᵉ catégorie
+franchit aussi le seuil par son TYPE — le plus petit seuil de la 5ᵉ au tableau de
+`PE 2 § 1`, 100 au moins pour M, N, O, S, T, V, W, X, Y, GA, PA
+(`PLANCHER_PUBLIC_4E_PAR_TYPE`) ; et la 5ᵉ tranche dans les deux sens par
+l'effectif du public admis + l'effectif salarié, le public de 5ᵉ se comptant
+seul (`GN 1 § 2 b`). Le nombre de personnes présentes est facultatif partout.]
 Sous la borne, l'obligation est retenue « à confirmer » si l'établissement reçoit du
 public, et rejetée s'il est de travail seul, où l'effectif salarié EST le total et non
 une borne. ~~Reste `manipuleMatieresR422722`, absent lu « non » : sa branche n'ajoute des

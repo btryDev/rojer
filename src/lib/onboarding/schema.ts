@@ -162,8 +162,9 @@ export const onboardingSchema = z
     // n'établit qu'il doive, sans qu'aucun écran du parcours ne l'ait invité à répondre.
     //
     // Elle n'est donc posée QU'À CEUX DONT LA RÉPONSE CHANGE QUELQUE CHOSE —
-    // `nombreDePersonnesADemander` : un ERP que ni sa catégorie ni son effectif
-    // ne portent au-dessus du seuil de R. 4227-34. ~~Pour eux elle est
+    // `nombreDePersonnesADemander` : un ERP que ni sa catégorie ~~ni son effectif~~
+    // [2026-10-27 : ni son type en 4ᵉ, ni son effectif salarié] ne portent
+    // au-dessus du seuil de R. 4227-34. ~~Pour eux elle est
     // obligatoire~~ [2026-10-27, décision de la propriétaire : facultative —
     // sans réponse, la consigne, l'alarme et les exercices restent « à
     // confirmer », et la fiche la redemande dans « À compléter »] ; pour tous
@@ -304,6 +305,9 @@ export const onboardingSchema = z
       // Posée au parcours depuis le 2026-09-27 : un « oui » rend le nombre sans
       // objet, ici comme à la fiche (revue du lot 1).
       manipuleMatieresR422722: val.manipuleMatieresR422722,
+      // 2026-10-27 : une 4ᵉ catégorie se tranche par son type.
+      typeErp: val.typeErp ?? null,
+      typesErpAutres: val.typesErpAutres ?? [],
     });
     // ~~Exigé là où il est demandé.~~ [2026-10-27 : facultatif, décision de
     // la propriétaire. Seul le refus hors de l'écran demeure.]

@@ -33,6 +33,7 @@ function etabBureau(over: Partial<EtablissementMatching> = {}): EtablissementMat
     classeIgh: null,
     familleHabitation: null,
     personnesPresentesHabituellement: null,
+    effectifPublicAdmis: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
     manutentionManuelle: null,
@@ -63,6 +64,7 @@ function etabRestoErpCat5(
     classeIgh: null,
     familleHabitation: null,
     personnesPresentesHabituellement: null,
+    effectifPublicAdmis: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
     manutentionManuelle: null,
@@ -91,6 +93,7 @@ function etabErpCat3(): EtablissementMatching {
     classeIgh: null,
     familleHabitation: null,
     personnesPresentesHabituellement: null,
+    effectifPublicAdmis: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
     manutentionManuelle: null,
@@ -118,6 +121,7 @@ function etabIgh(): EtablissementMatching {
     classeIgh: "GHW1",
     familleHabitation: null,
     personnesPresentesHabituellement: null,
+    effectifPublicAdmis: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
     manutentionManuelle: null,
@@ -145,6 +149,7 @@ function etabHabitationPure(): EtablissementMatching {
     classeIgh: null,
     familleHabitation: null,
     personnesPresentesHabituellement: null,
+    effectifPublicAdmis: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
     manutentionManuelle: null,
@@ -890,6 +895,7 @@ describe("moteur matching — cohérence avec le référentiel", () => {
       classeIgh: "GHZ",
       familleHabitation: null,
       personnesPresentesHabituellement: null,
+      effectifPublicAdmis: null,
       manipuleMatieresR422722: null,
       comporteLocauxSommeilPublic: null,
       manutentionManuelle: null,
@@ -1434,6 +1440,7 @@ describe("moteur matching — aucun établissement existant ne perd une obligati
     classeIgh: "GHZ",
     familleHabitation: null,
     personnesPresentesHabituellement: null,
+    effectifPublicAdmis: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
     manutentionManuelle: null,
@@ -2308,16 +2315,59 @@ describe("R. 4227-34 — ce que la catégorie d'ERP déduit, et ce qu'elle ne d�
     expect(raison).not.toContain("à confirmer");
   });
 
-  it("ERP de 4ᵉ catégorie sans le chiffre : retenu « à confirmer », jamais retiré", () => {
-    // La 4ᵉ va du seuil du type jusqu'à 300 : elle ne borne rien par le bas.
-    // Le silence ne peut pas valoir « moins de 51 » chez un établissement qui
-    // reçoit du public par définition.
+  // ~~ERP de 4ᵉ catégorie sans le chiffre : retenu « à confirmer »~~ —
+  // [2026-10-27 : « la 4ᵉ ne borne rien par le bas » était faux. Elle commence
+  // au seuil de la 5ᵉ de son type (PE 2 § 1), 100 au moins pour un restaurant :
+  // la ligne est due, sans marque. Le « à confirmer » reste pour un type dont
+  // une ligne du tableau passe sous 51 — ici P, 20 en sous-sol.]
+  it("ERP de 4ᵉ catégorie sans le chiffre : un restaurant franchit le seuil par son type", () => {
     const res = determineObligationsApplicables(
       etabRestoErpCat5({
         categorieErp: "N4",
         effectifSurSite: 8,
         effectifEntreprise: 8,
         personnesPresentesHabituellement: null,
+        effectifPublicAdmis: null,
+      }),
+      [],
+    );
+    for (const id of LES_DEUX) expect(idsObligations(res), id).toContain(id);
+    const raison = res.find((r) => r.obligation.id === EXERCICE)!.raisons.join(" ");
+    expect(raison).not.toContain("à confirmer");
+    expect(raison).toContain("seuil de la 5ᵉ catégorie de son type");
+  });
+
+  // Revue du 2026-10-27 : le moteur évalue la typologie type par type ; le
+  // seuil, lui, est celui de l'établissement entier. Un groupement N + L ne
+  // tranche pas par N seul, dans un ordre comme dans l'autre.
+  it("ERP de 4ᵉ catégorie N + L sans le chiffre : retenu « à confirmer », quel que soit l'ordre des types", () => {
+    for (const [typeErp, autre] of [["N", "L"], ["L", "N"]] as const) {
+      const res = determineObligationsApplicables(
+        etabRestoErpCat5({
+          typeErp,
+          typesErpAutres: [autre],
+          categorieErp: "N4",
+          personnesPresentesHabituellement: null,
+          effectifPublicAdmis: null,
+        }),
+        [],
+      );
+      for (const id of LES_DEUX) expect(idsObligations(res), `${typeErp}+${autre} ${id}`).toContain(id);
+      const raison = res.find((r) => r.obligation.id === EXERCICE)!.raisons.join(" ");
+      expect(raison, `${typeErp}+${autre}`).toContain("à confirmer");
+    }
+  });
+
+  it("ERP de 4ᵉ catégorie sans le chiffre, type P : retenu « à confirmer », jamais retiré", () => {
+    // P a un seuil de 20 en sous-sol : la 4ᵉ ne borne pas au-dessus de 50.
+    const res = determineObligationsApplicables(
+      etabRestoErpCat5({
+        typeErp: "P",
+        categorieErp: "N4",
+        effectifSurSite: 8,
+        effectifEntreprise: 8,
+        personnesPresentesHabituellement: null,
+        effectifPublicAdmis: null,
       }),
       [],
     );
@@ -2336,6 +2386,7 @@ describe("R. 4227-34 — ce que la catégorie d'ERP déduit, et ce qu'elle ne d�
         effectifSurSite: 8,
         effectifEntreprise: 8,
         personnesPresentesHabituellement: 200,
+        effectifPublicAdmis: null,
       }),
       [],
     );
@@ -2358,6 +2409,7 @@ describe("R. 4227-34 — ce que la catégorie d'ERP déduit, et ce qu'elle ne d�
         effectifSurSite: 8,
         effectifEntreprise: 8,
         personnesPresentesHabituellement: 20,
+        effectifPublicAdmis: null,
         // « non » déclaré : depuis le 2026-09-27, le silence sur les matières retient « à confirmer ».
         manipuleMatieresR422722: false,
       }),
@@ -2375,6 +2427,7 @@ describe("R. 4227-34 — ce que la catégorie d'ERP déduit, et ce qu'elle ne d�
         effectifSurSite: 8,
         effectifEntreprise: 8,
         personnesPresentesHabituellement: null,
+        effectifPublicAdmis: null,
         // « non » déclaré : depuis le 2026-09-27, le silence sur les matières retient « à confirmer ».
         manipuleMatieresR422722: false,
       }),

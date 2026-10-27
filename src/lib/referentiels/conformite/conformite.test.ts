@@ -486,6 +486,7 @@ describe("référentiel conformité — anti-doublon", () => {
       epiPresents: null,
       ssiCategorieAouB: null,
       personnesPresentesHabituellement: null,
+      effectifPublicAdmis: null,
       manipuleMatieresR422722: null,
     });
 
@@ -1317,6 +1318,7 @@ describe("référentiel conformité — éclairage de sécurité en lieu de trav
       epiPresents: null,
       ssiCategorieAouB: null,
       personnesPresentesHabituellement: null,
+      effectifPublicAdmis: null,
       manipuleMatieresR422722: null,
     };
     const parc = [
@@ -2701,6 +2703,7 @@ describe("IGH — aucune obligation ne naît plus du seul régime IGH", () => {
     epiPresents: null,
     ssiCategorieAouB: null,
     personnesPresentesHabituellement: null,
+    effectifPublicAdmis: null,
     manipuleMatieresR422722: null,
   };
 
@@ -2840,6 +2843,7 @@ describe("GE 4 § 1 — le tableau, case par case", () => {
       epiPresents: null,
       ssiCategorieAouB: null,
       personnesPresentesHabituellement: null,
+      effectifPublicAdmis: null,
       manipuleMatieresR422722: null,
     };
   }

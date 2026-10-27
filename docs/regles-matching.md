@@ -409,6 +409,12 @@ cohérence du référentiel
   autre. Sous les deux, l'obligation est retenue « à confirmer » pour un ERP,
   qui reçoit du public par définition, et rejetée pour un établissement de
   travail seul, où l'effectif EST le total.
+  [2026-10-27, moteur 7 : la 4ᵉ catégorie borne aussi, par le plus petit seuil
+  de la 5ᵉ de son type (`PE 2 § 1` ; 100 pour M, N, O, S, T, V, W, X, Y, 200
+  GA, 300 PA ; L, P, R, U non bornés), tous les types d'un groupement réunis ;
+  et la 5ᵉ se tranche dans les deux sens par l'effectif du public admis — le
+  public seul, `GN 1 § 2 b` — ajouté à l'effectif salarié. Le nombre déclaré
+  prime toujours ; zéro de public se lit « non renseigné ».]
   `TypologieApplication` gagne `personnesPresentesMin` et `champR422734`,
   ce dernier étant le seul OU inter-critères du moteur, nommé d'après son
   article. Reste au dirigeant : la qualification R. 4227-22 des produits

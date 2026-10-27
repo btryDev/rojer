@@ -126,7 +126,7 @@ function estHorsReleve(chemin: string): boolean {
  * message du test dit quand en faire un.
  */
 const RELEVE = {
-  version: 6,
+  version: 7,
   // Recopiée SANS incrément le 2026-10-17 (ADR-045, lot 1, plusieurs types
   // d'ERP) : `matchTypologie` évalue la typologie type par type et
   // `determineObligationsApplicables` résout les groupes exclusifs. Ce que la
@@ -536,7 +536,14 @@ const RELEVE = {
   // « site » dans deux raisons du moteur (`engine.ts`, `personnes-presentes.ts`,
   // 2026-10-26, PR #93) : les raisons s'affichent, aucune colonne ne les
   // garde — NON, empreinte recopiée, version inchangée.
-  empreinte: "95a676563de275cc",
+  // ~~95a676563de275cc~~. 2026-10-27 : `personnes-presentes.ts` tranche la 4ᵉ
+  // catégorie par le type et la 5ᵉ par l'effectif du public admis — OUI, la
+  // régénération écrit autrement : version 7, décidée par la propriétaire.
+  // ~~2effe194d6aae176~~ — même jour, revue du lot : le seuil se lit sur
+  // l'établissement entier (`engine.ts`, groupements) et la régénération hors
+  // session est extraite (`actions.ts`, sans changer ce qu'elle écrit).
+  // Version 7 inchangée, le lot n'étant pas fusionné.
+  empreinte: "2fd933a8a6caf8f2",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

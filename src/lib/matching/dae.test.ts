@@ -48,6 +48,7 @@ const BASE: EtablissementMatching = {
   classeIgh: null,
   familleHabitation: null,
   personnesPresentesHabituellement: null,
+  effectifPublicAdmis: null,
   manipuleMatieresR422722: null,
   comporteLocauxSommeilPublic: null,
   manutentionManuelle: null,

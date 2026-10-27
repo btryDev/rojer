@@ -39,6 +39,7 @@ function bureau(over: Partial<EtablissementMatching> = {}): EtablissementMatchin
     classeIgh: null,
     familleHabitation: null,
     personnesPresentesHabituellement: null,
+    effectifPublicAdmis: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
     // Les faits d'activité (ADR-041) sont RÉPONDUS ici : le test porte sur le

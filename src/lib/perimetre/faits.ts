@@ -100,6 +100,7 @@ export async function faitsDeCouverture(
     classeIgh: etab.classeIgh,
     familleHabitation: etab.familleHabitation,
     personnesPresentesHabituellement: etab.personnesPresentesHabituellement,
+    effectifPublicAdmis: etab.effectifPublicAdmis,
     manipuleMatieresR422722: etab.manipuleMatieresR422722,
     comporteLocauxSommeilPublic: etab.comporteLocauxSommeilPublic,
     manutentionManuelle: etab.manutentionManuelle,

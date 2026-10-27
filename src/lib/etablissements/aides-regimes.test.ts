@@ -100,6 +100,7 @@ describe("Locaux à sommeil — l'aide dit ce que « oui » change, dans chaque 
     classeIgh: null,
     familleHabitation: null,
     personnesPresentesHabituellement: null,
+    effectifPublicAdmis: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: h,
     manutentionManuelle: null,

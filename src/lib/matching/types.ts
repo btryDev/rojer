@@ -102,6 +102,17 @@ export type EtablissementMatching = {
    */
   personnesPresentesHabituellement: number | null;
   /**
+   * L'effectif du public susceptible d'être admis (`Etablissement.effectifPublicAdmis`),
+   * celui du classement de l'ERP. Pour une 5ᵉ catégorie, il compte le public
+   * SEUL — « pour les établissements de 5e catégorie, ce dernier effectif [le
+   * personnel] n'intervient pas pour le classement » (GN 1 § 2 b) — et, ajouté
+   * à l'effectif salarié, il tranche le seuil de personnes présentes de
+   * R. 4227-34 sans poser la question (2026-10-27). `null` = non renseigné.
+   * Requis, comme les champs voisins : une projection qui l'oublierait ne
+   * compilerait pas.
+   */
+  effectifPublicAdmis: number | null;
+  /**
    * Manipulation et mise en œuvre de matières visées par R. 4227-22
    * (explosives, comburantes, extrêmement inflammables).
    *

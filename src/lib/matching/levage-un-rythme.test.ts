@@ -45,7 +45,7 @@ type Reponse = boolean | undefined;
 const bureau: EtablissementMatching = {
   id: "e", effectifSurSite: 10, effectifEntreprise: 10, estEtablissementTravail: true,
   estERP: false, estIGH: false, estHabitation: false, typeErp: null, typesErpAutres: [], categorieErp: null,
-  classeIgh: null, familleHabitation: null, personnesPresentesHabituellement: null,
+  classeIgh: null, familleHabitation: null, personnesPresentesHabituellement: null, effectifPublicAdmis: null,
   manipuleMatieresR422722: false, comporteLocauxSommeilPublic: null, manutentionManuelle: null, travailSurEcran: null, operationsElectriques: null, conduiteEngins: null, expositionCMR: null, epiPresents: null, ssiCategorieAouB: null,
 };
 

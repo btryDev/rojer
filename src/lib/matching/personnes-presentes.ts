@@ -12,7 +12,7 @@
  * Aucune dépendance au référentiel, à Prisma ni à la session : ce module se
  * charge des deux côtés.
  */
-import type { CategorieErp } from "@/lib/referentiels/types-communs";
+import type { CategorieErp, TypeErp } from "@/lib/referentiels/types-communs";
 
 /** Ce que la règle lit d'un établissement — et rien d'autre. */
 export type EtablissementPourLeSeuil = {
@@ -20,6 +20,12 @@ export type EtablissementPourLeSeuil = {
   categorieErp: CategorieErp | null;
   effectifSurSite: number;
   personnesPresentesHabituellement: number | null;
+  /** Les types d'ERP déclarés — le premier et les autres (ADR-045). Lus pour
+   *  la borne de la 4ᵉ catégorie ; absents, la borne ne joue pas. */
+  typeErp?: TypeErp | null;
+  typesErpAutres?: readonly TypeErp[];
+  /** L'effectif du public admis (2026-10-27) ; absent ou `null`, non lu. */
+  effectifPublicAdmis?: number | null;
 };
 
 /**
@@ -87,10 +93,12 @@ export type EvalPersonnesPresentes =
 
 /**
  * L'effectif que la catégorie d'ERP garantit **au moins** (ADR-004, art.
- * R. 143-19 CCH). Seules les trois premières catégories bornent par le bas :
+ * R. 143-19 CCH). ~~Seules les trois premières catégories bornent par le bas :
  * la 4ᵉ va du seuil du type jusqu'à 300 et la 5ᵉ est sous le seuil du type —
- * ni l'une ni l'autre ne garantit quoi que ce soit, et les omettre est la façon
- * d'écrire qu'elles ne déduisent rien.
+ * ni l'une ni l'autre ne garantit quoi que ce soit.~~ [2026-10-27 : la 4ᵉ borne
+ * par le bas au plus petit seuil de son TYPE (`PLANCHER_PUBLIC_4E_PAR_TYPE`,
+ * ci-dessous) ; la 5ᵉ se tranche par l'effectif du public admis. Cette table ne
+ * garde que les bornes qui ne dépendent pas du type.]
  *
  * Le nombre est le premier de la fourchette, pas sa borne haute : la 3ᵉ
  * catégorie commence à 301, pas à 700.
@@ -110,6 +118,56 @@ export const PLANCHER_EFFECTIF_PAR_CATEGORIE: Partial<Record<CategorieErp, numbe
   N2: 701,
   N3: 301,
 };
+
+/**
+ * Le PLUS PETIT effectif de public d'une 4ᵉ catégorie, par type (2026-10-27).
+ *
+ * Est de 5ᵉ catégorie l'établissement « dans lequel l'effectif du public admis
+ * est inférieur aux nombres fixés pour chaque type d'exploitation » (arrêté du
+ * 25 juin 1980, PE 2 § 1) ; le public seul compte pour ce classement (GN 1 § 2 b :
+ * le personnel « n'intervient pas pour le classement » de la 5ᵉ). Une 4ᵉ
+ * catégorie a donc atteint au moins l'un des seuils de son type — sous-sol,
+ * étages ou ensemble des niveaux —, et son public vaut au moins le PLUS PETIT
+ * d'entre eux. Relu sur Légifrance (site et API, version en vigueur depuis le
+ * 2026-01-01) le 2026-10-27.
+ *
+ * NE FIGURENT ICI QUE LES TYPES DONT TOUTES LES LIGNES DU TABLEAU DÉPASSENT 50 :
+ * L (salles de spectacles : 20 en sous-sol, 50 sur l'ensemble), P (20 en
+ * sous-sol), R (écoles maternelles, locaux à sommeil : 1 à 30) et U (avec
+ * hébergement : 20) ont une ligne sous le seuil, et Rojer ne connaît pas la
+ * ligne ; J et OA aussi. GA et PA restent dans la table bien que refusés à
+ * l'accueil : leur seuil est sûr, et un dossier déjà ouvert les garde. Les établissements
+ * spéciaux sans ligne au tableau (CTS, SG, PS, REF, EF) n'y sont pas.
+ */
+export const PLANCHER_PUBLIC_4E_PAR_TYPE: Partial<Record<TypeErp, number>> = {
+  M: 100,
+  N: 100,
+  O: 100,
+  S: 100,
+  T: 100,
+  V: 100,
+  W: 100,
+  X: 100,
+  Y: 100,
+  GA: 200,
+  PA: 300,
+};
+
+/**
+ * Le plancher de public d'une 4ᵉ catégorie, tous types déclarés réunis : le
+ * plus petit des leurs, et rien dès qu'un type n'en a pas — on ne sait alors
+ * pas lequel a porté le classement.
+ */
+export function plancherPublicQuatrieme(
+  types: readonly (TypeErp | null | undefined)[],
+): number | undefined {
+  const declares = types.filter((t): t is TypeErp => t != null);
+  if (declares.length === 0) return undefined;
+  const planchers = declares.map((t) => PLANCHER_PUBLIC_4E_PAR_TYPE[t]);
+  return planchers.some((p) => p === undefined)
+    ? undefined
+    : Math.min(...(planchers as number[]));
+}
 
 const LIBELLE_CATEGORIE_ERP: Record<CategorieErp, string> = {
   N1: "1ʳᵉ catégorie",
@@ -158,6 +216,34 @@ export function evaluerPersonnesPresentes(
     }
   }
 
+  // La 4ᵉ catégorie (2026-10-27) : son public atteint au moins le plus petit
+  // seuil de son type, quand chacun de ses types en a un au-dessus de 50.
+  if (categorie === "N4") {
+    const plancher = plancherPublicQuatrieme([etab.typeErp, ...(etab.typesErpAutres ?? [])]);
+    if (plancher !== undefined && plancher >= seuil) {
+      return {
+        etat: "atteint",
+        raison: `ERP de 4ᵉ catégorie : au moins ${plancher} personnes de public par son classement (seuil de la 5ᵉ catégorie de son type, PE 2), seuil de ${seuil} franchi`,
+      };
+    }
+  }
+
+  // La 5ᵉ catégorie avec son effectif de public déclaré (2026-10-27) : le
+  // public seul (GN 1 § 2 b) plus les salariés, que R. 4227-34 compte aussi.
+  // C'est un maximum admissible : au-dessus du seuil, l'obligation est due ;
+  // en dessous, même plein l'établissement ne l'atteint pas.
+  // Zéro se lit « non renseigné » : un ERP reçoit du public par définition, et
+  // un 0 de bouche-trou retirerait la consigne (revue du 2026-10-27).
+  if (categorie === "N5" && etab.effectifPublicAdmis != null && etab.effectifPublicAdmis > 0) {
+    const total = etab.effectifPublicAdmis + etab.effectifSurSite;
+    return total >= seuil
+      ? {
+          etat: "atteint",
+          raison: `${etab.effectifPublicAdmis} personnes de public admis et ${etab.effectifSurSite} salariés, soit ${total} (seuil ${seuil})`,
+        }
+      : { etat: "non_atteint" };
+  }
+
   // Seconde borne : l'effectif salarié, compté par le texte au même titre.
   if (etab.effectifSurSite >= seuil) {
     return {
@@ -184,7 +270,9 @@ export function evaluerPersonnesPresentes(
  *
  * Oui quand, sans lui, le moteur ne saurait pas conclure — c'est-à-dire quand
  * `evaluerPersonnesPresentes` rendrait `indetermine` sur un nombre absent : un
- * ERP que ni sa catégorie ni son effectif ne portent au-dessus du seuil. Pour
+ * ERP que ni sa catégorie ~~ni son effectif~~ [2026-10-27 : ni son type en 4ᵉ, ni
+ * son effectif de public en 5ᵉ, ni son effectif salarié] ne portent au-dessus du
+ * seuil. Pour
  * tous les autres la question ne changerait rien, et on ne la pose pas.
  *
  * Un effectif illisible (champ encore vide à l'écran) ne pose pas la question :
@@ -204,6 +292,11 @@ export function nombreDePersonnesADemander(etab: {
   categorieErp: CategorieErp | null | undefined;
   effectifSurSite: number | null | undefined;
   manipuleMatieresR422722?: boolean | null;
+  /** 2026-10-27 : la 4ᵉ catégorie se tranche par le type, la 5ᵉ par l'effectif
+   *  du public — mêmes lectures que `evaluerPersonnesPresentes`. */
+  typeErp?: TypeErp | null;
+  typesErpAutres?: readonly TypeErp[];
+  effectifPublicAdmis?: number | null;
 }): boolean {
   if (etab.manipuleMatieresR422722 === true) return false;
   if (!etab.estERP || !etab.categorieErp) return false;
@@ -216,6 +309,9 @@ export function nombreDePersonnesADemander(etab: {
       categorieErp: etab.categorieErp,
       effectifSurSite: etab.effectifSurSite,
       personnesPresentesHabituellement: null,
+      typeErp: etab.typeErp,
+      typesErpAutres: etab.typesErpAutres,
+      effectifPublicAdmis: etab.effectifPublicAdmis,
     }).etat === "indetermine"
   );
 }

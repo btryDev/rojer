@@ -295,7 +295,7 @@ export function EtablissementForm({
             defaultValue={
               valeursInitiales.personnesPresentesHabituellement ?? ""
             }
-            aide={`${AIDE_NOMBRE_DE_PERSONNES} Ce nombre vous est demandé si vous recevez du public et que ni votre catégorie d'ERP ni votre effectif n'établissent le seuil ; sinon vous pouvez le laisser vide.`}
+            aide={`${AIDE_NOMBRE_DE_PERSONNES} Facultatif : il ne sert que si ni votre catégorie et votre type d'ERP, ni votre effectif du public ajouté à vos salariés n'établissent le seuil.`}
             erreur={err("personnesPresentesHabituellement")}
             champClassName={anneau("personnesPresentesHabituellement")}
           />
@@ -575,7 +575,7 @@ export function EtablissementForm({
                     type="text"
                     inputMode="numeric"
                     defaultValue={valeursInitiales.effectifPublicAdmis ?? ""}
-                    aide="Le chiffre retenu à votre classement ERP — distinct de votre effectif salarié et des personnes présentes."
+                    aide="Le chiffre retenu à votre classement ERP (arrêté d'ouverture ou PV de la commission). En 5ᵉ catégorie, c'est le public seul : ajouté à vos salariés, il dit si plus de 50 personnes peuvent se trouver dans vos locaux."
                     erreur={err("effectifPublicAdmis")}
                   />
 

@@ -55,6 +55,7 @@ function etabLarge(): EtablissementMatching {
     classeIgh: null,
     familleHabitation: null,
     personnesPresentesHabituellement: null,
+    effectifPublicAdmis: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
     // Faits d'activité (ADR-041) muets : le silence retient « à confirmer »,
