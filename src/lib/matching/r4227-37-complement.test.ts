@@ -37,6 +37,7 @@ const e = (over: Partial<EtablissementMatching>): EtablissementMatching => ({
   classeIgh: null,
   familleHabitation: null,
   personnesPresentesHabituellement: null,
+  effectifPublicAdmis: null,
   manipuleMatieresR422722: null,
   comporteLocauxSommeilPublic: null,
   manutentionManuelle: null,
@@ -84,6 +85,7 @@ describe("R. 4227-37 et R. 4227-34 : consigne, instructions, alarme", () => {
             const x = e({
               manipuleMatieresR422722: matieres,
               personnesPresentesHabituellement: personnes,
+              effectifPublicAdmis: null,
               effectifSurSite: eff,
               effectifEntreprise: eff,
               ...(erp ? { estERP: true, typeErp: "N", typesErpAutres: [], categorieErp: erp } : {}),

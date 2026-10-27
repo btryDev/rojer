@@ -117,8 +117,16 @@ import {
  * appelant les deux moteurs sur 2 484 profils, zéro écart (`RELEVE`,
  * `version-moteur.test.ts`). Le premier dossier qui déclarera un second type
  * le fera par une mutation, qui régénère son calendrier.
+ *
+ * `7` (2026-10-27, décidé par la propriétaire, `lot/personnes-presentes-categorie`) :
+ * LE SEUIL DE R. 4227-34 SE TRANCHE SANS LE NOMBRE en 4ᵉ catégorie par le type
+ * (PE 2 § 1) et en 5ᵉ par l'effectif du public admis (GN 1 § 2 b). La consigne,
+ * l'alarme et les exercices d'un ERP de 4ᵉ de type M, N, O, S, T, V, W, X, Y, GA
+ * ou PA perdent leur « à confirmer » ; ceux d'une 5ᵉ dont public admis + salariés
+ * reste à 50 ou moins SORTENT (archivées si elles portent une trace). Sans
+ * l'incrément, ces dossiers ne changeraient qu'à leur prochaine mutation.
  */
-export const VERSION_MOTEUR_CALENDRIER = 6;
+export const VERSION_MOTEUR_CALENDRIER = 7;
 
 /**
  * La forme du sceau. Le moteur `0` n'y paraît pas : c'est le moteur d'avant la

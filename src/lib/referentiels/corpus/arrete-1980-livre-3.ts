@@ -83,7 +83,7 @@ export const CORPUS_PE: Corpus = {
       lecture: "premiere_main",
       statut: "sans_objet",
       motif:
-        "Définit les seuils d'assujettissement et réduit, au § 3, le régime des établissements sans locaux à sommeil recevant au plus 19 personnes aux seuls PE 4, PE 10 B, PE 24 § 1, PE 26 § 1 et PE 27. Aucune obligation propre, mais PE 4 y figure : aucune TPE n'échappe au triennal.",
+        "Définit les seuils d'assujettissement et réduit, au § 3, le régime des établissements sans locaux à sommeil recevant au plus 19 personnes aux seuls PE 4, PE 10 B, PE 24 § 1, PE 26 § 1 et PE 27. Aucune obligation propre, mais PE 4 y figure : aucune TPE n'échappe au triennal.\n\n[2026-10-27, § 1 relu sur le site Légifrance et par l'API PISTE (bac à sable), version en vigueur depuis le 2026-01-01, LEGIARTI000053027820] « Les établissements de cinquième catégorie visés à l'article précédent sont les établissements recevant du public dans lesquels l'effectif du public admis est inférieur aux nombres fixés pour chaque type d'exploitation dans le tableau ci-après. » LE TABLEAU SERT AU MOTEUR (`PLANCHER_PUBLIC_4E_PAR_TYPE`, `matching/personnes-presentes.ts`) : une 4ᵉ catégorie a atteint au moins un seuil de son type, donc son public vaut au moins le plus petit — 100 pour M, N, O, S, T, V, W, X, Y (sous-sol, étages ou ensemble), 200 pour GA, 300 pour PA —, au-dessus du seuil de cinquante personnes de R. 4227-34. Sont écartés de la table les types dont une ligne passe sous 51 : L (spectacles : 20 en sous-sol, 50 sur l'ensemble), P (20 en sous-sol), R (maternelles 1 à 20, locaux à sommeil 30), U (avec hébergement 20), J (résidents 20 à 25), OA (20).",
     },
     {
       ref: "PE 3",

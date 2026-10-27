@@ -74,6 +74,7 @@ function profilsInscription(): EtablissementMatching[] {
         // « non » à l'accueil d'enfants ; « oui » est refusé.
         ...(erp?.t === "R" ? { accueilEnfants: "non" } : {}),
         personnesPresentesHabituellement: p ?? "",
+        effectifPublicAdmis: null,
         manutentionManuelle: null,
         travailSurEcran: null,
         operationsElectriques: null,
@@ -91,6 +92,7 @@ function profilsInscription(): EtablissementMatching[] {
         // Ni l'inscription ni la fiche ne posent ces deux questions (2026-09-03).
         classeIgh: null, familleHabitation: null,
         personnesPresentesHabituellement: d.personnesPresentesHabituellement ?? null,
+        effectifPublicAdmis: null,
         manipuleMatieresR422722: d.manipuleMatieresR422722 ?? null,
         comporteLocauxSommeilPublic: d.comporteLocauxSommeilPublic ?? null,
         manutentionManuelle: null,

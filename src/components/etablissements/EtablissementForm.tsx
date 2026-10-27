@@ -575,7 +575,7 @@ export function EtablissementForm({
                     type="text"
                     inputMode="numeric"
                     defaultValue={valeursInitiales.effectifPublicAdmis ?? ""}
-                    aide="Le chiffre retenu à votre classement ERP — distinct de votre effectif salarié et des personnes présentes."
+                    aide="Le chiffre retenu à votre classement ERP (arrêté d'ouverture ou PV de la commission). En 5ᵉ catégorie, c'est le public seul : ajouté à vos salariés, il dit si plus de 50 personnes peuvent se trouver dans vos locaux."
                     erreur={err("effectifPublicAdmis")}
                   />
 

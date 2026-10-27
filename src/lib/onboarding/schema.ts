@@ -304,6 +304,9 @@ export const onboardingSchema = z
       // Posée au parcours depuis le 2026-09-27 : un « oui » rend le nombre sans
       // objet, ici comme à la fiche (revue du lot 1).
       manipuleMatieresR422722: val.manipuleMatieresR422722,
+      // 2026-10-27 : une 4ᵉ catégorie se tranche par son type.
+      typeErp: val.typeErp ?? null,
+      typesErpAutres: val.typesErpAutres ?? [],
     });
     // ~~Exigé là où il est demandé.~~ [2026-10-27 : facultatif, décision de
     // la propriétaire. Seul le refus hors de l'écran demeure.]

@@ -28,6 +28,7 @@ function bureau(over: Partial<EtablissementMatching> = {}): EtablissementMatchin
     classeIgh: null,
     familleHabitation: null,
     personnesPresentesHabituellement: null,
+    effectifPublicAdmis: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
     manutentionManuelle: null,

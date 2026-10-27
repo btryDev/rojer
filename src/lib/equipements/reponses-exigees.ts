@@ -126,6 +126,7 @@ const TRAVAIL: EtablissementMatching = {
   classeIgh: null,
   familleHabitation: null,
   personnesPresentesHabituellement: null,
+  effectifPublicAdmis: null,
   manipuleMatieresR422722: false,
   comporteLocauxSommeilPublic: null,
   manutentionManuelle: null,

@@ -35,6 +35,7 @@ function etab(typeErp: TypeErp, categorieErp: CategorieErp): EtablissementMatchi
     classeIgh: null,
     familleHabitation: null,
     personnesPresentesHabituellement: null,
+    effectifPublicAdmis: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: typeErp === "O" ? true : null,
     manutentionManuelle: null,

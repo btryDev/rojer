@@ -33,9 +33,20 @@ import {
 } from "@/lib/referentiels/types-communs";
 import type { EtablissementMatching, QuestionSansReponse } from "./types";
 import {
-  PLANCHER_EFFECTIF_PAR_CATEGORIE,
+  evaluerPersonnesPresentes,
   SEUIL_PERSONNES_R422734,
 } from "./personnes-presentes";
+
+/** Le seuil de R. 4227-34 est-il établi SANS le nombre déclaré ? La fonction
+ *  du moteur elle-même, jamais une copie de ses bornes. */
+function etabliSansLeNombre(e: EtablissementMatching): boolean {
+  return (
+    evaluerPersonnesPresentes(SEUIL_PERSONNES_R422734, {
+      ...e,
+      personnesPresentesHabituellement: null,
+    }).etat === "atteint"
+  );
+}
 
 /** Les attributs d'établissement que le moteur lit et qui admettent `null`. */
 export type AttributNullable = {
@@ -127,18 +138,37 @@ export const POLITIQUE_ABSENCE = {
         "ADR-022 § 7 : sans public, l'effectif salarié EST le total, pas une borne",
     },
     etablieAutrement: {
-      si: (e) =>
-        e.effectifSurSite >= SEUIL_PERSONNES_R422734 ||
-        (e.estERP &&
-          e.categorieErp !== null &&
-          (PLANCHER_EFFECTIF_PAR_CATEGORIE[e.categorieErp] ?? 0) >= SEUIL_PERSONNES_R422734),
+      // ~~La catégorie (planchers N1 à N3) et l'effectif du site, recopiés
+      // ici.~~ [2026-10-27 : la fonction elle-même, sans le nombre — la 4ᵉ
+      // catégorie par son type et la 5ᵉ par son effectif de public s'y sont
+      // ajoutées, et une copie aurait divergé.]
+      si: (e) => etabliSansLeNombre(e),
       regle:
-        "bornes basses d'`evaluerPersonnesPresentes` : la catégorie d'ERP (plancher de classement) et l'effectif du site établissent le seuil sans le nombre",
+        "bornes d'`evaluerPersonnesPresentes` sans le nombre : la catégorie d'ERP (et le type pour la 4ᵉ), l'effectif du public admis en 5ᵉ, l'effectif du site",
     },
     allegement: {
       si: (t) => t.horsChampR422734 === true,
       regle:
         "les instructions d'évacuation (R. 4227-37, al. 2) ne remplacent la consigne que sur un champ établi négatif",
+    },
+  },
+  // 2026-10-27 : l'effectif du public admis ne retient rien par lui-même —
+  // il tranche le seuil de R. 4227-34 en 5ᵉ catégorie. Son silence laisse la
+  // question du nombre ouverte, avec ses marques.
+  effectifPublicAdmis: {
+    valeurs: [1, 20, 30, 51, 500],
+    sens: "retient_a_confirmer",
+    question: "personnes_presentes",
+    exception: {
+      si: (e) => !e.estERP,
+      regle: "lu pour un ERP seulement",
+    },
+    etablieAutrement: {
+      si: (e) =>
+        e.personnesPresentesHabituellement !== null ||
+        etabliSansLeNombre({ ...e, effectifPublicAdmis: null }),
+      regle:
+        "le nombre déclaré prime, et les autres bornes établissent le seuil sans l'effectif du public",
     },
   },
   manipuleMatieresR422722: {

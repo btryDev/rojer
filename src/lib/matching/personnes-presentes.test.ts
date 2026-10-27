@@ -132,7 +132,13 @@ describe("la question et le moteur disent la même chose", () => {
           evaluerPersonnesPresentes(SEUIL_PERSONNES_R422734, muet).etat ===
           "indetermine";
         expect(
-          nombreDePersonnesADemander({ estERP: true, categorieErp, effectifSurSite }),
+          nombreDePersonnesADemander({
+            estERP: true,
+            categorieErp,
+            effectifSurSite,
+            typeErp: muet.typeErp,
+            typesErpAutres: muet.typesErpAutres,
+          }),
         ).toBe(indetermine);
         const aConfirmer = determineObligationsApplicables(muet, [])
           .filter((o) => IDS.includes(o.obligation.id))
@@ -169,5 +175,70 @@ describe("le nombre déclaré ne descend pas sous l'effectif du site (2026-09-27
     ).map((o) => o.obligation.id);
     expect(r).toContain("incendie-travail-consigne-affichee");
     expect(r).not.toContain("incendie-travail-instructions-evacuation");
+  });
+});
+
+// 2026-10-27 — la 4ᵉ catégorie tranchée par le type (PE 2 § 1), la 5ᵉ par
+// l'effectif du public admis (GN 1 § 2 b), relus sur Légifrance le même jour.
+describe("la catégorie et l'effectif du public tranchent sans le nombre", () => {
+  const seuil = (e: Partial<EtablissementMatching>) =>
+    evaluerPersonnesPresentes(SEUIL_PERSONNES_R422734, etab(e)).etat;
+
+  it("une 4ᵉ catégorie dont chaque ligne du tableau dépasse 50 franchit le seuil", () => {
+    for (const typeErp of ["M", "N", "O", "S", "T", "V", "W", "X", "Y", "GA", "PA"] as const) {
+      expect(seuil({ categorieErp: "N4", typeErp }), typeErp).toBe("atteint");
+    }
+  });
+
+  it("une 4ᵉ catégorie dont une ligne passe sous 51 reste à confirmer", () => {
+    for (const typeErp of ["L", "P", "R", "U", "J", "OA", "PS", "CTS"] as const) {
+      expect(seuil({ categorieErp: "N4", typeErp }), typeErp).toBe("indetermine");
+    }
+  });
+
+  it("un groupement ne tranche que si TOUS ses types tranchent", () => {
+    expect(seuil({ categorieErp: "N4", typeErp: "N", typesErpAutres: ["M"] })).toBe("atteint");
+    expect(seuil({ categorieErp: "N4", typeErp: "N", typesErpAutres: ["P"] })).toBe("indetermine");
+  });
+
+  it("la borne du type ne vaut qu'en 4ᵉ : une 5ᵉ de type N sans effectif de public reste à confirmer", () => {
+    expect(seuil({ categorieErp: "N5", typeErp: "N" })).toBe("indetermine");
+  });
+
+  it("en 5ᵉ, public admis + salariés tranche dans les deux sens, au seuil près", () => {
+    expect(seuil({ effectifPublicAdmis: 45, effectifSurSite: 6 })).toBe("atteint"); // 51
+    expect(seuil({ effectifPublicAdmis: 44, effectifSurSite: 6 })).toBe("non_atteint"); // 50
+    expect(seuil({ effectifPublicAdmis: 150, effectifSurSite: 2 })).toBe("atteint");
+  });
+
+  it("le nombre déclaré prime sur l'effectif du public", () => {
+    expect(seuil({ effectifPublicAdmis: 150, personnesPresentesHabituellement: 30 })).toBe("non_atteint");
+  });
+
+  it("l'effectif du public ne sert qu'en 5ᵉ : en 4ᵉ de type P, il ne tranche pas", () => {
+    expect(seuil({ categorieErp: "N4", typeErp: "P", effectifPublicAdmis: 10 })).toBe("indetermine");
+  });
+
+  it("la question suit le moteur : plus posée à un restaurant de 4ᵉ, ni à une 5ᵉ qui a son effectif", () => {
+    expect(
+      nombreDePersonnesADemander({ estERP: true, categorieErp: "N4", effectifSurSite: 6, typeErp: "N", typesErpAutres: [] }),
+    ).toBe(false);
+    expect(
+      nombreDePersonnesADemander({ estERP: true, categorieErp: "N5", effectifSurSite: 6, typeErp: "N", typesErpAutres: [], effectifPublicAdmis: 20 }),
+    ).toBe(false);
+    expect(
+      nombreDePersonnesADemander({ estERP: true, categorieErp: "N5", effectifSurSite: 6, typeErp: "N", typesErpAutres: [] }),
+    ).toBe(true);
+  });
+
+  it("le moteur sert les deux lignes sans marque à un restaurant de 4ᵉ, et les retire à une petite 5ᵉ", () => {
+    const quatrieme = determineObligationsApplicables(etab({ categorieErp: "N4" }), []).filter((o) =>
+      IDS.includes(o.obligation.id),
+    );
+    expect(quatrieme.map((o) => o.obligation.id).sort()).toEqual(IDS);
+    expect(quatrieme.flatMap((o) => o.raisons).join(" ")).not.toContain("à confirmer");
+    expect(
+      retenues(etab({ effectifPublicAdmis: 20, effectifSurSite: 6, manipuleMatieresR422722: false })),
+    ).toEqual([]);
   });
 });

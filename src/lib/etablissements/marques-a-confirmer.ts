@@ -56,6 +56,7 @@ export async function marquesAConfirmerDuDossier(
       classeIgh: true,
       familleHabitation: true,
       personnesPresentesHabituellement: true,
+      effectifPublicAdmis: true,
       manipuleMatieresR422722: true,
       comporteLocauxSommeilPublic: true,
       manutentionManuelle: true,

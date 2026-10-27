@@ -104,6 +104,7 @@ export async function getFicheEquipement(id: string) {
           classeIgh: true,
           familleHabitation: true,
           personnesPresentesHabituellement: true,
+          effectifPublicAdmis: true,
           manipuleMatieresR422722: true,
           comporteLocauxSommeilPublic: true,
           manutentionManuelle: true,

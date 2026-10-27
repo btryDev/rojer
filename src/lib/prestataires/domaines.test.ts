@@ -294,6 +294,7 @@ describe("le signal « aucun service de santé au travail » (L. 4622-1)", () =>
     classeIgh: null,
     familleHabitation: null,
     personnesPresentesHabituellement: null,
+    effectifPublicAdmis: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
     manutentionManuelle: null,

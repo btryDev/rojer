@@ -47,6 +47,7 @@ function salle(
     classeIgh: null,
     familleHabitation: null,
     personnesPresentesHabituellement: null,
+    effectifPublicAdmis: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: typeErp === "O" ? true : null,
     manutentionManuelle: null,
