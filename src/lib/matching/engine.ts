@@ -583,11 +583,11 @@ export function matchTypologie(
   }
   const types = typesErpDe(etab);
   if (types.length <= 1) {
-    return matchTypologieUnType(t, {
-      ...etab,
-      typeErp: types[0] ?? null,
-      typesErpAutres: [],
-    });
+    return matchTypologieUnType(
+      t,
+      { ...etab, typeErp: types[0] ?? null, typesErpAutres: [] },
+      etab,
+    );
   }
   // Quelle évaluation rendre, quand plusieurs types satisfont la ligne ? Ses
   // raisons s'affichent (guide, « Comprendre », PDF) : elles ne doivent pas
@@ -599,9 +599,12 @@ export function matchTypologie(
   // deux types qui satisfont la même ligne lisent les mêmes réponses de
   // l'établissement, et un type ne change que la PLAUSIBILITÉ du sommeil —
   // qui écarte, sans retenir « à confirmer ». La préférence ne serait jamais
-  // décisive, donc jamais éprouvable.
+  // décisive, donc jamais éprouvable. [2026-10-27 : le type borne aussi le
+  // seuil de R. 4227-34 en 4ᵉ catégorie (PE 2 § 1) ; ce seuil est celui de
+  // l'ÉTABLISSEMENT, tous types réunis, et il se lit donc sur l'établissement
+  // entier, passé à part — sinon un groupement N + L tranchait par N seul.]
   for (const type of typesErpOrdreProduit(etab)) {
-    const r = matchTypologieUnType(t, { ...etab, typeErp: type, typesErpAutres: [] });
+    const r = matchTypologieUnType(t, { ...etab, typeErp: type, typesErpAutres: [] }, etab);
     if (r.ok) return r;
   }
   return { ok: false };
@@ -610,6 +613,9 @@ export function matchTypologie(
 function matchTypologieUnType(
   t: TypologieApplication,
   etab: EtablissementMatching,
+  /** L'établissement entier, tous types réunis : le seuil de personnes
+   *  présentes est le sien, pas celui d'un type (2026-10-27). */
+  etabEntier: EtablissementMatching = etab,
 ): ResultatTypologie {
   // 1. Exclusions (ET) — un critère négatif violé rejette immédiatement.
   if (t.travail === false && etab.estEtablissementTravail) return { ok: false };
@@ -738,6 +744,9 @@ function matchTypologieUnType(
   // CE QU'IL FAIT MAINTENANT : il ne connaît que des BORNES BASSES du total, et
   // une borne basse ne conclut que dans un sens. Elle établit « au-dessus du
   // seuil », jamais « en dessous ». Deux bornes, et la meilleure des deux :
+  // [2026-10-27 : trois, et un chiffre déclaré — la 4ᵉ catégorie borne par son
+  // type (PE 2 § 1), et la 5ᵉ se tranche dans les deux sens par l'effectif du
+  // public admis + les salariés (GN 1 § 2 b). Voir `personnes-presentes.ts`.]
   //
   //   - la catégorie d'ERP, déclarée par le dirigeant depuis le 2026-09-01 —
   //     dès la 3ᵉ catégorie l'effectif de classement — public et personnel,
@@ -786,7 +795,7 @@ function matchTypologieUnType(
     const seuil =
       t.personnesPresentesMin === undefined
         ? { etat: "non_atteint" as const }
-        : evaluerPersonnesPresentes(t.personnesPresentesMin, etab);
+        : evaluerPersonnesPresentes(t.personnesPresentesMin, etabEntier);
 
     if (seuil.etat === "non_atteint" && !brancheMatieres) {
       if (!matieresNonRenseignees) return { ok: false };
@@ -846,7 +855,7 @@ function matchTypologieUnType(
   // atteint et matières déclarées « non » (`TypologieApplication.horsChampR422734`).
   if (t.horsChampR422734 === true) {
     if (t.personnesPresentesMin === undefined) return { ok: false };
-    const seuil = evaluerPersonnesPresentes(t.personnesPresentesMin, etab);
+    const seuil = evaluerPersonnesPresentes(t.personnesPresentesMin, etabEntier);
     if (seuil.etat !== "non_atteint") return { ok: false };
     if (etab.manipuleMatieresR422722 !== false) return { ok: false };
     raisons.push(

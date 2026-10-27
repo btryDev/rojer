@@ -539,7 +539,11 @@ const RELEVE = {
   // ~~95a676563de275cc~~. 2026-10-27 : `personnes-presentes.ts` tranche la 4ᵉ
   // catégorie par le type et la 5ᵉ par l'effectif du public admis — OUI, la
   // régénération écrit autrement : version 7, décidée par la propriétaire.
-  empreinte: "2effe194d6aae176",
+  // ~~2effe194d6aae176~~ — même jour, revue du lot : le seuil se lit sur
+  // l'établissement entier (`engine.ts`, groupements) et la régénération hors
+  // session est extraite (`actions.ts`, sans changer ce qu'elle écrit).
+  // Version 7 inchangée, le lot n'étant pas fusionné.
+  empreinte: "2fd933a8a6caf8f2",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

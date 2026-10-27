@@ -133,9 +133,11 @@ export const POLITIQUE_ABSENCE = {
     sens: "retient_a_confirmer",
     question: "personnes_presentes",
     exception: {
-      si: (e) => !e.estERP,
+      si: (e) =>
+        !e.estERP ||
+        (e.categorieErp === "N5" && e.effectifPublicAdmis !== null && e.effectifPublicAdmis > 0),
       regle:
-        "ADR-022 § 7 : sans public, l'effectif salarié EST le total, pas une borne",
+        "ADR-022 § 7 : sans public, l'effectif salarié EST le total, pas une borne ; [2026-10-27] en 5ᵉ catégorie, l'effectif du public admis déclaré + l'effectif salarié EST le total (GN 1 § 2 b) — le silence sur le nombre n'y retient rien",
     },
     etablieAutrement: {
       // ~~La catégorie (planchers N1 à N3) et l'effectif du site, recopiés

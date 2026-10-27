@@ -2337,6 +2337,27 @@ describe("R. 4227-34 — ce que la catégorie d'ERP déduit, et ce qu'elle ne d�
     expect(raison).toContain("seuil de la 5ᵉ catégorie de son type");
   });
 
+  // Revue du 2026-10-27 : le moteur évalue la typologie type par type ; le
+  // seuil, lui, est celui de l'établissement entier. Un groupement N + L ne
+  // tranche pas par N seul, dans un ordre comme dans l'autre.
+  it("ERP de 4ᵉ catégorie N + L sans le chiffre : retenu « à confirmer », quel que soit l'ordre des types", () => {
+    for (const [typeErp, autre] of [["N", "L"], ["L", "N"]] as const) {
+      const res = determineObligationsApplicables(
+        etabRestoErpCat5({
+          typeErp,
+          typesErpAutres: [autre],
+          categorieErp: "N4",
+          personnesPresentesHabituellement: null,
+          effectifPublicAdmis: null,
+        }),
+        [],
+      );
+      for (const id of LES_DEUX) expect(idsObligations(res), `${typeErp}+${autre} ${id}`).toContain(id);
+      const raison = res.find((r) => r.obligation.id === EXERCICE)!.raisons.join(" ");
+      expect(raison, `${typeErp}+${autre}`).toContain("à confirmer");
+    }
+  });
+
   it("ERP de 4ᵉ catégorie sans le chiffre, type P : retenu « à confirmer », jamais retiré", () => {
     // P a un seuil de 20 en sous-sol : la 4ᵉ ne borne pas au-dessus de 50.
     const res = determineObligationsApplicables(

@@ -295,7 +295,7 @@ export function EtablissementForm({
             defaultValue={
               valeursInitiales.personnesPresentesHabituellement ?? ""
             }
-            aide={`${AIDE_NOMBRE_DE_PERSONNES} Ce nombre vous est demandé si vous recevez du public et que ni votre catégorie d'ERP ni votre effectif n'établissent le seuil ; sinon vous pouvez le laisser vide.`}
+            aide={`${AIDE_NOMBRE_DE_PERSONNES} Facultatif : il ne sert que si ni votre catégorie et votre type d'ERP, ni votre effectif du public ajouté à vos salariés n'établissent le seuil.`}
             erreur={err("personnesPresentesHabituellement")}
             champClassName={anneau("personnesPresentesHabituellement")}
           />

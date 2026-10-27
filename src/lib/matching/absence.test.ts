@@ -102,6 +102,13 @@ function profils(): { nom: string; e: Etab }[] {
           out.push({ nom: `ERP ${t} ${cat}, ${eff}, contexte ${i}`, e: c({ estERP: true, typeErp: t, typesErpAutres: [], categorieErp: cat }) });
       out.push({ nom: `ERP sans salariés N N5, contexte ${i}`, e: c({ estEtablissementTravail: false, estERP: true, typeErp: "N", typesErpAutres: [], categorieErp: "N5", effectifSurSite: 0, effectifEntreprise: 0 }) });
       out.push({ nom: `IGH, ${eff}, contexte ${i}`, e: c({ estIGH: true }) });
+      // 2026-10-27 (revue du lot) : un groupement de 4ᵉ dont un type ne borne
+      // pas, et une 5ᵉ qui a déclaré son effectif de public — les deux cas que
+      // la règle du seuil lit désormais.
+      for (const autres of [["L"], ["M"]] as const)
+        out.push({ nom: `ERP N+${autres[0]} N4, ${eff}, contexte ${i}`, e: c({ estERP: true, typeErp: "N", typesErpAutres: [...autres], categorieErp: "N4" }) });
+      for (const pub of [20, 200])
+        out.push({ nom: `ERP N N5 public ${pub}, ${eff}, contexte ${i}`, e: c({ estERP: true, typeErp: "N", typesErpAutres: [], categorieErp: "N5", effectifPublicAdmis: pub }) });
       out.push({ nom: `habitation, contexte ${i}`, e: c({ estHabitation: true, estEtablissementTravail: false, effectifSurSite: 0, effectifEntreprise: 0 }) });
     }
   }

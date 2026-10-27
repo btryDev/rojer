@@ -87,8 +87,9 @@ export function StepTypologie({
 
   /**
    * Le nombre de personnes n'est demandé qu'à ceux dont la réponse change
-   * quelque chose (2026-09-20) : un ERP que ni sa catégorie ni son effectif ne
-   * portent au-dessus du seuil de R. 4227-34. La question apparaît donc SOUS la
+   * quelque chose (2026-09-20) : un ERP que ni sa catégorie ~~ni son effectif~~
+   * [2026-10-27 : ni son type en 4ᵉ, ni son effectif salarié] ne portent
+   * au-dessus du seuil de R. 4227-34. La question apparaît donc SOUS la
    * catégorie, pour la même raison que le sommeil apparaît sous le type.
    */
   const poseNombre = nombreDePersonnesDemande(state);

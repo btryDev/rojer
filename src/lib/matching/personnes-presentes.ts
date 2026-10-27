@@ -93,10 +93,12 @@ export type EvalPersonnesPresentes =
 
 /**
  * L'effectif que la catégorie d'ERP garantit **au moins** (ADR-004, art.
- * R. 143-19 CCH). Seules les trois premières catégories bornent par le bas :
+ * R. 143-19 CCH). ~~Seules les trois premières catégories bornent par le bas :
  * la 4ᵉ va du seuil du type jusqu'à 300 et la 5ᵉ est sous le seuil du type —
- * ni l'une ni l'autre ne garantit quoi que ce soit, et les omettre est la façon
- * d'écrire qu'elles ne déduisent rien.
+ * ni l'une ni l'autre ne garantit quoi que ce soit.~~ [2026-10-27 : la 4ᵉ borne
+ * par le bas au plus petit seuil de son TYPE (`PLANCHER_PUBLIC_4E_PAR_TYPE`,
+ * ci-dessous) ; la 5ᵉ se tranche par l'effectif du public admis. Cette table ne
+ * garde que les bornes qui ne dépendent pas du type.]
  *
  * Le nombre est le premier de la fourchette, pas sa borne haute : la 3ᵉ
  * catégorie commence à 301, pas à 700.
@@ -133,7 +135,8 @@ export const PLANCHER_EFFECTIF_PAR_CATEGORIE: Partial<Record<CategorieErp, numbe
  * L (salles de spectacles : 20 en sous-sol, 50 sur l'ensemble), P (20 en
  * sous-sol), R (écoles maternelles, locaux à sommeil : 1 à 30) et U (avec
  * hébergement : 20) ont une ligne sous le seuil, et Rojer ne connaît pas la
- * ligne ; J et OA aussi, et ils sont refusés à l'accueil. Les établissements
+ * ligne ; J et OA aussi. GA et PA restent dans la table bien que refusés à
+ * l'accueil : leur seuil est sûr, et un dossier déjà ouvert les garde. Les établissements
  * spéciaux sans ligne au tableau (CTS, SG, PS, REF, EF) n'y sont pas.
  */
 export const PLANCHER_PUBLIC_4E_PAR_TYPE: Partial<Record<TypeErp, number>> = {
@@ -229,7 +232,9 @@ export function evaluerPersonnesPresentes(
   // public seul (GN 1 § 2 b) plus les salariés, que R. 4227-34 compte aussi.
   // C'est un maximum admissible : au-dessus du seuil, l'obligation est due ;
   // en dessous, même plein l'établissement ne l'atteint pas.
-  if (categorie === "N5" && etab.effectifPublicAdmis != null) {
+  // Zéro se lit « non renseigné » : un ERP reçoit du public par définition, et
+  // un 0 de bouche-trou retirerait la consigne (revue du 2026-10-27).
+  if (categorie === "N5" && etab.effectifPublicAdmis != null && etab.effectifPublicAdmis > 0) {
     const total = etab.effectifPublicAdmis + etab.effectifSurSite;
     return total >= seuil
       ? {
@@ -265,7 +270,9 @@ export function evaluerPersonnesPresentes(
  *
  * Oui quand, sans lui, le moteur ne saurait pas conclure — c'est-à-dire quand
  * `evaluerPersonnesPresentes` rendrait `indetermine` sur un nombre absent : un
- * ERP que ni sa catégorie ni son effectif ne portent au-dessus du seuil. Pour
+ * ERP que ni sa catégorie ~~ni son effectif~~ [2026-10-27 : ni son type en 4ᵉ, ni
+ * son effectif de public en 5ᵉ, ni son effectif salarié] ne portent au-dessus du
+ * seuil. Pour
  * tous les autres la question ne changerait rien, et on ne la pose pas.
  *
  * Un effectif illisible (champ encore vide à l'écran) ne pose pas la question :

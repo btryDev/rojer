@@ -107,7 +107,22 @@ export async function regenererSansInvalider(
   etablissementId: string,
 ): Promise<GenerationResult> {
   await assertEtablissementOwnership(etablissementId);
+  return regenererSansControleDeSession(etablissementId);
+}
 
+/**
+ * La même régénération, SANS contrôle d'appartenance — pour le seul script de
+ * maintenance `scripts/regenerer-calendriers.ts`, qui recalcule les dossiers au
+ * sceau périmé après un changement du référentiel ou du moteur (2026-10-27).
+ * Il tourne hors de toute session, avec les droits de la base : il n'y a pas
+ * d'utilisateur à qui rattacher le dossier. JAMAIS depuis une page, une action
+ * ou une route — `regeneration-hors-session.test.ts` relit le dépôt et le
+ * vérifie. Ce module n'est pas un `"use server"` : rien ici n'est un point
+ * d'entrée réseau.
+ */
+export async function regenererSansControleDeSession(
+  etablissementId: string,
+): Promise<GenerationResult> {
   let passe = await regenererUnePasse(etablissementId);
   let tentative = 1;
   while (!passe.converge && tentative < TENTATIVES_MAX) {
