@@ -5,21 +5,9 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import type { LigneResteAFaire } from "@/lib/equipements/reste-a-faire";
-import { SuggestionsEnFenetre } from "./SuggestionsEnFenetre";
+import { OuvrirSuggestions } from "./SuggestionsEnFenetre";
 
-type PanneauSuggestions = Omit<
-  React.ComponentProps<typeof SuggestionsEnFenetre>,
-  "forme" | "libelle"
->;
-
-export function ResteAFaireParc({
-  lignes,
-  suggestions,
-}: {
-  lignes: LigneResteAFaire[];
-  /** Ce que la fenêtre des suggestions affiche, pour la ligne qui l'ouvre. */
-  suggestions: PanneauSuggestions;
-}) {
+export function ResteAFaireParc({ lignes }: { lignes: LigneResteAFaire[] }) {
   if (lignes.length === 0) return null;
 
   return (
@@ -54,7 +42,7 @@ export function ResteAFaireParc({
                 {l.genre === "questions" ? "Répondre" : "Renseigner"}
               </Link>
             ) : (
-              <SuggestionsEnFenetre {...suggestions} forme="bouton" libelle="Voir les suggestions" />
+              <OuvrirSuggestions forme="bouton" libelle="Voir les suggestions" />
             )}
           </li>
         ))}

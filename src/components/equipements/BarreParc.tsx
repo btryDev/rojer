@@ -62,10 +62,7 @@ import {
 } from "@/lib/calendrier/etats";
 import { porteursDuParc } from "@/lib/equipements/etat-verifications";
 import { legendeParc } from "@/lib/perimetre/porteurs-comptes";
-
-/** Un lien posé dans une phrase de la barre — légende et suggestions. */
-const LIEN_DANS_PHRASE =
-  "font-semibold text-[color:var(--board-ink)] underline underline-offset-2 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--board-ink)]";
+import { LIEN_DANS_PHRASE } from "./lien-dans-phrase";
 
 export function BarreParc({
   hrefCalendrier,

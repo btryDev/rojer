@@ -43,7 +43,23 @@ restait bloqué, et l'écran ne disait pas pourquoi.
 
 - `VERSION_MOTEUR_CALENDRIER` inchangée : la colonne naît vide, la
   régénération écrit sur chaque dossier exactement ce qu'elle écrivait.
-- Une succession de ligne (renommage d'obligation) ne lègue pas la date
-  déclarée : seule une réalisation se lègue. Limite connue, sans cas en base.
+- ~~Une succession de ligne (renommage d'obligation) ne lègue pas la date
+  déclarée : seule une réalisation se lègue.~~ [2026-10-27, revue
+  indépendante : faux. Une succession ADOPTE la rangée (`adopter`), qui garde
+  sa colonne : la date déclarée suit l'obligation renommée ou scindée, avec le
+  rythme du successeur. Seule la fusion vers une ligne d'établissement
+  (`heritageDesRetirees`) ne la transmet pas. Sans cas en base.]
+- Un rapport réalisé déposé sur la ligne EFFACE la date déclarée
+  (`rapports/actions.ts`, revue du 2026-10-27) : sans quoi, le rapport
+  supprimé, la déclaration oubliée redatait la ligne en silence.
+- Une date antérieure à la mise en service de l'appareil est refusée.
+- Limite connue : sur une ligne qui porte à la fois un héritage et une
+  déclaration, la fiche attribue l'échéance à la déclaration alors que le
+  moteur a pris l'héritage. Cas rare, sans cas en base.
+- **À trancher par la propriétaire** (revue du 2026-10-27) : une ligne datée par
+  une déclaration compte comme n'importe quelle échéance — hors retard si la
+  date le dit — dans les compteurs, le MCP et la case « aucune vérification en
+  retard » du dossier de contrôle, et la mention « sans rapport » n'est écrite
+  que sur la fiche de l'appareil.
 - Le contrôle ponctuel (vérification de mise en service) reste soldé par une
   pièce seulement.

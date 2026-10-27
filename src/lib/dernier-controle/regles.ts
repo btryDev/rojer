@@ -32,7 +32,14 @@ export type LectureDateDeclaree =
  * Paris (ADR-011). Vide = retirer la date déclarée. Refusée dans le futur — un
  * contrôle à venir est un rendez-vous (ADR-049), pas un contrôle fait.
  */
-export function lireDateDeclaree(saisie: unknown, maintenant: Date): LectureDateDeclaree {
+export function lireDateDeclaree(
+  saisie: unknown,
+  maintenant: Date,
+  /** La mise en service de l'appareil, si connue : un contrôle ne la précède
+   *  pas (revue du 2026-10-27 — il aurait daté un retard sur un appareil qui
+   *  n'existait pas encore). */
+  miseEnService: Date | null = null,
+): LectureDateDeclaree {
   if (saisie === null || saisie === undefined || saisie === "") return { ok: true, date: null };
   if (typeof saisie !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(saisie)) {
     return { ok: false, message: "Indiquez une date au format jour/mois/année." };
@@ -51,6 +58,12 @@ export function lireDateDeclaree(saisie: unknown, maintenant: Date): LectureDate
   const borne = `${Number(aujourdhui.slice(0, 4)) - ANS_EN_ARRIERE}${aujourdhui.slice(4)}`;
   if (saisie < borne) {
     return { ok: false, message: `Indiquez une date des ${ANS_EN_ARRIERE} dernières années.` };
+  }
+  if (miseEnService !== null && saisie < cleJourCivil(miseEnService)) {
+    return {
+      ok: false,
+      message: "Cette date précède la mise en service de l'appareil. Vérifiez l'une ou l'autre.",
+    };
   }
   return { ok: true, date };
 }

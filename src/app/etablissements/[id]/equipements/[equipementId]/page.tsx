@@ -149,6 +149,9 @@ export default async function EquipementDetailPage({
   // déclarer — sans échéance connue, ou déjà datés par une déclaration.
   const aDater = retire ? [] : controlesADater(eq, aFaire);
   const aDaterSansDate = aDater.filter((c) => c.declareLe === null).length;
+  // La phrase sur la mise en service ne vaut que pour une ligne du
+  // référentiel : une prescription particulière n'est jamais datée par elle.
+  const miseEnServiceSansEffet = aDater.some((c) => c.declareLe === null && !c.surMesure);
   const obligations = obligationsDeLEquipement(eq);
 
   // Ce qui vise cet appareil sans jamais tomber à une date. Lu au MOTEUR et
@@ -772,9 +775,11 @@ export default async function EquipementDetailPage({
                 </p>
                 {aDaterSansDate > 0 ? (
                   eq.dateMiseEnService ? (
+                    miseEnServiceSansEffet ? (
                     <p className="m-0 mt-2 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                       {`La mise en service du ${formaterDateLongueFr(eq.dateMiseEnService)} ne date pas ce contrôle\u00a0: le premier tombait avant le début du suivi dans Rojer.`}
                     </p>
+                    ) : null
                   ) : (
                     <p className="m-0 mt-2 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                       Appareil neuf, jamais contrôlé&nbsp;?{" "}

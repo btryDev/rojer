@@ -13,6 +13,8 @@ const h = vi.hoisted(() => ({
     periodicite: "annuelle" as string,
   },
   actif: true,
+  miseEnService: null as Date | null,
+  archiveSousVerrou: null as Date | null,
   realises: 0,
   updateMany: vi.fn(async () => ({ count: 1 })),
   recalculer: vi.fn(async () => ({ ecrit: true })),
@@ -23,11 +25,16 @@ vi.mock("@/lib/prisma", () => {
   const tx = {
     $queryRaw: vi.fn(async () => []),
     rapportVerification: { count: vi.fn(async () => h.realises) },
-    verification: { updateMany: h.updateMany },
+    verification: {
+      updateMany: h.updateMany,
+      findUnique: vi.fn(async () => ({ archiveLe: h.archiveSousVerrou })),
+    },
   };
   return {
     prisma: {
-      equipement: { findFirst: vi.fn(async () => ({ actif: h.actif })) },
+      equipement: {
+        findFirst: vi.fn(async () => ({ actif: h.actif, dateMiseEnService: h.miseEnService })),
+      },
       $transaction: vi.fn(async (f: (t: typeof tx) => unknown) => f(tx)),
     },
   };
@@ -53,6 +60,8 @@ beforeEach(() => {
   h.ligne.periodicite = "annuelle";
   h.ligne.salarieId = null;
   h.actif = true;
+  h.miseEnService = null;
+  h.archiveSousVerrou = null;
   h.realises = 0;
 });
 
@@ -99,5 +108,20 @@ describe("declarerDernierControle", () => {
     expect(h.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({ data: { dernierControleDeclareLe: null } }),
     );
+  });
+
+  it("refuse une date antérieure à la mise en service de l'appareil", async () => {
+    h.miseEnService = new Date("2025-08-31T22:00:00Z"); // 1er septembre 2025, Paris
+    const r = await declarerDernierControle("v1", IDLE, fd("2025-08-31"));
+    expect(r.status).toBe("error");
+    expect(h.updateMany).not.toHaveBeenCalled();
+    expect((await declarerDernierControle("v1", IDLE, fd("2025-09-01"))).status).toBe("success");
+  });
+
+  it("refuse une ligne archivée entre la lecture et le verrou", async () => {
+    h.archiveSousVerrou = new Date();
+    const r = await declarerDernierControle("v1", IDLE, fd("2026-03-15"));
+    expect(r.status).toBe("error");
+    expect(h.updateMany).not.toHaveBeenCalled();
   });
 });

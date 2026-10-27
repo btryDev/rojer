@@ -18,6 +18,8 @@ export type DateDeclareeState =
   | { status: "success" }
   | { status: "error"; message: string };
 
+const LIGNE_ETEINTE = "Ce contrôle ne s'applique plus à cet appareil. Rechargez la page.";
+
 const DEJA_UN_RAPPORT =
   "Un rapport de contrôle est déjà enregistré : c'est lui qui date la prochaine échéance.";
 
@@ -30,21 +32,29 @@ export async function declarerDernierControle(
   if (!recoitUneDateDeclaree(v)) {
     return { status: "error", message: "Ce contrôle ne se date pas par une date déclarée." };
   }
-  if (v.equipementId !== null) {
-    const eq = await prisma.equipement.findFirst({
-      where: { id: v.equipementId, etablissementId },
-      select: { actif: true },
-    });
-    if (eq && estAppareilRetire(eq)) return { status: "error", message: MESSAGE_APPAREIL_RETIRE };
-  }
+  const eq =
+    v.equipementId === null
+      ? null
+      : await prisma.equipement.findFirst({
+          where: { id: v.equipementId, etablissementId },
+          select: { actif: true, dateMiseEnService: true },
+        });
+  if (eq && estAppareilRetire(eq)) return { status: "error", message: MESSAGE_APPAREIL_RETIRE };
 
-  const lu = lireDateDeclaree(formData.get("dernierControleLe"), new Date());
+  const lu = lireDateDeclaree(formData.get("dernierControleLe"), new Date(), eq?.dateMiseEnService ?? null);
   if (!lu.ok) return { status: "error", message: lu.message };
 
   // Sous le verrou de la ligne, comme le dépôt d'un rapport : un rapport
   // réalisé déposé entre-temps rend la déclaration sans objet.
   const refus = await prisma.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT 1 FROM "Verification" WHERE "id" = ${v.id} FOR UPDATE`;
+    // Relue sous le verrou : une régénération a pu l'archiver depuis la lecture
+    // de `requireVerification` (revue du 2026-10-27).
+    const ligne = await tx.verification.findUnique({
+      where: { id: v.id },
+      select: { archiveLe: true },
+    });
+    if (ligne === null || ligne.archiveLe !== null) return LIGNE_ETEINTE;
     const realise = await tx.rapportVerification.count({
       where: { verificationId: v.id, ...WHERE_RAPPORT_REALISE },
     });

@@ -32,6 +32,7 @@ import {
 import { formaterDateCourteFr, joursCivilsEntre } from "@/lib/dates";
 import { estResultatRealise } from "@/lib/rapports/resultats";
 import { recoitUneDateDeclaree } from "@/lib/dernier-controle/regles";
+import { PREFIXE_PRESCRIPTION } from "@/lib/matching/prescriptions";
 import { registrePrudent, type RetenueParPrudence } from "@/lib/calendrier/prudence";
 import {
   estActionEnRetard,
@@ -182,10 +183,10 @@ export type LigneHistoire = {
  * ligne : aucun rapport réalisé ne la supplante. Sinon `null`.
  */
 function dateDeclareeSeule(v: {
-  dernierControleDeclareLe?: Date | null;
+  dernierControleDeclareLe: Date | null;
   rapports: readonly { resultat: ResultatVerification }[];
 }): Date | null {
-  if (v.dernierControleDeclareLe == null) return null;
+  if (v.dernierControleDeclareLe === null) return null;
   return v.rapports.some((r) => estResultatRealise(r.resultat)) ? null : v.dernierControleDeclareLe;
 }
 
@@ -195,6 +196,9 @@ export type ControleADater = {
   libelle: string;
   /** La date déjà déclarée, sinon `null`. */
   declareLe: Date | null;
+  /** Ligne d'une prescription particulière (ADR-035) : la mise en service de
+   *  l'appareil ne la date jamais. */
+  surMesure: boolean;
 };
 
 /**
@@ -204,7 +208,7 @@ export type ControleADater = {
  * faire » : une ligne sans date y porte `date: null`.
  */
 export function controlesADater(
-  eq: { verifications: readonly (VerificationFiche & { dernierControleDeclareLe?: Date | null })[] },
+  eq: { verifications: readonly VerificationFiche[] },
   aFaire: readonly Pick<LigneAFaire, "cle" | "genre" | "date">[],
 ): ControleADater[] {
   const sansDate = new Set(
@@ -213,8 +217,13 @@ export function controlesADater(
   return eq.verifications
     .filter((v) => recoitUneDateDeclaree(v))
     .filter((v) => !v.rapports.some((r) => estResultatRealise(r.resultat)))
-    .filter((v) => sansDate.has(`v-${v.id}`) || v.dernierControleDeclareLe != null)
-    .map((v) => ({ id: v.id, libelle: v.libelleObligation, declareLe: v.dernierControleDeclareLe ?? null }));
+    .filter((v) => sansDate.has(`v-${v.id}`) || v.dernierControleDeclareLe !== null)
+    .map((v) => ({
+      id: v.id,
+      libelle: v.libelleObligation,
+      declareLe: v.dernierControleDeclareLe,
+      surMesure: v.obligationId.startsWith(PREFIXE_PRESCRIPTION),
+    }));
 }
 
 export function lignesAFaire(
@@ -237,6 +246,7 @@ export function lignesAFaire(
   const lignes: LigneAFaire[] = [];
 
   for (const v of eq.verifications) {
+    const declaree = dateDeclareeSeule(v);
     // UNE LIGNE, UNE ÉCHÉANCE (ADR-034, N4). Elle en portait deux — le fait
     // passé et le rendez-vous suivant —, et cette liste devait donc la déplier
     // pour ne pas faire disparaître les échéances d'un appareil à jour. Depuis
@@ -262,8 +272,8 @@ export function lignesAFaire(
         detail: aUnRendezVous(v, maintenant)
           ? // ADR-051 : une échéance tirée d'une date DÉCLARÉE le dit — elle
             // n'est adossée à aucune pièce.
-            dateDeclareeSeule(v) !== null
-            ? `Calculée d'après le dernier contrôle déclaré le ${formaterDateCourteFr(dateDeclareeSeule(v)!)}, sans rapport`
+            declaree !== null
+            ? `Calculée d'après le dernier contrôle déclaré le ${formaterDateCourteFr(declaree)}, sans rapport`
             : "Échéance portée au calendrier"
           : etat === "enRetard"
             ? LIBELLE_AUCUNE_VERIFICATION

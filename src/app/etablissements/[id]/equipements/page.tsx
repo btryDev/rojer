@@ -14,7 +14,10 @@ import {
   urgenceCategorie,
   type AppareilListe,
 } from "@/components/equipements/CarteCategorie";
-import { SuggestionsEnFenetre } from "@/components/equipements/SuggestionsEnFenetre";
+import {
+  FenetreSuggestions,
+  OuvrirSuggestions,
+} from "@/components/equipements/SuggestionsEnFenetre";
 import { ResteAFaireParc } from "@/components/equipements/ResteAFaireParc";
 import { resteAFaireDuParc } from "@/lib/equipements/reste-a-faire";
 import {
@@ -306,8 +309,7 @@ export default async function EquipementsPage({
         hrefAjouter={hrefAjouter}
         suggestions={
           suggestionsRestantes.length > 0 ? (
-            <SuggestionsEnFenetre
-              {...panneauSuggestions}
+            <OuvrirSuggestions
               forme="lien"
               libelle={`Équipements souvent présents dans votre activité (${suggestionsRestantes.length}) →`}
             />
@@ -350,7 +352,10 @@ export default async function EquipementsPage({
         {/* ~~Le panneau des suggestions, toujours rendu ici~~ [2026-10-27 :
             il vit dans une fenêtre, ouverte depuis la barre du parc ou depuis
             la liste ci-dessous (`SuggestionsEnFenetre`).] */}
-        <ResteAFaireParc lignes={resteAFaire} suggestions={panneauSuggestions} />
+        <ResteAFaireParc lignes={resteAFaire} />
+        {/* Montée en permanence : la ligne ou le lien qui l'ouvre peut
+            disparaître pendant qu'elle affiche son résultat. */}
+        <FenetreSuggestions {...panneauSuggestions} />
 
         <SectionEquipementsSecurite lignes={lignesSecurite} />
 

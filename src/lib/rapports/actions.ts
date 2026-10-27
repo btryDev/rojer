@@ -290,6 +290,16 @@ export async function uploadRapport(
 
       // LA LIGNE SE RECALCULE DEPUIS SES FAITS — le rapport qu'on vient de
       // créer compris —, par la même décision que la régénération (ADR-036).
+      // ADR-051 : un rapport réalisé remplace la date déclarée du dernier
+      // contrôle. Gardée, elle redaterait la ligne en silence si le rapport
+      // venait à être supprimé (revue du 2026-10-27).
+      if (estResultatRealise(resultat)) {
+        await tx.verification.updateMany({
+          where: { id: verif.id, etablissementId: verif.etablissementId },
+          data: { dernierControleDeclareLe: null },
+        });
+      }
+
       await recalculerLigne(tx, verif.id);
 
       // Le rendez-vous est consommé par le rapport qu'il annonçait — celui
