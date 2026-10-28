@@ -291,6 +291,60 @@ Non atteint, et pourquoi :
   partagée : elles ont besoin de la vérification et de sa zone, une relation
   qui coûte en SQL autant qu'elle économise.
 
+### Lot 1b — Le calcul serveur et l'historique relu partout (2026-10-28)
+
+Né d'un profil CPU du serveur (`node --cpu-prof`, `next start`, gros dossier) :
+après le lot 1, le tableau de bord passait 229 ms dont 92 de SQL — le reste
+était du calcul, que la mesure en requêtes ne voyait pas.
+
+Fait :
+- **Dates civiles** (`dates/index.ts`) : une seule fonction prenait ≈ 115 ms
+  par affichage du tableau de bord — `composantesCiviles`, un
+  `Intl.formatToParts` par appel, deux par `instantCivil`, trois par
+  `debutDuJour`. Le décalage de Paris est désormais lu une fois par heure UTC
+  (les changements d'heure tombent à 01:00 UTC pile depuis 1981) et les
+  composantes en dérivent par l'arithmétique UTC. Résultat identique, vérifié
+  minute par minute autour des changements d'heure, aux bornes et sur 20 000
+  instants (`composantes-rapides.test.ts`, éprouvé en faussant le décalage :
+  rouge). Le sceau du moteur est recopié sans incrément : aucun dossier
+  régénéré.
+- **Dernière réalisation** (`rapports/joindre-realisations.ts`, lue sur chaque
+  écran par la barre latérale) : le `DISTINCT ON` lisait et triait TOUT
+  l'historique (≈ 12 ms à dix ans, linéaire en années). Une descente d'index
+  par ligne (`LATERAL … LIMIT 1`, index
+  `(verificationId, dateRapport DESC, createdAt DESC)` qui remplace celui sur
+  `verificationId` seul) : ≈ 1,1 ms, et le coût suit le nombre de lignes, pas
+  la longueur de l'historique. Équivalence tenue contre une vraie base
+  (`joindre-realisations.integration.test.ts`, éprouvé en inversant l'ordre :
+  rouge). Le lot 1a l'avait écartée pour « ≈ 1 ms » : mesuré à nouveau, avec
+  les statistiques de la base à jour, l'écart est de dix à un.
+
+| Gros dossier (médianes, local) | SQL avant → après (ms) | Total avant → après (ms) |
+|---|---|---|
+| Tableau de bord | 92 → 65 | 229 → 109 |
+| Calendrier | 49 → 28 | 196 → 107 |
+| Équipements | 40 → 28 | 109 → 79 |
+| Plan d'actions | 37 → 17 | 59 → 45 |
+| Équipe | 35 → 21 | 87 → 64 |
+| Documents | 44 → 15 | 69 → 44 |
+| Carnet sanitaire | 44 → 18 | 79 → 64 |
+| Fiche équipement | 40 → 25 | 81 → 64 |
+| Registre | 46 → 37 | 171 → 158 |
+| Fiche contrôle | 38 → 22 | 157 → 155 |
+
+Mesuré et écarté :
+- les classes du bouton (≈ 800 caractères, 2 665 fois sur le registre) :
+  4 Mo de HTML, mais 91 Ko en gzip et ≈ 20 ms de rendu — pas une refonte du
+  bouton de toute l'application pour si peu ;
+- `COLLATE "C"` sur l'ancien `DISTINCT ON` (12 → 7 ms) : remplacé par la
+  descente d'index.
+
+Reste, et c'est ce qui grandit encore avec les années : **le registre et la
+fiche d'un contrôle** rendent chaque rapport (532 lignes pour une année
+chargée, dix ans d'historique sur la fiche). Le registre est borné à l'année ;
+la fiche ne l'est pas — décision de la propriétaire attendue (« des filtres
+plus tard », lot 1a).
+
 ### Lot 2 — Même traitement pour les autres écrans lourds (M)
 
 Calendrier, registre, équipements, DUERP, dans cet ordre (le plus consulté

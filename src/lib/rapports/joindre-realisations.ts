@@ -51,22 +51,39 @@ export type DernierRapport = { id: string } & DerniereRealisation;
  * source de `WHERE_RAPPORT_REALISE` ; l'ordre, d'`ordreRapportPlusRecentSql`.
  * L'équivalence au départage du moteur (`indexerDernieresRealisations`) est
  * tenue contre une vraie base par `joindre-realisations.integration.test.ts`.
+ *
+ * [2026-10-28, plan performance] Plus de `DISTINCT ON` : il lisait et triait
+ * TOUT l'historique de l'établissement à chaque écran — ≈ 12 ms à dix ans,
+ * quatre fois plus à quarante (durée de conservation). Désormais une descente
+ * d'index par ligne (`LATERAL … LIMIT 1` sur
+ * `(verificationId, dateRapport DESC, createdAt DESC)`) : le coût suit le
+ * nombre de lignes, borné par la cible, et plus la longueur de l'historique
+ * (≈ 4 ms mesurés sur le même dossier). Un rapport porte toujours
+ * l'établissement de sa ligne (`rapports/actions.ts`, seule écriture) ; le
+ * filtre est gardé dans la sous-requête pour que le sens ne dépende pas de
+ * cette propriété.
  */
 async function lireDerniersRapports(
   etablissementId: string,
   realisesSeulement: boolean,
 ): Promise<Map<string, DernierRapport>> {
-  const proprietaire = await requireProprietaireSql('r."etablissementId"');
+  const proprietaire = await requireProprietaireSql('v."etablissementId"');
   const lignes = await prisma.$queryRaw<
     { verificationId: string; id: string; dateRapport: Date; resultat: string }[]
   >`
-    SELECT DISTINCT ON (r."verificationId")
-      r."verificationId", r."id", r."dateRapport", r."resultat"::text AS "resultat"
-    FROM "RapportVerification" r
-    WHERE r."etablissementId" = ${etablissementId}
+    SELECT v."id" AS "verificationId", d."id", d."dateRapport", d."resultat"
+    FROM "Verification" v
+    CROSS JOIN LATERAL (
+      SELECT r."id", r."dateRapport", r."resultat"::text AS "resultat"
+      FROM "RapportVerification" r
+      WHERE r."verificationId" = v."id"
+        AND r."etablissementId" = ${etablissementId}
+        AND (${!realisesSeulement} OR r."resultat"::text = ANY(${[...RESULTATS_REALISES]}::text[]))
+      ORDER BY ${ordreRapportPlusRecentSql("r")}
+      LIMIT 1
+    ) d
+    WHERE v."etablissementId" = ${etablissementId}
       AND ${proprietaire}
-      AND (${!realisesSeulement} OR r."resultat"::text = ANY(${[...RESULTATS_REALISES]}::text[]))
-    ORDER BY r."verificationId", ${ordreRapportPlusRecentSql("r")}
   `;
   return new Map(
     lignes.map((l) => [

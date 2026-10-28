@@ -92,11 +92,8 @@ const FORMATEUR_PARTS = new Intl.DateTimeFormat("en-CA", {
   hourCycle: "h23",
 });
 
-/**
- * Décompose un instant en composantes civiles Europe/Paris.
- * C'est la brique de base : tout le reste du module en dérive.
- */
-export function composantesCiviles(d: Date): ComposantesCiviles {
+/** Les composantes lues par `Intl` — la référence, et le chemin lent. */
+export function composantesCivilesIntl(d: Date): ComposantesCiviles {
   const parts = FORMATEUR_PARTS.formatToParts(d);
   const lire = (type: Intl.DateTimeFormatPartTypes): number => {
     const p = parts.find((x) => x.type === type);
@@ -115,13 +112,9 @@ export function composantesCiviles(d: Date): ComposantesCiviles {
   };
 }
 
-/**
- * Décalage Europe/Paris ↔ UTC, en millisecondes, **à l'instant donné**
- * (+1 h en hiver, +2 h en été). Interne : sert à reconstruire un instant
- * depuis des composantes civiles.
- */
-function decalageMs(d: Date): number {
-  const c = composantesCiviles(d);
+/** Le décalage lu par `Intl` à l'instant donné. */
+function decalageIntlMs(d: Date): number {
+  const c = composantesCivilesIntl(d);
   const commeSiUtc = Date.UTC(
     c.annee,
     c.mois - 1,
@@ -131,6 +124,67 @@ function decalageMs(d: Date): number {
     c.seconde,
   );
   return commeSiUtc - (d.getTime() - d.getUTCMilliseconds());
+}
+
+// [2026-10-28, plan performance] Le décalage, mémorisé par heure UTC.
+//
+// `formatToParts` coûte quelques microsecondes, et un rendu en fait des
+// dizaines de milliers : `instantCivil` l'appelle deux fois, `debutDuJour`
+// trois. Mesuré au profileur sur le tableau de bord du gros dossier : ≈ 115 ms
+// de calcul par affichage, la moitié de la page.
+//
+// Or le décalage de Paris ne change qu'aux changements d'heure, et depuis 1981
+// ils tombent à 01:00 UTC pile : il est le même pendant toute une heure UTC.
+// Lu une fois par heure, il donne les composantes par l'arithmétique UTC — à
+// l'identique, ce que `dates/index.test.ts` vérifie minute par minute autour
+// des changements d'heure. Hors de 1981-2199 (transitions anciennes à des
+// heures quelconques ; années à plus de quatre chiffres), et pour une date
+// invalide (même erreur qu'avant), la lecture reste celle d'`Intl`.
+const HEURE_MS = 3_600_000;
+const DEBUT_HEURES_ALIGNEES = Date.UTC(1981, 0, 1);
+const FIN_HEURES_ALIGNEES = Date.UTC(2200, 0, 1);
+const PLAFOND_MEMOIRE = 100_000;
+const decalageParHeure = new Map<number, number>();
+
+/**
+ * Décalage Europe/Paris ↔ UTC, en millisecondes, **à l'instant donné**
+ * (+1 h en hiver, +2 h en été). Interne : sert à reconstruire un instant
+ * depuis des composantes civiles.
+ */
+function decalageMs(d: Date): number {
+  const t = d.getTime();
+  if (!(t >= DEBUT_HEURES_ALIGNEES && t < FIN_HEURES_ALIGNEES)) return decalageIntlMs(d);
+  const heure = Math.floor(t / HEURE_MS);
+  let decalage = decalageParHeure.get(heure);
+  if (decalage === undefined) {
+    // Une mémoire bornée : un serveur qui tourne des mois ne la fait pas
+    // grossir sans fin (≈ 10 000 heures distinctes pour dix ans de dates).
+    if (decalageParHeure.size >= PLAFOND_MEMOIRE) decalageParHeure.clear();
+    decalage = decalageIntlMs(new Date(heure * HEURE_MS));
+    decalageParHeure.set(heure, decalage);
+  }
+  return decalage;
+}
+
+/**
+ * Décompose un instant en composantes civiles Europe/Paris.
+ * C'est la brique de base : tout le reste du module en dérive.
+ */
+export function composantesCiviles(d: Date): ComposantesCiviles {
+  const t = d.getTime();
+  if (!(t >= DEBUT_HEURES_ALIGNEES && t < FIN_HEURES_ALIGNEES)) return composantesCivilesIntl(d);
+  // L'heure civile, c'est l'instant décalé, lu en UTC. Le décalage est un
+  // nombre entier de secondes : les millisecondes ne bougent pas.
+  const civil = new Date(t + decalageMs(d));
+  return {
+    annee: civil.getUTCFullYear(),
+    mois: civil.getUTCMonth() + 1,
+    jour: civil.getUTCDate(),
+    heure: civil.getUTCHours(),
+    minute: civil.getUTCMinutes(),
+    seconde: civil.getUTCSeconds(),
+    milliseconde: civil.getUTCMilliseconds(),
+  };
 }
 
 /**
