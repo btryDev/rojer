@@ -335,6 +335,13 @@ Fait :
 | Registre | 46 → 37 | 171 → 158 |
 | Fiche contrôle | 38 → 22 | 157 → 155 |
 
+Dossier de démo (36 lignes), même build de prod, `main` 2f837b49 contre ce
+lot : `mesurer.mjs` donnait le tableau de bord 75 → 82 ms et le calendrier
+55 → 60 ms — du bruit, la mesure faisant journaliser chaque requête à
+PostgreSQL. Rejoué sans journal, deux séries de 25 chargements complets :
+tableau de bord 42–48 → 28–29 ms, calendrier 31–32 → 24 ms. Aucune page de
+la démo ne recule.
+
 Mesuré et écarté :
 - les classes du bouton (≈ 800 caractères, 2 665 fois sur le registre) :
   4 Mo de HTML, mais 91 Ko en gzip et ≈ 20 ms de rendu — pas une refonte du
