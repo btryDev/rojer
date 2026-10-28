@@ -305,6 +305,37 @@ propre lecture. Cible indicative : ≤ 25 requêtes par écran.
   DUERP), au lieu du squelette de board pour tout.
 - Contrôle visuel : avant/après sur les écrans touchés.
 
+#### Avancement du lot 3 (2026-10-28, `lot/perf-afficher-tout-de-suite`)
+
+Fait — le second point, les replis par section :
+- chaque page d'entrée du rail a son `loading.tsx`, qui rend le **vrai
+  en-tête** (`ChargementSection` → `EnTetePage`) : titre et teinte de la
+  section à leur place définitive dès le clic, seul le corps attend. Le
+  descriptif est remplacé par deux traits ; le dessin garde sa place sans se
+  montrer (`enAttente`), parce qu'il s'anime au montage et se retracerait à
+  l'arrivée de la page ;
+- chaque sous-dossier de fiche ou de formulaire (`[equipementId]`,
+  `nouveau`…) prend le repli neutre (`ChargementNeutre`, l'ancien corps de
+  `etablissements/[id]/loading.tsx`) : sans lui, il hériterait de l'en-tête
+  de sa liste ;
+- garde `chargement-sections.test.ts` : toutes les pages balayées, le repli
+  le plus proche doit porter l'en-tête de la page, et aucune page sans
+  `EnTetePage` ne doit tomber sur un repli de section. Éprouvée en la
+  cassant des deux côtés (un repli à la mauvaise entrée ; le repli d'une
+  fiche retiré) : rouge.
+
+Le corps du repli reste le patron « Liste » commun : pas encore à la forme
+de chaque écran (calendrier, DUERP).
+
+Reste :
+- le tableau de bord en `<Suspense>` par bloc. Ses widgets reçoivent un seul
+  paquet (`DashboardBundle`) dans une grille client à glisser-déposer : le
+  streaming demande de passer aux widgets des promesses (`use()`) ou de
+  découper la grille — à concevoir avant de coder ;
+- le contrôle visuel des replis, pas encore fait : un état de chargement ne
+  se voit qu'en ralentissant le serveur. Couvert d'ici là par un test de
+  rendu (`ChargementSection.test.tsx`).
+
 ### Lot 4 — Ne pas refaire ce qui vient d'être fait (S, optionnel — option expérimentale)
 
 - `staleTimes.dynamic` (proposé : 30 s) : un aller-retour board → page → board

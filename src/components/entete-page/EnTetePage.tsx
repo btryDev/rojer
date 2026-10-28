@@ -43,6 +43,7 @@ export function EnTetePage({
   titre,
   description,
   children,
+  enAttente = false,
 }: {
   item: Exclude<SidebarItemId, "tableau">;
   /** Le titre d'une SOUS-PAGE d'une entrée (l'import du DUERP). Les pages
@@ -53,6 +54,12 @@ export function EnTetePage({
   description: ReactNode;
   /** La bascule de vue de la page, et rien d'autre. */
   children?: ReactNode;
+  /** Le repli de chargement de la page (`ChargementSection`) : le dessin
+   *  garde sa place mais reste invisible. Il s'anime au montage ; affiché
+   *  dans le repli, il s'effacerait puis se retracerait à l'arrivée de la
+   *  page. Ainsi la teinte et la hauteur sont là tout de suite, et le dessin
+   *  arrive une seule fois, avec la page. */
+  enAttente?: boolean;
 }) {
   const fond = TEINTE_SECTION[categorieDeItem(item) ?? "tableau"];
   const illustree = aUneIllustration(item);
@@ -90,7 +97,13 @@ export function EnTetePage({
           className="hidden items-end justify-center overflow-hidden px-8 pb-5 pt-16 md:flex [&>*]:max-w-full"
           style={fond ? { backgroundColor: fond } : undefined}
         >
-          <IllustrationEnTete item={item} />
+          {enAttente ? (
+            <div className="invisible">
+              <IllustrationEnTete item={item} />
+            </div>
+          ) : (
+            <IllustrationEnTete item={item} />
+          )}
         </div>
       ) : null}
     </header>
