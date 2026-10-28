@@ -136,29 +136,29 @@ function decalageIntlMs(d: Date): number {
 // Or le décalage de Paris ne change qu'aux changements d'heure, et depuis 1981
 // ils tombent à 01:00 UTC pile : il est le même pendant toute une heure UTC.
 // Lu une fois par heure, il donne les composantes par l'arithmétique UTC — à
-// l'identique, ce que `dates/index.test.ts` vérifie minute par minute autour
-// des changements d'heure. Hors de 1981-2199 (transitions anciennes à des
-// heures quelconques ; années à plus de quatre chiffres), et pour une date
-// invalide (même erreur qu'avant), la lecture reste celle d'`Intl`.
+// l'identique, ce que `dates/composantes-rapides.test.ts` vérifie minute par
+// minute autour des changements d'heure. Hors de 1981-2199 (transitions
+// anciennes à des heures quelconques ; années à plus de quatre chiffres), et
+// pour une date invalide (même erreur qu'avant), la lecture reste celle
+// d'`Intl`.
 const HEURE_MS = 3_600_000;
 const DEBUT_HEURES_ALIGNEES = Date.UTC(1981, 0, 1);
 const FIN_HEURES_ALIGNEES = Date.UTC(2200, 0, 1);
+// Une mémoire bornée. Les dates du produit sont surtout des minuits civils
+// (une ou deux heures UTC par jour), mais un horodatage peut tomber sur
+// n'importe quelle heure : 8 760 par an au plus. Au plafond — plus de onze
+// ans d'heures distinctes, quelques Mo —, la table est vidée et se remplit à
+// nouveau, une lecture d'`Intl` par heure rencontrée.
 const PLAFOND_MEMOIRE = 100_000;
 const decalageParHeure = new Map<number, number>();
 
-/**
- * Décalage Europe/Paris ↔ UTC, en millisecondes, **à l'instant donné**
- * (+1 h en hiver, +2 h en été). Interne : sert à reconstruire un instant
- * depuis des composantes civiles.
- */
-function decalageMs(d: Date): number {
-  const t = d.getTime();
-  if (!(t >= DEBUT_HEURES_ALIGNEES && t < FIN_HEURES_ALIGNEES)) return decalageIntlMs(d);
+/** Le décalage mémorisé de l'heure UTC de `t`, ou `null` hors de la plage
+ *  où les changements d'heure tombent sur des heures pleines. */
+function decalageMemorise(t: number): number | null {
+  if (!(t >= DEBUT_HEURES_ALIGNEES && t < FIN_HEURES_ALIGNEES)) return null;
   const heure = Math.floor(t / HEURE_MS);
   let decalage = decalageParHeure.get(heure);
   if (decalage === undefined) {
-    // Une mémoire bornée : un serveur qui tourne des mois ne la fait pas
-    // grossir sans fin (≈ 10 000 heures distinctes pour dix ans de dates).
     if (decalageParHeure.size >= PLAFOND_MEMOIRE) decalageParHeure.clear();
     decalage = decalageIntlMs(new Date(heure * HEURE_MS));
     decalageParHeure.set(heure, decalage);
@@ -167,15 +167,25 @@ function decalageMs(d: Date): number {
 }
 
 /**
+ * Décalage Europe/Paris ↔ UTC, en millisecondes, **à l'instant donné**
+ * (+1 h en hiver, +2 h en été). Interne : sert à reconstruire un instant
+ * depuis des composantes civiles.
+ */
+function decalageMs(d: Date): number {
+  return decalageMemorise(d.getTime()) ?? decalageIntlMs(d);
+}
+
+/**
  * Décompose un instant en composantes civiles Europe/Paris.
  * C'est la brique de base : tout le reste du module en dérive.
  */
 export function composantesCiviles(d: Date): ComposantesCiviles {
   const t = d.getTime();
-  if (!(t >= DEBUT_HEURES_ALIGNEES && t < FIN_HEURES_ALIGNEES)) return composantesCivilesIntl(d);
+  const decalage = decalageMemorise(t);
+  if (decalage === null) return composantesCivilesIntl(d);
   // L'heure civile, c'est l'instant décalé, lu en UTC. Le décalage est un
   // nombre entier de secondes : les millisecondes ne bougent pas.
-  const civil = new Date(t + decalageMs(d));
+  const civil = new Date(t + decalage);
   return {
     annee: civil.getUTCFullYear(),
     mois: civil.getUTCMonth() + 1,

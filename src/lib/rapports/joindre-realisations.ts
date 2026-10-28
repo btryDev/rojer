@@ -58,10 +58,11 @@ export type DernierRapport = { id: string } & DerniereRealisation;
  * d'index par ligne (`LATERAL … LIMIT 1` sur
  * `(verificationId, dateRapport DESC, createdAt DESC)`) : le coût suit le
  * nombre de lignes, borné par la cible, et plus la longueur de l'historique
- * (≈ 4 ms mesurés sur le même dossier). Un rapport porte toujours
- * l'établissement de sa ligne (`rapports/actions.ts`, seule écriture) ; le
- * filtre est gardé dans la sous-requête pour que le sens ne dépende pas de
- * cette propriété.
+ * (≈ 1,1 ms mesuré sur le même dossier). Les rapports d'une ligne se lisent
+ * par sa seule `verificationId` — la règle du moteur, que le test
+ * d'intégration prend pour référence —, sans exiger que leur colonne
+ * `etablissementId` (recopiée à l'écriture, `rapports/actions.ts`) soit
+ * restée égale : une divergence ne ferait pas disparaître une réalisation.
  */
 async function lireDerniersRapports(
   etablissementId: string,
@@ -77,7 +78,6 @@ async function lireDerniersRapports(
       SELECT r."id", r."dateRapport", r."resultat"::text AS "resultat"
       FROM "RapportVerification" r
       WHERE r."verificationId" = v."id"
-        AND r."etablissementId" = ${etablissementId}
         AND (${!realisesSeulement} OR r."resultat"::text = ANY(${[...RESULTATS_REALISES]}::text[]))
       ORDER BY ${ordreRapportPlusRecentSql("r")}
       LIMIT 1

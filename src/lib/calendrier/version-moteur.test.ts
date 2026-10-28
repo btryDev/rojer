@@ -551,7 +551,10 @@ const RELEVE = {
   // aux bornes de la plage mémorisée et sur 20 000 instants tirés au hasard
   // (`dates/composantes-rapides.test.ts`). Empreinte recopiée, version
   // inchangée : aucun dossier n'est régénéré.
-  empreinte: "69c2588f7f743e9c",
+  // ~~69c2588f7f743e9c~~ — même jour, revue du lot : la plage mémorisée est
+  // testée par une seule fonction (`decalageMemorise`) au lieu de deux
+  // copies. NON, même calcul : empreinte recopiée, version inchangée.
+  empreinte: "e427cfa97f701a73",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");
