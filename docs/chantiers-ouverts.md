@@ -3178,3 +3178,25 @@ rappelée en décision 15). Les relevés ECS « À REPRENDRE » (ADR-010) n'éta
 suivis nulle part : décision 20. Le « non » au DUERP imprimé,
 que l'ADR-038 laisse ouvert, est tranché depuis le 2026-10-12 (§ 17, point 2).
 
+
+## 19. Registre d'accessibilité — l'adresse publique et les pièces jointes (2026-10-28)
+
+Relevé sur `lot/ui-1028`, à la demande de la propriétaire (« quand on fait
+visualiser, on a site inaccessible ; c'est fait tout ça, le QR ? »).
+
+1. **« Site inaccessible » en local : configuration, pas code.** `PUBLIC_APP_URL`
+   absente du `.env` local ; `publicAppUrl()` (`src/lib/email/index.ts`) retombe
+   alors sur `http://localhost:3000`, et le serveur de dev tournait sur 3001.
+   « Prévisualiser », l'URL, le QR, l'affiche et le ZIP de contrôle lisent tous
+   cette même fonction. En local : `PUBLIC_APP_URL` au port réellement servi, ou
+   servir sur 3000. **En prod : vérifier que `PUBLIC_APP_URL` est posée** — sans
+   elle, la page dit « adresse publique non configurée » et l'affiche répond 503.
+2. **Attestation et Ad'AP : partiels.** Seuls le numéro d'attestation, la date
+   de conformité et la date de dépôt de l'Ad'AP se saisissent. Les colonnes du
+   fichier existent (`attestationCle`/`attestationNom`,
+   `agendaAdapCle`/`agendaAdapNom`), aucun écran ne les écrit.
+3. **Le QR n'est pas dans le ZIP de contrôle** : le ZIP porte l'URL de l'affiche.
+
+Fait et fonctionnel : page publique par slug (publiée seulement), publication et
+retrait, QR et affiche A4, prestations, formation du personnel d'accueil,
+équipements, pièce `05` du ZIP de contrôle.

@@ -6,6 +6,7 @@ import { buttonVariants } from "@/components/ui/button";
 import {
   CarteFiche,
   LegalBadge,
+  Textes,
   LignesFiche,
   WhyCard,
 } from "@/components/ui-kit";
@@ -121,7 +122,7 @@ export default async function PermisFeuListePage({
             GN&nbsp;13 du règlement de sécurité, intitulé «&nbsp;Travaux
             dangereux&nbsp;», est cité ci-dessous.
           </p>
-          <div className="mt-4 flex flex-wrap gap-2">
+          <Textes className="mt-4">
             <LegalBadge
               charte="board"
               reference="INRS ED 6030"
@@ -166,7 +167,7 @@ export default async function PermisFeuListePage({
               href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020303866"
               extrait="L'exploitant ne peut effectuer ou faire effectuer, en présence du public, des travaux qui feraient courir un danger quelconque à ce dernier ou qui apporteraient une gêne pour son évacuation."
             />
-          </div>
+          </Textes>
           <p className="m-0 mt-3 text-[13px] leading-[1.6] text-[color:var(--board-slate-mid)]">
             La règle APSAD R43 (travaux par points chauds) est un référentiel
             publié par la profession de l&apos;assurance, que Rojer n&apos;a

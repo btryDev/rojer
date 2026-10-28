@@ -68,8 +68,15 @@ export const URL_R4512_12 =
  * 2026-09-26). Chaque article garde ici ses mots, entre guillemets, relus sur
  * sa page propre le 2026-09-26 et confrontés au corpus par le test.
  */
-export const R4512_2_MOMENT =
-  "préalablement à l'exécution de l'opération réalisée par une entreprise extérieure";
+/** L'article entier, tenu égal au corpus par `annonces-plan.test.ts`. */
+export const R4512_2 =
+  "Il est procédé, préalablement à l'exécution de l'opération réalisée par une entreprise extérieure, à une inspection commune des lieux de travail, des installations qui s'y trouvent et des matériels éventuellement mis à disposition des entreprises extérieures.";
+export const URL_R4512_2 =
+  "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018529795";
+export const URL_R4512_6 =
+  "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018529785";
+export const URL_R4512_7 =
+  "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018529783";
 export const R4512_6_MOMENT = "avant le début des travaux";
 export const R4512_7_ECRIT = "établi par écrit et arrêté avant le commencement des travaux";
 export const R4512_7_1_SEUIL =
@@ -100,25 +107,81 @@ export function ligneHeuresRevisees(heures: number, leTexte: string): string {
 export const CONSTAT_HEURES_REVISEES =
   "Rojer ne compte pas les heures réalisées : il garde le nombre d'heures prévisible que vous notez.";
 
-/** L'aide de saisie de la durée, au formulaire du plan. */
+/**
+ * L'aide de saisie de la durée, au formulaire du plan. Le seuil n'y est pas
+ * redit : le diagnostic juste au-dessus le porte, sa source sous le livre.
+ */
 export const AIDE_DUREE_HEURES =
-  "Seuil R. 4512-7 : l'écrit est obligatoire dès 400 h atteintes sur une période d'au plus 12 mois. Comptez les heures de tous les intervenants, sous-traitants de l'entreprise extérieure compris. Si, en cours de chantier, il apparaît que les 400 h seront atteintes, notez-le sur la fiche du plan : Rojer en tire l'obligation d'écrit.";
+  "Comptez les heures de tous les intervenants, sous-traitants de l'entreprise extérieure compris. Si le chiffre monte en cours de chantier, notez-le sur la fiche du plan.";
 
 const minuscule = (t: string) => t.charAt(0).toLowerCase() + t.slice(1);
 
-/** Les deux cas de l'écrit, 1° ET 2° — jamais l'un sans l'autre. */
-export const PHRASE_R4512_7 =
-  `Art. R. 4512-7 : le plan de prévention est « ${R4512_7_ECRIT} » dans deux cas — ` +
+/**
+ * Les deux cas de l'écrit, 1° ET 2° — jamais l'un sans l'autre. Se lit sous
+ * le livre, dont la tête porte déjà la référence. Les fragments entre
+ * guillemets sont des constantes verbatim : la phrase les compose, elle ne
+ * les recopie pas.
+ */
+export const SENS_R4512_7 =
+  `Le plan de prévention est « ${R4512_7_ECRIT} » dans deux cas — ` +
   `1° un nombre total d'heures de travail prévisible « ${R4512_7_1_SEUIL} » ; ` +
   `2° des « ${R4512_7_2_LISTE} » par arrêté, « ${minuscule(R4512_7_2_DUREE)} ».`;
 
-/** Le moment de l'inspection — le sien, pas celui de l'accord. Aucun « reste à faire ». */
-export const PHRASE_R4512_2 =
-  `Art. R. 4512-2 : l'inspection commune a lieu « ${R4512_2_MOMENT} ».`;
-
 /** Le moment de l'accord. « Ces risques » du texte : ceux d'interférence de sa première phrase. */
-export const PHRASE_R4512_6 =
-  `Art. R. 4512-6 : lorsque des risques d'interférence existent, les employeurs arrêtent d'un commun accord le plan de prévention « ${R4512_6_MOMENT} ».`;
+export const SENS_R4512_6 =
+  `Lorsque des risques d'interférence existent, les employeurs arrêtent d'un commun accord le plan de prévention « ${R4512_6_MOMENT} ».`;
+
+// ── En clair (2026-10-28) ────────────────────────────────────────────────
+/**
+ * CE QUE L'ÉCRAN DIT, LE TEXTE ÉTANT SOUS LE LIVRE. La propriétaire, devant
+ * le diagnostic d'un nouveau plan : « on est obligé de mettre tout ce pavé ? »
+ * Quatre articles cités mot pour mot, puis deux livres « Texte » identiques.
+ * L'écran dit désormais la règle en une ou deux phrases ; les verbatims
+ * ci-dessus se lisent sous un livre (`Textes`), inchangés.
+ *
+ * Ce sont des libellés d'écran, pas du droit. Chacun est écrit en relisant
+ * les constantes verbatim de ce module : il simplifie, il n'ajoute ni délai,
+ * ni débiteur, ni condition que le texte ne porte pas. Aucun ne cite un
+ * numéro d'article ni ne met de guillemets — `annonces-plan.test.ts` le tient.
+ */
+export const EN_CLAIR_R4512_12 =
+  "Le plan reste à la disposition de l'inspection du travail pendant toute la durée des travaux, et vous informez par écrit l'inspection du travail de l'ouverture des travaux.";
+
+/** Le diagnostic, état par état. `non_impose` suit le fait saisi. */
+export const EN_CLAIR_ECRIT: Record<EtatEcrit, string> = {
+  obligatoire:
+    "Après l'inspection commune des lieux, le plan s'arrête par écrit avec l'entreprise extérieure, avant le commencement des travaux. " +
+    EN_CLAIR_R4512_12,
+  indetermine:
+    "Le plan est dû. Il s'écrit si l'opération compte au moins 400 heures de travail sur douze mois au plus, ou si les travaux figurent sur la liste des travaux dangereux : renseignez la durée estimée.",
+  non_impose:
+    "L'écrit n'est pas imposé. Si l'inspection commune révèle des risques d'interférence, le plan s'arrête d'un commun accord avec l'entreprise extérieure, avant le début des travaux.",
+};
+
+/** La fiche, carte de R. 4512-12 dans l'indéterminé : sous sa condition. */
+export const EN_CLAIR_R4512_12_SI_ECRIT = `Si l'écrit est obligatoire, ${minuscule(EN_CLAIR_R4512_12)}`;
+
+export const EN_CLAIR_R4512_2 =
+  "L'inspection commune des lieux, des installations et du matériel mis à disposition se fait avec l'entreprise extérieure avant l'exécution de l'opération, quelle que soit la durée des travaux.";
+
+/** La fiche, sans date d'inspection : le moment de R. 4512-2, le sien seul. */
+export const EN_CLAIR_R4512_2_MOMENT =
+  "L'inspection commune a lieu avant l'exécution de l'opération.";
+
+export const EN_CLAIR_R4512_7_EN_COURS =
+  "Si, en cours de chantier, il apparaît que les 400 heures seront atteintes, l'écrit devient obligatoire : notez-le ici.";
+
+export const EN_CLAIR_R4512_1 =
+  "Si l'entreprise extérieure fait venir un nouveau sous-traitant après le début de l'intervention, les mêmes étapes valent pour lui.";
+
+export const EN_CLAIR_R4512_9 =
+  "Chaque entreprise fournit la liste des postes dont les travailleurs sont susceptibles de relever du suivi individuel renforcé en raison des travaux faits chez vous ; cette liste figure dans le plan.";
+
+export const EN_CLAIR_R4512_11 =
+  "Les dossiers techniques amiante ou, le cas échéant, le rapport de repérage de l'amiante sont joints au plan.";
+
+export const EN_CLAIR_R4463_8 =
+  "Le plan tient compte, le cas échéant, des risques liés aux épisodes de chaleur intense.";
 
 /**
  * TROIS ÉTATS, ET NON DEUX. `R. 4512-7` rend l'écrit obligatoire à 400 heures

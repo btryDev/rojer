@@ -14,6 +14,7 @@ import { CHAMP_ETAT, ENCRE_ETAT } from "@/lib/calendrier/etats";
 import { FAITS_ACTIVITE } from "@/lib/etablissements/faits-activite";
 import { chargerFaitsActivite } from "@/lib/etablissements/faits-activite-queries";
 import { FormationsAOrganiser } from "@/components/salaries/FormationsAOrganiser";
+import { EvaluerRisquesACompleter } from "@/components/salaries/EvaluerRisquesACompleter";
 import { ancreEtatPermanent } from "@/lib/etats-permanents/ancre";
 import {
   aOrganiserALEtablissement,
@@ -90,7 +91,6 @@ export default async function EquipePage({
     epiPresents: "EPI",
   };
   const muets = faits ? FAITS_ACTIVITE.filter((f) => faits[f.champ] === null) : [];
-  const sansReponse = muets.length;
 
   const enRetard = equipe
     .filter((s) => s.actif)
@@ -155,25 +155,12 @@ export default async function EquipePage({
         {/* [2026-10-24, décision de la propriétaire] Le bloc ne s'affiche
             que tant qu'une question reste sans réponse : une fois tout répondu,
             les réponses se revoient dans le DUERP, et les formations qui en
-            découlent dans la section « Formations à organiser ». */}
-        {sansReponse > 0 && (
-        <section className="carte-board flex flex-wrap items-center justify-between gap-4 px-7 py-5 sm:px-8">
-          <div className="min-w-0 max-w-[var(--board-mesure)]">
-            <p className="m-0 text-[14px] font-semibold leading-[1.4] text-[color:var(--board-ink)]">
-              Évaluez les risques de vos salariés
-            </p>
-            <p className="m-0 mt-1 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-              {`${sansReponse} question${sansReponse > 1 ? "s" : ""} sans réponse : ${muets.map((f) => NOM_COURT[f.champ]).join(", ")}. Elles décident des formations, du suivi et des consignes dus à une partie de l'effectif.`}
-            </p>
-          </div>
-          <Link
-            href={`/etablissements/${id}/equipe/risques`}
-            className={buttonVariants({ variant: "board", size: "boardSm" })}
-          >
-            Évaluer les risques →
-          </Link>
-        </section>
-        )}
+            découlent dans la section « Formations à organiser ». Cadre ambre
+            des Équipements depuis le 2026-10-28. */}
+        <EvaluerRisquesACompleter
+          sansReponse={muets.map((f) => NOM_COURT[f.champ])}
+          href={`/etablissements/${id}/equipe/risques`}
+        />
 
         {equipe.length === 0 ? (
           <section className="carte-board px-7 py-8 sm:px-8">

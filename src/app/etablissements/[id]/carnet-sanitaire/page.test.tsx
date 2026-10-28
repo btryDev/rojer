@@ -26,6 +26,11 @@ vi.mock("@/lib/carnet-sanitaire/queries", () => ({
 vi.mock("@/lib/batiments/queries", () => ({
   listerBatimentsDeLEtablissement: async () => [],
 }));
+// Le corps de « Pourquoi ce carnet » vit dans la modal du « ? » (2026-10-28),
+// qui ne se rend qu'ouverte : ici on la rend ouverte, pour lire le texte.
+vi.mock("@/components/ui-kit/AideEcran", () => ({
+  AideEcran: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
 // Les actions serveur : aucune n'est appelée au rendu, toutes sont des fonctions.
 vi.mock("@/lib/carnet-sanitaire/actions", () =>
   new Proxy({} as Record<string, unknown>, {

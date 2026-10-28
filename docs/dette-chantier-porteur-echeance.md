@@ -277,7 +277,7 @@ Deux libellés de statut divergent — « Terminé » /
 « Travaux terminés », « Validé » / « Prêt à démarrer ». Les unifier est une
 décision de contenu, pas un effet de bord de migration.
 
-### 6.4 `ComplianceTimeline` est du code mort — confirmé, non supprimé
+### 6.4 ~~`ComplianceTimeline` est du code mort — confirmé, non supprimé~~ [2026-10-28, `lot/ui-1028` : supprimé avec `.filet-vertical`, son seul usage — il portait la dernière pastille « § » écrite à la main]
 
 Aucun appelant dans tout le dépôt : deux occurrences seulement, sa définition
 et sa ré-export du barrel. Il est le seul appelant de `.filet-vertical`. Il

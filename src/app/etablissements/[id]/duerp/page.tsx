@@ -3,7 +3,7 @@ import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import { notFound, redirect } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { WhyCard } from "@/components/ui-kit/WhyCard";
-import { LegalBadge } from "@/components/ui-kit/LegalBadge";
+import { LegalBadge, Textes } from "@/components/ui-kit/LegalBadge";
 import { getEtablissement } from "@/lib/etablissements/queries";
 import { creerDuerp } from "@/lib/duerps/actions";
 import { EXTRAIT_R4121_2 } from "@/lib/referentiels/conformite/texte-r4121-2";
@@ -60,7 +60,7 @@ export default async function EtablissementDuerpPage({
             vous pouvez vous arrêter et reprendre. L&apos;outil structure
             votre évaluation ; il ne certifie pas votre conformité.
           </p>
-          <div className="mt-4 flex flex-wrap gap-2">
+          <Textes className="mt-4">
             <LegalBadge
               charte="board"
               reference="Art. R. 4121-1 CT"
@@ -90,7 +90,7 @@ export default async function EtablissementDuerpPage({
                 elles ne s&apos;écrasent pas.
               </p>
             </LegalBadge>
-          </div>
+          </Textes>
         </WhyCard>
 
         <div className="carte-board flex flex-wrap items-center justify-between gap-4 px-7 py-6 sm:px-8">

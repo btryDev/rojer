@@ -5,9 +5,7 @@ import { AjouterUniteForm } from "@/components/duerps/AjouterUniteForm";
 import { UniteRow } from "@/components/duerps/UniteRow";
 import { WizardSteps } from "@/components/duerps/WizardSteps";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
-import { activitesDuSecteur } from "@/lib/activites/reponses";
-import { construireEtapes } from "@/lib/duerps/etapes";
-import { etatEtapeTransverses } from "@/lib/transverses/etat";
+import { etapesDuDuerp } from "@/lib/duerps/etapes";
 import { getDuerp } from "@/lib/duerps/queries";
 
 export default async function UnitesPage({
@@ -21,13 +19,7 @@ export default async function UnitesPage({
 
   const unitesVisibles = duerp.unites.filter((u) => !u.estTransverse);
   const unitesOk = unitesVisibles.length > 0;
-  const etapes = construireEtapes(id, "unites", {
-    secteurOk: Boolean(duerp.referentielSecteurId),
-    unitesOk,
-    risquesOk: false,
-    transverses: etatEtapeTransverses(duerp),
-    activitesPosees: activitesDuSecteur(duerp.referentielSecteurId).length > 0,
-  });
+  const etapes = etapesDuDuerp(duerp, "unites");
 
   return (
     <div className="flex flex-col gap-[22px]">

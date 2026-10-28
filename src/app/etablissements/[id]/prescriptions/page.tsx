@@ -9,7 +9,8 @@ import {
   estSourceContractuelle,
   type SourcePrescription,
 } from "@/lib/prescriptions/sources";
-import { PrescriptionForm } from "@/components/prescriptions/PrescriptionForm";
+import { BarreDeListe } from "@/components/ui-kit/BarreDeListe";
+import { NouvellePrescription } from "@/components/prescriptions/NouvellePrescription";
 import { MentionContractuelle } from "@/components/prescriptions/MentionContractuelle";
 import { PrescriptionActions } from "@/components/prescriptions/PrescriptionActions";
 
@@ -90,6 +91,20 @@ export default async function PrescriptionsPage({
       />
 
       <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
+        {/* Le geste principal au-dessus de la liste, le formulaire en modal
+            (2026-10-28) : posé sous la liste, il s'éloignait à chaque
+            prescription ouverte. Le bouton reste là quand la liste est vide. */}
+        <BarreDeListe
+          action={
+            <NouvellePrescription
+              action={action}
+              obligations={obligations}
+              equipements={equipements}
+              sourceInitiale={sourceInitiale}
+              ouvertAuDepart={sourceInitiale !== undefined}
+            />
+          }
+        />
         <section className="flex flex-col gap-4">
           <h2 className="board-titre m-0 text-[22px]">
             Prescriptions déclarées
@@ -98,7 +113,7 @@ export default async function PrescriptionsPage({
             <p className="carte-board m-0 px-7 py-5 text-[14px] leading-[1.6] text-[color:var(--board-slate-mid)] sm:px-8">
               Aucune prescription déclarée. Si personne ne vous a rien
               prescrit en propre — ni autorité, ni assureur —, il n&apos;y a
-              rien à faire ici.
+              rien à faire ici. Sinon, « Ajouter une prescription » ci-dessus.
             </p>
           ) : (
             <ul className="carte-board m-0 list-none p-0">
@@ -180,18 +195,6 @@ export default async function PrescriptionsPage({
               ))}
             </ul>
           )}
-        </section>
-
-        <section className="flex flex-col gap-4">
-          <h2 className="board-titre m-0 text-[22px]">
-            Déclarer une prescription
-          </h2>
-          <PrescriptionForm
-            action={action}
-            obligations={obligations}
-            equipements={equipements}
-            sourceInitiale={sourceInitiale}
-          />
         </section>
       </div>
     </main>

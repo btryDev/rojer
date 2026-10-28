@@ -7,11 +7,7 @@ import {
   formaterDateFr,
 } from "@/lib/dates";
 import {
-  EXTRAIT_R4512_12,
-  FAIT_DUREE_NON_RENSEIGNEE,
-  PHRASE_R4512_2,
-  PHRASE_R4512_6,
-  PHRASE_R4512_7,
+  EN_CLAIR_ECRIT,
   R4512_7_1_EN_COURS,
   R4512_7_1_SEUIL,
   ligneHeuresRevisees,
@@ -293,17 +289,9 @@ export function diagnostiquerPlan(params: {
     : params.dureeHeuresEstimee === null && revisees === null
       ? "indetermine"
       : "non_impose";
-  // `R. 4512-12` s'ouvre sur « Lorsque l'établissement d'un plan de
-  // prévention par écrit est obligatoire, en application de l'article
-  // R. 4512-7 » : il est cité entier, sa condition comprise, quand l'écrit
-  // est obligatoire ET quand Rojer ne peut pas dire qu'il ne l'est pas. Aucun
-  // délai ajouté — l'article n'en fixe pas.
-  const r4512_12 = `Art. R. 4512-12 : « ${EXTRAIT_R4512_12} »`;
-  // Chaque article avec ses mots et son moment : l'inspection « préalablement
-  // à l'exécution de l'opération » (R. 4512-2), l'accord « avant le début des
-  // travaux » (R. 4512-6), l'écrit dans ses DEUX cas (R. 4512-7). Aucun
-  // « restent à faire » : le diagnostic ne sait pas si l'inspection a eu lieu.
-  const TEXTES = `${PHRASE_R4512_7} ${PHRASE_R4512_2} ${PHRASE_R4512_6}`;
+  // La règle en clair (`EN_CLAIR_ECRIT`) ; les articles se lisent sous le
+  // livre du formulaire. Aucun « restent à faire » — le diagnostic ne sait
+  // pas si l'inspection a eu lieu —, et aucun délai à R. 4512-12.
   return {
     ecrit,
     ecritObligatoire,
@@ -311,10 +299,8 @@ export function diagnostiquerPlan(params: {
     seuil400EnCours,
     raisons,
     recommandation:
-      ecrit === "obligatoire"
-        ? `${TEXTES} ${r4512_12}`
-        : ecrit === "indetermine"
-          ? `${FAIT_DUREE_NON_RENSEIGNEE} ${TEXTES} ${r4512_12}`
-          : `${revisees ?? `Durée saisie : ${params.dureeHeuresEstimee} heures`} ; travaux non déclarés dangereux. ${TEXTES}`,
+      ecrit === "non_impose"
+        ? `${revisees ?? `Durée saisie : ${params.dureeHeuresEstimee} heures`} ; travaux non déclarés dangereux. ${EN_CLAIR_ECRIT.non_impose}`
+        : EN_CLAIR_ECRIT[ecrit],
   };
 }

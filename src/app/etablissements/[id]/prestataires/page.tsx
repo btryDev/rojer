@@ -4,7 +4,7 @@ import { BarreDeListe } from "@/components/ui-kit/BarreDeListe";
 import { CompteurEtat } from "@/components/ui-kit/CompteurEtat";
 import { Plus } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
-import { LegalBadge } from "@/components/ui-kit";
+import { LegalBadge, WhyCard } from "@/components/ui-kit";
 import { PrestataireCard } from "@/components/prestataires/PrestataireCard";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { listPrestataires } from "@/lib/prestataires/queries";
@@ -120,16 +120,14 @@ export default async function PrestatairesPage({
           </div>
         )}
 
-        {/* Ce qui fonde l'obligation, replié en pied : on le lit une fois, on
-            ne le relit pas à chaque visite. */}
-        <section className="carte-board px-7 py-6 sm:px-8">
-          <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-            Pourquoi cette page
-          </p>
-          <h2 className="board-titre m-0 mt-2 text-[22px]">
-            Votre obligation de vigilance
-          </h2>
-          <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+        {/* Ce qui fonde l'obligation, derrière le « ? » (2026-10-28) : on le
+            lit une fois, on ne le relit pas à chaque visite. */}
+        <WhyCard
+          charte="board"
+          kicker="Pourquoi cette page"
+          titre="Votre obligation de vigilance"
+        >
+          <p className="m-0">
             Pour tout contrat d&apos;au moins <strong>5 000 € HT</strong>, vous
             vous faites remettre <strong>tous les six mois</strong>{" "}
             l&apos;attestation
@@ -142,7 +140,7 @@ export default async function PrestatairesPage({
               2026-12-26 : « fin décembre 2026 » reste juste des deux côtés.
               Adresse du `declareA` de L. 8222-1-1 au corpus, tenue par
               `vigilance-sous-traitant.test.ts`. */}
-          <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          <p className="m-0 mt-2">
             Si votre prestataire fait intervenir un sous-traitant que vous
             acceptez, pour un contrat de sous-traitance d&apos;un montant
             minimal, vous devez aussi vérifier périodiquement, au plus tard à
@@ -173,7 +171,7 @@ export default async function PrestatairesPage({
               </p>
             </LegalBadge>
           </div>
-        </section>
+        </WhyCard>
       </div>
     </main>
   );

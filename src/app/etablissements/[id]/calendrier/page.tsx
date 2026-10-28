@@ -6,7 +6,7 @@ import { ArrowUpRight, ChevronRight } from "lucide-react";
 import { AideEcran } from "@/components/ui-kit/AideEcran";
 import { LienProvenance } from "@/components/navigation/LienProvenance";
 import { EnTetePage } from "@/components/entete-page/EnTetePage";
-import { LegalBadge } from "@/components/ui-kit/LegalBadge";
+import { LegalBadge, Textes } from "@/components/ui-kit/LegalBadge";
 import { BadgeStatut } from "@/components/calendrier/BadgeStatut";
 import { mentionDelaiDeGrace } from "@/lib/calendrier/grace";
 import { datePoseeAuCalendrier, pastilleRendezVous, type PastilleRendezVous } from "@/lib/rendez-vous/regles";
@@ -1125,7 +1125,7 @@ export default async function CalendrierPage({
         sur l&apos;année en cours, celles des années passées restées en
         retard.
       </p>
-      <div className="flex flex-wrap gap-2 pt-1">
+      <Textes className="pt-1">
         <LegalBadge
           charte="board"
           reference="Art. R. 4323-23 s. CT"
@@ -1143,7 +1143,7 @@ export default async function CalendrierPage({
             (électricité, moyens de secours, désenfumage…).
           </p>
         </LegalBadge>
-      </div>
+      </Textes>
     </AideEcran>
   );
 

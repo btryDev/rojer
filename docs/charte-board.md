@@ -137,15 +137,30 @@ Les valeurs sont des littéraux. L'échelle de fait :
 | `16px` | Champ de saisie |
 | `9999px` | Pastilles, boutons |
 
-**Exception, la pastille d'article (`LegalBadge`, 2026-10-16)** : une
-référence peut passer à la ligne (« R. 157-1, 1° (obligation de détenir…) »).
-Elle prend alors le rayon du bloc interne, `18px`, et s'aligne à gauche
-(`text-left`) — à `9999px`, un texte de plusieurs lignes devient une bulle
-ovale centrée (contrôle visuel du lot défibrillateur, 500 px). Sur une seule
-ligne (~26 px de haut), le navigateur ramène 18 px à la demi-hauteur : la
-forme reste celle d'une pastille. La variante papier (dette) garde
-`rounded-full` mais s'aligne aussi à gauche. Tenu par `LegalBadge.test.tsx` ;
-ne pas « réaligner » ce composant sur `.pastille-board`.
+~~**Exception, la pastille d'article (`LegalBadge`, 2026-10-16)** : une
+référence peut passer à la ligne […] ne pas « réaligner » ce composant sur
+`.pastille-board`.~~ [2026-10-28 : la pastille « § ART. … ▾ » n'existe plus.]
+
+**Le droit derrière un livre, l'explication derrière un « ? » (2026-10-28).**
+L'écran dit la règle en clair ; le texte juridique et l'explication se lisent
+à un clic, jamais imposés à chaque visite. Deux pictos, deux sens :
+
+- **Livre** (`LegalBadge`) : une source — référence, citation, lien
+  Légifrance. Un livre et un mot, « Texte » par défaut (`libelle` pour un
+  article court : « GN 10 »). Plusieurs sources côte à côte → **un seul livre**,
+  `Textes`, qui les liste au dépli. Une référence sans adresse s'écrit en texte
+  simple (`ReferenceSansLien`), jamais en « § » capitales. `TexteSource` (« Ce
+  que dit le texte ») est le même livre, pour une citation composée.
+- **« ? »** (`AideEcran`) : une explication — comment lire la page, pourquoi
+  cette obligation. Rond seul, ou avec son titre (`libelle`) quand il remplace
+  une carte. `WhyCard` en board **est** ce « ? » avec titre ; restent des cartes
+  ouvertes la tonalité `alerte` (un avertissement ne se range pas derrière un
+  clic), `ok` (un fait acquis) et `replie={false}` (ce qu'il faut lire avant
+  d'agir, comme la page de signature d'un prestataire). Dans la modal d'une
+  aide, les livres se présentent ouverts.
+
+Ne pas réécrire « § » + référence à la main dans un écran : c'est ce qui
+avait fait diverger quatre écritures.
 
 Règle relevée pour les marques carrées : `borderRadius: Math.round(taille * 0.34)`.
 
@@ -265,7 +280,8 @@ depuis le calendrier ». Réutiliser plutôt que refaire.
 | `LigneFiche` | Ligne de liste, avec voile d'état optionnel |
 | `TuileDate` | Le carré de date, deux tailles (`liste` 50 px, `fiche` 84 px) |
 | `FilRetour` | Le retour de provenance (ADR-014) |
-| `AideEcran` | Le bouton `?` et son panneau |
+| `AideEcran` | Le bouton `?` et son panneau ; avec `libelle`, une ligne « ? + titre » |
+| `LegalBadge` / `Textes` | Le livre d'une source ; `Textes` en regroupe plusieurs |
 
 Hors kit : `MarqueurFamille` / `MarqueurEcheance`, `BadgeStatut`,
 `MarqueCategorie`, `ChampSaisie`.

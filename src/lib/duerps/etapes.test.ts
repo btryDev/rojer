@@ -7,6 +7,8 @@ const progression = {
   risquesOk: true,
   transverses: { faite: true, sansReponse: [] },
   activitesPosees: false,
+  activitesOk: false,
+  versionValidee: false,
 };
 
 function ids(etapes: ReturnType<typeof construireEtapes>): EtapeId[] {
@@ -47,10 +49,7 @@ describe("construireEtapes — étape périmètre", () => {
 
   it("n'est jamais bloquante : elle ne conditionne aucune étape suivante", () => {
     const etapes = construireEtapes("d1", "synthese", {
-      secteurOk: true,
-      unitesOk: true,
-      risquesOk: true,
-      transverses: { faite: true, sansReponse: [] },
+      ...progression,
       activitesPosees: true,
     });
     expect(etapes.find((e) => e.id === "unites")?.atteinte).toBe(true);
@@ -78,5 +77,28 @@ describe("construireEtapes — la synthèse n'attend pas les questions transvers
   it("sans unité, la synthèse reste à venir", () => {
     const etapes = construireEtapes("d1", "unites", { ...sansReponse, unitesOk: false });
     expect(etapes.find((e) => e.id === "synthese")?.atteinte).toBe(false);
+  });
+});
+
+describe("construireEtapes — « Fait » se lit sur les données (2026-10-28)", () => {
+  const avec = (p: Partial<Parameters<typeof construireEtapes>[2]>) =>
+    construireEtapes("d1", "unites", { ...progression, ...p });
+  const faite = (etapes: ReturnType<typeof construireEtapes>, id: EtapeId) =>
+    etapes.find((e) => e.id === id)?.faite;
+
+  it("accessible n'est pas fait : risques non évalués, l'étape est atteinte mais pas faite", () => {
+    const etapes = avec({ risquesOk: false });
+    expect(etapes.find((e) => e.id === "risques")?.atteinte).toBe(true);
+    expect(faite(etapes, "risques")).toBe(false);
+  });
+
+  it("la synthèse n'est faite qu'avec une version validée", () => {
+    expect(faite(avec({}), "synthese")).toBe(false);
+    expect(faite(avec({ versionValidee: true }), "synthese")).toBe(true);
+  });
+
+  it("les transverses suivent leur état calculé", () => {
+    expect(faite(avec({ transverses: { faite: false, sansReponse: ["q1"] } }), "transverses")).toBe(false);
+    expect(faite(avec({}), "transverses")).toBe(true);
   });
 });

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   CHAPEAU_R4512_8,
+  TEXTE_R4512_8,
   RUBRIQUES_R4512_8,
   contenuR4512_8,
   rubriquesManquantes,
@@ -46,6 +47,8 @@ describe("ce que les surfaces citent est bien le relevé du corpus", () => {
       (r) => `${r.numero}° ${r.verbatim}`,
     ).join(" ; ")}.`;
     expect(recompose).toBe(entree?.citationCle);
+    // La même recomposition, telle que les deux écrans l'affichent sous le livre.
+    expect(TEXTE_R4512_8).toBe(entree?.citationCle);
   });
 
   it("garde des titres qui abrègent leur alinéa, sans le trahir", () => {

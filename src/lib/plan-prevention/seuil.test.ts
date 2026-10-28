@@ -111,19 +111,26 @@ describe("sous le seuil, ce qui reste dû", () => {
   // R. 4512-6) », attribuait à R. 4512-6 des mots qui ouvrent le 2° de
   // R. 4512-7, et rangeait l'inspection sous le moment de l'accord. Ce qui
   // est tenu désormais : chaque acte, avec son article et SON moment.
-  it("il dit que le plan lui-même est arrêté, par R. 4512-6, avant le début des travaux", () => {
+  // [2026-10-28 : la recommandation dit la règle en clair, les articles se
+  // lisent sous le livre du formulaire. Les deux gardes suivantes tiennent le
+  // même fond — le plan reste dû, à son moment ; l'inspection n'emprunte pas
+  // celui de l'accord — sur la phrase en clair. Le verbatim est tenu par
+  // `annonces-plan.test.ts` et `annonces-surfaces.test.tsx`.]
+  it("il dit que le plan lui-même est arrêté, d'un commun accord, avant le début des travaux", () => {
     expect(
       sousLeSeuil.recommandation,
       "Le message sous le seuil ne dit pas que le plan est dû : le dirigeant " +
         "lit qu'il n'a rien à faire tant qu'il n'atteint pas 400 heures.",
     ).toContain(
-      "Art. R. 4512-6 : lorsque des risques d'interférence existent, les employeurs arrêtent d'un commun accord le plan de prévention « avant le début des travaux ».",
+      "le plan s'arrête d'un commun accord avec l'entreprise extérieure, avant le début des travaux.",
     );
+    expect(sousLeSeuil.recommandation).toContain("risques d'interférence");
   });
 
-  it("il nomme l'inspection commune avec le moment de R. 4512-2, pas celui de l'accord", () => {
-    expect(sousLeSeuil.recommandation).toContain(
-      "Art. R. 4512-2 : l'inspection commune a lieu « préalablement à l'exécution de l'opération réalisée par une entreprise extérieure ».",
+  it("il nomme l'inspection commune sans lui prêter le moment de l'accord", () => {
+    expect(sousLeSeuil.recommandation).toContain("inspection commune");
+    expect(sousLeSeuil.recommandation).not.toMatch(
+      /inspection commune[^.]*avant le début des travaux[^.]*,[^.]*plan/,
     );
     expect(sousLeSeuil.recommandation).not.toMatch(/restent? à faire/i);
   });
@@ -134,9 +141,12 @@ describe("sous le seuil, ce qui reste dû", () => {
     }
   });
 
-  it("il dit les deux cas de l'écrit, pas seulement les 400 heures", () => {
-    expect(sousLeSeuil.recommandation).toMatch(/1° [^;]*400 heures/);
-    expect(sousLeSeuil.recommandation).toMatch(/2° [^.]*travaux dangereux[^.]*quelle que soit la durée prévisible/);
+  it("il dit les deux faits de l'écrit, pas seulement les heures", () => {
+    // Les deux cas de R. 4512-7 se lisent sous le livre (`SENS_R4512_7`,
+    // tenu par `annonces-plan.test.ts`) ; la phrase en clair garde les deux
+    // faits qui fondent sa conclusion.
+    expect(sousLeSeuil.recommandation).toMatch(/^Durée saisie : 120 heures ; /);
+    expect(sousLeSeuil.recommandation).toContain("travaux non déclarés dangereux");
   });
 
   it("il ne présente plus l'écrit comme une précaution contre le litige", () => {

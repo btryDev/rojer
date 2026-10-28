@@ -18,7 +18,6 @@ import {
   ChampsFiche,
   CorpsFiche,
   EcranFiche,
-  LegalBadge,
   LigneFiche,
   LignesFiche,
   PastilleFiche,
@@ -26,6 +25,7 @@ import {
   TuileMuette,
 } from "@/components/ui-kit";
 import { HeroEquipement } from "@/components/equipements/HeroEquipement";
+import { ReferenceFondatrice } from "@/components/salaries/ReferenceFondatrice";
 import {
   CarteDocuments,
   CartePhotos,
@@ -674,29 +674,10 @@ export default async function EquipementDetailPage({
                           Pourquoi elle vise cet appareil : {raisons.join(" · ")}.
                         </p>
                       )}
-                      {/* La référence qui FONDE l'obligation vient en premier
-                          dans le référentiel (ADR-003). Même geste que sur la
-                          fiche d'un salarié : pastille dépliable quand elle
-                          pointe un texte, texte simple sinon — l'apparence
-                          d'un lien sans rien dessous est un lien mort. */}
-                      <div className="mt-2.5 flex flex-wrap items-center gap-3">
-                        {obligation.referencesLegales.slice(0, 1).map((r) =>
-                          r.url ? (
-                            <LegalBadge
-                              key={r.article ?? r.reference}
-                              charte="board"
-                              reference={r.reference}
-                              href={r.url}
-                            />
-                          ) : (
-                            <span
-                              key={r.article ?? r.reference}
-                              className="font-mono text-[10.5px] font-medium uppercase tracking-[0.16em] text-[color:var(--board-slate-soft)]"
-                            >
-                              § {r.reference}
-                            </span>
-                          ),
-                        )}
+                      {/* La référence qui FONDE l'obligation (ADR-003) : le
+                          même composant que sur la fiche d'un salarié. */}
+                      <div className="mt-2.5">
+                        <ReferenceFondatrice obligation={obligation} />
                       </div>
                     </li>
                   ))}

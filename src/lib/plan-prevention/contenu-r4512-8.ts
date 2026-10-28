@@ -139,6 +139,15 @@ export const RUBRIQUES_R4512_8: readonly RubriqueR4512_8[] = [
 export const CHAPEAU_R4512_8 =
   "Les mesures prévues par le plan de prévention comportent au moins les dispositions suivantes :";
 
+/**
+ * L'article entier, recomposé du chapeau et des cinq alinéas (2026-10-28) :
+ * c'est ce qui se lit sous le livre de R. 4512-8, au formulaire comme sur la
+ * fiche. `contenu-r4512-8.test.ts` le tient égal à la `citationCle`.
+ */
+export const TEXTE_R4512_8 = `${CHAPEAU_R4512_8} ${RUBRIQUES_R4512_8.map(
+  (r) => `${r.numero}° ${r.verbatim}`,
+).join(" ; ")}.`;
+
 export const URL_R4512_8 =
   "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018529781";
 

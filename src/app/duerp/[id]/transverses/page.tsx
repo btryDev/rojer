@@ -8,12 +8,10 @@ import { CadreACompleter, ListeACompleter } from "@/components/ui-kit/CadreAComp
 import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
 import { faitsManquants } from "@/lib/etablissements/guide-par-module";
 import { WizardSteps } from "@/components/duerps/WizardSteps";
-import { activitesDuSecteur } from "@/lib/activites/reponses";
-import { construireEtapes } from "@/lib/duerps/etapes";
+import { etapesDuDuerp } from "@/lib/duerps/etapes";
 import { getDuerp } from "@/lib/duerps/queries";
 import { risquesTransverses } from "@/lib/referentiels";
 import {
-  etatEtapeTransverses,
   repondreAuxQuestionsTransverses,
   risquesTransversesActifs,
 } from "@/lib/transverses/etat";
@@ -27,7 +25,6 @@ export default async function TransversesPage({
   const duerp = await getDuerp(id);
   if (!duerp) notFound();
 
-  const unitesSaisies = duerp.unites.filter((u) => !u.estTransverse);
   const uniteTransverse = duerp.unites.find((u) => u.estTransverse);
   // Trois états — oui, non, sans réponse — lus par la règle de
   // `transverses/etat.ts` : l'écran ne relit pas les risques à sa façon.
@@ -42,18 +39,7 @@ export default async function TransversesPage({
     duerp.etablissement,
   );
 
-  const unitesOk = unitesSaisies.length > 0;
-  const risquesOk =
-    unitesOk && unitesSaisies.every((u) => u.risques.length > 0);
-  const etapes = construireEtapes(id, "transverses", {
-    secteurOk: Boolean(duerp.referentielSecteurId),
-    unitesOk,
-    risquesOk,
-    // Calculée, plus stockée (2026-10-12, chantiers-ouverts § 17.5) : la même
-    // règle que les lignes ci-dessous, appliquée au DUERP entier.
-    transverses: etatEtapeTransverses(duerp),
-    activitesPosees: activitesDuSecteur(duerp.referentielSecteurId).length > 0,
-  });
+  const etapes = etapesDuDuerp(duerp, "transverses");
 
   const risquesParId = new Map(risquesTransverses.map((r) => [r.id, r]));
 

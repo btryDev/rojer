@@ -6,7 +6,7 @@ import { DemandeAide } from "@/components/assistance/DemandeAide";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AideEcran } from "@/components/ui-kit/AideEcran";
-import { LegalBadge } from "@/components/ui-kit/LegalBadge";
+import { LegalBadge, Textes } from "@/components/ui-kit/LegalBadge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/layout/EmptyState";
 import { BadgeResultat } from "@/components/rapports/BadgeResultat";
@@ -153,7 +153,7 @@ export default async function RegistrePage({
         qualifiée ; l&apos;application conserve ce qu&apos;ils vous remettent
         et vous dit ce qui manque.
       </p>
-      <div className="flex flex-wrap gap-2 pt-1">
+      <Textes className="pt-1">
         <LegalBadge
           charte="board"
           reference="Art. R. 143-44 CCH"
@@ -201,7 +201,7 @@ export default async function RegistrePage({
             peut exiger plus longtemps.
           </p>
         </LegalBadge>
-      </div>
+      </Textes>
     </AideEcran>
   );
 
