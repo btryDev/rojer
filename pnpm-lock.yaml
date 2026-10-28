@@ -105,9 +105,15 @@ importers:
       eslint-config-next:
         specifier: 16.4.1
         version: 16.4.1(@typescript-eslint/parser@8.58.2(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3)
+      gsap:
+        specifier: 3.12.5
+        version: 3.12.5
       jsdom:
         specifier: ^29.0.2
         version: 29.0.2(@noble/hashes@1.8.0)
+      playwright-core:
+        specifier: 1.48.2
+        version: 1.48.2
       prisma:
         specifier: ^6
         version: 6.19.3(typescript@5.9.3)
@@ -2507,6 +2513,9 @@ packages:
     resolution: {integrity: sha512-5bJ+nf/UCpAjHM8i06fl7eLyVC9iuNAjm9qzkiu2ZGhM0VscSvS6WDPfAwkdkBuoXGM9FJSbKl6wylMwP9Ktig==}
     engines: {node: ^12.22.0 || ^14.16.0 || ^16.0.0 || >=17.0.0}
 
+  gsap@3.12.5:
+    resolution: {integrity: sha512-srBfnk4n+Oe/ZnMIOXt3gT605BX9x5+rh/prT2F1SsNJsU1XuMiP0E2aptW481OnonOGACZWBqseH5Z7csHxhQ==}
+
   has-bigints@1.1.0:
     resolution: {integrity: sha512-R3pbpkcIqv2Pm3dUwgjclDRVmWpTJW2DcMzcIhEXEx1oh/CEMObMm3KLmRJOdvhM7o4uQBnwr8pzRK2sJWIqfg==}
     engines: {node: '>= 0.4'}
@@ -3346,6 +3355,11 @@ packages:
 
   pkg-types@2.3.0:
     resolution: {integrity: sha512-SIqCzDRg0s9npO5XQ3tNZioRY1uK06lA41ynBC1YmFTmnY6FjUjVt6s4LoADmwoig1qqD0oK8h1p/8mlMx8Oig==}
+
+  playwright-core@1.48.2:
+    resolution: {integrity: sha512-sjjw+qrLFlriJo64du+EK0kJgZzoQPsabGF4lBvsid+3CNIZIYLgnMj9V6JY5VhM2Peh20DJWIVpVljLLnlawA==}
+    engines: {node: '>=18'}
+    hasBin: true
 
   png-js@2.0.0:
     resolution: {integrity: sha512-GdzJuUMc6ZSpxFJWVxtOH1bzYHym+TOnveqUjb+VJIbZWbZzyiRGFiKhbiielfpYbgMlhHVhsJ0FTazfuRFkMA==}
@@ -6748,6 +6762,8 @@ snapshots:
 
   graphql@16.13.2: {}
 
+  gsap@3.12.5: {}
+
   has-bigints@1.1.0: {}
 
   has-flag@4.0.0: {}
@@ -7533,6 +7549,8 @@ snapshots:
       confbox: 0.2.4
       exsolve: 1.0.8
       pathe: 2.0.3
+
+  playwright-core@1.48.2: {}
 
   png-js@2.0.0:
     dependencies:

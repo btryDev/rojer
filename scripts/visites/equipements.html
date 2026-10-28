@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Visite Équipements</title>
+<!-- Source de public/videos/visite-equipements.mp4. Les {{…}} sont remplis par scripts/visites/rendre.tsx. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Instrument+Sans:wght@500;600&family=JetBrains+Mono:wght@500&display=block" rel="stylesheet">
+<style>
+:root{
+  --canvas:#f6f9fb; --card:#fff; --ink:#0a0a0a;
+  --blue-pale:#d8eef9; --blue-soft:#a9d3ec; --blue-strong:#5d93b8; --blue-ink:#376881;
+  --slate-pale:#edf2f5; --slate-line:#dfe8ee; --slate:#b5d1e3; --slate-soft:#5c7182; --slate-mid:#4d5d6b; --slate-ink:#304148;
+  --signal:#ff9d9e; --signal-ink:#8a2a23; --amber:#fff3ba; --amber-ink:#754d0a; --amber-wash:#fffaf0;
+  --green:#bdfdb5; --green-ink:#216037; --glacier:#dceaf6;
+  --shadow:0 0 0 1px rgba(13,18,36,.06),0 1px 2px rgba(13,18,36,.04),0 12px 32px -14px rgba(13,18,36,.1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1280px;height:720px;overflow:hidden;background:var(--canvas);font-family:"IBM Plex Sans",sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+.titre{font-family:"Instrument Sans",sans-serif;font-weight:600;letter-spacing:-.032em;line-height:1.12}
+.eb{font-family:"JetBrains Mono",monospace;font-weight:500;text-transform:uppercase;letter-spacing:.18em;font-size:10.5px;color:var(--slate-soft)}
+.carte{background:var(--card);border-radius:30px;box-shadow:var(--shadow)}
+.btn{display:inline-flex;align-items:center;gap:8px;border-radius:9999px;height:40px;padding:0 18px;font-size:13.5px;font-weight:600;white-space:nowrap}
+.btn-ink{background:var(--ink);color:#fff}
+.btn-clair{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1px #d4dde3}
+.btn-sm{height:32px;padding:0 14px;font-size:12.5px}
+.past{display:inline-flex;align-items:center;gap:7px;border-radius:9999px;padding:5px 13px;font-size:12.5px;font-weight:600;white-space:nowrap}
+.label{font-size:13px;font-weight:600;margin-bottom:8px;display:block}
+.champ{height:44px;border-radius:16px;background:var(--slate-pale);border:1px solid var(--slate-line);display:flex;align-items:center;padding:0 16px;font-size:14px;color:var(--ink);position:relative}
+.champ.vide{color:#8193a0}
+.aide{font-size:12px;line-height:1.5;color:var(--slate-mid);margin-top:7px}
+.chev{position:absolute;right:14px;top:50%;margin-top:-9px;color:var(--slate-mid)}
+
+/* ---------- la fenêtre et la caméra ---------- */
+#fenetre{position:absolute;left:28px;top:28px;width:860px;height:664px;border-radius:18px;overflow:hidden;background:var(--canvas);box-shadow:0 0 0 1px rgba(13,18,36,.10),0 30px 60px -28px rgba(13,18,36,.32)}
+#camera{position:absolute;left:0;top:0;transform-origin:0 0}
+#app{position:relative;width:1440px;height:1112px;background:var(--canvas);overflow:hidden}
+
+/* ---------- rail + panneau ---------- */
+#rail{position:absolute;left:0;top:0;bottom:0;width:88px;background:#0a0a0a;color:#fff}
+#rail .marque{height:67px;display:flex;align-items:center;justify-content:center;font-family:"Instrument Sans";font-weight:600;font-size:17px;letter-spacing:-.02em;border-bottom:1px solid #1f1f1f}
+.ri{display:flex;flex-direction:column;align-items:center;gap:7px;margin-top:20px;font-size:10px;color:#a3a3a3;position:relative}
+.ri .rond{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#bdbdbd;position:relative}
+.ri.actif{color:#fff}
+.ri.actif .rond{background:#fff;color:#0a0a0a}
+.ri .pt{position:absolute;right:-1px;top:-1px;width:8px;height:8px;border-radius:50%;background:#ff8f90;box-shadow:0 0 0 2px #0a0a0a}
+.ri.sep{margin-top:22px;width:48px;height:1px;background:#262626;margin-left:20px}
+#panneau{position:absolute;left:88px;top:0;bottom:0;width:256px;background:#161616;color:#d0d0d0;border-left:1px solid #1f1f1f}
+#panneau .tete{height:67px;border-bottom:1px solid #222;display:flex;align-items:center;justify-content:flex-end;padding-right:18px;color:#6f6f6f}
+#panneau .eb{color:#7d7d7d;font-size:10px;letter-spacing:.2em;margin:24px 0 10px 26px}
+.pi{display:flex;align-items:center;gap:12px;height:38px;margin:0 10px;padding:0 16px;border-radius:9999px;font-size:14px;color:#c9c9c9}
+.pi.actif{background:#fff;color:#0a0a0a;font-weight:600;height:38px}
+.pi .cpt{margin-left:auto;font-size:11px;font-family:"JetBrains Mono";background:#ececec;border-radius:9999px;padding:2px 8px;color:#0a0a0a}
+#gelule{position:absolute;right:34px;top:18px;height:42px;padding:0 4px 0 14px;border-radius:9999px;background:rgba(255,255,255,.9);box-shadow:var(--shadow);display:flex;align-items:center;gap:12px;z-index:5}
+#gelule .av{width:34px;height:34px;border-radius:50%;background:#0a0a0a;color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;letter-spacing:.06em}
+#gelule .sepv{width:1px;height:20px;background:var(--slate-line)}
+
+/* ---------- les écrans ---------- */
+#principal{position:absolute;left:344px;top:0;right:0;bottom:0;overflow:hidden}
+.ecr{position:absolute;inset:0;opacity:0}
+.retour{font-family:"JetBrains Mono";font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--slate-soft);display:flex;align-items:center;gap:8px}
+.bande{background:#fff;border-bottom:1px solid var(--slate-line)}
+
+/* E1 : liste */
+#e1 .entete{height:370px;background:#fff;position:relative;display:flex}
+#e1 .entete .txt{padding:110px 0 0 32px;width:600px}
+#e1 h1{font-size:52px}
+#e1 .entete p{font-size:18px;line-height:1.55;color:var(--slate-mid);margin-top:20px;max-width:470px}
+#e1 .ill{position:absolute;right:0;top:0;width:460px;height:370px;background:var(--glacier);display:flex;align-items:center;justify-content:center}
+#e1 .ill svg{width:360px;height:auto}
+#e1 .barre{display:flex;align-items:center;justify-content:flex-end;padding:19px 32px 18px;background:#fff;border-bottom:1px solid var(--slate-line)}
+#e1 .vide{margin:26px 32px 0;padding:32px 34px}
+#e1 .vide h3{font-size:22px;margin-top:14px}
+#e1 .vide p{font-size:13.5px;line-height:1.6;color:var(--slate-mid);margin-top:12px;max-width:820px}
+#e1 .vide p.qf{color:var(--ink)}
+
+/* E2 : formulaire */
+#e2 .bande{padding:96px 32px 22px}
+#e2 h1{font-size:30px;margin-top:12px}
+#e2 .form{margin:22px 32px 0;width:860px;padding:30px 32px}
+.ligne2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.cat{display:flex;gap:12px;align-items:center}
+.cat .mq{width:44px;height:44px;border-radius:14px;background:var(--ink);display:flex;align-items:center;justify-content:center;flex:none}
+.cat .champ{flex:1}
+#liste-cat{position:absolute;left:56px;right:0;top:48px;background:#fff;border-radius:16px;box-shadow:0 18px 40px -12px rgba(13,18,36,.28),0 0 0 1px rgba(13,18,36,.08);padding:6px;opacity:0;z-index:4}
+#liste-cat div{height:38px;border-radius:11px;display:flex;align-items:center;padding:0 12px;font-size:14px}
+#liste-cat div.sur{background:var(--blue-pale)}
+.curseur-texte{display:inline-block;width:1.5px;height:17px;background:var(--ink);margin-left:1px;vertical-align:-3px}
+
+/* E3 : fiche équipement */
+#e3 .haut{padding:96px 32px 0}
+.hero{display:flex;gap:24px;margin-top:22px;padding-bottom:26px;border-bottom:1px solid var(--slate-line)}
+.hero .mq{width:84px;height:84px;border-radius:28px;background:var(--ink);display:flex;align-items:center;justify-content:center;flex:none}
+.hero h1{font-size:31px;margin-top:8px}
+.hero p{font-size:14.5px;color:var(--slate-mid);margin-top:9px}
+.hero .pp{display:flex;gap:8px;margin-top:14px}
+.afaire{margin:24px 32px 0;border-radius:30px;background:var(--amber-wash);box-shadow:inset 0 0 0 1px #f6e6a8;padding:24px 32px}
+.afaire .eb{color:var(--amber-ink)}
+.afaire h4{font-size:15px;font-weight:600;margin-top:14px}
+.afaire .s{font-size:13px;color:var(--slate-mid);margin-top:3px}
+.afaire .rg{display:flex;align-items:center;justify-content:space-between;margin-top:18px;font-size:14px}
+.cols{display:grid;grid-template-columns:1fr 396px;gap:22px;margin:24px 32px 0}
+.dl{display:flex;padding:14px 0;border-bottom:1px solid var(--slate-line);font-size:14px}
+.dl:last-child{border-bottom:0}
+.dl dt{width:190px;color:var(--slate-mid);font-size:13px}
+.tuile{width:50px;height:50px;border-radius:17px;background:var(--slate-pale);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:"JetBrains Mono";font-size:9px;letter-spacing:.1em;color:var(--slate-mid);flex:none;line-height:1.25;text-align:center}
+.tuile b{font-family:"IBM Plex Sans";font-size:18px;letter-spacing:0;color:var(--ink);font-weight:600}
+.lf{display:flex;gap:14px;align-items:center;padding:12px 0;border-bottom:1px solid var(--slate-line)}
+.lf:last-of-type{border-bottom:0}
+.lf .t{font-size:14.5px;font-weight:600;letter-spacing:-.01em}
+.lf .m{font-size:12.5px;margin-top:2px}
+
+/* E4 : fiche contrôle */
+#e4 .defil{position:absolute;left:0;right:0;top:0}
+#e4 .zone{padding:96px 32px 0}
+.hctrl{margin-top:20px;overflow:hidden}
+.hctrl .h{display:flex;gap:24px;padding:28px 36px 26px}
+.hctrl .ic{width:84px;height:84px;border-radius:28px;background:var(--slate-pale);display:flex;align-items:center;justify-content:center;flex:none;color:var(--blue-ink)}
+.hctrl h1{font-size:31px;margin-top:10px}
+.hctrl p{font-size:14px;line-height:1.55;color:var(--slate-mid);margin-top:10px;max-width:680px}
+.faits{display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid var(--slate-line)}
+.faits>div{padding:20px 24px;border-right:1px solid var(--slate-line)}
+.faits>div:last-child{border-right:0}
+.faits b{display:block;font-size:15px;font-weight:600;margin-top:8px}
+.faits small{display:block;font-size:12px;color:var(--slate-mid);margin-top:4px}
+.bloc{margin-top:20px;padding:24px 32px}
+#rdv-form{height:0;overflow:hidden}
+#rdv-form .in{padding-top:22px;margin-top:22px;border-top:1px solid var(--slate-line)}
+.cote{border-radius:30px;background:var(--blue-pale);padding:28px 32px}
+.cote h3{font-size:23px;margin-top:12px}
+.cote p{font-size:13.5px;line-height:1.6;color:var(--slate-ink);margin-top:12px}
+#toast{position:absolute;left:50%;top:84px;transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:9999px;padding:10px 18px 10px 12px;font-size:14px;font-weight:500;display:flex;align-items:center;gap:10px;opacity:0;white-space:nowrap;z-index:6}
+#toast b{display:inline-flex;width:22px;height:22px;border-radius:50%;background:var(--green);color:var(--green-ink);align-items:center;justify-content:center}
+
+/* ---------- curseur ---------- */
+#curseur{position:absolute;left:0;top:0;width:30px;height:30px;transform-origin:0 0;z-index:30;filter:drop-shadow(0 2px 3px rgba(13,18,36,.35));pointer-events:none}
+#onde{position:absolute;left:0;top:0;width:56px;height:56px;border-radius:50%;border:3px solid var(--blue-strong);opacity:0;z-index:29;transform-origin:0 0}
+
+/* ---------- le texte ---------- */
+#texte{position:absolute;left:924px;top:0;width:326px;height:720px}
+#texte .haut{position:absolute;top:150px;left:0;right:0;display:flex;align-items:center;justify-content:space-between}
+.barres{display:flex;gap:5px}
+.barres i{width:20px;height:4px;border-radius:4px;background:var(--slate-line);position:relative;overflow:hidden}
+.barres i span{position:absolute;inset:0;background:var(--ink);transform-origin:left;transform:scaleX(0)}
+.etape{position:absolute;top:210px;left:0;right:0;opacity:0}
+.etape .num{font-family:"JetBrains Mono";font-size:12px;letter-spacing:.16em;color:var(--blue-ink)}
+.etape h2{font-size:34px;margin-top:14px}
+.etape p{font-size:16px;line-height:1.55;color:var(--slate-mid);margin-top:16px}
+.etape p em{font-style:normal;color:var(--ink);font-weight:500}
+#marque{position:absolute;left:924px;bottom:40px;font-family:"Instrument Sans";font-weight:600;font-size:17px;letter-spacing:-.03em}
+#marque i,.pt-bleu{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--blue-strong);margin-left:1px}
+
+/* ---------- intertitres ---------- */
+.inter{position:absolute;inset:0;background:var(--canvas);z-index:45;opacity:0;display:flex;flex-direction:column;justify-content:center;padding-left:96px}
+.inter .n{font-family:"JetBrains Mono";font-size:15px;letter-spacing:.2em;color:var(--blue-ink);text-transform:uppercase}
+.inter h1{font-size:92px;margin-top:22px}
+.inter .seg{display:flex;gap:8px;margin-top:40px}
+.inter .seg i{width:56px;height:5px;border-radius:5px;background:var(--slate-line)}
+.inter .seg i.on{background:var(--ink)}
+.inter .sig{position:absolute;left:96px;bottom:56px;font-family:"Instrument Sans";font-weight:600;font-size:20px;letter-spacing:-.03em}
+/* ---------- intro / fin ---------- */
+.plein{position:absolute;inset:0;background:var(--canvas);z-index:50;display:flex;align-items:center}
+.plein .g{padding-left:96px;width:700px}
+.plein h1{font-size:54px;margin-top:20px}
+.plein .liste{margin-top:34px}
+.plein .liste div{display:flex;align-items:center;gap:16px;font-size:19px;font-weight:500;height:46px}
+.plein .liste span{font-family:"JetBrains Mono";font-size:12px;width:30px;height:30px;border-radius:50%;background:var(--blue-pale);color:var(--blue-ink);display:inline-flex;align-items:center;justify-content:center;letter-spacing:0}
+.plein .d{position:absolute;right:72px;top:96px;width:440px;height:528px;border-radius:30px;background:var(--glacier);display:flex;align-items:center;justify-content:center}
+.plein .d svg{width:380px;height:auto}
+.plein p.chap{font-size:19px;line-height:1.55;color:var(--slate-mid);margin-top:20px;max-width:560px}
+.plein .sig{position:absolute;left:96px;bottom:56px;font-family:"Instrument Sans";font-weight:600;font-size:20px;letter-spacing:-.03em}
+.boucle{display:flex;gap:10px;margin-top:34px;flex-wrap:wrap}
+.boucle span{display:inline-flex;align-items:center;gap:8px;border-radius:9999px;padding:9px 16px;font-size:15px;font-weight:600;background:#fff;box-shadow:var(--shadow)}
+.boucle span.fl{background:none;box-shadow:none;padding:9px 0;color:var(--slate)}
+</style>
+</head>
+<body>
+
+<!-- ================= L'APP ================= -->
+<div id="fenetre"><div id="camera"><div id="app">
+  <div id="rail">
+    <div class="marque">Rojer</div>
+    <div class="ri"><div class="rond">{{ListTodo}}<i class="pt"></i></div>À faire</div>
+    <div class="ri"><div class="rond">{{HardHat}}<i class="pt"></i></div>Sécurité</div>
+    <div class="ri actif"><div class="rond">{{Building2}}</div>Équipement</div>
+    <div class="ri"><div class="rond">{{Archive}}</div>Documents</div>
+    <div class="ri sep"></div>
+    <div class="ri"><div class="rond">{{Settings}}</div>Paramètres</div>
+  </div>
+  <div id="panneau">
+    <div class="tete">{{PanelLeft}}</div>
+    <div class="eb">Équipement et bâtiment</div>
+    <div class="pi actif">{{Wrench}} Équipements <span class="cpt" id="cpt-eq">0</span></div>
+    <div class="pi">{{Warehouse}} Zones</div>
+    <div class="pi">{{Users}} Prestataires</div>
+    <div class="pi">{{NotebookText}} Registre de sécurité</div>
+    <div class="pi">{{Accessibility}} Accessibilité</div>
+    <div class="pi">{{Droplets}} Carnet sanitaire</div>
+  </div>
+
+  <div id="principal">
+    <!-- E1 : la liste -->
+    <div class="ecr" id="e1">
+      <div class="entete">
+        <div class="txt">
+          <h1 class="titre">Équipements</h1>
+          <p>Ce que vous avez, et où. Chaque appareil porte ses vérifications, ses rapports et ses papiers : ouvrez sa fiche pour les voir.</p>
+        </div>
+        <div class="ill">{{illustration}}</div>
+      </div>
+      <div class="barre"><span class="btn btn-ink" id="b-ajouter">+ Ajouter un équipement</span></div>
+      <div class="carte vide">
+        <div class="eb">À quoi sert cette page</div>
+        <h3 class="titre">Les équipements de votre établissement alimentent tout le reste</h3>
+        <p>Électricité, extincteurs, hotte, ascenseur… Chaque équipement déclenche des vérifications périodiques qui doivent être faites par un organisme ou un technicien. C'est la déclaration ici qui dit à l'outil quoi mettre dans votre calendrier.</p>
+        <p class="qf"><span class="eb" style="font-size:10px">Pour commencer —</span> ajoutez un premier équipement via le bouton « + Ajouter un équipement » en haut de la page.</p>
+      </div>
+    </div>
+
+    <!-- E2 : le formulaire -->
+    <div class="ecr" id="e2">
+      <div class="bande">
+        <div class="retour">{{ArrowLeft}} Équipements du Comptoir des Halles</div>
+        <h1 class="titre">Déclarer un équipement</h1>
+      </div>
+      <div class="carte form">
+        <span class="label">Catégorie *</span>
+        <div class="cat" style="position:relative">
+          <div class="mq" id="mq-cat"><span id="pic-elec">{{elec}}</span><span id="pic-ext" style="display:none">{{extincteur}}</span></div>
+          <div class="champ" id="ch-cat"><span id="val-cat">Installation électrique</span><span class="chev">{{ChevronDown}}</span></div>
+          <div id="liste-cat">
+            <div>Installation électrique</div>
+            <div id="opt-ext">Extincteurs</div>
+            <div>Éclairage de sécurité (BAES)</div>
+            <div>Alarme incendie / SSI</div>
+            <div>Hotte de cuisine professionnelle</div>
+          </div>
+        </div>
+        <p class="aide" id="aide-cat">Tableau général, circuits terminaux, éventuel groupe électrogène de sécurité.</p>
+        <div style="margin-top:22px"><span class="label">Libellé *</span>
+          <div class="champ vide" id="ch-lib"><span id="val-lib">Ex : TGBT principal, Hotte de la cuisine chaude</span></div></div>
+        <div style="margin-top:22px"><span class="label">Zone *</span>
+          <div class="champ">Zone principale<span class="chev">{{ChevronDown}}</span></div></div>
+        <div class="ligne2" style="margin-top:22px">
+          <div><span class="label">Précision du lieu</span><div class="champ vide" id="ch-lieu"><span id="val-lieu">Ex : local technique RDC</span></div>
+            <p class="aide">Facultatif. Utile au technicien lors de la vérification.</p></div>
+          <div><span class="label">Date de mise en service</span><div class="champ vide">jj/mm/aaaa</div>
+            <p class="aide">Facultatif. Si vous ne la connaissez pas, laissez vide — l'outil se calera sur la première vérification à venir.</p></div>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:28px"><span class="btn btn-ink" id="b-creer">Créer l'équipement</span><span class="btn btn-clair">Annuler</span></div>
+      </div>
+    </div>
+
+    <!-- E3 : la fiche de l'appareil -->
+    <div class="ecr" id="e3">
+      <div class="haut">
+        <div class="retour">{{ArrowLeft}} Équipements</div>
+        <div class="hero">
+          <div class="mq">{{extincteur_grand}}</div>
+          <div>
+            <div class="eb">Équipement · Extincteurs · Zone principale · Salle, bar</div>
+            <h1 class="titre">Extincteurs de la salle et du bar</h1>
+            <p>Aucune vérification n'est encore enregistrée pour cet appareil.</p>
+            <div class="pp"><span class="past" style="background:var(--amber);color:var(--amber-ink)">À compléter</span><span class="past" style="background:var(--slate-pale);color:var(--slate-ink)">2 obligations</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="afaire" id="afaire">
+        <div class="eb">À faire sur cet équipement</div>
+        <h4>Déposer le rapport du dernier contrôle</h4>
+        <div class="s">Sa date calcule le prochain contrôle.</div>
+        <div class="rg"><span>Vérification annuelle des extincteurs (ERP)</span><span class="btn btn-clair btn-sm" id="b-deposer">Déposer le rapport</span></div>
+      </div>
+      <div class="cols">
+        <div class="carte" style="padding:24px 32px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><h3 class="titre" style="font-size:22px">L'appareil</h3><span style="font-size:13px;font-weight:600;color:var(--blue-ink)">Modifier →</span></div>
+          <dl style="margin-top:8px">
+            <div class="dl"><dt>Catégorie</dt><dd>Extincteurs</dd></div>
+            <div class="dl"><dt>Zone</dt><dd>Zone principale</dd></div>
+            <div class="dl"><dt>Localisation</dt><dd>Salle, bar</dd></div>
+            <div class="dl"><dt>Réalisateur requis</dt><dd>Personne compétente</dd></div>
+          </dl>
+        </div>
+        <div class="carte" style="padding:22px 28px" id="carte-afaire">
+          <div style="display:flex;justify-content:space-between;align-items:center"><span class="eb">À faire</span><span class="past" style="background:var(--slate-pale);color:var(--slate-ink);padding:3px 10px">2</span></div>
+          <div class="lf" style="margin-top:8px"><div class="tuile sd">SANS<br>DATE</div><div><div class="t">Vérification annuelle des extincteurs (ERP)</div><div class="m" style="color:var(--signal-ink)">aucune vérification enregistrée</div></div></div>
+          <div class="lf"><div class="tuile sd">SANS<br>DATE</div><div><div class="t">Révision décennale des extincteurs (ERP)</div><div class="m" style="color:var(--signal-ink)">aucune vérification enregistrée</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- E4 : la fiche du contrôle -->
+    <div class="ecr" id="e4"><div class="defil" id="defil">
+      <div class="zone">
+        <div class="retour">{{ArrowLeft}} Extincteurs de la salle et du bar</div>
+        <div class="carte hctrl" id="hctrl">
+          <div class="h">
+            <div class="ic">{{ClipboardCheck_grand}}</div>
+            <div>
+              <div class="eb">Incendie / sécurité · Annuelle</div>
+              <h1 class="titre">Vérification annuelle des extincteurs (ERP)</h1>
+              <p>Un extincteur fait l'objet d'une vérification annuelle et d'une révision tous les dix ans, par une personne ou un organisme compétent.</p>
+              <div style="margin-top:14px;position:relative;height:28px">
+                <span class="past" id="p-aucune" style="background:var(--signal);color:var(--signal-ink);position:absolute">Aucune vérification enregistrée</span>
+                <span class="past" id="p-ajour" style="background:var(--green);color:var(--green-ink);position:absolute;opacity:0">Réalisée le 14 mars 2026</span>
+              </div>
+            </div>
+          </div>
+          <div class="faits">
+            <div><span class="eb" style="font-size:10px">Date</span>
+              <div style="position:relative;height:42px">
+                <div id="f-sans" style="position:absolute"><b>Sans échéance connue</b><small>Aucune échéance n'est encore connue pour ce contrôle.</small></div>
+                <div id="f-date" style="position:absolute;opacity:0"><b>14 mars 2027</b><small>Prochaine vérification · dans 4 mois</small></div>
+              </div></div>
+            <div><span class="eb" style="font-size:10px">Équipement</span><b>Extincteurs de la salle et du bar</b><small>Extincteurs · Salle, bar</small></div>
+            <div><span class="eb" style="font-size:10px">Réalisateur requis</span><b>Personne compétente</b></div>
+          </div>
+        </div>
+
+        <div class="carte bloc" id="rdv">
+          <div style="display:flex;justify-content:space-between">
+            <div>
+              <div class="eb">Prestataire et rendez-vous</div>
+              <div style="position:relative;height:52px;margin-top:10px;font-size:14px">
+                <div id="rdv-avant" style="position:absolute;white-space:nowrap"><div style="color:var(--slate-mid)">Aucun prestataire attitré.</div><div style="margin-top:6px">Pas de rendez-vous pris.</div></div>
+                <div id="rdv-apres" style="position:absolute;white-space:nowrap;opacity:0"><div><span style="color:var(--slate-mid)">Prestataire attitré :</span> <b style="font-weight:600">Durand Protection Incendie</b></div><div style="margin-top:6px"><span style="color:var(--slate-mid)">Rendez-vous :</span> <b style="font-weight:600">vendredi 5 mars 2027 à 9 h</b></div></div>
+              </div>
+              <div style="font-size:12px;color:var(--slate-soft);margin-top:4px">Le rendez-vous ne change pas l'échéance : seul le rapport la fait avancer.</div>
+            </div>
+            <span class="btn btn-clair btn-sm" id="b-rdv">Choisir un prestataire, prendre rendez-vous</span>
+          </div>
+          <div id="rdv-form"><div class="in">
+            <span class="label">Prestataire attitré</span>
+            <div class="champ" id="ch-presta" style="position:relative"><span id="val-presta">— Aucun —</span><span class="chev">{{ChevronDown}}</span></div>
+            <p class="aide">Il n'est pas dans la liste ? <u style="color:var(--blue-ink);font-weight:600">Ajouter un prestataire</u></p>
+            <div class="ligne2" style="margin-top:16px">
+              <div><span class="label">Rendez-vous</span><div class="champ vide" id="ch-date-rdv"><span id="val-rdv">jj/mm/aaaa --:--</span></div></div>
+              <div><span class="label">Note</span><div class="champ vide">Ex : avec M. Martin, accès par la cour</div></div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:20px"><span class="btn btn-ink btn-sm" id="b-rdv-ok">Enregistrer</span><span class="btn btn-clair btn-sm">Annuler</span></div>
+          </div></div>
+        </div>
+
+        <div class="cols" style="margin:20px 0 0" id="depot">
+          <div class="carte" style="padding:26px 32px">
+            <div class="eb">Déposer le rapport</div>
+            <div style="margin-top:20px"><span class="label">Fichier du rapport *</span>
+              <div class="champ" style="height:50px;padding-left:8px;gap:12px"><span class="btn btn-ink btn-sm" id="b-fichier">Choisir un fichier</span><span id="val-fichier" style="color:var(--slate-mid)">Aucun fichier choisi</span></div></div>
+            <div class="ligne2" style="margin-top:18px">
+              <div><span class="label">Date du rapport *</span><div class="champ vide" id="ch-date"><span id="val-date">jj/mm/aaaa</span></div></div>
+              <div><span class="label">Résultat *</span><div class="champ">Conforme<span class="chev">{{ChevronDown}}</span></div></div>
+            </div>
+            <div style="margin-top:18px"><span class="label">Organisme vérificateur</span><div class="champ vide">Ex : nom de l'organisme ou du technicien</div></div>
+            <div style="display:flex;gap:12px;margin-top:24px;align-items:center"><span class="btn btn-ink" id="b-enreg">Enregistrer le rapport</span><span style="font-size:13.5px;font-weight:600;color:var(--slate-mid)">Annuler</span></div>
+          </div>
+          <div class="cote" id="cote">
+            <div class="eb" style="color:var(--blue-ink)">En attente</div>
+            <h3 class="titre">Cette vérification attend son rapport.</h3>
+            <p>Dès que vous téléversez le rapport du vérificateur, la vérification est marquée comme réalisée et la prochaine échéance est recalculée automatiquement.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <template id="tpl-file">{{FileText}}</template>
+    <div id="toast"><b>{{Check}}</b> Rapport enregistré</div>
+    </div>
+  </div>
+
+  <div id="gelule">{{House}}<span class="sepv"></span><span class="av">MD</span></div>
+  <div id="onde"></div>
+  <svg id="curseur" viewBox="0 0 24 24"><path d="M4 2.5 L4 19.5 L8.6 15.3 L11.6 22 L14.6 20.7 L11.7 14.2 L18 14.2 Z" fill="#0a0a0a" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>
+</div></div></div>
+
+<!-- ================= LE TEXTE ================= -->
+<div id="texte">
+  <div class="haut">
+    <div class="eb">Visite · Équipements</div>
+    <div class="barres"><i><span id="b1"></span></i><i><span id="b2"></span></i><i><span id="b3"></span></i><i><span id="b4"></span></i></div>
+  </div>
+  <div class="etape" id="t1"><div class="num">1 / 4</div><h2 class="titre">Déclarez l'appareil.</h2>
+    <p>Choisissez sa catégorie et donnez-lui un nom. Rojer en déduit les <em>contrôles que les textes lui attachent</em>.</p></div>
+  <div class="etape" id="t2"><div class="num">2 / 4</div><h2 class="titre">Ses contrôles attendent une date.</h2>
+    <p>Tant qu'aucun contrôle n'est enregistré, Rojer ne peut pas calculer l'échéance. <em>Le rapport du dernier passage suffit</em> à la lui donner.</p></div>
+  <div class="etape" id="t3"><div class="num">3 / 4</div><h2 class="titre">Déposez le rapport.</h2>
+    <p>Fichier, date, résultat. La vérification passe en réalisée et <em>la prochaine échéance se calcule</em> à partir de cette date.</p></div>
+  <div class="etape" id="t4"><div class="num">4 / 4</div><h2 class="titre">Préparez le prochain passage.</h2>
+    <p>Choisissez votre prestataire et notez le rendez-vous. <em>Il ne change pas l'échéance</em> : seul le prochain rapport la fera avancer.</p></div>
+</div>
+<div id="marque">Rojer<i></i></div>
+
+<!-- ================= INTRO ================= -->
+<div class="plein" id="intro">
+  <div class="g">
+    <div class="eb">Visite guidée · Équipement et bâtiment</div>
+    <h1 class="titre">Vos équipements,<br>en quatre gestes.</h1>
+    <div class="liste">
+      <div><span>1</span>Déclarer un appareil</div>
+      <div><span>2</span>Voir ce qui lui manque</div>
+      <div><span>3</span>Déposer le rapport du dernier contrôle</div>
+      <div><span>4</span>Prendre rendez-vous pour le suivant</div>
+    </div>
+  </div>
+  <div class="d">{{illustration}}</div>
+  <div class="sig">Rojer<i class="pt-bleu"></i></div>
+</div>
+
+<!-- ================= FIN ================= -->
+<div class="plein" id="fin" style="opacity:0">
+  <div class="g" style="width:1000px">
+    <div class="eb">Et ensuite</div>
+    <h1 class="titre">Au prochain passage,<br>la boucle recommence.</h1>
+    <p class="chap">Déposez le nouveau rapport : Rojer recalcule l'échéance suivante, et vous la retrouvez dans votre calendrier.</p>
+    <div class="boucle"><span>Rendez-vous</span><span class="fl">→</span><span>Passage du prestataire</span><span class="fl">→</span><span>Rapport déposé</span><span class="fl">→</span><span>Échéance suivante</span><span class="fl">↺</span></div>
+  </div>
+  <div class="sig">Rojer<i class="pt-bleu"></i></div>
+</div>
+
+<script>{{gsap}}</script>
+<script>
+// La vidéo commence à 1,6 s : l'écran d'intro y est entièrement posé, et
+// c'est lui qui sert d'image d'aperçu.
+window.debut = 1.6;
+const W = 860, H = 664, AW = 1440, AH = 1112, BASE = W / AW;
+const $ = (s) => document.querySelector(s);
+const app = $("#app");
+
+// Centre d'un élément, en coordonnées de l'app (caméra au repos, mesurée avant toute animation).
+function pos(sel, dx = 0, dy = 0) {
+  const a = app.getBoundingClientRect(), r = $(sel).getBoundingClientRect();
+  return { x: r.left - a.left + r.width / 2 + dx, y: r.top - a.top + r.height / 2 + dy };
+}
+
+// Les états pilotés par le curseur et la caméra : des objets que GSAP anime, rendus dans allerA.
+const cam = { x: AW / 2, y: AH / 2, s: BASE };
+const cur = { x: 900, y: 900, k: 1, o: 0 };
+const onde = { x: 0, y: 0, s: 0.3, o: 0 };
+const frappe = { lib: 0, date: 0, rdv: 0 };
+const defil = { y: 0 };
+const LIB = "Extincteurs de la salle et du bar", DATE = "14/03/2026", RDV = "05/03/2027 09:00";
+const bascules = []; // [instant, fonction(t >= instant)]
+const a = (t, f) => bascules.push([t, f]);
+
+function construire() {
+  const P = {
+    ajouter: pos("#b-ajouter"), cat: pos("#ch-cat"), ext: pos("#opt-ext"), lib: pos("#ch-lib", -120),
+    creer: pos("#b-creer"), deposer: pos("#b-deposer"), afaire: pos("#afaire"), carteAF: pos("#carte-afaire"),
+    fichier: pos("#b-fichier"), date: pos("#ch-date"), enreg: pos("#b-enreg"), depot: pos("#depot"),
+    hctrl: pos("#hctrl"), rdvB: pos("#b-rdv"), rdv: pos("#rdv"),
+    presta: pos("#ch-presta"), dateRdv: pos("#ch-date-rdv"), rdvOk: pos("#b-rdv-ok"),
+  };
+  const tl = gsap.timeline({ paused: true, defaults: { ease: "power2.inOut" } });
+  const camera = (p, s, at, d = 0.9) => tl.to(cam, { x: p.x, y: p.y, s, duration: d, ease: "power2.inOut" }, at);
+  const vers = (p, at, d = 0.9) => tl.to(cur, { x: p.x, y: p.y, duration: d }, at);
+  const clic = (p, at) => {
+    tl.to(cur, { k: 0.82, duration: 0.08 }, at).to(cur, { k: 1, duration: 0.14 }, at + 0.08);
+    tl.fromTo(onde, { x: p.x, y: p.y, s: 0.3, o: 0.9 }, { s: 1.6, o: 0, duration: 0.5, ease: "power1.out", immediateRender: false }, at);
+  };
+  const ecran = (n, at) => {
+    tl.to(".ecr", { opacity: 0, duration: 0.25 }, at);
+    tl.fromTo("#e" + n, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", immediateRender: false }, at + 0.15);
+  };
+  const etape = (n, at, dureeBarre) => {
+    if (n > 1) tl.to("#t" + (n - 1), { opacity: 0, y: -14, duration: 0.3, ease: "power1.in" }, at);
+    tl.fromTo("#t" + n, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out", immediateRender: false }, at + (n > 1 ? 0.2 : 0));
+    tl.to("#b" + n, { scaleX: 1, duration: dureeBarre, ease: "none" }, at);
+  };
+
+  const TITRES = ["Déclarer l'appareil.", "Voir ce qui lui manque.", "Déposer le rapport.", "Prendre rendez-vous."];
+  const intertitre = (n, at) => {
+    const el = document.createElement("div");
+    el.className = "inter";
+    el.innerHTML = `<div class="n">Étape ${n} / 4</div><h1 class="titre">${TITRES[n - 1]}</h1>`
+      + `<div class="seg">${[1, 2, 3, 4].map((k) => `<i class="${k <= n ? "on" : ""}"></i>`).join("")}</div>`
+      + `<div class="sig">Rojer<i class="pt-bleu"></i></div>`;
+    document.body.appendChild(el);
+    tl.to(el, { opacity: 1, duration: 0.3, ease: "power1.out" }, at);
+    tl.fromTo(el.querySelector("h1"), { y: 24 }, { y: 0, duration: 0.6, ease: "power3.out", immediateRender: false }, at);
+    tl.fromTo(el.querySelector(".n"), { y: 12 }, { y: 0, duration: 0.5, ease: "power3.out", immediateRender: false }, at + 0.05);
+    tl.to(el, { opacity: 0, duration: 0.35, ease: "power1.in" }, at + 1.55);
+  };
+
+  // ---------- intro ----------
+  tl.set("#e1", { opacity: 1 }, 0);
+  tl.from("#intro .eb, #intro h1", { opacity: 0, y: 14, duration: 0.5, stagger: 0.12, ease: "power2.out" }, 0.1);
+  tl.from("#intro .liste div", { opacity: 0, x: -12, duration: 0.4, stagger: 0.18, ease: "power2.out" }, 0.6);
+  tl.from("#intro .d", { opacity: 0, scale: 0.96, duration: 0.6, ease: "power2.out" }, 0.3);
+  intertitre(1, 3.5);
+  tl.set("#intro", { opacity: 0 }, 3.85);
+  tl.from("#texte, #marque", { opacity: 0, duration: 0.4 }, 4.9);
+
+  // ---------- 1. Déclarer ----------
+  let t = 5.4;
+  etape(1, t, 8.0);
+  tl.set(cur, { x: 1000, y: 800 }, 0);
+  tl.to(cur, { o: 1, duration: 0.3 }, t + 0.3);
+  vers(P.ajouter, t + 0.7, 1.1);
+  camera({ x: P.ajouter.x - 200, y: 420 }, 0.82, t + 1.0, 0.8);
+  clic(P.ajouter, t + 1.8);
+  ecran(2, t + 2.0);
+  camera({ x: 830, y: 430 }, 0.86, t + 1.9, 0.8);
+  vers(P.cat, t + 2.5, 0.8);
+  clic(P.cat, t + 3.3);
+  tl.to("#liste-cat", { opacity: 1, y: 0, duration: 0.2 }, t + 3.4);
+  vers(P.ext, t + 3.7, 0.5);
+  a(t + 4.15, (on) => { $("#opt-ext").className = on ? "sur" : ""; });
+  clic(P.ext, t + 4.35);
+  tl.to("#liste-cat", { opacity: 0, duration: 0.15 }, t + 4.5);
+  a(t + 4.5, (on) => {
+    $("#val-cat").textContent = on ? "Extincteurs" : "Installation électrique";
+    $("#pic-elec").style.display = on ? "none" : ""; $("#pic-ext").style.display = on ? "" : "none";
+    $("#aide-cat").textContent = on ? "Extincteurs portatifs (eau, CO₂, poudre) et mobiles." : "Tableau général, circuits terminaux, éventuel groupe électrogène de sécurité.";
+  });
+  vers(P.lib, t + 4.8, 0.6);
+  clic(P.lib, t + 5.4);
+  tl.to(frappe, { lib: LIB.length, duration: 1.3, ease: "none" }, t + 5.6);
+  vers(P.creer, t + 7.1, 0.8);
+  camera({ x: 830, y: 560 }, 0.86, t + 6.9, 0.9);
+  clic(P.creer, t + 7.9);
+
+  // ---------- 2. Ce qui manque ----------
+  intertitre(2, 13.9);
+  t = 15.7;
+  ecran(3, t);
+  a(t, (on) => { $("#cpt-eq").textContent = on ? "1" : "0"; });
+  camera({ x: AW / 2, y: AH / 2 }, BASE, t, 0.8);
+  etape(2, t + 0.1, 6.0);
+  vers({ x: P.carteAF.x + 120, y: P.carteAF.y + 90 }, t + 0.4, 1.0);
+  camera({ x: 1040, y: 680 }, 0.8, t + 1.6, 1.0);
+  tl.to("#e3 .sd", { backgroundColor: "#ffd9d9", color: "#8a2a23", duration: 0.3, yoyo: true, repeat: 3 }, t + 2.4);
+  camera({ x: 900, y: 500 }, 0.84, t + 4.0, 0.9);
+  vers(P.deposer, t + 4.2, 0.9);
+  tl.to("#afaire", { boxShadow: "inset 0 0 0 2px #e5c34f", duration: 0.3 }, t + 4.6);
+  clic(P.deposer, t + 5.4);
+
+  // ---------- 3. Déposer le rapport ----------
+  intertitre(3, 21.6);
+  t = 23.4;
+  const SCROLL_DEPOT = 470;
+  ecran(4, t);
+  tl.set(defil, { y: SCROLL_DEPOT }, t);
+  const dans4 = (p, dx = 0) => ({ x: p.x + dx, y: p.y - SCROLL_DEPOT });
+  camera({ x: 905, y: dans4(P.depot).y + 10 }, 0.84, t, 0.6);
+  etape(3, t + 0.1, 7.6);
+  vers(dans4(P.fichier), t + 0.6, 0.9);
+  clic(dans4(P.fichier), t + 1.5);
+  a(t + 1.75, (on) => { const v = $("#val-fichier"); v.innerHTML = on ? $("#tpl-file").innerHTML + " rapport-extincteurs-mars-2026.pdf" : "Aucun fichier choisi"; v.style.color = on ? "var(--ink)" : "var(--slate-mid)"; v.style.display = "inline-flex"; v.style.gap = "6px"; v.style.alignItems = "center"; });
+  vers(dans4(P.date, -40), t + 2.1, 0.7);
+  clic(dans4(P.date, -40), t + 2.8);
+  tl.to(frappe, { date: DATE.length, duration: 0.7, ease: "none" }, t + 3.0);
+  vers(dans4(P.enreg), t + 3.9, 0.8);
+  clic(dans4(P.enreg), t + 4.7);
+  tl.fromTo("#toast", { opacity: 0, y: -8 }, { opacity: 1, y: 0, duration: 0.3, immediateRender: false }, t + 5.0);
+  a(t + 5.0, (on) => {
+    $("#cote .eb").textContent = on ? "Réalisée" : "En attente";
+    $("#cote h3").textContent = on ? "Le prochain contrôle est calculé." : "Cette vérification attend son rapport.";
+    $("#cote p").textContent = on ? "Prochaine vérification : 14 mars 2027. Le rapport est rangé au registre de sécurité." : "Dès que vous téléversez le rapport du vérificateur, la vérification est marquée comme réalisée et la prochaine échéance est recalculée automatiquement.";
+    $("#cote").style.background = on ? "#e3fde0" : "var(--blue-pale)";
+    $("#cote .eb").style.color = on ? "var(--green-ink)" : "var(--blue-ink)";
+  });
+  tl.to(defil, { y: 0, duration: 0.9, ease: "power2.inOut" }, t + 5.6);
+  tl.to(cur, { x: P.hctrl.x + 330, y: P.hctrl.y + 230, duration: 0.9 }, t + 5.6);
+  camera({ x: 905, y: P.hctrl.y + 40 }, 0.8, t + 5.6, 0.9);
+  tl.to("#p-aucune", { opacity: 0, duration: 0.25 }, t + 6.5);
+  tl.to("#p-ajour", { opacity: 1, duration: 0.3 }, t + 6.6);
+  tl.to("#f-sans", { opacity: 0, duration: 0.25 }, t + 6.7);
+  tl.fromTo("#f-date", { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.35, immediateRender: false }, t + 6.8);
+  tl.to("#toast", { opacity: 0, duration: 0.3 }, t + 7.2);
+
+  // ---------- 4. Rendez-vous ----------
+  intertitre(4, 31.0);
+  t = 32.8;
+  etape(4, t, 7.0);
+  camera({ x: 905, y: P.rdv.y + 120 }, 0.82, t, 0.9);
+  vers(P.rdvB, t + 0.6, 0.8);
+  clic(P.rdvB, t + 1.4);
+  tl.to("#rdv-form", { height: 238, duration: 0.45, ease: "power2.out" }, t + 1.6);
+  vers(P.presta, t + 2.1, 0.7);
+  clic(P.presta, t + 2.8);
+  a(t + 3.0, (on) => { $("#val-presta").textContent = on ? "Durand Protection Incendie" : "— Aucun —"; });
+  vers(P.dateRdv, t + 3.3, 0.6);
+  clic(P.dateRdv, t + 3.9);
+  tl.to(frappe, { rdv: RDV.length, duration: 0.9, ease: "none" }, t + 4.1);
+  vers(P.rdvOk, t + 5.1, 0.6);
+  clic(P.rdvOk, t + 5.7);
+  tl.to("#rdv-form", { height: 0, duration: 0.4, ease: "power2.inOut" }, t + 6.0);
+  tl.to("#rdv-avant", { opacity: 0, duration: 0.2 }, t + 6.1);
+  tl.to("#rdv-apres", { opacity: 1, duration: 0.3 }, t + 6.25);
+  camera({ x: 905, y: P.rdv.y + 10 }, 0.84, t + 6.0, 0.6);
+
+  // ---------- fin ----------
+  t = 39.8;
+  tl.to("#fin", { opacity: 1, duration: 0.6, ease: "power1.out" }, t);
+  tl.from("#fin .eb, #fin h1, #fin .chap", { y: 14, duration: 0.5, stagger: 0.1, ease: "power2.out" }, t + 0.2);
+  tl.from("#fin .boucle span", { opacity: 0, y: 8, duration: 0.3, stagger: 0.08 }, t + 0.7);
+  tl.to({}, { duration: 1 }, t + 3.2);
+  return tl;
+}
+
+function rendre(t) {
+  for (const [instant, f] of bascules) f(t >= instant);
+  const v = (txt, n) => txt.slice(0, Math.round(n));
+  const lib = $("#val-lib"), cl = $("#ch-lib");
+  if (frappe.lib > 0) { lib.innerHTML = v(LIB, frappe.lib) + (frappe.lib < LIB.length ? '<i class="curseur-texte"></i>' : ""); cl.classList.remove("vide"); }
+  else { lib.textContent = "Ex : TGBT principal, Hotte de la cuisine chaude"; cl.classList.add("vide"); }
+  const d = $("#val-date"); d.textContent = frappe.date > 0 ? v(DATE, frappe.date) : "jj/mm/aaaa"; $("#ch-date").classList.toggle("vide", frappe.date === 0);
+  const r = $("#val-rdv"); r.textContent = frappe.rdv > 0 ? v(RDV, frappe.rdv) : "jj/mm/aaaa --:--"; $("#ch-date-rdv").classList.toggle("vide", frappe.rdv === 0);
+  $("#defil").style.transform = `translateY(${-defil.y}px)`;
+  $("#gelule").style.opacity = Math.max(0, 1 - defil.y / 120);
+  // Caméra : le point (cam.x, cam.y) au centre, sans jamais montrer hors de l'app.
+  const s = cam.s;
+  const tx = Math.min(0, Math.max(W - AW * s, W / 2 - cam.x * s));
+  const ty = Math.min(0, Math.max(H - AH * s, H / 2 - cam.y * s));
+  $("#camera").style.transform = `translate(${tx}px,${ty}px) scale(${s})`;
+  // Le curseur garde sa taille à l'écran, quel que soit le zoom.
+  $("#curseur").style.transform = `translate(${cur.x - 5 / s}px,${cur.y - 3 / s}px) scale(${cur.k / s})`;
+  $("#curseur").style.opacity = cur.o;
+  $("#onde").style.transform = `translate(${onde.x - 28 * onde.s / s}px,${onde.y - 28 * onde.s / s}px) scale(${onde.s / s})`;
+  $("#onde").style.opacity = onde.o;
+}
+
+window.allerA = (t) => { window.tl.seek(t, false); rendre(t); };
+
+document.fonts.ready.then(() => {
+  window.tl = construire();
+  window.duree = window.tl.duration();
+  rendre(0);
+  window.pret = true;
+  if (!navigator.webdriver) {
+    const debut = performance.now();
+    const boucle = (now) => { allerA(((now - debut) / 1000) % (window.duree + 0.8)); requestAnimationFrame(boucle); };
+    requestAnimationFrame(boucle);
+  }
+});
+</script>
+</body>
+</html>

@@ -38,6 +38,13 @@ export function PanneauModal({
 }) {
   const titreId = useId();
   const panneau = useRef<HTMLDivElement | null>(null);
+  // La fermeture passe par une ref : un appelant qui la recrée à chaque rendu
+  // (une fonction en ligne) relancerait sinon l'effet ci-dessous, qui remet
+  // le focus sur le panneau — cocher une case le lui volait.
+  const fermer = useRef(surFermer);
+  useEffect(() => {
+    fermer.current = surFermer;
+  });
 
   useEffect(() => {
     if (!ouvert) return;
@@ -49,11 +56,11 @@ export function PanneauModal({
       // la touche), avec ce qui y a été saisi.
       e.preventDefault();
       e.stopPropagation();
-      surFermer();
+      fermer.current();
     };
     document.addEventListener("keydown", surTouche);
     return () => document.removeEventListener("keydown", surTouche);
-  }, [ouvert, surFermer]);
+  }, [ouvert]);
 
   if (!ouvert) return null;
   return createPortal(

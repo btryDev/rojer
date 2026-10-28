@@ -18,6 +18,7 @@ import {
   type WidgetId,
 } from "./registry";
 import { cheminCookieLayout, nomCookieLayout } from "./cookie-layout";
+import { ecrireCookieClient } from "@/lib/navigateur/cookie-client";
 import type { LayoutItem, PersistedLayout } from "./types";
 
 export const SCHEMA_VERSION = 3;
@@ -162,15 +163,11 @@ function lireLayoutCookie(valeur: string | null): PersistedLayout | null {
   }
 }
 
-const UN_AN_EN_SECONDES = 60 * 60 * 24 * 365;
-
 function ecrireLayoutCookie(etablissementId: string, layout: PersistedLayout) {
   if (typeof document === "undefined") return;
-  const secure = window.location.protocol === "https:" ? "; Secure" : "";
-  document.cookie =
-    `${nomCookieLayout(etablissementId)}=${encodeURIComponent(JSON.stringify(layout))}` +
-    `; Path=${cheminCookieLayout(etablissementId)}` +
-    `; Max-Age=${UN_AN_EN_SECONDES}; SameSite=Lax${secure}`;
+  ecrireCookieClient(nomCookieLayout(etablissementId), JSON.stringify(layout), {
+    chemin: cheminCookieLayout(etablissementId),
+  });
 }
 
 /** Reprise, une fois, d'une disposition enregistrée avant le cookie. La

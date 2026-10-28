@@ -29,3 +29,21 @@ describe("PanneauModal — largeur", () => {
     expect(p.className).toContain("max-h-[85vh]");
   });
 });
+
+describe("PanneauModal — focus", () => {
+  it("un re-rendu avec une nouvelle fonction de fermeture ne vole pas le focus", async () => {
+    const { rerender } = render(
+      <PanneauModal ouvert surFermer={() => {}} surtitre="S" titre="T">
+        <input aria-label="case" type="checkbox" />
+      </PanneauModal>,
+    );
+    const champ = screen.getByLabelText("case");
+    champ.focus();
+    rerender(
+      <PanneauModal ouvert surFermer={() => {}} surtitre="S" titre="T">
+        <input aria-label="case" type="checkbox" />
+      </PanneauModal>,
+    );
+    expect(document.activeElement).toBe(champ);
+  });
+});

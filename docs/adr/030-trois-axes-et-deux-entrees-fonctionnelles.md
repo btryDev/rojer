@@ -49,8 +49,13 @@ produit ; le ranger sous « santé-sécurité » le mettrait à deux clics de so
 usage quotidien pour gagner une symétrie que personne ne regarde.
 
 **Ce que l'ADR-015 avait raison de poser est conservé** : une entrée de rail
-désigne une page réelle, jamais une approximation ; cliquer navigue *et* ouvre le
-panneau ; les pastilles de retard suivent l'entrée qui les concerne.
+désigne une page réelle, jamais une approximation ; ~~cliquer navigue *et* ouvre le
+panneau~~ [2026-10-28, décision de la propriétaire : cliquer une entrée qui porte
+un panneau l'ouvre **sans naviguer** — c'est l'entrée choisie dans le panneau qui
+mène à une page, et un second clic le referme. Le panneau est replié à l'arrivée
+sur chaque page et rien n'est plus mémorisé : resté ouvert d'une visite à
+l'autre, il mangeait la largeur des petits écrans. `AppSidebar.tsx`,
+`AppSidebar.repli.test.tsx`] ; les pastilles de retard suivent l'entrée qui les concerne.
 
 ## Ce que l'implémentation a tranché, et que la décision ne disait pas
 

@@ -768,8 +768,11 @@ régulièrement un écran hors charte.
 
 ### Navigation (double sidebar : rail + panneau)
 
-Une entrée de rail = une **page d'entrée** + un **panneau** : cliquer navigue
-et ouvre le panneau (ADR-015, conservé par l'ADR-030).
+Une entrée de rail = une **page d'entrée** + un **panneau** : ~~cliquer navigue
+et ouvre le panneau (ADR-015, conservé par l'ADR-030)~~ [2026-10-28, ADR-030
+amendée : cliquer ouvre le panneau sans naviguer, l'entrée choisie dans le
+panneau mène à la page ; le panneau est replié à l'arrivée sur chaque page,
+rien n'est mémorisé].
 
 Le rail porte **trois axes thématiques** — de quoi s'agit-il — et **deux
 entrées fonctionnelles** — qu'est-ce que je fais maintenant, où je règle. Cinq

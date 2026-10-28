@@ -260,6 +260,7 @@ décisions qui dormaient dans le texte des ADR, remontées ici.]
 5. Les alertes par e-mail, gelées ([§ 12](#12-les-alertes-par-e-mail--une-règle-à-tenir-avant-la-première-ligne)).
 6. Les titres « gestes et postures », « écran », « chimique » au catalogue ([§ 17](#17-les-titres-que-le-duerp-rend-dus--ce-que-ladr-038-laisse-ouvert-2026-10-05), point 3).
 7. « Ne concerne pas cette personne », après instruction RGPD ([§ 17](#17-les-titres-que-le-duerp-rend-dus--ce-que-ladr-038-laisse-ouvert-2026-10-05), point 4).
+8. Après le dépôt d'un rapport, dire la prochaine échéance ([§ 20](#20-après-le-dépôt-dun-rapport-dire-la-prochaine-échéance-2026-10-28)).
 
 ---
 
@@ -3202,3 +3203,23 @@ visualiser, on a site inaccessible ; c'est fait tout ça, le QR ? »).
 Fait et fonctionnel : page publique par slug (publiée seulement), publication et
 retrait, QR et affiche A4, prestations, formation du personnel d'accueil,
 équipements, pièce `05` du ZIP de contrôle.
+
+## 20. Après le dépôt d'un rapport, dire la prochaine échéance (2026-10-28)
+
+Demandé par la propriétaire, après la vidéo de visite « Équipements » qui le
+montrait sans que l'app le fasse.
+
+Aujourd'hui, `uploadRapport` (`src/lib/rapports/actions.ts`) ramène à la fiche
+du contrôle avec `?apres=<rapportId>`, et la page
+(`src/app/etablissements/[id]/verifications/[verificationId]/page.tsx`) affiche
+un bandeau vert « Rapport enregistré. » au-dessus des rapports déposés. Rien ne
+dit que l'échéance a été recalculée, ni pour quand.
+
+À faire : au même endroit (le rapport déposé à l'instant est déjà repéré,
+`rapportDepose`), dire la nouvelle échéance — « Prochain contrôle : 14 mars
+2027 » —, et faire passer la carte de côté « En attente — Cette vérification
+attend son rapport » à un état réalisé, sur le champ et l'encre `--board-green`.
+La date est `v.datePrevue` après roulement (ADR-034, ADR-036) : la lire, jamais
+la recalculer à l'écran. Cas à prévoir : la ligne « à planifier » faute de
+rythme (aucune date à annoncer), et le rapport à écart, où la confirmation vit
+dans la section des points (ADR-048).

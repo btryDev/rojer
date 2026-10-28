@@ -30,35 +30,34 @@
 //      le libellé se replie au lieu de se couper : un libellé replié se lit,
 //      un libellé coupé se devine.
 //
-// Toute entrée de rail est un lien (ADR-015) : cliquer navigue vers la page
-// d'entrée de la catégorie **et** ouvre son panneau. Auparavant une icône de
-// premier niveau n'ouvrait qu'un tiroir, et il fallait deux clics pour
-// arriver quelque part.
+// ~~Toute entrée de rail est un lien (ADR-015) : cliquer navigue vers la page
+// d'entrée de la catégorie **et** ouvre son panneau.~~ ~~Le panneau suit la
+// page courante : à chaque navigation il se rabat sur la catégorie de l'item
+// actif.~~ [2026-10-28, ADR-030 amendée, décision de la propriétaire : une
+// entrée de rail est un bouton qui ouvre le panneau de sa catégorie sans
+// naviguer — c'est l'entrée choisie dans le panneau qui mène à une page —,
+// et un second clic le referme. Le panneau est replié à l'arrivée sur chaque
+// page, et toute navigation le replie.] La tuile de la page courante reste
+// allumée, celle du panneau ouvert aussi : « la page est ici » n'est pas
+// « le panneau montre ceci ».
 //
-// Le panneau suit la page courante : à chaque navigation il se rabat sur la
-// catégorie de l'item actif. Entre deux navigations, un clic sur le rail le
-// fait basculer sans quitter la page — d'où la distinction entre « la page
-// est ici » (tuile allumée) et « le panneau montre ceci ». Sur une catégorie
-// sans panneau (tableau de bord, Paramètres), le panneau s'efface : montrer
-// celui de « À faire », sans rien y surligner, décrivait un endroit où l'on
-// n'est pas — et le board de widgets récupère la largeur.
-//
-// Le panneau est rétractable, et replié par défaut : un bouton en pied de
+// ~~Le panneau est rétractable, et replié par défaut : un bouton en pied de
 // rail — ou un clic sur une entrée du rail — le déplie, un bouton dans son
-// en-tête le replie. Le choix est mémorisé dans localStorage.
+// en-tête le replie. Le choix est mémorisé dans localStorage.~~ [2026-10-28 :
+// rien n'est plus mémorisé, et le bouton du pied de rail est retiré — un
+// panneau resté ouvert d'une visite à l'autre mangeait la largeur des petits
+// écrans, et tout le monde n'a pas le réflexe de le refermer. Le bouton de
+// son en-tête, ou un second clic sur le rail, le replie.]
 //
 // L'arborescence vit dans `sidebar-nav.ts` (module pur, testé) : mêmes
 // items, mêmes badges que le rail simple qu'elle remplace. Ce fichier ne
 // fait que le rendu.
 
-import { Fragment, useState, useSyncExternalStore } from "react";
+import { Fragment, useState } from "react";
 import Link from "next/link";
 import { DemandeAide } from "@/components/assistance/DemandeAide";
 import { usePathname, useSearchParams } from "next/navigation";
-import {
-  PanelLeftClose,
-  PanelLeftOpen,
-} from "lucide-react";
+import { PanelLeftClose } from "lucide-react";
 import {
   categorieDeItem,
   construireRail,
@@ -107,33 +106,20 @@ export function AppSidebar({
     modules,
   });
 
-  // Panneau affiché : le choix manuel prime, sinon la catégorie de la page
-  // courante. Le choix se rabat à chaque navigation pour que le panneau
-  // suive toujours l'endroit où l'on se trouve — ajustement pendant le
-  // rendu (et non dans un effet) pour ne pas provoquer de rendu en cascade.
   const catActive = categorieDeItem(actif);
-  // L'URL entière, query comprise : passer de « Tout » à « Contrôles
-  // matériel » ne change pas le pathname, mais c'est bien une navigation —
-  // sans quoi un panneau choisi à la main y survivrait.
+  // Le panneau ouvert : celui de la catégorie cliquée au rail, ou aucun. Il
+  // se referme à chaque navigation — ajustement pendant le rendu (et non
+  // dans un effet) pour ne pas provoquer de rendu en cascade. L'URL entière,
+  // query comprise : passer de « Tout » à « Contrôles matériel » ne change
+  // pas le pathname, mais c'est bien une navigation.
   const urlCourante = `${pathname}?${searchParams}`;
-  const [choix, setChoix] = useState<RailCategorieId | null>(null);
+  const [ouverte, setOuverte] = useState<RailCategorieId | null>(null);
   const [derniereUrl, setDerniereUrl] = useState(urlCourante);
   if (urlCourante !== derniereUrl) {
     setDerniereUrl(urlCourante);
-    setChoix(null);
+    setOuverte(null);
   }
-  const affichee = choix ?? catActive;
-
-  // Repli du panneau, persisté dans localStorage. Le serveur rend toujours
-  // replié (le défaut) ; le client se rattrape au premier rendu.
-  const replie = useSyncExternalStore(sAbonnerRepli, lireRepli, () => true);
-  const basculerRepli = ecrireRepli;
-
-  const panneau = rail.find((c) => c.id === affichee && c.items) ?? null;
-  // Rien à afficher à droite : la catégorie n'a pas de panneau, le rail
-  // reste seul. Le compte n'entre plus dans ce calcul — il a quitté le rail
-  // pour la barre haute (cf. `BarreCompte`).
-  const ferme = replie || !panneau;
+  const panneau = rail.find((c) => c.id === ouverte) ?? null;
 
 
   return (
@@ -149,7 +135,7 @@ export function AppSidebar({
         <div className="grid h-[67px] shrink-0 place-items-center border-b border-white/10">
           <Link
             href={`/etablissements/${etablissement.id}`}
-            onClick={() => setChoix(null)}
+            onClick={() => setOuverte(null)}
             aria-current={catActive === "tableau" ? "page" : undefined}
             aria-label={`${LABEL_ITEM.tableau} — Rojer`}
             className={
@@ -162,9 +148,6 @@ export function AppSidebar({
         </div>
 
         <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-2 py-3">
-          {/* Une seule boucle : une catégorie porte toujours un href, et
-              certaines portent en plus un panneau. Deux passes filtrées
-              rendraient les secondes en double. */}
           {rail.map((c) => (
             <Fragment key={c.id}>
               {c.separateurAvant ? (
@@ -173,13 +156,8 @@ export function AppSidebar({
               <RailEntree
                 cat={c}
                 surPage={catActive === c.id}
-                // Le panneau ouvert à la main s'allume aussi : sans cela,
-                // basculer de panneau sans naviguer n'aurait aucun écho.
-                choisie={choix === c.id}
-                onClick={() => {
-                  setChoix(c.id);
-                  basculerRepli(false);
-                }}
+                ouverte={ouverte === c.id}
+                onClick={() => setOuverte(ouverte === c.id ? null : c.id)}
               />
             </Fragment>
           ))}
@@ -190,30 +168,14 @@ export function AppSidebar({
           <DemandeAide variante="rail" libelle="Aide" etablissementId={etablissement.id} />
         </div>
 
-        {/* Le bouton de dépliage ne s'offre que s'il y a quelque chose à
-            déplier : sur le tableau de bord, il ouvrirait le vide. */}
-        {replie && panneau ? (
-          <div className="shrink-0 px-2 pb-1">
-            <button
-              type="button"
-              onClick={() => basculerRepli(false)}
-              aria-label="Déplier le panneau"
-              aria-expanded={false}
-              className="grid w-full place-items-center rounded-xl py-2 text-white/50 transition-colors hover:bg-white/10 hover:text-white"
-            >
-              <PanelLeftOpen aria-hidden className="size-[18px]" />
-            </button>
-          </div>
-        ) : null}
-
       </div>
 
       {/* ---- Panneau : items de la catégorie choisie ---- */}
       <div
-        inert={ferme}
+        inert={!panneau}
         className={
           "shrink-0 overflow-hidden bg-white/[0.04] transition-[width] duration-200 " +
-          (ferme ? "w-0" : "w-[256px]")
+          (panneau ? "w-[256px]" : "w-0")
         }
       >
         {/* Largeur fixe interne : le contenu glisse sous le bord au lieu de
@@ -222,7 +184,7 @@ export function AppSidebar({
           <div className="flex h-[67px] shrink-0 items-center justify-end border-b border-white/10 pl-5 pr-3">
             <button
               type="button"
-              onClick={() => basculerRepli(true)}
+              onClick={() => setOuverte(null)}
               aria-label="Replier le panneau"
               aria-expanded
               className="grid size-8 place-items-center rounded-lg text-white/40 transition-colors hover:bg-white/10 hover:text-white"
@@ -239,7 +201,7 @@ export function AppSidebar({
               <p className="px-4 pb-2 pt-[18px] font-mono text-[10px] uppercase tracking-[0.16em] text-white/40">
                 {panneau.label}
               </p>
-              {panneau.items?.map((it) => (
+              {panneau.items.map((it) => (
                 <NavLink key={it.id} item={it} actif={actif} />
               ))}
             </nav>
@@ -250,51 +212,45 @@ export function AppSidebar({
   );
 }
 
-/** Entrée de rail ouvrant un panneau (pas de navigation). */
 /**
- * Entrée de rail : toujours un lien, panneau ou pas (ADR-015).
- *
- * `Link` plutôt qu'un `router.push` dans un `button` : on garde le
- * prefetch, le clic du milieu, « ouvrir dans un nouvel onglet » et
- * l'annonce native du lien. Le `onClick` ne fait qu'ouvrir le panneau au
- * passage — la navigation, elle, se charge d'y rabattre le choix.
+ * Entrée de rail : un bouton qui ouvre le panneau de sa catégorie, sans
+ * naviguer — c'est l'entrée choisie dans le panneau qui mène à une page
+ * (2026-10-28, ADR-030 amendée). ~~Toujours un lien, panneau ou pas
+ * (ADR-015).~~
  */
 function RailEntree({
   cat,
   surPage,
-  choisie,
+  ouverte,
   onClick,
 }: {
   cat: RailCategorie;
   /** La page courante appartient à cette catégorie. */
   surPage: boolean;
-  /** Son panneau est ouvert par un clic, sans navigation. */
-  choisie: boolean;
+  /** Son panneau est celui qui est ouvert. */
+  ouverte: boolean;
   onClick: () => void;
 }) {
-  const allume = surPage || choisie;
+  const allume = surPage || ouverte;
   return (
-    <Link
-      href={cat.href}
+    <button
+      type="button"
       onClick={onClick}
-      // `aria-current` dit où l'on est ; l'ouverture d'un panneau n'est pas
-      // un état de page et n'a pas à s'y ajouter.
+      aria-expanded={ouverte}
+      // `aria-current` dit où l'on est ; l'ouverture d'un panneau, elle, est
+      // dite par `aria-expanded`.
       aria-current={surPage ? "page" : undefined}
       // PAS d'`aria-label`. Il portait le libellé LONG (« Santé-sécurité »,
       // « Documentation ») alors que la tuile affiche le court (« Sécurité »,
       // « Documents ») : le nom accessible ne contenait pas le texte visible,
-      // ce que WCAG 2.5.3 « Label in Name » interdit — et sur « Documents » /
-      // « Documentation » il ne le contenait même pas à un mot près. La
-      // divergence court/long, elle, est voulue : le rail fait 88 px, aucun
-      // des trois axes n'y tient en entier. Elle se règle donc dans l'autre
-      // sens — le nom accessible suit ce qu'on lit, et le libellé long reste
+      // ce que WCAG 2.5.3 « Label in Name » interdit. Le libellé long reste
       // là où il y a la place de l'écrire : l'en-tête du panneau, qui nomme
       // aussi sa région (`aria-label={panneau.label}`).
       className="group flex w-full flex-col items-center gap-1.5 rounded-xl py-2 transition-colors hover:bg-white/10"
     >
       <TuileIcone cat={cat} pleine={allume} />
       <RailLibelle cat={cat} allume={allume} />
-    </Link>
+    </button>
   );
 }
 
@@ -337,46 +293,6 @@ function RailLibelle({ cat, allume }: { cat: RailCategorie; allume: boolean }) {
       {cat.labelCourt}
     </span>
   );
-}
-
-/**
- * Mini-store du repli du panneau : la vérité vit en mémoire de module (le
- * repli survit donc même sans localStorage, navigation privée par exemple),
- * localStorage n'est que la persistance entre sessions. Lu au premier accès,
- * consommé via `useSyncExternalStore` pour rester hydratation-sûr.
- */
-const CLE_REPLI = "rojer-sidebar-panneau-replie";
-let etatRepli = true;
-let etatRepliLu = false;
-const ecouteursRepli = new Set<() => void>();
-
-function sAbonnerRepli(cb: () => void) {
-  ecouteursRepli.add(cb);
-  return () => ecouteursRepli.delete(cb);
-}
-
-function lireRepli() {
-  if (!etatRepliLu) {
-    etatRepliLu = true;
-    try {
-      // Replié par défaut : seul un « 0 » explicitement mémorisé déplie.
-      etatRepli = window.localStorage.getItem(CLE_REPLI) !== "0";
-    } catch {
-      // Stockage inaccessible : on reste sur la valeur en mémoire.
-    }
-  }
-  return etatRepli;
-}
-
-function ecrireRepli(v: boolean) {
-  etatRepli = v;
-  etatRepliLu = true;
-  try {
-    window.localStorage.setItem(CLE_REPLI, v ? "1" : "0");
-  } catch {
-    // Stockage inaccessible : le repli vaut pour la session en cours.
-  }
-  ecouteursRepli.forEach((cb) => cb());
 }
 
 const CLASSES_ITEM =

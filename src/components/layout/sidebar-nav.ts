@@ -623,11 +623,11 @@ export type RailCategorie = {
   /** Libellé court affiché sous l'icône du rail. */
   labelCourt: string;
   Icon: typeof LayoutDashboard;
-  /** Page d'entrée de la catégorie — toujours présente : cliquer une
-   *  entrée de rail navigue (ADR-015). */
-  href: string;
-  /** Absent = catégorie sans panneau (lien seul). */
-  items?: NavItem[];
+  /** ~~Page d'entrée de la catégorie — cliquer une entrée de rail navigue
+   *  (ADR-015).~~ [2026-10-28 : retiré — l'entrée de rail ouvre son panneau
+   *  sans naviguer (ADR-030 amendée) ; la page d'entrée est le premier item.]
+   *  Les entrées du panneau ; toute catégorie du rail en a. */
+  items: NavItem[];
   /** Au moins un item du panneau porte une alerte. */
   alert?: boolean;
   /** Marque la césure entre les catégories du dossier et les modes
@@ -690,7 +690,6 @@ export function construireRail(params: {
   // seule la présentation change.
   const [aFaire, santeSecurite, equipementBatiment, documentation, parametres] =
     construireSections(params);
-  const base = `/etablissements/${params.etablissementId}`;
   const alerte = (items: NavItem[]) => items.some((it) => it.alert);
 
   return [
@@ -699,7 +698,6 @@ export function construireRail(params: {
       label: LABEL_CATEGORIE["a-faire"],
       labelCourt: "À faire",
       Icon: ListTodo,
-      href: `${base}/calendrier`,
       items: aFaire.items,
       alert: alerte(aFaire.items),
     },
@@ -711,7 +709,6 @@ export function construireRail(params: {
       label: LABEL_CATEGORIE["sante-securite"],
       labelCourt: "Sécurité",
       Icon: HardHat,
-      href: `${base}/duerp`,
       items: santeSecurite.items,
       alert: alerte(santeSecurite.items),
     },
@@ -722,7 +719,6 @@ export function construireRail(params: {
       label: LABEL_CATEGORIE["equipement-batiment"],
       labelCourt: "Équipement",
       Icon: Building2,
-      href: `${base}/equipements`,
       items: equipementBatiment.items,
       alert: alerte(equipementBatiment.items),
     },
@@ -732,7 +728,6 @@ export function construireRail(params: {
       label: LABEL_CATEGORIE["documentation"],
       labelCourt: "Documents",
       Icon: Archive,
-      href: `${base}/documents`,
       items: documentation.items,
       alert: alerte(documentation.items),
     },
@@ -747,7 +742,6 @@ export function construireRail(params: {
       label: LABEL_CATEGORIE["parametres"],
       labelCourt: "Paramètres",
       Icon: Settings,
-      href: `${base}/modifier`,
       items: parametres.items,
       separateurAvant: true,
     },
