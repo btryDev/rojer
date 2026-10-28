@@ -9,20 +9,20 @@
 export type CleVisite = "equipements";
 
 export type Visite = {
-  /** Durée annoncée, « 40 s ». */
+  /** Durée annoncée, « 50 s ». */
   duree: string;
   /** Titre de l'îlot. */
   titre: string;
   /** Titre du panneau qui porte la vidéo. */
   titreVideo: string;
   /** Les étapes montrées : lues par les lecteurs d'écran, la vidéo n'ayant
-   *  ni son ni sous-titres. */
+   *  ni voix ni sous-titres (seulement une musique). */
   etapes: string[];
 };
 
 export const VISITES: Record<CleVisite, Visite> = {
   equipements: {
-    duree: "40 s",
+    duree: "50 s",
     titre: "Comment ça marche ?",
     titreVideo: "Vos équipements, en quatre gestes",
     etapes: [
