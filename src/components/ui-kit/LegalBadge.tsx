@@ -1,14 +1,8 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, type ReactNode } from "react";
 import { BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Charte } from "./charte";
 import { DansAide } from "./dans-aide";
 import { LIVRE, LIVRE_REFERENCE } from "./livre";
 
@@ -26,43 +20,22 @@ import { LIVRE, LIVRE_REFERENCE } from "./livre";
  * « Texte » identiques sur une ligne ne se distinguaient pas.
  */
 
-const PANNEAU: Record<Charte, string> = {
-  papier:
-    "rounded-lg border border-[color:var(--rule-soft)] bg-[color:var(--paper-elevated)] p-4 text-[0.8rem] leading-relaxed text-[color:var(--ink)] shadow-[0_1px_0_0_var(--rule-soft)]",
-  // Bloc interne creux, rayon 18 : le livre se déplie presque toujours dans
-  // une `carte-board` blanche, où un second fond blanc cerné d'un filet ne se
-  // lit pas. Le creux ardoise est l'idiome du board pour « un cran en
-  // dessous » (cf. `BlocCreux`).
-  board:
-    "rounded-[18px] bg-[color:var(--board-slate-pale)] px-5 py-4 text-[13px] leading-[1.6] text-[color:var(--board-slate-ink)]",
-};
+// Bloc interne creux, rayon 18 (« Bloc interne » de la charte) : le livre se déplie presque
+// toujours dans une `carte-board` blanche, où un second fond blanc cerné d'un
+// filet ne se lit pas. Le creux ardoise est l'idiome du board pour « un cran
+// en dessous » (cf. `BlocCreux`).
+const PANNEAU =
+  "mt-2 rounded-[18px] bg-[color:var(--board-slate-pale)] px-5 py-4 text-[13px] leading-[1.6] text-[color:var(--board-slate-ink)]";
 
-const CITATION: Record<Charte, string> = {
-  papier:
-    "border-l-2 border-[color:var(--warm)] pl-3 text-[color:var(--foreground)] italic",
-  // Le filet de citation est une structure, pas une encre : c'est l'emploi de
-  // `--board-slate`, qui ne tient pas 1,6:1 en texte mais fait une graduation.
-  board:
-    "border-l-2 border-[color:var(--board-slate)] pl-3.5 text-[color:var(--board-slate-ink)] italic",
-};
+// Le filet de citation est une structure, pas une encre : c'est l'emploi de
+// `--board-slate`, qui ne tient pas 1,6:1 en texte mais fait une graduation.
+const CITATION =
+  "border-l-2 border-[color:var(--board-slate)] pl-3.5 text-[color:var(--board-slate-ink)] italic";
 
-const COMPLEMENT: Record<Charte, string> = {
-  papier: "mt-3 text-[color:var(--muted-foreground)]",
-  board: "mt-3 text-[color:var(--board-slate-mid)]",
-};
+const COMPLEMENT = "mt-3 text-[color:var(--board-slate-mid)]";
 
-const LIEN: Record<Charte, string> = {
-  papier:
-    "mt-3 inline-flex items-center gap-1 font-mono text-[0.68rem] font-medium uppercase tracking-[0.12em] text-[color:var(--warm)] hover:underline",
-  board:
-    "mt-3 inline-flex items-center gap-1 font-mono text-[10.5px] font-medium uppercase tracking-[0.16em] text-[color:var(--board-blue-ink)] hover:underline",
-};
-
-// Le filet entre deux sources d'un même livre (`Textes`).
-const DIVISEUR: Record<Charte, string> = {
-  papier: "divide-y divide-[color:var(--rule-soft)]",
-  board: "divide-y divide-[color:var(--board-slate-line)]",
-};
+const LIEN =
+  "mt-3 inline-flex items-center gap-1 font-mono text-[10.5px] font-medium uppercase tracking-[0.16em] text-[color:var(--board-blue-ink)] hover:underline";
 
 type SocleLegalBadge = {
   /** Référence complète, ex. « Art. R. 4224-17 CT ». Imprimée en tête du
@@ -70,8 +43,6 @@ type SocleLegalBadge = {
   reference: string;
   className?: string;
   defaultOpen?: boolean;
-  /** La grammaire visuelle de l'écran qui porte le livre. */
-  charte?: Charte;
   /**
    * Ce qui se lit AVANT la citation, au dépli (2026-10-17, mention GN 10) :
    * une phrase qui dit pourquoi l'article est cité. Les `children` restent
@@ -100,38 +71,36 @@ type SourceLegalBadge =
 export type LegalBadgeProps = SocleLegalBadge & SourceLegalBadge;
 
 /** Dans un `Textes`, chaque source rend son contenu sous le livre commun. */
-const DansTextes = createContext<Charte | null>(null);
+const DansTextes = createContext(false);
 
 /** Le contenu d'une source : référence, avant, citation, complément, lien. */
 function ContenuSource({
-  charte,
   reference,
   avant,
   extrait,
   children,
   href,
 }: Pick<SocleLegalBadge, "reference" | "avant"> & {
-  charte: Charte;
   extrait?: string;
   children?: ReactNode;
   href?: string;
 }) {
   return (
     <>
-      <p className={LIVRE_REFERENCE[charte]}>{reference}</p>
+      <p className={LIVRE_REFERENCE}>{reference}</p>
       {avant && <div className="mb-3">{avant}</div>}
       {extrait && (
-        <blockquote className={cn("m-0", CITATION[charte])}>
+        <blockquote className={cn("m-0", CITATION)}>
           «&nbsp;{extrait}&nbsp;»
         </blockquote>
       )}
-      {children && <div className={COMPLEMENT[charte]}>{children}</div>}
+      {children && <div className={COMPLEMENT}>{children}</div>}
       {href && (
         <a
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          className={LIEN[charte]}
+          className={LIEN}
         >
           Lire la source officielle →
           {/* Le lien ouvre un onglet : le lecteur d'écran l'entend (F4). */}
@@ -142,40 +111,50 @@ function ContenuSource({
   );
 }
 
-/** Le bouton livre et son panneau, communs à `LegalBadge` et à `Textes`. */
-function Livre({
-  charte,
+/**
+ * Le livre : un `<details>` natif, replié par défaut. LE livre du kit —
+ * `LegalBadge`, `Textes` et `TexteSource` le rendent tous (2026-10-28 : il y
+ * en avait deux, l'un en `useState`, l'autre en `<details>`, qui ne se
+ * ressemblaient pas). Natif : clavier et lecteurs d'écran gérés par le
+ * navigateur, et le texte reste dans la page (recherche, impression).
+ */
+export function Livre({
   libelle,
   nomAccessible,
-  defaultOpen,
+  defaultOpen = false,
+  ouvreLaLigne = false,
   className,
   children,
 }: {
-  charte: Charte;
   libelle: string;
   nomAccessible?: string;
-  defaultOpen: boolean;
+  defaultOpen?: boolean;
+  /** Le livre ouvre la ligne : l'icône s'aligne sur le texte (`-ml-2`). */
+  ouvreLaLigne?: boolean;
   className?: string;
   children: ReactNode;
 }) {
   // Dans une aide d'écran, on est venu lire : le livre s'y présente ouvert.
   const dansAide = useContext(DansAide);
-  const [open, setOpen] = useState(defaultOpen || dansAide);
   return (
-    <div className={cn("inline-flex max-w-full flex-col gap-2 align-top", className)}>
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className={cn("self-start text-left", LIVRE[charte])}
-        aria-expanded={open}
+    <details
+      open={defaultOpen || dansAide || undefined}
+      className={cn("inline-block max-w-full align-top", className)}
+    >
+      <summary
+        className={cn(
+          LIVRE,
+          "list-none text-left [&::-webkit-details-marker]:hidden",
+          ouvreLaLigne && "-ml-2",
+        )}
         aria-label={nomAccessible}
         title={nomAccessible}
       >
         <BookOpen aria-hidden className="size-3.5" />
         <span>{libelle}</span>
-      </button>
-      {open && <div className={PANNEAU[charte]}>{children}</div>}
-    </div>
+      </summary>
+      <div className={PANNEAU}>{children}</div>
+    </details>
   );
 }
 
@@ -187,14 +166,12 @@ export function LegalBadge(props: LegalBadgeProps) {
     children,
     className,
     defaultOpen = false,
-    charte = "board",
     avant,
     libelle = "Texte",
   } = props;
   const groupe = useContext(DansTextes);
   const contenu = (
     <ContenuSource
-      charte={groupe ?? charte}
       reference={reference}
       avant={avant}
       extrait={extrait}
@@ -205,7 +182,7 @@ export function LegalBadge(props: LegalBadgeProps) {
   );
 
   // Sous un livre commun : le contenu seul, séparé du précédent.
-  if (groupe !== null) {
+  if (groupe) {
     return (
       <section className="py-4 first:pt-0 last:pb-0">
         {contenu}
@@ -215,7 +192,6 @@ export function LegalBadge(props: LegalBadgeProps) {
 
   return (
     <Livre
-      charte={charte}
       libelle={libelle}
       // Le livre ne répète pas la référence quand il la dit déjà.
       nomAccessible={libelle === reference ? undefined : `${libelle} : ${reference}`}
@@ -232,8 +208,8 @@ export function LegalBadge(props: LegalBadgeProps) {
  * plus de bouton : leur contenu se suit dans le panneau commun, séparé par un
  * filet. Remplace les rangées de pastilles.
  *
- * La présentation est celle du livre commun : `charte`, `className`,
- * `defaultOpen` et `libelle` d'un enfant n'ont pas d'effet ici.
+ * La présentation est celle du livre commun : `className`, `defaultOpen` et
+ * `libelle` d'un enfant n'ont pas d'effet ici.
  */
 export function Textes({
   children,
@@ -244,14 +220,14 @@ export function Textes({
 }) {
   return (
     <Livre
-      charte="board"
       libelle="Textes"
       nomAccessible="Textes : les articles cités"
-      defaultOpen={false}
       className={className}
     >
-      <DansTextes.Provider value="board">
-        <div className={cn("flex flex-col", DIVISEUR.board)}>{children}</div>
+      <DansTextes.Provider value>
+        <div className="flex flex-col divide-y divide-[color:var(--board-slate-line)]">
+          {children}
+        </div>
       </DansTextes.Provider>
     </Livre>
   );

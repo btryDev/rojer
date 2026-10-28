@@ -31,7 +31,6 @@ export function ReferenceFondatrice({
           // prenait plus de place que la ligne qu'il fonde.
           <LegalBadge
             key={r.article ?? r.reference}
-            charte="board"
             reference={r.reference}
             href={r.url}
             libelle={r.article ?? r.reference}

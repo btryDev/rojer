@@ -207,7 +207,6 @@ export default async function AccessibilitePage({
                 le complément, là où il agit : il fixe le contenu, il
                 n'institue rien. */}
           <LegalBadge
-            charte="board"
             reference="Art. R. 164-6 CCH · Registre d'accessibilité"
             href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000043819305"
             extrait="L'exploitant de tout établissement recevant du public au sens de l'article R. 143-2 élabore le registre public d'accessibilité prévu à l'article L. 164-1. Celui-ci précise les dispositions prises pour permettre à tous, notamment aux personnes handicapées, quel que soit leur handicap, de bénéficier des prestations en vue desquelles cet établissement a été conçu."

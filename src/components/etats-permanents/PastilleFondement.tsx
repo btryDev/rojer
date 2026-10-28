@@ -56,7 +56,6 @@ function MentionGn10() {
       <p className="m-0">{MENTION_GN_10_COURTE}</p>
       <div>
         <LegalBadge
-          charte="board"
           reference="GN 10"
           libelle="GN 10"
           href={URL_GN_10}
@@ -112,7 +111,6 @@ function PastilleSeule({
   if (source)
     return (
       <LegalBadge
-        charte="board"
         reference={reference}
         {...source}
         libelle={libelle}

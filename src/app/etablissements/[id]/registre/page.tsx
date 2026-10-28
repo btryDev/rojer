@@ -155,7 +155,6 @@ export default async function RegistrePage({
       </p>
       <Textes className="pt-1">
         <LegalBadge
-          charte="board"
           reference="Art. R. 143-44 CCH"
           href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000043819037"
           extrait="Dans les établissements soumis aux prescriptions du présent chapitre, il doit être tenu un registre de sécurité sur lequel sont reportés les renseignements indispensables à la bonne marche du service de sécurité."
@@ -168,13 +167,11 @@ export default async function RegistrePage({
           </p>
         </LegalBadge>
         <LegalBadge
-          charte="board"
           reference="Art. L. 4711-1 CT"
           href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000006903383"
           extrait="Les attestations, consignes, résultats et rapports relatifs aux vérifications et contrôles mis à la charge de l'employeur au titre de la santé et de la sécurité au travail comportent des mentions obligatoires déterminées par voie réglementaire."
         />
         <LegalBadge
-          charte="board"
           reference="Art. L. 4711-5 CT"
           href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000006903389"
           extrait="[…] l'employeur est autorisé à réunir ces informations dans un registre unique dès lors que cette mesure est de nature à faciliter la conservation et la consultation de ces informations."
@@ -189,7 +186,6 @@ export default async function RegistrePage({
             de l'ADR-034). Citation et lien relus à la source le 2026-09-01,
             version en vigueur depuis le 16/03/2009. */}
         <LegalBadge
-          charte="board"
           reference="Art. D. 4711-3 CT"
           href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020398142/"
           extrait="Sauf dispositions particulières, l'employeur conserve les documents concernant les observations et mises en demeure de l'inspection du travail ainsi que ceux concernant les vérifications et contrôles mis à la charge des employeurs au titre de la santé et de la sécurité au travail des cinq dernières années et, en tout état de cause, ceux des deux derniers contrôles ou vérifications."

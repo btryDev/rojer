@@ -130,7 +130,6 @@ export default async function CarnetSanitairePage({
                 Verbatim de l'article 3, version en vigueur au 2023-01-01,
                 relevé le 2026-08-28. */}
             <LegalBadge
-              charte="board"
               reference="Arrêté du 1er février 2010, art. 3"
               href="https://www.legifrance.gouv.fr/loda/id/JORFTEXT000021795143/"
               extrait="Le responsable des installations assure la traçabilité de cette surveillance. Il consigne les modalités et les résultats de cette surveillance avec les éléments descriptifs des réseaux d'eau chaude sanitaire et ceux relatifs à leur maintenance dans un fichier sanitaire des installations, qui est tenu à disposition du directeur général de l'agence régionale de santé."

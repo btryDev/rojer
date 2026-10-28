@@ -24,6 +24,9 @@ vi.mock("@/lib/etats-permanents/actions", () => ({
 const { listerEtatsPermanents } = await import("@/lib/etats-permanents/queries");
 const { versFiche } = await import("@/lib/etats-permanents/vers-fiche");
 const { rendreFicheOuverte } = await import("@/test/fiche-ouverte");
+// Le livre est un `<details>` (2026-10-28) : replié, son texte est dans le DOM
+// sans être affiché. On lit le texte VISIBLE.
+const { livre, texteVisible } = await import("@/test/livre");
 const { obligationsConformite } = await import("@/lib/referentiels/conformite");
 const { fondementDe } = await import("@/lib/etats-permanents/fondement");
 const { porteGn10, MENTION_GN_10, MENTION_GN_10_COURTE, GESTE_GN_10, CITATION_GN_10 } = await import(
@@ -115,7 +118,7 @@ describe("GN 10 à l'écran — une ligne qui le cite le dit", () => {
     for (const e of [erp("N3"), erp("N5"), erp("N5", "O", true)]) {
       for (const l of await lignes(e)) {
         const { container, unmount } = rendre(l);
-        const texte = container.textContent ?? "";
+        const texte = texteVisible(container);
         const affiche = texte.includes(MENTION_GN_10_COURTE);
         // Replié, la phrase longue n'est PAS sur la ligne (décision de c6 :
         // onze fois la même phrase sur un N3, c'était trop de texte).
@@ -132,11 +135,13 @@ describe("GN 10 à l'écran — une ligne qui le cite le dit", () => {
     const l = (await lignes(erp("N3"))).find(
       (x) => x.obligation.id === "incendie-erp-plan-intervention-entrees",
     )!;
-    const { getByRole, container } = rendre(l);
+    const { container } = rendre(l);
     // Le nom accessible ne répète pas la référence : « GN 10 », pas « GN 10 : GN 10 ».
-    const livre = getByRole("button", { name: "GN 10", hidden: true });
-    fireEvent.click(livre);
-    const t = container.textContent ?? "";
+    const gn10 = livre(container, "GN 10");
+    expect(gn10.getAttribute("aria-label")).toBeNull();
+    expect(texteVisible(container)).not.toContain(CITATION_GN_10);
+    fireEvent.click(gn10);
+    const t = texteVisible(container);
     // Au dépli : la phrase longue, puis le verbatim, puis le geste.
     const [i, j, k] = [t.indexOf(MENTION_GN_10), t.indexOf(CITATION_GN_10), t.indexOf(GESTE_GN_10)];
     expect(i).toBeGreaterThanOrEqual(0);

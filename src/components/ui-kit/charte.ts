@@ -1,9 +1,10 @@
 // Le kit est appelé des deux côtés de la migration visuelle.
 //
 // Deux grammaires cohabitent dans le produit (docs/charte-board.md, § 0) :
-// le « board », en vigueur, et le « papier », qui est de la dette. Quatre
-// composants du kit — LegalBadge, WhyCard, StatusPill, SignatureBlock —
-// sont appelés par les deux, et un composant partagé ne peut pas trancher
+// le « board », en vigueur, et le « papier », qui est de la dette. ~~Quatre~~
+// Trois composants du kit — ~~LegalBadge,~~ WhyCard, StatusPill,
+// SignatureBlock — sont appelés par les deux [2026-10-28 : LegalBadge n'avait
+// plus d'appelant papier, sa table et sa prop `charte` sont parties], et un composant partagé ne peut pas trancher
 // à la place de l'écran qui le porte : une pastille réglementaire à rayon
 // 6 px au milieu d'une carte à rayon 30 se voit, et l'inverse aussi.
 //
@@ -15,6 +16,6 @@
 // d'écrans non repris.
 //
 // Ce fichier est daté : le jour où le dernier appelant papier disparaît,
-// il s'en va avec les tables `papier` des quatre composants. Il ne se
+// il s'en va avec les tables `papier` des ~~quatre~~ trois composants. Il ne se
 // remplit pas, il se vide.
 export type Charte = "papier" | "board";

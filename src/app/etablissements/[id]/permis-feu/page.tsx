@@ -124,7 +124,6 @@ export default async function PermisFeuListePage({
           </p>
           <Textes className="mt-4">
             <LegalBadge
-              charte="board"
               reference="INRS ED 6030"
               href="https://www.inrs.fr/media.html?refINRS=ED%206030"
             >
@@ -162,7 +161,6 @@ export default async function PermisFeuListePage({
                   prend pas la pastille d'un article de code. Elle reste
                   nommée en clair sous les pastilles, pour ce qu'elle est. */}
             <LegalBadge
-              charte="board"
               reference="Art. GN 13 · Règlement ERP"
               href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020303866"
               extrait="L'exploitant ne peut effectuer ou faire effectuer, en présence du public, des travaux qui feraient courir un danger quelconque à ce dernier ou qui apporteraient une gêne pour son évacuation."

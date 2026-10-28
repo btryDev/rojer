@@ -340,7 +340,6 @@ export default async function PrestataireDetailPage({
                 {/* LEGIARTI000037389145 rend 404. Identifiant relu à la
                     source le 2026-08-28. */}
                 <LegalBadge
-                  charte="board"
                   reference="Art. L. 8222-1 CT"
                   href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024197683"
                   extrait="Toute personne vérifie lors de la conclusion d'un contrat dont l'objet porte sur une obligation d'un montant minimum en vue de l'exécution d'un travail, de la fourniture d'une prestation de services ou de l'accomplissement d'un acte de commerce, et périodiquement jusqu'à la fin de l'exécution du contrat, que son cocontractant s'acquitte : 1° des formalités mentionnées aux articles L. 8221-3 et L. 8221-5 […]"

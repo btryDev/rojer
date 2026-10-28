@@ -123,7 +123,7 @@ export function ChezVous({
           />
         ) : null}
         <div className="mt-3 flex flex-wrap gap-2">
-          <LegalBadge charte="board"
+          <LegalBadge
             reference="Art. R. 4121-2 CT"
             href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000045386446"
             extrait={EXTRAIT_R4121_2}

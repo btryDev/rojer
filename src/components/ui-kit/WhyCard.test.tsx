@@ -38,7 +38,7 @@ describe("WhyCard en board — ce qui se replie", () => {
     render(
       <WhyCard charte="board" titre="Pourquoi">
         <Textes>
-          <LegalBadge charte="board" reference="Art. R. 4512-6 CT" href="https://www.legifrance.gouv.fr/a" />
+          <LegalBadge reference="Art. R. 4512-6 CT" href="https://www.legifrance.gouv.fr/a" />
         </Textes>
       </WhyCard>,
     );
