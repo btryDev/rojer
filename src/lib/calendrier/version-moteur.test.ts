@@ -554,7 +554,12 @@ const RELEVE = {
   // ~~69c2588f7f743e9c~~ — même jour, revue du lot : la plage mémorisée est
   // testée par une seule fonction (`decalageMemorise`) au lieu de deux
   // copies. NON, même calcul : empreinte recopiée, version inchangée.
-  empreinte: "e427cfa97f701a73",
+  // ~~e427cfa97f701a73~~ — même jour, seconde revue : mémoire à deux
+  // générations au lieu d'un vidage d'un coup, `decalageMs` prend un nombre,
+  // `composantesCivilesIntl` n'est plus exporté. NON, même calcul — et le
+  // test vérifie désormais chacun des 438 changements d'heure de 1981 à
+  // 2199 : empreinte recopiée, version inchangée.
+  empreinte: "fcb4b1ae31aa4ebf",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

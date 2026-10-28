@@ -40,7 +40,8 @@ export type DernierRapport = { id: string } & DerniereRealisation;
 /**
  * Le dernier rapport de chaque ligne d'un établissement — réalisé seulement,
  * ou tout résultat —, une ligne par échéance, calculé par la base
- * (`DISTINCT ON`). La portée au propriétaire est DANS la requête
+ * (~~`DISTINCT ON`~~ [2026-10-28 : une descente d'index par ligne, voir
+ * plus bas]). La portée au propriétaire est DANS la requête
  * (`requireProprietaireSql`) : elle ne compte pas sur ses appelants.
  *
  * [2026-10-27, plan performance, lot 1a] Remplace la lecture de TOUS les
@@ -58,16 +59,22 @@ export type DernierRapport = { id: string } & DerniereRealisation;
  * d'index par ligne (`LATERAL … LIMIT 1` sur
  * `(verificationId, dateRapport DESC, createdAt DESC)`) : le coût suit le
  * nombre de lignes, borné par la cible, et plus la longueur de l'historique
- * (≈ 1,1 ms mesuré sur le même dossier). Les rapports d'une ligne se lisent
- * par sa seule `verificationId` — la règle du moteur, que le test
- * d'intégration prend pour référence —, sans exiger que leur colonne
- * `etablissementId` (recopiée à l'écriture, `rapports/actions.ts`) soit
- * restée égale : une divergence ne ferait pas disparaître une réalisation.
+ * (≈ 1,1 ms mesuré sur le même dossier).
+ *
+ * Le rapport reste borné à l'établissement par SA colonne `etablissementId`,
+ * comme avant et comme le registre (`listerRapportsDeLEtablissement`) : la
+ * portée au compte ne s'élargit pas, et le registre et cette lecture voient
+ * les mêmes rapports. Seul écart avec l'ancienne requête : un rapport dont la
+ * ligne appartiendrait à un autre établissement n'est plus lu — l'unique
+ * écriture (`rapports/actions.ts`) recopie l'établissement de la ligne, il
+ * ne peut pas exister.
  */
 async function lireDerniersRapports(
   etablissementId: string,
   realisesSeulement: boolean,
 ): Promise<Map<string, DernierRapport>> {
+  // La portée se prouve une fois, sur la ligne ; le rapport porte le même
+  // établissement (filtre ci-dessous), donc le même propriétaire.
   const proprietaire = await requireProprietaireSql('v."etablissementId"');
   const lignes = await prisma.$queryRaw<
     { verificationId: string; id: string; dateRapport: Date; resultat: string }[]
@@ -78,6 +85,7 @@ async function lireDerniersRapports(
       SELECT r."id", r."dateRapport", r."resultat"::text AS "resultat"
       FROM "RapportVerification" r
       WHERE r."verificationId" = v."id"
+        AND r."etablissementId" = ${etablissementId}
         AND (${!realisesSeulement} OR r."resultat"::text = ANY(${[...RESULTATS_REALISES]}::text[]))
       ORDER BY ${ordreRapportPlusRecentSql("r")}
       LIMIT 1

@@ -303,11 +303,14 @@ Fait :
   `Intl.formatToParts` par appel, deux par `instantCivil`, trois par
   `debutDuJour`. Le décalage de Paris est désormais lu une fois par heure UTC
   (les changements d'heure tombent à 01:00 UTC pile depuis 1981) et les
-  composantes en dérivent par l'arithmétique UTC. Résultat identique, vérifié
-  minute par minute autour des changements d'heure, aux bornes et sur 20 000
-  instants (`composantes-rapides.test.ts`, éprouvé en faussant le décalage :
-  rouge). Le sceau du moteur est recopié sans incrément : aucun dossier
-  régénéré.
+  composantes en dérivent par l'arithmétique UTC. Résultat identique à une
+  référence `Intl` écrite dans le test : chacun des 438 changements d'heure
+  de 1981 à 2199 est retrouvé par dichotomie et tombe sur une heure UTC
+  pleine, puis le calcul est comparé minute par minute sur ± 2 h autour de
+  chacun, aux bornes et sur 20 000 instants distincts
+  (`composantes-rapides.test.ts`, éprouvé en faussant le décalage : rouge).
+  Mémoire à deux générations, bornée. Le sceau du moteur est recopié sans
+  incrément : aucun dossier régénéré.
 - **Dernière réalisation** (`rapports/joindre-realisations.ts`, lue sur chaque
   écran par la barre latérale) : le `DISTINCT ON` lisait et triait TOUT
   l'historique (≈ 12 ms à dix ans, linéaire en années). Une descente d'index

@@ -1,5 +1,6 @@
 // Pour les tests seulement : un faux module `joindre-realisations`, qui rend
-// en mémoire ce que rend sa requête (`DISTINCT ON`) sur des rapports factices —
+// en mémoire ce que rend sa requête (~~`DISTINCT ON`~~ [2026-10-28 : une
+// descente d'index par ligne, `LATERAL … LIMIT 1`]) sur des rapports factices —
 // le dernier rapport de chaque ligne.
 //
 // Les tests qui éprouvent les lectures du calendrier et du tableau de bord le

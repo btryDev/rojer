@@ -18,6 +18,12 @@
 //     `timeZone: "Europe/Paris"` explicite. Conséquence utile : ces
 //     fonctions donnent le même résultat quel que soit `TZ`, en
 //     production comme en test.
+//     [2026-10-28, plan performance] Le DÉCALAGE de Paris vient toujours
+//     d'`Intl`, mais lu une fois par heure UTC ; les composantes en dérivent
+//     par `getUTC*` sur l'instant décalé (`decalageMemorise`), seulement de
+//     1981 à 2199, où les changements d'heure tombent sur des heures pleines
+//     — ce que `composantes-rapides.test.ts` vérifie pour chacun. Ailleurs,
+//     un `getUTC*` sur une date civile reste une faute.
 //
 //  2. **L'horloge est toujours injectée.** Aucune fonction d'ici n'appelle
 //     `new Date()` ni `Date.now()` sans paramètre. C'est ce qui rend les
@@ -92,8 +98,9 @@ const FORMATEUR_PARTS = new Intl.DateTimeFormat("en-CA", {
   hourCycle: "h23",
 });
 
-/** Les composantes lues par `Intl` — la référence, et le chemin lent. */
-export function composantesCivilesIntl(d: Date): ComposantesCiviles {
+/** Les composantes lues par `Intl` — le chemin lent, hors de la plage
+ *  mémorisée. Non exporté : `composantesCiviles` est la seule lecture. */
+function composantesCivilesIntl(d: Date): ComposantesCiviles {
   const parts = FORMATEUR_PARTS.formatToParts(d);
   const lire = (type: Intl.DateTimeFormatPartTypes): number => {
     const p = parts.find((x) => x.type === type);
@@ -146,33 +153,39 @@ const DEBUT_HEURES_ALIGNEES = Date.UTC(1981, 0, 1);
 const FIN_HEURES_ALIGNEES = Date.UTC(2200, 0, 1);
 // Une mémoire bornée. Les dates du produit sont surtout des minuits civils
 // (une ou deux heures UTC par jour), mais un horodatage peut tomber sur
-// n'importe quelle heure : 8 760 par an au plus. Au plafond — plus de onze
-// ans d'heures distinctes, quelques Mo —, la table est vidée et se remplit à
-// nouveau, une lecture d'`Intl` par heure rencontrée.
-const PLAFOND_MEMOIRE = 100_000;
-const decalageParHeure = new Map<number, number>();
+// n'importe quelle heure : 8 760 par an au plus. Deux générations : quand la
+// récente atteint le plafond, elle devient l'ancienne et la précédente est
+// oubliée — les heures encore lues survivent au passage, sans falaise où
+// tout serait relu d'un coup.
+const PLAFOND_GENERATION = 50_000;
+let decalagesRecents = new Map<number, number>();
+let decalagesAnciens = new Map<number, number>();
 
 /** Le décalage mémorisé de l'heure UTC de `t`, ou `null` hors de la plage
  *  où les changements d'heure tombent sur des heures pleines. */
 function decalageMemorise(t: number): number | null {
   if (!(t >= DEBUT_HEURES_ALIGNEES && t < FIN_HEURES_ALIGNEES)) return null;
   const heure = Math.floor(t / HEURE_MS);
-  let decalage = decalageParHeure.get(heure);
+  let decalage = decalagesRecents.get(heure);
   if (decalage === undefined) {
-    if (decalageParHeure.size >= PLAFOND_MEMOIRE) decalageParHeure.clear();
-    decalage = decalageIntlMs(new Date(heure * HEURE_MS));
-    decalageParHeure.set(heure, decalage);
+    decalage = decalagesAnciens.get(heure) ?? decalageIntlMs(new Date(heure * HEURE_MS));
+    if (decalagesRecents.size >= PLAFOND_GENERATION) {
+      decalagesAnciens = decalagesRecents;
+      decalagesRecents = new Map();
+    }
+    decalagesRecents.set(heure, decalage);
   }
   return decalage;
 }
 
 /**
- * Décalage Europe/Paris ↔ UTC, en millisecondes, **à l'instant donné**
+ * Décalage Europe/Paris ↔ UTC, en millisecondes, **à l'instant `t`**
  * (+1 h en hiver, +2 h en été). Interne : sert à reconstruire un instant
- * depuis des composantes civiles.
+ * depuis des composantes civiles. Prend un nombre : sur le chemin rapide,
+ * aucune `Date` n'est construite.
  */
-function decalageMs(d: Date): number {
-  return decalageMemorise(d.getTime()) ?? decalageIntlMs(d);
+function decalageMs(t: number): number {
+  return decalageMemorise(t) ?? decalageIntlMs(new Date(t));
 }
 
 /**
@@ -216,9 +229,9 @@ export function instantCivil(
   milliseconde = 0,
 ): Date {
   const naif = Date.UTC(annee, mois - 1, jour, heure, minute, seconde, milliseconde);
-  const decalage1 = decalageMs(new Date(naif));
+  const decalage1 = decalageMs(naif);
   const candidat = naif - decalage1;
-  const decalage2 = decalageMs(new Date(candidat));
+  const decalage2 = decalageMs(candidat);
   return new Date(decalage2 === decalage1 ? candidat : naif - decalage2);
 }
 
