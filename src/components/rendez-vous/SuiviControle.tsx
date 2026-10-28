@@ -191,7 +191,7 @@ export function SuiviControle({
               {/* La règle d'affichage d'ADR-049 § 3, dite là où l'on choisit la date. */}
               {echeance && (
                 <p className="m-0 mt-1 text-[12px] text-[color:var(--board-slate-mid)]">
-                  Échéance le {formaterDateCourteFr(echeance)}. Un rendez-vous avant ce jour prend sa place au
+                  Échéance le {formaterDateCourteFr(echeance)}. Un rendez-vous au plus tard ce jour prend sa place au
                   calendrier ; après, le contrôle passe en retard.
                 </p>
               )}
