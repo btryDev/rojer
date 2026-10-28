@@ -170,7 +170,7 @@ describe("les pages d'entrée s'ouvrent sur l'en-tête commun, sans retour écri
       .find((f) => existsSync(f) && statSync(f).isFile());
   // [2026-10-28] Un cran de plus : `EnTetePage` délègue son cadre, `<h1>`
   // compris, à `CadreEnTete` (lot 3 du plan performance). Les imports
-  // relatifs (`./…`) d'un composant importé sont suivis aussi.
+  // relatifs (`./…`, `../…`) d'un composant importé sont suivis aussi.
   const importsDe = (fichier: string, source: string) =>
     analyser(source)
       .statements.filter(ts.isImportDeclaration)
@@ -178,7 +178,7 @@ describe("les pages d'entrée s'ouvrent sur l'en-tête commun, sans retour écri
       .map((s) =>
         s.startsWith("@/components/")
           ? resoudre(s)
-          : s.startsWith("./")
+          : s.startsWith(".")
             ? resoudre("@/" + path.relative(SRC, path.join(path.dirname(fichier), s)))
             : undefined,
       )

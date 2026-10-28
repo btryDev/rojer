@@ -4,6 +4,9 @@ import type { SidebarItemId } from "@/components/layout/sidebar-nav";
 export type RepliSection = {
   item: Exclude<SidebarItemId, "tableau">;
   titre?: string;
+  /** La page porte une bascule de vue sous son titre : le repli lui garde
+   *  sa place, sans quoi l'en-tête grandirait à l'arrivée de la page. */
+  bascule?: true;
 };
 
 /**
@@ -15,11 +18,11 @@ export type RepliSection = {
  * La garde `chargement-sections.test.ts` relit chaque page et vérifie que
  * cette table dit le même en-tête qu'elle.
  */
-const REPLIS: Record<string, RepliSection> = {
+const REPLIS: Readonly<Record<string, RepliSection>> = {
   accessibilite: { item: "accessibilite" },
   actions: { item: "actions" },
   batiments: { item: "batiments" },
-  calendrier: { item: "calendrier" },
+  calendrier: { item: "calendrier", bascule: true },
   "carnet-sanitaire": { item: "carnet-sanitaire" },
   connecter: { item: "connecter" },
   controle: { item: "controle" },
@@ -28,8 +31,8 @@ const REPLIS: Record<string, RepliSection> = {
   "duerp/import": { item: "duerp", titre: "Importer un DUERP" },
   equipe: { item: "equipe" },
   equipements: { item: "equipements" },
-  "etats-permanents": { item: "etats-permanents" },
-  "etats-permanents/en-cas-de": { item: "etats-permanents" },
+  "etats-permanents": { item: "etats-permanents", bascule: true },
+  "etats-permanents/en-cas-de": { item: "etats-permanents", bascule: true },
   guide: { item: "guide" },
   modifier: { item: "fiche" },
   perimetre: { item: "perimetre" },
@@ -45,5 +48,7 @@ const REPLIS: Record<string, RepliSection> = {
 export function repliDeChargement(pathname: string): RepliSection | null {
   const [racine, , ...suite] = pathname.split("/").filter(Boolean);
   if (racine !== "etablissements") return null;
-  return REPLIS[suite.join("/")] ?? null;
+  const cle = suite.join("/");
+  // `hasOwn` : « constructor » ou « __proto__ » ne sont pas des pages.
+  return Object.hasOwn(REPLIS, cle) ? REPLIS[cle] : null;
 }

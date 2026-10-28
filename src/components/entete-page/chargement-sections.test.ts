@@ -12,7 +12,7 @@
  *
  * La garde balaie toutes les pages sous `etablissements/[id]` — une page
  * neuve y tombe sans inscription — et compare l'en-tête de la page
- * (`<EnTetePage item titre>`, lu par l'arbre syntaxique : un commentaire ne
+ * (`<EnTetePage item titre>` et sa bascule, lus par l'arbre syntaxique : un commentaire ne
  * compte pas) à ce que la table annonce pour son adresse.
  */
 import { readdirSync, readFileSync, statSync } from "node:fs";
@@ -45,16 +45,23 @@ function entetes(fichier: string): RepliSection[] {
     // l'égalité échouera — à la garde d'être élargie, pas contournée.
     return ts.isStringLiteral(init) ? init.text : init.getText();
   };
+  const noter = (el: ts.JsxOpeningLikeElement, bascule: boolean) => {
+    const titre = lire(el, "titre");
+    trouves.push({
+      item: lire(el, "item") as RepliSection["item"],
+      ...(titre === undefined ? {} : { titre }),
+      ...(bascule ? { bascule: true as const } : {}),
+    });
+  };
   const visiter = (n: ts.Node) => {
-    if (
-      (ts.isJsxOpeningElement(n) || ts.isJsxSelfClosingElement(n)) &&
-      n.tagName.getText() === "EnTetePage"
-    ) {
-      const titre = lire(n, "titre");
-      trouves.push({
-        item: lire(n, "item") as RepliSection["item"],
-        ...(titre === undefined ? {} : { titre }),
-      });
+    // Des enfants à l'en-tête, c'est sa bascule de vue (`EnTetePage`).
+    if (ts.isJsxElement(n) && n.openingElement.tagName.getText() === "EnTetePage") {
+      noter(
+        n.openingElement,
+        n.children.some((c) => !(ts.isJsxText(c) && !c.text.trim())),
+      );
+    } else if (ts.isJsxSelfClosingElement(n) && n.tagName.getText() === "EnTetePage") {
+      noter(n, false);
     }
     ts.forEachChild(n, visiter);
   };
