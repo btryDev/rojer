@@ -75,6 +75,9 @@
     "vitest": "^4.1.4"
   },
   "pnpm": {
+    "overrides": {
+      "proxy-addr": ">=2.0.8"
+    },
     "ignoredBuiltDependencies": [
       "sharp",
       "unrs-resolver"
