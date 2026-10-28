@@ -136,3 +136,25 @@ describe("l'exemple de référence suit la source (revue du 2026-10-18)", () => 
   });
 });
 
+
+describe("présentation : cartes sur une page, à plat dans une modal", () => {
+  it("par défaut, deux sections `carte-board`", () => {
+    const { container } = rendre();
+    expect(container.querySelectorAll("section.carte-board")).toHaveLength(2);
+  });
+
+  it("`aPlat` : aucune carte dans la carte, la seconde section sous un filet", () => {
+    const { container } = render(
+      <PrescriptionForm
+        action={async () => ({ status: "idle" })}
+        obligations={obligations}
+        equipements={equipements}
+        aPlat
+      />,
+    );
+    const sections = container.querySelectorAll("section");
+    expect(sections).toHaveLength(2);
+    expect(container.querySelector(".carte-board")).toBeNull();
+    expect(sections[1].className).toContain("border-t");
+  });
+});

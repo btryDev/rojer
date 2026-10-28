@@ -11,17 +11,29 @@ import { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
+const LARGEUR = {
+  normale: "max-w-[600px]",
+  large: "max-w-[880px]",
+} as const;
+
 export function PanneauModal({
   ouvert,
   surFermer,
   surtitre,
   titre,
+  largeur = "normale",
   children,
 }: {
   ouvert: boolean;
   surFermer: () => void;
   surtitre: string;
   titre: string;
+  /**
+   * `normale` (600 px) pour un texte ou un court formulaire ; `large`
+   * (880 px) pour un formulaire de page, à deux colonnes, qu'on ouvre en
+   * modal — la prescription.
+   */
+  largeur?: "normale" | "large";
   children: React.ReactNode;
 }) {
   const titreId = useId();
@@ -60,7 +72,8 @@ export function PanneauModal({
       <div
         ref={panneau}
         tabIndex={-1}
-        className="relative max-h-[85vh] w-full max-w-[600px] overflow-y-auto rounded-[26px] bg-[color:var(--board-card)] p-7 shadow-[0_0_0_1px_rgba(13,18,36,.06),0_24px_60px_-24px_rgba(13,18,36,.45)] outline-none"
+        data-largeur={largeur}
+        className={`relative max-h-[85vh] w-full ${LARGEUR[largeur]} overflow-y-auto rounded-[26px] bg-[color:var(--board-card)] p-7 shadow-[0_0_0_1px_rgba(13,18,36,.06),0_24px_60px_-24px_rgba(13,18,36,.45)] outline-none`}
       >
         <div className="flex items-start justify-between gap-6">
           <div>

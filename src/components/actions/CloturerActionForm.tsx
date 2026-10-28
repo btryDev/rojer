@@ -10,6 +10,7 @@ import {
   LIBELLE_JUSTIFICATIF,
   LIBELLE_PIECE,
 } from "@/lib/points-a-corriger/libelles";
+import { MessageFait } from "@/components/ui-kit/MessageFait";
 
 type Props = {
   action: (
@@ -102,14 +103,11 @@ export function CloturerActionForm({ action, rapportsDisponibles, point = false 
           {state.message}
         </p>
       )}
-      {state.status === "success" && (
-        <p
-          role="status"
-          className="m-0 text-[12.5px] text-[color:var(--board-green-ink)]"
-        >
-          {point ? "Point corrigé." : "Action clôturée."}
-        </p>
-      )}
+      {/* Posée vide d'avance : une zone d'annonce insérée avec son texte
+          n'est souvent pas lue par les lecteurs d'écran. */}
+      <MessageFait>
+        {state.status === "success" ? (point ? "Point corrigé." : "Action clôturée.") : null}
+      </MessageFait>
 
       <div>
         <Button type="submit" variant="board" size="board" disabled={pending}>
