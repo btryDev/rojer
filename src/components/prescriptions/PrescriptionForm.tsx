@@ -35,6 +35,8 @@ type Props = {
    * sur la nature de l'acte.
    */
   sourceInitiale?: SourcePrescription;
+  /** Appelé après un enregistrement réussi — la modal s'y ferme. */
+  surSucces?: () => void;
 };
 
 /**
@@ -100,6 +102,7 @@ export function PrescriptionForm({
   // ~~"arrete_prefectoral"~~ — 2026-10-18, décision de la propriétaire :
   // deux sources ; le défaut est la demande de l'assureur.
   sourceInitiale = "demande_assureur",
+  surSucces,
 }: Props) {
   // La source est un état — pas pour la valider, le schéma s'en charge, mais
   // parce que l'avertissement contractuel doit apparaître au moment du choix.
@@ -142,6 +145,7 @@ export function PrescriptionForm({
       if (resultat.status === "success") {
         setSource(sourceInitiale);
         setEffet("renforce_periodicite");
+        surSucces?.();
       }
       setJeton((n) => n + 1);
       return resultat;
