@@ -343,9 +343,24 @@ Reste :
   paquet (`DashboardBundle`) dans une grille client à glisser-déposer : le
   streaming demande de passer aux widgets des promesses (`use()`) ou de
   découper la grille — à concevoir avant de coder ;
-- le contrôle visuel des replis, pas encore fait : un état de chargement ne
-  se voit qu'en ralentissant le serveur. Couvert d'ici là par un test de
-  rendu (`ChargementSection.test.tsx`).
+- ~~le contrôle visuel des replis, pas encore fait~~ [2026-10-28, fait en
+  local — `next dev`, base de mesure semée par `seed:complet`, faux serveur
+  Auth ; la base a été supprimée après. Relevé par un observateur du DOM :
+  - plan d'actions → calendrier : le repli s'affiche sous l'adresse DEMANDÉE
+    (`usePathname` rend la nouvelle adresse pendant l'attente), titre
+    « Calendrier », teinte pêche, sans dessin ; la page arrive ≈ 500 ms
+    après ;
+  - `?annee=2027` puis `&vue=equipement` sur le calendrier : aucun repli,
+    l'écran reste en place — la régression du premier essai est écartée ;
+  - documents, page retardée de 8 s le temps d'une capture (retiré
+    aussitôt) : titre et gris de Documentation tout de suite. **Reste un
+    saut** : à 1 440 px, l'en-tête réel mesure ≈ 403 px contre 320 dans le
+    repli (dessin plus haut que le minimum, descriptif de quatre lignes
+    contre deux) — le titre descend de ≈ 15 px, le corps de ≈ 80 px.
+    Réserver la hauteur exacte demanderait la proportion de chaque dessin ;
+    non fait.]
+- en `next dev`, la première compilation d'une page garde l'écran précédent
+  (« Rendering… ») avant le repli : propre au mode développement.
 
 ### Lot 4 — Ne pas refaire ce qui vient d'être fait (S, optionnel — option expérimentale)
 
