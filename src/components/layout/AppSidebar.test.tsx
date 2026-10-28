@@ -7,7 +7,7 @@
  * Calendrier à jour : le nombre, comme avant (2026-10-13).
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/etablissements/e1/calendrier",
@@ -28,10 +28,11 @@ const ETAB = {
 };
 
 function lienCalendrier(): HTMLElement {
+  // Le panneau est replié à l'arrivée : on ouvre celui de « À faire ».
+  fireEvent.click(screen.getByRole("button", { name: /À faire/ }));
   return screen
     .getAllByRole("link")
     .filter((a) => a.getAttribute("href") === "/etablissements/e1/calendrier")
-    // Le lien du panneau, pas la tuile « À faire » du rail qui mène au même endroit.
     .find((a) => a.textContent?.startsWith("Calendrier"))!;
 }
 

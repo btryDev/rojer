@@ -271,20 +271,13 @@ describe("construireRail — rail à deux niveaux", () => {
     ]);
   });
 
-  it("donne une page d'entrée à chaque catégorie, panneau ou non", () => {
-    // ADR-015 : cliquer une entrée de rail navigue. Une icône de premier
-    // niveau qui ne mène nulle part n'est qu'un tiroir.
+  it("donne un panneau non vide à chaque catégorie", () => {
+    // ~~ADR-015 : cliquer une entrée de rail navigue.~~ [2026-10-28, ADR-030
+    // amendée : cliquer ouvre le panneau sans naviguer.] Une entrée dont le
+    // panneau serait vide n'ouvrirait rien, et ne mènerait nulle part.
     for (const cat of rail()) {
-      expect(cat.href.startsWith(`/etablissements/${ID}`)).toBe(true);
-    }
-  });
-
-  it("fait entrer chaque panneau par son premier item", () => {
-    // Sans quoi le rail déposerait sur un écran que le panneau ne montre
-    // pas, et aucun item ne serait surligné à l'arrivée.
-    for (const cat of rail()) {
-      if (!cat.items) continue;
-      expect(cat.href).toBe(cat.items[0].href);
+      expect(cat.items.length).toBeGreaterThan(0);
+      for (const it of cat.items) expect(it.href.startsWith(`/etablissements/${ID}`)).toBe(true);
     }
   });
 
@@ -304,7 +297,6 @@ describe("construireRail — rail à deux niveaux", () => {
     // seulement en tapant son URL. Une entrée de rail qui déplace une page
     // sans lui en rendre une autre la supprime.
     expect(parametres?.items?.map((i) => i.id)).toEqual(["fiche", "connecter"]);
-    expect(parametres?.href).toBe(`/etablissements/${ID}/modifier`);
     expect(idsVisibles()).toContain("connecter");
     expect(idsVisibles()).toContain("fiche");
     // La césure entre le dossier et son réglage est portée par la donnée,
@@ -318,10 +310,6 @@ describe("construireRail — rail à deux niveaux", () => {
     // rang de rail la mettait au niveau d'un registre tenu. Sous
     // « Documentation », il est un document parmi ceux qui expliquent le
     // dossier — et il redevient atteignable sans passer par un autre écran.
-    const cats = rail();
-    expect(cats.map((c) => c.href)).not.toContain(
-      `/etablissements/${ID}/guide`,
-    );
     expect(idsVisibles()).toContain("guide");
     expect(categorieDeItem("guide")).toBe("documentation");
   });
