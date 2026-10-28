@@ -43,6 +43,15 @@ import { CORPUS } from "@/lib/referentiels/corpus";
 import { SURFACES_AFFICHEES, dateArrete } from "@/lib/referentiels/corpus/citations-ecran";
 import type { ArticleDepouille } from "@/lib/referentiels/corpus/types";
 import { EXTRAIT_R4121_2 } from "@/lib/referentiels/conformite/texte-r4121-2";
+import {
+  EXTRAIT_R4512_12,
+  R4463_8,
+  R4512_1,
+  R4512_2,
+  R4512_7_1_EN_COURS,
+  R4512_9,
+  R4512_11,
+} from "@/lib/plan-prevention/annonces-plan";
 import { ecartsDeCitation, normaliser } from "./extrait-continu";
 
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
@@ -62,6 +71,16 @@ const EXPRESSIONS: Record<string, string | { motif: string }> = {
   // « GN 10 » sous une ligne qui le cite. Sa valeur est confrontée au corpus
   // comme les autres ; `texte-gn10.test.ts` la tient égale à la citationCle.
   CITATION_GN_10,
+  // Plan de prévention (2026-10-28) : les articles passent sous le livre, en
+  // `extrait`. Valeurs prises à `annonces-plan.ts`, confrontées au corpus ici
+  // comme les autres (et égales à la citationCle par `annonces-plan.test.ts`).
+  EXTRAIT_R4512_12,
+  R4463_8,
+  R4512_1,
+  R4512_2,
+  R4512_7_1_EN_COURS,
+  R4512_9,
+  R4512_11,
   // `DocumentsObligatoires.tsx` : la pastille affiche la `citationCle` du
   // corpus elle-même, lue par `documentsObligatoires()`. L'extrait EST le
   // verbatim ; le confronter à lui-même ne prouverait rien.

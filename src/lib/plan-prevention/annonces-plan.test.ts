@@ -18,13 +18,20 @@ import {
   CONSTAT_R4512_9,
   CONSTAT_R4512_11,
   CONSTAT_R4512_12,
+  EN_CLAIR_ECRIT,
+  EN_CLAIR_R4463_8,
+  EN_CLAIR_R4512_1,
+  EN_CLAIR_R4512_2,
+  EN_CLAIR_R4512_2_MOMENT,
+  EN_CLAIR_R4512_7_EN_COURS,
+  EN_CLAIR_R4512_9,
+  EN_CLAIR_R4512_11,
+  EN_CLAIR_R4512_12,
+  EN_CLAIR_R4512_12_SI_ECRIT,
   EXTRAIT_R4512_12,
   FAIT_DUREE_NON_RENSEIGNEE,
-  PHRASE_R4512_2,
-  PHRASE_R4512_6,
-  PHRASE_R4512_7,
   R4463_8,
-  R4512_2_MOMENT,
+  R4512_2,
   R4512_6_MOMENT,
   R4512_7_1_EN_COURS,
   R4512_7_1_SEUIL,
@@ -37,8 +44,13 @@ import {
   R4512_12_1,
   R4512_12_2,
   R4512_12_CHAPEAU,
+  SENS_R4512_6,
+  SENS_R4512_7,
   URL_R4463_8,
   URL_R4512_1,
+  URL_R4512_2,
+  URL_R4512_6,
+  URL_R4512_7,
   URL_R4512_9,
   URL_R4512_11,
   URL_R4512_12,
@@ -60,6 +72,7 @@ const verbatim = (ref: string) => article(ref)?.citationCle ?? "";
 describe("cinq articles écrits une fois, et dans leurs mots", () => {
   it.each([
     ["R. 4512-1", R4512_1, URL_R4512_1],
+    ["R. 4512-2", R4512_2, URL_R4512_2],
     ["R. 4512-9", R4512_9, URL_R4512_9],
     ["R. 4512-11", R4512_11, URL_R4512_11],
     ["R. 4512-12", EXTRAIT_R4512_12, URL_R4512_12],
@@ -68,6 +81,11 @@ describe("cinq articles écrits une fois, et dans leurs mots", () => {
     expect(verbatim(ref).length).toBeGreaterThan(80);
     expect(texte).toBe(verbatim(ref));
     expect(url).toBe(article(ref)?.url);
+  });
+
+  it("R. 4512-6 et R. 4512-7 : l'adresse du livre est celle du corpus", () => {
+    expect(URL_R4512_6).toBe(article("R. 4512-6")?.url);
+    expect(URL_R4512_7).toBe(article("R. 4512-7")?.url);
   });
 
   it("R. 4512-12 : chapeau, 1° et 2° recomposent exactement l'article", () => {
@@ -86,7 +104,6 @@ describe("cinq articles écrits une fois, et dans leurs mots", () => {
 
 describe("le diagnostic : R. 4512-2, -6 et -7 dans leurs mots", () => {
   it.each([
-    ["R. 4512-2", R4512_2_MOMENT],
     ["R. 4512-6", R4512_6_MOMENT],
     ["R. 4512-7", R4512_7_ECRIT],
     ["R. 4512-7", R4512_7_1_SEUIL],
@@ -102,8 +119,7 @@ describe("le diagnostic : R. 4512-2, -6 et -7 dans leurs mots", () => {
     // l'inspection, et « quelle que soit la durée » pour R. 4512-6.
     expect(verbatim("R. 4512-2")).not.toContain(R4512_6_MOMENT);
     expect(verbatim("R. 4512-6")).not.toMatch(/durée/);
-    expect(PHRASE_R4512_2).toContain(R4512_2_MOMENT);
-    expect(PHRASE_R4512_6).toContain(R4512_6_MOMENT);
+    expect(SENS_R4512_6).toContain(R4512_6_MOMENT);
   });
 
   it.each([
@@ -111,10 +127,21 @@ describe("le diagnostic : R. 4512-2, -6 et -7 dans leurs mots", () => {
     [null, true],
     [null, false],
     [12, false],
-  ] as const)("durée %s, dangereux %s : les trois articles, les deux cas de l'écrit", (duree, dangereux) => {
-    const r = diagnostiquerPlan({ dureeHeuresEstimee: duree, travauxDangereux: dangereux }).recommandation;
-    for (const p of [PHRASE_R4512_7, PHRASE_R4512_2, PHRASE_R4512_6]) expect(r).toContain(p);
-    expect(r).not.toMatch(/restent? à faire|quelle que soit la durée \(art\. R\. 4512-6\)|400 heures qui commandent/);
+  ] as const)("durée %s, dangereux %s : la phrase en clair de son état, sans citation", (duree, dangereux) => {
+    // La règle en clair ; les articles se lisent sous le livre du
+    // formulaire, tenu par `annonces-surfaces.test.tsx`.
+    const d = diagnostiquerPlan({ dureeHeuresEstimee: duree, travauxDangereux: dangereux });
+    expect(d.recommandation).toContain(EN_CLAIR_ECRIT[d.ecrit]);
+    expect(d.recommandation).not.toMatch(/«|»|\bArt\.|R\. \d{4}/);
+    expect(d.recommandation).not.toMatch(/restent? à faire|400 heures qui commandent/);
+  });
+
+  it("les phrases citées sous le livre gardent leur moment et leurs deux cas", () => {
+    expect(SENS_R4512_7).toMatch(/1° [^;]*400 heures/);
+    expect(SENS_R4512_7).toMatch(/2° [^.]*travaux dangereux[^.]*quelle que soit la durée prévisible/);
+    for (const f of [R4512_7_ECRIT, R4512_7_1_SEUIL, R4512_7_2_LISTE])
+      expect(SENS_R4512_7).toContain(`« ${f} »`);
+    expect(SENS_R4512_6).toContain(`« ${R4512_6_MOMENT} »`);
   });
 });
 
@@ -129,6 +156,51 @@ describe("le diagnostic : R. 4512-2, -6 et -7 dans leurs mots", () => {
 const PRESCRIPTION =
   /(?<![\p{L}'])(devez|doit|doivent|obligatoires?|obligations?|il faut|pensez|n'oubliez|oubliez|délais?|jours?|avant|dès|à faire|faites|veillez|informez|joignez|fournissez)(?![\p{L}])/iu;
 const avise = (phrase: string) => PRESCRIPTION.test(phrase.replace(/[’‘]/g, "'"));
+
+/**
+ * Les phrases en clair (2026-10-28) : libellés d'écran, pas du droit. Ni
+ * guillemets, ni numéro d'article — le texte est sous le livre —, ni délai :
+ * aucun des articles qu'elles résument n'en fixe.
+ */
+describe("les phrases en clair ne citent pas et n'ajoutent pas de délai", () => {
+  const EN_CLAIR: [string, string][] = [
+    ["écrit obligatoire", EN_CLAIR_ECRIT.obligatoire],
+    ["écrit indéterminé", EN_CLAIR_ECRIT.indetermine],
+    ["écrit non imposé", EN_CLAIR_ECRIT.non_impose],
+    ["R. 4512-12", EN_CLAIR_R4512_12],
+    ["R. 4512-12, sous condition", EN_CLAIR_R4512_12_SI_ECRIT],
+    ["R. 4512-2", EN_CLAIR_R4512_2],
+    ["R. 4512-2, le moment", EN_CLAIR_R4512_2_MOMENT],
+    ["R. 4512-7 en cours", EN_CLAIR_R4512_7_EN_COURS],
+    ["R. 4512-1", EN_CLAIR_R4512_1],
+    ["R. 4512-9", EN_CLAIR_R4512_9],
+    ["R. 4512-11", EN_CLAIR_R4512_11],
+    ["R. 4463-8", EN_CLAIR_R4463_8],
+  ];
+  it.each(EN_CLAIR)("%s", (_nom, phrase) => {
+    expect(phrase).not.toMatch(/«|»|\bArt\.|[LRD]\. ?\d{3,4}/);
+    expect(phrase).not.toMatch(/\bdélais?\b|\bjours?\b|\bsous huit\b/i);
+  });
+
+  it("chaque moment reste le sien : l'inspection avant l'exécution, l'accord avant le début, l'écrit avant le commencement", () => {
+    for (const p of [EN_CLAIR_R4512_2, EN_CLAIR_R4512_2_MOMENT]) {
+      expect(p).toContain("avant l'exécution de l'opération");
+      expect(p).not.toMatch(/début des travaux|démarrage|commencement/);
+    }
+    expect(EN_CLAIR_ECRIT.non_impose).toContain("avant le début des travaux");
+    expect(EN_CLAIR_ECRIT.obligatoire).toContain("avant le commencement des travaux");
+  });
+
+  it("le 2° de R. 4512-12 n'est pas situé dans le temps", () => {
+    // « pendant toute la durée des travaux » est le 1° ; le 2° vient après
+    // la virgule, sans moment.
+    for (const p of [EN_CLAIR_R4512_12, EN_CLAIR_R4512_12_SI_ECRIT]) {
+      expect(p).not.toMatch(/pendant les travaux/i);
+      const deuxieme = p.split(", et ")[1];
+      expect(deuxieme).toBe("vous informez par écrit l'inspection du travail de l'ouverture des travaux.");
+    }
+  });
+});
 
 describe("les phrases de Rojer n'avisent pas", () => {
   it.each([
@@ -168,23 +240,33 @@ describe("trois états de l'écrit, et R. 4512-12 dans deux", () => {
     expect(d.ecritObligatoire).toBe(ecrit === "obligatoire");
   });
 
-  it.each(cas)("$nom : diagnostic et ZIP citent R. 4512-12 entier, ou pas du tout", ({ plan, ecrit }) => {
+  it.each(cas)("$nom : le ZIP cite R. 4512-12 entier, ou pas du tout ; le diagnostic le dit en clair", ({ plan, ecrit }) => {
+    // ~~La recommandation citait l'article entier, comme le ZIP.~~
+    // [2026-10-28 : à l'écran, il se lit sous le livre du diagnostic quand
+    // `citeR4512_12` le veut (`annonces-surfaces.test.tsx`). La phrase en
+    // clair le dit dans l'obligatoire ; dans l'indéterminé, elle demande la
+    // durée, et l'article reste sous le livre.]
     const d = diagnostiquerPlan(plan);
     const zip = zipSansTrace(plan).join("\n");
     const cite = ecrit !== "non_impose";
     expect(citeR4512_12(d.ecrit)).toBe(cite);
-    for (const t of [d.recommandation, zip]) {
-      if (cite) expect(t).toContain(`« ${EXTRAIT_R4512_12} »`);
-      else expect(t).not.toContain("R. 4512-12");
-    }
+    if (cite) expect(zip).toContain(`« ${EXTRAIT_R4512_12} »`);
+    else expect(zip).not.toContain("R. 4512-12");
     if (cite) expect(zip).toContain(CONSTAT_R4512_12);
+    expect(d.recommandation.includes(EN_CLAIR_R4512_12)).toBe(ecrit === "obligatoire");
+    if (ecrit === "non_impose") expect(d.recommandation).not.toMatch(/inspection du travail/);
   });
 
-  it("indéterminé : le fait est dit, et la conclusion du seuil n'y est pas", () => {
+  it("indéterminé : la durée est demandée, et la conclusion du seuil n'y est pas", () => {
     const plan = { dureeHeuresEstimee: null, travauxDangereux: false };
     const d = diagnostiquerPlan(plan);
-    expect(d.recommandation).toContain(FAIT_DUREE_NON_RENSEIGNEE);
-    expect(d.recommandation).not.toMatch(/pas atteintes/);
+    // ~~`toContain(FAIT_DUREE_NON_RENSEIGNEE)`~~ [2026-10-28 : le titre du
+    // diagnostic dit « durée non renseignée » ; la phrase dit les deux cas et
+    // demande la durée. Le fait reste dans le ZIP et sur la fiche.]
+    expect(d.recommandation).toMatch(/400 heures/);
+    expect(d.recommandation).toMatch(/travaux dangereux/);
+    expect(d.recommandation).toMatch(/renseignez la durée/);
+    expect(d.recommandation).not.toMatch(/pas atteintes|n'est pas imposé/);
     expect(zipSansTrace(plan).join("\n")).toContain(FAIT_DUREE_NON_RENSEIGNEE);
   });
 
@@ -266,6 +348,7 @@ describe("aucune seconde copie", () => {
 
   it.each([
     ["R. 4512-1", R4512_1],
+    ["R. 4512-2", R4512_2],
     ["R. 4512-9", R4512_9],
     ["R. 4512-11", R4512_11],
     ["R. 4512-12 1°", R4512_12_1],

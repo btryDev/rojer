@@ -4,8 +4,9 @@ import { useActionState, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { ChampBoard, LegalBadge, SectionChamps } from "@/components/ui-kit";
+import { ChampBoard, LegalBadge, SectionChamps, Textes } from "@/components/ui-kit";
 import { ChampBatiment } from "@/components/batiments/ChampBatiment";
+import { ArticleEnClair } from "@/components/plan-prevention/ArticleEnClair";
 import {
   creerPlanPrevention,
   modifierPlanPrevention,
@@ -13,8 +14,8 @@ import {
 } from "@/lib/plan-prevention/actions";
 import { diagnostiquerPlan } from "@/lib/plan-prevention/schema";
 import {
-  CHAPEAU_R4512_8,
   RUBRIQUES_R4512_8,
+  TEXTE_R4512_8,
   URL_R4512_8,
 } from "@/lib/plan-prevention/contenu-r4512-8";
 import {
@@ -23,12 +24,24 @@ import {
   CONSTAT_R4512_1,
   CONSTAT_R4512_9,
   CONSTAT_R4512_11,
+  EN_CLAIR_R4463_8,
+  EN_CLAIR_R4512_1,
+  EN_CLAIR_R4512_2,
+  EN_CLAIR_R4512_9,
+  EN_CLAIR_R4512_11,
+  EXTRAIT_R4512_12,
   R4463_8,
   R4512_1,
+  R4512_2,
   R4512_9,
   R4512_11,
+  SENS_R4512_6,
+  SENS_R4512_7,
   URL_R4463_8,
   URL_R4512_1,
+  URL_R4512_2,
+  URL_R4512_6,
+  URL_R4512_7,
   URL_R4512_9,
   URL_R4512_11,
   URL_R4512_12,
@@ -72,8 +85,13 @@ type LigneState = {
 
 type PhaseState = { cle: string; phase: string; moyensPrevention: string };
 
+// Les lignes présentes au premier rendu ont une clé fixe (`initiale`) : le
+// serveur et le navigateur doivent produire les mêmes `id`, et un compteur de
+// module ne vaut pas la même chose des deux côtés (erreur d'hydratation). Le
+// compteur ne sert qu'aux lignes ajoutées ensuite, côté navigateur seulement.
 let compteurRang = 0;
 const nouvelleCle = () => `rang-${(compteurRang += 1)}`;
+const initiale = (famille: string, i: number) => `${famille}-initiale-${i}`;
 
 /** Les quatre rubriques de `R. 4512-8` qui sont un bloc de texte — le 1° est
  *  une liste appariée, il a son propre répéteur. L'ordre et le libellé
@@ -190,10 +208,10 @@ export function FormulairePlanPrevention({
 
   const [lignes, setLignes] = useState<LigneState[]>(() =>
     plan && plan.lignes.length > 0
-      ? plan.lignes.map((l) => ({ cle: nouvelleCle(), ...l }))
+      ? plan.lignes.map((l, i) => ({ cle: initiale("ligne", i), ...l }))
       : [
           {
-            cle: nouvelleCle(),
+            cle: initiale("ligne", 0),
             risque: "",
             mesureEntrepriseUtilisatrice: "",
             mesureEntrepriseExterieure: "",
@@ -203,8 +221,8 @@ export function FormulairePlanPrevention({
 
   const [phases, setPhases] = useState<PhaseState[]>(() =>
     plan && plan.phases.length > 0
-      ? plan.phases.map((f) => ({ cle: nouvelleCle(), ...f }))
-      : [{ cle: nouvelleCle(), phase: "", moyensPrevention: "" }],
+      ? plan.phases.map((f, i) => ({ cle: initiale("phase", i), ...f }))
+      : [{ cle: initiale("phase", 0), phase: "", moyensPrevention: "" }],
   );
 
   // Un champ texte d'un plan rouvert : la valeur choisie dans l'annuaire
@@ -321,42 +339,46 @@ export function FormulairePlanPrevention({
             ))}
           </ul>
         )}
-        <div className="mt-4">
-          <LegalBadge
-            charte="board"
-            reference="Art. R. 4512-7 CT"
-            href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018529783"
-          />
-          {/* La recommandation cite R. 4512-12 dans ces deux états : sa
-              source doit s'ouvrir d'ici, comme celle de R. 4512-7. */}
+        {/* UN SEUL LIVRE (2026-10-28). Les articles que la phrase résume :
+            l'écrit (R. 4512-7), l'inspection (R. 4512-2), l'accord
+            (R. 4512-6), et R. 4512-12 dans les deux états où il se dit. Deux
+            livres « Texte » côte à côte ne se distinguaient pas. */}
+        <Textes className="mt-4">
+          <LegalBadge reference="Art. R. 4512-7 CT" href={URL_R4512_7}>
+            {SENS_R4512_7}
+          </LegalBadge>
+          <LegalBadge reference="Art. R. 4512-2 CT" href={URL_R4512_2} extrait={R4512_2} />
+          <LegalBadge reference="Art. R. 4512-6 CT" href={URL_R4512_6}>
+            {SENS_R4512_6}
+          </LegalBadge>
           {citeR4512_12(diagnostic.ecrit) && (
             <LegalBadge
-              charte="board"
               reference="Art. R. 4512-12 CT"
               href={URL_R4512_12}
-              className="ml-3"
+              extrait={EXTRAIT_R4512_12}
             />
           )}
-        </div>
+        </Textes>
       </section>
 
       {/* Les sections ne sont plus numérotées : la numérotation ne se garde
           que si l'ordre porte une information. */}
       {/* R. 4512-1, dit ici parce que c'est la section qui nomme L'entreprise
           extérieure, au singulier : le modèle n'en connaît qu'une par plan.
-          Le texte entre guillemets, l'antécédent de « le présent chapitre »
-          et le constat sur le produit hors des guillemets — rien d'autre.
+          En clair, puis le constat sur le produit ; le texte et l'antécédent
+          de « le présent chapitre » sous le livre (2026-10-28).
           `annonces-plan.ts` les écrit une fois. */}
       <SectionChamps
         titre="Entreprise extérieure"
         chapeau={
           <>
-            Qui intervient chez vous. Art. R. 4512-1 : « {R4512_1} »{" "}
-            {CHAPITRE_R4512} {CONSTAT_R4512_1}
+            Qui intervient chez vous. {EN_CLAIR_R4512_1} {CONSTAT_R4512_1}
           </>
         }
       >
-        <LegalBadge charte="board" reference="Art. R. 4512-1 CT" href={URL_R4512_1} />
+        <LegalBadge charte="board" reference="Art. R. 4512-1 CT" href={URL_R4512_1} extrait={R4512_1}>
+          {CHAPITRE_R4512}
+        </LegalBadge>
         {prestataires.length > 0 && (
           <fieldset className="m-0 border-0 p-0">
             <legend className="label-board">
@@ -515,17 +537,11 @@ export function FormulairePlanPrevention({
           type="text"
           inputMode="numeric"
           maxLength={5}
-          className="max-w-[220px]"
-          // Les deux moitiés du 1° de R. 4512-7 que le produit ne reprenait
-          // pas, relevées au verbatim le 2026-09-02 : le total compte « les
-          // entreprises sous-traitantes auxquelles elles peuvent faire
-          // appel », et le seuil se déclenche aussi « dès lors qu'il apparaît,
-          // en cours d'exécution des travaux, que le nombre d'heures doit
-          // atteindre 400 heures ». ~~Le module ne recalcule rien après
-          // validation — c'est une limite, et l'aide la nomme plutôt que de
-          // la taire.~~ [2026-10-12 : la fiche du plan note les heures
-          // prévisibles revues en cours de chantier, et le diagnostic en tire
-          // l'écrit (`seuil400EnCours`) ; l'aide le dit.]
+          // La largeur bornée est celle du champ, pas du bloc : bornée sur le
+          // bloc, l'aide s'étirait sur cinq lignes étroites.
+          champClassName="max-w-[220px]"
+          // Le total compte les sous-traitants, et les heures revues en cours
+          // de chantier se notent sur la fiche (`seuil400EnCours`).
           aide={AIDE_DUREE_HEURES}
           erreur={err("dureeHeuresEstimee")}
           onChange={(e) => {
@@ -544,10 +560,11 @@ export function FormulairePlanPrevention({
           />
           <span className="min-w-0 flex-1">
             <span className="block text-[13.5px] font-semibold leading-[1.4] text-[color:var(--board-ink)]">
+              {/* « (art. R. 4512-7, 2°) » retiré le 2026-10-28 : l'article
+                  s'ouvre sous le livre du diagnostic. */}
               Les travaux figurent sur la liste des travaux dangereux de
               l&apos;arrêté du 19 mars 1993 ou, pour les travaux agricoles,
               de l&apos;arrêté du ministre chargé de l&apos;agriculture
-              (art. R. 4512-7, 2°)
             </span>
             {/* Les exemples sont des points de la liste, entre guillemets
                 (C40, suite). Ils étaient paraphrasés, et plusieurs en
@@ -615,10 +632,13 @@ export function FormulairePlanPrevention({
         </div>
       </SectionChamps>
 
+      {/* Le moment de R. 4512-2 — « avant l'exécution », pas celui de
+          R. 4512-6 (C40). L'article sous le livre, pris à `annonces-plan.ts`. */}
       <SectionChamps
         titre="Inspection commune préalable"
-        chapeau="Obligatoire avant démarrage, quelle que soit la durée des travaux. Art. R. 4512-2 : « Il est procédé, préalablement à l'exécution de l'opération réalisée par une entreprise extérieure, à une inspection commune des lieux de travail, des installations qui s'y trouvent et des matériels éventuellement mis à disposition des entreprises extérieures. »"
+        chapeau={EN_CLAIR_R4512_2}
       >
+        <LegalBadge charte="board" reference="Art. R. 4512-2 CT" href={URL_R4512_2} extrait={R4512_2} />
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-[220px_1fr]">
           <ChampBoard
             id="inspectionDate"
@@ -647,16 +667,17 @@ export function FormulairePlanPrevention({
 
       <SectionChamps
         titre="Analyse conjointe des risques d'interférence"
-        // R. 4463-8 cité entier : « le cas échéant » laisse l'appréciation
-        // aux employeurs, et c'est au texte de le dire, pas à un exemple.
+        // R. 4463-8 : « le cas échéant » laisse l'appréciation aux
+        // employeurs, et la phrase en clair le garde. L'article entier sous
+        // le livre (2026-10-28).
         chapeau={
           <>
             Pour chaque risque identifié lors de l&apos;inspection, indiquez la
-            mesure prise par chaque partie. Art. R. 4463-8 : « {R4463_8} »
+            mesure prise par chaque partie. {EN_CLAIR_R4463_8}
           </>
         }
       >
-        <LegalBadge charte="board" reference="Art. R. 4463-8 CT" href={URL_R4463_8} />
+        <LegalBadge charte="board" reference="Art. R. 4463-8 CT" href={URL_R4463_8} extrait={R4463_8} />
         {/* Les risques sont séparés par un filet plein : le board sépare
             ainsi, ou pas du tout — il n'a pas de pointillé. */}
         {lignes.map((l, i) => (
@@ -763,16 +784,22 @@ export function FormulairePlanPrevention({
           clôture. Ce qui est vide se lit vide, sur la fiche comme dans le ZIP. */}
       <SectionChamps
         titre="Contenu minimal du plan"
-        chapeau={`Art. R. 4512-8 : « ${CHAPEAU_R4512_8} » Ce que vous laissez vide est signalé comme manquant sur la fiche du plan et dans le dossier de contrôle — rien ne vous empêche d'enregistrer.`}
+        // 2026-10-28 : la citation du chapeau et celle de chaque rubrique
+        // passent sous le livre de l'article, en tête de section ; le titre
+        // de chaque rubrique dit déjà ce qu'on y écrit.
+        chapeau="Les rubriques que le plan contient au moins. Ce que vous laissez vide est signalé comme manquant sur la fiche du plan et dans le dossier de contrôle — rien ne vous empêche d'enregistrer."
       >
+        <LegalBadge charte="board" reference="Art. R. 4512-8 CT" href={URL_R4512_8}>
+          {TEXTE_R4512_8}
+        </LegalBadge>
         <div>
           <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
             1° — {RUBRIQUES_R4512_8[0].titre}
           </p>
           <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-            « {RUBRIQUES_R4512_8[0].verbatim}. » À distinguer des risques
-            d&apos;interférence ci-dessus : ceux-là naissent de la co-activité,
-            les phases dangereuses sont celles de l&apos;opération elle-même.
+            Les phases dangereuses de l&apos;opération elle-même, et les moyens
+            de prévention de chacune. À distinguer des risques
+            d&apos;interférence ci-dessus, qui naissent de la co-activité.
           </p>
         </div>
 
@@ -860,9 +887,6 @@ export function FormulairePlanPrevention({
               <label className="label-board" htmlFor={r.name}>
                 {r.numero}° — {rubrique.titre}
               </label>
-              <p className="m-0 mb-2 mt-1 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                « {rubrique.verbatim}. »
-              </p>
               <textarea
                 id={r.name}
                 name={r.name}
@@ -886,38 +910,30 @@ export function FormulairePlanPrevention({
           );
         })}
 
-        <div>
-          <LegalBadge
-            charte="board"
-            reference="Art. R. 4512-8 CT"
-            href={URL_R4512_8}
-          />
-        </div>
-
         {/* DEUX PIÈCES QUE D'AUTRES ARTICLES FONT FIGURER DANS LE PLAN, et
             pour lesquelles ce formulaire n'a pas de champ. Les taire laissait
             croire que les cinq rubriques ci-dessus sont tout le plan. Le
             constat est sur le produit ; ce qu'est une « entreprise
             concernée » ou un « dossier technique », le texte le dit, pas nous. */}
-        {[
-          { ref: "R. 4512-9", texte: R4512_9, constat: CONSTAT_R4512_9, href: URL_R4512_9 },
-          { ref: "R. 4512-11", texte: R4512_11, constat: CONSTAT_R4512_11, href: URL_R4512_11 },
-        ].map((a) => (
-          <div
-            key={a.ref}
-            className="border-t border-[color:var(--board-slate-line)] pt-5"
-          >
-            <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
-              Art. {a.ref}
-            </p>
-            <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-              « {a.texte} » {a.constat}
-            </p>
-            <div className="mt-2">
-              <LegalBadge charte="board" reference={`Art. ${a.ref} CT`} href={a.href} />
-            </div>
-          </div>
-        ))}
+        {/* En clair et le constat ; l'article sous son livre (2026-10-28).
+            Écrits un par un, pas en boucle : la garde des extraits
+            (`extraits-affiches.test.ts`) lit la `reference` littérale. */}
+        <ArticleEnClair
+          className="border-t border-[color:var(--board-slate-line)] pt-5"
+          titre="Liste des postes en suivi individuel renforcé"
+          texte={EN_CLAIR_R4512_9}
+          constat={CONSTAT_R4512_9}
+        >
+          <LegalBadge charte="board" className="mt-2" reference="Art. R. 4512-9 CT" href={URL_R4512_9} extrait={R4512_9} />
+        </ArticleEnClair>
+        <ArticleEnClair
+          className="border-t border-[color:var(--board-slate-line)] pt-5"
+          titre="Dossiers techniques amiante"
+          texte={EN_CLAIR_R4512_11}
+          constat={CONSTAT_R4512_11}
+        >
+          <LegalBadge charte="board" className="mt-2" reference="Art. R. 4512-11 CT" href={URL_R4512_11} extrait={R4512_11} />
+        </ArticleEnClair>
       </SectionChamps>
 
       </fieldset>

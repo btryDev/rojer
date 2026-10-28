@@ -33,10 +33,12 @@ import { diagnostiquerPlan } from "@/lib/plan-prevention/schema";
 import {
   CHAPEAU_R4512_8,
   RUBRIQUES_R4512_8,
+  TEXTE_R4512_8,
   URL_R4512_8,
   rubriquesManquantes,
 } from "@/lib/plan-prevention/contenu-r4512-8";
 import { HeuresReviseesForm } from "@/components/plan-prevention/HeuresReviseesForm";
+import { ArticleEnClair } from "@/components/plan-prevention/ArticleEnClair";
 import {
   CHAPITRE_R4512,
   CONSTAT_HEURES_REVISEES,
@@ -46,17 +48,25 @@ import {
   CONSTAT_R4512_9,
   CONSTAT_R4512_11,
   CONSTAT_R4512_12,
+  EN_CLAIR_R4463_8,
+  EN_CLAIR_R4512_1,
+  EN_CLAIR_R4512_9,
+  EN_CLAIR_R4512_11,
+  EN_CLAIR_R4512_12,
+  EN_CLAIR_R4512_12_SI_ECRIT,
+  EN_CLAIR_R4512_2_MOMENT,
+  EN_CLAIR_R4512_7_EN_COURS,
+  EXTRAIT_R4512_12,
   FAIT_DUREE_NON_RENSEIGNEE,
   R4463_8,
-  PHRASE_R4512_2,
   R4512_1,
+  R4512_2,
   R4512_9,
   R4512_11,
-  R4512_12_1,
-  R4512_12_2,
-  R4512_12_CHAPEAU,
   URL_R4463_8,
   URL_R4512_1,
+  URL_R4512_2,
+  URL_R4512_7,
   URL_R4512_9,
   URL_R4512_11,
   URL_R4512_12,
@@ -214,23 +224,31 @@ export default async function PlanPreventionDetailPage({
                 travaux » situait le 2° dans le temps, ce que le texte ne fait
                 pas. Débiteur écrit, aucun délai : l'article n'en fixe pas. */}
             {citeR4512_12(diag.ecrit) && (
-              <CarteFiche titre="Art. R. 4512-12">
-                <LegalBadge charte="board" reference="Art. R. 4512-12 CT" href={URL_R4512_12} />
+              <CarteFiche titre="Inspection du travail">
                 {diag.ecrit === "indetermine" && (
-                  <p className="m-0 mt-3 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
+                  <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
                     {FAIT_DUREE_NON_RENSEIGNEE}
                   </p>
                 )}
-                <p className="m-0 mt-3 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
-                  « {R4512_12_CHAPEAU} :
+                <p
+                  className={`m-0 text-[14px] leading-[1.6] ${
+                    diag.ecrit === "indetermine" ? "mt-2" : ""
+                  }`}
+                >
+                  {diag.ecrit === "indetermine"
+                    ? EN_CLAIR_R4512_12_SI_ECRIT
+                    : EN_CLAIR_R4512_12}
                 </p>
-                <ul className="m-0 mt-2 flex list-none flex-col gap-1.5 p-0 text-[14px] leading-[1.6]">
-                  <li>1° {R4512_12_1} ;</li>
-                  <li>2° {R4512_12_2}. »</li>
-                </ul>
                 <p className="m-0 mt-3 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                   {CONSTAT_R4512_12}
                 </p>
+                <LegalBadge
+                  charte="board"
+                  className="mt-3"
+                  reference="Art. R. 4512-12 CT"
+                  href={URL_R4512_12}
+                  extrait={EXTRAIT_R4512_12}
+                />
                 {/* C45 : la trace déclarée du 2°. */}
                 <InformationInspectionForm
                   planId={plan.id}
@@ -260,8 +278,15 @@ export default async function PlanPreventionDetailPage({
                   : "Aucune révision notée."}
               </p>
               <p className="m-0 mt-2 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                Art. R. 4512-7, 1° : « {R4512_7_1_EN_COURS} ». {CONSTAT_HEURES_REVISEES}
+                {EN_CLAIR_R4512_7_EN_COURS} {CONSTAT_HEURES_REVISEES}
               </p>
+              <LegalBadge
+                charte="board"
+                className="mt-2"
+                reference="Art. R. 4512-7 CT"
+                href={URL_R4512_7}
+                extrait={R4512_7_1_EN_COURS}
+              />
               {planSignable && (
                 <HeuresReviseesForm
                   planId={plan.id}
@@ -307,19 +332,26 @@ export default async function PlanPreventionDetailPage({
                   )}
                 </>
               ) : (
-                // « Obligatoire avant le démarrage des travaux » prêtait à
-                // R. 4512-2 le moment de R. 4512-6 (C40, suite) : l'article
-                // dit « préalablement à l'exécution de l'opération », et le
-                // dit dans la constante que le diagnostic cite déjà.
-                <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                  Aucune date d&apos;inspection commune enregistrée.{" "}
-                  {PHRASE_R4512_2}
-                  {/* Signé, le plan ne la prend plus (B5) : la fiche dit la
-                      même issue que l'écran « Modifier ». */}
-                  {planSignable && plan.signatures.length > 0 && (
-                    <> {INSPECTION_SUR_PLAN_SIGNE}</>
-                  )}
-                </p>
+                // Le moment de R. 4512-2, pas celui de R. 4512-6 (C40) ; le
+                // texte sous le livre.
+                <>
+                  <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+                    Aucune date d&apos;inspection commune enregistrée.{" "}
+                    {EN_CLAIR_R4512_2_MOMENT}
+                    {/* Signé, le plan ne la prend plus (B5) : la fiche dit la
+                        même issue que l'écran « Modifier ». */}
+                    {planSignable && plan.signatures.length > 0 && (
+                      <> {INSPECTION_SUR_PLAN_SIGNE}</>
+                    )}
+                  </p>
+                  <LegalBadge
+                    charte="board"
+                    className="mt-2"
+                    reference="Art. R. 4512-2 CT"
+                    href={URL_R4512_2}
+                    extrait={R4512_2}
+                  />
+                </>
               )}
             </CarteFiche>
 
@@ -398,8 +430,7 @@ export default async function PlanPreventionDetailPage({
                     <li key={r.numero}>
                       <strong>
                         {r.numero}° {r.titre}
-                      </strong>{" "}
-                      — « {r.verbatim}. »
+                      </strong>
                     </li>
                   ))}
                 </ul>
@@ -438,7 +469,7 @@ export default async function PlanPreventionDetailPage({
                     </ul>
                   ) : (
                     <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                      Aucune phase d&apos;activité dangereuse enregistrée. « {r.verbatim}. »
+                      Aucune phase d&apos;activité dangereuse enregistrée.
                     </p>
                   )
                 ) : /* `r.renseignee(plan)` et non la véracité brute de la
@@ -452,56 +483,46 @@ export default async function PlanPreventionDetailPage({
                   </p>
                 ) : (
                   <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                    Non renseigné. « {r.verbatim}. »
+                    Non renseigné.
                   </p>
                 )}
               </CarteFiche>
             ))}
 
-            <div className="pt-1">
-              <LegalBadge
-                charte="board"
-                reference="Art. R. 4512-8 CT"
-                href={URL_R4512_8}
-              >
-                {/* LE VERBATIM SE COMPOSE, IL NE SE RECOPIE PAS. Les cinq
-                    alinéas étaient réécrits à la main ici, à trois lignes de
-                    l'import de `RUBRIQUES_R4512_8` — une troisième copie que
-                    rien ne surveille, dans un dépôt qui a déjà perdu trois mots
-                    entre guillemets sur R. 4512-2. `citations-ecran.ts` ne
-                    vérifie que des NUMÉROS d'article, jamais des verbatims :
-                    cette copie aurait pu diverger sans qu'aucun test bronche. */}
-                {`${CHAPEAU_R4512_8} ${RUBRIQUES_R4512_8.map(
-                  (r) => `${r.numero}° ${r.verbatim}`,
-                ).join(" ; ")}.`}
-              </LegalBadge>
-            </div>
+            <LegalBadge
+              charte="board"
+              className="mt-1"
+              reference="Art. R. 4512-8 CT"
+              href={URL_R4512_8}
+            >
+              {/* LE VERBATIM SE COMPOSE, IL NE SE RECOPIE PAS : la composition
+                  vit dans `contenu-r4512-8.ts` (`TEXTE_R4512_8`), tenue égale
+                  au corpus par son test, et le formulaire lit la même. */}
+              {TEXTE_R4512_8}
+            </LegalBadge>
 
             {/* TROIS ARTICLES QUI DISENT CE QUE LE PLAN CONTIENT, ET QUE CE
-                PLAN NE PORTE PAS. Au corpus, ils sont `obligation_manquante` :
-                le module existe et n'en disait rien. Ils ne sont pas comptés
-                dans les « cinq rubriques » — R. 4512-8 est le seul article qui
-                les énumère —, et aucune pastille ne leur donne un état : Rojer
-                n'a rien pour savoir s'ils sont satisfaits. L'article d'abord
-                (la pastille), puis son texte, puis ce que le produit
-                enregistre ou non ; aucune qualification. */}
+                PLAN NE PORTE PAS. Hors des « cinq rubriques » de R. 4512-8, et
+                sans état : Rojer n'a rien pour savoir s'ils sont satisfaits.
+                Écrits un par un, pas en boucle : la garde des extraits lit la
+                `reference` littérale. */}
             <CarteFiche titre="Ce que d'autres articles demandent au plan">
               <ul className="m-0 flex list-none flex-col gap-4 p-0 text-[13.5px] leading-[1.6]">
-                {[
-                  { ref: "R. 4512-9", href: URL_R4512_9, texte: R4512_9, suite: CONSTAT_R4512_9 },
-                  { ref: "R. 4512-11", href: URL_R4512_11, texte: R4512_11, suite: CONSTAT_R4512_11 },
-                  { ref: "R. 4463-8", href: URL_R4463_8, texte: R4463_8, suite: null },
-                ].map((a) => (
-                  <li key={a.ref}>
-                    <LegalBadge charte="board" reference={`Art. ${a.ref} CT`} href={a.href} />
-                    <p className="m-0 mt-2">« {a.texte} »</p>
-                    {a.suite && (
-                      <p className="m-0 mt-1 text-[13px] text-[color:var(--board-slate-mid)]">
-                        {a.suite}
-                      </p>
-                    )}
-                  </li>
-                ))}
+                <li>
+                  <ArticleEnClair texte={EN_CLAIR_R4512_9} constat={CONSTAT_R4512_9}>
+                    <LegalBadge charte="board" className="mt-2" reference="Art. R. 4512-9 CT" href={URL_R4512_9} extrait={R4512_9} />
+                  </ArticleEnClair>
+                </li>
+                <li>
+                  <ArticleEnClair texte={EN_CLAIR_R4512_11} constat={CONSTAT_R4512_11}>
+                    <LegalBadge charte="board" className="mt-2" reference="Art. R. 4512-11 CT" href={URL_R4512_11} extrait={R4512_11} />
+                  </ArticleEnClair>
+                </li>
+                <li>
+                  <ArticleEnClair texte={EN_CLAIR_R4463_8}>
+                    <LegalBadge charte="board" className="mt-2" reference="Art. R. 4463-8 CT" href={URL_R4463_8} extrait={R4463_8} />
+                  </ArticleEnClair>
+                </li>
               </ul>
             </CarteFiche>
 
@@ -509,12 +530,12 @@ export default async function PlanPreventionDetailPage({
                 procédures du chapitre valent de nouveau pour un nouveau
                 sous-traitant. Le ranger dans la carte précédente lui faisait
                 dire ce qu'il ne dit pas (contre-lecture du 2026-09-26). */}
-            <CarteFiche titre="Art. R. 4512-1">
-              <LegalBadge charte="board" reference="Art. R. 4512-1 CT" href={URL_R4512_1} />
-              <p className="m-0 mt-2 text-[13.5px] leading-[1.6]">« {R4512_1} »</p>
-              <p className="m-0 mt-1 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                {CHAPITRE_R4512} {CONSTAT_R4512_1}
-              </p>
+            <CarteFiche titre="Nouveaux sous-traitants">
+              <ArticleEnClair texte={EN_CLAIR_R4512_1} constat={CONSTAT_R4512_1}>
+                <LegalBadge charte="board" className="mt-2" reference="Art. R. 4512-1 CT" href={URL_R4512_1} extrait={R4512_1}>
+                  {CHAPITRE_R4512}
+                </LegalBadge>
+              </ArticleEnClair>
             </CarteFiche>
           </>
         }
@@ -619,7 +640,6 @@ export default async function PlanPreventionDetailPage({
           charte="board"
           reference="Art. R. 4512-6 à R. 4512-12 CT"
           href="https://www.legifrance.gouv.fr/codes/id/LEGISCTA000018529787/"
-          defaultOpen
         >
           Le plan de prévention est établi conjointement par le chef de
           l&apos;entreprise utilisatrice et celui de l&apos;entreprise
