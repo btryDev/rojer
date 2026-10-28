@@ -154,6 +154,8 @@ html,body{width:1280px;height:720px;overflow:hidden;background:var(--canvas);fon
 .inter{position:absolute;inset:0;background:var(--canvas);z-index:45;opacity:0;display:flex;flex-direction:column;justify-content:center;padding-left:96px}
 .inter .n{font-family:"JetBrains Mono";font-size:15px;letter-spacing:.2em;color:var(--blue-ink);text-transform:uppercase}
 .inter h1{font-size:92px;margin-top:22px}
+.inter p{font-size:25px;line-height:1.5;color:var(--slate-mid);margin-top:26px;max-width:820px}
+.inter p em{font-style:normal;color:var(--ink);font-weight:500}
 .inter .seg{display:flex;gap:8px;margin-top:40px}
 .inter .seg i{width:56px;height:5px;border-radius:5px;background:var(--slate-line)}
 .inter .seg i.on{background:var(--ink)}
@@ -465,18 +467,24 @@ function construire() {
     tl.to("#b" + n, { scaleX: 1, duration: dureeBarre, ease: "none" }, at);
   };
 
+  // Le temps ajouté à chaque plan de titre pour lire le texte de l'étape.
+  const LECTURE = 2.2;
   const TITRES = ["Déclarer l'appareil.", "Voir ce qui lui manque.", "Déposer le rapport.", "Prendre rendez-vous."];
   const intertitre = (n, at) => {
     const el = document.createElement("div");
     el.className = "inter";
-    el.innerHTML = `<div class="n">Étape ${n} / 4</div><h1 class="titre">${TITRES[n - 1]}</h1>`
+    // Le texte de l'étape, repris du panneau de droite : il se lit dès le
+    // plan de titre, qui reste à l'écran le temps de le lire (LECTURE).
+    const texte = document.querySelector(`#t${n} p`).innerHTML;
+    el.innerHTML = `<div class="n">Étape ${n} / 4</div><h1 class="titre">${TITRES[n - 1]}</h1><p>${texte}</p>`
       + `<div class="seg">${[1, 2, 3, 4].map((k) => `<i class="${k <= n ? "on" : ""}"></i>`).join("")}</div>`
       + `<div class="sig">Rojer<i class="pt-bleu"></i></div>`;
     document.body.appendChild(el);
     tl.to(el, { opacity: 1, duration: 0.3, ease: "power1.out" }, at);
     tl.fromTo(el.querySelector("h1"), { y: 24 }, { y: 0, duration: 0.6, ease: "power3.out", immediateRender: false }, at);
     tl.fromTo(el.querySelector(".n"), { y: 12 }, { y: 0, duration: 0.5, ease: "power3.out", immediateRender: false }, at + 0.05);
-    tl.to(el, { opacity: 0, duration: 0.35, ease: "power1.in" }, at + 1.55);
+    tl.fromTo(el.querySelector("p"), { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out", immediateRender: false }, at + 0.35);
+    tl.to(el, { opacity: 0, duration: 0.35, ease: "power1.in" }, at + 1.55 + LECTURE);
   };
 
   // ---------- intro ----------
@@ -486,10 +494,10 @@ function construire() {
   tl.from("#intro .d", { opacity: 0, scale: 0.96, duration: 0.6, ease: "power2.out" }, 0.3);
   intertitre(1, 3.5);
   tl.set("#intro", { opacity: 0 }, 3.85);
-  tl.from("#texte, #marque", { opacity: 0, duration: 0.4 }, 4.9);
+  tl.from("#texte, #marque", { opacity: 0, duration: 0.4 }, 4.9 + LECTURE);
 
   // ---------- 1. Déclarer ----------
-  let t = 5.4;
+  let t = 5.4 + LECTURE;
   etape(1, t, 8.0);
   tl.set(cur, { x: 1000, y: 800 }, 0);
   tl.to(cur, { o: 1, duration: 0.3 }, t + 0.3);
@@ -518,8 +526,8 @@ function construire() {
   clic(P.creer, t + 7.9);
 
   // ---------- 2. Ce qui manque ----------
-  intertitre(2, 13.9);
-  t = 15.7;
+  intertitre(2, 13.9 + LECTURE);
+  t = 15.7 + 2 * LECTURE;
   ecran(3, t);
   a(t, (on) => { $("#cpt-eq").textContent = on ? "1" : "0"; });
   camera({ x: AW / 2, y: AH / 2 }, BASE, t, 0.8);
@@ -533,8 +541,8 @@ function construire() {
   clic(P.deposer, t + 5.4);
 
   // ---------- 3. Déposer le rapport ----------
-  intertitre(3, 21.6);
-  t = 23.4;
+  intertitre(3, 21.6 + 2 * LECTURE);
+  t = 23.4 + 3 * LECTURE;
   const SCROLL_DEPOT = 470;
   ecran(4, t);
   tl.set(defil, { y: SCROLL_DEPOT }, t);
@@ -567,8 +575,8 @@ function construire() {
   tl.to("#toast", { opacity: 0, duration: 0.3 }, t + 7.2);
 
   // ---------- 4. Rendez-vous ----------
-  intertitre(4, 31.0);
-  t = 32.8;
+  intertitre(4, 31.0 + 3 * LECTURE);
+  t = 32.8 + 4 * LECTURE;
   etape(4, t, 7.0);
   camera({ x: 905, y: P.rdv.y + 120 }, 0.82, t, 0.9);
   vers(P.rdvB, t + 0.6, 0.8);
@@ -588,7 +596,7 @@ function construire() {
   camera({ x: 905, y: P.rdv.y + 10 }, 0.84, t + 6.0, 0.6);
 
   // ---------- fin ----------
-  t = 39.8;
+  t = 39.8 + 4 * LECTURE;
   tl.to("#fin", { opacity: 1, duration: 0.6, ease: "power1.out" }, t);
   tl.from("#fin .eb, #fin h1, #fin .chap", { y: 14, duration: 0.5, stagger: 0.1, ease: "power2.out" }, t + 0.2);
   tl.from("#fin .boucle span", { opacity: 0, y: 8, duration: 0.3, stagger: 0.08 }, t + 0.7);

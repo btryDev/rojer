@@ -9,7 +9,7 @@
 export type CleVisite = "equipements";
 
 export type Visite = {
-  /** Durée annoncée, « 40 s ». */
+  /** Durée annoncée, « 50 s ». */
   duree: string;
   /** Titre de l'îlot. */
   titre: string;
@@ -22,7 +22,7 @@ export type Visite = {
 
 export const VISITES: Record<CleVisite, Visite> = {
   equipements: {
-    duree: "40 s",
+    duree: "50 s",
     titre: "Comment ça marche ?",
     titreVideo: "Vos équipements, en quatre gestes",
     etapes: [
