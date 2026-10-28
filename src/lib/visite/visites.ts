@@ -16,7 +16,7 @@ export type Visite = {
   /** Titre du panneau qui porte la vidéo. */
   titreVideo: string;
   /** Les étapes montrées : lues par les lecteurs d'écran, la vidéo n'ayant
-   *  ni son ni sous-titres. */
+   *  ni voix ni sous-titres (seulement une musique). */
   etapes: string[];
 };
 

@@ -2,6 +2,10 @@
 //
 //   pnpm visite:rendre equipements
 //
+// Si `scripts/visites/musique/<cle>.m4a` existe, la musique est posée sous
+// l'image : ramenée à -21 LUFS (discrète), coupée à la durée de la vidéo,
+// fondue sur sa dernière seconde.
+//
 // Écrit, dans `public/videos/` : `visite-<cle>.mp4`, son image d'aperçu
 // `visite-<cle>.jpg` et la vignette de l'îlot `visite-<cle>-vignette.jpg`
 // (les noms que lit `src/lib/visite/visites.ts`).
@@ -30,6 +34,8 @@ import { IllustrationEquipements } from "../../src/components/entete-page/illust
 import { ICONE_CATEGORIE } from "../../src/components/equipements/MarqueCategorie";
 
 const FPS = 30;
+/** Volume de la musique, en LUFS intégrés : sous une page qu'on lit, pas devant. */
+const VOLUME_MUSIQUE = -21;
 // Lancé par `pnpm`, depuis la racine du dépôt.
 const RACINE = process.cwd();
 const CHROME =
@@ -78,6 +84,7 @@ async function rendre(cle: string) {
   const images = path.join(travail, "images");
   execFileSync("mkdir", [images]);
 
+  let dureeRendue = 0;
   const navigateur = await chromium.launch({ executablePath: CHROME, headless: true });
   try {
     const page = await navigateur.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1.5 });
@@ -93,6 +100,7 @@ async function rendre(cle: string) {
       await page.screenshot({ path: path.join(images, `${String(i).padStart(5, "0")}.png`) });
     }
     console.log(`${n} images, ${(n / FPS).toFixed(1)} s`);
+    dureeRendue = n / FPS;
   } finally {
     await navigateur.close();
   }
@@ -100,8 +108,16 @@ async function rendre(cle: string) {
   const sortie = (nom: string) => path.join(RACINE, "public/videos", nom);
   const ffmpeg = (...args: string[]) => execFileSync("ffmpeg", ["-y", "-loglevel", "error", ...args]);
   const premiere = path.join(images, "00000.png");
-  ffmpeg("-framerate", String(FPS), "-i", path.join(images, "%05d.png"), "-c:v", "libx264", "-preset", "slow",
-    "-crf", "25", "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-an", sortie(`visite-${cle}.mp4`));
+  const musique = path.join(RACINE, "scripts/visites/musique", `${cle}.m4a`);
+  const son = existsSync(musique)
+    ? [
+        "-i", musique, "-map", "0:v", "-map", "1:a",
+        "-af", `loudnorm=I=${VOLUME_MUSIQUE}:TP=-2:LRA=11,afade=t=out:st=${(dureeRendue - 1.2).toFixed(2)}:d=1.2,apad`,
+        "-c:a", "aac", "-b:a", "160k", "-t", dureeRendue.toFixed(2),
+      ]
+    : ["-an"];
+  ffmpeg("-framerate", String(FPS), "-i", path.join(images, "%05d.png"), ...son, "-c:v", "libx264", "-preset", "slow",
+    "-crf", "25", "-pix_fmt", "yuv420p", "-movflags", "+faststart", sortie(`visite-${cle}.mp4`));
   ffmpeg("-i", premiere, "-vf", "scale=1280:-1", "-q:v", "4", sortie(`visite-${cle}.jpg`));
   ffmpeg("-i", premiere, "-vf", "scale=240:-1", "-q:v", "5", sortie(`visite-${cle}-vignette.jpg`));
   rmSync(travail, { recursive: true, force: true });

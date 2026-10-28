@@ -9,7 +9,8 @@
 // - « Ne plus afficher » l'écrit dans un cookie et le retire tout de suite
 //   (dans le panneau : à la fermeture, et décocher défait le choix).
 // La vidéo ne démarre qu'à l'ouverture du panneau, et pas d'elle-même si le
-// système demande de réduire les animations.
+// système demande de réduire les animations. Elle démarre avec sa musique ;
+// un navigateur qui refuse le son sans geste la relance en sourdine.
 
 import { useState } from "react";
 import { Play, X } from "lucide-react";
@@ -17,6 +18,20 @@ import { buttonVariants } from "@/components/ui/button";
 import { PanneauModal } from "@/components/ui-kit/PanneauModal";
 import { ecrireCookieClient } from "@/lib/navigateur/cookie-client";
 import { VISITES, cookieVisiteMasquee, fichiersVisite, type CleVisite } from "@/lib/visite/visites";
+
+/** Lance la lecture avec le son ; refusée, la relance en sourdine. */
+function lancer(video: HTMLVideoElement) {
+  if (!video.paused) return;
+  try {
+    video.play()?.catch(() => {
+      video.muted = true;
+      video.play()?.catch(() => {});
+    });
+  } catch {
+    // Pas de lecture possible ici (environnement sans média) : l'image
+    // d'aperçu et les contrôles restent.
+  }
+}
 
 export function IlotVideoVisite({ cle }: { cle: CleVisite }) {
   const { duree, titre, titreVideo, etapes } = VISITES[cle];
@@ -102,8 +117,9 @@ export function IlotVideoVisite({ cle }: { cle: CleVisite }) {
           src={video}
           poster={affiche}
           controls
-          autoPlay={lectureAuto}
-          muted
+          ref={(v) => {
+            if (v && lectureAuto) lancer(v);
+          }}
           playsInline
           aria-describedby={`etapes-visite-${cle}`}
           className="block aspect-video w-full rounded-[18px] bg-[color:var(--board-slate-pale)]"
