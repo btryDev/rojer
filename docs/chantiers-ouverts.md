@@ -3189,8 +3189,10 @@ visualiser, on a site inaccessible ; c'est fait tout ça, le QR ? »).
    alors sur `http://localhost:3000`, et le serveur de dev tournait sur 3001.
    « Prévisualiser », l'URL, le QR, l'affiche et le ZIP de contrôle lisent tous
    cette même fonction. En local : `PUBLIC_APP_URL` au port réellement servi, ou
-   servir sur 3000. **En prod : vérifier que `PUBLIC_APP_URL` est posée** — sans
-   elle, la page dit « adresse publique non configurée » et l'affiche répond 503.
+   servir sur 3000. ~~**En prod : vérifier que `PUBLIC_APP_URL` est posée** — sans
+   elle, la page dit « adresse publique non configurée » et l'affiche répond 503.~~
+   [2026-10-28 : vérifié par la propriétaire sur un registre publié en prod —
+   l'aperçu et le QR marchent. Le défaut n'existait qu'en local.]
 2. **Attestation et Ad'AP : partiels.** Seuls le numéro d'attestation, la date
    de conformité et la date de dépôt de l'Ad'AP se saisissent. Les colonnes du
    fichier existent (`attestationCle`/`attestationNom`,
