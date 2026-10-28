@@ -16,6 +16,7 @@ import {
   QUI_REPOND,
   TELEPHONE_MAX,
 } from "@/lib/assistance/libelles";
+import { MessageFait } from "@/components/ui-kit/MessageFait";
 
 /**
  * « Besoin d'aide ? » (décision de la propriétaire du 2026-10-24) : un texte
@@ -129,9 +130,7 @@ function Formulaire({
   if (state.status === "success") {
     return (
       <>
-        <p role="status" className="m-0 font-semibold text-[color:var(--board-green-ink)]">
-          Votre demande est enregistrée.
-        </p>
+        <MessageFait>Votre demande est enregistrée.</MessageFait>
         <p className="m-0">Un expert l&apos;étudie et vous recontacte.</p>
         <div>
           <Button type="button" variant="board" size="boardSm" onClick={surFermer}>

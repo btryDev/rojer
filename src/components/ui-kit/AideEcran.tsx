@@ -30,7 +30,7 @@ const ROND =
 
 /** Le « ? » suivi d'un titre : la forme du livre (`livre.ts`), plus lisible. */
 const LIGNE = cn(
-  LIVRE.board,
+  LIVRE,
   "-ml-2 max-w-full self-start text-left text-[13.5px] text-[color:var(--board-slate-ink)]",
 );
 

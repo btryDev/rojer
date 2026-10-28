@@ -479,7 +479,6 @@ export default async function PermisFeuDetailPage({
             valeur réglementaire propre ; lui adosser un article de code le
             contredisait. */}
         <LegalBadge
-          charte="board"
           reference="INRS ED 6030"
           href="https://www.inrs.fr/media.html?refINRS=ED%206030"
         >

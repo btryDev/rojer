@@ -119,7 +119,6 @@ function BlocDocuments({
               {d.fondements.map((f) => (
                 <LegalBadge
                   key={`${d.id}-${f.article}`}
-                  charte="board"
                   reference={f.article}
                   href={f.url}
                   extrait={f.citationCle}

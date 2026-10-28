@@ -376,7 +376,7 @@ export function FormulairePlanPrevention({
           </>
         }
       >
-        <LegalBadge charte="board" reference="Art. R. 4512-1 CT" href={URL_R4512_1} extrait={R4512_1}>
+        <LegalBadge reference="Art. R. 4512-1 CT" href={URL_R4512_1} extrait={R4512_1}>
           {CHAPITRE_R4512}
         </LegalBadge>
         {prestataires.length > 0 && (
@@ -638,7 +638,7 @@ export function FormulairePlanPrevention({
         titre="Inspection commune préalable"
         chapeau={EN_CLAIR_R4512_2}
       >
-        <LegalBadge charte="board" reference="Art. R. 4512-2 CT" href={URL_R4512_2} extrait={R4512_2} />
+        <LegalBadge reference="Art. R. 4512-2 CT" href={URL_R4512_2} extrait={R4512_2} />
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-[220px_1fr]">
           <ChampBoard
             id="inspectionDate"
@@ -677,7 +677,7 @@ export function FormulairePlanPrevention({
           </>
         }
       >
-        <LegalBadge charte="board" reference="Art. R. 4463-8 CT" href={URL_R4463_8} extrait={R4463_8} />
+        <LegalBadge reference="Art. R. 4463-8 CT" href={URL_R4463_8} extrait={R4463_8} />
         {/* Les risques sont séparés par un filet plein : le board sépare
             ainsi, ou pas du tout — il n'a pas de pointillé. */}
         {lignes.map((l, i) => (
@@ -789,7 +789,7 @@ export function FormulairePlanPrevention({
         // de chaque rubrique dit déjà ce qu'on y écrit.
         chapeau="Les rubriques que le plan contient au moins. Ce que vous laissez vide est signalé comme manquant sur la fiche du plan et dans le dossier de contrôle — rien ne vous empêche d'enregistrer."
       >
-        <LegalBadge charte="board" reference="Art. R. 4512-8 CT" href={URL_R4512_8}>
+        <LegalBadge reference="Art. R. 4512-8 CT" href={URL_R4512_8}>
           {TEXTE_R4512_8}
         </LegalBadge>
         <div>
@@ -924,7 +924,7 @@ export function FormulairePlanPrevention({
           texte={EN_CLAIR_R4512_9}
           constat={CONSTAT_R4512_9}
         >
-          <LegalBadge charte="board" className="mt-2" reference="Art. R. 4512-9 CT" href={URL_R4512_9} extrait={R4512_9} />
+          <LegalBadge className="mt-2" reference="Art. R. 4512-9 CT" href={URL_R4512_9} extrait={R4512_9} />
         </ArticleEnClair>
         <ArticleEnClair
           className="border-t border-[color:var(--board-slate-line)] pt-5"
@@ -932,7 +932,7 @@ export function FormulairePlanPrevention({
           texte={EN_CLAIR_R4512_11}
           constat={CONSTAT_R4512_11}
         >
-          <LegalBadge charte="board" className="mt-2" reference="Art. R. 4512-11 CT" href={URL_R4512_11} extrait={R4512_11} />
+          <LegalBadge className="mt-2" reference="Art. R. 4512-11 CT" href={URL_R4512_11} extrait={R4512_11} />
         </ArticleEnClair>
       </SectionChamps>
 

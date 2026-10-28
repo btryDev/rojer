@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { ChampBoard } from "@/components/ui-kit";
+import { ChampBoard, MessageFait } from "@/components/ui-kit";
 import { TYPES_ACTION } from "@/lib/actions/schema";
 import { LABEL_TYPE_ACTION } from "@/lib/actions/labels";
 import type { ActionPlanState } from "@/lib/actions/plan";
@@ -308,10 +308,13 @@ function Formulaire({
       )}
       {/* Une correction réussie rouvre la fiche (`redirect`) : pas de
           message de succès à poser ici. */}
-      {!correction && creesAvant > 0 && state.status === "idle" && (
-        <p role="status" className="m-0 text-[12.5px] text-[color:var(--board-green-ink)]">
-          {creesAvant > 1 ? `${creesAvant} points ajoutés.` : "Point ajouté."} Ajoutez-en un autre si besoin.
-        </p>
+      {/* Posée vide d'avance (zone d'annonce, cf. `MessageFait`). */}
+      {!correction && (
+        <MessageFait>
+          {creesAvant > 0 && state.status === "idle"
+            ? `${creesAvant > 1 ? `${creesAvant} points ajoutés.` : "Point ajouté."} Ajoutez-en un autre si besoin.`
+            : null}
+        </MessageFait>
       )}
 
       <div className="flex items-center gap-3">

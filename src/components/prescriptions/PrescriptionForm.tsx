@@ -37,6 +37,12 @@ type Props = {
   sourceInitiale?: SourcePrescription;
   /** Appelé après un enregistrement réussi — la modal s'y ferme. */
   surSucces?: () => void;
+  /**
+   * Sections à plat, séparées d'un filet, au lieu de deux `carte-board` :
+   * posé dans `PanneauModal`, qui est déjà une carte, le formulaire n'y
+   * empile pas des cartes dans une carte.
+   */
+  aPlat?: boolean;
 };
 
 /**
@@ -95,6 +101,10 @@ function Erreur({ message }: { message?: string }) {
   );
 }
 
+const SECTION_CARTE = "carte-board flex flex-col gap-5 px-7 py-6 sm:px-8";
+const SECTION_A_PLAT = "flex flex-col gap-5";
+const FILET_A_PLAT = "border-t border-[color:var(--board-slate-line)] pt-6";
+
 export function PrescriptionForm({
   action,
   obligations,
@@ -103,6 +113,7 @@ export function PrescriptionForm({
   // deux sources ; le défaut est la demande de l'assureur.
   sourceInitiale = "demande_assureur",
   surSucces,
+  aPlat = false,
 }: Props) {
   // La source est un état — pas pour la valider, le schéma s'en charge, mais
   // parce que l'avertissement contractuel doit apparaître au moment du choix.
@@ -157,7 +168,7 @@ export function PrescriptionForm({
 
   return (
     <form key={jeton} action={formAction} className="flex flex-col gap-7">
-      <section className="carte-board flex flex-col gap-5 px-7 py-6 sm:px-8">
+      <section className={aPlat ? SECTION_A_PLAT : SECTION_CARTE}>
         <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
           L&apos;acte
         </p>
@@ -266,7 +277,7 @@ export function PrescriptionForm({
         </p>
       </section>
 
-      <section className="carte-board flex flex-col gap-5 px-7 py-6 sm:px-8">
+      <section className={aPlat ? `${SECTION_A_PLAT} ${FILET_A_PLAT}` : SECTION_CARTE}>
         <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
           Ce que la prescription impose
         </p>

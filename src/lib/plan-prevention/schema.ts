@@ -8,12 +8,10 @@ import {
 } from "@/lib/dates";
 import {
   EN_CLAIR_ECRIT,
-  R4512_7_1_EN_COURS,
-  R4512_7_1_SEUIL,
+  RAISON_TRAVAUX_DANGEREUX,
   ligneHeuresRevisees,
-  R4512_7_2_DUREE,
-  R4512_7_2_LISTE,
-  R4512_7_ECRIT,
+  raisonDureeEstimee,
+  raisonHeuresRevisees,
   type EtatEcrit,
 } from "./annonces-plan";
 
@@ -233,8 +231,8 @@ export function diagnostiquerPlan(params: {
           formaterDateFr(params.heuresPrevisiblesReviseesLe),
         )
       : null;
-  const seuil400EnCours =
-    revisees !== null && (params.heuresPrevisiblesRevisees as number) >= 400;
+  const heuresRevisees = revisees !== null ? params.heuresPrevisiblesRevisees : null;
+  const seuil400EnCours = heuresRevisees != null && heuresRevisees >= 400;
   const raisons: string[] = [];
   // `>=` et non `>`. R. 4512-7 dit « un nombre total d'heures de travail
   // prévisible **égal au moins à** 400 heures », et ajoute « dès lors qu'il
@@ -243,40 +241,23 @@ export function diagnostiquerPlan(params: {
   // affichait « recommandé », c'est-à-dire l'inverse du texte.
   // Verbatim relevé sur Légifrance le 2026-08-27, version en vigueur au
   // 2008-05-01 (LEGIARTI000018529783).
-  const seuil400 =
-    params.dureeHeuresEstimee !== null && params.dureeHeuresEstimee >= 400;
-  // LES RAISONS CITENT LE TEXTE, ET LE FAIT QUI LE DÉCLENCHE (revue finale
-  // de l'intégration d, 2026-09-26). Elles disaient « Les travaux atteignent
-  // 400 h sur 12 mois (seuil art. R4512-7) » et « Les travaux figurent sur la
-  // liste dangereuse (arrêté 19-03-1993) » : deux paraphrases, dont la
-  // première affirmait un fait que le dossier ne tient pas — il tient une
-  // DURÉE ESTIMÉE, le texte parle d'heures « prévisible[s] ». Chaque raison
-  // porte désormais le fait saisi, puis le cas de R. 4512-7 entre guillemets,
-  // pris aux constantes d'`annonces-plan.ts` que `annonces-plan.test.ts`
-  // confronte au corpus. Relu sur Légifrance le 2026-09-26, en vigueur
-  // depuis le 2008-05-01 : identique.
-  // Le 2° renvoie à DEUX listes — « respectivement, par arrêté du ministre
-  // chargé du travail et par arrêté du ministre chargé de l'agriculture ».
-  // La seconde n'est pas lue au dépôt : elle est nommée, pas citée
-  // (contre-lecture de C40, 2026-09-27).
-  if (seuil400) {
-    raisons.push(
-      `Durée estimée : ${params.dureeHeuresEstimee} h. Art. R. 4512-7, 1° : ` +
-        `le plan est « ${R4512_7_ECRIT} » dès lors que l'opération représente ` +
-        `un nombre total d'heures de travail prévisible « ${R4512_7_1_SEUIL} ».`,
-    );
+  const dureeEstimee = params.dureeHeuresEstimee;
+  const seuil400 = dureeEstimee !== null && dureeEstimee >= 400;
+  // LES RAISONS DISENT LE FAIT SAISI, ET LUI SEUL (2026-10-28). Elles
+  // citaient R. 4512-7 entre guillemets (depuis la revue du 2026-09-26, qui
+  // avait remplacé deux paraphrases dont l'une affirmait un fait que le
+  // dossier ne tient pas). Le verbatim se lit désormais sous le livre du
+  // formulaire et sur la fiche (`SENS_R4512_7`) : le redire ici doublait le
+  // pavé. Les phrases vivent dans `annonces-plan.ts`, sans guillemets ni
+  // article — `annonces-plan.test.ts` le tient.
+  if (dureeEstimee !== null && seuil400) {
+    raisons.push(raisonDureeEstimee(dureeEstimee));
   }
-  if (seuil400EnCours) {
-    raisons.push(`${revisees}. Art. R. 4512-7, 1° : « ${R4512_7_1_EN_COURS} ».`);
+  if (revisees !== null && seuil400EnCours) {
+    raisons.push(raisonHeuresRevisees(revisees));
   }
   if (params.travauxDangereux) {
-    raisons.push(
-      "Travaux déclarés dangereux. Art. R. 4512-7, 2° : " +
-        `« ${R4512_7_2_DUREE.charAt(0).toLowerCase()}${R4512_7_2_DUREE.slice(1)} », ` +
-        `le plan est « ${R4512_7_ECRIT} » lorsque les travaux sont au nombre ` +
-        `des « ${R4512_7_2_LISTE} » par arrêté (arrêté du 19 mars 1993 et, ` +
-        "pour les travaux agricoles, arrêté du ministre chargé de l'agriculture).",
-    );
+    raisons.push(RAISON_TRAVAUX_DANGEREUX);
   }
   // Un OU : l'estimation initiale, la révision en cours de chantier, la liste
   // dangereuse. Une révision à la baisse ne retire donc jamais ce que

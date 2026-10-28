@@ -75,6 +75,13 @@ describe("NouvellePrescription", () => {
     expect(screen.getByText("Format attendu : AAAA-MM-JJ")).toBeTruthy();
   });
 
+  it("modal large, formulaire à plat : pas de carte dans la carte", () => {
+    rendre({ status: "success", prescriptionId: "p1" }, true);
+    const panneau = document.querySelector("[data-largeur]") as HTMLElement;
+    expect(panneau.dataset.largeur).toBe("large");
+    expect(panneau.querySelector(".carte-board")).toBeNull();
+  });
+
   it("la croix ferme la modal", () => {
     rendre({ status: "success", prescriptionId: "p1" }, true);
     fireEvent.click(screen.getByRole("button", { name: "Fermer" }));

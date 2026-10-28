@@ -124,8 +124,11 @@ const minuscule = (t: string) => t.charAt(0).toLowerCase() + t.slice(1);
  */
 export const SENS_R4512_7 =
   `Le plan de prévention est « ${R4512_7_ECRIT} » dans deux cas — ` +
-  `1° un nombre total d'heures de travail prévisible « ${R4512_7_1_SEUIL} » ; ` +
-  `2° des « ${R4512_7_2_LISTE} » par arrêté, « ${minuscule(R4512_7_2_DUREE)} ».`;
+  `1° un nombre total d'heures de travail prévisible « ${R4512_7_1_SEUIL} » ` +
+  `(« ${R4512_7_1_EN_COURS} ») ; ` +
+  `2° des « ${R4512_7_2_LISTE} » par arrêté — l'arrêté du 19 mars 1993 et, ` +
+  `pour les travaux agricoles, un arrêté du ministre chargé de l'agriculture —, ` +
+  `« ${minuscule(R4512_7_2_DUREE)} ».`;
 
 /** Le moment de l'accord. « Ces risques » du texte : ceux d'interférence de sa première phrase. */
 export const SENS_R4512_6 =
@@ -157,6 +160,22 @@ export const EN_CLAIR_ECRIT: Record<EtatEcrit, string> = {
   non_impose:
     "L'écrit n'est pas imposé. Si l'inspection commune révèle des risques d'interférence, le plan s'arrête d'un commun accord avec l'entreprise extérieure, avant le début des travaux.",
 };
+
+/**
+ * Les raisons du diagnostic : le FAIT saisi qui rend l'écrit obligatoire,
+ * rien d'autre (2026-10-28). Elles citaient R. 4512-7 entre guillemets, que
+ * le livre du formulaire et la fiche portent déjà. Ni guillemets ni article
+ * — `annonces-plan.test.ts` le tient. Aucune n'affirme la période de douze
+ * mois : Rojer ne la contrôle pas, le livre la cite.
+ */
+export const raisonDureeEstimee = (heures: number): string =>
+  `Durée estimée : ${heures} h, soit 400 heures ou plus.`;
+
+export const RAISON_TRAVAUX_DANGEREUX =
+  "Travaux déclarés dangereux, quelle que soit la durée.";
+
+/** La révision notée en cours de chantier, telle que `ligneHeuresRevisees` l'écrit. */
+export const raisonHeuresRevisees = (ligne: string): string => `${ligne}.`;
 
 /** La fiche, carte de R. 4512-12 dans l'indéterminé : sous sa condition. */
 export const EN_CLAIR_R4512_12_SI_ECRIT = `Si l'écrit est obligatoire, ${minuscule(EN_CLAIR_R4512_12)}`;

@@ -1127,13 +1127,11 @@ export default async function CalendrierPage({
       </p>
       <Textes className="pt-1">
         <LegalBadge
-          charte="board"
           reference="Art. R. 4323-23 s. CT"
           href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018531479"
           extrait="Des arrêtés […] déterminent les équipements de travail ou les catégories d'équipement de travail pour lesquels l'employeur procède ou fait procéder à des vérifications générales périodiques afin que soit décelée en temps utile toute détérioration susceptible de créer des dangers."
         />
         <LegalBadge
-          charte="board"
           reference="Arrêté du 25 juin 1980 (ERP)"
           href="https://www.legifrance.gouv.fr/loda/id/LEGITEXT000020303557/"
         >

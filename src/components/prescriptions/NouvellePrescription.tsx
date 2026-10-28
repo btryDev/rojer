@@ -5,6 +5,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PanneauModal } from "@/components/ui-kit/PanneauModal";
 import { PrescriptionForm } from "./PrescriptionForm";
+import { MessageFait } from "@/components/ui-kit/MessageFait";
 
 /**
  * Le geste principal de la page Prescriptions : un bouton au-dessus de la
@@ -34,9 +35,7 @@ export function NouvellePrescription({
 
   return (
     <>
-      <p role="status" className="m-0 text-[13px] text-[color:var(--board-green-ink)]">
-        {enregistree ? "Prescription enregistrée." : null}
-      </p>
+      <MessageFait>{enregistree ? "Prescription enregistrée." : null}</MessageFait>
       <Button
         type="button"
         variant="board"
@@ -54,8 +53,9 @@ export function NouvellePrescription({
         surFermer={fermer}
         surtitre="Prescriptions"
         titre="Déclarer une prescription"
+        largeur="large"
       >
-        <PrescriptionForm {...propsFormulaire} surSucces={surSucces} />
+        <PrescriptionForm {...propsFormulaire} surSucces={surSucces} aPlat />
       </PanneauModal>
     </>
   );

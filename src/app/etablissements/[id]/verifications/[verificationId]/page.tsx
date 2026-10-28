@@ -90,6 +90,7 @@ import {
   CorpsFiche,
   EcranFiche,
   HeroFiche,
+  MessageFait,
   PastilleFiche,
   PastilleRetard,
   SignatureBlock,
@@ -992,9 +993,7 @@ export default async function VerificationDetailPage({
           <div className="carte-board mt-4 space-y-4 px-7 py-6">
             {rapportApres && (
               <>
-                <p role="status" className="m-0 text-[13px] text-[color:var(--board-green-ink)]">
-                  Rapport enregistré.
-                </p>
+                <MessageFait>Rapport enregistré.</MessageFait>
                 <p className="m-0 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.55] text-[color:var(--board-ink)]">
                   {INVITATION_APRES_RAPPORT}
                 </p>

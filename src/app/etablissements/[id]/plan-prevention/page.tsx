@@ -195,7 +195,6 @@ export default async function PlanPreventionListePage({
           </p>
           <Textes className="mt-4">
             <LegalBadge
-              charte="board"
               reference="Art. R. 4512-6 à R. 4512-12 CT"
               href="https://www.legifrance.gouv.fr/codes/id/LEGISCTA000018529787/"
             />
@@ -211,7 +210,6 @@ export default async function PlanPreventionListePage({
                 filiation, si elle intéresse, se lit dans un commentaire de
                 code, pas dans un écran qu'on ouvre devant un inspecteur. */}
             <LegalBadge
-              charte="board"
               reference="Arrêté du 19 mars 1993 · Travaux dangereux"
               href="https://www.legifrance.gouv.fr/loda/id/JORFTEXT000000179892/"
               extrait="Un plan de prévention est établi par écrit dans les conditions prévues au deuxième alinéa de l'article R. 4512-7 du code du travail pour les travaux dangereux ci-après énumérés."

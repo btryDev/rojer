@@ -9,6 +9,7 @@
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { seulementSousUnLivreFerme } from "@/test/livre";
 
 const suivie = vi.fn();
 vi.mock("@/lib/carnet-sanitaire/suivi-calendrier", () => ({
@@ -74,5 +75,17 @@ describe("page du carnet — le texte suit l'installation déclarée", () => {
       etablissementId: "etab-1",
       etablissement: { entreprise: { userId: "u1" } },
     });
+  });
+});
+
+// Le livre est un `<details>` natif (2026-10-28) : le verbatim est dans le
+// HTML, mais replié. On tient qu'il n'est lu nulle part HORS d'un livre fermé.
+describe("page du carnet — le texte de l'arrêté reste sous son livre", () => {
+  it("l'article 3 n'est pas lu tant que le livre n'est pas ouvert", async () => {
+    suivie.mockResolvedValue(true);
+    const html = await rendre();
+    expect(
+      seulementSousUnLivreFerme(html, "assure la traçabilité de cette surveillance"),
+    ).toBe(true);
   });
 });

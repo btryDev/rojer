@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
-import { BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { LIVRE } from "./livre";
+import { Livre } from "./LegalBadge";
 
 /**
  * Le livre : « Ce que dit le texte », replié par défaut (2026-10-20).
@@ -10,12 +9,8 @@ import { LIVRE } from "./livre";
  * en clair ce qu'il faut faire ; la citation et les articles restent à un
  * clic — on garde la traçabilité, on retire la lecture imposée.
  *
- * `<details>` natif : pas de JavaScript, clavier et lecteurs d'écran gérés
- * par le navigateur, et le texte reste dans la page (recherche, impression).
- *
- * Charte board seulement, et c'est voulu : le papier est de la dette
- * (`docs/charte-board.md`), un écran qui allège son texte passe au board.
- * `LegalBadge` garde ses deux chartes parce que des écrans papier l'appellent.
+ * Même livre que `LegalBadge` (`Livre`, 2026-10-28) : `<details>` natif, même
+ * panneau creux. Ici pour une citation composée, références en pied.
  */
 export function TexteSource({
   articles,
@@ -31,27 +26,20 @@ export function TexteSource({
   className?: string;
 }) {
   return (
-    <details className={className}>
-      {/* `-ml-2` : le livre ouvre la ligne, l'icône s'aligne sur le texte. */}
-      <summary
-        className={cn(
-          LIVRE.board,
-          "-ml-2 list-none [&::-webkit-details-marker]:hidden",
-        )}
-      >
-        <BookOpen aria-hidden className="size-3.5" />
-        {libelle}
-      </summary>
-      <div className="mt-2 max-w-[var(--board-mesure)] border-l-2 border-[color:var(--board-slate-line)] pl-4">
-        {children ? (
-          <div className="text-[12.5px] leading-[1.6] text-[color:var(--board-slate-mid)] [&>p]:m-0 [&>p+p]:mt-2">
-            {children}
-          </div>
-        ) : null}
-        <p className="m-0 mt-2 text-[11.5px] leading-[1.5] text-[color:var(--board-slate-soft)]">
-          {articles.join(" · ")}
-        </p>
-      </div>
-    </details>
+    // Un bloc à la mesure de lecture, comme avant 2026-10-28 : le livre
+    // d'une citation composée ouvre sa propre ligne, et son panneau ne
+    // s'étire pas sur toute la largeur d'une carte.
+    <Livre
+      libelle={libelle}
+      ouvreLaLigne
+      className={cn("block max-w-[var(--board-mesure)]", className)}
+    >
+      {children ? (
+        <div className="[&>p]:m-0 [&>p+p]:mt-2">{children}</div>
+      ) : null}
+      <p className="m-0 mt-3 text-[11.5px] leading-[1.5] text-[color:var(--board-slate-soft)] first:mt-0">
+        {articles.join(" · ")}
+      </p>
+    </Livre>
   );
 }
