@@ -73,6 +73,7 @@ import {
 } from "@/lib/calendrier/fraicheur";
 import { AvertissementFraicheur } from "@/components/calendrier/AvertissementFraicheur";
 import { nomDeZone } from "@/lib/batiments/nom-zone";
+import { VisiteGuidee } from "@/components/visite/VisiteGuidee";
 
 export default async function EquipementsPage({
   params,
@@ -441,6 +442,7 @@ export default async function EquipementsPage({
           })
         )}
       </div>
+      <VisiteGuidee cle="equipements" />
     </main>
   );
 }

@@ -30,7 +30,8 @@
     "veille": "tsx --import ./scripts/server-only-hors-next.mjs scripts/veille-worklist.ts",
     "relecture": "tsx --import ./scripts/server-only-hors-next.mjs scripts/export-relecture.ts",
     "verification": "tsx --import ./scripts/server-only-hors-next.mjs scripts/export-verification.ts",
-    "legifrance:verifier": "tsx --import ./scripts/server-only-hors-next.mjs scripts/verifier-corpus-legifrance.ts"
+    "legifrance:verifier": "tsx --import ./scripts/server-only-hors-next.mjs scripts/verifier-corpus-legifrance.ts",
+    "visite:rendre": "tsx scripts/visites/rendre.tsx"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.0",
@@ -66,7 +67,9 @@
     "@vitejs/plugin-react": "^6.0.1",
     "eslint": "^9",
     "eslint-config-next": "16.4.1",
+    "gsap": "3.12.5",
     "jsdom": "^29.0.2",
+    "playwright-core": "1.48.2",
     "prisma": "^6",
     "shadcn": "^4.3.1",
     "tailwindcss": "^4",
