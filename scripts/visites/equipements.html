@@ -156,6 +156,7 @@ html,body{width:1280px;height:720px;overflow:hidden;background:var(--canvas);fon
 .inter h1{font-size:92px;margin-top:22px}
 .inter p{font-size:25px;line-height:1.5;color:var(--slate-mid);margin-top:26px;max-width:820px}
 .inter p em{font-style:normal;color:var(--ink);font-weight:500}
+.inter .n,.inter h1,.inter p{opacity:0}
 .inter .seg{display:flex;gap:8px;margin-top:40px}
 .inter .seg i{width:56px;height:5px;border-radius:5px;background:var(--slate-line)}
 .inter .seg i.on{background:var(--ink)}
@@ -480,11 +481,13 @@ function construire() {
       + `<div class="seg">${[1, 2, 3, 4].map((k) => `<i class="${k <= n ? "on" : ""}"></i>`).join("")}</div>`
       + `<div class="sig">Rojer<i class="pt-bleu"></i></div>`;
     document.body.appendChild(el);
-    tl.to(el, { opacity: 1, duration: 0.3, ease: "power1.out" }, at);
-    tl.fromTo(el.querySelector("h1"), { y: 24 }, { y: 0, duration: 0.6, ease: "power3.out", immediateRender: false }, at);
-    tl.fromTo(el.querySelector(".n"), { y: 12 }, { y: 0, duration: 0.5, ease: "power3.out", immediateRender: false }, at + 0.05);
-    tl.fromTo(el.querySelector("p"), { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out", immediateRender: false }, at + 0.35);
-    tl.to(el, { opacity: 0, duration: 0.35, ease: "power1.in" }, at + 1.55 + LECTURE);
+    // Un fondu doux, puis le texte qui monte en trois temps : l'enchaînement
+    // depuis l'écran précédent ne doit pas claquer.
+    tl.to(el, { opacity: 1, duration: 0.65, ease: "power2.inOut" }, at);
+    tl.fromTo(el.querySelector(".n"), { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out", immediateRender: false }, at + 0.5);
+    tl.fromTo(el.querySelector("h1"), { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.7, ease: "power2.out", immediateRender: false }, at + 0.6);
+    tl.fromTo(el.querySelector("p"), { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out", immediateRender: false }, at + 0.85);
+    tl.to(el, { opacity: 0, duration: 0.55, ease: "power2.inOut" }, at + 1.45 + LECTURE);
   };
 
   // ---------- intro ----------
