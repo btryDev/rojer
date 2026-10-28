@@ -1,32 +1,32 @@
 /**
  * Chaque page attend sous le BON repli (plan performance, lot 3, 2026-10-28).
  *
- * Next montre, pendant le chargement d'une page, le `loading.tsx` le plus
- * proche en remontant ses dossiers. Deux fautes possibles, invisibles à la
+ * Le repli de `etablissements/[id]/loading.tsx` choisit son en-tête sur
+ * l'adresse (`repliDeChargement`). Deux fautes possibles, invisibles à la
  * lecture d'un seul fichier :
- *  - une page d'entrée dont le repli annonce une autre section (un
- *    copier-coller, ou une page déplacée) : le titre et la teinte changent
- *    à l'arrivée ;
- *  - une fiche ou un formulaire SANS repli propre, qui hérite de celui de sa
- *    liste : la fiche d'un équipement s'annoncerait « Équipements ».
+ *  - une page d'entrée que la table annonce sous une autre section, ou pas du
+ *    tout (une page neuve, une page déplacée) : le titre et la teinte
+ *    changent à l'arrivée ;
+ *  - une fiche ou un formulaire annoncé sous l'en-tête d'une section : la
+ *    fiche d'un équipement s'annoncerait « Équipements ».
  *
  * La garde balaie toutes les pages sous `etablissements/[id]` — une page
  * neuve y tombe sans inscription — et compare l'en-tête de la page
- * (`<EnTetePage item titre>`) au repli qui la couvre
- * (`<ChargementSection item titre>`), par l'arbre syntaxique : un
- * commentaire qui cite l'un ou l'autre ne compte pas.
+ * (`<EnTetePage item titre>`, lu par l'arbre syntaxique : un commentaire ne
+ * compte pas) à ce que la table annonce pour son adresse.
  */
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
+import { ITEMS_ILLUSTRES } from "./illustrations";
+import { repliDeChargement, type RepliSection } from "./repli-de-chargement";
+
 const RACINE = path.resolve(__dirname, "../../app/etablissements/[id]");
 
-type EnTete = { item: string; titre: string | null };
-
-/** Les en-têtes rendus par un fichier : chaque `<Balise item="…" titre="…">`. */
-function entetes(fichier: string, balise: string): EnTete[] {
+/** Les en-têtes rendus par une page : chaque `<EnTetePage item="…" titre="…">`. */
+function entetes(fichier: string): RepliSection[] {
   const source = ts.createSourceFile(
     fichier,
     readFileSync(fichier, "utf8"),
@@ -34,23 +34,27 @@ function entetes(fichier: string, balise: string): EnTete[] {
     true,
     ts.ScriptKind.TSX,
   );
-  const trouves: EnTete[] = [];
+  const trouves: RepliSection[] = [];
   const lire = (el: ts.JsxOpeningLikeElement, nom: string) => {
     const attr = el.attributes.properties.find(
       (p): p is ts.JsxAttribute => ts.isJsxAttribute(p) && p.name.getText() === nom,
     );
-    if (!attr) return null;
-    const init = attr.initializer;
+    const init = attr?.initializer;
+    if (!init) return undefined;
     // Une valeur calculée ne se compare pas : on la rend telle quelle, et
     // l'égalité échouera — à la garde d'être élargie, pas contournée.
-    return init && ts.isStringLiteral(init) ? init.text : (init?.getText() ?? "");
+    return ts.isStringLiteral(init) ? init.text : init.getText();
   };
   const visiter = (n: ts.Node) => {
     if (
       (ts.isJsxOpeningElement(n) || ts.isJsxSelfClosingElement(n)) &&
-      n.tagName.getText() === balise
+      n.tagName.getText() === "EnTetePage"
     ) {
-      trouves.push({ item: lire(n, "item") ?? "", titre: lire(n, "titre") });
+      const titre = lire(n, "titre");
+      trouves.push({
+        item: lire(n, "item") as RepliSection["item"],
+        ...(titre === undefined ? {} : { titre }),
+      });
     }
     ts.forEachChild(n, visiter);
   };
@@ -58,61 +62,69 @@ function entetes(fichier: string, balise: string): EnTete[] {
   return trouves;
 }
 
-function pages(dossier: string, acc: string[] = []): string[] {
-  for (const nom of readdirSync(dossier)) {
-    const chemin = path.join(dossier, nom);
-    if (statSync(chemin).isDirectory()) pages(chemin, acc);
-    else if (nom === "page.tsx") acc.push(chemin);
+function fichiers(dossier: string, nom: string, acc: string[] = []): string[] {
+  for (const entree of readdirSync(dossier)) {
+    const chemin = path.join(dossier, entree);
+    if (statSync(chemin).isDirectory()) fichiers(chemin, nom, acc);
+    else if (entree === nom) acc.push(chemin);
   }
   return acc;
 }
 
-/** Le `loading.tsx` qui couvre une page : le plus proche en remontant. */
-function repliDe(page: string): string | null {
-  let dossier = path.dirname(page);
-  for (;;) {
-    const repli = path.join(dossier, "loading.tsx");
-    if (existsSync(repli)) return repli;
-    if (dossier === RACINE) return null;
-    dossier = path.dirname(dossier);
-  }
-}
-
-const relatif = (f: string) => path.relative(RACINE, f);
+/** L'adresse servie par une page : `equipements/[equipementId]/page.tsx`
+ *  → `/etablissements/e1/equipements/x`. */
+const adresse = (page: string) => {
+  const dossier = path.relative(RACINE, path.dirname(page));
+  const suite = dossier
+    .split(path.sep)
+    .filter(Boolean)
+    .map((s) => (s.startsWith("[") ? "x" : s));
+  return ["", "etablissements", "e1", ...suite].join("/");
+};
 
 describe("chaque page attend sous le repli de son propre en-tête", () => {
-  const toutes = pages(RACINE).sort();
-  const avecEnTete = toutes.filter((p) => entetes(p, "EnTetePage").length > 0);
+  const pages = fichiers(RACINE, "page.tsx").sort();
+  const avecEnTete = pages.filter((p) => entetes(p).length > 0);
 
   it("balaie bien les pages (borne basse)", () => {
-    expect(toutes.length).toBeGreaterThanOrEqual(45);
+    expect(pages.length).toBeGreaterThanOrEqual(45);
     expect(avecEnTete.length).toBeGreaterThanOrEqual(22);
   });
 
-  it("une page d'entrée attend sous un repli qui porte son en-tête", () => {
+  it("une page d'entrée est annoncée sous son en-tête", () => {
     const fautes = avecEnTete.flatMap((page) => {
-      const attendus = new Set(
-        entetes(page, "EnTetePage").map((e) => JSON.stringify(e)),
-      );
-      const repli = repliDe(page);
-      const rendus = repli ? entetes(repli, "ChargementSection") : [];
-      const rendu = rendus.length === 1 ? JSON.stringify(rendus[0]) : null;
-      return attendus.size === 1 && rendu && attendus.has(rendu)
+      const attendus = new Set(entetes(page).map((e) => JSON.stringify(e)));
+      const annonce = JSON.stringify(repliDeChargement(adresse(page)));
+      return attendus.size === 1 && attendus.has(annonce)
         ? []
-        : [`${relatif(page)} : en-tête ${[...attendus].join(" / ")}, repli ${repli ? relatif(repli) : "aucun"} → ${rendus.map((r) => JSON.stringify(r)).join(" / ") || "neutre"}`];
+        : [`${adresse(page)} : en-tête ${[...attendus].join(" / ")}, repli ${annonce}`];
     });
     expect(fautes).toEqual([]);
   });
 
-  it("une fiche ou un formulaire n'hérite pas du repli d'une section", () => {
-    const fautes = toutes
+  it("une page sans en-tête de section (tableau de bord, fiche, formulaire) prend le repli neutre", () => {
+    const fautes = pages
       .filter((p) => !avecEnTete.includes(p))
-      .flatMap((page) => {
-        const repli = repliDe(page);
-        return repli && entetes(repli, "ChargementSection").length > 0
-          ? [`${relatif(page)} → ${relatif(repli)}`]
-          : [];
-      });
+      .map(adresse)
+      .filter((a) => repliDeChargement(a) !== null);
     expect(fautes).toEqual([]);
+  });
+
+  // Le repli montre toujours le panneau teinté : une page sans dessin n'en a
+  // pas, et l'en-tête changerait de forme à son arrivée.
+  it("chaque en-tête annoncé a son dessin, donc son panneau", () => {
+    const sansDessin = avecEnTete
+      .map((p) => repliDeChargement(adresse(p))?.item)
+      .filter((item) => item && !ITEMS_ILLUSTRES.includes(item));
+    expect(sansDessin).toEqual([]);
+  });
+
+  // Un `loading.tsx` dans le dossier d'une page est rattaché par Next à une
+  // clé qui contient les paramètres d'URL : il remplacerait la page par son
+  // squelette à chaque filtre (voir `etablissements/[id]/loading.tsx`).
+  it("un seul repli, à la racine de l'établissement", () => {
+    expect(fichiers(RACINE, "loading.tsx").map((f) => path.relative(RACINE, f))).toEqual([
+      "loading.tsx",
+    ]);
   });
 });

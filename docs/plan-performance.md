@@ -308,21 +308,32 @@ propre lecture. Cible indicative : ≤ 25 requêtes par écran.
 #### Avancement du lot 3 (2026-10-28, `lot/perf-afficher-tout-de-suite`)
 
 Fait — le second point, les replis par section :
-- chaque page d'entrée du rail a son `loading.tsx`, qui rend le **vrai
-  en-tête** (`ChargementSection` → `EnTetePage`) : titre et teinte de la
-  section à leur place définitive dès le clic, seul le corps attend. Le
-  descriptif est remplacé par deux traits ; le dessin garde sa place sans se
-  montrer (`enAttente`), parce qu'il s'anime au montage et se retracerait à
-  l'arrivée de la page ;
-- chaque sous-dossier de fiche ou de formulaire (`[equipementId]`,
-  `nouveau`…) prend le repli neutre (`ChargementNeutre`, l'ancien corps de
-  `etablissements/[id]/loading.tsx`) : sans lui, il hériterait de l'en-tête
-  de sa liste ;
-- garde `chargement-sections.test.ts` : toutes les pages balayées, le repli
-  le plus proche doit porter l'en-tête de la page, et aucune page sans
-  `EnTetePage` ne doit tomber sur un repli de section. Éprouvée en la
-  cassant des deux côtés (un repli à la mauvaise entrée ; le repli d'une
-  fiche retiré) : rouge.
+- ~~chaque page d'entrée du rail a son `loading.tsx`, qui rend le vrai
+  en-tête ; chaque sous-dossier de fiche prend le repli neutre~~
+  [2026-10-28, relecture avant PR, même lot : **régression**. Next rattache
+  le repli d'un dossier à une clé qui contient les paramètres d'URL de la
+  page (`addSearchParamsIfPageSegment`, puis `stateKey` dans
+  `layout-router`) : chaque filtre, année ou bascule de vue du calendrier
+  aurait remplacé la page par son squelette — ce que `FiltresCalendrier`
+  évite exprès par une transition. Même chose au registre, aux équipements,
+  au plan d'actions, et sur une fiche quand `SuiviControle` retire
+  `?apres=`.] ;
+- **un seul repli, `etablissements/[id]/loading.tsx`**, composant client :
+  il lit l'adresse (`repliDeChargement`) et rend le vrai en-tête de la page
+  demandée (`ChargementSection` → `CadreEnTete`) — titre et teinte de la
+  section dès le clic, seul le corps attend — ou le repli neutre pour le
+  tableau de bord, les fiches et les formulaires (`ChargementNeutre`).
+  Posé là, il n'est rattaché qu'au premier dossier sous l'établissement :
+  il se montre en changeant de section, jamais en changeant de paramètre ;
+- le cadre de l'en-tête est sorti d'`EnTetePage` (`CadreEnTete`) pour que le
+  repli client n'importe pas les dessins (≈ 46 Ko de source) ; le panneau
+  teinté y reste vide — un dessin plus haut que le minimum (320 px)
+  l'allonge à l'arrivée de la page ;
+- garde `chargement-sections.test.ts` : chaque page balayée doit être
+  annoncée sous son propre en-tête, aucune page sans `EnTetePage` sous un
+  en-tête de section, et un seul `loading.tsx` sous l'établissement.
+  Éprouvée en la cassant trois fois (mauvaise entrée, page oubliée,
+  `loading.tsx` remis dans un dossier) : rouge.
 
 Le corps du repli reste le patron « Liste » commun : pas encore à la forme
 de chaque écran (calendrier, DUERP).

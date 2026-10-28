@@ -5,7 +5,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
 
 import { ChargementSection } from "./ChargementSection";
-import { EnTetePage } from "./EnTetePage";
+import { repliDeChargement } from "./repli-de-chargement";
 
 afterEach(cleanup);
 
@@ -17,19 +17,27 @@ describe("ChargementSection", () => {
     expect(container.querySelector("main")?.getAttribute("aria-busy")).toBe("true");
   });
 
-  it("garde la place du dessin sans le montrer, et la teinte de la section", () => {
+  it("porte le panneau teinté de la section, sans dessin", () => {
     const { container } = render(<ChargementSection item="equipements" />);
     const panneau = container.querySelector("[data-teinte-section]") as HTMLElement;
     expect(panneau.style.backgroundColor).not.toBe("");
-    const enveloppe = panneau.firstElementChild as HTMLElement;
-    expect(enveloppe.className).toBe("invisible");
-    // Le dessin y est bien : c'est lui qui donne sa hauteur au panneau.
-    expect(enveloppe.firstElementChild).not.toBeNull();
+    expect(panneau.querySelector("svg, img")).toBeNull();
+  });
+});
+
+describe("repliDeChargement", () => {
+  it("lit la section sur l'adresse, paramètres compris", () => {
+    expect(repliDeChargement("/etablissements/e1/calendrier")).toEqual({ item: "calendrier" });
+    expect(repliDeChargement("/etablissements/e1/duerp/import")).toEqual({
+      item: "duerp",
+      titre: "Importer un DUERP",
+    });
   });
 
-  it("la page, elle, montre son dessin", () => {
-    const { container } = render(<EnTetePage item="equipements" description="Une phrase." />);
-    const panneau = container.querySelector("[data-teinte-section]") as HTMLElement;
-    expect(panneau.querySelector(".invisible")).toBeNull();
+  it("rend le repli neutre hors des pages d'entrée", () => {
+    expect(repliDeChargement("/etablissements/e1")).toBeNull();
+    expect(repliDeChargement("/etablissements/e1/equipements/abc")).toBeNull();
+    expect(repliDeChargement("/etablissements/e1/equipements/nouveau")).toBeNull();
+    expect(repliDeChargement("/onboarding")).toBeNull();
   });
 });

@@ -1,3 +1,9 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+
+import { ChargementSection } from "@/components/entete-page/ChargementSection";
+import { repliDeChargement } from "@/components/entete-page/repli-de-chargement";
 import { ChargementNeutre } from "@/components/layout/ChargementNeutre";
 
 /**
@@ -10,9 +16,20 @@ import { ChargementNeutre } from "@/components/layout/ChargementNeutre";
  * repli : le layout — barre latérale et barre de compte — reste en place, et
  * seule la colonne de droite attend.
  *
- * [2026-10-28, plan performance, lot 3] Il ne sert plus que le tableau de
- * bord et les pages sans dossier propre : chaque page d'entrée a son repli,
- * à son en-tête (`ChargementSection`), chaque fiche le repli neutre.
+ * [2026-10-28, plan performance, lot 3] Le repli annonce l'en-tête de la
+ * page demandée (`ChargementSection`), lu sur l'adresse ; le tableau de bord,
+ * les fiches et les formulaires gardent le repli neutre.
+ *
+ * **Un seul fichier, ici, et pas un par dossier de page.** Next rattache le
+ * repli d'un dossier à une clé qui contient les paramètres d'URL de la page
+ * (`addSearchParamsIfPageSegment`, puis `stateKey` dans `layout-router`) :
+ * un `calendrier/loading.tsx` remplaçait la page par son squelette à chaque
+ * filtre, chaque année, chaque bascule de vue — ce que `FiltresCalendrier`
+ * évite exprès par une transition. Posé ici, le repli n'est rattaché qu'au
+ * premier dossier sous l'établissement (« calendrier ») : il se montre en
+ * changeant de section, jamais en changeant de paramètre. Même effet dans
+ * une section (d'une liste à sa fiche) : pas de repli, l'écran précédent
+ * reste jusqu'à l'arrivée du suivant, comme avant ce lot.
  *
  * Un `notFound()` levé par une page imbriquée arrive désormais APRÈS le début
  * du flux : la réponse garde le statut 200, avec la page introuvable et un
@@ -21,5 +38,6 @@ import { ChargementNeutre } from "@/components/layout/ChargementNeutre";
  * dossier étranger répond toujours 404.
  */
 export default function ChargementEtablissement() {
-  return <ChargementNeutre />;
+  const repli = repliDeChargement(usePathname());
+  return repli ? <ChargementSection {...repli} /> : <ChargementNeutre />;
 }
