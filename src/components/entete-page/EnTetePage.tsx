@@ -1,9 +1,6 @@
-import type { ReactNode } from "react";
-
-import type { SidebarItemId } from "@/components/layout/sidebar-nav";
-
-import { CadreEnTete } from "./CadreEnTete";
-import { IllustrationEnTete, aUneIllustration } from "./illustrations";
+import { CadreEnTete, type CadreEnTeteProps } from "./CadreEnTete";
+import { IllustrationEnTete } from "./illustrations";
+import { aUneIllustration } from "./illustrations/liste";
 
 /**
  * L'en-tête des pages d'entrée du rail — un seul pour toutes (2026-10-25).
@@ -33,30 +30,14 @@ import { IllustrationEnTete, aUneIllustration } from "./illustrations";
  * qui flotte au-dessus : sur ordinateur elle passe sur le panneau (un fond y
  * a droit) ; sur téléphone, la colonne de texte commence sous elle.
  */
-export function EnTetePage({
-  item,
-  titre,
-  description,
-  children,
-}: {
-  item: Exclude<SidebarItemId, "tableau">;
-  /** Le titre d'une SOUS-PAGE d'une entrée (l'import du DUERP). Les pages
-   *  d'entrée n'en passent pas : leur titre est le rail, ou `TITRE_EN_TETE`. */
-  titre?: string;
-  /** Ce qu'on voit, puis ce qu'on peut y faire. Contenu en ligne seulement :
-   *  il est rendu dans un paragraphe. */
-  description: ReactNode;
-  /** La bascule de vue de la page, et rien d'autre. */
-  children?: ReactNode;
-}) {
-  // Sans dessin, pas de panneau — un aplat teinté vide occuperait la moitié
-  // droite. Le cadre (titre, teinte, mise en page) vit dans `CadreEnTete`.
+export function EnTetePage({ children, ...cadre }: CadreEnTeteProps) {
+  // Le cadre (titre, teinte, mise en page) vit dans `CadreEnTete`, partagé
+  // avec le repli de chargement.
   return (
     <CadreEnTete
-      item={item}
-      titre={titre}
-      description={description}
-      panneau={aUneIllustration(item) ? <IllustrationEnTete item={item} /> : null}
+      {...cadre}
+      avecPanneau={aUneIllustration(cadre.item)}
+      dessin={<IllustrationEnTete item={cadre.item} />}
     >
       {children}
     </CadreEnTete>

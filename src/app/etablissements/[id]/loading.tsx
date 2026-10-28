@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 
 import { ChargementSection } from "@/components/entete-page/ChargementSection";
 import { repliDeChargement } from "@/components/entete-page/repli-de-chargement";
@@ -38,6 +38,7 @@ import { ChargementNeutre } from "@/components/layout/ChargementNeutre";
  * dossier étranger répond toujours 404.
  */
 export default function ChargementEtablissement() {
-  const repli = repliDeChargement(usePathname());
+  const { id } = useParams<{ id: string }>();
+  const repli = repliDeChargement(usePathname(), id);
   return repli ? <ChargementSection {...repli} /> : <ChargementNeutre />;
 }

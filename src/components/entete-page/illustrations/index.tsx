@@ -2,6 +2,8 @@ import type { ComponentType } from "react";
 
 import type { SidebarItemId } from "@/components/layout/sidebar-nav";
 
+import { aUneIllustration, type ItemIllustre } from "./liste";
+
 import { IllustrationAccessibilite } from "./Accessibilite";
 import { IllustrationCalendrier } from "./Calendrier";
 import { IllustrationCarnetSanitaire } from "./CarnetSanitaire";
@@ -34,7 +36,7 @@ import { IllustrationZones } from "./Zones";
  * jouée une fois au chargement (`ep-*` dans `globals.css`), aucune si le
  * visiteur a demandé moins de mouvement.
  */
-const ILLUSTRATIONS: Partial<Record<SidebarItemId, ComponentType>> = {
+const ILLUSTRATIONS: Record<ItemIllustre, ComponentType> = {
   calendrier: IllustrationCalendrier,
   actions: IllustrationPlanActions,
   "etats-permanents": IllustrationEnPlace,
@@ -57,16 +59,8 @@ const ILLUSTRATIONS: Partial<Record<SidebarItemId, ComponentType>> = {
   connecter: IllustrationConnecter,
 };
 
-/** La page a-t-elle son dessin ? Sans lui, l'en-tête n'ouvre pas de
- *  panneau : un aplat teinté vide occuperait la moitié droite. */
-export function aUneIllustration(item: SidebarItemId): boolean {
-  return item in ILLUSTRATIONS;
-}
-
 export function IllustrationEnTete({ item }: { item: SidebarItemId }) {
+  if (!aUneIllustration(item)) return null;
   const Dessin = ILLUSTRATIONS[item];
-  return Dessin ? <Dessin /> : null;
+  return <Dessin />;
 }
-
-/** Les pages qui ont déjà leur dessin — lu par le test de couverture. */
-export const ITEMS_ILLUSTRES = Object.keys(ILLUSTRATIONS) as SidebarItemId[];

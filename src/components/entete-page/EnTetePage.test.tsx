@@ -11,7 +11,7 @@ import {
 } from "@/components/layout/sidebar-nav";
 
 import { EnTetePage } from "./EnTetePage";
-import { ITEMS_ILLUSTRES } from "./illustrations";
+import { ITEMS_ILLUSTRES } from "./illustrations/liste";
 import { SECTIONS_TEINTEES, TEINTE_SECTION } from "./teintes";
 
 afterEach(cleanup);

@@ -1,6 +1,7 @@
 import { CorpsEnAttente } from "@/components/layout/CorpsEnAttente";
 
 import { CadreEnTete } from "./CadreEnTete";
+import { aUneIllustration } from "./illustrations/liste";
 import type { RepliSection } from "./repli-de-chargement";
 
 /**
@@ -15,8 +16,9 @@ import type { RepliSection } from "./repli-de-chargement";
  *
  * Le descriptif, propre à chaque page, est remplacé par deux traits de sa
  * hauteur ; la bascule de vue, quand la page en porte une, par une pastille
- * de sa taille. Le panneau teinté reste vide : les dessins s'animent au
- * montage, et ce repli est un composant client
+ * de sa taille. Le panneau teinté suit la règle de l'en-tête (pas de dessin,
+ * pas de panneau) mais reste vide : les dessins s'animent au montage, et ce
+ * repli est un composant client
  * (`etablissements/[id]/loading.tsx`) — les importer pour ne pas les montrer
  * les enverrait au navigateur sur chaque écran (`CadreEnTete`). Le panneau
  * tient sa hauteur minimale ; un dessin plus haut l'allonge à l'arrivée.
@@ -31,7 +33,7 @@ export function ChargementSection({ item, titre, bascule }: RepliSection) {
         item={item}
         titre={titre}
         description={<DescriptifEnAttente />}
-        panneau={<span />}
+        avecPanneau={aUneIllustration(item)}
       >
         {bascule ? (
           // La hauteur des deux bascules de l'en-tête (`SelecteurLecture`,

@@ -31,26 +31,19 @@ describe("ChargementSection", () => {
   });
 });
 
-describe("repliDeChargement", () => {
-  it("lit la section sur l'adresse (sans paramètres : `usePathname` n'en rend pas)", () => {
-    expect(repliDeChargement("/etablissements/e1/calendrier")).toEqual({
-      item: "calendrier",
-      bascule: true,
-    });
-    expect(repliDeChargement("/etablissements/e1/registre")).toEqual({ item: "registre" });
-    expect(repliDeChargement("/etablissements/e1/duerp/import")).toEqual({
-      item: "duerp",
-      titre: "Importer un DUERP",
-    });
-  });
-
-  it("rend le repli neutre hors des pages d'entrée", () => {
-    expect(repliDeChargement("/etablissements/e1")).toBeNull();
-    expect(repliDeChargement("/etablissements/e1/equipements/abc")).toBeNull();
-    expect(repliDeChargement("/etablissements/e1/equipements/nouveau")).toBeNull();
-    expect(repliDeChargement("/onboarding")).toBeNull();
+// Les pages d'entrée sont vérifiées une à une par `chargement-sections.test.ts` ;
+// ici, ce qui ne doit JAMAIS annoncer une section.
+describe("repliDeChargement, repli neutre", () => {
+  it.each([
+    "/etablissements/e1",
+    "/etablissements/e1/equipements/abc",
+    "/etablissements/e1/equipements/nouveau",
+    "/etablissements/e2/calendrier", // un autre établissement que celui du rendu
+    "/onboarding",
     // Une propriété héritée de l'objet n'est pas une page.
-    expect(repliDeChargement("/etablissements/e1/constructor")).toBeNull();
-    expect(repliDeChargement("/etablissements/e1/__proto__")).toBeNull();
+    "/etablissements/e1/constructor",
+    "/etablissements/e1/__proto__",
+  ])("%s", (adresse) => {
+    expect(repliDeChargement(adresse, "e1")).toBeNull();
   });
 });

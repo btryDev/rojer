@@ -91,7 +91,7 @@ export function decouperCheminInterne(
 
 /** Les segments du chemin situés sous `/etablissements/{id}`, ou `null`
  *  si le chemin sort de l'établissement courant. */
-function segmentsSousEtablissement(
+export function segmentsSousEtablissement(
   pathname: string,
   etablissementId: string,
 ): string[] | null {

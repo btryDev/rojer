@@ -9,6 +9,19 @@ import {
 import { TITRE_EN_TETE } from "./titres";
 import { TEINTE_SECTION } from "./teintes";
 
+/** Ce que porte l'en-tête, page ou repli. */
+export type CadreEnTeteProps = {
+  item: Exclude<SidebarItemId, "tableau">;
+  /** Le titre d'une SOUS-PAGE d'une entrée (l'import du DUERP). Les pages
+   *  d'entrée n'en passent pas : leur titre est le rail, ou `TITRE_EN_TETE`. */
+  titre?: string;
+  /** Ce qu'on voit, puis ce qu'on peut y faire. Contenu en ligne seulement :
+   *  il est rendu dans un paragraphe. */
+  description: ReactNode;
+  /** La bascule de vue de la page, et rien d'autre. */
+  children?: ReactNode;
+};
+
 /**
  * Le cadre de l'en-tête de page, sans ses dessins : titre, descriptif,
  * bascule, et le panneau teinté de la section. `EnTetePage` y pose le dessin
@@ -25,18 +38,15 @@ export function CadreEnTete({
   titre,
   description,
   children,
-  panneau,
-}: {
-  item: Exclude<SidebarItemId, "tableau">;
-  titre?: string;
-  description: ReactNode;
-  children?: ReactNode;
-  /** Le contenu du panneau teinté ; `null` : pas de panneau, l'en-tête tient
-   *  sur une colonne. */
-  panneau: ReactNode | null;
+  avecPanneau,
+  dessin,
+}: CadreEnTeteProps & {
+  /** Le panneau teinté de droite. Sans lui, l'en-tête tient sur une colonne. */
+  avecPanneau: boolean;
+  /** Ce que le panneau montre ; le repli de chargement n'y met rien. */
+  dessin?: ReactNode;
 }) {
   const fond = TEINTE_SECTION[categorieDeItem(item) ?? "tableau"];
-  const avecPanneau = panneau !== null;
 
   return (
     // `flex-none` n'est pas décoratif : la colonne de contenu du shell est un
@@ -70,7 +80,7 @@ export function CadreEnTete({
           className="hidden items-end justify-center overflow-hidden px-8 pb-5 pt-16 md:flex [&>*]:max-w-full"
           style={fond ? { backgroundColor: fond } : undefined}
         >
-          {panneau}
+          {dessin}
         </div>
       ) : null}
     </header>

@@ -1,9 +1,9 @@
-import type { SidebarItemId } from "@/components/layout/sidebar-nav";
+import { segmentsSousEtablissement } from "@/lib/navigation/provenance";
+
+import type { CadreEnTeteProps } from "./CadreEnTete";
 
 /** L'en-tête qu'annonce le repli de chargement d'une page. */
-export type RepliSection = {
-  item: Exclude<SidebarItemId, "tableau">;
-  titre?: string;
+export type RepliSection = Pick<CadreEnTeteProps, "item" | "titre"> & {
   /** La page porte une bascule de vue sous son titre : le repli lui garde
    *  sa place, sans quoi l'en-tête grandirait à l'arrivée de la page. */
   bascule?: true;
@@ -45,10 +45,11 @@ const REPLIS: Readonly<Record<string, RepliSection>> = {
 
 /** L'en-tête à annoncer pendant le chargement de `pathname`, ou `null` pour
  *  le repli neutre. */
-export function repliDeChargement(pathname: string): RepliSection | null {
-  const [racine, , ...suite] = pathname.split("/").filter(Boolean);
-  if (racine !== "etablissements") return null;
-  const cle = suite.join("/");
+export function repliDeChargement(
+  pathname: string,
+  etablissementId: string,
+): RepliSection | null {
+  const cle = segmentsSousEtablissement(pathname, etablissementId)?.join("/");
   // `hasOwn` : « constructor » ou « __proto__ » ne sont pas des pages.
-  return Object.hasOwn(REPLIS, cle) ? REPLIS[cle] : null;
+  return cle !== undefined && Object.hasOwn(REPLIS, cle) ? REPLIS[cle] : null;
 }

@@ -20,7 +20,6 @@ import path from "node:path";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
-import { ITEMS_ILLUSTRES } from "./illustrations";
 import { repliDeChargement, type RepliSection } from "./repli-de-chargement";
 
 const RACINE = path.resolve(__dirname, "../../app/etablissements/[id]");
@@ -45,14 +44,14 @@ function entetes(fichier: string): RepliSection[] {
     // l'égalité échouera — à la garde d'être élargie, pas contournée.
     return ts.isStringLiteral(init) ? init.text : init.getText();
   };
-  const noter = (el: ts.JsxOpeningLikeElement, bascule: boolean) => {
-    const titre = lire(el, "titre");
+  // `toEqual` ignore les clés `undefined` : pas de titre, pas de bascule,
+  // c'est la même chose que des clés absentes dans la table.
+  const noter = (el: ts.JsxOpeningLikeElement, bascule: boolean) =>
     trouves.push({
       item: lire(el, "item") as RepliSection["item"],
-      ...(titre === undefined ? {} : { titre }),
-      ...(bascule ? { bascule: true as const } : {}),
+      titre: lire(el, "titre"),
+      bascule: bascule || undefined,
     });
-  };
   const visiter = (n: ts.Node) => {
     // Des enfants à l'en-tête, c'est sa bascule de vue (`EnTetePage`).
     if (ts.isJsxElement(n) && n.openingElement.tagName.getText() === "EnTetePage") {
@@ -99,31 +98,22 @@ describe("chaque page attend sous le repli de son propre en-tête", () => {
   });
 
   it("une page d'entrée est annoncée sous son en-tête", () => {
-    const fautes = avecEnTete.flatMap((page) => {
-      const attendus = new Set(entetes(page).map((e) => JSON.stringify(e)));
-      const annonce = JSON.stringify(repliDeChargement(adresse(page)));
-      return attendus.size === 1 && attendus.has(annonce)
-        ? []
-        : [`${adresse(page)} : en-tête ${[...attendus].join(" / ")}, repli ${annonce}`];
-    });
-    expect(fautes).toEqual([]);
+    // Chaque en-tête de la page (l'accessibilité en rend deux, un par
+    // branche) face à ce que la table annonce pour son adresse.
+    const lu = avecEnTete.map((page) => [adresse(page), entetes(page)]);
+    const annonce = avecEnTete.map((page) => [
+      adresse(page),
+      entetes(page).map(() => repliDeChargement(adresse(page), "e1")),
+    ]);
+    expect(annonce).toEqual(lu);
   });
 
   it("une page sans en-tête de section (tableau de bord, fiche, formulaire) prend le repli neutre", () => {
     const fautes = pages
       .filter((p) => !avecEnTete.includes(p))
       .map(adresse)
-      .filter((a) => repliDeChargement(a) !== null);
+      .filter((a) => repliDeChargement(a, "e1") !== null);
     expect(fautes).toEqual([]);
-  });
-
-  // Le repli montre toujours le panneau teinté : une page sans dessin n'en a
-  // pas, et l'en-tête changerait de forme à son arrivée.
-  it("chaque en-tête annoncé a son dessin, donc son panneau", () => {
-    const sansDessin = avecEnTete
-      .map((p) => repliDeChargement(adresse(p))?.item)
-      .filter((item) => item && !ITEMS_ILLUSTRES.includes(item));
-    expect(sansDessin).toEqual([]);
   });
 
   // Un `loading.tsx` dans le dossier d'une page est rattaché par Next à une
