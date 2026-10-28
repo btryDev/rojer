@@ -1,9 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { indexArticlesParRef } from "@/lib/referentiels/corpus";
 import { diagnostiquerPlan } from "./schema";
-
-/** Casse et espaces ne comptent pas — la souplesse de `fait-dans-le-texte`. */
-const norm = (t: string) => t.toLowerCase().replace(/\s+/g, " ").trim();
 
 /**
  * Le seuil des 400 heures, tenu par un test parce qu'il s'affiche comme un fait.
@@ -44,41 +40,25 @@ describe("seuil des 400 h — art. R. 4512-7", () => {
     expect(diag(null, true).ecritObligatoire).toBe(true);
   });
 
-  it("dit « égal au moins à » et non « dépassent »", () => {
+  it("dit « 400 heures ou plus » et non « dépasse » ni « au-delà »", () => {
     // « Dépasser » exclut la valeur pivot, et c'est précisément l'erreur que
-    // la comparaison portait. Depuis le 2026-09-26, la raison cite le 1° du
-    // texte au lieu de le paraphraser (« atteignent »).
-    expect(diag(400).raisons.join(" ")).toContain("« égal au moins à 400 heures");
-    expect(diag(400).raisons.join(" ")).not.toContain("dépass");
+    // la comparaison portait. Depuis le 2026-10-28, la raison dit le fait
+    // saisi ; le texte de R. 4512-7 est sous le livre.
+    expect(diag(400).raisons).toEqual(["Durée estimée : 400 h, soit 400 heures ou plus."]);
+    expect(diag(400).raisons.join(" ")).not.toMatch(/dépass|au-delà/);
   });
 
-  it("chaque passage entre guillemets des raisons est un extrait de R. 4512-7", () => {
-    // La discipline de `fait-dans-le-texte` : ce qui est entre guillemets
-    // est dans le verbatim consigné au corpus — le même que Légifrance.
-    const verbatim = norm(
-      indexArticlesParRef().get("R. 4512-7")?.article.citationCle ?? "",
-    );
-    expect(verbatim.length).toBeGreaterThan(0);
-    const raisons = [...diag(400).raisons, ...diag(null, true).raisons];
-    expect(raisons).toHaveLength(2);
-    for (const r of raisons) {
-      const cites = [...r.matchAll(/«\s*([^»]+?)\s*»/g)].map((m) => m[1]);
-      expect(cites.length).toBeGreaterThan(0);
-      for (const c of cites) expect(verbatim).toContain(norm(c));
-    }
-  });
-
-  it("le 2° nomme ses deux listes, travail et agriculture", () => {
-    // « respectivement, par arrêté du ministre chargé du travail et par
-    // arrêté du ministre chargé de l'agriculture » (R. 4512-7, 2°).
-    const r = diag(null, true).raisons[0];
-    expect(r).toContain("arrêté du 19 mars 1993");
-    expect(r).toContain("arrêté du ministre chargé de l'agriculture");
+  it("les raisons disent le fait saisi, sans guillemets ni article (le texte est sous le livre)", () => {
+    const raisons = [...diag(450, true).raisons, ...diag(null, true).raisons];
+    expect(raisons).toHaveLength(3);
+    for (const r of raisons) expect(r).not.toMatch(/«|»|\bArt\.|[LRD]\. ?\d{3,4}/);
   });
 
   it("chaque raison nomme le fait saisi qui la déclenche", () => {
-    expect(diag(420).raisons[0]).toMatch(/^Durée estimée : 420 h\./);
-    expect(diag(null, true).raisons[0]).toMatch(/^Travaux déclarés dangereux\./);
+    expect(diag(420).raisons).toEqual(["Durée estimée : 420 h, soit 400 heures ou plus."]);
+    expect(diag(null, true).raisons).toEqual([
+      "Travaux déclarés dangereux, quelle que soit la durée.",
+    ]);
   });
 });
 
@@ -202,7 +182,7 @@ describe("le fondement affiché est celui qui s'applique", () => {
   it("la raison énoncée nomme la liste dangereuse, pas les 400 heures", () => {
     const raisons = diag(22, true).raisons;
     expect(raisons).toHaveLength(1);
-    expect(raisons[0]).toContain("« travaux dangereux figurant sur une liste fixée »");
+    expect(raisons[0]).toBe("Travaux déclarés dangereux, quelle que soit la durée.");
     expect(raisons.join(" ")).not.toContain("400");
   });
 });

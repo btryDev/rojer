@@ -19,6 +19,10 @@ import {
   CONSTAT_R4512_11,
   CONSTAT_R4512_12,
   EN_CLAIR_ECRIT,
+  RAISON_TRAVAUX_DANGEREUX,
+  raisonDureeEstimee,
+  raisonHeuresRevisees,
+  ligneHeuresRevisees,
   EN_CLAIR_R4463_8,
   EN_CLAIR_R4512_1,
   EN_CLAIR_R4512_2,
@@ -139,8 +143,12 @@ describe("le diagnostic : R. 4512-2, -6 et -7 dans leurs mots", () => {
   it("les phrases citées sous le livre gardent leur moment et leurs deux cas", () => {
     expect(SENS_R4512_7).toMatch(/1° [^;]*400 heures/);
     expect(SENS_R4512_7).toMatch(/2° [^.]*travaux dangereux[^.]*quelle que soit la durée prévisible/);
-    for (const f of [R4512_7_ECRIT, R4512_7_1_SEUIL, R4512_7_2_LISTE])
+    for (const f of [R4512_7_ECRIT, R4512_7_1_SEUIL, R4512_7_1_EN_COURS, R4512_7_2_LISTE])
       expect(SENS_R4512_7).toContain(`« ${f} »`);
+    // Le cas des heures revues en cours de chantier, et les deux listes du 2° :
+    // le diagnostic peut naître de l'un comme de l'autre (revue du 2026-10-28).
+    expect(SENS_R4512_7).toContain("arrêté du 19 mars 1993");
+    expect(SENS_R4512_7).toContain("ministre chargé de l'agriculture");
     expect(SENS_R4512_6).toContain(`« ${R4512_6_MOMENT} »`);
   });
 });
@@ -176,6 +184,11 @@ describe("les phrases en clair ne citent pas et n'ajoutent pas de délai", () =>
     ["R. 4512-9", EN_CLAIR_R4512_9],
     ["R. 4512-11", EN_CLAIR_R4512_11],
     ["R. 4463-8", EN_CLAIR_R4463_8],
+    // Les raisons du diagnostic (2026-10-28) : le fait saisi, rien d'autre.
+    ["raison, durée estimée", raisonDureeEstimee(450)],
+    ["raison, durée estimée au seuil", raisonDureeEstimee(400)],
+    ["raison, travaux dangereux", RAISON_TRAVAUX_DANGEREUX],
+    ["raison, heures revues", raisonHeuresRevisees(ligneHeuresRevisees(420, "05/10/2026"))],
   ];
   it.each(EN_CLAIR)("%s", (_nom, phrase) => {
     expect(phrase).not.toMatch(/«|»|\bArt\.|[LRD]\. ?\d{3,4}/);

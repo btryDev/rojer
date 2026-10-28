@@ -58,6 +58,8 @@ import {
   URL_R4512_9,
   URL_R4512_11,
   URL_R4512_12,
+  RAISON_TRAVAUX_DANGEREUX,
+  raisonDureeEstimee,
 } from "@/lib/plan-prevention/annonces-plan";
 import {
   CHAPEAU_R4512_8,
@@ -255,6 +257,19 @@ describe("fiche du plan : en clair à l'écran, le texte sous le livre, dans les
     expect(lu).not.toMatch(/pendant les travaux/i);
   });
 
+  it("écrit obligatoire : les raisons disent le fait saisi, R. 4512-7 sous le livre de la carte", async () => {
+    const { html, lu } = await rendreFiche({ dureeHeuresEstimee: 450, travauxDangereux: true });
+    const debut = lu.indexOf("Pourquoi l'écrit est obligatoire");
+    expect(debut).toBeGreaterThan(-1);
+    for (const r of [raisonDureeEstimee(450), RAISON_TRAVAUX_DANGEREUX])
+      expect(contient(lu, r), r).toBe(true);
+    // Plus de citation dans la carte : le texte est sous la pastille.
+    const carte = lu.slice(debut, lu.indexOf("Inspection du travail", debut));
+    expect(carte).not.toMatch(/«|»|\bArt\./);
+    expect(livrePorte(html, "R. 4512-7", URL_R4512_7, SENS_R4512_7)).toBe(true);
+    expect(contient(lu, SENS_R4512_7)).toBe(false);
+  });
+
   it("sans date d'inspection : le moment en clair, R. 4512-2 entier sous le livre, sans « obligatoire »", async () => {
     // C40, suite : « obligatoire avant le démarrage des travaux (art.
     // R. 4512-2 CT) » prêtait à R. 4512-2 le moment de R. 4512-6.
@@ -381,5 +396,53 @@ describe("formulaire : ce qui s'y lit au premier affichage", async () => {
     const horsCommun = html.replace(/<rojer-textes[\s\S]*?<\/rojer-textes>/g, "");
     expect(livres(horsCommun, "R. 4512-7")).toEqual([]);
     expect(livres(horsCommun, "R. 4512-12")).toEqual([]);
+  });
+});
+
+describe("formulaire rouvert, écrit obligatoire : les raisons sans citation", async () => {
+  const { FormulairePlanPrevention } = await import("./FormulairePlanPrevention");
+  const html = renderToStaticMarkup(
+    <FormulairePlanPrevention
+      etablissementId="e1"
+      prestataires={[]}
+      plan={{
+        id: "p1",
+        prestataireId: null,
+        entrepriseExterieureRaison: "Plomberie Test",
+        entrepriseExterieureSiret: null,
+        efChefNom: "Chef EE",
+        efChefEmail: "ee@example.invalid",
+        efEffectifIntervenant: 2,
+        euChefNom: "Chef EU",
+        euChefFonction: null,
+        dateDebut: "2026-10-01T08:00",
+        dateFin: "2026-10-02T17:00",
+        dureeHeuresEstimee: 450,
+        lieux: "Cuisine",
+        batimentId: null,
+        naturesTravaux: "Remplacement d'un siphon",
+        travauxDangereux: true,
+        inspectionDate: null,
+        inspectionParticipants: null,
+        lignes: [],
+        phases: [],
+        adaptationMateriels: null,
+        instructionsTravailleurs: null,
+        organisationSecours: null,
+        participationCroisee: null,
+      }}
+    />,
+  );
+  const lu = visible(html);
+
+  it("le titre, la phrase en clair, puis les deux faits saisis — sans guillemets ni article", () => {
+    const debut = lu.indexOf("Plan écrit obligatoire");
+    expect(debut).toBeGreaterThan(-1);
+    const fin = lu.indexOf(RAISON_TRAVAUX_DANGEREUX, debut) + RAISON_TRAVAUX_DANGEREUX.length;
+    const bloc = lu.slice(debut, fin);
+    expect(contient(bloc, EN_CLAIR_ECRIT.obligatoire)).toBe(true);
+    expect(contient(bloc, raisonDureeEstimee(450))).toBe(true);
+    expect(bloc).not.toMatch(/«|»|\bArt\.|R\. \d{4}/);
+    expect(livrePorte(livreCommun(html), "R. 4512-7", URL_R4512_7, SENS_R4512_7)).toBe(true);
   });
 });

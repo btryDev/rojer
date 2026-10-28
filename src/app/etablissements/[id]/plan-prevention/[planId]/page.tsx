@@ -63,6 +63,7 @@ import {
   R4512_2,
   R4512_9,
   R4512_11,
+  SENS_R4512_7,
   URL_R4463_8,
   URL_R4512_1,
   URL_R4512_2,
@@ -212,6 +213,15 @@ export default async function PlanPreventionDetailPage({
                     <li key={raison}>{raison}</li>
                   ))}
                 </ul>
+                {/* Les raisons disent le fait saisi (2026-10-28) ; le texte
+                    qui en fait un fondement est ici, sous la pastille. */}
+                <LegalBadge
+                  className="mt-3"
+                  reference="Art. R. 4512-7 CT"
+                  href={URL_R4512_7}
+                >
+                  {SENS_R4512_7}
+                </LegalBadge>
               </CarteFiche>
             )}
             {/* R. 4512-12, cité quand l'écrit est obligatoire ET quand la
@@ -243,7 +253,6 @@ export default async function PlanPreventionDetailPage({
                   {CONSTAT_R4512_12}
                 </p>
                 <LegalBadge
-                  charte="board"
                   className="mt-3"
                   reference="Art. R. 4512-12 CT"
                   href={URL_R4512_12}
@@ -281,7 +290,6 @@ export default async function PlanPreventionDetailPage({
                 {EN_CLAIR_R4512_7_EN_COURS} {CONSTAT_HEURES_REVISEES}
               </p>
               <LegalBadge
-                charte="board"
                 className="mt-2"
                 reference="Art. R. 4512-7 CT"
                 href={URL_R4512_7}
@@ -345,7 +353,6 @@ export default async function PlanPreventionDetailPage({
                     )}
                   </p>
                   <LegalBadge
-                    charte="board"
                     className="mt-2"
                     reference="Art. R. 4512-2 CT"
                     href={URL_R4512_2}
@@ -490,7 +497,6 @@ export default async function PlanPreventionDetailPage({
             ))}
 
             <LegalBadge
-              charte="board"
               className="mt-1"
               reference="Art. R. 4512-8 CT"
               href={URL_R4512_8}
@@ -510,17 +516,17 @@ export default async function PlanPreventionDetailPage({
               <ul className="m-0 flex list-none flex-col gap-4 p-0 text-[13.5px] leading-[1.6]">
                 <li>
                   <ArticleEnClair texte={EN_CLAIR_R4512_9} constat={CONSTAT_R4512_9}>
-                    <LegalBadge charte="board" className="mt-2" reference="Art. R. 4512-9 CT" href={URL_R4512_9} extrait={R4512_9} />
+                    <LegalBadge className="mt-2" reference="Art. R. 4512-9 CT" href={URL_R4512_9} extrait={R4512_9} />
                   </ArticleEnClair>
                 </li>
                 <li>
                   <ArticleEnClair texte={EN_CLAIR_R4512_11} constat={CONSTAT_R4512_11}>
-                    <LegalBadge charte="board" className="mt-2" reference="Art. R. 4512-11 CT" href={URL_R4512_11} extrait={R4512_11} />
+                    <LegalBadge className="mt-2" reference="Art. R. 4512-11 CT" href={URL_R4512_11} extrait={R4512_11} />
                   </ArticleEnClair>
                 </li>
                 <li>
                   <ArticleEnClair texte={EN_CLAIR_R4463_8}>
-                    <LegalBadge charte="board" className="mt-2" reference="Art. R. 4463-8 CT" href={URL_R4463_8} extrait={R4463_8} />
+                    <LegalBadge className="mt-2" reference="Art. R. 4463-8 CT" href={URL_R4463_8} extrait={R4463_8} />
                   </ArticleEnClair>
                 </li>
               </ul>
@@ -532,7 +538,7 @@ export default async function PlanPreventionDetailPage({
                 dire ce qu'il ne dit pas (contre-lecture du 2026-09-26). */}
             <CarteFiche titre="Nouveaux sous-traitants">
               <ArticleEnClair texte={EN_CLAIR_R4512_1} constat={CONSTAT_R4512_1}>
-                <LegalBadge charte="board" className="mt-2" reference="Art. R. 4512-1 CT" href={URL_R4512_1} extrait={R4512_1}>
+                <LegalBadge className="mt-2" reference="Art. R. 4512-1 CT" href={URL_R4512_1} extrait={R4512_1}>
                   {CHAPITRE_R4512}
                 </LegalBadge>
               </ArticleEnClair>
@@ -637,7 +643,6 @@ export default async function PlanPreventionDetailPage({
 
       <div className="pt-2">
         <LegalBadge
-          charte="board"
           reference="Art. R. 4512-6 à R. 4512-12 CT"
           href="https://www.legifrance.gouv.fr/codes/id/LEGISCTA000018529787/"
         >

@@ -62,7 +62,7 @@ describe("diagnostiquerPlan — la révision en cours de chantier", () => {
     expect(d.seuil400).toBe(false);
     expect(d.seuil400EnCours).toBe(true);
     expect(d.raisons).toEqual([
-      "Heures prévisibles revues : 450 h, seuil de 400 h noté le 05/10/2026. Art. R. 4512-7, 1° : « Il en est de même dès lors qu'il apparaît, en cours d'exécution des travaux, que le nombre d'heures de travail doit atteindre 400 heures ».",
+      "Heures prévisibles revues : 450 h, seuil de 400 h noté le 05/10/2026.",
     ]);
   });
 
