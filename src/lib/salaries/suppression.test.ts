@@ -6,8 +6,11 @@
 // autre chose qu'un relevé d'appels :
 //   - `Verification.salarieId` → `Salarie` est `Restrict` : supprimer une
 //     fiche encore visée par une ligne LÈVE (P2003), comme PostgreSQL ;
-//   - `TitreSalarie` cascade depuis `Salarie`, `RapportVerification` et
-//     `Action` depuis `Verification` ;
+//   - `TitreSalarie` cascade depuis `Salarie` ;
+//   - ~~`RapportVerification` et `Action` cascadent depuis `Verification`~~
+//     [2026-10-28 : `NoAction` — supprimer une ligne qui porte encore un
+//     rapport ou une action LÈVE (P2003), migration
+//     `20261028120000_preuves_protegees_en_base`] ;
 //   - `Signature.objetId` n'a PAS de clé étrangère : rien ne l'emporte ;
 //   - `$transaction` restaure l'état si le corps lève.
 // `regles-du-schema` (en bas) relit `schema.prisma` et fait échouer ce
@@ -55,6 +58,13 @@ const h = vi.hoisted(() => {
     w.objetId.in.includes(s.objetId);
 
   const client = {
+    // Le verrou des lignes (`SELECT … FOR UPDATE`) : sans effet en mémoire,
+    // journalisé pour qu'un test puisse vérifier qu'il est posé.
+    verrous: [] as string[],
+    $queryRaw: async (morceaux: TemplateStringsArray) => {
+      client.verrous.push(morceaux.join("?"));
+      return [];
+    },
     etablissement: {
       findFirst: async ({ where }: { where: { id: string; entreprise: { userId: string } } }) =>
         db.etablissements.find(
@@ -95,10 +105,31 @@ const h = vi.hoisted(() => {
     rapportVerification: {
       findMany: async ({ where }: { where: { verification: L } }) =>
         db.rapports.filter(surLigne(where)),
+      deleteMany: async ({ where }: { where: { etablissementId: unknown; verification: L } }) => {
+        db.rapports = db.rapports.filter(
+          (r) => !(surLigne(where)(r) && eq(where.etablissementId, r.etablissementId)),
+        );
+      },
     },
     action: {
       count: async ({ where }: { where: { verification: L } }) =>
         db.actions.filter(surLigne(where)).length,
+      deleteMany: async ({ where }: { where: { etablissementId: unknown; verification: L } }) => {
+        db.actions = db.actions.filter(
+          (a) => !(surLigne(where)(a) && eq(where.etablissementId, a.etablissementId)),
+        );
+      },
+      updateMany: async ({
+        where,
+        data,
+      }: {
+        where: { etablissementId: unknown; leveeRapportId: { in: unknown[] } };
+        data: L;
+      }) => {
+        for (const a of db.actions)
+          if (eq(where.etablissementId, a.etablissementId) && where.leveeRapportId.in.includes(a.leveeRapportId))
+            Object.assign(a, data);
+      },
     },
     signature: {
       count: async ({ where }: { where: Parameters<typeof signatureVisee>[0] }) =>
@@ -124,9 +155,12 @@ const h = vi.hoisted(() => {
             )
             .map((v) => v.id),
         );
+        // `NoAction` : une ligne qui porte encore une preuve ne part pas.
+        if ([...db.rapports, ...db.actions].some((p) => ids.has(p.verificationId)))
+          throw Object.assign(new Error("P2003 RapportVerification_verificationId_fkey"), {
+            code: "P2003",
+          });
         db.verifications = db.verifications.filter((v) => !ids.has(v.id));
-        db.rapports = db.rapports.filter((r) => !ids.has(r.verificationId));
-        db.actions = db.actions.filter((a) => !ids.has(a.verificationId));
       },
     },
   };
@@ -197,13 +231,13 @@ function semer() {
       { id: "v-etab", etablissementId: "etab-a", salarieId: null },
     ],
     rapports: [
-      { id: "r-1a", verificationId: "v-1a", fichierCle: "cle/r-1a.pdf" },
-      { id: "r-2a", verificationId: "v-2a", fichierCle: "cle/r-2a.pdf" },
-      { id: "r-etab", verificationId: "v-etab", fichierCle: "cle/r-etab.pdf" },
+      { id: "r-1a", etablissementId: "etab-a", verificationId: "v-1a", fichierCle: "cle/r-1a.pdf" },
+      { id: "r-2a", etablissementId: "etab-a", verificationId: "v-2a", fichierCle: "cle/r-2a.pdf" },
+      { id: "r-etab", etablissementId: "etab-a", verificationId: "v-etab", fichierCle: "cle/r-etab.pdf" },
     ],
     actions: [
-      { id: "a-1a", verificationId: "v-1a" },
-      { id: "a-2a", verificationId: "v-2a" },
+      { id: "a-1a", etablissementId: "etab-a", verificationId: "v-1a" },
+      { id: "a-2a", etablissementId: "etab-a", verificationId: "v-2a" },
     ],
     signatures: [
       { id: "s-1a", etablissementId: "etab-a", objetType: "rapport_verification", objetId: "r-1a" },
@@ -234,6 +268,27 @@ describe("« Supprimer ce salarié » efface tout ce qui le vise, et rien d'autr
     expect(ids(h.db.actions)).toEqual(["a-2a"]);
     expect(ids(h.db.signatures)).toEqual(["s-2a", "s-autre"]);
     expect(h.stockage.delete.mock.calls.map((c) => c[0])).toEqual(["cle/r-1a.pdf"]);
+  });
+
+  it("verrouille ses lignes avant d'en effacer les preuves (2026-10-28)", async () => {
+    h.prisma.verrous.length = 0;
+    await supprimerSalarie("etab-a", "sal-1");
+    expect(h.prisma.verrous).toHaveLength(1);
+    expect(h.prisma.verrous[0]).toMatch(/FROM "Verification"[\s\S]*"salarieId"[\s\S]*"etablissementId"[\s\S]*FOR UPDATE/);
+  });
+
+  it("une action d'une autre ligne levée sur un de ses rapports perd le lien, pas la levée (2026-10-28)", async () => {
+    h.db.actions.push({
+      id: "a-levee",
+      etablissementId: "etab-a",
+      verificationId: "v-etab",
+      leveeRapportId: "r-1a",
+      leveeLe: "2026-03-04",
+    });
+    await supprimerSalarie("etab-a", "sal-1");
+    const levee = h.db.actions.find((a) => a.id === "a-levee");
+    expect(levee?.leveeRapportId).toBeNull();
+    expect(levee?.leveeLe).toBe("2026-03-04");
   });
 
   it("sans effacer les lignes d'abord, la base refuse — la garde Restrict est vivante", async () => {
@@ -403,8 +458,8 @@ describe("regles-du-schema : ce que la base en mémoire suppose", () => {
   it("les actions de suppression sont celles que la base en mémoire applique", () => {
     expect(relation("Verification", "salarie")).toBe("Restrict");
     expect(relation("TitreSalarie", "salarie")).toBe("Cascade");
-    expect(relation("RapportVerification", "verification")).toBe("Cascade");
-    expect(relation("Action", "verification")).toBe("Cascade");
+    expect(relation("RapportVerification", "verification")).toBe("NoAction");
+    expect(relation("Action", "verification")).toBe("NoAction");
   });
 
   it("Signature.objetId n'a pas de clé étrangère — d'où leur effacement explicite", () => {

@@ -47,8 +47,9 @@ model Entreprise {
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
+  // ~~@@index([userId])~~ [2026-10-28 : retiré, redondant — l'unicité
+  // `[userId, siren]` commence par `userId` et sert les mêmes lectures.]
   @@unique([userId, siren])
-  @@index([userId])
 }
 
 // ADR-001 : Etablissement est l'ancrage des obligations réglementaires.
@@ -985,7 +986,7 @@ model RapportVerification {
   etablissementId String
   etablissement   Etablissement @relation(fields: [etablissementId], references: [id], onDelete: Cascade)
   verificationId  String
-  verification    Verification  @relation(fields: [verificationId], references: [id], onDelete: Cascade)
+  verification    Verification  @relation(fields: [verificationId], references: [id], onDelete: NoAction)
 
   dateRapport     DateTime
   // L'échéance que ce rapport honorait : la `datePrevue` de la ligne au moment
@@ -1052,7 +1053,7 @@ model Action {
   risqueId       String?
   risque         Risque?       @relation(fields: [risqueId], references: [id], onDelete: Cascade)
   verificationId String?
-  verification   Verification? @relation(fields: [verificationId], references: [id], onDelete: Cascade)
+  verification   Verification? @relation(fields: [verificationId], references: [id], onDelete: NoAction)
 
   referentielMesureId String?
 
@@ -1097,8 +1098,12 @@ model Action {
   // (`creerPointACorriger`, règles de `lib/points-a-corriger/regles.ts`) ; la
   // base n'exige que `verificationId` (CHECK `Action_point_equipement`). Pas
   // de `batimentId` : la zone se lit par l'appareil (ADR-019).
+  // ~~onDelete: SetNull~~ [2026-10-28 : NoAction — un point désigné sur un
+  // appareil est sa trace (ADR-048) ; la base refuse de supprimer l'appareil
+  // plutôt que de l'en détacher en silence. Migration
+  // `20261028120000_preuves_protegees_en_base`.]
   equipementId String?
-  equipement   Equipement? @relation(fields: [equipementId], references: [id], onDelete: SetNull)
+  equipement   Equipement? @relation(fields: [equipementId], references: [id], onDelete: NoAction)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1198,8 +1203,9 @@ model Prestataire {
   // fiches, deux attestations URSSAF, une seule à jour). Les NULL restent
   // distincts pour Postgres : les prestataires sans SIRET connu ne sont pas
   // contraints.
+  // [2026-10-28 : `@@index([etablissementId])` retiré, redondant — les deux
+  // index ci-dessous commencent par `etablissementId`.]
   @@unique([etablissementId, siret])
-  @@index([etablissementId])
   @@index([etablissementId, raisonSociale])
 }
 
@@ -1997,8 +2003,9 @@ model FicheRegistre {
 
   // Une fiche par section et par établissement : la saisie est un upsert, pas
   // un empilement de brouillons.
+  // [2026-10-28 : `@@index([etablissementId])` retiré, redondant avec
+  // l'unicité qui commence par la même colonne.]
   @@unique([etablissementId, sectionId])
-  @@index([etablissementId])
 }
 
 // -----------------------------------------------------------------------------

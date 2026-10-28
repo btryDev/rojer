@@ -346,9 +346,16 @@ describe("plusieurs établissements par entreprise (ADR-028)", () => {
         "plus suivre deux sociétés (ADR-028 amendée le 2026-10-26).",
     ).not.toContain("@unique");
     expect(corps).toMatch(/@@unique\(\[userId,\s*siren\]\)/);
-    // Chaque lecture cloisonnée remonte à `userId` : l'index simple remplace
-    // celui que portait l'unicité.
-    expect(corps).toMatch(/@@index\(\[userId\]\)/);
+    // ~~Chaque lecture cloisonnée remonte à `userId` : l'index simple remplace
+    // celui que portait l'unicité.~~ [2026-10-28 : l'index simple est retiré,
+    // migration `20261028130000_index_redondants` — l'unicité `[userId, siren]`
+    // commence par `userId` et sert ces lectures. Ce qui doit rester vrai :
+    // `userId` est EN TÊTE de cet index.]
+    expect(
+      corps,
+      "Aucun index ne commence plus par `userId` : chaque lecture cloisonnée " +
+        "(`entreprise: { userId }`) parcourrait toute la table.",
+    ).toMatch(/@@(unique|index)\(\[\s*userId\b/);
   });
 
   it("la migration qui ouvre plusieurs entreprises par compte repose l'index", () => {

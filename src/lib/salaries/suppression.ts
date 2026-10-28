@@ -95,6 +95,13 @@ export async function effacerSalarie(
     });
     if (!s) return null;
 
+    // Ses lignes sont verrouillées d'abord (2026-10-28). Un rapport ou une
+    // action qui viserait l'une d'elles pendant l'effacement attend la fin de
+    // la transaction, puis échoue sur sa propre clé étrangère — au lieu de
+    // faire échouer l'effacement, que la base refuse depuis que les preuves
+    // ne partent plus en cascade (`NoAction`).
+    await tx.$queryRaw`SELECT 1 FROM "Verification" WHERE "salarieId" = ${salarieId} AND "etablissementId" = ${etablissementId} FOR UPDATE`;
+
     const rapports = await tx.rapportVerification.findMany({
       where: surSesLignes(etablissementId, salarieId),
       select: { id: true, fichierCle: true },
@@ -108,7 +115,25 @@ export async function effacerSalarie(
         objetId: { in: rapports.map((r) => r.id) },
       },
     });
-    // Les lignes : leurs rapports et leurs actions suivent en cascade.
+    // ~~Les lignes : leurs rapports et leurs actions suivent en cascade.~~
+    // [2026-10-28 : plus de cascade — la base refuse de supprimer une ligne
+    // qui porte encore un rapport ou une action (migration
+    // `20261028120000_preuves_protegees_en_base`). L'effacement est voulu
+    // ici (RGPD) : les preuves partent d'abord, nommément, puis les lignes.]
+    await tx.action.deleteMany({
+      where: { etablissementId, ...surSesLignes(etablissementId, salarieId) },
+    });
+    // Une action d'une AUTRE ligne levée sur l'un de ces rapports garderait un
+    // `leveeRapportId` vers un rapport disparu — la colonne n'a pas de clé
+    // étrangère. Le lien est vidé ; la levée elle-même (date, commentaire)
+    // reste.
+    await tx.action.updateMany({
+      where: { etablissementId, leveeRapportId: { in: rapports.map((r) => r.id) } },
+      data: { leveeRapportId: null },
+    });
+    await tx.rapportVerification.deleteMany({
+      where: { etablissementId, ...surSesLignes(etablissementId, salarieId) },
+    });
     await tx.verification.deleteMany({ where: { salarieId, etablissementId } });
     // La fiche : ses titres suivent en cascade (`TitreSalarie.salarie`).
     await tx.salarie.deleteMany({ where: { id: salarieId, etablissementId } });
