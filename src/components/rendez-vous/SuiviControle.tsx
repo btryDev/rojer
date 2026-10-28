@@ -4,7 +4,13 @@ import { useActionState, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { depuisSaisieDateHeure, estSaisieDateHeureReelle, formaterDateHeureFr, versSaisieDateHeure } from "@/lib/dates";
+import {
+  depuisSaisieDateHeure,
+  estSaisieDateHeureReelle,
+  formaterDateCourteFr,
+  formaterDateHeureFr,
+  versSaisieDateHeure,
+} from "@/lib/dates";
 import { avertissementRendezVous } from "@/lib/rendez-vous/regles";
 import type { SuiviControleState } from "@/lib/rendez-vous/actions";
 import type { PrestataireProposable } from "@/lib/rendez-vous/queries";
@@ -182,6 +188,13 @@ export function SuiviControle({
                 value={saisieRdv}
                 onChange={(e) => setSaisieRdv(e.currentTarget.value)}
               />
+              {/* La règle d'affichage d'ADR-049 § 3, dite là où l'on choisit la date. */}
+              {echeance && (
+                <p className="m-0 mt-1 text-[12px] text-[color:var(--board-slate-mid)]">
+                  Échéance le {formaterDateCourteFr(echeance)}. Un rendez-vous au plus tard ce jour prend sa place au
+                  calendrier ; après, le contrôle passe en retard.
+                </p>
+              )}
               {avertissement && (
                 <p className="m-0 mt-1 text-[12px] text-[color:var(--board-amber-ink)]">{avertissement}</p>
               )}
