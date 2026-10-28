@@ -4,8 +4,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { QuestionActiviteRow } from "@/components/duerps/QuestionActiviteRow";
 import { WizardSteps } from "@/components/duerps/WizardSteps";
 import { questionsActivites } from "@/lib/activites/reponses";
-import { construireEtapes } from "@/lib/duerps/etapes";
-import { etatEtapeTransverses } from "@/lib/transverses/etat";
+import { etapesDuDuerp } from "@/lib/duerps/etapes";
 import { getDuerp } from "@/lib/duerps/queries";
 import { trouverReferentielParId } from "@/lib/referentiels";
 
@@ -44,14 +43,7 @@ export default async function ActivitesPage({
     redirect(`/duerp/${id}/${duerp.referentielSecteurId ? "unites" : "secteur"}`);
   }
 
-  const unitesVisibles = duerp.unites.filter((u) => !u.estTransverse);
-  const etapes = construireEtapes(id, "activites", {
-    secteurOk: Boolean(duerp.referentielSecteurId),
-    unitesOk: unitesVisibles.length > 0,
-    risquesOk: false,
-    transverses: etatEtapeTransverses(duerp),
-    activitesPosees: true,
-  });
+  const etapes = etapesDuDuerp(duerp, "activites");
 
   const referentiel = duerp.referentielSecteurId
     ? trouverReferentielParId(duerp.referentielSecteurId)

@@ -1,5 +1,7 @@
 import type { Etape } from "@/components/duerps/WizardSteps";
+import { questionsActivites } from "@/lib/activites/reponses";
 import {
+  etatEtapeTransverses,
   signalQuestionsARepondre,
   type EtatEtapeTransverses,
 } from "@/lib/transverses/etat";
@@ -19,6 +21,10 @@ export function construireEtapes(
     secteurOk: boolean;
     unitesOk: boolean;
     risquesOk: boolean;
+    /** Toutes les questions du périmètre ont une réponse. */
+    activitesOk: boolean;
+    /** Au moins une version du DUERP est validée (figée). */
+    versionValidee: boolean;
     /**
      * CALCULÉ par `etatEtapeTransverses` (`transverses/etat.ts`), plus lu sur
      * `Duerp.transversesRepondues` depuis le 2026-10-12 (chantiers-ouverts
@@ -90,11 +96,31 @@ export function construireEtapes(
   const signaler =
     sansReponse.length > 0 &&
     (atteinte("transverses") || etapeActuelle === "transverses");
+  // « Fait » se lit sur les données, jamais sur le passage (2026-10-28) :
+  // l'ancien « Ouvert » disait seulement qu'une étape était accessible.
+  const faite = (id: EtapeId): boolean => {
+    switch (id) {
+      case "secteur":
+        return progression.secteurOk;
+      case "activites":
+        return progression.activitesOk;
+      case "unites":
+        return progression.unitesOk;
+      case "risques":
+        return progression.risquesOk;
+      case "transverses":
+        return progression.transverses.faite;
+      case "synthese":
+        return progression.versionValidee;
+    }
+  };
+
   return visibles.map((e) => ({
     id: e.id,
     libelle: e.libelle,
     href: `/duerp/${duerpId}/${e.id}`,
     atteinte: atteinte(e.id),
+    faite: faite(e.id),
     actuelle: e.id === etapeActuelle,
     ...(e.id === "transverses" && signaler
       ? {
@@ -105,4 +131,44 @@ export function construireEtapes(
         }
       : {}),
   }));
+}
+
+/**
+ * Les étapes d'un DUERP chargé, progression lue sur ses données — la seule
+ * entrée des pages du DUERP (2026-10-28). Chaque page recomposait la sienne,
+ * et plusieurs posaient « risques faits » ou « non faits » en dur : un
+ * « Fait » n'aurait pas voulu dire la même chose d'une page à l'autre.
+ */
+export function etapesDuDuerp(
+  duerp: {
+    id: string;
+    referentielSecteurId: string | null;
+    reponsesActivitesNonCouvertes: unknown;
+    unites: (Parameters<typeof etatEtapeTransverses>[0]["unites"][number] & {
+      estTransverse: boolean;
+      risques: readonly unknown[];
+    })[];
+    reponsesTransverses: unknown;
+    etablissement: Parameters<typeof etatEtapeTransverses>[0]["etablissement"];
+    versions: readonly unknown[];
+  },
+  etapeActuelle: EtapeId,
+): Etape[] {
+  const unites = duerp.unites.filter((u) => !u.estTransverse);
+  const unitesOk = unites.length > 0;
+  const questions = questionsActivites(
+    duerp.referentielSecteurId,
+    duerp.reponsesActivitesNonCouvertes,
+  );
+  return construireEtapes(duerp.id, etapeActuelle, {
+    secteurOk: Boolean(duerp.referentielSecteurId),
+    unitesOk,
+    risquesOk: unitesOk && unites.every((u) => u.risques.length > 0),
+    activitesOk:
+      questions.length > 0 && questions.every((q) => q.exercee !== undefined),
+    versionValidee: duerp.versions.length > 0,
+    transverses: etatEtapeTransverses(duerp),
+    // Une question par activité du secteur : la liste dit aussi s'il en a.
+    activitesPosees: questions.length > 0,
+  });
 }

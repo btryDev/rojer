@@ -69,6 +69,8 @@ const etapes = (d: ReturnType<typeof duerp>, actuelle: "unites" | "transverses" 
     risquesOk: true,
     transverses: etatEtapeTransverses(d),
     activitesPosees: false,
+    activitesOk: false,
+    versionValidee: false,
   });
 
 const etape = (d: ReturnType<typeof duerp>, id: string) => etapes(d).find((e) => e.id === id);
@@ -164,6 +166,8 @@ describe("étape « Questions transverses » — calculée, plus stockée (§ 17
       risquesOk: false,
       transverses: etatEtapeTransverses(ANCIEN),
       activitesPosees: false,
+      activitesOk: false,
+      versionValidee: false,
     }).find((x) => x.id === "transverses");
     expect(e?.atteinte).toBe(false);
     expect(e?.signal).toBeUndefined();

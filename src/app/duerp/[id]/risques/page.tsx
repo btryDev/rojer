@@ -4,9 +4,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { WizardSteps } from "@/components/duerps/WizardSteps";
 import { LigneHorsReferentiel } from "@/components/duerps/MentionHorsReferentiel";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
-import { activitesDuSecteur } from "@/lib/activites/reponses";
-import { construireEtapes } from "@/lib/duerps/etapes";
-import { etatEtapeTransverses } from "@/lib/transverses/etat";
+import { etapesDuDuerp } from "@/lib/duerps/etapes";
 import { getDuerp } from "@/lib/duerps/queries";
 import { estHorsReferentiel, unitesHorsReferentiel } from "@/lib/risques/helpers";
 
@@ -47,14 +45,7 @@ export default async function RisquesOverviewPage({
   if (!duerp) notFound();
 
   const unitesVisibles = duerp.unites.filter((u) => !u.estTransverse);
-  const unitesOk = unitesVisibles.length > 0;
-  const etapes = construireEtapes(id, "risques", {
-    secteurOk: Boolean(duerp.referentielSecteurId),
-    unitesOk,
-    risquesOk: true,
-    transverses: etatEtapeTransverses(duerp),
-    activitesPosees: activitesDuSecteur(duerp.referentielSecteurId).length > 0,
-  });
+  const etapes = etapesDuDuerp(duerp, "risques");
 
   const totalRisques = unitesVisibles.reduce(
     (acc, u) => acc + u.risques.length,

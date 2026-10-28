@@ -7,13 +7,11 @@ import { CreerVersionForm } from "@/components/duerps/CreerVersionForm";
 import { TransmissionSpstForm } from "@/components/duerps/TransmissionSpstForm";
 import { WizardSteps } from "@/components/duerps/WizardSteps";
 import {
-  activitesDuSecteur,
   lireReponsesActivites,
 } from "@/lib/activites/reponses";
 import { CHAMP_ETAT, ENCRE_ETAT } from "@/lib/calendrier/etats";
 import { evaluerCouverture } from "@/lib/duerps/couverture";
-import { construireEtapes } from "@/lib/duerps/etapes";
-import { etatEtapeTransverses } from "@/lib/transverses/etat";
+import { etapesDuDuerp } from "@/lib/duerps/etapes";
 import { getDuerp } from "@/lib/duerps/queries";
 import { construireSynthese } from "@/lib/duerps/synthese";
 import { LABEL_TYPE_MESURE } from "@/lib/mesures/labels";
@@ -43,17 +41,7 @@ export default async function SynthesePage({
   const duerp = await getDuerp(id);
   if (!duerp) notFound();
 
-  const unitesVisibles = duerp.unites.filter((u) => !u.estTransverse);
-  const unitesOk = unitesVisibles.length > 0;
-  const risquesOk =
-    unitesOk && unitesVisibles.every((u) => u.risques.length > 0);
-  const etapes = construireEtapes(id, "synthese", {
-    secteurOk: Boolean(duerp.referentielSecteurId),
-    unitesOk,
-    risquesOk,
-    transverses: etatEtapeTransverses(duerp),
-    activitesPosees: activitesDuSecteur(duerp.referentielSecteurId).length > 0,
-  });
+  const etapes = etapesDuDuerp(duerp, "synthese");
 
   const synthese = construireSynthese(duerp.unites);
   const versions = await listerVersions(id);
