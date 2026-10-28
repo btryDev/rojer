@@ -37,9 +37,10 @@ export async function getCarnetSanitaire(etablissementId: string) {
  *
  * **Sans appelant au 2026-08-28.** La requête vivante équivalente est dans
  * `dashboard/queries.ts` (`getModulesMatrice`), qui porte le même prédicat.
- * Constatée morte, non supprimée — même traitement que `ComplianceTimeline`
- * (`docs/dette-chantier-porteur-echeance.md` § 6.4) : la suppression est une
- * décision à part, pas un effet de bord d'un lot de sécurité.
+ * Constatée morte, non supprimée : la suppression est une décision à part,
+ * pas un effet de bord d'un lot de sécurité (`ComplianceTimeline`, traitée
+ * pareil au § 6.4 de `docs/dette-chantier-porteur-echeance.md`, a été
+ * supprimée le 2026-10-28).
  */
 export async function dernierRelevesParPoint(carnetId: string) {
   const user = await requireUser();

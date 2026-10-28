@@ -482,7 +482,6 @@ export default async function PermisFeuDetailPage({
           charte="board"
           reference="INRS ED 6030"
           href="https://www.inrs.fr/media.html?refINRS=ED%206030"
-          defaultOpen
         >
           Le permis de feu enregistré ici nomme le donneur d&apos;ordre et
           l&apos;entreprise qui intervient, les travaux, les mesures

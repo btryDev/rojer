@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { compterActions } from "@/lib/actions/queries";
 import { EnTetePage } from "@/components/entete-page/EnTetePage";
-import { LegalBadge, WhyCard, StatusPill } from "@/components/ui-kit";
+import { LegalBadge, ReferenceSansLien, Textes, WhyCard, StatusPill } from "@/components/ui-kit";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { getDashboardData } from "@/lib/dashboard/queries";
 import { compterVigilanceParGravite } from "@/lib/prestataires/queries";
@@ -436,9 +436,12 @@ export default async function ControlePage({
                   <p className="mt-1 text-[0.85rem] text-[color:var(--board-slate-mid)]">
                     {el.description}
                   </p>
+                  {/* La référence en texte simple (2026-10-28) : plus de « § »
+                      en capitales, mais chaque pièce garde sa source — l'écran
+                      se montre à un inspecteur. */}
                   {el.reference && (
-                    <p className="mt-1.5 font-mono text-[0.66rem] uppercase tracking-[0.14em] text-[color:var(--board-slate-soft)]">
-                      § {el.reference}
+                    <p className="m-0 mt-1.5">
+                      <ReferenceSansLien reference={el.reference} />
                     </p>
                   )}
                 </div>
@@ -479,7 +482,7 @@ export default async function ControlePage({
               Si un inspecteur conteste une pièce, vous pouvez la retrouver
               dans l&apos;application, à l&apos;écran d&apos;où elle vient.
             </p>
-            <div className="mt-3 flex flex-wrap gap-2">
+            <Textes className="mt-3">
               <LegalBadge
                 charte="board"
                 reference="Art. R. 4121-1 CT · DUERP"
@@ -524,7 +527,7 @@ export default async function ControlePage({
                   R. 8222-1 et D. 8222-5.
                 </p>
               </LegalBadge>
-            </div>
+            </Textes>
           </WhyCard>
         </section>
 

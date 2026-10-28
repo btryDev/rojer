@@ -23,7 +23,7 @@
 // Ce composant ne déclare rien : il rend `referentiels/documents-obligatoires`,
 // dont chaque entrée porte un fondement vérifiable ou n'entre pas.
 
-import { LegalBadge } from "@/components/ui-kit";
+import { LegalBadge, Textes } from "@/components/ui-kit";
 import {
   documentsNonProduits,
   documentsProduits,
@@ -113,12 +113,9 @@ function BlocDocuments({
               </p>
             </div>
 
-            {/* Une pastille par fondement, dépliable sur la citation et le
-                lien Légifrance. `charte="board"` sur chacune : le défaut du
-                composant est « papier », et l'oublier rendrait un encart d'une
-                autre famille au milieu de la carte, sans erreur ni
-                avertissement. */}
-            <div className="flex flex-wrap gap-2">
+            {/* Les fondements sous un seul livre : plusieurs « Texte » côte à
+                côte ne se distinguaient pas. */}
+            <Textes>
               {d.fondements.map((f) => (
                 <LegalBadge
                   key={`${d.id}-${f.article}`}
@@ -134,7 +131,7 @@ function BlocDocuments({
                   </span>
                 </LegalBadge>
               ))}
-            </div>
+            </Textes>
           </li>
         ))}
       </ul>

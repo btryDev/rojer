@@ -6,6 +6,7 @@ import { buttonVariants } from "@/components/ui/button";
 import {
   CarteFiche,
   LegalBadge,
+  Textes,
   LigneFiche,
   LignesFiche,
   PastilleFiche,
@@ -192,7 +193,7 @@ export default async function PlanPreventionListePage({
             Sous ce seuil, l&apos;inspection commune préalable et
             l&apos;accord sur les mesures restent dus.
           </p>
-          <div className="mt-4 flex flex-wrap gap-2">
+          <Textes className="mt-4">
             <LegalBadge
               charte="board"
               reference="Art. R. 4512-6 à R. 4512-12 CT"
@@ -215,7 +216,7 @@ export default async function PlanPreventionListePage({
               href="https://www.legifrance.gouv.fr/loda/id/JORFTEXT000000179892/"
               extrait="Un plan de prévention est établi par écrit dans les conditions prévues au deuxième alinéa de l'article R. 4512-7 du code du travail pour les travaux dangereux ci-après énumérés."
             />
-          </div>
+          </Textes>
         </WhyCard>
       </div>
     </main>

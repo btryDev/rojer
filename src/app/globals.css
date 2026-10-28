@@ -352,18 +352,6 @@
     background-repeat: repeat-x;
   }
 
-  /* Séparateur vertical pointillé */
-  .filet-vertical {
-    width: 1px;
-    background-image: linear-gradient(
-      to bottom,
-      var(--rule) 40%,
-      transparent 40%
-    );
-    background-size: 1px 7px;
-    background-repeat: repeat-y;
-  }
-
   /* =============================================================
      Cartouches (cards)
      ============================================================= */

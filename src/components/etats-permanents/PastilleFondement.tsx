@@ -1,6 +1,6 @@
 "use client";
 
-import { LegalBadge } from "@/components/ui-kit";
+import { LegalBadge, ReferenceSansLien } from "@/components/ui-kit";
 import type { FondementLigne } from "@/lib/etats-permanents/fondement";
 import {
   CITATION_GN_10,
@@ -58,7 +58,7 @@ function MentionGn10() {
         <LegalBadge
           charte="board"
           reference="GN 10"
-          compact={{ libelle: "GN 10" }}
+          libelle="GN 10"
           href={URL_GN_10}
           avant={<p className="m-0">{MENTION_GN_10}</p>}
           extrait={CITATION_GN_10}
@@ -115,12 +115,8 @@ function PastilleSeule({
         charte="board"
         reference={reference}
         {...source}
-        compact={libelle ? { libelle } : true}
+        libelle={libelle}
       />
     );
-  return (
-    <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-[color:var(--board-slate-soft)]">
-      {reference}
-    </span>
-  );
+  return <ReferenceSansLien reference={reference} />;
 }

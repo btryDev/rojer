@@ -118,6 +118,7 @@ export default async function AccesParTokenPage({
 
         <div className="mt-8">
           <WhyCard charte="board"
+            replie={false}
             kicker="Ce que vous signez"
             titre={libelleObjet.titre}
             enjeu={libelleObjet.description}

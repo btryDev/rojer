@@ -1,4 +1,4 @@
-import { LegalBadge } from "@/components/ui-kit";
+import { LegalBadge, ReferenceSansLien } from "@/components/ui-kit";
 import type { ReferenceLegale } from "@/lib/referentiels/conformite";
 
 /**
@@ -34,15 +34,10 @@ export function ReferenceFondatrice({
             charte="board"
             reference={r.reference}
             href={r.url}
-            compact={{ libelle: r.article ?? r.reference }}
+            libelle={r.article ?? r.reference}
           />
         ) : (
-          <span
-            key={r.article ?? r.reference}
-            className="font-mono text-[10.5px] font-medium uppercase tracking-[0.16em] text-[color:var(--board-slate-soft)]"
-          >
-            § {r.reference}
-          </span>
+          <ReferenceSansLien key={r.article ?? r.reference} reference={r.reference} />
         ),
       )}
     </div>

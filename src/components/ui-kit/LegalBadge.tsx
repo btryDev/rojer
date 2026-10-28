@@ -1,66 +1,38 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  type ReactNode,
+} from "react";
 import { BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Charte } from "./charte";
+import { DansAide } from "./dans-aide";
 import { LIVRE, LIVRE_REFERENCE } from "./livre";
 
 /**
- * Pastille réglementaire. Cliquable : déploie un bloc citant
- * l'article et pointe vers Légifrance. Chaque obligation du produit
- * doit s'afficher avec son LegalBadge pour rappeler au dirigeant
- * d'où vient la contrainte. Argument d'auditabilité.
+ * La source d'une obligation, derrière un livre (2026-10-28, uniformisation).
+ *
+ * Une seule forme pour tous les écrans : un livre et un mot (« Texte » par
+ * défaut), qui déplie la référence, la citation et le lien vers Légifrance.
+ * L'ancienne pastille « § ART. … ▾ » en capitales n'existe plus : elle
+ * imposait la lecture du droit à chaque visite, alors que l'écran dit déjà la
+ * règle en clair. La traçabilité reste à un clic, et le nom accessible garde
+ * la référence complète.
+ *
+ * Plusieurs sources côte à côte se rangent sous UN livre (`Textes`) : quatre
+ * « Texte » identiques sur une ligne ne se distinguaient pas.
  */
-
-// Les deux voix vivent côte à côte plutôt que dans deux fichiers : le
-// balisage est le même des deux côtés — un bouton, un panneau, une
-// citation, un lien — seules les teintes et les rayons changent. Deux
-// composants auraient dupliqué la logique d'ouverture, qui est la seule
-// chose fragile ici.
-
-// La forme de la pastille, par charte. BOARD : un rayon FIXE de 18 px — celui
-// du « bloc interne » de la charte (docs/charte-board.md, § 1.6) —, et non
-// `rounded-full` (2026-10-16, second contrôle visuel, F2). Sur une ligne, la
-// pastille fait ~26 px de haut : CSS ramène alors un rayon trop grand à la
-// demi-hauteur (réduction proportionnelle des rayons, CSS Backgrounds § 5.5),
-// et elle garde exactement sa forme de pastille. Dès que la référence passe à
-// la ligne — au téléphone, R. 157-1 tenait sur sept —, `rounded-full` en
-// faisait une bulle ovale ; 18 px en fait un bloc aux coins de la charte.
-// Sans JavaScript ni mesure. PAPIER garde sa forme : c'est de la dette, elle
-// ne s'étend pas — mais l'alignement à gauche (`text-left`, commun aux deux
-// chartes) vaut aussi pour lui : sans effet sur une ligne, plus lisible sur
-// plusieurs (revue du 2026-10-16). La règle est écrite dans la charte, § 1.6.
-const FORME: Record<Charte, string> = {
-  papier: "rounded-full",
-  board: "rounded-[18px]",
-};
-
-const BOUTON: Record<Charte, string> = {
-  papier:
-    "border border-[color:var(--rule)] bg-[color:var(--paper-sunk)] px-3 py-1 font-mono text-[0.65rem] font-medium uppercase tracking-[0.14em] text-[color:var(--seal)]",
-  // Pas de contour : dans le board une pastille est un champ, pas un
-  // encadré (cf. `.pastille-board`). Le mono capitales reste — une
-  // référence d'article est une chaîne de code, et c'est le registre que
-  // le board garde pour les sur-titres et les dates.
-  board:
-    "bg-[color:var(--board-slate-pale)] px-3 py-[5px] font-mono text-[10.5px] font-medium uppercase tracking-[0.16em] text-[color:var(--board-slate-soft)] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[color:var(--board-blue-strong)]",
-};
-
-const BOUTON_DEPLIABLE: Record<Charte, string> = {
-  papier:
-    "cursor-pointer hover:border-[color:var(--warm)] hover:text-[color:var(--warm)]",
-  board:
-    "cursor-pointer hover:bg-[color:var(--board-blue-pale)] hover:text-[color:var(--board-blue-ink)]",
-};
 
 const PANNEAU: Record<Charte, string> = {
   papier:
     "rounded-lg border border-[color:var(--rule-soft)] bg-[color:var(--paper-elevated)] p-4 text-[0.8rem] leading-relaxed text-[color:var(--ink)] shadow-[0_1px_0_0_var(--rule-soft)]",
-  // Bloc interne creux, rayon 18 : le badge se déplie presque toujours
-  // dans une `carte-board` blanche, où un second fond blanc cerné d'un
-  // filet ne se lit pas. Le creux ardoise, lui, est l'idiome du board
-  // pour « un cran en dessous » (cf. `BlocCreux`).
+  // Bloc interne creux, rayon 18 : le livre se déplie presque toujours dans
+  // une `carte-board` blanche, où un second fond blanc cerné d'un filet ne se
+  // lit pas. Le creux ardoise est l'idiome du board pour « un cran en
+  // dessous » (cf. `BlocCreux`).
   board:
     "rounded-[18px] bg-[color:var(--board-slate-pale)] px-5 py-4 text-[13px] leading-[1.6] text-[color:var(--board-slate-ink)]",
 };
@@ -68,9 +40,8 @@ const PANNEAU: Record<Charte, string> = {
 const CITATION: Record<Charte, string> = {
   papier:
     "border-l-2 border-[color:var(--warm)] pl-3 text-[color:var(--foreground)] italic",
-  // Le filet de citation est une structure, pas une encre : c'est
-  // exactement l'emploi de `--board-slate`, qui ne tient pas 1,6:1 en
-  // texte mais fait très bien une graduation.
+  // Le filet de citation est une structure, pas une encre : c'est l'emploi de
+  // `--board-slate`, qui ne tient pas 1,6:1 en texte mais fait une graduation.
   board:
     "border-l-2 border-[color:var(--board-slate)] pl-3.5 text-[color:var(--board-slate-ink)] italic",
 };
@@ -87,59 +58,128 @@ const LIEN: Record<Charte, string> = {
     "mt-3 inline-flex items-center gap-1 font-mono text-[10.5px] font-medium uppercase tracking-[0.16em] text-[color:var(--board-blue-ink)] hover:underline",
 };
 
+// Le filet entre deux sources d'un même livre (`Textes`).
+const DIVISEUR: Record<Charte, string> = {
+  papier: "divide-y divide-[color:var(--rule-soft)]",
+  board: "divide-y divide-[color:var(--board-slate-line)]",
+};
+
 type SocleLegalBadge = {
-  /** Référence courte, ex: "Art. R. 4224-17 CT" */
+  /** Référence complète, ex. « Art. R. 4224-17 CT ». Imprimée en tête du
+   *  panneau, et nom accessible du livre. */
   reference: string;
   className?: string;
   defaultOpen?: boolean;
-  /** La grammaire visuelle de l'écran qui porte la pastille. */
+  /** La grammaire visuelle de l'écran qui porte le livre. */
   charte?: Charte;
   /**
    * Ce qui se lit AVANT la citation, au dépli (2026-10-17, mention GN 10) :
    * une phrase qui dit pourquoi l'article est cité. Les `children` restent
-   * après. Absent : rien ne change.
+   * après.
    */
   avant?: ReactNode;
   /**
-   * Forme compacte (2026-10-20, allègement des écrans) : le bouton n'affiche
-   * qu'un livre et « Texte » ; la référence complète s'imprime en tête du
-   * panneau. Pour les écrans où la pastille suit une phrase en clair et où
-   * l'intitulé de l'article, en capitales, prenait plus de place que la
-   * ligne elle-même. Le nom accessible garde la référence.
-   *
-   * `true` : le livre dit « Texte ». `{ libelle }` : il dit le sien — quand
-   * plusieurs livres se suivent sur une ligne (fondement + articles de
-   * contexte), trois « Texte » identiques ne se distinguaient pas.
+   * Le mot du livre, « Texte » par défaut. Un article court quand il dit
+   * mieux que « Texte » ce qu'on ouvre (« GN 10 », « R. 4624-10 »).
    */
-  compact?: true | { libelle: string };
+  libelle?: string;
 };
 
 /**
- * Ce qu'une pastille doit porter pour avoir le droit d'exister.
- *
- * Le type n'exigeait que `reference`. Une pastille sans `href`, sans
- * `extrait` et sans enfant compilait donc — et rendait un BOUTON MORT : même
- * fond, même graisse, même capitales que ses voisines cliquables, mais rien
- * dessous. Six ont été écrites ainsi, dont quatre sur l'écran qu'on ouvre
- * devant un inspecteur, sous un bandeau qui promet « références sourcées
- * Légifrance et INRS ».
- *
- * L'union impose donc AU MOINS une des trois. Ce n'est pas une préférence de
- * rédaction : c'est la seule forme qui empêche d'écrire à nouveau le défaut.
- * Un test n'y suffirait pas — il faudrait qu'il tourne, et le défaut se
- * fabrique à l'écriture.
- *
- * Corollaire assumé : une référence dont on n'a pas l'URL ne s'affiche plus
- * en pastille. Elle s'écrit en texte, comme `controle/page.tsx` le fait déjà
- * pour les éléments de sa check-list. Une source qu'on ne peut pas ouvrir
- * n'est pas une source dégradée, c'est autre chose.
+ * Ce qu'un livre doit porter pour avoir le droit d'exister : au moins un lien,
+ * une citation ou un complément. Sans aucun des trois, il ouvrirait un panneau
+ * vide — un lien mort. Une référence sans adresse s'écrit en texte
+ * (`ReferenceSansLien`). Le type l'impose : le défaut se fabrique à
+ * l'écriture, un test n'y suffirait pas.
  */
 type SourceLegalBadge =
   | { href: string; extrait?: string; children?: ReactNode }
   | { href?: string; extrait: string; children?: ReactNode }
   | { href?: string; extrait?: string; children: ReactNode };
 
-export function LegalBadge(props: SocleLegalBadge & SourceLegalBadge) {
+export type LegalBadgeProps = SocleLegalBadge & SourceLegalBadge;
+
+/** Dans un `Textes`, chaque source rend son contenu sous le livre commun. */
+const DansTextes = createContext<Charte | null>(null);
+
+/** Le contenu d'une source : référence, avant, citation, complément, lien. */
+function ContenuSource({
+  charte,
+  reference,
+  avant,
+  extrait,
+  children,
+  href,
+}: Pick<SocleLegalBadge, "reference" | "avant"> & {
+  charte: Charte;
+  extrait?: string;
+  children?: ReactNode;
+  href?: string;
+}) {
+  return (
+    <>
+      <p className={LIVRE_REFERENCE[charte]}>{reference}</p>
+      {avant && <div className="mb-3">{avant}</div>}
+      {extrait && (
+        <blockquote className={cn("m-0", CITATION[charte])}>
+          «&nbsp;{extrait}&nbsp;»
+        </blockquote>
+      )}
+      {children && <div className={COMPLEMENT[charte]}>{children}</div>}
+      {href && (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={LIEN[charte]}
+        >
+          Lire la source officielle →
+          {/* Le lien ouvre un onglet : le lecteur d'écran l'entend (F4). */}
+          <span className="sr-only"> (nouvel onglet)</span>
+        </a>
+      )}
+    </>
+  );
+}
+
+/** Le bouton livre et son panneau, communs à `LegalBadge` et à `Textes`. */
+function Livre({
+  charte,
+  libelle,
+  nomAccessible,
+  defaultOpen,
+  className,
+  children,
+}: {
+  charte: Charte;
+  libelle: string;
+  nomAccessible?: string;
+  defaultOpen: boolean;
+  className?: string;
+  children: ReactNode;
+}) {
+  // Dans une aide d'écran, on est venu lire : le livre s'y présente ouvert.
+  const dansAide = useContext(DansAide);
+  const [open, setOpen] = useState(defaultOpen || dansAide);
+  return (
+    <div className={cn("inline-flex max-w-full flex-col gap-2 align-top", className)}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={cn("self-start text-left", LIVRE[charte])}
+        aria-expanded={open}
+        aria-label={nomAccessible}
+        title={nomAccessible}
+      >
+        <BookOpen aria-hidden className="size-3.5" />
+        <span>{libelle}</span>
+      </button>
+      {open && <div className={PANNEAU[charte]}>{children}</div>}
+    </div>
+  );
+}
+
+export function LegalBadge(props: LegalBadgeProps) {
   const {
     reference,
     href,
@@ -147,91 +187,85 @@ export function LegalBadge(props: SocleLegalBadge & SourceLegalBadge) {
     children,
     className,
     defaultOpen = false,
-    charte = "papier",
+    charte = "board",
     avant,
-    compact,
+    libelle = "Texte",
   } = props;
-  const [open, setOpen] = useState(defaultOpen);
-  // Le mot du livre, ou `null` hors forme compacte.
-  const livre =
-    compact === undefined ? null : compact === true ? "Texte" : compact.libelle;
-  // Le nom accessible ne répète pas la référence quand le livre la dit déjà
-  // (« GN 10 : GN 10 »).
-  const nomAccessible =
-    livre === null || livre === reference ? undefined : `${livre} : ${reference}`;
+  const groupe = useContext(DansTextes);
+  const contenu = (
+    <ContenuSource
+      charte={groupe ?? charte}
+      reference={reference}
+      avant={avant}
+      extrait={extrait}
+      href={href}
+    >
+      {children}
+    </ContenuSource>
+  );
+
+  // Sous un livre commun : le contenu seul, séparé du précédent.
+  if (groupe !== null) {
+    return (
+      <section className="py-4 first:pt-0 last:pb-0">
+        {contenu}
+      </section>
+    );
+  }
 
   return (
-    <div className={cn("inline-flex flex-col gap-2 align-top", className)}>
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className={cn(
-          // `text-left` : un bouton centre son texte ; une référence longue
-          // passée à la ligne se lisait centrée (F2).
-          "self-start text-left",
-          // Compact : le livre, comme `TexteSource` — pas une étiquette de code.
-          livre !== null
-            ? LIVRE[charte]
-            : [
-                "inline-flex items-center gap-2 transition",
-                FORME[charte],
-                BOUTON[charte],
-                BOUTON_DEPLIABLE[charte],
-              ],
-        )}
-        aria-expanded={open}
-        aria-label={nomAccessible}
-        title={nomAccessible && reference}
-      >
-        {livre !== null ? (
-          <>
-            <BookOpen aria-hidden className="size-3.5" />
-            <span>{livre}</span>
-          </>
-        ) : (
-          <>
-            <span aria-hidden className="text-[0.75rem] leading-none">§</span>
-            <span>{reference}</span>
-            <span
-              aria-hidden
-              className={cn(
-                "inline-block text-[0.6rem] transition-transform",
-                open && "rotate-180",
-              )}
-            >
-              ▾
-            </span>
-          </>
-        )}
-      </button>
+    <Livre
+      charte={charte}
+      libelle={libelle}
+      // Le livre ne répète pas la référence quand il la dit déjà.
+      nomAccessible={libelle === reference ? undefined : `${libelle} : ${reference}`}
+      defaultOpen={defaultOpen}
+      className={className}
+    >
+      {contenu}
+    </Livre>
+  );
+}
 
-      {open && (
-        <div className={PANNEAU[charte]}>
-          {livre !== null && (
-            <p className={LIVRE_REFERENCE[charte]}>{reference}</p>
-          )}
-          {avant && <div className="mb-3">{avant}</div>}
-          {extrait && (
-            <blockquote className={CITATION[charte]}>
-              «&nbsp;{extrait}&nbsp;»
-            </blockquote>
-          )}
-          {children && <div className={COMPLEMENT[charte]}>{children}</div>}
-          {href && (
-            <a
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={LIEN[charte]}
-            >
-              Lire la source officielle →
-              {/* Le lien ouvre un onglet : le lecteur d'écran l'entend (F4,
-                  2026-10-16). Une fois ici, pour toutes les pastilles. */}
-              <span className="sr-only"> (nouvel onglet)</span>
-            </a>
-          )}
-        </div>
-      )}
-    </div>
+/**
+ * Plusieurs sources sous un seul livre. Les `LegalBadge` enfants n'affichent
+ * plus de bouton : leur contenu se suit dans le panneau commun, séparé par un
+ * filet. Remplace les rangées de pastilles.
+ *
+ * La présentation est celle du livre commun : `charte`, `className`,
+ * `defaultOpen` et `libelle` d'un enfant n'ont pas d'effet ici.
+ */
+export function Textes({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <Livre
+      charte="board"
+      libelle="Textes"
+      nomAccessible="Textes : les articles cités"
+      defaultOpen={false}
+      className={className}
+    >
+      <DansTextes.Provider value="board">
+        <div className={cn("flex flex-col", DIVISEUR.board)}>{children}</div>
+      </DansTextes.Provider>
+    </Livre>
+  );
+}
+
+/**
+ * Une référence qu'on ne peut pas ouvrir (pas d'adresse Légifrance) : en
+ * texte simple, sans « § » ni capitales. Un livre sans rien dessous serait un
+ * lien mort.
+ */
+export function ReferenceSansLien({ reference }: { reference: string }) {
+  return (
+    <span className="text-[12px] text-[color:var(--board-slate-soft)]">
+      {reference}
+    </span>
   );
 }
