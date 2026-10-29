@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { JOURS_SEMAINE } from "@/lib/calendrier/grille";
 import { POINT_ETAT, type RegistreLigne } from "@/lib/calendrier/etats";
+import { depuisCleJourCivil } from "@/lib/dates";
 import { formaterJourDateLongueFr } from "@/lib/dates/jour-long";
 
 /** Une case de la grille ; `null` pour les cases hors du mois. */
@@ -19,19 +20,25 @@ export type CasePoints = {
 const MAX_POINTS = 3;
 
 /** Le plus grave d'abord : les trois points montrés doivent porter le retard
- *  s'il y en a un, pas les trois premiers venus. */
-const GRAVITE: RegistreLigne[] = ["enRetard", "proche", "aPlanifier", "lointain", "faite"];
-const rang = (e: RegistreLigne) => {
-  const i = GRAVITE.indexOf(e);
-  return i < 0 ? GRAVITE.length : i;
+ *  s'il y en a un, pas les trois premiers venus. Une table complète : un
+ *  état neuf ne compile pas sans son rang. */
+const RANG: Record<RegistreLigne, number> = {
+  enRetard: 0,
+  aConfirmer: 1,
+  proche: 2,
+  aPlanifier: 3,
+  lointain: 4,
+  sansRendezVous: 5,
+  pourInformation: 6,
+  faite: 7,
+  archivee: 8,
 };
 
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-/** « jeudi 29 octobre 2026 », depuis une clé de jour. Midi UTC tombe le même
- *  jour civil dans le fuseau de référence. */
+/** « jeudi 29 octobre 2026 », depuis une clé de jour. */
 function jourEnLettres(cle: string): string {
-  return formaterJourDateLongueFr(new Date(`${cle}T12:00:00Z`));
+  return formaterJourDateLongueFr(depuisCleJourCivil(cle));
 }
 
 function GrillePoints({
@@ -57,7 +64,7 @@ function GrillePoints({
         if (!c) return <span key={`vide-${i}`} aria-hidden />;
         const nb = c.etats.length;
         const actif = c.cle === choisi;
-        const montres = [...c.etats].sort((a, b) => rang(a) - rang(b)).slice(0, MAX_POINTS);
+        const montres = [...c.etats].sort((a, b) => RANG[a] - RANG[b]).slice(0, MAX_POINTS);
         return (
           <button
             key={c.cle}

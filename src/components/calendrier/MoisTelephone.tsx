@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { RegistreLigne } from "@/lib/calendrier/etats";
+import { decalageLundi, joursDansLeMois } from "@/lib/calendrier/grille";
 import { GrilleAvecJour, type CasePoints } from "./GrillePoints";
 
 /** Une ligne de la liste mensuelle, rendue par la page côté serveur. */
@@ -43,17 +44,16 @@ export type MoisTelephoneData = {
 };
 
 /** Les cases d'un mois : des vides jusqu'au 1er (semaine du lundi), puis un
- *  jour par case. Calcul civil pur, sans horloge ni fuseau. */
+ *  jour par case — la même arithmétique que la grille du widget
+ *  (`lib/calendrier/grille`). */
 function casesDuMois(
   cleMois: string,
   cleAujourdhui: string,
   parJour: Map<string, LigneSection[]>,
 ): CasePoints[] {
   const [a, m] = cleMois.split("-").map(Number);
-  const decalage = (new Date(Date.UTC(a, m - 1, 1)).getUTCDay() + 6) % 7;
-  const nbJours = new Date(Date.UTC(a, m, 0)).getUTCDate();
-  const cases: CasePoints[] = Array.from({ length: decalage }, () => null);
-  for (let n = 1; n <= nbJours; n += 1) {
+  const cases: CasePoints[] = Array.from({ length: decalageLundi(a, m) }, () => null);
+  for (let n = 1; n <= joursDansLeMois(a, m); n += 1) {
     const cle = `${cleMois}-${String(n).padStart(2, "0")}`;
     cases.push({
       cle,
@@ -91,15 +91,14 @@ export function MoisTelephone({
   // (`ancreDuMois`), et la règle annuelle la cherche par identifiant.
   const titreId = useId();
 
+  if (mois.length === 0) return null;
   // Le mois montré : celui choisi s'il est encore servi (changer d'année le
   // retire), sinon le mois d'arrivée, sinon le mois courant, sinon le premier.
-  const indexDe = (cle: string | null) => mois.findIndex((m) => m.cle === cle);
   const index =
     [cleMois, moisInitial, cleAujourdhui.slice(0, 7)]
-      .map(indexDe)
-      .find((i) => i >= 0) ?? (mois.length > 0 ? 0 : -1);
-  const courant = index >= 0 ? mois[index] : null;
-  if (!courant) return null;
+      .map((cle) => mois.findIndex((m) => m.cle === cle))
+      .find((i) => i >= 0) ?? 0;
+  const courant = mois[index];
 
   const parJour = new Map<string, LigneSection[]>();
   const sansDate: LigneSection[] = [];

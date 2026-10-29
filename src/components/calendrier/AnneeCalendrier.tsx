@@ -330,7 +330,7 @@ export function AnneeCalendrier({
       ) : null}
       <div
         className={
-          "-mt-5 flex-col gap-5 " + (lecture === "mois" ? "hidden md:flex" : "hidden")
+          "-mt-5 hidden flex-col gap-5" + (lecture === "mois" ? " md:flex" : "")
         }
       >
         <RegleAnnuelle

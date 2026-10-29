@@ -26,6 +26,7 @@ import {
 } from "@/lib/dates/retard";
 import { estLignePourInformation } from "@/lib/referentiels/conformite/initiative";
 import { JOURS_HORIZON_PROCHE } from "@/lib/dates";
+import { statutDepuisResultat } from "@/lib/rapports/resultats";
 // Type seul : effacé à la compilation, donc ce module reste utilisable côté
 // client, comme le dit l'en-tête de `VerificationDatee`.
 import type { StatutVerification } from "@prisma/client";
@@ -298,6 +299,27 @@ export function libelleEtatCapitale(etat: RegistreLigne): string {
 }
 
 /**
+ * Le mot de la pastille d'une ligne de calendrier (décision de la
+ * propriétaire du 2026-10-29) :
+ *  · « Fait » pour ce qui est fait — un contrôle fait ne porte pas le
+ *    résultat de son rapport au calendrier : un point vert à côté
+ *    d'« Écart majeur » se contredisait, et le danger d'un écart majeur y
+ *    reste par ses points à corriger, datés et rouges ;
+ *  · « Aujourd'hui » pour une échéance proche qui tombe le jour même :
+ *    « Sous 30 jours » se lisait « on a le temps ».
+ * Ailleurs, le mot de l'état (`libelleEtatCapitale`). Le champ et l'encre
+ * restent ceux de l'état.
+ */
+export function libellePastille(etat: RegistreLigne, duJour: boolean): string {
+  if (etat === "faite") return "Fait";
+  // « En retard », le mot des pastilles (`BadgeStatut`, `en_retard`), et non
+  // « Dépassée », celui des comptes et des légendes.
+  if (etat === "enRetard") return "En retard";
+  if (etat === "proche" && duJour) return "Aujourd'hui";
+  return libelleEtatCapitale(etat);
+}
+
+/**
  * Classe une date nue — une échéance qui n'a ni statut ni réalisation,
  * comme les attestations ou les travaux du plan d'actions.
  */
@@ -474,9 +496,7 @@ export type StatutPeint =
   | StatutVerification
   | "en_retard"
   | "a_confirmer"
-  | "pour_information"
-  // Le contrôle fait, au calendrier (2026-10-29) : sans son résultat.
-  | "fait";
+  | "pour_information";
 
 /**
  * Le statut à PEINDRE pour un état — une table, et une seule.
@@ -583,16 +603,10 @@ export function statutAffiche(
  * La pastille à peindre à côté d'une LECTURE de calendrier.
  *
  * Deux lectures, deux réponses (ADR-034) :
- *  · `realisation` — le contrôle fait : ~~il porte le RÉSULTAT de son
- *    rapport~~ [2026-10-29, décision de la propriétaire : il dit « Fait »,
- *    comme son point vert. Le calendrier parle d'échéances et de ce qui a
- *    été fait ; un point vert à côté d'« Écart majeur » se contredisait. Le
- *    résultat reste au rapport et sur la fiche de l'équipement, et le
- *    danger d'un écart majeur reste au calendrier par ses points à corriger,
- *    datés et rouges.] Pas le statut de la ligne : depuis qu'elle roule au
- *    dépôt, c'est celui de l'échéance ouverte, et une tuile verte « fait le
- *    1er juin » affichait « En retard » dès que l'échéance suivante était
- *    passée ;
+ *  · `realisation` — le contrôle fait : il porte le RÉSULTAT de son rapport.
+ *    Depuis que la ligne roule au dépôt, son statut est celui de l'échéance
+ *    ouverte : une tuile verte « fait le 1er juin » affichait donc « En
+ *    retard » dès que l'échéance suivante était passée ;
  *  · `courante` — l'échéance ouverte : le statut de l'état qu'elle PORTE
  *    (`statutDuRegistre`), plus le statut stocké. Sur une rangée périodique
  *    gelée, celui-ci disait « Conforme » à côté d'une tuile rouge.
@@ -606,9 +620,11 @@ export function statutDeLaLecture(
     // table rend donc toujours un statut.
     return statutDuRegistre(lecture.registre, v.statut) as StatutPeint;
   }
-  // ~~Le résultat du rapport, sinon — ponctuelle consommée sans rapport — le
-  // statut de la ligne.~~ [2026-10-29 : « Fait », voir plus haut.]
-  return "fait";
+  // Résultat inconnu : une ponctuelle consommée sans rapport (seed), dont le
+  // statut porte lui-même le résultat.
+  return (
+    statutDepuisResultat(v.dernierResultat) ?? (v.statut as StatutVerification)
+  );
 }
 
 /**

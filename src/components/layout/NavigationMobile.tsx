@@ -15,36 +15,18 @@
 // L'état ouvert/fermé et le voile appartiennent à `AppSidebar`, qui les
 // partage avec le rail : une seule source, refermée à chaque navigation.
 
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { DemandeAide } from "@/components/assistance/DemandeAide";
+import { unPanneauModalEstOuvert } from "@/components/ui-kit/PanneauModal";
 import { NavLink, RailEntree } from "./entrees-navigation";
+import { useEstTelephone } from "./useEstTelephone";
 import {
   LABEL_ITEM,
   type RailCategorie,
   type RailCategorieId,
   type SidebarItemId,
 } from "./sidebar-nav";
-
-/** Le seuil « téléphone » de toute l'app : `md` (48rem), comme la règle de
- *  `globals.css` et les variantes `md:`. */
-const REQUETE_TELEPHONE = "(width < 48rem)";
-
-function abonner(rappel: () => void) {
-  const mq = window.matchMedia?.(REQUETE_TELEPHONE);
-  mq?.addEventListener("change", rappel);
-  return () => mq?.removeEventListener("change", rappel);
-}
-
-/** Vrai sous 48rem. Faux au rendu serveur : rien de ce qui en dépend n'y est
- *  rendu, la feuille ne s'ouvrant que sur un geste. */
-function useEstTelephone(): boolean {
-  return useSyncExternalStore(
-    abonner,
-    () => window.matchMedia?.(REQUETE_TELEPHONE).matches ?? false,
-    () => false,
-  );
-}
 
 export function NavigationMobile({
   etablissementId,
@@ -86,7 +68,7 @@ export function NavigationMobile({
       // Une fenêtre ouverte depuis la feuille (« Besoin d'aide ? ») a son
       // propre Échap : refermer la feuille sous elle la démonterait, et le
       // message en cours de saisie avec.
-      if (document.querySelector("[data-panneau-modal]")) return;
+      if (unPanneauModalEstOuvert()) return;
       const onglet = barre.current?.querySelector<HTMLElement>('[aria-expanded="true"]');
       surChoisir(null);
       onglet?.focus();
@@ -130,7 +112,7 @@ export function NavigationMobile({
           </p>
           <nav aria-label={feuille.label}>
             {feuille.items.map((it) => (
-              <NavLink key={it.id} item={it} actif={actif} onNavigate={() => surChoisir(null)} />
+              <NavLink key={it.id} item={it} actif={actif} auChoix={() => surChoisir(null)} />
             ))}
           </nav>
           <div className="mt-2 border-t border-white/10 pt-2">

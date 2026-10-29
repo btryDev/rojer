@@ -19,9 +19,6 @@ const LABEL: Record<StatutPeint, string> = {
   // C64 : la visite de la commission de sécurité. La phrase longue est dans
   // l'infobulle (`title`) — la pastille garde la largeur des autres.
   pour_information: LIBELLE_POUR_INFORMATION,
-  // Le contrôle fait, au calendrier (2026-10-29) : son résultat est au
-  // rapport, pas ici.
-  fait: "Fait",
 };
 
 // Champs saturés du board éditorial, encre de la même famille : rose
@@ -54,8 +51,6 @@ const CLASSE: Record<StatutPeint, string> = {
   // L'ardoise aussi : une information, ni une alerte ni un acquis.
   pour_information:
     "bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-mid)]",
-  // Le vert de l'état « faite », comme le point de la grille.
-  fait: "bg-[color:var(--board-green)] text-[color:var(--board-green-ink)]",
 };
 
 export function BadgeStatut({ statut }: Props) {

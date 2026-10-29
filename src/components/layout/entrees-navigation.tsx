@@ -135,14 +135,14 @@ const ETIQUETTE_ETAT: Record<string, string> = {
 export function NavLink({
   item,
   actif,
-  onNavigate,
+  auChoix,
 }: {
   item: NavItem;
   actif: SidebarItemId;
   /** Referme le panneau au clic : le repli à chaque navigation (`AppSidebar`)
    *  ne voit pas un lien vers la page où l'on est déjà, l'adresse ne
    *  changeant pas — le panneau restait ouvert, on croyait n'avoir rien fait. */
-  onNavigate?: () => void;
+  auChoix?: () => void;
 }) {
   const isActive = item.id === actif;
   // Un registre qualifié reste un lien : c'est par là qu'on l'ouvre le jour
@@ -168,7 +168,7 @@ export function NavLink({
   return (
     <Link
       href={item.href}
-      onClick={onNavigate}
+      onClick={auChoix}
       aria-current={isActive ? "page" : undefined}
       className={
         CLASSES_ITEM + " " +

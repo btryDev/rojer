@@ -16,6 +16,13 @@ const LARGEUR = {
   large: "max-w-[880px]",
 } as const;
 
+/** Un panneau est-il ouvert ? Pour une couche du dessous qui écoute aussi
+ *  Échap sur `document` : le panneau a la priorité, et son `stopPropagation`
+ *  n'atteint pas un écouteur posé avant lui sur le même nœud. */
+export function unPanneauModalEstOuvert(): boolean {
+  return document.querySelector("[data-panneau-modal]") !== null;
+}
+
 export function PanneauModal({
   ouvert,
   surFermer,

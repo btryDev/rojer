@@ -56,6 +56,7 @@ import {
   compteEtat,
   ENCRE_ETAT,
   libelleEtatCourtCapitale,
+  libellePastille,
   type EtatEcheance,
   type RegistreLigne,
 } from "@/lib/calendrier/etats";
@@ -536,6 +537,15 @@ function CarteEquipement({
                     </span>
                     {o.statut ? (
                         <BadgeStatut statut={o.statut} />
+                      ) : o.etat === "faite" ? (
+                        // Le contrôle fait (2026-10-29) : « Fait », sans le
+                        // résultat de son rapport — comme la liste par mois.
+                        <span
+                          className="inline-flex items-center whitespace-nowrap rounded-full px-[13px] py-[6px] text-[12px] font-semibold"
+                          style={{ background: CHAMP_ETAT.faite, color: ENCRE_ETAT.faite }}
+                        >
+                          {libellePastille("faite", false)}
+                        </span>
                       ) : o.etat === "enRetard" ? (
                         <span className="inline-flex items-center whitespace-nowrap rounded-full bg-[color:var(--board-signal)] px-[13px] py-[6px] text-[12px] font-semibold text-[color:var(--board-signal-ink)]">
                           {libelleEtatCourtCapitale("enRetard")}

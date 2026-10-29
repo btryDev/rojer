@@ -84,12 +84,12 @@ function reperUtc(annee: number, mois: number, jour: number): Date {
 }
 
 /** Décalage du 1er du mois par rapport au lundi précédent (0 à 6). */
-function decalageLundi(annee: number, mois: number): number {
+export function decalageLundi(annee: number, mois: number): number {
   return (reperUtc(annee, mois, 1).getUTCDay() + 6) % 7;
 }
 
 /** Nombre de jours du mois civil — le « jour 0 » du mois suivant. */
-function joursDansLeMois(annee: number, mois: number): number {
+export function joursDansLeMois(annee: number, mois: number): number {
   return reperUtc(annee, mois + 1, 0).getUTCDate();
 }
 

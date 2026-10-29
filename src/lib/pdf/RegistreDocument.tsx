@@ -172,8 +172,6 @@ const LIBELLE_STATUT_VERIF: Record<StatutPeint, string> = {
   realisee_conforme: "Conforme",
   realisee_observations: "Observations",
   realisee_ecart_majeur: "Écart majeur",
-  // Le contrôle fait, au calendrier — le registre, lui, garde les résultats.
-  fait: "Fait",
 };
 
 

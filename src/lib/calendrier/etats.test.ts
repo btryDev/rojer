@@ -7,9 +7,26 @@ import {
   dateEnJeuAutre,
   etatAutreEcheance,
   lecturesCalendrier,
+  libellePastille,
   statutAffiche,
   statutDeLaLecture,
 } from "./etats";
+
+describe("libellePastille (2026-10-29)", () => {
+  it("ce qui est fait dit « Fait », sans le résultat de son rapport", () => {
+    expect(libellePastille("faite", false)).toBe("Fait");
+    expect(libellePastille("faite", true)).toBe("Fait");
+  });
+
+  it("une échéance proche qui tombe aujourd'hui dit « Aujourd'hui »", () => {
+    expect(libellePastille("proche", true)).toBe("Aujourd'hui");
+    expect(libellePastille("proche", false)).toBe("Sous 30 jours");
+  });
+
+  it("le jour même ne change pas le mot d'un retard", () => {
+    expect(libellePastille("enRetard", true)).toBe("En retard");
+  });
+});
 
 // L'horloge est injectée partout (ADR-011) : midi à Paris, un jour sans
 // piège de fuseau — les cas de bascule de minuit vivent dans
@@ -425,21 +442,15 @@ describe("lecturesCalendrier", () => {
 describe("statutDeLaLecture (ADR-034)", () => {
   const FAIT = { lecture: "realisation", registre: "faite" } as const;
 
-  it("le FAIT dit « fait », quel que soit le résultat de son rapport", () => {
-    // [2026-10-29, décision de la propriétaire] Le calendrier parle
-    // d'échéances : un point vert à côté d'« Écart majeur » se contredisait.
-    // Le résultat reste au rapport. Et pas l'état de l'échéance ouverte non
-    // plus : une tuile verte « fait le 1er juin » affichait « En retard » dès
-    // que l'échéance suivante de la même ligne était passée.
+  it("le FAIT porte le résultat de son rapport, pas l'état de l'échéance ouverte", () => {
+    // Le défaut : une tuile verte « fait le 1er juin » affichait « En retard »
+    // dès que l'échéance suivante de la même ligne était passée.
     expect(
       statutDeLaLecture(FAIT, { statut: "planifiee", dernierResultat: "conforme" }),
-    ).toBe("fait");
+    ).toBe("realisee_conforme");
     expect(
       statutDeLaLecture(FAIT, { statut: "planifiee", dernierResultat: "ecart_majeur" }),
-    ).toBe("fait");
-    expect(
-      statutDeLaLecture(FAIT, { statut: "en_retard", dernierResultat: null }),
-    ).toBe("fait");
+    ).toBe("realisee_ecart_majeur");
   });
 
   it("l'échéance ouverte porte le statut de SON ÉTAT, pas le statut stocké", () => {
@@ -466,8 +477,11 @@ describe("statutDeLaLecture (ADR-034)", () => {
     ).toBe("en_retard");
   });
 
-  // ~~« sans résultat connu — ligne d'avant l'ADR-034 — le statut de la ligne
-  // fait foi »~~ [2026-10-29 : sans objet, le fait ne peint plus de résultat.]
+  it("sans résultat connu — ligne d'avant l'ADR-034 — le statut de la ligne fait foi", () => {
+    expect(
+      statutDeLaLecture(FAIT, { statut: "realisee_observations" }),
+    ).toBe("realisee_observations");
+  });
 });
 
 describe("la date des lectures est l'échéance OUVERTE", () => {

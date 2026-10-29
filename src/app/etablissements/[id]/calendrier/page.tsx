@@ -72,7 +72,7 @@ import {
 import {
   CHAMP_ETAT,
   ENCRE_ETAT,
-  libelleEtatCapitale,
+  libellePastille,
   PRIORITE_ETAT,
   avecMentionFin,
   lecturesCalendrier,
@@ -159,9 +159,8 @@ function PastilleEtat({
   duJour = false,
 }: {
   etat: RegistreLigne;
-  /** L'échéance tombe aujourd'hui (2026-10-29, décision de la propriétaire) :
-   *  « Sous 30 jours » se lisait « on a le temps » le jour même. Même champ,
-   *  le mot seul change. */
+  /** L'échéance tombe aujourd'hui : « Aujourd'hui » au lieu de « Sous 30
+   *  jours » (`libellePastille`). */
   duJour?: boolean;
 }) {
   return (
@@ -169,7 +168,7 @@ function PastilleEtat({
       className="inline-flex items-center whitespace-nowrap rounded-full px-[13px] py-[6px] text-[12px] font-semibold"
       style={{ background: CHAMP_ETAT[etat], color: ENCRE_ETAT[etat] }}
     >
-      {duJour && etat === "proche" ? "Aujourd'hui" : libelleEtatCapitale(etat)}
+      {libellePastille(etat, duJour)}
     </span>
   );
 }
@@ -607,7 +606,7 @@ export default async function CalendrierPage({
       // [2026-10-29 : le fait dit « Fait », `statutDeLaLecture`].
       // D1 (a) : « à confirmer », pas « en retard », sur une ligne que
       // seul le silence de la fiche retient — lu sur le registre (D26).
-      statut: statutDeLaLecture(lec, v),
+      statut: lec.lecture === "realisation" ? undefined : statutDeLaLecture(lec, v),
     });
     for (const lecBrute of lecturesCalendrier(v, aujourdhui)) {
       // D26 : le même registre que la liste mensuelle, prudence comprise.
@@ -1205,8 +1204,22 @@ export default async function CalendrierPage({
   // une (2026-10-29) : la liste de l'ordinateur les empile, la grille du
   // téléphone les range sous leur jour.
   const cleAujourdhui = cleJourCivil(aujourdhui);
-  const estDuJour = (d: Date) => cleJourCivil(d) === cleAujourdhui;
-  const rendreLigne = (ligne: LigneMois<(typeof verifsVisibles)[number]>) => {
+  // L'état d'une ligne : celui de son point dans la grille du téléphone ET de
+  // sa pastille — décidé ici seulement, pour que les deux ne divergent pas.
+  const etatDeLaLigne = (
+    ligne: LigneMois<(typeof verifsVisibles)[number]>,
+  ): RegistreLigne =>
+    ligne.genre === "verif"
+      ? ligne.lecture === "realisation"
+        ? "faite"
+        : ligne.registre
+      : ligne.e.tone === "alerte" && !ligne.e.sansEcheance
+        ? "enRetard"
+        : ligne.etat;
+  const rendreLigne = (
+    ligne: LigneMois<(typeof verifsVisibles)[number]>,
+    duJour: boolean,
+  ) => {
     if (ligne.genre === "verif") {
       const v = ligne.v;
       const o = obligationParId(v.obligationId);
@@ -1276,10 +1289,13 @@ export default async function CalendrierPage({
             // et non « Planifiée » : la tuile-date ne le
             // colore plus, la pastille est le seul endroit
             // où l'urgence se lit.
-            ligne.lecture !== "realisation" &&
-            (ligne.registre === "proche" ||
-              ligne.registre === "lointain") ? (
-              <PastilleEtat etat={ligne.registre} duJour={estDuJour(ligne.date)} />
+            // [2026-10-29] Le fait aussi passe par l'état
+            // (« Fait », `libellePastille`) et non plus par
+            // le statut peint de son rapport.
+            ligne.lecture === "realisation" ||
+            ligne.registre === "proche" ||
+            ligne.registre === "lointain" ? (
+              <PastilleEtat etat={etatDeLaLigne(ligne)} duJour={duJour} />
             ) : (
               <BadgeStatut
                 // D26 : « à confirmer » vient du registre de
@@ -1313,12 +1329,8 @@ export default async function CalendrierPage({
             <span className="inline-flex items-center whitespace-nowrap rounded-full bg-[color:var(--board-slate-pale)] px-[13px] py-[6px] text-[12px] font-semibold text-[color:var(--board-slate-ink)]">
               Date non renseignée
             </span>
-          ) : e.tone === "alerte" ? (
-            <span className="inline-flex items-center whitespace-nowrap rounded-full bg-[color:var(--board-signal)] px-[13px] py-[6px] text-[12px] font-semibold text-[color:var(--board-signal-ink)]">
-              En retard
-            </span>
           ) : (
-            <PastilleEtat etat={ligne.etat} duJour={estDuJour(ligne.date)} />
+            <PastilleEtat etat={etatDeLaLigne(ligne)} duJour={duJour} />
           )
         }
       />
@@ -1495,25 +1507,23 @@ export default async function CalendrierPage({
                 // échéance connue n'est sur aucune barre non plus, et la
                 // pastille ne la comptait nulle part (relecture du lot C).
                 nbSansDate: liste.filter((l) => !datable(l)).length,
-                lignes: liste.map((ligne) => ({
-                  // Deux lectures d'une même ligne (fait + prochain
-                  // rendez-vous) peuvent tomber dans le même mois : la clé
-                  // porte la lecture.
-                  cle:
-                    ligne.genre === "verif"
-                      ? `${ligne.v.id}:${ligne.lecture}`
-                      : ligne.e.id,
+                lignes: liste.map((ligne) => {
                   // Le jour de la grille du téléphone ; une ligne sans
                   // échéance connue n'en a pas.
-                  jour: datable(ligne) ? cleJourCivil(ligne.date) : null,
-                  etat:
-                    ligne.genre === "verif"
-                      ? ligne.registre
-                      : ligne.e.tone === "alerte" && !ligne.e.sansEcheance
-                        ? "enRetard"
-                        : ligne.etat,
-                  noeud: rendreLigne(ligne),
-                })),
+                  const jour = datable(ligne) ? cleJourCivil(ligne.date) : null;
+                  return {
+                    // Deux lectures d'une même ligne (fait + prochain
+                    // rendez-vous) peuvent tomber dans le même mois : la
+                    // clé porte la lecture.
+                    cle:
+                      ligne.genre === "verif"
+                        ? `${ligne.v.id}:${ligne.lecture}`
+                        : ligne.e.id,
+                    jour,
+                    etat: etatDeLaLigne(ligne),
+                    noeud: rendreLigne(ligne, jour === cleAujourdhui),
+                  };
+                }),
               }))}
             />
           </div>
