@@ -24,6 +24,7 @@
 // dont chaque entrée porte un fondement vérifiable ou n'entre pas.
 
 import { LegalBadge, Textes } from "@/components/ui-kit";
+import { ChevronRepli, LIEN_REPLI } from "@/components/ui/repli";
 import {
   documentsNonProduits,
   documentsProduits,
@@ -87,53 +88,78 @@ function BlocDocuments({
         {documents.map((d) => (
           <li
             key={d.id}
-            className="flex flex-col gap-3 rounded-2xl border border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] p-6"
+            className="rounded-2xl border border-[color:var(--board-slate-line)] bg-[color:var(--board-card)]"
           >
-            <h3 className="m-0 text-[1.05rem] font-semibold leading-[1.3] tracking-[-0.012em]">
-              {d.nom}
-            </h3>
-
-            <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
-              {d.ceQueLeTexteDemande}
-            </p>
-
-            {d.quandIlEstDu ? (
-              <p className="m-0 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                <span className="font-semibold">Quand il est dû — </span>
-                {d.quandIlEstDu}
-              </p>
-            ) : null}
-
-            <div className="rounded-[18px] bg-[color:var(--board-slate-pale)] px-5 py-4">
-              <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
-                {d.produitParRojer ? "Où le lire" : "Où le trouver"}
-              </p>
-              <p className="m-0 mt-2 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-ink)]">
-                {d.produitParRojer ? d.ouDansRojer : d.ouLeTrouver}
-              </p>
+            {/* Sur ordinateur, la carte dépliée. Sur téléphone, le nom seul,
+                le reste derrière lui (2026-10-29) : douze cartes dépliées
+                faisaient six écrans, et on y cherche un document par son
+                nom. */}
+            <div className="flex flex-col gap-3 p-6 max-md:hidden">
+              <h3 className="m-0 text-[1.05rem] font-semibold leading-[1.3] tracking-[-0.012em]">
+                {d.nom}
+              </h3>
+              <CorpsDocument d={d} />
             </div>
-
-            {/* Les fondements sous un seul livre : plusieurs « Texte » côte à
-                côte ne se distinguaient pas. */}
-            <Textes>
-              {d.fondements.map((f) => (
-                <LegalBadge
-                  key={`${d.id}-${f.article}`}
-                  reference={f.article}
-                  href={f.url}
-                  extrait={f.citationCle}
-                >
-                  <span className="block">{f.reference}</span>
-                  <span className="mt-2 block text-[11.5px] text-[color:var(--board-slate-mid)]">
-                    Version en vigueur depuis le {f.versionConstatee}, relevée
-                    le {f.luLe}.
-                  </span>
-                </LegalBadge>
-              ))}
-            </Textes>
+            <details className="group md:hidden">
+              <summary className={`${LIEN_REPLI} min-h-14 w-full px-5 py-3 text-[15px] leading-[1.3] text-[color:var(--board-ink)]`}>
+                <ChevronRepli />
+                {/* Un titre dans le `summary` : le plan de la page reste le
+                    même sur téléphone, un `h3` par document. */}
+                <h3 className="m-0 min-w-0 flex-1 text-[15px] font-semibold leading-[1.3]">{d.nom}</h3>
+              </summary>
+              <div className="flex flex-col gap-3 px-5 pb-5">
+                <CorpsDocument d={d} />
+              </div>
+            </details>
           </li>
         ))}
       </ul>
     </div>
+  );
+}
+
+/** Ce que demande le texte, quand c'est dû, où le lire, et les textes. */
+function CorpsDocument({ d }: { d: DocumentObligatoire }) {
+  return (
+    <>
+      <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
+        {d.ceQueLeTexteDemande}
+      </p>
+
+      {d.quandIlEstDu ? (
+        <p className="m-0 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          <span className="font-semibold">Quand il est dû — </span>
+          {d.quandIlEstDu}
+        </p>
+      ) : null}
+
+      <div className="rounded-[18px] bg-[color:var(--board-slate-pale)] px-5 py-4">
+        <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
+          {d.produitParRojer ? "Où le lire" : "Où le trouver"}
+        </p>
+        <p className="m-0 mt-2 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-ink)]">
+          {d.produitParRojer ? d.ouDansRojer : d.ouLeTrouver}
+        </p>
+      </div>
+
+      {/* Les fondements sous un seul livre : plusieurs « Texte » côte à
+          côte ne se distinguaient pas. */}
+      <Textes>
+        {d.fondements.map((f) => (
+          <LegalBadge
+            key={`${d.id}-${f.article}`}
+            reference={f.article}
+            href={f.url}
+            extrait={f.citationCle}
+          >
+            <span className="block">{f.reference}</span>
+            <span className="mt-2 block text-[11.5px] text-[color:var(--board-slate-mid)]">
+              Version en vigueur depuis le {f.versionConstatee}, relevée
+              le {f.luLe}.
+            </span>
+          </LegalBadge>
+        ))}
+      </Textes>
+    </>
   );
 }
