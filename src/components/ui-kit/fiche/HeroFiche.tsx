@@ -148,7 +148,7 @@ export function HeroFiche({
 const CHAPEAU_LONG = 160;
 
 /**
- * Le chapeau. Long, il se replie sur téléphone derrière « Lire l'explication »
+ * Le chapeau. Long, il se replie sur téléphone derrière « L'explication »
  * (demande de la propriétaire, 2026-10-29) : douze lignes de texte
  * repoussaient à deux écrans plus bas ce qu'on vient faire sur la fiche —
  * déposer le rapport. Sur ordinateur, il reste déplié.
@@ -164,8 +164,7 @@ function ChapeauFiche({ children }: { children: ReactNode }) {
       <details className="group mt-2 md:hidden">
         <summary className={`${LIEN_REPLI} min-h-11`}>
           <ChevronRepli />
-          <span className="group-open:hidden">Lire l&apos;explication</span>
-          <span className="hidden group-open:inline">Masquer l&apos;explication</span>
+          L&apos;explication
         </summary>
         <p className={`${classe} leading-[1.6]`}>{children}</p>
       </details>
