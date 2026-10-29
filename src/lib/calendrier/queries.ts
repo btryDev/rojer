@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import { SCEAU_CALENDRIER } from "./version-moteur";
+import { lireRepereCalendrier } from "./fraicheur";
 import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
 import { cleJourCivil, debutDuJour } from "@/lib/dates";
 import {
@@ -317,13 +318,12 @@ export function grouperParMois(
 export async function calendrierDesynchronise(
   etablissementId: string,
 ): Promise<boolean> {
-  const user = await requireUser();
-  const etab = await prisma.etablissement.findFirst({
-    where: { id: etablissementId, entreprise: { userId: user.id } },
-    select: { referentielVersionCalendrier: true },
-  });
-  if (!etab) return false;
-  return etab.referentielVersionCalendrier !== SCEAU_CALENDRIER;
+  // La lecture que `fraicheurCalendrier` partage, NON mémoïsée : la
+  // réparation doit voir la base au moment où elle décide, jamais une lecture
+  // faite plus tôt dans le rendu (`lireRepereCalendrier`).
+  const lu = await lireRepereCalendrier(etablissementId);
+  if (!lu) return false;
+  return lu.repere !== SCEAU_CALENDRIER;
 }
 
 /**

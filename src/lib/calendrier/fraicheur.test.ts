@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
@@ -259,5 +261,31 @@ describe("les phrases d'ÉCRAN nomment ce que l'écran montre (2026-10-13)", () 
     expect(
       phraseFraicheur({ etat: "perime", sceauPose: "a", sceauAttendu: "b" }),
     ).toContain("les échéances ci-dessous sont celles d'avant");
+  });
+});
+
+describe("une lecture du repère, jamais mémoïsée (plan performance, 2026-10-29)", () => {
+  // Hors rendu, `cache()` de React ne mémoïse rien : aucun test qui APPELLE
+  // ces fonctions ne verrait qu'on les a enveloppées. La propriété porte sur
+  // le câblage — elle se lit dans les sources, comme `fraicheur-sorties`.
+  const source = (f: string) => readFileSync(join(__dirname, f), "utf8");
+  const sources = ["fraicheur.ts", "queries.ts"].map(source).join("\n");
+
+  it("le repère n'est sélectionné qu'en un endroit, `lireRepereCalendrier`", () => {
+    expect(
+      sources.match(/select:\s*\{\s*referentielVersionCalendrier:\s*true\s*\}/g),
+    ).toHaveLength(1);
+    expect(source("fraicheur.ts")).toMatch(
+      /export async function lireRepereCalendrier\([^]*?referentielVersionCalendrier: true/,
+    );
+  });
+
+  it("ni la lecture ni la décision de réparer ne passent par `cache()` : la réparation doit voir la base du moment", () => {
+    for (const nom of ["lireRepereCalendrier", "calendrierDesynchronise"]) {
+      expect(sources, nom).toMatch(
+        new RegExp(`export async function ${nom}\\(`),
+      );
+      expect(sources, nom).not.toMatch(new RegExp(`const ${nom}\\s*=`));
+    }
   });
 });
