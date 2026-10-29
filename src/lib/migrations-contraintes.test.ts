@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { readdirSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { MARQUEUR_NON_APPLICABLE } from "@/lib/calendrier/marqueur";
+import { lireMigrations } from "./migrations-lecture";
 
 /**
  * Non-régression sur les invariants de base qui ne vivent PAS dans le client
@@ -23,19 +24,6 @@ import { MARQUEUR_NON_APPLICABLE } from "@/lib/calendrier/marqueur";
  */
 
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const DOSSIER_MIGRATIONS = join(RACINE, "prisma", "migrations");
-
-/** Contenu de chaque migration.sql, indexé par nom de dossier (donc trié chronologiquement). */
-function lireMigrations(): { nom: string; sql: string }[] {
-  return readdirSync(DOSSIER_MIGRATIONS, { withFileTypes: true })
-    .filter((e) => e.isDirectory())
-    .map((e) => e.name)
-    .sort()
-    .map((nom) => ({
-      nom,
-      sql: readFileSync(join(DOSSIER_MIGRATIONS, nom, "migration.sql"), "utf8"),
-    }));
-}
 
 /** Écrase les retours à la ligne et les espaces multiples : le SQL est formaté librement. */
 function normaliser(sql: string): string {

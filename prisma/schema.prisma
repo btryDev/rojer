@@ -1010,7 +1010,12 @@ model RapportVerification {
   pointsACorriger Action[] @relation("PointsDuRapport")
 
   @@index([etablissementId, dateRapport])
-  @@index([verificationId])
+  // Le dernier rapport d'une ligne, lu par une seule descente d'index
+  // (`ORDRE_RAPPORT_PLUS_RECENT`) : la « dernière réalisation » de chaque
+  // écran coûte le nombre de lignes, pas la longueur de l'historique
+  // (`rapports/joindre-realisations.ts`, plan performance, 2026-10-28). Il
+  // remplace l'index sur `verificationId` seul, dont il est le préfixe.
+  @@index([verificationId, dateRapport(sort: Desc), createdAt(sort: Desc)])
 }
 
 enum ResultatVerification {
