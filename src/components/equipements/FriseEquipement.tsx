@@ -19,23 +19,28 @@ import { formaterMoisAnneeFr } from "@/lib/dates";
 const FOND = "var(--board-card)";
 
 /**
- * Aligne l'étiquette d'un jalon selon sa place sur l'axe. Centrée au
- * milieu, calée sur les bords aux extrémités : une étiquette centrée à 0 %
- * déborderait de la carte d'une demi-largeur.
+ * Aligne l'étiquette d'un jalon selon sa place sur l'axe : posée à `p` % de
+ * l'axe, elle recule de `p` % de sa propre largeur — calée à gauche au début,
+ * centrée au milieu, calée à droite au bout. Elle ne peut donc jamais sortir
+ * de la carte, quelle que soit sa largeur.
+ *
+ * ~~Centrée au milieu, calée sur les bords sous 6 % et au-delà de 94 %.~~
+ * [2026-10-29 : sur téléphone, « 24 NOV. · VÉRIFICATION » centrée à 88 %
+ * débordait de la carte — le seuil fixe ne tenait que sur une carte large.]
  */
 function ancrage(position: number): {
   style: React.CSSProperties;
   classe: string;
 } {
-  if (position <= 0.06) {
-    return { style: { left: "0%" }, classe: "items-start text-left" };
-  }
-  if (position >= 0.94) {
-    return { style: { right: "0%" }, classe: "items-end text-right" };
-  }
+  const p = Math.min(1, Math.max(0, position)) * 100;
   return {
-    style: { left: `${position * 100}%`, transform: "translateX(-50%)" },
-    classe: "items-center text-center",
+    style: { left: `${p}%`, transform: `translateX(-${p}%)` },
+    classe:
+      p < 34
+        ? "items-start text-left"
+        : p > 66
+          ? "items-end text-right"
+          : "items-center text-center",
   };
 }
 
