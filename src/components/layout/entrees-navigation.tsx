@@ -132,7 +132,18 @@ const ETIQUETTE_ETAT: Record<string, string> = {
   "non-applicable": "non applicable",
 };
 
-export function NavLink({ item, actif }: { item: NavItem; actif: SidebarItemId }) {
+export function NavLink({
+  item,
+  actif,
+  onNavigate,
+}: {
+  item: NavItem;
+  actif: SidebarItemId;
+  /** Referme le panneau au clic : le repli à chaque navigation (`AppSidebar`)
+   *  ne voit pas un lien vers la page où l'on est déjà, l'adresse ne
+   *  changeant pas — le panneau restait ouvert, on croyait n'avoir rien fait. */
+  onNavigate?: () => void;
+}) {
   const isActive = item.id === actif;
   // Un registre qualifié reste un lien : c'est par là qu'on l'ouvre le jour
   // venu, et la page « non applicable » explique et permet de corriger le
@@ -157,6 +168,7 @@ export function NavLink({ item, actif }: { item: NavItem; actif: SidebarItemId }
   return (
     <Link
       href={item.href}
+      onClick={onNavigate}
       aria-current={isActive ? "page" : undefined}
       className={
         CLASSES_ITEM + " " +

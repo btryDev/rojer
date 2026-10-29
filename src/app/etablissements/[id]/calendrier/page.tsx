@@ -603,7 +603,8 @@ export default async function CalendrierPage({
         marquesAConfirmer.parObligation.get(v.obligationId)?.phrases ?? [],
       etat: lec.registre,
       // Même règle que la liste mensuelle : le rendez-vous suivant est
-      // planifié, le fait porte le résultat de son rapport (ADR-034).
+      // planifié, ~~le fait porte le résultat de son rapport (ADR-034)~~
+      // [2026-10-29 : le fait dit « Fait », `statutDeLaLecture`].
       // D1 (a) : « à confirmer », pas « en retard », sur une ligne que
       // seul le silence de la fiche retient — lu sur le registre (D26).
       statut: statutDeLaLecture(lec, v),
@@ -1263,8 +1264,10 @@ export default async function CalendrierPage({
           pastille={
             // Trois lectures, trois pastilles (ADR-034) :
             // le rendez-vous suivant est « planifié », le
-            // FAIT porte le résultat de son rapport, et
-            // l'échéance ouverte porte l'état de la ligne.
+            // FAIT ~~porte le résultat de son rapport~~
+            // [2026-10-29, décision de la propriétaire :
+            // dit « Fait », le résultat reste au rapport],
+            // et l'échéance ouverte porte l'état de la ligne.
             // Sans le cas « realisation », une tuile verte
             // « fait le 1er juin » affichait « En retard »
             // dès que l'échéance suivante était passée.

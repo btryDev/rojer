@@ -10,7 +10,6 @@
 // Les couleurs sont celles du board éditorial : ce composant est monté
 // dans une carte blanche du tableau de bord.
 
-import { useState } from "react";
 import { LienProvenance } from "@/components/navigation/LienProvenance";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
@@ -19,9 +18,12 @@ import {
   type EvenementGrille,
   type GrilleMois,
 } from "@/lib/calendrier/grille";
-import { formaterJourDateLongueFr } from "@/lib/dates/jour-long";
-import { GrillePoints, libelleDuJour } from "./GrillePoints";
-import { avecMentionFin, dateEnJeuEvenement } from "@/lib/calendrier/etats";
+import { GrilleAvecJour } from "./GrillePoints";
+import {
+  avecMentionFin,
+  dateEnJeuEvenement,
+  type RegistreLigne,
+} from "@/lib/calendrier/etats";
 import { MarqueurFamille } from "./MarqueurFamille";
 
 /** Nombre de pastilles affichées avant de replier en « +N ». */
@@ -201,24 +203,19 @@ function cibleEvenement(
   return { href: e.href ?? hrefEvenement(e), texte: avecMentionFin(e.libelle, fin) };
 }
 
-/** Le point d'un événement dans la grille du téléphone : la couleur de sa
- *  pastille, en plus soutenu pour se lire à 6 px. */
-const COULEUR_POINT: Record<EvenementGrille["tone"], string> = {
-  alerte: "var(--board-signal-line)",
-  warn: "var(--board-slate-mid)",
-  ok: "var(--board-blue-strong)",
+/** L'état d'un événement, pour la couleur de son point : la même table que
+ *  la page Calendrier (`POINT_ETAT`), pour que le même mois ne change pas
+ *  de couleurs d'un écran à l'autre. */
+const ETAT_DU_TON: Record<EvenementGrille["tone"], RegistreLigne> = {
+  alerte: "enRetard",
+  warn: "proche",
+  ok: "lointain",
 };
 
 /**
- * La vue mois du téléphone (décision 4A de la propriétaire, 2026-10-29).
- *
- * Sept colonnes de 33 px ne laissent rien lire d'une pastille : la grille
- * ne porte plus que des points, un par échéance dans la couleur de son état,
- * et toucher un jour liste ses échéances dessous. Le mois reste un
- * calendrier — on voit d'un coup d'œil où tombent les retards.
- *
- * Le jour choisi par défaut : aujourd'hui s'il est dans le mois, sinon le
- * premier jour qui porte une échéance.
+ * La vue mois du widget, sur téléphone (décision 4A de la propriétaire,
+ * 2026-10-29) : la grille à points de la page Calendrier (`GrilleAvecJour`),
+ * et la liste du jour touché faite des pastilles du widget.
  */
 export function GrilleTelephone({
   grille,
@@ -230,48 +227,27 @@ export function GrilleTelephone({
   hrefEvenement: (e: EvenementGrille) => string;
 }) {
   const jours = grille.semaines.flat();
-  const duMois = jours.filter((j) => j.dansLeMois);
-  const parDefaut =
-    duMois.find((j) => j.estAujourdhui) ??
-    duMois.find((j) => j.evenements.length > 0) ??
-    null;
-  const [choisi, setChoisi] = useState<string | null>(null);
-  // Un choix fait dans un autre mois ne vaut plus : on retombe sur le défaut.
-  const jour = duMois.find((j) => j.cle === choisi) ?? parDefaut;
+  const parCle = new Map(jours.map((j) => [j.cle, j]));
 
   return (
-    <div className="md:hidden">
-      <div className="mt-4">
-        <GrillePoints
-          cases={jours.map((j) =>
-            j.dansLeMois
-              ? {
-                  cle: j.cle,
-                  numero: j.numero,
-                  estAujourdhui: j.estAujourdhui,
-                  points: j.evenements.map((e) => COULEUR_POINT[e.tone]),
-                }
-              : null,
-          )}
-          choisi={jour?.cle ?? null}
-          onChoisir={setChoisi}
-        />
-      </div>
-
-      {jour ? (
-        <div className="mt-5">
-          <p className="m-0 text-[13px] font-semibold text-[color:var(--board-slate-ink)]">
-            {jour.estAujourdhui
-              ? `Aujourd'hui, ${formaterJourDateLongueFr(jour.date)}`
-              : libelleDuJour(jour.cle)}
-          </p>
-          {jour.evenements.length === 0 ? (
-            <p className="m-0 mt-2 text-[13.5px] text-[color:var(--board-slate-mid)]">
-              Aucune échéance ce jour-là.
-            </p>
-          ) : (
+    <div className="mt-4 md:hidden">
+      <GrilleAvecJour
+        cases={jours.map((j) =>
+          j.dansLeMois
+            ? {
+                cle: j.cle,
+                numero: j.numero,
+                estAujourdhui: j.estAujourdhui,
+                etats: j.evenements.map((e) => ETAT_DU_TON[e.tone]),
+              }
+            : null,
+        )}
+        rendreJour={(cle) => {
+          const evenements = parCle.get(cle)?.evenements ?? [];
+          if (evenements.length === 0) return null;
+          return (
             <ul className="mt-2.5 flex flex-col gap-1.5">
-              {jour.evenements.map((e) => {
+              {evenements.map((e) => {
                 const cible = cibleEvenement(e, aujourdhui, hrefEvenement);
                 return (
                   <li key={e.id}>
@@ -296,13 +272,9 @@ export function GrilleTelephone({
                 );
               })}
             </ul>
-          )}
-        </div>
-      ) : (
-        <p className="m-0 mt-5 text-[13.5px] text-[color:var(--board-slate-mid)]">
-          Aucune échéance ce mois-ci.
-        </p>
-      )}
+          );
+        }}
+      />
     </div>
   );
 }

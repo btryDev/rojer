@@ -4,7 +4,7 @@
  * le même geste — un appui ouvre la feuille de la catégorie sans naviguer —,
  * et les mêmes règles de repli que le panneau de l'ordinateur.
  */
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 
 const nav = vi.hoisted(() => ({ chemin: "/etablissements/e1/calendrier" }));
@@ -15,7 +15,18 @@ vi.mock("next/navigation", () => ({
 
 import { AppSidebar } from "./AppSidebar";
 
-afterEach(cleanup);
+// Un écran de téléphone : la feuille n'existe que sous 48rem.
+beforeEach(() => {
+  vi.stubGlobal("matchMedia", (q: string) => ({
+    matches: q === "(width < 48rem)",
+    addEventListener: () => {},
+    removeEventListener: () => {},
+  }));
+});
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 
 const ETAB = { id: "e1", raisonDisplay: "Le Comptoir des Halles", adresse: "1 rue", effectifSurSite: 4, entrepriseId: "ent-1" };
 const COUNTS = { enRetardTotal: 3, calendrierAMettreAJour: false };
@@ -89,6 +100,41 @@ describe("NavigationMobile", () => {
       .filter((a) => a.textContent?.includes("Le Comptoir des Halles"));
     expect(marques).toHaveLength(1);
     expect(marques[0].getAttribute("href")).toBe("/etablissements/e1");
+  });
+
+  it("Échap laisse la feuille ouverte sous une fenêtre ouverte depuis elle", () => {
+    nav.chemin = "/etablissements/e1/calendrier";
+    render(barre("calendrier"));
+    fireEvent.click(basDePage().getByRole("button", { name: /À faire/ }));
+    const fenetre = document.createElement("div");
+    fenetre.setAttribute("data-panneau-modal", "");
+    document.body.appendChild(fenetre);
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(feuille()).not.toBeNull();
+    fenetre.remove();
+  });
+
+  it("un lien vers la page où l'on est referme la feuille", () => {
+    nav.chemin = "/etablissements/e1/calendrier";
+    render(barre("calendrier"));
+    fireEvent.click(basDePage().getByRole("button", { name: /À faire/ }));
+    const calendrier = within(feuille()!)
+      .getAllByRole("link")
+      .find((a) => a.getAttribute("href") === "/etablissements/e1/calendrier")!;
+    fireEvent.click(calendrier);
+    expect(feuille()).toBeNull();
+  });
+
+  it("sur ordinateur, pas de feuille : le panneau du rail suffit", () => {
+    vi.stubGlobal("matchMedia", () => ({
+      matches: false,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }));
+    nav.chemin = "/etablissements/e1/calendrier";
+    render(barre("calendrier"));
+    fireEvent.click(basDePage().getByRole("button", { name: /À faire/ }));
+    expect(feuille()).toBeNull();
   });
 
   it("le voile referme la feuille", () => {

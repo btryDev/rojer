@@ -241,7 +241,7 @@ export function AppSidebar({
                 {panneau.label}
               </p>
               {panneau.items.map((it) => (
-                <NavLink key={it.id} item={it} actif={actif} />
+                <NavLink key={it.id} item={it} actif={actif} onNavigate={() => setOuverte(null)} />
               ))}
             </nav>
           ) : null}

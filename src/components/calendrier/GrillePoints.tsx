@@ -1,37 +1,40 @@
 "use client";
 
+import { useState } from "react";
 import { JOURS_SEMAINE } from "@/lib/calendrier/grille";
+import { POINT_ETAT, type RegistreLigne } from "@/lib/calendrier/etats";
 import { formaterJourDateLongueFr } from "@/lib/dates/jour-long";
 
-/** Une case de la grille ; `null` pour les cases d'avant le 1er. */
+/** Une case de la grille ; `null` pour les cases hors du mois. */
 export type CasePoints = {
   /** « 2026-10-29 », la clé de `cleJourCivil`. */
   cle: string;
   numero: number;
   estAujourdhui: boolean;
-  /** Une couleur CSS par échéance du jour, dans l'ordre. */
-  points: string[];
+  /** L'état de chaque échéance du jour, dans n'importe quel ordre. */
+  etats: RegistreLigne[];
 } | null;
 
-/** Au-delà, les points ne se comptent plus d'un regard. */
+/** Au-delà, les points ne se comptent plus d'un regard : un « + » le dit. */
 const MAX_POINTS = 3;
+
+/** Le plus grave d'abord : les trois points montrés doivent porter le retard
+ *  s'il y en a un, pas les trois premiers venus. */
+const GRAVITE: RegistreLigne[] = ["enRetard", "proche", "aPlanifier", "lointain", "faite"];
+const rang = (e: RegistreLigne) => {
+  const i = GRAVITE.indexOf(e);
+  return i < 0 ? GRAVITE.length : i;
+};
 
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-/** « Jeudi 29 octobre 2026 », depuis une clé de jour. Midi UTC tombe le même
+/** « jeudi 29 octobre 2026 », depuis une clé de jour. Midi UTC tombe le même
  *  jour civil dans le fuseau de référence. */
-export function libelleDuJour(cle: string): string {
-  return majuscule(formaterJourDateLongueFr(new Date(`${cle}T12:00:00Z`)));
+function jourEnLettres(cle: string): string {
+  return formaterJourDateLongueFr(new Date(`${cle}T12:00:00Z`));
 }
 
-/**
- * La grille du mois du téléphone (décision 4A de la propriétaire,
- * 2026-10-29) : sept colonnes de 33 px ne laissent rien lire d'une pastille,
- * la case ne porte donc plus que son numéro et un point par échéance, dans la
- * couleur de son état. Toucher un jour le choisit ; l'appelant liste ses
- * échéances dessous.
- */
-export function GrillePoints({
+function GrillePoints({
   cases,
   choisi,
   onChoisir,
@@ -52,15 +55,16 @@ export function GrillePoints({
       ))}
       {cases.map((c, i) => {
         if (!c) return <span key={`vide-${i}`} aria-hidden />;
-        const nb = c.points.length;
+        const nb = c.etats.length;
         const actif = c.cle === choisi;
+        const montres = [...c.etats].sort((a, b) => rang(a) - rang(b)).slice(0, MAX_POINTS);
         return (
           <button
             key={c.cle}
             type="button"
             onClick={() => onChoisir(c.cle)}
             aria-pressed={actif}
-            aria-label={`${libelleDuJour(c.cle)}, ${
+            aria-label={`${majuscule(jourEnLettres(c.cle))}, ${
               nb === 0 ? "aucune échéance" : `${nb} échéance${nb > 1 ? "s" : ""}`
             }`}
             className={
@@ -75,21 +79,81 @@ export function GrillePoints({
             <span className="text-[13px] font-semibold tabular-nums leading-none">
               {c.numero}
             </span>
-            <span aria-hidden className="flex h-1.5 gap-[3px]">
-              {c.points.slice(0, MAX_POINTS).map((couleur, k) => (
+            <span aria-hidden className="flex h-1.5 items-center gap-[3px]">
+              {montres.map((etat, k) => (
                 <span
                   key={k}
                   data-point=""
                   // Le filet garde lisible un point pâle (le jaune « sous
                   // 30 jours ») sur le blanc de la carte.
                   className="size-1.5 rounded-full ring-1 ring-[rgba(10,10,10,.12)]"
-                  style={{ background: couleur }}
+                  style={{ background: POINT_ETAT[etat] }}
                 />
               ))}
+              {nb > MAX_POINTS ? (
+                <span data-plus="" className="text-[9px] font-bold leading-none">
+                  +
+                </span>
+              ) : null}
             </span>
           </button>
         );
       })}
     </div>
+  );
+}
+
+/**
+ * Le mois du téléphone (décision 4A de la propriétaire, 2026-10-29) : sept
+ * colonnes de 33 px ne laissent rien lire d'une pastille, la case ne porte
+ * donc plus que son numéro et un point par échéance, dans la couleur de son
+ * état. Toucher un jour le choisit, et ses échéances se lisent dessous.
+ *
+ * Le jour ouvert : celui touché s'il est de ce mois, sinon aujourd'hui, sinon
+ * le premier qui porte une échéance. Un choix fait dans un autre mois ne vaut
+ * plus — changer de mois revient au défaut.
+ *
+ * Partagé par la page Calendrier (`MoisTelephone`) et le widget du tableau de
+ * bord (`VueMois`) : chacun fournit ses cases et la liste d'un jour.
+ */
+export function GrilleAvecJour({
+  cases,
+  rendreJour,
+}: {
+  cases: CasePoints[];
+  /** Les échéances d'un jour, ou `null` s'il n'en porte aucune. */
+  rendreJour: (cle: string) => React.ReactNode;
+}) {
+  const [choisi, setChoisi] = useState<string | null>(null);
+  const jours = cases.filter((c) => c !== null);
+  const jour =
+    jours.find((c) => c.cle === choisi) ??
+    jours.find((c) => c.estAujourdhui) ??
+    jours.find((c) => c.etats.length > 0) ??
+    null;
+  const liste = jour ? rendreJour(jour.cle) : null;
+
+  return (
+    <>
+      <GrillePoints cases={cases} choisi={jour?.cle ?? null} onChoisir={setChoisi} />
+      {jour ? (
+        <div className="mt-5">
+          <p className="m-0 text-[13px] font-semibold text-[color:var(--board-slate-ink)]">
+            {jour.estAujourdhui
+              ? `Aujourd'hui, ${jourEnLettres(jour.cle)}`
+              : majuscule(jourEnLettres(jour.cle))}
+          </p>
+          {liste ?? (
+            <p className="m-0 mt-2 text-[13.5px] text-[color:var(--board-slate-mid)]">
+              Aucune échéance ce jour-là.
+            </p>
+          )}
+        </div>
+      ) : (
+        <p className="m-0 mt-5 text-[13.5px] text-[color:var(--board-slate-mid)]">
+          Aucune échéance datée ce mois-ci.
+        </p>
+      )}
+    </>
   );
 }

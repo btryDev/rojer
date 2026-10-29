@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { POINT_ETAT, type RegistreLigne } from "@/lib/calendrier/etats";
-import { formaterJourDateLongueFr } from "@/lib/dates/jour-long";
-import { GrillePoints, libelleDuJour, type CasePoints } from "./GrillePoints";
+import type { RegistreLigne } from "@/lib/calendrier/etats";
+import { GrilleAvecJour, type CasePoints } from "./GrillePoints";
 
 /** Une ligne de la liste mensuelle, rendue par la page côté serveur. */
 export type LigneSection = {
@@ -60,7 +59,7 @@ function casesDuMois(
       cle,
       numero: n,
       estAujourdhui: cle === cleAujourdhui,
-      points: (parJour.get(cle) ?? []).map((l) => POINT_ETAT[l.etat]),
+      etats: (parJour.get(cle) ?? []).map((l) => l.etat),
     });
   }
   return cases;
@@ -88,16 +87,17 @@ export function MoisTelephone({
   cleAujourdhui: string;
 }) {
   const [cleMois, setCleMois] = useState<string | null>(null);
-  const [jourChoisi, setJourChoisi] = useState<string | null>(null);
+  // Pas `mois-AAAA-MM` : c'est l'ancre des cartes de l'ordinateur
+  // (`ancreDuMois`), et la règle annuelle la cherche par identifiant.
+  const titreId = useId();
 
   // Le mois montré : celui choisi s'il est encore servi (changer d'année le
   // retire), sinon le mois d'arrivée, sinon le mois courant, sinon le premier.
-  const cleMoisCourant = cleAujourdhui.slice(0, 7);
   const indexDe = (cle: string | null) => mois.findIndex((m) => m.cle === cle);
-  const index = [cleMois, moisInitial, cleMoisCourant]
-    .map(indexDe)
-    .concat(mois.length > 0 ? 0 : -1)
-    .find((i) => i >= 0) ?? -1;
+  const index =
+    [cleMois, moisInitial, cleAujourdhui.slice(0, 7)]
+      .map(indexDe)
+      .find((i) => i >= 0) ?? (mois.length > 0 ? 0 : -1);
   const courant = index >= 0 ? mois[index] : null;
   if (!courant) return null;
 
@@ -107,33 +107,18 @@ export function MoisTelephone({
     if (l.jour === null) sansDate.push(l);
     else parJour.set(l.jour, [...(parJour.get(l.jour) ?? []), l]);
   }
-  const cases = casesDuMois(courant.cle, cleAujourdhui, parJour);
-  const jours = cases.filter((c) => c !== null);
-  // Le jour ouvert : celui touché dans CE mois, sinon aujourd'hui, sinon le
-  // premier qui porte une échéance.
-  const jour =
-    jours.find((c) => c.cle === jourChoisi) ??
-    jours.find((c) => c.estAujourdhui) ??
-    jours.find((c) => c.points.length > 0) ??
-    null;
-  const lignesDuJour = jour ? (parJour.get(jour.cle) ?? []) : [];
 
   // Les retards des mois d'avant celui qu'on regarde : la grille ne les
   // montre pas, le bandeau les compte et mène au premier.
-  const avant = mois.slice(0, Math.max(index, 0)).filter((m) => m.nbEnRetard > 0);
+  const avant = mois.slice(0, index).filter((m) => m.nbEnRetard > 0);
   const nbRetardsAvant = avant.reduce((n, m) => n + m.nbEnRetard, 0);
-
-  const allerA = (i: number) => {
-    setCleMois(mois[i].cle);
-    setJourChoisi(null);
-  };
 
   return (
     <div className="flex flex-col gap-4">
       {nbRetardsAvant > 0 ? (
         <button
           type="button"
-          onClick={() => allerA(mois.indexOf(avant[0]))}
+          onClick={() => setCleMois(avant[0].cle)}
           className="flex min-h-11 items-center justify-between gap-3 rounded-[16px] bg-[color:var(--board-signal-wash)] px-4 py-2.5 text-left text-[13.5px] font-semibold text-[color:var(--board-signal-ink)] ring-1 ring-inset ring-[color:var(--board-signal)]"
         >
           {nbRetardsAvant} en retard les mois précédents
@@ -141,52 +126,37 @@ export function MoisTelephone({
         </button>
       ) : null}
 
-      <section className="carte-board px-4 pb-5 pt-4" aria-labelledby={`mois-${courant.cle}`}>
-        <div className="flex items-center gap-2">
+      <section className="carte-board px-4 pb-5 pt-4" aria-labelledby={titreId}>
+        <div className="mb-4 flex items-center gap-2">
           <BoutonMois
             label="Mois précédent"
-            onClick={index > 0 ? () => allerA(index - 1) : undefined}
+            onClick={index > 0 ? () => setCleMois(mois[index - 1].cle) : undefined}
           >
             <ChevronLeft className="size-4" />
           </BoutonMois>
           <h3
-            id={`mois-${courant.cle}`}
+            id={titreId}
             className="board-titre m-0 flex-1 text-center text-[18px] first-letter:uppercase"
           >
             {courant.titre}
           </h3>
           <BoutonMois
             label="Mois suivant"
-            onClick={index < mois.length - 1 ? () => allerA(index + 1) : undefined}
+            onClick={
+              index < mois.length - 1 ? () => setCleMois(mois[index + 1].cle) : undefined
+            }
           >
             <ChevronRight className="size-4" />
           </BoutonMois>
         </div>
 
-        <div className="mt-4">
-          <GrillePoints cases={cases} choisi={jour?.cle ?? null} onChoisir={setJourChoisi} />
-        </div>
-
-        {jour ? (
-          <div className="mt-5">
-            <p className="m-0 text-[13px] font-semibold text-[color:var(--board-slate-ink)]">
-              {jour.estAujourdhui
-                ? `Aujourd'hui, ${formaterJourDateLongueFr(new Date(`${jour.cle}T12:00:00Z`))}`
-                : libelleDuJour(jour.cle)}
-            </p>
-            {lignesDuJour.length > 0 ? (
-              <ListeLignes lignes={lignesDuJour} />
-            ) : (
-              <p className="m-0 mt-2 text-[13.5px] text-[color:var(--board-slate-mid)]">
-                Aucune échéance ce jour-là.
-              </p>
-            )}
-          </div>
-        ) : (
-          <p className="m-0 mt-5 text-[13.5px] text-[color:var(--board-slate-mid)]">
-            Aucune échéance datée ce mois-ci.
-          </p>
-        )}
+        <GrilleAvecJour
+          cases={casesDuMois(courant.cle, cleAujourdhui, parJour)}
+          rendreJour={(cle) => {
+            const lignes = parJour.get(cle);
+            return lignes ? <ListeLignes lignes={lignes} /> : null;
+          }}
+        />
 
         {sansDate.length > 0 ? (
           <div className="mt-5 border-t border-[color:var(--board-slate-line)] pt-4">

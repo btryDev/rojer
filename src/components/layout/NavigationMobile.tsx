@@ -15,7 +15,7 @@
 // L'état ouvert/fermé et le voile appartiennent à `AppSidebar`, qui les
 // partage avec le rail : une seule source, refermée à chaque navigation.
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { DemandeAide } from "@/components/assistance/DemandeAide";
 import { NavLink, RailEntree } from "./entrees-navigation";
@@ -25,6 +25,26 @@ import {
   type RailCategorieId,
   type SidebarItemId,
 } from "./sidebar-nav";
+
+/** Le seuil « téléphone » de toute l'app : `md` (48rem), comme la règle de
+ *  `globals.css` et les variantes `md:`. */
+const REQUETE_TELEPHONE = "(width < 48rem)";
+
+function abonner(rappel: () => void) {
+  const mq = window.matchMedia?.(REQUETE_TELEPHONE);
+  mq?.addEventListener("change", rappel);
+  return () => mq?.removeEventListener("change", rappel);
+}
+
+/** Vrai sous 48rem. Faux au rendu serveur : rien de ce qui en dépend n'y est
+ *  rendu, la feuille ne s'ouvrant que sur un geste. */
+function useEstTelephone(): boolean {
+  return useSyncExternalStore(
+    abonner,
+    () => window.matchMedia?.(REQUETE_TELEPHONE).matches ?? false,
+    () => false,
+  );
+}
 
 export function NavigationMobile({
   etablissementId,
@@ -48,24 +68,32 @@ export function NavigationMobile({
   surChoisir: (id: RailCategorieId | null) => void;
   enAttente: boolean;
 }) {
-  const feuille = rail.find((c) => c.id === ouverte) ?? null;
+  // La feuille n'existe que sur téléphone : ailleurs, l'état `ouverte` est
+  // celui du panneau du rail, et une copie cachée de ses liens — avec son
+  // focus et son Échap — n'aurait rien à faire dans la page.
+  const telephone = useEstTelephone();
+  const feuille = telephone ? (rail.find((c) => c.id === ouverte) ?? null) : null;
   const zoneFeuille = useRef<HTMLDivElement>(null);
   const barre = useRef<HTMLElement>(null);
 
   // À l'ouverture, le focus entre dans la feuille ; Échap la referme et le
   // rend à l'onglet qui l'a ouverte. Même contrat que le menu de la gélule.
   useEffect(() => {
-    if (!ouverte) return;
+    if (!feuille) return;
     zoneFeuille.current?.querySelector<HTMLElement>("a, button")?.focus();
     const auClavier = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
+      // Une fenêtre ouverte depuis la feuille (« Besoin d'aide ? ») a son
+      // propre Échap : refermer la feuille sous elle la démonterait, et le
+      // message en cours de saisie avec.
+      if (document.querySelector("[data-panneau-modal]")) return;
       const onglet = barre.current?.querySelector<HTMLElement>('[aria-expanded="true"]');
       surChoisir(null);
       onglet?.focus();
     };
     document.addEventListener("keydown", auClavier);
     return () => document.removeEventListener("keydown", auClavier);
-  }, [ouverte, surChoisir]);
+  }, [feuille, surChoisir]);
 
   return (
     <div className="md:hidden">
@@ -102,7 +130,7 @@ export function NavigationMobile({
           </p>
           <nav aria-label={feuille.label}>
             {feuille.items.map((it) => (
-              <NavLink key={it.id} item={it} actif={actif} />
+              <NavLink key={it.id} item={it} actif={actif} onNavigate={() => surChoisir(null)} />
             ))}
           </nav>
           <div className="mt-2 border-t border-white/10 pt-2">

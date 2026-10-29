@@ -66,10 +66,23 @@ describe("GrilleTelephone", () => {
     expect(screen.getByText("Jeudi 15 octobre 2026")).toBeDefined();
   });
 
-  it("un point par échéance, trois au plus", () => {
+  it("un point par échéance, trois au plus, et un « + » au-delà", () => {
     rendre([1, 2, 3, 4].map((n) => evt(`x${n}`, 8, `Ligne ${n}`, "ok")));
     const huit = screen.getByRole("button", { name: /^Jeudi 8 octobre 2026, 4 échéances$/ });
     expect(within(huit).getByText("8")).toBeDefined();
     expect(huit.querySelectorAll("[data-point]")).toHaveLength(3);
+    expect(huit.querySelector("[data-plus]")).not.toBeNull();
+  });
+
+  it("le retard passe devant : il ne se perd pas derrière trois autres points", () => {
+    rendre([
+      evt("a", 8, "A", "ok"),
+      evt("b", 8, "B", "ok"),
+      evt("c", 8, "C", "ok"),
+      evt("d", 8, "D", "alerte"),
+    ]);
+    const huit = screen.getByRole("button", { name: /^Jeudi 8 octobre 2026/ });
+    const premier = huit.querySelector<HTMLElement>("[data-point]")!;
+    expect(premier.style.background).toBe("var(--board-signal)");
   });
 });
