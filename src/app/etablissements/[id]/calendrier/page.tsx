@@ -154,13 +154,22 @@ const FMT_AUJOURDHUI = new Intl.DateTimeFormat("fr-FR", {
  * L'état d'une ligne en mots, sur son champ : « Sous 30 jours », « Au-delà de
  * 30 jours »… Une seule écriture pour les deux familles de lignes.
  */
-function PastilleEtat({ etat }: { etat: RegistreLigne }) {
+function PastilleEtat({
+  etat,
+  duJour = false,
+}: {
+  etat: RegistreLigne;
+  /** L'échéance tombe aujourd'hui (2026-10-29, décision de la propriétaire) :
+   *  « Sous 30 jours » se lisait « on a le temps » le jour même. Même champ,
+   *  le mot seul change. */
+  duJour?: boolean;
+}) {
   return (
     <span
       className="inline-flex items-center whitespace-nowrap rounded-full px-[13px] py-[6px] text-[12px] font-semibold"
       style={{ background: CHAMP_ETAT[etat], color: ENCRE_ETAT[etat] }}
     >
-      {libelleEtatCapitale(etat)}
+      {duJour && etat === "proche" ? "Aujourd'hui" : libelleEtatCapitale(etat)}
     </span>
   );
 }
@@ -1194,6 +1203,8 @@ export default async function CalendrierPage({
   // méta, l'état par la pastille de droite. Les lignes descendent une par
   // une (2026-10-29) : la liste de l'ordinateur les empile, la grille du
   // téléphone les range sous leur jour.
+  const cleAujourdhui = cleJourCivil(aujourdhui);
+  const estDuJour = (d: Date) => cleJourCivil(d) === cleAujourdhui;
   const rendreLigne = (ligne: LigneMois<(typeof verifsVisibles)[number]>) => {
     if (ligne.genre === "verif") {
       const v = ligne.v;
@@ -1265,7 +1276,7 @@ export default async function CalendrierPage({
             ligne.lecture !== "realisation" &&
             (ligne.registre === "proche" ||
               ligne.registre === "lointain") ? (
-              <PastilleEtat etat={ligne.registre} />
+              <PastilleEtat etat={ligne.registre} duJour={estDuJour(ligne.date)} />
             ) : (
               <BadgeStatut
                 // D26 : « à confirmer » vient du registre de
@@ -1304,7 +1315,7 @@ export default async function CalendrierPage({
               En retard
             </span>
           ) : (
-            <PastilleEtat etat={ligne.etat} />
+            <PastilleEtat etat={ligne.etat} duJour={estDuJour(ligne.date)} />
           )
         }
       />
@@ -1449,7 +1460,7 @@ export default async function CalendrierPage({
                  pas. */
               moisInitial={moisInitial}
               cleMoisCourant={cleMoisCourant}
-              cleAujourdhui={cleJourCivil(aujourdhui)}
+              cleAujourdhui={cleAujourdhui}
               commandes={commandes}
               parEquipement={
                 <VueParEquipement
