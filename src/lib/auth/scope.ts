@@ -48,7 +48,10 @@ export const requireEtablissement = cache(async function requireEtablissement(
   etablissementId: string,
 ) {
   const user = await requireUser();
-  const etablissement = await etablissementDuCompteDuRendu(etablissementId);
+  const etablissement = await etablissementDuCompteDuRendu(
+    etablissementId,
+    user.id,
+  );
   if (!etablissement) notFound();
   return { user, etablissement };
 });

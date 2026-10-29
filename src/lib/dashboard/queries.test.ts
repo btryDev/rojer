@@ -630,22 +630,22 @@ describe("getDashboardData — le jour même de l'échéance", () => {
 });
 
 describe("getDashboardData — DUERP", () => {
+  const duerpAvecVersion = (ageJours: number | null) => ({
+    id: "duerp-1",
+    referentielSecteurId: "restauration",
+    versions:
+      ageJours === null ? [] : [{ numero: 1, createdAt: jour(-ageJours) }],
+  });
   // L'effectif se lit sur l'établissement du rendu, plus sur une relation du
   // DUERP (plan performance, 2026-10-29) : le test le pose là où il est lu.
-  const duerpAvecVersion = (ageJours: number | null, effectif: number) => {
-    h.db.etablissement = { effectifSurSite: 0, entreprise: { effectif } };
-    return {
-      id: "duerp-1",
-      referentielSecteurId: "restauration",
-      versions:
-        ageJours === null
-          ? []
-          : [{ numero: 1, createdAt: jour(-ageJours) }],
-    };
-  };
+  const effectifEntreprise = (effectif: number) => ({
+    effectifSurSite: 0,
+    entreprise: { effectif },
+  });
 
   it("distingue « aucune version validée » de « version trop ancienne »", async () => {
-    h.db.duerp = duerpAvecVersion(null, 20);
+    h.db.duerp = duerpAvecVersion(null);
+    h.db.etablissement = effectifEntreprise(20);
     const d = await getDashboardData(ETAB);
     expect(d.duerp.existe).toBe(true);
     expect(d.duerp.ageJours).toBeNull();
@@ -658,7 +658,8 @@ describe("getDashboardData — DUERP", () => {
   });
 
   it("n'exige pas la mise à jour annuelle sous onze salariés (art. R. 4121-2)", async () => {
-    h.db.duerp = duerpAvecVersion(400, 4);
+    h.db.duerp = duerpAvecVersion(400);
+    h.db.etablissement = effectifEntreprise(4);
     const d = await getDashboardData(ETAB);
     expect(d.duerp.estAJour).toBe(true);
     expect(d.recommandations.some((r) => r.kind === "duerp_a_jour")).toBe(false);
@@ -666,7 +667,8 @@ describe("getDashboardData — DUERP", () => {
   });
 
   it("l'exige à partir de onze salariés", async () => {
-    h.db.duerp = duerpAvecVersion(400, 11);
+    h.db.duerp = duerpAvecVersion(400);
+    h.db.etablissement = effectifEntreprise(11);
     const d = await getDashboardData(ETAB);
     expect(d.duerp.estAJour).toBe(false);
     expect(d.recommandations.some((r) => r.kind === "duerp_a_jour")).toBe(true);

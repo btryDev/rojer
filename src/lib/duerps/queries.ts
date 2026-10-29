@@ -58,20 +58,28 @@ function actionVersMesure(a: ActionRow) {
  * PARTAGÉ ENTRE LE LAYOUT ET LA PAGE, ET C'EST SANS RISQUE : la réparation du
  * calendrier que font le tableau de bord et le calendrier
  * (`regeneration-sure.ts`) n'écrit que des lignes de suivi et le sceau de
- * l'établissement, jamais le DUERP. Clé primitive, portée de la requête HTTP ;
- * hors rendu (action serveur, route), la lecture se fait à chaque appel. Le
- * résultat est partagé : un appelant ne le modifie pas.
+ * l'établissement, jamais le DUERP. Clés primitives, portée de la requête
+ * HTTP ; hors rendu (action serveur, route), la lecture se fait à chaque
+ * appel. Le résultat est partagé : un appelant ne le modifie pas.
+ *
+ * LE PROPRIÉTAIRE EST UN PARAMÈTRE, sur le modèle de
+ * `chargerEtablissementEtParc` : chaque appelant tient déjà l'utilisateur, et
+ * hors rendu un second `requireUser()` coûterait un aller-retour
+ * d'authentification de plus. Le prédicat d'appartenance reste dans la requête.
  */
 export const duerpDuRendu = cache(async function duerpDuRendu(
   etablissementId: string,
+  userId: string,
 ) {
-  const user = await requireUser();
   return prisma.duerp.findFirst({
     where: {
       etablissementId,
-      etablissement: { entreprise: { userId: user.id } },
+      etablissement: { entreprise: { userId } },
     },
     orderBy: { updatedAt: "desc" },
+    // Les réponses aux questions transverses : seuls les écrans du DUERP les
+    // lisent, par leur propre lecture (`getDuerp`).
+    omit: { reponsesTransverses: true, transversesRepondues: true },
     include: {
       // Le numéro et la date, seuls lus. Pas le `snapshot` : le document figé
       // entier, que la barre latérale paierait sur chaque écran pour une date.

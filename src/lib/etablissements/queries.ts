@@ -25,15 +25,19 @@ import { cache } from "react";
  * lecture (`registre/queries.ts`). Aucune autre colonne n'est écrite pendant
  * un rendu.
  *
- * Clé primitive, portée de la requête HTTP ; hors rendu (action serveur), la
+ * LE PROPRIÉTAIRE EST UN PARAMÈTRE, sur le modèle de
+ * `chargerEtablissementEtParc` : la garde tient déjà l'utilisateur, et hors
+ * rendu un second `requireUser()` coûterait un aller-retour
+ * d'authentification de plus. Le prédicat d'appartenance reste dans la requête.
+ *
+ * Clés primitives, portée de la requête HTTP ; hors rendu (action serveur), la
  * lecture se fait à chaque appel. Le résultat est partagé : un appelant ne le
  * modifie pas.
  */
 export const etablissementDuCompteDuRendu = cache(
-  async function etablissementDuCompteDuRendu(id: string) {
-    const user = await requireUser();
+  async function etablissementDuCompteDuRendu(id: string, userId: string) {
     return prisma.etablissement.findFirst({
-      where: { id, entreprise: { userId: user.id } },
+      where: { id, entreprise: { userId } },
       include: { entreprise: true },
       // Les deux colonnes que la réparation peut réécrire après cette lecture
       // (voir ci-dessus) : absentes du type, un lecteur ne peut pas les y
@@ -61,9 +65,10 @@ export const etablissementDuCompteDuRendu = cache(
 export const getEtablissement = cache(async function getEtablissement(
   id: string,
 ) {
+  const user = await requireUser();
   const [etab, duerp] = await Promise.all([
-    etablissementDuCompteDuRendu(id),
-    duerpDuRendu(id),
+    etablissementDuCompteDuRendu(id, user.id),
+    duerpDuRendu(id, user.id),
   ]);
   if (!etab) return null;
   return { ...etab, duerp };

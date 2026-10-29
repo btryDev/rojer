@@ -843,7 +843,7 @@ export const getDashboardData = cache(async function getDashboardData(
     prisma.action.count({ where: { ...scope, risqueId: { not: null } } }),
     // Le DUERP du rendu, partagé avec l'échéance annuelle de la barre
     // latérale, la couverture et la page (plan performance, 2026-10-29).
-    duerpDuRendu(etablissementId),
+    duerpDuRendu(etablissementId, user.id),
     // Le parc compté une fois par rendu, partagé avec la barre latérale.
     comptesParcDuRendu(etablissementId).then((c) => c.total),
     // Dans le `Promise.all` et non derrière lui : le rapprochement ne dépend
@@ -879,7 +879,7 @@ export const getDashboardData = cache(async function getDashboardData(
     // L'effectif de l'entreprise et du site conditionne la mise à jour
     // annuelle du DUERP (art. R. 4121-2) — cf. `./duerp`. La lecture de la
     // garde d'appartenance, partagée sur le rendu.
-    etablissementDuCompteDuRendu(etablissementId),
+    etablissementDuCompteDuRendu(etablissementId, user.id),
   ]);
 
   // Répartition unique, partagée avec les documents générés : quatre

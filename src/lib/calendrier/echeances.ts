@@ -699,14 +699,18 @@ const sourceActions: SourceEcheances = async ({
 };
 
 const sourceDuerp: SourceEcheances = async ({
+  scope,
   aujourdhui,
   etablissementId,
 }) => {
   // Le DUERP du rendu, le même que celui du tableau de bord : l'échéance
   // « mise à jour annuelle » et l'âge affiché au board portent sur le même
   // document par construction. La sélection déterministe (tri, version par
-  // `numero`) et la portée au compte vivent dans le chargeur.
-  const duerp = await duerpDuRendu(etablissementId);
+  // `numero`) vit dans le chargeur ; le propriétaire est celui du périmètre.
+  const duerp = await duerpDuRendu(
+    etablissementId,
+    scope.etablissement.entreprise.userId,
+  );
   const e = echeanceDuerp({
     etablissementId,
     dateDerniereVersion: duerp?.versions[0]?.createdAt ?? null,
