@@ -71,6 +71,7 @@ import {
   type SidebarItemId,
   type SidebarModules,
 } from "./sidebar-nav";
+import { NavigationMobile } from "./NavigationMobile";
 
 type Etablissement = {
   id: string;
@@ -127,10 +128,33 @@ export function AppSidebar({
   }
   const panneau = rail.find((c) => c.id === ouverte) ?? null;
 
-
+  // Trois largeurs (responsive, 2026-10-29) :
+  //   - téléphone, sous 768 px : la barre latérale disparaît, la navigation
+  //     passe en bas (`NavigationMobile`), même rail, même panneau en feuille ;
+  //   - tablette, de 768 à 1023 px : le rail seul ; le panneau s'ouvre
+  //     PAR-DESSUS la page, avec un voile, au lieu de la pousser ;
+  //   - ordinateur : rien ne change, le panneau prend sa place à côté.
   return (
+    <>
+    <NavigationMobile
+      etablissementId={etablissement.id}
+      raisonDisplay={etablissement.raisonDisplay}
+      rail={rail}
+      catActive={catActive}
+      ouverte={ouverte}
+      surChoisir={setOuverte}
+      enAttente={enAttente}
+      rendreItem={(it) => <NavLink item={it} actif={actif} />}
+    />
+    {panneau ? (
+      <div
+        aria-hidden
+        onClick={() => setOuverte(null)}
+        className="fixed inset-0 z-30 hidden bg-[color:rgba(10,10,10,.28)] md:block lg:hidden"
+      />
+    ) : null}
     <aside
-      className="flex h-screen bg-[color:var(--board-ink)] text-white"
+      className="relative z-40 hidden h-dvh bg-[color:var(--board-ink)] text-white md:flex"
       aria-label="Navigation principale"
       inert={enAttente}
       aria-busy={enAttente || undefined}
@@ -182,7 +206,10 @@ export function AppSidebar({
       <div
         inert={!panneau}
         className={
+          // Sur tablette, le panneau flotte à droite du rail (fond plein :
+          // le voile de 4 % de blanc ne se lit que sur l'encre du rail).
           "shrink-0 overflow-hidden bg-white/[0.04] transition-[width] duration-200 " +
+          "max-lg:absolute max-lg:inset-y-0 max-lg:left-[88px] max-lg:bg-[#1a1a1a] max-lg:shadow-[12px_0_32px_-16px_rgba(0,0,0,.5)] " +
           (panneau ? "w-[256px]" : "w-0")
         }
       >
@@ -217,6 +244,7 @@ export function AppSidebar({
         </div>
       </div>
     </aside>
+    </>
   );
 }
 

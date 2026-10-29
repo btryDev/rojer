@@ -51,7 +51,10 @@ export default async function EtablissementLayout({
   };
 
   return (
-    <div className="grid min-h-screen grid-cols-1 lg:h-screen lg:grid-cols-[auto_1fr] lg:overflow-hidden">
+    // `md:` et non plus `lg:` (2026-10-29) : la tablette garde le rail, le
+    // téléphone n'en a plus (`NavigationMobile`). `relative` : la marque du
+    // téléphone s'y pose en haut à gauche, en face de la gélule.
+    <div className="relative grid min-h-screen grid-cols-1 md:h-dvh md:grid-cols-[auto_1fr] md:overflow-hidden">
       {/* La barre s'affiche sans attendre ses pastilles, et la page se rend
           en même temps (plan performance, lot 3, `SidebarAvecPastilles`). */}
       <SidebarAvecPastilles etablissement={etab} />
@@ -59,7 +62,9 @@ export default async function EtablissementLayout({
       {/* `pt-[var(--reserve-gelule)]` : la place de la gélule, réservée par
           défaut ; un en-tête à fond la reprend (`.sous-la-gelule`). Sans
           elle, un formulaire ou une fiche passait sous la gélule. */}
-      <div className="relative flex min-w-0 flex-col pt-[var(--reserve-gelule)] lg:overflow-y-auto">
+      {/* `pb-[var(--reserve-nav-bas)]` : la place de la barre du bas, sur
+          téléphone seulement. */}
+      <div className="relative flex min-w-0 flex-col pt-[var(--reserve-gelule)] pb-[var(--reserve-nav-bas)] md:overflow-y-auto">
         {/* Gélule de compte : la sidebar porte la hiérarchie du produit, la
             gélule les utilitaires de session. Elle flotte au-dessus du
             contenu, sans bande à elle. Cf. `BarreCompte`. */}

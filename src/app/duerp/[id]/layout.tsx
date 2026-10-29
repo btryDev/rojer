@@ -72,7 +72,8 @@ export default async function DuerpLayout({
   ];
 
   return (
-    <div className="grid min-h-screen grid-cols-1 lg:h-screen lg:grid-cols-[auto_1fr] lg:overflow-hidden">
+    // Mêmes largeurs que le shell d'établissement (2026-10-29).
+    <div className="relative grid min-h-screen grid-cols-1 md:h-dvh md:grid-cols-[auto_1fr] md:overflow-hidden">
       <AppSidebar
         etablissement={{
           id: etab.id,
@@ -89,7 +90,7 @@ export default async function DuerpLayout({
       {/* `relative` : la gélule de compte s'y positionne, en haut à droite. */}
       {/* La place de la gélule, réservée par défaut (voir le shell
           d'établissement). */}
-      <div className="relative flex min-w-0 flex-col bg-[color:var(--board-canvas)] pt-[var(--reserve-gelule)] lg:overflow-y-auto">
+      <div className="relative flex min-w-0 flex-col bg-[color:var(--board-canvas)] pt-[var(--reserve-gelule)] pb-[var(--reserve-nav-bas)] md:overflow-y-auto">
         {/* Le compte se tient en haut à droite ici aussi : le shell DUERP
             partage la même sidebar, donc la même règle. */}
         <BarreCompte

@@ -93,6 +93,10 @@
      shells, rendue par ce qui a le droit de passer dessous — un fond ou une
      image (`.sous-la-gelule`). Par défaut, rien ne s'y glisse. */
   --reserve-gelule: 72px;
+  /* La place de la barre de navigation du bas (`NavigationMobile`), sur
+     téléphone seulement : 68 px, plus la barre d'accueil de l'iPhone. Nulle
+     dès 768 px, où le rail reprend la navigation. */
+  --reserve-nav-bas: 0px;
   /* La mesure de lecture, unique (2026-10-24, décision de la propriétaire).
      ~~62 / 66 / 68 caractères, recopiés à la main dans chaque écran~~ : la
      mesure d'un livre, qui coupait en trois lignes une phrase d'aide sur un
@@ -206,6 +210,20 @@
   --input: oklch(0.88 0.003 90);
   --ring: oklch(0.35 0.004 90);
   --radius: 0.75rem; /* ronds doux, type image 2 */
+}
+
+/* Téléphone (2026-10-29). La gouttière tombe à 16 px : à 32, un écran de
+   390 px en perdait 64, et 120 dans une carte à `px-7`. La barre du bas
+   réserve sa place sous le contenu. */
+@media (max-width: 767.98px) {
+  :root {
+    --reserve-nav-bas: calc(68px + env(safe-area-inset-bottom, 0px));
+  }
+}
+@media (max-width: 639.98px) {
+  :root {
+    --board-gutter: 16px;
+  }
 }
 
 .dark {

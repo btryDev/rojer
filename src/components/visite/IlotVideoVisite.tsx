@@ -65,11 +65,13 @@ export function IlotVideoVisite({ cle }: { cle: CleVisite }) {
         aria-label="Visite guidée de la page"
         // Sur l'encre, comme le rail : l'îlot se détache des cartes blanches
         // de la page sans emprunter une couleur d'état (charte, § 1.5).
-        className="fixed bottom-5 right-5 z-40 w-[384px] max-w-[calc(100vw-32px)] rounded-[22px] bg-[color:var(--board-ink)] px-3.5 pb-2.5 pt-3.5 text-white shadow-[0_18px_40px_-14px_rgba(13,18,36,.55)]"
+        // Sur téléphone, l'îlot se pose au-dessus de la barre du bas
+        // (`--reserve-nav-bas`, nulle ailleurs) et perd sa vignette.
+        className="fixed bottom-[calc(var(--reserve-nav-bas)_+_12px)] right-[var(--board-gutter)] z-40 w-[384px] max-w-[calc(100vw_-_2_*_var(--board-gutter))] md:bottom-5 md:right-5 rounded-[22px] bg-[color:var(--board-ink)] px-3.5 pb-2.5 pt-3.5 text-white shadow-[0_18px_40px_-14px_rgba(13,18,36,.55)]"
       >
         <div className="flex items-start gap-3.5">
           <button type="button" onClick={ouvrir} className="group flex min-w-0 flex-1 items-start gap-3.5 text-left">
-            <span className="relative block w-[118px] flex-none overflow-hidden rounded-[14px] bg-[color:var(--board-canvas)]">
+            <span className="relative hidden w-[118px] flex-none overflow-hidden rounded-[14px] bg-[color:var(--board-canvas)] sm:block">
               {/* eslint-disable-next-line @next/next/no-img-element -- vignette statique, déjà à la bonne taille */}
               <img src={vignette} alt="" className="block aspect-video w-full object-cover" />
               <span className="absolute inset-0 flex items-center justify-center bg-[rgba(10,10,10,.06)] transition-colors group-hover:bg-[rgba(10,10,10,.16)]">

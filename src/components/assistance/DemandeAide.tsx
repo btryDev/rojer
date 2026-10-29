@@ -25,7 +25,9 @@ import { MessageFait } from "@/components/ui-kit/MessageFait";
  *
  *   - `encart` : une accroche et un bouton, là où le doute est fort ;
  *   - `lien`   : une ligne discrète, au fil d'un parcours ;
- *   - `rail`   : l'entrée permanente de la barre latérale.
+ *   - `rail`   : l'entrée permanente de la barre latérale ;
+ *   - `feuille`: la même entrée au pied des feuilles de la navigation du
+ *     téléphone (`NavigationMobile`), sur l'encre comme le rail.
  */
 export function DemandeAide({
   variante,
@@ -35,7 +37,7 @@ export function DemandeAide({
   contexte,
   etablissementId,
 }: {
-  variante: "encart" | "lien" | "rail";
+  variante: "encart" | "lien" | "rail" | "feuille";
   /** Le texte du bouton ou du lien, adapté à l'endroit. */
   libelle?: string;
   /** Pour l'encart : la phrase qui pose le doute. */
@@ -64,6 +66,17 @@ export function DemandeAide({
           <LifeBuoy aria-hidden className="size-[18px]" />
         </span>
         <span className="text-[10.5px] font-semibold leading-none">{libelle}</span>
+      </button>
+    ) : variante === "feuille" ? (
+      // Une ligne au gabarit des entrées de la feuille.
+      <button
+        type="button"
+        onClick={ouvrir}
+        aria-haspopup="dialog"
+        className="flex w-full items-center gap-3 rounded-full px-3.5 py-[10px] text-left text-[13.5px] text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+      >
+        <LifeBuoy aria-hidden className="size-4 flex-none opacity-90" />
+        <span className="min-w-0 flex-1 leading-[1.3]">{libelle}</span>
       </button>
     ) : variante === "lien" ? (
       <button
@@ -94,7 +107,7 @@ export function DemandeAide({
         {ouvert && (
           <Formulaire
             // Le rail ne sait pas d'où on l'ouvre : la page le dira.
-            categorie={variante === "rail" ? null : categorie}
+            categorie={variante === "rail" || variante === "feuille" ? null : categorie}
             contexte={contexte}
             etablissementId={etablissementId}
             surFermer={fermer}
