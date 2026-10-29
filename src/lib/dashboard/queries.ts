@@ -25,6 +25,8 @@ import { JOURS_APRES } from "./frise";
 import { instantDuRendu } from "@/lib/dates/instant-du-rendu";
 import { comptesParcDuRendu } from "@/lib/equipements/queries";
 import { compterRapportsDuDossier } from "@/lib/rapports/queries";
+import { duerpDuRendu } from "@/lib/duerps/queries";
+import { etablissementDuCompteDuRendu } from "@/lib/etablissements/queries";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { compterActions } from "@/lib/actions/queries";
@@ -753,6 +755,7 @@ export const getDashboardData = cache(async function getDashboardData(
     rapports12m,
     marquesDossier,
     couverture,
+    etablissement,
   ] = await Promise.all([
     // Un seul passage sur les vérifications qui comptent : les occurrences
     // ouvertes (toutes, sans plafond — leur nombre est borné par le
@@ -838,24 +841,9 @@ export const getDashboardData = cache(async function getDashboardData(
     // compteurs à l'écran ; le score, lui, garde toutes les actions.
     compterActions(etablissementId, now, { origine: "duerp" }),
     prisma.action.count({ where: { ...scope, risqueId: { not: null } } }),
-    prisma.duerp.findFirst({
-      where: {
-        etablissementId,
-        etablissement: { entreprise: { userId: user.id } },
-      },
-      orderBy: { updatedAt: "desc" },
-      include: {
-        versions: { orderBy: { numero: "desc" }, take: 1 },
-        // L'effectif de l'entreprise conditionne la mise à jour annuelle
-        // (art. R. 4121-2) — cf. `./duerp`.
-        etablissement: {
-          select: {
-            effectifSurSite: true,
-            entreprise: { select: { effectif: true } },
-          },
-        },
-      },
-    }),
+    // Le DUERP du rendu, partagé avec l'échéance annuelle de la barre
+    // latérale, la couverture et la page (plan performance, 2026-10-29).
+    duerpDuRendu(etablissementId),
     // Le parc compté une fois par rendu, partagé avec la barre latérale.
     comptesParcDuRendu(etablissementId).then((c) => c.total),
     // Dans le `Promise.all` et non derrière lui : le rapprochement ne dépend
@@ -888,6 +876,10 @@ export const getDashboardData = cache(async function getDashboardData(
     // l'écran « Périmètre » et le dossier PDF : deux lectures finiraient par
     // dire deux choses.
     couvertureDuDossier(etablissementId),
+    // L'effectif de l'entreprise et du site conditionne la mise à jour
+    // annuelle du DUERP (art. R. 4121-2) — cf. `./duerp`. La lecture de la
+    // garde d'appartenance, partagée sur le rendu.
+    etablissementDuCompteDuRendu(etablissementId),
   ]);
 
   // Répartition unique, partagée avec les documents générés : quatre
@@ -910,8 +902,8 @@ export const getDashboardData = cache(async function getDashboardData(
       // Sans DUERP, rien n'est ouvert et l'effectif ne décide de rien :
       // `ouvert: false` tranche avant lui.
       effectifs: {
-        entreprise: duerp?.etablissement.entreprise.effectif ?? 0,
-        site: duerp?.etablissement.effectifSurSite ?? 0,
+        entreprise: etablissement?.entreprise.effectif ?? 0,
+        site: etablissement?.effectifSurSite ?? 0,
       },
     },
     now,

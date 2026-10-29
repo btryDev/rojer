@@ -20,6 +20,7 @@ import {
   equipementsPourLeMoteur,
 } from "@/lib/etablissements/dossier-du-rendu";
 import { evaluerCouverture } from "@/lib/duerps/couverture";
+import { duerpDuRendu } from "@/lib/duerps/queries";
 import { lireReponsesActivites } from "@/lib/activites/reponses";
 import {
   compterSansObligation,
@@ -64,13 +65,11 @@ export async function faitsDeCouverture(
   // la couverture, bornées par `etab.id`, établi par la lecture ci-dessus.
   const etab = await chargerEtablissementEtParc(etablissementId, user.id);
   if (!etab) return null;
-  const [duerps, nbRetires] = await Promise.all([
-    // « 1 établissement = 1 DUERP » est un invariant de base
-    // (`Duerp.etablissementId @unique`) : le premier est le seul.
-    prisma.duerp.findMany({
-      where: { etablissementId: etab.id },
-      include: { unites: true },
-    }),
+  const [duerp, nbRetires] = await Promise.all([
+    // Le DUERP du rendu, avec ses unités, partagé avec le tableau de bord et
+    // la barre latérale (plan performance, 2026-10-29) ; portée au compte
+    // dans sa requête.
+    duerpDuRendu(etab.id),
     // Les retirés, comptés à part : ils portent des preuves que le registre
     // imprime (axe `inventaire`, `couverture.ts`).
     // Partagé avec la barre latérale et le tableau de bord (plan
@@ -115,7 +114,6 @@ export async function faitsDeCouverture(
 
   const sansEcheance = reperterSansEcheance(etabMatching, equipementsMatching);
 
-  const duerp = duerps[0] ?? null;
   // Le tri « déclarée / écartée / sans réponse » et les cinq états viennent
   // d'`evaluerCouverture`, seule autorité sur la question (ADR-020). On ne le
   // refait pas ici : on projette ce qu'il rend.

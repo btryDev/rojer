@@ -1,12 +1,52 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
+import { duerpDuRendu } from "@/lib/duerps/queries";
 import { cache } from "react";
 
 // ADR-005 : scope par userId via la relation entreprise.
 
 /**
- * L'établissement du user, son entreprise et son dernier DUERP.
+ * L'établissement du user et son entreprise, lus UNE FOIS par rendu. `null`
+ * s'il n'existe pas ou n'appartient pas à l'utilisateur.
+ *
+ * LA LECTURE QUE PARTAGENT `requireEtablissement` (`auth/scope.ts`, la garde
+ * d'appartenance de chaque page et de la barre latérale) et `getEtablissement`
+ * (plan performance, 2026-10-29). Elle vit ici et non dans `scope.ts` pour que
+ * la garde de tenancy des `queries.ts` (`tenancy-lectures.test.ts`) continue
+ * de voir `getEtablissement` lire par `id`, avec son prédicat.
+ *
+ * CE QU'ELLE NE DIT PAS À JOUR. Le layout la lit en parallèle de la page, donc
+ * possiblement AVANT la réparation du calendrier que font le tableau de bord
+ * et le calendrier (`regeneration-sure.ts`). La réparation écrit le sceau
+ * `referentielVersionCalendrier` — et, par lui, `updatedAt`. Ces deux colonnes
+ * se lisent ailleurs : l'âge du calendrier par `fraicheurCalendrier`, la date
+ * de mise à jour du registre par sa propre lecture (`registre/queries.ts`).
+ * Aucune autre colonne n'est écrite pendant un rendu.
+ *
+ * Clé primitive, portée de la requête HTTP ; hors rendu (action serveur), la
+ * lecture se fait à chaque appel. Le résultat est partagé : un appelant ne le
+ * modifie pas.
+ */
+export const etablissementDuCompteDuRendu = cache(
+  async function etablissementDuCompteDuRendu(id: string) {
+    const user = await requireUser();
+    return prisma.etablissement.findFirst({
+      where: { id, entreprise: { userId: user.id } },
+      include: { entreprise: true },
+    });
+  },
+);
+
+/**
+ * L'établissement du user, son entreprise et son DUERP (`null` s'il n'en a
+ * pas encore), avec la dernière version et les unités de celui-ci.
+ *
+ * Deux lectures partagées, lancées ensemble : l'établissement que la garde
+ * d'appartenance a déjà lu (`etablissementDuCompteDuRendu`), et le DUERP du
+ * rendu (`duerpDuRendu`), que lisent aussi l'échéance annuelle, le tableau de
+ * bord et la couverture. Chacune porte la portée au compte dans sa requête.
+ * Elle relisait l'un et l'autre dans un `include`.
  *
  * Mémoïsé par `cache()` sur le rendu (audit Next.js du 2026-10-14, H2) : les
  * pages et les fonctions qu'elles appellent le relisent dans le même rendu.
@@ -16,22 +56,12 @@ import { cache } from "react";
 export const getEtablissement = cache(async function getEtablissement(
   id: string,
 ) {
-  const user = await requireUser();
-  return prisma.etablissement.findFirst({
-    where: { id, entreprise: { userId: user.id } },
-    include: {
-      entreprise: true,
-      duerps: {
-        orderBy: { updatedAt: "desc" },
-        include: {
-          versions: {
-            orderBy: { numero: "desc" },
-            take: 1,
-          },
-        },
-      },
-    },
-  });
+  const [etab, duerp] = await Promise.all([
+    etablissementDuCompteDuRendu(id),
+    duerpDuRendu(id),
+  ]);
+  if (!etab) return null;
+  return { ...etab, duerp };
 });
 
 /**

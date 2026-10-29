@@ -63,6 +63,12 @@ const h = vi.hoisted(() => {
     verifications: [] as Array<Record<string, unknown>>,
     actions: [] as Array<Record<string, unknown>>,
     duerp: null as Record<string, unknown> | null,
+    // L'établissement de la garde d'appartenance : le tableau de bord y lit
+    // les effectifs qui conditionnent la mise à jour annuelle du DUERP.
+    etablissement: {
+      effectifSurSite: 0,
+      entreprise: { effectif: 0 },
+    } as Record<string, unknown> | null,
     nbEquipements: 0,
     nbRapports: 0,
   };
@@ -206,6 +212,7 @@ const h = vi.hoisted(() => {
         db.actions.filter((a) => correspond(a, args.where)).length,
     },
     duerp: { findFirst: async () => db.duerp },
+    etablissement: { findFirst: async () => db.etablissement },
     // Le parc, compté une fois par rendu (`comptesParcDuRendu`, `groupBy` sur
     // `actif`) : tout en service ici.
     equipement: {
@@ -358,6 +365,7 @@ beforeEach(() => {
   h.couverture.indeterminations = [];
   h.db.actions = [];
   h.db.duerp = null;
+  h.db.etablissement = { effectifSurSite: 0, entreprise: { effectif: 0 } };
   h.db.nbEquipements = 3;
   h.db.nbRapports = 2;
 });
@@ -622,15 +630,19 @@ describe("getDashboardData — le jour même de l'échéance", () => {
 });
 
 describe("getDashboardData — DUERP", () => {
-  const duerpAvecVersion = (ageJours: number | null, effectif: number) => ({
-    id: "duerp-1",
-    referentielSecteurId: "restauration",
-    versions:
-      ageJours === null
-        ? []
-        : [{ numero: 1, createdAt: jour(-ageJours) }],
-    etablissement: { entreprise: { effectif } },
-  });
+  // L'effectif se lit sur l'établissement du rendu, plus sur une relation du
+  // DUERP (plan performance, 2026-10-29) : le test le pose là où il est lu.
+  const duerpAvecVersion = (ageJours: number | null, effectif: number) => {
+    h.db.etablissement = { effectifSurSite: 0, entreprise: { effectif } };
+    return {
+      id: "duerp-1",
+      referentielSecteurId: "restauration",
+      versions:
+        ageJours === null
+          ? []
+          : [{ numero: 1, createdAt: jour(-ageJours) }],
+    };
+  };
 
   it("distingue « aucune version validée » de « version trop ancienne »", async () => {
     h.db.duerp = duerpAvecVersion(null, 20);

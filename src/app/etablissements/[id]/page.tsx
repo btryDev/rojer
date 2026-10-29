@@ -171,7 +171,7 @@ export default async function EtablissementPage({
   // historiques par les pages relais). Un seul DUERP par établissement
   // (`Duerp.etablissementId` est unique) : ~~la recherche « de celui qui porte
   // un secteur » ajoutée le 2026-10-22~~ visait un cas impossible, retirée.
-  const duerpDernier = etab.duerps[0] ?? null;
+  const duerpDernier = etab.duerp;
   const duerpOuvert = duerpDernier?.referentielSecteurId != null;
 
   // Checklist onboarding : uniquement les étapes actionnables par l'user.

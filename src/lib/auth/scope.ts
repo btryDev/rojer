@@ -9,6 +9,7 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getOptionalUser, requireUser } from "./require-user";
+import { etablissementDuCompteDuRendu } from "@/lib/etablissements/queries";
 import { cache } from "react";
 
 /**
@@ -38,15 +39,16 @@ export async function requireEntreprise(entrepriseId: string) {
  * barre latérale (vigilance prestataires) et la page le demandent dans le même
  * rendu. Clé primitive, portée de la requête HTTP ; hors rendu RSC — une
  * action serveur —, la garde s'exécute à chaque appel, comme avant.
+ *
+ * [2026-10-29, plan performance] La lecture est celle de `getEtablissement`
+ * (`etablissementDuCompteDuRendu`), bornée au propriétaire dans sa requête :
+ * la garde et la page ne lisent plus l'établissement deux fois.
  */
 export const requireEtablissement = cache(async function requireEtablissement(
   etablissementId: string,
 ) {
   const user = await requireUser();
-  const etablissement = await prisma.etablissement.findFirst({
-    where: { id: etablissementId, entreprise: { userId: user.id } },
-    include: { entreprise: true },
-  });
+  const etablissement = await etablissementDuCompteDuRendu(etablissementId);
   if (!etablissement) notFound();
   return { user, etablissement };
 });

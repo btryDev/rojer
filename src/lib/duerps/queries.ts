@@ -36,6 +36,48 @@ function actionVersMesure(a: ActionRow) {
 }
 
 /**
+ * Le DUERP d'un établissement, sa dernière version et ses unités, lus UNE FOIS
+ * par rendu. `null` si l'établissement n'en a pas, ou n'est pas à l'utilisateur.
+ *
+ * POURQUOI (plan performance, 2026-10-29). Quatre fonctions le lisaient dans
+ * le même rendu, chacune sous sa forme : l'échéance de mise à jour annuelle
+ * (`calendrier/echeances.ts`, lue par la barre latérale sur chaque écran),
+ * l'état du DUERP au tableau de bord (`dashboard/queries.ts`), la couverture
+ * (`perimetre/faits.ts`) et `getEtablissement`. Ce chargeur sert l'union de ce
+ * qu'elles lisaient : les colonnes du DUERP, sa dernière version (toutes ses
+ * colonnes) et ses unités.
+ *
+ * LE TRI EST CELUI QU'ELLES PARTAGEAIENT : le plus récemment modifié d'abord,
+ * versions par `numero` décroissant (unique par DUERP, quand `createdAt` peut
+ * être partagé par deux lignes d'une même transaction). `Duerp.etablissementId`
+ * est unique : il n'y en a qu'un, mais une requête ne doit pas dépendre d'un
+ * invariant écrit ailleurs.
+ *
+ * PARTAGÉ ENTRE LE LAYOUT ET LA PAGE, ET C'EST SANS RISQUE : la réparation du
+ * calendrier que font le tableau de bord et le calendrier
+ * (`regeneration-sure.ts`) n'écrit que des lignes de suivi et le sceau de
+ * l'établissement, jamais le DUERP. Clé primitive, portée de la requête HTTP ;
+ * hors rendu (action serveur, route), la lecture se fait à chaque appel. Le
+ * résultat est partagé : un appelant ne le modifie pas.
+ */
+export const duerpDuRendu = cache(async function duerpDuRendu(
+  etablissementId: string,
+) {
+  const user = await requireUser();
+  return prisma.duerp.findFirst({
+    where: {
+      etablissementId,
+      etablissement: { entreprise: { userId: user.id } },
+    },
+    orderBy: { updatedAt: "desc" },
+    include: {
+      versions: { orderBy: { numero: "desc" }, take: 1 },
+      unites: true,
+    },
+  });
+});
+
+/**
  * Le DUERP du user, avec son établissement, ses unités, risques, mesures et
  * versions.
  *
