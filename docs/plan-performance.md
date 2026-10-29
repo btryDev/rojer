@@ -205,8 +205,11 @@ Reste, rangé dans les lots suivants :
   3,7 Mo — lot 6 (poids envoyé) ; ~~**question à la propriétaire** : la fiche
   d'un contrôle doit-elle montrer tout son historique, ou les plus récents et
   un renvoi au registre ?~~ [2026-10-27, la propriétaire : **des filtres sur
-  l'historique de la fiche d'un contrôle, plus tard** — à faire, pas encore
-  planifié.]
+  l'historique de la fiche d'un contrôle, plus tard** — ~~à faire, pas encore
+  planifié~~.] [2026-10-29, la propriétaire : **pas maintenant** — rangé dans
+  les chantiers à envisager (`docs/chantiers-ouverts.md` § 21) : des filtres
+  par année, la fiche s'ouvrant probablement sur l'année en cours. D'ici là,
+  la page reste telle quelle.]
 - calendrier (1,4 Mo) et équipements (0,8 Mo) grossissent avec le parc, pas
   avec l'historique : lot 6.
 
@@ -290,6 +293,96 @@ Non atteint, et pourquoi :
 - Les actions de la source du calendrier ne sont pas fondues dans la lecture
   partagée : elles ont besoin de la vérification et de sa zone, une relation
   qui coûte en SQL autant qu'elle économise.
+
+### Lot 1b — Le calcul serveur et l'historique relu partout (2026-10-28)
+
+Né d'un profil CPU du serveur (`node --cpu-prof`, `next start`, gros dossier) :
+après le lot 1, le tableau de bord passait 229 ms dont 92 de SQL — le reste
+était du calcul, que la mesure en requêtes ne voyait pas.
+
+Fait :
+- **Dates civiles** (`dates/index.ts`) : une seule fonction prenait ≈ 115 ms
+  par affichage du tableau de bord — `composantesCiviles`, un
+  `Intl.formatToParts` par appel, deux par `instantCivil`, trois par
+  `debutDuJour`. Le décalage de Paris est désormais lu une fois par heure UTC
+  ~~(les changements d'heure tombent à 01:00 UTC pile depuis 1981)~~
+  [2026-10-29, `/simplify` : une heure n'est mémorisée que si le décalage y
+  est le même au début et à la fin ; sinon, lecture `Intl` — aucune hypothèse
+  sur les données de fuseau] et les composantes en dérivent par
+  l'arithmétique UTC. Résultat identique à une référence `Intl` écrite dans
+  le test : ~~chacun des 438 changements d'heure de 1981 à 2199~~ [2026-10-29 :
+  chacun des changements de 1900 à 2300, dont d'anciens hors des heures
+  pleines (1911)] est retrouvé dans les données de fuseau, puis le calcul est
+  comparé autour de chacun, et sur 20 000 instants distincts de l'an 900 à
+  10 100 (`composantes-rapides.test.ts`, éprouvé en faussant le décalage puis
+  en retirant la vérification de l'heure : rouge). Mémoire à deux
+  générations, bornée, précédée de la dernière heure lue. Le sceau du moteur
+  est recopié sans incrément : aucun dossier régénéré.
+- **Dernière réalisation** (`rapports/joindre-realisations.ts`, lue sur chaque
+  écran par la barre latérale) : le `DISTINCT ON` lisait et triait TOUT
+  l'historique (≈ 12 ms à dix ans, linéaire en années). Une descente d'index
+  par ligne (`LATERAL … LIMIT 1`, index
+  `(verificationId, dateRapport DESC, createdAt DESC)` qui remplace celui sur
+  `verificationId` seul) : ≈ 1,1 ms, et le coût suit le nombre de lignes, pas
+  la longueur de l'historique. Équivalence tenue contre une vraie base
+  (`joindre-realisations.integration.test.ts`, éprouvé en inversant l'ordre :
+  rouge). Le lot 1a l'avait écartée pour « ≈ 1 ms » : mesuré à nouveau, avec
+  les statistiques de la base à jour, l'écart est de dix à un.
+- **Index sans verrou** (2026-10-29, décision de la propriétaire : « on pense
+  à long terme », pas de choix selon la taille de la table au jour J) : l'index
+  se pose en `CONCURRENTLY` et l'ancien se retire de même, chaque instruction
+  seule dans sa migration (`20261028200000_rapport_index_dernier_par_ligne`,
+  `20261028200100_rapport_retrait_index_verification`) — vérifié par un
+  `migrate deploy` complet sur une base neuve, sans écart au schéma. La règle
+  vaut pour toute migration à venir : `migrations-index.test.ts` refuse un
+  index ordinaire sur une table existante, un `DROP INDEX` ordinaire, et un
+  `CONCURRENTLY` accompagné (éprouvé en remettant l'ancienne migration :
+  rouge). [2026-10-29, `/simplify` : la garde lit les migrations par
+  `migrations-lecture.ts`, partagé avec la garde RLS (renommages, `public."X"`,
+  tables supprimées), et vise aussi les contraintes qui verrouillent une table
+  existante — `UNIQUE`/`PRIMARY KEY` hors `USING INDEX`, clé étrangère sans
+  `NOT VALID`. Pas encore lus : `ALTER COLUMN … TYPE`, `SET NOT NULL`.]
+- **Proposé, non fait — décision de la propriétaire** : un `lock_timeout` sur
+  la connexion de `migrate deploy` (`scripts/migrer-en-production.sh`), pour
+  qu'une instruction qui attend un verrou échoue vite au lieu de faire
+  attendre l'application, quelle que soit sa forme ; ou un linter de
+  migrations PostgreSQL en CI (squawk). Le premier touche le script de
+  déploiement de production, le second ajoute un outil.
+
+| Gros dossier (médianes, local) | SQL avant → après (ms) | Total avant → après (ms) |
+|---|---|---|
+| Tableau de bord | 92 → 65 | 229 → 109 |
+| Calendrier | 49 → 28 | 196 → 107 |
+| Équipements | 40 → 28 | 109 → 79 |
+| Plan d'actions | 37 → 17 | 59 → 45 |
+| Équipe | 35 → 21 | 87 → 64 |
+| Documents | 44 → 15 | 69 → 44 |
+| Carnet sanitaire | 44 → 18 | 79 → 64 |
+| Fiche équipement | 40 → 25 | 81 → 64 |
+| Registre | 46 → 37 | 171 → 158 |
+| Fiche contrôle | 38 → 22 | 157 → 155 |
+
+Dossier de démo (36 lignes), même build de prod, `main` 2f837b49 contre ce
+lot : `mesurer.mjs` donnait le tableau de bord 75 → 82 ms et le calendrier
+55 → 60 ms — du bruit, la mesure faisant journaliser chaque requête à
+PostgreSQL. Rejoué sans journal, deux séries de 25 chargements complets :
+tableau de bord 42–48 → 28–29 ms, calendrier 31–32 → 24 ms. Aucune page de
+la démo ne recule.
+
+Mesuré et écarté :
+- les classes du bouton (≈ 800 caractères, 2 665 fois sur le registre) :
+  4 Mo de HTML, mais 91 Ko en gzip et ≈ 20 ms de rendu — pas une refonte du
+  bouton de toute l'application pour si peu ;
+- `COLLATE "C"` sur l'ancien `DISTINCT ON` (12 → 7 ms) : remplacé par la
+  descente d'index.
+
+Reste, et c'est ce qui grandit encore avec les années : **le registre et la
+fiche d'un contrôle** rendent chaque rapport (532 lignes pour une année
+chargée, dix ans d'historique sur la fiche). Le registre est borné à l'année ;
+la fiche ne l'est pas — ~~décision de la propriétaire attendue (« des filtres
+plus tard », lot 1a)~~ [2026-10-29, la propriétaire : pas maintenant ; filtres
+par année à envisager, `docs/chantiers-ouverts.md` § 21. La page reste telle
+quelle].
 
 ### Lot 2 — Même traitement pour les autres écrans lourds (M)
 

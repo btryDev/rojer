@@ -1,4 +1,5 @@
-// La « dernière réalisation » lue par la base (`DISTINCT ON`) contre un VRAI
+// La « dernière réalisation » lue par la base (~~`DISTINCT ON`~~
+// [2026-10-28 : `LATERAL … LIMIT 1`, une descente d'index par ligne]) contre un VRAI
 // PostgreSQL : elle doit rendre, pour chaque ligne, exactement ce que rend le
 // départage du moteur (`indexerDernieresRealisations`) sur la liste complète
 // des rapports — ex æquo du même jour compris. Un faux client ne dirait rien

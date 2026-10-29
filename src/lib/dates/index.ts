@@ -18,6 +18,12 @@
 //     `timeZone: "Europe/Paris"` explicite. Conséquence utile : ces
 //     fonctions donnent le même résultat quel que soit `TZ`, en
 //     production comme en test.
+//     [2026-10-28, plan performance] Le DÉCALAGE de Paris vient toujours
+//     d'`Intl`, mais lu une fois par heure UTC ; les composantes en dérivent
+//     par `getUTC*` sur l'instant décalé (`decalageMemorise`), seulement pour
+//     une heure où ce décalage ne change pas — vérifié à la lecture de
+//     l'heure, pas supposé. Ailleurs, un `getUTC*` sur une date civile reste
+//     une faute.
 //
 //  2. **L'horloge est toujours injectée.** Aucune fonction d'ici n'appelle
 //     `new Date()` ni `Date.now()` sans paramètre. C'est ce qui rend les
@@ -92,11 +98,9 @@ const FORMATEUR_PARTS = new Intl.DateTimeFormat("en-CA", {
   hourCycle: "h23",
 });
 
-/**
- * Décompose un instant en composantes civiles Europe/Paris.
- * C'est la brique de base : tout le reste du module en dérive.
- */
-export function composantesCiviles(d: Date): ComposantesCiviles {
+/** Les composantes lues par `Intl` — le chemin lent, hors de la plage
+ *  mémorisée. Non exporté : `composantesCiviles` est la seule lecture. */
+function composantesCivilesIntl(d: Date): ComposantesCiviles {
   const parts = FORMATEUR_PARTS.formatToParts(d);
   const lire = (type: Intl.DateTimeFormatPartTypes): number => {
     const p = parts.find((x) => x.type === type);
@@ -115,13 +119,9 @@ export function composantesCiviles(d: Date): ComposantesCiviles {
   };
 }
 
-/**
- * Décalage Europe/Paris ↔ UTC, en millisecondes, **à l'instant donné**
- * (+1 h en hiver, +2 h en été). Interne : sert à reconstruire un instant
- * depuis des composantes civiles.
- */
-function decalageMs(d: Date): number {
-  const c = composantesCiviles(d);
+/** Le décalage lu par `Intl` à l'instant donné. */
+function decalageIntlMs(d: Date): number {
+  const c = composantesCivilesIntl(d);
   const commeSiUtc = Date.UTC(
     c.annee,
     c.mois - 1,
@@ -131,6 +131,101 @@ function decalageMs(d: Date): number {
     c.seconde,
   );
   return commeSiUtc - (d.getTime() - d.getUTCMilliseconds());
+}
+
+// [2026-10-28, plan performance] Le décalage, mémorisé par heure UTC.
+//
+// `formatToParts` coûte quelques microsecondes, et un rendu en fait des
+// dizaines de milliers : `instantCivil` l'appelle deux fois, `debutDuJour`
+// trois. Mesuré au profileur sur le tableau de bord du gros dossier : ≈ 115 ms
+// de calcul par affichage, la moitié de la page.
+//
+// Or le décalage de Paris ne change qu'aux changements d'heure, deux fois par
+// an. Une heure UTC où il est le même au début et à la fin — toutes, sauf
+// celle d'un changement qui ne tomberait pas sur une heure pleine — est lue
+// une fois, et les composantes en dérivent par l'arithmétique UTC, à
+// l'identique (`dates/composantes-rapides.test.ts`). Une heure où il change
+// est marquée, et lue par `Intl` à chaque appel : aucune hypothèse sur les
+// données de fuseau. [2026-10-29, revue : remplace une plage fixe 1981-2199
+// supposée alignée sur les heures pleines.] Hors des années 1000 à 9999
+// (format de l'année d'`Intl`), et pour une date invalide (même erreur
+// qu'avant), la lecture reste celle d'`Intl`.
+const HEURE_MS = 3_600_000;
+const DEBUT_PLAGE = Date.UTC(1000, 0, 1);
+const FIN_PLAGE = Date.UTC(10_000, 0, 1);
+/** Valeur mémorisée d'une heure où le décalage change : lire par `Intl`. */
+const VARIABLE = Number.NaN;
+// Une mémoire bornée. Les dates du produit sont surtout des minuits civils
+// (une ou deux heures UTC par jour), mais un horodatage peut tomber sur
+// n'importe quelle heure : 8 760 par an au plus. Deux générations : quand la
+// récente atteint le plafond, elle devient l'ancienne et la précédente est
+// oubliée — les heures encore lues survivent au passage, sans falaise où
+// tout serait relu d'un coup. Devant elles, la dernière heure lue : les
+// appels successifs tombent surtout dans la même.
+const PLAFOND_GENERATION = 50_000;
+let decalagesRecents = new Map<number, number>();
+let decalagesAnciens = new Map<number, number>();
+let derniereHeure = Number.NaN;
+let dernierDecalage = VARIABLE;
+
+/** Le décalage de l'heure UTC `heure`, ou `VARIABLE` s'il y change. */
+function decalageDeLHeure(heure: number): number {
+  const debut = decalageIntlMs(new Date(heure * HEURE_MS));
+  const fin = decalageIntlMs(new Date((heure + 1) * HEURE_MS - 1));
+  return debut === fin ? debut : VARIABLE;
+}
+
+/** Le décalage mémorisé de l'heure UTC de `t`, ou `null` si `t` sort de la
+ *  plage, est invalide, ou tombe dans une heure où le décalage change. */
+function decalageMemorise(t: number): number | null {
+  if (!(t >= DEBUT_PLAGE && t < FIN_PLAGE)) return null;
+  const heure = Math.floor(t / HEURE_MS);
+  if (heure !== derniereHeure) {
+    let decalage = decalagesRecents.get(heure);
+    if (decalage === undefined) {
+      decalage = decalagesAnciens.get(heure) ?? decalageDeLHeure(heure);
+      if (decalagesRecents.size >= PLAFOND_GENERATION) {
+        decalagesAnciens = decalagesRecents;
+        decalagesRecents = new Map();
+      }
+      decalagesRecents.set(heure, decalage);
+    }
+    derniereHeure = heure;
+    dernierDecalage = decalage;
+  }
+  return Number.isNaN(dernierDecalage) ? null : dernierDecalage;
+}
+
+/**
+ * Décalage Europe/Paris ↔ UTC, en millisecondes, **à l'instant `t`**
+ * (+1 h en hiver, +2 h en été). Interne : sert à reconstruire un instant
+ * depuis des composantes civiles. Prend un nombre : sur le chemin rapide,
+ * aucune `Date` n'est construite.
+ */
+function decalageMs(t: number): number {
+  return decalageMemorise(t) ?? decalageIntlMs(new Date(t));
+}
+
+/**
+ * Décompose un instant en composantes civiles Europe/Paris.
+ * C'est la brique de base : tout le reste du module en dérive.
+ */
+export function composantesCiviles(d: Date): ComposantesCiviles {
+  const t = d.getTime();
+  const decalage = decalageMemorise(t);
+  if (decalage === null) return composantesCivilesIntl(d);
+  // L'heure civile, c'est l'instant décalé, lu en UTC. Le décalage est un
+  // nombre entier de secondes : les millisecondes ne bougent pas.
+  const civil = new Date(t + decalage);
+  return {
+    annee: civil.getUTCFullYear(),
+    mois: civil.getUTCMonth() + 1,
+    jour: civil.getUTCDate(),
+    heure: civil.getUTCHours(),
+    minute: civil.getUTCMinutes(),
+    seconde: civil.getUTCSeconds(),
+    milliseconde: civil.getUTCMilliseconds(),
+  };
 }
 
 /**
@@ -152,9 +247,9 @@ export function instantCivil(
   milliseconde = 0,
 ): Date {
   const naif = Date.UTC(annee, mois - 1, jour, heure, minute, seconde, milliseconde);
-  const decalage1 = decalageMs(new Date(naif));
+  const decalage1 = decalageMs(naif);
   const candidat = naif - decalage1;
-  const decalage2 = decalageMs(new Date(candidat));
+  const decalage2 = decalageMs(candidat);
   return new Date(decalage2 === decalage1 ? candidat : naif - decalage2);
 }
 

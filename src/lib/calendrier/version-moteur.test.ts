@@ -543,7 +543,29 @@ const RELEVE = {
   // l'établissement entier (`engine.ts`, groupements) et la régénération hors
   // session est extraite (`actions.ts`, sans changer ce qu'elle écrit).
   // Version 7 inchangée, le lot n'étant pas fusionné.
-  empreinte: "2fd933a8a6caf8f2",
+  // ~~2fd933a8a6caf8f2~~ — 2026-10-28, plan performance : `dates/index.ts`
+  // mémorise le décalage de Paris par heure UTC et en tire les composantes
+  // civiles par l'arithmétique UTC, au lieu d'un `formatToParts` par appel.
+  // NON : les composantes et les instants reconstruits sont identiques à ceux
+  // d'`Intl` — vérifié minute par minute autour des changements d'heure,
+  // aux bornes de la plage mémorisée et sur 20 000 instants tirés au hasard
+  // (`dates/composantes-rapides.test.ts`). Empreinte recopiée, version
+  // inchangée : aucun dossier n'est régénéré.
+  // ~~69c2588f7f743e9c~~ — même jour, revue du lot : la plage mémorisée est
+  // testée par une seule fonction (`decalageMemorise`) au lieu de deux
+  // copies. NON, même calcul : empreinte recopiée, version inchangée.
+  // ~~e427cfa97f701a73~~ — même jour, seconde revue : mémoire à deux
+  // générations au lieu d'un vidage d'un coup, `decalageMs` prend un nombre,
+  // `composantesCivilesIntl` n'est plus exporté. NON, même calcul — et le
+  // test vérifie désormais chacun des 438 changements d'heure de 1981 à
+  // 2199 : empreinte recopiée, version inchangée.
+  // ~~fcb4b1ae31aa4ebf~~ — 2026-10-29, `/simplify` : une heure n'est
+  // mémorisée que si le décalage y est le même au début et à la fin (sinon
+  // lecture `Intl`), au lieu d'une plage 1981-2199 supposée alignée ; la
+  // dernière heure lue est gardée devant la mémoire. NON, même calcul —
+  // éprouvé contre `Intl` autour de chaque changement de 1900 à 2300, dont
+  // ceux hors des heures pleines : empreinte recopiée, version inchangée.
+  empreinte: "0a32814cf20b42e9",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");
