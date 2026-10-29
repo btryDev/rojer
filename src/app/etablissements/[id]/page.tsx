@@ -19,14 +19,17 @@ import { estMultiBatiments, resoudreFiltreBatiment } from "@/lib/batiments/filtr
 import { SelecteurBatiment } from "@/components/batiments/SelecteurBatiment";
 import {
   compterObligationsParMois,
-  compterVerifsParEquipement,
+  compterVerifsParEquipementDeLaPage,
   getDashboardData,
   getModulesMatrice,
   listerEvenementsFenetre,
   marquesAConfirmerDuRendu,
 } from "@/lib/dashboard/queries";
 import { listerEvenementsCalendrier } from "@/lib/calendrier/evenements";
-import { compterEtatEcheances } from "@/lib/calendrier/retards";
+import {
+  compterEtatEcheances,
+  compterEtatEcheancesDeLaPage,
+} from "@/lib/calendrier/retards";
 import { assurerCalendrierAJour } from "@/lib/calendrier/regeneration-sure";
 import { statsActionsEnRetard } from "@/lib/actions/queries";
 import {
@@ -34,7 +37,7 @@ import {
   listerRapportsRecents,
 } from "@/lib/rapports/queries";
 import {
-  compterVerificationsDuDossier,
+  compterLignesDeLaPage,
   listerEcheancesAnnoncables,
 } from "@/lib/calendrier/queries";
 import { composantesCiviles, joursCivilsEntre } from "@/lib/dates";
@@ -115,13 +118,18 @@ export default async function EtablissementPage({
     rapportsRecents,
     marquesDuDossier,
     nbEquipe,
+    echeancesSansFiltre,
   ] = await Promise.all([
     listerEquipementsDeLEtablissement(id),
-    compterVerifsParEquipement(id),
+    compterVerifsParEquipementDeLaPage(id),
     getDashboardData(id),
     // Le dépassé et l'horizon proche, ventilés par famille : la seule
     // source des nombres de retard du board (cf. `DashboardBundle`).
-    compterEtatEcheances(id, aujourdhui, { batimentId: batimentFiltre }),
+    // Filtrée par zone, sa propre lecture filtrée ; sinon les lignes que la
+    // page partage.
+    batimentFiltre
+      ? compterEtatEcheances(id, aujourdhui, { batimentId: batimentFiltre })
+      : compterEtatEcheancesDeLaPage(id, aujourdhui),
     compterObligationsParMois(id),
     // La frise défile jusqu'à 24 mois et propose une vue calendrier sur
     // la même donnée — une seule collecte pour les deux vues, qui coupent
@@ -133,7 +141,7 @@ export default async function EtablissementPage({
     // Le widget mène au plan d'actions : les mesures du DUERP seules.
     statsActionsEnRetard(id, aujourdhui, { origine: "duerp" }),
     getModulesMatrice(id, etab.estERP),
-    compterVerificationsDuDossier(id),
+    compterLignesDeLaPage(id),
     compterRapportsDuDossier(id),
     // Toutes : les cinq prochaines se choisissent après projection
     // (`cinqProchaines`, plus bas).
@@ -145,6 +153,11 @@ export default async function EtablissementPage({
     marquesAConfirmerDuRendu(id),
     // Le nombre de fiches de l'équipe, pour la fiche du hero.
     compterEquipe(id),
+    // Le hero parle de l'établissement — sa plaque liste tous les bâtiments —,
+    // le reste de l'écran suit le filtre. Filtré, l'état de tout
+    // l'établissement part avec le reste : il lit les lignes que la page
+    // partage, déjà chargées. Sans filtre, c'est `echeances` lui-même.
+    batimentFiltre ? compterEtatEcheancesDeLaPage(id, aujourdhui) : null,
   ]);
 
   // Le filtre bâtiment se pose ici, une fois, sur la liste chargée entière —
@@ -152,12 +165,7 @@ export default async function EtablissementPage({
   const equipementsDuLieu = batimentFiltre
     ? equipements.filter((e) => e.batimentId === batimentFiltre)
     : equipements;
-  // Le hero parle de l'établissement — sa plaque liste tous les bâtiments —,
-  // le reste de l'écran suit le filtre. Sans filtre, les deux états sont le
-  // même objet : pas de seconde lecture.
-  const echeancesEtablissement = batimentFiltre
-    ? await compterEtatEcheances(id, aujourdhui)
-    : echeances;
+  const echeancesEtablissement = echeancesSansFiltre ?? echeances;
 
   const enLite = (e: (typeof equipements)[number]) => ({
     id: e.id,

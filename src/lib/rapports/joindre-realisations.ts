@@ -17,7 +17,10 @@ import {
   ORDRE_RAPPORT_PLUS_RECENT,
   type DerniereRealisation,
 } from "./derniere-realisation";
-import { projeterDernieresRealisations } from "./projeter-realisations";
+import {
+  projeterDernieresRealisations,
+  type AvecDerniereRealisation,
+} from "./projeter-realisations";
 import { RESULTATS_REALISES } from "./resultats";
 
 /**
@@ -131,9 +134,7 @@ export const derniersRapportsDeLEtablissement = cache(
 export async function joindreDernieresRealisations<T extends { id: string }>(
   etablissementId: string,
   lignes: T[],
-): Promise<
-  Array<T & { derniereRealisation: Date | null; dernierResultat: string | null }>
-> {
+): Promise<AvecDerniereRealisation<T>[]> {
   if (lignes.length === 0) return [];
   return projeterDernieresRealisations(
     lignes,

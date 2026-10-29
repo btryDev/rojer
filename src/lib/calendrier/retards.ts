@@ -18,7 +18,10 @@
 // diverger, et chacune choisit explicitement le périmètre qu'elle annonce
 // (ADR-015).
 
-import { compterEtatCalendrier } from "./queries";
+import {
+  compterEtatCalendrier,
+  compterEtatCalendrierDeLaPage,
+} from "./queries";
 import {
   FAMILLE_DE_TYPE,
   TYPES_VERIFICATION,
@@ -188,13 +191,48 @@ export async function compterEtatEcheances(
   now: Date = new Date(),
   filtres: { batimentId?: string } = {},
 ): Promise<EtatEcheances> {
-  const [etat, autresTous] = await Promise.all([
+  return composerEtatEcheances(
     compterEtatCalendrier(etablissementId, now, {
       batimentId: filtres.batimentId,
     }),
+    etablissementId,
+    now,
+    filtres.batimentId,
+  );
+}
+
+/**
+ * Le même état, POUR LA PAGE DU TABLEAU DE BORD (plan performance,
+ * 2026-10-29), sur tout l'établissement : les lignes qu'elle partage avec ses
+ * pastilles par appareil et son compte de lignes (`lignesDuDossierDeLaPage`).
+ * Réservé à une page qui a réparé le calendrier avant de lire ; jamais depuis
+ * un layout (`lignes-de-la-page.test.ts`). Filtrée par zone, la page passe par
+ * `compterEtatEcheances` : aucun filtre n'est réécrit en mémoire.
+ */
+export async function compterEtatEcheancesDeLaPage(
+  etablissementId: string,
+  now: Date,
+): Promise<EtatEcheances> {
+  return composerEtatEcheances(
+    compterEtatCalendrierDeLaPage(etablissementId, now),
+    etablissementId,
+    now,
+    undefined,
+  );
+}
+
+/** Le calcul des deux entrées ci-dessus : un seul, pour qu'elles ne divergent pas. */
+async function composerEtatEcheances(
+  etatLu: ReturnType<typeof compterEtatCalendrier>,
+  etablissementId: string,
+  now: Date,
+  batimentId: string | undefined,
+): Promise<EtatEcheances> {
+  const [etat, autresTous] = await Promise.all([
+    etatLu,
     listerAutresEcheances(etablissementId, now),
   ]);
-  const autres = filtrerParBatiment(autresTous, filtres.batimentId);
+  const autres = filtrerParBatiment(autresTous, batimentId);
 
   return {
     retards: repartirRetards(autres, etat.enRetardParType),
@@ -207,6 +245,11 @@ export async function compterEtatEcheances(
 /**
  * Les seuls retards — ce que lit la sidebar, qui n'a pas de fenêtre à
  * annoncer.
+ *
+ * Par `compterEtatEcheances`, qui lit ses propres lignes, jamais par l'entrée
+ * de la page : la barre est rendue par le layout, EN PARALLÈLE de la page qui
+ * répare le calendrier avant de lire. Partager servirait à la page les lignes
+ * d'avant la réparation (`lignes-de-la-page.test.ts`).
  */
 export async function compterEnRetardParFamille(
   etablissementId: string,

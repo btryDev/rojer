@@ -359,7 +359,7 @@ describe("toute sortie qui lit le calendrier en dit l'âge", () => {
       "compterEtatEcheances",
       "compterEtatCalendrier",
       "listerEvenementsCalendrier",
-      "compterVerifsParEquipement",
+      "compterVerifsParEquipementDeLaPage",
       // ~~"listerBatimentsAvecCharge"~~ [2026-10-25 : retirée avec la plaque
       // des zones du hero — le tableau de bord ne lit plus la charge par zone].
       // `getModulesMatrice`, citée par la revue, n'y est pas : elle compte des

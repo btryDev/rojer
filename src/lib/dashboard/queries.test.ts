@@ -319,7 +319,7 @@ vi.mock("@/lib/actions/queries", () => ({
 
 import {
   compterObligationsParMois,
-  compterVerifsParEquipement,
+  compterVerifsParEquipementDeLaPage,
   getDashboardData,
 } from "./queries";
 
@@ -692,12 +692,12 @@ describe("getDashboardData — plan d'actions", () => {
   });
 });
 
-describe("compterVerifsParEquipement", () => {
+describe("compterVerifsParEquipementDeLaPage", () => {
   it("n'allume pas la pastille rouge le matin de l'échéance", async () => {
     h.db.verifications.push(
       verif({ id: "v1", equipementId: "eq-1", datePrevue: jour(0) }),
     );
-    const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
+    const stats = (await compterVerifsParEquipementDeLaPage(ETAB)).get("eq-1")!;
     expect(stats.enRetard).toBe(0);
     expect(stats.sous30j).toBe(1);
     expect(stats.prochaineDate).toEqual(jour(0));
@@ -712,7 +712,7 @@ describe("compterVerifsParEquipement", () => {
         datePrevue: jour(-2),
       }),
     );
-    const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
+    const stats = (await compterVerifsParEquipementDeLaPage(ETAB)).get("eq-1")!;
     expect(stats.enRetard).toBe(1);
     expect(stats.aPlanifier).toBe(0);
   });
@@ -730,7 +730,7 @@ describe("compterVerifsParEquipement", () => {
         rapports: [{ dateRapport: jour(-28), resultat: "conforme" }],
       }),
     );
-    const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
+    const stats = (await compterVerifsParEquipementDeLaPage(ETAB)).get("eq-1")!;
     expect(stats.enRetard).toBe(0);
     expect(stats.derniereRealisee).toEqual(jour(-28));
   });
@@ -751,7 +751,7 @@ describe("compterVerifsParEquipement", () => {
         datePrevue: jour(20),
       }),
     );
-    const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
+    const stats = (await compterVerifsParEquipementDeLaPage(ETAB)).get("eq-1")!;
     expect(stats.aPlanifier).toBe(1);
     expect(stats.prochaineDate).toBeNull();
   });
@@ -773,7 +773,7 @@ describe("compterVerifsParEquipement", () => {
         archiveLe: jour(-3),
       }),
     );
-    const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
+    const stats = (await compterVerifsParEquipementDeLaPage(ETAB)).get("eq-1")!;
     expect(stats.enRetard).toBe(0);
     // Ni rangée ailleurs : une ligne éteinte sort des trois comptes, elle ne se
     // déplace pas de l'un à l'autre.
@@ -792,7 +792,7 @@ describe("compterVerifsParEquipement", () => {
       verif({ id: "v1", equipementId: "eq-1", datePrevue: jour(-5) }),
       verif({ id: "v2", equipementId: "eq-1", datePrevue: jour(40) }),
     );
-    const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
+    const stats = (await compterVerifsParEquipementDeLaPage(ETAB)).get("eq-1")!;
     expect(stats.enRetard).toBe(1);
     expect(stats.prochaineDate).toEqual(jour(-5));
   });
@@ -809,7 +809,7 @@ describe("compterVerifsParEquipement", () => {
       }),
       verif({ id: "vraie", equipementId: "eq-1", datePrevue: jour(66) }),
     );
-    const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
+    const stats = (await compterVerifsParEquipementDeLaPage(ETAB)).get("eq-1")!;
     expect(stats.enRetard).toBe(1);
     expect(stats.prochaineDate).toEqual(jour(66));
   });
@@ -830,7 +830,7 @@ describe("compterVerifsParEquipement", () => {
         archiveLe: jour(-3),
       }),
     );
-    const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
+    const stats = (await compterVerifsParEquipementDeLaPage(ETAB)).get("eq-1")!;
     expect(stats.prochaineDate).toBeNull();
     expect(stats.sous30j).toBe(0);
   });
@@ -849,7 +849,7 @@ describe("compterVerifsParEquipement", () => {
         datePrevue: jour(-180),
       }),
     );
-    const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
+    const stats = (await compterVerifsParEquipementDeLaPage(ETAB)).get("eq-1")!;
     expect(stats.enRetard).toBe(1);
     expect(stats.derniereRealisee).toBeNull(); // hors fenêtre de douze mois
   });
@@ -866,7 +866,7 @@ describe("compterVerifsParEquipement", () => {
         rapports: [{ dateRapport: jour(-20), resultat: "conforme" }],
       }),
     );
-    const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
+    const stats = (await compterVerifsParEquipementDeLaPage(ETAB)).get("eq-1")!;
     expect(stats.derniereRealisee).toEqual(jour(-20));
   });
 });

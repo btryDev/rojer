@@ -5,6 +5,12 @@
 
 import type { DerniereRealisation } from "./derniere-realisation";
 
+/** Une ligne, et la date et le résultat de sa dernière réalisation. */
+export type AvecDerniereRealisation<T> = T & {
+  derniereRealisation: Date | null;
+  dernierResultat: string | null;
+};
+
 /**
  * Joint à des lignes la date et le résultat de leur dernière réalisation, lus
  * dans un index par ligne (`dernieresRealisationsDeLEtablissement`). Pure :
@@ -14,7 +20,7 @@ import type { DerniereRealisation } from "./derniere-realisation";
 export function projeterDernieresRealisations<T extends { id: string }>(
   lignes: T[],
   index: ReadonlyMap<string, DerniereRealisation>,
-): Array<T & { derniereRealisation: Date | null; dernierResultat: string | null }> {
+): AvecDerniereRealisation<T>[] {
   return lignes.map((l) => {
     const derniere = index.get(l.id) ?? null;
     return {

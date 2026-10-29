@@ -25,6 +25,10 @@ import { JOURS_APRES } from "./frise";
 import { instantDuRendu } from "@/lib/dates/instant-du-rendu";
 import { comptesParcDuRendu } from "@/lib/equipements/queries";
 import { compterRapportsDuDossier } from "@/lib/rapports/queries";
+import {
+  lignesDuDossierDeLaPage,
+  type LigneComptee,
+} from "@/lib/calendrier/queries";
 import { duerpDuRendu } from "@/lib/duerps/queries";
 import { etablissementDuCompteDuRendu } from "@/lib/etablissements/queries";
 import { prisma } from "@/lib/prisma";
@@ -59,7 +63,6 @@ import {
   dernieresRealisationsDeLEtablissement,
   joindreDernieresRealisations,
 } from "@/lib/rapports/joindre-realisations";
-import { projeterDernieresRealisations } from "@/lib/rapports/projeter-realisations";
 import {
   typeDeVerification,
   type BatimentEcheance,
@@ -332,10 +335,9 @@ export type StatsEquipement = {
  * occurrence `a_planifier` dont la date est passée compte une fois, comme
  * retard. Elle était auparavant comptée dans les deux pastilles.
  */
-export async function compterVerifsParEquipement(
+export async function compterVerifsParEquipementDeLaPage(
   etablissementId: string,
 ): Promise<Map<string, StatsEquipement>> {
-  const user = await requireUser();
   // L'instant du rendu, partagé : les lectures mémoïsées par jour civil
   // tombent sur la même clé (revue du lot 1).
   const now = instantDuRendu();
@@ -343,36 +345,15 @@ export async function compterVerifsParEquipement(
     ajouterMois(now, -MOIS_FENETRE_HISTORIQUE),
   );
 
-  const [lignes, marques, dernieres] = await Promise.all([
-    prisma.verification.findMany({
-      where: {
-        etablissementId,
-        etablissement: { entreprise: { userId: user.id } },
-      },
-      select: {
-        id: true,
-        equipementId: true,
-        // L'obligation, pour la prudence (D1 (a)) : la pastille rouge d'un
-        // appareil ne compte pas une ligne que seul le silence retient.
-        obligationId: true,
-        // … sauf si une prescription la rythme (revue indépendante, lot 3).
-        prescriptionId: true,
-        statut: true,
-        datePrevue: true,
-        periodicite: true,
-        // Sans lui, une ligne dont l'obligation ne s'applique plus (ADR-034)
-        // pèse encore sur les pastilles de son appareil, avec le statut gelé
-        // où l'archivage l'a laissée. Le fait se lisait dans le libellé, il a
-        // maintenant sa colonne — et son absence du `select` ne compile plus.
-        archiveLe: true,
-        graceJusquAu: true,
-        libelleObligation: true,
-      },
-    }),
+  // Les lignes que la page partage avec l'état du calendrier et le compte de
+  // lignes (plan performance, 2026-10-29), portée au compte dans leur
+  // requête. Elles portent l'obligation et la prescription (prudence, D1 (a)),
+  // et `archiveLe` : sans lui, une ligne dont l'obligation ne s'applique plus
+  // (ADR-034) pèserait encore sur les pastilles de son appareil.
+  const [verifs, marques] = await Promise.all([
+    lignesDuDossierDeLaPage(etablissementId),
     marquesAConfirmerDuRendu(etablissementId),
-    dernieresRealisationsDeLEtablissement(etablissementId),
   ]);
-  const verifs = projeterDernieresRealisations(lignes, dernieres);
   const prudence = retenueParPrudence(marques.parObligation);
 
   const map = new Map<string, StatsEquipement>();
@@ -390,7 +371,7 @@ export async function compterVerifsParEquipement(
     }
     return s;
   };
-  const lignesParEquipement = new Map<string, typeof verifs>();
+  const lignesParEquipement = new Map<string, LigneComptee[]>();
 
   for (const v of verifs) {
     // Statistiques **par équipement** : une échéance portée par
