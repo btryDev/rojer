@@ -23,6 +23,8 @@
 // Ce composant ne déclare rien : il rend `referentiels/documents-obligatoires`,
 // dont chaque entrée porte un fondement vérifiable ou n'entre pas.
 
+import Link from "next/link";
+import { ArrowUpRight, FileText } from "lucide-react";
 import { LegalBadge, Textes } from "@/components/ui-kit";
 import { ChevronRepli, LIEN_REPLI } from "@/components/ui/repli";
 import {
@@ -34,7 +36,74 @@ import {
 /** L'ancre citée par la page des éléments exclus. */
 export const ANCRE_DOCUMENTS = "documents-obligatoires";
 
-export function DocumentsObligatoires() {
+type LienDocument = { href: string; libelle: string; fichier?: boolean };
+
+/**
+ * Où ouvrir un document que Rojer produit (2026-10-29, demande de la
+ * propriétaire) : la page expliquait chaque document sans en ouvrir aucun, et
+ * c'est ici qu'on vient le chercher quand un contrôleur le demande. Une
+ * entrée par document produit — la garde (`DocumentsObligatoires.test.tsx`)
+ * refuse un document produit sans lien.
+ */
+export function liensDuDocument(
+  documentId: string,
+  etablissementId: string,
+): LienDocument[] {
+  const base = `/etablissements/${etablissementId}`;
+  switch (documentId) {
+    case "duerp":
+      return [{ href: `${base}/duerp`, libelle: "Ouvrir le DUERP" }];
+    case "registre-securite":
+      return [
+        { href: `${base}/registre`, libelle: "Ouvrir le registre" },
+        {
+          href: `/api/etablissements/${etablissementId}/registre/pdf`,
+          libelle: "PDF du registre",
+          fichier: true,
+        },
+      ];
+    case "registre-accessibilite":
+      return [{ href: `${base}/accessibilite`, libelle: "Ouvrir le registre d'accessibilité" }];
+    case "plan-prevention":
+      return [{ href: `${base}/plan-prevention`, libelle: "Ouvrir les plans de prévention" }];
+    default:
+      return [];
+  }
+}
+
+function LiensDocument({ liens }: { liens: LienDocument[] }) {
+  if (liens.length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-2">
+      {liens.map((l) =>
+        l.fichier ? (
+          <a
+            key={l.href}
+            href={l.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-full px-4 text-[13px] font-semibold text-[color:var(--board-ink)] ring-1 ring-[color:rgba(10,10,10,.18)] transition-colors hover:bg-[color:var(--board-slate-pale)]"
+          >
+            <FileText aria-hidden className="size-4" />
+            {l.libelle}
+            <span className="sr-only">(nouvel onglet)</span>
+          </a>
+        ) : (
+          <Link
+            key={l.href}
+            href={l.href}
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-[color:var(--board-ink)] px-4 text-[13px] font-semibold text-white transition-opacity hover:opacity-85"
+          >
+            {l.libelle}
+            <ArrowUpRight aria-hidden className="size-4" />
+          </Link>
+        ),
+      )}
+    </div>
+  );
+}
+
+export function DocumentsObligatoires({ etablissementId }: { etablissementId?: string }) {
   const produits = documentsProduits();
   const ailleurs = documentsNonProduits();
 
@@ -51,6 +120,7 @@ export function DocumentsObligatoires() {
           surTitre="Rojer les produit"
           chapeau="Ces documents se composent dans l'application, se mettent à jour au fil de vos saisies et s'exportent."
           documents={produits}
+          etablissementId={etablissementId}
         />
         {/* La moitié qui justifie la liste, et qui vient en second : un
             dirigeant qui parcourt une liste mêlée retient ce qu'il a déjà, pas
@@ -59,6 +129,7 @@ export function DocumentsObligatoires() {
           surTitre="Rojer ne les produit pas"
           chapeau="Ils vous incombent quand même. Chacun dit où il se tient — l'outil ne les fabrique pas et ne vous les rappellera pas."
           documents={ailleurs}
+          etablissementId={etablissementId}
         />
       </div>
     </section>
@@ -69,10 +140,13 @@ function BlocDocuments({
   surTitre,
   chapeau,
   documents,
+  etablissementId,
 }: {
   surTitre: string;
   chapeau: string;
   documents: DocumentObligatoire[];
+  /** Absent, les documents ne portent pas de lien (page sans dossier). */
+  etablissementId?: string;
 }) {
   return (
     <div>
@@ -98,6 +172,9 @@ function BlocDocuments({
               <h3 className="m-0 text-[1.05rem] font-semibold leading-[1.3] tracking-[-0.012em]">
                 {d.nom}
               </h3>
+              {etablissementId ? (
+                <LiensDocument liens={liensDuDocument(d.id, etablissementId)} />
+              ) : null}
               <CorpsDocument d={d} />
             </div>
             <details className="group md:hidden">
@@ -111,6 +188,11 @@ function BlocDocuments({
                 <CorpsDocument d={d} />
               </div>
             </details>
+            {etablissementId && liensDuDocument(d.id, etablissementId).length > 0 ? (
+              <div className="px-5 pb-4 md:hidden">
+                <LiensDocument liens={liensDuDocument(d.id, etablissementId)} />
+              </div>
+            ) : null}
           </li>
         ))}
       </ul>
