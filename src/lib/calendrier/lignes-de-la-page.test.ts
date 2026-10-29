@@ -60,7 +60,7 @@ function arbre(chemin: string): ts.SourceFile {
     chemin,
     readFileSync(chemin, "utf8"),
     ts.ScriptTarget.Latest,
-    true,
+    false,
     chemin.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
   );
 }
@@ -145,7 +145,7 @@ describe("la lecture des lignes de la page n'est jamais atteinte depuis un layou
     for (const f of [
       "compterEtatCalendrierDeLaPage",
       "compterEtatEcheancesDeLaPage",
-      "compterVerifsParEquipement",
+      "compterVerifsParEquipementDeLaPage",
       "compterLignesDeLaPage",
     ]) {
       expect(versLaCible.has(f), f).toBe(true);

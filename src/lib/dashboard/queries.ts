@@ -335,7 +335,7 @@ export type StatsEquipement = {
  * occurrence `a_planifier` dont la date est passée compte une fois, comme
  * retard. Elle était auparavant comptée dans les deux pastilles.
  */
-export async function compterVerifsParEquipement(
+export async function compterVerifsParEquipementDeLaPage(
   etablissementId: string,
 ): Promise<Map<string, StatsEquipement>> {
   // L'instant du rendu, partagé : les lectures mémoïsées par jour civil

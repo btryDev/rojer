@@ -16,7 +16,10 @@ import {
   dernieresRealisationsDeLEtablissement,
   joindreDernieresRealisations,
 } from "@/lib/rapports/joindre-realisations";
-import { projeterDernieresRealisations } from "@/lib/rapports/projeter-realisations";
+import {
+  projeterDernieresRealisations,
+  type AvecDerniereRealisation,
+} from "@/lib/rapports/projeter-realisations";
 // Module **pur** : c'est lui qui détient la partition en quatre ensembles
 // disjoints (retard / à planifier / à venir / réalisées 12 mois), déjà
 // utilisée par les documents générés. Le compteur du calendrier passe par
@@ -199,7 +202,7 @@ const SELECT_LIGNE_COMPTEE = {
  *
  * Le tableau de bord les lisait trois fois, sous la même forme et sans autre
  * filtre que la portée : l'état du calendrier (`compterEtatCalendrierDeLaPage`),
- * les pastilles par appareil (`compterVerifsParEquipement`) et le nombre de
+ * les pastilles par appareil (`compterVerifsParEquipementDeLaPage`) et le nombre de
  * lignes (`compterVerificationsDuDossier`).
  *
  * JAMAIS DEPUIS UN LAYOUT. Le layout est rendu EN PARALLÈLE de la page, qui
@@ -216,33 +219,46 @@ const SELECT_LIGNE_COMPTEE = {
  * appelant ne le modifie pas.
  */
 export const lignesDuDossierDeLaPage = cache(
-  async function lignesDuDossierDeLaPage(etablissementId: string) {
-    const user = await requireUser();
-    const [lignes, dernieres] = await Promise.all([
-      prisma.verification.findMany({
-        where: {
-          etablissementId,
-          etablissement: { entreprise: { userId: user.id } },
-        },
-        select: SELECT_LIGNE_COMPTEE,
-      }),
-      dernieresRealisationsDeLEtablissement(etablissementId),
-    ]);
+  async function lignesDuDossierDeLaPage(
+    etablissementId: string,
+  ): Promise<readonly LigneComptee[]> {
     // En lecture seule au typage : le tableau est partagé par tous les
     // lecteurs du rendu, et un tri sur place se verrait chez les autres.
-    const verifs: readonly LigneComptee[] = projeterDernieresRealisations(
-      lignes,
-      dernieres,
-    );
-    return verifs;
+    return lireLignesComptees(etablissementId, undefined);
   },
 );
 
-export type LigneComptee = ReturnType<
-  typeof projeterDernieresRealisations<
-    Prisma.VerificationGetPayload<{ select: typeof SELECT_LIGNE_COMPTEE }>
-  >
->[number];
+export type LigneComptee = AvecDerniereRealisation<
+  Prisma.VerificationGetPayload<{ select: typeof SELECT_LIGNE_COMPTEE }>
+>;
+
+/**
+ * La lecture des lignes comptées, NON mémoïsée : celle de la page
+ * (`lignesDuDossierDeLaPage`, sans zone) et celle de `compterEtatCalendrier`
+ * (barre latérale, calendrier, zone). Une seule portée au compte, une seule
+ * projection — les deux comptes ne peuvent pas diverger.
+ */
+async function lireLignesComptees(
+  etablissementId: string,
+  batimentId: string | undefined,
+): Promise<LigneComptee[]> {
+  const user = await requireUser();
+  const [lignes, dernieres] = await Promise.all([
+    prisma.verification.findMany({
+      where: toutesLesConditions(
+        {
+          etablissementId,
+          etablissement: { entreprise: { userId: user.id } },
+        },
+        porteeBatiment(batimentId),
+      ),
+      select: SELECT_LIGNE_COMPTEE,
+    }),
+    // En parallèle des lignes : la barre latérale passe ici sur chaque écran.
+    dernieresRealisationsDeLEtablissement(etablissementId),
+  ]);
+  return projeterDernieresRealisations(lignes, dernieres);
+}
 
 /**
  * Agrégats pour l'en-tête du calendrier et le tableau de bord :
@@ -277,32 +293,16 @@ export async function compterEtatCalendrier(
   // liste qui n'en montrait qu'une partie.
   filtres: { batimentId?: string } = {},
 ) {
-  const user = await requireUser();
   // Les marques « à confirmer », lues EN MÊME TEMPS que les lignes (D1 (a)) :
   // une ligne que seul le silence de la fiche retient ne compte pas en retard,
   // ni dans la sidebar, ni au bandeau, ni au tableau de bord — les trois
   // lisent ce compte. Mémoïsées sur le rendu : la page qui les lit aussi ne
   // les recalcule pas.
-  const [lignes, marques, dernieres] = await Promise.all([
-    prisma.verification.findMany({
-      where: toutesLesConditions(
-        {
-          etablissementId,
-          etablissement: { entreprise: { userId: user.id } },
-        },
-        porteeBatiment(filtres.batimentId),
-      ),
-      select: SELECT_LIGNE_COMPTEE,
-    }),
+  const [verifs, marques] = await Promise.all([
+    lireLignesComptees(etablissementId, filtres.batimentId),
     marquesAConfirmerDuRendu(etablissementId),
-    // En parallèle des lignes : la barre latérale passe ici sur chaque écran.
-    dernieresRealisationsDeLEtablissement(etablissementId),
   ]);
-  return etatDesLignes(
-    projeterDernieresRealisations(lignes, dernieres),
-    now,
-    marques.parObligation,
-  );
+  return etatDesLignes(verifs, now, retenueParPrudence(marques.parObligation));
 }
 
 /**
@@ -318,20 +318,16 @@ export async function compterEtatCalendrierDeLaPage(
     lignesDuDossierDeLaPage(etablissementId),
     marquesAConfirmerDuRendu(etablissementId),
   ]);
-  return etatDesLignes(verifs, now, marques.parObligation);
+  return etatDesLignes(verifs, now, retenueParPrudence(marques.parObligation));
 }
 
 /** Le calcul des deux lecteurs ci-dessus, sans base. */
 function etatDesLignes(
   verifs: readonly LigneComptee[],
   now: Date,
-  marquesParObligation: Parameters<typeof retenueParPrudence>[0],
+  prudence: ReturnType<typeof retenueParPrudence>,
 ) {
-  const etat = repartirVerifications(
-    verifs,
-    now,
-    retenueParPrudence(marquesParObligation),
-  );
+  const etat = repartirVerifications(verifs, now, prudence);
   return {
     enRetard: etat.enRetard.length,
     // Le même prédicat que chaque surface qui place une date.

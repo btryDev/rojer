@@ -19,14 +19,17 @@ import { estMultiBatiments, resoudreFiltreBatiment } from "@/lib/batiments/filtr
 import { SelecteurBatiment } from "@/components/batiments/SelecteurBatiment";
 import {
   compterObligationsParMois,
-  compterVerifsParEquipement,
+  compterVerifsParEquipementDeLaPage,
   getDashboardData,
   getModulesMatrice,
   listerEvenementsFenetre,
   marquesAConfirmerDuRendu,
 } from "@/lib/dashboard/queries";
 import { listerEvenementsCalendrier } from "@/lib/calendrier/evenements";
-import { compterEtatEcheancesDeLaPage } from "@/lib/calendrier/retards";
+import {
+  compterEtatEcheances,
+  compterEtatEcheancesDeLaPage,
+} from "@/lib/calendrier/retards";
 import { assurerCalendrierAJour } from "@/lib/calendrier/regeneration-sure";
 import { statsActionsEnRetard } from "@/lib/actions/queries";
 import {
@@ -118,13 +121,15 @@ export default async function EtablissementPage({
     echeancesSansFiltre,
   ] = await Promise.all([
     listerEquipementsDeLEtablissement(id),
-    compterVerifsParEquipement(id),
+    compterVerifsParEquipementDeLaPage(id),
     getDashboardData(id),
     // Le dépassé et l'horizon proche, ventilés par famille : la seule
     // source des nombres de retard du board (cf. `DashboardBundle`).
-    compterEtatEcheancesDeLaPage(id, aujourdhui, {
-      batimentId: batimentFiltre,
-    }),
+    // Filtrée par zone, sa propre lecture filtrée ; sinon les lignes que la
+    // page partage.
+    batimentFiltre
+      ? compterEtatEcheances(id, aujourdhui, { batimentId: batimentFiltre })
+      : compterEtatEcheancesDeLaPage(id, aujourdhui),
     compterObligationsParMois(id),
     // La frise défile jusqu'à 24 mois et propose une vue calendrier sur
     // la même donnée — une seule collecte pour les deux vues, qui coupent

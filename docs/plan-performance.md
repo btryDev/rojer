@@ -455,6 +455,16 @@ Fait :
 Reste : l'établissement est encore lu par `chargerEtablissementEtParc`
 (autre forme, le parc) et par le repère ; les lignes de suivi sept fois —
 l'étape 4, dont le design attend la décision de la propriétaire.
+[2026-10-29, `lot/perf-lignes-partagees`, accord de la propriétaire :
+étape 4a faite. Les trois lectures des lignes du tableau de bord sans
+autre filtre que la portée — état du calendrier, pastilles par appareil,
+nombre de lignes — passent par `lignesDuDossierDeLaPage`, réservée à la
+page. La barre latérale garde sa lecture ; `lignes-de-la-page.test.ts`
+refuse qu'un layout, un fichier d'attente ou d'erreur, une route
+parallèle ou un `generateMetadata` l'atteigne, par un appel ou par un
+composant. Restent quatre lectures filtrées en SQL (frise, prochaines
+échéances, barres de l'année, `getDashboardData`) : les fondre réécrirait
+leurs filtres en mémoire, à ne lancer qu'avec les chiffres du lot 7.]
 
 ### Lot 3 — Afficher tout de suite (S-M)
 

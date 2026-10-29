@@ -203,26 +203,21 @@ export async function compterEtatEcheances(
 
 /**
  * Le même état, POUR LA PAGE DU TABLEAU DE BORD (plan performance,
- * 2026-10-29) : sans filtre de zone, sur les lignes qu'elle partage avec ses
+ * 2026-10-29), sur tout l'établissement : les lignes qu'elle partage avec ses
  * pastilles par appareil et son compte de lignes (`lignesDuDossierDeLaPage`).
  * Réservé à une page qui a réparé le calendrier avant de lire ; jamais depuis
- * un layout (`lignes-de-la-page.test.ts`). Filtré par zone, il garde sa
- * lecture filtrée : aucun filtre n'est réécrit en mémoire.
+ * un layout (`lignes-de-la-page.test.ts`). Filtrée par zone, la page passe par
+ * `compterEtatEcheances` : aucun filtre n'est réécrit en mémoire.
  */
 export async function compterEtatEcheancesDeLaPage(
   etablissementId: string,
   now: Date,
-  filtres: { batimentId?: string } = {},
 ): Promise<EtatEcheances> {
   return composerEtatEcheances(
-    filtres.batimentId
-      ? compterEtatCalendrier(etablissementId, now, {
-          batimentId: filtres.batimentId,
-        })
-      : compterEtatCalendrierDeLaPage(etablissementId, now),
+    compterEtatCalendrierDeLaPage(etablissementId, now),
     etablissementId,
     now,
-    filtres.batimentId,
+    undefined,
   );
 }
 
