@@ -493,9 +493,30 @@ garde. [Revue du lot : le shell DUERP garde sa lecture attendue — sans
 Les temps totaux ne bougent pas (deux mesures, bruit de quelques ms : la
 mesure fait journaliser chaque requête). Les pages DUERP ne gagnaient rien
 (`/duerp/[id]` n'a pas de `loading.tsx`, la page bloque le premier envoi) :
-leur shell est laissé tel quel, à reprendre avec un repli par section. Le
+leur shell est laissé tel quel. [2026-10-29, essayé puis mis de côté (PR
+#120, code retiré avant fusion, décision à prendre par la propriétaire) : un
+`duerp/[id]/loading.tsx` et le shell DUERP sur `SidebarAvecPastilles`
+gagnaient au 1er octet (unités 57 → 38 ms, synthèse 67 → 50 ms), mais la
+revue a relevé deux reculs sur le chemin d'entrée principal :
+- `/duerp/[id]`, cible de l'entrée « DUERP » de la barre, redirige vers
+  `/unites` ou `/secteur` ; sous le repli, la redirection part après le début
+  du flux (squelette affiché, puis redirection côté navigateur, aller-retour
+  en plus) ;
+- passer du shell d'établissement au shell DUERP remonte la barre : elle
+  s'afficherait sans pastilles puis les retrouverait, à chaque entrée dans
+  le DUERP.
+Le layout DUERP attend aussi `getDuerp` (unités, risques, actions) avant tout
+rendu : le repli ne couvre que la navigation d'étape à étape. À reprendre en
+traitant d'abord la redirection (lien direct vers l'étape depuis la barre,
+ou redirection hors du rendu).] Le
 HTML grossit de ≈ 7 Ko bruts (la barre est envoyée sans puis avec ses
 pastilles).
+
+**Ce qu'en dit l'audit indépendant** (`docs/revues/audit-acces-donnees-2026-10-29.md`) :
+en production aujourd'hui, avec une seule connexion à la base, la barre et la
+page font la queue sur la même connexion. Le premier affichage part plus tôt,
+le contenu de la page pas plus vite. Avec un pool > 1 (à la bascule), elles
+tournent côte à côte.
 
 - Board : le hero et la barre partent d'abord, les widgets arrivent en
   `<Suspense>` par bloc, chacun avec son squelette à sa taille (pas de saut).
@@ -585,6 +606,14 @@ Reste :
 
 ### Lot 7 — Voir la performance en production (S)
 
+[2026-10-29, décision de la propriétaire : **à faire à la bascule Clever
+Cloud, pas avant.** Le chiffre qu'il doit donner — le coût d'un aller-retour
+vers la base — dépend de l'hébergement (région, pool) ; mesuré sur Vercel, il
+ne vaudrait plus après la bascule. Rien de spécifique à Vercel n'est
+construit. Le banc local à latence injectée que propose l'audit (§ 5.1,
+Toxiproxy devant `duerp-db`) n'est pas urgent non plus : à faire avant ou
+pendant la bascule, s'il faut chiffrer le réglage du pool.]
+
 - Web Vitals des vrais utilisateurs (`useReportWebVitals`) envoyés à une route
   à nous, journalisés par page ; pas de service tiers (RGPD).
 - Traces OpenTelemetry (`instrumentation.ts`) : temps par requête SQL et par
@@ -629,7 +658,11 @@ Reste :
 ## Hors plan — lié à la bascule Clever Cloud
 
 - `connection_limit` et pool de connexions (aujourd'hui 1 : les `Promise.all`
-  sont sérialisés en prod).
+  sont sérialisés en prod). [2026-10-29, audit indépendant : **le levier
+  principal** — pool explicite de 5 à 10 par processus, sous le
+  `max_connections` du plan Clever Cloud (non publié : console ou support),
+  base et application dans la même région, sans `pgbouncer=true`. Le cache
+  serveur des compteurs est écarté : voir le rapport.]
 - Région des fonctions vs région de la base (`dub1` / base Supabase).
 - Plan Vercel Hobby (journaux d'une heure, usage non commercial).
 - Appel réseau au serveur Auth Supabase à chaque rendu (Better Auth le remplace).
