@@ -22,7 +22,7 @@
  *     [--essais 3] [--expliquer 5] [--sortie mesure.json]
  */
 import { execFileSync, spawnSync } from "node:child_process";
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { fabriquerCookie } from "./faux-auth.mjs";
 
 const arg = (nom, defaut) => {
@@ -35,7 +35,13 @@ const ESSAIS = Number(arg("essais", "3"));
 const EXPLIQUER = Number(arg("expliquer", "0"));
 const SORTIE = arg("sortie");
 const AUTH = arg("auth", "http://localhost:54399");
-const CONTENEUR = "duerp-db";
+// Le conteneur PostgreSQL et son utilisateur : `duerp-db` / `duerp` en local ;
+// en CI, le conteneur de service du runner (`budget-requetes.yml`).
+const CONTENEUR = arg("conteneur", "duerp-db");
+const UTILISATEUR_PG = arg("utilisateur", "duerp");
+// Budget de requêtes SQL par page (`scripts/perf/budget-requetes.json`) : avec
+// `--budget`, le script sort en erreur si une page le dépasse.
+const BUDGET = arg("budget");
 
 if (!DB || !/^duerp_perf_\w+$/.test(DB)) {
   console.error("--db duerp_perf_<nom> obligatoire (seules les bases de mesure sont acceptées).");
@@ -43,7 +49,7 @@ if (!DB || !/^duerp_perf_\w+$/.test(DB)) {
 }
 
 const psql = (base, sql) =>
-  execFileSync("docker", ["exec", CONTENEUR, "psql", "-U", "duerp", "-d", base, "-Atc", sql], {
+  execFileSync("docker", ["exec", CONTENEUR, "psql", "-U", UTILISATEUR_PG, "-d", base, "-Atc", sql], {
     encoding: "utf8",
   }).trim();
 
@@ -68,6 +74,7 @@ function activerJournal() {
 
 function couperJournal() {
   psql("postgres", "ALTER SYSTEM RESET log_min_duration_statement");
+  psql("postgres", "ALTER SYSTEM RESET log_line_prefix");
   psql("postgres", "SELECT pg_reload_conf()");
 }
 
@@ -102,11 +109,16 @@ function analyser(journal) {
     const m = RE_DUREE.exec(lignes[i]);
     if (!m) continue;
     const [, duree, phase, sql] = m;
+    const texte = sql.replace(/\s+/g, " ").trim();
+    // `SELECT 1` : le contrôle de connexion de Prisma, émis selon l'état du
+    // pool et non par l'application — ni compté ni chronométré : il ferait
+    // varier une page d'une mesure à l'autre.
+    if (/^SELECT 1;?$/i.test(texte)) continue;
     tempsSql += Number(duree);
     // Une requête = une exécution (protocole étendu) ou une instruction simple.
     if (phase === "execute" || phase === undefined) {
       const p = RE_PARAMS.exec(lignes[i + 1] ?? "");
-      requetes.push({ sql: sql.replace(/\s+/g, " ").trim(), duree: Number(duree), params: p ? p[1] : null });
+      requetes.push({ sql: texte, duree: Number(duree), params: p ? p[1] : null });
     } else if (phase === "parse" || phase === "bind") {
       // Le temps de parse/bind est compté dans le total, pas comme requête.
     }
@@ -120,13 +132,19 @@ function pagesAMesurer() {
   const etab = psql(DB, `SELECT id FROM "Etablissement" ORDER BY "createdAt" LIMIT 1`);
   const duerp = psql(DB, `SELECT id FROM "Duerp" WHERE "etablissementId" = '${etab}' LIMIT 1`);
   // L'appareil et le contrôle qui portent le plus de rapports : les fiches
-  // qui relisent un historique y paient le plus.
+  // qui relisent un historique y paient le plus. Les ex æquo sont la règle
+  // (le gros dossier donne le même historique aux lignes d'un même rythme) :
+  // départagés par l'obligation et le libellé de l'appareil, stables d'un
+  // semis à l'autre, et non par des identifiants tirés au hasard.
   const [equipement, controle] = psql(
     DB,
     `SELECT v."equipementId" || '|' || v.id FROM "Verification" v
+       JOIN "Equipement" e ON e.id = v."equipementId"
        JOIN "RapportVerification" r ON r."verificationId" = v.id
-      WHERE v."etablissementId" = '${etab}' AND v."equipementId" IS NOT NULL
-      GROUP BY v.id ORDER BY count(*) DESC LIMIT 1`,
+      WHERE v."etablissementId" = '${etab}'
+      GROUP BY v.id, e.id
+      ORDER BY count(*) DESC, v."obligationId", e.libelle, e."createdAt"
+      LIMIT 1`,
   ).split("|");
   const e = `/etablissements/${etab}`;
   return [
@@ -293,9 +311,47 @@ async function main() {
       );
       console.log(`\nDétail : ${SORTIE}`);
     }
+
+    if (BUDGET) process.exitCode = comparerAuBudget(resultats, JSON.parse(readFileSync(BUDGET, "utf8")));
   } finally {
     couperJournal();
   }
+}
+
+/**
+ * Compare le nombre de requêtes de chaque page à son budget. Rend 1 (échec) si
+ * une page le dépasse, n'a pas répondu 200, ou n'a pas de budget ; une page
+ * sous son budget est signalée — le budget se baisse alors à la main, pour
+ * qu'un gain ne soit pas reperdu en silence.
+ */
+function comparerAuBudget(resultats, budget) {
+  const pages = budget.pages ?? {};
+  const depassements = [];
+  const autres = [];
+  const sous = [];
+  for (const r of resultats) {
+    const permis = pages[r.nom];
+    if (r.statut !== 200) autres.push(`${r.nom} : la page a répondu ${r.statut} — voir le journal du serveur`);
+    else if (permis === undefined)
+      autres.push(`${r.nom} : aucun budget (${r.sql} requêtes mesurées) — l'ajouter à ${BUDGET}`);
+    else if (r.sql > permis) depassements.push(`${r.nom} : ${r.sql} requêtes, budget ${permis} (+${r.sql - permis})`);
+    else if (r.sql < permis) sous.push(`${r.nom} : ${r.sql} requêtes, budget ${permis} — à baisser`);
+  }
+  for (const nom of Object.keys(pages)) {
+    if (!resultats.some((r) => r.nom === nom))
+      autres.push(`${nom} : page du budget non mesurée — le dossier semé ne la permet plus ?`);
+  }
+  console.log(`\nBudget de requêtes (${BUDGET}) :`);
+  for (const s of sous) console.log(`  ↓ ${s}`);
+  for (const f of [...depassements, ...autres]) console.log(`  ✗ ${f}`);
+  if (depassements.length + autres.length === 0) console.log("  ✓ aucune page au-dessus de son budget");
+  if (depassements.length > 0)
+    console.log(
+      "\nUne page fait plus de requêtes qu'avant. Si c'est voulu, relever son budget dans " +
+        `${BUDGET}, avec la raison dans le message de commit ; sinon, chercher la ` +
+        "lecture ajoutée (une boucle, un include, une lecture en double).",
+    );
+  return depassements.length + autres.length === 0 ? 0 : 1;
 }
 
 main().catch((e) => {
