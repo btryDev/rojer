@@ -432,6 +432,35 @@ leur coût. À reprendre avec ces chiffres.
 
 ### Lot 3 — Afficher tout de suite (S-M)
 
+#### La barre latérale ne retarde plus la page (2026-10-29, `lot/perf-lot3-tableau`)
+
+Trouvé en instruisant le lot 2 : le layout attendait les pastilles et l'état
+des registres (une vingtaine de requêtes) avant de rendre quoi que ce soit —
+sur un chargement complet, la page elle-même attendait derrière. La barre se
+rend désormais sans eux, inerte le temps qu'ils arrivent (aucun panneau ne
+s'ouvre, donc rien ne se referme ni ne se réordonne au remplacement), puis
+complète (`SidebarAvecPastilles`, sous `<Suspense>`). Une lecture de
+pastille en échec laisse la barre sans pastilles au lieu de remplacer la page
+par l'écran d'erreur. La fratrie de la gélule est lue en même temps que la
+garde. [Revue du lot : le shell DUERP garde sa lecture attendue — sans
+`loading.tsx` sous `/duerp/[id]`, il n'y gagnait rien.]
+
+| Gros dossier, 1er octet (ms) | main | lot |
+|---|---|---|
+| Tableau de bord | 81 | 58–59 |
+| Calendrier | 53 | 23–36 |
+| Registre | 48 | 19–30 |
+| Équipements | 71 | 27–31 |
+| Équipe | 56 | 26 |
+| Fiche équipement | 44 | 21–27 |
+
+Les temps totaux ne bougent pas (deux mesures, bruit de quelques ms : la
+mesure fait journaliser chaque requête). Les pages DUERP ne gagnaient rien
+(`/duerp/[id]` n'a pas de `loading.tsx`, la page bloque le premier envoi) :
+leur shell est laissé tel quel, à reprendre avec un repli par section. Le
+HTML grossit de ≈ 7 Ko bruts (la barre est envoyée sans puis avec ses
+pastilles).
+
 - Board : le hero et la barre partent d'abord, les widgets arrivent en
   `<Suspense>` par bloc, chacun avec son squelette à sa taille (pas de saut).
 - Un `loading.tsx` par section, à la forme de l'écran (calendrier, listes,
