@@ -1,0 +1,20 @@
+-- Le dernier rapport d'une ligne en une descente d'index (plan performance,
+-- 2026-10-28) : la « dernière réalisation », lue sur chaque écran, coûte le
+-- nombre de lignes et non plus la longueur de l'historique.
+--
+-- `CONCURRENTLY` : la table des rapports grandit sans fin (conservation des
+-- preuves), et `migrate deploy` passe avant chaque build — un index posé
+-- normalement bloquerait le dépôt des rapports le temps de sa construction.
+-- Construit en `CONCURRENTLY`, il n'arrête aucune écriture, quelle que soit
+-- la taille de la table (règle tenue par `migrations-index.test.ts`).
+--
+-- SEULE instruction de ce fichier : PostgreSQL exécute dans une transaction
+-- implicite un envoi qui en compte plusieurs, et `CONCURRENTLY` y est refusé.
+--
+-- Si la construction échoue en production, elle laisse un index INVALID et la
+-- migration marquée en échec : supprimer l'index
+-- (`DROP INDEX CONCURRENTLY "RapportVerification_verificationId_dateRapport_createdAt_idx"`),
+-- puis `prisma migrate resolve --rolled-back 20261028200000_rapport_index_dernier_par_ligne`,
+-- et redéployer. Pas de `IF NOT EXISTS` : il laisserait passer en silence un
+-- index invalide.
+CREATE INDEX CONCURRENTLY "RapportVerification_verificationId_dateRapport_createdAt_idx" ON "RapportVerification"("verificationId", "dateRapport" DESC, "createdAt" DESC);

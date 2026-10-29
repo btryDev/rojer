@@ -324,6 +324,16 @@ Fait :
   (`joindre-realisations.integration.test.ts`, éprouvé en inversant l'ordre :
   rouge). Le lot 1a l'avait écartée pour « ≈ 1 ms » : mesuré à nouveau, avec
   les statistiques de la base à jour, l'écart est de dix à un.
+- **Index sans verrou** (2026-10-29, décision de la propriétaire : « on pense
+  à long terme », pas de choix selon la taille de la table au jour J) : l'index
+  se pose en `CONCURRENTLY` et l'ancien se retire de même, chaque instruction
+  seule dans sa migration (`20261028200000_rapport_index_dernier_par_ligne`,
+  `20261028200100_rapport_retrait_index_verification`) — vérifié par un
+  `migrate deploy` complet sur une base neuve, sans écart au schéma. La règle
+  vaut pour toute migration à venir : `migrations-index.test.ts` refuse un
+  index ordinaire sur une table existante, un `DROP INDEX` ordinaire, et un
+  `CONCURRENTLY` accompagné (éprouvé en remettant l'ancienne migration :
+  rouge).
 
 | Gros dossier (médianes, local) | SQL avant → après (ms) | Total avant → après (ms) |
 |---|---|---|
