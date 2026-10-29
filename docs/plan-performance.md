@@ -390,6 +390,46 @@ Calendrier, registre, équipements, DUERP, dans cet ordre (le plus consulté
 d'abord). Chaque écran réutilise le chargeur du lot 1 plutôt que d'écrire sa
 propre lecture. Cible indicative : ≤ 25 requêtes par écran.
 
+#### Instruction du lot 2 (2026-10-29, main 5a5e9040, gros dossier)
+
+Méthode : un traçage temporaire du client Prisma (proxy, pile capturée à
+l'appel, `next dev`), retiré avant tout commit, puis `mesurer.mjs` sur build
+de prod.
+
+Ce que la mesure apprend :
+- **Une lecture Prisma n'est pas une requête** : le tableau de bord fait 40
+  appels et 73 requêtes SQL — chaque `include` coûte une requête de plus
+  (Prisma 6). Documents : 17 appels, 28 requêtes.
+- **La base n'est pas le goulet** : 18,5 ms de SQL pour les 73 requêtes du
+  tableau de bord (dernier essai). En production, le coût d'une page est
+  surtout le NOMBRE d'allers-retours, que la mesure locale ne voit pas.
+- **Les lectures en double qui restent n'ont pas la même forme** :
+  l'établissement est lu cinq fois par rendu (contrôle d'accès, fraîcheur du
+  calendrier, dossier du moteur, page, réparation), les lignes sept fois. Les
+  identiques ont été partagées au lot 1. La lecture de réparation
+  (`calendrierDesynchronise`) doit voir la base APRÈS la réparation : la
+  partager servirait un état périmé (déjà écarté au lot 1). Les fondre
+  demande de réécrire leurs projections, sans gain sur la base.
+
+Mesuré et écarté — `relationJoins` (préversion de Prisma 6, une requête par
+lecture au lieu d'une par relation) :
+
+| Gros dossier (build webpack) | SQL | Total (ms) |
+|---|---|---|
+| Tableau de bord | 73 → 39 | 104 → 129 |
+| Calendrier | 46 → 23 | 124 → 131 |
+| Documents | 28 → 17 | 37 → 50 |
+
+Moitié moins d'allers-retours, mais le décodage du JSON coûte au serveur
+(+ 10 à 25 ms par page) et l'agrégation à la base (Documents : 5,2 → 10,6 ms
+de SQL au dernier essai). Le bilan dépend du temps d'un aller-retour en
+production, non mesuré : **pas d'adoption sans le lot 7**.
+
+**Conclusion** : le lot 2 n'a pas de gain propre aujourd'hui. Le préalable
+est le lot 7 (temps réels en production) : il dit ce que coûte un
+aller-retour, donc si `relationJoins` ou la refonte des projections valent
+leur coût. À reprendre avec ces chiffres.
+
 ### Lot 3 — Afficher tout de suite (S-M)
 
 - Board : le hero et la barre partent d'abord, les widgets arrivent en
