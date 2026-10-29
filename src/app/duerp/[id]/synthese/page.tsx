@@ -276,11 +276,11 @@ export default async function SynthesePage({
           </p>
         ) : (
           <div className="mt-5 overflow-x-auto">
-            <table className="tableau-en-cartes w-full min-w-[46rem] border-collapse text-[13.5px]">
+            <table className="tableau-en-cartes w-full md:min-w-[46rem] border-collapse text-[13.5px]">
               <caption className="sr-only">
                 Risques retenus, criticité décroissante, gravité en départage.
               </caption>
-              <thead>
+              <thead className="max-md:sr-only">
                 <tr className="border-b border-[color:var(--board-slate-line)] text-left">
                   <th scope="col" className={TH}>
                     Criticité
@@ -394,11 +394,11 @@ export default async function SynthesePage({
           </p>
         ) : (
           <div className="mt-5 overflow-x-auto">
-            <table className="tableau-en-cartes w-full min-w-[42rem] border-collapse text-[13.5px]">
+            <table className="tableau-en-cartes w-full md:min-w-[42rem] border-collapse text-[13.5px]">
               <caption className="sr-only">
                 Mesures prévues, échéance croissante, criticité en départage.
               </caption>
-              <thead>
+              <thead className="max-md:sr-only">
                 <tr className="border-b border-[color:var(--board-slate-line)] text-left">
                   <th scope="col" className={TH}>
                     Échéance

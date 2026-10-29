@@ -19,6 +19,7 @@ import {
   type EvenementGrille,
   type GrilleMois,
 } from "@/lib/calendrier/grille";
+import { formaterJourDateLongueFr } from "@/lib/dates";
 import { avecMentionFin, dateEnJeuEvenement } from "@/lib/calendrier/etats";
 import { MarqueurFamille } from "./MarqueurFamille";
 
@@ -91,7 +92,7 @@ export function VueMois({
         >
           <ChevronLeft className="size-4" />
         </BoutonNav>
-        <p className="m-0 min-w-0 flex-1 text-center text-[15px] font-semibold tracking-[-0.015em] text-[color:var(--board-ink)] sm:min-w-[168px] sm:flex-none">
+        <p className="m-0 min-w-0 flex-1 text-center text-[15px] font-semibold tracking-[-0.015em] text-[color:var(--board-ink)] md:min-w-[168px] md:flex-none">
           {grille.libelle}
         </p>
         <BoutonNav
@@ -101,7 +102,7 @@ export function VueMois({
         >
           <ChevronRight className="size-4" />
         </BoutonNav>
-        <p className="m-0 ml-auto hidden text-[12.5px] text-[color:var(--board-slate-mid)] sm:block">
+        <p className="m-0 ml-auto hidden text-[12.5px] text-[color:var(--board-slate-mid)] md:block">
           {grille.nbEvenements === 0
             ? "Aucune échéance ce mois-ci"
             : `${grille.nbEvenements} échéance${grille.nbEvenements > 1 ? "s" : ""}`}
@@ -114,7 +115,7 @@ export function VueMois({
         hrefEvenement={hrefEvenement}
       />
 
-      <div className="mt-4 hidden grid-cols-7 gap-1.5 sm:grid">
+      <div className="mt-4 hidden grid-cols-7 gap-1.5 md:grid">
         {JOURS_SEMAINE.map((j) => (
           <div
             key={j}
@@ -154,15 +155,11 @@ export function VueMois({
 
               <ul className="mt-1 flex flex-col gap-1">
                 {visibles.map((e) => {
-                  // Posée sur la fin de son opération, la pastille le dit en
-                  // tête : la case du 25 se lirait comme le début des travaux
-                  // (relecture, 2026-09-15).
-                  const fin =
-                    dateEnJeuEvenement(e, aujourdhui).getTime() !== e.date.getTime();
+                  const cible = cibleEvenement(e, aujourdhui, hrefEvenement);
                   return (
                     <li key={e.id}>
                       <LienProvenance
-                        href={e.href ?? hrefEvenement(e)}
+                        href={cible.href}
                         title={`${e.libelle} — ${e.equipement}`}
                         className={
                           "flex items-center gap-1 rounded-[7px] px-1.5 py-1 text-[10.5px] font-semibold leading-tight transition-opacity hover:opacity-80 " +
@@ -172,9 +169,7 @@ export function VueMois({
                         {/* L'icône dit la famille ; la pastille garde la
                             couleur de son urgence. */}
                         <MarqueurFamille famille={e.famille} className="size-2.5" />
-                        <span className="min-w-0 truncate">
-                          {avecMentionFin(e.libelle, fin)}
-                        </span>
+                        <span className="min-w-0 truncate">{cible.texte}</span>
                       </LienProvenance>
                     </li>
                   );
@@ -193,7 +188,19 @@ export function VueMois({
   );
 }
 
-const JOURS_LONGS = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+/** Où mène la pastille d'un événement, et ce qu'elle dit : posée sur la fin
+ *  de son opération, elle le dit en tête — la case du 25 se lirait comme le
+ *  début des travaux (relecture, 2026-09-15). Partagé par les deux grilles. */
+function cibleEvenement(
+  e: EvenementGrille,
+  aujourdhui: Date,
+  hrefEvenement: (e: EvenementGrille) => string,
+) {
+  const fin = dateEnJeuEvenement(e, aujourdhui).getTime() !== e.date.getTime();
+  return { href: e.href ?? hrefEvenement(e), texte: avecMentionFin(e.libelle, fin) };
+}
+
+const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /** Le point d'un événement dans la grille du téléphone : la couleur de sa
  *  pastille, en plus soutenu pour se lire à 6 px. */
@@ -232,14 +239,9 @@ export function GrilleTelephone({
   const [choisi, setChoisi] = useState<string | null>(null);
   // Un choix fait dans un autre mois ne vaut plus : on retombe sur le défaut.
   const jour = duMois.find((j) => j.cle === choisi) ?? parDefaut;
-  const nomDuJour = jour ? JOURS_LONGS[jours.indexOf(jour) % 7] : "";
-  // « 8 octobre 2026 » : le numéro sans zéro, le mois et l'année du titre de
-  // la grille (« Octobre 2026 »), déjà calculés dans le fuseau de référence.
-  const dateDuJour = (j: { numero: number }) =>
-    `${j.numero} ${grille.libelle.toLowerCase()}`;
 
   return (
-    <div className="sm:hidden">
+    <div className="md:hidden">
       <div className="mt-4 grid grid-cols-7 gap-y-1">
         {JOURS_SEMAINE.map((j) => (
           <div
@@ -249,7 +251,7 @@ export function GrilleTelephone({
             {j.slice(0, 1)}
           </div>
         ))}
-        {jours.map((j, i) => {
+        {jours.map((j) => {
           if (!j.dansLeMois) return <span key={j.cle} aria-hidden />;
           const nb = j.evenements.length;
           const actif = jour?.cle === j.cle;
@@ -259,7 +261,7 @@ export function GrilleTelephone({
               type="button"
               onClick={() => setChoisi(j.cle)}
               aria-pressed={actif}
-              aria-label={`${JOURS_LONGS[i % 7]} ${dateDuJour(j)}, ${
+              aria-label={`${majuscule(formaterJourDateLongueFr(j.date))}, ${
                 nb === 0 ? "aucune échéance" : `${nb} échéance${nb > 1 ? "s" : ""}`
               }`}
               className={
@@ -278,6 +280,7 @@ export function GrilleTelephone({
                 {j.evenements.slice(0, MAX_PAR_JOUR).map((e) => (
                   <span
                     key={e.id}
+                    data-point=""
                     className={
                       "size-1.5 rounded-full " +
                       (actif && e.tone !== "alerte" ? "bg-white" : TON_POINT[e.tone])
@@ -294,8 +297,8 @@ export function GrilleTelephone({
         <div className="mt-5">
           <p className="m-0 text-[13px] font-semibold text-[color:var(--board-slate-ink)]">
             {jour.estAujourdhui
-              ? `Aujourd'hui, ${nomDuJour.toLowerCase()} ${dateDuJour(jour)}`
-              : `${nomDuJour} ${dateDuJour(jour)}`}
+              ? `Aujourd'hui, ${formaterJourDateLongueFr(jour.date)}`
+              : majuscule(formaterJourDateLongueFr(jour.date))}
           </p>
           {jour.evenements.length === 0 ? (
             <p className="m-0 mt-2 text-[13.5px] text-[color:var(--board-slate-mid)]">
@@ -304,12 +307,11 @@ export function GrilleTelephone({
           ) : (
             <ul className="mt-2.5 flex flex-col gap-1.5">
               {jour.evenements.map((e) => {
-                const fin =
-                  dateEnJeuEvenement(e, aujourdhui).getTime() !== e.date.getTime();
+                const cible = cibleEvenement(e, aujourdhui, hrefEvenement);
                 return (
                   <li key={e.id}>
                     <LienProvenance
-                      href={e.href ?? hrefEvenement(e)}
+                      href={cible.href}
                       className={
                         "flex min-h-11 items-center gap-2.5 rounded-[14px] px-3 py-2.5 text-[13.5px] font-semibold leading-snug " +
                         TON_PASTILLE[e.tone]
@@ -317,7 +319,7 @@ export function GrilleTelephone({
                     >
                       <MarqueurFamille famille={e.famille} className="size-3.5 flex-none" />
                       <span className="min-w-0 flex-1">
-                        {avecMentionFin(e.libelle, fin)}
+                        {cible.texte}
                         {e.equipement ? (
                           <span className="block text-[12px] font-normal opacity-80">
                             {e.equipement}

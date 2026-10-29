@@ -224,7 +224,7 @@ export function WidgetEcheances({ bundle }: { bundle: DashboardBundle }) {
           : undefined
       }
     >
-      <div className="grid grid-cols-3 gap-3 pt-1 sm:gap-4">
+      <div className="grid grid-cols-3 gap-3 pt-1 @md:gap-4">
         <MiniStat
           label="En retard"
           valeur={verifsEnRetard}
@@ -257,7 +257,7 @@ export function WidgetActivite({ bundle }: { bundle: DashboardBundle }) {
 
   return (
     <BentoCell kicker="Activité">
-      <div className="grid grid-cols-3 gap-3 pt-1 sm:gap-4">
+      <div className="grid grid-cols-3 gap-3 pt-1 @md:gap-4">
         <MiniStat
           label="Actions en cours"
           valeur={totalActions}

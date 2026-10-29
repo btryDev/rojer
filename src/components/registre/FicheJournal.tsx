@@ -75,11 +75,11 @@ export function FicheJournal({
         </p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="tableau-en-cartes w-full min-w-[34rem] border-collapse text-[13.5px]">
+          <table className="tableau-en-cartes w-full md:min-w-[34rem] border-collapse text-[13.5px]">
             <caption className="sr-only">
               Lignes consignées, la plus récemment saisie en premier.
             </caption>
-            <thead>
+            <thead className="max-md:sr-only">
               <tr className="border-b border-[color:var(--board-slate-line)] text-left">
                 {colonnes.map((c) => (
                   <th

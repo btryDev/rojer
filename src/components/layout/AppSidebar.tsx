@@ -55,6 +55,7 @@
 
 import { Fragment, useState } from "react";
 import Link from "next/link";
+import { NavLink, RailEntree } from "./entrees-navigation";
 import { DemandeAide } from "@/components/assistance/DemandeAide";
 import { usePathname, useSearchParams } from "next/navigation";
 import { PanelLeftClose } from "lucide-react";
@@ -63,8 +64,6 @@ import {
   construireRail,
   deduireActif,
   LABEL_ITEM,
-  type NavItem,
-  type RailCategorie,
   type RailCategorieId,
   type SidebarActive,
   type SidebarCounts,
@@ -144,13 +143,18 @@ export function AppSidebar({
       ouverte={ouverte}
       surChoisir={setOuverte}
       enAttente={enAttente}
-      rendreItem={(it) => <NavLink item={it} actif={actif} />}
+      actif={actif}
     />
+    {/* Le voile, sous la feuille du téléphone et sous le panneau de la
+        tablette : un appui hors du panneau le referme. Rendu avant la barre,
+        qui passe donc devant à z-index égal. Pas sur ordinateur, où le
+        panneau ne recouvre rien. */}
     {panneau ? (
       <div
         aria-hidden
+        data-voile=""
         onClick={() => setOuverte(null)}
-        className="fixed inset-0 z-30 hidden bg-[color:rgba(10,10,10,.28)] md:block lg:hidden"
+        className="fixed inset-0 z-40 bg-[color:rgba(10,10,10,.32)] lg:hidden"
       />
     ) : null}
     <aside
@@ -245,193 +249,5 @@ export function AppSidebar({
       </div>
     </aside>
     </>
-  );
-}
-
-/**
- * Entrée de rail : un bouton qui ouvre le panneau de sa catégorie, sans
- * naviguer — c'est l'entrée choisie dans le panneau qui mène à une page
- * (2026-10-28, ADR-030 amendée). ~~Toujours un lien, panneau ou pas
- * (ADR-015).~~
- */
-function RailEntree({
-  cat,
-  surPage,
-  ouverte,
-  onClick,
-}: {
-  cat: RailCategorie;
-  /** La page courante appartient à cette catégorie. */
-  surPage: boolean;
-  /** Son panneau est celui qui est ouvert. */
-  ouverte: boolean;
-  onClick: () => void;
-}) {
-  const allume = surPage || ouverte;
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-expanded={ouverte}
-      // `aria-current` dit où l'on est ; l'ouverture d'un panneau, elle, est
-      // dite par `aria-expanded`.
-      aria-current={surPage ? "page" : undefined}
-      // PAS d'`aria-label`. Il portait le libellé LONG (« Santé-sécurité »,
-      // « Documentation ») alors que la tuile affiche le court (« Sécurité »,
-      // « Documents ») : le nom accessible ne contenait pas le texte visible,
-      // ce que WCAG 2.5.3 « Label in Name » interdit. Le libellé long reste
-      // là où il y a la place de l'écrire : l'en-tête du panneau, qui nomme
-      // aussi sa région (`aria-label={panneau.label}`).
-      className="group flex w-full flex-col items-center gap-1.5 rounded-xl py-2 transition-colors hover:bg-white/10"
-    >
-      <TuileIcone cat={cat} pleine={allume} />
-      <RailLibelle cat={cat} allume={allume} />
-    </button>
-  );
-}
-
-function TuileIcone({ cat, pleine }: { cat: RailCategorie; pleine: boolean }) {
-  return (
-    <span
-      className={
-        "relative grid size-9 place-items-center rounded-xl transition-colors " +
-        (pleine
-          ? "bg-white text-[color:var(--board-ink)]"
-          : "text-white/60 group-hover:text-white")
-      }
-    >
-      <cat.Icon aria-hidden className="size-[18px]" />
-      {cat.alert ? (
-        <span
-          aria-hidden
-          className="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-[color:var(--board-signal-mark)] ring-2 ring-[color:var(--board-ink)]"
-        />
-      ) : null}
-    </span>
-  );
-}
-
-function RailLibelle({ cat, allume }: { cat: RailCategorie; allume: boolean }) {
-  return (
-    <span
-      className={
-        // `leading-[1.35]` et non `leading-none` : à 9 px, une boîte de ligne
-        // haute de 9 px ne contient pas les accents. Comme `truncate` pose
-        // `overflow: hidden`, ils étaient rognés — le rail affichait « A
-        // faire » là où le lien et le panneau disent « À faire ». Le texte
-        // était juste depuis le début (`labelCourt`), c'est le rendu qui
-        // mangeait l'accent. Même cause exactement que les cartes de frise du
-        // tableau de bord : une boîte trop courte, un `overflow` qui coupe.
-        "max-w-full truncate px-0.5 text-[9px] leading-[1.35] tracking-[0.02em] " +
-        (allume ? "text-white" : "text-white/50 group-hover:text-white")
-      }
-    >
-      {cat.labelCourt}
-    </span>
-  );
-}
-
-const CLASSES_ITEM =
-  "flex w-full items-center gap-3 rounded-full px-3.5 py-[10px] text-[13.5px] transition-colors";
-
-/**
- * Étiquette d'un registre qui ne concerne pas (encore) l'établissement.
- *
- * « au besoin » plutôt que « à ouvrir » : l'entrée annonce une disponibilité,
- * elle ne réclame rien. Un dirigeant qui n'a pas de travaux par point chaud
- * n'a rien à faire de ce registre, et la sidebar ne doit pas lui inventer une
- * tâche — c'est le contraire de ce que promet « À faire ».
- */
-const ETIQUETTE_ETAT: Record<string, string> = {
-  "non-ouvert": "au besoin",
-  "non-applicable": "non applicable",
-};
-
-function NavLink({ item, actif }: { item: NavItem; actif: SidebarItemId }) {
-  const isActive = item.id === actif;
-  // Un registre qualifié reste un lien : c'est par là qu'on l'ouvre le jour
-  // venu, et la page « non applicable » explique et permet de corriger le
-  // régime déclaré. Seule sa présentation s'efface.
-  const etiquette =
-    item.etat && item.etat !== "actif" ? ETIQUETTE_ETAT[item.etat] : null;
-
-  // Destination pas encore implémentée : rendue inerte et étiquetée, pour
-  // qu'elle ne se confonde pas visuellement avec un lien réel.
-  if (item.bientot) {
-    return (
-      <span className={CLASSES_ITEM + " text-white/30"} aria-disabled>
-        <item.Icon aria-hidden className="size-4 flex-none opacity-70" />
-        <span className="min-w-0 flex-1 leading-[1.3]">{item.label}</span>
-        <span className="flex-none font-mono text-[9px] uppercase tracking-[0.1em]">
-          bientôt
-        </span>
-      </span>
-    );
-  }
-
-  return (
-    <Link
-      href={item.href}
-      aria-current={isActive ? "page" : undefined}
-      className={
-        CLASSES_ITEM + " " +
-        (isActive
-          ? "bg-white font-semibold text-[color:var(--board-ink)]"
-          : etiquette
-            ? "text-white/35 hover:bg-white/10 hover:text-white/70"
-            : "text-white/60 hover:bg-white/10 hover:text-white")
-      }
-    >
-      <item.Icon
-        aria-hidden
-        className={
-          "size-4 flex-none " +
-          (etiquette && !isActive ? "opacity-50" : "opacity-90")
-        }
-      />
-      {/* Le libellé d'abord, son état DESSOUS. L'étiquette partageait la
-          ligne et prenait 60 px des 148 disponibles : « Permis de f… ». Une
-          seconde information se range sous la première (charte, patron de
-          tableau dense), elle ne dispute pas sa largeur au nom de l'écran —
-          c'est le nom qui sert à choisir, l'état ne fait que le qualifier. */}
-      <span className="flex min-w-0 flex-1 flex-col">
-        <span className="leading-[1.3]">{item.label}</span>
-        {etiquette && !isActive ? (
-          <span className="mt-[3px] font-mono text-[9px] uppercase leading-none tracking-[0.1em] opacity-80">
-            {etiquette}
-          </span>
-        ) : null}
-      </span>
-      {item.aMettreAJour ? (
-        // Pastille NEUTRE et sans nombre : le compte serait faux, le
-        // calendrier n'ayant pas été recalculé (2026-10-13). Le gabarit d'un
-        // volume, jamais la couleur du signal.
-        <span
-          title={item.aMettreAJour}
-          className={
-            "flex-none rounded-full px-[7px] py-px font-mono text-[11px] " +
-            (isActive
-              ? "bg-[color:var(--board-ink)]/10 text-[color:var(--board-ink)]"
-              : "bg-white/10 text-white/60")
-          }
-        >
-          <span aria-hidden>…</span>
-          <span className="sr-only">{item.aMettreAJour}</span>
-        </span>
-      ) : typeof item.count === "number" && item.count > 0 ? (
-        <span
-          className={
-            "flex-none rounded-full px-[7px] py-px font-mono text-[11px] " +
-            (isActive
-              ? "bg-[color:var(--board-ink)]/10 text-[color:var(--board-ink)]"
-              : item.alert
-                ? "bg-[color:var(--board-signal)] text-[color:var(--board-signal-on)]"
-                : "bg-white/10 text-white/60")
-          }
-        >
-          {item.count}
-        </span>
-      ) : null}
-    </Link>
   );
 }

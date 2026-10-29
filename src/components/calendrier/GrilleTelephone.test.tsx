@@ -67,10 +67,9 @@ describe("GrilleTelephone", () => {
   });
 
   it("un point par échéance, trois au plus", () => {
-    const { container } = rendre([1, 2, 3, 4].map((n) => evt(`x${n}`, 8, `Ligne ${n}`, "ok")));
+    rendre([1, 2, 3, 4].map((n) => evt(`x${n}`, 8, `Ligne ${n}`, "ok")));
     const huit = screen.getByRole("button", { name: /^Jeudi 8 octobre 2026, 4 échéances$/ });
     expect(within(huit).getByText("8")).toBeDefined();
-    expect(huit.querySelectorAll(".size-1\\.5.rounded-full")).toHaveLength(3);
-    expect(container).toBeDefined();
+    expect(huit.querySelectorAll("[data-point]")).toHaveLength(3);
   });
 });

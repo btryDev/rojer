@@ -17,6 +17,7 @@ import {
   TELEPHONE_MAX,
 } from "@/lib/assistance/libelles";
 import { MessageFait } from "@/components/ui-kit/MessageFait";
+import { CLASSES_ITEM, TON_ITEM_REPOS } from "@/components/layout/entrees-navigation";
 
 /**
  * « Besoin d'aide ? » (décision de la propriétaire du 2026-10-24) : un texte
@@ -73,7 +74,7 @@ export function DemandeAide({
         type="button"
         onClick={ouvrir}
         aria-haspopup="dialog"
-        className="flex w-full items-center gap-3 rounded-full px-3.5 py-[10px] text-left text-[13.5px] text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+        className={`${CLASSES_ITEM} ${TON_ITEM_REPOS} text-left`}
       >
         <LifeBuoy aria-hidden className="size-4 flex-none opacity-90" />
         <span className="min-w-0 flex-1 leading-[1.3]">{libelle}</span>

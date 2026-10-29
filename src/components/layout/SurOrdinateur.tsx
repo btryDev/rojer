@@ -7,10 +7,6 @@ import { Monitor } from "lucide-react";
  * cède la place à une carte qui le dit et dit pourquoi. L'en-tête de la page
  * reste au-dessus, et l'adresse ne change pas : le lien ouvert sur ordinateur
  * mène au même écran.
- *
- * Trois écrans sont concernés : l'import d'un DUERP existant, la connexion
- * d'un assistant, et la personnalisation du tableau de bord (son bouton est
- * simplement retiré sur téléphone, `EditToolbar`).
  */
 export function SurOrdinateur({
   raison,

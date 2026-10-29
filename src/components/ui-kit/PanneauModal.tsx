@@ -74,14 +74,14 @@ export function PanneauModal({
       // Au-dessus des autres couches fixes (revue « en place », z-50) : un
       // panneau s'ouvre souvent depuis l'une d'elles.
       // Sur téléphone, le panneau monte du bas, pleine largeur (2026-10-29).
-      className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center sm:p-4"
+      className="fixed inset-0 z-[60] flex items-end justify-center md:items-center md:p-4"
     >
       <div aria-hidden onClick={surFermer} className="absolute inset-0 bg-[rgba(10,10,10,.35)]" />
       <div
         ref={panneau}
         tabIndex={-1}
         data-largeur={largeur}
-        className={`relative max-h-[92dvh] w-full ${LARGEUR[largeur]} overflow-y-auto overscroll-contain rounded-t-[26px] bg-[color:var(--board-card)] px-5 pb-[calc(20px+env(safe-area-inset-bottom,0px))] pt-6 sm:max-h-[85vh] sm:rounded-[26px] sm:p-7 shadow-[0_0_0_1px_rgba(13,18,36,.06),0_24px_60px_-24px_rgba(13,18,36,.45)] outline-none`}
+        className={`relative max-h-[92dvh] w-full ${LARGEUR[largeur]} overflow-y-auto overscroll-contain rounded-t-[26px] bg-[color:var(--board-card)] px-5 pb-[calc(20px+env(safe-area-inset-bottom,0px))] pt-6 md:max-h-[85vh] md:rounded-[26px] md:p-7 shadow-[0_0_0_1px_rgba(13,18,36,.06),0_24px_60px_-24px_rgba(13,18,36,.45)] outline-none`}
       >
         <div className="flex items-start justify-between gap-6">
           <div>
@@ -94,7 +94,7 @@ export function PanneauModal({
             type="button"
             onClick={surFermer}
             aria-label="Fermer"
-            className="flex size-10 flex-none items-center sm:size-8 justify-center rounded-full text-[color:var(--board-slate-mid)] shadow-[inset_0_0_0_1px_rgba(10,10,10,.14)] transition-colors hover:bg-[color:var(--board-slate-pale)] hover:text-[color:var(--board-ink)]"
+            className="flex size-10 flex-none items-center md:size-8 justify-center rounded-full text-[color:var(--board-slate-mid)] shadow-[inset_0_0_0_1px_rgba(10,10,10,.14)] transition-colors hover:bg-[color:var(--board-slate-pale)] hover:text-[color:var(--board-ink)]"
           >
             <X className="size-4" />
           </button>

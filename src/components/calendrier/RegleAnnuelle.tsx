@@ -158,9 +158,9 @@ export function RegleAnnuelle({
           pour le doigt. Le mois ouvert est ramené au centre. */}
       <div
         ref={defilement}
-        className="-mx-[var(--board-gutter)] overflow-x-auto px-[var(--board-gutter)] sm:mx-0 sm:overflow-visible sm:px-0"
+        className="-mx-[var(--board-gutter)] overflow-x-auto px-[var(--board-gutter)] md:mx-0 md:overflow-visible md:px-0"
       >
-      <div className="relative grid min-w-[560px] grid-cols-12 gap-1.5 sm:min-w-0">
+      <div className="relative grid min-w-[560px] grid-cols-12 gap-1.5 md:min-w-0">
         {mois.map((m) => {
           const nb = totalDuMois(m);
           const segments = segmentsDuMois(m, maxTotal);

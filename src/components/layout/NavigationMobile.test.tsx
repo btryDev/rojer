@@ -95,7 +95,7 @@ describe("NavigationMobile", () => {
     nav.chemin = "/etablissements/e1/calendrier";
     const { container } = render(barre("calendrier"));
     fireEvent.click(basDePage().getByRole("button", { name: /Documents/ }));
-    const voile = container.querySelector(".fixed.inset-0.z-40");
+    const voile = container.querySelector("[data-voile]");
     expect(voile).not.toBeNull();
     fireEvent.click(voile!);
     expect(feuille()).toBeNull();
