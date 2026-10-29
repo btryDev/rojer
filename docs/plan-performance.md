@@ -600,6 +600,20 @@ Reste :
 (équipement, fiche, salarié). Le mesurer sur le gros dossier. Au-delà de
 ≈ 300 ms, ne régénérer que le porteur touché ; en dessous, ne rien changer.
 
+**Mesuré le 2026-10-29 (main 35372ecf, gros dossier, 290 lignes) — clos, rien
+à changer.** La régénération (`regenererSansControleDeSession`, chronométrée
+par un script local) coûte ≈ 55-60 ms de calcul et ≈ 8 requêtes à blanc ;
+l'ajout d'un extincteur crée 2 lignes et ne met rien à jour (≈ 62 ms), sa
+désactivation en supprime 2 (≈ 72 ms). Le moteur ne dépend pas de la date
+(ADR-036) : une modification ne touche que quelques lignes. En production,
+≈ 10 allers-retours : sous le seuil, même à 10-20 ms l'aller-retour. Seul cas
+coûteux : beaucoup de lignes mises à jour d'un coup (une requête par ligne,
+protection de concurrence), après un changement du référentiel — rattrapé
+hors affichage par `scripts/regenerer-calendriers.ts`. Regrouper ces mises à
+jour en une instruction serait possible, pour un cas rare : non fait. (Le gros
+dossier de mesure en déclenche 159 à sa première régénération : il insère dix
+ans de rapports après avoir généré le calendrier — un artefact du semis.)
+
 ### Lot 6 — Le poids envoyé au navigateur (S)
 
 - Analyse du bundle par page (`@next/bundle-analyzer`, hors dépendances livrées).
