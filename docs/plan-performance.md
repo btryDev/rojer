@@ -566,10 +566,20 @@ Reste :
 
 ## Garde-fous
 
-- **Budget de requêtes par écran, testé** : un test qui rend le board sur une
+- **Budget de requêtes par écran, testé** : ~~un test qui rend le board sur une
   base réelle et échoue au-delà du budget. La CI de tests n'a pas de base
   (`tests.yml`, URL factice) ; `derive-schema.yml` en a une, le test s'y
-  greffe. Éprouvé en le cassant (réintroduire une lecture en double → rouge).
+  greffe. Éprouvé en le cassant (réintroduire une lecture en double → rouge).~~
+  [2026-10-29, fait, demandé par la propriétaire : un workflow à part,
+  `budget-requetes.yml`. Il construit l'application, sème le gros dossier
+  dans un Postgres du runner (≈ 10 s), ouvre les treize pages principales et
+  compte leurs requêtes SQL avec `mesurer.mjs` (`--conteneur`, `--budget`).
+  Une page au-dessus de `scripts/perf/budget-requetes.json` fait échouer le
+  job ; une page en dessous est signalée, pour baisser le budget. Les
+  `SELECT 1` du contrôle de connexion de Prisma ne comptent pas : ils
+  faisaient varier une page de deux requêtes d'une mesure à l'autre. Stable
+  sur trois mesures. Éprouvé deux fois : un budget baissé d'une unité, puis
+  une lecture en double ajoutée à la page Documents (29 pour 28) — rouge.]
 - Chaque lot : mesure avant/après collée depuis la sortie du script, jamais
   annoncée.
 - Une revue indépendante avant chaque merge (lots 1 et 2 touchent la tenancy).
