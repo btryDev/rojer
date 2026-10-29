@@ -35,7 +35,7 @@ export function ContenuTenuAilleurs({ lignes, source, vide }: ContenuAilleurs) {
               <>
                 <span className="min-w-0 flex-1">
                   <span className="flex items-baseline gap-2 text-[14px] font-semibold leading-[1.35] tracking-[-0.015em] text-[color:var(--board-ink)]">
-                    <span className="min-w-0 truncate">{ligne.titre}</span>
+                    <span className="min-w-0 max-md:line-clamp-2 md:truncate">{ligne.titre}</span>
                     {/* Le registre est le document qu'on présente à la
                         commission : une échéance d'assurance qui s'y lirait
                         comme réglementaire est l'erreur la plus coûteuse du
@@ -51,11 +51,15 @@ export function ContenuTenuAilleurs({ lignes, source, vide }: ContenuAilleurs) {
                     </span>
                   )}
                 </span>
-                {ligne.statut && <BadgeStatut statut={ligne.statut} />}
+                {ligne.statut && (
+                  <span className="flex-none max-md:col-start-1 max-md:row-start-2 max-md:justify-self-start">
+                    <BadgeStatut statut={ligne.statut} />
+                  </span>
+                )}
                 {ligne.href && (
                   <ChevronRight
                     aria-hidden
-                    className="size-4 flex-none text-[color:var(--board-slate-soft)]"
+                    className="size-4 flex-none text-[color:var(--board-slate-soft)] max-md:col-start-2 max-md:row-span-2 max-md:row-start-1"
                   />
                 )}
               </>
@@ -68,12 +72,12 @@ export function ContenuTenuAilleurs({ lignes, source, vide }: ContenuAilleurs) {
                 {ligne.href ? (
                   <Link
                     href={ligne.href}
-                    className="-mx-3 flex items-center gap-4 rounded-[16px] px-3 py-3 transition-colors hover:bg-[color:var(--board-slate-pale)]"
+                    className="-mx-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1.5 rounded-[16px] px-3 py-3 transition-colors hover:bg-[color:var(--board-slate-pale)] md:flex md:gap-4"
                   >
                     {contenu}
                   </Link>
                 ) : (
-                  <div className="flex items-center gap-4 py-3">{contenu}</div>
+                  <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1.5 py-3 md:flex md:gap-4">{contenu}</div>
                 )}
               </li>
             );
