@@ -1965,14 +1965,16 @@ export function BlocDocuments({ bundle }: { bundle: DashboardBundle }) {
     <CarteBoard className="px-7 py-[26px]">
       <TitreBloc titre="Vos documents, en un coup d'œil" />
 
-      <div className="mt-[22px] grid grid-cols-[1.6fr_1fr_1fr_1fr] items-center gap-[7px]">
-        <span className="rounded-full bg-[color:var(--board-blue-ink)] px-3.5 py-2 text-center font-mono text-[11px] font-semibold uppercase tracking-[0.06em] text-white">
+      {/* Sur téléphone, les têtes de colonne se resserrent : à 11 px,
+          « Sans retard » ne tenait pas dans ses 70 px. */}
+      <div className="mt-[22px] grid grid-cols-[1.4fr_1fr_1fr_1fr] items-center gap-[5px] sm:grid-cols-[1.6fr_1fr_1fr_1fr] sm:gap-[7px]">
+        <span className="rounded-full bg-[color:var(--board-blue-ink)] px-2 py-2 text-center font-mono text-[9.5px] font-semibold uppercase tracking-[0.04em] text-white sm:px-3.5 sm:text-[11px] sm:tracking-[0.06em]">
           Document
         </span>
         {COLONNES_MATRICE.map((c) => (
           <span
             key={c}
-            className="rounded-full bg-[color:var(--board-slate-pale)] px-2.5 py-2 text-center font-mono text-[11px] font-semibold uppercase tracking-[0.06em] text-[color:var(--board-slate-mid)]"
+            className="rounded-full bg-[color:var(--board-slate-pale)] px-1 py-2 text-center font-mono text-[9.5px] font-semibold uppercase leading-[1.2] tracking-[0.04em] text-[color:var(--board-slate-mid)] sm:px-2.5 sm:text-[11px] sm:tracking-[0.06em]"
           >
             {c}
           </span>

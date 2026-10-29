@@ -77,7 +77,9 @@ export function WidgetSemaine({ bundle }: { bundle: DashboardBundle }) {
           : `${total} ${total > 1 ? "échéances" : "échéance"}`
       }
     >
-      <ol className="grid grid-cols-7 gap-1.5">
+      {/* Sur téléphone, la semaine se lit en lignes, un jour par ligne :
+          sept colonnes de 40 px ne laissaient rien lire des échéances. */}
+      <ol className="grid grid-cols-1 gap-1.5 sm:grid-cols-7">
         {jours.map((jour) => {
           const events = eventsParJour.get(jour.cle) ?? [];
           const isToday = jour.estAujourdhui;
@@ -85,7 +87,7 @@ export function WidgetSemaine({ bundle }: { bundle: DashboardBundle }) {
             <li
               key={jour.cle}
               className={
-                "flex min-h-[96px] flex-col rounded-lg p-2 " +
+                "flex min-h-[44px] items-baseline gap-2.5 rounded-lg p-2 sm:min-h-[96px] sm:flex-col sm:items-stretch sm:gap-0 " +
                 (isToday
                   ? "bg-[color:var(--board-blue-soft)]"
                   : "bg-[color:var(--board-slate-pale)]")
@@ -93,7 +95,7 @@ export function WidgetSemaine({ bundle }: { bundle: DashboardBundle }) {
             >
               <div
                 className={
-                  "font-mono text-[10px] uppercase tracking-[0.14em] " +
+                  "w-9 flex-none font-mono text-[10px] uppercase tracking-[0.14em] sm:w-auto " +
                   (isToday
                     ? "text-[color:var(--board-blue-ink)]"
                     : "text-[color:var(--board-slate-mid)]")
@@ -109,7 +111,7 @@ export function WidgetSemaine({ bundle }: { bundle: DashboardBundle }) {
               >
                 {jour.numero}
               </div>
-              <ul className="mt-1.5 flex flex-col gap-0.5">
+              <ul className="flex min-w-0 flex-1 flex-col gap-0.5 sm:mt-1.5 sm:flex-none">
                 {events.slice(0, 3).map((e) => (
                   <li key={e.id}>
                     <LienProvenance

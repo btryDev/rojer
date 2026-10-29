@@ -28,6 +28,7 @@
 // elle ne peut pas vivre dans le même bloc que des graduations qui,
 // elles, s'en vont avec la page.
 
+import { useEffect, useRef } from "react";
 import {
   CHAMP_ETAT,
   compteEtat,
@@ -118,6 +119,18 @@ export function RegleAnnuelle({
 }) {
   const maxTotal = Math.max(1, ...mois.map(totalDuMois));
 
+  // Le mois ouvert, ramené au centre de la règle quand elle défile (sur
+  // téléphone seulement : ailleurs elle ne défile pas, et rien ne bouge).
+  const defilement = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const zone = defilement.current;
+    if (!zone || zone.scrollWidth <= zone.clientWidth || !moisOuvert) return;
+    const index = mois.findIndex((m) => m.cle === moisOuvert);
+    if (index < 0) return;
+    const largeurMois = zone.scrollWidth / mois.length;
+    zone.scrollLeft = largeurMois * (index + 0.5) - zone.clientWidth / 2;
+  }, [moisOuvert, mois]);
+
   // Les totaux de l'année affichée, par état : la légende ne se contente
   // pas de nommer les couleurs, elle donne le solde de chacune.
   const totaux = mois.reduce(
@@ -140,7 +153,14 @@ export function RegleAnnuelle({
     <div className="-mx-[var(--board-gutter)] flex flex-col border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] pb-5 pt-3">
       {/* L'instrument. Chaque graduation est un bouton : c'est bien une
           commande, pas une image — le clavier doit y arriver. */}
-      <div className="relative grid grid-cols-12 gap-1.5">
+      {/* Sur téléphone, la règle garde 46 px par mois et défile de côté :
+          serrée dans l'écran, elle tombait à 21 px, des cibles trop petites
+          pour le doigt. Le mois ouvert est ramené au centre. */}
+      <div
+        ref={defilement}
+        className="-mx-[var(--board-gutter)] overflow-x-auto px-[var(--board-gutter)] sm:mx-0 sm:overflow-visible sm:px-0"
+      >
+      <div className="relative grid min-w-[560px] grid-cols-12 gap-1.5 sm:min-w-0">
         {mois.map((m) => {
           const nb = totalDuMois(m);
           const segments = segmentsDuMois(m, maxTotal);
@@ -256,6 +276,7 @@ export function RegleAnnuelle({
           className="pointer-events-none absolute inset-x-0 h-px bg-[color:var(--board-slate-line)]"
           style={{ bottom: H_ETIQUETTE }}
         />
+      </div>
       </div>
 
       {/* La légende. Elle nomme les champs : sans elle, trois couleurs

@@ -67,7 +67,7 @@ export function HeroFiche({
 
   return (
     <section className="carte-board overflow-hidden">
-      <div className="flex flex-wrap items-start gap-x-6 gap-y-5 px-7 pb-6 pt-7 sm:px-9">
+      <div className="flex flex-wrap items-start gap-x-6 gap-y-5 px-5 pb-6 pt-6 sm:px-9 sm:pt-7">
         {date ? (
           <TuileDate date={date} etat={etat} taille="fiche" />
         ) : (
@@ -79,7 +79,9 @@ export function HeroFiche({
           </span>
         )}
 
-        <div className="min-w-[280px] flex-1">
+        {/* `min(280px, 100%)` : sur téléphone, la carte n'offre pas 280 px,
+            et la fiche défilait de côté. Le texte passe sous la tuile. */}
+        <div className="min-w-[min(280px,100%)] flex-1">
           <p className="board-eyebrow m-0 flex flex-wrap items-center gap-2.5 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
             <MarqueurFamille famille={famille} className="size-[13px]" />
             {surtitre}

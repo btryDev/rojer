@@ -36,7 +36,9 @@ export function EditToolbar({
         type="button"
         onClick={onToggle}
         title="Personnaliser le tableau de bord"
-        className="inline-flex items-center gap-1.5 rounded-full border border-[color:rgba(10,10,10,.14)] bg-[color:var(--board-card)]/90 px-3.5 py-2 text-[12.5px] font-medium text-[color:var(--board-ink)] shadow-sm backdrop-blur transition-colors hover:bg-[color:var(--board-card)]"
+        // Pas sur téléphone (décision 3A du 2026-10-29) : la disposition se
+        // règle sur ordinateur, le téléphone montre le board en une colonne.
+        className="hidden items-center md:inline-flex gap-1.5 rounded-full border border-[color:rgba(10,10,10,.14)] bg-[color:var(--board-card)]/90 px-3.5 py-2 text-[12.5px] font-medium text-[color:var(--board-ink)] shadow-sm backdrop-blur transition-colors hover:bg-[color:var(--board-card)]"
       >
         <GripVertical aria-hidden className="size-3.5 opacity-60" />
         Personnaliser

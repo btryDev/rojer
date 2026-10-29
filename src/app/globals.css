@@ -219,6 +219,13 @@
   :root {
     --reserve-nav-bas: calc(68px + env(safe-area-inset-bottom, 0px));
   }
+  /* Sous 16 px, Safari iOS zoome sur le champ au moment de la saisie, et la
+     page reste agrandie après. Hors couche : passe devant `champ-board`. */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
 }
 @media (max-width: 639.98px) {
   :root {
@@ -1380,5 +1387,46 @@
   }
   .lp-btn:hover .lp-fleche {
     transform: none;
+  }
+}
+
+/* Un tableau dense devient une pile de cartes sur téléphone (2026-10-29).
+   Même balisage partout : chaque cellule porte le nom de sa colonne dans
+   `data-label`, l'en-tête reste là pour les lecteurs d'écran, et la largeur
+   minimale du tableau (`min-w-[46rem]`) tombe. Hors couche : ces règles
+   doivent passer devant les utilitaires des cellules. */
+@media (max-width: 639.98px) {
+  .tableau-en-cartes {
+    min-width: 0;
+  }
+  .tableau-en-cartes thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .tableau-en-cartes tbody,
+  .tableau-en-cartes tr,
+  .tableau-en-cartes td {
+    display: block;
+  }
+  .tableau-en-cartes tr {
+    padding-block: 12px;
+  }
+  .tableau-en-cartes td {
+    padding: 3px 0;
+  }
+  .tableau-en-cartes td[data-label] {
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+    gap: 10px;
+  }
+  .tableau-en-cartes td[data-label]::before {
+    content: attr(data-label);
+    font-size: 11.5px;
+    line-height: 1.9;
+    color: var(--board-slate-soft);
   }
 }

@@ -276,7 +276,7 @@ export default async function SynthesePage({
           </p>
         ) : (
           <div className="mt-5 overflow-x-auto">
-            <table className="w-full min-w-[46rem] border-collapse text-[13.5px]">
+            <table className="tableau-en-cartes w-full min-w-[46rem] border-collapse text-[13.5px]">
               <caption className="sr-only">
                 Risques retenus, criticité décroissante, gravité en départage.
               </caption>
@@ -320,12 +320,12 @@ export default async function SynthesePage({
                         (interdit 2) ; ici le nombre sur 16 et le tri
                         décroissant portent l'information, plus précisément
                         que quatre bandes. */}
-                    <td className={TD}>
+                    <td data-label="Criticité" className={TD}>
                       <span className="pastille-board bg-[color:var(--board-slate-pale)] font-mono text-[12px] tabular-nums text-[color:var(--board-slate-ink)]">
                         {l.cotationSaisie ? `${l.criticite}/16` : "n.c."}
                       </span>
                     </td>
-                    <td className={TD}>
+                    <td data-label="Risque" className={TD}>
                       <span className="font-medium text-[color:var(--board-ink)]">
                         {l.libelle}
                       </span>
@@ -337,7 +337,7 @@ export default async function SynthesePage({
                         </span>
                       )}
                     </td>
-                    <td className={TD}>
+                    <td data-label="Unité" className={TD}>
                       {l.uniteNom}
                       {l.estTransverse && (
                         <span className="ml-1 text-[color:var(--board-slate-soft)]">
@@ -345,10 +345,10 @@ export default async function SynthesePage({
                         </span>
                       )}
                     </td>
-                    <td className={`${TD} font-mono tabular-nums`}>
+                    <td data-label="G × P / M" className={`${TD} font-mono tabular-nums`}>
                       {l.gravite} × {l.probabilite} / {l.maitrise}
                     </td>
-                    <td className={`${TD} tabular-nums`}>
+                    <td data-label="Mesures" className={`${TD} tabular-nums`}>
                       {l.nombreMesures}
                       {l.nombreMesuresPrevues > 0 && (
                         <span className="text-[12.5px]">
@@ -394,7 +394,7 @@ export default async function SynthesePage({
           </p>
         ) : (
           <div className="mt-5 overflow-x-auto">
-            <table className="w-full min-w-[42rem] border-collapse text-[13.5px]">
+            <table className="tableau-en-cartes w-full min-w-[42rem] border-collapse text-[13.5px]">
               <caption className="sr-only">
                 Mesures prévues, échéance croissante, criticité en départage.
               </caption>
@@ -423,16 +423,16 @@ export default async function SynthesePage({
                     key={a.mesureId}
                     className="border-b border-[color:var(--board-slate-line)] align-top last:border-b-0"
                   >
-                    <td className={`${TD} font-mono tabular-nums`}>
+                    <td data-label="Échéance" className={`${TD} font-mono tabular-nums`}>
                       {formatDate(a.echeance)}
                     </td>
-                    <td className={`${TD} text-[color:var(--board-ink)]`}>
+                    <td data-label="Action" className={`${TD} text-[color:var(--board-ink)]`}>
                       {a.libelleMesure}
                     </td>
-                    <td className={TD}>
+                    <td data-label="Type" className={TD}>
                       {LABEL_TYPE_MESURE[a.type as TypeMesure] ?? a.type}
                     </td>
-                    <td className={TD}>
+                    <td data-label="Risque · Unité" className={TD}>
                       {a.libelleRisque}
                       {/* L'unité se range sous le risque : une colonne de
                           plus se paierait en largeur sur tous les écrans
@@ -441,7 +441,7 @@ export default async function SynthesePage({
                         {a.uniteNom}
                       </span>
                     </td>
-                    <td className={TD}>{a.responsable ?? "—"}</td>
+                    <td data-label="Responsable" className={TD}>{a.responsable ?? "—"}</td>
                   </tr>
                 ))}
               </tbody>
