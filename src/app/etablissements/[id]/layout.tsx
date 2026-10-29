@@ -29,7 +29,15 @@ export default async function EtablissementLayout({
   // n'est pas au user). Mémoïsée sur le rendu (audit Next.js du 2026-10-14,
   // H2) : la vigilance prestataires de la barre latérale la redemandait, et
   // c'était une troisième lecture du même établissement.
-  const { user, etablissement } = await requireEtablissement(id);
+  //
+  // La fratrie, pour le sélecteur de la gélule (ADR-028), est lue en même
+  // temps : une lecture des établissements du compte, qui ne dépend pas de
+  // la garde. Elle est lue ici et non dans `BarreCompte` : le composant est
+  // client.
+  const [{ user, etablissement }, fratrie] = await Promise.all([
+    requireEtablissement(id),
+    listerEtablissementsDuCompte(),
+  ]);
   // Le client ne reçoit que ce que la barre affiche — l'entreprise chargée
   // par la garde reste ici.
   const etab = {
@@ -41,10 +49,6 @@ export default async function EtablissementLayout({
     // Qualifie le registre d'accessibilité dans la sidebar (ERP seulement).
     estERP: etablissement.estERP,
   };
-
-  // La fratrie, pour le sélecteur de la gélule (ADR-028) : une lecture. Elle
-  // est lue ici et non dans `BarreCompte` : le composant est client.
-  const fratrie = await listerEtablissementsDuCompte();
 
   return (
     <div className="grid min-h-screen grid-cols-1 lg:h-screen lg:grid-cols-[auto_1fr] lg:overflow-hidden">
@@ -69,4 +73,3 @@ export default async function EtablissementLayout({
     </div>
   );
 }
-

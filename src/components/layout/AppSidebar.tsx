@@ -85,6 +85,7 @@ export function AppSidebar({
   active,
   counts,
   modules,
+  enAttente = false,
 }: {
   etablissement: Etablissement;
   /** Item actif. Si omis, déduit automatiquement depuis `usePathname()`. */
@@ -92,6 +93,11 @@ export function AppSidebar({
   counts?: SidebarCounts;
   /** État des registres pour cet établissement. Omis, aucun n'est qualifié. */
   modules?: SidebarModules;
+  /** La barre de repli, le temps que ses pastilles arrivent
+   *  (`SidebarAvecPastilles`) : affichée mais inerte. Aucun panneau ne
+   *  s'ouvre, donc rien n'est perdu ni ne se réordonne quand la barre
+   *  complète la remplace. */
+  enAttente?: boolean;
 }) {
   const pathname = usePathname();
   // Le panneau ne dépend pas des filtres d'écran ; la query ne sert qu'à
@@ -126,6 +132,8 @@ export function AppSidebar({
     <aside
       className="flex h-screen bg-[color:var(--board-ink)] text-white"
       aria-label="Navigation principale"
+      inert={enAttente}
+      aria-busy={enAttente || undefined}
     >
       {/* ---- Rail : entrées de premier niveau ---- */}
       <div className="flex w-[88px] shrink-0 flex-col border-r border-white/10">
