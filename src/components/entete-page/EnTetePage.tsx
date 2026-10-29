@@ -1,14 +1,6 @@
-import type { ReactNode } from "react";
-
-import {
-  LABEL_ITEM,
-  categorieDeItem,
-  type SidebarItemId,
-} from "@/components/layout/sidebar-nav";
-
-import { IllustrationEnTete, aUneIllustration } from "./illustrations";
-import { TITRE_EN_TETE } from "./titres";
-import { TEINTE_SECTION } from "./teintes";
+import { CadreEnTete, type CadreEnTeteProps } from "./CadreEnTete";
+import { IllustrationEnTete } from "./illustrations";
+import { aUneIllustration } from "./illustrations/liste";
 
 /**
  * L'en-tête des pages d'entrée du rail — un seul pour toutes (2026-10-25).
@@ -38,61 +30,16 @@ import { TEINTE_SECTION } from "./teintes";
  * qui flotte au-dessus : sur ordinateur elle passe sur le panneau (un fond y
  * a droit) ; sur téléphone, la colonne de texte commence sous elle.
  */
-export function EnTetePage({
-  item,
-  titre,
-  description,
-  children,
-}: {
-  item: Exclude<SidebarItemId, "tableau">;
-  /** Le titre d'une SOUS-PAGE d'une entrée (l'import du DUERP). Les pages
-   *  d'entrée n'en passent pas : leur titre est le rail, ou `TITRE_EN_TETE`. */
-  titre?: string;
-  /** Ce qu'on voit, puis ce qu'on peut y faire. Contenu en ligne seulement :
-   *  il est rendu dans un paragraphe. */
-  description: ReactNode;
-  /** La bascule de vue de la page, et rien d'autre. */
-  children?: ReactNode;
-}) {
-  const fond = TEINTE_SECTION[categorieDeItem(item) ?? "tableau"];
-  const illustree = aUneIllustration(item);
-
+export function EnTetePage({ children, ...cadre }: CadreEnTeteProps) {
+  // Le cadre (titre, teinte, mise en page) vit dans `CadreEnTete`, partagé
+  // avec le repli de chargement.
   return (
-    // `flex-none` n'est pas décoratif : la colonne de contenu du shell est un
-    // `flex flex-col` de hauteur contrainte (`h-screen`), où `flex-shrink`
-    // vaut 1 et porte sur la HAUTEUR. Sans lui, l'en-tête est écrasé sous son
-    // contenu et l'illustration est coupée par le bloc suivant.
-    <header
-      className={
-        "sous-la-gelule grid flex-none bg-[color:var(--board-card)] " +
-        (illustree ? "md:min-h-[320px] md:grid-cols-[minmax(0,1fr)_minmax(340px,42%)]" : "")
-      }
+    <CadreEnTete
+      {...cadre}
+      avecPanneau={aUneIllustration(cadre.item)}
+      dessin={<IllustrationEnTete item={cadre.item} />}
     >
-      {fond ? (
-        <div aria-hidden className="h-1.5 md:hidden" style={{ backgroundColor: fond }} />
-      ) : null}
-      <div className="flex min-w-0 flex-col justify-center pb-10 pl-[var(--board-gutter)] pr-[var(--board-gutter)] pt-20 md:py-10 md:pr-12">
-        <h1 className="board-titre m-0 text-[clamp(34px,4vw,50px)] leading-[1.06] tracking-[-0.035em]">
-          {titre ?? TITRE_EN_TETE[item] ?? LABEL_ITEM[item]}
-        </h1>
-        <p className="m-0 mt-3.5 max-w-[46ch] text-[clamp(16px,1.4vw,18px)] leading-[1.55] text-[color:var(--board-slate-ink)]">
-          {description}
-        </p>
-        {children ? (
-          <div className="mt-6 flex flex-col items-start gap-4">{children}</div>
-        ) : null}
-      </div>
-      {/* Le panneau passe sous la gélule de compte : un fond y a droit. Sans
-          dessin, pas de panneau — l'en-tête tient sur une colonne. */}
-      {illustree ? (
-        <div
-          data-teinte-section
-          className="hidden items-end justify-center overflow-hidden px-8 pb-5 pt-16 md:flex [&>*]:max-w-full"
-          style={fond ? { backgroundColor: fond } : undefined}
-        >
-          <IllustrationEnTete item={item} />
-        </div>
-      ) : null}
-    </header>
+      {children}
+    </CadreEnTete>
   );
 }

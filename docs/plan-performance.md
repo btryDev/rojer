@@ -438,6 +438,63 @@ leur coût. À reprendre avec ces chiffres.
   DUERP), au lieu du squelette de board pour tout.
 - Contrôle visuel : avant/après sur les écrans touchés.
 
+#### Avancement du lot 3 (2026-10-28, `lot/perf-afficher-tout-de-suite`)
+
+Fait — le second point, les replis par section :
+- ~~chaque page d'entrée du rail a son `loading.tsx`, qui rend le vrai
+  en-tête ; chaque sous-dossier de fiche prend le repli neutre~~
+  [2026-10-28, relecture avant PR, même lot : **régression**. Next rattache
+  le repli d'un dossier à une clé qui contient les paramètres d'URL de la
+  page (`addSearchParamsIfPageSegment`, puis `stateKey` dans
+  `layout-router`) : chaque filtre, année ou bascule de vue du calendrier
+  aurait remplacé la page par son squelette — ce que `FiltresCalendrier`
+  évite exprès par une transition. Même chose au registre, aux équipements,
+  au plan d'actions, et sur une fiche quand `SuiviControle` retire
+  `?apres=`.] ;
+- **un seul repli, `etablissements/[id]/loading.tsx`**, composant client :
+  il lit l'adresse (`repliDeChargement`) et rend le vrai en-tête de la page
+  demandée (`ChargementSection` → `CadreEnTete`) — titre et teinte de la
+  section dès le clic, seul le corps attend — ou le repli neutre pour le
+  tableau de bord, les fiches et les formulaires (`ChargementNeutre`).
+  Posé là, il n'est rattaché qu'au premier dossier sous l'établissement :
+  il se montre en changeant de section, jamais en changeant de paramètre ;
+- le cadre de l'en-tête est sorti d'`EnTetePage` (`CadreEnTete`) pour que le
+  repli client n'importe pas les dessins (≈ 46 Ko de source) ; le panneau
+  teinté y reste vide — un dessin plus haut que le minimum (320 px)
+  l'allonge à l'arrivée de la page ;
+- garde `chargement-sections.test.ts` : chaque page balayée doit être
+  annoncée sous son propre en-tête, aucune page sans `EnTetePage` sous un
+  en-tête de section, et un seul `loading.tsx` sous l'établissement.
+  Éprouvée en la cassant trois fois (mauvaise entrée, page oubliée,
+  `loading.tsx` remis dans un dossier) : rouge.
+
+Le corps du repli reste le patron « Liste » commun : pas encore à la forme
+de chaque écran (calendrier, DUERP).
+
+Reste :
+- le tableau de bord en `<Suspense>` par bloc. Ses widgets reçoivent un seul
+  paquet (`DashboardBundle`) dans une grille client à glisser-déposer : le
+  streaming demande de passer aux widgets des promesses (`use()`) ou de
+  découper la grille — à concevoir avant de coder ;
+- ~~le contrôle visuel des replis, pas encore fait~~ [2026-10-28, fait en
+  local — `next dev`, base de mesure semée par `seed:complet`, faux serveur
+  Auth ; la base a été supprimée après. Relevé par un observateur du DOM :
+  - plan d'actions → calendrier : le repli s'affiche sous l'adresse DEMANDÉE
+    (`usePathname` rend la nouvelle adresse pendant l'attente), titre
+    « Calendrier », teinte pêche, sans dessin ; la page arrive ≈ 500 ms
+    après ;
+  - `?annee=2027` puis `&vue=equipement` sur le calendrier : aucun repli,
+    l'écran reste en place — la régression du premier essai est écartée ;
+  - documents, page retardée de 8 s le temps d'une capture (retiré
+    aussitôt) : titre et gris de Documentation tout de suite. **Reste un
+    saut** : à 1 440 px, l'en-tête réel mesure ≈ 403 px contre 320 dans le
+    repli (dessin plus haut que le minimum, descriptif de quatre lignes
+    contre deux) — le titre descend de ≈ 15 px, le corps de ≈ 80 px.
+    Réserver la hauteur exacte demanderait la proportion de chaque dessin ;
+    non fait.]
+- en `next dev`, la première compilation d'une page garde l'écran précédent
+  (« Rendering… ») avant le repli : propre au mode développement.
+
 ### Lot 4 — Ne pas refaire ce qui vient d'être fait (S, optionnel — option expérimentale)
 
 - `staleTimes.dynamic` (proposé : 30 s) : un aller-retour board → page → board

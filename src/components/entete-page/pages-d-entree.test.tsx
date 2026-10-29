@@ -168,15 +168,26 @@ describe("les pages d'entrée s'ouvrent sur l'en-tête commun, sans retour écri
     ["", ".tsx", ".ts", "/index.tsx", "/index.ts"]
       .map((ext) => path.join(SRC, specifieur.slice("@/".length) + ext))
       .find((f) => existsSync(f) && statSync(f).isFile());
+  // [2026-10-28] Un cran de plus : `EnTetePage` délègue son cadre, `<h1>`
+  // compris, à `CadreEnTete` (lot 3 du plan performance). Les imports
+  // relatifs (`./…`, `../…`) d'un composant importé sont suivis aussi.
+  const importsDe = (fichier: string, source: string) =>
+    analyser(source)
+      .statements.filter(ts.isImportDeclaration)
+      .map((i) => (i.moduleSpecifier as ts.StringLiteral).text)
+      .map((s) =>
+        s.startsWith("@/components/")
+          ? resoudre(s)
+          : s.startsWith(".")
+            ? resoudre("@/" + path.relative(SRC, path.join(path.dirname(fichier), s)))
+            : undefined,
+      )
+      .filter((f): f is string => !!f && f.endsWith(".tsx"));
   const bandeaux = [
     ...new Set(
       pages.flatMap((dossier) =>
-        analyser(lire(dossier))
-          .statements.filter(ts.isImportDeclaration)
-          .map((i) => (i.moduleSpecifier as ts.StringLiteral).text)
-          .filter((s) => s.startsWith("@/components/"))
-          .map(resoudre)
-          .filter((f): f is string => !!f && f.endsWith(".tsx"))
+        importsDe(path.join(RACINE, dossier, "page.tsx"), lire(dossier))
+          .flatMap((f) => [f, ...importsDe(f, readFileSync(f, "utf8"))])
           .filter((f) => sansCommentaires(readFileSync(f, "utf8")).includes("<h1")),
       ),
     ),
@@ -192,7 +203,8 @@ describe("les pages d'entrée s'ouvrent sur l'en-tête commun, sans retour écri
     // ~~`BandeauParc.tsx`~~ [2026-10-25 : le parc a perdu son titre au profit
     // de l'en-tête commun ; c'est lui, désormais, le bandeau délégué qui
     // porte le `<h1>` des pages d'entrée.]
-    expect(bandeaux.map((f) => path.basename(f))).toContain("EnTetePage.tsx");
+    // [2026-10-28 : `CadreEnTete`, à qui `EnTetePage` délègue son cadre.]
+    expect(bandeaux.map((f) => path.basename(f))).toContain("CadreEnTete.tsx");
   });
 
   it.each(pages)(
