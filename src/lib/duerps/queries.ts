@@ -36,6 +36,63 @@ function actionVersMesure(a: ActionRow) {
 }
 
 /**
+ * Le DUERP d'un établissement et la date de sa dernière version, lus UNE FOIS
+ * par rendu. `null` si l'établissement n'en a pas, ou n'est pas à l'utilisateur.
+ *
+ * POURQUOI (plan performance, 2026-10-29). Quatre fonctions le lisaient dans
+ * le même rendu, chacune sous sa forme : l'échéance de mise à jour annuelle
+ * (`calendrier/echeances.ts`, lue par la barre latérale sur chaque écran),
+ * l'état du DUERP au tableau de bord (`dashboard/queries.ts`), la couverture
+ * (`perimetre/faits.ts`) et `getEtablissement`. Ce chargeur sert ce que la
+ * plupart lisaient : les colonnes du DUERP, le numéro et la date de sa
+ * dernière version. Les unités n'y sont pas — la couverture seule les lit, et
+ * la barre latérale les paierait sur chaque écran : `faitsDeCouverture` les
+ * lit à part.
+ *
+ * LE TRI EST CELUI QU'ELLES PARTAGEAIENT : le plus récemment modifié d'abord,
+ * versions par `numero` décroissant (unique par DUERP, quand `createdAt` peut
+ * être partagé par deux lignes d'une même transaction). `Duerp.etablissementId`
+ * est unique : il n'y en a qu'un, mais une requête ne doit pas dépendre d'un
+ * invariant écrit ailleurs.
+ *
+ * PARTAGÉ ENTRE LE LAYOUT ET LA PAGE, ET C'EST SANS RISQUE : la réparation du
+ * calendrier que font le tableau de bord et le calendrier
+ * (`regeneration-sure.ts`) n'écrit que des lignes de suivi et le sceau de
+ * l'établissement, jamais le DUERP. Clés primitives, portée de la requête
+ * HTTP ; hors rendu (action serveur, route), la lecture se fait à chaque
+ * appel. Le résultat est partagé : un appelant ne le modifie pas.
+ *
+ * LE PROPRIÉTAIRE EST UN PARAMÈTRE, sur le modèle de
+ * `chargerEtablissementEtParc` : chaque appelant tient déjà l'utilisateur, et
+ * hors rendu un second `requireUser()` coûterait un aller-retour
+ * d'authentification de plus. Le prédicat d'appartenance reste dans la requête.
+ */
+export const duerpDuRendu = cache(async function duerpDuRendu(
+  etablissementId: string,
+  userId: string,
+) {
+  return prisma.duerp.findFirst({
+    where: {
+      etablissementId,
+      etablissement: { entreprise: { userId } },
+    },
+    orderBy: { updatedAt: "desc" },
+    // Les réponses aux questions transverses : seuls les écrans du DUERP les
+    // lisent, par leur propre lecture (`getDuerp`).
+    omit: { reponsesTransverses: true, transversesRepondues: true },
+    include: {
+      // Le numéro et la date, seuls lus. Pas le `snapshot` : le document figé
+      // entier, que la barre latérale paierait sur chaque écran pour une date.
+      versions: {
+        orderBy: { numero: "desc" },
+        take: 1,
+        select: { numero: true, createdAt: true },
+      },
+    },
+  });
+});
+
+/**
  * Le DUERP du user, avec son établissement, ses unités, risques, mesures et
  * versions.
  *

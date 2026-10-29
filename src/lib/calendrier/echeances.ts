@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { cache } from "react";
 import { prestatairesDuRendu } from "@/lib/prestataires/queries";
+import { duerpDuRendu } from "@/lib/duerps/queries";
 import { carnetDuRendu } from "@/lib/etablissements/modules";
 import { STATUTS_PERMIS_FEU_CLOS, STATUTS_PLAN_PREVENTION_CLOS } from "./statuts-operations";
 import { JOURS_APRES } from "@/lib/dashboard/frise";
@@ -702,26 +703,14 @@ const sourceDuerp: SourceEcheances = async ({
   aujourdhui,
   etablissementId,
 }) => {
-  // Sélection **déterministe**, et identique à celle du tableau de bord :
-  // `findFirst` sans `orderBy` laisse Postgres rendre la ligne qu'il veut.
-  // Avec plusieurs DUERP, l'échéance « mise à jour annuelle » et l'âge
-  // affiché au board pouvaient porter sur deux documents différents. La
-  // contrainte d'unicité `Duerp.etablissementId` rend le cas impossible en
-  // base, mais l'ordre reste explicite : une requête ne doit pas dépendre
-  // d'un invariant écrit ailleurs. Les versions sont ordonnées par
-  // `numero` (unique par DUERP), et non par `createdAt` qui peut être
-  // partagé par deux lignes d'une même transaction.
-  const duerp = await prisma.duerp.findFirst({
-    where: scope,
-    orderBy: { updatedAt: "desc" },
-    select: {
-      versions: {
-        orderBy: { numero: "desc" },
-        take: 1,
-        select: { createdAt: true },
-      },
-    },
-  });
+  // Le DUERP du rendu, le même que celui du tableau de bord : l'échéance
+  // « mise à jour annuelle » et l'âge affiché au board portent sur le même
+  // document par construction. La sélection déterministe (tri, version par
+  // `numero`) vit dans le chargeur ; le propriétaire est celui du périmètre.
+  const duerp = await duerpDuRendu(
+    etablissementId,
+    scope.etablissement.entreprise.userId,
+  );
   const e = echeanceDuerp({
     etablissementId,
     dateDerniereVersion: duerp?.versions[0]?.createdAt ?? null,

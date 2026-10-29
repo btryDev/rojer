@@ -20,6 +20,7 @@ import {
   equipementsPourLeMoteur,
 } from "@/lib/etablissements/dossier-du-rendu";
 import { evaluerCouverture } from "@/lib/duerps/couverture";
+import { duerpDuRendu } from "@/lib/duerps/queries";
 import { lireReponsesActivites } from "@/lib/activites/reponses";
 import {
   compterSansObligation,
@@ -60,23 +61,32 @@ export async function faitsDeCouverture(
   // sien), et le parc EN SERVICE — un équipement désactivé ne génère plus
   // rien — viennent de la lecture que le rendu partage (`dossier-du-rendu.ts`)
   // avec les transmissions, les états permanents et les marques : le tableau
-  // de bord relisait les trois. Ne restent ici que les deux lectures propres à
-  // la couverture, bornées par `etab.id`, établi par la lecture ci-dessus.
-  const etab = await chargerEtablissementEtParc(etablissementId, user.id);
-  if (!etab) return null;
-  const [duerps, nbRetires] = await Promise.all([
-    // « 1 établissement = 1 DUERP » est un invariant de base
-    // (`Duerp.etablissementId @unique`) : le premier est le seul.
-    prisma.duerp.findMany({
-      where: { etablissementId: etab.id },
-      include: { unites: true },
+  // de bord relisait les trois.
+  //
+  // [2026-10-29, plan performance] Les quatre lectures partent ENSEMBLE :
+  // chacune porte la portée au compte dans sa requête, aucune n'attend que
+  // l'établissement ait été établi pour s'y borner.
+  const [etab, duerp, unites, nbRetires] = await Promise.all([
+    chargerEtablissementEtParc(etablissementId, user.id),
+    // Le DUERP du rendu, partagé avec le tableau de bord et la barre latérale.
+    duerpDuRendu(etablissementId, user.id),
+    // Ses unités, que la couverture seule lit. « 1 établissement = 1 DUERP »
+    // (`Duerp.etablissementId @unique`) : celles du DUERP de l'établissement.
+    prisma.uniteTravail.findMany({
+      where: {
+        duerp: {
+          etablissementId,
+          etablissement: { entreprise: { userId: user.id } },
+        },
+      },
     }),
     // Les retirés, comptés à part : ils portent des preuves que le registre
     // imprime (axe `inventaire`, `couverture.ts`).
     // Partagé avec la barre latérale et le tableau de bord (plan
     // performance, lot 1), portée au compte dans sa requête.
-    comptesParcDuRendu(etab.id).then((c) => c.retires),
+    comptesParcDuRendu(etablissementId).then((c) => c.retires),
   ]);
+  if (!etab) return null;
 
   const equipementsMatching = equipementsPourLeMoteur(etab.equipements);
 
@@ -115,7 +125,6 @@ export async function faitsDeCouverture(
 
   const sansEcheance = reperterSansEcheance(etabMatching, equipementsMatching);
 
-  const duerp = duerps[0] ?? null;
   // Le tri « déclarée / écartée / sans réponse » et les cinq états viennent
   // d'`evaluerCouverture`, seule autorité sur la question (ADR-020). On ne le
   // refait pas ici : on projette ce qu'il rend.
@@ -123,7 +132,7 @@ export async function faitsDeCouverture(
     ? evaluerCouverture({
         secteurId: duerp.referentielSecteurId ?? "",
         reponses: lireReponsesActivites(duerp.reponsesActivitesNonCouvertes),
-        unites: duerp.unites,
+        unites,
       })
     : null;
 

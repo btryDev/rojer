@@ -28,7 +28,7 @@ export default async function EtablissementDuerpPage({
   const etab = await getEtablissement(id);
   if (!etab) notFound();
 
-  const duerp = etab.duerps[0] ?? null;
+  const duerp = etab.duerp;
   if (duerp?.referentielSecteurId) {
     redirect(`/duerp/${duerp.id}/unites`);
   }

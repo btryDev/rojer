@@ -430,6 +430,32 @@ est le lot 7 (temps réels en production) : il dit ce que coûte un
 aller-retour, donc si `relationJoins` ou la refonte des projections valent
 leur coût. À reprendre avec ces chiffres.
 
+#### Lectures en double, étapes 1 à 3 (2026-10-29, `lot/perf-lectures-doubles`)
+
+De la propreté de code, demandée par la propriétaire : une lecture par
+donnée et par rendu là où elles avaient la même forme. Non mesuré.
+
+Fait :
+- **Le repère du calendrier** : `fraicheurCalendrier` et
+  `calendrierDesynchronise` passent par `lireRepereCalendrier`, NON
+  mémoïsée. **Aucune requête gagnée**, et c'est voulu : la barre latérale
+  lit sans réparer, la page répare puis lit — partager servirait la page
+  d'avant la réparation (lot 1). Une garde relit les sources
+  (`fraicheur.test.ts`).
+- **Le DUERP** : `duerpDuRendu` remplace quatre lectures (échéance annuelle
+  de la barre, tableau de bord, couverture, `getEtablissement`). Il ne lit
+  que le numéro et la date de la dernière version — pas le `snapshot` — et
+  pas les unités, que la couverture lit à part.
+- **L'établissement** : `requireEtablissement` et `getEtablissement`
+  partagent `etablissementDuCompteDuRendu`, qui OMET le sceau et
+  `updatedAt` — les colonnes que la réparation réécrit, éventuellement après
+  cette lecture. `lecture-partagee.test.ts` relie l'omission aux écritures
+  du calendrier.
+
+Reste : l'établissement est encore lu par `chargerEtablissementEtParc`
+(autre forme, le parc) et par le repère ; les lignes de suivi sept fois —
+l'étape 4, dont le design attend la décision de la propriétaire.
+
 ### Lot 3 — Afficher tout de suite (S-M)
 
 #### La barre latérale ne retarde plus la page (2026-10-29, `lot/perf-lot3-tableau`)
