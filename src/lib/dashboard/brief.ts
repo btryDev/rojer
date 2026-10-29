@@ -17,7 +17,7 @@
 // Le module est volontairement structurel (pas d'import de `queries.ts`,
 // qui tirerait Prisma) pour rester testable en environnement `node`.
 
-import { formaterJourDateLongueFr } from "@/lib/dates";
+import { formaterJourDateLongueFr } from "@/lib/dates/jour-long";
 import type { FamilleEcheance } from "@/lib/calendrier/echeances";
 import type { Recommandation } from "./recommandations";
 

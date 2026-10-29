@@ -19,7 +19,8 @@ import {
   type EvenementGrille,
   type GrilleMois,
 } from "@/lib/calendrier/grille";
-import { formaterJourDateLongueFr } from "@/lib/dates";
+import { formaterJourDateLongueFr } from "@/lib/dates/jour-long";
+import { GrillePoints, libelleDuJour } from "./GrillePoints";
 import { avecMentionFin, dateEnJeuEvenement } from "@/lib/calendrier/etats";
 import { MarqueurFamille } from "./MarqueurFamille";
 
@@ -200,14 +201,12 @@ function cibleEvenement(
   return { href: e.href ?? hrefEvenement(e), texte: avecMentionFin(e.libelle, fin) };
 }
 
-const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-
 /** Le point d'un événement dans la grille du téléphone : la couleur de sa
  *  pastille, en plus soutenu pour se lire à 6 px. */
-const TON_POINT: Record<EvenementGrille["tone"], string> = {
-  alerte: "bg-[color:var(--board-signal-line)]",
-  warn: "bg-[color:var(--board-slate-mid)]",
-  ok: "bg-[color:var(--board-blue-strong)]",
+const COULEUR_POINT: Record<EvenementGrille["tone"], string> = {
+  alerte: "var(--board-signal-line)",
+  warn: "var(--board-slate-mid)",
+  ok: "var(--board-blue-strong)",
 };
 
 /**
@@ -242,55 +241,21 @@ export function GrilleTelephone({
 
   return (
     <div className="md:hidden">
-      <div className="mt-4 grid grid-cols-7 gap-y-1">
-        {JOURS_SEMAINE.map((j) => (
-          <div
-            key={j}
-            className="pb-1 text-center font-mono text-[10px] font-semibold uppercase text-[color:var(--board-slate-soft)]"
-          >
-            {j.slice(0, 1)}
-          </div>
-        ))}
-        {jours.map((j) => {
-          if (!j.dansLeMois) return <span key={j.cle} aria-hidden />;
-          const nb = j.evenements.length;
-          const actif = jour?.cle === j.cle;
-          return (
-            <button
-              key={j.cle}
-              type="button"
-              onClick={() => setChoisi(j.cle)}
-              aria-pressed={actif}
-              aria-label={`${majuscule(formaterJourDateLongueFr(j.date))}, ${
-                nb === 0 ? "aucune échéance" : `${nb} échéance${nb > 1 ? "s" : ""}`
-              }`}
-              className={
-                "mx-auto flex h-11 w-full max-w-11 flex-col items-center justify-start gap-1 rounded-[14px] pt-1.5 " +
-                (actif
-                  ? "bg-[color:var(--board-ink)] text-white"
-                  : j.estAujourdhui
-                    ? "bg-[color:var(--board-blue-pale)] text-[color:var(--board-blue-ink)]"
-                    : "text-[color:var(--board-ink)]")
-              }
-            >
-              <span className="text-[13px] font-semibold tabular-nums leading-none">
-                {j.numero}
-              </span>
-              <span aria-hidden className="flex h-1.5 gap-[3px]">
-                {j.evenements.slice(0, MAX_PAR_JOUR).map((e) => (
-                  <span
-                    key={e.id}
-                    data-point=""
-                    className={
-                      "size-1.5 rounded-full " +
-                      (actif && e.tone !== "alerte" ? "bg-white" : TON_POINT[e.tone])
-                    }
-                  />
-                ))}
-              </span>
-            </button>
-          );
-        })}
+      <div className="mt-4">
+        <GrillePoints
+          cases={jours.map((j) =>
+            j.dansLeMois
+              ? {
+                  cle: j.cle,
+                  numero: j.numero,
+                  estAujourdhui: j.estAujourdhui,
+                  points: j.evenements.map((e) => COULEUR_POINT[e.tone]),
+                }
+              : null,
+          )}
+          choisi={jour?.cle ?? null}
+          onChoisir={setChoisi}
+        />
       </div>
 
       {jour ? (
@@ -298,7 +263,7 @@ export function GrilleTelephone({
           <p className="m-0 text-[13px] font-semibold text-[color:var(--board-slate-ink)]">
             {jour.estAujourdhui
               ? `Aujourd'hui, ${formaterJourDateLongueFr(jour.date)}`
-              : majuscule(formaterJourDateLongueFr(jour.date))}
+              : libelleDuJour(jour.cle)}
           </p>
           {jour.evenements.length === 0 ? (
             <p className="m-0 mt-2 text-[13.5px] text-[color:var(--board-slate-mid)]">

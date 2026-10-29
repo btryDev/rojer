@@ -522,21 +522,6 @@ export function formaterDateLongueFr(d: Date): string {
   return FMT_DATE_LONGUE.format(d);
 }
 
-const FMT_JOUR_DATE_LONGUE = new Intl.DateTimeFormat("fr-FR", {
-  timeZone: FUSEAU_REFERENCE,
-  weekday: "long",
-  day: "numeric",
-  month: "long",
-  year: "numeric",
-});
-
-/** « lundi 10 août 2026 » — le jour de la semaine en tête, sans zéro devant
- *  le numéro. En minuscule, comme le rend la langue : la majuscule de début
- *  de phrase est l'affaire de l'appelant. */
-export function formaterJourDateLongueFr(d: Date): string {
-  return FMT_JOUR_DATE_LONGUE.format(d);
-}
-
 /** « 10 août 2026 » en mois abrégé (« 10 sept. 2026 »). */
 export function formaterDateCourteFr(d: Date): string {
   return FMT_DATE_COURTE.format(d);
