@@ -10,12 +10,14 @@
 // Les couleurs sont celles du board éditorial : ce composant est monté
 // dans une carte blanche du tableau de bord.
 
+import { useState } from "react";
 import { LienProvenance } from "@/components/navigation/LienProvenance";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   construireGrilleMois,
   JOURS_SEMAINE,
   type EvenementGrille,
+  type GrilleMois,
 } from "@/lib/calendrier/grille";
 import { avecMentionFin, dateEnJeuEvenement } from "@/lib/calendrier/etats";
 import { MarqueurFamille } from "./MarqueurFamille";
@@ -89,7 +91,7 @@ export function VueMois({
         >
           <ChevronLeft className="size-4" />
         </BoutonNav>
-        <p className="m-0 min-w-[168px] text-center text-[15px] font-semibold tracking-[-0.015em] text-[color:var(--board-ink)]">
+        <p className="m-0 min-w-0 flex-1 text-center text-[15px] font-semibold tracking-[-0.015em] text-[color:var(--board-ink)] sm:min-w-[168px] sm:flex-none">
           {grille.libelle}
         </p>
         <BoutonNav
@@ -99,14 +101,20 @@ export function VueMois({
         >
           <ChevronRight className="size-4" />
         </BoutonNav>
-        <p className="m-0 ml-auto text-[12.5px] text-[color:var(--board-slate-mid)]">
+        <p className="m-0 ml-auto hidden text-[12.5px] text-[color:var(--board-slate-mid)] sm:block">
           {grille.nbEvenements === 0
             ? "Aucune échéance ce mois-ci"
             : `${grille.nbEvenements} échéance${grille.nbEvenements > 1 ? "s" : ""}`}
         </p>
       </div>
 
-      <div className="mt-4 grid grid-cols-7 gap-1.5">
+      <GrilleTelephone
+        grille={grille}
+        aujourdhui={aujourdhui}
+        hrefEvenement={hrefEvenement}
+      />
+
+      <div className="mt-4 hidden grid-cols-7 gap-1.5 sm:grid">
         {JOURS_SEMAINE.map((j) => (
           <div
             key={j}
@@ -181,6 +189,153 @@ export function VueMois({
           );
         })}
       </div>
+    </div>
+  );
+}
+
+const JOURS_LONGS = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+
+/** Le point d'un événement dans la grille du téléphone : la couleur de sa
+ *  pastille, en plus soutenu pour se lire à 6 px. */
+const TON_POINT: Record<EvenementGrille["tone"], string> = {
+  alerte: "bg-[color:var(--board-signal-line)]",
+  warn: "bg-[color:var(--board-slate-mid)]",
+  ok: "bg-[color:var(--board-blue-strong)]",
+};
+
+/**
+ * La vue mois du téléphone (décision 4A de la propriétaire, 2026-10-29).
+ *
+ * Sept colonnes de 33 px ne laissent rien lire d'une pastille : la grille
+ * ne porte plus que des points, un par échéance dans la couleur de son état,
+ * et toucher un jour liste ses échéances dessous. Le mois reste un
+ * calendrier — on voit d'un coup d'œil où tombent les retards.
+ *
+ * Le jour choisi par défaut : aujourd'hui s'il est dans le mois, sinon le
+ * premier jour qui porte une échéance.
+ */
+export function GrilleTelephone({
+  grille,
+  aujourdhui,
+  hrefEvenement,
+}: {
+  grille: GrilleMois;
+  aujourdhui: Date;
+  hrefEvenement: (e: EvenementGrille) => string;
+}) {
+  const jours = grille.semaines.flat();
+  const duMois = jours.filter((j) => j.dansLeMois);
+  const parDefaut =
+    duMois.find((j) => j.estAujourdhui) ??
+    duMois.find((j) => j.evenements.length > 0) ??
+    null;
+  const [choisi, setChoisi] = useState<string | null>(null);
+  // Un choix fait dans un autre mois ne vaut plus : on retombe sur le défaut.
+  const jour = duMois.find((j) => j.cle === choisi) ?? parDefaut;
+  const nomDuJour = jour ? JOURS_LONGS[jours.indexOf(jour) % 7] : "";
+  // « 8 octobre 2026 » : le numéro sans zéro, le mois et l'année du titre de
+  // la grille (« Octobre 2026 »), déjà calculés dans le fuseau de référence.
+  const dateDuJour = (j: { numero: number }) =>
+    `${j.numero} ${grille.libelle.toLowerCase()}`;
+
+  return (
+    <div className="sm:hidden">
+      <div className="mt-4 grid grid-cols-7 gap-y-1">
+        {JOURS_SEMAINE.map((j) => (
+          <div
+            key={j}
+            className="pb-1 text-center font-mono text-[10px] font-semibold uppercase text-[color:var(--board-slate-soft)]"
+          >
+            {j.slice(0, 1)}
+          </div>
+        ))}
+        {jours.map((j, i) => {
+          if (!j.dansLeMois) return <span key={j.cle} aria-hidden />;
+          const nb = j.evenements.length;
+          const actif = jour?.cle === j.cle;
+          return (
+            <button
+              key={j.cle}
+              type="button"
+              onClick={() => setChoisi(j.cle)}
+              aria-pressed={actif}
+              aria-label={`${JOURS_LONGS[i % 7]} ${dateDuJour(j)}, ${
+                nb === 0 ? "aucune échéance" : `${nb} échéance${nb > 1 ? "s" : ""}`
+              }`}
+              className={
+                "mx-auto flex h-11 w-full max-w-11 flex-col items-center justify-start gap-1 rounded-[14px] pt-1.5 " +
+                (actif
+                  ? "bg-[color:var(--board-ink)] text-white"
+                  : j.estAujourdhui
+                    ? "bg-[color:var(--board-blue-pale)] text-[color:var(--board-blue-ink)]"
+                    : "text-[color:var(--board-ink)]")
+              }
+            >
+              <span className="text-[13px] font-semibold tabular-nums leading-none">
+                {j.numero}
+              </span>
+              <span aria-hidden className="flex h-1.5 gap-[3px]">
+                {j.evenements.slice(0, MAX_PAR_JOUR).map((e) => (
+                  <span
+                    key={e.id}
+                    className={
+                      "size-1.5 rounded-full " +
+                      (actif && e.tone !== "alerte" ? "bg-white" : TON_POINT[e.tone])
+                    }
+                  />
+                ))}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {jour ? (
+        <div className="mt-5">
+          <p className="m-0 text-[13px] font-semibold text-[color:var(--board-slate-ink)]">
+            {jour.estAujourdhui
+              ? `Aujourd'hui, ${nomDuJour.toLowerCase()} ${dateDuJour(jour)}`
+              : `${nomDuJour} ${dateDuJour(jour)}`}
+          </p>
+          {jour.evenements.length === 0 ? (
+            <p className="m-0 mt-2 text-[13.5px] text-[color:var(--board-slate-mid)]">
+              Aucune échéance ce jour-là.
+            </p>
+          ) : (
+            <ul className="mt-2.5 flex flex-col gap-1.5">
+              {jour.evenements.map((e) => {
+                const fin =
+                  dateEnJeuEvenement(e, aujourdhui).getTime() !== e.date.getTime();
+                return (
+                  <li key={e.id}>
+                    <LienProvenance
+                      href={e.href ?? hrefEvenement(e)}
+                      className={
+                        "flex min-h-11 items-center gap-2.5 rounded-[14px] px-3 py-2.5 text-[13.5px] font-semibold leading-snug " +
+                        TON_PASTILLE[e.tone]
+                      }
+                    >
+                      <MarqueurFamille famille={e.famille} className="size-3.5 flex-none" />
+                      <span className="min-w-0 flex-1">
+                        {avecMentionFin(e.libelle, fin)}
+                        {e.equipement ? (
+                          <span className="block text-[12px] font-normal opacity-80">
+                            {e.equipement}
+                          </span>
+                        ) : null}
+                      </span>
+                    </LienProvenance>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      ) : (
+        <p className="m-0 mt-5 text-[13.5px] text-[color:var(--board-slate-mid)]">
+          Aucune échéance ce mois-ci.
+        </p>
+      )}
     </div>
   );
 }
