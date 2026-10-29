@@ -18,12 +18,20 @@
 name: Budget de requêtes par page
 
 on:
+  # Une modification de documentation seule ne change aucune page.
   pull_request:
+    paths-ignore: ["docs/**", "**/*.md"]
   push:
     branches: [main]
+    paths-ignore: ["docs/**", "**/*.md"]
 
 permissions:
   contents: read
+
+# Un nouveau push sur la même branche annule la mesure en cours.
+concurrency:
+  group: budget-requetes-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   budget:
@@ -87,15 +95,24 @@ jobs:
         run: |
           node scripts/perf/faux-auth.mjs --port 54399 > faux-auth.log 2>&1 &
           pnpm exec next start --port 3101 > next.log 2>&1 &
-          for i in $(seq 1 60); do curl -s -o /dev/null http://localhost:3101/ && break; sleep 1; done
+          pret=0
+          for i in $(seq 1 60); do
+            if curl -s -o /dev/null http://localhost:3101/ && curl -s -o /dev/null http://localhost:54399/__compte; then pret=1; break; fi
+            sleep 1
+          done
+          if [ "$pret" != 1 ]; then echo "Le serveur ou le faux serveur d'authentification n'a pas démarré en 60 s."; exit 1; fi
+          # Trois essais par page, la médiane fait foi : une requête de passage
+          # (travail différé, reconnexion du pool) ne fait pas échouer une PR.
           node scripts/perf/mesurer.mjs \
             --base http://localhost:3101 \
             --db duerp_perf_ci \
             --conteneur "$CONTENEUR_PG" \
             --utilisateur duerp \
-            --essais 1 \
+            --essais 3 \
             --budget scripts/perf/budget-requetes.json
 
-      - name: Journal du serveur, en cas d'échec
+      - name: Journaux des serveurs, en cas d'échec
         if: failure()
-        run: tail -n 80 next.log || true
+        run: |
+          echo "--- next.log"; tail -n 80 next.log || true
+          echo "--- faux-auth.log"; tail -n 40 faux-auth.log || true
