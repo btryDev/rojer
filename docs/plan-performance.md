@@ -390,6 +390,46 @@ Calendrier, registre, équipements, DUERP, dans cet ordre (le plus consulté
 d'abord). Chaque écran réutilise le chargeur du lot 1 plutôt que d'écrire sa
 propre lecture. Cible indicative : ≤ 25 requêtes par écran.
 
+#### Instruction du lot 2 (2026-10-29, main 5a5e9040, gros dossier)
+
+Méthode : un traçage temporaire du client Prisma (proxy, pile capturée à
+l'appel, `next dev`), retiré avant tout commit, puis `mesurer.mjs` sur build
+de prod.
+
+Ce que la mesure apprend :
+- **Une lecture Prisma n'est pas une requête** : le tableau de bord fait 40
+  appels et 73 requêtes SQL — chaque `include` coûte une requête de plus
+  (Prisma 6). Documents : 17 appels, 28 requêtes.
+- **La base n'est pas le goulet** : 18,5 ms de SQL pour les 73 requêtes du
+  tableau de bord (dernier essai). En production, le coût d'une page est
+  surtout le NOMBRE d'allers-retours, que la mesure locale ne voit pas.
+- **Les lectures en double qui restent n'ont pas la même forme** :
+  l'établissement est lu cinq fois par rendu (contrôle d'accès, fraîcheur du
+  calendrier, dossier du moteur, page, réparation), les lignes sept fois. Les
+  identiques ont été partagées au lot 1. La lecture de réparation
+  (`calendrierDesynchronise`) doit voir la base APRÈS la réparation : la
+  partager servirait un état périmé (déjà écarté au lot 1). Les fondre
+  demande de réécrire leurs projections, sans gain sur la base.
+
+Mesuré et écarté — `relationJoins` (préversion de Prisma 6, une requête par
+lecture au lieu d'une par relation) :
+
+| Gros dossier (build webpack) | SQL | Total (ms) |
+|---|---|---|
+| Tableau de bord | 73 → 39 | 104 → 129 |
+| Calendrier | 46 → 23 | 124 → 131 |
+| Documents | 28 → 17 | 37 → 50 |
+
+Moitié moins d'allers-retours, mais le décodage du JSON coûte au serveur
+(+ 10 à 25 ms par page) et l'agrégation à la base (Documents : 5,2 → 10,6 ms
+de SQL au dernier essai). Le bilan dépend du temps d'un aller-retour en
+production, non mesuré : **pas d'adoption sans le lot 7**.
+
+**Conclusion** : le lot 2 n'a pas de gain propre aujourd'hui. Le préalable
+est le lot 7 (temps réels en production) : il dit ce que coûte un
+aller-retour, donc si `relationJoins` ou la refonte des projections valent
+leur coût. À reprendre avec ces chiffres.
+
 ### Lot 3 — Afficher tout de suite (S-M)
 
 #### La barre latérale ne retarde plus la page (2026-10-29, `lot/perf-lot3-tableau`)
@@ -426,6 +466,63 @@ pastilles).
 - Un `loading.tsx` par section, à la forme de l'écran (calendrier, listes,
   DUERP), au lieu du squelette de board pour tout.
 - Contrôle visuel : avant/après sur les écrans touchés.
+
+#### Avancement du lot 3 (2026-10-28, `lot/perf-afficher-tout-de-suite`)
+
+Fait — le second point, les replis par section :
+- ~~chaque page d'entrée du rail a son `loading.tsx`, qui rend le vrai
+  en-tête ; chaque sous-dossier de fiche prend le repli neutre~~
+  [2026-10-28, relecture avant PR, même lot : **régression**. Next rattache
+  le repli d'un dossier à une clé qui contient les paramètres d'URL de la
+  page (`addSearchParamsIfPageSegment`, puis `stateKey` dans
+  `layout-router`) : chaque filtre, année ou bascule de vue du calendrier
+  aurait remplacé la page par son squelette — ce que `FiltresCalendrier`
+  évite exprès par une transition. Même chose au registre, aux équipements,
+  au plan d'actions, et sur une fiche quand `SuiviControle` retire
+  `?apres=`.] ;
+- **un seul repli, `etablissements/[id]/loading.tsx`**, composant client :
+  il lit l'adresse (`repliDeChargement`) et rend le vrai en-tête de la page
+  demandée (`ChargementSection` → `CadreEnTete`) — titre et teinte de la
+  section dès le clic, seul le corps attend — ou le repli neutre pour le
+  tableau de bord, les fiches et les formulaires (`ChargementNeutre`).
+  Posé là, il n'est rattaché qu'au premier dossier sous l'établissement :
+  il se montre en changeant de section, jamais en changeant de paramètre ;
+- le cadre de l'en-tête est sorti d'`EnTetePage` (`CadreEnTete`) pour que le
+  repli client n'importe pas les dessins (≈ 46 Ko de source) ; le panneau
+  teinté y reste vide — un dessin plus haut que le minimum (320 px)
+  l'allonge à l'arrivée de la page ;
+- garde `chargement-sections.test.ts` : chaque page balayée doit être
+  annoncée sous son propre en-tête, aucune page sans `EnTetePage` sous un
+  en-tête de section, et un seul `loading.tsx` sous l'établissement.
+  Éprouvée en la cassant trois fois (mauvaise entrée, page oubliée,
+  `loading.tsx` remis dans un dossier) : rouge.
+
+Le corps du repli reste le patron « Liste » commun : pas encore à la forme
+de chaque écran (calendrier, DUERP).
+
+Reste :
+- le tableau de bord en `<Suspense>` par bloc. Ses widgets reçoivent un seul
+  paquet (`DashboardBundle`) dans une grille client à glisser-déposer : le
+  streaming demande de passer aux widgets des promesses (`use()`) ou de
+  découper la grille — à concevoir avant de coder ;
+- ~~le contrôle visuel des replis, pas encore fait~~ [2026-10-28, fait en
+  local — `next dev`, base de mesure semée par `seed:complet`, faux serveur
+  Auth ; la base a été supprimée après. Relevé par un observateur du DOM :
+  - plan d'actions → calendrier : le repli s'affiche sous l'adresse DEMANDÉE
+    (`usePathname` rend la nouvelle adresse pendant l'attente), titre
+    « Calendrier », teinte pêche, sans dessin ; la page arrive ≈ 500 ms
+    après ;
+  - `?annee=2027` puis `&vue=equipement` sur le calendrier : aucun repli,
+    l'écran reste en place — la régression du premier essai est écartée ;
+  - documents, page retardée de 8 s le temps d'une capture (retiré
+    aussitôt) : titre et gris de Documentation tout de suite. **Reste un
+    saut** : à 1 440 px, l'en-tête réel mesure ≈ 403 px contre 320 dans le
+    repli (dessin plus haut que le minimum, descriptif de quatre lignes
+    contre deux) — le titre descend de ≈ 15 px, le corps de ≈ 80 px.
+    Réserver la hauteur exacte demanderait la proportion de chaque dessin ;
+    non fait.]
+- en `next dev`, la première compilation d'une page garde l'écran précédent
+  (« Rendering… ») avant le repli : propre au mode développement.
 
 ### Lot 4 — Ne pas refaire ce qui vient d'être fait (S, optionnel — option expérimentale)
 
