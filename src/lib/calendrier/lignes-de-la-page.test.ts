@@ -18,8 +18,17 @@ import { describe, expect, it } from "vitest";
  * suit les APPELS dans `src/lib` et `src/app`. Or le layout rend la barre par
  * un COMPOSANT (`<SidebarAvecPastilles>`, `src/components`), qui appelle les
  * compteurs : un élément JSX n'est pas un appel, et le chemin lui échappait.
- * Celle-ci suit les appels ET les éléments JSX, sur les trois dossiers — et
- * vérifie qu'elle retrouve ce chemin-là, sans quoi elle ne prouverait rien.
+ * Celle-ci suit TOUT NOM RÉFÉRENCÉ — appel direct ou par méthode
+ * (`q.lecteur()`), fonction passée en argument (`.then(lecteur)`), composant,
+ * y compris à espace de noms (`<Ui.Barre>`) — sur les trois dossiers, et
+ * vérifie qu'elle retrouve le chemin de la barre, sans quoi elle ne
+ * prouverait rien.
+ *
+ * CE QUI TOURNE EN PARALLÈLE DE LA PAGE, ET QUE LA GARDE REGARDE : les
+ * layouts et templates, les fichiers d'attente et d'erreur, les routes
+ * parallèles (`@slot/…`, `default.tsx`), et les `generateMetadata` /
+ * `generateViewport` des pages, que Next résout à part du corps de la page —
+ * donc sans la réparation qu'il fait.
  *
  * Par NOM, comme l'autre : deux homonymes se confondent, ce qui ne peut
  * qu'élargir ce qu'on croit atteint — l'erreur se fait du côté qui fait
@@ -56,19 +65,15 @@ function arbre(chemin: string): ts.SourceFile {
   );
 }
 
-/** Les noms appelés, et les composants rendus, sous `racine`. */
+/**
+ * Tous les noms référencés sous `racine` : appels, références passées en
+ * argument, membres (`q.lecteur`), composants (`<Barre>`, `<Ui.Barre>`).
+ * Large à dessein — un nom de trop ne peut que faire échouer la garde.
+ */
 function atteints(racine: ts.Node): Set<string> {
   const noms = new Set<string>();
   const visiter = (n: ts.Node): void => {
-    if (ts.isCallExpression(n) && ts.isIdentifier(n.expression)) {
-      noms.add(n.expression.text);
-    }
-    if (
-      (ts.isJsxOpeningElement(n) || ts.isJsxSelfClosingElement(n)) &&
-      ts.isIdentifier(n.tagName)
-    ) {
-      noms.add(n.tagName.text);
-    }
+    if (ts.isIdentifier(n)) noms.add(n.text);
     ts.forEachChild(n, visiter);
   };
   visiter(racine);
@@ -112,8 +117,26 @@ function quiAtteint(cible: string): Set<string> {
   return ensemble;
 }
 
-const layouts = fichiers.filter((f) => /[\\/](layout|template)\.tsx?$/.test(f));
 const relatif = (f: string) => f.slice(RACINE.length + 1);
+
+/** Les fichiers de `src/app` que Next rend à côté de la page, en entier. */
+const RENDUS_A_COTE =
+  /[\\/](layout|template|default|loading|error|not-found|global-error)\.tsx?$/;
+const dansSrcApp = (f: string) => relatif(f).startsWith("src/app/");
+const layouts = fichiers.filter((f) => dansSrcApp(f) && RENDUS_A_COTE.test(f));
+const slots = fichiers.filter(
+  (f) => dansSrcApp(f) && /[\\/]@[^\\/]+[\\/]/.test(relatif(f)),
+);
+
+/** Les fonctions de page que Next résout à part du corps, sans sa réparation. */
+const A_PART_DE_LA_PAGE = new Set(["generateMetadata", "generateViewport"]);
+const fonctionsAPart = fichiers
+  .filter((f) => dansSrcApp(f) && /[\\/](page|layout)\.tsx?$/.test(f))
+  .flatMap((f) =>
+    fonctionsDe(arbres.get(f)!)
+      .filter(({ nom }) => A_PART_DE_LA_PAGE.has(nom))
+      .map((fn) => ({ chemin: f, ...fn })),
+  );
 
 describe("la lecture des lignes de la page n'est jamais atteinte depuis un layout", () => {
   const versLaCible = quiAtteint(CIBLE);
@@ -121,9 +144,9 @@ describe("la lecture des lignes de la page n'est jamais atteinte depuis un layou
   it("borne basse : ses lecteurs connus l'atteignent", () => {
     for (const f of [
       "compterEtatCalendrierDeLaPage",
-      "compterEtatEcheances",
+      "compterEtatEcheancesDeLaPage",
       "compterVerifsParEquipement",
-      "compterVerificationsDuDossier",
+      "compterLignesDeLaPage",
     ]) {
       expect(versLaCible.has(f), f).toBe(true);
     }
@@ -143,18 +166,30 @@ describe("la lecture des lignes de la page n'est jamais atteinte depuis un layou
   });
 
   it("la barre latérale ne l'atteint pas : elle garde sa lecture", () => {
-    for (const f of ["chargerSidebarCounts", "compterEnRetardParFamille"]) {
+    for (const f of [
+      "chargerSidebarCounts",
+      "compterEnRetardParFamille",
+      "compterEtatEcheances",
+      "compterEtatCalendrier",
+    ]) {
       expect(versLaCible.has(f), f).toBe(false);
     }
   });
 
-  it("aucun layout ne l'atteint, par un appel ni par un composant", () => {
+  it("aucun rendu parallèle à la page ne l'atteint, par un appel ni par un composant", () => {
     expect(layouts.length).toBeGreaterThanOrEqual(1);
-    const fautifs = layouts.flatMap((f) =>
-      [...atteints(arbres.get(f)!)]
-        .filter((n) => versLaCible.has(n))
-        .map((n) => `${relatif(f)} → ${n}`),
-    );
+    const fautifs = [
+      ...[...layouts, ...slots].flatMap((f) =>
+        [...atteints(arbres.get(f)!)]
+          .filter((n) => versLaCible.has(n))
+          .map((n) => `${relatif(f)} → ${n}`),
+      ),
+      ...fonctionsAPart.flatMap(({ chemin, nom, atteint }) =>
+        [...atteint]
+          .filter((n) => n !== nom && versLaCible.has(n))
+          .map((n) => `${relatif(chemin)} (${nom}) → ${n}`),
+      ),
+    ];
     expect(
       fautifs,
       "Ces layouts atteignent `lignesDuDossierDeLaPage`. Le layout est rendu " +

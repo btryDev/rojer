@@ -191,19 +191,53 @@ export async function compterEtatEcheances(
   now: Date = new Date(),
   filtres: { batimentId?: string } = {},
 ): Promise<EtatEcheances> {
-  const [etat, autresTous] = await Promise.all([
-    // [2026-10-29, plan performance] Sans filtre de zone, les lignes que la
-    // page partage avec ses pastilles par appareil et son compte de lignes
-    // (`lignesDuDossierDeLaPage`). Le tableau de bord, seul appelant, répare
-    // le calendrier avant de lire ; la barre latérale ne passe pas par ici.
+  return composerEtatEcheances(
+    compterEtatCalendrier(etablissementId, now, {
+      batimentId: filtres.batimentId,
+    }),
+    etablissementId,
+    now,
+    filtres.batimentId,
+  );
+}
+
+/**
+ * Le même état, POUR LA PAGE DU TABLEAU DE BORD (plan performance,
+ * 2026-10-29) : sans filtre de zone, sur les lignes qu'elle partage avec ses
+ * pastilles par appareil et son compte de lignes (`lignesDuDossierDeLaPage`).
+ * Réservé à une page qui a réparé le calendrier avant de lire ; jamais depuis
+ * un layout (`lignes-de-la-page.test.ts`). Filtré par zone, il garde sa
+ * lecture filtrée : aucun filtre n'est réécrit en mémoire.
+ */
+export async function compterEtatEcheancesDeLaPage(
+  etablissementId: string,
+  now: Date,
+  filtres: { batimentId?: string } = {},
+): Promise<EtatEcheances> {
+  return composerEtatEcheances(
     filtres.batimentId
       ? compterEtatCalendrier(etablissementId, now, {
           batimentId: filtres.batimentId,
         })
       : compterEtatCalendrierDeLaPage(etablissementId, now),
+    etablissementId,
+    now,
+    filtres.batimentId,
+  );
+}
+
+/** Le calcul des deux entrées ci-dessus : un seul, pour qu'elles ne divergent pas. */
+async function composerEtatEcheances(
+  etatLu: ReturnType<typeof compterEtatCalendrier>,
+  etablissementId: string,
+  now: Date,
+  batimentId: string | undefined,
+): Promise<EtatEcheances> {
+  const [etat, autresTous] = await Promise.all([
+    etatLu,
     listerAutresEcheances(etablissementId, now),
   ]);
-  const autres = filtrerParBatiment(autresTous, filtres.batimentId);
+  const autres = filtrerParBatiment(autresTous, batimentId);
 
   return {
     retards: repartirRetards(autres, etat.enRetardParType),
@@ -217,8 +251,8 @@ export async function compterEtatEcheances(
  * Les seuls retards — ce que lit la sidebar, qui n'a pas de fenêtre à
  * annoncer.
  *
- * SA PROPRE LECTURE DES LIGNES (`compterEtatCalendrier`), jamais celle de la
- * page : la barre est rendue par le layout, EN PARALLÈLE de la page qui
+ * Par `compterEtatEcheances`, qui lit ses propres lignes, jamais par l'entrée
+ * de la page : la barre est rendue par le layout, EN PARALLÈLE de la page qui
  * répare le calendrier avant de lire. Partager servirait à la page les lignes
  * d'avant la réparation (`lignes-de-la-page.test.ts`).
  */
@@ -226,9 +260,6 @@ export async function compterEnRetardParFamille(
   etablissementId: string,
   now: Date = new Date(),
 ): Promise<RetardsParFamille> {
-  const [etat, autres] = await Promise.all([
-    compterEtatCalendrier(etablissementId, now),
-    listerAutresEcheances(etablissementId, now),
-  ]);
-  return repartirRetards(autres, etat.enRetardParType);
+  const { retards } = await compterEtatEcheances(etablissementId, now);
+  return retards;
 }

@@ -25,7 +25,10 @@ import { JOURS_APRES } from "./frise";
 import { instantDuRendu } from "@/lib/dates/instant-du-rendu";
 import { comptesParcDuRendu } from "@/lib/equipements/queries";
 import { compterRapportsDuDossier } from "@/lib/rapports/queries";
-import { lignesDuDossierDeLaPage } from "@/lib/calendrier/queries";
+import {
+  lignesDuDossierDeLaPage,
+  type LigneComptee,
+} from "@/lib/calendrier/queries";
 import { duerpDuRendu } from "@/lib/duerps/queries";
 import { etablissementDuCompteDuRendu } from "@/lib/etablissements/queries";
 import { prisma } from "@/lib/prisma";
@@ -368,7 +371,7 @@ export async function compterVerifsParEquipement(
     }
     return s;
   };
-  const lignesParEquipement = new Map<string, typeof verifs>();
+  const lignesParEquipement = new Map<string, LigneComptee[]>();
 
   for (const v of verifs) {
     // Statistiques **par équipement** : une échéance portée par

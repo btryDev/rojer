@@ -228,12 +228,20 @@ export const lignesDuDossierDeLaPage = cache(
       }),
       dernieresRealisationsDeLEtablissement(etablissementId),
     ]);
-    return projeterDernieresRealisations(lignes, dernieres);
+    // En lecture seule au typage : le tableau est partagé par tous les
+    // lecteurs du rendu, et un tri sur place se verrait chez les autres.
+    const verifs: readonly LigneComptee[] = projeterDernieresRealisations(
+      lignes,
+      dernieres,
+    );
+    return verifs;
   },
 );
 
-export type LigneComptee = Awaited<
-  ReturnType<typeof lignesDuDossierDeLaPage>
+export type LigneComptee = ReturnType<
+  typeof projeterDernieresRealisations<
+    Prisma.VerificationGetPayload<{ select: typeof SELECT_LIGNE_COMPTEE }>
+  >
 >[number];
 
 /**
@@ -315,7 +323,7 @@ export async function compterEtatCalendrierDeLaPage(
 
 /** Le calcul des deux lecteurs ci-dessus, sans base. */
 function etatDesLignes(
-  verifs: LigneComptee[],
+  verifs: readonly LigneComptee[],
   now: Date,
   marquesParObligation: Parameters<typeof retenueParPrudence>[0],
 ) {
@@ -414,9 +422,11 @@ export async function calendrierDesynchronise(
  * Tableau de bord : combien de lignes le calendrier porte (audit Next.js du
  * 2026-10-14, B6 — la page le comptait elle-même).
  */
-export async function compterVerificationsDuDossier(etablissementId: string) {
+export async function compterLignesDeLaPage(etablissementId: string) {
   // Les lignes que la page partage (plan performance, 2026-10-29) : le compte
-  // est leur nombre, sans requête de plus.
+  // est leur nombre, sans requête de plus. D'où le nom : réservé à la page,
+  // jamais un compteur à appeler d'ailleurs — hors rendu, il lirait toutes
+  // les lignes pour un nombre.
   return (await lignesDuDossierDeLaPage(etablissementId)).length;
 }
 
