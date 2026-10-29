@@ -483,11 +483,22 @@ garde. [Revue du lot : le shell DUERP garde sa lecture attendue — sans
 Les temps totaux ne bougent pas (deux mesures, bruit de quelques ms : la
 mesure fait journaliser chaque requête). Les pages DUERP ne gagnaient rien
 (`/duerp/[id]` n'a pas de `loading.tsx`, la page bloque le premier envoi) :
-~~leur shell est laissé tel quel, à reprendre avec un repli par section~~
-[2026-10-29, `lot/perf-duerp-attente` : `duerp/[id]/loading.tsx` (le corps
-de l'étape attend, l'en-tête du shell part tout de suite) et le shell DUERP
-passe à `SidebarAvecPastilles`. 1er octet, gros dossier : DUERP unités
-57 → 38 ms, synthèse 67 → 50 ms ; requêtes inchangées]. Le
+leur shell est laissé tel quel. [2026-10-29, essayé puis mis de côté (PR
+#120, code retiré avant fusion, décision à prendre par la propriétaire) : un
+`duerp/[id]/loading.tsx` et le shell DUERP sur `SidebarAvecPastilles`
+gagnaient au 1er octet (unités 57 → 38 ms, synthèse 67 → 50 ms), mais la
+revue a relevé deux reculs sur le chemin d'entrée principal :
+- `/duerp/[id]`, cible de l'entrée « DUERP » de la barre, redirige vers
+  `/unites` ou `/secteur` ; sous le repli, la redirection part après le début
+  du flux (squelette affiché, puis redirection côté navigateur, aller-retour
+  en plus) ;
+- passer du shell d'établissement au shell DUERP remonte la barre : elle
+  s'afficherait sans pastilles puis les retrouverait, à chaque entrée dans
+  le DUERP.
+Le layout DUERP attend aussi `getDuerp` (unités, risques, actions) avant tout
+rendu : le repli ne couvre que la navigation d'étape à étape. À reprendre en
+traitant d'abord la redirection (lien direct vers l'étape depuis la barre,
+ou redirection hors du rendu).] Le
 HTML grossit de ≈ 7 Ko bruts (la barre est envoyée sans puis avec ses
 pastilles).
 
