@@ -16,6 +16,7 @@ import { MarqueurFamille } from "@/components/calendrier/MarqueurFamille";
 import type { FamilleEcheance } from "@/lib/calendrier/echeances";
 import type { RegistreLigne } from "@/lib/calendrier/etats";
 import { TuileDate } from "./TuileDate";
+import { ChevronRepli, LIEN_REPLI } from "@/components/ui/repli";
 
 export type FaitFiche = {
   cle: string;
@@ -90,9 +91,7 @@ export function HeroFiche({
             {titre}
           </h1>
           {chapeau ? (
-            <p className="m-0 mt-2 text-[14px] text-[color:var(--board-slate-mid)]">
-              {chapeau}
-            </p>
+            <ChapeauFiche>{chapeau}</ChapeauFiche>
           ) : null}
           {pastilles ? (
             <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -141,5 +140,35 @@ export function HeroFiche({
         </dl>
       ) : null}
     </section>
+  );
+}
+
+/** Au-delà, un chapeau n'est plus « une ligne de contexte » mais une
+ *  explication — sur une vérification, le texte de l'obligation. */
+const CHAPEAU_LONG = 160;
+
+/**
+ * Le chapeau. Long, il se replie sur téléphone derrière « Lire l'explication »
+ * (demande de la propriétaire, 2026-10-29) : douze lignes de texte
+ * repoussaient à deux écrans plus bas ce qu'on vient faire sur la fiche —
+ * déposer le rapport. Sur ordinateur, il reste déplié.
+ */
+function ChapeauFiche({ children }: { children: ReactNode }) {
+  const classe = "m-0 mt-2 text-[14px] text-[color:var(--board-slate-mid)]";
+  if (typeof children !== "string" || children.length <= CHAPEAU_LONG) {
+    return <p className={classe}>{children}</p>;
+  }
+  return (
+    <>
+      <p className={`${classe} max-md:hidden`}>{children}</p>
+      <details className="group mt-2 md:hidden">
+        <summary className={`${LIEN_REPLI} min-h-11`}>
+          <ChevronRepli />
+          <span className="group-open:hidden">Lire l&apos;explication</span>
+          <span className="hidden group-open:inline">Masquer l&apos;explication</span>
+        </summary>
+        <p className={`${classe} leading-[1.6]`}>{children}</p>
+      </details>
+    </>
   );
 }
