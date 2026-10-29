@@ -19,26 +19,31 @@ import { formaterMoisAnneeFr } from "@/lib/dates";
 const FOND = "var(--board-card)";
 
 /**
- * Aligne l'étiquette d'un jalon selon sa place sur l'axe : posée à `p` % de
- * l'axe, elle recule de `p` % de sa propre largeur — calée à gauche au début,
- * centrée au milieu, calée à droite au bout. Elle ne peut donc jamais sortir
- * de la carte, quelle que soit sa largeur.
+ * Aligne l'étiquette d'un jalon selon sa place sur l'axe. Sur la moitié
+ * centrale de l'axe, elle est centrée sur son point. Dans le quart de chaque
+ * bord, elle glisse progressivement vers le bord : à 0 % elle est calée à
+ * gauche, à 100 % calée à droite, et entre les deux le recul suit la position.
+ * Une étiquette ne sort donc pas de la carte, sans quitter son point au milieu.
  *
  * ~~Centrée au milieu, calée sur les bords sous 6 % et au-delà de 94 %.~~
  * [2026-10-29 : sur téléphone, « 24 NOV. · VÉRIFICATION » centrée à 88 %
- * débordait de la carte — le seuil fixe ne tenait que sur une carte large.]
+ * débordait de la carte — le seuil fixe ne tenait que sur une carte large.
+ * Un premier remède faisait reculer l'étiquette de p % partout, et décalait
+ * de son point une étiquette posée au quart (revue du même jour).]
  */
 function ancrage(position: number): {
   style: React.CSSProperties;
   classe: string;
 } {
-  const p = Math.min(1, Math.max(0, position)) * 100;
+  const p = Math.min(1, Math.max(0, position));
+  // 0 → 0 %, 0,25 → 50 %, 0,75 → 50 %, 1 → 100 %.
+  const recul = p < 0.25 ? p * 200 : p > 0.75 ? 50 + (p - 0.75) * 200 : 50;
   return {
-    style: { left: `${p}%`, transform: `translateX(-${p}%)` },
+    style: { left: `${p * 100}%`, transform: `translateX(-${recul}%)` },
     classe:
-      p < 34
+      recul < 25
         ? "items-start text-left"
-        : p > 66
+        : recul > 75
           ? "items-end text-right"
           : "items-center text-center",
   };

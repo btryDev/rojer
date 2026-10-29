@@ -203,12 +203,14 @@ function cibleEvenement(
   return { href: e.href ?? hrefEvenement(e), texte: avecMentionFin(e.libelle, fin) };
 }
 
-/** L'état d'un événement, pour la couleur de son point : la même table que
- *  la page Calendrier (`POINT_ETAT`), pour que le même mois ne change pas
- *  de couleurs d'un écran à l'autre. */
+/** L'état d'un événement, pour la couleur de son point. Le widget ne reçoit
+ *  qu'un ton (`TON_REGISTRE` : `warn` = à planifier ou à confirmer, `ok` =
+ *  tout ce qui n'appelle rien), pas l'état : le point prend la couleur de la
+ *  pastille de la liste dessous (`TON_PASTILLE` : rose, ardoise, bleu), tirée
+ *  de la même table que la page Calendrier (`POINT_ETAT`). */
 const ETAT_DU_TON: Record<EvenementGrille["tone"], RegistreLigne> = {
   alerte: "enRetard",
-  warn: "proche",
+  warn: "aPlanifier",
   ok: "lointain",
 };
 

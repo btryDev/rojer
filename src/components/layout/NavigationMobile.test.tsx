@@ -125,6 +125,17 @@ describe("NavigationMobile", () => {
     expect(feuille()).toBeNull();
   });
 
+  it("un Cmd-clic, qui ouvre un nouvel onglet, laisse la feuille ouverte", () => {
+    nav.chemin = "/etablissements/e1/calendrier";
+    render(barre("calendrier"));
+    fireEvent.click(basDePage().getByRole("button", { name: /À faire/ }));
+    const calendrier = within(feuille()!)
+      .getAllByRole("link")
+      .find((a) => a.getAttribute("href") === "/etablissements/e1/calendrier")!;
+    fireEvent.click(calendrier, { metaKey: true });
+    expect(feuille()).not.toBeNull();
+  });
+
   it("sur ordinateur, pas de feuille : le panneau du rail suffit", () => {
     vi.stubGlobal("matchMedia", () => ({
       matches: false,

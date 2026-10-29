@@ -61,7 +61,9 @@ export function NavigationMobile({
   // À l'ouverture, le focus entre dans la feuille ; Échap la referme et le
   // rend à l'onglet qui l'a ouverte. Même contrat que le menu de la gélule.
   useEffect(() => {
-    if (!feuille) return;
+    // Sur l'identifiant, pas sur l'objet `feuille`, recréé à chaque rendu : chaque
+    // rendu du parent ramenait sinon le focus en tête de la feuille.
+    if (!ouverte || !telephone) return;
     zoneFeuille.current?.querySelector<HTMLElement>("a, button")?.focus();
     const auClavier = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
@@ -75,7 +77,7 @@ export function NavigationMobile({
     };
     document.addEventListener("keydown", auClavier);
     return () => document.removeEventListener("keydown", auClavier);
-  }, [feuille, surChoisir]);
+  }, [ouverte, telephone, surChoisir]);
 
   return (
     <div className="md:hidden">

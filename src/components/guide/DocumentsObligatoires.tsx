@@ -42,7 +42,7 @@ type LienDocument = { href: string; libelle: string; fichier?: boolean };
  * Où ouvrir un document que Rojer produit (2026-10-29, demande de la
  * propriétaire) : la page expliquait chaque document sans en ouvrir aucun, et
  * c'est ici qu'on vient le chercher quand un contrôleur le demande. Une
- * entrée par document produit — la garde (`DocumentsObligatoires.test.tsx`)
+ * entrée par document produit — la garde (`DocumentsObligatoires.liens.test.ts`)
  * refuse un document produit sans lien.
  */
 export function liensDuDocument(
@@ -159,7 +159,9 @@ function BlocDocuments({
       </p>
 
       <ul className="m-0 mt-5 grid list-none grid-cols-1 gap-4 p-0 lg:grid-cols-2">
-        {documents.map((d) => (
+        {documents.map((d) => {
+          const liens = etablissementId ? liensDuDocument(d.id, etablissementId) : [];
+          return (
           <li
             key={d.id}
             className="rounded-2xl border border-[color:var(--board-slate-line)] bg-[color:var(--board-card)]"
@@ -172,9 +174,7 @@ function BlocDocuments({
               <h3 className="m-0 text-[1.05rem] font-semibold leading-[1.3] tracking-[-0.012em]">
                 {d.nom}
               </h3>
-              {etablissementId ? (
-                <LiensDocument liens={liensDuDocument(d.id, etablissementId)} />
-              ) : null}
+              <LiensDocument liens={liens} />
               <CorpsDocument d={d} />
             </div>
             <details className="group md:hidden">
@@ -188,13 +188,14 @@ function BlocDocuments({
                 <CorpsDocument d={d} />
               </div>
             </details>
-            {etablissementId && liensDuDocument(d.id, etablissementId).length > 0 ? (
+            {liens.length > 0 ? (
               <div className="px-5 pb-4 md:hidden">
-                <LiensDocument liens={liensDuDocument(d.id, etablissementId)} />
+                <LiensDocument liens={liens} />
               </div>
             ) : null}
           </li>
-        ))}
+          );
+        })}
       </ul>
     </div>
   );

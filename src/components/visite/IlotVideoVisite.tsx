@@ -76,7 +76,7 @@ export function IlotVideoVisite({ cle }: { cle: CleVisite }) {
             <span aria-hidden className="grid size-7 flex-none place-items-center rounded-full bg-white text-[color:var(--board-ink)] md:hidden">
               <Play className="ml-0.5 size-3 fill-current" />
             </span>
-            <span className="relative hidden w-[118px] flex-none overflow-hidden rounded-[14px] bg-[color:var(--board-canvas)] sm:block">
+            <span className="relative hidden w-[118px] flex-none overflow-hidden rounded-[14px] bg-[color:var(--board-canvas)] md:block">
               {/* eslint-disable-next-line @next/next/no-img-element -- vignette statique, déjà à la bonne taille */}
               <img src={vignette} alt="" className="block aspect-video w-full object-cover" />
               <span className="absolute inset-0 flex items-center justify-center bg-[rgba(10,10,10,.06)] transition-colors group-hover:bg-[rgba(10,10,10,.16)]">

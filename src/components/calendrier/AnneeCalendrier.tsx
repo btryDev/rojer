@@ -314,13 +314,25 @@ export function AnneeCalendrier({
       {lecture === "mois" ? (
         <div className="md:hidden">
           <MoisTelephone
-            mois={[...moisAnterieursEnRetard, ...regle.mois].map((m) => {
+            mois={[
+              // Les années révolues comptent leurs retards comme la couture
+              // de l'ordinateur et l'anneau du tableau de bord : sans date
+              // compris (`retardSansDate`).
+              ...moisAnterieursEnRetard.map((m) => ({
+                m,
+                nbEnRetard: m.enRetard + (m.retardSansDate ?? 0),
+              })),
+              ...regle.mois.map((m) => ({
+                m,
+                nbEnRetard: sectionsParCle.get(m.cle)?.nbEnRetard ?? 0,
+              })),
+            ].map(({ m, nbEnRetard }) => {
               const s = sectionsParCle.get(m.cle);
               return {
                 cle: m.cle,
                 titre: s?.titre ?? m.labelLong,
                 lignes: s?.lignes ?? [],
-                nbEnRetard: s?.nbEnRetard ?? 0,
+                nbEnRetard,
               };
             })}
             moisInitial={moisInitial}

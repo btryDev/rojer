@@ -7,6 +7,7 @@ import { AideEcran } from "@/components/ui-kit/AideEcran";
 import { LienProvenance } from "@/components/navigation/LienProvenance";
 import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import { LegalBadge, Textes } from "@/components/ui-kit/LegalBadge";
+import { PastilleEtat } from "@/components/calendrier/PastilleEtat";
 import { BadgeStatut } from "@/components/calendrier/BadgeStatut";
 import { mentionDelaiDeGrace } from "@/lib/calendrier/grace";
 import { datePoseeAuCalendrier, pastilleRendezVous, type PastilleRendezVous } from "@/lib/rendez-vous/regles";
@@ -70,9 +71,6 @@ import {
   type LigneMois,
 } from "@/lib/calendrier/regle-annee";
 import {
-  CHAMP_ETAT,
-  ENCRE_ETAT,
-  libellePastille,
   PRIORITE_ETAT,
   avecMentionFin,
   lecturesCalendrier,
@@ -149,29 +147,6 @@ const FMT_AUJOURDHUI = new Intl.DateTimeFormat("fr-FR", {
   month: "long",
   year: "numeric",
 });
-
-/**
- * L'état d'une ligne en mots, sur son champ : « Sous 30 jours », « Au-delà de
- * 30 jours »… Une seule écriture pour les deux familles de lignes.
- */
-function PastilleEtat({
-  etat,
-  duJour = false,
-}: {
-  etat: RegistreLigne;
-  /** L'échéance tombe aujourd'hui : « Aujourd'hui » au lieu de « Sous 30
-   *  jours » (`libellePastille`). */
-  duJour?: boolean;
-}) {
-  return (
-    <span
-      className="inline-flex items-center whitespace-nowrap rounded-full px-[13px] py-[6px] text-[12px] font-semibold"
-      style={{ background: CHAMP_ETAT[etat], color: ENCRE_ETAT[etat] }}
-    >
-      {libellePastille(etat, duJour)}
-    </span>
-  );
-}
 
 /**
  * ~~La tuile-date porte la couleur de l'état parce que c'est l'objet que
@@ -1210,9 +1185,7 @@ export default async function CalendrierPage({
     ligne: LigneMois<(typeof verifsVisibles)[number]>,
   ): RegistreLigne =>
     ligne.genre === "verif"
-      ? ligne.lecture === "realisation"
-        ? "faite"
-        : ligne.registre
+      ? ligne.registre
       : ligne.e.tone === "alerte" && !ligne.e.sansEcheance
         ? "enRetard"
         : ligne.etat;

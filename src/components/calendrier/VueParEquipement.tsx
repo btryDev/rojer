@@ -43,6 +43,7 @@ import { MentionRendezVous } from "@/components/rendez-vous/MentionRendezVous";
 import type { PastilleRendezVous } from "@/lib/rendez-vous/regles";
 import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
 import { useState } from "react";
+import { PastilleEtat } from "./PastilleEtat";
 import { LienProvenance } from "@/components/navigation/LienProvenance";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import type { StatutPeint } from "@/lib/calendrier/etats";
@@ -56,7 +57,6 @@ import {
   compteEtat,
   ENCRE_ETAT,
   libelleEtatCourtCapitale,
-  libellePastille,
   type EtatEcheance,
   type RegistreLigne,
 } from "@/lib/calendrier/etats";
@@ -540,12 +540,7 @@ function CarteEquipement({
                       ) : o.etat === "faite" ? (
                         // Le contrôle fait (2026-10-29) : « Fait », sans le
                         // résultat de son rapport — comme la liste par mois.
-                        <span
-                          className="inline-flex items-center whitespace-nowrap rounded-full px-[13px] py-[6px] text-[12px] font-semibold"
-                          style={{ background: CHAMP_ETAT.faite, color: ENCRE_ETAT.faite }}
-                        >
-                          {libellePastille("faite", false)}
-                        </span>
+                        <PastilleEtat etat="faite" />
                       ) : o.etat === "enRetard" ? (
                         <span className="inline-flex items-center whitespace-nowrap rounded-full bg-[color:var(--board-signal)] px-[13px] py-[6px] text-[12px] font-semibold text-[color:var(--board-signal-ink)]">
                           {libelleEtatCourtCapitale("enRetard")}

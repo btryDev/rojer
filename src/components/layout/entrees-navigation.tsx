@@ -8,12 +8,6 @@
 import Link from "next/link";
 import type { NavItem, RailCategorie, SidebarItemId } from "./sidebar-nav";
 
-/**
- * Entrée de rail : un bouton qui ouvre le panneau de sa catégorie, sans
- * naviguer — c'est l'entrée choisie dans le panneau qui mène à une page
- * (2026-10-28, ADR-030 amendée). ~~Toujours un lien, panneau ou pas
- * (ADR-015).~~
- */
 /** Les mesures d'une entrée : le rail (88 px de large) ou la barre du bas du
  *  téléphone, où l'entrée prend un cinquième de l'écran et 56 px de haut. */
 const MESURES = {
@@ -31,6 +25,12 @@ const MESURES = {
   },
 } as const;
 
+/**
+ * Entrée de rail : un bouton qui ouvre le panneau de sa catégorie, sans
+ * naviguer — c'est l'entrée choisie dans le panneau qui mène à une page
+ * (2026-10-28, ADR-030 amendée). ~~Toujours un lien, panneau ou pas
+ * (ADR-015).~~
+ */
 export function RailEntree({
   cat,
   surPage,
@@ -168,7 +168,12 @@ export function NavLink({
   return (
     <Link
       href={item.href}
-      onClick={auChoix}
+      onClick={(e) => {
+        // Un clic qui ouvre un nouvel onglet (Cmd, Ctrl, Maj, molette) ne
+        // quitte pas la page : le panneau reste ouvert.
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+        auChoix?.();
+      }}
       aria-current={isActive ? "page" : undefined}
       className={
         CLASSES_ITEM + " " +
