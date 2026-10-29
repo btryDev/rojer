@@ -205,8 +205,11 @@ Reste, rangé dans les lots suivants :
   3,7 Mo — lot 6 (poids envoyé) ; ~~**question à la propriétaire** : la fiche
   d'un contrôle doit-elle montrer tout son historique, ou les plus récents et
   un renvoi au registre ?~~ [2026-10-27, la propriétaire : **des filtres sur
-  l'historique de la fiche d'un contrôle, plus tard** — à faire, pas encore
-  planifié.]
+  l'historique de la fiche d'un contrôle, plus tard** — ~~à faire, pas encore
+  planifié~~.] [2026-10-29, la propriétaire : **pas maintenant** — rangé dans
+  les chantiers à envisager (`docs/chantiers-ouverts.md` § 21) : des filtres
+  par année, la fiche s'ouvrant probablement sur l'année en cours. D'ici là,
+  la page reste telle quelle.]
 - calendrier (1,4 Mo) et équipements (0,8 Mo) grossissent avec le parc, pas
   avec l'historique : lot 6.
 
@@ -352,8 +355,10 @@ Mesuré et écarté :
 Reste, et c'est ce qui grandit encore avec les années : **le registre et la
 fiche d'un contrôle** rendent chaque rapport (532 lignes pour une année
 chargée, dix ans d'historique sur la fiche). Le registre est borné à l'année ;
-la fiche ne l'est pas — décision de la propriétaire attendue (« des filtres
-plus tard », lot 1a).
+la fiche ne l'est pas — ~~décision de la propriétaire attendue (« des filtres
+plus tard », lot 1a)~~ [2026-10-29, la propriétaire : pas maintenant ; filtres
+par année à envisager, `docs/chantiers-ouverts.md` § 21. La page reste telle
+quelle].
 
 ### Lot 2 — Même traitement pour les autres écrans lourds (M)
 
