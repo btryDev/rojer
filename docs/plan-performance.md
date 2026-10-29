@@ -685,6 +685,13 @@ pendant la bascule, s'il faut chiffrer le réglage du pool.]
 - Appel réseau au serveur Auth Supabase à chaque rendu (Better Auth le remplace).
 - Cache serveur partagé (`use cache` + étiquette par établissement) : son
   stockage dépend de l'hébergement, à concevoir sur Node permanent.
+- [2026-10-29] **Poser `APP_ENV=production`** sur l'application Clever Cloud
+  de prod (`APP_ENV=preview` sur toute préversion). Hors Vercel, sans elle,
+  l'environnement est indéterminé et la réparation automatique du calendrier
+  ne s'exécute pas — sans erreur, un simple avertissement au démarrage
+  (`src/lib/environnement.ts`). Revu au lancement d'un build de prod local ;
+  déjà écrit dans `docs/revues/audit-nextjs-2026-10-14.md` (H5), rappelé ici
+  pour la liste de bascule.
 
 Les lots 1 à 3 restent valables quel que soit l'hébergeur : moins
 d'allers-retours, c'est plus rapide partout.
