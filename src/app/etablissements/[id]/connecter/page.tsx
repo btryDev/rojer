@@ -4,6 +4,7 @@ import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import { BlocConfig } from "@/components/mcp/BlocConfig";
 import { WhyCard } from "@/components/ui-kit";
 import { requireEtablissement } from "@/lib/auth/scope";
+import { SurOrdinateur } from "@/components/layout/SurOrdinateur";
 import { DETAIL_OUTIL_PRODUIT } from "@/components/mcp/outils-produit";
 import { OUTILS_MCP } from "@/lib/mcp/tools";
 
@@ -79,6 +80,7 @@ export default async function ConnecterPage({
         description="Consultez ce dossier depuis un assistant, en lecture seule : il lit vos données, il ne peut rien y modifier."
       />
 
+      <SurOrdinateur raison="La connexion se règle dans l'assistant installé sur votre ordinateur : il faut y coller une configuration.">
       <div className="flex flex-1 flex-col gap-7 bg-[color:var(--board-canvas)] px-[var(--board-gutter)] pt-7 pb-20">
         {/* HERO */}
         <section className="carte-board px-7 py-8 sm:px-8">
@@ -260,6 +262,7 @@ export default async function ConnecterPage({
           </Link>
         </footer>
       </div>
+      </SurOrdinateur>
     </main>
   );
 }

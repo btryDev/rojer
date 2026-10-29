@@ -4,6 +4,7 @@ import { BarreDeListe } from "@/components/ui-kit/BarreDeListe";
 import { LegalBadge, WhyCard } from "@/components/ui-kit";
 import { ImportDuerpWizard } from "@/components/duerps/ImportDuerpWizard";
 import { requireEtablissement } from "@/lib/auth/scope";
+import { SurOrdinateur } from "@/components/layout/SurOrdinateur";
 
 export const metadata = {
   title: "Importer un DUERP existant",
@@ -25,6 +26,7 @@ export default async function ImportDuerpPage({
         description="Si vous avez déjà un DUERP sous Excel, téléversez-le pour démarrer plus vite."
       />
 
+      <SurOrdinateur raison="Votre fichier Excel est sur votre ordinateur, et la vérification des colonnes demande de la largeur.">
       <div className="flex flex-1 flex-col gap-[22px] bg-[color:var(--board-canvas)] px-[var(--board-gutter)] pb-16 pt-6">
         {/* Le chemin du retour : l'en-tête commun n'a plus de fil d'Ariane. */}
         <BarreDeListe
@@ -84,6 +86,7 @@ export default async function ImportDuerpPage({
           </ul>
         </div>
       </div>
+      </SurOrdinateur>
     </main>
   );
 }
