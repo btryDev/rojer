@@ -36,16 +36,18 @@ function actionVersMesure(a: ActionRow) {
 }
 
 /**
- * Le DUERP d'un établissement, sa dernière version et ses unités, lus UNE FOIS
+ * Le DUERP d'un établissement et la date de sa dernière version, lus UNE FOIS
  * par rendu. `null` si l'établissement n'en a pas, ou n'est pas à l'utilisateur.
  *
  * POURQUOI (plan performance, 2026-10-29). Quatre fonctions le lisaient dans
  * le même rendu, chacune sous sa forme : l'échéance de mise à jour annuelle
  * (`calendrier/echeances.ts`, lue par la barre latérale sur chaque écran),
  * l'état du DUERP au tableau de bord (`dashboard/queries.ts`), la couverture
- * (`perimetre/faits.ts`) et `getEtablissement`. Ce chargeur sert l'union de ce
- * qu'elles lisaient : les colonnes du DUERP, sa dernière version (toutes ses
- * colonnes) et ses unités.
+ * (`perimetre/faits.ts`) et `getEtablissement`. Ce chargeur sert ce que la
+ * plupart lisaient : les colonnes du DUERP, le numéro et la date de sa
+ * dernière version. Les unités n'y sont pas — la couverture seule les lit, et
+ * la barre latérale les paierait sur chaque écran : `faitsDeCouverture` les
+ * lit à part.
  *
  * LE TRI EST CELUI QU'ELLES PARTAGEAIENT : le plus récemment modifié d'abord,
  * versions par `numero` décroissant (unique par DUERP, quand `createdAt` peut
@@ -71,8 +73,13 @@ export const duerpDuRendu = cache(async function duerpDuRendu(
     },
     orderBy: { updatedAt: "desc" },
     include: {
-      versions: { orderBy: { numero: "desc" }, take: 1 },
-      unites: true,
+      // Le numéro et la date, seuls lus. Pas le `snapshot` : le document figé
+      // entier, que la barre latérale paierait sur chaque écran pour une date.
+      versions: {
+        orderBy: { numero: "desc" },
+        take: 1,
+        select: { numero: true, createdAt: true },
+      },
     },
   });
 });

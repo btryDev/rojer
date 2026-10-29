@@ -271,7 +271,10 @@ describe("une lecture du repère, jamais mémoïsée (plan performance, 2026-10-
   const source = (f: string) => readFileSync(join(__dirname, f), "utf8");
   const sources = ["fraicheur.ts", "queries.ts"].map(source).join("\n");
 
-  it("le repère n'est sélectionné qu'en un endroit, `lireRepereCalendrier`", () => {
+  // Dans une SESSION. Le serveur MCP garde sa lecture (`mcp/queries.ts`,
+  // `getFraicheurCalendrier`) : sans cookies, il porte la portée dans son
+  // `where`, et ne peut pas appeler `requireUser`.
+  it("dans une session, le repère n'est sélectionné qu'en un endroit, `lireRepereCalendrier`", () => {
     expect(
       sources.match(/select:\s*\{\s*referentielVersionCalendrier:\s*true\s*\}/g),
     ).toHaveLength(1);

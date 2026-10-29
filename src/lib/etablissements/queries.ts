@@ -20,9 +20,10 @@ import { cache } from "react";
  * possiblement AVANT la réparation du calendrier que font le tableau de bord
  * et le calendrier (`regeneration-sure.ts`). La réparation écrit le sceau
  * `referentielVersionCalendrier` — et, par lui, `updatedAt`. Ces deux colonnes
- * se lisent ailleurs : l'âge du calendrier par `fraicheurCalendrier`, la date
- * de mise à jour du registre par sa propre lecture (`registre/queries.ts`).
- * Aucune autre colonne n'est écrite pendant un rendu.
+ * sont donc OMISES de la lecture : l'âge du calendrier se lit par
+ * `fraicheurCalendrier`, la date de mise à jour du registre par sa propre
+ * lecture (`registre/queries.ts`). Aucune autre colonne n'est écrite pendant
+ * un rendu.
  *
  * Clé primitive, portée de la requête HTTP ; hors rendu (action serveur), la
  * lecture se fait à chaque appel. Le résultat est partagé : un appelant ne le
@@ -34,13 +35,17 @@ export const etablissementDuCompteDuRendu = cache(
     return prisma.etablissement.findFirst({
       where: { id, entreprise: { userId: user.id } },
       include: { entreprise: true },
+      // Les deux colonnes que la réparation peut réécrire après cette lecture
+      // (voir ci-dessus) : absentes du type, un lecteur ne peut pas les y
+      // prendre par erreur.
+      omit: { referentielVersionCalendrier: true, updatedAt: true },
     });
   },
 );
 
 /**
  * L'établissement du user, son entreprise et son DUERP (`null` s'il n'en a
- * pas encore), avec la dernière version et les unités de celui-ci.
+ * pas encore), avec le numéro et la date de sa dernière version.
  *
  * Deux lectures partagées, lancées ensemble : l'établissement que la garde
  * d'appartenance a déjà lu (`etablissementDuCompteDuRendu`), et le DUERP du

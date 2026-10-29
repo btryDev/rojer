@@ -65,11 +65,15 @@ export async function faitsDeCouverture(
   // la couverture, bornées par `etab.id`, établi par la lecture ci-dessus.
   const etab = await chargerEtablissementEtParc(etablissementId, user.id);
   if (!etab) return null;
-  const [duerp, nbRetires] = await Promise.all([
-    // Le DUERP du rendu, avec ses unités, partagé avec le tableau de bord et
-    // la barre latérale (plan performance, 2026-10-29) ; portée au compte
-    // dans sa requête.
+  const [duerp, unites, nbRetires] = await Promise.all([
+    // Le DUERP du rendu, partagé avec le tableau de bord et la barre latérale
+    // (plan performance, 2026-10-29) ; portée au compte dans sa requête.
     duerpDuRendu(etab.id),
+    // Ses unités, que la couverture seule lit. « 1 établissement = 1 DUERP »
+    // (`Duerp.etablissementId @unique`) : celles du DUERP de `etab.id`.
+    prisma.uniteTravail.findMany({
+      where: { duerp: { etablissementId: etab.id } },
+    }),
     // Les retirés, comptés à part : ils portent des preuves que le registre
     // imprime (axe `inventaire`, `couverture.ts`).
     // Partagé avec la barre latérale et le tableau de bord (plan
@@ -121,7 +125,7 @@ export async function faitsDeCouverture(
     ? evaluerCouverture({
         secteurId: duerp.referentielSecteurId ?? "",
         reponses: lireReponsesActivites(duerp.reponsesActivitesNonCouvertes),
-        unites: duerp.unites,
+        unites,
       })
     : null;
 
