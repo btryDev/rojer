@@ -392,6 +392,29 @@ propre lecture. Cible indicative : ≤ 25 requêtes par écran.
 
 ### Lot 3 — Afficher tout de suite (S-M)
 
+#### La barre latérale ne retarde plus la page (2026-10-29, `lot/perf-lot3-tableau`)
+
+Trouvé en instruisant le lot 2 : le layout attendait les pastilles et l'état
+des registres (une vingtaine de requêtes) avant de rendre quoi que ce soit —
+sur un chargement complet, la page elle-même attendait derrière. La barre se
+rend désormais sans eux, puis complète (`SidebarAvecPastilles`, sous
+`<Suspense>`, pour le shell d'établissement et le shell DUERP).
+
+| Gros dossier, 1er octet (ms) | main | lot |
+|---|---|---|
+| Tableau de bord | 81 | 58–59 |
+| Calendrier | 53 | 23–36 |
+| Registre | 48 | 19–30 |
+| Équipements | 71 | 27–31 |
+| Équipe | 56 | 26 |
+| Fiche équipement | 44 | 21–27 |
+
+Les temps totaux ne bougent pas (deux mesures, bruit de quelques ms : la
+mesure fait journaliser chaque requête). Les pages DUERP ne gagnent rien :
+`/duerp/[id]` n'a pas de `loading.tsx`, la page bloque le premier envoi —
+c'est le second point du lot (un repli par section). Le HTML grossit de
+≈ 7 Ko bruts (la barre est envoyée sans puis avec ses pastilles).
+
 - Board : le hero et la barre partent d'abord, les widgets arrivent en
   `<Suspense>` par bloc, chacun avec son squelette à sa taille (pas de saut).
 - Un `loading.tsx` par section, à la forme de l'écran (calendrier, listes,

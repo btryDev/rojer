@@ -1,8 +1,6 @@
 import { requireEtablissement } from "@/lib/auth/scope";
-import { AppSidebar } from "@/components/layout/AppSidebar";
 import { BarreCompte } from "@/components/layout/BarreCompte";
-import { chargerSidebarCounts } from "@/lib/navigation/sidebar-counts";
-import { getEtatModules } from "@/lib/etablissements/modules";
+import { SidebarAvecPastilles } from "@/components/layout/SidebarAvecPastilles";
 import { listerEtablissementsDuCompte } from "@/lib/etablissements/queries";
 
 /**
@@ -44,25 +42,15 @@ export default async function EtablissementLayout({
     estERP: etablissement.estERP,
   };
 
-  // Pastilles de la sidebar : même chargement que le shell DUERP, pour
-  // que les deux annoncent les mêmes nombres (ADR-015).
-  //
-  // La fratrie vient avec, pour le sélecteur de la barre haute (ADR-028). Elle
-  // est lue ici et non dans `BarreCompte` : le composant est client, et la
-  // charger depuis le layout la met dans le même aller-retour que le reste.
-  const [counts, modules, fratrie] = await Promise.all([
-    chargerSidebarCounts(id),
-    getEtatModules(id, etab.estERP),
-    listerEtablissementsDuCompte(),
-  ]);
+  // La fratrie, pour le sélecteur de la gélule (ADR-028) : une lecture. Elle
+  // est lue ici et non dans `BarreCompte` : le composant est client.
+  const fratrie = await listerEtablissementsDuCompte();
 
   return (
     <div className="grid min-h-screen grid-cols-1 lg:h-screen lg:grid-cols-[auto_1fr] lg:overflow-hidden">
-      <AppSidebar
-        etablissement={etab}
-        counts={counts}
-        modules={modules}
-      />
+      {/* La barre s'affiche sans attendre ses pastilles, et la page se rend
+          en même temps (plan performance, lot 3, `SidebarAvecPastilles`). */}
+      <SidebarAvecPastilles etablissement={etab} />
       {/* `relative` : la gélule de compte s'y positionne, en haut à droite. */}
       {/* `pt-[var(--reserve-gelule)]` : la place de la gélule, réservée par
           défaut ; un en-tête à fond la reprend (`.sous-la-gelule`). Sans
@@ -81,3 +69,4 @@ export default async function EtablissementLayout({
     </div>
   );
 }
+
