@@ -48,6 +48,14 @@ describe("SidebarAvecPastilles", () => {
     expect(chargeurs.getEtatModules).toHaveBeenCalledWith("e1", true);
   });
 
+  it("l'entrée allumée (shell DUERP) passe à la barre de repli comme à la barre complète", async () => {
+    chargeurs.chargerSidebarCounts.mockResolvedValue({});
+    chargeurs.getEtatModules.mockResolvedValue({});
+    const repli = props(props(SidebarAvecPastilles({ etablissement, active: "duerp" })).fallback);
+    expect(repli.active).toBe("duerp");
+    expect(props(await SidebarComplete({ etablissement, active: "duerp" })).active).toBe("duerp");
+  });
+
   it("une lecture en échec laisse la barre, utilisable et sans pastilles, plutôt que l'écran d'erreur", async () => {
     chargeurs.chargerSidebarCounts.mockRejectedValue(new Error("délai dépassé"));
     chargeurs.getEtatModules.mockResolvedValue({ estERP: true });

@@ -1,15 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
-import { AppSidebar } from "@/components/layout/AppSidebar";
+import { SidebarAvecPastilles } from "@/components/layout/SidebarAvecPastilles";
 import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import { BarreDeListe } from "@/components/ui-kit/BarreDeListe";
 import { BarreCompte } from "@/components/layout/BarreCompte";
 import { getDuerp } from "@/lib/duerps/queries";
 import { getOptionalUser } from "@/lib/auth/require-user";
-import { getEtatModules } from "@/lib/etablissements/modules";
 import { listerEtablissementsDuCompte } from "@/lib/etablissements/queries";
-import { chargerSidebarCounts } from "@/lib/navigation/sidebar-counts";
 import {
   trouverReferentielParId,
   trouverReferentielParNaf,
@@ -38,24 +36,21 @@ export default async function DuerpLayout({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [duerp, user] = await Promise.all([
+  // La fratrie, pour le sélecteur de la gélule (ADR-028), est lue en même
+  // temps : elle ne dépend pas du DUERP.
+  const [duerp, user, fratrie] = await Promise.all([
     getDuerp(id),
     getOptionalUser(),
+    listerEtablissementsDuCompte(),
   ]);
   if (!duerp) notFound();
 
   const etab = duerp.etablissement;
-  // Le DUERP partage la sidebar de l'établissement : sans cet état ni ces
-  // compteurs, registres et pastilles y seraient qualifiés autrement
-  // qu'ailleurs dans le produit — entrer dans le wizard faisait
-  // disparaître les retards (ADR-015).
-  // La fratrie vient avec, pour le sélecteur de la barre haute : le shell DUERP
-  // partage la même barre, donc la même règle (ADR-028).
-  const [modules, counts, fratrie] = await Promise.all([
-    getEtatModules(etab.id, etab.estERP),
-    chargerSidebarCounts(etab.id),
-    listerEtablissementsDuCompte(),
-  ]);
+  // Le DUERP partage la sidebar de l'établissement, pastilles et état des
+  // registres compris (`SidebarAvecPastilles`) : sans eux, entrer dans le
+  // wizard faisait disparaître les retards (ADR-015). Depuis le repli de
+  // chargement (`loading.tsx`), ils ne retardent plus la page (plan
+  // performance, lot 3).
   // Secteur affiché dans le contexte : celui choisi dans le wizard en priorité,
   // sinon suggestion par NAF (même règle que la page secteur elle-même).
   const refChoisi = duerp.referentielSecteurId
@@ -73,17 +68,16 @@ export default async function DuerpLayout({
 
   return (
     <div className="grid min-h-screen grid-cols-1 lg:h-screen lg:grid-cols-[auto_1fr] lg:overflow-hidden">
-      <AppSidebar
+      <SidebarAvecPastilles
         etablissement={{
           id: etab.id,
           raisonDisplay: etab.raisonDisplay,
           adresse: etab.adresse,
           effectifSurSite: etab.effectifSurSite,
           entrepriseId: etab.entrepriseId,
+          estERP: etab.estERP,
         }}
         active="duerp"
-        counts={counts}
-        modules={modules}
       />
 
       {/* `relative` : la gélule de compte s'y positionne, en haut à droite. */}

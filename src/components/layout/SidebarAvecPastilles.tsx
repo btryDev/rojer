@@ -6,6 +6,8 @@ import { chargerSidebarCounts } from "@/lib/navigation/sidebar-counts";
 
 type Props = {
   etablissement: ComponentProps<typeof AppSidebar>["etablissement"] & { estERP: boolean };
+  /** L'entrée allumée, quand le chemin ne la donne pas (le shell DUERP). */
+  active?: ComponentProps<typeof AppSidebar>["active"];
 };
 
 /**
@@ -21,21 +23,20 @@ type Props = {
  * faites. Inerte : aucun panneau ne peut s'ouvrir pendant l'attente, donc le
  * remplacement ne referme rien et ne réordonne rien sous le curseur.
  *
- * Le shell DUERP n'en profite pas encore : sans `loading.tsx` sous
- * `/duerp/[id]`, sa page bloque le premier envoi, et la barre sans pastilles
- * s'y montrerait sans rien faire gagner. Il garde sa lecture attendue — mêmes
- * chargeurs, donc mêmes nombres (ADR-015).
+ * Elle sert le shell d'établissement et, depuis qu'il a son repli de
+ * chargement (`duerp/[id]/loading.tsx`), le shell DUERP : mêmes chargeurs,
+ * donc mêmes nombres (ADR-015).
  */
-export function SidebarAvecPastilles({ etablissement }: Props) {
+export function SidebarAvecPastilles({ etablissement, active }: Props) {
   return (
-    <Suspense fallback={<AppSidebar etablissement={etablissement} enAttente />}>
-      <SidebarComplete etablissement={etablissement} />
+    <Suspense fallback={<AppSidebar etablissement={etablissement} active={active} enAttente />}>
+      <SidebarComplete etablissement={etablissement} active={active} />
     </Suspense>
   );
 }
 
 /** Exporté pour les tests. */
-export async function SidebarComplete({ etablissement }: Props) {
+export async function SidebarComplete({ etablissement, active }: Props) {
   const lues = await lirePastilles(etablissement).catch((erreur: unknown) => {
     // La page est déjà affichée : une lecture de pastille en échec ne doit
     // pas la remplacer par l'écran d'erreur. La barre reste, utilisable, sans
@@ -44,7 +45,12 @@ export async function SidebarComplete({ etablissement }: Props) {
     return null;
   });
   return (
-    <AppSidebar etablissement={etablissement} counts={lues?.counts} modules={lues?.modules} />
+    <AppSidebar
+      etablissement={etablissement}
+      active={active}
+      counts={lues?.counts}
+      modules={lues?.modules}
+    />
   );
 }
 
