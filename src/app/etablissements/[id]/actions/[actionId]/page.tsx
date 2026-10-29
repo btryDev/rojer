@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { DemandeAide } from "@/components/assistance/DemandeAide";
 import { notFound, redirect } from "next/navigation";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, CircleCheck } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import {
   CarteFiche,
@@ -154,6 +154,19 @@ export default async function ActionDetailPage({
         }
         actions={
           <>
+            {/* Sur téléphone, la clôture est sous les faits, un écran et demi
+                plus bas, quand « Supprimer » est ici : le geste attendu
+                remonte en tête (2026-10-29, même motif que le dépôt d'un
+                rapport). */}
+            {estOuverte ? (
+              <a
+                href="#cloturer"
+                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[color:var(--board-ink)] px-5 text-[13.5px] font-semibold text-white md:hidden"
+              >
+                <CircleCheck aria-hidden className="size-4" />
+                {point ? "Marquer comme corrigé" : "Clôturer l'action"}
+              </a>
+            ) : null}
             {corrigeableIci ? (
               <>
                 <Link
@@ -340,7 +353,7 @@ export default async function ActionDetailPage({
         cote={
           estOuverte ? (
             <>
-            <CarteFiche titre={point ? "Marquer comme corrigé" : "Clôturer cette action"}>
+            <CarteFiche id="cloturer" titre={point ? "Marquer comme corrigé" : "Clôturer cette action"}>
               <p className="m-0 mb-4 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                 Décrivez ce qui a été fait et son résultat. Le justificatif
                 reste attaché à la fiche&nbsp;: c&apos;est lui qu&apos;on

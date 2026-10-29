@@ -6,7 +6,7 @@
  * et la navigation suivante le replie.
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 
 const nav = vi.hoisted(() => ({ chemin: "/etablissements/e1/calendrier" }));
 vi.mock("next/navigation", () => ({
@@ -17,6 +17,11 @@ vi.mock("next/navigation", () => ({
 import { AppSidebar } from "./AppSidebar";
 
 afterEach(cleanup);
+
+// Le rail de l'ordinateur. La barre du bas du téléphone est rendue à côté,
+// masquée par CSS que jsdom n'applique pas (`NavigationMobile.test.tsx`).
+const rail = () =>
+  within(screen.getByRole("complementary", { name: "Navigation principale" }));
 
 const ETAB = { id: "e1", raisonDisplay: "Le Comptoir", adresse: "1 rue", effectifSurSite: 4, entrepriseId: "ent-1" };
 const COUNTS = { enRetardTotal: 0, calendrierAMettreAJour: false };
@@ -32,7 +37,7 @@ describe("AppSidebar — repli du panneau", () => {
     render(barre("calendrier"));
     expect(replie()).toBe(true);
 
-    const securite = screen.getByRole("button", { name: /Sécurité/ });
+    const securite = rail().getByRole("button", { name: /Sécurité/ });
     expect(securite.getAttribute("href")).toBeNull();
     fireEvent.click(securite);
     expect(replie()).toBe(false);
@@ -47,7 +52,7 @@ describe("AppSidebar — repli du panneau", () => {
   it("la navigation suivante le replie", () => {
     nav.chemin = "/etablissements/e1/calendrier";
     const { rerender } = render(barre("calendrier"));
-    fireEvent.click(screen.getByRole("button", { name: /Équipement/ }));
+    fireEvent.click(rail().getByRole("button", { name: /Équipement/ }));
     expect(replie()).toBe(false);
     nav.chemin = "/etablissements/e1/registre";
     rerender(barre("registre"));
@@ -57,7 +62,7 @@ describe("AppSidebar — repli du panneau", () => {
   it("le bouton de l'en-tête du panneau le replie", () => {
     nav.chemin = "/etablissements/e1/calendrier";
     render(barre("calendrier"));
-    fireEvent.click(screen.getByRole("button", { name: /Sécurité/ }));
+    fireEvent.click(rail().getByRole("button", { name: /Sécurité/ }));
     expect(replie()).toBe(false);
     fireEvent.click(screen.getByLabelText("Replier le panneau"));
     expect(replie()).toBe(true);

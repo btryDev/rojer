@@ -43,6 +43,7 @@ import { MentionRendezVous } from "@/components/rendez-vous/MentionRendezVous";
 import type { PastilleRendezVous } from "@/lib/rendez-vous/regles";
 import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
 import { useState } from "react";
+import { PastilleEtat } from "./PastilleEtat";
 import { LienProvenance } from "@/components/navigation/LienProvenance";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import type { StatutPeint } from "@/lib/calendrier/etats";
@@ -417,11 +418,11 @@ function CarteEquipement({
         </div>
       </header>
 
-      <div className="px-7 pb-6 pt-[22px]">
+      <div className="px-5 pb-6 pt-[22px] @md:px-7">
         {/* La réduction de la règle : une case par mois, sur toute la
             largeur de la carte — douze cases coincées dans 600 px se
             lisaient mal. */}
-        <div className="grid grid-cols-12 gap-1.5">
+        <div className="grid grid-cols-12 gap-1 @md:gap-1.5">
           {l.mois.map((etat, i) => {
             const mois = i + 1;
             const nb = l.occurrences.filter((o) => o.mois === mois).length;
@@ -460,7 +461,7 @@ function CarteEquipement({
         {/* Le nom des mois n'a de sens qu'ouverte : repliée, la carte
             montre la forme de l'année, pas son détail. */}
         {ouverte ? (
-          <div className="mt-2 grid grid-cols-12 gap-1.5 border-t border-[color:var(--board-slate-line)] pt-2">
+          <div className="mt-2 grid grid-cols-12 gap-1 border-t border-[color:var(--board-slate-line)] pt-2 @md:gap-1.5">
             {MOIS_FR_COURT.map((m, i) => (
               <span
                 key={m}
@@ -536,6 +537,10 @@ function CarteEquipement({
                     </span>
                     {o.statut ? (
                         <BadgeStatut statut={o.statut} />
+                      ) : o.etat === "faite" ? (
+                        // Le contrôle fait (2026-10-29) : « Fait », sans le
+                        // résultat de son rapport — comme la liste par mois.
+                        <PastilleEtat etat="faite" />
                       ) : o.etat === "enRetard" ? (
                         <span className="inline-flex items-center whitespace-nowrap rounded-full bg-[color:var(--board-signal)] px-[13px] py-[6px] text-[12px] font-semibold text-[color:var(--board-signal-ink)]">
                           {libelleEtatCourtCapitale("enRetard")}

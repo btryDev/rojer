@@ -62,8 +62,10 @@ export function CadreEnTete({
       {fond ? (
         <div aria-hidden className="h-1.5 md:hidden" style={{ backgroundColor: fond }} />
       ) : null}
-      <div className="flex min-w-0 flex-col justify-center pb-10 pl-[var(--board-gutter)] pr-[var(--board-gutter)] pt-20 md:py-10 md:pr-12">
-        <h1 className="board-titre m-0 text-[clamp(34px,4vw,50px)] leading-[1.06] tracking-[-0.035em]">
+      {/* Sur téléphone, le titre descend à 30 px : à 34, « Ce qui doit être
+          en place » tenait sur trois lignes. */}
+      <div className="flex min-w-0 flex-col justify-center pb-8 pl-[var(--board-gutter)] pr-[var(--board-gutter)] pt-20 md:py-10 md:pr-12">
+        <h1 className="board-titre m-0 text-[clamp(30px,4vw,50px)] leading-[1.06] tracking-[-0.035em]">
           {titre ?? TITRE_EN_TETE[item] ?? LABEL_ITEM[item]}
         </h1>
         <p className="m-0 mt-3.5 max-w-[46ch] text-[clamp(16px,1.4vw,18px)] leading-[1.55] text-[color:var(--board-slate-ink)]">

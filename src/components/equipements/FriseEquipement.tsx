@@ -19,23 +19,33 @@ import { formaterMoisAnneeFr } from "@/lib/dates";
 const FOND = "var(--board-card)";
 
 /**
- * Aligne l'étiquette d'un jalon selon sa place sur l'axe. Centrée au
- * milieu, calée sur les bords aux extrémités : une étiquette centrée à 0 %
- * déborderait de la carte d'une demi-largeur.
+ * Aligne l'étiquette d'un jalon selon sa place sur l'axe. Sur la moitié
+ * centrale de l'axe, elle est centrée sur son point. Dans le quart de chaque
+ * bord, elle glisse progressivement vers le bord : à 0 % elle est calée à
+ * gauche, à 100 % calée à droite, et entre les deux le recul suit la position.
+ * Une étiquette ne sort donc pas de la carte, sans quitter son point au milieu.
+ *
+ * ~~Centrée au milieu, calée sur les bords sous 6 % et au-delà de 94 %.~~
+ * [2026-10-29 : sur téléphone, « 24 NOV. · VÉRIFICATION » centrée à 88 %
+ * débordait de la carte — le seuil fixe ne tenait que sur une carte large.
+ * Un premier remède faisait reculer l'étiquette de p % partout, et décalait
+ * de son point une étiquette posée au quart (revue du même jour).]
  */
 function ancrage(position: number): {
   style: React.CSSProperties;
   classe: string;
 } {
-  if (position <= 0.06) {
-    return { style: { left: "0%" }, classe: "items-start text-left" };
-  }
-  if (position >= 0.94) {
-    return { style: { right: "0%" }, classe: "items-end text-right" };
-  }
+  const p = Math.min(1, Math.max(0, position));
+  // 0 → 0 %, 0,25 → 50 %, 0,75 → 50 %, 1 → 100 %.
+  const recul = p < 0.25 ? p * 200 : p > 0.75 ? 50 + (p - 0.75) * 200 : 50;
   return {
-    style: { left: `${position * 100}%`, transform: "translateX(-50%)" },
-    classe: "items-center text-center",
+    style: { left: `${p * 100}%`, transform: `translateX(-${recul}%)` },
+    classe:
+      recul < 25
+        ? "items-start text-left"
+        : recul > 75
+          ? "items-end text-right"
+          : "items-center text-center",
   };
 }
 

@@ -390,7 +390,7 @@ export default async function RegistrePage({
                       className="flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-[color:var(--board-slate-line)] py-3.5 first:border-t-0 first:pt-0"
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="m-0 truncate text-[14px] font-semibold leading-[1.3] tracking-[-0.015em] text-[color:var(--board-ink)]">
+                        <p className="m-0 text-[14px] max-md:line-clamp-2 md:truncate font-semibold leading-[1.3] tracking-[-0.015em] text-[color:var(--board-ink)]">
                           {r.verification.libelleObligation}
                         </p>
                         <p className="m-0 mt-1 truncate text-[12.5px] text-[color:var(--board-slate-mid)]">

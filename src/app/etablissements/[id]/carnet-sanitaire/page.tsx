@@ -1,3 +1,4 @@
+import { ChevronRepli, LIEN_REPLI } from "@/components/ui/repli";
 import { DemandeAide } from "@/components/assistance/DemandeAide";
 import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import {
@@ -181,7 +182,7 @@ export default async function CarnetSanitairePage({
             qui les sépare est plein : le board n'a pas de pointillé, il
             sépare par un trait ou pas du tout. */}
         {carnet && (
-          <div className="carte-board grid grid-cols-2 divide-x divide-[color:var(--board-slate-line)] sm:grid-cols-4">
+          <div className="carte-board grid grid-cols-2 [&>*]:border-[color:var(--board-slate-line)] max-sm:[&>*:nth-child(even)]:border-l max-sm:[&>*:nth-child(n+3)]:border-t sm:grid-cols-4 sm:[&>*+*]:border-l">
             <Stat label="Points de relevé" value={nbPoints} />
             <Stat label="Relevés enregistrés" value={nbReleves} />
             <Stat
@@ -215,7 +216,7 @@ export default async function CarnetSanitairePage({
           <header className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-                01 · Points de relevé
+                Points de relevé
               </p>
               <h2 className="board-titre m-0 mt-1.5 text-[22px]">
                 Vos installations
@@ -246,7 +247,7 @@ export default async function CarnetSanitairePage({
                 const etat = etatDernierReleve(dernier, now);
                 return (
                   <li key={p.id} className="carte-board">
-                    <div className="flex flex-wrap items-start justify-between gap-3 px-7 pb-3 pt-6 sm:px-8">
+                    <div className="flex flex-wrap items-start justify-between gap-3 px-5 pb-3 pt-6 sm:px-8">
                       <div>
                         <p className="m-0 text-[16px] font-semibold leading-[1.3] tracking-[-0.01em] text-[color:var(--board-ink)]">
                           {p.nom}
@@ -286,7 +287,7 @@ export default async function CarnetSanitairePage({
                                 accompli. La mesure porte l'encre courante ;
                                 seul l'écart prend le signal. */}
                             <p
-                              className="m-0 font-mono text-[22px] font-semibold tabular-nums"
+                              className="board-titre m-0 text-[24px] tabular-nums"
                               style={{
                                 // L'écart reste visible sur un relevé ancien :
                                 // c'est un fait de cette mesure, que la
@@ -319,7 +320,7 @@ export default async function CarnetSanitairePage({
                       </div>
                     </div>
 
-                    <div className="px-7 pb-5 sm:px-8">
+                    <div className="px-5 pb-5 sm:px-8">
                       <GraphTemperatures
                         releves={p.releves}
                         seuilMinCelsius={p.seuilMinCelsius}
@@ -327,7 +328,7 @@ export default async function CarnetSanitairePage({
                       />
                     </div>
 
-                    <div className="border-t border-[color:var(--board-slate-line)] px-7 py-5 sm:px-8">
+                    <div className="border-t border-[color:var(--board-slate-line)] px-5 py-5 sm:px-8">
                       <AjoutReleveForm
                         etablissementId={id}
                         pointReleveId={p.id}
@@ -341,8 +342,9 @@ export default async function CarnetSanitairePage({
                         relevé bloquait « À jour » au tableau de bord pour
                         toujours. Les relevés listés sont ceux du graphique. */}
                     {p.releves.length > 0 && (
-                      <details className="border-t border-[color:var(--board-slate-line)] px-7 py-4 sm:px-8">
-                        <summary className="cursor-pointer text-[12.5px] font-medium text-[color:var(--board-slate-mid)]">
+                      <details className="group border-t border-[color:var(--board-slate-line)] px-5 py-4 sm:px-8">
+                        <summary className={LIEN_REPLI}>
+                          <ChevronRepli />
                           Relevés du graphique ({p.releves.length}) : corriger, supprimer
                         </summary>
                         <ul className="m-0 mt-3 flex list-none flex-col gap-2 p-0">
@@ -380,7 +382,7 @@ export default async function CarnetSanitairePage({
                       </details>
                     )}
 
-                    <div className="flex flex-wrap items-start gap-x-5 gap-y-2 border-t border-[color:var(--board-slate-line)] px-7 py-4 sm:px-8">
+                    <div className="flex flex-wrap items-start gap-x-5 gap-y-2 border-t border-[color:var(--board-slate-line)] px-5 py-4 sm:px-8">
                       <AjoutPointReleveForm
                         etablissementId={id}
                         batiments={batiments}
@@ -415,7 +417,7 @@ export default async function CarnetSanitairePage({
           <header className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-                02 · Analyses légionelles
+                Analyses légionelles
               </p>
               <h2 className="board-titre m-0 mt-1.5 text-[22px]">
                 Prélèvements et résultats laboratoire
@@ -451,7 +453,7 @@ export default async function CarnetSanitairePage({
           ) : (
             <ul className="m-0 flex list-none flex-col gap-3 p-0">
               {carnet.analyses.map((a) => (
-                <li key={a.id} className="carte-board px-7 py-6 sm:px-8">
+                <li key={a.id} className="carte-board px-5 py-6 sm:px-8">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p className="m-0 text-[16px] font-semibold leading-[1.3] tracking-[-0.01em] text-[color:var(--board-ink)]">
@@ -485,7 +487,7 @@ export default async function CarnetSanitairePage({
                     <div className="flex flex-col items-end gap-1.5">
                       {a.valeurUfcParL !== null && (
                         <p
-                          className="m-0 font-mono text-[22px] font-semibold tabular-nums"
+                          className="board-titre m-0 text-[24px] tabular-nums"
                           style={{
                             color:
                               resultatAnalyse(a.valeurUfcParL) === "limite_atteinte"
@@ -580,8 +582,8 @@ function Stat({
         className={
           (mono
             ? "m-0 mt-1.5 font-mono text-[15px] "
-            : "m-0 mt-1.5 text-[24px] ") +
-          "font-semibold tabular-nums"
+            : "board-titre m-0 mt-1.5 text-[26px] ") +
+          "tabular-nums"
         }
         style={{
           color: mention ? "var(--board-signal-ink)" : "var(--board-ink)",

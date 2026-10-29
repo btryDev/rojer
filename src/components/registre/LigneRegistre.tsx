@@ -28,15 +28,17 @@ export function LigneRegistre({
   return (
     <Link
       href={href}
-      className="-mx-3 flex items-center gap-4 rounded-[20px] px-3 py-3 transition-colors hover:bg-[color:var(--board-slate-pale)]"
+      // Sur téléphone, la pastille passe sous le titre : à côté, elle
+      // coupait « Renseignements généraux » à « Renseignements… ».
+      className="-mx-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1.5 rounded-[20px] px-3 py-3 transition-colors hover:bg-[color:var(--board-slate-pale)] md:flex md:gap-4"
     >
-      <span className="min-w-0 flex-1 truncate text-[14.5px] font-semibold leading-[1.3] tracking-[-0.015em] text-[color:var(--board-ink)]">
+      <span className="min-w-0 flex-1 text-[14.5px] max-md:line-clamp-2 md:truncate font-semibold leading-[1.3] tracking-[-0.015em] text-[color:var(--board-ink)]">
         {titre}
       </span>
-      <PastilleCompletude completude={completude} className="flex-none" />
+      <PastilleCompletude completude={completude} className="flex-none max-md:col-start-1 max-md:row-start-2 max-md:justify-self-start" />
       <ChevronRight
         aria-hidden
-        className="size-4 flex-none text-[color:var(--board-slate-soft)]"
+        className="size-4 flex-none text-[color:var(--board-slate-soft)] max-md:col-start-2 max-md:row-span-2 max-md:row-start-1"
       />
     </Link>
   );
@@ -60,7 +62,7 @@ export function PartieRegistre({
   children: React.ReactNode;
 }) {
   return (
-    <section className="carte-board px-7 py-6 sm:px-8">
+    <section className="carte-board px-5 py-6 sm:px-8">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <span className="board-eyebrow m-0 text-[10.5px] tabular-nums tracking-[0.18em] text-[color:var(--board-slate-soft)]">
           {numero}

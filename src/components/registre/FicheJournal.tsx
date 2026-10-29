@@ -75,11 +75,11 @@ export function FicheJournal({
         </p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[34rem] border-collapse text-[13.5px]">
+          <table className="tableau-en-cartes w-full md:min-w-[34rem] border-collapse text-[13.5px]">
             <caption className="sr-only">
               Lignes consignées, la plus récemment saisie en premier.
             </caption>
-            <thead>
+            <thead className="max-md:sr-only">
               <tr className="border-b border-[color:var(--board-slate-line)] text-left">
                 {colonnes.map((c) => (
                   <th
@@ -103,6 +103,7 @@ export function FicheJournal({
                     {colonnes.map((c, i) => (
                       <td
                         key={c.cle}
+                        data-label={c.libelle}
                         className="py-2.5 pr-4 leading-[1.55] text-[color:var(--board-slate-ink)] last:pr-0"
                       >
                         {afficherValeur(ligne.valeurs[c.cle], c)}

@@ -36,6 +36,7 @@ import {
   libelleTotalAnnee,
 } from "@/lib/calendrier/labels";
 import { SectionMois } from "./SectionMois";
+import { ListeLignes, MoisTelephone, type LigneSection } from "./MoisTelephone";
 import { ecrireLecture, lectureDesParams } from "./SelecteurLecture";
 
 export type SectionMoisData = {
@@ -46,7 +47,9 @@ export type SectionMoisData = {
   nbEnRetard: number;
   /** Lignes du mois qu'aucune barre ne place (`datable`). */
   nbSansDate: number;
-  contenu: React.ReactNode;
+  /** Les lignes une par une : la carte du mois les empile, la grille du
+   *  téléphone les range sous leur jour. */
+  lignes: LigneSection[];
 };
 
 /** Une année de la règle : douze mois, présents ou vides. Vit avec la
@@ -64,6 +67,7 @@ export function AnneeCalendrier({
   sections,
   moisInitial,
   cleMoisCourant,
+  cleAujourdhui,
   commandes,
   parEquipement,
 }: {
@@ -92,6 +96,9 @@ export function AnneeCalendrier({
   moisInitial: string | null;
   /** Clé `AAAA-MM` du mois d'aujourd'hui — la charnière de la liste. */
   cleMoisCourant: string;
+  /** Clé `AAAA-MM-JJ` d'aujourd'hui — le jour ouvert dans la grille du
+   *  téléphone. */
+  cleAujourdhui: string;
   /**
    * Bascule de lecture, filtres, aide — le bout droit de la barre de
    * réglage. Ils règlent ce que les deux lectures montrent, donc ils
@@ -301,9 +308,41 @@ export function AnneeCalendrier({
           l'index, et par équipement chaque carte porte déjà son année en
           réduction : la grande au-dessus ferait deux fois le même dessin.
           La marge haute négative soude la mesure à la barre. */}
+      {/* Sur téléphone, la lecture par mois est une grille à points et la
+          liste du jour touché (décision 4A, 2026-10-29) ; la règle et les
+          cartes de mois restent à l'ordinateur. Mêmes lignes des deux côtés. */}
+      {lecture === "mois" ? (
+        <div className="md:hidden">
+          <MoisTelephone
+            mois={[
+              // Les années révolues comptent leurs retards comme la couture
+              // de l'ordinateur et l'anneau du tableau de bord : sans date
+              // compris (`retardSansDate`).
+              ...moisAnterieursEnRetard.map((m) => ({
+                m,
+                nbEnRetard: m.enRetard + (m.retardSansDate ?? 0),
+              })),
+              ...regle.mois.map((m) => ({
+                m,
+                nbEnRetard: sectionsParCle.get(m.cle)?.nbEnRetard ?? 0,
+              })),
+            ].map(({ m, nbEnRetard }) => {
+              const s = sectionsParCle.get(m.cle);
+              return {
+                cle: m.cle,
+                titre: s?.titre ?? m.labelLong,
+                lignes: s?.lignes ?? [],
+                nbEnRetard,
+              };
+            })}
+            moisInitial={moisInitial}
+            cleAujourdhui={cleAujourdhui}
+          />
+        </div>
+      ) : null}
       <div
         className={
-          "-mt-5 flex flex-col gap-5 " + (lecture === "mois" ? "" : "hidden")
+          "-mt-5 hidden flex-col gap-5" + (lecture === "mois" ? " md:flex" : "")
         }
       >
         <RegleAnnuelle
@@ -658,7 +697,7 @@ function SectionMoisControlee({
       onToggle={onToggle}
       ancre={ancreDuMois(data.cle)}
     >
-      {data.contenu}
+      <ListeLignes lignes={data.lignes} />
     </SectionMois>
   );
 }

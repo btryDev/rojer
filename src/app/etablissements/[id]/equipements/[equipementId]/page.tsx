@@ -10,7 +10,7 @@ import { controlesPourUnPoint, listerPointsDeLEquipement } from "@/lib/points-a-
 import { LIBELLE_POINTS, nombreDePoints } from "@/lib/points-a-corriger/libelles";
 import { creerPointACorriger } from "@/lib/actions/plan";
 import { notFound } from "next/navigation";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, ListTodo } from "lucide-react";
 import {
   AideEcran,
   CarteFiche,
@@ -380,6 +380,19 @@ export default async function EquipementDetailPage({
           }
           actions={
             <>
+              {/* Sur téléphone, « À faire » est sous les faits, les photos et
+                  les documents — quatre écrans plus bas. L'ordre reste celui
+                  de la charte (les faits d'abord, `CorpsFiche`) ; ce raccourci
+                  mène au geste attendu (2026-10-29). */}
+              {aFaire.length > 0 ? (
+                <a
+                  href="#a-faire"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[color:var(--board-ink)] px-5 text-[13.5px] font-semibold text-white md:hidden"
+                >
+                  <ListTodo aria-hidden className="size-4" />
+                  À faire ({aFaire.length})
+                </a>
+              ) : null}
               {/* Les articles qui fondent les vérifications se lisent une
                   fois, pas à chaque ouverture de la fiche : ils passent
                   derrière le « ? », le même objet que celui du calendrier. */}
@@ -694,6 +707,7 @@ export default async function EquipementDetailPage({
         cote={
           <>
             <CarteFiche
+              id="a-faire"
               titre="À faire"
               droite={
                 aFaire.length > 0 ? (

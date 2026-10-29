@@ -196,8 +196,11 @@ export default async function PlanActionsPage({
           }
         />
         {/* Indicateurs */}
-        <section className="carte-board px-7 py-6 sm:px-8">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        {/* Sur téléphone, deux par rang, « À couvrir » en tête sur toute la
+            largeur : un par rang, les cinq compteurs prenaient un écran
+            entier avant la première action (2026-10-29). */}
+        <section className="carte-board px-5 py-5 sm:px-8 sm:py-6">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-5 max-lg:[&>*:first-child]:col-span-2">
             <Compteur legende="À couvrir" valeur={compteurs.totalACouvrir} />
             <Compteur legende="En cours" valeur={compteurs.enCours} />
             <Compteur legende="En retard" valeur={compteurs.enRetard} alerte />
@@ -279,7 +282,10 @@ export default async function PlanActionsPage({
                 // `first:` doit désigner la première ligne de la liste.
                 <li
                   key={a.id}
-                  className="flex items-start justify-between gap-4 border-t border-[color:var(--board-slate-line)] px-7 py-5 first:border-t-0 sm:px-8"
+                  // Sur téléphone, le statut et « Détail » passent sous le
+                  // texte : à côté, ils réduisaient le titre à une colonne
+                  // de 150 px.
+                  className="flex items-start justify-between gap-4 border-t border-[color:var(--board-slate-line)] px-5 py-5 first:border-t-0 max-md:flex-col max-md:gap-3 sm:px-8"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="m-0 text-[16px] font-semibold leading-[1.3] tracking-[-0.01em] text-[color:var(--board-ink)]">
@@ -319,8 +325,8 @@ export default async function PlanActionsPage({
                       className="mt-1.5"
                     />
                   </div>
-                  <div className="flex flex-none flex-col items-end gap-2">
-                    <div className="flex flex-wrap items-center justify-end gap-2">
+                  <div className="flex flex-none flex-col items-end gap-2 max-md:w-full max-md:flex-row max-md:items-center max-md:justify-between">
+                    <div className="flex flex-wrap items-center justify-end gap-2 max-md:justify-start">
                       <BadgeStatutAction statut={a.statut} />
                       {/* Le retard s'ajoute au statut, il ne le remplace
                           pas — et il dit le nombre de jours, que personne
