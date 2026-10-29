@@ -18,7 +18,10 @@
 // diverger, et chacune choisit explicitement le périmètre qu'elle annonce
 // (ADR-015).
 
-import { compterEtatCalendrier } from "./queries";
+import {
+  compterEtatCalendrier,
+  compterEtatCalendrierDeLaPage,
+} from "./queries";
 import {
   FAMILLE_DE_TYPE,
   TYPES_VERIFICATION,
@@ -189,9 +192,15 @@ export async function compterEtatEcheances(
   filtres: { batimentId?: string } = {},
 ): Promise<EtatEcheances> {
   const [etat, autresTous] = await Promise.all([
-    compterEtatCalendrier(etablissementId, now, {
-      batimentId: filtres.batimentId,
-    }),
+    // [2026-10-29, plan performance] Sans filtre de zone, les lignes que la
+    // page partage avec ses pastilles par appareil et son compte de lignes
+    // (`lignesDuDossierDeLaPage`). Le tableau de bord, seul appelant, répare
+    // le calendrier avant de lire ; la barre latérale ne passe pas par ici.
+    filtres.batimentId
+      ? compterEtatCalendrier(etablissementId, now, {
+          batimentId: filtres.batimentId,
+        })
+      : compterEtatCalendrierDeLaPage(etablissementId, now),
     listerAutresEcheances(etablissementId, now),
   ]);
   const autres = filtrerParBatiment(autresTous, filtres.batimentId);
@@ -207,11 +216,19 @@ export async function compterEtatEcheances(
 /**
  * Les seuls retards — ce que lit la sidebar, qui n'a pas de fenêtre à
  * annoncer.
+ *
+ * SA PROPRE LECTURE DES LIGNES (`compterEtatCalendrier`), jamais celle de la
+ * page : la barre est rendue par le layout, EN PARALLÈLE de la page qui
+ * répare le calendrier avant de lire. Partager servirait à la page les lignes
+ * d'avant la réparation (`lignes-de-la-page.test.ts`).
  */
 export async function compterEnRetardParFamille(
   etablissementId: string,
   now: Date = new Date(),
 ): Promise<RetardsParFamille> {
-  const { retards } = await compterEtatEcheances(etablissementId, now);
-  return retards;
+  const [etat, autres] = await Promise.all([
+    compterEtatCalendrier(etablissementId, now),
+    listerAutresEcheances(etablissementId, now),
+  ]);
+  return repartirRetards(autres, etat.enRetardParType);
 }

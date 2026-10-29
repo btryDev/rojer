@@ -1,4 +1,6 @@
 import "server-only";
+import { cache } from "react";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { obligationParId } from "@/lib/referentiels/conformite";
@@ -160,6 +162,81 @@ export async function getVerification(id: string) {
 }
 
 /**
+ * Les colonnes d'une ligne que lisent l'état du calendrier et les pastilles
+ * par appareil — l'union de ce que lisaient leurs deux lectures.
+ *
+ * `archiveLe` porte l'archivage depuis l'ADR-034 (N3) : `repartirVerifications`
+ * en a besoin pour ne pas compter en retard une ligne dont l'obligation ne
+ * s'applique plus. Le libellé, lui, n'est plus qu'un texte d'affichage — il ne
+ * décide plus rien ; c'est `archiveLe` qui ne se retire pas sous peine de
+ * rouvrir le défaut. Requis dans `VerificationDatee`, l'oubli ne compile pas.
+ */
+const SELECT_LIGNE_COMPTEE = {
+  id: true,
+  statut: true,
+  datePrevue: true,
+  // Le rythme, requis par les prédicats : un statut réalisé ne purge que sur
+  // une obligation sans rendez-vous suivant.
+  periodicite: true,
+  archiveLe: true,
+  graceJusquAu: true,
+  libelleObligation: true,
+  // Le porteur, pour ventiler par famille (ADR-016) : une ligne à porteur
+  // salarié est un titre, pas un contrôle d'appareil.
+  salarieId: true,
+  // L'appareil, pour les pastilles par équipement.
+  equipementId: true,
+  // L'obligation, pour le prédicat « retenue par prudence » (D1 (a)).
+  obligationId: true,
+  // La prescription : une ligne qu'une autorité rythme n'est jamais prudente
+  // (revue indépendante du lot 3).
+  prescriptionId: true,
+} as const satisfies Prisma.VerificationSelect;
+
+/**
+ * Toutes les lignes de suivi du dossier, avec leur dernière réalisation, lues
+ * UNE FOIS par rendu — POUR LA PAGE SEULEMENT (plan performance, 2026-10-29).
+ *
+ * Le tableau de bord les lisait trois fois, sous la même forme et sans autre
+ * filtre que la portée : l'état du calendrier (`compterEtatCalendrierDeLaPage`),
+ * les pastilles par appareil (`compterVerifsParEquipement`) et le nombre de
+ * lignes (`compterVerificationsDuDossier`).
+ *
+ * JAMAIS DEPUIS UN LAYOUT. Le layout est rendu EN PARALLÈLE de la page, qui
+ * répare le calendrier avant de lire (`regeneration-sure.ts`) : une lecture
+ * partagée entre les deux servirait à la page les lignes d'avant la
+ * réparation — le défaut retiré au lot 1 (`navigation/sidebar-counts.ts`).
+ * La barre latérale garde donc sa lecture (`compterEtatCalendrier`), et
+ * `lignes-de-la-page.test.ts` refuse qu'un layout atteigne celle-ci, par un
+ * appel ou par un composant. Dans la page, la garde de
+ * `fraicheur-sorties.test.ts` interdit déjà de la lancer avant la réparation :
+ * elle lit la table.
+ *
+ * Clé primitive, portée de la requête HTTP ; le résultat est partagé : un
+ * appelant ne le modifie pas.
+ */
+export const lignesDuDossierDeLaPage = cache(
+  async function lignesDuDossierDeLaPage(etablissementId: string) {
+    const user = await requireUser();
+    const [lignes, dernieres] = await Promise.all([
+      prisma.verification.findMany({
+        where: {
+          etablissementId,
+          etablissement: { entreprise: { userId: user.id } },
+        },
+        select: SELECT_LIGNE_COMPTEE,
+      }),
+      dernieresRealisationsDeLEtablissement(etablissementId),
+    ]);
+    return projeterDernieresRealisations(lignes, dernieres);
+  },
+);
+
+export type LigneComptee = Awaited<
+  ReturnType<typeof lignesDuDossierDeLaPage>
+>[number];
+
+/**
  * Agrégats pour l'en-tête du calendrier et le tableau de bord :
  *  - `enRetard`     : échéance passée sans réalisation
  *  - `aPlanifier`   : sans date convenue, mais pas encore en retard
@@ -177,6 +254,11 @@ export async function getVerification(id: string) {
  *
  * Une seule lecture, trois colonnes : moins coûteux que les quatre
  * `count` qu'elle remplace, et exact par construction.
+ *
+ * [2026-10-29, plan performance] Lue par sa propre requête : c'est ce que
+ * lisent la barre latérale, le calendrier et le tableau de bord filtré par
+ * zone. La page du tableau de bord, sans filtre, passe par
+ * `compterEtatCalendrierDeLaPage`, sur les lignes qu'elle partage.
  */
 export async function compterEtatCalendrier(
   etablissementId: string,
@@ -202,43 +284,45 @@ export async function compterEtatCalendrier(
         },
         porteeBatiment(filtres.batimentId),
       ),
-      // `archiveLe` porte l'archivage depuis l'ADR-034 (N3) :
-      // `repartirVerifications` en a besoin pour ne pas compter en retard une
-      // ligne dont l'obligation ne s'applique plus. Le libellé, lui, n'est plus
-      // qu'un texte d'affichage — il ne décide plus rien, et l'oublier ici ne
-      // fausserait plus aucun compte ; c'est `archiveLe` qui ne se sélectionne
-      // pas sous peine de rouvrir le défaut. Requis dans `VerificationDatee`,
-      // l'oubli ne compile pas.
-      select: {
-        id: true,
-        statut: true,
-        datePrevue: true,
-        // Le rythme, requis par les prédicats : un statut réalisé ne purge
-        // que sur une obligation sans rendez-vous suivant.
-        periodicite: true,
-        archiveLe: true,
-        graceJusquAu: true,
-        libelleObligation: true,
-        // Le porteur, pour ventiler par famille (ADR-016) : une ligne à
-        // porteur salarié est un titre, pas un contrôle d'appareil.
-        salarieId: true,
-        // L'obligation, pour le prédicat « retenue par prudence » (D1 (a)).
-        obligationId: true,
-        // La prescription : une ligne qu'une autorité rythme n'est jamais
-        // prudente (revue indépendante du lot 3).
-        prescriptionId: true,
-      },
+      select: SELECT_LIGNE_COMPTEE,
     }),
     marquesAConfirmerDuRendu(etablissementId),
     // En parallèle des lignes : la barre latérale passe ici sur chaque écran.
     dernieresRealisationsDeLEtablissement(etablissementId),
   ]);
-  const verifs = projeterDernieresRealisations(lignes, dernieres);
+  return etatDesLignes(
+    projeterDernieresRealisations(lignes, dernieres),
+    now,
+    marques.parObligation,
+  );
+}
 
+/**
+ * Le même état, sur les lignes que la page partage
+ * (`lignesDuDossierDeLaPage`) : tout le dossier, sans filtre de zone.
+ * Réservé aux pages qui ont réparé le calendrier avant de lire.
+ */
+export async function compterEtatCalendrierDeLaPage(
+  etablissementId: string,
+  now: Date,
+) {
+  const [verifs, marques] = await Promise.all([
+    lignesDuDossierDeLaPage(etablissementId),
+    marquesAConfirmerDuRendu(etablissementId),
+  ]);
+  return etatDesLignes(verifs, now, marques.parObligation);
+}
+
+/** Le calcul des deux lecteurs ci-dessus, sans base. */
+function etatDesLignes(
+  verifs: LigneComptee[],
+  now: Date,
+  marquesParObligation: Parameters<typeof retenueParPrudence>[0],
+) {
   const etat = repartirVerifications(
     verifs,
     now,
-    retenueParPrudence(marques.parObligation),
+    retenueParPrudence(marquesParObligation),
   );
   return {
     enRetard: etat.enRetard.length,
@@ -331,10 +415,9 @@ export async function calendrierDesynchronise(
  * 2026-10-14, B6 — la page le comptait elle-même).
  */
 export async function compterVerificationsDuDossier(etablissementId: string) {
-  const user = await requireUser();
-  return prisma.verification.count({
-    where: { etablissementId, etablissement: { entreprise: { userId: user.id } } },
-  });
+  // Les lignes que la page partage (plan performance, 2026-10-29) : le compte
+  // est leur nombre, sans requête de plus.
+  return (await lignesDuDossierDeLaPage(etablissementId)).length;
 }
 
 /**
