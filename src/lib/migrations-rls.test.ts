@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { readdirSync, readFileSync } from "node:fs";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+
+import {
+  MOTIFS_TABLES,
+  NOM,
+  lireMigrations,
+  sansCommentaires,
+  type EvenementTable,
+} from "./migrations-lecture";
 
 /**
  * Toute table vivante de `public` a la RLS activée.
@@ -20,56 +25,14 @@ import { fileURLToPath } from "node:url";
  * aucune base.
  */
 
-const RACINE = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const DOSSIER_MIGRATIONS = join(RACINE, "prisma", "migrations");
-
-/** Contenu de chaque migration.sql, trié par nom de dossier (donc chronologiquement). */
-function lireMigrations(): { nom: string; sql: string }[] {
-  return readdirSync(DOSSIER_MIGRATIONS, { withFileTypes: true })
-    .filter((e) => e.isDirectory())
-    .map((e) => e.name)
-    .sort()
-    .map((nom) => ({
-      nom,
-      sql: readFileSync(join(DOSSIER_MIGRATIONS, nom, "migration.sql"), "utf8"),
-    }));
-}
-
-/**
- * Retire les commentaires `--` et `/* … *\/` : une ligne ENABLE commentée ne
- * doit pas compter, ni un CREATE TABLE cité dans une explication.
- */
-function sansCommentaires(sql: string): string {
-  return sql.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/--[^\n]*/g, " ");
-}
-
-/** `"X"`, `public."X"` ou `"public"."X"` → `X`. Les autres schémas sont écartés. */
-const NOM = String.raw`(?:(?:"public"|public)\.)?"([^"]+)"`;
-
-type Evenement =
-  | { type: "creation"; table: string }
-  | { type: "suppression"; table: string }
-  | { type: "renommage"; de: string; vers: string }
-  | { type: "rls"; table: string; active: boolean };
+type Evenement = EvenementTable | { type: "rls"; table: string; active: boolean };
 
 /** Les instructions qui comptent, dans l'ordre où elles apparaissent dans le fichier. */
 function evenements(sql: string): Evenement[] {
+  // La vie des tables est lue par `migrations-lecture.ts`, que la garde des
+  // index partage ; seule la RLS est propre à cette garde.
   const motifs: { re: RegExp; lire: (m: RegExpExecArray) => Evenement }[] = [
-    {
-      re: new RegExp(String.raw`\bCREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?${NOM}`, "gi"),
-      lire: (m) => ({ type: "creation", table: m[1] }),
-    },
-    {
-      re: new RegExp(String.raw`\bDROP\s+TABLE\s+(?:IF\s+EXISTS\s+)?${NOM}`, "gi"),
-      lire: (m) => ({ type: "suppression", table: m[1] }),
-    },
-    {
-      re: new RegExp(
-        String.raw`\bALTER\s+TABLE\s+(?:IF\s+EXISTS\s+)?(?:ONLY\s+)?${NOM}\s+RENAME\s+TO\s+"([^"]+)"`,
-        "gi",
-      ),
-      lire: (m) => ({ type: "renommage", de: m[1], vers: m[2] }),
-    },
+    ...MOTIFS_TABLES,
     {
       re: new RegExp(
         String.raw`\bALTER\s+TABLE\s+(?:IF\s+EXISTS\s+)?(?:ONLY\s+)?${NOM}\s+(ENABLE|DISABLE)\s+ROW\s+LEVEL\s+SECURITY`,

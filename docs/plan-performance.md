@@ -305,15 +305,19 @@ Fait :
   par affichage du tableau de bord — `composantesCiviles`, un
   `Intl.formatToParts` par appel, deux par `instantCivil`, trois par
   `debutDuJour`. Le décalage de Paris est désormais lu une fois par heure UTC
-  (les changements d'heure tombent à 01:00 UTC pile depuis 1981) et les
-  composantes en dérivent par l'arithmétique UTC. Résultat identique à une
-  référence `Intl` écrite dans le test : chacun des 438 changements d'heure
-  de 1981 à 2199 est retrouvé par dichotomie et tombe sur une heure UTC
-  pleine, puis le calcul est comparé minute par minute sur ± 2 h autour de
-  chacun, aux bornes et sur 20 000 instants distincts
-  (`composantes-rapides.test.ts`, éprouvé en faussant le décalage : rouge).
-  Mémoire à deux générations, bornée. Le sceau du moteur est recopié sans
-  incrément : aucun dossier régénéré.
+  ~~(les changements d'heure tombent à 01:00 UTC pile depuis 1981)~~
+  [2026-10-29, `/simplify` : une heure n'est mémorisée que si le décalage y
+  est le même au début et à la fin ; sinon, lecture `Intl` — aucune hypothèse
+  sur les données de fuseau] et les composantes en dérivent par
+  l'arithmétique UTC. Résultat identique à une référence `Intl` écrite dans
+  le test : ~~chacun des 438 changements d'heure de 1981 à 2199~~ [2026-10-29 :
+  chacun des changements de 1900 à 2300, dont d'anciens hors des heures
+  pleines (1911)] est retrouvé dans les données de fuseau, puis le calcul est
+  comparé autour de chacun, et sur 20 000 instants distincts de l'an 900 à
+  10 100 (`composantes-rapides.test.ts`, éprouvé en faussant le décalage puis
+  en retirant la vérification de l'heure : rouge). Mémoire à deux
+  générations, bornée, précédée de la dernière heure lue. Le sceau du moteur
+  est recopié sans incrément : aucun dossier régénéré.
 - **Dernière réalisation** (`rapports/joindre-realisations.ts`, lue sur chaque
   écran par la barre latérale) : le `DISTINCT ON` lisait et triait TOUT
   l'historique (≈ 12 ms à dix ans, linéaire en années). Une descente d'index
@@ -333,7 +337,17 @@ Fait :
   vaut pour toute migration à venir : `migrations-index.test.ts` refuse un
   index ordinaire sur une table existante, un `DROP INDEX` ordinaire, et un
   `CONCURRENTLY` accompagné (éprouvé en remettant l'ancienne migration :
-  rouge).
+  rouge). [2026-10-29, `/simplify` : la garde lit les migrations par
+  `migrations-lecture.ts`, partagé avec la garde RLS (renommages, `public."X"`,
+  tables supprimées), et vise aussi les contraintes qui verrouillent une table
+  existante — `UNIQUE`/`PRIMARY KEY` hors `USING INDEX`, clé étrangère sans
+  `NOT VALID`. Pas encore lus : `ALTER COLUMN … TYPE`, `SET NOT NULL`.]
+- **Proposé, non fait — décision de la propriétaire** : un `lock_timeout` sur
+  la connexion de `migrate deploy` (`scripts/migrer-en-production.sh`), pour
+  qu'une instruction qui attend un verrou échoue vite au lieu de faire
+  attendre l'application, quelle que soit sa forme ; ou un linter de
+  migrations PostgreSQL en CI (squawk). Le premier touche le script de
+  déploiement de production, le second ajoute un outil.
 
 | Gros dossier (médianes, local) | SQL avant → après (ms) | Total avant → après (ms) |
 |---|---|---|

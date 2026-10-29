@@ -559,7 +559,13 @@ const RELEVE = {
   // `composantesCivilesIntl` n'est plus exporté. NON, même calcul — et le
   // test vérifie désormais chacun des 438 changements d'heure de 1981 à
   // 2199 : empreinte recopiée, version inchangée.
-  empreinte: "fcb4b1ae31aa4ebf",
+  // ~~fcb4b1ae31aa4ebf~~ — 2026-10-29, `/simplify` : une heure n'est
+  // mémorisée que si le décalage y est le même au début et à la fin (sinon
+  // lecture `Intl`), au lieu d'une plage 1981-2199 supposée alignée ; la
+  // dernière heure lue est gardée devant la mémoire. NON, même calcul —
+  // éprouvé contre `Intl` autour de chaque changement de 1900 à 2300, dont
+  // ceux hors des heures pleines : empreinte recopiée, version inchangée.
+  empreinte: "0a32814cf20b42e9",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

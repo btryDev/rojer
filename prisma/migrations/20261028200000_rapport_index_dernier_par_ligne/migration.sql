@@ -3,8 +3,10 @@
 -- nombre de lignes et non plus la longueur de l'historique.
 --
 -- `CONCURRENTLY` : la table des rapports grandit sans fin (conservation des
--- preuves), et `migrate deploy` passe avant chaque build — un index posé
--- normalement bloquerait le dépôt des rapports le temps de sa construction.
+-- preuves), et en production `migrate deploy` passe après la compilation,
+-- avant la mise en ligne, pendant que la version précédente sert encore
+-- (`scripts/migrer-en-production.sh`) — un index posé normalement bloquerait
+-- le dépôt des rapports le temps de sa construction.
 -- Construit en `CONCURRENTLY`, il n'arrête aucune écriture, quelle que soit
 -- la taille de la table (règle tenue par `migrations-index.test.ts`).
 --

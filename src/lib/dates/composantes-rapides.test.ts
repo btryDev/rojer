@@ -6,17 +6,20 @@
  * La référence est écrite ici, indépendante du module : un `formatToParts`
  * Europe/Paris, comme le faisait `dates/index.ts` avant ce lot.
  *
- * L'hypothèse qui porte tout — de 1981 à 2199, chaque changement d'heure
- * tombe sur une heure UTC pleine — est vérifiée pour CHACUN des changements
- * de la plage (trouvés par dichotomie, pas recopiés d'une règle), puis le
- * calcul est comparé à la référence autour de chacun.
+ * Les points difficiles sont les changements de décalage. Ils ne sont pas
+ * recopiés d'une règle : chacun, de 1900 à 2300, est retrouvé dans les
+ * données de fuseau (semaine par semaine, puis par dichotomie), y compris
+ * les anciens qui ne tombent pas sur une heure pleine — ceux-là passent par
+ * la lecture `Intl` du module, et c'est ce que le test éprouve aussi.
  */
 import { describe, expect, it } from "vitest";
 
 import { composantesCiviles, instantCivil, type ComposantesCiviles } from "./index";
 
-const MINUTE = 60_000;
+const SECONDE = 1_000;
+const MINUTE = 60 * SECONDE;
 const HEURE = 60 * MINUTE;
+const SEMAINE = 7 * 24 * HEURE;
 
 const FORMATEUR = new Intl.DateTimeFormat("en-CA", {
   timeZone: "Europe/Paris",
@@ -64,7 +67,7 @@ function instantCivilReference(a: number, mo: number, j: number, h = 0, mi = 0, 
 }
 
 /** L'instant exact (à la milliseconde) où le décalage change entre `a` et
- *  `b`, sachant qu'il change une fois et une seule. */
+ *  `b`, sachant qu'il y change. */
 function changementEntre(a: number, b: number): number {
   const avant = decalageReference(a);
   while (b - a > 1) {
@@ -75,19 +78,17 @@ function changementEntre(a: number, b: number): number {
   return b;
 }
 
-/** Les deux changements d'heure de chaque année, 1981 à 2199. */
+/** Tous les changements de décalage de Paris de 1900 à 2300. */
 const CHANGEMENTS = (() => {
-  const t: number[] = [];
-  for (let annee = 1981; annee < 2200; annee++) {
-    const janvier = Date.UTC(annee, 0, 1);
-    const juillet = Date.UTC(annee, 6, 1);
-    const decembre = Date.UTC(annee, 11, 31);
-    if (decalageReference(juillet) === decalageReference(janvier)) {
-      throw new Error(`${annee} : pas d'heure d'été, la recherche ne s'applique pas`);
-    }
-    t.push(changementEntre(janvier, juillet), changementEntre(juillet, decembre));
+  const trouves: number[] = [];
+  let t = Date.UTC(1900, 0, 1);
+  let avant = decalageReference(t);
+  for (const fin = Date.UTC(2300, 0, 1); t < fin; t += SEMAINE) {
+    const apres = decalageReference(t + SEMAINE);
+    if (apres !== avant) trouves.push(changementEntre(t, t + SEMAINE));
+    avant = apres;
   }
-  return t;
+  return trouves;
 })();
 
 function ecarts(instants: Iterable<number>) {
@@ -101,36 +102,34 @@ function ecarts(instants: Iterable<number>) {
   return fautes;
 }
 
-function* pas(debut: number, fin: number, ecart: number) {
-  for (let t = debut; t < fin; t += ecart) yield t;
+/** Autour d'un changement : tous les quarts d'heure sur ± 2 h, et au plus
+ *  près — la seconde, la milliseconde de part et d'autre. */
+function autour(t: number): number[] {
+  const points: number[] = [];
+  for (let x = t - 2 * HEURE; x <= t + 2 * HEURE; x += 15 * MINUTE) points.push(x);
+  for (const e of [-MINUTE, -SECONDE, -1, 0, 1, SECONDE, MINUTE]) points.push(t + e);
+  return points;
 }
 
 describe("composantes civiles mémorisées par heure", () => {
-  it("trouve les deux changements d'heure de chacune des 219 années", () => {
-    expect(CHANGEMENTS).toHaveLength(2 * 219);
+  it("retrouve les changements d'heure, dont d'anciens hors des heures pleines", () => {
+    // Deux par an depuis 1976 jusqu'à 2300 au moins, et la période 1900-1975
+    // en compte d'autres : la recherche ne passe pas à vide.
+    expect(CHANGEMENTS.length).toBeGreaterThan(2 * (2300 - 1976));
+    // Au moins un changement hors d'une heure pleine (1911 : passage du
+    // temps moyen de Paris au temps de Greenwich) : le chemin `Intl` du
+    // module est bien éprouvé.
+    expect(CHANGEMENTS.some((t) => t % HEURE !== 0)).toBe(true);
   });
 
-  it("chaque changement de 1981 à 2199 tombe sur une heure UTC pleine", () => {
-    const horsHeure = CHANGEMENTS.filter((t) => t % HEURE !== 0).map((t) =>
-      new Date(t).toISOString(),
-    );
-    expect(horsHeure).toEqual([]);
+  it("autour de chaque changement, le calcul est celui d'Intl", () => {
+    expect(CHANGEMENTS.flatMap((t) => ecarts(autour(t)))).toEqual([]);
   });
 
-  it("autour de chaque changement, minute par minute sur ± 2 h, le calcul est celui d'Intl", () => {
-    const fautes = CHANGEMENTS.flatMap((t) => ecarts(pas(t - 2 * HEURE, t + 2 * HEURE, MINUTE)));
-    expect(fautes).toEqual([]);
-  });
-
-  it("aux bornes de la plage mémorisée, de part et d'autre", () => {
-    const pasIrregulier = 7 * MINUTE + 13_457;
-    expect(ecarts(pas(Date.UTC(1980, 11, 31, 20), Date.UTC(1981, 0, 1, 4), pasIrregulier))).toEqual([]);
-    expect(ecarts(pas(Date.UTC(2199, 11, 31, 20), Date.UTC(2200, 0, 1, 4), pasIrregulier))).toEqual([]);
-  });
-
-  it("sur 20 000 instants distincts, millisecondes comprises", () => {
+  it("sur 20 000 instants distincts, millisecondes comprises, de l'an 900 à 10 100", () => {
     // mulberry32 : entiers 32 bits par `Math.imul`, sans dépassement de la
-    // précision des flottants.
+    // précision des flottants. La plage déborde celle que le module mémorise
+    // (1000-9999) : de part et d'autre, la lecture `Intl` est comparée aussi.
     let graine = 42;
     const hasard = () => {
       graine = (graine + 0x6d2b79f5) | 0;
@@ -138,8 +137,8 @@ describe("composantes civiles mémorisées par heure", () => {
       x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x;
       return ((x ^ (x >>> 14)) >>> 0) / 2 ** 32;
     };
-    const debut = Date.UTC(1975, 0, 1);
-    const fin = Date.UTC(2205, 0, 1);
+    const debut = Date.UTC(900, 0, 1);
+    const fin = Date.UTC(10_100, 0, 1);
     const instants = new Set<number>();
     while (instants.size < 20_000) instants.add(Math.floor(debut + hasard() * (fin - debut)));
     expect(ecarts(instants)).toEqual([]);
