@@ -58,6 +58,11 @@ describe("validerEnvironnement", () => {
       "PUBLIC_APP_URL",
     ]);
     expect(erreurDe({ ...BASE, APP_ENV: "prod" }).variables).toEqual(["APP_ENV"]);
+    // EXPORTS_SIMULTANES : une valeur fausse retombait en silence sur 1.
+    for (const v of ["0", "-1", "2.5", "deux"]) {
+      expect(erreurDe({ ...BASE, EXPORTS_SIMULTANES: v }).variables).toEqual(["EXPORTS_SIMULTANES"]);
+    }
+    expect(() => validerEnvironnement({ ...BASE, EXPORTS_SIMULTANES: "3" })).not.toThrow();
     expect(() =>
       validerEnvironnement({ ...BASE, STORAGE_DRIVER: "supabase", PUBLIC_APP_URL: "https://rojer.fr" }),
     ).not.toThrow();

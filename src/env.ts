@@ -104,6 +104,15 @@ const schema = z
     MCP_ETABLISSEMENT_ID: optionnelle,
     MCP_HOTES: optionnelle,
 
+    // Exports menés de front (`exports/limite.ts`) : à dimensionner sur la RAM
+    // de l'instance, environ 400 Mo par export lourd (audit Next.js, H3).
+    // Une valeur fausse retombait en silence sur le défaut : elle arrête
+    // désormais le démarrage (plan de bascule, 0.5).
+    EXPORTS_SIMULTANES: z.preprocess(
+      vide,
+      z.string().regex(/^[1-9]\d*$/, "doit être un entier ≥ 1").optional(),
+    ),
+
     // API Légifrance (`legifrance/client.ts`, scripts).
     LEGIFRANCE_CLIENT_ID: optionnelle,
     LEGIFRANCE_CLIENT_SECRET: optionnelle,

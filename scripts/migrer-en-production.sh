@@ -1,17 +1,20 @@
 #!/bin/sh
-# Les migrations ne s'appliquent qu'au déploiement de PRODUCTION (2026-10-25).
+# Migrations au BUILD : seulement sur Vercel, en production (2026-10-25).
 # Un aperçu Vercel (PR) n'a pas DIRECT_URL et échouait ; s'il l'avait eue, il
 # aurait migré la base de prod avant tout merge. En local, `pnpm build` ne
-# migre plus : `prisma migrate dev` reste le geste du développeur.
+# migre pas : `prisma migrate dev` reste le geste du développeur.
 #
-# Filet : si VERCEL_ENV n'était pas exposé au build, la production cesserait
-# de migrer en silence. Sans VERCEL_ENV, on migre donc dès que DIRECT_URL est
-# fournie par l'environnement (la production l'a, les aperçus non) ; un aperçu
-# déclaré (`preview`) ne migre jamais.
+# ~~Filet : sans VERCEL_ENV, on migrait dès que DIRECT_URL était fournie.~~
+# [2026-10-30, plan de bascule Clever Cloud, 0.2 : retiré. Les logs de build
+# Vercel montrent `VERCEL_ENV=production` (déploiement de 9bdbb47d), le filet ne
+# servait à rien ici ; chez Clever Cloud, il aurait migré pendant le BUILD, sur
+# l'instance de build, avant que le déploiement soit retenu. Là-bas, les
+# migrations passent par le hook de démarrage (`CC_PRE_RUN_HOOK=pnpm
+# db:migrate`), qui fait échouer le déploiement si elles échouent.]
 set -e
-if [ "$VERCEL_ENV" = "production" ] || { [ -z "$VERCEL_ENV" ] && [ -n "$DIRECT_URL" ]; }; then
-  echo "Migrations : VERCEL_ENV=${VERCEL_ENV:-non défini}, on applique."
+if [ "$VERCEL_ENV" = "production" ]; then
+  echo "Migrations : VERCEL_ENV=production, on applique."
   prisma migrate deploy
 else
-  echo "Migrations sautées : VERCEL_ENV=${VERCEL_ENV:-non défini} (seule la production migre)."
+  echo "Migrations sautées au build : VERCEL_ENV=${VERCEL_ENV:-non défini}. Hors Vercel, elles passent au démarrage (CC_PRE_RUN_HOOK)."
 fi
