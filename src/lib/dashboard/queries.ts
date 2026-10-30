@@ -1,3 +1,4 @@
+import { requireCompte } from "@/lib/auth/compte";
 import "server-only";
 // Lectures du tableau de bord.
 //
@@ -31,8 +32,6 @@ import {
 } from "@/lib/calendrier/queries";
 import { duerpDuRendu } from "@/lib/duerps/queries";
 import { etablissementDuCompteDuRendu } from "@/lib/etablissements/queries";
-import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
 import { compterActions } from "@/lib/actions/queries";
 import { computeVigilance } from "@/lib/prestataires/vigilance";
 import { chargerTransmissions, titresDusEnRetard } from "./transmissions";
@@ -176,12 +175,12 @@ export const lignesEvenementsDuRendu = cache(async function lignesEvenementsDuRe
   batimentId: string | null,
   urgentsSeulement: boolean,
 ) {
-  const user = await requireUser();
+  const { user, db } = await requireCompte();
   // La borne de la plus longue fenêtre (la frise, `JOURS_APRES`) reste dans la requête : les
   // fenêtres plus courtes se coupent en mémoire, mais rien au-delà de la frise
   // n'est lu (revue du lot 1).
   const finMax = ajouterJours(new Date(debutDuJourMs), JOURS_APRES);
-  return prisma.verification.findMany({
+  return db.verification.findMany({
     // Composées et non diffusées, comme `listerVerifications` : la portée par
     // bâtiment pose un `OR`, et ce site n'échappait à l'écrasement que parce
     // que sa condition d'urgence porte `statut` et non `OR` — un accident, pas
@@ -447,11 +446,11 @@ export async function compterObligationsParMois(
   etablissementId: string,
   annee: number = composantesCiviles(new Date()).annee,
 ): Promise<BarresAnnee> {
-  const user = await requireUser();
+  const { user, db } = await requireCompte();
   const debut = instantCivil(annee, 1, 1);
   const fin = instantCivil(annee + 1, 1, 1);
 
-  const [verifs, marques, dernieres] = await Promise.all([prisma.verification.findMany({
+  const [verifs, marques, dernieres] = await Promise.all([db.verification.findMany({
     where: {
       etablissementId,
       etablissement: { entreprise: { userId: user.id } },
@@ -537,7 +536,7 @@ export async function getModulesMatrice(
   etablissementId: string,
   estERP: boolean,
 ): Promise<ModulesMatrice> {
-  const user = await requireUser();
+  const { user, db } = await requireCompte();
   const scope = {
     etablissementId,
     etablissement: { entreprise: { userId: user.id } },
@@ -547,7 +546,7 @@ export async function getModulesMatrice(
   const now = instantDuRendu();
 
   const [accessibilite, comptes, prestataires, suiviParLeCalendrier] = await Promise.all([
-    prisma.registreAccessibilite.findFirst({
+    db.registreAccessibilite.findFirst({
       where: scope,
       select: { publie: true },
     }),
@@ -575,7 +574,7 @@ export async function getModulesMatrice(
   let nbPointsJamaisReleves = 0;
   let nbPoints = 0;
   if (carnet) {
-    const points = await prisma.pointReleve.findMany({
+    const points = await db.pointReleve.findMany({
       // `carnet.id` sort du `findFirst` scopé ci-dessus, donc la portée est
       // déjà établie — le prédicat est porté quand même, pour que cette
       // lecture ne dépende pas de la provenance de son argument (cf.
@@ -710,7 +709,7 @@ const MAX_VERIFS_RECOS = 40;
 export const getDashboardData = cache(async function getDashboardData(
   etablissementId: string,
 ): Promise<DashboardData> {
-  const user = await requireUser();
+  const { user, db } = await requireCompte();
   const scope = {
     etablissementId,
     etablissement: { entreprise: { userId: user.id } },
@@ -743,7 +742,7 @@ export const getDashboardData = cache(async function getDashboardData(
     // calendrier généré) et celles réalisées sur la fenêtre d'historique.
     // Les compteurs, le score et la file de propositions décrivent ainsi le
     // même ensemble, comme le fait déjà le dossier de conformité PDF.
-    prisma.verification.findMany({
+    db.verification.findMany({
       where: {
         ...scope,
         OR: [
@@ -798,7 +797,7 @@ export const getDashboardData = cache(async function getDashboardData(
     // l'agrégat SQL : les deux appliquent la même règle, mais le compteur
     // affiché et la file de propositions décrivent ainsi, par construction,
     // le même ensemble de lignes.
-    prisma.action.findMany({
+    db.action.findMany({
       where: {
         ...scope,
         statut: { in: ["ouverte", "en_cours"] },
@@ -821,7 +820,7 @@ export const getDashboardData = cache(async function getDashboardData(
     // Le plan d'actions, ce sont les mesures du DUERP (ADR-048, lot 3) : ses
     // compteurs à l'écran ; le score, lui, garde toutes les actions.
     compterActions(etablissementId, now, { origine: "duerp" }),
-    prisma.action.count({ where: { ...scope, risqueId: { not: null } } }),
+    db.action.count({ where: { ...scope, risqueId: { not: null } } }),
     // Le DUERP du rendu, partagé avec l'échéance annuelle de la barre
     // latérale, la couverture et la page (plan performance, 2026-10-29).
     duerpDuRendu(etablissementId, user.id),
@@ -843,7 +842,7 @@ export const getDashboardData = cache(async function getDashboardData(
     // Les rapports RÉALISÉS de la fenêtre, comptés en base : les cartes
     // « Rapports 12 m » parlent de pièces déposées, pas de lignes couvertes,
     // et depuis l'ADR-034 les deux ne coïncident plus.
-    prisma.rapportVerification.count({
+    db.rapportVerification.count({
       where: {
         verification: scope,
         dateRapport: { gte: debutFenetreHistorique },

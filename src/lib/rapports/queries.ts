@@ -1,8 +1,8 @@
+import { requireCompte } from "@/lib/auth/compte";
 import "server-only";
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { ORDRE_RAPPORT_PLUS_RECENT } from "./derniere-realisation";
-import { requireUser } from "@/lib/auth/require-user";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
 import { libellePorteur } from "@/lib/calendrier/labels";
@@ -58,8 +58,8 @@ export async function listerRapportsDeLEtablissement(
   etablissementId: string,
   filtres: FiltresRegistre = {},
 ) {
-  const user = await requireUser();
-  const rapports = await prisma.rapportVerification.findMany({
+  const { user, db } = await requireCompte();
+  const rapports = await db.rapportVerification.findMany({
     where: {
       etablissementId,
       etablissement: { entreprise: { userId: user.id } },
@@ -101,7 +101,7 @@ export async function listerRapportsDeLEtablissement(
   // de chaque année consultée.
   const [sansOrigine, derniers] = rapports.length
     ? await Promise.all([
-        prisma.action.findMany({
+        db.action.findMany({
           where: {
             etablissementId,
             etablissement: { entreprise: { userId: user.id } },
@@ -156,8 +156,8 @@ export type RapportListe = Awaited<
 >[number];
 
 export async function getRapport(id: string) {
-  const user = await requireUser();
-  return prisma.rapportVerification.findFirst({
+  const { user, db } = await requireCompte();
+  return db.rapportVerification.findFirst({
     where: { id, etablissement: { entreprise: { userId: user.id } } },
     include: {
       verification: {
@@ -173,8 +173,8 @@ export async function getRapport(id: string) {
 }
 
 export async function listerRapportsDUneVerification(verificationId: string) {
-  const user = await requireUser();
-  return prisma.rapportVerification.findMany({
+  const { user, db } = await requireCompte();
+  return db.rapportVerification.findMany({
     where: {
       verificationId,
       etablissement: { entreprise: { userId: user.id } },
@@ -189,16 +189,16 @@ export async function listerRapportsDUneVerification(verificationId: string) {
 export const compterRapportsDuDossier = cache(async function compterRapportsDuDossier(
   etablissementId: string,
 ) {
-  const user = await requireUser();
-  return prisma.rapportVerification.count({
+  const { user, db } = await requireCompte();
+  return db.rapportVerification.count({
     where: { etablissementId, etablissement: { entreprise: { userId: user.id } } },
   });
 });
 
 /** Tableau de bord : les derniers rapports, du plus récent au plus ancien (B6). */
 export async function listerRapportsRecents(etablissementId: string, nombre: number) {
-  const user = await requireUser();
-  return prisma.rapportVerification.findMany({
+  const { user, db } = await requireCompte();
+  return db.rapportVerification.findMany({
     where: { etablissementId, etablissement: { entreprise: { userId: user.id } } },
     include: { verification: true },
     orderBy: ORDRE_RAPPORT_PLUS_RECENT,

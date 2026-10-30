@@ -74,6 +74,12 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/auth/require-user", () => ({ requireUser: h.requireUser }));
 vi.mock("@/lib/auth/scope", () => ({
   assertEtablissementOwnership: h.assertEtablissementOwnership,
+  // La même garde, qui rend aussi le client borné (ADR-051) : ici, le client
+  // simulé ; elle passe par la simulation d'origine, refus compris.
+  assertEtablissementDuCompte: async (id: string) => {
+    await (h.assertEtablissementOwnership as (x: string) => Promise<unknown>)(id);
+    return { user: await h.requireUser(), db: h.prisma };
+  },
 }));
 
 const { creerBatiment, modifierBatiment, supprimerBatiment } = await import(

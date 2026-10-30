@@ -1,9 +1,9 @@
+import { requireUser } from "@/lib/auth/require-user";
 import "server-only";
 import { mentionRythmeRetenu } from "@/lib/referentiels/conformite/mention-rythme";
 import { renvoiAuxNormes } from "@/lib/referentiels/conformite/renvoi-aux-normes";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
 import { titreParId } from "./catalogue";
 import { echeanceDuTitre } from "./echeance";
 import { ceQuiManqueALaPersonne, etatDuManque } from "./du-a-la-personne";

@@ -1,6 +1,6 @@
+import { requireCompte } from "@/lib/auth/compte";
 import "server-only";
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
 import { cache } from "react";
 
 // ADR-005 : scope par userId via la chaîne duerp → etablissement → entreprise.
@@ -103,8 +103,8 @@ export const duerpDuRendu = cache(async function duerpDuRendu(
  * appelant ne le modifie pas.
  */
 export const getDuerp = cache(async function getDuerp(id: string) {
-  const user = await requireUser();
-  const duerp = await prisma.duerp.findFirst({
+  const { user, db } = await requireCompte();
+  const duerp = await db.duerp.findFirst({
     where: { id, etablissement: { entreprise: { userId: user.id } } },
     include: {
       etablissement: { include: { entreprise: true } },
@@ -136,8 +136,8 @@ export const getDuerp = cache(async function getDuerp(id: string) {
 });
 
 export async function getUnite(id: string) {
-  const user = await requireUser();
-  const unite = await prisma.uniteTravail.findFirst({
+  const { user, db } = await requireCompte();
+  const unite = await db.uniteTravail.findFirst({
     where: {
       id,
       duerp: { etablissement: { entreprise: { userId: user.id } } },

@@ -178,6 +178,11 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/lib/auth/require-user", () => ({ requireUser: vi.fn(async () => ({ id: "user-1" })) }));
 vi.mock("@/lib/auth/scope", () => ({
   assertEtablissementOwnership: h.assertOwnership,
+  // La garde rend aussi le client borné (ADR-051) : ici, le client simulé.
+  assertEtablissementDuCompte: async (...a: unknown[]) => ({
+    user: (await (h.assertOwnership as (...x: unknown[]) => unknown)(...a)) ?? { id: "u1" },
+    db: (await import("@/lib/prisma")).prisma,
+  }),
 }));
 vi.mock("@/lib/batiments/queries", () => ({
   batimentParDefaut: async () => ({ id: "bat-1" }),

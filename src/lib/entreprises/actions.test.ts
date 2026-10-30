@@ -19,6 +19,11 @@ vi.mock("@/lib/auth/require-user", () => ({
 }));
 vi.mock("@/lib/auth/scope", () => ({
   assertEntrepriseOwnership: vi.fn(async () => undefined),
+  // La garde rend aussi le client borné (ADR-051) : ici, le client simulé.
+  assertEntrepriseDuCompte: async (...a: unknown[]) => ({
+    user: (await (vi.fn(async () => undefined) as (...x: unknown[]) => unknown)(...a)) ?? { id: "u1" },
+    db: (await import("@/lib/prisma")).prisma,
+  }),
   getOptionalUserEtablissement: vi.fn(async () => null),
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));

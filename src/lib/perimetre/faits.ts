@@ -12,9 +12,8 @@
 // appareils vit dans `equipements/hors-referentiel.ts` ; tout constat sur le
 // DUERP vit dans `duerps/couverture.ts`.
 
-import { prisma } from "@/lib/prisma";
+import { requireCompte } from "@/lib/auth/compte";
 import { comptesParcDuRendu } from "@/lib/equipements/queries";
-import { requireUser } from "@/lib/auth/require-user";
 import {
   chargerEtablissementEtParc,
   equipementsPourLeMoteur,
@@ -55,7 +54,7 @@ export async function couvertureDuDossier(
 export async function faitsDeCouverture(
   etablissementId: string,
 ): Promise<FaitsCouverture | null> {
-  const user = await requireUser();
+  const { user, db } = await requireCompte();
   // [2026-10-14, audit Next.js H2] L'établissement, l'effectif et le code NAF
   // de son entreprise (C37 : les seuils comptés sur l'entreprise lisent le
   // sien), et le parc EN SERVICE — un équipement désactivé ne génère plus
@@ -72,7 +71,7 @@ export async function faitsDeCouverture(
     duerpDuRendu(etablissementId, user.id),
     // Ses unités, que la couverture seule lit. « 1 établissement = 1 DUERP »
     // (`Duerp.etablissementId @unique`) : celles du DUERP de l'établissement.
-    prisma.uniteTravail.findMany({
+    db.uniteTravail.findMany({
       where: {
         duerp: {
           etablissementId,
@@ -191,8 +190,8 @@ export async function faitsDeCouverture(
 export async function faitsManquesAnnonces(
   etablissementId: string,
 ): Promise<FaitsManquesAnnonces | null> {
-  const user = await requireUser();
-  const etab = await prisma.etablissement.findFirst({
+  const { user, db } = await requireCompte();
+  const etab = await db.etablissement.findFirst({
     where: { id: etablissementId, entreprise: { userId: user.id } },
     select: {
       estEtablissementTravail: true,

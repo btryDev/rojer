@@ -1,6 +1,5 @@
+import { requireCompte } from "@/lib/auth/compte";
 import "server-only";
-import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
 
 /**
  * Lectures des bâtiments d'un établissement (ADR-019).
@@ -21,8 +20,8 @@ export type BatimentListe = {
 export async function listerBatimentsDeLEtablissement(
   etablissementId: string,
 ): Promise<BatimentListe[]> {
-  const user = await requireUser();
-  const rows = await prisma.batiment.findMany({
+  const { user, db } = await requireCompte();
+  const rows = await db.batiment.findMany({
     where: { etablissementId, etablissement: { entreprise: { userId: user.id } } },
     orderBy: [{ ordre: "asc" }, { createdAt: "asc" }],
     select: {
@@ -54,8 +53,8 @@ export async function listerBatimentsDeLEtablissement(
  * refus : bruyant, et sans rien divulguer de l'autre dossier.
  */
 export async function batimentParDefaut(etablissementId: string) {
-  const user = await requireUser();
-  const b = await prisma.batiment.findFirst({
+  const { user, db } = await requireCompte();
+  const b = await db.batiment.findFirst({
     where: {
       etablissementId,
       etablissement: { entreprise: { userId: user.id } },
@@ -90,8 +89,8 @@ export async function resoudreBatimentOptionnel(
   batimentId: string | null | undefined,
 ): Promise<{ ok: true; id: string | null } | { ok: false }> {
   if (!batimentId) return { ok: true, id: null };
-  const user = await requireUser();
-  const b = await prisma.batiment.findFirst({
+  const { user, db } = await requireCompte();
+  const b = await db.batiment.findFirst({
     where: {
       id: batimentId,
       etablissementId,

@@ -1,5 +1,6 @@
 "use server";
 
+import { requireCompte } from "@/lib/auth/compte";
 import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
@@ -9,8 +10,7 @@ import {
   portantUnePreuve,
   toutesLesConditions,
 } from "@/lib/calendrier/portee";
-import { assertEtablissementOwnership } from "@/lib/auth/scope";
-import { requireUser } from "@/lib/auth/require-user";
+import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import {
   MESSAGE_REGEN_ECHEC,
   regenererApresMutation,
@@ -100,8 +100,8 @@ async function regimeDe(etablissementId: string): Promise<RegimeExigence> {
  * désormais sur le même `notFound()`.
  */
 async function appareilDuCompte(equipementId: string) {
-  const user = await requireUser();
-  const eq = await prisma.equipement.findFirst({
+  const { user, db } = await requireCompte();
+  const eq = await db.equipement.findFirst({
     where: { id: equipementId, etablissement: { entreprise: { userId: user.id } } },
     select: {
       etablissementId: true,
@@ -136,7 +136,7 @@ export async function creerEquipement(
   _prev: EquipementActionState,
   formData: FormData,
 ): Promise<EquipementActionState> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
   const parsed = equipementSchema.safeParse(normaliserFormDataEquipement(formData));
   if (!parsed.success) {
     return {
@@ -156,7 +156,7 @@ export async function creerEquipement(
   // sinon, le seul existant. Un id fourni doit être un bâtiment de CET
   // établissement — la base ne le vérifie pas (clé simple), l'action le fait.
   const batiment = parsed.data.batimentId
-    ? await prisma.batiment.findFirst({
+    ? await db.batiment.findFirst({
         where: { id: parsed.data.batimentId, etablissementId },
         select: { id: true },
       })
@@ -169,7 +169,7 @@ export async function creerEquipement(
     };
   }
 
-  await prisma.equipement.create({
+  await db.equipement.create({
     data: {
       etablissementId,
       batimentId: batiment.id,
@@ -437,7 +437,7 @@ export async function creerEquipementsDepuisPreRemplissage(
     caracteristiques?: Partial<Record<ChampTriEtat, boolean>>;
   }[],
 ): Promise<ResultatPreRemplissage> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
   // Le tableau vient du client : un tableau, pas plus d'entrées que de
   // catégories (ASVS V2.2.1, `lot/securite-owasp-1013`), avant de le parcourir.
   // [2026-10-14, intégration avec `lot/conditions-equipement` : la catégorie et
@@ -555,7 +555,7 @@ export async function creerEquipementsDepuisPreRemplissage(
   }
 
   const batiment = await batimentParDefaut(etablissementId);
-  const result = await prisma.equipement.createMany({
+  const result = await db.equipement.createMany({
     data: entrees.map((e, i) => ({
       etablissementId,
       batimentId: batiment.id,

@@ -1,11 +1,10 @@
 "use server";
 
+import { requireCompte } from "@/lib/auth/compte";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
 import { NOM_BATIMENT_PRINCIPAL } from "@/lib/batiments/schema";
-import { requireUser } from "@/lib/auth/require-user";
 import { poserEtablissementActif } from "@/lib/etablissements/etablissement-actif";
 import { sirenDuSiret } from "@/lib/etablissements/siret";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
@@ -67,7 +66,7 @@ export async function finaliserOnboarding(
   _prev: OnboardingActionState,
   formData: FormData,
 ): Promise<OnboardingActionState> {
-  const user = await requireUser();
+  const { user, db } = await requireCompte();
 
   // ~~Un compte = une entreprise : l'onboarding ne se joue qu'une fois.~~
   // [2026-10-26 : chaque établissement passe par ce parcours.]
@@ -93,7 +92,7 @@ export async function finaliserOnboarding(
 
   let result;
   try {
-    result = await avecUneReprise(() => prisma.$transaction(async (tx) => {
+    result = await avecUneReprise(() => db.$transaction(async (tx) => {
       // L'entreprise du SIREN, dans CE compte — jamais ailleurs : la clé porte
       // `userId`, un SIREN suivi par un autre compte n'est ni lu ni touché.
       // `upsert` sur l'unicité `(userId, siren)` : deux parcours finis au même

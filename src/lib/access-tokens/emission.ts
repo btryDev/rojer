@@ -1,9 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { notFound } from "next/navigation";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
-import { assertEtablissementOwnership } from "@/lib/auth/scope";
+import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { objetAppartientAEtablissement } from "@/lib/signatures/appartenance";
 import { PartieSignataire, ScopeAccessToken } from "@prisma/client";
 import {
@@ -181,11 +179,12 @@ export const MESSAGE_ENVOI_ECHOUE =
 export async function emettreAccessToken(
   entree: EmissionTokenParams,
 ): Promise<EmissionResultat> {
-  const user = await requireUser();
   // `parse` et non `safeParse` : l'appelant légitime a déjà validé, une
   // entrée invalide ici est une faute de programmation, pas une saisie.
   const params = emissionSchema.parse(entree);
-  await assertEtablissementOwnership(params.etablissementId);
+  // Une seule lecture de la session : la garde rend l'utilisateur et le
+  // client borné.
+  const { user, db } = await assertEtablissementDuCompte(params.etablissementId);
 
   // `etablissementId` et `objetId` arrivent du même appel, et jusqu'ici rien
   // ne vérifiait qu'ils avaient un rapport entre eux : posséder son propre
@@ -218,14 +217,14 @@ export async function emettreAccessToken(
   const depuis = new Date(Date.now() - UNE_HEURE_MS);
   // Un lien dont l'e-mail n'est jamais parti ne compte pas (`LIEN_PARTI`).
   const [parEtablissement, parUtilisateur] = await Promise.all([
-    prisma.accessToken.count({
+    db.accessToken.count({
       where: {
         etablissementId: params.etablissementId,
         createdAt: { gte: depuis },
         ...LIEN_PARTI,
       },
     }),
-    prisma.accessToken.count({
+    db.accessToken.count({
       where: { createdByUserId: user.id, createdAt: { gte: depuis }, ...LIEN_PARTI },
     }),
   ]);
@@ -264,7 +263,7 @@ export async function emettreAccessToken(
   // — l'email annonçait 10 minutes, le code en durait des jours.
   const otpExpireLe = otp ? otpExpirationDate(maintenant) : null;
 
-  const access = await prisma.accessToken.create({
+  const access = await db.accessToken.create({
     data: {
       id: `atk_${randomUUID()}`,
       tokenHash,
@@ -298,7 +297,7 @@ export async function emettreAccessToken(
     // pas abouti. Si la révocation échoue aussi (base indisponible), le jeton
     // reste, mais son secret n'est ni parti ni rendu : il ne sert à personne.
     // Le journal porte les deux causes, jamais l'adresse ni le contenu.
-    const revoque = await prisma.accessToken
+    const revoque = await db.accessToken
       .update({
         where: { id: access.id },
         data: { revoqueLe: new Date(), revoqueMotif: MOTIF_REVOCATION_ENVOI_ECHOUE },

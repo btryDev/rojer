@@ -4,8 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { libererFichiers } from "@/lib/suppression/fichiers";
 import { effacerSalarie } from "./suppression";
-import { prisma } from "@/lib/prisma";
-import { assertEtablissementOwnership } from "@/lib/auth/scope";
+import { assertEtablissementDuCompte, assertEtablissementOwnership } from "@/lib/auth/scope";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import { salarieSchema, titreSchema } from "./schema";
 import { exclusionsDuTitre, titreParId } from "./catalogue";
@@ -57,7 +56,7 @@ export async function creerSalarie(
   _prev: SalarieActionState,
   formData: FormData,
 ): Promise<SalarieActionState> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
 
   const parsed = salarieSchema.safeParse({
     nom: formData.get("nom"),
@@ -73,7 +72,7 @@ export async function creerSalarie(
     };
   }
 
-  const salarie = await prisma.salarie.create({
+  const salarie = await db.salarie.create({
     data: { etablissementId, ...parsed.data },
     select: { id: true },
   });
@@ -90,7 +89,7 @@ export async function modifierSalarie(
   _prev: SalarieActionState,
   formData: FormData,
 ): Promise<SalarieActionState> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
 
   const parsed = salarieSchema.safeParse({
     nom: formData.get("nom"),
@@ -109,7 +108,7 @@ export async function modifierSalarie(
   // `updateMany` et non `update` : le filtre porte l'`etablissementId`, donc
   // un identifiant appartenant à un autre dossier ne modifie rien au lieu de
   // lever une erreur qui confirmerait son existence.
-  const { count } = await prisma.salarie.updateMany({
+  const { count } = await db.salarie.updateMany({
     where: { id: salarieId, etablissementId },
     data: parsed.data,
   });
@@ -151,8 +150,8 @@ export async function basculerActif(
   salarieId: string,
   actif: boolean,
 ): Promise<void> {
-  await assertEtablissementOwnership(etablissementId);
-  await prisma.salarie.updateMany({
+  const { db } = await assertEtablissementDuCompte(etablissementId);
+  await db.salarie.updateMany({
     where: { id: salarieId, etablissementId },
     data: { actif },
   });
@@ -167,7 +166,7 @@ export async function declarerTitre(
   _prev: TitreActionState,
   formData: FormData,
 ): Promise<TitreActionState> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
 
   const parsed = titreSchema.safeParse({
     obligationId: formData.get("obligationId"),
@@ -196,7 +195,7 @@ export async function declarerTitre(
     };
   }
 
-  const salarie = await prisma.salarie.findFirst({
+  const salarie = await db.salarie.findFirst({
     where: { id: salarieId, etablissementId },
     // Les titres déjà portés sont lus ici, dans la requête qui vérifie
     // l'appartenance, plutôt que par un second aller-retour : c'est la même
@@ -241,7 +240,7 @@ export async function declarerTitre(
   // un renouvellement, pas un doublon. Sans lui, l'unicité en base rendrait
   // une erreur Prisma brute là où l'utilisateur fait le geste normal — saisir
   // la nouvelle attestation quand l'ancienne expire.
-  await prisma.titreSalarie.upsert({
+  await db.titreSalarie.upsert({
     where: {
       salarieId_obligationId: {
         salarieId,
@@ -265,8 +264,8 @@ export async function retirerTitre(
   salarieId: string,
   titreId: string,
 ): Promise<void> {
-  await assertEtablissementOwnership(etablissementId);
-  await prisma.titreSalarie.deleteMany({
+  const { db } = await assertEtablissementDuCompte(etablissementId);
+  await db.titreSalarie.deleteMany({
     where: { id: titreId, salarie: { id: salarieId, etablissementId } },
   });
   await regenererEtRafraichir(etablissementId);

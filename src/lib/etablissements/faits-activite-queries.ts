@@ -1,5 +1,4 @@
-import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireCompte } from "@/lib/auth/compte";
 import { SELECT_FAITS_ACTIVITE, type ReponsesFaitsActivite } from "./faits-activite";
 
 /**
@@ -16,8 +15,8 @@ import { SELECT_FAITS_ACTIVITE, type ReponsesFaitsActivite } from "./faits-activ
 export async function chargerFaitsActivite(
   etablissementId: string,
 ): Promise<ReponsesFaitsActivite | null> {
-  const user = await requireUser();
-  return prisma.etablissement.findFirst({
+  const { user, db } = await requireCompte();
+  return db.etablissement.findFirst({
     where: { id: etablissementId, entreprise: { userId: user.id } },
     select: SELECT_FAITS_ACTIVITE,
   });

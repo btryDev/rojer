@@ -1,7 +1,6 @@
+import { requireCompte } from "@/lib/auth/compte";
 import "server-only";
 import { cache } from "react";
-import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
 import { trierParCategorie } from "./labels";
 
@@ -24,8 +23,8 @@ import { trierParCategorie } from "./labels";
  * pourquoi il ne propose rien (`retrait.ts`)].
  */
 export async function getEquipement(id: string) {
-  const user = await requireUser();
-  return prisma.equipement.findFirst({
+  const { user, db } = await requireCompte();
+  return db.equipement.findFirst({
     where: { id, etablissement: { entreprise: { userId: user.id } } },
     include: {
       // Le régime et la réponse au SSI A/B : la fiche de modification en tire
@@ -49,9 +48,9 @@ export async function getEquipement(id: string) {
 export async function listerEquipementsDeLEtablissement(
   etablissementId: string,
 ) {
-  const user = await requireUser();
+  const { user, db } = await requireCompte();
   return trierParCategorie(
-    await prisma.equipement.findMany({
+    await db.equipement.findMany({
     where: {
       etablissementId,
       actif: true,
@@ -99,8 +98,8 @@ export function grouperParCategorie(
 export const comptesParcDuRendu = cache(async function comptesParcDuRendu(
   etablissementId: string,
 ) {
-  const user = await requireUser();
-  const groupes = await prisma.equipement.groupBy({
+  const { user, db } = await requireCompte();
+  const groupes = await db.equipement.groupBy({
     by: ["actif"],
     where: { etablissementId, etablissement: { entreprise: { userId: user.id } } },
     _count: { _all: true },

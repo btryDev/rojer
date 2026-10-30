@@ -1,8 +1,7 @@
+import { requireCompte } from "@/lib/auth/compte";
 import "server-only";
 import { cache } from "react";
-import { prisma } from "@/lib/prisma";
 import { requireEtablissement } from "@/lib/auth/scope";
-import { requireUser } from "@/lib/auth/require-user";
 import {
   computeVigilance,
   ventilerVigilance,
@@ -19,8 +18,8 @@ import {
 export const prestatairesDuRendu = cache(async function prestatairesDuRendu(
   etablissementId: string,
 ) {
-  const user = await requireUser();
-  return prisma.prestataire.findMany({
+  const { user, db } = await requireCompte();
+  return db.prestataire.findMany({
     where: { etablissementId, etablissement: { entreprise: { userId: user.id } } },
     orderBy: [{ raisonSociale: "asc" }],
   });
@@ -39,8 +38,8 @@ export async function getPrestataire(
   etablissementId: string,
   prestataireId: string,
 ) {
-  const { etablissement } = await requireEtablissement(etablissementId);
-  const prestataire = await prisma.prestataire.findFirst({
+  const { db, etablissement } = await requireEtablissement(etablissementId);
+  const prestataire = await db.prestataire.findFirst({
     where: { id: prestataireId, etablissementId: etablissement.id },
     // Les pièces remplacées (2026-10-12), la plus récemment remplacée d'abord.
     include: {
@@ -74,8 +73,8 @@ export async function resoudrePrestataireOptionnel(
   prestataireId: string | null | undefined,
 ): Promise<{ ok: true; id: string | null } | { ok: false }> {
   if (!prestataireId) return { ok: true, id: null };
-  const user = await requireUser();
-  const p = await prisma.prestataire.findFirst({
+  const { user, db } = await requireCompte();
+  const p = await db.prestataire.findFirst({
     where: {
       id: prestataireId,
       etablissementId,

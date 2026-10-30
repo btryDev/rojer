@@ -118,6 +118,11 @@ vi.mock("@/lib/auth/scope", () => ({
   assertEtablissementOwnership: vi.fn(async (e: string) => {
     if (e !== "etab-a-moi") throw new Error("NEXT_NOT_FOUND");
   }),
+  // La même garde, qui rend aussi le client borné (ADR-051) : ici, le client simulé.
+  assertEtablissementDuCompte: vi.fn(async (e: string) => {
+    if (e !== "etab-a-moi") throw new Error("NEXT_NOT_FOUND");
+    return { user: { id: "u1" }, db: (await import("@/lib/prisma")).prisma };
+  }),
 }));
 vi.mock("@/lib/batiments/queries", () => ({
   resoudreBatimentOptionnel: vi.fn(async (_e: string, id?: string) => {

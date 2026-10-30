@@ -1,11 +1,10 @@
+import { requireCompte } from "@/lib/auth/compte";
 import "server-only";
-import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
 import { requireEtablissement } from "@/lib/auth/scope";
 
 export async function getCarnetSanitaire(etablissementId: string) {
-  const { etablissement } = await requireEtablissement(etablissementId);
-  return prisma.carnetSanitaire.findUnique({
+  const { db, etablissement } = await requireEtablissement(etablissementId);
+  return db.carnetSanitaire.findUnique({
     where: { etablissementId: etablissement.id },
     include: {
       pointsReleve: {
@@ -43,8 +42,8 @@ export async function getCarnetSanitaire(etablissementId: string) {
  * supprimée le 2026-10-28).
  */
 export async function dernierRelevesParPoint(carnetId: string) {
-  const user = await requireUser();
-  const points = await prisma.pointReleve.findMany({
+  const { user, db } = await requireCompte();
+  const points = await db.pointReleve.findMany({
     where: {
       carnetId,
       actif: true,

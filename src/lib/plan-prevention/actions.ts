@@ -1,13 +1,13 @@
 "use server";
 
+import { requireCompte } from "@/lib/auth/compte";
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { resoudreBatimentOptionnel } from "@/lib/batiments/queries";
 import { resoudrePrestataireOptionnel } from "@/lib/prestataires/queries";
-import { assertEtablissementOwnership } from "@/lib/auth/scope";
-import { requireUser } from "@/lib/auth/require-user";
+import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { lireDateDeclaree } from "@/lib/traces/date-declaree";
 import { z } from "zod";
 import {
@@ -202,7 +202,7 @@ export async function creerPlanPrevention(
   _prev: PlanActionState,
   formData: FormData,
 ): Promise<PlanActionState> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
 
   const parsed = lirePlanPrevention(formData);
   if (!parsed.success) {
@@ -227,7 +227,7 @@ export async function creerPlanPrevention(
   const numero = await nextNumeroPlan(etablissementId);
   const id = `pp_${randomUUID()}`;
 
-  await prisma.planPrevention.create({
+  await db.planPrevention.create({
     data: {
       id,
       etablissementId,
@@ -256,8 +256,8 @@ export async function creerPlanPrevention(
  * `auth/tenancy-oracle.test.ts`.
  */
 async function planDuCompte(planId: string) {
-  const user = await requireUser();
-  const plan = await prisma.planPrevention.findFirst({
+  const { user, db } = await requireCompte();
+  const plan = await db.planPrevention.findFirst({
     where: { id: planId, etablissement: { entreprise: { userId: user.id } } },
     select: {
       etablissementId: true,

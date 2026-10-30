@@ -151,7 +151,17 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("@/lib/auth/scope", () => ({
   assertEtablissementOwnership: vi.fn(async () => ({ id: "user-1" })),
+  // La garde rend aussi le client borné (ADR-051) : ici, le client simulé.
+  assertEtablissementDuCompte: async (...a: unknown[]) => ({
+    user: (await (vi.fn(async () => ({ id: "user-1" })) as (...x: unknown[]) => unknown)(...a)) ?? { id: "u1" },
+    db: (await import("@/lib/prisma")).prisma,
+  }),
   assertEntrepriseOwnership: vi.fn(async () => ({ id: "user-1" })),
+  // La garde rend aussi le client borné (ADR-051) : ici, le client simulé.
+  assertEntrepriseDuCompte: async (...a: unknown[]) => ({
+    user: (await (vi.fn(async () => ({ id: "user-1" })) as (...x: unknown[]) => unknown)(...a)) ?? { id: "u1" },
+    db: (await import("@/lib/prisma")).prisma,
+  }),
   // Le nom du cookie voyage avec les gardes : il est défini là où il est LU
   // (`scope.ts`), pour qu'écriture et lecture ne puissent pas diverger.
   COOKIE_ETABLISSEMENT_ACTIF: "etablissement-actif",

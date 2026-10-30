@@ -29,7 +29,7 @@ import {
 
 /** Ce que l'écran compte des pièces du dossier, par les filtres du ZIP. */
 export async function etatDesPiecesDuDossier(etablissementId: string, maintenant: Date) {
-  const { etablissement } = await requireEtablissement(etablissementId);
+  const { db, etablissement } = await requireEtablissement(etablissementId);
   const id = etablissement.id;
   const [
     nbPrestataires,
@@ -41,23 +41,23 @@ export async function etatDesPiecesDuDossier(etablissementId: string, maintenant
     nbPlansPrevention,
     carnet,
   ] = await Promise.all([
-    prisma.prestataire.count({ where: { etablissementId: id } }),
-    prisma.duerpVersion.findFirst({
+    db.prestataire.count({ where: { etablissementId: id } }),
+    db.duerpVersion.findFirst({
       where: { duerp: { etablissementId: id } },
       orderBy: { numero: "desc" },
       select: { numero: true, createdAt: true },
     }),
-    prisma.rapportVerification.count({ where: { etablissementId: id } }),
-    prisma.registreAccessibilite.findUnique({
+    db.rapportVerification.count({ where: { etablissementId: id } }),
+    db.registreAccessibilite.findUnique({
       where: { etablissementId: id },
       select: { publie: true },
     }),
     // Ce que le ZIP met dans ses autres pièces, par les filtres de la route
     // (`controle/pieces-zip.ts`) : l'écran annonce ce que le ZIP contient.
-    prisma.rapportVerification.count({ where: filtreRapportsDuDossier(id) }),
-    prisma.permisFeu.count({ where: filtreActesDuDossier(id, maintenant) }),
-    prisma.planPrevention.count({ where: filtreActesDuDossier(id, maintenant) }),
-    prisma.carnetSanitaire.findUnique({
+    db.rapportVerification.count({ where: filtreRapportsDuDossier(id) }),
+    db.permisFeu.count({ where: filtreActesDuDossier(id, maintenant) }),
+    db.planPrevention.count({ where: filtreActesDuDossier(id, maintenant) }),
+    db.carnetSanitaire.findUnique({
       where: { etablissementId: id },
       select: {
         _count: {

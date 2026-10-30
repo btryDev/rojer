@@ -1,6 +1,7 @@
+import { requireUser } from "@/lib/auth/require-user";
+import { requireCompte } from "@/lib/auth/compte";
 import "server-only";
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
 import { duerpDuRendu } from "@/lib/duerps/queries";
 import { cache } from "react";
 
@@ -84,8 +85,8 @@ export const getEtablissement = cache(async function getEtablissement(
  */
 export const listerEtablissementsDuCompte = cache(
   async function listerEtablissementsDuCompte() {
-    const user = await requireUser();
-    return prisma.etablissement.findMany({
+    const { user, db } = await requireCompte();
+    return db.etablissement.findMany({
       where: { entreprise: { userId: user.id } },
       orderBy: { createdAt: "asc" },
       select: { id: true, raisonDisplay: true },

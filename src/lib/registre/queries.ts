@@ -1,3 +1,4 @@
+import { requireCompte } from "@/lib/auth/compte";
 import "server-only";
 // Lecture : la composition du registre pour un établissement réel.
 //
@@ -13,8 +14,6 @@ import "server-only";
 
 import { trierParCategorie } from "@/lib/equipements/labels";
 import { cache } from "react";
-import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
 import { projeterEtablissement } from "@/lib/matching/projection";
 import { composerRegistreParPartie, type PartieDue } from "./composition";
 import { CHAMPS_PAR_SECTION } from "./champs";
@@ -71,8 +70,8 @@ export const composerRegistreDeLEtablissement = cache(
   async (
     etablissementId: string,
   ): Promise<RegistreDeLEtablissement | null> => {
-    const user = await requireUser();
-    const etab = await prisma.etablissement.findFirst({
+    const { user, db } = await requireCompte();
+    const etab = await db.etablissement.findFirst({
       where: { id: etablissementId, entreprise: { userId: user.id } },
       select: {
         id: true,

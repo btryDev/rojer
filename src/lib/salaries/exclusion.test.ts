@@ -150,6 +150,11 @@ vi.mock("@/lib/prisma", () => ({
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/auth/scope", () => ({
   assertEtablissementOwnership: vi.fn(async () => {}),
+  // La garde rend aussi le client borné (ADR-051) : ici, le client simulé.
+  assertEtablissementDuCompte: async (...a: unknown[]) => ({
+    user: (await (vi.fn(async () => {}) as (...x: unknown[]) => unknown)(...a)) ?? { id: "u1" },
+    db: (await import("@/lib/prisma")).prisma,
+  }),
 }));
 vi.mock("@/lib/calendrier/actions", () => ({
   genererCalendrier: h.genererCalendrier,

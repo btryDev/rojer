@@ -4,8 +4,7 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { SELECT_FAITS_ACTIVITE } from "@/lib/etablissements/faits-activite";
 import { reprendreFaitsDansDuerp } from "@/lib/etablissements/faits-activite-ecriture";
-import { prisma } from "@/lib/prisma";
-import { assertEtablissementOwnership } from "@/lib/auth/scope";
+import { assertEtablissementDuCompte, assertEtablissementOwnership } from "@/lib/auth/scope";
 import { construireEcrituresImport } from "./ecritures";
 import { verifierPlafondImport } from "../plafond-unites";
 import {
@@ -119,7 +118,7 @@ export async function commitImport(
   _prev: CommitImportState,
   formData: FormData,
 ): Promise<CommitImportState> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
 
   const fichier = formData.get("fichier");
   if (!(fichier instanceof File) || fichier.size === 0) {
@@ -145,7 +144,7 @@ export async function commitImport(
 
   // Le DUERP actif de l'établissement, s'il y en a un — on ne le crée pas
   // encore.
-  const duerpExistant = await prisma.duerp.findFirst({
+  const duerpExistant = await db.duerp.findFirst({
     where: { etablissementId },
     orderBy: { updatedAt: "desc" },
   });
@@ -161,7 +160,7 @@ export async function commitImport(
   // aurait rendu la borne aveugle aux unités que le fichier ne mentionne pas
   // — c'est-à-dire au cas courant.
   const unitesExistantes = duerpExistant
-    ? await prisma.uniteTravail.findMany({
+    ? await db.uniteTravail.findMany({
         where: { duerpId: duerpExistant.id },
         select: { id: true, nom: true, estTransverse: true },
       })
@@ -178,7 +177,7 @@ export async function commitImport(
 
   const duerpId =
     duerpExistant?.id ??
-    (await prisma.duerp.create({ data: { etablissementId } })).id;
+    (await db.duerp.create({ data: { etablissementId } })).id;
 
   // Les identifiants sont générés ici, donc plus aucune écriture n'attend le
   // résultat d'une autre : les trois listes partent en autant de `createMany`,
@@ -205,7 +204,7 @@ export async function commitImport(
   // réimporterait sur un DUERP déjà rempli (contre-relecture du 2026-10-08).
   const faits = duerpExistant
     ? null
-    : await prisma.etablissement.findUnique({
+    : await db.etablissement.findUnique({
         where: { id: etablissementId },
         select: SELECT_FAITS_ACTIVITE,
       });
@@ -214,7 +213,7 @@ export async function commitImport(
   // l'exécution — les unités avant les risques qui les référencent, les
   // risques avant leurs actions, puis la reprise, qui crée l'unité
   // transverse que le fichier ne porte jamais.
-  await prisma.$transaction(async (tx) => {
+  await db.$transaction(async (tx) => {
     if (ecritures.unitesACreer.length > 0) {
       await tx.uniteTravail.createMany({ data: ecritures.unitesACreer });
     }

@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
 import { requireEtablissement } from "@/lib/auth/scope";
 import {
   clePhotoEtablissement,
@@ -38,7 +37,7 @@ export async function deposerPhotoEtablissement(
   etablissementId: string,
   formData: FormData,
 ): Promise<ResultatPhoto> {
-  const { user, etablissement } = await requireEtablissement(etablissementId);
+  const { db, user, etablissement } = await requireEtablissement(etablissementId);
   const fichier = formData.get("photo");
   if (!(fichier instanceof File) || fichier.size === 0) {
     return { status: "error", message: "Aucune photo sélectionnée." };
@@ -62,7 +61,7 @@ export async function deposerPhotoEtablissement(
   const ancienne = etablissement.photoCle;
   let enregistree = false;
   try {
-    const { count } = await prisma.etablissement.updateMany({
+    const { count } = await db.etablissement.updateMany({
       where: { id: etablissement.id, entreprise: { userId: user.id }, photoCle: ancienne },
       data: { photoCle: cle, photoMime: val.mime, photoDeposeeLe: new Date() },
     });
@@ -83,12 +82,12 @@ export async function deposerPhotoEtablissement(
 export async function retirerPhotoEtablissement(
   etablissementId: string,
 ): Promise<ResultatPhoto> {
-  const { user, etablissement } = await requireEtablissement(etablissementId);
+  const { db, user, etablissement } = await requireEtablissement(etablissementId);
   if (!etablissement.photoCle) return { status: "ok" };
   // Borné à la clé lue : un dépôt concurrent qui l'aurait déjà remplacée
   // n'est pas effacé par ce retrait.
   try {
-    const { count } = await prisma.etablissement.updateMany({
+    const { count } = await db.etablissement.updateMany({
       where: {
         id: etablissement.id,
         entreprise: { userId: user.id },

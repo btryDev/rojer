@@ -1,10 +1,10 @@
 "use server";
 
+import { requireCompte } from "@/lib/auth/compte";
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
-import { assertEtablissementOwnership } from "@/lib/auth/scope";
+import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { batimentSchema, MAX_ZONES, PLAFOND_ZONES } from "./schema";
 
 /**
@@ -43,8 +43,8 @@ function revalider(etablissementId: string) {
 
 /** Scope d'une zone : elle appartient au user via son établissement. */
 async function trouverBatimentDuUser(id: string) {
-  const user = await requireUser();
-  return prisma.batiment.findFirst({
+  const { user, db } = await requireCompte();
+  return db.batiment.findFirst({
     where: { id, etablissement: { entreprise: { userId: user.id } } },
     select: { id: true, etablissementId: true, ordre: true },
   });
@@ -61,7 +61,7 @@ export async function creerBatiment(
   _prev: BatimentActionState,
   formData: FormData,
 ): Promise<BatimentActionState> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
   const parsed = batimentSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     return {
@@ -74,7 +74,7 @@ export async function creerBatiment(
   // Le rang du prochain et le compte se lisent d'un seul passage : ils
   // portent sur le même ensemble, et deux requêtes en donneraient deux
   // photos décalées.
-  const existant = await prisma.batiment.aggregate({
+  const existant = await db.batiment.aggregate({
     where: { etablissementId },
     _max: { ordre: true },
     _count: true,
@@ -91,7 +91,7 @@ export async function creerBatiment(
   }
 
   try {
-    const b = await prisma.batiment.create({
+    const b = await db.batiment.create({
       data: {
         etablissementId,
         nom: parsed.data.nom,

@@ -1,13 +1,13 @@
 "use server";
 
+import { requireCompte } from "@/lib/auth/compte";
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { resoudreBatimentOptionnel } from "@/lib/batiments/queries";
 import { resoudrePrestataireOptionnel } from "@/lib/prestataires/queries";
-import { assertEtablissementOwnership } from "@/lib/auth/scope";
-import { requireUser } from "@/lib/auth/require-user";
+import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { NatureTravauxPointChaud } from "@prisma/client";
 import type { StatutPermisFeu } from "@prisma/client";
 import { NATURES_TRAVAUX, permisFeuSchema, type PermisFeuInput } from "./schema";
@@ -108,7 +108,7 @@ export async function creerPermisFeu(
   _prev: PermisFeuActionState,
   formData: FormData,
 ): Promise<PermisFeuActionState> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
 
   const parsed = lirePermisFeu(formData);
   if (!parsed.success) {
@@ -133,7 +133,7 @@ export async function creerPermisFeu(
   const numero = await nextNumeroPermisFeu(etablissementId);
   const id = `pf_${randomUUID()}`;
 
-  const permis = await prisma.permisFeu.create({
+  const permis = await db.permisFeu.create({
     data: {
       id,
       etablissementId,
@@ -159,8 +159,8 @@ export async function creerPermisFeu(
  * tombent sur le même `notFound()` — celui des helpers de `auth/scope`.
  */
 async function permisDuCompte(permisFeuId: string) {
-  const user = await requireUser();
-  const permis = await prisma.permisFeu.findFirst({
+  const { user, db } = await requireCompte();
+  const permis = await db.permisFeu.findFirst({
     where: { id: permisFeuId, etablissement: { entreprise: { userId: user.id } } },
     select: { etablissementId: true, statut: true, numero: true },
   });

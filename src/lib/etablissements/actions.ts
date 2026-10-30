@@ -8,9 +8,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import {
-  assertEtablissementOwnership,
-} from "@/lib/auth/scope";
+import { assertEtablissementDuCompte, assertEtablissementOwnership } from "@/lib/auth/scope";
 import { poserEtablissementActif } from "./etablissement-actif";
 import { sirenDuSiret } from "./siret";
 import { supprimerEntrepriseSiVide } from "@/lib/entreprises/cycle-de-vie";
@@ -225,7 +223,7 @@ export async function modifierEtablissement(
   _prev: EtablissementActionState,
   formData: FormData,
 ): Promise<EtablissementActionState> {
-  const user = await assertEtablissementOwnership(id);
+  const { user, db } = await assertEtablissementDuCompte(id);
   const brut = normaliserFormData(formData);
   const parsed = etablissementSchema.safeParse(brut);
   if (!parsed.success) {
@@ -250,7 +248,7 @@ export async function modifierEtablissement(
 
   // État avant modification : c'est lui qui dit si le calendrier doit être
   // recalculé.
-  const avant = await prisma.etablissement.findUnique({
+  const avant = await db.etablissement.findUnique({
     where: { id },
     select: {
       estEtablissementTravail: true,
@@ -292,7 +290,7 @@ export async function modifierEtablissement(
   let entrepriseCible = avant.entrepriseId;
   let sirenAPoser = false;
   if (avant.entreprise.siren !== siren) {
-    const autre = await prisma.entreprise.findFirst({
+    const autre = await db.entreprise.findFirst({
       where: { userId: user.id, siren },
       select: { id: true },
     });
@@ -345,7 +343,7 @@ export async function modifierEtablissement(
   });
   let etab;
   try {
-    etab = await prisma.$transaction(async (tx) => {
+    etab = await db.$transaction(async (tx) => {
       if (sirenAPoser) {
         await tx.entreprise.update({
           where: { id: avant.entrepriseId },
@@ -453,9 +451,9 @@ async function compterVersionsDuerp(etablissementId: string): Promise<number> {
 export async function supprimerEtablissement(
   id: string,
 ): Promise<SuppressionResult> {
-  await assertEtablissementOwnership(id);
+  const { db } = await assertEtablissementDuCompte(id);
 
-  const etab = await prisma.etablissement.findUnique({
+  const etab = await db.etablissement.findUnique({
     where: { id },
     select: { id: true, entrepriseId: true },
   });
@@ -482,7 +480,7 @@ export async function supprimerEtablissement(
   // fois la base d'accord.
   let cles: string[];
   try {
-    cles = await prisma.$transaction(async (tx) => {
+    cles = await db.$transaction(async (tx) => {
       const c = await clesDesEtablissements(tx, [id]);
       await tx.etablissement.delete({ where: { id } });
       // Le dernier parti, l'entreprise part avec lui (2026-10-26).

@@ -1,7 +1,6 @@
+import { requireCompte } from "@/lib/auth/compte";
 import "server-only";
 import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
-import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import { aUnRendezVous, classerVerification, type RegistreLigne } from "@/lib/calendrier/etats";
 import { joindreDernieresRealisations } from "@/lib/rapports/joindre-realisations";
@@ -31,8 +30,8 @@ export type ControleDEnsemble = {
  * couvre, il s'annonce « Aussi couvert par », compté une seule fois.
  */
 export async function controlesDEnsemble(etablissementId: string, maintenant: Date): Promise<ControleDEnsemble[]> {
-  const user = await requireUser();
-  const lignes = await prisma.verification.findMany({
+  const { user, db } = await requireCompte();
+  const lignes = await db.verification.findMany({
     where: {
       etablissementId,
       etablissement: { entreprise: { userId: user.id } },

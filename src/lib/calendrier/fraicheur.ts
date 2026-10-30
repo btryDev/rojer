@@ -67,9 +67,9 @@
 // (`docs/chantiers-ouverts.md` § 15, rayé). Ce module, lui, se tait toujours
 // sur `a_jour`, et c'est toujours juste.
 
+import { requireCompte } from "@/lib/auth/compte";
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
 import { SCEAU_CALENDRIER } from "./version-moteur";
 
 /**
@@ -148,8 +148,8 @@ export async function fraicheurDepuisRepere(
 export async function lireRepereCalendrier(
   etablissementId: string,
 ): Promise<{ repere: string | null } | null> {
-  const user = await requireUser();
-  const etab = await prisma.etablissement.findFirst({
+  const { user, db } = await requireCompte();
+  const etab = await db.etablissement.findFirst({
     where: { id: etablissementId, entreprise: { userId: user.id } },
     select: { referentielVersionCalendrier: true },
   });
