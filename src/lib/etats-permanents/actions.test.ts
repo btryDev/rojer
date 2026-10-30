@@ -41,6 +41,8 @@ vi.mock("@/lib/prisma", () => ({ prisma: h.prisma }));
 vi.mock("next/cache", () => ({ revalidatePath: h.revalidatePath }));
 vi.mock("@/lib/auth/scope", () => ({
   assertEtablissementOwnership: vi.fn(async () => {}),
+  // Rend le client borné (ADR-051) : ici, le client simulé.
+  assertEtablissementDuCompte: vi.fn(async () => ({ user: { id: "u1" }, db: h.prisma })),
 }));
 
 const { declarerEnPlace } = await import("./actions");

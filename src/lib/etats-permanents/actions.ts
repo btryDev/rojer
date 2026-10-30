@@ -1,9 +1,9 @@
 "use server";
 
+import type { Db } from "@/lib/auth/compte";
 import { etabliParLesTitres } from "./par-les-titres";
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
-import { assertEtablissementOwnership } from "@/lib/auth/scope";
+import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import { modeDeclarationApplique } from "./regle";
 import {
@@ -61,18 +61,19 @@ export type DeclarationActionState =
  * connaître le dossier.
  */
 async function obligationDeclarable(
+  db: Db,
   etablissementId: string,
   obligationId: string,
 ): Promise<boolean | "etabli_par_les_titres"> {
   if (!obligationParId(obligationId)) return false;
 
-  const etablissement = await prisma.etablissement.findUnique({
+  const etablissement = await db.etablissement.findUnique({
     where: { id: etablissementId },
     include: { entreprise: { select: { effectif: true } } },
   });
   if (!etablissement) return false;
 
-  const equipements = await prisma.equipement.findMany({
+  const equipements = await db.equipement.findMany({
     where: { etablissementId, actif: true },
     select: { id: true, libelle: true, categorie: true, caracteristiques: true },
   });
@@ -128,9 +129,9 @@ export async function declarerEnPlace(
   obligationId: string,
   note?: string | null,
 ): Promise<DeclarationActionState> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
 
-  const declarable = await obligationDeclarable(etablissementId, obligationId);
+  const declarable = await obligationDeclarable(db, etablissementId, obligationId);
   if (declarable === "etabli_par_les_titres") {
     return {
       status: "error",
@@ -154,7 +155,7 @@ export async function declarerEnPlace(
     };
   }
 
-  await prisma.declarationEtatPermanent.upsert({
+  await db.declarationEtatPermanent.upsert({
     where: { etablissementId_obligationId: { etablissementId, obligationId } },
     // Redéclarer redate. C'est le sens de la ligne : l'employeur affirme
     // qu'aujourd'hui l'état est là. Une seconde déclaration n'empile pas un
@@ -176,13 +177,13 @@ export async function retirerDeclaration(
   etablissementId: string,
   obligationId: string,
 ): Promise<DeclarationActionState> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
 
   // `deleteMany` et non `delete` : décocher une ligne jamais déclarée ne doit
   // pas lever. L'écran est optimiste, deux clics rapides peuvent arriver dans
   // l'ordre inverse, et un `P2025` affiché au dirigeant ne lui apprendrait
   // rien.
-  await prisma.declarationEtatPermanent.deleteMany({
+  await db.declarationEtatPermanent.deleteMany({
     where: { etablissementId, obligationId },
   });
 

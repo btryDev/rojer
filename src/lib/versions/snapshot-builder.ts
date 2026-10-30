@@ -1,5 +1,4 @@
-import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireCompte } from "@/lib/auth/compte";
 import type {
   DuerpSnapshot,
   MesureSnapshot,
@@ -32,8 +31,8 @@ export async function construireSnapshot(
   duerpId: string,
   options: { numero: number; motif: string | null },
 ): Promise<DuerpSnapshot | null> {
-  const user = await requireUser();
-  const duerp = await prisma.duerp.findFirst({
+  const { user, db } = await requireCompte();
+  const duerp = await db.duerp.findFirst({
     where: {
       id: duerpId,
       etablissement: { entreprise: { userId: user.id } },

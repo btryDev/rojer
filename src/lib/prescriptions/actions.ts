@@ -2,8 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import type { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
-import { assertEtablissementOwnership } from "@/lib/auth/scope";
+import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import { cleJourCivil, depuisCleJourCivil, estJourCivilReel } from "@/lib/dates";
 import { validerPrescription } from "./schema";
@@ -37,7 +36,7 @@ export async function creerPrescription(
   _prev: PrescriptionActionState,
   formData: FormData,
 ): Promise<PrescriptionActionState> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
 
   const parsed = validerPrescription(normaliser(formData));
   if (!parsed.success) {
@@ -51,7 +50,7 @@ export async function creerPrescription(
 
   // Un équipement visé doit appartenir à l'établissement.
   if (d.equipementId) {
-    const eq = await prisma.equipement.findFirst({
+    const eq = await db.equipement.findFirst({
       where: { id: d.equipementId, etablissementId },
       select: { id: true },
     });
@@ -92,7 +91,7 @@ export async function creerPrescription(
           categorieEquipement: d.categorieEquipement ?? null,
         };
 
-  const p = await prisma.prescriptionParticuliere.create({
+  const p = await db.prescriptionParticuliere.create({
     data,
     select: { id: true },
   });
@@ -114,7 +113,7 @@ export async function leverPrescription(
   _prev: PrescriptionActionState,
   formData: FormData,
 ): Promise<PrescriptionActionState> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
 
   const brut = formData.get("dateFin");
   const dateFin = typeof brut === "string" ? brut.trim() : "";
@@ -127,7 +126,7 @@ export async function leverPrescription(
     };
   }
 
-  const existante = await prisma.prescriptionParticuliere.findFirst({
+  const existante = await db.prescriptionParticuliere.findFirst({
     where: { id: prescriptionId, etablissementId },
     select: { dateDocument: true },
   });
@@ -152,7 +151,7 @@ export async function leverPrescription(
   // prouvait. La suppression compte désormais les preuves sans borne de
   // levée : antidater ne rend plus rien supprimable.)
 
-  await prisma.prescriptionParticuliere.update({
+  await db.prescriptionParticuliere.update({
     where: { id: prescriptionId, etablissementId },
     data: { dateFin: date },
   });
@@ -167,8 +166,8 @@ export async function reactiverPrescription(
   etablissementId: string,
   prescriptionId: string,
 ): Promise<void> {
-  await assertEtablissementOwnership(etablissementId);
-  await prisma.prescriptionParticuliere.update({
+  const { db } = await assertEtablissementDuCompte(etablissementId);
+  await db.prescriptionParticuliere.update({
     where: { id: prescriptionId, etablissementId },
     data: { dateFin: null, actif: true },
   });
@@ -191,14 +190,14 @@ export async function supprimerPrescription(
   etablissementId: string,
   prescriptionId: string,
 ): Promise<PrescriptionActionState> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
 
   // (Une garde « prescription levée » a vécu ici quelques heures, le
   // 2026-09-15 : elle rattrapait un compte fondé sur `prescriptionId`, que la
   // levée remettait à zéro. Elle créait une impasse — une saisie erronée sur
   // une ligne déjà contrôlée ne se supprimait ni active, ni levée. Le compte
   // par cible et par date de l'acte ne dépend plus de l'effet : il suffit.)
-  const existante = await prisma.prescriptionParticuliere.findFirst({
+  const existante = await db.prescriptionParticuliere.findFirst({
     where: { id: prescriptionId, etablissementId },
     select: {
       id: true,
@@ -238,7 +237,7 @@ export async function supprimerPrescription(
     };
   }
 
-  await prisma.prescriptionParticuliere.delete({
+  await db.prescriptionParticuliere.delete({
     where: { id: prescriptionId, etablissementId },
   });
   await regenererApresMutation(etablissementId, "prescriptions");

@@ -1,6 +1,5 @@
+import { requireCompte } from "@/lib/auth/compte";
 import "server-only";
-import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
 import type { DuerpSnapshot } from "./snapshot";
 
 /**
@@ -12,8 +11,8 @@ import type { DuerpSnapshot } from "./snapshot";
  * par `getVersion`.
  */
 export async function listerVersions(duerpId: string) {
-  const user = await requireUser();
-  return prisma.duerpVersion.findMany({
+  const { user, db } = await requireCompte();
+  return db.duerpVersion.findMany({
     where: {
       duerpId,
       duerp: { etablissement: { entreprise: { userId: user.id } } },
@@ -30,8 +29,8 @@ export async function listerVersions(duerpId: string) {
 }
 
 export async function getVersion(duerpId: string, numero: number) {
-  const user = await requireUser();
-  const version = await prisma.duerpVersion.findFirst({
+  const { user, db } = await requireCompte();
+  const version = await db.duerpVersion.findFirst({
     where: {
       duerpId,
       numero,

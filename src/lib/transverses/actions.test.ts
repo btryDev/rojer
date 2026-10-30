@@ -150,7 +150,10 @@ const h = vi.hoisted(() => {
 
 vi.mock("@/lib/prisma", () => ({ prisma: h.prisma }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
-vi.mock("@/lib/auth/scope", () => ({ requireDuerp: h.requireDuerp }));
+// Les gardes rendent le client borné (ADR-051) : ici, le client simulé.
+vi.mock("@/lib/auth/scope", () => ({
+  requireDuerp: async () => ({ db: h.prisma, ...(await h.requireDuerp()) }),
+}));
 vi.mock("@/lib/calendrier/regeneration-sure", () => ({
   regenererApresMutation: async () => {
     h.db.regenerations++;

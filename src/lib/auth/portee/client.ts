@@ -8,6 +8,7 @@ import "server-only";
 // Le SQL brut (`$queryRaw`, `$executeRaw`) n'est pas borné par l'extension :
 // sa propre garde le tient (ADR-051 § 5).
 
+import type { Prisma, PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { argumentsBornes, ErreurPortee, estLectureDIdentifiants, noterVus, type Portee } from "./borne";
 
@@ -15,7 +16,13 @@ function etendre(p: Portee) {
   // Copie figée : un appelant qui garderait l'objet ne peut plus déplacer la
   // portée d'un client déjà en cache (revue du lot 2a).
   const portee: Portee = Object.freeze({ type: "compte", userId: p.userId });
-  return prisma.$extends({
+  // Typé comme le client brut : l'extension ne porte que sur les ARGUMENTS
+  // des requêtes (`query`), elle n'ajoute ni modèle, ni champ, ni méthode —
+  // l'API à l'exécution est la même. Le type étendu de Prisma, lui, n'est pas
+  // assignable à `Prisma.TransactionClient` et perdait le type des `include` :
+  // les utilitaires qui reçoivent un client ou une transaction les acceptent
+  // ainsi sans changer de signature.
+  const client = prisma.$extends({
     name: "borne-au-compte",
     query: {
       $allModels: {
@@ -27,9 +34,10 @@ function etendre(p: Portee) {
       },
     },
   });
+  return client as unknown as PrismaClient;
 }
 
-export type ClientBorne = ReturnType<typeof etendre>;
+export type ClientBorne = PrismaClient;
 
 // Un client par portée, gardé : `$extends` est peu coûteux, mais un rendu en
 // demande des dizaines. La clé est l'identifiant de la portée ; un client
@@ -56,4 +64,4 @@ export function clientBorne(portee: Portee): ClientBorne {
 }
 
 /** Le client d'une transaction ouverte sur un client borné. */
-export type TransactionBornee = Parameters<Parameters<ClientBorne["$transaction"]>[0]>[0];
+export type TransactionBornee = Prisma.TransactionClient;

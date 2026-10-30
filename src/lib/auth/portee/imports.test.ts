@@ -48,11 +48,6 @@ const A_MIGRER = new Set([
   "src/lib/access-tokens/verify.ts",
   "src/lib/accessibilite/actions.ts",
   "src/lib/accessibilite/queries.ts",
-  "src/lib/actions/actions.ts",
-  "src/lib/actions/plan.ts",
-  "src/lib/actions/queries.ts",
-  "src/lib/activites/actions.ts",
-  "src/lib/assistance/actions.ts",
   "src/lib/batiments/actions.ts",
   "src/lib/batiments/queries.ts",
   "src/lib/calendrier/actions.ts",
@@ -84,8 +79,6 @@ const A_MIGRER = new Set([
   "src/lib/etablissements/parametrage.ts",
   "src/lib/etablissements/photo.ts",
   "src/lib/etablissements/queries.ts",
-  "src/lib/etats-permanents/actions.ts",
-  "src/lib/etats-permanents/queries.ts",
   "src/lib/mcp/acces-oauth-deps.ts", // par dbMcp()
   "src/lib/mcp/db.ts",
   "src/lib/mcp/queries.ts", // par dbMcp()
@@ -97,10 +90,8 @@ const A_MIGRER = new Set([
   "src/lib/plan-prevention/actions.ts",
   "src/lib/plan-prevention/queries.ts",
   "src/lib/points-a-corriger/queries.ts",
-  "src/lib/prescriptions/actions.ts",
   "src/lib/prescriptions/lecture-preuves.ts",
   "src/lib/prescriptions/libelles-retires.ts",
-  "src/lib/prescriptions/queries.ts",
   "src/lib/prestataires/actions.ts",
   "src/lib/prestataires/queries.ts",
   "src/lib/rapports/actions.ts",
@@ -108,10 +99,6 @@ const A_MIGRER = new Set([
   "src/lib/rapports/queries.ts",
   "src/lib/registre/actions.ts",
   "src/lib/registre/queries.ts",
-  "src/lib/rendez-vous/actions.ts",
-  "src/lib/rendez-vous/queries.ts",
-  "src/lib/risques/actions.ts",
-  "src/lib/risques/queries.ts",
   "src/lib/salaries/actions.ts",
   "src/lib/salaries/droits.ts",
   "src/lib/salaries/queries.ts",
@@ -129,10 +116,6 @@ const A_MIGRER = new Set([
   "src/lib/signatures/verification-publique.ts",
   "src/lib/signatures/verrou-contenu.ts",
   "src/lib/suppression/queries.ts",
-  "src/lib/transverses/actions.ts",
-  "src/lib/versions/actions.ts",
-  "src/lib/versions/queries.ts",
-  "src/lib/versions/snapshot-builder.ts",
 ]);
 
 /** Modules qui peuvent importer les rouages du client borné. */

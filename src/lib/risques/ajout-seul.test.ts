@@ -18,7 +18,8 @@ const { prismaMock } = vi.hoisted(() => ({
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/auth/scope", () => ({
-  requireUnite: vi.fn(async () => ({ unite: { id: "u1", duerpId: "d1" } })),
+  // La garde rend le client borné (ADR-051) : ici, le client simulé.
+  requireUnite: vi.fn(async () => ({ db: prismaMock, unite: { id: "u1", duerpId: "d1" } })),
   requireRisque: vi.fn(),
 }));
 

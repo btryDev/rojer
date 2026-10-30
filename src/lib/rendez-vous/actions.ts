@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
 import { requireVerification } from "@/lib/auth/scope";
 import { depuisSaisieDateHeure, joursCivilsEntre } from "@/lib/dates";
 import { resoudrePrestataireOptionnel } from "@/lib/prestataires/queries";
@@ -23,7 +22,7 @@ export async function enregistrerSuiviControle(
   _prev: SuiviControleState,
   formData: FormData,
 ): Promise<SuiviControleState> {
-  const { verification: v, etablissementId } = await requireVerification(verificationId);
+  const { db, verification: v, etablissementId } = await requireVerification(verificationId);
   if (!recoitUnSuivi(v)) {
     return { status: "error", message: "Ce contrôle ne reçoit ni prestataire ni rendez-vous." };
   }
@@ -62,7 +61,7 @@ export async function enregistrerSuiviControle(
       };
     }
   }
-  await prisma.verification.updateMany({
+  await db.verification.updateMany({
     where: { id: v.id, etablissementId },
     data: {
       prestataireId: prestataire.id,

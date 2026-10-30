@@ -22,3 +22,9 @@ export async function getOptionalCompte() {
 }
 
 export type Compte = Awaited<ReturnType<typeof requireCompte>>;
+
+/**
+ * Le client borné, à passer en paramètre aux fonctions qui lisent pour un
+ * appelant déjà authentifié — jamais fabriqué par elles.
+ */
+export type Db = Compte["db"];

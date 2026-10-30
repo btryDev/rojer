@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
 import { requireDuerp } from "@/lib/auth/scope";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import { ecrireReponseFermee } from "@/lib/duerps/ecrire-reponse-fermee";
@@ -45,7 +44,7 @@ export async function repondreQuestionTransverse(
   questionId: string,
   reponse: boolean | null,
 ): Promise<void> {
-  const { duerp } = await requireDuerp(duerpId);
+  const { db, duerp } = await requireDuerp(duerpId);
   const question = questionTransverseParId(questionId);
   if (!question) throw new Error(`Question transverse inconnue : ${questionId}`);
   // Une question qui pose un FAIT D'ACTIVITÉ (ADR-041) : la réponse vit sur
@@ -61,7 +60,7 @@ export async function repondreQuestionTransverse(
     // Le fait ajoute ou retire des obligations : le calendrier suit.
     await regenererApresMutation(duerp.etablissementId, `transverses/${question.id}`);
   } else {
-    await prisma.$transaction(async (tx) => {
+    await db.$transaction(async (tx) => {
       await poserRisqueTransverse(tx, duerpId, question, reponse === true, "toujours");
       // « oui » efface la clé : il se lit sur le risque, et un `false` resté là
       // contredirait le document le jour où le risque serait retiré ailleurs.

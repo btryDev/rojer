@@ -18,9 +18,13 @@ const h = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/prisma", () => ({ prisma: { verification: { updateMany: h.updateMany } } }));
-vi.mock("@/lib/auth/scope", () => ({
-  requireVerification: vi.fn(async () => ({ verification: h.ligne, etablissementId: "e1" })),
-}));
+vi.mock("@/lib/auth/scope", async () => {
+  // La garde rend le client borné (ADR-051) : ici, le client simulé.
+  const { prisma } = await import("@/lib/prisma");
+  return {
+    requireVerification: vi.fn(async () => ({ db: prisma, verification: h.ligne, etablissementId: "e1" })),
+  };
+});
 vi.mock("@/lib/prestataires/queries", () => ({ resoudrePrestataireOptionnel: h.resoudre }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
