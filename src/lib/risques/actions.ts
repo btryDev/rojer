@@ -242,7 +242,7 @@ export async function enregistrerCotation(
   // réponse générale. Décocher ne vaut pas « non » — un autre risque peut
   // porter l'exposition, et une case vide n'a jamais été une réponse.
   if (risque.exposeCMR) {
-    await ecrireFaitActivite(etablissementId, "expositionCMR", true, "si_vierge");
+    await ecrireFaitActivite(db, etablissementId, "expositionCMR", true, "si_vierge");
     revalidatePath(`/etablissements/${etablissementId}`, "layout");
   }
 

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { Db } from "@/lib/auth/compte";
 
 // D2 (a) : le dossier PDF transmet au score les questions de couverture du
 // dossier. Contre-lecture du lot 3 : ce maillon n'était tenu par aucun test —
@@ -27,12 +28,11 @@ const etab = {
 
 vi.mock("@/lib/auth/require-user", () => ({ requireUser: async () => ({ id: "user-1" }) }));
 // 2026-10-14 : le builder lit aussi les matériels non couverts déclarés.
-vi.mock("@/lib/prisma", () => ({
-  prisma: {
-    etablissement: { findFirst: async () => etab },
-    equipement: { findMany: async () => [] },
-  },
-}));
+// Le client borné au compte (ADR-051) est reçu de la route : simulé ici.
+const db = {
+  etablissement: { findFirst: async () => etab },
+  equipement: { findMany: async () => [] },
+} as unknown as Db;
 vi.mock("@/lib/actions/queries", async (orig) => ({
   ...(await orig<typeof import("@/lib/actions/queries")>()),
   compterActions: async () => ({ totalACouvrir: 0, enRetard: 0, ouvertes: 0, enCours: 0, leveesRecemment: 0 }),
@@ -83,9 +83,9 @@ beforeEach(() => {
 
 describe("dossier PDF : le score reçoit la couverture (D2 (a))", () => {
   it("une question ouverte empêche « satisfaisante » ; sans question, rien ne change", async () => {
-    const sans = await construireDossierConformiteData("etab-1", { id: "user-1", email: null });
+    const sans = await construireDossierConformiteData(db, "etab-1", { id: "user-1", email: null });
     h.indeterminations = [{ axe: "categorie_erp", motif: "m", quoiFaire: "q" }];
-    const avec = await construireDossierConformiteData("etab-1", { id: "user-1", email: null });
+    const avec = await construireDossierConformiteData(db, "etab-1", { id: "user-1", email: null });
     expect(sans?.score.indeterminationsCouverture).toBe(0);
     expect(avec?.score.indeterminationsCouverture).toBe(1);
     expect(avec?.score.niveau).not.toBe(sans?.score.niveau);

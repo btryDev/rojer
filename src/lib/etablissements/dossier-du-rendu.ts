@@ -25,6 +25,12 @@ import "server-only";
 // bornent l'établissement par le `userId` qu'ils reçoivent, et ce module garde
 // leur contrat. Le prédicat d'appartenance est porté par la requête.
 //
+// LE CLIENT BORNÉ AU COMPTE (ADR-051) EST REÇU DE MÊME, dans les variantes
+// `…DuCompte`. Un par compte, gardé par `clientBorne`, il est une clé stable
+// du cache. Les fonctions d'origine lisent par le client brut, pour les
+// appelants qui ne le tiennent pas encore (isolation, lot 2b) : leur cache est
+// distinct, et elles disparaissent quand ils passent aux variantes.
+//
 // RIEN ICI NE DÉPEND DES LIGNES DU CALENDRIER. Le layout et la page sont rendus
 // EN PARALLÈLE (`regeneration-sure.ts`) : une lecture partagée entre les deux
 // peut partir avant la réparation que fait la page. L'établissement et son
@@ -37,6 +43,7 @@ import "server-only";
 import { cache } from "react";
 import type { Equipement } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import type { Db } from "@/lib/auth/compte";
 import {
   determineObligationsApplicables,
   projeterEtablissement,
@@ -49,18 +56,29 @@ import type { EquipementMatching } from "@/lib/matching/types";
  * plus rien. C'est l'union de ce que lisaient les cinq chargements qu'il
  * remplace ; aucun n'y perd un champ.
  */
-export const chargerEtablissementEtParc = cache(
-  async function chargerEtablissementEtParc(
+export const chargerEtablissementEtParcDuCompte = cache(
+  async function chargerEtablissementEtParcDuCompte(
+    db: Db,
     etablissementId: string,
     userId: string,
   ) {
-    return prisma.etablissement.findFirst({
+    return db.etablissement.findFirst({
       where: { id: etablissementId, entreprise: { userId } },
       include: {
         entreprise: { select: { effectif: true } },
         equipements: { where: { actif: true } },
       },
     });
+  },
+);
+
+/** La même lecture par le client brut (voir l'en-tête). */
+export const chargerEtablissementEtParc = cache(
+  async function chargerEtablissementEtParc(
+    etablissementId: string,
+    userId: string,
+  ) {
+    return chargerEtablissementEtParcDuCompte(prisma, etablissementId, userId);
   },
 );
 
@@ -90,12 +108,13 @@ export function equipementsPourLeMoteur(
  * Le passage du moteur sur le dossier, une fois par rendu. `null` si le
  * dossier n'existe pas ou n'appartient pas à `userId`.
  */
-export const obligationsApplicablesDuDossier = cache(
-  async function obligationsApplicablesDuDossier(
+export const obligationsApplicablesDuDossierDuCompte = cache(
+  async function obligationsApplicablesDuDossierDuCompte(
+    db: Db,
     etablissementId: string,
     userId: string,
   ) {
-    const etab = await chargerEtablissementEtParc(etablissementId, userId);
+    const etab = await chargerEtablissementEtParcDuCompte(db, etablissementId, userId);
     if (!etab) return null;
     const equipements = equipementsPourLeMoteur(etab.equipements);
     return {
@@ -106,5 +125,15 @@ export const obligationsApplicablesDuDossier = cache(
         equipements,
       ),
     };
+  },
+);
+
+/** Le même passage, sur la lecture par le client brut (voir l'en-tête). */
+export const obligationsApplicablesDuDossier = cache(
+  async function obligationsApplicablesDuDossier(
+    etablissementId: string,
+    userId: string,
+  ) {
+    return obligationsApplicablesDuDossierDuCompte(prisma, etablissementId, userId);
   },
 );

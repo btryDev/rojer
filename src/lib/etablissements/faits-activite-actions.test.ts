@@ -8,12 +8,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const h = vi.hoisted(() => ({
   ecrits: [] as unknown[][],
   appartient: true,
+  db: { simule: "client borné" },
 }));
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+// La garde rend le client borné au compte (ADR-051) : ici, un simulé, que
+// l'écriture doit recevoir.
 vi.mock("@/lib/auth/scope", () => ({
-  assertEtablissementOwnership: vi.fn(async () => {
+  assertEtablissementDuCompte: vi.fn(async () => {
     if (!h.appartient) throw Object.assign(new Error("NEXT_NOT_FOUND"), { digest: "NEXT_HTTP_ERROR_FALLBACK;404" });
+    return { user: { id: "u1" }, db: h.db };
   }),
 }));
 vi.mock("@/lib/calendrier/regeneration-sure", () => ({
@@ -57,7 +61,8 @@ describe("repondreFaitActivite — refus avant écriture", () => {
     for (const v of [true, false, null]) {
       expect((await repondreFaitActivite("e1", "conduiteEngins", v)).status).toBe("success");
     }
-    expect(h.ecrits.map((a) => [a[2], a[3]])).toEqual([
+    expect(h.ecrits.every((a) => a[0] === h.db)).toBe(true);
+    expect(h.ecrits.map((a) => [a[3], a[4]])).toEqual([
       [true, "si_vierge"],
       [false, "si_vierge"],
       [null, "si_vierge"],

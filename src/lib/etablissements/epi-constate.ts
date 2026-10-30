@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import type { Db } from "@/lib/auth/compte";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import { CATEGORIES_EPI } from "@/lib/referentiels/types-communs";
 
@@ -32,8 +33,8 @@ const EPI_CONSTATES: Prisma.EtablissementWhereInput = {
 };
 
 /** Des EPI sont-ils constatés à ce dossier ? Lu avant d'accepter un « non ». */
-export async function epiConstates(etablissementId: string): Promise<boolean> {
-  const n = await prisma.etablissement.count({
+export async function epiConstates(db: Db, etablissementId: string): Promise<boolean> {
+  const n = await db.etablissement.count({
     where: { AND: [{ id: etablissementId }, EPI_CONSTATES] },
   });
   return n > 0;
@@ -51,12 +52,16 @@ export async function epiConstates(etablissementId: string): Promise<boolean> {
  * À SENS UNIQUE, et c'est voulu : retirer la mesure ou l'équipement ne rend
  * pas l'ancienne réponse. La question redevient libre (`epiConstates` ne
  * bloque plus le « non »), et le dirigeant la corrige au DUERP ou dans Équipe.
+ *
+ * Écrit par le client borné au compte (ADR-051) que l'appelant tient de sa
+ * garde.
  */
-export async function constaterEpi(
+export async function constaterEpiDuCompte(
+  db: Db,
   etablissementId: string,
   { regenerer = true }: { regenerer?: boolean } = {},
 ): Promise<boolean> {
-  const { count } = await prisma.etablissement.updateMany({
+  const { count } = await db.etablissement.updateMany({
     where: {
       AND: [
         { id: etablissementId },
@@ -73,6 +78,18 @@ export async function constaterEpi(
     revalidatePath(`/etablissements/${etablissementId}`, "layout");
   }
   return true;
+}
+
+/**
+ * La même écriture par le client brut, pour les appelants qui ne tiennent pas
+ * encore le client borné (`equipements/actions.ts`, isolation lot 2b) ; elle
+ * disparaît quand ils passent à `constaterEpiDuCompte`.
+ */
+export async function constaterEpi(
+  etablissementId: string,
+  options: { regenerer?: boolean } = {},
+): Promise<boolean> {
+  return constaterEpiDuCompte(prisma, etablissementId, options);
 }
 
 /** Ce que l'écran dit quand un « non » contredit des EPI constatés. */

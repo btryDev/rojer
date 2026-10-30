@@ -7,7 +7,7 @@ import {
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+import type { Db } from "@/lib/auth/compte";
 import { assertEtablissementDuCompte, assertEtablissementOwnership } from "@/lib/auth/scope";
 import { poserEtablissementActif } from "./etablissement-actif";
 import { sirenDuSiret } from "./siret";
@@ -205,8 +205,8 @@ export async function choisirEtablissementActif(
 }
 
 /** Les seuls refus de TYPE du filtre, lus sur la saisie brute (le schéma a échoué). */
-async function refusDeTypesALaTransition(id: string, brut: Record<string, unknown>) {
-  const avant = await prisma.etablissement.findUnique({
+async function refusDeTypesALaTransition(db: Db, id: string, brut: Record<string, unknown>) {
+  const avant = await db.etablissement.findUnique({
     where: { id },
     select: { estERP: true, typeErp: true, typesErpAutres: true },
   });
@@ -232,7 +232,7 @@ export async function modifierEtablissement(
     // d'un type que Rojer ne prendra pas. Ce chemin masque alors les autres
     // erreurs du formulaire, qui reviendront une fois le type corrigé : choix
     // assumé (revue du 2026-10-17, R1).
-    const typesRefuses = await refusDeTypesALaTransition(id, brut);
+    const typesRefuses = await refusDeTypesALaTransition(db, id, brut);
     if (typesRefuses.length > 0)
       return {
         status: "error",
@@ -436,8 +436,8 @@ function messageConservationDuerp(nbVersions: number): string {
  * `20260810120000_integrite_et_conservation`), mais avec une erreur Prisma
  * P2003 illisible.
  */
-async function compterVersionsDuerp(etablissementId: string): Promise<number> {
-  return prisma.duerpVersion.count({
+async function compterVersionsDuerp(db: Db, etablissementId: string): Promise<number> {
+  return db.duerpVersion.count({
     where: { duerp: { etablissementId } },
   });
 }
@@ -465,7 +465,7 @@ export async function supprimerEtablissement(
     };
   }
 
-  const nbVersions = await compterVersionsDuerp(id);
+  const nbVersions = await compterVersionsDuerp(db, id);
   if (nbVersions > 0) {
     return {
       statut: "refus",

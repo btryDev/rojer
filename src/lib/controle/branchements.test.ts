@@ -29,7 +29,7 @@ describe("branchements des fichiers déposés", () => {
     expect(queries).toMatch(
       /rapportVerification\.findMany\(\{[\s\S]{0,600}?where: \{ \.\.\.filtreRapportsDuDossier\(etablissementId\), etablissement: \{ entreprise: \{ userId \} \} \},/,
     );
-    expect(zip).toMatch(/rapportsDeposesDuDossier\(id, user\.id\)/);
+    expect(zip).toMatch(/rapportsDeposesDuDossier\(db, id, user\.id\)/);
   });
 
   it("le ZIP répond en flux, avec une durée maximale posée", () => {

@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import type { Db } from "@/lib/auth/compte";
 import { titreParId } from "./catalogue";
 import { formaterDateLongueFr } from "@/lib/dates";
 
@@ -24,10 +24,11 @@ import { formaterDateLongueFr } from "@/lib/dates";
  * que la minimisation a été tenue, pas un export incomplet.
  */
 export async function exporterDonneesSalarie(
+  db: Db,
   etablissementId: string,
   salarieId: string,
 ) {
-  const s = await prisma.salarie.findFirst({
+  const s = await db.salarie.findFirst({
     where: { id: salarieId, etablissementId },
     select: {
       id: true,

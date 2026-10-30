@@ -16,7 +16,7 @@ import {
   type ColonneAttendue,
 } from "./parser";
 import { validerFichierImport } from "./format";
-import { constaterEpi } from "@/lib/etablissements/epi-constate";
+import { constaterEpiDuCompte } from "@/lib/etablissements/epi-constate";
 
 /**
  * Import d'un DUERP Excel ou CSV.
@@ -231,7 +231,7 @@ export async function commitImport(
   // Une transaction interactive a 5 s par défaut ; un DUERP importé peut
   // porter des centaines de risques et d'actions (relecture du 2026-10-08).
   { timeout: 30_000 });
-  await constaterEpi(etablissementId);
+  await constaterEpiDuCompte(db, etablissementId);
 
   revalidatePath(`/etablissements/${etablissementId}`);
   revalidatePath(`/duerp/${duerpId}/risques`);
