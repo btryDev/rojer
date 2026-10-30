@@ -7,8 +7,8 @@
 // des droits. Cette garde est la seule barrière. Le schéma ne change que par
 // une migration, relue et appliquée au déploiement.
 //
-// Ce qui est lu, dans `src/` et `scripts/` (décision de la propriétaire du
-// 2026-10-30), tests exclus :
+// Ce qui est lu, dans `src/`, `scripts/` et `prisma/seed.ts` (décisions de la
+// propriétaire du 2026-10-30), tests exclus :
 // - dans le code (`.ts`, `.tsx`, `.js`, `.mjs`…), chaque littéral de chaîne et
 //   de gabarit, extrait par le compilateur TypeScript — les commentaires du
 //   code et les motifs des autres gardes ne sont donc pas lus ; une
@@ -37,8 +37,9 @@
 // "TABLE …"`) ou lu dans un fichier à l'exécution. Elle ferme l'oubli et la
 // copie maladroite, pas l'intention.
 //
-// Hors du périmètre décidé, et signalé : `prisma/seed.ts`, que `pnpm db:seed`
-// lance avec le même rôle (jamais contre la production).
+// `prisma/seed.ts` y est depuis la seconde décision du même jour : la
+// répétition générale de la bascule peut rejouer la graine sur la
+// préproduction Clever Cloud, avec le rôle propriétaire de cette base.
 //
 // Les tests sont exclus : ils ne tournent jamais contre la production, et une
 // doublure de test peut avoir à écrire du SQL qui en ressemble.
@@ -213,8 +214,13 @@ type Lu = { racine: string; genre: "code" | "sql" | "sh" };
 function balayer(): { lus: Lu[]; trouves: Trouve[] } {
   const trouves: Trouve[] = [];
   const lus: Lu[] = [];
-  for (const racine of ["src", "scripts"]) {
-    for (const chemin of fichiers(join(DEPOT, racine))) {
+  const sources: [string, string[]][] = [
+    ["src", fichiers(join(DEPOT, "src"))],
+    ["scripts", fichiers(join(DEPOT, "scripts"))],
+    ["prisma", [join(DEPOT, "prisma", "seed.ts")]],
+  ];
+  for (const [racine, chemins] of sources) {
+    for (const chemin of chemins) {
       const rel = relative(DEPOT, chemin);
       if (EXCLUS.has(rel) || TEST.test(rel)) continue;
       const source = readFileSync(chemin, "utf8");
@@ -348,6 +354,9 @@ describe("aucun DDL dans le code hors des migrations", () => {
   it("le balayage lit le code de scripts/", () => {
     expect(compte((l) => l.racine === "scripts" && l.genre === "code")).toBeGreaterThanOrEqual(10);
   });
+  it("le balayage lit la graine prisma/seed.ts", () => {
+    expect(compte((l) => l.racine === "prisma" && l.genre === "code")).toBe(1);
+  });
   it("le balayage lit les scripts shell", () => {
     expect(compte((l) => l.genre === "sh")).toBeGreaterThanOrEqual(1);
   });
@@ -359,7 +368,7 @@ describe("aucun DDL dans le code hors des migrations", () => {
     }
   });
 
-  it("aucun littéral, .sql ni .sh de src/ et scripts/ ne porte un DDL", () => {
+  it("aucun littéral, .sql ni .sh de src/, scripts/ et prisma/seed.ts ne porte un DDL", () => {
     expect(trouves).toEqual([]);
   });
 });
