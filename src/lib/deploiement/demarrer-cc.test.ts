@@ -10,21 +10,27 @@
  * - le mot de passe ne s'affiche pas.
  */
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, readdirSync } from "node:fs";
+import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 const SCRIPT = join(process.cwd(), "scripts/demarrer-cc.sh");
 const ADDON = "postgresql://u:secret@bxyz-postgresql.services.clever-cloud.com:5432/bxyz";
 const CA = "-----BEGIN CERTIFICATE-----\nAAAA\n-----END CERTIFICATE-----";
 
-function lancer(env: Record<string, string>, mode = "verifier") {
+const dossiers: string[] = [];
+afterEach(() => {
+  for (const d of dossiers.splice(0)) rmSync(d, { recursive: true, force: true });
+});
+
+function lancer(env: Record<string, string>, mode = "verifier", ...commande: string[]) {
   // Environnement vide : rien n'est hérité du poste, comme sur une instance
   // neuve. Un dossier temporaire propre à chaque appel : rien n'est écrit
   // dans le /tmp partagé. NODE_ENV : exigée par le type de Next, sans effet.
   const dossier = mkdtempSync(join(tmpdir(), "cc-"));
-  const r = spawnSync("sh", [SCRIPT, mode], {
+  dossiers.push(dossier);
+  const r = spawnSync("sh", [SCRIPT, mode, ...commande], {
     env: { NODE_ENV: "test", PATH: process.env.PATH ?? "", TMPDIR: dossier, ...env },
     encoding: "utf8",
   });
@@ -105,6 +111,20 @@ describe("demarrer-cc.sh : l'URL de la base", () => {
     const r = lancer({ POSTGRESQL_ADDON_URI: ADDON, BASE_CA_PEM: CA, BASE_POOL: "8" });
     expect(r.code).toBe(0);
     expect(r.sortie).toMatch(/\?connection_limit=8&/);
+  });
+
+  it("lancer : toute commande reçoit la même base", () => {
+    const r = lancer(
+      { POSTGRESQL_ADDON_URI: "postgresql://r:r@db:5432/r", BASE_EN_CLAIR_HOTE: "db" },
+      "lancer",
+      "sh",
+      "-c",
+      'echo "$DATABASE_URL|$DIRECT_URL"',
+    );
+    expect(r.code).toBe(0);
+    const url = "postgresql://r:r@db:5432/r?connection_limit=5&sslmode=disable";
+    expect(r.sortie).toBe(`${url}|${url}`);
+    expect(lancer({ POSTGRESQL_ADDON_URI: ADDON, BASE_CA_PEM: CA }, "lancer").code).toBe(2);
   });
 
   it("sans aucune base, ni un mode inconnu, rien ne démarre", () => {

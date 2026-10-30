@@ -17,10 +17,13 @@ RUN apt-get update \
 RUN corepack enable
 
 WORKDIR /app
-# Le dépôt entier avant l'installation, comme chez Clever Cloud : le
-# `postinstall` lance `prisma generate`, qui lit `prisma/schema.prisma`.
-COPY . .
+# L'installation dans sa propre couche, refaite seulement si les dépendances
+# changent. Le schéma y entre : le `postinstall` lance `prisma generate`.
+COPY package.json pnpm-lock.yaml ./
+COPY prisma ./prisma
 RUN pnpm install --frozen-lockfile
+
+COPY . .
 
 # Les NEXT_PUBLIC_* sont figées dans le code au build, comme chez Clever Cloud
 # où les variables de l'application sont présentes pendant le build.

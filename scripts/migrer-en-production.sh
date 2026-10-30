@@ -9,8 +9,8 @@
 # Vercel montrent `VERCEL_ENV=production` (déploiement de 9bdbb47d), le filet ne
 # servait à rien ici ; chez Clever Cloud, il aurait migré pendant le BUILD, sur
 # l'instance de build, avant que le déploiement soit retenu. Là-bas, les
-# migrations passent par le hook de démarrage (~~`CC_PRE_RUN_HOOK=pnpm
-# db:migrate`~~ [2026-10-30 : `sh scripts/demarrer-cc.sh migrer`]), qui fait échouer le déploiement si elles échouent.]
+# migrations passent par le hook de démarrage (`CC_PRE_RUN_HOOK=sh
+# scripts/demarrer-cc.sh migrer`), qui fait échouer le déploiement si elles échouent.]
 #
 # Mais un build Vercel SANS `VERCEL_ENV` (variables système plus exposées,
 # build par la CLI) sauterait les migrations en silence, et le code partirait

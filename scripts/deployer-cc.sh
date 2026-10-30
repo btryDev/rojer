@@ -45,7 +45,6 @@ sha=$(git rev-parse HEAD)
 court=$(printf '%s' "$sha" | cut -c1-7)
 
 # La CI de ce commit : au moins un workflow, aucun en cours, aucun en échec.
-# Sur `cc`, elle comprend le build CC lui-même (`build-cc.yml`).
 etats=$(gh run list --commit "$sha" --json status,conclusion \
   --jq '.[] | "\(.status) \(.conclusion)"')
 [ -n "$etats" ] || refus "aucune CI pour $court : attendre qu'elle démarre."
@@ -55,7 +54,13 @@ fi
 if printf '%s\n' "$etats" | grep -qv -E '^completed (success|skipped|neutral)$'; then
   refus "la CI de $court n'est pas verte."
 fi
-echo "CI verte pour $court."
+# Et le build Clever Cloud lui-même, nommément : « tout ce qui a tourné est
+# vert » passerait si le job n'avait pas tourné du tout.
+build=$(gh run list --commit "$sha" --workflow tests.yml --json databaseId --jq '.[0].databaseId')
+[ -n "$build" ] || refus "pas de workflow Tests pour $court."
+etat_build=$(gh run view "$build" --json jobs --jq '.jobs[] | select(.name == "build-cc") | .conclusion')
+[ "$etat_build" = "success" ] || refus "le job build-cc de $court n'a pas réussi (« ${etat_build:-absent} »)."
+echo "CI verte pour $court, build Clever Cloud compris."
 
 echo "Déploiement de $court ($branche) sur $app…"
 # `rebuild` : un commit déjà poussé chez Clever Cloud est reconstruit au lieu

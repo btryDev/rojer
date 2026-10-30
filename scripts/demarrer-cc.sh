@@ -2,9 +2,11 @@
 # Démarrage chez Clever Cloud, et dans la pile locale qui l'imite (plan de
 # bascule, § 5 bis). Un seul script pour les deux gestes du démarrage :
 #
-#   sh scripts/demarrer-cc.sh migrer     CC_PRE_RUN_HOOK : migrations
-#   sh scripts/demarrer-cc.sh servir     CC_RUN_COMMAND : le serveur autonome
-#   sh scripts/demarrer-cc.sh verifier   affiche l'URL construite, mot de passe masqué
+#   sh scripts/demarrer-cc.sh migrer           CC_PRE_RUN_HOOK : migrations
+#   sh scripts/demarrer-cc.sh servir           CC_RUN_COMMAND : le serveur autonome
+#   sh scripts/demarrer-cc.sh lancer <cmd…>    toute autre commande sur l'instance
+#                                              (clever ssh : seed, script) avec la même base
+#   sh scripts/demarrer-cc.sh verifier         affiche l'URL construite, mot de passe masqué
 #
 # Pourquoi un script : Clever Cloud ne développe pas `$VAR` dans la valeur
 # d'une variable — `DATABASE_URL=$POSTGRESQL_ADDON_URI` y reste littéral
@@ -28,7 +30,8 @@ set -eu
 mode="${1:-}"
 case "$mode" in
   migrer|servir|verifier) ;;
-  *) echo "Usage : sh scripts/demarrer-cc.sh migrer|servir|verifier" >&2; exit 2 ;;
+  lancer) shift; [ $# -gt 0 ] || { echo "lancer : quelle commande ?" >&2; exit 2; } ;;
+  *) echo "Usage : sh scripts/demarrer-cc.sh migrer|servir|verifier|lancer <commande>" >&2; exit 2 ;;
 esac
 
 base="${POSTGRESQL_ADDON_URI:-${DATABASE_URL:-}}"
@@ -36,20 +39,16 @@ if [ -z "$base" ]; then
   echo "Ni POSTGRESQL_ADDON_URI ni DATABASE_URL : aucune base à joindre." >&2
   exit 1
 fi
-# Une valeur restée littérale (« $POSTGRESQL_ADDON_URI », le piège même que ce
-# script contourne) ou mal formée s'arrête ici, pas dans Prisma.
-case "$base" in
-  postgres://*|postgresql://*) ;;
-  *) echo "L'URL de la base ne commence pas par postgresql:// : à relire." >&2; exit 1 ;;
-esac
-
-# Des paramètres déjà présents se mêleraient aux nôtres sans qu'on sache
-# lequel l'emporte (un `sslmode` hérité désactiverait la vérification) :
-# mieux vaut s'arrêter et relire l'URL.
+# Refusées ici plutôt que dans Prisma : des paramètres déjà présents (un
+# `sslmode` hérité désactiverait la vérification sans bruit), et une valeur
+# restée littérale (« $POSTGRESQL_ADDON_URI », le piège même que ce script
+# contourne) ou mal formée.
 case "$base" in
   *\?*)
     echo "L'URL de la base porte déjà des paramètres (« ? ») : à relire, ce script pose les siens." >&2
     exit 1 ;;
+  postgres://*|postgresql://*) ;;
+  *) echo "L'URL de la base ne commence pas par postgresql:// : à relire." >&2; exit 1 ;;
 esac
 
 # L'hôte : entre le dernier « @ » et le « : » ou « / » qui suit.
@@ -99,7 +98,7 @@ case "$mode" in
     # vider node_modules après les migrations ; nous, d'abord mesurer).
     df -h . 2>/dev/null | tail -1 || true
     # `exec` : l'échec des migrations est celui du hook, donc du déploiement.
-    exec pnpm exec prisma migrate deploy
+    exec pnpm db:migrate
     ;;
   servir)
     test -f .next/standalone/server.js || {
@@ -109,5 +108,8 @@ case "$mode" in
     # 0.0.0.0 : le contrôle de santé de Clever Cloud échoue si le serveur
     # n'écoute que sur localhost.
     PORT="${PORT:-8080}" HOSTNAME=0.0.0.0 exec node .next/standalone/server.js
+    ;;
+  lancer)
+    exec "$@"
     ;;
 esac
