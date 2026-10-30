@@ -177,8 +177,14 @@ export const MESSAGE_ENVOI_HORS_SERVICE =
 export const MESSAGE_ENVOI_ECHOUE =
   "La demande n'a pas été envoyée : l'e-mail n'a pas pu partir. Le lien préparé a été annulé. Réessayez dans quelques minutes.";
 
-/** Le motif écrit sur un jeton dont l'e-mail n'est jamais parti. */
-export const MOTIF_REVOCATION_ENVOI_ECHOUE = "envoi_echoue";
+/**
+ * Le motif écrit sur un jeton dont l'e-mail n'est pas parti. En français
+ * lisible : la page `/acces/[token]` et la signature l'affichent tels quels
+ * au destinataire, si le message finit par lui arriver quand même (délai
+ * dépassé côté Rojer alors que Mailpace l'avait accepté).
+ */
+export const MOTIF_REVOCATION_ENVOI_ECHOUE =
+  "l'e-mail n'a pas pu être envoyé ; demandez un nouveau lien à votre interlocuteur";
 
 export async function emettreAccessToken(
   entree: EmissionTokenParams,
@@ -218,15 +224,26 @@ export async function emettreAccessToken(
 
   // Limite de fréquence, avant toute écriture et tout envoi.
   const depuis = new Date(Date.now() - UNE_HEURE_MS);
+  // Un lien dont l'e-mail n'est jamais parti ne compte pas : sans cela, une
+  // panne du fournisseur épuisait le plafond de l'heure sans qu'aucun lien
+  // ait atteint personne. `revoqueMotif` est nullable : l'exclusion passe par
+  // un OR explicite, `not` seul écarterait aussi les jetons sans motif.
+  const parti = {
+    OR: [
+      { revoqueMotif: null },
+      { revoqueMotif: { not: MOTIF_REVOCATION_ENVOI_ECHOUE } },
+    ],
+  };
   const [parEtablissement, parUtilisateur] = await Promise.all([
     prisma.accessToken.count({
       where: {
         etablissementId: params.etablissementId,
         createdAt: { gte: depuis },
+        ...parti,
       },
     }),
     prisma.accessToken.count({
-      where: { createdByUserId: user.id, createdAt: { gte: depuis } },
+      where: { createdByUserId: user.id, createdAt: { gte: depuis }, ...parti },
     }),
   ]);
   if (
@@ -297,14 +314,23 @@ export async function emettreAccessToken(
     // supprimé — la trace dit qu'une demande a eu lieu et pourquoi elle n'a
     // pas abouti. Le journal ne porte que le motif de l'erreur, jamais
     // l'adresse ni le contenu.
-    await prisma.accessToken.update({
-      where: { id: access.id },
-      data: { revoqueLe: new Date(), revoqueMotif: MOTIF_REVOCATION_ENVOI_ECHOUE },
-    });
-    console.error(
-      `[access-tokens] envoi échoué, jeton ${access.id} révoqué :`,
-      erreur instanceof Error ? erreur.message : "erreur inconnue",
-    );
+    const motifEnvoi = erreur instanceof Error ? erreur.message : "erreur inconnue";
+    try {
+      await prisma.accessToken.update({
+        where: { id: access.id },
+        data: { revoqueLe: new Date(), revoqueMotif: MOTIF_REVOCATION_ENVOI_ECHOUE },
+      });
+      console.error(`[access-tokens] envoi échoué, jeton ${access.id} révoqué :`, motifEnvoi);
+    } catch (erreurRevocation) {
+      // La révocation elle-même a échoué (base indisponible) : le jeton reste
+      // en base, mais son secret n'est ni parti ni rendu à l'appelant — il ne
+      // sert à personne. Les deux causes sont journalisées, aucune n'est perdue.
+      console.error(
+        `[access-tokens] envoi échoué ET révocation impossible, jeton ${access.id} :`,
+        motifEnvoi,
+        erreurRevocation instanceof Error ? erreurRevocation.message : "erreur inconnue",
+      );
+    }
     return { ok: false, raison: "envoi_echoue", message: MESSAGE_ENVOI_ECHOUE };
   }
 

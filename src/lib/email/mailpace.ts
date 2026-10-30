@@ -17,9 +17,12 @@ import type { EmailDriver, EmailPayload } from "./index";
  *   pendant 24 h — https://docs.mailpace.com/guide/idempotency/ . Une clé par
  *   message, gardée entre les deux essais : réessayer ne peut pas envoyer
  *   deux fois.
- * - 429 (« sending too quickly ») et 5xx se réessaient ; 4xx non (adresse,
- *   clé, domaine : un second essai rendrait la même erreur) —
- *   https://docs.mailpace.com/reference/responses
+ * - 429 (« sending too quickly »), 409 et 5xx se réessaient ; les autres 4xx
+ *   non (adresse, clé, domaine : un second essai rendrait la même erreur) —
+ *   https://docs.mailpace.com/reference/responses . Le 409 : un premier essai
+ *   coupé par notre délai peut être encore en cours chez Mailpace, et la doc
+ *   d'idempotence dit qu'une requête concurrente en conflit « can safely
+ *   retry » ; si le premier a abouti entre-temps, Mailpace rend sa réponse.
  * - `to` accepte une LISTE séparée par des virgules (jusqu'à 50) : une adresse
  *   saisie « a@x.fr, b@y.fr » enverrait un lien ou un code à un tiers. Le
  *   pilote n'accepte qu'une adresse.
@@ -32,8 +35,11 @@ import type { EmailDriver, EmailPayload } from "./index";
 
 export const URL_ENVOI_MAILPACE = "https://app.mailpace.com/api/v1/send";
 
-/** Délai d'un essai, réponse comprise (audit Next.js, M9). */
-export const DELAI_ENVOI_MS = 10_000;
+/**
+ * Délai d'un essai, réponse comprise (audit Next.js, M9). Deux essais et la
+ * pause font au pire ~17 s, que l'action qui demande l'envoi attend.
+ */
+export const DELAI_ENVOI_MS = 8_000;
 /** Deux essais au plus : l'action qui attend l'envoi reste courte. */
 export const ESSAIS_ENVOI_MAX = 2;
 const PAUSE_AVANT_REESSAI_MS = 1_000;
@@ -57,7 +63,12 @@ function exigerAdresseUnique(to: string): void {
 }
 
 function reessayable(statut: number): boolean {
-  return statut === 429 || statut >= 500;
+  return statut === 409 || statut === 429 || statut >= 500;
+}
+
+/** Ce que Mailpace écrit, sans aucune adresse e-mail qu'il aurait recopiée. */
+function sansAdresse(texte: string): string {
+  return texte.replace(/\S+@\S+/g, "[adresse]");
 }
 
 /** Le motif court que Mailpace donne, sans jamais recopier le corps entier. */
@@ -67,10 +78,11 @@ async function motifDeMailpace(reponse: Response): Promise<string> {
       error?: unknown;
       errors?: Record<string, unknown>;
     };
-    if (typeof corps.error === "string") return corps.error.slice(0, 200);
+    if (typeof corps.error === "string") return sansAdresse(corps.error).slice(0, 200);
     if (corps.errors && typeof corps.errors === "object") {
       return Object.entries(corps.errors)
         .map(([champ, msgs]) => `${champ} : ${Array.isArray(msgs) ? msgs.join(", ") : String(msgs)}`)
+        .map(sansAdresse)
         .join(" ; ")
         .slice(0, 200);
     }

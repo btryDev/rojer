@@ -33,7 +33,16 @@ type Ligne = Record<string, unknown>;
 function correspond(ligne: Ligne | undefined, where: Ligne): boolean {
   if (!ligne) return false;
   return Object.entries(where).every(([clef, attendu]) => {
+    // Le plafond des liens écarte les jetons jamais partis (2026-10-30) :
+    // `OR: [{ revoqueMotif: null }, { revoqueMotif: { not: … } }]`.
+    if (clef === "OR") return (attendu as Ligne[]).some((w) => correspond(ligne, w));
+    if (attendu === null) return ligne[clef] === null || ligne[clef] === undefined;
     if (attendu && typeof attendu === "object" && !(attendu instanceof Date)) {
+      // `not` de Prisma, comme en SQL : une valeur nulle ne passe pas.
+      if ("not" in (attendu as Ligne)) {
+        const v = ligne[clef];
+        return v !== null && v !== undefined && v !== (attendu as Ligne).not;
+      }
       // `{ gte: Date }` — la fenêtre de la limite de fréquence.
       if ("gte" in (attendu as Ligne)) {
         const v = ligne[clef];
@@ -107,6 +116,7 @@ vi.mock("next/navigation", () => ({
 }));
 const { envoi } = vi.hoisted(() => ({ envoi: { enService: true } }));
 vi.mock("@/lib/email", () => ({
+  nomDuDriver: () => "console",
   sendMail: vi.fn(async (p: { to: string; subject: string; text: string }) => {
     mailsEnvoyes.push(p);
   }),

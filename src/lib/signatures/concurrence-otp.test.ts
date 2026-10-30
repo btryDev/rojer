@@ -125,6 +125,7 @@ vi.mock("@/lib/auth/require-user", () => ({ requireUser: vi.fn(), getOptionalUse
 vi.mock("@/lib/auth/scope", () => ({ assertEtablissementOwnership: vi.fn() }));
 const { mails } = vi.hoisted(() => ({ mails: [] as { to: string; text: string }[] }));
 vi.mock("@/lib/email", () => ({
+  nomDuDriver: () => "console",
   sendMail: vi.fn(async (m: { to: string; text: string }) => {
     mails.push(m);
   }),

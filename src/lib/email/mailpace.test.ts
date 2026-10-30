@@ -98,6 +98,12 @@ describe("pilote Mailpace — erreurs et second essai", () => {
     expect(entetes(appels[1]).get("Idempotency-Key")).toBe(entetes(appels[0]).get("Idempotency-Key"));
   });
 
+  it("409 (premier essai encore en cours chez Mailpace) puis 200 : un second essai", async () => {
+    const { pilote, appels } = apiSimulee([refus(409, { error: "conflict" }), ok()]);
+    await pilote.send(MESSAGE);
+    expect(appels).toHaveLength(2);
+  });
+
   it("réseau coupé puis 200 : un second essai", async () => {
     const { pilote, appels } = apiSimulee([new TypeError("fetch failed"), ok()]);
     await pilote.send(MESSAGE);
@@ -126,6 +132,15 @@ describe("pilote Mailpace — erreurs et second essai", () => {
     expect(e.statut).toBe(statut);
     expect(e.message).toMatch(new RegExp(`HTTP ${statut}`));
     expect(appels).toHaveLength(1);
+  });
+
+  it("une adresse recopiée par Mailpace dans son motif est masquée", async () => {
+    const { pilote } = apiSimulee([
+      refus(422, { errors: { to: [`${MESSAGE.to} is invalid`] } }),
+    ]);
+    const e = (await pilote.send(MESSAGE).catch((x: unknown) => x)) as ErreurEnvoiMail;
+    expect(e.message).not.toContain(MESSAGE.to);
+    expect(e.message).toContain("[adresse] is invalid");
   });
 
   it("l'erreur ne porte ni la clé, ni l'adresse, ni le contenu", async () => {

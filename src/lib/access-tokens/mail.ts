@@ -1,4 +1,4 @@
-import { mailFrom, publicAppUrl, sendMail } from "@/lib/email";
+import { mailFrom, nomDuDriver, publicAppUrl, sendMail } from "@/lib/email";
 import { OTP_ESSAIS_MAX, OTP_TTL_MINUTES } from "@/lib/signatures/otp";
 import { formaterDateHeureFr } from "@/lib/dates";
 
@@ -75,7 +75,7 @@ export async function envoyerMailAcces(args: MailAccesArgs): Promise<void> {
 
   // En développement seulement (pilote `console`) : l'expéditeur qui sortirait
   // en production. Un pilote réel ne journalise rien du message.
-  if ((process.env.EMAIL_DRIVER || "console") === "console") {
+  if (nomDuDriver() === "console") {
     console.log(`   (From : ${mailFrom()})`);
   }
 }

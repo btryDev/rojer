@@ -15,6 +15,8 @@ type Ligne = Record<string, unknown>;
 function correspond(ligne: Ligne | undefined, where: Ligne): boolean {
   if (!ligne) return false;
   return Object.entries(where).every(([clef, attendu]) => {
+    // Le plafond des liens (2026-10-30) écarte les jetons jamais partis.
+    if (clef === "OR") return (attendu as Ligne[]).some((w) => correspond(ligne, w));
     const valeur = ligne[clef];
     if (attendu === null) return valeur === null || valeur === undefined;
     if (attendu instanceof Date) return valeur instanceof Date && valeur.getTime() === attendu.getTime();
@@ -27,6 +29,8 @@ function correspond(ligne: Ligne | undefined, where: Ligne): boolean {
       // Le plafond des envois de code (2026-10-13) : `envois < plafond`.
       if ("lt" in a) return (valeur as number) < (a.lt as number);
       if ("in" in a) return (a.in as unknown[]).includes(valeur);
+      // `not` de Prisma, comme en SQL : une valeur nulle ne passe pas.
+      if ("not" in a) return valeur !== null && valeur !== undefined && valeur !== a.not;
       return correspond(valeur as Ligne, a);
     }
     return valeur === attendu;
@@ -139,6 +143,7 @@ vi.mock("@/lib/email", () => ({
   }),
   envoiEnService: () => envoi.enService,
   mailFrom: () => "no-reply@test.local",
+  nomDuDriver: () => "console",
   publicAppUrl: () => "http://localhost:3000",
 }));
 
@@ -826,5 +831,38 @@ describe("envoi échoué : rien de valable ne reste, et l'écran le dit", () => 
       expect.objectContaining({ data: { envois: { decrement: 1 } } }),
     );
     expect(mailsEnvoyes).toHaveLength(0);
+  });
+
+  it("un lien jamais parti ne compte pas dans le plafond de l'heure", async () => {
+    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
+    // Dix liens révoqués pour envoi échoué dans l'heure : le plafond (10) serait
+    // atteint s'ils comptaient.
+    for (let i = 0; i < 10; i++) {
+      prismaMock.accessToken.lignes.push(
+        jeton("plan_prevention", `pp-x${i}`, "etab-a-moi", {
+          createdByUserId: "user-1",
+          revoqueLe: new Date(),
+          revoqueMotif: MOTIF_REVOCATION_ENVOI_ECHOUE,
+        }),
+      );
+    }
+
+    const r = await demanderSignature({ ...DEMANDE_PLAN, partie: "entreprise_exterieure" });
+
+    expect(r).toEqual({ ok: true });
+    expect(mailsEnvoyes).toHaveLength(1);
+  });
+
+  it("contrôle : dix liens partis dans l'heure atteignent bien le plafond", async () => {
+    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
+    for (let i = 0; i < 10; i++) {
+      prismaMock.accessToken.lignes.push(
+        jeton("plan_prevention", `pp-x${i}`, "etab-a-moi", { createdByUserId: "user-1" }),
+      );
+    }
+
+    const r = await demanderSignature({ ...DEMANDE_PLAN, partie: "entreprise_exterieure" });
+
+    expect(r).toEqual({ ok: false, message: expect.stringMatching(/Trop de liens/) });
   });
 });

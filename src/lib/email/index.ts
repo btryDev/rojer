@@ -57,13 +57,22 @@ class ConsoleEmailDriver implements EmailDriver {
 let _driver: EmailDriver | null = null;
 
 /**
+ * Le pilote choisi : `EMAIL_DRIVER` sans espaces, `console` s'il est absent ou
+ * vide. UN seul lecteur, comme `src/env.ts` le valide (une valeur vide y est
+ * absente) : les deux couches ne peuvent pas lire deux pilotes différents.
+ */
+export function nomDuDriver(): string {
+  return process.env.EMAIL_DRIVER?.trim() || "console";
+}
+
+/**
  * Pourquoi aucun message ne partirait, ou `null` si l'envoi est en service.
  * UNE seule règle, lue par `getEmailDriver` (qui lève) et par `envoiEnService`
  * (qui répond avant qu'on écrive quoi que ce soit) : les deux ne peuvent pas
  * se contredire.
  */
 function refusDuDriver(): string | null {
-  const driver = process.env.EMAIL_DRIVER || "console";
+  const driver = nomDuDriver();
   if (driver === "mailpace") {
     // Sans clé, aucun envoi ne peut partir : on le sait AVANT d'écrire quoi
     // que ce soit, comme pour `console` en production.
@@ -106,7 +115,7 @@ export function getEmailDriver(): EmailDriver {
   const refus = refusDuDriver();
   if (refus) throw new Error(refus);
   _driver =
-    (process.env.EMAIL_DRIVER || "console") === "mailpace"
+    nomDuDriver() === "mailpace"
       ? creerPiloteMailpace({
           cle: process.env.MAILPACE_API_KEY!.trim(),
           expediteur: mailFrom(),
