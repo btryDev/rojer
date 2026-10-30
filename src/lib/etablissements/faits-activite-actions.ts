@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { assertEtablissementOwnership } from "@/lib/auth/scope";
+import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import {
   MESSAGE_REGEN_ECHEC,
   regenererApresMutation,
@@ -26,7 +26,7 @@ export async function repondreFaitActivite(
   champ: ChampFaitActivite,
   valeur: boolean | null,
 ): Promise<ReponseParametrage & { risqueConserve?: boolean }> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
   // Le champ vient du client : une colonne arbitraire n'entre pas en base.
   if (!CHAMPS.has(champ)) return { status: "error", message: "Question inconnue." };
   // `boolean | null` n'est qu'un type : la valeur vient aussi du client.
@@ -37,10 +37,10 @@ export async function repondreFaitActivite(
   // « non » ou un retrait la contredirait, et la consigne d'utilisation
   // (R. 4323-105) tomberait alors que la mesure ou l'équipement est là
   // (revue du 2026-10-22).
-  if (champ === "epiPresents" && valeur !== true && (await epiConstates(etablissementId))) {
+  if (champ === "epiPresents" && valeur !== true && (await epiConstates(db, etablissementId))) {
     return { status: "error", message: MESSAGE_EPI_CONSTATES };
   }
-  const { conserve } = await ecrireFaitActivite(etablissementId, champ, valeur, "si_vierge");
+  const { conserve } = await ecrireFaitActivite(db, etablissementId, champ, valeur, "si_vierge");
   const regenere = await regenererApresMutation(etablissementId, `faits-activite/${champ}`);
   revalidatePath(`/etablissements/${etablissementId}`, "layout");
   // L'étape transverse du DUERP lit le même fait.

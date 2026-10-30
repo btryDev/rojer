@@ -1,4 +1,4 @@
-import { requireCompte } from "@/lib/auth/compte";
+import { requireCompte, type Db } from "@/lib/auth/compte";
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { cache } from "react";
@@ -66,12 +66,15 @@ function actionVersMesure(a: ActionRow) {
  * `chargerEtablissementEtParc` : chaque appelant tient déjà l'utilisateur, et
  * hors rendu un second `requireUser()` coûterait un aller-retour
  * d'authentification de plus. Le prédicat d'appartenance reste dans la requête.
+ * Le client borné au compte (ADR-051) est reçu de même ; un par compte, gardé
+ * par `clientBorne`, il est une clé stable du cache.
  */
-export const duerpDuRendu = cache(async function duerpDuRendu(
+export const duerpDuRenduDuCompte = cache(async function duerpDuRenduDuCompte(
+  db: Db,
   etablissementId: string,
   userId: string,
 ) {
-  return prisma.duerp.findFirst({
+  return db.duerp.findFirst({
     where: {
       etablissementId,
       etablissement: { entreprise: { userId } },
@@ -90,6 +93,20 @@ export const duerpDuRendu = cache(async function duerpDuRendu(
       },
     },
   });
+});
+
+/**
+ * La même lecture par le client brut, pour les appelants qui ne tiennent pas
+ * encore le client borné (`calendrier/echeances.ts`, `dashboard/queries.ts`,
+ * `perimetre/faits.ts`, isolation lot 2b). Son cache est distinct : le jour où
+ * ils passent à `duerpDuRenduDuCompte`, la lecture redevient unique par
+ * rendu, et celle-ci disparaît.
+ */
+export const duerpDuRendu = cache(async function duerpDuRendu(
+  etablissementId: string,
+  userId: string,
+) {
+  return duerpDuRenduDuCompte(prisma, etablissementId, userId);
 });
 
 /**

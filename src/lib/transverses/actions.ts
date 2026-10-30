@@ -56,7 +56,7 @@ export async function repondreQuestionTransverse(
     // La clé de la question dans `Duerp.reponsesTransverses` n'est plus écrite
     // ni lue (`etat.ts` lit le fait) : la migration 20261008150000 a repris
     // les « non » qu'elle portait.
-    await ecrireFaitActivite(duerp.etablissementId, fait.champ, reponse, "toujours");
+    await ecrireFaitActivite(db, duerp.etablissementId, fait.champ, reponse, "toujours");
     // Le fait ajoute ou retire des obligations : le calendrier suit.
     await regenererApresMutation(duerp.etablissementId, `transverses/${question.id}`);
   } else {

@@ -1,9 +1,8 @@
-import { requireUser } from "@/lib/auth/require-user";
+import { requireCompte } from "@/lib/auth/compte";
 import "server-only";
 import { mentionRythmeRetenu } from "@/lib/referentiels/conformite/mention-rythme";
 import { renvoiAuxNormes } from "@/lib/referentiels/conformite/renvoi-aux-normes";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
-import { prisma } from "@/lib/prisma";
 import { titreParId } from "./catalogue";
 import { echeanceDuTitre } from "./echeance";
 import { ceQuiManqueALaPersonne, etatDuManque } from "./du-a-la-personne";
@@ -21,10 +20,13 @@ import { ceQuiManqueALaPersonne, etatDuManque } from "./du-a-la-personne";
  * Ce module porte des données de personnes ; c'est la surface où la
  * convention coûte le plus cher à rompre. Éprouvé dans `isolation.test.ts`,
  * qui lit le dossier voisin et exige une réponse vide.
+ *
+ * Rend aussi le client borné au compte (ADR-051) : une seule lecture de
+ * session, et les lectures du module passent par lui.
  */
 async function portee() {
-  const user = await requireUser();
-  return { entreprise: { userId: user.id } } as const;
+  const { user, db } = await requireCompte();
+  return { db, etablissement: { entreprise: { userId: user.id } } } as const;
 }
 
 // `classerTitre`, `etatDuTitre` et `EtatTitre` vivent dans `./etat-titre`,
@@ -48,15 +50,15 @@ const SELECTION_TITRE = {
  * le hero n'a pas à porter de donnée de personne.
  */
 export async function compterEquipe(etablissementId: string): Promise<number> {
-  const etablissement = await portee();
-  return prisma.salarie.count({
+  const { db, etablissement } = await portee();
+  return db.salarie.count({
     where: { etablissementId, etablissement, actif: true },
   });
 }
 
 export async function listerEquipe(etablissementId: string, now: Date) {
-  const etablissement = await portee();
-  const salaries = await prisma.salarie.findMany({
+  const { db, etablissement } = await portee();
+  const salaries = await db.salarie.findMany({
     where: { etablissementId, etablissement },
     // Les personnes sorties de l'effectif en dernier, mais toujours là : leur
     // titre prouve qu'elles étaient habilitées AU MOMENT où elles ont opéré,
@@ -101,8 +103,8 @@ export async function getSalarie(
   salarieId: string,
   now: Date,
 ) {
-  const etablissement = await portee();
-  const s = await prisma.salarie.findFirst({
+  const { db, etablissement } = await portee();
+  const s = await db.salarie.findFirst({
     // `etablissementId` dans le `where`, jamais seulement l'id : c'est la
     // portée de tenancy (ADR-005). Un identifiant deviné ne doit pas ouvrir
     // la fiche d'une personne d'un autre dossier. Et l'établissement lui-même
@@ -170,8 +172,8 @@ export async function compterTitresEnRetard(
   etablissementId: string,
   now: Date,
 ): Promise<number> {
-  const etablissement = await portee();
-  const salaries = await prisma.salarie.findMany({
+  const { db, etablissement } = await portee();
+  const salaries = await db.salarie.findMany({
     where: { etablissementId, actif: true, etablissement },
     select: {
       actif: true,
@@ -221,8 +223,8 @@ export async function libellesTitresDeclares(
   // (E8, 2026-09-27) ; ~~(art. 17.3.b)~~ ne la fonde pas. Le texte
   // d'information doit décrire le traitement réel, pas seulement sa part en
   // cours.
-  const etablissement = await portee();
-  const lignes = await prisma.titreSalarie.groupBy({
+  const { db, etablissement } = await portee();
+  const lignes = await db.titreSalarie.groupBy({
     by: ["obligationId"],
     where: { salarie: { etablissementId, etablissement } },
   });

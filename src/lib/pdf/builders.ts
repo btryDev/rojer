@@ -3,7 +3,7 @@ import { LABEL_RESULTAT } from "@/lib/rapports/resultats";
 import { estLignePourInformation } from "@/lib/referentiels/conformite/initiative";
 import { libelleTypesErp, numeroCategorie } from "@/lib/etablissements/types-erp-affiches";
 import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
-import { prisma } from "@/lib/prisma";
+import type { Db } from "@/lib/auth/compte";
 import type { AuthedUser } from "@/lib/auth/require-user";
 import {
   compterActions,
@@ -134,10 +134,10 @@ import {
  * rendu, `requireUser()` refait un `getUser()` réseau à chaque appel, et le
  * ZIP de contrôle en faisait vingt-trois. Les builders le reçoivent de la
  * route, qui le tient de `requireEtablissement` ; le prédicat `userId` reste
- * dans chaque requête.
+ * dans chaque requête. Le client borné au compte (ADR-051) est reçu de même.
  */
-async function chargerEtablissementDuUser(etablissementId: string, user: AuthedUser) {
-  return prisma.etablissement.findFirst({
+async function chargerEtablissementDuUser(db: Db, etablissementId: string, user: AuthedUser) {
+  return db.etablissement.findFirst({
     where: { id: etablissementId, entreprise: { userId: user.id } },
     include: { entreprise: true, _count: { select: { batiments: true } } },
   });
@@ -320,10 +320,11 @@ function versLigneRapport(
 }
 
 export async function construirePlanActionsData(
+  db: Db,
   etablissementId: string,
   user: AuthedUser,
 ): Promise<PlanActionsData | null> {
-  const etab = await chargerEtablissementDuUser(etablissementId, user);
+  const etab = await chargerEtablissementDuUser(db, etablissementId, user);
   if (!etab) return null;
 
   // Le PDF Plan d'actions documente ce qui reste à faire à la date
@@ -356,13 +357,14 @@ export async function construirePlanActionsData(
  * compte : l'établissement et l'appareil sont relus dans son périmètre.
  */
 export async function construirePointsEquipementData(
+  db: Db,
   etablissementId: string,
   equipementId: string,
   user: AuthedUser,
 ): Promise<PointsACorrigerData | null> {
-  const etab = await chargerEtablissementDuUser(etablissementId, user);
+  const etab = await chargerEtablissementDuUser(db, etablissementId, user);
   if (!etab) return null;
-  const appareil = await prisma.equipement.findFirst({
+  const appareil = await db.equipement.findFirst({
     where: { id: equipementId, etablissementId },
     select: { libelle: true },
   });
@@ -399,10 +401,11 @@ export async function construirePointsEquipementData(
 }
 
 export async function construireRegistreData(
+  db: Db,
   etablissementId: string,
   user: AuthedUser,
 ): Promise<RegistreData | null> {
-  const etab = await chargerEtablissementDuUser(etablissementId, user);
+  const etab = await chargerEtablissementDuUser(db, etablissementId, user);
   if (!etab) return null;
   const multiBatiments = etab._count.batiments > 1;
   // Une horloge pour tout le document (ADR-011) : la pastille des
@@ -418,7 +421,7 @@ export async function construireRegistreData(
     // périmètre, et ce lot ne l'y ajoute pas.
     couvertureDuDossier(etablissementId),
     fraicheurCalendrier(etablissementId),
-    marquesAConfirmerDuDossier(prisma, {
+    marquesAConfirmerDuDossier(db, {
       id: etablissementId,
       entreprise: { userId: user.id },
     }),
@@ -566,10 +569,11 @@ function ficheDuPdf(
 }
 
 export async function construireDossierConformiteData(
+  db: Db,
   etablissementId: string,
   user: AuthedUser,
 ): Promise<DossierData | null> {
-  const etab = await prisma.etablissement.findFirst({
+  const etab = await db.etablissement.findFirst({
     where: { id: etablissementId, entreprise: { userId: user.id } },
     include: {
       entreprise: true,
@@ -614,7 +618,7 @@ export async function construireDossierConformiteData(
       // performance, lot 1) : hors rendu, rien n'est mémoïsé.
       compterActionsParOrigine(etablissementId),
       listerActions(etablissementId, { origine: "verification", enCoursSeulement: true }),
-      construirePlanActionsData(etablissementId, user),
+      construirePlanActionsData(db, etablissementId, user),
       listerRapportsDeLEtablissement(etablissementId),
       listerVerifications(etablissementId),
       // Ce que le référentiel ne traite pas pour cet établissement. Lu par la
@@ -637,7 +641,7 @@ export async function construireDossierConformiteData(
       fraicheurCalendrier(etablissementId),
       // Les lignes retenues par prudence le disent aussi dans le document
       // remis à un tiers (analyse du 2026-09-27, § 6.3).
-      marquesAConfirmerDuDossier(prisma, {
+      marquesAConfirmerDuDossier(db, {
         id: etablissementId,
         entreprise: { userId: user.id },
       }),
@@ -645,7 +649,7 @@ export async function construireDossierConformiteData(
 
   // 2026-10-14 : les matériels que Rojer ne suit pas, déclarés au parc en
   // service de CET établissement (l'appartenance est établie plus haut).
-  const materielsDeclares = await prisma.equipement.findMany({
+  const materielsDeclares = await db.equipement.findMany({
     where: { etablissementId, actif: true, materielNonCouvert: { not: null } },
     select: { materielNonCouvert: true },
   });

@@ -9,7 +9,7 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { requireUser } from "./require-user";
 import { getOptionalCompte, requireCompte } from "./compte";
-import { etablissementDuCompteDuRendu } from "@/lib/etablissements/queries";
+import { etablissementDuRendu } from "@/lib/etablissements/queries";
 import { cache } from "react";
 
 /**
@@ -41,17 +41,14 @@ export async function requireEntreprise(entrepriseId: string) {
  * action serveur —, la garde s'exécute à chaque appel, comme avant.
  *
  * [2026-10-29, plan performance] La lecture est celle de `getEtablissement`
- * (`etablissementDuCompteDuRendu`), bornée au propriétaire dans sa requête :
+ * (`etablissementDuRendu`), bornée au propriétaire dans sa requête :
  * la garde et la page ne lisent plus l'établissement deux fois.
  */
 export const requireEtablissement = cache(async function requireEtablissement(
   etablissementId: string,
 ) {
   const { user, db } = await requireCompte();
-  const etablissement = await etablissementDuCompteDuRendu(
-    etablissementId,
-    user.id,
-  );
+  const etablissement = await etablissementDuRendu(db, etablissementId, user.id);
   if (!etablissement) notFound();
   return { user, db, etablissement };
 });

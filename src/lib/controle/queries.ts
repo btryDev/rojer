@@ -1,6 +1,6 @@
 import "server-only";
 import { requireEtablissement } from "@/lib/auth/scope";
-import { prisma } from "@/lib/prisma";
+import type { Db } from "@/lib/auth/compte";
 import { NB_RELEVES_DU_DOSSIER } from "@/lib/carnet-sanitaire/export";
 import {
   NB_ANALYSES_DU_DOSSIER,
@@ -19,8 +19,9 @@ import {
  *  - l'écran passe par `requireEtablissement`, mémoïsée sur le rendu — la
  *    page l'a déjà appelée, la garde ne coûte rien de plus ;
  *  - le ZIP est un route handler, où rien n'est mémoïsé : chaque garde serait
- *    un `getUser()` réseau de plus (M7). Ses lectures reçoivent l'identifiant
- *    de l'utilisateur que la route tient de `requireEtablissement`, et le
+ *    un `getUser()` réseau de plus (M7). Ses lectures reçoivent le client
+ *    borné au compte (ADR-051) et l'identifiant de l'utilisateur que la route
+ *    tient de `requireEtablissement`, et le
  *    prédicat propriétaire est DANS chaque requête — plus strict qu'avant, où
  *    elles ne portaient que l'`etablissementId`.
  */
@@ -86,8 +87,8 @@ export async function etatDesPiecesDuDossier(etablissementId: string, maintenant
 /* ─── Le ZIP ──────────────────────────────────────────────────────────── */
 
 /** Les versions figées du DUERP, la plus récente d'abord. */
-export async function versionsDuDuerpDuDossier(etablissementId: string, userId: string) {
-  return prisma.duerpVersion.findMany({
+export async function versionsDuDuerpDuDossier(db: Db, etablissementId: string, userId: string) {
+  return db.duerpVersion.findMany({
     where: { duerp: { etablissementId, etablissement: { entreprise: { userId } } } },
     orderBy: { numero: "desc" },
     select: { numero: true, snapshot: true, motif: true, createdAt: true },
@@ -95,16 +96,16 @@ export async function versionsDuDuerpDuDossier(etablissementId: string, userId: 
 }
 
 /** Le registre d'accessibilité : son adresse publique, et s'il est publié. */
-export async function registreAccessibiliteDuDossier(etablissementId: string, userId: string) {
-  return prisma.registreAccessibilite.findFirst({
+export async function registreAccessibiliteDuDossier(db: Db, etablissementId: string, userId: string) {
+  return db.registreAccessibilite.findFirst({
     where: { etablissementId, etablissement: { entreprise: { userId } } },
     select: { slugPublic: true, publie: true },
   });
 }
 
 /** Les prestataires, avec les pièces qu'ils ont remplacées. */
-export async function prestatairesDuDossier(etablissementId: string, userId: string) {
-  return prisma.prestataire.findMany({
+export async function prestatairesDuDossier(db: Db, etablissementId: string, userId: string) {
+  return db.prestataire.findMany({
     where: { etablissementId, etablissement: { entreprise: { userId } } },
     orderBy: { raisonSociale: "asc" },
     // Les pièces remplacées (2026-10-12) : le ZIP joint les pièces en cours,
@@ -120,8 +121,8 @@ export async function prestatairesDuDossier(etablissementId: string, userId: str
 }
 
 /** Les rapports dont le fichier entre au ZIP (`filtreRapportsDuDossier`). */
-export async function rapportsDeposesDuDossier(etablissementId: string, userId: string) {
-  return prisma.rapportVerification.findMany({
+export async function rapportsDeposesDuDossier(db: Db, etablissementId: string, userId: string) {
+  return db.rapportVerification.findMany({
     // PAS LES RAPPORTS DES LIGNES DE SALARIÉ (contre-lecture du 2026-09-27,
     // M1). Depuis `bb03cdd` aucun dépôt n'y est possible, mais des rapports
     // antérieurs peuvent exister : documents nominatifs, parfois médicaux,
@@ -143,8 +144,8 @@ export async function rapportsDeposesDuDossier(etablissementId: string, userId: 
 }
 
 /** Combien de rapports de lignes de salarié le ZIP écarte, pour le dire. */
-export async function compterRapportsSalariesEcartes(etablissementId: string, userId: string) {
-  return prisma.rapportVerification.count({
+export async function compterRapportsSalariesEcartes(db: Db, etablissementId: string, userId: string) {
+  return db.rapportVerification.count({
     where: {
       etablissementId,
       verification: { salarieId: { not: null } },
@@ -154,8 +155,8 @@ export async function compterRapportsSalariesEcartes(etablissementId: string, us
 }
 
 /** Les permis de feu des douze derniers mois (`filtreActesDuDossier`). */
-export async function permisFeuDuDossier(etablissementId: string, userId: string, maintenant: Date) {
-  return prisma.permisFeu.findMany({
+export async function permisFeuDuDossier(db: Db, etablissementId: string, userId: string, maintenant: Date) {
+  return db.permisFeu.findMany({
     where: { ...filtreActesDuDossier(etablissementId, maintenant), etablissement: { entreprise: { userId } } },
     orderBy: { numero: "desc" },
   });
@@ -163,11 +164,12 @@ export async function permisFeuDuDossier(etablissementId: string, userId: string
 
 /** Les plans de prévention des douze derniers mois, lignes et phases comprises. */
 export async function plansPreventionDuDossier(
+  db: Db,
   etablissementId: string,
   userId: string,
   maintenant: Date,
 ) {
-  return prisma.planPrevention.findMany({
+  return db.planPrevention.findMany({
     where: { ...filtreActesDuDossier(etablissementId, maintenant), etablissement: { entreprise: { userId } } },
     include: {
       lignes: { orderBy: { ordre: "asc" } },
@@ -178,8 +180,8 @@ export async function plansPreventionDuDossier(
 }
 
 /** Le carnet sanitaire : points actifs, derniers relevés, dernières analyses. */
-export async function carnetSanitaireDuDossier(etablissementId: string, userId: string) {
-  return prisma.carnetSanitaire.findFirst({
+export async function carnetSanitaireDuDossier(db: Db, etablissementId: string, userId: string) {
+  return db.carnetSanitaire.findFirst({
     where: { etablissementId, etablissement: { entreprise: { userId } } },
     include: {
       pointsReleve: {

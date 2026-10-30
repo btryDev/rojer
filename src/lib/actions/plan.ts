@@ -6,7 +6,7 @@ import { requireAction, requireVerification } from "@/lib/auth/scope";
 import { estActionEnRetard, estActionOuverte } from "@/lib/dates/retard";
 import { actionVerificationSchema, cloturerActionSchema } from "./schema";
 import { assertOrigineActionValide } from "./origine";
-import { constaterEpi } from "@/lib/etablissements/epi-constate";
+import { constaterEpiDuCompte } from "@/lib/etablissements/epi-constate";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import {
   clePieceDePoint,
@@ -176,7 +176,7 @@ export async function creerPointACorriger(
     },
   });
 
-  await constaterEpi(verif.etablissementId);
+  await constaterEpiDuCompte(db, verif.etablissementId);
   revalidateAction(verif.etablissementId);
   return { status: "success", actionId: a.id };
 }
@@ -244,7 +244,7 @@ export async function modifierActionPlan(
       responsable: parsed.data.responsable ?? null,
     },
   });
-  await constaterEpi(etablissementId);
+  await constaterEpiDuCompte(db, etablissementId);
 
   revalidateAction(etablissementId);
   redirect(`/etablissements/${etablissementId}/actions/${actionId}`);
@@ -335,7 +335,7 @@ export async function cloturerAction(
   }
 
   // Une mesure de protection individuelle levée vaut « EPI fournis ».
-  await constaterEpi(existante.etablissementId);
+  await constaterEpiDuCompte(db, existante.etablissementId);
   revalidateAction(existante.etablissementId);
   return { status: "success", actionId };
 }
