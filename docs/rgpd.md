@@ -513,7 +513,16 @@ qui manque est l'outil, pas le droit. Manques distincts de celui que l'écran
 - **Supabase** (Francfort, DE) — base de données, authentification, stockage.
 - **Vercel** — hébergement applicatif, région UE.
 
-Aucun autre. Pas de LLM, pas d'analytics tiers, pas de CDN hors UE. Le principe
+[2026-10-30, branche `cc` (bascule Clever Cloud, ADR-052) : un appel sortant de
+plus, qui n'est pas un sous-traitant de données personnelles — **Have I Been
+Pwned, « Pwned Passwords »** (Cloudflare, hors UE), interrogé à l'inscription,
+à la réinitialisation et au changement de mot de passe. N'en part que les
+cinq premiers caractères de l'empreinte SHA-1 du mot de passe (k-anonymat) :
+ni le mot de passe, ni l'adresse, ni aucun identifiant du compte
+(`auth/mot-de-passe-divulgue.ts`). Les sous-traitants de Clever Cloud
+(hébergement, base, Cellar, Mailpace) entreront dans cette liste à la bascule.]
+
+~~Aucun autre.~~ [2026-10-30 : aucun autre à ce jour, hormis l'appel ci-dessus.] Pas de LLM, pas d'analytics tiers, pas de CDN hors UE. Le principe
 « zéro IA » du produit a une conséquence directe : **le produit** n'envoie
 aucune donnée à un service d'inférence, pour aucun traitement.
 

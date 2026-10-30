@@ -36,6 +36,7 @@ export const RACINES_EXCLUES = [
   "/verifier/",
   // Application authentifiée et parcours de compte.
   "/auth/",
+  "/compte",
   "/dev/",
   "/duerp/",
   "/entreprises",
