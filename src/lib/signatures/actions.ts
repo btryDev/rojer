@@ -9,7 +9,7 @@ import { formaterDateFr, formaterHeureFr } from "@/lib/dates";
 import { z } from "zod";
 import { emettreAccessToken } from "@/lib/access-tokens/emission";
 import { envoyerMailAcces, urlAccesPourToken } from "@/lib/access-tokens/mail";
-import { envoiEnService } from "@/lib/email";
+import { envoiEnService, motifErreur } from "@/lib/email";
 import {
   consommerJeton,
   rendreEnvoiOtp,
@@ -546,17 +546,30 @@ export async function renvoyerCodeOtp(
     };
   }
 
-  await envoyerMailAcces({
-    to: token.emailDestinataire,
-    nom: token.nomDestinataire,
-    sujet: "Votre nouveau code de confirmation",
-    message:
-      "Voici un nouveau code de confirmation pour l'action qui vous a été demandée. " +
-      "Le précédent n'est plus valable.",
-    urlAcces,
-    otp,
-    expireLe: token.expireLe,
-  });
+  try {
+    await envoyerMailAcces({
+      to: token.emailDestinataire,
+      nom: token.nomDestinataire,
+      sujet: "Votre nouveau code de confirmation",
+      message:
+        "Voici un nouveau code de confirmation pour l'action qui vous a été demandée. " +
+        "Le précédent n'est plus valable.",
+      urlAcces,
+      otp,
+      expireLe: token.expireLe,
+    });
+  } catch (erreur) {
+    // Le nouveau code est posé mais n'est pas parti : l'ancien ne vaut déjà
+    // plus. La place au plafond horaire est rendue, et la page le dit au lieu
+    // d'annoncer un envoi qui n'a pas eu lieu.
+    await rendreEnvoiOtp(token.emailDestinataire);
+    console.error("[signatures] renvoi de code échoué :", motifErreur(erreur));
+    return {
+      status: "error",
+      message:
+        "Le nouveau code n'a pas pu être envoyé. Patientez une minute, puis demandez-en un autre.",
+    };
+  }
 
   // Les essais ne sont pas remis à trois (`renouvelerOtp`) : la phrase dit ce
   // qui reste sur le lien, pour que le signataire ne compte pas sur trois.

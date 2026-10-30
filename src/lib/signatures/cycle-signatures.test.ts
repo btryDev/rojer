@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { correspond } from "@/test/prisma-where";
 import { Prisma } from "@prisma/client";
 
 /**
@@ -11,27 +12,6 @@ import { Prisma } from "@prisma/client";
  */
 
 type Ligne = Record<string, unknown>;
-
-function correspond(ligne: Ligne | undefined, where: Ligne): boolean {
-  if (!ligne) return false;
-  return Object.entries(where).every(([clef, attendu]) => {
-    const valeur = ligne[clef];
-    if (attendu === null) return valeur === null || valeur === undefined;
-    if (attendu instanceof Date) return valeur instanceof Date && valeur.getTime() === attendu.getTime();
-    if (typeof attendu === "object") {
-      const a = attendu as Ligne;
-      if ("gte" in a) return valeur instanceof Date && valeur >= (a.gte as Date);
-      // La réservation d'un essai de code (2026-10-12) est conditionnelle.
-      if ("gt" in a) return (valeur as number) > (a.gt as number);
-      if ("lte" in a) return (valeur as number) <= (a.lte as number);
-      // Le plafond des envois de code (2026-10-13) : `envois < plafond`.
-      if ("lt" in a) return (valeur as number) < (a.lt as number);
-      if ("in" in a) return (a.in as unknown[]).includes(valeur);
-      return correspond(valeur as Ligne, a);
-    }
-    return valeur === attendu;
-  });
-}
 
 function table(lignes: Ligne[]) {
   const trouver = async ({ where }: { where: Ligne }) =>
@@ -130,13 +110,16 @@ const verrous: string[] = [];
 const { mailsEnvoyes } = vi.hoisted(() => ({
   mailsEnvoyes: [] as { to: string; subject: string; text: string }[],
 }));
-const { envoi } = vi.hoisted(() => ({ envoi: { enService: true } }));
+const { envoi } = vi.hoisted(() => ({ envoi: { enService: true, echoue: false } }));
 vi.mock("@/lib/email", () => ({
   sendMail: vi.fn(async (p: { to: string; subject: string; text: string }) => {
+    // Le fournisseur refuse ou ne répond pas (Mailpace, 2026-10-30).
+    if (envoi.echoue) throw new Error("Mailpace a refusé l'envoi (HTTP 500).");
     mailsEnvoyes.push(p);
   }),
   envoiEnService: () => envoi.enService,
   mailFrom: () => "no-reply@test.local",
+  motifErreur: (e: unknown) => (e instanceof Error ? e.message : "erreur inconnue"),
   publicAppUrl: () => "http://localhost:3000",
 }));
 
@@ -149,6 +132,8 @@ import {
   signerEnCompteConnecte,
 } from "./actions";
 import { hashToken } from "@/lib/access-tokens/token";
+import { MESSAGE_ENVOI_ECHOUE } from "@/lib/access-tokens/emission";
+import { MOTIF_REVOCATION_ENVOI_ECHOUE } from "@/lib/access-tokens/revocation";
 import { hashOtp } from "./otp";
 
 async function sansRedirection(p: Promise<unknown>): Promise<void> {
@@ -203,6 +188,7 @@ beforeEach(() => {
     return [];
   };
   mailsEnvoyes.length = 0;
+  envoi.echoue = false;
 });
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -781,5 +767,76 @@ describe("garantie 5 — la signature prend le verrou de l'objet que prend la mo
     expect((await signerCommeDirigeant("permis_feu", "pf-1")).ok).toBe(true);
 
     expect(verrous).toEqual(['SELECT 1 FROM "PermisFeu" WHERE "id" = ? FOR UPDATE pf-1']);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// Envoi échoué (pilote Mailpace, 2026-10-30) : le fournisseur refuse ou ne
+// répond pas APRÈS que le jeton ou le nouveau code a été écrit. Avant ce lot,
+// l'erreur remontait telle quelle : un jeton valable restait en base sans
+// que son e-mail soit parti, et l'écran affichait l'erreur générique.
+// ─────────────────────────────────────────────────────────────────────────
+
+describe("envoi échoué : rien de valable ne reste, et l'écran le dit", () => {
+  it("demande de signature : le lien créé est révoqué, motif écrit, message vrai", async () => {
+    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
+    envoi.echoue = true;
+
+    const r = await demanderSignature({ ...DEMANDE_PLAN, partie: "entreprise_exterieure" });
+
+    expect(r).toEqual({ ok: false, message: MESSAGE_ENVOI_ECHOUE });
+    expect(prismaMock.accessToken.lignes).toHaveLength(1);
+    expect(prismaMock.accessToken.lignes[0].revoqueLe).toBeInstanceOf(Date);
+    expect(prismaMock.accessToken.lignes[0].revoqueMotif).toBe(MOTIF_REVOCATION_ENVOI_ECHOUE);
+    expect(mailsEnvoyes).toHaveLength(0);
+  });
+
+  it("renvoi du code : la place au plafond est rendue, et rien n'annonce un envoi", async () => {
+    const lien = lienValide("plan_prevention", "pp-1");
+    lien.otpExpireLe = new Date(Date.now() + 60_000);
+    prismaMock.accessToken.lignes.push(lien);
+    envoi.echoue = true;
+
+    const r = await renvoyerCodeOtp(JETON_CLAIR);
+
+    expect(r.status).toBe("error");
+    expect((r as { message: string }).message).toMatch(/n'a pas pu être envoyé/);
+    expect(prismaMock.quotaEnvoiOtp.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { envois: { decrement: 1 } } }),
+    );
+    expect(mailsEnvoyes).toHaveLength(0);
+  });
+
+  it("un lien jamais parti ne compte pas dans le plafond de l'heure", async () => {
+    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
+    // Dix liens révoqués pour envoi échoué dans l'heure : le plafond (10) serait
+    // atteint s'ils comptaient.
+    for (let i = 0; i < 10; i++) {
+      prismaMock.accessToken.lignes.push(
+        jeton("plan_prevention", `pp-x${i}`, "etab-a-moi", {
+          createdByUserId: "user-1",
+          revoqueLe: new Date(),
+          revoqueMotif: MOTIF_REVOCATION_ENVOI_ECHOUE,
+        }),
+      );
+    }
+
+    const r = await demanderSignature({ ...DEMANDE_PLAN, partie: "entreprise_exterieure" });
+
+    expect(r).toEqual({ ok: true });
+    expect(mailsEnvoyes).toHaveLength(1);
+  });
+
+  it("contrôle : dix liens partis dans l'heure atteignent bien le plafond", async () => {
+    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
+    for (let i = 0; i < 10; i++) {
+      prismaMock.accessToken.lignes.push(
+        jeton("plan_prevention", `pp-x${i}`, "etab-a-moi", { createdByUserId: "user-1" }),
+      );
+    }
+
+    const r = await demanderSignature({ ...DEMANDE_PLAN, partie: "entreprise_exterieure" });
+
+    expect(r).toEqual({ ok: false, message: expect.stringMatching(/Trop de liens/) });
   });
 });

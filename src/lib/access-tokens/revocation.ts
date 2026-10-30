@@ -2,6 +2,29 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 /**
+ * Le motif écrit sur un jeton dont l'e-mail n'est pas parti (2026-10-30). En
+ * français lisible : la page `/acces/[token]` et la signature l'affichent tels
+ * quels au destinataire, si le message finit par lui arriver quand même
+ * (délai dépassé côté Rojer alors que le fournisseur l'avait accepté).
+ */
+export const MOTIF_REVOCATION_ENVOI_ECHOUE =
+  "l'e-mail n'a pas pu être envoyé ; demandez un nouveau lien à votre interlocuteur";
+
+/**
+ * Les jetons dont l'e-mail est parti : UNE règle pour tous les plafonds qui
+ * comptent des liens (par établissement, par utilisateur, par adresse). Sans
+ * elle, une panne du fournisseur épuisait les plafonds sans qu'aucun lien ait
+ * atteint personne. `revoqueMotif` est nullable : l'exclusion passe par un OR
+ * explicite, `not` seul écarterait aussi les jetons sans motif.
+ */
+export const LIEN_PARTI = {
+  OR: [
+    { revoqueMotif: null },
+    { revoqueMotif: { not: MOTIF_REVOCATION_ENVOI_ECHOUE } },
+  ],
+} satisfies Prisma.AccessTokenWhereInput;
+
+/**
  * Révoque les liens encore ouverts sur un objet — à sa clôture, son
  * annulation ou sa suppression, et (2026-10-12, relecture indépendante) quand
  * le contenu qu'une signature scellerait change : un lien envoyé montre une

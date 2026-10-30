@@ -1,4 +1,4 @@
-import { mailFrom, publicAppUrl, sendMail } from "@/lib/email";
+import { publicAppUrl, sendMail } from "@/lib/email";
 import { OTP_ESSAIS_MAX, OTP_TTL_MINUTES } from "@/lib/signatures/otp";
 import { formaterDateHeureFr } from "@/lib/dates";
 
@@ -72,12 +72,6 @@ export async function envoyerMailAcces(args: MailAccesArgs): Promise<void> {
     subject: args.sujet,
     text: lignes.join("\n"),
   });
-
-  // Aussi utile en dev : log le from configuré pour que l'utilisateur voie
-  // l'identité d'expéditeur qui sortirait en prod.
-  if (process.env.EMAIL_DRIVER !== "resend") {
-    console.log(`   (From : ${mailFrom()})`);
-  }
 }
 
 /** URL publique de la page d'accès pour un token clair donné. */

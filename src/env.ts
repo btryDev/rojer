@@ -91,7 +91,8 @@ const schema = z
 
     // URL publique, e-mail.
     PUBLIC_APP_URL: z.preprocess(vide, urlHttp.optional()),
-    EMAIL_DRIVER: optionnelle,
+    EMAIL_DRIVER: enumeration(["console", "mailpace"] as const),
+    MAILPACE_API_KEY: optionnelle,
     SIGNATURE_MAIL_FROM: optionnelle,
 
     // Stockage des fichiers (`storage/index.ts`).
