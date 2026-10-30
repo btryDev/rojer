@@ -78,7 +78,19 @@ jobs:
         env:
           ISOLATION_INTEGRATION_URL: postgresql://duerp:duerp@localhost:5432/rojer_integration_ci
           ACCESSIBILITE_INTEGRATION_URL: postgresql://duerp:duerp@localhost:5432/rojer_integration_ci
+          LIMITE_DEBIT_INTEGRATION_URL: postgresql://duerp:duerp@localhost:5432/rojer_integration_ci
         run: >-
           pnpm exec vitest run
           src/lib/auth/portee/client.integration
           src/lib/accessibilite/registre-vierge.integration
+          src/lib/securite/limite-debit.integration
+          --reporter=default --reporter=json --outputFile.json=integration.json
+
+      # Un test d'intégration saute sans sa variable : renommée un jour, le job
+      # resterait vert sans rien tester. Il tombe si un test a sauté.
+      - name: Refuser un test sauté
+        run: >-
+          node -e "const r=require('./integration.json');
+          if (r.numTotalTests === 0 || r.numPendingTests > 0 || r.numTodoTests > 0)
+          { console.error('Tests sautés : ' + r.numPendingTests + ' / ' + r.numTotalTests); process.exit(1) }
+          console.log(r.numPassedTests + ' tests passés, aucun sauté')"

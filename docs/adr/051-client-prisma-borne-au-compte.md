@@ -187,12 +187,44 @@ migrations appliquées), deux comptes A et B, client borné à A.
   borné ;
 - 5 000 actions : 42,5 ms (47,0) brut avec le prédicat écrit, 46,2 ms (48,9)
   borné avec le prédicat écrit en double, 48,4 ms (58,4) borné seul.
-- Le SQL produit reste **une seule instruction** : la borne devient deux
+- ~~Le SQL produit reste **une seule instruction** : la borne devient deux
   `LEFT JOIN` (`Etablissement`, `Entreprise`) et un `"userId" = $2` dans le
   `WHERE`. Aucune requête de plus, ni en lecture ni en écriture : le budget de
-  requêtes de la CI ne bouge pas par construction. Les écarts de temps sont de
-  l'ordre du bruit d'une machine partagée ; la mesure de référence reste celle
-  du lot 5 (`mesurer.mjs`).
+  requêtes de la CI ne bouge pas par construction.~~ [2026-10-30 : **faux pour
+  les écritures et pour le regroupement**, relevé par l'audit indépendant puis
+  mesuré — voir « Coût mesuré » plus bas. Vrai pour une lecture seule.] Les
+  écarts de temps sont de l'ordre du bruit d'une machine partagée ; la mesure
+  de référence reste celle du lot 5 (`mesurer.mjs`).
+
+**Coût mesuré** (2026-10-30, PostgreSQL 17.11 local, Prisma 6.19.3, vrai
+`clientBorne`, instructions SQL comptées par l'événement `query` — `BEGIN` et
+`COMMIT` compris — et recoupées par `log_statement` ; médiane de 100 essais
+après 20 de chauffe, deux passages) :
+
+| Cas | Instructions brut → borné | Médiane brut → borné |
+|---|---|---|
+| `findUnique` Etablissement | 1 → 1 | 0,412 → 0,509 ms |
+| `findUnique` Risque (quatre crans) | 1 → 1 | 0,274 → 0,385 ms |
+| `findMany` de 5 000 actions | 1 → 1 | 43,005 → 45,576 ms |
+| `findFirst` + `include` | 2 → 2 | 0,504 → 0,639 ms |
+| trois `findUnique` concurrents | **1 → 3** | 0,552 → 0,938 ms |
+| `create` à 1 clé (Batiment) | **1 → 5** | 0,277 → 0,811 ms |
+| `create` à 2 clés (Equipement) | **1 → 6** | 0,433 → 1,057 ms |
+| `create` à 3 clés (Action) | **1 → 7** | 0,335 → 1,555 ms |
+| `update` qui change une clé | **1 → 5** | 0,300 → 0,925 ms |
+| `update` d'un champ simple, `delete`, `deleteMany` | 1 → 1 | +0,06 à +0,14 ms |
+| `upsert` (mise à jour / création) | 5 → 5 / 5 → 6 | 0,655 → 0,849 ms |
+| 100 lignes : `createMany` / `creerEnLotVerifie` | 3 → 6 | 3,696 → 5,025 ms |
+| transaction interactive, trois écritures | **5 → 10** | 1,290 → 2,548 ms |
+
+D'où vient l'écart : un `connect` fait passer Prisma en écriture imbriquée —
+`BEGIN`, un `SELECT` de vérification par clé réécrite, l'`INSERT … RETURNING
+id`, la relecture de la ligne, `COMMIT` (+3 fixes, +1 par clé). Le
+regroupement des `findUnique` concurrents (`WHERE id IN (…)`) est perdu dès
+que le `where` porte un `AND`. Lectures : aucune instruction de plus. En
+local, un aller-retour coûte moins de 0,1 ms ; derrière un réseau, c'est le
+NOMBRE d'instructions qui compte. Le budget de requêtes par page (CI) le
+dira page par page à chaque module migré (grille de seconde lecture, point 6).
 
 **Ce que l'essai tranche** (consigne de la propriétaire : écrire ce qui est
 fragile plutôt que forcer) :
@@ -221,6 +253,27 @@ fragile plutôt que forcer) :
   bornée ou réécrite ;
 - une ligne d'un autre compte rend P2025 / P2018, comme une ligne absente : à
   vérifier au lot 2 que chaque appelant le traduit en 404, sans oracle.
+
+## Corrections de l'audit indépendant (2026-10-30)
+
+- **Identité** (`User`, sur cc) : une relation vers elle ne désigne que le
+  compte de la portée (clé égale à `userId`, cible réduite à `{ id }`, toute
+  autre écriture refusée) ; tout `include`/`select` qui traverse vers un modèle
+  hors compte ou l'identité est refusé, à toute profondeur, `_count` compris.
+  Le trou : `Signature.userId` et `AccessToken.createdByUserId` acceptaient
+  n'importe quel utilisateur, et un `include` remontait à ses sessions et à
+  son secret TOTP. Rien dans le code ne l'exploitait ; c'est ce que la borne
+  doit arrêter quand même. L'affirmation du § 2 — les lectures imbriquées sont
+  sûres parce que les clés croisées sont interdites — ne valait pas pour cette
+  clé-là.
+- **Formes servies** : seules celles que le dépôt emploie. Écritures
+  imbriquées : `create`, `connect`, `disconnect` (booléen), `deleteMany` ;
+  `cursor` refusé.
+- **Oracles d'existence restants**, à vérifier à chaque module migré : `upsert`
+  ou `createMany` à identifiant fourni et `skipDuplicates` sur un champ unique
+  global (P2002 révèle une ligne d'un autre compte).
+- **Tests d'intégration en CI** (`.github/workflows/integration.yml`, service
+  PostgreSQL 17) ; le job tombe si un test saute faute de sa variable.
 
 ## Accès sans session : jetons, MCP, pages publiques (décision du 2026-10-30)
 
