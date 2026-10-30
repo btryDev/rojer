@@ -17,9 +17,13 @@ import {
 } from "./index";
 import { LocalFileStorage } from "./local";
 import { SupabaseFileStorage } from "./supabase";
+import { S3FileStorage } from "./s3";
 
 const VARIABLES = [
   "NODE_ENV",
+  "CELLAR_ADDON_HOST",
+  "CELLAR_ADDON_KEY_ID",
+  "CELLAR_ADDON_KEY_SECRET",
   "STORAGE_DRIVER",
   "STORAGE_BUCKET",
   "SUPABASE_SERVICE_ROLE_KEY",
@@ -76,7 +80,7 @@ describe("getStorage — le pilote selon les variables", () => {
       expect(stockageEnService()).toBe(false);
       expect(() => getStorage()).toThrow(StockageNonConfigure);
       expect(() => getStorage()).toThrow(/en production : le disque du serveur est en lecture seule et éphémère/);
-      expect(() => getStorage()).toThrow(/STORAGE_DRIVER=supabase, STORAGE_BUCKET et SUPABASE_SERVICE_ROLE_KEY/);
+      expect(() => getStorage()).toThrow(/STORAGE_DRIVER=supabase \(Vercel\) ou STORAGE_DRIVER=s3 \(Clever Cloud\)/);
     },
   );
 
@@ -174,8 +178,8 @@ describe("getStorage — le pilote selon les variables", () => {
   });
 
   it("un pilote inconnu est refusé", () => {
-    poser({ NODE_ENV: "production", STORAGE_DRIVER: "s3" });
-    expect(() => getStorage()).toThrow(/non supporté : s3/);
+    poser({ NODE_ENV: "production", STORAGE_DRIVER: "ftp" });
+    expect(() => getStorage()).toThrow(/non supporté : ftp/);
   });
 
   it("aucune variable de stockage n'est exposée au navigateur", () => {
@@ -187,4 +191,43 @@ describe("getStorage — le pilote selon les variables", () => {
     );
     expect(source).not.toMatch(/NEXT_PUBLIC_[A-Z_]*(SERVICE|SECRET|ROLE|STORAGE)/);
   });
+});
+
+// Cellar (Clever Cloud, 2026-10-30) : le pilote s3, ses variables, et rien de
+// sensible dans un refus.
+describe("pilote s3 (Cellar)", () => {
+  const S3_COMPLET = {
+    STORAGE_DRIVER: "s3",
+    STORAGE_BUCKET: "rojer-pieces",
+    CELLAR_ADDON_HOST: "cellar-c2.services.clever-cloud.com",
+    CELLAR_ADDON_KEY_ID: "id-de-test",
+    CELLAR_ADDON_KEY_SECRET: "secret-qui-ne-doit-pas-sortir",
+  };
+
+  it("complet : en service, en production comme en développement", () => {
+    for (const NODE_ENV of ["production", "development"]) {
+      poser({ ...S3_COMPLET, NODE_ENV });
+      expect(stockageEnService()).toBe(true);
+      expect(getStorage()).toBeInstanceOf(S3FileStorage);
+    }
+  });
+
+  it.each(["STORAGE_BUCKET", "CELLAR_ADDON_HOST", "CELLAR_ADDON_KEY_ID", "CELLAR_ADDON_KEY_SECRET"] as const)(
+    "sans %s : hors service, le refus nomme la variable, jamais le secret",
+    (manquante) => {
+      poser({ ...S3_COMPLET, NODE_ENV: "production", [manquante]: undefined });
+      expect(stockageEnService()).toBe(false);
+      const e = (() => {
+        try {
+          getStorage();
+        } catch (x) {
+          return x as Error;
+        }
+        throw new Error("aucun refus");
+      })();
+      expect(e).toBeInstanceOf(StockageNonConfigure);
+      expect(e.message).toContain(manquante);
+      expect(e.message).not.toContain("secret-qui-ne-doit-pas-sortir");
+    },
+  );
 });

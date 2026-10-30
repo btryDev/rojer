@@ -6,8 +6,10 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { createClient } from "@supabase/supabase-js";
+import { S3Client } from "@aws-sdk/client-s3";
 import { LocalFileStorage } from "./local";
 import { SupabaseFileStorage, type ClientStockage } from "./supabase";
+import { S3FileStorage, pointDAcces, type ClientS3 } from "./s3";
 import { StockageNonConfigure } from "./erreurs";
 import { diagnostic, formeDeLaCle, nettoyer, refusDeLaCle } from "./cle-service";
 import { segmentCleStockage } from "./noms";
@@ -37,8 +39,12 @@ export {
  *     `SUPABASE_SERVICE_ROLE_KEY` (serveur seulement), URL du projet
  *     `NEXT_PUBLIC_SUPABASE_URL` (déjà posée pour l'authentification).
  *
- * Un pilote S3 (migration prévue vers Clever Cloud) s'ajoutera ici, derrière
- * la même interface. Procédure côté propriétaire : `docs/deploiement-stockage.md`.
+ *   - `s3` : Cellar, le stockage objet de Clever Cloud (2026-10-30, plan de
+ *     bascule 0.7), bucket privé `STORAGE_BUCKET`, accès par les variables
+ *     que l'add-on injecte (`CELLAR_ADDON_HOST`, `CELLAR_ADDON_KEY_ID`,
+ *     `CELLAR_ADDON_KEY_SECRET`). Voir `s3.ts`.
+ *
+ * Procédure côté propriétaire : `docs/deploiement-stockage.md`.
  */
 
 /**
@@ -48,10 +54,17 @@ export {
  * contrôle doivent y tenir sur un lien lent, d'où une minute plutôt que
  * quelques secondes. Au-delà, l'opération échoue en `ErreurStockage` comme
  * une panne : l'écran dit `MESSAGE_ECHEC_ENREGISTREMENT`, rien n'est écrit en
- * base. → bascule : le pilote S3 (Cellar) prendra le même délai, par
- * `requestTimeout`/`connectionTimeout` de son gestionnaire HTTP.
+ * base. Le pilote S3 (Cellar) prend le même délai, par le `requestTimeout`
+ * de son gestionnaire HTTP, et un essai de plus au plus (`maxAttempts`).
  */
 export const DELAI_STOCKAGE_MS = 60_000;
+
+const VARIABLES_S3 = [
+  "STORAGE_BUCKET",
+  "CELLAR_ADDON_HOST",
+  "CELLAR_ADDON_KEY_ID",
+  "CELLAR_ADDON_KEY_SECRET",
+] as const;
 
 const VARIABLES_SUPABASE = [
   "STORAGE_BUCKET",
@@ -71,8 +84,9 @@ function refusDuStockage(): string | null {
     return process.env.NODE_ENV === "production"
       ? `STORAGE_DRIVER vaut « local »${process.env.STORAGE_DRIVER ? "" : " (non défini)"} en production : ` +
           "le disque du serveur est en lecture seule et éphémère, aucun fichier " +
-          "déposé n'y survivrait. Poser STORAGE_DRIVER=supabase, STORAGE_BUCKET " +
-          "et SUPABASE_SERVICE_ROLE_KEY (docs/deploiement-stockage.md)."
+          "déposé n'y survivrait. Poser STORAGE_DRIVER=supabase (Vercel) ou " +
+          "STORAGE_DRIVER=s3 (Clever Cloud) et leurs variables " +
+          "(docs/deploiement-stockage.md)."
       : null;
   }
   if (driver === "supabase") {
@@ -89,7 +103,16 @@ function refusDuStockage(): string | null {
     // JWS » (production, 2026-09-27). `cle-service.ts`.
     return refusDeLaCle(formeDeLaCle(nettoyer(process.env.SUPABASE_SERVICE_ROLE_KEY)));
   }
-  return `Driver de stockage non supporté : ${driver}. Utiliser « local » (développement) ou « supabase ».`;
+  if (driver === "s3") {
+    const manquantes = VARIABLES_S3.filter((v) => !nettoyer(process.env[v]));
+    if (manquantes.length > 0)
+      return (
+        `STORAGE_DRIVER vaut « s3 », mais ${manquantes.join(", ")} ` +
+        `${manquantes.length > 1 ? "ne sont pas définies" : "n'est pas définie"}.`
+      );
+    return null;
+  }
+  return `Driver de stockage non supporté : ${driver}. Utiliser « local » (développement), « supabase » ou « s3 ».`;
 }
 
 /**
@@ -128,6 +151,31 @@ export function getStorage(): FileStorage {
     // quel, et le compilateur le vérifie à chaque montée de version.
     const stockage: ClientStockage = client;
     _storage = new SupabaseFileStorage(stockage, nettoyer(process.env.STORAGE_BUCKET));
+    return _storage;
+  }
+
+  if ((process.env.STORAGE_DRIVER ?? "local") === "s3") {
+    const bucket = nettoyer(process.env.STORAGE_BUCKET);
+    console.info(`[stockage] pilote s3 (Cellar), bucket « ${bucket} »`);
+    const client = new S3Client({
+      endpoint: pointDAcces(nettoyer(process.env.CELLAR_ADDON_HOST)),
+      // La doc de Cellar : une région est exigée par le SDK, « default » convient.
+      region: "default",
+      forcePathStyle: true,
+      credentials: {
+        accessKeyId: nettoyer(process.env.CELLAR_ADDON_KEY_ID),
+        secretAccessKey: nettoyer(process.env.CELLAR_ADDON_KEY_SECRET),
+      },
+      // Sans ces deux réglages, la doc de Cellar signale des erreurs de somme
+      // de contrôle avec le SDK v3 récent.
+      requestChecksumCalculation: "WHEN_REQUIRED",
+      responseChecksumValidation: "WHEN_REQUIRED",
+      requestHandler: { requestTimeout: DELAI_STOCKAGE_MS, connectionTimeout: 10_000 },
+      maxAttempts: 2,
+    });
+    // Sans conversion : `S3Client` satisfait `ClientS3` tel quel.
+    const s3: ClientS3 = client;
+    _storage = new S3FileStorage(s3, bucket);
     return _storage;
   }
 
