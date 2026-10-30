@@ -5,11 +5,12 @@
 // E-mail et mot de passe, adresse confirmée avant toute session.
 
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { isAPIError } from "better-auth/api";
 import { envoiEnService, refusUrlPublique } from "@/lib/email";
+import { COOKIE_ETABLISSEMENT_ACTIF } from "@/lib/auth/scope";
 import { auth } from "./better-auth";
 import { MESSAGE_MOT_DE_PASSE_DIVULGUE, motDePasseDivulgue } from "./mot-de-passe-divulgue";
 import { requireUser } from "./require-user";
@@ -105,11 +106,26 @@ export type AuthActionState = {
 const ENVOI_IMPOSSIBLE =
   "L'envoi d'e-mails n'est pas configuré sur ce serveur : aucun lien ne peut partir. Prévenez l'équipe Rojer.";
 
+const MOT_DE_PASSE_TROP_LONG = "Le mot de passe est trop long (128 caractères au plus).";
+
 const LIEN_INVALIDE =
   "Ce lien de réinitialisation est invalide ou a expiré. Redemandez un lien.";
 
 function envoiImpossible(): boolean {
   return refusUrlPublique() !== null || !envoiEnService();
+}
+
+/**
+ * La règle d'un NOUVEAU mot de passe, en un endroit pour les trois portes
+ * (inscription, réinitialisation, changement) : longueur, puis fuites connues
+ * (`mot-de-passe-divulgue.ts`, appel réseau — à placer après les refus
+ * gratuits et la limitation de débit). Rend le message, ou `null`.
+ */
+async function refusNouveauMotDePasse(motDePasse: string): Promise<string | null> {
+  return (
+    erreurMotDePasse(motDePasse) ??
+    ((await motDePasseDivulgue(motDePasse)) ? MESSAGE_MOT_DE_PASSE_DIVULGUE : null)
+  );
 }
 
 /** Le code d'erreur de Better Auth (`EMAIL_NOT_VERIFIED`…), ou `null`. */
@@ -172,11 +188,10 @@ export async function signUpAction(
 
   const limite = await refusParLimite("inscription", LIMITES.inscriptionIp);
   if (limite) return { error: limite };
-  if (await motDePasseDivulgue(parsed.data.password)) {
-    return { error: MESSAGE_MOT_DE_PASSE_DIVULGUE };
-  }
 
   if (envoiImpossible()) return { error: ENVOI_IMPOSSIBLE };
+  const refus = await refusNouveauMotDePasse(parsed.data.password);
+  if (refus) return { error: refus };
   try {
     await auth.api.signUpEmail({
       // Le nom n'est demandé nulle part : l'adresse en tient lieu.
@@ -245,14 +260,19 @@ export async function definirMotDePasseAction(
 
   const token = String(formData.get("token") ?? "");
   if (!token) return { error: LIEN_INVALIDE };
-  if (await motDePasseDivulgue(motDePasse)) return { error: MESSAGE_MOT_DE_PASSE_DIVULGUE };
+  // Avant l'appel réseau du contrôle des fuites : sans limite, un script
+  // ferait appeler le service en boucle, jusqu'à ce qu'il nous refuse.
+  const limite = await refusParLimite("definir-mot-de-passe", LIMITES.reinitialisationIp);
+  if (limite) return { error: limite };
+  const divulgue = await refusNouveauMotDePasse(motDePasse);
+  if (divulgue) return { error: divulgue };
   try {
     await auth.api.resetPassword({ body: { newPassword: motDePasse, token } });
   } catch (e) {
     return {
       error:
         codeErreur(e) === "PASSWORD_TOO_LONG"
-          ? "Le mot de passe est trop long (128 caractères au plus)."
+          ? MOT_DE_PASSE_TROP_LONG
           : LIEN_INVALIDE,
     };
   }
@@ -260,8 +280,31 @@ export async function definirMotDePasseAction(
 }
 
 
-// ~~`signOutAction`~~ [2026-10-30, lot 3a : la déconnexion passe par la route
-// `/auth/deconnexion`, qui seule peut poser `Clear-Site-Data`.]
+/**
+ * Déconnexion : la session se ferme en base, puis les cookies sensibles sont
+ * effacés NOMMÉMENT. Pas de `Clear-Site-Data` (revue de la PR #138) : il
+ * effacerait les préférences du tableau de bord (stockage local, sans donnée
+ * personnelle) et tous les cookies du domaine rojer.fr, et `"cache"` bloque la
+ * navigation dans Chromium — pour ne rien protéger de plus, les pages
+ * personnelles n'étant pas mises en cache.
+ *
+ * Une session déjà fermée (`APIError`) n'empêche pas de finir ; une panne,
+ * elle, se voit — sinon on croirait déconnecté un compte dont la session vit
+ * encore en base.
+ */
+export async function signOutAction() {
+  try {
+    await auth.api.signOut({ headers: await headers() });
+  } catch (e) {
+    if (!isAPIError(e)) throw e;
+  }
+  // L'établissement choisi au sélecteur ne survit pas à la déconnexion (audit
+  // Next.js, B3) : revalidé à chaque lecture (`scope.ts`), mais rien ne
+  // justifie de le laisser traîner sur un poste partagé.
+  (await cookies()).delete(COOKIE_ETABLISSEMENT_ACTIF);
+  revalidatePath("/", "layout");
+  redirect("/login");
+}
 
 // ---------------------------------------------------------------------------
 // Sécurité du compte (ADR-052, lot 3a) : mot de passe et sessions ouvertes.
@@ -292,7 +335,8 @@ export async function changerMotDePasseAction(
     limite: LIMITES.connexionCompte,
   });
   if (limite) return { error: limite };
-  if (await motDePasseDivulgue(nouveau)) return { error: MESSAGE_MOT_DE_PASSE_DIVULGUE };
+  const refus = await refusNouveauMotDePasse(nouveau);
+  if (refus) return { error: refus };
 
   try {
     await auth.api.changePassword({
@@ -304,7 +348,9 @@ export async function changerMotDePasseAction(
       error:
         codeErreur(e) === "INVALID_PASSWORD"
           ? "Mot de passe actuel incorrect"
-          : "Le mot de passe n'a pas pu être changé. Réessayez dans un instant.",
+          : codeErreur(e) === "PASSWORD_TOO_LONG"
+            ? MOT_DE_PASSE_TROP_LONG
+            : "Le mot de passe n'a pas pu être changé. Réessayez dans un instant.",
     };
   }
   revalidatePath("/compte/securite");

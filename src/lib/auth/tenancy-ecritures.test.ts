@@ -99,6 +99,16 @@ const EXEMPTIONS = new Map<string, Exemption>([
     },
   ],
   [
+    "lib/auth/actions.ts:definirMotDePasseAction",
+    {
+      garde: "auth.api.resetPassword",
+      raison:
+        "Nouveau mot de passe au retour du lien de réinitialisation : Better Auth ne " +
+        "l'applique qu'au compte que désigne le jeton du lien ; l'autre écriture est le " +
+        "compteur de limitation de débit. Aucune donnée de dossier.",
+    },
+  ],
+  [
     "lib/auth/actions.ts:changerMotDePasseAction",
     {
       garde: "auth.api.changePassword",

@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { Check, LogOut, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useConfirmation } from "@/components/ui-kit/Confirmation";
+import { signOutAction } from "@/lib/auth/actions";
 import { StepIdentite } from "./StepIdentite";
 import { StepTypologie } from "./StepTypologie";
 import { StepResume } from "./StepResume";
@@ -304,7 +305,7 @@ export function WizardShell({
               >
                 {email}
               </p>
-              <form method="post" action="/auth/deconnexion">
+              <form action={signOutAction}>
                 <button
                   type="submit"
                   className="mt-2 inline-flex items-center gap-2 text-[12.5px] text-white/70 underline decoration-white/30 decoration-dotted underline-offset-4 transition-colors hover:text-white"
@@ -345,7 +346,7 @@ export function WizardShell({
               le point de rupture : elle se redonne ici, sinon la sortie
               n'existe que sur grand écran. */}
           {email ? (
-            <form method="post" action="/auth/deconnexion">
+            <form action={signOutAction}>
               <button
                 type="submit"
                 className="inline-flex items-center gap-1.5 text-[12.5px] text-[color:var(--board-slate-mid)] underline decoration-[color:var(--board-slate)] decoration-dotted underline-offset-4 transition-colors hover:text-[color:var(--board-ink)]"

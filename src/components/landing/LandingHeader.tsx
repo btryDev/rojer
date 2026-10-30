@@ -11,6 +11,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { signOutAction } from "@/lib/auth/actions";
 
 // Deux entrées, deux destinations à venir : aucune des deux pages
 // n'existe encore. On les affiche quand même — la barre doit montrer la
@@ -92,7 +93,7 @@ export function LandingHeader({
               // sortie, un compte connecté sans dossier arrivait ici sur un
               // seul bouton, qui le renvoyait à l'écran qu'il venait de
               // quitter.
-              <form method="post" action="/auth/deconnexion">
+              <form action={signOutAction}>
                 <button
                   type="submit"
                   className="text-[0.875rem] text-[color:var(--board-slate-mid)] transition-colors hover:text-[color:var(--board-ink)]"

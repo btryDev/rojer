@@ -61,11 +61,6 @@ const PUBLIQUES = new Map<string, string>([
       "`getRegistrePublicParSlug` (registre publié, champs publiables).",
   ],
   [
-    "auth/deconnexion/route.ts:POST",
-    "Déconnexion (ADR-052, lot 3a) : ferme la session que porte le cookie, ou rien ; " +
-      "même origine exigée. Ne lit ni n'écrit aucune donnée de dossier.",
-  ],
-  [
     "auth/verification/route.ts:GET",
     "Lien de confirmation d'adresse (ADR-052) : Better Auth juge le jeton du " +
       "lien. Il n'y a pas de session à vérifier — le compte n'est pas encore " +

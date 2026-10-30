@@ -36,6 +36,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Building2, Check, HelpCircle, Home, LogOut, Plus, ShieldCheck } from "lucide-react";
+import { signOutAction } from "@/lib/auth/actions";
 import { choisirEtablissementActif } from "@/lib/etablissements/actions";
 import { estMultiEtablissements } from "@/lib/etablissements/selection";
 
@@ -325,7 +326,7 @@ export function BarreCompte({
             </button>
 
             {email != null ? (
-              <form method="post" action="/auth/deconnexion">
+              <form action={signOutAction}>
                 <button
                   type="submit"
                   role="menuitem"

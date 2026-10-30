@@ -163,14 +163,8 @@ const EXEMPTIONS = new Map<string, Exemption>([
       ] as const,
   ),
   [
-    "lib/auth/actions.ts:definirMotDePasseAction",
-    {
-      garde: "auth.api.resetPassword",
-      raison:
-        "Nouveau mot de passe au retour du lien de réinitialisation : agit sur " +
-        "le compte que désigne le jeton du lien (Better Auth le juge), ne lit " +
-        "aucune donnée de dossier.",
-    },
+    "lib/auth/actions.ts:signOutAction",
+    { garde: "auth.api.signOut", raison: "Déconnexion : ne lit aucune donnée de dossier." },
   ],
   [
     "lib/auth/actions.ts:fermerSessionsAction",
@@ -178,8 +172,7 @@ const EXEMPTIONS = new Map<string, Exemption>([
       garde: "auth.api.listSessions",
       raison:
         "Fermer une session ouverte (ADR-052, lot 3a) : Better Auth ne liste et ne " +
-        "ferme que les sessions du compte de la session courante ; aucune donnée de dossier. " +
-        "Remplace l'exemption de `signOutAction`, passée à la route `/auth/deconnexion`.",
+        "ferme que les sessions du compte de la session courante ; aucune donnée de dossier.",
     },
   ],
 ]);
@@ -193,6 +186,9 @@ const EXEMPTIONS = new Map<string, Exemption>([
 // `tenancy-ecritures.test.ts` ; `verifierIntegriteSignature` n'est plus une
 // action serveur (`signatures/verification-publique.ts`) ; entre
 // `definirMotDePasseAction`, la réinitialisation passée côté serveur.
+// 13 inchangé le 2026-10-30 (ADR-052, lot 3a, PR #138) : + `fermerSessionsAction`
+// (bornée par Better Auth au compte de la session courante), − `definirMotDePasseAction`,
+// passée aux écritures (elle tient désormais un compteur de limitation de débit).
 const PLAFOND_EXEMPTIONS = 13;
 
 const RACINE = join(process.cwd(), "src/lib");

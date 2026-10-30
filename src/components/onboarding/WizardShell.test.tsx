@@ -51,6 +51,9 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: (href: string) => navigations.push(href) }),
 }));
 vi.mock("@/lib/auth/actions", () => ({
+  signOutAction: async () => {
+    appels.push("deconnexion");
+  },
 }));
 
 import { WizardShell } from "./WizardShell";
@@ -350,14 +353,13 @@ describe("on peut sortir de la mise en place", () => {
     ).toBe("Bistrot du marché");
   });
 
-  it("la déconnexion est atteignable depuis l'écran", () => {
+  it("la déconnexion est atteignable depuis l'écran", async () => {
     render(<WizardShell email="paul@exemple.fr" entreprisesConnues={[]} />);
 
-    // Un POST vers la route de déconnexion (ADR-052, lot 3a), qui vide aussi
-    // le navigateur (`Clear-Site-Data`).
-    const formulaire = screen.getAllByRole("button", { name: /Déconnexion/ })[0].closest("form");
-    expect(formulaire?.getAttribute("action")).toBe("/auth/deconnexion");
-    expect(formulaire?.getAttribute("method")).toBe("post");
+    screen.getAllByRole("button", { name: /Déconnexion/ })[0].click();
+    await souffler();
+
+    expect(appels).toEqual(["deconnexion"]);
   });
 });
 

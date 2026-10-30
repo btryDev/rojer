@@ -55,6 +55,7 @@ const {
   fermerSessionsAction,
   requestPasswordResetAction,
   signInAction,
+  signOutAction,
   signUpAction,
 } = await import("./actions");
 
@@ -443,5 +444,25 @@ describe("fermer des sessions (lot 3a)", () => {
     await fermerSessionsAction(avec("autres"));
     expect(h.auth.revokeOtherSessions).toHaveBeenCalledWith({ headers: h.entetes });
     expect(h.auth.revokeSession).not.toHaveBeenCalled();
+  });
+});
+
+describe("déconnexion (audit Next.js, B3)", () => {
+  it("ferme la session en base et efface le cookie de l'établissement actif", async () => {
+    await expect(signOutAction()).rejects.toThrow("NEXT_REDIRECT");
+    expect(h.auth.signOut).toHaveBeenCalledWith({ headers: h.entetes });
+    expect(h.cookiesEffaces).toContain("etablissement-actif");
+  });
+
+  it("une session déjà fermée n'empêche pas de terminer la déconnexion", async () => {
+    h.auth.signOut.mockRejectedValue(new APIError("BAD_REQUEST", { message: "x" }));
+    const cible = await cibleDeRedirection(signOutAction());
+    expect(cible).toBe("/login");
+    expect(h.cookiesEffaces).toContain("etablissement-actif");
+  });
+
+  it("une panne ne se déguise pas en déconnexion réussie", async () => {
+    h.auth.signOut.mockRejectedValue(new Error("base indisponible"));
+    await expect(signOutAction()).rejects.toThrow("base indisponible");
   });
 });

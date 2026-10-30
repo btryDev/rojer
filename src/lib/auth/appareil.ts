@@ -4,11 +4,14 @@
  * appareils dans la liste des sessions — jamais une preuve, l'en-tête se
  * choisit librement. Module sans dépendance, testé à part.
  */
+// Ordre voulu : sur iOS, Chrome, Firefox et Edge portent aussi « Safari/ »,
+// sous les jetons CriOS, FxiOS, EdgiOS. Un iPad récent se dit « Macintosh » :
+// il s'affiche « Mac », sans moyen fiable de l'en distinguer.
 const NAVIGATEURS: [RegExp, string][] = [
-  [/Edg\//, "Edge"],
+  [/Edg\/|EdgiOS\//, "Edge"],
   [/OPR\/|Opera/, "Opera"],
-  [/Firefox\//, "Firefox"],
-  [/Chrome\//, "Chrome"],
+  [/Firefox\/|FxiOS\//, "Firefox"],
+  [/Chrome\/|CriOS\//, "Chrome"],
   [/Safari\//, "Safari"],
 ];
 
