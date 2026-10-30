@@ -138,6 +138,9 @@ export function reecrireDonnees(
 ): Objet {
   if (data === null || typeof data !== "object" || Array.isArray(data))
     throw new ErreurPortee(`données inattendues pour ${nom}`);
+  // À chaque niveau, pas seulement en tête : une création imbriquée passe par
+  // ici (revue du lot 2a bis).
+  verifierClesSimples(nom);
   const d: Objet = { ...(data as Objet) };
   racineDe(nom, d, portee, creation);
 

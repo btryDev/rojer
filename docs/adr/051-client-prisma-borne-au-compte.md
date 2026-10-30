@@ -234,6 +234,12 @@ raison. Ses réserves, et ce qu'il en est fait :
 2. **Clé étrangère composée** : passerait sans borne. **Corrigé** : refus
    explicite dans `borne.ts`, et `correspondance.test.ts` vérifie que le
    schéma n'en porte aucune vers un modèle du compte.
+   [Revue du lot 2a bis : le refus ne jouait qu'en tête — une création
+   imbriquée le contournait. Il est aussi appelé à chaque niveau de
+   `reecrireDonnees`.] Deux limites écrites : `createManyAndReturn` n'est pas
+   servi par `creerEnLotVerifie` (aucun appelant) ; un minuteur né dans un lot
+   en garderait le relevé — sans effet tant que `dansUnLot` n'exécute que le
+   code de `creerEnLotVerifie`, jamais un rappel fourni par l'appelant.
 3. **`include`/`select` non bornés** : tient au niveau du compte, pas d'un
    établissement — déjà la raison du retrait de la portée « établissement ».
 4. **Une seule réponse au refus** : P2025, P2018 et `ErreurPortee` doivent

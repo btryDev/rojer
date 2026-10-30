@@ -3,6 +3,7 @@
 // borné, et les refus. Le comportement contre un PostgreSQL réel est dans
 // `client.integration.test.ts`.
 
+import { Prisma } from "@prisma/client";
 import { describe, expect, it } from "vitest";
 import { argumentsBornes, borne, dansUnLot, ErreurPortee, estLectureDIdentifiants, noterVus, type Portee } from "./borne";
 
@@ -270,5 +271,52 @@ describe("ce qui n'est pas bornable", () => {
 
   it("un modèle hors compte est refusé", () => {
     expect(() => argumentsBornes("QuotaEnvoiOtp", "findMany", {}, A)).toThrow(ErreurPortee);
+  });
+});
+
+describe("clé étrangère composée", () => {
+  // Le schéma n'en porte aucune (correspondance.test.ts) : on en fabrique une
+  // en mémoire, le temps du test, pour éprouver le refus à chaque niveau.
+  function avecRelationComposee(f: () => void) {
+    const r = Prisma.dmmf.datamodel.models
+      .find((m) => m.name === "Equipement")!
+      .fields.find((x) => x.name === "batiment")! as { relationFromFields?: readonly string[] };
+    const avant = r.relationFromFields;
+    r.relationFromFields = ["batimentId", "etablissementId"];
+    try {
+      f();
+    } finally {
+      r.relationFromFields = avant;
+    }
+  }
+
+  it("refusée en tête", () => {
+    avecRelationComposee(() =>
+      expect(() => argumentsBornes("Equipement", "create", { data: { batimentId: "v" } }, A)).toThrow(/composée/),
+    );
+  });
+
+  it("refusée dans une création imbriquée et un connectOrCreate", () => {
+    avecRelationComposee(() => {
+      expect(() =>
+        argumentsBornes(
+          "Etablissement",
+          "update",
+          { where: { id: "e" }, data: { equipements: { create: { batimentId: "v" } } } },
+          A,
+        ),
+      ).toThrow(/composée/);
+      expect(() =>
+        argumentsBornes(
+          "Batiment",
+          "update",
+          {
+            where: { id: "b" },
+            data: { equipements: { connectOrCreate: { where: { id: "q" }, create: { batimentId: "v" } } } },
+          },
+          A,
+        ),
+      ).toThrow(/composée/);
+    });
   });
 });
