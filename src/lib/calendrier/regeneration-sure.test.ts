@@ -13,10 +13,13 @@ const genererCalendrier = vi.fn();
 const regenererSansInvalider = vi.fn();
 const marquerCalendrierPerime = vi.fn();
 const calendrierDesynchronise = vi.fn();
+const getOptionalCompte = vi.fn();
+const dbDuCompte = { nom: "client borné" };
 
 vi.mock("./actions", () => ({ genererCalendrier, regenererSansInvalider }));
 vi.mock("./reconciliation", () => ({ marquerCalendrierPerime }));
 vi.mock("./queries", () => ({ calendrierDesynchronise }));
+vi.mock("@/lib/auth/compte", () => ({ getOptionalCompte }));
 
 const { regenererApresMutation, assurerCalendrierAJour } = await import(
   "./regeneration-sure"
@@ -33,6 +36,7 @@ beforeEach(() => {
   regenererSansInvalider.mockReset();
   marquerCalendrierPerime.mockReset();
   calendrierDesynchronise.mockReset();
+  getOptionalCompte.mockReset().mockResolvedValue({ user: { id: "u" }, db: dbDuCompte });
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
@@ -60,7 +64,17 @@ describe("regenererApresMutation", () => {
     genererCalendrier.mockRejectedValue(new Error("base indisponible"));
 
     await regenererApresMutation("etab-1", "test");
-    expect(marquerCalendrierPerime).toHaveBeenCalledWith("etab-1");
+    // Par le client borné au compte (ADR-051) : un établissement d'un autre
+    // compte n'est pas touché.
+    expect(marquerCalendrierPerime).toHaveBeenCalledWith(dbDuCompte, "etab-1");
+  });
+
+  it("sans session lisible, ne marque rien et rend faux quand même", async () => {
+    genererCalendrier.mockRejectedValue(new Error("base indisponible"));
+    getOptionalCompte.mockRejectedValue(new Error("cookies hors requête"));
+
+    await expect(regenererApresMutation("etab-1", "test")).resolves.toBe(false);
+    expect(marquerCalendrierPerime).not.toHaveBeenCalled();
   });
 });
 

@@ -12,16 +12,18 @@
 import "server-only";
 import { revalidatePath } from "next/cache";
 import { Prisma, type Realisateur } from "@prisma/client";
-// Le client BRUT, délibérément (ADR-051, lot 2b) : la passe sert aussi le
-// script hors compte (`regenererSansControleDeSession`), et le client borné
-// refuserait son lot — `createMany` de Verification hors `creerEnLotVerifie`,
-// `updateMany` qui réécrit `prescriptionId`. `creerEnLotVerifie` ne rend pas
-// une `PrismaPromise` et ne tient pas dans la transaction séquentielle ; la
-// forme interactive coûterait un aller-retour par écriture (P2028, plus bas).
+// ÉCRITURE par le client BRUT, LECTURE par le client borné en session
+// (ADR-051, conception du calendrier, 2026-10-30) : le plan s'écrit en une
+// transaction par lot — un aller-retour —, que le client borné refuserait
+// (`createMany`, `updateMany` qui réécrit `prescriptionId`). Chaque écriture
+// porte `etablissementId` dans son `where`, et chaque clé écrite est vérifiée
+// contre la lecture de la passe (`clesDuPlanDansLaLecture`), qui est bornée
+// en session. Module NOMMÉ de la garde d'import pour ce motif.
 import { prisma } from "@/lib/prisma";
-import { assertEtablissementOwnership } from "@/lib/auth/scope";
+import { assertEtablissementDuCompte } from "@/lib/auth/scope";
+import { clesDuPlanDansLaLecture } from "./cles-du-plan";
 import { SCEAU_CALENDRIER } from "./version-moteur";
-import { lireEntrees, planifier } from "./passe";
+import { lireEntrees, planifier, type ClientLecture } from "./passe";
 import { graceANaissance } from "./grace";
 import { marquerCalendrierPerime } from "./reconciliation";
 import { STATUTS_REALISES_PERSISTES } from "@/lib/dates/retard";
@@ -112,8 +114,9 @@ export async function genererCalendrier(
 export async function regenererSansInvalider(
   etablissementId: string,
 ): Promise<GenerationResult> {
-  await assertEtablissementOwnership(etablissementId);
-  return regenererSansControleDeSession(etablissementId);
+  // La passe lit par le client borné au compte, à chaque tentative.
+  const { db } = await assertEtablissementDuCompte(etablissementId);
+  return regenerer(db, etablissementId);
 }
 
 /**
@@ -129,10 +132,18 @@ export async function regenererSansInvalider(
 export async function regenererSansControleDeSession(
   etablissementId: string,
 ): Promise<GenerationResult> {
-  let passe = await regenererUnePasse(etablissementId);
+  return regenerer(prisma, etablissementId);
+}
+
+/**
+ * Les passes, jusqu'à convergence. `lecteur` est le client par lequel CHAQUE
+ * passe lit : borné au compte en session, brut pour le script.
+ */
+async function regenerer(lecteur: ClientLecture, etablissementId: string): Promise<GenerationResult> {
+  let passe = await regenererUnePasse(lecteur, etablissementId);
   let tentative = 1;
   while (!passe.converge && tentative < TENTATIVES_MAX) {
-    passe = await regenererUnePasse(etablissementId);
+    passe = await regenererUnePasse(lecteur, etablissementId);
     tentative += 1;
   }
 
@@ -141,7 +152,7 @@ export async function regenererSansControleDeSession(
   // inscrit la version courante du référentiel, ce qui ferait passer le
   // calendrier pour à jour alors qu'une ligne au moins n'a pas été réalignée.
   // On efface donc ce repère : la prochaine ouverture régénérera d'elle-même.
-  if (!passe.converge) await marquerCalendrierPerime(etablissementId);
+  if (!passe.converge) await marquerCalendrierPerime(lecteur, etablissementId);
 
   return passe.resultat;
 }
@@ -174,6 +185,7 @@ type PasseRegeneration = {
  * idempotente (ADR-012), relancer ne coûte qu'un aller-retour.
  */
 async function regenererUnePasse(
+  lecteur: ClientLecture,
   etablissementId: string,
 ): Promise<PasseRegeneration> {
   const now = new Date();
@@ -183,8 +195,11 @@ async function regenererUnePasse(
   //    puisse calculer un plan sans écrire. La lecture ne prend pas l'horloge ;
   //    la planification la reçoit, et c'est la même `now` qui date ci-dessous
   //    les lignes créées (`suiviDepuis`).
-  const lecture = await lireEntrees(prisma, etablissementId);
+  const lecture = await lireEntrees(lecteur, etablissementId);
   const plan = planifier(lecture, now);
+  // La porte : aucune clé écrite qui ne vienne de cette lecture, dans les deux
+  // chemins. Lève avant toute écriture.
+  clesDuPlanDansLaLecture(plan, lecture);
   const { etab, existantes } = lecture;
 
   // 5. Application du plan — tout ou rien. Un calendrier à moitié régénéré

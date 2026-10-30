@@ -19,6 +19,7 @@
 // n'introduire aucun cycle — `regeneration-sure` → `actions` → `reconciliation`,
 // et `regeneration-sure` → `reconciliation`.
 
+import { getOptionalCompte } from "@/lib/auth/compte";
 import { genererCalendrier, regenererSansInvalider } from "./actions";
 import { calendrierDesynchronise } from "./queries";
 import { marquerCalendrierPerime } from "./reconciliation";
@@ -132,7 +133,12 @@ export async function regenererApresMutation(
     // Sans cette marque, l'échec passerait inaperçu : le calendrier n'est ni
     // vide ni périmé en version, donc l'auto-réparation à l'affichage ne le
     // reprendrait pas. Il resterait juste faux.
-    await marquerCalendrierPerime(etablissementId);
+    // Par le client borné au compte (ADR-051) : si l'échec venait de la garde
+    // d'appartenance, l'établissement d'un autre compte n'est pas touché.
+    // La lecture de session peut lever elle aussi : cette fonction n'échoue
+    // jamais, la marque se perd alors, et l'ouverture suivante régénère.
+    const compte = await getOptionalCompte().catch(() => null);
+    if (compte) await marquerCalendrierPerime(compte.db, etablissementId);
     return false;
   }
 }

@@ -15,6 +15,8 @@ const DEPOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const PORTES_BRUTES = ["src/lib/prisma", "src/lib/mcp/prisma", "src/lib/mcp/db"];
 const FABRIQUES = new Set(["src/lib/prisma.ts", "src/lib/mcp/prisma.ts"]);
 const NOMMES_PRISMA: Record<string, string> = {
+  "src/lib/calendrier/actions.ts":
+    "écritures bornées par etablissementId, clés vérifiées contre une lecture bornée (clesDuPlanDansLaLecture)",
   "src/lib/auth/portee/client.ts": "fabrique le client borné à partir du client brut",
   "src/lib/securite/limite-debit.ts": "compteurs techniques, hors de tout compte",
   "src/lib/signatures/verification-publique.ts": "vérification publique d'une signature, sans session",
@@ -25,8 +27,6 @@ const A_MIGRER = new Set([
   "src/lib/access-tokens/revocation.ts",
   "src/lib/accessibilite/actions.ts",
   "src/lib/accessibilite/queries.ts",
-  "src/lib/calendrier/actions.ts",
-  "src/lib/calendrier/reconciliation.ts",
   "src/lib/carnet-sanitaire/suivi-calendrier.ts",
   "src/lib/dashboard/transmissions.ts",
   "src/lib/duerps/queries.ts",
