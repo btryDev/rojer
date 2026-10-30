@@ -9,7 +9,7 @@ import { createClient } from "@supabase/supabase-js";
 import { S3Client } from "@aws-sdk/client-s3";
 import { LocalFileStorage } from "./local";
 import { SupabaseFileStorage, type ClientStockage } from "./supabase";
-import { S3FileStorage, pointDAcces, type ClientS3 } from "./s3";
+import { S3FileStorage, pointDAcces, refusDuPointDAcces, type ClientS3 } from "./s3";
 import { StockageNonConfigure } from "./erreurs";
 import { diagnostic, formeDeLaCle, nettoyer, refusDeLaCle } from "./cle-service";
 import { segmentCleStockage } from "./noms";
@@ -73,12 +73,6 @@ const VARIABLES_SUPABASE = [
   "NEXT_PUBLIC_SUPABASE_URL",
 ] as const;
 
-/**
- * Pourquoi le stockage n'est pas utilisable ici, ou `null` s'il l'est. UNE
- * règle, lue par `getStorage` (qui lève) et par `stockageEnService` (qui
- * répond avant qu'on lise le formulaire) : les deux ne peuvent pas se
- * contredire. Le motif nomme les variables, jamais leur valeur.
- */
 /** Le motif quand des variables d'un pilote manquent, ou `null`. Nomme, ne cite jamais. */
 function variablesManquantes(driver: string, variables: readonly string[]): string | null {
   const manquantes = variables.filter((v) => !nettoyer(process.env[v]));
@@ -89,6 +83,12 @@ function variablesManquantes(driver: string, variables: readonly string[]): stri
   );
 }
 
+/**
+ * Pourquoi le stockage n'est pas utilisable ici, ou `null` s'il l'est. UNE
+ * règle, lue par `getStorage` (qui lève) et par `stockageEnService` (qui
+ * répond avant qu'on lise le formulaire) : les deux ne peuvent pas se
+ * contredire. Le motif nomme les variables, jamais leur valeur.
+ */
 function refusDuStockage(): string | null {
   const driver = process.env.STORAGE_DRIVER ?? "local";
   if (driver === "local") {
@@ -113,11 +113,7 @@ function refusDuStockage(): string | null {
   if (driver === "s3") {
     const manque = variablesManquantes("s3", VARIABLES_S3);
     if (manque) return manque;
-    // Les fichiers transitent par ce lien : jamais en clair.
-    if (/^http:\/\//i.test(nettoyer(process.env.CELLAR_ADDON_HOST))) {
-      return "CELLAR_ADDON_HOST est en http:// : le stockage exige une connexion chiffrée (https).";
-    }
-    return null;
+    return refusDuPointDAcces(nettoyer(process.env.CELLAR_ADDON_HOST));
   }
   return `Driver de stockage non supporté : ${driver}. Utiliser « local » (développement), « supabase » ou « s3 ».`;
 }
@@ -143,7 +139,8 @@ export function getStorage(): FileStorage {
     throw new StockageNonConfigure(refus);
   }
 
-  if ((process.env.STORAGE_DRIVER ?? "local") === "supabase") {
+  const driver = process.env.STORAGE_DRIVER ?? "local";
+  if (driver === "supabase") {
     const cle = nettoyer(process.env.SUPABASE_SERVICE_ROLE_KEY);
     const url = nettoyer(process.env.NEXT_PUBLIC_SUPABASE_URL);
     console.info(
@@ -161,7 +158,7 @@ export function getStorage(): FileStorage {
     return _storage;
   }
 
-  if ((process.env.STORAGE_DRIVER ?? "local") === "s3") {
+  if (driver === "s3") {
     const bucket = nettoyer(process.env.STORAGE_BUCKET);
     console.info(`[stockage] pilote s3 (Cellar), bucket « ${bucket} »`);
     const client = new S3Client({
@@ -177,18 +174,13 @@ export function getStorage(): FileStorage {
       // de contrôle avec le SDK v3 récent.
       requestChecksumCalculation: "WHEN_REQUIRED",
       responseChecksumValidation: "WHEN_REQUIRED",
-      // Filet sous l'échéance par opération de `S3FileStorage` : la connexion
-      // et la réponse se bornent aussi au niveau du gestionnaire HTTP.
-      requestHandler: {
-        requestTimeout: DELAI_STOCKAGE_MS,
-        connectionTimeout: 10_000,
-        throwOnRequestTimeout: true,
-      },
+      // L'échéance de l'opération (`S3FileStorage`, `DELAI_STOCKAGE_MS`) fait
+      // foi ; seul l'établissement de la connexion a sa propre borne.
+      requestHandler: { connectionTimeout: 10_000 },
       maxAttempts: 1,
     });
-    // Sans conversion : `S3Client` satisfait `ClientS3` tel quel.
-    const s3: ClientS3 = client;
-    _storage = new S3FileStorage(s3, bucket, DELAI_STOCKAGE_MS);
+    // `satisfies` : `S3Client` remplit `ClientS3` tel quel, vérifié à la compilation.
+    _storage = new S3FileStorage(client satisfies ClientS3, bucket, DELAI_STOCKAGE_MS);
     return _storage;
   }
 

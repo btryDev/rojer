@@ -21,7 +21,7 @@ function sources(dossier: string): string[] {
 }
 
 describe("le stockage ne sort pas du serveur", () => {
-  it.each(["index.ts", "supabase.ts"])("%s importe « server-only » en tête", (f) => {
+  it.each(["index.ts", "supabase.ts", "s3.ts"])("%s importe « server-only » en tête", (f) => {
     const source = readFileSync(join(RACINE, "src", "lib", "storage", f), "utf8");
     const premierImport = source.split("\n").find((l) => l.startsWith("import "));
     expect(premierImport).toBe('import "server-only";');

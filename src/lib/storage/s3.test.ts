@@ -152,4 +152,8 @@ describe("pointDAcces — l'hôte de Cellar, nu ou en URL", () => {
   ])("%s → %s", (hote, attendu) => {
     expect(pointDAcces(hote)).toBe(attendu);
   });
+
+  it("http:// refusé : jamais de fichier en clair", () => {
+    expect(() => pointDAcces("http://cellar.exemple.fr")).toThrow(ErreurStockage);
+  });
 });

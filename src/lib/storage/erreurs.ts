@@ -51,13 +51,14 @@ export class FichierIntrouvable extends ErreurStockage {
 }
 
 /**
- * La règle de clé des pilotes distants (Supabase, S3) : ni vide, ni remontée,
- * ni chemin absolu, ni séparateur Windows. Une seule écriture, pour qu'un
- * durcissement futur ne manque aucun pilote (revue de la PR #129).
+ * L'échec d'une opération d'un pilote distant, en une phrase : le pilote,
+ * l'opération, la clé, ce que le service a dit — jamais une clé d'accès.
  */
-export function verifierCleStockage(key: string): string {
-  if (!key || key.includes("..") || key.startsWith("/") || key.includes("\\")) {
-    throw new ErreurStockage(`Clé de stockage invalide : ${key}`);
-  }
-  return key;
+export function echecStockage(
+  pilote: string,
+  operation: string,
+  key: string,
+  motif: string,
+): ErreurStockage {
+  return new ErreurStockage(`Stockage ${pilote} : échec de ${operation} pour « ${key} » (${motif})`);
 }

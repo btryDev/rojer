@@ -8,7 +8,8 @@ import {
   PutObjectCommand,
 } from "@aws-sdk/client-s3";
 import type { FileStorage, StorageKey } from "./types";
-import { ErreurStockage, FichierIntrouvable, verifierCleStockage } from "./erreurs";
+import { ErreurStockage, FichierIntrouvable, echecStockage } from "./erreurs";
+import { verifierCleStockage } from "./cle-stockage";
 
 /**
  * Pilote S3 du `FileStorage`, pour Cellar, le stockage objet de Clever Cloud
@@ -18,7 +19,7 @@ import { ErreurStockage, FichierIntrouvable, verifierCleStockage } from "./erreu
  * (https://www.clever.cloud/developers/doc/deploy/storage/cellar/) :
  * - L'add-on injecte `CELLAR_ADDON_HOST`, `CELLAR_ADDON_KEY_ID` et
  *   `CELLAR_ADDON_KEY_SECRET` ; la doc donne l'hôte tantôt en URL complète,
- *   tantôt nu : `pointDAcces` accepte les deux.
+ *   tantôt nu : `pointDAcces` accepte les deux, en https seulement.
  * - `region: "default"`, le SDK exigeant une région même avec un point
  *   d'accès propre.
  * - `requestChecksumCalculation` / `responseChecksumValidation` à
@@ -29,10 +30,10 @@ import { ErreurStockage, FichierIntrouvable, verifierCleStockage } from "./erreu
  *
  * Ce qu'il fait comme les autres pilotes : bucket PRIVÉ, aucune URL publique
  * ni présignée — les routes de l'application continuent de servir le fichier
- * après leur propre contrôle d'appartenance ; même règle de clé (ni remontée,
- * ni chemin absolu) ; une seule erreur à connaître pour l'appelant
- * (`ErreurStockage`, `FichierIntrouvable`), dont le message nomme l'opération,
- * la clé et ce que le service a dit, jamais les clés d'accès.
+ * après leur propre contrôle d'appartenance ; même règle de clé
+ * (`cle-stockage.ts`) ; une seule famille d'erreurs pour l'appelant
+ * (`ErreurStockage`, `FichierIntrouvable`), dont le message nomme
+ * l'opération, la clé et ce que le service a dit, jamais les clés d'accès.
  *
  * Le client est une interface minimale (`ClientS3`) : le `S3Client` du SDK la
  * satisfait tel quel, et les tests la remplacent par un double sans réseau.
@@ -42,10 +43,22 @@ export interface ClientS3 {
   send(commande: object, options?: { abortSignal?: AbortSignal }): Promise<unknown>;
 }
 
-/** L'hôte de Cellar, nu ou en URL, rendu en URL https. */
+/**
+ * Pourquoi l'hôte de Cellar n'est pas utilisable, ou `null`. Les fichiers
+ * transitent par ce lien : jamais en clair (revue de sécurité de la PR #129).
+ */
+export function refusDuPointDAcces(hote: string): string | null {
+  return /^http:\/\//i.test(hote.trim())
+    ? "CELLAR_ADDON_HOST est en http:// : le stockage exige une connexion chiffrée (https)."
+    : null;
+}
+
+/** L'hôte de Cellar, nu ou en URL https, rendu en URL https. */
 export function pointDAcces(hote: string): string {
+  const refus = refusDuPointDAcces(hote);
+  if (refus) throw new ErreurStockage(refus);
   const h = hote.trim().replace(/\/+$/, "");
-  return /^https?:\/\//.test(h) ? h : `https://${h}`;
+  return /^https:\/\//i.test(h) ? h : `https://${h}`;
 }
 
 /**
@@ -63,21 +76,23 @@ function estAbsent(e: unknown): boolean {
   );
 }
 
-function messageDe(e: unknown): string {
+/** Ce que le service a dit : son nom d'erreur, le statut HTTP, le message. */
+function motifS3(e: unknown): string {
   const err = e as { name?: string; message?: string; $metadata?: { httpStatusCode?: number } };
   const statut = err?.$metadata?.httpStatusCode;
-  return [err?.name, statut ? `HTTP ${statut}` : null, err?.message]
-    .filter(Boolean)
-    .join(" — ") || "erreur inconnue";
+  return (
+    [err?.name, statut ? `HTTP ${statut}` : null, err?.message].filter(Boolean).join(" — ") ||
+    "erreur inconnue"
+  );
 }
 
 export class S3FileStorage implements FileStorage {
   /**
    * `delaiMs` borne l'opération ENTIÈRE, lecture du corps comprise, comme
    * `fetchAvecDelai` pour Supabase : le `requestTimeout` du SDK s'arrête aux
-   * en-têtes de la réponse, et sans `throwOnRequestTimeout` il ne fait que
-   * journaliser. Un signal d'abandon par opération, lui, coupe la requête et
-   * son corps.
+   * en-têtes de la réponse et, sans `throwOnRequestTimeout`, ne fait que
+   * journaliser. Un signal d'abandon par opération coupe la requête et son
+   * corps.
    */
   constructor(
     private readonly client: ClientS3,
@@ -85,72 +100,75 @@ export class S3FileStorage implements FileStorage {
     private readonly delaiMs: number,
   ) {}
 
-  private verifier(key: StorageKey): string {
-    return verifierCleStockage(key);
-  }
-
-  private echeance(): { abortSignal: AbortSignal } {
-    return { abortSignal: AbortSignal.timeout(this.delaiMs) };
-  }
-
-  private echec(operation: string, key: StorageKey, e: unknown): never {
-    throw new ErreurStockage(`Stockage S3 : échec de ${operation} pour « ${key} » (${messageDe(e)})`);
+  /**
+   * Une opération : la clé vérifiée, l'échéance posée, toute erreur rendue en
+   * `ErreurStockage`. `siAbsent` dit ce que vaut un objet absent pour cette
+   * opération ; sans lui, l'absence est une erreur comme une autre.
+   */
+  private async appel<T>(
+    operation: string,
+    key: StorageKey,
+    f: (cle: string, options: { abortSignal: AbortSignal }) => Promise<T>,
+    siAbsent?: () => T,
+  ): Promise<T> {
+    const cle = verifierCleStockage(key);
+    try {
+      return await f(cle, { abortSignal: AbortSignal.timeout(this.delaiMs) });
+    } catch (e) {
+      if (e instanceof ErreurStockage) throw e;
+      if (siAbsent && estAbsent(e)) return siAbsent();
+      throw echecStockage("S3", operation, key, motifS3(e));
+    }
   }
 
   async put(key: StorageKey, data: Buffer, mime: string): Promise<void> {
-    const cle = this.verifier(key);
-    try {
-      // Même contrat que les autres pilotes : « Écrase si la clé existe déjà ».
-      await this.client.send(
+    // Même contrat que les autres pilotes : « Écrase si la clé existe déjà ».
+    await this.appel("l'écriture", key, (cle, o) =>
+      this.client.send(
         new PutObjectCommand({ Bucket: this.bucket, Key: cle, Body: data, ContentType: mime }),
-        this.echeance(),
-      );
-    } catch (e) {
-      this.echec("l'écriture", key, e);
-    }
+        o,
+      ),
+    );
   }
 
   async get(key: StorageKey): Promise<Buffer> {
-    const cle = this.verifier(key);
-    // La même échéance pour la requête et la lecture du corps.
-    const echeance = this.echeance();
-    let reponse: { Body?: { transformToByteArray(): Promise<Uint8Array> } };
-    try {
-      reponse = (await this.client.send(
-        new GetObjectCommand({ Bucket: this.bucket, Key: cle }),
-        echeance,
-      )) as typeof reponse;
-    } catch (e) {
-      if (estAbsent(e)) throw new FichierIntrouvable(key);
-      this.echec("la lecture", key, e);
-    }
-    if (!reponse.Body) throw new FichierIntrouvable(key);
-    try {
-      return Buffer.from(await reponse.Body.transformToByteArray());
-    } catch (e) {
-      this.echec("la lecture", key, e);
-    }
+    return this.appel(
+      "la lecture",
+      key,
+      async (cle, o) => {
+        // La même échéance pour la requête et la lecture du corps.
+        const { Body } = (await this.client.send(
+          new GetObjectCommand({ Bucket: this.bucket, Key: cle }),
+          o,
+        )) as { Body?: { transformToByteArray(): Promise<Uint8Array> } };
+        if (!Body) throw new FichierIntrouvable(key);
+        const octets = await Body.transformToByteArray();
+        // Une vue sur les octets reçus, pas une seconde copie.
+        return Buffer.from(octets.buffer, octets.byteOffset, octets.byteLength);
+      },
+      () => {
+        throw new FichierIntrouvable(key);
+      },
+    );
   }
 
   async delete(key: StorageKey): Promise<void> {
-    // S3 ne signale pas l'absence à la suppression : no-op, comme les autres
-    // pilotes. Une vraie erreur (droits, réseau) remonte.
-    const cle = this.verifier(key);
-    try {
-      await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: cle }), this.echeance());
-    } catch (e) {
-      if (!estAbsent(e)) this.echec("la suppression", key, e);
-    }
+    // S3 ne signale pas l'absence à la suppression : supprimer une clé absente
+    // ne lève rien, comme les autres pilotes. Une vraie erreur remonte.
+    await this.appel("la suppression", key, (cle, o) =>
+      this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: cle }), o),
+    );
   }
 
   async exists(key: StorageKey): Promise<boolean> {
-    const cle = this.verifier(key);
-    try {
-      await this.client.send(new HeadObjectCommand({ Bucket: this.bucket, Key: cle }), this.echeance());
-      return true;
-    } catch (e) {
-      if (estAbsent(e)) return false;
-      this.echec("la vérification", key, e);
-    }
+    return this.appel(
+      "la vérification",
+      key,
+      async (cle, o) => {
+        await this.client.send(new HeadObjectCommand({ Bucket: this.bucket, Key: cle }), o);
+        return true;
+      },
+      () => false,
+    );
   }
 }
