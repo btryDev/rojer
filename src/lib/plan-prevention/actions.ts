@@ -4,7 +4,6 @@ import { requireCompte } from "@/lib/auth/compte";
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
 import { resoudreBatimentOptionnel } from "@/lib/batiments/queries";
 import { resoudrePrestataireOptionnel } from "@/lib/prestataires/queries";
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
@@ -269,7 +268,7 @@ async function planDuCompte(planId: string) {
     },
   });
   if (!plan) notFound();
-  return plan;
+  return { ...plan, db };
 }
 
 /**
@@ -323,7 +322,7 @@ export async function modifierPlanPrevention(
     : null;
   if (prestataire && !prestataire.ok) return PRESTATAIRE_INTROUVABLE;
 
-  const resultat = await prisma.$transaction(async (tx): Promise<PlanActionState | null> => {
+  const resultat = await plan.db.$transaction(async (tx): Promise<PlanActionState | null> => {
     await verrouillerObjetSigne(tx, "plan_prevention", planId);
     // Le statut relu SOUS LE VERROU (relecture finale, R1) : une annulation
     // glissée entre la première lecture et le verrou ne laisse pas modifier
@@ -342,7 +341,11 @@ export async function modifierPlanPrevention(
     );
     if (scelle) {
       if (porteUnChampScelle(formData)) return { status: "error", message: scelle };
-      await tx.planPrevention.updateMany({
+      // `update`, plus `updateMany` (ADR-051, lot 2b) : le client borné refuse
+      // qu'un `updateMany` change une clé étrangère. Le compte de lignes n'était
+      // pas lu, et la ligne existe : verrouillée, relue juste au-dessus — le
+      // même `where` que l'écriture complète, plus bas.
+      await tx.planPrevention.update({
         where: { id: planId, etablissementId },
         data: { batimentId: batiment.id },
       });
@@ -395,7 +398,7 @@ function lireChampOptionnel(v: FormDataEntryValue | null): string | undefined {
 
 export async function cloturerPlan(planId: string): Promise<void> {
   const plan = await planDuCompte(planId);
-  await prisma.planPrevention.update({
+  await plan.db.planPrevention.update({
     where: { id: planId },
     data: { statut: "clos" },
   });
@@ -406,7 +409,7 @@ export async function cloturerPlan(planId: string): Promise<void> {
     objetType: "plan_prevention",
     objetId: planId,
     motif: "Plan de prévention clos",
-  });
+  }, plan.db);
   revalidatePath(`/etablissements/${plan.etablissementId}/plan-prevention/${planId}`);
 }
 
@@ -424,9 +427,9 @@ export async function supprimerPlan(planId: string): Promise<void> {
     (plan.statut === "brouillon" || plan.statut === "attente_signatures") &&
     !(await porteUneTraceDeSignature("plan_prevention", planId, etabId));
   if (effacable) {
-    await prisma.planPrevention.delete({ where: { id: planId } });
+    await plan.db.planPrevention.delete({ where: { id: planId } });
   } else {
-    await prisma.planPrevention.update({
+    await plan.db.planPrevention.update({
       where: { id: planId },
       data: { statut: "annule" },
     });
@@ -439,7 +442,7 @@ export async function supprimerPlan(planId: string): Promise<void> {
     objetType: "plan_prevention",
     objetId: planId,
     motif: effacable ? "Plan de prévention supprimé" : "Plan de prévention annulé",
-  });
+  }, plan.db);
   revalidatePath(`/etablissements/${etabId}/plan-prevention`);
   redirect(`/etablissements/${etabId}/plan-prevention`);
 }
@@ -469,7 +472,7 @@ export async function noterInformationInspection(
   );
   if (!lu.ok) return { status: "error", message: lu.message };
 
-  await prisma.planPrevention.update({
+  await plan.db.planPrevention.update({
     where: { id: planId },
     data: { inspectionTravailInformeeLe: lu.date },
   });
@@ -548,7 +551,7 @@ export async function noterHeuresRevisees(
   // La première date où 400 h ont été notées reste celle de l'obligation.
   const garderLaDate = deja.seuil400EnCours && heures.data >= 400 && !correction;
 
-  await prisma.planPrevention.updateMany({
+  await plan.db.planPrevention.updateMany({
     where: { id: planId, etablissementId: plan.etablissementId },
     data: {
       heuresPrevisiblesRevisees: heures.data,

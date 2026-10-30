@@ -8,8 +8,8 @@
 
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
-import { assertEtablissementOwnership } from "@/lib/auth/scope";
+import type { Db } from "@/lib/auth/compte";
+import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { saisiePourSection } from "./champs";
 import { schemaDeLaFiche, type LigneJournal } from "./schema";
 
@@ -25,11 +25,12 @@ export type EtatFiche =
  * une erreur 500 alors que sa ligne était parfaitement légitime.
  */
 async function creerLaFicheSiAbsente(
+  db: Db,
   etablissementId: string,
   sectionId: string,
 ): Promise<void> {
   try {
-    await prisma.ficheRegistre.create({
+    await db.ficheRegistre.create({
       data: {
         id: `fic_${randomUUID()}`,
         etablissementId,
@@ -52,6 +53,7 @@ type Prepare =
   | { ok: false; etat: EtatFiche }
   | {
       ok: true;
+      db: Db;
       saisie: NonNullable<ReturnType<typeof saisiePourSection>>;
       valeurs: Record<string, string | null>;
     };
@@ -61,7 +63,7 @@ async function preparer(
   sectionId: string,
   fd: FormData,
 ): Promise<Prepare> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
 
   // `sectionId` vient du client. Il ne devient une fiche que s'il désigne une
   // question du catalogue — sinon la table se remplirait de sections
@@ -95,6 +97,7 @@ async function preparer(
   }
   return {
     ok: true,
+    db,
     saisie,
     valeurs: parsed.data as Record<string, string | null>,
   };
@@ -123,7 +126,7 @@ export async function enregistrerFiche(
     return { status: "error", message: "Cette fiche n'est pas un formulaire." };
   }
 
-  await prisma.ficheRegistre.upsert({
+  await p.db.ficheRegistre.upsert({
     where: { etablissementId_sectionId: { etablissementId, sectionId } },
     create: {
       id: `fic_${randomUUID()}`,
@@ -187,8 +190,10 @@ export async function ajouterLigneJournal(
   // étendu à cette écriture sœur) : la colonne est un TIMESTAMP(3) sans fuseau
   // où Prisma range des instants UTC (ADR-011 § 1) ; ~~`NOW()`~~ seul y
   // écrivait l'heure locale de la session.
-  await creerLaFicheSiAbsente(etablissementId, sectionId);
-  await prisma.$executeRaw`
+  // La ligne visée est bornée : `etablissementId` a passé la garde du compte
+  // (`preparer`), et le SQL brut n'est pas borné par le client (ADR-051 § 5).
+  await creerLaFicheSiAbsente(p.db, etablissementId, sectionId);
+  await p.db.$executeRaw`
     UPDATE "FicheRegistre"
     SET "contenu" = jsonb_build_object(
           'lignes',
