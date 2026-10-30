@@ -132,6 +132,15 @@ indépendante, CI verte, feu vert de la propriétaire avant merge.
 | **5** | **Matrice d'autorisation** (OWASP) sur la base locale avec deux comptes : chaque opération de chaque modèle, refusée d'un compte à l'autre, réussie dans le compte ; mesure avant/après : budget de requêtes en CI (`budget-requetes.yml`) et `scripts/perf/mesurer.mjs` ; sonde des clés croisées ajoutée à `scripts/sante-base.sql` (à lancer par la propriétaire, jamais par nous) ; sort des gardes `tenancy-*` (§ 7) | — |
 | Better Auth | `lireUserCourant` lit `auth.api.getSession` : une ligne | la suite du lot 2 repasse |
 
+## 6 bis. Branches (organisation du 2026-10-30, décision de la propriétaire)
+
+Les lots de ce plan vont dans `main` (prod Vercel). La migration Clever Cloud
+vit sur la branche `cc`, que la session de la bascule alimente par fusion de
+`main` après chaque merge ; `cc` ne revient dans `main` qu'à la bascule. Le
+lot 2 entre dans `require-user.ts` par `main`, Better Auth le modifie sur
+`cc` : les conflits se règlent à la fusion de `main` dans `cc`, côté bascule.
+**Prévenir la session de la bascule quand le lot 2 est mergé.**
+
 ## 7. Ce qui devient redondant, ce qui reste
 
 - **Restent** : `requireUser` et les helpers de `scope.ts` — ils résolvent un
