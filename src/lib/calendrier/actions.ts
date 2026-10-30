@@ -23,7 +23,7 @@ import { prisma } from "@/lib/prisma";
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { clesDuPlanDansLaLecture } from "./cles-du-plan";
 import { SCEAU_CALENDRIER } from "./version-moteur";
-import { lireEntrees, planifier, type ClientLecture } from "./passe";
+import { lireEntrees, planifier, type ClientPasse } from "./passe";
 import { graceANaissance } from "./grace";
 import { marquerCalendrierPerime } from "./reconciliation";
 import { STATUTS_REALISES_PERSISTES } from "@/lib/dates/retard";
@@ -139,7 +139,7 @@ export async function regenererSansControleDeSession(
  * Les passes, jusqu'à convergence. `lecteur` est le client par lequel CHAQUE
  * passe lit : borné au compte en session, brut pour le script.
  */
-async function regenerer(lecteur: ClientLecture, etablissementId: string): Promise<GenerationResult> {
+async function regenerer(lecteur: ClientPasse, etablissementId: string): Promise<GenerationResult> {
   let passe = await regenererUnePasse(lecteur, etablissementId);
   let tentative = 1;
   while (!passe.converge && tentative < TENTATIVES_MAX) {
@@ -185,7 +185,7 @@ type PasseRegeneration = {
  * idempotente (ADR-012), relancer ne coûte qu'un aller-retour.
  */
 async function regenererUnePasse(
-  lecteur: ClientLecture,
+  lecteur: ClientPasse,
   etablissementId: string,
 ): Promise<PasseRegeneration> {
   const now = new Date();

@@ -14,7 +14,7 @@
 // un établissement d'un autre compte n'est alors pas touché —, brut pour le
 // script de maintenance.
 
-import type { ClientLecture } from "./passe";
+import type { ClientPasse } from "./passe";
 
 /**
  * Efface la version de référentiel d'un établissement, ce qui le replace
@@ -31,7 +31,7 @@ import type { ClientLecture } from "./passe";
  * elle-même indisponible il n'y a rien à marquer.
  */
 export async function marquerCalendrierPerime(
-  client: ClientLecture,
+  client: ClientPasse,
   etablissementId: string,
 ): Promise<void> {
   try {

@@ -137,7 +137,18 @@ export async function regenererApresMutation(
     // d'appartenance, l'établissement d'un autre compte n'est pas touché.
     // La lecture de session peut lever elle aussi : cette fonction n'échoue
     // jamais, la marque se perd alors, et l'ouverture suivante régénère.
-    const compte = await getOptionalCompte().catch(() => null);
+    // Une panne de session ne fait pas échouer la fonction, mais elle se voit.
+    const compte = await getOptionalCompte().catch((e: unknown) => {
+      console.error(
+        JSON.stringify({
+          type: "session_illisible_marque_perdue",
+          contexte,
+          etablissementId,
+          erreur: e instanceof Error ? e.message : String(e),
+        }),
+      );
+      return null;
+    });
     if (compte) await marquerCalendrierPerime(compte.db, etablissementId);
     return false;
   }

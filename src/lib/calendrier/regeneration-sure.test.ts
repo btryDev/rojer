@@ -69,12 +69,20 @@ describe("regenererApresMutation", () => {
     expect(marquerCalendrierPerime).toHaveBeenCalledWith(dbDuCompte, "etab-1");
   });
 
-  it("sans session lisible, ne marque rien et rend faux quand même", async () => {
+  it("sans session lisible, ne marque rien, le journalise et rend faux quand même", async () => {
     genererCalendrier.mockRejectedValue(new Error("base indisponible"));
     getOptionalCompte.mockRejectedValue(new Error("cookies hors requête"));
 
     await expect(regenererApresMutation("etab-1", "test")).resolves.toBe(false);
     expect(marquerCalendrierPerime).not.toHaveBeenCalled();
+    // La panne de session se voit, même si la fonction n'échoue pas.
+    const journal = vi.mocked(console.error).mock.calls.map((c) => String(c[0]));
+    expect(journal.map((l) => (l.startsWith("{") ? JSON.parse(l) : null))).toContainEqual({
+      type: "session_illisible_marque_perdue",
+      contexte: "test",
+      etablissementId: "etab-1",
+      erreur: "cookies hors requête",
+    });
   });
 });
 

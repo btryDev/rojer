@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { debutDuJour } from "@/lib/dates";
 import type { EtablissementFaux, LigneFausse } from "./faux-prisma";
-import { lireEntrees, planifier, preparer, type ClientLecture } from "./passe";
+import { lireEntrees, planifier, preparer, type ClientPasse } from "./passe";
 
 // La couture du lot 2b (ADR-036, 2026-09-18) : `regenererUnePasse` = lire,
 // planifier, écrire. Ce fichier tient les deux premiers temps et leur jointure
@@ -28,7 +28,7 @@ const ETAB_ID = "etab-1";
 const AERATION_R4222_20 = "aeration-controle-installations-r4222-20";
 
 const { db, prisma } = await h;
-const client = prisma as unknown as ClientLecture;
+const client = prisma as unknown as ClientPasse;
 const { genererCalendrier } = await import("./actions");
 
 function poserEtablissement(): EtablissementFaux {
