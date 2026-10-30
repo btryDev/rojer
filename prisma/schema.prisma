@@ -2213,3 +2213,75 @@ model DemandeAssistance {
   @@index([etablissementId])
 }
 
+// ============================================================================
+// Authentification — Better Auth (ADR-052, PR #130)
+// ============================================================================
+// Tables de Better Auth, générées par sa CLI (`auth generate`, 1.7.14) puis
+// recopiées ici : la CLI ne sait pas lire ce schéma. Identifiants UUID générés
+// par la base, comme les `userId` des tables métier. La configuration du lot 2
+// devra donc poser `advanced.database.generateId: "uuid"`, et
+// `verification.modelName: "authVerification"` : `Verification` est déjà une
+// table métier.
+//
+// Aucune table métier ne les référence encore : les clés étrangères vers
+// `User` arrivent avec la bascule de l'authentification (lot 2), qui crée les
+// comptes qu'elles désignent.
+
+model User {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  @@unique([email])
+}
+
+model Session {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  accountId             String
+  providerId            String
+  userId                String    @db.Uuid
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model AuthVerification {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+}
