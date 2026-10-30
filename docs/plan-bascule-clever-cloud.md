@@ -254,7 +254,12 @@ Source : https://cdn.jsdelivr.net/npm/clever-tools@4.10.0/src/commands/deploy/de
     `scripts/demarrer-cc.sh`, qui construit `DATABASE_URL` depuis
     `POSTGRESQL_ADDON_URI` — CC ne développe pas `$VAR` dans une variable —,
     et le build par `next build --webpack`] ;
-  - `CC_HEALTH_CHECK_PATH` : une route légère qui répond 200.
+  - `CC_HEALTH_CHECK_PATH` : une route légère qui répond 200 [2026-10-30 :
+    `/robots.txt`, déjà servi sans session ni base — aucune route publique de
+    plus] ;
+  - Node : `engines.node` (`>=22.15 <25`) l'emporte sur `CC_NODE_VERSION` ;
+    la CI et `.nvmrc` sont en 22. Version réellement prise : à lire au premier
+    déploiement, et à resserrer sur 22 si CC en prend une autre.
 - Au-delà d'une instance : `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` commune,
   fournie au build, et un `deploymentId` stable (le hash git).
 - Le hook de migration s'exécute sur chaque instance qui démarre. Le verrou
