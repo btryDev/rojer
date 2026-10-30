@@ -235,6 +235,9 @@ Supabase sert sur Vercel, et part à la bascule.
     dix échecs (plugin), plus notre limite par IP ;
   - activer exige le mot de passe, puis un premier code : rien n'est actif
     avant ; les codes de secours ne s'affichent qu'après ;
+  - à l'activation, les **autres sessions sont fermées** (comme au
+    changement de mot de passe) : une session ouverte avec un mot de passe
+    volé n'a jamais passé de second facteur ;
   - **à chaque activation, tous les appareils de confiance du compte sont
     oubliés** : le plugin n'efface que celui du navigateur qui désactive, et
     un appareil approuvé avant une désactivation passait sans code jusqu'à
