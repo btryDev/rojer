@@ -60,11 +60,12 @@ describe("au geste de suppression, l'employeur est prévenu des rapports à cons
     detailSuppressionEtablissement({ nom: "Atelier", lignes: 12, versionsDuerp: 0, rapports, entrepriseEmportee: null });
   const entreprise = (rapports: number) =>
     detailSuppressionEntreprise({ etablissements: ["Atelier"], lignes: 12, versionsDuerp: 0, rapports });
-
-  it.each([
+  const lesDeuxCartes = [
     ["l'établissement", etab],
     ["l'entreprise", entreprise],
-  ] as const)("%s, des rapports : le nombre, D. 4711-3, l'export, la charge", (_, phrase) => {
+  ] as const;
+
+  it.each(lesDeuxCartes)("%s, des rapports : le nombre, D. 4711-3, l'export, la charge", (_, phrase) => {
     const t = phrase(3);
     expect(t).toMatch(/Les 3 rapports de vérification partent aussi/);
     expect(t).toMatch(/cinq dernières années/);
@@ -79,10 +80,13 @@ describe("au geste de suppression, l'employeur est prévenu des rapports à cons
     expect(etab(1)).toMatch(/Le rapport de vérification part aussi/);
   });
 
-  it.each([
-    ["l'établissement", etab],
-    ["l'entreprise", entreprise],
-  ] as const)("%s, aucun rapport : rien n'est dit", (_, phrase) => {
+  it.each(lesDeuxCartes)("%s, aucun rapport : rien n'est dit", (_, phrase) => {
     expect(phrase(0)).not.toMatch(/D\. 4711-3|rapports? de vérification/);
+  });
+
+  it("le nombre annoncé est celui que l'export reprend : même filtre, sur les deux cartes", () => {
+    const q = lire("src/lib/suppression/queries.ts");
+    expect(q.match(/rapportVerification\.count\(\{\s*where: \{[^;]*?\.\.\.RAPPORT_HORS_LIGNE_SALARIE/g)).toHaveLength(2);
+    expect(lire("src/lib/controle/pieces-zip.ts")).toMatch(/filtreRapportsDuDossier[\s\S]*\.\.\.RAPPORT_HORS_LIGNE_SALARIE/);
   });
 });

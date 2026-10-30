@@ -86,10 +86,14 @@ export function filtreActesDuDossier(etablissementId: string, maintenant: Date) 
   };
 }
 
-/** Les rapports dont le fichier entre au dossier : jamais ceux d'une ligne de
- *  salarié, documents nominatifs (contre-lecture du 2026-09-27, M1). */
+/** Jamais les rapports d'une ligne de salarié, documents nominatifs
+ *  (contre-lecture du 2026-09-27, M1). Partagé avec la carte de suppression,
+ *  qui annonce ce que l'export reprend (`suppression/queries.ts`). */
+export const RAPPORT_HORS_LIGNE_SALARIE = { verification: { salarieId: null } } as const;
+
+/** Les rapports dont le fichier entre au dossier. */
 export function filtreRapportsDuDossier(etablissementId: string) {
-  return { etablissementId, verification: { salarieId: null } };
+  return { etablissementId, ...RAPPORT_HORS_LIGNE_SALARIE };
 }
 
 /** Le carnet sanitaire ne porte au dossier que ses cinq dernières analyses. */
