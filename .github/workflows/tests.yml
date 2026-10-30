@@ -21,18 +21,18 @@ on:
 permissions:
   contents: read
 
+env:
+  DATABASE_URL: postgresql://factice:factice@localhost:5432/factice
+  DIRECT_URL: postgresql://factice:factice@localhost:5432/factice
+  NEXT_PUBLIC_SUPABASE_URL: https://factice.supabase.co
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: factice
+  # Le fuseau des serveurs Vercel, et non celui des postes à Paris : un test
+  # qui ne passe qu'à Paris cache un défaut que la production verrait.
+  TZ: UTC
+
 jobs:
   vitest:
     runs-on: ubuntu-latest
-
-    env:
-      DATABASE_URL: postgresql://factice:factice@localhost:5432/factice
-      DIRECT_URL: postgresql://factice:factice@localhost:5432/factice
-      NEXT_PUBLIC_SUPABASE_URL: https://factice.supabase.co
-      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: factice
-      # Le fuseau des serveurs Vercel, et non celui des postes à Paris : un test
-      # qui ne passe qu'à Paris cache un défaut que la production verrait.
-      TZ: UTC
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -62,3 +62,30 @@ jobs:
 
       - name: Lancer la suite
         run: pnpm vitest run --maxWorkers=2
+
+  # Le build Clever Cloud, sur la branche `cc` et ses PR (plan de bascule,
+  # § 5 bis). Sans lui, un commit qui casse `next build --webpack` ou le
+  # serveur autonome passerait la porte « CI verte » de
+  # `scripts/deployer-cc.sh`, qui exige ce job nommément. Aucune base lue :
+  # le build n'en joint aucune.
+  build-cc:
+    if: github.ref == 'refs/heads/cc' || github.base_ref == 'cc'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Installer les dépendances
+        run: pnpm install --frozen-lockfile
+
+      # `preparer-standalone.sh`, en fin de `build:cc`, échoue si le serveur
+      # autonome est incomplet.
+      - name: Build Clever Cloud
+        run: pnpm build:cc

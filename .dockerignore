@@ -1,0 +1,9 @@
+# Contexte du build de la pile locale CC (docker/Dockerfile.cc) : l'arbre de
+# travail, moins ce qui ne doit jamais entrer dans une image. Clever Cloud,
+# lui, ne reçoit que git : un fichier non commité passe ici et manquera là-bas.
+node_modules
+.next
+.git
+.env*
+storage
+.claude

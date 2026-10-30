@@ -10,6 +10,7 @@
     "build": "prisma generate && next build && sh scripts/migrer-en-production.sh",
     "postinstall": "prisma generate",
     "start": "next start",
+    "build:cc": "prisma generate && next build --webpack && sh scripts/preparer-standalone.sh",
     "lint": "eslint",
     "test": "vitest",
     "test:run": "vitest run",
