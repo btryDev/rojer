@@ -4,6 +4,7 @@
 // suppression physique seulement si l'équipement ne porte aucune trace,
 // désactivation sinon.
 
+import { Prisma } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const h = vi.hoisted(() => {
@@ -238,6 +239,42 @@ describe("supprimerEquipement", () => {
     expect(res.statut).toBe("desactive");
     expect(h.db.supprimesPhysiquement).toEqual([]);
     expect(h.db.equipements[0].actif).toBe(false);
+  });
+
+  it("une preuve arrivée entre le comptage et la suppression : la base refuse, l'appareil est désactivé (2026-10-28)", async () => {
+    // Le comptage n'a rien vu ; un rapport est déposé juste après. Depuis la
+    // migration `20261030100000_preuves_protegees_en_base`, la base refuse la
+    // suppression (P2003) au lieu d'emporter le rapport en cascade.
+    h.db.nbTraces = 0;
+    const supprimer = h.prisma.equipement.delete;
+    h.prisma.equipement.delete = async () => {
+      throw new Prisma.PrismaClientKnownRequestError(
+        "Foreign key constraint violated: RapportVerification_verificationId_fkey",
+        { code: "P2003", clientVersion: "6" },
+      );
+    };
+    try {
+      const res = await supprimerEquipement("eq-1");
+
+      expect(res.statut).toBe("desactive");
+      expect(h.db.equipements[0].actif).toBe(false);
+    } finally {
+      h.prisma.equipement.delete = supprimer;
+    }
+  });
+
+  it("une autre erreur de la base à la suppression n'est pas maquillée en désactivation", async () => {
+    h.db.nbTraces = 0;
+    const supprimer = h.prisma.equipement.delete;
+    h.prisma.equipement.delete = async () => {
+      throw new Error("base indisponible");
+    };
+    try {
+      await expect(supprimerEquipement("eq-1")).rejects.toThrow("base indisponible");
+      expect(h.db.equipements[0].actif).toBe(true);
+    } finally {
+      h.prisma.equipement.delete = supprimer;
+    }
   });
 
   it("explique à l'utilisateur ce qui est conservé et pourquoi", async () => {

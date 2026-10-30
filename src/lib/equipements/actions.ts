@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { batimentParDefaut } from "@/lib/batiments/queries";
 import {
@@ -297,7 +297,10 @@ export type SuppressionEquipementResult =
  * L'ancienne version faisait un `prisma.equipement.delete`. Or
  * `Verification.equipementId` est en `onDelete: Cascade`, et
  * `RapportVerification.verificationId` et `Action.verificationId` le sont
- * aussi : supprimer une hotte emportait ses vérifications *y compris
+ * aussi [2026-10-28 : ~~le sont aussi~~ ne le sont plus — `NoAction`, comme
+ * `Action.equipementId`, migration `20261030100000_preuves_protegees_en_base` :
+ * la base refuse désormais la suppression d'un appareil qui porte une preuve.
+ * Ce qui suit décrit l'état d'avant] : supprimer une hotte emportait ses vérifications *y compris
  * réalisées*, donc les rapports du registre de sécurité (art. D. 4711-3 CT)
  * et les actions correctives ouvertes. Les PDF, eux, restaient sur le disque,
  * orphelins.
@@ -341,10 +344,25 @@ export async function supprimerEquipement(
   const nbTraces = nbLignes + nbPointsDesignes;
 
   let resultat: SuppressionEquipementResult;
+  let supprime = false;
   if (nbTraces === 0) {
     // Les vérifications restantes sont de simples échéances calculées :
     // la cascade ne détruit rien qui ne se régénère.
-    await prisma.equipement.delete({ where: { id } });
+    //
+    // La base refuse depuis le 2026-10-28 (migration
+    // `20261030100000_preuves_protegees_en_base`) si un rapport ou une action
+    // est arrivé entre le comptage et ici : l'appareil est alors désactivé,
+    // comme s'il avait porté sa trace dès le départ.
+    try {
+      await prisma.equipement.delete({ where: { id } });
+      supprime = true;
+    } catch (e) {
+      if (!(e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2003")) {
+        throw e;
+      }
+    }
+  }
+  if (supprime) {
     resultat = { statut: "supprime" };
   } else {
     await prisma.equipement.update({

@@ -1,0 +1,11 @@
+-- Index redondant retiré (2026-10-28, audit de la base avant la bascule Clever
+-- Cloud) : sa seule colonne est portée EN TÊTE par `Prestataire_etablissementId_siret_key` et
+-- `Prestataire_etablissementId_raisonSociale_idx` ;
+-- PostgreSQL sert les mêmes lectures par celui-là, et l'index simple ne
+-- coûtait qu'à l'écriture.
+--
+-- CONCURRENTLY et SEULE instruction du fichier (règle de
+-- `migrations-index.test.ts`) : ne pas verrouiller la table au déploiement.
+-- Les trois retraits formaient `20261028130000_index_redondants`, scindée le
+-- 2026-10-30 pour suivre la règle.
+DROP INDEX CONCURRENTLY "Prestataire_etablissementId_idx";

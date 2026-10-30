@@ -210,6 +210,12 @@ async function regenererUnePasse(
     // ici, un prestataire a pu déposer un rapport, le dirigeant créer une
     // action corrective. Sans ces clauses, le `deleteMany` les emporte par
     // cascade — mot pour mot ce que l'ADR-012 déclare impossible.
+    // [2026-10-28 : plus de cascade — `NoAction`, migration
+    // `20261030100000_preuves_protegees_en_base`. Une preuve insérée après
+    // l'évaluation de ces clauses fait désormais échouer le lot (P2003) au lieu
+    // de partir avec la ligne. C'est un échec de régénération comme un autre
+    // (`regeneration-sure.ts` marque le calendrier périmé) : il se refait à
+    // l'ouverture suivante, où le plan voit la preuve et garde la ligne.]
     operations.push(
       prisma.verification.deleteMany({
         where: {

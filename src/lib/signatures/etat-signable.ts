@@ -41,6 +41,15 @@ import type {
  * Les autres types d'objet signables n'ont pas de fin de vie ici : ils
  * répondent « signable », et leur existence dans l'établissement reste
  * vérifiée par `calculerHashObjet`.
+ *
+ * [2026-10-28, audit de la base : pour ces types, « signable » ne dit RIEN de
+ * l'existence de l'objet — la fonction ne lit pas la base. Elle répond à
+ * « la vie de l'objet est-elle terminée ? », pas à « l'objet existe-t-il dans
+ * l'établissement ? ». Un appelant borne l'objet lui-même (`calculerHashObjet`,
+ * `contenuASigner`, `objetAppartientAEtablissement`) ; ne pas s'en dispenser
+ * sur la foi de ce nom. Les faire répondre « non signable » a été essayé et
+ * écarté : les appelants affichent alors « clos ou annulé », faux pour un
+ * rapport absent.]
  */
 
 export const STATUTS_PLAN_NON_SIGNABLES: readonly StatutPlanPrevention[] = [

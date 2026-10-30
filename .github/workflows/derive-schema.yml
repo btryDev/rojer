@@ -34,7 +34,11 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16
+        # 17 : la version de la production (17.6) et de la base locale
+        # (docker-compose). Elle était en 16 — un écart de version majeure
+        # entre ce que la CI valide et ce qui tourne (audit de la base du
+        # 2026-10-28).
+        image: postgres:17
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
