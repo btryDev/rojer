@@ -175,6 +175,26 @@ L'ancien plugin `mcp` de `better-auth/plugins` est déprécié. Voir § 8.
 Tout se fait dans la région **Paris (`par`)**, application et base dans la
 même zone (B12, AD § 3).
 
+**Déploiement : une commande, jamais un merge** (décision de la propriétaire,
+2026-10-30). Fusionner dans `main` ne déploie rien chez Clever Cloud :
+- l'application Clever Cloud **n'est pas reliée à GitHub** (pas de
+  déploiement automatique sur push) ;
+- une branche `cc` porte ce qui est en production ; déployer, c'est l'avancer
+  sur le commit voulu de `main` (avance rapide seulement), la pousser sur
+  GitHub pour la trace, puis lancer `clever deploy --branch cc --alias <app>`.
+  La commande suit le déploiement jusqu'à sa fin (`--exit-on deploy-end`, par
+  défaut) ;
+- un script versionné (`scripts/deployer-cc.sh`, à écrire en phase 2) enchaîne
+  ces gestes et refuse un arbre sale, une branche qui ne serait pas en avance
+  rapide, ou un commit dont la CI n'est pas verte ; une cible `preprod` et une
+  cible `prod`, chacune son alias ;
+- revenir en arrière : redéployer le commit précédent de `cc`
+  (`clever deploy --force` sur ce commit), sans toucher à `main`.
+- d'ici la bascule, Vercel continue de déployer `main` comme aujourd'hui.
+
+Source : https://cdn.jsdelivr.net/npm/clever-tools@4.10.0/src/commands/deploy/deploy.docs.md
+(`--branch` : branche poussée, la courante par défaut ; `--force` ; `--same-commit-policy`).
+
 **Application Node.js**
 - Instance XS (1 Go) pour commencer, build sur une instance dédiée S (2 Go).
   Le déploiement sans coupure garde les anciennes instances jusqu'à ce que
@@ -267,8 +287,8 @@ Recommencer jusqu'à ce que tout passe sans geste à la main.
   OVH ; les MX ne bougent pas). Attendre l'expiration de l'ancien TTL.
   Prévenir les testeurs : **leurs comptes et dossiers ne suivent pas**, ils
   les recréeront.
-- **H0** : déployer la version finale sur la production Clever Cloud (base
-  neuve), recette courte (§ 7.2) sur son adresse Clever Cloud.
+- **H0** : `scripts/deployer-cc.sh prod` sur la version finale (base neuve),
+  recette courte (§ 7.2) sur l'adresse Clever Cloud.
 - Pointer le DNS vers Clever Cloud, en notant les anciennes valeurs. Passer
   Vercel en page de maintenance, pour qu'un navigateur encore sur l'ancienne
   adresse n'y écrive pas.
