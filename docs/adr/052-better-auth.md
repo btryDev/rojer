@@ -238,10 +238,11 @@ Supabase sert sur Vercel, et part à la bascule.
   - à l'activation, les **autres sessions sont fermées** (comme au
     changement de mot de passe) : une session ouverte avec un mot de passe
     volé n'a jamais passé de second facteur ;
-  - **à chaque activation, tous les appareils de confiance du compte sont
-    oubliés** : le plugin n'efface que celui du navigateur qui désactive, et
-    un appareil approuvé avant une désactivation passait sans code jusqu'à
-    trente jours après la réactivation ;
+  - **désactiver oublie tous les appareils de confiance du compte** (hook
+    `after` sur `/two-factor/disable`, `better-auth.ts`) : le plugin n'efface
+    que celui du navigateur qui désactive, et un appareil approuvé avant une
+    désactivation passait sans code jusqu'à trente jours après la
+    réactivation ;
   - le rendu qui suit une action lit la session dans les cookies laissés par
     l'action (`entetesDeSession`) : activer renouvelle la session, et la page
     relisait l'ancien cookie, puis renvoyait à `/login`.
