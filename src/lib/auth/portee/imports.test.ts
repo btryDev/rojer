@@ -35,6 +35,7 @@ const PORTES_BRUTES = ["src/lib/prisma", "src/lib/mcp/prisma", "src/lib/mcp/db"]
 /** Modules qui peuvent importer un client brut, et pourquoi. */
 const NOMMES_PRISMA: Record<string, string> = {
   "src/lib/auth/portee/client.ts": "fabrique le client borné à partir du client brut",
+  "src/lib/auth/better-auth.ts": "adaptateur Better Auth (ADR-052) : User, Session, Account, AuthVerification, hors compte, lus avant toute identité",
 };
 
 /** Les seuls modules qui fabriquent un client Prisma. */
@@ -87,7 +88,6 @@ const A_MIGRER = new Set([
   "src/lib/etablissements/queries.ts",
   "src/lib/etats-permanents/actions.ts",
   "src/lib/etats-permanents/queries.ts",
-  "src/lib/mcp/acces-oauth-deps.ts", // par dbMcp()
   "src/lib/mcp/db.ts",
   "src/lib/mcp/queries.ts", // par dbMcp()
   "src/lib/onboarding/actions.ts",

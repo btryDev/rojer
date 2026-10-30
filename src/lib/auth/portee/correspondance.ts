@@ -12,8 +12,14 @@ export type Racine = { racine: "userId" };
 export type Rattachement = { parent: string };
 /** Hors compte : jamais servi par le client borné. */
 export type HorsCompte = { horsCompte: string };
+/**
+ * Identité (le `User` de Better Auth) : hors compte comme les autres tables
+ * d'authentification — jamais lue ni écrite par le client borné —, mais des
+ * lignes du compte la référencent (`Entreprise.userId`, `Signature.userId`…).
+ */
+export type Identite = { identite: string };
 
-export type Classement = Racine | Rattachement | HorsCompte;
+export type Classement = Racine | Rattachement | HorsCompte | Identite;
 
 export const CORRESPONDANCE: Record<string, Classement> = {
   // Racines
@@ -64,10 +70,18 @@ export const CORRESPONDANCE: Record<string, Classement> = {
   LimiteDebit: {
     horsCompte: "limitation de débit par clé (IP, jeton) : compteur technique, lu avant toute identité",
   },
+
+  // Better Auth (ADR-052) : lues et écrites par son adaptateur, avec le client
+  // hors compte (`auth/better-auth.ts`), avant toute identité.
+  User: { identite: "l'utilisateur de Better Auth : la racine des comptes y pointe" },
+  Session: { horsCompte: "session Better Auth : lue pour établir l'identité" },
+  Account: { horsCompte: "moyen d'authentification Better Auth (mot de passe haché)" },
+  AuthVerification: { horsCompte: "jeton de vérification Better Auth (e-mail, réinitialisation)" },
 };
 
-export function estHorsCompte(c: Classement): c is HorsCompte {
-  return "horsCompte" in c;
+/** Hors compte au sens du client borné : il ne lit ni n'écrit ces modèles. */
+export function estHorsCompte(c: Classement): c is HorsCompte | Identite {
+  return "horsCompte" in c || "identite" in c;
 }
 export function estRacine(c: Classement): c is Racine {
   return "racine" in c;

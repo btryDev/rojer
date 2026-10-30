@@ -66,7 +66,8 @@ export function estDuCompte(nom: string): boolean {
 /** Le filtre `where` qui borne un modèle à la portée. */
 export function borne(nom: string, portee: Portee): Objet {
   const c = classement(nom);
-  if (estHorsCompte(c)) throw new ErreurPortee(`modèle hors compte : ${nom} (${c.horsCompte})`);
+  if (estHorsCompte(c))
+    throw new ErreurPortee(`modèle hors compte : ${nom} (${"horsCompte" in c ? c.horsCompte : c.identite})`);
 
   if (estRacine(c)) return { [c.racine]: portee.userId };
   return { [c.parent]: borne(relation(nom, c.parent).type, portee) };
@@ -108,7 +109,12 @@ function racineDe(nom: string, data: Objet, portee: Portee, creation: boolean): 
   const v = data[c.racine];
   if (v !== undefined && v !== portee.userId)
     throw new ErreurPortee(`${nom}.${c.racine} différent du compte`);
-  if (creation) data[c.racine] = portee.userId;
+  // La racine donnée par sa relation (`user: { connect }`, sur cc) est
+  // vérifiée par `referenceHorsCompte` : ne pas poser la colonne en plus.
+  const parRelation = relations(nom).some(
+    (r) => r.relationFromFields?.includes(c.racine) && data[r.name] !== undefined,
+  );
+  if (creation && !parRelation) data[c.racine] = portee.userId;
 }
 
 /**
@@ -128,9 +134,12 @@ export function reecrireDonnees(
   racineDe(nom, d, portee, creation);
 
   for (const r of relations(nom)) {
-    if (!estDuCompte(r.type)) continue;
     const cle = r.relationFromFields?.length === 1 ? r.relationFromFields[0] : undefined;
     const vers = r.relationToFields?.[0] ?? "id";
+    if (!estDuCompte(r.type)) {
+      referenceHorsCompte(nom, r, cle, vers, d, portee, creation);
+      continue;
+    }
 
     if (cle !== undefined && cle in d) {
       const v = d[cle];
@@ -151,6 +160,47 @@ export function reecrireDonnees(
     d[r.name] = reecrireImbrique(nom, r, imbrique as Objet, portee);
   }
   return d;
+}
+
+/**
+ * Une relation vers un modèle hors compte (l'identité `User`, sur `cc`) : sa
+ * clé scalaire devient un `connect` simple — Prisma refuse de mêler une clé
+ * scalaire et un `connect` dans une même création, et les autres clés de la
+ * ligne sont réécrites en `connect`. Quand cette clé est la racine du compte
+ * (`Entreprise.userId`), elle ne peut désigner que le compte de la portée.
+ * Toute autre écriture vers ce modèle est refusée.
+ */
+function referenceHorsCompte(
+  nom: string,
+  r: Champ,
+  cle: string | undefined,
+  vers: string,
+  d: Objet,
+  portee: Portee,
+  creation: boolean,
+): void {
+  const c = classement(nom);
+  const estLaRacine = estRacine(c) && cle === c.racine;
+  if (cle !== undefined && cle in d) {
+    if (r.name in d) throw new ErreurPortee(`${nom} : ${cle} et ${r.name} donnés ensemble`);
+    const v = d[cle];
+    delete d[cle];
+    if (v === null) {
+      if (estLaRacine) throw new ErreurPortee(`${nom}.${cle} ne peut pas être retiré`);
+      if (!creation) d[r.name] = { disconnect: true };
+    } else if (v !== undefined) {
+      d[r.name] = { connect: { [vers]: v } };
+    }
+    return;
+  }
+  const n = d[r.name];
+  if (n === undefined) return;
+  const cible = (n as Objet | null)?.connect as Objet | undefined;
+  const seul = n !== null && typeof n === "object" && Object.keys(n).length === 1 && cible !== undefined;
+  if (!seul || Array.isArray(cible))
+    throw new ErreurPortee(`${nom}.${r.name} : écriture vers un modèle hors compte`);
+  if (estLaRacine && (Object.keys(cible).length !== 1 || cible[vers] !== portee.userId))
+    throw new ErreurPortee(`${nom}.${r.name} : la racine ne peut désigner que le compte`);
 }
 
 function reecrireImbrique(nom: string, r: Champ, n: Objet, portee: Portee): Objet {

@@ -18,6 +18,7 @@ const local = URL_BASE ? /@(localhost|127\.0\.0\.1)[:/]/.test(URL_BASE) : false;
 describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async () => {
   if (URL_BASE) process.env.DATABASE_URL = URL_BASE;
   const { prisma } = await import("@/lib/prisma");
+  const { Prisma } = await import("@prisma/client");
   const { clientBorne } = await import("./client");
   const { creerEnLotVerifie } = await import("./lot-verifie");
 
@@ -25,7 +26,17 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
   const B = "00000000-0000-0000-0000-00000000000b";
   const dbA = clientBorne({ type: "compte", userId: A });
 
+  // Sur `cc`, la racine pointe vers l'utilisateur de Better Auth : il doit
+  // exister avant l'entreprise.
+  const avecUtilisateurs = Prisma.dmmf.datamodel.models.some((m) => m.name === "User");
+  async function utilisateur(id: string) {
+    if (!avecUtilisateurs) return;
+    const u = (prisma as unknown as Record<string, { upsert(a: object): Promise<unknown> }>).user;
+    await u.upsert({ where: { id }, create: { id, name: id, email: `${id}@exemple.invalid` }, update: {} });
+  }
+
   async function semer(userId: string, nom: string) {
+    await utilisateur(userId);
     const ent = await prisma.entreprise.create({ data: { userId, raisonSociale: nom, effectif: 5, adresse: "1 rue" } });
     const etab = await prisma.etablissement.create({
       data: { entrepriseId: ent.id, raisonDisplay: nom, adresse: "1 rue", codeNaf: "56.10A", effectifSurSite: 5 },
@@ -47,11 +58,13 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
 
   beforeAll(async () => {
     await prisma.$executeRawUnsafe('TRUNCATE "Entreprise" CASCADE');
+    if (avecUtilisateurs) await prisma.$executeRawUnsafe('TRUNCATE "User" CASCADE');
     a = await semer(A, "A");
     b = await semer(B, "B");
   });
   afterAll(async () => {
     await prisma.$executeRawUnsafe('TRUNCATE "Entreprise" CASCADE');
+    if (avecUtilisateurs) await prisma.$executeRawUnsafe('TRUNCATE "User" CASCADE');
     await prisma.$disconnect();
   });
 
@@ -89,6 +102,7 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
     });
 
     it("la portée est figée : modifier l'objet après coup ne déplace pas le client", async () => {
+      await utilisateur("00000000-0000-0000-0000-0000000000c0");
       const p = { type: "compte" as const, userId: "00000000-0000-0000-0000-0000000000c0" };
       const dbC = clientBorne(p);
       p.userId = B;
@@ -177,6 +191,26 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
         dbA.etablissement.findUnique({ where: { id: b.etab.id } }),
       ]);
       expect([liste.length, autre]).toEqual([1, null]);
+    });
+  });
+
+  describe("références à l'utilisateur (cc)", () => {
+    it.skipIf(!avecUtilisateurs)("une signature du compte se crée, clé User et clé d'établissement ensemble", async () => {
+      const sig = await dbA.signature.create({
+        data: {
+          etablissementId: a.etab.id, userId: A, objetType: "rapport_verification", objetId: "o",
+          signataireNom: "n", signataireEmail: "n@exemple.invalid", hashDocument: "0".repeat(64),
+          methode: "compte_connecte",
+        },
+      });
+      expect([sig.etablissementId, sig.userId]).toEqual([a.etab.id, A]);
+      await prisma.signature.delete({ where: { id: sig.id } });
+    });
+
+    it.skipIf(!avecUtilisateurs)("une entreprise ne peut pas pointer un autre utilisateur", async () => {
+      await expect(
+        dbA.entreprise.create({ data: { raisonSociale: "x", effectif: 1, adresse: "x", user: { connect: { id: B } } } }),
+      ).rejects.toThrow(/que le compte/);
     });
   });
 

@@ -170,9 +170,45 @@ describe("créations et clés étrangères", () => {
 });
 
 describe("racine du compte", () => {
-  it("une Entreprise créée reçoit le userId du compte", () => {
-    expect(argumentsBornes("Entreprise", "create", { data: { raisonSociale: "x" } }, A).data).toMatchObject({
-      userId: "u-a",
+  it("une Entreprise créée est rattachée à l'utilisateur du compte (relation user, sur cc)", () => {
+    expect(argumentsBornes("Entreprise", "create", { data: { raisonSociale: "x" } }, A).data).toEqual({
+      raisonSociale: "x",
+      user: { connect: { id: "u-a" } },
+    });
+  });
+
+  it("une clé vers User devient un connect, à côté des clés réécrites (Signature, AccessToken)", () => {
+    expect(
+      argumentsBornes("Signature", "create", { data: { etablissementId: "e", userId: "u-a", objetId: "o" } }, A).data,
+    ).toMatchObject({
+      user: { connect: { id: "u-a" } },
+      etablissement: { connect: { id: "e", AND: [COMPTE_A] } },
+    });
+    const { data } = argumentsBornes(
+      "AccessToken",
+      "create",
+      { data: { etablissementId: "e", createdByUserId: "u-a", objetId: "o" } },
+      A,
+    );
+    expect(data).toMatchObject({ createdBy: { connect: { id: "u-a" } } });
+    expect(data).not.toHaveProperty("createdByUserId");
+  });
+
+  it("la racine ne peut désigner que le compte, sous toutes ses formes", () => {
+    expect(() =>
+      argumentsBornes("Entreprise", "create", { data: { user: { connect: { id: "u-b" } } } }, A),
+    ).toThrow(/que le compte/);
+    expect(() =>
+      argumentsBornes("Entreprise", "update", { where: { id: "x" }, data: { user: { disconnect: true } } }, A),
+    ).toThrow(/hors compte/);
+    expect(() => argumentsBornes("Entreprise", "update", { where: { id: "x" }, data: { userId: null } }, A)).toThrow(
+      ErreurPortee,
+    );
+    expect(() =>
+      argumentsBornes("DemandeAssistance", "create", { data: { user: { create: { email: "x" } } } }, A),
+    ).toThrow(/hors compte/);
+    expect(argumentsBornes("Entreprise", "create", { data: { user: { connect: { id: "u-a" } } } }, A).data).toEqual({
+      user: { connect: { id: "u-a" } },
     });
   });
 

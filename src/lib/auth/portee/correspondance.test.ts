@@ -53,9 +53,10 @@ describe("table de correspondance", () => {
     },
   );
 
-  it("un modèle hors compte n'est la cible d'aucune relation d'un modèle du compte", () => {
-    const hors = new Set(Object.keys(CORRESPONDANCE).filter((n) => estHorsCompte(CORRESPONDANCE[n])));
-    const liens = MODELES.flatMap((m) =>
+  it("un modèle hors compte (identité exceptée) n'est la cible d'aucune relation d'un modèle du compte", () => {
+    // L'identité (`User`) est la seule cible permise : la racine y pointe.
+    const hors = new Set(Object.keys(CORRESPONDANCE).filter((n) => "horsCompte" in CORRESPONDANCE[n]));
+    const liens = MODELES.filter((m) => !estHorsCompte(CORRESPONDANCE[m.name])).flatMap((m) =>
       m.fields.filter((f) => f.kind === "object" && hors.has(f.type)).map((f) => `${m.name}.${f.name}`),
     );
     expect(liens).toEqual([]);
