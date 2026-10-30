@@ -43,11 +43,7 @@ export function SignupForm() {
 
       <MessageFormulaire ton="alerte">{state.error}</MessageFormulaire>
 
-      {state.message ? (
-        <p className="m-0 rounded-[18px] bg-[color:var(--board-blue-pale)] px-4 py-3 text-[13px] leading-[1.5] text-[color:var(--board-blue-ink)]">
-          {state.message}
-        </p>
-      ) : null}
+      <MessageFormulaire ton="info">{state.message}</MessageFormulaire>
 
       <Button
         type="submit"

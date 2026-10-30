@@ -19,8 +19,7 @@ vi.mock("@/lib/auth/actions", () => ({
     confirmee: true,
     message: "Vos sessions sur les autres appareils ont été fermées.",
   })),
-  regenererCodesSecoursAction: vi.fn(async () => ({})),
-  desactiverDoubleAuthAction: vi.fn(async () => ({})),
+  gererDoubleAuthAction: vi.fn(async () => ({})),
 }));
 
 const { DoubleAuthentification } = await import("./DoubleAuthentification");

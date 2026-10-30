@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getRegistrePublicParSlug } from "@/lib/accessibilite/queries";
-import { genererQrCodeDataUrl } from "@/lib/accessibilite/qrcode";
+import { genererQrCodeDataUrl } from "@/lib/rendu/qrcode";
 import { identitePublique } from "@/lib/accessibilite/identite";
 import {
   MESSAGE_URL_PUBLIQUE_ABSENTE,

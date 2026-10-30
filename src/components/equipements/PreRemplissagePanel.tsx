@@ -8,6 +8,7 @@ import { QuestionTriEtat } from "@/components/equipements/EquipementForm";
 import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
 import type { ChampTriEtat } from "@/lib/equipements/schema";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
+import { CASE_A_COCHER } from "@/components/ui-kit/case-a-cocher";
 
 type Suggestion = {
   categorie: CategorieEquipement;
@@ -212,7 +213,7 @@ export function PreRemplissagePanel({
                     id={`pre-${s.categorie}`}
                     checked={coche}
                     onChange={() => toggle(s.categorie)}
-                    className="mt-0.5 size-4 flex-none rounded border-[color:var(--board-slate)] accent-[color:var(--board-ink)]"
+                    className={CASE_A_COCHER}
                   />
                   <MarqueCategorie categorie={s.categorie} taille={36} />
                   <label

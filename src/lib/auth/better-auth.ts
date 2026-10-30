@@ -4,6 +4,8 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { twoFactor } from "better-auth/plugins/two-factor";
+import { createAuthMiddleware, isAPIError } from "better-auth/api";
+import { oublierAppareilsDeConfiance } from "./appareils-de-confiance";
 import { prisma } from "@/lib/prisma";
 import { motifErreur, publicAppUrl, refusUrlPublique, sendMail } from "@/lib/email";
 import { ENTETE_IP_CLIENT } from "./entete-ip";
@@ -27,6 +29,8 @@ import { LONGUEUR_MIN_MOT_DE_PASSE } from "./mot-de-passe";
 const SEPT_JOURS = 60 * 60 * 24 * 7;
 const UN_JOUR = 60 * 60 * 24;
 const TRENTE_JOURS = UN_JOUR * 30;
+/** Verrou du compte après dix seconds facteurs faux de suite (repris par le message). */
+export const VERROU_DOUBLE_AUTH_MINUTES = 15;
 
 /**
  * L'adresse de l'app, par la règle commune (`@/lib/email`). Elle décide aussi
@@ -120,6 +124,18 @@ export const auth = betterAuth({
     expiresIn: SEPT_JOURS,
     disableSessionRefresh: true,
   },
+  hooks: {
+    // Désactiver la double authentification oublie TOUS les appareils de
+    // confiance du compte : le plugin n'efface que celui du navigateur qui
+    // désactive, et les autres passeraient sans code à la réactivation.
+    // Accroché à l'appel lui-même, l'invariant vaut quel que soit l'appelant.
+    after: createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== "/two-factor/disable" || isAPIError(ctx.context.returned)) return;
+      const userId = ctx.context.session?.user.id;
+      if (!userId) throw new Error("two-factor/disable réussi sans session lue : appareils de confiance non oubliés");
+      await oublierAppareilsDeConfiance(ctx.context.adapter, userId);
+    }),
+  },
   plugins: [
     // Double authentification (ADR-052 § 7), proposée, non imposée : une
     // application d'authentification (TOTP) et des codes de secours, chiffrés
@@ -138,7 +154,7 @@ export const auth = betterAuth({
       backupCodeOptions: { amount: 10, storeBackupCodes: "encrypted" },
       twoFactorCookieMaxAge: 10 * 60,
       trustDeviceMaxAge: TRENTE_JOURS,
-      accountLockout: { enabled: true, maxFailedAttempts: 10, durationSeconds: 15 * 60 },
+      accountLockout: { enabled: true, maxFailedAttempts: 10, durationSeconds: VERROU_DOUBLE_AUTH_MINUTES * 60 },
     }),
     // `nextCookies` en dernier : sans lui, une connexion faite dans une action
     // serveur ne pose pas de cookie — ni celui du défi de double authentification.

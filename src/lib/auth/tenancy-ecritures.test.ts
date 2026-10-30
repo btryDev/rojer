@@ -132,8 +132,7 @@ const EXEMPTIONS = new Map<string, Exemption>([
     [
       ["activerDoubleAuthAction", "auth.api.enableTwoFactor"],
       ["confirmerDoubleAuthAction", "auth.api.verifyTOTP"],
-      ["regenererCodesSecoursAction", "auth.api.generateBackupCodes"],
-      ["desactiverDoubleAuthAction", "auth.api.disableTwoFactor"],
+      ["gererDoubleAuthAction", "auth.api.disableTwoFactor"],
     ] as const
   ).map(
     ([nom, garde]) =>

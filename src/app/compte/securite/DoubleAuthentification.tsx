@@ -7,11 +7,11 @@ import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
 import {
   activerDoubleAuthAction,
   confirmerDoubleAuthAction,
-  desactiverDoubleAuthAction,
-  regenererCodesSecoursAction,
+  gererDoubleAuthAction,
   type DoubleAuthState,
 } from "@/lib/auth/actions";
 import type { DonneesActivation } from "@/lib/auth/double-authentification";
+import { pluriel } from "@/lib/rendu/pluriel";
 
 const etatInitial: DoubleAuthState = {};
 
@@ -167,26 +167,17 @@ function EtapeActivation({
   );
 }
 
-/** Active : renouveler les codes de secours, ou désactiver. Mot de passe exigé. */
+/**
+ * Active : renouveler les codes de secours, ou désactiver. Un mot de passe,
+ * une action : chaque bouton envoie son geste.
+ */
 function GererDoubleAuth({ codesRestants }: { codesRestants: number | null }) {
-  const [regeneration, regenerer, enRegeneration] = useActionState(regenererCodesSecoursAction, etatInitial);
-  const [desactivation, desactiver, enDesactivation] = useActionState(desactiverDoubleAuthAction, etatInitial);
-  // Le dernier geste tenté : seule son erreur s'affiche, pas celle, périmée,
-  // de l'autre bouton.
-  const [geste, setGeste] = useState<"regenerer" | "desactiver" | null>(null);
-  const enCours = enRegeneration || enDesactivation;
-  const erreur = geste === "regenerer" ? regeneration.error : geste === "desactiver" ? desactivation.error : undefined;
+  const [etat, gerer, enCours] = useActionState(gererDoubleAuthAction, etatInitial);
 
   return (
     <div className="flex flex-col gap-5">
-      {regeneration.codes ? (
-        <CodesSecours codes={regeneration.codes} />
-      ) : (
-        <EtatCodes restants={codesRestants} />
-      )}
-      {/* Un seul mot de passe pour les deux gestes : chaque bouton porte son
-          action (`formAction`). */}
-      <form className="flex flex-col gap-5">
+      {etat.codes ? <CodesSecours codes={etat.codes} /> : <EtatCodes restants={codesRestants} />}
+      <form action={gerer} className="flex flex-col gap-5">
         <ChampBoard
           id="password-gestion"
           name="password"
@@ -195,29 +186,29 @@ function GererDoubleAuth({ codesRestants }: { codesRestants: number | null }) {
           autoComplete="current-password"
           required
         />
-        <MessageFormulaire ton="alerte">{erreur}</MessageFormulaire>
+        <MessageFormulaire ton="alerte">{etat.error}</MessageFormulaire>
         <div className="flex flex-col gap-3 sm:flex-row">
           <Button
             type="submit"
-            formAction={regenerer}
-            onClick={() => setGeste("regenerer")}
+            name="geste"
+            value="regenerer"
             variant="boardClair"
             size="board"
             disabled={enCours}
             className="flex-1"
           >
-            {enRegeneration ? "Génération…" : "Nouveaux codes de secours"}
+            Nouveaux codes de secours
           </Button>
           <Button
             type="submit"
-            formAction={desactiver}
-            onClick={() => setGeste("desactiver")}
+            name="geste"
+            value="desactiver"
             variant="boardClair"
             size="board"
             disabled={enCours}
             className="flex-1"
           >
-            {enDesactivation ? "Désactivation…" : "Désactiver"}
+            Désactiver
           </Button>
         </div>
       </form>
@@ -238,7 +229,7 @@ function EtatCodes({ restants }: { restants: number | null }) {
       <MessageFormulaire ton="alerte">
         {restants === 0
           ? "Plus aucun code de secours : générez-en de nouveaux."
-          : `Plus que ${restants} code${restants > 1 ? "s" : ""} de secours : pensez à en générer de nouveaux.`}
+          : `Plus que ${pluriel(restants, "code")} de secours : pensez à en générer de nouveaux.`}
       </MessageFormulaire>
     );
   }

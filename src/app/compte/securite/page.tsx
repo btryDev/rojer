@@ -3,7 +3,8 @@ import { FilRetour } from "@/components/ui-kit/FilRetour";
 import { fermerSessionsAction } from "@/lib/auth/actions";
 import { decrireAppareil } from "@/lib/auth/appareil";
 import { auth } from "@/lib/auth/better-auth";
-import { entetesDeSession, requireUser } from "@/lib/auth/require-user";
+import { entetesDeSession, lireSessionCourante, requireUser } from "@/lib/auth/require-user";
+import { motifErreur } from "@/lib/email";
 import { formaterDateHeureFr } from "@/lib/dates";
 import { ChangerMotDePasseForm } from "./ChangerMotDePasseForm";
 import { DoubleAuthentification } from "./DoubleAuthentification";
@@ -12,13 +13,6 @@ export const metadata = {
   title: "Sécurité du compte — Rojer",
 };
 
-/**
- * Sécurité du compte (ADR-052, lots 3a et 3b) : changer de mot de passe, la
- * double authentification, voir les sessions ouvertes et les fermer
- * (ASVS V7.4.5). Les sessions viennent de
- * Better Auth, qui ne liste que celles du compte connecté ; la page n'en
- * affiche que l'identifiant, jamais le jeton.
- */
 /**
  * Combien de codes de secours restent. Better Auth n'a pas de comptage : il
  * déchiffre la liste, dont on ne garde que la longueur — rien n'en sort de la
@@ -29,20 +23,25 @@ async function nombreCodesSecours(userId: string): Promise<number | null> {
   try {
     return (await auth.api.viewBackupCodes({ body: { userId } })).backupCodes.length;
   } catch (e) {
-    console.error(JSON.stringify({ type: "codes_secours_illisibles", motif: String(e) }));
+    console.error(JSON.stringify({ type: "codes_secours_illisibles", motif: motifErreur(e) }));
     return null;
   }
 }
 
+/**
+ * Sécurité du compte (ADR-052, lots 3a et 3b) : changer de mot de passe, la
+ * double authentification, voir les sessions ouvertes et les fermer
+ * (ASVS V7.4.5). Better Auth ne liste que les sessions du compte connecté ;
+ * la page n'en affiche que l'identifiant, jamais le jeton.
+ */
 export default async function SecuriteComptePage() {
   const user = await requireUser();
-  const entetes = await entetesDeSession();
-  const [courante, sessions] = await Promise.all([
-    auth.api.getSession({ headers: entetes }),
-    auth.api.listSessions({ headers: entetes }),
+  const doubleAuth = user.twoFactorEnabled;
+  const [courante, sessions, codesRestants] = await Promise.all([
+    lireSessionCourante(),
+    auth.api.listSessions({ headers: await entetesDeSession() }),
+    doubleAuth ? nombreCodesSecours(user.id) : null,
   ]);
-  const doubleAuth = courante?.user.twoFactorEnabled === true;
-  const codesRestants = doubleAuth ? await nombreCodesSecours(user.id) : null;
   const triees = [...sessions].sort((a, b) => +b.createdAt - +a.createdAt);
   const autres = triees.filter((s) => s.id !== courante?.session.id);
 

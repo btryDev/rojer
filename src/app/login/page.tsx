@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cheminDeRetour } from "@/lib/auth/chemin-de-retour";
 import { LoginForm } from "./LoginForm";
+import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
 
 export const metadata = {
   title: "Connexion — Rojer",
@@ -40,24 +41,21 @@ export default async function LoginPage({
           // Bleu et non vert : le vert du board dit « fait » au sens d'un
           // geste de conformité accompli. Ici on accuse réception d'une
           // confirmation d'adresse — le registre calme du glacier suffit.
-          <p className="m-0 mt-6 rounded-[18px] bg-[color:var(--board-blue-pale)] px-4 py-3 text-[13px] leading-[1.5] text-[color:var(--board-blue-ink)]">
+          <MessageFormulaire ton="info" className="mt-6">
             E-mail confirmé. Vous pouvez vous connecter.
-          </p>
+          </MessageFormulaire>
         ) : null}
 
         {reinitialise === "1" ? (
-          <p className="m-0 mt-6 rounded-[18px] bg-[color:var(--board-blue-pale)] px-4 py-3 text-[13px] leading-[1.5] text-[color:var(--board-blue-ink)]">
+          <MessageFormulaire ton="info" className="mt-6">
             Mot de passe changé. Vos autres sessions ont été fermées : connectez-vous avec le nouveau.
-          </p>
+          </MessageFormulaire>
         ) : null}
 
         {confirmation === "invalide" ? (
-          <p
-            role="alert"
-            className="m-0 mt-6 rounded-[18px] bg-[color:var(--board-signal-wash)] px-4 py-3 text-[13px] leading-[1.5] text-[color:var(--board-signal-ink)]"
-          >
+          <MessageFormulaire ton="alerte" className="mt-6">
             Ce lien de confirmation est invalide ou a expiré. Connectez-vous avec votre adresse et votre mot de passe pour en obtenir un nouveau.
-          </p>
+          </MessageFormulaire>
         ) : null}
 
         <div className="carte-board mt-7 px-7 py-6 sm:px-8">

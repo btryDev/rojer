@@ -22,9 +22,7 @@ export function ForgotPasswordForm() {
     // (cf. l'action) : le registre calme du glacier le dit sans laisser
     // croire à un accusé de réception personnel.
     return (
-      <p className="m-0 rounded-[18px] bg-[color:var(--board-blue-pale)] px-4 py-3 text-[13px] leading-[1.5] text-[color:var(--board-blue-ink)]">
-        {state.message}
-      </p>
+      <MessageFormulaire ton="info">{state.message}</MessageFormulaire>
     );
   }
 

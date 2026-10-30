@@ -83,9 +83,9 @@ beforeEach(() => {
 
 describe("dossier PDF : le score reçoit la couverture (D2 (a))", () => {
   it("une question ouverte empêche « satisfaisante » ; sans question, rien ne change", async () => {
-    const sans = await construireDossierConformiteData("etab-1", { id: "user-1", email: null });
+    const sans = await construireDossierConformiteData("etab-1", { id: "user-1", email: null, twoFactorEnabled: false });
     h.indeterminations = [{ axe: "categorie_erp", motif: "m", quoiFaire: "q" }];
-    const avec = await construireDossierConformiteData("etab-1", { id: "user-1", email: null });
+    const avec = await construireDossierConformiteData("etab-1", { id: "user-1", email: null, twoFactorEnabled: false });
     expect(sans?.score.indeterminationsCouverture).toBe(0);
     expect(avec?.score.indeterminationsCouverture).toBe(1);
     expect(avec?.score.niveau).not.toBe(sans?.score.niveau);

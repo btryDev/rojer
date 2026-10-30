@@ -25,7 +25,7 @@ const h = vi.hoisted(() => ({
     generateBackupCodes: vi.fn<(arg: { body: Record<string, unknown> }) => Promise<unknown>>(),
     disableTwoFactor: vi.fn<(arg: { body: Record<string, unknown> }) => Promise<unknown>>(),
   },
-  oublierAppareils: vi.fn<(userId: string) => Promise<void>>(),
+  user: { id: "u-1", email: "a@exemple.fr", twoFactorEnabled: false },
   divulgue: vi.fn<(mdp: string) => Promise<boolean | null>>(),
   entetes: new Headers({ "x-forwarded-for": "203.0.113.7" }),
   cookiesEffaces: [] as string[],
@@ -42,19 +42,15 @@ vi.mock("next/headers", () => ({
   headers: async () => h.entetes,
   cookies: async () => ({ delete: (nom: string) => h.cookiesEffaces.push(nom) }),
 }));
-vi.mock("./better-auth", () => ({ auth: { api: h.auth } }));
+vi.mock("./better-auth", () => ({ auth: { api: h.auth }, VERROU_DOUBLE_AUTH_MINUTES: 15 }));
 vi.mock("./require-user", () => ({
-  requireUser: async () => ({ id: "u-1", email: "a@exemple.fr" }),
+  requireUser: async () => h.user,
   entetesDeSession: async () => h.entetes,
 }));
 // Jamais d'appel réseau en test : le service Pwned Passwords est doublé.
 vi.mock("./mot-de-passe-divulgue", async (original) => ({
   ...(await original<typeof import("./mot-de-passe-divulgue")>()),
   motDePasseDivulgue: h.divulgue,
-}));
-vi.mock("./double-authentification", async (original) => ({
-  ...(await original<typeof import("./double-authentification")>()),
-  oublierAppareilsDeConfiance: h.oublierAppareils,
 }));
 vi.mock("@/lib/auth/scope", () => ({ COOKIE_ETABLISSEMENT_ACTIF: "etablissement-actif" }));
 vi.mock("@/lib/securite/limite-debit", async (original) => ({
@@ -65,8 +61,7 @@ vi.mock("@/lib/securite/limite-debit", async (original) => ({
 const {
   activerDoubleAuthAction,
   confirmerDoubleAuthAction,
-  desactiverDoubleAuthAction,
-  regenererCodesSecoursAction,
+  gererDoubleAuthAction,
   verifierSecondFacteurAction,
   changerMotDePasseAction,
   definirMotDePasseAction,
@@ -113,8 +108,7 @@ beforeEach(() => {
   });
   h.auth.generateBackupCodes.mockResolvedValue({ status: true, backupCodes: ["fghij-67890"] });
   h.auth.disableTwoFactor.mockResolvedValue({ status: true });
-  h.oublierAppareils.mockReset();
-  h.oublierAppareils.mockResolvedValue(undefined);
+  h.user = { id: "u-1", email: "a@exemple.fr", twoFactorEnabled: false };
   h.divulgue.mockResolvedValue(false);
   h.limite.mockClear();
   h.limite.mockResolvedValue({ ok: true });
@@ -532,7 +526,7 @@ describe("connexion avec double authentification (lot 3b)", () => {
     const cas: [string, RegExp][] = [
       ["INVALID_CODE", /Code incorrect/],
       ["INVALID_BACKUP_CODE", /Code incorrect/],
-      ["ACCOUNT_TEMPORARILY_LOCKED", /quinze minutes/],
+      ["ACCOUNT_TEMPORARILY_LOCKED", /15 minutes/],
       ["TOO_MANY_ATTEMPTS_REQUEST_NEW_CODE", /reconnectez-vous/],
       ["INVALID_TWO_FACTOR_COOKIE", /reconnectez-vous/],
       ["TOTP_NOT_ENABLED", /reconnectez-vous/],
@@ -566,24 +560,19 @@ describe("gérer la double authentification (lot 3b)", () => {
     expect(r.activation?.codesSecours).toEqual(["abcde-12345"]);
   });
 
-  it("confirmer : appareils de confiance oubliés AVANT le code, puis les autres sessions fermées", async () => {
+  it("confirmer : le premier code active, puis les autres sessions sont fermées", async () => {
     const r = await confirmerDoubleAuthAction({}, formulaire({ code: "123456" }));
     expect(r.confirmee).toBe(true);
     expect(r.message).toMatch(/autres appareils ont été fermées/);
     expect(h.auth.verifyTOTP).toHaveBeenCalledWith({ body: { code: "123456" }, headers: h.entetes });
-    expect(h.oublierAppareils).toHaveBeenCalledWith("u-1");
-    expect(h.oublierAppareils.mock.invocationCallOrder[0]).toBeLessThan(
-      h.auth.verifyTOTP.mock.invocationCallOrder[0],
-    );
     expect(h.auth.revokeOtherSessions.mock.invocationCallOrder[0]).toBeGreaterThan(
       h.auth.verifyTOTP.mock.invocationCallOrder[0],
     );
   });
 
-  it("confirmer : déjà active → refusé, rien d'oublié ni de vérifié (action rejouée)", async () => {
-    h.auth.getSession.mockResolvedValue({ session: { id: "s-ici" }, user: { twoFactorEnabled: true } });
+  it("confirmer : déjà active → refusé, rien de vérifié (action rejouée)", async () => {
+    h.user = { ...h.user, twoFactorEnabled: true };
     expect((await confirmerDoubleAuthAction({}, formulaire({ code: "123456" }))).error).toMatch(/déjà active/);
-    expect(h.oublierAppareils).not.toHaveBeenCalled();
     expect(h.auth.verifyTOTP).not.toHaveBeenCalled();
   });
 
@@ -605,17 +594,20 @@ describe("gérer la double authentification (lot 3b)", () => {
     h.auth.enableTwoFactor.mockRejectedValue(refus("INVALID_PASSWORD"));
     h.auth.generateBackupCodes.mockRejectedValue(refus("INVALID_PASSWORD"));
     h.auth.disableTwoFactor.mockRejectedValue(refus("INVALID_PASSWORD"));
-    for (const action of [activerDoubleAuthAction, regenererCodesSecoursAction, desactiverDoubleAuthAction]) {
-      expect((await action({}, formulaire({ password: "faux" }))).error).toBe("Mot de passe incorrect");
+    expect((await activerDoubleAuthAction({}, formulaire({ password: "faux" }))).error).toBe("Mot de passe incorrect");
+    for (const geste of ["regenerer", "desactiver"]) {
+      expect((await gererDoubleAuthAction({}, formulaire({ password: "faux", geste }))).error).toBe(
+        "Mot de passe incorrect",
+      );
     }
   });
 
   it("sans mot de passe, ou au-delà de la limite par compte : refusé avant Better Auth", async () => {
-    for (const action of [activerDoubleAuthAction, regenererCodesSecoursAction, desactiverDoubleAuthAction]) {
+    for (const action of [activerDoubleAuthAction, gererDoubleAuthAction]) {
       expect((await action({}, formulaire({}))).error).toMatch(/mot de passe/);
     }
     h.limite.mockResolvedValue({ ok: false, reessayerDansSecondes: 600 });
-    for (const action of [activerDoubleAuthAction, regenererCodesSecoursAction, desactiverDoubleAuthAction]) {
+    for (const action of [activerDoubleAuthAction, gererDoubleAuthAction]) {
       expect((await action({}, formulaire({ password: "mdp" }))).error).toMatch(/Trop de tentatives/);
     }
     expect((await confirmerDoubleAuthAction({}, formulaire({ code: "123456" }))).error).toMatch(/Trop de tentatives/);
@@ -631,13 +623,17 @@ describe("gérer la double authentification (lot 3b)", () => {
   });
 
   it("régénérer rend les codes neufs ; désactiver le confirme", async () => {
-    expect((await regenererCodesSecoursAction({}, formulaire({ password: "mdp" }))).codes).toEqual(["fghij-67890"]);
-    expect(await desactiverDoubleAuthAction({}, formulaire({ password: "mdp" }))).toEqual({});
+    expect((await gererDoubleAuthAction({}, formulaire({ password: "mdp", geste: "regenerer" }))).codes).toEqual([
+      "fghij-67890",
+    ]);
+    expect(await gererDoubleAuthAction({}, formulaire({ password: "mdp", geste: "desactiver" }))).toEqual({});
     expect(h.auth.disableTwoFactor).toHaveBeenCalledWith({ body: { password: "mdp" }, headers: h.entetes });
   });
 
   it("une panne remonte au lieu de passer pour un mot de passe faux", async () => {
     h.auth.disableTwoFactor.mockRejectedValue(new Error("panne"));
-    await expect(desactiverDoubleAuthAction({}, formulaire({ password: "mdp" }))).rejects.toThrow("panne");
+    await expect(gererDoubleAuthAction({}, formulaire({ password: "mdp", geste: "desactiver" }))).rejects.toThrow(
+      "panne",
+    );
   });
 });

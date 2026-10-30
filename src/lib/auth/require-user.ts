@@ -8,12 +8,14 @@ import { auth } from "./better-auth";
 export type AuthedUser = {
   id: string;
   email: string | null;
+  /** Double authentification active (ADR-052 § 7). */
+  twoFactorEnabled: boolean;
 };
 
 /**
- * Les en-têtes à donner à Better Auth pour LIRE la session pendant un rendu :
- * ceux de la requête, mais avec les cookies tels que l'action serveur qui
- * précède les a laissés. Une action qui renouvelle la session (activer ou
+ * Les en-têtes à donner à Better Auth pour tout appel lié à la session : ceux
+ * de la requête, mais avec les cookies tels que l'action serveur les a
+ * laissés. Une action qui renouvelle la session (activer ou
  * désactiver la double authentification) pose un cookie neuf et efface
  * l'ancienne session en base ; le rendu qui suit, dans la même requête,
  * lisait encore l'ancien cookie dans `headers()` et renvoyait à `/login`.
@@ -26,8 +28,9 @@ export async function entetesDeSession(): Promise<Headers> {
 }
 
 /**
- * Lecture mémoïsée de l'utilisateur courant, source unique de `requireUser`
- * et `getOptionalUser` — et le seul endroit qui sait d'où vient l'identité
+ * Lecture mémoïsée de la session courante, source unique de `requireUser`,
+ * `getOptionalUser` et de la page « Sécurité du compte » (qui y lit l'id de
+ * la session) — et le seul endroit qui sait d'où vient l'identité
  * (ADR-052 : Better Auth, ADR-051 : le client borné au compte s'appuie dessus).
  *
  * `auth.api.getSession` lit la session EN BASE à partir du cookie (pas de
@@ -41,10 +44,18 @@ export async function entetesDeSession(): Promise<Headers> {
  * ça). Une panne de base, elle, LÈVE : la page tombe en erreur et la panne se
  * voit, au lieu de déconnecter en silence un utilisateur connecté.
  */
+export const lireSessionCourante = cache(async () =>
+  auth.api.getSession({ headers: await entetesDeSession() }),
+);
+
 const lireUserCourant = cache(async (): Promise<AuthedUser | null> => {
-  const session = await auth.api.getSession({ headers: await entetesDeSession() });
+  const session = await lireSessionCourante();
   if (!session) return null;
-  return { id: session.user.id, email: session.user.email ?? null };
+  return {
+    id: session.user.id,
+    email: session.user.email ?? null,
+    twoFactorEnabled: session.user.twoFactorEnabled === true,
+  };
 });
 
 export async function requireUser(): Promise<AuthedUser> {

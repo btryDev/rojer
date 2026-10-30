@@ -13,7 +13,7 @@ import {
   calculerProgression,
   getRegistreAccessibilite,
 } from "@/lib/accessibilite/queries";
-import { genererQrCodeDataUrl } from "@/lib/accessibilite/qrcode";
+import { genererQrCodeDataUrl } from "@/lib/rendu/qrcode";
 import {
   MESSAGE_URL_PUBLIQUE_ABSENTE,
   publicAppUrl,
