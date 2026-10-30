@@ -1,0 +1,67 @@
+# Pile locale « comme Clever Cloud » : tester un commit avant de le déployer
+# (plan de bascule, § 5 bis). Pour développer, `pnpm dev` reste.
+#
+#   cp .env.cc-local.example .env.cc-local    une fois, puis le remplir
+#   docker compose -f docker-compose.cc.yml --env-file .env.cc-local up --build
+#   → http://localhost:8080
+#   docker compose -f docker-compose.cc.yml down       arrêter (la base reste)
+#   docker compose -f docker-compose.cc.yml down -v    arrêter et vider la base
+#
+# Le build est lourd (installation + build webpack, quelques minutes) : ne pas
+# le lancer en même temps qu'une autre tâche lourde.
+#
+# Base à part, port 5435 : ni `duerp-db` (5433) ni sa shadow (5434) ne sont
+# touchées, ni GestBAT (port 3000, conteneurs gestbat-*).
+# Stockage sur disque, e-mails dans la console : Cellar et Mailpace se
+# testent sur la préproduction Clever Cloud.
+
+name: rojer-cc
+
+services:
+  db:
+    image: postgres:17
+    container_name: rojer-cc-db
+    environment:
+      POSTGRES_USER: rojer
+      POSTGRES_PASSWORD: rojer
+      POSTGRES_DB: rojer
+    ports:
+      - "5435:5432"
+    volumes:
+      - rojer-cc-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rojer -d rojer"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    container_name: rojer-cc-app
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.cc
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?à poser dans .env.cc-local}
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:?à poser dans .env.cc-local}
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env.cc-local
+    environment:
+      # Comme l'add-on : l'URL brute, le script de démarrage y ajoute le reste.
+      POSTGRESQL_ADDON_URI: postgresql://rojer:rojer@db:5432/rojer
+      # Seul hôte admis en clair : la base de cette pile, sur le réseau Docker.
+      BASE_EN_CLAIR_HOTE: db
+      NODE_ENV: production
+      STORAGE_DRIVER: local
+      STORAGE_LOCAL_PATH: /app/storage
+      EMAIL_DRIVER: console
+      PUBLIC_APP_URL: http://localhost:8080
+    ports:
+      - "8080:8080"
+    volumes:
+      - rojer-cc-fichiers:/app/storage
+
+volumes:
+  rojer-cc-db:
+  rojer-cc-fichiers:

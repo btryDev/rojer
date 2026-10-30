@@ -1,0 +1,8 @@
+# Contexte du build de la pile locale CC (docker/Dockerfile.cc) : le dépôt
+# tel que Clever Cloud le reçoit de git, sans ce que git ignore.
+node_modules
+.next
+.git
+.env*
+storage
+.claude
