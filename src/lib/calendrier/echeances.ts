@@ -1,5 +1,4 @@
-import { requireUser } from "@/lib/auth/require-user";
-import { prisma } from "@/lib/prisma";
+import { requireCompte, type Db } from "@/lib/auth/compte";
 import { cache } from "react";
 import { prestatairesDuRendu } from "@/lib/prestataires/queries";
 import { duerpDuRendu } from "@/lib/duerps/queries";
@@ -258,9 +257,11 @@ export function filtrerParBatiment<T extends { batiment: BatimentEcheance | null
   );
 }
 
-/** Ce qu'une source reçoit : le périmètre déjà vérifié (ownership) et
- *  l'horloge du jour — elle n'a rien d'autre à savoir. */
+/** Ce qu'une source reçoit : le périmètre déjà vérifié (ownership), le
+ *  client borné au compte (ADR-051) et l'horloge du jour — elle n'a rien
+ *  d'autre à savoir. */
 type ContexteSource = {
+  db: Db;
   etablissementId: string;
   scope: {
     etablissementId: string;
@@ -647,11 +648,12 @@ export function echeanceLegionelles({
  * planifier.
  */
 const sourceActions: SourceEcheances = async ({
+  db,
   scope,
   aujourdhui,
   etablissementId,
 }) => {
-  const actions = await prisma.action.findMany({
+  const actions = await db.action.findMany({
     where: {
       ...scope,
       statut: { in: ["ouverte", "en_cours"] },
@@ -732,11 +734,12 @@ const sourcePrestataires: SourceEcheances = async ({
 };
 
 const sourcePermisFeu: SourceEcheances = async ({
+  db,
   scope,
   aujourdhui,
   etablissementId,
 }) => {
-  const permis = await prisma.permisFeu.findMany({
+  const permis = await db.permisFeu.findMany({
     where: {
       ...scope,
       // Seul le cycle de vie décide de la sortie du calendrier — jamais la
@@ -758,11 +761,12 @@ const sourcePermisFeu: SourceEcheances = async ({
 };
 
 const sourcePlansPrevention: SourceEcheances = async ({
+  db,
   scope,
   aujourdhui,
   etablissementId,
 }) => {
-  const plans = await prisma.planPrevention.findMany({
+  const plans = await db.planPrevention.findMany({
     where: {
       ...scope,
       // Le cycle de vie décide, pas la date — symétriquement au module
@@ -869,8 +873,9 @@ const autresEcheancesDuRendu = cache(async function autresEcheancesDuRendu(
   instant: number,
 ): Promise<EcheanceCalendrier[]> {
   const aujourdhui = new Date(instant);
-  const user = await requireUser();
+  const { user, db } = await requireCompte();
   const ctx: ContexteSource = {
+    db,
     etablissementId,
     scope: {
       etablissementId,
