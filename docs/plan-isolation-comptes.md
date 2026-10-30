@@ -153,8 +153,12 @@ Corrigé avant la PR, chaque fois éprouvé en cassant la correction :
   cache et client) — l'identifiant est lu une seule fois.
 
 Reste ouvert, à traiter au lot 2b :
-- **portée « établissement »** (jeton prestataire, MCP par clé) : à concevoir
-  avec des `include`/`select` bornés eux aussi, ou un client qui les refuse ;
+- ~~**portée « établissement »** (jeton prestataire, MCP par clé) : à concevoir
+  avec des `include`/`select` bornés eux aussi, ou un client qui les refuse ;~~
+  [2026-10-30 : décision de la propriétaire — jeton et MCP par clé reçoivent le
+  client borné au **compte propriétaire** de l'établissement ; la portée
+  « établissement » reste une amélioration possible. ADR-051, « Accès sans
+  session ».]
 - **oracle d'existence par unicité** : un `upsert`/`connectOrCreate` qui laisse
   l'appelant fixer un identifiant ou un champ unique global (slug) révèle par
   P2002 qu'une ligne existe ailleurs — à vérifier à chaque module migré ;

@@ -222,6 +222,22 @@ fragile plutôt que forcer) :
 - une ligne d'un autre compte rend P2025 / P2018, comme une ligne absente : à
   vérifier au lot 2 que chaque appelant le traduit en 404, sans oracle.
 
+## Accès sans session : jetons, MCP, pages publiques (décision du 2026-10-30)
+
+Décision de la propriétaire, lot 2b : la portée « établissement » du § 2 n'est
+pas construite maintenant.
+- **Prestataire porteur d'un jeton, MCP par clé** : le client est borné au
+  **compte propriétaire de l'établissement**, résolu côté serveur (jeton →
+  établissement → `Entreprise.userId` ; clé MCP → établissement configuré →
+  son propriétaire). Aucun accès à un autre compte. À l'intérieur du compte,
+  les filtres par établissement déjà écrits dans le code restent ; le moindre
+  privilège entre établissements d'un même compte reste une amélioration
+  possible (portée « établissement », avec `include` et `select` bornés).
+- **Accès publics** (registre d'accessibilité par slug, vérification publique
+  d'une signature), **compteurs techniques** (limite de débit, quotas d'OTP) et
+  **recherche d'un jeton par son empreinte** : modules NOMMÉS hors compte, avec
+  leur motif (`imports.test.ts`).
+
 ## Relecture par la session GestBAT (2026-10-30)
 
 Demandée par la propriétaire. Verdict : conception juste, RLS écartée à
