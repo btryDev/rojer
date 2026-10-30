@@ -8,7 +8,7 @@ import {
   PutObjectCommand,
 } from "@aws-sdk/client-s3";
 import type { FileStorage, StorageKey } from "./types";
-import { ErreurStockage, FichierIntrouvable } from "./erreurs";
+import { ErreurStockage, FichierIntrouvable, verifierCleStockage } from "./erreurs";
 
 /**
  * Pilote S3 du `FileStorage`, pour Cellar, le stockage objet de Clever Cloud
@@ -39,7 +39,7 @@ import { ErreurStockage, FichierIntrouvable } from "./erreurs";
  */
 
 export interface ClientS3 {
-  send(commande: object): Promise<unknown>;
+  send(commande: object, options?: { abortSignal?: AbortSignal }): Promise<unknown>;
 }
 
 /** L'hôte de Cellar, nu ou en URL, rendu en URL https. */
@@ -48,12 +48,17 @@ export function pointDAcces(hote: string): string {
   return /^https?:\/\//.test(h) ? h : `https://${h}`;
 }
 
-/** Ce que le SDK rend pour un objet absent : 404, `NoSuchKey` ou `NotFound`. */
+/**
+ * Un OBJET absent : `NoSuchKey` (lecture) ou `NotFound` (HEAD, sans corps
+ * d'erreur), et 404. Pas « tout 404 » : `NoSuchBucket` (bucket mal nommé ou
+ * pas créé) est une panne de configuration, qui doit se voir comme telle.
+ * Limite : un HEAD sur un bucket absent rend aussi `NotFound` ; `exists` ne
+ * sert qu'à l'inventaire du ZIP de contrôle, en lecture.
+ */
 function estAbsent(e: unknown): boolean {
   const err = e as { name?: string; $metadata?: { httpStatusCode?: number } };
   return (
-    err?.name === "NoSuchKey" ||
-    err?.name === "NotFound" ||
+    (err?.name === "NoSuchKey" || err?.name === "NotFound") &&
     err?.$metadata?.httpStatusCode === 404
   );
 }
@@ -67,17 +72,25 @@ function messageDe(e: unknown): string {
 }
 
 export class S3FileStorage implements FileStorage {
+  /**
+   * `delaiMs` borne l'opération ENTIÈRE, lecture du corps comprise, comme
+   * `fetchAvecDelai` pour Supabase : le `requestTimeout` du SDK s'arrête aux
+   * en-têtes de la réponse, et sans `throwOnRequestTimeout` il ne fait que
+   * journaliser. Un signal d'abandon par opération, lui, coupe la requête et
+   * son corps.
+   */
   constructor(
     private readonly client: ClientS3,
     private readonly bucket: string,
+    private readonly delaiMs: number,
   ) {}
 
-  /** Même règle que les autres pilotes : pas de remontée, pas de chemin absolu. */
   private verifier(key: StorageKey): string {
-    if (!key || key.includes("..") || key.startsWith("/") || key.includes("\\")) {
-      throw new ErreurStockage(`Clé de stockage invalide : ${key}`);
-    }
-    return key;
+    return verifierCleStockage(key);
+  }
+
+  private echeance(): { abortSignal: AbortSignal } {
+    return { abortSignal: AbortSignal.timeout(this.delaiMs) };
   }
 
   private echec(operation: string, key: StorageKey, e: unknown): never {
@@ -90,6 +103,7 @@ export class S3FileStorage implements FileStorage {
       // Même contrat que les autres pilotes : « Écrase si la clé existe déjà ».
       await this.client.send(
         new PutObjectCommand({ Bucket: this.bucket, Key: cle, Body: data, ContentType: mime }),
+        this.echeance(),
       );
     } catch (e) {
       this.echec("l'écriture", key, e);
@@ -98,10 +112,13 @@ export class S3FileStorage implements FileStorage {
 
   async get(key: StorageKey): Promise<Buffer> {
     const cle = this.verifier(key);
+    // La même échéance pour la requête et la lecture du corps.
+    const echeance = this.echeance();
     let reponse: { Body?: { transformToByteArray(): Promise<Uint8Array> } };
     try {
       reponse = (await this.client.send(
         new GetObjectCommand({ Bucket: this.bucket, Key: cle }),
+        echeance,
       )) as typeof reponse;
     } catch (e) {
       if (estAbsent(e)) throw new FichierIntrouvable(key);
@@ -120,7 +137,7 @@ export class S3FileStorage implements FileStorage {
     // pilotes. Une vraie erreur (droits, réseau) remonte.
     const cle = this.verifier(key);
     try {
-      await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: cle }));
+      await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: cle }), this.echeance());
     } catch (e) {
       if (!estAbsent(e)) this.echec("la suppression", key, e);
     }
@@ -129,7 +146,7 @@ export class S3FileStorage implements FileStorage {
   async exists(key: StorageKey): Promise<boolean> {
     const cle = this.verifier(key);
     try {
-      await this.client.send(new HeadObjectCommand({ Bucket: this.bucket, Key: cle }));
+      await this.client.send(new HeadObjectCommand({ Bucket: this.bucket, Key: cle }), this.echeance());
       return true;
     } catch (e) {
       if (estAbsent(e)) return false;

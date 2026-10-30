@@ -99,8 +99,13 @@ Côté propriétaire, sur la préproduction puis la production Clever Cloud :
 1. Créer un add-on **Cellar** et le lier à l'application : il injecte
    `CELLAR_ADDON_HOST`, `CELLAR_ADDON_KEY_ID` et `CELLAR_ADDON_KEY_SECRET`.
 2. Créer un bucket **privé** (aucune ACL publique, aucune politique publique),
-   sans tiret bas dans le nom, et y **activer le versionnage** dès la création
-   (doc Cellar : il ne se désactive plus ensuite, il se suspend).
+   sans tiret bas dans le nom. **Versionnage : à trancher avant de créer le
+   bucket**, il ne se désactive plus ensuite (doc Cellar). Pour : un fichier
+   écrasé ou supprimé par erreur se récupère (B13, BA 11). Contre : une
+   suppression ne pose qu'un marqueur, les anciennes versions restent — dont
+   les données de salariés qu'un effacement RGPD doit faire disparaître —,
+   sauf règle de cycle de vie qui expire les versions anciennes (à vérifier
+   chez Cellar). Sans décision, ne pas l'activer.
 3. Poser `STORAGE_DRIVER=s3` et `STORAGE_BUCKET=<nom du bucket>`.
 4. Recette : déposer un rapport, le relire, le supprimer ; vérifier dans les
    journaux la ligne `[stockage] pilote s3 (Cellar), bucket « … »`.

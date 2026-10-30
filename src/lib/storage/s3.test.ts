@@ -21,12 +21,14 @@ function erreurS3(name: string, statut: number): Erreur {
   return e;
 }
 
-function s3EnMemoire(panne?: Erreur) {
+function s3EnMemoire(panne?: Erreur, delaiMs = 5_000) {
   const objets = new Map<string, { corps: Buffer; type?: string }>();
   const commandes: object[] = [];
+  const signaux: (AbortSignal | undefined)[] = [];
   const client: ClientS3 = {
-    async send(commande) {
+    async send(commande, options) {
       commandes.push(commande);
+      signaux.push(options?.abortSignal);
       if (panne) throw panne;
       const { input } = commande as { input: { Bucket: string; Key: string; Body?: Buffer; ContentType?: string } };
       const cle = `${input.Bucket}/${input.Key}`;
@@ -35,6 +37,14 @@ function s3EnMemoire(panne?: Erreur) {
         return {};
       }
       if (commande instanceof GetObjectCommand) {
+        // Un service qui ne répond jamais : seule l'échéance l'interrompt.
+        if (input.Key.startsWith("lente/")) {
+          return new Promise((_, rejeter) =>
+            options?.abortSignal?.addEventListener("abort", () =>
+              rejeter(Object.assign(new Error("aborted"), { name: "AbortError" })),
+            ),
+          );
+        }
         const o = objets.get(cle);
         if (!o) throw erreurS3("NoSuchKey", 404);
         return { Body: { transformToByteArray: async () => new Uint8Array(o.corps) } };
@@ -50,7 +60,7 @@ function s3EnMemoire(panne?: Erreur) {
       throw new Error("commande inattendue");
     },
   };
-  return { stockage: new S3FileStorage(client, "rojer-pieces"), objets, commandes };
+  return { stockage: new S3FileStorage(client, "rojer-pieces", delaiMs), objets, commandes, signaux };
 }
 
 describe("pilote s3 — les quatre opérations", () => {
@@ -104,6 +114,33 @@ describe("pilote s3 — erreurs", () => {
     const e = await stockage.get("a/b.pdf").catch((x: unknown) => x);
     expect(e).toBeInstanceOf(ErreurStockage);
     expect(e).not.toBeInstanceOf(FichierIntrouvable);
+  });
+});
+
+describe("pilote s3 — échéance et bucket", () => {
+  it("chaque opération porte une échéance", async () => {
+    const { stockage, signaux } = s3EnMemoire();
+    await stockage.put("a/b.txt", Buffer.from("x"), "text/plain");
+    await stockage.exists("a/b.txt");
+    await stockage.get("a/b.txt");
+    await stockage.delete("a/b.txt");
+    expect(signaux).toHaveLength(4);
+    expect(signaux.every((s) => s instanceof AbortSignal)).toBe(true);
+  });
+
+  it("un service qui ne répond pas : ErreurStockage à l'échéance, pas une attente sans fin", async () => {
+    const { stockage } = s3EnMemoire(undefined, 30);
+    const e = await stockage.get("lente/rapport.pdf").catch((x: unknown) => x);
+    expect(e).toBeInstanceOf(ErreurStockage);
+    expect(e).not.toBeInstanceOf(FichierIntrouvable);
+  });
+
+  it("un bucket absent (NoSuchBucket) est une panne, pas un fichier introuvable", async () => {
+    const { stockage } = s3EnMemoire(erreurS3("NoSuchBucket", 404));
+    const e = await stockage.get("a/b.pdf").catch((x: unknown) => x);
+    expect(e).toBeInstanceOf(ErreurStockage);
+    expect(e).not.toBeInstanceOf(FichierIntrouvable);
+    await expect(stockage.delete("a/b.pdf")).rejects.toBeInstanceOf(ErreurStockage);
   });
 });
 

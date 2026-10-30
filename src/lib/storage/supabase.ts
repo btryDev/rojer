@@ -4,7 +4,7 @@
 // client (2026-09-27).
 import "server-only";
 import type { FileStorage, StorageKey } from "./types";
-import { ErreurStockage, FichierIntrouvable } from "./erreurs";
+import { ErreurStockage, FichierIntrouvable, verifierCleStockage } from "./erreurs";
 
 /**
  * Pilote Supabase Storage du `FileStorage` (2026-09-27, `lot/stockage-supabase`).
@@ -67,12 +67,8 @@ export class SupabaseFileStorage implements FileStorage {
     private readonly bucket: string,
   ) {}
 
-  /** Même règle que le pilote local : pas de remontée, pas de chemin absolu. */
   private verifier(key: StorageKey): string {
-    if (!key || key.includes("..") || key.startsWith("/") || key.includes("\\")) {
-      throw new ErreurStockage(`Clé de stockage invalide : ${key}`);
-    }
-    return key;
+    return verifierCleStockage(key);
   }
 
   private echec(operation: string, key: StorageKey, e: ErreurService): never {

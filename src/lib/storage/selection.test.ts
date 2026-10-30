@@ -230,4 +230,10 @@ describe("pilote s3 (Cellar)", () => {
       expect(e.message).not.toContain("secret-qui-ne-doit-pas-sortir");
     },
   );
+
+  it("un hôte en http:// est refusé : les fichiers ne transitent jamais en clair", () => {
+    poser({ ...S3_COMPLET, NODE_ENV: "production", CELLAR_ADDON_HOST: "http://cellar.exemple.fr" });
+    expect(stockageEnService()).toBe(false);
+    expect(() => getStorage()).toThrow(/https/);
+  });
 });

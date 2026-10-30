@@ -54,8 +54,9 @@ export {
  * contrôle doivent y tenir sur un lien lent, d'où une minute plutôt que
  * quelques secondes. Au-delà, l'opération échoue en `ErreurStockage` comme
  * une panne : l'écran dit `MESSAGE_ECHEC_ENREGISTREMENT`, rien n'est écrit en
- * base. Le pilote S3 (Cellar) prend le même délai, par le `requestTimeout`
- * de son gestionnaire HTTP, et un essai de plus au plus (`maxAttempts`).
+ * base. Le pilote S3 (Cellar) prend le même délai, par opération entière
+ * (signal d'abandon, `s3.ts`), sans second essai : le pire cas reste une
+ * minute, comme pour Supabase.
  */
 export const DELAI_STOCKAGE_MS = 60_000;
 
@@ -78,6 +79,16 @@ const VARIABLES_SUPABASE = [
  * répond avant qu'on lise le formulaire) : les deux ne peuvent pas se
  * contredire. Le motif nomme les variables, jamais leur valeur.
  */
+/** Le motif quand des variables d'un pilote manquent, ou `null`. Nomme, ne cite jamais. */
+function variablesManquantes(driver: string, variables: readonly string[]): string | null {
+  const manquantes = variables.filter((v) => !nettoyer(process.env[v]));
+  if (manquantes.length === 0) return null;
+  return (
+    `STORAGE_DRIVER vaut « ${driver} », mais ${manquantes.join(", ")} ` +
+    `${manquantes.length > 1 ? "ne sont pas définies" : "n'est pas définie"}.`
+  );
+}
+
 function refusDuStockage(): string | null {
   const driver = process.env.STORAGE_DRIVER ?? "local";
   if (driver === "local") {
@@ -92,24 +103,20 @@ function refusDuStockage(): string | null {
   if (driver === "supabase") {
     // Nettoyées avant d'être jugées : une variable faite d'un seul retour à la
     // ligne est « manquante », pas présente.
-    const manquantes = VARIABLES_SUPABASE.filter((v) => !nettoyer(process.env[v]));
-    if (manquantes.length > 0)
-      return (
-        `STORAGE_DRIVER vaut « supabase », mais ${manquantes.join(", ")} ` +
-        `${manquantes.length > 1 ? "ne sont pas définies" : "n'est pas définie"}.`
-      );
+    const manque = variablesManquantes("supabase", VARIABLES_SUPABASE);
+    if (manque) return manque;
     // La FORME de la clé, jugée avant tout appel : une clé mal collée ou d'un
     // autre format partait jusqu'à Storage, qui répondait « Invalid Compact
     // JWS » (production, 2026-09-27). `cle-service.ts`.
     return refusDeLaCle(formeDeLaCle(nettoyer(process.env.SUPABASE_SERVICE_ROLE_KEY)));
   }
   if (driver === "s3") {
-    const manquantes = VARIABLES_S3.filter((v) => !nettoyer(process.env[v]));
-    if (manquantes.length > 0)
-      return (
-        `STORAGE_DRIVER vaut « s3 », mais ${manquantes.join(", ")} ` +
-        `${manquantes.length > 1 ? "ne sont pas définies" : "n'est pas définie"}.`
-      );
+    const manque = variablesManquantes("s3", VARIABLES_S3);
+    if (manque) return manque;
+    // Les fichiers transitent par ce lien : jamais en clair.
+    if (/^http:\/\//i.test(nettoyer(process.env.CELLAR_ADDON_HOST))) {
+      return "CELLAR_ADDON_HOST est en http:// : le stockage exige une connexion chiffrée (https).";
+    }
     return null;
   }
   return `Driver de stockage non supporté : ${driver}. Utiliser « local » (développement), « supabase » ou « s3 ».`;
@@ -170,12 +177,18 @@ export function getStorage(): FileStorage {
       // de contrôle avec le SDK v3 récent.
       requestChecksumCalculation: "WHEN_REQUIRED",
       responseChecksumValidation: "WHEN_REQUIRED",
-      requestHandler: { requestTimeout: DELAI_STOCKAGE_MS, connectionTimeout: 10_000 },
-      maxAttempts: 2,
+      // Filet sous l'échéance par opération de `S3FileStorage` : la connexion
+      // et la réponse se bornent aussi au niveau du gestionnaire HTTP.
+      requestHandler: {
+        requestTimeout: DELAI_STOCKAGE_MS,
+        connectionTimeout: 10_000,
+        throwOnRequestTimeout: true,
+      },
+      maxAttempts: 1,
     });
     // Sans conversion : `S3Client` satisfait `ClientS3` tel quel.
     const s3: ClientS3 = client;
-    _storage = new S3FileStorage(s3, bucket);
+    _storage = new S3FileStorage(s3, bucket, DELAI_STOCKAGE_MS);
     return _storage;
   }
 

@@ -49,3 +49,15 @@ export class FichierIntrouvable extends ErreurStockage {
     this.name = "FichierIntrouvable";
   }
 }
+
+/**
+ * La règle de clé des pilotes distants (Supabase, S3) : ni vide, ni remontée,
+ * ni chemin absolu, ni séparateur Windows. Une seule écriture, pour qu'un
+ * durcissement futur ne manque aucun pilote (revue de la PR #129).
+ */
+export function verifierCleStockage(key: string): string {
+  if (!key || key.includes("..") || key.startsWith("/") || key.includes("\\")) {
+    throw new ErreurStockage(`Clé de stockage invalide : ${key}`);
+  }
+  return key;
+}
