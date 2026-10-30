@@ -268,8 +268,10 @@ relevé de `creerEnLotVerifie`, et `createMany` deviendrait sûr par
 construction. Prix : recopier `entrepriseId` sur une trentaine de tables
 (migration de données en production), des relations plus lourdes à écrire,
 lever le refus des clés composées (point 2). Elle ne protège que les
-écritures : les lectures restent bornées par le client. **À trancher par la
-propriétaire** ; pas engagée.
+écritures : les lectures restent bornées par le client. ~~**À trancher par la
+propriétaire** ; pas engagée.~~ [2026-10-30 : **écartée** par la propriétaire
+(« on ne la met pas en place »). Le contrôle des clés à l'écriture reste celui
+du client borné.]
 
 ## Option comparée, non retenue : la RLS par compte en base
 
