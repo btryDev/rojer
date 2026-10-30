@@ -1,10 +1,12 @@
 # ADR-051 — Chaque requête Prisma est bornée au compte par le client lui-même
 
-- **Statut** : **proposée**, 2026-10-30. Décisions de la propriétaire du même
+- **Statut** : **acceptée**, 2026-10-30 (feu vert de la propriétaire, après
+  les constats du lot 1). ~~Proposée~~ le même jour. Décisions de la propriétaire du même
   jour (transmises par la session de la bascule) : Q1 client explicite, Q2
   garde anti-DDL étendue à `scripts/`, lot 0 et lot 1 tout de suite ; les
   lots 2 à 5 ne bloquent pas la bascule. Reste à acceptation : les constats
   du lot 1 (`docs/plan-isolation-comptes.md` § 6), qui entreront ici.
+  [Entrés : « Constats du lot 1 ».]
 - **Origine** : « Je veux qu'on solidifie l'isolation » (propriétaire,
   2026-10-30) ; voie retenue le même jour : l'isolation applicative par une
   extension Prisma, la RLS par compte n'étant qu'une option comparée (§ 6).
@@ -202,6 +204,17 @@ fragile plutôt que forcer) :
   refuse, et ses huit appels passent par une **vérification nommée** — les
   parents comptés par le client de la transaction (`tx`, donc dans la même
   transaction) avant l'insertion. Inventaire au lot 3 ;
+  [2026-10-30, lot 2a : **le mécanisme a changé à l'épreuve.** Un jeton
+  (`Symbol`) ou l'identité d'un objet ne survivent pas : Prisma recopie les
+  arguments en profondeur avant l'extension (constaté : « tableau identique :
+  false »). Ce qui survit, ce sont les valeurs. Le client borné retient les
+  identifiants rendus par une lecture bornée `select: { id: true }` — elle
+  prouve qu'ils sont dans la portée — et n'accepte un `createMany` que si
+  chacune de ses clés étrangères vers une ligne d'un compte en fait partie.
+  `creerEnLotVerifie(tx, modèle, lignes)` fait cette lecture puis insère ; un
+  parent créé dans la même transaction est vu. Ni drapeau ni jeton : seule une
+  lecture réellement bornée ouvre la porte, pour les identifiants qu'elle a
+  rendus. Relevé par portée, borné en taille.]
 - les écritures imbriquées autres que `create`, `connect` et `disconnect`
   (`update`, `upsert`, `delete`, `set` sous une relation) sont refusées par le
   prototype : leur usage dans le code est à inventorier au lot 3, chacune
