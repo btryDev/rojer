@@ -4,18 +4,20 @@
 // SERVEUR à l'inscription et à la réinitialisation (`lib/auth/actions.ts`),
 // et annoncés dans le formulaire. Pas de règle de composition (V6.2.5 : ni
 // majuscule ni chiffre imposés). Pas de plafond ici : c'est le fournisseur qui
-// le fixe (72 octets chez Supabase, limite de bcrypt).
+// le fixe (128 caractères, `better-auth.ts`).
 //
 // À la CONNEXION, aucune règle de longueur : les comptes créés sous l'ancienne
 // règle (8 caractères) doivent pouvoir entrer, et refuser avant même d'avoir
 // interrogé le fournisseur renseignerait sur la règle sans rien protéger.
 //
-// LIMITE : la règle de l'app ne lie pas le fournisseur d'identité. Un porteur
+// ~~LIMITE : la règle de l'app ne lie pas le fournisseur d'identité. Un porteur
 // de session peut appeler directement l'API Auth de Supabase
 // (`PUT /auth/v1/user`) avec un mot de passe court ; seul le réglage
 // « Minimum password length » du projet Supabase (Authentication → Policies)
 // le refuse. → bascule : `minPasswordLength: 12` dans `emailAndPassword` de
-// Better Auth, qui vérifie alors côté serveur sur tous les chemins.
+// Better Auth, qui vérifie alors côté serveur sur tous les chemins.~~
+// [2026-10-30, ADR-052 : fait — `better-auth.ts` reprend cette constante, et
+// aucune route HTTP de Better Auth n'est exposée.]
 //
 // Module sans dépendance : il est lu par les formulaires clients comme par les
 // actions serveur.

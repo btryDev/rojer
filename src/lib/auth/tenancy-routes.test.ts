@@ -61,18 +61,10 @@ const PUBLIQUES = new Map<string, string>([
       "`getRegistrePublicParSlug` (registre publié, champs publiables).",
   ],
   [
-    ".well-known/oauth-protected-resource/api/mcp/route.ts:GET",
-    "Métadonnées de ressource protégée OAuth (RFC 9728) : document public, " +
-      "c'est lui qui dit au client où s'authentifier.",
-  ],
-  [
-    ".well-known/oauth-protected-resource/api/mcp/route.ts:OPTIONS",
-    "Pré-vol CORS du document précédent.",
-  ],
-  [
-    "auth/callback/route.ts:GET",
-    "Retour du lien d'e-mail Supabase : échange un code contre une session. " +
-      "Il n'y a pas encore de session à vérifier — c'est cette route qui la crée.",
+    "auth/verification/route.ts:GET",
+    "Lien de confirmation d'adresse (ADR-052) : Better Auth juge le jeton du " +
+      "lien. Il n'y a pas de session à vérifier — le compte n'est pas encore " +
+      "confirmé, et la route n'en ouvre aucune.",
   ],
 ]);
 

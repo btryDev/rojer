@@ -1,20 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { APIError } from "better-auth/api";
 
 const h = vi.hoisted(() => ({
   redirect: vi.fn((cible: string) => {
     throw new Error(`NEXT_REDIRECT ${cible}`);
   }),
+  // `auth.api` de Better Auth (ADR-052) : chaque appel reçoit un objet
+  // `{ body?, headers? }` et lève une `APIError` en cas de refus.
   auth: {
-    signInWithPassword: vi.fn(async () => ({ error: null })),
-    signUp: vi.fn<(creds: unknown) => Promise<unknown>>(async () => ({
-      data: { session: null },
-      error: null,
-    })),
-    resetPasswordForEmail: vi.fn<
-      (email: string, options: unknown) => Promise<unknown>
-    >(async () => ({ error: null })),
-    updateUser: vi.fn<(attrs: unknown) => Promise<unknown>>(async () => ({ error: null })),
-    signOut: vi.fn(async () => ({ error: null })),
+    signInEmail: vi.fn<(arg: { body: unknown; headers?: Headers }) => Promise<unknown>>(async () => ({})),
+    signUpEmail: vi.fn<(arg: { body: Record<string, unknown> }) => Promise<unknown>>(async () => ({})),
+    requestPasswordReset: vi.fn<(arg: { body: Record<string, unknown> }) => Promise<unknown>>(
+      async () => ({ status: true }),
+    ),
+    resetPassword: vi.fn<(arg: { body: Record<string, unknown> }) => Promise<unknown>>(
+      async () => ({ status: true }),
+    ),
+    signOut: vi.fn(async () => ({ success: true })),
   },
   entetes: new Headers({ "x-forwarded-for": "203.0.113.7" }),
   cookiesEffaces: [] as string[],
@@ -31,9 +33,7 @@ vi.mock("next/headers", () => ({
   headers: async () => h.entetes,
   cookies: async () => ({ delete: (nom: string) => h.cookiesEffaces.push(nom) }),
 }));
-vi.mock("@/lib/supabase/server", () => ({
-  createClient: async () => ({ auth: h.auth }),
-}));
+vi.mock("./better-auth", () => ({ auth: { api: h.auth } }));
 vi.mock("@/lib/auth/scope", () => ({ COOKIE_ETABLISSEMENT_ACTIF: "etablissement-actif" }));
 vi.mock("@/lib/securite/limite-debit", async (original) => ({
   ...(await original<typeof import("@/lib/securite/limite-debit")>()),
@@ -61,10 +61,11 @@ async function cibleDeRedirection(p: Promise<unknown>): Promise<string> {
 
 beforeEach(() => {
   h.redirect.mockClear();
-  h.auth.signUp.mockClear();
-  h.auth.signInWithPassword.mockClear();
-  h.auth.resetPasswordForEmail.mockClear();
-  h.auth.updateUser.mockClear();
+  for (const f of Object.values(h.auth)) f.mockReset();
+  h.auth.signInEmail.mockResolvedValue({});
+  h.auth.signUpEmail.mockResolvedValue({});
+  h.auth.requestPasswordReset.mockResolvedValue({ status: true });
+  h.auth.resetPassword.mockResolvedValue({ status: true });
   h.limite.mockClear();
   h.limite.mockResolvedValue({ ok: true });
   h.cookiesEffaces = [];
@@ -102,31 +103,24 @@ describe("connexion : le champ `next` ne mène que dans l'application (C1)", () 
  * Le lien de confirmation et celui de réinitialisation partent par mail au
  * nom de Rojer. Leur adresse de retour était lue dans un champ caché du
  * formulaire : un POST forgé faisait envoyer par Rojer un lien vers un site
- * tiers, qui recevait le code d'échange (audit du 2026-10-13, C3). Elle vient
- * désormais du serveur, `publicAppUrl`, comme les autres liens envoyés.
+ * tiers (audit du 2026-10-13, C3). Elle vient du serveur (`liens-compte.ts`,
+ * testé à part) : aucune action ne transmet d'adresse à Better Auth.
  */
-describe("liens envoyés par mail : l'origine vient du serveur (C3)", () => {
-  const forge = { origin: "https://evil.tld" };
+describe("liens envoyés par mail : aucune adresse ne vient du formulaire (C3)", () => {
+  const forge = { origin: "https://evil.tld", callbackURL: "https://evil.tld", redirectTo: "https://evil.tld" };
 
-  it("inscription", async () => {
+  it("inscription et mot de passe oublié ne passent que l'adresse et le mot de passe", async () => {
     vi.stubEnv("PUBLIC_APP_URL", "https://app.rojer.fr");
     await expect(
-      signUpAction(
-        {},
-        formulaire({ email: "a@exemple.fr", password: "motdepasse-solide", ...forge }),
-      ),
+      signUpAction({}, formulaire({ email: "a@exemple.fr", password: "motdepasse-solide", ...forge })),
     ).rejects.toThrow("NEXT_REDIRECT");
-    expect(h.auth.signUp.mock.calls[0][0]).toMatchObject({
-      options: { emailRedirectTo: "https://app.rojer.fr/auth/callback" },
-    });
-  });
-
-  it("mot de passe oublié, adresse publique posée avec un « / » final", async () => {
-    vi.stubEnv("PUBLIC_APP_URL", "https://app.rojer.fr/");
     await requestPasswordResetAction({}, formulaire({ email: "a@exemple.fr", ...forge }));
-    expect(h.auth.resetPasswordForEmail.mock.calls[0][1]).toEqual({
-      redirectTo: "https://app.rojer.fr/auth/reinitialisation",
-    });
+    expect(Object.keys(h.auth.signUpEmail.mock.calls[0][0].body).sort()).toEqual([
+      "email",
+      "name",
+      "password",
+    ]);
+    expect(h.auth.requestPasswordReset.mock.calls[0][0].body).toEqual({ email: "a@exemple.fr" });
   });
 
   it("refuse d'envoyer un lien quand l'adresse publique est inconnue en production", async () => {
@@ -134,16 +128,65 @@ describe("liens envoyés par mail : l'origine vient du serveur (C3)", () => {
     vi.stubEnv("PUBLIC_APP_URL", "");
     const inscription = await signUpAction(
       {},
-      formulaire({ email: "a@exemple.fr", password: "motdepasse-solide", ...forge }),
+      formulaire({ email: "a@exemple.fr", password: "motdepasse-solide" }),
     );
-    const oubli = await requestPasswordResetAction(
-      {},
-      formulaire({ email: "a@exemple.fr", ...forge }),
-    );
+    const oubli = await requestPasswordResetAction({}, formulaire({ email: "a@exemple.fr" }));
     expect(inscription.error).toBeTruthy();
     expect(oubli.error).toBeTruthy();
-    expect(h.auth.signUp).not.toHaveBeenCalled();
-    expect(h.auth.resetPasswordForEmail).not.toHaveBeenCalled();
+    expect(h.auth.signUpEmail).not.toHaveBeenCalled();
+    expect(h.auth.requestPasswordReset).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Ce que l'écran dit, sans renseigner un tiers sur qui a un compte.
+ */
+describe("réponses de Better Auth traduites pour l'écran", () => {
+  it("connexion d'un compte non confirmé : le dire, un nouveau lien est parti", async () => {
+    h.auth.signInEmail.mockRejectedValue(
+      new APIError("FORBIDDEN", { code: "EMAIL_NOT_VERIFIED", message: "Email not verified" }),
+    );
+    const r = await signInAction({}, formulaire({ email: "a@exemple.fr", password: "x" }));
+    expect(r.error).toMatch(/pas encore confirmée.*nouveau lien/);
+  });
+
+  it("connexion refusée pour toute autre raison : « Identifiants invalides »", async () => {
+    h.auth.signInEmail.mockRejectedValue(
+      new APIError("UNAUTHORIZED", { code: "INVALID_EMAIL_OR_PASSWORD", message: "x" }),
+    );
+    const r = await signInAction({}, formulaire({ email: "a@exemple.fr", password: "x" }));
+    expect(r.error).toBe("Identifiants invalides");
+  });
+
+  it("inscription d'une adresse déjà inscrite : même suite qu'une nouvelle", async () => {
+    vi.stubEnv("PUBLIC_APP_URL", "https://app.rojer.fr");
+    const nouvelle = await cibleDeRedirection(
+      signUpAction({}, formulaire({ email: "a@exemple.fr", password: "douze-caract" })),
+    );
+    h.auth.signUpEmail.mockRejectedValue(
+      new APIError("UNPROCESSABLE_ENTITY", { code: "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL", message: "x" }),
+    );
+    const existante = await cibleDeRedirection(
+      signUpAction({}, formulaire({ email: "a@exemple.fr", password: "douze-caract" })),
+    );
+    expect(existante).toBe(nouvelle);
+    expect(nouvelle).toBe("/signup/verification-en-attente?email=a%40exemple.fr");
+  });
+
+  it("inscription en échec pour une autre raison : un message, pas de redirection", async () => {
+    vi.stubEnv("PUBLIC_APP_URL", "https://app.rojer.fr");
+    h.auth.signUpEmail.mockRejectedValue(new APIError("BAD_REQUEST", { code: "FAILED_TO_CREATE_USER", message: "x" }));
+    const r = await signUpAction({}, formulaire({ email: "a@exemple.fr", password: "douze-caract" }));
+    expect(r.error).toMatch(/n'a pas abouti/);
+  });
+
+  it("réinitialisation avec un jeton refusé : lien invalide", async () => {
+    h.auth.resetPassword.mockRejectedValue(new APIError("BAD_REQUEST", { code: "INVALID_TOKEN", message: "x" }));
+    const r = await definirMotDePasseAction(
+      {},
+      formulaire({ password: "douze-caract", confirm: "douze-caract", token: "mort" }),
+    );
+    expect(r.error).toMatch(/invalide ou a expiré/);
   });
 });
 
@@ -156,7 +199,7 @@ describe("mot de passe : douze caractères (B4)", () => {
     vi.stubEnv("PUBLIC_APP_URL", "https://app.rojer.fr");
     const r = await signUpAction({}, formulaire({ email: "a@exemple.fr", password: "onze-caract" }));
     expect(r.error).toMatch(/au moins 12 caractères/);
-    expect(h.auth.signUp).not.toHaveBeenCalled();
+    expect(h.auth.signUpEmail).not.toHaveBeenCalled();
   });
 
   it("l'inscription accepte douze caractères", async () => {
@@ -164,40 +207,54 @@ describe("mot de passe : douze caractères (B4)", () => {
     await expect(
       signUpAction({}, formulaire({ email: "a@exemple.fr", password: "douze-caract" })),
     ).rejects.toThrow("NEXT_REDIRECT");
-    expect(h.auth.signUp).toHaveBeenCalled();
+    expect(h.auth.signUpEmail).toHaveBeenCalled();
   });
 
   it("la connexion n'impose aucune longueur : un compte de l'ancienne règle entre", async () => {
     await expect(
       signInAction({}, formulaire({ email: "a@exemple.fr", password: "8carac!!" })),
     ).rejects.toThrow("NEXT_REDIRECT");
-    expect(h.auth.signInWithPassword).toHaveBeenCalled();
+    expect(h.auth.signInEmail).toHaveBeenCalled();
   });
 
   it("la réinitialisation refuse onze caractères côté serveur", async () => {
     const r = await definirMotDePasseAction(
       {},
-      formulaire({ password: "onze-caract", confirm: "onze-caract" }),
+      formulaire({ password: "onze-caract", confirm: "onze-caract", token: "t" }),
     );
     expect(r.error).toMatch(/au moins 12 caractères/);
-    expect(h.auth.updateUser).not.toHaveBeenCalled();
+    expect(h.auth.resetPassword).not.toHaveBeenCalled();
   });
 
   it("la réinitialisation refuse deux saisies différentes", async () => {
     const r = await definirMotDePasseAction(
       {},
-      formulaire({ password: "douze-caract", confirm: "douze-caracX" }),
+      formulaire({ password: "douze-caract", confirm: "douze-caracX", token: "t" }),
     );
     expect(r.error).toMatch(/ne correspondent pas/);
-    expect(h.auth.updateUser).not.toHaveBeenCalled();
+    expect(h.auth.resetPassword).not.toHaveBeenCalled();
   });
 
-  it("la réinitialisation pose un mot de passe conforme puis mène au dossier", async () => {
-    const cible = await cibleDeRedirection(
-      definirMotDePasseAction({}, formulaire({ password: "douze-caract", confirm: "douze-caract" })),
+  it("la réinitialisation sans jeton ne va pas plus loin", async () => {
+    const r = await definirMotDePasseAction(
+      {},
+      formulaire({ password: "douze-caract", confirm: "douze-caract" }),
     );
-    expect(h.auth.updateUser).toHaveBeenCalledWith({ password: "douze-caract" });
-    expect(cible).toBe("/entreprises");
+    expect(r.error).toMatch(/invalide ou a expiré/);
+    expect(h.auth.resetPassword).not.toHaveBeenCalled();
+  });
+
+  it("la réinitialisation pose le mot de passe avec le jeton du lien, puis renvoie à la connexion", async () => {
+    const cible = await cibleDeRedirection(
+      definirMotDePasseAction(
+        {},
+        formulaire({ password: "douze-caract", confirm: "douze-caract", token: "jeton-du-lien" }),
+      ),
+    );
+    expect(h.auth.resetPassword).toHaveBeenCalledWith({
+      body: { newPassword: "douze-caract", token: "jeton-du-lien" },
+    });
+    expect(cible).toBe("/login?reinitialise=1");
   });
 });
 
@@ -212,7 +269,7 @@ describe("limitation de débit des parcours d'entrée", () => {
     h.limite.mockResolvedValue(refus);
     const r = await signInAction({}, formulaire({ email: "a@exemple.fr", password: "x" }));
     expect(r.error).toMatch(/Trop de tentatives.*10 minutes/);
-    expect(h.auth.signInWithPassword).not.toHaveBeenCalled();
+    expect(h.auth.signInEmail).not.toHaveBeenCalled();
   });
 
   it("connexion : une clé par IP et une par adresse, en minuscules, sans rien en clair", async () => {
@@ -269,14 +326,22 @@ describe("limitation de débit des parcours d'entrée", () => {
     const o = await requestPasswordResetAction({}, formulaire({ email: "a@exemple.fr" }));
     expect(i.error).toMatch(/Trop de tentatives/);
     expect(o.error).toMatch(/Trop de tentatives/);
-    expect(h.auth.signUp).not.toHaveBeenCalled();
-    expect(h.auth.resetPasswordForEmail).not.toHaveBeenCalled();
+    expect(h.auth.signUpEmail).not.toHaveBeenCalled();
+    expect(h.auth.requestPasswordReset).not.toHaveBeenCalled();
   });
 });
 
 describe("déconnexion (audit Next.js, B3)", () => {
-  it("efface le cookie de l'établissement actif", async () => {
+  it("ferme la session en base et efface le cookie de l'établissement actif", async () => {
     await expect(signOutAction()).rejects.toThrow("NEXT_REDIRECT");
+    expect(h.auth.signOut).toHaveBeenCalledWith({ headers: h.entetes });
+    expect(h.cookiesEffaces).toContain("etablissement-actif");
+  });
+
+  it("une session déjà fermée n'empêche pas de terminer la déconnexion", async () => {
+    h.auth.signOut.mockRejectedValue(new APIError("BAD_REQUEST", { message: "x" }));
+    const cible = await cibleDeRedirection(signOutAction());
+    expect(cible).toBe("/login");
     expect(h.cookiesEffaces).toContain("etablissement-actif");
   });
 });

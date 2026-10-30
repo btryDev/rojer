@@ -79,7 +79,9 @@ export type OptionsServeurHttp = {
    * Réponse rendue quand `resoudreScope` refuse. La forme du refus dépend du
    * mécanisme d'authentification, pas du transport : un secret dans l'URL se
    * refuse en `404` muet (cf. `./acces-http`), un jeton OAuth en `401`
-   * désignant les métadonnées de ressource (cf. `./acces-oauth`).
+   * désignant les métadonnées de ressource (~~cf. `./acces-oauth`~~
+   * [2026-10-30, ADR-052 : l'accès OAuth Supabase est retiré ; l'accès par
+   * compte reviendra avec `@better-auth/mcp`]).
    *
    * Par défaut, le `404` muet.
    */

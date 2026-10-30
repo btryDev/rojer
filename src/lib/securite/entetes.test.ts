@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 import { entetesSecurite, nonceCsp, politiqueContenu } from "./entetes";
 
 const PROD = {
-  supabaseUrl: "https://abcd.supabase.co",
   developpement: false,
   nonce: "bm9uY2U=",
 };
@@ -51,13 +50,8 @@ describe("entetesSecurite", () => {
 });
 
 describe("politiqueContenu", () => {
-  it("autorise l'origine Supabase en connect-src, pas son chemin", () => {
-    const csp = politiqueContenu({
-      supabaseUrl: "https://abcd.supabase.co/auth/v1",
-      developpement: false,
-      nonce: "n",
-    });
-    expect(csp).toMatch(/connect-src 'self' https:\/\/abcd\.supabase\.co(;|$)/);
+  it("connect-src ne nomme que l'app : aucun service d'authentification (ADR-052)", () => {
+    expect(politiqueContenu(PROD)).toMatch(/connect-src 'self'(;|$)/);
   });
 
   it("n'autorise 'unsafe-eval' qu'en développement", () => {
@@ -67,12 +61,6 @@ describe("politiqueContenu", () => {
     ).toContain("'unsafe-eval'");
   });
 
-  it("une URL Supabase absente ou invalide ne produit pas de source fautive", () => {
-    for (const supabaseUrl of [undefined, "", "pas une url"]) {
-      const csp = politiqueContenu({ supabaseUrl, developpement: false, nonce: "n" });
-      expect(csp).toMatch(/connect-src 'self'(;|$)/);
-    }
-  });
 });
 
 describe("politiqueContenu : scripts", () => {

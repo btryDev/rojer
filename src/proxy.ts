@@ -5,8 +5,8 @@
 // les routes internes Next.
 //
 // Deux rôles :
-//   - la session (rafraîchissement, refus sans session hors chemins publics) :
-//     `src/lib/supabase/middleware.ts`. Ce n'est PAS la garde d'accès, qui
+//   - la session (présence du cookie, refus sans session hors chemins
+//     publics, IP du visiteur pour Better Auth) : `src/lib/auth/proxy-session.ts`. Ce n'est PAS la garde d'accès, qui
 //     vit dans `requireUser()` et `lib/auth/scope.ts` ;
 //   - la CSP bloquante à nonce (audit OWASP S7) : un nonce neuf par requête,
 //     posé sur l'en-tête de requête — Next l'y lit et l'appose à ses scripts —
@@ -15,21 +15,20 @@
 //     fichiers déposés) vient de `next.config.ts`.
 
 import type { NextRequest } from "next/server";
-import { updateSession } from "@/lib/supabase/middleware";
+import { garderSession } from "@/lib/auth/proxy-session";
 import { nonceCsp, politiqueContenu } from "@/lib/securite/entetes";
 
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   if (pathname === "/api" || pathname.startsWith("/api/")) {
-    return updateSession(request);
+    return garderSession(request);
   }
 
   const csp = politiqueContenu({
-    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
     developpement: process.env.NODE_ENV !== "production",
     nonce: nonceCsp(),
   });
-  const reponse = await updateSession(request, {
+  const reponse = garderSession(request, {
     entetesRequete: { "Content-Security-Policy": csp },
   });
   reponse.headers.set("Content-Security-Policy", csp);

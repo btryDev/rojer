@@ -1,17 +1,13 @@
 "use client";
 
-// Réinitialisation du mot de passe. Deux formes de lien atterrissent ici :
-// - flux PKCE (resetPasswordForEmail depuis l'app) : ?code=… — le client
-//   browser échange le code contre une session à l'initialisation ;
-// - flux implicite (lien envoyé manuellement depuis le dashboard Supabase) :
-//   #access_token=…&type=recovery — détecté via detectSessionInUrl.
-// Dans les deux cas la session finit dans les cookies (@supabase/ssr), puis
-// l'action serveur `definirMotDePasseAction` pose le nouveau mot de passe —
-// côté serveur, où la règle des douze caractères est vérifiée (audit OWASP B4,
-// 2026-10-14 ; c'était `updateUser` depuis le navigateur).
+// Réinitialisation du mot de passe (ADR-052) : le lien de l'e-mail porte un
+// jeton (`?token=…`), transmis à l'action serveur par un champ caché.
+// L'action `definirMotDePasseAction` pose le nouveau mot de passe côté
+// SERVEUR, où la règle des douze caractères est vérifiée (audit OWASP B4) ;
+// c'est Better Auth qui juge le jeton. Sans jeton, la page le dit tout de suite.
 
 import Link from "next/link";
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ChampBoard } from "@/components/ui-kit/ChampBoard";
 import {
@@ -22,63 +18,17 @@ import {
   AIDE_MOT_DE_PASSE,
   LONGUEUR_MIN_MOT_DE_PASSE,
 } from "@/lib/auth/mot-de-passe";
-import { createClient } from "@/lib/supabase/client";
 
 const etatInitial: AuthActionState = {};
 
-type Status = "checking" | "ready" | "invalid";
-
-export function ResetPasswordForm() {
-  const supabase = useMemo(() => createClient(), []);
-  const [status, setStatus] = useState<Status>("checking");
+export function ResetPasswordForm({ token }: { token: string | null }) {
   const [state, action, pending] = useActionState(
     definirMotDePasseAction,
     etatInitial,
   );
   const error = state.error ?? null;
 
-  useEffect(() => {
-    // Lien expiré ou déjà utilisé : Supabase renvoie l'erreur dans le hash.
-    if (/error/.test(window.location.hash)) {
-      // Lecture client-only (hash d'URL) : impossible au premier rendu SSR.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setStatus("invalid");
-      return;
-    }
-
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) setStatus("ready");
-    });
-    // Même traitement que côté serveur (proxy, require-user) : un refresh
-    // token périmé fait rejeter getSession — on le traite comme « pas de
-    // session » au lieu de laisser la promesse rejeter sans handler.
-    supabase.auth
-      .getSession()
-      .then(({ data }) => {
-        if (data.session) setStatus("ready");
-      })
-      .catch(() => {});
-    // Si aucune session n'apparaît (lien invalide, autre navigateur pour un
-    // lien PKCE…), on bascule en erreur plutôt que d'attendre indéfiniment.
-    const timer = setTimeout(() => {
-      setStatus((s) => (s === "checking" ? "invalid" : s));
-    }, 5000);
-
-    return () => {
-      sub.subscription.unsubscribe();
-      clearTimeout(timer);
-    };
-  }, [supabase]);
-
-  if (status === "checking") {
-    return (
-      <p className="m-0 text-[13px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-        Vérification du lien…
-      </p>
-    );
-  }
-
-  if (status === "invalid") {
+  if (!token) {
     return (
       <div className="flex flex-col items-start gap-5">
         <p
@@ -101,6 +51,7 @@ export function ResetPasswordForm() {
 
   return (
     <form action={action} className="flex flex-col gap-5">
+      <input type="hidden" name="token" value={token} />
       <ChampBoard
         id="password"
         name="password"

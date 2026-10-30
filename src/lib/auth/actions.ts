@@ -1,14 +1,16 @@
 "use server";
 
-// Server actions pour l'authentification (ADR-005).
-// Email + password pour le MVP. Le flux magic-link / OAuth est hors MVP.
+// Server actions pour l'authentification : Better Auth (ADR-052), appelé en
+// direct (`auth.api.*`) — aucune route HTTP de Better Auth n'est montée.
+// E-mail et mot de passe, adresse confirmée avant toute session.
 
 import { revalidatePath } from "next/cache";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { publicAppUrl, refusUrlPublique } from "@/lib/email";
-import { createClient } from "@/lib/supabase/server";
+import { isAPIError } from "better-auth/api";
+import { envoiEnService, refusUrlPublique } from "@/lib/email";
+import { auth } from "./better-auth";
 import { COOKIE_ETABLISSEMENT_ACTIF } from "@/lib/auth/scope";
 import { ipClient } from "@/lib/securite/ip-client";
 import {
@@ -95,11 +97,23 @@ export type AuthActionState = {
 };
 
 // Les liens de confirmation et de réinitialisation partent par mail : leur
-// adresse de retour se prend au serveur, jamais au formulaire, qu'un POST forgé
-// remplit à sa guise (audit du 2026-10-13, C3). Sans adresse publique connue
-// en production, on refuse d'envoyer plutôt que d'envoyer un lien faux.
+// adresse se prend au serveur (`better-auth.ts`, depuis `PUBLIC_APP_URL`),
+// jamais au formulaire, qu'un POST forgé remplit à sa guise (audit du
+// 2026-10-13, C3). Sans adresse publique connue ou sans pilote d'envoi, on
+// refuse d'avance plutôt que de promettre un e-mail qui ne partira pas.
 const ENVOI_IMPOSSIBLE =
-  "L'adresse publique de l'application n'est pas configurée sur ce serveur : aucun e-mail ne peut partir. Prévenez l'équipe Rojer.";
+  "L'envoi d'e-mails n'est pas configuré sur ce serveur : aucun lien ne peut partir. Prévenez l'équipe Rojer.";
+
+function envoiImpossible(): boolean {
+  return refusUrlPublique() !== null || !envoiEnService();
+}
+
+/** Le code d'erreur de Better Auth (`EMAIL_NOT_VERIFIED`…), ou `null`. */
+function codeErreur(e: unknown): string | null {
+  if (!isAPIError(e)) return null;
+  const code = (e.body as { code?: unknown } | undefined)?.code;
+  return typeof code === "string" ? code : null;
+}
 
 export async function signInAction(
   _prev: AuthActionState,
@@ -120,9 +134,17 @@ export async function signInAction(
   });
   if (limite) return { error: limite };
 
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword(parsed.data);
-  if (error) {
+  try {
+    await auth.api.signInEmail({ body: parsed.data, headers: await headers() });
+  } catch (e) {
+    // Un compte non confirmé n'est révélé qu'à qui a le bon mot de passe ; un
+    // nouveau lien vient de partir (`emailVerification.sendOnSignIn`).
+    if (codeErreur(e) === "EMAIL_NOT_VERIFIED") {
+      return {
+        error:
+          "Votre adresse n'est pas encore confirmée : un nouveau lien vient de vous être envoyé. Ouvrez-le, puis reconnectez-vous.",
+      };
+    }
     return { error: "Identifiants invalides" };
   }
 
@@ -145,26 +167,22 @@ export async function signUpAction(
   const limite = await refusParLimite("inscription", LIMITES.inscriptionIp);
   if (limite) return { error: limite };
 
-  if (refusUrlPublique()) return { error: ENVOI_IMPOSSIBLE };
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.signUp({
-    email: parsed.data.email,
-    password: parsed.data.password,
-    options: { emailRedirectTo: `${publicAppUrl()}/auth/callback` },
-  });
-  if (error) {
-    return { error: error.message };
+  if (envoiImpossible()) return { error: ENVOI_IMPOSSIBLE };
+  try {
+    await auth.api.signUpEmail({
+      // Le nom n'est demandé nulle part : l'adresse en tient lieu.
+      body: { email: parsed.data.email, password: parsed.data.password, name: parsed.data.email },
+      headers: await headers(),
+    });
+  } catch (e) {
+    // Une adresse déjà inscrite reçoit la même réponse qu'une nouvelle : le
+    // formulaire ne dit pas qui a un compte.
+    if (codeErreur(e) !== "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL") {
+      return { error: "L'inscription n'a pas abouti. Réessayez dans un instant." };
+    }
   }
 
-  // Deux cas selon config Supabase :
-  // - Email confirmation OFF : session créée, on log direct → /entreprises
-  // - Email confirmation ON (défaut) : session null, on envoie sur une page
-  //   dédiée qui dit clairement "vérifie tes mails".
-  if (data.session) {
-    revalidatePath("/", "layout");
-    redirect("/entreprises");
-  }
-
+  // Adresse à confirmer avant toute session : page qui le dit clairement.
   redirect(
     `/signup/verification-en-attente?email=${encodeURIComponent(parsed.data.email)}`,
   );
@@ -185,11 +203,10 @@ export async function requestPasswordResetAction(
   });
   if (limite) return { error: limite };
 
-  if (refusUrlPublique()) return { error: ENVOI_IMPOSSIBLE };
-  const supabase = await createClient();
-  await supabase.auth.resetPasswordForEmail(parsed.data, {
-    redirectTo: `${publicAppUrl()}/auth/reinitialisation`,
-  });
+  if (envoiImpossible()) return { error: ENVOI_IMPOSSIBLE };
+  // Better Auth répond pareil qu'un compte existe ou non ; le lien vers
+  // `/auth/reinitialisation?token=…` est construit dans `better-auth.ts`.
+  await auth.api.requestPasswordReset({ body: { email: parsed.data } });
 
   // Réponse identique que le compte existe ou non : pas d'énumération
   // d'adresses possibles via ce formulaire.
@@ -200,12 +217,10 @@ export async function requestPasswordResetAction(
 }
 
 /**
- * Pose le nouveau mot de passe, au retour du lien de réinitialisation.
- *
- * Côté SERVEUR (audit OWASP B4) : la page appelait `updateUser` depuis le
- * navigateur, où seule la règle de l'attribut HTML s'appliquait. La session de
- * récupération, posée par le navigateur à l'échange du code (PKCE), est dans
- * les cookies : le client serveur la lit.
+ * Pose le nouveau mot de passe, au retour du lien de réinitialisation : le
+ * jeton du lien arrive par un champ caché du formulaire. Côté SERVEUR (audit
+ * OWASP B4). Toutes les sessions du compte sont fermées
+ * (`revokeSessionsOnPasswordReset`) : on se reconnecte.
  */
 export async function definirMotDePasseAction(
   _prev: AuthActionState,
@@ -219,23 +234,30 @@ export async function definirMotDePasseAction(
   const invalide = erreurMotDePasse(motDePasse);
   if (invalide) return { error: invalide };
 
-  const supabase = await createClient();
-  const { error } = await supabase.auth.updateUser({ password: motDePasse });
-  if (error) {
+  const token = String(formData.get("token") ?? "");
+  if (!token) return { error: LIEN_INVALIDE };
+  try {
+    await auth.api.resetPassword({ body: { newPassword: motDePasse, token } });
+  } catch (e) {
     return {
       error:
-        error.message === "New password should be different from the old password."
-          ? "Le nouveau mot de passe doit être différent de l'ancien"
-          : "Impossible de mettre à jour le mot de passe. Redemandez un lien.",
+        codeErreur(e) === "PASSWORD_TOO_LONG"
+          ? "Le mot de passe est trop long (128 caractères au plus)."
+          : LIEN_INVALIDE,
     };
   }
-  revalidatePath("/", "layout");
-  redirect("/entreprises");
+  redirect("/login?reinitialise=1");
 }
 
+const LIEN_INVALIDE =
+  "Ce lien de réinitialisation est invalide ou a expiré. Redemandez un lien.";
+
 export async function signOutAction() {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
+  try {
+    await auth.api.signOut({ headers: await headers() });
+  } catch {
+    // Session déjà fermée ou absente : on termine la déconnexion côté poste.
+  }
   // L'établissement choisi au sélecteur ne survit pas à la déconnexion (audit
   // Next.js, B3). Il était déjà sans risque — revalidé contre l'utilisateur à
   // chaque lecture (`scope.ts`) —, mais rien ne justifie de le laisser traîner

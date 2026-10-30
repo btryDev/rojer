@@ -4,7 +4,12 @@ export const metadata = {
   title: "Nouveau mot de passe — Rojer",
 };
 
-export default function ResetPasswordPage() {
+export default async function ResetPasswordPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ token?: string }>;
+}) {
+  const { token } = await searchParams;
   return (
     // Même enveloppe que /login : colonne étroite centrée sur le canvas. Cf.
     // le commentaire de `login/page.tsx` sur `mx-auto max-w-*`.
@@ -18,7 +23,7 @@ export default function ResetPasswordPage() {
         </h1>
 
         <div className="carte-board mt-7 px-7 py-6 sm:px-8">
-          <ResetPasswordForm />
+          <ResetPasswordForm token={token ?? null} />
         </div>
       </div>
     </main>
