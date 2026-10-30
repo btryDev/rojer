@@ -24,6 +24,8 @@ const EXEMPTIONS: Record<string, string> = {
     "gabarit XLSX vierge, identique pour tous : aucune donnée de compte",
   "api/accessibilite/[slug]/affiche/route.ts":
     "affiche du registre PUBLIC d'accessibilité, faite pour être imprimée et vue de tous",
+  "auth/deconnexion/route.ts":
+    "déconnexion puis redirection (no-store posé à part) : aucun document dans la réponse",
   "auth/verification/route.ts":
     "vérification d'un jeton puis redirection : aucun document dans la réponse",
   "api/mcp/[cle]/route.ts":

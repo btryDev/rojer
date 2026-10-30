@@ -2,7 +2,6 @@ import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { getOptionalUser } from "@/lib/auth/require-user";
 import { getOptionalUserEtablissement } from "@/lib/auth/scope";
-import { signOutAction } from "@/lib/auth/actions";
 
 /**
  * Header global persistant — visible partout où l'app n'a pas son propre
@@ -60,7 +59,7 @@ export async function AppHeader() {
               >
                 {user.email}
               </span>
-              <form action={signOutAction}>
+              <form method="post" action="/auth/deconnexion">
                 <button
                   type="submit"
                   className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)] underline decoration-[color:var(--board-slate)] decoration-1 underline-offset-4 transition-colors hover:text-[color:var(--board-ink)] hover:decoration-[color:var(--board-ink)]"

@@ -173,8 +173,14 @@ const EXEMPTIONS = new Map<string, Exemption>([
     },
   ],
   [
-    "lib/auth/actions.ts:signOutAction",
-    { garde: "auth.api.signOut", raison: "Déconnexion : ne lit aucune donnée de dossier." },
+    "lib/auth/actions.ts:fermerSessionsAction",
+    {
+      garde: "auth.api.listSessions",
+      raison:
+        "Fermer une session ouverte (ADR-052, lot 3a) : Better Auth ne liste et ne " +
+        "ferme que les sessions du compte de la session courante ; aucune donnée de dossier. " +
+        "Remplace l'exemption de `signOutAction`, passée à la route `/auth/deconnexion`.",
+    },
   ],
 ]);
 

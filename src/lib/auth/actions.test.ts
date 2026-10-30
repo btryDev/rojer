@@ -14,7 +14,13 @@ const h = vi.hoisted(() => ({
     requestPasswordReset: vi.fn<(arg: { body: Record<string, unknown> }) => Promise<unknown>>(),
     resetPassword: vi.fn<(arg: { body: Record<string, unknown> }) => Promise<unknown>>(),
     signOut: vi.fn<(arg: { headers: Headers }) => Promise<unknown>>(),
+    changePassword: vi.fn<(arg: { body: Record<string, unknown> }) => Promise<unknown>>(),
+    getSession: vi.fn<(arg: { headers: Headers }) => Promise<unknown>>(),
+    listSessions: vi.fn<(arg: { headers: Headers }) => Promise<{ id: string; token: string }[]>>(),
+    revokeSession: vi.fn<(arg: { body: { token: string } }) => Promise<unknown>>(),
+    revokeOtherSessions: vi.fn<(arg: { headers: Headers }) => Promise<unknown>>(),
   },
+  divulgue: vi.fn<(mdp: string) => Promise<boolean | null>>(),
   entetes: new Headers({ "x-forwarded-for": "203.0.113.7" }),
   cookiesEffaces: [] as string[],
   limite: vi.fn<
@@ -31,6 +37,12 @@ vi.mock("next/headers", () => ({
   cookies: async () => ({ delete: (nom: string) => h.cookiesEffaces.push(nom) }),
 }));
 vi.mock("./better-auth", () => ({ auth: { api: h.auth } }));
+vi.mock("./require-user", () => ({ requireUser: async () => ({ id: "u-1", email: "a@exemple.fr" }) }));
+// Jamais d'appel réseau en test : le service Pwned Passwords est doublé.
+vi.mock("./mot-de-passe-divulgue", async (original) => ({
+  ...(await original<typeof import("./mot-de-passe-divulgue")>()),
+  motDePasseDivulgue: h.divulgue,
+}));
 vi.mock("@/lib/auth/scope", () => ({ COOKIE_ETABLISSEMENT_ACTIF: "etablissement-actif" }));
 vi.mock("@/lib/securite/limite-debit", async (original) => ({
   ...(await original<typeof import("@/lib/securite/limite-debit")>()),
@@ -38,10 +50,11 @@ vi.mock("@/lib/securite/limite-debit", async (original) => ({
 }));
 
 const {
+  changerMotDePasseAction,
   definirMotDePasseAction,
+  fermerSessionsAction,
   requestPasswordResetAction,
   signInAction,
-  signOutAction,
   signUpAction,
 } = await import("./actions");
 
@@ -64,6 +77,15 @@ beforeEach(() => {
   h.auth.requestPasswordReset.mockResolvedValue({ status: true });
   h.auth.resetPassword.mockResolvedValue({ status: true });
   h.auth.signOut.mockResolvedValue({ success: true });
+  h.auth.changePassword.mockResolvedValue({});
+  h.auth.getSession.mockResolvedValue({ session: { id: "s-ici" } });
+  h.auth.listSessions.mockResolvedValue([
+    { id: "s-ici", token: "jeton-ici" },
+    { id: "s-autre", token: "jeton-autre" },
+  ]);
+  h.auth.revokeSession.mockResolvedValue({});
+  h.auth.revokeOtherSessions.mockResolvedValue({});
+  h.divulgue.mockResolvedValue(false);
   h.limite.mockClear();
   h.limite.mockResolvedValue({ ok: true });
   h.cookiesEffaces = [];
@@ -340,17 +362,86 @@ describe("limitation de débit des parcours d'entrée", () => {
   });
 });
 
-describe("déconnexion (audit Next.js, B3)", () => {
-  it("ferme la session en base et efface le cookie de l'établissement actif", async () => {
-    await expect(signOutAction()).rejects.toThrow("NEXT_REDIRECT");
-    expect(h.auth.signOut).toHaveBeenCalledWith({ headers: h.entetes });
-    expect(h.cookiesEffaces).toContain("etablissement-actif");
+describe("mots de passe divulgués (ASVS V6.2.12)", () => {
+  it("refusés à l'inscription et à la réinitialisation, avant Better Auth", async () => {
+    vi.stubEnv("PUBLIC_APP_URL", "https://app.rojer.fr");
+    h.divulgue.mockResolvedValue(true);
+    const i = await signUpAction({}, formulaire({ email: "a@exemple.fr", password: "motdepasse123" }));
+    const r = await definirMotDePasseAction(
+      {},
+      formulaire({ password: "motdepasse123", confirm: "motdepasse123", token: "t" }),
+    );
+    expect(i.error).toMatch(/fuites de données/);
+    expect(r.error).toMatch(/fuites de données/);
+    expect(h.auth.signUpEmail).not.toHaveBeenCalled();
+    expect(h.auth.resetPassword).not.toHaveBeenCalled();
   });
 
-  it("une session déjà fermée n'empêche pas de terminer la déconnexion", async () => {
-    h.auth.signOut.mockRejectedValue(new APIError("BAD_REQUEST", { message: "x" }));
-    const cible = await cibleDeRedirection(signOutAction());
-    expect(cible).toBe("/login");
-    expect(h.cookiesEffaces).toContain("etablissement-actif");
+  it("service injoignable : on laisse passer (indéterminé)", async () => {
+    vi.stubEnv("PUBLIC_APP_URL", "https://app.rojer.fr");
+    h.divulgue.mockResolvedValue(null);
+    await expect(
+      signUpAction({}, formulaire({ email: "a@exemple.fr", password: "douze-caract" })),
+    ).rejects.toThrow("NEXT_REDIRECT");
+    expect(h.auth.signUpEmail).toHaveBeenCalled();
+  });
+});
+
+describe("changer de mot de passe (lot 3a)", () => {
+  const champs = { actuel: "ancien-mot-de-passe", password: "nouveau-mot-de-passe", confirm: "nouveau-mot-de-passe" };
+
+  it("exige l'actuel, ferme les autres sessions", async () => {
+    const r = await changerMotDePasseAction({}, formulaire(champs));
+    expect(r.message).toMatch(/autres sessions ont été fermées/);
+    expect(h.auth.changePassword).toHaveBeenCalledWith({
+      body: { currentPassword: "ancien-mot-de-passe", newPassword: "nouveau-mot-de-passe", revokeOtherSessions: true },
+      headers: h.entetes,
+    });
+  });
+
+  it("refuse sans l'actuel, deux saisies différentes, onze caractères, un mot de passe divulgué", async () => {
+    expect((await changerMotDePasseAction({}, formulaire({ ...champs, actuel: "" }))).error).toMatch(/actuel/);
+    expect((await changerMotDePasseAction({}, formulaire({ ...champs, confirm: "autre-chose-xx" }))).error).toMatch(
+      /ne correspondent pas/,
+    );
+    expect(
+      (await changerMotDePasseAction({}, formulaire({ ...champs, password: "onze-caract", confirm: "onze-caract" })))
+        .error,
+    ).toMatch(/au moins 12/);
+    h.divulgue.mockResolvedValue(true);
+    expect((await changerMotDePasseAction({}, formulaire(champs))).error).toMatch(/fuites de données/);
+    expect(h.auth.changePassword).not.toHaveBeenCalled();
+  });
+
+  it("mot de passe actuel faux : le dire", async () => {
+    h.auth.changePassword.mockRejectedValue(new APIError("BAD_REQUEST", { code: "INVALID_PASSWORD", message: "x" }));
+    expect((await changerMotDePasseAction({}, formulaire(champs))).error).toBe("Mot de passe actuel incorrect");
+  });
+
+  it("limité par compte : refusé avant Better Auth", async () => {
+    h.limite.mockResolvedValue({ ok: false, reessayerDansSecondes: 600 });
+    expect((await changerMotDePasseAction({}, formulaire(champs))).error).toMatch(/Trop de tentatives/);
+    expect(h.auth.changePassword).not.toHaveBeenCalled();
+  });
+});
+
+describe("fermer des sessions (lot 3a)", () => {
+  const avec = (session: string) => formulaire({ session });
+
+  it("ferme la session désignée, par son jeton tenu côté serveur", async () => {
+    await fermerSessionsAction(avec("s-autre"));
+    expect(h.auth.revokeSession).toHaveBeenCalledWith({ body: { token: "jeton-autre" }, headers: h.entetes });
+  });
+
+  it("ne ferme jamais la session courante, ni une session inconnue du compte", async () => {
+    await fermerSessionsAction(avec("s-ici"));
+    await fermerSessionsAction(avec("s-d-un-autre-compte"));
+    expect(h.auth.revokeSession).not.toHaveBeenCalled();
+  });
+
+  it("« autres » : toutes sauf celle-ci", async () => {
+    await fermerSessionsAction(avec("autres"));
+    expect(h.auth.revokeOtherSessions).toHaveBeenCalledWith({ headers: h.entetes });
+    expect(h.auth.revokeSession).not.toHaveBeenCalled();
   });
 });

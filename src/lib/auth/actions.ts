@@ -5,13 +5,14 @@
 // E-mail et mot de passe, adresse confirmée avant toute session.
 
 import { revalidatePath } from "next/cache";
-import { cookies, headers } from "next/headers";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { isAPIError } from "better-auth/api";
 import { envoiEnService, refusUrlPublique } from "@/lib/email";
 import { auth } from "./better-auth";
-import { COOKIE_ETABLISSEMENT_ACTIF } from "@/lib/auth/scope";
+import { MESSAGE_MOT_DE_PASSE_DIVULGUE, motDePasseDivulgue } from "./mot-de-passe-divulgue";
+import { requireUser } from "./require-user";
 import { ipClient } from "@/lib/securite/ip-client";
 import {
   cleLimite,
@@ -171,6 +172,9 @@ export async function signUpAction(
 
   const limite = await refusParLimite("inscription", LIMITES.inscriptionIp);
   if (limite) return { error: limite };
+  if (await motDePasseDivulgue(parsed.data.password)) {
+    return { error: MESSAGE_MOT_DE_PASSE_DIVULGUE };
+  }
 
   if (envoiImpossible()) return { error: ENVOI_IMPOSSIBLE };
   try {
@@ -241,6 +245,7 @@ export async function definirMotDePasseAction(
 
   const token = String(formData.get("token") ?? "");
   if (!token) return { error: LIEN_INVALIDE };
+  if (await motDePasseDivulgue(motDePasse)) return { error: MESSAGE_MOT_DE_PASSE_DIVULGUE };
   try {
     await auth.api.resetPassword({ body: { newPassword: motDePasse, token } });
   } catch (e) {
@@ -255,17 +260,79 @@ export async function definirMotDePasseAction(
 }
 
 
-export async function signOutAction() {
-  try {
-    await auth.api.signOut({ headers: await headers() });
-  } catch {
-    // Session déjà fermée ou absente : on termine la déconnexion côté poste.
+// ~~`signOutAction`~~ [2026-10-30, lot 3a : la déconnexion passe par la route
+// `/auth/deconnexion`, qui seule peut poser `Clear-Site-Data`.]
+
+// ---------------------------------------------------------------------------
+// Sécurité du compte (ADR-052, lot 3a) : mot de passe et sessions ouvertes.
+// ---------------------------------------------------------------------------
+
+/**
+ * Changer de mot de passe : l'actuel est exigé (ASVS V6.2.3), le nouveau suit
+ * la règle et n'a pas fui, et toutes les AUTRES sessions sont fermées — un
+ * voleur de session ne survit pas au changement. Limité par compte : la
+ * saisie de l'actuel est une devinette comme une autre.
+ */
+export async function changerMotDePasseAction(
+  _prev: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const user = await requireUser();
+  const actuel = String(formData.get("actuel") ?? "");
+  const nouveau = String(formData.get("password") ?? "");
+  if (!actuel) return { error: "Saisissez votre mot de passe actuel" };
+  if (nouveau !== String(formData.get("confirm") ?? "")) {
+    return { error: "Les deux mots de passe ne correspondent pas" };
   }
-  // L'établissement choisi au sélecteur ne survit pas à la déconnexion (audit
-  // Next.js, B3). Il était déjà sans risque — revalidé contre l'utilisateur à
-  // chaque lecture (`scope.ts`) —, mais rien ne justifie de le laisser traîner
-  // sur un poste partagé.
-  (await cookies()).delete(COOKIE_ETABLISSEMENT_ACTIF);
-  revalidatePath("/", "layout");
-  redirect("/login");
+  const invalide = erreurMotDePasse(nouveau);
+  if (invalide) return { error: invalide };
+
+  const limite = await refusParLimite("changement-mot-de-passe", LIMITES.connexionIp, {
+    adresse: user.id,
+    limite: LIMITES.connexionCompte,
+  });
+  if (limite) return { error: limite };
+  if (await motDePasseDivulgue(nouveau)) return { error: MESSAGE_MOT_DE_PASSE_DIVULGUE };
+
+  try {
+    await auth.api.changePassword({
+      body: { currentPassword: actuel, newPassword: nouveau, revokeOtherSessions: true },
+      headers: await headers(),
+    });
+  } catch (e) {
+    return {
+      error:
+        codeErreur(e) === "INVALID_PASSWORD"
+          ? "Mot de passe actuel incorrect"
+          : "Le mot de passe n'a pas pu être changé. Réessayez dans un instant.",
+    };
+  }
+  revalidatePath("/compte/securite");
+  return { message: "Mot de passe changé. Vos autres sessions ont été fermées." };
+}
+
+/**
+ * Fermer des sessions ouvertes du compte : une, désignée par son identifiant
+ * (`session`), ou toutes les autres (`session=autres`). Le jeton de session ne
+ * quitte jamais le serveur : la page n'affiche que des identifiants, et
+ * Better Auth ne liste que les sessions du compte connecté. La session
+ * courante se ferme par la déconnexion.
+ */
+export async function fermerSessionsAction(formData: FormData): Promise<void> {
+  await requireUser();
+  const entetes = await headers();
+  const choix = String(formData.get("session") ?? "");
+  if (choix === "autres") {
+    await auth.api.revokeOtherSessions({ headers: entetes });
+  } else {
+    const [courante, sessions] = await Promise.all([
+      auth.api.getSession({ headers: entetes }),
+      auth.api.listSessions({ headers: entetes }),
+    ]);
+    const cible = sessions.find((s) => s.id === choix);
+    if (cible && cible.id !== courante?.session.id) {
+      await auth.api.revokeSession({ body: { token: cible.token }, headers: entetes });
+    }
+  }
+  revalidatePath("/compte/securite");
 }

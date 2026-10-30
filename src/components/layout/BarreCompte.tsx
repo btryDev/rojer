@@ -35,8 +35,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Building2, Check, HelpCircle, Home, LogOut, Plus } from "lucide-react";
-import { signOutAction } from "@/lib/auth/actions";
+import { Building2, Check, HelpCircle, Home, LogOut, Plus, ShieldCheck } from "lucide-react";
 import { choisirEtablissementActif } from "@/lib/etablissements/actions";
 import { estMultiEtablissements } from "@/lib/etablissements/selection";
 
@@ -298,6 +297,17 @@ export function BarreCompte({
                 pas figurer deux fois à l'écran. */}
             {multi ? null : <LienAjouter onNavigate={() => setOuvert(null)} />}
 
+            {/* Mot de passe et sessions ouvertes (ADR-052, lot 3a). */}
+            <Link
+              href="/compte/securite"
+              role="menuitem"
+              onClick={() => setOuvert(null)}
+              className="flex w-full items-center gap-2.5 rounded-full px-3 py-2 text-left text-[13px] text-[color:var(--board-slate-ink)] transition-colors hover:bg-[color:var(--board-slate-pale)] hover:text-[color:var(--board-ink)]"
+            >
+              <ShieldCheck aria-hidden className="size-4 opacity-90" />
+              <span className="flex-1 truncate">Sécurité du compte</span>
+            </Link>
+
             {/* Une commande à venir se déclare désactivée, pas absente : un
                 `span aria-disabled` n'est ni annoncé ni atteignable, alors
                 qu'il a l'allure d'une commande. */}
@@ -315,7 +325,7 @@ export function BarreCompte({
             </button>
 
             {email != null ? (
-              <form action={signOutAction}>
+              <form method="post" action="/auth/deconnexion">
                 <button
                   type="submit"
                   role="menuitem"

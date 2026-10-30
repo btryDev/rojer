@@ -98,6 +98,16 @@ const EXEMPTIONS = new Map<string, Exemption>([
       raison: "Mot de passe oublié, appelant non connecté : la seule écriture est le compteur de limitation de débit.",
     },
   ],
+  [
+    "lib/auth/actions.ts:changerMotDePasseAction",
+    {
+      garde: "auth.api.changePassword",
+      raison:
+        "Mot de passe du compte connecté (ADR-052, lot 3a) : Better Auth le change pour " +
+        "la session courante, mot de passe actuel exigé ; l'autre écriture est le compteur " +
+        "de limitation de débit. Aucune donnée de dossier.",
+    },
+  ],
   // ~~`creerEntreprise` et `finaliserOnboarding`, exemptées : elles fondaient
   // la racine de la tenancy~~ [2026-10-26 : la première est retirée ; la
   // seconde borne désormais par elle-même — son `upsert` cherche l'entreprise
