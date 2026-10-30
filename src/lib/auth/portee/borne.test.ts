@@ -4,7 +4,7 @@
 // `client.integration.test.ts`.
 
 import { describe, expect, it } from "vitest";
-import { argumentsBornes, borne, ErreurPortee, estLectureDIdentifiants, noterVus, type Portee } from "./borne";
+import { argumentsBornes, borne, dansUnLot, ErreurPortee, estLectureDIdentifiants, noterVus, type Portee } from "./borne";
 
 const A: Portee = { type: "compte", userId: "u-a" };
 const COMPTE_A = { entreprise: { userId: "u-a" } };
@@ -212,19 +212,37 @@ describe("ce qui n'est pas bornable", () => {
     ).toThrow(/creerEnLotVerifie/);
   });
 
-  it("createMany vers des parents lus par une lecture bornée d'identifiants : accepté", () => {
-    noterVus("Etablissement", A, [{ id: "e-lu" }]);
-    expect(argumentsBornes("Batiment", "createMany", { data: [{ etablissementId: "e-lu", nom: "n" }] }, A)).toEqual({
-      data: [{ etablissementId: "e-lu", nom: "n" }],
+  it("dans un lot, createMany vers des parents lus par une lecture bornée d'identifiants : accepté", async () => {
+    await dansUnLot(async () => {
+      noterVus("Etablissement", A, [{ id: "e-lu" }]);
+      expect(argumentsBornes("Batiment", "createMany", { data: [{ etablissementId: "e-lu", nom: "n" }] }, A)).toEqual({
+        data: [{ etablissementId: "e-lu", nom: "n" }],
+      });
     });
   });
 
-  it("un parent lu par un compte n'ouvre pas le createMany d'un autre", () => {
-    noterVus("Etablissement", A, [{ id: "e-de-a" }]);
-    const B: Portee = { type: "compte", userId: "u-b" };
+  it("hors d'un lot, une lecture d'identifiants n'ouvre rien", () => {
+    noterVus("Etablissement", A, [{ id: "e-hors-lot" }]);
     expect(() =>
-      argumentsBornes("Batiment", "createMany", { data: [{ etablissementId: "e-de-a", nom: "n" }] }, B),
+      argumentsBornes("Batiment", "createMany", { data: [{ etablissementId: "e-hors-lot", nom: "n" }] }, A),
     ).toThrow(ErreurPortee);
+  });
+
+  it("le lot fini, ses identifiants ne valent plus", async () => {
+    await dansUnLot(async () => noterVus("Etablissement", A, [{ id: "e-fini" }]));
+    expect(() =>
+      argumentsBornes("Batiment", "createMany", { data: [{ etablissementId: "e-fini", nom: "n" }] }, A),
+    ).toThrow(ErreurPortee);
+  });
+
+  it("dans un même lot, un parent lu par un compte n'ouvre pas le createMany d'un autre", async () => {
+    const B: Portee = { type: "compte", userId: "u-b" };
+    await dansUnLot(async () => {
+      noterVus("Etablissement", A, [{ id: "e-de-a" }]);
+      expect(() =>
+        argumentsBornes("Batiment", "createMany", { data: [{ etablissementId: "e-de-a", nom: "n" }] }, B),
+      ).toThrow(ErreurPortee);
+    });
   });
 
   it("seule une lecture des seuls identifiants est retenue", () => {
