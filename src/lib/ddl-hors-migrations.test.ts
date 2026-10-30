@@ -64,6 +64,10 @@
 // suite, un `dist/*` qui avalait le script jusqu'au prochain `*/` — et deux
 // faux positifs (`WITH … INSERT INTO`, la classe `truncate block`) : corrigés,
 // troisième épreuve, les deux trous injectés dans les vrais fichiers tombent.
+// Dernière passe : `TRUNCATE ${tables} CASCADE` (la graine qui vide ses
+// tables) était perdu depuis le marquage des interpolations — repris quand
+// l'interpolation est suivie de `;`, `,` ou d'une option ; `TRUNCATE ${t}`
+// seul reste non vu, sans quoi la classe `truncate ${cls}` reviendrait.
 
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
@@ -123,7 +127,7 @@ const COUPURE = "\u0000";
 
 const DDL = new RegExp(
   // `EXPLAIN ANALYZE` exécute l'instruction qu'il explique.
-  String.raw`(?:^|[;\u0000'"(])\s*(?:EXPLAIN\s+(?:\([^)]*\)\s*|(?:ANALYZE|VERBOSE)\s+)*)?(?:` +
+  String.raw`(?:^|[;\u0000'"(])\s*(?:EXPLAIN\s+(?:\([^)]*\)\s*|(?:ANALY[SZ]E|VERBOSE)\s+)*)?(?:` +
     [
       String.raw`(?:CREATE|ALTER|DROP)\s+(?:OR\s+REPLACE\s+)?(?:(?:GLOBAL|LOCAL)\s+)?(?:TEMP(?:ORARY)?\s+|UNLOGGED\s+)?(?:(?:RECURSIVE|CONSTRAINT|FOREIGN|TRUSTED|PROCEDURAL)\s+)*(?:${OBJETS})\b`,
       String.raw`(?:DROP|REASSIGN)\s+OWNED\b`,
@@ -139,7 +143,7 @@ const DDL = new RegExp(
       // guillemets ou qualifié, ou à une table suivie de `;`, `,`, `*` ou d'une
       // option. `TRUNCATE t` nu, sans rien derrière, n'est pas vu : les tables
       // de Prisma sont toujours entre guillemets.
-      String.raw`TRUNCATE\s+(?:TABLE\s|(?:ONLY\s+)?(?:"|[A-Za-z_]\w*\.|[A-Za-z_]\w*\s*(?:[;,*]|\s(?:CASCADE|RESTRICT|RESTART|CONTINUE)\b)))`,
+      String.raw`TRUNCATE\s+(?:TABLE\s|(?:ONLY\s+)?(?:"|[A-Za-z_]\w*\.|(?:[A-Za-z_]\w*|\u0000)\s*(?:[;,*]|\s(?:CASCADE|RESTRICT|RESTART|CONTINUE)\b)))`,
     ].join("|") +
     ")",
   "im",
@@ -287,6 +291,9 @@ describe("le motif reconnaît un DDL en tête d'instruction", () => {
     "DO E'BEGIN NULL; END'",
     'DO LANGUAGE "plpgsql" $$ BEGIN NULL; END $$',
     "EXPLAIN ANALYZE CREATE TABLE t AS SELECT 1",
+    "explain analyse create table t as select 1",
+    `TRUNCATE ${COUPURE} CASCADE`,
+    `TRUNCATE ${COUPURE};`,
     "EXPLAIN (ANALYZE, BUFFERS) SELECT * INTO t FROM u",
   ])("DDL : %s", (sql) => {
     expect(contientDdl(sql)).toBe(true);
@@ -321,6 +328,7 @@ describe("le motif laisse passer ce qui n'est pas un DDL", () => {
     "truncate block",
     "truncate hidden",
     `${COUPURE} truncate grow`,
+    `truncate ${COUPURE}`,
     'WITH s AS (SELECT id FROM t) INSERT INTO "X" SELECT * FROM s',
     'WITH s AS (\n  SELECT id FROM t\n)\nINSERT INTO "X" SELECT * FROM s',
     "grant_type",
