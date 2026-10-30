@@ -73,7 +73,7 @@ Relevé sur `prisma/schema.prisma` (relations `@relation(fields: …)`).
 | Scripts, graines, reprises | `prisma/seed.ts`, `scripts/*.ts` (seed-demo, seed-salaries-demo, seed-dossier-complet, regenerer-calendriers, reprise-ria, passage-a-blanc-echeances, corriger-libelles-demo, mesure-*…) | tout | client hors compte, hors `src/` |
 | Régénération du calendrier | `calendrier/reconciliation.ts`, `regenererApresMutation` | appelée depuis une action d'un compte connecté | **client borné** (rien à changer) ; `scripts/regenerer-calendriers.ts` reste hors compte |
 | Migrations | `prisma/migrations` | DDL et reprises de données | sans objet : SQL hors client |
-| Better Auth (à venir) | son adaptateur | `user`, `session`, `account`, `verification` | client hors compte, passé à `betterAuth()` dans un seul module ; ces tables sont hors de la table de correspondance |
+| Better Auth (à venir) | son adaptateur | `user`, `session`, `account`, `verification` | client hors compte, passé à `betterAuth()` dans un seul module, `src/lib/auth/better-auth.ts` (ADR-052, PR #130), autorisé nommément par la garde d'import ; ces tables sont hors de la table de correspondance |
 
 Aucun cron Vercel (`vercel.json`), aucun `after()` dans `src/`.
 
