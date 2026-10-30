@@ -12,8 +12,15 @@
 #
 # Base à part, port 5435 : ni `duerp-db` (5433) ni sa shadow (5434) ne sont
 # touchées, ni GestBAT (port 3000, conteneurs gestbat-*).
-# Stockage sur disque, e-mails dans la console : Cellar et Mailpace se
-# testent sur la préproduction Clever Cloud.
+# Ni stockage ni e-mail ici : le serveur tourne en production
+# (NODE_ENV=production), où l'app refuse à raison le disque et la console.
+# Déposer un fichier ou envoyer un lien répond donc « hors service », comme
+# une production sans pilote. Cellar et Mailpace se testent sur la
+# préproduction Clever Cloud ; affaiblir ces refus pour la pile locale
+# ouvrirait la même porte en production.
+#
+# Le contexte du build est l'arbre de travail : committer avant de tester ce
+# que Clever Cloud recevra (il ne reçoit que git).
 
 name: rojer-cc
 
@@ -53,15 +60,9 @@ services:
       # Seul hôte admis en clair : la base de cette pile, sur le réseau Docker.
       BASE_EN_CLAIR_HOTE: db
       NODE_ENV: production
-      STORAGE_DRIVER: local
-      STORAGE_LOCAL_PATH: /app/storage
-      EMAIL_DRIVER: console
       PUBLIC_APP_URL: http://localhost:8080
     ports:
       - "8080:8080"
-    volumes:
-      - rojer-cc-fichiers:/app/storage
 
 volumes:
   rojer-cc-db:
-  rojer-cc-fichiers:

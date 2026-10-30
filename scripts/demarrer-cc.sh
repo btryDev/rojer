@@ -13,8 +13,9 @@
 # ni au développement local.
 #
 # Variables lues :
-#   POSTGRESQL_ADDON_URI   posée par l'add-on (ignorée si DATABASE_URL l'est)
-#   DATABASE_URL           sinon : la pile locale la pose elle-même
+#   POSTGRESQL_ADDON_URI   posée par l'add-on : elle l'emporte toujours
+#   DATABASE_URL           seulement sans add-on (une valeur héritée ne doit
+#                          pas remplacer la base de l'add-on en silence)
 #   BASE_CA_PEM            certificat de l'add-on (auto-signé), PEM complet :
 #                          TLS vérifié contre lui, hôte compris
 #   BASE_EN_CLAIR_HOTE     le SEUL hôte joignable sans TLS (pile locale : `db`).
@@ -30,11 +31,17 @@ case "$mode" in
   *) echo "Usage : sh scripts/demarrer-cc.sh migrer|servir|verifier" >&2; exit 2 ;;
 esac
 
-base="${DATABASE_URL:-${POSTGRESQL_ADDON_URI:-}}"
+base="${POSTGRESQL_ADDON_URI:-${DATABASE_URL:-}}"
 if [ -z "$base" ]; then
-  echo "Ni DATABASE_URL ni POSTGRESQL_ADDON_URI : aucune base à joindre." >&2
+  echo "Ni POSTGRESQL_ADDON_URI ni DATABASE_URL : aucune base à joindre." >&2
   exit 1
 fi
+# Une valeur restée littérale (« $POSTGRESQL_ADDON_URI », le piège même que ce
+# script contourne) ou mal formée s'arrête ici, pas dans Prisma.
+case "$base" in
+  postgres://*|postgresql://*) ;;
+  *) echo "L'URL de la base ne commence pas par postgresql:// : à relire." >&2; exit 1 ;;
+esac
 
 # Des paramètres déjà présents se mêleraient aux nôtres sans qu'on sache
 # lequel l'emporte (un `sslmode` hérité désactiverait la vérification) :
@@ -54,8 +61,18 @@ fi
 
 parametres="connection_limit=${BASE_POOL:-5}"
 if [ -n "${BASE_CA_PEM:-}" ]; then
-  ca="${TMPDIR:-/tmp}/rojer-base-ca.pem"
-  printf '%s\n' "$BASE_CA_PEM" > "$ca"
+  # Une variable sur une ligne porte souvent des « \n » littéraux : on les
+  # rend (un PEM ne contient jamais de barre oblique inverse), puis on exige
+  # la forme d'un certificat plutôt qu'un échec obscur à la poignée de main.
+  pem=$(printf '%s\n' "$BASE_CA_PEM" | sed 's/\\n/\
+/g')
+  case "$pem" in
+    *"-----BEGIN CERTIFICATE-----"*"-----END CERTIFICATE-----"*) ;;
+    *) echo "BASE_CA_PEM n'a pas la forme d'un certificat PEM (BEGIN/END CERTIFICATE)." >&2; exit 1 ;;
+  esac
+  # Nom imprévisible, droits 600 (mktemp) : ni deviné ni lu par un autre compte.
+  ca=$(mktemp "${TMPDIR:-/tmp}/rojer-base-ca.XXXXXX")
+  printf '%s\n' "$pem" > "$ca"
   # Prisma 6 (moteur Rust) : `sslcert` = l'autorité de confiance,
   # `sslaccept=strict` = chaîne et hôte vérifiés.
   parametres="$parametres&sslmode=require&sslcert=$ca&sslaccept=strict"

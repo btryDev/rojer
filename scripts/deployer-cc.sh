@@ -45,6 +45,7 @@ sha=$(git rev-parse HEAD)
 court=$(printf '%s' "$sha" | cut -c1-7)
 
 # La CI de ce commit : au moins un workflow, aucun en cours, aucun en échec.
+# Sur `cc`, elle comprend le build CC lui-même (`build-cc.yml`).
 etats=$(gh run list --commit "$sha" --json status,conclusion \
   --jq '.[] | "\(.status) \(.conclusion)"')
 [ -n "$etats" ] || refus "aucune CI pour $court : attendre qu'elle démarre."

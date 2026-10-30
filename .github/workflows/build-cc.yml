@@ -1,0 +1,52 @@
+# Le build Clever Cloud, sur la branche `cc` et ses PR (plan de bascule,
+# § 5 bis, revue de la PR #132).
+#
+# `tests.yml` vérifie types, lint et vitest, pas le build : sans ce job, un
+# commit qui casse `next build --webpack` ou le serveur autonome passerait
+# « CI verte » dans `scripts/deployer-cc.sh` et ne tomberait qu'au build de
+# Clever Cloud — exactement ce que la porte de déploiement doit empêcher.
+#
+# Aucun secret, aucune base : le build n'en lit aucune (vérifié avec la pile
+# locale, qui construit sans base joignable).
+
+name: Build Clever Cloud
+
+on:
+  push:
+    branches: [cc]
+  pull_request:
+    branches: [cc]
+
+permissions:
+  contents: read
+
+jobs:
+  build-cc:
+    runs-on: ubuntu-latest
+
+    env:
+      DATABASE_URL: postgresql://factice:factice@localhost:5432/factice
+      DIRECT_URL: postgresql://factice:factice@localhost:5432/factice
+      NEXT_PUBLIC_SUPABASE_URL: https://factice.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: factice
+      NODE_ENV: production
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # Dépendances de dev comprises, comme CC_NODE_DEV_DEPENDENCIES=install.
+      - name: Installer les dépendances
+        run: pnpm install --frozen-lockfile --prod=false
+
+      - name: Build Clever Cloud
+        run: pnpm build:cc
+
+      - name: Le serveur autonome est complet
+        run: test -f .next/standalone/server.js && test -d .next/standalone/.next/static && test -d .next/standalone/public
