@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { connection } from "next/server";
 import { variablesPolices } from "./polices";
 import "./globals.css";
@@ -7,6 +7,19 @@ export const metadata: Metadata = {
   title: "Rojer — Conformité santé-sécurité TPE/PME",
   description:
     "Plateforme continue d'accompagnement à la conformité santé-sécurité pour dirigeants de TPE/PME : DUERP, calendrier de vérifications, registre de sécurité, plan d'actions.",
+};
+
+/**
+ * `viewportFit: "cover"` : sur un iPhone à encoche, la page va jusqu'aux
+ * bords et les barres fixes s'écartent d'elles-mêmes de la barre d'accueil
+ * (`env(safe-area-inset-bottom)`, `NavigationMobile`). La couleur du thème est
+ * le fond de page (`--board-canvas`).
+ */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#f6f9fb",
 };
 
 /**

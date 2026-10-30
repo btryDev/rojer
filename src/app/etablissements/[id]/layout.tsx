@@ -1,8 +1,6 @@
 import { requireEtablissement } from "@/lib/auth/scope";
-import { AppSidebar } from "@/components/layout/AppSidebar";
 import { BarreCompte } from "@/components/layout/BarreCompte";
-import { chargerSidebarCounts } from "@/lib/navigation/sidebar-counts";
-import { getEtatModules } from "@/lib/etablissements/modules";
+import { SidebarAvecPastilles } from "@/components/layout/SidebarAvecPastilles";
 import { listerEtablissementsDuCompte } from "@/lib/etablissements/queries";
 
 /**
@@ -31,7 +29,15 @@ export default async function EtablissementLayout({
   // n'est pas au user). Mémoïsée sur le rendu (audit Next.js du 2026-10-14,
   // H2) : la vigilance prestataires de la barre latérale la redemandait, et
   // c'était une troisième lecture du même établissement.
-  const { user, etablissement } = await requireEtablissement(id);
+  //
+  // La fratrie, pour le sélecteur de la gélule (ADR-028), est lue en même
+  // temps : une lecture des établissements du compte, qui ne dépend pas de
+  // la garde. Elle est lue ici et non dans `BarreCompte` : le composant est
+  // client.
+  const [{ user, etablissement }, fratrie] = await Promise.all([
+    requireEtablissement(id),
+    listerEtablissementsDuCompte(),
+  ]);
   // Le client ne reçoit que ce que la barre affiche — l'entreprise chargée
   // par la garde reste ici.
   const etab = {
@@ -44,30 +50,21 @@ export default async function EtablissementLayout({
     estERP: etablissement.estERP,
   };
 
-  // Pastilles de la sidebar : même chargement que le shell DUERP, pour
-  // que les deux annoncent les mêmes nombres (ADR-015).
-  //
-  // La fratrie vient avec, pour le sélecteur de la barre haute (ADR-028). Elle
-  // est lue ici et non dans `BarreCompte` : le composant est client, et la
-  // charger depuis le layout la met dans le même aller-retour que le reste.
-  const [counts, modules, fratrie] = await Promise.all([
-    chargerSidebarCounts(id),
-    getEtatModules(id, etab.estERP),
-    listerEtablissementsDuCompte(),
-  ]);
-
   return (
-    <div className="grid min-h-screen grid-cols-1 lg:h-screen lg:grid-cols-[auto_1fr] lg:overflow-hidden">
-      <AppSidebar
-        etablissement={etab}
-        counts={counts}
-        modules={modules}
-      />
+    // `md:` et non plus `lg:` (2026-10-29) : la tablette garde le rail, le
+    // téléphone n'en a plus (`NavigationMobile`). `relative` : la marque du
+    // téléphone s'y pose en haut à gauche, en face de la gélule.
+    <div className="relative grid min-h-screen grid-cols-1 md:h-dvh md:grid-cols-[auto_1fr] md:overflow-hidden">
+      {/* La barre s'affiche sans attendre ses pastilles, et la page se rend
+          en même temps (plan performance, lot 3, `SidebarAvecPastilles`). */}
+      <SidebarAvecPastilles etablissement={etab} />
       {/* `relative` : la gélule de compte s'y positionne, en haut à droite. */}
       {/* `pt-[var(--reserve-gelule)]` : la place de la gélule, réservée par
           défaut ; un en-tête à fond la reprend (`.sous-la-gelule`). Sans
           elle, un formulaire ou une fiche passait sous la gélule. */}
-      <div className="relative flex min-w-0 flex-col pt-[var(--reserve-gelule)] lg:overflow-y-auto">
+      {/* `pb-[var(--reserve-nav-bas)]` : la place de la barre du bas, sur
+          téléphone seulement. */}
+      <div className="relative flex min-w-0 flex-col pt-[var(--reserve-gelule)] pb-[var(--reserve-nav-bas)] md:overflow-y-auto">
         {/* Gélule de compte : la sidebar porte la hiérarchie du produit, la
             gélule les utilitaires de session. Elle flotte au-dessus du
             contenu, sans bande à elle. Cf. `BarreCompte`. */}

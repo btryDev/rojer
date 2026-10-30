@@ -17,7 +17,10 @@ import {
   ORDRE_RAPPORT_PLUS_RECENT,
   type DerniereRealisation,
 } from "./derniere-realisation";
-import { projeterDernieresRealisations } from "./projeter-realisations";
+import {
+  projeterDernieresRealisations,
+  type AvecDerniereRealisation,
+} from "./projeter-realisations";
 import { RESULTATS_REALISES } from "./resultats";
 
 /**
@@ -40,7 +43,8 @@ export type DernierRapport = { id: string } & DerniereRealisation;
 /**
  * Le dernier rapport de chaque ligne d'un établissement — réalisé seulement,
  * ou tout résultat —, une ligne par échéance, calculé par la base
- * (`DISTINCT ON`). La portée au propriétaire est DANS la requête
+ * (~~`DISTINCT ON`~~ [2026-10-28 : une descente d'index par ligne, voir
+ * plus bas]). La portée au propriétaire est DANS la requête
  * (`requireProprietaireSql`) : elle ne compte pas sur ses appelants.
  *
  * [2026-10-27, plan performance, lot 1a] Remplace la lecture de TOUS les
@@ -51,22 +55,46 @@ export type DernierRapport = { id: string } & DerniereRealisation;
  * source de `WHERE_RAPPORT_REALISE` ; l'ordre, d'`ordreRapportPlusRecentSql`.
  * L'équivalence au départage du moteur (`indexerDernieresRealisations`) est
  * tenue contre une vraie base par `joindre-realisations.integration.test.ts`.
+ *
+ * [2026-10-28, plan performance] Plus de `DISTINCT ON` : il lisait et triait
+ * TOUT l'historique de l'établissement à chaque écran — ≈ 12 ms à dix ans,
+ * quatre fois plus à quarante (durée de conservation). Désormais une descente
+ * d'index par ligne (`LATERAL … LIMIT 1` sur
+ * `(verificationId, dateRapport DESC, createdAt DESC)`) : le coût suit le
+ * nombre de lignes, borné par la cible, et plus la longueur de l'historique
+ * (≈ 1,1 ms mesuré sur le même dossier).
+ *
+ * Le rapport reste borné à l'établissement par SA colonne `etablissementId`,
+ * comme avant et comme le registre (`listerRapportsDeLEtablissement`) : la
+ * portée au compte ne s'élargit pas, et le registre et cette lecture voient
+ * les mêmes rapports. Seul écart avec l'ancienne requête : un rapport dont la
+ * ligne appartiendrait à un autre établissement n'est plus lu — l'unique
+ * écriture (`rapports/actions.ts`) recopie l'établissement de la ligne, il
+ * ne peut pas exister.
  */
 async function lireDerniersRapports(
   etablissementId: string,
   realisesSeulement: boolean,
 ): Promise<Map<string, DernierRapport>> {
-  const proprietaire = await requireProprietaireSql('r."etablissementId"');
+  // La portée se prouve une fois, sur la ligne ; le rapport porte le même
+  // établissement (filtre ci-dessous), donc le même propriétaire.
+  const proprietaire = await requireProprietaireSql('v."etablissementId"');
   const lignes = await prisma.$queryRaw<
     { verificationId: string; id: string; dateRapport: Date; resultat: string }[]
   >`
-    SELECT DISTINCT ON (r."verificationId")
-      r."verificationId", r."id", r."dateRapport", r."resultat"::text AS "resultat"
-    FROM "RapportVerification" r
-    WHERE r."etablissementId" = ${etablissementId}
+    SELECT v."id" AS "verificationId", d."id", d."dateRapport", d."resultat"
+    FROM "Verification" v
+    CROSS JOIN LATERAL (
+      SELECT r."id", r."dateRapport", r."resultat"::text AS "resultat"
+      FROM "RapportVerification" r
+      WHERE r."verificationId" = v."id"
+        AND r."etablissementId" = ${etablissementId}
+        AND (${!realisesSeulement} OR r."resultat"::text = ANY(${[...RESULTATS_REALISES]}::text[]))
+      ORDER BY ${ordreRapportPlusRecentSql("r")}
+      LIMIT 1
+    ) d
+    WHERE v."etablissementId" = ${etablissementId}
       AND ${proprietaire}
-      AND (${!realisesSeulement} OR r."resultat"::text = ANY(${[...RESULTATS_REALISES]}::text[]))
-    ORDER BY r."verificationId", ${ordreRapportPlusRecentSql("r")}
   `;
   return new Map(
     lignes.map((l) => [
@@ -106,9 +134,7 @@ export const derniersRapportsDeLEtablissement = cache(
 export async function joindreDernieresRealisations<T extends { id: string }>(
   etablissementId: string,
   lignes: T[],
-): Promise<
-  Array<T & { derniereRealisation: Date | null; dernierResultat: string | null }>
-> {
+): Promise<AvecDerniereRealisation<T>[]> {
   if (lignes.length === 0) return [];
   return projeterDernieresRealisations(
     lignes,

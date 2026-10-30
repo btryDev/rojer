@@ -27,7 +27,7 @@ C'est le premier fait à connaître, et celui qui coûte le plus cher à ignorer
 | Classes | `carte-board`, `board-eyebrow`, `pastille-board`, `champ-board`, `board-titre` | `cartouche`, `label-admin`, `filet-pointille` |
 | Enveloppe | `px-[var(--board-gutter)]`, pleine largeur | `mx-auto max-w-5xl px-6` |
 | Rayons | 30 / 22 / 18 / 16 px | 6 px |
-| Écrans | calendrier, équipements, registre, fiches, tableau de bord, **prestataires, équipe, chrome, auth, onboarding, permis de feu, plans de prévention, actions, prescriptions, bâtiments, fiche établissement** | **DUERP, guide « Comprendre », carnet sanitaire, accessibilité, signatures et pages publiques** |
+| Écrans | calendrier, équipements, registre, fiches, tableau de bord, **prestataires, équipe, chrome, auth, onboarding, permis de feu, plans de prévention, actions, prescriptions, bâtiments, fiche établissement**, carnet sanitaire [2026-10-29] | **DUERP, guide « Comprendre », ~~carnet sanitaire~~ [2026-10-29 : repris, `39310bf6`], accessibilité, signatures et pages publiques** |
 
 *(Relevé au 2026-08-27, après la vague de migration. Le tableau se corrige à
 chaque module repris — un document qui retarde sur le code envoie chercher un
@@ -546,6 +546,34 @@ Champs en `.label-board` / `.champ-board`. **L'erreur de validation est en
 Détails de saisie : date → `type="date"` ; nombre → `type="text"
 inputMode="numeric"` (la molette d'un champ nombre modifie une valeur déjà
 saisie par accident) ; `aria-describedby` chaîne l'aide et l'erreur.
+
+### Téléphone (2026-10-29)
+
+Décisions de la propriétaire : tout l'app est lisible sur téléphone, quatre
+gestes y sont pensés pour le pouce (voir ce qui est dû, déposer un rapport,
+montrer un document, ouvrir la fiche d'un équipement), trois écrans restent à
+l'ordinateur (`SurOrdinateur`).
+
+- **Un seul seuil, `md` (48rem).** En dessous, la barre du bas remplace le
+  rail (`NavigationMobile`), la gouttière tombe à 16 px, les panneaux montent
+  du bas, les tableaux denses deviennent des cartes. `max-md:` / `md:` dans les
+  composants, `@media (width < 48rem)` dans `globals.css`, `useEstTelephone`
+  en JS — jamais `sm:` pour changer de forme.
+- **Un widget ou une carte s'adapte à sa largeur, pas à l'écran** : requêtes
+  de conteneur (`@container` sur l'enveloppe du widget, variantes `@md:`).
+- **Le geste attendu monte en tête.** Une fiche garde son ordre (les faits,
+  puis le geste, § `CorpsFiche`) ; sur téléphone, un bouton d'encre en tête
+  y mène : « Déposer un rapport », « À faire (n) », « Clôturer l'action ».
+- **Ce qui s'explique se replie.** Un chapeau de fiche long se replie derrière
+  « L'explication » (`HeroFiche`) ; une liste de cartes d'explication se replie
+  derrière leurs titres (documents obligatoires).
+- **Une pastille ne coupe pas un titre.** Sur une ligne titre + pastille +
+  chevron, la pastille passe sous le titre, qui garde deux lignes
+  (`max-md:line-clamp-2`).
+- **Un tableau dense** porte `.tableau-en-cartes`, un `data-label` par cellule,
+  l'en-tête en `max-md:sr-only` et sa largeur minimale en `md:min-w-…`.
+- **Cibles de 44 px au moins**, champs en 16 px sur écran tactile (Safari iOS
+  zoome en dessous).
 
 ---
 

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowUpRight, ChevronDown, FileText } from "lucide-react";
+import { ArrowUpRight, ChevronDown, FileText, FileUp } from "lucide-react";
 import { BadgeStatut } from "@/components/calendrier/BadgeStatut";
 import { mentionDelaiDeGrace } from "@/lib/calendrier/grace";
 import { BadgeResultat } from "@/components/rapports/BadgeResultat";
@@ -520,18 +520,32 @@ export default async function VerificationDetailPage({
           </>
         }
         actions={
-          // Pas d'appareil à modifier quand l'échéance porte sur
-          // l'établissement (ADR-022) : un lien vers une fiche qui n'existe
-          // pas vaut moins que pas de lien.
-          v.equipement && !appareilRetire ? (
-            <Link
-              href={`/etablissements/${id}/equipements/${v.equipement.id}/modifier`}
-              className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
-            >
-              Modifier l&apos;équipement
-              <ArrowUpRight className="size-3.5" />
-            </Link>
-          ) : null
+          <>
+            {/* Sur téléphone, le dépôt est le geste qu'on vient faire, et la
+                carte qui le porte est un écran et demi plus bas : le bouton
+                l'ouvre en pleine largeur (`?deposer=1`) et y mène (2026-10-29). */}
+            {depotOuvert && !pieceMedicale ? (
+              <Link
+                href={`${avecParametres(depuisCetteFiche, { de, deposer: "1" })}#depot`}
+                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[color:var(--board-ink)] px-5 text-[13.5px] font-semibold text-white md:hidden"
+              >
+                <FileUp aria-hidden className="size-4" />
+                Déposer un rapport
+              </Link>
+            ) : null}
+            {/* Pas d'appareil à modifier quand l'échéance porte sur
+                l'établissement (ADR-022) : un lien vers une fiche qui n'existe
+                pas vaut moins que pas de lien. */}
+            {v.equipement && !appareilRetire ? (
+              <Link
+                href={`/etablissements/${id}/equipements/${v.equipement.id}/modifier`}
+                className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
+              >
+                Modifier l&apos;équipement
+                <ArrowUpRight className="size-3.5" />
+              </Link>
+            ) : null}
+          </>
         }
       />
       {/* Sous le titre de la fiche, comme sur « Préparer un contrôle » ; la

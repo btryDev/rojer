@@ -131,11 +131,37 @@ export async function fraicheurDepuisRepere(
 }
 
 /**
+ * Le repère du calendrier, lu dans une session et borné au propriétaire.
+ * `null` si l'établissement n'existe pas ou n'appartient pas à l'utilisateur ;
+ * sinon `{ repere }`, `repere` valant `null` quand il n'a jamais été posé ou a
+ * été effacé.
+ *
+ * LA SEULE LECTURE DU REPÈRE DANS UNE SESSION, et elle N'EST PAS MÉMOÏSÉE.
+ * Deux fonctions l'appellent, et elles n'ont pas le même rapport au temps :
+ * `calendrierDesynchronise` décide de la réparation (`assurerCalendrierAJour`)
+ * et doit voir la base au moment où elle est appelée ; `fraicheurCalendrier`
+ * dit l'âge à l'affichage, et se mémoïse elle-même. Mémoïser ici ferait servir
+ * à l'une la lecture de l'autre — la barre latérale, qui lit sans réparer, et
+ * la page, qui répare puis lit, sont rendues en parallèle (plan performance,
+ * lot 1, commentaire de `navigation/sidebar-counts.ts`).
+ */
+export async function lireRepereCalendrier(
+  etablissementId: string,
+): Promise<{ repere: string | null } | null> {
+  const user = await requireUser();
+  const etab = await prisma.etablissement.findFirst({
+    where: { id: etablissementId, entreprise: { userId: user.id } },
+    select: { referentielVersionCalendrier: true },
+  });
+  return etab ? { repere: etab.referentielVersionCalendrier } : null;
+}
+
+/**
  * Lit la fraîcheur du calendrier d'un établissement, **dans une session**.
  * N'écrit rien.
  *
- * Porte la garde de session et le filtre de tenancy, comme
- * `calendrierDesynchronise` dont elle reprend la lecture en la détaillant. Un
+ * Porte la garde de session et le filtre de tenancy par
+ * `lireRepereCalendrier`, la lecture que `calendrierDesynchronise` partage. Un
  * établissement qui n'appartient pas à l'utilisateur est traité comme absent —
  * et un dossier absent n'a pas de calendrier : `jamais_genere` est la réponse
  * la moins affirmative, celle qui ne fait pas passer un vide pour un état sain.
@@ -151,14 +177,10 @@ export async function fraicheurDepuisRepere(
 export const fraicheurCalendrier = cache(async function fraicheurCalendrier(
   etablissementId: string,
 ): Promise<FraicheurCalendrier> {
-  const user = await requireUser();
-  const etab = await prisma.etablissement.findFirst({
-    where: { id: etablissementId, entreprise: { userId: user.id } },
-    select: { referentielVersionCalendrier: true },
-  });
-  if (!etab) return { etat: "jamais_genere" };
+  const lu = await lireRepereCalendrier(etablissementId);
+  if (!lu) return { etat: "jamais_genere" };
 
-  return fraicheurDepuisRepere(etab.referentielVersionCalendrier, () =>
+  return fraicheurDepuisRepere(lu.repere, () =>
     // Le comptage ne sert QUE sur cette branche, donc il n'est pas payé par
     // les dossiers sains — qui sont le cas courant.
     prisma.verification.count({ where: { etablissementId } }),

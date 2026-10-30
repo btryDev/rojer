@@ -159,23 +159,26 @@ export function HeroEtablissement({
     <div>
     <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_clamp(260px,24vw,380px)]">
       <div className="min-w-0 rounded-[24px] bg-[color:var(--board-card)] p-6 ring-1 ring-[color:rgba(13,18,36,.10)] sm:p-7">
-        <div className="flex min-w-0 items-center gap-3.5">
+        {/* Sur téléphone, « Informations incomplètes » passe sous le nom :
+            à côté, il réduisait « Le Comptoir des Halles » à quatre lignes
+            d'un mot (2026-10-29). */}
+        <div className="flex min-w-0 flex-wrap items-center gap-3.5">
           <span
             aria-hidden
             className="flex size-12 flex-none items-center justify-center rounded-[14px] bg-[color:var(--board-ink)] indent-[0.06em] font-mono text-[13px] font-medium tracking-[0.06em] text-white"
           >
             {monogramme(etab.raisonDisplay)}
           </span>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1 basis-48">
             <p className="m-0 text-[22px] font-semibold leading-[1.2] tracking-[-0.025em] text-[color:var(--board-ink)]">
               {etab.raisonDisplay}
             </p>
-            <p className="m-0 mt-0.5 truncate text-[13px] text-[color:var(--board-slate-mid)]">
+            <p className="m-0 mt-0.5 text-[13px] text-[color:var(--board-slate-mid)] md:truncate">
               {[activite, etab.adresse].filter(Boolean).join(" · ")}
             </p>
           </div>
           {guide ? (
-            <span className="ml-auto inline-flex flex-none items-center gap-1.5 self-start rounded-full bg-[color:var(--board-amber)] px-3 py-1 text-[12px] font-semibold text-[color:var(--board-amber-ink)]">
+            <span className="inline-flex flex-none items-center gap-1.5 self-start rounded-full max-md:order-last md:ml-auto bg-[color:var(--board-amber)] px-3 py-1 text-[12px] font-semibold text-[color:var(--board-amber-ink)]">
               Informations incomplètes
             </span>
           ) : null}

@@ -68,7 +68,7 @@ export function WidgetShell({
         // La portée vient d'une classe et non du style inline : elle change
         // au point de rupture (cf. `classePortee`), et un style inline
         // gagnerait sur la règle CSS.
-        "relative " +
+        "@container relative " +
         classePortee +
         " " +
         (enEdition

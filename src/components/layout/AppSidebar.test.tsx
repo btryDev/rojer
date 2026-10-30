@@ -7,7 +7,7 @@
  * Calendrier à jour : le nombre, comme avant (2026-10-13).
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/etablissements/e1/calendrier",
@@ -19,6 +19,11 @@ import { LIBELLE_CALENDRIER_A_METTRE_A_JOUR } from "./sidebar-nav";
 
 afterEach(cleanup);
 
+// Le rail de l'ordinateur. La barre du bas du téléphone est rendue à côté,
+// masquée par CSS que jsdom n'applique pas (`NavigationMobile.test.tsx`).
+const rail = () =>
+  within(screen.getByRole("complementary", { name: "Navigation principale" }));
+
 const ETAB = {
   id: "e1",
   raisonDisplay: "Le Comptoir",
@@ -29,8 +34,8 @@ const ETAB = {
 
 function lienCalendrier(): HTMLElement {
   // Le panneau est replié à l'arrivée : on ouvre celui de « À faire ».
-  fireEvent.click(screen.getByRole("button", { name: /À faire/ }));
-  return screen
+  fireEvent.click(rail().getByRole("button", { name: /À faire/ }));
+  return rail()
     .getAllByRole("link")
     .filter((a) => a.getAttribute("href") === "/etablissements/e1/calendrier")
     .find((a) => a.textContent?.startsWith("Calendrier"))!;

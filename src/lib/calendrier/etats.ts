@@ -299,6 +299,27 @@ export function libelleEtatCapitale(etat: RegistreLigne): string {
 }
 
 /**
+ * Le mot de la pastille d'une ligne de calendrier (décision de la
+ * propriétaire du 2026-10-29) :
+ *  · « Fait » pour ce qui est fait — un contrôle fait ne porte pas le
+ *    résultat de son rapport au calendrier : un point vert à côté
+ *    d'« Écart majeur » se contredisait, et le danger d'un écart majeur y
+ *    reste par ses points à corriger, datés et rouges ;
+ *  · « Aujourd'hui » pour une échéance proche qui tombe le jour même :
+ *    « Sous 30 jours » se lisait « on a le temps ».
+ * Ailleurs, le mot de l'état (`libelleEtatCapitale`). Le champ et l'encre
+ * restent ceux de l'état.
+ */
+export function libellePastille(etat: RegistreLigne, duJour: boolean): string {
+  if (etat === "faite") return "Fait";
+  // « En retard », le mot des pastilles (`BadgeStatut`, `en_retard`), et non
+  // « Dépassée », celui des comptes et des légendes.
+  if (etat === "enRetard") return "En retard";
+  if (etat === "proche" && duJour) return "Aujourd'hui";
+  return libelleEtatCapitale(etat);
+}
+
+/**
  * Classe une date nue — une échéance qui n'a ni statut ni réalisation,
  * comme les attestations ou les travaux du plan d'actions.
  */

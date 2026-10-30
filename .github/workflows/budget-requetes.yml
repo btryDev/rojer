@@ -1,0 +1,118 @@
+# Budget de requêtes SQL par page (plan performance, garde-fou).
+#
+# Construit l'application, sème le gros dossier de mesure (100 équipements,
+# 50 salariés, dix ans d'historique) dans un Postgres éphémère, ouvre les
+# pages principales et compte les requêtes SQL de chacune
+# (`scripts/perf/mesurer.mjs`, journal de PostgreSQL). Une page au-dessus de
+# son budget (`scripts/perf/budget-requetes.json`) fait échouer le job.
+#
+# Ce qu'il protège : en production, chaque requête est un aller-retour réseau,
+# et une lecture dans une boucle fait grandir une page avec le dossier. Le
+# nombre de requêtes d'une page est ce qu'un relecteur ne voit pas dans un
+# diff ; ce job le voit.
+#
+# Aucun secret, aucun accès à la production : un Postgres du runner, un faux
+# serveur d'authentification local (`scripts/perf/faux-auth.mjs`), des valeurs
+# factices pour Supabase.
+
+name: Budget de requêtes par page
+
+on:
+  # Une modification de documentation seule ne change aucune page.
+  pull_request:
+    paths-ignore: ["docs/**", "**/*.md"]
+  push:
+    branches: [main]
+    paths-ignore: ["docs/**", "**/*.md"]
+
+permissions:
+  contents: read
+
+# Un nouveau push sur la même branche annule la mesure en cours.
+concurrency:
+  group: budget-requetes-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  budget:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: duerp
+          POSTGRES_PASSWORD: duerp
+          POSTGRES_DB: duerp_perf_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U duerp"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://duerp:duerp@localhost:5432/duerp_perf_ci
+      DIRECT_URL: postgresql://duerp:duerp@localhost:5432/duerp_perf_ci
+      # Le faux serveur d'authentification : le cookie de session de la
+      # mesure est signé pour lui (`faux-auth.mjs`).
+      NEXT_PUBLIC_SUPABASE_URL: http://localhost:54399
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-factice
+      # L'utilisateur du faux serveur, propriétaire du dossier semé.
+      UTILISATEUR_MESURE: 00000000-0000-4000-8000-00000000fe11
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Installer les dépendances
+        run: pnpm install --frozen-lockfile
+
+      - name: Semer le gros dossier de mesure
+        run: |
+          # `seed:complet` charge un .env : les variables du job priment.
+          touch .env
+          pnpm exec prisma migrate deploy
+          pnpm seed:complet --user "$UTILISATEUR_MESURE"
+          pnpm exec tsx --import ./scripts/server-only-hors-next.mjs scripts/perf/grossir-dossier.ts
+
+      - name: Construire l'application
+        # `next build` et non `pnpm build`, qui enchaîne une migration.
+        run: pnpm exec next build
+
+      - name: Mesurer les pages contre leur budget
+        env:
+          # Le conteneur du service Postgres : la mesure lit son journal.
+          CONTENEUR_PG: ${{ job.services.postgres.id }}
+        run: |
+          node scripts/perf/faux-auth.mjs --port 54399 > faux-auth.log 2>&1 &
+          pnpm exec next start --port 3101 > next.log 2>&1 &
+          pret=0
+          for i in $(seq 1 60); do
+            if curl -s -o /dev/null http://localhost:3101/ && curl -s -o /dev/null http://localhost:54399/__compte; then pret=1; break; fi
+            sleep 1
+          done
+          if [ "$pret" != 1 ]; then echo "Le serveur ou le faux serveur d'authentification n'a pas démarré en 60 s."; exit 1; fi
+          # Trois essais par page, la médiane fait foi : une requête de passage
+          # (travail différé, reconnexion du pool) ne fait pas échouer une PR.
+          node scripts/perf/mesurer.mjs \
+            --base http://localhost:3101 \
+            --db duerp_perf_ci \
+            --conteneur "$CONTENEUR_PG" \
+            --utilisateur duerp \
+            --essais 3 \
+            --budget scripts/perf/budget-requetes.json
+
+      - name: Journaux des serveurs, en cas d'échec
+        if: failure()
+        run: |
+          echo "--- next.log"; tail -n 80 next.log || true
+          echo "--- faux-auth.log"; tail -n 40 faux-auth.log || true

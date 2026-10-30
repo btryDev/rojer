@@ -17,7 +17,7 @@
 // Le module est volontairement structurel (pas d'import de `queries.ts`,
 // qui tirerait Prisma) pour rester testable en environnement `node`.
 
-import { FUSEAU_REFERENCE } from "@/lib/dates";
+import { formaterJourDateLongueFr } from "@/lib/dates/jour-long";
 import type { FamilleEcheance } from "@/lib/calendrier/echeances";
 import type { Recommandation } from "./recommandations";
 
@@ -91,16 +91,8 @@ function enLettres(n: number): string {
 
 // Date du jour en toutes lettres, fuseau épinglé : sans lui, le brief
 // annonçait « Dimanche 9 août » un lundi matin sur un serveur en UTC.
-const FMT_DATE_BRIEF = new Intl.DateTimeFormat("fr-FR", {
-  timeZone: FUSEAU_REFERENCE,
-  weekday: "long",
-  day: "numeric",
-  month: "long",
-  year: "numeric",
-});
-
 function formaterDate(d: Date): string {
-  const s = FMT_DATE_BRIEF.format(d);
+  const s = formaterJourDateLongueFr(d);
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 

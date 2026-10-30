@@ -59,7 +59,9 @@ function Jauge({ etats }: { etats: RegistreLigne[] }) {
   if (segments.length === 0) return null;
 
   return (
-    <span aria-hidden className="flex h-2 w-[180px] flex-none gap-[3px]">
+    // Sur téléphone, la jauge passe sous le titre, pleine largeur : à côté,
+    // ses 180 px écrasaient le nom de la catégorie à quelques lettres.
+    <span aria-hidden className="flex h-2 w-full flex-none gap-[3px] sm:w-[180px]">
       {segments.map((e) => (
         <span
           key={e}
@@ -103,7 +105,7 @@ export function CarteCategorie({
 
   return (
     <section>
-      <div className="flex items-center gap-3.5 border-b border-[color:var(--board-slate-line)] pb-3.5">
+      <div className="flex flex-wrap items-center gap-3.5 border-b border-[color:var(--board-slate-line)] pb-3.5 sm:flex-nowrap">
         <MarqueCategorie categorie={categorie} taille={44} />
         <div className="min-w-0 flex-1">
           <h2 className="board-titre m-0 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[22px]">

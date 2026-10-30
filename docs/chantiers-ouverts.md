@@ -261,6 +261,7 @@ décisions qui dormaient dans le texte des ADR, remontées ici.]
 6. Les titres « gestes et postures », « écran », « chimique » au catalogue ([§ 17](#17-les-titres-que-le-duerp-rend-dus--ce-que-ladr-038-laisse-ouvert-2026-10-05), point 3).
 7. « Ne concerne pas cette personne », après instruction RGPD ([§ 17](#17-les-titres-que-le-duerp-rend-dus--ce-que-ladr-038-laisse-ouvert-2026-10-05), point 4).
 8. Après le dépôt d'un rapport, dire la prochaine échéance ([§ 20](#20-après-le-dépôt-dun-rapport-dire-la-prochaine-échéance-2026-10-28)).
+9. Filtres par année sur l'historique de la fiche d'un contrôle — pas maintenant ([§ 21](#21-filtres-par-année-sur-lhistorique-de-la-fiche-dun-contrôle-2026-10-29)).
 
 ---
 
@@ -3223,3 +3224,19 @@ La date est `v.datePrevue` après roulement (ADR-034, ADR-036) : la lire, jamais
 la recalculer à l'écran. Cas à prévoir : la ligne « à planifier » faute de
 rythme (aucune date à annoncer), et le rapport à écart, où la confirmation vit
 dans la section des points (ADR-048).
+
+## 21. Filtres par année sur l'historique de la fiche d'un contrôle (2026-10-29)
+
+Décision de la propriétaire du 2026-10-29 (relayée par la session `duerp-61`) :
+**pas maintenant**, à envisager.
+
+La fiche d'un contrôle (`equipements/[equipementId]/controles/[verificationId]`)
+rend chaque rapport de la ligne, tout l'historique : sur le gros dossier de
+mesure, un contrôle hebdomadaire tenu dix ans pèse 3,7 Mo de HTML et ≈ 155 ms
+de rendu — la dernière page dont le coût grandit avec les années
+(`docs/plan-performance.md`, lots 1a et 1b). Le registre, lui, est déjà servi
+une année à la fois (`?annee=`).
+
+À faire, le jour où on le prend : des filtres par année sur l'historique, la
+fiche s'ouvrant probablement sur l'année en cours seulement — même mécanisme
+que le registre. D'ici là, la page reste telle quelle.

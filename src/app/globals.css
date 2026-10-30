@@ -93,6 +93,10 @@
      shells, rendue par ce qui a le droit de passer dessous — un fond ou une
      image (`.sous-la-gelule`). Par défaut, rien ne s'y glisse. */
   --reserve-gelule: 72px;
+  /* La place de la barre de navigation du bas (`NavigationMobile`), sur
+     téléphone seulement : 68 px, plus la barre d'accueil de l'iPhone. Nulle
+     dès 768 px, où le rail reprend la navigation. */
+  --reserve-nav-bas: 0px;
   /* La mesure de lecture, unique (2026-10-24, décision de la propriétaire).
      ~~62 / 66 / 68 caractères, recopiés à la main dans chaque écran~~ : la
      mesure d'un livre, qui coupait en trois lignes une phrase d'aide sur un
@@ -206,6 +210,30 @@
   --input: oklch(0.88 0.003 90);
   --ring: oklch(0.35 0.004 90);
   --radius: 0.75rem; /* ronds doux, type image 2 */
+}
+
+/* Téléphone (2026-10-29) : sous 48rem, le seuil `md` de Tailwind, et le
+   même partout — c'est là que la barre du bas remplace le rail, et que
+   tout ce qui change de forme pour le téléphone en change (`max-md:` dans
+   les composants). La gouttière tombe à 16 px : à 32, un écran de 390 px
+   en perdait 64. La barre du bas mesure 68 px plus la barre d'accueil de
+   l'iPhone ; elle se dimensionne sur cette réserve (`NavigationMobile`). */
+@media (width < 48rem) {
+  :root {
+    --board-gutter: 16px;
+    --reserve-nav-bas: calc(68px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Sous 16 px, Safari iOS zoome sur le champ au moment de la saisie, et la
+   page reste agrandie après. Le seuil est l'écran tactile, pas la largeur :
+   l'iPad zoome aussi. Hors couche : passe devant `champ-board`. */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
 }
 
 .dark {
@@ -1362,5 +1390,32 @@
   }
   .lp-btn:hover .lp-fleche {
     transform: none;
+  }
+}
+
+/* Un tableau dense devient une pile de cartes sur téléphone (2026-10-29).
+   Même balisage partout : chaque cellule porte le nom de sa colonne dans
+   `data-label`. Le reste se dit à l'appel : l'en-tête en `max-md:sr-only`
+   (il reste aux lecteurs d'écran), la largeur minimale en `md:min-w-…`. */
+@layer components {
+  @media (width < 48rem) {
+    .tableau-en-cartes tbody,
+    .tableau-en-cartes tr,
+    .tableau-en-cartes td {
+      display: block;
+    }
+    .tableau-en-cartes tr {
+      padding-block: 8px;
+    }
+    .tableau-en-cartes td[data-label] {
+      display: grid;
+      grid-template-columns: 7.5rem minmax(0, 1fr);
+      gap: 10px;
+    }
+    .tableau-en-cartes td[data-label]::before {
+      content: attr(data-label);
+      font-size: 11.5px;
+      color: var(--board-slate-soft);
+    }
   }
 }

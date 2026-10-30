@@ -205,8 +205,11 @@ Reste, rangé dans les lots suivants :
   3,7 Mo — lot 6 (poids envoyé) ; ~~**question à la propriétaire** : la fiche
   d'un contrôle doit-elle montrer tout son historique, ou les plus récents et
   un renvoi au registre ?~~ [2026-10-27, la propriétaire : **des filtres sur
-  l'historique de la fiche d'un contrôle, plus tard** — à faire, pas encore
-  planifié.]
+  l'historique de la fiche d'un contrôle, plus tard** — ~~à faire, pas encore
+  planifié~~.] [2026-10-29, la propriétaire : **pas maintenant** — rangé dans
+  les chantiers à envisager (`docs/chantiers-ouverts.md` § 21) : des filtres
+  par année, la fiche s'ouvrant probablement sur l'année en cours. D'ici là,
+  la page reste telle quelle.]
 - calendrier (1,4 Mo) et équipements (0,8 Mo) grossissent avec le parc, pas
   avec l'historique : lot 6.
 
@@ -291,19 +294,295 @@ Non atteint, et pourquoi :
   partagée : elles ont besoin de la vérification et de sa zone, une relation
   qui coûte en SQL autant qu'elle économise.
 
+### Lot 1b — Le calcul serveur et l'historique relu partout (2026-10-28)
+
+Né d'un profil CPU du serveur (`node --cpu-prof`, `next start`, gros dossier) :
+après le lot 1, le tableau de bord passait 229 ms dont 92 de SQL — le reste
+était du calcul, que la mesure en requêtes ne voyait pas.
+
+Fait :
+- **Dates civiles** (`dates/index.ts`) : une seule fonction prenait ≈ 115 ms
+  par affichage du tableau de bord — `composantesCiviles`, un
+  `Intl.formatToParts` par appel, deux par `instantCivil`, trois par
+  `debutDuJour`. Le décalage de Paris est désormais lu une fois par heure UTC
+  ~~(les changements d'heure tombent à 01:00 UTC pile depuis 1981)~~
+  [2026-10-29, `/simplify` : une heure n'est mémorisée que si le décalage y
+  est le même au début et à la fin ; sinon, lecture `Intl` — aucune hypothèse
+  sur les données de fuseau] et les composantes en dérivent par
+  l'arithmétique UTC. Résultat identique à une référence `Intl` écrite dans
+  le test : ~~chacun des 438 changements d'heure de 1981 à 2199~~ [2026-10-29 :
+  chacun des changements de 1900 à 2300, dont d'anciens hors des heures
+  pleines (1911)] est retrouvé dans les données de fuseau, puis le calcul est
+  comparé autour de chacun, et sur 20 000 instants distincts de l'an 900 à
+  10 100 (`composantes-rapides.test.ts`, éprouvé en faussant le décalage puis
+  en retirant la vérification de l'heure : rouge). Mémoire à deux
+  générations, bornée, précédée de la dernière heure lue. Le sceau du moteur
+  est recopié sans incrément : aucun dossier régénéré.
+- **Dernière réalisation** (`rapports/joindre-realisations.ts`, lue sur chaque
+  écran par la barre latérale) : le `DISTINCT ON` lisait et triait TOUT
+  l'historique (≈ 12 ms à dix ans, linéaire en années). Une descente d'index
+  par ligne (`LATERAL … LIMIT 1`, index
+  `(verificationId, dateRapport DESC, createdAt DESC)` qui remplace celui sur
+  `verificationId` seul) : ≈ 1,1 ms, et le coût suit le nombre de lignes, pas
+  la longueur de l'historique. Équivalence tenue contre une vraie base
+  (`joindre-realisations.integration.test.ts`, éprouvé en inversant l'ordre :
+  rouge). Le lot 1a l'avait écartée pour « ≈ 1 ms » : mesuré à nouveau, avec
+  les statistiques de la base à jour, l'écart est de dix à un.
+- **Index sans verrou** (2026-10-29, décision de la propriétaire : « on pense
+  à long terme », pas de choix selon la taille de la table au jour J) : l'index
+  se pose en `CONCURRENTLY` et l'ancien se retire de même, chaque instruction
+  seule dans sa migration (`20261028200000_rapport_index_dernier_par_ligne`,
+  `20261028200100_rapport_retrait_index_verification`) — vérifié par un
+  `migrate deploy` complet sur une base neuve, sans écart au schéma. La règle
+  vaut pour toute migration à venir : `migrations-index.test.ts` refuse un
+  index ordinaire sur une table existante, un `DROP INDEX` ordinaire, et un
+  `CONCURRENTLY` accompagné (éprouvé en remettant l'ancienne migration :
+  rouge). [2026-10-29, `/simplify` : la garde lit les migrations par
+  `migrations-lecture.ts`, partagé avec la garde RLS (renommages, `public."X"`,
+  tables supprimées), et vise aussi les contraintes qui verrouillent une table
+  existante — `UNIQUE`/`PRIMARY KEY` hors `USING INDEX`, clé étrangère sans
+  `NOT VALID`. Pas encore lus : `ALTER COLUMN … TYPE`, `SET NOT NULL`.]
+- **Proposé, non fait — décision de la propriétaire** : un `lock_timeout` sur
+  la connexion de `migrate deploy` (`scripts/migrer-en-production.sh`), pour
+  qu'une instruction qui attend un verrou échoue vite au lieu de faire
+  attendre l'application, quelle que soit sa forme ; ou un linter de
+  migrations PostgreSQL en CI (squawk). Le premier touche le script de
+  déploiement de production, le second ajoute un outil.
+
+| Gros dossier (médianes, local) | SQL avant → après (ms) | Total avant → après (ms) |
+|---|---|---|
+| Tableau de bord | 92 → 65 | 229 → 109 |
+| Calendrier | 49 → 28 | 196 → 107 |
+| Équipements | 40 → 28 | 109 → 79 |
+| Plan d'actions | 37 → 17 | 59 → 45 |
+| Équipe | 35 → 21 | 87 → 64 |
+| Documents | 44 → 15 | 69 → 44 |
+| Carnet sanitaire | 44 → 18 | 79 → 64 |
+| Fiche équipement | 40 → 25 | 81 → 64 |
+| Registre | 46 → 37 | 171 → 158 |
+| Fiche contrôle | 38 → 22 | 157 → 155 |
+
+Dossier de démo (36 lignes), même build de prod, `main` 2f837b49 contre ce
+lot : `mesurer.mjs` donnait le tableau de bord 75 → 82 ms et le calendrier
+55 → 60 ms — du bruit, la mesure faisant journaliser chaque requête à
+PostgreSQL. Rejoué sans journal, deux séries de 25 chargements complets :
+tableau de bord 42–48 → 28–29 ms, calendrier 31–32 → 24 ms. Aucune page de
+la démo ne recule.
+
+Mesuré et écarté :
+- les classes du bouton (≈ 800 caractères, 2 665 fois sur le registre) :
+  4 Mo de HTML, mais 91 Ko en gzip et ≈ 20 ms de rendu — pas une refonte du
+  bouton de toute l'application pour si peu ;
+- `COLLATE "C"` sur l'ancien `DISTINCT ON` (12 → 7 ms) : remplacé par la
+  descente d'index.
+
+Reste, et c'est ce qui grandit encore avec les années : **le registre et la
+fiche d'un contrôle** rendent chaque rapport (532 lignes pour une année
+chargée, dix ans d'historique sur la fiche). Le registre est borné à l'année ;
+la fiche ne l'est pas — ~~décision de la propriétaire attendue (« des filtres
+plus tard », lot 1a)~~ [2026-10-29, la propriétaire : pas maintenant ; filtres
+par année à envisager, `docs/chantiers-ouverts.md` § 21. La page reste telle
+quelle].
+
 ### Lot 2 — Même traitement pour les autres écrans lourds (M)
 
 Calendrier, registre, équipements, DUERP, dans cet ordre (le plus consulté
 d'abord). Chaque écran réutilise le chargeur du lot 1 plutôt que d'écrire sa
 propre lecture. Cible indicative : ≤ 25 requêtes par écran.
 
+#### Instruction du lot 2 (2026-10-29, main 5a5e9040, gros dossier)
+
+Méthode : un traçage temporaire du client Prisma (proxy, pile capturée à
+l'appel, `next dev`), retiré avant tout commit, puis `mesurer.mjs` sur build
+de prod.
+
+Ce que la mesure apprend :
+- **Une lecture Prisma n'est pas une requête** : le tableau de bord fait 40
+  appels et 73 requêtes SQL — chaque `include` coûte une requête de plus
+  (Prisma 6). Documents : 17 appels, 28 requêtes.
+- **La base n'est pas le goulet** : 18,5 ms de SQL pour les 73 requêtes du
+  tableau de bord (dernier essai). En production, le coût d'une page est
+  surtout le NOMBRE d'allers-retours, que la mesure locale ne voit pas.
+- **Les lectures en double qui restent n'ont pas la même forme** :
+  l'établissement est lu cinq fois par rendu (contrôle d'accès, fraîcheur du
+  calendrier, dossier du moteur, page, réparation), les lignes sept fois. Les
+  identiques ont été partagées au lot 1. La lecture de réparation
+  (`calendrierDesynchronise`) doit voir la base APRÈS la réparation : la
+  partager servirait un état périmé (déjà écarté au lot 1). Les fondre
+  demande de réécrire leurs projections, sans gain sur la base.
+
+Mesuré et écarté — `relationJoins` (préversion de Prisma 6, une requête par
+lecture au lieu d'une par relation) :
+
+| Gros dossier (build webpack) | SQL | Total (ms) |
+|---|---|---|
+| Tableau de bord | 73 → 39 | 104 → 129 |
+| Calendrier | 46 → 23 | 124 → 131 |
+| Documents | 28 → 17 | 37 → 50 |
+
+Moitié moins d'allers-retours, mais le décodage du JSON coûte au serveur
+(+ 10 à 25 ms par page) et l'agrégation à la base (Documents : 5,2 → 10,6 ms
+de SQL au dernier essai). Le bilan dépend du temps d'un aller-retour en
+production, non mesuré : **pas d'adoption sans le lot 7**.
+
+**Conclusion** : le lot 2 n'a pas de gain propre aujourd'hui. Le préalable
+est le lot 7 (temps réels en production) : il dit ce que coûte un
+aller-retour, donc si `relationJoins` ou la refonte des projections valent
+leur coût. À reprendre avec ces chiffres.
+
+#### Lectures en double, étapes 1 à 3 (2026-10-29, `lot/perf-lectures-doubles`)
+
+De la propreté de code, demandée par la propriétaire : une lecture par
+donnée et par rendu là où elles avaient la même forme. Non mesuré.
+
+Fait :
+- **Le repère du calendrier** : `fraicheurCalendrier` et
+  `calendrierDesynchronise` passent par `lireRepereCalendrier`, NON
+  mémoïsée. **Aucune requête gagnée**, et c'est voulu : la barre latérale
+  lit sans réparer, la page répare puis lit — partager servirait la page
+  d'avant la réparation (lot 1). Une garde relit les sources
+  (`fraicheur.test.ts`).
+- **Le DUERP** : `duerpDuRendu` remplace quatre lectures (échéance annuelle
+  de la barre, tableau de bord, couverture, `getEtablissement`). Il ne lit
+  que le numéro et la date de la dernière version — pas le `snapshot` — et
+  pas les unités, que la couverture lit à part.
+- **L'établissement** : `requireEtablissement` et `getEtablissement`
+  partagent `etablissementDuCompteDuRendu`, qui OMET le sceau et
+  `updatedAt` — les colonnes que la réparation réécrit, éventuellement après
+  cette lecture. `lecture-partagee.test.ts` relie l'omission aux écritures
+  du calendrier.
+
+Reste : l'établissement est encore lu par `chargerEtablissementEtParc`
+(autre forme, le parc) et par le repère ; les lignes de suivi sept fois —
+l'étape 4, dont le design attend la décision de la propriétaire.
+[2026-10-29, `lot/perf-lignes-partagees`, accord de la propriétaire :
+étape 4a faite. Les trois lectures des lignes du tableau de bord sans
+autre filtre que la portée — état du calendrier, pastilles par appareil,
+nombre de lignes — passent par `lignesDuDossierDeLaPage`, réservée à la
+page. La barre latérale garde sa lecture ; `lignes-de-la-page.test.ts`
+refuse qu'un layout, un fichier d'attente ou d'erreur, une route
+parallèle ou un `generateMetadata` l'atteigne, par un appel ou par un
+composant. Restent quatre lectures filtrées en SQL (frise, prochaines
+échéances, barres de l'année, `getDashboardData`) : les fondre réécrirait
+leurs filtres en mémoire, à ne lancer qu'avec les chiffres du lot 7.]
+
 ### Lot 3 — Afficher tout de suite (S-M)
+
+#### La barre latérale ne retarde plus la page (2026-10-29, `lot/perf-lot3-tableau`)
+
+Trouvé en instruisant le lot 2 : le layout attendait les pastilles et l'état
+des registres (une vingtaine de requêtes) avant de rendre quoi que ce soit —
+sur un chargement complet, la page elle-même attendait derrière. La barre se
+rend désormais sans eux, inerte le temps qu'ils arrivent (aucun panneau ne
+s'ouvre, donc rien ne se referme ni ne se réordonne au remplacement), puis
+complète (`SidebarAvecPastilles`, sous `<Suspense>`). Une lecture de
+pastille en échec laisse la barre sans pastilles au lieu de remplacer la page
+par l'écran d'erreur. La fratrie de la gélule est lue en même temps que la
+garde. [Revue du lot : le shell DUERP garde sa lecture attendue — sans
+`loading.tsx` sous `/duerp/[id]`, il n'y gagnait rien.]
+
+| Gros dossier, 1er octet (ms) | main | lot |
+|---|---|---|
+| Tableau de bord | 81 | 58–59 |
+| Calendrier | 53 | 23–36 |
+| Registre | 48 | 19–30 |
+| Équipements | 71 | 27–31 |
+| Équipe | 56 | 26 |
+| Fiche équipement | 44 | 21–27 |
+
+Les temps totaux ne bougent pas (deux mesures, bruit de quelques ms : la
+mesure fait journaliser chaque requête). Les pages DUERP ne gagnaient rien
+(`/duerp/[id]` n'a pas de `loading.tsx`, la page bloque le premier envoi) :
+leur shell est laissé tel quel. [2026-10-29, **abandonné** — décision de la
+propriétaire : « laisse tomber si le gain est minime ». Ne pas reproposer sans
+un gain mesuré plus grand. Ce qui suit est l'essai.] [2026-10-29, essayé puis
+mis de côté (PR #120, code retiré avant fusion, ~~décision à prendre par la
+propriétaire~~) : un
+`duerp/[id]/loading.tsx` et le shell DUERP sur `SidebarAvecPastilles`
+gagnaient au 1er octet (unités 57 → 38 ms, synthèse 67 → 50 ms), mais la
+revue a relevé deux reculs sur le chemin d'entrée principal :
+- `/duerp/[id]`, cible de l'entrée « DUERP » de la barre, redirige vers
+  `/unites` ou `/secteur` ; sous le repli, la redirection part après le début
+  du flux (squelette affiché, puis redirection côté navigateur, aller-retour
+  en plus) ;
+- passer du shell d'établissement au shell DUERP remonte la barre : elle
+  s'afficherait sans pastilles puis les retrouverait, à chaque entrée dans
+  le DUERP.
+Le layout DUERP attend aussi `getDuerp` (unités, risques, actions) avant tout
+rendu : le repli ne couvre que la navigation d'étape à étape. ~~À reprendre en
+traitant d'abord la redirection (lien direct vers l'étape depuis la barre,
+ou redirection hors du rendu).~~] Le
+HTML grossit de ≈ 7 Ko bruts (la barre est envoyée sans puis avec ses
+pastilles).
+
+**Ce qu'en dit l'audit indépendant** (`docs/revues/audit-acces-donnees-2026-10-29.md`) :
+en production aujourd'hui, avec une seule connexion à la base, la barre et la
+page font la queue sur la même connexion. Le premier affichage part plus tôt,
+le contenu de la page pas plus vite. Avec un pool > 1 (à la bascule), elles
+tournent côte à côte.
 
 - Board : le hero et la barre partent d'abord, les widgets arrivent en
   `<Suspense>` par bloc, chacun avec son squelette à sa taille (pas de saut).
 - Un `loading.tsx` par section, à la forme de l'écran (calendrier, listes,
   DUERP), au lieu du squelette de board pour tout.
 - Contrôle visuel : avant/après sur les écrans touchés.
+
+#### Avancement du lot 3 (2026-10-28, `lot/perf-afficher-tout-de-suite`)
+
+Fait — le second point, les replis par section :
+- ~~chaque page d'entrée du rail a son `loading.tsx`, qui rend le vrai
+  en-tête ; chaque sous-dossier de fiche prend le repli neutre~~
+  [2026-10-28, relecture avant PR, même lot : **régression**. Next rattache
+  le repli d'un dossier à une clé qui contient les paramètres d'URL de la
+  page (`addSearchParamsIfPageSegment`, puis `stateKey` dans
+  `layout-router`) : chaque filtre, année ou bascule de vue du calendrier
+  aurait remplacé la page par son squelette — ce que `FiltresCalendrier`
+  évite exprès par une transition. Même chose au registre, aux équipements,
+  au plan d'actions, et sur une fiche quand `SuiviControle` retire
+  `?apres=`.] ;
+- **un seul repli, `etablissements/[id]/loading.tsx`**, composant client :
+  il lit l'adresse (`repliDeChargement`) et rend le vrai en-tête de la page
+  demandée (`ChargementSection` → `CadreEnTete`) — titre et teinte de la
+  section dès le clic, seul le corps attend — ou le repli neutre pour le
+  tableau de bord, les fiches et les formulaires (`ChargementNeutre`).
+  Posé là, il n'est rattaché qu'au premier dossier sous l'établissement :
+  il se montre en changeant de section, jamais en changeant de paramètre ;
+- le cadre de l'en-tête est sorti d'`EnTetePage` (`CadreEnTete`) pour que le
+  repli client n'importe pas les dessins (≈ 46 Ko de source) ; le panneau
+  teinté y reste vide — un dessin plus haut que le minimum (320 px)
+  l'allonge à l'arrivée de la page ;
+- garde `chargement-sections.test.ts` : chaque page balayée doit être
+  annoncée sous son propre en-tête, aucune page sans `EnTetePage` sous un
+  en-tête de section, et un seul `loading.tsx` sous l'établissement.
+  Éprouvée en la cassant trois fois (mauvaise entrée, page oubliée,
+  `loading.tsx` remis dans un dossier) : rouge.
+
+Le corps du repli reste le patron « Liste » commun : pas encore à la forme
+de chaque écran (calendrier, DUERP).
+
+Reste :
+- le tableau de bord en `<Suspense>` par bloc. Ses widgets reçoivent un seul
+  paquet (`DashboardBundle`) dans une grille client à glisser-déposer : le
+  streaming demande de passer aux widgets des promesses (`use()`) ou de
+  découper la grille — à concevoir avant de coder ;
+- ~~le contrôle visuel des replis, pas encore fait~~ [2026-10-28, fait en
+  local — `next dev`, base de mesure semée par `seed:complet`, faux serveur
+  Auth ; la base a été supprimée après. Relevé par un observateur du DOM :
+  - plan d'actions → calendrier : le repli s'affiche sous l'adresse DEMANDÉE
+    (`usePathname` rend la nouvelle adresse pendant l'attente), titre
+    « Calendrier », teinte pêche, sans dessin ; la page arrive ≈ 500 ms
+    après ;
+  - `?annee=2027` puis `&vue=equipement` sur le calendrier : aucun repli,
+    l'écran reste en place — la régression du premier essai est écartée ;
+  - documents, page retardée de 8 s le temps d'une capture (retiré
+    aussitôt) : titre et gris de Documentation tout de suite. **Reste un
+    saut** : à 1 440 px, l'en-tête réel mesure ≈ 403 px contre 320 dans le
+    repli (dessin plus haut que le minimum, descriptif de quatre lignes
+    contre deux) — le titre descend de ≈ 15 px, le corps de ≈ 80 px.
+    Réserver la hauteur exacte demanderait la proportion de chaque dessin ;
+    non fait.]
+- en `next dev`, la première compilation d'une page garde l'écran précédent
+  (« Rendering… ») avant le repli : propre au mode développement.
 
 ### Lot 4 — Ne pas refaire ce qui vient d'être fait (S, optionnel — option expérimentale)
 
@@ -321,6 +600,20 @@ propre lecture. Cible indicative : ≤ 25 requêtes par écran.
 (équipement, fiche, salarié). Le mesurer sur le gros dossier. Au-delà de
 ≈ 300 ms, ne régénérer que le porteur touché ; en dessous, ne rien changer.
 
+**Mesuré le 2026-10-29 (main 35372ecf, gros dossier, 290 lignes) — clos, rien
+à changer.** La régénération (`regenererSansControleDeSession`, chronométrée
+par un script local) coûte ≈ 55-60 ms de calcul et ≈ 8 requêtes à blanc ;
+l'ajout d'un extincteur crée 2 lignes et ne met rien à jour (≈ 62 ms), sa
+désactivation en supprime 2 (≈ 72 ms). Le moteur ne dépend pas de la date
+(ADR-036) : une modification ne touche que quelques lignes. En production,
+≈ 10 allers-retours : sous le seuil, même à 10-20 ms l'aller-retour. Seul cas
+coûteux : beaucoup de lignes mises à jour d'un coup (une requête par ligne,
+protection de concurrence), après un changement du référentiel — rattrapé
+hors affichage par `scripts/regenerer-calendriers.ts`. Regrouper ces mises à
+jour en une instruction serait possible, pour un cas rare : non fait. (Le gros
+dossier de mesure en déclenche 159 à sa première régénération : il insère dix
+ans de rapports après avoir généré le calendrier — un artefact du semis.)
+
 ### Lot 6 — Le poids envoyé au navigateur (S)
 
 - Analyse du bundle par page (`@next/bundle-analyzer`, hors dépendances livrées).
@@ -329,6 +622,14 @@ propre lecture. Cible indicative : ≤ 25 requêtes par écran.
   widgets ne lisent pas.
 
 ### Lot 7 — Voir la performance en production (S)
+
+[2026-10-29, décision de la propriétaire : **à faire à la bascule Clever
+Cloud, pas avant.** Le chiffre qu'il doit donner — le coût d'un aller-retour
+vers la base — dépend de l'hébergement (région, pool) ; mesuré sur Vercel, il
+ne vaudrait plus après la bascule. Rien de spécifique à Vercel n'est
+construit. Le banc local à latence injectée que propose l'audit (§ 5.1,
+Toxiproxy devant `duerp-db`) n'est pas urgent non plus : à faire avant ou
+pendant la bascule, s'il faut chiffrer le réglage du pool.]
 
 - Web Vitals des vrais utilisateurs (`useReportWebVitals`) envoyés à une route
   à nous, journalisés par page ; pas de service tiers (RGPD).
@@ -347,10 +648,20 @@ propre lecture. Cible indicative : ≤ 25 requêtes par écran.
 
 ## Garde-fous
 
-- **Budget de requêtes par écran, testé** : un test qui rend le board sur une
+- **Budget de requêtes par écran, testé** : ~~un test qui rend le board sur une
   base réelle et échoue au-delà du budget. La CI de tests n'a pas de base
   (`tests.yml`, URL factice) ; `derive-schema.yml` en a une, le test s'y
-  greffe. Éprouvé en le cassant (réintroduire une lecture en double → rouge).
+  greffe. Éprouvé en le cassant (réintroduire une lecture en double → rouge).~~
+  [2026-10-29, fait, demandé par la propriétaire : un workflow à part,
+  `budget-requetes.yml`. Il construit l'application, sème le gros dossier
+  dans un Postgres du runner (≈ 10 s), ouvre les treize pages principales et
+  compte leurs requêtes SQL avec `mesurer.mjs` (`--conteneur`, `--budget`).
+  Une page au-dessus de `scripts/perf/budget-requetes.json` fait échouer le
+  job ; une page en dessous est signalée, pour baisser le budget. Les
+  `SELECT 1` du contrôle de connexion de Prisma ne comptent pas : ils
+  faisaient varier une page de deux requêtes d'une mesure à l'autre. Stable
+  sur trois mesures. Éprouvé deux fois : un budget baissé d'une unité, puis
+  une lecture en double ajoutée à la page Documents (29 pour 28) — rouge.]
 - Chaque lot : mesure avant/après collée depuis la sortie du script, jamais
   annoncée.
 - Une revue indépendante avant chaque merge (lots 1 et 2 touchent la tenancy).
@@ -364,12 +675,23 @@ propre lecture. Cible indicative : ≤ 25 requêtes par écran.
 ## Hors plan — lié à la bascule Clever Cloud
 
 - `connection_limit` et pool de connexions (aujourd'hui 1 : les `Promise.all`
-  sont sérialisés en prod).
+  sont sérialisés en prod). [2026-10-29, audit indépendant : **le levier
+  principal** — pool explicite de 5 à 10 par processus, sous le
+  `max_connections` du plan Clever Cloud (non publié : console ou support),
+  base et application dans la même région, sans `pgbouncer=true`. Le cache
+  serveur des compteurs est écarté : voir le rapport.]
 - Région des fonctions vs région de la base (`dub1` / base Supabase).
 - Plan Vercel Hobby (journaux d'une heure, usage non commercial).
 - Appel réseau au serveur Auth Supabase à chaque rendu (Better Auth le remplace).
 - Cache serveur partagé (`use cache` + étiquette par établissement) : son
   stockage dépend de l'hébergement, à concevoir sur Node permanent.
+- [2026-10-29] **Poser `APP_ENV=production`** sur l'application Clever Cloud
+  de prod (`APP_ENV=preview` sur toute préversion). Hors Vercel, sans elle,
+  l'environnement est indéterminé et la réparation automatique du calendrier
+  ne s'exécute pas — sans erreur, un simple avertissement au démarrage
+  (`src/lib/environnement.ts`). Revu au lancement d'un build de prod local ;
+  déjà écrit dans `docs/revues/audit-nextjs-2026-10-14.md` (H5), rappelé ici
+  pour la liste de bascule.
 
 Les lots 1 à 3 restent valables quel que soit l'hébergeur : moins
 d'allers-retours, c'est plus rapide partout.

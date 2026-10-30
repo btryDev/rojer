@@ -7,6 +7,7 @@ import { AideEcran } from "@/components/ui-kit/AideEcran";
 import { LienProvenance } from "@/components/navigation/LienProvenance";
 import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import { LegalBadge, Textes } from "@/components/ui-kit/LegalBadge";
+import { PastilleEtat } from "@/components/calendrier/PastilleEtat";
 import { BadgeStatut } from "@/components/calendrier/BadgeStatut";
 import { mentionDelaiDeGrace } from "@/lib/calendrier/grace";
 import { datePoseeAuCalendrier, pastilleRendezVous, type PastilleRendezVous } from "@/lib/rendez-vous/regles";
@@ -70,9 +71,6 @@ import {
   type LigneMois,
 } from "@/lib/calendrier/regle-annee";
 import {
-  CHAMP_ETAT,
-  ENCRE_ETAT,
-  libelleEtatCapitale,
   PRIORITE_ETAT,
   avecMentionFin,
   lecturesCalendrier,
@@ -106,6 +104,7 @@ import {
 } from "@/lib/calendrier/labels";
 import {
   FUSEAU_REFERENCE,
+  cleJourCivil,
   composantesCiviles,
   joursCivilsEntre,
 } from "@/lib/dates";
@@ -148,21 +147,6 @@ const FMT_AUJOURDHUI = new Intl.DateTimeFormat("fr-FR", {
   month: "long",
   year: "numeric",
 });
-
-/**
- * L'état d'une ligne en mots, sur son champ : « Sous 30 jours », « Au-delà de
- * 30 jours »… Une seule écriture pour les deux familles de lignes.
- */
-function PastilleEtat({ etat }: { etat: RegistreLigne }) {
-  return (
-    <span
-      className="inline-flex items-center whitespace-nowrap rounded-full px-[13px] py-[6px] text-[12px] font-semibold"
-      style={{ background: CHAMP_ETAT[etat], color: ENCRE_ETAT[etat] }}
-    >
-      {libelleEtatCapitale(etat)}
-    </span>
-  );
-}
 
 /**
  * ~~La tuile-date porte la couleur de l'état parce que c'est l'objet que
@@ -229,13 +213,16 @@ function LigneEcheance({
     // la connaît au clic.
     <LienProvenance
       href={href}
-      className="-mx-3 flex items-center gap-4 rounded-[20px] px-3 py-3 transition-colors hover:bg-[color:var(--board-slate-pale)]"
+      // Sur téléphone, une grille : la tuile tient deux rangées, la
+      // pastille passe sous le titre, et le titre garde deux lignes au lieu
+      // d'être coupé à quinze lettres par la pastille et le chevron.
+      className="-mx-3 grid grid-cols-[50px_minmax(0,1fr)] items-start gap-x-4 gap-y-2 rounded-[20px] px-3 py-3 transition-colors hover:bg-[color:var(--board-slate-pale)] md:flex md:items-center md:gap-4"
     >
       {/* La date en encre, quel que soit l'état (v3, 2026-10-25) : l'état
           est dit en bout de ligne par la pastille ; colorer aussi la date le
           disait deux fois, et une liste de retards devenait un mur rose. */}
       <span
-        className="flex size-[50px] flex-none flex-col items-center justify-center rounded-[16px] bg-[color:var(--board-ink)] text-white"
+        className="row-span-2 flex size-[50px] flex-none flex-col items-center justify-center rounded-[16px] bg-[color:var(--board-ink)] text-white"
         // « Sans date », et plus « à dater » ni « Date à renseigner » : aucun
         // écran ne permet de dater une vérification à la main. Seul le dépôt
         // d'un rapport lui donne une échéance — le mot promettait un geste qui
@@ -265,7 +252,7 @@ function LigneEcheance({
       </span>
       <div className="min-w-0 flex-1">
         <p className="m-0 flex items-baseline gap-2 text-[14.5px] font-semibold leading-[1.3] tracking-[-0.015em] text-[color:var(--board-ink)]">
-          <span className="min-w-0 truncate">{titre}</span>
+          <span className="min-w-0 max-md:line-clamp-2 md:truncate">{titre}</span>
           {contractuelle && <MentionContractuelle />}
           <MentionRythmeRetenu mention={rythmeRetenu} />
           <MentionAConfirmer phrases={aConfirmer} />
@@ -279,8 +266,8 @@ function LigneEcheance({
           <span className="min-w-0 truncate">{meta}</span>
         </p>
       </div>
-      {pastille}
-      <ChevronRight className="size-4 flex-none text-[color:var(--board-slate-soft)]" />
+      <span className="col-start-2 justify-self-start md:contents">{pastille}</span>
+      <ChevronRight className="size-4 flex-none text-[color:var(--board-slate-soft)] max-md:hidden" />
     </LienProvenance>
   );
 }
@@ -590,10 +577,11 @@ export default async function CalendrierPage({
         marquesAConfirmer.parObligation.get(v.obligationId)?.phrases ?? [],
       etat: lec.registre,
       // Même règle que la liste mensuelle : le rendez-vous suivant est
-      // planifié, le fait porte le résultat de son rapport (ADR-034).
+      // planifié, ~~le fait porte le résultat de son rapport (ADR-034)~~
+      // [2026-10-29 : le fait dit « Fait », `statutDeLaLecture`].
       // D1 (a) : « à confirmer », pas « en retard », sur une ligne que
       // seul le silence de la fiche retient — lu sur le registre (D26).
-      statut: statutDeLaLecture(lec, v),
+      statut: lec.lecture === "realisation" ? undefined : statutDeLaLecture(lec, v),
     });
     for (const lecBrute of lecturesCalendrier(v, aujourdhui)) {
       // D26 : le même registre que la liste mensuelle, prudence comprise.
@@ -1033,7 +1021,9 @@ export default async function CalendrierPage({
   // jamais dire depuis quand. Il vivait en haut à droite de l'en-tête — le
   // coin de la gélule de compte ; il voyage désormais avec les commandes.
   const aujourdhuiAffiche = (
-    <p className="m-0 flex flex-none items-baseline gap-2.5 font-mono text-[10.5px] leading-none">
+    // Pas sur téléphone : la grille du mois y marque déjà aujourd'hui, et la
+    // barre collante doit tenir en peu de hauteur.
+    <p className="m-0 flex flex-none items-baseline gap-2.5 font-mono text-[10.5px] leading-none max-md:hidden">
       <span className="uppercase tracking-[0.18em] text-[color:var(--board-slate-soft)]">
         Aujourd&apos;hui
       </span>
@@ -1183,6 +1173,143 @@ export default async function CalendrierPage({
     </div>
   );
 
+  // Le rendu d'une ligne de la liste mensuelle. La tuile-date et la
+  // structure sont communes ; la famille s'annonce par le marqueur et la
+  // méta, l'état par la pastille de droite. Les lignes descendent une par
+  // une (2026-10-29) : la liste de l'ordinateur les empile, la grille du
+  // téléphone les range sous leur jour.
+  const cleAujourdhui = cleJourCivil(aujourdhui);
+  // L'état d'une ligne : celui de son point dans la grille du téléphone ET de
+  // sa pastille — décidé ici seulement, pour que les deux ne divergent pas.
+  const etatDeLaLigne = (
+    ligne: LigneMois<(typeof verifsVisibles)[number]>,
+  ): RegistreLigne =>
+    ligne.genre === "verif"
+      ? ligne.registre
+      : ligne.e.tone === "alerte" && !ligne.e.sansEcheance
+        ? "enRetard"
+        : ligne.etat;
+  const rendreLigne = (
+    ligne: LigneMois<(typeof verifsVisibles)[number]>,
+    duJour: boolean,
+  ) => {
+    if (ligne.genre === "verif") {
+      const v = ligne.v;
+      const o = obligationParId(v.obligationId);
+      return (
+        <LigneEcheance
+          href={`/etablissements/${id}/verifications/${v.id}`}
+          /* Une ligne sans échéance connue ne porte pas
+             de date : la sienne est celle de la
+             génération du calendrier. Même prédicat que
+             toutes les surfaces (aUnRendezVous) ; le fait
+             daté d'un rapport, lui, garde sa date. */
+          date={
+            ligne.lecture === "realisation" ||
+            aUnRendezVous(v, aujourdhui) ||
+            // Posée au jour du rendez-vous (ADR-049).
+            (v.rendezVousLe !== null &&
+              ligne.date.getTime() === v.rendezVousLe.getTime())
+              ? ligne.date
+              : null
+          }
+          type={typeDeVerification(v)}
+          titre={v.libelleObligation}
+          meta={
+            // Sans équipement, l'échéance porte sur
+            // l'établissement (ADR-022) : elle se nomme
+            // par ce qu'elle est, pas par un appareil
+            // absent — et elle reste ici, sous tous les
+            // filtres de bâtiment (ADR-010).
+            (v.equipement && lieuDe(v.equipement.batiment)
+              ? `${nomDeZone(v.equipement.batiment.nom)} · `
+              : "") +
+            `${libellePorteur(v)} · ` +
+            LABEL_PERIODICITE[v.periodicite] +
+            (o ? ` · ${LABEL_DOMAINE[o.domaine]}` : "") +
+            // Le délai de grâce (ADR-040) : à côté de « à
+            // planifier », jamais à la place d'une date.
+            (mentionDelaiDeGrace(v, aujourdhui)
+              ? ` · ${mentionDelaiDeGrace(v, aujourdhui)}`
+              : "")
+          }
+          // Le rendez-vous pris (ADR-049), à côté de
+          // l'échéance, jamais à sa place.
+          rendezVous={
+            ligne.lecture === "realisation"
+              ? null
+              : pastilleRendezVous(v, aujourdhui, aUnRendezVous(v, aujourdhui))
+          }
+          contractuelle={estEcheanceContractuelle(v)}
+          rythmeRetenu={mentionRythmeDeVerification(v)}
+          aConfirmer={
+            marquesAConfirmer.parObligation.get(
+              v.obligationId,
+            )?.phrases ?? []
+          }
+          pastille={
+            // Trois lectures, trois pastilles (ADR-034) :
+            // le rendez-vous suivant est « planifié », le
+            // FAIT ~~porte le résultat de son rapport~~
+            // [2026-10-29, décision de la propriétaire :
+            // dit « Fait », le résultat reste au rapport],
+            // et l'échéance ouverte porte l'état de la ligne.
+            // Sans le cas « realisation », une tuile verte
+            // « fait le 1er juin » affichait « En retard »
+            // dès que l'échéance suivante était passée.
+            // [2026-10-25] À venir, la vérification dit
+            // son horizon (« Sous 30 jours », « Au-delà »)
+            // et non « Planifiée » : la tuile-date ne le
+            // colore plus, la pastille est le seul endroit
+            // où l'urgence se lit.
+            // [2026-10-29] Le fait aussi passe par l'état
+            // (« Fait », `libellePastille`) et non plus par
+            // le statut peint de son rapport.
+            ligne.lecture === "realisation" ||
+            ligne.registre === "proche" ||
+            ligne.registre === "lointain" ? (
+              <PastilleEtat etat={etatDeLaLigne(ligne)} duJour={duJour} />
+            ) : (
+              <BadgeStatut
+                // D26 : « à confirmer » vient du registre de
+                // la ligne (`registrePrudent`), comme
+                // l'en-tête du mois qui la compte.
+                statut={statutDeLaLecture(ligne, v)}
+              />
+            )
+          }
+        />
+      );
+    }
+    const e = ligne.e;
+    return (
+      <LigneEcheance
+        href={e.href}
+        // La date de RANGEMENT, celle de la section et du
+        // tri : pour une opération en cours, sa fin. La
+        // méta le dit EN TÊTE — au bout, la troncature
+        // l'effaçait, et la tuile « 25 SEPT. » se relisait
+        // comme le début des travaux (2026-09-15).
+        date={e.sansEcheance ? null : ligne.date}
+        type={e.type}
+        titre={e.libelle}
+        meta={avecMentionFin(metaAutre(e), ligne.fin)}
+        // Une date absente porte l'ardoise et son mot,
+        // jamais « En retard ». Les autres disent leur
+        // état : la tuile-date ne le colore plus (v3).
+        pastille={
+          e.sansEcheance ? (
+            <span className="inline-flex items-center whitespace-nowrap rounded-full bg-[color:var(--board-slate-pale)] px-[13px] py-[6px] text-[12px] font-semibold text-[color:var(--board-slate-ink)]">
+              Date non renseignée
+            </span>
+          ) : (
+            <PastilleEtat etat={etatDeLaLigne(ligne)} duJour={duJour} />
+          )
+        }
+      />
+    );
+  };
+
   return (
     <main className="flex flex-1 flex-col">
       {/* L'identité, puis l'instrument — et l'instrument porte ses propres
@@ -1321,6 +1448,7 @@ export default async function CalendrierPage({
                  pas. */
               moisInitial={moisInitial}
               cleMoisCourant={cleMoisCourant}
+              cleAujourdhui={cleAujourdhui}
               commandes={commandes}
               parEquipement={
                 <VueParEquipement
@@ -1352,148 +1480,23 @@ export default async function CalendrierPage({
                 // échéance connue n'est sur aucune barre non plus, et la
                 // pastille ne la comptait nulle part (relecture du lot C).
                 nbSansDate: liste.filter((l) => !datable(l)).length,
-                contenu: (
-                  // La clé n'est pas décorative : le contenu du mois est
-                  // créé côté serveur puis traverse la frontière client
-                  // dans une propriété. React le reçoit alors comme un
-                  // enfant de liste et réclame sa clé, faute de quoi la
-                  // console du calendrier reste rouge en développement.
-                  <ul
-                    key={cleMois}
-                    className="m-0 mt-3 flex list-none flex-col p-0"
-                  >
-                    {liste.map((ligne, i) => {
-                      const sep =
-                        i === 0
-                          ? ""
-                          : "border-t border-[color:rgba(10,10,10,.07)]";
-                      // La tuile-date et la structure de ligne sont
-                      // communes ; la famille s'annonce par le marqueur et
-                      // la méta, l'état par la pastille de droite.
-                      if (ligne.genre === "verif") {
-                        const v = ligne.v;
-                        const o = obligationParId(v.obligationId);
-                        return (
-                          // Deux lectures d'une même ligne (fait +
-                          // prochain rendez-vous) peuvent tomber dans le
-                          // même mois : la clé porte la lecture.
-                          <li key={`${v.id}:${ligne.lecture}`} className={sep}>
-                            <LigneEcheance
-                              href={`/etablissements/${id}/verifications/${v.id}`}
-                              /* Une ligne sans échéance connue ne porte pas
-                                 de date : la sienne est celle de la
-                                 génération du calendrier. Même prédicat que
-                                 toutes les surfaces (aUnRendezVous) ; le fait
-                                 daté d'un rapport, lui, garde sa date. */
-                              date={
-                                ligne.lecture === "realisation" ||
-                                aUnRendezVous(v, aujourdhui) ||
-                                // Posée au jour du rendez-vous (ADR-049).
-                                (v.rendezVousLe !== null &&
-                                  ligne.date.getTime() === v.rendezVousLe.getTime())
-                                  ? ligne.date
-                                  : null
-                              }
-                              type={typeDeVerification(v)}
-                              titre={v.libelleObligation}
-                              meta={
-                                // Sans équipement, l'échéance porte sur
-                                // l'établissement (ADR-022) : elle se nomme
-                                // par ce qu'elle est, pas par un appareil
-                                // absent — et elle reste ici, sous tous les
-                                // filtres de bâtiment (ADR-010).
-                                (v.equipement && lieuDe(v.equipement.batiment)
-                                  ? `${nomDeZone(v.equipement.batiment.nom)} · `
-                                  : "") +
-                                `${libellePorteur(v)} · ` +
-                                LABEL_PERIODICITE[v.periodicite] +
-                                (o ? ` · ${LABEL_DOMAINE[o.domaine]}` : "") +
-                                // Le délai de grâce (ADR-040) : à côté de « à
-                                // planifier », jamais à la place d'une date.
-                                (mentionDelaiDeGrace(v, aujourdhui)
-                                  ? ` · ${mentionDelaiDeGrace(v, aujourdhui)}`
-                                  : "")
-                              }
-                              // Le rendez-vous pris (ADR-049), à côté de
-                              // l'échéance, jamais à sa place.
-                              rendezVous={
-                                ligne.lecture === "realisation"
-                                  ? null
-                                  : pastilleRendezVous(v, aujourdhui, aUnRendezVous(v, aujourdhui))
-                              }
-                              contractuelle={estEcheanceContractuelle(v)}
-                              rythmeRetenu={mentionRythmeDeVerification(v)}
-                              aConfirmer={
-                                marquesAConfirmer.parObligation.get(
-                                  v.obligationId,
-                                )?.phrases ?? []
-                              }
-                              pastille={
-                                // Trois lectures, trois pastilles (ADR-034) :
-                                // le rendez-vous suivant est « planifié », le
-                                // FAIT porte le résultat de son rapport, et
-                                // l'échéance ouverte porte l'état de la ligne.
-                                // Sans le cas « realisation », une tuile verte
-                                // « fait le 1er juin » affichait « En retard »
-                                // dès que l'échéance suivante était passée.
-                                // [2026-10-25] À venir, la vérification dit
-                                // son horizon (« Sous 30 jours », « Au-delà »)
-                                // et non « Planifiée » : la tuile-date ne le
-                                // colore plus, la pastille est le seul endroit
-                                // où l'urgence se lit.
-                                ligne.lecture !== "realisation" &&
-                                (ligne.registre === "proche" ||
-                                  ligne.registre === "lointain") ? (
-                                  <PastilleEtat etat={ligne.registre} />
-                                ) : (
-                                  <BadgeStatut
-                                    // D26 : « à confirmer » vient du registre de
-                                    // la ligne (`registrePrudent`), comme
-                                    // l'en-tête du mois qui la compte.
-                                    statut={statutDeLaLecture(ligne, v)}
-                                  />
-                                )
-                              }
-                            />
-                          </li>
-                        );
-                      }
-                      const e = ligne.e;
-                      return (
-                        <li key={e.id} className={sep}>
-                          <LigneEcheance
-                            href={e.href}
-                            // La date de RANGEMENT, celle de la section et du
-                            // tri : pour une opération en cours, sa fin. La
-                            // méta le dit EN TÊTE — au bout, la troncature
-                            // l'effaçait, et la tuile « 25 SEPT. » se relisait
-                            // comme le début des travaux (2026-09-15).
-                            date={e.sansEcheance ? null : ligne.date}
-                            type={e.type}
-                            titre={e.libelle}
-                            meta={avecMentionFin(metaAutre(e), ligne.fin)}
-                            // Une date absente porte l'ardoise et son mot,
-                            // jamais « En retard ». Les autres disent leur
-                            // état : la tuile-date ne le colore plus (v3).
-                            pastille={
-                              e.sansEcheance ? (
-                                <span className="inline-flex items-center whitespace-nowrap rounded-full bg-[color:var(--board-slate-pale)] px-[13px] py-[6px] text-[12px] font-semibold text-[color:var(--board-slate-ink)]">
-                                  Date non renseignée
-                                </span>
-                              ) : e.tone === "alerte" ? (
-                                <span className="inline-flex items-center whitespace-nowrap rounded-full bg-[color:var(--board-signal)] px-[13px] py-[6px] text-[12px] font-semibold text-[color:var(--board-signal-ink)]">
-                                  En retard
-                                </span>
-                              ) : (
-                                <PastilleEtat etat={ligne.etat} />
-                              )
-                            }
-                          />
-                        </li>
-                      );
-                    })}
-                  </ul>
-                ),
+                lignes: liste.map((ligne) => {
+                  // Le jour de la grille du téléphone ; une ligne sans
+                  // échéance connue n'en a pas.
+                  const jour = datable(ligne) ? cleJourCivil(ligne.date) : null;
+                  return {
+                    // Deux lectures d'une même ligne (fait + prochain
+                    // rendez-vous) peuvent tomber dans le même mois : la
+                    // clé porte la lecture.
+                    cle:
+                      ligne.genre === "verif"
+                        ? `${ligne.v.id}:${ligne.lecture}`
+                        : ligne.e.id,
+                    jour,
+                    etat: etatDeLaLigne(ligne),
+                    noeud: rendreLigne(ligne, jour === cleAujourdhui),
+                  };
+                }),
               }))}
             />
           </div>

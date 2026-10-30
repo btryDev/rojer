@@ -7,9 +7,26 @@ import {
   dateEnJeuAutre,
   etatAutreEcheance,
   lecturesCalendrier,
+  libellePastille,
   statutAffiche,
   statutDeLaLecture,
 } from "./etats";
+
+describe("libellePastille (2026-10-29)", () => {
+  it("ce qui est fait dit « Fait », sans le résultat de son rapport", () => {
+    expect(libellePastille("faite", false)).toBe("Fait");
+    expect(libellePastille("faite", true)).toBe("Fait");
+  });
+
+  it("une échéance proche qui tombe aujourd'hui dit « Aujourd'hui »", () => {
+    expect(libellePastille("proche", true)).toBe("Aujourd'hui");
+    expect(libellePastille("proche", false)).toBe("Sous 30 jours");
+  });
+
+  it("le jour même ne change pas le mot d'un retard", () => {
+    expect(libellePastille("enRetard", true)).toBe("En retard");
+  });
+});
 
 // L'horloge est injectée partout (ADR-011) : midi à Paris, un jour sans
 // piège de fuseau — les cas de bascule de minuit vivent dans

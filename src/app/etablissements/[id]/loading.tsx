@@ -1,3 +1,11 @@
+"use client";
+
+import { useParams, usePathname } from "next/navigation";
+
+import { ChargementSection } from "@/components/entete-page/ChargementSection";
+import { repliDeChargement } from "@/components/entete-page/repli-de-chargement";
+import { ChargementNeutre } from "@/components/layout/ChargementNeutre";
+
 /**
  * L'attente d'un écran de l'établissement (audit Next.js du 2026-10-14, M1).
  *
@@ -8,12 +16,20 @@
  * repli : le layout — barre latérale et barre de compte — reste en place, et
  * seule la colonne de droite attend.
  *
- * Aucun style nouveau : la charte n'a pas de squelette, alors l'attente porte
- * le patron « Liste » de la charte (`docs/charte-board.md` § 5) — le canvas,
- * le bandeau d'en-tête bord à bord, des `.carte-board` vides dans la
- * gouttière. Pas d'animation non plus : aucune surface du board ne pulse, et
- * la charte demande de respecter `prefers-reduced-motion` (§ 7, 22) ; une
- * forme immobile n'a rien à respecter.
+ * [2026-10-28, plan performance, lot 3] Le repli annonce l'en-tête de la
+ * page demandée (`ChargementSection`), lu sur l'adresse ; le tableau de bord,
+ * les fiches et les formulaires gardent le repli neutre.
+ *
+ * **Un seul fichier, ici, et pas un par dossier de page.** Next rattache le
+ * repli d'un dossier à une clé qui contient les paramètres d'URL de la page
+ * (`addSearchParamsIfPageSegment`, puis `stateKey` dans `layout-router`) :
+ * un `calendrier/loading.tsx` remplaçait la page par son squelette à chaque
+ * filtre, chaque année, chaque bascule de vue — ce que `FiltresCalendrier`
+ * évite exprès par une transition. Posé ici, le repli n'est rattaché qu'au
+ * premier dossier sous l'établissement (« calendrier ») : il se montre en
+ * changeant de section, jamais en changeant de paramètre. Même effet dans
+ * une section (d'une liste à sa fiche) : pas de repli, l'écran précédent
+ * reste jusqu'à l'arrivée du suivant, comme avant ce lot.
  *
  * Un `notFound()` levé par une page imbriquée arrive désormais APRÈS le début
  * du flux : la réponse garde le statut 200, avec la page introuvable et un
@@ -22,33 +38,7 @@
  * dossier étranger répond toujours 404.
  */
 export default function ChargementEtablissement() {
-  return (
-    <main
-      className="flex flex-1 flex-col bg-[color:var(--board-card)] pb-16"
-      aria-busy="true"
-    >
-      <div className="border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] py-[22px]">
-        <p
-          role="status"
-          className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]"
-        >
-          Chargement…
-        </p>
-        <div
-          aria-hidden
-          className="mt-3 h-[30px] w-[min(420px,70%)] rounded-[10px] bg-[color:var(--board-slate-pale)]"
-        />
-      </div>
-      <div
-        aria-hidden
-        className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6"
-      >
-        <div className="carte-board h-[180px]" />
-        <div className="grid gap-7 md:grid-cols-2">
-          <div className="carte-board h-[220px]" />
-          <div className="carte-board h-[220px]" />
-        </div>
-      </div>
-    </main>
-  );
+  const { id } = useParams<{ id: string }>();
+  const repli = repliDeChargement(usePathname(), id);
+  return repli ? <ChargementSection {...repli} /> : <ChargementNeutre />;
 }

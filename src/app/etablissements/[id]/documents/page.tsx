@@ -35,7 +35,7 @@ export default async function DocumentsPage({
         description="Les documents que vous devez tenir, y compris ceux que Rojer ne produit pas, chacun avec le texte qui le fonde. Plusieurs ne sont dus que dans certains cas : la liste dit ce que les textes demandent, pas votre situation."
       />
       <div className="px-[var(--board-gutter)] pt-8">
-        <DocumentsObligatoires />
+        <DocumentsObligatoires etablissementId={id} />
       </div>
     </main>
   );

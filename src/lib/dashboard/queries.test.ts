@@ -63,6 +63,12 @@ const h = vi.hoisted(() => {
     verifications: [] as Array<Record<string, unknown>>,
     actions: [] as Array<Record<string, unknown>>,
     duerp: null as Record<string, unknown> | null,
+    // L'établissement de la garde d'appartenance : le tableau de bord y lit
+    // les effectifs qui conditionnent la mise à jour annuelle du DUERP.
+    etablissement: {
+      effectifSurSite: 0,
+      entreprise: { effectif: 0 },
+    } as Record<string, unknown> | null,
     nbEquipements: 0,
     nbRapports: 0,
   };
@@ -206,6 +212,7 @@ const h = vi.hoisted(() => {
         db.actions.filter((a) => correspond(a, args.where)).length,
     },
     duerp: { findFirst: async () => db.duerp },
+    etablissement: { findFirst: async () => db.etablissement },
     // Le parc, compté une fois par rendu (`comptesParcDuRendu`, `groupBy` sur
     // `actif`) : tout en service ici.
     equipement: {
@@ -312,7 +319,7 @@ vi.mock("@/lib/actions/queries", () => ({
 
 import {
   compterObligationsParMois,
-  compterVerifsParEquipement,
+  compterVerifsParEquipementDeLaPage,
   getDashboardData,
 } from "./queries";
 
@@ -358,6 +365,7 @@ beforeEach(() => {
   h.couverture.indeterminations = [];
   h.db.actions = [];
   h.db.duerp = null;
+  h.db.etablissement = { effectifSurSite: 0, entreprise: { effectif: 0 } };
   h.db.nbEquipements = 3;
   h.db.nbRapports = 2;
 });
@@ -622,18 +630,22 @@ describe("getDashboardData — le jour même de l'échéance", () => {
 });
 
 describe("getDashboardData — DUERP", () => {
-  const duerpAvecVersion = (ageJours: number | null, effectif: number) => ({
+  const duerpAvecVersion = (ageJours: number | null) => ({
     id: "duerp-1",
     referentielSecteurId: "restauration",
     versions:
-      ageJours === null
-        ? []
-        : [{ numero: 1, createdAt: jour(-ageJours) }],
-    etablissement: { entreprise: { effectif } },
+      ageJours === null ? [] : [{ numero: 1, createdAt: jour(-ageJours) }],
+  });
+  // L'effectif se lit sur l'établissement du rendu, plus sur une relation du
+  // DUERP (plan performance, 2026-10-29) : le test le pose là où il est lu.
+  const effectifEntreprise = (effectif: number) => ({
+    effectifSurSite: 0,
+    entreprise: { effectif },
   });
 
   it("distingue « aucune version validée » de « version trop ancienne »", async () => {
-    h.db.duerp = duerpAvecVersion(null, 20);
+    h.db.duerp = duerpAvecVersion(null);
+    h.db.etablissement = effectifEntreprise(20);
     const d = await getDashboardData(ETAB);
     expect(d.duerp.existe).toBe(true);
     expect(d.duerp.ageJours).toBeNull();
@@ -646,7 +658,8 @@ describe("getDashboardData — DUERP", () => {
   });
 
   it("n'exige pas la mise à jour annuelle sous onze salariés (art. R. 4121-2)", async () => {
-    h.db.duerp = duerpAvecVersion(400, 4);
+    h.db.duerp = duerpAvecVersion(400);
+    h.db.etablissement = effectifEntreprise(4);
     const d = await getDashboardData(ETAB);
     expect(d.duerp.estAJour).toBe(true);
     expect(d.recommandations.some((r) => r.kind === "duerp_a_jour")).toBe(false);
@@ -654,7 +667,8 @@ describe("getDashboardData — DUERP", () => {
   });
 
   it("l'exige à partir de onze salariés", async () => {
-    h.db.duerp = duerpAvecVersion(400, 11);
+    h.db.duerp = duerpAvecVersion(400);
+    h.db.etablissement = effectifEntreprise(11);
     const d = await getDashboardData(ETAB);
     expect(d.duerp.estAJour).toBe(false);
     expect(d.recommandations.some((r) => r.kind === "duerp_a_jour")).toBe(true);
@@ -678,12 +692,12 @@ describe("getDashboardData — plan d'actions", () => {
   });
 });
 
-describe("compterVerifsParEquipement", () => {
+describe("compterVerifsParEquipementDeLaPage", () => {
   it("n'allume pas la pastille rouge le matin de l'échéance", async () => {
     h.db.verifications.push(
       verif({ id: "v1", equipementId: "eq-1", datePrevue: jour(0) }),
     );
-    const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
+    const stats = (await compterVerifsParEquipementDeLaPage(ETAB)).get("eq-1")!;
     expect(stats.enRetard).toBe(0);
     expect(stats.sous30j).toBe(1);
     expect(stats.prochaineDate).toEqual(jour(0));
@@ -698,7 +712,7 @@ describe("compterVerifsParEquipement", () => {
         datePrevue: jour(-2),
       }),
     );
-    const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
+    const stats = (await compterVerifsParEquipementDeLaPage(ETAB)).get("eq-1")!;
     expect(stats.enRetard).toBe(1);
     expect(stats.aPlanifier).toBe(0);
   });
@@ -716,7 +730,7 @@ describe("compterVerifsParEquipement", () => {
         rapports: [{ dateRapport: jour(-28), resultat: "conforme" }],
       }),
     );
-    const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
+    const stats = (await compterVerifsParEquipementDeLaPage(ETAB)).get("eq-1")!;
     expect(stats.enRetard).toBe(0);
     expect(stats.derniereRealisee).toEqual(jour(-28));
   });
@@ -737,7 +751,7 @@ describe("compterVerifsParEquipement", () => {
         datePrevue: jour(20),
       }),
     );
-    const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
+    const stats = (await compterVerifsParEquipementDeLaPage(ETAB)).get("eq-1")!;
     expect(stats.aPlanifier).toBe(1);
     expect(stats.prochaineDate).toBeNull();
   });
@@ -759,7 +773,7 @@ describe("compterVerifsParEquipement", () => {
         archiveLe: jour(-3),
       }),
     );
-    const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
+    const stats = (await compterVerifsParEquipementDeLaPage(ETAB)).get("eq-1")!;
     expect(stats.enRetard).toBe(0);
     // Ni rangée ailleurs : une ligne éteinte sort des trois comptes, elle ne se
     // déplace pas de l'un à l'autre.
@@ -778,7 +792,7 @@ describe("compterVerifsParEquipement", () => {
       verif({ id: "v1", equipementId: "eq-1", datePrevue: jour(-5) }),
       verif({ id: "v2", equipementId: "eq-1", datePrevue: jour(40) }),
     );
-    const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
+    const stats = (await compterVerifsParEquipementDeLaPage(ETAB)).get("eq-1")!;
     expect(stats.enRetard).toBe(1);
     expect(stats.prochaineDate).toEqual(jour(-5));
   });
@@ -795,7 +809,7 @@ describe("compterVerifsParEquipement", () => {
       }),
       verif({ id: "vraie", equipementId: "eq-1", datePrevue: jour(66) }),
     );
-    const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
+    const stats = (await compterVerifsParEquipementDeLaPage(ETAB)).get("eq-1")!;
     expect(stats.enRetard).toBe(1);
     expect(stats.prochaineDate).toEqual(jour(66));
   });
@@ -816,7 +830,7 @@ describe("compterVerifsParEquipement", () => {
         archiveLe: jour(-3),
       }),
     );
-    const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
+    const stats = (await compterVerifsParEquipementDeLaPage(ETAB)).get("eq-1")!;
     expect(stats.prochaineDate).toBeNull();
     expect(stats.sous30j).toBe(0);
   });
@@ -835,7 +849,7 @@ describe("compterVerifsParEquipement", () => {
         datePrevue: jour(-180),
       }),
     );
-    const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
+    const stats = (await compterVerifsParEquipementDeLaPage(ETAB)).get("eq-1")!;
     expect(stats.enRetard).toBe(1);
     expect(stats.derniereRealisee).toBeNull(); // hors fenêtre de douze mois
   });
@@ -852,7 +866,7 @@ describe("compterVerifsParEquipement", () => {
         rapports: [{ dateRapport: jour(-20), resultat: "conforme" }],
       }),
     );
-    const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
+    const stats = (await compterVerifsParEquipementDeLaPage(ETAB)).get("eq-1")!;
     expect(stats.derniereRealisee).toEqual(jour(-20));
   });
 });

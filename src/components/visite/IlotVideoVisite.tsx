@@ -60,16 +60,23 @@ export function IlotVideoVisite({ cle }: { cle: CleVisite }) {
     <>
       {/* Réserve, en bas de page, la hauteur de l'îlot : sans elle, il
           couvrirait la fin de la liste. */}
-      <div aria-hidden className="h-36 flex-none" />
+      <div aria-hidden className="h-20 flex-none md:h-36" />
       <aside
         aria-label="Visite guidée de la page"
         // Sur l'encre, comme le rail : l'îlot se détache des cartes blanches
         // de la page sans emprunter une couleur d'état (charte, § 1.5).
-        className="fixed bottom-5 right-5 z-40 w-[384px] max-w-[calc(100vw-32px)] rounded-[22px] bg-[color:var(--board-ink)] px-3.5 pb-2.5 pt-3.5 text-white shadow-[0_18px_40px_-14px_rgba(13,18,36,.55)]"
+        // Sur téléphone, l'îlot se pose au-dessus de la barre du bas
+        // (`--reserve-nav-bas`, nulle ailleurs) et se réduit à une pastille
+        // d'une ligne : en carte, il couvrait 160 px de la liste. « Ne plus
+        // afficher » reste dans la fenêtre de la vidéo.
+        className="fixed bottom-[calc(var(--reserve-nav-bas)_+_12px)] right-[var(--board-gutter)] z-40 w-[384px] max-w-[calc(100vw_-_2_*_var(--board-gutter))] md:bottom-5 md:right-5 rounded-[22px] bg-[color:var(--board-ink)] px-3.5 pb-2.5 pt-3.5 text-white max-md:w-auto max-md:rounded-full max-md:py-1.5 max-md:pl-2 max-md:pr-1.5 shadow-[0_18px_40px_-14px_rgba(13,18,36,.55)]"
       >
-        <div className="flex items-start gap-3.5">
-          <button type="button" onClick={ouvrir} className="group flex min-w-0 flex-1 items-start gap-3.5 text-left">
-            <span className="relative block w-[118px] flex-none overflow-hidden rounded-[14px] bg-[color:var(--board-canvas)]">
+        <div className="flex items-start gap-3.5 max-md:items-center max-md:gap-1">
+          <button type="button" onClick={ouvrir} className="group flex min-w-0 flex-1 items-start gap-3.5 text-left max-md:min-h-9 max-md:items-center max-md:gap-2.5">
+            <span aria-hidden className="grid size-7 flex-none place-items-center rounded-full bg-white text-[color:var(--board-ink)] md:hidden">
+              <Play className="ml-0.5 size-3 fill-current" />
+            </span>
+            <span className="relative hidden w-[118px] flex-none overflow-hidden rounded-[14px] bg-[color:var(--board-canvas)] md:block">
               {/* eslint-disable-next-line @next/next/no-img-element -- vignette statique, déjà à la bonne taille */}
               <img src={vignette} alt="" className="block aspect-video w-full object-cover" />
               <span className="absolute inset-0 flex items-center justify-center bg-[rgba(10,10,10,.06)] transition-colors group-hover:bg-[rgba(10,10,10,.16)]">
@@ -79,11 +86,14 @@ export function IlotVideoVisite({ cle }: { cle: CleVisite }) {
               </span>
             </span>
             <span className="min-w-0 pt-0.5">
-              <span className="board-eyebrow block text-[9.5px] tracking-[0.16em] text-[#a3a3a3]">
+              <span className="board-eyebrow hidden text-[9.5px] tracking-[0.16em] text-[#a3a3a3] md:block">
                 Visite guidée · {duree}
               </span>
-              <span className="board-titre mt-1 block text-[16px] text-white">{titre}</span>
-              <span className="mt-1.5 inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-[color:var(--board-blue-pale)] group-hover:underline">
+              <span className="board-titre mt-1 block text-[16px] text-white max-md:mt-0 max-md:text-[14px]">
+                {titre}
+                <span className="ml-1.5 font-sans text-[12px] font-normal text-[#a3a3a3] md:hidden">{duree}</span>
+              </span>
+              <span className="mt-1.5 hidden items-center gap-1.5 text-[12.5px] font-semibold text-[color:var(--board-blue-pale)] group-hover:underline md:inline-flex">
                 <Play className="size-3 fill-current" />
                 Regarder la vidéo
               </span>
@@ -93,12 +103,12 @@ export function IlotVideoVisite({ cle }: { cle: CleVisite }) {
             type="button"
             onClick={() => setVisible(false)}
             aria-label="Masquer pour cette fois"
-            className="-mr-1 -mt-1 flex size-7 flex-none items-center justify-center rounded-full text-[#a3a3a3] transition-colors hover:bg-white/10 hover:text-white"
+            className="-mr-1 -mt-1 flex size-7 flex-none items-center justify-center rounded-full text-[#a3a3a3] max-md:m-0 max-md:size-9 transition-colors hover:bg-white/10 hover:text-white"
           >
             <X className="size-4" />
           </button>
         </div>
-        <div className="mt-2.5 border-t border-white/10 pt-2">
+        <div className="mt-2.5 hidden border-t border-white/10 pt-2 md:block">
           <button
             type="button"
             onClick={() => {

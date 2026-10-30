@@ -36,7 +36,7 @@ export function BarsObligations({
   const max = Math.max(1, ...totals);
 
   return (
-    <div className="grid h-[160px] grid-cols-12 items-end gap-2.5">
+    <div className="grid h-[160px] grid-cols-12 items-end gap-1.5 @md:gap-2.5">
       {data.map((d) => {
         const total = d.couvert + d.aVenir + d.retard;
         const heightPct = (total / max) * 100;
