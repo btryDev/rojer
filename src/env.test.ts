@@ -53,11 +53,24 @@ describe("validerEnvironnement", () => {
   });
 
   it("vérifie la forme d'une optionnelle posée, pas sa présence", () => {
-    expect(erreurDe({ ...BASE, STORAGE_DRIVER: "s3" }).variables).toEqual(["STORAGE_DRIVER"]);
+    expect(erreurDe({ ...BASE, STORAGE_DRIVER: "ftp" }).variables).toEqual(["STORAGE_DRIVER"]);
     expect(erreurDe({ ...BASE, PUBLIC_APP_URL: "rojer.fr" }).variables).toEqual([
       "PUBLIC_APP_URL",
     ]);
     expect(erreurDe({ ...BASE, APP_ENV: "prod" }).variables).toEqual(["APP_ENV"]);
+    // EXPORTS_SIMULTANES : une valeur fausse retombait en silence sur 1.
+    for (const v of ["0", "-1", "2.5", "deux"]) {
+      expect(erreurDe({ ...BASE, EXPORTS_SIMULTANES: v }).variables).toEqual(["EXPORTS_SIMULTANES"]);
+    }
+    expect(() => validerEnvironnement({ ...BASE, EXPORTS_SIMULTANES: "3" })).not.toThrow();
+    // Pilote d'e-mails : un nom connu, et la clé Mailpace avec lui.
+    expect(erreurDe({ ...BASE, EMAIL_DRIVER: "resend" }).variables).toEqual(["EMAIL_DRIVER"]);
+    // La clé manquante n'arrête pas le démarrage : `email/index.ts` refuse
+    // l'envoi avant toute écriture, comme pour les autres règles de contexte.
+    expect(() => validerEnvironnement({ ...BASE, EMAIL_DRIVER: "mailpace" })).not.toThrow();
+    expect(() =>
+      validerEnvironnement({ ...BASE, EMAIL_DRIVER: "mailpace", MAILPACE_API_KEY: "cle" }),
+    ).not.toThrow();
     expect(() =>
       validerEnvironnement({ ...BASE, STORAGE_DRIVER: "supabase", PUBLIC_APP_URL: "https://rojer.fr" }),
     ).not.toThrow();

@@ -4,7 +4,8 @@
 // client (2026-09-27).
 import "server-only";
 import type { FileStorage, StorageKey } from "./types";
-import { ErreurStockage, FichierIntrouvable } from "./erreurs";
+import { ErreurStockage, FichierIntrouvable, echecStockage } from "./erreurs";
+import { verifierCleStockage } from "./cle-stockage";
 
 /**
  * Pilote Supabase Storage du `FileStorage` (2026-09-27, `lot/stockage-supabase`).
@@ -20,8 +21,8 @@ import { ErreurStockage, FichierIntrouvable } from "./erreurs";
  *   contourne les règles d'accès — d'où un bucket PRIVÉ, et aucune URL signée
  *   ni publique : les routes de l'application continuent de streamer le
  *   fichier après leur propre contrôle d'appartenance.
- * - Il est interchangeable : l'interface est `FileStorage`, et un pilote S3
- *   (migration prévue vers Clever Cloud) se branchera à côté, dans
+ * - Il est interchangeable : l'interface est `FileStorage` ; le pilote S3
+ *   de Clever Cloud (`s3.ts`, 2026-10-30) s'est branché à côté, dans
  *   `getStorage()`, sans toucher aux appelants.
  * - Il ne dit jamais la clé de service dans une erreur : il nomme
  *   l'opération, la clé de stockage et le message du service.
@@ -67,18 +68,8 @@ export class SupabaseFileStorage implements FileStorage {
     private readonly bucket: string,
   ) {}
 
-  /** Même règle que le pilote local : pas de remontée, pas de chemin absolu. */
-  private verifier(key: StorageKey): string {
-    if (!key || key.includes("..") || key.startsWith("/") || key.includes("\\")) {
-      throw new ErreurStockage(`Clé de stockage invalide : ${key}`);
-    }
-    return key;
-  }
-
   private echec(operation: string, key: StorageKey, e: ErreurService): never {
-    throw new ErreurStockage(
-      `Stockage Supabase : échec de ${operation} pour « ${key} » (${e.message})`,
-    );
+    throw echecStockage("Supabase", operation, key, e.message);
   }
 
   private get api(): BucketStockage {
@@ -105,7 +96,7 @@ export class SupabaseFileStorage implements FileStorage {
   }
 
   async put(key: StorageKey, data: Buffer, mime: string): Promise<void> {
-    const cle = this.verifier(key);
+    const cle = verifierCleStockage(key);
     const { error } = await this.appel("l'écriture", key, () =>
       this.api.upload(cle, data, {
         contentType: mime,
@@ -117,7 +108,7 @@ export class SupabaseFileStorage implements FileStorage {
   }
 
   async get(key: StorageKey): Promise<Buffer> {
-    const cle = this.verifier(key);
+    const cle = verifierCleStockage(key);
     const { data, error } = await this.appel("la lecture", key, () =>
       this.api.download(cle),
     );
@@ -132,7 +123,7 @@ export class SupabaseFileStorage implements FileStorage {
   async delete(key: StorageKey): Promise<void> {
     // `remove` d'une clé absente ne rend pas d'erreur côté Supabase : no-op,
     // comme le pilote local. Une vraie erreur (droits, réseau) remonte.
-    const cle = this.verifier(key);
+    const cle = verifierCleStockage(key);
     const { error } = await this.appel("la suppression", key, () =>
       this.api.remove([cle]),
     );
@@ -148,7 +139,7 @@ export class SupabaseFileStorage implements FileStorage {
    * nom exact, l'est.
    */
   async exists(key: StorageKey): Promise<boolean> {
-    const cle = this.verifier(key);
+    const cle = verifierCleStockage(key);
     const i = cle.lastIndexOf("/");
     const dossier = i === -1 ? "" : cle.slice(0, i);
     const nom = cle.slice(i + 1);

@@ -13,7 +13,8 @@ import {
   ttlHoursFor,
 } from "./token";
 import { envoyerMailAcces, urlAccesPourToken } from "./mail";
-import { envoiEnService } from "@/lib/email";
+import { envoiEnService, motifErreur } from "@/lib/email";
+import { LIEN_PARTI, MOTIF_REVOCATION_ENVOI_ECHOUE } from "./revocation";
 import { generateOtp, hashOtp, otpExpirationDate } from "@/lib/signatures/otp";
 
 /**
@@ -156,7 +157,11 @@ export type EmissionTokenParams = {
 
 export type EmissionResultat =
   | { ok: true; accessTokenId: string; expireLe: Date }
-  | { ok: false; raison: "frequence" | "envoi_hors_service"; message: string };
+  | {
+      ok: false;
+      raison: "frequence" | "envoi_hors_service" | "envoi_echoue";
+      message: string;
+    };
 
 /**
  * Ce que le demandeur lit quand l'envoi n'est pas en service. Vrai à la
@@ -164,6 +169,14 @@ export type EmissionResultat =
  */
 export const MESSAGE_ENVOI_HORS_SERVICE =
   "La demande n'a pas été envoyée : l'envoi d'e-mails n'est pas encore en service dans Rojer. Aucun lien n'a été créé.";
+
+/**
+ * Ce que le demandeur lit quand l'envoi est parti en erreur (fournisseur
+ * injoignable, refus). Vrai à la lettre : le lien créé est révoqué aussitôt,
+ * il ne pourra pas servir même si le message finissait par arriver.
+ */
+export const MESSAGE_ENVOI_ECHOUE =
+  "La demande n'a pas été envoyée : l'e-mail n'a pas pu partir. Le lien préparé a été annulé. Réessayez dans quelques minutes.";
 
 export async function emettreAccessToken(
   entree: EmissionTokenParams,
@@ -203,15 +216,17 @@ export async function emettreAccessToken(
 
   // Limite de fréquence, avant toute écriture et tout envoi.
   const depuis = new Date(Date.now() - UNE_HEURE_MS);
+  // Un lien dont l'e-mail n'est jamais parti ne compte pas (`LIEN_PARTI`).
   const [parEtablissement, parUtilisateur] = await Promise.all([
     prisma.accessToken.count({
       where: {
         etablissementId: params.etablissementId,
         createdAt: { gte: depuis },
+        ...LIEN_PARTI,
       },
     }),
     prisma.accessToken.count({
-      where: { createdByUserId: user.id, createdAt: { gte: depuis } },
+      where: { createdByUserId: user.id, createdAt: { gte: depuis }, ...LIEN_PARTI },
     }),
   ]);
   if (
@@ -267,15 +282,34 @@ export async function emettreAccessToken(
     },
   });
 
-  await envoyerMailAcces({
-    to: params.emailDestinataire,
-    nom: params.nomDestinataire,
-    sujet: params.sujetMail,
-    message: params.messageMail,
-    urlAcces,
-    otp,
-    expireLe,
-  });
+  try {
+    await envoyerMailAcces({
+      to: params.emailDestinataire,
+      nom: params.nomDestinataire,
+      sujet: params.sujetMail,
+      message: params.messageMail,
+      urlAcces,
+      otp,
+      expireLe,
+    });
+  } catch (erreur) {
+    // Le jeton existe mais son e-mail n'est pas parti : il est révoqué, pas
+    // supprimé — la trace dit qu'une demande a eu lieu et pourquoi elle n'a
+    // pas abouti. Si la révocation échoue aussi (base indisponible), le jeton
+    // reste, mais son secret n'est ni parti ni rendu : il ne sert à personne.
+    // Le journal porte les deux causes, jamais l'adresse ni le contenu.
+    const revoque = await prisma.accessToken
+      .update({
+        where: { id: access.id },
+        data: { revoqueLe: new Date(), revoqueMotif: MOTIF_REVOCATION_ENVOI_ECHOUE },
+      })
+      .then(
+        () => "révoqué",
+        (e: unknown) => `révocation impossible (${motifErreur(e)})`,
+      );
+    console.error(`[access-tokens] envoi échoué, jeton ${access.id} ${revoque} :`, motifErreur(erreur));
+    return { ok: false, raison: "envoi_echoue", message: MESSAGE_ENVOI_ECHOUE };
+  }
 
   return {
     ok: true,

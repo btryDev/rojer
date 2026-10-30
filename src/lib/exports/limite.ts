@@ -40,10 +40,25 @@ export const ATTENTE_EXPORT_MAX_MS = 20_000;
 /** Ce que dit `Retry-After`, en secondes. */
 export const REESSAYER_APRES_S = 5;
 
-/** La valeur de `EXPORTS_SIMULTANES` : un entier ≥ 1, sinon le défaut. */
+/**
+ * La forme admise de `EXPORTS_SIMULTANES` : un entier ≥ 1 écrit en chiffres.
+ * UNE règle, lue ici et par `src/env.ts` au démarrage : les deux ne peuvent
+ * pas se contredire (revue de la PR #127, 2026-10-30).
+ */
+export const FORME_EXPORTS_SIMULTANES = /^[1-9]\d*$/;
+
+/**
+ * La valeur de `EXPORTS_SIMULTANES` : absente, le défaut ; bien formée, sa
+ * valeur ; mal formée, une erreur — jamais un repli silencieux, qui ferait
+ * tourner l'instance avec un réglage qu'on croit autre.
+ */
 export function exportsSimultanes(valeur = process.env.EXPORTS_SIMULTANES): number {
-  const n = Number(valeur);
-  return Number.isInteger(n) && n >= 1 ? n : EXPORTS_SIMULTANES_DEFAUT;
+  const v = valeur?.trim();
+  if (!v) return EXPORTS_SIMULTANES_DEFAUT;
+  if (!FORME_EXPORTS_SIMULTANES.test(v)) {
+    throw new Error("EXPORTS_SIMULTANES doit être un entier ≥ 1.");
+  }
+  return Number(v);
 }
 
 export type Liberer = () => void;

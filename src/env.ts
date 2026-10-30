@@ -45,6 +45,7 @@ import "server-only";
 
 import { z } from "zod";
 import { ENVIRONNEMENTS_APP } from "@/lib/environnement";
+import { FORME_EXPORTS_SIMULTANES } from "@/lib/exports/limite";
 
 type Env = Record<string, string | undefined>;
 
@@ -90,19 +91,33 @@ const schema = z
 
     // URL publique, e-mail.
     PUBLIC_APP_URL: z.preprocess(vide, urlHttp.optional()),
-    EMAIL_DRIVER: optionnelle,
+    EMAIL_DRIVER: enumeration(["console", "mailpace"] as const),
+    MAILPACE_API_KEY: optionnelle,
     SIGNATURE_MAIL_FROM: optionnelle,
 
     // Stockage des fichiers (`storage/index.ts`).
-    STORAGE_DRIVER: enumeration(["local", "supabase"] as const),
+    STORAGE_DRIVER: enumeration(["local", "supabase", "s3"] as const),
     STORAGE_BUCKET: optionnelle,
     STORAGE_LOCAL_PATH: optionnelle,
     SUPABASE_SERVICE_ROLE_KEY: optionnelle,
+    // Cellar (Clever Cloud) : injectées par l'add-on (`storage/s3.ts`).
+    CELLAR_ADDON_HOST: optionnelle,
+    CELLAR_ADDON_KEY_ID: optionnelle,
+    CELLAR_ADDON_KEY_SECRET: optionnelle,
 
     // Serveur MCP (`mcp/acces-*.ts`, `mcp/hotes.ts`).
     MCP_CLE: optionnelle,
     MCP_ETABLISSEMENT_ID: optionnelle,
     MCP_HOTES: optionnelle,
+
+    // Exports menés de front (`exports/limite.ts`) : à dimensionner sur la RAM
+    // de l'instance, environ 400 Mo par export lourd (audit Next.js, H3).
+    // Une valeur fausse retombait en silence sur le défaut : elle arrête
+    // désormais le démarrage (plan de bascule, 0.5).
+    EXPORTS_SIMULTANES: z.preprocess(
+      vide,
+      z.string().regex(FORME_EXPORTS_SIMULTANES, "doit être un entier ≥ 1").optional(),
+    ),
 
     // API Légifrance (`legifrance/client.ts`, scripts).
     LEGIFRANCE_CLIENT_ID: optionnelle,

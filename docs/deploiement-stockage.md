@@ -87,9 +87,30 @@ valeur.
 Il ne devrait exister aucune ligne de ce genre en production : le dépôt ne
 pouvait pas y aboutir.
 
-## Plus tard : Clever Cloud (S3)
+## Clever Cloud : Cellar (S3)
 
-Le pilote implémente `FileStorage` (`src/lib/storage/types.ts`). Un pilote S3
+~~Le pilote implémente `FileStorage` (`src/lib/storage/types.ts`). Un pilote S3
 s'ajoutera à côté de `supabase.ts` et se branchera dans `getStorage()`
-(`STORAGE_DRIVER=s3`) sans toucher aux appelants. Les fichiers déjà déposés
-seront à recopier d'un stockage à l'autre, clé par clé.
+(`STORAGE_DRIVER=s3`) sans toucher aux appelants.~~ [2026-10-30 : fait,
+`src/lib/storage/s3.ts`, plan de bascule 0.7.]
+
+Côté propriétaire, sur la préproduction puis la production Clever Cloud :
+
+1. Créer un add-on **Cellar** et le lier à l'application : il injecte
+   `CELLAR_ADDON_HOST`, `CELLAR_ADDON_KEY_ID` et `CELLAR_ADDON_KEY_SECRET`.
+2. Créer un bucket **privé** (aucune ACL publique, aucune politique publique),
+   sans tiret bas dans le nom. **Versionnage : à trancher avant de créer le
+   bucket**, il ne se désactive plus ensuite (doc Cellar). Pour : un fichier
+   écrasé ou supprimé par erreur se récupère (B13, BA 11). Contre : une
+   suppression ne pose qu'un marqueur, les anciennes versions restent — dont
+   les données de salariés qu'un effacement RGPD doit faire disparaître —,
+   sauf règle de cycle de vie qui expire les versions anciennes (à vérifier
+   chez Cellar). Sans décision, ne pas l'activer.
+3. Poser `STORAGE_DRIVER=s3` et `STORAGE_BUCKET=<nom du bucket>`.
+4. Recette : déposer un rapport, le relire, le supprimer ; vérifier dans les
+   journaux la ligne `[stockage] pilote s3 (Cellar), bucket « … »`.
+
+Aucune URL publique ni présignée : les fichiers passent toujours par les routes
+de l'application, après leur contrôle d'appartenance. Les fichiers déjà déposés
+sur Supabase ne sont pas recopiés : la bascule part d'une base neuve (décision
+du 2026-10-30).

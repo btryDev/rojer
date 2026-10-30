@@ -75,11 +75,14 @@ describe("le limiteur des exports", () => {
     expect(reponse.headers.get("Cache-Control")).toBe("no-store");
   });
 
-  it("EXPORTS_SIMULTANES : un entier ≥ 1, sinon le défaut", () => {
+  it("EXPORTS_SIMULTANES : absente, le défaut ; un entier ≥ 1 ; sinon une erreur", () => {
     expect(exportsSimultanes("3")).toBe(3);
-    expect(exportsSimultanes("2")).toBe(2);
-    for (const v of [undefined, "", "0", "-2", "1.5", "deux"]) {
+    expect(exportsSimultanes(" 2 ")).toBe(2);
+    for (const v of [undefined, "", "  "]) {
       expect(exportsSimultanes(v)).toBe(EXPORTS_SIMULTANES_DEFAUT);
+    }
+    for (const v of ["0", "-2", "1.5", "3.0", "1e1", "deux"]) {
+      expect(() => exportsSimultanes(v)).toThrow(/EXPORTS_SIMULTANES/);
     }
   });
 });

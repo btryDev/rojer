@@ -1,3 +1,6 @@
+import { readdirSync, readFileSync } from "node:fs";
+import { dirname, join, relative } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { ipClient } from "./ip-client";
 
@@ -20,5 +23,38 @@ describe("ipClient", () => {
     expect(ipClient(entetes())).toBeNull();
     expect(ipClient(entetes(""))).toBeNull();
     expect(ipClient(entetes("1.2.3.4, pas-une-ip"))).toBeNull();
+  });
+});
+
+// Un seul lecteur de l'IP (ASVS B17, 2026-10-30) : la preuve de signature lisait
+// la PREMIÈRE entrée de `X-Forwarded-For`, celle qu'écrit le client. Toute
+// lecture directe d'un en-tête qui porte l'IP ailleurs que dans
+// `src/lib/securite/ip-client.ts` refait ce trou. La garde vise la règle, pas
+// une chaîne : les en-têtes d'IP connus, dans tout le code exécuté (`src/`,
+// `scripts/`), quelle que soit l'extension.
+describe("aucune lecture d'un en-tête d'IP hors de ip-client.ts", () => {
+  it("le code ne relit pas ces en-têtes lui-même", () => {
+    const depot = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
+    const SEUL_LECTEUR = join("src", "lib", "securite", "ip-client.ts");
+    const ENTETES_IP = /x-forwarded-for|x-real-ip|cf-connecting-ip|true-client-ip|x-client-ip|["'`]forwarded["'`]/i;
+    const fautifs: string[] = [];
+    const parcourir = (dossier: string) => {
+      for (const e of readdirSync(dossier, { withFileTypes: true })) {
+        const chemin = join(dossier, e.name);
+        if (e.isDirectory()) {
+          if (e.name !== "node_modules" && !e.name.startsWith(".")) parcourir(chemin);
+        } else if (
+          /\.(ts|tsx|js|mjs|cjs)$/.test(e.name) &&
+          !/\.test\.(ts|tsx)$/.test(e.name) &&
+          relative(depot, chemin) !== SEUL_LECTEUR &&
+          ENTETES_IP.test(readFileSync(chemin, "utf8"))
+        ) {
+          fautifs.push(relative(depot, chemin));
+        }
+      }
+    };
+    parcourir(join(depot, "src"));
+    parcourir(join(depot, "scripts"));
+    expect(fautifs).toEqual([]);
   });
 });

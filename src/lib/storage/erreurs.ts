@@ -49,3 +49,16 @@ export class FichierIntrouvable extends ErreurStockage {
     this.name = "FichierIntrouvable";
   }
 }
+
+/**
+ * L'échec d'une opération d'un pilote distant, en une phrase : le pilote,
+ * l'opération, la clé, ce que le service a dit — jamais une clé d'accès.
+ */
+export function echecStockage(
+  pilote: string,
+  operation: string,
+  key: string,
+  motif: string,
+): ErreurStockage {
+  return new ErreurStockage(`Stockage ${pilote} : échec de ${operation} pour « ${key} » (${motif})`);
+}
