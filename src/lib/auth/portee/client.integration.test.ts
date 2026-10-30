@@ -245,6 +245,13 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
       await prisma.batiment.deleteMany({ where: { nom: { startsWith: "lot-" } } });
     });
 
+    it("une lecture d'identifiants hors lot n'ouvre pas un createMany ensuite", async () => {
+      await dbA.etablissement.findMany({ select: { id: true } });
+      await expect(dbA.batiment.createMany({ data: [{ etablissementId: a.etab.id, nom: "x" }] })).rejects.toThrow(
+        /creerEnLotVerifie/,
+      );
+    });
+
     it("par creerEnLotVerifie, un parent d'un autre compte : rien n'est inséré", async () => {
       await expect(
         creerEnLotVerifie(dbA, "Batiment", [

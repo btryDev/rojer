@@ -3,8 +3,9 @@
 // borné, et les refus. Le comportement contre un PostgreSQL réel est dans
 // `client.integration.test.ts`.
 
+import { Prisma } from "@prisma/client";
 import { describe, expect, it } from "vitest";
-import { argumentsBornes, borne, ErreurPortee, estLectureDIdentifiants, noterVus, type Portee } from "./borne";
+import { argumentsBornes, borne, dansUnLot, ErreurPortee, estLectureDIdentifiants, noterVus, type Portee } from "./borne";
 
 const A: Portee = { type: "compte", userId: "u-a" };
 const COMPTE_A = { entreprise: { userId: "u-a" } };
@@ -248,19 +249,37 @@ describe("ce qui n'est pas bornable", () => {
     ).toThrow(/creerEnLotVerifie/);
   });
 
-  it("createMany vers des parents lus par une lecture bornée d'identifiants : accepté", () => {
-    noterVus("Etablissement", A, [{ id: "e-lu" }]);
-    expect(argumentsBornes("Batiment", "createMany", { data: [{ etablissementId: "e-lu", nom: "n" }] }, A)).toEqual({
-      data: [{ etablissementId: "e-lu", nom: "n" }],
+  it("dans un lot, createMany vers des parents lus par une lecture bornée d'identifiants : accepté", async () => {
+    await dansUnLot(async () => {
+      noterVus("Etablissement", A, [{ id: "e-lu" }]);
+      expect(argumentsBornes("Batiment", "createMany", { data: [{ etablissementId: "e-lu", nom: "n" }] }, A)).toEqual({
+        data: [{ etablissementId: "e-lu", nom: "n" }],
+      });
     });
   });
 
-  it("un parent lu par un compte n'ouvre pas le createMany d'un autre", () => {
-    noterVus("Etablissement", A, [{ id: "e-de-a" }]);
-    const B: Portee = { type: "compte", userId: "u-b" };
+  it("hors d'un lot, une lecture d'identifiants n'ouvre rien", () => {
+    noterVus("Etablissement", A, [{ id: "e-hors-lot" }]);
     expect(() =>
-      argumentsBornes("Batiment", "createMany", { data: [{ etablissementId: "e-de-a", nom: "n" }] }, B),
+      argumentsBornes("Batiment", "createMany", { data: [{ etablissementId: "e-hors-lot", nom: "n" }] }, A),
     ).toThrow(ErreurPortee);
+  });
+
+  it("le lot fini, ses identifiants ne valent plus", async () => {
+    await dansUnLot(async () => noterVus("Etablissement", A, [{ id: "e-fini" }]));
+    expect(() =>
+      argumentsBornes("Batiment", "createMany", { data: [{ etablissementId: "e-fini", nom: "n" }] }, A),
+    ).toThrow(ErreurPortee);
+  });
+
+  it("dans un même lot, un parent lu par un compte n'ouvre pas le createMany d'un autre", async () => {
+    const B: Portee = { type: "compte", userId: "u-b" };
+    await dansUnLot(async () => {
+      noterVus("Etablissement", A, [{ id: "e-de-a" }]);
+      expect(() =>
+        argumentsBornes("Batiment", "createMany", { data: [{ etablissementId: "e-de-a", nom: "n" }] }, B),
+      ).toThrow(ErreurPortee);
+    });
   });
 
   it("seule une lecture des seuls identifiants est retenue", () => {
@@ -288,5 +307,52 @@ describe("ce qui n'est pas bornable", () => {
 
   it("un modèle hors compte est refusé", () => {
     expect(() => argumentsBornes("QuotaEnvoiOtp", "findMany", {}, A)).toThrow(ErreurPortee);
+  });
+});
+
+describe("clé étrangère composée", () => {
+  // Le schéma n'en porte aucune (correspondance.test.ts) : on en fabrique une
+  // en mémoire, le temps du test, pour éprouver le refus à chaque niveau.
+  function avecRelationComposee(f: () => void) {
+    const r = Prisma.dmmf.datamodel.models
+      .find((m) => m.name === "Equipement")!
+      .fields.find((x) => x.name === "batiment")! as { relationFromFields?: readonly string[] };
+    const avant = r.relationFromFields;
+    r.relationFromFields = ["batimentId", "etablissementId"];
+    try {
+      f();
+    } finally {
+      r.relationFromFields = avant;
+    }
+  }
+
+  it("refusée en tête", () => {
+    avecRelationComposee(() =>
+      expect(() => argumentsBornes("Equipement", "create", { data: { batimentId: "v" } }, A)).toThrow(/composée/),
+    );
+  });
+
+  it("refusée dans une création imbriquée et un connectOrCreate", () => {
+    avecRelationComposee(() => {
+      expect(() =>
+        argumentsBornes(
+          "Etablissement",
+          "update",
+          { where: { id: "e" }, data: { equipements: { create: { batimentId: "v" } } } },
+          A,
+        ),
+      ).toThrow(/composée/);
+      expect(() =>
+        argumentsBornes(
+          "Batiment",
+          "update",
+          {
+            where: { id: "b" },
+            data: { equipements: { connectOrCreate: { where: { id: "q" }, create: { batimentId: "v" } } } },
+          },
+          A,
+        ),
+      ).toThrow(/composée/);
+    });
   });
 });

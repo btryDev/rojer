@@ -10,6 +10,7 @@
 // écritures imbriquées sont parcourues ici, et celles qu'on ne sait pas borner
 // sont refusées plutôt que laissées passer.
 
+import { AsyncLocalStorage } from "node:async_hooks";
 import { Prisma } from "@prisma/client";
 import { CORRESPONDANCE, estHorsCompte, estRacine } from "./correspondance";
 
@@ -44,6 +45,19 @@ function modele(nom: string) {
 
 function relations(nom: string): Champ[] {
   return modele(nom).fields.filter((f) => f.kind === "object");
+}
+
+/**
+ * Les relations d'un modèle vers une ligne d'un compte, chacune à clé simple.
+ * Une clé composée ne se réécrit pas en `connect` borné par ce module : elle
+ * est refusée plutôt que laissée passer sans borne (relecture GestBAT ; le
+ * schéma n'en a aucune, `correspondance.test.ts` le vérifie).
+ */
+function verifierClesSimples(nom: string): void {
+  for (const r of relations(nom)) {
+    if (estDuCompte(r.type) && (r.relationFromFields?.length ?? 0) > 1)
+      throw new ErreurPortee(`${nom}.${r.name} : clé étrangère composée, non bornable`);
+  }
 }
 
 function relation(nom: string, champ: string): Champ {
@@ -130,6 +144,9 @@ export function reecrireDonnees(
 ): Objet {
   if (data === null || typeof data !== "object" || Array.isArray(data))
     throw new ErreurPortee(`données inattendues pour ${nom}`);
+  // À chaque niveau, pas seulement en tête : une création imbriquée passe par
+  // ici (revue du lot 2a bis).
+  verifierClesSimples(nom);
   const d: Objet = { ...(data as Objet) };
   racineDe(nom, d, portee, creation);
 
@@ -257,23 +274,28 @@ function reecrireImbrique(nom: string, r: Champ, n: Objet, portee: Portee): Obje
   return sortie;
 }
 
-// --- Parents vus par une lecture bornée ------------------------------------
+// --- Parents vus par une lecture bornée, le temps d'un lot -----------------
 //
 // Prisma recopie les arguments en profondeur avant l'extension : aucun
 // marqueur (symbole, identité d'objet) ne survit, constaté le 2026-10-30. Ce
 // qui survit, ce sont les valeurs. Une lecture bornée `select: { id: true }`
-// prouve que les identifiants rendus sont dans la portée : le client les
-// retient, et un `createMany` n'est accepté que si chacune de ses clés
-// étrangères vers une ligne d'un compte en fait partie. Par le client borné,
-// une ligne ne change pas de compte : il refuse de déplacer une clé vers un
-// autre compte comme de changer une racine (`userId`). Le relevé reste donc
-// vrai, sauf écriture par le client brut (scripts, modules nommés), qui ne
-// déplace pas de ligne entre comptes ; une ligne supprimée depuis fait échouer
-// la clé étrangère en base.
+// prouve que les identifiants rendus sont dans la portée ; un `createMany`
+// n'est accepté que si chacune de ses clés étrangères vers une ligne d'un
+// compte en fait partie.
+//
+// [2026-10-30, relecture GestBAT : le relevé était un état global, gardé d'une
+// requête à l'autre, nourri par toute lecture d'identifiants et purgé par
+// plafond — une purge entre la lecture et l'insertion refusait au hasard.] Il
+// ne vit plus que le temps d'un appel à `dansUnLot` (`AsyncLocalStorage`) :
+// `creerEnLotVerifie` y lit les parents puis insère. Hors d'un lot, rien n'est
+// retenu et tout `createMany` est refusé.
 
-const VUS = new Map<string, Set<string>>();
-const MAX_PORTEES = 500;
-const MAX_PAR_PORTEE = 50_000;
+const LOT = new AsyncLocalStorage<Set<string>>();
+
+/** Exécute `fn` dans un lot : les identifiants lus pendant l'appel y sont retenus. */
+export function dansUnLot<T>(fn: () => Promise<T>): Promise<T> {
+  return LOT.run(new Set(), fn);
+}
 
 function clePortee(p: Portee): string {
   return `compte:${p.userId}`;
@@ -286,26 +308,19 @@ export function estLectureDIdentifiants(operation: string, args: unknown): boole
   return !!select && Object.keys(select).length === 1 && select.id === true;
 }
 
-/** Retient les identifiants rendus par une lecture bornée. */
+/** Retient, dans le lot en cours, les identifiants rendus par une lecture bornée. */
 export function noterVus(nom: string, portee: Portee, resultat: unknown): void {
-  if (!Array.isArray(resultat)) return;
-  const cle = clePortee(portee);
-  let vus = VUS.get(cle);
-  if (!vus) {
-    if (VUS.size >= MAX_PORTEES) VUS.delete(VUS.keys().next().value!);
-    vus = new Set();
-    VUS.set(cle, vus);
-  }
-  if (vus.size + resultat.length > MAX_PAR_PORTEE) vus.clear();
+  const vus = LOT.getStore();
+  if (!vus || !Array.isArray(resultat)) return;
   for (const ligne of resultat) {
     const id = (ligne as Objet | null)?.id;
-    if (typeof id === "string") vus.add(`${nom}:${id}`);
+    if (typeof id === "string") vus.add(`${clePortee(portee)}|${nom}:${id}`);
   }
 }
 
 /** Les clés étrangères d'un lot qui ne désignent pas une ligne vue dans la portée. */
 function clesNonVues(nom: string, data: unknown, portee: Portee): string[] {
-  const vus = VUS.get(clePortee(portee)) ?? new Set<string>();
+  const vus = LOT.getStore() ?? new Set<string>();
   const manquantes: string[] = [];
   for (const ligne of lister(data)) {
     if (ligne === null || typeof ligne !== "object") throw new ErreurPortee(`${nom} : ligne inattendue`);
@@ -317,7 +332,7 @@ function clesNonVues(nom: string, data: unknown, portee: Portee): string[] {
         throw new ErreurPortee(`${nom}.${r.name} : clé vers un autre champ que id`);
       const v = l[r.relationFromFields[0]];
       if (v === undefined || v === null) continue;
-      if (!vus.has(`${r.type}:${String(v)}`)) manquantes.push(`${r.type}:${String(v)}`);
+      if (!vus.has(`${clePortee(portee)}|${r.type}:${String(v)}`)) manquantes.push(`${r.type}:${String(v)}`);
     }
   }
   return manquantes;
@@ -341,6 +356,7 @@ export function argumentsBornes(
   args: unknown,
   portee: Portee,
 ): Objet {
+  verifierClesSimples(nom);
   const a: Objet = { ...((args as Objet | undefined) ?? {}) };
   const b = borne(nom, portee);
 

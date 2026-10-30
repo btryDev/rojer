@@ -53,6 +53,16 @@ describe("table de correspondance", () => {
     },
   );
 
+  it("aucune clé étrangère composée vers un modèle du compte (borne.ts la refuserait)", () => {
+    const composees = MODELES.flatMap((m) =>
+      m.fields
+        .filter((f) => f.kind === "object" && (f.relationFromFields?.length ?? 0) > 1)
+        .filter((f) => !estHorsCompte(CORRESPONDANCE[f.type] ?? { horsCompte: "" }))
+        .map((f) => `${m.name}.${f.name}`),
+    );
+    expect(composees).toEqual([]);
+  });
+
   it("un modèle hors compte (identité exceptée) n'est la cible d'aucune relation d'un modèle du compte", () => {
     // L'identité (`User`) est la seule cible permise : la racine y pointe.
     const hors = new Set(Object.keys(CORRESPONDANCE).filter((n) => "horsCompte" in CORRESPONDANCE[n]));
