@@ -94,7 +94,7 @@ actuelle.
 | 0.4 | Export ZIP borné à moins de **180 s**, le délai du proxy de Clever Cloud (aujourd'hui `maxDuration` vaut 300 s) ; sinon, export asynchrone | H3, H5 | à faire : mesurer le plus gros dossier réel |
 | 0.5 | `EXPORTS_SIMULTANES` validée dans `src/env.ts` | H3 | ~~partiel~~ [2026-10-30 : PR #127] |
 | 0.6 | `Clear-Site-Data` à la déconnexion | B30 | à faire, ou avec Better Auth |
-| 0.7 | Pilote de stockage S3 (Cellar) derrière `FileStorage`, avec délai sortant | ST, M9 | ~~à faire~~ [2026-10-30 : fusionné, PR #129 ; reste à la propriétaire : créer l'add-on et le bucket privé, trancher le versionnage (RGPD), poser `STORAGE_DRIVER=s3` — `docs/deploiement-stockage.md`] |
+| 0.7 | Pilote de stockage S3 (Cellar) derrière `FileStorage`, avec délai sortant | ST, M9 | ~~à faire~~ [2026-10-30 : fusionné, PR #129 ; reste à la propriétaire : créer l'add-on et le bucket privé, sans versionnage (décision du 2026-10-30, RGPD), poser `STORAGE_DRIVER=s3` — `docs/deploiement-stockage.md`] |
 | 0.8 | Pilote d'e-mail Mailpace (API HTTPS, clé `MAILPACE_API_KEY`, délai sortant), domaine d'envoi vérifié (DKIM) | décision 1 | ~~à faire~~ [2026-10-30 : code fusionné, PR #128 (06951fa5) ; reste à la propriétaire : créer l'add-on, DKIM dans la zone rojer.fr, Mailpace au registre RGPD] |
 | 0.9 | Retrait des données mortes : `Intervention`, `chiffonsImpregnes`, `classeIgh`, `familleHabitation`, `pdfUrl` | BA 2 | facultatif : sans copie de données, ce n'est plus un préalable ; à faire quand on veut |
 | 0.10 | `DemandeAssistance.userId` en UUID, comme les trois autres `userId` | BA | à faire, ou en phase 1 avec les clés étrangères vers `user` |
@@ -251,8 +251,10 @@ Source : https://cdn.jsdelivr.net/npm/clever-tools@4.10.0/src/commands/deploy/de
   autorisées n'est pas documentée. À demander.
 
 **Cellar**
-- Bucket privé, clés limitées à ce bucket, aucune URL publique, versionnage
-  activé (B9). Fichiers servis par l'app, ou par URL présignée courte.
+- Bucket privé, clés limitées à ce bucket, aucune URL publique (B9).
+  ~~Versionnage activé~~ [2026-10-30 : **sans versionnage**, décision de la
+  propriétaire — il ne se désactive plus, et garderait des versions qu'un
+  effacement RGPD doit supprimer.] Fichiers servis par l'app, ou par URL présignée courte.
 
 **Journaux et mesure**
 - Rétention native de 7 jours seulement : un drain (Better Stack, Datadog,
