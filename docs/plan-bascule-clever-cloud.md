@@ -8,9 +8,13 @@ de Next.js et de Prisma (lues le 2026-10-30, URL en annexe), et dit ce qui reste
 
 **Le principe** : tout ce qui ne dépend pas de l'hébergeur part d'abord en
 production sur Vercel, où il est vérifiable sans rien couper. Clever Cloud se
-monte ensuite à côté, en préproduction, sans toucher à la prod. On répète la
-bascule sur une copie, chronomètre en main. La bascule elle-même n'est alors
-qu'une fenêtre courte et réversible.
+monte ensuite à côté, en préproduction, sans toucher à la prod. La bascule
+elle-même n'est alors qu'un changement de DNS, réversible.
+
+**Aucune donnée n'est migrée** (décision de la propriétaire du 2026-10-30) : les
+comptes et dossiers actuels sont fictifs, créés pour les tests. Clever Cloud
+part d'une base neuve, construite par les migrations ; les testeurs recréent
+leurs comptes. Ni dump, ni import des mots de passe, ni recopie des fichiers.
 
 Sources du dépôt reprises ici, sans les recopier (identifiants d'origine entre
 parenthèses) :
@@ -44,25 +48,38 @@ Node.js natif**, sortie `standalone`, démarrage par `CC_RUN_COMMAND`.
 
 ---
 
-## 2. Décisions à prendre par la propriétaire
+## 2. Décisions de la propriétaire (2026-10-30)
 
-1. **Fournisseur d'e-mails.** Better Auth n'envoie rien lui-même : vérification
-   d'adresse, mot de passe oublié et OTP passent par une fonction qu'on branche.
-   Aujourd'hui, c'est Supabase qui les envoie, et l'app n'a qu'un pilote
+1. **E-mails : l'add-on Mailpace de Clever Cloud.** Better Auth n'envoie rien
+   lui-même (vérification d'adresse, mot de passe oublié, OTP, code de double
+   authentification) ; aujourd'hui c'est Supabase, et l'app n'a qu'un pilote
    `console` (`src/lib/email/index.ts`). **Le lot e-mail, gelé, devient un
-   prérequis de la bascule.** Il faut un fournisseur hébergé dans l'UE, et
-   jamais de test sur btry.fr.
-2. **Mots de passe.** Recommandé : importer les hachés bcrypt de Supabase, comme
-   le fait le guide officiel de Better Auth. Personne ne réinitialise ; chacun
-   se reconnecte une fois. L'autre voie est une réinitialisation forcée.
-3. **Double authentification** (B22) : le plugin `twoFactor` dès la bascule, ou
-   une justification écrite pour plus tard.
-4. **Fenêtre de coupure.** La prod n'a pas de clients réels (données factices
-   au 2026-10-08, à revérifier). Une page de maintenance de l'ordre d'une heure
-   suffit, sans réplication logique.
-5. **Contradictions entre audits** (§ 9), à trancher une à une.
-6. **Taille des plans**, voir § 5 : base XS (75 connexions) et app XS, avec
-   instance de build S.
+   prérequis de la bascule.** Ce que la doc dit de Mailpace :
+   - API HTTPS et SMTP (`smtp.mailpace.com`, TLS) ; l'add-on donne une clé
+     qu'on pose soi-même dans l'app (`MAILPACE_API_KEY`), rien n'est injecté ;
+   - domaine d'envoi à vérifier, DKIM obligatoire avant tout envoi ;
+   - **RGPD** : société britannique (OhMySMTP Ltd), données « hébergées en
+     France » selon son DPA, mais **envois par des serveurs au Royaume-Uni**,
+     e-mails conservés jusqu'à 30 jours. Transfert hors UE à inscrire dans le
+     registre des traitements, sur la base de la décision d'adéquation
+     UE–Royaume-Uni (à vérifier en vigueur au jour de la bascule) ;
+   - prix non publiés : à lire dans la console ;
+   - jamais de test sur btry.fr.
+2. **Mots de passe et données : rien n'est migré** (voir l'en-tête). Better
+   Auth hache en scrypt, sa valeur par défaut.
+3. **Double authentification : oui** (B22), plugin `twoFactor` dès la
+   bascule. TOTP et code par e-mail, codes de secours, appareils de confiance
+   30 jours. **À trancher encore : proposée ou obligatoire.** Better Auth ne
+   sait pas l'imposer nativement : l'obligation se code (enrôlement forcé à la
+   première connexion, hook sur les routes de connexion). La perte du facteur
+   n'a que les codes de secours ; aucune réinitialisation par un
+   administrateur n'est prévue, il faudrait la construire.
+4. **Coupure** : sans données à copier, la bascule se réduit au DNS ;
+   quelques minutes, testeurs prévenus.
+5. **Taille des plans : XS** pour la base (75 connexions) et pour l'app, build
+   sur une instance S.
+6. **Contradictions entre audits** : propositions acceptées sous réserve de
+   contre-vérification, faite le 2026-10-30 (§ 9). Deux ont changé.
 
 ---
 
@@ -80,9 +97,9 @@ actuelle.
 | 0.5 | `EXPORTS_SIMULTANES` validée dans `src/env.ts` | H3 | partiel : la variable est dans `.env.example` seulement |
 | 0.6 | `Clear-Site-Data` à la déconnexion | B30 | à faire, ou avec Better Auth |
 | 0.7 | Pilote de stockage S3 (Cellar) derrière `FileStorage`, avec délai sortant | ST, M9 | à faire. Points connus : `region: 'default'`, et `requestChecksumCalculation` / `responseChecksumValidation` à `WHEN_REQUIRED` avec le SDK v3 récent |
-| 0.8 | Pilote d'e-mail réel | décision 1 | à faire, gelé |
-| 0.9 | Retrait des données mortes en deux déploiements : `Intervention`, `chiffonsImpregnes`, `classeIgh`, `familleHabitation`, `pdfUrl` | BA 2 | à faire, après lecture de `scripts/sante-base.sql` en prod |
-| 0.10 | `DemandeAssistance.userId` en UUID, comme les trois autres `userId` | BA | à faire |
+| 0.8 | Pilote d'e-mail Mailpace (API HTTPS, clé `MAILPACE_API_KEY`, délai sortant), domaine d'envoi vérifié (DKIM) | décision 1 | à faire ; le lot e-mail était gelé |
+| 0.9 | Retrait des données mortes : `Intervention`, `chiffonsImpregnes`, `classeIgh`, `familleHabitation`, `pdfUrl` | BA 2 | facultatif : sans copie de données, ce n'est plus un préalable ; à faire quand on veut |
+| 0.10 | `DemandeAssistance.userId` en UUID, comme les trois autres `userId` | BA | à faire, ou en phase 1 avec les clés étrangères vers `user` |
 | 0.11 | Antivirus des dépôts, ou décision écrite | B29 | à trancher |
 | 0.12 | Plafond total de renvois d'OTP par jeton | B3, B14 | non retrouvé dans le code : à vérifier |
 
@@ -106,19 +123,24 @@ Ce que le changement doit tenir :
 - **Un seul point de lecture de l'identité.** `requireUser(): {id, email}` passe
   sur `auth.api.getSession({ headers })`. Douze fichiers dépendent de Supabase
   Auth (liste en annexe B).
-- **Mêmes identifiants.** Le script du guide de migration conserve `id` =
-  l'UUID Supabase, donc les `userId` des tables métier restent valides. Les
-  nouveaux comptes doivent aussi être des UUID (`advanced.database.generateId:
-  "uuid"`, à poser explicitement : deux pages de la doc se contredisent sur la
-  valeur par défaut) (H6).
+- **Identifiants en UUID**, comme les `userId` des tables métier (`@db.Uuid`) :
+  `advanced.database.generateId: "uuid"`, à poser explicitement, deux pages de
+  la doc se contredisant sur la valeur par défaut (H6).
+- **Clés étrangères vers `user.id`** dès cette phase (`Entreprise.userId`,
+  `Signature.userId`, `DemandeAssistance.userId`…). La base partant neuve,
+  aucun compte orphelin ne peut les bloquer (BA 8).
 - **Collision de noms** : la table `verification` de Better Auth se renomme par
   `modelName` (par exemple `authVerification`), avant de générer son schéma
   (BA 1). `auth generate` pour Prisma a une issue ouverte (#12134), relations en
   double : relire le diff.
-- **Mots de passe** : `verify` à deux branches, bcrypt pour les hachés importés
-  (`$2a$`, `$2b$`) et scrypt sinon. Un `verify` personnalisé désactive la
-  détection automatique. Écrire les paramètres retenus (B4, B27). Longueur
-  minimale 12, déjà en place côté app.
+- **Mots de passe** : scrypt, la valeur par défaut de Better Auth ; rien à
+  importer. Paramètres écrits (B4, B27). Longueur minimale 12, déjà en place
+  côté app ; mots de passe divulgués refusés.
+- **Double authentification** (décision 3, B22) : plugin `twoFactor`, TOTP et
+  code par e-mail (`sendOTP` par Mailpace), codes de secours, appareils de
+  confiance. Activer la 2FA exige le mot de passe. Les routes `/two-factor/*`
+  sont limitées à 3 essais par 10 s par Better Auth. Si elle est
+  obligatoire : enrôlement forcé à la première connexion, codé côté app.
 - **Server Actions** : plugin `nextCookies()`, en **dernier** dans la liste,
   sinon une connexion faite dans une action ne pose pas de cookie.
 - **Proxy optimiste** : `getSessionCookie` ne teste que la présence du cookie.
@@ -181,19 +203,25 @@ même zone (B12, AD § 3).
 - Version 17, comme la prod et la CI. Plan XS (1 Go, 75 connexions) :
   2 instances × pool de 5 à 10, doublé pendant un déploiement, plus les
   migrations et les scripts, reste en dessous (AD).
-- `ALTER DATABASE … SET timezone = 'UTC'` à la création (BA 4).
 - `DATABASE_URL` sans `pgbouncer=true` ni `connection_limit=1`, avec un pool
   explicite (`connection_limit` 5 à 10) (H2, AD). `DIRECT_URL` sur le nom
   d'hôte direct, à régénérer après toute migration de l'add-on.
-- TLS : la doc de Clever Cloud ne dit rien de `sslmode`. À vérifier,
-  `verify-full` visé (B19).
+- TLS : la doc de Clever Cloud ne dit rien du chiffrement en transit. À
+  constater sur l'add-on (`SHOW ssl;`, `SELECT * FROM pg_stat_ssl;`) et à
+  demander au support avec l'autorité de certification (B19, § 9).
 - **À demander au support, pour des données de salariés** : le chiffrement au
   repos (LUKS, non activé par défaut), le PITR (pgBackRest, non installé par
   défaut), et une rétention des sauvegardes plus longue que 7 jours si besoin.
   Prévoir aussi un dump chiffré mensuel hors de Clever Cloud (B13).
-- Rôle applicatif distinct du rôle de migration (B6). La RLS est activée sans
-  politique : un rôle non propriétaire ne voit aucune ligne, sans erreur
-  (BA 6, voir § 9).
+- **Un seul rôle, le propriétaire** : Clever Cloud ne permet pas de créer
+  d'autre utilisateur que ceux de son plan de contrôle (le propriétaire et des
+  lecteurs), et ne donne pas de superutilisateur. Le rôle applicatif distinct
+  (B6) n'est donc pas atteignable : l'écart est accepté et écrit. La RLS, active
+  sans politique, ne gêne pas le propriétaire, qui y échappe ; elle reste
+  (voir § 9).
+- `ALTER DATABASE … SET timezone = 'UTC'` en tant que propriétaire : non
+  documenté, à constater à la création. `pg_stat_statements` est disponible par
+  défaut.
 - Réseau : les Network Groups sont en bêta pour les add-ons, et la liste d'IP
   autorisées n'est pas documentée. À demander.
 
@@ -214,24 +242,21 @@ domaine (M11, B8).
 
 ## 6. Phase 3 — répétition générale
 
-Sur la préproduction, avec une copie de la prod, chronomètre en main :
+Sans données à copier, la répétition porte sur le déploiement lui-même, sur la
+préproduction :
 
-1. `scripts/sante-base.sql` sur la prod (lecture seule).
-2. `pg_dump` depuis Supabase par la connexion **directe ou le pooler de
-   session**, jamais le pooler de transaction : `-n public --no-owner
-   --no-privileges`, `_prisma_migrations` compris. pg_dump doit être d'une
-   version majeure au moins égale à celle du serveur (BA 5).
-3. `pg_restore` avec `--exit-on-error`, puis `ANALYZE`.
-4. Migration des comptes : le script du guide Better Auth, lu et adapté
-   (`auth.users` + `auth.identities` → `user`, `account`), par lots
-   transactionnels.
-5. Recopie des fichiers Supabase Storage → Cellar, clé par clé (ST).
-6. Vérifications : comptes de lignes par table, `last_value` des séquences,
-   `sante-base.sql`, toutes les clés de fichiers présentes dans Cellar (BA 7).
-7. Recette (§ 7.2) sur la préproduction.
-8. **Durée totale mesurée = fenêtre de coupure annoncée.**
+1. Base vide : le premier démarrage applique les 97 migrations et plus
+   (`CC_PRE_RUN_HOOK`). Contrôle de dérive entre le schéma et la base
+   (`prisma migrate diff`), puis `scripts/sante-base.sql`.
+2. Deux déploiements successifs, pour voir le passage sans coupure et une
+   migration appliquée pendant que l'ancienne version sert.
+3. Un déploiement qui échoue volontairement (migration fautive) : l'ancienne
+   version doit rester en ligne. La doc de Clever Cloud ne l'écrit pas
+   explicitement : c'est ce test qui le dit.
+4. Recette complète (§ 7.2).
+5. Rejouer le seed des situations de test si les testeurs en ont besoin.
 
-Recommencer jusqu'à ce que la répétition passe sans geste à la main.
+Recommencer jusqu'à ce que tout passe sans geste à la main.
 
 ---
 
@@ -241,19 +266,22 @@ Recommencer jusqu'à ce que la répétition passe sans geste à la main.
 
 - **J-2** : abaisser le TTL de l'enregistrement de l'app (rojer.fr reste chez
   OVH ; les MX ne bougent pas). Attendre l'expiration de l'ancien TTL.
-  Prévenir les testeurs.
-- **H0** : page de maintenance sur Vercel, ce qui gèle les écritures.
-- Étapes 2 à 6 de la répétition, telles quelles.
-- Déployer la version finale sur Clever Cloud, puis pointer le DNS vers
-  Clever Cloud, en notant les anciennes valeurs.
-- Recette courte (§ 7.2), levée de la maintenance.
+  Prévenir les testeurs : **leurs comptes et dossiers ne suivent pas**, ils
+  les recréeront.
+- **H0** : déployer la version finale sur la production Clever Cloud (base
+  neuve), recette courte (§ 7.2) sur son adresse Clever Cloud.
+- Pointer le DNS vers Clever Cloud, en notant les anciennes valeurs. Passer
+  Vercel en page de maintenance, pour qu'un navigateur encore sur l'ancienne
+  adresse n'y écrive pas.
 
 ### 7.2 Recette
 
 Critères B1 à B31, les « Critères de recette » de l'audit Next.js, et en
 particulier :
-- connexion d'un compte migré **avec son ancien mot de passe** ; création d'un
-  compte ; mot de passe oublié, avec un e-mail reçu ; déconnexion ;
+- création d'un compte, avec l'e-mail de vérification reçu ; connexion ;
+  mot de passe oublié ; déconnexion ; liste et révocation des sessions ;
+- double authentification : enrôlement TOTP, connexion avec le code, code par
+  e-mail, code de secours, appareil de confiance ;
 - un `X-Forwarded-For` forgé ne se retrouve ni dans la preuve de signature ni
   dans la limitation de débit. La doc de Clever Cloud dit que la **première**
   entrée est l'IP du client, sans dire si son proxy écrase celle qu'envoie le
@@ -265,19 +293,18 @@ particulier :
 
 ### 7.3 Retour arrière
 
-La base Supabase n'est pas touchée pendant la bascule : elle reste intacte et
-sans écriture. Revenir, c'est remettre l'ancien DNS et lever la maintenance sur
-Vercel. Les écritures faites sur Clever Cloud entre-temps seraient perdues :
-d'où une recette courte avant d'ouvrir. Le retour arrière n'est plus possible
-une fois des écritures réelles acceptées sur Clever Cloud ; c'est le moment de
-le décider.
+Vercel et Supabase ne sont pas touchés par la bascule. Revenir, c'est remettre
+l'ancien DNS et lever la maintenance sur Vercel. Ce qui aura été saisi sur
+Clever Cloud entre-temps n'y suivra pas ; les données étant de test, c'est
+acceptable. Le retour arrière cesse d'être simple le jour où de vrais clients
+écrivent sur Clever Cloud.
 
 ---
 
 ## 8. Phase 5 — après la bascule
 
-- Supabase gardé en lecture seule quelques semaines, puis supprimé (projet,
-  stockage, clés). Vercel : projet mis en pause puis supprimé.
+- Supabase et Vercel gardés quelques semaines pour le retour arrière, puis
+  supprimés (projets, stockage, clés).
 - Mesures de l'AD § 5.3 : `max_connections` réel, latence avec et sans le proxy
   de Clever Cloud, p95 par page, lot 8 (charge). Le chantier « moins de
   requêtes » ne rouvre que si plus d'un tiers du p95 du tableau de bord attend
@@ -289,29 +316,32 @@ le décider.
   l'émetteur sur `baseURL`.
 - Prisma 7 **seulement après** : pas deux changements de fond en même temps
   (BA). La PR Dependabot #39 reste de côté d'ici là.
-- Clés étrangères vers `user.id` (`Entreprise.userId`…), possibles une fois
-  les comptes en base (BA 8).
 - Tâches planifiées : purge des jetons, OTP, limites et IP expirés (BA).
 
 ---
 
-## 9. Contradictions à trancher
+## 9. Contradictions entre audits — tranchées le 2026-10-30
 
-| Sujet | D'un côté | De l'autre | Proposition |
-|---|---|---|---|
-| RLS | B15 : la garder en défense en profondeur | BA 6 : un rôle non propriétaire ne voit rien ; la désactiver ou donner `BYPASSRLS` | Le rôle applicatif reçoit `BYPASSRLS` : l'isolation est dans le code (gardes `tenancy-*`), et la RLS sans politique protège contre un rôle mal configuré |
-| TLS de la base | B6 : `sslmode=require` | B19 : `require` accepte un certificat auto-signé | `verify-full` si Clever Cloud fournit l'autorité de certification |
-| Limitation de débit | B3 : celle de Better Auth | M11 : celle de l'app existe déjà, en base | Garder celle de l'app, et passer celle de Better Auth en base pour ses propres routes |
-| Session | H4 : proxy optimiste par cookie | AD § 4 : session en base ou cookie signé | Session en base (révocable, B20), sans `cookieCache` |
-| `MCP_HOTES` | H5 : obligatoire | correctif de H5 : `PUBLIC_APP_URL` suffit | `PUBLIC_APP_URL`, c'est ce qui est en place |
-| Lot 7 | PP : à la bascule, pas avant | AD § 5.2 : mesurer la prod avant | Le poser en préproduction (§ 5), qui donne l'« avant » sur la même infrastructure |
+Propositions acceptées par la propriétaire sous réserve de contre-vérification.
+Contre-vérifiées le même jour, dans le code et la doc ; deux ont changé.
+
+| Sujet | D'un côté | De l'autre | Retenu | Contre-vérification |
+|---|---|---|---|---|
+| RLS | B15 : la garder en défense en profondeur | BA 6 : un rôle non propriétaire ne voit rien ; la désactiver ou donner `BYPASSRLS` | ~~`BYPASSRLS` au rôle applicatif~~ **La garder telle quelle, l'app se connecte en propriétaire** | **Changé.** `BYPASSRLS` exige un superutilisateur, et Clever Cloud n'en donne pas ni ne permet de créer un second rôle. L'app se connecte déjà en propriétaire aujourd'hui (BA), qui échappe à la RLS ; la RLS sans politique ne gêne donc rien, et coupe tout accès à un rôle lecteur créé par la plateforme. La garde `migrations-rls.test.ts` reste |
+| TLS de la base | B6 : `sslmode=require` | B19 : `require` accepte un certificat auto-signé | ~~`verify-full` si l'autorité est fournie~~ **À constater, puis `verify-full` si possible, sinon `require` et écart écrit** | **Changé.** La doc de Clever Cloud ne dit rien du TLS en transit ni d'une autorité de certification : à constater sur l'add-on et à demander au support |
+| Limitation de débit | B3 : celle de Better Auth | M11 : celle de l'app existe déjà, en base | Garder celle de l'app ; celle de Better Auth en base (`rateLimit.storage: "database"`) pour ses routes | Confirmé : le stockage en base existe ; la mémoire, par défaut, est fausse dès deux instances. Better Auth limite déjà `/sign-in/email` et `/two-factor/*` à 3 essais par 10 s |
+| Session | H4 : proxy optimiste par cookie | AD § 4 : session en base ou cookie signé | Session en base, sans `cookieCache` ; le proxy ne teste que la présence du cookie | Confirmé : la session est en base par défaut, `cookieCache` est à activer explicitement ; `listSessions`, `revokeSession`, `revokeOtherSessions` existent |
+| `MCP_HOTES` | H5 : obligatoire | correctif de H5 : `PUBLIC_APP_URL` suffit | `PUBLIC_APP_URL` | Confirmé dans le code : `src/lib/mcp/hotes.ts` lit `PUBLIC_APP_URL` |
+| Lot 7 | PP : à la bascule, pas avant | AD § 5.2 : mesurer la prod avant | Le poser en préproduction (§ 5) | Sans objet à vérifier : c'est un choix d'ordre |
 
 ---
 
 ## 10. Ce qui reste à vérifier (non documenté par Clever Cloud)
 
 - Le proxy écrase-t-il un `X-Forwarded-For` envoyé par le client ? (test § 7.2)
-- `sslmode` et autorité de certification de l'add-on PostgreSQL.
+- TLS en transit et autorité de certification de l'add-on PostgreSQL.
+- `ALTER DATABASE … SET timezone` par le propriétaire.
+- Prix de l'add-on Mailpace.
 - Taille maximale du corps de requête (les dépôts vont jusqu'à 25 Mo).
 - Mise en mémoire tampon du proxy : le streaming des pages en dépend (AD § 4).
 - Hooks en Docker : sans objet si Node natif est retenu.
@@ -336,7 +366,6 @@ Clever Cloud :
 - Conformité (ISO 27001, HDS ; SecNumCloud en cours) : https://www.clever.cloud/compliance
 
 Better Auth :
-- Migration depuis Supabase : https://www.better-auth.com/docs/guides/supabase-migration-guide
 - Base de données (`modelName`, `generateId`) : https://www.better-auth.com/docs/concepts/database
 - Sécurité : https://www.better-auth.com/docs/reference/security
 - Limitation de débit : https://www.better-auth.com/docs/concepts/rate-limit
@@ -344,6 +373,12 @@ Better Auth :
 - Next.js : https://www.better-auth.com/docs/integrations/next
 - E-mails : https://www.better-auth.com/docs/concepts/email
 - MCP : https://www.better-auth.com/docs/plugins/mcp
+- Double authentification : https://www.better-auth.com/docs/plugins/2fa
+
+Mailpace :
+- Add-on Clever Cloud : https://www.clever.cloud/developers/doc/deploy/services/mailpace/
+- Documentation : https://docs.mailpace.com
+- Confidentialité et DPA : https://mailpace.com/privacy et https://mailpace.com/dpa
 
 Next.js, Prisma, PostgreSQL :
 - Auto-hébergement : https://nextjs.org/docs/app/guides/self-hosting
@@ -351,8 +386,6 @@ Next.js, Prisma, PostgreSQL :
 - `deploymentId` : https://nextjs.org/docs/app/api-reference/config/next-config-js/deploymentId
 - Pool Prisma 6 : https://www.prisma.io/docs/orm/v6/prisma-client/setup-and-configuration/databases-connections
 - Migrations en production : https://www.prisma.io/docs/v6/orm/prisma-migrate/workflows/development-and-production
-- pg_dump / pg_restore 17 : https://www.postgresql.org/docs/17/app-pgdump.html et …/app-pgrestore.html
-- Sortir de Supabase (connexion de dump) : https://supabase.com/docs/guides/platform/migrating-to-supabase/postgres
 
 ## Annexe B — ce qui dépend de Supabase et de Vercel (relevé le 2026-10-30)
 
