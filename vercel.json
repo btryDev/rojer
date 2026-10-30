@@ -11,7 +11,8 @@
       "perf/*": false,
       "worktree-*": false,
       "integration/*": false,
-      "dependabot/*": false
+      "dependabot/*": false,
+      "cc": false
     }
   }
 }
