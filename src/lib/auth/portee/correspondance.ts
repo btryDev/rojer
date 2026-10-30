@@ -12,10 +12,18 @@ export type Racine = { racine: "userId" };
 export type Rattachement = { parent: string };
 /** Hors compte : jamais servi par le client borné. */
 export type HorsCompte = { horsCompte: string };
+/**
+ * Identité (le `User` de Better Auth, sur cc) : hors compte comme les autres
+ * tables d'authentification, mais des lignes du compte y pointent ; une
+ * relation vers elle ne désigne que le compte de la portée (borne.ts).
+ */
+export type Identite = { identite: string };
 
-export type Classement = Racine | Rattachement | HorsCompte;
+export type Classement = Racine | Rattachement | HorsCompte | Identite;
 
-export const CORRESPONDANCE: Record<string, Classement> = {
+import type { Prisma } from "@prisma/client";
+
+export const CORRESPONDANCE = {
   // Racines
   Entreprise: { racine: "userId" },
   // `DemandeAssistance.userId` est posé par l'action d'un compte connecté ;
@@ -64,10 +72,11 @@ export const CORRESPONDANCE: Record<string, Classement> = {
   LimiteDebit: {
     horsCompte: "limitation de débit par clé (IP, jeton) : compteur technique, lu avant toute identité",
   },
-};
+} satisfies Record<Prisma.ModelName, Classement>;
 
-export function estHorsCompte(c: Classement): c is HorsCompte {
-  return "horsCompte" in c;
+/** Hors compte au sens du client borné : il ne lit ni n'écrit ces modèles. */
+export function estHorsCompte(c: Classement): c is HorsCompte | Identite {
+  return "horsCompte" in c || "identite" in c;
 }
 export function estRacine(c: Classement): c is Racine {
   return "racine" in c;

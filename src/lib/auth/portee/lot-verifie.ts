@@ -9,8 +9,8 @@ import "server-only";
 // dans un lot qui ne dure que cet appel (`dansUnLot`, `noterVus`), et c'est ce
 // relevé qui lui fait accepter le `createMany`.
 
-import { Prisma } from "@prisma/client";
-import { dansUnLot, ErreurPortee, estDuCompte } from "./borne";
+import type { Prisma } from "@prisma/client";
+import { clesDuCompte, dansUnLot, ErreurPortee } from "./borne";
 import type { ClientBorne, TransactionBornee } from "./client";
 
 type Ligne = Record<string, unknown>;
@@ -30,17 +30,18 @@ export async function creerEnLotVerifie(
   lignes: Ligne[],
   options: { skipDuplicates?: boolean } = {},
 ): Promise<{ count: number }> {
-  const m = Prisma.dmmf.datamodel.models.find((x) => x.name === nom);
-  if (!m) throw new ErreurPortee(`modèle inconnu : ${nom}`);
+  // Hors transaction, la vérification et l'insertion partiraient chacune de
+  // leur côté (mesuré le 2026-10-30) : on en ouvre une.
+  if ("$transaction" in client && typeof client.$transaction === "function")
+    return client.$transaction((tx) => creerEnLotVerifie(tx, nom, lignes, options));
   // Lecture des parents et insertion dans le même lot : le relevé des
-  // identifiants vus ne vit que le temps de cet appel.
+  // identifiants vus ne vit que le temps de cet appel. Les clés sont celles de
+  // la table de borne.ts (clés simples vers `id`, vérifiées au chargement).
   return dansUnLot(async () => {
-    for (const r of m.fields) {
-      if (r.kind !== "object" || !estDuCompte(r.type) || r.relationFromFields?.length !== 1) continue;
-      const cle = r.relationFromFields[0];
+    for (const { cle, cible } of clesDuCompte(nom)) {
       const ids = [...new Set(lignes.map((l) => l[cle]).filter((v) => v !== undefined && v !== null))];
       if (ids.length === 0) continue;
-      const trouves = await delegue(client, r.type).findMany({ where: { id: { in: ids } }, select: { id: true } });
+      const trouves = await delegue(client, cible).findMany({ where: { id: { in: ids } }, select: { id: true } });
       if (trouves.length !== ids.length)
         throw new ErreurPortee(`${nom}.${cle} : ${ids.length - trouves.length} ligne(s) parente(s) hors du compte`);
     }

@@ -148,30 +148,22 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
   });
 
   describe("écritures imbriquées sous une ligne bornée", () => {
-    it("update et deleteMany imbriqués touchent les lignes du parent", async () => {
+    it("deleteMany imbriqué touche les lignes du parent ; update imbriqué est refusé (non servi)", async () => {
       const t = await prisma.batiment.create({ data: { etablissementId: a.etab.id, nom: "imbrique" } });
+      await expect(
+        dbA.etablissement.update({
+          where: { id: a.etab.id },
+          data: { batiments: { update: { where: { id: t.id }, data: { nom: "imbrique-2" } } } },
+        }),
+      ).rejects.toThrow(/non servie/);
       await dbA.etablissement.update({
         where: { id: a.etab.id },
-        data: { batiments: { update: { where: { id: t.id }, data: { nom: "imbrique-2" } } } },
-      });
-      expect((await prisma.batiment.findUnique({ where: { id: t.id } }))?.nom).toBe("imbrique-2");
-      await dbA.etablissement.update({
-        where: { id: a.etab.id },
-        data: { batiments: { deleteMany: { nom: "imbrique-2" } } },
+        data: { batiments: { deleteMany: { nom: "imbrique" } } },
       });
       expect(await prisma.batiment.findUnique({ where: { id: t.id } })).toBeNull();
     });
 
-    it("update, delete et deleteMany imbriqués n'atteignent pas la ligne d'un autre compte", async () => {
-      await expect(
-        dbA.etablissement.update({
-          where: { id: a.etab.id },
-          data: { batiments: { update: { where: { id: b.bat.id }, data: { nom: "piraté" } } } },
-        }),
-      ).rejects.toThrow();
-      await expect(
-        dbA.etablissement.update({ where: { id: a.etab.id }, data: { batiments: { delete: { id: b.bat.id } } } }),
-      ).rejects.toThrow();
+    it("deleteMany imbriqué n'atteint pas la ligne d'un autre compte", async () => {
       await dbA.etablissement.update({
         where: { id: a.etab.id },
         data: { batiments: { deleteMany: { id: b.bat.id } } },
@@ -217,13 +209,13 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
   });
 
   describe("createMany imbriqué", () => {
-    it("une racine d'un autre compte y est refusée, B ne voit rien", async () => {
+    it("est refusé (forme non servie) : une racine d'un autre compte n'y passe pas, B ne voit rien", async () => {
       await expect(
         dbA.etablissement.update({
           where: { id: a.etab.id },
           data: { demandesAssistance: { createMany: { data: [{ userId: B, categorie: "duerp", message: "injecté", page: "/" }] } } },
         } as never),
-      ).rejects.toThrow(/différent du compte/);
+      ).rejects.toThrow(/non servie/);
       expect(await prisma.demandeAssistance.count({ where: { userId: B } })).toBe(0);
     });
   });

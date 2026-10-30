@@ -1,18 +1,27 @@
 // Ce que le client borné fait des arguments d'une opération (ADR-051 § 2),
 // sans base : la borne ajoutée, les clés étrangères réécrites en `connect`
 // borné, et les refus. Le comportement contre un PostgreSQL réel est dans
-// `client.integration.test.ts`.
+// `client.integration.test.ts` ; ce qui touche l'identité (`User`, sur cc)
+// s'éprouve sur cc, seul schéma qui la porte.
 
-import { Prisma } from "@prisma/client";
 import { describe, expect, it } from "vitest";
-import { argumentsBornes, borne, dansUnLot, ErreurPortee, estLectureDIdentifiants, noterVus, type Portee } from "./borne";
+import {
+  argumentsBornes,
+  borne,
+  dansUnLot,
+  ErreurPortee,
+  estLectureDIdentifiants,
+  noterVus,
+  type Portee,
+} from "./borne";
 
 const A: Portee = { type: "compte", userId: "u-a" };
+const B: Portee = { type: "compte", userId: "u-b" };
 const COMPTE_A = { entreprise: { userId: "u-a" } };
 const ETAB_A = { etablissement: COMPTE_A };
 
 describe("borne d'un modèle", () => {
-  it("compte : racine, un cran, quatre crans", () => {
+  it("racine, un cran, quatre crans", () => {
     expect(borne("Entreprise", A)).toEqual({ userId: "u-a" });
     expect(borne("Etablissement", A)).toEqual(COMPTE_A);
     expect(borne("Risque", A)).toEqual({ unite: { duerp: ETAB_A } });
@@ -21,11 +30,12 @@ describe("borne d'un modèle", () => {
 
   it("refuse un modèle hors compte", () => {
     expect(() => borne("LimiteDebit", A)).toThrow(ErreurPortee);
+    expect(() => argumentsBornes("QuotaEnvoiOtp", "findMany", {}, A)).toThrow(ErreurPortee);
   });
 });
 
 describe("lectures et écritures par where", () => {
-  it.each(["findMany", "findFirst", "findFirstOrThrow", "count", "aggregate", "groupBy", "deleteMany"])(
+  it.each(["findMany", "findFirst", "findFirstOrThrow", "count", "aggregate", "groupBy", "delete", "deleteMany"])(
     "%s : la borne s'ajoute au where",
     (op) => {
       expect(argumentsBornes("Equipement", op, { where: { libelle: "x" } }, A)).toMatchObject({
@@ -34,13 +44,10 @@ describe("lectures et écritures par where", () => {
     },
   );
 
-  it("findUnique garde son champ unique en tête", () => {
+  it("findUnique garde son champ unique en tête, un AND existant est conservé", () => {
     expect(argumentsBornes("Equipement", "findUnique", { where: { id: "q" } }, A)).toEqual({
       where: { id: "q", AND: [ETAB_A] },
     });
-  });
-
-  it("un AND existant est conservé", () => {
     expect(argumentsBornes("Action", "findMany", { where: { AND: { statut: "ouverte" } } }, A)).toEqual({
       where: { AND: [{ statut: "ouverte" }, ETAB_A] },
     });
@@ -53,17 +60,22 @@ describe("lectures et écritures par where", () => {
     });
   });
 
-  it("select et include passent tels quels", () => {
-    const a = argumentsBornes("Etablissement", "findFirst", { include: { batiments: true } }, A);
-    expect(a.include).toEqual({ batiments: true });
+  it("include et select vers des modèles du compte passent tels quels", () => {
+    const include = { batiments: { include: { equipements: true } } };
+    expect(argumentsBornes("Etablissement", "findFirst", { include }, A).include).toEqual(include);
+    expect(() =>
+      argumentsBornes("Etablissement", "findFirst", { select: { _count: { select: { batiments: true } } } }, A),
+    ).not.toThrow();
+  });
+
+  it("cursor est refusé (aucun usage)", () => {
+    expect(() => argumentsBornes("Action", "findMany", { cursor: { id: "x" } }, A)).toThrow(/cursor/);
   });
 });
 
 describe("créations et clés étrangères", () => {
   it("la clé de rattachement devient un connect borné", () => {
-    expect(
-      argumentsBornes("Batiment", "create", { data: { etablissementId: "e", nom: "n" } }, A),
-    ).toEqual({
+    expect(argumentsBornes("Batiment", "create", { data: { etablissementId: "e", nom: "n" } }, A)).toEqual({
       data: { nom: "n", etablissement: { connect: { id: "e", AND: [COMPTE_A] } } },
     });
   });
@@ -82,33 +94,34 @@ describe("créations et clés étrangères", () => {
     expect(data).not.toHaveProperty("equipementId");
   });
 
-  it("update : une clé remise à null devient un disconnect", () => {
-    expect(argumentsBornes("Action", "update", { where: { id: "a" }, data: { equipementId: null } }, A))
-      .toMatchObject({ data: { equipement: { disconnect: true } } });
+  it("une clé écrite { set: v } est lue comme v ; une autre opération sur une clé est refusée", () => {
+    expect(
+      argumentsBornes("Equipement", "update", { where: { id: "q" }, data: { batimentId: { set: "b" } } }, A).data,
+    ).toEqual({ batiment: { connect: { id: "b", AND: [ETAB_A] } } });
+    expect(() =>
+      argumentsBornes("Equipement", "update", { where: { id: "q" }, data: { batimentId: { increment: 1 } } }, A),
+    ).toThrow(ErreurPortee);
   });
 
-  it("un connect explicite, une liste set, un disconnect ciblé sont bornés", () => {
+  it("update : une clé remise à null devient un disconnect", () => {
+    expect(argumentsBornes("Action", "update", { where: { id: "a" }, data: { equipementId: null } }, A)).toMatchObject(
+      { data: { equipement: { disconnect: true } } },
+    );
+  });
+
+  it("un connect explicite (liste comprise) est borné", () => {
     const { data } = argumentsBornes(
-      "Etablissement",
+      "Batiment",
       "update",
-      {
-        where: { id: "e" },
-        data: {
-          batiments: { connect: [{ id: "b1" }], set: [{ id: "b2" }], disconnect: [{ id: "b3" }] },
-        },
-      },
+      { where: { id: "b" }, data: { equipements: { connect: [{ id: "q1" }, { id: "q2" }] } } },
       A,
     );
     expect(data).toEqual({
-      batiments: {
-        connect: [{ id: "b1", AND: [ETAB_A] }],
-        set: [{ id: "b2", AND: [ETAB_A] }],
-        disconnect: [{ id: "b3", AND: [ETAB_A] }],
-      },
+      equipements: { connect: [{ id: "q1", AND: [ETAB_A] }, { id: "q2", AND: [ETAB_A] }] },
     });
   });
 
-  it("une création imbriquée est réécrite à son tour", () => {
+  it("une création imbriquée est réécrite à son tour ; deleteMany imbriqué passe", () => {
     const { data } = argumentsBornes(
       "Etablissement",
       "update",
@@ -118,149 +131,88 @@ describe("créations et clés étrangères", () => {
     expect(data).toMatchObject({
       equipements: { create: { batiment: { connect: { id: "b", AND: [ETAB_A] } }, libelle: "x" } },
     });
+    expect(
+      argumentsBornes("PlanPrevention", "update", { where: { id: "p" }, data: { lignes: { deleteMany: {} } } }, A)
+        .data,
+    ).toEqual({ lignes: { deleteMany: {} } });
   });
 
-  it("connectOrCreate : where borné, création réécrite", () => {
-    const { data } = argumentsBornes(
-      "Equipement",
-      "create",
-      {
-        data: {
-          etablissementId: "e",
-          libelle: "x",
-          batiment: { connectOrCreate: { where: { id: "b" }, create: { etablissementId: "e", nom: "n" } } },
-        },
-      },
-      A,
-    );
-    expect(data).toMatchObject({
-      batiment: {
-        connectOrCreate: {
-          where: { id: "b", AND: [ETAB_A] },
-          create: { etablissement: { connect: { id: "e", AND: [COMPTE_A] } } },
-        },
-      },
-    });
-  });
+  it.each(["set", "connectOrCreate", "createMany", "update", "updateMany", "upsert", "delete"])(
+    "refuse une écriture imbriquée non servie : %s",
+    (op) => {
+      expect(() =>
+        argumentsBornes("Etablissement", "update", { where: { id: "e" }, data: { batiments: { [op]: {} } } }, A),
+      ).toThrow(/non servie/);
+    },
+  );
 
   it("refuse une clé et sa relation données ensemble", () => {
     expect(() =>
-      argumentsBornes("Batiment", "create", { data: { etablissementId: "e", etablissement: { connect: { id: "e" } }, nom: "n" } }, A),
-    ).toThrow(ErreurPortee);
-  });
-
-  it("refuse une écriture imbriquée inconnue", () => {
-    expect(() =>
-      argumentsBornes("Etablissement", "update", { where: { id: "e" }, data: { batiments: { truncate: {} } } }, A),
-    ).toThrow(/écriture imbriquée non bornée/);
-  });
-
-  it("delete et deleteMany imbriqués passent : Prisma les limite aux lignes du parent borné", () => {
-    const { data } = argumentsBornes(
-      "PlanPrevention",
-      "update",
-      { where: { id: "p" }, data: { lignes: { deleteMany: {}, delete: [{ id: "l" }] } } },
-      A,
-    );
-    expect(data).toEqual({ lignes: { deleteMany: {}, delete: [{ id: "l" }] } });
-  });
-
-  it("update imbriqué : ses données sont réécrites, une clé vers un autre compte bornée", () => {
-    const { data } = argumentsBornes(
-      "Etablissement",
-      "update",
-      { where: { id: "e" }, data: { equipements: { update: { where: { id: "q" }, data: { batimentId: "b" } } } } },
-      A,
-    );
-    expect(data).toEqual({
-      equipements: {
-        update: { where: { id: "q" }, data: { batiment: { connect: { id: "b", AND: [ETAB_A] } } } },
-      },
-    });
-  });
-
-  it("updateMany imbriqué : une clé étrangère changée est refusée", () => {
-    expect(() =>
       argumentsBornes(
-        "Etablissement",
-        "update",
-        { where: { id: "e" }, data: { equipements: { updateMany: { where: {}, data: { batimentId: "b" } } } } },
+        "Batiment",
+        "create",
+        { data: { etablissementId: "e", etablissement: { connect: { id: "e" } }, nom: "n" } },
         A,
       ),
-    ).toThrow(/non bornable/);
+    ).toThrow(/ensemble/);
   });
 
-  it("upsert imbriqué : création et mise à jour réécrites", () => {
-    const { data } = argumentsBornes(
-      "Etablissement",
-      "update",
-      {
-        where: { id: "e" },
-        data: { equipements: { upsert: { where: { id: "q" }, create: { batimentId: "b", libelle: "x" }, update: { libelle: "y" } } } },
-      },
-      A,
-    );
-    expect(data).toMatchObject({
-      equipements: { upsert: { create: { batiment: { connect: { id: "b", AND: [ETAB_A] } } }, update: { libelle: "y" } } },
-    });
-  });
-
-  it("upsert : where borné, create et update réécrits", () => {
+  it("upsert : where borné, création ET mise à jour réécrites", () => {
     const a = argumentsBornes(
-      "Batiment",
+      "Equipement",
       "upsert",
-      { where: { id: "b" }, create: { etablissementId: "e", nom: "n" }, update: { nom: "m" } },
+      { where: { id: "q" }, create: { etablissementId: "e", libelle: "n" }, update: { batimentId: "b" } },
       A,
     );
-    expect(a.where).toEqual({ id: "b", AND: [ETAB_A] });
-    expect(a.create).toMatchObject({ etablissement: { connect: { id: "e" } } });
+    expect(a.where).toEqual({ id: "q", AND: [ETAB_A] });
+    expect(a.create).toMatchObject({ etablissement: { connect: { id: "e", AND: [COMPTE_A] } } });
+    expect(a.update).toEqual({ batiment: { connect: { id: "b", AND: [ETAB_A] } } });
+  });
+
+  it("updateMany : une clé étrangère changée est refusée", () => {
+    expect(() => argumentsBornes("Action", "updateMany", { data: { equipementId: "q" } }, A)).toThrow(/non bornable/);
   });
 });
 
 describe("racine du compte", () => {
   it("une Entreprise créée reçoit le userId du compte", () => {
-    expect(argumentsBornes("Entreprise", "create", { data: { raisonSociale: "x" } }, A).data).toMatchObject({
+    expect(argumentsBornes("Entreprise", "create", { data: { raisonSociale: "x" } }, A).data).toEqual({
+      raisonSociale: "x",
       userId: "u-a",
     });
   });
 
-  it("refuse une Entreprise au userId d'un autre compte", () => {
-    expect(() => argumentsBornes("Entreprise", "create", { data: { userId: "u-b" } }, A)).toThrow(ErreurPortee);
-    expect(() =>
-      argumentsBornes("Entreprise", "update", { where: { id: "x" }, data: { userId: "u-b" } }, A),
-    ).toThrow(ErreurPortee);
-    expect(() =>
-      argumentsBornes("Entreprise", "updateMany", { data: { userId: "u-b" } }, A),
-    ).toThrow(ErreurPortee);
+  it.each([
+    ["create", { data: { userId: "u-b" } }],
+    ["update", { where: { id: "x" }, data: { userId: "u-b" } }],
+    ["update", { where: { id: "x" }, data: { userId: { set: "u-b" } } }],
+    ["update", { where: { id: "x" }, data: { userId: null } }],
+    ["updateMany", { data: { userId: "u-b" } }],
+    ["upsert", { where: { id: "x" }, create: {}, update: { userId: "u-b" } }],
+  ])("refuse la racine d'un autre compte : %s %j", (op, args) => {
+    expect(() => argumentsBornes("Entreprise", op, args, A)).toThrow(/différent du compte/);
   });
 
-  it("un createMany imbriqué pose la racine du compte, et refuse celle d'un autre", () => {
-    const { data } = argumentsBornes(
-      "Etablissement",
-      "update",
-      { where: { id: "e" }, data: { demandesAssistance: { createMany: { data: [{ message: "m" }] } } } },
-      A,
+  it("createMany d'une racine : posée, ou refusée si elle désigne un autre compte", async () => {
+    await dansUnLot(async () => {
+      expect(argumentsBornes("DemandeAssistance", "createMany", { data: [{ message: "m" }] }, A).data).toEqual([
+        { message: "m", userId: "u-a" },
+      ]);
+    });
+    expect(() => argumentsBornes("DemandeAssistance", "createMany", { data: [{ userId: "u-b" }] }, A)).toThrow(
+      ErreurPortee,
     );
-    expect(data).toMatchObject({ demandesAssistance: { createMany: { data: [{ message: "m", userId: "u-a" }] } } });
-    expect(() =>
-      argumentsBornes(
-        "Etablissement",
-        "update",
-        { where: { id: "e" }, data: { demandesAssistance: { createMany: { data: [{ userId: "u-b" }] } } } },
-        A,
-      ),
-    ).toThrow(/différent du compte/);
   });
 });
 
-describe("ce qui n'est pas bornable", () => {
-  it("createMany vers un parent jamais lu : refusé", () => {
+describe("createMany", () => {
+  it("vers un parent jamais lu : refusé", () => {
     expect(() =>
       argumentsBornes("Batiment", "createMany", { data: [{ etablissementId: "jamais-lu", nom: "n" }] }, A),
     ).toThrow(/creerEnLotVerifie/);
   });
 
-  it("dans un lot, createMany vers des parents lus par une lecture bornée d'identifiants : accepté", async () => {
+  it("dans un lot, vers des parents lus par une lecture bornée d'identifiants : accepté", async () => {
     await dansUnLot(async () => {
       noterVus("Etablissement", A, [{ id: "e-lu" }]);
       expect(argumentsBornes("Batiment", "createMany", { data: [{ etablissementId: "e-lu", nom: "n" }] }, A)).toEqual({
@@ -269,22 +221,16 @@ describe("ce qui n'est pas bornable", () => {
     });
   });
 
-  it("hors d'un lot, une lecture d'identifiants n'ouvre rien", () => {
-    noterVus("Etablissement", A, [{ id: "e-hors-lot" }]);
-    expect(() =>
-      argumentsBornes("Batiment", "createMany", { data: [{ etablissementId: "e-hors-lot", nom: "n" }] }, A),
-    ).toThrow(ErreurPortee);
-  });
-
-  it("le lot fini, ses identifiants ne valent plus", async () => {
+  it("hors d'un lot ou après lui, une lecture d'identifiants n'ouvre rien", async () => {
+    noterVus("Etablissement", A, [{ id: "e-hors" }]);
     await dansUnLot(async () => noterVus("Etablissement", A, [{ id: "e-fini" }]));
-    expect(() =>
-      argumentsBornes("Batiment", "createMany", { data: [{ etablissementId: "e-fini", nom: "n" }] }, A),
-    ).toThrow(ErreurPortee);
+    for (const id of ["e-hors", "e-fini"])
+      expect(() => argumentsBornes("Batiment", "createMany", { data: [{ etablissementId: id, nom: "n" }] }, A)).toThrow(
+        ErreurPortee,
+      );
   });
 
   it("dans un même lot, un parent lu par un compte n'ouvre pas le createMany d'un autre", async () => {
-    const B: Portee = { type: "compte", userId: "u-b" };
     await dansUnLot(async () => {
       noterVus("Etablissement", A, [{ id: "e-de-a" }]);
       expect(() =>
@@ -299,71 +245,9 @@ describe("ce qui n'est pas bornable", () => {
     expect(estLectureDIdentifiants("findMany", {})).toBe(false);
     expect(estLectureDIdentifiants("findFirst", { select: { id: true } })).toBe(false);
   });
-
-  it("createMany d'une racine au userId d'un autre compte : refusé", () => {
-    expect(() => argumentsBornes("DemandeAssistance", "createMany", { data: [{ userId: "u-b" }] }, A)).toThrow(
-      ErreurPortee,
-    );
-  });
-
-  it("une clé étrangère changée par updateMany est refusée", () => {
-    expect(() => argumentsBornes("Action", "updateMany", { data: { equipementId: "q" } }, A)).toThrow(
-      ErreurPortee,
-    );
-  });
-
-  it("une opération inconnue est refusée", () => {
-    expect(() => argumentsBornes("Batiment", "aggregateRaw", {}, A)).toThrow(/opération inconnue/);
-  });
-
-  it("un modèle hors compte est refusé", () => {
-    expect(() => argumentsBornes("QuotaEnvoiOtp", "findMany", {}, A)).toThrow(ErreurPortee);
-  });
 });
 
-describe("clé étrangère composée", () => {
-  // Le schéma n'en porte aucune (correspondance.test.ts) : on en fabrique une
-  // en mémoire, le temps du test, pour éprouver le refus à chaque niveau.
-  function avecRelationComposee(f: () => void) {
-    const r = Prisma.dmmf.datamodel.models
-      .find((m) => m.name === "Equipement")!
-      .fields.find((x) => x.name === "batiment")! as { relationFromFields?: readonly string[] };
-    const avant = r.relationFromFields;
-    r.relationFromFields = ["batimentId", "etablissementId"];
-    try {
-      f();
-    } finally {
-      r.relationFromFields = avant;
-    }
-  }
-
-  it("refusée en tête", () => {
-    avecRelationComposee(() =>
-      expect(() => argumentsBornes("Equipement", "create", { data: { batimentId: "v" } }, A)).toThrow(/composée/),
-    );
-  });
-
-  it("refusée dans une création imbriquée et un connectOrCreate", () => {
-    avecRelationComposee(() => {
-      expect(() =>
-        argumentsBornes(
-          "Etablissement",
-          "update",
-          { where: { id: "e" }, data: { equipements: { create: { batimentId: "v" } } } },
-          A,
-        ),
-      ).toThrow(/composée/);
-      expect(() =>
-        argumentsBornes(
-          "Batiment",
-          "update",
-          {
-            where: { id: "b" },
-            data: { equipements: { connectOrCreate: { where: { id: "q" }, create: { batimentId: "v" } } } },
-          },
-          A,
-        ),
-      ).toThrow(/composée/);
-    });
-  });
+it("une opération non servie est refusée", () => {
+  expect(() => argumentsBornes("Batiment", "aggregateRaw", {}, A)).toThrow(/non servie/);
+  expect(() => argumentsBornes("Batiment", "updateManyAndReturn", {}, A)).toThrow(/non servie/);
 });
