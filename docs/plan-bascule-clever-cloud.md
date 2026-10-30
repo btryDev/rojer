@@ -95,7 +95,7 @@ actuelle.
 | 0.5 | `EXPORTS_SIMULTANES` validée dans `src/env.ts` | H3 | ~~partiel~~ [2026-10-30 : PR #127] |
 | 0.6 | `Clear-Site-Data` à la déconnexion | B30 | à faire, ou avec Better Auth |
 | 0.7 | Pilote de stockage S3 (Cellar) derrière `FileStorage`, avec délai sortant | ST, M9 | à faire. Points connus : `region: 'default'`, et `requestChecksumCalculation` / `responseChecksumValidation` à `WHEN_REQUIRED` avec le SDK v3 récent |
-| 0.8 | Pilote d'e-mail Mailpace (API HTTPS, clé `MAILPACE_API_KEY`, délai sortant), domaine d'envoi vérifié (DKIM) | décision 1 | à faire ; le lot e-mail était gelé |
+| 0.8 | Pilote d'e-mail Mailpace (API HTTPS, clé `MAILPACE_API_KEY`, délai sortant), domaine d'envoi vérifié (DKIM) | décision 1 | ~~à faire~~ [2026-10-30 : code fusionné, PR #128 (06951fa5) ; reste à la propriétaire : créer l'add-on, DKIM dans la zone rojer.fr, Mailpace au registre RGPD] |
 | 0.9 | Retrait des données mortes : `Intervention`, `chiffonsImpregnes`, `classeIgh`, `familleHabitation`, `pdfUrl` | BA 2 | facultatif : sans copie de données, ce n'est plus un préalable ; à faire quand on veut |
 | 0.10 | `DemandeAssistance.userId` en UUID, comme les trois autres `userId` | BA | à faire, ou en phase 1 avec les clés étrangères vers `user` |
 | 0.11 | Antivirus des dépôts, ou décision écrite | B29 | à trancher |
