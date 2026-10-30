@@ -1,18 +1,18 @@
 {
-  "note": "Requêtes SQL par page sur le gros dossier de mesure (seed:complet puis grossir-dossier.ts), lues par scripts/perf/mesurer.mjs --budget, en CI (.github/workflows/budget-requetes.yml). Une page au-dessus fait échouer la CI. Relever un budget : seulement si l'ajout est voulu, avec la raison dans le message de commit. Une page sous son budget est signalée : baisser le budget pour garder le gain. Mesuré sur main d8e52975 le 2026-10-29, stable sur trois mesures ; tableau de bord, calendrier, registre, équipements et plan d'actions baissés le même jour aux valeurs mesurées avec la branche lot/perf-lectures-doubles (#117), médiane de trois essais ; tableau de bord baissé à 62 avec lot/perf-lignes-partagees (#119), compte du job budget de la PR. À surveiller : le dossier semé est daté par rapport au jour du semis ; si une page change d'une requête sans changement de code (un retard qui apparaît, une fin de mois), c'est cette dépendance, pas une régression.",
+  "note": "Requêtes SQL par page sur le gros dossier de mesure (seed:complet puis grossir-dossier.ts), lues par scripts/perf/mesurer.mjs --budget, en CI (.github/workflows/budget-requetes.yml). Une page au-dessus fait échouer la CI. Relever un budget : seulement si l'ajout est voulu, avec la raison dans le message de commit. Une page sous son budget est signalée : baisser le budget pour garder le gain. Mesuré sur main d8e52975 le 2026-10-29, stable sur trois mesures ; tableau de bord, calendrier, registre, équipements et plan d'actions baissés le même jour aux valeurs mesurées avec la branche lot/perf-lectures-doubles (#117), médiane de trois essais ; tableau de bord baissé à 62 avec lot/perf-lignes-partagees (#119), compte du job budget de la PR. À surveiller : le dossier semé est daté par rapport au jour du semis ; si une page change d'une requête sans changement de code (un retard qui apparaît, une fin de mois), c'est cette dépendance, pas une régression. 2026-10-30, Better Auth (ADR-052, PR #135) : + 2 sur chaque page — la lecture de la session (`Session` puis `User`, une fois par requête grâce à `cache()`) est désormais une requête SQL, comptée ; elle remplaçait un appel réseau à Supabase Auth, que la mesure ne comptait pas.",
   "pages": {
-    "Tableau de bord": 62,
-    "Calendrier": 42,
-    "Registre": 41,
-    "Équipements": 33,
-    "Plan d'actions": 32,
-    "Équipe": 33,
-    "Prestataires": 28,
-    "Carnet sanitaire": 33,
-    "Documents": 28,
-    "DUERP (unités)": 35,
-    "DUERP (synthèse)": 36,
-    "Fiche équipement": 39,
-    "Fiche contrôle": 37
+    "Tableau de bord": 64,
+    "Calendrier": 44,
+    "Registre": 43,
+    "Équipements": 35,
+    "Plan d'actions": 34,
+    "Équipe": 35,
+    "Prestataires": 30,
+    "Carnet sanitaire": 35,
+    "Documents": 30,
+    "DUERP (unités)": 37,
+    "DUERP (synthèse)": 38,
+    "Fiche équipement": 41,
+    "Fiche contrôle": 39
   }
 }

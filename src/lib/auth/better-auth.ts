@@ -61,9 +61,10 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: "postgresql" }),
   verification: { modelName: "authVerification" },
   advanced: {
-    // `joins` : la session et son compte en une requête (JOIN) au lieu de deux,
-    // à chaque `requireUser` (simplification de la PR #135).
-    database: { generateId: "uuid", joins: true },
+    // Pas de `joins` : avec Prisma (chargement des relations par requêtes
+    // séparées), la session puis son compte restent deux requêtes, mesuré en
+    // CI (budget de la PR #135) — l'option ne gagnait rien.
+    database: { generateId: "uuid" },
     ipAddress: { ipAddressHeaders: [ENTETE_IP_CLIENT] },
   },
   emailAndPassword: {
