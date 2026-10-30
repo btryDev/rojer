@@ -182,6 +182,39 @@ l'émetteur sur `baseURL` : à revérifier à ce moment-là (B5, B23).
 l'authentification**. `@supabase/supabase-js` reste tant que le stockage
 Supabase sert sur Vercel, et part à la bascule.
 
+## Ce que la réalisation a précisé (lots 1 et 2, 2026-10-30, PR #133 et #135)
+
+Écarts à ce qui précède, chacun avec sa raison :
+
+- **Aucune route HTTP de Better Auth** (`/api/auth/*` n'est pas monté) : nos
+  actions serveur et deux routes (`/auth/verification`, la page
+  `/auth/reinitialisation`) appellent `auth.api.*`. La surface exposée reste
+  celle de l'app, sous sa limitation de débit (`securite/limite-debit.ts`) ;
+  la limitation « en base » de Better Auth (§ 8), qui ne garde que ses routes
+  HTTP, n'a donc rien à protéger et n'est pas activée.
+- **Sessions de sept jours depuis la connexion, sans prolongation**
+  (`disableSessionRefresh`), au lieu de « prolongée chaque jour » (§ 6) :
+  prolongée pendant le rendu d'une page, la session l'était en base mais pas
+  dans le cookie (un composant serveur ne peut pas écrire de cookie), et la
+  déconnexion tombait au septième jour malgré tout. Choix assumé : une
+  utilisatrice active se reconnecte une fois par semaine. À rouvrir si
+  c'est gênant, en prolongeant là où le cookie s'écrit (actions).
+- **Ni la confirmation d'adresse ni la réinitialisation n'ouvrent de
+  session** : elles renvoient vers la connexion. La réinitialisation ferme
+  toutes les sessions du compte.
+- **Les e-mails de compte partent sans être attendus** : attendus, ils
+  rendaient la réponse plus lente quand le compte existe — le chronomètre
+  disait qui a un compte (revue de sécurité). L'échec est journalisé.
+- **IP** (§ 8) : réglé comme prévu, l'en-tête interne `x-rojer-ip-client`,
+  écrasé par le proxy à chaque requête. Elle ne sert qu'à l'IP notée sur la
+  session, que la liste des sessions du lot 3 affichera.
+- **`Clear-Site-Data`** à la déconnexion : reporté au lot 3, avec la liste
+  des sessions — une action serveur ne pose pas d'en-tête de réponse.
+- **Clés étrangères vers `User`** : posées au lot 2 et non au lot 1, avec la
+  bascule qui crée les comptes ; une migration qui trouve un compte inconnu
+  de `User` s'arrête avant toute modification (base Supabase non remise à
+  zéro).
+
 ## Questions à la propriétaire
 
 1. ~~**Moment** : Better Auth en production actuelle, sur Vercel, avant la
