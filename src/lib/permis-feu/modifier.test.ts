@@ -39,6 +39,15 @@ vi.mock("@/lib/prisma", () => {
         delete reste.etablissement;
         return db.permis.find((p) => correspond(p, reste)) ?? null;
       }),
+      // La correction écrit par `update` (ADR-051, lot 2b : un `updateMany`
+      // qui change `batimentId` est refusé par le client borné) ; comme lui,
+      // elle lève si la ligne n'est pas là.
+      update: vi.fn(async ({ where, data }: { where: Ligne; data: Ligne }) => {
+        const p = db.permis.find((x) => correspond(x, where));
+        if (!p) throw new Error("P2025");
+        Object.assign(p, data);
+        return p;
+      }),
       updateMany: vi.fn(async ({ where, data }: { where: Ligne; data: Ligne }) => {
         const t = db.permis.filter((x) => correspond(x, where));
         t.forEach((p) => Object.assign(p, data));

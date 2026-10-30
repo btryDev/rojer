@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
+import type { Db } from "@/lib/auth/compte";
 import { HandicapAccessible } from "@prisma/client";
 import {
   HANDICAPS,
@@ -24,13 +25,13 @@ export type RegistreActionState =
     }
   | { status: "success"; section: 1 | 2 | 3 | 4 | "publie" };
 
-async function obtenirOuCreer(etablissementId: string) {
-  const existant = await prisma.registreAccessibilite.findUnique({
+async function obtenirOuCreer(db: Db, etablissementId: string) {
+  const existant = await db.registreAccessibilite.findUnique({
     where: { etablissementId },
   });
   if (existant) return existant;
 
-  const etab = await prisma.etablissement.findUnique({
+  const etab = await db.etablissement.findUnique({
     where: { id: etablissementId },
     select: {
       raisonDisplay: true,
@@ -40,11 +41,16 @@ async function obtenirOuCreer(etablissementId: string) {
   if (!etab) throw new Error("Établissement introuvable");
 
   const base = genererSlug(etab.raisonDisplay, etab.siret);
+  // CLIENT BRUT, ET C'EST VOULU (ADR-051, lot 2b) : `slugPublic` est unique
+  // dans toute la table, pas dans un compte. Les slugs déjà pris le sont aussi
+  // par les registres des AUTRES comptes ; lus par le client borné, ils
+  // échapperaient au calcul et la création lèverait un P2002. Ne sort que des
+  // slugs, ceux qu'affiche déjà l'URL publique `/accessibilite/[slug]`.
   const pris = await prisma.registreAccessibilite.findMany({
     where: { slugPublic: { startsWith: base } },
     select: { slugPublic: true },
   });
-  return prisma.registreAccessibilite.create({
+  return db.registreAccessibilite.create({
     data: {
       id: `reg_${randomUUID()}`,
       etablissementId,
@@ -80,7 +86,7 @@ export async function sauverSection1(
       fieldErrors: parsed.error.flatten().fieldErrors,
     };
   }
-  const r = await obtenirOuCreer(etablissementId);
+  const r = await obtenirOuCreer(db, etablissementId);
   await db.registreAccessibilite.update({
     where: { id: r.id },
     data: parsed.data,
@@ -108,7 +114,7 @@ export async function sauverSection2(
       fieldErrors: parsed.error.flatten().fieldErrors,
     };
   }
-  const r = await obtenirOuCreer(etablissementId);
+  const r = await obtenirOuCreer(db, etablissementId);
   await db.registreAccessibilite.update({
     where: { id: r.id },
     data: parsed.data,
@@ -136,7 +142,7 @@ export async function sauverSection3(
       fieldErrors: parsed.error.flatten().fieldErrors,
     };
   }
-  const r = await obtenirOuCreer(etablissementId);
+  const r = await obtenirOuCreer(db, etablissementId);
   await db.registreAccessibilite.update({
     where: { id: r.id },
     data: parsed.data,
@@ -163,7 +169,7 @@ export async function sauverSection4(
       fieldErrors: parsed.error.flatten().fieldErrors,
     };
   }
-  const r = await obtenirOuCreer(etablissementId);
+  const r = await obtenirOuCreer(db, etablissementId);
   await db.registreAccessibilite.update({
     where: { id: r.id },
     data: parsed.data,
@@ -181,7 +187,7 @@ export async function publierRegistre(
   etablissementId: string,
 ): Promise<RegistreActionState> {
   const { db } = await assertEtablissementDuCompte(etablissementId);
-  const r = await obtenirOuCreer(etablissementId);
+  const r = await obtenirOuCreer(db, etablissementId);
 
   const manque: string[] = [];
   if (!r.prestationsFournies) manque.push("prestations");
