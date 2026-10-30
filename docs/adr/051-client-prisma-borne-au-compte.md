@@ -222,6 +222,57 @@ fragile plutôt que forcer) :
 - une ligne d'un autre compte rend P2025 / P2018, comme une ligne absente : à
   vérifier au lot 2 que chaque appelant le traduit en 404, sans oracle.
 
+## Relecture par la session GestBAT (2026-10-30)
+
+Demandée par la propriétaire. Verdict : conception juste, RLS écartée à
+raison. Ses réserves, et ce qu'il en est fait :
+
+1. **Relevé des identifiants vus global et purgé par plafond** : refus au
+   hasard sous charge. **Corrigé** (lot 2a bis) : le relevé ne vit plus que le
+   temps d'un appel à `creerEnLotVerifie` (`AsyncLocalStorage`, `dansUnLot`) ;
+   hors d'un lot, rien n'est retenu.
+2. **Clé étrangère composée** : passerait sans borne. **Corrigé** : refus
+   explicite dans `borne.ts`, et `correspondance.test.ts` vérifie que le
+   schéma n'en porte aucune vers un modèle du compte.
+   [Revue du lot 2a bis : le refus ne jouait qu'en tête — une création
+   imbriquée le contournait. Il est aussi appelé à chaque niveau de
+   `reecrireDonnees`.] Deux limites écrites : `createManyAndReturn` n'est pas
+   servi par `creerEnLotVerifie` (aucun appelant) ; un minuteur né dans un lot
+   en garderait le relevé — sans effet tant que `dansUnLot` n'exécute que le
+   code de `creerEnLotVerifie`, jamais un rappel fourni par l'appelant.
+3. **`include`/`select` non bornés** : tient au niveau du compte, pas d'un
+   établissement — déjà la raison du retrait de la portée « établissement ».
+4. **Une seule réponse au refus** : P2025, P2018 et `ErreurPortee` doivent
+   rendre le même 404 qu'une ligne absente. Le client rend déjà la même
+   erreur pour une ligne absente et pour une ligne d'un autre compte ; la
+   traduction en 404 se vérifie à chaque module migré (lot 2b). L'oracle par
+   unicité (`upsert` à identifiant fourni) est au plan.
+5. **Coût croissant avec la profondeur** (`ReleveTemperature` : quatre
+   jointures) : mesuré au lot 5 ; si une page ralentit, recopier
+   `entrepriseId` sur les modèles profonds.
+6. **Méthode de migration** : liste qui ne fait que raccourcir (déjà le
+   cliquet de `imports.test.ts`) et, pour chaque module, un test qui tombe
+   quand on retire la borne.
+
+À retenir de leur expérience : jamais de rôle ni de drapeau qui court-circuite
+le verdict — un `SUPER_ADMIN` qui passait le contrôle leur a valu un accès
+entre organisations en production. Rien de tel ici : le seul accès hors compte
+est le client brut, réservé à des modules nommés.
+
+### Option proposée, non décidée : des clés étrangères composées en base
+
+`Enfant(parentId, entrepriseId) → Parent(id, entrepriseId)`, avec
+`@@unique([id, entrepriseId])` sur le parent : PostgreSQL refuse toute ligne
+qui pointe vers un autre compte, même avec un seul rôle. Elle remplacerait le
+relevé de `creerEnLotVerifie`, et `createMany` deviendrait sûr par
+construction. Prix : recopier `entrepriseId` sur une trentaine de tables
+(migration de données en production), des relations plus lourdes à écrire,
+lever le refus des clés composées (point 2). Elle ne protège que les
+écritures : les lectures restent bornées par le client. ~~**À trancher par la
+propriétaire** ; pas engagée.~~ [2026-10-30 : **écartée** par la propriétaire
+(« on ne la met pas en place »). Le contrôle des clés à l'écriture reste celui
+du client borné.]
+
 ## Option comparée, non retenue : la RLS par compte en base
 
 `FORCE ROW LEVEL SECURITY` et des politiques qui lisent une variable posée à
