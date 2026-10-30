@@ -37,10 +37,20 @@ vi.mock("@/lib/prisma", () => ({
 }));
 vi.mock("@/lib/auth/scope", async (orig) => ({
   ...(await orig<object>()),
-  requireUnite: async () => ({ duerpId: "duerp1" }),
-  requireRisque: async () => ({ duerpId: "duerp1", uniteId: "u1", etablissementId: "etab1" }),
-  requireMesure: async () => ({ action: { echeance: null, leveeLe: null, risqueId: null } }),
+  // Les gardes rendent aussi le client borné (ADR-051) : ici, le client simulé.
+  requireUnite: async () => ({ db: (await import("@/lib/prisma")).prisma, duerpId: "duerp1" }),
+  requireRisque: async () => ({
+    db: (await import("@/lib/prisma")).prisma,
+    duerpId: "duerp1",
+    uniteId: "u1",
+    etablissementId: "etab1",
+  }),
+  requireMesure: async () => ({
+    db: (await import("@/lib/prisma")).prisma,
+    action: { echeance: null, leveeLe: null, risqueId: null },
+  }),
   assertEtablissementOwnership: async () => undefined,
+  assertEtablissementDuCompte: async () => ({ user: { id: "u1" }, db: (await import("@/lib/prisma")).prisma }),
 }));
 vi.mock("next/cache", () => ({ revalidatePath: () => undefined, revalidateTag: () => undefined }));
 vi.mock("@/lib/etablissements/epi-constate", () => ({ constaterEpi: vi.fn(async () => false) }));

@@ -81,6 +81,11 @@ vi.mock("@/lib/auth/require-user", () => ({
 }));
 vi.mock("@/lib/auth/scope", () => ({
   assertEtablissementOwnership: vi.fn(async () => ({ id: "user-1" })),
+  // La même garde, qui rend aussi le client borné (ADR-051) : ici, le client simulé.
+  assertEtablissementDuCompte: vi.fn(async () => ({
+    user: { id: "user-1" },
+    db: (await import("@/lib/prisma")).prisma,
+  })),
 }));
 vi.mock("@/lib/storage", () => ({ getStorage: vi.fn() }));
 vi.mock("next/headers", () => ({ headers: async () => new Map() }));
