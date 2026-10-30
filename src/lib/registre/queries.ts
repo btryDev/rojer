@@ -70,9 +70,9 @@ export const composerRegistreDeLEtablissement = cache(
   async (
     etablissementId: string,
   ): Promise<RegistreDeLEtablissement | null> => {
-    const { user, db } = await requireCompte();
+    const { db } = await requireCompte();
     const etab = await db.etablissement.findFirst({
-      where: { id: etablissementId, entreprise: { userId: user.id } },
+      where: { id: etablissementId },
       select: {
         id: true,
         effectifSurSite: true,

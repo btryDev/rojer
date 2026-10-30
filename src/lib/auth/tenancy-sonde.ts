@@ -237,23 +237,52 @@ function module(fichier: string): Module | null {
   return mod;
 }
 
+/**
+ * Réécrit les déclarations que `fonctions` ne découpe pas : `export const x =
+ * cache(async function x(`, `export const x = cache(async (`, les génériques
+ * `function f<T>(`. Né dans `tenancy-portee.ts` (vérification ASVS du
+ * 2026-10-13), déplacé ici pour `fonctionsAtteintes` ; `tenancy-portee.ts` le
+ * ré-exporte.
+ */
+export function normaliser(source: string): string {
+  return source
+    .replace(
+      /^export const (\w+) = cache\(\s*async function \w+\(/gm,
+      "export async function $1(",
+    )
+    .replace(/^export const (\w+) = cache\(\s*async \(/gm, "export const $1 = async (")
+    .replace(/^(export )?(async )?function (\w+)<[\s\S]*?>\(/gm, "$1$2function $3(");
+}
+
+/** Les fonctions d'un module, découpées après `normaliser` (pour `fonctionsAtteintes`). */
+const normalisees = new Map<string, Map<string, Fonction>>();
+function fonctionsNormalisees(fichier: string): Map<string, Fonction> {
+  let fns = normalisees.get(fichier);
+  if (!fns) {
+    fns = new Map(fonctions(normaliser(readFileSync(fichier, "utf8"))).map((f) => [f.nom, f]));
+    normalisees.set(fichier, fns);
+  }
+  return fns;
+}
+
 /** Où vit vraiment `nom` exporté par `fichier`, en suivant les ré-exports. */
 function localiser(
   fichier: string,
   nom: string,
   vus = new Set<string>(),
+  normalise = false,
 ): { fichier: string; fn: Fonction } | null {
   const cle = `${fichier}:${nom}`;
   if (vus.has(cle)) return null;
   vus.add(cle);
   const mod = module(fichier);
   if (!mod) return null;
-  const fn = mod.fonctions.get(nom);
+  const fn = (normalise ? fonctionsNormalisees(fichier) : mod.fonctions).get(nom);
   if (fn) return { fichier, fn };
   const re = mod.reexports.get(nom);
-  if (re) return localiser(re.fichier, re.nom, vus);
+  if (re) return localiser(re.fichier, re.nom, vus, normalise);
   for (const etoile of mod.reexportsEtoile) {
-    const trouve = localiser(etoile, nom, vus);
+    const trouve = localiser(etoile, nom, vus, normalise);
     if (trouve) return trouve;
   }
   return null;
@@ -301,6 +330,52 @@ export function cheminDEcriture(
     if (suite) return [cle, ...suite];
   }
   return null;
+}
+
+/**
+ * Ce que `fichier:nom` atteint, elle-même comprise, par le même chemin que
+ * `cheminDEcriture` : fonctions du même fichier et imports nommés du dépôt,
+ * ré-exports compris, une fonction comptant dès qu'elle est référencée. Pour
+ * `borneeParConstruction` (`tenancy-portee.ts`), qui exige que TOUTES les
+ * opérations atteintes passent par le client borné.
+ *
+ * Le découpage est celui de `normaliser` : `fonctions` seul ne voit pas
+ * `export const x = cache(async function x(`. `modules` : tout fichier dont un
+ * import est référencé, que la fonction importée ait été découpée ou non — une
+ * forme que le découpage manquerait encore ne cache pas ainsi un module qui
+ * détient le client brut.
+ *
+ * Mêmes angles morts que `cheminDEcriture` : import par défaut ou par espace
+ * de noms, `import()` dynamique, méthodes d'objet ou de classe.
+ */
+export function fonctionsAtteintes(
+  fichier: string,
+  nom: string,
+): { fonctions: { fichier: string; fn: Fonction }[]; modules: Set<string> } {
+  const out: { fichier: string; fn: Fonction }[] = [];
+  const modules = new Set<string>([fichier]);
+  const vus = new Set<string>();
+  const pile: [string, string][] = [[fichier, nom]];
+  while (pile.length > 0) {
+    const [f, n] = pile.pop()!;
+    const lieu = localiser(f, n, new Set(), true);
+    if (!lieu) continue;
+    const cle = `${lieu.fichier}:${lieu.fn.nom}`;
+    if (vus.has(cle)) continue;
+    vus.add(cle);
+    out.push(lieu);
+    modules.add(lieu.fichier);
+    const mod = module(lieu.fichier)!;
+    for (const [autre] of fonctionsNormalisees(lieu.fichier)) {
+      if (autre !== lieu.fn.nom && reference(autre, lieu.fn.corps)) pile.push([lieu.fichier, autre]);
+    }
+    for (const [local, cible] of mod.imports) {
+      if (!reference(local, lieu.fn.corps)) continue;
+      modules.add(cible.fichier);
+      pile.push([cible.fichier, cible.nom]);
+    }
+  }
+  return { fonctions: out, modules };
 }
 
 /**

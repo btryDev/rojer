@@ -26,15 +26,10 @@ function actionVersMesure(a: ActionRow) {
 }
 
 export async function getRisque(id: string) {
-  const { user, db } = await requireCompte();
+  const { db } = await requireCompte();
   const risque = await db.risque.findFirst({
     where: {
       id,
-      unite: {
-        duerp: {
-          etablissement: { entreprise: { userId: user.id } },
-        },
-      },
     },
     include: {
       unite: {

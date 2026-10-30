@@ -18,9 +18,9 @@ import {
 export const prestatairesDuRendu = cache(async function prestatairesDuRendu(
   etablissementId: string,
 ) {
-  const { user, db } = await requireCompte();
+  const { db } = await requireCompte();
   return db.prestataire.findMany({
-    where: { etablissementId, etablissement: { entreprise: { userId: user.id } } },
+    where: { etablissementId },
     orderBy: [{ raisonSociale: "asc" }],
   });
 });
@@ -73,12 +73,11 @@ export async function resoudrePrestataireOptionnel(
   prestataireId: string | null | undefined,
 ): Promise<{ ok: true; id: string | null } | { ok: false }> {
   if (!prestataireId) return { ok: true, id: null };
-  const { user, db } = await requireCompte();
+  const { db } = await requireCompte();
   const p = await db.prestataire.findFirst({
     where: {
       id: prestataireId,
       etablissementId,
-      etablissement: { entreprise: { userId: user.id } },
     },
     select: { id: true },
   });

@@ -27,9 +27,9 @@ describe("branchements des fichiers déposés", () => {
     // dans `controle/queries.ts` depuis le 2026-10-14 (B6).
     const queries = lire("src/lib/controle/queries.ts");
     expect(queries).toMatch(
-      /rapportVerification\.findMany\(\{[\s\S]{0,600}?where: \{ \.\.\.filtreRapportsDuDossier\(etablissementId\), etablissement: \{ entreprise: \{ userId \} \} \},/,
+      /rapportVerification\.findMany\(\{[\s\S]{0,600}?where: \{ \.\.\.filtreRapportsDuDossier\(etablissementId\) \},/,
     );
-    expect(zip).toMatch(/rapportsDeposesDuDossier\(db, id, user\.id\)/);
+    expect(zip).toMatch(/rapportsDeposesDuDossier\(db, id\)/);
   });
 
   it("le ZIP répond en flux, avec une durée maximale posée", () => {

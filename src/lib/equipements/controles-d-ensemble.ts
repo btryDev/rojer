@@ -30,11 +30,10 @@ export type ControleDEnsemble = {
  * couvre, il s'annonce « Aussi couvert par », compté une seule fois.
  */
 export async function controlesDEnsemble(etablissementId: string, maintenant: Date): Promise<ControleDEnsemble[]> {
-  const { user, db } = await requireCompte();
+  const { db } = await requireCompte();
   const lignes = await db.verification.findMany({
     where: {
       etablissementId,
-      etablissement: { entreprise: { userId: user.id } },
       equipementId: null,
       salarieId: null,
       archiveLe: null,

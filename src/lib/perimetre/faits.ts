@@ -75,7 +75,6 @@ export async function faitsDeCouverture(
       where: {
         duerp: {
           etablissementId,
-          etablissement: { entreprise: { userId: user.id } },
         },
       },
     }),
@@ -190,9 +189,9 @@ export async function faitsDeCouverture(
 export async function faitsManquesAnnonces(
   etablissementId: string,
 ): Promise<FaitsManquesAnnonces | null> {
-  const { user, db } = await requireCompte();
+  const { db } = await requireCompte();
   const etab = await db.etablissement.findFirst({
-    where: { id: etablissementId, entreprise: { userId: user.id } },
+    where: { id: etablissementId },
     select: {
       estEtablissementTravail: true,
       epiPresents: true,

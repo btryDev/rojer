@@ -7,8 +7,11 @@ import {
   modulesServerAction,
 } from "./tenancy-sonde";
 import {
+  borneeParConstruction,
   decoupe,
+  fonctionsExposees,
   etablitSaPorteeLocale,
+  LECTURE,
   exportsDeValeur,
   litDansLeFichier,
   portePortee,
@@ -193,6 +196,15 @@ const SRC = join(process.cwd(), "src");
 
 type Lecture = { cle: string; scopee: boolean; corps: string };
 
+/**
+ * La portée de `nom` : établie dans le fichier (helper, prédicat), ou par
+ * construction — tout ce qu'elle lit passe par le client borné
+ * (`borneeParConstruction`, `tenancy-portee.ts`, depuis le 2026-10-30).
+ */
+function porteeDe(fichier: string, fns: ReturnType<typeof decoupe>, nom: string): boolean {
+  return etablitSaPorteeLocale(fns, nom) || borneeParConstruction(fichier, nom, LECTURE);
+}
+
 function modulesQueries(): { chemin: string; source: string }[] {
   return readdirSync(RACINE, { withFileTypes: true })
     .filter((d) => d.isDirectory())
@@ -215,7 +227,7 @@ function lecturesDesQueries(): Lecture[] {
       if (!fn.exportee || !litDansLeFichier(fns, fn.nom)) continue;
       out.push({
         cle: `${chemin}:${fn.nom}`,
-        scopee: etablitSaPorteeLocale(fns, fn.nom),
+        scopee: porteeDe(join(RACINE, chemin), fns, fn.nom),
         corps: fn.corps,
       });
     }
@@ -237,7 +249,7 @@ function actionsEnLecture(): Lecture[] {
       if (!fn.exportee || cheminDEcriture(fichier, fn.nom)) continue;
       out.push({
         cle: fichier.slice(SRC.length + 1) + ":" + fn.nom,
-        scopee: etablitSaPorteeLocale(fns, fn.nom),
+        scopee: porteeDe(fichier, fns, fn.nom),
         corps: fn.corps,
       });
     }
@@ -341,5 +353,20 @@ describe("les lectures exportées et les server actions qui ne font que lire", (
       `export async function lire(id) { await requireUser(); return prisma.etablissement.findFirst({ where: { id } }); }`,
     );
     expect(etablitSaPorteeLocale(nue, "lire")).toBe(false);
+  });
+
+  it("la portée par construction : le client borné compte, le brut et ce qu'il peut joindre non", () => {
+    // 2026-10-30, lot 2b de l'isolation. Bornes, pas liste : un module migré
+    // compte, un module qui détient le brut ne compte pas même s'il lit par
+    // `db`, et une fonction qui reçoit son client d'un module au brut est
+    // exposée (`lireX(prisma)` → `lireXDuCompte(prisma, …)`).
+    const lib = (f: string) => join(RACINE, f);
+    expect(borneeParConstruction(lib("versions/queries.ts"), "getVersion", LECTURE)).toBe(true);
+    expect(borneeParConstruction(lib("rapports/queries.ts"), "getRapport", LECTURE)).toBe(false);
+    const exposees = fonctionsExposees();
+    expect(exposees).toContain("lib/dashboard/transmissions.ts:chargerTransmissionsDuCompte");
+    expect(exposees).toContain("lib/calendrier/passe.ts:lireEntrees");
+    expect(exposees).toContain("lib/etablissements/marques-a-confirmer.ts:marquesAConfirmerDuDossier");
+    expect(exposees).not.toContain("lib/controle/queries.ts:versionsDuDuerpDuDossier");
   });
 });

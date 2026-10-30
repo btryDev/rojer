@@ -30,11 +30,10 @@ export async function listerActions(
   etablissementId: string,
   filtres: FiltresPlanActions = {},
 ) {
-  const { user, db } = await requireCompte();
+  const { db } = await requireCompte();
   const where: Parameters<typeof db.action.findMany>[0] = {
     where: {
       etablissementId,
-      etablissement: { entreprise: { userId: user.id } },
     },
   };
 
@@ -88,9 +87,9 @@ export function origineDeLAction(a: {
 }
 
 export async function getAction(id: string) {
-  const { user, db } = await requireCompte();
+  const { db } = await requireCompte();
   const action = await db.action.findFirst({
-    where: { id, etablissement: { entreprise: { userId: user.id } } },
+    where: { id },
     include: {
       risque: {
         include: { unite: { include: { duerp: true } } },
@@ -223,11 +222,10 @@ export const actionsSuiviesDuRendu = cache(async function actionsSuiviesDuRendu(
   etablissementId: string,
   debutDuJourMs: number,
 ): Promise<ActionSuivie[]> {
-  const { user, db } = await requireCompte();
+  const { db } = await requireCompte();
   return db.action.findMany({
     where: {
       etablissementId,
-      etablissement: { entreprise: { userId: user.id } },
       OR: [
         // Le module de dates expose la liste en `readonly string[]` — il reste
         // utilisable côté client, sans importer l'enum Prisma. Le cast

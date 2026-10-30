@@ -49,6 +49,11 @@ const h = vi.hoisted(() => {
 
   function correspond(ligne: Ligne, where: Ligne): boolean {
     for (const [cle, attendu] of Object.entries(where)) {
+      if (cle === "AND") {
+        // La borne de l'extension (`avecBorne`) : une conjonction.
+        if (!(attendu as Ligne[]).every((w) => correspond(ligne, w))) return false;
+        continue;
+      }
       const relation = RELATIONS[cle];
       if (relation) {
         const liee = relation(ligne);
@@ -98,6 +103,17 @@ const h = vi.hoisted(() => {
 });
 
 vi.mock("@/lib/prisma", () => ({ prisma: h.prisma }));
+// Le client borné, borne comprise (`src/test/client-borne-simule.ts`) : les
+// lectures de ce module ne portent plus le prédicat écrit à la main depuis le
+// 2026-10-30 (lot 2b de l'isolation) — c'est la borne qui isole.
+vi.mock("@/lib/auth/portee/client", async () => {
+  const { clientBorneSimule } = await import("@/test/client-borne-simule");
+  const { argumentsBornes } = await import("@/lib/auth/portee/borne");
+  return {
+    clientBorne: (p: { type: "compte"; userId: string }) =>
+      clientBorneSimule(h.prisma, p, argumentsBornes),
+  };
+});
 vi.mock("@/lib/auth/require-user", () => ({ requireUser: h.requireUser }));
 
 const { construireSnapshot } = await import("./snapshot-builder");

@@ -19,9 +19,9 @@ export async function prestatairesProposables(
   etablissementId: string,
   domainesAttendus: readonly DomainePrestataire[],
 ): Promise<PrestataireProposable[]> {
-  const { user, db } = await requireCompte();
+  const { db } = await requireCompte();
   const lignes = await db.prestataire.findMany({
-    where: { etablissementId, etablissement: { entreprise: { userId: user.id } } },
+    where: { etablissementId },
     select: { id: true, raisonSociale: true, domaines: true },
     orderBy: { raisonSociale: "asc" },
   });
@@ -39,12 +39,11 @@ export async function prestatairesProposables(
  * fiche : le prochain rendez-vous d'abord.
  */
 export async function controlesSuivisPar(etablissementId: string, prestataireId: string) {
-  const { user, db } = await requireCompte();
+  const { db } = await requireCompte();
   return db.verification.findMany({
     where: {
       prestataireId,
       etablissementId,
-      etablissement: { entreprise: { userId: user.id } },
       archiveLe: null,
     },
     select: {

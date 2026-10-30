@@ -20,10 +20,11 @@ import {
  *    page l'a déjà appelée, la garde ne coûte rien de plus ;
  *  - le ZIP est un route handler, où rien n'est mémoïsé : chaque garde serait
  *    un `getUser()` réseau de plus (M7). Ses lectures reçoivent le client
- *    borné au compte (ADR-051) et l'identifiant de l'utilisateur que la route
- *    tient de `requireEtablissement`, et le
- *    prédicat propriétaire est DANS chaque requête — plus strict qu'avant, où
- *    elles ne portaient que l'`etablissementId`.
+ *    borné au compte (ADR-051) que la route tient de `requireEtablissement` :
+ *    la borne au compte est ajoutée à chaque requête par le client.
+ *    ~~et le prédicat propriétaire est DANS chaque requête~~ [2026-10-30,
+ *    lot 2b de l'isolation : retiré, le client borné le posait une seconde
+ *    fois — double jointure.]
  */
 
 /* ─── L'écran ─────────────────────────────────────────────────────────── */
@@ -87,26 +88,26 @@ export async function etatDesPiecesDuDossier(etablissementId: string, maintenant
 /* ─── Le ZIP ──────────────────────────────────────────────────────────── */
 
 /** Les versions figées du DUERP, la plus récente d'abord. */
-export async function versionsDuDuerpDuDossier(db: Db, etablissementId: string, userId: string) {
+export async function versionsDuDuerpDuDossier(db: Db, etablissementId: string) {
   return db.duerpVersion.findMany({
-    where: { duerp: { etablissementId, etablissement: { entreprise: { userId } } } },
+    where: { duerp: { etablissementId } },
     orderBy: { numero: "desc" },
     select: { numero: true, snapshot: true, motif: true, createdAt: true },
   });
 }
 
 /** Le registre d'accessibilité : son adresse publique, et s'il est publié. */
-export async function registreAccessibiliteDuDossier(db: Db, etablissementId: string, userId: string) {
+export async function registreAccessibiliteDuDossier(db: Db, etablissementId: string) {
   return db.registreAccessibilite.findFirst({
-    where: { etablissementId, etablissement: { entreprise: { userId } } },
+    where: { etablissementId },
     select: { slugPublic: true, publie: true },
   });
 }
 
 /** Les prestataires, avec les pièces qu'ils ont remplacées. */
-export async function prestatairesDuDossier(db: Db, etablissementId: string, userId: string) {
+export async function prestatairesDuDossier(db: Db, etablissementId: string) {
   return db.prestataire.findMany({
-    where: { etablissementId, etablissement: { entreprise: { userId } } },
+    where: { etablissementId },
     orderBy: { raisonSociale: "asc" },
     // Les pièces remplacées (2026-10-12) : le ZIP joint les pièces en cours,
     // il joint donc aussi celles qu'elles ont remplacées — l'attestation d'un
@@ -121,13 +122,13 @@ export async function prestatairesDuDossier(db: Db, etablissementId: string, use
 }
 
 /** Les rapports dont le fichier entre au ZIP (`filtreRapportsDuDossier`). */
-export async function rapportsDeposesDuDossier(db: Db, etablissementId: string, userId: string) {
+export async function rapportsDeposesDuDossier(db: Db, etablissementId: string) {
   return db.rapportVerification.findMany({
     // PAS LES RAPPORTS DES LIGNES DE SALARIÉ (contre-lecture du 2026-09-27,
     // M1). Depuis `bb03cdd` aucun dépôt n'y est possible, mais des rapports
     // antérieurs peuvent exister : documents nominatifs, parfois médicaux,
     // dans un ZIP remis à un tiers. Ils n'y entrent pas ; le README le dit.
-    where: { ...filtreRapportsDuDossier(etablissementId), etablissement: { entreprise: { userId } } },
+    where: { ...filtreRapportsDuDossier(etablissementId) },
     // Pas d'`orderBy` : l'ordre des rapports vit dans
     // `ORDRE_RAPPORT_PLUS_RECENT` (garde de `derniere-realisation.test.ts`),
     // et les entrées portent leur date en tête de nom — l'archive les range.
@@ -144,20 +145,19 @@ export async function rapportsDeposesDuDossier(db: Db, etablissementId: string, 
 }
 
 /** Combien de rapports de lignes de salarié le ZIP écarte, pour le dire. */
-export async function compterRapportsSalariesEcartes(db: Db, etablissementId: string, userId: string) {
+export async function compterRapportsSalariesEcartes(db: Db, etablissementId: string) {
   return db.rapportVerification.count({
     where: {
       etablissementId,
       verification: { salarieId: { not: null } },
-      etablissement: { entreprise: { userId } },
     },
   });
 }
 
 /** Les permis de feu des douze derniers mois (`filtreActesDuDossier`). */
-export async function permisFeuDuDossier(db: Db, etablissementId: string, userId: string, maintenant: Date) {
+export async function permisFeuDuDossier(db: Db, etablissementId: string, maintenant: Date) {
   return db.permisFeu.findMany({
-    where: { ...filtreActesDuDossier(etablissementId, maintenant), etablissement: { entreprise: { userId } } },
+    where: { ...filtreActesDuDossier(etablissementId, maintenant) },
     orderBy: { numero: "desc" },
   });
 }
@@ -166,11 +166,10 @@ export async function permisFeuDuDossier(db: Db, etablissementId: string, userId
 export async function plansPreventionDuDossier(
   db: Db,
   etablissementId: string,
-  userId: string,
   maintenant: Date,
 ) {
   return db.planPrevention.findMany({
-    where: { ...filtreActesDuDossier(etablissementId, maintenant), etablissement: { entreprise: { userId } } },
+    where: { ...filtreActesDuDossier(etablissementId, maintenant) },
     include: {
       lignes: { orderBy: { ordre: "asc" } },
       phasesDangereuses: { orderBy: { ordre: "asc" } },
@@ -180,9 +179,9 @@ export async function plansPreventionDuDossier(
 }
 
 /** Le carnet sanitaire : points actifs, derniers relevés, dernières analyses. */
-export async function carnetSanitaireDuDossier(db: Db, etablissementId: string, userId: string) {
+export async function carnetSanitaireDuDossier(db: Db, etablissementId: string) {
   return db.carnetSanitaire.findFirst({
-    where: { etablissementId, etablissement: { entreprise: { userId } } },
+    where: { etablissementId },
     include: {
       pointsReleve: {
         where: { actif: true },

@@ -11,11 +11,10 @@ import type { DuerpSnapshot } from "./snapshot";
  * par `getVersion`.
  */
 export async function listerVersions(duerpId: string) {
-  const { user, db } = await requireCompte();
+  const { db } = await requireCompte();
   return db.duerpVersion.findMany({
     where: {
       duerpId,
-      duerp: { etablissement: { entreprise: { userId: user.id } } },
     },
     select: {
       id: true,
@@ -29,12 +28,11 @@ export async function listerVersions(duerpId: string) {
 }
 
 export async function getVersion(duerpId: string, numero: number) {
-  const { user, db } = await requireCompte();
+  const { db } = await requireCompte();
   const version = await db.duerpVersion.findFirst({
     where: {
       duerpId,
       numero,
-      duerp: { etablissement: { entreprise: { userId: user.id } } },
     },
   });
   if (!version) return null;

@@ -19,9 +19,9 @@ import type { EntrepriseConnue } from "@/lib/onboarding/rattachement";
  * même société.
  */
 export async function listerEntreprisesConnues(): Promise<EntrepriseConnue[]> {
-  const { user, db } = await requireCompte();
+  const { db } = await requireCompte();
   const entreprises = await db.entreprise.findMany({
-    where: { userId: user.id, siren: { not: null } },
+    where: { siren: { not: null } },
     orderBy: { createdAt: "asc" },
     select: { siren: true, raisonSociale: true, effectif: true },
   });
@@ -34,9 +34,9 @@ export async function listerEntreprisesConnues(): Promise<EntrepriseConnue[]> {
 }
 
 export async function getEntreprise(id: string) {
-  const { user, db } = await requireCompte();
+  const { db } = await requireCompte();
   return db.entreprise.findFirst({
-    where: { id, userId: user.id },
+    where: { id },
     include: {
       etablissements: {
         orderBy: { createdAt: "asc" },
