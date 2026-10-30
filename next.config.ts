@@ -18,6 +18,11 @@ const EXTENSIONS_PAGES = ["tsx", "ts", "jsx", "js"];
 const EXTENSIONS_PAGES_DEV = ["dev.tsx", "dev.ts"];
 
 const nextConfig: NextConfig = {
+  // Serveur autonome (`.next/standalone/server.js`) pour Clever Cloud (plan
+  // de bascule, 0.3) : seules les dépendances tracées sont copiées. `public/`
+  // et `.next/static` ne le sont pas : `scripts/preparer-standalone.sh` les
+  // ajoute après le build. Vercel construit à sa façon et n'en est pas gêné.
+  output: "standalone",
   pageExtensions:
     process.env.NODE_ENV === "production"
       ? EXTENSIONS_PAGES

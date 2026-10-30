@@ -45,6 +45,7 @@ import "server-only";
 
 import { z } from "zod";
 import { ENVIRONNEMENTS_APP } from "@/lib/environnement";
+import { FORME_EXPORTS_SIMULTANES } from "@/lib/exports/limite";
 
 type Env = Record<string, string | undefined>;
 
@@ -103,6 +104,15 @@ const schema = z
     MCP_CLE: optionnelle,
     MCP_ETABLISSEMENT_ID: optionnelle,
     MCP_HOTES: optionnelle,
+
+    // Exports menés de front (`exports/limite.ts`) : à dimensionner sur la RAM
+    // de l'instance, environ 400 Mo par export lourd (audit Next.js, H3).
+    // Une valeur fausse retombait en silence sur le défaut : elle arrête
+    // désormais le démarrage (plan de bascule, 0.5).
+    EXPORTS_SIMULTANES: z.preprocess(
+      vide,
+      z.string().regex(FORME_EXPORTS_SIMULTANES, "doit être un entier ≥ 1").optional(),
+    ),
 
     // API Légifrance (`legifrance/client.ts`, scripts).
     LEGIFRANCE_CLIENT_ID: optionnelle,

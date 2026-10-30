@@ -40,6 +40,7 @@ import {
 } from "./parties";
 import { libelleDocumentSignable } from "./libelle-document";
 import { notFound } from "next/navigation";
+import { ipClient } from "@/lib/securite/ip-client";
 
 /**
  * Server actions de signature électronique simple (ADR-006 / ADR-008).
@@ -357,7 +358,7 @@ export async function poserSignatureAvecToken(
   const { hash, nomDocument } = h;
 
   const hh = await headers();
-  const ip = hh.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
+  const ip = ipClient(hh);
   const ua = hh.get("user-agent");
 
   // Le jeton se CONSOMME avant que la signature s'écrive, dans la même
@@ -616,7 +617,7 @@ export async function signerEnCompteConnecte(params: {
   }
 
   const hh = await headers();
-  const ip = hh.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
+  const ip = ipClient(hh);
   const ua = hh.get("user-agent");
 
   // Le titulaire du compte tient l'établissement : sur un acte co-signé, il
