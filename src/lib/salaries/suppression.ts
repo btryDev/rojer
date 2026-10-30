@@ -118,7 +118,7 @@ export async function effacerSalarie(
     // ~~Les lignes : leurs rapports et leurs actions suivent en cascade.~~
     // [2026-10-28 : plus de cascade — la base refuse de supprimer une ligne
     // qui porte encore un rapport ou une action (migration
-    // `20261028120000_preuves_protegees_en_base`). L'effacement est voulu
+    // `20261030100000_preuves_protegees_en_base`). L'effacement est voulu
     // ici (RGPD) : les preuves partent d'abord, nommément, puis les lignes.]
     await tx.action.deleteMany({
       where: { etablissementId, ...surSesLignes(etablissementId, salarieId) },

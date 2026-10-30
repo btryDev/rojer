@@ -45,7 +45,7 @@ Légende : ✅ en place · ⚠️ à reprendre · ❌ risque · ~~rayé~~ corrig
   suivi ; `supprimerEquipement` comptait puis supprimait hors transaction.~~
   Corrigé : `NO ACTION` sur `RapportVerification.verificationId`,
   `Action.verificationId` et `Action.equipementId` — le point à corriger
-  désigné sur un appareil (ADR-048) — par la migration `20261028120000`.
+  désigné sur un appareil (ADR-048) — par la migration `20261030100000`.
   Supprimer un appareil ou une ligne qui porte une preuve est refusé par la
   base ; supprimer un établissement ou une entreprise entière passe toujours
   (vérifié en SQL). `supprimerEquipement` désactive l'appareil si la base
@@ -62,7 +62,7 @@ Légende : ✅ en place · ⚠️ à reprendre · ❌ risque · ~~rayé~~ corrig
   référentiel TypeScript : voulu.
 - ⚠️ Cinq colonnes JSON lues par simple typage, sans validation. Le snapshot du
   DUERP (40 ans) n'a pas de numéro de format (`version` est le numéro du DUERP).
-- ~~⚠️ 4 index redondants.~~ Corrigé : 3 retirés (migration `20261028130000`) ;
+- ~~⚠️ 4 index redondants.~~ Corrigé : 3 retirés (migrations `20261030100200` à `20261030100400`) ;
   le quatrième relevé était un doublon de lecture.
 
 ## Sécurité

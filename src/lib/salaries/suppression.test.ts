@@ -10,7 +10,7 @@
 //   - ~~`RapportVerification` et `Action` cascadent depuis `Verification`~~
 //     [2026-10-28 : `NoAction` — supprimer une ligne qui porte encore un
 //     rapport ou une action LÈVE (P2003), migration
-//     `20261028120000_preuves_protegees_en_base`] ;
+//     `20261030100000_preuves_protegees_en_base`] ;
 //   - `Signature.objetId` n'a PAS de clé étrangère : rien ne l'emporte ;
 //   - `$transaction` restaure l'état si le corps lève.
 // `regles-du-schema` (en bas) relit `schema.prisma` et fait échouer ce

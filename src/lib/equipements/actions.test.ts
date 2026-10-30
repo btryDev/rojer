@@ -243,7 +243,7 @@ describe("supprimerEquipement", () => {
 
   it("une preuve arrivée entre le comptage et la suppression : la base refuse, l'appareil est désactivé (2026-10-28)", async () => {
     // Le comptage n'a rien vu ; un rapport est déposé juste après. Depuis la
-    // migration `20261028120000_preuves_protegees_en_base`, la base refuse la
+    // migration `20261030100000_preuves_protegees_en_base`, la base refuse la
     // suppression (P2003) au lieu d'emporter le rapport en cascade.
     h.db.nbTraces = 0;
     const supprimer = h.prisma.equipement.delete;

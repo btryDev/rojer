@@ -336,7 +336,7 @@ describe("plusieurs établissements par entreprise (ADR-028)", () => {
     expect(corps).toMatch(/@@unique\(\[userId,\s*siren\]\)/);
     // ~~Chaque lecture cloisonnée remonte à `userId` : l'index simple remplace
     // celui que portait l'unicité.~~ [2026-10-28 : l'index simple est retiré,
-    // migration `20261028130000_index_redondants` — l'unicité `[userId, siren]`
+    // migration `20261030100200_index_redondant_entreprise` — l'unicité `[userId, siren]`
     // commence par `userId` et sert ces lectures. Ce qui doit rester vrai :
     // `userId` est EN TÊTE de cet index.]
     expect(

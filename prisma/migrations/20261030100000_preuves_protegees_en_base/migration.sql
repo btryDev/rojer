@@ -21,12 +21,19 @@
 -- Même règle pour un point à corriger désigné sur un appareil par un contrôle
 -- d'ensemble (`Action.equipementId`, ADR-048) : c'est la trace de l'appareil.
 -- En SET NULL, supprimer l'appareil l'en détachait en silence.
+--
+-- NOT VALID (2026-10-30, règle de `migrations-index.test.ts`) : la contrainte
+-- s'applique aussitôt à toute écriture nouvelle, sans relire la table sous un
+-- verrou qui bloquerait les dépôts. Les lignes existantes sont relues par
+-- `20261030100100_preuves_protegees_validation`, sous un verrou qui laisse
+-- écrire. Le fichier s'appelait `20261028120000_…` : renommé pour passer après
+-- les migrations de `main` du 2026-10-28.
 
 -- DropForeignKey
 ALTER TABLE "Action" DROP CONSTRAINT "Action_equipementId_fkey";
 
 -- AddForeignKey
-ALTER TABLE "Action" ADD CONSTRAINT "Action_equipementId_fkey" FOREIGN KEY ("equipementId") REFERENCES "Equipement"("id") ON DELETE NO ACTION ON UPDATE CASCADE;
+ALTER TABLE "Action" ADD CONSTRAINT "Action_equipementId_fkey" FOREIGN KEY ("equipementId") REFERENCES "Equipement"("id") ON DELETE NO ACTION ON UPDATE CASCADE NOT VALID;
 
 -- DropForeignKey
 ALTER TABLE "Action" DROP CONSTRAINT "Action_verificationId_fkey";
@@ -35,7 +42,7 @@ ALTER TABLE "Action" DROP CONSTRAINT "Action_verificationId_fkey";
 ALTER TABLE "RapportVerification" DROP CONSTRAINT "RapportVerification_verificationId_fkey";
 
 -- AddForeignKey
-ALTER TABLE "RapportVerification" ADD CONSTRAINT "RapportVerification_verificationId_fkey" FOREIGN KEY ("verificationId") REFERENCES "Verification"("id") ON DELETE NO ACTION ON UPDATE CASCADE;
+ALTER TABLE "RapportVerification" ADD CONSTRAINT "RapportVerification_verificationId_fkey" FOREIGN KEY ("verificationId") REFERENCES "Verification"("id") ON DELETE NO ACTION ON UPDATE CASCADE NOT VALID;
 
 -- AddForeignKey
-ALTER TABLE "Action" ADD CONSTRAINT "Action_verificationId_fkey" FOREIGN KEY ("verificationId") REFERENCES "Verification"("id") ON DELETE NO ACTION ON UPDATE CASCADE;
+ALTER TABLE "Action" ADD CONSTRAINT "Action_verificationId_fkey" FOREIGN KEY ("verificationId") REFERENCES "Verification"("id") ON DELETE NO ACTION ON UPDATE CASCADE NOT VALID;

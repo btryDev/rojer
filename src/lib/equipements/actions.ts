@@ -298,7 +298,7 @@ export type SuppressionEquipementResult =
  * `Verification.equipementId` est en `onDelete: Cascade`, et
  * `RapportVerification.verificationId` et `Action.verificationId` le sont
  * aussi [2026-10-28 : ~~le sont aussi~~ ne le sont plus — `NoAction`, comme
- * `Action.equipementId`, migration `20261028120000_preuves_protegees_en_base` :
+ * `Action.equipementId`, migration `20261030100000_preuves_protegees_en_base` :
  * la base refuse désormais la suppression d'un appareil qui porte une preuve.
  * Ce qui suit décrit l'état d'avant] : supprimer une hotte emportait ses vérifications *y compris
  * réalisées*, donc les rapports du registre de sécurité (art. D. 4711-3 CT)
@@ -350,7 +350,7 @@ export async function supprimerEquipement(
     // la cascade ne détruit rien qui ne se régénère.
     //
     // La base refuse depuis le 2026-10-28 (migration
-    // `20261028120000_preuves_protegees_en_base`) si un rapport ou une action
+    // `20261030100000_preuves_protegees_en_base`) si un rapport ou une action
     // est arrivé entre le comptage et ici : l'appareil est alors désactivé,
     // comme s'il avait porté sa trace dès le départ.
     try {
