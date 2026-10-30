@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ChampBoard } from "@/components/ui-kit/ChampBoard";
 import { CASE_A_COCHER } from "@/components/ui-kit/case-a-cocher";
 import { verifierSecondFacteurAction, type AuthActionState } from "@/lib/auth/actions";
+import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
 
 const etatInitial: AuthActionState = {};
 
@@ -43,14 +44,7 @@ export function CodeForm({ next }: { next: string }) {
         </span>
       </label>
 
-      {state.error ? (
-        <p
-          role="alert"
-          className="m-0 rounded-[18px] bg-[color:var(--board-signal-wash)] px-4 py-3 text-[12.5px] leading-[1.5] text-[color:var(--board-signal-ink)]"
-        >
-          {state.error}
-        </p>
-      ) : null}
+      <MessageFormulaire ton="alerte">{state.error}</MessageFormulaire>
 
       <Button type="submit" variant="board" size="board" disabled={pending} className="w-full">
         {pending ? "Vérification…" : "Valider →"}

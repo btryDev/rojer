@@ -39,8 +39,6 @@ import { nomDeZone } from "@/lib/batiments/nom-zone";
 import type { EquipementActionState } from "@/lib/equipements/actions";
 import { CASE_A_COCHER } from "@/components/ui-kit/case-a-cocher";
 
-/** La case à cocher du board : encre pleine cochée, filet d'ardoise. */
-
 /** Le message de validation, à l'encre du signal. */
 function Erreur({ message, id }: { message?: string; id?: string }) {
   if (!message) return null;

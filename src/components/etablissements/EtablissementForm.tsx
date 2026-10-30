@@ -35,9 +35,6 @@ import { AideQuestionMatieres } from "./AideQuestionMatieres";
 import { QUESTION_ACCUEIL_ENFANTS, rEntre } from "@/lib/etablissements/types-refuses";
 import { CASE_A_COCHER } from "@/components/ui-kit/case-a-cocher";
 
-
-/** La case à cocher du board : encre pleine à l'état coché, filet d'ardoise. */
-
 /** Le message de validation, à l'encre du signal et jamais en `destructive`. */
 function Erreur({ message }: { message?: string }) {
   if (!message) return null;

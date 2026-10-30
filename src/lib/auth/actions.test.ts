@@ -43,7 +43,10 @@ vi.mock("next/headers", () => ({
   cookies: async () => ({ delete: (nom: string) => h.cookiesEffaces.push(nom) }),
 }));
 vi.mock("./better-auth", () => ({ auth: { api: h.auth } }));
-vi.mock("./require-user", () => ({ requireUser: async () => ({ id: "u-1", email: "a@exemple.fr" }) }));
+vi.mock("./require-user", () => ({
+  requireUser: async () => ({ id: "u-1", email: "a@exemple.fr" }),
+  entetesDeSession: async () => h.entetes,
+}));
 // Jamais d'appel réseau en test : le service Pwned Passwords est doublé.
 vi.mock("./mot-de-passe-divulgue", async (original) => ({
   ...(await original<typeof import("./mot-de-passe-divulgue")>()),
@@ -94,7 +97,7 @@ beforeEach(() => {
   h.auth.resetPassword.mockResolvedValue({ status: true });
   h.auth.signOut.mockResolvedValue({ success: true });
   h.auth.changePassword.mockResolvedValue({});
-  h.auth.getSession.mockResolvedValue({ session: { id: "s-ici" } });
+  h.auth.getSession.mockResolvedValue({ session: { id: "s-ici" }, user: { twoFactorEnabled: false } });
   h.auth.listSessions.mockResolvedValue([
     { id: "s-ici", token: "jeton-ici" },
     { id: "s-autre", token: "jeton-autre" },
@@ -532,6 +535,8 @@ describe("connexion avec double authentification (lot 3b)", () => {
       ["ACCOUNT_TEMPORARILY_LOCKED", /quinze minutes/],
       ["TOO_MANY_ATTEMPTS_REQUEST_NEW_CODE", /reconnectez-vous/],
       ["INVALID_TWO_FACTOR_COOKIE", /reconnectez-vous/],
+      ["TOTP_NOT_ENABLED", /reconnectez-vous/],
+      ["BACKUP_CODES_NOT_ENABLED", /reconnectez-vous/],
     ];
     for (const [code, attendu] of cas) {
       h.auth.verifyTOTP.mockRejectedValueOnce(refus(code));
@@ -561,16 +566,38 @@ describe("gérer la double authentification (lot 3b)", () => {
     expect(r.activation?.codesSecours).toEqual(["abcde-12345"]);
   });
 
-  it("confirmer : le premier code active, et les appareils de confiance d'avant sont oubliés", async () => {
-    expect(await confirmerDoubleAuthAction({}, formulaire({ code: "123456" }))).toEqual({ confirmee: true });
+  it("confirmer : appareils de confiance oubliés AVANT le code, puis les autres sessions fermées", async () => {
+    const r = await confirmerDoubleAuthAction({}, formulaire({ code: "123456" }));
+    expect(r.confirmee).toBe(true);
+    expect(r.message).toMatch(/autres appareils ont été fermées/);
     expect(h.auth.verifyTOTP).toHaveBeenCalledWith({ body: { code: "123456" }, headers: h.entetes });
     expect(h.oublierAppareils).toHaveBeenCalledWith("u-1");
+    expect(h.oublierAppareils.mock.invocationCallOrder[0]).toBeLessThan(
+      h.auth.verifyTOTP.mock.invocationCallOrder[0],
+    );
+    expect(h.auth.revokeOtherSessions.mock.invocationCallOrder[0]).toBeGreaterThan(
+      h.auth.verifyTOTP.mock.invocationCallOrder[0],
+    );
   });
 
-  it("confirmer : code faux → rien d'oublié, le dire", async () => {
+  it("confirmer : déjà active → refusé, rien d'oublié ni de vérifié (action rejouée)", async () => {
+    h.auth.getSession.mockResolvedValue({ session: { id: "s-ici" }, user: { twoFactorEnabled: true } });
+    expect((await confirmerDoubleAuthAction({}, formulaire({ code: "123456" }))).error).toMatch(/déjà active/);
+    expect(h.oublierAppareils).not.toHaveBeenCalled();
+    expect(h.auth.verifyTOTP).not.toHaveBeenCalled();
+  });
+
+  it("confirmer : une fois active, l'échec de la fermeture des sessions ne fait pas perdre les codes", async () => {
+    h.auth.revokeOtherSessions.mockRejectedValue(new Error("panne"));
+    const r = await confirmerDoubleAuthAction({}, formulaire({ code: "123456" }));
+    expect(r.confirmee).toBe(true);
+    expect(r.message).toMatch(/n'ont pas pu être fermées/);
+  });
+
+  it("confirmer : code faux → le dire, aucune session fermée", async () => {
     h.auth.verifyTOTP.mockRejectedValue(refus("INVALID_CODE"));
     expect((await confirmerDoubleAuthAction({}, formulaire({ code: "123456" }))).error).toMatch(/Code incorrect/);
-    expect(h.oublierAppareils).not.toHaveBeenCalled();
+    expect(h.auth.revokeOtherSessions).not.toHaveBeenCalled();
     expect((await confirmerDoubleAuthAction({}, formulaire({ code: "abcde12345" }))).error).toMatch(/six chiffres/);
   });
 
@@ -605,7 +632,7 @@ describe("gérer la double authentification (lot 3b)", () => {
 
   it("régénérer rend les codes neufs ; désactiver le confirme", async () => {
     expect((await regenererCodesSecoursAction({}, formulaire({ password: "mdp" }))).codes).toEqual(["fghij-67890"]);
-    expect((await desactiverDoubleAuthAction({}, formulaire({ password: "mdp" }))).message).toMatch(/désactivée/);
+    expect(await desactiverDoubleAuthAction({}, formulaire({ password: "mdp" }))).toEqual({});
     expect(h.auth.disableTwoFactor).toHaveBeenCalledWith({ body: { password: "mdp" }, headers: h.entetes });
   });
 

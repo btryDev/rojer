@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ChampBoard } from "@/components/ui-kit/ChampBoard";
+import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
 import {
   activerDoubleAuthAction,
   confirmerDoubleAuthAction,
@@ -14,18 +15,6 @@ import type { DonneesActivation } from "@/lib/auth/double-authentification";
 
 const etatInitial: DoubleAuthState = {};
 
-const ALERTE =
-  "m-0 rounded-[18px] bg-[color:var(--board-signal-wash)] px-4 py-3 text-[12.5px] leading-[1.5] text-[color:var(--board-signal-ink)]";
-const INFO =
-  "m-0 rounded-[18px] bg-[color:var(--board-blue-pale)] px-4 py-3 text-[12.5px] leading-[1.5] text-[color:var(--board-blue-ink)]";
-
-function Erreur({ texte }: { texte?: string }) {
-  return texte ? (
-    <p role="alert" className={ALERTE}>
-      {texte}
-    </p>
-  ) : null;
-}
 
 /** Les codes de secours, montrés une seule fois. */
 function CodesSecours({ codes }: { codes: string[] }) {
@@ -57,10 +46,10 @@ export function DoubleAuthentification({
   codesRestants,
 }: {
   active: boolean;
-  codesRestants: number;
+  codesRestants: number | null;
 }) {
   const [preparation, preparer, enPreparation] = useActionState(activerDoubleAuthAction, etatInitial);
-  // La clé de l'activation dont l'utilisateur a fini de noter les codes.
+  // La clé de l'activation refermée : codes notés, ou étape annulée.
   const [terminee, setTerminee] = useState<string | null>(null);
   const activation = preparation.activation;
 
@@ -69,7 +58,7 @@ export function DoubleAuthentification({
       <EtapeActivation
         key={activation.cle}
         activation={activation}
-        onTerminee={() => setTerminee(activation.cle)}
+        onFermer={() => setTerminee(activation.cle)}
       />
     );
   }
@@ -84,7 +73,7 @@ export function DoubleAuthentification({
         autoComplete="current-password"
         required
       />
-      <Erreur texte={preparation.error} />
+      <MessageFormulaire ton="alerte">{preparation.error}</MessageFormulaire>
       <Button type="submit" variant="board" size="board" disabled={enPreparation} className="w-full">
         {enPreparation ? "Préparation…" : "Activer la double authentification →"}
       </Button>
@@ -98,22 +87,22 @@ export function DoubleAuthentification({
  */
 function EtapeActivation({
   activation,
-  onTerminee,
+  onFermer,
 }: {
   activation: DonneesActivation;
-  onTerminee: () => void;
+  onFermer: () => void;
 }) {
   const [confirmation, confirmer, enConfirmation] = useActionState(confirmerDoubleAuthAction, etatInitial);
 
   if (confirmation.confirmee) {
     return (
       <div className="flex flex-col gap-5">
-        <p role="status" className={INFO}>
+        <MessageFormulaire ton="info">
           Double authentification activée. À la prochaine connexion, le code de l&apos;application
-          sera demandé après le mot de passe.
-        </p>
+          sera demandé après le mot de passe. {confirmation.message}
+        </MessageFormulaire>
         <CodesSecours codes={activation.codesSecours} />
-        <Button type="button" variant="board" size="board" className="w-full" onClick={onTerminee}>
+        <Button type="button" variant="board" size="board" className="w-full" onClick={onFermer}>
           J&apos;ai noté mes codes →
         </Button>
       </div>
@@ -157,9 +146,21 @@ function EtapeActivation({
           required
           autoFocus
         />
-        <Erreur texte={confirmation.error} />
+        <MessageFormulaire ton="alerte">{confirmation.error}</MessageFormulaire>
         <Button type="submit" variant="board" size="board" disabled={enConfirmation} className="w-full">
           {enConfirmation ? "Vérification…" : "Activer →"}
+        </Button>
+        {/* Rien n'est actif avant le code : annuler ne laisse qu'un secret en
+            attente, remplacé à la prochaine activation. */}
+        <Button
+          type="button"
+          variant="boardClair"
+          size="board"
+          disabled={enConfirmation}
+          className="w-full"
+          onClick={onFermer}
+        >
+          Annuler
         </Button>
       </form>
     </div>
@@ -167,29 +168,21 @@ function EtapeActivation({
 }
 
 /** Active : renouveler les codes de secours, ou désactiver. Mot de passe exigé. */
-function GererDoubleAuth({ codesRestants }: { codesRestants: number }) {
+function GererDoubleAuth({ codesRestants }: { codesRestants: number | null }) {
   const [regeneration, regenerer, enRegeneration] = useActionState(regenererCodesSecoursAction, etatInitial);
   const [desactivation, desactiver, enDesactivation] = useActionState(desactiverDoubleAuthAction, etatInitial);
+  // Le dernier geste tenté : seule son erreur s'affiche, pas celle, périmée,
+  // de l'autre bouton.
+  const [geste, setGeste] = useState<"regenerer" | "desactiver" | null>(null);
   const enCours = enRegeneration || enDesactivation;
+  const erreur = geste === "regenerer" ? regeneration.error : geste === "desactiver" ? desactivation.error : undefined;
 
   return (
     <div className="flex flex-col gap-5">
       {regeneration.codes ? (
         <CodesSecours codes={regeneration.codes} />
       ) : (
-        <p
-          className={
-            codesRestants <= 3
-              ? ALERTE
-              : "m-0 text-[12.5px] leading-[1.55] tabular-nums text-[color:var(--board-slate-mid)]"
-          }
-        >
-          {codesRestants === 0
-            ? "Plus aucun code de secours : générez-en de nouveaux."
-            : `${codesRestants} code${codesRestants > 1 ? "s" : ""} de secours ${
-                codesRestants > 1 ? "restants" : "restant"
-              }${codesRestants <= 3 ? " : pensez à en générer de nouveaux." : "."}`}
-        </p>
+        <EtatCodes restants={codesRestants} />
       )}
       {/* Un seul mot de passe pour les deux gestes : chaque bouton porte son
           action (`formAction`). */}
@@ -202,11 +195,12 @@ function GererDoubleAuth({ codesRestants }: { codesRestants: number }) {
           autoComplete="current-password"
           required
         />
-        <Erreur texte={regeneration.error ?? desactivation.error} />
+        <MessageFormulaire ton="alerte">{erreur}</MessageFormulaire>
         <div className="flex flex-col gap-3 sm:flex-row">
           <Button
             type="submit"
             formAction={regenerer}
+            onClick={() => setGeste("regenerer")}
             variant="boardClair"
             size="board"
             disabled={enCours}
@@ -217,6 +211,7 @@ function GererDoubleAuth({ codesRestants }: { codesRestants: number }) {
           <Button
             type="submit"
             formAction={desactiver}
+            onClick={() => setGeste("desactiver")}
             variant="boardClair"
             size="board"
             disabled={enCours}
@@ -227,5 +222,29 @@ function GererDoubleAuth({ codesRestants }: { codesRestants: number }) {
         </div>
       </form>
     </div>
+  );
+}
+
+function EtatCodes({ restants }: { restants: number | null }) {
+  if (restants === null) {
+    return (
+      <MessageFormulaire ton="alerte">
+        Vos codes de secours n&apos;ont pas pu être relus : générez-en de nouveaux.
+      </MessageFormulaire>
+    );
+  }
+  if (restants <= 3) {
+    return (
+      <MessageFormulaire ton="alerte">
+        {restants === 0
+          ? "Plus aucun code de secours : générez-en de nouveaux."
+          : `Plus que ${restants} code${restants > 1 ? "s" : ""} de secours : pensez à en générer de nouveaux.`}
+      </MessageFormulaire>
+    );
+  }
+  return (
+    <p className="m-0 text-[12.5px] leading-[1.55] tabular-nums text-[color:var(--board-slate-mid)]">
+      {restants} codes de secours restants.
+    </p>
   );
 }

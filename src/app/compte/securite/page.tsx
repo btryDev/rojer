@@ -19,6 +19,21 @@ export const metadata = {
  * Better Auth, qui ne liste que celles du compte connecté ; la page n'en
  * affiche que l'identifiant, jamais le jeton.
  */
+/**
+ * Combien de codes de secours restent. Better Auth n'a pas de comptage : il
+ * déchiffre la liste, dont on ne garde que la longueur — rien n'en sort de la
+ * fonction. S'il échoue (secret du serveur changé, ligne absente), la page
+ * reste servie : c'est d'elle qu'on désactive et qu'on régénère les codes.
+ */
+async function nombreCodesSecours(userId: string): Promise<number | null> {
+  try {
+    return (await auth.api.viewBackupCodes({ body: { userId } })).backupCodes.length;
+  } catch (e) {
+    console.error(JSON.stringify({ type: "codes_secours_illisibles", motif: String(e) }));
+    return null;
+  }
+}
+
 export default async function SecuriteComptePage() {
   const user = await requireUser();
   const entetes = await entetesDeSession();
@@ -27,11 +42,7 @@ export default async function SecuriteComptePage() {
     auth.api.listSessions({ headers: entetes }),
   ]);
   const doubleAuth = courante?.user.twoFactorEnabled === true;
-  // Le nombre seul : les codes restent chiffrés en base, et l'écran ne les
-  // montre qu'à leur création.
-  const codesRestants = doubleAuth
-    ? (await auth.api.viewBackupCodes({ body: { userId: user.id } })).backupCodes.length
-    : 0;
+  const codesRestants = doubleAuth ? await nombreCodesSecours(user.id) : null;
   const triees = [...sessions].sort((a, b) => +b.createdAt - +a.createdAt);
   const autres = triees.filter((s) => s.id !== courante?.session.id);
 

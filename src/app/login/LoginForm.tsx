@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { ChampBoard } from "@/components/ui-kit/ChampBoard";
 import { signInAction, type AuthActionState } from "@/lib/auth/actions";
+import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
 
 const initialState: AuthActionState = {};
 
@@ -52,14 +53,7 @@ export function LoginForm({ next }: { next: string }) {
       {/* Erreur de formulaire, pas de champ : le message ne dit jamais lequel
           des deux identifiants est en cause. Le voile porte donc l'erreur au
           niveau du bloc, là où `ChampBoard` la poserait sous un champ. */}
-      {state.error ? (
-        <p
-          role="alert"
-          className="m-0 rounded-[18px] bg-[color:var(--board-signal-wash)] px-4 py-3 text-[12.5px] leading-[1.5] text-[color:var(--board-signal-ink)]"
-        >
-          {state.error}
-        </p>
-      ) : null}
+      <MessageFormulaire ton="alerte">{state.error}</MessageFormulaire>
 
       <Button
         type="submit"

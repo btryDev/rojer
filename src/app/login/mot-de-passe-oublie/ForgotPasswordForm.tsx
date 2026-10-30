@@ -7,6 +7,7 @@ import {
   requestPasswordResetAction,
   type AuthActionState,
 } from "@/lib/auth/actions";
+import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
 
 const initialState: AuthActionState = {};
 
@@ -39,14 +40,7 @@ export function ForgotPasswordForm() {
         placeholder="vous@exemple.fr"
       />
 
-      {state.error ? (
-        <p
-          role="alert"
-          className="m-0 rounded-[18px] bg-[color:var(--board-signal-wash)] px-4 py-3 text-[12.5px] leading-[1.5] text-[color:var(--board-signal-ink)]"
-        >
-          {state.error}
-        </p>
-      ) : null}
+      <MessageFormulaire ton="alerte">{state.error}</MessageFormulaire>
 
       <Button
         type="submit"

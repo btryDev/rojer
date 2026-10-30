@@ -7,8 +7,6 @@ import { CHAMP_TEMOIN_TYPES_ERP_AUTRES } from "@/lib/etablissements/types-erp-af
 import { ChevronRepli, LIEN_REPLI } from "@/components/ui/repli";
 import { CASE_A_COCHER } from "@/components/ui-kit/case-a-cocher";
 
-/** La case à cocher du board : encre pleine à l'état coché, filet d'ardoise. */
-
 /**
  * Les autres types d'ERP d'un établissement qui groupe plusieurs exploitations
  * (ADR-045, arrêté du 25 juin 1980, art. GN 2).

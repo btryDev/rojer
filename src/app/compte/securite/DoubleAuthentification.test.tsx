@@ -15,7 +15,10 @@ vi.mock("@/lib/auth/actions", () => ({
   activerDoubleAuthAction: vi.fn(async () => ({
     activation: { qr: "data:image/png;base64,AA", cle: "ABCD EFGH", codesSecours: CODES },
   })),
-  confirmerDoubleAuthAction: vi.fn(async () => ({ confirmee: true })),
+  confirmerDoubleAuthAction: vi.fn(async () => ({
+    confirmee: true,
+    message: "Vos sessions sur les autres appareils ont été fermées.",
+  })),
   regenererCodesSecoursAction: vi.fn(async () => ({})),
   desactiverDoubleAuthAction: vi.fn(async () => ({})),
 }));
@@ -44,6 +47,7 @@ describe("DoubleAuthentification", () => {
     rerender(<DoubleAuthentification active codesRestants={10} />);
     expect(screen.getByText(CODES[0])).toBeTruthy();
     expect(screen.getAllByRole("listitem")).toHaveLength(10);
+    expect(screen.getByText(/autres appareils ont été fermées/)).toBeTruthy();
 
     await cliquer(/J'ai noté mes codes/);
     expect(screen.queryByText(CODES[0])).toBeNull();
@@ -61,5 +65,21 @@ describe("DoubleAuthentification", () => {
     rerender(<DoubleAuthentification active={false} codesRestants={0} />);
     expect(screen.queryByText("ABCD EFGH")).toBeNull();
     expect(screen.getByRole("button", { name: /Activer la double authentification/ })).toBeTruthy();
+  });
+});
+
+describe("DoubleAuthentification — sortir de l'étape du QR code", () => {
+  it("« Annuler » ramène au mot de passe", async () => {
+    render(<DoubleAuthentification active={false} codesRestants={null} />);
+    fireEvent.change(screen.getByLabelText(/Mot de passe/), { target: { value: "x" } });
+    await cliquer(/Activer la double authentification/);
+    await cliquer(/Annuler/);
+    expect(screen.queryByText("ABCD EFGH")).toBeNull();
+    expect(screen.getByRole("button", { name: /Activer la double authentification/ })).toBeTruthy();
+  });
+
+  it("codes illisibles : la carte le dit au lieu de tomber", () => {
+    render(<DoubleAuthentification active codesRestants={null} />);
+    expect(screen.getByRole("alert").textContent).toMatch(/n'ont pas pu être relus/);
   });
 });

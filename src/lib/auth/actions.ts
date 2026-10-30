@@ -13,7 +13,7 @@ import { envoiEnService, refusUrlPublique } from "@/lib/email";
 import { COOKIE_ETABLISSEMENT_ACTIF } from "@/lib/auth/scope";
 import { auth } from "./better-auth";
 import { MESSAGE_MOT_DE_PASSE_DIVULGUE, motDePasseDivulgue } from "./mot-de-passe-divulgue";
-import { requireUser } from "./require-user";
+import { entetesDeSession, requireUser } from "./require-user";
 import {
   codeSaisi,
   donneesActivation,
@@ -442,6 +442,10 @@ function messageSecondFacteur(code: string | null): string {
       return "Trop de codes incorrects sur ce compte : réessayez dans quinze minutes.";
     case "TOO_MANY_ATTEMPTS_REQUEST_NEW_CODE":
     case "INVALID_TWO_FACTOR_COOKIE":
+    // La double authentification désactivée depuis un autre appareil pendant
+    // le défi : réessayer ne servirait à rien.
+    case "TOTP_NOT_ENABLED":
+    case "BACKUP_CODES_NOT_ENABLED":
       return "Cette connexion a expiré ou a reçu trop de codes incorrects : reconnectez-vous avec votre mot de passe.";
     default:
       return "Le code n'a pas pu être vérifié. Réessayez dans un instant.";
@@ -511,9 +515,16 @@ export async function activerDoubleAuthAction(
 
 /**
  * Activer, seconde étape : le premier code de l'application l'active (Better
- * Auth passe `twoFactorEnabled` et renouvelle la session). Pas de
- * `revalidatePath` : l'écran d'activation reste monté pour montrer les codes
- * de secours, et c'est son bouton « Terminé » qui rafraîchit la page.
+ * Auth passe `twoFactorEnabled` et renouvelle la session), puis les AUTRES
+ * sessions sont fermées — comme au changement de mot de passe : une session
+ * ouverte par un voleur du mot de passe n'a jamais passé de second facteur.
+ * Pas de `revalidatePath` : l'écran d'activation reste monté pour montrer les
+ * codes de secours, et c'est son bouton qui le referme.
+ *
+ * Tout ce qui peut échouer passe AVANT le code : une fois la double
+ * authentification active, une erreur ferait perdre à l'écran des codes de
+ * secours jamais vus. La fermeture des autres sessions, seule après, ne lève
+ * pas : son échec se dit.
  */
 export async function confirmerDoubleAuthAction(
   _prev: DoubleAuthState,
@@ -526,24 +537,43 @@ export async function confirmerDoubleAuthAction(
   }
   const limite = await refusDoubleAuth(user.id);
   if (limite) return { error: limite };
+  const entetes = await headers();
+  // Déjà active : rien à confirmer. Sans ce refus, l'action rejouée (onglet
+  // périmé) oublierait les appareils de confiance, et servirait d'oracle de
+  // codes en session, où Better Auth ne compte pas les essais.
+  const session = await auth.api.getSession({ headers: entetes });
+  if (session?.user.twoFactorEnabled) {
+    return { error: "La double authentification est déjà active sur ce compte." };
+  }
+  // Les appareils de confiance d'une activation précédente sont oubliés :
+  // Better Auth ne les efface qu'un par un, au navigateur qui désactive. Sans
+  // cela, un appareil approuvé avant une désactivation — peut-être celui qui
+  // l'a motivée — passerait sans code jusqu'à trente jours après la nouvelle
+  // activation. Rien n'étant actif, les oublier avant le code ne coûte rien.
+  await oublierAppareilsDeConfiance(user.id);
   try {
-    await auth.api.verifyTOTP({ body: { code: code.valeur }, headers: await headers() });
+    await auth.api.verifyTOTP({ body: { code: code.valeur }, headers: entetes });
   } catch (e) {
     if (!isAPIError(e)) throw e;
     return {
       error:
         codeErreur(e) === "INVALID_CODE"
           ? "Code incorrect. Vérifiez que l'heure du téléphone est à jour, puis saisissez le code affiché."
-          : "Le code n'a pas pu être vérifié. Recommencez l'activation.",
+          : "Le code n'a pas pu être vérifié. Annulez, puis recommencez l'activation.",
     };
   }
-  // Les appareils de confiance d'une activation précédente sont oubliés :
-  // Better Auth ne les efface qu'un par un, au navigateur qui désactive. Sans
-  // cela, un appareil approuvé avant une désactivation — peut-être celui qui
-  // l'a motivée — passerait sans code jusqu'à trente jours après la nouvelle
-  // activation.
-  await oublierAppareilsDeConfiance(user.id);
-  return { confirmee: true };
+  try {
+    // La session vient d'être renouvelée : son nouveau cookie est dans
+    // `cookies()`, pas dans les en-têtes de la requête.
+    await auth.api.revokeOtherSessions({ headers: await entetesDeSession() });
+  } catch (e) {
+    console.error(JSON.stringify({ type: "fermeture_autres_sessions_echouee", motif: String(e) }));
+    return {
+      confirmee: true,
+      message: "Vos autres sessions n'ont pas pu être fermées : fermez-les plus bas, dans « Sessions ouvertes ».",
+    };
+  }
+  return { confirmee: true, message: "Vos sessions sur les autres appareils ont été fermées." };
 }
 
 /** De nouveaux codes de secours : les anciens cessent de valoir. */
@@ -586,6 +616,7 @@ export async function desactiverDoubleAuthAction(
   } catch (e) {
     return { error: messageMotDePasse(e, "La double authentification n'a pas pu être désactivée. Réessayez.") };
   }
+  // L'écran repasse à « inactive » : c'est l'accusé de réception.
   revalidatePath("/compte/securite");
-  return { message: "Double authentification désactivée." };
+  return {};
 }
