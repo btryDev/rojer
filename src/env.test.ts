@@ -53,7 +53,7 @@ describe("validerEnvironnement", () => {
   });
 
   it("vérifie la forme d'une optionnelle posée, pas sa présence", () => {
-    expect(erreurDe({ ...BASE, STORAGE_DRIVER: "s3" }).variables).toEqual(["STORAGE_DRIVER"]);
+    expect(erreurDe({ ...BASE, STORAGE_DRIVER: "ftp" }).variables).toEqual(["STORAGE_DRIVER"]);
     expect(erreurDe({ ...BASE, PUBLIC_APP_URL: "rojer.fr" }).variables).toEqual([
       "PUBLIC_APP_URL",
     ]);

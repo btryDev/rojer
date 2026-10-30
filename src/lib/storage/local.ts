@@ -1,7 +1,8 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import type { FileStorage, StorageKey } from "./types";
-import { FichierIntrouvable } from "./erreurs";
+import { ErreurStockage, FichierIntrouvable } from "./erreurs";
+import { verifierCleStockage } from "./cle-stockage";
 
 /**
  * Implémentation filesystem locale du `FileStorage`.
@@ -14,16 +15,16 @@ export class LocalFileStorage implements FileStorage {
   constructor(private readonly rootDir: string) {}
 
   private resolveKey(key: StorageKey): string {
-    // On refuse les caractères parents et les chemins absolus.
-    if (key.includes("..") || path.isAbsolute(key)) {
-      throw new Error(`Clé de stockage invalide : ${key}`);
-    }
+    // La règle commune aux pilotes (`cle-stockage.ts`), puis le contrôle
+    // propre au disque : le chemin résolu reste sous la racine.
+    verifierCleStockage(key);
+    if (path.isAbsolute(key)) throw new ErreurStockage(`Clé de stockage invalide : ${key}`);
     const full = path.join(this.rootDir, key);
     // Sécurité supplémentaire : vérifier que le chemin résolu reste sous root.
     const normalized = path.resolve(full);
     const rootResolved = path.resolve(this.rootDir);
     if (!normalized.startsWith(rootResolved + path.sep) && normalized !== rootResolved) {
-      throw new Error(`Clé de stockage hors du dossier racine : ${key}`);
+      throw new ErreurStockage(`Clé de stockage hors du dossier racine : ${key}`);
     }
     return normalized;
   }

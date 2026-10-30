@@ -96,10 +96,14 @@ const schema = z
     SIGNATURE_MAIL_FROM: optionnelle,
 
     // Stockage des fichiers (`storage/index.ts`).
-    STORAGE_DRIVER: enumeration(["local", "supabase"] as const),
+    STORAGE_DRIVER: enumeration(["local", "supabase", "s3"] as const),
     STORAGE_BUCKET: optionnelle,
     STORAGE_LOCAL_PATH: optionnelle,
     SUPABASE_SERVICE_ROLE_KEY: optionnelle,
+    // Cellar (Clever Cloud) : injectées par l'add-on (`storage/s3.ts`).
+    CELLAR_ADDON_HOST: optionnelle,
+    CELLAR_ADDON_KEY_ID: optionnelle,
+    CELLAR_ADDON_KEY_SECRET: optionnelle,
 
     // Serveur MCP (`mcp/acces-*.ts`, `mcp/hotes.ts`).
     MCP_CLE: optionnelle,
