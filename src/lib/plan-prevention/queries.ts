@@ -1,5 +1,5 @@
-import { requireCompte } from "@/lib/auth/compte";
 import "server-only";
+import { requireCompte } from "@/lib/auth/compte";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { listSignatures } from "@/lib/signatures/queries";
 

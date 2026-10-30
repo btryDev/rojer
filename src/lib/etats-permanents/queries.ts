@@ -1,5 +1,5 @@
-import { requireCompte } from "@/lib/auth/compte";
 import "server-only";
+import { requireCompte } from "@/lib/auth/compte";
 /**
  * Ce que l'écran « Ce qui doit être en place » lit.
  *

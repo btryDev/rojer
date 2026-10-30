@@ -1,5 +1,5 @@
-import { requireCompte } from "@/lib/auth/compte";
 import "server-only";
+import { requireCompte } from "@/lib/auth/compte";
 import { cache } from "react";
 import { requireEtablissement } from "@/lib/auth/scope";
 import {

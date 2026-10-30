@@ -1,5 +1,5 @@
-import { requireCompte } from "@/lib/auth/compte";
 import "server-only";
+import { requireCompte } from "@/lib/auth/compte";
 import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import { aUnRendezVous, classerVerification, type RegistreLigne } from "@/lib/calendrier/etats";

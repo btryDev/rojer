@@ -12,12 +12,14 @@ const h = vi.hoisted(() => ({
     rendezVousLe: null as Date | null,
   },
   update: vi.fn(async () => ({ count: 1 })),
+  // La ligne existe-t-elle encore après un P2025 ? 0 : supprimée entre-temps.
+  count: vi.fn(async () => 0),
   resoudre: vi.fn(async (_e: string, id: string | null | undefined) =>
     !id ? { ok: true as const, id: null } : id === "presta-e1" ? { ok: true as const, id } : { ok: false as const },
   ),
 }));
 
-vi.mock("@/lib/prisma", () => ({ prisma: { verification: { update: h.update } } }));
+vi.mock("@/lib/prisma", () => ({ prisma: { verification: { update: h.update, count: h.count } } }));
 vi.mock("@/lib/auth/scope", async () => {
   // La garde rend le client borné (ADR-051) : ici, le client simulé.
   const { prisma } = await import("@/lib/prisma");
@@ -70,6 +72,17 @@ describe("enregistrerSuiviControle", () => {
     );
     const r = await enregistrerSuiviControle("v1", IDLE, fd({ prestataireId: "presta-e1" }));
     expect(r.status).toBe("success");
+  });
+
+  it("le prestataire disparu entre sa résolution et l'écriture : erreur, pas « Enregistré »", async () => {
+    const { Prisma } = await import("@prisma/client");
+    h.update.mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError("introuvable", { code: "P2025", clientVersion: "6" }),
+    );
+    // La ligne est toujours là : c'est le `connect` borné du prestataire qui a échoué.
+    h.count.mockResolvedValueOnce(1);
+    const r = await enregistrerSuiviControle("v1", IDLE, fd({ prestataireId: "presta-e1" }));
+    expect(r).toEqual({ status: "error", message: "Prestataire introuvable" });
   });
 
   it("une autre erreur de la base remonte", async () => {

@@ -1,5 +1,5 @@
-import { requireCompte } from "@/lib/auth/compte";
 import "server-only";
+import { requireCompte } from "@/lib/auth/compte";
 import type { DomainePrestataire } from "@prisma/client";
 
 /** Un prestataire tel que le choix du prestataire attitré le propose. */

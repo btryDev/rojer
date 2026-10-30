@@ -1,5 +1,5 @@
-import { requireCompte, type Db } from "@/lib/auth/compte";
 import "server-only";
+import { requireCompte, type Db } from "@/lib/auth/compte";
 import { prisma } from "@/lib/prisma";
 import { cache } from "react";
 

@@ -64,9 +64,11 @@ export async function enregistrerSuiviControle(
   }
   // `update` et non `updateMany` : le client borné (ADR-051) réécrit la clé
   // du prestataire en `connect` borné, ce qu'un `updateMany` ne permet pas.
-  // La ligne vient d'être lue par `requireVerification` ; supprimée entre-temps,
-  // `update` lève P2025 là où `updateMany` rendait 0 ligne — même réponse
-  // qu'avant : rien à écrire, l'action aboutit.
+  // La ligne vient d'être lue par `requireVerification`. P2025 a deux causes :
+  // la ligne supprimée entre-temps (`updateMany` rendait 0 ligne : rien à
+  // écrire, l'action aboutit, comme avant) ou le prestataire disparu entre sa
+  // résolution et l'écriture (le `connect` borné ne trouve rien : rien n'est
+  // écrit, et l'écran doit le dire).
   try {
     await db.verification.update({
       where: { id: v.id, etablissementId },
@@ -79,6 +81,9 @@ export async function enregistrerSuiviControle(
     });
   } catch (e) {
     if (!(e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025")) throw e;
+    if ((await db.verification.count({ where: { id: v.id, etablissementId } })) > 0) {
+      return { status: "error", message: "Prestataire introuvable" };
+    }
   }
 
   revalidatePath(`/etablissements/${etablissementId}`, "layout");

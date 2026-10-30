@@ -130,6 +130,12 @@ function valeurScalaire(v: unknown): unknown {
 }
 
 /** Vérifie et pose la racine (`userId`) d'une création ou d'une mise à jour. */
+/** La clé de racine d'un modèle racine (`Entreprise.userId`) — et elle seule. */
+function estLaRacine(nom: string, cle: string): boolean {
+  const c = classement(nom);
+  return "racine" in c && c.racine === cle;
+}
+
 function racineDe(nom: string, data: Objet, portee: Portee, creation: boolean): void {
   const c = classement(nom);
   if (!("racine" in c)) return;
@@ -341,7 +347,9 @@ export function argumentsBornes(nom: string, operation: string, args: unknown, p
       const data: Objet = estObjet(a.data) ? { ...a.data } : {};
       racineDe(nom, data, portee, false);
       for (const r of relations(nom)) {
-        if (r.cle && r.cle in data && !("racine" in classement(nom) && r.genre === "identite"))
+        // La racine est vérifiée par `racineDe` ; toute autre clé est refusée,
+        // y compris une seconde clé d'un modèle racine.
+        if (r.cle && r.cle in data && !estLaRacine(nom, r.cle))
           throw new ErreurPortee(`${nom}.updateMany : clé ${r.cle} non bornable ici`);
       }
       a.where = avecBorne(a.where, b);
@@ -354,7 +362,7 @@ export function argumentsBornes(nom: string, operation: string, args: unknown, p
         const ligne = { ...l };
         racineDe(nom, ligne, portee, true);
         for (const r of relations(nom)) {
-          if (r.cle && r.genre !== "compte" && ligne[r.cle] != null && !("racine" in classement(nom)))
+          if (r.cle && r.genre !== "compte" && ligne[r.cle] != null && !estLaRacine(nom, r.cle))
             throw new ErreurPortee(`${nom}.createMany : clé ${r.cle} vers un modèle hors compte`);
         }
         return ligne;

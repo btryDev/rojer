@@ -205,9 +205,15 @@ function parametres(fn: Fonction): string[] {
 
 const OPERATION =
   "(?:findMany|findFirst|findUnique|findFirstOrThrow|findUniqueOrThrow|count|aggregate|groupBy|create|createMany|createManyAndReturn|update|updateMany|upsert|delete|deleteMany)";
+// Un client reçu DANS un objet compte aussi (`ctx.db.action.findMany(`,
+// `f(ctx.db)`) : `Db` est typé `PrismaClient`, rien n'empêche d'y glisser le
+// client brut. Un cran de membre au plus — élargir n'expose que de trop.
+const MEMBRE = "(?:\\s*\\.\\s*[a-zA-Z_$][\\w$]*)?";
 const sert = (p: string) =>
-  new RegExp(`(?<![\\w$.])${p}\\s*\\.\\s*(?:\\$\\w+|\\w+\\s*\\.\\s*${OPERATION}\\s*\\()`);
-const passe = (p: string) => new RegExp(`[(,]\\s*${p}\\s*[,)]`);
+  new RegExp(
+    `(?<![\\w$.])${p}${MEMBRE}\\s*\\.\\s*(?:\\$\\w+|\\w+\\s*\\.\\s*${OPERATION}\\s*\\()`,
+  );
+const passe = (p: string) => new RegExp(`[(,]\\s*${p}${MEMBRE}\\s*[,)]`);
 
 function construireIndex(): Index {
   const racine = RACINE_SRC();
@@ -220,7 +226,9 @@ function construireIndex(): Index {
     const chemin = relative(depot, f);
     if (chemin !== FABRIQUE_DU_CLIENT_BORNE && importeLeClientBrut(chemin, source)) bruts.add(f);
     textes.set(f, sansCommentairesNiChaines(source));
-    parFichier.set(f, fonctions(source));
+    // Découpé après `normaliser`, comme `fonctionsAtteintes` : sans lui,
+    // `cache(async function x(db, …))` échappe à l'index.
+    parFichier.set(f, fonctions(normaliser(source)));
   }
   // Les fonctions qui REÇOIVENT leur client : un paramètre sert de client
   // (`p.modele.findMany(`, `p.$transaction`), ou est passé à une fonction qui

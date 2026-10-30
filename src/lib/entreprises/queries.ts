@@ -1,5 +1,5 @@
-import { requireCompte } from "@/lib/auth/compte";
 import "server-only";
+import { requireCompte } from "@/lib/auth/compte";
 import type { EntrepriseConnue } from "@/lib/onboarding/rattachement";
 
 // ADR-005 : toutes les lectures d'Entreprise passent par requireUser() et

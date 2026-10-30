@@ -1,5 +1,5 @@
-import { requireCompte } from "@/lib/auth/compte";
 import "server-only";
+import { requireCompte } from "@/lib/auth/compte";
 import { mentionRythmeRetenu } from "@/lib/referentiels/conformite/mention-rythme";
 import { renvoiAuxNormes } from "@/lib/referentiels/conformite/renvoi-aux-normes";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";

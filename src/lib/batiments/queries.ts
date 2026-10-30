@@ -1,5 +1,5 @@
-import { requireCompte } from "@/lib/auth/compte";
 import "server-only";
+import { requireCompte } from "@/lib/auth/compte";
 
 /**
  * Lectures des bâtiments d'un établissement (ADR-019).

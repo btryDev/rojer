@@ -1,5 +1,5 @@
-import { requireCompte } from "@/lib/auth/compte";
 import "server-only";
+import { requireCompte } from "@/lib/auth/compte";
 // Lecture : la composition du registre pour un établissement réel.
 //
 // `composition.ts` est pur et ne connaît pas la base. Ce module fait le pont :

@@ -1,5 +1,5 @@
-import { requireCompte } from "@/lib/auth/compte";
 import "server-only";
+import { requireCompte } from "@/lib/auth/compte";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import { projeterEtablissement } from "@/lib/matching/projection";
 import { cleJourCivil } from "@/lib/dates";

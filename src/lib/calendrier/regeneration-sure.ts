@@ -135,8 +135,11 @@ export async function regenererApresMutation(
     // reprendrait pas. Il resterait juste faux.
     // Par le client borné au compte (ADR-051) : si l'échec venait de la garde
     // d'appartenance, l'établissement d'un autre compte n'est pas touché.
-    // La lecture de session peut lever elle aussi : cette fonction n'échoue
-    // jamais, la marque se perd alors, et l'ouverture suivante régénère.
+    // Toutes les appelantes sont des actions passées par `requireCompte`
+    // (relevé du 2026-10-31) : la session n'est absente ou illisible ici que si
+    // elle disparaît au milieu de la requête. La marque se perd alors — le
+    // calendrier reste faux jusqu'à la prochaine mutation ou le prochain
+    // changement de sceau —, et le journal ci-dessous le dit.
     // Une panne de session ne fait pas échouer la fonction, mais elle se voit.
     const compte = await getOptionalCompte().catch((e: unknown) => {
       console.error(
