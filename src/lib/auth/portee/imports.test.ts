@@ -188,12 +188,41 @@ describe("client Prisma brut", () => {
   });
 });
 
+/**
+ * Vrai si le fichier peut obtenir la VALEUR `PrismaClient` : un import non
+ * typé qui la nomme (alias compris), un import d'espace de noms, un
+ * `require`/`import()` du paquet. Les imports de types et de `Prisma` seuls
+ * restent libres.
+ */
+function peutFabriquer(texte: string): boolean {
+  const nommes = [...texte.matchAll(/import\s+(type\s+)?\{([^}]*)\}\s*from\s*["']@prisma\/client["']/g)];
+  if (nommes.some(([, type, liste]) => !type && /(^|[,{\s])PrismaClient\b/.test(liste.replace(/\btype\s+\w+/g, ""))))
+    return true;
+  if (/import\s+\*\s+as\s+\w+\s+from\s*["']@prisma\/client["']/.test(texte)) return true;
+  if (/import\s+\w+\s*(,|from)\s*[^;]*["']@prisma\/client["']/.test(texte)) return true;
+  return /(?:require|import)\s*\(\s*["'`]@prisma\/client["'`]\s*\)/.test(texte);
+}
+
 describe("fabrication d'un client Prisma", () => {
-  it("new PrismaClient ne s'écrit que dans les modules qui fabriquent un client", () => {
+  it("la valeur PrismaClient ne s'obtient que dans les modules qui fabriquent un client", () => {
     const fabriquent = fichiers(SRC)
-      .filter((f) => /\bnew\s+PrismaClient\b/.test(readFileSync(f, "utf8")))
+      .filter((f) => peutFabriquer(readFileSync(f, "utf8")))
       .map((f) => relative(DEPOT, f));
     expect(fabriquent.filter((f) => !FABRIQUES.has(f))).toEqual([]);
+  });
+
+  it.each([
+    ['import { PrismaClient } from "@prisma/client";', true],
+    ['import { PrismaClient as P } from "@prisma/client";', true],
+    ['import { Prisma, PrismaClient } from "@prisma/client";', true],
+    ['import * as client from "@prisma/client";', true],
+    ['const m = require("@prisma/client");', true],
+    ['const m = await import("@prisma/client");', true],
+    ['import type { PrismaClient } from "@prisma/client";', false],
+    ['import { type PrismaClient, Prisma } from "@prisma/client";', false],
+    ['import { Prisma } from "@prisma/client";', false],
+  ])("%s → %s", (texte, attendu) => {
+    expect(peutFabriquer(texte)).toBe(attendu);
   });
 });
 

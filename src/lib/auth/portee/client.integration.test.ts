@@ -77,6 +77,17 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
       expect(() => clientBorne({ type: "etablissement", etablissementId: a.etab.id } as never)).toThrow(/portée de compte/);
     });
 
+    it("une portée à accesseur ne rend pas deux comptes", async () => {
+      let n = 0;
+      const p = {
+        type: "compte" as const,
+        get userId() {
+          return n++ === 0 ? "00000000-0000-0000-0000-0000000000dd" : B;
+        },
+      };
+      expect(await clientBorne(p).batiment.findMany()).toEqual([]);
+    });
+
     it("la portée est figée : modifier l'objet après coup ne déplace pas le client", async () => {
       const p = { type: "compte" as const, userId: "00000000-0000-0000-0000-0000000000c0" };
       const dbC = clientBorne(p);

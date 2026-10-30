@@ -146,8 +146,11 @@ Corrigé avant la PR, chaque fois éprouvé en cassant la correction :
 - la portée d'un client en cache est **figée** (un objet modifié après coup
   déplaçait le client) ;
 - la garde d'import lit `require()`, `import()` à gabarit, les `.mjs`/`.cjs`,
-  le client du MCP (`mcp/prisma.ts`, `dbMcp()` de `mcp/db.ts`) et
-  `new PrismaClient`.
+  le client du MCP (`mcp/prisma.ts`, `dbMcp()` de `mcp/db.ts`), et réserve la
+  VALEUR `PrismaClient` (alias, espace de noms, `require` compris) aux deux
+  modules qui fabriquent un client ;
+- contre-vérification : une portée à accesseur rendait deux comptes (clé du
+  cache et client) — l'identifiant est lu une seule fois.
 
 Reste ouvert, à traiter au lot 2b :
 - **portée « établissement »** (jeton prestataire, MCP par clé) : à concevoir
@@ -160,7 +163,11 @@ Reste ouvert, à traiter au lot 2b :
   `$queryRaw` borné par `requireProprietaireSql`) — garde du lot 4 ; `db`
   expose `$queryRaw` dans ses types ;
 - garde d'import : un chemin calculé à l'exécution et `globalThis.prisma`
-  (hors production) lui échappent ;
+  (hors production) lui échappent ; la liste des portes vers un client brut
+  (`PORTES_BRUTES`) est écrite à la main — un module À MIGRER qui se mettrait à
+  rendre `prisma` (comme `dbMcp()`) en ouvrirait une sans être vu ; et une
+  requête du client brut glissée dans `db.$transaction([...])` n'est pas
+  bornée (le client brut lui-même reste gardé) ;
 - disponibilité : le plafond du relevé des identifiants vus peut faire refuser
   à tort un `creerEnLotVerifie` concurrent de la même portée.
 

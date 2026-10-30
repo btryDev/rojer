@@ -47,7 +47,9 @@ export function clientBorne(portee: Portee): ClientBorne {
   let client = CLIENTS.get(cle);
   if (!client) {
     if (CLIENTS.size >= MAX_CLIENTS) CLIENTS.delete(CLIENTS.keys().next().value!);
-    client = etendre(portee);
+    // L'identifiant lu une seule fois sert à la clé ET au client : un objet à
+    // accesseur ne peut pas rendre deux comptes (contre-vérification du lot 2a).
+    client = etendre({ type: "compte", userId: id });
     CLIENTS.set(cle, client);
   }
   return client;
