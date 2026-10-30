@@ -5,10 +5,7 @@ import { TYPE_ERP } from "@/lib/etablissements/schema";
 import { LABEL_TYPE_ERP } from "@/lib/etablissements/labels";
 import { CHAMP_TEMOIN_TYPES_ERP_AUTRES } from "@/lib/etablissements/types-erp-affiches";
 import { ChevronRepli, LIEN_REPLI } from "@/components/ui/repli";
-
-/** La case à cocher du board : encre pleine à l'état coché, filet d'ardoise. */
-const CASE_A_COCHER =
-  "mt-0.5 size-4 flex-none rounded border-[color:var(--board-slate)] accent-[color:var(--board-ink)]";
+import { CASE_A_COCHER } from "@/components/ui-kit/case-a-cocher";
 
 /**
  * Les autres types d'ERP d'un établissement qui groupe plusieurs exploitations

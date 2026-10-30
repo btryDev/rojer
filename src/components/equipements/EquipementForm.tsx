@@ -37,10 +37,7 @@ import {
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
 import { nomDeZone } from "@/lib/batiments/nom-zone";
 import type { EquipementActionState } from "@/lib/equipements/actions";
-
-/** La case à cocher du board : encre pleine cochée, filet d'ardoise. */
-const CASE_A_COCHER =
-  "mt-0.5 size-4 flex-none rounded border-[color:var(--board-slate)] accent-[color:var(--board-ink)]";
+import { CASE_A_COCHER } from "@/components/ui-kit/case-a-cocher";
 
 /** Le message de validation, à l'encre du signal. */
 function Erreur({ message, id }: { message?: string; id?: string }) {

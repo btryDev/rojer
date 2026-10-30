@@ -3,6 +3,9 @@ import "server-only";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
+import { twoFactor } from "better-auth/plugins/two-factor";
+import { createAuthMiddleware, isAPIError } from "better-auth/api";
+import { oublierAppareilsDeConfiance } from "./appareils-de-confiance";
 import { prisma } from "@/lib/prisma";
 import { motifErreur, publicAppUrl, refusUrlPublique, sendMail } from "@/lib/email";
 import { ENTETE_IP_CLIENT } from "./entete-ip";
@@ -25,6 +28,9 @@ import { LONGUEUR_MIN_MOT_DE_PASSE } from "./mot-de-passe";
 
 const SEPT_JOURS = 60 * 60 * 24 * 7;
 const UN_JOUR = 60 * 60 * 24;
+const TRENTE_JOURS = UN_JOUR * 30;
+/** Verrou du compte après dix seconds facteurs faux de suite (repris par le message). */
+export const VERROU_DOUBLE_AUTH_MINUTES = 15;
 
 /**
  * L'adresse de l'app, par la règle commune (`@/lib/email`). Elle décide aussi
@@ -118,7 +124,40 @@ export const auth = betterAuth({
     expiresIn: SEPT_JOURS,
     disableSessionRefresh: true,
   },
-  // `nextCookies` en dernier : sans lui, une connexion faite dans une action
-  // serveur ne pose pas de cookie.
-  plugins: [nextCookies()],
+  hooks: {
+    // Désactiver la double authentification oublie TOUS les appareils de
+    // confiance du compte : le plugin n'efface que celui du navigateur qui
+    // désactive, et les autres passeraient sans code à la réactivation.
+    // Accroché à l'appel lui-même, l'invariant vaut quel que soit l'appelant.
+    after: createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== "/two-factor/disable" || isAPIError(ctx.context.returned)) return;
+      const userId = ctx.context.session?.user.id;
+      if (!userId) throw new Error("two-factor/disable réussi sans session lue : appareils de confiance non oubliés");
+      await oublierAppareilsDeConfiance(ctx.context.adapter, userId);
+    }),
+  },
+  plugins: [
+    // Double authentification (ADR-052 § 7), proposée, non imposée : une
+    // application d'authentification (TOTP) et des codes de secours, chiffrés
+    // par le secret. PAS de code par e-mail (`otpOptions` absent, décision du
+    // 2026-10-30) : qui tient la boîte tient déjà la réinitialisation du mot
+    // de passe, et le second facteur ne protégerait plus que d'un mot de passe
+    // divulgué.
+    //
+    // À la connexion, le plugin remplace la session par un défi de dix
+    // minutes (cookie signé) ; `/login/code` le relève. Cinq essais par défi,
+    // et le compte se verrouille quinze minutes après dix échecs consécutifs,
+    // défis confondus. Sa propre limitation de débit ne garde que ses routes
+    // HTTP, que nous ne montons pas : nos actions posent la leur.
+    twoFactor({
+      issuer: "Rojer",
+      backupCodeOptions: { amount: 10, storeBackupCodes: "encrypted" },
+      twoFactorCookieMaxAge: 10 * 60,
+      trustDeviceMaxAge: TRENTE_JOURS,
+      accountLockout: { enabled: true, maxFailedAttempts: 10, durationSeconds: VERROU_DOUBLE_AUTH_MINUTES * 60 },
+    }),
+    // `nextCookies` en dernier : sans lui, une connexion faite dans une action
+    // serveur ne pose pas de cookie — ni celui du défi de double authentification.
+    nextCookies(),
+  ],
 });

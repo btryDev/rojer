@@ -18,6 +18,7 @@ import {
   AIDE_MOT_DE_PASSE,
   LONGUEUR_MIN_MOT_DE_PASSE,
 } from "@/lib/auth/mot-de-passe";
+import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
 
 const etatInitial: AuthActionState = {};
 
@@ -31,12 +32,7 @@ export function ResetPasswordForm({ token }: { token: string | null }) {
   if (!token) {
     return (
       <div className="flex flex-col items-start gap-5">
-        <p
-          role="alert"
-          className="m-0 rounded-[18px] bg-[color:var(--board-signal-wash)] px-4 py-3 text-[12.5px] leading-[1.5] text-[color:var(--board-signal-ink)]"
-        >
-          Ce lien de réinitialisation est invalide ou a expiré.
-        </p>
+        <MessageFormulaire ton="alerte">Ce lien de réinitialisation est invalide ou a expiré.</MessageFormulaire>
         {/* Une porte, pas un cul-de-sac : le lien mène là où l'on en
             redemande un. */}
         <Link
@@ -76,14 +72,7 @@ export function ResetPasswordForm({ token }: { token: string | null }) {
       {/* La comparaison des deux saisies est faite à la soumission, sur le
           formulaire entier : l'erreur porte sur la paire, pas sur l'un des
           deux champs. */}
-      {error ? (
-        <p
-          role="alert"
-          className="m-0 rounded-[18px] bg-[color:var(--board-signal-wash)] px-4 py-3 text-[12.5px] leading-[1.5] text-[color:var(--board-signal-ink)]"
-        >
-          {error}
-        </p>
-      ) : null}
+      <MessageFormulaire ton="alerte">{error}</MessageFormulaire>
 
       <Button
         type="submit"

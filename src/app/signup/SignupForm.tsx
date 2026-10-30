@@ -8,6 +8,7 @@ import {
   AIDE_MOT_DE_PASSE,
   LONGUEUR_MIN_MOT_DE_PASSE,
 } from "@/lib/auth/mot-de-passe";
+import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
 
 const initialState: AuthActionState = {};
 
@@ -40,20 +41,9 @@ export function SignupForm() {
         aide={AIDE_MOT_DE_PASSE}
       />
 
-      {state.error ? (
-        <p
-          role="alert"
-          className="m-0 rounded-[18px] bg-[color:var(--board-signal-wash)] px-4 py-3 text-[12.5px] leading-[1.5] text-[color:var(--board-signal-ink)]"
-        >
-          {state.error}
-        </p>
-      ) : null}
+      <MessageFormulaire ton="alerte">{state.error}</MessageFormulaire>
 
-      {state.message ? (
-        <p className="m-0 rounded-[18px] bg-[color:var(--board-blue-pale)] px-4 py-3 text-[13px] leading-[1.5] text-[color:var(--board-blue-ink)]">
-          {state.message}
-        </p>
-      ) : null}
+      <MessageFormulaire ton="info">{state.message}</MessageFormulaire>
 
       <Button
         type="submit"

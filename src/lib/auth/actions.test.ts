@@ -19,7 +19,13 @@ const h = vi.hoisted(() => ({
     listSessions: vi.fn<(arg: { headers: Headers }) => Promise<{ id: string; token: string }[]>>(),
     revokeSession: vi.fn<(arg: { body: { token: string } }) => Promise<unknown>>(),
     revokeOtherSessions: vi.fn<(arg: { headers: Headers }) => Promise<unknown>>(),
+    verifyTOTP: vi.fn<(arg: { body: Record<string, unknown> }) => Promise<unknown>>(),
+    verifyBackupCode: vi.fn<(arg: { body: Record<string, unknown> }) => Promise<unknown>>(),
+    enableTwoFactor: vi.fn<(arg: { body: Record<string, unknown> }) => Promise<unknown>>(),
+    generateBackupCodes: vi.fn<(arg: { body: Record<string, unknown> }) => Promise<unknown>>(),
+    disableTwoFactor: vi.fn<(arg: { body: Record<string, unknown> }) => Promise<unknown>>(),
   },
+  user: { id: "u-1", email: "a@exemple.fr", twoFactorEnabled: false },
   divulgue: vi.fn<(mdp: string) => Promise<boolean | null>>(),
   entetes: new Headers({ "x-forwarded-for": "203.0.113.7" }),
   cookiesEffaces: [] as string[],
@@ -36,8 +42,11 @@ vi.mock("next/headers", () => ({
   headers: async () => h.entetes,
   cookies: async () => ({ delete: (nom: string) => h.cookiesEffaces.push(nom) }),
 }));
-vi.mock("./better-auth", () => ({ auth: { api: h.auth } }));
-vi.mock("./require-user", () => ({ requireUser: async () => ({ id: "u-1", email: "a@exemple.fr" }) }));
+vi.mock("./better-auth", () => ({ auth: { api: h.auth }, VERROU_DOUBLE_AUTH_MINUTES: 15 }));
+vi.mock("./require-user", () => ({
+  requireUser: async () => h.user,
+  entetesDeSession: async () => h.entetes,
+}));
 // Jamais d'appel réseau en test : le service Pwned Passwords est doublé.
 vi.mock("./mot-de-passe-divulgue", async (original) => ({
   ...(await original<typeof import("./mot-de-passe-divulgue")>()),
@@ -50,6 +59,10 @@ vi.mock("@/lib/securite/limite-debit", async (original) => ({
 }));
 
 const {
+  activerDoubleAuthAction,
+  confirmerDoubleAuthAction,
+  gererDoubleAuthAction,
+  verifierSecondFacteurAction,
   changerMotDePasseAction,
   definirMotDePasseAction,
   fermerSessionsAction,
@@ -79,13 +92,23 @@ beforeEach(() => {
   h.auth.resetPassword.mockResolvedValue({ status: true });
   h.auth.signOut.mockResolvedValue({ success: true });
   h.auth.changePassword.mockResolvedValue({});
-  h.auth.getSession.mockResolvedValue({ session: { id: "s-ici" } });
+  h.auth.getSession.mockResolvedValue({ session: { id: "s-ici" }, user: { twoFactorEnabled: false } });
   h.auth.listSessions.mockResolvedValue([
     { id: "s-ici", token: "jeton-ici" },
     { id: "s-autre", token: "jeton-autre" },
   ]);
   h.auth.revokeSession.mockResolvedValue({});
   h.auth.revokeOtherSessions.mockResolvedValue({});
+  h.auth.verifyTOTP.mockResolvedValue({});
+  h.auth.verifyBackupCode.mockResolvedValue({});
+  h.auth.enableTwoFactor.mockResolvedValue({
+    method: "totp",
+    totpURI: "otpauth://totp/Rojer:a%40exemple.fr?secret=JBSWY3DPEHPK3PXPJBSWY3DP&issuer=Rojer",
+    backupCodes: ["abcde-12345"],
+  });
+  h.auth.generateBackupCodes.mockResolvedValue({ status: true, backupCodes: ["fghij-67890"] });
+  h.auth.disableTwoFactor.mockResolvedValue({ status: true });
+  h.user = { id: "u-1", email: "a@exemple.fr", twoFactorEnabled: false };
   h.divulgue.mockResolvedValue(false);
   h.limite.mockClear();
   h.limite.mockResolvedValue({ ok: true });
@@ -464,5 +487,153 @@ describe("déconnexion (audit Next.js, B3)", () => {
   it("une panne ne se déguise pas en déconnexion réussie", async () => {
     h.auth.signOut.mockRejectedValue(new Error("base indisponible"));
     await expect(signOutAction()).rejects.toThrow("base indisponible");
+  });
+});
+
+const refus = (code: string) => new APIError("UNAUTHORIZED", { code, message: "x" });
+
+describe("connexion avec double authentification (lot 3b)", () => {
+  const identifiants = { email: "a@exemple.fr", password: "motdepasse" };
+
+  it("défi posé par Better Auth : vers /login/code, `next` filtré et transmis", async () => {
+    h.auth.signInEmail.mockResolvedValue({ twoFactorRedirect: true, twoFactorMethods: ["totp"] });
+    expect(await cibleDeRedirection(signInAction({}, formulaire({ ...identifiants, next: "/etablissements/e1" })))).toBe(
+      "/login/code?next=%2Fetablissements%2Fe1",
+    );
+    expect(await cibleDeRedirection(signInAction({}, formulaire({ ...identifiants, next: "https://evil.tld" })))).toBe(
+      "/login/code?next=%2Fentreprises",
+    );
+  });
+
+  it("six chiffres : code de l'application ; dix caractères : code de secours, remis en forme", async () => {
+    await cibleDeRedirection(verifierSecondFacteurAction({}, formulaire({ code: "123 456", confiance: "on" })));
+    expect(h.auth.verifyTOTP).toHaveBeenCalledWith({ body: { code: "123456", trustDevice: true }, headers: h.entetes });
+    await cibleDeRedirection(verifierSecondFacteurAction({}, formulaire({ code: "AbCdE 12345", next: "/x" })));
+    expect(h.auth.verifyBackupCode).toHaveBeenCalledWith({
+      body: { code: "AbCdE-12345", trustDevice: false },
+      headers: h.entetes,
+    });
+    expect(h.redirect.mock.calls.at(-1)![0]).toBe("/x");
+  });
+
+  it("refuse un code sans forme, avant toute limite ni Better Auth", async () => {
+    expect((await verifierSecondFacteurAction({}, formulaire({ code: "12345" }))).error).toMatch(/six chiffres/);
+    expect(h.limite).not.toHaveBeenCalled();
+    expect(h.auth.verifyTOTP).not.toHaveBeenCalled();
+  });
+
+  it("dit le refus de Better Auth sans rien révéler de plus", async () => {
+    const cas: [string, RegExp][] = [
+      ["INVALID_CODE", /Code incorrect/],
+      ["INVALID_BACKUP_CODE", /Code incorrect/],
+      ["ACCOUNT_TEMPORARILY_LOCKED", /15 minutes/],
+      ["TOO_MANY_ATTEMPTS_REQUEST_NEW_CODE", /reconnectez-vous/],
+      ["INVALID_TWO_FACTOR_COOKIE", /reconnectez-vous/],
+      ["TOTP_NOT_ENABLED", /reconnectez-vous/],
+      ["BACKUP_CODES_NOT_ENABLED", /reconnectez-vous/],
+    ];
+    for (const [code, attendu] of cas) {
+      h.auth.verifyTOTP.mockRejectedValueOnce(refus(code));
+      expect((await verifierSecondFacteurAction({}, formulaire({ code: "123456" }))).error, code).toMatch(attendu);
+    }
+    expect(h.redirect).not.toHaveBeenCalled();
+  });
+
+  it("une panne n'est pas un code faux : elle remonte", async () => {
+    h.auth.verifyTOTP.mockRejectedValue(new Error("base injoignable"));
+    await expect(verifierSecondFacteurAction({}, formulaire({ code: "123456" }))).rejects.toThrow("base injoignable");
+  });
+
+  it("limité par IP, avant Better Auth", async () => {
+    h.limite.mockResolvedValue({ ok: false, reessayerDansSecondes: 600 });
+    expect((await verifierSecondFacteurAction({}, formulaire({ code: "123456" }))).error).toMatch(/Trop de tentatives/);
+    expect(h.auth.verifyTOTP).not.toHaveBeenCalled();
+  });
+});
+
+describe("gérer la double authentification (lot 3b)", () => {
+  it("activer : TOTP demandé, QR code dessiné ici, clé lue dans l'URI", async () => {
+    const r = await activerDoubleAuthAction({}, formulaire({ password: "mdp" }));
+    expect(h.auth.enableTwoFactor).toHaveBeenCalledWith({ body: { password: "mdp", method: "totp" }, headers: h.entetes });
+    expect(r.activation?.qr).toMatch(/^data:image\/png;base64,/);
+    expect(r.activation?.cle).toBe("JBSW Y3DP EHPK 3PXP JBSW Y3DP");
+    expect(r.activation?.codesSecours).toEqual(["abcde-12345"]);
+  });
+
+  it("confirmer : le premier code active, puis les autres sessions sont fermées", async () => {
+    const r = await confirmerDoubleAuthAction({}, formulaire({ code: "123456" }));
+    expect(r.confirmee).toBe(true);
+    expect(r.message).toMatch(/autres appareils ont été fermées/);
+    expect(h.auth.verifyTOTP).toHaveBeenCalledWith({ body: { code: "123456" }, headers: h.entetes });
+    expect(h.auth.revokeOtherSessions.mock.invocationCallOrder[0]).toBeGreaterThan(
+      h.auth.verifyTOTP.mock.invocationCallOrder[0],
+    );
+  });
+
+  it("confirmer : déjà active → refusé, rien de vérifié (action rejouée)", async () => {
+    h.user = { ...h.user, twoFactorEnabled: true };
+    expect((await confirmerDoubleAuthAction({}, formulaire({ code: "123456" }))).error).toMatch(/déjà active/);
+    expect(h.auth.verifyTOTP).not.toHaveBeenCalled();
+  });
+
+  it("confirmer : une fois active, l'échec de la fermeture des sessions ne fait pas perdre les codes", async () => {
+    h.auth.revokeOtherSessions.mockRejectedValue(new Error("panne"));
+    const r = await confirmerDoubleAuthAction({}, formulaire({ code: "123456" }));
+    expect(r.confirmee).toBe(true);
+    expect(r.message).toMatch(/n'ont pas pu être fermées/);
+  });
+
+  it("confirmer : code faux → le dire, aucune session fermée", async () => {
+    h.auth.verifyTOTP.mockRejectedValue(refus("INVALID_CODE"));
+    expect((await confirmerDoubleAuthAction({}, formulaire({ code: "123456" }))).error).toMatch(/Code incorrect/);
+    expect(h.auth.revokeOtherSessions).not.toHaveBeenCalled();
+    expect((await confirmerDoubleAuthAction({}, formulaire({ code: "abcde12345" }))).error).toMatch(/six chiffres/);
+  });
+
+  it("mot de passe faux : le dire, pour les trois gestes qui l'exigent", async () => {
+    h.auth.enableTwoFactor.mockRejectedValue(refus("INVALID_PASSWORD"));
+    h.auth.generateBackupCodes.mockRejectedValue(refus("INVALID_PASSWORD"));
+    h.auth.disableTwoFactor.mockRejectedValue(refus("INVALID_PASSWORD"));
+    expect((await activerDoubleAuthAction({}, formulaire({ password: "faux" }))).error).toBe("Mot de passe incorrect");
+    for (const geste of ["regenerer", "desactiver"]) {
+      expect((await gererDoubleAuthAction({}, formulaire({ password: "faux", geste }))).error).toBe(
+        "Mot de passe incorrect",
+      );
+    }
+  });
+
+  it("sans mot de passe, ou au-delà de la limite par compte : refusé avant Better Auth", async () => {
+    for (const action of [activerDoubleAuthAction, gererDoubleAuthAction]) {
+      expect((await action({}, formulaire({}))).error).toMatch(/mot de passe/);
+    }
+    h.limite.mockResolvedValue({ ok: false, reessayerDansSecondes: 600 });
+    for (const action of [activerDoubleAuthAction, gererDoubleAuthAction]) {
+      expect((await action({}, formulaire({ password: "mdp" }))).error).toMatch(/Trop de tentatives/);
+    }
+    expect((await confirmerDoubleAuthAction({}, formulaire({ code: "123456" }))).error).toMatch(/Trop de tentatives/);
+    expect(h.auth.enableTwoFactor).not.toHaveBeenCalled();
+    expect(h.auth.generateBackupCodes).not.toHaveBeenCalled();
+    expect(h.auth.disableTwoFactor).not.toHaveBeenCalled();
+    expect(h.auth.verifyTOTP).not.toHaveBeenCalled();
+    // La clé de compte est l'identifiant du compte connecté.
+    expect(h.limite.mock.calls.at(-1)![0].map((d) => d.cle)).toEqual([
+      expect.stringMatching(/^double-authentification:ip:/),
+      expect.stringMatching(/^double-authentification:compte:/),
+    ]);
+  });
+
+  it("régénérer rend les codes neufs ; désactiver le confirme", async () => {
+    expect((await gererDoubleAuthAction({}, formulaire({ password: "mdp", geste: "regenerer" }))).codes).toEqual([
+      "fghij-67890",
+    ]);
+    expect(await gererDoubleAuthAction({}, formulaire({ password: "mdp", geste: "desactiver" }))).toEqual({});
+    expect(h.auth.disableTwoFactor).toHaveBeenCalledWith({ body: { password: "mdp" }, headers: h.entetes });
+  });
+
+  it("une panne remonte au lieu de passer pour un mot de passe faux", async () => {
+    h.auth.disableTwoFactor.mockRejectedValue(new Error("panne"));
+    await expect(gererDoubleAuthAction({}, formulaire({ password: "mdp", geste: "desactiver" }))).rejects.toThrow(
+      "panne",
+    );
   });
 });
