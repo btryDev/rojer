@@ -15,9 +15,9 @@ import { SELECT_FAITS_ACTIVITE, type ReponsesFaitsActivite } from "./faits-activ
 export async function chargerFaitsActivite(
   etablissementId: string,
 ): Promise<ReponsesFaitsActivite | null> {
-  const { user, db } = await requireCompte();
+  const { db } = await requireCompte();
   return db.etablissement.findFirst({
-    where: { id: etablissementId, entreprise: { userId: user.id } },
+    where: { id: etablissementId },
     select: SELECT_FAITS_ACTIVITE,
   });
 }

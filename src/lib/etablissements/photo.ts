@@ -37,7 +37,7 @@ export async function deposerPhotoEtablissement(
   etablissementId: string,
   formData: FormData,
 ): Promise<ResultatPhoto> {
-  const { db, user, etablissement } = await requireEtablissement(etablissementId);
+  const { db, etablissement } = await requireEtablissement(etablissementId);
   const fichier = formData.get("photo");
   if (!(fichier instanceof File) || fichier.size === 0) {
     return { status: "error", message: "Aucune photo sélectionnée." };
@@ -62,7 +62,7 @@ export async function deposerPhotoEtablissement(
   let enregistree = false;
   try {
     const { count } = await db.etablissement.updateMany({
-      where: { id: etablissement.id, entreprise: { userId: user.id }, photoCle: ancienne },
+      where: { id: etablissement.id, photoCle: ancienne },
       data: { photoCle: cle, photoMime: val.mime, photoDeposeeLe: new Date() },
     });
     enregistree = count > 0;
@@ -82,7 +82,7 @@ export async function deposerPhotoEtablissement(
 export async function retirerPhotoEtablissement(
   etablissementId: string,
 ): Promise<ResultatPhoto> {
-  const { db, user, etablissement } = await requireEtablissement(etablissementId);
+  const { db, etablissement } = await requireEtablissement(etablissementId);
   if (!etablissement.photoCle) return { status: "ok" };
   // Borné à la clé lue : un dépôt concurrent qui l'aurait déjà remplacée
   // n'est pas effacé par ce retrait.
@@ -90,7 +90,6 @@ export async function retirerPhotoEtablissement(
     const { count } = await db.etablissement.updateMany({
       where: {
         id: etablissement.id,
-        entreprise: { userId: user.id },
         photoCle: etablissement.photoCle,
       },
       data: { photoCle: null, photoMime: null, photoDeposeeLe: null },

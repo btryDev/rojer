@@ -147,9 +147,9 @@ export async function fraicheurDepuisRepere(
 export async function lireRepereCalendrier(
   etablissementId: string,
 ): Promise<{ repere: string | null; db: Db } | null> {
-  const { user, db } = await requireCompte();
+  const { db } = await requireCompte();
   const etab = await db.etablissement.findFirst({
-    where: { id: etablissementId, entreprise: { userId: user.id } },
+    where: { id: etablissementId },
     select: { referentielVersionCalendrier: true },
   });
   // Le client borné est rendu avec le repère (ADR-051) : la lecture qui suit

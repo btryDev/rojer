@@ -23,9 +23,9 @@ import { trierParCategorie } from "./labels";
  * pourquoi il ne propose rien (`retrait.ts`)].
  */
 export async function getEquipement(id: string) {
-  const { user, db } = await requireCompte();
+  const { db } = await requireCompte();
   return db.equipement.findFirst({
-    where: { id, etablissement: { entreprise: { userId: user.id } } },
+    where: { id },
     include: {
       // Le régime et la réponse au SSI A/B : la fiche de modification en tire
       // les réponses exigées (DF 10 § 3, décision du 2026-10-08).
@@ -48,13 +48,12 @@ export async function getEquipement(id: string) {
 export async function listerEquipementsDeLEtablissement(
   etablissementId: string,
 ) {
-  const { user, db } = await requireCompte();
+  const { db } = await requireCompte();
   return trierParCategorie(
     await db.equipement.findMany({
     where: {
       etablissementId,
       actif: true,
-      etablissement: { entreprise: { userId: user.id } },
     },
     // Le tri par catégorie se fait après la lecture, sur `ordreCategorie` :
     // en SQL, `categorie: "asc"` suit l'ordre de l'ENUM PostgreSQL, qui a
@@ -98,10 +97,10 @@ export function grouperParCategorie(
 export const comptesParcDuRendu = cache(async function comptesParcDuRendu(
   etablissementId: string,
 ) {
-  const { user, db } = await requireCompte();
+  const { db } = await requireCompte();
   const groupes = await db.equipement.groupBy({
     by: ["actif"],
-    where: { etablissementId, etablissement: { entreprise: { userId: user.id } } },
+    where: { etablissementId },
     _count: { _all: true },
   });
   const enService = groupes.find((g) => g.actif)?._count._all ?? 0;

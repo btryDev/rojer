@@ -263,10 +263,10 @@ export function filtrerParBatiment<T extends { batiment: BatimentEcheance | null
 type ContexteSource = {
   db: Db;
   etablissementId: string;
-  scope: {
-    etablissementId: string;
-    etablissement: { entreprise: { userId: string } };
-  };
+  scope: { etablissementId: string };
+  /** Pour les seuls modules encore au client brut, qui portent le prédicat
+   *  eux-mêmes (`duerpDuRendu`, `eauChaudeSuivieParLeCalendrier`). */
+  userId: string;
   aujourdhui: Date;
 };
 
@@ -701,7 +701,7 @@ const sourceActions: SourceEcheances = async ({
 };
 
 const sourceDuerp: SourceEcheances = async ({
-  scope,
+  userId,
   aujourdhui,
   etablissementId,
 }) => {
@@ -709,10 +709,7 @@ const sourceDuerp: SourceEcheances = async ({
   // « mise à jour annuelle » et l'âge affiché au board portent sur le même
   // document par construction. La sélection déterministe (tri, version par
   // `numero`) vit dans le chargeur ; le propriétaire est celui du périmètre.
-  const duerp = await duerpDuRendu(
-    etablissementId,
-    scope.etablissement.entreprise.userId,
-  );
+  const duerp = await duerpDuRendu(etablissementId, userId);
   const e = echeanceDuerp({
     etablissementId,
     dateDerniereVersion: duerp?.versions[0]?.createdAt ?? null,
@@ -795,7 +792,7 @@ const sourcePlansPrevention: SourceEcheances = async ({
 };
 
 const sourceLegionelles: SourceEcheances = async ({
-  scope,
+  userId,
   aujourdhui,
   etablissementId,
 }) => {
@@ -807,7 +804,10 @@ const sourceLegionelles: SourceEcheances = async ({
   // matrice partagent (`carnetDuRendu`, plan performance, lot 1).
   const [carnet, suivieParLeCalendrier] = await Promise.all([
     carnetDuRendu(etablissementId),
-    eauChaudeSuivieParLeCalendrier(scope),
+    eauChaudeSuivieParLeCalendrier({
+      etablissementId,
+      etablissement: { entreprise: { userId } },
+    }),
   ]);
   const e = echeanceLegionelles({
     etablissementId,
@@ -877,10 +877,8 @@ const autresEcheancesDuRendu = cache(async function autresEcheancesDuRendu(
   const ctx: ContexteSource = {
     db,
     etablissementId,
-    scope: {
-      etablissementId,
-      etablissement: { entreprise: { userId: user.id } },
-    },
+    scope: { etablissementId },
+    userId: user.id,
     aujourdhui,
   };
 

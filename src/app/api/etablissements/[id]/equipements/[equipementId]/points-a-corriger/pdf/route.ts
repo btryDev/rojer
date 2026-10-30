@@ -14,8 +14,8 @@ export async function GET(
   context: { params: Promise<{ id: string; equipementId: string }> },
 ) {
   const { id, equipementId } = await context.params;
-  const { user, db } = await requireEtablissement(id);
-  const data = await construirePointsEquipementData(db, id, equipementId, user);
+  const { db } = await requireEtablissement(id);
+  const data = await construirePointsEquipementData(db, id, equipementId);
   if (!data) return new Response("Introuvable", { status: 404 });
   return reponsePdf(
     PointsACorrigerDocument({ data }),

@@ -29,7 +29,7 @@ export async function getCarnetSanitaire(etablissementId: string) {
  * Dernier relevé par point — utilisé pour afficher un statut rapide en
  * dashboard / page index.
  *
- * Le prédicat d'appartenance est porté ici aussi, bien que le `carnetId`
+ * La borne au compte est portée ici aussi [2026-10-30, lot 2b de l'isolation : le prédicat écrit est retiré ; la borne est celle du client borné de `requireCompte()`, ajoutée à chaque opération (ADR-051) — même garantie, sans la seconde jointure.], bien que le `carnetId`
  * soit destiné à sortir d'une lecture scopée : sans RLS (ADR-005), une
  * lecture qui ne le porte pas devient une fuite au premier appelant qui
  * prendra l'identifiant ailleurs.
@@ -42,12 +42,11 @@ export async function getCarnetSanitaire(etablissementId: string) {
  * supprimée le 2026-10-28).
  */
 export async function dernierRelevesParPoint(carnetId: string) {
-  const { user, db } = await requireCompte();
+  const { db } = await requireCompte();
   const points = await db.pointReleve.findMany({
     where: {
       carnetId,
       actif: true,
-      carnet: { etablissement: { entreprise: { userId: user.id } } },
     },
     include: {
       releves: {

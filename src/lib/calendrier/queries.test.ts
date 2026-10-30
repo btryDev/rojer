@@ -443,14 +443,14 @@ describe("cloisonnement des lectures par entreprise (ADR-005)", () => {
     ).toBeDefined();
   });
 
-  it("getVerification scope sur l'entreprise du user", async () => {
+  // [2026-10-30, lot 2b] La borne au compte est celle du client borné
+  // (ADR-051, éprouvée par `portee/borne.test.ts` et l'intégration) : ces
+  // deux lectures ne portent plus le prédicat écrit, qui la doublait.
+  it("getVerification lit par le client borné, sans prédicat écrit", async () => {
     await getVerification("verif-1");
     expect(
       prismaMock.verification.findFirst.mock.calls.at(-1)![0].where,
-    ).toEqual({
-      id: "verif-1",
-      etablissement: { entreprise: { userId: "user-1" } },
-    });
+    ).toEqual({ id: "verif-1" });
   });
 
   it("getVerification ne rend rien pour la vérification d'un autre client", async () => {
@@ -461,11 +461,11 @@ describe("cloisonnement des lectures par entreprise (ADR-005)", () => {
     expect(await getVerification("verif-d-un-autre")).toBeNull();
   });
 
-  it("calendrierDesynchronise scope sur l'entreprise du user", async () => {
+  it("calendrierDesynchronise lit par le client borné, sans prédicat écrit", async () => {
     await calendrierDesynchronise("etab-1");
     expect(
       prismaMock.etablissement.findFirst.mock.calls.at(-1)![0].where,
-    ).toEqual({ id: "etab-1", entreprise: { userId: "user-1" } });
+    ).toEqual({ id: "etab-1" });
   });
 });
 

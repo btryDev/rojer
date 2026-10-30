@@ -539,7 +539,6 @@ export async function getModulesMatrice(
   const { user, db } = await requireCompte();
   const scope = {
     etablissementId,
-    etablissement: { entreprise: { userId: user.id } },
   } as const;
   // L'instant du rendu, partagé : les lectures mémoïsées par jour civil
   // tombent sur la même clé (revue du lot 1).
@@ -556,7 +555,11 @@ export async function getModulesMatrice(
     // « échu » un permis qui court encore jusqu'à ce soir.
     comptesModulesDuRendu(etablissementId, debutDuJour(now).getTime()),
     prestatairesDuRendu(etablissementId),
-    eauChaudeSuivieParLeCalendrier(scope),
+    // Module encore au client brut (À MIGRER) : le prédicat lui est passé.
+    eauChaudeSuivieParLeCalendrier({
+      etablissementId,
+      etablissement: { entreprise: { userId: user.id } },
+    }),
   ]);
   const carnet = comptes.carnet;
 
@@ -576,13 +579,13 @@ export async function getModulesMatrice(
   if (carnet) {
     const points = await db.pointReleve.findMany({
       // `carnet.id` sort du `findFirst` scopé ci-dessus, donc la portée est
-      // déjà établie — le prédicat est porté quand même, pour que cette
-      // lecture ne dépende pas de la provenance de son argument (cf.
-      // `docs/rgpd.md` § 7.1, forme A).
+      // déjà établie — la borne au compte est portée quand même, pour que
+      // cette lecture ne dépende pas de la provenance de son argument (cf.
+      // `docs/rgpd.md` § 7.1, forme A) : c'est le client borné qui la pose
+      // depuis le 2026-10-30, le prédicat écrit est retiré (lot 2b).
       where: {
         carnetId: carnet.id,
         actif: true,
-        carnet: { etablissement: { entreprise: { userId: user.id } } },
       },
       select: {
         id: true,

@@ -195,6 +195,11 @@ lot 2 entre dans `require-user.ts` par `main`, Better Auth le modifie sur
   présence textuelle du prédicat. **Proposition : ne rien retirer avant le
   lot 5**, quand l'extension aura été cassée et aura fait tomber ses tests ;
   la décision viendra alors, chiffrée.
+  [2026-10-30, audit (grille de seconde lecture, point 5) : retirer le
+  prédicat à chaque module migré. Fait au lot 2b-f : les gardes reconnaissent
+  un module sans client brut comme borné par construction
+  (`borneeParConstruction`) ; le prédicat reste là où la fonction atteint un
+  module encore au brut, ou reçoit un client qu'un tel module peut lui passer.]
 
 ## 8. Sources
 

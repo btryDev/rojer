@@ -42,9 +42,9 @@ function revalider(etablissementId: string) {
 
 /** Scope d'une zone : elle appartient au user via son établissement. */
 async function trouverBatimentDuUser(id: string) {
-  const { user, db } = await requireCompte();
+  const { db } = await requireCompte();
   const b = await db.batiment.findFirst({
-    where: { id, etablissement: { entreprise: { userId: user.id } } },
+    where: { id },
     select: { id: true, etablissementId: true, ordre: true },
   });
   return b ? { ...b, db } : null;

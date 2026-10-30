@@ -75,7 +75,7 @@ export async function demanderAssistance(
 
   const depuis = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const recentes = await db.demandeAssistance.count({
-    where: { userId: user.id, createdAt: { gte: depuis } },
+    where: { createdAt: { gte: depuis } },
   });
   if (recentes >= DEMANDES_PAR_JOUR_MAX) {
     return {

@@ -85,16 +85,17 @@ export async function etatVerificationsParEquipement(
   etablissementId: string,
   now: Date = new Date(),
 ): Promise<Map<string, EtatEquipement>> {
-  // Client borné au compte (ADR-051) : la borne s'ajoute à chaque requête ;
-  // le prédicat écrit reste tant que les gardes `tenancy-*` le relisent.
-  const { user, db } = await requireCompte();
+  // Client borné au compte (ADR-051) : la borne s'ajoute à chaque requête.
+  // ~~le prédicat écrit reste tant que les gardes `tenancy-*` le relisent~~
+  // [2026-10-30, lot 2b : retiré, les gardes savent qu'un module sans client
+  // brut est borné par construction (`tenancy-portee.ts`).]
+  const { db } = await requireCompte();
   // Le « fait le … » de chaque ligne se lit sur ses rapports (ADR-034).
   const verifs = await joindreDernieresRealisations(
     etablissementId,
     await db.verification.findMany({
       where: {
         etablissementId,
-        etablissement: { entreprise: { userId: user.id } },
       },
       select: {
         id: true,

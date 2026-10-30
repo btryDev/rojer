@@ -27,7 +27,7 @@ export async function getPermisFeu(
 /**
  * Le numéro suivant de la série de l'établissement.
  *
- * Le prédicat d'appartenance est porté bien que la fonction ne rende qu'un
+ * La borne au compte est portée [2026-10-30, lot 2b de l'isolation : le prédicat écrit est retiré ; la borne est celle du client borné de `requireCompte()`, ajoutée à chaque opération (ADR-051) — même garantie, sans la seconde jointure.] bien que la fonction ne rende qu'un
  * entier : sans lui, le nombre de permis d'un dossier tiers se lisait depuis
  * un identifiant deviné. Sans RLS (ADR-005), aucune lecture n'est trop petite
  * pour porter sa portée.
@@ -35,11 +35,10 @@ export async function getPermisFeu(
 export async function nextNumeroPermisFeu(
   etablissementId: string,
 ): Promise<number> {
-  const { user, db } = await requireCompte();
+  const { db } = await requireCompte();
   const last = await db.permisFeu.findFirst({
     where: {
       etablissementId,
-      etablissement: { entreprise: { userId: user.id } },
     },
     orderBy: { numero: "desc" },
     select: { numero: true },

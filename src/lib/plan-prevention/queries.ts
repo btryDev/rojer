@@ -40,11 +40,10 @@ export async function getPlanPrevention(
 export async function nextNumeroPlan(
   etablissementId: string,
 ): Promise<number> {
-  const { user, db } = await requireCompte();
+  const { db } = await requireCompte();
   const last = await db.planPrevention.findFirst({
     where: {
       etablissementId,
-      etablissement: { entreprise: { userId: user.id } },
     },
     orderBy: { numero: "desc" },
     select: { numero: true },

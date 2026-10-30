@@ -75,9 +75,9 @@ function detailSansRendezVous(obligationId: string): string {
  * lisible : c'est même la seule porte vers son historique (ADR-012).
  */
 export async function getFicheEquipement(id: string) {
-  const { user, db } = await requireCompte();
+  const { db } = await requireCompte();
   return db.equipement.findFirst({
-    where: { id, etablissement: { entreprise: { userId: user.id } } },
+    where: { id },
     include: {
       etablissement: {
         select: {

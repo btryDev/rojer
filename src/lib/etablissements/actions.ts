@@ -223,7 +223,7 @@ export async function modifierEtablissement(
   _prev: EtablissementActionState,
   formData: FormData,
 ): Promise<EtablissementActionState> {
-  const { user, db } = await assertEtablissementDuCompte(id);
+  const { db } = await assertEtablissementDuCompte(id);
   const brut = normaliserFormData(formData);
   const parsed = etablissementSchema.safeParse(brut);
   if (!parsed.success) {
@@ -291,7 +291,7 @@ export async function modifierEtablissement(
   let sirenAPoser = false;
   if (avant.entreprise.siren !== siren) {
     const autre = await db.entreprise.findFirst({
-      where: { userId: user.id, siren },
+      where: { siren },
       select: { id: true },
     });
     if (autre) entrepriseCible = autre.id;

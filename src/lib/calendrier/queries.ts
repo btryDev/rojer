@@ -131,9 +131,9 @@ export type VerificationListee = Awaited<
 >[number];
 
 export async function getVerification(id: string) {
-  const { user, db } = await requireCompte();
+  const { db } = await requireCompte();
   const v = await db.verification.findFirst({
-    where: { id, etablissement: { entreprise: { userId: user.id } } },
+    where: { id },
     include: {
       equipement: true,
       salarie: { select: { nom: true, prenom: true } },
@@ -436,11 +436,11 @@ export async function listerEcheancesAnnoncables(
   etablissementId: string,
   batimentId: Parameters<typeof porteeBatiment>[0],
 ) {
-  const { user, db } = await requireCompte();
+  const { db } = await requireCompte();
   return db.verification.findMany({
     // La clause vit dans `portee.ts`, où un test la tient.
     where: toutesLesConditions(
-      { etablissementId, etablissement: { entreprise: { userId: user.id } } },
+      { etablissementId },
       echeancesAnnoncables(),
       porteeBatiment(batimentId),
     ),

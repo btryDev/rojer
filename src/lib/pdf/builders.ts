@@ -126,19 +126,21 @@ import {
  */
 
 /**
- * Charge un établissement (et son entreprise) en le bornant au user
- * connecté. Retourne `null` aussi bien pour un établissement inexistant que
+ * Charge un établissement (et son entreprise), borné au compte par le client
+ * reçu (ADR-051). Retourne `null` aussi bien pour un établissement inexistant que
  * pour celui d'un tiers : l'appelant ne doit pas pouvoir les distinguer.
  *
  * L'utilisateur est REÇU, pas relu (audit Next.js du 2026-10-14, M7) : hors
  * rendu, `requireUser()` refait un `getUser()` réseau à chaque appel, et le
  * ZIP de contrôle en faisait vingt-trois. Les builders le reçoivent de la
- * route, qui le tient de `requireEtablissement` ; le prédicat `userId` reste
- * dans chaque requête. Le client borné au compte (ADR-051) est reçu de même.
+ * route, qui le tient de `requireEtablissement`. Le client borné au compte
+ * (ADR-051) est reçu de même, et c'est lui qui borne chaque requête.
+ * ~~le prédicat `userId` reste dans chaque requête~~ [2026-10-30, lot 2b de
+ * l'isolation : retiré, le client borné le posait une seconde fois.]
  */
-async function chargerEtablissementDuUser(db: Db, etablissementId: string, user: AuthedUser) {
+async function chargerEtablissementDuUser(db: Db, etablissementId: string) {
   return db.etablissement.findFirst({
-    where: { id: etablissementId, entreprise: { userId: user.id } },
+    where: { id: etablissementId },
     include: { entreprise: true, _count: { select: { batiments: true } } },
   });
 }
@@ -322,9 +324,8 @@ function versLigneRapport(
 export async function construirePlanActionsData(
   db: Db,
   etablissementId: string,
-  user: AuthedUser,
 ): Promise<PlanActionsData | null> {
-  const etab = await chargerEtablissementDuUser(db, etablissementId, user);
+  const etab = await chargerEtablissementDuUser(db, etablissementId);
   if (!etab) return null;
 
   // Le PDF Plan d'actions documente ce qui reste à faire à la date
@@ -360,9 +361,8 @@ export async function construirePointsEquipementData(
   db: Db,
   etablissementId: string,
   equipementId: string,
-  user: AuthedUser,
 ): Promise<PointsACorrigerData | null> {
-  const etab = await chargerEtablissementDuUser(db, etablissementId, user);
+  const etab = await chargerEtablissementDuUser(db, etablissementId);
   if (!etab) return null;
   const appareil = await db.equipement.findFirst({
     where: { id: equipementId, etablissementId },
@@ -403,9 +403,8 @@ export async function construirePointsEquipementData(
 export async function construireRegistreData(
   db: Db,
   etablissementId: string,
-  user: AuthedUser,
 ): Promise<RegistreData | null> {
-  const etab = await chargerEtablissementDuUser(db, etablissementId, user);
+  const etab = await chargerEtablissementDuUser(db, etablissementId);
   if (!etab) return null;
   const multiBatiments = etab._count.batiments > 1;
   // Une horloge pour tout le document (ADR-011) : la pastille des
@@ -423,7 +422,6 @@ export async function construireRegistreData(
     fraicheurCalendrier(etablissementId),
     marquesAConfirmerDuDossier(db, {
       id: etablissementId,
-      entreprise: { userId: user.id },
     }),
   ]);
 
@@ -574,7 +572,7 @@ export async function construireDossierConformiteData(
   user: AuthedUser,
 ): Promise<DossierData | null> {
   const etab = await db.etablissement.findFirst({
-    where: { id: etablissementId, entreprise: { userId: user.id } },
+    where: { id: etablissementId },
     include: {
       entreprise: true,
       _count: { select: { batiments: true } },
@@ -618,7 +616,7 @@ export async function construireDossierConformiteData(
       // performance, lot 1) : hors rendu, rien n'est mémoïsé.
       compterActionsParOrigine(etablissementId),
       listerActions(etablissementId, { origine: "verification", enCoursSeulement: true }),
-      construirePlanActionsData(db, etablissementId, user),
+      construirePlanActionsData(db, etablissementId),
       listerRapportsDeLEtablissement(etablissementId),
       listerVerifications(etablissementId),
       // Ce que le référentiel ne traite pas pour cet établissement. Lu par la
@@ -643,7 +641,6 @@ export async function construireDossierConformiteData(
       // remis à un tiers (analyse du 2026-09-27, § 6.3).
       marquesAConfirmerDuDossier(db, {
         id: etablissementId,
-        entreprise: { userId: user.id },
       }),
     ]);
 
