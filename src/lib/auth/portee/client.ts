@@ -1,6 +1,6 @@
 import "server-only";
-// Le client Prisma borné à une portée (ADR-051 § 2) : un compte, ou un
-// établissement (prestataire porteur d'un jeton, MCP par clé). Il ajoute la
+// Le client Prisma borné à une portée (ADR-051 § 2) : un compte. [La portée
+// « établissement » viendra au lot 2b, voir `Portee`.] Il ajoute la
 // borne à chaque opération de modèle, même si l'appelant l'oublie, et refuse
 // ce qu'il ne sait pas borner. Il ne s'obtient qu'avec une portée : sans
 // elle, pas de client.
@@ -11,7 +11,10 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { argumentsBornes, ErreurPortee, estLectureDIdentifiants, noterVus, type Portee } from "./borne";
 
-function etendre(portee: Portee) {
+function etendre(p: Portee) {
+  // Copie figée : un appelant qui garderait l'objet ne peut plus déplacer la
+  // portée d'un client déjà en cache (revue du lot 2a).
+  const portee: Portee = Object.freeze({ type: "compte", userId: p.userId });
   return prisma.$extends({
     name: "borne-au-compte",
     query: {
@@ -35,10 +38,12 @@ const CLIENTS = new Map<string, ClientBorne>();
 const MAX_CLIENTS = 500;
 
 export function clientBorne(portee: Portee): ClientBorne {
-  const id = portee.type === "compte" ? portee.userId : portee.etablissementId;
+  if (portee?.type !== "compte")
+    throw new ErreurPortee("seule la portée de compte existe à ce jour : client refusé");
+  const id = portee.userId;
   if (typeof id !== "string" || id.length === 0)
     throw new ErreurPortee("portée sans identifiant : client refusé");
-  const cle = `${portee.type}:${id}`;
+  const cle = `compte:${id}`;
   let client = CLIENTS.get(cle);
   if (!client) {
     if (CLIENTS.size >= MAX_CLIENTS) CLIENTS.delete(CLIENTS.keys().next().value!);

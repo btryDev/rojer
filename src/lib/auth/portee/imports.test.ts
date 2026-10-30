@@ -11,6 +11,14 @@
 //   `borne.ts` ne s'importent que depuis les modules qui établissent la
 //   portée eux-mêmes.
 //
+// Le client brut a trois portes : `@/lib/prisma`, et le client du serveur MCP
+// (`mcp/prisma.ts`, rendu par `dbMcp()` de `mcp/db.ts`). Les trois sont
+// gardées ; `new PrismaClient` ne s'écrit que dans les deux modules qui
+// fabriquent un client. Sont lus : `import … from`, `import()` à chaîne ou
+// gabarit littéral, `require()`, dans les .ts/.tsx/.js/.mjs/.cjs de `src/`.
+// Ce qui échappe : un import dont le chemin est calculé, et `globalThis.prisma`
+// (hors production seulement).
+//
 // Les tests sont exclus : ils montent leurs propres doublures.
 
 import { readdirSync, readFileSync, statSync } from "node:fs";
@@ -21,10 +29,16 @@ import { describe, expect, it } from "vitest";
 const DEPOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
 const SRC = join(DEPOT, "src");
 
-/** Modules qui peuvent importer le client brut, et pourquoi. */
+/** Les modules qui rendent un client brut. */
+const PORTES_BRUTES = ["src/lib/prisma", "src/lib/mcp/prisma", "src/lib/mcp/db"];
+
+/** Modules qui peuvent importer un client brut, et pourquoi. */
 const NOMMES_PRISMA: Record<string, string> = {
   "src/lib/auth/portee/client.ts": "fabrique le client borné à partir du client brut",
 };
+
+/** Les seuls modules qui fabriquent un client Prisma. */
+const FABRIQUES = new Set(["src/lib/prisma.ts", "src/lib/mcp/prisma.ts"]);
 
 /** Cliquet : importeurs du client brut encore à migrer vers requireCompte(). */
 const A_MIGRER = new Set([
@@ -73,7 +87,9 @@ const A_MIGRER = new Set([
   "src/lib/etablissements/queries.ts",
   "src/lib/etats-permanents/actions.ts",
   "src/lib/etats-permanents/queries.ts",
+  "src/lib/mcp/acces-oauth-deps.ts", // par dbMcp()
   "src/lib/mcp/db.ts",
+  "src/lib/mcp/queries.ts", // par dbMcp()
   "src/lib/onboarding/actions.ts",
   "src/lib/pdf/builders.ts",
   "src/lib/perimetre/faits.ts",
@@ -136,11 +152,11 @@ function fichiers(dir: string): string[] {
   return readdirSync(dir).flatMap((nom) => {
     const chemin = join(dir, nom);
     if (statSync(chemin).isDirectory()) return fichiers(chemin);
-    return /\.tsx?$/.test(nom) && !/\.test\.tsx?$/.test(nom) ? [chemin] : [];
+    return /\.(?:tsx?|m?js|cjs)$/.test(nom) && !/\.test\.tsx?$/.test(nom) ? [chemin] : [];
   });
 }
 
-const IMPORT = /(?:from\s+|import\s*\(\s*)["']([^"']+)["']/g;
+const IMPORT = /(?:from\s+|import\s*\(\s*|require\s*\(\s*)["'`]([^"'`$]+)["'`]/g;
 
 /** Les modules importés par un fichier, en chemins du dépôt sans extension. */
 function importsDe(chemin: string): string[] {
@@ -149,7 +165,7 @@ function importsDe(chemin: string): string[] {
     if (spec.startsWith("@/")) return "src/" + spec.slice(2);
     if (spec.startsWith(".")) return relative(DEPOT, resolve(dirname(chemin), spec));
     return spec;
-  }).map((s) => s.replace(/\.(ts|tsx)$/, "").replace(/\/index$/, ""));
+  }).map((s) => s.replace(/\.(ts|tsx|m?js|cjs)$/, "").replace(/\/index$/, ""));
 }
 
 const GRAPHE = new Map(fichiers(SRC).map((f) => [relative(DEPOT, f), importsDe(f)]));
@@ -157,7 +173,7 @@ const importeurs = (cible: string) =>
   [...GRAPHE].filter(([, imports]) => imports.includes(cible)).map(([f]) => f).sort();
 
 describe("client Prisma brut", () => {
-  const brut = importeurs("src/lib/prisma");
+  const brut = [...new Set(PORTES_BRUTES.flatMap(importeurs))].sort();
 
   it("le relevé voit les importeurs (borne basse)", () => {
     expect(brut.length).toBeGreaterThan(0);
@@ -169,6 +185,15 @@ describe("client Prisma brut", () => {
 
   it("un module migré sort de la liste À MIGRER", () => {
     expect([...A_MIGRER].filter((f) => !brut.includes(f))).toEqual([]);
+  });
+});
+
+describe("fabrication d'un client Prisma", () => {
+  it("new PrismaClient ne s'écrit que dans les modules qui fabriquent un client", () => {
+    const fabriquent = fichiers(SRC)
+      .filter((f) => /\bnew\s+PrismaClient\b/.test(readFileSync(f, "utf8")))
+      .map((f) => relative(DEPOT, f));
+    expect(fabriquent.filter((f) => !FABRIQUES.has(f))).toEqual([]);
   });
 });
 

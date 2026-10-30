@@ -13,9 +13,15 @@
 import { Prisma } from "@prisma/client";
 import { CORRESPONDANCE, estHorsCompte, estRacine } from "./correspondance";
 
-export type Portee =
-  | { type: "compte"; userId: string }
-  | { type: "etablissement"; etablissementId: string };
+/**
+ * La portée d'un client borné : un compte. [2026-10-30, revue du lot 2a : la
+ * portée « établissement » (jeton prestataire, MCP par clé) est retirée de ce
+ * lot. Seul le `where` de tête est borné ; un `include` descend donc d'une
+ * ligne bornée à ses voisines — sans fuite entre comptes, mais d'un
+ * établissement à ses frères du même compte. Elle sera conçue au lot 2b, avec
+ * des `include` bornés eux aussi.]
+ */
+export type Portee = { type: "compte"; userId: string };
 
 /** Refus du client borné : opération ou modèle qu'il ne sait pas borner. */
 export class ErreurPortee extends Error {
@@ -62,16 +68,7 @@ export function borne(nom: string, portee: Portee): Objet {
   const c = classement(nom);
   if (estHorsCompte(c)) throw new ErreurPortee(`modèle hors compte : ${nom} (${c.horsCompte})`);
 
-  if (portee.type === "compte") {
-    if (estRacine(c)) return { [c.racine]: portee.userId };
-    return { [c.parent]: borne(relation(nom, c.parent).type, portee) };
-  }
-
-  const id = portee.etablissementId;
-  if (nom === "Etablissement") return { id };
-  if (nom === "Entreprise") return { etablissements: { some: { id } } };
-  if (nom === "DemandeAssistance") return { etablissementId: id };
-  if (estRacine(c)) throw new ErreurPortee(`racine sans portée d'établissement : ${nom}`);
+  if (estRacine(c)) return { [c.racine]: portee.userId };
   return { [c.parent]: borne(relation(nom, c.parent).type, portee) };
 }
 
@@ -108,11 +105,6 @@ function commeAvant<T>(origine: unknown, liste: T[]): T | T[] {
 function racineDe(nom: string, data: Objet, portee: Portee, creation: boolean): void {
   const c = classement(nom);
   if (!estRacine(c)) return;
-  if (portee.type !== "compte") {
-    if (creation && nom !== "DemandeAssistance")
-      throw new ErreurPortee(`création de ${nom} hors d'une portée de compte`);
-    return;
-  }
   const v = data[c.racine];
   if (v !== undefined && v !== portee.userId)
     throw new ErreurPortee(`${nom}.${c.racine} différent du compte`);
@@ -133,8 +125,6 @@ export function reecrireDonnees(
   if (data === null || typeof data !== "object" || Array.isArray(data))
     throw new ErreurPortee(`données inattendues pour ${nom}`);
   const d: Objet = { ...(data as Objet) };
-  if (creation && portee.type === "etablissement" && (nom === "Entreprise" || nom === "Etablissement"))
-    throw new ErreurPortee(`création de ${nom} dans une portée d'établissement`);
   racineDe(nom, d, portee, creation);
 
   for (const r of relations(nom)) {
@@ -195,10 +185,19 @@ function reecrireImbrique(nom: string, r: Champ, n: Objet, portee: Portee): Obje
         break;
       case "createMany": {
         // Lignes filles : elles héritent du parent, mais une clé secondaire
-        // ne peut pas y devenir un `connect` — refusée si présente.
-        const { data } = val as Objet;
-        for (const ligne of lister(data)) refuserClesSecondaires(r.type, ligne as Objet, `${nom}.${r.name}.createMany`);
-        sortie[op] = val;
+        // ne peut pas y devenir un `connect` — refusée si présente. Une racine
+        // (`DemandeAssistance.userId`) est posée ou refusée comme ailleurs
+        // (revue du lot 2a : elle passait telle quelle).
+        const { data, ...reste } = val as Objet;
+        const lignes = lister(data).map((ligne) => {
+          if (ligne === null || typeof ligne !== "object")
+            throw new ErreurPortee(`${nom}.${r.name}.createMany : ligne inattendue`);
+          const l = { ...(ligne as Objet) };
+          racineDe(r.type, l, portee, true);
+          refuserClesSecondaires(r.type, l, `${nom}.${r.name}.createMany`);
+          return l;
+        });
+        sortie[op] = { ...reste, data: commeAvant(data, lignes) };
         break;
       }
       default:
@@ -215,16 +214,19 @@ function reecrireImbrique(nom: string, r: Champ, n: Objet, portee: Portee): Obje
 // qui survit, ce sont les valeurs. Une lecture bornée `select: { id: true }`
 // prouve que les identifiants rendus sont dans la portée : le client les
 // retient, et un `createMany` n'est accepté que si chacune de ses clés
-// étrangères vers une ligne d'un compte en fait partie. Une ligne ne change
-// pas de compte (le client borné refuse de la déplacer), le relevé reste donc
-// vrai ; une ligne supprimée depuis fait échouer la clé étrangère en base.
+// étrangères vers une ligne d'un compte en fait partie. Par le client borné,
+// une ligne ne change pas de compte : il refuse de déplacer une clé vers un
+// autre compte comme de changer une racine (`userId`). Le relevé reste donc
+// vrai, sauf écriture par le client brut (scripts, modules nommés), qui ne
+// déplace pas de ligne entre comptes ; une ligne supprimée depuis fait échouer
+// la clé étrangère en base.
 
 const VUS = new Map<string, Set<string>>();
 const MAX_PORTEES = 500;
 const MAX_PAR_PORTEE = 50_000;
 
 function clePortee(p: Portee): string {
-  return p.type === "compte" ? `compte:${p.userId}` : `etablissement:${p.etablissementId}`;
+  return `compte:${p.userId}`;
 }
 
 /** Vrai si les arguments sont une lecture des seuls identifiants. */

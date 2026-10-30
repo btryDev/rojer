@@ -134,6 +134,36 @@ indépendante, CI verte, feu vert de la propriétaire avant merge.
 | **5** | **Matrice d'autorisation** (OWASP) sur la base locale avec deux comptes : chaque opération de chaque modèle, refusée d'un compte à l'autre, réussie dans le compte ; mesure avant/après : budget de requêtes en CI (`budget-requetes.yml`) et `scripts/perf/mesurer.mjs` ; sonde des clés croisées ajoutée à `scripts/sante-base.sql` (à lancer par la propriétaire, jamais par nous) ; sort des gardes `tenancy-*` (§ 7) | — |
 | Better Auth | `lireUserCourant` lit `auth.api.getSession` : une ligne | la suite du lot 2 repasse |
 
+## 6 ter. Revue du lot 2a (2026-10-30) — ce qui a été corrigé, ce qui reste
+
+Corrigé avant la PR, chaque fois éprouvé en cassant la correction :
+- **bloquant** : un `createMany` imbriqué posait la racine telle quelle — A
+  écrivait une `DemandeAssistance` chez B. La racine y est posée ou refusée ;
+- la **portée « établissement » est retirée** du lot : seul le `where` de tête
+  est borné, un `include` descendait donc d'un établissement à ses frères du
+  même compte, et `racineDe` laissait changer le `userId` d'une entreprise.
+  `clientBorne` refuse toute autre portée que le compte ;
+- la portée d'un client en cache est **figée** (un objet modifié après coup
+  déplaçait le client) ;
+- la garde d'import lit `require()`, `import()` à gabarit, les `.mjs`/`.cjs`,
+  le client du MCP (`mcp/prisma.ts`, `dbMcp()` de `mcp/db.ts`) et
+  `new PrismaClient`.
+
+Reste ouvert, à traiter au lot 2b :
+- **portée « établissement »** (jeton prestataire, MCP par clé) : à concevoir
+  avec des `include`/`select` bornés eux aussi, ou un client qui les refuse ;
+- **oracle d'existence par unicité** : un `upsert`/`connectOrCreate` qui laisse
+  l'appelant fixer un identifiant ou un champ unique global (slug) révèle par
+  P2002 qu'une ligne existe ailleurs — à vérifier à chaque module migré ;
+- **SQL brut** : un module « migré » peut encore lire par le client brut au
+  travers d'un helper (`etat-verifications` → `joindreDernieresRealisations`,
+  `$queryRaw` borné par `requireProprietaireSql`) — garde du lot 4 ; `db`
+  expose `$queryRaw` dans ses types ;
+- garde d'import : un chemin calculé à l'exécution et `globalThis.prisma`
+  (hors production) lui échappent ;
+- disponibilité : le plafond du relevé des identifiants vus peut faire refuser
+  à tort un `creerEnLotVerifie` concurrent de la même portée.
+
 ## 6 bis. Branches (organisation du 2026-10-30, décision de la propriétaire)
 
 Les lots de ce plan vont dans `main` (prod Vercel). La migration Clever Cloud

@@ -7,7 +7,6 @@ import { describe, expect, it } from "vitest";
 import { argumentsBornes, borne, ErreurPortee, estLectureDIdentifiants, noterVus, type Portee } from "./borne";
 
 const A: Portee = { type: "compte", userId: "u-a" };
-const E: Portee = { type: "etablissement", etablissementId: "e-1" };
 const COMPTE_A = { entreprise: { userId: "u-a" } };
 const ETAB_A = { etablissement: COMPTE_A };
 
@@ -17,13 +16,6 @@ describe("borne d'un modèle", () => {
     expect(borne("Etablissement", A)).toEqual(COMPTE_A);
     expect(borne("Risque", A)).toEqual({ unite: { duerp: ETAB_A } });
     expect(borne("ReleveTemperature", A)).toEqual({ pointReleve: { carnet: ETAB_A } });
-  });
-
-  it("établissement : l'établissement lui-même, son entreprise, ses lignes", () => {
-    expect(borne("Etablissement", E)).toEqual({ id: "e-1" });
-    expect(borne("Entreprise", E)).toEqual({ etablissements: { some: { id: "e-1" } } });
-    expect(borne("Equipement", E)).toEqual({ etablissement: { id: "e-1" } });
-    expect(borne("Risque", E)).toEqual({ unite: { duerp: { etablissement: { id: "e-1" } } } });
   });
 
   it("refuse un modèle hors compte", () => {
@@ -194,11 +186,22 @@ describe("racine du compte", () => {
     ).toThrow(ErreurPortee);
   });
 
-  it("refuse de créer une Entreprise ou un Etablissement dans une portée d'établissement", () => {
-    expect(() => argumentsBornes("Entreprise", "create", { data: {} }, E)).toThrow(ErreurPortee);
-    expect(() => argumentsBornes("Etablissement", "create", { data: { entrepriseId: "x" } }, E)).toThrow(
-      ErreurPortee,
+  it("un createMany imbriqué pose la racine du compte, et refuse celle d'un autre", () => {
+    const { data } = argumentsBornes(
+      "Etablissement",
+      "update",
+      { where: { id: "e" }, data: { demandesAssistance: { createMany: { data: [{ message: "m" }] } } } },
+      A,
     );
+    expect(data).toMatchObject({ demandesAssistance: { createMany: { data: [{ message: "m", userId: "u-a" }] } } });
+    expect(() =>
+      argumentsBornes(
+        "Etablissement",
+        "update",
+        { where: { id: "e" }, data: { demandesAssistance: { createMany: { data: [{ userId: "u-b" }] } } } },
+        A,
+      ),
+    ).toThrow(/différent du compte/);
   });
 });
 

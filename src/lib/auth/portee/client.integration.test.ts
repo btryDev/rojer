@@ -44,7 +44,6 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
 
   let a: Awaited<ReturnType<typeof semer>>;
   let b: Awaited<ReturnType<typeof semer>>;
-  const dbEtabA = () => clientBorne({ type: "etablissement", etablissementId: a.etab.id });
 
   beforeAll(async () => {
     await prisma.$executeRawUnsafe('TRUNCATE "Entreprise" CASCADE');
@@ -74,9 +73,15 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
       expect(borne?.batiments.length).toBe(await prisma.batiment.count({ where: { etablissementId: a.etab.id } }));
     });
 
-    it("portée d'établissement : ses lignes seulement", async () => {
-      expect((await dbEtabA().equipement.findMany()).map((e) => e.id)).toEqual([a.equip.id]);
-      expect(await dbEtabA().entreprise.findUnique({ where: { id: b.ent.id } })).toBeNull();
+    it("seule la portée de compte existe : une autre est refusée", () => {
+      expect(() => clientBorne({ type: "etablissement", etablissementId: a.etab.id } as never)).toThrow(/portée de compte/);
+    });
+
+    it("la portée est figée : modifier l'objet après coup ne déplace pas le client", async () => {
+      const p = { type: "compte" as const, userId: "00000000-0000-0000-0000-0000000000c0" };
+      const dbC = clientBorne(p);
+      p.userId = B;
+      expect(await dbC.batiment.findMany()).toEqual([]);
     });
   });
 
@@ -161,6 +166,18 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
         dbA.etablissement.findUnique({ where: { id: b.etab.id } }),
       ]);
       expect([liste.length, autre]).toEqual([1, null]);
+    });
+  });
+
+  describe("createMany imbriqué", () => {
+    it("une racine d'un autre compte y est refusée, B ne voit rien", async () => {
+      await expect(
+        dbA.etablissement.update({
+          where: { id: a.etab.id },
+          data: { demandesAssistance: { createMany: { data: [{ userId: B, categorie: "duerp", message: "injecté", page: "/" }] } } },
+        } as never),
+      ).rejects.toThrow(/différent du compte/);
+      expect(await prisma.demandeAssistance.count({ where: { userId: B } })).toBe(0);
     });
   });
 
