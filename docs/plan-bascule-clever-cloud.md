@@ -88,18 +88,18 @@ actuelle.
 
 | # | Quoi | Source | État au 2026-10-30 |
 |---|---|---|---|
-| 0.1 | La preuve de signature lit l'IP par le helper commun (`securite/ip-client.ts`), pas par `x-forwarded-for` découpé à la main | B17 | **à faire** : `signatures/actions.ts:360` et `:619` prennent la première entrée, forgeable |
-| 0.2 | Migrations hors du build : `scripts/migrer-en-production.sh` ne migre que sur Vercel ; ailleurs, c'est le rôle du hook de démarrage | B7, H5 | **à faire** : sans `VERCEL_ENV` mais avec `DIRECT_URL`, le script migre au build, ce qui serait le cas chez Clever Cloud |
-| 0.3 | `output: "standalone"`, avec copie de `public/` et `.next/static` après le build | H5 | à faire |
+| 0.1 | La preuve de signature lit l'IP par le helper commun (`securite/ip-client.ts`), pas par `x-forwarded-for` découpé à la main | B17 | ~~**à faire** : `signatures/actions.ts:360` et `:619` prennent la première entrée, forgeable~~ [2026-10-30 : PR #127, avec une garde] |
+| 0.2 | Migrations hors du build : `scripts/migrer-en-production.sh` ne migre que sur Vercel ; ailleurs, c'est le rôle du hook de démarrage | B7, H5 | ~~**à faire**~~ [2026-10-30 : PR #127] |
+| 0.3 | `output: "standalone"`, avec copie de `public/` et `.next/static` après le build | H5 | ~~à faire~~ [2026-10-30 : PR #127, `scripts/preparer-standalone.sh`, vérifié en local] |
 | 0.4 | Export ZIP borné à moins de **180 s**, le délai du proxy de Clever Cloud (aujourd'hui `maxDuration` vaut 300 s) ; sinon, export asynchrone | H3, H5 | à faire : mesurer le plus gros dossier réel |
-| 0.5 | `EXPORTS_SIMULTANES` validée dans `src/env.ts` | H3 | partiel : la variable est dans `.env.example` seulement |
+| 0.5 | `EXPORTS_SIMULTANES` validée dans `src/env.ts` | H3 | ~~partiel~~ [2026-10-30 : PR #127] |
 | 0.6 | `Clear-Site-Data` à la déconnexion | B30 | à faire, ou avec Better Auth |
 | 0.7 | Pilote de stockage S3 (Cellar) derrière `FileStorage`, avec délai sortant | ST, M9 | à faire. Points connus : `region: 'default'`, et `requestChecksumCalculation` / `responseChecksumValidation` à `WHEN_REQUIRED` avec le SDK v3 récent |
 | 0.8 | Pilote d'e-mail Mailpace (API HTTPS, clé `MAILPACE_API_KEY`, délai sortant), domaine d'envoi vérifié (DKIM) | décision 1 | à faire ; le lot e-mail était gelé |
 | 0.9 | Retrait des données mortes : `Intervention`, `chiffonsImpregnes`, `classeIgh`, `familleHabitation`, `pdfUrl` | BA 2 | facultatif : sans copie de données, ce n'est plus un préalable ; à faire quand on veut |
 | 0.10 | `DemandeAssistance.userId` en UUID, comme les trois autres `userId` | BA | à faire, ou en phase 1 avec les clés étrangères vers `user` |
 | 0.11 | Antivirus des dépôts, ou décision écrite | B29 | à trancher |
-| 0.12 | Plafond total de renvois d'OTP par jeton | B3, B14 | non retrouvé dans le code : à vérifier |
+| 0.12 | Plafond total de renvois d'OTP par jeton | B3, B14 | ~~non retrouvé dans le code : à vérifier~~ [2026-10-30 : en place — 3 essais au total par lien, nouveaux codes compris (`access-tokens/verify.ts`), 5 envois par heure et par adresse (`OTP_ENVOIS_MAX_PAR_HEURE`), 60 s entre deux renvois] |
 | 0.13 | Garde : aucun DDL (`CREATE`, `ALTER`, `DROP`, `GRANT`, `TRUNCATE`) ailleurs que dans `prisma/migrations` — l'app se connectant avec le rôle propriétaire, c'est la seule barrière | § 9 bis | à faire ; relevé le 2026-10-30 : aucun DDL dans `src/`, mais rien ne l'interdit |
 
 Déjà fait, et sans rien à refaire : `APP_ENV` (H5), hôtes MCP par
@@ -163,6 +163,12 @@ Ce que le changement doit tenir :
 - **OTP par e-mail** : `storeOTP: "hashed"`, la valeur par défaut étant `plain`.
 - **Mémoïsation de la session hors RSC** (M7), par `AsyncLocalStorage`.
 - **Journal** : les événements d'authentification vont au drain de logs (B25).
+- **Avec le lot d'isolation** (ADR-051, proposée, `lot/isolation-rls`) : les
+  tables de Better Auth passent par le client hors compte, remis à son
+  adaptateur dans un seul module ; la mémoïsation de l'identité hors rendu
+  (M7) devient une condition de la variante « implicite » du client borné ;
+  la clé MCP actuelle borne à un établissement, pas à un compte, d'où deux
+  portées du client borné (compte, établissement).
 
 **Le MCP n'est pas dans la bascule.** `/api/mcp/[cle]` reste en place, clé
 tournée. L'accès par compte (OAuth) vient après, avec `@better-auth/mcp`.
