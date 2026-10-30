@@ -1,5 +1,6 @@
 "use server";
 
+import { creerEnLotVerifie } from "@/lib/auth/portee/lot-verifie";
 import { requireCompte } from "@/lib/auth/compte";
 import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
@@ -555,8 +556,8 @@ export async function creerEquipementsDepuisPreRemplissage(
   }
 
   const batiment = await batimentParDefaut(etablissementId);
-  const result = await db.equipement.createMany({
-    data: entrees.map((e, i) => ({
+  const result = await creerEnLotVerifie(db, "Equipement",
+    entrees.map((e, i) => ({
       etablissementId,
       batimentId: batiment.id,
       categorie: e.categorie,
@@ -565,7 +566,7 @@ export async function creerEquipementsDepuisPreRemplissage(
         ? { caracteristiques: e.caracteristiques as Prisma.InputJsonValue }
         : {}),
     })),
-  });
+  );
   if (entrees.some((e) => estCategorieEpi(e.categorie))) {
     await constaterEpi(etablissementId, { regenerer: false });
   }

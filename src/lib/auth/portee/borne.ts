@@ -217,6 +217,53 @@ function reecrireImbrique(nom: string, r: Champ, n: Objet, portee: Portee): Obje
         sortie[op] = { ...reste, data: commeAvant(data, lignes) };
         break;
       }
+      // Écritures sur les lignes DÉJÀ rattachées au parent : Prisma les limite
+      // à la relation de ce parent, borné par l'opération de tête — elles ne
+      // peuvent pas atteindre la ligne d'un autre compte. Leurs données sont
+      // réécrites comme ailleurs (une clé déplacée vers un autre compte est
+      // refusée). [2026-10-30, lot 2b : refusées jusque-là par prudence ; la
+      // mise à jour des lignes d'un plan de prévention en dépend.]
+      case "delete":
+      case "deleteMany":
+        sortie[op] = val;
+        break;
+      case "update":
+        sortie[op] = commeAvant(
+          val,
+          lister(val).map((x) => {
+            const o = x as Objet;
+            const enveloppe = "data" in o && Object.keys(o).every((k) => k === "data" || k === "where");
+            return enveloppe
+              ? { ...o, data: reecrireDonnees(r.type, o.data, portee, false) }
+              : reecrireDonnees(r.type, o, portee, false);
+          }),
+        );
+        break;
+      case "updateMany":
+        sortie[op] = commeAvant(
+          val,
+          lister(val).map((x) => {
+            const o = x as Objet;
+            const data = { ...((o.data ?? {}) as Objet) };
+            refuserClesSecondaires(r.type, data, `${nom}.${r.name}.updateMany`);
+            racineDe(r.type, data, portee, false);
+            return { ...o, data };
+          }),
+        );
+        break;
+      case "upsert":
+        sortie[op] = commeAvant(
+          val,
+          lister(val).map((x) => {
+            const o = x as Objet;
+            return {
+              ...o,
+              create: reecrireDonnees(r.type, o.create, portee, true),
+              update: reecrireDonnees(r.type, o.update, portee, false),
+            };
+          }),
+        );
+        break;
       default:
         throw new ErreurPortee(`écriture imbriquée non bornée : ${nom}.${r.name}.${op}`);
     }

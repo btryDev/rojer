@@ -149,14 +149,61 @@ describe("créations et clés étrangères", () => {
     ).toThrow(ErreurPortee);
   });
 
-  it.each(["update", "upsert", "delete", "deleteMany", "updateMany"])(
-    "refuse une écriture imbriquée %s",
-    (op) => {
-      expect(() =>
-        argumentsBornes("Etablissement", "update", { where: { id: "e" }, data: { batiments: { [op]: {} } } }, A),
-      ).toThrow(/écriture imbriquée non bornée/);
-    },
-  );
+  it("refuse une écriture imbriquée inconnue", () => {
+    expect(() =>
+      argumentsBornes("Etablissement", "update", { where: { id: "e" }, data: { batiments: { truncate: {} } } }, A),
+    ).toThrow(/écriture imbriquée non bornée/);
+  });
+
+  it("delete et deleteMany imbriqués passent : Prisma les limite aux lignes du parent borné", () => {
+    const { data } = argumentsBornes(
+      "PlanPrevention",
+      "update",
+      { where: { id: "p" }, data: { lignes: { deleteMany: {}, delete: [{ id: "l" }] } } },
+      A,
+    );
+    expect(data).toEqual({ lignes: { deleteMany: {}, delete: [{ id: "l" }] } });
+  });
+
+  it("update imbriqué : ses données sont réécrites, une clé vers un autre compte bornée", () => {
+    const { data } = argumentsBornes(
+      "Etablissement",
+      "update",
+      { where: { id: "e" }, data: { equipements: { update: { where: { id: "q" }, data: { batimentId: "b" } } } } },
+      A,
+    );
+    expect(data).toEqual({
+      equipements: {
+        update: { where: { id: "q" }, data: { batiment: { connect: { id: "b", AND: [ETAB_A] } } } },
+      },
+    });
+  });
+
+  it("updateMany imbriqué : une clé étrangère changée est refusée", () => {
+    expect(() =>
+      argumentsBornes(
+        "Etablissement",
+        "update",
+        { where: { id: "e" }, data: { equipements: { updateMany: { where: {}, data: { batimentId: "b" } } } } },
+        A,
+      ),
+    ).toThrow(/non bornable/);
+  });
+
+  it("upsert imbriqué : création et mise à jour réécrites", () => {
+    const { data } = argumentsBornes(
+      "Etablissement",
+      "update",
+      {
+        where: { id: "e" },
+        data: { equipements: { upsert: { where: { id: "q" }, create: { batimentId: "b", libelle: "x" }, update: { libelle: "y" } } } },
+      },
+      A,
+    );
+    expect(data).toMatchObject({
+      equipements: { upsert: { create: { batiment: { connect: { id: "b", AND: [ETAB_A] } } }, update: { libelle: "y" } } },
+    });
+  });
 
   it("upsert : where borné, create et update réécrits", () => {
     const a = argumentsBornes(

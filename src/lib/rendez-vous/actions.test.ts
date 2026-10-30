@@ -11,13 +11,13 @@ const h = vi.hoisted(() => ({
     salarieId: null as string | null,
     rendezVousLe: null as Date | null,
   },
-  updateMany: vi.fn(async () => ({ count: 1 })),
+  update: vi.fn(async () => ({ count: 1 })),
   resoudre: vi.fn(async (_e: string, id: string | null | undefined) =>
     !id ? { ok: true as const, id: null } : id === "presta-e1" ? { ok: true as const, id } : { ok: false as const },
   ),
 }));
 
-vi.mock("@/lib/prisma", () => ({ prisma: { verification: { updateMany: h.updateMany } } }));
+vi.mock("@/lib/prisma", () => ({ prisma: { verification: { update: h.update } } }));
 vi.mock("@/lib/auth/scope", async () => {
   // La garde rend le client borné (ADR-051) : ici, le client simulé.
   const { prisma } = await import("@/lib/prisma");
@@ -36,7 +36,7 @@ function fd(champs: Record<string, string>): FormData {
   return f;
 }
 const IDLE = { status: "idle" } as const;
-const data = () => (h.updateMany.mock.calls[0] as unknown as [{ data: Record<string, unknown> }])[0].data;
+const data = () => (h.update.mock.calls[0] as unknown as [{ data: Record<string, unknown> }])[0].data;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -66,7 +66,7 @@ describe("enregistrerSuiviControle", () => {
   it("refuse le prestataire d'un autre établissement, sans rien écrire", async () => {
     const r = await enregistrerSuiviControle("v1", IDLE, fd({ prestataireId: "presta-autre" }));
     expect(r.status).toBe("error");
-    expect(h.updateMany).not.toHaveBeenCalled();
+    expect(h.update).not.toHaveBeenCalled();
   });
 
   it("des champs vidés retirent prestataire et rendez-vous ; une note sans rendez-vous ne s'écrit pas", async () => {
@@ -77,7 +77,7 @@ describe("enregistrerSuiviControle", () => {
   it("refuse une date absurde (plus d'un mois passé, plus de deux ans d'ici), accepte une date gênante", async () => {
     expect((await enregistrerSuiviControle("v1", IDLE, fd({ rendezVousLe: "2026-09-01T09:00" }))).status).toBe("error");
     expect((await enregistrerSuiviControle("v1", IDLE, fd({ rendezVousLe: "2029-01-01T09:00" }))).status).toBe("error");
-    expect(h.updateMany).not.toHaveBeenCalled();
+    expect(h.update).not.toHaveBeenCalled();
     // Après l'échéance ou très en avance : accepté, l'écran le signale.
     expect((await enregistrerSuiviControle("v1", IDLE, fd({ rendezVousLe: "2028-06-01T09:00" }))).status).toBe("success");
   });
@@ -92,7 +92,7 @@ describe("enregistrerSuiviControle", () => {
   it("refuse une date-heure qui n'existe pas", async () => {
     const r = await enregistrerSuiviControle("v1", IDLE, fd({ rendezVousLe: "2026-02-30T09:00" }));
     expect(r.status).toBe("error");
-    expect(h.updateMany).not.toHaveBeenCalled();
+    expect(h.update).not.toHaveBeenCalled();
   });
 
   it("refuse une ligne éteinte et l'échéance d'une personne", async () => {
@@ -101,6 +101,6 @@ describe("enregistrerSuiviControle", () => {
     h.ligne.archiveLe = null;
     h.ligne.salarieId = "s1";
     expect((await enregistrerSuiviControle("v1", IDLE, fd({}))).status).toBe("error");
-    expect(h.updateMany).not.toHaveBeenCalled();
+    expect(h.update).not.toHaveBeenCalled();
   });
 });

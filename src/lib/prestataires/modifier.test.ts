@@ -7,14 +7,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const h = vi.hoisted(() => {
   const appels: { op: string; args: unknown }[] = [];
   const reponses: Record<string, (args: unknown) => unknown> = {};
-  const prisma = new Proxy(
+  const prisma: Record<string, unknown> = new Proxy(
     {},
     {
       get: (_t, nom: string) =>
         // La forme tableau de `$transaction` : les écritures sont déjà
-        // relevées à leur création, on rend leurs résultats.
+        // relevées à leur création, on rend leurs résultats. La forme
+        // interactive reçoit le même client simulé (depuis le 2026-10-30 : la
+        // modification passe par `creerEnLotVerifie`, qui lit avant d'écrire).
         nom === "$transaction"
-          ? async (ops: Promise<unknown>[]) => Promise.all(ops)
+          ? async (ops: Promise<unknown>[] | ((tx: unknown) => Promise<unknown>)) =>
+              typeof ops === "function" ? ops(prisma) : Promise.all(ops)
           : new Proxy(
           {},
           {

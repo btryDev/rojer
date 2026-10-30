@@ -1,5 +1,6 @@
 "use server";
 
+import { creerEnLotVerifie } from "@/lib/auth/portee/lot-verifie";
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { SELECT_FAITS_ACTIVITE } from "@/lib/etablissements/faits-activite";
@@ -214,14 +215,16 @@ export async function commitImport(
   // risques avant leurs actions, puis la reprise, qui crée l'unité
   // transverse que le fichier ne porte jamais.
   await db.$transaction(async (tx) => {
+    // `creerEnLotVerifie` (ADR-051) : les parents de chaque lot sont lus par
+    // la transaction — les unités créées juste avant y sont vues.
     if (ecritures.unitesACreer.length > 0) {
-      await tx.uniteTravail.createMany({ data: ecritures.unitesACreer });
+      await creerEnLotVerifie(tx, "UniteTravail", ecritures.unitesACreer);
     }
     if (ecritures.risques.length > 0) {
-      await tx.risque.createMany({ data: ecritures.risques });
+      await creerEnLotVerifie(tx, "Risque", ecritures.risques);
     }
     if (ecritures.actions.length > 0) {
-      await tx.action.createMany({ data: ecritures.actions });
+      await creerEnLotVerifie(tx, "Action", ecritures.actions);
     }
     if (faits) await reprendreFaitsDansDuerp(tx, duerpId, faits);
   },

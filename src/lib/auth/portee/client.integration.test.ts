@@ -13,6 +13,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 // Le vrai client borné, pas le remplacement de vitest.setup.ts.
 vi.unmock("@/lib/auth/portee/client");
+vi.unmock("@/lib/auth/portee/lot-verifie");
 
 const URL_BASE = process.env.ISOLATION_INTEGRATION_URL;
 const local = URL_BASE ? /@(localhost|127\.0\.0\.1)[:/]/.test(URL_BASE) : false;
@@ -143,6 +144,39 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
         dbA.etablissement.update({ where: { id: a.etab.id }, data: { batiments: { connect: { id: b.bat.id } } } }),
       ).rejects.toThrow();
       expect((await prisma.batiment.findUnique({ where: { id: b.bat.id } }))?.etablissementId).toBe(b.etab.id);
+    });
+  });
+
+  describe("écritures imbriquées sous une ligne bornée", () => {
+    it("update et deleteMany imbriqués touchent les lignes du parent", async () => {
+      const t = await prisma.batiment.create({ data: { etablissementId: a.etab.id, nom: "imbrique" } });
+      await dbA.etablissement.update({
+        where: { id: a.etab.id },
+        data: { batiments: { update: { where: { id: t.id }, data: { nom: "imbrique-2" } } } },
+      });
+      expect((await prisma.batiment.findUnique({ where: { id: t.id } }))?.nom).toBe("imbrique-2");
+      await dbA.etablissement.update({
+        where: { id: a.etab.id },
+        data: { batiments: { deleteMany: { nom: "imbrique-2" } } },
+      });
+      expect(await prisma.batiment.findUnique({ where: { id: t.id } })).toBeNull();
+    });
+
+    it("update, delete et deleteMany imbriqués n'atteignent pas la ligne d'un autre compte", async () => {
+      await expect(
+        dbA.etablissement.update({
+          where: { id: a.etab.id },
+          data: { batiments: { update: { where: { id: b.bat.id }, data: { nom: "piraté" } } } },
+        }),
+      ).rejects.toThrow();
+      await expect(
+        dbA.etablissement.update({ where: { id: a.etab.id }, data: { batiments: { delete: { id: b.bat.id } } } }),
+      ).rejects.toThrow();
+      await dbA.etablissement.update({
+        where: { id: a.etab.id },
+        data: { batiments: { deleteMany: { id: b.bat.id } } },
+      });
+      expect((await prisma.batiment.findUnique({ where: { id: b.bat.id } }))?.nom).toBe("Principal");
     });
   });
 

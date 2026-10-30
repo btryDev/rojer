@@ -1,5 +1,6 @@
 "use server";
 
+import { creerEnLotVerifie } from "@/lib/auth/portee/lot-verifie";
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -284,15 +285,19 @@ export async function modifierPrestataire(
 
   const remplacees = piecesRemplacees(existant, depot.colonnes);
   try {
-    await db.$transaction([
-      db.prestataire.update({
+    // Transaction interactive, et non par lot : `creerEnLotVerifie` (ADR-051)
+    // lit le prestataire avant d'insérer ses pièces, dans la transaction.
+    await db.$transaction(async (tx) => {
+      await tx.prestataire.update({
         where: { id: existant.id },
         data: { ...colonnesDeLaSaisie(parsed.data), ...depot.colonnes },
-      }),
-      db.piecePrestataire.createMany({
-        data: remplacees.map((r) => ({ prestataireId: existant.id, ...r })),
-      }),
-    ]);
+      });
+      await creerEnLotVerifie(
+        tx,
+        "PiecePrestataire",
+        remplacees.map((r) => ({ prestataireId: existant.id, ...r })),
+      );
+    });
   } catch (err) {
     await libererFichiers(depot.cles, "prestataires/modification");
     if (estSiretEnDouble(err)) return erreurSiret();

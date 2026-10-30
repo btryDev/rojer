@@ -61,7 +61,10 @@ export async function enregistrerSuiviControle(
       };
     }
   }
-  await db.verification.updateMany({
+  // `update` et non `updateMany` : le client borné (ADR-051) réécrit la clé
+  // du prestataire en `connect` borné, ce qu'un `updateMany` ne permet pas.
+  // La ligne vient d'être lue par `requireVerification`.
+  await db.verification.update({
     where: { id: v.id, etablissementId },
     data: {
       prestataireId: prestataire.id,
