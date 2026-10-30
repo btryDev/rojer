@@ -63,6 +63,12 @@ describe("validerEnvironnement", () => {
       expect(erreurDe({ ...BASE, EXPORTS_SIMULTANES: v }).variables).toEqual(["EXPORTS_SIMULTANES"]);
     }
     expect(() => validerEnvironnement({ ...BASE, EXPORTS_SIMULTANES: "3" })).not.toThrow();
+    // Pilote d'e-mails : un nom connu, et la clé Mailpace avec lui.
+    expect(erreurDe({ ...BASE, EMAIL_DRIVER: "resend" }).variables).toEqual(["EMAIL_DRIVER"]);
+    expect(erreurDe({ ...BASE, EMAIL_DRIVER: "mailpace" }).variables).toEqual(["MAILPACE_API_KEY"]);
+    expect(() =>
+      validerEnvironnement({ ...BASE, EMAIL_DRIVER: "mailpace", MAILPACE_API_KEY: "cle" }),
+    ).not.toThrow();
     expect(() =>
       validerEnvironnement({ ...BASE, STORAGE_DRIVER: "supabase", PUBLIC_APP_URL: "https://rojer.fr" }),
     ).not.toThrow();

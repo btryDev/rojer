@@ -73,9 +73,9 @@ export async function envoyerMailAcces(args: MailAccesArgs): Promise<void> {
     text: lignes.join("\n"),
   });
 
-  // Aussi utile en dev : log le from configuré pour que l'utilisateur voie
-  // l'identité d'expéditeur qui sortirait en prod.
-  if (process.env.EMAIL_DRIVER !== "resend") {
+  // En développement seulement (pilote `console`) : l'expéditeur qui sortirait
+  // en production. Un pilote réel ne journalise rien du message.
+  if ((process.env.EMAIL_DRIVER || "console") === "console") {
     console.log(`   (From : ${mailFrom()})`);
   }
 }

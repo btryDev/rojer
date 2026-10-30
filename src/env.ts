@@ -91,7 +91,8 @@ const schema = z
 
     // URL publique, e-mail.
     PUBLIC_APP_URL: z.preprocess(vide, urlHttp.optional()),
-    EMAIL_DRIVER: optionnelle,
+    EMAIL_DRIVER: enumeration(["console", "mailpace"] as const),
+    MAILPACE_API_KEY: optionnelle,
     SIGNATURE_MAIL_FROM: optionnelle,
 
     // Stockage des fichiers (`storage/index.ts`).
@@ -118,6 +119,17 @@ const schema = z
     LEGIFRANCE_CLIENT_ID: optionnelle,
     LEGIFRANCE_CLIENT_SECRET: optionnelle,
     LEGIFRANCE_ENV: enumeration(["sandbox", "production"] as const),
+  })
+  // Une variable qui n'a de sens qu'avec une autre : le pilote Mailpace sans
+  // sa clé n'enverrait rien, et ne le dirait qu'au premier envoi.
+  .superRefine((env, ctx) => {
+    if (env.EMAIL_DRIVER === "mailpace" && !env.MAILPACE_API_KEY) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["MAILPACE_API_KEY"],
+        message: "requise quand EMAIL_DRIVER vaut « mailpace »",
+      });
+    }
   });
 
 export type EnvValide = z.infer<typeof schema>;

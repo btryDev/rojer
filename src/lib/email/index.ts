@@ -6,9 +6,11 @@ import "server-only";
  * logs serveur (utile pour le développement et les démos locales sans avoir
  * à configurer un vrai provider).
  *
- * Pour passer en prod : implémenter un driver `resend` ou `supabase` et le
- * brancher via `EMAIL_DRIVER`. Aucune autre ligne à changer côté app.
+ * En production : `EMAIL_DRIVER=mailpace` (add-on Clever Cloud, 2026-10-30),
+ * clé dans `MAILPACE_API_KEY`, expéditeur dans `SIGNATURE_MAIL_FROM` (un
+ * domaine vérifié chez Mailpace). Voir `mailpace.ts`.
  */
+import { creerPiloteMailpace } from "./mailpace";
 
 export type EmailPayload = {
   to: string;
@@ -61,7 +63,15 @@ let _driver: EmailDriver | null = null;
  * se contredire.
  */
 function refusDuDriver(): string | null {
-  const driver = process.env.EMAIL_DRIVER ?? "console";
+  const driver = process.env.EMAIL_DRIVER || "console";
+  if (driver === "mailpace") {
+    // Sans clé, aucun envoi ne peut partir : on le sait AVANT d'écrire quoi
+    // que ce soit, comme pour `console` en production.
+    if (!process.env.MAILPACE_API_KEY?.trim()) {
+      return "EMAIL_DRIVER vaut « mailpace » mais MAILPACE_API_KEY est absente : aucun mail ne partirait.";
+    }
+    return null;
+  }
   if (driver === "console") {
     // Le driver `console` n'envoie rien : il imprime. En production, il ne
     // rend pas un service dégradé, il fait disparaître en silence des liens
@@ -75,7 +85,7 @@ function refusDuDriver(): string | null {
           "Brancher un driver d'envoi réel avant de servir ce chemin."
       : null;
   }
-  return `Driver email non supporté : ${driver}. Utiliser "console" ou brancher une implémentation.`;
+  return `Driver email non supporté : ${driver}. Utiliser « console » ou « mailpace ».`;
 }
 
 /**
@@ -95,7 +105,13 @@ export function getEmailDriver(): EmailDriver {
   if (_driver) return _driver;
   const refus = refusDuDriver();
   if (refus) throw new Error(refus);
-  _driver = new ConsoleEmailDriver();
+  _driver =
+    (process.env.EMAIL_DRIVER || "console") === "mailpace"
+      ? creerPiloteMailpace({
+          cle: process.env.MAILPACE_API_KEY!.trim(),
+          expediteur: mailFrom(),
+        })
+      : new ConsoleEmailDriver();
   return _driver;
 }
 
@@ -103,8 +119,13 @@ export async function sendMail(payload: EmailPayload): Promise<void> {
   return getEmailDriver().send(payload);
 }
 
+/**
+ * L'expéditeur de tous les e-mails. Chez Mailpace, son domaine doit être
+ * celui que la clé vérifie (DKIM) ; un autre domaine rend 403. Par défaut
+ * l'adresse retenue par la propriétaire le 2026-10-30.
+ */
 export function mailFrom(): string {
-  return process.env.SIGNATURE_MAIL_FROM ?? "no-reply@pilote-conformite.local";
+  return process.env.SIGNATURE_MAIL_FROM?.trim() || "Rojer <no-reply@rojer.fr>";
 }
 
 /**

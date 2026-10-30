@@ -88,3 +88,32 @@ describe("publicAppUrl — pas de localhost en production (audit du 2026-10-12, 
     expect(m.publicAppUrl()).toBe("http://localhost:3000");
   });
 });
+
+describe("pilote Mailpace (2026-10-30)", () => {
+  it("sans clé : hors service avant toute écriture, et le driver lève", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("EMAIL_DRIVER", "mailpace");
+    vi.stubEnv("MAILPACE_API_KEY", "");
+    const m = await charger();
+    expect(m.envoiEnService()).toBe(false);
+    expect(() => m.getEmailDriver()).toThrow(/MAILPACE_API_KEY/);
+  });
+
+  it("avec sa clé : en service, en production comme en développement", async () => {
+    for (const env of ["production", "development"]) {
+      vi.stubEnv("NODE_ENV", env);
+      vi.stubEnv("EMAIL_DRIVER", "mailpace");
+      vi.stubEnv("MAILPACE_API_KEY", "cle-de-test");
+      const m = await charger();
+      expect(m.envoiEnService()).toBe(true);
+      expect(() => m.getEmailDriver()).not.toThrow();
+    }
+  });
+
+  it("l'expéditeur par défaut est celui de rojer.fr, la variable l'emporte", async () => {
+    delete process.env.SIGNATURE_MAIL_FROM;
+    expect((await charger()).mailFrom()).toBe("Rojer <no-reply@rojer.fr>");
+    vi.stubEnv("SIGNATURE_MAIL_FROM", "Autre <contact@exemple.fr>");
+    expect((await charger()).mailFrom()).toBe("Autre <contact@exemple.fr>");
+  });
+});

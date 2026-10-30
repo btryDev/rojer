@@ -156,7 +156,11 @@ export type EmissionTokenParams = {
 
 export type EmissionResultat =
   | { ok: true; accessTokenId: string; expireLe: Date }
-  | { ok: false; raison: "frequence" | "envoi_hors_service"; message: string };
+  | {
+      ok: false;
+      raison: "frequence" | "envoi_hors_service" | "envoi_echoue";
+      message: string;
+    };
 
 /**
  * Ce que le demandeur lit quand l'envoi n'est pas en service. Vrai à la
@@ -164,6 +168,17 @@ export type EmissionResultat =
  */
 export const MESSAGE_ENVOI_HORS_SERVICE =
   "La demande n'a pas été envoyée : l'envoi d'e-mails n'est pas encore en service dans Rojer. Aucun lien n'a été créé.";
+
+/**
+ * Ce que le demandeur lit quand l'envoi est parti en erreur (fournisseur
+ * injoignable, refus). Vrai à la lettre : le lien créé est révoqué aussitôt,
+ * il ne pourra pas servir même si le message finissait par arriver.
+ */
+export const MESSAGE_ENVOI_ECHOUE =
+  "La demande n'a pas été envoyée : l'e-mail n'a pas pu partir. Le lien préparé a été annulé. Réessayez dans quelques minutes.";
+
+/** Le motif écrit sur un jeton dont l'e-mail n'est jamais parti. */
+export const MOTIF_REVOCATION_ENVOI_ECHOUE = "envoi_echoue";
 
 export async function emettreAccessToken(
   entree: EmissionTokenParams,
@@ -267,15 +282,31 @@ export async function emettreAccessToken(
     },
   });
 
-  await envoyerMailAcces({
-    to: params.emailDestinataire,
-    nom: params.nomDestinataire,
-    sujet: params.sujetMail,
-    message: params.messageMail,
-    urlAcces,
-    otp,
-    expireLe,
-  });
+  try {
+    await envoyerMailAcces({
+      to: params.emailDestinataire,
+      nom: params.nomDestinataire,
+      sujet: params.sujetMail,
+      message: params.messageMail,
+      urlAcces,
+      otp,
+      expireLe,
+    });
+  } catch (erreur) {
+    // Le jeton existe mais son e-mail n'est pas parti : il est révoqué, pas
+    // supprimé — la trace dit qu'une demande a eu lieu et pourquoi elle n'a
+    // pas abouti. Le journal ne porte que le motif de l'erreur, jamais
+    // l'adresse ni le contenu.
+    await prisma.accessToken.update({
+      where: { id: access.id },
+      data: { revoqueLe: new Date(), revoqueMotif: MOTIF_REVOCATION_ENVOI_ECHOUE },
+    });
+    console.error(
+      `[access-tokens] envoi échoué, jeton ${access.id} révoqué :`,
+      erreur instanceof Error ? erreur.message : "erreur inconnue",
+    );
+    return { ok: false, raison: "envoi_echoue", message: MESSAGE_ENVOI_ECHOUE };
+  }
 
   return {
     ok: true,
