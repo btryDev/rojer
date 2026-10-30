@@ -2,7 +2,7 @@
 
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
+import type { Db } from "@/lib/auth/compte";
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { resoudreBatimentOptionnel } from "@/lib/batiments/queries";
 import {
@@ -49,12 +49,12 @@ const formulaireInvalide = (fieldErrors: Record<string, string[]>): CarnetAction
   fieldErrors,
 });
 
-async function obtenirOuCreerCarnet(etablissementId: string) {
-  const existant = await prisma.carnetSanitaire.findUnique({
+async function obtenirOuCreerCarnet(db: Db, etablissementId: string) {
+  const existant = await db.carnetSanitaire.findUnique({
     where: { etablissementId },
   });
   if (existant) return existant;
-  return prisma.carnetSanitaire.create({
+  return db.carnetSanitaire.create({
     data: {
       id: `cs_${randomUUID()}`,
       etablissementId,
@@ -110,7 +110,7 @@ export async function creerPointReleve(
       fieldErrors: { batimentId: ["Zone introuvable"] },
     };
   }
-  const carnet = await obtenirOuCreerCarnet(etablissementId);
+  const carnet = await obtenirOuCreerCarnet(db, etablissementId);
   await db.pointReleve.create({
     data: {
       id: `pt_${randomUUID()}`,
@@ -259,8 +259,8 @@ export async function ajouterReleve(
 
 /** Un relevé, cherché dans le carnet de CET établissement : l'identifiant
  *  vient du client (même rapprochement que `supprimerPointReleve`). */
-function releveDansLeCarnet(etablissementId: string, releveId: string) {
-  return prisma.releveTemperature.findFirst({
+function releveDansLeCarnet(db: Db, etablissementId: string, releveId: string) {
+  return db.releveTemperature.findFirst({
     where: { id: releveId, pointReleve: { carnet: { etablissementId } } },
     select: {
       id: true,
@@ -280,7 +280,7 @@ export async function modifierReleve(
   formData: FormData,
 ): Promise<CarnetActionState> {
   const { db } = await assertEtablissementDuCompte(etablissementId);
-  const releve = await releveDansLeCarnet(etablissementId, releveId);
+  const releve = await releveDansLeCarnet(db, etablissementId, releveId);
   if (!releve) return { status: "error", message: "Relevé introuvable" };
   const parsed = lireReleve(formData, releve.pointReleveId);
   if (!parsed.success) return formulaireInvalide(parsed.error.flatten().fieldErrors);
@@ -361,7 +361,7 @@ export async function ajouterAnalyseLegionelle(
   const parsed = lireAnalyse(formData);
   if (!parsed.success) return formulaireInvalide(parsed.error.flatten().fieldErrors);
 
-  const carnet = await obtenirOuCreerCarnet(etablissementId);
+  const carnet = await obtenirOuCreerCarnet(db, etablissementId);
 
   const depot = await deposerRapportLabo(etablissementId, formData);
   if (!depot.ok) return { status: "error", message: depot.message };
@@ -401,8 +401,8 @@ export async function ajouterAnalyseLegionelle(
 }
 
 /** Une analyse, cherchée dans le carnet de CET établissement. */
-function analyseDansLeCarnet(etablissementId: string, analyseId: string) {
-  return prisma.analyseLegionelle.findFirst({
+function analyseDansLeCarnet(db: Db, etablissementId: string, analyseId: string) {
+  return db.analyseLegionelle.findFirst({
     where: { id: analyseId, carnet: { etablissementId } },
     select: { id: true, rapportCle: true },
   });
@@ -422,7 +422,7 @@ export async function modifierAnalyseLegionelle(
   formData: FormData,
 ): Promise<CarnetActionState> {
   const { db } = await assertEtablissementDuCompte(etablissementId);
-  const analyse = await analyseDansLeCarnet(etablissementId, analyseId);
+  const analyse = await analyseDansLeCarnet(db, etablissementId, analyseId);
   if (!analyse) return { status: "error", message: "Analyse introuvable" };
   const parsed = lireAnalyse(formData);
   if (!parsed.success) return formulaireInvalide(parsed.error.flatten().fieldErrors);
@@ -462,7 +462,7 @@ export async function supprimerAnalyseLegionelle(
   analyseId: string,
 ): Promise<void> {
   const { db } = await assertEtablissementDuCompte(etablissementId);
-  const analyse = await analyseDansLeCarnet(etablissementId, analyseId);
+  const analyse = await analyseDansLeCarnet(db, etablissementId, analyseId);
   if (!analyse) throw new Error("Analyse introuvable");
   await db.analyseLegionelle.delete({ where: { id: analyse.id } });
   if (analyse.rapportCle) {

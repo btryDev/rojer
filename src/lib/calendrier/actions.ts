@@ -12,6 +12,12 @@
 import "server-only";
 import { revalidatePath } from "next/cache";
 import { Prisma, type Realisateur } from "@prisma/client";
+// Le client BRUT, délibérément (ADR-051, lot 2b) : la passe sert aussi le
+// script hors compte (`regenererSansControleDeSession`), et le client borné
+// refuserait son lot — `createMany` de Verification hors `creerEnLotVerifie`,
+// `updateMany` qui réécrit `prescriptionId`. `creerEnLotVerifie` ne rend pas
+// une `PrismaPromise` et ne tient pas dans la transaction séquentielle ; la
+// forme interactive coûterait un aller-retour par écriture (P2028, plus bas).
 import { prisma } from "@/lib/prisma";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { SCEAU_CALENDRIER } from "./version-moteur";
