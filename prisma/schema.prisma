@@ -2250,6 +2250,11 @@ model User {
   sessions      Session[]
   accounts      Account[]
 
+  // Double authentification (ADR-052 § 7) : vraie une fois le premier code
+  // de l'application d'authentification vérifié, pas avant.
+  twoFactorEnabled Boolean    @default(false)
+  twoFactor        TwoFactor?
+
   entreprises        Entreprise[]
   signatures         Signature[]
   accessTokensEmis   AccessToken[]
@@ -2290,6 +2295,23 @@ model Account {
   updatedAt             DateTime  @updatedAt
 
   @@index([userId])
+}
+
+// Second facteur d'un compte (plugin `twoFactor` de Better Auth, ADR-052 § 7) :
+// secret TOTP et codes de secours, chiffrés par BETTER_AUTH_SECRET. Une ligne
+// par compte (unique : deux activations simultanées n'en font pas deux) ;
+// `verified` reste faux tant que le premier code n'a pas été lu.
+model TwoFactor {
+  id                      String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  secret                  String
+  backupCodes             String
+  userId                  String    @db.Uuid
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  verified                Boolean   @default(true)
+  failedVerificationCount Int       @default(0)
+  lockedUntil             DateTime?
+
+  @@unique([userId])
 }
 
 model AuthVerification {

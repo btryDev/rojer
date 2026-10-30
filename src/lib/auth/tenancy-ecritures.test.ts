@@ -118,6 +118,37 @@ const EXEMPTIONS = new Map<string, Exemption>([
         "de limitation de débit. Aucune donnée de dossier.",
     },
   ],
+  [
+    "lib/auth/actions.ts:verifierSecondFacteurAction",
+    {
+      garde: "refusParLimite",
+      raison:
+        "Second facteur à la connexion (ADR-052 § 7), sans session encore : le compte est " +
+        "celui du défi signé que Better Auth a posé ; les écritures sont la session ouverte " +
+        "par Better Auth et le compteur de limitation de débit. Aucune donnée de dossier.",
+    },
+  ],
+  ...(
+    [
+      ["activerDoubleAuthAction", "auth.api.enableTwoFactor"],
+      ["confirmerDoubleAuthAction", "auth.api.verifyTOTP"],
+      ["regenererCodesSecoursAction", "auth.api.generateBackupCodes"],
+      ["desactiverDoubleAuthAction", "auth.api.disableTwoFactor"],
+    ] as const
+  ).map(
+    ([nom, garde]) =>
+      [
+        `lib/auth/actions.ts:${nom}`,
+        {
+          garde,
+          raison:
+            "Double authentification du compte connecté (ADR-052 § 7, lot 3b) : Better Auth " +
+            "n'écrit que pour la session courante (`TwoFactor`, `User.twoFactorEnabled`, " +
+            "appareils de confiance) ; l'autre écriture est le compteur de limitation de " +
+            "débit. Aucune donnée de dossier.",
+        },
+      ] as const,
+  ),
   // ~~`creerEntreprise` et `finaliserOnboarding`, exemptées : elles fondaient
   // la racine de la tenancy~~ [2026-10-26 : la première est retirée ; la
   // seconde borne désormais par elle-même — son `upsert` cherche l'entreprise

@@ -76,7 +76,10 @@ export const CORRESPONDANCE: Record<string, Classement> = {
   User: { identite: "l'utilisateur de Better Auth : la racine des comptes y pointe" },
   Session: { horsCompte: "session Better Auth : lue pour établir l'identité" },
   Account: { horsCompte: "moyen d'authentification Better Auth (mot de passe haché)" },
-  AuthVerification: { horsCompte: "jeton de vérification Better Auth (e-mail, réinitialisation)" },
+  AuthVerification: {
+    horsCompte: "jeton de vérification Better Auth (e-mail, réinitialisation, défi et appareil de confiance de la double authentification)",
+  },
+  TwoFactor: { horsCompte: "second facteur Better Auth (secret TOTP et codes de secours, chiffrés), lu à la connexion" },
 };
 
 /** Hors compte au sens du client borné : il ne lit ni n'écrit ces modèles. */

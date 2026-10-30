@@ -14,6 +14,12 @@ import { COOKIE_ETABLISSEMENT_ACTIF } from "@/lib/auth/scope";
 import { auth } from "./better-auth";
 import { MESSAGE_MOT_DE_PASSE_DIVULGUE, motDePasseDivulgue } from "./mot-de-passe-divulgue";
 import { requireUser } from "./require-user";
+import {
+  codeSaisi,
+  donneesActivation,
+  oublierAppareilsDeConfiance,
+  type DonneesActivation,
+} from "./double-authentification";
 import { ipClient } from "@/lib/securite/ip-client";
 import {
   cleLimite,
@@ -154,8 +160,9 @@ export async function signInAction(
   });
   if (limite) return { error: limite };
 
+  let resultat: Awaited<ReturnType<typeof auth.api.signInEmail>>;
   try {
-    await auth.api.signInEmail({ body: parsed.data, headers: await headers() });
+    resultat = await auth.api.signInEmail({ body: parsed.data, headers: await headers() });
   } catch (e) {
     // Un compte non confirmé n'est révélé qu'à qui a le bon mot de passe ; un
     // nouveau lien part (`emailVerification.sendOnSignIn`) — sauf si l'envoi
@@ -168,6 +175,12 @@ export async function signInAction(
       };
     }
     return { error: "Identifiants invalides" };
+  }
+
+  // Double authentification active : pas de session encore, un défi de dix
+  // minutes (cookie signé, posé par le plugin) que `/login/code` relève.
+  if ("twoFactorRedirect" in resultat && resultat.twoFactorRedirect) {
+    redirect(`/login/code?next=${encodeURIComponent(cheminDeRetour(formData.get("next")))}`);
   }
 
   revalidatePath("/", "layout");
@@ -381,4 +394,198 @@ export async function fermerSessionsAction(formData: FormData): Promise<void> {
     }
   }
   revalidatePath("/compte/securite");
+}
+
+// ---------------------------------------------------------------------------
+// Double authentification (ADR-052 § 7, lot 3b) : application
+// d'authentification et codes de secours, proposée, non imposée.
+// ---------------------------------------------------------------------------
+
+/**
+ * Le second facteur à la connexion : un code de l'application (six chiffres)
+ * ou un code de secours, qui ne sert qu'une fois. Le défi vit dans le cookie
+ * posé par `signInAction` ; Better Auth y borne les essais (cinq par défi,
+ * verrou du compte après dix échecs). La limite par IP s'y ajoute : nos
+ * actions sont les seules portes, et la limitation de Better Auth ne garde que
+ * ses routes HTTP.
+ */
+export async function verifierSecondFacteurAction(
+  _prev: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const code = codeSaisi(String(formData.get("code") ?? ""));
+  if (!code) return { error: "Saisissez le code à six chiffres de votre application, ou un code de secours." };
+
+  const limite = await refusParLimite("second-facteur", LIMITES.connexionIp);
+  if (limite) return { error: limite };
+
+  const body = { code: code.valeur, trustDevice: formData.get("confiance") === "on" };
+  const entetes = await headers();
+  try {
+    if (code.genre === "application") await auth.api.verifyTOTP({ body, headers: entetes });
+    else await auth.api.verifyBackupCode({ body, headers: entetes });
+  } catch (e) {
+    // Une panne n'est pas un code faux : elle se voit.
+    if (!isAPIError(e)) throw e;
+    return { error: messageSecondFacteur(codeErreur(e)) };
+  }
+  revalidatePath("/", "layout");
+  redirect(cheminDeRetour(formData.get("next")));
+}
+
+function messageSecondFacteur(code: string | null): string {
+  switch (code) {
+    case "INVALID_CODE":
+    case "INVALID_BACKUP_CODE":
+      return "Code incorrect. Vérifiez qu'il vient bien de l'application liée à Rojer, puis réessayez.";
+    case "ACCOUNT_TEMPORARILY_LOCKED":
+      return "Trop de codes incorrects sur ce compte : réessayez dans quinze minutes.";
+    case "TOO_MANY_ATTEMPTS_REQUEST_NEW_CODE":
+    case "INVALID_TWO_FACTOR_COOKIE":
+      return "Cette connexion a expiré ou a reçu trop de codes incorrects : reconnectez-vous avec votre mot de passe.";
+    default:
+      return "Le code n'a pas pu être vérifié. Réessayez dans un instant.";
+  }
+}
+
+export type DoubleAuthState = {
+  error?: string;
+  message?: string;
+  /** Activation en cours : QR code, clé à saisir et codes de secours. */
+  activation?: DonneesActivation;
+  /** Premier code vérifié : la double authentification est active. */
+  confirmee?: boolean;
+  /** Codes de secours neufs, affichés une seule fois. */
+  codes?: string[];
+};
+
+/**
+ * Les gestes de la double authentification exigent le mot de passe (ou, pour
+ * confirmer, un code) : une devinette comme une autre, limitée par compte.
+ */
+async function refusDoubleAuth(userId: string): Promise<string | null> {
+  return refusParLimite("double-authentification", LIMITES.connexionIp, {
+    adresse: userId,
+    limite: LIMITES.connexionCompte,
+  });
+}
+
+function messageMotDePasse(e: unknown, defaut: string): string {
+  if (!isAPIError(e)) throw e;
+  return codeErreur(e) === "INVALID_PASSWORD" ? "Mot de passe incorrect" : defaut;
+}
+
+/**
+ * Activer, première étape : Better Auth crée le secret (chiffré, `verified`
+ * faux) et les codes de secours ; rien n'est actif tant que le premier code
+ * n'a pas été lu (`confirmerDoubleAuthAction`). Recommencer remplace le secret
+ * en attente.
+ */
+export async function activerDoubleAuthAction(
+  _prev: DoubleAuthState,
+  formData: FormData,
+): Promise<DoubleAuthState> {
+  const user = await requireUser();
+  const password = String(formData.get("password") ?? "");
+  if (!password) return { error: "Saisissez votre mot de passe" };
+  const limite = await refusDoubleAuth(user.id);
+  if (limite) return { error: limite };
+
+  let reponse: Awaited<ReturnType<typeof auth.api.enableTwoFactor>>;
+  try {
+    reponse = await auth.api.enableTwoFactor({
+      body: { password, method: "totp" },
+      headers: await headers(),
+    });
+  } catch (e) {
+    if (isAPIError(e) && codeErreur(e) === "TOTP_ALREADY_ENABLED") {
+      return { error: "La double authentification est déjà active sur ce compte." };
+    }
+    return { error: messageMotDePasse(e, "La double authentification n'a pas pu être préparée. Réessayez.") };
+  }
+  if (reponse.method !== "totp") {
+    throw new Error(`enableTwoFactor a rendu la méthode « ${reponse.method} », TOTP attendue`);
+  }
+  return { activation: await donneesActivation(reponse.totpURI, reponse.backupCodes) };
+}
+
+/**
+ * Activer, seconde étape : le premier code de l'application l'active (Better
+ * Auth passe `twoFactorEnabled` et renouvelle la session). Pas de
+ * `revalidatePath` : l'écran d'activation reste monté pour montrer les codes
+ * de secours, et c'est son bouton « Terminé » qui rafraîchit la page.
+ */
+export async function confirmerDoubleAuthAction(
+  _prev: DoubleAuthState,
+  formData: FormData,
+): Promise<DoubleAuthState> {
+  const user = await requireUser();
+  const code = codeSaisi(String(formData.get("code") ?? ""));
+  if (code?.genre !== "application") {
+    return { error: "Saisissez le code à six chiffres affiché par l'application." };
+  }
+  const limite = await refusDoubleAuth(user.id);
+  if (limite) return { error: limite };
+  try {
+    await auth.api.verifyTOTP({ body: { code: code.valeur }, headers: await headers() });
+  } catch (e) {
+    if (!isAPIError(e)) throw e;
+    return {
+      error:
+        codeErreur(e) === "INVALID_CODE"
+          ? "Code incorrect. Vérifiez que l'heure du téléphone est à jour, puis saisissez le code affiché."
+          : "Le code n'a pas pu être vérifié. Recommencez l'activation.",
+    };
+  }
+  // Les appareils de confiance d'une activation précédente sont oubliés :
+  // Better Auth ne les efface qu'un par un, au navigateur qui désactive. Sans
+  // cela, un appareil approuvé avant une désactivation — peut-être celui qui
+  // l'a motivée — passerait sans code jusqu'à trente jours après la nouvelle
+  // activation.
+  await oublierAppareilsDeConfiance(user.id);
+  return { confirmee: true };
+}
+
+/** De nouveaux codes de secours : les anciens cessent de valoir. */
+export async function regenererCodesSecoursAction(
+  _prev: DoubleAuthState,
+  formData: FormData,
+): Promise<DoubleAuthState> {
+  const user = await requireUser();
+  const password = String(formData.get("password") ?? "");
+  if (!password) return { error: "Saisissez votre mot de passe" };
+  const limite = await refusDoubleAuth(user.id);
+  if (limite) return { error: limite };
+  try {
+    const { backupCodes } = await auth.api.generateBackupCodes({
+      body: { password },
+      headers: await headers(),
+    });
+    return { codes: backupCodes };
+  } catch (e) {
+    return { error: messageMotDePasse(e, "Les codes n'ont pas pu être générés. Réessayez.") };
+  }
+}
+
+/**
+ * Désactiver : Better Auth efface le secret et les codes, et oublie la
+ * confiance accordée à CE navigateur. Celle des autres appareils l'est à la
+ * prochaine activation (`confirmerDoubleAuthAction`).
+ */
+export async function desactiverDoubleAuthAction(
+  _prev: DoubleAuthState,
+  formData: FormData,
+): Promise<DoubleAuthState> {
+  const user = await requireUser();
+  const password = String(formData.get("password") ?? "");
+  if (!password) return { error: "Saisissez votre mot de passe" };
+  const limite = await refusDoubleAuth(user.id);
+  if (limite) return { error: limite };
+  try {
+    await auth.api.disableTwoFactor({ body: { password }, headers: await headers() });
+  } catch (e) {
+    return { error: messageMotDePasse(e, "La double authentification n'a pas pu être désactivée. Réessayez.") };
+  }
+  revalidatePath("/compte/securite");
+  return { message: "Double authentification désactivée." };
 }

@@ -276,9 +276,18 @@ empêcher, il l'en informe.
 
 ### 2.7 Comptes utilisateurs
 
-L'authentification est **en place** (ADR-005) : elle repose sur Supabase Auth,
+~~L'authentification est **en place** (ADR-005) : elle repose sur Supabase Auth,
 qui détient l'identité (email, mot de passe haché). Il n'y a pas de modèle
-`User` en base applicative ; `Entreprise.userId` fait le lien.
+`User` en base applicative ; `Entreprise.userId` fait le lien.~~
+[2026-10-30, branche `cc`, ADR-052 : Better Auth, dans notre base.] Le compte
+(`User` : adresse, nom), son mot de passe haché (`Account`), ses sessions
+(`Session` : date, adresse IP, navigateur, montrés au titulaire sur « Sécurité
+du compte ») et ses jetons à usage unique (`AuthVerification` : confirmation
+d'adresse, réinitialisation, défi et appareils de confiance de la double
+authentification). La double authentification, facultative, ajoute `TwoFactor` :
+le secret de l'application d'authentification et les codes de secours,
+**chiffrés** par le secret du serveur, effacés quand elle est désactivée.
+`Entreprise.userId` est une clé étrangère vers `User`.
 
 ### 2.8 Demandes d'assistance (« Besoin d'aide ? », ADR-050, 2026-10-24)
 

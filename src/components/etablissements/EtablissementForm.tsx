@@ -33,11 +33,10 @@ import {
 } from "@/lib/etablissements/questions";
 import { AideQuestionMatieres } from "./AideQuestionMatieres";
 import { QUESTION_ACCUEIL_ENFANTS, rEntre } from "@/lib/etablissements/types-refuses";
+import { CASE_A_COCHER } from "@/components/ui-kit/case-a-cocher";
 
 
 /** La case à cocher du board : encre pleine à l'état coché, filet d'ardoise. */
-const CASE_A_COCHER =
-  "mt-0.5 size-4 flex-none rounded border-[color:var(--board-slate)] accent-[color:var(--board-ink)]";
 
 /** Le message de validation, à l'encre du signal et jamais en `destructive`. */
 function Erreur({ message }: { message?: string }) {
