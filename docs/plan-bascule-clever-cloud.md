@@ -11,6 +11,22 @@ production sur Vercel, où il est vérifiable sans rien couper. Clever Cloud se
 monte ensuite à côté, en préproduction, sans toucher à la prod. La bascule
 elle-même n'est alors qu'un changement de DNS, réversible.
 
+**[2026-10-30, décision de la propriétaire : deux lignes jusqu'à la bascule.]**
+Un testeur utilise la prod Vercel : rien ne doit la perturber, sans faire de
+nœuds pour la préserver.
+- **`main`** reste la prod Vercel, déployée au merge comme aujourd'hui. Y vont
+  les lots qui servent les deux hébergeurs (correctifs, isolation, phase 0).
+- **`cc`** porte la migration : Better Auth, le build Clever Cloud, ce qui ne
+  tournerait plus sur Vercel/Supabase. Chaque lot est une PR vers `cc` (la CI
+  tourne sur toute PR), déployée sur Clever Cloud par commande, jamais au merge.
+- **Le flux ne va que de `main` vers `cc`** : chaque merge dans `main` est
+  reporté dans `cc` par une fusion de `main`, tout de suite, pour que les
+  conflits restent petits. Jamais `cc` vers `main` avant la bascule.
+- **À la bascule** : `cc` fusionnée dans `main` une fois, Clever Cloud se
+  déploie depuis `main` (toujours par commande), Vercel est supprimé.
+- `vercel.json` désactive les aperçus Vercel de `cc` : un aperçu y tournerait
+  un code que Supabase ne sert plus.
+
 **Aucune donnée n'est migrée** (décision de la propriétaire du 2026-10-30) : les
 comptes et dossiers actuels sont fictifs, créés pour les tests. Clever Cloud
 part d'une base neuve, construite par les migrations ; les testeurs recréent
@@ -38,7 +54,7 @@ Node natif. Ce qui tranche :
 | pnpm | détecté par `pnpm-lock.yaml`, version prise dans `packageManager` | à écrire dans le Dockerfile |
 | Version de Node | `engines.node` (déjà `>=22.15 <25`) ou `CC_NODE_VERSION` | dans l'image |
 | Migrations au démarrage | `CC_PRE_RUN_HOOK`, documenté pour cet usage ; son échec fait échouer le déploiement | la doc se contredit : une page dit tous les hooks supportés, une autre seulement `CC_RUN_SUCCEEDED_HOOK` |
-| Mémoire | `--max-old-space-size` réglé aux 3/4 de la RAM | limitée à la RAM, sans swap |
+| Mémoire | `--max-old-space-size` réglé aux 3/4 de la RAM [2026-10-30 : ~62 % mesuré par GestBAT, § 5 bis] | limitée à la RAM, sans swap |
 | Pgpool-II | disponible | non |
 | À maintenir | rien | un Dockerfile, ses mises à jour de sécurité |
 
@@ -111,7 +127,11 @@ ouverte : il est périmé sur ce point).
 
 ---
 
-## 4. Phase 1 — Better Auth, sur une branche
+## 4. Phase 1 — Better Auth, sur la branche `cc`
+
+[2026-10-30 : ADR-052, PR #130. Better Auth n'entre pas dans `main` avant la
+bascule (en-tête) ; il se teste sur la pile locale CC puis la préproduction.
+Il vient après le lot « build CC et pile locale » (§ 5 bis).]
 
 **Avant de coder : une ADR.** L'ADR-005 avait écarté Better Auth, et l'ADR-013
 son plugin OAuth. La nouvelle ADR les amende. Version visée : `better-auth`
@@ -158,8 +178,13 @@ Ce que le changement doit tenir :
 - **Limitation de débit** : celle de Better Auth est en mémoire par défaut,
   fausse dès deux instances. `rateLimit.storage: "database"`, ou garder la
   limitation de l'app, qui est déjà en base (B3, voir § 9).
-- **IP derrière le proxy** : `advanced.ipAddress.ipAddressHeaders` sur
-  l'en-tête que Clever Cloud pose, et le même helper que 0.1 (B17).
+- **IP derrière le proxy** : ~~`advanced.ipAddress.ipAddressHeaders` sur
+  l'en-tête que Clever Cloud pose~~ [2026-10-30, leçon de GestBAT (§ 5 bis) :
+  le proxy de Clever Cloud AJOUTE l'adresse réelle à droite de
+  `X-Forwarded-For`, et Better Auth en lit la première entrée, que le client
+  écrit. Notre proxy calcule l'IP par `ipClient` (la dernière entrée), la
+  publie dans un en-tête interne **écrasé à chaque requête** (sinon le client
+  le forge), et `ipAddressHeaders` ne lit que celui-là], et le même helper que 0.1 (B17).
 - **OTP par e-mail** : `storeOTP: "hashed"`, la valeur par défaut étant `plain`.
 - **Mémoïsation de la session hors RSC** (M7), par `AsyncLocalStorage`.
 - **Journal** : les événements d'authentification vont au drain de logs (B25).
@@ -185,24 +210,34 @@ même zone (B12, AD § 3).
 2026-10-30). Fusionner dans `main` ne déploie rien chez Clever Cloud :
 - l'application Clever Cloud **n'est pas reliée à GitHub** (pas de
   déploiement automatique sur push) ;
-- une branche `cc` porte ce qui est en production ; déployer, c'est l'avancer
+- ~~une branche `cc` porte ce qui est en production ; déployer, c'est l'avancer
   sur le commit voulu de `main` (avance rapide seulement), la pousser sur
   GitHub pour la trace, puis lancer `clever deploy --branch cc --alias <app>`.
   La commande suit le déploiement jusqu'à sa fin (`--exit-on deploy-end`, par
-  défaut) ;
-- un script versionné (`scripts/deployer-cc.sh`, à écrire en phase 2) enchaîne
-  ces gestes et refuse un arbre sale, une branche qui ne serait pas en avance
-  rapide, ou un commit dont la CI n'est pas verte ; une cible `preprod` et une
-  cible `prod`, chacune son alias ;
+  défaut) ;~~ [2026-10-30 : `cc` n'avance plus sur `main`, elle porte la
+  migration (en-tête). Déployer, c'est déployer un commit de `cc` déjà poussé
+  sur GitHub : `clever deploy --branch cc --alias <app>
+  --same-commit-policy rebuild --exit-on deploy-end`. GestBAT a constaté
+  qu'un simple `git push` vers Clever Cloud peut mettre à jour la référence
+  sans lancer de build ; la politique par défaut (`error`) refuse un commit
+  déjà poussé. Après la bascule, la même commande part de `main`.]
+- un script versionné (`scripts/deployer-cc.sh`, ~~à écrire en phase 2~~
+  [2026-10-30 : lot « build CC et pile locale », § 5 bis]) enchaîne
+  ces gestes et refuse un arbre sale, ~~une branche qui ne serait pas en avance
+  rapide~~ un commit absent de `origin/cc`, ou un commit dont la CI n'est pas verte ; une cible `preprod` et une
+  cible `prod`, chacune son alias. **Il ne croit pas le message de fin** : il
+  relit le commit servi (`clever status`) et appelle la route de santé ;
 - revenir en arrière : redéployer le commit précédent de `cc`
   (`clever deploy --force` sur ce commit), sans toucher à `main`.
-- d'ici la bascule, Vercel continue de déployer `main` comme aujourd'hui.
+- d'ici la bascule, Vercel continue de déployer `main` comme aujourd'hui, et
+  ne déploie jamais `cc`.
 
 Source : https://cdn.jsdelivr.net/npm/clever-tools@4.10.0/src/commands/deploy/deploy.docs.md
 (`--branch` : branche poussée, la courante par défaut ; `--force` ; `--same-commit-policy`).
 
 **Application Node.js**
-- Instance XS (1 Go) pour commencer, build sur une instance dédiée S (2 Go).
+- Instance XS (1 Go) pour commencer (GestBAT, comparable, y tient à ~611 Mo),
+  build sur une instance dédiée ~~S (2 Go)~~ M (§ 5 bis).
   Le déploiement sans coupure garde les anciennes instances jusqu'à ce que
   les nouvelles répondent.
 - Variables :
@@ -215,6 +250,10 @@ Source : https://cdn.jsdelivr.net/npm/clever-tools@4.10.0/src/commands/deploy/de
   - `CC_PRE_RUN_HOOK` : `prisma migrate deploy` ;
   - `CC_RUN_COMMAND` : `node .next/standalone/server.js`, avec `PORT=8080` et
     `HOSTNAME=0.0.0.0` ;
+  - [2026-10-30, § 5 bis : le hook et la commande passent par
+    `scripts/demarrer-cc.sh`, qui construit `DATABASE_URL` depuis
+    `POSTGRESQL_ADDON_URI` — CC ne développe pas `$VAR` dans une variable —,
+    et le build par `next build --webpack`] ;
   - `CC_HEALTH_CHECK_PATH` : une route légère qui répond 200.
 - Au-delà d'une instance : `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` commune,
   fournie au build, et un `deploymentId` stable (le hash git).
@@ -234,6 +273,12 @@ Source : https://cdn.jsdelivr.net/npm/clever-tools@4.10.0/src/commands/deploy/de
 - TLS : la doc de Clever Cloud ne dit rien du chiffrement en transit. À
   constater sur l'add-on (`SHOW ssl;`, `SELECT * FROM pg_stat_ssl;`) et à
   demander au support avec l'autorité de certification (B19, § 9).
+  [2026-10-30 : GestBAT l'a constaté en prod le 2026-10-22 — TLS 1.3, et le
+  certificat de l'add-on est **auto-signé** : il l'épingle comme autorité, en
+  vérification stricte, et un faux certificat est refusé. Pour nous (Prisma 6,
+  moteur Rust, URL de connexion) : `sslmode=verify-full&sslrootcert=<fichier>`,
+  le fichier écrit au démarrage depuis une variable. Plus besoin de le
+  demander au support ; reste à le constater sur notre add-on.]
 - **À demander au support, pour des données de salariés** : le chiffrement au
   repos (LUKS, non activé par défaut), le PITR (pgBackRest, non installé par
   défaut), et une rétention des sauvegardes plus longue que 7 jours si besoin.
@@ -264,6 +309,40 @@ Source : https://cdn.jsdelivr.net/npm/clever-tools@4.10.0/src/commands/deploy/de
 
 **Domaine de préproduction** : un sous-domaine, HSTS, CSP revérifiée sur ce
 domaine (M11, B8).
+
+---
+
+## 5 bis. Leçons de GestBAT, et le lot « build CC et pile locale »
+
+GestBAT (RiskBoard), autre projet de la propriétaire, tourne sur Clever Cloud.
+Son `CLAUDE.md` (§ « Clever Cloud Deployment », relevés de `clever env` et
+incidents datés) a été **lu le 2026-10-30, sans rien en copier**. Chaque leçon
+est confrontée à notre cas ; certaines sont prises autrement.
+
+| Leçon de GestBAT | Ce qu'on en fait |
+|---|---|
+| Turbopack se fige au build sur Clever Cloud : `next build --webpack` | **Pris.** Le build CC passe en webpack. Constat de GestBAT, non daté : à remesurer une fois en préproduction avant de s'y tenir pour toujours |
+| CC ne développe pas `$VAR` dans ses variables : `DATABASE_URL=$POSTGRESQL_ADDON_URI` reste littéral. GestBAT lit `POSTGRESQL_ADDON_URI` dans le code | **Pris autrement.** Les hooks et la commande de démarrage, eux, passent par un shell. Un seul script de démarrage (`scripts/demarrer-cc.sh`) construit `DATABASE_URL` depuis l'add-on, avec le pool (`connection_limit`) et le TLS, puis lance migrations ou serveur. Le code et le développement local ne changent pas |
+| Disque de l'instance limité : node_modules et le cache pnpm effacés après les migrations (le serveur standalone a sa copie) ; GestBAT efface aussi les sources | **Pris en partie.** D'abord mesurer (`df` au démarrage, en préproduction) ; n'effacer que node_modules et le cache pnpm si la place manque. La migration se chaîne par `&&` : son échec arrête le déploiement, jamais de `; true` (GestBAT l'a payé le 2026-07-29) |
+| Types : du code qui compile sur macOS casse sur Linux (résolution pnpm) | **Pris.** La pile locale construit dans un conteneur Linux, comme CC. La CI, Linux elle aussi, vérifie déjà les types |
+| Build dédié en taille M, après un manque de mémoire en S ; vérification des types retirée du build | **M pris** (le § 5 disait S) : quelques centimes par build. **La vérification des types reste au build** tant qu'il ne manque pas de mémoire |
+| Ne jamais poser `CC_DISABLE_BUILD_CACHE_UPLOAD` (builds en boucle, facturés) ni `--max-old-space-size` (CC le règle, mesuré à ~62 % de la RAM, pas 75 %) | **Pris.** Le tableau du § 1 disait « 3/4 » : c'est la doc, GestBAT a mesuré moins |
+| Le proxy ajoute l'IP à droite de `X-Forwarded-For` ; Better Auth lit la gauche | **Pris**, § 4. Notre `ipClient` lit déjà la droite ; un hop de proxy de plus (CDN, WAF) change la règle, à écrire avec |
+| TLS de la base : certificat auto-signé épinglé | **Pris**, § 5, adapté à Prisma 6 |
+| L'add-on Mailpace injecterait `MAILPACE_API_TOKEN` | **Contredit par la doc de Clever Cloud** (clé à poser soi-même, nommée `MAILPACE_API_KEY` dans son exemple). À lire dans l'onglet des variables à la création de l'add-on ; notre pilote lit `MAILPACE_API_KEY` |
+| Sauvegardes quotidiennes gardées 7 jours ; restauration testée et écrite ; tâches planifiées sur l'instance 0 seulement | **À reprendre** : procédure de restauration écrite et jouée en phase 3 ; les purges du § 8 sur l'instance 0 |
+
+**Le lot « build CC et pile locale »**, première PR vers `cc`, avant Better
+Auth (décision de la propriétaire du 2026-10-30 : léger, sans S3) :
+- build CC : webpack, `scripts/demarrer-cc.sh` (variables de l'add-on, TLS,
+  migrations par `&&`, serveur sur `0.0.0.0:8080`), `vercel.json` sans aperçu
+  pour `cc` ;
+- `scripts/deployer-cc.sh` (ci-dessus) ;
+- pile locale pour tester un commit avant de le déployer : un conteneur Linux
+  qui construit et démarre l'app exactement comme CC (Node 24, pnpm, build
+  webpack, script de démarrage), et Postgres 17 à part de la base de
+  développement. Stockage sur disque, e-mails dans la console : le S3 et
+  Mailpace se testent en préproduction. Pour développer, `pnpm dev` reste.
 
 ---
 
@@ -415,8 +494,8 @@ utilisateurs multiples par entreprise.
 
 ## 10. Ce qui reste à vérifier (non documenté par Clever Cloud)
 
-- Le proxy écrase-t-il un `X-Forwarded-For` envoyé par le client ? (test § 7.2)
-- TLS en transit et autorité de certification de l'add-on PostgreSQL.
+- ~~Le proxy écrase-t-il un `X-Forwarded-For` envoyé par le client ? (test § 7.2)~~ [2026-10-30 : non, il ajoute à droite — mesuré en prod par GestBAT ; le test § 7.2 le reconfirme pour nous]
+- ~~TLS en transit et autorité de certification de l'add-on PostgreSQL.~~ [2026-10-30 : TLS 1.3, certificat auto-signé à épingler — constaté par GestBAT ; à reconstater sur notre add-on]
 - `ALTER DATABASE … SET timezone` par le propriétaire.
 - Prix de l'add-on Mailpace.
 - Création d'un second rôle : constatée sur un add-on DEV, et demandée au
