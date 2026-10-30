@@ -4,6 +4,7 @@ import {
   assertEntrepriseOwnership,
   assertEtablissementOwnership,
 } from "@/lib/auth/scope";
+import { RAPPORT_HORS_LIGNE_SALARIE } from "@/lib/controle/pieces-zip";
 import { cascadeDepuis, compterLignes } from "./cascade";
 import type {
   PerimetreEntreprise,
@@ -23,6 +24,12 @@ import type {
  * compte que `supprimerEntreprise` et `supprimerEtablissement` opposent à la
  * demande. La carte et le refus doivent tenir le MÊME prédicat, sinon la carte
  * finit par promettre une suppression que l'action refuse — ou l'inverse.
+ *
+ * **Le nombre de rapports non plus**, pour une raison voisine : la carte
+ * renvoie à l'export de « Préparer un contrôle » pour les garder, et ce ZIP
+ * écarte les rapports des lignes de salarié (`RAPPORT_HORS_LIGNE_SALARIE`).
+ * La cascade, elle, les emporte tous : le nombre annoncé doit être celui que
+ * l'export reprend, sinon l'employeur croit avoir tout sauvegardé.
  */
 
 /** Ce que la suppression d'une entreprise emporte, et ce qui la refusera. */
@@ -44,9 +51,14 @@ export async function mesurerPerimetreEntreprise(
     select: { raisonDisplay: true },
   });
 
-  const versionsDuerp = await prisma.duerpVersion.count({
-    where: { duerp: { etablissement: { entrepriseId } } },
-  });
+  const [versionsDuerp, rapports] = await Promise.all([
+    prisma.duerpVersion.count({
+      where: { duerp: { etablissement: { entrepriseId } } },
+    }),
+    prisma.rapportVerification.count({
+      where: { etablissement: { entrepriseId }, ...RAPPORT_HORS_LIGNE_SALARIE },
+    }),
+  ]);
 
   return {
     etablissements: etablissements.map((e) => e.raisonDisplay),
@@ -54,6 +66,7 @@ export async function mesurerPerimetreEntreprise(
     // compter une seconde fois dans le total les ferait compter deux fois.
     lignes: compterLignes(emporte, ["Entreprise", "Etablissement"]),
     versionsDuerp,
+    rapports,
   };
 }
 
@@ -77,14 +90,18 @@ export async function mesurerPerimetreEtablissement(
     etablissementId,
   ]);
 
-  const versionsDuerp = await prisma.duerpVersion.count({
-    where: { duerp: { etablissementId } },
-  });
+  const [versionsDuerp, rapports] = await Promise.all([
+    prisma.duerpVersion.count({ where: { duerp: { etablissementId } } }),
+    prisma.rapportVerification.count({
+      where: { etablissementId, ...RAPPORT_HORS_LIGNE_SALARIE },
+    }),
+  ]);
 
   return {
     nom: etablissement.raisonDisplay,
     lignes: compterLignes(emporte, ["Etablissement"]),
     versionsDuerp,
+    rapports,
     entrepriseEmportee:
       etablissement.entreprise._count.etablissements === 1
         ? etablissement.entreprise.raisonSociale

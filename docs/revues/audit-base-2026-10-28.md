@@ -53,8 +53,15 @@ Légende : ✅ en place · ⚠️ à reprendre · ❌ risque · ~~rayé~~ corrig
   preuves nommément et vide les `leveeRapportId` qui pointaient ses rapports.
   Une régénération du calendrier qui croise un dépôt échoue désormais (P2003)
   au lieu d'emporter le rapport : le calendrier est marqué périmé et refait.
-- ⚠️ **À trancher** : supprimer un établissement sans DUERP figé efface ses
-  rapports du registre de sécurité et ses signatures (D. 4711-3 : cinq ans).
+- ~~⚠️ **À trancher** : supprimer un établissement sans DUERP figé efface ses
+  rapports du registre de sécurité et ses signatures (D. 4711-3 : cinq ans).~~
+  [2026-10-30, tranché par la propriétaire : la suppression n'est pas
+  refusée ; l'employeur est prévenu avant (« on prévient les utilisateurs
+  avant qu'ils ne suppriment, après c'est leur responsabilité »). Les cartes
+  de suppression d'un établissement et d'une entreprise comptent les rapports
+  emportés, citent D. 4711-3 et renvoient à l'export de « Préparer un
+  contrôle » (`suppression/perimetre.ts`, `clauseRapports`),
+  `lot/suppression-avertir-rapports`.]
 - ⚠️ Colonnes de référence sans clé étrangère : `Action.leveeRapportId`,
   `Signature.objetId` et `AccessToken.objetId` (polymorphes), les quatre
   `userId` (Supabase, hors schéma). `AccessToken.objetType` est un texte libre

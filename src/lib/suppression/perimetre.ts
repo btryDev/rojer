@@ -50,6 +50,8 @@ export type PerimetreEntreprise = {
   lignes: number;
   /** Ce qui fera REFUSER la suppression. Zéro veut dire « rien ne s'y oppose ». */
   versionsDuerp: number;
+  /** Les rapports de vérification emportés que l'export de « Préparer un contrôle » reprend. */
+  rapports: number;
 };
 
 /** Nombres mesurés sur le dossier d'un établissement. */
@@ -58,6 +60,8 @@ export type PerimetreEtablissement = {
   /** Enregistrements emportés, l'établissement lui-même exclu. */
   lignes: number;
   versionsDuerp: number;
+  /** Les rapports de vérification emportés que l'export de « Préparer un contrôle » reprend. */
+  rapports: number;
   /**
    * L'entreprise qui part avec lui, quand il est son dernier établissement
    * (2026-10-26, `supprimerEntrepriseSiVide`), sinon `null`.
@@ -88,6 +92,50 @@ function clauseConservation(versionsDuerp: number): string {
     "ici, et le Code du travail les fait conserver 40 ans (art. R. 4121-4 du Code du " +
     "travail)."
   );
+}
+
+/**
+ * Les rapports de vérification partent avec le dossier, et la loi les fait
+ * conserver : `D. 4711-3` — « les documents concernant […] les vérifications
+ * et contrôles […] des cinq dernières années et, en tout état de cause, ceux
+ * des deux derniers contrôles ».
+ *
+ * La suppression n'est PAS refusée pour autant (décision de la propriétaire du
+ * 2026-10-30) : on prévient avant, avec l'export qui les emporte ; la
+ * conservation devient alors l'affaire de l'employeur. À l'inverse des
+ * versions de DUERP, que la base protège (`onDelete: Restrict`).
+ *
+ * Rien n'est dit quand il n'y a aucun rapport : une mise en garde sans objet
+ * fait douter sans raison.
+ */
+function clauseRapports(rapports: number): string {
+  if (rapports === 0) return "";
+  const sujet =
+    rapports > 1
+      ? `Les ${rapports} rapports de vérification partent`
+      : "Le rapport de vérification part";
+  return (
+    `${sujet} aussi. Le Code du travail vous fait conserver ceux des cinq ` +
+    "dernières années, et en tout cas ceux des deux derniers contrôles " +
+    "(art. D. 4711-3) : téléchargez le dossier depuis « Préparer un contrôle » " +
+    "avant de supprimer. Rojer ne les gardera pas ; leur conservation sera à " +
+    "votre charge."
+  );
+}
+
+/**
+ * La fin commune aux deux cartes : les rapports à conserver, le caractère
+ * définitif, puis la conservation du DUERP — dans cet ordre, l'avertissement
+ * avant « définitivement ».
+ */
+function finDeSuppression(p: { rapports: number; versionsDuerp: number }): string {
+  return [
+    clauseRapports(p.rapports),
+    "Rien ne se récupère ensuite : tout est supprimé définitivement.",
+    clauseConservation(p.versionsDuerp),
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
 
 /** « 412 enregistrements » / « 1 enregistrement » / rien du tout. */
@@ -121,7 +169,7 @@ export function detailSuppressionEntreprise(p: PerimetreEntreprise): string {
           "vérifications, rapports téléversés, plan d'actions, registres, " +
           "et les fiches de l'équipe avec leurs titres.";
 
-  return `${cePartant} Rien ne se récupère ensuite : tout est supprimé définitivement. ${clauseConservation(p.versionsDuerp)}`;
+  return `${cePartant} ${finDeSuppression(p)}`;
 }
 
 /** Le détail de la carte de suppression d'un établissement. */
@@ -135,6 +183,6 @@ export function detailSuppressionEtablissement(
     (p.entrepriseEmportee
       ? `C'est le dernier établissement de ${p.entrepriseEmportee} : l'entreprise est supprimée avec lui. `
       : "") +
-    `Rien ne se récupère ensuite : tout est supprimé définitivement. ${clauseConservation(p.versionsDuerp)}`
+    finDeSuppression(p)
   );
 }
