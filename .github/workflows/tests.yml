@@ -25,7 +25,6 @@ env:
   DATABASE_URL: postgresql://factice:factice@localhost:5432/factice
   DIRECT_URL: postgresql://factice:factice@localhost:5432/factice
   NEXT_PUBLIC_SUPABASE_URL: https://factice.supabase.co
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: factice
   # Le fuseau des serveurs Vercel, et non celui des postes à Paris : un test
   # qui ne passe qu'à Paris cache un défaut que la production verrait.
   TZ: UTC

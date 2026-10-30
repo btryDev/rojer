@@ -23,8 +23,10 @@
  * - `style-src 'unsafe-inline'` : React rend des attributs `style`, qu'aucun
  *   nonce ne couvre (un nonce ne vaut que pour un élément `<style>`). Une
  *   injection de style ne fait pas exécuter de code ;
- * - `connect-src` vers l'origine Supabase : le navigateur échange le code du
- *   lien de réinitialisation (PKCE) avec le serveur Auth.
+ * - ~~`connect-src` vers l'origine Supabase : le navigateur échange le code du
+ *   lien de réinitialisation (PKCE) avec le serveur Auth.~~ [2026-10-30,
+ *   ADR-052 : le navigateur n'appelle plus aucun service d'authentification ;
+ *   `connect-src` revient à l'app seule.]
  *
  * Les browsers d'avant CSP 3 ignorent `'strict-dynamic'` et retombent sur
  * `'self'` : ils chargent les morceaux de l'app, et refusent tout script en
@@ -33,23 +35,11 @@
 
 type Entete = { key: string; value: string };
 
-/** Origine Supabase appelée depuis le navigateur (connect-src). */
-function origineSupabase(url: string | undefined): string | null {
-  if (!url) return null;
-  try {
-    return new URL(url).origin;
-  } catch {
-    return null;
-  }
-}
-
 export function politiqueContenu(options: {
-  supabaseUrl: string | undefined;
   developpement: boolean;
   /** Le nonce de la requête, tiré par le proxy (`nonceCsp`). */
   nonce: string;
 }): string {
-  const supabase = origineSupabase(options.supabaseUrl);
   const directives: Record<string, string[]> = {
     "default-src": ["'self'"],
     // 'unsafe-eval' : React en développement seulement (piles d'appel).
@@ -65,7 +55,6 @@ export function politiqueContenu(options: {
     "font-src": ["'self'", "data:"],
     "connect-src": [
       "'self'",
-      ...(supabase ? [supabase] : []),
       ...(options.developpement ? ["ws:"] : []),
     ],
     "object-src": ["'none'"],

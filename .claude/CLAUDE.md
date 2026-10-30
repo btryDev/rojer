@@ -576,7 +576,7 @@ est nulle, la conservation reste à la charge de l'employeur hors de l'outil.
 - **Next.js 16** (App Router, Server Actions) + **React 19**
 - **TypeScript strict**
 - **PostgreSQL** + **Prisma** (ORM)
-- **Supabase Auth** (`@supabase/ssr`) pour l'authentification — cf. ADR-005. Supabase sert uniquement d'auth provider ; la data reste accédée via Prisma (rôle `postgres`, bypass RLS). Pas de modèle `User` en base : l'identité vit chez Supabase, `Entreprise.userId` fait le lien.
+- ~~**Supabase Auth** (`@supabase/ssr`) pour l'authentification — cf. ADR-005. Supabase sert uniquement d'auth provider ; la data reste accédée via Prisma (rôle `postgres`, bypass RLS). Pas de modèle `User` en base : l'identité vit chez Supabase, `Entreprise.userId` fait le lien.~~ [2026-10-30, branche `cc`, ADR-052 : **Better Auth** (`src/lib/auth/better-auth.ts`), tables `User`/`Session`/`Account`/`AuthVerification` dans notre base, `Entreprise.userId` est une clé étrangère vers `User`. Aucune route HTTP de Better Auth : nos actions appellent `auth.api.*`. `lireUserCourant` (`require-user.ts`) est la seule lecture de l'identité.]
 - ~~**react-hook-form** +~~ **Zod** pour la validation, côté serveur ; les formulaires passent par `useActionState` et une action serveur [2026-10-14 : `react-hook-form` et `@hookform/resolvers` n'étaient importés nulle part, retirés de `package.json` (audit Next.js, B7)]
 - **Tailwind CSS** + **shadcn/ui** (+ `@base-ui/react`, `@dnd-kit` pour le board) pour l'interface
 - **@react-pdf/renderer** pour la génération PDF ; `jszip` (export contrôle), `qrcode` (affiche accessibilité), `xlsx` (import DUERP)

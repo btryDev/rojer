@@ -3,7 +3,7 @@
  * Mesure des pages authentifiées (plan performance, lot 0).
  *
  * Par page : requêtes SQL et leur temps en base, temps du premier octet et
- * total, poids HTML et RSC, appels au serveur Auth. Médiane de N essais après
+ * total, poids HTML et RSC. Médiane de N essais après
  * une chauffe. Puis les requêtes SQL les plus coûteuses, toutes pages
  * confondues, et — avec `--expliquer` — leur plan d'exécution.
  *
@@ -14,16 +14,18 @@
  * Prérequis :
  *   - conteneur `duerp-db` démarré, base de mesure semée (seed:complet, puis
  *     scripts/perf/grossir-dossier.ts pour le gros dossier) ;
- *   - faux serveur Auth : node scripts/perf/faux-auth.mjs ;
+ *   - une vraie session Better Auth (ADR-052) : `scripts/perf/session-mesure.ts`
+ *     crée le compte et écrit le cookie de session ; son chemin dans
+ *     MESURE_COOKIE_FICHIER (la lecture de la session est une requête SQL, comptée
+ *     comme les autres) ;
  *   - build de prod (`next build`, jamais `pnpm build`, qui migre) servi par
- *     `next start`, construit avec NEXT_PUBLIC_SUPABASE_URL=http://localhost:54399.
+ *     `next start`, avec le même BETTER_AUTH_SECRET que la session.
  *
  *   node scripts/perf/mesurer.mjs --base http://localhost:3101 --db duerp_perf_gros \
  *     [--essais 3] [--expliquer 5] [--sortie mesure.json]
  */
 import { execFileSync, spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
-import { fabriquerCookie } from "./faux-auth.mjs";
 
 const arg = (nom, defaut) => {
   const i = process.argv.indexOf(`--${nom}`);
@@ -34,7 +36,6 @@ const DB = arg("db");
 const ESSAIS = Number(arg("essais", "3"));
 const EXPLIQUER = Number(arg("expliquer", "0"));
 const SORTIE = arg("sortie");
-const AUTH = arg("auth", "http://localhost:54399");
 // Le conteneur PostgreSQL et son utilisateur : `duerp-db` / `duerp` en local ;
 // en CI, le conteneur de service du runner (`budget-requetes.yml`).
 const CONTENEUR = arg("conteneur", "duerp-db");
@@ -168,7 +169,11 @@ function pagesAMesurer() {
   ];
 }
 
-const COOKIE = fabriquerCookie();
+const COOKIE = (() => {
+  const fichier = process.env.MESURE_COOKIE_FICHIER;
+  if (!fichier) throw new Error("MESURE_COOKIE_FICHIER absente : lancer d'abord scripts/perf/session-mesure.ts.");
+  return readFileSync(fichier, "utf8").trim();
+})();
 
 async function obtenir(chemin, rsc) {
   const t0 = performance.now();
@@ -184,25 +189,18 @@ async function obtenir(chemin, rsc) {
   return { statut: r.status, premierOctet, total: performance.now() - t0, octets: corps.length };
 }
 
-async function appelsAuth(raz) {
-  const r = await fetch(`${AUTH}/${raz ? "__raz" : "__compte"}`, { method: raz ? "POST" : "GET" });
-  return raz ? 0 : (await r.json()).appels;
-}
-
 async function mesurerPage(nom, chemin) {
   await obtenir(chemin, false); // chauffe
   const essais = [];
   for (let k = 0; k < ESSAIS; k++) {
     await attendre(300);
-    await appelsAuth(true);
     const debut = new Date(Date.now() - 50);
     const html = await obtenir(chemin, false);
     await attendre(400);
     const fin = new Date();
-    const auth = await appelsAuth(false);
     const { requetes, tempsSql } = analyser(lireJournal(debut, fin));
     const rsc = await obtenir(chemin, true);
-    essais.push({ html, rsc, requetes, tempsSql, auth });
+    essais.push({ html, rsc, requetes, tempsSql });
   }
   const statut = essais[0].html.statut;
   if (statut !== 200) console.error(`  ! ${nom} : statut ${statut}`);
@@ -216,7 +214,6 @@ async function mesurerPage(nom, chemin) {
     totalMs: mediane(essais.map((e) => e.html.total)),
     htmlOctets: mediane(essais.map((e) => e.html.octets)),
     rscOctets: mediane(essais.map((e) => e.rsc.octets)),
-    appelsAuth: mediane(essais.map((e) => e.auth)),
     requetes: essais[essais.length - 1].requetes,
   };
 }
@@ -254,11 +251,11 @@ async function main() {
     }
 
     console.log(`\nBase ${DB} — médiane de ${ESSAIS} essais après une chauffe.\n`);
-    console.log("| Page | SQL | Temps SQL (ms) | 1er octet (ms) | Total (ms) | HTML (Ko) | RSC (Ko) | Appels Auth |");
-    console.log("|---|---|---|---|---|---|---|---|");
+    console.log("| Page | SQL | Temps SQL (ms) | 1er octet (ms) | Total (ms) | HTML (Ko) | RSC (Ko) |");
+    console.log("|---|---|---|---|---|---|---|");
     for (const r of resultats) {
       console.log(
-        `| ${r.nom} | ${r.sql} | ${r.tempsSqlMs.toFixed(1)} | ${r.premierOctetMs.toFixed(0)} | ${r.totalMs.toFixed(0)} | ${(r.htmlOctets / 1024).toFixed(0)} | ${(r.rscOctets / 1024).toFixed(0)} | ${r.appelsAuth} |`,
+        `| ${r.nom} | ${r.sql} | ${r.tempsSqlMs.toFixed(1)} | ${r.premierOctetMs.toFixed(0)} | ${r.totalMs.toFixed(0)} | ${(r.htmlOctets / 1024).toFixed(0)} | ${(r.rscOctets / 1024).toFixed(0)} |`,
       );
     }
 

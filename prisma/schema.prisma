@@ -16,9 +16,11 @@ datasource db {
 // Modèle documenté dans /docs/adr/001 à 004.
 // ============================================================================
 
-// ADR-005 : Entreprise est rattachée à un user Supabase (auth.users.id).
+// ~~ADR-005 : Entreprise est rattachée à un user Supabase (auth.users.id).
 // userId est un UUID stocké en texte, pas de FK cross-schéma : auth.* est
-// géré par Supabase, on n'y projette pas de contrainte Prisma. Le scoping
+// géré par Supabase, on n'y projette pas de contrainte Prisma.~~
+// [2026-10-30, ADR-052 : le compte est le modèle `User` de Better Auth, dans
+// notre base ; `userId` est une clé étrangère vers lui.] Le scoping
 // par user est assuré au niveau applicatif (helper requireUser + WHERE userId).
 //
 // ~~Invariant produit « 1 utilisateur = 1 entreprise »~~ [2026-10-26 : retiré,
@@ -39,6 +41,7 @@ datasource db {
 model Entreprise {
   id             String          @id @default(cuid())
   userId         String?         @db.Uuid
+  user           User?           @relation(fields: [userId], references: [id], onDelete: Restrict)
   siren          String?
   raisonSociale  String
   effectif       Int
@@ -1293,6 +1296,7 @@ model Signature {
   signataireEmail String
   signataireRole  String?
   userId          String? @db.Uuid // non-null si compte_connecte
+  user            User?   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   // La partie AU NOM DE LAQUELLE la signature est donnée (audit du
   // 2026-10-12). Les fiches attribuaient une signature à une partie en
@@ -1388,6 +1392,7 @@ model AccessToken {
   revoqueMotif String?
 
   createdByUserId              String   @db.Uuid
+  createdBy                    User     @relation(fields: [createdByUserId], references: [id], onDelete: Restrict)
   createdAt                    DateTime @default(now())
   derniereUtilisationIp        String?
   derniereUtilisationUserAgent String?
@@ -1395,6 +1400,9 @@ model AccessToken {
   @@index([etablissementId])
   @@index([objetType, objetId])
   @@index([prestataireId])
+  // Liens émis par un compte (plafond d'émission, `access-tokens/emission.ts`)
+  // et contrôle `Restrict` de la clé vers User.
+  @@index([createdByUserId, createdAt])
 }
 
 /// Le plafond des envois de code de confirmation, PAR ADRESSE (ADR-006,
@@ -2196,8 +2204,9 @@ enum CategorieAssistance {
 
 model DemandeAssistance {
   id              String              @id @default(cuid())
-  /// L'utilisateur Supabase qui demande (ADR-005 : pas de modèle User).
-  userId          String
+  /// Le compte qui demande (ADR-052).
+  userId          String              @db.Uuid
+  user            User                @relation(fields: [userId], references: [id], onDelete: Restrict)
   etablissementId String?
   etablissement   Etablissement?      @relation(fields: [etablissementId], references: [id], onDelete: Cascade)
   categorie       CategorieAssistance
@@ -2223,9 +2232,12 @@ model DemandeAssistance {
 // `verification.modelName: "authVerification"` : `Verification` est déjà une
 // table métier.
 //
-// Aucune table métier ne les référence encore : les clés étrangères vers
-// `User` arrivent avec la bascule de l'authentification (lot 2), qui crée les
-// comptes qu'elles désignent.
+// Les tables métier qui désignent un compte (`Entreprise`, `Signature`,
+// `AccessToken`, `DemandeAssistance`) le font par une clé étrangère en
+// `Restrict` : un compte ne se supprime pas en emportant dossiers, signatures
+// ou liens émis (conservation, ADR-012). La suppression de compte n'existe pas
+// encore ; elle tranchera ce qu'elle fait de chacun. Sessions et comptes de
+// connexion suivent l'utilisateur (`Cascade`, défaut de Better Auth).
 
 model User {
   id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -2237,6 +2249,11 @@ model User {
   updatedAt     DateTime  @updatedAt
   sessions      Session[]
   accounts      Account[]
+
+  entreprises        Entreprise[]
+  signatures         Signature[]
+  accessTokensEmis   AccessToken[]
+  demandesAssistance DemandeAssistance[]
 
   @@unique([email])
 }

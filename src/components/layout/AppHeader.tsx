@@ -17,7 +17,7 @@ import { signOutAction } from "@/lib/auth/actions";
  * (`docs/charte-board.md`), et un en-tête papier au-dessus d'écrans board
  * se lit comme un morceau d'un autre logiciel.
  *
- * Server component : lit la session Supabase pour afficher l'email + logout
+ * Server component : lit la session (Better Auth, ADR-052) pour afficher l'email + logout
  * quand l'utilisateur est connecté, ou les liens de connexion sinon.
  */
 export async function AppHeader() {

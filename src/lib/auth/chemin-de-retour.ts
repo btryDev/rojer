@@ -1,11 +1,11 @@
 // Où renvoyer l'utilisateur après connexion ou confirmation d'adresse.
 //
-// La valeur vient de l'URL (`/login?next=…`, `/auth/callback?next=…`) : elle
+// La valeur vient de l'URL (`/login?next=…` ; ~~`/auth/callback?next=…`~~, retiré avec Supabase, ADR-052) : elle
 // se forge et s'envoie par mail à n'importe qui. Suivie telle quelle, elle
 // faisait de la page de connexion de Rojer un tremplin vers un site tiers,
 // juste après que la victime a tapé son mot de passe (audit du 2026-10-13, C1
 // et C2). Une seule règle, lue partout où `next` est lu : la page de
-// connexion, l'action, le callback.
+// connexion, l'action.
 
 export const CHEMIN_DE_RETOUR_PAR_DEFAUT = "/entreprises";
 

@@ -2,11 +2,11 @@
 // `server-only-hors-next.mjs`. Remplace `@/lib/auth/require-user` par un
 // double qui rend l'utilisateur `MESURE_USER_ID` et COMPTE les appels.
 //
-// Hors d'une requête Next, le vrai module appelle `cookies()` (qui lève) puis
-// `supabase.auth.getUser()` (un aller-retour réseau vers le projet Supabase,
-// à ne jamais appeler d'ici). Chaque appel compté ici est, en production, un
-// `getUser()` réseau : dans un route handler, `cache()` de React ne mémoïse
-// rien (audit Next.js du 2026-10-14, M7).
+// Hors d'une requête Next, le vrai module appelle `headers()` (qui lève) puis
+// `auth.api.getSession()` (ADR-052 ; ~~`supabase.auth.getUser()`, un
+// aller-retour réseau~~). Chaque appel compté ici est, en production, une
+// lecture de session en base : dans un route handler, `cache()` de React ne
+// mémoïse rien (audit Next.js du 2026-10-14, M7).
 
 import { registerHooks } from "node:module";
 import { pathToFileURL } from "node:url";

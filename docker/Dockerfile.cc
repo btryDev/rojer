@@ -25,10 +25,6 @@ RUN pnpm install --frozen-lockfile
 
 COPY . .
 
-# Les NEXT_PUBLIC_* sont figées dans le code au build, comme chez Clever Cloud
-# où les variables de l'application sont présentes pendant le build.
-ARG NEXT_PUBLIC_SUPABASE_URL
-ARG NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 ENV NODE_ENV=production
 RUN pnpm build:cc
 

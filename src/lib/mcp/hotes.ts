@@ -1,6 +1,7 @@
 // Hôtes et origines acceptés par le serveur MCP distant.
 //
-// Extrait de `./acces-http` pour être partagé avec `./acces-oauth` : la
+// Extrait de `./acces-http` pour être partagé avec ~~`./acces-oauth`~~ [retiré
+// le 2026-10-30, ADR-052] l'accès par compte à venir (`@better-auth/mcp`) : la
 // validation `Host`/`Origin` est une garde de transport, elle ne dépend pas
 // de la façon dont on authentifie derrière.
 //

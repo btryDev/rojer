@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { Cadran } from "@/components/landing/Cadran";
 import { Etapes } from "@/components/landing/Etapes";
 import { HeroBrief } from "@/components/landing/HeroBrief";
@@ -11,23 +10,11 @@ import { TableauDeBord } from "@/components/landing/TableauDeBord";
 import { getOptionalUser } from "@/lib/auth/require-user";
 import { getOptionalUserEtablissement } from "@/lib/auth/scope";
 import { chiffresReferentielSuivi } from "@/lib/referentiels/conformite";
-import { RecoveryHashRedirect } from "./RecoveryHashRedirect";
 
-export default async function Home({
-  searchParams,
-}: {
-  searchParams: Promise<{ code?: string }>;
-}) {
-  // Les liens e-mail Supabase envoyés depuis le dashboard redirigent vers la
-  // Site URL racine avec ?code=… : on l'échange contre une session via la
-  // route callback, puis direction la page de choix du nouveau mot de passe.
-  const { code } = await searchParams;
-  if (code) {
-    redirect(
-      `/auth/callback?code=${encodeURIComponent(code)}&next=/auth/reinitialisation`,
-    );
-  }
-
+// ~~Les liens e-mail Supabase (`?code=…`, `#type=recovery`) étaient relayés
+// d'ici vers `/auth/callback`~~ [2026-10-30, ADR-052 : les liens de Better Auth
+// mènent directement à `/auth/verification` et `/auth/reinitialisation`.]
+export default async function Home() {
   const user = await getOptionalUser();
   const etab = user ? await getOptionalUserEtablissement() : null;
   // Quand l'utilisateur n'est pas connecté, le CTA principal l'envoie sur
@@ -57,8 +44,7 @@ export default async function Home({
 
   return (
     <main className="bg-[color:var(--board-card)]">
-      <RecoveryHashRedirect />
-      <LandingHeader
+            <LandingHeader
         ctaHref={ctaHref}
         ctaLabel={ctaLabel}
         connecte={Boolean(user)}

@@ -165,15 +165,16 @@ const EXEMPTIONS = new Map<string, Exemption>([
   [
     "lib/auth/actions.ts:definirMotDePasseAction",
     {
-      garde: "supabase.auth",
+      garde: "auth.api.resetPassword",
       raison:
         "Nouveau mot de passe au retour du lien de réinitialisation : agit sur " +
-        "le compte de la session de récupération, ne lit aucune donnée de dossier.",
+        "le compte que désigne le jeton du lien (Better Auth le juge), ne lit " +
+        "aucune donnée de dossier.",
     },
   ],
   [
     "lib/auth/actions.ts:signOutAction",
-    { garde: "supabase.auth", raison: "Déconnexion : ne lit aucune donnée de dossier." },
+    { garde: "auth.api.signOut", raison: "Déconnexion : ne lit aucune donnée de dossier." },
   ],
 ]);
 

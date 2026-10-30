@@ -11,9 +11,9 @@
 # nombre de requêtes d'une page est ce qu'un relecteur ne voit pas dans un
 # diff ; ce job le voit.
 #
-# Aucun secret, aucun accès à la production : un Postgres du runner, un faux
-# serveur d'authentification local (`scripts/perf/faux-auth.mjs`), des valeurs
-# factices pour Supabase.
+# Aucun secret, aucun accès à la production : un Postgres du runner, et une
+# vraie session Better Auth créée sur lui (`scripts/perf/session-mesure.ts`,
+# ADR-052), signée par un secret propre à ce job.
 
 name: Budget de requêtes par page
 
@@ -56,12 +56,12 @@ jobs:
     env:
       DATABASE_URL: postgresql://duerp:duerp@localhost:5432/duerp_perf_ci
       DIRECT_URL: postgresql://duerp:duerp@localhost:5432/duerp_perf_ci
-      # Le faux serveur d'authentification : le cookie de session de la
-      # mesure est signé pour lui (`faux-auth.mjs`).
-      NEXT_PUBLIC_SUPABASE_URL: http://localhost:54399
-      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-factice
-      # L'utilisateur du faux serveur, propriétaire du dossier semé.
-      UTILISATEUR_MESURE: 00000000-0000-4000-8000-00000000fe11
+      # La session de mesure est signée par ce secret, que le serveur mesuré
+      # partage. Valeur de CI seulement, sans rien à protéger.
+      BETTER_AUTH_SECRET: secret-de-ci-pour-la-mesure-des-pages-seulement
+      MESURE_COOKIE_FICHIER: session-mesure.cookie
+      # Requise en production (`env.ts`) : l'adresse du serveur mesuré ici.
+      PUBLIC_APP_URL: http://localhost:3101
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -81,7 +81,8 @@ jobs:
           # `seed:complet` charge un .env : les variables du job priment.
           touch .env
           pnpm exec prisma migrate deploy
-          pnpm seed:complet --user "$UTILISATEUR_MESURE"
+          pnpm exec tsx --import ./scripts/server-only-hors-next.mjs scripts/perf/session-mesure.ts session-mesure.id "$MESURE_COOKIE_FICHIER"
+          pnpm seed:complet --user "$(cat session-mesure.id)"
           pnpm exec tsx --import ./scripts/server-only-hors-next.mjs scripts/perf/grossir-dossier.ts
 
       - name: Construire l'application
@@ -93,14 +94,13 @@ jobs:
           # Le conteneur du service Postgres : la mesure lit son journal.
           CONTENEUR_PG: ${{ job.services.postgres.id }}
         run: |
-          node scripts/perf/faux-auth.mjs --port 54399 > faux-auth.log 2>&1 &
           pnpm exec next start --port 3101 > next.log 2>&1 &
           pret=0
           for i in $(seq 1 60); do
-            if curl -s -o /dev/null http://localhost:3101/ && curl -s -o /dev/null http://localhost:54399/__compte; then pret=1; break; fi
+            if curl -s -o /dev/null http://localhost:3101/; then pret=1; break; fi
             sleep 1
           done
-          if [ "$pret" != 1 ]; then echo "Le serveur ou le faux serveur d'authentification n'a pas démarré en 60 s."; exit 1; fi
+          if [ "$pret" != 1 ]; then echo "Le serveur n'a pas démarré en 60 s."; exit 1; fi
           # Trois essais par page, la médiane fait foi : une requête de passage
           # (travail différé, reconnexion du pool) ne fait pas échouer une PR.
           node scripts/perf/mesurer.mjs \
@@ -115,4 +115,3 @@ jobs:
         if: failure()
         run: |
           echo "--- next.log"; tail -n 80 next.log || true
-          echo "--- faux-auth.log"; tail -n 40 faux-auth.log || true

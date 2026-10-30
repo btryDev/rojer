@@ -9,9 +9,14 @@ export const metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; confirmed?: string }>;
+  searchParams: Promise<{
+    next?: string;
+    confirmed?: string;
+    confirmation?: string;
+    reinitialise?: string;
+  }>;
 }) {
-  const { next: nextBrut, confirmed } = await searchParams;
+  const { next: nextBrut, confirmed, confirmation, reinitialise } = await searchParams;
   // Filtré dès la page : le lien vers /signup le recopie, et l'action le
   // refiltre de toute façon (le champ caché se modifie à la main).
   const next = nextBrut === undefined ? undefined : cheminDeRetour(nextBrut);
@@ -37,6 +42,21 @@ export default async function LoginPage({
           // confirmation d'adresse — le registre calme du glacier suffit.
           <p className="m-0 mt-6 rounded-[18px] bg-[color:var(--board-blue-pale)] px-4 py-3 text-[13px] leading-[1.5] text-[color:var(--board-blue-ink)]">
             E-mail confirmé. Vous pouvez vous connecter.
+          </p>
+        ) : null}
+
+        {reinitialise === "1" ? (
+          <p className="m-0 mt-6 rounded-[18px] bg-[color:var(--board-blue-pale)] px-4 py-3 text-[13px] leading-[1.5] text-[color:var(--board-blue-ink)]">
+            Mot de passe changé. Vos autres sessions ont été fermées : connectez-vous avec le nouveau.
+          </p>
+        ) : null}
+
+        {confirmation === "invalide" ? (
+          <p
+            role="alert"
+            className="m-0 mt-6 rounded-[18px] bg-[color:var(--board-signal-wash)] px-4 py-3 text-[13px] leading-[1.5] text-[color:var(--board-signal-ink)]"
+          >
+            Ce lien de confirmation est invalide ou a expiré. Connectez-vous avec votre adresse et votre mot de passe pour en obtenir un nouveau.
           </p>
         ) : null}
 

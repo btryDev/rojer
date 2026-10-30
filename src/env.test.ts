@@ -13,8 +13,7 @@ import {
 const BASE = {
   NODE_ENV: "development",
   DATABASE_URL: "postgresql://u:secret-db@localhost:5433/duerp",
-  NEXT_PUBLIC_SUPABASE_URL: "https://abc.supabase.co",
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_xxx",
+  BETTER_AUTH_SECRET: "un-secret-de-trente-deux-caracteres-au-moins",
 };
 
 function erreurDe(env: Record<string, string | undefined>): ErreurEnvironnement {
@@ -34,12 +33,21 @@ describe("validerEnvironnement", () => {
 
   it("nomme chaque variable requise manquante", () => {
     const e = erreurDe({ NODE_ENV: "development" });
-    expect(e.variables.sort()).toEqual([
-      "DATABASE_URL",
-      "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
-      "NEXT_PUBLIC_SUPABASE_URL",
-    ]);
+    expect(e.variables.sort()).toEqual(["BETTER_AUTH_SECRET", "DATABASE_URL"]);
     expect(e.message).toContain("DATABASE_URL : absente");
+  });
+
+  it("le secret de Better Auth : 32 caractères au moins, jamais cité", () => {
+    const e = erreurDe({ ...BASE, BETTER_AUTH_SECRET: "court-et-secret" });
+    expect(e.variables).toEqual(["BETTER_AUTH_SECRET"]);
+    expect(e.message).not.toContain("court-et-secret");
+  });
+
+  it("l'URL publique est exigée en production, pas en développement", () => {
+    expect(() => validerEnvironnement(BASE)).not.toThrow();
+    const prod = { ...BASE, NODE_ENV: "production", APP_ENV: "production" };
+    expect(erreurDe(prod).variables).toEqual(["PUBLIC_APP_URL"]);
+    expect(() => validerEnvironnement({ ...prod, PUBLIC_APP_URL: "https://rojer.fr" })).not.toThrow();
   });
 
   it("une variable posée vide est absente", () => {
@@ -80,7 +88,7 @@ describe("validerEnvironnement", () => {
   // faute — en faire une faute fermait toute la prod si Vercel n'exposait pas
   // ses variables système (revue du 2026-10-14, B1).
   it("signale APP_ENV d'une production hors Vercel sans fermer le serveur", () => {
-    const prod = { ...BASE, NODE_ENV: "production" };
+    const prod = { ...BASE, NODE_ENV: "production", PUBLIC_APP_URL: "https://rojer.fr" };
     expect(() => validerEnvironnement(prod)).not.toThrow();
     expect(avertissementsEnvironnement(prod)).toHaveLength(1);
     expect(avertissementsEnvironnement(prod)[0]).toMatch(/^APP_ENV absente/);
@@ -106,9 +114,6 @@ describe("validerEnvironnementAuDemarrage", () => {
 describe("toutes les fautes en une fois", () => {
   it("nomme toutes les requises manquantes en une fois", () => {
     const e = erreurDe({ NODE_ENV: "production", DATABASE_URL: BASE.DATABASE_URL });
-    expect(e.variables.sort()).toEqual([
-      "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
-      "NEXT_PUBLIC_SUPABASE_URL",
-    ]);
+    expect(e.variables.sort()).toEqual(["BETTER_AUTH_SECRET", "PUBLIC_APP_URL"]);
   });
 });

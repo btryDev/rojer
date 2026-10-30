@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { NextRequest } from "next/server";
 
 /**
@@ -15,12 +15,6 @@ import { NextRequest } from "next/server";
  *      Une page statique porte des scripts sans nonce — mesuré sur
  *      `/_not-found` dans Chrome : page morte.
  */
-
-vi.mock("@supabase/ssr", () => ({
-  createServerClient: () => ({
-    auth: { getClaims: async () => ({ data: { claims: { sub: "u1" } }, error: null }) },
-  }),
-}));
 
 const { proxy } = await import("../../proxy");
 

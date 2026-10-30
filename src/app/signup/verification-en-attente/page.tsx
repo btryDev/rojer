@@ -58,7 +58,7 @@ export default async function VerificationEnAttentePage({
           <Etape
             numero={1}
             titre="Ouvrez le mail"
-            corps='De la part de « Supabase Auth » — sujet « Confirm your signup ». Regardez dans vos spams au cas où.'
+            corps="De la part de Rojer — sujet « Rojer — confirmez votre adresse ». Le lien vaut 24 heures. Regardez dans vos spams au cas où."
           />
           <Etape
             numero={2}

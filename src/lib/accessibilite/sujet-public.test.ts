@@ -3,7 +3,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { cheminPublic } from "@/lib/supabase/middleware";
+import { cheminPublic } from "@/lib/auth/proxy-session";
 import {
   surfacesQuiNommentLEntreprise,
   SURFACES_PUBLIQUES_ACCESSIBILITE,

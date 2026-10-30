@@ -58,27 +58,22 @@
 //        -c "CREATE DATABASE duerp_demo OWNER duerp;"
 //   4. pointer DATABASE_URL et DIRECT_URL du .env sur `duerp_demo`
 //   5. npx prisma migrate deploy
-//   6. pnpm seed:complet --user <uuid Supabase>
+//   6. pnpm seed:complet --user <uuid du compte>  (le compte : s'inscrire d'abord)
 //   7. pnpm dev, se connecter avec CE compte-là, ouvrir le dossier.
 //
 // -----------------------------------------------------------------------------
 // `--user` EST OBLIGATOIRE, ET VOICI OÙ TROUVER SA VALEUR
 // -----------------------------------------------------------------------------
-// L'authentification vit chez Supabase (ADR-005) : il n'existe pas de modèle
-// `User` en base, et `Entreprise.userId` — un UUID de `auth.users` stocké en
-// texte, sans clé étrangère — est le SEUL lien entre un compte et son dossier.
-// Ce script ne crée donc aucun compte : il n'a pas la clé de service, et le
-// dépôt n'en stocke aucune. Il rattache le dossier à un compte qui existe déjà.
+// ~~L'authentification vit chez Supabase (ADR-005) : il n'existe pas de modèle
+// `User` en base~~ [2026-10-30, ADR-052 : le compte est le modèle `User` de
+// Better Auth, dans la même base ; `Entreprise.userId` est une clé étrangère
+// vers lui.] Ce script ne crée aucun compte : un mot de passe et une adresse
+// confirmée passent par l'inscription. Il rattache le dossier à un compte qui
+// existe déjà, et vérifie qu'il existe.
 //
-// Trois façons de lire cet identifiant, de la plus immédiate à la plus sûre :
-//
-//   · **Depuis une base où vous avez déjà un dossier.** Si vous avez créé un
-//     dossier par l'onboarding avec ce compte, votre UUID y est déjà écrit :
-//       docker exec duerp-db psql -U duerp -d <votre_base> \
-//         -c 'SELECT "userId", "raisonSociale" FROM "Entreprise" WHERE "userId" IS NOT NULL;'
-//   · **Depuis la console Supabase** : Authentication → Users, colonne UID.
-//   · **Depuis l'application connectée**, en lisant le JWT de session : le
-//     champ `sub` du jeton porté par le cookie `sb-<ref>-auth-token`.
+// L'identifiant se lit dans la base, une fois inscrit :
+//   docker exec duerp-db psql -U duerp -d <votre_base> \
+//     -c 'SELECT id, email FROM "User";'
 //
 // SANS `--user`, LE SCRIPT S'ARRÊTE. Il n'invente pas de valeur et ne retombe
 // pas sur `null` : un dossier créé sous un identifiant que personne ne détient
@@ -743,21 +738,19 @@ const PRESTATAIRES = [
 ];
 
 // ===========================================================================
-// Résolution du compte Supabase.
+// Résolution du compte (ADR-052).
 // ===========================================================================
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const OU_TROUVER_L_UUID = [
-  "  · dans une base où vous avez déjà un dossier, il y est déjà écrit :",
+  "  · s'inscrire sur l'application, confirmer l'adresse, puis lire l'identifiant :",
   "      docker exec duerp-db psql -U duerp -d <votre_base> \\",
-  "        -c 'SELECT \"userId\", \"raisonSociale\" FROM \"Entreprise\" WHERE \"userId\" IS NOT NULL;'",
-  "  · dans la console Supabase : Authentication → Users, colonne UID ;",
-  "  · dans le JWT de session de l'application connectée, champ `sub`.",
+  "        -c 'SELECT id, email FROM \"User\";'",
 ].join("\n");
 
 /**
- * L'UUID Supabase du compte auquel rattacher le dossier — obligatoire.
+ * L'UUID du compte (`User`) auquel rattacher le dossier — obligatoire.
  *
  * Il n'y a pas de valeur par défaut, et surtout pas `null` : un dossier créé
  * sous un identifiant que personne ne détient n'est visible d'aucun écran (les
@@ -818,8 +811,8 @@ function lireUserId(argv: string[]): string {
   if (valeur === undefined || valeur.startsWith("--")) {
     throw new Error(
       "--user <uuid> est obligatoire : le dossier doit appartenir à un compte\n" +
-        "Supabase existant, sans quoi aucun écran ne s'ouvrira dessus (ADR-005 —\n" +
-        "l'auth ne vit pas en base, `Entreprise.userId` est le seul lien).\n" +
+        "existant, sans quoi aucun écran ne s'ouvrira dessus (ADR-052 —\n" +
+        "`Entreprise.userId` désigne un `User`).\n" +
         "Où trouver cet identifiant :\n" +
         OU_TROUVER_L_UUID,
     );
@@ -828,7 +821,7 @@ function lireUserId(argv: string[]): string {
   if (!UUID.test(valeur)) {
     throw new Error(
       `« ${valeur} » n'est pas un UUID. \`Entreprise.userId\` porte l'identifiant\n` +
-        "de `auth.users`, typé `uuid` en base : une chaîne libre y sera refusée par\n" +
+        "d'un `User`, typé `uuid` en base : une chaîne libre y sera refusée par\n" +
         "Postgres, et un identifiant approximatif ne correspondrait à aucun compte.\n" +
         "Où trouver le bon :\n" +
         OU_TROUVER_L_UUID,
@@ -844,6 +837,9 @@ function lireUserId(argv: string[]): string {
 
 async function main(): Promise<void> {
   const userId = lireUserId(process.argv.slice(2));
+  if (!(await prisma.user.findUnique({ where: { id: userId }, select: { id: true } }))) {
+    throw new Error(`Aucun compte « ${userId} » dans cette base.\nOù trouver le bon :\n${OU_TROUVER_L_UUID}`);
+  }
   const zoneUnique = lireZoneUnique(process.argv.slice(2));
   const entrepriseHote = lireEntrepriseHote(process.argv.slice(2));
 

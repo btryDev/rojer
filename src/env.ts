@@ -13,9 +13,12 @@ import "server-only";
 // au journal, NOMME chaque variable fautive — jamais sa valeur.
 //
 // CE QUI EST EXIGÉ, et ce qui ne l'est pas.
-//   - Trois variables sans lesquelles aucune page authentifiée ne répond :
+//   - ~~Trois variables sans lesquelles aucune page authentifiée ne répond :
 //     `DATABASE_URL`, `NEXT_PUBLIC_SUPABASE_URL`,
-//     `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+//     `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.~~ [2026-10-30, ADR-052 :
+//     `DATABASE_URL` et `BETTER_AUTH_SECRET` ; en production, `PUBLIC_APP_URL`
+//     aussi — sans elle, l'authentification n'a pas d'origine de confiance et
+//     aucun lien d'e-mail ne peut se construire.]
 //   - `APP_ENV`, seulement pour un serveur de production qui n'est pas sur
 //     Vercel (pas de `VERCEL_ENV`) : sans elle, l'environnement est
 //     indéterminé et la réparation du calendrier ne s'exécute jamais
@@ -34,8 +37,9 @@ import "server-only";
 // CE QUI N'EST PAS MIGRÉ. Le code continue de lire `process.env.X` là où il le
 // lisait. Plusieurs lecteurs prennent l'environnement en PARAMÈTRE pour être
 // testés sans muter `process.env` (`mcp/hotes.ts`, `mcp/acces-*.ts`,
-// `legifrance/client.ts`, `lib/environnement.ts`), et les modules Supabase sont
-// au lot sécurité puis à Better Auth. Les remplacer par un objet importé d'ici
+// `legifrance/client.ts`, `lib/environnement.ts`) ; ~~les modules Supabase sont
+// au lot sécurité puis à Better Auth~~ [2026-10-30 : Better Auth lit son
+// secret et l'adresse publique dans `auth/better-auth.ts`]. Les remplacer par un objet importé d'ici
 // toucherait une vingtaine de fichiers pour un gain nul : la validation, elle,
 // est faite.
 //
@@ -81,9 +85,11 @@ const schema = z
     ),
     DIRECT_URL: optionnelle,
 
-    // Authentification Supabase (ADR-005), jusqu'à la bascule Better Auth.
-    NEXT_PUBLIC_SUPABASE_URL: requise("URL du projet Supabase").pipe(urlHttp),
-    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: requise("clé publiable Supabase"),
+    // Authentification : Better Auth (ADR-052). Le secret signe les cookies
+    // de session : 32 caractères au moins (`openssl rand -base64 32`).
+    BETTER_AUTH_SECRET: requise("secret de Better Auth").pipe(
+      z.string().min(32, "doit faire au moins 32 caractères"),
+    ),
 
     // Environnement de l'application (`lib/environnement.ts`).
     APP_ENV: enumeration(ENVIRONNEMENTS_APP),
@@ -100,6 +106,9 @@ const schema = z
     STORAGE_BUCKET: optionnelle,
     STORAGE_LOCAL_PATH: optionnelle,
     SUPABASE_SERVICE_ROLE_KEY: optionnelle,
+    // URL du projet Supabase, pour le seul stockage Supabase (Vercel), d'ici
+    // la bascule ; l'authentification ne la lit plus (ADR-052).
+    NEXT_PUBLIC_SUPABASE_URL: z.preprocess(vide, urlHttp.optional()),
     // Cellar (Clever Cloud) : injectées par l'add-on (`storage/s3.ts`).
     CELLAR_ADDON_HOST: optionnelle,
     CELLAR_ADDON_KEY_ID: optionnelle,
@@ -125,6 +134,24 @@ const schema = z
     LEGIFRANCE_ENV: enumeration(["sandbox", "production"] as const),
   });
 
+/**
+ * Les règles qui dépendent d'une autre variable. Hors du schéma : zod ne les
+ * jouerait qu'une fois tout le reste valide, et l'erreur arriverait en deux
+ * temps au lieu de nommer toutes les fautes d'un coup.
+ */
+function fautesDeContexte(env: Env): { variable: string; message: string }[] {
+  if (vide(env.NODE_ENV) === "production" && !vide(env.PUBLIC_APP_URL)) {
+    return [
+      {
+        variable: "PUBLIC_APP_URL",
+        message:
+          "requise en production : origine de confiance de l'authentification et adresse des liens envoyés par e-mail",
+      },
+    ];
+  }
+  return [];
+}
+
 export type EnvValide = z.infer<typeof schema>;
 
 export class ErreurEnvironnement extends Error {
@@ -140,9 +167,12 @@ export class ErreurEnvironnement extends Error {
  */
 export function validerEnvironnement(env: Env = process.env): EnvValide {
   const r = schema.safeParse(env);
-  const fautes: { variable: string; message: string }[] = r.success
-    ? []
-    : r.error.issues.map((i) => ({ variable: String(i.path[0] ?? "?"), message: i.message }));
+  const fautes: { variable: string; message: string }[] = [
+    ...(r.success
+      ? []
+      : r.error.issues.map((i) => ({ variable: String(i.path[0] ?? "?"), message: i.message }))),
+    ...fautesDeContexte(env),
+  ];
 
   if (r.success && fautes.length === 0) return r.data;
 

@@ -32,7 +32,7 @@ import { join } from "node:path";
 
 /**
  * Les répertoires servis sans session — cf. `CHEMINS_PUBLICS` de
- * `src/lib/supabase/middleware.ts`, restreints au module accessibilité.
+ * `src/lib/auth/proxy-session.ts`, restreints au module accessibilité.
  */
 export const SURFACES_PUBLIQUES_ACCESSIBILITE = [
   "src/app/accessibilite",
