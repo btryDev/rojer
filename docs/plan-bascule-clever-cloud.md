@@ -359,10 +359,12 @@ fermeture :
 | Injection SQL | Aucun `$queryRawUnsafe` ni `$executeRawUnsafe` ; SQL brut paramétré, `Prisma.raw` sur liste fermée (BA) | en place |
 | Fuite des identifiants de la base | Pas d'accès direct généré sans besoin, TLS (§ 5), restriction réseau à demander, rotation écrite (B31), jamais dans les journaux | à faire en phase 2 |
 
-**La RLS stricte** ~~gardée pour plus tard~~ [2026-10-30 : **retenue** par la
-propriétaire (« je veux qu'on solidifie l'isolation ») ; instruite dans un lot
-à part, `lot/isolation-rls`, plan et ADR avant tout code. Les difficultés
-ci-dessous sont celles que ce lot doit traiter].
+**La RLS stricte** ~~gardée pour plus tard~~ ~~[2026-10-30 : retenue par la
+propriétaire ; instruite dans un lot à part]~~ [2026-10-30, seconde décision :
+**l'isolation se renforce côté application**, par une extension Prisma qui
+borne chaque requête au compte connecté (lot à part, plan et ADR avant tout
+code). La RLS par compte en base reste une option comparée, non retenue pour
+les raisons ci-dessous.]
  On peut soumettre même le
 propriétaire à la RLS (`FORCE ROW LEVEL SECURITY`) avec des politiques par
 compte, lues dans une variable posée à chaque transaction (`set_config`,
@@ -378,8 +380,8 @@ bascule :
 - le propriétaire peut toujours retirer `FORCE` : elle protège d'un oubli dans
   le code, pas d'un identifiant volé.
 
-~~À rouvrir si les gardes de code ne suffisent plus, par exemple avec des
-utilisateurs multiples par entreprise.~~ [2026-10-30 : ouvert, voir plus haut.]
+À rouvrir si l'isolation applicative ne suffit plus, par exemple avec des
+utilisateurs multiples par entreprise.
 
 ---
 
