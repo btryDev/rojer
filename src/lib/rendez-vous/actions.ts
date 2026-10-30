@@ -1,5 +1,6 @@
 "use server";
 
+import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { requireVerification } from "@/lib/auth/scope";
 import { depuisSaisieDateHeure, joursCivilsEntre } from "@/lib/dates";
@@ -63,16 +64,22 @@ export async function enregistrerSuiviControle(
   }
   // `update` et non `updateMany` : le client borné (ADR-051) réécrit la clé
   // du prestataire en `connect` borné, ce qu'un `updateMany` ne permet pas.
-  // La ligne vient d'être lue par `requireVerification`.
-  await db.verification.update({
-    where: { id: v.id, etablissementId },
-    data: {
-      prestataireId: prestataire.id,
-      rendezVousLe,
-      // Une note sans rendez-vous n'a pas d'objet.
-      rendezVousNote: rendezVousLe ? (parsed.data.rendezVousNote ?? null) : null,
-    },
-  });
+  // La ligne vient d'être lue par `requireVerification` ; supprimée entre-temps,
+  // `update` lève P2025 là où `updateMany` rendait 0 ligne — même réponse
+  // qu'avant : rien à écrire, l'action aboutit.
+  try {
+    await db.verification.update({
+      where: { id: v.id, etablissementId },
+      data: {
+        prestataireId: prestataire.id,
+        rendezVousLe,
+        // Une note sans rendez-vous n'a pas d'objet.
+        rendezVousNote: rendezVousLe ? (parsed.data.rendezVousNote ?? null) : null,
+      },
+    });
+  } catch (e) {
+    if (!(e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025")) throw e;
+  }
 
   revalidatePath(`/etablissements/${etablissementId}`, "layout");
   return { status: "success" };

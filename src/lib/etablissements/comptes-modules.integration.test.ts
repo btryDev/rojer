@@ -11,6 +11,10 @@
 import { afterAll, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
+// Le vrai client borné (ADR-051), pas le remplacement de vitest.setup.ts : ce
+// test tourne contre une vraie base, il éprouve aussi la borne.
+vi.unmock("@/lib/auth/portee/client");
+vi.unmock("@/lib/auth/portee/lot-verifie");
 const session = vi.hoisted(() => ({ userId: "" }));
 vi.mock("@/lib/auth/require-user", () => ({
   requireUser: async () => ({ id: session.userId, email: null }),

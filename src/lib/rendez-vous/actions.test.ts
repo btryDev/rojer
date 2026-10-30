@@ -63,6 +63,22 @@ describe("enregistrerSuiviControle", () => {
     expect((data().rendezVousLe as Date).toISOString()).toBe("2026-11-12T08:30:00.000Z");
   });
 
+  it("une ligne supprimée entre la garde et l'écriture : l'action aboutit, comme avec l'ancien updateMany", async () => {
+    const { Prisma } = await import("@prisma/client");
+    h.update.mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError("introuvable", { code: "P2025", clientVersion: "6" }),
+    );
+    const r = await enregistrerSuiviControle("v1", IDLE, fd({ prestataireId: "presta-e1" }));
+    expect(r.status).toBe("success");
+  });
+
+  it("une autre erreur de la base remonte", async () => {
+    h.update.mockRejectedValueOnce(new Error("base indisponible"));
+    await expect(enregistrerSuiviControle("v1", IDLE, fd({ prestataireId: "presta-e1" }))).rejects.toThrow(
+      "base indisponible",
+    );
+  });
+
   it("refuse le prestataire d'un autre établissement, sans rien écrire", async () => {
     const r = await enregistrerSuiviControle("v1", IDLE, fd({ prestataireId: "presta-autre" }));
     expect(r.status).toBe("error");
