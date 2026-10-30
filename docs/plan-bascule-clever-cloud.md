@@ -375,6 +375,14 @@ Recommencer jusqu'à ce que tout passe sans geste à la main.
 
 ### 7.1 Déroulé
 
+[2026-10-30, Better Auth lot 1 (PR #133) : les migrations de `cc` posent des
+clés étrangères vers `User`, validées sur une base sans comptes Supabase. Donc,
+dans cet ordre : **couper le build et le déploiement Vercel, puis seulement
+fusionner `cc` dans `main`.** Sinon le build Vercel (`migrer-en-production.sh`)
+jouerait ces migrations sur la base Supabase et échouerait à la validation.
+Une base de développement locale qui porte des comptes Supabase se remet à
+zéro avant de jouer `cc`.]
+
 - **J-2** : abaisser le TTL de l'enregistrement de l'app (rojer.fr reste chez
   OVH ; les MX ne bougent pas). Attendre l'expiration de l'ancien TTL.
   Prévenir les testeurs : **leurs comptes et dossiers ne suivent pas**, ils
