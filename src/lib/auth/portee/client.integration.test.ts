@@ -11,6 +11,8 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
+// Le vrai client borné, pas le remplacement de vitest.setup.ts.
+vi.unmock("@/lib/auth/portee/client");
 
 const URL_BASE = process.env.ISOLATION_INTEGRATION_URL;
 const local = URL_BASE ? /@(localhost|127\.0\.0\.1)[:/]/.test(URL_BASE) : false;

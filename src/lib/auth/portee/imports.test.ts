@@ -53,7 +53,6 @@ const A_MIGRER = new Set([
   "src/lib/actions/queries.ts",
   "src/lib/activites/actions.ts",
   "src/lib/assistance/actions.ts",
-  "src/lib/auth/scope.ts",
   "src/lib/batiments/actions.ts",
   "src/lib/batiments/queries.ts",
   "src/lib/calendrier/actions.ts",
