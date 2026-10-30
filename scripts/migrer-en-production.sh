@@ -11,7 +11,16 @@
 # l'instance de build, avant que le déploiement soit retenu. Là-bas, les
 # migrations passent par le hook de démarrage (`CC_PRE_RUN_HOOK=pnpm
 # db:migrate`), qui fait échouer le déploiement si elles échouent.]
+#
+# Mais un build Vercel SANS `VERCEL_ENV` (variables système plus exposées,
+# build par la CLI) sauterait les migrations en silence, et le code partirait
+# contre un schéma ancien (revue de la PR #127). Vercel pose toujours
+# `VERCEL=1` au build : dans ce cas, on s'arrête au lieu de deviner.
 set -e
+if [ "$VERCEL" = "1" ] && [ -z "$VERCEL_ENV" ]; then
+  echo "Build Vercel sans VERCEL_ENV : impossible de savoir s'il faut migrer. Arrêt." >&2
+  exit 1
+fi
 if [ "$VERCEL_ENV" = "production" ]; then
   echo "Migrations : VERCEL_ENV=production, on applique."
   prisma migrate deploy

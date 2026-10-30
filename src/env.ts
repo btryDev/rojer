@@ -45,6 +45,7 @@ import "server-only";
 
 import { z } from "zod";
 import { ENVIRONNEMENTS_APP } from "@/lib/environnement";
+import { FORME_EXPORTS_SIMULTANES } from "@/lib/exports/limite";
 
 type Env = Record<string, string | undefined>;
 
@@ -110,7 +111,7 @@ const schema = z
     // désormais le démarrage (plan de bascule, 0.5).
     EXPORTS_SIMULTANES: z.preprocess(
       vide,
-      z.string().regex(/^[1-9]\d*$/, "doit être un entier ≥ 1").optional(),
+      z.string().regex(FORME_EXPORTS_SIMULTANES, "doit être un entier ≥ 1").optional(),
     ),
 
     // API Légifrance (`legifrance/client.ts`, scripts).

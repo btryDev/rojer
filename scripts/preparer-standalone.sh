@@ -6,6 +6,9 @@
 #
 # Chez Clever Cloud : CC_POST_BUILD_HOOK="pnpm build && sh scripts/preparer-standalone.sh"
 # puis CC_RUN_COMMAND="node .next/standalone/server.js" (PORT=8080, HOSTNAME=0.0.0.0).
+# Les migrations passent avant, par CC_PRE_RUN_HOOK="pnpm db:migrate" : le CLI
+# `prisma` est une devDependency, donc CC_NODE_DEV_DEPENDENCIES=install est
+# requis (sans lui, « prisma: not found » fait échouer le déploiement).
 set -e
 test -f .next/standalone/server.js || { echo "Pas de .next/standalone/server.js : lancer next build avec output standalone."; exit 1; }
 rm -rf .next/standalone/public .next/standalone/.next/static

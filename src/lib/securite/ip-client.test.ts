@@ -28,26 +28,33 @@ describe("ipClient", () => {
 
 // Un seul lecteur de l'IP (ASVS B17, 2026-10-30) : la preuve de signature lisait
 // la PREMIÈRE entrée de `X-Forwarded-For`, celle qu'écrit le client. Toute
-// lecture directe de l'en-tête ailleurs que dans `ip-client.ts` refait ce trou.
-describe("aucune lecture de X-Forwarded-For hors de ip-client.ts", () => {
-  it("le code ne relit pas l'en-tête lui-même", () => {
-    const racine = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
+// lecture directe d'un en-tête qui porte l'IP ailleurs que dans
+// `src/lib/securite/ip-client.ts` refait ce trou. La garde vise la règle, pas
+// une chaîne : les en-têtes d'IP connus, dans tout le code exécuté (`src/`,
+// `scripts/`), quelle que soit l'extension.
+describe("aucune lecture d'un en-tête d'IP hors de ip-client.ts", () => {
+  it("le code ne relit pas ces en-têtes lui-même", () => {
+    const depot = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
+    const SEUL_LECTEUR = join("src", "lib", "securite", "ip-client.ts");
+    const ENTETES_IP = /x-forwarded-for|x-real-ip|cf-connecting-ip|true-client-ip|x-client-ip|["'`]forwarded["'`]/i;
     const fautifs: string[] = [];
     const parcourir = (dossier: string) => {
       for (const e of readdirSync(dossier, { withFileTypes: true })) {
         const chemin = join(dossier, e.name);
-        if (e.isDirectory()) parcourir(chemin);
-        else if (
-          /\.(ts|tsx)$/.test(e.name) &&
-          !/\.test\.tsx?$/.test(e.name) &&
-          e.name !== "ip-client.ts" &&
-          /x-forwarded-for/i.test(readFileSync(chemin, "utf8"))
+        if (e.isDirectory()) {
+          if (e.name !== "node_modules" && !e.name.startsWith(".")) parcourir(chemin);
+        } else if (
+          /\.(ts|tsx|js|mjs|cjs)$/.test(e.name) &&
+          !/\.test\.(ts|tsx)$/.test(e.name) &&
+          relative(depot, chemin) !== SEUL_LECTEUR &&
+          ENTETES_IP.test(readFileSync(chemin, "utf8"))
         ) {
-          fautifs.push(relative(racine, chemin));
+          fautifs.push(relative(depot, chemin));
         }
       }
     };
-    parcourir(racine);
+    parcourir(join(depot, "src"));
+    parcourir(join(depot, "scripts"));
     expect(fautifs).toEqual([]);
   });
 });
