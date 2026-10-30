@@ -4,7 +4,7 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { prisma } from "@/lib/prisma";
-import { motifErreur, sendMail } from "@/lib/email";
+import { motifErreur, publicAppUrl, refusUrlPublique, sendMail } from "@/lib/email";
 import { ENTETE_IP_CLIENT } from "./entete-ip";
 import { lienReinitialisation, lienVerification } from "./liens-compte";
 import { LONGUEUR_MIN_MOT_DE_PASSE } from "./mot-de-passe";
@@ -26,23 +26,30 @@ import { LONGUEUR_MIN_MOT_DE_PASSE } from "./mot-de-passe";
 const SEPT_JOURS = 60 * 60 * 24 * 7;
 const UN_JOUR = 60 * 60 * 24;
 
-/** L'adresse de l'app : la variable en production, localhost en développement. */
+/**
+ * L'adresse de l'app, par la règle commune (`@/lib/email`). Elle décide aussi
+ * des cookies : `Secure` et le préfixe `__Secure-` viennent d'une adresse en
+ * https. Absente en production, `env.ts` arrête le démarrage ; pendant le
+ * build, elle peut manquer sans dommage (aucune session n'y est servie).
+ */
 function adresseApp(): string | undefined {
-  return (
-    process.env.PUBLIC_APP_URL?.replace(/\/+$/, "") ||
-    (process.env.NODE_ENV === "production" ? undefined : "http://localhost:3000")
-  );
+  return refusUrlPublique() ? undefined : publicAppUrl();
 }
 
-/** Un e-mail de compte : l'échec se journalise, jamais ne s'avale. */
-async function envoyer(to: string, subject: string, lignes: string[]): Promise<void> {
-  try {
-    await sendMail({ to, subject, text: lignes.join("\n") });
-  } catch (e) {
+/**
+ * Un e-mail de compte part SANS être attendu : Better Auth attend sa fonction
+ * d'envoi, et l'appel à Mailpace n'a lieu que pour un compte existant (mot de
+ * passe oublié) ou nouveau (inscription). L'attendre rendait la réponse plus
+ * lente dans un cas que dans l'autre, et le chronomètre disait qui a un compte
+ * (revue de sécurité de la PR #135). L'échec se journalise, jamais ne s'avale.
+ */
+function envoyer(to: string, subject: string, lignes: string[]): Promise<void> {
+  void sendMail({ to, subject, text: lignes.join("\n") }).catch((e: unknown) => {
     console.error(
       JSON.stringify({ type: "envoi_mail_compte_echoue", sujet: subject, motif: motifErreur(e) }),
     );
-  }
+  });
+  return Promise.resolve();
 }
 
 export const auth = betterAuth({
@@ -63,15 +70,22 @@ export const auth = betterAuth({
     // Un mot de passe réinitialisé ferme toutes les sessions ouvertes.
     revokeSessionsOnPasswordReset: true,
     resetPasswordTokenExpiresIn: 60 * 60,
-    sendResetPassword: async ({ user, token }) => {
-      await envoyer(user.email, "Rojer — réinitialiser votre mot de passe", [
+    sendResetPassword: ({ user, token }) =>
+      envoyer(user.email, "Rojer — réinitialiser votre mot de passe", [
         "Bonjour,",
         "",
         "Pour choisir un nouveau mot de passe, ouvrez ce lien (valable une heure) :",
         lienReinitialisation(token),
         "",
         "Si vous n'êtes pas à l'origine de cette demande, ignorez ce message : votre mot de passe ne change pas.",
-      ]);
+      ]),
+    // Une adresse déjà inscrite reçoit la même réponse qu'une nouvelle (pas
+    // d'énumération) ; si son compte n'est pas encore confirmé — lien de 24 h
+    // expiré —, elle reçoit un nouveau lien au lieu de n'avoir rien.
+    onExistingUserSignUp: async ({ user }) => {
+      if (!user.emailVerified) {
+        await auth.api.sendVerificationEmail({ body: { email: user.email } });
+      }
     },
   },
   emailVerification: {
@@ -80,21 +94,24 @@ export const auth = betterAuth({
     sendOnSignIn: true,
     autoSignInAfterVerification: false,
     expiresIn: UN_JOUR,
-    sendVerificationEmail: async ({ user, token }) => {
-      await envoyer(user.email, "Rojer — confirmez votre adresse", [
+    sendVerificationEmail: ({ user, token }) =>
+      envoyer(user.email, "Rojer — confirmez votre adresse", [
         "Bonjour,",
         "",
         "Pour confirmer votre adresse et activer votre compte Rojer, ouvrez ce lien (valable 24 heures) :",
         lienVerification(token),
         "",
         "Si vous n'avez pas créé de compte, ignorez ce message.",
-      ]);
-    },
+      ]),
   },
   session: {
     // En base, sans cache de cookie : une session fermée l'est tout de suite.
+    // Sept jours depuis la connexion, sans prolongation : prolongée pendant le
+    // rendu d'une page, la session l'était en base mais pas dans le cookie
+    // (un composant serveur ne peut pas écrire de cookie), et la déconnexion
+    // tombait au septième jour malgré tout (revue de la PR #135).
     expiresIn: SEPT_JOURS,
-    updateAge: UN_JOUR,
+    disableSessionRefresh: true,
   },
   // `nextCookies` en dernier : sans lui, une connexion faite dans une action
   // serveur ne pose pas de cookie.

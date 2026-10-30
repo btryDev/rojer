@@ -138,11 +138,13 @@ export async function signInAction(
     await auth.api.signInEmail({ body: parsed.data, headers: await headers() });
   } catch (e) {
     // Un compte non confirmé n'est révélé qu'à qui a le bon mot de passe ; un
-    // nouveau lien vient de partir (`emailVerification.sendOnSignIn`).
+    // nouveau lien part (`emailVerification.sendOnSignIn`) — sauf si l'envoi
+    // n'est pas en service, et alors on ne le promet pas.
     if (codeErreur(e) === "EMAIL_NOT_VERIFIED") {
       return {
-        error:
-          "Votre adresse n'est pas encore confirmée : un nouveau lien vient de vous être envoyé. Ouvrez-le, puis reconnectez-vous.",
+        error: envoiImpossible()
+          ? `Votre adresse n'est pas encore confirmée. ${ENVOI_IMPOSSIBLE}`
+          : "Votre adresse n'est pas encore confirmée : un nouveau lien vient de vous être envoyé. Ouvrez-le, puis reconnectez-vous.",
       };
     }
     return { error: "Identifiants invalides" };

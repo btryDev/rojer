@@ -22,17 +22,14 @@ export type AuthedUser = {
  * mémoïsation de portée module ferait fuiter l'identité d'un visiteur vers le
  * suivant. `cache()` ne mémoïse rien dans les actions et les routes (M7).
  *
- * Une erreur de lecture vaut « pas de session » : la page redirige vers la
- * connexion au lieu de casser.
+ * Un cookie absent, forgé ou expiré rend `null` (Better Auth ne lève pas pour
+ * ça). Une panne de base, elle, LÈVE : la page tombe en erreur et la panne se
+ * voit, au lieu de déconnecter en silence un utilisateur connecté.
  */
 const lireUserCourant = cache(async (): Promise<AuthedUser | null> => {
-  try {
-    const session = await auth.api.getSession({ headers: await headers() });
-    if (!session) return null;
-    return { id: session.user.id, email: session.user.email ?? null };
-  } catch {
-    return null;
-  }
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) return null;
+  return { id: session.user.id, email: session.user.email ?? null };
 });
 
 export async function requireUser(): Promise<AuthedUser> {

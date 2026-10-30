@@ -150,6 +150,17 @@ describe("réponses de Better Auth traduites pour l'écran", () => {
     expect(r.error).toMatch(/pas encore confirmée.*nouveau lien/);
   });
 
+  it("compte non confirmé sur un serveur sans envoi : ne promet pas de lien", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("PUBLIC_APP_URL", "");
+    h.auth.signInEmail.mockRejectedValue(
+      new APIError("FORBIDDEN", { code: "EMAIL_NOT_VERIFIED", message: "Email not verified" }),
+    );
+    const r = await signInAction({}, formulaire({ email: "a@exemple.fr", password: "x" }));
+    expect(r.error).toMatch(/pas encore confirmée/);
+    expect(r.error).not.toMatch(/nouveau lien vient/);
+  });
+
   it("connexion refusée pour toute autre raison : « Identifiants invalides »", async () => {
     h.auth.signInEmail.mockRejectedValue(
       new APIError("UNAUTHORIZED", { code: "INVALID_EMAIL_OR_PASSWORD", message: "x" }),
