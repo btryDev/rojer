@@ -1,7 +1,8 @@
 # ADR-052 — L'authentification passe de Supabase Auth à Better Auth
 
-- **Statut** : **proposée**, 2026-10-30. Attend le feu vert de la propriétaire
-  sur les trois questions du § « Questions ».
+- **Statut** : **proposée**, 2026-10-30. ~~Attend le feu vert de la propriétaire
+  sur les trois questions du § « Questions ».~~ [2026-10-30 : questions
+  tranchées (§ « Questions ») ; reste à l'accepter.]
 - **Remplace** l'ADR-005 (Supabase Auth). **Amende** l'ADR-013 : le serveur
   d'autorisation OAuth du MCP sera Better Auth, dans un lot ultérieur.
 - **S'appuie sur** l'ADR-051 (proposée, isolation des comptes par un client
@@ -42,7 +43,14 @@ déjà propre à l'application.
 
 ## Décision
 
-### 1. Le moment : Better Auth part d'abord sur Vercel
+### 1. Le moment : ~~Better Auth part d'abord sur Vercel~~ sur la branche `cc`
+
+[2026-10-30, décision de la propriétaire : un testeur utilise la prod Vercel,
+qui ne doit pas bouger. Better Auth se code sur la branche `cc`, qui porte la
+migration ; il ne rejoint `main` qu'à la bascule (plan de bascule, en-tête).
+Mailpace se branche sur Clever Cloud, depuis son interface. Le texte ci-dessous
+était la recommandation d'avant, écartée.]
+
 
 Better Auth ne dépend pas de l'hébergeur : ses tables vivent dans la base,
 quelle qu'elle soit. Suivant le principe du plan de bascule — tout ce qui ne
@@ -147,10 +155,15 @@ administrateur n'existe, et ce lot n'en crée pas.
   "database"`) : en mémoire, elle serait fausse dès deux instances. Celle de
   l'application (`securite/limite-debit.ts`) reste pour ce qui n'est pas de
   Better Auth (B3, § 9 du plan).
-- **IP** : Better Auth lit `x-forwarded-for` à sa façon ; elle doit lire la
-  même entrée que `ipClient` (`securite/ip-client.ts`, la dernière). Le
-  réglage (`advanced.ipAddress`) se fige au test de recette du plan (§ 7.2) :
-  un `X-Forwarded-For` forgé ne doit pas déplacer la limite (B17).
+- **IP** : Better Auth lit ~~`x-forwarded-for` à sa façon~~ la **première**
+  entrée de `x-forwarded-for`, celle que le client écrit, alors que le proxy
+  de Clever Cloud ajoute l'adresse réelle à droite (mesuré en prod par
+  GestBAT, plan § 5 bis). Notre proxy (`src/proxy.ts`) calcule l'IP par
+  `ipClient` (`securite/ip-client.ts`, la dernière entrée), la pose dans un
+  en-tête interne **écrasé à chaque requête**, et
+  `advanced.ipAddress.ipAddressHeaders` ne lit que lui. Recette (plan § 7.2) :
+  un `X-Forwarded-For` forgé, ou l'en-tête interne envoyé par le client, ne
+  déplace pas la limite (B17).
 - Les événements d'authentification vont au journal (B25).
 
 ### 9. Le MCP
@@ -171,18 +184,19 @@ Supabase sert sur Vercel, et part à la bascule.
 
 ## Questions à la propriétaire
 
-1. **Moment** : Better Auth en production actuelle, sur Vercel, avant la
+1. ~~**Moment** : Better Auth en production actuelle, sur Vercel, avant la
    bascule (recommandé, § 1) — les comptes de test disparaissent alors, et
    Mailpace doit être en service sur Vercel aussi — ; ou seulement à la
    bascule, sur Clever Cloud, au prix d'une période où le code connaît deux
-   authentifications.
+   authentifications.~~ [2026-10-30 : sur la branche `cc`, § 1.]
 2. **Mots de passe divulgués** : le plugin `haveIBeenPwned` de Better Auth
    interroge le service Have I Been Pwned avec les 5 premiers caractères de
    l'empreinte du mot de passe (anonymat par k-anonymat : ni le mot de passe
    ni son empreinte complète ne sortent). C'est une exigence de l'ASVS (B27).
-   Recommandé : oui.
+   Recommandé : oui. [2026-10-30 : retenu — la propriétaire laisse
+   l'authentification à l'appréciation de la session (« peu importe »).]
 3. **Vérification de l'adresse** obligatoire à l'inscription, comme
-   aujourd'hui : recommandé, oui.
+   aujourd'hui : recommandé, oui. [2026-10-30 : retenu, même motif.]
 
 ## Lots
 
