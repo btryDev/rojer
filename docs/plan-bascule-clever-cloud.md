@@ -67,13 +67,11 @@ Node.js natif**, sortie `standalone`, démarrage par `CC_RUN_COMMAND`.
    - jamais de test sur btry.fr.
 2. **Mots de passe et données : rien n'est migré** (voir l'en-tête). Better
    Auth hache en scrypt, sa valeur par défaut.
-3. **Double authentification : oui** (B22), plugin `twoFactor` dès la
-   bascule. TOTP et code par e-mail, codes de secours, appareils de confiance
-   30 jours. **À trancher encore : proposée ou obligatoire.** Better Auth ne
-   sait pas l'imposer nativement : l'obligation se code (enrôlement forcé à la
-   première connexion, hook sur les routes de connexion). La perte du facteur
-   n'a que les codes de secours ; aucune réinitialisation par un
-   administrateur n'est prévue, il faudrait la construire.
+3. **Double authentification : oui, proposée** (B22), plugin `twoFactor` dès
+   la bascule, non imposée. TOTP et code par e-mail, codes de secours,
+   appareils de confiance 30 jours. La perte du facteur n'a que les codes de
+   secours : aucune réinitialisation par un administrateur n'existe, il
+   faudrait la construire le jour où un utilisateur perd les deux.
 4. **Coupure** : sans données à copier, la bascule se réduit au DNS ;
    quelques minutes, testeurs prévenus.
 5. **Taille des plans : XS** pour la base (75 connexions) et pour l'app, build
@@ -102,6 +100,7 @@ actuelle.
 | 0.10 | `DemandeAssistance.userId` en UUID, comme les trois autres `userId` | BA | à faire, ou en phase 1 avec les clés étrangères vers `user` |
 | 0.11 | Antivirus des dépôts, ou décision écrite | B29 | à trancher |
 | 0.12 | Plafond total de renvois d'OTP par jeton | B3, B14 | non retrouvé dans le code : à vérifier |
+| 0.13 | Garde : aucun DDL (`CREATE`, `ALTER`, `DROP`, `GRANT`, `TRUNCATE`) ailleurs que dans `prisma/migrations` — l'app se connectant avec le rôle propriétaire, c'est la seule barrière | § 9 bis | à faire ; relevé le 2026-10-30 : aucun DDL dans `src/`, mais rien ne l'interdit |
 
 Déjà fait, et sans rien à refaire : `APP_ENV` (H5), hôtes MCP par
 `PUBLIC_APP_URL`, exports sous sémaphore et ZIP en flux (H3), un seul
@@ -327,12 +326,56 @@ Contre-vérifiées le même jour, dans le code et la doc ; deux ont changé.
 
 | Sujet | D'un côté | De l'autre | Retenu | Contre-vérification |
 |---|---|---|---|---|
-| RLS | B15 : la garder en défense en profondeur | BA 6 : un rôle non propriétaire ne voit rien ; la désactiver ou donner `BYPASSRLS` | ~~`BYPASSRLS` au rôle applicatif~~ **La garder telle quelle, l'app se connecte en propriétaire** | **Changé.** `BYPASSRLS` exige un superutilisateur, et Clever Cloud n'en donne pas ni ne permet de créer un second rôle. L'app se connecte déjà en propriétaire aujourd'hui (BA), qui échappe à la RLS ; la RLS sans politique ne gêne donc rien, et coupe tout accès à un rôle lecteur créé par la plateforme. La garde `migrations-rls.test.ts` reste |
+| RLS | B15 : la garder en défense en profondeur | BA 6 : un rôle non propriétaire ne voit rien ; la désactiver ou donner `BYPASSRLS` | ~~`BYPASSRLS` au rôle applicatif~~ **La garder telle quelle, l'app se connecte en propriétaire ; chaque trou fermé au § 9 bis** | **Changé.** `BYPASSRLS` exige un superutilisateur, et Clever Cloud n'en donne pas ni ne permet de créer un second rôle. L'app se connecte déjà en propriétaire aujourd'hui (BA), qui échappe à la RLS ; la RLS sans politique ne gêne donc rien, et coupe tout accès à un rôle lecteur créé par la plateforme. La garde `migrations-rls.test.ts` reste |
 | TLS de la base | B6 : `sslmode=require` | B19 : `require` accepte un certificat auto-signé | ~~`verify-full` si l'autorité est fournie~~ **À constater, puis `verify-full` si possible, sinon `require` et écart écrit** | **Changé.** La doc de Clever Cloud ne dit rien du TLS en transit ni d'une autorité de certification : à constater sur l'add-on et à demander au support |
 | Limitation de débit | B3 : celle de Better Auth | M11 : celle de l'app existe déjà, en base | Garder celle de l'app ; celle de Better Auth en base (`rateLimit.storage: "database"`) pour ses routes | Confirmé : le stockage en base existe ; la mémoire, par défaut, est fausse dès deux instances. Better Auth limite déjà `/sign-in/email` et `/two-factor/*` à 3 essais par 10 s |
 | Session | H4 : proxy optimiste par cookie | AD § 4 : session en base ou cookie signé | Session en base, sans `cookieCache` ; le proxy ne teste que la présence du cookie | Confirmé : la session est en base par défaut, `cookieCache` est à activer explicitement ; `listSessions`, `revokeSession`, `revokeOtherSessions` existent |
 | `MCP_HOTES` | H5 : obligatoire | correctif de H5 : `PUBLIC_APP_URL` suffit | `PUBLIC_APP_URL` | Confirmé dans le code : `src/lib/mcp/hotes.ts` lit `PUBLIC_APP_URL` |
 | Lot 7 | PP : à la bascule, pas avant | AD § 5.2 : mesurer la prod avant | Le poser en préproduction (§ 5) | Sans objet à vérifier : c'est un choix d'ordre |
+
+---
+
+## 9 bis. Un seul rôle de base : fermer chaque trou
+
+Revérifié le 2026-10-30 dans la doc PostgreSQL de Clever Cloud : « you won't be
+able to create other users than the one handled with our control plane (i.e.
+the base owner and read-only users) ». Aucun superutilisateur n'est fourni. Un
+rôle applicatif séparé et `BYPASSRLS` sont donc hors d'atteinte **selon la
+doc**. Deux vérifications restent, et elles ne coûtent rien :
+- `CREATE ROLE essai;` sur un add-on DEV gratuit : on constate le refus ;
+- la question au support, avec celles du chiffrement au repos et du PITR :
+  peuvent-ils créer un rôle applicatif sans DDL, ou lui donner `BYPASSRLS` ?
+  Si oui, on le prend : migrations par le propriétaire, app par ce rôle (B6).
+
+Sinon, chaque risque qu'un second rôle ou la RLS aurait couvert a sa
+fermeture :
+
+| Risque | Fermeture | État |
+|---|---|---|
+| Un compte lit ou modifie les données d'un autre (oubli de portée dans le code) | Toutes les lectures et écritures passent par `scope.ts` ; six gardes relisent le code (`tenancy-lectures`, `-ecritures`, `-enfants`, `-oracle`, `-routes`, `-sonde`) | **Éprouvé le 2026-10-30** : la borne au compte retirée d'une lecture exportée (`listerEtablissementsDuCompte`, la classe M2 de l'ASVS) fait tomber `tenancy-lectures` et un test métier ; une lecture non bornée injectée dans une action serveur (`resumeEtatsPermanentsPourWidget`, la classe M3) fait tomber `tenancy-lectures`. Les deux trous relevés le 2026-10-13 sont fermés (B15) |
+| Un tiers lit la base par une API exposée | Chez Supabase, la RLS existait pour l'API Data publique. Clever Cloud n'en expose aucune : la base n'est joignable qu'avec ses identifiants | disparaît avec la bascule |
+| Un rôle lecteur créé par la plateforme (statistiques, support) voit les données | La RLS active sans politique ne lui laisse voir aucune ligne. Elle reste, avec la garde `migrations-rls.test.ts` | en place |
+| L'app, propriétaire, modifie le schéma ou détruit une table | Aucun DDL hors des migrations : garde à écrire (0.13). Les migrations ne tournent que dans le hook de démarrage | garde à faire |
+| Injection SQL | Aucun `$queryRawUnsafe` ni `$executeRawUnsafe` ; SQL brut paramétré, `Prisma.raw` sur liste fermée (BA) | en place |
+| Fuite des identifiants de la base | Pas d'accès direct généré sans besoin, TLS (§ 5), restriction réseau à demander, rotation écrite (B31), jamais dans les journaux | à faire en phase 2 |
+
+**La RLS stricte, gardée pour plus tard.** On peut soumettre même le
+propriétaire à la RLS (`FORCE ROW LEVEL SECURITY`) avec des politiques par
+compte, lues dans une variable posée à chaque transaction (`set_config`,
+exemple officiel de Prisma, `prisma-client-extensions/row-level-security`).
+C'est la seule isolation en base possible avec un rôle unique. Pas pour la
+bascule :
+- chaque requête doit passer dans une transaction qui pose la variable, ce qui
+  ajoute un aller-retour ;
+- l'exemple officiel prévient que les transactions explicites ne se comportent
+  plus comme prévu, or le code en compte une cinquantaine (avec le SQL brut) ;
+- les tables sans `userId` direct exigent des politiques par jointure jusqu'à
+  `Entreprise`, sur trente-quatre modèles ;
+- le propriétaire peut toujours retirer `FORCE` : elle protège d'un oubli dans
+  le code, pas d'un identifiant volé.
+
+À rouvrir si les gardes de code ne suffisent plus, par exemple avec des
+utilisateurs multiples par entreprise.
 
 ---
 
@@ -342,6 +385,8 @@ Contre-vérifiées le même jour, dans le code et la doc ; deux ont changé.
 - TLS en transit et autorité de certification de l'add-on PostgreSQL.
 - `ALTER DATABASE … SET timezone` par le propriétaire.
 - Prix de l'add-on Mailpace.
+- Création d'un second rôle : constatée sur un add-on DEV, et demandée au
+  support (§ 9 bis).
 - Taille maximale du corps de requête (les dépôts vont jusqu'à 25 Mo).
 - Mise en mémoire tampon du proxy : le streaming des pages en dépend (AD § 4).
 - Hooks en Docker : sans objet si Node natif est retenu.
@@ -364,6 +409,9 @@ Clever Cloud :
 - FAQ (IP client, sauvegardes) : https://www.clever.cloud/developers/doc/find-help/faq/
 - Logs et drains : https://www.clever.cloud/developers/doc/develop/observability/logs/ et …/drains/
 - Conformité (ISO 27001, HDS ; SecNumCloud en cours) : https://www.clever.cloud/compliance
+
+- Rôles PostgreSQL (citation du § 9 bis) : même page que PostgreSQL ci-dessus.
+- RLS par extension Prisma : https://github.com/prisma/prisma-client-extensions/tree/main/row-level-security
 
 Better Auth :
 - Base de données (`modelName`, `generateId`) : https://www.better-auth.com/docs/concepts/database
