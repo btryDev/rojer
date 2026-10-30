@@ -176,6 +176,12 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 vi.mock("@/lib/auth/require-user", () => ({ requireUser: vi.fn(async () => ({ id: "user-1" })) }));
+// La marque « calendrier périmé » passe par le client de la session (ADR-051).
+const dbDuCompte = vi.hoisted(() => ({ nom: "client du compte" }));
+vi.mock("@/lib/auth/compte", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/auth/compte")>()),
+  getOptionalCompte: async () => ({ user: { id: "user-1" }, db: dbDuCompte }),
+}));
 vi.mock("@/lib/auth/scope", () => ({
   assertEtablissementOwnership: h.assertOwnership,
   // La garde rend aussi le client borné (ADR-051) : ici, le client simulé.
@@ -332,7 +338,7 @@ describe("supprimerEquipement", () => {
 
     await supprimerEquipement("eq-1");
 
-    expect(h.marquerCalendrierPerime).toHaveBeenCalledWith("etab-1");
+    expect(h.marquerCalendrierPerime).toHaveBeenCalledWith(dbDuCompte, "etab-1");
   });
 
   it("ne marque rien quand la régénération passe", async () => {
