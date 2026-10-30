@@ -60,6 +60,8 @@ jobs:
       # partage. Valeur de CI seulement, sans rien à protéger.
       BETTER_AUTH_SECRET: secret-de-ci-pour-la-mesure-des-pages-seulement
       MESURE_COOKIE_FICHIER: session-mesure.cookie
+      # Requise en production (`env.ts`) : l'adresse du serveur mesuré ici.
+      PUBLIC_APP_URL: http://localhost:3101
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
