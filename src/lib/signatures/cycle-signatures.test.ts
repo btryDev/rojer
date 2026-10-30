@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { correspond } from "@/test/prisma-where";
 import { Prisma } from "@prisma/client";
 
 /**
@@ -11,31 +12,6 @@ import { Prisma } from "@prisma/client";
  */
 
 type Ligne = Record<string, unknown>;
-
-function correspond(ligne: Ligne | undefined, where: Ligne): boolean {
-  if (!ligne) return false;
-  return Object.entries(where).every(([clef, attendu]) => {
-    // Le plafond des liens (2026-10-30) écarte les jetons jamais partis.
-    if (clef === "OR") return (attendu as Ligne[]).some((w) => correspond(ligne, w));
-    const valeur = ligne[clef];
-    if (attendu === null) return valeur === null || valeur === undefined;
-    if (attendu instanceof Date) return valeur instanceof Date && valeur.getTime() === attendu.getTime();
-    if (typeof attendu === "object") {
-      const a = attendu as Ligne;
-      if ("gte" in a) return valeur instanceof Date && valeur >= (a.gte as Date);
-      // La réservation d'un essai de code (2026-10-12) est conditionnelle.
-      if ("gt" in a) return (valeur as number) > (a.gt as number);
-      if ("lte" in a) return (valeur as number) <= (a.lte as number);
-      // Le plafond des envois de code (2026-10-13) : `envois < plafond`.
-      if ("lt" in a) return (valeur as number) < (a.lt as number);
-      if ("in" in a) return (a.in as unknown[]).includes(valeur);
-      // `not` de Prisma, comme en SQL : une valeur nulle ne passe pas.
-      if ("not" in a) return valeur !== null && valeur !== undefined && valeur !== a.not;
-      return correspond(valeur as Ligne, a);
-    }
-    return valeur === attendu;
-  });
-}
 
 function table(lignes: Ligne[]) {
   const trouver = async ({ where }: { where: Ligne }) =>
@@ -143,7 +119,7 @@ vi.mock("@/lib/email", () => ({
   }),
   envoiEnService: () => envoi.enService,
   mailFrom: () => "no-reply@test.local",
-  nomDuDriver: () => "console",
+  motifErreur: (e: unknown) => (e instanceof Error ? e.message : "erreur inconnue"),
   publicAppUrl: () => "http://localhost:3000",
 }));
 
@@ -156,10 +132,8 @@ import {
   signerEnCompteConnecte,
 } from "./actions";
 import { hashToken } from "@/lib/access-tokens/token";
-import {
-  MESSAGE_ENVOI_ECHOUE,
-  MOTIF_REVOCATION_ENVOI_ECHOUE,
-} from "@/lib/access-tokens/emission";
+import { MESSAGE_ENVOI_ECHOUE } from "@/lib/access-tokens/emission";
+import { MOTIF_REVOCATION_ENVOI_ECHOUE } from "@/lib/access-tokens/revocation";
 import { hashOtp } from "./otp";
 
 async function sansRedirection(p: Promise<unknown>): Promise<void> {

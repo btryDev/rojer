@@ -13,7 +13,8 @@ import {
   ttlHoursFor,
 } from "./token";
 import { envoyerMailAcces, urlAccesPourToken } from "./mail";
-import { envoiEnService } from "@/lib/email";
+import { envoiEnService, motifErreur } from "@/lib/email";
+import { LIEN_PARTI, MOTIF_REVOCATION_ENVOI_ECHOUE } from "./revocation";
 import { generateOtp, hashOtp, otpExpirationDate } from "@/lib/signatures/otp";
 
 /**
@@ -177,15 +178,6 @@ export const MESSAGE_ENVOI_HORS_SERVICE =
 export const MESSAGE_ENVOI_ECHOUE =
   "La demande n'a pas été envoyée : l'e-mail n'a pas pu partir. Le lien préparé a été annulé. Réessayez dans quelques minutes.";
 
-/**
- * Le motif écrit sur un jeton dont l'e-mail n'est pas parti. En français
- * lisible : la page `/acces/[token]` et la signature l'affichent tels quels
- * au destinataire, si le message finit par lui arriver quand même (délai
- * dépassé côté Rojer alors que Mailpace l'avait accepté).
- */
-export const MOTIF_REVOCATION_ENVOI_ECHOUE =
-  "l'e-mail n'a pas pu être envoyé ; demandez un nouveau lien à votre interlocuteur";
-
 export async function emettreAccessToken(
   entree: EmissionTokenParams,
 ): Promise<EmissionResultat> {
@@ -224,26 +216,17 @@ export async function emettreAccessToken(
 
   // Limite de fréquence, avant toute écriture et tout envoi.
   const depuis = new Date(Date.now() - UNE_HEURE_MS);
-  // Un lien dont l'e-mail n'est jamais parti ne compte pas : sans cela, une
-  // panne du fournisseur épuisait le plafond de l'heure sans qu'aucun lien
-  // ait atteint personne. `revoqueMotif` est nullable : l'exclusion passe par
-  // un OR explicite, `not` seul écarterait aussi les jetons sans motif.
-  const parti = {
-    OR: [
-      { revoqueMotif: null },
-      { revoqueMotif: { not: MOTIF_REVOCATION_ENVOI_ECHOUE } },
-    ],
-  };
+  // Un lien dont l'e-mail n'est jamais parti ne compte pas (`LIEN_PARTI`).
   const [parEtablissement, parUtilisateur] = await Promise.all([
     prisma.accessToken.count({
       where: {
         etablissementId: params.etablissementId,
         createdAt: { gte: depuis },
-        ...parti,
+        ...LIEN_PARTI,
       },
     }),
     prisma.accessToken.count({
-      where: { createdByUserId: user.id, createdAt: { gte: depuis }, ...parti },
+      where: { createdByUserId: user.id, createdAt: { gte: depuis }, ...LIEN_PARTI },
     }),
   ]);
   if (
@@ -312,25 +295,19 @@ export async function emettreAccessToken(
   } catch (erreur) {
     // Le jeton existe mais son e-mail n'est pas parti : il est révoqué, pas
     // supprimé — la trace dit qu'une demande a eu lieu et pourquoi elle n'a
-    // pas abouti. Le journal ne porte que le motif de l'erreur, jamais
-    // l'adresse ni le contenu.
-    const motifEnvoi = erreur instanceof Error ? erreur.message : "erreur inconnue";
-    try {
-      await prisma.accessToken.update({
+    // pas abouti. Si la révocation échoue aussi (base indisponible), le jeton
+    // reste, mais son secret n'est ni parti ni rendu : il ne sert à personne.
+    // Le journal porte les deux causes, jamais l'adresse ni le contenu.
+    const revoque = await prisma.accessToken
+      .update({
         where: { id: access.id },
         data: { revoqueLe: new Date(), revoqueMotif: MOTIF_REVOCATION_ENVOI_ECHOUE },
-      });
-      console.error(`[access-tokens] envoi échoué, jeton ${access.id} révoqué :`, motifEnvoi);
-    } catch (erreurRevocation) {
-      // La révocation elle-même a échoué (base indisponible) : le jeton reste
-      // en base, mais son secret n'est ni parti ni rendu à l'appelant — il ne
-      // sert à personne. Les deux causes sont journalisées, aucune n'est perdue.
-      console.error(
-        `[access-tokens] envoi échoué ET révocation impossible, jeton ${access.id} :`,
-        motifEnvoi,
-        erreurRevocation instanceof Error ? erreurRevocation.message : "erreur inconnue",
+      })
+      .then(
+        () => "révoqué",
+        (e: unknown) => `révocation impossible (${motifErreur(e)})`,
       );
-    }
+    console.error(`[access-tokens] envoi échoué, jeton ${access.id} ${revoque} :`, motifErreur(erreur));
     return { ok: false, raison: "envoi_echoue", message: MESSAGE_ENVOI_ECHOUE };
   }
 

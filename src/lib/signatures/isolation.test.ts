@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { correspond } from "@/test/prisma-where";
 
 /**
  * Isolation entre clients sur l'émission d'un accès de signature, et
@@ -29,31 +30,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 type Ligne = Record<string, unknown>;
 
-/** Applique la clause `where` pour de bon, filtres de relation compris. */
-function correspond(ligne: Ligne | undefined, where: Ligne): boolean {
-  if (!ligne) return false;
-  return Object.entries(where).every(([clef, attendu]) => {
-    // Le plafond des liens écarte les jetons jamais partis (2026-10-30) :
-    // `OR: [{ revoqueMotif: null }, { revoqueMotif: { not: … } }]`.
-    if (clef === "OR") return (attendu as Ligne[]).some((w) => correspond(ligne, w));
-    if (attendu === null) return ligne[clef] === null || ligne[clef] === undefined;
-    if (attendu && typeof attendu === "object" && !(attendu instanceof Date)) {
-      // `not` de Prisma, comme en SQL : une valeur nulle ne passe pas.
-      if ("not" in (attendu as Ligne)) {
-        const v = ligne[clef];
-        return v !== null && v !== undefined && v !== (attendu as Ligne).not;
-      }
-      // `{ gte: Date }` — la fenêtre de la limite de fréquence.
-      if ("gte" in (attendu as Ligne)) {
-        const v = ligne[clef];
-        return v instanceof Date && v >= ((attendu as Ligne).gte as Date);
-      }
-      return correspond(ligne[clef] as Ligne, attendu as Ligne);
-    }
-    return ligne[clef] === attendu;
-  });
-}
-
+/** La clause `where` appliquée pour de bon (`@/test/prisma-where`). */
 function table(lignes: Ligne[]) {
   const chercher = async ({ where }: { where: Ligne }) =>
     lignes.find((l) => correspond(l, where)) ?? null;
@@ -116,7 +93,7 @@ vi.mock("next/navigation", () => ({
 }));
 const { envoi } = vi.hoisted(() => ({ envoi: { enService: true } }));
 vi.mock("@/lib/email", () => ({
-  nomDuDriver: () => "console",
+  motifErreur: (e: unknown) => (e instanceof Error ? e.message : "erreur inconnue"),
   sendMail: vi.fn(async (p: { to: string; subject: string; text: string }) => {
     mailsEnvoyes.push(p);
   }),

@@ -1,4 +1,4 @@
-import { mailFrom, nomDuDriver, publicAppUrl, sendMail } from "@/lib/email";
+import { publicAppUrl, sendMail } from "@/lib/email";
 import { OTP_ESSAIS_MAX, OTP_TTL_MINUTES } from "@/lib/signatures/otp";
 import { formaterDateHeureFr } from "@/lib/dates";
 
@@ -72,12 +72,6 @@ export async function envoyerMailAcces(args: MailAccesArgs): Promise<void> {
     subject: args.sujet,
     text: lignes.join("\n"),
   });
-
-  // En développement seulement (pilote `console`) : l'expéditeur qui sortirait
-  // en production. Un pilote réel ne journalise rien du message.
-  if (nomDuDriver() === "console") {
-    console.log(`   (From : ${mailFrom()})`);
-  }
 }
 
 /** URL publique de la page d'accès pour un token clair donné. */

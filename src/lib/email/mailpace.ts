@@ -1,5 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
+import { z } from "zod";
 import { fetchAvecDelai } from "@/lib/reseau/delai";
 import type { EmailDriver, EmailPayload } from "./index";
 
@@ -55,9 +56,14 @@ export class ErreurEnvoiMail extends Error {
   }
 }
 
-/** Une adresse, une seule : ni liste, ni nom, ni saut de ligne. */
+/**
+ * Une adresse, une seule : ni liste, ni nom, ni saut de ligne. La même règle
+ * que les formulaires (`z.string().email()`, `access-tokens/emission.ts`) ;
+ * la redire ici protège le pilote d'un appelant qui ne valide pas.
+ */
+const ADRESSE_UNIQUE = z.string().email();
 function exigerAdresseUnique(to: string): void {
-  if (/[,;<>\s]/.test(to) || !/^[^@]+@[^@]+\.[^@]+$/.test(to)) {
+  if (!ADRESSE_UNIQUE.safeParse(to).success) {
     throw new ErreurEnvoiMail(null, "Destinataire refusé : une seule adresse e-mail est attendue.");
   }
 }
@@ -121,8 +127,8 @@ export function creerPiloteMailpace(options: {
         "Idempotency-Key": randomUUID(),
       };
 
-      let erreur = new ErreurEnvoiMail(null, "Envoi non tenté.");
-      for (let essai = 1; essai <= ESSAIS_ENVOI_MAX; essai++) {
+      for (let essai = 1; ; essai++) {
+        const dernier = essai === ESSAIS_ENVOI_MAX;
         let reponse: Response;
         try {
           reponse = await appeler(URL_ENVOI_MAILPACE, {
@@ -131,26 +137,22 @@ export function creerPiloteMailpace(options: {
             body: corps,
           });
         } catch {
-          erreur = new ErreurEnvoiMail(null, "Mailpace injoignable (réseau ou délai dépassé).");
-          if (essai < ESSAIS_ENVOI_MAX) {
-            await attendre(PAUSE_AVANT_REESSAI_MS);
-            continue;
+          if (dernier) {
+            throw new ErreurEnvoiMail(null, "Mailpace injoignable (réseau ou délai dépassé).");
           }
-          throw erreur;
-        }
-        if (reponse.ok) return;
-        const motif = await motifDeMailpace(reponse);
-        erreur = new ErreurEnvoiMail(
-          reponse.status,
-          `Mailpace a refusé l'envoi (HTTP ${reponse.status}${motif ? ` : ${motif}` : ""}).`,
-        );
-        if (essai < ESSAIS_ENVOI_MAX && reessayable(reponse.status)) {
           await attendre(PAUSE_AVANT_REESSAI_MS);
           continue;
         }
-        throw erreur;
+        if (reponse.ok) return;
+        if (dernier || !reessayable(reponse.status)) {
+          const motif = await motifDeMailpace(reponse);
+          throw new ErreurEnvoiMail(
+            reponse.status,
+            `Mailpace a refusé l'envoi (HTTP ${reponse.status}${motif ? ` : ${motif}` : ""}).`,
+          );
+        }
+        await attendre(PAUSE_AVANT_REESSAI_MS);
       }
-      throw erreur;
     },
   };
 }

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { LIEN_PARTI } from "./revocation";
 import type { AccessToken, Prisma } from "@prisma/client";
 import { sha256Hex } from "@/lib/signatures/hash";
 import {
@@ -181,6 +182,8 @@ export async function reserverEnvoiOtp(
       emailDestinataire,
       createdAt: { gte: ouverture },
       scope: { in: ["signature", "depot_rapport"] },
+      // Un lien dont l'e-mail n'est pas parti n'a rien envoyé à cette adresse.
+      ...LIEN_PARTI,
     },
     select: { createdAt: true },
   });

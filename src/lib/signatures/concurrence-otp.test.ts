@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { correspond } from "@/test/prisma-where";
 
 /**
  * Le code de confirmation sous concurrence (audit du 2026-10-12, constat 9).
@@ -18,27 +19,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
  */
 
 type Ligne = Record<string, unknown>;
-
-function correspond(ligne: Ligne, where: Ligne): boolean {
-  return Object.entries(where).every(([clef, attendu]) => {
-    const valeur = ligne[clef];
-    if (attendu === null) return valeur === null || valeur === undefined;
-    if (attendu instanceof Date) return valeur instanceof Date && valeur.getTime() === attendu.getTime();
-    if (typeof attendu === "object") {
-      const ops = attendu as Ligne;
-      return Object.entries(ops).every(([op, borne]) => {
-        // Nombres et dates se comparent de la même façon (`valueOf`).
-        if (op === "gt") return (valeur as number) > (borne as number);
-        if (op === "gte") return (valeur as number) >= (borne as number);
-        if (op === "lt") return (valeur as number) < (borne as number);
-        if (op === "lte") return (valeur as number) <= (borne as number);
-        if (op === "in") return (borne as unknown[]).includes(valeur);
-        throw new Error(`clause inconnue du faux client : ${clef}.${op}`);
-      });
-    }
-    return valeur === attendu;
-  });
-}
 
 function appliquer(ligne: Ligne, data: Ligne) {
   for (const [clef, v] of Object.entries(data)) {
@@ -125,7 +105,7 @@ vi.mock("@/lib/auth/require-user", () => ({ requireUser: vi.fn(), getOptionalUse
 vi.mock("@/lib/auth/scope", () => ({ assertEtablissementOwnership: vi.fn() }));
 const { mails } = vi.hoisted(() => ({ mails: [] as { to: string; text: string }[] }));
 vi.mock("@/lib/email", () => ({
-  nomDuDriver: () => "console",
+  motifErreur: (e: unknown) => (e instanceof Error ? e.message : "erreur inconnue"),
   sendMail: vi.fn(async (m: { to: string; text: string }) => {
     mails.push(m);
   }),

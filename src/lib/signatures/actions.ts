@@ -9,7 +9,7 @@ import { formaterDateFr, formaterHeureFr } from "@/lib/dates";
 import { z } from "zod";
 import { emettreAccessToken } from "@/lib/access-tokens/emission";
 import { envoyerMailAcces, urlAccesPourToken } from "@/lib/access-tokens/mail";
-import { envoiEnService } from "@/lib/email";
+import { envoiEnService, motifErreur } from "@/lib/email";
 import {
   consommerJeton,
   rendreEnvoiOtp,
@@ -563,10 +563,7 @@ export async function renvoyerCodeOtp(
     // plus. La place au plafond horaire est rendue, et la page le dit au lieu
     // d'annoncer un envoi qui n'a pas eu lieu.
     await rendreEnvoiOtp(token.emailDestinataire);
-    console.error(
-      "[signatures] renvoi de code échoué :",
-      erreur instanceof Error ? erreur.message : "erreur inconnue",
-    );
+    console.error("[signatures] renvoi de code échoué :", motifErreur(erreur));
     return {
       status: "error",
       message:

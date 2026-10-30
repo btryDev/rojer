@@ -65,7 +65,9 @@ describe("validerEnvironnement", () => {
     expect(() => validerEnvironnement({ ...BASE, EXPORTS_SIMULTANES: "3" })).not.toThrow();
     // Pilote d'e-mails : un nom connu, et la clé Mailpace avec lui.
     expect(erreurDe({ ...BASE, EMAIL_DRIVER: "resend" }).variables).toEqual(["EMAIL_DRIVER"]);
-    expect(erreurDe({ ...BASE, EMAIL_DRIVER: "mailpace" }).variables).toEqual(["MAILPACE_API_KEY"]);
+    // La clé manquante n'arrête pas le démarrage : `email/index.ts` refuse
+    // l'envoi avant toute écriture, comme pour les autres règles de contexte.
+    expect(() => validerEnvironnement({ ...BASE, EMAIL_DRIVER: "mailpace" })).not.toThrow();
     expect(() =>
       validerEnvironnement({ ...BASE, EMAIL_DRIVER: "mailpace", MAILPACE_API_KEY: "cle" }),
     ).not.toThrow();

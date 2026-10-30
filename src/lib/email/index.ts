@@ -30,6 +30,8 @@ class ConsoleEmailDriver implements EmailDriver {
     console.log(`   Sujet : ${payload.subject}`);
     console.log(`   ${"─".repeat(66)}`);
     console.log(payload.text);
+    // L'expéditeur qui sortirait en production, pour le voir dès le dev.
+    console.log(`   (From : ${mailFrom()})`);
     console.log("─".repeat(72) + "\n");
 
     // Le même message est gardé pour `/dev/boite-mail`, qui évite d'aller le
@@ -61,8 +63,17 @@ let _driver: EmailDriver | null = null;
  * vide. UN seul lecteur, comme `src/env.ts` le valide (une valeur vide y est
  * absente) : les deux couches ne peuvent pas lire deux pilotes différents.
  */
-export function nomDuDriver(): string {
+function nomDuDriver(): string {
   return process.env.EMAIL_DRIVER?.trim() || "console";
+}
+
+function cleMailpace(): string | undefined {
+  return process.env.MAILPACE_API_KEY?.trim() || undefined;
+}
+
+/** Ce qu'une erreur dit d'elle-même, pour un journal : son message, rien d'autre. */
+export function motifErreur(e: unknown): string {
+  return e instanceof Error ? e.message : "erreur inconnue";
 }
 
 /**
@@ -76,7 +87,7 @@ function refusDuDriver(): string | null {
   if (driver === "mailpace") {
     // Sans clé, aucun envoi ne peut partir : on le sait AVANT d'écrire quoi
     // que ce soit, comme pour `console` en production.
-    if (!process.env.MAILPACE_API_KEY?.trim()) {
+    if (!cleMailpace()) {
       return "EMAIL_DRIVER vaut « mailpace » mais MAILPACE_API_KEY est absente : aucun mail ne partirait.";
     }
     return null;
@@ -117,7 +128,7 @@ export function getEmailDriver(): EmailDriver {
   _driver =
     nomDuDriver() === "mailpace"
       ? creerPiloteMailpace({
-          cle: process.env.MAILPACE_API_KEY!.trim(),
+          cle: cleMailpace()!,
           expediteur: mailFrom(),
         })
       : new ConsoleEmailDriver();
