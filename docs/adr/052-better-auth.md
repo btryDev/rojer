@@ -139,8 +139,11 @@ lieu de promettre un e-mail.
 
 ### 7. Double authentification
 
-Plugin `twoFactor` : application d'authentification (TOTP), code par e-mail,
-codes de secours, appareil de confiance 30 jours. **Proposée, non imposée**
+Plugin `twoFactor` : application d'authentification (TOTP), ~~code par e-mail,~~
+codes de secours, appareil de confiance 30 jours. [2026-10-30, décision de la
+propriétaire : pas de code par e-mail — qui tient la boîte tient déjà la
+réinitialisation du mot de passe, et le second facteur ne protégerait plus que
+d'un mot de passe divulgué.] **Proposée, non imposée**
 (décision du 2026-10-30). Activer la 2FA exige le mot de passe. La perte des
 deux facteurs n'a que les codes de secours : aucune réinitialisation par un
 administrateur n'existe, et ce lot n'en crée pas.
@@ -214,6 +217,31 @@ Supabase sert sur Vercel, et part à la bascule.
   bascule qui crée les comptes ; une migration qui trouve un compte inconnu
   de `User` s'arrête avant toute modification (base Supabase non remise à
   zéro).
+
+## Ce que la réalisation a précisé (lots 3a et 3b, 2026-10-30, PR #138 et suivante)
+
+- **Mots de passe divulgués** : notre module (`auth/mot-de-passe-divulgue.ts`),
+  pas le plugin `haveIBeenPwned` — celui-ci appelle le service sans délai et
+  refuse l'inscription quand il est en panne. Même k-anonymat ; délai de
+  4 s ; service muet = on laisse passer, et le journal le dit.
+- **Pas de `Clear-Site-Data`** à la déconnexion (§ 6, revue de la PR #138) :
+  il effaçait les préférences du tableau de bord et tous les cookies du
+  domaine pour ne rien protéger de plus. La déconnexion efface nommément le
+  cookie d'établissement actif.
+- **Double authentification** (§ 7) :
+  - à la connexion, `/login/code` relève le défi de dix minutes posé par le
+    plugin ; un seul champ pour le code de l'application ou un code de
+    secours ; cinq essais par défi, compte verrouillé quinze minutes après
+    dix échecs (plugin), plus notre limite par IP ;
+  - activer exige le mot de passe, puis un premier code : rien n'est actif
+    avant ; les codes de secours ne s'affichent qu'après ;
+  - **à chaque activation, tous les appareils de confiance du compte sont
+    oubliés** : le plugin n'efface que celui du navigateur qui désactive, et
+    un appareil approuvé avant une désactivation passait sans code jusqu'à
+    trente jours après la réactivation ;
+  - le rendu qui suit une action lit la session dans les cookies laissés par
+    l'action (`entetesDeSession`) : activer renouvelle la session, et la page
+    relisait l'ancien cookie, puis renvoyait à `/login`.
 
 ## Questions à la propriétaire
 
