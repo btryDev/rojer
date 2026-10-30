@@ -44,9 +44,14 @@ export async function mesurerPerimetreEntreprise(
     select: { raisonDisplay: true },
   });
 
-  const versionsDuerp = await prisma.duerpVersion.count({
-    where: { duerp: { etablissement: { entrepriseId } } },
-  });
+  const [versionsDuerp, rapports] = await Promise.all([
+    prisma.duerpVersion.count({
+      where: { duerp: { etablissement: { entrepriseId } } },
+    }),
+    prisma.rapportVerification.count({
+      where: { etablissement: { entrepriseId } },
+    }),
+  ]);
 
   return {
     etablissements: etablissements.map((e) => e.raisonDisplay),
@@ -54,6 +59,7 @@ export async function mesurerPerimetreEntreprise(
     // compter une seconde fois dans le total les ferait compter deux fois.
     lignes: compterLignes(emporte, ["Entreprise", "Etablissement"]),
     versionsDuerp,
+    rapports,
   };
 }
 
@@ -77,14 +83,16 @@ export async function mesurerPerimetreEtablissement(
     etablissementId,
   ]);
 
-  const versionsDuerp = await prisma.duerpVersion.count({
-    where: { duerp: { etablissementId } },
-  });
+  const [versionsDuerp, rapports] = await Promise.all([
+    prisma.duerpVersion.count({ where: { duerp: { etablissementId } } }),
+    prisma.rapportVerification.count({ where: { etablissementId } }),
+  ]);
 
   return {
     nom: etablissement.raisonDisplay,
     lignes: compterLignes(emporte, ["Etablissement"]),
     versionsDuerp,
+    rapports,
     entrepriseEmportee:
       etablissement.entreprise._count.etablissements === 1
         ? etablissement.entreprise.raisonSociale
