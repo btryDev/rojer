@@ -11,8 +11,7 @@
 
 import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
 import { porteSaMarque, retenueParSaMarque } from "@/lib/calendrier/prudence";
-import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireCompte } from "@/lib/auth/compte";
 import { joindreDernieresRealisations } from "@/lib/rapports/joindre-realisations";
 import {
   compteEtat,
@@ -86,11 +85,13 @@ export async function etatVerificationsParEquipement(
   etablissementId: string,
   now: Date = new Date(),
 ): Promise<Map<string, EtatEquipement>> {
-  const user = await requireUser();
+  // Client borné au compte (ADR-051) : la borne s'ajoute à chaque requête ;
+  // le prédicat écrit reste tant que les gardes `tenancy-*` le relisent.
+  const { user, db } = await requireCompte();
   // Le « fait le … » de chaque ligne se lit sur ses rapports (ADR-034).
   const verifs = await joindreDernieresRealisations(
     etablissementId,
-    await prisma.verification.findMany({
+    await db.verification.findMany({
       where: {
         etablissementId,
         etablissement: { entreprise: { userId: user.id } },
