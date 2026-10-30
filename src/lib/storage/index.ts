@@ -37,7 +37,7 @@ export {
  *     son driver `console`.
  *   - `supabase` : Supabase Storage, bucket privé `STORAGE_BUCKET`, clé
  *     `SUPABASE_SERVICE_ROLE_KEY` (serveur seulement), URL du projet
- *     `NEXT_PUBLIC_SUPABASE_URL` (déjà posée pour l'authentification).
+ *     `NEXT_PUBLIC_SUPABASE_URL` (l'authentification ne la lit plus, ADR-052).
  *
  *   - `s3` : Cellar, le stockage objet de Clever Cloud (2026-10-30, plan de
  *     bascule 0.7), bucket privé `STORAGE_BUCKET`, accès par les variables

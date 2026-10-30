@@ -37,8 +37,9 @@ import "server-only";
 // CE QUI N'EST PAS MIGRÉ. Le code continue de lire `process.env.X` là où il le
 // lisait. Plusieurs lecteurs prennent l'environnement en PARAMÈTRE pour être
 // testés sans muter `process.env` (`mcp/hotes.ts`, `mcp/acces-*.ts`,
-// `legifrance/client.ts`, `lib/environnement.ts`), et les modules Supabase sont
-// au lot sécurité puis à Better Auth. Les remplacer par un objet importé d'ici
+// `legifrance/client.ts`, `lib/environnement.ts`) ; ~~les modules Supabase sont
+// au lot sécurité puis à Better Auth~~ [2026-10-30 : Better Auth lit son
+// secret et l'adresse publique dans `auth/better-auth.ts`]. Les remplacer par un objet importé d'ici
 // toucherait une vingtaine de fichiers pour un gain nul : la validation, elle,
 // est faite.
 //

@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { isAPIError } from "better-auth/api";
 import { auth } from "@/lib/auth/better-auth";
 
 /**
@@ -22,7 +23,9 @@ export async function GET(request: NextRequest) {
   try {
     await auth.api.verifyEmail({ query: { token } });
     return vers("confirmed=1");
-  } catch {
-    return vers("confirmation=invalide");
+  } catch (e) {
+    // Un jeton refusé est un lien invalide ; une panne de base, elle, se voit.
+    if (isAPIError(e)) return vers("confirmation=invalide");
+    throw e;
   }
 }

@@ -141,16 +141,21 @@ const ADMISES: { fichier: string; ligne: string; motif: string }[] = [
     motif:
       "La consigne donnée au modèle qui lit le serveur MCP : elle NOMME les mots pour les interdire.",
   },
-  // Les e-mails d'authentification : Supabase Auth les envoie, eux (ADR-005).
+  // Les e-mails d'authentification (ADR-052) : Better Auth les fait partir par
+  // `sendMail`, et les actions vérifient avant que l'envoi est en service
+  // (`envoiImpossible`, `auth/actions.ts`) — sinon elles le disent au lieu de
+  // promettre. ~~Supabase Auth les envoie, eux (ADR-005).~~
   {
     fichier: "src/app/signup/verification-en-attente/page.tsx",
     ligne: "Un lien de confirmation a été envoyé à",
-    motif: "Envoyé par Supabase Auth à l'inscription (`signUp`), pas par le driver de Rojer.",
+    motif:
+      "Envoyé par Better Auth à l'inscription ; la page n'est atteinte qu'après le contrôle `envoiImpossible` de `signUpAction`.",
   },
   {
     fichier: "src/lib/auth/actions.ts",
     ligne: '"Si un compte existe avec cette adresse, un e-mail de réinitialisation vient de partir.",',
-    motif: "Envoyé par Supabase Auth (`resetPasswordForEmail`), pas par le driver de Rojer.",
+    motif:
+      "Envoyé par Better Auth (`requestPasswordReset`) ; le message ne s'affiche qu'après le contrôle `envoiImpossible`.",
   },
   // Deux envois VRAIS, qui ne sont pas des e-mails.
   {

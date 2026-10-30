@@ -56,7 +56,7 @@ export default async function LoginPage({
             role="alert"
             className="m-0 mt-6 rounded-[18px] bg-[color:var(--board-signal-wash)] px-4 py-3 text-[13px] leading-[1.5] text-[color:var(--board-signal-ink)]"
           >
-            Ce lien de confirmation est invalide ou a expiré. Connectez-vous : un nouveau lien vous sera envoyé.
+            Ce lien de confirmation est invalide ou a expiré. Connectez-vous avec votre adresse et votre mot de passe pour en obtenir un nouveau.
           </p>
         ) : null}
 

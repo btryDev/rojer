@@ -104,6 +104,9 @@ export type AuthActionState = {
 const ENVOI_IMPOSSIBLE =
   "L'envoi d'e-mails n'est pas configuré sur ce serveur : aucun lien ne peut partir. Prévenez l'équipe Rojer.";
 
+const LIEN_INVALIDE =
+  "Ce lien de réinitialisation est invalide ou a expiré. Redemandez un lien.";
+
 function envoiImpossible(): boolean {
   return refusUrlPublique() !== null || !envoiEnService();
 }
@@ -251,8 +254,6 @@ export async function definirMotDePasseAction(
   redirect("/login?reinitialise=1");
 }
 
-const LIEN_INVALIDE =
-  "Ce lien de réinitialisation est invalide ou a expiré. Redemandez un lien.";
 
 export async function signOutAction() {
   try {

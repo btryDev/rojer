@@ -2,7 +2,7 @@ import "server-only";
 // Lectures du serveur MCP — **portée explicite, jamais implicite**.
 //
 // Les queries de l'application (`src/lib/*/queries.ts`) déterminent leur
-// portée en appelant `requireUser()`, qui lit la session Supabase dans les
+// portée en appelant `requireUser()`, qui lit la session (Better Auth, ADR-052) dans les
 // cookies de la requête Next. Hors du runtime Next — ce qu'est un serveur
 // stdio — il n'y a ni requête ni cookies : ces fonctions ne sont pas
 // réutilisables telles quelles.

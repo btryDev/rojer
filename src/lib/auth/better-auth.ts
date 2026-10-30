@@ -43,13 +43,15 @@ function adresseApp(): string | undefined {
  * lente dans un cas que dans l'autre, et le chronomètre disait qui a un compte
  * (revue de sécurité de la PR #135). L'échec se journalise, jamais ne s'avale.
  */
-function envoyer(to: string, subject: string, lignes: string[]): Promise<void> {
+async function envoyer(to: string, subject: string, lignes: string[]): Promise<void> {
+  // Sans `after()` de Next : Better Auth l'appelle aussi hors requête (script
+  // de mesure), et Clever Cloud sert depuis un processus Node durable, qui
+  // mène la promesse à son terme.
   void sendMail({ to, subject, text: lignes.join("\n") }).catch((e: unknown) => {
     console.error(
       JSON.stringify({ type: "envoi_mail_compte_echoue", sujet: subject, motif: motifErreur(e) }),
     );
   });
-  return Promise.resolve();
 }
 
 export const auth = betterAuth({
@@ -59,7 +61,9 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: "postgresql" }),
   verification: { modelName: "authVerification" },
   advanced: {
-    database: { generateId: "uuid" },
+    // `joins` : la session et son compte en une requête (JOIN) au lieu de deux,
+    // à chaque `requireUser` (simplification de la PR #135).
+    database: { generateId: "uuid", joins: true },
     ipAddress: { ipAddressHeaders: [ENTETE_IP_CLIENT] },
   },
   emailAndPassword: {

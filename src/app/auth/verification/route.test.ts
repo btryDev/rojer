@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
+import { APIError } from "better-auth/api";
 
 /**
  * Le lien de confirmation d'adresse (ADR-052) : il confirme, ou dit qu'il est
@@ -30,9 +31,14 @@ describe("/auth/verification", () => {
   });
 
   it("un jeton refusé : lien invalide", async () => {
-    h.verifyEmail.mockRejectedValue(new Error("INVALID_TOKEN"));
+    h.verifyEmail.mockRejectedValue(new APIError("UNAUTHORIZED", { code: "INVALID_TOKEN", message: "x" }));
     const r = await appel("?token=mort");
     expect(r.headers.get("location")).toBe("https://app.rojer.fr/login?confirmation=invalide");
+  });
+
+  it("une panne (autre chose qu'un refus de Better Auth) n'est pas déguisée en lien invalide", async () => {
+    h.verifyEmail.mockRejectedValue(new Error("connexion à la base perdue"));
+    await expect(appel("?token=abc")).rejects.toThrow("connexion à la base perdue");
   });
 
   it("sans jeton : lien invalide, Better Auth n'est pas appelé", async () => {

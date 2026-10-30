@@ -7,16 +7,13 @@ const h = vi.hoisted(() => ({
   }),
   // `auth.api` de Better Auth (ADR-052) : chaque appel reçoit un objet
   // `{ body?, headers? }` et lève une `APIError` en cas de refus.
+  // Réponses par défaut posées dans `beforeEach`, un seul endroit.
   auth: {
-    signInEmail: vi.fn<(arg: { body: unknown; headers?: Headers }) => Promise<unknown>>(async () => ({})),
-    signUpEmail: vi.fn<(arg: { body: Record<string, unknown> }) => Promise<unknown>>(async () => ({})),
-    requestPasswordReset: vi.fn<(arg: { body: Record<string, unknown> }) => Promise<unknown>>(
-      async () => ({ status: true }),
-    ),
-    resetPassword: vi.fn<(arg: { body: Record<string, unknown> }) => Promise<unknown>>(
-      async () => ({ status: true }),
-    ),
-    signOut: vi.fn(async () => ({ success: true })),
+    signInEmail: vi.fn<(arg: { body: unknown; headers?: Headers }) => Promise<unknown>>(),
+    signUpEmail: vi.fn<(arg: { body: Record<string, unknown> }) => Promise<unknown>>(),
+    requestPasswordReset: vi.fn<(arg: { body: Record<string, unknown> }) => Promise<unknown>>(),
+    resetPassword: vi.fn<(arg: { body: Record<string, unknown> }) => Promise<unknown>>(),
+    signOut: vi.fn<(arg: { headers: Headers }) => Promise<unknown>>(),
   },
   entetes: new Headers({ "x-forwarded-for": "203.0.113.7" }),
   cookiesEffaces: [] as string[],
@@ -66,6 +63,7 @@ beforeEach(() => {
   h.auth.signUpEmail.mockResolvedValue({});
   h.auth.requestPasswordReset.mockResolvedValue({ status: true });
   h.auth.resetPassword.mockResolvedValue({ status: true });
+  h.auth.signOut.mockResolvedValue({ success: true });
   h.limite.mockClear();
   h.limite.mockResolvedValue({ ok: true });
   h.cookiesEffaces = [];
