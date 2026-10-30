@@ -1106,7 +1106,7 @@ model Action {
   // ~~onDelete: SetNull~~ [2026-10-28 : NoAction — un point désigné sur un
   // appareil est sa trace (ADR-048) ; la base refuse de supprimer l'appareil
   // plutôt que de l'en détacher en silence. Migration
-  // `20261028120000_preuves_protegees_en_base`.]
+  // `20261030100000_preuves_protegees_en_base`.]
   equipementId String?
   equipement   Equipement? @relation(fields: [equipementId], references: [id], onDelete: NoAction)
 
