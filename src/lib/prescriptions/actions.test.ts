@@ -46,7 +46,7 @@ vi.mock("@/lib/calendrier/regeneration-sure", () => ({
   regenererApresMutation: vi.fn(async () => undefined),
 }));
 
-const { leverPrescription, supprimerPrescription } = await import("./actions");
+const { leverPrescription, reactiverPrescription, supprimerPrescription } = await import("./actions");
 
 const jour = (iso: string) => new Date(`${iso}T00:00:00Z`);
 
@@ -371,6 +371,26 @@ describe("supprimerPrescription", () => {
           equipementId: "eq-portail",
         },
       }),
+    );
+  });
+});
+
+// Une prescription étrangère ou disparue est introuvable (404), jamais une
+// erreur serveur : la lecture bornée précède l'écriture (relevé du 2026-10-31).
+describe("reactiverPrescription : identifiant étranger ou disparu", () => {
+  it("404 sans rien écrire", async () => {
+    h.etat.prescription = null;
+    h.prisma.prescriptionParticuliere.update.mockClear();
+    await expect(reactiverPrescription("e1", "presc_d_un_autre")).rejects.toThrow(/NEXT_HTTP_ERROR_FALLBACK;404/);
+    expect(h.prisma.prescriptionParticuliere.update).not.toHaveBeenCalled();
+  });
+
+  it("contrôle positif : la sienne se réactive", async () => {
+    h.etat.prescription = { id: "presc_1" };
+    h.prisma.prescriptionParticuliere.update.mockClear();
+    await reactiverPrescription("e1", "presc_1");
+    expect(h.prisma.prescriptionParticuliere.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "presc_1", etablissementId: "e1" } }),
     );
   });
 });

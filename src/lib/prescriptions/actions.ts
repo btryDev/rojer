@@ -1,5 +1,7 @@
 "use server";
 
+import { notFound } from "next/navigation";
+
 import { revalidatePath } from "next/cache";
 import type { Prisma } from "@prisma/client";
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
@@ -167,8 +169,16 @@ export async function reactiverPrescription(
   prescriptionId: string,
 ): Promise<void> {
   const { db } = await assertEtablissementDuCompte(etablissementId);
-  await db.prescriptionParticuliere.update({
+  // Lue d'abord, bornée à l'établissement : une prescription étrangère ou
+  // disparue est introuvable (404), jamais une erreur serveur — `update` sur
+  // une ligne absente lève P2025 (relevé du 2026-10-31, isolation).
+  const existante = await db.prescriptionParticuliere.findFirst({
     where: { id: prescriptionId, etablissementId },
+    select: { id: true },
+  });
+  if (!existante) notFound();
+  await db.prescriptionParticuliere.update({
+    where: { id: existante.id, etablissementId },
     data: { dateFin: null, actif: true },
   });
   await regenererApresMutation(etablissementId, "prescriptions");
