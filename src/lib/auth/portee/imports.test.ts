@@ -71,8 +71,11 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous" }
 };
 /** Cliquet : importeurs du client brut encore à migrer vers requireCompte(). */
 const A_MIGRER = new Set<string>([]);
-/** Un module nommé : son motif, ou `{ motif, typesSeuls: true }` s'il n'a droit qu'aux types. */
-type Nomme = string | { motif: string; typesSeuls: true };
+/**
+ * Un module nommé : son motif ; `{ motif, typesSeuls: true }` s'il n'a droit
+ * qu'aux types ; `{ motif, symboles }` s'il n'a droit qu'à ces valeurs.
+ */
+type Nomme = string | { motif: string; typesSeuls: true } | { motif: string; symboles: string[] };
 const NOMMES_ROUAGES: Record<string, Record<string, Nomme>> = {
   "src/lib/auth/portee/client": {
     "src/lib/auth/compte.ts": "requireCompte : la portée vient de la session",
@@ -85,11 +88,11 @@ const NOMMES_ROUAGES: Record<string, Record<string, Nomme>> = {
   // preuve vérifiée (jeton, signature, clé ou jeton MCP) — seconde lecture de
   // #146.
   "src/lib/auth/compte-hors-session": {
-    "src/lib/mcp/db.ts": "MCP : établissement de la clé, identité du jeton OAuth vérifié",
-    "src/lib/mcp/acces-oauth-deps.ts": "MCP OAuth : établissements du porteur vérifié",
-    "src/lib/signatures/actions.ts": "pose de signature par jeton vérifié",
-    "src/lib/signatures/verification-publique.ts": "établissement d'une signature lue par son identifiant",
-    "src/app/acces/[token]/page.tsx": "page d'un jeton vérifié",
+    "src/lib/mcp/db.ts": { motif: "MCP : établissement de la clé, identité du jeton OAuth vérifié", symboles: ["clientDuCompteVerifie", "clientDuProprietaire"] },
+    "src/lib/mcp/acces-oauth-deps.ts": { motif: "MCP OAuth : établissements du porteur vérifié", symboles: ["clientDuCompteVerifie"] },
+    "src/lib/signatures/actions.ts": { motif: "pose de signature par jeton vérifié", symboles: ["clientDuProprietaire"] },
+    "src/lib/signatures/verification-publique.ts": { motif: "établissement d'une signature lue par son identifiant", symboles: ["clientDuProprietaire"] },
+    "src/app/acces/[token]/page.tsx": { motif: "page d'un jeton vérifié", symboles: ["clientDuProprietaire"] },
   },
   "src/lib/auth/portee/borne": {
     "src/lib/auth/portee/client.ts": "l'extension",
@@ -198,17 +201,39 @@ function importsDeValeur(f: string, c: string): string[] {
 }
 const TYPES_SEULS = Object.entries(NOMMES_ROUAGES).flatMap(([c, nommes]) =>
   Object.entries(nommes)
-    .filter(([, nomme]) => typeof nomme !== "string" && nomme.typesSeuls)
+    .filter(([, nomme]) => typeof nomme !== "string" && "typesSeuls" in nomme)
     .map(([f]) => [f, c] as const),
 );
-it("sessionStdio ne sert que le serveur stdio (scripts/mcp-server.ts) : aucun module de src ne l'emploie", () => {
-  // Appelé dans le processus web, il y réintroduirait un second pool vers la
-  // base (audit Next.js M5) ; scripts/ n'est pas relu par ces gardes.
-  const emploient = [...TEXTES]
-    .filter(([f, t]) => f !== "src/lib/auth/compte-hors-session.ts" && /\bsessionStdio\b/.test(sansCommentairesNiChaines(t)))
-    .map(([f]) => f);
-  expect(emploient).toEqual([]);
+/**
+ * Un module nommé avec ses `symboles` n'importe de la cible que ces valeurs-là
+ * (les types restent libres) : nommé pour `clientDuProprietaire`, il ne peut
+ * pas appeler `clientDuCompteVerifie(chaîne)` (revue du 2026-10-31).
+ */
+function valeursImportees(f: string, c: string): string[] {
+  const texte = TEXTES.get(f)!;
+  const statiques = [...texte.matchAll(IMPORT_STATIQUE)].filter(([, , , spec]) => cible(f, spec) === c);
+  const valeurs = statiques.flatMap(([, type, clause]) => {
+    if (type) return [];
+    const accolades = clause.match(/^\{([^}]*)\}$/);
+    if (!accolades) return ["<défaut ou espace de noms>"];
+    return accolades[1]
+      .split(",")
+      .map((x) => x.trim())
+      .filter((x) => x && !x.startsWith("type "))
+      .map((x) => x.split(/\s+as\s+/)[0]);
+  });
+  const dynamiques = [...texte.matchAll(IMPORT_DYNAMIQUE)].filter(([, spec]) => cible(f, spec) === c).map(() => "<import dynamique>");
+  return [...valeurs, ...dynamiques];
+}
+const PAR_SYMBOLES = Object.entries(NOMMES_ROUAGES).flatMap(([c, nommes]) =>
+  Object.entries(nommes).flatMap(([f, nomme]) =>
+    typeof nomme !== "string" && "symboles" in nomme ? [[f, c, nomme.symboles] as const] : [],
+  ),
+);
+it.each(PAR_SYMBOLES)("%s n'importe de %s que ses symboles nommés", (f, c, symboles) => {
+  expect(valeursImportees(f, c).filter((v) => !symboles.includes(v))).toEqual([]);
 });
+
 it("les modules nommés `typesSeuls` existent", () => {
   expect(TYPES_SEULS.length).toBeGreaterThan(0);
 });

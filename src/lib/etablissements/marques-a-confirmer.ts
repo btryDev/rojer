@@ -9,10 +9,10 @@
 // ainsi : c'est le même calcul, par la même traduction (`matching/marques.ts`).
 //
 // Le client est reçu, pas importé : le MCP passe le sien (~~`dbMcp()`~~
-// [2026-10-31 : le client borné de la session MCP, `mcp/db.ts`, construit sur
-// `mcp/prisma.ts` dans le serveur stdio — rien sur la sortie standard — et
-// sur le client commun dans le processus web, audit Next.js M5 du
-// 2026-10-14]). La portée l'est aussi — l'appelant
+// [2026-10-31 : le client borné de la session MCP — `mcp/db.ts` dans le
+// processus web, sur le client commun ; `sessionStdio`
+// (`auth/compte-hors-session.ts`) dans le serveur stdio, sur `mcp/prisma.ts`,
+// rien sur la sortie standard ; audit Next.js M5 du 2026-10-14]). La portée l'est aussi — l'appelant
 // passe le prédicat d'appartenance qu'il a établi, et la lecture le porte.
 
 import type { Prisma, PrismaClient } from "@prisma/client";

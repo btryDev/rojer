@@ -48,3 +48,28 @@ describe("prismaMcp n'a qu'un importeur : le serveur stdio", () => {
     expect(importeurs.filter((f) => f !== IMPORTEUR_PERMIS)).toEqual([]);
   });
 });
+
+// Le serveur stdio construit son client des lectures au démarrage
+// (`sessionStdio`, `auth/compte-hors-session.ts`), sur `prismaMcp`, et le passe
+// lui-même aux outils. Appelé ailleurs, `sessionStdio` ouvrirait un second
+// pool dans le processus web ; un contexte refait par `contexteMcp` ou
+// `clientMcp` lirait par le client de l'application, qui écrit sur stdout en
+// développement — la sortie du protocole (revue du 2026-10-31).
+describe("le serveur stdio et sa session", () => {
+  const tous = [...fichiers(join(racine, "src")), ...fichiers(join(racine, "scripts"))];
+  const DEFINITION = "src/lib/auth/compte-hors-session.ts";
+  const emploient = tous
+    .filter((f) => /\bsessionStdio\b/.test(readFileSync(f, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "")))
+    .map((f) => relative(racine, f))
+    .filter((f) => f !== DEFINITION);
+
+  it("sessionStdio n'est employé que par le serveur stdio", () => {
+    expect(emploient).toEqual([IMPORTEUR_PERMIS]);
+  });
+
+  it("le script passe aux outils le client de SA session, et ne refait pas de contexte", () => {
+    const script = readFileSync(join(racine, IMPORTEUR_PERMIS), "utf8").replace(/\/\/[^\n]*/g, "");
+    expect(script).toMatch(/\{ scope, now: new Date\(\), db: session\.db \}/);
+    expect(script).not.toMatch(/\b(?:contexteMcp|clientMcp)\b/);
+  });
+});

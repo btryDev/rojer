@@ -1,14 +1,11 @@
-// La jointure « dernière réalisation » pour des lignes déjà lues, par le client
-// Prisma de l'application.
+// La jointure « dernière réalisation » pour des lignes déjà lues, en SQL brut
+// borné au propriétaire de la SESSION (`requireLectureSqlProprietaire`,
+// `auth/scope.ts`).
 //
-// Séparée de `derniere-realisation.ts`, qui reste pur, pour une raison
-// précise : le serveur MCP a son propre client (`lib/mcp/prisma.ts`) et lit ce
-// module-là. S'il importait celui-ci, il chargerait un second client.
-// [2026-10-14, audit Next.js M5 : le MCP lit désormais ~~`dbMcp()`~~ [2026-10-31 :
-// le client borné de `clientMcp`]
-// (`lib/mcp/db.ts`) — le client commun dans le processus web, `prismaMcp`
-// dans le seul serveur stdio. La séparation reste juste : en stdio, ce module
-// interrogerait le client commun, qui écrit ses requêtes sur stdout en dev.]
+// Séparée de `derniere-realisation.ts`, qui reste pur : le serveur MCP lit
+// celui-là. ~~S'il importait celui-ci, il chargerait un second client.~~
+// [2026-10-31 : ce module lit la session (cookies) ; hors requête Next — le
+// serveur stdio —, il lèverait. C'est la raison qui tient la séparation.]
 
 import { cache } from "react";
 import { Prisma } from "@prisma/client";
