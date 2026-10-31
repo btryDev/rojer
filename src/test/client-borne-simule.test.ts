@@ -19,17 +19,22 @@ describe("client borné simulé", () => {
     const db = await clientDuCompteSimule("user-1");
     await expect(
       creerEnLotVerifie(db as never, "Signature", [{ userId: "user-2", etablissementId: "e" }]),
-    ).rejects.toThrow(/userId/);
+    ).rejects.toThrow("Signature.userId : utilisateur d'un autre compte");
   });
 
-  it("createMany direct sur le client simulé passe par la borne", async () => {
-    const db = (await clientDuCompteSimule("user-1")) as unknown as {
-      accessToken: { createMany(a: object): Promise<unknown> };
-    };
+  it("createMany direct, hors d'un lot : parents non vérifiés, refusé comme en production", async () => {
+    const db = (await clientDuCompteSimule("user-1")) as unknown as Lot;
     await expect(
-      Promise.resolve().then(() =>
-        db.accessToken.createMany({ data: [{ etablissementId: "e", createdByUserId: "user-2" }] }),
-      ),
-    ).rejects.toThrow(/createdByUserId|creerEnLotVerifie/);
+      Promise.resolve().then(() => db.accessToken.createMany({ data: [{ etablissementId: "e", createdByUserId: "user-1" }] })),
+    ).rejects.toThrow("AccessToken.createMany : parents non vérifiés (Etablissement:e) — passer par creerEnLotVerifie");
+  });
+
+  it("createMany direct portant l'identité d'un autre compte : refusé sur l'identité", async () => {
+    const db = (await clientDuCompteSimule("user-1")) as unknown as Lot;
+    await expect(
+      Promise.resolve().then(() => db.accessToken.createMany({ data: [{ etablissementId: "e", createdByUserId: "user-2" }] })),
+    ).rejects.toThrow("AccessToken.createdByUserId : utilisateur d'un autre compte");
   });
 });
+
+type Lot = { accessToken: { createMany(a: object): Promise<unknown> } };

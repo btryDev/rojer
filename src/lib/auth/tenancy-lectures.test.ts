@@ -166,9 +166,11 @@ const EXEMPTIONS = new Map<string, Exemption>([
 // `tenancy-ecritures.test.ts` ; `verifierIntegriteSignature` n'est plus une
 // action serveur (`signatures/verification-publique.ts`) ; entre
 // `definirMotDePasseAction`, la réinitialisation passée côté serveur.
-// ~~13~~ → 11 le 2026-10-31 (isolation, signatures) : `getSignature` a quitté
-// `queries.ts` pour le module public nommé, `listSignatures` reçoit le client
-// borné.
+// ~~13~~ → 11 le 2026-10-31 (isolation, signatures) : `getSignature` a
+// DÉMÉNAGÉ — de `queries.ts`, que cette garde relit, vers le module public
+// nommé `verification-publique.ts`, qu'elle ne relit pas (sa lecture brute y
+// est tenue par `USAGES` d'`imports.test.ts`) ; `listSignatures` porte
+// désormais l'établissement dans sa requête.
 const PLAFOND_EXEMPTIONS = 11;
 
 const RACINE = join(process.cwd(), "src/lib");

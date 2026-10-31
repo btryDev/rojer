@@ -151,12 +151,10 @@ export async function verifierSousLimite(
 /**
  * Lit une signature par son identifiant, **sans authentification**.
  *
- * C'est délibéré : l'identifiant `sig_…` est communiqué avec le document
- * pour permettre à un tiers (inspecteur, assureur, acquéreur) de contrôler
- * la signature sans compte — c'est tout l'objet de la page publique
- * de vérification ; ici, pour la confirmation `/signe/[signatureId]`, sœur de
- * `/verifier/[signatureId]`. L'identifiant est un UUID aléatoire, donc non
- * énumérable.
+ * Seul appelant : la page de confirmation `/signe/[signatureId]`, que voit
+ * le signataire juste après avoir signé. La page publique de vérification
+ * `/verifier/[signatureId]`, sa sœur, passe par `verifierSousLimite`.
+ * L'identifiant `sig_…` est un UUID aléatoire, donc non énumérable.
  *
  * En contrepartie, la projection est limitée à ce qui sert la preuve.
  * L'adresse IP, le user-agent, l'identifiant d'établissement et l'objet

@@ -45,7 +45,7 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous" }
     usages: ["prisma.etablissement.findUnique"],
   },
   "src/lib/signatures/verification-publique.ts": {
-    motif: "vérification publique d'une signature, sans session",
+    motif: "vérification publique d'une signature et confirmation /signe, sans session",
     usages: ["prisma.signature.findUnique"],
   },
   "src/lib/access-tokens/verify.ts": {
