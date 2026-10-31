@@ -1,9 +1,8 @@
 // Qui peut toucher au client Prisma brut, qui voit tous les comptes (ADR-051 § 3).
-// Ses portes (`@/lib/prisma`, `mcp/prisma` ; ~~`mcp/db`~~ [2026-10-31 : il ne
-// rend plus que le client borné]) ne s'importent que depuis les modules
-// NOMMÉS, chacun avec son motif, ou ceux encore À MIGRER vers
-// `requireCompte()` : un cliquet qui ne fait que raccourcir — vide depuis le
-// 2026-10-31 (lot 2b, MCP). Les rouages du
+// Ses portes (`@/lib/prisma`, `mcp/prisma`) ne s'importent que depuis les
+// modules NOMMÉS, chacun avec son motif et ses seuls usages, ou ceux de la
+// liste À MIGRER vers `requireCompte()` : un cliquet qui ne fait que
+// raccourcir (vide depuis le lot 2b, voir `PORTES_BRUTES`). Les rouages du
 // client borné ne s'importent que là où la portée s'établit, et la valeur
 // `PrismaClient` que dans les deux modules qui fabriquent un client.
 // Échappent : un chemin calculé, `globalThis.prisma`. Tests exclus (doublures).
@@ -15,7 +14,8 @@ import { describe, expect, it } from "vitest";
 import { sansCommentairesNiChaines } from "@/lib/auth/tenancy-sonde";
 
 const DEPOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
-// `mcp/db` n'est plus une porte : il ne rend que le client borné (lot 2b).
+// ~~`mcp/db`~~ n'est plus une porte depuis le 2026-10-31 : il ne rend que le
+// client borné (lot 2b, MCP) ; la liste À MIGRER est vide depuis le même jour.
 const PORTES_BRUTES = ["src/lib/prisma", "src/lib/mcp/prisma"];
 const FABRIQUES = new Set(["src/lib/prisma.ts", "src/lib/mcp/prisma.ts"]);
 /** SQL brut sous requireProprietaireSql, jusqu'au chantier `{ sql, db }`. */

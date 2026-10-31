@@ -144,7 +144,7 @@ export function etablitSaPorteeLocale(
 
 const RACINE_SRC = () => join(process.cwd(), "src");
 
-/** Les trois portes du client brut — les mêmes que `portee/imports.test.ts`. */
+/** Les portes du client brut — les mêmes que `portee/imports.test.ts`. */
 const PORTES_BRUTES = ["src/lib/prisma", "src/lib/mcp/prisma"];
 /**
  * Le seul module qui détient le client brut pour n'en rendre que des clients

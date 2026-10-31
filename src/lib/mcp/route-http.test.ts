@@ -34,22 +34,10 @@ vi.mock("@/lib/securite/limite-debit", async (original) => ({
   consommer: async () => ({ ok: true }),
 }));
 
-// Le client des lectures : le client borné simulé (`vitest.setup.ts`) sur le
-// faux Prisma, rendu tant que l'établissement existe (`./db.ts` : un
-// établissement disparu rend `null`, dit « introuvable »).
-const { portees } = vi.hoisted(() => ({ portees: [] as { etablissementId: string; userId?: string }[] }));
+// Le client des lectures : le client borné simulé sur le faux Prisma, tant
+// que l'établissement existe (`./db.ts`).
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
-vi.mock("./db", async () => {
-  const { clientDuCompteSimule } = await import("@/test/garde-simulee");
-  return {
-    clientMcp: async (scope: { etablissementId: string; userId?: string }) => {
-      portees.push(scope);
-      return (await prismaMock.etablissement.findUnique({ where: { id: scope.etablissementId }, select: { id: true } }))
-        ? clientDuCompteSimule(scope.userId)
-        : null;
-    },
-  };
-});
+vi.mock("./db", async () => (await import("@/test/garde-simulee")).clientMcpSimule(prismaMock));
 
 // La route lit sa configuration au chargement du module : l'environnement
 // doit être posé avant l'import.

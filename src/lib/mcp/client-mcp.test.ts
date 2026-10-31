@@ -22,12 +22,12 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
-const { clientMcp, utiliserClientMcp } = await import("./db");
+const { arreterStdio, clientMcp, demarrerStdio } = await import("./db");
 const portee = (db: unknown) => (db as Record<symbol, unknown> | null)?.[PORTEE_SIMULEE];
 
 beforeEach(() => {
   h.lecturesApp = 0;
-  utiliserClientMcp(null); // retour au processus web
+  arreterStdio(); // retour au processus web
 });
 
 describe("clientMcp", () => {
@@ -59,7 +59,7 @@ describe("clientMcp", () => {
         },
       },
     };
-    utiliserClientMcp(base as never);
+    expect(await demarrerStdio(base as never, "etab-1")).toBe(true);
     const db = await clientMcp({ etablissementId: "etab-1" });
     expect(portee(db)).toEqual({ type: "compte", userId: "user-9" });
     expect(await db!.verification.count({ where: { etablissementId: "etab-1" } })).toBe(3);
@@ -70,8 +70,7 @@ describe("clientMcp", () => {
     expect(h.lecturesApp).toBe(0);
   });
 
-  it("stdio : un établissement inconnu rend null", async () => {
-    utiliserClientMcp({ etablissement: { findUnique: async () => null } } as never);
-    expect(await clientMcp({ etablissementId: "inconnu" })).toBeNull();
+  it("stdio : un établissement inconnu ou sans propriétaire ne démarre pas", async () => {
+    expect(await demarrerStdio({ etablissement: { findUnique: async () => null } } as never, "inconnu")).toBe(false);
   });
 });

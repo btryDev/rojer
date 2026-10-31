@@ -3,7 +3,7 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
-vi.mock("@/lib/mcp/db", () => ({ dbMcp: () => ({}) }));
+vi.mock("@/lib/mcp/db", () => ({ clientMcp: async () => ({}) }));
 
 const { evaluerEtatDuerp, EFFECTIF_MAJ_ANNUELLE } = await import("./duerp");
 const { mentionAConfirmer } = await import(

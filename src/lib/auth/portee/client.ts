@@ -46,12 +46,18 @@ export type ClientBorne = PrismaClient;
 const CLIENTS = new Map<string, ClientBorne>();
 const MAX_CLIENTS = 500;
 
-export function clientBorne(portee: Portee): ClientBorne {
+/** L'identifiant d'une portée valide, lu UNE fois (un objet à accesseur ne peut pas en rendre deux). */
+function idDePortee(portee: Portee): string {
   if (portee?.type !== "compte")
     throw new ErreurPortee("seule la portée de compte existe à ce jour : client refusé");
   const id = portee.userId;
   if (typeof id !== "string" || id.length === 0)
     throw new ErreurPortee("portée sans identifiant : client refusé");
+  return id;
+}
+
+export function clientBorne(portee: Portee): ClientBorne {
+  const id = idDePortee(portee);
   const cle = `compte:${id}`;
   let client = CLIENTS.get(cle);
   if (client) {
@@ -74,14 +80,12 @@ export function clientBorne(portee: Portee): ClientBorne {
  * Le même client borné, construit sur un AUTRE client brut que celui de
  * l'application : le serveur MCP stdio, dont la sortie standard appartient au
  * protocole, a son propre client sans journal sur stdout (`mcp/prisma.ts`).
- * Pas de cache ici : `mcp/db.ts` garde le client de la session stdio, qui ne
- * sert qu'un établissement. Réservé à `auth/compte-hors-session.ts`
+ * Pas de cache ici : `mcp/db.ts` construit le client de la session stdio une
+ * fois, au démarrage. Réservé à `auth/compte-hors-session.ts`
  * (`portee/imports.test.ts`).
  */
 export function clientBorneSur(base: PrismaClient, portee: Portee): ClientBorne {
-  if (portee?.type !== "compte" || typeof portee.userId !== "string" || portee.userId.length === 0)
-    throw new ErreurPortee("portée sans identifiant : client refusé");
-  return etendre(base, { type: "compte", userId: portee.userId });
+  return etendre(base, { type: "compte", userId: idDePortee(portee) });
 }
 
 /** Le client d'une transaction ouverte sur un client borné. */

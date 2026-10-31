@@ -12,31 +12,33 @@ import "server-only";
 // REMPLACE PAS (seconde lecture du 2026-10-31) : chaque lecture de
 // `./queries.ts` garde son `where: { etablissementId }`.
 //
-// DEUX CLIENTS DE BASE (audit Next.js du 2026-10-14, M5) : dans le processus
-// web, celui de l'application — un seul pool ; dans le serveur stdio, et lui
-// seul, `prismaMcp` (`./prisma`), qui n'écrit rien sur stdout. Le script le
-// substitue au démarrage (`utiliserClientMcp`) ; le client borné, construit
-// dessus, est gardé pour la session : un processus stdio sert un seul
-// établissement.
+// LE SERVEUR STDIO (audit Next.js du 2026-10-14, M5) a son propre client brut,
+// `prismaMcp` (`./prisma`), qui n'écrit rien sur stdout (la sortie appartient
+// au protocole) : le script borne une fois, au démarrage, sur ce client
+// (`demarrerStdio`), et ce client sert toute la session — un processus stdio
+// sert un seul établissement. Dans le processus web, le client de
+// l'application : un seul pool.
 
 import type { PrismaClient } from "@prisma/client";
 import { clientDuCompteVerifie, clientDuProprietaire } from "@/lib/auth/compte-hors-session";
 import type { ClientBorne } from "@/lib/auth/portee/client";
 import type { ScopeMcp } from "./tools";
 
-let baseStdio: PrismaClient | null = null;
-let clientStdio: Promise<ClientBorne | null> | null = null;
+let clientStdio: ClientBorne | null = null;
 
-/** Réservé au serveur stdio : le client brut sur lequel borner (`null` : retour au client de l'application). */
-export function utiliserClientMcp(c: PrismaClient | null): void {
-  baseStdio = c;
+/** Serveur stdio, au démarrage. `false` si l'établissement a disparu ou n'a pas de propriétaire. */
+export async function demarrerStdio(base: PrismaClient, etablissementId: string): Promise<boolean> {
+  clientStdio = await clientDuProprietaire(etablissementId, base);
+  return clientStdio !== null;
+}
+
+/** Retour au processus web (tests). */
+export function arreterStdio(): void {
   clientStdio = null;
 }
 
 /** Le client borné de la session ; `null` si l'établissement a disparu ou n'a pas de propriétaire. */
 export async function clientMcp(scope: ScopeMcp): Promise<ClientBorne | null> {
   if (scope.userId) return clientDuCompteVerifie(scope.userId);
-  if (!baseStdio) return clientDuProprietaire(scope.etablissementId);
-  clientStdio ??= clientDuProprietaire(scope.etablissementId, baseStdio);
-  return clientStdio;
+  return clientStdio ?? clientDuProprietaire(scope.etablissementId);
 }

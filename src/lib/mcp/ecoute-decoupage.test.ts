@@ -32,7 +32,7 @@ vi.mock("@/lib/securite/limite-debit", async (original) => ({
 
 vi.mock("./db", () => {
   const client = { etablissement: { findUnique: vi.fn() } };
-  return { dbMcp: () => client };
+  return { clientMcp: async () => client };
 });
 
 vi.mock("@modelcontextprotocol/server", async (importOriginal) => {

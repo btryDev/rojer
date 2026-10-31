@@ -129,8 +129,8 @@ export type ScopeMcp = { etablissementId: string; userId?: string };
 
 export type ContexteMcp = {
   scope: ScopeMcp;
-  /** Le client borné au compte propriétaire de l'établissement servi
-   *  (ADR-051, `./db.ts`) ; chaque lecture garde aussi `scope.etablissementId`. */
+  /** Le client borné au compte de la session (ADR-051, `./db.ts`) ; chaque
+   *  lecture garde aussi `scope.etablissementId`. */
   db: Prisma.TransactionClient;
   /** Horloge injectée — cf. ADR-011. */
   now: Date;
@@ -138,7 +138,7 @@ export type ContexteMcp = {
 
 /**
  * Le contexte d'un appel d'outil : la portée, l'horloge et le client borné au
- * compte propriétaire de l'établissement (`./db.ts`). Un établissement disparu
+ * compte de la session (`./db.ts`). Un établissement disparu
  * ou sans propriétaire se dit comme un établissement introuvable.
  */
 export async function contexteMcp(scope: ScopeMcp, now: Date): Promise<ContexteMcp> {

@@ -19,6 +19,11 @@ import "server-only";
 // sans réécriture : le jour où la portée viendra d'un jeton OAuth plutôt
 // que d'une variable d'environnement, seul l'appelant change.
 //
+// [2026-10-31, ADR-051] Chaque fonction reçoit en premier paramètre `db`, le
+// client borné au compte de la session MCP (`./db.ts` : le compte du jeton
+// OAuth, ou le propriétaire de l'établissement pour la clé et le stdio). La
+// borne de compte s'AJOUTE à l'`etablissementId` de chaque `where`, qui reste.
+//
 // Lecture seule : aucune fonction d'écriture n'a sa place dans ce fichier.
 
 import { estLignePourInformation } from "@/lib/referentiels/conformite/initiative";
@@ -87,7 +92,6 @@ export type FicheEtablissement = NonNullable<
  * lit comme « rien à signaler ».
  */
 export async function getFraicheurCalendrier(
-  /** Le client borné au compte propriétaire de l'établissement (`./db.ts`). */
   db: Prisma.TransactionClient,
   etablissementId: string,
 ): Promise<FraicheurCalendrier> {
@@ -180,7 +184,6 @@ export type EtatDuerpLu = {
  * contredire le tableau de bord.
  */
 export async function getEtatDuerp(
-  /** Le client borné au compte propriétaire de l'établissement (`./db.ts`). */
   db: Prisma.TransactionClient,
   etablissementId: string,
   now: Date,
@@ -331,7 +334,6 @@ export type FiltresActionsMcp = {
  * duplique pas.
  */
 export async function listerActions(
-  /** Le client borné au compte propriétaire de l'établissement (`./db.ts`). */
   db: Prisma.TransactionClient,
   etablissementId: string,
   filtres: FiltresActionsMcp,
@@ -468,7 +470,6 @@ export type EquipementLu = {
  * de le réécrire, donc de le dupliquer.
  */
 export async function listerEquipements(
-  /** Le client borné au compte propriétaire de l'établissement (`./db.ts`). */
   db: Prisma.TransactionClient,
   etablissementId: string,
   now: Date,
@@ -543,7 +544,6 @@ export async function listerEquipements(
  * service », comme sur les écrans.
  */
 export async function getParcEquipements(
-  /** Le client borné au compte propriétaire de l'établissement (`./db.ts`). */
   db: Prisma.TransactionClient,
   etablissementId: string,
 ): Promise<FaitParc> {
@@ -648,7 +648,6 @@ export type FiltresVerificationsMcp = {
  * nomenclature interne des catégories.
  */
 export async function listerVerifications(
-  /** Le client borné au compte propriétaire de l'établissement (`./db.ts`). */
   db: Prisma.TransactionClient,
   etablissementId: string,
   filtres: FiltresVerificationsMcp,
@@ -807,7 +806,6 @@ export async function listerVerifications(
  * lit comme une réponse fausse.
  */
 export async function getNomEtablissement(
-  /** Le client borné au compte propriétaire de l'établissement (`./db.ts`). */
   db: Prisma.TransactionClient,
   etablissementId: string,
 ): Promise<string | null> {

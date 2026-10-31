@@ -21,8 +21,8 @@
 //     aussi la raison pour laquelle `@/lib/mcp/prisma` instancie son propre
 //     client plutôt que le singleton de l'application, qui journalise ses
 //     requêtes sur la sortie standard en développement. Ce fichier est le
-//     SEUL à l'importer : il le substitue au client des lectures MCP
-//     (`utiliserClientMcp`) avant tout appel d'outil ; la route HTTP, elle,
+//     SEUL à l'importer : le client des lectures MCP, borné au compte, est
+//     construit dessus au démarrage (`demarrerStdio`) ; la route HTTP, elle,
 //     garde le client commun (audit Next.js du 2026-10-14, M5).
 //   - **Une erreur ne doit pas fuir.** Les exceptions sont renvoyées au
 //     client comme résultat d'outil en erreur, avec un message court : pas
@@ -41,10 +41,7 @@ import {
   type ScopeMcp,
 } from "@/lib/mcp/tools";
 import { prismaMcp } from "@/lib/mcp/prisma";
-import { utiliserClientMcp } from "@/lib/mcp/db";
-
-// Avant toute lecture : les outils lisent `dbMcp()` à chaque appel.
-utiliserClientMcp(prismaMcp);
+import { demarrerStdio } from "@/lib/mcp/db";
 
 const NOM_SERVEUR = "rojer-demo";
 const VERSION_SERVEUR = "0.1.0";
@@ -93,6 +90,13 @@ async function main(): Promise<void> {
       `Aucun établissement ne porte l'identifiant « ${scope.etablissementId} ». ` +
         "Vérifiez MCP_ETABLISSEMENT_ID et la base pointée par DATABASE_URL.",
     );
+    process.exit(1);
+  }
+
+  // Le client des lectures, borné une fois pour la session au compte
+  // propriétaire de l'établissement, sur le client MCP (ADR-051, `mcp/db.ts`).
+  if (!(await demarrerStdio(prismaMcp, scope.etablissementId))) {
+    trace(`L'établissement « ${scope.etablissementId} » n'a pas de propriétaire : rien ne peut être servi.`);
     process.exit(1);
   }
 

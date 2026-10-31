@@ -69,7 +69,8 @@ const ETABLISSEMENT_ID = "etab_demo_1";
 const AUTRE_ETABLISSEMENT = "etab_du_voisin";
 
 const { clientDuCompteSimule } = await import("@/test/garde-simulee");
-const db = () => clientDuCompteSimule();
+const client = await clientDuCompteSimule();
+const db = async () => client;
 const ctx: ContexteMcp = {
   scope: { etablissementId: ETABLISSEMENT_ID },
   now: NOW,
