@@ -149,6 +149,12 @@ vi.mock("next/navigation", () => ({
     throw new Error("NEXT_REDIRECT");
   }),
 }));
+// La marque de calendrier périmé passe par le client de la session
+// (`regeneration-sure.ts`) : sans ce mock, le chemin d'échec appelle Supabase.
+vi.mock("@/lib/auth/compte", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/auth/compte")>()),
+  getOptionalCompte: async () => ({ user: { id: "user-1" }, db: h.prisma }),
+}));
 vi.mock("@/lib/auth/scope", () => ({
   assertEtablissementOwnership: vi.fn(async () => ({ id: "user-1" })),
   // La garde rend aussi le client borné (ADR-051) : ici, le client simulé.
@@ -276,6 +282,7 @@ describe("modifierEtablissement — recalcul des obligations", () => {
     );
 
     expect(res.status).toBe("success_avec_avertissement");
+    expect(h.marquerCalendrierPerime).toHaveBeenCalledWith(h.prisma, "etab-1");
     h.genererCalendrier.mockImplementation(async () => ({}));
   });
 });
