@@ -79,10 +79,10 @@ const A_MIGRER = new Set<string>([]);
 const NOMMES_ROUAGES: Record<string, Record<string, string>> = {
   "src/lib/auth/portee/client": {
     "src/lib/auth/compte.ts": "requireCompte : la portée vient de la session",
-    "src/lib/auth/portee/lot-verifie.ts": "types du client et de la transaction",
+    "src/lib/auth/portee/lot-verifie.ts": "types du client et de la transaction (types seuls)",
     "src/test/garde-simulee.ts": "tests seuls : le client simulé que rendent les gardes simulées",
     "src/lib/auth/compte-hors-session.ts": "accès sans session : la portée vient de la preuve vérifiée",
-    "src/lib/mcp/db.ts": "le type ClientBorne du client des lectures MCP",
+    "src/lib/mcp/db.ts": "le type ClientBorne du client des lectures MCP (types seuls)",
   },
   "src/lib/auth/portee/borne": {
     "src/lib/auth/portee/client.ts": "l'extension",
@@ -128,6 +128,40 @@ describe("client Prisma brut", () => {
 
 it.each(Object.entries(NOMMES_ROUAGES))("les rouages %s ne s'importent que des modules nommés", (c, nommes) => {
   expect(importeurs(c).filter((f) => !(f in nommes))).toEqual([]);
+});
+
+/**
+ * Un module nommé « (types seuls) » n'importe des rouages que des TYPES : la
+ * garde ci-dessus est par module, pas par symbole — sans celle-ci, un module
+ * nommé pour un type pourrait appeler `clientBorne({ userId: … })` librement
+ * (seconde lecture de #145).
+ */
+const IMPORT_STATIQUE = /(?:import|export)\s+(type\s+)?([^;"'`]*?)\s*from\s*["'`]([^"'`]+)["'`]/g;
+const IMPORT_DYNAMIQUE = /(?:import|require)\s*\(\s*["'`]([^"'`]+)["'`]/g;
+function importsDeValeur(f: string, c: string): string[] {
+  const texte = TEXTES.get(f)!;
+  const statiques = [...texte.matchAll(IMPORT_STATIQUE)].filter(([, , , spec]) => cible(f, spec) === c);
+  const deValeur = statiques
+    .filter(([, type, clause]) => {
+      if (type) return false;
+      const accolades = clause.match(/^\{([^}]*)\}$/);
+      if (!accolades) return true; // défaut, espace de noms : une valeur
+      return accolades[1].split(",").map((x) => x.trim()).filter(Boolean).some((x) => !x.startsWith("type "));
+    })
+    .map(([texteImport]) => texteImport);
+  const dynamiques = [...texte.matchAll(IMPORT_DYNAMIQUE)].filter(([, spec]) => cible(f, spec) === c).map(([t]) => t);
+  return [...deValeur, ...dynamiques];
+}
+const TYPES_SEULS = Object.entries(NOMMES_ROUAGES).flatMap(([c, nommes]) =>
+  Object.entries(nommes)
+    .filter(([, motif]) => motif.endsWith("(types seuls)"))
+    .map(([f]) => [f, c] as const),
+);
+it("les modules nommés « (types seuls) » existent", () => {
+  expect(TYPES_SEULS.length).toBeGreaterThan(0);
+});
+it.each(TYPES_SEULS)("%s n'importe de %s que des types", (f, c) => {
+  expect(importsDeValeur(f, c)).toEqual([]);
 });
 
 /** Vrai si le texte obtient la VALEUR `PrismaClient` (nommée, défaut, espace de noms, require, import()). */

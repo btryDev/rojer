@@ -58,7 +58,7 @@ vi.mock("@/lib/referentiels/conformite/mention-de-ligne", () => ({
 
 import { ErreurOutilMcp, OUTILS_MCP, type ContexteMcp } from "./tools";
 import { SCEAU_CALENDRIER } from "@/lib/calendrier/version-moteur";
-import { getEtatDuerp, getFraicheurCalendrier, getParcEquipements, listerActions } from "./queries";
+import { getEtatDuerp, getFraicheurCalendrier, getParcEquipements, listerActions, listerEquipements } from "./queries";
 import { couvertureDeLInventaire } from "@/lib/perimetre/couverture";
 import { PHRASE_SANS_REPONSE } from "@/lib/matching/sans-reponse";
 import { QUESTION_MATIERES } from "@/lib/etablissements/questions";
@@ -1017,6 +1017,16 @@ describe("le serveur dit qu'aucun équipement n'est déclaré (§ 15)", () => {
     const liste = await outil("equipements").executer(ctx, {});
     expect(lignes(liste)).toContain("0 équipement(s) déclaré(s) en service, 1 retiré(s) du parc.");
     expect(liste).toContain("Ancien extincteur — extincteur · retiré du parc");
+  });
+
+  it("tenancy : les marques « à confirmer » du parc sont lues sur l'établissement servi", async () => {
+    // Pas une fuite (la borne tient), mais une réponse fausse si l'identifiant
+    // se perdait : les marques disparaîtraient en silence (revue de #145).
+    prismaMock.equipement.findMany.mockResolvedValue([]);
+    await listerEquipements(await db(), ETABLISSEMENT_ID, NOW);
+    expect(prismaMock.etablissement.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: ETABLISSEMENT_ID } }),
+    );
   });
 
   it("tenancy : chaque lecture du parc porte l'établissement du jeton, et lui seul", async () => {
