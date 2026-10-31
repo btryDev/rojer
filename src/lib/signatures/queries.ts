@@ -1,6 +1,5 @@
 import "server-only";
-import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireCompte } from "@/lib/auth/compte";
 import type { ObjetSignable, Prisma } from "@prisma/client";
 
 /**
@@ -16,15 +15,20 @@ import type { ObjetSignable, Prisma } from "@prisma/client";
  * l'appeler avec un identifiant venu directement d'une URL ou d'un
  * formulaire sans avoir chargé l'objet au préalable.
  */
-export async function listSignatures(objetType: ObjetSignable, objetId: string) {
-  return prisma.signature.findMany({
+export async function listSignatures(
+  /** Le client borné au compte, reçu de la garde de l'appelant (ADR-051). */
+  db: Prisma.TransactionClient,
+  objetType: ObjetSignable,
+  objetId: string,
+) {
+  return db.signature.findMany({
     where: { objetType, objetId },
     orderBy: { horodatageIso: "asc" },
   });
 }
 
 /** Champs d'une signature qui constituent la preuve, et rien d'autre. */
-const SELECT_PREUVE = {
+export const SELECT_PREUVE = {
   id: true,
   signataireNom: true,
   signataireEmail: true,
@@ -53,8 +57,8 @@ export async function listSignaturesDesObjets(
   type Preuve = Prisma.SignatureGetPayload<{ select: typeof SELECT_PREUVE }>;
   const parObjet = new Map<string, Preuve[]>(objetIds.map((id) => [id, []]));
   if (objetIds.length === 0) return parObjet;
-  const user = await requireUser();
-  const signatures = await prisma.signature.findMany({
+  const { user, db } = await requireCompte();
+  const signatures = await db.signature.findMany({
     where: {
       objetType,
       objetId: { in: [...objetIds] },
@@ -65,25 +69,4 @@ export async function listSignaturesDesObjets(
   });
   for (const { objetId, ...preuve } of signatures) parObjet.get(objetId)?.push(preuve);
   return parObjet;
-}
-
-/**
- * Lit une signature par son identifiant, **sans authentification**.
- *
- * C'est délibéré : l'identifiant `sig_…` est communiqué avec le document
- * pour permettre à un tiers (inspecteur, assureur, acquéreur) de contrôler
- * la signature sans compte — c'est tout l'objet de la page publique
- * `/verifier/[signatureId]`. L'identifiant est un UUID aléatoire, donc non
- * énumérable.
- *
- * En contrepartie, la projection est limitée à ce qui sert la preuve.
- * L'adresse IP, le user-agent, l'identifiant d'établissement et l'objet
- * signé ne sortent pas d'ici : ils ne participent pas à la vérification et
- * exposeraient la structure interne du compte.
- */
-export async function getSignature(id: string) {
-  return prisma.signature.findUnique({
-    where: { id },
-    select: SELECT_PREUVE,
-  });
 }

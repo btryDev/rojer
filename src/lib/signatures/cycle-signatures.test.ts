@@ -73,6 +73,12 @@ const { prismaMock } = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
+// Sans session, le compte vient du propriétaire de l'établissement du jeton
+// (ADR-051, `compte-hors-session.ts`) : ici, le client borné simulé.
+vi.mock("@/lib/auth/compte-hors-session", async () => {
+  const { clientDuCompteSimule } = await import("@/test/garde-simulee");
+  return { clientDuProprietaire: async () => clientDuCompteSimule() };
+});
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/navigation", () => ({
   redirect: () => {
@@ -435,6 +441,25 @@ describe("garantie 2b — un objet clos ou annulé ne se signe plus, même avec 
 
     expect(r.status).toBe("success");
     expect(prismaMock.signature.lignes).toHaveLength(1);
+  });
+
+  it("un jeton de E1 qui vise un objet de E2 du MÊME compte est refusé (ADR-051, chemin par jeton)", async () => {
+    // Sans session, le client est borné au compte propriétaire de
+    // l'établissement du jeton (`compte-hors-session.ts`) ; le compte couvre
+    // aussi E2. La borne de compte ne remplace pas les contrôles du jeton :
+    // chaque lecture garde l'établissement DU JETON, et l'objet de E2 n'y est
+    // pas. Seconde lecture du 2026-10-31.
+    prismaMock.planPrevention.lignes.push({
+      ...planComplet("pp-e2", "etab-a-moi-2", "attente_signatures"),
+      etablissement: { entreprise: { userId: "user-1" } },
+    });
+    prismaMock.accessToken.lignes.push(lienValide("plan_prevention", "pp-e2"));
+
+    const r = await signer();
+
+    expect(r.status).toBe("error");
+    expect(prismaMock.signature.create).not.toHaveBeenCalled();
+    expect(prismaMock.signature.lignes).toHaveLength(0);
   });
 
   it("traversée : l'état lu est celui du plan de l'établissement du jeton, pas d'un homonyme", async () => {

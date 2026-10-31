@@ -20,7 +20,7 @@ export async function getPermisFeu(
     where: { id: permisFeuId, etablissementId: etablissement.id },
   });
   if (!permis) return null;
-  const signatures = await listSignatures("permis_feu", permis.id);
+  const signatures = await listSignatures(db, "permis_feu", permis.id);
   return { ...permis, signatures };
 }
 

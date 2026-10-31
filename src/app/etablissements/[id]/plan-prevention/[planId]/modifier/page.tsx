@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requireCompte } from "@/lib/auth/compte";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { FormulairePlanPrevention } from "@/components/plan-prevention/FormulairePlanPrevention";
@@ -27,10 +28,13 @@ export default async function ModifierPlanPreventionPage({
   const { id, planId } = await params;
   const plan = await getPlanPrevention(id, planId);
   if (!plan || !statutPlanSignable(plan.statut)) notFound();
+  // Le client borné de la session (ADR-051) ; la garde est passée par la
+  // lecture ci-dessus.
+  const { db } = await requireCompte();
   const [prestatairesAnnuaire, batiments, liensEnVol] = await Promise.all([
     listPrestataires(id),
     listerBatimentsDeLEtablissement(id),
-    compterLiensEnVol({ etablissementId: id, objetType: "plan_prevention", objetId: plan.id }),
+    compterLiensEnVol(db, { etablissementId: id, objetType: "plan_prevention", objetId: plan.id }),
   ]);
 
   const numero = `PP-${String(plan.numero).padStart(3, "0")}`;

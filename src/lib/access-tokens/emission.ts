@@ -197,6 +197,7 @@ export async function emettreAccessToken(
   // jeton en base, ni mail parti, ni code émis.
   if (
     !(await objetAppartientAEtablissement(
+      db,
       params.objetType,
       params.objetId,
       params.etablissementId,

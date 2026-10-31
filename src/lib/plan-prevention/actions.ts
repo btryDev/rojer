@@ -336,7 +336,7 @@ export async function modifierPlanPrevention(
     }
     const scelle = motifContenuScelle(
       "plan",
-      await compterSignatures("plan_prevention", planId, etablissementId, tx),
+      await compterSignatures(tx, "plan_prevention", planId, etablissementId),
       plan.inspectionDate === null,
     );
     if (scelle) {
@@ -358,7 +358,7 @@ export async function modifierPlanPrevention(
         fieldErrors: parsed.error.flatten().fieldErrors,
       };
     }
-    const avant = await calculerHashObjet("plan_prevention", planId, etablissementId, tx);
+    const avant = await calculerHashObjet(tx, "plan_prevention", planId, etablissementId);
     await tx.planPrevention.update({
       where: { id: planId, etablissementId },
       data: {
@@ -370,7 +370,7 @@ export async function modifierPlanPrevention(
         lignes: { deleteMany: {}, create: lignesACreer(parsed.data) },
       },
     });
-    const apres = await calculerHashObjet("plan_prevention", planId, etablissementId, tx);
+    const apres = await calculerHashObjet(tx, "plan_prevention", planId, etablissementId);
     if (!avant.ok || !apres.ok || avant.hash !== apres.hash) {
       await revoquerLiensEnVol(
         {
@@ -425,7 +425,7 @@ export async function supprimerPlan(planId: string): Promise<void> {
   // « annulé » et rien n'est détruit.
   const effacable =
     (plan.statut === "brouillon" || plan.statut === "attente_signatures") &&
-    !(await porteUneTraceDeSignature("plan_prevention", planId, etabId));
+    !(await porteUneTraceDeSignature(plan.db, "plan_prevention", planId, etabId));
   if (effacable) {
     await plan.db.planPrevention.delete({ where: { id: planId } });
   } else {

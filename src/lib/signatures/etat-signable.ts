@@ -1,6 +1,6 @@
-import { prisma } from "@/lib/prisma";
 import type {
   ObjetSignable,
+  Prisma,
   StatutPermisFeu,
   StatutPlanPrevention,
 } from "@prisma/client";
@@ -76,19 +76,21 @@ export function statutPermisSignable(statut: StatutPermisFeu): boolean {
  * Un objet hors de ce périmètre est « non signable ».
  */
 export async function objetEstSignable(
+  /** Le client borné au compte de l'appelant ou du jeton (ADR-051). */
+  db: Prisma.TransactionClient,
   objetType: ObjetSignable | string,
   objetId: string,
   etablissementId: string,
 ): Promise<boolean> {
   if (objetType === "plan_prevention") {
-    const plan = await prisma.planPrevention.findFirst({
+    const plan = await db.planPrevention.findFirst({
       where: { id: objetId, etablissementId },
       select: { statut: true },
     });
     return plan !== null && statutPlanSignable(plan.statut);
   }
   if (objetType === "permis_feu") {
-    const permis = await prisma.permisFeu.findFirst({
+    const permis = await db.permisFeu.findFirst({
       where: { id: objetId, etablissementId },
       select: { statut: true },
     });

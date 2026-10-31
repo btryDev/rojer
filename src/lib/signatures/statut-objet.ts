@@ -1,6 +1,6 @@
-import { prisma } from "@/lib/prisma";
 import type {
   ObjetSignable,
+  Prisma,
   StatutPermisFeu,
   StatutPlanPrevention,
 } from "@prisma/client";
@@ -41,24 +41,26 @@ const STATUTS_PERMIS_AVANT_VALIDE: StatutPermisFeu[] = [
 ];
 
 export async function validerSiCoSigne(
+  /** Le client borné au compte de l'appelant ou du jeton (ADR-051). */
+  db: Prisma.TransactionClient,
   objetType: ObjetSignable,
   objetId: string,
   etablissementId: string,
 ): Promise<void> {
   if (partiesAttendues(objetType).length === 0) return;
-  const signatures = await prisma.signature.findMany({
+  const signatures = await db.signature.findMany({
     where: { objetType, objetId, etablissementId },
     select: { partie: true },
   });
   if (repartirSignatures(objetType, signatures).manquantes.length > 0) return;
 
   if (objetType === "plan_prevention") {
-    await prisma.planPrevention.updateMany({
+    await db.planPrevention.updateMany({
       where: { id: objetId, etablissementId, statut: { in: STATUTS_PLAN_AVANT_VALIDE } },
       data: { statut: "valide" },
     });
   } else if (objetType === "permis_feu") {
-    await prisma.permisFeu.updateMany({
+    await db.permisFeu.updateMany({
       where: { id: objetId, etablissementId, statut: { in: STATUTS_PERMIS_AVANT_VALIDE } },
       data: { statut: "valide" },
     });

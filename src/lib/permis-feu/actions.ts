@@ -224,7 +224,7 @@ export async function modifierPermisFeu(
     }
     const scelle = motifContenuScelle(
       "permis",
-      await compterSignatures("permis_feu", permisFeuId, etablissementId, tx),
+      await compterSignatures(tx, "permis_feu", permisFeuId, etablissementId),
     );
     if (scelle) {
       if (porteUnChampScelle(formData)) return { status: "error", message: scelle };
@@ -253,7 +253,7 @@ export async function modifierPermisFeu(
       MESURES_RETIREES.some((m) => m.id === id),
     );
     const colonnes = colonnesPermis(parsed.data);
-    const avant = await calculerHashObjet("permis_feu", permisFeuId, etablissementId, tx);
+    const avant = await calculerHashObjet(tx, "permis_feu", permisFeuId, etablissementId);
     // `update`, même motif que la branche scellée : `batimentId` et
     // `prestataireId` changent, ce qu'un `updateMany` borné refuse.
     await tx.permisFeu.update({
@@ -264,7 +264,7 @@ export async function modifierPermisFeu(
         batimentId: batiment.id,
       },
     });
-    const apres = await calculerHashObjet("permis_feu", permisFeuId, etablissementId, tx);
+    const apres = await calculerHashObjet(tx, "permis_feu", permisFeuId, etablissementId);
     if (!avant.ok || !apres.ok || avant.hash !== apres.hash) {
       await revoquerLiensEnVol(
         {
@@ -348,7 +348,7 @@ export async function supprimerPermisFeu(permisFeuId: string): Promise<void> {
   const etabId = permis.etablissementId;
   const effacable =
     (permis.statut === "attente_signatures" || permis.statut === "brouillon") &&
-    !(await porteUneTraceDeSignature("permis_feu", permisFeuId, etabId));
+    !(await porteUneTraceDeSignature(permis.db, "permis_feu", permisFeuId, etabId));
   if (effacable) {
     await permis.db.permisFeu.delete({ where: { id: permisFeuId } });
   } else {

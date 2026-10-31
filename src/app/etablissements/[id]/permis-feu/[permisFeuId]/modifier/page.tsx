@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requireCompte } from "@/lib/auth/compte";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { FormulairePermisFeu } from "@/components/permis-feu/FormulairePermisFeu";
@@ -28,10 +29,13 @@ export default async function ModifierPermisFeuPage({
   const { id, permisFeuId } = await params;
   const permis = await getPermisFeu(id, permisFeuId);
   if (!permis || !statutPermisSignable(permis.statut)) notFound();
+  // Le client borné de la session (ADR-051) ; la garde est passée par la
+  // lecture ci-dessus.
+  const { db } = await requireCompte();
   const [prestatairesAnnuaire, batiments, liensEnVol] = await Promise.all([
     listPrestataires(id),
     listerBatimentsDeLEtablissement(id),
-    compterLiensEnVol({ etablissementId: id, objetType: "permis_feu", objetId: permis.id }),
+    compterLiensEnVol(db, { etablissementId: id, objetType: "permis_feu", objetId: permis.id }),
   ]);
 
   const numero = `PF-${String(permis.numero).padStart(3, "0")}`;

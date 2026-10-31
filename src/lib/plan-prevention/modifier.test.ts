@@ -96,7 +96,7 @@ vi.mock("@/lib/prisma", () => {
 // identifiants des lignes, recréés à chaque enregistrement — la règle de
 // `hash-objet.ts`, que ses propres tests éprouvent.
 vi.mock("@/lib/signatures/hash-objet", () => ({
-  calculerHashObjet: vi.fn(async (_t: string, id: string) => {
+  calculerHashObjet: vi.fn(async (_db: unknown, _t: string, id: string) => {
     const p = db.plans.find((x) => x.id === id);
     if (!p) return { ok: false, raison: "objet_introuvable" };
     const couvert = { ...p };

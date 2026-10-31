@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import { formaterDateFr } from "@/lib/dates";
 
 /**
@@ -33,6 +33,8 @@ function numero(prefixe: string, n: number): string {
 }
 
 export async function libelleDocumentSignable(
+  /** Le client borné au compte de l'appelant (ADR-051). */
+  db: Prisma.TransactionClient,
   objetType: string,
   objetId: string,
   etablissementId: string,
@@ -40,7 +42,7 @@ export async function libelleDocumentSignable(
   if (!objetId || !etablissementId) return null;
 
   if (objetType === "rapport_verification") {
-    const r = await prisma.rapportVerification.findFirst({
+    const r = await db.rapportVerification.findFirst({
       where: { id: objetId, etablissementId },
       select: {
         dateRapport: true,
@@ -55,7 +57,7 @@ export async function libelleDocumentSignable(
   }
 
   if (objetType === "plan_prevention") {
-    const p = await prisma.planPrevention.findFirst({
+    const p = await db.planPrevention.findFirst({
       where: { id: objetId, etablissementId },
       select: { numero: true, entrepriseExterieureRaison: true },
     });
@@ -67,7 +69,7 @@ export async function libelleDocumentSignable(
   }
 
   if (objetType === "permis_feu") {
-    const p = await prisma.permisFeu.findFirst({
+    const p = await db.permisFeu.findFirst({
       where: { id: objetId, etablissementId },
       select: { numero: true, prestataireRaison: true },
     });

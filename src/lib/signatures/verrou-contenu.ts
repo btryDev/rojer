@@ -1,4 +1,3 @@
-import { prisma } from "@/lib/prisma";
 import type { ObjetSignable, Prisma } from "@prisma/client";
 
 /**
@@ -33,10 +32,11 @@ import type { ObjetSignable, Prisma } from "@prisma/client";
  * l'autre ait fini, et le second relit ce que le premier a écrit.
  */
 export async function compterSignatures(
+  /** Le client borné au compte, ou la transaction ouverte sur lui (ADR-051). */
+  db: Prisma.TransactionClient,
   objetType: ObjetSignable,
   objetId: string,
   etablissementId: string,
-  db: Prisma.TransactionClient = prisma,
 ): Promise<number> {
   return db.signature.count({ where: { objetType, objetId, etablissementId } });
 }

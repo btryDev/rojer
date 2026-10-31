@@ -2,9 +2,8 @@
 
 import { randomUUID } from "node:crypto";
 import { headers } from "next/headers";
-import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
-import { assertEtablissementOwnership } from "@/lib/auth/scope";
+import { assertEtablissementDuCompte } from "@/lib/auth/scope";
+import { clientDuProprietaire } from "@/lib/auth/compte-hors-session";
 import { formaterDateFr, formaterHeureFr } from "@/lib/dates";
 import { z } from "zod";
 import { emettreAccessToken } from "@/lib/access-tokens/emission";
@@ -152,12 +151,13 @@ export async function demanderSignature(
     return { ok: false, message: "Partie signataire invalide pour ce document." };
   }
 
-  await assertEtablissementOwnership(params.etablissementId);
+  const { db } = await assertEtablissementDuCompte(params.etablissementId);
   // Aucun lien ne part pour un objet clos ou annulé : il serait refusé au
   // moment de signer (`poserSignatureAvecToken`), autant ne pas envoyer au
   // tiers un courriel qui ne mène à rien.
   if (
     !(await objetEstSignable(
+      db,
       params.objetType,
       params.objetId,
       params.etablissementId,
@@ -169,7 +169,7 @@ export async function demanderSignature(
   // refusée (unicité `objetType, objetId, partie`).
   if (
     params.partie &&
-    (await prisma.signature.count({
+    (await db.signature.count({
       where: {
         etablissementId: params.etablissementId,
         objetType: params.objetType,
@@ -182,6 +182,7 @@ export async function demanderSignature(
   }
 
   const libelle = await libelleDocumentSignable(
+    db,
     params.objetType,
     params.objetId,
     params.etablissementId,
@@ -271,6 +272,11 @@ export async function poserSignatureAvecToken(
   if (!token.otpHash) {
     return { status: "error", message: "Configuration OTP manquante." };
   }
+  // Le client borné au compte propriétaire de l'établissement DU JETON
+  // (ADR-051). Il s'AJOUTE aux contrôles du jeton, qui restent tous
+  // ci-dessous : chaque lecture et écriture garde `token.etablissementId`.
+  const db = await clientDuProprietaire(token.etablissementId);
+  if (!db) return { status: "error", message: "Ce lien est invalide." };
 
   // LA GARDE DE FOND. La clôture et l'annulation révoquent les liens en vol
   // (`revoquerLiensEnVol`), mais un jeton émis par un autre chemin, ou
@@ -279,6 +285,7 @@ export async function poserSignatureAvecToken(
   // d'essai. Bornée à l'établissement du jeton.
   if (
     !(await objetEstSignable(
+      db,
       token.objetType,
       token.objetId,
       token.etablissementId,
@@ -338,6 +345,7 @@ export async function poserSignatureAvecToken(
   // OTP ok → calcul du hash + création de la signature. Le périmètre vient
   // du token lui-même (`token.etablissementId`), jamais du formulaire.
   const h = await calculerHashObjet(
+    db,
     token.objetType as ObjetSignable,
     token.objetId,
     token.etablissementId,
@@ -367,7 +375,7 @@ export async function poserSignatureAvecToken(
   // rien. Si l'écriture de la signature échoue, la consommation est défaite.
   let signature;
   try {
-    signature = await prisma.$transaction(async (tx) => {
+    signature = await db.$transaction(async (tx) => {
       // Le verrou de l'objet d'abord, celui que prend `modifier*` (2026-10-12,
       // relecture indépendante) : une modification en cours finit avant, et
       // si elle a changé l'empreinte, elle a révoqué ce jeton — qui ne se
@@ -413,7 +421,7 @@ export async function poserSignatureAvecToken(
     // modification de l'acte vient de le révoquer (relecture finale du
     // 2026-10-12, C1). La phrase dit laquelle — « déjà servi » mentait au
     // signataire dont le lien venait d'être annulé.
-    const etat = await prisma.accessToken.findUnique({
+    const etat = await db.accessToken.findUnique({
       where: { id: token.id },
       select: { revoqueLe: true, revoqueMotif: true },
     });
@@ -433,6 +441,7 @@ export async function poserSignatureAvecToken(
   // Le statut suit les signatures : les deux parties signées, l'acte passe
   // « valide » (`validerSiCoSigne`, 2026-10-12).
   await validerSiCoSigne(
+    db,
     token.objetType as ObjetSignable,
     token.objetId,
     token.etablissementId,
@@ -586,7 +595,7 @@ export async function renvoyerCodeOtp(
  * Signature directe par un utilisateur connecté (pas de token externe).
  * Utilisé pour la co-signature du donneur d'ordre sur ses propres documents.
  *
- * `assertEtablissementOwnership` est le garde décisif : `requireUser` seul
+ * `assertEtablissementDuCompte` est le garde décisif : `requireUser` seul
  * établissait qu'il y a *un* utilisateur, pas qu'il a quoi que ce soit à
  * voir avec `etablissementId` et `objetId`. On pouvait ainsi signer le
  * document d'un tiers — et en récupérer l'empreinte au passage.
@@ -609,8 +618,7 @@ export async function signerEnCompteConnecte(params: {
         | "deja_signee";
     }
 > {
-  const user = await requireUser();
-  await assertEtablissementOwnership(params.etablissementId);
+  const { user, db } = await assertEtablissementDuCompte(params.etablissementId);
   // Même règle que les deux autres portes. Aucun écran ne passe de fonction
   // ici : seul un appel forgé est refusé, d'où l'exception plutôt qu'une
   // raison de plus dans le retour.
@@ -621,6 +629,7 @@ export async function signerEnCompteConnecte(params: {
   // se signe plus, par personne.
   if (
     !(await objetEstSignable(
+      db,
       params.objetType,
       params.objetId,
       params.etablissementId,
@@ -650,13 +659,13 @@ export async function signerEnCompteConnecte(params: {
   // objetId d'un autre périmètre ressort « introuvable ».
   let resultat;
   try {
-    resultat = await prisma.$transaction(async (tx) => {
+    resultat = await db.$transaction(async (tx) => {
       await verrouillerObjetSigne(tx, params.objetType, params.objetId);
       const h = await calculerHashObjet(
+        tx,
         params.objetType,
         params.objetId,
         params.etablissementId,
-        tx,
       );
       if (!h.ok) return h;
       const signature = await tx.signature.create({
@@ -685,7 +694,7 @@ export async function signerEnCompteConnecte(params: {
   }
   if (!resultat.ok) return { ok: false, raison: resultat.raison };
   const { signature } = resultat;
-  await validerSiCoSigne(params.objetType, params.objetId, params.etablissementId);
+  await validerSiCoSigne(db, params.objetType, params.objetId, params.etablissementId);
   return { ok: true, signatureId: signature.id };
 }
 

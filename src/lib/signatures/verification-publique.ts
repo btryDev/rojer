@@ -15,6 +15,8 @@ import { prisma } from "@/lib/prisma";
 import { ipClient } from "@/lib/securite/ip-client";
 import { cleLimite, consommer, LIMITES } from "@/lib/securite/limite-debit";
 import { calculerHashObjet, versionDeHash } from "./hash-objet";
+import { SELECT_PREUVE } from "./queries";
+import { clientDuProprietaire } from "@/lib/auth/compte-hors-session";
 
 /**
  * Élément de preuve exposé publiquement par `/verifier/[signatureId]`.
@@ -62,7 +64,13 @@ export async function verifierIntegriteSignature(
   });
   if (!signature) return { ok: false, raison: "inexistante" };
 
+  // Le recalcul lit par le client borné au compte propriétaire de
+  // l'établissement que porte la signature (ADR-051) : sans session, le
+  // compte vient de la preuve, jamais de l'appelant.
+  const db = await clientDuProprietaire(signature.etablissementId);
+  if (!db) return { ok: false, raison: "document_introuvable" };
   const h = await calculerHashObjet(
+    db,
     signature.objetType,
     signature.objetId,
     signature.etablissementId,
@@ -156,4 +164,25 @@ export async function verifierSousLimite(
     }
   }
   return verifierIntegriteSignature(signatureId);
+}
+
+/**
+ * Lit une signature par son identifiant, **sans authentification**.
+ *
+ * C'est délibéré : l'identifiant `sig_…` est communiqué avec le document
+ * pour permettre à un tiers (inspecteur, assureur, acquéreur) de contrôler
+ * la signature sans compte — c'est tout l'objet de la page publique
+ * `/verifier/[signatureId]` (et la confirmation `/signe/[signatureId]`). L'identifiant est un UUID aléatoire, donc non
+ * énumérable.
+ *
+ * En contrepartie, la projection est limitée à ce qui sert la preuve.
+ * L'adresse IP, le user-agent, l'identifiant d'établissement et l'objet
+ * signé ne sortent pas d'ici : ils ne participent pas à la vérification et
+ * exposeraient la structure interne du compte.
+ */
+export async function getSignature(id: string) {
+  return prisma.signature.findUnique({
+    where: { id },
+    select: SELECT_PREUVE,
+  });
 }

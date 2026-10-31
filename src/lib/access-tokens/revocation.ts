@@ -1,5 +1,4 @@
 import type { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
 
 /**
  * Le motif écrit sur un jeton dont l'e-mail n'est pas parti (2026-10-30). En
@@ -51,7 +50,8 @@ export const LIEN_PARTI = {
  */
 export async function revoquerLiensEnVol(
   params: LiensDeLObjet & { motif: string },
-  db: Prisma.TransactionClient = prisma,
+  /** Le client borné au compte, ou la transaction ouverte sur lui (ADR-051). */
+  db: Prisma.TransactionClient,
 ): Promise<number> {
   const r = await db.accessToken.updateMany({
     where: whereLiensEnVol(params),
@@ -82,8 +82,11 @@ function whereLiensEnVol(p: LiensDeLObjet) {
  * l'écran « Modifier » annonce avant l'envoi. Un lien expiré n'y compte pas :
  * il ne mène déjà plus nulle part, rien n'est à renvoyer pour lui.
  */
-export async function compterLiensEnVol(p: LiensDeLObjet): Promise<number> {
-  return prisma.accessToken.count({
+export async function compterLiensEnVol(
+  db: Prisma.TransactionClient,
+  p: LiensDeLObjet,
+): Promise<number> {
+  return db.accessToken.count({
     where: { ...whereLiensEnVol(p), expireLe: { gt: new Date() } },
   });
 }

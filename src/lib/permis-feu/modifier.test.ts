@@ -81,7 +81,7 @@ vi.mock("@/lib/prisma", () => {
 });
 // L'empreinte : tout le permis sauf la zone, hors empreinte (`hash-objet.ts`).
 vi.mock("@/lib/signatures/hash-objet", () => ({
-  calculerHashObjet: vi.fn(async (_t: string, id: string) => {
+  calculerHashObjet: vi.fn(async (_db: unknown, _t: string, id: string) => {
     const p = db.permis.find((x) => x.id === id);
     if (!p) return { ok: false, raison: "objet_introuvable" };
     const couvert = { ...p };

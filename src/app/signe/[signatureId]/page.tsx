@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getSignature } from "@/lib/signatures/queries";
+import { getSignature } from "@/lib/signatures/verification-publique";
 import { SignatureBlock } from "@/components/ui-kit/SignatureBlock";
 import { LegalBadge } from "@/components/ui-kit/LegalBadge";
 
