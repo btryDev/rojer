@@ -298,6 +298,33 @@ fragile plutôt que forcer) :
 - **Tests de module** : le client simulé de `vitest.setup.ts` passe chaque
   appel par le vrai `argumentsBornes` pour ses refus.
 
+## Erreurs : 404, jamais 500 (chantier transverse, 2026-10-31)
+
+Un identifiant étranger ou disparu doit donner une page introuvable (404) ou
+un message métier, jamais une erreur serveur ni un indice d'existence. Relevé
+du 2026-10-31 : les gardes de `scope.ts` font `notFound()` ; 62 écritures par
+`db` passent d'abord par une lecture bornée de l'objet ; aucun message ne
+distingue « étranger » de « disparu ».
+
+**L'invariant « une écriture par identifiant suit une lecture bornée de cet
+identifiant » est tenu par la REVUE, pas par une garde.** Raison : il ne
+départage que 404 et 500 — la sécurité tient sans lui (sur un identifiant
+étranger, l'écriture bornée ne trouve rien, lève P2025 et n'écrit rien) — et
+une garde heuristique coûterait des exemptions à entretenir (`updateMany` avec
+son `count`, `upsert`, identifiants issus d'une lecture) pour une page
+d'erreur. Exemple de ce que la revue attrape : `reactiverPrescription` faisait
+un `update` direct sur l'identifiant reçu — `tenancy-ecritures` l'acceptait
+(appartenance établie par la garde), la réponse était une 500 ; corrigé par
+une lecture bornée et `notFound()` (de même pour trois `throw new Error` du
+carnet sanitaire). Une course entre la lecture et l'écriture reste une 500,
+rare et sans indice d'existence (option C, seconde lecture du 2026-10-31).
+
+`ErreurPortee` reste une 500 voulue : c'est une forme refusée par la borne, un
+défaut du code, jamais une entrée utilisateur. `onRequestError`
+(`instrumentation.ts`) la journalise déjà en une ligne JSON (`nom`, message
+avec modèle et opération) ; ses messages ne portent aucun identifiant de compte
+(au plus des identifiants d'objets, « parents non vérifiés »).
+
 ## Accès sans session : jetons, MCP, pages publiques (décision du 2026-10-30)
 
 Décision de la propriétaire, lot 2b : la portée « établissement » du § 2 n'est
