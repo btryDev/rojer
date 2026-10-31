@@ -163,51 +163,21 @@ const SQL_BRUT_NOMMES: Record<string, string> = {
   "src/lib/calendrier/faux-prisma.ts": "faux client des tests",
   "src/lib/auth/tenancy-portee.ts": "sonde : le motif de détection du SQL brut, aucune requête",
   "src/lib/auth/tenancy-sonde.ts": "sonde : le motif de détection du SQL brut, aucune requête",
+  "src/lib/auth/portee/client.ts": "commentaire seul : l'extension ne borne pas le SQL brut",
 };
 /**
- * Le texte privé de ses commentaires, chaînes GARDÉES : `db["$queryRaw"]` ou
- * `const { $queryRaw: q } = db` doivent se voir (seconde lecture de #147) —
- * `sansCommentairesNiChaines` effaçait la clé entre crochets. Un `//` dans une
- * chaîne (URL) n'ouvre pas de commentaire.
+ * Le motif se cherche sur le texte BRUT, commentaires et chaînes compris :
+ * `db["$queryRaw"]`, `const { $queryRaw: q } = db` ou une clé calculée se
+ * voient, et aucun analyseur ne peut se dérégler (une apostrophe dans du JSX
+ * le faisait — revue de #149, 2026-10-31). Un module qui ne fait que NOMMER le
+ * motif (commentaire, sonde) est nommé comme tel.
  */
-function sansCommentaires(src: string): string {
-  let sortie = "";
-  let i = 0;
-  let chaine: string | null = null;
-  while (i < src.length) {
-    const c = src[i];
-    if (chaine) {
-      sortie += c;
-      if (c === "\\") {
-        sortie += src[i + 1] ?? "";
-        i += 2;
-        continue;
-      }
-      if (c === chaine) chaine = null;
-      i += 1;
-      continue;
-    }
-    if (c === "/" && src[i + 1] === "/") {
-      while (i < src.length && src[i] !== "\n") i += 1;
-      continue;
-    }
-    if (c === "/" && src[i + 1] === "*") {
-      const fin = src.indexOf("*/", i + 2);
-      i = fin === -1 ? src.length : fin + 2;
-      continue;
-    }
-    if (c === '"' || c === "'" || c === "`") chaine = c;
-    sortie += c;
-    i += 1;
-  }
-  return sortie;
-}
 // Sans le point : l'accès par crochets ou la déstructuration s'y voient aussi.
 const SQL_BRUT = /\$(?:queryRaw|executeRaw)/;
 const SQL_BRUT_UNSAFE = /\$(?:queryRaw|executeRaw)Unsafe\b/;
 describe("SQL brut", () => {
   const ecrivent = [...TEXTES]
-    .filter(([, t]) => SQL_BRUT.test(sansCommentaires(t)))
+    .filter(([, t]) => SQL_BRUT.test(t))
     .map(([f]) => f)
     .sort();
   it("seuls les modules nommés en écrivent", () => {
@@ -217,7 +187,7 @@ describe("SQL brut", () => {
     expect(Object.keys(SQL_BRUT_NOMMES).filter((f) => !ecrivent.includes(f))).toEqual([]);
   });
   it("jamais de forme Unsafe (chaîne SQL non paramétrée)", () => {
-    const unsafe = [...TEXTES].filter(([, t]) => SQL_BRUT_UNSAFE.test(sansCommentaires(t))).map(([f]) => f);
+    const unsafe = [...TEXTES].filter(([, t]) => SQL_BRUT_UNSAFE.test(t)).map(([f]) => f);
     expect(unsafe).toEqual([]);
   });
 });
