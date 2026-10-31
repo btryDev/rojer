@@ -555,8 +555,7 @@ export async function getModulesMatrice(
     // « échu » un permis qui court encore jusqu'à ce soir.
     comptesModulesDuRendu(etablissementId, debutDuJour(now).getTime()),
     prestatairesDuRendu(etablissementId),
-    // Module encore au client brut (À MIGRER) : le prédicat lui est passé.
-    eauChaudeSuivieParLeCalendrier({
+    eauChaudeSuivieParLeCalendrier(db, {
       etablissementId,
       etablissement: { entreprise: { userId: user.id } },
     }),
@@ -833,7 +832,7 @@ export const getDashboardData = cache(async function getDashboardData(
     // que de `etablissementId` et `user.id`, tous deux disponibles avant.
     // Placé après, il ajoutait trois requêtes sérialisées derrière tout le
     // reste du tableau de bord (ADR-024).
-    chargerTransmissions(etablissementId, user.id, now),
+    chargerTransmissions(db, etablissementId, user.id, now),
     // Le même nombre que la carte du tableau de bord, lu une fois par rendu.
     compterRapportsDuDossier(etablissementId),
     // Le score ne peut pas conclure « satisfaisante » en ignorant ce que

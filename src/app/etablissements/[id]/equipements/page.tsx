@@ -29,7 +29,7 @@ import {
   SectionEquipementsSecurite,
   type LigneSecuriteAffichee,
 } from "@/components/equipements/SectionEquipementsSecurite";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireCompte } from "@/lib/auth/compte";
 import { contexteFondementDe } from "@/lib/etats-permanents/fondement";
 import { obligationsApplicablesDuDossier } from "@/lib/etablissements/dossier-du-rendu";
 import {
@@ -101,7 +101,7 @@ export default async function EquipementsPage({
   // sécurité »] partent ensemble, APRÈS la garde (`getEtablissement`
   // + `notFound`) : les bâtiments étaient lus seuls, puis le reste — aucune
   // des ~~quatre~~ cinq autres ne dépend du filtre (audit Next.js du 2026-10-14, M4).
-  const user = await requireUser();
+  const { user, db } = await requireCompte();
   const [batiments, equipements, etatsVerifs, sansEcheance, fraicheur, dossier, ensembles] =
     await Promise.all([
       listerBatimentsDeLEtablissement(id),
@@ -122,7 +122,7 @@ export default async function EquipementsPage({
       // 2026-10-15 : les obligations applicables, pour la section
       // « Équipements de sécurité ». Lecture bornée au compte (prédicat
       // `entreprise.userId` dans la requête), partagée avec le reste du rendu.
-      obligationsApplicablesDuDossier(id, user.id),
+      obligationsApplicablesDuDossier(db, id, user.id),
       // Les contrôles d'ensemble, rangés en tête de leur domaine (points à
       // corriger, lot 2).
       controlesDEnsemble(id, instantDuRendu()),

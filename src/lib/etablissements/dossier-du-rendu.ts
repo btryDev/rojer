@@ -36,7 +36,7 @@ import "server-only";
 
 import { cache } from "react";
 import type { Equipement } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+import type { Db } from "@/lib/auth/compte";
 import {
   determineObligationsApplicables,
   projeterEtablissement,
@@ -51,10 +51,11 @@ import type { EquipementMatching } from "@/lib/matching/types";
  */
 export const chargerEtablissementEtParc = cache(
   async function chargerEtablissementEtParc(
+    db: Db,
     etablissementId: string,
     userId: string,
   ) {
-    return prisma.etablissement.findFirst({
+    return db.etablissement.findFirst({
       where: { id: etablissementId, entreprise: { userId } },
       include: {
         entreprise: { select: { effectif: true } },
@@ -92,10 +93,11 @@ export function equipementsPourLeMoteur(
  */
 export const obligationsApplicablesDuDossier = cache(
   async function obligationsApplicablesDuDossier(
+    db: Db,
     etablissementId: string,
     userId: string,
   ) {
-    const etab = await chargerEtablissementEtParc(etablissementId, userId);
+    const etab = await chargerEtablissementEtParc(db, etablissementId, userId);
     if (!etab) return null;
     const equipements = equipementsPourLeMoteur(etab.equipements);
     return {

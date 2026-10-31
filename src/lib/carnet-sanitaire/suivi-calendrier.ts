@@ -1,6 +1,6 @@
 import "server-only";
 import { cache } from "react";
-import { prisma } from "@/lib/prisma";
+import type { Db } from "@/lib/auth/compte";
 import type { CategorieEquipement } from "@prisma/client";
 
 /**
@@ -34,25 +34,31 @@ export const CATEGORIE_EAU_CHAUDE_SUIVIE: CategorieEquipement =
  * laissait le carnet muet, la matrice en « na » et la page affirmer que Rojer
  * suit — l'utilisateur perdait tout rappel.
  *
- * `scope` porte le prédicat de compte (`etablissement.entreprise.userId`) :
- * la lecture ne dépend pas de la provenance de son argument.
+ * `db` est le client borné au compte de l'appelant (ADR-051), reçu de sa
+ * garde ; `scope` porte en plus le prédicat de compte
+ * (`etablissement.entreprise.userId`).
  */
-export async function eauChaudeSuivieParLeCalendrier(scope: {
-  etablissementId: string;
-  etablissement: { entreprise: { userId: string } };
-}): Promise<boolean> {
-  return eauChaudeSuivieDuRendu(scope.etablissementId, scope.etablissement.entreprise.userId);
+export async function eauChaudeSuivieParLeCalendrier(
+  db: Db,
+  scope: {
+    etablissementId: string;
+    etablissement: { entreprise: { userId: string } };
+  },
+): Promise<boolean> {
+  return eauChaudeSuivieDuRendu(db, scope.etablissementId, scope.etablissement.entreprise.userId);
 }
 
 /** Le corps, mémoïsé sur le rendu (clés primitives) : la matrice du tableau
  *  de bord et les échéances du carnet le demandaient chacune (plan
- *  performance, lot 1). Le compte vient de la portée de l'appelant, comme
+ *  performance, lot 1). Le client borné, un par compte, est une clé stable.
+ *  Le compte vient de la portée de l'appelant, comme
  *  avant : `getModulesMatrice` éprouve que le prédicat y est lu. */
 const eauChaudeSuivieDuRendu = cache(async function eauChaudeSuivieDuRendu(
+  db: Db,
   etablissementId: string,
   userId: string,
 ): Promise<boolean> {
-  const n = await prisma.equipement.count({
+  const n = await db.equipement.count({
     where: {
       etablissementId,
       etablissement: { entreprise: { userId }, estERP: true },

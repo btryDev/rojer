@@ -794,6 +794,7 @@ const sourcePlansPrevention: SourceEcheances = async ({
 };
 
 const sourceLegionelles: SourceEcheances = async ({
+  db,
   userId,
   aujourdhui,
   etablissementId,
@@ -806,7 +807,7 @@ const sourceLegionelles: SourceEcheances = async ({
   // matrice partagent (`carnetDuRendu`, plan performance, lot 1).
   const [carnet, suivieParLeCalendrier] = await Promise.all([
     carnetDuRendu(etablissementId),
-    eauChaudeSuivieParLeCalendrier({
+    eauChaudeSuivieParLeCalendrier(db, {
       etablissementId,
       etablissement: { entreprise: { userId } },
     }),

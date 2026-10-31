@@ -59,7 +59,8 @@ describe("getModulesMatrice — le carnet suit le prédicat partagé", () => {
   it("le prédicat est lu dans le périmètre du compte", async () => {
     suivie.mockResolvedValue(false);
     await getModulesMatrice("etab-1", true);
-    expect(suivie).toHaveBeenCalledWith({
+    // Le client borné de la session (ADR-051), puis la portée.
+    expect(suivie).toHaveBeenCalledWith(expect.anything(), {
       etablissementId: "etab-1",
       etablissement: { entreprise: { userId: "u1" } },
     });

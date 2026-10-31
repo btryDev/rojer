@@ -496,7 +496,10 @@ export async function etatsPermanentsDuDossier(
   // [2026-10-14, audit Next.js H2] Lecture et passage du moteur partagés avec
   // le reste du rendu (`dossier-du-rendu.ts`) — même prédicat, même parc en
   // service. Hors rendu RSC, ils se font ici comme avant.
+  // Le client borné vient de la session, comme les déclarations (ci-dessus).
+  const { db } = await requireCompte();
   const dossier = await obligationsApplicablesDuDossier(
+    db,
     etablissementId,
     userId,
   );
