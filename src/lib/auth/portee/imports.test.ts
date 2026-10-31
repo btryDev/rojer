@@ -77,7 +77,17 @@ const NOMMES_ROUAGES: Record<string, Record<string, string>> = {
     "src/lib/auth/portee/lot-verifie.ts": "types du client et de la transaction (types seuls)",
     "src/test/garde-simulee.ts": "tests seuls : le client simulé que rendent les gardes simulées",
     "src/lib/auth/compte-hors-session.ts": "accès sans session : la portée vient de la preuve vérifiée",
-    "src/lib/mcp/db.ts": "le type ClientBorne du client des lectures MCP (types seuls)",
+  },
+  // Un client borné à un compte tiré d'une chaîne (propriétaire d'un
+  // établissement, identité OAuth) : seulement là où cette chaîne vient d'une
+  // preuve vérifiée (jeton, signature, clé ou jeton MCP) — seconde lecture de
+  // #146.
+  "src/lib/auth/compte-hors-session": {
+    "src/lib/mcp/db.ts": "MCP : établissement de la clé, identité du jeton OAuth vérifié",
+    "src/lib/mcp/acces-oauth-deps.ts": "MCP OAuth : établissements du porteur vérifié",
+    "src/lib/signatures/actions.ts": "pose de signature par jeton vérifié",
+    "src/lib/signatures/verification-publique.ts": "établissement d'une signature lue par son identifiant",
+    "src/app/acces/[token]/page.tsx": "page d'un jeton vérifié",
   },
   "src/lib/auth/portee/borne": {
     "src/lib/auth/portee/client.ts": "l'extension",
@@ -152,6 +162,14 @@ const TYPES_SEULS = Object.entries(NOMMES_ROUAGES).flatMap(([c, nommes]) =>
     .filter(([, motif]) => motif.endsWith("(types seuls)"))
     .map(([f]) => [f, c] as const),
 );
+it("sessionStdio ne sert que le serveur stdio (scripts/mcp-server.ts) : aucun module de src ne l'emploie", () => {
+  // Appelé dans le processus web, il y réintroduirait un second pool vers la
+  // base (audit Next.js M5) ; scripts/ n'est pas relu par ces gardes.
+  const emploient = [...TEXTES]
+    .filter(([f, t]) => f !== "src/lib/auth/compte-hors-session.ts" && /\bsessionStdio\b/.test(sansCommentairesNiChaines(t)))
+    .map(([f]) => f);
+  expect(emploient).toEqual([]);
+});
 it("les modules nommés « (types seuls) » existent", () => {
   expect(TYPES_SEULS.length).toBeGreaterThan(0);
 });

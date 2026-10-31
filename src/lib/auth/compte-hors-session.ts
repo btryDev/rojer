@@ -27,21 +27,31 @@ export function clientDuCompteVerifie(userId: string): ClientBorne {
   return clientBorne({ type: "compte", userId });
 }
 
-/**
- * `null` si l'établissement a disparu ou n'a pas de propriétaire. `base` : un
- * autre client brut que celui de l'application — le serveur MCP stdio
- * (`mcp/db.ts`), dont la sortie standard appartient au protocole ; le client
- * borné est alors construit sur lui.
- */
-export async function clientDuProprietaire(
-  etablissementId: string,
-  base?: PrismaClient,
-): Promise<ClientBorne | null> {
-  const lecture = { where: { id: etablissementId }, select: { entreprise: { select: { userId: true } } } };
-  const etab = base
-    ? await base.etablissement.findUnique(lecture)
-    : await prisma.etablissement.findUnique(lecture);
+/** `null` si l'établissement a disparu ou n'a pas de propriétaire. */
+export async function clientDuProprietaire(etablissementId: string): Promise<ClientBorne | null> {
+  const etab = await prisma.etablissement.findUnique({
+    where: { id: etablissementId },
+    select: { entreprise: { select: { userId: true } } },
+  });
   const userId = etab?.entreprise.userId;
-  if (!userId) return null;
-  return base ? clientBorneSur(base, { type: "compte", userId }) : clientBorne({ type: "compte", userId });
+  return userId ? clientBorne({ type: "compte", userId }) : null;
+}
+
+/**
+ * La session du serveur MCP stdio, lue UNE fois au démarrage, sur son propre
+ * client brut (`mcp/prisma.ts` : rien sur la sortie standard, qui appartient
+ * au protocole) : le nom de l'établissement servi et le client borné au compte
+ * de son propriétaire, construit sur ce client. `null` si l'établissement a
+ * disparu ou n'a pas de propriétaire. Réservé à `scripts/mcp-server.ts`.
+ */
+export async function sessionStdio(
+  base: PrismaClient,
+  etablissementId: string,
+): Promise<{ nom: string; db: ClientBorne } | null> {
+  const etab = await base.etablissement.findUnique({
+    where: { id: etablissementId },
+    select: { raisonDisplay: true, entreprise: { select: { userId: true } } },
+  });
+  const userId = etab?.entreprise.userId;
+  return etab && userId ? { nom: etab.raisonDisplay, db: clientBorneSur(base, { type: "compte", userId }) } : null;
 }
