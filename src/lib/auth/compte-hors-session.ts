@@ -20,14 +20,6 @@ import type { PrismaClient } from "@prisma/client";
 import { clientBorne, clientBorneSur, type ClientBorne } from "./portee/client";
 
 /**
- * Le client borné au compte dont l'identité vient d'un jeton OAuth DÉJÀ
- * vérifié (MCP distant, `mcp/acces-oauth-deps.ts`) — jamais d'une saisie.
- */
-export function clientDuCompteVerifie(userId: string): ClientBorne {
-  return clientBorne({ type: "compte", userId });
-}
-
-/**
  * `null` si l'établissement a disparu ou n'a pas de propriétaire. `base` : un
  * autre client brut que celui de l'application — le serveur MCP stdio
  * (`mcp/db.ts`), dont la sortie standard appartient au protocole ; le client

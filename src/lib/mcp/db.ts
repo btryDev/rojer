@@ -1,10 +1,10 @@
 import "server-only";
 // Le client des lectures MCP : le client borné au compte (ADR-051).
-//   - Porteur OAuth : le compte de son JETON VÉRIFIÉ (`scope.userId`), jamais
-//     un compte déduit de l'établissement demandé — si une régression laissait
-//     passer l'établissement d'un autre compte, ce client ne le lirait pas.
 //   - Clé et stdio, sans identité : le compte du propriétaire de
 //     l'établissement servi, fixé par la configuration.
+//   - ~~Porteur OAuth : le compte de son jeton vérifié (`scope.userId`)~~
+//     [2026-10-31, cc : pas de connecteur OAuth sur cc (ADR-052), la branche
+//     est retirée ; elle reviendra avec un connecteur OAuth de Better Auth.]
 // Le client MCP n'en désigne aucun : aucun schéma d'entrée ne porte
 // d'identifiant.
 //
@@ -20,7 +20,7 @@ import "server-only";
 // l'application : un seul pool.
 
 import type { PrismaClient } from "@prisma/client";
-import { clientDuCompteVerifie, clientDuProprietaire } from "@/lib/auth/compte-hors-session";
+import { clientDuProprietaire } from "@/lib/auth/compte-hors-session";
 import type { ClientBorne } from "@/lib/auth/portee/client";
 import type { ScopeMcp } from "./tools";
 
@@ -41,7 +41,6 @@ export function arreterStdio(): void {
 
 /** Le client borné de la session ; `null` si l'établissement a disparu ou n'a pas de propriétaire. */
 export async function clientMcp(scope: ScopeMcp): Promise<ClientBorne | null> {
-  if (scope.userId) return clientDuCompteVerifie(scope.userId);
   if (!stdio) return clientDuProprietaire(scope.etablissementId);
   // Le client de la session ne sert QUE l'établissement pour lequel il a été
   // construit (revue de sécurité du 2026-10-31) : tout autre est introuvable.

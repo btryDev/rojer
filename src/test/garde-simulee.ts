@@ -28,10 +28,6 @@ export function compteHorsSessionSimule(
       const userId = options.proprietaire ? options.proprietaire() : "user-1";
       return userId === null ? null : clientDuCompteSimule(userId);
     },
-    clientDuCompteVerifie: (userId: string) => {
-      options.journal?.push(`compte:${userId}`);
-      return clientDuCompteSimule(userId);
-    },
   };
 }
 
@@ -43,13 +39,13 @@ export function compteHorsSessionSimule(
  */
 export function clientMcpSimule(
   base: { etablissement: { findUnique(a: object): Promise<unknown> } },
-  portees?: { etablissementId: string; userId?: string }[],
+  portees?: { etablissementId: string }[],
 ) {
   return {
-    clientMcp: async (scope: { etablissementId: string; userId?: string }) => {
+    clientMcp: async (scope: { etablissementId: string }) => {
       portees?.push(scope);
       const existe = await base.etablissement.findUnique({ where: { id: scope.etablissementId }, select: { id: true } });
-      return existe ? clientDuCompteSimule(scope.userId) : null;
+      return existe ? clientDuCompteSimule() : null;
     },
   };
 }

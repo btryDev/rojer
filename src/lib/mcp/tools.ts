@@ -119,13 +119,12 @@ export const MESSAGE_ETABLISSEMENT_INTROUVABLE =
   "Établissement introuvable pour ce connecteur : son dossier ne peut pas être lu, et rien n'est à conclure de son contenu.";
 
 /**
- * Portée de la session : l'établissement que le serveur a le droit de lire,
- * et, pour un porteur OAuth, le compte de son jeton vérifié (`userId`) — le
- * client borné l'est alors à CE compte, et non au propriétaire déduit de
- * l'établissement (ADR-051 ; revue du 2026-10-31). Clé et stdio n'ont pas
- * d'identité : le compte y est celui du propriétaire de l'établissement.
+ * Portée de la session : l'établissement que le serveur a le droit de lire.
+ * Clé et stdio n'ont pas d'identité : le client borné l'est au propriétaire de
+ * l'établissement (ADR-051). [2026-10-31, cc : ~~`userId` du porteur OAuth~~,
+ * pas de connecteur OAuth sur cc (ADR-052).]
  */
-export type ScopeMcp = { etablissementId: string; userId?: string };
+export type ScopeMcp = { etablissementId: string };
 
 export type ContexteMcp = {
   scope: ScopeMcp;

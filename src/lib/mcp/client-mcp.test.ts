@@ -1,7 +1,5 @@
 // Le client des lectures MCP (`./db.ts`, ADR-051), avec le vrai
 // `compte-hors-session` :
-//   - porteur OAuth : borné au compte de son JETON, jamais au propriétaire
-//     déduit de l'établissement demandé ;
 //   - clé (processus web) : borné au propriétaire de l'établissement servi ;
 //   - stdio : idem, construit sur le client MCP — jamais sur celui de
 //     l'application (qui écrirait sur stdout, réservé au protocole) — et gardé
@@ -31,12 +29,6 @@ beforeEach(() => {
 });
 
 describe("clientMcp", () => {
-  it("porteur OAuth : le compte du jeton vérifié, sans déduire le propriétaire", async () => {
-    const db = await clientMcp({ etablissementId: "etab-1", userId: "porteur-7" });
-    expect(portee(db)).toEqual({ type: "compte", userId: "porteur-7" });
-    expect(h.lecturesApp).toBe(0);
-  });
-
   it("clé : le propriétaire de l'établissement servi", async () => {
     expect(portee(await clientMcp({ etablissementId: "etab-1" }))).toEqual({ type: "compte", userId: "proprietaire-1" });
     expect(await clientMcp({ etablissementId: "inconnu" })).toBeNull();
