@@ -274,7 +274,9 @@ export async function poserSignatureAvecToken(
   }
   // Le client borné au compte propriétaire de l'établissement DU JETON
   // (ADR-051). Il s'AJOUTE aux contrôles du jeton, qui restent tous
-  // ci-dessous : chaque lecture et écriture garde `token.etablissementId`.
+  // ci-dessous : chaque lecture et écriture garde `token.etablissementId`
+  // (le jeton lui-même se consomme par son identifiant, celui que
+  // `verifierAccessToken` vient de lire par son empreinte).
   const db = await clientDuProprietaire(token.etablissementId);
   if (!db) return { status: "error", message: "Ce lien est invalide." };
 
@@ -381,7 +383,7 @@ export async function poserSignatureAvecToken(
       // si elle a changé l'empreinte, elle a révoqué ce jeton — qui ne se
       // consomme plus. Sinon, elle attend que cette signature soit écrite, et
       // la compte.
-      await verrouillerObjetSigne(tx, token.objetType as ObjetSignable, token.objetId);
+      await verrouillerObjetSigne(tx, token.objetType as ObjetSignable, token.objetId, token.etablissementId);
       const consomme = await consommerJeton(tx, token.id, {
         ip: ip ?? undefined,
         userAgent: ua ?? undefined,
@@ -422,7 +424,7 @@ export async function poserSignatureAvecToken(
     // 2026-10-12, C1). La phrase dit laquelle — « déjà servi » mentait au
     // signataire dont le lien venait d'être annulé.
     const etat = await db.accessToken.findUnique({
-      where: { id: token.id },
+      where: { id: token.id, etablissementId: token.etablissementId },
       select: { revoqueLe: true, revoqueMotif: true },
     });
     if (etat?.revoqueLe) {
@@ -660,7 +662,7 @@ export async function signerEnCompteConnecte(params: {
   let resultat;
   try {
     resultat = await db.$transaction(async (tx) => {
-      await verrouillerObjetSigne(tx, params.objetType, params.objetId);
+      await verrouillerObjetSigne(tx, params.objetType, params.objetId, params.etablissementId);
       const h = await calculerHashObjet(
         tx,
         params.objetType,

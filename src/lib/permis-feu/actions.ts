@@ -213,7 +213,7 @@ export async function modifierPermisFeu(
   if (prestataire && !prestataire.ok) return PRESTATAIRE_INTROUVABLE;
 
   const resultat = await permis.db.$transaction(async (tx): Promise<PermisFeuActionState | null> => {
-    await verrouillerObjetSigne(tx, "permis_feu", permisFeuId);
+    await verrouillerObjetSigne(tx, "permis_feu", permisFeuId, etablissementId);
     // Le statut relu sous le verrou (relecture finale, R1).
     const statut = await tx.permisFeu.findUnique({
       where: { id: permisFeuId },

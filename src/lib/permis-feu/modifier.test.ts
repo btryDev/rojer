@@ -269,7 +269,7 @@ describe("les liens de signature en vol (relecture indépendante du 2026-10-12)"
     await modifier(saisie());
 
     expect(db.journal.slice(0, 2)).toEqual([
-      'verrou SELECT 1 FROM "PermisFeu" WHERE "id" = ? FOR UPDATE pf-1',
+      'verrou SELECT 1 FROM "PermisFeu" WHERE "id" = ? AND "etablissementId" = ? FOR UPDATE pf-1,etab-a-moi',
       "compte des signatures",
     ]);
   });

@@ -323,7 +323,7 @@ export async function modifierPlanPrevention(
   if (prestataire && !prestataire.ok) return PRESTATAIRE_INTROUVABLE;
 
   const resultat = await plan.db.$transaction(async (tx): Promise<PlanActionState | null> => {
-    await verrouillerObjetSigne(tx, "plan_prevention", planId);
+    await verrouillerObjetSigne(tx, "plan_prevention", planId, etablissementId);
     // Le statut relu SOUS LE VERROU (relecture finale, R1) : une annulation
     // glissée entre la première lecture et le verrou ne laisse pas modifier
     // un plan annulé.

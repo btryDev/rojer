@@ -15,7 +15,7 @@ import { prisma } from "@/lib/prisma";
 import { ipClient } from "@/lib/securite/ip-client";
 import { cleLimite, consommer, LIMITES } from "@/lib/securite/limite-debit";
 import { calculerHashObjet, versionDeHash } from "./hash-objet";
-import { SELECT_PREUVE } from "./queries";
+import { SELECT_PREUVE } from "./preuve";
 import { clientDuProprietaire } from "@/lib/auth/compte-hors-session";
 
 /**

@@ -1,5 +1,6 @@
 import "server-only";
 import { requireCompte } from "@/lib/auth/compte";
+import { SELECT_PREUVE } from "./preuve";
 import type { ObjetSignable, Prisma } from "@prisma/client";
 
 /**
@@ -18,33 +19,24 @@ import type { ObjetSignable, Prisma } from "@prisma/client";
 export async function listSignatures(
   /** Le client borné au compte, reçu de la garde de l'appelant (ADR-051). */
   db: Prisma.TransactionClient,
+  etablissementId: string,
   objetType: ObjetSignable,
   objetId: string,
 ) {
   return db.signature.findMany({
-    where: { objetType, objetId },
+    where: { etablissementId, objetType, objetId },
     orderBy: { horodatageIso: "asc" },
   });
 }
-
-/** Champs d'une signature qui constituent la preuve, et rien d'autre. */
-export const SELECT_PREUVE = {
-  id: true,
-  signataireNom: true,
-  signataireEmail: true,
-  signataireRole: true,
-  horodatageIso: true,
-  methode: true,
-  hashDocument: true,
-  nomDocument: true,
-} as const;
 
 /**
  * Les signatures de plusieurs objets d'un même type, en UNE requête, rangées
  * par objet dans l'ordre de dépôt — seulement les champs de la preuve
  * (`SELECT_PREUVE`), ceux qu'affiche `SignatureBlock`. La portée au
- * propriétaire est dans la requête — la doctrine du module, que
- * `listSignatures` porte encore en dette (`tenancy-lectures.test.ts`).
+ * propriétaire est dans la requête — la doctrine du module, ~~que
+ * `listSignatures` porte encore en dette (`tenancy-lectures.test.ts`)~~
+ * [2026-10-31 : `listSignatures` porte l'établissement dans sa requête, son
+ * exemption est retirée].
  *
  * [2026-10-27, plan performance, lot 1a] La fiche d'un contrôle appelait
  * `listSignatures` rapport par rapport, l'une après l'autre : 521 requêtes à la

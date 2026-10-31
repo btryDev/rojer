@@ -75,9 +75,15 @@ const { prismaMock } = vi.hoisted(() => ({
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
 // Sans session, le compte vient du propriétaire de l'établissement du jeton
 // (ADR-051, `compte-hors-session.ts`) : ici, le client borné simulé.
+const { comptesDemandes } = vi.hoisted(() => ({ comptesDemandes: [] as string[] }));
 vi.mock("@/lib/auth/compte-hors-session", async () => {
   const { clientDuCompteSimule } = await import("@/test/garde-simulee");
-  return { clientDuProprietaire: async () => clientDuCompteSimule() };
+  return {
+    clientDuProprietaire: async (etablissementId: string) => {
+      comptesDemandes.push(etablissementId);
+      return clientDuCompteSimule();
+    },
+  };
 });
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/navigation", () => ({
@@ -191,6 +197,7 @@ function jeton(
 
 beforeEach(() => {
   vi.clearAllMocks();
+  comptesDemandes.length = 0;
   prismaMock.planPrevention = table([]);
   prismaMock.permisFeu = table([]);
   prismaMock.signature = table([]);
@@ -460,6 +467,9 @@ describe("garantie 2b — un objet clos ou annulé ne se signe plus, même avec 
     expect(r.status).toBe("error");
     expect(prismaMock.signature.create).not.toHaveBeenCalled();
     expect(prismaMock.signature.lignes).toHaveLength(0);
+    // Le compte est demandé pour l'établissement DU JETON, jamais pour celui
+    // de l'objet visé.
+    expect(comptesDemandes).toEqual(["etab-a-moi"]);
   });
 
   it("traversée : l'état lu est celui du plan de l'établissement du jeton, pas d'un homonyme", async () => {
@@ -792,7 +802,7 @@ describe("garantie 5 — la signature prend le verrou de l'objet que prend la mo
     expect((await signer()).status).toBe("success");
 
     expect(verrouAvantConsommation).toEqual([true]);
-    expect(verrous[0]).toBe('SELECT 1 FROM "PlanPrevention" WHERE "id" = ? FOR UPDATE pp-1');
+    expect(verrous[0]).toBe('SELECT 1 FROM "PlanPrevention" WHERE "id" = ? AND "etablissementId" = ? FOR UPDATE pp-1,etab-a-moi');
   });
 
   it("en compte connecté : le verrou du permis est pris avant la signature", async () => {
@@ -800,7 +810,7 @@ describe("garantie 5 — la signature prend le verrou de l'objet que prend la mo
 
     expect((await signerCommeDirigeant("permis_feu", "pf-1")).ok).toBe(true);
 
-    expect(verrous).toEqual(['SELECT 1 FROM "PermisFeu" WHERE "id" = ? FOR UPDATE pf-1']);
+    expect(verrous).toEqual(['SELECT 1 FROM "PermisFeu" WHERE "id" = ? AND "etablissementId" = ? FOR UPDATE pf-1,etab-a-moi']);
   });
 });
 
