@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { clientDuCompteSimule } from "@/test/garde-simulee";
 import { correspond } from "@/test/prisma-where";
 
 /**
@@ -193,13 +194,13 @@ describe("émission d'un accès — objet d'un autre client", () => {
 describe("appartenance — refus par défaut", () => {
   it("refuse un type non inscrit, même si l'identifiant existe ailleurs", async () => {
     await expect(
-      objetAppartientAEtablissement("type_inventé", RAPPORT_A_MOI.id, "etab-a-moi"),
+      objetAppartientAEtablissement(await clientDuCompteSimule(), "type_inventé", RAPPORT_A_MOI.id, "etab-a-moi"),
     ).resolves.toBe(false);
   });
 
   it("refuse un identifiant vide", async () => {
     await expect(
-      objetAppartientAEtablissement("rapport_verification", "", "etab-a-moi"),
+      objetAppartientAEtablissement(await clientDuCompteSimule(), "rapport_verification", "", "etab-a-moi"),
     ).resolves.toBe(false);
   });
 });

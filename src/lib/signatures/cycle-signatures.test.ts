@@ -73,6 +73,18 @@ const { prismaMock } = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
+// Sans session, le compte vient du propriétaire de l'établissement du jeton
+// (ADR-051, `compte-hors-session.ts`) : ici, le client borné simulé.
+const { comptesDemandes, proprietaire } = vi.hoisted(() => ({
+  comptesDemandes: [] as string[],
+  proprietaire: { userId: "user-1" as string | null },
+}));
+vi.mock("@/lib/auth/compte-hors-session", async () =>
+  (await import("@/test/garde-simulee")).compteHorsSessionSimule({
+    journal: comptesDemandes,
+    proprietaire: () => proprietaire.userId,
+  }),
+);
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/navigation", () => ({
   redirect: () => {
@@ -185,6 +197,8 @@ function jeton(
 
 beforeEach(() => {
   vi.clearAllMocks();
+  comptesDemandes.length = 0;
+  proprietaire.userId = "user-1";
   prismaMock.planPrevention = table([]);
   prismaMock.permisFeu = table([]);
   prismaMock.signature = table([]);
@@ -394,6 +408,42 @@ async function signer() {
   return poserSignatureAvecToken(JETON_CLAIR, { status: "idle" }, fd);
 }
 
+describe("relecture du jeton non consommé : celle de l'établissement du jeton", () => {
+  it("un lien révoqué pendant la pose le dit, même devant un homonyme d'un autre établissement", async () => {
+    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
+    const lien = lienValide("plan_prevention", "pp-1");
+    // Même identifiant, autre établissement, placé en premier : une relecture
+    // qui oublierait l'établissement le trouverait et dirait « déjà servi ».
+    prismaMock.accessToken.lignes.push({ ...lien, etablissementId: "etab-autre", tokenHash: "autre" }, lien);
+    const reserver = prismaMock.accessToken.updateMany.getMockImplementation()!;
+    prismaMock.accessToken.updateMany.mockImplementation(async (a: { where: Ligne; data: Ligne }) => {
+      // La consommation arrive après une révocation concurrente : elle échoue.
+      if ("utiliseLe" in a.data) {
+        lien.revoqueLe = new Date();
+        lien.revoqueMotif = "Contenu modifié";
+        return { count: 0 };
+      }
+      // La réservation d'essai vise le seul lien réel (l'homonyme est fictif).
+      return reserver({ ...a, where: { ...a.where, etablissementId: "etab-a-moi" } });
+    });
+
+    expect(await signer()).toEqual({ status: "error", message: "Ce lien a été révoqué : Contenu modifié" });
+    expect(prismaMock.signature.create).not.toHaveBeenCalled();
+  });
+});
+
+describe("lien dont l'établissement n'a plus de propriétaire", () => {
+  it("refuse comme un lien invalide, sans consommer d'essai ni rien écrire", async () => {
+    proprietaire.userId = null;
+    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
+    prismaMock.accessToken.lignes.push(lienValide("plan_prevention", "pp-1"));
+
+    expect(await signer()).toEqual({ status: "error", message: "Ce lien est invalide." });
+    expect(prismaMock.accessToken.lignes[0].otpEssaisRestants).toBe(3);
+    expect(prismaMock.signature.create).not.toHaveBeenCalled();
+  });
+});
+
 describe("garantie 2b — un objet clos ou annulé ne se signe plus, même avec un lien valide", () => {
   it("refuse de signer un plan clos avec un lien resté ouvert", async () => {
     prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "clos"));
@@ -435,6 +485,35 @@ describe("garantie 2b — un objet clos ou annulé ne se signe plus, même avec 
 
     expect(r.status).toBe("success");
     expect(prismaMock.signature.lignes).toHaveLength(1);
+  });
+
+  it("un jeton de E1 qui vise un objet de E2 du MÊME compte est refusé (ADR-051, chemin par jeton)", async () => {
+    // Sans session, le client est borné au compte propriétaire de
+    // l'établissement du jeton (`compte-hors-session.ts`) ; le compte couvre
+    // aussi E2. La borne de compte ne remplace pas les contrôles du jeton :
+    // chaque lecture garde l'établissement DU JETON, et l'objet de E2 n'y est
+    // pas. Seconde lecture du 2026-10-31.
+    prismaMock.planPrevention.lignes.push({
+      ...planComplet("pp-e2", "etab-a-moi-2", "attente_signatures"),
+      etablissement: { entreprise: { userId: "user-1" } },
+    });
+    prismaMock.accessToken.lignes.push(lienValide("plan_prevention", "pp-e2"));
+
+    const r = await signer();
+
+    // Refusé à la PREMIÈRE barrière, l'état de l'objet lu dans l'établissement
+    // du jeton (`objetEstSignable`) : le message le dit. Les couches suivantes
+    // (empreinte, statut) sont éprouvées une à une dans
+    // `traversee-etablissement.test.ts`.
+    expect(r).toEqual({
+      status: "error",
+      message: "Ce document n'est plus à signer : il a été clos ou annulé.",
+    });
+    expect(prismaMock.signature.create).not.toHaveBeenCalled();
+    expect(prismaMock.signature.lignes).toHaveLength(0);
+    // Le compte est demandé pour l'établissement DU JETON, jamais pour celui
+    // de l'objet visé.
+    expect(comptesDemandes).toEqual(["etab-a-moi"]);
   });
 
   it("traversée : l'état lu est celui du plan de l'établissement du jeton, pas d'un homonyme", async () => {
@@ -767,7 +846,7 @@ describe("garantie 5 — la signature prend le verrou de l'objet que prend la mo
     expect((await signer()).status).toBe("success");
 
     expect(verrouAvantConsommation).toEqual([true]);
-    expect(verrous[0]).toBe('SELECT 1 FROM "PlanPrevention" WHERE "id" = ? FOR UPDATE pp-1');
+    expect(verrous[0]).toBe('SELECT 1 FROM "PlanPrevention" WHERE "id" = ? AND "etablissementId" = ? FOR UPDATE pp-1,etab-a-moi');
   });
 
   it("en compte connecté : le verrou du permis est pris avant la signature", async () => {
@@ -775,7 +854,7 @@ describe("garantie 5 — la signature prend le verrou de l'objet que prend la mo
 
     expect((await signerCommeDirigeant("permis_feu", "pf-1")).ok).toBe(true);
 
-    expect(verrous).toEqual(['SELECT 1 FROM "PermisFeu" WHERE "id" = ? FOR UPDATE pf-1']);
+    expect(verrous).toEqual(['SELECT 1 FROM "PermisFeu" WHERE "id" = ? AND "etablissementId" = ? FOR UPDATE pf-1,etab-a-moi']);
   });
 });
 

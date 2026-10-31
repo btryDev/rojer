@@ -116,29 +116,6 @@ const EXEMPTIONS = new Map<string, Exemption>([
         "champs publiables et `null` si le registre n'est pas publié.",
     },
   ],
-  [
-    "signatures/queries.ts:getSignature",
-    {
-      garde: "SELECT_PREUVE",
-      raison:
-        "Lecture publique par identifiant `sig_…` (page /verifier/[id], ADR-006) : " +
-        "un tiers contrôle la preuve sans compte. La projection se limite à la preuve.",
-    },
-  ],
-  [
-    "signatures/queries.ts:listSignatures",
-    {
-      garde: "objetId",
-      raison:
-        "Contrat d'appel : la clé (objetType, objetId) vient d'un objet déjà " +
-        "chargé par une query scopée. ~~Un seul appelant au 2026-10-13 " +
-        "(`verifications/[verificationId]/page.tsx`, `r.id` d'une vérification " +
-        "scopée).~~ [2026-10-27 : cette page passe par `listSignaturesDesObjets`, " +
-        "scopée dans la requête ; restent `permis-feu/queries.ts` et " +
-        "`plan-prevention/queries.ts`, objets chargés scopés.] Dette : la doctrine " +
-        "du module veut le prédicat dans la requête.",
-    },
-  ],
   ...(
     [
       "getFraicheurCalendrier",
@@ -189,7 +166,12 @@ const EXEMPTIONS = new Map<string, Exemption>([
 // `tenancy-ecritures.test.ts` ; `verifierIntegriteSignature` n'est plus une
 // action serveur (`signatures/verification-publique.ts`) ; entre
 // `definirMotDePasseAction`, la réinitialisation passée côté serveur.
-const PLAFOND_EXEMPTIONS = 13;
+// ~~13~~ → 11 le 2026-10-31 (isolation, signatures) : `getSignature` a
+// DÉMÉNAGÉ — de `queries.ts`, que cette garde relit, vers le module public
+// nommé `verification-publique.ts`, qu'elle ne relit pas (sa lecture brute y
+// est tenue par `USAGES` d'`imports.test.ts`) ; `listSignatures` porte
+// désormais l'établissement dans sa requête.
+const PLAFOND_EXEMPTIONS = 11;
 
 const RACINE = join(process.cwd(), "src/lib");
 const SRC = join(process.cwd(), "src");

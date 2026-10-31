@@ -213,7 +213,7 @@ export async function modifierPermisFeu(
   if (prestataire && !prestataire.ok) return PRESTATAIRE_INTROUVABLE;
 
   const resultat = await permis.db.$transaction(async (tx): Promise<PermisFeuActionState | null> => {
-    await verrouillerObjetSigne(tx, "permis_feu", permisFeuId);
+    await verrouillerObjetSigne(tx, "permis_feu", permisFeuId, etablissementId);
     // Le statut relu sous le verrou (relecture finale, R1).
     const statut = await tx.permisFeu.findUnique({
       where: { id: permisFeuId },
@@ -224,7 +224,7 @@ export async function modifierPermisFeu(
     }
     const scelle = motifContenuScelle(
       "permis",
-      await compterSignatures("permis_feu", permisFeuId, etablissementId, tx),
+      await compterSignatures(tx, "permis_feu", permisFeuId, etablissementId),
     );
     if (scelle) {
       if (porteUnChampScelle(formData)) return { status: "error", message: scelle };
@@ -253,7 +253,7 @@ export async function modifierPermisFeu(
       MESURES_RETIREES.some((m) => m.id === id),
     );
     const colonnes = colonnesPermis(parsed.data);
-    const avant = await calculerHashObjet("permis_feu", permisFeuId, etablissementId, tx);
+    const avant = await calculerHashObjet(tx, "permis_feu", permisFeuId, etablissementId);
     // `update`, même motif que la branche scellée : `batimentId` et
     // `prestataireId` changent, ce qu'un `updateMany` borné refuse.
     await tx.permisFeu.update({
@@ -264,17 +264,14 @@ export async function modifierPermisFeu(
         batimentId: batiment.id,
       },
     });
-    const apres = await calculerHashObjet("permis_feu", permisFeuId, etablissementId, tx);
+    const apres = await calculerHashObjet(tx, "permis_feu", permisFeuId, etablissementId);
     if (!avant.ok || !apres.ok || avant.hash !== apres.hash) {
-      await revoquerLiensEnVol(
-        {
+      await revoquerLiensEnVol(tx, {
           etablissementId,
           objetType: "permis_feu",
           objetId: permisFeuId,
           motif: MOTIF_CONTENU_MODIFIE.permis,
-        },
-        tx,
-      );
+        });
     }
     return null;
   });
@@ -328,12 +325,12 @@ export async function marquerTermine(permisFeuId: string): Promise<void> {
   if (!r.fait) return;
   // Un permis terminé ne se signe plus (`etat-signable.ts`) : ses liens
   // encore ouverts tombent avec lui.
-  await revoquerLiensEnVol({
+  await revoquerLiensEnVol(r.db, {
     etablissementId: r.etablissementId,
     objetType: "permis_feu",
     objetId: permisFeuId,
     motif: "Permis de feu terminé",
-  }, r.db);
+  });
 }
 
 export async function supprimerPermisFeu(permisFeuId: string): Promise<void> {
@@ -348,7 +345,7 @@ export async function supprimerPermisFeu(permisFeuId: string): Promise<void> {
   const etabId = permis.etablissementId;
   const effacable =
     (permis.statut === "attente_signatures" || permis.statut === "brouillon") &&
-    !(await porteUneTraceDeSignature("permis_feu", permisFeuId, etabId));
+    !(await porteUneTraceDeSignature(permis.db, "permis_feu", permisFeuId, etabId));
   if (effacable) {
     await permis.db.permisFeu.delete({ where: { id: permisFeuId } });
   } else {
@@ -357,12 +354,12 @@ export async function supprimerPermisFeu(permisFeuId: string): Promise<void> {
       data: { statut: "annule" },
     });
   }
-  await revoquerLiensEnVol({
+  await revoquerLiensEnVol(permis.db, {
     etablissementId: etabId,
     objetType: "permis_feu",
     objetId: permisFeuId,
     motif: effacable ? "Permis de feu supprimé" : "Permis de feu annulé",
-  }, permis.db);
+  });
   revalidatePath(`/etablissements/${etabId}/permis-feu`);
   redirect(`/etablissements/${etabId}/permis-feu`);
 }

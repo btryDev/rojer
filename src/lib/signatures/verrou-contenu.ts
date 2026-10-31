@@ -1,4 +1,3 @@
-import { prisma } from "@/lib/prisma";
 import type { ObjetSignable, Prisma } from "@prisma/client";
 
 /**
@@ -33,10 +32,11 @@ import type { ObjetSignable, Prisma } from "@prisma/client";
  * l'autre ait fini, et le second relit ce que le premier a écrit.
  */
 export async function compterSignatures(
+  /** Le client borné au compte, ou la transaction ouverte sur lui (ADR-051). */
+  db: Prisma.TransactionClient,
   objetType: ObjetSignable,
   objetId: string,
   etablissementId: string,
-  db: Prisma.TransactionClient = prisma,
 ): Promise<number> {
   return db.signature.count({ where: { objetType, objetId, etablissementId } });
 }
@@ -50,11 +50,15 @@ export async function verrouillerObjetSigne(
   tx: Prisma.TransactionClient,
   objetType: ObjetSignable,
   objetId: string,
+  /** L'établissement de l'appelant ou du jeton : le SQL brut n'est pas borné
+   *  par le client (ADR-051 § 5), le verrou ne prend donc que la ligne de cet
+   *  établissement — jamais celle d'un autre, même pour un instant. */
+  etablissementId: string,
 ): Promise<void> {
   if (objetType === "plan_prevention") {
-    await tx.$queryRaw`SELECT 1 FROM "PlanPrevention" WHERE "id" = ${objetId} FOR UPDATE`;
+    await tx.$queryRaw`SELECT 1 FROM "PlanPrevention" WHERE "id" = ${objetId} AND "etablissementId" = ${etablissementId} FOR UPDATE`;
   } else if (objetType === "permis_feu") {
-    await tx.$queryRaw`SELECT 1 FROM "PermisFeu" WHERE "id" = ${objetId} FOR UPDATE`;
+    await tx.$queryRaw`SELECT 1 FROM "PermisFeu" WHERE "id" = ${objetId} AND "etablissementId" = ${etablissementId} FOR UPDATE`;
   }
 }
 

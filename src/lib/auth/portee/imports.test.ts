@@ -40,8 +40,12 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous" }
     motif: "compteurs techniques, hors de tout compte",
     usages: ["prisma.$executeRaw", "prisma.$queryRaw"],
   },
+  "src/lib/auth/compte-hors-session.ts": {
+    motif: "accès sans session : le compte propriétaire de l'établissement d'une preuve vérifiée (jeton, signature publique, clé MCP)",
+    usages: ["prisma.etablissement.findUnique"],
+  },
   "src/lib/signatures/verification-publique.ts": {
-    motif: "vérification publique d'une signature, sans session",
+    motif: "vérification publique d'une signature et confirmation /signe, sans session",
     usages: ["prisma.signature.findUnique"],
   },
   "src/lib/access-tokens/verify.ts": {
@@ -69,26 +73,16 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous" }
 };
 /** Cliquet : importeurs du client brut encore à migrer vers requireCompte(). */
 const A_MIGRER = new Set([
-  "src/lib/access-tokens/revocation.ts",
   "src/lib/mcp/acces-oauth-deps.ts",
   "src/lib/mcp/db.ts",
   "src/lib/mcp/queries.ts",
-  "src/lib/signatures/actions.ts",
-  "src/lib/signatures/appartenance.ts",
-  "src/lib/signatures/contenu-a-signer.ts",
-  "src/lib/signatures/etat-signable.ts",
-  "src/lib/signatures/hash-objet.ts",
-  "src/lib/signatures/libelle-document.ts",
-  "src/lib/signatures/queries.ts",
-  "src/lib/signatures/statut-objet.ts",
-  "src/lib/signatures/trace.ts",
-  "src/lib/signatures/verrou-contenu.ts",
 ]);
 const NOMMES_ROUAGES: Record<string, Record<string, string>> = {
   "src/lib/auth/portee/client": {
     "src/lib/auth/compte.ts": "requireCompte : la portée vient de la session",
     "src/lib/auth/portee/lot-verifie.ts": "types du client et de la transaction",
     "src/test/garde-simulee.ts": "tests seuls : le client simulé que rendent les gardes simulées",
+    "src/lib/auth/compte-hors-session.ts": "accès sans session : la portée vient de la preuve vérifiée",
   },
   "src/lib/auth/portee/borne": {
     "src/lib/auth/portee/client.ts": "l'extension",

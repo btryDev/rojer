@@ -1,5 +1,4 @@
 import type { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
 import { StockageNonConfigure, getStorage } from "@/lib/storage";
 import { sha256Hex } from "./hash";
 import type { ObjetSignable } from "@prisma/client";
@@ -80,12 +79,13 @@ export type HashResult =
     };
 
 export async function calculerHashObjet(
+  /** Le client borné au compte (ADR-051) — ou la transaction en cours ouverte
+   *  sur lui, pour lire ce qu'elle vient d'écrire (`modifierPlanPrevention`,
+   *  2026-10-12). */
+  db: Prisma.TransactionClient,
   objetType: ObjetSignable,
   objetId: string,
   etablissementId: string,
-  /** Le client d'une transaction en cours, pour lire ce qu'elle vient
-   *  d'écrire (`modifierPlanPrevention`, 2026-10-12). */
-  db: Prisma.TransactionClient = prisma,
 ): Promise<HashResult> {
   if (objetType === "rapport_verification") {
     // Pour un rapport de vérification, l'objet signé est le fichier déposé

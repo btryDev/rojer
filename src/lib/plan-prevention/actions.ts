@@ -323,7 +323,7 @@ export async function modifierPlanPrevention(
   if (prestataire && !prestataire.ok) return PRESTATAIRE_INTROUVABLE;
 
   const resultat = await plan.db.$transaction(async (tx): Promise<PlanActionState | null> => {
-    await verrouillerObjetSigne(tx, "plan_prevention", planId);
+    await verrouillerObjetSigne(tx, "plan_prevention", planId, etablissementId);
     // Le statut relu SOUS LE VERROU (relecture finale, R1) : une annulation
     // glissée entre la première lecture et le verrou ne laisse pas modifier
     // un plan annulé.
@@ -336,7 +336,7 @@ export async function modifierPlanPrevention(
     }
     const scelle = motifContenuScelle(
       "plan",
-      await compterSignatures("plan_prevention", planId, etablissementId, tx),
+      await compterSignatures(tx, "plan_prevention", planId, etablissementId),
       plan.inspectionDate === null,
     );
     if (scelle) {
@@ -358,7 +358,7 @@ export async function modifierPlanPrevention(
         fieldErrors: parsed.error.flatten().fieldErrors,
       };
     }
-    const avant = await calculerHashObjet("plan_prevention", planId, etablissementId, tx);
+    const avant = await calculerHashObjet(tx, "plan_prevention", planId, etablissementId);
     await tx.planPrevention.update({
       where: { id: planId, etablissementId },
       data: {
@@ -370,17 +370,14 @@ export async function modifierPlanPrevention(
         lignes: { deleteMany: {}, create: lignesACreer(parsed.data) },
       },
     });
-    const apres = await calculerHashObjet("plan_prevention", planId, etablissementId, tx);
+    const apres = await calculerHashObjet(tx, "plan_prevention", planId, etablissementId);
     if (!avant.ok || !apres.ok || avant.hash !== apres.hash) {
-      await revoquerLiensEnVol(
-        {
+      await revoquerLiensEnVol(tx, {
           etablissementId,
           objetType: "plan_prevention",
           objetId: planId,
           motif: MOTIF_CONTENU_MODIFIE.plan,
-        },
-        tx,
-      );
+        });
     }
     return null;
   });
@@ -404,12 +401,12 @@ export async function cloturerPlan(planId: string): Promise<void> {
   });
   // Un plan clos ne se signe plus : les liens encore ouverts tombent avec lui.
   // La garde de fond reste au moment de signer (`etat-signable.ts`).
-  await revoquerLiensEnVol({
+  await revoquerLiensEnVol(plan.db, {
     etablissementId: plan.etablissementId,
     objetType: "plan_prevention",
     objetId: planId,
     motif: "Plan de prévention clos",
-  }, plan.db);
+  });
   revalidatePath(`/etablissements/${plan.etablissementId}/plan-prevention/${planId}`);
 }
 
@@ -425,7 +422,7 @@ export async function supprimerPlan(planId: string): Promise<void> {
   // « annulé » et rien n'est détruit.
   const effacable =
     (plan.statut === "brouillon" || plan.statut === "attente_signatures") &&
-    !(await porteUneTraceDeSignature("plan_prevention", planId, etabId));
+    !(await porteUneTraceDeSignature(plan.db, "plan_prevention", planId, etabId));
   if (effacable) {
     await plan.db.planPrevention.delete({ where: { id: planId } });
   } else {
@@ -437,12 +434,12 @@ export async function supprimerPlan(planId: string): Promise<void> {
   // Annulé ou effacé, le plan ne se signe plus. Pour un plan effacé la
   // révocation ne trouve rien — il était vierge —, sauf un lien émis entre
   // la vérification et l'effacement : elle le ferme aussi.
-  await revoquerLiensEnVol({
+  await revoquerLiensEnVol(plan.db, {
     etablissementId: etabId,
     objetType: "plan_prevention",
     objetId: planId,
     motif: effacable ? "Plan de prévention supprimé" : "Plan de prévention annulé",
-  }, plan.db);
+  });
   revalidatePath(`/etablissements/${etabId}/plan-prevention`);
   redirect(`/etablissements/${etabId}/plan-prevention`);
 }
