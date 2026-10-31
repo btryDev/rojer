@@ -302,8 +302,9 @@ fragile plutôt que forcer) :
 
 Un identifiant étranger ou disparu doit donner une page introuvable (404) ou
 un message métier, jamais une erreur serveur ni un indice d'existence. Relevé
-du 2026-10-31 : les gardes de `scope.ts` font `notFound()` ; 62 écritures par
-`db` passent d'abord par une lecture bornée de l'objet ; aucun message ne
+du 2026-10-31 : les gardes de `scope.ts` font `notFound()` ; les écritures par `db`
+passaient presque toutes d'abord par une lecture bornée de l'objet (62 au
+relevé de ce jour) ; aucun message ne
 distingue « étranger » de « disparu ».
 
 **L'invariant « une écriture par identifiant suit une lecture bornée de cet

@@ -23,6 +23,9 @@ export type PrescriptionActionState =
   | { status: "error"; message: string; fieldErrors?: Record<string, string[]> }
   | { status: "success"; prescriptionId: string };
 
+/** Prescription étrangère ou disparue : le même message partout, sans indice d'existence. */
+const INTROUVABLE: PrescriptionActionState = { status: "error", message: "Prescription introuvable." };
+
 function normaliser(fd: FormData): Record<string, unknown> {
   const raw = Object.fromEntries(fd);
   return {
@@ -131,7 +134,7 @@ export async function leverPrescription(
     select: { dateDocument: true },
   });
   if (!existante) {
-    return { status: "error", message: "Prescription introuvable." };
+    return INTROUVABLE;
   }
 
   // Une levée antérieure à l'acte lui-même n'a pas de sens et produirait une
@@ -167,16 +170,13 @@ export async function reactiverPrescription(
   prescriptionId: string,
 ): Promise<PrescriptionActionState> {
   const { db } = await assertEtablissementDuCompte(etablissementId);
-  // Une seule écriture conditionnelle, bornée à l'établissement : une
-  // prescription étrangère ou disparue rend le message de ses sœurs (lever,
-  // supprimer), jamais une erreur serveur — un `update` sur une ligne absente
-  // levait P2025 (relevé du 2026-10-31, isolation) — et sans course entre une
-  // lecture et l'écriture.
+  // Écriture conditionnelle bornée : introuvable → message, sans course
+  // (ADR-051, « Erreurs : 404, jamais 500 »).
   const { count } = await db.prescriptionParticuliere.updateMany({
     where: { id: prescriptionId, etablissementId },
     data: { dateFin: null, actif: true },
   });
-  if (count === 0) return { status: "error", message: "Prescription introuvable." };
+  if (count === 0) return INTROUVABLE;
   await regenererApresMutation(etablissementId, "prescriptions");
   revalidatePath(`/etablissements/${etablissementId}/prescriptions`);
   revalidatePath(`/etablissements/${etablissementId}/calendrier`);
@@ -218,7 +218,7 @@ export async function supprimerPrescription(
     },
   });
   if (!existante) {
-    return { status: "error", message: "Prescription introuvable." };
+    return INTROUVABLE;
   }
 
   // Les lignes VISÉES et les preuves faites SOUS l'acte (`preuves.ts`), plus

@@ -54,7 +54,7 @@ export function PrescriptionActions({
 }) {
   const [ouvert, setOuvert] = useState(false);
   const [pendingAutre, startTransition] = useTransition();
-  const [etatSuppr, setEtatSuppr] = useState<PrescriptionActionState | null>(
+  const [etatAutre, setEtatAutre] = useState<PrescriptionActionState | null>(
     null,
   );
   const { demander, confirmation } = useConfirmation();
@@ -94,7 +94,7 @@ export function PrescriptionActions({
                 agir: "Supprimer la prescription",
                 alors: () =>
                   startTransition(async () => {
-                    setEtatSuppr(
+                    setEtatAutre(
                       await supprimerPrescription(
                         etablissementId,
                         prescriptionId,
@@ -115,9 +115,9 @@ export function PrescriptionActions({
           </p>
         );
 
-  const erreurSuppression = etatSuppr?.status === "error" && (
+  const erreurAutre = etatAutre?.status === "error" && (
     <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
-      {etatSuppr.message}
+      {etatAutre.message}
     </p>
   );
 
@@ -131,7 +131,7 @@ export function PrescriptionActions({
             disabled={pendingAutre}
             onClick={() =>
               startTransition(async () => {
-                setEtatSuppr(await reactiverPrescription(etablissementId, prescriptionId));
+                setEtatAutre(await reactiverPrescription(etablissementId, prescriptionId));
               })
             }
           >
@@ -144,7 +144,7 @@ export function PrescriptionActions({
           sera régénéré.
         </p>
         {confirmation}
-        {erreurSuppression}
+        {erreurAutre}
       </div>
     );
   }
@@ -165,7 +165,7 @@ export function PrescriptionActions({
 
       {confirmation}
 
-      {erreurSuppression}
+      {erreurAutre}
 
       {ouvert && (
         <form action={action} className="flex flex-wrap items-end gap-3">
