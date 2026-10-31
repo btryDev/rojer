@@ -190,6 +190,21 @@ describe("SQL brut", () => {
     const unsafe = [...TEXTES].filter(([, t]) => SQL_BRUT_UNSAFE.test(t)).map(([f]) => f);
     expect(unsafe).toEqual([]);
   });
+  // Le helper vérifie la PRÉSENCE du prédicat, pas qu'il filtre : chaque
+  // appelant est éprouvé par le résultat, sur base réelle (ADR-051 § 5). Un
+  // appelant neuf qui n'entre pas dans ce test fait tomber celui-ci.
+  it("chaque appelant de requireLectureSqlProprietaire est éprouvé sur base réelle", () => {
+    const EPREUVE = "src/lib/auth/sql-proprietaire.integration.test.ts";
+    const appelants = [...TEXTES]
+      .filter(([f, t]) => f !== "src/lib/auth/scope.ts" && /\brequireLectureSqlProprietaire\b/.test(sansCommentairesNiChaines(t)))
+      .map(([f]) => f.replace(/\.ts$/, ""))
+      .sort();
+    // Commentaires retirés : un import mis en commentaire n'éprouve plus rien.
+    const code = readFileSync(join(DEPOT, EPREUVE), "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+    const eprouves = [...code.matchAll(IMPORT)].map(([, s]) => cible(EPREUVE, s));
+    expect(appelants.length).toBeGreaterThan(0);
+    expect(appelants.filter((f) => !eprouves.includes(f))).toEqual([]);
+  });
 });
 
 it.each(Object.entries(NOMMES_ROUAGES))("les rouages %s ne s'importent que des modules nommés", (c, nommes) => {
