@@ -285,19 +285,25 @@ export async function modifierPrestataire(
 
   const remplacees = piecesRemplacees(existant, depot.colonnes);
   try {
-    // Transaction interactive, et non par lot : `creerEnLotVerifie` (ADR-051)
-    // lit le prestataire avant d'insérer ses pièces, dans la transaction.
-    await db.$transaction(async (tx) => {
-      await tx.prestataire.update({
-        where: { id: existant.id },
-        data: { ...colonnesDeLaSaisie(parsed.data), ...depot.colonnes },
+    const modification = {
+      where: { id: existant.id },
+      data: { ...colonnesDeLaSaisie(parsed.data), ...depot.colonnes },
+    };
+    // Sans pièce remplacée, une seule écriture : pas de transaction.
+    // Avec, transaction interactive : `creerEnLotVerifie` (ADR-051) lit le
+    // prestataire avant d'insérer ses pièces, dans la transaction.
+    if (remplacees.length === 0) {
+      await db.prestataire.update(modification);
+    } else {
+      await db.$transaction(async (tx) => {
+        await tx.prestataire.update(modification);
+        await creerEnLotVerifie(
+          tx,
+          "PiecePrestataire",
+          remplacees.map((r) => ({ prestataireId: existant.id, ...r })),
+        );
       });
-      await creerEnLotVerifie(
-        tx,
-        "PiecePrestataire",
-        remplacees.map((r) => ({ prestataireId: existant.id, ...r })),
-      );
-    });
+    }
   } catch (err) {
     await libererFichiers(depot.cles, "prestataires/modification");
     if (estSiretEnDouble(err)) return erreurSiret();

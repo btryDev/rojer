@@ -373,9 +373,9 @@ describe("finaliserOnboarding — filtre à l'accueil (2026-10-17)", () => {
 });
 
 describe("finaliserOnboarding — une création heurtée se rejoue une fois (2026-10-26)", () => {
-  it("rejoue après P2002 (même SIREN créé au même instant) ou P2003 (entreprise supprimée)", async () => {
+  it("rejoue après P2002 (même SIREN créé au même instant), P2003 ou P2025 (entreprise supprimée)", async () => {
     const { Prisma } = await import("@prisma/client");
-    for (const code of ["P2002", "P2003"]) {
+    for (const code of ["P2002", "P2003", "P2025"]) {
       h.tx.etablissement.create.mockClear();
       h.tx.etablissement.create.mockImplementationOnce(async () => {
         throw new Prisma.PrismaClientKnownRequestError("collision", { code, clientVersion: "test" });

@@ -45,7 +45,9 @@ class RefusEffectifEntreprise extends Error {}
  * Rejoue une fois une création heurtée par une transaction concurrente sur la
  * même entreprise : P2002, deux parcours ont créé le même SIREN au même
  * instant ; P2003, l'entreprise a été supprimée avec son dernier établissement pendant
- * qu'on y rattachait celui-ci (`supprimerEntrepriseSiVide`). Au second passage,
+ * qu'on y rattachait celui-ci (`supprimerEntrepriseSiVide`). Sous le client borné
+ * (ADR-051), la clé `entrepriseId` devient un `connect` : la même course lève
+ * alors P2025 (« nested connect »), repris de même. Au second passage,
  * l'`upsert` trouve l'entreprise, ou la recrée.
  */
 async function avecUneReprise<T>(creer: () => Promise<T>): Promise<T> {
@@ -54,7 +56,7 @@ async function avecUneReprise<T>(creer: () => Promise<T>): Promise<T> {
   } catch (e) {
     if (
       e instanceof Prisma.PrismaClientKnownRequestError &&
-      (e.code === "P2002" || e.code === "P2003")
+      (e.code === "P2002" || e.code === "P2003" || e.code === "P2025")
     ) {
       return creer();
     }

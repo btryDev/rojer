@@ -30,6 +30,8 @@ export async function creerEnLotVerifie(
   lignes: Ligne[],
   options: { skipDuplicates?: boolean } = {},
 ): Promise<{ count: number }> {
+  // Rien à insérer : ni lecture, ni transaction.
+  if (lignes.length === 0) return { count: 0 };
   // Hors transaction, la vérification et l'insertion partiraient chacune de
   // leur côté (mesuré le 2026-10-30) : on en ouvre une.
   if ("$transaction" in client && typeof client.$transaction === "function")

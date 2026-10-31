@@ -16,8 +16,10 @@ const h = vi.hoisted(() => {
         // interactive reçoit le même client simulé (depuis le 2026-10-30 : la
         // modification passe par `creerEnLotVerifie`, qui lit avant d'écrire).
         nom === "$transaction"
-          ? async (ops: Promise<unknown>[] | ((tx: unknown) => Promise<unknown>)) =>
-              typeof ops === "function" ? ops(prisma) : Promise.all(ops)
+          ? async (ops: Promise<unknown>[] | ((tx: unknown) => Promise<unknown>)) => {
+              appels.push({ op: "$transaction", args: null });
+              return typeof ops === "function" ? ops(prisma) : Promise.all(ops);
+            }
           : new Proxy(
           {},
           {
@@ -134,8 +136,10 @@ describe("modifierPrestataire", () => {
     expect(data.notesInternes).toBeNull();
     expect(data.kbisDateEmission).toBeNull();
     expect(data.attestationUrssafValableJusquA).toBeInstanceOf(Date);
-    // Aucune pièce jointe : les pièces en place ne sont pas touchées.
+    // Aucune pièce jointe : les pièces en place ne sont pas touchées, et la
+    // modification est une seule écriture, sans transaction.
     expect("attestationUrssafCle" in data).toBe(false);
+    expect(h.appels.map((a) => a.op).filter((op) => op !== "prestataire.findFirst")).toEqual(["prestataire.update"]);
     expect(h.stockage.liberes).toEqual([]);
   });
 
@@ -172,8 +176,7 @@ describe("modifierPrestataire", () => {
 
   it("une pièce jointe là où il n'y en avait pas n'inscrit rien", async () => {
     await modifierPrestataire("e1", "pre_1", { status: "idle" }, saisie({ kbis: pdf() }));
-    const [inscription] = ecritures("piecePrestataire.createMany");
-    expect((inscription.args as { data: unknown[] }).data).toEqual([]);
+    expect(ecritures("piecePrestataire.createMany")).toEqual([]);
   });
 
   it("reprend les validations de la création : une remise future est refusée sur son champ", async () => {
