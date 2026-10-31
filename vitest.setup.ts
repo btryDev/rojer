@@ -34,7 +34,7 @@ vi.mock("@/lib/auth/portee/client", async () => {
     clientBorne: (portee: { type: "compte"; userId: string }) =>
       clientBorneSimule(prisma as object, portee, argumentsBornes, "verifier"),
     // Le même client simulé, sur un autre client brut (serveur MCP stdio,
-    // `mcp/db.ts`).
+    // `sessionStdio`).
     clientBorneSur: (base: object, portee: { type: "compte"; userId: string }) =>
       clientBorneSimule(base, portee, argumentsBornes, "verifier"),
   };

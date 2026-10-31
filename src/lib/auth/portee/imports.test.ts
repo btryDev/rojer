@@ -71,10 +71,12 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous" }
 };
 /** Cliquet : importeurs du client brut encore à migrer vers requireCompte(). */
 const A_MIGRER = new Set<string>([]);
-const NOMMES_ROUAGES: Record<string, Record<string, string>> = {
+/** Un module nommé : son motif, ou `{ motif, typesSeuls: true }` s'il n'a droit qu'aux types. */
+type Nomme = string | { motif: string; typesSeuls: true };
+const NOMMES_ROUAGES: Record<string, Record<string, Nomme>> = {
   "src/lib/auth/portee/client": {
     "src/lib/auth/compte.ts": "requireCompte : la portée vient de la session",
-    "src/lib/auth/portee/lot-verifie.ts": "types du client et de la transaction (types seuls)",
+    "src/lib/auth/portee/lot-verifie.ts": { motif: "types du client et de la transaction", typesSeuls: true },
     "src/test/garde-simulee.ts": "tests seuls : le client simulé que rendent les gardes simulées",
     "src/lib/auth/compte-hors-session.ts": "accès sans session : la portée vient de la preuve vérifiée",
   },
@@ -136,7 +138,7 @@ it.each(Object.entries(NOMMES_ROUAGES))("les rouages %s ne s'importent que des m
 });
 
 /**
- * Un module nommé « (types seuls) » n'importe des rouages que des TYPES : la
+ * Un module nommé `typesSeuls` n'importe des rouages que des TYPES : la
  * garde ci-dessus est par module, pas par symbole — sans celle-ci, un module
  * nommé pour un type pourrait appeler `clientBorne({ userId: … })` librement
  * (seconde lecture de #145).
@@ -159,7 +161,7 @@ function importsDeValeur(f: string, c: string): string[] {
 }
 const TYPES_SEULS = Object.entries(NOMMES_ROUAGES).flatMap(([c, nommes]) =>
   Object.entries(nommes)
-    .filter(([, motif]) => motif.endsWith("(types seuls)"))
+    .filter(([, nomme]) => typeof nomme !== "string" && nomme.typesSeuls)
     .map(([f]) => [f, c] as const),
 );
 it("sessionStdio ne sert que le serveur stdio (scripts/mcp-server.ts) : aucun module de src ne l'emploie", () => {
@@ -170,7 +172,7 @@ it("sessionStdio ne sert que le serveur stdio (scripts/mcp-server.ts) : aucun mo
     .map(([f]) => f);
   expect(emploient).toEqual([]);
 });
-it("les modules nommés « (types seuls) » existent", () => {
+it("les modules nommés `typesSeuls` existent", () => {
   expect(TYPES_SEULS.length).toBeGreaterThan(0);
 });
 it.each(TYPES_SEULS)("%s n'importe de %s que des types", (f, c) => {
