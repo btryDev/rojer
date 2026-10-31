@@ -45,14 +45,17 @@ vi.mock("@/lib/securite/limite-debit", async (original) => ({
 // Le client des lectures : le client borné simulé (`vitest.setup.ts`) sur le
 // faux Prisma, rendu tant que l'établissement existe (`./db.ts` : un
 // établissement disparu rend `null`, dit « introuvable »).
+const { portees } = vi.hoisted(() => ({ portees: [] as { etablissementId: string; userId?: string }[] }));
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
 vi.mock("./db", async () => {
   const { clientDuCompteSimule } = await import("@/test/garde-simulee");
   return {
-    clientMcp: async (id: string) =>
-      (await prismaMock.etablissement.findUnique({ where: { id }, select: { id: true } }))
-        ? clientDuCompteSimule()
-        : null,
+    clientMcp: async (scope: { etablissementId: string; userId?: string }) => {
+      portees.push(scope);
+      return (await prismaMock.etablissement.findUnique({ where: { id: scope.etablissementId }, select: { id: true } }))
+        ? clientDuCompteSimule(scope.userId)
+        : null;
+    },
   };
 });
 vi.mock("./acces-oauth-deps", () => ({
@@ -262,6 +265,9 @@ describe("service", () => {
     expect(prismaMock.etablissement.findUnique).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: ETAB } }),
     );
+    // Le client des lectures est borné au compte du JETON (ADR-051), pas à un
+    // propriétaire déduit de l'établissement.
+    expect(portees.at(-1)).toEqual({ etablissementId: ETAB, userId: SUB });
   });
 
   it("n'expose aucun champ où désigner un autre établissement", async () => {

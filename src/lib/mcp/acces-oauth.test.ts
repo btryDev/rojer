@@ -185,7 +185,7 @@ describe("resoudreScopeDepuisJeton", () => {
     const d = deps();
     await expect(
       resoudreScopeDepuisJeton(requete("Bearer jeton"), d),
-    ).resolves.toEqual({ statut: "ok", scope: { etablissementId: ETAB } });
+    ).resolves.toEqual({ statut: "ok", scope: { etablissementId: ETAB, userId: SUB } });
     expect(d.chercherEtablissement).toHaveBeenCalledWith(SUB);
   });
 
@@ -272,7 +272,7 @@ describe("le porteur de plusieurs établissements les désigne lui-même", () =>
         requete("Bearer jeton", `https://rojer.fr/api/mcp?etablissement=${AUTRE}`),
         d,
       ),
-    ).resolves.toEqual({ statut: "ok", scope: { etablissementId: AUTRE } });
+    ).resolves.toEqual({ statut: "ok", scope: { etablissementId: AUTRE, userId: SUB } });
   });
 
   it("ne sert jamais un établissement que le porteur ne possède pas", async () => {

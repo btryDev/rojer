@@ -74,8 +74,9 @@ export function clientBorne(portee: Portee): ClientBorne {
  * Le même client borné, construit sur un AUTRE client brut que celui de
  * l'application : le serveur MCP stdio, dont la sortie standard appartient au
  * protocole, a son propre client sans journal sur stdout (`mcp/prisma.ts`).
- * Pas de cache : un processus stdio sert un seul compte. Réservé à
- * `mcp/db.ts` (`portee/imports.test.ts`).
+ * Pas de cache ici : `mcp/db.ts` garde le client de la session stdio, qui ne
+ * sert qu'un établissement. Réservé à `auth/compte-hors-session.ts`
+ * (`portee/imports.test.ts`).
  */
 export function clientBorneSur(base: PrismaClient, portee: Portee): ClientBorne {
   if (portee?.type !== "compte" || typeof portee.userId !== "string" || portee.userId.length === 0)

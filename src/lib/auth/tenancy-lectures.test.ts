@@ -325,6 +325,11 @@ describe("les lectures exportées et les server actions qui ne font que lire", (
     expect(borneeParConstruction(lib("rapports/queries.ts"), "getRapport", LECTURE)).toBe(false);
     const exposees = fonctionsExposees();
     expect(exposees).toContain("lib/calendrier/passe.ts:lireEntrees");
+    // [2026-10-31] `marquesAConfirmerDuDossier` n'est plus exposée : son seul
+    // appelant au client brut était le MCP, qui passe le client borné. Les
+    // lectures MCP elles-mêmes sont bornées par construction.
+    expect(exposees).not.toContain("lib/etablissements/marques-a-confirmer.ts:marquesAConfirmerDuDossier");
+    expect(borneeParConstruction(lib("mcp/queries.ts"), "getEtatDuerp", LECTURE)).toBe(true);
     expect(exposees).not.toContain("lib/controle/queries.ts:versionsDuDuerpDuDossier");
   });
 });

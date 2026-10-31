@@ -118,8 +118,14 @@ export class ErreurOutilMcp extends Error {
 export const MESSAGE_ETABLISSEMENT_INTROUVABLE =
   "Établissement introuvable pour ce connecteur : son dossier ne peut pas être lu, et rien n'est à conclure de son contenu.";
 
-/** Portée de la session : l'établissement que le serveur a le droit de lire. */
-export type ScopeMcp = { etablissementId: string };
+/**
+ * Portée de la session : l'établissement que le serveur a le droit de lire,
+ * et, pour un porteur OAuth, le compte de son jeton vérifié (`userId`) — le
+ * client borné l'est alors à CE compte, et non au propriétaire déduit de
+ * l'établissement (ADR-051 ; revue du 2026-10-31). Clé et stdio n'ont pas
+ * d'identité : le compte y est celui du propriétaire de l'établissement.
+ */
+export type ScopeMcp = { etablissementId: string; userId?: string };
 
 export type ContexteMcp = {
   scope: ScopeMcp;
@@ -136,7 +142,7 @@ export type ContexteMcp = {
  * ou sans propriétaire se dit comme un établissement introuvable.
  */
 export async function contexteMcp(scope: ScopeMcp, now: Date): Promise<ContexteMcp> {
-  const db = await clientMcp(scope.etablissementId);
+  const db = await clientMcp(scope);
   if (!db) throw new ErreurOutilMcp(MESSAGE_ETABLISSEMENT_INTROUVABLE);
   return { scope, now, db };
 }

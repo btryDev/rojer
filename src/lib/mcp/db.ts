@@ -1,44 +1,42 @@
 import "server-only";
-// Le client des lectures MCP : le client borné au compte (ADR-051) qui
-// possède l'établissement servi. La portée d'une session MCP est un
-// établissement (variable de configuration pour la clé et le stdio, choix du
-// porteur pour OAuth) ; le compte est celui de son propriétaire, lu en base —
-// jamais fourni par le client MCP, dont aucun schéma d'entrée ne porte
+// Le client des lectures MCP : le client borné au compte (ADR-051).
+//   - Porteur OAuth : le compte de son JETON VÉRIFIÉ (`scope.userId`), jamais
+//     un compte déduit de l'établissement demandé — si une régression laissait
+//     passer l'établissement d'un autre compte, ce client ne le lirait pas.
+//   - Clé et stdio, sans identité : le compte du propriétaire de
+//     l'établissement servi, fixé par la configuration.
+// Le client MCP n'en désigne aucun : aucun schéma d'entrée ne porte
 // d'identifiant.
 //
 // LA BORNE DE COMPTE S'AJOUTE À LA PORTÉE D'ÉTABLISSEMENT, ELLE NE LA
 // REMPLACE PAS (seconde lecture du 2026-10-31) : chaque lecture de
 // `./queries.ts` garde son `where: { etablissementId }`.
 //
-// DEUX CLIENTS DE BASE (audit Next.js du 2026-10-14, M5) :
-//   - dans le processus web, le client de l'application, par
-//     `clientDuProprietaire` (`auth/compte-hors-session.ts`) — un seul pool ;
-//   - dans le serveur stdio, et lui seul, `prismaMcp` (`./prisma`), qui
-//     n'écrit rien sur stdout (la sortie appartient au protocole). Le script
-//     le substitue au démarrage par `utiliserClientMcp`, et le client borné
-//     est construit dessus (`clientBorneSur`).
+// DEUX CLIENTS DE BASE (audit Next.js du 2026-10-14, M5) : dans le processus
+// web, celui de l'application — un seul pool ; dans le serveur stdio, et lui
+// seul, `prismaMcp` (`./prisma`), qui n'écrit rien sur stdout. Le script le
+// substitue au démarrage (`utiliserClientMcp`) ; le client borné, construit
+// dessus, est gardé pour la session : un processus stdio sert un seul
+// établissement.
 
 import type { PrismaClient } from "@prisma/client";
-import { clientDuProprietaire } from "@/lib/auth/compte-hors-session";
-import { clientBorneSur, type ClientBorne } from "@/lib/auth/portee/client";
+import { clientDuCompteVerifie, clientDuProprietaire } from "@/lib/auth/compte-hors-session";
+import type { ClientBorne } from "@/lib/auth/portee/client";
+import type { ScopeMcp } from "./tools";
 
 let baseStdio: PrismaClient | null = null;
+let clientStdio: Promise<ClientBorne | null> | null = null;
 
-/** Réservé au serveur stdio : le client brut sur lequel borner. */
-export function utiliserClientMcp(c: PrismaClient): void {
+/** Réservé au serveur stdio : le client brut sur lequel borner (`null` : retour au client de l'application). */
+export function utiliserClientMcp(c: PrismaClient | null): void {
   baseStdio = c;
+  clientStdio = null;
 }
 
-/**
- * Le client borné au compte propriétaire de l'établissement servi ; `null`
- * si l'établissement a disparu ou n'a pas de propriétaire.
- */
-export async function clientMcp(etablissementId: string): Promise<ClientBorne | null> {
-  if (!baseStdio) return clientDuProprietaire(etablissementId);
-  const etab = await baseStdio.etablissement.findUnique({
-    where: { id: etablissementId },
-    select: { entreprise: { select: { userId: true } } },
-  });
-  const userId = etab?.entreprise.userId;
-  return userId ? clientBorneSur(baseStdio, { type: "compte", userId }) : null;
+/** Le client borné de la session ; `null` si l'établissement a disparu ou n'a pas de propriétaire. */
+export async function clientMcp(scope: ScopeMcp): Promise<ClientBorne | null> {
+  if (scope.userId) return clientDuCompteVerifie(scope.userId);
+  if (!baseStdio) return clientDuProprietaire(scope.etablissementId);
+  clientStdio ??= clientDuProprietaire(scope.etablissementId, baseStdio);
+  return clientStdio;
 }

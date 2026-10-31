@@ -249,14 +249,14 @@ export async function resoudreScopeDepuisJeton(
   if (designe) {
     const cible = etablissements.find((e) => e.id === designe);
     return cible
-      ? { statut: "ok", scope: { etablissementId: cible.id } }
+      ? { statut: "ok", scope: { etablissementId: cible.id, userId: sub } }
       : { statut: "choix_requis", etablissements };
   }
 
   // Un seul établissement : il n'y a rien à désambiguïser, et exiger un
   // paramètre casserait tous les connecteurs déjà configurés.
   if (etablissements.length === 1) {
-    return { statut: "ok", scope: { etablissementId: etablissements[0].id } };
+    return { statut: "ok", scope: { etablissementId: etablissements[0].id, userId: sub } };
   }
 
   return { statut: "choix_requis", etablissements };

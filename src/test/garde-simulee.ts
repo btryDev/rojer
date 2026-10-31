@@ -28,5 +28,9 @@ export function compteHorsSessionSimule(
       const userId = options.proprietaire ? options.proprietaire() : "user-1";
       return userId === null ? null : clientDuCompteSimule(userId);
     },
+    clientDuCompteVerifie: (userId: string) => {
+      options.journal?.push(`compte:${userId}`);
+      return clientDuCompteSimule(userId);
+    },
   };
 }

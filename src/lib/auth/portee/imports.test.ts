@@ -82,7 +82,7 @@ const NOMMES_ROUAGES: Record<string, Record<string, string>> = {
     "src/lib/auth/portee/lot-verifie.ts": "types du client et de la transaction",
     "src/test/garde-simulee.ts": "tests seuls : le client simulé que rendent les gardes simulées",
     "src/lib/auth/compte-hors-session.ts": "accès sans session : la portée vient de la preuve vérifiée",
-    "src/lib/mcp/db.ts": "serveur stdio : client borné construit sur le client MCP (clientBorneSur)",
+    "src/lib/mcp/db.ts": "le type ClientBorne du client des lectures MCP",
   },
   "src/lib/auth/portee/borne": {
     "src/lib/auth/portee/client.ts": "l'extension",
