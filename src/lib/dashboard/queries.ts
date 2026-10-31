@@ -555,8 +555,7 @@ export async function getModulesMatrice(
     // « échu » un permis qui court encore jusqu'à ce soir.
     comptesModulesDuRendu(etablissementId, debutDuJour(now).getTime()),
     prestatairesDuRendu(etablissementId),
-    // Module encore au client brut (À MIGRER) : le prédicat lui est passé.
-    eauChaudeSuivieParLeCalendrier({
+    eauChaudeSuivieParLeCalendrier(db, {
       etablissementId,
       etablissement: { entreprise: { userId: user.id } },
     }),
@@ -833,7 +832,7 @@ export const getDashboardData = cache(async function getDashboardData(
     // que de `etablissementId` et `user.id`, tous deux disponibles avant.
     // Placé après, il ajoutait trois requêtes sérialisées derrière tout le
     // reste du tableau de bord (ADR-024).
-    chargerTransmissions(etablissementId, user.id, now),
+    chargerTransmissions(db, etablissementId, user.id, now),
     // Le même nombre que la carte du tableau de bord, lu une fois par rendu.
     compterRapportsDuDossier(etablissementId),
     // Le score ne peut pas conclure « satisfaisante » en ignorant ce que
@@ -841,7 +840,7 @@ export const getDashboardData = cache(async function getDashboardData(
     // personnes sortait à 100 avec treize états non renseignés. Lu par la même
     // entrée que cet écran — deux comptes finiraient par diverger, et c'est le
     // chiffre du tableau de bord qui porterait la version fausse.
-    compterEtatsPermanents(etablissementId, user.id),
+    compterEtatsPermanents(db, etablissementId, user.id),
     // Les rapports RÉALISÉS de la fenêtre, comptés en base : les cartes
     // « Rapports 12 m » parlent de pièces déposées, pas de lignes couvertes,
     // et depuis l'ADR-034 les deux ne coïncident plus.

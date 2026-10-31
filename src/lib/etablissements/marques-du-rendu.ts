@@ -6,7 +6,7 @@
 // tableau de bord aurait noué les deux modules. Serveur seulement.
 
 import { cache } from "react";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireCompte } from "@/lib/auth/compte";
 import {
   marquesDepuisApplicables,
   type MarquesDuDossier,
@@ -25,13 +25,14 @@ export const marquesAConfirmerDuRendu = cache(
   async function marquesAConfirmerDuRendu(
     etablissementId: string,
   ): Promise<MarquesDuDossier> {
-    const user = await requireUser();
+    const { user, db } = await requireCompte();
     // [2026-10-14, audit Next.js H2] Le passage du moteur est celui que le
     // rendu partage avec les transmissions, les états permanents et la
     // couverture (`dossier-du-rendu.ts`) : même établissement, même parc en
     // service, même prédicat d'appartenance que `marquesAConfirmerDuDossier`,
     // qui reste la porte du MCP et des routes hors rendu.
     const dossier = await obligationsApplicablesDuDossier(
+      db,
       etablissementId,
       user.id,
     );

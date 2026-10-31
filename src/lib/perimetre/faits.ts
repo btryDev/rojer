@@ -66,7 +66,7 @@ export async function faitsDeCouverture(
   // chacune porte la portée au compte dans sa requête, aucune n'attend que
   // l'établissement ait été établi pour s'y borner.
   const [etab, duerp, unites, nbRetires] = await Promise.all([
-    chargerEtablissementEtParc(etablissementId, user.id),
+    chargerEtablissementEtParc(db, etablissementId, user.id),
     // Le DUERP du rendu, partagé avec le tableau de bord et la barre latérale.
     duerpDuRenduDuCompte(db, etablissementId, user.id),
     // Ses unités, que la couverture seule lit. « 1 établissement = 1 DUERP »
