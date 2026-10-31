@@ -24,21 +24,26 @@ import { clientDuCompteVerifie, clientDuProprietaire } from "@/lib/auth/compte-h
 import type { ClientBorne } from "@/lib/auth/portee/client";
 import type { ScopeMcp } from "./tools";
 
-let clientStdio: ClientBorne | null = null;
+/** Le client de la session stdio, et l'établissement pour lequel il a été construit. */
+let stdio: { etablissementId: string; client: ClientBorne } | null = null;
 
 /** Serveur stdio, au démarrage. `false` si l'établissement a disparu ou n'a pas de propriétaire. */
 export async function demarrerStdio(base: PrismaClient, etablissementId: string): Promise<boolean> {
-  clientStdio = await clientDuProprietaire(etablissementId, base);
-  return clientStdio !== null;
+  const client = await clientDuProprietaire(etablissementId, base);
+  stdio = client ? { etablissementId, client } : null;
+  return stdio !== null;
 }
 
 /** Retour au processus web (tests). */
 export function arreterStdio(): void {
-  clientStdio = null;
+  stdio = null;
 }
 
 /** Le client borné de la session ; `null` si l'établissement a disparu ou n'a pas de propriétaire. */
 export async function clientMcp(scope: ScopeMcp): Promise<ClientBorne | null> {
   if (scope.userId) return clientDuCompteVerifie(scope.userId);
-  return clientStdio ?? clientDuProprietaire(scope.etablissementId);
+  if (!stdio) return clientDuProprietaire(scope.etablissementId);
+  // Le client de la session ne sert QUE l'établissement pour lequel il a été
+  // construit (revue de sécurité du 2026-10-31) : tout autre est introuvable.
+  return scope.etablissementId === stdio.etablissementId ? stdio.client : null;
 }

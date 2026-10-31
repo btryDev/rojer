@@ -70,6 +70,13 @@ describe("clientMcp", () => {
     expect(h.lecturesApp).toBe(0);
   });
 
+  it("stdio : le client de la session ne sert pas un autre établissement", async () => {
+    const base = { etablissement: { findUnique: async () => ({ entreprise: { userId: "user-9" } }) } };
+    expect(await demarrerStdio(base as never, "etab-1")).toBe(true);
+    expect(await clientMcp({ etablissementId: "etab-2" })).toBeNull();
+    expect(h.lecturesApp).toBe(0);
+  });
+
   it("stdio : un établissement inconnu ou sans propriétaire ne démarre pas", async () => {
     expect(await demarrerStdio({ etablissement: { findUnique: async () => null } } as never, "inconnu")).toBe(false);
   });
