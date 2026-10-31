@@ -38,6 +38,7 @@ const { validerSiCoSigne } = await import("./statut-objet");
 const { objetAppartientAEtablissement } = await import("./appartenance");
 const { libelleDocumentSignable } = await import("./libelle-document");
 const { listSignatures } = await import("./queries");
+const { objetEstSignable } = await import("./etat-signable");
 
 const E1 = "etab-1";
 const E2 = "etab-2-meme-compte";
@@ -161,5 +162,18 @@ describe("signatures d'un objet (listSignatures)", () => {
     );
     const lues = await listSignatures(db, E1, "plan_prevention", ID);
     expect(lues.map((s) => s.etablissementId)).toEqual([E1]);
+  });
+});
+
+describe("état signable (objetEstSignable)", () => {
+  it.each([
+    ["plan_prevention", "planPrevention", plan],
+    ["permis_feu", "permisFeu", permis],
+  ] as const)("%s : l'état lu est celui de E1, pas d'un homonyme ouvert dans E2", async (type, modele, ligne) => {
+    base[modele].lignes.push(ligne(E2), ligne(E1, "annule"));
+    expect(await objetEstSignable(db, type, ID, E1)).toBe(false);
+    // Contrôle positif : l'objet de E1 ouvert se signe.
+    base[modele].lignes[1].statut = "attente_signatures";
+    expect(await objetEstSignable(db, type, ID, E1)).toBe(true);
   });
 });

@@ -408,6 +408,30 @@ async function signer() {
   return poserSignatureAvecToken(JETON_CLAIR, { status: "idle" }, fd);
 }
 
+describe("relecture du jeton non consommé : celle de l'établissement du jeton", () => {
+  it("un lien révoqué pendant la pose le dit, même devant un homonyme d'un autre établissement", async () => {
+    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
+    const lien = lienValide("plan_prevention", "pp-1");
+    // Même identifiant, autre établissement, placé en premier : une relecture
+    // qui oublierait l'établissement le trouverait et dirait « déjà servi ».
+    prismaMock.accessToken.lignes.push({ ...lien, etablissementId: "etab-autre", tokenHash: "autre" }, lien);
+    const reserver = prismaMock.accessToken.updateMany.getMockImplementation()!;
+    prismaMock.accessToken.updateMany.mockImplementation(async (a: { where: Ligne; data: Ligne }) => {
+      // La consommation arrive après une révocation concurrente : elle échoue.
+      if ("utiliseLe" in a.data) {
+        lien.revoqueLe = new Date();
+        lien.revoqueMotif = "Contenu modifié";
+        return { count: 0 };
+      }
+      // La réservation d'essai vise le seul lien réel (l'homonyme est fictif).
+      return reserver({ ...a, where: { ...a.where, etablissementId: "etab-a-moi" } });
+    });
+
+    expect(await signer()).toEqual({ status: "error", message: "Ce lien a été révoqué : Contenu modifié" });
+    expect(prismaMock.signature.create).not.toHaveBeenCalled();
+  });
+});
+
 describe("lien dont l'établissement n'a plus de propriétaire", () => {
   it("refuse comme un lien invalide, sans consommer d'essai ni rien écrire", async () => {
     proprietaire.userId = null;
