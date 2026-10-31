@@ -1,9 +1,8 @@
 "use server";
 
-import { notFound } from "next/navigation";
-
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
+import { notFound } from "next/navigation";
 import type { Db } from "@/lib/auth/compte";
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { resoudreBatimentOptionnel } from "@/lib/batiments/queries";

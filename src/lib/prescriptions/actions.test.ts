@@ -27,6 +27,7 @@ const h = vi.hoisted(() => {
       findFirst: vi.fn(async () => etat.prescription),
       delete: vi.fn(async () => ({})),
       update: vi.fn(async () => ({})),
+      updateMany: vi.fn(async () => ({ count: etat.prescription ? 1 : 0 })),
     },
     verification: {
       findMany: vi.fn(async () => etat.lignes),
@@ -375,21 +376,23 @@ describe("supprimerPrescription", () => {
   });
 });
 
-// Une prescription étrangère ou disparue est introuvable (404), jamais une
-// erreur serveur : la lecture bornée précède l'écriture (relevé du 2026-10-31).
+// Une prescription étrangère ou disparue rend le message de ses sœurs, jamais
+// une erreur serveur ; l'écriture est bornée à l'établissement (relevé du
+// 2026-10-31).
 describe("reactiverPrescription : identifiant étranger ou disparu", () => {
-  it("404 sans rien écrire", async () => {
+  it("message « introuvable », sans erreur serveur", async () => {
     h.etat.prescription = null;
-    h.prisma.prescriptionParticuliere.update.mockClear();
-    await expect(reactiverPrescription("e1", "presc_d_un_autre")).rejects.toThrow(/NEXT_HTTP_ERROR_FALLBACK;404/);
-    expect(h.prisma.prescriptionParticuliere.update).not.toHaveBeenCalled();
+    expect(await reactiverPrescription("e1", "presc_d_un_autre")).toEqual({
+      status: "error",
+      message: "Prescription introuvable.",
+    });
   });
 
-  it("contrôle positif : la sienne se réactive", async () => {
+  it("l'écriture porte l'établissement, et la sienne se réactive", async () => {
     h.etat.prescription = { id: "presc_1" };
-    h.prisma.prescriptionParticuliere.update.mockClear();
-    await reactiverPrescription("e1", "presc_1");
-    expect(h.prisma.prescriptionParticuliere.update).toHaveBeenCalledWith(
+    h.prisma.prescriptionParticuliere.updateMany.mockClear();
+    expect(await reactiverPrescription("e1", "presc_1")).toEqual({ status: "success", prescriptionId: "presc_1" });
+    expect(h.prisma.prescriptionParticuliere.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: "presc_1", etablissementId: "e1" } }),
     );
   });

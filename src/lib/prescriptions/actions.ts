@@ -1,7 +1,5 @@
 "use server";
 
-import { notFound } from "next/navigation";
-
 import { revalidatePath } from "next/cache";
 import type { Prisma } from "@prisma/client";
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
@@ -167,23 +165,22 @@ export async function leverPrescription(
 export async function reactiverPrescription(
   etablissementId: string,
   prescriptionId: string,
-): Promise<void> {
+): Promise<PrescriptionActionState> {
   const { db } = await assertEtablissementDuCompte(etablissementId);
-  // Lue d'abord, bornée à l'établissement : une prescription étrangère ou
-  // disparue est introuvable (404), jamais une erreur serveur — `update` sur
-  // une ligne absente lève P2025 (relevé du 2026-10-31, isolation).
-  const existante = await db.prescriptionParticuliere.findFirst({
+  // Une seule écriture conditionnelle, bornée à l'établissement : une
+  // prescription étrangère ou disparue rend le message de ses sœurs (lever,
+  // supprimer), jamais une erreur serveur — un `update` sur une ligne absente
+  // levait P2025 (relevé du 2026-10-31, isolation) — et sans course entre une
+  // lecture et l'écriture.
+  const { count } = await db.prescriptionParticuliere.updateMany({
     where: { id: prescriptionId, etablissementId },
-    select: { id: true },
-  });
-  if (!existante) notFound();
-  await db.prescriptionParticuliere.update({
-    where: { id: existante.id, etablissementId },
     data: { dateFin: null, actif: true },
   });
+  if (count === 0) return { status: "error", message: "Prescription introuvable." };
   await regenererApresMutation(etablissementId, "prescriptions");
   revalidatePath(`/etablissements/${etablissementId}/prescriptions`);
   revalidatePath(`/etablissements/${etablissementId}/calendrier`);
+  return { status: "success", prescriptionId };
 }
 
 /**

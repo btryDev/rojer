@@ -201,25 +201,26 @@ describe("modifierAnalyseLegionelle / supprimerAnalyseLegionelle", () => {
 describe("identifiant étranger ou disparu : 404, jamais une erreur serveur", () => {
   const INTROUVABLE = /NEXT_HTTP_ERROR_FALLBACK;404/;
 
-  it("retirer un point de relevé", async () => {
+  it("retirer un point de relevé : écriture bornée au carnet de l'établissement", async () => {
     h.reponses["pointReleve.updateMany"] = () => ({ count: 0 });
     await expect(supprimerPointReleve("e1", "point_d_un_autre")).rejects.toThrow(INTROUVABLE);
-    delete h.reponses["pointReleve.updateMany"];
+    expect(h.appels.find((a) => a.op === "pointReleve.updateMany")?.args).toMatchObject({
+      where: { id: "point_d_un_autre", carnet: { etablissementId: "e1" } },
+    });
   });
 
-  it("supprimer un relevé", async () => {
+  it("supprimer un relevé : suppression bornée au carnet de l'établissement", async () => {
     h.reponses["releveTemperature.deleteMany"] = () => ({ count: 0 });
     await expect(supprimerReleve("e1", "releve_d_un_autre")).rejects.toThrow(INTROUVABLE);
-    delete h.reponses["releveTemperature.deleteMany"];
+    expect(h.appels.find((a) => a.op === "releveTemperature.deleteMany")?.args).toMatchObject({
+      where: { id: "releve_d_un_autre", pointReleve: { carnet: { etablissementId: "e1" } } },
+    });
   });
 
   it("supprimer une analyse : ni suppression, ni fichier libéré", async () => {
     h.reponses["analyseLegionelle.findFirst"] = () => null;
-    h.appels.length = 0;
-    h.stockage.liberes.length = 0;
     await expect(supprimerAnalyseLegionelle("e1", "analyse_d_un_autre")).rejects.toThrow(INTROUVABLE);
     expect(h.appels.map((a) => a.op)).not.toContain("analyseLegionelle.delete");
     expect(h.stockage.liberes).toEqual([]);
-    delete h.reponses["analyseLegionelle.findFirst"];
   });
 });

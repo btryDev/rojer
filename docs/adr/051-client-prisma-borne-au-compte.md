@@ -315,9 +315,15 @@ son `count`, `upsert`, identifiants issus d'une lecture) pour une page
 d'erreur. Exemple de ce que la revue attrape : `reactiverPrescription` faisait
 un `update` direct sur l'identifiant reçu — `tenancy-ecritures` l'acceptait
 (appartenance établie par la garde), la réponse était une 500 ; corrigé par
-une lecture bornée et `notFound()` (de même pour trois `throw new Error` du
-carnet sanitaire). Une course entre la lecture et l'écriture reste une 500,
-rare et sans indice d'existence (option C, seconde lecture du 2026-10-31).
+une écriture conditionnelle bornée (`updateMany` + `count`), qui rend le
+message « Prescription introuvable. » de ses sœurs, sans course. Les trois
+`throw new Error` du carnet sanitaire deviennent `notFound()` : la réponse est
+une 404, et le bouton (`BoutonRetirer`) affiche son message « Introuvable :
+la page n'était plus à jour ». Ailleurs, une course entre la lecture et
+l'écriture reste une 500, rare et sans indice d'existence (option C, seconde
+lecture du 2026-10-31). Une 404 d'action ne passe pas par `onRequestError` :
+un identifiant étranger essayé n'est pas journalisé, comme pour toutes les
+gardes de `scope.ts` — accepté, rien n'est lu ni écrit.
 
 `ErreurPortee` reste une 500 voulue : c'est une forme refusée par la borne, un
 défaut du code, jamais une entrée utilisateur. `onRequestError`

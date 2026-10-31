@@ -131,7 +131,7 @@ export function PrescriptionActions({
             disabled={pendingAutre}
             onClick={() =>
               startTransition(async () => {
-                await reactiverPrescription(etablissementId, prescriptionId);
+                setEtatSuppr(await reactiverPrescription(etablissementId, prescriptionId));
               })
             }
           >
