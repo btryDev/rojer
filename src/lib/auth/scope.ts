@@ -229,8 +229,14 @@ export async function requirePiecePrestataire(pieceId: string, prestataireId: st
  * LE PRÉDICAT EST OBLIGATOIRE, ET C'EST LE HELPER QUI EXÉCUTE (revue du
  * 2026-10-31) : l'extension du client borné NE borne PAS le SQL brut, le
  * prédicat est la seule borne de la requête. Le gabarit le reçoit, et une
- * requête qui ne le contient pas est refusée avant d'être envoyée — rendre le
- * client à l'appelant aurait permis d'écrire la requête sans lui.
+ * requête où il n'apparaît pas — son texte ET la valeur du compte — est
+ * refusée avant d'être envoyée ; rendre le client à l'appelant aurait permis
+ * d'écrire la requête sans lui.
+ *
+ * LIMITE : le contrôle vérifie la PRÉSENCE du prédicat, pas sa CONJONCTION.
+ * `… = ${id} OR ${proprietaire}`, ou une sous-requête parmi d'autres qui
+ * l'omet, passeraient. Cela, la revue le tient (ADR-051 § 5) : le helper ne
+ * lit pas le SQL.
  *
  *   requireLectureSqlProprietaire<{ annee: number }>('r."etablissementId"', (proprietaire) =>
  *     Prisma.sql`SELECT … FROM "RapportVerification" r WHERE ${proprietaire}`);

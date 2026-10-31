@@ -94,7 +94,9 @@ autre compte.
    tout autre SQL brut figure nommément dans `SQL_BRUT_NOMMES`
    (`portee/imports.test.ts`) avec ce qui borne sa requête (verrous
    `FOR UPDATE` après une lecture bornée, limitation de débit, `UPDATE` jsonb
-   d'une ligne gardée) ; jamais de forme `Unsafe`.]
+   d'une ligne gardée) ; jamais de forme `Unsafe`. Le refus vérifie la
+   PRÉSENCE du prédicat (texte et valeur), pas sa CONJONCTION : un `OR`, ou
+   une sous-requête qui l'omet, est tenu par la revue.]
 6. **Aucun DDL hors des migrations** : une garde refuse `CREATE`, `ALTER`,
    `DROP`, `GRANT`, `REVOKE`, `TRUNCATE` dans un gabarit SQL du code (point
    0.13 du plan de bascule).

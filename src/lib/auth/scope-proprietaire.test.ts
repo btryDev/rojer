@@ -188,6 +188,24 @@ describe("requireLectureSqlProprietaire (lecture SQL brute bornée au propriéta
     expect(h.etat.requetesSql).toEqual([]);
   });
 
+  it("refuse le texte du prédicat sans sa valeur (prédicat recopié en dur)", async () => {
+    h.etat.requetesSql.length = 0;
+    h.requireUser.mockResolvedValue({ id: PROPRIETAIRE });
+    await expect(
+      scope.requireLectureSqlProprietaire('r."etablissementId"', (p) => Prisma.sql`SELECT 1 WHERE ${Prisma.raw(p.sql)}`),
+    ).rejects.toThrow(/sans le prédicat propriétaire/);
+    expect(h.etat.requetesSql).toEqual([]);
+  });
+
+  it("refuse la valeur sans le texte du prédicat (identifiant du compte ailleurs)", async () => {
+    h.etat.requetesSql.length = 0;
+    h.requireUser.mockResolvedValue({ id: PROPRIETAIRE });
+    await expect(
+      scope.requireLectureSqlProprietaire('r."etablissementId"', () => Prisma.sql`SELECT 1 FROM "RapportVerification" r WHERE r."x" = ${PROPRIETAIRE}`),
+    ).rejects.toThrow(/sans le prédicat propriétaire/);
+    expect(h.etat.requetesSql).toEqual([]);
+  });
+
   it("refuse ce qui ne serait pas une colonne SQL", async () => {
     h.requireUser.mockResolvedValue({ id: PROPRIETAIRE });
     await expect(
