@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { clientDuProprietaire } from "@/lib/auth/compte-hors-session";
 import { notFound } from "next/navigation";
 import { verifierAccessToken } from "@/lib/access-tokens/verify";
 import { WhyCard } from "@/components/ui-kit/WhyCard";
@@ -66,13 +67,20 @@ export default async function AccesParTokenPage({
 
   const t = res.token;
 
+  // Le client borné au compte propriétaire de l'établissement DU JETON
+  // (ADR-051). Il s'ajoute aux contrôles du jeton : chaque lecture ci-dessous
+  // reste bornée à `t.etablissementId`.
+  const db = await clientDuProprietaire(t.etablissementId);
+  if (!db) notFound();
+
   // Récupération du contexte métier pour affichage (qui signe quoi).
-  const etablissement = await etablissementDuJeton(t.etablissementId);
+  const etablissement = await etablissementDuJeton(db, t.etablissementId);
   if (!etablissement) notFound();
 
   // Lecture bornée à l'établissement DU JETON : c'est par une lecture non
   // bornée que cette page a déjà laissé fuir le rapport d'un autre client.
   const contenu = await contenuASigner(
+    db,
     t.objetType,
     t.objetId,
     t.etablissementId,
@@ -84,7 +92,7 @@ export default async function AccesParTokenPage({
   // l'établissement du jeton, comme toute lecture de cette page.
   if (
     t.scope === "signature" &&
-    !(await objetEstSignable(t.objetType, t.objetId, t.etablissementId))
+    !(await objetEstSignable(db, t.objetType, t.objetId, t.etablissementId))
   ) {
     return (
       <main className="mx-auto max-w-xl px-6 py-16 sm:px-10">

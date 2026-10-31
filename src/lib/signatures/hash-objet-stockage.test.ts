@@ -13,6 +13,7 @@ vi.mock("@/lib/prisma", () => ({
 
 import { __oublierPiloteStockage } from "@/lib/storage";
 import { calculerHashObjet } from "./hash-objet";
+import { clientDuCompteSimule } from "@/test/garde-simulee";
 
 beforeEach(() => __oublierPiloteStockage());
 afterEach(() => {
@@ -24,7 +25,7 @@ describe("empreinte d'un rapport à signer, selon le stockage", () => {
   it("stockage non configuré : sa propre raison", async () => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("STORAGE_DRIVER", "local");
-    expect(await calculerHashObjet("rapport_verification", "r1", "e1")).toEqual({
+    expect(await calculerHashObjet(await clientDuCompteSimule(), "rapport_verification", "r1", "e1")).toEqual({
       ok: false,
       raison: "stockage_non_configure",
     });
@@ -34,7 +35,7 @@ describe("empreinte d'un rapport à signer, selon le stockage", () => {
     vi.stubEnv("NODE_ENV", "development");
     vi.stubEnv("STORAGE_DRIVER", "local");
     vi.stubEnv("STORAGE_LOCAL_PATH", "/tmp/rojer-stockage-inexistant-pour-test");
-    expect(await calculerHashObjet("rapport_verification", "r1", "e1")).toEqual({
+    expect(await calculerHashObjet(await clientDuCompteSimule(), "rapport_verification", "r1", "e1")).toEqual({
       ok: false,
       raison: "fichier_introuvable",
     });

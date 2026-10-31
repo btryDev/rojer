@@ -96,7 +96,7 @@ vi.mock("@/lib/prisma", () => {
 // identifiants des lignes, recréés à chaque enregistrement — la règle de
 // `hash-objet.ts`, que ses propres tests éprouvent.
 vi.mock("@/lib/signatures/hash-objet", () => ({
-  calculerHashObjet: vi.fn(async (_t: string, id: string) => {
+  calculerHashObjet: vi.fn(async (_db: unknown, _t: string, id: string) => {
     const p = db.plans.find((x) => x.id === id);
     if (!p) return { ok: false, raison: "objet_introuvable" };
     const couvert = { ...p };
@@ -336,7 +336,7 @@ describe("les liens de signature en vol (relecture indépendante du 2026-10-12)"
     // Le journal porte aussi l'ouverture de la transaction et la lecture de
     // zone (B1, plus haut) : l'ordre éprouvé ici est verrou → compte.
     const ordre = db.journal.filter((e) => e.startsWith("verrou") || e === "compte des signatures");
-    expect(ordre[0]).toMatch(/^verrou SELECT 1 FROM "PlanPrevention" WHERE "id" = \? FOR UPDATE pp-1$/);
+    expect(ordre[0]).toMatch(/^verrou SELECT 1 FROM "PlanPrevention" WHERE "id" = \? AND "etablissementId" = \? FOR UPDATE pp-1,etab-a-moi$/);
     expect(ordre[1]).toBe("compte des signatures");
   });
 });

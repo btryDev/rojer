@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import { formaterDateFr } from "@/lib/dates";
 
 /**
@@ -120,8 +120,8 @@ export type ContenuASigner =
  * d'un jeton vérifié (`verifierAccessToken`), jamais de l'URL. Lu par la page
  * `/acces/[token]`, qui le lisait elle-même (audit Next.js du 2026-10-14, B6).
  */
-export async function etablissementDuJeton(etablissementId: string) {
-  return prisma.etablissement.findUnique({
+export async function etablissementDuJeton(db: Prisma.TransactionClient, etablissementId: string) {
+  return db.etablissement.findUnique({
     where: { id: etablissementId },
     select: {
       raisonDisplay: true,
@@ -131,6 +131,8 @@ export async function etablissementDuJeton(etablissementId: string) {
 }
 
 export async function contenuASigner(
+  /** Le client borné au compte propriétaire du jeton (ADR-051). */
+  db: Prisma.TransactionClient,
   objetType: string,
   objetId: string,
   etablissementId: string,
@@ -138,7 +140,7 @@ export async function contenuASigner(
   if (!objetId || !etablissementId) return null;
 
   if (objetType === "rapport_verification") {
-    const r = await prisma.rapportVerification.findFirst({
+    const r = await db.rapportVerification.findFirst({
       where: { id: objetId, etablissementId },
       select: {
         fichierNomOriginal: true,
@@ -155,7 +157,7 @@ export async function contenuASigner(
   }
 
   if (objetType === "plan_prevention") {
-    const p = await prisma.planPrevention.findFirst({
+    const p = await db.planPrevention.findFirst({
       where: { id: objetId, etablissementId },
       select: {
         numero: true,
@@ -199,7 +201,7 @@ export async function contenuASigner(
   }
 
   if (objetType === "permis_feu") {
-    const p = await prisma.permisFeu.findFirst({
+    const p = await db.permisFeu.findFirst({
       where: { id: objetId, etablissementId },
       select: {
         numero: true,
