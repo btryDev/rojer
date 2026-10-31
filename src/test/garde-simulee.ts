@@ -28,5 +28,28 @@ export function compteHorsSessionSimule(
       const userId = options.proprietaire ? options.proprietaire() : "user-1";
       return userId === null ? null : clientDuCompteSimule(userId);
     },
+    clientDuCompteVerifie: (userId: string) => {
+      options.journal?.push(`compte:${userId}`);
+      return clientDuCompteSimule(userId);
+    },
+  };
+}
+
+/**
+ * `mcp/db.ts` simulé pour les tests de route : le client simulé du compte
+ * (celui du jeton s'il y en a un), tant que l'établissement existe dans le
+ * faux Prisma — un établissement disparu rend `null`, dit « introuvable ».
+ * `portees`, s'il est donné, note la portée de chaque demande.
+ */
+export function clientMcpSimule(
+  base: { etablissement: { findUnique(a: object): Promise<unknown> } },
+  portees?: { etablissementId: string; userId?: string }[],
+) {
+  return {
+    clientMcp: async (scope: { etablissementId: string; userId?: string }) => {
+      portees?.push(scope);
+      const existe = await base.etablissement.findUnique({ where: { id: scope.etablissementId }, select: { id: true } });
+      return existe ? clientDuCompteSimule(scope.userId) : null;
+    },
   };
 }

@@ -15,7 +15,7 @@ import "server-only";
 
 import { createClient } from "@supabase/supabase-js";
 import { fetchAvecDelai } from "@/lib/reseau/delai";
-import { dbMcp } from "./db";
+import { clientDuCompteVerifie } from "@/lib/auth/compte-hors-session";
 import type { ChercheurEtablissement, VerificateurJeton } from "./acces-oauth";
 
 /** Délai maximal d'un appel de vérification de jeton à Supabase Auth (M9). */
@@ -91,7 +91,10 @@ export const chercherEtablissementDeUtilisateur: ChercheurEtablissement =
   async (userId) => {
     // Tous les établissements du porteur, quelle que soit l'entreprise qui
     // les porte : un compte en suit plusieurs depuis le 2026-10-26.
-    const etablissements = await dbMcp().etablissement.findMany({
+    // Le client borné au compte du porteur, dont l'identité vient du jeton
+    // OAuth vérifié (ADR-051). Module voué à disparaître à la bascule (cc).
+    const db = clientDuCompteVerifie(userId);
+    const etablissements = await db.etablissement.findMany({
       where: { entreprise: { userId } },
       select: { id: true, raisonDisplay: true },
       orderBy: [{ createdAt: "asc" }, { id: "asc" }],

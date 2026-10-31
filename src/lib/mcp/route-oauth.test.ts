@@ -42,7 +42,11 @@ vi.mock("@/lib/securite/limite-debit", async (original) => ({
   consommer: async () => ({ ok: true }),
 }));
 
-vi.mock("./db", () => ({ dbMcp: () => prismaMock }));
+// Le client des lectures : le client borné simulé sur le faux Prisma, tant
+// que l'établissement existe (`./db.ts`).
+const { portees } = vi.hoisted(() => ({ portees: [] as { etablissementId: string; userId?: string }[] }));
+vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
+vi.mock("./db", async () => (await import("@/test/garde-simulee")).clientMcpSimule(prismaMock, portees));
 vi.mock("./acces-oauth-deps", () => ({
   creerVerificateurSupabase: () => verifierMock,
   chercherEtablissementDeUtilisateur: chercherMock,
@@ -250,6 +254,9 @@ describe("service", () => {
     expect(prismaMock.etablissement.findUnique).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: ETAB } }),
     );
+    // Le client des lectures est borné au compte du JETON (ADR-051), pas à un
+    // propriétaire déduit de l'établissement.
+    expect(portees.at(-1)).toEqual({ etablissementId: ETAB, userId: SUB });
   });
 
   it("n'expose aucun champ où désigner un autre établissement", async () => {

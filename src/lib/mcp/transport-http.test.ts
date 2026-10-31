@@ -36,7 +36,10 @@ vi.mock("@/lib/securite/limite-debit", async (original) => ({
   consommer: async () => ({ ok: true }),
 }));
 
-vi.mock("./db", () => ({ dbMcp: () => prismaMock }));
+// Le client des lectures : le client borné simulé sur le faux Prisma, tant
+// que l'établissement existe (`./db.ts`).
+vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
+vi.mock("./db", async () => (await import("@/test/garde-simulee")).clientMcpSimule(prismaMock));
 
 process.env.MCP_CLE = CLE;
 process.env.MCP_ETABLISSEMENT_ID = ETAB;

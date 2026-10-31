@@ -1,7 +1,8 @@
 // Qui peut toucher au client Prisma brut, qui voit tous les comptes (ADR-051 § 3).
-// Ses trois portes (`@/lib/prisma`, `mcp/prisma`, `mcp/db`) ne s'importent que
-// depuis les modules NOMMÉS, chacun avec son motif, ou ceux encore À MIGRER vers
-// `requireCompte()` : un cliquet qui ne fait que raccourcir. Les rouages du
+// Ses portes (`@/lib/prisma`, `mcp/prisma`) ne s'importent que depuis les
+// modules NOMMÉS, chacun avec son motif et ses seuls usages, ou ceux de la
+// liste À MIGRER vers `requireCompte()` : un cliquet qui ne fait que
+// raccourcir (vide depuis le lot 2b, voir `PORTES_BRUTES`). Les rouages du
 // client borné ne s'importent que là où la portée s'établit, et la valeur
 // `PrismaClient` que dans les deux modules qui fabriquent un client.
 // Échappent : un chemin calculé, `globalThis.prisma`. Tests exclus (doublures).
@@ -13,7 +14,9 @@ import { describe, expect, it } from "vitest";
 import { sansCommentairesNiChaines } from "@/lib/auth/tenancy-sonde";
 
 const DEPOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
-const PORTES_BRUTES = ["src/lib/prisma", "src/lib/mcp/prisma", "src/lib/mcp/db"];
+// ~~`mcp/db`~~ n'est plus une porte depuis le 2026-10-31 : il ne rend que le
+// client borné (lot 2b, MCP) ; la liste À MIGRER est vide depuis le même jour.
+const PORTES_BRUTES = ["src/lib/prisma", "src/lib/mcp/prisma"];
 const FABRIQUES = new Set(["src/lib/prisma.ts", "src/lib/mcp/prisma.ts"]);
 /** SQL brut sous requireProprietaireSql, jusqu'au chantier `{ sql, db }`. */
 const SQL_BRUT = { motif: "SQL brut borné par requireProprietaireSql (ADR-051 § 5)", usages: ["prisma.$queryRaw"] };
@@ -72,17 +75,14 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous" }
   "src/lib/rapports/joindre-realisations.ts": SQL_BRUT,
 };
 /** Cliquet : importeurs du client brut encore à migrer vers requireCompte(). */
-const A_MIGRER = new Set([
-  "src/lib/mcp/acces-oauth-deps.ts",
-  "src/lib/mcp/db.ts",
-  "src/lib/mcp/queries.ts",
-]);
+const A_MIGRER = new Set<string>([]);
 const NOMMES_ROUAGES: Record<string, Record<string, string>> = {
   "src/lib/auth/portee/client": {
     "src/lib/auth/compte.ts": "requireCompte : la portée vient de la session",
-    "src/lib/auth/portee/lot-verifie.ts": "types du client et de la transaction",
+    "src/lib/auth/portee/lot-verifie.ts": "types du client et de la transaction (types seuls)",
     "src/test/garde-simulee.ts": "tests seuls : le client simulé que rendent les gardes simulées",
     "src/lib/auth/compte-hors-session.ts": "accès sans session : la portée vient de la preuve vérifiée",
+    "src/lib/mcp/db.ts": "le type ClientBorne du client des lectures MCP (types seuls)",
   },
   "src/lib/auth/portee/borne": {
     "src/lib/auth/portee/client.ts": "l'extension",
@@ -128,6 +128,40 @@ describe("client Prisma brut", () => {
 
 it.each(Object.entries(NOMMES_ROUAGES))("les rouages %s ne s'importent que des modules nommés", (c, nommes) => {
   expect(importeurs(c).filter((f) => !(f in nommes))).toEqual([]);
+});
+
+/**
+ * Un module nommé « (types seuls) » n'importe des rouages que des TYPES : la
+ * garde ci-dessus est par module, pas par symbole — sans celle-ci, un module
+ * nommé pour un type pourrait appeler `clientBorne({ userId: … })` librement
+ * (seconde lecture de #145).
+ */
+const IMPORT_STATIQUE = /(?:import|export)\s+(type\s+)?([^;"'`]*?)\s*from\s*["'`]([^"'`]+)["'`]/g;
+const IMPORT_DYNAMIQUE = /(?:import|require)\s*\(\s*["'`]([^"'`]+)["'`]/g;
+function importsDeValeur(f: string, c: string): string[] {
+  const texte = TEXTES.get(f)!;
+  const statiques = [...texte.matchAll(IMPORT_STATIQUE)].filter(([, , , spec]) => cible(f, spec) === c);
+  const deValeur = statiques
+    .filter(([, type, clause]) => {
+      if (type) return false;
+      const accolades = clause.match(/^\{([^}]*)\}$/);
+      if (!accolades) return true; // défaut, espace de noms : une valeur
+      return accolades[1].split(",").map((x) => x.trim()).filter(Boolean).some((x) => !x.startsWith("type "));
+    })
+    .map(([texteImport]) => texteImport);
+  const dynamiques = [...texte.matchAll(IMPORT_DYNAMIQUE)].filter(([, spec]) => cible(f, spec) === c).map(([t]) => t);
+  return [...deValeur, ...dynamiques];
+}
+const TYPES_SEULS = Object.entries(NOMMES_ROUAGES).flatMap(([c, nommes]) =>
+  Object.entries(nommes)
+    .filter(([, motif]) => motif.endsWith("(types seuls)"))
+    .map(([f]) => [f, c] as const),
+);
+it("les modules nommés « (types seuls) » existent", () => {
+  expect(TYPES_SEULS.length).toBeGreaterThan(0);
+});
+it.each(TYPES_SEULS)("%s n'importe de %s que des types", (f, c) => {
+  expect(importsDeValeur(f, c)).toEqual([]);
 });
 
 /** Vrai si le texte obtient la VALEUR `PrismaClient` (nommée, défaut, espace de noms, require, import()). */

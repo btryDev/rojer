@@ -16,14 +16,32 @@ import "server-only";
 // tests tiennent.
 
 import { prisma } from "@/lib/prisma";
-import { clientBorne, type ClientBorne } from "./portee/client";
+import type { PrismaClient } from "@prisma/client";
+import { clientBorne, clientBorneSur, type ClientBorne } from "./portee/client";
 
-/** `null` si l'établissement a disparu ou n'a pas de propriétaire. */
-export async function clientDuProprietaire(etablissementId: string): Promise<ClientBorne | null> {
-  const etab = await prisma.etablissement.findUnique({
-    where: { id: etablissementId },
-    select: { entreprise: { select: { userId: true } } },
-  });
+/**
+ * Le client borné au compte dont l'identité vient d'un jeton OAuth DÉJÀ
+ * vérifié (MCP distant, `mcp/acces-oauth-deps.ts`) — jamais d'une saisie.
+ */
+export function clientDuCompteVerifie(userId: string): ClientBorne {
+  return clientBorne({ type: "compte", userId });
+}
+
+/**
+ * `null` si l'établissement a disparu ou n'a pas de propriétaire. `base` : un
+ * autre client brut que celui de l'application — le serveur MCP stdio
+ * (`mcp/db.ts`), dont la sortie standard appartient au protocole ; le client
+ * borné est alors construit sur lui.
+ */
+export async function clientDuProprietaire(
+  etablissementId: string,
+  base?: PrismaClient,
+): Promise<ClientBorne | null> {
+  const lecture = { where: { id: etablissementId }, select: { entreprise: { select: { userId: true } } } };
+  const etab = base
+    ? await base.etablissement.findUnique(lecture)
+    : await prisma.etablissement.findUnique(lecture);
   const userId = etab?.entreprise.userId;
-  return userId ? clientBorne({ type: "compte", userId }) : null;
+  if (!userId) return null;
+  return base ? clientBorneSur(base, { type: "compte", userId }) : clientBorne({ type: "compte", userId });
 }
