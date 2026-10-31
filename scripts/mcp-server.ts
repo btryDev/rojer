@@ -22,7 +22,7 @@
 //     client plutôt que le singleton de l'application, qui journalise ses
 //     requêtes sur la sortie standard en développement. Ce fichier est le
 //     SEUL à l'importer : le client des lectures MCP, borné au compte, est
-//     construit dessus au démarrage (`demarrerStdio`) ; la route HTTP, elle,
+//     construit dessus au démarrage (`sessionStdio`) ; la route HTTP, elle,
 //     garde le client commun (audit Next.js du 2026-10-14, M5).
 //   - **Une erreur ne doit pas fuir.** Les exceptions sont renvoyées au
 //     client comme résultat d'outil en erreur, avec un message court : pas
@@ -37,11 +37,10 @@ import {
   CONSIGNE_SERVEUR,
   ErreurOutilMcp,
   OUTILS_MCP,
-  contexteMcp,
   type ScopeMcp,
 } from "@/lib/mcp/tools";
 import { prismaMcp } from "@/lib/mcp/prisma";
-import { demarrerStdio } from "@/lib/mcp/db";
+import { sessionStdio } from "@/lib/auth/compte-hors-session";
 
 const NOM_SERVEUR = "rojer-demo";
 const VERSION_SERVEUR = "0.1.0";
@@ -79,24 +78,16 @@ async function main(): Promise<void> {
 
   // Vérification au démarrage plutôt qu'au premier appel d'outil : un
   // identifiant erroné doit se voir tout de suite, pas se manifester en
-  // pleine conversation par trois outils qui répondent « introuvable ».
-  const etablissement = await prismaMcp.etablissement.findUnique({
-    where: { id: scope.etablissementId },
-    select: { raisonDisplay: true },
-  });
+  // pleine conversation par trois outils qui répondent « introuvable ». La
+  // même lecture rend le nom et le client des lectures, borné au compte
+  // propriétaire et construit sur le client MCP (ADR-051).
+  const session = await sessionStdio(prismaMcp, scope.etablissementId);
 
-  if (!etablissement) {
+  if (!session) {
     trace(
-      `Aucun établissement ne porte l'identifiant « ${scope.etablissementId} ». ` +
-        "Vérifiez MCP_ETABLISSEMENT_ID et la base pointée par DATABASE_URL.",
+      `Aucun établissement servable ne porte l'identifiant « ${scope.etablissementId} » ` +
+        "(absent, ou sans propriétaire). Vérifiez MCP_ETABLISSEMENT_ID et la base pointée par DATABASE_URL.",
     );
-    process.exit(1);
-  }
-
-  // Le client des lectures, borné une fois pour la session au compte
-  // propriétaire de l'établissement, sur le client MCP (ADR-051, `mcp/db.ts`).
-  if (!(await demarrerStdio(prismaMcp, scope.etablissementId))) {
-    trace(`L'établissement « ${scope.etablissementId} » n'a pas de propriétaire : rien ne peut être servi.`);
     process.exit(1);
   }
 
@@ -123,7 +114,7 @@ async function main(): Promise<void> {
       async (args: unknown) => {
         try {
           const texte = await outil.executer(
-            await contexteMcp(scope, new Date()),
+            { scope, now: new Date(), db: session.db },
             args,
           );
           return { content: [{ type: "text" as const, text: texte }] };
@@ -161,7 +152,7 @@ async function main(): Promise<void> {
 
   await server.connect(new StdioServerTransport());
   trace(
-    `prêt — ${OUTILS_MCP.length} outils en lecture seule sur « ${etablissement.raisonDisplay} ».`,
+    `prêt — ${OUTILS_MCP.length} outils en lecture seule sur « ${session.nom} ».`,
   );
 }
 

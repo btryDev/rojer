@@ -1,7 +1,6 @@
 import { requireCompte } from "@/lib/auth/compte";
-import { prisma } from "@/lib/prisma";
 import { cache } from "react";
-import { requireProprietaireSql } from "@/lib/auth/scope";
+import { requireLectureSqlProprietaire } from "@/lib/auth/scope";
 import { debutDuJour } from "@/lib/dates";
 import { instantDuRendu } from "@/lib/dates/instant-du-rendu";
 import { Prisma } from "@prisma/client";
@@ -91,8 +90,6 @@ export const comptesModulesDuRendu = cache(async function comptesModulesDuRendu(
   etablissementId: string,
   debutDuJourMs: number,
 ) {
-  // Le même alias `m` dans chaque sous-requête : un seul prédicat.
-  const proprietaire = await requireProprietaireSql('m."etablissementId"');
   // `dateFin` est un instant UTC sans fuseau ; la borne lui est comparée en
   // UTC explicite, quel que soit le fuseau de la session (revue du lot 1) —
   // comme le faisaient les `count` Prisma remplacés.
@@ -100,16 +97,15 @@ export const comptesModulesDuRendu = cache(async function comptesModulesDuRendu(
   // Une requête pour les deux tables (sous-requêtes scalaires), chacune sous
   // la portée au compte. « Ouvert » = tout sauf les statuts qui soldent
   // l'opération (`statuts-operations.ts`) : la règle du calendrier.
+  // Le même alias `m` dans chaque sous-requête : un seul prédicat.
   const [[comptes], carnet] = await Promise.all([
-    prisma.$queryRaw<
-      {
-        permisTotal: bigint;
-        permisEchus: bigint;
-        plansTotal: bigint;
-        plansSansInspection: bigint;
-        plansEchus: bigint;
-      }[]
-    >`
+    requireLectureSqlProprietaire<{
+      permisTotal: bigint;
+      permisEchus: bigint;
+      plansTotal: bigint;
+      plansSansInspection: bigint;
+      plansEchus: bigint;
+    }>('m."etablissementId"', (proprietaire) => Prisma.sql`
       SELECT
         (SELECT count(*) FROM "PermisFeu" m
           WHERE m."etablissementId" = ${etablissementId} AND ${proprietaire}) AS "permisTotal",
@@ -127,7 +123,7 @@ export const comptesModulesDuRendu = cache(async function comptesModulesDuRendu(
           WHERE m."etablissementId" = ${etablissementId} AND ${proprietaire}
             AND m."dateFin" < ${debutSql}
             AND NOT (m."statut"::text = ANY(${[...STATUTS_PLAN_PREVENTION_CLOS]}::text[]))) AS "plansEchus"
-    `,
+    `),
     carnetDuRendu(etablissementId),
   ]);
   return {

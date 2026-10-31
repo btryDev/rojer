@@ -221,29 +221,45 @@ export async function requirePiecePrestataire(pieceId: string, prestataireId: st
 }
 
 /**
- * Le prédicat propriétaire d'une requête SQL brute (`$queryRaw`) : la ligne
- * dont `colonneEtablissement` désigne l'établissement appartient à
- * l'utilisateur de la session. La forme SQL de
- * `etablissement: { entreprise: { userId } }`, pour les lectures que Prisma
- * n'exprime pas (`DISTINCT ON`…) — prédicat complet, sans jointure à écrire
- * chez l'appelant. Écrit une fois ici : la garde de tenancy ne lit pas le SQL
- * d'un gabarit, elle reconnaît l'appel de ce helper.
+ * Une lecture en SQL brut (`$queryRaw`), bornée au propriétaire : la ligne dont
+ * `colonneEtablissement` désigne l'établissement appartient à l'utilisateur de
+ * la session. La forme SQL de `etablissement: { entreprise: { userId } }`, pour
+ * les lectures que Prisma n'exprime pas (`DISTINCT ON`, `LATERAL`…).
  *
- *   const proprietaire = await requireProprietaireSql('r."etablissementId"');
- *   prisma.$queryRaw`SELECT … FROM "RapportVerification" r WHERE ${proprietaire}`
+ * LE PRÉDICAT EST OBLIGATOIRE, ET C'EST LE HELPER QUI EXÉCUTE (revue du
+ * 2026-10-31) : l'extension du client borné NE borne PAS le SQL brut, le
+ * prédicat est la seule borne de la requête. Le gabarit le reçoit, et une
+ * requête où il n'apparaît pas — son texte ET la valeur du compte — est
+ * refusée avant d'être envoyée ; rendre le client à l'appelant aurait permis
+ * d'écrire la requête sans lui.
  *
- * [2026-10-27, plan performance, lot 1a.]
+ * LIMITE : le contrôle vérifie la PRÉSENCE du prédicat, pas sa CONJONCTION.
+ * `… = ${id} OR ${proprietaire}`, ou une sous-requête parmi d'autres qui
+ * l'omet, passeraient. Cela, la revue le tient (ADR-051 § 5) : le helper ne
+ * lit pas le SQL.
+ *
+ *   requireLectureSqlProprietaire<{ annee: number }>('r."etablissementId"', (proprietaire) =>
+ *     Prisma.sql`SELECT … FROM "RapportVerification" r WHERE ${proprietaire}`);
+ *
+ * [2026-10-27, plan performance, lot 1a ; 2026-10-31, exécution par le helper.]
  */
-export async function requireProprietaireSql(colonneEtablissement: string): Promise<Prisma.Sql> {
+export async function requireLectureSqlProprietaire<T>(
+  colonneEtablissement: string,
+  gabarit: (proprietaire: Prisma.Sql) => Prisma.Sql,
+): Promise<T[]> {
   if (!/^[A-Za-z_]\w*\."[A-Za-z_]\w*"$/.test(colonneEtablissement)) {
     throw new Error(`Colonne SQL invalide : « ${colonneEtablissement} »`);
   }
-  const user = await requireUser();
-  return Prisma.sql`EXISTS (
+  const { user, db } = await requireCompte();
+  const proprietaire = Prisma.sql`EXISTS (
     SELECT 1 FROM "Etablissement" e_p
     JOIN "Entreprise" en_p ON en_p."id" = e_p."entrepriseId"
     WHERE e_p."id" = ${Prisma.raw(colonneEtablissement)} AND en_p."userId" = ${user.id}::uuid
   )`;
+  const requete = gabarit(proprietaire);
+  if (!requete.sql.includes(proprietaire.sql) || !requete.values.includes(user.id))
+    throw new Error("Requête SQL brute sans le prédicat propriétaire : refusée");
+  return db.$queryRaw<T[]>(requete);
 }
 
 /**

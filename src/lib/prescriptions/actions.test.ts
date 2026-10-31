@@ -27,6 +27,7 @@ const h = vi.hoisted(() => {
       findFirst: vi.fn(async () => etat.prescription),
       delete: vi.fn(async () => ({})),
       update: vi.fn(async () => ({})),
+      updateMany: vi.fn(async () => ({ count: etat.prescription ? 1 : 0 })),
     },
     verification: {
       findMany: vi.fn(async () => etat.lignes),
@@ -46,7 +47,7 @@ vi.mock("@/lib/calendrier/regeneration-sure", () => ({
   regenererApresMutation: vi.fn(async () => undefined),
 }));
 
-const { leverPrescription, supprimerPrescription } = await import("./actions");
+const { leverPrescription, reactiverPrescription, supprimerPrescription } = await import("./actions");
 
 const jour = (iso: string) => new Date(`${iso}T00:00:00Z`);
 
@@ -371,6 +372,31 @@ describe("supprimerPrescription", () => {
           equipementId: "eq-portail",
         },
       }),
+    );
+  });
+});
+
+// Une prescription étrangère ou disparue rend le message de ses sœurs, jamais
+// une erreur serveur ; l'écriture est bornée à l'établissement (relevé du
+// 2026-10-31).
+describe("reactiverPrescription : identifiant étranger ou disparu", () => {
+  it("message « introuvable », sans erreur serveur ni régénération du calendrier", async () => {
+    h.etat.prescription = null;
+    const { regenererApresMutation } = await import("@/lib/calendrier/regeneration-sure");
+    vi.mocked(regenererApresMutation).mockClear();
+    expect(await reactiverPrescription("e1", "presc_d_un_autre")).toEqual({
+      status: "error",
+      message: "Prescription introuvable.",
+    });
+    expect(regenererApresMutation).not.toHaveBeenCalled();
+  });
+
+  it("l'écriture porte l'établissement, et la sienne se réactive", async () => {
+    h.etat.prescription = { id: "presc_1" };
+    h.prisma.prescriptionParticuliere.updateMany.mockClear();
+    expect(await reactiverPrescription("e1", "presc_1")).toEqual({ status: "success", prescriptionId: "presc_1" });
+    expect(h.prisma.prescriptionParticuliere.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "presc_1", etablissementId: "e1" } }),
     );
   });
 });

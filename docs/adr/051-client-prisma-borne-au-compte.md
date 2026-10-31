@@ -85,10 +85,18 @@ autre compte.
    que `cache()` de React « does nothing » dans les actions serveur et les
    routes — une identité relue à chaque requête du client y coûterait un
    appel au serveur d'authentification par requête SQL.
-5. **SQL brut** : l'extension ne le voit pas. Une garde exige qu'un
+5. **SQL brut** : l'extension ne le voit pas. ~~Une garde exige qu'un
    `$queryRaw` / `$executeRaw` interpole `requireProprietaireSql`, ou figure
    nommément dans une liste avec son motif (verrous `FOR UPDATE` après une
-   lecture bornée, limitation de débit).
+   lecture bornée, limitation de débit).~~ [2026-10-31 : une lecture bornée
+   au propriétaire passe par `requireLectureSqlProprietaire` (`auth/scope.ts`),
+   qui pose le prédicat, refuse un gabarit qui ne le contient pas et exécute ;
+   tout autre SQL brut figure nommément dans `SQL_BRUT_NOMMES`
+   (`portee/imports.test.ts`) avec ce qui borne sa requête (verrous
+   `FOR UPDATE` après une lecture bornée, limitation de débit, `UPDATE` jsonb
+   d'une ligne gardée) ; jamais de forme `Unsafe`. Le refus vérifie la
+   PRÉSENCE du prédicat (texte et valeur), pas sa CONJONCTION : un `OR`, ou
+   une sous-requête qui l'omet, est tenu par la revue.]
 6. **Aucun DDL hors des migrations** : une garde refuse `CREATE`, `ALTER`,
    `DROP`, `GRANT`, `REVOKE`, `TRUNCATE` dans un gabarit SQL du code (point
    0.13 du plan de bascule).
@@ -297,6 +305,40 @@ fragile plutôt que forcer) :
   valeur `PrismaClient`.
 - **Tests de module** : le client simulé de `vitest.setup.ts` passe chaque
   appel par le vrai `argumentsBornes` pour ses refus.
+
+## Erreurs : 404, jamais 500 (chantier transverse, 2026-10-31)
+
+Un identifiant étranger ou disparu doit donner une page introuvable (404) ou
+un message métier, jamais une erreur serveur ni un indice d'existence. Relevé
+du 2026-10-31 : les gardes de `scope.ts` font `notFound()` ; les écritures par `db`
+passaient presque toutes d'abord par une lecture bornée de l'objet (62 au
+relevé de ce jour) ; aucun message ne
+distingue « étranger » de « disparu ».
+
+**L'invariant « une écriture par identifiant suit une lecture bornée de cet
+identifiant » est tenu par la REVUE, pas par une garde.** Raison : il ne
+départage que 404 et 500 — la sécurité tient sans lui (sur un identifiant
+étranger, l'écriture bornée ne trouve rien, lève P2025 et n'écrit rien) — et
+une garde heuristique coûterait des exemptions à entretenir (`updateMany` avec
+son `count`, `upsert`, identifiants issus d'une lecture) pour une page
+d'erreur. Exemple de ce que la revue attrape : `reactiverPrescription` faisait
+un `update` direct sur l'identifiant reçu — `tenancy-ecritures` l'acceptait
+(appartenance établie par la garde), la réponse était une 500 ; corrigé par
+une écriture conditionnelle bornée (`updateMany` + `count`), qui rend le
+message « Prescription introuvable. » de ses sœurs, sans course. Les trois
+`throw new Error` du carnet sanitaire deviennent `notFound()` : la réponse est
+une 404, et le bouton (`BoutonRetirer`) affiche son message « Introuvable :
+la page n'était plus à jour ». Ailleurs, une course entre la lecture et
+l'écriture reste une 500, rare et sans indice d'existence (option C, seconde
+lecture du 2026-10-31). Une 404 d'action ne passe pas par `onRequestError` :
+un identifiant étranger essayé n'est pas journalisé, comme pour toutes les
+gardes de `scope.ts` — accepté, rien n'est lu ni écrit.
+
+`ErreurPortee` reste une 500 voulue : c'est une forme refusée par la borne, un
+défaut du code, jamais une entrée utilisateur. `onRequestError`
+(`instrumentation.ts`) la journalise déjà en une ligne JSON (`nom`, message
+avec modèle et opération) ; ses messages ne portent aucun identifiant de compte
+(au plus des identifiants d'objets, « parents non vérifiés »).
 
 ## Accès sans session : jetons, MCP, pages publiques (décision du 2026-10-30)
 
