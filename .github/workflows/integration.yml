@@ -87,6 +87,7 @@ jobs:
           src/lib/accessibilite/registre-vierge.integration
           src/lib/securite/limite-debit.integration
           src/lib/calendrier/regeneration-bornee.integration
+          src/lib/auth/sql-proprietaire.integration
           --no-file-parallelism
           --reporter=default --reporter=json --outputFile.json=integration.json
 

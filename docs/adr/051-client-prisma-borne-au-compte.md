@@ -96,7 +96,11 @@ autre compte.
    `FOR UPDATE` après une lecture bornée, limitation de débit, `UPDATE` jsonb
    d'une ligne gardée) ; jamais de forme `Unsafe`. Le refus vérifie la
    PRÉSENCE du prédicat (texte et valeur), pas sa CONJONCTION : un `OR`, ou
-   une sous-requête qui l'omet, est tenu par la revue.]
+   une sous-requête qui l'omet, ~~est tenu par la revue~~ [2026-10-31 : est
+   tenu par le RÉSULTAT — chaque appelant a son test sur base réelle
+   (`auth/sql-proprietaire.integration.test.ts`, job d'intégration de la CI),
+   où B ne reçoit rien de A ; les deux fautes, injectées dans les trois
+   lectures, font tomber le test (8 sur 8)].]
 6. **Aucun DDL hors des migrations** : une garde refuse `CREATE`, `ALTER`,
    `DROP`, `GRANT`, `REVOKE`, `TRUNCATE` dans un gabarit SQL du code (point
    0.13 du plan de bascule).

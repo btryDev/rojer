@@ -235,8 +235,11 @@ export async function requirePiecePrestataire(pieceId: string, prestataireId: st
  *
  * LIMITE : le contrôle vérifie la PRÉSENCE du prédicat, pas sa CONJONCTION.
  * `… = ${id} OR ${proprietaire}`, ou une sous-requête parmi d'autres qui
- * l'omet, passeraient. Cela, la revue le tient (ADR-051 § 5) : le helper ne
- * lit pas le SQL.
+ * l'omet, passeraient : le helper ne lit pas le SQL. ~~Cela, la revue le
+ * tient~~ [2026-10-31 : chaque appelant a son test sur base réelle,
+ * `auth/sql-proprietaire.integration.test.ts` — B ne reçoit rien de A, chaque
+ * sous-requête ayant une ligne de A à compter ; un nouvel appelant s'y
+ * ajoute.]
  *
  *   requireLectureSqlProprietaire<{ annee: number }>('r."etablissementId"', (proprietaire) =>
  *     Prisma.sql`SELECT … FROM "RapportVerification" r WHERE ${proprietaire}`);
