@@ -216,6 +216,9 @@ function cible(r: Relation, where: unknown, portee: Portee): Objet {
       throw new ErreurPortee(`${r.nom} : une relation vers l'identité ne désigne que le compte`);
     return { id: portee.userId };
   }
+  // La condition d'un `connect` est un filtre comme un autre : elle ne remonte
+  // pas vers un modèle hors compte ni vers l'identité (seconde lecture de #142).
+  verifierFiltre(r.cible, where);
   return avecBorne(where, borne(r.cible, portee));
 }
 
@@ -237,7 +240,9 @@ function reecrireImbrique(nom: string, r: Relation, n: Objet, portee: Portee): O
         break;
       case "deleteMany":
         // Lignes déjà rattachées au parent borné : Prisma limite la suppression
-        // à cette relation (lignes d'un plan de prévention).
+        // à cette relation (lignes d'un plan de prévention). Sa condition reste
+        // un filtre : ni hors compte, ni identité.
+        for (const w of lister(val)) verifierFiltre(r.cible, w);
         sortie[op] = val;
         break;
       default:

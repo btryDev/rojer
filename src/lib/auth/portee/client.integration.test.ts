@@ -3,7 +3,9 @@
 // dans le compte —, les transactions, et `creerEnLotVerifie`.
 //
 // SAUTÉ PAR DÉFAUT : il ne tourne que si `ISOLATION_INTEGRATION_URL` pointe une
-// base LOCALE migrée, qu'il VIDE (`TRUNCATE "Entreprise" CASCADE`) :
+// base LOCALE migrée, qu'il VIDE (`TRUNCATE "Entreprise" CASCADE`, et sur cc
+// `TRUNCATE "User" CASCADE` : comptes, sessions, seconds facteurs, signatures,
+// jetons d'accès) :
 //   ISOLATION_INTEGRATION_URL=postgresql://duerp:<mdp>@localhost:5433/rojer_essai_isolation \
 //     pnpm exec vitest run src/lib/auth/portee/client.integration
 // Jamais une base qui porte des données utiles.

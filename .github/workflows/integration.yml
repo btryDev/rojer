@@ -80,7 +80,7 @@ jobs:
           ACCESSIBILITE_INTEGRATION_URL: postgresql://duerp:duerp@localhost:5432/rojer_integration_ci
           LIMITE_DEBIT_INTEGRATION_URL: postgresql://duerp:duerp@localhost:5432/rojer_integration_ci
         # Un fichier après l'autre : ils partagent la base, et
-        # client.integration la vide (TRUNCATE "Entreprise" CASCADE).
+        # client.integration la vide (TRUNCATE "Entreprise" CASCADE, et "User" sur cc).
         run: >-
           pnpm exec vitest run
           src/lib/auth/portee/client.integration

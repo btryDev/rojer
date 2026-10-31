@@ -93,14 +93,11 @@ export function estRacine(c: Classement): c is Racine {
 }
 
 /**
- * Les clés d'identité SANS relation au schéma : sur `main`, il n'y a pas de
- * modèle `User` (l'identité vit chez Supabase), et `Signature.userId`,
- * `AccessToken.createdByUserId` sont de simples colonnes. Leur valeur ne peut
- * être que l'utilisateur du compte, ou `null` (seconde lecture du 2026-10-31).
- * Sur `cc`, elles deviennent des relations vers `User`, bornées comme telles :
- * l'entrée doit alors partir — `borne.ts` refuse au chargement une entrée qui
- * désigne la clé d'une relation.
+ * Les clés d'identité SANS relation au schéma. Sur `main` (pas de modèle
+ * `User`), `Signature.userId` et `AccessToken.createdByUserId` y figurent :
+ * leur valeur ne peut être que l'utilisateur du compte, ou `null`. Sur `cc`,
+ * ce sont des relations vers `User`, bornées comme l'identité : la table est
+ * vide (`borne.ts` refuse au chargement une entrée qui serait la clé d'une
+ * relation).
  */
-// Sur cc : vide. `Signature.userId` et `AccessToken.createdByUserId` y sont des
-// relations vers `User`, bornées comme l'identité (borne.ts).
 export const IDENTITES_SCALAIRES: Partial<Record<Prisma.ModelName, readonly string[]>> = {};

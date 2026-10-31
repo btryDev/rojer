@@ -67,7 +67,6 @@ export function clientBorneSimule<T extends object>(
           if (mode === "borner") {
             return (args?: unknown) => f.call(modele, argumentsBornes(nom, operation, args ?? {}, portee));
           }
-          if (operation === "createMany") return f;
           return (args?: unknown, ...reste: unknown[]) => {
             argumentsBornes(nom, operation, copie(args ?? {}), portee);
             return f.call(modele, args, ...reste);

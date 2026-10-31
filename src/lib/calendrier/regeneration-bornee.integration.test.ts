@@ -40,6 +40,7 @@ describe.skipIf(!URL_BASE || !local)("régénération du calendrier — PostgreS
   const { regenererSansInvalider } = await import("./actions");
   const { lireEntrees, planifier } = await import("./passe");
   const { clesDuPlanDansLaLecture } = await import("./cles-du-plan");
+  const { creerUtilisateurDeTest, effacerUtilisateursDeTest } = await import("@/test/utilisateur-de-test");
 
   const A = randomUUID();
   const B = randomUUID();
@@ -62,9 +63,7 @@ describe.skipIf(!URL_BASE || !local)("régénération du calendrier — PostgreS
   beforeAll(async () => {
     // Sur cc, `Entreprise.userId` est une clé vers `User` : les comptes
     // existent avant leurs entreprises.
-    for (const id of [A, B]) {
-      await prisma.user.create({ data: { id, name: id, email: `${id}@exemple.test` } });
-    }
+    for (const id of [A, B]) await creerUtilisateurDeTest(prisma, id);
     const ent = await prisma.entreprise.create({
       data: { userId: A, raisonSociale: "A", effectif: 5, adresse: "1 rue" },
     });
@@ -76,7 +75,7 @@ describe.skipIf(!URL_BASE || !local)("régénération du calendrier — PostgreS
   });
   afterAll(async () => {
     await prisma.entreprise.deleteMany({ where: { id: { in: entreprises } } });
-    await prisma.user.deleteMany({ where: { id: { in: [A, B] } } });
+    await effacerUtilisateursDeTest(prisma, [A, B]);
     await prisma.$disconnect();
   });
 

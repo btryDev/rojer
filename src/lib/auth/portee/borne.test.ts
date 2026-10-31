@@ -360,10 +360,33 @@ describe("identité (cc) : relations vers User", () => {
     expect(() => argumentsBornes("Signature", "findMany", args, A)).toThrow(ErreurPortee);
   });
 
-  it("_count vers un modèle hors compte depuis User n'est pas atteignable : Entreprise ne compte pas ses sessions", () => {
-    expect(() =>
-      argumentsBornes("Entreprise", "findMany", { include: { user: { select: { _count: { select: { sessions: true } } } } } }, A),
-    ).toThrow(ErreurPortee);
+  it.each([
+    [
+      "connect dont la condition remonte vers le second facteur",
+      "Etablissement",
+      { data: { entreprise: { connect: { id: "e", user: { twoFactor: { secret: { startsWith: "A" } } } } } } },
+    ],
+    [
+      "deleteMany imbriqué dont la condition remonte vers les sessions",
+      "Etablissement",
+      {
+        where: { id: "e" },
+        data: { signatures: { deleteMany: { user: { sessions: { some: { token: { startsWith: "x" } } } } } } },
+      },
+    ],
+  ])("écriture : %s → refusée", (_cas, nom, args) => {
+    const op = "where" in args ? "update" : "create";
+    expect(() => argumentsBornes(nom, op, args, A)).toThrow(/hors compte/);
   });
+
+  it.each(["User", "Session", "Account", "AuthVerification", "TwoFactor"])(
+    "le client borné ne sert jamais %s, en lecture comme en écriture",
+    (nom) => {
+      expect(() => argumentsBornes(nom, "findMany", {}, A)).toThrow(ErreurPortee);
+      expect(() => argumentsBornes(nom, "deleteMany", {}, A)).toThrow(ErreurPortee);
+      expect(() => argumentsBornes(nom, "create", { data: {} }, A)).toThrow(ErreurPortee);
+    },
+  );
+
 });
 

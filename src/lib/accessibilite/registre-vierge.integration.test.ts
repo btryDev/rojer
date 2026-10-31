@@ -54,6 +54,7 @@ describe.skipIf(!URL_BASE || !local)("registre d'accessibilité — établisseme
   }
   const { prisma } = await import("@/lib/prisma");
   const { sauverSection1, publierRegistre } = await import("./actions");
+  const { creerUtilisateurDeTest, effacerUtilisateursDeTest } = await import("@/test/utilisateur-de-test");
   const marque = `test-integration-access-${Date.now()}`;
   const entrepriseIds: string[] = [];
 
@@ -63,8 +64,7 @@ describe.skipIf(!URL_BASE || !local)("registre d'accessibilité — établisseme
     // Un propriétaire, comme toute entreprise en production : la garde rend le
     // client borné à son compte. Sur cc, `Entreprise.userId` est une clé vers
     // `User` : le compte existe avant l'entreprise.
-    const userId = randomUUID();
-    await prisma.user.create({ data: { id: userId, name: marque, email: `${userId}@exemple.test` } });
+    const userId = await creerUtilisateurDeTest(prisma);
     utilisateurs.push(userId);
     const e = await prisma.entreprise.create({
       data: {
@@ -92,7 +92,7 @@ describe.skipIf(!URL_BASE || !local)("registre d'accessibilité — établisseme
 
   afterAll(async () => {
     await prisma.entreprise.deleteMany({ where: { id: { in: entrepriseIds } } });
-    await prisma.user.deleteMany({ where: { id: { in: utilisateurs } } });
+    await effacerUtilisateursDeTest(prisma, utilisateurs);
     await prisma.$disconnect();
   });
 
