@@ -81,7 +81,7 @@ vi.mock("@/lib/prisma", () => {
 });
 // L'empreinte : tout le permis sauf la zone, hors empreinte (`hash-objet.ts`).
 vi.mock("@/lib/signatures/hash-objet", () => ({
-  calculerHashObjet: vi.fn(async (_t: string, id: string) => {
+  calculerHashObjet: vi.fn(async (_db: unknown, _t: string, id: string) => {
     const p = db.permis.find((x) => x.id === id);
     if (!p) return { ok: false, raison: "objet_introuvable" };
     const couvert = { ...p };
@@ -269,7 +269,7 @@ describe("les liens de signature en vol (relecture indépendante du 2026-10-12)"
     await modifier(saisie());
 
     expect(db.journal.slice(0, 2)).toEqual([
-      'verrou SELECT 1 FROM "PermisFeu" WHERE "id" = ? FOR UPDATE pf-1',
+      'verrou SELECT 1 FROM "PermisFeu" WHERE "id" = ? AND "etablissementId" = ? FOR UPDATE pf-1,etab-a-moi',
       "compte des signatures",
     ]);
   });

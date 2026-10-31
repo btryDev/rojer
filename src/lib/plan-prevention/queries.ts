@@ -28,7 +28,7 @@ export async function getPlanPrevention(
     },
   });
   if (!plan) return null;
-  const signatures = await listSignatures("plan_prevention", plan.id);
+  const signatures = await listSignatures(db, etablissement.id, "plan_prevention", plan.id);
   return { ...plan, signatures };
 }
 

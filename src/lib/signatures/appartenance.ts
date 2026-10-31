@@ -1,5 +1,4 @@
-import { prisma } from "@/lib/prisma";
-import type { ObjetSignable } from "@prisma/client";
+import type { ObjetSignable, Prisma } from "@prisma/client";
 
 /**
  * L'objet visé appartient-il bien à cet établissement ?
@@ -50,6 +49,8 @@ import type { ObjetSignable } from "@prisma/client";
  * ici avant de pouvoir être signé — et c'est exactement le rappel voulu.
  */
 export async function objetAppartientAEtablissement(
+  /** Le client borné au compte de l'appelant (ADR-051). */
+  db: Prisma.TransactionClient,
   objetType: string,
   objetId: string,
   etablissementId: string,
@@ -61,7 +62,7 @@ export async function objetAppartientAEtablissement(
   switch (objetType as ObjetSignable) {
     case "rapport_verification":
       return Boolean(
-        await prisma.rapportVerification.findFirst({
+        await db.rapportVerification.findFirst({
           where: { id: objetId, etablissementId },
           ...selectId,
         }),
@@ -69,7 +70,7 @@ export async function objetAppartientAEtablissement(
 
     case "permis_feu":
       return Boolean(
-        await prisma.permisFeu.findFirst({
+        await db.permisFeu.findFirst({
           where: { id: objetId, etablissementId },
           ...selectId,
         }),
@@ -77,7 +78,7 @@ export async function objetAppartientAEtablissement(
 
     case "plan_prevention":
       return Boolean(
-        await prisma.planPrevention.findFirst({
+        await db.planPrevention.findFirst({
           where: { id: objetId, etablissementId },
           ...selectId,
         }),
@@ -85,7 +86,7 @@ export async function objetAppartientAEtablissement(
 
     case "registre_accessibilite":
       return Boolean(
-        await prisma.registreAccessibilite.findFirst({
+        await db.registreAccessibilite.findFirst({
           where: { id: objetId, etablissementId },
           ...selectId,
         }),
@@ -95,7 +96,7 @@ export async function objetAppartientAEtablissement(
       // Une version de DUERP ne porte pas l'établissement : il se lit à
       // travers le DUERP dont elle est une version.
       return Boolean(
-        await prisma.duerpVersion.findFirst({
+        await db.duerpVersion.findFirst({
           where: { id: objetId, duerp: { etablissementId } },
           ...selectId,
         }),

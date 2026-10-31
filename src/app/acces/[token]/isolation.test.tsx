@@ -67,12 +67,18 @@ function table(lignes: Ligne[]) {
 const NOM_FICHIER_VOISIN = "rapport-electrique-du-voisin.pdf";
 const OBLIGATION_VOISIN = "Vérification annuelle des installations électriques";
 
-const { prismaMock, verifierMock } = vi.hoisted(() => ({
+const { prismaMock, verifierMock, proprietaire } = vi.hoisted(() => ({
   prismaMock: {} as Record<string, ReturnType<typeof table>>,
   verifierMock: vi.fn(),
+  proprietaire: { userId: "user-1" as string | null },
 }));
 
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
+// Sans session, le compte vient du propriétaire de l'établissement du jeton
+// (ADR-051, `compte-hors-session.ts`) : ici, le client borné simulé.
+vi.mock("@/lib/auth/compte-hors-session", async () =>
+  (await import("@/test/garde-simulee")).compteHorsSessionSimule({ proprietaire: () => proprietaire.userId }),
+);
 vi.mock("@/lib/access-tokens/verify", () => ({
   verifierAccessToken: verifierMock,
 }));
@@ -190,6 +196,7 @@ const PERMIS_VOISIN = permisDe("etab-voisin", "voisin");
 
 beforeEach(() => {
   vi.clearAllMocks();
+  proprietaire.userId = "user-1";
   prismaMock.rapportVerification = table([
     {
       id: "rap-voisin",
@@ -215,6 +222,16 @@ beforeEach(() => {
       entreprise: { raisonSociale: "Mon entreprise" },
     },
   ]);
+});
+
+describe("page d'accès — établissement du jeton sans propriétaire", () => {
+  it("un établissement disparu ou sans propriétaire rend un 404, sans rien lire", async () => {
+    proprietaire.userId = null;
+    verifierMock.mockResolvedValue(jetonSignature("rap-a-moi"));
+
+    await expect(rendreLaPage()).rejects.toThrow("NEXT_NOT_FOUND");
+    expect(prismaMock.rapportVerification.findFirst).not.toHaveBeenCalled();
+  });
 });
 
 describe("page d'accès — objet situé hors du périmètre du jeton", () => {

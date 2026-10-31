@@ -1,5 +1,4 @@
-import { prisma } from "@/lib/prisma";
-import type { ObjetSignable } from "@prisma/client";
+import type { ObjetSignable, Prisma } from "@prisma/client";
 
 /**
  * Un objet signable porte-t-il déjà une trace de signature ?
@@ -36,15 +35,17 @@ import type { ObjetSignable } from "@prisma/client";
  * pas.
  */
 export async function porteUneTraceDeSignature(
+  /** Le client borné au compte de l'appelant (ADR-051). */
+  db: Prisma.TransactionClient,
   objetType: ObjetSignable,
   objetId: string,
   etablissementId: string,
 ): Promise<boolean> {
   const [signatures, jetons] = await Promise.all([
-    prisma.signature.count({
+    db.signature.count({
       where: { objetType, objetId, etablissementId },
     }),
-    prisma.accessToken.count({
+    db.accessToken.count({
       where: { objetType, objetId, etablissementId },
     }),
   ]);

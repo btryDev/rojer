@@ -10,11 +10,13 @@ import "server-only";
 // limitation de débit par IP (`LIMITES.verificationIp`).
 
 import { headers } from "next/headers";
-import type { MethodeSignature } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { ipClient } from "@/lib/securite/ip-client";
 import { cleLimite, consommer, LIMITES } from "@/lib/securite/limite-debit";
 import { calculerHashObjet, versionDeHash } from "./hash-objet";
+import { SELECT_PREUVE } from "./preuve";
+import { clientDuProprietaire } from "@/lib/auth/compte-hors-session";
 
 /**
  * Élément de preuve exposé publiquement par `/verifier/[signatureId]`.
@@ -28,16 +30,7 @@ import { calculerHashObjet, versionDeHash } from "./hash-objet";
  * restent côté serveur : ils n'apportent rien à la vérification et
  * dessineraient la carte interne du compte.
  */
-export type PreuveSignature = {
-  id: string;
-  signataireNom: string;
-  signataireEmail: string;
-  signataireRole: string | null;
-  horodatageIso: Date;
-  methode: MethodeSignature;
-  hashDocument: string;
-  nomDocument: string | null;
-};
+export type PreuveSignature = Prisma.SignatureGetPayload<{ select: typeof SELECT_PREUVE }>;
 
 /**
  * Vérifie l'intégrité d'une signature : recalcule le hash du document et
@@ -62,7 +55,13 @@ export async function verifierIntegriteSignature(
   });
   if (!signature) return { ok: false, raison: "inexistante" };
 
+  // Le recalcul lit par le client borné au compte propriétaire de
+  // l'établissement que porte la signature (ADR-051) : sans session, le
+  // compte vient de la preuve, jamais de l'appelant.
+  const db = await clientDuProprietaire(signature.etablissementId);
+  if (!db) return { ok: false, raison: "document_introuvable" };
   const h = await calculerHashObjet(
+    db,
     signature.objetType,
     signature.objetId,
     signature.etablissementId,
@@ -110,16 +109,7 @@ export async function verifierIntegriteSignature(
  * voir. L'adresse IP, le user-agent, l'établissement et l'objet signé restent
  * dehors.
  */
-function enPreuve(signature: {
-  id: string;
-  signataireNom: string;
-  signataireEmail: string;
-  signataireRole: string | null;
-  horodatageIso: Date;
-  methode: MethodeSignature;
-  hashDocument: string;
-  nomDocument: string | null;
-}): PreuveSignature {
+function enPreuve(signature: PreuveSignature): PreuveSignature {
   return {
     id: signature.id,
     signataireNom: signature.signataireNom,
@@ -156,4 +146,24 @@ export async function verifierSousLimite(
     }
   }
   return verifierIntegriteSignature(signatureId);
+}
+
+/**
+ * Lit une signature par son identifiant, **sans authentification**.
+ *
+ * Seul appelant : la page de confirmation `/signe/[signatureId]`, que voit
+ * le signataire juste après avoir signé. La page publique de vérification
+ * `/verifier/[signatureId]`, sa sœur, passe par `verifierSousLimite`.
+ * L'identifiant `sig_…` est un UUID aléatoire, donc non énumérable.
+ *
+ * En contrepartie, la projection est limitée à ce qui sert la preuve.
+ * L'adresse IP, le user-agent, l'identifiant d'établissement et l'objet
+ * signé ne sortent pas d'ici : ils ne participent pas à la vérification et
+ * exposeraient la structure interne du compte.
+ */
+export async function getSignature(id: string) {
+  return prisma.signature.findUnique({
+    where: { id },
+    select: SELECT_PREUVE,
+  });
 }
