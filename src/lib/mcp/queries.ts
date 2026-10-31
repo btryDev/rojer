@@ -20,9 +20,8 @@ import "server-only";
 // que d'une variable d'environnement, seul l'appelant change.
 //
 // [2026-10-31, ADR-051] Chaque fonction reçoit en premier paramètre `db`, le
-// client borné au compte de la session MCP (`./db.ts` : le compte du jeton
-// OAuth, ou le propriétaire de l'établissement pour la clé et le stdio). La
-// borne de compte s'AJOUTE à l'`etablissementId` de chaque `where`, qui reste.
+// client borné au propriétaire de l'établissement servi (`./db.ts` ; sur cc,
+// pas de jeton OAuth, ADR-052). La borne de compte s'AJOUTE à l'`etablissementId` de chaque `where`, qui reste.
 //
 // Lecture seule : aucune fonction d'écriture n'a sa place dans ce fichier.
 
