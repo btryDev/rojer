@@ -6,7 +6,9 @@
 // PRÉSENT dans la requête, pas qu'il filtre (un `OR ${proprietaire}`, ou une
 // sous-requête qui l'omet, passeraient). Ici c'est le RÉSULTAT qui est
 // vérifié : chaque sous-requête a une ligne de A à compter, donc un prédicat
-// qui ne filtre pas se voit dans les nombres que B reçoit.
+// qui ne filtre pas se voit dans les nombres que B reçoit. Limite : seules les
+// branches semées sont éprouvées (une ligne ouverte et une close par table).
+// Un appelant neuf du helper doit entrer ici (`portee/imports.test.ts`).
 //
 // SAUTÉ PAR DÉFAUT, comme `portee/client.integration` : il ne tourne que si
 // `ISOLATION_INTEGRATION_URL` pointe une base LOCALE migrée, qu'il VIDE
@@ -32,7 +34,7 @@ describe.skipIf(!URL_BASE || !local)("SQL brut borné au propriétaire — Postg
   const { prisma } = await import("@/lib/prisma");
   const { Prisma } = await import("@prisma/client");
   const { anneesDuRegistre } = await import("@/lib/rapports/queries");
-  const { derniersRapportsDeLEtablissement } = await import("@/lib/rapports/joindre-realisations");
+  const { derniersRapportsDeLEtablissement, dernieresRealisationsDeLEtablissement } = await import("@/lib/rapports/joindre-realisations");
   const { comptesModulesDuRendu } = await import("@/lib/etablissements/modules");
 
   const A = "00000000-0000-0000-0000-0000000005aa";
@@ -75,11 +77,14 @@ describe.skipIf(!URL_BASE || !local)("SQL brut borné au propriétaire — Postg
         fichierTaille: 9,
       },
     });
-    // Échu et non clos : compté par « total » ET par « échus ».
-    await prisma.permisFeu.create({
+    // Une ligne ouverte (échue, non close, sans inspection : comptée par toutes
+    // les sous-requêtes) et une close (comptée par « total » seulement) : un
+    // prédicat mis en `OR` avec une condition de statut se verrait aussi.
+    for (const [i, statut] of (["valide", "termine"] as const).entries())
+      await prisma.permisFeu.create({
       data: {
         etablissementId: etab.id,
-        numero: 1,
+        numero: i + 1,
         prestataireRaison: "Soudure SARL",
         prestataireContact: "M. Martin",
         prestataireEmail: "contact@exemple.invalid",
@@ -89,14 +94,14 @@ describe.skipIf(!URL_BASE || !local)("SQL brut borné au propriétaire — Postg
         descriptionTravaux: "Soudure",
         lieu: "Cuisine",
         naturesTravaux: ["soudage_arc"],
-        statut: "valide",
+        statut,
       },
     });
-    // Échu, non clos, sans inspection : compté par les trois sous-requêtes des plans.
-    await prisma.planPrevention.create({
+    for (const [i, statut] of (["valide", "clos"] as const).entries())
+      await prisma.planPrevention.create({
       data: {
         etablissementId: etab.id,
-        numero: 1,
+        numero: i + 1,
         entrepriseExterieureRaison: "Nettoyage SAS",
         efChefNom: "M. Petit",
         efChefEmail: "chef@exemple.invalid",
@@ -106,7 +111,7 @@ describe.skipIf(!URL_BASE || !local)("SQL brut borné au propriétaire — Postg
         dateFin: PASSE,
         lieux: "Cuisine",
         naturesTravaux: "Nettoyage",
-        statut: "valide",
+        statut,
       },
     });
     return { etab, verif };
@@ -137,19 +142,21 @@ describe.skipIf(!URL_BASE || !local)("SQL brut borné au propriétaire — Postg
     expect(await anneesDuRegistre(a.etab.id, 2026)).toEqual([2026]);
   });
 
-  it("dernière réalisation : B ne lit aucun rapport de A", async () => {
+  it("dernière réalisation, tous rapports et réalisés seulement : B ne lit aucun rapport de A", async () => {
     comme(A);
     expect([...(await derniersRapportsDeLEtablissement(a.etab.id)).keys()]).toEqual([a.verif.id]);
+    expect([...(await dernieresRealisationsDeLEtablissement(a.etab.id)).keys()]).toEqual([a.verif.id]);
     comme(B);
     expect((await derniersRapportsDeLEtablissement(a.etab.id)).size).toBe(0);
+    expect((await dernieresRealisationsDeLEtablissement(a.etab.id)).size).toBe(0);
   });
 
   it("compteurs des modules : chacune des cinq sous-requêtes rend 0 à B", async () => {
     comme(A);
     const pourA = await comptesModulesDuRendu(a.etab.id, AUJOURDHUI);
     expect({ permis: pourA.permisFeu, plans: pourA.plansPrevention }).toEqual({
-      permis: { total: 1, echusNonClos: 1 },
-      plans: { total: 1, sansInspection: 1, echusNonClos: 1 },
+      permis: { total: 2, echusNonClos: 1 },
+      plans: { total: 2, sansInspection: 1, echusNonClos: 1 },
     });
     comme(B);
     const pourB = await comptesModulesDuRendu(a.etab.id, AUJOURDHUI);
