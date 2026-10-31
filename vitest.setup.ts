@@ -14,10 +14,9 @@
 // écriture imbriquée non servie, `include` d'un modèle hors compte, clé et
 // relation données ensemble, opération non servie (revue du 2026-10-31). Le
 // mock reçoit les arguments d'ORIGINE : les assertions des tests sur ce qu'un
-// module envoie restent vraies. Échappent à cette vérification : `createMany`
-// (le relevé des parents vus n'existe que sous le vrai client ; tenu par
-// `portee/usages.test.ts`), relayé par `creerEnLotVerifie` ci-dessous. Le
-// client d'une `$transaction` interactive est vérifié de même.
+// module envoie restent vraies. `createMany` y passe aussi : hors d'un lot de
+// `creerEnLotVerifie` (simulé ci-dessous), il est refusé comme en production.
+// Le client d'une `$transaction` interactive est vérifié de même.
 //
 // Hors de `src/` : la production n'en voit rien.
 

@@ -34,7 +34,8 @@ export const PORTEE_SIMULEE = Symbol("portee-simulee");
  * `verifier` : les arguments passent par `argumentsBornes` pour ses REFUS
  * seuls, et le client simulé reçoit ceux d'origine — les assertions d'un test
  * de module sur ce qu'il envoie restent vraies (`vitest.setup.ts`). `createMany`
- * y échappe : le relevé des parents vus n'existe que sous le vrai client.
+ * aussi : hors d'un lot (`creerEnLotVerifie`), il est refusé comme en
+ * production (seconde lecture de #142).
  */
 export function clientBorneSimule<T extends object>(
   brut: T,
