@@ -35,7 +35,7 @@ import {
   type RegimeExigence,
 } from "./reponses-exigees";
 import { MESSAGE_APPAREIL_RETIRE, estAppareilRetire } from "./retrait";
-import { constaterEpi } from "@/lib/etablissements/epi-constate";
+import { constaterEpiDuCompte } from "@/lib/etablissements/epi-constate";
 
 /**
  * Toute mutation d'équipement invalide le calendrier de vérifications : on
@@ -184,7 +184,7 @@ export async function creerEquipement(
     },
   });
   if (estCategorieEpi(parsed.data.categorie)) {
-    await constaterEpi(etablissementId, { regenerer: false });
+    await constaterEpiDuCompte(db, etablissementId, { regenerer: false });
   }
 
   const regen = await regenererCalendrier(etablissementId);
@@ -268,7 +268,7 @@ export async function modifierEquipement(
   });
 
   if (estCategorieEpi(parsed.data.categorie)) {
-    await constaterEpi(eq.etablissementId, { regenerer: false });
+    await constaterEpiDuCompte(db, eq.etablissementId, { regenerer: false });
   }
   const regen = await regenererCalendrier(eq.etablissementId);
 
@@ -567,7 +567,7 @@ export async function creerEquipementsDepuisPreRemplissage(
     })),
   );
   if (entrees.some((e) => estCategorieEpi(e.categorie))) {
-    await constaterEpi(etablissementId, { regenerer: false });
+    await constaterEpiDuCompte(db, etablissementId, { regenerer: false });
   }
 
   const regen = await regenererCalendrier(etablissementId);

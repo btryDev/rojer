@@ -19,7 +19,7 @@ import {
   equipementsPourLeMoteur,
 } from "@/lib/etablissements/dossier-du-rendu";
 import { evaluerCouverture } from "@/lib/duerps/couverture";
-import { duerpDuRendu } from "@/lib/duerps/queries";
+import { duerpDuRenduDuCompte } from "@/lib/duerps/queries";
 import { lireReponsesActivites } from "@/lib/activites/reponses";
 import {
   compterSansObligation,
@@ -68,7 +68,7 @@ export async function faitsDeCouverture(
   const [etab, duerp, unites, nbRetires] = await Promise.all([
     chargerEtablissementEtParc(etablissementId, user.id),
     // Le DUERP du rendu, partagé avec le tableau de bord et la barre latérale.
-    duerpDuRendu(etablissementId, user.id),
+    duerpDuRenduDuCompte(db, etablissementId, user.id),
     // Ses unités, que la couverture seule lit. « 1 établissement = 1 DUERP »
     // (`Duerp.etablissementId @unique`) : celles du DUERP de l'établissement.
     db.uniteTravail.findMany({

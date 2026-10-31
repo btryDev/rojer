@@ -1,6 +1,7 @@
 import "server-only";
 // Le client Prisma borné à une portée (ADR-051 § 2) : un compte. [La portée
-// « établissement » viendra au lot 2b, voir `Portee`.] Il ajoute la
+// « établissement » n'est pas faite : jetons et MCP sont bornés au compte
+// propriétaire, décision de la propriétaire du 2026-10-30.] Il ajoute la
 // borne à chaque opération de modèle, même si l'appelant l'oublie, et refuse
 // ce qu'il ne sait pas borner. Il ne s'obtient qu'avec une portée : sans
 // elle, pas de client.
@@ -53,7 +54,13 @@ export function clientBorne(portee: Portee): ClientBorne {
     throw new ErreurPortee("portée sans identifiant : client refusé");
   const cle = `compte:${id}`;
   let client = CLIENTS.get(cle);
-  if (!client) {
+  if (client) {
+    // Le plus récemment servi passe en queue : l'éviction vise le moins
+    // récemment servi, pas le plus ancien créé — un client remplacé au milieu
+    // d'un rendu ferait manquer les `cache()` qui le prennent pour clé.
+    CLIENTS.delete(cle);
+    CLIENTS.set(cle, client);
+  } else {
     if (CLIENTS.size >= MAX_CLIENTS) CLIENTS.delete(CLIENTS.keys().next().value!);
     // L'identifiant lu une seule fois sert à la clé ET au client : un objet à
     // accesseur ne peut pas rendre deux comptes (contre-vérification du lot 2a).

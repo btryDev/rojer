@@ -18,7 +18,6 @@ vi.mock("@/lib/auth/require-user", () => ({
   requireUser: vi.fn(async () => ({ id: "user-1" })),
 }));
 vi.mock("@/lib/auth/scope", () => ({
-  assertEntrepriseOwnership: vi.fn(async () => undefined),
   // La garde rend aussi le client borné (ADR-051) : ici, le client simulé.
   assertEntrepriseDuCompte: async (...a: unknown[]) => ({
     user: (await (vi.fn(async () => undefined) as (...x: unknown[]) => unknown)(...a)) ?? { id: "u1" },

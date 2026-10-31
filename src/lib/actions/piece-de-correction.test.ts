@@ -29,7 +29,6 @@ vi.mock("@/lib/auth/require-user", () => ({
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/etablissements/epi-constate", () => ({
-  constaterEpi: vi.fn(async () => false),
   constaterEpiDuCompte: vi.fn(async () => false),
 }));
 vi.mock("@/lib/suppression/fichiers", () => ({ libererFichiers: h.liberer }));

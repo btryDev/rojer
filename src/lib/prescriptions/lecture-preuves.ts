@@ -1,4 +1,3 @@
-import { prisma } from "@/lib/prisma";
 import type { Db } from "@/lib/auth/compte";
 import {
   lignesVisees,
@@ -16,17 +15,8 @@ import {
  * rougisse : `portee.test.ts` tient désormais l'appel dans les deux fichiers,
  * et `prescriptions/actions.test.ts` la clause.
  *
- * Par le client brut, pour les appelants qui ne passent pas encore le client
- * borné (ADR-051, lot 2b) : elle délègue à `chargerLignesViseesDuCompte`.
+ * Par le client borné au compte de l'appelant (ADR-051).
  */
-export async function chargerLignesVisees(
-  etablissementId: string,
-  p: PrescriptionAPreuver,
-): Promise<LigneVisee[]> {
-  return chargerLignesViseesDuCompte(prisma, etablissementId, p);
-}
-
-/** La même lecture, par le client borné au compte de l'appelant (ADR-051). */
 export async function chargerLignesViseesDuCompte(
   db: Db,
   etablissementId: string,

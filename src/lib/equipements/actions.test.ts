@@ -162,7 +162,7 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 // La règle des EPI constatés vit dans `epi-constate.ts`, testée là ; ici, on
 // vérifie que chaque écriture d'équipement l'appelle, AVANT la régénération.
 vi.mock("@/lib/etablissements/epi-constate", () => ({
-  constaterEpi: vi.fn(async (id: string, opts?: { regenerer?: boolean }) => {
+  constaterEpiDuCompte: vi.fn(async (_db: unknown, id: string, opts?: { regenerer?: boolean }) => {
     h.db.journal.push(`constat:${id}:${opts?.regenerer === false ? "sans-regen" : "regen"}`);
     return false;
   }),
@@ -474,7 +474,7 @@ describe("D29 (a) : les réponses exigées d'un appareil de levage", () => {
 });
 
 // ~~« un EPI déclaré contredit un « non » aux EPI » (B2)~~ — la règle est
-// partagée depuis le 2026-10-22 (`constaterEpi`, testée dans
+// partagée depuis le 2026-10-22 (`constaterEpiDuCompte`, testée dans
 // `etablissements/epi-constate.test.ts`) ; ici, l'appel et son ordre.
 describe("une écriture d'équipement fait constater les EPI, avant la régénération (B2, 2026-10-22)", () => {
   function epi(categorie: string): FormData {

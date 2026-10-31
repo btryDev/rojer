@@ -11,7 +11,7 @@ vi.mock("@/lib/prisma", () => ({
 vi.mock("@/lib/calendrier/regeneration-sure", () => ({ regenererApresMutation: h.regenerer }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-const { constaterEpi, epiConstates } = await import("./epi-constate");
+const { constaterEpiDuCompte, epiConstates } = await import("./epi-constate");
 // Le client que la garde de l'appelant rendrait (ADR-051) : ici, le simulé.
 const { prisma: db } = await import("@/lib/prisma");
 
@@ -31,7 +31,7 @@ const CONSTATES = {
 describe("EPI constatés : une mesure en place ou un EPI au parc vaut « oui »", () => {
   it("ne passe à « oui » qu'un silence ou un « non », sur une mesure LEVÉE ou un EPI actif", async () => {
     h.updateMany.mockResolvedValue({ count: 1 });
-    expect(await constaterEpi("etab-1")).toBe(true);
+    expect(await constaterEpiDuCompte(db, "etab-1")).toBe(true);
     expect(h.updateMany).toHaveBeenCalledWith({
       where: {
         AND: [
@@ -47,9 +47,9 @@ describe("EPI constatés : une mesure en place ou un EPI au parc vaut « oui »"
 
   it("sans changement, ou à la demande de l'appelant, ne régénère rien", async () => {
     h.updateMany.mockResolvedValue({ count: 0 });
-    expect(await constaterEpi("etab-1")).toBe(false);
+    expect(await constaterEpiDuCompte(db, "etab-1")).toBe(false);
     h.updateMany.mockResolvedValue({ count: 1 });
-    expect(await constaterEpi("etab-1", { regenerer: false })).toBe(true);
+    expect(await constaterEpiDuCompte(db, "etab-1", { regenerer: false })).toBe(true);
     expect(h.regenerer).not.toHaveBeenCalled();
   });
 

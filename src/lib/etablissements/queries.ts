@@ -1,6 +1,5 @@
 import "server-only";
 import { requireCompte, type Db } from "@/lib/auth/compte";
-import { prisma } from "@/lib/prisma";
 import { duerpDuRenduDuCompte } from "@/lib/duerps/queries";
 import { cache } from "react";
 
@@ -49,17 +48,6 @@ export const etablissementDuRendu = cache(
   },
 );
 
-/**
- * La même lecture par le client brut, pour les appelants qui ne tiennent pas
- * encore le client borné (`dashboard/queries.ts`, isolation lot 2b). Son cache
- * est distinct de celui d'`etablissementDuRendu` : le jour où ils passent à
- * celle-ci, la lecture redevient unique par rendu, et celle-ci disparaît.
- */
-export const etablissementDuCompteDuRendu = cache(
-  async function etablissementDuCompteDuRendu(id: string, userId: string) {
-    return etablissementDuRendu(prisma, id, userId);
-  },
-);
 
 /**
  * L'établissement du user, son entreprise et son DUERP (`null` s'il n'en a

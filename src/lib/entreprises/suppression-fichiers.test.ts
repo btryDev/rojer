@@ -39,7 +39,6 @@ const h = vi.hoisted(() => {
 vi.mock("@/lib/prisma", () => ({ prisma: h.prisma }));
 vi.mock("@/lib/storage", () => ({ getStorage: () => h.stockage }));
 vi.mock("@/lib/auth/scope", () => ({
-  assertEntrepriseOwnership: vi.fn(async () => ({ id: "u" })),
   // La garde rend aussi le client borné (ADR-051) : ici, le client simulé.
   assertEntrepriseDuCompte: vi.fn(async () => ({ user: { id: "u" }, db: h.prisma })),
 }));

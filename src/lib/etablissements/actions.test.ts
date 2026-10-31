@@ -156,7 +156,6 @@ vi.mock("@/lib/auth/scope", () => ({
     user: (await (vi.fn(async () => ({ id: "user-1" })) as (...x: unknown[]) => unknown)(...a)) ?? { id: "u1" },
     db: (await import("@/lib/prisma")).prisma,
   }),
-  assertEntrepriseOwnership: vi.fn(async () => ({ id: "user-1" })),
   // La garde rend aussi le client borné (ADR-051) : ici, le client simulé.
   assertEntrepriseDuCompte: async (...a: unknown[]) => ({
     user: (await (vi.fn(async () => ({ id: "user-1" })) as (...x: unknown[]) => unknown)(...a)) ?? { id: "u1" },

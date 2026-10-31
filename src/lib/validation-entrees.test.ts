@@ -54,7 +54,6 @@ vi.mock("@/lib/auth/scope", async (orig) => ({
 }));
 vi.mock("next/cache", () => ({ revalidatePath: () => undefined, revalidateTag: () => undefined }));
 vi.mock("@/lib/etablissements/epi-constate", () => ({
-  constaterEpi: vi.fn(async () => false),
   constaterEpiDuCompte: vi.fn(async () => false),
 }));
 vi.mock("@/lib/batiments/queries", async (orig) => ({

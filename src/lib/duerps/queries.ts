@@ -1,6 +1,5 @@
 import "server-only";
 import { requireCompte, type Db } from "@/lib/auth/compte";
-import { prisma } from "@/lib/prisma";
 import { cache } from "react";
 
 // ADR-005 : scope par userId via la chaîne duerp → etablissement → entreprise.
@@ -95,19 +94,6 @@ export const duerpDuRenduDuCompte = cache(async function duerpDuRenduDuCompte(
   });
 });
 
-/**
- * La même lecture par le client brut, pour les appelants qui ne tiennent pas
- * encore le client borné (`calendrier/echeances.ts`, `dashboard/queries.ts`,
- * `perimetre/faits.ts`, isolation lot 2b). Son cache est distinct : le jour où
- * ils passent à `duerpDuRenduDuCompte`, la lecture redevient unique par
- * rendu, et celle-ci disparaît.
- */
-export const duerpDuRendu = cache(async function duerpDuRendu(
-  etablissementId: string,
-  userId: string,
-) {
-  return duerpDuRenduDuCompte(prisma, etablissementId, userId);
-});
 
 /**
  * Le DUERP du user, avec son établissement, ses unités, risques, mesures et

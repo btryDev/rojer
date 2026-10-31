@@ -27,33 +27,11 @@ vi.mock("@/lib/auth/portee/client", async () => {
   const { argumentsBornes } = await vi.importActual<typeof import("@/lib/auth/portee/borne")>(
     "@/lib/auth/portee/borne",
   );
-  const valider = (portee: { type: "compte"; userId: string }) =>
-    new Proxy(prisma as object, {
-      get(cible, cle) {
-        const valeur = Reflect.get(cible, cle) as unknown;
-        if (typeof cle !== "string" || cle.startsWith("$") || valeur === null || typeof valeur !== "object") {
-          return valeur;
-        }
-        const nom = cle.charAt(0).toUpperCase() + cle.slice(1);
-        return new Proxy(valeur, {
-          get(modele, operation) {
-            const f = Reflect.get(modele, operation) as unknown;
-            if (typeof operation !== "string" || typeof f !== "function" || operation === "createMany") return f;
-            return (args?: unknown, ...reste: unknown[]) => {
-              let copie: unknown = args ?? {};
-              try {
-                copie = structuredClone(copie);
-              } catch {
-                // Un argument non clonable (fonction simulée) : vérifié tel quel.
-              }
-              argumentsBornes(nom, operation, copie, portee);
-              return f.call(modele, args, ...reste);
-            };
-          },
-        });
-      },
-    });
-  return { clientBorne: valider };
+  const { clientBorneSimule } = await import("@/test/client-borne-simule");
+  return {
+    clientBorne: (portee: { type: "compte"; userId: string }) =>
+      clientBorneSimule(prisma as object, portee, argumentsBornes, "verifier"),
+  };
 });
 
 // De même, `creerEnLotVerifie` (qui lit les parents par le client borné avant

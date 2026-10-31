@@ -80,11 +80,6 @@ function relation(nom: string, champ: string): Relation | undefined {
   return relations(nom).find((r) => r.nom === champ);
 }
 
-/** Vrai si une ligne de ce modèle appartient à un compte. */
-export function estDuCompte(nom: string): boolean {
-  return genreDe(classement(nom)) === "compte";
-}
-
 /** Les relations d'un modèle vers une ligne d'un compte, par leur clé. */
 export function clesDuCompte(nom: string): { cle: string; cible: string }[] {
   return relations(nom).flatMap((r) =>
@@ -129,13 +124,13 @@ function valeurScalaire(v: unknown): unknown {
   throw new ErreurPortee(`opération inattendue sur une clé : ${Object.keys(v).join(", ")}`);
 }
 
-/** Vérifie et pose la racine (`userId`) d'une création ou d'une mise à jour. */
 /** La clé de racine d'un modèle racine (`Entreprise.userId`) — et elle seule. */
 function estLaRacine(nom: string, cle: string): boolean {
   const c = classement(nom);
   return "racine" in c && c.racine === cle;
 }
 
+/** Vérifie et pose la racine (`userId`) d'une création ou d'une mise à jour. */
 function racineDe(nom: string, data: Objet, portee: Portee, creation: boolean): void {
   const c = classement(nom);
   if (!("racine" in c)) return;

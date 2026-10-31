@@ -4,7 +4,7 @@ import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-reten
 import { projeterEtablissement } from "@/lib/matching/projection";
 import { cleJourCivil } from "@/lib/dates";
 import { compterLignesAvecPreuve } from "./preuves";
-import { chargerLignesVisees } from "./lecture-preuves";
+import { chargerLignesViseesDuCompte } from "./lecture-preuves";
 import {
   appliquerPrescriptions,
   determineObligationsApplicables,
@@ -13,7 +13,7 @@ import {
 } from "@/lib/matching";
 import { obligationParId, OBLIGATIONS_RETIREES } from "@/lib/referentiels/conformite";
 import { libelleObligationRetiree } from "@/lib/matching/obligation-retiree";
-import { derniersLibellesConnus } from "./libelles-retires";
+import { derniersLibellesConnusDuCompte } from "./libelles-retires";
 import { LABEL_PERIODICITE } from "@/lib/calendrier/labels";
 
 export type EtatPrescription =
@@ -108,11 +108,11 @@ export async function chargerPagePrescriptions(
         async (p) =>
           [
             p.id,
-            compterLignesAvecPreuve(p, await chargerLignesVisees(etab.id, p)),
+            compterLignesAvecPreuve(p, await chargerLignesViseesDuCompte(db, etab.id, p)),
           ] as const,
       ),
     ),
-    derniersLibellesConnus(etab.id, retireesVisees),
+    derniersLibellesConnusDuCompte(db, etab.id, retireesVisees),
   ]);
   const preuves = new Map<string, number>(comptesPreuves);
 

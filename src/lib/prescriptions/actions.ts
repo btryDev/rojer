@@ -7,7 +7,7 @@ import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import { cleJourCivil, depuisCleJourCivil, estJourCivilReel } from "@/lib/dates";
 import { validerPrescription } from "./schema";
 import { compterLignesAvecPreuve } from "./preuves";
-import { chargerLignesVisees } from "./lecture-preuves";
+import { chargerLignesViseesDuCompte } from "./lecture-preuves";
 import { raisonDuRefus } from "./refus-suppression";
 import { estPrescriptionLevee } from "@/lib/matching/prescriptions";
 
@@ -219,7 +219,7 @@ export async function supprimerPrescription(
   // de l'effet (2026-09-15). La lecture est celle de la page.
   const avecPreuve = compterLignesAvecPreuve(
     existante,
-    await chargerLignesVisees(etablissementId, existante),
+    await chargerLignesViseesDuCompte(db, etablissementId, existante),
   );
   if (avecPreuve > 0) {
     return {

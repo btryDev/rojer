@@ -8,7 +8,7 @@
 // module n'y ajoute que trois choses, chacune née d'un trou mesuré :
 //
 //  1. `normaliser` (déplacé dans la sonde le 2026-10-30, qui s'en sert pour
-//     `fonctionsAtteintes` ; ré-exporté ici) — `fonctions` ne voit ni `export const x = cache(async
+//     `fonctionsAtteintes`) — `fonctions` ne voit ni `export const x = cache(async
 //     function x(`, ni `export function f<T>(`. Trois lectures exportées de
 //     `*/queries.ts` lui échappaient (`getDashboardData`,
 //     `composerRegistreDeLEtablissement`, `grouperChargeParBatiment` — retirée
@@ -38,8 +38,6 @@ import {
   sansCommentairesNiChaines,
   type Fonction,
 } from "./tenancy-sonde";
-
-export { normaliser };
 
 /** Les fonctions de premier niveau, formes normalisées comprises. */
 export function decoupe(source: string): Map<string, Fonction> {

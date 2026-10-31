@@ -1,6 +1,5 @@
 import { revalidatePath } from "next/cache";
 import type { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
 import type { Db } from "@/lib/auth/compte";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import { CATEGORIES_EPI } from "@/lib/referentiels/types-communs";
@@ -80,17 +79,6 @@ export async function constaterEpiDuCompte(
   return true;
 }
 
-/**
- * La même écriture par le client brut, pour les appelants qui ne tiennent pas
- * encore le client borné (`equipements/actions.ts`, isolation lot 2b) ; elle
- * disparaît quand ils passent à `constaterEpiDuCompte`.
- */
-export async function constaterEpi(
-  etablissementId: string,
-  options: { regenerer?: boolean } = {},
-): Promise<boolean> {
-  return constaterEpiDuCompte(prisma, etablissementId, options);
-}
 
 /** Ce que l'écran dit quand un « non » contredit des EPI constatés. */
 export const MESSAGE_EPI_CONSTATES =

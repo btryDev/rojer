@@ -13,20 +13,6 @@ import { etablissementDuRendu } from "@/lib/etablissements/queries";
 import { cache } from "react";
 
 /**
- * Récupère une entreprise appartenant au user connecté, ou 404.
- * Utilisé dans les pages /entreprises/[id] et les actions qui reçoivent
- * un entrepriseId en paramètre.
- */
-export async function requireEntreprise(entrepriseId: string) {
-  const { user, db } = await requireCompte();
-  const entreprise = await db.entreprise.findFirst({
-    where: { id: entrepriseId, userId: user.id },
-  });
-  if (!entreprise) notFound();
-  return { user, db, entreprise };
-}
-
-/**
  * Récupère un établissement dont l'entreprise appartient au user connecté,
  * ou 404. Utilisé par toutes les pages /etablissements/[id]/... et les
  * actions qui reçoivent un etablissementId.
@@ -41,8 +27,10 @@ export async function requireEntreprise(entrepriseId: string) {
  * action serveur —, la garde s'exécute à chaque appel, comme avant.
  *
  * [2026-10-29, plan performance] La lecture est celle de `getEtablissement`
- * (`etablissementDuRendu`), bornée au propriétaire dans sa requête :
- * la garde et la page ne lisent plus l'établissement deux fois.
+ * (`etablissementDuRendu`) : la garde et la page ne lisent plus
+ * l'établissement deux fois. [2026-10-31 : bornée au compte par le client
+ * `db` (ADR-051) ; le prédicat écrit qu'elle garde encore est un doublon,
+ * à retirer avec les autres prédicats écrits (ADR-051 § 7).]
  */
 export const requireEtablissement = cache(async function requireEtablissement(
   etablissementId: string,
@@ -280,14 +268,7 @@ export async function assertEtablissementDuCompte(etablissementId: string) {
   return { user, db };
 }
 
-/**
- * Vérifie qu'un entrepriseId appartient au user.
- */
-export async function assertEntrepriseOwnership(entrepriseId: string) {
-  return (await assertEntrepriseDuCompte(entrepriseId)).user;
-}
-
-/** La même garde, qui rend aussi le client borné au compte (ADR-051). */
+/** Vérifie qu'un entrepriseId appartient au user ; rend aussi le client borné au compte (ADR-051). */
 export async function assertEntrepriseDuCompte(entrepriseId: string) {
   const { user, db } = await requireCompte();
   const exists = await db.entreprise.findFirst({

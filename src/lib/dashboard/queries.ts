@@ -30,8 +30,8 @@ import {
   lignesDuDossierDeLaPage,
   type LigneComptee,
 } from "@/lib/calendrier/queries";
-import { duerpDuRendu } from "@/lib/duerps/queries";
-import { etablissementDuCompteDuRendu } from "@/lib/etablissements/queries";
+import { duerpDuRenduDuCompte } from "@/lib/duerps/queries";
+import { etablissementDuRendu } from "@/lib/etablissements/queries";
 import { compterActions } from "@/lib/actions/queries";
 import { computeVigilance } from "@/lib/prestataires/vigilance";
 import { chargerTransmissions, titresDusEnRetard } from "./transmissions";
@@ -826,7 +826,7 @@ export const getDashboardData = cache(async function getDashboardData(
     db.action.count({ where: { ...scope, risqueId: { not: null } } }),
     // Le DUERP du rendu, partagé avec l'échéance annuelle de la barre
     // latérale, la couverture et la page (plan performance, 2026-10-29).
-    duerpDuRendu(etablissementId, user.id),
+    duerpDuRenduDuCompte(db, etablissementId, user.id),
     // Le parc compté une fois par rendu, partagé avec la barre latérale.
     comptesParcDuRendu(etablissementId).then((c) => c.total),
     // Dans le `Promise.all` et non derrière lui : le rapprochement ne dépend
@@ -862,7 +862,7 @@ export const getDashboardData = cache(async function getDashboardData(
     // L'effectif de l'entreprise et du site conditionne la mise à jour
     // annuelle du DUERP (art. R. 4121-2) — cf. `./duerp`. La lecture de la
     // garde d'appartenance, partagée sur le rendu.
-    etablissementDuCompteDuRendu(etablissementId, user.id),
+    etablissementDuRendu(db, etablissementId, user.id),
   ]);
 
   // Répartition unique, partagée avec les documents générés : quatre
