@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { EtablissementFaux, LigneFausse } from "./faux-prisma";
-import { lireEntrees, planifier, type ClientLecture } from "./passe";
+import { lireEntrees, planifier, type ClientPasse } from "./passe";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 
 // ADR-042 — ce que la passe de régénération fait des lignes DÉJÀ POSÉES d'une
@@ -47,7 +47,7 @@ const AUDIT_EPI = [
 const MAINTENANT = new Date("2026-10-09T08:00:00Z");
 
 const { db, prisma } = await h;
-const client = prisma as unknown as ClientLecture;
+const client = prisma as unknown as ClientPasse;
 
 function poserEtablissement(): EtablissementFaux {
   const etab: EtablissementFaux = {

@@ -1,0 +1,100 @@
+# Tests d'intégration contre un vrai PostgreSQL.
+#
+# Les `*.integration.test.ts` sautent sans leur variable d'environnement : sans
+# ce job, aucun ne tourne en CI. Celui-ci pose les variables de ceux qui ne
+# demandent qu'une base migrée et jetable :
+# - `auth/portee/client.integration` (ADR-051) : la matrice d'autorisation du
+#   client borné, d'un compte à l'autre ; il VIDE la base (`TRUNCATE`) ;
+# - `accessibilite/registre-vierge.integration` : le registre public créé sur
+#   un établissement vierge, sans seed.
+# Les deux tests refusent une URL qui ne vise pas `localhost` : la base du
+# service du runner, jamais une autre.
+#
+# Absents, et pourquoi : `etablissements/comptes-modules.integration` et
+# `rapports/joindre-realisations.integration` exigent une base semée du gros
+# dossier (`seed:complet`), que ce job ne sème pas ; `storage/supabase` exige
+# un vrai stockage Supabase et sa clé de service.
+#
+# Aucun secret, aucun accès à la production.
+
+name: Tests d'intégration
+
+on:
+  pull_request:
+    paths-ignore: ["docs/**", "**/*.md"]
+  push:
+    branches: [main]
+    paths-ignore: ["docs/**", "**/*.md"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: integration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        # La version de la production (Clever Cloud).
+        image: postgres:17
+        env:
+          POSTGRES_USER: duerp
+          POSTGRES_PASSWORD: duerp
+          POSTGRES_DB: rojer_integration_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U duerp"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://duerp:duerp@localhost:5432/rojer_integration_ci
+      DIRECT_URL: postgresql://duerp:duerp@localhost:5432/rojer_integration_ci
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Installer les dépendances
+        run: pnpm install --frozen-lockfile
+
+      - name: Migrer la base du service
+        run: pnpm exec prisma migrate deploy
+
+      - name: Lancer les tests d'intégration
+        env:
+          ISOLATION_INTEGRATION_URL: postgresql://duerp:duerp@localhost:5432/rojer_integration_ci
+          ACCESSIBILITE_INTEGRATION_URL: postgresql://duerp:duerp@localhost:5432/rojer_integration_ci
+          LIMITE_DEBIT_INTEGRATION_URL: postgresql://duerp:duerp@localhost:5432/rojer_integration_ci
+        # Un fichier après l'autre : ils partagent la base, et
+        # client.integration la vide (TRUNCATE "Entreprise" CASCADE, et "User" sur cc).
+        run: >-
+          pnpm exec vitest run
+          src/lib/auth/portee/client.integration
+          src/lib/accessibilite/registre-vierge.integration
+          src/lib/securite/limite-debit.integration
+          src/lib/calendrier/regeneration-bornee.integration
+          --no-file-parallelism
+          --reporter=default --reporter=json --outputFile.json=integration.json
+
+      # Un test d'intégration saute sans sa variable : renommée un jour, le job
+      # resterait vert sans rien tester. Il tombe si un test a sauté.
+      - name: Refuser un test sauté
+        run: >-
+          node -e "const r=require('./integration.json');
+          if (r.numTotalTests === 0 || r.numPendingTests > 0 || r.numTodoTests > 0)
+          { console.error('Tests sautés : ' + r.numPendingTests + ' / ' + r.numTotalTests); process.exit(1) }
+          console.log(r.numPassedTests + ' tests passés, aucun sauté')"

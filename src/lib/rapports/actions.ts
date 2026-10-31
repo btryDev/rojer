@@ -1,14 +1,13 @@
 "use server";
 
+import { requireCompte } from "@/lib/auth/compte";
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
 import {
   MESSAGE_APPAREIL_RETIRE,
   estAppareilRetire,
 } from "@/lib/equipements/retrait";
-import { requireUser } from "@/lib/auth/require-user";
 import {
   cleRapport,
   getStorage,
@@ -94,7 +93,7 @@ export async function uploadRapport(
   //    `serverActions.bodySizeLimit` (next.config).
   //    [2026-10-14, intégration avec `integration/audit-1013` : un seul appel,
   //    son `user` borne aussi la lecture de l'étape 3.]
-  const user = await requireUser();
+  const { user, db } = await requireCompte();
 
   // 1. Métadonnées
   const parsed = rapportMetadataSchema.safeParse({
@@ -143,7 +142,7 @@ export async function uploadRapport(
   //    seul `id` puis contrôlée, elle répondait « Vérification introuvable »
   //    pour un id absent et 404 pour celle d'autrui — un oracle d'existence.
   //    Les deux cas tombent désormais sur le même `notFound()`.
-  const verif = await prisma.verification.findFirst({
+  const verif = await db.verification.findFirst({
     where: { id: verificationId, etablissement: { entreprise: { userId: user.id } } },
     select: {
       id: true,
@@ -231,7 +230,7 @@ export async function uploadRapport(
   // 5. Persistance DB dans une transaction : le rapport, puis la ligne
   //    recalculée depuis ses faits. Tout ou rien.
   try {
-    await prisma.$transaction(async (tx) => {
+    await db.$transaction(async (tx) => {
       // LA LIGNE EST VERROUILLÉE AVANT TOUTE LECTURE, comme à la suppression
       // (revue du 2026-09-14) : deux dépôts concurrents sur la même ligne
       // s'enchaînent, et chacun lit ce que le précédent a laissé — l'échéance
@@ -369,8 +368,8 @@ export async function uploadRapport(
 export async function supprimerRapport(rapportId: string): Promise<void> {
   // Lu DANS le périmètre du compte, absent et étranger confondus dans le même
   // `notFound()` (audit du 2026-10-13, comme le dépôt ci-dessus).
-  const user = await requireUser();
-  const rap = await prisma.rapportVerification.findFirst({
+  const { user, db } = await requireCompte();
+  const rap = await db.rapportVerification.findFirst({
     where: { id: rapportId, etablissement: { entreprise: { userId: user.id } } },
     select: {
       id: true,
@@ -390,7 +389,7 @@ export async function supprimerRapport(rapportId: string): Promise<void> {
     throw new Error(MESSAGE_APPAREIL_RETIRE);
   }
 
-  await prisma.$transaction(async (tx) => {
+  await db.$transaction(async (tx) => {
     // LA LIGNE EST VERROUILLÉE AVANT TOUTE LECTURE, et c'est ce qui rend le
     // recalcul juste sous concurrence (revue du 2026-09-14). Deux suppressions
     // sur la même ligne — deux onglets, un double clic — lisaient chacune

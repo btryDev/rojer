@@ -1,5 +1,5 @@
 import type { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+import type { Db } from "@/lib/auth/compte";
 import { questionTransverseParId } from "@/lib/transverses/etat";
 import {
   poserRisqueTransverse,
@@ -24,13 +24,15 @@ import {
  * selon l'écran qui a répondu.
  *
  * L'appartenance est vérifiée par l'appelant (action serveur) ; ce module ne
- * reçoit qu'un identifiant déjà contrôlé.
+ * reçoit qu'un identifiant déjà contrôlé, et le client borné au compte
+ * (ADR-051) que l'appelant tient de sa garde.
  *
  * Rend `conserve: true` quand le DUERP garde une trace contraire à la réponse :
  * un risque travaillé (coté ou avec des actions) laissé malgré un « non »
  * donné hors du DUERP, ou un risque encore coché « exposition CMR ».
  */
 export async function ecrireFaitActivite(
+  db: Db,
   etablissementId: string,
   champ: ChampFaitActivite,
   valeur: boolean | null,
@@ -40,7 +42,7 @@ export async function ecrireFaitActivite(
   const question = fait.questionTransverse
     ? questionTransverseParId(fait.questionTransverse)
     : undefined;
-  return prisma.$transaction(async (tx) => {
+  return db.$transaction(async (tx) => {
     await tx.etablissement.update({
       where: { id: etablissementId },
       data: {

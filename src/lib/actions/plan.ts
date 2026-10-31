@@ -2,12 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
 import { requireAction, requireVerification } from "@/lib/auth/scope";
 import { estActionEnRetard, estActionOuverte } from "@/lib/dates/retard";
 import { actionVerificationSchema, cloturerActionSchema } from "./schema";
 import { assertOrigineActionValide } from "./origine";
-import { constaterEpi } from "@/lib/etablissements/epi-constate";
+import { constaterEpiDuCompte } from "@/lib/etablissements/epi-constate";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import {
   clePieceDePoint,
@@ -103,7 +102,7 @@ export async function creerPointACorriger(
   if (typeof verificationId !== "string" || verificationId === "") {
     return { status: "error", message: "Choisissez le contrôle qui a relevé ce point." };
   }
-  const { verification: verif } = await requireVerification(verificationId);
+  const { db, verification: verif } = await requireVerification(verificationId);
 
   const parsed = lireFormulaireAction(formData);
   if (!parsed.success) {
@@ -121,16 +120,16 @@ export async function creerPointACorriger(
   const equipementId = champFacultatif(formData.get("equipementId"));
   const [equipementDeLaLigne, rapport, appareil] = await Promise.all([
     verif.equipementId
-      ? prisma.equipement.findUnique({ where: { id: verif.equipementId }, select: { actif: true } })
+      ? db.equipement.findUnique({ where: { id: verif.equipementId }, select: { actif: true } })
       : null,
     rapportOrigineId
-      ? prisma.rapportVerification.findFirst({
+      ? db.rapportVerification.findFirst({
           where: { id: rapportOrigineId, verificationId: verif.id },
           select: { id: true },
         })
       : null,
     equipementId && estControleDEnsemble(verif)
-      ? prisma.equipement.findFirst({
+      ? db.equipement.findFirst({
           where: { id: equipementId, etablissementId: verif.etablissementId },
           select: { categorie: true, actif: true },
         })
@@ -161,7 +160,7 @@ export async function creerPointACorriger(
   );
 
   assertOrigineActionValide({ risqueId: null, verificationId: verif.id });
-  const a = await prisma.action.create({
+  const a = await db.action.create({
     data: {
       etablissementId: verif.etablissementId,
       verificationId: verif.id,
@@ -177,7 +176,7 @@ export async function creerPointACorriger(
     },
   });
 
-  await constaterEpi(verif.etablissementId);
+  await constaterEpiDuCompte(db, verif.etablissementId);
   revalidateAction(verif.etablissementId);
   return { status: "success", actionId: a.id };
 }
@@ -209,7 +208,7 @@ export async function modifierActionPlan(
   _prev: ActionPlanState,
   formData: FormData,
 ): Promise<ActionPlanState> {
-  const { action: existante, etablissementId } = await requireAction(actionId);
+  const { db, action: existante, etablissementId } = await requireAction(actionId);
 
   if (existante.risqueId) {
     return {
@@ -234,7 +233,7 @@ export async function modifierActionPlan(
     };
   }
 
-  await prisma.action.update({
+  await db.action.update({
     where: { id: actionId },
     data: {
       libelle: parsed.data.libelle,
@@ -245,7 +244,7 @@ export async function modifierActionPlan(
       responsable: parsed.data.responsable ?? null,
     },
   });
-  await constaterEpi(etablissementId);
+  await constaterEpiDuCompte(db, etablissementId);
 
   revalidateAction(etablissementId);
   redirect(`/etablissements/${etablissementId}/actions/${actionId}`);
@@ -256,7 +255,7 @@ export async function cloturerAction(
   _prev: ActionPlanState,
   formData: FormData,
 ): Promise<ActionPlanState> {
-  const { action: existante } = await requireAction(actionId);
+  const { db, action: existante } = await requireAction(actionId);
 
   const parsed = cloturerActionSchema.safeParse({
     commentaire: formData.get("commentaire"),
@@ -284,7 +283,7 @@ export async function cloturerAction(
   // comme justificatif dans le dossier de conformité). On exige un rapport
   // du même établissement que l'action.
   if (parsed.data.rapportId) {
-    const rapport = await prisma.rapportVerification.findFirst({
+    const rapport = await db.rapportVerification.findFirst({
       where: {
         id: parsed.data.rapportId,
         etablissementId: existante.etablissementId,
@@ -309,7 +308,7 @@ export async function cloturerAction(
   // ne référencerait, est libérée.
   let ecrites: number;
   try {
-    ({ count: ecrites } = await prisma.action.updateMany({
+    ({ count: ecrites } = await db.action.updateMany({
       where: { id: actionId, statut: { in: ["ouverte", "en_cours"] } },
       data: {
         statut: "levee",
@@ -336,7 +335,7 @@ export async function cloturerAction(
   }
 
   // Une mesure de protection individuelle levée vaut « EPI fournis ».
-  await constaterEpi(existante.etablissementId);
+  await constaterEpiDuCompte(db, existante.etablissementId);
   revalidateAction(existante.etablissementId);
   return { status: "success", actionId };
 }
@@ -381,13 +380,13 @@ async function lirePiece(
  * avant le geste.
  */
 export async function rouvrirAction(actionId: string): Promise<void> {
-  const { action, etablissementId } = await requireAction(actionId);
+  const { db, action, etablissementId } = await requireAction(actionId);
   if (estActionOuverte(action)) return;
 
   // Borné à ce qui a été lu (statut, pièce) : si le point a été rouvert puis
   // corrigé de nouveau entre-temps, avec une autre pièce, on n'efface pas
   // cette pièce-là en libérant l'ancienne — elle resterait orpheline.
-  const { count } = await prisma.action.updateMany({
+  const { count } = await db.action.updateMany({
     where: { id: actionId, statut: action.statut, leveeFichierCle: action.leveeFichierCle },
     data: {
       statut: "ouverte",
@@ -419,13 +418,13 @@ export async function rouvrirAction(actionId: string): Promise<void> {
  * abandonnée comme prévue.
  */
 export async function abandonnerAction(actionId: string): Promise<void> {
-  const { action, etablissementId } = await requireAction(actionId);
+  const { db, action, etablissementId } = await requireAction(actionId);
   if (action.risqueId) {
     throw new Error("Une mesure du DUERP ne s'abandonne pas depuis le plan d'actions");
   }
   if (!estActionOuverte(action)) return;
 
-  await prisma.action.update({
+  await db.action.update({
     where: { id: actionId },
     data: { statut: "abandonnee" },
   });
@@ -433,9 +432,9 @@ export async function abandonnerAction(actionId: string): Promise<void> {
 }
 
 export async function supprimerActionPlan(actionId: string): Promise<void> {
-  const { action, etablissementId } = await requireAction(actionId);
+  const { db, action, etablissementId } = await requireAction(actionId);
 
-  await prisma.action.delete({ where: { id: actionId } });
+  await db.action.delete({ where: { id: actionId } });
   if (action.leveeFichierCle) {
     await libererFichiers([action.leveeFichierCle], "points/suppression");
   }

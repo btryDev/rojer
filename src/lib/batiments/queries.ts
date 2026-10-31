@@ -1,6 +1,5 @@
 import "server-only";
-import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireCompte } from "@/lib/auth/compte";
 
 /**
  * Lectures des bâtiments d'un établissement (ADR-019).
@@ -21,9 +20,9 @@ export type BatimentListe = {
 export async function listerBatimentsDeLEtablissement(
   etablissementId: string,
 ): Promise<BatimentListe[]> {
-  const user = await requireUser();
-  const rows = await prisma.batiment.findMany({
-    where: { etablissementId, etablissement: { entreprise: { userId: user.id } } },
+  const { db } = await requireCompte();
+  const rows = await db.batiment.findMany({
+    where: { etablissementId },
     orderBy: [{ ordre: "asc" }, { createdAt: "asc" }],
     select: {
       id: true,
@@ -44,8 +43,8 @@ export async function listerBatimentsDeLEtablissement(
  * Lève si l'établissement n'a aucun bâtiment : c'est une violation
  * d'invariant, pas un cas à rattraper en silence.
  *
- * « Périmètre déjà vérifié » décrit l'usage, pas une dispense : le prédicat
- * est porté ici aussi — sans RLS (ADR-005, Prisma en rôle postgres),
+ * « Périmètre déjà vérifié » décrit l'usage, pas une dispense : ~~le prédicat
+ * est porté ici aussi~~ la borne au compte est portée ici aussi [2026-10-30, lot 2b de l'isolation : le prédicat écrit est retiré ; la borne est celle du client borné de `requireCompte()`, ajoutée à chaque opération (ADR-051) — même garantie, sans la seconde jointure.] — sans RLS (ADR-005, Prisma en rôle postgres),
  * l'isolation est une convention applicative, et une lecture qui ne la porte
  * pas devient une fuite le jour où un appelant nouveau ne vérifie pas
  * [2026-10-25 : la raison était écrite dans `listerBatimentsAvecCharge`,
@@ -54,11 +53,10 @@ export async function listerBatimentsDeLEtablissement(
  * refus : bruyant, et sans rien divulguer de l'autre dossier.
  */
 export async function batimentParDefaut(etablissementId: string) {
-  const user = await requireUser();
-  const b = await prisma.batiment.findFirst({
+  const { db } = await requireCompte();
+  const b = await db.batiment.findFirst({
     where: {
       etablissementId,
-      etablissement: { entreprise: { userId: user.id } },
     },
     orderBy: [{ ordre: "asc" }, { createdAt: "asc" }],
     select: { id: true, nom: true },
@@ -78,7 +76,8 @@ export async function batimentParDefaut(etablissementId: string) {
  * = id étranger ou inconnu.
  *
  * L'`etablissementId` vient lui aussi de l'appelant, et cette fonction est
- * ce qui **valide** un identifiant avant qu'il soit écrit : sans le prédicat,
+ * ce qui **valide** un identifiant avant qu'il soit écrit : sans la borne
+ * au compte (le client borné, depuis le 2026-10-30),
  * un `etablissementId` non gardé lui ferait confirmer comme valide le
  * bâtiment d'un autre compte, et le permis de feu s'y rattacherait. Ses trois
  * appelants — `carnet-sanitaire`, `permis-feu`, `plan-prevention` — posent
@@ -90,12 +89,11 @@ export async function resoudreBatimentOptionnel(
   batimentId: string | null | undefined,
 ): Promise<{ ok: true; id: string | null } | { ok: false }> {
   if (!batimentId) return { ok: true, id: null };
-  const user = await requireUser();
-  const b = await prisma.batiment.findFirst({
+  const { db } = await requireCompte();
+  const b = await db.batiment.findFirst({
     where: {
       id: batimentId,
       etablissementId,
-      etablissement: { entreprise: { userId: user.id } },
     },
     select: { id: true },
   });

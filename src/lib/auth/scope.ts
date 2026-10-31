@@ -7,24 +7,10 @@ import "server-only";
 import { Prisma } from "@prisma/client";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
-import { getOptionalUser, requireUser } from "./require-user";
-import { etablissementDuCompteDuRendu } from "@/lib/etablissements/queries";
+import { requireUser } from "./require-user";
+import { getOptionalCompte, requireCompte } from "./compte";
+import { etablissementDuRendu } from "@/lib/etablissements/queries";
 import { cache } from "react";
-
-/**
- * Récupère une entreprise appartenant au user connecté, ou 404.
- * Utilisé dans les pages /entreprises/[id] et les actions qui reçoivent
- * un entrepriseId en paramètre.
- */
-export async function requireEntreprise(entrepriseId: string) {
-  const user = await requireUser();
-  const entreprise = await prisma.entreprise.findFirst({
-    where: { id: entrepriseId, userId: user.id },
-  });
-  if (!entreprise) notFound();
-  return { user, entreprise };
-}
 
 /**
  * Récupère un établissement dont l'entreprise appartient au user connecté,
@@ -41,27 +27,26 @@ export async function requireEntreprise(entrepriseId: string) {
  * action serveur —, la garde s'exécute à chaque appel, comme avant.
  *
  * [2026-10-29, plan performance] La lecture est celle de `getEtablissement`
- * (`etablissementDuCompteDuRendu`), bornée au propriétaire dans sa requête :
- * la garde et la page ne lisent plus l'établissement deux fois.
+ * (`etablissementDuRendu`) : la garde et la page ne lisent plus
+ * l'établissement deux fois. [2026-10-31 : bornée au compte par le client
+ * `db` (ADR-051) ; le prédicat écrit qu'elle garde encore est un doublon,
+ * à retirer avec les autres prédicats écrits (ADR-051 § 7).]
  */
 export const requireEtablissement = cache(async function requireEtablissement(
   etablissementId: string,
 ) {
-  const user = await requireUser();
-  const etablissement = await etablissementDuCompteDuRendu(
-    etablissementId,
-    user.id,
-  );
+  const { user, db } = await requireCompte();
+  const etablissement = await etablissementDuRendu(db, etablissementId, user.id);
   if (!etablissement) notFound();
-  return { user, etablissement };
+  return { user, db, etablissement };
 });
 
 /**
  * Récupère un DUERP dont l'établissement appartient au user, ou 404.
  */
 export async function requireDuerp(duerpId: string) {
-  const user = await requireUser();
-  const duerp = await prisma.duerp.findFirst({
+  const { user, db } = await requireCompte();
+  const duerp = await db.duerp.findFirst({
     where: {
       id: duerpId,
       etablissement: { entreprise: { userId: user.id } },
@@ -69,7 +54,7 @@ export async function requireDuerp(duerpId: string) {
     include: { etablissement: { include: { entreprise: true } } },
   });
   if (!duerp) notFound();
-  return { user, duerp };
+  return { user, db, duerp };
 }
 
 /**
@@ -84,8 +69,8 @@ export async function requireDuerp(duerpId: string) {
  * ses `revalidatePath`.
  */
 export async function requireUnite(uniteId: string) {
-  const user = await requireUser();
-  const unite = await prisma.uniteTravail.findFirst({
+  const { user, db } = await requireCompte();
+  const unite = await db.uniteTravail.findFirst({
     where: {
       id: uniteId,
       duerp: { etablissement: { entreprise: { userId: user.id } } },
@@ -95,6 +80,7 @@ export async function requireUnite(uniteId: string) {
   if (!unite) notFound();
   return {
     user,
+    db,
     unite,
     duerpId: unite.duerpId,
     etablissementId: unite.duerp.etablissementId,
@@ -108,8 +94,8 @@ export async function requireUnite(uniteId: string) {
  * suppression manipulaient jusqu'ici sur un `id` brut reçu du client.
  */
 export async function requireRisque(risqueId: string) {
-  const user = await requireUser();
-  const risque = await prisma.risque.findFirst({
+  const { user, db } = await requireCompte();
+  const risque = await db.risque.findFirst({
     where: {
       id: risqueId,
       unite: { duerp: { etablissement: { entreprise: { userId: user.id } } } },
@@ -127,6 +113,7 @@ export async function requireRisque(risqueId: string) {
   if (!risque) notFound();
   return {
     user,
+    db,
     risque,
     uniteId: risque.uniteId,
     duerpId: risque.unite.duerpId,
@@ -139,15 +126,15 @@ export async function requireRisque(risqueId: string) {
  * l'établissement appartient au user, ou 404.
  */
 export async function requireAction(actionId: string) {
-  const user = await requireUser();
-  const action = await prisma.action.findFirst({
+  const { user, db } = await requireCompte();
+  const action = await db.action.findFirst({
     where: {
       id: actionId,
       etablissement: { entreprise: { userId: user.id } },
     },
   });
   if (!action) notFound();
-  return { user, action, etablissementId: action.etablissementId };
+  return { user, db, action, etablissementId: action.etablissementId };
 }
 
 /**
@@ -164,15 +151,15 @@ export const requireMesure = requireAction;
  * user, ou 404. Utilisé avant de créer une action corrective depuis un écart.
  */
 export async function requireVerification(verificationId: string) {
-  const user = await requireUser();
-  const verification = await prisma.verification.findFirst({
+  const { user, db } = await requireCompte();
+  const verification = await db.verification.findFirst({
     where: {
       id: verificationId,
       etablissement: { entreprise: { userId: user.id } },
     },
   });
   if (!verification) notFound();
-  return { user, verification, etablissementId: verification.etablissementId };
+  return { user, db, verification, etablissementId: verification.etablissementId };
 }
 
 /**
@@ -185,35 +172,35 @@ export async function requireVerification(verificationId: string) {
 
 /** Un rapport de vérification dont l'établissement appartient au user, ou 404. */
 export async function requireRapportVerification(rapportId: string) {
-  const user = await requireUser();
-  const rapport = await prisma.rapportVerification.findFirst({
+  const { user, db } = await requireCompte();
+  const rapport = await db.rapportVerification.findFirst({
     where: { id: rapportId, etablissement: { entreprise: { userId: user.id } } },
   });
   if (!rapport) notFound();
-  return { user, rapport };
+  return { user, db, rapport };
 }
 
 /** Une analyse de légionelles dont le carnet appartient au user, ou 404. */
 export async function requireAnalyseLegionelle(analyseId: string) {
-  const user = await requireUser();
-  const analyse = await prisma.analyseLegionelle.findFirst({
+  const { user, db } = await requireCompte();
+  const analyse = await db.analyseLegionelle.findFirst({
     where: {
       id: analyseId,
       carnet: { etablissement: { entreprise: { userId: user.id } } },
     },
   });
   if (!analyse) notFound();
-  return { user, analyse };
+  return { user, db, analyse };
 }
 
 /** Un prestataire dont l'établissement appartient au user, ou 404. */
 export async function requirePrestataire(prestataireId: string) {
-  const user = await requireUser();
-  const prestataire = await prisma.prestataire.findFirst({
+  const { user, db } = await requireCompte();
+  const prestataire = await db.prestataire.findFirst({
     where: { id: prestataireId, etablissement: { entreprise: { userId: user.id } } },
   });
   if (!prestataire) notFound();
-  return { user, prestataire };
+  return { user, db, prestataire };
 }
 
 /**
@@ -221,8 +208,8 @@ export async function requirePrestataire(prestataireId: string) {
  * user, ou 404 — une pièce rattachée à un autre de ses prestataires aussi.
  */
 export async function requirePiecePrestataire(pieceId: string, prestataireId: string) {
-  const user = await requireUser();
-  const piece = await prisma.piecePrestataire.findFirst({
+  const { user, db } = await requireCompte();
+  const piece = await db.piecePrestataire.findFirst({
     where: {
       id: pieceId,
       prestataireId,
@@ -230,7 +217,7 @@ export async function requirePiecePrestataire(pieceId: string, prestataireId: st
     },
   });
   if (!piece) notFound();
-  return { user, piece };
+  return { user, db, piece };
 }
 
 /**
@@ -264,26 +251,32 @@ export async function requireProprietaireSql(colonneEtablissement: string): Prom
  * Utile dans les server actions où on veut juste un garde-fou.
  */
 export async function assertEtablissementOwnership(etablissementId: string) {
-  const user = await requireUser();
-  const exists = await prisma.etablissement.findFirst({
+  return (await assertEtablissementDuCompte(etablissementId)).user;
+}
+
+/**
+ * La même garde, qui rend aussi le client borné au compte (ADR-051) : le
+ * module qui la passe lit et écrit ensuite par `db`, sans relire la session.
+ */
+export async function assertEtablissementDuCompte(etablissementId: string) {
+  const { user, db } = await requireCompte();
+  const exists = await db.etablissement.findFirst({
     where: { id: etablissementId, entreprise: { userId: user.id } },
     select: { id: true },
   });
   if (!exists) notFound();
-  return user;
+  return { user, db };
 }
 
-/**
- * Vérifie qu'un entrepriseId appartient au user.
- */
-export async function assertEntrepriseOwnership(entrepriseId: string) {
-  const user = await requireUser();
-  const exists = await prisma.entreprise.findFirst({
+/** Vérifie qu'un entrepriseId appartient au user ; rend aussi le client borné au compte (ADR-051). */
+export async function assertEntrepriseDuCompte(entrepriseId: string) {
+  const { user, db } = await requireCompte();
+  const exists = await db.entreprise.findFirst({
     where: { id: entrepriseId, userId: user.id },
     select: { id: true },
   });
   if (!exists) notFound();
-  return user;
+  return { user, db };
 }
 
 /**
@@ -332,8 +325,9 @@ export const getOptionalUserEtablissement = cache(
     raisonDisplay: string;
     entrepriseId: string;
   } | null> {
-    const user = await getOptionalUser();
-    if (!user) return null;
+    const compte = await getOptionalCompte();
+    if (!compte) return null;
+    const { user, db } = compte;
 
     const champs = {
       id: true,
@@ -343,14 +337,14 @@ export const getOptionalUserEtablissement = cache(
 
     const demande = (await cookies()).get(COOKIE_ETABLISSEMENT_ACTIF)?.value;
     if (demande) {
-      const actif = await prisma.etablissement.findFirst({
+      const actif = await db.etablissement.findFirst({
         where: { id: demande, entreprise: { userId: user.id } },
         select: champs,
       });
       if (actif) return actif;
     }
 
-    return prisma.etablissement.findFirst({
+    return db.etablissement.findFirst({
       where: { entreprise: { userId: user.id } },
       orderBy: { createdAt: "asc" },
       select: champs,

@@ -7,10 +7,8 @@ import {
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
-import {
-  assertEtablissementOwnership,
-} from "@/lib/auth/scope";
+import type { Db } from "@/lib/auth/compte";
+import { assertEtablissementDuCompte, assertEtablissementOwnership } from "@/lib/auth/scope";
 import { poserEtablissementActif } from "./etablissement-actif";
 import { sirenDuSiret } from "./siret";
 import { supprimerEntrepriseSiVide } from "@/lib/entreprises/cycle-de-vie";
@@ -207,8 +205,8 @@ export async function choisirEtablissementActif(
 }
 
 /** Les seuls refus de TYPE du filtre, lus sur la saisie brute (le schéma a échoué). */
-async function refusDeTypesALaTransition(id: string, brut: Record<string, unknown>) {
-  const avant = await prisma.etablissement.findUnique({
+async function refusDeTypesALaTransition(db: Db, id: string, brut: Record<string, unknown>) {
+  const avant = await db.etablissement.findUnique({
     where: { id },
     select: { estERP: true, typeErp: true, typesErpAutres: true },
   });
@@ -225,7 +223,7 @@ export async function modifierEtablissement(
   _prev: EtablissementActionState,
   formData: FormData,
 ): Promise<EtablissementActionState> {
-  const user = await assertEtablissementOwnership(id);
+  const { db } = await assertEtablissementDuCompte(id);
   const brut = normaliserFormData(formData);
   const parsed = etablissementSchema.safeParse(brut);
   if (!parsed.success) {
@@ -234,7 +232,7 @@ export async function modifierEtablissement(
     // d'un type que Rojer ne prendra pas. Ce chemin masque alors les autres
     // erreurs du formulaire, qui reviendront une fois le type corrigé : choix
     // assumé (revue du 2026-10-17, R1).
-    const typesRefuses = await refusDeTypesALaTransition(id, brut);
+    const typesRefuses = await refusDeTypesALaTransition(db, id, brut);
     if (typesRefuses.length > 0)
       return {
         status: "error",
@@ -250,7 +248,7 @@ export async function modifierEtablissement(
 
   // État avant modification : c'est lui qui dit si le calendrier doit être
   // recalculé.
-  const avant = await prisma.etablissement.findUnique({
+  const avant = await db.etablissement.findUnique({
     where: { id },
     select: {
       estEtablissementTravail: true,
@@ -292,8 +290,8 @@ export async function modifierEtablissement(
   let entrepriseCible = avant.entrepriseId;
   let sirenAPoser = false;
   if (avant.entreprise.siren !== siren) {
-    const autre = await prisma.entreprise.findFirst({
-      where: { userId: user.id, siren },
+    const autre = await db.entreprise.findFirst({
+      where: { siren },
       select: { id: true },
     });
     if (autre) entrepriseCible = autre.id;
@@ -345,7 +343,7 @@ export async function modifierEtablissement(
   });
   let etab;
   try {
-    etab = await prisma.$transaction(async (tx) => {
+    etab = await db.$transaction(async (tx) => {
       if (sirenAPoser) {
         await tx.entreprise.update({
           where: { id: avant.entrepriseId },
@@ -438,8 +436,8 @@ function messageConservationDuerp(nbVersions: number): string {
  * `20260810120000_integrite_et_conservation`), mais avec une erreur Prisma
  * P2003 illisible.
  */
-async function compterVersionsDuerp(etablissementId: string): Promise<number> {
-  return prisma.duerpVersion.count({
+async function compterVersionsDuerp(db: Db, etablissementId: string): Promise<number> {
+  return db.duerpVersion.count({
     where: { duerp: { etablissementId } },
   });
 }
@@ -453,9 +451,9 @@ async function compterVersionsDuerp(etablissementId: string): Promise<number> {
 export async function supprimerEtablissement(
   id: string,
 ): Promise<SuppressionResult> {
-  await assertEtablissementOwnership(id);
+  const { db } = await assertEtablissementDuCompte(id);
 
-  const etab = await prisma.etablissement.findUnique({
+  const etab = await db.etablissement.findUnique({
     where: { id },
     select: { id: true, entrepriseId: true },
   });
@@ -467,7 +465,7 @@ export async function supprimerEtablissement(
     };
   }
 
-  const nbVersions = await compterVersionsDuerp(id);
+  const nbVersions = await compterVersionsDuerp(db, id);
   if (nbVersions > 0) {
     return {
       statut: "refus",
@@ -482,7 +480,7 @@ export async function supprimerEtablissement(
   // fois la base d'accord.
   let cles: string[];
   try {
-    cles = await prisma.$transaction(async (tx) => {
+    cles = await db.$transaction(async (tx) => {
       const c = await clesDesEtablissements(tx, [id]);
       await tx.etablissement.delete({ where: { id } });
       // Le dernier parti, l'entreprise part avec lui (2026-10-26).

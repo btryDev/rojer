@@ -37,13 +37,25 @@ vi.mock("@/lib/prisma", () => ({
 }));
 vi.mock("@/lib/auth/scope", async (orig) => ({
   ...(await orig<object>()),
-  requireUnite: async () => ({ duerpId: "duerp1" }),
-  requireRisque: async () => ({ duerpId: "duerp1", uniteId: "u1", etablissementId: "etab1" }),
-  requireMesure: async () => ({ action: { echeance: null, leveeLe: null, risqueId: null } }),
+  // Les gardes rendent aussi le client borné (ADR-051) : ici, le client simulé.
+  requireUnite: async () => ({ db: await (await import("@/test/garde-simulee")).clientDuCompteSimule(), duerpId: "duerp1" }),
+  requireRisque: async () => ({
+    db: await (await import("@/test/garde-simulee")).clientDuCompteSimule(),
+    duerpId: "duerp1",
+    uniteId: "u1",
+    etablissementId: "etab1",
+  }),
+  requireMesure: async () => ({
+    db: await (await import("@/test/garde-simulee")).clientDuCompteSimule(),
+    action: { echeance: null, leveeLe: null, risqueId: null },
+  }),
   assertEtablissementOwnership: async () => undefined,
+  assertEtablissementDuCompte: async () => ({ user: { id: "u1" }, db: await (await import("@/test/garde-simulee")).clientDuCompteSimule() }),
 }));
 vi.mock("next/cache", () => ({ revalidatePath: () => undefined, revalidateTag: () => undefined }));
-vi.mock("@/lib/etablissements/epi-constate", () => ({ constaterEpi: vi.fn(async () => false) }));
+vi.mock("@/lib/etablissements/epi-constate", () => ({
+  constaterEpiDuCompte: vi.fn(async () => false),
+}));
 vi.mock("@/lib/batiments/queries", async (orig) => ({
   ...(await orig<object>()),
   batimentParDefaut: async () => ({ id: "bat1" }),

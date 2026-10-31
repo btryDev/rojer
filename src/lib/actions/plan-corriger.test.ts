@@ -32,7 +32,9 @@ vi.mock("@/lib/auth/require-user", () => ({
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 const { liberer } = vi.hoisted(() => ({ liberer: vi.fn(async () => ({ liberes: 1, echecs: 0 })) }));
 vi.mock("@/lib/suppression/fichiers", () => ({ libererFichiers: liberer }));
-vi.mock("@/lib/etablissements/epi-constate", () => ({ constaterEpi: vi.fn(async () => false) }));
+vi.mock("@/lib/etablissements/epi-constate", () => ({
+  constaterEpiDuCompte: vi.fn(async () => false),
+}));
 vi.mock("next/navigation", async (orig) => ({
   ...(await orig<typeof import("next/navigation")>()),
   redirect: redirectMock,

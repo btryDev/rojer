@@ -96,6 +96,15 @@ vi.mock("@/lib/auth/scope", () => ({
     }
     return { id: "user-1" };
   }),
+  // La même garde, qui rend aussi le client borné (ADR-051) : ici, le client simulé.
+  assertEtablissementDuCompte: vi.fn(async (etablissementId: string) => {
+    if (etablissementId !== "etab-a-moi") {
+      const e = new Error("NEXT_NOT_FOUND");
+      (e as { digest?: string }).digest = "NEXT_HTTP_ERROR_FALLBACK;404";
+      throw e;
+    }
+    return { user: { id: "user-1" }, db: await (await import("@/test/garde-simulee")).clientDuCompteSimule() };
+  }),
 }));
 vi.mock("@/lib/batiments/queries", () => ({ resoudreBatimentOptionnel: vi.fn() }));
 vi.mock("@/lib/auth/require-user", () => ({

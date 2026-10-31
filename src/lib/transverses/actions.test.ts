@@ -150,7 +150,10 @@ const h = vi.hoisted(() => {
 
 vi.mock("@/lib/prisma", () => ({ prisma: h.prisma }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
-vi.mock("@/lib/auth/scope", () => ({ requireDuerp: h.requireDuerp }));
+// Les gardes rendent le client borné (ADR-051) : ici, le client simulé.
+vi.mock("@/lib/auth/scope", () => ({
+  requireDuerp: async () => ({ db: await (await import("@/test/garde-simulee")).clientDuCompteSimule(), ...(await h.requireDuerp()) }),
+}));
 vi.mock("@/lib/calendrier/regeneration-sure", () => ({
   regenererApresMutation: async () => {
     h.db.regenerations++;
@@ -161,6 +164,9 @@ vi.mock("@/lib/calendrier/regeneration-sure", () => ({
 
 const { repondreQuestionTransverse } = await import("./actions");
 const { ecrireFaitActivite } = await import("@/lib/etablissements/faits-activite-ecriture");
+// Le client que la garde rend en production : le client borné, ici simulé.
+const { clientDuCompteSimule } = await import("@/test/garde-simulee");
+const db = await clientDuCompteSimule();
 
 const DUERP = "d1";
 const SANS_FAIT = "q-routier";
@@ -249,23 +255,23 @@ describe("question qui pose un fait d'activité (ADR-041)", () => {
 
 describe("ecrireFaitActivite depuis Équipe ou la fiche (`si_vierge`)", () => {
   it("garde un risque travaillé et le dit ; retire un risque vierge", async () => {
-    await ecrireFaitActivite("e1", "conduiteEngins", true, "si_vierge");
+    await ecrireFaitActivite(db as never, "e1", "conduiteEngins", true, "si_vierge");
     Object.assign(risqueDe("trv-conduite-engins")!, { cotationSaisie: true });
-    const r1 = await ecrireFaitActivite("e1", "conduiteEngins", false, "si_vierge");
+    const r1 = await ecrireFaitActivite(db as never, "e1", "conduiteEngins", false, "si_vierge");
     expect(r1.conserve).toBe(true);
     expect(risqueDe("trv-conduite-engins")).toBeDefined();
     // La réponse, elle, est acquise : c'est le fait qui fait foi.
     expect(relue(AVEC_FAIT)).toBe("non");
 
-    await ecrireFaitActivite("e1", "operationsElectriques", true, "si_vierge");
-    const r2 = await ecrireFaitActivite("e1", "operationsElectriques", false, "si_vierge");
+    await ecrireFaitActivite(db as never, "e1", "operationsElectriques", true, "si_vierge");
+    const r2 = await ecrireFaitActivite(db as never, "e1", "operationsElectriques", false, "si_vierge");
     expect(r2.conserve).toBe(false);
     expect(risqueDe("trv-operations-electriques")).toBeUndefined();
   });
 
   it("sans DUERP, n'écrit que le fait", async () => {
     h.db.aUnDuerp = false;
-    await ecrireFaitActivite("e1", "manutentionManuelle", true, "si_vierge");
+    await ecrireFaitActivite(db as never, "e1", "manutentionManuelle", true, "si_vierge");
     expect(h.db.faits.manutentionManuelle).toBe(true);
     expect(h.db.risques).toHaveLength(0);
     expect(h.db.unites).toHaveLength(0);
@@ -273,15 +279,15 @@ describe("ecrireFaitActivite depuis Équipe ou la fiche (`si_vierge`)", () => {
 
   it("un « non » au CMR alors qu'un risque du DUERP est coché CMR : enregistré, et signalé", async () => {
     h.db.risquesCMR = 1;
-    const r = await ecrireFaitActivite("e1", "expositionCMR", false, "si_vierge");
+    const r = await ecrireFaitActivite(db as never, "e1", "expositionCMR", false, "si_vierge");
     expect(h.db.faits.expositionCMR).toBe(false);
     expect(r.conserve).toBe(true);
     h.db.risquesCMR = 0;
-    expect((await ecrireFaitActivite("e1", "expositionCMR", false, "si_vierge")).conserve).toBe(false);
+    expect((await ecrireFaitActivite(db as never, "e1", "expositionCMR", false, "si_vierge")).conserve).toBe(false);
   });
 
   it("un fait sans question transverse (CMR) ne touche aucun risque", async () => {
-    await ecrireFaitActivite("e1", "expositionCMR", true, "si_vierge");
+    await ecrireFaitActivite(db as never, "e1", "expositionCMR", true, "si_vierge");
     expect(h.db.faits.expositionCMR).toBe(true);
     expect(h.db.risques).toHaveLength(0);
   });

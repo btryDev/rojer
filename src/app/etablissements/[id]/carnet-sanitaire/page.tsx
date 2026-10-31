@@ -52,10 +52,10 @@ export default async function CarnetSanitairePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { user, etablissement } = await requireEtablissement(id);
+  const { user, db, etablissement } = await requireEtablissement(id);
   // 2026-10-17, sous-lot F : l'installation déclarée au parc fait porter la
   // surveillance par le calendrier — la page le dit (`ceQueRojerFait`).
-  const installationDeclaree = await eauChaudeSuivieParLeCalendrier({
+  const installationDeclaree = await eauChaudeSuivieParLeCalendrier(db, {
     etablissementId: etablissement.id,
     etablissement: { entreprise: { userId: user.id } },
   });

@@ -1,7 +1,6 @@
 "use server";
 
-import { requireUser } from "@/lib/auth/require-user";
-import { assertEtablissementOwnership } from "@/lib/auth/scope";
+import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { etatsPermanentsDuDossier } from "./queries";
 import { resumeDuWidget, type ResumeWidgetEtats } from "./widget";
 
@@ -24,7 +23,6 @@ import { resumeDuWidget, type ResumeWidgetEtats } from "./widget";
 export async function resumeEtatsPermanentsPourWidget(
   etablissementId: string,
 ): Promise<ResumeWidgetEtats> {
-  await assertEtablissementOwnership(etablissementId);
-  const user = await requireUser();
-  return resumeDuWidget(await etatsPermanentsDuDossier(etablissementId, user.id));
+  const { user, db } = await assertEtablissementDuCompte(etablissementId);
+  return resumeDuWidget(await etatsPermanentsDuDossier(db, etablissementId, user.id));
 }

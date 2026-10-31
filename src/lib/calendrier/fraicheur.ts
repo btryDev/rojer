@@ -67,9 +67,8 @@
 // (`docs/chantiers-ouverts.md` § 15, rayé). Ce module, lui, se tait toujours
 // sur `a_jour`, et c'est toujours juste.
 
+import { requireCompte, type Db } from "@/lib/auth/compte";
 import { cache } from "react";
-import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
 import { SCEAU_CALENDRIER } from "./version-moteur";
 
 /**
@@ -147,13 +146,15 @@ export async function fraicheurDepuisRepere(
  */
 export async function lireRepereCalendrier(
   etablissementId: string,
-): Promise<{ repere: string | null } | null> {
-  const user = await requireUser();
-  const etab = await prisma.etablissement.findFirst({
-    where: { id: etablissementId, entreprise: { userId: user.id } },
+): Promise<{ repere: string | null; db: Db } | null> {
+  const { db } = await requireCompte();
+  const etab = await db.etablissement.findFirst({
+    where: { id: etablissementId },
     select: { referentielVersionCalendrier: true },
   });
-  return etab ? { repere: etab.referentielVersionCalendrier } : null;
+  // Le client borné est rendu avec le repère (ADR-051) : la lecture qui suit
+  // chez l'appelant passe par lui, sans relire la session.
+  return etab ? { repere: etab.referentielVersionCalendrier, db } : null;
 }
 
 /**
@@ -183,7 +184,7 @@ export const fraicheurCalendrier = cache(async function fraicheurCalendrier(
   return fraicheurDepuisRepere(lu.repere, () =>
     // Le comptage ne sert QUE sur cette branche, donc il n'est pas payé par
     // les dossiers sains — qui sont le cas courant.
-    prisma.verification.count({ where: { etablissementId } }),
+    lu.db.verification.count({ where: { etablissementId } }),
   );
 });
 

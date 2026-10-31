@@ -1,8 +1,7 @@
-import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireCompte, type Db } from "@/lib/auth/compte";
 import { cache } from "react";
 import { prestatairesDuRendu } from "@/lib/prestataires/queries";
-import { duerpDuRendu } from "@/lib/duerps/queries";
+import { duerpDuRenduDuCompte } from "@/lib/duerps/queries";
 import { carnetDuRendu } from "@/lib/etablissements/modules";
 import { STATUTS_PERMIS_FEU_CLOS, STATUTS_PLAN_PREVENTION_CLOS } from "./statuts-operations";
 import { JOURS_APRES } from "@/lib/dashboard/frise";
@@ -258,14 +257,17 @@ export function filtrerParBatiment<T extends { batiment: BatimentEcheance | null
   );
 }
 
-/** Ce qu'une source reçoit : le périmètre déjà vérifié (ownership) et
- *  l'horloge du jour — elle n'a rien d'autre à savoir. */
+/** Ce qu'une source reçoit : le périmètre déjà vérifié (ownership), le
+ *  client borné au compte (ADR-051) et l'horloge du jour — elle n'a rien
+ *  d'autre à savoir. */
 type ContexteSource = {
+  db: Db;
   etablissementId: string;
-  scope: {
-    etablissementId: string;
-    etablissement: { entreprise: { userId: string } };
-  };
+  scope: { etablissementId: string };
+  /** Pour les seuls modules encore au client brut, qui portent le prédicat
+   *  eux-mêmes (`eauChaudeSuivieParLeCalendrier`), et le prédicat que
+   *  `duerpDuRenduDuCompte` garde encore. */
+  userId: string;
   aujourdhui: Date;
 };
 
@@ -647,11 +649,12 @@ export function echeanceLegionelles({
  * planifier.
  */
 const sourceActions: SourceEcheances = async ({
+  db,
   scope,
   aujourdhui,
   etablissementId,
 }) => {
-  const actions = await prisma.action.findMany({
+  const actions = await db.action.findMany({
     where: {
       ...scope,
       statut: { in: ["ouverte", "en_cours"] },
@@ -699,7 +702,8 @@ const sourceActions: SourceEcheances = async ({
 };
 
 const sourceDuerp: SourceEcheances = async ({
-  scope,
+  db,
+  userId,
   aujourdhui,
   etablissementId,
 }) => {
@@ -707,10 +711,7 @@ const sourceDuerp: SourceEcheances = async ({
   // « mise à jour annuelle » et l'âge affiché au board portent sur le même
   // document par construction. La sélection déterministe (tri, version par
   // `numero`) vit dans le chargeur ; le propriétaire est celui du périmètre.
-  const duerp = await duerpDuRendu(
-    etablissementId,
-    scope.etablissement.entreprise.userId,
-  );
+  const duerp = await duerpDuRenduDuCompte(db, etablissementId, userId);
   const e = echeanceDuerp({
     etablissementId,
     dateDerniereVersion: duerp?.versions[0]?.createdAt ?? null,
@@ -732,11 +733,12 @@ const sourcePrestataires: SourceEcheances = async ({
 };
 
 const sourcePermisFeu: SourceEcheances = async ({
+  db,
   scope,
   aujourdhui,
   etablissementId,
 }) => {
-  const permis = await prisma.permisFeu.findMany({
+  const permis = await db.permisFeu.findMany({
     where: {
       ...scope,
       // Seul le cycle de vie décide de la sortie du calendrier — jamais la
@@ -758,11 +760,12 @@ const sourcePermisFeu: SourceEcheances = async ({
 };
 
 const sourcePlansPrevention: SourceEcheances = async ({
+  db,
   scope,
   aujourdhui,
   etablissementId,
 }) => {
-  const plans = await prisma.planPrevention.findMany({
+  const plans = await db.planPrevention.findMany({
     where: {
       ...scope,
       // Le cycle de vie décide, pas la date — symétriquement au module
@@ -791,7 +794,8 @@ const sourcePlansPrevention: SourceEcheances = async ({
 };
 
 const sourceLegionelles: SourceEcheances = async ({
-  scope,
+  db,
+  userId,
   aujourdhui,
   etablissementId,
 }) => {
@@ -803,7 +807,10 @@ const sourceLegionelles: SourceEcheances = async ({
   // matrice partagent (`carnetDuRendu`, plan performance, lot 1).
   const [carnet, suivieParLeCalendrier] = await Promise.all([
     carnetDuRendu(etablissementId),
-    eauChaudeSuivieParLeCalendrier(scope),
+    eauChaudeSuivieParLeCalendrier(db, {
+      etablissementId,
+      etablissement: { entreprise: { userId } },
+    }),
   ]);
   const e = echeanceLegionelles({
     etablissementId,
@@ -869,13 +876,12 @@ const autresEcheancesDuRendu = cache(async function autresEcheancesDuRendu(
   instant: number,
 ): Promise<EcheanceCalendrier[]> {
   const aujourdhui = new Date(instant);
-  const user = await requireUser();
+  const { user, db } = await requireCompte();
   const ctx: ContexteSource = {
+    db,
     etablissementId,
-    scope: {
-      etablissementId,
-      etablissement: { entreprise: { userId: user.id } },
-    },
+    scope: { etablissementId },
+    userId: user.id,
     aujourdhui,
   };
 

@@ -105,7 +105,7 @@ describe("fraicheurCalendrier — les quatre cas se distinguent", () => {
     });
   });
 
-  it("lit sous la garde de session et filtre sur le propriétaire", async () => {
+  it("lit sous la garde de session, par le client borné au compte", async () => {
     prismaMock.etablissement.findFirst.mockResolvedValue({
       referentielVersionCalendrier: SCEAU_CALENDRIER,
     });
@@ -113,7 +113,9 @@ describe("fraicheurCalendrier — les quatre cas se distinguent", () => {
     expect(requireUserMock).toHaveBeenCalled();
     expect(prismaMock.etablissement.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: ETAB, entreprise: { userId: "user-1" } },
+        // La borne au compte est celle du client borné (ADR-051) ; le
+        // prédicat écrit est retiré depuis le 2026-10-30 (lot 2b).
+        where: { id: ETAB },
       }),
     );
   });

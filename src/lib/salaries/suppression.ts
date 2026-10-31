@@ -24,7 +24,7 @@
  * réversible, il garde tout.
  */
 
-import { prisma } from "@/lib/prisma";
+import type { Db } from "@/lib/auth/compte";
 
 /** Ce que la suppression emporte, compté pour la confirmation. */
 export type PerimetreSuppressionSalarie = {
@@ -45,22 +45,23 @@ const surSesLignes = (etablissementId: string, salarieId: string) => ({
  * Même périmètre que `effacerSalarie` — les deux lisent `surSesLignes`.
  */
 export async function perimetreSuppressionSalarie(
+  db: Db,
   etablissementId: string,
   salarieId: string,
 ): Promise<PerimetreSuppressionSalarie | null> {
-  const s = await prisma.salarie.findFirst({
+  const s = await db.salarie.findFirst({
     where: { id: salarieId, etablissementId },
     select: { _count: { select: { titres: true } } },
   });
   if (!s) return null;
-  const rapports = await prisma.rapportVerification.findMany({
+  const rapports = await db.rapportVerification.findMany({
     where: surSesLignes(etablissementId, salarieId),
     select: { id: true },
   });
   const [echeances, actions, signatures] = await Promise.all([
-    prisma.verification.count({ where: { salarieId, etablissementId } }),
-    prisma.action.count({ where: surSesLignes(etablissementId, salarieId) }),
-    prisma.signature.count({
+    db.verification.count({ where: { salarieId, etablissementId } }),
+    db.action.count({ where: surSesLignes(etablissementId, salarieId) }),
+    db.signature.count({
       where: {
         etablissementId,
         objetType: "rapport_verification",
@@ -81,14 +82,16 @@ export async function perimetreSuppressionSalarie(
  * Efface, dans une transaction, et rend les clés des fichiers à libérer
  * ensuite. `null` si la personne n'est pas de cet établissement — rien n'est
  * touché. L'appartenance de l'établissement à l'utilisateur est vérifiée par
- * l'appelant (`assertEtablissementOwnership`) ; chaque écriture ci-dessous est
+ * l'appelant (`assertEtablissementDuCompte`, qui rend le client borné au
+ * compte, ADR-051) ; chaque écriture ci-dessous est
  * en plus bornée à l'établissement.
  */
 export async function effacerSalarie(
+  db: Db,
   etablissementId: string,
   salarieId: string,
 ): Promise<{ cles: string[] } | null> {
-  return prisma.$transaction(async (tx) => {
+  return db.$transaction(async (tx) => {
     const s = await tx.salarie.findFirst({
       where: { id: salarieId, etablissementId },
       select: { id: true },

@@ -93,7 +93,10 @@ const h = vi.hoisted(() => {
 
 vi.mock("@/lib/prisma", () => ({ prisma: h.prisma }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
-vi.mock("@/lib/auth/scope", () => ({ requireDuerp: h.requireDuerp }));
+// Les gardes rendent le client borné (ADR-051) : ici, le client simulé.
+vi.mock("@/lib/auth/scope", () => ({
+  requireDuerp: async (id: string) => ({ db: await (await import("@/test/garde-simulee")).clientDuCompteSimule(), ...(await h.requireDuerp(id)) }),
+}));
 
 const { repondreActivite } = await import("./actions");
 

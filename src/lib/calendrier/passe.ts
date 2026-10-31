@@ -77,9 +77,11 @@ export const SUCCESSIONS_DECLAREES: ReadonlyMap<string, string> = new Map(
   ),
 );
 
-/** Le client que la lecture accepte : un `PrismaClient` comme un client de
- *  transaction interactive, le passage à blanc lisant sous `READ ONLY`. */
-export type ClientLecture = Prisma.TransactionClient;
+/** Le client d'une passe : un `PrismaClient` comme un client de transaction
+ *  interactive, le passage à blanc lisant sous `READ ONLY`. Borné au compte en
+ *  session, brut pour le script (ADR-051). La passe lit par lui ; la marque
+ *  « calendrier périmé » (`marquerCalendrierPerime`) écrit par lui. */
+export type ClientPasse = Prisma.TransactionClient;
 
 /**
  * Tout ce qu'une passe LIT, et rien de ce qu'elle calcule. Quatre requêtes,
@@ -91,7 +93,7 @@ export type ClientLecture = Prisma.TransactionClient;
  * `apresLecture` juste après la lecture des lignes, et c'est là que la fenêtre
  * de concurrence des écritures conditionnées se rejoue.
  */
-export async function lireEntrees(client: ClientLecture, etablissementId: string) {
+export async function lireEntrees(client: ClientPasse, etablissementId: string) {
   // 1. Lecture établissement + équipements encore en service.
   const etab = await client.etablissement.findUnique({
     where: { id: etablissementId },

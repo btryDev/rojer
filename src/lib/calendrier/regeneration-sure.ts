@@ -19,6 +19,7 @@
 // n'introduire aucun cycle — `regeneration-sure` → `actions` → `reconciliation`,
 // et `regeneration-sure` → `reconciliation`.
 
+import { getOptionalCompte } from "@/lib/auth/compte";
 import { genererCalendrier, regenererSansInvalider } from "./actions";
 import { calendrierDesynchronise } from "./queries";
 import { marquerCalendrierPerime } from "./reconciliation";
@@ -132,7 +133,26 @@ export async function regenererApresMutation(
     // Sans cette marque, l'échec passerait inaperçu : le calendrier n'est ni
     // vide ni périmé en version, donc l'auto-réparation à l'affichage ne le
     // reprendrait pas. Il resterait juste faux.
-    await marquerCalendrierPerime(etablissementId);
+    // Par le client borné au compte (ADR-051) : si l'échec venait de la garde
+    // d'appartenance, l'établissement d'un autre compte n'est pas touché.
+    // Toutes les appelantes sont des actions passées par `requireCompte`
+    // (relevé du 2026-10-31) : la session n'est absente ou illisible ici que si
+    // elle disparaît au milieu de la requête. La marque se perd alors — le
+    // calendrier reste faux jusqu'à la prochaine mutation ou le prochain
+    // changement de sceau —, et le journal ci-dessous le dit.
+    // Une panne de session ne fait pas échouer la fonction, mais elle se voit.
+    const compte = await getOptionalCompte().catch((e: unknown) => {
+      console.error(
+        JSON.stringify({
+          type: "session_illisible_marque_perdue",
+          contexte,
+          etablissementId,
+          erreur: e instanceof Error ? e.message : String(e),
+        }),
+      );
+      return null;
+    });
+    if (compte) await marquerCalendrierPerime(compte.db, etablissementId);
     return false;
   }
 }

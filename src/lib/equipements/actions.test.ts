@@ -162,7 +162,7 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 // La règle des EPI constatés vit dans `epi-constate.ts`, testée là ; ici, on
 // vérifie que chaque écriture d'équipement l'appelle, AVANT la régénération.
 vi.mock("@/lib/etablissements/epi-constate", () => ({
-  constaterEpi: vi.fn(async (id: string, opts?: { regenerer?: boolean }) => {
+  constaterEpiDuCompte: vi.fn(async (_db: unknown, id: string, opts?: { regenerer?: boolean }) => {
     h.db.journal.push(`constat:${id}:${opts?.regenerer === false ? "sans-regen" : "regen"}`);
     return false;
   }),
@@ -176,8 +176,19 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 vi.mock("@/lib/auth/require-user", () => ({ requireUser: vi.fn(async () => ({ id: "user-1" })) }));
+// La marque « calendrier périmé » passe par le client de la session (ADR-051).
+const dbDuCompte = vi.hoisted(() => ({ nom: "client du compte" }));
+vi.mock("@/lib/auth/compte", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/auth/compte")>()),
+  getOptionalCompte: async () => ({ user: { id: "user-1" }, db: dbDuCompte }),
+}));
 vi.mock("@/lib/auth/scope", () => ({
   assertEtablissementOwnership: h.assertOwnership,
+  // La garde rend aussi le client borné (ADR-051) : ici, le client simulé.
+  assertEtablissementDuCompte: async (...a: unknown[]) => ({
+    user: (await (h.assertOwnership as (...x: unknown[]) => unknown)(...a)) ?? { id: "u1" },
+    db: await (await import("@/test/garde-simulee")).clientDuCompteSimule(),
+  }),
 }));
 vi.mock("@/lib/batiments/queries", () => ({
   batimentParDefaut: async () => ({ id: "bat-1" }),
@@ -327,7 +338,7 @@ describe("supprimerEquipement", () => {
 
     await supprimerEquipement("eq-1");
 
-    expect(h.marquerCalendrierPerime).toHaveBeenCalledWith("etab-1");
+    expect(h.marquerCalendrierPerime).toHaveBeenCalledWith(dbDuCompte, "etab-1");
   });
 
   it("ne marque rien quand la régénération passe", async () => {
@@ -463,7 +474,7 @@ describe("D29 (a) : les réponses exigées d'un appareil de levage", () => {
 });
 
 // ~~« un EPI déclaré contredit un « non » aux EPI » (B2)~~ — la règle est
-// partagée depuis le 2026-10-22 (`constaterEpi`, testée dans
+// partagée depuis le 2026-10-22 (`constaterEpiDuCompte`, testée dans
 // `etablissements/epi-constate.test.ts`) ; ici, l'appel et son ordre.
 describe("une écriture d'équipement fait constater les EPI, avant la régénération (B2, 2026-10-22)", () => {
   function epi(categorie: string): FormData {

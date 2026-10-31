@@ -35,7 +35,7 @@
 // générateur d'occurrences, donc exactement ce que le calendrier montre.
 
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireCompte } from "@/lib/auth/compte";
 import { projeterEtablissement } from "@/lib/matching/projection";
 import { chargerEtablissementEtParc } from "@/lib/etablissements/dossier-du-rendu";
 import {
@@ -279,10 +279,10 @@ export function reperterSansEcheance(
 export async function equipementsSansEcheance(
   etablissementId: string,
 ): Promise<Map<string, MotifSansEcheance>> {
-  const user = await requireUser();
+  const { user, db } = await requireCompte();
   // [2026-10-14, audit Next.js H2] La lecture que le rendu partage
   // (`dossier-du-rendu.ts`) : même prédicat, même parc en service.
-  const etab = await chargerEtablissementEtParc(etablissementId, user.id);
+  const etab = await chargerEtablissementEtParc(db, etablissementId, user.id);
   if (!etab) return new Map();
 
   return reperterSansEcheance(

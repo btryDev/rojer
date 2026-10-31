@@ -1,7 +1,6 @@
 import "server-only";
-import { prisma } from "@/lib/prisma";
+import { requireCompte } from "@/lib/auth/compte";
 import { ORDRE_RAPPORT_PLUS_RECENT } from "@/lib/rapports/derniere-realisation";
-import { requireUser } from "@/lib/auth/require-user";
 import type { StatutAction } from "@prisma/client";
 import { cache } from "react";
 import { JOURS_HORIZON_PROCHE, ajouterJours, debutDuJour } from "@/lib/dates";
@@ -31,11 +30,10 @@ export async function listerActions(
   etablissementId: string,
   filtres: FiltresPlanActions = {},
 ) {
-  const user = await requireUser();
-  const where: Parameters<typeof prisma.action.findMany>[0] = {
+  const { db } = await requireCompte();
+  const where: Parameters<typeof db.action.findMany>[0] = {
     where: {
       etablissementId,
-      etablissement: { entreprise: { userId: user.id } },
     },
   };
 
@@ -57,7 +55,7 @@ export async function listerActions(
     };
   }
 
-  return prisma.action.findMany({
+  return db.action.findMany({
     ...where,
     include: {
       risque: {
@@ -89,9 +87,9 @@ export function origineDeLAction(a: {
 }
 
 export async function getAction(id: string) {
-  const user = await requireUser();
-  const action = await prisma.action.findFirst({
-    where: { id, etablissement: { entreprise: { userId: user.id } } },
+  const { db } = await requireCompte();
+  const action = await db.action.findFirst({
+    where: { id },
     include: {
       risque: {
         include: { unite: { include: { duerp: true } } },
@@ -122,7 +120,7 @@ export async function getAction(id: string) {
   // affiché nulle part (audit du 2026-10-12). `null` alors que l'id est posé :
   // le rapport a été supprimé depuis, et la fiche le dit.
   const leveeRapport = action.leveeRapportId
-    ? await prisma.rapportVerification.findFirst({
+    ? await db.rapportVerification.findFirst({
         where: {
           id: action.leveeRapportId,
           etablissementId: action.etablissementId,
@@ -224,11 +222,10 @@ export const actionsSuiviesDuRendu = cache(async function actionsSuiviesDuRendu(
   etablissementId: string,
   debutDuJourMs: number,
 ): Promise<ActionSuivie[]> {
-  const user = await requireUser();
-  return prisma.action.findMany({
+  const { db } = await requireCompte();
+  return db.action.findMany({
     where: {
       etablissementId,
-      etablissement: { entreprise: { userId: user.id } },
       OR: [
         // Le module de dates expose la liste en `readonly string[]` — il reste
         // utilisable côté client, sans importer l'enum Prisma. Le cast

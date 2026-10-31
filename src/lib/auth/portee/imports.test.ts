@@ -1,123 +1,84 @@
-// Qui peut toucher au client Prisma brut et aux rouages du client borné
-// (ADR-051 § 3). Garde qui relit le code, comme les gardes `tenancy-*`.
-//
-// - `@/lib/prisma` (le client brut, qui voit tous les comptes) ne s'importe
-//   que depuis les modules NOMMÉS ci-dessous, chacun avec son motif, et depuis
-//   ceux qui restent À MIGRER vers `requireCompte()`. Cette seconde liste est
-//   un cliquet : un fichier nouveau ne peut pas y entrer sans qu'une revue le
-//   voie, et un fichier migré doit en sortir (le test le rappelle). Elle se
-//   vide au fil du lot 2b, module par module.
-// - `clientBorne` (qui fabrique un client pour N'IMPORTE QUELLE portée) et
-//   `borne.ts` ne s'importent que depuis les modules qui établissent la
-//   portée eux-mêmes.
-//
-// Le client brut a trois portes : `@/lib/prisma`, et le client du serveur MCP
-// (`mcp/prisma.ts`, rendu par `dbMcp()` de `mcp/db.ts`). Les trois sont
-// gardées ; `new PrismaClient` ne s'écrit que dans les deux modules qui
-// fabriquent un client. Sont lus : `import … from`, `import()` à chaîne ou
-// gabarit littéral, `require()`, dans les .ts/.tsx/.js/.mjs/.cjs de `src/`.
-// Ce qui échappe : un import dont le chemin est calculé, et `globalThis.prisma`
-// (hors production seulement).
-//
-// Les tests sont exclus : ils montent leurs propres doublures.
+// Qui peut toucher au client Prisma brut, qui voit tous les comptes (ADR-051 § 3).
+// Ses trois portes (`@/lib/prisma`, `mcp/prisma`, `mcp/db`) ne s'importent que
+// depuis les modules NOMMÉS, chacun avec son motif, ou ceux encore À MIGRER vers
+// `requireCompte()` : un cliquet qui ne fait que raccourcir. Les rouages du
+// client borné ne s'importent que là où la portée s'établit, et la valeur
+// `PrismaClient` que dans les deux modules qui fabriquent un client.
+// Échappent : un chemin calculé, `globalThis.prisma`. Tests exclus (doublures).
 
 import { readdirSync, readFileSync, statSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { dirname, join, posix, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { sansCommentairesNiChaines } from "@/lib/auth/tenancy-sonde";
 
-const DEPOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
-const SRC = join(DEPOT, "src");
-
-/** Les modules qui rendent un client brut. */
+const DEPOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const PORTES_BRUTES = ["src/lib/prisma", "src/lib/mcp/prisma", "src/lib/mcp/db"];
-
-/** Modules qui peuvent importer un client brut, et pourquoi. */
-const NOMMES_PRISMA: Record<string, string> = {
-  "src/lib/auth/portee/client.ts": "fabrique le client borné à partir du client brut",
-  "src/lib/auth/better-auth.ts": "adaptateur Better Auth (ADR-052) : User, Session, Account, AuthVerification, hors compte, lus avant toute identité",
-};
-
-/** Les seuls modules qui fabriquent un client Prisma. */
 const FABRIQUES = new Set(["src/lib/prisma.ts", "src/lib/mcp/prisma.ts"]);
-
+/** SQL brut sous requireProprietaireSql, jusqu'au chantier `{ sql, db }`. */
+const SQL_BRUT = { motif: "SQL brut borné par requireProprietaireSql (ADR-051 § 5)", usages: ["prisma.$queryRaw"] };
+/**
+ * Les modules nommés, leur motif et les seuls usages du client brut qu'il
+ * couvre : chaque `prisma.…` de leur code (commentaires et chaînes retirés)
+ * doit en être un. Sans quoi le motif couvrirait le fichier entier, et une
+ * lecture de modèle ajoutée demain passerait sans borne (revue du
+ * 2026-10-31). La fabrique du client borné, seule, a droit au client entier —
+ * et, sur cc, l'adaptateur de Better Auth.
+ */
+const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous" }> = {
+  "src/lib/auth/portee/client.ts": { motif: "fabrique le client borné à partir du client brut", usages: "tous" },
+  // cc : l'adaptateur de Better Auth reçoit le client entier (prismaAdapter).
+  "src/lib/auth/better-auth.ts": {
+    motif:
+      "adaptateur Better Auth (ADR-052) : User, Session, Account, AuthVerification, TwoFactor, hors compte, lus avant toute identité",
+    usages: "tous",
+  },
+  "src/lib/calendrier/actions.ts": {
+    motif: "écritures bornées par etablissementId, clés vérifiées contre une lecture bornée (clesDuPlanDansLaLecture)",
+    usages: [
+      "prisma.$transaction",
+      "prisma.etablissement.update",
+      "prisma.verification.createMany",
+      "prisma.verification.deleteMany",
+      "prisma.verification.updateMany",
+    ],
+  },
+  "src/lib/securite/limite-debit.ts": {
+    motif: "compteurs techniques, hors de tout compte",
+    usages: ["prisma.$executeRaw", "prisma.$queryRaw"],
+  },
+  "src/lib/signatures/verification-publique.ts": {
+    motif: "vérification publique d'une signature, sans session",
+    usages: ["prisma.signature.findUnique"],
+  },
+  "src/lib/access-tokens/verify.ts": {
+    motif: "recherche d'un jeton par son empreinte, quotas d'OTP",
+    usages: [
+      "prisma.accessToken.findMany",
+      "prisma.accessToken.findUnique",
+      "prisma.accessToken.updateMany",
+      "prisma.quotaEnvoiOtp.createMany",
+      "prisma.quotaEnvoiOtp.findUnique",
+      "prisma.quotaEnvoiOtp.updateMany",
+    ],
+  },
+  "src/lib/accessibilite/actions.ts": {
+    motif: "slugs publics, uniques sur toute la table : seuls les slugs sont lus",
+    usages: ["prisma.registreAccessibilite.findMany"],
+  },
+  "src/lib/accessibilite/queries.ts": {
+    motif: "registre public par son slug, sans session",
+    usages: ["prisma.registreAccessibilite.findUnique"],
+  },
+  "src/lib/etablissements/modules.ts": SQL_BRUT,
+  "src/lib/rapports/queries.ts": SQL_BRUT,
+  "src/lib/rapports/joindre-realisations.ts": SQL_BRUT,
+};
 /** Cliquet : importeurs du client brut encore à migrer vers requireCompte(). */
 const A_MIGRER = new Set([
-  "src/lib/access-tokens/actions.ts",
-  "src/lib/access-tokens/emission.ts",
   "src/lib/access-tokens/revocation.ts",
-  "src/lib/access-tokens/verify.ts",
-  "src/lib/accessibilite/actions.ts",
-  "src/lib/accessibilite/queries.ts",
-  "src/lib/actions/actions.ts",
-  "src/lib/actions/plan.ts",
-  "src/lib/actions/queries.ts",
-  "src/lib/activites/actions.ts",
-  "src/lib/assistance/actions.ts",
-  "src/lib/auth/scope.ts",
-  "src/lib/batiments/actions.ts",
-  "src/lib/batiments/queries.ts",
-  "src/lib/calendrier/actions.ts",
-  "src/lib/calendrier/echeances.ts",
-  "src/lib/calendrier/fraicheur.ts",
-  "src/lib/calendrier/queries.ts",
-  "src/lib/calendrier/reconciliation.ts",
-  "src/lib/carnet-sanitaire/actions.ts",
-  "src/lib/carnet-sanitaire/queries.ts",
-  "src/lib/carnet-sanitaire/suivi-calendrier.ts",
-  "src/lib/controle/queries.ts",
-  "src/lib/dashboard/queries.ts",
-  "src/lib/dashboard/transmissions.ts",
-  "src/lib/duerps/actions.ts",
-  "src/lib/duerps/import/actions.ts",
-  "src/lib/duerps/queries.ts",
-  "src/lib/entreprises/actions.ts",
-  "src/lib/entreprises/queries.ts",
-  "src/lib/equipements/actions.ts",
-  "src/lib/equipements/controles-d-ensemble.ts",
-  "src/lib/equipements/fiche.ts",
-  "src/lib/equipements/queries.ts",
-  "src/lib/etablissements/actions.ts",
-  "src/lib/etablissements/dossier-du-rendu.ts",
-  "src/lib/etablissements/epi-constate.ts",
-  "src/lib/etablissements/faits-activite-ecriture.ts",
-  "src/lib/etablissements/faits-activite-queries.ts",
-  "src/lib/etablissements/modules.ts",
-  "src/lib/etablissements/parametrage.ts",
-  "src/lib/etablissements/photo.ts",
-  "src/lib/etablissements/queries.ts",
-  "src/lib/etats-permanents/actions.ts",
-  "src/lib/etats-permanents/queries.ts",
   "src/lib/mcp/db.ts",
-  "src/lib/mcp/queries.ts", // par dbMcp()
-  "src/lib/onboarding/actions.ts",
-  "src/lib/pdf/builders.ts",
-  "src/lib/perimetre/faits.ts",
-  "src/lib/permis-feu/actions.ts",
-  "src/lib/permis-feu/queries.ts",
-  "src/lib/plan-prevention/actions.ts",
-  "src/lib/plan-prevention/queries.ts",
-  "src/lib/points-a-corriger/queries.ts",
-  "src/lib/prescriptions/actions.ts",
-  "src/lib/prescriptions/lecture-preuves.ts",
-  "src/lib/prescriptions/libelles-retires.ts",
-  "src/lib/prescriptions/queries.ts",
-  "src/lib/prestataires/actions.ts",
-  "src/lib/prestataires/queries.ts",
-  "src/lib/rapports/actions.ts",
-  "src/lib/rapports/joindre-realisations.ts",
-  "src/lib/rapports/queries.ts",
-  "src/lib/registre/actions.ts",
-  "src/lib/registre/queries.ts",
-  "src/lib/rendez-vous/actions.ts",
-  "src/lib/rendez-vous/queries.ts",
-  "src/lib/risques/actions.ts",
-  "src/lib/risques/queries.ts",
-  "src/lib/salaries/actions.ts",
-  "src/lib/salaries/droits.ts",
-  "src/lib/salaries/queries.ts",
-  "src/lib/salaries/suppression.ts",
-  "src/lib/securite/limite-debit.ts",
+  "src/lib/mcp/queries.ts",
   "src/lib/signatures/actions.ts",
   "src/lib/signatures/appartenance.ts",
   "src/lib/signatures/contenu-a-signer.ts",
@@ -127,20 +88,13 @@ const A_MIGRER = new Set([
   "src/lib/signatures/queries.ts",
   "src/lib/signatures/statut-objet.ts",
   "src/lib/signatures/trace.ts",
-  "src/lib/signatures/verification-publique.ts",
   "src/lib/signatures/verrou-contenu.ts",
-  "src/lib/suppression/queries.ts",
-  "src/lib/transverses/actions.ts",
-  "src/lib/versions/actions.ts",
-  "src/lib/versions/queries.ts",
-  "src/lib/versions/snapshot-builder.ts",
 ]);
-
-/** Modules qui peuvent importer les rouages du client borné. */
 const NOMMES_ROUAGES: Record<string, Record<string, string>> = {
   "src/lib/auth/portee/client": {
     "src/lib/auth/compte.ts": "requireCompte : la portée vient de la session",
     "src/lib/auth/portee/lot-verifie.ts": "types du client et de la transaction",
+    "src/test/garde-simulee.ts": "tests seuls : le client simulé que rendent les gardes simulées",
   },
   "src/lib/auth/portee/borne": {
     "src/lib/auth/portee/client.ts": "l'extension",
@@ -148,86 +102,77 @@ const NOMMES_ROUAGES: Record<string, Record<string, string>> = {
   },
 };
 
-function fichiers(dir: string): string[] {
-  return readdirSync(dir).flatMap((nom) => {
+const fichiers = (dir: string): string[] =>
+  readdirSync(dir).flatMap((nom) => {
     const chemin = join(dir, nom);
     if (statSync(chemin).isDirectory()) return fichiers(chemin);
-    return /\.(?:tsx?|m?js|cjs)$/.test(nom) && !/\.test\.tsx?$/.test(nom) ? [chemin] : [];
+    return /\.(?:[mc]?[jt]s|[jt]sx)$/.test(nom) && !/\.test\.\w+$/.test(nom) ? [relative(DEPOT, chemin)] : [];
   });
-}
+const TEXTES = new Map(fichiers(join(DEPOT, "src")).map((f) => [f, readFileSync(join(DEPOT, f), "utf8")]));
 
 const IMPORT = /(?:from\s+|import\s*\(\s*|require\s*\(\s*)["'`]([^"'`$]+)["'`]/g;
-
-/** Les modules importés par un fichier, en chemins du dépôt sans extension. */
-function importsDe(chemin: string): string[] {
-  const texte = readFileSync(chemin, "utf8");
-  return [...texte.matchAll(IMPORT)].map(([, spec]) => {
-    if (spec.startsWith("@/")) return "src/" + spec.slice(2);
-    if (spec.startsWith(".")) return relative(DEPOT, resolve(dirname(chemin), spec));
-    return spec;
-  }).map((s) => s.replace(/\.(ts|tsx|m?js|cjs)$/, "").replace(/\/index$/, ""));
-}
-
-const GRAPHE = new Map(fichiers(SRC).map((f) => [relative(DEPOT, f), importsDe(f)]));
-const importeurs = (cible: string) =>
-  [...GRAPHE].filter(([, imports]) => imports.includes(cible)).map(([f]) => f).sort();
+const cible = (f: string, spec: string) =>
+  (spec.startsWith("@/") ? posix.normalize("src/" + spec.slice(2))
+    : spec.startsWith(".") ? posix.join(posix.dirname(f), spec) : spec
+  ).replace(/\.(?:[mc]?[jt]s|[jt]sx)$/, "").replace(/\/index$/, "");
+const GRAPHE = [...TEXTES].map(([f, t]) => [f, [...t.matchAll(IMPORT)].map(([, s]) => cible(f, s))] as const);
+const importeurs = (c: string) => GRAPHE.filter(([, i]) => i.includes(c)).map(([f]) => f).sort();
 
 describe("client Prisma brut", () => {
   const brut = [...new Set(PORTES_BRUTES.flatMap(importeurs))].sort();
-
-  it("le relevé voit les importeurs (borne basse)", () => {
+  it("seuls les modules nommés ou à migrer l'importent", () => {
     expect(brut.length).toBeGreaterThan(0);
-  });
-
-  it("aucun module nouveau n'importe le client brut", () => {
     expect(brut.filter((f) => !(f in NOMMES_PRISMA) && !A_MIGRER.has(f))).toEqual([]);
   });
-
+  it.each(Object.entries(NOMMES_PRISMA))("%s n'emploie le client brut que pour son motif", (f, { usages }) => {
+    if (usages === "tous") return;
+    const code = sansCommentairesNiChaines(TEXTES.get(f)!);
+    const employes = [...code.matchAll(/\bprisma\s*\.\s*([$\w]+)(?:\s*\.\s*(\w+))?/g)].map(
+      ([, a, b]) => (a.startsWith("$") || !b ? `prisma.${a}` : `prisma.${a}.${b}`),
+    );
+    expect(employes.length).toBeGreaterThan(0);
+    expect(employes.filter((u) => !usages.includes(u))).toEqual([]);
+  });
   it("un module migré sort de la liste À MIGRER", () => {
     expect([...A_MIGRER].filter((f) => !brut.includes(f))).toEqual([]);
   });
 });
 
-/**
- * Vrai si le fichier peut obtenir la VALEUR `PrismaClient` : un import non
- * typé qui la nomme (alias compris), un import d'espace de noms, un
- * `require`/`import()` du paquet. Les imports de types et de `Prisma` seuls
- * restent libres.
- */
+it.each(Object.entries(NOMMES_ROUAGES))("les rouages %s ne s'importent que des modules nommés", (c, nommes) => {
+  expect(importeurs(c).filter((f) => !(f in nommes))).toEqual([]);
+});
+
+/** Vrai si le texte obtient la VALEUR `PrismaClient` (nommée, défaut, espace de noms, require, import()). */
+const PAQUET = String.raw`["'\`](?:@prisma|\.prisma)\/client(?:\/[^"'\`]*)?["'\`]`;
 function peutFabriquer(texte: string): boolean {
-  const nommes = [...texte.matchAll(/import\s+(type\s+)?\{([^}]*)\}\s*from\s*["']@prisma\/client["']/g)];
-  if (nommes.some(([, type, liste]) => !type && /(^|[,{\s])PrismaClient\b/.test(liste.replace(/\btype\s+\w+/g, ""))))
-    return true;
-  if (/import\s+\*\s+as\s+\w+\s+from\s*["']@prisma\/client["']/.test(texte)) return true;
-  if (/import\s+\w+\s*(,|from)\s*[^;]*["']@prisma\/client["']/.test(texte)) return true;
-  return /(?:require|import)\s*\(\s*["'`]@prisma\/client["'`]\s*\)/.test(texte);
+  // `import` comme `export … from` (ré-export, `export *`) ; `default` nommé
+  // entre accolades compte comme l'import par défaut.
+  const statiques = texte.matchAll(
+    new RegExp(String.raw`(?:import|export)\s+(type\s+)?([^;"'\`]*?)\s*from\s*` + PAQUET, "g"),
+  );
+  return [...statiques].some(([, type, clause]) =>
+    !type &&
+    /^(?:\w|\*)|\bPrismaClient\b|\bdefault\b/.test(clause.replace(/\btype\s+\w+(?:\s+as\s+\w+)?/g, "")),
+  ) || new RegExp(String.raw`(?:require|import)\s*\(\s*` + PAQUET).test(texte);
 }
 
 describe("fabrication d'un client Prisma", () => {
   it("la valeur PrismaClient ne s'obtient que dans les modules qui fabriquent un client", () => {
-    const fabriquent = fichiers(SRC)
-      .filter((f) => peutFabriquer(readFileSync(f, "utf8")))
-      .map((f) => relative(DEPOT, f));
-    expect(fabriquent.filter((f) => !FABRIQUES.has(f))).toEqual([]);
+    expect([...TEXTES].filter(([f, t]) => peutFabriquer(t) && !FABRIQUES.has(f)).map(([f]) => f)).toEqual([]);
   });
-
   it.each([
-    ['import { PrismaClient } from "@prisma/client";', true],
-    ['import { PrismaClient as P } from "@prisma/client";', true],
-    ['import { Prisma, PrismaClient } from "@prisma/client";', true],
+    ['import { Prisma, PrismaClient as P } from "@prisma/client";', true],
+    ['export { PrismaClient } from "@prisma/client";', true],
+    ['export * from "@prisma/client";', true],
+    ['import { default as P } from "@prisma/client";', true],
+    ['export type { PrismaClient } from "@prisma/client";', false],
+    ['export { Prisma } from "@prisma/client";', false],
     ['import * as client from "@prisma/client";', true],
-    ['const m = require("@prisma/client");', true],
-    ['const m = await import("@prisma/client");', true],
+    ['import { PrismaClient } from "@prisma/client/runtime/library";', true],
+    ['import { PrismaClient } from ".prisma/client";', true],
+    ['const m = require("@prisma/client/default");', true],
+    ['import type { A } from "./a";\nimport { PrismaClient } from "@prisma/client";', true],
     ['import type { PrismaClient } from "@prisma/client";', false],
     ['import { type PrismaClient, Prisma } from "@prisma/client";', false],
-    ['import { Prisma } from "@prisma/client";', false],
-  ])("%s → %s", (texte, attendu) => {
-    expect(peutFabriquer(texte)).toBe(attendu);
-  });
-});
-
-describe.each(Object.entries(NOMMES_ROUAGES))("rouages : %s", (cible, nommes) => {
-  it("ne s'importe que depuis les modules nommés", () => {
-    expect(importeurs(cible).filter((f) => !(f in nommes))).toEqual([]);
-  });
+  ])("%s → %s", (texte, attendu) => expect(peutFabriquer(texte)).toBe(attendu));
 });

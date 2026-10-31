@@ -3,7 +3,9 @@
 // dans le compte —, les transactions, et `creerEnLotVerifie`.
 //
 // SAUTÉ PAR DÉFAUT : il ne tourne que si `ISOLATION_INTEGRATION_URL` pointe une
-// base LOCALE migrée, qu'il VIDE (`TRUNCATE "Entreprise" CASCADE`) :
+// base LOCALE migrée, qu'il VIDE (`TRUNCATE "Entreprise" CASCADE`, et sur cc
+// `TRUNCATE "User" CASCADE` : comptes, sessions, seconds facteurs, signatures,
+// jetons d'accès) :
 //   ISOLATION_INTEGRATION_URL=postgresql://duerp:<mdp>@localhost:5433/rojer_essai_isolation \
 //     pnpm exec vitest run src/lib/auth/portee/client.integration
 // Jamais une base qui porte des données utiles.
@@ -11,6 +13,9 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
+// Le vrai client borné, pas le remplacement de vitest.setup.ts.
+vi.unmock("@/lib/auth/portee/client");
+vi.unmock("@/lib/auth/portee/lot-verifie");
 
 const URL_BASE = process.env.ISOLATION_INTEGRATION_URL;
 const local = URL_BASE ? /@(localhost|127\.0\.0\.1)[:/]/.test(URL_BASE) : false;
@@ -158,6 +163,31 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
     });
   });
 
+  describe("écritures imbriquées sous une ligne bornée", () => {
+    it("deleteMany imbriqué touche les lignes du parent ; update imbriqué est refusé (non servi)", async () => {
+      const t = await prisma.batiment.create({ data: { etablissementId: a.etab.id, nom: "imbrique" } });
+      await expect(
+        dbA.etablissement.update({
+          where: { id: a.etab.id },
+          data: { batiments: { update: { where: { id: t.id }, data: { nom: "imbrique-2" } } } },
+        }),
+      ).rejects.toThrow(/non servie/);
+      await dbA.etablissement.update({
+        where: { id: a.etab.id },
+        data: { batiments: { deleteMany: { nom: "imbrique" } } },
+      });
+      expect(await prisma.batiment.findUnique({ where: { id: t.id } })).toBeNull();
+    });
+
+    it("deleteMany imbriqué n'atteint pas la ligne d'un autre compte", async () => {
+      await dbA.etablissement.update({
+        where: { id: a.etab.id },
+        data: { batiments: { deleteMany: { id: b.bat.id } } },
+      });
+      expect((await prisma.batiment.findUnique({ where: { id: b.bat.id } }))?.nom).toBe("Principal");
+    });
+  });
+
   describe("transactions", () => {
     it("interactive : le client de transaction est borné", async () => {
       expect(await dbA.$transaction((tx) => tx.etablissement.findUnique({ where: { id: b.etab.id } }))).toBeNull();
@@ -215,13 +245,13 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
   });
 
   describe("createMany imbriqué", () => {
-    it("une racine d'un autre compte y est refusée, B ne voit rien", async () => {
+    it("est refusé (forme non servie) : une racine d'un autre compte n'y passe pas, B ne voit rien", async () => {
       await expect(
         dbA.etablissement.update({
           where: { id: a.etab.id },
           data: { demandesAssistance: { createMany: { data: [{ userId: B, categorie: "duerp", message: "injecté", page: "/" }] } } },
         } as never),
-      ).rejects.toThrow(/différent du compte/);
+      ).rejects.toThrow(/non servie/);
       expect(await prisma.demandeAssistance.count({ where: { userId: B } })).toBe(0);
     });
   });

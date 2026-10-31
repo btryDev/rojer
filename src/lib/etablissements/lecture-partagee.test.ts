@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 /**
  * CE QUE CE FICHIER DÉFEND (plan performance, 2026-10-29).
  *
- * `etablissementDuCompteDuRendu` est mémoïsée sur le rendu et lue par la barre
+ * `etablissementDuRendu` est mémoïsée sur le rendu et lue par la barre
  * latérale EN PARALLÈLE de la page — donc possiblement avant la réparation du
  * calendrier que font le tableau de bord et le calendrier. Les colonnes que la
  * réparation écrit sont OMISES de cette lecture, pour qu'aucun lecteur ne les
@@ -42,7 +42,7 @@ function colonnesEcritesParLeCalendrier(): Set<string> {
 
 function colonnesOmises(): Set<string> {
   const source = readFileSync(join(__dirname, "queries.ts"), "utf8");
-  const debut = source.indexOf("export const etablissementDuCompteDuRendu");
+  const debut = source.indexOf("export const etablissementDuRendu");
   const omit = source.slice(debut).match(/\bomit:\s*\{([^}]*)\}/);
   return new Set(
     [...(omit?.[1] ?? "").matchAll(/(\w+)\s*:\s*true/g)].map(([, c]) => c),
@@ -65,7 +65,7 @@ describe("la lecture partagée de l'établissement omet ce que la réparation é
     expect(
       manquantes,
       "Ces colonnes peuvent être réécrites pendant le rendu, après la lecture " +
-        "partagée : omettez-les de `etablissementDuCompteDuRendu`, et lisez-les " +
+        "partagée : omettez-les de `etablissementDuRendu`, et lisez-les " +
         "par une lecture à soi.",
     ).toEqual([]);
   });

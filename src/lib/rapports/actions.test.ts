@@ -27,7 +27,7 @@ import { cleJourCivil, depuisCleJourCivil } from "@/lib/dates";
 import { estVerificationEnRetard } from "@/lib/dates/retard";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import type { EquipementFaux, LigneFausse, RapportFaux } from "@/lib/calendrier/faux-prisma";
-import { lireEntrees, planifier, type ClientLecture } from "@/lib/calendrier/passe";
+import { lireEntrees, planifier, type ClientPasse } from "@/lib/calendrier/passe";
 
 const h = vi.hoisted(async () => {
   const { fauxPrisma, magasinVide } = await import("@/lib/calendrier/faux-prisma");
@@ -82,7 +82,7 @@ vi.mock("@/lib/storage", async () => {
 });
 
 const { db, prisma, stockage, regenerer } = await h;
-const client = prisma as unknown as ClientLecture;
+const client = prisma as unknown as ClientPasse;
 const { supprimerRapport, uploadRapport } = await import("./actions");
 const { MESSAGE_APPAREIL_RETIRE } = await import("@/lib/equipements/retrait");
 

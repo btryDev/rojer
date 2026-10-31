@@ -2,13 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
 import { estJourCivilReel } from "@/lib/dates";
 import { requireMesure, requireRisque } from "@/lib/auth/scope";
 import { tousRisquesConnus } from "@/lib/referentiels";
 import { statutUIVersAction } from "./mapping";
 import { assertOrigineActionValide } from "./origine";
-import { constaterEpi } from "@/lib/etablissements/epi-constate";
+import { constaterEpiDuCompte } from "@/lib/etablissements/epi-constate";
 
 /**
  * Server actions pour l'entité `Action` — unifiée DUERP + vérifications
@@ -59,17 +58,17 @@ export async function toggleMesureReferentiel(
   risqueId: string,
   referentielMesureId: string,
 ): Promise<void> {
-  const { risque, duerpId, uniteId, etablissementId } =
+  const { db, risque, duerpId, uniteId, etablissementId } =
     await requireRisque(risqueId);
 
-  const existant = await prisma.action.findUnique({
+  const existant = await db.action.findUnique({
     where: {
       risqueId_referentielMesureId: { risqueId, referentielMesureId },
     },
   });
 
   if (existant) {
-    await prisma.action.delete({ where: { id: existant.id } });
+    await db.action.delete({ where: { id: existant.id } });
   } else {
     if (!risque.referentielId) {
       throw new Error("Risque personnalisé : pas de mesure référentielle");
@@ -83,7 +82,7 @@ export async function toggleMesureReferentiel(
     // XOR d'origine (ADR-002) : une mesure du wizard se rattache au risque,
     // jamais à une vérification.
     assertOrigineActionValide({ risqueId, verificationId: null });
-    await prisma.action.create({
+    await db.action.create({
       data: {
         etablissementId,
         risqueId,
@@ -94,7 +93,7 @@ export async function toggleMesureReferentiel(
         leveeLe: new Date(),
       },
     });
-    await constaterEpi(etablissementId);
+    await constaterEpiDuCompte(db, etablissementId);
   }
 
   revalidateMesure(duerpId, uniteId, risqueId);
@@ -127,7 +126,7 @@ export async function ajouterMesureCustom(
   _prev: MesureActionState,
   formData: FormData,
 ): Promise<MesureActionState> {
-  const { duerpId, uniteId, etablissementId } = await requireRisque(risqueId);
+  const { db, duerpId, uniteId, etablissementId } = await requireRisque(risqueId);
 
   const parsed = mesureCustomSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -144,7 +143,7 @@ export async function ajouterMesureCustom(
   );
 
   assertOrigineActionValide({ risqueId, verificationId: null });
-  await prisma.action.create({
+  await db.action.create({
     data: {
       etablissementId,
       risqueId,
@@ -156,7 +155,7 @@ export async function ajouterMesureCustom(
       leveeLe: statutAction === "levee" ? new Date() : null,
     },
   });
-  await constaterEpi(etablissementId);
+  await constaterEpiDuCompte(db, etablissementId);
 
   revalidateMesure(duerpId, uniteId, risqueId);
   return { status: "success" };
@@ -180,13 +179,13 @@ export async function modifierMesure(
   mesureId: string,
   patch: z.input<typeof patchSchema>,
 ): Promise<void> {
-  const { action: actuelle } = await requireMesure(mesureId);
+  const { db, action: actuelle } = await requireMesure(mesureId);
 
   const parsed = patchSchema.safeParse(patch);
   if (!parsed.success) throw new Error("Patch invalide");
 
   const { statut: statutDuerp, ...rest } = parsed.data;
-  const data: Parameters<typeof prisma.action.update>[0]["data"] = { ...rest };
+  const data: Parameters<typeof db.action.update>[0]["data"] = { ...rest };
   if (statutDuerp !== undefined) {
     const echeanceEff =
       rest.echeance !== undefined ? rest.echeance : actuelle.echeance;
@@ -195,12 +194,12 @@ export async function modifierMesure(
     data.leveeLe = nouveau === "levee" ? actuelle.leveeLe ?? new Date() : null;
   }
 
-  await prisma.action.update({
+  await db.action.update({
     where: { id: mesureId },
     data,
   });
   // Le type ou le statut a pu changer (une mesure abandonnée ne compte pas).
-  await constaterEpi(actuelle.etablissementId);
+  await constaterEpiDuCompte(db, actuelle.etablissementId);
 
   if (actuelle.risqueId) {
     const { duerpId, uniteId } = await requireRisque(actuelle.risqueId);
@@ -209,13 +208,13 @@ export async function modifierMesure(
 }
 
 export async function supprimerMesure(mesureId: string): Promise<void> {
-  const { action } = await requireMesure(mesureId);
+  const { db, action } = await requireMesure(mesureId);
 
   // Le risque porteur est résolu (et re-scopé) avant la suppression : c'est
   // lui qui donne les chemins de cache du wizard à invalider.
   const cible = action.risqueId ? await requireRisque(action.risqueId) : null;
 
-  await prisma.action.delete({ where: { id: mesureId } });
+  await db.action.delete({ where: { id: mesureId } });
 
   if (cible && action.risqueId) {
     revalidateMesure(cible.duerpId, cible.uniteId, action.risqueId);

@@ -4,13 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
 import { reprendreFaitsDansDuerp } from "@/lib/etablissements/faits-activite-ecriture";
-import {
-  requireDuerp,
-  requireEtablissement,
-  requireUnite,
-} from "@/lib/auth/scope";
+import { requireDuerp, requireEtablissement, requireUnite } from "@/lib/auth/scope";
 import { trouverReferentielParId } from "@/lib/referentiels";
 import {
   compterUnitesPlafonnees,
@@ -36,9 +31,9 @@ import {
  * un second.
  */
 export async function creerDuerp(etablissementId: string): Promise<void> {
-  const { etablissement } = await requireEtablissement(etablissementId);
+  const { db, etablissement } = await requireEtablissement(etablissementId);
 
-  let duerp = await prisma.duerp.findFirst({
+  let duerp = await db.duerp.findFirst({
     where: { etablissementId },
     orderBy: { createdAt: "desc" },
     select: { id: true },
@@ -53,7 +48,7 @@ export async function creerDuerp(etablissementId: string): Promise<void> {
     // (ADR-041) : un dirigeant qui a répondu « oui, des travailleurs
     // conduisent des engins » depuis Équipe retrouve la question répondue ET
     // son risque dans le document, sans la reposer.
-    duerp = await prisma.$transaction(async (tx) => {
+    duerp = await db.$transaction(async (tx) => {
       const cree = await tx.duerp.create({
         data: {
           etablissementId,
@@ -85,7 +80,7 @@ export async function choisirSecteur(
   duerpId: string,
   secteurId: string,
 ): Promise<void> {
-  const { duerp } = await requireDuerp(duerpId);
+  const { db, duerp } = await requireDuerp(duerpId);
 
   const ref = trouverReferentielParId(secteurId);
   if (!ref) throw new Error(`Secteur inconnu : ${secteurId}`);
@@ -103,7 +98,7 @@ export async function choisirSecteur(
     duerp.referentielSecteurId !== null &&
     duerp.referentielSecteurId !== secteurId;
 
-  const unitesExistantes = await prisma.uniteTravail.findMany({
+  const unitesExistantes = await db.uniteTravail.findMany({
     where: { duerpId },
     select: { nom: true, estTransverse: true },
   });
@@ -123,8 +118,8 @@ export async function choisirSecteur(
   // supprimer les anciennes lui-même.
   const places = placesRestantes(compterUnitesPlafonnees(unitesExistantes));
 
-  await prisma.$transaction([
-    prisma.duerp.update({
+  await db.$transaction([
+    db.duerp.update({
       where: { id: duerpId },
       data: {
         referentielSecteurId: secteurId,
@@ -135,7 +130,7 @@ export async function choisirSecteur(
       .filter((u) => !nomsExistants.has(u.nom.toLowerCase()))
       .slice(0, places)
       .map((u) =>
-        prisma.uniteTravail.create({
+        db.uniteTravail.create({
           data: {
             duerpId,
             nom: u.nom,
@@ -178,7 +173,7 @@ export async function ajouterUnite(
   _prev: UniteActionState,
   formData: FormData,
 ): Promise<UniteActionState> {
-  await requireDuerp(duerpId);
+  const { db } = await requireDuerp(duerpId);
 
   const parsed = uniteSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -191,7 +186,7 @@ export async function ajouterUnite(
 
   // Le plafond de l'ADR-033 vaut à l'ajout, jamais à la lecture : un DUERP qui
   // porte déjà huit unités n'en perd aucune, il n'en gagne plus.
-  const unites = await prisma.uniteTravail.findMany({
+  const unites = await db.uniteTravail.findMany({
     where: { duerpId },
     select: { estTransverse: true },
   });
@@ -202,7 +197,7 @@ export async function ajouterUnite(
     return { status: "error", message, fieldErrors: { nom: [message] } };
   }
 
-  await prisma.uniteTravail.create({
+  await db.uniteTravail.create({
     data: {
       duerpId,
       nom: parsed.data.nom,
@@ -218,7 +213,7 @@ export async function renommerUnite(
   uniteId: string,
   nouveauNom: string,
 ): Promise<void> {
-  const { duerpId } = await requireUnite(uniteId);
+  const { db, duerpId } = await requireUnite(uniteId);
 
   // La borne de la création (`uniteSchema`), et non une seconde : un point
   // d'entrée réseau qui écrivait un nom d'un mégaoctet là où l'ajout en
@@ -230,7 +225,7 @@ export async function renommerUnite(
   if (!parsed.success) {
     throw new Error("Nom d'unité de travail invalide (100 caractères au plus).");
   }
-  await prisma.uniteTravail.update({
+  await db.uniteTravail.update({
     where: { id: uniteId },
     data: { nom: parsed.data },
   });
@@ -238,9 +233,9 @@ export async function renommerUnite(
 }
 
 export async function supprimerUnite(uniteId: string): Promise<void> {
-  const { duerpId } = await requireUnite(uniteId);
+  const { db, duerpId } = await requireUnite(uniteId);
 
-  await prisma.uniteTravail.delete({ where: { id: uniteId } });
+  await db.uniteTravail.delete({ where: { id: uniteId } });
   revalidatePath(`/duerp/${duerpId}/unites`);
 }
 
@@ -268,7 +263,7 @@ export async function declarerAucunRisque(
   uniteId: string,
   justification: string | null,
 ): Promise<void> {
-  const { duerpId } = await requireUnite(uniteId);
+  const { db, duerpId } = await requireUnite(uniteId);
 
   const parsed = justificationAucunRisqueSchema.safeParse(justification);
   if (!parsed.success) {
@@ -277,7 +272,7 @@ export async function declarerAucunRisque(
     );
   }
   const justif = parsed.data || null;
-  await prisma.uniteTravail.update({
+  await db.uniteTravail.update({
     where: { id: uniteId },
     data: { aucunRisqueJustif: justif },
   });

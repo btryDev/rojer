@@ -434,14 +434,14 @@ describe("portantUnePreuve — ce qu'aucune suppression n'emporte (ADR-012)", ()
     // Elles partagent désormais `prescriptions/preuves.ts` (preuves faites SOUS
     // l'acte, statut réalisé compris pour une obligation sur mesure), et ce
     // test tient qu'elles l'emploient toutes les deux, au lieu de la recopier.
-    // La LECTURE aussi est partagée (`chargerLignesVisees`, relecture du même
+    // La LECTURE aussi est partagée (`chargerLignesViseesDuCompte`, relecture du même
     // jour) : écrite deux fois, la page pouvait revenir à `prescriptionId`
     // en laissant la suite verte.
     expect(code("prescriptions/actions.ts")).toContain(
-      "await chargerLignesVisees(etablissementId, existante),",
+      "await chargerLignesViseesDuCompte(db, etablissementId, existante),",
     );
     expect(code("prescriptions/queries.ts")).toContain(
-      "compterLignesAvecPreuve(p, await chargerLignesVisees(etab.id, p)),",
+      "compterLignesAvecPreuve(p, await chargerLignesViseesDuCompte(db, etab.id, p)),",
     );
     for (const f of ["prescriptions/actions.ts", "prescriptions/queries.ts"]) {
       expect(code(f), f).not.toContain("verification.findMany");

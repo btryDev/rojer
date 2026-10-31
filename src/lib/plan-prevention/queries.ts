@@ -1,12 +1,11 @@
 import "server-only";
-import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireCompte } from "@/lib/auth/compte";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { listSignatures } from "@/lib/signatures/queries";
 
 export async function listPlansPrevention(etablissementId: string) {
-  const { etablissement } = await requireEtablissement(etablissementId);
-  return prisma.planPrevention.findMany({
+  const { db, etablissement } = await requireEtablissement(etablissementId);
+  return db.planPrevention.findMany({
     where: { etablissementId: etablissement.id },
     orderBy: [{ numero: "desc" }],
     include: { _count: { select: { lignes: true } } },
@@ -17,8 +16,8 @@ export async function getPlanPrevention(
   etablissementId: string,
   planId: string,
 ) {
-  const { etablissement } = await requireEtablissement(etablissementId);
-  const plan = await prisma.planPrevention.findFirst({
+  const { db, etablissement } = await requireEtablissement(etablissementId);
+  const plan = await db.planPrevention.findFirst({
     where: { id: planId, etablissementId: etablissement.id },
     include: {
       lignes: { orderBy: { ordre: "asc" } },
@@ -41,11 +40,10 @@ export async function getPlanPrevention(
 export async function nextNumeroPlan(
   etablissementId: string,
 ): Promise<number> {
-  const user = await requireUser();
-  const last = await prisma.planPrevention.findFirst({
+  const { db } = await requireCompte();
+  const last = await db.planPrevention.findFirst({
     where: {
       etablissementId,
-      etablissement: { entreprise: { userId: user.id } },
     },
     orderBy: { numero: "desc" },
     select: { numero: true },

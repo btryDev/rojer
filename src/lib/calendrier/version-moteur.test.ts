@@ -565,7 +565,12 @@ const RELEVE = {
   // dernière heure lue est gardée devant la mémoire. NON, même calcul —
   // éprouvé contre `Intl` autour de chaque changement de 1900 à 2300, dont
   // ceux hors des heures pleines : empreinte recopiée, version inchangée.
-  empreinte: "0a32814cf20b42e9",
+  // [2026-10-30, ADR-051, isolation du calendrier] la passe lit par le client
+  // borné en session et vérifie chaque clé du plan contre sa lecture
+  // (`clesDuPlanDansLaLecture`). NON : la porte ne fait que refuser une clé
+  // qu'aucun plan légitime ne produit, ce que la régénération écrit ne change
+  // pas — empreinte recopiée, version inchangée.
+  empreinte: "befd7d3f01d4b946",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

@@ -3,7 +3,7 @@ import { execSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { helpersDAppartenance, sansCommentairesNiChaines } from "./tenancy-sonde";
-import { decoupe, etablitSaPorteeLocale, LECTURE } from "./tenancy-portee";
+import { borneeParConstruction, decoupe, etablitSaPorteeLocale, LECTURE } from "./tenancy-portee";
 
 /**
  * Chaque méthode exportée d'un `route.ts` appelle un contrôle d'accès.
@@ -133,8 +133,16 @@ function controle(m: Methode): string | null {
   }
   const delegation = DELEGATIONS.get(m.cle);
   if (delegation && appelle(delegation.fonction, m.corps)) {
-    const fns = decoupe(readFileSync(join(process.cwd(), delegation.module), "utf8"));
-    if (etablitSaPorteeLocale(fns, delegation.fonction)) return `délégation à ${delegation.fonction}`;
+    const chemin = join(process.cwd(), delegation.module);
+    const fns = decoupe(readFileSync(chemin, "utf8"));
+    // Bornée dans le fichier, ou par construction : tout ce qu'elle lit passe
+    // par le client borné (2026-10-30, lot 2b de l'isolation).
+    if (
+      etablitSaPorteeLocale(fns, delegation.fonction) ||
+      borneeParConstruction(chemin, delegation.fonction, LECTURE)
+    ) {
+      return `délégation à ${delegation.fonction}`;
+    }
   }
   if (
     /\bhandler\.servir\(/.test(m.corps) &&

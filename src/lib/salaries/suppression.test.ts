@@ -344,7 +344,7 @@ describe("le stockage qui échoue n'annule pas l'effacement", () => {
 
 describe("la confirmation compte juste", () => {
   it("compte ce que l'effacement emporte — le même périmètre", async () => {
-    const p = await perimetreSuppressionSalarie("etab-a", "sal-1");
+    const p = await perimetreSuppressionSalarie(h.prisma as never, "etab-a", "sal-1");
     expect(p).toEqual({ titres: 2, echeances: 2, rapports: 1, actions: 1, signatures: 1 });
     // Et c'est bien ce qui part.
     const avant = {
@@ -365,7 +365,7 @@ describe("la confirmation compte juste", () => {
   });
 
   it("hors de l'établissement : rien à compter", async () => {
-    expect(await perimetreSuppressionSalarie("etab-a2", "sal-1")).toBeNull();
+    expect(await perimetreSuppressionSalarie(h.prisma as never, "etab-a2", "sal-1")).toBeNull();
   });
 
   it("dit ce qui part, que c'est définitif, et ce que l'export garde (M1, M2, F4)", () => {
