@@ -1,6 +1,5 @@
 import "server-only";
-import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireCompte } from "@/lib/auth/compte";
 import type { EntrepriseConnue } from "@/lib/onboarding/rattachement";
 
 // ADR-005 : toutes les lectures d'Entreprise passent par requireUser() et
@@ -20,9 +19,9 @@ import type { EntrepriseConnue } from "@/lib/onboarding/rattachement";
  * même société.
  */
 export async function listerEntreprisesConnues(): Promise<EntrepriseConnue[]> {
-  const user = await requireUser();
-  const entreprises = await prisma.entreprise.findMany({
-    where: { userId: user.id, siren: { not: null } },
+  const { db } = await requireCompte();
+  const entreprises = await db.entreprise.findMany({
+    where: { siren: { not: null } },
     orderBy: { createdAt: "asc" },
     select: { siren: true, raisonSociale: true, effectif: true },
   });
@@ -35,9 +34,9 @@ export async function listerEntreprisesConnues(): Promise<EntrepriseConnue[]> {
 }
 
 export async function getEntreprise(id: string) {
-  const user = await requireUser();
-  return prisma.entreprise.findFirst({
-    where: { id, userId: user.id },
+  const { db } = await requireCompte();
+  return db.entreprise.findFirst({
+    where: { id },
     include: {
       etablissements: {
         orderBy: { createdAt: "asc" },

@@ -1,8 +1,7 @@
 "use server";
 
+import { requireCompte } from "@/lib/auth/compte";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { decouperCheminInterne } from "@/lib/navigation/provenance";
 import {
@@ -53,7 +52,7 @@ export async function demanderAssistance(
   _prev: DemandeAssistanceState,
   formData: FormData,
 ): Promise<DemandeAssistanceState> {
-  const user = await requireUser();
+  const { user, db } = await requireCompte();
   const parsed = schema.safeParse({
     categorie: formData.get("categorie"),
     message: formData.get("message"),
@@ -75,8 +74,8 @@ export async function demanderAssistance(
   const etablissementId = voulu ? (await requireEtablissement(voulu)).etablissement.id : null;
 
   const depuis = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const recentes = await prisma.demandeAssistance.count({
-    where: { userId: user.id, createdAt: { gte: depuis } },
+  const recentes = await db.demandeAssistance.count({
+    where: { createdAt: { gte: depuis } },
   });
   if (recentes >= DEMANDES_PAR_JOUR_MAX) {
     return {
@@ -85,7 +84,7 @@ export async function demanderAssistance(
     };
   }
 
-  await prisma.demandeAssistance.create({
+  await db.demandeAssistance.create({
     data: {
       userId: user.id,
       etablissementId,

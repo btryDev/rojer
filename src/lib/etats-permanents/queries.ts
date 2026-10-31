@@ -1,4 +1,5 @@
 import "server-only";
+import { requireCompte } from "@/lib/auth/compte";
 /**
  * Ce que l'écran « Ce qui doit être en place » lit.
  *
@@ -15,8 +16,6 @@ import "server-only";
  * n'affirme rien tant que personne ne la lit.
  */
 
-import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
 import {
   determineObligationsApplicables,
   projeterEtablissement,
@@ -218,7 +217,7 @@ export async function listerEtatsPermanents(
   // l'appelle : c'est ce que `batiments/queries.ts` formule par « une lecture
   // qui ne le porte pas devient une fuite le jour où quelqu'un rend la fonction
   // publique ».
-  const user = await requireUser();
+  const { user, db } = await requireCompte();
 
   // Les titres des personnes actives, pour les seules lignes établies d'après
   // eux (`etabliParLesTitres`, le prédicat que lit aussi la garde de
@@ -241,7 +240,7 @@ export async function listerEtatsPermanents(
   // actives de CE dossier »). `tenancy-lectures.test.ts` ne voit pas cette
   // lecture. Retirer le prédicat ne fait tomber que ce test-là.
   const [declarations, titres] = await Promise.all([
-    prisma.declarationEtatPermanent.findMany({
+    db.declarationEtatPermanent.findMany({
       where: {
         etablissementId: etablissement.id,
         etablissement: { entreprise: { userId: user.id } },
@@ -250,7 +249,7 @@ export async function listerEtatsPermanents(
     }),
     titresVises.length === 0
       ? Promise.resolve([])
-      : prisma.titreSalarie.findMany({
+      : db.titreSalarie.findMany({
           where: {
             obligationId: { in: titresVises },
             salarie: {

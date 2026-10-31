@@ -1,5 +1,5 @@
+import { requireCompte } from "@/lib/auth/compte";
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
 import { cache } from "react";
 import { requireProprietaireSql } from "@/lib/auth/scope";
 import { debutDuJour } from "@/lib/dates";
@@ -59,8 +59,8 @@ export const getEtatModules = cache(async function getEtatModules(
  * partagent (plan performance, lot 1). Portée au compte dans la requête.
  */
 export const carnetDuRendu = cache(async function carnetDuRendu(etablissementId: string) {
-  const user = await requireUser();
-  return prisma.carnetSanitaire.findFirst({
+  const { user, db } = await requireCompte();
+  return db.carnetSanitaire.findFirst({
     where: { etablissementId, etablissement: { entreprise: { userId: user.id } } },
     select: {
       id: true,

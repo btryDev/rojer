@@ -1,13 +1,12 @@
 "use server";
 
+import { requireCompte, type Db } from "@/lib/auth/compte";
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
 import { resoudreBatimentOptionnel } from "@/lib/batiments/queries";
 import { resoudrePrestataireOptionnel } from "@/lib/prestataires/queries";
-import { assertEtablissementOwnership } from "@/lib/auth/scope";
-import { requireUser } from "@/lib/auth/require-user";
+import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { NatureTravauxPointChaud } from "@prisma/client";
 import type { StatutPermisFeu } from "@prisma/client";
 import { NATURES_TRAVAUX, permisFeuSchema, type PermisFeuInput } from "./schema";
@@ -108,7 +107,7 @@ export async function creerPermisFeu(
   _prev: PermisFeuActionState,
   formData: FormData,
 ): Promise<PermisFeuActionState> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
 
   const parsed = lirePermisFeu(formData);
   if (!parsed.success) {
@@ -133,7 +132,7 @@ export async function creerPermisFeu(
   const numero = await nextNumeroPermisFeu(etablissementId);
   const id = `pf_${randomUUID()}`;
 
-  const permis = await prisma.permisFeu.create({
+  const permis = await db.permisFeu.create({
     data: {
       id,
       etablissementId,
@@ -159,13 +158,13 @@ export async function creerPermisFeu(
  * tombent sur le même `notFound()` — celui des helpers de `auth/scope`.
  */
 async function permisDuCompte(permisFeuId: string) {
-  const user = await requireUser();
-  const permis = await prisma.permisFeu.findFirst({
+  const { user, db } = await requireCompte();
+  const permis = await db.permisFeu.findFirst({
     where: { id: permisFeuId, etablissement: { entreprise: { userId: user.id } } },
     select: { etablissementId: true, statut: true, numero: true },
   });
   if (!permis) notFound();
-  return permis;
+  return { ...permis, db };
 }
 
 /**
@@ -213,7 +212,7 @@ export async function modifierPermisFeu(
     : null;
   if (prestataire && !prestataire.ok) return PRESTATAIRE_INTROUVABLE;
 
-  const resultat = await prisma.$transaction(async (tx): Promise<PermisFeuActionState | null> => {
+  const resultat = await permis.db.$transaction(async (tx): Promise<PermisFeuActionState | null> => {
     await verrouillerObjetSigne(tx, "permis_feu", permisFeuId);
     // Le statut relu sous le verrou (relecture finale, R1).
     const statut = await tx.permisFeu.findUnique({
@@ -229,7 +228,10 @@ export async function modifierPermisFeu(
     );
     if (scelle) {
       if (porteUnChampScelle(formData)) return { status: "error", message: scelle };
-      await tx.permisFeu.updateMany({
+      // `update`, plus `updateMany` (ADR-051, lot 2b) : le client borné refuse
+      // qu'un `updateMany` change une clé étrangère. Le compte de lignes n'était
+      // pas lu, et la ligne existe : verrouillée, relue juste au-dessus.
+      await tx.permisFeu.update({
         where: { id: permisFeuId, etablissementId },
         data: { batimentId: batiment.id },
       });
@@ -252,7 +254,9 @@ export async function modifierPermisFeu(
     );
     const colonnes = colonnesPermis(parsed.data);
     const avant = await calculerHashObjet("permis_feu", permisFeuId, etablissementId, tx);
-    await tx.permisFeu.updateMany({
+    // `update`, même motif que la branche scellée : `batimentId` et
+    // `prestataireId` changent, ce qu'un `updateMany` borné refuse.
+    await tx.permisFeu.update({
       where: { id: permisFeuId, etablissementId },
       data: {
         ...colonnes,
@@ -299,9 +303,11 @@ const TRANSITIONS_CHANTIER = {
 async function franchir(
   permisFeuId: string,
   vers: keyof typeof TRANSITIONS_CHANTIER,
-): Promise<{ etablissementId: string; fait: boolean }> {
+): Promise<{ etablissementId: string; fait: boolean; db: Db }> {
   const permis = await permisDuCompte(permisFeuId);
-  const r = await prisma.permisFeu.updateMany({
+  // `updateMany` gardé : la transition conditionnelle se lit au compte de
+  // lignes, et elle ne change aucune clé étrangère.
+  const r = await permis.db.permisFeu.updateMany({
     where: {
       id: permisFeuId,
       etablissementId: permis.etablissementId,
@@ -310,7 +316,7 @@ async function franchir(
     data: { statut: vers },
   });
   revalidatePath(`/etablissements/${permis.etablissementId}/permis-feu/${permisFeuId}`);
-  return { etablissementId: permis.etablissementId, fait: r.count === 1 };
+  return { etablissementId: permis.etablissementId, fait: r.count === 1, db: permis.db };
 }
 
 export async function marquerEnCours(permisFeuId: string): Promise<void> {
@@ -327,7 +333,7 @@ export async function marquerTermine(permisFeuId: string): Promise<void> {
     objetType: "permis_feu",
     objetId: permisFeuId,
     motif: "Permis de feu terminé",
-  });
+  }, r.db);
 }
 
 export async function supprimerPermisFeu(permisFeuId: string): Promise<void> {
@@ -344,9 +350,9 @@ export async function supprimerPermisFeu(permisFeuId: string): Promise<void> {
     (permis.statut === "attente_signatures" || permis.statut === "brouillon") &&
     !(await porteUneTraceDeSignature("permis_feu", permisFeuId, etabId));
   if (effacable) {
-    await prisma.permisFeu.delete({ where: { id: permisFeuId } });
+    await permis.db.permisFeu.delete({ where: { id: permisFeuId } });
   } else {
-    await prisma.permisFeu.update({
+    await permis.db.permisFeu.update({
       where: { id: permisFeuId },
       data: { statut: "annule" },
     });
@@ -356,7 +362,7 @@ export async function supprimerPermisFeu(permisFeuId: string): Promise<void> {
     objetType: "permis_feu",
     objetId: permisFeuId,
     motif: effacable ? "Permis de feu supprimé" : "Permis de feu annulé",
-  });
+  }, permis.db);
   revalidatePath(`/etablissements/${etabId}/permis-feu`);
   redirect(`/etablissements/${etabId}/permis-feu`);
 }

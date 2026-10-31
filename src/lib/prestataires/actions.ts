@@ -1,10 +1,10 @@
 "use server";
 
+import { creerEnLotVerifie } from "@/lib/auth/portee/lot-verifie";
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
-import { assertEtablissementOwnership } from "@/lib/auth/scope";
+import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import {
   getStorage,
   MESSAGE_DEPOT_NON_CONFIGURE,
@@ -164,7 +164,7 @@ export async function creerPrestataire(
   _prev: PrestataireActionState,
   formData: FormData,
 ): Promise<PrestataireActionState> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
 
   const parsed = lireSaisie(formData);
   if (!parsed.success) {
@@ -186,7 +186,7 @@ export async function creerPrestataire(
   }
 
   try {
-    await prisma.prestataire.create({
+    await db.prestataire.create({
       data: {
         id: prestataireId,
         etablissementId,
@@ -245,9 +245,9 @@ export async function modifierPrestataire(
   _prev: PrestataireActionState,
   formData: FormData,
 ): Promise<PrestataireActionState> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
 
-  const existant = await prisma.prestataire.findFirst({
+  const existant = await db.prestataire.findFirst({
     where: { id: prestataireId, etablissementId },
     select: {
       id: true,
@@ -285,15 +285,25 @@ export async function modifierPrestataire(
 
   const remplacees = piecesRemplacees(existant, depot.colonnes);
   try {
-    await prisma.$transaction([
-      prisma.prestataire.update({
-        where: { id: existant.id },
-        data: { ...colonnesDeLaSaisie(parsed.data), ...depot.colonnes },
-      }),
-      prisma.piecePrestataire.createMany({
-        data: remplacees.map((r) => ({ prestataireId: existant.id, ...r })),
-      }),
-    ]);
+    const modification = {
+      where: { id: existant.id },
+      data: { ...colonnesDeLaSaisie(parsed.data), ...depot.colonnes },
+    };
+    // Sans pièce remplacée, une seule écriture : pas de transaction.
+    // Avec, transaction interactive : `creerEnLotVerifie` (ADR-051) lit le
+    // prestataire avant d'insérer ses pièces, dans la transaction.
+    if (remplacees.length === 0) {
+      await db.prestataire.update(modification);
+    } else {
+      await db.$transaction(async (tx) => {
+        await tx.prestataire.update(modification);
+        await creerEnLotVerifie(
+          tx,
+          "PiecePrestataire",
+          remplacees.map((r) => ({ prestataireId: existant.id, ...r })),
+        );
+      });
+    }
   } catch (err) {
     await libererFichiers(depot.cles, "prestataires/modification");
     if (estSiretEnDouble(err)) return erreurSiret();
@@ -326,7 +336,7 @@ export async function enregistrerDatesAttestation(
   _prev: RemiseAttestationState,
   formData: FormData,
 ): Promise<RemiseAttestationState> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
 
   const parsed = remiseAttestationSchema.safeParse({
     attestationUrssafRemiseLe: formData.get("attestationUrssafRemiseLe"),
@@ -340,7 +350,7 @@ export async function enregistrerDatesAttestation(
     };
   }
 
-  const { count } = await prisma.prestataire.updateMany({
+  const { count } = await db.prestataire.updateMany({
     where: { id: prestataireId, etablissementId },
     data: {
       attestationUrssafRemiseLe: parsed.data.attestationUrssafRemiseLe ?? null,
@@ -361,9 +371,9 @@ export async function supprimerPrestataire(
   etablissementId: string,
   prestataireId: string,
 ): Promise<void> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
 
-  const prestataire = await prisma.prestataire.findFirst({
+  const prestataire = await db.prestataire.findFirst({
     where: { id: prestataireId, etablissementId },
     select: {
       id: true,
@@ -377,7 +387,7 @@ export async function supprimerPrestataire(
   });
   if (!prestataire) return;
 
-  await prisma.prestataire.delete({ where: { id: prestataire.id } });
+  await db.prestataire.delete({ where: { id: prestataire.id } });
   await deletePiecesPrestataire(prestataire);
 
   revalidatePath(`/etablissements/${etablissementId}/prestataires`);

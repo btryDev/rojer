@@ -1,4 +1,5 @@
 import "server-only";
+import { requireCompte } from "@/lib/auth/compte";
 // Lecture : la composition du registre pour un établissement réel.
 //
 // `composition.ts` est pur et ne connaît pas la base. Ce module fait le pont :
@@ -13,8 +14,6 @@ import "server-only";
 
 import { trierParCategorie } from "@/lib/equipements/labels";
 import { cache } from "react";
-import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
 import { projeterEtablissement } from "@/lib/matching/projection";
 import { composerRegistreParPartie, type PartieDue } from "./composition";
 import { CHAMPS_PAR_SECTION } from "./champs";
@@ -71,9 +70,9 @@ export const composerRegistreDeLEtablissement = cache(
   async (
     etablissementId: string,
   ): Promise<RegistreDeLEtablissement | null> => {
-    const user = await requireUser();
-    const etab = await prisma.etablissement.findFirst({
-      where: { id: etablissementId, entreprise: { userId: user.id } },
+    const { db } = await requireCompte();
+    const etab = await db.etablissement.findFirst({
+      where: { id: etablissementId },
       select: {
         id: true,
         effectifSurSite: true,

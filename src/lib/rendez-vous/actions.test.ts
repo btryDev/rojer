@@ -11,16 +11,22 @@ const h = vi.hoisted(() => ({
     salarieId: null as string | null,
     rendezVousLe: null as Date | null,
   },
-  updateMany: vi.fn(async () => ({ count: 1 })),
+  update: vi.fn(async () => ({ count: 1 })),
+  // La ligne existe-t-elle encore après un P2025 ? 0 : supprimée entre-temps.
+  count: vi.fn(async () => 0),
   resoudre: vi.fn(async (_e: string, id: string | null | undefined) =>
     !id ? { ok: true as const, id: null } : id === "presta-e1" ? { ok: true as const, id } : { ok: false as const },
   ),
 }));
 
-vi.mock("@/lib/prisma", () => ({ prisma: { verification: { updateMany: h.updateMany } } }));
-vi.mock("@/lib/auth/scope", () => ({
-  requireVerification: vi.fn(async () => ({ verification: h.ligne, etablissementId: "e1" })),
-}));
+vi.mock("@/lib/prisma", () => ({ prisma: { verification: { update: h.update, count: h.count } } }));
+vi.mock("@/lib/auth/scope", async () => {
+  // La garde rend le client borné (ADR-051) : ici, le client simulé.
+  const { prisma } = await import("@/lib/prisma");
+  return {
+    requireVerification: vi.fn(async () => ({ db: prisma, verification: h.ligne, etablissementId: "e1" })),
+  };
+});
 vi.mock("@/lib/prestataires/queries", () => ({ resoudrePrestataireOptionnel: h.resoudre }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
@@ -32,7 +38,7 @@ function fd(champs: Record<string, string>): FormData {
   return f;
 }
 const IDLE = { status: "idle" } as const;
-const data = () => (h.updateMany.mock.calls[0] as unknown as [{ data: Record<string, unknown> }])[0].data;
+const data = () => (h.update.mock.calls[0] as unknown as [{ data: Record<string, unknown> }])[0].data;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -59,10 +65,37 @@ describe("enregistrerSuiviControle", () => {
     expect((data().rendezVousLe as Date).toISOString()).toBe("2026-11-12T08:30:00.000Z");
   });
 
+  it("une ligne supprimée entre la garde et l'écriture : l'action aboutit, comme avec l'ancien updateMany", async () => {
+    const { Prisma } = await import("@prisma/client");
+    h.update.mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError("introuvable", { code: "P2025", clientVersion: "6" }),
+    );
+    const r = await enregistrerSuiviControle("v1", IDLE, fd({ prestataireId: "presta-e1" }));
+    expect(r.status).toBe("success");
+  });
+
+  it("le prestataire disparu entre sa résolution et l'écriture : erreur, pas « Enregistré »", async () => {
+    const { Prisma } = await import("@prisma/client");
+    h.update.mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError("introuvable", { code: "P2025", clientVersion: "6" }),
+    );
+    // La ligne est toujours là : c'est le `connect` borné du prestataire qui a échoué.
+    h.count.mockResolvedValueOnce(1);
+    const r = await enregistrerSuiviControle("v1", IDLE, fd({ prestataireId: "presta-e1" }));
+    expect(r).toEqual({ status: "error", message: "Prestataire introuvable" });
+  });
+
+  it("une autre erreur de la base remonte", async () => {
+    h.update.mockRejectedValueOnce(new Error("base indisponible"));
+    await expect(enregistrerSuiviControle("v1", IDLE, fd({ prestataireId: "presta-e1" }))).rejects.toThrow(
+      "base indisponible",
+    );
+  });
+
   it("refuse le prestataire d'un autre établissement, sans rien écrire", async () => {
     const r = await enregistrerSuiviControle("v1", IDLE, fd({ prestataireId: "presta-autre" }));
     expect(r.status).toBe("error");
-    expect(h.updateMany).not.toHaveBeenCalled();
+    expect(h.update).not.toHaveBeenCalled();
   });
 
   it("des champs vidés retirent prestataire et rendez-vous ; une note sans rendez-vous ne s'écrit pas", async () => {
@@ -73,7 +106,7 @@ describe("enregistrerSuiviControle", () => {
   it("refuse une date absurde (plus d'un mois passé, plus de deux ans d'ici), accepte une date gênante", async () => {
     expect((await enregistrerSuiviControle("v1", IDLE, fd({ rendezVousLe: "2026-09-01T09:00" }))).status).toBe("error");
     expect((await enregistrerSuiviControle("v1", IDLE, fd({ rendezVousLe: "2029-01-01T09:00" }))).status).toBe("error");
-    expect(h.updateMany).not.toHaveBeenCalled();
+    expect(h.update).not.toHaveBeenCalled();
     // Après l'échéance ou très en avance : accepté, l'écran le signale.
     expect((await enregistrerSuiviControle("v1", IDLE, fd({ rendezVousLe: "2028-06-01T09:00" }))).status).toBe("success");
   });
@@ -88,7 +121,7 @@ describe("enregistrerSuiviControle", () => {
   it("refuse une date-heure qui n'existe pas", async () => {
     const r = await enregistrerSuiviControle("v1", IDLE, fd({ rendezVousLe: "2026-02-30T09:00" }));
     expect(r.status).toBe("error");
-    expect(h.updateMany).not.toHaveBeenCalled();
+    expect(h.update).not.toHaveBeenCalled();
   });
 
   it("refuse une ligne éteinte et l'échéance d'une personne", async () => {
@@ -97,6 +130,6 @@ describe("enregistrerSuiviControle", () => {
     h.ligne.archiveLe = null;
     h.ligne.salarieId = "s1";
     expect((await enregistrerSuiviControle("v1", IDLE, fd({}))).status).toBe("error");
-    expect(h.updateMany).not.toHaveBeenCalled();
+    expect(h.update).not.toHaveBeenCalled();
   });
 });

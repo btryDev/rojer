@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
 import { requireDuerp } from "@/lib/auth/scope";
 import { seuilMajAnnuelle } from "@/lib/dashboard/duerp";
 import { lireDateDeclaree } from "@/lib/traces/date-declaree";
@@ -49,7 +48,7 @@ export async function creerVersion(
   const cle = cleParsed.data;
   // Le formulaire ne propose le 1° qu'au-dessus du seuil ; l'action le
   // vérifie aussi, un formulaire se contourne. `requireDuerp` borne au user.
-  const { duerp } = await requireDuerp(duerpId);
+  const { db, duerp } = await requireDuerp(duerpId);
   const soumis = seuilMajAnnuelle({
     entreprise: duerp.etablissement.entreprise.effectif,
     site: duerp.etablissement.effectifSurSite,
@@ -95,7 +94,7 @@ export async function creerVersion(
   // erreur Prisma P2002 brute à l'écran.
   for (let tentative = 1; tentative <= TENTATIVES_NUMEROTATION; tentative++) {
     try {
-      const cree = await prisma.$transaction(async (tx) => {
+      const cree = await db.$transaction(async (tx) => {
         const derniere = await tx.duerpVersion.findFirst({
           where: { duerpId },
           orderBy: { numero: "desc" },
@@ -165,8 +164,8 @@ export async function noterTransmissionSpst(
   _prev: TraceTransmissionState,
   formData: FormData,
 ): Promise<TraceTransmissionState> {
-  await requireDuerp(duerpId);
-  const version = await prisma.duerpVersion.findFirst({
+  const { db } = await requireDuerp(duerpId);
+  const version = await db.duerpVersion.findFirst({
     where: { id: versionId, duerpId },
     select: { createdAt: true },
   });
@@ -179,7 +178,7 @@ export async function noterTransmissionSpst(
   });
   if (!lu.ok) return { status: "error", message: lu.message };
 
-  const { count } = await prisma.duerpVersion.updateMany({
+  const { count } = await db.duerpVersion.updateMany({
     where: { id: versionId, duerpId },
     data: { transmiseSpstLe: lu.date },
   });

@@ -9,10 +9,12 @@
 // mais c'est une écriture non autorisée sur la donnée d'autrui, et ça n'a
 // pas à exister.
 //
-// Ici, la fonction n'est joignable que par du code serveur qui l'importe,
-// après avoir vérifié la propriété de l'établissement à sa façon.
+// Ici, la fonction n'est joignable que par du code serveur qui l'importe. Elle
+// écrit par le client qu'on lui passe (ADR-051) : borné au compte en session —
+// un établissement d'un autre compte n'est alors pas touché —, brut pour le
+// script de maintenance.
 
-import { prisma } from "@/lib/prisma";
+import type { ClientPasse } from "./passe";
 
 /**
  * Efface la version de référentiel d'un établissement, ce qui le replace
@@ -29,10 +31,13 @@ import { prisma } from "@/lib/prisma";
  * elle-même indisponible il n'y a rien à marquer.
  */
 export async function marquerCalendrierPerime(
+  client: ClientPasse,
   etablissementId: string,
 ): Promise<void> {
   try {
-    await prisma.etablissement.update({
+    // Par le client borné, un établissement hors du compte lève (P2025) : le
+    // `catch` ci-dessous l'avale, rien n'est écrit.
+    await client.etablissement.update({
       where: { id: etablissementId },
       data: { referentielVersionCalendrier: null },
     });

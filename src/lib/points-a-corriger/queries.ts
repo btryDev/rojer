@@ -1,6 +1,5 @@
 import "server-only";
-import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireCompte } from "@/lib/auth/compte";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import { ORDRE_RAPPORT_PLUS_RECENT } from "@/lib/rapports/derniere-realisation";
 import type { Resultat } from "@/lib/rapports/resultats";
@@ -8,7 +7,8 @@ import { appareilDesignable, estControleDEnsemble, recoitDesPoints } from "./reg
 
 /**
  * Les lectures des points à corriger (ADR-048). Toutes bornées au compte
- * connecté par `Entreprise.userId` (ADR-005) : un identifiant venu de l'URL
+ * connecté par `Entreprise.userId` (ADR-005), par le client borné de
+ * `requireCompte()` (ADR-051 ; prédicat écrit retiré le 2026-10-30) : un identifiant venu de l'URL
  * ne lit jamais le dossier d'un autre.
  */
 
@@ -36,10 +36,9 @@ const SELECTION_POINT = {
  * contrôle d'ensemble a désignés sur lui. Ouverts d'abord, puis par échéance.
  */
 export async function listerPointsDeLEquipement(equipementId: string) {
-  const user = await requireUser();
-  return prisma.action.findMany({
+  const { db } = await requireCompte();
+  return db.action.findMany({
     where: {
-      etablissement: { entreprise: { userId: user.id } },
       verificationId: { not: null },
       OR: [{ verification: { equipementId } }, { equipementId }],
     },
@@ -55,9 +54,9 @@ export type PointListe = Awaited<ReturnType<typeof listerPointsDeLEquipement>>[n
  * d'ensemble, elle gère ceux qui ne désignent aucun appareil.
  */
 export async function listerPointsDuControle(verificationId: string) {
-  const user = await requireUser();
-  return prisma.action.findMany({
-    where: { verificationId, etablissement: { entreprise: { userId: user.id } } },
+  const { db } = await requireCompte();
+  return db.action.findMany({
+    where: { verificationId },
     select: SELECTION_POINT,
     orderBy: [{ statut: "asc" }, { echeance: { sort: "asc", nulls: "last" } }, { createdAt: "desc" }],
   });
@@ -95,11 +94,10 @@ export async function controlesPourUnPoint(eq: {
   if (!eq.actif) return [];
   // La portée reste DANS la requête (`tenancy-lectures.test.ts`) : l'appareil
   // reçu n'en dispense pas. `requireUser` est mémoïsé par requête.
-  const user = await requireUser();
-  const lignes = await prisma.verification.findMany({
+  const { db } = await requireCompte();
+  const lignes = await db.verification.findMany({
     where: {
       etablissementId: eq.etablissementId,
-      etablissement: { entreprise: { userId: user.id } },
       archiveLe: null,
       salarieId: null,
       OR: [{ equipementId: eq.id }, { equipementId: null }],
@@ -153,11 +151,10 @@ export async function appareilsDesignables(v: {
   if (!estControleDEnsemble(v)) return [];
   const o = obligationParId(v.obligationId);
   if (!o) return [];
-  const user = await requireUser();
-  const appareils = await prisma.equipement.findMany({
+  const { db } = await requireCompte();
+  const appareils = await db.equipement.findMany({
     where: {
       etablissementId: v.etablissementId,
-      etablissement: { entreprise: { userId: user.id } },
       actif: true,
     },
     select: { id: true, libelle: true, categorie: true, actif: true },

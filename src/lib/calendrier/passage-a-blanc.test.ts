@@ -19,7 +19,7 @@ import {
   type Categorie,
   type EntreeClassement,
 } from "./passage-a-blanc";
-import { lireEntrees, type ClientLecture } from "./passe";
+import { lireEntrees, type ClientPasse } from "./passe";
 
 // ============================================================================
 // Le passage à blanc (ADR-036, lot 2c — 2026-09-18) : le classement des
@@ -290,7 +290,7 @@ const h = vi.hoisted(async () => {
 });
 
 const { db, prisma } = await h;
-const client = prisma as unknown as ClientLecture;
+const client = prisma as unknown as ClientPasse;
 
 const ETAB_ID = "etab-1";
 /** Établissement, annuelle, sans source : S1. */

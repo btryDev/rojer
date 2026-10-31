@@ -6,8 +6,7 @@ import {
 } from "@/lib/suppression/fichiers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
-import { assertEntrepriseOwnership } from "@/lib/auth/scope";
+import { assertEntrepriseDuCompte } from "@/lib/auth/scope";
 import {
   MESSAGE_REGEN_ECHEC,
   regenererApresMutation,
@@ -29,7 +28,7 @@ export async function modifierEntreprise(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  await assertEntrepriseOwnership(id);
+  const { db } = await assertEntrepriseDuCompte(id);
   const raw = Object.fromEntries(formData);
   const parsed = entrepriseSchema.safeParse(raw);
 
@@ -41,7 +40,7 @@ export async function modifierEntreprise(
     };
   }
 
-  await prisma.entreprise.update({
+  await db.entreprise.update({
     where: { id },
     data: parsed.data,
   });
@@ -57,7 +56,7 @@ export async function modifierEntreprise(
   // L'issue est testée, comme dans `etablissements/actions.ts` : un échec ne
   // se tait pas derrière un « Enregistré ». `genererCalendrier` revalide
   // lui-même les pages de l'établissement (`calendrier/actions.ts`).
-  const etablissements = await prisma.etablissement.findMany({
+  const etablissements = await db.etablissement.findMany({
     where: { entrepriseId: id },
     select: { id: true },
   });
@@ -102,15 +101,15 @@ export type SuppressionEntrepriseResult = {
 export async function supprimerEntreprise(
   id: string,
 ): Promise<SuppressionEntrepriseResult> {
-  await assertEntrepriseOwnership(id);
+  const { db } = await assertEntrepriseDuCompte(id);
 
   // Un établissement dont on connaît l'id permet d'orienter vers l'export.
-  const etablissement = await prisma.etablissement.findFirst({
+  const etablissement = await db.etablissement.findFirst({
     where: { entrepriseId: id },
     select: { id: true },
   });
 
-  const nbVersions = await prisma.duerpVersion.count({
+  const nbVersions = await db.duerpVersion.count({
     where: { duerp: { etablissement: { entrepriseId: id } } },
   });
 
@@ -138,7 +137,7 @@ export async function supprimerEntreprise(
   // transaction, fichiers libérés après (`suppression/fichiers.ts`).
   let cles: string[];
   try {
-    cles = await prisma.$transaction(async (tx) => {
+    cles = await db.$transaction(async (tx) => {
       const etabs = await tx.etablissement.findMany({
         where: { entrepriseId: id },
         select: { id: true },

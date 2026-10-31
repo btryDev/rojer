@@ -1,6 +1,5 @@
 import "server-only";
-import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireCompte, type Db } from "@/lib/auth/compte";
 import { cache } from "react";
 
 // ADR-005 : scope par userId via la chaîne duerp → etablissement → entreprise.
@@ -66,12 +65,15 @@ function actionVersMesure(a: ActionRow) {
  * `chargerEtablissementEtParc` : chaque appelant tient déjà l'utilisateur, et
  * hors rendu un second `requireUser()` coûterait un aller-retour
  * d'authentification de plus. Le prédicat d'appartenance reste dans la requête.
+ * Le client borné au compte (ADR-051) est reçu de même ; un par compte, gardé
+ * par `clientBorne`, il est une clé stable du cache.
  */
-export const duerpDuRendu = cache(async function duerpDuRendu(
+export const duerpDuRenduDuCompte = cache(async function duerpDuRenduDuCompte(
+  db: Db,
   etablissementId: string,
   userId: string,
 ) {
-  return prisma.duerp.findFirst({
+  return db.duerp.findFirst({
     where: {
       etablissementId,
       etablissement: { entreprise: { userId } },
@@ -92,6 +94,7 @@ export const duerpDuRendu = cache(async function duerpDuRendu(
   });
 });
 
+
 /**
  * Le DUERP du user, avec son établissement, ses unités, risques, mesures et
  * versions.
@@ -103,8 +106,8 @@ export const duerpDuRendu = cache(async function duerpDuRendu(
  * appelant ne le modifie pas.
  */
 export const getDuerp = cache(async function getDuerp(id: string) {
-  const user = await requireUser();
-  const duerp = await prisma.duerp.findFirst({
+  const { user, db } = await requireCompte();
+  const duerp = await db.duerp.findFirst({
     where: { id, etablissement: { entreprise: { userId: user.id } } },
     include: {
       etablissement: { include: { entreprise: true } },
@@ -136,8 +139,8 @@ export const getDuerp = cache(async function getDuerp(id: string) {
 });
 
 export async function getUnite(id: string) {
-  const user = await requireUser();
-  const unite = await prisma.uniteTravail.findFirst({
+  const { user, db } = await requireCompte();
+  const unite = await db.uniteTravail.findFirst({
     where: {
       id,
       duerp: { etablissement: { entreprise: { userId: user.id } } },

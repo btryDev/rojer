@@ -12,12 +12,11 @@
 // été fait, et les obligations qui expliquent pourquoi. Rien n'est
 // recalculé côté vue.
 
+import { requireCompte } from "@/lib/auth/compte";
 import { mentionRendezVous } from "@/lib/rendez-vous/regles";
 import { LIBELLE_POINT, nombreDePoints } from "@/lib/points-a-corriger/libelles";
 import type { ResultatVerification } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
 import { ORDRE_RAPPORT_PLUS_RECENT } from "@/lib/rapports/derniere-realisation";
-import { requireUser } from "@/lib/auth/require-user";
 import {
   aUnRendezVous,
   classerDate,
@@ -76,9 +75,9 @@ function detailSansRendezVous(obligationId: string): string {
  * lisible : c'est même la seule porte vers son historique (ADR-012).
  */
 export async function getFicheEquipement(id: string) {
-  const user = await requireUser();
-  return prisma.equipement.findFirst({
-    where: { id, etablissement: { entreprise: { userId: user.id } } },
+  const { db } = await requireCompte();
+  return db.equipement.findFirst({
+    where: { id },
     include: {
       etablissement: {
         select: {

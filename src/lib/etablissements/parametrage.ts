@@ -2,8 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
-import { assertEtablissementOwnership } from "@/lib/auth/scope";
+import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 
 /**
  * ~~Les deux questions de paramétrage~~ La question de paramétrage — ADR-025 § 7, ADR-032.
@@ -55,14 +54,14 @@ export async function repondreDemandesAssureur(
   _prev: ReponseParametrage,
   formData: FormData,
 ): Promise<ReponseParametrage> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
 
   const parsed = reponseBooleenne.safeParse(formData.get("reponse"));
   if (!parsed.success) {
     return { status: "error", message: "Répondez oui ou non." };
   }
 
-  await prisma.etablissement.update({
+  await db.etablissement.update({
     where: { id: etablissementId },
     data: { aDemandesAssureur: parsed.data === "oui" },
   });

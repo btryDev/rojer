@@ -1,7 +1,6 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
-import { assertEtablissementOwnership } from "@/lib/auth/scope";
+import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 
 /**
  * Server actions de l'accès externe (ADR-007).
@@ -31,8 +30,8 @@ export async function revoquerAccessToken(
   accessTokenId: string,
   motif: string,
 ): Promise<void> {
-  await assertEtablissementOwnership(etablissementId);
-  await prisma.accessToken.updateMany({
+  const { db } = await assertEtablissementDuCompte(etablissementId);
+  await db.accessToken.updateMany({
     where: { id: accessTokenId, etablissementId },
     data: { revoqueLe: new Date(), revoqueMotif: motif },
   });

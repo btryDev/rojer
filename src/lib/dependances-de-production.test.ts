@@ -65,7 +65,9 @@ const paquet = (specifier: string) =>
 
 /** Un fichier source de la racine du dépôt, chargé par la production ? */
 function racineDeProduction(nom: string): boolean {
-  const outil = /^([^.]+)\.config\./.exec(nom)?.[1];
+  // `<outil>.config.*` et `<outil>.setup.*` (vitest.setup.ts, chargé par
+  // vitest.config.ts) appartiennent à l'outil qui les charge.
+  const outil = /^([^.]+)\.(?:config|setup)\./.exec(nom)?.[1];
   return outil === undefined || PROD.includes(outil);
 }
 
@@ -102,6 +104,7 @@ describe("dépendances de production", () => {
     const relatifs = deRacine.map((f) => path.relative(RACINE, f));
     expect(relatifs).toContain("next.config.ts");
     expect(relatifs).not.toContain("vitest.config.ts");
+    expect(relatifs).not.toContain("vitest.setup.ts");
   });
 
   it("une réexportation compte comme un import, un `export type` non", () => {

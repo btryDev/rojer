@@ -1,16 +1,16 @@
 "use server";
 
+import { creerEnLotVerifie } from "@/lib/auth/portee/lot-verifie";
+import { requireCompte, type Db } from "@/lib/auth/compte";
 import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
 import { batimentParDefaut } from "@/lib/batiments/queries";
 import {
   portantUnePreuve,
   toutesLesConditions,
 } from "@/lib/calendrier/portee";
-import { assertEtablissementOwnership } from "@/lib/auth/scope";
-import { requireUser } from "@/lib/auth/require-user";
+import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import {
   MESSAGE_REGEN_ECHEC,
   regenererApresMutation,
@@ -35,7 +35,7 @@ import {
   type RegimeExigence,
 } from "./reponses-exigees";
 import { MESSAGE_APPAREIL_RETIRE, estAppareilRetire } from "./retrait";
-import { constaterEpi } from "@/lib/etablissements/epi-constate";
+import { constaterEpiDuCompte } from "@/lib/etablissements/epi-constate";
 
 /**
  * Toute mutation d'équipement invalide le calendrier de vérifications : on
@@ -78,8 +78,8 @@ async function regenererCalendrier(
  * le régime ERP et la réponse au SSI A/B (DF 10 § 3, décision du
  * 2026-10-08). Lu après le contrôle d'appartenance.
  */
-async function regimeDe(etablissementId: string): Promise<RegimeExigence> {
-  const r = await prisma.etablissement.findUnique({
+async function regimeDe(db: Db, etablissementId: string): Promise<RegimeExigence> {
+  const r = await db.etablissement.findUnique({
     where: { id: etablissementId },
     select: { estERP: true, typeErp: true, typesErpAutres: true, categorieErp: true, ssiCategorieAouB: true },
   });
@@ -100,8 +100,8 @@ async function regimeDe(etablissementId: string): Promise<RegimeExigence> {
  * désormais sur le même `notFound()`.
  */
 async function appareilDuCompte(equipementId: string) {
-  const user = await requireUser();
-  const eq = await prisma.equipement.findFirst({
+  const { user, db } = await requireCompte();
+  const eq = await db.equipement.findFirst({
     where: { id: equipementId, etablissement: { entreprise: { userId: user.id } } },
     select: {
       etablissementId: true,
@@ -113,7 +113,7 @@ async function appareilDuCompte(equipementId: string) {
     },
   });
   if (!eq) notFound();
-  return eq;
+  return { appareil: eq, db };
 }
 
 /** Le retour du pré-remplissage : le motif de `EquipementActionState`, un
@@ -136,7 +136,7 @@ export async function creerEquipement(
   _prev: EquipementActionState,
   formData: FormData,
 ): Promise<EquipementActionState> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
   const parsed = equipementSchema.safeParse(normaliserFormDataEquipement(formData));
   if (!parsed.success) {
     return {
@@ -145,7 +145,7 @@ export async function creerEquipement(
       fieldErrors: parsed.error.flatten().fieldErrors,
     };
   }
-  const exigees = reponsesExigeesManquantes(parsed.data, await regimeDe(etablissementId));
+  const exigees = reponsesExigeesManquantes(parsed.data, await regimeDe(db, etablissementId));
   if (exigees) {
     return { status: "error", message: "Formulaire invalide", fieldErrors: exigees };
   }
@@ -156,7 +156,7 @@ export async function creerEquipement(
   // sinon, le seul existant. Un id fourni doit être un bâtiment de CET
   // établissement — la base ne le vérifie pas (clé simple), l'action le fait.
   const batiment = parsed.data.batimentId
-    ? await prisma.batiment.findFirst({
+    ? await db.batiment.findFirst({
         where: { id: parsed.data.batimentId, etablissementId },
         select: { id: true },
       })
@@ -169,7 +169,7 @@ export async function creerEquipement(
     };
   }
 
-  await prisma.equipement.create({
+  await db.equipement.create({
     data: {
       etablissementId,
       batimentId: batiment.id,
@@ -184,7 +184,7 @@ export async function creerEquipement(
     },
   });
   if (estCategorieEpi(parsed.data.categorie)) {
-    await constaterEpi(etablissementId, { regenerer: false });
+    await constaterEpiDuCompte(db, etablissementId, { regenerer: false });
   }
 
   const regen = await regenererCalendrier(etablissementId);
@@ -210,7 +210,7 @@ export async function modifierEquipement(
   _prev: EquipementActionState,
   formData: FormData,
 ): Promise<EquipementActionState> {
-  const appareil = await appareilDuCompte(id);
+  const { appareil, db } = await appareilDuCompte(id);
   // L'appartenance d'abord, le refus ensuite : on ne dit rien d'un appareil
   // qui n'est pas à soi.
   if (estAppareilRetire(appareil)) {
@@ -225,7 +225,7 @@ export async function modifierEquipement(
       fieldErrors: parsed.error.flatten().fieldErrors,
     };
   }
-  const exigees = reponsesExigeesManquantes(parsed.data, await regimeDe(appareil.etablissementId));
+  const exigees = reponsesExigeesManquantes(parsed.data, await regimeDe(db, appareil.etablissementId));
   if (exigees) {
     return { status: "error", message: "Formulaire invalide", fieldErrors: exigees };
   }
@@ -235,7 +235,7 @@ export async function modifierEquipement(
   // Le bâtiment ne change que si le formulaire en propose un autre ; il doit
   // appartenir au même établissement.
   if (parsed.data.batimentId) {
-    const cible = await prisma.batiment.findFirst({
+    const cible = await db.batiment.findFirst({
       where: {
         id: parsed.data.batimentId,
         etablissementId: appareil.etablissementId,
@@ -251,7 +251,7 @@ export async function modifierEquipement(
     }
   }
 
-  const eq = await prisma.equipement.update({
+  const eq = await db.equipement.update({
     where: { id },
     data: {
       batimentId: parsed.data.batimentId,
@@ -268,7 +268,7 @@ export async function modifierEquipement(
   });
 
   if (estCategorieEpi(parsed.data.categorie)) {
-    await constaterEpi(eq.etablissementId, { regenerer: false });
+    await constaterEpiDuCompte(db, eq.etablissementId, { regenerer: false });
   }
   const regen = await regenererCalendrier(eq.etablissementId);
 
@@ -319,7 +319,7 @@ export type SuppressionEquipementResult =
 export async function supprimerEquipement(
   id: string,
 ): Promise<SuppressionEquipementResult> {
-  const appareil = await appareilDuCompte(id);
+  const { appareil, db } = await appareilDuCompte(id);
   const { etablissementId } = appareil;
   // Déjà retiré : le retrait est définitif, il ne se rejoue pas. Sans ce
   // refus, un appareil retiré dont le dernier rapport aurait été retiré
@@ -336,10 +336,10 @@ export async function supprimerEquipement(
   // (ADR-048) : ils ne pendent pas à ses lignes, mais ils sont sa trace —
   // une suppression physique les détacherait de lui en silence.
   const [nbLignes, nbPointsDesignes] = await Promise.all([
-    prisma.verification.count({
+    db.verification.count({
       where: toutesLesConditions({ equipementId: id }, portantUnePreuve()),
     }),
-    prisma.action.count({ where: { equipementId: id } }),
+    db.action.count({ where: { equipementId: id } }),
   ]);
   const nbTraces = nbLignes + nbPointsDesignes;
 
@@ -354,7 +354,7 @@ export async function supprimerEquipement(
     // est arrivé entre le comptage et ici : l'appareil est alors désactivé,
     // comme s'il avait porté sa trace dès le départ.
     try {
-      await prisma.equipement.delete({ where: { id } });
+      await db.equipement.delete({ where: { id } });
       supprime = true;
     } catch (e) {
       if (!(e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2003")) {
@@ -365,7 +365,7 @@ export async function supprimerEquipement(
   if (supprime) {
     resultat = { statut: "supprime" };
   } else {
-    await prisma.equipement.update({
+    await db.equipement.update({
       where: { id },
       data: { actif: false },
     });
@@ -437,7 +437,7 @@ export async function creerEquipementsDepuisPreRemplissage(
     caracteristiques?: Partial<Record<ChampTriEtat, boolean>>;
   }[],
 ): Promise<ResultatPreRemplissage> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
   // Le tableau vient du client : un tableau, pas plus d'entrées que de
   // catégories (ASVS V2.2.1, `lot/securite-owasp-1013`), avant de le parcourir.
   // [2026-10-14, intégration avec `lot/conditions-equipement` : la catégorie et
@@ -509,7 +509,7 @@ export async function creerEquipementsDepuisPreRemplissage(
       message: "Sélection invalide : une catégorie au plus une fois. Rien n'a été créé.",
     };
   }
-  const regime = await regimeDe(etablissementId);
+  const regime = await regimeDe(db, etablissementId);
   // Les réponses fournies (2026-10-13) : un objet simple, dont chaque clé est
   // une question EXIGÉE pour cette catégorie dans ce régime, et chaque valeur
   // un booléen. Rien d'autre n'entre dans le JSON de l'appareil par ici.
@@ -555,8 +555,8 @@ export async function creerEquipementsDepuisPreRemplissage(
   }
 
   const batiment = await batimentParDefaut(etablissementId);
-  const result = await prisma.equipement.createMany({
-    data: entrees.map((e, i) => ({
+  const result = await creerEnLotVerifie(db, "Equipement",
+    entrees.map((e, i) => ({
       etablissementId,
       batimentId: batiment.id,
       categorie: e.categorie,
@@ -565,9 +565,9 @@ export async function creerEquipementsDepuisPreRemplissage(
         ? { caracteristiques: e.caracteristiques as Prisma.InputJsonValue }
         : {}),
     })),
-  });
+  );
   if (entrees.some((e) => estCategorieEpi(e.categorie))) {
-    await constaterEpi(etablissementId, { regenerer: false });
+    await constaterEpiDuCompte(db, etablissementId, { regenerer: false });
   }
 
   const regen = await regenererCalendrier(etablissementId);

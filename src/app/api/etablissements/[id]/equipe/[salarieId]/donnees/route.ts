@@ -21,9 +21,9 @@ export async function GET(
   const { id, salarieId } = await params;
   // La portée de tenancy avant tout : sans elle, un identifiant deviné
   // exporterait les données d'une personne d'un autre dossier.
-  await requireEtablissement(id);
+  const { db } = await requireEtablissement(id);
 
-  const donnees = await exporterDonneesSalarie(id, salarieId);
+  const donnees = await exporterDonneesSalarie(db, id, salarieId);
   if (!donnees) {
     return NextResponse.json({ erreur: "Introuvable" }, { status: 404 });
   }

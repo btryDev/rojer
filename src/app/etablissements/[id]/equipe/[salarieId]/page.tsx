@@ -117,14 +117,14 @@ export default async function SalarieDetailPage({
 }) {
   const { id, salarieId } = await params;
   const { de } = await searchParams;
-  await requireEtablissement(id);
+  const { db } = await requireEtablissement(id);
 
   const now = new Date();
   const s = await getSalarie(id, salarieId, now);
   if (!s) notFound();
   // Ce que « Supprimer ce salarié » emporterait, compté par la requête même
   // de l'effacement (`suppression.ts`) : la confirmation annonce ce qui part.
-  const perimetre = await perimetreSuppressionSalarie(id, salarieId);
+  const perimetre = await perimetreSuppressionSalarie(db, id, salarieId);
 
   const catalogue = cataloguerTitres();
   const dejaDeclares = s.titres.map((t) => t.obligationId);

@@ -7,14 +7,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const h = vi.hoisted(() => {
   const appels: { op: string; args: unknown }[] = [];
   const reponses: Record<string, (args: unknown) => unknown> = {};
-  const prisma = new Proxy(
+  const prisma: Record<string, unknown> = new Proxy(
     {},
     {
       get: (_t, nom: string) =>
         // La forme tableau de `$transaction` : les écritures sont déjà
-        // relevées à leur création, on rend leurs résultats.
+        // relevées à leur création, on rend leurs résultats. La forme
+        // interactive reçoit le même client simulé (depuis le 2026-10-30 : la
+        // modification passe par `creerEnLotVerifie`, qui lit avant d'écrire).
         nom === "$transaction"
-          ? async (ops: Promise<unknown>[]) => Promise.all(ops)
+          ? async (ops: Promise<unknown>[] | ((tx: unknown) => Promise<unknown>)) => {
+              appels.push({ op: "$transaction", args: null });
+              return typeof ops === "function" ? ops(prisma) : Promise.all(ops);
+            }
           : new Proxy(
           {},
           {
@@ -39,6 +44,11 @@ const h = vi.hoisted(() => {
 vi.mock("@/lib/prisma", () => ({ prisma: h.prisma }));
 vi.mock("@/lib/auth/scope", () => ({
   assertEtablissementOwnership: vi.fn(async () => ({ id: "u1" })),
+  // La garde rend aussi le client borné (ADR-051) : ici, le client simulé.
+  assertEtablissementDuCompte: async (...a: unknown[]) => ({
+    user: (await (vi.fn(async () => ({ id: "u1" })) as (...x: unknown[]) => unknown)(...a)) ?? { id: "u1" },
+    db: await (await import("@/test/garde-simulee")).clientDuCompteSimule(),
+  }),
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
@@ -126,8 +136,10 @@ describe("modifierPrestataire", () => {
     expect(data.notesInternes).toBeNull();
     expect(data.kbisDateEmission).toBeNull();
     expect(data.attestationUrssafValableJusquA).toBeInstanceOf(Date);
-    // Aucune pièce jointe : les pièces en place ne sont pas touchées.
+    // Aucune pièce jointe : les pièces en place ne sont pas touchées, et la
+    // modification est une seule écriture, sans transaction.
     expect("attestationUrssafCle" in data).toBe(false);
+    expect(h.appels.map((a) => a.op).filter((op) => op !== "prestataire.findFirst")).toEqual(["prestataire.update"]);
     expect(h.stockage.liberes).toEqual([]);
   });
 
@@ -164,8 +176,7 @@ describe("modifierPrestataire", () => {
 
   it("une pièce jointe là où il n'y en avait pas n'inscrit rien", async () => {
     await modifierPrestataire("e1", "pre_1", { status: "idle" }, saisie({ kbis: pdf() }));
-    const [inscription] = ecritures("piecePrestataire.createMany");
-    expect((inscription.args as { data: unknown[] }).data).toEqual([]);
+    expect(ecritures("piecePrestataire.createMany")).toEqual([]);
   });
 
   it("reprend les validations de la création : une remise future est refusée sur son champ", async () => {
