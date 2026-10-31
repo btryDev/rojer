@@ -30,3 +30,17 @@ export function compteHorsSessionSimule(
     },
   };
 }
+
+/**
+ * `mcp/db.ts` simulé pour les tests de route : le client simulé du compte
+ * `user-1`, tant que l'établissement existe dans le faux Prisma — un
+ * établissement disparu rend `null`, dit « introuvable ».
+ */
+export function clientMcpSimule(base: { etablissement: { findUnique(a: object): Promise<unknown> } }) {
+  return {
+    clientMcp: async (scope: { etablissementId: string }) => {
+      const existe = await base.etablissement.findUnique({ where: { id: scope.etablissementId }, select: { id: true } });
+      return existe ? clientDuCompteSimule() : null;
+    },
+  };
+}
