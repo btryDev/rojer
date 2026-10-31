@@ -18,6 +18,14 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { clientBorne, type ClientBorne } from "./portee/client";
 
+/**
+ * Le client borné au compte dont l'identité vient d'un jeton OAuth DÉJÀ
+ * vérifié (MCP distant, `mcp/acces-oauth-deps.ts`) — jamais d'une saisie.
+ */
+export function clientDuCompteVerifie(userId: string): ClientBorne {
+  return clientBorne({ type: "compte", userId });
+}
+
 /** `null` si l'établissement a disparu ou n'a pas de propriétaire. */
 export async function clientDuProprietaire(etablissementId: string): Promise<ClientBorne | null> {
   const etab = await prisma.etablissement.findUnique({

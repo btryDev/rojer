@@ -42,6 +42,7 @@ import {
   CONSIGNE_SERVEUR,
   ErreurOutilMcp,
   OUTILS_MCP,
+  contexteMcp,
   type ScopeMcp,
 } from "./tools";
 
@@ -121,7 +122,7 @@ function construireServeur(scope: ScopeMcp): McpServer {
       },
       async (args: unknown) => {
         try {
-          const texte = await outil.executer({ scope, now: new Date() }, args);
+          const texte = await outil.executer(await contexteMcp(scope, new Date()), args);
           return { content: [{ type: "text" as const, text: texte }] };
         } catch (erreur) {
           // Une erreur que l'outil destine au client (établissement

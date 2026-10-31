@@ -32,7 +32,14 @@ const { prismaMock } = vi.hoisted(() => ({
   },
 }));
 
-vi.mock("./db", () => ({ dbMcp: () => prismaMock }));
+// Le client des lectures : le client borné simulé (`vitest.setup.ts`) sur
+// le faux Prisma — les refus de la borne s'y appliquent, les assertions
+// portent sur ce que reçoit `prismaMock`.
+vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
+vi.mock("./db", async () => {
+  const { clientDuCompteSimule } = await import("@/test/garde-simulee");
+  return { clientMcp: async () => clientDuCompteSimule() };
+});
 // ADR-039 : aucune obligation livrée ne porte encore de rythme retenu (lot 3).
 // Pour éprouver que la mention voyage jusqu'à l'assistant, une ligne FICTIVE
 // en reçoit une ; toutes les autres reçoivent `null`, ce que la fonction réelle
@@ -61,9 +68,12 @@ const NOW = new Date("2026-08-10T07:00:00Z");
 const ETABLISSEMENT_ID = "etab_demo_1";
 const AUTRE_ETABLISSEMENT = "etab_du_voisin";
 
+const { clientDuCompteSimule } = await import("@/test/garde-simulee");
+const db = () => clientDuCompteSimule();
 const ctx: ContexteMcp = {
   scope: { etablissementId: ETABLISSEMENT_ID },
   now: NOW,
+  db: await db(),
 };
 
 /** Date civile telle que Prisma la rend. */
@@ -196,7 +206,7 @@ describe("portée des lectures", () => {
   });
 
   it("le DUERP est cherché par etablissementId", async () => {
-    await getEtatDuerp(ETABLISSEMENT_ID, NOW);
+    await getEtatDuerp(await db(), ETABLISSEMENT_ID, NOW);
 
     expect(prismaMock.duerp.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({ where: { etablissementId: ETABLISSEMENT_ID } }),
@@ -204,7 +214,7 @@ describe("portée des lectures", () => {
   });
 
   it("le plan d'actions porte l'etablissementId, quels que soient les filtres", async () => {
-    await listerActions(ETABLISSEMENT_ID, { criticiteMin: 9 }, NOW);
+    await listerActions(await db(), ETABLISSEMENT_ID, { criticiteMin: 9 }, NOW);
 
     const [{ where }] = prismaMock.action.findMany.mock.calls[0];
     expect(where.etablissementId).toBe(ETABLISSEMENT_ID);
@@ -1002,7 +1012,7 @@ describe("le serveur dit qu'aucun équipement n'est déclaré (§ 15)", () => {
   });
 
   it("tenancy : chaque lecture du parc porte l'établissement du jeton, et lui seul", async () => {
-    await getParcEquipements(ETABLISSEMENT_ID);
+    await getParcEquipements(await db(), ETABLISSEMENT_ID);
     expect(prismaMock.equipement.findMany).toHaveBeenCalledWith({
       where: { etablissementId: ETABLISSEMENT_ID },
       select: { actif: true },

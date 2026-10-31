@@ -1,42 +1,44 @@
 import "server-only";
-// Le client Prisma des lectures MCP — celui de l'application, sauf en stdio.
+// Le client des lectures MCP : le client borné au compte (ADR-051) qui
+// possède l'établissement servi. La portée d'une session MCP est un
+// établissement (variable de configuration pour la clé et le stdio, choix du
+// porteur pour OAuth) ; le compte est celui de son propriétaire, lu en base —
+// jamais fourni par le client MCP, dont aucun schéma d'entrée ne porte
+// d'identifiant.
 //
-// AVANT (audit Next.js du 2026-10-14, M5). `queries.ts` et
-// `acces-oauth-deps.ts` importaient `prismaMcp` (`./prisma`), un client
-// dédié. Il est justifié pour le serveur stdio, dont la sortie standard
-// appartient au protocole. Mais la route HTTP `/api/mcp` et la page
-// « Connecter » (par `tools.ts`) importent ces mêmes modules : le processus web
-// instanciait un second `PrismaClient`, donc un second pool vers la même base,
-// à compter dans `max_connections` d'un Node permanent (Clever Cloud).
+// LA BORNE DE COMPTE S'AJOUTE À LA PORTÉE D'ÉTABLISSEMENT, ELLE NE LA
+// REMPLACE PAS (seconde lecture du 2026-10-31) : chaque lecture de
+// `./queries.ts` garde son `where: { etablissementId }`.
 //
-// MAINTENANT. Les lectures MCP prennent leur client ici, à chaque appel :
-//   - par défaut, le singleton de l'application (`@/lib/prisma`) — un seul
-//     client dans le processus web ;
-//   - le serveur stdio (`scripts/mcp-server.ts`), et lui seul, y substitue
-//     `prismaMcp` au démarrage par `utiliserClientMcp`, avant tout appel
-//     d'outil. `./prisma` n'est importé nulle part ailleurs : c'est ce que
-//     `db.test.ts` vérifie.
-//
-// FORME D'APPEL : `const db = dbMcp();` en tête de fonction, puis `db.x.y(…)`.
-// Pas `dbMcp().x.y(…)` : la sonde de cloisonnement (`auth/tenancy-sonde.ts`)
-// reconnaît une lecture à la forme `client.modele.findUnique(` et ne verrait
-// plus les lectures MCP — elle les a vues disparaître, et leurs exemptions
-// devenir orphelines, au premier essai (2026-10-14).
-//
-// Le singleton n'ouvre aucune connexion tant qu'on ne l'interroge pas : dans
-// le processus stdio, où il est importé mais jamais lu, il ne coûte aucun pool.
+// DEUX CLIENTS DE BASE (audit Next.js du 2026-10-14, M5) :
+//   - dans le processus web, le client de l'application, par
+//     `clientDuProprietaire` (`auth/compte-hors-session.ts`) — un seul pool ;
+//   - dans le serveur stdio, et lui seul, `prismaMcp` (`./prisma`), qui
+//     n'écrit rien sur stdout (la sortie appartient au protocole). Le script
+//     le substitue au démarrage par `utiliserClientMcp`, et le client borné
+//     est construit dessus (`clientBorneSur`).
 
 import type { PrismaClient } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+import { clientDuProprietaire } from "@/lib/auth/compte-hors-session";
+import { clientBorneSur, type ClientBorne } from "@/lib/auth/portee/client";
 
-let client: PrismaClient = prisma;
+let baseStdio: PrismaClient | null = null;
 
-/** Réservé au serveur stdio : remplace le client des lectures MCP. */
+/** Réservé au serveur stdio : le client brut sur lequel borner. */
 export function utiliserClientMcp(c: PrismaClient): void {
-  client = c;
+  baseStdio = c;
 }
 
-/** Le client des lectures MCP. Lu à chaque appel, jamais capturé à l'import. */
-export function dbMcp(): PrismaClient {
-  return client;
+/**
+ * Le client borné au compte propriétaire de l'établissement servi ; `null`
+ * si l'établissement a disparu ou n'a pas de propriétaire.
+ */
+export async function clientMcp(etablissementId: string): Promise<ClientBorne | null> {
+  if (!baseStdio) return clientDuProprietaire(etablissementId);
+  const etab = await baseStdio.etablissement.findUnique({
+    where: { id: etablissementId },
+    select: { entreprise: { select: { userId: true } } },
+  });
+  const userId = etab?.entreprise.userId;
+  return userId ? clientBorneSur(baseStdio, { type: "compte", userId }) : null;
 }

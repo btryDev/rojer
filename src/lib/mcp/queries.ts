@@ -24,7 +24,7 @@ import "server-only";
 import { estLignePourInformation } from "@/lib/referentiels/conformite/initiative";
 import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
 import { trierParCategorie } from "@/lib/equipements/labels";
-import type { CategorieEquipement, StatutAction } from "@prisma/client";
+import type { CategorieEquipement, Prisma, StatutAction } from "@prisma/client";
 import { evaluerEtatDuerp, type EtatDuerp } from "@/lib/dashboard/duerp";
 import {
   estActionEnRetard,
@@ -44,7 +44,6 @@ import {
   type LignePrudence,
   type RetenueParPrudence,
 } from "@/lib/calendrier/prudence";
-import { dbMcp } from "./db";
 import { estAppareilRetire } from "@/lib/equipements/retrait";
 import type { FaitParc } from "@/lib/perimetre/couverture";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
@@ -88,9 +87,10 @@ export type FicheEtablissement = NonNullable<
  * lit comme « rien à signaler ».
  */
 export async function getFraicheurCalendrier(
+  /** Le client borné au compte propriétaire de l'établissement (`./db.ts`). */
+  db: Prisma.TransactionClient,
   etablissementId: string,
 ): Promise<FraicheurCalendrier> {
-  const db = dbMcp();
   const etab = await db.etablissement.findUnique({
     where: { id: etablissementId },
     select: { referentielVersionCalendrier: true },
@@ -101,8 +101,7 @@ export async function getFraicheurCalendrier(
   );
 }
 
-export async function getFicheEtablissement(etablissementId: string) {
-  const db = dbMcp();
+export async function getFicheEtablissement(db: Prisma.TransactionClient, etablissementId: string) {
   return db.etablissement.findUnique({
     where: { id: etablissementId },
     select: {
@@ -181,10 +180,11 @@ export type EtatDuerpLu = {
  * contredire le tableau de bord.
  */
 export async function getEtatDuerp(
+  /** Le client borné au compte propriétaire de l'établissement (`./db.ts`). */
+  db: Prisma.TransactionClient,
   etablissementId: string,
   now: Date,
 ): Promise<EtatDuerpLu> {
-  const db = dbMcp();
   const duerp = await db.duerp.findFirst({
     where: { etablissementId },
     // `select` de bout en bout, et jamais `include`. `include` rend TOUS les
@@ -331,11 +331,12 @@ export type FiltresActionsMcp = {
  * duplique pas.
  */
 export async function listerActions(
+  /** Le client borné au compte propriétaire de l'établissement (`./db.ts`). */
+  db: Prisma.TransactionClient,
   etablissementId: string,
   filtres: FiltresActionsMcp,
   now: Date,
 ): Promise<ActionLue[]> {
-  const db = dbMcp();
   const actions = await db.action.findMany({
     where: {
       etablissementId,
@@ -467,10 +468,11 @@ export type EquipementLu = {
  * de le réécrire, donc de le dupliquer.
  */
 export async function listerEquipements(
+  /** Le client borné au compte propriétaire de l'établissement (`./db.ts`). */
+  db: Prisma.TransactionClient,
   etablissementId: string,
   now: Date,
 ): Promise<EquipementLu[]> {
-  const db = dbMcp();
   const [lus, marques] = await Promise.all([
     db.equipement.findMany({
     where: { etablissementId },
@@ -541,9 +543,10 @@ export async function listerEquipements(
  * service », comme sur les écrans.
  */
 export async function getParcEquipements(
+  /** Le client borné au compte propriétaire de l'établissement (`./db.ts`). */
+  db: Prisma.TransactionClient,
   etablissementId: string,
 ): Promise<FaitParc> {
-  const db = dbMcp();
   const lus = await db.equipement.findMany({
     where: { etablissementId },
     select: { actif: true },
@@ -645,11 +648,12 @@ export type FiltresVerificationsMcp = {
  * nomenclature interne des catégories.
  */
 export async function listerVerifications(
+  /** Le client borné au compte propriétaire de l'établissement (`./db.ts`). */
+  db: Prisma.TransactionClient,
   etablissementId: string,
   filtres: FiltresVerificationsMcp,
   now: Date,
 ): Promise<VerificationLue[]> {
-  const db = dbMcp();
   const [brutes, marques] = await Promise.all([
     db.verification.findMany({
     where: { etablissementId },
@@ -803,9 +807,10 @@ export async function listerVerifications(
  * lit comme une réponse fausse.
  */
 export async function getNomEtablissement(
+  /** Le client borné au compte propriétaire de l'établissement (`./db.ts`). */
+  db: Prisma.TransactionClient,
   etablissementId: string,
 ): Promise<string | null> {
-  const db = dbMcp();
   const e = await db.etablissement.findUnique({
     where: { id: etablissementId },
     select: { raisonDisplay: true, adresse: true },

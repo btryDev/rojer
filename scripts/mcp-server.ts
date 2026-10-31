@@ -37,6 +37,7 @@ import {
   CONSIGNE_SERVEUR,
   ErreurOutilMcp,
   OUTILS_MCP,
+  contexteMcp,
   type ScopeMcp,
 } from "@/lib/mcp/tools";
 import { prismaMcp } from "@/lib/mcp/prisma";
@@ -118,7 +119,7 @@ async function main(): Promise<void> {
       async (args: unknown) => {
         try {
           const texte = await outil.executer(
-            { scope, now: new Date() },
+            await contexteMcp(scope, new Date()),
             args,
           );
           return { content: [{ type: "text" as const, text: texte }] };

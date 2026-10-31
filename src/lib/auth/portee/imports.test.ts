@@ -1,7 +1,9 @@
 // Qui peut toucher au client Prisma brut, qui voit tous les comptes (ADR-051 § 3).
-// Ses trois portes (`@/lib/prisma`, `mcp/prisma`, `mcp/db`) ne s'importent que
-// depuis les modules NOMMÉS, chacun avec son motif, ou ceux encore À MIGRER vers
-// `requireCompte()` : un cliquet qui ne fait que raccourcir. Les rouages du
+// Ses portes (`@/lib/prisma`, `mcp/prisma` ; ~~`mcp/db`~~ [2026-10-31 : il ne
+// rend plus que le client borné]) ne s'importent que depuis les modules
+// NOMMÉS, chacun avec son motif, ou ceux encore À MIGRER vers
+// `requireCompte()` : un cliquet qui ne fait que raccourcir — vide depuis le
+// 2026-10-31 (lot 2b, MCP). Les rouages du
 // client borné ne s'importent que là où la portée s'établit, et la valeur
 // `PrismaClient` que dans les deux modules qui fabriquent un client.
 // Échappent : un chemin calculé, `globalThis.prisma`. Tests exclus (doublures).
@@ -13,7 +15,8 @@ import { describe, expect, it } from "vitest";
 import { sansCommentairesNiChaines } from "@/lib/auth/tenancy-sonde";
 
 const DEPOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
-const PORTES_BRUTES = ["src/lib/prisma", "src/lib/mcp/prisma", "src/lib/mcp/db"];
+// `mcp/db` n'est plus une porte : il ne rend que le client borné (lot 2b).
+const PORTES_BRUTES = ["src/lib/prisma", "src/lib/mcp/prisma"];
 const FABRIQUES = new Set(["src/lib/prisma.ts", "src/lib/mcp/prisma.ts"]);
 /** SQL brut sous requireProprietaireSql, jusqu'au chantier `{ sql, db }`. */
 const SQL_BRUT = { motif: "SQL brut borné par requireProprietaireSql (ADR-051 § 5)", usages: ["prisma.$queryRaw"] };
@@ -72,17 +75,14 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous" }
   "src/lib/rapports/joindre-realisations.ts": SQL_BRUT,
 };
 /** Cliquet : importeurs du client brut encore à migrer vers requireCompte(). */
-const A_MIGRER = new Set([
-  "src/lib/mcp/acces-oauth-deps.ts",
-  "src/lib/mcp/db.ts",
-  "src/lib/mcp/queries.ts",
-]);
+const A_MIGRER = new Set<string>([]);
 const NOMMES_ROUAGES: Record<string, Record<string, string>> = {
   "src/lib/auth/portee/client": {
     "src/lib/auth/compte.ts": "requireCompte : la portée vient de la session",
     "src/lib/auth/portee/lot-verifie.ts": "types du client et de la transaction",
     "src/test/garde-simulee.ts": "tests seuls : le client simulé que rendent les gardes simulées",
     "src/lib/auth/compte-hors-session.ts": "accès sans session : la portée vient de la preuve vérifiée",
+    "src/lib/mcp/db.ts": "serveur stdio : client borné construit sur le client MCP (clientBorneSur)",
   },
   "src/lib/auth/portee/borne": {
     "src/lib/auth/portee/client.ts": "l'extension",

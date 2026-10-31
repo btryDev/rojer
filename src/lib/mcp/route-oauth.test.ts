@@ -42,7 +42,19 @@ vi.mock("@/lib/securite/limite-debit", async (original) => ({
   consommer: async () => ({ ok: true }),
 }));
 
-vi.mock("./db", () => ({ dbMcp: () => prismaMock }));
+// Le client des lectures : le client borné simulé (`vitest.setup.ts`) sur le
+// faux Prisma, rendu tant que l'établissement existe (`./db.ts` : un
+// établissement disparu rend `null`, dit « introuvable »).
+vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
+vi.mock("./db", async () => {
+  const { clientDuCompteSimule } = await import("@/test/garde-simulee");
+  return {
+    clientMcp: async (id: string) =>
+      (await prismaMock.etablissement.findUnique({ where: { id }, select: { id: true } }))
+        ? clientDuCompteSimule()
+        : null,
+  };
+});
 vi.mock("./acces-oauth-deps", () => ({
   creerVerificateurSupabase: () => verifierMock,
   chercherEtablissementDeUtilisateur: chercherMock,
