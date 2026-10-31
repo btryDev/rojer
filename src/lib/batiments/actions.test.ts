@@ -85,7 +85,7 @@ vi.mock("@/lib/auth/scope", () => ({
   // simulé ; elle passe par la simulation d'origine, refus compris.
   assertEtablissementDuCompte: async (id: string) => {
     await (h.assertEtablissementOwnership as (x: string) => Promise<unknown>)(id);
-    return { user: await h.requireUser(), db: h.prisma };
+    return { user: await h.requireUser(), db: await (await import("@/test/garde-simulee")).clientDuCompteSimule() };
   },
 }));
 

@@ -16,7 +16,8 @@
 // mock reçoit les arguments d'ORIGINE : les assertions des tests sur ce qu'un
 // module envoie restent vraies. Échappent à cette vérification : `createMany`
 // (le relevé des parents vus n'existe que sous le vrai client ; tenu par
-// `portee/usages.test.ts`) et le client d'une `$transaction` simulée.
+// `portee/usages.test.ts`), relayé par `creerEnLotVerifie` ci-dessous. Le
+// client d'une `$transaction` interactive est vérifié de même.
 //
 // Hors de `src/` : la production n'en voit rien.
 
@@ -35,12 +36,31 @@ vi.mock("@/lib/auth/portee/client", async () => {
 });
 
 // De même, `creerEnLotVerifie` (qui lit les parents par le client borné avant
-// d'insérer) revient ici à un `createMany` sur le client simulé.
-vi.mock("@/lib/auth/portee/lot-verifie", () => ({
-  creerEnLotVerifie: (
-    client: Record<string, { createMany: (a: object) => unknown }>,
-    nom: string,
-    lignes: object[],
-    options: object = {},
-  ) => client[nom.charAt(0).toLowerCase() + nom.slice(1)].createMany({ data: lignes, ...options }),
-}));
+// d'insérer) revient ici à un `createMany` sur le client simulé — après que
+// chaque ligne est passée par le vrai `argumentsBornes` comme une création :
+// clé vers un modèle hors compte, identité étrangère, forme non servie y
+// tombent. Le client doit être un client simulé borné (une garde simulée qui
+// rendrait le client brut ferait tomber le test).
+vi.mock("@/lib/auth/portee/lot-verifie", async () => {
+  const { argumentsBornes } = await vi.importActual<typeof import("@/lib/auth/portee/borne")>(
+    "@/lib/auth/portee/borne",
+  );
+  const { PORTEE_SIMULEE } = await import("@/test/client-borne-simule");
+  return {
+    creerEnLotVerifie: async (
+      client: Record<string | symbol, unknown>,
+      nom: string,
+      lignes: object[],
+      options: object = {},
+    ) => {
+      if (lignes.length === 0) return { count: 0 };
+      const portee = client[PORTEE_SIMULEE] as { type: "compte"; userId: string } | undefined;
+      if (!portee) throw new Error(`creerEnLotVerifie(${nom}) : client non borné (garde simulée au client brut ?)`);
+      for (const ligne of lignes) argumentsBornes(nom, "create", { data: structuredClone(ligne) }, portee);
+      const delegue = client[nom.charAt(0).toLowerCase() + nom.slice(1)] as {
+        createMany: (a: object) => unknown;
+      };
+      return delegue.createMany({ data: lignes, ...options });
+    },
+  };
+});

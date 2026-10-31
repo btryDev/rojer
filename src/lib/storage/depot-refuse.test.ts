@@ -37,7 +37,7 @@ vi.mock("@/lib/auth/scope", () => ({
   // La garde rend aussi le client borné (ADR-051) : ici, le client simulé.
   assertEtablissementDuCompte: vi.fn(async () => ({
     user: { id: "u1" },
-    db: (await import("@/lib/prisma")).prisma,
+    db: await (await import("@/test/garde-simulee")).clientDuCompteSimule(),
   })),
   requireEtablissement: vi.fn(async () => ({ etablissement: { id: "e1" } })),
   // La garde de la route du fichier (audit Next.js du 2026-10-14, B6).

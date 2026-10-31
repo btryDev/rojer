@@ -95,7 +95,7 @@ vi.mock("@/lib/prisma", () => ({ prisma: h.prisma }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 // Les gardes rendent le client borné (ADR-051) : ici, le client simulé.
 vi.mock("@/lib/auth/scope", () => ({
-  requireDuerp: async (id: string) => ({ db: h.prisma, ...(await h.requireDuerp(id)) }),
+  requireDuerp: async (id: string) => ({ db: await (await import("@/test/garde-simulee")).clientDuCompteSimule(), ...(await h.requireDuerp(id)) }),
 }));
 
 const { repondreActivite } = await import("./actions");

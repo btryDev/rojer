@@ -51,6 +51,7 @@ const NOMMES_ROUAGES: Record<string, Record<string, string>> = {
   "src/lib/auth/portee/client": {
     "src/lib/auth/compte.ts": "requireCompte : la portée vient de la session",
     "src/lib/auth/portee/lot-verifie.ts": "types du client et de la transaction",
+    "src/test/garde-simulee.ts": "tests seuls : le client simulé que rendent les gardes simulées",
   },
   "src/lib/auth/portee/borne": {
     "src/lib/auth/portee/client.ts": "l'extension",

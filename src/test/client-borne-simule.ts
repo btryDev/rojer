@@ -11,7 +11,9 @@
 // En mode `borner`, ce simulateur pose les VRAIS arguments bornés
 // (`argumentsBornes`, la fonction même de l'extension) avant de passer la main
 // au client simulé.
-// Il ne simule ni `$transaction`, ni les refus d'exécution du vrai client
+// Le client d'une `$transaction` interactive est simulé de même : ce que le
+// rappel écrit par `tx` est vérifié comme le reste (seconde lecture du
+// 2026-10-31). Il ne simule pas les refus d'exécution du vrai client
 // (`portee/usages.test.ts`, `portee/client.integration.test.ts`).
 
 // `argumentsBornes` est REÇU, pas importé : les rouages du client borné ne
@@ -22,6 +24,9 @@
 type Portee = { type: "compte"; userId: string };
 type Modele = Record<string, unknown>;
 type ArgumentsBornes = (nom: string, operation: string, args: unknown, portee: Portee) => object;
+
+/** La portée d'un client simulé : `creerEnLotVerifie` simulé la relit (`vitest.setup.ts`). */
+export const PORTEE_SIMULEE = Symbol("portee-simulee");
 
 /**
  * `borner` (défaut) : le client simulé reçoit les arguments BORNÉS — pour un
@@ -39,7 +44,18 @@ export function clientBorneSimule<T extends object>(
 ): T {
   return new Proxy(brut, {
     get(cible, cle) {
+      if (cle === PORTEE_SIMULEE) return portee;
       const valeur = Reflect.get(cible, cle) as unknown;
+      if (cle === "$transaction" && typeof valeur === "function") {
+        return (ops: unknown, ...reste: unknown[]) =>
+          valeur.call(
+            cible,
+            typeof ops === "function"
+              ? (tx: object) => ops(clientBorneSimule(tx, portee, argumentsBornes, mode))
+              : ops,
+            ...reste,
+          );
+      }
       if (typeof cle !== "string" || cle.startsWith("$") || valeur === null || typeof valeur !== "object") {
         return valeur;
       }

@@ -121,7 +121,7 @@ vi.mock("@/lib/auth/scope", () => ({
   // La même garde, qui rend aussi le client borné (ADR-051) : ici, le client simulé.
   assertEtablissementDuCompte: vi.fn(async (e: string) => {
     if (e !== "etab-a-moi") throw new Error("NEXT_NOT_FOUND");
-    return { user: { id: "u1" }, db: (await import("@/lib/prisma")).prisma };
+    return { user: { id: "u1" }, db: await (await import("@/test/garde-simulee")).clientDuCompteSimule() };
   }),
 }));
 vi.mock("@/lib/batiments/queries", () => ({

@@ -153,19 +153,19 @@ vi.mock("next/navigation", () => ({
 // (`regeneration-sure.ts`) : sans ce mock, le chemin d'échec appelle Supabase.
 vi.mock("@/lib/auth/compte", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/auth/compte")>()),
-  getOptionalCompte: async () => ({ user: { id: "user-1" }, db: h.prisma }),
+  getOptionalCompte: async () => ({ user: { id: "user-1" }, db: await (await import("@/test/garde-simulee")).clientDuCompteSimule() }),
 }));
 vi.mock("@/lib/auth/scope", () => ({
   assertEtablissementOwnership: vi.fn(async () => ({ id: "user-1" })),
   // La garde rend aussi le client borné (ADR-051) : ici, le client simulé.
   assertEtablissementDuCompte: async (...a: unknown[]) => ({
     user: (await (vi.fn(async () => ({ id: "user-1" })) as (...x: unknown[]) => unknown)(...a)) ?? { id: "u1" },
-    db: (await import("@/lib/prisma")).prisma,
+    db: await (await import("@/test/garde-simulee")).clientDuCompteSimule(),
   }),
   // La garde rend aussi le client borné (ADR-051) : ici, le client simulé.
   assertEntrepriseDuCompte: async (...a: unknown[]) => ({
     user: (await (vi.fn(async () => ({ id: "user-1" })) as (...x: unknown[]) => unknown)(...a)) ?? { id: "u1" },
-    db: (await import("@/lib/prisma")).prisma,
+    db: await (await import("@/test/garde-simulee")).clientDuCompteSimule(),
   }),
   // Le nom du cookie voyage avec les gardes : il est défini là où il est LU
   // (`scope.ts`), pour qu'écriture et lecture ne puissent pas diverger.
@@ -282,7 +282,7 @@ describe("modifierEtablissement — recalcul des obligations", () => {
     );
 
     expect(res.status).toBe("success_avec_avertissement");
-    expect(h.marquerCalendrierPerime).toHaveBeenCalledWith(h.prisma, "etab-1");
+    expect(h.marquerCalendrierPerime).toHaveBeenCalledWith(expect.anything(), "etab-1");
     h.genererCalendrier.mockImplementation(async () => ({}));
   });
 });

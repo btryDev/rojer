@@ -36,7 +36,7 @@ vi.mock("@/lib/auth/scope", () => ({
   // La garde rend aussi le client borné (ADR-051) : ici, le client simulé.
   assertEtablissementDuCompte: vi.fn(async () => ({
     user: { id: "u1" },
-    db: (await import("@/lib/prisma")).prisma,
+    db: await (await import("@/test/garde-simulee")).clientDuCompteSimule(),
   })),
 }));
 vi.mock("@/lib/auth/require-user", () => ({ requireUser: vi.fn(async () => ({ id: "u1" })) }));
