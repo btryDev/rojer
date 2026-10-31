@@ -43,6 +43,9 @@ export async function clientDuProprietaire(etablissementId: string): Promise<Cli
  * au protocole) : le nom de l'établissement servi et le client borné au compte
  * de son propriétaire, construit sur ce client. `null` si l'établissement a
  * disparu ou n'a pas de propriétaire. Réservé à `scripts/mcp-server.ts`.
+ * Même lecture que `clientDuProprietaire`, écrite deux fois exprès : celle-là
+ * doit rester un `prisma.etablissement.findUnique` littéral (seul usage admis
+ * du client brut ici, `portee/imports.test.ts`).
  */
 export async function sessionStdio(
   base: PrismaClient,

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { sansCommentairesNiChaines } from "@/lib/auth/tenancy-sonde";
 
 // Un seul `PrismaClient` dans le processus web (audit Next.js du 2026-10-14,
 // M5). Le client dédié `prismaMcp` (`src/lib/mcp/prisma.ts`) n'est légitime
@@ -59,7 +60,7 @@ describe("le serveur stdio et sa session", () => {
   const tous = [...fichiers(join(racine, "src")), ...fichiers(join(racine, "scripts"))];
   const DEFINITION = "src/lib/auth/compte-hors-session.ts";
   const emploient = tous
-    .filter((f) => /\bsessionStdio\b/.test(readFileSync(f, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "")))
+    .filter((f) => /\bsessionStdio\b/.test(sansCommentairesNiChaines(readFileSync(f, "utf8"))))
     .map((f) => relative(racine, f))
     .filter((f) => f !== DEFINITION);
 
@@ -68,8 +69,8 @@ describe("le serveur stdio et sa session", () => {
   });
 
   it("le script passe aux outils le client de SA session, et ne refait pas de contexte", () => {
-    const script = readFileSync(join(racine, IMPORTEUR_PERMIS), "utf8").replace(/\/\/[^\n]*/g, "");
-    expect(script).toMatch(/\{ scope, now: new Date\(\), db: session\.db \}/);
+    const script = sansCommentairesNiChaines(readFileSync(join(racine, IMPORTEUR_PERMIS), "utf8"));
+    expect(script).toMatch(/db:\s*session\.db\b/);
     expect(script).not.toMatch(/\b(?:contexteMcp|clientMcp)\b/);
   });
 });

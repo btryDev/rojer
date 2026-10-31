@@ -85,10 +85,16 @@ autre compte.
    que `cache()` de React « does nothing » dans les actions serveur et les
    routes — une identité relue à chaque requête du client y coûterait un
    appel au serveur d'authentification par requête SQL.
-5. **SQL brut** : l'extension ne le voit pas. Une garde exige qu'un
+5. **SQL brut** : l'extension ne le voit pas. ~~Une garde exige qu'un
    `$queryRaw` / `$executeRaw` interpole `requireProprietaireSql`, ou figure
    nommément dans une liste avec son motif (verrous `FOR UPDATE` après une
-   lecture bornée, limitation de débit).
+   lecture bornée, limitation de débit).~~ [2026-10-31 : une lecture bornée
+   au propriétaire passe par `requireLectureSqlProprietaire` (`auth/scope.ts`),
+   qui pose le prédicat, refuse un gabarit qui ne le contient pas et exécute ;
+   tout autre SQL brut figure nommément dans `SQL_BRUT_NOMMES`
+   (`portee/imports.test.ts`) avec ce qui borne sa requête (verrous
+   `FOR UPDATE` après une lecture bornée, limitation de débit, `UPDATE` jsonb
+   d'une ligne gardée) ; jamais de forme `Unsafe`.]
 6. **Aucun DDL hors des migrations** : une garde refuse `CREATE`, `ALTER`,
    `DROP`, `GRANT`, `REVOKE`, `TRUNCATE` dans un gabarit SQL du code (point
    0.13 du plan de bascule).

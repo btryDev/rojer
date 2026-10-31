@@ -155,10 +155,11 @@ const SQL_BRUT_NOMMES: Record<string, string> = {
   "src/lib/duerps/ecrire-reponse-fermee.ts": "UPDATE jsonb d'un DUERP déjà gardé",
   "src/lib/calendrier/faux-prisma.ts": "faux client des tests",
 };
-const SQL_BRUT = /\.\$(?:queryRaw|executeRaw)(Unsafe)?\b/g;
+const SQL_BRUT = /\.\$(?:queryRaw|executeRaw)/;
+const SQL_BRUT_UNSAFE = /\.\$(?:queryRaw|executeRaw)Unsafe\b/;
 describe("SQL brut", () => {
   const ecrivent = [...TEXTES]
-    .filter(([, t]) => SQL_BRUT.test(sansCommentairesNiChaines(t)) && ((SQL_BRUT.lastIndex = 0), true))
+    .filter(([, t]) => SQL_BRUT.test(sansCommentairesNiChaines(t)))
     .map(([f]) => f)
     .sort();
   it("seuls les modules nommés en écrivent", () => {
@@ -168,7 +169,7 @@ describe("SQL brut", () => {
     expect(Object.keys(SQL_BRUT_NOMMES).filter((f) => !ecrivent.includes(f))).toEqual([]);
   });
   it("jamais de forme Unsafe (chaîne SQL non paramétrée)", () => {
-    const unsafe = [...TEXTES].filter(([, t]) => /\.\$(?:queryRaw|executeRaw)Unsafe\b/.test(sansCommentairesNiChaines(t))).map(([f]) => f);
+    const unsafe = [...TEXTES].filter(([, t]) => SQL_BRUT_UNSAFE.test(sansCommentairesNiChaines(t))).map(([f]) => f);
     expect(unsafe).toEqual([]);
   });
 });

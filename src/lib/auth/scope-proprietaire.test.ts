@@ -34,7 +34,10 @@ const AUTRE = "user-b";
 const h = vi.hoisted(() => {
   type Where = Record<string, unknown>;
   const etat = {
-    requetesSql: [] as { sql: string; values: unknown[] }[], proprietaire: "user-a", appels: [] as { modele: string; where: Where }[] };
+    requetesSql: [] as { sql: string; values: unknown[] }[],
+    proprietaire: "user-a",
+    appels: [] as { modele: string; where: Where }[],
+  };
 
   /**
    * Toute ligne de la base appartient au propriétaire : chaque relation, à
@@ -110,9 +113,8 @@ const HELPERS = helpersDAppartenance();
 /**
  * Les helpers qui chargent UNE LIGNE par son identifiant — tous, sauf
  * `requireLectureSqlProprietaire`, qui ne charge pas une ligne : il exécute
- * une lecture SQL brute sous le prédicat
- * propriétaire d'une requête SQL brute, et s'éprouve plus bas sur ce qu'il
- * fabrique. Le retirer d'ici par son nom, et lui seul, garde le relevé
+ * une lecture SQL brute sous le prédicat propriétaire, et s'éprouve plus bas
+ * sur la requête qu'il envoie. Le retirer d'ici par son nom, et lui seul, garde le relevé
  * automatique pour tout helper ajouté demain.
  */
 const HELPERS_DE_LIGNE = HELPERS.filter((nom) => nom !== "requireLectureSqlProprietaire");
