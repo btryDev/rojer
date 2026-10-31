@@ -20,7 +20,7 @@
 // exactement le cas qui a fait naître cet ADR.
 
 import type { DomainePrestataire } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+import type { Db } from "@/lib/auth/compte";
 import { obligationsApplicablesDuDossier } from "@/lib/etablissements/dossier-du-rendu";
 import { prestatairesDuRendu } from "@/lib/prestataires/queries";
 import { LABEL_DOMAINE as LABEL_DOMAINE_OBLIGATION } from "@/lib/calendrier/labels";
@@ -345,6 +345,7 @@ export function rapprocher(
 
 /** La même lecture, branchée sur la base. Trois requêtes, aucune boucle. */
 export async function chargerTransmissions(
+  db: Db,
   etablissementId: string,
   userId: string,
   /** L'horloge du tableau de bord, pour que ses cartes lisent la même. */
@@ -355,7 +356,7 @@ export async function chargerTransmissions(
   // même prédicat d'appartenance, même projection (`projeterEtablissement`,
   // dont la recopie champ à champ qui était ici donnait les vingt et un mêmes
   // champs). Hors rendu RSC, la lecture se fait comme avant.
-  const dossier = await obligationsApplicablesDuDossier(etablissementId, userId);
+  const dossier = await obligationsApplicablesDuDossier(db, etablissementId, userId);
   if (!dossier) return AUCUNE_TRANSMISSION;
   const { etab } = dossier;
 
@@ -373,7 +374,7 @@ export async function chargerTransmissions(
     // est redite sur la relation (ADR-005, même forme que `salaries/queries.ts`)
     // alors que `etab.id` vient d'être établi : la garantie ne doit pas tenir
     // à l'ordre des lectures.
-    prisma.salarie.findMany({
+    db.salarie.findMany({
       where: {
         etablissementId: etab.id,
         etablissement: { entreprise: { userId } },

@@ -43,7 +43,7 @@ export default async function EquipePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { user, etablissement } = await requireEtablissement(id);
+  const { user, db, etablissement } = await requireEtablissement(id);
   const now = new Date();
   // Lectures indépendantes, en parallèle ; la dernière donne les formations
   // à organiser (ADR-047, amendée le 2026-10-24).
@@ -51,7 +51,7 @@ export default async function EquipePage({
     listerEquipe(id, now),
     libellesTitresDeclares(id),
     chargerFaitsActivite(id),
-    etatsPermanentsDuDossier(id, user.id),
+    etatsPermanentsDuDossier(db, id, user.id),
   ]);
   const catalogue = cataloguerTitres();
   // « Formations à organiser » : dues aux salariés sans qu'on sache lesquels.

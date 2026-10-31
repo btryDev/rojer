@@ -15,9 +15,11 @@ const suivie = vi.fn();
 vi.mock("@/lib/carnet-sanitaire/suivi-calendrier", () => ({
   eauChaudeSuivieParLeCalendrier: (...a: unknown[]) => suivie(...a),
 }));
+const DB_DU_COMPTE = vi.hoisted(() => ({ nom: "client du compte" }));
 vi.mock("@/lib/auth/scope", () => ({
   requireEtablissement: async (id: string) => ({
     user: { id: "u1" },
+    db: DB_DU_COMPTE,
     etablissement: { id, estERP: true, raisonDisplay: "Hôtel du Port" },
   }),
 }));
@@ -71,7 +73,8 @@ describe("page du carnet — le texte suit l'installation déclarée", () => {
   it("le prédicat est lu dans le périmètre du compte", async () => {
     suivie.mockResolvedValue(false);
     await rendre();
-    expect(suivie).toHaveBeenCalledWith({
+    // Le client que rend la garde (ADR-051), puis la portée.
+    expect(suivie).toHaveBeenCalledWith(DB_DU_COMPTE, {
       etablissementId: "etab-1",
       etablissement: { entreprise: { userId: "u1" } },
     });
