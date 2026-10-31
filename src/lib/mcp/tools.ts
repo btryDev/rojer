@@ -409,7 +409,7 @@ const outilActions: OutilMcp<typeof schemaActions> = {
     // la description), mais les actions naissent en partie d'écarts relevés au
     // calendrier : un calendrier jamais calculé rend une liste courte pour une
     // raison que le lecteur doit connaître.
-    return avecFraicheur(ctx.db, ctx.scope.etablissementId, formaterActions(actions, avecFiltre(args)));
+    return avecFraicheur(ctx, formaterActions(actions, avecFiltre(args)));
   },
 };
 
@@ -656,12 +656,8 @@ const schemaVerifications = z.object({
  *
  * La phrase passe AVANT le contenu : un modèle qui tronque lit le début.
  */
-async function avecFraicheur(
-  db: Prisma.TransactionClient,
-  etablissementId: string,
-  rendu: string,
-): Promise<string> {
-  const phrase = phraseFraicheur(await getFraicheurCalendrier(db, etablissementId));
+async function avecFraicheur(ctx: ContexteMcp, rendu: string): Promise<string> {
+  const phrase = phraseFraicheur(await getFraicheurCalendrier(ctx.db, ctx.scope.etablissementId));
   return phrase === null ? rendu : `${phrase}\n\n${rendu}`;
 }
 
@@ -677,8 +673,8 @@ type InventaireLu = { parc: FaitParc; manque: ManqueCouverture | null };
  * restent dans `perimetre/couverture.ts` (`couvertureDeLInventaire`) ; ce
  * fichier ne collecte que le parc, à la portée du jeton.
  */
-async function lireInventaire(db: Prisma.TransactionClient, etablissementId: string): Promise<InventaireLu> {
-  return inventaireDe(await getParcEquipements(db, etablissementId));
+async function lireInventaire(ctx: ContexteMcp): Promise<InventaireLu> {
+  return inventaireDe(await getParcEquipements(ctx.db, ctx.scope.etablissementId));
 }
 
 function inventaireDe(parc: FaitParc): InventaireLu {
@@ -718,11 +714,10 @@ const outilVerifications: OutilMcp<typeof schemaVerifications> = {
   executer: async (ctx, args) => {
     const [verifs, inventaire] = await Promise.all([
       listerVerifications(ctx.db, ctx.scope.etablissementId, args, ctx.now),
-      lireInventaire(ctx.db, ctx.scope.etablissementId),
+      lireInventaire(ctx),
     ]);
     return avecFraicheur(
-      ctx.db,
-      ctx.scope.etablissementId,
+      ctx,
       avecInventaire(inventaire, formaterVerifications(verifs, avecFiltre(args))),
     );
   },

@@ -140,7 +140,8 @@ export function etablitSaPorteeLocale(
 //     atteinte doit être bornée.
 //
 // Le SQL brut (`$queryRaw`, `$executeRaw`) n'est pas borné par l'extension :
-// il ne l'est jamais par construction (sa garde : `requireProprietaireSql`).
+// il ne l'est jamais par construction (sa garde : `requireLectureSqlProprietaire`,
+// qui pose le prédicat et exécute, et `SQL_BRUT_NOMMES` de `portee/imports.test.ts`).
 
 const RACINE_SRC = () => join(process.cwd(), "src");
 

@@ -11,7 +11,7 @@ attend le feu vert de la propriétaire.**
   politique (`migrations-rls.test.ts`) : elle bloque un rôle lecteur, pas l'app.
 - L'isolation est dans le code : `requireUser` (`auth/require-user.ts`, seule
   lecture de l'identité), les helpers de `auth/scope.ts` (prédicat
-  `entreprise: { userId }` dans la requête, 404 sinon), `requireProprietaireSql`
+  `entreprise: { userId }` dans la requête, 404 sinon), ~~`requireProprietaireSql`~~ [2026-10-31 : `requireLectureSqlProprietaire`, qui exécute]
   pour le SQL brut, et six gardes qui **relisent le code** (`tenancy-lectures`,
   `-ecritures`, `-enfants`, `-oracle`, `-routes`, `-sonde`).
 - Ce que ces gardes ne garantissent pas : qu'une requête écrite correctement
@@ -89,7 +89,7 @@ est le client étendu, et l'extension ne pose rien en base. À constater au
 lot 1 sur les deux formes.
 
 SQL brut, 15 appels :
-- **bornés par `requireProprietaireSql`** : `etablissements/modules.ts:104`,
+- **bornés par ~~`requireProprietaireSql`~~ [2026-10-31 : `requireLectureSqlProprietaire`, qui exécute]** : `etablissements/modules.ts:104`,
   `rapports/joindre-realisations.ts:82`, `rapports/queries.ts:39` ;
 - **verrous `SELECT 1 … FOR UPDATE` par id**, dans une transaction après une
   lecture bornée : `calendrier/recalcul-ligne.ts:101`, `entreprises/cycle-de-vie.ts:26`,
@@ -130,7 +130,7 @@ indépendante, CI verte, feu vert de la propriétaire avant merge.
 | **2b** | Migration module par module vers `requireCompte()` : chaque module sort de la liste À MIGRER ; les accès sans compte du § 3 reçoivent leur portée ou deviennent des modules NOMMÉS | la garde d'import |
 | ~~**2**~~ | ~~(découpé en 2a et 2b le 2026-10-30)~~ Table de correspondance + son test ; client borné pour **lectures et écritures par `where`** ; client hors compte + garde d'import ; bascule des accès du § 3 vers leur portée | retirer la borne d'un modèle de la table : le test tombe ; brancher un module non nommé sur le client hors compte : la garde tombe ; lire un établissement d'un autre compte par `findUnique` sans prédicat : `null` |
 | **3** | Créations, `connect`, `upsert`, écritures imbriquées : clés de rattachement et clés secondaires du § 2 vérifiées ; identifiants polymorphes listés | créer une `Action` dont `equipementId` est d'un autre compte : refus |
-| **4** | SQL brut : garde qui exige `requireProprietaireSql` ou une entrée nommée de la liste du § 4, avec son motif | ajouter un `$queryRaw` non borné : la garde tombe |
+| **4** | SQL brut : garde qui exige ~~`requireProprietaireSql`~~ [2026-10-31 : `requireLectureSqlProprietaire`, qui exécute] ou une entrée nommée de la liste du § 4, avec son motif | ajouter un `$queryRaw` non borné : la garde tombe |
 | **5** | **Matrice d'autorisation** (OWASP) sur la base locale avec deux comptes : chaque opération de chaque modèle, refusée d'un compte à l'autre, réussie dans le compte ; mesure avant/après : budget de requêtes en CI (`budget-requetes.yml`) et `scripts/perf/mesurer.mjs` ; sonde des clés croisées ajoutée à `scripts/sante-base.sql` (à lancer par la propriétaire, jamais par nous) ; sort des gardes `tenancy-*` (§ 7) | — |
 | Better Auth | `lireUserCourant` lit `auth.api.getSession` : une ligne | la suite du lot 2 repasse |
 
@@ -164,7 +164,7 @@ Reste ouvert, à traiter au lot 2b :
   P2002 qu'une ligne existe ailleurs — à vérifier à chaque module migré ;
 - **SQL brut** : un module « migré » peut encore lire par le client brut au
   travers d'un helper (`etat-verifications` → `joindreDernieresRealisations`,
-  `$queryRaw` borné par `requireProprietaireSql`) — garde du lot 4 ; `db`
+  `$queryRaw` borné par ~~`requireProprietaireSql`~~ [2026-10-31 : `requireLectureSqlProprietaire`, qui exécute]) — garde du lot 4 ; `db`
   expose `$queryRaw` dans ses types ;
 - garde d'import : un chemin calculé à l'exécution et `globalThis.prisma`
   (hors production) lui échappent ; la liste des portes vers un client brut

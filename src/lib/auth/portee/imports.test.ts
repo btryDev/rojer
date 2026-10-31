@@ -18,8 +18,6 @@ const DEPOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 // client borné (lot 2b, MCP) ; la liste À MIGRER est vide depuis le même jour.
 const PORTES_BRUTES = ["src/lib/prisma", "src/lib/mcp/prisma"];
 const FABRIQUES = new Set(["src/lib/prisma.ts", "src/lib/mcp/prisma.ts"]);
-/** SQL brut sous requireProprietaireSql, jusqu'au chantier `{ sql, db }`. */
-const SQL_BRUT = { motif: "SQL brut borné par requireProprietaireSql (ADR-051 § 5)", usages: ["prisma.$queryRaw"] };
 /**
  * Les modules nommés, leur motif et les seuls usages du client brut qu'il
  * couvre : chaque `prisma.…` de leur code (commentaires et chaînes retirés)
@@ -77,19 +75,31 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous" }
     motif: "registre public par son slug, sans session",
     usages: ["prisma.registreAccessibilite.findUnique"],
   },
-  "src/lib/etablissements/modules.ts": SQL_BRUT,
-  "src/lib/rapports/queries.ts": SQL_BRUT,
-  "src/lib/rapports/joindre-realisations.ts": SQL_BRUT,
 };
 /** Cliquet : importeurs du client brut encore à migrer vers requireCompte(). */
 const A_MIGRER = new Set<string>([]);
-const NOMMES_ROUAGES: Record<string, Record<string, string>> = {
+/**
+ * Un module nommé : son motif ; `{ motif, typesSeuls: true }` s'il n'a droit
+ * qu'aux types ; `{ motif, symboles }` s'il n'a droit qu'à ces valeurs.
+ */
+type Nomme = string | { motif: string; typesSeuls: true } | { motif: string; symboles: string[] };
+const NOMMES_ROUAGES: Record<string, Record<string, Nomme>> = {
   "src/lib/auth/portee/client": {
     "src/lib/auth/compte.ts": "requireCompte : la portée vient de la session",
-    "src/lib/auth/portee/lot-verifie.ts": "types du client et de la transaction (types seuls)",
+    "src/lib/auth/portee/lot-verifie.ts": { motif: "types du client et de la transaction", typesSeuls: true },
     "src/test/garde-simulee.ts": "tests seuls : le client simulé que rendent les gardes simulées",
     "src/lib/auth/compte-hors-session.ts": "accès sans session : la portée vient de la preuve vérifiée",
-    "src/lib/mcp/db.ts": "le type ClientBorne du client des lectures MCP (types seuls)",
+  },
+  // Un client borné à un compte tiré d'une chaîne (propriétaire d'un
+  // établissement, identité OAuth) : seulement là où cette chaîne vient d'une
+  // preuve vérifiée (jeton, signature, clé ou jeton MCP) — seconde lecture de
+  // #146.
+  "src/lib/auth/compte-hors-session": {
+    // [cc : pas d'OAuth MCP (ADR-052) — ni `clientDuCompteVerifie` ni `acces-oauth-deps.ts`.]
+    "src/lib/mcp/db.ts": { motif: "MCP : établissement de la clé", symboles: ["clientDuProprietaire"] },
+    "src/lib/signatures/actions.ts": { motif: "pose de signature par jeton vérifié", symboles: ["clientDuProprietaire"] },
+    "src/lib/signatures/verification-publique.ts": { motif: "établissement d'une signature lue par son identifiant", symboles: ["clientDuProprietaire"] },
+    "src/app/acces/[token]/page.tsx": { motif: "page d'un jeton vérifié", symboles: ["clientDuProprietaire"] },
   },
   "src/lib/auth/portee/borne": {
     "src/lib/auth/portee/client.ts": "l'extension",
@@ -133,12 +143,61 @@ describe("client Prisma brut", () => {
   });
 });
 
+/**
+ * Le SQL brut (`$queryRaw`, `$executeRaw`) n'est pas borné par l'extension du
+ * client borné (ADR-051 § 5) : chaque module qui en écrit est nommé, avec ce
+ * qui borne SA requête. Une lecture bornée au propriétaire passe par
+ * `requireLectureSqlProprietaire` (`auth/scope.ts`), qui pose le prédicat et
+ * exécute — elle n'a pas à être ici (revue de code du 2026-10-31).
+ */
+const SQL_BRUT_NOMMES: Record<string, string> = {
+  "src/lib/auth/scope.ts": "requireLectureSqlProprietaire : pose le prédicat propriétaire et exécute",
+  "src/lib/securite/limite-debit.ts": "compteurs techniques, hors de tout compte",
+  "src/lib/signatures/verrou-contenu.ts": "verrou FOR UPDATE de la ligne, borné à l'établissement",
+  "src/lib/rapports/actions.ts": "verrou FOR UPDATE d'une ligne déjà lue par le client borné",
+  "src/lib/salaries/suppression.ts": "verrou FOR UPDATE borné au salarié et à l'établissement gardés",
+  "src/lib/calendrier/recalcul-ligne.ts": "verrou FOR UPDATE d'une ligne déjà lue par le client borné",
+  "src/lib/entreprises/cycle-de-vie.ts": "verrou FOR UPDATE d'une entreprise déjà gardée",
+  "src/lib/registre/actions.ts": "UPDATE jsonb borné à l'établissement gardé",
+  "src/lib/duerps/ecrire-reponse-fermee.ts": "UPDATE jsonb d'un DUERP déjà gardé",
+  "src/lib/calendrier/faux-prisma.ts": "faux client des tests",
+  "src/lib/auth/tenancy-portee.ts": "sonde : le motif de détection du SQL brut, aucune requête",
+  "src/lib/auth/tenancy-sonde.ts": "sonde : le motif de détection du SQL brut, aucune requête",
+  "src/lib/auth/portee/client.ts": "commentaire seul : l'extension ne borne pas le SQL brut",
+};
+/**
+ * Le motif se cherche sur le texte BRUT, commentaires et chaînes compris :
+ * `db["$queryRaw"]`, `const { $queryRaw: q } = db` ou une clé calculée se
+ * voient, et aucun analyseur ne peut se dérégler (une apostrophe dans du JSX
+ * le faisait — revue de #149, 2026-10-31). Un module qui ne fait que NOMMER le
+ * motif (commentaire, sonde) est nommé comme tel.
+ */
+// Sans le point : l'accès par crochets ou la déstructuration s'y voient aussi.
+const SQL_BRUT = /\$(?:queryRaw|executeRaw)/;
+const SQL_BRUT_UNSAFE = /\$(?:queryRaw|executeRaw)Unsafe\b/;
+describe("SQL brut", () => {
+  const ecrivent = [...TEXTES]
+    .filter(([, t]) => SQL_BRUT.test(t))
+    .map(([f]) => f)
+    .sort();
+  it("seuls les modules nommés en écrivent", () => {
+    expect(ecrivent.filter((f) => !(f in SQL_BRUT_NOMMES))).toEqual([]);
+  });
+  it("un module nommé qui n'en écrit plus sort de la liste", () => {
+    expect(Object.keys(SQL_BRUT_NOMMES).filter((f) => !ecrivent.includes(f))).toEqual([]);
+  });
+  it("jamais de forme Unsafe (chaîne SQL non paramétrée)", () => {
+    const unsafe = [...TEXTES].filter(([, t]) => SQL_BRUT_UNSAFE.test(t)).map(([f]) => f);
+    expect(unsafe).toEqual([]);
+  });
+});
+
 it.each(Object.entries(NOMMES_ROUAGES))("les rouages %s ne s'importent que des modules nommés", (c, nommes) => {
   expect(importeurs(c).filter((f) => !(f in nommes))).toEqual([]);
 });
 
 /**
- * Un module nommé « (types seuls) » n'importe des rouages que des TYPES : la
+ * Un module nommé `typesSeuls` n'importe des rouages que des TYPES : la
  * garde ci-dessus est par module, pas par symbole — sans celle-ci, un module
  * nommé pour un type pourrait appeler `clientBorne({ userId: … })` librement
  * (seconde lecture de #145).
@@ -161,10 +220,40 @@ function importsDeValeur(f: string, c: string): string[] {
 }
 const TYPES_SEULS = Object.entries(NOMMES_ROUAGES).flatMap(([c, nommes]) =>
   Object.entries(nommes)
-    .filter(([, motif]) => motif.endsWith("(types seuls)"))
+    .filter(([, nomme]) => typeof nomme !== "string" && "typesSeuls" in nomme)
     .map(([f]) => [f, c] as const),
 );
-it("les modules nommés « (types seuls) » existent", () => {
+/**
+ * Un module nommé avec ses `symboles` n'importe de la cible que ces valeurs-là
+ * (les types restent libres) : nommé pour `clientDuProprietaire`, il ne peut
+ * pas appeler `clientDuCompteVerifie(chaîne)` (revue du 2026-10-31).
+ */
+function valeursImportees(f: string, c: string): string[] {
+  const texte = TEXTES.get(f)!;
+  const statiques = [...texte.matchAll(IMPORT_STATIQUE)].filter(([, , , spec]) => cible(f, spec) === c);
+  const valeurs = statiques.flatMap(([, type, clause]) => {
+    if (type) return [];
+    const accolades = clause.match(/^\{([^}]*)\}$/);
+    if (!accolades) return ["<défaut ou espace de noms>"];
+    return accolades[1]
+      .split(",")
+      .map((x) => x.trim())
+      .filter((x) => x && !x.startsWith("type "))
+      .map((x) => x.split(/\s+as\s+/)[0]);
+  });
+  const dynamiques = [...texte.matchAll(IMPORT_DYNAMIQUE)].filter(([, spec]) => cible(f, spec) === c).map(() => "<import dynamique>");
+  return [...valeurs, ...dynamiques];
+}
+const PAR_SYMBOLES = Object.entries(NOMMES_ROUAGES).flatMap(([c, nommes]) =>
+  Object.entries(nommes).flatMap(([f, nomme]) =>
+    typeof nomme !== "string" && "symboles" in nomme ? [[f, c, nomme.symboles] as const] : [],
+  ),
+);
+it.each(PAR_SYMBOLES)("%s n'importe de %s que ses symboles nommés", (f, c, symboles) => {
+  expect(valeursImportees(f, c).filter((v) => !symboles.includes(v))).toEqual([]);
+});
+
+it("les modules nommés `typesSeuls` existent", () => {
   expect(TYPES_SEULS.length).toBeGreaterThan(0);
 });
 it.each(TYPES_SEULS)("%s n'importe de %s que des types", (f, c) => {
