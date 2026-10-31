@@ -364,7 +364,6 @@ describe("les lectures exportées et les server actions qui ne font que lire", (
     expect(borneeParConstruction(lib("versions/queries.ts"), "getVersion", LECTURE)).toBe(true);
     expect(borneeParConstruction(lib("rapports/queries.ts"), "getRapport", LECTURE)).toBe(false);
     const exposees = fonctionsExposees();
-    expect(exposees).toContain("lib/dashboard/transmissions.ts:chargerTransmissionsDuCompte");
     expect(exposees).toContain("lib/calendrier/passe.ts:lireEntrees");
     expect(exposees).toContain("lib/etablissements/marques-a-confirmer.ts:marquesAConfirmerDuDossier");
     expect(exposees).not.toContain("lib/controle/queries.ts:versionsDuDuerpDuDossier");

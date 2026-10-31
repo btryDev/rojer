@@ -21,7 +21,6 @@
 
 import type { DomainePrestataire } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import type { Db } from "@/lib/auth/compte";
 import { obligationsApplicablesDuDossier } from "@/lib/etablissements/dossier-du-rendu";
 import { prestatairesDuRendu } from "@/lib/prestataires/queries";
 import { LABEL_DOMAINE as LABEL_DOMAINE_OBLIGATION } from "@/lib/calendrier/labels";
@@ -344,26 +343,11 @@ export function rapprocher(
   };
 }
 
-/**
- * La même lecture, branchée sur la base. Trois requêtes, aucune boucle.
- *
- * Par le client brut, pour les appelants qui ne passent pas encore le client
- * borné (ADR-051, lot 2b) : elle délègue à `chargerTransmissionsDuCompte`.
- */
+/** La même lecture, branchée sur la base. Trois requêtes, aucune boucle. */
 export async function chargerTransmissions(
   etablissementId: string,
   userId: string,
   /** L'horloge du tableau de bord, pour que ses cartes lisent la même. */
-  now: Date,
-): Promise<Transmissions> {
-  return chargerTransmissionsDuCompte(prisma, etablissementId, userId, now);
-}
-
-/** La même lecture, par le client borné au compte de l'appelant (ADR-051). */
-export async function chargerTransmissionsDuCompte(
-  db: Db,
-  etablissementId: string,
-  userId: string,
   now: Date,
 ): Promise<Transmissions> {
   // [2026-10-14, audit Next.js H2] L'établissement, son parc en service et le
@@ -389,7 +373,7 @@ export async function chargerTransmissionsDuCompte(
     // est redite sur la relation (ADR-005, même forme que `salaries/queries.ts`)
     // alors que `etab.id` vient d'être établi : la garantie ne doit pas tenir
     // à l'ordre des lectures.
-    db.salarie.findMany({
+    prisma.salarie.findMany({
       where: {
         etablissementId: etab.id,
         etablissement: { entreprise: { userId } },
