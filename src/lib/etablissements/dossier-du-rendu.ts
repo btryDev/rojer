@@ -16,14 +16,18 @@ import "server-only";
 // serveur, test —, React n'a pas de dispatcher de cache et la fonction
 // s'exécute normalement : le résultat est le même, seule la mémoïsation tombe.
 //
-// LES CLÉS SONT DES PRIMITIVES. `cache()` compare ses arguments par identité :
-// un objet reconstruit à chaque appel ne toucherait jamais l'entrée. On passe
-// donc l'identifiant et le propriétaire, jamais l'établissement projeté.
+// LES CLÉS SONT STABLES. `cache()` compare ses arguments par identité : un
+// objet reconstruit à chaque appel ne toucherait jamais l'entrée. On passe
+// donc l'identifiant et le propriétaire, jamais l'établissement projeté — et
+// le client borné au compte (ADR-051), qui est un objet mais le MÊME pour un
+// compte : `clientBorne` le garde (cache LRU de `portee/client.ts`). Un
+// appelant qui passerait une transaction ou un autre client perdrait le
+// partage, sans erreur.
 //
-// LE PROPRIÉTAIRE EST UN PARAMÈTRE, pas une lecture de session, sur le modèle
-// de `chargerTransmissions` et `etatsPermanentsDuDossier` : leurs appelants
-// bornent l'établissement par le `userId` qu'ils reçoivent, et ce module garde
-// leur contrat. Le prédicat d'appartenance est porté par la requête.
+// LE CLIENT ET LE PROPRIÉTAIRE SONT DES PARAMÈTRES, reçus de la garde de
+// l'appelant, comme `chargerTransmissions` et `etatsPermanentsDuDossier`. Le
+// prédicat d'appartenance reste aussi dans la requête, en double de la borne
+// du client, jusqu'au tri des prédicats écrits (plan d'isolation, § 7).
 //
 // RIEN ICI NE DÉPEND DES LIGNES DU CALENDRIER. Le layout et la page sont rendus
 // EN PARALLÈLE (`regeneration-sure.ts`) : une lecture partagée entre les deux

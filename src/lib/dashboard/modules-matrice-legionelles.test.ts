@@ -1,3 +1,4 @@
+import { PORTEE_SIMULEE } from "@/test/client-borne-simule";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
@@ -59,10 +60,14 @@ describe("getModulesMatrice — le carnet suit le prédicat partagé", () => {
   it("le prédicat est lu dans le périmètre du compte", async () => {
     suivie.mockResolvedValue(false);
     await getModulesMatrice("etab-1", true);
-    // Le client borné de la session (ADR-051), puis la portée.
+    // Le client borné de la session (ADR-051) — simulé, il porte sa portée —,
+    // puis la portée écrite.
     expect(suivie).toHaveBeenCalledWith(expect.anything(), {
       etablissementId: "etab-1",
       etablissement: { entreprise: { userId: "u1" } },
     });
+    const [db] = suivie.mock.calls[0] as [Record<symbol, unknown>];
+    expect(db).not.toBe(prismaMock);
+    expect(db[PORTEE_SIMULEE]).toEqual({ type: "compte", userId: "u1" });
   });
 });

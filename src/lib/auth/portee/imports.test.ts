@@ -27,6 +27,19 @@ const NOMMES_PRISMA: Record<string, string> = {
   "src/lib/rapports/queries.ts": "SQL brut borné par requireProprietaireSql (ADR-051 § 5)",
   "src/lib/rapports/joindre-realisations.ts": "SQL brut borné par requireProprietaireSql (ADR-051 § 5)",
 };
+/**
+ * Un module nommé pour un usage précis n'a droit qu'à lui : chaque `prisma.…`
+ * de son code (commentaires retirés) doit être l'un de ceux-ci. Sans quoi le
+ * motif couvrirait le fichier entier, et une lecture de modèle ajoutée demain
+ * passerait sans borne (revue de code du 2026-10-31).
+ */
+const USAGES_ADMIS: Record<string, string[]> = {
+  "src/lib/accessibilite/actions.ts": ["prisma.registreAccessibilite.findMany"],
+  "src/lib/accessibilite/queries.ts": ["prisma.registreAccessibilite.findUnique"],
+  "src/lib/etablissements/modules.ts": ["prisma.$queryRaw"],
+  "src/lib/rapports/queries.ts": ["prisma.$queryRaw"],
+  "src/lib/rapports/joindre-realisations.ts": ["prisma.$queryRaw"],
+};
 /** Cliquet : importeurs du client brut encore à migrer vers requireCompte(). */
 const A_MIGRER = new Set([
   "src/lib/access-tokens/revocation.ts",
@@ -77,6 +90,15 @@ describe("client Prisma brut", () => {
   it("seuls les modules nommés ou à migrer l'importent", () => {
     expect(brut.length).toBeGreaterThan(0);
     expect(brut.filter((f) => !(f in NOMMES_PRISMA) && !A_MIGRER.has(f))).toEqual([]);
+  });
+  it.each(Object.entries(USAGES_ADMIS))("%s n'emploie le client brut que pour son motif", (f, admis) => {
+    expect(f in NOMMES_PRISMA).toBe(true);
+    const code = TEXTES.get(f)!.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+    const usages = [...code.matchAll(/\bprisma\s*\.\s*([$\w]+)(?:\s*\.\s*(\w+))?/g)].map(
+      ([, a, b]) => (a.startsWith("$") || !b ? `prisma.${a}` : `prisma.${a}.${b}`),
+    );
+    expect(usages.length).toBeGreaterThan(0);
+    expect(usages.filter((u) => !admis.includes(u))).toEqual([]);
   });
   it("un module migré sort de la liste À MIGRER", () => {
     expect([...A_MIGRER].filter((f) => !brut.includes(f))).toEqual([]);

@@ -1,5 +1,5 @@
 import "server-only";
-import { requireCompte } from "@/lib/auth/compte";
+import { requireCompte, type Db } from "@/lib/auth/compte";
 /**
  * Ce que l'écran « Ce qui doit être en place » lit.
  *
@@ -466,8 +466,9 @@ export async function listerEtatsPermanents(
  * les lignes prend les mêmes lignes que celles qui s'affichent. Aucun des deux
  * ne peut décrire un ensemble que l'autre ne décrit pas.
  *
- * **`userId` en paramètre**, sur le modèle de `dashboard/transmissions.ts` :
- * les appelants viennent tous d'un contexte déjà authentifié. La garantie ne
+ * **`db` et `userId` en paramètres**, sur le modèle de `dashboard/transmissions.ts` :
+ * les appelants viennent tous d'un contexte déjà authentifié, et passent le
+ * client borné de leur garde (ADR-051). La garantie ne
  * s'en remet pas pour autant à l'appelant — le prédicat d'appartenance est
  * porté par la requête ci-dessous, et c'est `etab.id` qui est propagé ensuite,
  * jamais l'identifiant reçu.
@@ -490,14 +491,13 @@ export async function listerEtatsPermanents(
  * cette fonction la seule à établir la portée, pas d'ajouter un garde ici.
  */
 export async function etatsPermanentsDuDossier(
+  db: Db,
   etablissementId: string,
   userId: string,
 ): Promise<EtatsPermanentsDuDossier> {
   // [2026-10-14, audit Next.js H2] Lecture et passage du moteur partagés avec
   // le reste du rendu (`dossier-du-rendu.ts`) — même prédicat, même parc en
   // service. Hors rendu RSC, ils se font ici comme avant.
-  // Le client borné vient de la session, comme les déclarations (ci-dessus).
-  const { db } = await requireCompte();
   const dossier = await obligationsApplicablesDuDossier(
     db,
     etablissementId,
@@ -536,10 +536,12 @@ export async function etatsPermanentsDuDossier(
  * l'énumération ci-dessus — et c'est la seule chose qui compte.
  */
 export async function compterEtatsPermanents(
+  db: Db,
   etablissementId: string,
   userId: string,
 ): Promise<{ total: number; enPlace: number }> {
   const { total, enPlace } = await etatsPermanentsDuDossier(
+    db,
     etablissementId,
     userId,
   );

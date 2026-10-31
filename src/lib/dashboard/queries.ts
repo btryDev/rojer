@@ -840,7 +840,7 @@ export const getDashboardData = cache(async function getDashboardData(
     // personnes sortait à 100 avec treize états non renseignés. Lu par la même
     // entrée que cet écran — deux comptes finiraient par diverger, et c'est le
     // chiffre du tableau de bord qui porterait la version fausse.
-    compterEtatsPermanents(etablissementId, user.id),
+    compterEtatsPermanents(db, etablissementId, user.id),
     // Les rapports RÉALISÉS de la fenêtre, comptés en base : les cartes
     // « Rapports 12 m » parlent de pièces déposées, pas de lignes couvertes,
     // et depuis l'ADR-034 les deux ne coïncident plus.
