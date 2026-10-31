@@ -10,7 +10,7 @@ import "server-only";
 // limitation de débit par IP (`LIMITES.verificationIp`).
 
 import { headers } from "next/headers";
-import type { MethodeSignature } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { ipClient } from "@/lib/securite/ip-client";
 import { cleLimite, consommer, LIMITES } from "@/lib/securite/limite-debit";
@@ -30,16 +30,7 @@ import { clientDuProprietaire } from "@/lib/auth/compte-hors-session";
  * restent côté serveur : ils n'apportent rien à la vérification et
  * dessineraient la carte interne du compte.
  */
-export type PreuveSignature = {
-  id: string;
-  signataireNom: string;
-  signataireEmail: string;
-  signataireRole: string | null;
-  horodatageIso: Date;
-  methode: MethodeSignature;
-  hashDocument: string;
-  nomDocument: string | null;
-};
+export type PreuveSignature = Prisma.SignatureGetPayload<{ select: typeof SELECT_PREUVE }>;
 
 /**
  * Vérifie l'intégrité d'une signature : recalcule le hash du document et
@@ -118,16 +109,7 @@ export async function verifierIntegriteSignature(
  * voir. L'adresse IP, le user-agent, l'établissement et l'objet signé restent
  * dehors.
  */
-function enPreuve(signature: {
-  id: string;
-  signataireNom: string;
-  signataireEmail: string;
-  signataireRole: string | null;
-  horodatageIso: Date;
-  methode: MethodeSignature;
-  hashDocument: string;
-  nomDocument: string | null;
-}): PreuveSignature {
+function enPreuve(signature: PreuveSignature): PreuveSignature {
   return {
     id: signature.id,
     signataireNom: signature.signataireNom,
@@ -172,7 +154,8 @@ export async function verifierSousLimite(
  * C'est délibéré : l'identifiant `sig_…` est communiqué avec le document
  * pour permettre à un tiers (inspecteur, assureur, acquéreur) de contrôler
  * la signature sans compte — c'est tout l'objet de la page publique
- * `/verifier/[signatureId]` (et la confirmation `/signe/[signatureId]`). L'identifiant est un UUID aléatoire, donc non
+ * de vérification ; ici, pour la confirmation `/signe/[signatureId]`, sœur de
+ * `/verifier/[signatureId]`. L'identifiant est un UUID aléatoire, donc non
  * énumérable.
  *
  * En contrepartie, la projection est limitée à ce qui sert la preuve.

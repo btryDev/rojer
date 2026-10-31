@@ -12,3 +12,17 @@ import { clientBorne } from "@/lib/auth/portee/client";
 export async function clientDuCompteSimule(userId = "user-1") {
   return clientBorne({ type: "compte", userId });
 }
+
+/**
+ * Le module `compte-hors-session` simulé : `clientDuProprietaire` rend le
+ * client simulé et note, si on lui passe un journal, l'établissement pour
+ * lequel le compte a été demandé.
+ */
+export function compteHorsSessionSimule(journal?: string[]) {
+  return {
+    clientDuProprietaire: async (etablissementId: string) => {
+      journal?.push(etablissementId);
+      return clientDuCompteSimule();
+    },
+  };
+}

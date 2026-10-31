@@ -266,15 +266,12 @@ export async function modifierPermisFeu(
     });
     const apres = await calculerHashObjet(tx, "permis_feu", permisFeuId, etablissementId);
     if (!avant.ok || !apres.ok || avant.hash !== apres.hash) {
-      await revoquerLiensEnVol(
-        {
+      await revoquerLiensEnVol(tx, {
           etablissementId,
           objetType: "permis_feu",
           objetId: permisFeuId,
           motif: MOTIF_CONTENU_MODIFIE.permis,
-        },
-        tx,
-      );
+        });
     }
     return null;
   });
@@ -328,12 +325,12 @@ export async function marquerTermine(permisFeuId: string): Promise<void> {
   if (!r.fait) return;
   // Un permis terminé ne se signe plus (`etat-signable.ts`) : ses liens
   // encore ouverts tombent avec lui.
-  await revoquerLiensEnVol({
+  await revoquerLiensEnVol(r.db, {
     etablissementId: r.etablissementId,
     objetType: "permis_feu",
     objetId: permisFeuId,
     motif: "Permis de feu terminé",
-  }, r.db);
+  });
 }
 
 export async function supprimerPermisFeu(permisFeuId: string): Promise<void> {
@@ -357,12 +354,12 @@ export async function supprimerPermisFeu(permisFeuId: string): Promise<void> {
       data: { statut: "annule" },
     });
   }
-  await revoquerLiensEnVol({
+  await revoquerLiensEnVol(permis.db, {
     etablissementId: etabId,
     objetType: "permis_feu",
     objetId: permisFeuId,
     motif: effacable ? "Permis de feu supprimé" : "Permis de feu annulé",
-  }, permis.db);
+  });
   revalidatePath(`/etablissements/${etabId}/permis-feu`);
   redirect(`/etablissements/${etabId}/permis-feu`);
 }

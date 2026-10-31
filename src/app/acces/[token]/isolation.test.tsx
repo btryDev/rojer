@@ -75,10 +75,9 @@ const { prismaMock, verifierMock } = vi.hoisted(() => ({
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
 // Sans session, le compte vient du propriétaire de l'établissement du jeton
 // (ADR-051, `compte-hors-session.ts`) : ici, le client borné simulé.
-vi.mock("@/lib/auth/compte-hors-session", async () => {
-  const { clientDuCompteSimule } = await import("@/test/garde-simulee");
-  return { clientDuProprietaire: async () => clientDuCompteSimule() };
-});
+vi.mock("@/lib/auth/compte-hors-session", async () =>
+  (await import("@/test/garde-simulee")).compteHorsSessionSimule(),
+);
 vi.mock("@/lib/access-tokens/verify", () => ({
   verifierAccessToken: verifierMock,
 }));

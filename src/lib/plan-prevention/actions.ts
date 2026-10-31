@@ -372,15 +372,12 @@ export async function modifierPlanPrevention(
     });
     const apres = await calculerHashObjet(tx, "plan_prevention", planId, etablissementId);
     if (!avant.ok || !apres.ok || avant.hash !== apres.hash) {
-      await revoquerLiensEnVol(
-        {
+      await revoquerLiensEnVol(tx, {
           etablissementId,
           objetType: "plan_prevention",
           objetId: planId,
           motif: MOTIF_CONTENU_MODIFIE.plan,
-        },
-        tx,
-      );
+        });
     }
     return null;
   });
@@ -404,12 +401,12 @@ export async function cloturerPlan(planId: string): Promise<void> {
   });
   // Un plan clos ne se signe plus : les liens encore ouverts tombent avec lui.
   // La garde de fond reste au moment de signer (`etat-signable.ts`).
-  await revoquerLiensEnVol({
+  await revoquerLiensEnVol(plan.db, {
     etablissementId: plan.etablissementId,
     objetType: "plan_prevention",
     objetId: planId,
     motif: "Plan de prévention clos",
-  }, plan.db);
+  });
   revalidatePath(`/etablissements/${plan.etablissementId}/plan-prevention/${planId}`);
 }
 
@@ -437,12 +434,12 @@ export async function supprimerPlan(planId: string): Promise<void> {
   // Annulé ou effacé, le plan ne se signe plus. Pour un plan effacé la
   // révocation ne trouve rien — il était vierge —, sauf un lien émis entre
   // la vérification et l'effacement : elle le ferme aussi.
-  await revoquerLiensEnVol({
+  await revoquerLiensEnVol(plan.db, {
     etablissementId: etabId,
     objetType: "plan_prevention",
     objetId: planId,
     motif: effacable ? "Plan de prévention supprimé" : "Plan de prévention annulé",
-  }, plan.db);
+  });
   revalidatePath(`/etablissements/${etabId}/plan-prevention`);
   redirect(`/etablissements/${etabId}/plan-prevention`);
 }

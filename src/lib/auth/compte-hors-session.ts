@@ -1,6 +1,7 @@
 import "server-only";
 // Le client borné au compte (ADR-051) pour un accès SANS session : un jeton
-// d'accès externe, une signature vérifiée publiquement, une clé MCP. Le compte
+// d'accès externe, une signature vérifiée publiquement (et, au lot MCP, une
+// clé MCP). Le compte
 // est celui qui possède l'établissement que porte la PREUVE déjà vérifiée —
 // jamais un identifiant reçu de l'appelant.
 //
@@ -14,7 +15,7 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { clientBorne, type ClientBorne } from "./portee/client";
 
-/** `null` si l'établissement n'existe plus. */
+/** `null` si l'établissement a disparu ou n'a pas de propriétaire. */
 export async function clientDuProprietaire(etablissementId: string): Promise<ClientBorne | null> {
   const etab = await prisma.etablissement.findUnique({
     where: { id: etablissementId },

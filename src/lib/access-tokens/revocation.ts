@@ -49,9 +49,9 @@ export const LIEN_PARTI = {
  * tomber avec l'écriture qui la motive (`modifierPlanPrevention`).
  */
 export async function revoquerLiensEnVol(
-  params: LiensDeLObjet & { motif: string },
   /** Le client borné au compte, ou la transaction ouverte sur lui (ADR-051). */
   db: Prisma.TransactionClient,
+  params: LiensDeLObjet & { motif: string },
 ): Promise<number> {
   const r = await db.accessToken.updateMany({
     where: whereLiensEnVol(params),
