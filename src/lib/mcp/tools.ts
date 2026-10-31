@@ -21,11 +21,12 @@
 // L'horloge est injectée (ADR-011) : `now` vient du contexte, jamais d'un
 // `new Date()` planté au milieu d'un formatage.
 
+import { clientMcp } from "./db";
 import { LABEL_PERIODICITE } from "@/lib/calendrier/labels";
 import { numeroCategorie, typesErpDe } from "@/lib/etablissements/types-erp-affiches";
 import type { Periodicite } from "@/lib/referentiels/types-communs";
 import { z } from "zod";
-import type { StatutAction } from "@prisma/client";
+import type { Prisma, StatutAction } from "@prisma/client";
 import { formaterDateFr } from "@/lib/dates";
 import { estVerificationRealisee } from "@/lib/dates/retard";
 import {
@@ -117,14 +118,34 @@ export class ErreurOutilMcp extends Error {
 export const MESSAGE_ETABLISSEMENT_INTROUVABLE =
   "Établissement introuvable pour ce connecteur : son dossier ne peut pas être lu, et rien n'est à conclure de son contenu.";
 
-/** Portée de la session : l'établissement que le serveur a le droit de lire. */
-export type ScopeMcp = { etablissementId: string };
+/**
+ * Portée de la session : l'établissement que le serveur a le droit de lire,
+ * et, pour un porteur OAuth, le compte de son jeton vérifié (`userId`) — le
+ * client borné l'est alors à CE compte, et non au propriétaire déduit de
+ * l'établissement (ADR-051 ; revue du 2026-10-31). Clé et stdio n'ont pas
+ * d'identité : le compte y est celui du propriétaire de l'établissement.
+ */
+export type ScopeMcp = { etablissementId: string; userId?: string };
 
 export type ContexteMcp = {
   scope: ScopeMcp;
+  /** Le client borné au compte de la session (ADR-051, `./db.ts`) ; chaque
+   *  lecture garde aussi `scope.etablissementId`. */
+  db: Prisma.TransactionClient;
   /** Horloge injectée — cf. ADR-011. */
   now: Date;
 };
+
+/**
+ * Le contexte d'un appel d'outil : la portée, l'horloge et le client borné au
+ * compte de la session (`./db.ts`). Un établissement disparu
+ * ou sans propriétaire se dit comme un établissement introuvable.
+ */
+export async function contexteMcp(scope: ScopeMcp, now: Date): Promise<ContexteMcp> {
+  const db = await clientMcp(scope);
+  if (!db) throw new ErreurOutilMcp(MESSAGE_ETABLISSEMENT_INTROUVABLE);
+  return { scope, now, db };
+}
 
 export type OutilMcp<Schema extends z.ZodTypeAny> = {
   nom: string;
@@ -326,7 +347,7 @@ const outilFiche: OutilMcp<SchemaVide> = {
     "Identité de l'établissement suivi : raison sociale, adresse, régimes réglementaires (travail, ERP, IGH, habitation), effectifs, et volume du dossier (équipements, vérifications, actions). À appeler en premier pour savoir de quel établissement on parle.",
   schema: SCHEMA_VIDE,
   executer: async (ctx) => {
-    const fiche = await getFicheEtablissement(ctx.scope.etablissementId);
+    const fiche = await getFicheEtablissement(ctx.db, ctx.scope.etablissementId);
     // Déjà filtré par `avecEtablissement` ; si l'établissement disparaît
     // entre les deux lectures, même réponse, même marquage.
     if (!fiche) throw new ErreurOutilMcp(MESSAGE_ETABLISSEMENT_INTROUVABLE);
@@ -343,7 +364,7 @@ const outilDuerp: OutilMcp<SchemaVide> = {
     "État du document unique d'évaluation des risques professionnels : ancienneté de la dernière version validée, échéance de mise à jour annuelle (art. R. 4121-2, applicable à partir de 11 salariés), unités de travail et risques cotés avec leur criticité. À appeler pour toute question sur les risques évalués ou la fraîcheur du DUERP.",
   schema: SCHEMA_VIDE,
   executer: async (ctx) => {
-    const etat = await getEtatDuerp(ctx.scope.etablissementId, ctx.now);
+    const etat = await getEtatDuerp(ctx.db, ctx.scope.etablissementId, ctx.now);
     return formaterEtatDuerp(etat);
   },
 };
@@ -384,12 +405,12 @@ const outilActions: OutilMcp<typeof schemaActions> = {
     "Attention : les échéances rendues ici sont des échéances de **traitement**, que l'établissement se fixe. Elles sont distinctes des échéances des obligations suivies, rendues par l'outil `verifications`. Avant de conclure qu'une date n'existe pas dans le dossier, interroger les deux.",
   schema: schemaActions,
   executer: async (ctx, args) => {
-    const actions = await listerActions(ctx.scope.etablissementId, args, ctx.now);
+    const actions = await listerActions(ctx.db, ctx.scope.etablissementId, args, ctx.now);
     // Les échéances rendues ici sont de TRAITEMENT et non réglementaires (cf.
     // la description), mais les actions naissent en partie d'écarts relevés au
     // calendrier : un calendrier jamais calculé rend une liste courte pour une
     // raison que le lecteur doit connaître.
-    return avecFraicheur(ctx.scope.etablissementId, formaterActions(actions, avecFiltre(args)));
+    return avecFraicheur(ctx.db, ctx.scope.etablissementId, formaterActions(actions, avecFiltre(args)));
   },
 };
 
@@ -584,7 +605,7 @@ const outilEquipements: OutilMcp<SchemaVide> = {
     "Équipements déclarés de l'établissement (extincteurs, installation électrique, blocs de secours, ventilation, ascenseur…) avec leur catégorie, leur localisation, leur date de mise en service, et le nombre de vérifications en retard ou à planifier pour chacun. À appeler pour savoir de quel matériel dispose l'établissement.",
   schema: SCHEMA_VIDE,
   executer: async (ctx) => {
-    const equipements = await listerEquipements(ctx.scope.etablissementId, ctx.now);
+    const equipements = await listerEquipements(ctx.db, ctx.scope.etablissementId, ctx.now);
     // Le parc se déduit de la liste rendue : ni seconde lecture, ni écart
     // possible entre ce qui est listé et ce que la phrase affirme.
     const inventaire = inventaireDe(parcDepuis(equipements));
@@ -637,10 +658,11 @@ const schemaVerifications = z.object({
  * La phrase passe AVANT le contenu : un modèle qui tronque lit le début.
  */
 async function avecFraicheur(
+  db: Prisma.TransactionClient,
   etablissementId: string,
   rendu: string,
 ): Promise<string> {
-  const phrase = phraseFraicheur(await getFraicheurCalendrier(etablissementId));
+  const phrase = phraseFraicheur(await getFraicheurCalendrier(db, etablissementId));
   return phrase === null ? rendu : `${phrase}\n\n${rendu}`;
 }
 
@@ -656,8 +678,8 @@ type InventaireLu = { parc: FaitParc; manque: ManqueCouverture | null };
  * restent dans `perimetre/couverture.ts` (`couvertureDeLInventaire`) ; ce
  * fichier ne collecte que le parc, à la portée du jeton.
  */
-async function lireInventaire(etablissementId: string): Promise<InventaireLu> {
-  return inventaireDe(await getParcEquipements(etablissementId));
+async function lireInventaire(db: Prisma.TransactionClient, etablissementId: string): Promise<InventaireLu> {
+  return inventaireDe(await getParcEquipements(db, etablissementId));
 }
 
 function inventaireDe(parc: FaitParc): InventaireLu {
@@ -696,10 +718,11 @@ const outilVerifications: OutilMcp<typeof schemaVerifications> = {
   schema: schemaVerifications,
   executer: async (ctx, args) => {
     const [verifs, inventaire] = await Promise.all([
-      listerVerifications(ctx.scope.etablissementId, args, ctx.now),
-      lireInventaire(ctx.scope.etablissementId),
+      listerVerifications(ctx.db, ctx.scope.etablissementId, args, ctx.now),
+      lireInventaire(ctx.db, ctx.scope.etablissementId),
     ]);
     return avecFraicheur(
+      ctx.db,
       ctx.scope.etablissementId,
       avecInventaire(inventaire, formaterVerifications(verifs, avecFiltre(args))),
     );
@@ -745,7 +768,7 @@ function avecEtablissement<S extends z.ZodTypeAny>(
       // vide — « aucun équipement déclaré », « aucun DUERP ouvert » —, un fait
       // faux dit comme un fait (relecture du 2026-09-26). L'outil n'est plus
       // exécuté.
-      const nom = await getNomEtablissement(ctx.scope.etablissementId);
+      const nom = await getNomEtablissement(ctx.db, ctx.scope.etablissementId);
       // ~~Rendu comme un texte ordinaire~~ (audit du 2026-09-27) : rien ne
       // le distinguait d'une réponse réussie. C'est le cas d'un
       // `MCP_ETABLISSEMENT_ID` qui désigne un établissement supprimé — une

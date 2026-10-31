@@ -118,7 +118,8 @@ export function etablitSaPorteeLocale(
 //
 // Un module qui n'importe pas le client Prisma brut ne peut lire ou écrire que
 // par le client borné : `portee/imports.test.ts` interdit toute nouvelle porte
-// vers `@/lib/prisma`, `@/lib/mcp/prisma`, `@/lib/mcp/db` et la valeur
+// vers `@/lib/prisma`, `@/lib/mcp/prisma` (~~`@/lib/mcp/db`~~ [2026-10-31 :
+// il ne rend plus que le client borné]) et la valeur
 // `PrismaClient` hors des modules nommés et de la liste À MIGRER. Le client
 // borné ajoute la borne au compte à chaque opération : le prédicat écrit à la
 // main (`etablissement: { entreprise: { userId } }`) y fait une seconde
@@ -143,8 +144,8 @@ export function etablitSaPorteeLocale(
 
 const RACINE_SRC = () => join(process.cwd(), "src");
 
-/** Les trois portes du client brut — les mêmes que `portee/imports.test.ts`. */
-const PORTES_BRUTES = ["src/lib/prisma", "src/lib/mcp/prisma", "src/lib/mcp/db"];
+/** Les portes du client brut — les mêmes que `portee/imports.test.ts`. */
+const PORTES_BRUTES = ["src/lib/prisma", "src/lib/mcp/prisma"];
 /**
  * Le seul module qui détient le client brut pour n'en rendre que des clients
  * bornés : la fabrique (`clientBorne`). Toute fonction qui appelle

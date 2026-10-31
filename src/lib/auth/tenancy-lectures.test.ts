@@ -116,32 +116,6 @@ const EXEMPTIONS = new Map<string, Exemption>([
         "champs publiables et `null` si le registre n'est pas publié.",
     },
   ],
-  ...(
-    [
-      "getFraicheurCalendrier",
-      "getFicheEtablissement",
-      "getEtatDuerp",
-      "listerActions",
-      "listerEquipements",
-      "listerVerifications",
-      "getNomEtablissement",
-      // 2026-10-14 : entrée par `lot/mcp-inventaire`, même garde — `where:
-      // { etablissementId }`.
-      "getParcEquipements",
-    ] as const
-  ).map(
-    (nom) =>
-      [
-        `mcp/queries.ts:${nom}`,
-        {
-          garde: "etablissementId",
-          raison:
-            "Serveur MCP, hors runtime Next (pas de session) : la portée est " +
-            "l'`etablissementId` tiré du jeton ou de la clé par la route, et " +
-            "chaque `where` le porte (en-tête de `mcp/queries.ts`).",
-        },
-      ] as const,
-  ),
   [
     "lib/auth/actions.ts:signOutAction",
     { garde: "auth.api.signOut", raison: "Déconnexion : ne lit aucune donnée de dossier." },
@@ -174,7 +148,11 @@ const EXEMPTIONS = new Map<string, Exemption>([
 // nommé `verification-publique.ts`, qu'elle ne relit pas (sa lecture brute y
 // est tenue par `USAGES` d'`imports.test.ts`) ; `listSignatures` porte
 // désormais l'établissement dans sa requête.
-const PLAFOND_EXEMPTIONS = 11;
+// ~~11~~ → 3 le 2026-10-31 (isolation, MCP) : les huit lectures de
+// `mcp/queries.ts` reçoivent le client borné au compte propriétaire
+// (`mcp/db.ts`) et gardent leur `where: { etablissementId }` — bornées par
+// construction, elles n'ont plus d'exemption.
+const PLAFOND_EXEMPTIONS = 3;
 
 const RACINE = join(process.cwd(), "src/lib");
 const SRC = join(process.cwd(), "src");
@@ -350,7 +328,11 @@ describe("les lectures exportées et les server actions qui ne font que lire", (
     expect(borneeParConstruction(lib("rapports/queries.ts"), "getRapport", LECTURE)).toBe(false);
     const exposees = fonctionsExposees();
     expect(exposees).toContain("lib/calendrier/passe.ts:lireEntrees");
-    expect(exposees).toContain("lib/etablissements/marques-a-confirmer.ts:marquesAConfirmerDuDossier");
+    // [2026-10-31] `marquesAConfirmerDuDossier` n'est plus exposée : son seul
+    // appelant au client brut était le MCP, qui passe le client borné. Les
+    // lectures MCP elles-mêmes sont bornées par construction.
+    expect(exposees).not.toContain("lib/etablissements/marques-a-confirmer.ts:marquesAConfirmerDuDossier");
+    expect(borneeParConstruction(lib("mcp/queries.ts"), "getEtatDuerp", LECTURE)).toBe(true);
     expect(exposees).not.toContain("lib/controle/queries.ts:versionsDuDuerpDuDossier");
   });
 });
