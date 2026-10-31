@@ -11,7 +11,7 @@
 
 import { AsyncLocalStorage } from "node:async_hooks";
 import { Prisma } from "@prisma/client";
-import { CORRESPONDANCE, type Classement } from "./correspondance";
+import { CORRESPONDANCE, IDENTITES_SCALAIRES, type Classement } from "./correspondance";
 
 /** La portée d'un client borné : un compte (ADR-051, « Accès sans session »). */
 export type Portee = { type: "compte"; userId: string };
@@ -69,6 +69,29 @@ const RELATIONS = new Map<string, Relation[]>(
       }),
   ]),
 );
+
+// Chaque clé d'identité scalaire est une colonne du modèle, et la clé d'aucune
+// relation : une relation la borne déjà, l'entrée serait un doublon trompeur.
+for (const [nom, cles] of Object.entries(IDENTITES_SCALAIRES)) {
+  const m = Prisma.dmmf.datamodel.models.find((x) => x.name === nom);
+  for (const cle of cles ?? []) {
+    const champ = m?.fields.find((f) => f.name === cle);
+    if (!champ || champ.kind !== "scalar")
+      throw new ErreurPortee(`${nom}.${cle} : clé d'identité scalaire introuvable`);
+    if (m!.fields.some((f) => f.relationFromFields?.includes(cle)))
+      throw new ErreurPortee(`${nom}.${cle} : clé d'une relation, à retirer d'IDENTITES_SCALAIRES`);
+  }
+}
+
+/** Une clé d'identité scalaire écrite : l'utilisateur du compte, ou `null`. */
+function identitesScalaires(nom: string, data: Objet, portee: Portee): void {
+  for (const cle of IDENTITES_SCALAIRES[nom as Prisma.ModelName] ?? []) {
+    if (!(cle in data) || data[cle] === undefined) continue;
+    const v = valeurScalaire(data[cle]);
+    if (v !== null && v !== portee.userId) throw new ErreurPortee(`${nom}.${cle} : utilisateur d'un autre compte`);
+    data[cle] = v;
+  }
+}
 
 function relations(nom: string): Relation[] {
   const r = RELATIONS.get(nom);
@@ -156,6 +179,7 @@ export function reecrireDonnees(nom: string, data: unknown, portee: Portee, crea
   if (!estObjet(data)) throw new ErreurPortee(`données inattendues pour ${nom}`);
   const d: Objet = { ...data };
   racineDe(nom, d, portee, creation);
+  identitesScalaires(nom, d, portee);
 
   for (const r of relations(nom)) {
     const parCle = r.cle !== undefined && r.cle in d;
@@ -231,8 +255,15 @@ function reecrireImbrique(nom: string, r: Relation, n: Objet, portee: Portee): O
  * cc), et la lecture imbriquée n'est pas bornée. À toute profondeur, `_count`
  * compris.
  */
-function verifierLecture(nom: string, args: unknown): void {
+function verifierLecture(nom: string, args: unknown, imbrique = false): void {
   if (!estObjet(args)) return;
+  // `cursor` n'est employé nulle part, à aucun niveau : refusé plutôt que raisonné.
+  if (imbrique && "cursor" in args) throw new ErreurPortee(`${nom} : cursor imbriqué non servi`);
+  // Un filtre ou un tri traverse une relation comme un `include` : vers un
+  // modèle hors compte ou l'identité, il en ferait un oracle (seconde
+  // lecture du 2026-10-31).
+  verifierFiltre(nom, args.where);
+  verifierFiltre(nom, args.orderBy);
   for (const cleArg of ["include", "select"] as const) {
     const sel = args[cleArg];
     if (!estObjet(sel)) continue;
@@ -241,14 +272,40 @@ function verifierLecture(nom: string, args: unknown): void {
       if (champ === "_count") {
         if (v === true && relations(nom).some((r) => r.liste && r.genre !== "compte"))
           throw new ErreurPortee(`${nom}._count : relation hors compte`);
-        verifierLecture(nom, v);
+        verifierLecture(nom, v, true);
         continue;
       }
       const r = relation(nom, champ);
       if (!r) continue;
       if (r.genre !== "compte") throw new ErreurPortee(`${nom}.${champ} : lecture d'un modèle hors compte`);
-      verifierLecture(r.cible, v);
+      verifierLecture(r.cible, v, true);
     }
+  }
+}
+
+/** Les opérateurs de relation d'un filtre : leur valeur filtre le modèle cible. */
+const OPERATEURS_RELATION = new Set(["some", "every", "none", "is", "isNot"]);
+const LOGIQUES = new Set(["AND", "OR", "NOT"]);
+
+/** Refuse un `where` ou un `orderBy` qui traverse une relation hors du compte. */
+function verifierFiltre(nom: string, f: unknown): void {
+  if (Array.isArray(f)) {
+    for (const x of f) verifierFiltre(nom, x);
+    return;
+  }
+  if (!estObjet(f)) return;
+  for (const [cle, v] of Object.entries(f)) {
+    if (LOGIQUES.has(cle)) {
+      verifierFiltre(nom, v);
+      continue;
+    }
+    const r = relation(nom, cle);
+    if (!r) continue;
+    if (r.genre !== "compte") throw new ErreurPortee(`${nom}.${cle} : filtre ou tri vers un modèle hors compte`);
+    const sous = estObjet(v) ? Object.keys(v) : [];
+    if (sous.length > 0 && sous.every((k) => OPERATEURS_RELATION.has(k)))
+      for (const k of sous) verifierFiltre(r.cible, (v as Objet)[k]);
+    else verifierFiltre(r.cible, v);
   }
 }
 
@@ -341,6 +398,7 @@ export function argumentsBornes(nom: string, operation: string, args: unknown, p
       // compte, ou vers un modèle hors compte, ne s'y borne pas.
       const data: Objet = estObjet(a.data) ? { ...a.data } : {};
       racineDe(nom, data, portee, false);
+      identitesScalaires(nom, data, portee);
       for (const r of relations(nom)) {
         // La racine est vérifiée par `racineDe` ; toute autre clé est refusée,
         // y compris une seconde clé d'un modèle racine.
@@ -356,6 +414,7 @@ export function argumentsBornes(nom: string, operation: string, args: unknown, p
         if (!estObjet(l)) throw new ErreurPortee(`${nom}.createMany : ligne inattendue`);
         const ligne = { ...l };
         racineDe(nom, ligne, portee, true);
+        identitesScalaires(nom, ligne, portee);
         for (const r of relations(nom)) {
           if (r.cle && r.genre !== "compte" && ligne[r.cle] != null && !estLaRacine(nom, r.cle))
             throw new ErreurPortee(`${nom}.createMany : clé ${r.cle} vers un modèle hors compte`);

@@ -275,6 +275,29 @@ fragile plutôt que forcer) :
 - **Tests d'intégration en CI** (`.github/workflows/integration.yml`, service
   PostgreSQL 17) ; le job tombe si un test saute faute de sa variable.
 
+## Revue de code et seconde lecture sécurité du lot 2b (2026-10-31)
+
+- **Filtres et tris** : `verifierLecture` refuse désormais, dans `where` et
+  `orderBy` (opérateurs `some`/`every`/`none`/`is`/`isNot` et `AND`/`OR`/`NOT`
+  compris, à toute profondeur), la traversée d'une relation vers un modèle
+  hors compte ou l'identité — un filtre en ferait un oracle. Sur `main`, aucune
+  relation n'y mène : le refus ne s'éprouve que sur `cc`.
+- **`cursor`** refusé à tout niveau, imbriqué dans un `include`, un `select` ou
+  un `_count` compris.
+- **Clés d'identité sans relation** (`IDENTITES_SCALAIRES`, `main` seulement) :
+  `Signature.userId` et `AccessToken.createdByUserId` sont de simples colonnes
+  sans modèle `User` ; leur valeur écrite ne peut être que l'utilisateur du
+  compte ou `null`. Le code n'écrit déjà que l'un ou l'autre. Sur `cc`, elles
+  deviennent des relations : l'entrée doit partir, et le chargement de
+  `borne.ts` le refuse sinon.
+- **Modèle racine** : seule la clé de racine échappe au contrôle des clés dans
+  `createMany` et `updateMany`, pas une seconde clé.
+- **Garde d'import** : un ré-export (`export { PrismaClient } from`,
+  `export * from`) et `import { default as P }` comptent comme obtenir la
+  valeur `PrismaClient`.
+- **Tests de module** : le client simulé de `vitest.setup.ts` passe chaque
+  appel par le vrai `argumentsBornes` pour ses refus.
+
 ## Accès sans session : jetons, MCP, pages publiques (décision du 2026-10-30)
 
 Décision de la propriétaire, lot 2b : la portée « établissement » du § 2 n'est

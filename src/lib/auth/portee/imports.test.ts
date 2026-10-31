@@ -92,9 +92,14 @@ it.each(Object.entries(NOMMES_ROUAGES))("les rouages %s ne s'importent que des m
 /** Vrai si le texte obtient la VALEUR `PrismaClient` (nommée, défaut, espace de noms, require, import()). */
 const PAQUET = String.raw`["'\`](?:@prisma|\.prisma)\/client(?:\/[^"'\`]*)?["'\`]`;
 function peutFabriquer(texte: string): boolean {
-  const statiques = texte.matchAll(new RegExp(String.raw`import\s+(type\s+)?([^;"'\`]*?)\s*from\s*` + PAQUET, "g"));
+  // `import` comme `export … from` (ré-export, `export *`) ; `default` nommé
+  // entre accolades compte comme l'import par défaut.
+  const statiques = texte.matchAll(
+    new RegExp(String.raw`(?:import|export)\s+(type\s+)?([^;"'\`]*?)\s*from\s*` + PAQUET, "g"),
+  );
   return [...statiques].some(([, type, clause]) =>
-    !type && /^(?:\w|\*)|\bPrismaClient\b/.test(clause.replace(/\btype\s+\w+(?:\s+as\s+\w+)?/g, "")),
+    !type &&
+    /^(?:\w|\*)|\bPrismaClient\b|\bdefault\b/.test(clause.replace(/\btype\s+\w+(?:\s+as\s+\w+)?/g, "")),
   ) || new RegExp(String.raw`(?:require|import)\s*\(\s*` + PAQUET).test(texte);
 }
 
@@ -104,6 +109,11 @@ describe("fabrication d'un client Prisma", () => {
   });
   it.each([
     ['import { Prisma, PrismaClient as P } from "@prisma/client";', true],
+    ['export { PrismaClient } from "@prisma/client";', true],
+    ['export * from "@prisma/client";', true],
+    ['import { default as P } from "@prisma/client";', true],
+    ['export type { PrismaClient } from "@prisma/client";', false],
+    ['export { Prisma } from "@prisma/client";', false],
     ['import * as client from "@prisma/client";', true],
     ['import { PrismaClient } from "@prisma/client/runtime/library";', true],
     ['import { PrismaClient } from ".prisma/client";', true],

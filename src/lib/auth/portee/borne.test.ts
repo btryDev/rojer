@@ -71,6 +71,38 @@ describe("lectures et écritures par where", () => {
   it("cursor est refusé (aucun usage)", () => {
     expect(() => argumentsBornes("Action", "findMany", { cursor: { id: "x" } }, A)).toThrow(/cursor/);
   });
+
+  it("cursor imbriqué dans un include ou un _count : refusé aussi", () => {
+    expect(() =>
+      argumentsBornes("Etablissement", "findFirst", { include: { batiments: { cursor: { id: "x" } } } }, A),
+    ).toThrow(/cursor/);
+    expect(() =>
+      argumentsBornes(
+        "Etablissement",
+        "findFirst",
+        { select: { _count: { select: { batiments: { cursor: { id: "x" } } } } } },
+        A,
+      ),
+    ).toThrow(/cursor/);
+  });
+
+  it("un filtre ou un tri qui traverse des relations du compte passe", () => {
+    expect(() =>
+      argumentsBornes(
+        "Equipement",
+        "findMany",
+        {
+          where: {
+            OR: [{ batiment: { nom: "A" } }, { etablissement: { entreprise: { userId: "u-a" } } }],
+            actions: { some: { statut: "ouverte" } },
+          },
+          orderBy: [{ batiment: { nom: "asc" } }],
+          include: { actions: { where: { verification: { is: { statut: "a_planifier" } } } } },
+        },
+        A,
+      ),
+    ).not.toThrow();
+  });
 });
 
 describe("créations et clés étrangères", () => {
@@ -135,6 +167,12 @@ describe("créations et clés étrangères", () => {
       argumentsBornes("PlanPrevention", "update", { where: { id: "p" }, data: { lignes: { deleteMany: {} } } }, A)
         .data,
     ).toEqual({ lignes: { deleteMany: {} } });
+  });
+
+  it("disconnect imbriqué par identifiant : refusé (seul `disconnect: true` est servi)", () => {
+    expect(() =>
+      argumentsBornes("Action", "update", { where: { id: "a" }, data: { equipement: { disconnect: { id: "q" } } } }, A),
+    ).toThrow(ErreurPortee);
   });
 
   it.each(["set", "connectOrCreate", "createMany", "update", "updateMany", "upsert", "delete"])(
@@ -250,4 +288,27 @@ describe("createMany", () => {
 it("une opération non servie est refusée", () => {
   expect(() => argumentsBornes("Batiment", "aggregateRaw", {}, A)).toThrow(/non servie/);
   expect(() => argumentsBornes("Batiment", "updateManyAndReturn", {}, A)).toThrow(/non servie/);
+});
+
+describe("clés d'identité sans relation (main : Signature.userId, AccessToken.createdByUserId)", () => {
+  it.each([
+    ["Signature", "create", { data: { userId: "u-b" } }],
+    ["Signature", "update", { where: { id: "s" }, data: { userId: { set: "u-b" } } }],
+    ["Signature", "updateMany", { data: { userId: "u-b" } }],
+    ["AccessToken", "create", { data: { createdByUserId: "u-b" } }],
+    ["AccessToken", "upsert", { where: { id: "t" }, create: { createdByUserId: "u-a" }, update: { createdByUserId: "u-b" } }],
+    ["AccessToken", "createMany", { data: [{ createdByUserId: "u-b" }] }],
+  ])("%s.%s vers l'utilisateur d'un autre compte : refusé", (nom, op, args) => {
+    expect(() => argumentsBornes(nom, op, args, A)).toThrow(/autre compte/);
+  });
+
+  it("l'utilisateur du compte ou null : accepté", () => {
+    expect(argumentsBornes("Signature", "update", { where: { id: "s" }, data: { userId: null } }, A).data).toEqual({
+      userId: null,
+    });
+    expect(
+      argumentsBornes("AccessToken", "update", { where: { id: "t" }, data: { createdByUserId: { set: "u-a" } } }, A)
+        .data,
+    ).toEqual({ createdByUserId: "u-a" });
+  });
 });
