@@ -322,7 +322,11 @@ describe("les lectures exportées et les server actions qui ne font que lire", (
     // exposée (`lireX(prisma)` → `lireXDuCompte(prisma, …)`).
     const lib = (f: string) => join(RACINE, f);
     expect(borneeParConstruction(lib("versions/queries.ts"), "getVersion", LECTURE)).toBe(true);
-    expect(borneeParConstruction(lib("rapports/queries.ts"), "getRapport", LECTURE)).toBe(false);
+    // [2026-10-31] `rapports/queries.ts` ne détient plus le client brut (SQL
+    // brut par `db`) : l'exemple d'un module qui le détient est le registre
+    // public d'accessibilité.
+    expect(borneeParConstruction(lib("rapports/queries.ts"), "getRapport", LECTURE)).toBe(true);
+    expect(borneeParConstruction(lib("accessibilite/queries.ts"), "getRegistrePublicParSlug", LECTURE)).toBe(false);
     const exposees = fonctionsExposees();
     expect(exposees).toContain("lib/calendrier/passe.ts:lireEntrees");
     // [2026-10-31] `marquesAConfirmerDuDossier` n'est plus exposée : son seul

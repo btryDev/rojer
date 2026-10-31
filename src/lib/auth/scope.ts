@@ -8,7 +8,7 @@ import { Prisma } from "@prisma/client";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { requireUser } from "./require-user";
-import { getOptionalCompte, requireCompte } from "./compte";
+import { getOptionalCompte, requireCompte, type Db } from "./compte";
 import { etablissementDuRendu } from "@/lib/etablissements/queries";
 import { cache } from "react";
 
@@ -229,21 +229,28 @@ export async function requirePiecePrestataire(pieceId: string, prestataireId: st
  * chez l'appelant. Écrit une fois ici : la garde de tenancy ne lit pas le SQL
  * d'un gabarit, elle reconnaît l'appel de ce helper.
  *
- *   const proprietaire = await requireProprietaireSql('r."etablissementId"');
- *   prisma.$queryRaw`SELECT … FROM "RapportVerification" r WHERE ${proprietaire}`
+ *   const { sql: proprietaire, db } = await requireProprietaireSql('r."etablissementId"');
+ *   db.$queryRaw`SELECT … FROM "RapportVerification" r WHERE ${proprietaire}`
  *
- * [2026-10-27, plan performance, lot 1a.]
+ * Il rend aussi `db`, le client borné au compte (ADR-051) : le module qui écrit
+ * du SQL brut n'importe pas le client brut. L'extension NE borne PAS le SQL
+ * brut — le prédicat `sql` reste la seule borne de la requête.
+ *
+ * [2026-10-27, plan performance, lot 1a ; 2026-10-31, `{ sql, db }`.]
  */
-export async function requireProprietaireSql(colonneEtablissement: string): Promise<Prisma.Sql> {
+export async function requireProprietaireSql(
+  colonneEtablissement: string,
+): Promise<{ sql: Prisma.Sql; db: Db }> {
   if (!/^[A-Za-z_]\w*\."[A-Za-z_]\w*"$/.test(colonneEtablissement)) {
     throw new Error(`Colonne SQL invalide : « ${colonneEtablissement} »`);
   }
-  const user = await requireUser();
-  return Prisma.sql`EXISTS (
+  const { user, db } = await requireCompte();
+  const sql = Prisma.sql`EXISTS (
     SELECT 1 FROM "Etablissement" e_p
     JOIN "Entreprise" en_p ON en_p."id" = e_p."entrepriseId"
     WHERE e_p."id" = ${Prisma.raw(colonneEtablissement)} AND en_p."userId" = ${user.id}::uuid
   )`;
+  return { sql, db };
 }
 
 /**

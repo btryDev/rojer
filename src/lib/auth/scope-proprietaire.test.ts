@@ -155,14 +155,14 @@ describe("les helpers d'appartenance de scope.ts", () => {
 describe("requireProprietaireSql (prédicat d'une requête SQL brute)", () => {
   it("borne la colonne d'établissement à l'utilisateur de la session, typé uuid", async () => {
     h.requireUser.mockResolvedValue({ id: PROPRIETAIRE });
-    const p = await scope.requireProprietaireSql('r."etablissementId"');
+    const { sql: p } = await scope.requireProprietaireSql('r."etablissementId"');
     const sql = p.sql.replace(/\s+/g, " ");
     expect(sql).toContain('e_p."id" = r."etablissementId"');
     expect(sql).toContain('en_p."userId" = ?::uuid');
     expect(p.values).toEqual([PROPRIETAIRE]);
     // Un autre compte : son identifiant, jamais celui du propriétaire.
     h.requireUser.mockResolvedValue({ id: AUTRE });
-    expect((await scope.requireProprietaireSql('r."etablissementId"')).values).toEqual([AUTRE]);
+    expect((await scope.requireProprietaireSql('r."etablissementId"')).sql.values).toEqual([AUTRE]);
   });
 
   it("refuse ce qui ne serait pas une colonne SQL", async () => {

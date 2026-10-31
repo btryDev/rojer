@@ -1,7 +1,6 @@
 import "server-only";
 import { requireCompte } from "@/lib/auth/compte";
 import { cache } from "react";
-import { prisma } from "@/lib/prisma";
 import { ORDRE_RAPPORT_PLUS_RECENT } from "./derniere-realisation";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
@@ -33,10 +32,10 @@ export async function anneesDuRegistre(
   etablissementId: string,
   anneeEnCours: number,
 ): Promise<number[]> {
-  const proprietaire = await requireProprietaireSql('r."etablissementId"');
+  const { sql: proprietaire, db } = await requireProprietaireSql('r."etablissementId"');
   // `dateRapport` est un instant UTC sans fuseau : lu dans le fuseau de
   // référence, comme `composantesCiviles`.
-  const lignes = await prisma.$queryRaw<{ annee: number }[]>`
+  const lignes = await db.$queryRaw<{ annee: number }[]>`
     SELECT DISTINCT EXTRACT(YEAR FROM (r."dateRapport" AT TIME ZONE 'UTC') AT TIME ZONE ${FUSEAU_REFERENCE})::int AS "annee"
     FROM "RapportVerification" r
     WHERE r."etablissementId" = ${etablissementId} AND ${proprietaire}

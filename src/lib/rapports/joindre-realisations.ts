@@ -4,14 +4,14 @@
 // Séparée de `derniere-realisation.ts`, qui reste pur, pour une raison
 // précise : le serveur MCP a son propre client (`lib/mcp/prisma.ts`) et lit ce
 // module-là. S'il importait celui-ci, il chargerait un second client.
-// [2026-10-14, audit Next.js M5 : le MCP lit désormais `dbMcp()`
+// [2026-10-14, audit Next.js M5 : le MCP lit désormais ~~`dbMcp()`~~ [2026-10-31 :
+// le client borné de `clientMcp`]
 // (`lib/mcp/db.ts`) — le client commun dans le processus web, `prismaMcp`
 // dans le seul serveur stdio. La séparation reste juste : en stdio, ce module
 // interrogerait le client commun, qui écrit ses requêtes sur stdout en dev.]
 
 import { cache } from "react";
 import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
 import { requireProprietaireSql } from "@/lib/auth/scope";
 import {
   ORDRE_RAPPORT_PLUS_RECENT,
@@ -78,8 +78,8 @@ async function lireDerniersRapports(
 ): Promise<Map<string, DernierRapport>> {
   // La portée se prouve une fois, sur la ligne ; le rapport porte le même
   // établissement (filtre ci-dessous), donc le même propriétaire.
-  const proprietaire = await requireProprietaireSql('v."etablissementId"');
-  const lignes = await prisma.$queryRaw<
+  const { sql: proprietaire, db } = await requireProprietaireSql('v."etablissementId"');
+  const lignes = await db.$queryRaw<
     { verificationId: string; id: string; dateRapport: Date; resultat: string }[]
   >`
     SELECT v."id" AS "verificationId", d."id", d."dateRapport", d."resultat"

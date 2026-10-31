@@ -1,5 +1,4 @@
 import { requireCompte } from "@/lib/auth/compte";
-import { prisma } from "@/lib/prisma";
 import { cache } from "react";
 import { requireProprietaireSql } from "@/lib/auth/scope";
 import { debutDuJour } from "@/lib/dates";
@@ -92,7 +91,7 @@ export const comptesModulesDuRendu = cache(async function comptesModulesDuRendu(
   debutDuJourMs: number,
 ) {
   // Le même alias `m` dans chaque sous-requête : un seul prédicat.
-  const proprietaire = await requireProprietaireSql('m."etablissementId"');
+  const { sql: proprietaire, db } = await requireProprietaireSql('m."etablissementId"');
   // `dateFin` est un instant UTC sans fuseau ; la borne lui est comparée en
   // UTC explicite, quel que soit le fuseau de la session (revue du lot 1) —
   // comme le faisaient les `count` Prisma remplacés.
@@ -101,7 +100,7 @@ export const comptesModulesDuRendu = cache(async function comptesModulesDuRendu(
   // la portée au compte. « Ouvert » = tout sauf les statuts qui soldent
   // l'opération (`statuts-operations.ts`) : la règle du calendrier.
   const [[comptes], carnet] = await Promise.all([
-    prisma.$queryRaw<
+    db.$queryRaw<
       {
         permisTotal: bigint;
         permisEchus: bigint;

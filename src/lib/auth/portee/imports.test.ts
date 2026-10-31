@@ -18,8 +18,6 @@ const DEPOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 // client borné (lot 2b, MCP) ; la liste À MIGRER est vide depuis le même jour.
 const PORTES_BRUTES = ["src/lib/prisma", "src/lib/mcp/prisma"];
 const FABRIQUES = new Set(["src/lib/prisma.ts", "src/lib/mcp/prisma.ts"]);
-/** SQL brut sous requireProprietaireSql, jusqu'au chantier `{ sql, db }`. */
-const SQL_BRUT = { motif: "SQL brut borné par requireProprietaireSql (ADR-051 § 5)", usages: ["prisma.$queryRaw"] };
 /**
  * Les modules nommés, leur motif et les seuls usages du client brut qu'il
  * couvre : chaque `prisma.…` de leur code (commentaires et chaînes retirés)
@@ -70,9 +68,6 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous" }
     motif: "registre public par son slug, sans session",
     usages: ["prisma.registreAccessibilite.findUnique"],
   },
-  "src/lib/etablissements/modules.ts": SQL_BRUT,
-  "src/lib/rapports/queries.ts": SQL_BRUT,
-  "src/lib/rapports/joindre-realisations.ts": SQL_BRUT,
 };
 /** Cliquet : importeurs du client brut encore à migrer vers requireCompte(). */
 const A_MIGRER = new Set<string>([]);
