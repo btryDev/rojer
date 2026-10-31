@@ -48,11 +48,10 @@ export async function eauChaudeSuivieParLeCalendrier(
   return eauChaudeSuivieDuRendu(db, scope.etablissementId, scope.etablissement.entreprise.userId);
 }
 
-/** Le corps, mémoïsé sur le rendu (clés primitives) : la matrice du tableau
- *  de bord et les échéances du carnet le demandaient chacune (plan
- *  performance, lot 1). Le client borné, un par compte, est une clé stable.
- *  Le compte vient de la portée de l'appelant, comme
- *  avant : `getModulesMatrice` éprouve que le prédicat y est lu. */
+/** Le corps, mémoïsé sur le rendu : la matrice du tableau de bord et les
+ *  échéances du carnet le demandaient chacune (plan performance, lot 1). Clés
+ *  stables, comme au dossier du rendu (`dossier-du-rendu.ts`, en-tête) ;
+ *  `getModulesMatrice` éprouve que client et prédicat y sont lus. */
 const eauChaudeSuivieDuRendu = cache(async function eauChaudeSuivieDuRendu(
   db: Db,
   etablissementId: string,

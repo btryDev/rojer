@@ -120,8 +120,8 @@ export default async function EquipementsPage({
       // repère, aucune écriture (`docs/chantiers-ouverts.md` § 12).
       fraicheurCalendrier(id),
       // 2026-10-15 : les obligations applicables, pour la section
-      // « Équipements de sécurité ». Lecture bornée au compte (prédicat
-      // `entreprise.userId` dans la requête), partagée avec le reste du rendu.
+      // « Équipements de sécurité ». Lecture bornée au compte (le client de la
+      // garde), partagée avec le reste du rendu.
       obligationsApplicablesDuDossier(db, id, user.id),
       // Les contrôles d'ensemble, rangés en tête de leur domaine (points à
       // corriger, lot 2).

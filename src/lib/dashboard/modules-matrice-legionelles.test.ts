@@ -1,5 +1,5 @@
-import { PORTEE_SIMULEE } from "@/test/client-borne-simule";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { PORTEE_SIMULEE } from "@/test/client-borne-simule";
 
 /**
  * Le BRANCHEMENT du silence du carnet dans la matrice du tableau de bord
@@ -62,12 +62,11 @@ describe("getModulesMatrice — le carnet suit le prédicat partagé", () => {
     await getModulesMatrice("etab-1", true);
     // Le client borné de la session (ADR-051) — simulé, il porte sa portée —,
     // puis la portée écrite.
-    expect(suivie).toHaveBeenCalledWith(expect.anything(), {
+    const [db, portee] = suivie.mock.calls[0] as [Record<symbol, unknown>, unknown];
+    expect(db[PORTEE_SIMULEE]).toEqual({ type: "compte", userId: "u1" });
+    expect(portee).toEqual({
       etablissementId: "etab-1",
       etablissement: { entreprise: { userId: "u1" } },
     });
-    const [db] = suivie.mock.calls[0] as [Record<symbol, unknown>];
-    expect(db).not.toBe(prismaMock);
-    expect(db[PORTEE_SIMULEE]).toEqual({ type: "compte", userId: "u1" });
   });
 });

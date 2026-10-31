@@ -10,35 +10,62 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, posix, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { sansCommentairesNiChaines } from "@/lib/auth/tenancy-sonde";
 
 const DEPOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const PORTES_BRUTES = ["src/lib/prisma", "src/lib/mcp/prisma", "src/lib/mcp/db"];
 const FABRIQUES = new Set(["src/lib/prisma.ts", "src/lib/mcp/prisma.ts"]);
-const NOMMES_PRISMA: Record<string, string> = {
-  "src/lib/calendrier/actions.ts":
-    "écritures bornées par etablissementId, clés vérifiées contre une lecture bornée (clesDuPlanDansLaLecture)",
-  "src/lib/auth/portee/client.ts": "fabrique le client borné à partir du client brut",
-  "src/lib/securite/limite-debit.ts": "compteurs techniques, hors de tout compte",
-  "src/lib/signatures/verification-publique.ts": "vérification publique d'une signature, sans session",
-  "src/lib/access-tokens/verify.ts": "recherche d'un jeton par son empreinte, quotas d'OTP",
-  "src/lib/accessibilite/actions.ts": "slugs publics, uniques sur toute la table : seuls les slugs sont lus",
-  "src/lib/accessibilite/queries.ts": "registre public par son slug, sans session",
-  "src/lib/etablissements/modules.ts": "SQL brut borné par requireProprietaireSql (ADR-051 § 5)",
-  "src/lib/rapports/queries.ts": "SQL brut borné par requireProprietaireSql (ADR-051 § 5)",
-  "src/lib/rapports/joindre-realisations.ts": "SQL brut borné par requireProprietaireSql (ADR-051 § 5)",
-};
+/** SQL brut sous requireProprietaireSql, jusqu'au chantier `{ sql, db }`. */
+const SQL_BRUT = { motif: "SQL brut borné par requireProprietaireSql (ADR-051 § 5)", usages: ["prisma.$queryRaw"] };
 /**
- * Un module nommé pour un usage précis n'a droit qu'à lui : chaque `prisma.…`
- * de son code (commentaires retirés) doit être l'un de ceux-ci. Sans quoi le
- * motif couvrirait le fichier entier, et une lecture de modèle ajoutée demain
- * passerait sans borne (revue de code du 2026-10-31).
+ * Les modules nommés, leur motif et les seuls usages du client brut qu'il
+ * couvre : chaque `prisma.…` de leur code (commentaires et chaînes retirés)
+ * doit en être un. Sans quoi le motif couvrirait le fichier entier, et une
+ * lecture de modèle ajoutée demain passerait sans borne (revue du
+ * 2026-10-31). La fabrique du client borné, seule, a droit au client entier.
  */
-const USAGES_ADMIS: Record<string, string[]> = {
-  "src/lib/accessibilite/actions.ts": ["prisma.registreAccessibilite.findMany"],
-  "src/lib/accessibilite/queries.ts": ["prisma.registreAccessibilite.findUnique"],
-  "src/lib/etablissements/modules.ts": ["prisma.$queryRaw"],
-  "src/lib/rapports/queries.ts": ["prisma.$queryRaw"],
-  "src/lib/rapports/joindre-realisations.ts": ["prisma.$queryRaw"],
+const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous" }> = {
+  "src/lib/auth/portee/client.ts": { motif: "fabrique le client borné à partir du client brut", usages: "tous" },
+  "src/lib/calendrier/actions.ts": {
+    motif: "écritures bornées par etablissementId, clés vérifiées contre une lecture bornée (clesDuPlanDansLaLecture)",
+    usages: [
+      "prisma.$transaction",
+      "prisma.etablissement.update",
+      "prisma.verification.createMany",
+      "prisma.verification.deleteMany",
+      "prisma.verification.updateMany",
+    ],
+  },
+  "src/lib/securite/limite-debit.ts": {
+    motif: "compteurs techniques, hors de tout compte",
+    usages: ["prisma.$executeRaw", "prisma.$queryRaw"],
+  },
+  "src/lib/signatures/verification-publique.ts": {
+    motif: "vérification publique d'une signature, sans session",
+    usages: ["prisma.signature.findUnique"],
+  },
+  "src/lib/access-tokens/verify.ts": {
+    motif: "recherche d'un jeton par son empreinte, quotas d'OTP",
+    usages: [
+      "prisma.accessToken.findMany",
+      "prisma.accessToken.findUnique",
+      "prisma.accessToken.updateMany",
+      "prisma.quotaEnvoiOtp.createMany",
+      "prisma.quotaEnvoiOtp.findUnique",
+      "prisma.quotaEnvoiOtp.updateMany",
+    ],
+  },
+  "src/lib/accessibilite/actions.ts": {
+    motif: "slugs publics, uniques sur toute la table : seuls les slugs sont lus",
+    usages: ["prisma.registreAccessibilite.findMany"],
+  },
+  "src/lib/accessibilite/queries.ts": {
+    motif: "registre public par son slug, sans session",
+    usages: ["prisma.registreAccessibilite.findUnique"],
+  },
+  "src/lib/etablissements/modules.ts": SQL_BRUT,
+  "src/lib/rapports/queries.ts": SQL_BRUT,
+  "src/lib/rapports/joindre-realisations.ts": SQL_BRUT,
 };
 /** Cliquet : importeurs du client brut encore à migrer vers requireCompte(). */
 const A_MIGRER = new Set([
@@ -91,14 +118,14 @@ describe("client Prisma brut", () => {
     expect(brut.length).toBeGreaterThan(0);
     expect(brut.filter((f) => !(f in NOMMES_PRISMA) && !A_MIGRER.has(f))).toEqual([]);
   });
-  it.each(Object.entries(USAGES_ADMIS))("%s n'emploie le client brut que pour son motif", (f, admis) => {
-    expect(f in NOMMES_PRISMA).toBe(true);
-    const code = TEXTES.get(f)!.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
-    const usages = [...code.matchAll(/\bprisma\s*\.\s*([$\w]+)(?:\s*\.\s*(\w+))?/g)].map(
+  it.each(Object.entries(NOMMES_PRISMA))("%s n'emploie le client brut que pour son motif", (f, { usages }) => {
+    if (usages === "tous") return;
+    const code = sansCommentairesNiChaines(TEXTES.get(f)!);
+    const employes = [...code.matchAll(/\bprisma\s*\.\s*([$\w]+)(?:\s*\.\s*(\w+))?/g)].map(
       ([, a, b]) => (a.startsWith("$") || !b ? `prisma.${a}` : `prisma.${a}.${b}`),
     );
-    expect(usages.length).toBeGreaterThan(0);
-    expect(usages.filter((u) => !admis.includes(u))).toEqual([]);
+    expect(employes.length).toBeGreaterThan(0);
+    expect(employes.filter((u) => !usages.includes(u))).toEqual([]);
   });
   it("un module migré sort de la liste À MIGRER", () => {
     expect([...A_MIGRER].filter((f) => !brut.includes(f))).toEqual([]);
