@@ -23,6 +23,9 @@ export type PrescriptionActionState =
   | { status: "error"; message: string; fieldErrors?: Record<string, string[]> }
   | { status: "success"; prescriptionId: string };
 
+/** Prescription étrangère ou disparue : le même message partout, sans indice d'existence. */
+const INTROUVABLE: PrescriptionActionState = { status: "error", message: "Prescription introuvable." };
+
 function normaliser(fd: FormData): Record<string, unknown> {
   const raw = Object.fromEntries(fd);
   return {
@@ -131,7 +134,7 @@ export async function leverPrescription(
     select: { dateDocument: true },
   });
   if (!existante) {
-    return { status: "error", message: "Prescription introuvable." };
+    return INTROUVABLE;
   }
 
   // Une levée antérieure à l'acte lui-même n'a pas de sens et produirait une
@@ -165,15 +168,19 @@ export async function leverPrescription(
 export async function reactiverPrescription(
   etablissementId: string,
   prescriptionId: string,
-): Promise<void> {
+): Promise<PrescriptionActionState> {
   const { db } = await assertEtablissementDuCompte(etablissementId);
-  await db.prescriptionParticuliere.update({
+  // Écriture conditionnelle bornée : introuvable → message, sans course
+  // (ADR-051, « Erreurs : 404, jamais 500 »).
+  const { count } = await db.prescriptionParticuliere.updateMany({
     where: { id: prescriptionId, etablissementId },
     data: { dateFin: null, actif: true },
   });
+  if (count === 0) return INTROUVABLE;
   await regenererApresMutation(etablissementId, "prescriptions");
   revalidatePath(`/etablissements/${etablissementId}/prescriptions`);
   revalidatePath(`/etablissements/${etablissementId}/calendrier`);
+  return { status: "success", prescriptionId };
 }
 
 /**
@@ -211,7 +218,7 @@ export async function supprimerPrescription(
     },
   });
   if (!existante) {
-    return { status: "error", message: "Prescription introuvable." };
+    return INTROUVABLE;
   }
 
   // Les lignes VISÉES et les preuves faites SOUS l'acte (`preuves.ts`), plus

@@ -2,6 +2,7 @@
 
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
+import { notFound } from "next/navigation";
 import type { Db } from "@/lib/auth/compte";
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { resoudreBatimentOptionnel } from "@/lib/batiments/queries";
@@ -207,7 +208,8 @@ export async function supprimerPointReleve(
     where: { id: pointId, carnet: { etablissementId } },
     data: { actif: false },
   });
-  if (count === 0) throw new Error("Point de relevé introuvable");
+  // Étranger ou disparu : introuvable (404), jamais une erreur serveur.
+  if (count === 0) notFound();
   revaliderCarnet(etablissementId);
 }
 
@@ -308,7 +310,7 @@ export async function supprimerReleve(
   const { count } = await db.releveTemperature.deleteMany({
     where: { id: releveId, pointReleve: { carnet: { etablissementId } } },
   });
-  if (count === 0) throw new Error("Relevé introuvable");
+  if (count === 0) notFound();
   revaliderCarnet(etablissementId);
 }
 
@@ -463,7 +465,7 @@ export async function supprimerAnalyseLegionelle(
 ): Promise<void> {
   const { db } = await assertEtablissementDuCompte(etablissementId);
   const analyse = await analyseDansLeCarnet(db, etablissementId, analyseId);
-  if (!analyse) throw new Error("Analyse introuvable");
+  if (!analyse) notFound();
   await db.analyseLegionelle.delete({ where: { id: analyse.id } });
   if (analyse.rapportCle) {
     await libererFichiers([analyse.rapportCle], "carnet-sanitaire/suppression");
