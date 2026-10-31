@@ -380,12 +380,15 @@ describe("supprimerPrescription", () => {
 // une erreur serveur ; l'écriture est bornée à l'établissement (relevé du
 // 2026-10-31).
 describe("reactiverPrescription : identifiant étranger ou disparu", () => {
-  it("message « introuvable », sans erreur serveur", async () => {
+  it("message « introuvable », sans erreur serveur ni régénération du calendrier", async () => {
     h.etat.prescription = null;
+    const { regenererApresMutation } = await import("@/lib/calendrier/regeneration-sure");
+    vi.mocked(regenererApresMutation).mockClear();
     expect(await reactiverPrescription("e1", "presc_d_un_autre")).toEqual({
       status: "error",
       message: "Prescription introuvable.",
     });
+    expect(regenererApresMutation).not.toHaveBeenCalled();
   });
 
   it("l'écriture porte l'établissement, et la sienne se réactive", async () => {
