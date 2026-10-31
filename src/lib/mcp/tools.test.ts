@@ -58,7 +58,7 @@ vi.mock("@/lib/referentiels/conformite/mention-de-ligne", () => ({
 
 import { ErreurOutilMcp, OUTILS_MCP, type ContexteMcp } from "./tools";
 import { SCEAU_CALENDRIER } from "@/lib/calendrier/version-moteur";
-import { getEtatDuerp, getParcEquipements, listerActions } from "./queries";
+import { getEtatDuerp, getFraicheurCalendrier, getParcEquipements, listerActions } from "./queries";
 import { couvertureDeLInventaire } from "@/lib/perimetre/couverture";
 import { PHRASE_SANS_REPONSE } from "@/lib/matching/sans-reponse";
 import { QUESTION_MATIERES } from "@/lib/etablissements/questions";
@@ -150,6 +150,13 @@ describe("le serveur dit quand le calendrier n'est pas à jour", () => {
 
     expect(texte).toContain("n'a pas encore été calculé");
     expect(texte).toContain("ne veut pas dire qu'il n'y en a pas");
+  });
+
+  it("tenancy : les lignes comptées pour le repère sont celles de l'établissement servi", async () => {
+    prismaMock.etablissement.findUnique.mockResolvedValue(dossier(null));
+    prismaMock.verification.count.mockResolvedValue(0);
+    await getFraicheurCalendrier(await db(), ETABLISSEMENT_ID);
+    expect(prismaMock.verification.count).toHaveBeenCalledWith({ where: { etablissementId: ETABLISSEMENT_ID } });
   });
 
   it("ne dit rien quand le calendrier est à jour", async () => {
