@@ -133,6 +133,43 @@ describe("client Prisma brut", () => {
   });
 });
 
+/**
+ * Le SQL brut (`$queryRaw`, `$executeRaw`) n'est pas borné par l'extension du
+ * client borné (ADR-051 § 5) : chaque module qui en écrit est nommé, avec ce
+ * qui borne SA requête. Une lecture bornée au propriétaire passe par
+ * `requireLectureSqlProprietaire` (`auth/scope.ts`), qui pose le prédicat et
+ * exécute — elle n'a pas à être ici (revue de code du 2026-10-31).
+ */
+const SQL_BRUT_NOMMES: Record<string, string> = {
+  "src/lib/auth/scope.ts": "requireLectureSqlProprietaire : pose le prédicat propriétaire et exécute",
+  "src/lib/securite/limite-debit.ts": "compteurs techniques, hors de tout compte",
+  "src/lib/signatures/verrou-contenu.ts": "verrou FOR UPDATE de la ligne, borné à l'établissement",
+  "src/lib/rapports/actions.ts": "verrou FOR UPDATE d'une ligne déjà lue par le client borné",
+  "src/lib/salaries/suppression.ts": "verrou FOR UPDATE borné au salarié et à l'établissement gardés",
+  "src/lib/calendrier/recalcul-ligne.ts": "verrou FOR UPDATE d'une ligne déjà lue par le client borné",
+  "src/lib/entreprises/cycle-de-vie.ts": "verrou FOR UPDATE d'une entreprise déjà gardée",
+  "src/lib/registre/actions.ts": "UPDATE jsonb borné à l'établissement gardé",
+  "src/lib/duerps/ecrire-reponse-fermee.ts": "UPDATE jsonb d'un DUERP déjà gardé",
+  "src/lib/calendrier/faux-prisma.ts": "faux client des tests",
+};
+const SQL_BRUT = /\.\$(?:queryRaw|executeRaw)(Unsafe)?\b/g;
+describe("SQL brut", () => {
+  const ecrivent = [...TEXTES]
+    .filter(([, t]) => SQL_BRUT.test(sansCommentairesNiChaines(t)) && ((SQL_BRUT.lastIndex = 0), true))
+    .map(([f]) => f)
+    .sort();
+  it("seuls les modules nommés en écrivent", () => {
+    expect(ecrivent.filter((f) => !(f in SQL_BRUT_NOMMES))).toEqual([]);
+  });
+  it("un module nommé qui n'en écrit plus sort de la liste", () => {
+    expect(Object.keys(SQL_BRUT_NOMMES).filter((f) => !ecrivent.includes(f))).toEqual([]);
+  });
+  it("jamais de forme Unsafe (chaîne SQL non paramétrée)", () => {
+    const unsafe = [...TEXTES].filter(([, t]) => /\.\$(?:queryRaw|executeRaw)Unsafe\b/.test(sansCommentairesNiChaines(t))).map(([f]) => f);
+    expect(unsafe).toEqual([]);
+  });
+});
+
 it.each(Object.entries(NOMMES_ROUAGES))("les rouages %s ne s'importent que des modules nommés", (c, nommes) => {
   expect(importeurs(c).filter((f) => !(f in nommes))).toEqual([]);
 });

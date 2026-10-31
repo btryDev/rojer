@@ -12,7 +12,7 @@
 
 import { cache } from "react";
 import { Prisma } from "@prisma/client";
-import { requireProprietaireSql } from "@/lib/auth/scope";
+import { requireLectureSqlProprietaire } from "@/lib/auth/scope";
 import {
   ORDRE_RAPPORT_PLUS_RECENT,
   type DerniereRealisation,
@@ -45,7 +45,7 @@ export type DernierRapport = { id: string } & DerniereRealisation;
  * ou tout résultat —, une ligne par échéance, calculé par la base
  * (~~`DISTINCT ON`~~ [2026-10-28 : une descente d'index par ligne, voir
  * plus bas]). La portée au propriétaire est DANS la requête
- * (`requireProprietaireSql`) : elle ne compte pas sur ses appelants.
+ * (`requireLectureSqlProprietaire`) : elle ne compte pas sur ses appelants.
  *
  * [2026-10-27, plan performance, lot 1a] Remplace la lecture de TOUS les
  * rapports réalisés départagés en mémoire : sur dix ans d'historique, 290
@@ -78,10 +78,9 @@ async function lireDerniersRapports(
 ): Promise<Map<string, DernierRapport>> {
   // La portée se prouve une fois, sur la ligne ; le rapport porte le même
   // établissement (filtre ci-dessous), donc le même propriétaire.
-  const { sql: proprietaire, db } = await requireProprietaireSql('v."etablissementId"');
-  const lignes = await db.$queryRaw<
-    { verificationId: string; id: string; dateRapport: Date; resultat: string }[]
-  >`
+  const lignes = await requireLectureSqlProprietaire<
+    { verificationId: string; id: string; dateRapport: Date; resultat: string }
+  >('v."etablissementId"', (proprietaire) => Prisma.sql`
     SELECT v."id" AS "verificationId", d."id", d."dateRapport", d."resultat"
     FROM "Verification" v
     CROSS JOIN LATERAL (
@@ -95,7 +94,7 @@ async function lireDerniersRapports(
     ) d
     WHERE v."etablissementId" = ${etablissementId}
       AND ${proprietaire}
-  `;
+  `);
   return new Map(
     lignes.map((l) => [
       l.verificationId,

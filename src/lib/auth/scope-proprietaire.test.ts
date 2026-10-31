@@ -33,7 +33,8 @@ const AUTRE = "user-b";
 
 const h = vi.hoisted(() => {
   type Where = Record<string, unknown>;
-  const etat = { proprietaire: "user-a", appels: [] as { modele: string; where: Where }[] };
+  const etat = {
+    requetesSql: [] as { sql: string; values: unknown[] }[], proprietaire: "user-a", appels: [] as { modele: string; where: Where }[] };
 
   /**
    * Toute ligne de la base appartient au propriétaire : chaque relation, à
@@ -70,6 +71,12 @@ const h = vi.hoisted(() => {
     {},
     {
       get(_, modele: string) {
+        if (modele === "$queryRaw") {
+          return async (requete: { sql: string; values: unknown[] }) => {
+            etat.requetesSql.push(requete);
+            return [];
+          };
+        }
         const lire = async (args: { where?: Where } = {}) => {
           const where = args.where ?? {};
           etat.appels.push({ modele, where });
@@ -92,6 +99,7 @@ vi.mock("./require-user", () => ({
 vi.mock("next/headers", () => ({ cookies: h.cookies }));
 
 import * as scope from "./scope";
+import { Prisma } from "@prisma/client";
 
 function estNotFound(e: unknown): boolean {
   const digest = (e as { digest?: unknown }).digest;
@@ -101,12 +109,13 @@ function estNotFound(e: unknown): boolean {
 const HELPERS = helpersDAppartenance();
 /**
  * Les helpers qui chargent UNE LIGNE par son identifiant — tous, sauf
- * `requireProprietaireSql`, qui ne charge rien : il fabrique le prédicat
+ * `requireLectureSqlProprietaire`, qui ne charge pas une ligne : il exécute
+ * une lecture SQL brute sous le prédicat
  * propriétaire d'une requête SQL brute, et s'éprouve plus bas sur ce qu'il
  * fabrique. Le retirer d'ici par son nom, et lui seul, garde le relevé
  * automatique pour tout helper ajouté demain.
  */
-const HELPERS_DE_LIGNE = HELPERS.filter((nom) => nom !== "requireProprietaireSql");
+const HELPERS_DE_LIGNE = HELPERS.filter((nom) => nom !== "requireLectureSqlProprietaire");
 
 function helperNomme(nom: string): (id: string) => Promise<unknown> {
   return (scope as unknown as Record<string, (id: string) => Promise<unknown>>)[nom];
@@ -152,22 +161,36 @@ describe("les helpers d'appartenance de scope.ts", () => {
   });
 });
 
-describe("requireProprietaireSql (prédicat d'une requête SQL brute)", () => {
-  it("borne la colonne d'établissement à l'utilisateur de la session, typé uuid", async () => {
+describe("requireLectureSqlProprietaire (lecture SQL brute bornée au propriétaire)", () => {
+  it("pose le prédicat de l'utilisateur de la session, typé uuid, et exécute", async () => {
+    h.etat.requetesSql.length = 0;
     h.requireUser.mockResolvedValue({ id: PROPRIETAIRE });
-    const { sql: p } = await scope.requireProprietaireSql('r."etablissementId"');
-    const sql = p.sql.replace(/\s+/g, " ");
+    await scope.requireLectureSqlProprietaire('r."etablissementId"', (p) => Prisma.sql`SELECT 1 FROM "RapportVerification" r WHERE ${p}`);
+    const [requete] = h.etat.requetesSql;
+    const sql = requete.sql.replace(/\s+/g, " ");
     expect(sql).toContain('e_p."id" = r."etablissementId"');
     expect(sql).toContain('en_p."userId" = ?::uuid');
-    expect(p.values).toEqual([PROPRIETAIRE]);
+    expect(requete.values).toEqual([PROPRIETAIRE]);
     // Un autre compte : son identifiant, jamais celui du propriétaire.
     h.requireUser.mockResolvedValue({ id: AUTRE });
-    expect((await scope.requireProprietaireSql('r."etablissementId"')).sql.values).toEqual([AUTRE]);
+    await scope.requireLectureSqlProprietaire('r."etablissementId"', (p) => Prisma.sql`SELECT 1 WHERE ${p}`);
+    expect(h.etat.requetesSql[1].values).toEqual([AUTRE]);
+  });
+
+  it("refuse, sans rien exécuter, un gabarit qui n'interpole pas le prédicat", async () => {
+    h.etat.requetesSql.length = 0;
+    h.requireUser.mockResolvedValue({ id: PROPRIETAIRE });
+    await expect(
+      scope.requireLectureSqlProprietaire('r."etablissementId"', () => Prisma.sql`SELECT 1 FROM "RapportVerification" r WHERE r."id" = ${"x"}`),
+    ).rejects.toThrow(/sans le prédicat propriétaire/);
+    expect(h.etat.requetesSql).toEqual([]);
   });
 
   it("refuse ce qui ne serait pas une colonne SQL", async () => {
     h.requireUser.mockResolvedValue({ id: PROPRIETAIRE });
-    await expect(scope.requireProprietaireSql('r."id" OR 1=1 --')).rejects.toThrow(/Colonne SQL invalide/);
+    await expect(
+      scope.requireLectureSqlProprietaire('r."id" OR 1=1 --', (p) => Prisma.sql`SELECT 1 WHERE ${p}`),
+    ).rejects.toThrow(/Colonne SQL invalide/);
   });
 });
 
