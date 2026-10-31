@@ -153,8 +153,12 @@ Corrigé avant la PR, chaque fois éprouvé en cassant la correction :
   cache et client) — l'identifiant est lu une seule fois.
 
 Reste ouvert, à traiter au lot 2b :
-- **portée « établissement »** (jeton prestataire, MCP par clé) : à concevoir
-  avec des `include`/`select` bornés eux aussi, ou un client qui les refuse ;
+- ~~**portée « établissement »** (jeton prestataire, MCP par clé) : à concevoir
+  avec des `include`/`select` bornés eux aussi, ou un client qui les refuse ;~~
+  [2026-10-30 : décision de la propriétaire — jeton et MCP par clé reçoivent le
+  client borné au **compte propriétaire** de l'établissement ; la portée
+  « établissement » reste une amélioration possible. ADR-051, « Accès sans
+  session ».]
 - **oracle d'existence par unicité** : un `upsert`/`connectOrCreate` qui laisse
   l'appelant fixer un identifiant ou un champ unique global (slug) révèle par
   P2002 qu'une ligne existe ailleurs — à vérifier à chaque module migré ;
@@ -191,6 +195,11 @@ lot 2 entre dans `require-user.ts` par `main`, Better Auth le modifie sur
   présence textuelle du prédicat. **Proposition : ne rien retirer avant le
   lot 5**, quand l'extension aura été cassée et aura fait tomber ses tests ;
   la décision viendra alors, chiffrée.
+  [2026-10-30, audit (grille de seconde lecture, point 5) : retirer le
+  prédicat à chaque module migré. Fait au lot 2b-f : les gardes reconnaissent
+  un module sans client brut comme borné par construction
+  (`borneeParConstruction`) ; le prédicat reste là où la fonction atteint un
+  module encore au brut, ou reçoit un client qu'un tel module peut lui passer.]
 
 ## 8. Sources
 

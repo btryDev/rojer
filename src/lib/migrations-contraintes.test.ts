@@ -473,14 +473,25 @@ describe("le bâtiment est un lieu, jamais un régime (ADR-019)", () => {
       join(RACINE, "src", "lib", "batiments", "actions.ts"),
       "utf8",
     );
-    for (const table of ["equipement", "pointReleve", "permisFeu", "planPrevention"]) {
-      expect(actions, `${table} n'est pas déplacé avant la suppression`).toContain(
-        `tx.${table}.updateMany(deplacement)`,
+    // Depuis le lot 2b de l'ADR-051 (2026-10-30), le déplacement est un
+    // `connect` imbriqué à la zone de destination — borné au compte, ce qu'un
+    // `updateMany` d'une clé ne permet pas : le contenu de la zone est lu, puis
+    // rattaché à la destination, puis la zone est supprimée.
+    const contenu = {
+      equipement: "equipements",
+      pointReleve: "pointsReleve",
+      permisFeu: "permisFeu",
+      planPrevention: "plansPrevention",
+    };
+    const rattachement = actions.indexOf("tx.batiment.update(");
+    expect(rattachement, "la zone de destination n'est pas mise à jour").toBeGreaterThan(-1);
+    for (const [table, relation] of Object.entries(contenu)) {
+      expect(actions, `${table} n'est pas lu avant la suppression`).toContain(`tx.${table}.findMany(deLaZone)`);
+      expect(actions, `${table} n'est pas déplacé avant la suppression`).toMatch(
+        new RegExp(`${relation}: \\{ connect: \\w+ \\}`),
       );
     }
-    expect(actions.indexOf("tx.batiment.delete")).toBeGreaterThan(
-      actions.indexOf("tx.planPrevention.updateMany"),
-    );
+    expect(actions.indexOf("tx.batiment.delete")).toBeGreaterThan(rattachement);
   });
 
   it("aucune migration ultérieure ne repasse Equipement.batimentId en CASCADE", () => {

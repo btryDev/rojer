@@ -1,11 +1,11 @@
 "use server";
 
+import { creerEnLotVerifie } from "@/lib/auth/portee/lot-verifie";
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { SELECT_FAITS_ACTIVITE } from "@/lib/etablissements/faits-activite";
 import { reprendreFaitsDansDuerp } from "@/lib/etablissements/faits-activite-ecriture";
-import { prisma } from "@/lib/prisma";
-import { assertEtablissementOwnership } from "@/lib/auth/scope";
+import { assertEtablissementDuCompte, assertEtablissementOwnership } from "@/lib/auth/scope";
 import { construireEcrituresImport } from "./ecritures";
 import { verifierPlafondImport } from "../plafond-unites";
 import {
@@ -16,7 +16,7 @@ import {
   type ColonneAttendue,
 } from "./parser";
 import { validerFichierImport } from "./format";
-import { constaterEpi } from "@/lib/etablissements/epi-constate";
+import { constaterEpiDuCompte } from "@/lib/etablissements/epi-constate";
 
 /**
  * Import d'un DUERP Excel ou CSV.
@@ -119,7 +119,7 @@ export async function commitImport(
   _prev: CommitImportState,
   formData: FormData,
 ): Promise<CommitImportState> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
 
   const fichier = formData.get("fichier");
   if (!(fichier instanceof File) || fichier.size === 0) {
@@ -145,7 +145,7 @@ export async function commitImport(
 
   // Le DUERP actif de l'établissement, s'il y en a un — on ne le crée pas
   // encore.
-  const duerpExistant = await prisma.duerp.findFirst({
+  const duerpExistant = await db.duerp.findFirst({
     where: { etablissementId },
     orderBy: { updatedAt: "desc" },
   });
@@ -161,7 +161,7 @@ export async function commitImport(
   // aurait rendu la borne aveugle aux unités que le fichier ne mentionne pas
   // — c'est-à-dire au cas courant.
   const unitesExistantes = duerpExistant
-    ? await prisma.uniteTravail.findMany({
+    ? await db.uniteTravail.findMany({
         where: { duerpId: duerpExistant.id },
         select: { id: true, nom: true, estTransverse: true },
       })
@@ -178,7 +178,7 @@ export async function commitImport(
 
   const duerpId =
     duerpExistant?.id ??
-    (await prisma.duerp.create({ data: { etablissementId } })).id;
+    (await db.duerp.create({ data: { etablissementId } })).id;
 
   // Les identifiants sont générés ici, donc plus aucune écriture n'attend le
   // résultat d'une autre : les trois listes partent en autant de `createMany`,
@@ -205,7 +205,7 @@ export async function commitImport(
   // réimporterait sur un DUERP déjà rempli (contre-relecture du 2026-10-08).
   const faits = duerpExistant
     ? null
-    : await prisma.etablissement.findUnique({
+    : await db.etablissement.findUnique({
         where: { id: etablissementId },
         select: SELECT_FAITS_ACTIVITE,
       });
@@ -214,22 +214,24 @@ export async function commitImport(
   // l'exécution — les unités avant les risques qui les référencent, les
   // risques avant leurs actions, puis la reprise, qui crée l'unité
   // transverse que le fichier ne porte jamais.
-  await prisma.$transaction(async (tx) => {
+  await db.$transaction(async (tx) => {
+    // `creerEnLotVerifie` (ADR-051) : les parents de chaque lot sont lus par
+    // la transaction — les unités créées juste avant y sont vues.
     if (ecritures.unitesACreer.length > 0) {
-      await tx.uniteTravail.createMany({ data: ecritures.unitesACreer });
+      await creerEnLotVerifie(tx, "UniteTravail", ecritures.unitesACreer);
     }
     if (ecritures.risques.length > 0) {
-      await tx.risque.createMany({ data: ecritures.risques });
+      await creerEnLotVerifie(tx, "Risque", ecritures.risques);
     }
     if (ecritures.actions.length > 0) {
-      await tx.action.createMany({ data: ecritures.actions });
+      await creerEnLotVerifie(tx, "Action", ecritures.actions);
     }
     if (faits) await reprendreFaitsDansDuerp(tx, duerpId, faits);
   },
   // Une transaction interactive a 5 s par défaut ; un DUERP importé peut
   // porter des centaines de risques et d'actions (relecture du 2026-10-08).
   { timeout: 30_000 });
-  await constaterEpi(etablissementId);
+  await constaterEpiDuCompte(db, etablissementId);
 
   revalidatePath(`/etablissements/${etablissementId}`);
   revalidatePath(`/duerp/${duerpId}/risques`);

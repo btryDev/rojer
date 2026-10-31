@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
 import { requireDuerp } from "@/lib/auth/scope";
 import { ecrireReponseFermee } from "@/lib/duerps/ecrire-reponse-fermee";
 import { activitesDuSecteur } from "./reponses";
@@ -42,7 +41,7 @@ export async function repondreActivite(
   activiteId: string,
   exercee: boolean | null,
 ): Promise<void> {
-  const { duerp } = await requireDuerp(duerpId);
+  const { db, duerp } = await requireDuerp(duerpId);
 
   const connue = activitesDuSecteur(duerp.referentielSecteurId).some(
     (a) => a.id === activiteId,
@@ -50,7 +49,7 @@ export async function repondreActivite(
   if (!connue) throw new Error(`Activité inconnue : ${activiteId}`);
 
   const lignes = await ecrireReponseFermee(
-    prisma,
+    db,
     "reponsesActivitesNonCouvertes",
     duerpId,
     activiteId,

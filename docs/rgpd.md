@@ -572,6 +572,14 @@ retirer les lignes à porteur salarié plutôt que les anonymiser ? Voir
 
 ### 7.1 Les trois formes de portée, et pourquoi il y en a trois
 
+[2026-10-30, lot 2b de l'isolation (ADR-051) : une quatrième forme est
+légitime — la lecture par le client borné de `requireCompte()` ou d'une garde
+de `scope.ts`, dans un module qui n'importe pas le client brut. La borne y est
+ajoutée à chaque opération ; le prédicat écrit à la main en est retiré (double
+jointure). Les gardes `tenancy-*` la reconnaissent (`borneeParConstruction`,
+`src/lib/auth/tenancy-portee.ts`). Ce qui suit décrit les modules encore au
+client brut.]
+
 La phrase précédente disait « chaque lecture porte le prédicat », ce qui
 laissait croire à une forme unique : le relecteur suivant prenait la forme B
 pour un défaut, et refaisait l'analyse. Les trois sont légitimes ; ce qui ne

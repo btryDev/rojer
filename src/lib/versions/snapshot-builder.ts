@@ -1,5 +1,4 @@
-import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireCompte } from "@/lib/auth/compte";
 import type {
   DuerpSnapshot,
   MesureSnapshot,
@@ -16,7 +15,8 @@ import type { TypeMesure } from "@/lib/referentiels/types";
  * Ne persiste rien — la persistance reste à la charge de l'appelant.
  *
  * **Scoping (ADR-005).** La lecture est bornée au user connecté :
- * `Duerp → Etablissement → Entreprise → userId`. C'est indispensable ici et
+ * `Duerp → Etablissement → Entreprise → userId`, posée par le client borné
+ * de `requireCompte()` (ADR-051 ; prédicat écrit retiré le 2026-10-30). C'est indispensable ici et
  * pas seulement chez l'appelant, parce que le snapshot embarque l'intégralité
  * du document — raison sociale, SIRET, adresse, unités de travail, risques,
  * cotations et mesures. Sans ce filtre, l'aperçu PDF rendait le DUERP d'un
@@ -32,11 +32,10 @@ export async function construireSnapshot(
   duerpId: string,
   options: { numero: number; motif: string | null },
 ): Promise<DuerpSnapshot | null> {
-  const user = await requireUser();
-  const duerp = await prisma.duerp.findFirst({
+  const { db } = await requireCompte();
+  const duerp = await db.duerp.findFirst({
     where: {
       id: duerpId,
-      etablissement: { entreprise: { userId: user.id } },
     },
     include: {
       etablissement: { include: { entreprise: true } },

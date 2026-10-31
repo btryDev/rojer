@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
 import { estJourCivilReel } from "@/lib/dates";
 import { ecrireFaitActivite } from "@/lib/etablissements/faits-activite-ecriture";
 import { requireRisque, requireUnite } from "@/lib/auth/scope";
@@ -47,9 +46,9 @@ export async function ajouterRisqueReferentiel(
   uniteId: string,
   referentielId: string,
 ): Promise<void> {
-  const { unite } = await requireUnite(uniteId);
+  const { db, unite } = await requireUnite(uniteId);
 
-  const existant = await prisma.risque.findUnique({
+  const existant = await db.risque.findUnique({
     where: { uniteId_referentielId: { uniteId, referentielId } },
     select: { id: true },
   });
@@ -58,7 +57,7 @@ export async function ajouterRisqueReferentiel(
     const ref = tousRisquesConnus().get(referentielId);
     if (!ref) throw new Error(`Risque référentiel inconnu : ${referentielId}`);
     const cot = defautCotation(ref);
-    await prisma.risque.create({
+    await db.risque.create({
       data: {
         uniteId,
         referentielId,
@@ -95,7 +94,7 @@ export async function ajouterRisqueCustom(
 ): Promise<RisqueActionState> {
   // Garde d'abord, validation ensuite : un id d'unité qui n'est pas au user
   // ne doit même pas atteindre le parsing du formulaire.
-  const { unite } = await requireUnite(uniteId);
+  const { db, unite } = await requireUnite(uniteId);
 
   const parsed = risqueCustomSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -107,7 +106,7 @@ export async function ajouterRisqueCustom(
   }
 
   const cot = defautCotation(undefined);
-  await prisma.risque.create({
+  await db.risque.create({
     data: {
       uniteId,
       libelle: parsed.data.libelle,
@@ -122,9 +121,9 @@ export async function ajouterRisqueCustom(
 }
 
 export async function supprimerRisque(risqueId: string): Promise<void> {
-  const { duerpId, uniteId } = await requireRisque(risqueId);
+  const { db, duerpId, uniteId } = await requireRisque(risqueId);
 
-  await prisma.risque.delete({ where: { id: risqueId } });
+  await db.risque.delete({ where: { id: risqueId } });
   revalidatePath(`/duerp/${duerpId}/risques`);
   revalidatePath(`/duerp/${duerpId}/risques/${uniteId}`);
 }
@@ -134,7 +133,7 @@ export async function modifierRisqueCustom(
   _prev: RisqueActionState,
   formData: FormData,
 ): Promise<RisqueActionState> {
-  const { risque: existant, duerpId, uniteId } = await requireRisque(risqueId);
+  const { db, risque: existant, duerpId, uniteId } = await requireRisque(risqueId);
 
   const parsed = risqueCustomSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -152,7 +151,7 @@ export async function modifierRisqueCustom(
     };
   }
 
-  await prisma.risque.update({
+  await db.risque.update({
     where: { id: risqueId },
     data: {
       libelle: parsed.data.libelle,
@@ -206,7 +205,7 @@ export async function enregistrerCotation(
   _prev: CotationActionState,
   formData: FormData,
 ): Promise<CotationActionState> {
-  const { duerpId, uniteId, etablissementId } = await requireRisque(risqueId);
+  const { db, duerpId, uniteId, etablissementId } = await requireRisque(risqueId);
 
   const entries = Object.fromEntries(formData);
   const parsed = cotationSchema.safeParse(entries);
@@ -226,7 +225,7 @@ export async function enregistrerCotation(
       }
     : {};
 
-  const risque = await prisma.risque.update({
+  const risque = await db.risque.update({
     where: { id: risqueId },
     data: {
       ...parsed.data,
@@ -243,7 +242,7 @@ export async function enregistrerCotation(
   // réponse générale. Décocher ne vaut pas « non » — un autre risque peut
   // porter l'exposition, et une case vide n'a jamais été une réponse.
   if (risque.exposeCMR) {
-    await ecrireFaitActivite(etablissementId, "expositionCMR", true, "si_vierge");
+    await ecrireFaitActivite(db, etablissementId, "expositionCMR", true, "si_vierge");
     revalidatePath(`/etablissements/${etablissementId}`, "layout");
   }
 

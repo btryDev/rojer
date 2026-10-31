@@ -1,7 +1,6 @@
 import "server-only";
+import { requireCompte } from "@/lib/auth/compte";
 import type { DomainePrestataire } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
 
 /** Un prestataire tel que le choix du prestataire attitré le propose. */
 export type PrestataireProposable = {
@@ -20,9 +19,9 @@ export async function prestatairesProposables(
   etablissementId: string,
   domainesAttendus: readonly DomainePrestataire[],
 ): Promise<PrestataireProposable[]> {
-  const user = await requireUser();
-  const lignes = await prisma.prestataire.findMany({
-    where: { etablissementId, etablissement: { entreprise: { userId: user.id } } },
+  const { db } = await requireCompte();
+  const lignes = await db.prestataire.findMany({
+    where: { etablissementId },
     select: { id: true, raisonSociale: true, domaines: true },
     orderBy: { raisonSociale: "asc" },
   });
@@ -40,12 +39,11 @@ export async function prestatairesProposables(
  * fiche : le prochain rendez-vous d'abord.
  */
 export async function controlesSuivisPar(etablissementId: string, prestataireId: string) {
-  const user = await requireUser();
-  return prisma.verification.findMany({
+  const { db } = await requireCompte();
+  return db.verification.findMany({
     where: {
       prestataireId,
       etablissementId,
-      etablissement: { entreprise: { userId: user.id } },
       archiveLe: null,
     },
     select: {

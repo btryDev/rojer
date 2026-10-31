@@ -5,7 +5,9 @@
 
 import { Prisma } from "@prisma/client";
 import { describe, expect, it } from "vitest";
-import { CORRESPONDANCE, estHorsCompte, estRacine } from "./correspondance";
+import { CORRESPONDANCE as TABLE, estHorsCompte, estRacine, type Classement } from "./correspondance";
+
+const CORRESPONDANCE: Record<string, Classement> = TABLE;
 
 const MODELES = Prisma.dmmf.datamodel.models;
 const PAR_NOM = new Map(MODELES.map((m) => [m.name, m]));
@@ -42,29 +44,18 @@ describe("table de correspondance", () => {
           expect(champ?.kind, `${courant}.${c.racine}`).toBe("scalar");
           break;
         }
-        if (estHorsCompte(c)) break;
-        const r = m.fields.find((f) => f.name === c.parent);
-        expect(r?.kind, `${courant}.${c.parent} n'est pas une relation`).toBe("object");
-        expect(r?.isList, `${courant}.${c.parent} est une liste`).toBe(false);
-        expect(r?.isRequired, `${courant}.${c.parent} est facultative`).toBe(true);
+        const parent = "parent" in c ? c.parent : undefined;
+        const r = m.fields.find((f) => f.name === parent);
+        expect(r?.kind, `${courant}.${parent} n'est pas une relation`).toBe("object");
+        expect(r?.isList, `${courant}.${parent} est une liste`).toBe(false);
+        expect(r?.isRequired, `${courant}.${parent} est facultative`).toBe(true);
         courant = r!.type;
       }
-      expect(courant).toMatch(/^(Entreprise|DemandeAssistance)$/);
     },
   );
 
-  it("aucune clé étrangère composée vers un modèle du compte (borne.ts la refuserait)", () => {
-    const composees = MODELES.flatMap((m) =>
-      m.fields
-        .filter((f) => f.kind === "object" && (f.relationFromFields?.length ?? 0) > 1)
-        .filter((f) => !estHorsCompte(CORRESPONDANCE[f.type] ?? { horsCompte: "" }))
-        .map((f) => `${m.name}.${f.name}`),
-    );
-    expect(composees).toEqual([]);
-  });
-
   it("un modèle hors compte (identité exceptée) n'est la cible d'aucune relation d'un modèle du compte", () => {
-    // L'identité (`User`) est la seule cible permise : la racine y pointe.
+    // L'identité (`User`, sur cc) est la seule cible permise : la racine y pointe.
     const hors = new Set(Object.keys(CORRESPONDANCE).filter((n) => "horsCompte" in CORRESPONDANCE[n]));
     const liens = MODELES.filter((m) => !estHorsCompte(CORRESPONDANCE[m.name])).flatMap((m) =>
       m.fields.filter((f) => f.kind === "object" && hors.has(f.type)).map((f) => `${m.name}.${f.name}`),

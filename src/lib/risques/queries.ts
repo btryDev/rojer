@@ -1,6 +1,5 @@
 import "server-only";
-import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireCompte } from "@/lib/auth/compte";
 
 type ActionRow = {
   id: string;
@@ -27,15 +26,10 @@ function actionVersMesure(a: ActionRow) {
 }
 
 export async function getRisque(id: string) {
-  const user = await requireUser();
-  const risque = await prisma.risque.findFirst({
+  const { db } = await requireCompte();
+  const risque = await db.risque.findFirst({
     where: {
       id,
-      unite: {
-        duerp: {
-          etablissement: { entreprise: { userId: user.id } },
-        },
-      },
     },
     include: {
       unite: {

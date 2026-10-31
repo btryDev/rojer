@@ -1,10 +1,9 @@
 "use server";
 
+import { requireCompte } from "@/lib/auth/compte";
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
-import { assertEtablissementOwnership } from "@/lib/auth/scope";
+import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { batimentSchema, MAX_ZONES, PLAFOND_ZONES } from "./schema";
 
 /**
@@ -43,11 +42,12 @@ function revalider(etablissementId: string) {
 
 /** Scope d'une zone : elle appartient au user via son établissement. */
 async function trouverBatimentDuUser(id: string) {
-  const user = await requireUser();
-  return prisma.batiment.findFirst({
-    where: { id, etablissement: { entreprise: { userId: user.id } } },
+  const { db } = await requireCompte();
+  const b = await db.batiment.findFirst({
+    where: { id },
     select: { id: true, etablissementId: true, ordre: true },
   });
+  return b ? { ...b, db } : null;
 }
 
 function estDoublonDeNom(e: unknown): boolean {
@@ -61,7 +61,7 @@ export async function creerBatiment(
   _prev: BatimentActionState,
   formData: FormData,
 ): Promise<BatimentActionState> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
   const parsed = batimentSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     return {
@@ -74,7 +74,7 @@ export async function creerBatiment(
   // Le rang du prochain et le compte se lisent d'un seul passage : ils
   // portent sur le même ensemble, et deux requêtes en donneraient deux
   // photos décalées.
-  const existant = await prisma.batiment.aggregate({
+  const existant = await db.batiment.aggregate({
     where: { etablissementId },
     _max: { ordre: true },
     _count: true,
@@ -91,7 +91,7 @@ export async function creerBatiment(
   }
 
   try {
-    const b = await prisma.batiment.create({
+    const b = await db.batiment.create({
       data: {
         etablissementId,
         nom: parsed.data.nom,
@@ -132,7 +132,7 @@ export async function modifierBatiment(
   }
 
   try {
-    await prisma.batiment.update({
+    await b.db.batiment.update({
       where: { id },
       data: {
         nom: parsed.data.nom,
@@ -172,7 +172,7 @@ export async function supprimerBatiment(
   const b = await trouverBatimentDuUser(id);
   if (!b) return { status: "error", message: "Zone introuvable" };
 
-  const destination = await prisma.batiment.findFirst({
+  const destination = await b.db.batiment.findFirst({
     where: {
       id: versBatimentId,
       etablissementId: b.etablissementId,
@@ -194,15 +194,29 @@ export async function supprimerBatiment(
   // c'est ce qu'on veut, rien ne doit rester orphelin —, mais l'erreur
   // remontait brute depuis la server action. On la traduit.
   try {
-    await prisma.$transaction(async (tx) => {
-      const deplacement = {
-        where: { batimentId: id },
-        data: { batimentId: destination.id },
-      };
-      await tx.equipement.updateMany(deplacement);
-      await tx.pointReleve.updateMany(deplacement);
-      await tx.permisFeu.updateMany(deplacement);
-      await tx.planPrevention.updateMany(deplacement);
+    await b.db.$transaction(async (tx) => {
+      // Le contenu se rattache À LA DESTINATION, par `connect` (ADR-051,
+      // lot 2b) : ~~un `updateMany` par table, `data: { batimentId }`~~ — le
+      // client borné refuse qu'un `updateMany` change une clé étrangère (il
+      // ne sait pas la borner), alors qu'un `connect` imbriqué porte la borne
+      // du compte sur chaque ligne. Même filtre qu'avant : TOUTES les lignes
+      // de la zone, sans regarder `actif` (ADR-012).
+      const deLaZone = { where: { batimentId: id }, select: { id: true } };
+      const [equipements, pointsReleve, permisFeu, plansPrevention] = [
+        await tx.equipement.findMany(deLaZone),
+        await tx.pointReleve.findMany(deLaZone),
+        await tx.permisFeu.findMany(deLaZone),
+        await tx.planPrevention.findMany(deLaZone),
+      ];
+      await tx.batiment.update({
+        where: { id: destination.id },
+        data: {
+          equipements: { connect: equipements },
+          pointsReleve: { connect: pointsReleve },
+          permisFeu: { connect: permisFeu },
+          plansPrevention: { connect: plansPrevention },
+        },
+      });
       await tx.batiment.delete({ where: { id } });
     });
   } catch (e) {

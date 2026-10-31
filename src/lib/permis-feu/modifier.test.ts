@@ -39,6 +39,15 @@ vi.mock("@/lib/prisma", () => {
         delete reste.etablissement;
         return db.permis.find((p) => correspond(p, reste)) ?? null;
       }),
+      // La correction écrit par `update` (ADR-051, lot 2b : un `updateMany`
+      // qui change `batimentId` est refusé par le client borné) ; comme lui,
+      // elle lève si la ligne n'est pas là.
+      update: vi.fn(async ({ where, data }: { where: Ligne; data: Ligne }) => {
+        const p = db.permis.find((x) => correspond(x, where));
+        if (!p) throw new Error("P2025");
+        Object.assign(p, data);
+        return p;
+      }),
       updateMany: vi.fn(async ({ where, data }: { where: Ligne; data: Ligne }) => {
         const t = db.permis.filter((x) => correspond(x, where));
         t.forEach((p) => Object.assign(p, data));
@@ -84,6 +93,11 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/auth/scope", () => ({
   assertEtablissementOwnership: vi.fn(async (e: string) => {
     if (e !== "etab-a-moi") throw new Error("NEXT_NOT_FOUND");
+  }),
+  // La même garde, qui rend aussi le client borné (ADR-051) : ici, le client simulé.
+  assertEtablissementDuCompte: vi.fn(async (e: string) => {
+    if (e !== "etab-a-moi") throw new Error("NEXT_NOT_FOUND");
+    return { user: { id: "u1" }, db: await (await import("@/test/garde-simulee")).clientDuCompteSimule() };
   }),
 }));
 vi.mock("@/lib/batiments/queries", () => ({

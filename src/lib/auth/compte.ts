@@ -7,7 +7,7 @@ import "server-only";
 // ne se résout ici à partir d'un identifiant reçu : le 404 d'un identifiant
 // étranger vient de ce que `db` ne le trouve pas.
 
-import { requireUser } from "./require-user";
+import { getOptionalUser, requireUser } from "./require-user";
 import { clientBorne } from "./portee/client";
 
 export async function requireCompte() {
@@ -15,4 +15,16 @@ export async function requireCompte() {
   return { user, db: clientBorne({ type: "compte", userId: user.id }) };
 }
 
+/** Variante sans redirection : `null` si personne n'est connecté. */
+export async function getOptionalCompte() {
+  const user = await getOptionalUser();
+  return user ? { user, db: clientBorne({ type: "compte", userId: user.id }) } : null;
+}
+
 export type Compte = Awaited<ReturnType<typeof requireCompte>>;
+
+/**
+ * Le client borné, à passer en paramètre aux fonctions qui lisent pour un
+ * appelant déjà authentifié — jamais fabriqué par elles.
+ */
+export type Db = Compte["db"];

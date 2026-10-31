@@ -1,27 +1,19 @@
 // La borne au compte, en fonctions pures (ADR-051 § 2) : ce que le client
-// borné ajoute aux arguments d'une opération Prisma. Aucune requête n'est émise
-// ici — la doc Prisma prévient qu'une requête lancée par une extension pendant
-// une transaction part sur une autre connexion et ignore la transaction ; la
-// vérification passe donc par la requête elle-même (une clé étrangère devient
-// un `connect` qui porte la borne et échoue s'il ne trouve rien).
+// borné fait des arguments d'une opération Prisma. Aucune requête n'est émise
+// ici — une requête lancée par une extension pendant une transaction part sur
+// une autre connexion et ignore la transaction (doc Prisma) ; la vérification
+// passe par la requête elle-même : une clé étrangère devient un `connect` qui
+// porte la borne et échoue s'il ne trouve rien.
 //
-// Prisma ne transmet aux extensions que l'opération de tête (« The `query`
-// extension type does not support nested read and write operations ») : les
-// écritures imbriquées sont parcourues ici, et celles qu'on ne sait pas borner
-// sont refusées plutôt que laissées passer.
+// Prisma ne transmet aux extensions que l'opération de tête : les écritures
+// imbriquées et les `include`/`select` sont parcourus ici. Seules les formes
+// que le dépôt emploie sont servies ; les autres sont refusées.
 
 import { AsyncLocalStorage } from "node:async_hooks";
 import { Prisma } from "@prisma/client";
-import { CORRESPONDANCE, estHorsCompte, estRacine } from "./correspondance";
+import { CORRESPONDANCE, IDENTITES_SCALAIRES, type Classement } from "./correspondance";
 
-/**
- * La portée d'un client borné : un compte. [2026-10-30, revue du lot 2a : la
- * portée « établissement » (jeton prestataire, MCP par clé) est retirée de ce
- * lot. Seul le `where` de tête est borné ; un `include` descend donc d'une
- * ligne bornée à ses voisines — sans fuite entre comptes, mais d'un
- * établissement à ses frères du même compte. Elle sera conçue au lot 2b, avec
- * des `include` bornés eux aussi.]
- */
+/** La portée d'un client borné : un compte (ADR-051, « Accès sans session »). */
 export type Portee = { type: "compte"; userId: string };
 
 /** Refus du client borné : opération ou modèle qu'il ne sait pas borner. */
@@ -32,59 +24,100 @@ export class ErreurPortee extends Error {
   }
 }
 
-type Champ = Prisma.DMMF.Field;
 type Objet = Record<string, unknown>;
 
-const MODELES = new Map(Prisma.dmmf.datamodel.models.map((m) => [m.name, m]));
+// --- Table des relations, calculée une fois au chargement --------------------
 
-function modele(nom: string) {
-  const m = MODELES.get(nom);
-  if (!m) throw new ErreurPortee(`modèle inconnu : ${nom}`);
-  return m;
+/** Ce qu'est la cible d'une relation, vue du client borné. */
+type Genre = "compte" | "identite" | "hors";
+
+type Relation = {
+  nom: string;
+  cible: string;
+  genre: Genre;
+  liste: boolean;
+  /** La clé étrangère portée par CE modèle, s'il en porte une. */
+  cle?: string;
+};
+
+function genreDe(c: Classement): Genre {
+  if ("identite" in c) return "identite";
+  if ("horsCompte" in c) return "hors";
+  return "compte";
 }
 
-function relations(nom: string): Champ[] {
-  return modele(nom).fields.filter((f) => f.kind === "object");
-}
-
-/**
- * Les relations d'un modèle vers une ligne d'un compte, chacune à clé simple.
- * Une clé composée ne se réécrit pas en `connect` borné par ce module : elle
- * est refusée plutôt que laissée passer sans borne (relecture GestBAT ; le
- * schéma n'en a aucune, `correspondance.test.ts` le vérifie).
- */
-function verifierClesSimples(nom: string): void {
-  for (const r of relations(nom)) {
-    if (estDuCompte(r.type) && (r.relationFromFields?.length ?? 0) > 1)
-      throw new ErreurPortee(`${nom}.${r.name} : clé étrangère composée, non bornable`);
-  }
-}
-
-function relation(nom: string, champ: string): Champ {
-  const r = relations(nom).find((f) => f.name === champ);
-  if (!r) throw new ErreurPortee(`relation inconnue : ${nom}.${champ}`);
-  return r;
-}
-
-function classement(nom: string) {
-  const c = CORRESPONDANCE[nom];
+function classement(nom: string): Classement {
+  const c = (CORRESPONDANCE as Record<string, Classement>)[nom];
   if (!c) throw new ErreurPortee(`modèle non classé : ${nom}`);
   return c;
 }
 
-/** Vrai si une ligne de ce modèle appartient à un compte. */
-export function estDuCompte(nom: string): boolean {
-  return !estHorsCompte(classement(nom));
+const RELATIONS = new Map<string, Relation[]>(
+  Prisma.dmmf.datamodel.models.map((m) => [
+    m.name,
+    m.fields
+      .filter((f) => f.kind === "object")
+      .map((f) => {
+        const genre = genreDe(classement(f.type));
+        const de = f.relationFromFields ?? [];
+        // Une clé composée, ou une clé qui ne vise pas `id`, ne se réécrit pas
+        // en `connect` borné : refusée au chargement plutôt que laissée passer
+        // sans borne. Le schéma n'en porte aucune.
+        if (de.length > 1 || (de.length === 1 && (f.relationToFields?.[0] ?? "id") !== "id"))
+          throw new ErreurPortee(`${m.name}.${f.name} : clé étrangère non simple, non bornable`);
+        return { nom: f.name, cible: f.type, genre, liste: f.isList, cle: de[0] };
+      }),
+  ]),
+);
+
+// Chaque clé d'identité scalaire est une colonne du modèle, et la clé d'aucune
+// relation : une relation la borne déjà, l'entrée serait un doublon trompeur.
+for (const [nom, cles] of Object.entries(IDENTITES_SCALAIRES)) {
+  const m = Prisma.dmmf.datamodel.models.find((x) => x.name === nom);
+  for (const cle of cles ?? []) {
+    const champ = m?.fields.find((f) => f.name === cle);
+    if (!champ || champ.kind !== "scalar")
+      throw new ErreurPortee(`${nom}.${cle} : clé d'identité scalaire introuvable`);
+    if (m!.fields.some((f) => f.relationFromFields?.includes(cle)))
+      throw new ErreurPortee(`${nom}.${cle} : clé d'une relation, à retirer d'IDENTITES_SCALAIRES`);
+  }
 }
+
+/** Une clé d'identité scalaire écrite : l'utilisateur du compte, ou `null`. */
+function identitesScalaires(nom: string, data: Objet, portee: Portee): void {
+  for (const cle of IDENTITES_SCALAIRES[nom as Prisma.ModelName] ?? []) {
+    if (!(cle in data) || data[cle] === undefined) continue;
+    const v = valeurScalaire(data[cle]);
+    if (v !== null && v !== portee.userId) throw new ErreurPortee(`${nom}.${cle} : utilisateur d'un autre compte`);
+    data[cle] = v;
+  }
+}
+
+function relations(nom: string): Relation[] {
+  const r = RELATIONS.get(nom);
+  if (!r) throw new ErreurPortee(`modèle inconnu : ${nom}`);
+  return r;
+}
+
+function relation(nom: string, champ: string): Relation | undefined {
+  return relations(nom).find((r) => r.nom === champ);
+}
+
+/** Les relations d'un modèle vers une ligne d'un compte, par leur clé. */
+export function clesDuCompte(nom: string): { cle: string; cible: string }[] {
+  return relations(nom).flatMap((r) =>
+    r.genre === "compte" && r.cle ? [{ cle: r.cle, cible: r.cible }] : [],
+  );
+}
+
+// --- La borne ----------------------------------------------------------------
 
 /** Le filtre `where` qui borne un modèle à la portée. */
 export function borne(nom: string, portee: Portee): Objet {
   const c = classement(nom);
-  if (estHorsCompte(c))
-    throw new ErreurPortee(`modèle hors compte : ${nom} (${"horsCompte" in c ? c.horsCompte : c.identite})`);
-
-  if (estRacine(c)) return { [c.racine]: portee.userId };
-  return { [c.parent]: borne(relation(nom, c.parent).type, portee) };
+  if ("racine" in c) return { [c.racine]: portee.userId };
+  if ("parent" in c) return { [c.parent]: borne(relation(nom, c.parent)!.cible, portee) };
+  throw new ErreurPortee(`modèle hors compte : ${nom}`);
 }
 
 /** Ajoute la borne à un `where` sans toucher à ses champs uniques. */
@@ -95,19 +128,6 @@ export function avecBorne(where: unknown, b: Objet): Objet {
   return w;
 }
 
-const PAR_WHERE = new Set([
-  "findMany",
-  "findFirst",
-  "findFirstOrThrow",
-  "findUnique",
-  "findUniqueOrThrow",
-  "count",
-  "aggregate",
-  "groupBy",
-  "delete",
-  "deleteMany",
-]);
-
 function lister(v: unknown): unknown[] {
   return Array.isArray(v) ? v : [v];
 }
@@ -116,179 +136,186 @@ function commeAvant<T>(origine: unknown, liste: T[]): T | T[] {
   return Array.isArray(origine) ? liste : liste[0];
 }
 
+function estObjet(v: unknown): v is Objet {
+  return v !== null && typeof v === "object" && !Array.isArray(v) && !(v instanceof Date);
+}
+
+/** La valeur d'un champ scalaire écrit tel quel ou sous la forme `{ set: v }`. */
+function valeurScalaire(v: unknown): unknown {
+  if (!estObjet(v)) return v;
+  if (Object.keys(v).length === 1 && "set" in v) return v.set;
+  throw new ErreurPortee(`opération inattendue sur une clé : ${Object.keys(v).join(", ")}`);
+}
+
+/** La clé de racine d'un modèle racine (`Entreprise.userId`) — et elle seule. */
+function estLaRacine(nom: string, cle: string): boolean {
+  const c = classement(nom);
+  return "racine" in c && c.racine === cle;
+}
+
 /** Vérifie et pose la racine (`userId`) d'une création ou d'une mise à jour. */
 function racineDe(nom: string, data: Objet, portee: Portee, creation: boolean): void {
   const c = classement(nom);
-  if (!estRacine(c)) return;
-  const v = data[c.racine];
-  if (v !== undefined && v !== portee.userId)
-    throw new ErreurPortee(`${nom}.${c.racine} différent du compte`);
-  // La racine donnée par sa relation (`user: { connect }`, sur cc) est
-  // vérifiée par `referenceHorsCompte` : ne pas poser la colonne en plus.
-  const parRelation = relations(nom).some(
-    (r) => r.relationFromFields?.includes(c.racine) && data[r.name] !== undefined,
-  );
+  if (!("racine" in c)) return;
+  if (c.racine in data) {
+    const v = valeurScalaire(data[c.racine]);
+    if (v !== portee.userId) throw new ErreurPortee(`${nom}.${c.racine} différent du compte`);
+    data[c.racine] = v;
+    return;
+  }
+  const parRelation = relations(nom).some((r) => r.cle === c.racine && data[r.nom] !== undefined);
   if (creation && !parRelation) data[c.racine] = portee.userId;
 }
 
+// --- Écritures ----------------------------------------------------------------
+
 /**
- * Réécrit le `data` d'une création ou d'une mise à jour : chaque clé
- * étrangère vers une ligne d'un compte devient un `connect` borné, et les
- * écritures imbriquées sont parcourues.
+ * Réécrit le `data` d'une création ou d'une mise à jour : une clé vers une
+ * ligne d'un compte devient un `connect` borné ; une relation vers l'identité
+ * (`User`, sur cc) ne désigne que le compte ; toute écriture vers un autre
+ * modèle hors compte est refusée ; les écritures imbriquées sont parcourues.
  */
-export function reecrireDonnees(
-  nom: string,
-  data: unknown,
-  portee: Portee,
-  creation: boolean,
-): Objet {
-  if (data === null || typeof data !== "object" || Array.isArray(data))
-    throw new ErreurPortee(`données inattendues pour ${nom}`);
-  // À chaque niveau, pas seulement en tête : une création imbriquée passe par
-  // ici (revue du lot 2a bis).
-  verifierClesSimples(nom);
-  const d: Objet = { ...(data as Objet) };
+export function reecrireDonnees(nom: string, data: unknown, portee: Portee, creation: boolean): Objet {
+  if (!estObjet(data)) throw new ErreurPortee(`données inattendues pour ${nom}`);
+  const d: Objet = { ...data };
   racineDe(nom, d, portee, creation);
+  identitesScalaires(nom, d, portee);
 
   for (const r of relations(nom)) {
-    const cle = r.relationFromFields?.length === 1 ? r.relationFromFields[0] : undefined;
-    const vers = r.relationToFields?.[0] ?? "id";
-    if (!estDuCompte(r.type)) {
-      referenceHorsCompte(nom, r, cle, vers, d, portee, creation);
+    const parCle = r.cle !== undefined && r.cle in d;
+    if (parCle && r.nom in d) throw new ErreurPortee(`${nom} : ${r.cle} et ${r.nom} donnés ensemble`);
+
+    if (r.genre === "hors") {
+      if (parCle || r.nom in d) throw new ErreurPortee(`${nom}.${r.nom} : écriture vers un modèle hors compte`);
       continue;
     }
 
-    if (cle !== undefined && cle in d) {
-      const v = d[cle];
-      delete d[cle];
-      if (r.name in d) throw new ErreurPortee(`${nom} : ${cle} et ${r.name} donnés ensemble`);
+    if (parCle) {
+      const v = valeurScalaire(d[r.cle!]);
+      delete d[r.cle!];
       if (v === null) {
-        if (!creation) d[r.name] = { disconnect: true };
+        if (!creation) d[r.nom] = { disconnect: true };
       } else if (v !== undefined) {
-        d[r.name] = { connect: avecBorne({ [vers]: v }, borne(r.type, portee)) };
+        d[r.nom] = { connect: cible(r, { id: v }, portee) };
       }
-      continue; // déjà borné : ne pas repasser par l'imbriqué
+      continue;
     }
 
-    const imbrique = d[r.name];
-    if (imbrique === undefined) continue;
-    if (imbrique === null || typeof imbrique !== "object")
-      throw new ErreurPortee(`${nom}.${r.name} : écriture imbriquée inattendue`);
-    d[r.name] = reecrireImbrique(nom, r, imbrique as Objet, portee);
+    const n = d[r.nom];
+    if (n === undefined) continue;
+    if (!estObjet(n)) throw new ErreurPortee(`${nom}.${r.nom} : écriture imbriquée inattendue`);
+    d[r.nom] = reecrireImbrique(nom, r, n, portee);
   }
   return d;
 }
 
-/**
- * Une relation vers un modèle hors compte (l'identité `User`, sur `cc`) : sa
- * clé scalaire devient un `connect` simple — Prisma refuse de mêler une clé
- * scalaire et un `connect` dans une même création, et les autres clés de la
- * ligne sont réécrites en `connect`. Quand cette clé est la racine du compte
- * (`Entreprise.userId`), elle ne peut désigner que le compte de la portée.
- * Toute autre écriture vers ce modèle est refusée.
- */
-function referenceHorsCompte(
-  nom: string,
-  r: Champ,
-  cle: string | undefined,
-  vers: string,
-  d: Objet,
-  portee: Portee,
-  creation: boolean,
-): void {
-  const c = classement(nom);
-  const estLaRacine = estRacine(c) && cle === c.racine;
-  if (cle !== undefined && cle in d) {
-    if (r.name in d) throw new ErreurPortee(`${nom} : ${cle} et ${r.name} donnés ensemble`);
-    const v = d[cle];
-    delete d[cle];
-    if (v === null) {
-      if (estLaRacine) throw new ErreurPortee(`${nom}.${cle} ne peut pas être retiré`);
-      if (!creation) d[r.name] = { disconnect: true };
-    } else if (v !== undefined) {
-      d[r.name] = { connect: { [vers]: v } };
-    }
-    return;
+/** La cible d'un `connect` : bornée au compte, ou réduite au compte lui-même. */
+function cible(r: Relation, where: unknown, portee: Portee): Objet {
+  if (r.genre === "identite") {
+    if (!estObjet(where) || Object.keys(where).length !== 1 || where.id !== portee.userId)
+      throw new ErreurPortee(`${r.nom} : une relation vers l'identité ne désigne que le compte`);
+    return { id: portee.userId };
   }
-  const n = d[r.name];
-  if (n === undefined) return;
-  const cible = (n as Objet | null)?.connect as Objet | undefined;
-  const seul = n !== null && typeof n === "object" && Object.keys(n).length === 1 && cible !== undefined;
-  if (!seul || Array.isArray(cible))
-    throw new ErreurPortee(`${nom}.${r.name} : écriture vers un modèle hors compte`);
-  if (estLaRacine && (Object.keys(cible).length !== 1 || cible[vers] !== portee.userId))
-    throw new ErreurPortee(`${nom}.${r.name} : la racine ne peut désigner que le compte`);
+  return avecBorne(where, borne(r.cible, portee));
 }
 
-function reecrireImbrique(nom: string, r: Champ, n: Objet, portee: Portee): Objet {
+function reecrireImbrique(nom: string, r: Relation, n: Objet, portee: Portee): Objet {
   const sortie: Objet = {};
-  const b = () => borne(r.type, portee);
   for (const [op, val] of Object.entries(n)) {
+    if (r.genre === "identite" && op !== "connect")
+      throw new ErreurPortee(`${nom}.${r.nom}.${op} : seule la relation au compte est permise`);
     switch (op) {
       case "connect":
-      case "set":
-        sortie[op] = commeAvant(val, lister(val).map((w) => avecBorne(w, b())));
+        sortie[op] = commeAvant(val, lister(val).map((w) => cible(r, w, portee)));
         break;
       case "disconnect":
-        sortie[op] =
-          val === true || val === false
-            ? val
-            : commeAvant(val, lister(val).map((w) => avecBorne(w, b())));
+        if (val !== true) throw new ErreurPortee(`${nom}.${r.nom}.disconnect : forme non servie`);
+        sortie[op] = val;
         break;
       case "create":
-        sortie[op] = commeAvant(val, lister(val).map((c) => reecrireDonnees(r.type, c, portee, true)));
+        sortie[op] = commeAvant(val, lister(val).map((c) => reecrireDonnees(r.cible, c, portee, true)));
         break;
-      case "connectOrCreate":
-        sortie[op] = commeAvant(
-          val,
-          lister(val).map((x) => {
-            const { where, create } = x as Objet;
-            return {
-              where: avecBorne(where, b()),
-              create: reecrireDonnees(r.type, create, portee, true),
-            };
-          }),
-        );
+      case "deleteMany":
+        // Lignes déjà rattachées au parent borné : Prisma limite la suppression
+        // à cette relation (lignes d'un plan de prévention).
+        sortie[op] = val;
         break;
-      case "createMany": {
-        // Lignes filles : elles héritent du parent, mais une clé secondaire
-        // ne peut pas y devenir un `connect` — refusée si présente. Une racine
-        // (`DemandeAssistance.userId`) est posée ou refusée comme ailleurs
-        // (revue du lot 2a : elle passait telle quelle).
-        const { data, ...reste } = val as Objet;
-        const lignes = lister(data).map((ligne) => {
-          if (ligne === null || typeof ligne !== "object")
-            throw new ErreurPortee(`${nom}.${r.name}.createMany : ligne inattendue`);
-          const l = { ...(ligne as Objet) };
-          racineDe(r.type, l, portee, true);
-          refuserClesSecondaires(r.type, l, `${nom}.${r.name}.createMany`);
-          return l;
-        });
-        sortie[op] = { ...reste, data: commeAvant(data, lignes) };
-        break;
-      }
       default:
-        throw new ErreurPortee(`écriture imbriquée non bornée : ${nom}.${r.name}.${op}`);
+        throw new ErreurPortee(`écriture imbriquée non servie : ${nom}.${r.nom}.${op}`);
     }
   }
   return sortie;
 }
 
-// --- Parents vus par une lecture bornée, le temps d'un lot -----------------
+// --- Lectures imbriquées --------------------------------------------------------
+
+/**
+ * Refuse tout `include`/`select` qui traverse vers un modèle hors compte ou
+ * vers l'identité : une ligne du compte peut y pointer (`Signature.user`, sur
+ * cc), et la lecture imbriquée n'est pas bornée. À toute profondeur, `_count`
+ * compris.
+ */
+function verifierLecture(nom: string, args: unknown, imbrique = false): void {
+  if (!estObjet(args)) return;
+  // `cursor` n'est employé nulle part, à aucun niveau : refusé plutôt que raisonné.
+  if (imbrique && "cursor" in args) throw new ErreurPortee(`${nom} : cursor imbriqué non servi`);
+  // Un filtre ou un tri traverse une relation comme un `include` : vers un
+  // modèle hors compte ou l'identité, il en ferait un oracle (seconde
+  // lecture du 2026-10-31).
+  verifierFiltre(nom, args.where);
+  verifierFiltre(nom, args.orderBy);
+  for (const cleArg of ["include", "select"] as const) {
+    const sel = args[cleArg];
+    if (!estObjet(sel)) continue;
+    for (const [champ, v] of Object.entries(sel)) {
+      if (v === false || v === undefined) continue;
+      if (champ === "_count") {
+        if (v === true && relations(nom).some((r) => r.liste && r.genre !== "compte"))
+          throw new ErreurPortee(`${nom}._count : relation hors compte`);
+        verifierLecture(nom, v, true);
+        continue;
+      }
+      const r = relation(nom, champ);
+      if (!r) continue;
+      if (r.genre !== "compte") throw new ErreurPortee(`${nom}.${champ} : lecture d'un modèle hors compte`);
+      verifierLecture(r.cible, v, true);
+    }
+  }
+}
+
+/** Les opérateurs de relation d'un filtre : leur valeur filtre le modèle cible. */
+const OPERATEURS_RELATION = new Set(["some", "every", "none", "is", "isNot"]);
+const LOGIQUES = new Set(["AND", "OR", "NOT"]);
+
+/** Refuse un `where` ou un `orderBy` qui traverse une relation hors du compte. */
+function verifierFiltre(nom: string, f: unknown): void {
+  if (Array.isArray(f)) {
+    for (const x of f) verifierFiltre(nom, x);
+    return;
+  }
+  if (!estObjet(f)) return;
+  for (const [cle, v] of Object.entries(f)) {
+    if (LOGIQUES.has(cle)) {
+      verifierFiltre(nom, v);
+      continue;
+    }
+    const r = relation(nom, cle);
+    if (!r) continue;
+    if (r.genre !== "compte") throw new ErreurPortee(`${nom}.${cle} : filtre ou tri vers un modèle hors compte`);
+    const sous = estObjet(v) ? Object.keys(v) : [];
+    if (sous.length > 0 && sous.every((k) => OPERATEURS_RELATION.has(k)))
+      for (const k of sous) verifierFiltre(r.cible, (v as Objet)[k]);
+    else verifierFiltre(r.cible, v);
+  }
+}
+
+// --- Lot vérifié (createMany) ----------------------------------------------------
 //
-// Prisma recopie les arguments en profondeur avant l'extension : aucun
-// marqueur (symbole, identité d'objet) ne survit, constaté le 2026-10-30. Ce
-// qui survit, ce sont les valeurs. Une lecture bornée `select: { id: true }`
+// Prisma recopie les arguments en profondeur avant l'extension : aucun marqueur
+// ne survit, seulement les valeurs. Une lecture bornée `select: { id: true }`
 // prouve que les identifiants rendus sont dans la portée ; un `createMany`
-// n'est accepté que si chacune de ses clés étrangères vers une ligne d'un
-// compte en fait partie.
-//
-// [2026-10-30, relecture GestBAT : le relevé était un état global, gardé d'une
-// requête à l'autre, nourri par toute lecture d'identifiants et purgé par
-// plafond — une purge entre la lecture et l'insertion refusait au hasard.] Il
-// ne vit plus que le temps d'un appel à `dansUnLot` (`AsyncLocalStorage`) :
-// `creerEnLotVerifie` y lit les parents puis insère. Hors d'un lot, rien n'est
-// retenu et tout `createMany` est refusé.
+// n'est accepté que si chacune de ses clés vers une ligne d'un compte en fait
+// partie. Le relevé ne vit que le temps de `dansUnLot` (`creerEnLotVerifie`).
 
 const LOT = new AsyncLocalStorage<Set<string>>();
 
@@ -297,15 +324,11 @@ export function dansUnLot<T>(fn: () => Promise<T>): Promise<T> {
   return LOT.run(new Set(), fn);
 }
 
-function clePortee(p: Portee): string {
-  return `compte:${p.userId}`;
-}
-
 /** Vrai si les arguments sont une lecture des seuls identifiants. */
 export function estLectureDIdentifiants(operation: string, args: unknown): boolean {
   if (operation !== "findMany") return false;
-  const select = (args as Objet | undefined)?.select as Objet | undefined;
-  return !!select && Object.keys(select).length === 1 && select.id === true;
+  const select = estObjet(args) ? args.select : undefined;
+  return estObjet(select) && Object.keys(select).length === 1 && select.id === true;
 }
 
 /** Retient, dans le lot en cours, les identifiants rendus par une lecture bornée. */
@@ -314,57 +337,50 @@ export function noterVus(nom: string, portee: Portee, resultat: unknown): void {
   if (!vus || !Array.isArray(resultat)) return;
   for (const ligne of resultat) {
     const id = (ligne as Objet | null)?.id;
-    if (typeof id === "string") vus.add(`${clePortee(portee)}|${nom}:${id}`);
+    if (typeof id === "string") vus.add(`${portee.userId}|${nom}:${id}`);
   }
 }
 
-/** Les clés étrangères d'un lot qui ne désignent pas une ligne vue dans la portée. */
-function clesNonVues(nom: string, data: unknown, portee: Portee): string[] {
+/** Les clés d'une ligne vers une ligne d'un compte qui n'ont pas été vues dans le lot. */
+function clesNonVues(nom: string, ligne: Objet, portee: Portee): string[] {
   const vus = LOT.getStore() ?? new Set<string>();
-  const manquantes: string[] = [];
-  for (const ligne of lister(data)) {
-    if (ligne === null || typeof ligne !== "object") throw new ErreurPortee(`${nom} : ligne inattendue`);
-    const l = ligne as Objet;
-    racineDe(nom, l, portee, true);
-    for (const r of relations(nom)) {
-      if (!estDuCompte(r.type) || r.relationFromFields?.length !== 1) continue;
-      if ((r.relationToFields?.[0] ?? "id") !== "id")
-        throw new ErreurPortee(`${nom}.${r.name} : clé vers un autre champ que id`);
-      const v = l[r.relationFromFields[0]];
-      if (v === undefined || v === null) continue;
-      if (!vus.has(`${clePortee(portee)}|${r.type}:${String(v)}`)) manquantes.push(`${r.type}:${String(v)}`);
-    }
-  }
-  return manquantes;
+  return clesDuCompte(nom).flatMap(({ cle, cible: c }) => {
+    const v = ligne[cle];
+    if (v === undefined || v === null) return [];
+    return vus.has(`${portee.userId}|${c}:${String(v)}`) ? [] : [`${c}:${String(v)}`];
+  });
 }
 
-/** Refuse une ligne qui porte une clé étrangère vers une ligne d'un compte. */
-function refuserClesSecondaires(nom: string, ligne: Objet, ou: string): void {
-  for (const r of relations(nom)) {
-    if (!estDuCompte(r.type)) continue;
-    for (const cle of r.relationFromFields ?? []) {
-      if (ligne[cle] !== undefined && ligne[cle] !== null)
-        throw new ErreurPortee(`${ou} : clé ${cle} non bornable, passer par une vérification nommée`);
-    }
-  }
-}
+// --- Point d'entrée -------------------------------------------------------------
+
+const LECTURES = new Set([
+  "findMany",
+  "findFirst",
+  "findFirstOrThrow",
+  "findUnique",
+  "findUniqueOrThrow",
+  "count",
+  "aggregate",
+  "groupBy",
+]);
 
 /** Les arguments bornés d'une opération de modèle. Lève sur ce qu'elle ne sait pas borner. */
-export function argumentsBornes(
-  nom: string,
-  operation: string,
-  args: unknown,
-  portee: Portee,
-): Objet {
-  verifierClesSimples(nom);
-  const a: Objet = { ...((args as Objet | undefined) ?? {}) };
+export function argumentsBornes(nom: string, operation: string, args: unknown, portee: Portee): Objet {
+  const a: Objet = estObjet(args) ? { ...args } : {};
   const b = borne(nom, portee);
+  verifierLecture(nom, a);
 
-  if (PAR_WHERE.has(operation)) {
+  if (LECTURES.has(operation)) {
+    // `cursor` n'est employé nulle part : refusé plutôt que raisonné.
+    if ("cursor" in a) throw new ErreurPortee(`${nom}.${operation} : cursor non servi`);
     a.where = avecBorne(a.where, b);
     return a;
   }
   switch (operation) {
+    case "delete":
+    case "deleteMany":
+      a.where = avecBorne(a.where, b);
+      return a;
     case "create":
       a.data = reecrireDonnees(nom, a.data, portee, true);
       return a;
@@ -377,23 +393,43 @@ export function argumentsBornes(
       a.create = reecrireDonnees(nom, a.create, portee, true);
       a.update = reecrireDonnees(nom, a.update, portee, false);
       return a;
-    case "updateMany":
-    case "updateManyAndReturn":
-      // `updateMany` n'accepte pas de `connect` : une clé étrangère changée
-      // ici ne se borne pas.
+    case "updateMany": {
+      // `updateMany` n'accepte pas de `connect` : une clé vers une ligne d'un
+      // compte, ou vers un modèle hors compte, ne s'y borne pas.
+      const data: Objet = estObjet(a.data) ? { ...a.data } : {};
+      racineDe(nom, data, portee, false);
+      identitesScalaires(nom, data, portee);
+      for (const r of relations(nom)) {
+        // La racine est vérifiée par `racineDe` ; toute autre clé est refusée,
+        // y compris une seconde clé d'un modèle racine.
+        if (r.cle && r.cle in data && !estLaRacine(nom, r.cle))
+          throw new ErreurPortee(`${nom}.updateMany : clé ${r.cle} non bornable ici`);
+      }
       a.where = avecBorne(a.where, b);
-      refuserClesSecondaires(nom, (a.data ?? {}) as Objet, `${nom}.${operation}`);
-      racineDe(nom, (a.data ?? {}) as Objet, portee, false);
+      a.data = data;
       return a;
-    case "createMany":
-    case "createManyAndReturn": {
-      const manquantes = clesNonVues(nom, a.data, portee);
-      if (manquantes.length === 0) return a;
-      throw new ErreurPortee(
-        `${nom}.${operation} : parents non vérifiés (${manquantes.slice(0, 3).join(", ")}) — passer par creerEnLotVerifie, dans la transaction (ADR-051, constats du lot 1)`,
-      );
+    }
+    case "createMany": {
+      const lignes = lister(a.data).map((l) => {
+        if (!estObjet(l)) throw new ErreurPortee(`${nom}.createMany : ligne inattendue`);
+        const ligne = { ...l };
+        racineDe(nom, ligne, portee, true);
+        identitesScalaires(nom, ligne, portee);
+        for (const r of relations(nom)) {
+          if (r.cle && r.genre !== "compte" && ligne[r.cle] != null && !estLaRacine(nom, r.cle))
+            throw new ErreurPortee(`${nom}.createMany : clé ${r.cle} vers un modèle hors compte`);
+        }
+        return ligne;
+      });
+      const manquantes = lignes.flatMap((l) => clesNonVues(nom, l, portee));
+      if (manquantes.length > 0)
+        throw new ErreurPortee(
+          `${nom}.createMany : parents non vérifiés (${manquantes.slice(0, 3).join(", ")}) — passer par creerEnLotVerifie`,
+        );
+      a.data = commeAvant(a.data, lignes);
+      return a;
     }
     default:
-      throw new ErreurPortee(`opération inconnue : ${nom}.${operation}`);
+      throw new ErreurPortee(`opération non servie : ${nom}.${operation}`);
   }
 }

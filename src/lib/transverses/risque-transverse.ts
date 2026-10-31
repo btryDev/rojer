@@ -1,4 +1,5 @@
 import type { Prisma } from "@prisma/client";
+import { creerEnLotVerifie } from "@/lib/auth/portee/lot-verifie";
 import { calculerCriticite } from "@/lib/cotation";
 import { risquesTransverses } from "@/lib/referentiels";
 import type { QuestionDetection } from "@/lib/referentiels/types";
@@ -65,21 +66,25 @@ export async function poserRisqueTransverse(
     const gravite = ref.graviteParDefaut;
     const probabilite = ref.probabiliteParDefaut;
     const maitrise = ref.maitriseParDefaut ?? 2;
-    await tx.risque.createMany({
-      data: [
-        {
-          uniteId: unite.id,
-          referentielId: ref.id,
-          libelle: ref.libelle,
-          description: ref.description,
-          gravite,
-          probabilite,
-          maitrise,
-          criticite: calculerCriticite({ gravite, probabilite, maitrise }),
-        },
-      ],
-      skipDuplicates: true,
-    });
+    // `creerEnLotVerifie` (ADR-051) : l'unité est lue par la transaction,
+    // puis le même `INSERT … ON CONFLICT DO NOTHING`.
+    await creerEnLotVerifie(
+      tx,
+      "Risque",
+      [
+          {
+            uniteId: unite.id,
+            referentielId: ref.id,
+            libelle: ref.libelle,
+            description: ref.description,
+            gravite,
+            probabilite,
+            maitrise,
+            criticite: calculerCriticite({ gravite, probabilite, maitrise }),
+          },
+        ],
+      { skipDuplicates: true },
+    );
     return false;
   }
 

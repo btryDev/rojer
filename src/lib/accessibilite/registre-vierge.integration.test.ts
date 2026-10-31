@@ -15,6 +15,7 @@
 //     vitest run registre-vierge.integration
 // Il crée une entreprise et un établissement à lui, et les efface.
 
+import { randomUUID } from "node:crypto";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterAll, describe, expect, it, vi } from "vitest";
@@ -22,7 +23,28 @@ import { afterAll, describe, expect, it, vi } from "vitest";
 const URL_BASE = process.env.ACCESSIBILITE_INTEGRATION_URL;
 const local = URL_BASE ? /@(localhost|127\.0\.0\.1)[:/]/.test(URL_BASE) : false;
 
-vi.mock("@/lib/auth/scope", () => ({ assertEtablissementOwnership: async () => undefined }));
+// Le vrai client borné (ADR-051), pas le remplacement de vitest.setup.ts : ce
+// test tourne contre une vraie base, il éprouve aussi la borne.
+vi.unmock("@/lib/auth/portee/client");
+vi.unmock("@/lib/auth/portee/lot-verifie");
+vi.mock("@/lib/auth/scope", async () => {
+  const { clientBorne } = await vi.importActual<typeof import("@/lib/auth/portee/client")>(
+    "@/lib/auth/portee/client",
+  );
+  const { prisma } = await import("@/lib/prisma");
+  return {
+    assertEtablissementOwnership: async () => undefined,
+    // La garde rend le client borné au propriétaire de l'établissement.
+    assertEtablissementDuCompte: async (etablissementId: string) => {
+      const e = await prisma.etablissement.findUniqueOrThrow({
+        where: { id: etablissementId },
+        select: { entreprise: { select: { userId: true } } },
+      });
+      const userId = e.entreprise.userId!;
+      return { user: { id: userId, email: null }, db: clientBorne({ type: "compte", userId }) };
+    },
+  };
+});
 vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
 
 describe.skipIf(!URL_BASE || !local)("registre d'accessibilité — établissement vierge, PostgreSQL réel", async () => {
@@ -35,9 +57,18 @@ describe.skipIf(!URL_BASE || !local)("registre d'accessibilité — établisseme
   const marque = `test-integration-access-${Date.now()}`;
   const entrepriseIds: string[] = [];
 
+  const utilisateurs: string[] = [];
+
   async function etablissementVierge() {
+    // Un propriétaire, comme toute entreprise en production : la garde rend le
+    // client borné à son compte. Sur cc, `Entreprise.userId` est une clé vers
+    // `User` : le compte existe avant l'entreprise.
+    const userId = randomUUID();
+    await prisma.user.create({ data: { id: userId, name: marque, email: `${userId}@exemple.test` } });
+    utilisateurs.push(userId);
     const e = await prisma.entreprise.create({
       data: {
+        userId,
         raisonSociale: marque,
         effectif: 3,
         adresse: "1 rue du Test, 75000 Paris",
@@ -61,6 +92,7 @@ describe.skipIf(!URL_BASE || !local)("registre d'accessibilité — établisseme
 
   afterAll(async () => {
     await prisma.entreprise.deleteMany({ where: { id: { in: entrepriseIds } } });
+    await prisma.user.deleteMany({ where: { id: { in: utilisateurs } } });
     await prisma.$disconnect();
   });
 

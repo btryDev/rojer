@@ -31,7 +31,7 @@ import { estVerificationEnRetard } from "@/lib/dates/retard";
 import { classerVerification } from "./etats";
 import { ajouterJours, cleJourCivil, depuisCleJourCivil, instantCivil } from "@/lib/dates";
 import { prochaineEcheance } from "./periodicite";
-import { lireEntrees, planifier, type ClientLecture } from "./passe";
+import { lireEntrees, planifier, type ClientPasse } from "./passe";
 import { planVide } from "./passage-a-blanc";
 
 // `vi.hoisted` : les fabriques de `vi.mock` sont remontées en tête de module,
@@ -1390,7 +1390,7 @@ describe("ADR-036 — S1 à S7, de la base à la base", () => {
 
   async function regenererPuisRejouer() {
     await genererCalendrier(ETAB_ID);
-    const client = (await h).prisma as unknown as ClientLecture;
+    const client = (await h).prisma as unknown as ClientPasse;
     const lecture = await lireEntrees(client, ETAB_ID);
     const plusTard = planifier(lecture, ajouterJours(new Date(), 400));
     expect(planVide(plusTard), JSON.stringify(plusTard.aMettreAJour, null, 2)).toBe(true);

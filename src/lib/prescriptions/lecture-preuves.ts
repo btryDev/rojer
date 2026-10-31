@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import type { Db } from "@/lib/auth/compte";
 import {
   lignesVisees,
   SELECT_LIGNE_VISEE,
@@ -14,14 +14,17 @@ import {
  * fois, la page pouvait revenir à `prescriptionId` sans qu'aucun test ne
  * rougisse : `portee.test.ts` tient désormais l'appel dans les deux fichiers,
  * et `prescriptions/actions.test.ts` la clause.
+ *
+ * Par le client borné au compte de l'appelant (ADR-051).
  */
-export async function chargerLignesVisees(
+export async function chargerLignesViseesDuCompte(
+  db: Db,
   etablissementId: string,
   p: PrescriptionAPreuver,
 ): Promise<LigneVisee[]> {
   const where = lignesVisees(etablissementId, p);
   if (where === null) return [];
-  const lignes = await prisma.verification.findMany({
+  const lignes = await db.verification.findMany({
     where,
     select: SELECT_LIGNE_VISEE,
   });

@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { borneeParConstruction } from "./tenancy-portee";
 import {
+  ECRITURE,
   ecrituresExposees,
   estServerAction,
   fonctions,
@@ -196,9 +198,25 @@ const EXEMPTIONS = new Map<string, Exemption>([
  */
 const PLANCHER = 83;
 
+/**
+ * Les écritures exposées, la portée comprise PAR CONSTRUCTION (2026-10-30,
+ * lot 2b de l'isolation) : une action dont toutes les écritures atteintes
+ * passent par le client borné est bornée au compte même sans helper de
+ * `scope.ts` ni prédicat — `borneeParConstruction`, `tenancy-portee.ts`.
+ */
+function ecritures() {
+  return ecrituresExposees().map((e) => {
+    const [chemin, nom] = e.cle.split(":");
+    return {
+      ...e,
+      scopee: e.scopee || borneeParConstruction(join(process.cwd(), "src", chemin), nom, ECRITURE),
+    };
+  });
+}
+
 describe("les écritures des server actions", () => {
   it("établissent toutes l'appartenance, ou sont exemptées nommément", () => {
-    const toutes = ecrituresExposees();
+    const toutes = ecritures();
 
     expect(
       toutes.length,
@@ -234,7 +252,7 @@ describe("les écritures des server actions", () => {
     // personne — ou pire, pour n'importe qui : la fonction a disparu, elle
     // s'est bornée depuis (l'exemption ne sert plus qu'à couvrir le jour où
     // elle se débornera), ou le garde qu'elle nomme n'est plus appelé.
-    const parCle = new Map(ecrituresExposees().map((e) => [e.cle, e]));
+    const parCle = new Map(ecritures().map((e) => [e.cle, e]));
 
     const orphelines = [...EXEMPTIONS.keys()].filter((k) => !parCle.has(k));
     expect(

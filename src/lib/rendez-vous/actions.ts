@@ -1,7 +1,7 @@
 "use server";
 
+import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
 import { requireVerification } from "@/lib/auth/scope";
 import { depuisSaisieDateHeure, joursCivilsEntre } from "@/lib/dates";
 import { resoudrePrestataireOptionnel } from "@/lib/prestataires/queries";
@@ -23,7 +23,7 @@ export async function enregistrerSuiviControle(
   _prev: SuiviControleState,
   formData: FormData,
 ): Promise<SuiviControleState> {
-  const { verification: v, etablissementId } = await requireVerification(verificationId);
+  const { db, verification: v, etablissementId } = await requireVerification(verificationId);
   if (!recoitUnSuivi(v)) {
     return { status: "error", message: "Ce contrôle ne reçoit ni prestataire ni rendez-vous." };
   }
@@ -62,15 +62,29 @@ export async function enregistrerSuiviControle(
       };
     }
   }
-  await prisma.verification.updateMany({
-    where: { id: v.id, etablissementId },
-    data: {
-      prestataireId: prestataire.id,
-      rendezVousLe,
-      // Une note sans rendez-vous n'a pas d'objet.
-      rendezVousNote: rendezVousLe ? (parsed.data.rendezVousNote ?? null) : null,
-    },
-  });
+  // `update` et non `updateMany` : le client borné (ADR-051) réécrit la clé
+  // du prestataire en `connect` borné, ce qu'un `updateMany` ne permet pas.
+  // La ligne vient d'être lue par `requireVerification`. P2025 a deux causes :
+  // la ligne supprimée entre-temps (`updateMany` rendait 0 ligne : rien à
+  // écrire, l'action aboutit, comme avant) ou le prestataire disparu entre sa
+  // résolution et l'écriture (le `connect` borné ne trouve rien : rien n'est
+  // écrit, et l'écran doit le dire).
+  try {
+    await db.verification.update({
+      where: { id: v.id, etablissementId },
+      data: {
+        prestataireId: prestataire.id,
+        rendezVousLe,
+        // Une note sans rendez-vous n'a pas d'objet.
+        rendezVousNote: rendezVousLe ? (parsed.data.rendezVousNote ?? null) : null,
+      },
+    });
+  } catch (e) {
+    if (!(e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025")) throw e;
+    if ((await db.verification.count({ where: { id: v.id, etablissementId } })) > 0) {
+      return { status: "error", message: "Prestataire introuvable" };
+    }
+  }
 
   revalidatePath(`/etablissements/${etablissementId}`, "layout");
   return { status: "success" };

@@ -1,9 +1,5 @@
 import "server-only";
-import { prisma } from "@/lib/prisma";
-import {
-  assertEntrepriseOwnership,
-  assertEtablissementOwnership,
-} from "@/lib/auth/scope";
+import { assertEntrepriseDuCompte, assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { RAPPORT_HORS_LIGNE_SALARIE } from "@/lib/controle/pieces-zip";
 import { cascadeDepuis, compterLignes } from "./cascade";
 import type {
@@ -36,26 +32,26 @@ import type {
 export async function mesurerPerimetreEntreprise(
   entrepriseId: string,
 ): Promise<PerimetreEntreprise> {
-  await assertEntrepriseOwnership(entrepriseId);
+  const { db } = await assertEntrepriseDuCompte(entrepriseId);
 
-  const emporte = await cascadeDepuis(prisma, "Entreprise", [entrepriseId]);
+  const emporte = await cascadeDepuis(db, "Entreprise", [entrepriseId]);
 
   // Les noms viennent de l'ensemble QUE LA CASCADE A MESURÉ, et non d'une
   // seconde requête sur `entrepriseId` : la liste nommée et le compte annoncé
   // sortent ainsi de la même mesure, et aucun `[0]` ne peut se glisser entre
   // les deux.
   const idsEtablissements = [...(emporte.get("Etablissement") ?? [])];
-  const etablissements = await prisma.etablissement.findMany({
+  const etablissements = await db.etablissement.findMany({
     where: { id: { in: idsEtablissements } },
     orderBy: { createdAt: "asc" },
     select: { raisonDisplay: true },
   });
 
   const [versionsDuerp, rapports] = await Promise.all([
-    prisma.duerpVersion.count({
+    db.duerpVersion.count({
       where: { duerp: { etablissement: { entrepriseId } } },
     }),
-    prisma.rapportVerification.count({
+    db.rapportVerification.count({
       where: { etablissement: { entrepriseId }, ...RAPPORT_HORS_LIGNE_SALARIE },
     }),
   ]);
@@ -74,9 +70,9 @@ export async function mesurerPerimetreEntreprise(
 export async function mesurerPerimetreEtablissement(
   etablissementId: string,
 ): Promise<PerimetreEtablissement> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
 
-  const etablissement = await prisma.etablissement.findUniqueOrThrow({
+  const etablissement = await db.etablissement.findUniqueOrThrow({
     where: { id: etablissementId },
     select: {
       raisonDisplay: true,
@@ -86,13 +82,13 @@ export async function mesurerPerimetreEtablissement(
     },
   });
 
-  const emporte = await cascadeDepuis(prisma, "Etablissement", [
+  const emporte = await cascadeDepuis(db, "Etablissement", [
     etablissementId,
   ]);
 
   const [versionsDuerp, rapports] = await Promise.all([
-    prisma.duerpVersion.count({ where: { duerp: { etablissementId } } }),
-    prisma.rapportVerification.count({
+    db.duerpVersion.count({ where: { duerp: { etablissementId } } }),
+    db.rapportVerification.count({
       where: { etablissementId, ...RAPPORT_HORS_LIGNE_SALARIE },
     }),
   ]);

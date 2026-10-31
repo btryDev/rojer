@@ -1,8 +1,7 @@
 import "server-only";
+import { requireCompte } from "@/lib/auth/compte";
 import { cache } from "react";
 import type { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/require-user";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import { SCEAU_CALENDRIER } from "./version-moteur";
 import { lireRepereCalendrier } from "./fraicheur";
@@ -75,13 +74,13 @@ export async function listerVerifications(
   etablissementId: string,
   filtres: FiltresCalendrier = {},
 ) {
-  const user = await requireUser();
+  const { user, db } = await requireCompte();
   // L'horloge est capturée **au bord**, une seule fois, et n'est plus
   // relue au fil des comparaisons (ADR-011).
   const now = new Date();
   const debut = debutDuJour(now);
 
-  const verifs = await prisma.verification.findMany({
+  const verifs = await db.verification.findMany({
     // Trois conditions indépendantes, composées et non diffusées : la portée
     // par bâtiment et l'urgence posent toutes deux un `OR`, et la diffusion
     // faisait disparaître la première (cf. `toutesLesConditions`).
@@ -132,9 +131,9 @@ export type VerificationListee = Awaited<
 >[number];
 
 export async function getVerification(id: string) {
-  const user = await requireUser();
-  const v = await prisma.verification.findFirst({
-    where: { id, etablissement: { entreprise: { userId: user.id } } },
+  const { db } = await requireCompte();
+  const v = await db.verification.findFirst({
+    where: { id },
     include: {
       equipement: true,
       salarie: { select: { nom: true, prenom: true } },
@@ -242,9 +241,9 @@ async function lireLignesComptees(
   etablissementId: string,
   batimentId: string | undefined,
 ): Promise<LigneComptee[]> {
-  const user = await requireUser();
+  const { user, db } = await requireCompte();
   const [lignes, dernieres] = await Promise.all([
-    prisma.verification.findMany({
+    db.verification.findMany({
       where: toutesLesConditions(
         {
           etablissementId,
@@ -437,11 +436,11 @@ export async function listerEcheancesAnnoncables(
   etablissementId: string,
   batimentId: Parameters<typeof porteeBatiment>[0],
 ) {
-  const user = await requireUser();
-  return prisma.verification.findMany({
+  const { db } = await requireCompte();
+  return db.verification.findMany({
     // La clause vit dans `portee.ts`, où un test la tient.
     where: toutesLesConditions(
-      { etablissementId, etablissement: { entreprise: { userId: user.id } } },
+      { etablissementId },
       echeancesAnnoncables(),
       porteeBatiment(batimentId),
     ),

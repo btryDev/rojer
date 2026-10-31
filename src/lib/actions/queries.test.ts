@@ -71,13 +71,15 @@ const action = (o: {
 });
 
 describe("compterActions", () => {
-  it("une seule lecture, bornée au compte, levées sur trente jours civils", async () => {
+  it("une seule lecture, par le client borné, levées sur trente jours civils", async () => {
     await compterActions("etab-1", NOW);
     expect(prismaMock.action.findMany).toHaveBeenCalledTimes(1);
     expect(prismaMock.action.count).not.toHaveBeenCalled();
     const where = prismaMock.action.findMany.mock.calls[0][0].where;
     expect(where.etablissementId).toBe("etab-1");
-    expect(where.etablissement).toEqual({ entreprise: { userId: "user-1" } });
+    // La borne au compte est celle du client borné (ADR-051), plus un prédicat
+    // écrit (retiré le 2026-10-30, lot 2b) : le `where` du module n'en porte pas.
+    expect(where.etablissement).toBeUndefined();
     expect(where.OR).toEqual([
       { statut: { in: ["ouverte", "en_cours"] } },
       { statut: "levee", leveeLe: { gte: new Date("2026-07-10T22:00:00.000Z") } },

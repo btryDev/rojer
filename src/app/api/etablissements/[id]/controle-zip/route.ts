@@ -5,6 +5,7 @@ import JSZip from "jszip";
 import { NextResponse } from "next/server";
 import { requireEtablissement } from "@/lib/auth/scope";
 import type { AuthedUser } from "@/lib/auth/require-user";
+import type { Db } from "@/lib/auth/compte";
 import { getStorage, type FileStorage } from "@/lib/storage";
 import { publicAppUrl, refusUrlPublique } from "@/lib/email";
 import {
@@ -118,7 +119,7 @@ export async function GET(
   const { id } = await context.params;
   // L'utilisateur, lu une fois ici, est passé aux builders (M7) : hors rendu,
   // chaque `requireUser()` est un `getUser()` réseau.
-  const { user, etablissement } = await requireEtablissement(id);
+  const { user, db, etablissement } = await requireEtablissement(id);
 
   // Une place d'export (H3, `exports/limite.ts`), tenue pendant la
   // construction — lectures, quatre rendus PDF, vérification des fichiers — et
@@ -129,7 +130,7 @@ export async function GET(
   if (liberer instanceof Response) return liberer;
   let archive: Awaited<ReturnType<typeof construireArchive>>;
   try {
-    archive = await construireArchive(id, etablissement, user);
+    archive = await construireArchive(db, id, etablissement, user);
   } finally {
     liberer();
   }
@@ -144,6 +145,7 @@ export async function GET(
 }
 
 async function construireArchive(
+  db: Db,
   id: string,
   etablissement: Awaited<ReturnType<typeof requireEtablissement>>["etablissement"],
   user: AuthedUser,
@@ -242,7 +244,7 @@ async function construireArchive(
 
   // ── 01 Dossier de conformité ────────────────────────────────────────
   try {
-    const data = await construireDossierConformiteData(id, user);
+    const data = await construireDossierConformiteData(db, id, user);
     if (data) {
       for (const v of data.verifsEnRetard) {
         if (v.contractuelle) echeancesContractuelles.add(v.id);
@@ -281,7 +283,7 @@ async function construireArchive(
   // échec n'est pas « aucune version validée ».
   let duerpLu = false;
   try {
-    const versions = await versionsDuDuerpDuDossier(id, user.id);
+    const versions = await versionsDuDuerpDuDossier(db, id);
     duerpLu = true;
     const versionCourante = versions[0] ?? null;
     if (versionCourante) {
@@ -324,7 +326,7 @@ async function construireArchive(
 
   // ── 03 Registre de sécurité ─────────────────────────────────────────
   try {
-    const data = await construireRegistreData(id, user);
+    const data = await construireRegistreData(db, id);
     if (data) {
       for (const v of data.verifsEnAttente) {
         if (v.contractuelle) echeancesContractuelles.add(v.id);
@@ -340,7 +342,7 @@ async function construireArchive(
 
   // ── 04 Plan d'actions ───────────────────────────────────────────────
   try {
-    const data = await construirePlanActionsData(id, user);
+    const data = await construirePlanActionsData(db, id);
     if (data) {
       const buf = await renderToBuffer(PlanActionsDocument({ data }));
       zip.file(PIECES_ZIP.plan, new Uint8Array(buf));
@@ -351,7 +353,7 @@ async function construireArchive(
 
   // ── 05 Accessibilité (URL publique + QR si publié) ──────────────────
   const registreAccess = await lire(PIECES_ZIP.accessibilite, null, () =>
-    registreAccessibiliteDuDossier(id, user.id),
+    registreAccessibiliteDuDossier(db, id),
   );
   // La même règle que la page publique (`registreServiAuPublic`) : le ZIP ne
   // donne pas une adresse qui répondrait 404 (2026-10-12). Et sans adresse
@@ -382,7 +384,7 @@ async function construireArchive(
 
   // ── Prestataires : attestations URSSAF, RC Pro, Kbis ────────────────
   const prestataires = await lire(PIECES_ZIP.prestataires, [], () =>
-    prestatairesDuDossier(id, user.id),
+    prestatairesDuDossier(db, id),
   );
   if (prestataires.length > 0) {
     const dossierPrestataires = zip.folder(nomDeDossier(PIECES_ZIP.prestataires)) ?? zip;
@@ -448,13 +450,13 @@ async function construireArchive(
   // n'a pas accès à l'application (`controle/fichiers-zip.ts`, 2026-09-27).
   // Jamais ceux d'une ligne de salarié (`filtreRapportsDuDossier`, M1).
   const rapportsDeposes = await lire(PIECES_ZIP.rapports, [], () =>
-    rapportsDeposesDuDossier(id, user.id),
+    rapportsDeposesDuDossier(db, id),
   );
   // Combien sont écartés, pour le dire. Un comptage en échec ne prive pas
   // Rapports/ (ce n'est pas `lire`) : le README dit alors la règle sans nombre.
   let rapportsSalariesEcartes: number | null;
   try {
-    rapportsSalariesEcartes = await compterRapportsSalariesEcartes(id, user.id);
+    rapportsSalariesEcartes = await compterRapportsSalariesEcartes(db, id);
   } catch (e) {
     console.error("controle-zip : comptage des rapports de salarié en échec", e);
     rapportsSalariesEcartes = null;
@@ -484,7 +486,7 @@ async function construireArchive(
   // encore présente le matin. (La fenêtre et le filtre vivent dans
   // `controle/pieces-zip.ts` depuis le 2026-10-12 : l'écran les lit aussi.)
   const permisFeuList = await lire(PIECES_ZIP.permisFeu, [], () =>
-    permisFeuDuDossier(id, user.id, maintenant),
+    permisFeuDuDossier(db, id, maintenant),
   );
   if (permisFeuList.length > 0) {
     const txt = [
@@ -522,7 +524,7 @@ async function construireArchive(
 
   // ── 07 Plans de prévention (actifs 12 derniers mois) ────────────────
   const plansList = await lire(PIECES_ZIP.plansPrevention, [], () =>
-    plansPreventionDuDossier(id, user.id, maintenant),
+    plansPreventionDuDossier(db, id, maintenant),
   );
   if (plansList.length > 0) {
     const txt = [
@@ -586,7 +588,7 @@ async function construireArchive(
   // Sans le nom de qui a relevé (`ReleveTemperature.operateur`) : la
   // retenue est dans la requête (`carnetSanitaireDuDossier`, docs/rgpd.md § 2.5).
   const carnetSan = await lire(PIECES_ZIP.carnet, null, () =>
-    carnetSanitaireDuDossier(id, user.id),
+    carnetSanitaireDuDossier(db, id),
   );
   if (carnetSan && (carnetSan.pointsReleve.length > 0 || carnetSan.analyses.length > 0)) {
     const txt = [

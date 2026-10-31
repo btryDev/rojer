@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { EtablissementFaux, LigneFausse } from "./faux-prisma";
-import { lireEntrees, planifier, type ClientLecture } from "./passe";
+import { lireEntrees, planifier, type ClientPasse } from "./passe";
 
 // 2026-10-13 — l'hôtel de 5ᵉ catégorie quitte la ligne triennale de PE 4 § 2
 // (`typesExclus: ["O"]`) pour la ligne biennale de PO 1 § 3, qui la déclare
@@ -25,7 +25,7 @@ const BIENNALE = "incendie-hotel-po-controle-biennal-installations";
 const MAINTENANT = new Date("2026-10-13T08:00:00Z");
 
 const { db, prisma } = await h;
-const client = prisma as unknown as ClientLecture;
+const client = prisma as unknown as ClientPasse;
 
 function poserEtablissement(typeErp: "O" | "N"): EtablissementFaux {
   const etab: EtablissementFaux = {

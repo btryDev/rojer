@@ -4,8 +4,8 @@ import { requireEtablissement } from "@/lib/auth/scope";
 import { registreServiAuPublic } from "./publication";
 
 export async function getRegistreAccessibilite(etablissementId: string) {
-  const { etablissement } = await requireEtablissement(etablissementId);
-  return prisma.registreAccessibilite.findUnique({
+  const { db, etablissement } = await requireEtablissement(etablissementId);
+  return db.registreAccessibilite.findUnique({
     where: { etablissementId: etablissement.id },
   });
 }

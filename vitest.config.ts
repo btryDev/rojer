@@ -5,6 +5,8 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["src/**/*.test.{ts,tsx}"],
+    // Le client borné rend le client simulé des tests (voir le fichier).
+    setupFiles: ["./vitest.setup.ts"],
   },
   resolve: {
     alias: {

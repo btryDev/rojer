@@ -28,10 +28,13 @@ const h = vi.hoisted(() => {
     nbZones: 3 as number,
   };
 
+  // Le contenu de la zone se lit, puis se rattache à la destination par
+  // `connect` (ADR-051, lot 2b : le client borné refuse un `updateMany` qui
+  // change `batimentId`).
   const deplacement = (table: string) => ({
-    updateMany: async (args: unknown) => {
+    findMany: async (args: unknown) => {
       db.appels.push({ table, args });
-      return { count: 1 };
+      return [{ id: `${table}-1` }];
     },
   });
 
@@ -41,6 +44,10 @@ const h = vi.hoisted(() => {
     permisFeu: deplacement("permisFeu"),
     planPrevention: deplacement("planPrevention"),
     batiment: {
+      update: async (args: unknown) => {
+        db.appels.push({ table: "batiment.update", args });
+        return {};
+      },
       delete: async (args: unknown) => {
         db.appels.push({ table: "batiment.delete", args });
         return {};
@@ -74,6 +81,12 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/auth/require-user", () => ({ requireUser: h.requireUser }));
 vi.mock("@/lib/auth/scope", () => ({
   assertEtablissementOwnership: h.assertEtablissementOwnership,
+  // La même garde, qui rend aussi le client borné (ADR-051) : ici, le client
+  // simulé ; elle passe par la simulation d'origine, refus compris.
+  assertEtablissementDuCompte: async (id: string) => {
+    await (h.assertEtablissementOwnership as (x: string) => Promise<unknown>)(id);
+    return { user: await h.requireUser(), db: await (await import("@/test/garde-simulee")).clientDuCompteSimule() };
+  },
 }));
 
 const { creerBatiment, modifierBatiment, supprimerBatiment } = await import(
@@ -109,6 +122,7 @@ describe("supprimerBatiment — le contenu part avant le lieu", () => {
       "pointReleve",
       "permisFeu",
       "planPrevention",
+      "batiment.update",
       "batiment.delete",
     ]);
   });
@@ -121,7 +135,17 @@ describe("supprimerBatiment — le contenu part avant le lieu", () => {
       const eq = h.db.appels.find((a) => a.table === "equipement");
       expect(eq?.args).toEqual({
         where: { batimentId: B.id },
-        data: { batimentId: "b-principal" },
+        select: { id: true },
+      });
+      const rattache = h.db.appels.find((a) => a.table === "batiment.update");
+      expect(rattache?.args).toEqual({
+        where: { id: "b-principal" },
+        data: {
+          equipements: { connect: [{ id: "equipement-1" }] },
+          pointsReleve: { connect: [{ id: "pointReleve-1" }] },
+          permisFeu: { connect: [{ id: "permisFeu-1" }] },
+          plansPrevention: { connect: [{ id: "planPrevention-1" }] },
+        },
       });
     });
   });

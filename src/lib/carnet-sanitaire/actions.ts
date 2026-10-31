@@ -2,8 +2,8 @@
 
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
-import { assertEtablissementOwnership } from "@/lib/auth/scope";
+import type { Db } from "@/lib/auth/compte";
+import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { resoudreBatimentOptionnel } from "@/lib/batiments/queries";
 import {
   getStorage,
@@ -49,12 +49,12 @@ const formulaireInvalide = (fieldErrors: Record<string, string[]>): CarnetAction
   fieldErrors,
 });
 
-async function obtenirOuCreerCarnet(etablissementId: string) {
-  const existant = await prisma.carnetSanitaire.findUnique({
+async function obtenirOuCreerCarnet(db: Db, etablissementId: string) {
+  const existant = await db.carnetSanitaire.findUnique({
     where: { etablissementId },
   });
   if (existant) return existant;
-  return prisma.carnetSanitaire.create({
+  return db.carnetSanitaire.create({
     data: {
       id: `cs_${randomUUID()}`,
       etablissementId,
@@ -91,7 +91,7 @@ export async function creerPointReleve(
   _prev: CarnetActionState,
   formData: FormData,
 ): Promise<CarnetActionState> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
   const parsed = lirePoint(formData);
   if (!parsed.success) return formulaireInvalide(parsed.error.flatten().fieldErrors);
   // Un point NEUF dit où il est (2026-10-14) : seul un point d'avant le type
@@ -110,8 +110,8 @@ export async function creerPointReleve(
       fieldErrors: { batimentId: ["Zone introuvable"] },
     };
   }
-  const carnet = await obtenirOuCreerCarnet(etablissementId);
-  await prisma.pointReleve.create({
+  const carnet = await obtenirOuCreerCarnet(db, etablissementId);
+  await db.pointReleve.create({
     data: {
       id: `pt_${randomUUID()}`,
       carnetId: carnet.id,
@@ -136,10 +136,10 @@ export async function modifierPointReleve(
   _prev: CarnetActionState,
   formData: FormData,
 ): Promise<CarnetActionState> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
   const parsed = lirePoint(formData);
   if (!parsed.success) return formulaireInvalide(parsed.error.flatten().fieldErrors);
-  const point = await prisma.pointReleve.findFirst({
+  const point = await db.pointReleve.findFirst({
     where: { id: pointId, actif: true, carnet: { etablissementId } },
     select: {
       id: true,
@@ -169,13 +169,13 @@ export async function modifierPointReleve(
     };
   }
   const champs = champsDuPoint(parsed.data);
-  await prisma.$transaction([
-    prisma.pointReleve.update({
+  await db.$transaction([
+    db.pointReleve.update({
       where: { id: point.id },
       data: { ...champs, batimentId: batiment.id },
     }),
     ...point.releves.map((r) =>
-      prisma.releveTemperature.update({
+      db.releveTemperature.update({
         where: { id: r.id },
         data: { conforme: estReleveConforme(r.temperatureCelsius, champs) },
       }),
@@ -194,7 +194,7 @@ export async function supprimerPointReleve(
   etablissementId: string,
   pointId: string,
 ): Promise<void> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
   // Soft delete : on garde les relevés historiques, on désactive le point.
   //
   // Le point est désactivé *via* son carnet : `assertEtablissementOwnership`
@@ -203,7 +203,7 @@ export async function supprimerPointReleve(
   // un utilisateur authentifié pouvait passer son propre établissement et
   // l'identifiant du point d'un tiers. `ajouterReleve`, juste dessous, fait
   // déjà ce rapprochement.
-  const { count } = await prisma.pointReleve.updateMany({
+  const { count } = await db.pointReleve.updateMany({
     where: { id: pointId, carnet: { etablissementId } },
     data: { actif: false },
   });
@@ -227,10 +227,10 @@ export async function ajouterReleve(
   _prev: CarnetActionState,
   formData: FormData,
 ): Promise<CarnetActionState> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
   const parsed = lireReleve(formData, formData.get("pointReleveId"));
   if (!parsed.success) return formulaireInvalide(parsed.error.flatten().fieldErrors);
-  const point = await prisma.pointReleve.findUnique({
+  const point = await db.pointReleve.findUnique({
     where: { id: parsed.data.pointReleveId },
     select: {
       seuilMinCelsius: true,
@@ -242,7 +242,7 @@ export async function ajouterReleve(
     return { status: "error", message: "Point de relevé introuvable" };
   }
   const conforme = estReleveConforme(parsed.data.temperatureCelsius, point);
-  await prisma.releveTemperature.create({
+  await db.releveTemperature.create({
     data: {
       id: `rel_${randomUUID()}`,
       pointReleveId: parsed.data.pointReleveId,
@@ -259,8 +259,8 @@ export async function ajouterReleve(
 
 /** Un relevé, cherché dans le carnet de CET établissement : l'identifiant
  *  vient du client (même rapprochement que `supprimerPointReleve`). */
-function releveDansLeCarnet(etablissementId: string, releveId: string) {
-  return prisma.releveTemperature.findFirst({
+function releveDansLeCarnet(db: Db, etablissementId: string, releveId: string) {
+  return db.releveTemperature.findFirst({
     where: { id: releveId, pointReleve: { carnet: { etablissementId } } },
     select: {
       id: true,
@@ -279,12 +279,12 @@ export async function modifierReleve(
   _prev: CarnetActionState,
   formData: FormData,
 ): Promise<CarnetActionState> {
-  await assertEtablissementOwnership(etablissementId);
-  const releve = await releveDansLeCarnet(etablissementId, releveId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
+  const releve = await releveDansLeCarnet(db, etablissementId, releveId);
   if (!releve) return { status: "error", message: "Relevé introuvable" };
   const parsed = lireReleve(formData, releve.pointReleveId);
   if (!parsed.success) return formulaireInvalide(parsed.error.flatten().fieldErrors);
-  await prisma.releveTemperature.update({
+  await db.releveTemperature.update({
     where: { id: releve.id },
     data: {
       dateReleve: parsed.data.dateReleve,
@@ -304,8 +304,8 @@ export async function supprimerReleve(
   etablissementId: string,
   releveId: string,
 ): Promise<void> {
-  await assertEtablissementOwnership(etablissementId);
-  const { count } = await prisma.releveTemperature.deleteMany({
+  const { db } = await assertEtablissementDuCompte(etablissementId);
+  const { count } = await db.releveTemperature.deleteMany({
     where: { id: releveId, pointReleve: { carnet: { etablissementId } } },
   });
   if (count === 0) throw new Error("Relevé introuvable");
@@ -357,11 +357,11 @@ export async function ajouterAnalyseLegionelle(
   _prev: CarnetActionState,
   formData: FormData,
 ): Promise<CarnetActionState> {
-  await assertEtablissementOwnership(etablissementId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
   const parsed = lireAnalyse(formData);
   if (!parsed.success) return formulaireInvalide(parsed.error.flatten().fieldErrors);
 
-  const carnet = await obtenirOuCreerCarnet(etablissementId);
+  const carnet = await obtenirOuCreerCarnet(db, etablissementId);
 
   const depot = await deposerRapportLabo(etablissementId, formData);
   if (!depot.ok) return { status: "error", message: depot.message };
@@ -377,7 +377,7 @@ export async function ajouterAnalyseLegionelle(
   // ne référence. Même nettoyage best-effort que les trois autres modules
   // d'upload (rapports, prestataires).
   try {
-    await prisma.analyseLegionelle.create({
+    await db.analyseLegionelle.create({
       data: {
         id: `ana_${randomUUID()}`,
         carnetId: carnet.id,
@@ -401,8 +401,8 @@ export async function ajouterAnalyseLegionelle(
 }
 
 /** Une analyse, cherchée dans le carnet de CET établissement. */
-function analyseDansLeCarnet(etablissementId: string, analyseId: string) {
-  return prisma.analyseLegionelle.findFirst({
+function analyseDansLeCarnet(db: Db, etablissementId: string, analyseId: string) {
+  return db.analyseLegionelle.findFirst({
     where: { id: analyseId, carnet: { etablissementId } },
     select: { id: true, rapportCle: true },
   });
@@ -421,8 +421,8 @@ export async function modifierAnalyseLegionelle(
   _prev: CarnetActionState,
   formData: FormData,
 ): Promise<CarnetActionState> {
-  await assertEtablissementOwnership(etablissementId);
-  const analyse = await analyseDansLeCarnet(etablissementId, analyseId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
+  const analyse = await analyseDansLeCarnet(db, etablissementId, analyseId);
   if (!analyse) return { status: "error", message: "Analyse introuvable" };
   const parsed = lireAnalyse(formData);
   if (!parsed.success) return formulaireInvalide(parsed.error.flatten().fieldErrors);
@@ -431,7 +431,7 @@ export async function modifierAnalyseLegionelle(
   if (!depot.ok) return { status: "error", message: depot.message };
 
   try {
-    await prisma.analyseLegionelle.update({
+    await db.analyseLegionelle.update({
       where: { id: analyse.id },
       data: {
         dateAnalyse: parsed.data.dateAnalyse,
@@ -461,10 +461,10 @@ export async function supprimerAnalyseLegionelle(
   etablissementId: string,
   analyseId: string,
 ): Promise<void> {
-  await assertEtablissementOwnership(etablissementId);
-  const analyse = await analyseDansLeCarnet(etablissementId, analyseId);
+  const { db } = await assertEtablissementDuCompte(etablissementId);
+  const analyse = await analyseDansLeCarnet(db, etablissementId, analyseId);
   if (!analyse) throw new Error("Analyse introuvable");
-  await prisma.analyseLegionelle.delete({ where: { id: analyse.id } });
+  await db.analyseLegionelle.delete({ where: { id: analyse.id } });
   if (analyse.rapportCle) {
     await libererFichiers([analyse.rapportCle], "carnet-sanitaire/suppression");
   }

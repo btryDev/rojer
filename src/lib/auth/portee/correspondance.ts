@@ -13,15 +13,17 @@ export type Rattachement = { parent: string };
 /** Hors compte : jamais servi par le client borné. */
 export type HorsCompte = { horsCompte: string };
 /**
- * Identité (le `User` de Better Auth) : hors compte comme les autres tables
- * d'authentification — jamais lue ni écrite par le client borné —, mais des
- * lignes du compte la référencent (`Entreprise.userId`, `Signature.userId`…).
+ * Identité (le `User` de Better Auth, sur cc) : hors compte comme les autres
+ * tables d'authentification, mais des lignes du compte y pointent ; une
+ * relation vers elle ne désigne que le compte de la portée (borne.ts).
  */
 export type Identite = { identite: string };
 
 export type Classement = Racine | Rattachement | HorsCompte | Identite;
 
-export const CORRESPONDANCE: Record<string, Classement> = {
+import type { Prisma } from "@prisma/client";
+
+export const CORRESPONDANCE = {
   // Racines
   Entreprise: { racine: "userId" },
   // `DemandeAssistance.userId` est posé par l'action d'un compte connecté ;
@@ -80,7 +82,7 @@ export const CORRESPONDANCE: Record<string, Classement> = {
     horsCompte: "jeton de vérification Better Auth (e-mail, réinitialisation, défi et appareil de confiance de la double authentification)",
   },
   TwoFactor: { horsCompte: "second facteur Better Auth (secret TOTP et codes de secours, chiffrés), lu à la connexion" },
-};
+} satisfies Record<Prisma.ModelName, Classement>;
 
 /** Hors compte au sens du client borné : il ne lit ni n'écrit ces modèles. */
 export function estHorsCompte(c: Classement): c is HorsCompte | Identite {
@@ -89,3 +91,16 @@ export function estHorsCompte(c: Classement): c is HorsCompte | Identite {
 export function estRacine(c: Classement): c is Racine {
   return "racine" in c;
 }
+
+/**
+ * Les clés d'identité SANS relation au schéma : sur `main`, il n'y a pas de
+ * modèle `User` (l'identité vit chez Supabase), et `Signature.userId`,
+ * `AccessToken.createdByUserId` sont de simples colonnes. Leur valeur ne peut
+ * être que l'utilisateur du compte, ou `null` (seconde lecture du 2026-10-31).
+ * Sur `cc`, elles deviennent des relations vers `User`, bornées comme telles :
+ * l'entrée doit alors partir — `borne.ts` refuse au chargement une entrée qui
+ * désigne la clé d'une relation.
+ */
+// Sur cc : vide. `Signature.userId` et `AccessToken.createdByUserId` y sont des
+// relations vers `User`, bornées comme l'identité (borne.ts).
+export const IDENTITES_SCALAIRES: Partial<Record<Prisma.ModelName, readonly string[]>> = {};
