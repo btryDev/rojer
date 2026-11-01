@@ -1,5 +1,10 @@
 # CLAUDE.md — Rojer, plateforme de pilotage de la prévention (TPE/PME)
 
+> **Bascule vers Clever Cloud en cours (2026-11-01).** `main` = production
+> Vercel actuelle ; `cc` = future production (Better Auth, isolation des
+> comptes). Flux `main` → `cc` seulement. État, règles et reste à faire :
+> **`docs/etat-bascule-clever-cloud.md`** — à lire avant toute session.
+
 ## Vision produit
 
 > **« Concentrez-vous sur votre activité, Rojer coordonne la prévention des risques de votre structure. »**
