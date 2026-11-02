@@ -27,7 +27,7 @@
 export const ENVIRONNEMENTS_APP = ["production", "preview", "development"] as const;
 export type EnvironnementApp = (typeof ENVIRONNEMENTS_APP)[number];
 
-type Env = Record<string, string | undefined>;
+export type Env = Record<string, string | undefined>;
 
 function estEnvironnementApp(v: string): v is EnvironnementApp {
   return (ENVIRONNEMENTS_APP as readonly string[]).includes(v);

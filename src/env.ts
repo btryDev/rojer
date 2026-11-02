@@ -50,7 +50,7 @@ import "server-only";
 import { z } from "zod";
 import { ENVIRONNEMENTS_APP } from "@/lib/environnement";
 import { FORME_EXPORTS_SIMULTANES } from "@/lib/exports/limite";
-import { etatStripe, FORME_CLE_STRIPE, FORME_SECRET_WEBHOOK_STRIPE } from "@/lib/stripe/config";
+import { etatStripe } from "@/lib/stripe/config";
 
 type Env = Record<string, string | undefined>;
 
@@ -61,12 +61,6 @@ const requise = (description: string) =>
   z.preprocess(vide, z.string({ error: `absente (${description})` }));
 
 const optionnelle = z.preprocess(vide, z.string().optional());
-
-/** Vide → absente ; sinon la valeur sans les espaces qui l'entourent. */
-const sansEspacesAutour = (v: unknown) => {
-  const w = vide(v);
-  return typeof w === "string" ? w.trim() : w;
-};
 
 const urlHttp = z.string().refine((v) => {
   try {
@@ -140,19 +134,11 @@ const schema = z
     LEGIFRANCE_CLIENT_SECRET: optionnelle,
     LEGIFRANCE_ENV: enumeration(["sandbox", "production"] as const),
 
-    // Abonnements (ADR-053, `stripe/config.ts`) : la forme ici ; l'accord de
-    // la clé avec l'environnement là-bas, où un refus ferme les abonnements
-    // sans fermer le serveur.
-    // Les espaces autour (copier-coller, retour à la ligne) sont retirés,
-    // comme `stripe/config.ts` le fait : ils ne doivent pas fermer le serveur.
-    STRIPE_SECRET_KEY: z.preprocess(
-      sansEspacesAutour,
-      z.string().regex(FORME_CLE_STRIPE, "doit être une clé Stripe (sk_ ou rk_, test ou live)").optional(),
-    ),
-    STRIPE_WEBHOOK_SECRET: z.preprocess(
-      sansEspacesAutour,
-      z.string().regex(FORME_SECRET_WEBHOOK_STRIPE, "doit être un secret de webhook Stripe (whsec_)").optional(),
-    ),
+    // Abonnements (ADR-053) : forme et accord avec l'environnement sont
+    // jugés par `stripe/config.ts` seul, dont un refus ferme les abonnements,
+    // pas le serveur (signalé par `avertissementsEnvironnement`).
+    STRIPE_SECRET_KEY: optionnelle,
+    STRIPE_WEBHOOK_SECRET: optionnelle,
   });
 
 /**

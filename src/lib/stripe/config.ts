@@ -1,40 +1,25 @@
 import "server-only";
-// La configuration Stripe (ADR-053 § 7) : la clé et l'environnement vont
-// ensemble.
+// La configuration Stripe (ADR-053 § 7), seule décision : la clé et
+// l'environnement vont ensemble, et la clé avec le secret du webhook.
 //
-// - Rien de posé : les abonnements sont désactivés, sciemment, et l'app sert
-//   tout le reste (règle des variables optionnelles, `env.ts`).
-// - Une clé `live` n'est admise qu'en production DÉCLARÉE
-//   (`environnementApp() === "production"`) ET sur un serveur de production
-//   (`NODE_ENV=production`) : une préversion, ou un poste de développement où
-//   l'on aurait copié le `.env` de production, ne doit jamais pouvoir débiter
-//   une vraie carte. Et en
-//   production, elle doit être RESTREINTE (`rk_live_…`) : une clé fuitée ne
-//   fait que ce que ses permissions autorisent.
-// - Une clé de test n'est jamais admise en production : des clients y
-//   « paieraient » sans être débités.
-// - La clé et le secret du webhook vont par deux : l'une sans l'autre, la
-//   copie locale des abonnements ne se tiendrait pas à jour.
+// - Rien de posé : abonnements désactivés sciemment, l'app sert le reste.
+// - Clé `live` : seulement sur un serveur de production (`NODE_ENV`) qui se
+//   déclare production (`APP_ENV`) — un `.env` de production copié sur un
+//   poste ne débite pas de vraie carte —, et restreinte (`rk_live_`).
+// - Clé de test : jamais en production (des clients y « paieraient » sans
+//   être débités).
 //
-// Une configuration refusée n'arrête pas le serveur : les abonnements se
-// ferment, et le motif est signalé au démarrage (`avertissementsEnvironnement`).
-// Aucun message ne cite une valeur.
-//
-// `configurationStripe` rend la clé et le secret : réservée au serveur
-// (`server-only`) et aux modules qui parlent à Stripe. Pour dire à l'écran si
-// les abonnements sont ouverts, `etatStripe` rend la même décision SANS
-// secret — c'est elle qu'un composant reçoit, jamais l'autre. Sans le SDK :
-// `env.ts` y lit les formes, les tests l'appellent avec un environnement en
-// paramètre.
+// Tout refus, forme comprise, ferme les abonnements et non le serveur ; le
+// motif est signalé au démarrage (`avertissementsEnvironnement`) et ne cite
+// jamais une valeur. `configurationStripe` rend les secrets : serveur seul.
+// Un écran ne reçoit que `etatStripe`, la même décision sans secret.
 
-import { environnementApp } from "@/lib/environnement";
-
-type Env = Record<string, string | undefined>;
+import { environnementApp, type Env } from "@/lib/environnement";
 
 /** Clé secrète (`sk_`) ou restreinte (`rk_`), de test ou de production. */
-export const FORME_CLE_STRIPE = /^(sk|rk)_(test|live)_\w+$/;
+const FORME_CLE_STRIPE = /^(sk|rk)_(test|live)_\w+$/;
 /** Secret de signature d'un endpoint de webhook. */
-export const FORME_SECRET_WEBHOOK_STRIPE = /^whsec_\S+$/;
+const FORME_SECRET_WEBHOOK_STRIPE = /^whsec_\S+$/;
 
 export type ModeStripe = "test" | "live";
 

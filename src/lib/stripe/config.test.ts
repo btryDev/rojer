@@ -17,9 +17,15 @@ const INDETERMINE = { NODE_ENV: "production" };
 
 const avec = (env: Record<string, string>, cle?: string, wh?: string) => ({
   ...env,
-  ...(cle === undefined ? {} : { STRIPE_SECRET_KEY: cle }),
-  ...(wh === undefined ? {} : { STRIPE_WEBHOOK_SECRET: wh }),
+  STRIPE_SECRET_KEY: cle,
+  STRIPE_WEBHOOK_SECRET: wh,
 });
+
+/** Le motif d'un refus (`undefined` si la configuration est active). */
+const motifDe = (env: Record<string, string | undefined>) => {
+  const r = configurationStripe(env);
+  return r.active ? undefined : r.motif;
+};
 
 describe("configurationStripe", () => {
   it("rien de posé : désactivée sciemment, sans motif", () => {
@@ -42,31 +48,25 @@ describe("configurationStripe", () => {
     expect(configurationStripe(avec(PROD, LIVE_RESTREINTE, WH))).toMatchObject({ active: true, mode: "live" });
 
     for (const env of [DEV, PREVIEW, INDETERMINE]) {
-      const r = configurationStripe(avec(env, LIVE_RESTREINTE, WH));
-      expect(r).toMatchObject({ active: false });
-      expect(r.active || r.motif).toMatch(/production déclarée/);
+      expect(motifDe(avec(env, LIVE_RESTREINTE, WH))).toMatch(/production déclarée/);
     }
     // Le `.env` de production copié sur un poste : APP_ENV dit production,
     // le serveur n'en est pas un (`next dev`).
-    const copieSurUnPoste = configurationStripe(avec({ NODE_ENV: "development", APP_ENV: "production" }, LIVE_RESTREINTE, WH));
-    expect(copieSurUnPoste.active || copieSurUnPoste.motif).toMatch(/production déclarée/);
+    const copieSurUnPoste = { NODE_ENV: "development", APP_ENV: "production" };
+    expect(motifDe(avec(copieSurUnPoste, LIVE_RESTREINTE, WH))).toMatch(/production déclarée/);
 
-    const nonRestreinte = configurationStripe(avec(PROD, LIVE, WH));
-    expect(nonRestreinte.active || nonRestreinte.motif).toMatch(/non restreinte/);
+    expect(motifDe(avec(PROD, LIVE, WH))).toMatch(/non restreinte/);
   });
 
   it("jamais une clé de test en production", () => {
     for (const cle of [TEST, TEST_RESTREINTE]) {
-      const r = configurationStripe(avec(PROD, cle, WH));
-      expect(r.active || r.motif).toMatch(/de test refusée en production/);
+      expect(motifDe(avec(PROD, cle, WH))).toMatch(/de test refusée en production/);
     }
   });
 
   it("la clé et le secret du webhook vont par deux", () => {
-    const sansSecret = configurationStripe(avec(DEV, TEST));
-    expect(sansSecret.active || sansSecret.motif).toMatch(/STRIPE_WEBHOOK_SECRET absente/);
-    const sansCle = configurationStripe(avec(DEV, undefined, WH));
-    expect(sansCle.active || sansCle.motif).toMatch(/STRIPE_SECRET_KEY absente/);
+    expect(motifDe(avec(DEV, TEST))).toMatch(/STRIPE_WEBHOOK_SECRET absente/);
+    expect(motifDe(avec(DEV, undefined, WH))).toMatch(/STRIPE_SECRET_KEY absente/);
   });
 
   it("refuse une forme inconnue", () => {
@@ -96,10 +96,10 @@ describe("configurationStripe", () => {
       avec(DEV, TEST),
     ];
     for (const env of cas) {
-      const r = configurationStripe(env);
-      expect(r.active).toBe(false);
+      const motif = motifDe(env);
+      expect(motif).toEqual(expect.any(String));
       for (const valeur of [TEST, LIVE, LIVE_RESTREINTE, WH, "pk_test_abc", "pas-un-whsec"]) {
-        expect(r.active || r.motif).not.toContain(valeur);
+        expect(motif).not.toContain(valeur);
       }
     }
   });

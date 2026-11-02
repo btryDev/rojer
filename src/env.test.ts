@@ -98,25 +98,8 @@ describe("validerEnvironnement", () => {
 });
 
 describe("variables Stripe (ADR-053)", () => {
-  it("vérifie leur forme, sans citer la valeur", () => {
-    expect(() => validerEnvironnement({ ...BASE, STRIPE_SECRET_KEY: "sk_test_abc", STRIPE_WEBHOOK_SECRET: "whsec_abc" })).not.toThrow();
-    expect(() => validerEnvironnement({ ...BASE, STRIPE_SECRET_KEY: "pk_test_abc" })).toThrow(/STRIPE_SECRET_KEY/);
-    expect(() => validerEnvironnement({ ...BASE, STRIPE_SECRET_KEY: "pk_test_abc" })).not.toThrow(/pk_test_abc/);
-    expect(() => validerEnvironnement({ ...BASE, STRIPE_WEBHOOK_SECRET: "pas-un-whsec" })).toThrow(
-      /STRIPE_WEBHOOK_SECRET/,
-    );
-  });
-
-  // Une clé collée avec un retour à la ligne fermait tout le serveur, quand
-  // `stripe/config.ts` l'acceptait (revue de sécurité du socle).
-  it("accepte une valeur entourée d'espaces, comme stripe/config.ts", () => {
-    expect(() =>
-      validerEnvironnement({ ...BASE, STRIPE_SECRET_KEY: "sk_test_abc\n", STRIPE_WEBHOOK_SECRET: " whsec_abc " }),
-    ).not.toThrow();
-  });
-
-  // Une clé refusée pour son environnement ferme les abonnements, pas le
-  // serveur : un avertissement au démarrage, pas une faute.
+  // Une clé refusée — mal formée ou hors de son environnement — ferme les
+  // abonnements, pas le serveur : un avertissement au démarrage, sans valeur.
   it("signale une clé refusée sans fermer le serveur", () => {
     const prod = {
       ...BASE,
@@ -129,6 +112,11 @@ describe("variables Stripe (ADR-053)", () => {
     expect(() => validerEnvironnement(prod)).not.toThrow();
     expect(avertissementsEnvironnement(prod)).toEqual([expect.stringMatching(/clé Stripe de test refusée/)]);
     expect(avertissementsEnvironnement({ ...prod, STRIPE_SECRET_KEY: "rk_live_abc" })).toEqual([]);
+
+    const malFormee = { ...prod, STRIPE_SECRET_KEY: "pk_live_abc" };
+    expect(() => validerEnvironnement(malFormee)).not.toThrow();
+    expect(avertissementsEnvironnement(malFormee)).toEqual([expect.stringMatching(/forme d'une clé Stripe/)]);
+    expect(avertissementsEnvironnement(malFormee).join()).not.toContain("pk_live_abc");
   });
 });
 
