@@ -4,7 +4,8 @@
 -- "Abonnement" : une ligne par compte, copie de l'état Stripe, écrite depuis
 -- un webhook signé après relecture de l'abonnement. RESTRICT vers "User" :
 -- supprimer un compte devra d'abord résilier chez Stripe.
--- "EvenementStripe" : les événements reçus, dédoublonnés par leur identifiant.
+-- "EvenementStripe" : les événements reçus, dédoublonnés par leur identifiant,
+-- pris en charge un à la fois.
 
 -- CreateTable
 CREATE TABLE "Abonnement" (
@@ -14,9 +15,11 @@ CREATE TABLE "Abonnement" (
     "stripeSubscriptionId" TEXT,
     "statut" TEXT,
     "formule" TEXT,
+    "stripePriceId" TEXT,
     "finPeriode" TIMESTAMP(3),
     "finEssai" TIMESTAMP(3),
     "resilieEnFinDePeriode" BOOLEAN NOT NULL DEFAULT false,
+    "finPrevueLe" TIMESTAMP(3),
     "essaiUtiliseLe" TIMESTAMP(3),
     "relueLe" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -30,7 +33,9 @@ CREATE TABLE "EvenementStripe" (
     "id" TEXT NOT NULL,
     "type" TEXT NOT NULL,
     "recuLe" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "traitementDebuteLe" TIMESTAMP(3),
     "traiteLe" TIMESTAMP(3),
+    "derniereErreur" TEXT,
 
     CONSTRAINT "EvenementStripe_pkey" PRIMARY KEY ("id")
 );
@@ -44,8 +49,12 @@ CREATE UNIQUE INDEX "Abonnement_stripeCustomerId_key" ON "Abonnement"("stripeCus
 -- CreateIndex
 CREATE UNIQUE INDEX "Abonnement_stripeSubscriptionId_key" ON "Abonnement"("stripeSubscriptionId");
 
+-- CreateIndex
+CREATE INDEX "EvenementStripe_recuLe_idx" ON "EvenementStripe"("recuLe");
+
 -- AddForeignKey
 ALTER TABLE "Abonnement" ADD CONSTRAINT "Abonnement_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
 
 -- Comme toutes les tables de `public` (migrations-rls.test.ts).
 ALTER TABLE "Abonnement" ENABLE ROW LEVEL SECURITY;

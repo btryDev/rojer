@@ -305,6 +305,54 @@ formules (limites, modules), une page de tarifs publique, la TVA.
   après la dernière relance (`unpaid`), e-mails client (reçus, rappels
   d'essai, carte expirée), libellé de relevé court, portail.
 
+## 7. Revues du socle (2026-11-02) — ce qui revient aux lots suivants
+
+Deux revues indépendantes du lot 1 (sécurité ; maintenabilité et
+performance). Corrigé dans le socle : une clé entourée d'espaces ne ferme
+plus le serveur ; une clé `live` exige aussi `NODE_ENV=production` ;
+`config.ts` est `server-only` et `etatStripe` rend la décision sans secret ;
+colonnes `stripePriceId`, `finPrevueLe` (`cancel_at`), `traitementDebuteLe`,
+`derniereErreur`, index sur `recuLe` ; version d'API vérifiée par
+`satisfies` ; test d'isolation indépendant de l'ordre.
+
+**Lot 2 (webhook)**
+- **Plusieurs abonnements chez Stripe, une ligne chez nous.** Un
+  `customer.subscription.deleted` en retard d'un ANCIEN abonnement, relu, dit
+  `canceled` et fermerait la saisie d'un client qui paie. N'écrire que si le
+  client Stripe de l'événement est celui de la ligne ; relister les
+  abonnements du client et retenir celui qui n'est pas terminé ; alerte si
+  deux le sont.
+- **Relectures concurrentes** : écriture conditionnelle sur `relueLe`
+  (`updateMany where relueLe < t`), pour qu'une relecture ancienne n'écrase
+  pas une plus récente.
+- **Prise en charge d'un événement** : `traitementDebuteLe` posé par une mise
+  à jour conditionnelle (nul, ou ancien de plus de quelques minutes) ; une
+  livraison qui ne la prend pas répond 2xx sans traiter… ou 409 pour que
+  Stripe relance — à trancher.
+- **Délais** : options par requête plus courtes dans la route
+  (`timeout`, `maxNetworkRetries`) — le client par défaut peut tenir 35 à
+  40 s.
+- `finPeriode` se lit sur `items.data[].current_period_end` ;
+  `resilieEnFinDePeriode` ← `cancel_at_period_end`, `finPrevueLe` ← `cancel_at`.
+- Vérifier `event.livemode === (mode === "live")` : un `whsec_` ne dit pas
+  son mode.
+- **Configuration inactive en production** : la route répond 503 (Stripe
+  relance 3 jours) et lève une alerte, au lieu d'ignorer les événements —
+  sinon les résiliations ne s'enregistrent plus.
+- Ne jamais journaliser l'objet d'une erreur de signature (il porte la
+  charge utile, donc des données personnelles) ; `derniereErreur` ne garde
+  qu'un motif.
+- Ménage de `EvenementStripe` (au-delà de quelques semaines).
+
+**Lot 3 (droits)** : décider explicitement le comportement de
+`droitsDuCompte` quand la configuration est inactive en production.
+
+**Lot 4 (parcours)** : refuser une nouvelle session Checkout tant qu'un
+abonnement non terminé existe (deux onglets → deux abonnements) ; créer le
+client Stripe une seule fois par compte (ligne réservée d'abord, clé
+d'idempotence dérivée du `userId`). Ne passer à un composant que
+`etatStripe`, jamais `configurationStripe`.
+
 ## Sources lues
 
 - Stripe : [webhooks](https://docs.stripe.com/webhooks.md) ·

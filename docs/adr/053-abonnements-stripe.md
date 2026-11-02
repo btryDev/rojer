@@ -46,7 +46,13 @@ et sans croire une information qui ne vient pas de Stripe.
      Stripe ne garantit pas, cesse de compter.
    - Chaque événement est enregistré par son identifiant
      (`EvenementStripe`) : un doublon est ignoré, un traitement échoué est
-     rejoué à la relance suivante de Stripe (jusqu'à 3 jours en production).
+     rejoué à la relance suivante de Stripe (jusqu'à 3 jours en production),
+     et deux livraisons simultanées ne le traitent pas deux fois (prise en
+     charge, `traitementDebuteLe`).
+   - Une ligne ne s'écrit que pour l'abonnement courant du client Stripe de
+     la ligne, et jamais avec une relecture plus ancienne que la dernière
+     écrite (`relueLe`) : un événement en retard d'un ancien abonnement ne
+     ferme pas la saisie d'un client qui paie.
    - Le compte se déduit de l'objet Stripe relu (`metadata.userId`, posé par
      Rojer à la création du client Stripe), jamais d'un identifiant de la
      charge utile pris tel quel — même règle que les accès sans session
@@ -57,8 +63,10 @@ et sans croire une information qui ne vient pas de Stripe.
    s'enregistre (et ferme la saisie, § 3) au lieu de faire échouer le
    webhook en boucle.
 7. **La clé et l'environnement vont ensemble** : une clé `live` n'est admise
-   qu'en production déclarée (`environnementApp() === "production"`), une
-   clé de test jamais en production. Sans clé, les abonnements sont
+   qu'en production déclarée (`environnementApp() === "production"`) sur un
+   serveur de production (`NODE_ENV=production`), une clé de test jamais en
+   production. La clé et le secret ne sortent pas du serveur : un écran ne
+   reçoit que `etatStripe` (la décision, sans secret). Sans clé, les abonnements sont
    désactivés et l'app sert tout le reste (même règle que les variables
    optionnelles de `env.ts`). En production, la clé doit être **restreinte**
    (`rk_live_…`) : une clé fuitée ne fait que ce que ses permissions
@@ -70,14 +78,16 @@ et sans croire une information qui ne vient pas de Stripe.
 - `Abonnement` : racine de compte (`userId`, ADR-051) ; `stripeCustomerId`
   unique ; `stripeSubscriptionId` unique, nul avant le premier abonnement ;
   `statut` (texte, nul avant le premier abonnement) ; `formule` (la
-  `lookup_key` du prix Stripe) ; `finPeriode`, `finEssai`,
-  `resilieEnFinDePeriode` ; `essaiUtiliseLe` (un essai par compte) ;
+  `lookup_key` du prix Stripe) et `stripePriceId` ; `finPeriode`, `finEssai`,
+  `resilieEnFinDePeriode` (`cancel_at_period_end`), `finPrevueLe`
+  (`cancel_at`) ; `essaiUtiliseLe` (un essai par compte) ;
   `relueLe` (dernière relecture chez Stripe). Clé étrangère vers `User` en
   `RESTRICT` : supprimer un compte (qui n'existe pas encore) devra d'abord
   résilier chez Stripe.
-- `EvenementStripe` : hors compte (ADR-051), compteur technique écrit avant
-  toute identité : `id` (l'identifiant Stripe `evt_…`), `type`, `recuLe`,
-  `traiteLe`.
+- `EvenementStripe` : hors compte (ADR-051), écrit avant toute identité :
+  `id` (l'identifiant Stripe `evt_…`), `type`, `recuLe` (indexé, pour le
+  ménage), `traitementDebuteLe`, `traiteLe`, `derniereErreur` (un motif,
+  jamais la charge utile).
 
 ## Ce que cette décision ne règle pas
 

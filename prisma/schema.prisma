@@ -2344,11 +2344,19 @@ model Abonnement {
   stripeCustomerId      String    @unique
   stripeSubscriptionId  String?   @unique
   statut                String?
-  /// La `lookup_key` du prix Stripe souscrit.
+  /// La `lookup_key` du prix Stripe souscrit. Elle peut passer d'un prix à
+  /// l'autre chez Stripe (`transfer_lookup_key`) : le prix lui-même est gardé.
   formule               String?
+  stripePriceId         String?
+  /// Fin de la période en cours : portée par la ligne d'abonnement
+  /// (`items.data[].current_period_end`), plus par l'abonnement, depuis la
+  /// version d'API épinglée.
   finPeriode            DateTime?
   finEssai              DateTime?
+  /// `cancel_at_period_end` : la résiliation prend effet en fin de période.
   resilieEnFinDePeriode Boolean   @default(false)
+  /// `cancel_at` : une fin programmée à une date, que le booléen ne voit pas.
+  finPrevueLe           DateTime?
   /// Un essai par compte : posé au premier abonnement en essai, jamais effacé.
   essaiUtiliseLe        DateTime?
   /// Dernière relecture de l'abonnement chez Stripe.
@@ -2362,8 +2370,17 @@ model Abonnement {
 // réception marque un traitement à rejouer à la relance suivante de Stripe.
 // Hors compte (ADR-051) : écrit avant toute identité.
 model EvenementStripe {
-  id       String    @id
-  type     String
-  recuLe   DateTime  @default(now())
-  traiteLe DateTime?
+  id                 String    @id
+  type               String
+  recuLe             DateTime  @default(now())
+  /// Prise en charge : deux livraisons simultanées du même événement ne le
+  /// traitent pas deux fois (une prise ancienne est reprise, ADR-053 § 5).
+  traitementDebuteLe DateTime?
+  traiteLe           DateTime?
+  /// Motif du dernier échec (jamais la charge utile, qui porte des données
+  /// personnelles).
+  derniereErreur     String?
+
+  // Le ménage des événements anciens (`DELETE … WHERE "recuLe" < …`).
+  @@index([recuLe])
 }

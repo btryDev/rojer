@@ -107,6 +107,14 @@ describe("variables Stripe (ADR-053)", () => {
     );
   });
 
+  // Une clé collée avec un retour à la ligne fermait tout le serveur, quand
+  // `stripe/config.ts` l'acceptait (revue de sécurité du socle).
+  it("accepte une valeur entourée d'espaces, comme stripe/config.ts", () => {
+    expect(() =>
+      validerEnvironnement({ ...BASE, STRIPE_SECRET_KEY: "sk_test_abc\n", STRIPE_WEBHOOK_SECRET: " whsec_abc " }),
+    ).not.toThrow();
+  });
+
   // Une clé refusée pour son environnement ferme les abonnements, pas le
   // serveur : un avertissement au démarrage, pas une faute.
   it("signale une clé refusée sans fermer le serveur", () => {

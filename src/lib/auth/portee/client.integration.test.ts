@@ -254,7 +254,9 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
 
     it("celui d'un autre compte est absent, en lecture comme en écriture", async () => {
       expect(await dbA.abonnement.findUnique({ where: { userId: B } })).toBeNull();
-      expect(await dbA.abonnement.findMany()).toEqual([]);
+      // La recherche du webhook : par le client Stripe.
+      expect(await dbA.abonnement.findUnique({ where: { stripeCustomerId: "cus_B" } })).toBeNull();
+      expect((await dbA.abonnement.findMany()).filter((x) => x.userId !== A)).toEqual([]);
       await expect(dbA.abonnement.update({ where: { userId: B }, data: { statut: "canceled" } })).rejects.toThrow();
       await expect(dbA.abonnement.upsert({
         where: { userId: B },

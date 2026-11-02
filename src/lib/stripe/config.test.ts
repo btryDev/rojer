@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { configurationStripe } from "./config";
+import { configurationStripe, etatStripe } from "./config";
 
 // Valeurs volontairement courtes et fausses : rien qu'un détecteur de secrets
 // puisse prendre pour une vraie clé.
@@ -46,6 +46,11 @@ describe("configurationStripe", () => {
       expect(r).toMatchObject({ active: false });
       expect(r.active || r.motif).toMatch(/production déclarée/);
     }
+    // Le `.env` de production copié sur un poste : APP_ENV dit production,
+    // le serveur n'en est pas un (`next dev`).
+    const copieSurUnPoste = configurationStripe(avec({ NODE_ENV: "development", APP_ENV: "production" }, LIVE_RESTREINTE, WH));
+    expect(copieSurUnPoste.active || copieSurUnPoste.motif).toMatch(/production déclarée/);
+
     const nonRestreinte = configurationStripe(avec(PROD, LIVE, WH));
     expect(nonRestreinte.active || nonRestreinte.motif).toMatch(/non restreinte/);
   });
@@ -67,6 +72,18 @@ describe("configurationStripe", () => {
   it("refuse une forme inconnue", () => {
     expect(configurationStripe(avec(DEV, "pk_test_abc", WH)).active).toBe(false);
     expect(configurationStripe(avec(DEV, TEST, "pas-un-whsec")).active).toBe(false);
+  });
+
+  it("retire les espaces autour des valeurs (copier-coller)", () => {
+    expect(configurationStripe(avec(DEV, ` ${TEST}\n`, `${WH} `))).toMatchObject({ active: true, cle: TEST, secretWebhook: WH });
+  });
+
+  it("etatStripe rend la décision sans aucun secret", () => {
+    const etat = etatStripe(avec(DEV, TEST, WH));
+    expect(etat).toEqual({ active: true, mode: "test" });
+    expect(JSON.stringify(etat)).not.toContain(TEST);
+    expect(JSON.stringify(etat)).not.toContain(WH);
+    expect(etatStripe(avec(PROD, TEST, WH))).toMatchObject({ active: false, motif: expect.stringMatching(/de test/) });
   });
 
   it("ne cite jamais une valeur dans un motif", () => {
