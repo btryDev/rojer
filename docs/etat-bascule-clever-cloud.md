@@ -20,7 +20,7 @@ connecteur MCP OAuth de Supabase n'existe plus — garder la suppression de
 `src/lib/mcp/acces-oauth*.ts` et `route-oauth.test.ts`, ne pas réintroduire
 `clientDuCompteVerifie` ni `ScopeMcp.userId`.
 
-## Ce qui est sur `cc` (au 2026-11-01, e65ba81c)
+## Ce qui est sur `cc` (au 2026-11-02, 4f4e63e4 ; ~~au 2026-11-01, e65ba81c~~)
 
 - **Better Auth**, lots 1 à 3b (#133 à #139) : inscription, connexion,
   vérification d'adresse, mot de passe oublié, page « Sécurité du compte »
@@ -40,6 +40,15 @@ connecteur MCP OAuth de Supabase n'existe plus — garder la suppression de
   à une font tomber un test (la 18ᵉ vise une relation qui n'existe pas) ;
   13 pages au budget de requêtes, toutes sous 130 ms.
 
+- **Abonnements Stripe, socle** (2026-11-02, PR #153, `4f4e63e4`) : ADR-053,
+  tables `Abonnement` (racine de compte) et `EvenementStripe` (hors compte),
+  RLS, configuration et client Stripe. **Aucune route ni aucun écran** : sans
+  clé Stripe, `cc` se comporte comme avant. Fusionné avant la bascule à la
+  demande de la propriétaire (le plan était d'attendre) : deux tables vides
+  de plus à rejouer, rien d'autre. Suite du chantier et constats des revues :
+  `docs/notes-chantier-abonnements-stripe.md` (§ 5 les lots, § 7 ce que les
+  revues renvoient au webhook, aux droits et au parcours).
+
 ## Ce qui reste avant la bascule
 
 Gestes de la propriétaire (Clever Cloud) :
@@ -57,6 +66,16 @@ Documents à valider puis fusionner :
 - PR #130 — ADR-052 (Better Auth).
 
 Le jour J : suivre le plan de #126.
+
+Abonnements (ne bloquent pas la bascule ; rien à poser tant qu'ils ne
+sont pas ouverts) :
+- `STRIPE_SECRET_KEY` et `STRIPE_WEBHOOK_SECRET` vont par deux. En
+  production, seule une clé **restreinte** de production (`rk_live_…`) est
+  admise, et seulement si `APP_ENV=production` est posée : sans `APP_ENV`,
+  aucune clé Stripe n'est acceptée. Une clé refusée ferme les abonnements,
+  pas le serveur, et le démarrage le signale.
+- Le contenu et les prix des formules ne sont pas arrêtés (brouillon de la
+  session « pricing » : branche `docs/offres-abonnement`).
 
 ## Règles de travail qui valent ici
 
