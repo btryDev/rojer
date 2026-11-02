@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Rojer — Offres d'abonnement</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Instrument+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  @page { size: A4; margin: 16mm 15mm 16mm 15mm; }
+  :root {
+    --ink: #0a0a0a; --muted: #4a5a66; --canvas: #f6f9fb; --line: #dfe8ee;
+    --blue-pale: #d8eef9; --blue-ink: #376881; --amber: #fff3ba; --amber-ink: #754d0a;
+    --green: #bdfdb5; --green-ink: #216037; --signal-pale: #ffeaea; --signal-ink: #8a2a23;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif; color: var(--ink);
+         font-size: 9.6pt; line-height: 1.45; margin: 0; }
+  h1, h2, h3, .prix { font-family: "Instrument Sans", "Helvetica Neue", Arial, sans-serif; }
+  h1 { font-size: 26pt; margin: 0 0 2mm; letter-spacing: -0.02em; }
+  h2 { font-size: 15pt; margin: 0 0 3mm; letter-spacing: -0.01em; }
+  h3 { font-size: 11pt; margin: 4mm 0 1.5mm; }
+  p { margin: 0 0 2mm; }
+  .page { page-break-after: always; }
+  .page:last-child { page-break-after: auto; }
+  .sous { color: var(--muted); font-size: 10.5pt; margin-bottom: 7mm; }
+  .marque { font-family: "Instrument Sans", sans-serif; font-weight: 700; font-size: 11pt;
+            color: var(--blue-ink); letter-spacing: 0.02em; margin-bottom: 10mm; }
+  .carte { background: var(--canvas); border: 1px solid var(--line); border-radius: 4mm;
+           padding: 5mm 6mm; margin-bottom: 5mm; }
+  .carte.bleue { background: var(--blue-pale); border-color: #b9dcef; }
+  .carte.ambre { background: #fffaf0; border-color: #f3e3a6; }
+  ul { margin: 0; padding-left: 4.5mm; }
+  li { margin-bottom: 1.4mm; }
+  .tag { display: inline-block; font-size: 7.8pt; font-weight: 600; padding: 0.6mm 2.2mm;
+         border-radius: 10mm; background: var(--amber); color: var(--amber-ink); vertical-align: middle; }
+  .tag.vert { background: var(--green); color: var(--green-ink); }
+  table { width: 100%; border-collapse: collapse; margin: 1mm 0 3mm; }
+  th, td { text-align: left; vertical-align: top; padding: 1.8mm 2mm; border-bottom: 1px solid var(--line); }
+  th { font-size: 8.4pt; color: var(--muted); font-weight: 600; text-transform: none; }
+  td.num, th.num { text-align: right; white-space: nowrap; }
+  .grille { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3.5mm; margin: 2mm 0 3mm; }
+  .offre { border: 1px solid var(--line); border-radius: 4mm; padding: 4mm; background: #fff; }
+  .offre.premium { background: var(--blue-pale); border-color: #b9dcef; }
+  .offre .nom { font-weight: 700; font-size: 11pt; font-family: "Instrument Sans", sans-serif; }
+  .offre .pour { color: var(--muted); font-size: 8.4pt; min-height: 7mm; margin-bottom: 2mm; }
+  .prix { font-size: 19pt; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+  .prix small { font-size: 9pt; font-weight: 500; color: var(--muted); letter-spacing: 0; }
+  .ligne-prix { font-size: 8.6pt; margin: 1mm 0 2.5mm; color: var(--muted); }
+  .offre ul { font-size: 8.6pt; padding-left: 4mm; }
+  .entete-option { display: flex; align-items: baseline; gap: 3mm; margin-top: 2mm; }
+  .entete-option h2 { margin-bottom: 1mm; }
+  .note { font-size: 8.2pt; color: var(--muted); }
+  .deux { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+  .chiffre { font-family: "Instrument Sans", sans-serif; font-weight: 700; font-size: 15pt; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; margin-bottom: 5mm; }
+  .kpi { background: var(--canvas); border: 1px solid var(--line); border-radius: 3mm; padding: 3mm; }
+  .kpi .legende { font-size: 8pt; color: var(--muted); line-height: 1.3; }
+  .sources { font-size: 7.8pt; color: var(--muted); word-break: break-all; }
+  .sources li { margin-bottom: 0.6mm; }
+  .serre td, .serre th { padding: 1.3mm 2mm; font-size: 9pt; }
+  .commun { columns: 2; column-gap: 8mm; }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1 -->
+<section class="page">
+  <div class="marque">ROJER</div>
+  <h1>Offres d'abonnement</h1>
+  <p class="sous">Benchmark et proposition tarifaire · 2 novembre 2026 · prix HT</p>
+
+  <div class="carte bleue">
+    <h3 style="margin-top:0">En bref</h3>
+    <ul>
+      <li><b>Trois offres, qui se distinguent par la part d'humain :</b> Essentiel (le logiciel seul), Suivi (+ un rendez-vous annuel avec un expert), Accompagné (+ un expert à la demande). L'expert est un expert en sécurité de BTRY Solution.</li>
+      <li><b>1 établissement inclus partout.</b> Les sites en plus sont une option, disponible dans toutes les offres. La plupart des TPE n'ont qu'un site : le nombre de sites ne fait pas un palier.</li>
+      <li><b>Mensuel sans engagement, ou annuel avec 2 mois offerts.</b> Le marché engage souvent 12 à 36 mois : « résiliable à tout moment » nous distingue.</li>
+      <li><b>Deux niveaux de prix possibles :</b> <b>A</b> au prix du marché (Essentiel à 29 €/mois), <b>B</b> en prix d'appel (Essentiel dès 10 €/mois en annuel).</li>
+      <li><b>Toutes les offres voient toutes les obligations.</b> On fait payer l'humain, jamais ce que la loi exige.</li>
+    </ul>
+  </div>
+
+  <h3>Ce que comprend chaque offre</h3>
+  <div class="carte">
+    <ul class="commun">
+      <li>Toutes les obligations du référentiel, article cité</li>
+      <li>Tous les modules : DUERP, vérifications, registre de sécurité, plan d'actions, accessibilité, permis de feu, plans de prévention, carnet sanitaire</li>
+      <li>Calendrier généré dès la création du dossier, sans paramétrage</li>
+      <li>Relances email des échéances<sup>†</sup></li>
+      <li>Prestataires invités sans compte (lien et code) et suivi de leurs attestations</li>
+      <li>Signature électronique simple</li>
+      <li>Export « Préparer un contrôle » en un clic</li>
+      <li>Aide en ligne (guide « Comprendre ») et contact pour un problème technique</li>
+      <li>Téléchargement de ses données, y compris après résiliation<sup>†</sup></li>
+      <li>Aucun frais de mise en service · essai de 30 jours sans carte bancaire</li>
+    </ul>
+    <p class="note" style="margin:2mm 0 0">† Pas encore livré : prévu avec le passage sur Clever Cloud. À mettre en service avant de publier les offres.</p>
+  </div>
+
+  <h3>Notre recommandation</h3>
+  <div class="carte ambre">
+    <p><b>Lancer avec les prix B, comme « tarif fondateur » garanti aux premiers clients, puis appliquer les prix A aux nouveaux clients</b> si les six premiers mois montrent que les clients restent.</p>
+    <ul>
+      <li><b>Pourquoi B d'abord :</b> à 10 €, la décision d'achat est immédiate, et on récolte vite des clients et des retours. Vigie pratique le même tarif fondateur.</li>
+      <li><b>Pourquoi A ensuite :</b> 29 € est le prix d'un seul registre chez nos concurrents. Rojer en couvre huit, et un prix trop bas fait douter du sérieux sur un document à valeur légale.</li>
+      <li><b>Ce qui tranchera :</b> le coût pour acquérir un client et la durée pendant laquelle il reste. Si les clients arrivent par des partenaires (experts-comptables, assureurs, CCI), B peut rester la grille durable.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- PAGE 2 -->
+<section class="page">
+  <div class="entete-option"><h2>Prix A — au prix du marché</h2><span class="tag vert">positionnement</span></div>
+  <p class="note">Rojer se place au prix d'un registre spécialisé, sous la somme des outils qu'il remplace.</p>
+  <div class="grille">
+    <div class="offre">
+      <div class="nom">Essentiel</div>
+      <div class="pour">Le logiciel, rien d'autre</div>
+      <div class="prix">29 € <small>/mois</small></div>
+      <div class="ligne-prix">ou 290 €/an · 1 établissement</div>
+      <ul><li>Tout le logiciel</li></ul>
+    </div>
+    <div class="offre">
+      <div class="nom">Suivi</div>
+      <div class="pour">Un point par an avec un expert</div>
+      <div class="prix">49 € <small>/mois</small></div>
+      <div class="ligne-prix">ou 490 €/an · 1 établissement</div>
+      <ul><li>Tout Essentiel</li><li>Rendez-vous annuel avec l'expert</li></ul>
+    </div>
+    <div class="offre premium">
+      <div class="nom">Accompagné</div>
+      <div class="pour">Un expert en sécurité à la demande</div>
+      <div class="prix">129 € <small>/mois</small></div>
+      <div class="ligne-prix">ou 1 290 €/an · 1 établissement</div>
+      <ul><li>Tout Suivi</li><li>Expert à la demande</li></ul>
+    </div>
+  </div>
+  <p class="note" style="margin:-1mm 0 4mm">Établissement supplémentaire, toutes offres : +10 €/mois ou 100 €/an.</p>
+
+  <div class="entete-option"><h2>Prix B — prix d'appel « dès 10 € »</h2><span class="tag">conversion</span></div>
+  <p class="note">Le prix d'entrée passe sous tous les outils qui ne gèrent qu'un registre, et l'annuel devient le choix évident.</p>
+  <div class="grille">
+    <div class="offre">
+      <div class="nom">Essentiel</div>
+      <div class="pour">Le logiciel, rien d'autre</div>
+      <div class="prix">9,90 € <small>/mois</small></div>
+      <div class="ligne-prix">payé 119 €/an · ou 12 €/mois sans engagement<br>1 établissement</div>
+      <ul><li>Tout le logiciel</li></ul>
+    </div>
+    <div class="offre">
+      <div class="nom">Suivi</div>
+      <div class="pour">Un point par an avec un expert</div>
+      <div class="prix">24 € <small>/mois</small></div>
+      <div class="ligne-prix">payé 290 €/an · ou 29 €/mois<br>1 établissement</div>
+      <ul><li>Tout Essentiel</li><li>Rendez-vous annuel avec l'expert</li></ul>
+    </div>
+    <div class="offre premium">
+      <div class="nom">Accompagné</div>
+      <div class="pour">Un expert en sécurité à la demande</div>
+      <div class="prix">99 € <small>/mois</small></div>
+      <div class="ligne-prix">payé 1 190 €/an · ou 119 €/mois<br>1 établissement</div>
+      <ul><li>Tout Suivi</li><li>Expert à la demande</li></ul>
+    </div>
+  </div>
+  <p class="note" style="margin:-1mm 0 4mm">Établissement supplémentaire, toutes offres : +5 €/mois ou 50 €/an.</p>
+
+  <div class="deux">
+    <div class="carte" style="margin-bottom:0">
+      <h3 style="margin-top:0">L'expert BTRY Solution</h3>
+      <p><b>Suivi : un rendez-vous annuel (1 h)</b> pour relire le DUERP et le calendrier de l'année. Il tombe au moment de la mise à jour annuelle du DUERP, obligatoire dès 11 salariés (art. R. 4121-2 CT). Un consultant facture environ 400 € pour cette seule mise à jour.</p>
+      <p style="margin-bottom:1mm"><b>Accompagné : en plus</b></p>
+      <ul>
+        <li>Mise en route du dossier en visio (45 min)</li>
+        <li>Questions écrites illimitées, réponse sous 48 h ouvrées</li>
+        <li>1 h de visio par trimestre</li>
+        <li>Préparation d'un contrôle par an (inspection, commission de sécurité, assureur)</li>
+      </ul>
+    </div>
+    <div class="carte" style="margin-bottom:0">
+      <h3 style="margin-top:0">A ou B, ce qui change</h3>
+      <table>
+        <tr><th></th><th class="num">A</th><th class="num">B</th></tr>
+        <tr><td>Essentiel, recette par an</td><td class="num">290 €</td><td class="num">119 €</td></tr>
+        <tr><td>Essentiel, client resté 2 ans</td><td class="num">580 €</td><td class="num">238 €</td></tr>
+        <tr><td>Suivi, reste après l'expert*</td><td class="num">≈ 350 €</td><td class="num">≈ 150 €</td></tr>
+        <tr><td>Accompagné, reste après l'expert*</td><td class="num">≈ 790 €</td><td class="num">≈ 690 €</td></tr>
+      </table>
+      <p class="note">* Hypothèses, par client et par an, à environ 70 €/h : Suivi environ 2 h d'expert (préparation comprise), soit environ 140 € ; Accompagné environ 7 h, soit environ 500 €. À remplacer par le coût réel de BTRY Solution.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PAGE 3 -->
+<section class="page serre">
+  <h2>Sur quoi reposent ces propositions</h2>
+  <p class="note" style="margin-bottom:4mm">Prix publics relevés le 2 novembre 2026 sur les sites des éditeurs. Plusieurs comparatifs sont écrits par l'éditeur sur lui-même.</p>
+
+  <div class="kpis">
+    <div class="kpi"><div class="chiffre">19-29 €</div><div class="legende">par mois : le prix d'un seul registre (DUERP ou registre de sécurité)</div></div>
+    <div class="kpi"><div class="chiffre">32-58 €</div><div class="legende">par mois pour réunir DUERP + registre de sécurité + accessibilité chez des spécialistes</div></div>
+    <div class="kpi"><div class="chiffre">≈ 19 €</div><div class="legende">par bâtiment et par mois chez Deemply, notre concurrent le plus proche</div></div>
+    <div class="kpi"><div class="chiffre">800 + 400 €</div><div class="legende">création puis mise à jour annuelle d'un DUERP par un consultant</div></div>
+  </div>
+
+  <table>
+    <tr><th>Éditeur</th><th>Ce qu'il fait</th><th>Prix</th><th>Engagement</th><th>Humain</th></tr>
+    <tr><td><b>Deemply</b></td><td>Plateforme multi-modules, pour les équipes QHSE</td><td>Gratuit (1 bâtiment) · dès 490 €/an</td><td>Annuel</td><td>Assistance ; mise en service payante</td></tr>
+    <tr><td><b>Securylog</b></td><td>Registre de sécurité</td><td>29 €/mois ou 319 €/an</td><td>36 mois</td><td>Interlocuteur en Premium</td></tr>
+    <tr><td><b>Vigie</b></td><td>Registre de sécurité, petits ERP</td><td>19 €/mois, tarif fondateur</td><td>Aucun</td><td>—</td></tr>
+    <tr><td><b>DUPrev'</b></td><td>DUERP</td><td>19 €/mois ou 179 €/an · +9 €/entreprise</td><td>12 mois</td><td>1 analyse expert par an</td></tr>
+    <tr><td><b>DUERP.ai</b></td><td>DUERP (IA)</td><td>9,90 €/mois</td><td>Aucun</td><td>Email</td></tr>
+    <tr><td><b>France DUERP</b></td><td>Générateur de DUERP</td><td>29 € + 2,99 €/mois</td><td>Aucun</td><td>—</td></tr>
+    <tr><td><b>ALEA Prevention</b></td><td>DUERP, PME multi-sites</td><td>Licence experte 89 €/mois</td><td>Annuel + formation</td><td>Hotline (clients formés)</td></tr>
+    <tr><td><b>ACHOP</b></td><td>Registre d'accessibilité</td><td>9,99 €/mois</td><td>36 mois</td><td>—</td></tr>
+    <tr><td><b>Repères « expert »</b></td><td>Juritravail · Legalstart · Captain Contrat Premium</td><td>50 € · 30-50 € · ≈ 249 €/mois</td><td>—</td><td>Juriste, avocat</td></tr>
+  </table>
+
+  <h3>Les cinq constats qui fondent la grille</h3>
+  <table>
+    <tr><th style="width:42%">Constat</th><th>Ce qu'on en fait</th></tr>
+    <tr><td>Un registre seul se vend 19-29 €/mois</td><td>Prix A : Essentiel à 29 €, avec tous les modules. Prix B : sous tout le monde, à 9,90 €.</td></tr>
+    <tr><td>Hors des petits outils à un seul registre, l'engagement est la règle (12 à 36 mois)</td><td>Mensuel résiliable dans toutes les offres.</td></tr>
+    <tr><td>La remise annuelle va de 8 % (Securylog) à 20 % (DUPrev')</td><td>« 2 mois offerts », soit −17 %, qui se comprend sans calcul.</td></tr>
+    <tr><td>Le site supplémentaire se facture à l'unité (9 à 19 €), et la cible a presque toujours un seul site</td><td>Les sites sont une option dans toutes les offres, pas un palier.</td></tr>
+    <tr><td>L'humain multiplie le prix par 3 à 10. Pour une TPE, seul DUPrev' inclut un expert : une analyse par an, sur le DUERP seul</td><td>Les paliers se font sur la part d'expert BTRY Solution : aucun, un rendez-vous annuel sur tout le dossier, à la demande.</td></tr>
+  </table>
+  <p class="note">Autres repères : presque tous les concurrents vendent de l'IA, et chaque obligation de Rojer cite son article, ce qui se vend comme une garantie. Facturer la mise en service irrite les clients ; Rojer n'en facture pas.</p>
+</section>
+
+<!-- PAGE 4 -->
+<section class="page">
+  <h2>À trancher avant de publier</h2>
+  <div class="carte">
+    <ul>
+      <li><b>Le cadre de l'expert.</b> L'expert BTRY Solution donne un conseil technique de sécurité et de prévention, pas une consultation juridique, qui est réservée aux professions du droit (loi du 31 décembre 1971). Comme l'outil, il ne dit jamais « vous êtes conforme ». À écrire dans les CGV.</li>
+      <li><b>La capacité de l'expert.</b> Suivi et Accompagné ne tiennent que si le temps par client est borné. Fixer le volume (1 h par an en Suivi ; 1 h par trimestre et des réponses écrites sous 48 h en Accompagné), et suivre le temps réellement passé. Avec beaucoup de clients en Suivi, les rendez-vous annuels se répartissent sur l'année.</li>
+      <li><b>La résiliation.</b> Le téléchargement des données n'existe pas encore : l'export du titulaire du compte est une dette ouverte. À livrer avant la publication, puis préciser ce qui reste consultable du DUERP, dont la loi impose la conservation pendant 40 ans.</li>
+      <li><b>Les relances email</b> n'existent pas encore (seuls les emails de connexion et d'accès partent) : elles arrivent avec le passage sur Clever Cloud. Ne pas publier les offres avant leur mise en service.</li>
+      <li><b>Ne pas promettre ce qui n'existe pas encore :</b> plusieurs utilisateurs par compte, application mobile, rappels par SMS.</li>
+      <li><b>Le paiement en ligne</b> reste à brancher (abonnement, essai, passage d'une offre à l'autre). C'est un chantier produit à part entière.</li>
+      <li><b>Le compte des établissements</b> porte sur les sites, toutes sociétés du compte confondues : 2 établissements, ce sont 2 sites, en une ou plusieurs sociétés.</li>
+    </ul>
+  </div>
+
+  <h3>Messages clés</h3>
+  <div class="carte bleue">
+    <ul>
+      <li>« Tous vos registres de prévention au même endroit. Résiliable à tout moment. »</li>
+      <li>« Rien à paramétrer : vos obligations sont déjà écrites, article par article. »</li>
+      <li>« Aucune obligation n'est réservée à une offre plus chère. »</li>
+      <li>Suivi : « Chaque année, un expert relit votre dossier avec vous. »</li>
+      <li>Accompagné : « Un expert en sécurité répond à vos questions, sur votre dossier. »</li>
+    </ul>
+  </div>
+
+  <h3>Sources</h3>
+  <ul class="sources">
+    <li>Deemply — deemply.com/tarifs</li>
+    <li>Securylog — securylog.pro</li>
+    <li>Vigie — vigie-registre.fr (site indisponible le 2 novembre, prix lu dans l'index de recherche)</li>
+    <li>DUPrev' (FJ Prévention) — app.fjprevention.fr/tarifs</li>
+    <li>DUERP.ai — duerp.ai/tarifs (service annoncé « bientôt disponible »)</li>
+    <li>France DUERP — franceduerp.fr/duerp/logiciel</li>
+    <li>ALEA Prevention — alea-prevention.com/pme-la-solution-pour-vos-salaries</li>
+    <li>ACHOP — achop.fr/registre-accessibilite.html</li>
+    <li>Prix des consultants DUERP — app.fjprevention.fr/blog/logiciel-document-unique-gratuit-comparatif ; duerp-express.fr/duerp-prix</li>
+    <li>Repères juridiques — independant.io/legalstart-ou-captain-contrat ; juritravail.com ; vitepromo.com (Captain Contrat)</li>
+  </ul>
+</section>
+
+</body>
+</html>

@@ -1,178 +1,119 @@
-# Benchmark et proposition d'offres d'abonnement — Rojer
+# Offres d'abonnement Rojer — benchmark et proposition
 
-*Relevé le 2026-11-02, sur les pages publiques des éditeurs. Prix HT sauf
-mention. Plusieurs comparatifs sont écrits par un éditeur sur lui-même : les
-prix ont été relus sur la page tarif de l'éditeur chaque fois qu'elle était
-accessible.*
+*Relevé le 2026-11-02, prix publics HT. Le document mis en page est
+`rojer-offres-abonnement-2026-11.pdf`, généré depuis
+`source/rojer-offres-abonnement-2026-11.html` (Chrome sans interface,
+`--print-to-pdf`). Ce fichier en reprend le contenu, il ne le contredit pas.*
 
-## 1. Le marché en une phrase
+## 1. Les offres
 
-Le marché est éclaté en **outils mono-registre bon marché** (DUERP seul,
-registre de sécurité seul, registre d'accessibilité seul : 3 à 29 €/mois) et en
-**plateformes multi-sites pour services QHSE** (Deemply, ALEA : à partir de
-490 €/an, souvent sur devis, avec frais de mise en service). Entre les deux, il
-n'y a presque personne pour le dirigeant de TPE qui veut **tout au même
-endroit, sans paramétrer**. C'est la place de Rojer.
+Trois offres, qui se distinguent **par la part d'humain**, jamais par ce que
+la loi exige : toutes voient toutes les obligations et tous les modules.
+L'expert est un expert en sécurité de **BTRY Solution**.
+
+1 établissement inclus partout. Les sites en plus sont une **option**,
+disponible dans toutes les offres : la plupart des TPE n'ont qu'un site, le
+nombre de sites ne fait pas un palier.
+
+| | Essentiel | Suivi | Accompagné |
+|---|---|---|---|
+| Ce que c'est | Le logiciel, rien d'autre | + un rendez-vous annuel avec l'expert | + l'expert à la demande |
+| **Prix A**, mensuel / annuel | 29 € / 290 € | 49 € / 490 € | 129 € / 1 290 € |
+| **Prix B**, payé à l'année | 119 €/an (≈ 9,90 €/mois) | 290 €/an (≈ 24 €/mois) | 1 190 €/an (≈ 99 €/mois) |
+| **Prix B**, mensuel sans engagement | 12 € | 29 € | 119 € |
+| Établissement en plus | A : +10 €/mois ou 100 €/an · B : +5 €/mois ou 50 €/an | idem | idem |
+
+**L'expert.** Suivi : un rendez-vous annuel d'1 h pour relire le DUERP et le
+calendrier de l'année. Il tombe au moment de la mise à jour annuelle du DUERP,
+obligatoire dès 11 salariés (art. R. 4121-2 CT). Accompagné, en plus : mise en
+route du dossier en visio (45 min), questions écrites illimitées avec réponse
+sous 48 h ouvrées, 1 h de visio par trimestre, préparation d'un contrôle par an.
+
+**Commun à toutes les offres** : toutes les obligations, article cité ; tous
+les modules ; calendrier généré à la création ; relances email des
+échéances (†) ; prestataires invités sans compte ; signature simple ; export
+« Préparer un contrôle » ; aide en ligne et contact pour un problème
+technique ; téléchargement de ses données, y compris après résiliation (†) ;
+aucun frais de mise en service ; essai de 30 jours sans carte bancaire.
+
+(†) **Pas encore livré** : prévu avec le passage sur Clever Cloud. Aujourd'hui
+seuls les emails de connexion et d'accès partent, et l'export du titulaire du
+compte est une dette ouverte (`docs/dette-chantier-porteur-echeance.md` § 1.1).
+À mettre en service avant de publier les offres.
+
+**Recommandation** : lancer avec les prix B comme « tarif fondateur » garanti
+aux premiers clients, puis appliquer les prix A aux nouveaux clients si les six
+premiers mois montrent que les clients restent. Si les clients arrivent surtout
+par des partenaires (experts-comptables, assureurs, CCI), B peut rester la
+grille durable.
+
+| Ce qui change entre A et B | A | B |
+|---|---|---|
+| Essentiel, recette par an | 290 € | 119 € |
+| Essentiel, client resté 2 ans | 580 € | 238 € |
+| Suivi, reste après l'expert* | ≈ 350 € | ≈ 150 € |
+| Accompagné, reste après l'expert* | ≈ 790 € | ≈ 690 € |
+
+\* Hypothèses, par client et par an, à environ 70 €/h : Suivi environ 2 h,
+soit environ 140 € ; Accompagné environ 7 h, soit environ 500 €. À remplacer
+par le coût réel de BTRY Solution.
 
 ## 2. Benchmark
 
-### 2.1 Outils DUERP seul
-
-| Éditeur | Prix | Engagement | Multi-entreprises / sites | Humain |
+| Éditeur | Ce qu'il fait | Prix | Engagement | Humain |
 |---|---|---|---|---|
-| **France DUERP** | 29 € TTC le document, puis 2,99 € TTC/mois pour les mises à jour | Sans engagement | Non précisé | Aucun |
-| **DUERP.ai** | 9,90 €/mois (TPE 1-10 sal.) ; 49 €/mois (cabinets, clients illimités) | Sans engagement — service « bientôt disponible » | Offre cabinet seulement | Support email ; **IA** |
-| **DUPrev' (FJ Prévention)** | Gratuit (filigrane) ; Pass 99 € one-shot ; Premium **19 €/mois ou 179 €/an (-20 %)** | 12 mois | **+9 €/mois par entreprise** | 1 analyse expert/an en Premium ; formation 900 € ; clé en main dès 1 500 € |
-| **ALEA Prevention** (PME) | Licence « Experte » 89 €/mois ; pack jusqu'à 4 sites sur devis | Annuel, formation d'1 jour obligatoire | Jusqu'à 4 sites, illimité en licence Experte | Hotline 5 j/7 réservée aux clients formés |
-| **Gratuits publics** (OiRA INRS, ameli) | 0 € | — | — | Aucun ; couverture par métier partielle |
-| **Consultant / IPRP** | 500 à 1 500 € la création (≈ 800 €), ≈ 400 € la mise à jour annuelle | À la prestation | Facturé en plus | Oui, sur site |
+| Deemply | Plateforme multi-modules, pour les équipes QHSE | Gratuit (1 bâtiment) · dès 490 €/an, ≈ 19 €/bâtiment/mois | Annuel | Assistance ; mise en service payante |
+| Securylog | Registre de sécurité | 29 €/mois ou 319 €/an | 36 mois | Interlocuteur en Premium |
+| Vigie | Registre de sécurité, petits ERP | 19 €/mois, tarif fondateur | Aucun | — |
+| DUPrev' | DUERP | 19 €/mois ou 179 €/an · +9 €/entreprise | 12 mois | 1 analyse expert par an |
+| DUERP.ai | DUERP (IA) | 9,90 €/mois | Aucun | Email |
+| France DUERP | Générateur de DUERP | 29 € + 2,99 €/mois | Aucun | — |
+| ALEA Prevention | DUERP, PME multi-sites | Licence experte 89 €/mois | Annuel + formation | Hotline (clients formés) |
+| ACHOP | Registre d'accessibilité | 9,99 €/mois | 36 mois | — |
+| Repères « expert » | Juritravail · Legalstart · Captain Contrat Premium | 50 € · 30-50 € · ≈ 249 €/mois | — | Juriste, avocat |
+| Consultant DUERP | Création puis mise à jour | ≈ 800 € + ≈ 400 €/an | — | Sur site |
 
-### 2.2 Registres bâtiment seuls
+**Les constats qui fondent la grille**
 
-| Éditeur | Prix | Engagement | Multi-sites | Humain |
-|---|---|---|---|---|
-| **Vigie** (registre de sécurité, petits ERP) | 19 €/mois ; gratuit en bêta, tarif fondateur à vie | Sans engagement | Non précisé | Non précisé |
-| **Securylog** (registre de sécurité) | Starter 5ᵉ cat. : **29 €/mois** ou **319 €/an** ; Premium sur devis | **36 mois** | Oui, en montant de formule | Interlocuteur dédié en Premium ; onboarding en supplément |
-| **ACHOP** (registre d'accessibilité en ligne) | 9,99 €/mois ou 699,60 € à l'achat | **36 mois** | — | — |
-
-### 2.3 Plateforme multi-modules — le concurrent frontal
-
-| Éditeur | Prix | Engagement | Multi-sites | Humain |
-|---|---|---|---|---|
-| **Deemply** (ex-registresecurite.com) | Découverte **gratuite** (1 bâtiment, 1 module, 1 utilisateur) ; Pro **dès 490 €/an**, exemple affiché 3 970 €/an soit **≈ 19 €/bâtiment/mois** ; sur devis au-delà de 20 bâtiments | Annuel, pas de mensuel affiché | Tarif au bâtiment et au module | Assistance humaine incluse en Pro ; mise en service et reprise d'historique **facturées à part** ; **IA** |
-
-Rappel (mémoire produit, 2026-08-19) : Deemply vise des préventeurs qui
-paramètrent leur outil, son unité est le bâtiment ; Rojer vise le dirigeant
-sans service QHSE, son unité est l'employeur. Ne pas se battre sur le nombre de
-modules.
-
-### 2.4 Repères pour le prix d'un « expert »
-
-| Service | Prix |
+| Constat | Ce qu'on en fait |
 |---|---|
-| Juritravail (abonnement juridique) | 50 €/mois |
-| Legalstart (assistance juridique) | 29,90 à 49,90 €/mois |
-| Captain Contrat Premium (accès avocats) | ≈ 249 €/mois |
-| DUPrev' Premium | 1 analyse expert/an incluse dans 19 €/mois |
-| Consultant prévention | ≈ 800 € la création + ≈ 400 €/an |
+| Un registre seul se vend 19-29 €/mois ; réunir DUERP + registre de sécurité + accessibilité chez des spécialistes coûte 32 à 58 €/mois (France DUERP + Vigie + ACHOP au moins cher, DUPrev' + Securylog + ACHOP au plus cher) | Prix A : Essentiel à 29 €, avec tous les modules, sous la combinaison la moins chère. Prix B : 9,90 €, sous tout le monde. |
+| Hors des petits outils à un seul registre, l'engagement est la règle (12 à 36 mois) | Mensuel résiliable dans toutes les offres. |
+| La remise annuelle va de 8 % (Securylog) à 20 % (DUPrev') | « 2 mois offerts », soit −17 %. |
+| Le site supplémentaire se facture à l'unité (9 à 19 €), et la cible a presque toujours un seul site | Les sites sont une option, pas un palier. |
+| L'humain multiplie le prix par 3 à 10. Pour une TPE, seul DUPrev' inclut un expert : une analyse par an, sur le DUERP seul | Paliers sur la part d'expert : aucun, un rendez-vous annuel sur tout le dossier, à la demande. |
 
-## 3. Ce que le benchmark enseigne
+Autres repères : presque tous les concurrents vendent de l'IA, et chaque
+obligation de Rojer cite son article. Facturer la mise en service irrite les
+clients ; Rojer n'en facture pas.
 
-1. **Le prix de référence d'un registre seul est 19-29 €/mois.** Un dirigeant
-   qui assemble DUERP + registre de sécurité + accessibilité chez des
-   spécialistes paie déjà 40 à 60 €/mois, pour trois outils qui ne se parlent
-   pas.
-2. **Le mensuel sans engagement est rare et différenciant.** Securylog et
-   ACHOP engagent 36 mois, DUPrev' et ALEA 12 mois, Deemply n'affiche pas de
-   mensuel. « Résiliable à tout moment » est un argument.
-3. **La remise annuelle d'usage est de 15 à 20 %** (DUPrev' -20 %, Securylog
-   ≈ -8 %). « 2 mois offerts » (-17 %) se comprend sans calcul.
-4. **Le multi-site se facture à l'unité** (9 €/entreprise chez DUPrev',
-   ≈ 19 €/bâtiment chez Deemply). Un palier inclus puis un prix par site
-   supplémentaire est la forme attendue.
-5. **L'humain est la vraie ligne de partage du prix.** Ceux qui en mettent
-   (Deemply Pro, ALEA, Captain Contrat) sont 3 à 10 fois plus chers. Personne
-   ne propose, pour une TPE, un logiciel complet **plus** un préventeur
-   joignable à un prix d'abonnement : c'est l'espace du Premium.
-6. **Presque tous vendent de l'IA.** Le zéro-IA de Rojer est opposable :
-   « chaque obligation cite son article, rien n'est inventé ».
-7. **Les frais de mise en service sont un irritant** (Deemply, Securylog).
-   Rojer génère le calendrier à la création du dossier : pas de frais d'entrée
-   à justifier.
+## 3. À trancher avant de publier
 
-## 4. Proposition : trois offres
-
-### Principe directeur — on ne bride jamais le référentiel
-
-Toutes les offres voient **toutes les obligations et tous les modules**. Une
-offre moins chère qui masquerait une obligation ferait mentir l'outil sur le
-niveau de conformité, ce que le produit s'interdit. On différencie donc par
-**le nombre d'établissements**, **l'accompagnement humain** et le **niveau de
-service** — jamais par ce que la loi exige.
-
-### Les offres (prix HT)
-
-| | **Essentiel** | **Multi-sites** | **Accompagné** |
-|---|---|---|---|
-| Pour qui | Un commerce, un restaurant, un cabinet | Plusieurs sites ou plusieurs sociétés (SIREN) | Le dirigeant qui veut un préventeur au bout du fil |
-| Mensuel, sans engagement | **29 €/mois** | **59 €/mois** | **129 €/mois** |
-| Annuel (2 mois offerts) | **290 €/an** | **590 €/an** | **1 290 €/an** |
-| Établissements inclus | 1 | 3 | 3 |
-| Établissement supplémentaire | — (passer à Multi-sites) | +15 €/mois (150 €/an) | +15 €/mois (150 €/an) |
-| Toutes les obligations, tous les modules | ✓ | ✓ | ✓ |
-| Prestataires invités (lien + code), signatures, export contrôle | ✓ | ✓ | ✓ |
-| Support | Email, réponse sous 2 jours ouvrés | Email prioritaire, réponse sous 1 jour ouvré | Ligne directe |
-| Mise en route du dossier en visio (45 min) | — | — | ✓ |
-| **Questions à un expert prévention** par écrit | — | — | ✓ illimitées, réponse sous 48 h ouvrées |
-| **Rendez-vous visio avec l'expert** | — | — | 1 h par trimestre |
-| Revue annuelle du DUERP avec l'expert | — | — | ✓ |
-| Préparation d'un contrôle (relecture du dossier avant inspection ou commission de sécurité) | — | — | 1 par an |
-
-**Essai :** 30 jours, toutes fonctions, sans carte bancaire — plutôt qu'une
-offre gratuite à vie. Un gratuit bridé obligerait à masquer des obligations
-(voir le principe directeur) ; l'essai montre au contraire le calendrier
-complet dès la création du dossier, ce qui est le moment où le produit se vend.
-
-### Pourquoi ces prix
-
-- **Essentiel à 29 €** : au prix d'un seul registre de sécurité chez Securylog,
-  mais sans engagement et avec tout le reste. Sous la somme des outils
-  spécialisés (40-60 €).
-- **Multi-sites à 59 € pour 3** : ≈ 20 €/site, aligné sur Deemply
-  (≈ 19 €/bâtiment) sans frais de mise en service ni devis. Le palier de 3
-  correspond aux zones et aux sites d'une TPE ; au-delà, 15 €/site reste sous
-  le prix d'un Essentiel.
-- **Accompagné à 129 €** : 1 548 €/an en mensuel, 1 290 € en annuel — soit le
-  prix d'un consultant qui crée puis met à jour un seul DUERP (≈ 800 + 400 €),
-  pour un suivi de tous les registres toute l'année. Sous Captain Contrat
-  Premium (≈ 249 €). Coût de l'expert estimé : 4 h de visio + ≈ 3 h d'écrit
-  par client et par an, ≈ 500 € à 70 €/h — la marge reste correcte.
-- **Annuel à 10 mois** : « 2 mois offerts » se lit sans calcul et se situe
-  dans l'usage du marché (-17 %).
-
-### Messages clés
-
-- « Tous vos registres de prévention au même endroit. Résiliable à tout
-  moment. »
-- « Rien à paramétrer : vos obligations sont déjà écrites, article par
-  article. »
-- « Aucune obligation n'est réservée à une offre plus chère. »
-- Accompagné : « Un préventeur répond à vos questions, sur votre dossier. »
-
-## 5. Points de vigilance avant de publier
-
-1. **Expert prévention, pas conseil juridique.** La consultation juridique à
-   titre habituel est réservée (loi du 31 décembre 1971, art. 54 et s.). L'offre
-   doit dire « expert en prévention » (IPRP, préventeur) et parler de conseil
-   technique de prévention. Et, comme l'outil, l'expert ne dit jamais « vous
-   êtes conforme ».
-2. **Qui est l'expert ?** Partenaire IPRP enregistré auprès de la DREETS, ou
-   préventeur salarié : à décider, avec un contrat qui fixe la capacité (le
-   Premium ne tient que si le temps par client est borné).
-3. **Ne vendre que ce qui existe.** Aujourd'hui le produit n'a ni
-   multi-utilisateurs internes, ni relances email/SMS, ni paiement en ligne
-   (`CLAUDE.md`, « Hors périmètre »). Ne pas annoncer « utilisateurs
-   illimités » ni « rappels automatiques » tant que ce n'est pas livré.
-4. **Le compte des établissements** traverse les entreprises du compte
-   (ADR-028 amendée) : 3 établissements = 3 sites, qu'ils soient dans une ou
-   plusieurs sociétés.
-5. **Ce qui arrive à la résiliation** : la conservation de 40 ans du DUERP et
-   l'export RGPD doivent rester accessibles (lecture et export) après la fin de
-   l'abonnement. À écrire dans les CGV, et c'est un argument rassurant.
-6. **Paiement et abonnement sont hors périmètre du produit à ce jour** :
-   les brancher est un chantier (et sans doute un ADR — l'accès selon le statut
-   d'abonnement touche aux données).
+- **Le cadre de l'expert** : un conseil technique de sécurité et de prévention,
+  pas une consultation juridique, qui est réservée aux professions du droit
+  (loi du 31 décembre 1971). Il ne dit jamais « vous êtes conforme ». À écrire
+  dans les CGV.
+- **La capacité de l'expert** : borner le temps par client (1 h par an en
+  Suivi ; 1 h par trimestre et des réponses écrites sous 48 h en Accompagné), et
+  suivre le temps réellement passé.
+- **Relances email et téléchargement des données** : à livrer avant la
+  publication (voir †). Ensuite, préciser ce qui reste consultable du DUERP,
+  dont la loi impose la conservation pendant 40 ans.
+- **Ne pas promettre** plusieurs utilisateurs par compte, une application
+  mobile ou des rappels par SMS.
+- **Le paiement en ligne** : chantier `lot/abonnements-stripe` (ADR-053).
+- **Le compte des établissements** porte sur les sites, toutes sociétés du
+  compte confondues.
 
 ## Sources
 
-- Deemply, page tarifs — https://www.deemply.com/tarifs
+- Deemply — https://www.deemply.com/tarifs
 - Securylog — https://www.securylog.pro/
-- Vigie — https://vigie-registre.fr/ (page indisponible le 2026-11-02, prix lu dans l'index de recherche)
-- DUPrev' (FJ Prévention), tarifs — https://app.fjprevention.fr/tarifs
-- DUPrev', comparatif — https://app.fjprevention.fr/blog/logiciel-document-unique-gratuit-comparatif
-- DUERP.ai, tarifs — https://duerp.ai/tarifs ; comparatif — https://duerp.ai/blog/logiciel-duerp-comparatif
+- Vigie — https://vigie-registre.fr/ (indisponible le 2026-11-02, prix lu dans l'index de recherche)
+- DUPrev' — https://app.fjprevention.fr/tarifs ; https://app.fjprevention.fr/blog/logiciel-document-unique-gratuit-comparatif
+- DUERP.ai — https://duerp.ai/tarifs (service annoncé « bientôt disponible »)
 - France DUERP — https://www.franceduerp.fr/duerp/logiciel
 - ALEA Prevention — https://alea-prevention.com/pme-la-solution-pour-vos-salaries/
-- ACHOP (registre d'accessibilité) — https://www.achop.fr/registre-accessibilite.html
-- Repères prix DUERP — https://duerp-express.fr/duerp-prix ; https://duerp-en-direct.fr/faq/combien-coute-un-duerp/
-- Repères juridiques — https://independant.io/legalstart-ou-captain-contrat/ ; https://www.vitepromo.com/en/divers-rencontres/code-promo-captaincontrat ; https://www.juritravail.com/Dossier/duer-rediger-le-document-unique-devaluation-des-risques-professionnels/172
+- ACHOP — https://www.achop.fr/registre-accessibilite.html
+- Prix des consultants — https://duerp-express.fr/duerp-prix
+- Repères juridiques — https://independant.io/legalstart-ou-captain-contrat/ ; https://www.juritravail.com/ ; https://www.vitepromo.com/en/divers-rencontres/code-promo-captaincontrat
