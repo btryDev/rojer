@@ -64,8 +64,10 @@ et sans croire une information qui ne vient pas de Stripe.
    webhook en boucle.
 7. **La clé et l'environnement vont ensemble** : une clé `live` n'est admise
    qu'en production déclarée (`environnementApp() === "production"`) sur un
-   serveur de production (`NODE_ENV=production`), une clé de test jamais en
-   production. La clé et le secret ne sortent pas du serveur : un écran ne
+   serveur de production (`NODE_ENV=production`) ; une clé de test
+   seulement en préversion ou en développement déclarés — jamais en
+   production, ni sur un serveur de production qui ne déclare pas son
+   environnement (revue de code du socle). La clé et le secret ne sortent pas du serveur : un écran ne
    reçoit que `etatStripe` (la décision, sans secret). Sans clé, les abonnements sont
    désactivés et l'app sert tout le reste (même règle que les variables
    optionnelles de `env.ts`). En production, la clé doit être **restreinte**

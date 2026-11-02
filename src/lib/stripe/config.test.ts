@@ -33,7 +33,7 @@ describe("configurationStripe", () => {
     expect(configurationStripe(avec(PROD, "  ", ""))).toEqual({ active: false, motif: null });
   });
 
-  it("une clé de test en développement et en préversion", () => {
+  it("une clé de test en développement et en préversion déclarés", () => {
     expect(configurationStripe(avec(DEV, TEST, WH))).toEqual({
       active: true,
       cle: TEST,
@@ -41,7 +41,7 @@ describe("configurationStripe", () => {
       mode: "test",
     });
     expect(configurationStripe(avec(PREVIEW, TEST_RESTREINTE, WH))).toMatchObject({ active: true, mode: "test" });
-    expect(configurationStripe(avec(INDETERMINE, TEST, WH))).toMatchObject({ active: true, mode: "test" });
+
   });
 
   it("une clé de production seulement en production déclarée, et restreinte", () => {
@@ -58,7 +58,10 @@ describe("configurationStripe", () => {
     expect(motifDe(avec(PROD, LIVE, WH))).toMatch(/non restreinte/);
   });
 
-  it("jamais une clé de test en production", () => {
+  it("jamais une clé de test en production, ni sur un serveur qui ne dit pas ce qu'il est", () => {
+    // Une mise en ligne sans APP_ENV ouvrait les abonnements en mode test sur
+    // le vrai site (revue de code du socle).
+    expect(motifDe(avec(INDETERMINE, TEST, WH))).toMatch(/ne déclare pas son environnement/);
     for (const cle of [TEST, TEST_RESTREINTE]) {
       expect(motifDe(avec(PROD, cle, WH))).toMatch(/de test refusée en production/);
     }

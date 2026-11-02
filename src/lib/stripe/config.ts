@@ -6,8 +6,9 @@ import "server-only";
 // - Clé `live` : seulement sur un serveur de production (`NODE_ENV`) qui se
 //   déclare production (`APP_ENV`) — un `.env` de production copié sur un
 //   poste ne débite pas de vraie carte —, et restreinte (`rk_live_`).
-// - Clé de test : jamais en production (des clients y « paieraient » sans
-//   être débités).
+// - Clé de test : seulement en préversion ou en développement DÉCLARÉS —
+//   jamais en production, ni sur un serveur de production qui ne dit pas ce
+//   qu'il est (des clients y « paieraient » sans être débités).
 //
 // Tout refus, forme comprise, ferme les abonnements et non le serveur ; le
 // motif est signalé au démarrage (`avertissementsEnvironnement`) et ne cite
@@ -51,7 +52,8 @@ export function configurationStripe(env: Env = process.env): ConfigurationStripe
 
   const restreinte = forme[1] === "rk";
   const mode: ModeStripe = forme[2] === "live" ? "live" : "test";
-  const production = environnementApp(env) === "production";
+  const environnement = environnementApp(env);
+  const production = environnement === "production";
   const serveurDeProduction = posee(env.NODE_ENV) === "production";
 
   if (mode === "live" && !(production && serveurDeProduction)) {
@@ -61,6 +63,11 @@ export function configurationStripe(env: Env = process.env): ConfigurationStripe
   }
   if (mode === "test" && production) {
     return refus("clé Stripe de test refusée en production : aucun paiement n'y serait encaissé");
+  }
+  // Un serveur de production sans APP_ENV (ni VERCEL_ENV) est indéterminé
+  // (`environnementApp` → null) : il est peut-être la production.
+  if (mode === "test" && environnement === null) {
+    return refus("clé Stripe de test refusée : serveur de production qui ne déclare pas son environnement (APP_ENV)");
   }
   if (mode === "live" && !restreinte) {
     return refus("clé Stripe de production non restreinte : utiliser une clé restreinte (rk_live_)");
