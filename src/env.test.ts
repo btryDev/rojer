@@ -97,6 +97,29 @@ describe("validerEnvironnement", () => {
   });
 });
 
+describe("variables Stripe (ADR-053)", () => {
+  // Une clé refusée — mal formée ou hors de son environnement — ferme les
+  // abonnements, pas le serveur : un avertissement au démarrage, sans valeur.
+  it("signale une clé refusée sans fermer le serveur", () => {
+    const prod = {
+      ...BASE,
+      NODE_ENV: "production",
+      APP_ENV: "production",
+      PUBLIC_APP_URL: "https://rojer.fr",
+      STRIPE_SECRET_KEY: "sk_test_abc",
+      STRIPE_WEBHOOK_SECRET: "whsec_abc",
+    };
+    expect(() => validerEnvironnement(prod)).not.toThrow();
+    expect(avertissementsEnvironnement(prod)).toEqual([expect.stringMatching(/clé Stripe de test refusée/)]);
+    expect(avertissementsEnvironnement({ ...prod, STRIPE_SECRET_KEY: "rk_live_abc" })).toEqual([]);
+
+    const malFormee = { ...prod, STRIPE_SECRET_KEY: "pk_live_abc" };
+    expect(() => validerEnvironnement(malFormee)).not.toThrow();
+    expect(avertissementsEnvironnement(malFormee)).toEqual([expect.stringMatching(/forme d'une clé Stripe/)]);
+    expect(avertissementsEnvironnement(malFormee).join()).not.toContain("pk_live_abc");
+  });
+});
+
 describe("validerEnvironnementAuDemarrage", () => {
   it("n'exige rien pendant next build", () => {
     expect(() =>

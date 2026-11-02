@@ -568,7 +568,7 @@ est nulle, la conservation reste à la charge de l'employeur hors de l'outil.
 - Signature électronique **qualifiée** (la signature simple existe)
 - Multi-utilisateurs internes par entreprise (rôles, permissions fines) — l'accès externe prestataire par token existe, lui. **À ne pas confondre avec le multi-établissements, qui est entré au périmètre le 2026-09-01** (ADR-028) : ~~un compte reste une entreprise et un utilisateur, mais cette entreprise porte autant d'établissements qu'elle en a~~ [2026-10-26, ADR-028 amendée : un compte reste un utilisateur ; il suit autant d'entreprises que de SIREN, chacune avec ses établissements]
 - Notifications de relance (email/push/SMS) — seuls les emails transactionnels existent (OTP, liens d'accès)
-- Paiement / abonnement / gestion commerciale
+- ~~Paiement / abonnement / gestion commerciale~~ [2026-11-02 : les abonnements entrent au périmètre, ADR-053, branche `lot/abonnements-stripe` sur `cc` ; la gestion commerciale reste dehors]
 - Intégration SIRENE pour auto-complétion SIRET
 - Analyses comparatives / benchmarks sectoriels
 - Signalements de terrain / ticketing : le module Interventions a été retiré (ADR-018) ; rien ne relie plus un constat à une action datée
@@ -733,6 +733,10 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     le datent pas (2026-10-24)
 50. **050** — Une demande d'assistance s'enregistre là où le doute naît, et
     ne part pas encore (2026-10-24)
+53. **053** — L'abonnement est porté par le compte ; Stripe en garde la
+    vérité, Rojer une copie écrite depuis un webhook signé, après relecture
+    de l'abonnement. Un impayé ferme la saisie, jamais la lecture ni
+    l'export (2026-11-02, branche `lot/abonnements-stripe`)
 
 [2026-10-15, ménage des ADR : 037, 038 et 043 manquaient à cette liste ;
 **il n'existe pas d'ADR-044** — annoncée dans

@@ -50,6 +50,7 @@ import "server-only";
 import { z } from "zod";
 import { ENVIRONNEMENTS_APP } from "@/lib/environnement";
 import { FORME_EXPORTS_SIMULTANES } from "@/lib/exports/limite";
+import { etatStripe } from "@/lib/stripe/config";
 
 type Env = Record<string, string | undefined>;
 
@@ -132,6 +133,12 @@ const schema = z
     LEGIFRANCE_CLIENT_ID: optionnelle,
     LEGIFRANCE_CLIENT_SECRET: optionnelle,
     LEGIFRANCE_ENV: enumeration(["sandbox", "production"] as const),
+
+    // Abonnements (ADR-053) : forme et accord avec l'environnement sont
+    // jugés par `stripe/config.ts` seul, dont un refus ferme les abonnements,
+    // pas le serveur (signalé par `avertissementsEnvironnement`).
+    STRIPE_SECRET_KEY: optionnelle,
+    STRIPE_WEBHOOK_SECRET: optionnelle,
   });
 
 /**
@@ -197,14 +204,19 @@ export function validerEnvironnement(env: Env = process.env): EnvValide {
  * 2026-10-14, B1). La sanction doit être à la mesure de la conséquence.
  */
 export function avertissementsEnvironnement(env: Env = process.env): string[] {
+  const avertissements: string[] = [];
   if (vide(env.NODE_ENV) === "production" && !vide(env.APP_ENV) && !vide(env.VERCEL_ENV)) {
-    return [
+    avertissements.push(
       "APP_ENV absente : un serveur de production hors Vercel doit dire ce qu'il est " +
         "(production | preview | development). Sans elle, la réparation automatique " +
         "du calendrier ne s'exécute pas (lib/environnement.ts).",
-    ];
+    );
   }
-  return [];
+  // Une configuration Stripe posée mais refusée ferme les abonnements, pas le
+  // serveur (ADR-053 § 7) : le démarrage le dit à qui déploie.
+  const stripe = etatStripe(env);
+  if (!stripe.active && stripe.motif) avertissements.push(stripe.motif);
+  return avertissements;
 }
 
 /** Appelé par `register()` ; ne fait rien pendant `next build`. */

@@ -244,6 +244,45 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
     });
   });
 
+  // ADR-053 : l'abonnement est une racine de compte. Le webhook l'écrit avec
+  // le client borné au compte que désigne l'objet Stripe relu ; ce client ne
+  // doit ni voir, ni toucher, ni créer l'abonnement d'un autre compte.
+  describe("abonnement (ADR-053)", () => {
+    beforeAll(async () => {
+      await prisma.abonnement.create({ data: { userId: B, stripeCustomerId: "cus_B", statut: "active" } });
+    });
+
+    it("celui d'un autre compte est absent, en lecture comme en écriture", async () => {
+      expect(await dbA.abonnement.findUnique({ where: { userId: B } })).toBeNull();
+      // La recherche du webhook : par le client Stripe.
+      expect(await dbA.abonnement.findUnique({ where: { stripeCustomerId: "cus_B" } })).toBeNull();
+      expect((await dbA.abonnement.findMany()).filter((x) => x.userId !== A)).toEqual([]);
+      await expect(dbA.abonnement.update({ where: { userId: B }, data: { statut: "canceled" } })).rejects.toThrow();
+      await expect(dbA.abonnement.upsert({
+        where: { userId: B },
+        create: { userId: B, stripeCustomerId: "cus_z" },
+        update: { statut: "canceled" },
+      })).rejects.toThrow();
+      expect((await prisma.abonnement.findUniqueOrThrow({ where: { userId: B } })).statut).toBe("active");
+    });
+
+    it("ne se crée pas au nom d'un autre compte", async () => {
+      await expect(dbA.abonnement.create({ data: { userId: B, stripeCustomerId: "cus_x" } })).rejects.toThrow();
+      await expect(
+        dbA.abonnement.create({ data: { stripeCustomerId: "cus_y", user: { connect: { id: B } } } }),
+      ).rejects.toThrow(/que le compte/);
+    });
+
+    it("celui du compte se crée et se relit", async () => {
+      await dbA.abonnement.upsert({ where: { userId: A }, create: { userId: A, stripeCustomerId: "cus_A" }, update: {} });
+      expect((await dbA.abonnement.findMany()).map((x) => x.stripeCustomerId)).toEqual(["cus_A"]);
+    });
+
+    it("les événements Stripe sont hors compte : le client borné ne les sert pas", async () => {
+      await expect(dbA.evenementStripe.findMany()).rejects.toThrow();
+    });
+  });
+
   describe("createMany imbriqué", () => {
     it("est refusé (forme non servie) : une racine d'un autre compte n'y passe pas, B ne voit rien", async () => {
       await expect(
