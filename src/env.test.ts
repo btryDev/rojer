@@ -97,6 +97,33 @@ describe("validerEnvironnement", () => {
   });
 });
 
+describe("variables Stripe (ADR-053)", () => {
+  it("vérifie leur forme, sans citer la valeur", () => {
+    expect(() => validerEnvironnement({ ...BASE, STRIPE_SECRET_KEY: "sk_test_abc", STRIPE_WEBHOOK_SECRET: "whsec_abc" })).not.toThrow();
+    expect(() => validerEnvironnement({ ...BASE, STRIPE_SECRET_KEY: "pk_test_abc" })).toThrow(/STRIPE_SECRET_KEY/);
+    expect(() => validerEnvironnement({ ...BASE, STRIPE_SECRET_KEY: "pk_test_abc" })).not.toThrow(/pk_test_abc/);
+    expect(() => validerEnvironnement({ ...BASE, STRIPE_WEBHOOK_SECRET: "pas-un-whsec" })).toThrow(
+      /STRIPE_WEBHOOK_SECRET/,
+    );
+  });
+
+  // Une clé refusée pour son environnement ferme les abonnements, pas le
+  // serveur : un avertissement au démarrage, pas une faute.
+  it("signale une clé refusée sans fermer le serveur", () => {
+    const prod = {
+      ...BASE,
+      NODE_ENV: "production",
+      APP_ENV: "production",
+      PUBLIC_APP_URL: "https://rojer.fr",
+      STRIPE_SECRET_KEY: "sk_test_abc",
+      STRIPE_WEBHOOK_SECRET: "whsec_abc",
+    };
+    expect(() => validerEnvironnement(prod)).not.toThrow();
+    expect(avertissementsEnvironnement(prod)).toEqual([expect.stringMatching(/clé Stripe de test refusée/)]);
+    expect(avertissementsEnvironnement({ ...prod, STRIPE_SECRET_KEY: "rk_live_abc" })).toEqual([]);
+  });
+});
+
 describe("validerEnvironnementAuDemarrage", () => {
   it("n'exige rien pendant next build", () => {
     expect(() =>

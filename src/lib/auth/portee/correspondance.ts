@@ -29,6 +29,9 @@ export const CORRESPONDANCE = {
   // `DemandeAssistance.userId` est posé par l'action d'un compte connecté ;
   // son `etablissementId` est facultatif (ADR-050).
   DemandeAssistance: { racine: "userId" },
+  // L'abonnement du compte (ADR-053) : écrit depuis un webhook signé, par le
+  // client borné au compte que désigne l'objet Stripe relu.
+  Abonnement: { racine: "userId" },
 
   Etablissement: { parent: "entreprise" },
 
@@ -71,6 +74,9 @@ export const CORRESPONDANCE = {
   },
   LimiteDebit: {
     horsCompte: "limitation de débit par clé (IP, jeton) : compteur technique, lu avant toute identité",
+  },
+  EvenementStripe: {
+    horsCompte: "événement Stripe reçu (ADR-053) : dédoublonnage des livraisons, écrit avant toute identité",
   },
 
   // Better Auth (ADR-052) : lues et écrites par son adaptateur, avec le client

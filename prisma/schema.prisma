@@ -2259,6 +2259,7 @@ model User {
   signatures         Signature[]
   accessTokensEmis   AccessToken[]
   demandesAssistance DemandeAssistance[]
+  abonnement         Abonnement?
 
   @@unique([email])
 }
@@ -2323,4 +2324,46 @@ model AuthVerification {
   updatedAt  DateTime @updatedAt
 
   @@index([identifier])
+}
+
+// L'abonnement du compte (ADR-053). Stripe tient la vérité (clients,
+// abonnements, factures) ; cette ligne en est la copie, écrite seulement
+// depuis un webhook signé, après relecture de l'abonnement par l'API. Une
+// ligne par compte : l'état courant ; l'historique reste chez Stripe.
+//
+// `statut` est le `status` Stripe tel quel, en texte et non en énumération :
+// un état inconnu s'enregistre et ferme la saisie (ADR-053 § 3) au lieu de
+// faire échouer le webhook en boucle. Nul tant qu'aucun abonnement n'a été
+// créé (le client Stripe existe dès le premier passage au paiement).
+model Abonnement {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// Racine de compte (ADR-051). RESTRICT : supprimer un compte devra
+  /// d'abord résilier chez Stripe.
+  userId                String    @unique @db.Uuid
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  stripeCustomerId      String    @unique
+  stripeSubscriptionId  String?   @unique
+  statut                String?
+  /// La `lookup_key` du prix Stripe souscrit.
+  formule               String?
+  finPeriode            DateTime?
+  finEssai              DateTime?
+  resilieEnFinDePeriode Boolean   @default(false)
+  /// Un essai par compte : posé au premier abonnement en essai, jamais effacé.
+  essaiUtiliseLe        DateTime?
+  /// Dernière relecture de l'abonnement chez Stripe.
+  relueLe               DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+}
+
+// Les événements Stripe reçus (ADR-053 § 5) : l'identifiant `evt_…` en clé
+// primaire dédoublonne les livraisons répétées ; `traiteLe` nul après une
+// réception marque un traitement à rejouer à la relance suivante de Stripe.
+// Hors compte (ADR-051) : écrit avant toute identité.
+model EvenementStripe {
+  id       String    @id
+  type     String
+  recuLe   DateTime  @default(now())
+  traiteLe DateTime?
 }
