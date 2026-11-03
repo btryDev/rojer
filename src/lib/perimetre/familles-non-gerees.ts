@@ -1,5 +1,4 @@
-// « Ce que Rojer ne gère pas » — ~~cinq~~ six familles [2026-11-03 : + « Code du
-// travail, pas encore », réalignement], une phrase chacune (2026-10-17,
+// « Ce que Rojer ne gère pas » — cinq familles, une phrase chacune (2026-10-17,
 // ADR-046, plan validé par c6 et la propriétaire).
 //
 // POURQUOI DES FAMILLES. La page « Ce que Rojer ne couvre pas » listait
@@ -47,8 +46,6 @@ export type CleFamille =
   | "equipements_a_prevoir"
   | "regles_de_conduite"
   | "risques_specialises"
-  // 2026-11-03, réalignement (ADR-031 amendée).
-  | "code_du_travail_pas_encore"
   | "hors_sante_securite";
 
 export type FamilleNonGeree = {
@@ -79,23 +76,14 @@ const CONDUITE = [
 ] as const;
 
 // Le motif de l'exclusion `risque_specialise` (`corpus/perimetre.ts`), élément
-// par élément. [2026-11-03, réalignement (ADR-031 amendée) : ~~une seule liste,
-// « risques spécialisés », hors périmètre par choix~~ — deux listes. Ce qui
-// relève d'un autre code reste dehors ; l'ATEX et la radioprotection relèvent
-// du Code du travail, que Rojer sert : elles sont « pas encore » suivies.]
-// ~~« les piscines »~~ — revue de #172 (2026-11-03) : leurs dispositions au
-// règlement de sécurité ERP sont du CCH ; seules leurs règles sanitaires
-// relèvent d'un autre code.
-const AUTRES_CODES = [
+// par élément.
+const RISQUES = [
   nonPorte("les installations classées soumises à autorisation"),
-  nonPorte("les règles sanitaires des piscines"),
-  nonPorte("les bains à remous"),
-  nonPorte("les appareils de bronzage UV"),
-] as const;
-
-const PAS_ENCORE = [
   nonPorte("les atmosphères explosives"),
   nonPorte("la radioprotection"),
+  nonPorte("les piscines"),
+  nonPorte("les bains à remous"),
+  nonPorte("les appareils de bronzage UV"),
 ] as const;
 
 const HORS_SST = [
@@ -126,19 +114,8 @@ export const FAMILLES_NON_GEREES: readonly FamilleNonGeree[] = [
   },
   {
     cle: "risques_specialises",
-    liste: AUTRES_CODES,
-    // ~~« Rojer ne suit pas les mesures de prévention propres aux risques
-    // spécialisés — [les six] ; il tient en revanche le suivi individuel
-    // renforcé … »~~ — 2026-11-03, réalignement : ne reste ici que ce qui
-    // relève d'un autre code ; la clé est gardée (parité page ↔ PDF).
-    phrase: `Rojer ne suit pas ce qui relève d'autres codes que le Code de la construction et de l'habitation et le Code du travail : ${enumerer(AUTRES_CODES)}.`,
-  },
-  {
-    // 2026-11-03, réalignement : ce que le Code du travail impose et que
-    // Rojer ne suit pas encore. Un manque, pas une exclusion.
-    cle: "code_du_travail_pas_encore",
-    liste: PAS_ENCORE,
-    phrase: `Rojer ne suit pas encore les mesures de prévention que le Code du travail impose pour ${enumerer(PAS_ENCORE)} ; il tient en revanche ${porte("le suivi individuel renforcé")} de chaque salarié dont vous déclarez le titre.`,
+    liste: RISQUES,
+    phrase: `Rojer ne suit pas les mesures de prévention propres aux risques spécialisés — ${enumerer(RISQUES)} ; il tient en revanche ${porte("le suivi individuel renforcé")} de chaque salarié dont vous déclarez le titre.`,
   },
   {
     cle: "hors_sante_securite",
