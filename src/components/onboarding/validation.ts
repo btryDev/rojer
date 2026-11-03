@@ -27,7 +27,6 @@ import {
 import type { CategorieErp, TypeErp } from "@/lib/referentiels/types-communs";
 import type { OnboardingState } from "./types";
 import { effectifApresRattachement } from "@/lib/entreprises/effectif-calcul";
-import { refusDuFiltre } from "@/lib/etablissements/types-refuses";
 
 /**
  * Un refus d'avancer, et ce qu'il faut pour le montrer au bon endroit.
@@ -243,23 +242,6 @@ export function validerTypologie(s: OnboardingState): Blocage | null {
   // sinon il envoie chercher autre chose.
   if (s.estERP && !s.typeErp)
     return { champ: "typeErp", message: "Précisez le type de votre ERP." };
-  // LE FILTRE À L'ACCUEIL (2026-10-17) : la règle du serveur, par la même
-  // fonction (`etablissements/types-refuses.ts`), et AVANT la catégorie,
-  // comme le serveur — un J est refusé sans avoir à choisir de catégorie
-  // (revue). Un type refusé est un refus de périmètre ; la question R sans
-  // réponse se corrige en répondant.
-  const filtre = refusDuFiltre({
-    estERP: s.estERP,
-    typeErp: s.typeErp,
-    typesErpAutres: s.typesErpAutres,
-    accueilEnfants: s.accueilEnfants === "oui" ? true : s.accueilEnfants === "non" ? false : undefined,
-  })[0];
-  if (filtre)
-    return {
-      champ: filtre.champ,
-      message: filtre.message,
-      ...(filtre.champ === "accueilEnfants" && s.accueilEnfants === "" ? {} : { perimetre: true }),
-    };
   if (s.estERP && !s.categorieErp)
     return {
       champ: "categorieErp",

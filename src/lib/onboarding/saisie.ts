@@ -30,8 +30,6 @@ export function saisieOnboardingDepuisFormData(formData: FormData) {
     // Vide = « je ne sais pas encore », et le vide ne se coerce pas en `false` :
     // le schéma le rend `undefined`, et l'écriture ci-dessous est alors omise.
     comporteLocauxSommeilPublic: raw.comporteLocauxSommeilPublic,
-    // Filtre à l'accueil (2026-10-17) : lue pour refuser, jamais écrite.
-    accueilEnfants: raw.accueilEnfants || undefined,
     personnesPresentesHabituellement: raw.personnesPresentesHabituellement,
     manipuleMatieresR422722: raw.manipuleMatieresR422722,
   };
