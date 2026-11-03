@@ -1,7 +1,8 @@
 import "server-only";
 // Les appels Stripe du parcours d'abonnement (ADR-053 §§ 8 à 10), sans rien
 // savoir du compte : l'appelant passe les métadonnées qui le désignent
-// (`metadata.userId` aujourd'hui, `metadata.compteId` avec l'ADR-054) et la
+// (~~`metadata.userId` aujourd'hui~~ `metadata.compteId`, ADR-054 ; la
+// synchronisation relit encore un ancien `metadata.userId`) et la
 // clé d'idempotence, dérivée du COMPTE (jamais de la personne : avec
 // l'ADR-054, une personne peut ouvrir deux comptes). Ces clés n'arrêtent qu'un
 // double clic : Stripe ne les garde que 24 heures. La vraie garde contre deux
