@@ -39,7 +39,9 @@
  * ce fait ; il le lit sur le type d'ERP X (établissements sportifs couverts).
  * La ligne des secours est donc bornée à `erp: { types: ["X"] }`, toutes
  * catégories. Un établissement sportif de plein
- * air (PA) est refusé à l'accueil ; un club qui n'est pas déclaré X ne reçoit
+ * air (PA) ~~est refusé à l'accueil~~ [2026-11-03 : est accepté depuis le
+ * réalignement (ADR-031 amendée) et ne reçoit pas cette ligne — son type
+ * porte un manque déclaré, `perimetre/couverture.ts`, axe `type_erp`] ; un club qui n'est pas déclaré X ne reçoit
  * rien, et c'est une limite du produit, écrite.
  *
  * LES BUTS ET PANIERS, SEULS, NE SONT PAS BORNÉS À X (décision de c6 du

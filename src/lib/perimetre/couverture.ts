@@ -153,6 +153,10 @@ export type AxeCouverture =
   | "igh"
   /** La catégorie d'ERP rouvre le livre II, que le référentiel ne connaît pas. */
   | "categorie_erp"
+  /** Un type d'ERP accepté dont Rojer ne suit pas les dispositions propres
+   *  (réalignement du 2026-11-03, ADR-031 amendée : ce qui ne se refuse plus
+   *  se déclare). */
+  | "type_erp"
   /** Le DUERP ne couvre pas tout — projection de l'ADR-020. */
   | "secteur_duerp"
   /** Des appareils du parc ne portent aucune échéance — rappel de
@@ -238,6 +242,12 @@ export type RegimeEtablissement = {
   estHabitation: boolean;
   /* `familleHabitation` a quitté ce type le 2026-09-03 avec l'axe qui la
      lisait : plus rien, dans la couverture, ne dépend de la famille. */
+  /**
+   * Les types d'ERP déclarés, le premier puis les autres (`typesErpDe`).
+   * Lus par l'axe `type_erp` (2026-11-03). Absent = non transmis : l'axe se
+   * tait.
+   */
+  typesErp?: readonly TypeErp[];
 };
 
 /**
@@ -445,6 +455,75 @@ function axeRegime(
     // `TYPES_ERP_DISPOSITIONS_PARTICULIERES`, que le test dérive du référentiel.]
     consequence: `Rojer accepte les ERP des catégories 1 à 4. Le règlement de sécurité leur applique en entier son livre II, dont cet outil ne porte qu'une part : ${nonPorte("le service de sécurité incendie assuré par des agents de sécurité incendie")}, notamment, n'y est pas, et des dispositions particulières par type d'activité, il ne porte que quelques-unes, et seulement pour les ${enumeration(TYPES_ERP_DISPOSITIONS_PARTICULIERES.map((t) => NOM_TYPE_ERP_PLURIEL[t] ?? t))}. Votre calendrier et votre registre sont donc incomplets, et le resteront.`,
   });
+}
+
+/**
+ * Les types d'ERP acceptés depuis le réalignement (2026-11-03, ADR-031
+ * amendée) dont Rojer ne suit pas les dispositions propres. Le filtre à
+ * l'accueil du 2026-10-17 les refusait ; ils se déclarent désormais.
+ *
+ * - J et U : leurs chapitres du livre II (catégories 1 à 4) sont lus, pas
+ *   encodés ; en 5ᵉ catégorie, U relève des articles PU du livre III, lus
+ *   aussi, et J d'aucun chapitre propre (le livre III n'en a pas) : rien à
+ *   déclarer pour lui.
+ * - Les établissements spéciaux du livre IV, PS excepté (servi par PS 32,
+ *   et accepté avant le filtre) : leurs dispositions ne sont pas lues.
+ * - EF : son règlement (arrêté du 9 janvier 1990) n'est pas lu.
+ */
+const SPECIAUX_NON_LUS: Partial<Record<TypeErp, string>> = {
+  PA: "établissement de plein air",
+  CTS: "chapiteau, tente ou structure",
+  SG: "structure gonflable",
+  OA: "hôtel-restaurant d'altitude",
+  REF: "refuge de montagne",
+  GA: "gare",
+};
+
+const INCOMPLETS = "Votre calendrier et votre registre sont donc incomplets.";
+
+function axeTypeErp(regime: RegimeEtablissement, manques: ManqueCouverture[]): void {
+  // Hors ERP, rien ; en IGH, l'axe `igh` a déjà dit que rien de ce qui est lu
+  // ici ne couvre le régime.
+  if (!regime.estERP || regime.estIGH) return;
+  const types = regime.typesErp ?? [];
+  const cat = regime.categorieErp;
+  const livreII = cat !== null && cat !== "N5";
+
+  if (types.includes("J") && livreII) {
+    manques.push({
+      axe: "type_erp",
+      motif:
+        "Cet établissement est déclaré structure d'accueil pour personnes âgées ou handicapées (type J).",
+      consequence: `Le règlement de sécurité consacre à ce type des dispositions particulières (chapitre J du livre II). Rojer les a lues mais ne les suit pas encore : ${nonPorte("les exercices pratiques semestriels propres au type J")}, ${nonPorte("les consignes remises à chaque résident")} et ${nonPorte("la vérification annuelle des équipements d'oxygénothérapie")}, notamment. ${INCOMPLETS}`,
+    });
+  }
+
+  if (types.includes("U") && cat !== null) {
+    manques.push({
+      axe: "type_erp",
+      motif: "Cet établissement est déclaré établissement de soins (type U).",
+      consequence: livreII
+        ? `Le règlement de sécurité consacre à ce type des dispositions particulières (chapitre U du livre II). Rojer les a lues mais ne les suit pas encore : ${nonPorte("les exercices d'évacuation simulée propres au type U")}, ${nonPorte("les consignes affichées propres aux établissements de soins")} et ${nonPorte("la vérification annuelle des installations de gaz médicaux")}, notamment. ${INCOMPLETS}`
+        : `Le règlement de sécurité consacre aux petits établissements de soins des dispositions propres (articles PU du livre III). Rojer les a lues mais ne les suit pas encore : ${nonPorte("la vérification annuelle des installations de gaz médicaux")}, notamment. ${INCOMPLETS}`,
+    });
+  }
+
+  const speciaux = types.filter((t) => SPECIAUX_NON_LUS[t] !== undefined);
+  if (speciaux.length > 0) {
+    manques.push({
+      axe: "type_erp",
+      motif: `Cet établissement est déclaré établissement spécial : ${enumeration(speciaux.map((t) => `${SPECIAUX_NON_LUS[t]} (${t})`))}.`,
+      consequence: `Le règlement de sécurité consacre aux établissements spéciaux ${nonPorte("des dispositions propres (livre IV de l'arrêté du 25 juin 1980)")}. Rojer ne les a pas encore lues et ne les suit pas. ${INCOMPLETS}`,
+    });
+  }
+
+  if (types.includes("EF")) {
+    manques.push({
+      axe: "type_erp",
+      motif: "Cet établissement est déclaré établissement flottant (type EF).",
+      consequence: `Les établissements flottants relèvent ${nonPorte("de dispositions de sécurité propres (arrêté du 9 janvier 1990)")}. Rojer ne les a pas encore lues et ne les suit pas. ${INCOMPLETS}`,
+    });
+  }
 }
 
 /**
@@ -852,6 +931,7 @@ export function couvertureDeLEtablissement(
   const indeterminations: IndeterminationCouverture[] = [];
 
   axeRegime(faits.regime, manques, indeterminations);
+  axeTypeErp(faits.regime, manques);
   // Juste après le régime, et pour la même raison : la taille de la structure
   // qualifie tout le reste de ce que le dossier contient.
   axeEffectif(faits.effectif, manques);
@@ -881,5 +961,6 @@ export function couvertureDuRegime(
   const manques: ManqueCouverture[] = [];
   const indeterminations: IndeterminationCouverture[] = [];
   axeRegime(regime, manques, indeterminations);
+  axeTypeErp(regime, manques);
   return { manques, indeterminations };
 }

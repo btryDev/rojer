@@ -26,6 +26,7 @@ import {
   reperterSansEcheance,
 } from "@/lib/equipements/hors-referentiel";
 import { projeterEtablissement } from "@/lib/matching";
+import { typesErpDe } from "@/lib/matching/types-erp";
 import { EFFECTIF_MAX } from "@/lib/etablissements/schema";
 import { correspondanceSecteur } from "./secteur";
 import type { FaitsManquesAnnonces } from "./manques-annonces";
@@ -140,6 +141,7 @@ export async function faitsDeCouverture(
       estIGH: etab.estIGH,
       categorieErp: etab.categorieErp,
       estHabitation: etab.estHabitation,
+      typesErp: typesErpDe(etab),
     },
     duerp: couvertureDuerp && {
       etat: couvertureDuerp.etat,

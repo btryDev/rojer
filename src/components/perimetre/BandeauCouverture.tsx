@@ -41,6 +41,7 @@ function lienDeLAxe(
   switch (axe) {
     case "igh":
     case "categorie_erp":
+    case "type_erp":
       return {
         href: hrefs.etablissement,
         libelle: "Vérifier le régime de l'établissement",
