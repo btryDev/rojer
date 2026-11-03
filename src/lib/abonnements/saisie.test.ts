@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
+// Le vrai module, pas les gardes ouvertes de `vitest.setup.ts`.
+vi.unmock("@/lib/abonnements/saisie");
 const { redirect, getOptionalCompte, requireUser, etatStripe, findUnique } = vi.hoisted(() => ({
   redirect: vi.fn(() => {
     throw new Error("NEXT_REDIRECT");

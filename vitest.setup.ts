@@ -35,6 +35,18 @@ vi.mock("@/lib/auth/membres", () => ({
   compteDontEstProprietaire: async (userId: string) => userId,
 }));
 
+// Les gardes d'écriture (ADR-053, ADR-054 § 4), ouvertes : elles lisent la
+// session et le rôle à chaque écriture, ce que les tests de module ne
+// simulent pas. Elles ont leurs propres tests (`abonnements/saisie.test.ts`,
+// qui lève ce remplacement) et leur garde de présence, qui relit le code
+// (`abonnements/saisie-gardee.test.ts`).
+vi.mock("@/lib/abonnements/saisie", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/abonnements/saisie")>()),
+  verifierSaisie: async () => {},
+  verifierRole: async () => {},
+  verifierProprietaire: async () => {},
+}));
+
 vi.mock("@/lib/auth/portee/client", async () => {
   const { prisma } = await import("@/lib/prisma");
   const { argumentsBornes, clesDuCompte, dansUnLot, noterVus } = await vi.importActual<
