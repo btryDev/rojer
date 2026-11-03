@@ -376,7 +376,7 @@ chapitre PS, non lu, est un manque à déclarer au même titre (non fait ici).
   J 35, J 39, J 40, U 41, U 43, U 47, U 48, U 62, U 64, PU 5, PU 6) y
   reviennent (`toucheLaCible: true`) ; aucun n'est encodé.
 - L'exclusion `risque_specialise` (`corpus/perimetre.ts`) devient « Relève
-  d'un autre code » : installations classées, piscines, bains à remous,
+  d'un autre code » : installations classées, règles sanitaires des piscines, bains à remous,
   appareils de bronzage. L'ATEX et la radioprotection, qui relèvent du Code
   du travail, en sortent : la page les dit « pas encore » suivies (famille
   `code_du_travail_pas_encore`).
@@ -386,7 +386,11 @@ chapitre PS, non lu, est un manque à déclarer au même titre (non fait ici).
   du travail) est encore rangé sous `risque_specialise`, dont le nouveau motif
   ne le décrit pas ; son motif le dit. Le reclasser en manque annoncé demande
   une adresse d'annonce : lot d'encodage du Code du travail.
-- Les autres motifs « cas particulier » du corpus ne sont pas relus ici.
+- Les autres motifs « cas particulier » du corpus ne sont pas relus ici —
+  dont les piscines : `X annexe` et `X 1 § 2` (règlement de sécurité ERP, donc
+  CCH) sont classés hors cadre au § 7 de `docs/couverture-declaree-du-produit.md`
+  « sous l'exclusion `risque_specialise` » ; sous la règle du réalignement, ce
+  sont des manques à servir.
 - Le chapitre PS (livre IV), lu pour un article sur quarante-trois, n'a pas de
   manque déclaré.
 - Les quatorze obligations du référentiel fondées sur un autre code restent

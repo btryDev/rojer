@@ -244,10 +244,10 @@ export type RegimeEtablissement = {
      lisait : plus rien, dans la couverture, ne dépend de la famille. */
   /**
    * Les types d'ERP déclarés, le premier puis les autres (`typesErpDe`).
-   * Lus par l'axe `type_erp` (2026-11-03). Absent = non transmis : l'axe se
-   * tait.
+   * Lus par l'axe `type_erp` (2026-11-03). Requis : optionnel, un appelant
+   * qui l'oublierait compilerait et tairait le manque (revue de #172).
    */
-  typesErp?: readonly TypeErp[];
+  typesErp: readonly TypeErp[];
 };
 
 /**
@@ -470,14 +470,28 @@ function axeRegime(
  *   et accepté avant le filtre) : leurs dispositions ne sont pas lues.
  * - EF : son règlement (arrêté du 9 janvier 1990) n'est pas lu.
  */
-const SPECIAUX_NON_LUS: Partial<Record<TypeErp, string>> = {
-  PA: "établissement de plein air",
-  CTS: "chapiteau, tente ou structure",
-  SG: "structure gonflable",
-  OA: "hôtel-restaurant d'altitude",
-  REF: "refuge de montagne",
-  GA: "gare",
-};
+const TEXTES_NON_LUS: readonly {
+  /** Ce que Rojer n'a pas lu, écrit par `nonPorte` (le balayage le lit). */
+  texte: string;
+  /** Les types qu'il vise, et leur nom pour la phrase. */
+  types: Partial<Record<TypeErp, string>>;
+}[] = [
+  {
+    texte: nonPorte("les dispositions propres aux établissements spéciaux (livre IV de l'arrêté du 25 juin 1980)"),
+    types: {
+      PA: "établissement de plein air",
+      CTS: "chapiteau, tente ou structure",
+      SG: "structure gonflable",
+      OA: "hôtel-restaurant d'altitude",
+      REF: "refuge de montagne",
+      GA: "gare",
+    },
+  },
+  {
+    texte: nonPorte("les dispositions de sécurité propres aux établissements flottants (arrêté du 9 janvier 1990)"),
+    types: { EF: "établissement flottant" },
+  },
+];
 
 const INCOMPLETS = "Votre calendrier et votre registre sont donc incomplets.";
 
@@ -485,7 +499,7 @@ function axeTypeErp(regime: RegimeEtablissement, manques: ManqueCouverture[]): v
   // Hors ERP, rien ; en IGH, l'axe `igh` a déjà dit que rien de ce qui est lu
   // ici ne couvre le régime.
   if (!regime.estERP || regime.estIGH) return;
-  const types = regime.typesErp ?? [];
+  const types = regime.typesErp;
   const cat = regime.categorieErp;
   const livreII = cat !== null && cat !== "N5";
 
@@ -508,20 +522,13 @@ function axeTypeErp(regime: RegimeEtablissement, manques: ManqueCouverture[]): v
     });
   }
 
-  const speciaux = types.filter((t) => SPECIAUX_NON_LUS[t] !== undefined);
-  if (speciaux.length > 0) {
+  for (const { texte, types: vises } of TEXTES_NON_LUS) {
+    const declares = types.filter((t) => vises[t] !== undefined);
+    if (declares.length === 0) continue;
     manques.push({
       axe: "type_erp",
-      motif: `Cet établissement est déclaré établissement spécial : ${enumeration(speciaux.map((t) => `${SPECIAUX_NON_LUS[t]} (${t})`))}.`,
-      consequence: `Le règlement de sécurité consacre aux établissements spéciaux ${nonPorte("des dispositions propres (livre IV de l'arrêté du 25 juin 1980)")}. Rojer ne les a pas encore lues et ne les suit pas. ${INCOMPLETS}`,
-    });
-  }
-
-  if (types.includes("EF")) {
-    manques.push({
-      axe: "type_erp",
-      motif: "Cet établissement est déclaré établissement flottant (type EF).",
-      consequence: `Les établissements flottants relèvent ${nonPorte("de dispositions de sécurité propres (arrêté du 9 janvier 1990)")}. Rojer ne les a pas encore lues et ne les suit pas. ${INCOMPLETS}`,
+      motif: `Cet établissement est déclaré ${enumeration(declares.map((t) => `${vises[t]} (${t})`))}.`,
+      consequence: `Rojer ne suit pas ${texte} : il ne les a pas encore lues. ${INCOMPLETS}`,
     });
   }
 }

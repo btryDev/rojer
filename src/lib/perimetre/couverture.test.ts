@@ -17,6 +17,7 @@ const regimeCouvert: RegimeEtablissement = {
   estIGH: false,
   categorieErp: "N5",
   estHabitation: false,
+  typesErp: [],
 };
 
 /** Un dossier sans rien à signaler : chaque test n'y ajoute que son axe. */
@@ -48,6 +49,7 @@ describe("axe du régime", () => {
       estIGH: false,
       categorieErp: null,
       estHabitation: false,
+      typesErp: [],
     });
     expect(riensASignaler(c)).toBe(true);
   });
@@ -108,9 +110,8 @@ describe("axe type_erp (réalignement, 2026-11-03)", () => {
   const avec = (typesErp: RegimeEtablissement["typesErp"], categorieErp: RegimeEtablissement["categorieErp"] = "N5") =>
     couvertureDuRegime({ ...regimeCouvert, categorieErp, typesErp });
 
-  it("se tait pour un type que Rojer sert, et quand les types ne sont pas transmis", () => {
+  it("se tait pour un type que Rojer sert", () => {
     expect(riensASignaler(avec(["N", "M", "PS"]))).toBe(true);
-    expect(riensASignaler(avec(undefined))).toBe(true);
   });
 
   it.each(["PA", "CTS", "SG", "OA", "REF", "GA"] as const)("déclare l'établissement spécial %s, en 5ᵉ catégorie aussi", (t) => {
@@ -516,6 +517,7 @@ describe("les axes ne s'additionnent ni ne se recouvrent", () => {
       estIGH: false,
       categorieErp: "N2",
       estHabitation: false,
+      typesErp: [],
     },
     duerp: {
       etat: "secteur_inconnu",
@@ -563,6 +565,7 @@ describe("les axes ne s'additionnent ni ne se recouvrent", () => {
           estIGH: false,
           categorieErp: null,
           estHabitation: false,
+          typesErp: [],
         },
         equipements: { nbSansObligation: 2, nbEquipements: 5, nbRetires: 0 },
       }),

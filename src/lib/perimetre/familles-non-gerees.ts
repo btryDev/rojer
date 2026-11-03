@@ -83,9 +83,12 @@ const CONDUITE = [
 // « risques spécialisés », hors périmètre par choix~~ — deux listes. Ce qui
 // relève d'un autre code reste dehors ; l'ATEX et la radioprotection relèvent
 // du Code du travail, que Rojer sert : elles sont « pas encore » suivies.]
+// ~~« les piscines »~~ — revue de #172 (2026-11-03) : leurs dispositions au
+// règlement de sécurité ERP sont du CCH ; seules leurs règles sanitaires
+// relèvent d'un autre code.
 const AUTRES_CODES = [
   nonPorte("les installations classées soumises à autorisation"),
-  nonPorte("les piscines"),
+  nonPorte("les règles sanitaires des piscines"),
   nonPorte("les bains à remous"),
   nonPorte("les appareils de bronzage UV"),
 ] as const;

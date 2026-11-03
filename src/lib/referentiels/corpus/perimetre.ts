@@ -66,11 +66,14 @@ export const EXCLUSIONS = {
   // d'un AUTRE code. L'ATEX et la radioprotection relèvent du Code du
   // travail : elles quittent l'exclusion et deviennent des manques « pas
   // encore couverts » (`perimetre/familles-non-gerees.ts`). La clé reste,
-  // pour ne pas réécrire les articles qui la citent.
+  // pour ne pas réécrire les articles qui la citent. Revue de #172 : les
+  // dispositions des piscines au règlement de sécurité ERP (X annexe, X 1
+  // § 2, PX) sont du CCH — elles ne sont PAS ici ; seules leurs règles
+  // sanitaires (Code de la santé publique) le sont.
   risque_specialise: {
     libelle: "Relève d'un autre code",
     motif:
-      "Installations classées pour la protection de l'environnement (Code de l'environnement), piscines, bains à remous, appareils de bronzage (UV) : leurs obligations propres relèvent d'autres codes que le code de la construction et de l'habitation et le Code du travail, que Rojer ne suit pas. Un établissement concerné n'est pas refusé pour autant.",
+      "Installations classées pour la protection de l'environnement (Code de l'environnement), règles sanitaires des piscines et des bains à remous, appareils de bronzage (UV) (Code de la santé publique) : leurs obligations propres relèvent d'autres codes que le code de la construction et de l'habitation et le Code du travail, que Rojer ne suit pas. Un établissement concerné n'est pas refusé pour autant.",
   },
   construction: {
     libelle: "Règle de construction, pas d'exploitation",

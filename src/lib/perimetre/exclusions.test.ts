@@ -138,6 +138,7 @@ describe("les refus à l'entrée sont projetés, pas recopiés", () => {
       estIGH: true,
       categorieErp: null,
       estHabitation: false,
+      typesErp: [],
     }).manques.find((m) => m.axe === "igh")!;
     expect(igh.indication).toContain(REGLEMENT_IGH_NON_TRAITE);
     expect(enTour.consequence).toContain(REGLEMENT_IGH_NON_TRAITE);
