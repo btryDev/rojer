@@ -2269,6 +2269,50 @@ export const obligationsIncendie: Obligation[] = [
       NOTE_TITRE_2_COMMUNE,
   },
 
+  {
+    id: "incendie-erp-enseignement-exercices-evacuation",
+    domaine: "incendie",
+    libelle:
+      "Exercices pratiques d'évacuation chaque année scolaire ou universitaire (établissement d'enseignement ou de formation, ERP des catégories 1 à 4)",
+    description:
+      "Dans un établissement d'éveil, d'enseignement ou de formation, un centre de vacances ou un centre de loisirs sans hébergement (type R) des quatre premières catégories, l'article R 33 écrit : « Des exercices pratiques d'évacuation doivent avoir lieu au cours de l'année scolaire ou universitaire ; lorsque l'établissement comporte des locaux réservés au sommeil, des exercices de nuit doivent également être organisés ; le premier exercice doit se dérouler durant le mois qui suit la rentrée. » Et : « Les conditions de leur déroulement et le temps d'évacuation doivent être consignés sur le registre de sécurité. » Rojer ne connaît pas votre date de rentrée : il vous rappelle les exercices une fois par an, sans pouvoir placer le premier dans le mois qui suit la rentrée. Les exercices de nuit ne sont dus que si l'établissement comporte des locaux réservés au sommeil.",
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. R 33 (exercices d'évacuation) — livre II, titre II, type R, établissements des quatre premières catégories",
+        article: "R 33",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000025134178",
+        note: "« Des exercices pratiques d'évacuation doivent avoir lieu au cours de l'année scolaire ou universitaire ; lorsque l'établissement comporte des locaux réservés au sommeil, des exercices de nuit doivent également être organisés ; le premier exercice doit se dérouler durant le mois qui suit la rentrée. Ces exercices ont pour objectif d'entraîner les élèves et le personnel sur la conduite à tenir en cas d'incendie. Pour cela, ils doivent être représentatifs d'une situation réaliste préparée à l'avance et être l'occasion d'une information des élèves et du personnel. Les conditions de leur déroulement et le temps d'évacuation doivent être consignés sur le registre de sécurité. » Article entier. Relu le 2026-11-03 dans le jeu LEGI de la DILA (export global du 2025-07-13 + mises à jour quotidiennes jusqu'au 2026-11-02) : LEGIARTI000025134178, en vigueur depuis le 2004-05-14, sans terme ni version future ; livre II, titre II, chapitre VI (type R), section 10 « Moyens de secours ».",
+        versionConstatee: "2004-05-14",
+      },
+    ],
+    periodicite: "annuelle",
+    nature: "echeance_recurrente",
+    pieceAttendue: "mention au registre de sécurité (conditions de déroulement et temps d'évacuation)",
+    usageEcran: null,
+    realisateurs: ["exploitant"],
+    criticite: 4,
+    transmet: [
+      {
+        vers: "modele_absent",
+        modele: "ExerciceSecurite",
+        motif:
+          "R 33 fait consigner au registre de sécurité les conditions de déroulement et le temps d'évacuation de chaque exercice. Le produit ouvre l'échéance, mais ne sait la solder que par un dépôt de fichier — là où le texte attend une mention au registre. Même manque que pour R. 4227-39 (docs/registre-securite-ecart.md § 3.2).",
+      },
+    ],
+    typologies: { erp: { categories: [...CATEGORIES_LIVRE_2], types: ["R"] } },
+    porteur: "etablissement",
+    notesInternes:
+      "CRÉÉE LE 2026-11-03 (`lot/cch-manques-cible`), mission « alignement CCH + Code du travail » (décision de la propriétaire du 2026-11-03 : Rojer sert tout le CCH qui s'adresse à l'exploitant). Le corpus portait R 33 en `obligation_manquante`, cause `libre`, depuis la lecture du 2026-10-16. Proposition du corpus suivie : une ligne d'établissement, type R, catégories 1 à 4, annuelle, pièce = la mention au registre ; l'exercice de nuit en description.\n\n" +
+      "LE RYTHME EST ÉCRIT, pas le défaut de l'ADR-039 : « au cours de l'année scolaire ou universitaire » fait revenir l'acte chaque année. Le texte dit « des exercices », au pluriel, sans en fixer le nombre : Rojer en date au moins un par an et ne dit pas combien.\n\n" +
+      "CE QUE ROJER NE SAIT PAS DATER, ET LE DIT. « Le premier exercice doit se dérouler durant le mois qui suit la rentrée » : le produit ne connaît pas la date de rentrée, et n'en pose pas la question (hors mission : pas de question nouvelle). L'échéance roule d'un an depuis le dernier rapport, ou naît « à planifier ». La description le dit au dirigeant.\n\n" +
+      "L'EXERCICE DE NUIT est en description seulement, conditionné par le texte aux locaux réservés au sommeil. Une seule ligne : le texte ne donne pas de rythme propre aux exercices de nuit, et une seconde ligne conditionnée à `locauxSommeilPublic` ferait deux rendez-vous pour un même acte annuel.\n\n" +
+      "SANS RECOUVREMENT avec `incendie-travail-exercice-semestriel` (R. 4227-39, lieux de travail de plus de cinquante personnes) : autre texte, autre champ, autre rythme. Un établissement d'enseignement qui relève des deux voit les deux lignes ; un même exercice peut honorer les deux, ce que le produit ne dit pas.\n\n" +
+      "BORNE : N1 à N4 et type R. Le chapitre R est au livre II, que PE 1 § 1 écarte en 5ᵉ catégorie. En 5ᵉ, rien n'est encodé pour le type R. Le type R qui accueille des enfants est refusé à l'accueil depuis le 2026-10-17 (lot à lever, mission du 2026-11-03) ; R 1 fait entrer au chapitre la formation d'adultes dès 200 stagiaires, acceptée.\n\n" +
+      "GN 10 n'est pas cité : la ligne est une échéance récurrente, pas un état permanent (garde de `conformite.test.ts`), comme `incendie-hotel-po-instruction-personnel-semestrielle`.",
+  },
+
   // ---------------------------------------------------------------------------
   // Livre II, titre Ier — états permanents des catégories 1 à 4 (sous-lot C,
   // 2026-10-17). Le contrat du système de sécurité incendie et la présence

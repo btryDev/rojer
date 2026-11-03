@@ -85,7 +85,7 @@ describe("registre de dette — les obligations manquantes", () => {
       // ~~"MS 74"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
       // ~~"MS 75"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
       // ~~"P 21"~~ — 2026-10-17, sous-lot D : retenu (rattachement).
-      "R 33",
+      // ~~"R 33"~~ — 2026-11-03, `lot/cch-manques-cible` : retenu (`incendie-erp-enseignement-exercices-evacuation`).
       // ~~"S 15"~~ — 2026-10-17, sous-lot D : retenu (rattachement).
       // ~~"T 52"~~ — 2026-10-17, sous-lot D : retenu (rattachement).
       "U 41",
@@ -151,7 +151,9 @@ describe("registre de dette — les obligations manquantes", () => {
       // cible (revue : la formation d'adultes est acceptée).
       // [1, 8] → [9, 0] le 2026-11-03 (réalignement, ADR-031 amendée) : le
       // filtre est levé, les huit rentrent dans la cible.
-      libre: [9, 0],
+      // [9, 0] → [8, 0] le 2026-11-03 (`lot/cch-manques-cible`) : `R 33` retenu
+      // (`incendie-erp-enseignement-exercices-evacuation`), 9 − 1 + 0.
+      libre: [8, 0],
       // 9 → 6 le 2026-09-21 : les trois de la chaleur intense (`R. 4463-4`,
       // `-5`, `-7`) sont encodées sur la page « Quand ça arrive ».
       // 6 → 0 le même jour : cinq relues à la source et encodées ; la sixième,
@@ -320,8 +322,10 @@ describe("registre de dette — les obligations manquantes", () => {
     // ne bouge pas (37) : c'est une mesure de la cible, pas une dette réglée.
     // 25 → 37 dans la cible le 2026-11-03 (réalignement, ADR-031 amendée),
     // mesuré en appelant : 25 + 12 — le filtre est levé, les douze reviennent.
-    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(37);
-    expect(manquantes.length).toBe(37);
+    // 37 → 36 dans la cible et au total le 2026-11-03 (`lot/cch-manques-cible`),
+    // mesuré en appelant : `R 33` retenu.
+    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(36);
+    expect(manquantes.length).toBe(36);
   });
 });
 
@@ -400,7 +404,11 @@ describe("registre de dette — les réserves de lecture", () => {
     // phrase du § 5 est portée), `L 14` (agents de sécurité incendie et service
     // de représentation non suivis), `L 57` (§ 7, § 1 b et § 4 classés à part ;
     // § 1 c porté par le levage).
-    expect(n).toBe(118);
+    // 118 → 119 le 2026-11-03 (`lot/cch-manques-cible`), mesuré en appelant :
+    // `R 33` retenu avec sa réserve — le premier exercice dans le mois qui suit
+    // la rentrée, que Rojer ne date pas ; les exercices de nuit sans ligne
+    // propre. 118 + 1 − 0.
+    expect(n).toBe(119);
     expect(reservesDeLecture().length).toBe(n);
   });
 });

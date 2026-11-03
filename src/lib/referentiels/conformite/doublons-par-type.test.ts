@@ -199,6 +199,26 @@ const FAMILLES_DECLAREES: {
       ],
     ],
   },
+  {
+    // 2026-11-03, `lot/cch-manques-cible` : R 33 entre.
+    famille: "exercices d'évacuation du type R ↔ disposition d'un autre type, scène, sport ou visite de commission",
+    motif:
+      "Les exercices pratiques d'évacuation de l'année scolaire ou universitaire (R 33, établissement d'enseignement des catégories 1 à 4) ne sont aucun des actes qu'un autre type fait naître : personnel désigné, interdiction de fumer affichée, schéma d'organisation, consigne et plans de l'hôtel, vérifications de la scène, secours du code du sport, visite de la commission au rythme d'un autre type. Un établissement d'enseignement qui comporte un autre type doit les deux.",
+    cotes: [
+      [
+        /^incendie-erp-enseignement-exercices-evacuation$/,
+        /^incendie-erp-(hotel-consigne-chambres|hotel-plans-evacuation-niveaux|interdiction-fumer-affichee|personnel-designe-moyens-secours|schema-organisation-securite)$/,
+      ],
+      [
+        /^incendie-erp-enseignement-exercices-evacuation$/,
+        /^(elec-erp-presence-personne-qualifiee-scene-n3|scene-erp-verifications-triennales-organisme-agree|scene-erp-materiels-installations-temporaires-annuelle|sport-etablissement-secours-r322-4)$/,
+      ],
+      [
+        /^incendie-erp-enseignement-exercices-evacuation$/,
+        /^incendie-erp-visite-commission-(cat1-2-quinquennale|cat3-quinquennale|cat4-triennale|cat4-quinquennale)$/,
+      ],
+    ],
+  },
 ];
 
 const declaree = ([a, b]: [string, string]) =>

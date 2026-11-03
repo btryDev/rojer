@@ -203,6 +203,7 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "incendie-erp-modalites-appel-pompiers-affichees": "etablissement", // 2026-10-17, sous-lot C
   "incendie-erp-pe4-entretien-installations-techniques": "etablissement",
   "incendie-erp-personnel-designe-moyens-secours": "etablissement",
+  "incendie-erp-enseignement-exercices-evacuation": "etablissement",
   "incendie-erp-personnel-qualifie-detection": "etablissement", // 2026-10-17, sous-lot C
   "incendie-erp-plan-intervention-entrees": "etablissement", // 2026-10-17, sous-lot C
   "incendie-erp-ria-annuelle": "equipement",

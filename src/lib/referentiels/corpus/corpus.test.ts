@@ -825,7 +825,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // À évaluer : § 9 de `docs/couverture-declaree-du-produit.md`, et le
       // plan `propositions/lecture-chapitres-types-erp-2026-10-16.md`.
       // ~~"P 21"~~ — 2026-10-17, sous-lot D : retenu (personnel désigné).
-      "R 33",
+      // ~~"R 33"~~ — 2026-11-03, `lot/cch-manques-cible` : retenu (`incendie-erp-enseignement-exercices-evacuation`).
       // ~~"S 15"~~ — 2026-10-17, sous-lot D : retenu (personnel désigné).
       // 2026-10-17 (`lot/ref-a-corpus-titre-1`) : ~~"T 29"~~, ~~"T 33"~~, la
       // présence d'un personnel compétent au-delà de 200 kW ou 200 kVA —
