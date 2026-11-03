@@ -79,8 +79,9 @@ export const SUCCESSIONS_DECLAREES: ReadonlyMap<string, string> = new Map(
 
 /** Le client d'une passe : un `PrismaClient` comme un client de transaction
  *  interactive, le passage à blanc lisant sous `READ ONLY`. Borné au compte en
- *  session, brut pour le script (ADR-051). La passe lit par lui ; la marque
- *  « calendrier périmé » (`marquerCalendrierPerime`) écrit par lui. */
+ *  session, brut pour le script (ADR-051). La passe lit par lui ; ~~la marque
+ *  « calendrier périmé » (`marquerCalendrierPerime`) écrit par lui~~ [2026-11-03,
+ *  ADR-054 : la marque de fin de passe écrit par le client brut, comme la passe]. */
 export type ClientPasse = Prisma.TransactionClient;
 
 /**

@@ -9,9 +9,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 type Ligne = Record<string, unknown>;
 const correspond = (l: Ligne, w: Ligne) =>
   Object.entries(w).every(([k, v]) => l[k] === v);
-/** `etablissement: { entreprise: { userId } }` : seul « etab-a-moi » est à « u1 ». */
+/** `etablissement: { entreprise: { compteId: compte.compteId } }` : seul « etab-a-moi » est à « u1 ». */
 const auCompte = (l: Ligne, portee: unknown) => {
-  const userId = (portee as { entreprise?: { userId?: string } } | undefined)?.entreprise?.userId;
+  const userId = (portee as { entreprise?: { compteId?: string } } | undefined)?.entreprise?.compteId;
   return userId === undefined || (l.etablissementId === "etab-a-moi" ? "u1" : "u-voisin") === userId;
 };
 
@@ -74,7 +74,7 @@ vi.mock("@/lib/prisma", () => {
       }),
     },
     prestataire: {
-      // La portée par le compte (`etablissement: { entreprise: { userId } }`)
+      // La portée par le compte (`etablissement: { entreprise: { compteId: compte.compteId } }`)
       // est celle du compte connecté du test : seul l'établissement compte ici.
       findFirst: vi.fn(async ({ where }: { where: Ligne }) => {
         const sansPortee = { ...where };

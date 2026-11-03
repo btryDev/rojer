@@ -23,6 +23,6 @@ import { resumeDuWidget, type ResumeWidgetEtats } from "./widget";
 export async function resumeEtatsPermanentsPourWidget(
   etablissementId: string,
 ): Promise<ResumeWidgetEtats> {
-  const { user, db } = await assertEtablissementDuCompte(etablissementId);
-  return resumeDuWidget(await etatsPermanentsDuDossier(db, etablissementId, user.id));
+  const { compte, db } = await assertEtablissementDuCompte(etablissementId);
+  return resumeDuWidget(await etatsPermanentsDuDossier(db, etablissementId, compte.compteId));
 }

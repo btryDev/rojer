@@ -46,7 +46,7 @@ import { verifierSaisie } from "@/lib/abonnements/saisie";
  * Cloisonnement : `verificationId` et `actionId` viennent du client, et la
  * RLS PostgreSQL n'est pas effective (le rôle Prisma la contourne). Chaque
  * action commence donc par `requireVerification` / `requireAction`, qui
- * remontent jusqu'à `Entreprise.userId` et répondent 404 quand l'objet
+ * remontent jusqu'à `Entreprise.compteId` et répondent 404 quand l'objet
  * appartient à un autre client — sans révéler qu'il existe.
  */
 

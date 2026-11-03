@@ -30,7 +30,7 @@ import type { SidebarModules } from "@/components/layout/sidebar-nav";
  * clés primitives, l'identifiant et le booléen. Hors rendu RSC, rien n'est
  * mémoïsé.
  *
- * ADR-005 : scope par userId via la relation entreprise.
+ * ADR-005 : scope par compte via la relation entreprise.
  */
 export const getEtatModules = cache(async function getEtatModules(
   etablissementId: string,
@@ -58,9 +58,9 @@ export const getEtatModules = cache(async function getEtatModules(
  * partagent (plan performance, lot 1). Portée au compte dans la requête.
  */
 export const carnetDuRendu = cache(async function carnetDuRendu(etablissementId: string) {
-  const { user, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   return db.carnetSanitaire.findFirst({
-    where: { etablissementId, etablissement: { entreprise: { userId: user.id } } },
+    where: { etablissementId, etablissement: { entreprise: { compteId: compte.compteId } } },
     select: {
       id: true,
       analyses: {

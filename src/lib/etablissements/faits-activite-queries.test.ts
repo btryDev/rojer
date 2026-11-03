@@ -12,8 +12,8 @@ const h = vi.hoisted(() => {
   type Ligne = Record<string, unknown>;
   const db = {
     entreprises: [
-      { id: "ent-a", userId: "user-a" },
-      { id: "ent-b", userId: "user-b" },
+      { id: "ent-a", compteId: "user-a" },
+      { id: "ent-b", compteId: "user-b" },
     ] as Ligne[],
     etablissements: [
       { id: "etab-a", entrepriseId: "ent-a", conduiteEngins: true, manutentionManuelle: false },
@@ -63,7 +63,7 @@ vi.mock("@/lib/auth/portee/client", async () => {
   const { clientBorneSimule } = await import("@/test/client-borne-simule");
   const { argumentsBornes } = await import("@/lib/auth/portee/borne");
   return {
-    clientBorne: (p: { type: "compte"; userId: string }) =>
+    clientBorne: (p: { type: "compte"; compteId: string; userId: string | null }) =>
       clientBorneSimule(h.prisma, p, argumentsBornes),
   };
 });

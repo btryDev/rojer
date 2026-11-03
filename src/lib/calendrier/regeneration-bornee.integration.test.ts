@@ -24,8 +24,8 @@ vi.mock("@/lib/auth/scope", async () => {
   );
   return {
     assertEtablissementDuCompte: async () => ({
-      user: { id: garde.compte!, email: null },
-      db: clientBorne({ type: "compte", userId: garde.compte! }),
+      user: { id: "00000000-0000-4000-8000-000000000001", email: null },
+      db: clientBorne({ type: "compte", compteId: garde.compte!, userId: null }),
     }),
   };
 });
@@ -40,10 +40,13 @@ describe.skipIf(!URL_BASE || !local)("régénération du calendrier — PostgreS
   const { regenererSansInvalider } = await import("./actions");
   const { lireEntrees, planifier } = await import("./passe");
   const { clesDuPlanDansLaLecture } = await import("./cles-du-plan");
-  const { creerUtilisateurDeTest, effacerUtilisateursDeTest } = await import("@/test/utilisateur-de-test");
+  const { creerCompteDeTest, effacerUtilisateursDeTest } = await import("@/test/utilisateur-de-test");
 
-  const A = randomUUID();
-  const B = randomUUID();
+  // Les personnes ; les comptes A et B sont créés pour elles (ADR-054).
+  const UA = randomUUID();
+  const UB = randomUUID();
+  let A = "";
+  let B = "";
   const entreprises: string[] = [];
 
   async function etablissement(entrepriseId: string, nom: string) {
@@ -61,11 +64,11 @@ describe.skipIf(!URL_BASE || !local)("régénération du calendrier — PostgreS
   let e2: Awaited<ReturnType<typeof etablissement>>;
 
   beforeAll(async () => {
-    // Sur cc, `Entreprise.userId` est une clé vers `User` : les comptes
-    // existent avant leurs entreprises.
-    for (const id of [A, B]) await creerUtilisateurDeTest(prisma, id);
+    // La racine est un compte, dont chaque personne est membre (ADR-054).
+    A = await creerCompteDeTest(prisma, UA);
+    B = await creerCompteDeTest(prisma, UB);
     const ent = await prisma.entreprise.create({
-      data: { userId: A, raisonSociale: "A", effectif: 5, adresse: "1 rue" },
+      data: { compteId: A, raisonSociale: "A", effectif: 5, adresse: "1 rue" },
     });
     entreprises.push(ent.id);
     // Deux établissements du MÊME compte : la borne au compte ne les sépare
@@ -75,7 +78,8 @@ describe.skipIf(!URL_BASE || !local)("régénération du calendrier — PostgreS
   });
   afterAll(async () => {
     await prisma.entreprise.deleteMany({ where: { id: { in: entreprises } } });
-    await effacerUtilisateursDeTest(prisma, [A, B]);
+    await prisma.compte.deleteMany({ where: { id: { in: [A, B] } } });
+    await effacerUtilisateursDeTest(prisma, [UA, UB]);
     await prisma.$disconnect();
   });
 
@@ -101,7 +105,7 @@ describe.skipIf(!URL_BASE || !local)("régénération du calendrier — PostgreS
   });
 
   it("sur la lecture bornée réelle, un équipement de l'autre établissement du compte est refusé", async () => {
-    const lecture = await lireEntrees(clientBorne({ type: "compte", userId: A }), e1.etab.id);
+    const lecture = await lireEntrees(clientBorne({ type: "compte", compteId: A, userId: UA }), e1.etab.id);
     const plan = planifier(lecture, new Date());
     expect(() => clesDuPlanDansLaLecture(plan, lecture)).not.toThrow();
     const modele = plan.aCreer[0] ?? { equipementId: null, salarieId: null, prescriptionId: null };

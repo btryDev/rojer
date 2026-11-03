@@ -4,7 +4,6 @@ import { estLignePourInformation } from "@/lib/referentiels/conformite/initiativ
 import { libelleTypesErp, numeroCategorie } from "@/lib/etablissements/types-erp-affiches";
 import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
 import type { Db } from "@/lib/auth/compte";
-import type { AuthedUser } from "@/lib/auth/require-user";
 import {
   compterActions,
   compterActionsParOrigine,
@@ -569,7 +568,6 @@ function ficheDuPdf(
 export async function construireDossierConformiteData(
   db: Db,
   etablissementId: string,
-  user: AuthedUser,
 ): Promise<DossierData | null> {
   const etab = await db.etablissement.findFirst({
     where: { id: etablissementId },
@@ -635,7 +633,8 @@ export async function construireDossierConformiteData(
       // note calculée sur un ensemble et un détail décrivant l'autre. C'est
       // mot pour mot le défaut raconté six lignes plus haut, celui des « 5
       // vérifications en retard » suivies de 3 lignes.
-      etatsPermanentsDuDossier(db, etablissementId, user.id),
+      // Le compte de l'établissement lu par le client borné : celui de la portée.
+      etatsPermanentsDuDossier(db, etablissementId, etab.entreprise.compteId ?? ""),
       fraicheurCalendrier(etablissementId),
       // Les lignes retenues par prudence le disent aussi dans le document
       // remis à un tiers (analyse du 2026-09-27, § 6.3).

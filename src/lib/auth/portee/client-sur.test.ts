@@ -10,14 +10,14 @@ const { clientBorneSur } = await import("./client");
 describe("clientBorneSur", () => {
   it("étend le client brut REÇU, pas celui de l'application", () => {
     const $extends = vi.fn(() => ({ etendu: true }));
-    const client = clientBorneSur({ $extends } as never, { type: "compte", userId: "user-9" });
+    const client = clientBorneSur({ $extends } as never, { type: "compte", compteId: "user-9", userId: "user-9" });
     expect($extends).toHaveBeenCalledTimes(1);
     expect(client).toEqual({ etendu: true });
   });
 
   it("refuse une portée sans identifiant", () => {
     const $extends = vi.fn();
-    expect(() => clientBorneSur({ $extends } as never, { type: "compte", userId: "" })).toThrow(/portée/);
+    expect(() => clientBorneSur({ $extends } as never, { type: "compte", compteId: "", userId: "" })).toThrow(/portée/);
     expect($extends).not.toHaveBeenCalled();
   });
 });

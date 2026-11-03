@@ -101,9 +101,9 @@ async function regimeDe(db: Db, etablissementId: string): Promise<RegimeExigence
  * désormais sur le même `notFound()`.
  */
 async function appareilDuCompte(equipementId: string) {
-  const { user, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   const eq = await db.equipement.findFirst({
-    where: { id: equipementId, etablissement: { entreprise: { userId: user.id } } },
+    where: { id: equipementId, etablissement: { entreprise: { compteId: compte.compteId } } },
     select: {
       etablissementId: true,
       actif: true,
@@ -138,7 +138,7 @@ export async function creerEquipement(
   formData: FormData,
 ): Promise<EquipementActionState> {
   await verifierSaisie();
-  const { db } = await assertEtablissementDuCompte(etablissementId);
+  const { compte, db } = await assertEtablissementDuCompte(etablissementId);
   const parsed = equipementSchema.safeParse(normaliserFormDataEquipement(formData));
   if (!parsed.success) {
     return {
@@ -442,7 +442,7 @@ export async function creerEquipementsDepuisPreRemplissage(
   }[],
 ): Promise<ResultatPreRemplissage> {
   await verifierSaisie();
-  const { db } = await assertEtablissementDuCompte(etablissementId);
+  const { compte, db } = await assertEtablissementDuCompte(etablissementId);
   // Le tableau vient du client : un tableau, pas plus d'entrées que de
   // catégories (ASVS V2.2.1, `lot/securite-owasp-1013`), avant de le parcourir.
   // [2026-10-14, intégration avec `lot/conditions-equipement` : la catégorie et

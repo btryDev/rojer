@@ -54,7 +54,7 @@ describe("listerEvenementsFenetre", () => {
     expect(w7).toBe(w30);
     // 730 jours après le début du jour civil (10 août 2026 à Paris).
     expect(w7).toContain('"datePrevue":{"lte":"2028-08-08T22:00:00.000Z"}');
-    expect(w7).toContain('"userId":"u1"');
+    expect(w7).toContain('"compteId":"u1"');
   });
 
   it("refuse une fenêtre plus longue que la frise", async () => {

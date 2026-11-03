@@ -7,7 +7,7 @@ import { appareilDesignable, estControleDEnsemble, recoitDesPoints } from "./reg
 
 /**
  * Les lectures des points à corriger (ADR-048). Toutes bornées au compte
- * connecté par `Entreprise.userId` (ADR-005), par le client borné de
+ * connecté par `Entreprise.compteId` (ADR-005), par le client borné de
  * `requireCompte()` (ADR-051 ; prédicat écrit retiré le 2026-10-30) : un identifiant venu de l'URL
  * ne lit jamais le dossier d'un autre.
  */

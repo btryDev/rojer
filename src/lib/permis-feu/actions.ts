@@ -109,7 +109,7 @@ export async function creerPermisFeu(
   formData: FormData,
 ): Promise<PermisFeuActionState> {
   await verifierSaisie();
-  const { db } = await assertEtablissementDuCompte(etablissementId);
+  const { compte, db } = await assertEtablissementDuCompte(etablissementId);
 
   const parsed = lirePermisFeu(formData);
   if (!parsed.success) {
@@ -160,9 +160,9 @@ export async function creerPermisFeu(
  * tombent sur le même `notFound()` — celui des helpers de `auth/scope`.
  */
 async function permisDuCompte(permisFeuId: string) {
-  const { user, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   const permis = await db.permisFeu.findFirst({
-    where: { id: permisFeuId, etablissement: { entreprise: { userId: user.id } } },
+    where: { id: permisFeuId, etablissement: { entreprise: { compteId: compte.compteId } } },
     select: { etablissementId: true, statut: true, numero: true },
   });
   if (!permis) notFound();

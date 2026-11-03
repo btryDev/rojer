@@ -64,6 +64,8 @@ export const LIMITES = {
    */
   mcpIp: { max: 600, fenetreSecondes: 60 },
   mcpPortee: { max: 120, fenetreSecondes: 60 },
+  /** Invitations à rejoindre un compte (ADR-054) : des e-mails Rojer vers des tiers. */
+  invitationCompte: { max: 20, fenetreSecondes: 24 * 60 * 60 },
 } as const satisfies Record<string, Limite>;
 
 export type Verdict =

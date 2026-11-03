@@ -249,11 +249,11 @@ describe("contraintes SQL non représentables dans schema.prisma", () => {
  * avec un message Prisma parlant de contrainte unique.
  *
  * ~~Le couple des deux assertions dit la décision entière, et c'est ce qui rend
- * le test lisible : `Etablissement.entrepriseId` NON, `Entreprise.userId` OUI.
+ * le test lisible : `Etablissement.entrepriseId` NON, `Entreprise.compteId` OUI.
  * Retirer la seconde par symétrie ferait tomber la racine de tenancy de
  * l'ADR-005.~~ [2026-10-26 : `Entreprise.userId` n'est plus unique non plus —
  * une entreprise par SIREN, plusieurs par compte. La racine de tenancy reste
- * `entreprise.userId` ; elle n'a jamais exigé l'unicité, seulement que chaque
+ * `entreprise.compteId` ; elle n'a jamais exigé l'unicité, seulement que chaque
  * `where` y remonte.]
  */
 describe("plusieurs établissements par entreprise (ADR-028)", () => {
@@ -320,20 +320,21 @@ describe("plusieurs établissements par entreprise (ADR-028)", () => {
   // ~~« Entreprise.userId reste @unique — la racine de tenancy ne bouge pas »~~
   // [2026-10-26 : renversé, ADR-028 amendée. Une Entreprise est l'unité légale
   // (SIREN) et un compte en porte plusieurs. Le cloisonnement n'en dépendait
-  // pas : tout `where` filtre `entreprise: { userId }`, qui reste juste avec N
+  // pas : tout `where` filtre `entreprise: { compteId }`, qui reste juste avec N
   // entreprises. Seuls les `findUnique({ where: { userId } })` supposaient
   // l'unicité, et le typage Prisma les refuse désormais.]
   it("un compte porte plusieurs entreprises, une seule par SIREN", () => {
     const corps = corpsDuModele("Entreprise");
-    const ligne = corps.match(/^\s*userId\s+String.*$/m);
+    // [2026-11-03, ADR-054 : la racine est `compteId`, plus `userId`.]
+    const ligne = corps.match(/^\s*compteId\s+String.*$/m);
 
-    expect(ligne, "champ `userId` introuvable").not.toBeNull();
+    expect(ligne, "champ `compteId` introuvable").not.toBeNull();
     expect(
       ligne![0],
-      "Le `@unique` est revenu sur `Entreprise.userId` : un compte ne pourrait " +
+      "Le `@unique` est revenu sur `Entreprise.compteId` : un compte ne pourrait " +
         "plus suivre deux sociétés (ADR-028 amendée le 2026-10-26).",
     ).not.toContain("@unique");
-    expect(corps).toMatch(/@@unique\(\[userId,\s*siren\]\)/);
+    expect(corps).toMatch(/@@unique\(\[compteId,\s*siren\]\)/);
     // ~~Chaque lecture cloisonnée remonte à `userId` : l'index simple remplace
     // celui que portait l'unicité.~~ [2026-10-28 : l'index simple est retiré,
     // migration `20261030100200_index_redondant_entreprise` — l'unicité `[userId, siren]`
@@ -341,9 +342,9 @@ describe("plusieurs établissements par entreprise (ADR-028)", () => {
     // `userId` est EN TÊTE de cet index.]
     expect(
       corps,
-      "Aucun index ne commence plus par `userId` : chaque lecture cloisonnée " +
-        "(`entreprise: { userId }`) parcourrait toute la table.",
-    ).toMatch(/@@(unique|index)\(\[\s*userId\b/);
+      "Aucun index ne commence plus par `compteId` : chaque lecture cloisonnée " +
+        "(`entreprise: { compteId }`) parcourrait toute la table.",
+    ).toMatch(/@@(unique|index)\(\[\s*compteId\b/);
   });
 
   it("la migration qui ouvre plusieurs entreprises par compte repose l'index", () => {

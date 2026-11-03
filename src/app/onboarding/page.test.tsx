@@ -13,12 +13,17 @@ const h = vi.hoisted(() => ({
     throw new Error(`REDIRECT ${url}`);
   }),
   connues: vi.fn(),
+  compte: null as unknown,
+  invitations: [] as { id: string }[],
   props: null as Record<string, unknown> | null,
 }));
 
 vi.mock("next/navigation", () => ({ redirect: (u: string) => h.redirect(u) }));
 vi.mock("@/lib/auth/require-user", () => ({
   requireUser: async () => ({ id: "u1", email: "dirigeant@example.test" }),
+}));
+vi.mock("@/lib/auth/compte", () => ({
+  aiguillageSansCompte: async () => (!h.compte && h.invitations[0] ? `/invitation/${h.invitations[0].id}` : null),
 }));
 vi.mock("@/lib/entreprises/queries", () => ({
   listerEntreprisesConnues: () => h.connues(),
@@ -36,6 +41,8 @@ beforeEach(() => {
   h.redirect.mockClear();
   h.connues.mockReset();
   h.props = null;
+  h.compte = { compte: { compteId: "c1", role: "owner" } };
+  h.invitations = [];
 });
 
 describe("/onboarding", () => {
@@ -56,5 +63,18 @@ describe("/onboarding", () => {
     expect((element as { props: Record<string, unknown> }).props).toMatchObject({
       entreprisesConnues: [],
     });
+  });
+
+  it("une personne sans compte, invitée, voit d'abord l'invitation (ADR-054 § 5)", async () => {
+    h.compte = null;
+    h.invitations = [{ id: "inv-1" }];
+    await expect(OnboardingPage()).rejects.toThrow("REDIRECT /invitation/inv-1");
+  });
+
+  it("une personne qui a déjà un compte n'y est pas renvoyée, même invitée ailleurs", async () => {
+    h.invitations = [{ id: "inv-1" }];
+    h.connues.mockResolvedValue([]);
+    await OnboardingPage();
+    expect(h.redirect).not.toHaveBeenCalled();
   });
 });

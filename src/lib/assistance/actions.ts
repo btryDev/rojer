@@ -52,7 +52,7 @@ export async function demanderAssistance(
   _prev: DemandeAssistanceState,
   formData: FormData,
 ): Promise<DemandeAssistanceState> {
-  const { user, db } = await requireCompte();
+  const { user, compte, db } = await requireCompte();
   const parsed = schema.safeParse({
     categorie: formData.get("categorie"),
     message: formData.get("message"),
@@ -86,6 +86,7 @@ export async function demanderAssistance(
 
   await db.demandeAssistance.create({
     data: {
+      compteId: compte.compteId,
       userId: user.id,
       etablissementId,
       categorie: d.categorie,

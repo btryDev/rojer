@@ -217,7 +217,7 @@ export async function listerEtatsPermanents(
   // l'appelle : c'est ce que `batiments/queries.ts` formule par « une lecture
   // qui ne le porte pas devient une fuite le jour où quelqu'un rend la fonction
   // publique ».
-  const { user, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
 
   // Les titres des personnes actives, pour les seules lignes établies d'après
   // eux (`etabliParLesTitres`, le prédicat que lit aussi la garde de
@@ -243,7 +243,7 @@ export async function listerEtatsPermanents(
     db.declarationEtatPermanent.findMany({
       where: {
         etablissementId: etablissement.id,
-        etablissement: { entreprise: { userId: user.id } },
+        etablissement: { entreprise: { compteId: compte.compteId } },
       },
       select: { obligationId: true, declareLe: true, note: true },
     }),
@@ -255,7 +255,7 @@ export async function listerEtatsPermanents(
             salarie: {
               etablissementId: etablissement.id,
               actif: true,
-              etablissement: { entreprise: { userId: user.id } },
+              etablissement: { entreprise: { compteId: compte.compteId } },
             },
           },
           select: {
@@ -466,7 +466,7 @@ export async function listerEtatsPermanents(
  * les lignes prend les mêmes lignes que celles qui s'affichent. Aucun des deux
  * ne peut décrire un ensemble que l'autre ne décrit pas.
  *
- * **`db` et `userId` en paramètres**, sur le modèle de `dashboard/transmissions.ts` :
+ * **`db` et `compteId` en paramètres**, sur le modèle de `dashboard/transmissions.ts` :
  * les appelants viennent tous d'un contexte déjà authentifié, et passent le
  * client borné de leur garde (ADR-051). La garantie ne
  * s'en remet pas pour autant à l'appelant — le prédicat d'appartenance est
@@ -483,7 +483,7 @@ export async function listerEtatsPermanents(
  * outside a request scope », depuis `require-user.ts` via `listerEtatsPermanents`.
  *
  * Ce qu'il faut en retenir pour un appelant futur : l'établissement est borné
- * par le `userId` REÇU, les déclarations par l'utilisateur de la SESSION. Les
+ * par le `compteId` REÇU, les déclarations par l'utilisateur de la SESSION. Les
  * deux coïncident chez les trois appelants d'aujourd'hui. Passer l'identifiant
  * d'un autre utilisateur ne ferait fuir aucune donnée — la seconde portée est
  * la plus étroite — mais produirait un dossier trouvé et vide, ce qui est un
@@ -493,7 +493,7 @@ export async function listerEtatsPermanents(
 export async function etatsPermanentsDuDossier(
   db: Db,
   etablissementId: string,
-  userId: string,
+  compteId: string,
 ): Promise<EtatsPermanentsDuDossier> {
   // [2026-10-14, audit Next.js H2] Lecture et passage du moteur partagés avec
   // le reste du rendu (`dossier-du-rendu.ts`) — même prédicat, même parc en
@@ -501,7 +501,7 @@ export async function etatsPermanentsDuDossier(
   const dossier = await obligationsApplicablesDuDossier(
     db,
     etablissementId,
-    userId,
+    compteId,
   );
   // Un dossier qui n'est pas celui de l'utilisateur n'a rien à montrer, et
   // zéro sur zéro ne produit aucune indétermination : le score reste ce qu'il
@@ -538,12 +538,12 @@ export async function etatsPermanentsDuDossier(
 export async function compterEtatsPermanents(
   db: Db,
   etablissementId: string,
-  userId: string,
+  compteId: string,
 ): Promise<{ total: number; enPlace: number }> {
   const { total, enPlace } = await etatsPermanentsDuDossier(
     db,
     etablissementId,
-    userId,
+    compteId,
   );
   return { total, enPlace };
 }

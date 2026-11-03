@@ -8,7 +8,7 @@ import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 /**
  * Cloisonnement : `duerpId` vient du client. `requireDuerp` remonte jusqu'à
- * `Entreprise.userId` et répond 404 sinon (ADR-005) — sans lui, on écrivait
+ * `Entreprise.compteId` et répond 404 sinon (ADR-005) — sans lui, on écrivait
  * une déclaration de périmètre dans le dossier d'un autre.
  */
 

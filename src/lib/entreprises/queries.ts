@@ -1,5 +1,5 @@
 import "server-only";
-import { requireCompte } from "@/lib/auth/compte";
+import { getOptionalCompte, requireCompte } from "@/lib/auth/compte";
 import type { EntrepriseConnue } from "@/lib/onboarding/rattachement";
 
 // ADR-005 : toutes les lectures d'Entreprise passent par requireUser() et
@@ -19,7 +19,11 @@ import type { EntrepriseConnue } from "@/lib/onboarding/rattachement";
  * même société.
  */
 export async function listerEntreprisesConnues(): Promise<EntrepriseConnue[]> {
-  const { db } = await requireCompte();
+  // Sans compte (première inscription, ADR-054) : rien à reprendre. Pas de
+  // `requireCompte`, qui renverrait à l'onboarding, c'est-à-dire ici même.
+  const session = await getOptionalCompte();
+  if (!session) return [];
+  const { db } = session;
   const entreprises = await db.entreprise.findMany({
     where: { siren: { not: null } },
     orderBy: { createdAt: "asc" },

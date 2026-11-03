@@ -2,7 +2,7 @@ import "server-only";
 import { requireCompte, type Db } from "@/lib/auth/compte";
 import { cache } from "react";
 
-// ADR-005 : scope par userId via la chaîne duerp → etablissement → entreprise.
+// ADR-005 : scope par compte via la chaîne duerp → etablissement → entreprise.
 
 // Transition V2 : les relations Prisma s'appellent désormais `etablissement`
 // (au lieu de `entreprise` directe) et `actions` (au lieu de `mesures`). On
@@ -71,12 +71,12 @@ function actionVersMesure(a: ActionRow) {
 export const duerpDuRenduDuCompte = cache(async function duerpDuRenduDuCompte(
   db: Db,
   etablissementId: string,
-  userId: string,
+  compteId: string,
 ) {
   return db.duerp.findFirst({
     where: {
       etablissementId,
-      etablissement: { entreprise: { userId } },
+      etablissement: { entreprise: { compteId } },
     },
     orderBy: { updatedAt: "desc" },
     // Les réponses aux questions transverses : seuls les écrans du DUERP les
@@ -106,9 +106,9 @@ export const duerpDuRenduDuCompte = cache(async function duerpDuRenduDuCompte(
  * appelant ne le modifie pas.
  */
 export const getDuerp = cache(async function getDuerp(id: string) {
-  const { user, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   const duerp = await db.duerp.findFirst({
-    where: { id, etablissement: { entreprise: { userId: user.id } } },
+    where: { id, etablissement: { entreprise: { compteId: compte.compteId } } },
     include: {
       etablissement: { include: { entreprise: true } },
       unites: {
@@ -139,11 +139,11 @@ export const getDuerp = cache(async function getDuerp(id: string) {
 });
 
 export async function getUnite(id: string) {
-  const { user, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   const unite = await db.uniteTravail.findFirst({
     where: {
       id,
-      duerp: { etablissement: { entreprise: { userId: user.id } } },
+      duerp: { etablissement: { entreprise: { compteId: compte.compteId } } },
     },
     include: {
       duerp: {

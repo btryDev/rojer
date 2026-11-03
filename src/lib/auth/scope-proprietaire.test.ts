@@ -8,7 +8,7 @@ import { helpersDAppartenance } from "./tenancy-sonde";
  * ## Pourquoi ce fichier
  *
  * Vérification ASVS 5.0.0 du 2026-10-13 (V8.4.1), mutation R1 : le prédicat
- * `entreprise: { userId: user.id }` retiré de `requireEtablissement` ET
+ * `entreprise: { compteId: compte.compteId }` retiré de `requireEtablissement` ET
  * d'`assertEtablissementOwnership` — les deux helpers par lesquels passent
  * presque toutes les pages et actions. Les tests de `src/lib/auth` sont restés
  * verts : `scope.test.ts` ne couvre que `requireUnite`, `requireRisque`,
@@ -23,11 +23,12 @@ import { helpersDAppartenance } from "./tenancy-sonde";
  *
  * Prisma est remplacé par un faux qui ÉVALUE le `where` contre une base dont
  * toute ligne appartient au compte A, relations comprises. Un `where` qui ne
- * porte pas `userId` ramène la ligne quel que soit le demandeur — c'est
+ * porte pas `compteId` ramène la ligne quel que soit le demandeur — c'est
  * exactement ce que ferait PostgreSQL. L'assertion porte
  * donc sur ce que le helper REND au compte B, pas sur la forme de sa requête.
  */
 
+// Le compte simulé porte l'identifiant de la personne (`vitest.setup.ts`).
 const PROPRIETAIRE = "user-a";
 const AUTRE = "user-b";
 
@@ -43,7 +44,7 @@ const h = vi.hoisted(() => {
    * Toute ligne de la base appartient au propriétaire : chaque relation, à
    * quelque profondeur qu'elle soit (`risque → unite → duerp → établissement →
    * entreprise`), remonte à lui. Évaluer un `where` revient donc à vérifier
-   * que chaque `userId` qu'il pose est celui du propriétaire ; les autres
+   * que chaque `compteId` qu'il pose est celui du compte propriétaire ; les autres
    * scalaires (identifiants, clés de jointure) sont satisfaits par la ligne
    * demandée.
    */
@@ -51,7 +52,7 @@ const h = vi.hoisted(() => {
     return Object.entries(where).every(([cle, attendu]) =>
       attendu !== null && typeof attendu === "object"
         ? correspond(attendu as Where)
-        : cle !== "userId" || attendu === etat.proprietaire,
+        : cle !== "compteId" || attendu === etat.proprietaire,
     );
   }
 
@@ -59,7 +60,7 @@ const h = vi.hoisted(() => {
   function ligne(id: string): Record<string, unknown> {
     return {
       id,
-      userId: etat.proprietaire,
+      compteId: etat.proprietaire,
       raisonDisplay: "Établissement",
       entrepriseId: "entreprise-1",
       etablissementId: "etab-1",
@@ -95,6 +96,13 @@ const h = vi.hoisted(() => {
 });
 
 vi.mock("@/lib/prisma", () => ({ prisma: h.prisma }));
+// L'invitation n'existe que pour l'adresse a@exemple.fr (ADR-054 § 5).
+vi.mock("./membres", () => ({
+  // Comme `vitest.setup.ts` : la personne simulée est propriétaire du compte qui porte son identifiant.
+  appartenanceDeLaSession: async (userId: string) => ({ compteId: userId, role: "owner" }),
+  invitationAdresseeA: async (id: string, email: string) =>
+    id === "inv-1" && email === "a@exemple.fr" ? { id, compte: "A", role: "member", invitePar: "x" } : null,
+}));
 vi.mock("./require-user", () => ({
   requireUser: h.requireUser,
   getOptionalUser: h.requireUser,
@@ -117,7 +125,11 @@ const HELPERS = helpersDAppartenance();
  * sur la requête qu'il envoie. Le retirer d'ici par son nom, et lui seul, garde le relevé
  * automatique pour tout helper ajouté demain.
  */
-const HELPERS_DE_LIGNE = HELPERS.filter((nom) => nom !== "requireLectureSqlProprietaire");
+// [2026-11-03, ADR-054] `requireInvitationDeLaSession` non plus : il borne à
+// l'ADRESSE de la session, pas au compte ; éprouvé plus bas.
+const HELPERS_DE_LIGNE = HELPERS.filter(
+  (nom) => nom !== "requireLectureSqlProprietaire" && nom !== "requireInvitationDeLaSession",
+);
 
 function helperNomme(nom: string): (id: string) => Promise<unknown> {
   return (scope as unknown as Record<string, (id: string) => Promise<unknown>>)[nom];
@@ -159,7 +171,7 @@ describe("les helpers d'appartenance de scope.ts", () => {
     expect(h.etat.appels.length, "une lecture et une seule").toBe(1);
     const where = JSON.stringify(h.etat.appels[0].where);
     expect(where).toContain('"id":"cible-1"');
-    expect(where).toContain(`"userId":"${PROPRIETAIRE}"`);
+    expect(where).toContain(`"compteId":"${PROPRIETAIRE}"`);
   });
 });
 
@@ -171,7 +183,7 @@ describe("requireLectureSqlProprietaire (lecture SQL brute bornée au propriéta
     const [requete] = h.etat.requetesSql;
     const sql = requete.sql.replace(/\s+/g, " ");
     expect(sql).toContain('e_p."id" = r."etablissementId"');
-    expect(sql).toContain('en_p."userId" = ?::uuid');
+    expect(sql).toContain('en_p."compteId" = ?::uuid');
     expect(requete.values).toEqual([PROPRIETAIRE]);
     // Un autre compte : son identifiant, jamais celui du propriétaire.
     h.requireUser.mockResolvedValue({ id: AUTRE });
@@ -227,5 +239,19 @@ describe("getOptionalUserEtablissement (cookie d'établissement actif, ADR-028)"
     h.cookies.mockResolvedValue({ get: () => ({ value: "etab-du-compte-a" }) });
     const r = await scope.getOptionalUserEtablissement();
     expect(r?.id).toBe("etab-du-compte-a");
+  });
+});
+
+describe("requireInvitationDeLaSession (ADR-054 § 5)", () => {
+  it("rend l'invitation à la personne à qui elle est adressée", async () => {
+    h.requireUser.mockResolvedValue({ id: PROPRIETAIRE, email: "a@exemple.fr" });
+    expect((await scope.requireInvitationDeLaSession("inv-1")).invitation.id).toBe("inv-1");
+  });
+
+  it("répond notFound à une autre adresse, comme à une invitation inexistante", async () => {
+    h.requireUser.mockResolvedValue({ id: AUTRE, email: "b@exemple.fr" });
+    await expect(scope.requireInvitationDeLaSession("inv-1")).rejects.toSatisfy(estNotFound);
+    h.requireUser.mockResolvedValue({ id: PROPRIETAIRE, email: "a@exemple.fr" });
+    await expect(scope.requireInvitationDeLaSession("inv-inconnue")).rejects.toSatisfy(estNotFound);
   });
 });

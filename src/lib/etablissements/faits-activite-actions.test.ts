@@ -14,6 +14,13 @@ const h = vi.hoisted(() => ({
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 // La garde rend le client borné au compte (ADR-051) : ici, un simulé, que
 // l'écriture doit recevoir.
+// Les gardes de saisie et de rôle (ADR-053, ADR-054) ont leurs propres tests
+// (`abonnements/saisie.test.ts`) : ici, ouvertes.
+vi.mock("@/lib/abonnements/saisie", () => ({
+  verifierSaisie: async () => {},
+  verifierRole: async () => {},
+  verifierProprietaire: async () => {},
+}));
 vi.mock("@/lib/auth/scope", () => ({
   assertEtablissementDuCompte: vi.fn(async () => {
     if (!h.appartient) throw Object.assign(new Error("NEXT_NOT_FOUND"), { digest: "NEXT_HTTP_ERROR_FALLBACK;404" });

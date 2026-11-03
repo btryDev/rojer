@@ -12,7 +12,7 @@ import {
   regenererApresMutation,
 } from "@/lib/calendrier/regeneration-sure";
 import { entrepriseSchema } from "./schema";
-import { verifierSaisie } from "@/lib/abonnements/saisie";
+import { verifierProprietaire, verifierSaisie } from "@/lib/abonnements/saisie";
 
 export type ActionState =
   | { status: "idle" }
@@ -103,6 +103,9 @@ export type SuppressionEntrepriseResult = {
 export async function supprimerEntreprise(
   id: string,
 ): Promise<SuppressionEntrepriseResult> {
+  // Ouverte à un compte impayé (RGPD) ; réservée au propriétaire : elle
+  // efface un dossier entier (ADR-054 § 2).
+  await verifierProprietaire();
   const { db } = await assertEntrepriseDuCompte(id);
 
   // Un établissement dont on connaît l'id permet d'orienter vers l'export.

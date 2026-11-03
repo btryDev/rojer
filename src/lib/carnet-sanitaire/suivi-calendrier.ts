@@ -36,16 +36,16 @@ export const CATEGORIE_EAU_CHAUDE_SUIVIE: CategorieEquipement =
  *
  * `db` est le client borné au compte de l'appelant (ADR-051), reçu de sa
  * garde ; `scope` porte en plus le prédicat de compte
- * (`etablissement.entreprise.userId`).
+ * (`etablissement.entreprise.compteId`).
  */
 export async function eauChaudeSuivieParLeCalendrier(
   db: Db,
   scope: {
     etablissementId: string;
-    etablissement: { entreprise: { userId: string } };
+    etablissement: { entreprise: { compteId: string } };
   },
 ): Promise<boolean> {
-  return eauChaudeSuivieDuRendu(db, scope.etablissementId, scope.etablissement.entreprise.userId);
+  return eauChaudeSuivieDuRendu(db, scope.etablissementId, scope.etablissement.entreprise.compteId);
 }
 
 /** Le corps, mémoïsé sur le rendu : la matrice du tableau de bord et les
@@ -55,12 +55,12 @@ export async function eauChaudeSuivieParLeCalendrier(
 const eauChaudeSuivieDuRendu = cache(async function eauChaudeSuivieDuRendu(
   db: Db,
   etablissementId: string,
-  userId: string,
+  compteId: string,
 ): Promise<boolean> {
   const n = await db.equipement.count({
     where: {
       etablissementId,
-      etablissement: { entreprise: { userId }, estERP: true },
+      etablissement: { entreprise: { compteId }, estERP: true },
       categorie: CATEGORIE_EAU_CHAUDE_SUIVIE,
       actif: true,
     },

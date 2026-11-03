@@ -1,6 +1,7 @@
 import { FilRetour } from "@/components/ui-kit/FilRetour";
 import { BandeauAbonnement } from "@/components/abonnements/BandeauAbonnement";
-import { requireCompte } from "@/lib/auth/compte";
+import { getOptionalCompte } from "@/lib/auth/compte";
+import { requireUser } from "@/lib/auth/require-user";
 import { abonnementDuCompte, contexteDroits, offreLancee } from "@/lib/abonnements/saisie";
 import { droitsDe, libelleStatut } from "@/lib/abonnements/droits";
 import { formaterDateLongueFr } from "@/lib/dates";
@@ -20,12 +21,15 @@ export default async function AbonnementPage({
 }: {
   searchParams: Promise<{ saisie?: string }>;
 }) {
-  const { user, db } = await requireCompte();
+  // Sans compte encore (rien créé), la page se lit quand même : aucun
+  // abonnement (ADR-054). `requireCompte` renverrait à l'onboarding.
+  await requireUser();
+  const c = await getOptionalCompte();
   const { saisie } = await searchParams;
   const ctx = contexteDroits();
   const ouvert = offreLancee(ctx);
   // Une seule lecture : la ligne sert à l'état affiché et aux droits.
-  const ligne = await abonnementDuCompte(db, user.id);
+  const ligne = c ? await abonnementDuCompte(c.db, c.compte.compteId) : null;
   const droits = droitsDe(ligne, ctx);
 
   return (

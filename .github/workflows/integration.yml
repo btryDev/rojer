@@ -92,6 +92,9 @@ jobs:
           src/lib/securite/limite-debit.integration
           src/lib/calendrier/regeneration-bornee.integration
           src/lib/auth/sql-proprietaire.integration
+          src/lib/auth/membres.integration
+          src/lib/auth/creer-compte.integration
+          src/lib/membres/invitation.integration
           src/lib/stripe/synchronisation.integration
           --no-file-parallelism
           --reporter=default --reporter=json --outputFile.json=integration.json

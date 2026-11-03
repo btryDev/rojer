@@ -31,7 +31,25 @@ const OUVERTES = new Map<string, string>([
   ["lib/signatures/actions.ts:renvoyerCodeOtp", "acte d'un tiers par lien vérifié, pas du titulaire"],
   ["lib/entreprises/actions.ts:supprimerEntreprise", "supprimer ses données reste possible à tout moment (RGPD, règle 9)"],
   ["lib/etablissements/actions.ts:supprimerEtablissement", "supprimer ses données reste possible à tout moment (RGPD, règle 9)"],
+  ["lib/membres/actions.ts:quitterCompte", "quitter un compte reste possible à tout moment, quel que soit son rôle (ADR-054 § 6)"],
 ]);
+
+/**
+ * Parmi les ouvertes, celles qui le restent aussi à un membre en LECTURE SEULE
+ * (ADR-054 § 4) : le compte et sa sécurité, l'assistance, les actes d'un tiers.
+ * Les autres (suppressions, retrait d'un accès ou d'une page publique) ouvrent
+ * par `await verifierRole();`.
+ */
+const OUVERTES_A_LA_LECTURE = new Set<string>(
+  [...OUVERTES.keys()].filter(
+    (c) =>
+      c.startsWith("lib/auth/actions.ts:") ||
+      c === "lib/assistance/actions.ts:demanderAssistance" ||
+      c === "lib/signatures/actions.ts:poserSignatureAvecToken" ||
+      c === "lib/signatures/actions.ts:renvoyerCodeOtp" ||
+      c === "lib/membres/actions.ts:quitterCompte",
+  ),
+);
 
 /** Le corps de chaque fonction de premier niveau d'un fichier, par nom (une lecture par fichier). */
 const corps = new Map<string, Map<string, ts.Block>>();
@@ -61,13 +79,14 @@ function corpsDe(fichier: string): Map<string, ts.Block> {
  * une condition, ni dans un commentaire, ni après une écriture, ni dans un
  * `try` qui avalerait la redirection.
  */
-function gardee(cle: string): boolean {
+function ouvrePar(cle: string, garde: string): boolean {
   const [fichier, nom] = cle.split(":");
   const premiere = corpsDe(fichier).get(nom)?.statements[0];
   if (!premiere || !ts.isExpressionStatement(premiere) || !ts.isAwaitExpression(premiere.expression)) return false;
   const appel = premiere.expression.expression;
-  return ts.isCallExpression(appel) && ts.isIdentifier(appel.expression) && appel.expression.text === "verifierSaisie";
+  return ts.isCallExpression(appel) && ts.isIdentifier(appel.expression) && appel.expression.text === garde;
 }
+const gardee = (cle: string) => ouvrePar(cle, "verifierSaisie");
 
 describe("la saisie fermée (ADR-053 § 3)", () => {
   const ecritures = ecrituresExposees().map((e) => e.cle).sort();
@@ -88,6 +107,17 @@ describe("la saisie fermée (ADR-053 § 3)", () => {
   it("les ouvertes existent, et aucune n'appelle verifierSaisie", () => {
     expect([...OUVERTES.keys()].filter((c) => !ecritures.includes(c))).toEqual([]);
     expect([...OUVERTES.keys()].filter(gardee)).toEqual([]);
+  });
+
+  it("une ouverte qui ne l'est pas à la lecture seule commence par verifierRole (ADR-054 § 4)", () => {
+    // `verifierProprietaire` ferme aussi la lecture seule : un lecteur n'est jamais propriétaire.
+    const ferme = (c: string) => ouvrePar(c, "verifierRole") || ouvrePar(c, "verifierProprietaire");
+    const sansRole = [...OUVERTES.keys()].filter((c) => !OUVERTES_A_LA_LECTURE.has(c) && !ferme(c));
+    expect(
+      sansRole,
+      "Appelez `await verifierRole()` (ou `verifierProprietaire()`) en tête de l'action, ou nommez-la dans OUVERTES_A_LA_LECTURE.",
+    ).toEqual([]);
+    expect([...OUVERTES_A_LA_LECTURE].filter(ferme)).toEqual([]);
   });
 
   it("un écran qui attrape l'erreur d'une action gardée laisse repartir la redirection", () => {

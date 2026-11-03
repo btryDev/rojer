@@ -33,7 +33,7 @@ import {
 } from "./schema";
 import { typesErpAutresPostes } from "./types-erp-affiches";
 import { refusDuFiltre, rEntre, sansReponseEnfants } from "./types-refuses";
-import { verifierSaisie } from "@/lib/abonnements/saisie";
+import { verifierProprietaire, verifierSaisie } from "@/lib/abonnements/saisie";
 
 export type EtablissementActionState =
   | { status: "idle" }
@@ -193,7 +193,7 @@ function normaliserFormData(fd: FormData): Record<string, unknown> {
  * `assertEtablissementOwnership` d'abord, et ce n'est pas une formalité : la
  * cible arrive d'un formulaire, donc du client. Sans elle, on écrirait dans le
  * cookie l'identifiant de n'importe quel établissement — la lecture le
- * refuserait bien (le `where` remonte à `entreprise.userId`), mais l'utilisateur
+ * refuserait bien (le `where` remonte à `entreprise.compteId`), mais l'utilisateur
  * serait renvoyé en boucle vers un dossier qui n'est pas le sien et qu'il ne
  * verrait jamais s'ouvrir. Mieux vaut un 404 franc au moment du geste.
  */
@@ -363,7 +363,7 @@ export async function modifierEtablissement(
     });
   } catch (e) {
     // Une autre entreprise du compte a pris ce SIREN entre la lecture et
-    // l'écriture : l'unicité `(userId, siren)` tranche. Rare (deux onglets) ;
+    // l'écriture : l'unicité `(compteId, siren)` tranche. Rare (deux onglets) ;
     // un nouvel enregistrement rattachera l'établissement à cette entreprise.
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
       return refusSiretAutreEntreprise();
@@ -453,6 +453,9 @@ async function compterVersionsDuerp(db: Db, etablissementId: string): Promise<nu
 export async function supprimerEtablissement(
   id: string,
 ): Promise<SuppressionResult> {
+  // Ouverte à un compte impayé (RGPD) ; réservée au propriétaire : elle
+  // efface un dossier entier (ADR-054 § 2).
+  await verifierProprietaire();
   const { db } = await assertEtablissementDuCompte(id);
 
   const etab = await db.etablissement.findUnique({

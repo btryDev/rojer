@@ -1,6 +1,7 @@
 "use server";
 
-import { requireCompte } from "@/lib/auth/compte";
+import { requireCompteDOnboarding } from "@/lib/auth/compte";
+import { requireUser } from "@/lib/auth/require-user";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
@@ -70,7 +71,8 @@ export async function finaliserOnboarding(
   formData: FormData,
 ): Promise<OnboardingActionState> {
   await verifierSaisie();
-  const { user, db } = await requireCompte();
+  // La session d'abord : sans elle, renvoi à la connexion avant toute lecture.
+  await requireUser();
 
   // ~~Un compte = une entreprise : l'onboarding ne se joue qu'une fois.~~
   // [2026-10-26 : chaque établissement passe par ce parcours.]
@@ -92,22 +94,27 @@ export async function finaliserOnboarding(
 
   const d = parsed.data;
 
+  // Le compte où ranger l'établissement : celui de la personne, ou un compte
+  // neuf dont elle devient propriétaire (ADR-054 § 5). Créé avant la
+  // transaction : si elle échoue, le parcours suivant le reprend.
+  const { compte, db } = await requireCompteDOnboarding(d.raisonSociale);
+
   const siren = sirenDuSiret(d.siret);
 
   let result;
   try {
     result = await avecUneReprise(() => db.$transaction(async (tx) => {
       // L'entreprise du SIREN, dans CE compte — jamais ailleurs : la clé porte
-      // `userId`, un SIREN suivi par un autre compte n'est ni lu ni touché.
-      // `upsert` sur l'unicité `(userId, siren)` : deux parcours finis au même
+      // `compteId`, un SIREN suivi par un autre compte n'est ni lu ni touché.
+      // `upsert` sur l'unicité `(compteId, siren)` : deux parcours finis au même
       // instant pour le même SIREN se rejoignent au lieu de se heurter. Quand
       // elle existe, rien n'y est écrit (`update: {}`) : sa raison sociale et
       // son effectif sont les siens, que le parcours affiche sans les lire.
       const entreprise = await tx.entreprise.upsert({
-        where: { userId_siren: { userId: user.id, siren } },
+        where: { compteId_siren: { compteId: compte.compteId, siren } },
         update: {},
         create: {
-          userId: user.id,
+          compteId: compte.compteId,
           siren,
           raisonSociale: d.raisonSociale,
           // L'effectif de l'ENTREPRISE, apprentis non compris, demandé pour

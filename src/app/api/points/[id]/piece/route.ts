@@ -7,7 +7,7 @@ import { servirFichier } from "@/lib/storage/servir";
  * La pièce qui prouve la correction d'un point à corriger (ADR-048).
  *
  * GET `/api/points/[id]/piece`. Servie seulement si le point appartient au
- * compte connecté (`requireAction` remonte jusqu'à `Entreprise.userId`) ; un
+ * compte connecté (`requireAction` remonte jusqu'à `Entreprise.compteId`) ; un
  * point d'autrui et un point sans pièce répondent le même 404, sans oracle
  * d'existence — la règle des autres routes de fichiers.
  */

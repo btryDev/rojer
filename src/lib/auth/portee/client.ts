@@ -11,12 +11,32 @@ import "server-only";
 
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { argumentsBornes, ErreurPortee, estLectureDIdentifiants, noterVus, type Portee } from "./borne";
+import {
+  argumentsBornes,
+  ErreurLectureSeule,
+  ErreurPortee,
+  estLectureDIdentifiants,
+  noterVus,
+  sqlPeutEcrire,
+  type Portee,
+} from "./borne";
 
 function etendre(base: PrismaClient, p: Portee) {
   // Copie figée : un appelant qui garderait l'objet ne peut plus déplacer la
   // portée d'un client déjà en cache (revue du lot 2a).
-  const portee: Portee = Object.freeze({ type: "compte", userId: p.userId });
+  const portee: Portee = Object.freeze({
+    type: "compte",
+    compteId: p.compteId,
+    userId: p.userId,
+    lectureSeule: p.lectureSeule === true,
+  });
+  // Le SQL brut d'écriture n'est pas borné par l'extension (ADR-051 § 5) ; en
+  // lecture seule, il est refusé ici (ADR-054 § 4). La forme non paramétrée
+  // est interdite dans tout le dépôt par la garde du SQL brut. Les lectures brutes ont
+  // leur propre garde (`requireLectureSqlProprietaire`).
+  const refuserEnLecture = (operation: string) => {
+    if (portee.lectureSeule) throw new ErreurLectureSeule(operation);
+  };
   // Typé comme le client brut : l'extension ne porte que sur les ARGUMENTS
   // des requêtes (`query`), elle n'ajoute ni modèle, ni champ, ni méthode —
   // l'API à l'exécution est la même. Le type étendu de Prisma, lui, n'est pas
@@ -26,6 +46,16 @@ function etendre(base: PrismaClient, p: Portee) {
   const client = base.$extends({
     name: "borne-au-compte",
     query: {
+      async $executeRaw({ args, query }) {
+        refuserEnLecture("$executeRaw");
+        return query(args);
+      },
+      // Une lecture brute qui écrirait (`UPDATE … RETURNING`) est refusée en
+      // lecture seule, comme `$executeRaw` (revue de sécurité des lots 3-4).
+      async $queryRaw({ args, query }) {
+        if (portee.lectureSeule && sqlPeutEcrire(texteSql(args))) refuserEnLecture("$queryRaw");
+        return query(args);
+      },
       $allModels: {
         async $allOperations({ model, operation, args, query }) {
           const resultat = await query(argumentsBornes(model, operation, args, portee) as typeof args);
@@ -38,27 +68,39 @@ function etendre(base: PrismaClient, p: Portee) {
   return client as unknown as PrismaClient;
 }
 
+/** Le texte d'une requête brute, sous les formes que Prisma passe à l'extension. */
+function texteSql(args: unknown): string {
+  const a = Array.isArray(args) ? args[0] : args;
+  if (a && typeof a === "object" && "strings" in a && Array.isArray((a as { strings: unknown }).strings))
+    return ((a as { strings: string[] }).strings).join(" ? ");
+  if (a && typeof a === "object" && "sql" in a) return String((a as { sql: unknown }).sql);
+  return String(a ?? "");
+}
+
 export type ClientBorne = PrismaClient;
 
 // Un client par portée, gardé : `$extends` est peu coûteux, mais un rendu en
-// demande des dizaines. La clé est l'identifiant de la portée ; un client
-// borné à X n'est rendu qu'à du code qui s'est authentifié comme X.
+// demande des dizaines. La clé est la portée entière (compte et personne) ; un
+// client borné à X n'est rendu qu'à du code qui s'est authentifié comme X.
 const CLIENTS = new Map<string, ClientBorne>();
 const MAX_CLIENTS = 500;
 
-/** L'identifiant d'une portée valide, lu UNE fois (un objet à accesseur ne peut pas en rendre deux). */
-function idDePortee(portee: Portee): string {
+/** Une portée valide, lue UNE fois (un objet à accesseur ne peut pas en rendre deux). */
+function lirePortee(portee: Portee): Portee {
   if (portee?.type !== "compte")
     throw new ErreurPortee("seule la portée de compte existe à ce jour : client refusé");
-  const id = portee.userId;
-  if (typeof id !== "string" || id.length === 0)
-    throw new ErreurPortee("portée sans identifiant : client refusé");
-  return id;
+  const compteId = portee.compteId;
+  const userId = portee.userId;
+  if (typeof compteId !== "string" || compteId.length === 0)
+    throw new ErreurPortee("portée sans compte : client refusé");
+  if (userId !== null && (typeof userId !== "string" || userId.length === 0))
+    throw new ErreurPortee("portée à la personne invalide : client refusé");
+  return { type: "compte", compteId, userId, lectureSeule: portee.lectureSeule === true };
 }
 
 export function clientBorne(portee: Portee): ClientBorne {
-  const id = idDePortee(portee);
-  const cle = `compte:${id}`;
+  const lue = lirePortee(portee);
+  const cle = `compte:${lue.compteId}|${lue.userId ?? "-"}|${lue.lectureSeule ? "lecture" : "saisie"}`;
   let client = CLIENTS.get(cle);
   if (client) {
     // Le plus récemment servi passe en queue : l'éviction vise le moins
@@ -68,9 +110,9 @@ export function clientBorne(portee: Portee): ClientBorne {
     CLIENTS.set(cle, client);
   } else {
     if (CLIENTS.size >= MAX_CLIENTS) CLIENTS.delete(CLIENTS.keys().next().value!);
-    // L'identifiant lu une seule fois sert à la clé ET au client : un objet à
+    // La portée lue une seule fois sert à la clé ET au client : un objet à
     // accesseur ne peut pas rendre deux comptes (contre-vérification du lot 2a).
-    client = etendre(prisma, { type: "compte", userId: id });
+    client = etendre(prisma, lue);
     CLIENTS.set(cle, client);
   }
   return client;
@@ -85,7 +127,7 @@ export function clientBorne(portee: Portee): ClientBorne {
  * (`portee/imports.test.ts`).
  */
 export function clientBorneSur(base: PrismaClient, portee: Portee): ClientBorne {
-  return etendre(base, { type: "compte", userId: idDePortee(portee) });
+  return etendre(base, lirePortee(portee));
 }
 
 /** Le client d'une transaction ouverte sur un client borné. */

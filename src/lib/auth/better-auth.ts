@@ -4,12 +4,14 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { twoFactor } from "better-auth/plugins/two-factor";
+import { organization } from "better-auth/plugins/organization";
+import { estRole, libelleRole, ROLES_DU_PLUGIN } from "./roles";
 import { createAuthMiddleware, isAPIError } from "better-auth/api";
 import { oublierAppareilsDeConfiance } from "./appareils-de-confiance";
 import { prisma } from "@/lib/prisma";
 import { motifErreur, publicAppUrl, refusUrlPublique, sendMail } from "@/lib/email";
 import { ENTETE_IP_CLIENT } from "./entete-ip";
-import { lienReinitialisation, lienVerification } from "./liens-compte";
+import { lienInvitation, lienReinitialisation, lienVerification } from "./liens-compte";
 import { LONGUEUR_MIN_MOT_DE_PASSE } from "./mot-de-passe";
 
 /**
@@ -29,6 +31,36 @@ import { LONGUEUR_MIN_MOT_DE_PASSE } from "./mot-de-passe";
 const SEPT_JOURS = 60 * 60 * 24 * 7;
 const UN_JOUR = 60 * 60 * 24;
 const TRENTE_JOURS = UN_JOUR * 30;
+/**
+ * Un nom saisi par un utilisateur (personne, compte), mis dans un e-mail que
+ * Rojer envoie à un tiers : une ligne, sans lien, 80 caractères au plus —
+ * qu'un nom ne fasse pas d'une invitation Rojer un hameçonnage.
+ */
+export function nomPourEmail(brut: string): string {
+  // Normaliser d'abord : formes de compatibilité (NFKC), caractères invisibles
+  // retirés, points idéographiques ramenés au point.
+  const normal = brut.normalize("NFKC").replace(/\p{Cf}/gu, "").replace(/[\u3002\uFF0E\uFF61]/g, ".");
+  // Puis rien de ce qu'une messagerie rendrait cliquable : un lien explicite,
+  // et tout point collé entre deux caractères (domaine nu, adresse, IP) — le
+  // point devient une espace ; « @ » disparaît.
+  const sansLien = normal
+    .replace(/\S*(?:https?:\/\/|www\.)\S*/giu, "[lien retiré]")
+    .replace(/(?<=\S)\.(?=\S)/gu, " ")
+    .replace(/@/g, " ");
+  const uneLigne = sansLien.replace(/[\u0000-\u001f\u007f\u2028\u2029]+/g, " ").replace(/\s+/g, " ").trim();
+  return uneLigne.length > 80 ? `${uneLigne.slice(0, 79)}…` : uneLigne;
+}
+
+/** Les invitations en attente qu'une personne a envoyées pour un compte tombent (ADR-054 § 6). */
+async function annulerInvitationsDe(inviterId: string, compteId: string): Promise<void> {
+  // Sans l'un des deux, Prisma ignorerait le filtre : toutes les invitations tomberaient.
+  if (!inviterId || !compteId) throw new Error("annulation d'invitations sans personne ou sans compte");
+  await prisma.invitationCompte.updateMany({
+    where: { inviterId, compteId, status: "pending" },
+    data: { status: "canceled" },
+  });
+}
+
 /** Verrou du compte après dix seconds facteurs faux de suite (repris par le message). */
 export const VERROU_DOUBLE_AUTH_MINUTES = 15;
 
@@ -155,6 +187,73 @@ export const auth = betterAuth({
       twoFactorCookieMaxAge: 10 * 60,
       trustDeviceMaxAge: TRENTE_JOURS,
       accountLockout: { enabled: true, maxFailedAttempts: 10, durationSeconds: VERROU_DOUBLE_AUTH_MINUTES * 60 },
+    }),
+    // Comptes et membres (ADR-054) : l'« organisation » du plugin est notre
+    // `Compte`. Le plugin tient les membres, les rôles et les invitations ;
+    // l'accès aux données, lui, ne croit jamais `compteActifId` : il relit
+    // `Membre` à chaque appel (`auth/membres.ts`). Aucune création de compte
+    // depuis une session : l'onboarding le crée par un appel serveur
+    // (`compteDOnboarding`), que le plugin appelle « action système ».
+    organization({
+      allowUserToCreateOrganization: false,
+      creatorRole: "owner",
+      ac: ROLES_DU_PLUGIN.ac,
+      roles: ROLES_DU_PLUGIN.roles,
+      invitationExpiresIn: SEPT_JOURS,
+      cancelPendingInvitationsOnReInvite: true,
+      requireEmailVerificationOnInvitation: true,
+      sendInvitationEmail: ({ id, email, role, organization, inviter }) =>
+        envoyer(email, "Rojer — invitation à rejoindre un compte", [
+          "Bonjour,",
+          "",
+          `${(inviter.user.name && nomPourEmail(inviter.user.name)) || "Un propriétaire du compte"} vous invite à travailler sur le compte Rojer « ${nomPourEmail(organization.name)} », en tant que ${libelleRole(role)}.`,
+          "",
+          "Pour accepter, ouvrez ce lien (valable 7 jours) :",
+          lienInvitation(id),
+          "",
+          `Si vous n'avez pas encore de compte Rojer, créez-le avec cette adresse : ${email}.`,
+          "Si vous ne vous attendiez pas à cette invitation, ignorez ce message.",
+        ]),
+      organizationHooks: {
+        // Un rôle, et l'un des trois (ADR-054 § 2) : le plugin accepterait
+        // « member,lecture », que `estRole` écarte ensuite sans un mot.
+        beforeCreateInvitation: async ({ invitation }) => {
+          if (!estRole(invitation.role)) throw new Error(`rôle d'invitation refusé : ${invitation.role}`);
+        },
+        beforeUpdateMemberRole: async ({ newRole }) => {
+          if (!estRole(newRole)) throw new Error(`rôle refusé : ${newRole}`);
+        },
+        // Une invitation ne vaut que tant que son auteur est PROPRIÉTAIRE du
+        // compte (revue de sécurité des lots 3-4) : sinon un propriétaire
+        // écarté, qui se serait invité à une seconde adresse, reprendrait le
+        // compte. Le plugin ne revérifie pas l'invitant à l'acceptation.
+        beforeAcceptInvitation: async ({ invitation }) => {
+          const invitant = await prisma.membre.findUnique({
+            where: { compteId_userId: { compteId: invitation.organizationId, userId: invitation.inviterId } },
+            select: { role: true },
+          });
+          if (invitant?.role !== "owner") throw new Error("invitation dont l'auteur n'est plus propriétaire du compte");
+        },
+        // Ménage : les sessions de la personne retirée oublient ce compte, et
+        // ses invitations en attente tombent. La sécurité n'en dépend pas —
+        // `requireCompte` relit `Membre`, l'acceptation relit l'invitant.
+        afterRemoveMember: async ({ member }) => {
+          await prisma.session.updateMany({
+            where: { userId: member.userId, compteActifId: member.organizationId },
+            data: { compteActifId: null },
+          });
+          await annulerInvitationsDe(member.userId, member.organizationId);
+        },
+        afterUpdateMemberRole: async ({ member }) => {
+          if (member.role !== "owner") await annulerInvitationsDe(member.userId, member.organizationId);
+        },
+      },
+      schema: {
+        organization: { modelName: "compte" },
+        member: { modelName: "membre", fields: { organizationId: "compteId" } },
+        invitation: { modelName: "invitationCompte", fields: { organizationId: "compteId" } },
+        session: { fields: { activeOrganizationId: "compteActifId" } },
+      },
     }),
     // `nextCookies` en dernier : sans lui, une connexion faite dans une action
     // serveur ne pose pas de cookie — ni celui du défi de double authentification.

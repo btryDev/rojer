@@ -27,7 +27,7 @@ describe("listSignaturesDesObjets", () => {
         objetType: "rapport_verification",
         objetId: { in: ["r1", "r2", "r3"] },
         // La portée au propriétaire, dans la requête.
-        etablissement: { entreprise: { userId: "u1" } },
+        etablissement: { entreprise: { compteId: "u1" } },
       },
       // Les seuls champs de la preuve, plus l'objet pour ranger.
       select: expect.objectContaining({ id: true, hashDocument: true, objetId: true }),

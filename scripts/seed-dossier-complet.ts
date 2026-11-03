@@ -66,7 +66,7 @@
 // -----------------------------------------------------------------------------
 // ~~L'authentification vit chez Supabase (ADR-005) : il n'existe pas de modèle
 // `User` en base~~ [2026-10-30, ADR-052 : le compte est le modèle `User` de
-// Better Auth, dans la même base ; `Entreprise.userId` est une clé étrangère
+// Better Auth, dans la même base ; `Entreprise.compteId` est une clé étrangère
 // vers lui.] Ce script ne crée aucun compte : un mot de passe et une adresse
 // confirmée passent par l'inscription. Il rattache le dossier à un compte qui
 // existe déjà, et vérifie qu'il existe.
@@ -78,7 +78,7 @@
 // SANS `--user`, LE SCRIPT S'ARRÊTE. Il n'invente pas de valeur et ne retombe
 // pas sur `null` : un dossier créé sous un identifiant que personne ne détient
 // est invisible de tous les écrans — tous les helpers de `lib/auth/scope.ts`
-// bornent par `entreprise.userId` — tout en ayant l'air d'avoir réussi. C'est le
+// bornent par `entreprise.compteId` — tout en ayant l'air d'avoir réussi. C'est le
 // pire des trois résultats possibles, et le seul qu'on refuse d'atteindre.
 //
 // LES PERSONNES SONT FICTIVES. Le suivi nominatif traite de vraies données de
@@ -99,6 +99,7 @@ import {
   type TypeAction,
 } from "@prisma/client";
 
+import { randomUUID } from "node:crypto";
 import { genererSlug } from "@/lib/accessibilite/schema";
 import { estReleveConforme } from "@/lib/carnet-sanitaire/schema";
 import { NOM_BATIMENT_PRINCIPAL } from "@/lib/batiments/schema";
@@ -754,7 +755,7 @@ const OU_TROUVER_L_UUID = [
  *
  * Il n'y a pas de valeur par défaut, et surtout pas `null` : un dossier créé
  * sous un identifiant que personne ne détient n'est visible d'aucun écran (les
- * helpers de `lib/auth/scope.ts` bornent tous par `entreprise.userId`) tout en
+ * helpers de `lib/auth/scope.ts` bornent tous par `entreprise.compteId`) tout en
  * ayant l'air d'avoir réussi. Le script s'arrête plutôt que de le produire.
  */
 /**
@@ -779,7 +780,7 @@ const OU_TROUVER_L_UUID = [
  * un dossier sans le dire. Ici, l'intention est nommée sur la ligne de
  * commande, et l'entreprise d'accueil est désignée : rien n'est deviné.
  *
- * ET SURTOUT, LE MODÈLE L'EXIGE. `Entreprise.userId` est `@unique` — un
+ * ET SURTOUT, LE MODÈLE L'EXIGE. `Entreprise.compteId` est `@unique` — un
  * utilisateur a UNE entreprise et autant d'établissements qu'il en tient
  * (ADR-028). Créer une seconde entreprise sous le même compte violerait la
  * contrainte ; le second dossier doit donc être un second ÉTABLISSEMENT de
@@ -794,7 +795,7 @@ function lireEntrepriseHote(argv: string[]): string | null {
     throw new Error(
       "--second-etablissement <id> attend l'identifiant de l'entreprise\n" +
         "d'accueil. Pour le trouver :\n" +
-        '  select id, "raisonSociale", "userId" from "Entreprise";',
+        '  select id, "raisonSociale", "compteId" from "Entreprise";',
     );
   }
   return valeur;
@@ -812,7 +813,7 @@ function lireUserId(argv: string[]): string {
     throw new Error(
       "--user <uuid> est obligatoire : le dossier doit appartenir à un compte\n" +
         "existant, sans quoi aucun écran ne s'ouvrira dessus (ADR-052 —\n" +
-        "`Entreprise.userId` désigne un `User`).\n" +
+        "le compte de l'entreprise a pour propriétaire un `User`).\n" +
         "Où trouver cet identifiant :\n" +
         OU_TROUVER_L_UUID,
     );
@@ -820,7 +821,7 @@ function lireUserId(argv: string[]): string {
 
   if (!UUID.test(valeur)) {
     throw new Error(
-      `« ${valeur} » n'est pas un UUID. \`Entreprise.userId\` porte l'identifiant\n` +
+      `« ${valeur} » n'est pas un UUID. \`Membre.userId\` porte l'identifiant\n` +
         "d'un `User`, typé `uuid` en base : une chaîne libre y sera refusée par\n" +
         "Postgres, et un identifiant approximatif ne correspondrait à aucun compte.\n" +
         "Où trouver le bon :\n" +
@@ -834,6 +835,17 @@ function lireUserId(argv: string[]): string {
 // ===========================================================================
 // Le seed proprement dit.
 // ===========================================================================
+
+/** Le compte dont `userId` est propriétaire, créé s'il n'existe pas (ADR-054). */
+async function compteDuProprietaire(userId: string): Promise<string> {
+  const membre = await prisma.membre.findFirst({ where: { userId, role: "owner" }, select: { compteId: true } });
+  if (membre) return membre.compteId;
+  const compte = await prisma.compte.create({
+    data: { name: ENTREPRISE.raisonSociale, slug: randomUUID(), membres: { create: { userId, role: "owner" } } },
+    select: { id: true },
+  });
+  return compte.id;
+}
 
 async function main(): Promise<void> {
   const userId = lireUserId(process.argv.slice(2));
@@ -868,7 +880,9 @@ async function main(): Promise<void> {
     ? await prisma.entreprise.findUniqueOrThrow({ where: { id: entrepriseHote } })
     : await prisma.entreprise.create({
     data: {
-      userId,
+      // [2026-11-03, ADR-054 : l'entreprise est au compte dont la personne
+      // est propriétaire ; il naît ici s'il n'existe pas.]
+      compteId: await compteDuProprietaire(userId),
       siren: ENTREPRISE.siret.slice(0, 9),
       raisonSociale: ENTREPRISE.raisonSociale,
       effectif: ENTREPRISE.effectif,

@@ -11,7 +11,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  *
  * Montage : Prisma est simulé et ses `findFirst` scopés ne ramènent rien
  * (c'est exactement ce qui se passe pour l'id d'un autre client, puisque le
- * `where` porte `entreprise.userId`). Les vrais helpers de `lib/auth/scope`
+ * `where` porte `entreprise.compteId`). Les vrais helpers de `lib/auth/scope`
  * sont utilisés — on teste la chaîne complète, pas un mock de garde.
  */
 

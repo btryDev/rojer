@@ -44,6 +44,7 @@ export const RACINES_EXCLUES = [
   "/duerp/",
   "/entreprises",
   "/etablissements/",
+  "/invitation/",
   "/onboarding",
   // Routes.
   "/api/",

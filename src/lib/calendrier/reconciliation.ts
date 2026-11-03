@@ -35,8 +35,11 @@ export async function marquerCalendrierPerime(
   etablissementId: string,
 ): Promise<void> {
   try {
-    // Par le client borné, un établissement hors du compte lève (P2025) : le
-    // `catch` ci-dessous l'avale, rien n'est écrit.
+    // Par le client reçu : borné au compte (une action, `regenererApresMutation`),
+    // un établissement hors du compte lève (P2025), le `catch` l'avale ; brut
+    // à la fin d'une passe qui ne converge pas (`calendrier/actions.ts`), après
+    // une lecture bornée de l'établissement — un lecteur en lecture seule, dont
+    // le client refuse l'écriture, ne laisse pas le calendrier faux.
     await client.etablissement.update({
       where: { id: etablissementId },
       data: { referentielVersionCalendrier: null },

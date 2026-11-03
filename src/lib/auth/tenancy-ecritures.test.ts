@@ -153,7 +153,7 @@ const EXEMPTIONS = new Map<string, Exemption>([
   // ~~`creerEntreprise` et `finaliserOnboarding`, exemptées : elles fondaient
   // la racine de la tenancy~~ [2026-10-26 : la première est retirée ; la
   // seconde borne désormais par elle-même — son `upsert` cherche l'entreprise
-  // par `(userId, siren)`, l'identifiant du compte connecté en clé.]
+  // par `(compteId, siren)`, l'identifiant du compte connecté en clé.]
   [
     "lib/signatures/actions.ts:poserSignatureAvecToken",
     {
@@ -286,7 +286,7 @@ describe("les écritures des server actions", () => {
     ).toEqual([]);
   });
 
-  it("aucune server action ne reçoit le `userId` de son appelant", () => {
+  it("aucune server action ne reçoit le `userId` ni le `compteId` de son appelant", () => {
     // La dernière porte que le balayage ne saurait pas fermer : une action qui
     // prendrait `userId` en paramètre et le porterait dans son `where`
     // passerait pour bornée, alors que le client choisirait lui-même à quel
@@ -298,12 +298,13 @@ describe("les écritures des server actions", () => {
       for (const fn of fonctions(source)) {
         if (!fn.exportee) continue;
         const parametres = fn.corps.slice(0, fn.corps.indexOf(")"));
-        if (/\buserId\b/.test(parametres)) coupables.push(fn.nom);
+        // [2026-11-03, ADR-054] `compteId` aussi : c'est la racine du compte.
+        if (/\b(userId|compteId)\b/.test(parametres)) coupables.push(fn.nom);
       }
     }
     expect(
       coupables,
-      "Ces server actions reçoivent un `userId` du client : il n'établit " +
+      "Ces server actions reçoivent un `userId` ou un `compteId` du client : il n'établit " +
         "alors plus rien, puisque l'appelant le choisit.",
     ).toEqual([]);
   });

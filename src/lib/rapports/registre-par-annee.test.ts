@@ -45,7 +45,7 @@ describe("listerRapportsDeLEtablissement — par année", () => {
       lt: instantCivil(2025, 1, 1),
     });
     // La portée au compte n'est pas perdue en route.
-    expect(where.etablissement).toEqual({ entreprise: { userId: "u1" } });
+    expect(where.etablissement).toEqual({ entreprise: { compteId: "u1" } });
   });
 
   it("sans année : tout l'historique (les exports)", async () => {

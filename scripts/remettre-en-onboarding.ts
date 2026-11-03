@@ -52,7 +52,7 @@
  * première rédaction de ce script se trompait sur ce point : elle interrogeait
  * `auth.users`, qui n'existe pas dans la base locale. L'identité vit chez
  * Supabase, seul le dossier est ici — la seule clé commune aux deux mondes est
- * l'UUID que `Entreprise.userId` porte. Sans argument, le script liste les
+ * l'UUID que `Entreprise.compteId` porte. Sans argument, le script liste les
  * dossiers présents avec leur `userId` : c'est là qu'on lit celui qu'on veut.
  */
 
@@ -90,9 +90,15 @@ async function main(): Promise<void> {
   const userId = process.argv[2];
   const vraiment = process.argv.includes("--vraiment");
 
-  const dossiers = await prisma.entreprise.findMany({
-    include: { etablissements: { select: { id: true, raisonDisplay: true } } },
+  // [2026-11-03, ADR-054 : l'entreprise est au compte ; on la désigne par le
+  // `userId` de son propriétaire, la personne qui l'a créée.]
+  const avecCompte = await prisma.entreprise.findMany({
+    include: {
+      etablissements: { select: { id: true, raisonDisplay: true } },
+      compte: { select: { membres: { where: { role: "owner" }, select: { userId: true } } } },
+    },
   });
+  const dossiers = avecCompte.map((d) => ({ ...d, userId: d.compte?.membres[0]?.userId ?? null }));
 
   // Sans argument : on montre ce qu'il y a, avec la clé qui sert à le désigner.
   // Un script destructif ne doit jamais avoir à deviner sa cible.

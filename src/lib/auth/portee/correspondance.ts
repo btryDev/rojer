@@ -1,37 +1,38 @@
 // Table de correspondance de l'isolation des comptes (ADR-051 § 1).
 //
 // Pour chaque modèle Prisma : la relation qui mène à son parent, jusqu'à
-// `Entreprise.userId` — ou le motif qui le met hors compte. Écrite une fois,
+// `Entreprise.compteId` — ou le motif qui le met hors compte. Écrite une fois,
 // ici ; `correspondance.test.ts` lit la liste des modèles dans le schéma
 // (pas une liste recopiée) et échoue si un modèle n'y est pas classé, ou si un
 // chemin ne suit pas une relation obligatoire du schéma.
 
-/** Racine d'un compte : la colonne qui porte l'identifiant de l'utilisateur. */
-export type Racine = { racine: "userId" };
+/** Racine d'un compte : la colonne qui porte l'identifiant du compte (ADR-054). */
+export type Racine = { racine: "compteId" };
 /** Rattachement : la relation (obligatoire) vers le modèle parent. */
 export type Rattachement = { parent: string };
 /** Hors compte : jamais servi par le client borné. */
 export type HorsCompte = { horsCompte: string };
 /**
- * Identité (le `User` de Better Auth, sur cc) : hors compte comme les autres
- * tables d'authentification, mais des lignes du compte y pointent ; une
- * relation vers elle ne désigne que le compte de la portée (borne.ts).
+ * Identité : hors compte comme les autres tables d'authentification, mais des
+ * lignes du compte y pointent. Une relation vers elle ne désigne que la valeur
+ * de la portée nommée par `porteePar` (borne.ts) : `Compte` le compte,
+ * `User` la personne qui agit (ADR-054 § 3).
  */
-export type Identite = { identite: string };
+export type Identite = { identite: string; porteePar: "userId" | "compteId" };
 
 export type Classement = Racine | Rattachement | HorsCompte | Identite;
 
 import type { Prisma } from "@prisma/client";
 
 export const CORRESPONDANCE = {
-  // Racines
-  Entreprise: { racine: "userId" },
-  // `DemandeAssistance.userId` est posé par l'action d'un compte connecté ;
+  // Racines (ADR-054 : le compte, plus l'utilisateur)
+  Entreprise: { racine: "compteId" },
+  // Posée par l'action d'un membre connecté, qui en est l'auteur (`userId`) ;
   // son `etablissementId` est facultatif (ADR-050).
-  DemandeAssistance: { racine: "userId" },
+  DemandeAssistance: { racine: "compteId" },
   // L'abonnement du compte (ADR-053) : écrit depuis un webhook signé, par le
   // client borné au compte que désigne l'objet Stripe relu.
-  Abonnement: { racine: "userId" },
+  Abonnement: { racine: "compteId" },
 
   Etablissement: { parent: "entreprise" },
 
@@ -81,7 +82,16 @@ export const CORRESPONDANCE = {
 
   // Better Auth (ADR-052) : lues et écrites par son adaptateur, avec le client
   // hors compte (`auth/better-auth.ts`), avant toute identité.
-  User: { identite: "l'utilisateur de Better Auth : la racine des comptes y pointe" },
+  User: { identite: "l'utilisateur de Better Auth : les auteurs (signature, lien, demande) y pointent", porteePar: "userId" },
+
+  // Comptes et membres (ADR-054) : le plugin `organization` de Better Auth.
+  Compte: { identite: "le compte : les racines y pointent", porteePar: "compteId" },
+  Membre: {
+    horsCompte: "appartenance d'une personne à un compte : relue par `auth/membres.ts` avant de construire la portée",
+  },
+  InvitationCompte: {
+    horsCompte: "invitation à rejoindre un compte : lue et écrite par le plugin `organization`, avant l'appartenance",
+  },
   Session: { horsCompte: "session Better Auth : lue pour établir l'identité" },
   Account: { horsCompte: "moyen d'authentification Better Auth (mot de passe haché)" },
   AuthVerification: {

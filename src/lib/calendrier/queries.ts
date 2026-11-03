@@ -74,7 +74,7 @@ export async function listerVerifications(
   etablissementId: string,
   filtres: FiltresCalendrier = {},
 ) {
-  const { user, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   // L'horloge est capturée **au bord**, une seule fois, et n'est plus
   // relue au fil des comparaisons (ADR-011).
   const now = new Date();
@@ -87,7 +87,7 @@ export async function listerVerifications(
     where: toutesLesConditions(
       {
         etablissementId,
-        etablissement: { entreprise: { userId: user.id } },
+        etablissement: { entreprise: { compteId: compte.compteId } },
       },
       porteeBatiment(filtres.batimentId),
       filtres.urgentsSeulement ? urgenceSeule(debut) : {},
@@ -131,7 +131,7 @@ export type VerificationListee = Awaited<
 >[number];
 
 export async function getVerification(id: string) {
-  const { db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   const v = await db.verification.findFirst({
     where: { id },
     include: {
@@ -241,13 +241,13 @@ async function lireLignesComptees(
   etablissementId: string,
   batimentId: string | undefined,
 ): Promise<LigneComptee[]> {
-  const { user, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   const [lignes, dernieres] = await Promise.all([
     db.verification.findMany({
       where: toutesLesConditions(
         {
           etablissementId,
-          etablissement: { entreprise: { userId: user.id } },
+          etablissement: { entreprise: { compteId: compte.compteId } },
         },
         porteeBatiment(batimentId),
       ),
@@ -436,7 +436,7 @@ export async function listerEcheancesAnnoncables(
   etablissementId: string,
   batimentId: Parameters<typeof porteeBatiment>[0],
 ) {
-  const { db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   return db.verification.findMany({
     // La clause vit dans `portee.ts`, où un test la tient.
     where: toutesLesConditions(

@@ -18,7 +18,7 @@ import { verifierSaisie } from "@/lib/abonnements/saisie";
  * Cloisonnement : aucune de ces actions ne peut faire confiance à
  * l'identifiant qu'elle reçoit (etablissementId, duerpId, uniteId viennent
  * tous du client). Chacune commence donc par un helper de `lib/auth/scope`
- * qui remonte jusqu'à `Entreprise.userId` et répond 404 si l'objet n'est pas
+ * qui remonte jusqu'à `Entreprise.compteId` et répond 404 si l'objet n'est pas
  * au user — la RLS PostgreSQL n'étant pas effective, c'est le seul rempart.
  */
 

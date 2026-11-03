@@ -1,6 +1,7 @@
 "use server";
 
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
+import { verifierRole } from "@/lib/abonnements/saisie";
 
 /**
  * Server actions de l'accès externe (ADR-007).
@@ -30,6 +31,8 @@ export async function revoquerAccessToken(
   accessTokenId: string,
   motif: string,
 ): Promise<void> {
+  // Ouverte à un compte impayé, pas à la lecture seule (ADR-054 § 4).
+  await verifierRole();
   const { db } = await assertEtablissementDuCompte(etablissementId);
   await db.accessToken.updateMany({
     where: { id: accessTokenId, etablissementId },

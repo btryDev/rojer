@@ -570,7 +570,7 @@ const RELEVE = {
   // (`clesDuPlanDansLaLecture`). NON : la porte ne fait que refuser une clé
   // qu'aucun plan légitime ne produit, ce que la régénération écrit ne change
   // pas — empreinte recopiée, version inchangée.
-  empreinte: "befd7d3f01d4b946",
+  empreinte: "7eeab099dca9f51c",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");
