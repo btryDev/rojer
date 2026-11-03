@@ -14,7 +14,7 @@ document mis en page est `rojer-offres-abonnement-2026-11.pdf`, généré depuis
 | Annuel (2 mois offerts) | 290 € | 690 € | Au contrat |
 | Essai gratuit | **1 mois**, sans carte bancaire | — | — |
 | Établissements | 1 | jusqu'à 5 | au-delà de 5 |
-| Utilisateurs (†) | 1 | jusqu'à 5 | illimités, droits sur mesure |
+| Utilisateurs (bientôt) | 1 | jusqu'à 5 | illimités, droits sur mesure |
 
 Tous les modules sont dans toutes les offres ; Essentiel a des volumes limités sur l'usage à volonté (détail ci-dessous). Les prestataires invités par lien ne comptent pas comme utilisateurs.
 
@@ -36,7 +36,7 @@ Tous les modules sont dans toutes les offres ; Essentiel a des volumes limités 
 | Module | Essentiel | Pro | Sur mesure |
 |---|---|---|---|
 | Établissements | 1 | jusqu'à 5 | au-delà de 5 |
-| Utilisateurs (†) | 1 | jusqu'à 5 | illimités, droits sur mesure |
+| Utilisateurs (bientôt) | 1 | jusqu'à 5 | illimités, droits sur mesure |
 | **Illimité partout : les obligations** | | | |
 | DUERP (unités, cotation, versions conservées 40 ans) | ✓ | ✓ | ✓ |
 | Vérifications périodiques et calendrier | ✓ | ✓ | ✓ |
@@ -49,11 +49,11 @@ Tous les modules sont dans toutes les offres ; Essentiel a des volumes limités 
 | Carnet sanitaire : relevés et analyses | ✓ | ✓ | ✓ |
 | Registre d'accessibilité et affiche QR | ✓ | ✓ | ✓ |
 | Documents obligatoires, Préparer un contrôle, Comprendre | ✓ | ✓ | ✓ |
-| Relances email des échéances (†) | ✓ | ✓ | ✓ |
-| Téléchargement de ses données, y compris après résiliation (†) | ✓ | ✓ | ✓ |
+| Relances email des échéances (bientôt) | ✓ | ✓ | ✓ |
+| Téléchargement de ses données, y compris après résiliation (bientôt) | ✓ | ✓ | ✓ |
 | **Limité selon l'offre : l'usage à volonté** | | | |
 | Permis de feu | 10 par an | illimité | illimité |
-| Plans de prévention (‡) | 5 par an | illimité | illimité |
+| Plans de prévention (*) | 5 par an | illimité | illimité |
 | Prestataires suivis | 10 | 50 | illimité |
 | Liens d'accès prestataires actifs | 5 | 50 | illimité |
 | Signatures électroniques | 20 par an | 200 par an | sur mesure |
@@ -62,17 +62,17 @@ Tous les modules sont dans toutes les offres ; Essentiel a des volumes limités 
 | Connecter un assistant | — | ✓ | ✓ |
 | **Humain : l'expert BTRY Solution** | | | |
 | Aide en ligne et contact pour un problème technique | ✓ | ✓ | ✓ |
-| Rendez-vous avec l'expert (†) | — | 1 h par an | à la demande |
+| Rendez-vous avec l'expert (bientôt) | — | 1 h par an | à la demande |
 | Formation, reprise de l'historique, déploiement accompagné | — | — | ✓ |
 
-(†) **Pas encore livré.** Relances et téléchargement des données : avec le
+(bientôt) **Pas encore livré.** Relances et téléchargement des données : avec le
 passage sur Clever Cloud (aujourd'hui seuls les emails de connexion et
 d'accès partent ; l'export du titulaire est la dette
 `docs/dette-chantier-porteur-echeance.md` § 1.1). Demande d'assistance :
 enregistrée dans l'app, ne part encore vers personne (ADR-050). Multi-utilisateur : en conception (ADR en préparation), membres invités par email, rôles propriétaire, membre et lecture seule. À mettre en
 service avant de publier les offres.
 
-(‡) Le plan de prévention est une obligation légale dès que le chantier
+(*) Le plan de prévention est une obligation légale dès que le chantier
 remplit les conditions (art. R. 4512-6 et R. 4512-7 CT) : voir § 3.
 
 ### Pourquoi ces prix
