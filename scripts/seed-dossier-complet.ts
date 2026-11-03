@@ -795,7 +795,7 @@ function lireEntrepriseHote(argv: string[]): string | null {
     throw new Error(
       "--second-etablissement <id> attend l'identifiant de l'entreprise\n" +
         "d'accueil. Pour le trouver :\n" +
-        '  select id, "raisonSociale", "userId" from "Entreprise";',
+        '  select id, "raisonSociale", "compteId" from "Entreprise";',
     );
   }
   return valeur;

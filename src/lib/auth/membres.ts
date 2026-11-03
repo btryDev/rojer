@@ -31,7 +31,9 @@ export async function appartenanceCourante(
   const lignes = await prisma.membre.findMany({
     where: { userId },
     select: { compteId: true, role: true },
-    orderBy: { createdAt: "asc" },
+    // Le plus ancien d'abord, à égalité départagé par l'identifiant : deux
+    // lectures concurrentes désignent le même (`compteDOnboarding`).
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
   });
   const valides = lignes.filter((l): l is Appartenance => estRole(l.role));
   const active = compteActifId ? valides.find((l) => l.compteId === compteActifId) : undefined;
@@ -51,12 +53,28 @@ export async function appartenanceDeLaSession(userId: string): Promise<Appartena
  * une session est fermée (`allowUserToCreateOrganization: false`). Le `slug`,
  * que le plugin exige unique, est tiré au hasard et jamais affiché.
  */
-export async function creerCompte(userId: string, nom: string): Promise<Appartenance> {
+async function creerCompte(userId: string, nom: string): Promise<Appartenance> {
   const compte = await auth.api.createOrganization({
     body: { userId, name: nom, slug: randomUUID(), keepCurrentActiveOrganization: true },
   });
   if (!compte) throw new Error("création du compte refusée par le plugin organization");
   return { compteId: compte.id, role: "owner" };
+}
+
+/**
+ * Le compte d'une personne qui n'en a aucun : créé par le plugin, puis relu.
+ * Deux premiers onboardings simultanés (deux onglets) en créent chacun un ;
+ * à la relecture, tous deux désignent le plus ancien, et celui qui ne l'est
+ * pas supprime le sien — il est vide, l'établissement s'écrit après.
+ */
+export async function compteDOnboarding(userId: string, nom: string): Promise<Appartenance> {
+  const cree = await creerCompte(userId, nom);
+  const retenu = await appartenanceCourante(userId, null);
+  if (retenu && retenu.compteId !== cree.compteId) {
+    await prisma.compte.delete({ where: { id: cree.compteId } });
+    return retenu;
+  }
+  return cree;
 }
 
 /**

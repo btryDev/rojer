@@ -13,7 +13,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { getOptionalUser, requireUser } from "./require-user";
 import { clientBorne } from "./portee/client";
-import { appartenanceDeLaSession, creerCompte, type Appartenance } from "./membres";
+import { appartenanceDeLaSession, compteDOnboarding, type Appartenance } from "./membres";
 
 /**
  * L'appartenance de la personne connectée. Mémoïsée pour un rendu (`cache()`
@@ -52,7 +52,7 @@ export async function getOptionalCompte() {
  */
 export async function requireCompteDOnboarding(nomSiNouveau: string) {
   const user = await requireUser();
-  const compte = (await lireAppartenance(user.id)) ?? (await creerCompte(user.id, nomSiNouveau));
+  const compte = (await lireAppartenance(user.id)) ?? (await compteDOnboarding(user.id, nomSiNouveau));
   return { user, compte, db: portee(user.id, compte) };
 }
 

@@ -1,5 +1,26 @@
 -- ADR-054 : validation des clés posées NOT VALID par
 -- `20261103120000_comptes_et_membres`, puis retrait de l'ancienne racine.
+
+-- Rien ne se retire si une ligne a échappé à la reprise : une entreprise ou un
+-- abonnement écrit par l'ancien code entre deux migrations porterait un
+-- `userId` sans `compteId`, et deviendrait orphelin sans bruit au retrait de
+-- la colonne. On s'arrête AVANT toute modification, avec un message qui le dit
+-- (même règle que `20261030130000_comptes_cles_etrangeres`).
+DO $$
+DECLARE
+  sans_compte bigint;
+BEGIN
+  SELECT
+      (SELECT count(*) FROM "Entreprise" WHERE "userId" IS NOT NULL AND "compteId" IS NULL)
+    + (SELECT count(*) FROM "Abonnement" WHERE "compteId" IS NULL)
+    + (SELECT count(*) FROM "DemandeAssistance" WHERE "compteId" IS NULL)
+  INTO sans_compte;
+  IF sans_compte > 0 THEN
+    RAISE EXCEPTION
+      'Lignes sans compte après la reprise : %. Rejouer la reprise de `20261103120000_comptes_et_membres` sur ces lignes avant de retirer userId (ADR-054 § 10).',
+      sans_compte;
+  END IF;
+END $$;
 ALTER TABLE "Entreprise" VALIDATE CONSTRAINT "Entreprise_compteId_fkey";
 ALTER TABLE "Abonnement" VALIDATE CONSTRAINT "Abonnement_compteId_fkey";
 ALTER TABLE "DemandeAssistance" VALIDATE CONSTRAINT "DemandeAssistance_compteId_fkey";

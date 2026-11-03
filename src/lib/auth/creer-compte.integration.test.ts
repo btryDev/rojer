@@ -20,7 +20,7 @@ describe.skipIf(!URL_BASE || !local)("création d'un compte par le plugin — Po
   if (URL_BASE) process.env.DATABASE_URL = URL_BASE;
   process.env.BETTER_AUTH_SECRET ??= "secret-de-test-integration-0123456789abcdef";
   const { prisma } = await import("@/lib/prisma");
-  const { creerCompte, appartenanceCourante } = await import("./membres");
+  const { compteDOnboarding, appartenanceCourante } = await import("./membres");
   const { auth } = await import("./better-auth");
 
   const U = randomUUID();
@@ -34,7 +34,7 @@ describe.skipIf(!URL_BASE || !local)("création d'un compte par le plugin — Po
 
   it("crée le compte et son propriétaire, que l'appartenance relit", async () => {
     await prisma.user.create({ data: { id: U, name: "Dirigeante", email: `${U}@exemple.test`, emailVerified: true } });
-    const a = await creerCompte(U, "Café du Port");
+    const a = await compteDOnboarding(U, "Café du Port");
     comptes.push(a.compteId);
     expect(a.role).toBe("owner");
     const compte = await prisma.compte.findUniqueOrThrow({ where: { id: a.compteId }, include: { membres: true } });
@@ -47,6 +47,20 @@ describe.skipIf(!URL_BASE || !local)("création d'un compte par le plugin — Po
   // d'une session réelle (`allowUserToCreateOrganization: false`) est lu dans
   // le code du plugin (`crud-org.mjs`), pas éprouvé ici : il faudrait un
   // cookie de session signé.
+  it("deux premiers onboardings simultanés ne laissent qu'un compte, le même pour les deux", async () => {
+    const V = randomUUID();
+    await prisma.user.create({ data: { id: V, name: "Deux onglets", email: `${V}@exemple.test`, emailVerified: true } });
+    try {
+      const [x, y] = await Promise.all([compteDOnboarding(V, "Onglet 1"), compteDOnboarding(V, "Onglet 2")]);
+      expect(x.compteId).toBe(y.compteId);
+      expect(await prisma.membre.count({ where: { userId: V } })).toBe(1);
+      comptes.push(x.compteId);
+    } finally {
+      await prisma.compte.deleteMany({ where: { membres: { some: { userId: V } } } });
+      await prisma.user.deleteMany({ where: { id: V } });
+    }
+  });
+
   it("un appel porteur d'en-têtes, sans session, est refusé", async () => {
     await expect(
       auth.api.createOrganization({ body: { name: "x", slug: randomUUID() }, headers: new Headers() }),

@@ -12,7 +12,8 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 vi.unmock("@/lib/auth/portee/client");
 vi.unmock("@/lib/auth/membres");
-// `better-auth.ts` n'est lu que pour `creerCompte`, qui n'est pas éprouvé ici.
+// `better-auth.ts` n'est lu que pour créer un compte, éprouvé à part
+// (`creer-compte.integration`).
 vi.mock("@/lib/auth/better-auth", () => ({ auth: {} }));
 
 const session = vi.hoisted(() => ({ userId: "", compteActifId: null as string | null }));

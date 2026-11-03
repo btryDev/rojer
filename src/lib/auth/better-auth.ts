@@ -163,7 +163,7 @@ export const auth = betterAuth({
     // l'accès aux données, lui, ne croit jamais `compteActifId` : il relit
     // `Membre` à chaque appel (`auth/membres.ts`). Aucune création de compte
     // depuis une session : l'onboarding le crée par un appel serveur
-    // (`creerCompte`), que le plugin appelle « action système ».
+    // (`compteDOnboarding`), que le plugin appelle « action système ».
     organization({
       allowUserToCreateOrganization: false,
       creatorRole: "owner",

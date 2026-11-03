@@ -131,9 +131,10 @@ function controle(m: Methode): string | null {
   for (const h of helpersDAppartenance()) if (appelle(h, m.corps)) return h;
   if (appelle("verifierAccessToken", m.corps)) return "verifierAccessToken";
   if (appelle("verifierNotificationStripe", m.corps)) return "signature Stripe";
-  if (appelle("requireUser", m.corps) && /\buserId\b/.test(m.corps)) {
-    return "requireUser + userId";
-  }
+  // ~~« requireUser + userId »~~ [2026-11-03, ADR-054 : `userId` ne désigne
+  // plus un compte, et `requireUser` ne prouve pas l'appartenance (`Membre`).
+  // Une route du compte passe par un helper de `scope.ts` ou `requireCompte`.]
+  if (appelle("requireCompte", m.corps)) return "requireCompte";
   const delegation = DELEGATIONS.get(m.cle);
   if (delegation && appelle(delegation.fonction, m.corps)) {
     const chemin = join(process.cwd(), delegation.module);

@@ -329,6 +329,44 @@ requêtes qui la lisent, ils ne se fusionnent pas l'un sans l'autre.
   (`allowUserToCreateOrganization: false`) est lu dans le code du plugin, pas
   éprouvé : il faudrait un cookie de session signé.
 
+### Revue de sécurité du lot 1 (2026-11-03)
+
+Corrigé :
+- **Boucle de redirection à l'onboarding** pour toute personne sans compte :
+  la page lisait les entreprises connues par `requireCompte`, qui renvoie à
+  l'onboarding. Elle lit désormais `getOptionalCompte` (rien sans compte).
+  Invisible aux tests de module, qui simulent toujours un compte.
+- **Garde affaiblie** : « aucune action serveur ne reçoit le `userId` de son
+  appelant » ne visait pas `compteId`, la nouvelle racine ; elle le vise
+  (éprouvée par une action ajoutée qui reçoit `compteId` : elle tombe). Le
+  contrôle « `requireUser` + `userId` » de `tenancy-routes` est remplacé par
+  `requireCompte` : `userId` ne prouve plus une appartenance.
+- **Migration** : `20261103120400` s'arrête avant de retirer `userId` si une
+  ligne a échappé à la reprise (éprouvé : une entreprise orpheline arrête la
+  migration, la colonne reste). Reprise rejouée sur une base peuplée : deux
+  entreprises d'une même personne dans un seul compte, l'abonnement suit,
+  la session reçoit son compte actif, une personne sans données n'a pas de
+  compte.
+- **Deux premiers onboardings simultanés** créaient deux comptes : à la
+  relecture, tous deux retiennent le plus ancien, l'autre est supprimé
+  (`compteDOnboarding`, éprouvé en parallèle ; sans la correction, le test
+  tombe).
+
+Écrit, non corrigé :
+- **Les tests de module ne voient pas une confusion `userId`/`compteId`** :
+  l'appartenance simulée pose `compteId === userId`. Seuls les tests sur base
+  réelle les distinguent. La revue a relu un à un les appels qui passent
+  encore `user.id` : ce sont des auteurs ou des limites de débit.
+- **Un membre retiré de son seul compte** est renvoyé à l'onboarding, où il
+  peut créer un compte neuf ; l'écran « Vous n'avez accès à aucun compte »
+  vient au lot 4 (§ 3, § 6). Sans effet tant que le retrait n'existe pas.
+- **Limites par personne ou par compte** : le plafond de liens prestataires
+  se compte par auteur (`createdByUserId`), donc par membre ; celui des
+  demandes d'assistance se compte désormais par compte.
+- **Un rôle multiple** écrit par le plugin (`member,lecture`) est écarté par
+  `estRole` : le refus est sûr, l'accès se perd sans message. Nos écrans
+  n'en écriront pas (lot 4).
+
 ## Ce que cette décision ne règle pas
 
 - Les droits par établissement et les droits fins (Q2 ; formule « Sur
