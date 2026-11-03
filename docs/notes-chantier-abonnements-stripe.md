@@ -384,6 +384,17 @@ la page. Limite acceptée : une fois l'offre lancée, une écriture lit la
 session deux fois (`verifierSaisie`, puis la garde de portée de l'action).
 Liens déjà émis : un tiers peut encore signer pour un compte fermé (voulu).
 
+**Contrôle visuel du lot 3 (2026-11-03, `pnpm dev` sur une base locale
+dédiée, `ABONNEMENT_EXIGE=oui`)** : onboarding refusé sans abonnement →
+page Abonnement ; abonnement actif → création, pas de bandeau ;
+`past_due`, `unpaid`, essai finissant → bandeaux justes ; écriture refusée
+depuis un formulaire et depuis un écran à `try/catch` → redirection ; lecture
+du calendrier ouverte. Trouvé et corrigé : le bandeau, placé dans le flux,
+était recouvert par l'en-tête de page (qui remonte sous la bande) — il est
+désormais en gélule dans la bande du haut. **Responsive reporté (décision de
+la propriétaire)** : sur téléphone, le bandeau est en bas et la carte de
+visite guidée peut le recouvrir.
+
 **Lot 3 fait (2026-11-03)** : `droitsDe`, `verifierSaisie` dans 88 actions,
 16 écritures ouvertes nommées, page `/compte/abonnement`, bandeau dans le
 dossier. Reste pour les lots suivants :

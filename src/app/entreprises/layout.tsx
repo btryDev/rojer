@@ -11,7 +11,7 @@ export default function EntreprisesLayout({ children }: Readonly<{ children: Rea
     <>
       <AppHeader />
       <Suspense fallback={null}>
-        <BandeauAbonnementDuCompte className="mx-6 mt-4 sm:mx-10" />
+        <BandeauAbonnementDuCompte dansLeContenu="mx-6 mt-4 sm:mx-10" />
       </Suspense>
       {children}
     </>
