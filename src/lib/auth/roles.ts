@@ -2,8 +2,8 @@
 // de `Membre.role` est l'une de ces chaînes.
 //
 // Le plugin `organization` ne contrôle que ce qui le concerne — inviter,
-// retirer, changer un rôle —, réservé au propriétaire. Le reste du produit
-// lit `peutEcrire` ; la lecture seule se ferme dans le client borné (lot 3).
+// retirer, changer un rôle —, réservé au propriétaire. La lecture seule se
+// fermera dans le client borné (ADR-054 § 4, lot 3).
 
 import { createAccessControl } from "better-auth/plugins/access";
 import { defaultStatements, memberAc, ownerAc } from "better-auth/plugins/organization/access";
@@ -13,16 +13,6 @@ export type Role = (typeof ROLES)[number];
 
 export function estRole(v: unknown): v is Role {
   return typeof v === "string" && (ROLES as readonly string[]).includes(v);
-}
-
-/** Ajouter un établissement, saisir, signer : tout sauf la lecture seule. */
-export function peutEcrire(role: Role): boolean {
-  return role !== "lecture";
-}
-
-/** Inviter, retirer, changer un rôle, l'abonnement. */
-export function estProprietaire(role: Role): boolean {
-  return role === "owner";
 }
 
 const ac = createAccessControl(defaultStatements);
