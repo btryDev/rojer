@@ -289,11 +289,8 @@ export const etablissementSchema = z
       .toUpperCase()
       .min(1, "Indiquez le code NAF de l'établissement.")
       .regex(nafRegex, "Code NAF invalide (ex. 56.10A)"),
-    effectifSurSite: z.coerce
-      .number()
-      .int("Effectif entier")
-      .min(0, "Effectif positif")
-      .max(9999),
+    // ~~effectifSurSite~~ [2026-11-03 : saisi dans Équipe, avec la borne de
+    // Rojer (`entreprises/effectif-calcul.ts`, `effectifsSchema`).]
     // Champ de R. 4227-34 CT (cf. schema.prisma) : personnes habituellement
     // présentes, salariés + public, et manipulation de matières R. 4227-22.
     // Optionnels : vide = « non renseigné », jamais 0 ni « non » par défaut.

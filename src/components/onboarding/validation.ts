@@ -26,6 +26,7 @@ import {
 } from "@/lib/onboarding/schema";
 import type { CategorieErp, TypeErp } from "@/lib/referentiels/types-communs";
 import type { OnboardingState } from "./types";
+import { effectifApresRattachement } from "@/lib/entreprises/effectif-calcul";
 import { refusDuFiltre } from "@/lib/etablissements/types-refuses";
 
 /**
@@ -103,6 +104,25 @@ export function refusEffectifEntreprise(
 }
 
 /**
+ * La borne sur la SOMME (2026-11-03, décision de la propriétaire) : quand le
+ * SIRET rattache l'établissement à une société déjà suivie, son effectif
+ * s'ajoute à celui de la société. Même lecture que le serveur
+ * (`effectifApresRattachement`, `entreprises/effectif-calcul.ts`) : il compte
+ * entier — ses apprentis se déclarent ensuite dans Équipe — et sort des
+ * salariés « hors Rojer » de la société, où il était compté.
+ */
+export function refusSommeDesSites(s: OnboardingState): Blocage | null {
+  const site = Number(s.effectifSurSite);
+  if (!s.societeSuivie || !Number.isInteger(site) || site < 1) return null;
+  const { effectif, effectifHorsRojer } = s.societeSuivie;
+  const { total } = effectifApresRattachement(effectif, effectifHorsRojer, site);
+  // Même calcul et même borne que le serveur ; la phrase est celle du refus de
+  // l'effectif de l'entreprise, rendue sous le site, qu'on peut baisser ici.
+  const refus = total > effectif ? refusEffectifEntreprise(String(total)) : null;
+  return refus && { ...refus, champ: "effectifSurSite" };
+}
+
+/**
  * Étape 1 — identité et lieu. Rend le message à afficher, ou `null`.
  *
  * Le contrôle de format du code NAF passe par `evaluerScopeSecteur` et par
@@ -156,7 +176,7 @@ export function validerIdentite(s: OnboardingState): Blocage | null {
   const e = s.effectifEntreprise.trim();
   if (e === "" || !Number.isInteger(Number(e)) || Number(e) < 0)
     return { champ: "effectifEntreprise", message: MESSAGE_EFFECTIF_ENTREPRISE };
-  return refusEffectifEntreprise(s.effectifEntreprise);
+  return refusEffectifEntreprise(s.effectifEntreprise) ?? refusSommeDesSites(s);
 }
 
 /**
