@@ -21,7 +21,7 @@ export const CONDITIONS: Section[] = [
   {
     titre: "Objet",
     paragraphes: [
-      "Rojer est un outil d'aide à l'organisation de la prévention des risques professionnels et de la sécurité des bâtiments. Il rappelle des obligations et aide à les tenir ; il ne délivre aucun avis juridique et n'atteste jamais la conformité d'un établissement.",
+      "Rojer est un outil d'aide à l'organisation de la prévention des risques professionnels et de la sécurité des bâtiments. Il présente les obligations qui s'appliquent et aide à les tenir ; il ne délivre aucun avis juridique et n'atteste jamais la conformité d'un établissement.",
     ],
   },
   {
