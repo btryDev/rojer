@@ -8,6 +8,7 @@ vi.mock("@/lib/calendrier/regeneration-sure", () => ({
 
 const { EFFECTIF_MAX } = await import("@/lib/etablissements/schema");
 const {
+  RefusSousLesFiches,
   changerDeSociete,
   accueillirSite,
   ecrireEffectifs,
@@ -33,10 +34,10 @@ function base(entreprise: Partial<Ent>, sites: Omit<Site, "entrepriseId">[], act
       }),
       findUnique: async () => ({ id: ent.id }),
       update: async ({ data }: { data: Record<string, unknown> }) => {
-        // L'écriture sans effet du verrou (`increment: 0`).
+        // L'écriture sans effet du verrou (`increment: 0`), qui rend l'état lu.
         if (typeof data.effectif === "object") {
           verrous.push(ent.id);
-          return { id: ent.id };
+          return { ...ent, etablissements: etabs.map((e) => ({ ...e })) };
         }
         return Object.assign(ent, data);
       },
@@ -55,7 +56,8 @@ function base(entreprise: Partial<Ent>, sites: Omit<Site, "entrepriseId">[], act
     },
     salarie: { count: async () => actifs },
   };
-  return { tx: tx as never, ent, etabs, verrous };
+  const cree = (id: string) => etabs.find((e) => e.id === id)!;
+  return { tx: tx as never, ent, etabs, verrous, cree };
 }
 
 describe("effectifEntrepriseDesSites — la somme, apprentis non compris (L. 1111-3)", () => {
@@ -79,7 +81,7 @@ describe("ecrireEffectifs — la borne de Rojer, dans Équipe", () => {
       { id: "b", effectifSurSite: 0, apprentisSurSite: 0 },
     ]);
     const r = await ecrireEffectifs(b.tx, "b", { effectifSurSite: 10, apprentisSurSite: 2 });
-    expect(r.entreprise).toBe(38);
+    expect(r).toEqual({ societe: true, site: true });
     expect(b.ent.effectif).toBe(38);
     expect(b.verrous).toEqual(["ent"]);
   });
@@ -97,10 +99,8 @@ describe("ecrireEffectifs — la borne de Rojer, dans Équipe", () => {
 
   it("à la borne pile, passe ; une personne de plus, refuse", async () => {
     const b = base({}, [{ id: "a", effectifSurSite: 0, apprentisSurSite: 0 }]);
-    await expect(ecrireEffectifs(b.tx, "a", { effectifSurSite: EFFECTIF_MAX })).resolves.toEqual({
-      entreprise: EFFECTIF_MAX,
-      site: EFFECTIF_MAX,
-    });
+    await ecrireEffectifs(b.tx, "a", { effectifSurSite: EFFECTIF_MAX });
+    expect(b.ent.effectif).toBe(EFFECTIF_MAX);
     await expect(ecrireEffectifs(b.tx, "a", { effectifHorsRojer: 1 })).rejects.toMatchObject({
       champ: "effectifHorsRojer",
     });
@@ -115,17 +115,16 @@ describe("ecrireEffectifs — la borne de Rojer, dans Équipe", () => {
     ).rejects.toMatchObject({ champ: "effectifSurSite" });
     await expect(
       ecrireEffectifs(b.tx, "a", { effectifSurSite: 49, apprentisSurSite: 4 }),
-    ).resolves.toEqual({ entreprise: 45, site: 49 });
+    ).resolves.toBeDefined();
+    expect(b.ent.effectif).toBe(45);
   });
 
   it("baisser n'est jamais refusé, même au-delà de la borne (dossier ancien)", async () => {
     const b = base({ effectif: 70, effectifHorsRojer: 40 }, [
       { id: "a", effectifSurSite: 30, apprentisSurSite: 0 },
     ]);
-    await expect(ecrireEffectifs(b.tx, "a", { effectifSurSite: 28 })).resolves.toEqual({
-      entreprise: 68,
-      site: 28,
-    });
+    await ecrireEffectifs(b.tx, "a", { effectifSurSite: 28 });
+    expect(b.ent.effectif).toBe(68);
   });
 });
 
@@ -144,16 +143,15 @@ describe("ecrireEffectifs — un dossier ancien que le seul recalcul fait passer
     // stockée : 55 → 55 n'est pas une croissance.
     await expect(
       ecrireEffectifs(b.tx, "a", { effectifSurSite: 30, apprentisSurSite: 0, effectifHorsRojer: 0 }),
-    ).resolves.toEqual({ entreprise: 55, site: 30 });
+    ).resolves.toEqual({ societe: false, site: false });
+    // La colonne périmée (45) prend la somme, sans refus.
     expect(b.ent.effectif).toBe(55);
   });
 
   it("baisser passe ; croître d'une personne est refusé", async () => {
     const b = ancien();
-    await expect(ecrireEffectifs(b.tx, "b", { apprentisSurSite: 3 })).resolves.toEqual({
-      entreprise: 52,
-      site: 25,
-    });
+    await ecrireEffectifs(b.tx, "b", { apprentisSurSite: 3 });
+    expect(b.ent.effectif).toBe(52);
     // Le refus se rend sous le nombre qui a fait croître : ici, les apprentis.
     await expect(ecrireEffectifs(b.tx, "b", { apprentisSurSite: 2 })).rejects.toMatchObject({
       champ: "apprentisSurSite",
@@ -162,14 +160,15 @@ describe("ecrireEffectifs — un dossier ancien que le seul recalcul fait passer
 
   it("le recalcul d'une suppression ou d'un changement de société ne refuse jamais", async () => {
     const b = ancien();
-    await expect(recalculerEffectifEntreprise(b.tx, "ent")).resolves.toBe(55);
+    await recalculerEffectifEntreprise(b.tx, "ent");
+    expect(b.ent.effectif).toBe(55);
   });
 });
 
 describe("accueillirSite — l'onboarding", () => {
   it("seul site : l'écart sous le site est fait d'apprentis, et la somme retombe sur le déclaré", async () => {
     const b = base({ effectif: 8 }, [{ id: "a", effectifSurSite: 10, apprentisSurSite: 0 }]);
-    await accueillirSite(b.tx, "a", 8);
+    await accueillirSite(b.tx, b.cree("a"), 8);
     expect(b.etabs[0].apprentisSurSite).toBe(2);
     expect(b.ent.effectifHorsRojer).toBe(0);
     expect(effectifEntrepriseDesSites(b.etabs, b.ent.effectifHorsRojer)).toBe(8);
@@ -177,7 +176,7 @@ describe("accueillirSite — l'onboarding", () => {
 
   it("seul site : l'écart au-dessus travaille hors de Rojer", async () => {
     const b = base({ effectif: 40 }, [{ id: "a", effectifSurSite: 10, apprentisSurSite: 0 }]);
-    await accueillirSite(b.tx, "a", 40);
+    await accueillirSite(b.tx, b.cree("a"), 40);
     expect(b.etabs[0].apprentisSurSite).toBe(0);
     expect(b.ent.effectifHorsRojer).toBe(30);
     expect(b.ent.effectif).toBe(40);
@@ -188,7 +187,7 @@ describe("accueillirSite — l'onboarding", () => {
       { id: "a", effectifSurSite: 30, apprentisSurSite: 0 },
       { id: "b", effectifSurSite: 12, apprentisSurSite: 0 },
     ]);
-    await accueillirSite(b.tx, "b", 1);
+    await accueillirSite(b.tx, b.cree("b"), 1);
     expect(b.ent.effectif).toBe(42);
   });
 
@@ -199,7 +198,7 @@ describe("accueillirSite — l'onboarding", () => {
       { id: "a", effectifSurSite: 20, apprentisSurSite: 0 },
       { id: "b", effectifSurSite: 20, apprentisSurSite: 0 },
     ]);
-    await accueillirSite(b.tx, "b", 0);
+    await accueillirSite(b.tx, b.cree("b"), 0);
     expect(b.ent).toMatchObject({ effectif: 40, effectifHorsRojer: 0 });
   });
 
@@ -208,7 +207,7 @@ describe("accueillirSite — l'onboarding", () => {
       { id: "a", effectifSurSite: 30, apprentisSurSite: 0 },
       { id: "b", effectifSurSite: 25, apprentisSurSite: 0 },
     ]);
-    await expect(accueillirSite(b.tx, "b", 0)).rejects.toThrow(RefusBorneEffectif);
+    await expect(accueillirSite(b.tx, b.cree("b"), 0)).rejects.toThrow(RefusBorneEffectif);
   });
 });
 
@@ -219,20 +218,29 @@ describe("changerDeSociete — un SIRET rattache le site à la société de son 
       { id: "b", effectifSurSite: 30, apprentisSurSite: 0 },
     ]);
     await expect(
-      changerDeSociete(b.tx, "b", { id: "ancienne", supprimee: true }),
+      changerDeSociete(b.tx, b.cree("b"), { id: "ancienne", supprimee: true }),
     ).rejects.toThrow(RefusBorneEffectif);
+  });
+});
+
+describe("ecrireEffectifs — l'effectif ne descend pas sous les fiches actives", () => {
+  it("refuse, compté sous le verrou de la société", async () => {
+    const b = base({ effectif: 5 }, [{ id: "a", effectifSurSite: 5, apprentisSurSite: 0 }], 5);
+    await expect(ecrireEffectifs(b.tx, "a", { effectifSurSite: 4 })).rejects.toThrow(RefusSousLesFiches);
+    expect(b.verrous).toEqual(["ent"]);
   });
 });
 
 describe("effectifSuitLesFiches — une fiche est une personne", () => {
   it("ne touche à rien tant que les fiches restent sous l'effectif", async () => {
     const b = base({}, [{ id: "a", effectifSurSite: 5, apprentisSurSite: 0 }], 5);
-    expect(await effectifSuitLesFiches(b.tx, "a")).toBeNull();
+    expect(await effectifSuitLesFiches(b.tx, "a")).toBe(false);
   });
 
   it("monte l'effectif du site aux fiches actives", async () => {
     const b = base({ effectif: 5 }, [{ id: "a", effectifSurSite: 5, apprentisSurSite: 0 }], 6);
-    expect(await effectifSuitLesFiches(b.tx, "a")).toBe(6);
+    expect(await effectifSuitLesFiches(b.tx, "a")).toBe(true);
+    expect(b.etabs[0].effectifSurSite).toBe(6);
     expect(b.ent.effectif).toBe(6);
   });
 
@@ -251,7 +259,7 @@ describe("recalculerEffectifEntreprise — sans refus", () => {
     const b = base({ effectif: 99, effectifHorsRojer: 3 }, [
       { id: "a", effectifSurSite: 10, apprentisSurSite: 1 },
     ]);
-    expect(await recalculerEffectifEntreprise(b.tx, "ent")).toBe(12);
+    await recalculerEffectifEntreprise(b.tx, "ent");
     expect(b.ent.effectif).toBe(12);
   });
 });

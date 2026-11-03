@@ -26,7 +26,7 @@ import {
 } from "@/lib/onboarding/schema";
 import type { CategorieErp, TypeErp } from "@/lib/referentiels/types-communs";
 import type { OnboardingState } from "./types";
-import { messageRefusEffectifEntreprise } from "@/lib/entreprises/effectif-calcul";
+import { effectifApresRattachement } from "@/lib/entreprises/effectif-calcul";
 import { refusDuFiltre } from "@/lib/etablissements/types-refuses";
 
 /**
@@ -107,22 +107,19 @@ export function refusEffectifEntreprise(
  * La borne sur la SOMME (2026-11-03, décision de la propriétaire) : quand le
  * SIRET rattache l'établissement à une société déjà suivie, son effectif
  * s'ajoute à celui de la société. Même lecture que le serveur
- * (`entreprises/effectif.ts`, `rejoindreSociete`) : l'établissement compte
+ * (`effectifApresRattachement`, `entreprises/effectif-calcul.ts`) : il compte
  * entier — ses apprentis se déclarent ensuite dans Équipe — et sort des
  * salariés « hors Rojer » de la société, où il était compté.
  */
 export function refusSommeDesSites(s: OnboardingState): Blocage | null {
-  const deja = s.effectifDejaSuivi.trim();
   const site = Number(s.effectifSurSite);
-  if (deja === "" || !Number.isInteger(site) || site < 1) return null;
-  const hors = Number(s.effectifHorsRojerRepris.trim() || "0");
-  const total = Number(deja) - Math.min(Number.isInteger(hors) ? hors : 0, site) + site;
-  if (!Number.isInteger(total) || total <= EFFECTIF_MAX) return null;
-  return {
-    champ: "effectifSurSite",
-    perimetre: true,
-    message: `${messageRefusEffectifEntreprise(total)} ${AU_DELA_DE_LA_BORNE}`,
-  };
+  if (!s.societeSuivie || !Number.isInteger(site) || site < 1) return null;
+  const { effectif, effectifHorsRojer } = s.societeSuivie;
+  const { total } = effectifApresRattachement(effectif, effectifHorsRojer, site);
+  // Même calcul et même borne que le serveur ; la phrase est celle du refus de
+  // l'effectif de l'entreprise, rendue sous le site, qu'on peut baisser ici.
+  const refus = total > effectif ? refusEffectifEntreprise(String(total)) : null;
+  return refus && { ...refus, champ: "effectifSurSite" };
 }
 
 /**

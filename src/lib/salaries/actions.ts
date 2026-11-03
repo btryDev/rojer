@@ -87,7 +87,7 @@ export async function creerSalarie(
         data: { etablissementId, ...parsed.data },
         select: { id: true },
       });
-      effectifMonte = (await effectifSuitLesFiches(tx, etablissementId)) !== null;
+      effectifMonte = await effectifSuitLesFiches(tx, etablissementId);
       return cree;
     });
   } catch (e) {
@@ -179,7 +179,7 @@ export async function basculerActif(
         where: { id: salarieId, etablissementId },
         data: { actif },
       });
-      if (actif) effectifMonte = (await effectifSuitLesFiches(tx, etablissementId)) !== null;
+      if (actif) effectifMonte = await effectifSuitLesFiches(tx, etablissementId);
     });
   } catch (e) {
     if (e instanceof RefusBorneEffectif) return { refus: e.message };

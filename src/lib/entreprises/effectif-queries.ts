@@ -14,29 +14,25 @@ export type EffectifsDuSite = {
   entreprise: number;
 };
 
+/**
+ * Le site et sa société sont déjà lus par la page (`requireEtablissement`) ;
+ * seule une requête s'ajoute, pour les autres sites. Pas d'agrégat `_sum` :
+ * `contributionDuSite` borne chaque site à zéro.
+ */
 export async function lireEffectifsDuSite(
   db: Pick<Prisma.TransactionClient, "etablissement">,
-  etablissementId: string,
-): Promise<EffectifsDuSite | null> {
-  const site = await db.etablissement.findUnique({
-    where: { id: etablissementId },
-    select: {
-      effectifSurSite: true,
-      apprentisSurSite: true,
-      entreprise: {
-        select: {
-          effectif: true,
-          effectifHorsRojer: true,
-          etablissements: {
-            where: { id: { not: etablissementId } },
-            select: { effectifSurSite: true, apprentisSurSite: true },
-          },
-        },
-      },
-    },
+  site: {
+    id: string;
+    entrepriseId: string;
+    effectifSurSite: number;
+    apprentisSurSite: number;
+    entreprise: { effectif: number; effectifHorsRojer: number };
+  },
+): Promise<EffectifsDuSite> {
+  const autres = await db.etablissement.findMany({
+    where: { entrepriseId: site.entrepriseId, id: { not: site.id } },
+    select: { effectifSurSite: true, apprentisSurSite: true },
   });
-  if (!site) return null;
-  const autres = site.entreprise.etablissements;
   return {
     effectifSurSite: site.effectifSurSite,
     apprentisSurSite: site.apprentisSurSite,

@@ -5,11 +5,16 @@ const h = vi.hoisted(() => {
   return {
     tx,
     db: { $transaction: async (f: (t: unknown) => unknown) => f(tx) },
-    ecrireEffectifs: vi.fn(async () => ({ entreprise: 12, site: 12 })),
+    ecrireEffectifs: vi.fn(async () => ({ societe: true, site: true })),
     regenererLaSociete: vi.fn(async () => true),
+    regenererSite: vi.fn(async () => true),
   };
 });
-vi.mock("@/lib/calendrier/regeneration-sure", () => ({ MESSAGE_REGEN_ECHEC: "pas recalculé" }));
+vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+vi.mock("@/lib/calendrier/regeneration-sure", () => ({
+  MESSAGE_REGEN_ECHEC: "pas recalculé",
+  regenererApresMutation: h.regenererSite,
+}));
 vi.mock("@/lib/auth/scope", () => ({
   assertEtablissementDuCompte: async () => ({ user: { id: "u" }, db: h.db }),
 }));
@@ -21,7 +26,11 @@ vi.mock("./effectif", () => ({
   },
   ecrireEffectifs: h.ecrireEffectifs,
   regenererLaSociete: h.regenererLaSociete,
-  verrouillerLaSocieteDuSite: vi.fn(async () => {}),
+  RefusSousLesFiches: class RefusSousLesFiches extends Error {
+    constructor(readonly actifs: number) {
+      super(`Vous suivez ${actifs} personnes`);
+    }
+  },
 }));
 
 const { modifierEffectifs } = await import("./effectif-actions");
@@ -54,10 +63,25 @@ describe("modifierEffectifs — l'effectif se déclare dans Équipe (2026-11-03)
     expect(h.regenererLaSociete).toHaveBeenCalledWith(h.db, "etab-1");
   });
 
-  it("l'effectif ne descend pas sous les fiches actives", async () => {
+  it("l'effectif sous les fiches actives : refus sous le champ du site", async () => {
+    const { RefusSousLesFiches } = await import("./effectif");
+    h.ecrireEffectifs.mockRejectedValueOnce(new RefusSousLesFiches(3));
     const r = await modifierEffectifs("etab-1", { status: "idle" }, formulaire({ effectifSurSite: "2", apprentisSurSite: "0" }));
     expect(r.status === "error" && r.fieldErrors?.effectifSurSite?.[0]).toMatch(/3 personnes/);
-    expect(h.ecrireEffectifs).not.toHaveBeenCalled();
+  });
+
+  it("seuls les nombres du site ont bougé : ce site seul se recalcule", async () => {
+    h.ecrireEffectifs.mockResolvedValueOnce({ societe: false, site: true } as never);
+    await modifierEffectifs("etab-1", { status: "idle" }, formulaire({}));
+    expect(h.regenererSite).toHaveBeenCalledWith("etab-1", expect.any(String));
+    expect(h.regenererLaSociete).not.toHaveBeenCalled();
+  });
+
+  it("rien n'a bougé : rien ne se recalcule", async () => {
+    h.ecrireEffectifs.mockResolvedValueOnce({ societe: false, site: false } as never);
+    await modifierEffectifs("etab-1", { status: "idle" }, formulaire({}));
+    expect(h.regenererSite).not.toHaveBeenCalled();
+    expect(h.regenererLaSociete).not.toHaveBeenCalled();
   });
 
   it("la borne refuse, sous le champ qu'elle vise, et rien n'est recalculé", async () => {

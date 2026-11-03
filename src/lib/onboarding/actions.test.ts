@@ -63,10 +63,9 @@ const h = vi.hoisted(() => {
 const eff = vi.hoisted(() => ({
   accueillirSite: vi.fn(async () => {}),
   ecrireEffectifs: vi.fn(async () => ({ entreprise: 0, site: 0 })),
-  effectifSuitLesFiches: vi.fn(async () => null),
+  effectifSuitLesFiches: vi.fn(async () => false),
   recalculerEffectifEntreprise: vi.fn(async () => 0),
   changerDeSociete: vi.fn(async () => {}),
-  verrouillerLaSocieteDuSite: vi.fn(async () => {}),
   regenererLaSociete: vi.fn(async () => true),
 }));
 // Le calcul de l'effectif de la société (2026-11-03) a ses propres tests
@@ -80,7 +79,6 @@ vi.mock("@/lib/entreprises/effectif", () => ({
   effectifSuitLesFiches: eff.effectifSuitLesFiches,
   recalculerEffectifEntreprise: eff.recalculerEffectifEntreprise,
   changerDeSociete: eff.changerDeSociete,
-  verrouillerLaSocieteDuSite: eff.verrouillerLaSocieteDuSite,
   regenererLaSociete: eff.regenererLaSociete,
 }));
 vi.mock("@/lib/prisma", () => ({
@@ -216,7 +214,7 @@ describe("la somme des sites (2026-11-03)", () => {
     await expect(
       finaliserOnboarding({ status: "idle" }, formulaire({ effectifSurSite: "12", effectifEntreprise: "10" })),
     ).rejects.toThrow("NEXT_REDIRECT");
-    expect(eff.accueillirSite).toHaveBeenCalledWith(expect.anything(), expect.any(String), 10);
+    expect(eff.accueillirSite).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: expect.any(String) }), 10);
   });
 
   it("la société dépasse la borne avec ce site : refus, sous l'effectif du site", async () => {

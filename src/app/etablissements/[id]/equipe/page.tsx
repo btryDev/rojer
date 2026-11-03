@@ -55,7 +55,7 @@ export default async function EquipePage({
     libellesTitresDeclares(id),
     chargerFaitsActivite(id),
     etatsPermanentsDuDossier(db, id, user.id),
-    lireEffectifsDuSite(db, id),
+    lireEffectifsDuSite(db, etablissement),
   ]);
   const catalogue = cataloguerTitres();
   // « Formations à organiser » : dues aux salariés sans qu'on sache lesquels.
@@ -108,7 +108,7 @@ export default async function EquipePage({
   const actifs = equipe.filter((s) => s.actif).length;
   // Les personnes de l'effectif sans fiche (2026-11-03) : des places, pas des
   // fiches. L'effectif ne descend jamais sous les fiches actives.
-  const aRenseigner = Math.max(0, (effectifs?.effectifSurSite ?? 0) - actifs);
+  const aRenseigner = Math.max(0, effectifs.effectifSurSite - actifs);
 
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
@@ -156,9 +156,7 @@ export default async function EquipePage({
             </Link>
           }
         />
-        {effectifs ? (
-          <CarteEffectif action={modifierEffectifs.bind(null, id)} effectifs={effectifs} />
-        ) : null}
+        <CarteEffectif action={modifierEffectifs.bind(null, id)} effectifs={effectifs} />
 
         {/* La porte d'entrée unique des faits d'activité (ADR-041) : tant
             qu'une question reste sans réponse, les formations qu'elle

@@ -363,7 +363,7 @@ export async function modifierEtablissement(
       if (changeDEntreprise) {
         const supprimee = await supprimerEntrepriseSiVide(tx, avant.entrepriseId);
         // Les deux sociétés recomptent leurs sites, borne comprise (2026-11-03).
-        await changerDeSociete(tx, id, { id: avant.entrepriseId, supprimee });
+        await changerDeSociete(tx, ecrit, { id: avant.entrepriseId, supprimee });
       }
       return ecrit;
     });

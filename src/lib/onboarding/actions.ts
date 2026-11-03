@@ -189,7 +189,7 @@ export async function finaliserOnboarding(
       });
 
       // L'effectif de la société, somme de ses sites (2026-11-03).
-      await accueillirSite(tx, etablissement.id, d.effectifEntreprise);
+      await accueillirSite(tx, etablissement, d.effectifEntreprise);
       return etablissement;
     }));
   } catch (err) {

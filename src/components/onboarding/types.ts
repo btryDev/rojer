@@ -31,13 +31,11 @@ export type OnboardingState = {
   // intérieur. Demandé depuis le 2026-09-26 (C37) ; il était recopié de
   // l'effectif du site, apprentis compris.
   effectifEntreprise: string;
-  // L'effectif de la société quand le SIRET rattache l'établissement à une
-  // société déjà suivie (2026-11-03) : celui-ci s'y ajoute, et la borne se lit
-  // sur la somme. Vide pour une société nouvelle. Jamais posté : le serveur
-  // refait la somme lui-même.
-  effectifDejaSuivi: string;
-  // Ses salariés hors Rojer, dont ce site sort en entrant (vide si nouvelle).
-  effectifHorsRojerRepris: string;
+  // La société déjà suivie que le SIRET rattache (2026-11-03) : l'établissement
+  // la rejoint, et la borne se lit sur la somme (`effectifApresRattachement`).
+  // `null` pour une société nouvelle. Jamais posté : le serveur refait le
+  // calcul lui-même.
+  societeSuivie: { effectif: number; effectifHorsRojer: number } | null;
 
   estEtablissementTravail: boolean;
   // `null` = pas encore répondu (2026-09-27, analyse de la réponse absente,
@@ -92,8 +90,7 @@ export const VALEURS_INITIALES: OnboardingState = {
   codeNaf: "",
   effectifSurSite: "",
   effectifEntreprise: "",
-  effectifDejaSuivi: "",
-  effectifHorsRojerRepris: "",
+  societeSuivie: null,
   estEtablissementTravail: true,
   estERP: null,
   estIGH: null,

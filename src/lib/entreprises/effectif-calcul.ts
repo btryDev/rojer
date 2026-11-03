@@ -28,6 +28,28 @@ export function effectifEntrepriseDesSites(
   return sites.reduce((n, s) => n + contributionDuSite(s), 0) + horsRojer;
 }
 
+/**
+ * Un site entre dans une société suivie (parcours d'entrée, ou SIRET qui le
+ * rattache à la société de son SIREN). Il n'était pas suivi : s'il a été
+ * déclaré, ses salariés l'ont été parmi les « hors Rojer », d'où il sort — au
+ * plus ce qu'il y en a. Sans cela, les mêmes personnes compteraient deux fois
+ * (revue du 2026-11-03). Une seule écriture du calcul, pour le serveur
+ * (`rejoindre`) et l'aperçu du parcours (`refusSommeDesSites`).
+ *
+ * @param effectifSansLeSite l'effectif de la société avant son entrée
+ */
+export function effectifApresRattachement(
+  effectifSansLeSite: number,
+  horsRojer: number,
+  contribution: number,
+): { total: number; horsRojerApres: number } {
+  const absorbes = Math.min(horsRojer, contribution);
+  return {
+    total: effectifSansLeSite - absorbes + contribution,
+    horsRojerApres: horsRojer - absorbes,
+  };
+}
+
 /** La borne franchie par la société : même phrase à l'onboarding et dans Équipe. */
 export function messageRefusEffectifEntreprise(total: number): string {
   return `Votre société compterait ${total} salariés, tous établissements confondus (apprentis non compris) : Rojer prend en charge les structures jusqu'à ${EFFECTIF_MAX} salariés.`;
@@ -52,6 +74,9 @@ function nombreDePersonnes(message: string) {
       .max(9999, "Nombre hors limites"),
   );
 }
+
+/** Les trois nombres que la carte « Effectif » saisit. */
+export type ChampEffectif = "effectifSurSite" | "apprentisSurSite" | "effectifHorsRojer";
 
 /** La saisie des effectifs, dans Équipe (2026-11-03). */
 export const effectifsSchema = z

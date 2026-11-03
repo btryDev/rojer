@@ -3,9 +3,10 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ChampBoard } from "@/components/ui-kit";
+import { ChampBoard, MessageFait } from "@/components/ui-kit";
 import type { EffectifsActionState } from "@/lib/entreprises/effectif-actions";
 import type { EffectifsDuSite } from "@/lib/entreprises/effectif-queries";
+import type { ChampEffectif } from "@/lib/entreprises/effectif-calcul";
 import { EFFECTIF_MAX } from "@/lib/etablissements/schema";
 
 /**
@@ -30,7 +31,7 @@ export function CarteEffectif({
   // Après un refus, React remet le formulaire à ses valeurs par défaut : on
   // lui rend ce qui avait été saisi, pour que le refus se lise à côté.
   const saisie = state.status === "error" ? state.saisie : undefined;
-  const valeur = (champ: "effectifSurSite" | "apprentisSurSite" | "effectifHorsRojer") =>
+  const valeur = (champ: ChampEffectif) =>
     saisie?.[champ] ?? String(effectifs[champ]);
 
   return (
@@ -101,9 +102,7 @@ export function CarteEffectif({
             {state.message}
           </p>
         ) : null}
-        {state.status === "success" ? (
-          <p className="m-0 text-[12.5px] text-[color:var(--board-green-ink)]">Enregistré.</p>
-        ) : null}
+        {state.status === "success" ? <MessageFait>Enregistré.</MessageFait> : null}
         {state.status === "success_avec_avertissement" ? (
           <p role="status" className="m-0 text-[12.5px] text-[color:var(--board-amber-ink)]">
             {state.message}
@@ -119,6 +118,9 @@ export function CarteEffectif({
     </section>
   );
 }
+
+const CLASSE_PLACE =
+  "flex min-h-[96px] items-center justify-center rounded-[30px] border border-dashed border-[color:var(--board-slate-line)] px-6 py-5 text-[13px] text-[color:var(--board-slate-mid)] hover:border-[color:var(--board-slate-mid)] hover:text-[color:var(--board-ink)]";
 
 /** Au-delà, une seule carte dit le reste (un dossier ancien peut en porter des centaines). */
 const PLACES_AFFICHEES = 12;
@@ -137,7 +139,7 @@ export function PlacesARenseigner({ nombre, href }: { nombre: number; href: stri
         <Link
           key={i}
           href={href}
-          className="flex min-h-[96px] items-center justify-center rounded-[30px] border border-dashed border-[color:var(--board-slate-line)] px-6 py-5 text-[13px] text-[color:var(--board-slate-mid)] hover:border-[color:var(--board-slate-mid)] hover:text-[color:var(--board-ink)]"
+          className={CLASSE_PLACE}
         >
           Personne à renseigner
         </Link>
@@ -145,7 +147,7 @@ export function PlacesARenseigner({ nombre, href }: { nombre: number; href: stri
       {reste > 0 ? (
         <Link
           href={href}
-          className="flex min-h-[96px] items-center justify-center rounded-[30px] border border-dashed border-[color:var(--board-slate-line)] px-6 py-5 text-[13px] text-[color:var(--board-slate-mid)] hover:border-[color:var(--board-slate-mid)] hover:text-[color:var(--board-ink)]"
+          className={CLASSE_PLACE}
         >
           {`Et ${reste + 1} autres personnes à renseigner`}
         </Link>

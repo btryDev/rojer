@@ -1,14 +1,16 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
-import { MESSAGE_REGEN_ECHEC } from "@/lib/calendrier/regeneration-sure";
+import { MESSAGE_REGEN_ECHEC, regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import {
   ecrireEffectifs,
   RefusBorneEffectif,
+  RefusSousLesFiches,
   regenererLaSociete,
-  verrouillerLaSocieteDuSite,
+  type EffetEffectifs,
 } from "./effectif";
-import { effectifsSchema } from "./effectif-calcul";
+import { effectifsSchema, type ChampEffectif } from "./effectif-calcul";
 
 export type EffectifsActionState =
   | { status: "idle" }
@@ -23,13 +25,12 @@ export type EffectifsActionState =
   /** Enregistré, mais un calendrier n'a pas pu être recalculé à l'instant. */
   | { status: "success_avec_avertissement"; message: string };
 
-type ChampEffectif = "effectifSurSite" | "apprentisSurSite" | "effectifHorsRojer";
-
 /**
  * Les effectifs se déclarent dans Équipe (2026-11-03, décision de la
  * propriétaire) : ceux du site, ses apprentis, et les salariés de la société
  * hors de Rojer. La société se recalcule ; ce qui fait croître au-delà de la
- * borne est refusé, en entier (`ecrireEffectifs`).
+ * borne, ou descend sous les fiches actives, est refusé en entier
+ * (`ecrireEffectifs`).
  */
 export async function modifierEffectifs(
   etablissementId: string,
@@ -53,38 +54,29 @@ export async function modifierEffectifs(
     };
   }
 
+  let effet: EffetEffectifs;
   try {
-    await db.$transaction(async (tx) => {
-      // L'effectif ne descend pas sous les fiches actives : une fiche est une
-      // personne. Les sorties se marquent sur les fiches. Compté sous le
-      // verrou de la société, comme `effectifSuitLesFiches`.
-      await verrouillerLaSocieteDuSite(tx, etablissementId);
-      const actifs = await tx.salarie.count({ where: { etablissementId, actif: true } });
-      if (parsed.data.effectifSurSite < actifs) {
-        throw new SousLesFiches(actifs);
-      }
-      await ecrireEffectifs(tx, etablissementId, parsed.data);
-    });
+    effet = await db.$transaction((tx) => ecrireEffectifs(tx, etablissementId, parsed.data));
   } catch (e) {
     if (e instanceof RefusBorneEffectif) {
       return { status: "error", message: e.message, fieldErrors: { [e.champ]: [e.message] }, saisie };
     }
-    if (e instanceof SousLesFiches) {
-      const message = `Vous suivez ${e.actifs} personnes dans cet établissement : l'effectif ne peut pas être inférieur. Marquez d'abord les sorties sur leurs fiches.`;
-      return { status: "error", message, fieldErrors: { effectifSurSite: [message] }, saisie };
+    if (e instanceof RefusSousLesFiches) {
+      return { status: "error", message: e.message, fieldErrors: { effectifSurSite: [e.message] }, saisie };
     }
     throw e;
   }
 
-  // L'effectif de la société est lu par chacun de ses sites (CSE, règlement
-  // intérieur) : tous se recalculent.
-  return (await regenererLaSociete(db, etablissementId))
+  // Ne recalcule que ce qui a bougé : la société entière si son total a
+  // changé (CSE, règlement intérieur sur chaque site), ce site seul si
+  // seuls ses nombres ont changé, rien sinon.
+  const recalcule = effet.societe
+    ? await regenererLaSociete(db, etablissementId)
+    : effet.site
+      ? await regenererApresMutation(etablissementId, "entreprises/effectif")
+      : true;
+  revalidatePath(`/etablissements/${etablissementId}`, "layout");
+  return recalcule
     ? { status: "success" }
     : { status: "success_avec_avertissement", message: MESSAGE_REGEN_ECHEC };
-}
-
-class SousLesFiches extends Error {
-  constructor(readonly actifs: number) {
-    super("effectif sous les fiches actives");
-  }
 }

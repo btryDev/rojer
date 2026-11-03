@@ -45,13 +45,12 @@ export function StepIdentite({
         siret,
         raisonSociale: r.raisonSociale,
         effectifEntreprise: String(r.effectif),
-        effectifDejaSuivi: String(r.effectif),
-        effectifHorsRojerRepris: String(r.effectifHorsRojer),
+        societeSuivie: { effectif: r.effectif, effectifHorsRojer: r.effectifHorsRojer },
       });
     } else if (rattachee) {
       // Le SIRET quitte l'entreprise reprise : ses valeurs, en lecture seule
       // jusque-là, ne sont pas celles de la société qu'on saisit maintenant.
-      update({ siret, raisonSociale: "", effectifEntreprise: "", effectifDejaSuivi: "", effectifHorsRojerRepris: "", nomUsage: "" });
+      update({ siret, raisonSociale: "", effectifEntreprise: "", societeSuivie: null, nomUsage: "" });
     } else {
       update({ siret });
     }
@@ -72,9 +71,7 @@ export function StepIdentite({
   // ADR-031), lue en direct comme celle du site.
   // Rattaché à une société suivie, la borne se lit sur la somme : son effectif
   // et celui de cet établissement (2026-11-03).
-  const refusEntreprise = rattachee
-    ? refusSommeDesSites(state)
-    : refusEffectifEntreprise(state.effectifEntreprise);
+  const refusEntreprise = refusEffectifEntreprise(state.effectifEntreprise) ?? refusSommeDesSites(state);
   const repere =
     refus || refusEntreprise ? null : repereEffectif(state.effectifEntreprise);
   /** L'erreur d'un champ : le refus de passage d'étape, sinon le serveur. */
