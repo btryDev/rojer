@@ -19,13 +19,30 @@ import { CORRESPONDANCE, IDENTITES_SCALAIRES, type Classement } from "./correspo
  * de prestataire, MCP, webhook) : une relation vers `User` n'y peut alors
  * désigner personne.
  */
-export type Portee = { type: "compte"; compteId: string; userId: string | null };
+export type Portee = {
+  type: "compte";
+  compteId: string;
+  userId: string | null;
+  /**
+   * Un membre en lecture seule (ADR-054 § 4) : toute écriture est refusée,
+   * ici, quelle que soit l'action qui l'oublierait. Absent ou faux ailleurs.
+   */
+  lectureSeule?: boolean;
+};
 
 /** Refus du client borné : opération ou modèle qu'il ne sait pas borner. */
 export class ErreurPortee extends Error {
   constructor(message: string) {
     super(`Isolation des comptes : ${message}`);
     this.name = "ErreurPortee";
+  }
+}
+
+/** Refus d'une écriture à un membre en lecture seule (ADR-054 § 4). */
+export class ErreurLectureSeule extends ErreurPortee {
+  constructor(operation: string) {
+    super(`${operation} : votre accès est en lecture seule`);
+    this.name = "ErreurLectureSeule";
   }
 }
 
@@ -393,6 +410,9 @@ export function argumentsBornes(nom: string, operation: string, args: unknown, p
     a.where = avecBorne(a.where, b);
     return a;
   }
+  // Tout ce qui n'est pas une lecture écrit, ou est refusé plus bas : en
+  // lecture seule, rien ne passe (ADR-054 § 4).
+  if (portee.lectureSeule) throw new ErreurLectureSeule(`${nom}.${operation}`);
   switch (operation) {
     case "delete":
     case "deleteMany":

@@ -23,7 +23,7 @@ import { appartenanceDeLaSession, compteDOnboarding, type Appartenance } from ".
 const lireAppartenance = cache((userId: string): Promise<Appartenance | null> => appartenanceDeLaSession(userId));
 
 function portee(userId: string, a: Appartenance) {
-  return clientBorne({ type: "compte", compteId: a.compteId, userId });
+  return clientBorne({ type: "compte", compteId: a.compteId, userId, lectureSeule: a.role === "lecture" });
 }
 
 /**

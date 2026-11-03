@@ -11,12 +11,30 @@ import "server-only";
 
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { argumentsBornes, ErreurPortee, estLectureDIdentifiants, noterVus, type Portee } from "./borne";
+import {
+  argumentsBornes,
+  ErreurLectureSeule,
+  ErreurPortee,
+  estLectureDIdentifiants,
+  noterVus,
+  type Portee,
+} from "./borne";
 
 function etendre(base: PrismaClient, p: Portee) {
   // Copie figée : un appelant qui garderait l'objet ne peut plus déplacer la
   // portée d'un client déjà en cache (revue du lot 2a).
-  const portee: Portee = Object.freeze({ type: "compte", compteId: p.compteId, userId: p.userId });
+  const portee: Portee = Object.freeze({
+    type: "compte",
+    compteId: p.compteId,
+    userId: p.userId,
+    lectureSeule: p.lectureSeule === true,
+  });
+  // Le SQL brut d'écriture n'est pas borné par l'extension (ADR-051 § 5) ; en
+  // lecture seule, il est refusé ici (ADR-054 § 4). Les lectures brutes ont
+  // leur propre garde (`requireLectureSqlProprietaire`).
+  const refuserEnLecture = (operation: string) => {
+    if (portee.lectureSeule) throw new ErreurLectureSeule(operation);
+  };
   // Typé comme le client brut : l'extension ne porte que sur les ARGUMENTS
   // des requêtes (`query`), elle n'ajoute ni modèle, ni champ, ni méthode —
   // l'API à l'exécution est la même. Le type étendu de Prisma, lui, n'est pas
@@ -26,6 +44,14 @@ function etendre(base: PrismaClient, p: Portee) {
   const client = base.$extends({
     name: "borne-au-compte",
     query: {
+      async $executeRaw({ args, query }) {
+        refuserEnLecture("$executeRaw");
+        return query(args);
+      },
+      async $executeRawUnsafe({ args, query }) {
+        refuserEnLecture("$executeRawUnsafe");
+        return query(args);
+      },
       $allModels: {
         async $allOperations({ model, operation, args, query }) {
           const resultat = await query(argumentsBornes(model, operation, args, portee) as typeof args);
@@ -56,12 +82,12 @@ function lirePortee(portee: Portee): Portee {
     throw new ErreurPortee("portée sans compte : client refusé");
   if (userId !== null && (typeof userId !== "string" || userId.length === 0))
     throw new ErreurPortee("portée à la personne invalide : client refusé");
-  return { type: "compte", compteId, userId };
+  return { type: "compte", compteId, userId, lectureSeule: portee.lectureSeule === true };
 }
 
 export function clientBorne(portee: Portee): ClientBorne {
   const lue = lirePortee(portee);
-  const cle = `compte:${lue.compteId}|${lue.userId ?? "-"}`;
+  const cle = `compte:${lue.compteId}|${lue.userId ?? "-"}|${lue.lectureSeule ? "lecture" : "saisie"}`;
   let client = CLIENTS.get(cle);
   if (client) {
     // Le plus récemment servi passe en queue : l'éviction vise le moins

@@ -117,6 +117,26 @@ describe.skipIf(!URL_BASE || !local)("appartenance au compte — PostgreSQL rée
     }
   });
 
+  it("un membre en lecture seule reçoit un client qui lit et n'écrit pas", async () => {
+    await prisma.membre.update({ where: { compteId_userId: { compteId: A, userId: MEMBRE } }, data: { role: "lecture" } });
+    try {
+      session.userId = MEMBRE;
+      session.compteActifId = A;
+      const { compte, db } = await requireCompte();
+      expect(compte.role).toBe("lecture");
+      expect((await db.etablissement.findMany({ select: { id: true } })).map((e) => e.id)).toEqual([etabA]);
+      await expect(db.etablissement.update({ where: { id: etabA }, data: { raisonDisplay: "x" } })).rejects.toThrow(
+        /lecture seule/,
+      );
+      // Le rôle relu à chaque appel : repassé membre, il écrit.
+      await prisma.membre.update({ where: { compteId_userId: { compteId: A, userId: MEMBRE } }, data: { role: "member" } });
+      const { db: db2 } = await requireCompte();
+      await db2.etablissement.update({ where: { id: etabA }, data: { raisonDisplay: "A" } });
+    } finally {
+      await prisma.membre.update({ where: { compteId_userId: { compteId: A, userId: MEMBRE } }, data: { role: "member" } });
+    }
+  });
+
   it("une personne d'un autre compte ne lit rien de A, même avec A pour compte actif", async () => {
     session.userId = ETRANGER;
     session.compteActifId = A;

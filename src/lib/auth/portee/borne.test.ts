@@ -9,6 +9,7 @@ import {
   argumentsBornes,
   borne,
   dansUnLot,
+  ErreurLectureSeule,
   ErreurPortee,
   estLectureDIdentifiants,
   noterVus,
@@ -415,3 +416,33 @@ describe("identité (cc) : relations vers User", () => {
 
 });
 
+describe("lecture seule (ADR-054 § 4)", () => {
+  const LECTURE_A: Portee = { ...A, lectureSeule: true };
+
+  it.each([
+    ["findMany", { where: { id: "x" } }],
+    ["findUnique", { where: { id: "x" } }],
+    ["count", {}],
+    ["groupBy", { by: ["etablissementId"] }],
+  ])("laisse passer la lecture %s, bornée", (op, args) => {
+    expect(argumentsBornes("Equipement", op, args, LECTURE_A).where).toEqual(
+      expect.objectContaining({ AND: expect.anything() }),
+    );
+  });
+
+  it.each([
+    ["create", { data: { libelle: "x" } }],
+    ["createMany", { data: [{ libelle: "x" }] }],
+    ["update", { where: { id: "x" }, data: { libelle: "y" } }],
+    ["updateMany", { data: { libelle: "y" } }],
+    ["upsert", { where: { id: "x" }, create: {}, update: {} }],
+    ["delete", { where: { id: "x" } }],
+    ["deleteMany", {}],
+  ])("refuse l'écriture %s", (op, args) => {
+    expect(() => argumentsBornes("Equipement", op, args, LECTURE_A)).toThrow(ErreurLectureSeule);
+  });
+
+  it("la même écriture passe pour un membre qui saisit", () => {
+    expect(() => argumentsBornes("Equipement", "update", { where: { id: "x" }, data: { libelle: "y" } }, A)).not.toThrow();
+  });
+});

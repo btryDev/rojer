@@ -143,6 +143,43 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
     });
   });
 
+  describe("lecture seule (ADR-054 § 4)", () => {
+    const lecture = () => clientBorne({ type: "compte", compteId: A, userId: UA2, lectureSeule: true });
+
+    it("lit comme un membre", async () => {
+      expect((await lecture().equipement.findMany()).map((e) => e.id)).toEqual([a.equip.id]);
+    });
+
+    it("n'écrit rien : création, mise à jour, suppression, en transaction, en SQL brut", async () => {
+      const db = lecture();
+      const avant = await prisma.equipement.findUniqueOrThrow({ where: { id: a.equip.id } });
+      await expect(
+        db.batiment.create({ data: { etablissementId: a.etab.id, nom: "lecture" } }),
+      ).rejects.toThrow(/lecture seule/);
+      await expect(
+        db.equipement.update({ where: { id: a.equip.id }, data: { libelle: "modifié" } }),
+      ).rejects.toThrow(/lecture seule/);
+      await expect(db.equipement.deleteMany({})).rejects.toThrow(/lecture seule/);
+      await expect(
+        db.$transaction((tx) => tx.equipement.update({ where: { id: a.equip.id }, data: { libelle: "tx" } })),
+      ).rejects.toThrow(/lecture seule/);
+      await expect(
+        db.$executeRaw`UPDATE "Equipement" SET "libelle" = 'brut' WHERE "id" = ${a.equip.id}`,
+      ).rejects.toThrow(/lecture seule/);
+      expect(await prisma.equipement.findUniqueOrThrow({ where: { id: a.equip.id } })).toEqual(avant);
+      expect(await prisma.batiment.count({ where: { nom: "lecture" } })).toBe(0);
+    });
+
+    it("le client d'un membre qui saisit, sur le même compte, n'est pas celui de la lecture seule", async () => {
+      const saisie = clientBorne({ type: "compte", compteId: A, userId: UA2 });
+      const b2 = await saisie.batiment.create({ data: { etablissementId: a.etab.id, nom: "saisie" } });
+      await prisma.batiment.delete({ where: { id: b2.id } });
+      await expect(lecture().batiment.create({ data: { etablissementId: a.etab.id, nom: "x" } })).rejects.toThrow(
+        /lecture seule/,
+      );
+    });
+  });
+
   describe("écritures par where", () => {
     it("update et delete d'une ligne d'un autre compte échouent, B intact", async () => {
       await expect(dbA.etablissement.update({ where: { id: b.etab.id }, data: { raisonDisplay: "x" } })).rejects.toThrow();
