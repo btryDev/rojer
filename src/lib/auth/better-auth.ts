@@ -37,7 +37,11 @@ const TRENTE_JOURS = UN_JOUR * 30;
  * qu'un nom ne fasse pas d'une invitation Rojer un hameçonnage.
  */
 export function nomPourEmail(brut: string): string {
-  const sansLien = brut.replace(/\S*(?:https?:\/\/|www\.)\S*/gi, "[lien retiré]");
+  // Un lien explicite, puis tout ce qu'une messagerie rendrait cliquable : un
+  // domaine nu (`evil.fr/connexion`) ou une adresse e-mail.
+  const sansLien = brut
+    .replace(/\S*(?:https?:\/\/|www\.)\S*/gi, "[lien retiré]")
+    .replace(/\S*[\p{L}\p{N}_-]\.[a-z]{2,}\b\S*/giu, "[lien retiré]");
   const uneLigne = sansLien.replace(/[\u0000-\u001f\u007f\u2028\u2029]+/g, " ").replace(/\s+/g, " ").trim();
   return uneLigne.length > 80 ? `${uneLigne.slice(0, 79)}…` : uneLigne;
 }
@@ -187,7 +191,7 @@ export const auth = betterAuth({
         envoyer(email, "Rojer — invitation à rejoindre un compte", [
           "Bonjour,",
           "",
-          `${nomPourEmail(inviter.user.name || inviter.user.email)} vous invite à travailler sur le compte Rojer « ${nomPourEmail(organization.name)} », en tant que ${libelleRole(role)}.`,
+          `${inviter.user.name ? nomPourEmail(inviter.user.name) : "Un propriétaire du compte"} vous invite à travailler sur le compte Rojer « ${nomPourEmail(organization.name)} », en tant que ${libelleRole(role)}.`,
           "",
           "Pour accepter, ouvrez ce lien (valable 7 jours) :",
           lienInvitation(id),
