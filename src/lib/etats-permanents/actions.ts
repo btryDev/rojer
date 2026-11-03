@@ -10,6 +10,7 @@ import {
   determineObligationsApplicables,
   projeterEtablissement,
 } from "@/lib/matching";
+import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 /**
  * Déclarer, et défaire.
@@ -129,6 +130,7 @@ export async function declarerEnPlace(
   obligationId: string,
   note?: string | null,
 ): Promise<DeclarationActionState> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
 
   const declarable = await obligationDeclarable(db, etablissementId, obligationId);
@@ -177,6 +179,7 @@ export async function retirerDeclaration(
   etablissementId: string,
   obligationId: string,
 ): Promise<DeclarationActionState> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
 
   // `deleteMany` et non `delete` : décocher une ligne jamais déclarée ne doit

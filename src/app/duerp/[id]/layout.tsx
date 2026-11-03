@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { BandeauAbonnementDuCompte } from "@/components/abonnements/BandeauAbonnementDuCompte";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
@@ -98,6 +100,10 @@ export default async function DuerpLayout({
           email={user?.email ?? null}
           etablissements={fratrie}
         />
+        {/* L'état de l'abonnement (ADR-053 § 3), comme dans le dossier. */}
+        <Suspense fallback={null}>
+          <BandeauAbonnementDuCompte />
+        </Suspense>
         {/* Le grand en-tête, sur chaque étape de l'assistant (décision de la
             propriétaire du 2026-10-25) — le même que la porte d'entrée
             (`etablissements/[id]/duerp`), pour que passer de l'une à

@@ -23,6 +23,7 @@ import {
 } from "@/lib/signatures/verrou-contenu";
 import { calculerHashObjet } from "@/lib/signatures/hash-objet";
 import { revoquerLiensEnVol } from "@/lib/access-tokens/revocation";
+import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 export type PermisFeuActionState =
   | { status: "idle" }
@@ -107,6 +108,7 @@ export async function creerPermisFeu(
   _prev: PermisFeuActionState,
   formData: FormData,
 ): Promise<PermisFeuActionState> {
+  await verifierSaisie();
   const { compte, db } = await assertEtablissementDuCompte(etablissementId);
 
   const parsed = lirePermisFeu(formData);
@@ -186,6 +188,7 @@ export async function modifierPermisFeu(
   _prev: PermisFeuActionState,
   formData: FormData,
 ): Promise<PermisFeuActionState> {
+  await verifierSaisie();
   const permis = await permisDuCompte(permisFeuId);
   const etablissementId = permis.etablissementId;
   if (!statutPermisSignable(permis.statut)) {
@@ -317,10 +320,12 @@ async function franchir(
 }
 
 export async function marquerEnCours(permisFeuId: string): Promise<void> {
+  await verifierSaisie();
   await franchir(permisFeuId, "en_cours");
 }
 
 export async function marquerTermine(permisFeuId: string): Promise<void> {
+  await verifierSaisie();
   const r = await franchir(permisFeuId, "termine");
   if (!r.fait) return;
   // Un permis terminé ne se signe plus (`etat-signable.ts`) : ses liens
@@ -334,6 +339,7 @@ export async function marquerTermine(permisFeuId: string): Promise<void> {
 }
 
 export async function supprimerPermisFeu(permisFeuId: string): Promise<void> {
+  await verifierSaisie();
   const permis = await permisDuCompte(permisFeuId);
   // On ne supprime pas un permis déjà signé : on l'annule à la place pour
   // conserver la piste d'audit. LE STATUT NE LE DISAIT PAS : un permis est

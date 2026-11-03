@@ -10,6 +10,7 @@ import { compterLignesAvecPreuve } from "./preuves";
 import { chargerLignesViseesDuCompte } from "./lecture-preuves";
 import { raisonDuRefus } from "./refus-suppression";
 import { estPrescriptionLevee } from "@/lib/matching/prescriptions";
+import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 /**
  * Prescriptions particulières (ADR-035) — création, levée, suppression.
@@ -39,6 +40,7 @@ export async function creerPrescription(
   _prev: PrescriptionActionState,
   formData: FormData,
 ): Promise<PrescriptionActionState> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
 
   const parsed = validerPrescription(normaliser(formData));
@@ -116,6 +118,7 @@ export async function leverPrescription(
   _prev: PrescriptionActionState,
   formData: FormData,
 ): Promise<PrescriptionActionState> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
 
   const brut = formData.get("dateFin");
@@ -169,6 +172,7 @@ export async function reactiverPrescription(
   etablissementId: string,
   prescriptionId: string,
 ): Promise<PrescriptionActionState> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
   // Écriture conditionnelle bornée : introuvable → message, sans course
   // (ADR-051, « Erreurs : 404, jamais 500 »).
@@ -197,6 +201,7 @@ export async function supprimerPrescription(
   etablissementId: string,
   prescriptionId: string,
 ): Promise<PrescriptionActionState> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
 
   // (Une garde « prescription levée » a vécu ici quelques heures, le

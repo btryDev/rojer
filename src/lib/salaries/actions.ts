@@ -8,6 +8,7 @@ import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import { salarieSchema, titreSchema } from "./schema";
 import { exclusionsDuTitre, titreParId } from "./catalogue";
+import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 export type SalarieActionState =
   | { status: "idle" }
@@ -56,6 +57,7 @@ export async function creerSalarie(
   _prev: SalarieActionState,
   formData: FormData,
 ): Promise<SalarieActionState> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
 
   const parsed = salarieSchema.safeParse({
@@ -89,6 +91,7 @@ export async function modifierSalarie(
   _prev: SalarieActionState,
   formData: FormData,
 ): Promise<SalarieActionState> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
 
   const parsed = salarieSchema.safeParse({
@@ -150,6 +153,7 @@ export async function basculerActif(
   salarieId: string,
   actif: boolean,
 ): Promise<void> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
   await db.salarie.updateMany({
     where: { id: salarieId, etablissementId },
@@ -166,6 +170,7 @@ export async function declarerTitre(
   _prev: TitreActionState,
   formData: FormData,
 ): Promise<TitreActionState> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
 
   const parsed = titreSchema.safeParse({
@@ -264,6 +269,7 @@ export async function retirerTitre(
   salarieId: string,
   titreId: string,
 ): Promise<void> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
   await db.titreSalarie.deleteMany({
     where: { id: titreId, salarie: { id: salarieId, etablissementId } },
@@ -285,6 +291,7 @@ export async function supprimerSalarie(
   etablissementId: string,
   salarieId: string,
 ): Promise<void> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
   const efface = await effacerSalarie(db, etablissementId, salarieId);
   if (efface) {

@@ -15,6 +15,7 @@ import { MESSAGE_EFFECTIF_REPRIS } from "./rattachement";
 import { EFFECTIF_MAX } from "@/lib/etablissements/schema";
 import { typesErpAutresCoherents } from "@/lib/etablissements/schema";
 import { saisieOnboardingDepuisFormData } from "./saisie";
+import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 /**
  * Server action de finalisation du parcours d'onboarding.
@@ -69,6 +70,7 @@ export async function finaliserOnboarding(
   _prev: OnboardingActionState,
   formData: FormData,
 ): Promise<OnboardingActionState> {
+  await verifierSaisie();
   // La session d'abord : sans elle, renvoi à la connexion avant toute lecture.
   await requireUser();
 

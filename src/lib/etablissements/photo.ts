@@ -12,6 +12,7 @@ import {
 import { validerFichier } from "@/lib/rapports/validator";
 import { libererFichiers } from "@/lib/suppression/fichiers";
 import { REGLE_PHOTO } from "./photo-regle";
+import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 /**
  * La photo du lieu, affichée dans le hero du tableau de bord à la place de
@@ -37,6 +38,7 @@ export async function deposerPhotoEtablissement(
   etablissementId: string,
   formData: FormData,
 ): Promise<ResultatPhoto> {
+  await verifierSaisie();
   const { db, etablissement } = await requireEtablissement(etablissementId);
   const fichier = formData.get("photo");
   if (!(fichier instanceof File) || fichier.size === 0) {
@@ -82,6 +84,7 @@ export async function deposerPhotoEtablissement(
 export async function retirerPhotoEtablissement(
   etablissementId: string,
 ): Promise<ResultatPhoto> {
+  await verifierSaisie();
   const { db, etablissement } = await requireEtablissement(etablissementId);
   if (!etablissement.photoCle) return { status: "ok" };
   // Borné à la clé lue : un dépôt concurrent qui l'aurait déjà remplacée

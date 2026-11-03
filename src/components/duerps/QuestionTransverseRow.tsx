@@ -1,5 +1,6 @@
 "use client";
 
+import { unstable_rethrow } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { ANNEAU_A_COMPLETER } from "@/components/ui-kit/anneau-a-completer";
@@ -66,7 +67,9 @@ export function QuestionTransverseRow({
     startTransition(async () => {
       try {
         await repondreQuestionTransverse(duerpId, questionId, valeur);
-      } catch {
+      } catch (e) {
+        // Une redirection (saisie fermée, ADR-053) n'est pas un échec : Next la reprend.
+        unstable_rethrow(e);
         setEchec(true);
       }
     });

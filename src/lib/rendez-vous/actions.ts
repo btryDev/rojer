@@ -7,6 +7,7 @@ import { depuisSaisieDateHeure, joursCivilsEntre } from "@/lib/dates";
 import { resoudrePrestataireOptionnel } from "@/lib/prestataires/queries";
 import { suiviControleSchema } from "./schema";
 import { recoitUnSuivi } from "./regles";
+import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 export type SuiviControleState =
   | { status: "idle" }
@@ -23,6 +24,7 @@ export async function enregistrerSuiviControle(
   _prev: SuiviControleState,
   formData: FormData,
 ): Promise<SuiviControleState> {
+  await verifierSaisie();
   const { db, verification: v, etablissementId } = await requireVerification(verificationId);
   if (!recoitUnSuivi(v)) {
     return { status: "error", message: "Ce contrôle ne reçoit ni prestataire ni rendez-vous." };

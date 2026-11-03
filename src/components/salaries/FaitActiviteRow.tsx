@@ -1,5 +1,6 @@
 "use client";
 
+import { unstable_rethrow } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { ANNEAU_A_COMPLETER } from "@/components/ui-kit/anneau-a-completer";
@@ -57,7 +58,9 @@ export function FaitActiviteRow({ etablissementId, champ, intitule, pourquoi, ho
         // comme la fiche établissement (`MESSAGE_REGEN_ECHEC`).
         if (r.status === "success_avec_avertissement") setAvertissement(r.message);
         if ("risqueConserve" in r && r.risqueConserve) setRisqueConserve(true);
-      } catch {
+      } catch (e) {
+        // Une redirection (saisie fermée, ADR-053) n'est pas un échec : Next la reprend.
+        unstable_rethrow(e);
         setEchec(true);
       }
     });

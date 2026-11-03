@@ -22,6 +22,7 @@ import {
   estControleDEnsemble,
   recoitDesPoints,
 } from "@/lib/points-a-corriger/regles";
+import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 /**
  * Server actions du plan d'actions unifié (étape 8).
@@ -98,6 +99,7 @@ export async function creerPointACorriger(
   _prev: ActionPlanState,
   formData: FormData,
 ): Promise<ActionPlanState> {
+  await verifierSaisie();
   const verificationId = formData.get("verificationId");
   if (typeof verificationId !== "string" || verificationId === "") {
     return { status: "error", message: "Choisissez le contrôle qui a relevé ce point." };
@@ -208,6 +210,7 @@ export async function modifierActionPlan(
   _prev: ActionPlanState,
   formData: FormData,
 ): Promise<ActionPlanState> {
+  await verifierSaisie();
   const { db, action: existante, etablissementId } = await requireAction(actionId);
 
   if (existante.risqueId) {
@@ -255,6 +258,7 @@ export async function cloturerAction(
   _prev: ActionPlanState,
   formData: FormData,
 ): Promise<ActionPlanState> {
+  await verifierSaisie();
   const { db, action: existante } = await requireAction(actionId);
 
   const parsed = cloturerActionSchema.safeParse({
@@ -380,6 +384,7 @@ async function lirePiece(
  * avant le geste.
  */
 export async function rouvrirAction(actionId: string): Promise<void> {
+  await verifierSaisie();
   const { db, action, etablissementId } = await requireAction(actionId);
   if (estActionOuverte(action)) return;
 
@@ -418,6 +423,7 @@ export async function rouvrirAction(actionId: string): Promise<void> {
  * abandonnée comme prévue.
  */
 export async function abandonnerAction(actionId: string): Promise<void> {
+  await verifierSaisie();
   const { db, action, etablissementId } = await requireAction(actionId);
   if (action.risqueId) {
     throw new Error("Une mesure du DUERP ne s'abandonne pas depuis le plan d'actions");
@@ -432,6 +438,7 @@ export async function abandonnerAction(actionId: string): Promise<void> {
 }
 
 export async function supprimerActionPlan(actionId: string): Promise<void> {
+  await verifierSaisie();
   const { db, action, etablissementId } = await requireAction(actionId);
 
   await db.action.delete({ where: { id: actionId } });
