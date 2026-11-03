@@ -48,18 +48,47 @@ connecteur MCP OAuth de Supabase n'existe plus — garder la suppression de
   de plus à rejouer, rien d'autre. Suite du chantier et constats des revues :
   `docs/notes-chantier-abonnements-stripe.md` (§ 5 les lots, § 7 ce que les
   revues renvoient au webhook, aux droits et au parcours).
-- **Plusieurs utilisateurs par compte, lot 1** (2026-11-03, ADR-054, PR #159) :
+- **Plusieurs utilisateurs par compte, lot 1** (2026-11-03, ADR-054, PR #159,
+  fusionnée dans `cc` en 5e4c8378 avec l'ADR, #157) :
   tables `Compte`, `Membre`, `InvitationCompte` (plugin `organization` de
   Better Auth) ; la racine de l'isolation est `compteId`, plus `userId` ;
   l'appartenance est relue à chaque requête ; + 1 requête par page. Cinq
   migrations, avec reprise (un compte par utilisateur existant) et arrêt
   avant le retrait de `userId` si une ligne y échappe. **Si la bascule a lieu
   avant la fusion de ce lot**, scinder la dernière migration (§ 10 de
-  l'ADR). ~~Pas encore d'écran : invitation, lecture seule et membres viennent
+  l'ADR). [2026-11-03 : sans objet, fusionné avant la bascule.] ~~Pas encore d'écran : invitation, lecture seule et membres viennent
   aux lots suivants.~~ [2026-11-03 : lots 3 et 4 sur la même PR — lecture
   seule (client borné et `verifierSaisie`), écran « Membres », invitation par
   e-mail, choix du compte. Reste : masquer les boutons de saisie pour la
   lecture seule, plafond de membres par formule.]
+
+### Multi-utilisateurs : ce qui reste (2026-11-03)
+
+- **Recette à rejouer AVANT la bascule** : la matrice « 75 routes × 2 comptes »
+  du 2026-10-31 n'a pas été rejouée depuis l'ADR-054 (son outil n'est pas
+  versionné). La rejouer avec un compte A à **deux membres** (un membre, un
+  lecture seule) et un compte B, plus un membre retiré (ADR-054 § 9). Les
+  tests sur base réelle (`portee/client`, `auth/membres`,
+  `membres/invitation` .integration) couvrent la borne, l'appartenance et le
+  parcours d'invitation, pas chaque route.
+- **Décision à confirmer par la propriétaire** : supprimer une entreprise ou
+  un établissement est réservé au propriétaire du compte
+  (`verifierProprietaire`), choix de réalisation (ADR-054, « Ce que la
+  réalisation a précisé, lots 3 et 4 »). Pour l'ouvrir aux membres :
+  `verifierRole` à la place, dans `entreprises/actions.ts` et
+  `etablissements/actions.ts`.
+- **Lot à part, lecture seule** : masquer les boutons de saisie pour un
+  membre en lecture seule (environ 80 écrans de formulaires). D'ici là, tout
+  geste tenté aboutit à `/compte/lecture-seule`, et le client borné refuse
+  l'écriture.
+- **Plafond de membres par formule** : à poser quand la gamme est arrêtée
+  (`membershipLimit` du plugin, lu depuis la formule, invitations en attente
+  comprises ; ADR-054 § 8). Le plugin garde aujourd'hui son défaut de 100.
+- **Choix du compte dans la gélule** : il n'existe que sur l'écran « Membres »
+  (ADR-054 § 7).
+- **Bases locales** qui ont joué `20261103120000_comptes_et_membres` avant
+  son CHECK et son déclencheur : à remettre à zéro (aucune n'est en
+  production).
 
 ## Ce qui reste avant la bascule
 
