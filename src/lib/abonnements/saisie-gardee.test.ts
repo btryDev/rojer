@@ -31,6 +31,7 @@ const OUVERTES = new Map<string, string>([
   ["lib/signatures/actions.ts:renvoyerCodeOtp", "acte d'un tiers par lien vérifié, pas du titulaire"],
   ["lib/entreprises/actions.ts:supprimerEntreprise", "supprimer ses données reste possible à tout moment (RGPD, règle 9)"],
   ["lib/etablissements/actions.ts:supprimerEtablissement", "supprimer ses données reste possible à tout moment (RGPD, règle 9)"],
+  ["lib/membres/actions.ts:quitterCompte", "quitter un compte reste possible à tout moment, quel que soit son rôle (ADR-054 § 6)"],
 ]);
 
 /**
@@ -46,6 +47,7 @@ const OUVERTES_A_LA_LECTURE = new Set<string>(
       c === "lib/assistance/actions.ts:demanderAssistance" ||
       c === "lib/signatures/actions.ts:poserSignatureAvecToken" ||
       c === "lib/signatures/actions.ts:renvoyerCodeOtp",
+      c === "lib/membres/actions.ts:quitterCompte",
   ),
 );
 
