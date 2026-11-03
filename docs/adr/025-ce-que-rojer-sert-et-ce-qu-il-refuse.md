@@ -38,8 +38,12 @@ l'entreprise plafonné comme celui du site ; et depuis le 2026-10-17, le filtre
 OA, REF, GA, EF, et R qui accueille des enfants — ADR-031, amendement du
 2026-10-18] :
 
-1. **plus de cinquante travailleurs** — au-delà, les obligations changent de
-   nature (CSSCT dédiée, programme annuel présenté au CSE) et le produit ne les
+1. **~~plus de cinquante~~ cinquante travailleurs ou plus** [2026-11-03 : borne à
+   quarante-neuf, ADR-031, amendement du 2026-11-03 — le programme annuel est dû
+   dès cinquante (L. 4121-3-1, III, 1°)] — au-delà, les obligations changent de
+   nature (~~CSSCT dédiée,~~ [2026-09-26 : la CSSCT n'est imposée qu'à partir de
+   trois cents salariés, L. 2315-36 — retirée des messages de refus le même jour,
+   pas d'ici] programme annuel présenté au CSE, L. 2312-27) et le produit ne les
    porte pas ;
 2. **un ERP situé dans un immeuble de grande hauteur** — il relève du règlement
    de sécurité des IGH, jamais dépouillé.
@@ -103,7 +107,7 @@ public reçu, pas l'effectif salarié.** Un restaurant de huit salariés qui ~~r
 trois cents couverts relève de la 3ᵉ catégorie~~ peut accueillir quatre cents personnes à la fois relève de la 3ᵉ catégorie. *[Corrigé le 2026-09-26 : R. 143-19 CCH classe « d'après l'effectif du public et du personnel », majore le public du personnel, et met « 300 personnes et au-dessous » en 4ᵉ catégorie ; « trois cents couverts » était faux deux fois. La décision n'en dépend pas.]* C'est exactement la cible du
 produit, et le refuser au nom d'un chiffre qui ne parle pas de ses salariés
 serait une erreur de lecture du cadrage lui-même. La borne du produit est de
-**cinquante salariés** ; elle ne s'applique pas au public reçu.
+**~~cinquante~~ [2026-11-03 : quarante-neuf] salariés** ; elle ne s'applique pas au public reçu.
 
 Une position intermédiaire a été proposée en cours de journée — différer les
 catégories 1 à 4 hors du recadrage — et **elle a été écartée** par la
