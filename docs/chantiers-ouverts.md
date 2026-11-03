@@ -497,7 +497,7 @@ qu'un restaurant de huit salariés en 3ᵉ catégorie « reste dans la cible ».
 deux définitions cohabitent dans le dépôt ; ~~la réponse appartient à la
 propriétaire (lot 6b), et elle déplacerait quatre lignes de colonne.~~
 [**TRANCHÉ le 2026-10-12** par la propriétaire : la cible est ce que
-l'onboarding ne refuse pas — au plus cinquante travailleurs, pas d'ERP en IGH
+l'onboarding ne refuse pas — au plus ~~cinquante~~ [2026-11-03 : quarante-neuf, ADR-031 amendée] travailleurs, pas d'ERP en IGH
 (ADR-031) [2026-10-18 : plus les refus du filtre à l'accueil du 2026-10-17,
 ADR-031 amendée — amendement du 2026-10-18] ; au sens large, TPE/PME. Le restaurant de 4ᵉ catégorie EST dans la
 cible. ~~Reste à faire : aligner `toucheLaCible` sur cette définition plutôt que

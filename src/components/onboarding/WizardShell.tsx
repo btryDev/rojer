@@ -149,7 +149,7 @@ export function WizardShell({
   /**
    * Le refus de périmètre de l'étape courante, recalculé à chaque rendu.
    *
-   * Il ne se lève par aucune saisie de plus — plus de cinquante travailleurs,
+   * Il ne se lève par aucune saisie de plus — ~~plus de cinquante~~ cinquante travailleurs ou plus (borne à 49 depuis le 2026-11-03),
    * un ERP en IGH (ADR-031) —, donc la porte s'annonce fermée AVANT le clic :
    * le bouton passe en `disabled`, et le refus s'écrit une seule fois, à
    * l'endroit où on le provoque. Il restait « noir plein » et le clic

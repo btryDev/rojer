@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { EFFECTIF_MAX } from "@/lib/etablissements/schema";
 import {
   couvertureDeLEtablissement,
   couvertureDuRegime,
@@ -593,6 +594,24 @@ describe("axe effectif", () => {
       faits({ effectif: { surSite: 50, entreprise: 46, seuilServi: 50 } }),
     );
     expect(axes(doute)).toContain("effectif");
+  });
+
+  it("à la vraie borne (EFFECTIF_MAX) : la borne se tait, un de plus dit le dépassement", () => {
+    // Les autres cas injectent `seuilServi: 50` pour éprouver la branche
+    // « servi au seuil du programme », dormante tant que la borne reste sous
+    // cinquante. Celui-ci lit la constante de la porte.
+    expect(EFFECTIF_MAX).toBeLessThan(50);
+    const sous = couvertureDeLEtablissement(
+      faits({ effectif: { surSite: EFFECTIF_MAX, entreprise: EFFECTIF_MAX, seuilServi: EFFECTIF_MAX } }),
+    );
+    expect(axes(sous)).not.toContain("effectif");
+
+    const plein = couvertureDeLEtablissement(
+      faits({ effectif: { surSite: 50, entreprise: 50, seuilServi: EFFECTIF_MAX } }),
+    ).manques.filter((x) => x.axe === "effectif");
+    expect(plein).toHaveLength(1);
+    expect(plein[0].motif).toContain("au-delà");
+
   });
 
   it("au-dessus du seuil servi, dit le dépassement, une seule fois", () => {
