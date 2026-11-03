@@ -17,7 +17,7 @@ import Stripe from "stripe";
 import type { ModeStripe } from "./config";
 import { OPTIONS_WEBHOOK } from "./client";
 import { marquerEchec, marquerTraite, oublierLesAnciens, prendreEnCharge } from "./evenements";
-import { synchroniserClientStripe } from "./synchronisation";
+import { codePrisma, synchroniserClientStripe, type Synchronisation } from "./synchronisation";
 
 /** Une notification légère pèse moins d'un kilo-octet. */
 export const TAILLE_MAX_NOTIFICATION = 64 * 1024;
@@ -82,35 +82,41 @@ export function verifierNotificationStripe(
 
 const idDe = (c: string | { id: string } | null | undefined) => (typeof c === "string" ? c : (c?.id ?? null));
 
-/** Le client Stripe de l'objet de la notification, relu par l'API ; `null` : rien à suivre. */
-async function clientDeLObjet(stripe: Stripe, n: NotificationStripe): Promise<string | null> {
+type ObjetSuivi = { customerId: string | null; abonnement?: Stripe.Subscription };
+
+/** Le client Stripe de l'objet de la notification, relu par l'API ; `customerId` nul : rien à suivre. */
+async function objetSuivi(stripe: Stripe, n: NotificationStripe): Promise<ObjetSuivi> {
   switch (n.type) {
     case "v1.customer.subscription.created":
     case "v1.customer.subscription.updated":
     case "v1.customer.subscription.deleted":
     case "v1.customer.subscription.paused":
     case "v1.customer.subscription.resumed":
-    case "v1.customer.subscription.trial_will_end":
-      return idDe((await stripe.subscriptions.retrieve(n.related_object.id, {}, OPTIONS_WEBHOOK)).customer);
+    case "v1.customer.subscription.trial_will_end": {
+      const abonnement = await stripe.subscriptions.retrieve(n.related_object.id, {}, OPTIONS_WEBHOOK);
+      return { customerId: idDe(abonnement.customer), abonnement };
+    }
     case "v1.checkout.session.completed": {
       const session = await stripe.checkout.sessions.retrieve(n.related_object.id, {}, OPTIONS_WEBHOOK);
-      return session.mode === "subscription" ? idDe(session.customer) : null;
+      return { customerId: session.mode === "subscription" ? idDe(session.customer) : null };
     }
     case "v1.invoice.paid":
     case "v1.invoice.payment_failed":
     case "v1.invoice.payment_action_required":
-      return idDe((await stripe.invoices.retrieve(n.related_object.id, {}, OPTIONS_WEBHOOK)).customer);
+      return { customerId: idDe((await stripe.invoices.retrieve(n.related_object.id, {}, OPTIONS_WEBHOOK)).customer) };
     default:
-      return null;
+      return { customerId: null };
   }
 }
 
-/** Au plus un ménage par heure et par processus, hors du traitement. */
+const SANS_CLIENT: Synchronisation = { issue: "ignore", motif: "événement sans client Stripe à suivre" };
+
+/** Au plus un ménage par heure et par processus, après la réponse : il ne la retarde ni ne la change. */
 let dernierMenage = 0;
-async function menageDeTempsEnTemps() {
+function menageDeTempsEnTemps() {
   if (Date.now() - dernierMenage < 60 * 60_000) return;
   dernierMenage = Date.now();
-  await oublierLesAnciens().catch(() => console.warn("stripe : ménage des événements en échec"));
+  void oublierLesAnciens().catch(() => console.warn("stripe : ménage des événements en échec"));
 }
 
 /** Le code HTTP à rendre à Stripe. */
@@ -128,11 +134,13 @@ export async function traiterNotificationStripe(
   if (p.etat !== "prise") return p.etat === "deja-traite" ? 200 : 409;
 
   try {
-    const customerId = await clientDeLObjet(stripe, n);
-    const r = customerId ? await synchroniserClientStripe(stripe, customerId) : null;
-    const motif = !r ? "événement sans client Stripe à suivre" : r.issue === "ignore" ? r.motif : null;
-    if (r?.issue === "ignore" && r.alerte) console.error(`stripe : ${n.type} ${n.id} non enregistré — ${motif}`);
-    else if (motif) console.warn(`stripe : ${n.type} ${n.id} sans effet — ${motif}`);
+    const { customerId, abonnement } = await objetSuivi(stripe, n);
+    const r = customerId ? await synchroniserClientStripe(stripe, customerId, { abonnementLu: abonnement }) : SANS_CLIENT;
+    const motif = r.issue === "ignore" ? r.motif : null;
+    if (r.issue === "ignore") {
+      if (r.alerte) console.error(`stripe : ${n.type} ${n.id} non enregistré — ${r.motif}`);
+      else console.warn(`stripe : ${n.type} ${n.id} sans effet — ${r.motif}`);
+    }
     await marquerTraite(n.id, p.prise, motif);
   } catch (e) {
     const motif = motifDErreur(e);
@@ -140,7 +148,7 @@ export async function traiterNotificationStripe(
     await marquerEchec(n.id, p.prise, motif);
     return 500;
   }
-  await menageDeTempsEnTemps();
+  menageDeTempsEnTemps();
   return 200;
 }
 
@@ -149,7 +157,6 @@ export function motifDErreur(e: unknown): string {
   if (e instanceof Stripe.errors.StripeError) {
     return `API Stripe : ${e.type}${e.statusCode ? ` ${e.statusCode}` : ""}${e.code ? ` (${e.code})` : ""}`;
   }
-  const code = (e as { code?: unknown } | null)?.code;
-  if (typeof code === "string" && /^P\d{4}$/.test(code)) return `base : ${code}`;
-  return "erreur inattendue";
+  const code = codePrisma(e);
+  return code ? `base : ${code}` : "erreur inattendue";
 }

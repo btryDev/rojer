@@ -97,7 +97,7 @@ describe("synchroniserClientStripe — le compte vient de Stripe relu, jamais de
   const stripeAvec = (client: object, abonnements: Stripe.Subscription[] = []) =>
     ({
       customers: { retrieve: vi.fn().mockResolvedValue(client) },
-      subscriptions: { list: vi.fn().mockResolvedValue({ data: abonnements }) },
+      subscriptions: { list: vi.fn().mockReturnValue({ autoPagingToArray: vi.fn().mockResolvedValue(abonnements) }) },
     }) as unknown as Stripe;
 
   it("sans compte, au compte mal formé, ou supprimé sans abonnement qui le nomme : sans effet, aucune écriture", async () => {

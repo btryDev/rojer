@@ -10,8 +10,12 @@ import "server-only";
 // - La ligne n'est écrite que si elle porte CE client Stripe ; un conflit
 //   (autre client, autre compte, compte disparu) ne s'écrit pas : il se
 //   signale (`alerte`).
-// - Écriture conditionnelle sur `relueLe` : une relecture plus ancienne que la
-//   dernière écrite (deux livraisons croisées) n'écrase rien.
+// - Écriture conditionnelle sur `relueLe`, l'heure à laquelle la relecture
+//   commence : une relecture lancée plus tôt n'écrase pas une lancée plus
+//   tard. Limite connue : deux relectures croisées dont la plus récente
+//   reviendrait avec l'état le plus ancien (latence réseau inégale) laissent
+//   cet état jusqu'à l'événement suivant — Stripe en envoie plusieurs par
+//   changement (abonnement, facture).
 
 import type Stripe from "stripe";
 import { clientDuClientStripe } from "@/lib/auth/compte-hors-session";
@@ -87,8 +91,8 @@ export function compteDuClientStripe(
   return typeof userId === "string" && UUID.test(userId) ? userId : null;
 }
 
-/** Code d'une erreur Prisma, reconnu à sa forme (sans charger le client généré). */
-const codePrisma = (e: unknown) => {
+/** Code d'une erreur Prisma, reconnu à sa forme (aussi lu par `motifDErreur`). */
+export const codePrisma = (e: unknown) => {
   const code = (e as { code?: unknown } | null)?.code;
   return typeof code === "string" && /^P\d{4}$/.test(code) ? code : null;
 };
@@ -97,23 +101,81 @@ export type Synchronisation =
   | { issue: "ecrit" | "inchange" }
   | { issue: "ignore"; motif: string; alerte?: true };
 
+const ECRIT = { issue: "ecrit" } as const;
+const INCHANGE = { issue: "inchange" } as const;
+const SANS_COMPTE = { issue: "ignore", motif: "client Stripe sans compte Rojer (metadata.userId)" } as const;
+const INTROUVABLE = { issue: "ignore", motif: "compte Rojer introuvable", alerte: true } as const;
 const DEJA_LIE = { issue: "ignore", motif: "client ou abonnement Stripe déjà lié à un autre compte", alerte: true } as const;
 const AUTRE_CLIENT = { issue: "ignore", motif: "le compte est lié à un autre client Stripe", alerte: true } as const;
+
+type Db = ReturnType<typeof clientDuClientStripe>;
+type Donnees = ReturnType<typeof colonnesDe> & { relueLe: Date; essaiUtiliseLe: Date | null };
+
+/** `null` : une livraison simultanée a créé la ligne du compte — passer à la mise à jour. */
+async function creerLigne(db: Db, userId: string, customerId: string, donnees: Donnees) {
+  try {
+    await db.abonnement.create({ data: { userId, stripeCustomerId: customerId, ...donnees } });
+    return ECRIT;
+  } catch (e) {
+    switch (codePrisma(e)) {
+      // Compte disparu : clé étrangère (P2003), ou la liaison au compte que
+      // pose la borne (P2025, enregistrement requis introuvable).
+      case "P2003":
+      case "P2025":
+        return INTROUVABLE;
+      case "P2002":
+        break;
+      default:
+        throw e;
+    }
+  }
+  // Unicité : la ligne du compte vient d'être créée, ou ce client Stripe est
+  // déjà à un autre compte.
+  const creee = await db.abonnement.findUnique({ where: { userId }, select: { stripeCustomerId: true } });
+  if (!creee) return DEJA_LIE;
+  return creee.stripeCustomerId !== customerId ? AUTRE_CLIENT : null;
+}
+
+async function mettreAJour(db: Db, userId: string, customerId: string, donnees: Donnees) {
+  try {
+    const { count } = await db.abonnement.updateMany({
+      where: { userId, stripeCustomerId: customerId, OR: [{ relueLe: null }, { relueLe: { lt: donnees.relueLe } }] },
+      data: donnees,
+    });
+    return count === 1 ? ECRIT : INCHANGE;
+  } catch (e) {
+    // L'abonnement relu est déjà sur la ligne d'un autre compte.
+    if (codePrisma(e) === "P2002") return DEJA_LIE;
+    throw e;
+  }
+}
 
 export async function synchroniserClientStripe(
   stripe: Stripe,
   customerId: string,
-  maintenant: () => Date = () => new Date(),
+  options: { abonnementLu?: Stripe.Subscription | null; maintenant?: () => Date } = {},
 ): Promise<Synchronisation> {
-  const client = await stripe.customers.retrieve(customerId, {}, OPTIONS_WEBHOOK);
-  // L'heure de la relecture est prise AVANT de lister : une relecture qui
-  // commence plus tard voit un état au moins aussi récent.
-  const relueLe = maintenant();
-  const liste = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 100 }, OPTIONS_WEBHOOK);
-  const { courant, plusieurs } = abonnementCourant(liste.data);
+  // L'heure de la relecture, prise AVANT les deux lectures, lancées ensemble.
+  const relueLe = (options.maintenant ?? (() => new Date()))();
+  const [client, liste] = await Promise.allSettled([
+    stripe.customers.retrieve(customerId, {}, OPTIONS_WEBHOOK),
+    stripe.subscriptions
+      .list({ customer: customerId, status: "all", limit: 100 }, OPTIONS_WEBHOOK)
+      .autoPagingToArray({ limit: 10_000 }),
+  ]);
+  if (client.status === "rejected") throw client.reason;
+  // Client supprimé : la liste peut être refusée ; l'abonnement relu depuis
+  // la notification reste la seule trace du compte et de la résiliation.
+  const supprime = client.value.deleted === true;
+  const abonnements =
+    liste.status === "fulfilled" ? liste.value
+    : supprime ? (options.abonnementLu ? [options.abonnementLu] : [])
+    : null;
+  if (!abonnements) throw (liste as PromiseRejectedResult).reason;
 
-  const userId = compteDuClientStripe(client, courant);
-  if (!userId) return { issue: "ignore", motif: "client Stripe sans compte Rojer (metadata.userId)" };
+  const { courant, plusieurs } = abonnementCourant(abonnements);
+  const userId = compteDuClientStripe(client.value, courant);
+  if (!userId) return SANS_COMPTE;
   if (plusieurs) console.error(`stripe : plusieurs abonnements en cours pour un même client (${customerId})`);
 
   const db = clientDuClientStripe(userId);
@@ -123,38 +185,14 @@ export async function synchroniserClientStripe(
   });
   if (ligne && ligne.stripeCustomerId !== customerId) return AUTRE_CLIENT;
 
-  const donnees = {
+  const donnees: Donnees = {
     ...colonnesDe(courant),
     relueLe,
-    essaiUtiliseLe: ligne?.essaiUtiliseLe ?? premierEssai(liste.data),
+    essaiUtiliseLe: ligne?.essaiUtiliseLe ?? premierEssai(abonnements),
   };
-
-  try {
-    if (!ligne) {
-      try {
-        await db.abonnement.create({ data: { userId, stripeCustomerId: customerId, ...donnees } });
-        return { issue: "ecrit" };
-      } catch (e) {
-        // Compte disparu : clé étrangère (P2003), ou la liaison au compte que
-        // pose la borne (P2025, enregistrement requis introuvable).
-        const code = codePrisma(e);
-        if (code === "P2003" || code === "P2025") return { issue: "ignore", motif: "compte Rojer introuvable", alerte: true };
-        if (code !== "P2002") throw e;
-        // Unicité : une livraison simultanée a créé la ligne du compte — on
-        // passe à la mise à jour —, ou ce client est déjà à un autre compte.
-        const creee = await db.abonnement.findUnique({ where: { userId }, select: { stripeCustomerId: true } });
-        if (!creee) return DEJA_LIE;
-        if (creee.stripeCustomerId !== customerId) return AUTRE_CLIENT;
-      }
-    }
-    const { count } = await db.abonnement.updateMany({
-      where: { userId, stripeCustomerId: customerId, OR: [{ relueLe: null }, { relueLe: { lt: relueLe } }] },
-      data: donnees,
-    });
-    return { issue: count === 1 ? "ecrit" : "inchange" };
-  } catch (e) {
-    // L'abonnement relu est déjà sur la ligne d'un autre compte.
-    if (codePrisma(e) === "P2002") return DEJA_LIE;
-    throw e;
+  if (!ligne) {
+    const issue = await creerLigne(db, userId, customerId, donnees);
+    if (issue) return issue;
   }
+  return mettreAJour(db, userId, customerId, donnees);
 }

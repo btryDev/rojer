@@ -64,10 +64,17 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
       ...o,
     }) as unknown as Stripe.Subscription;
 
-  const stripe = (userId: string, abonnements: Stripe.Subscription[], client?: object) =>
+  const stripe = (userId: string, abonnements: Stripe.Subscription[] | Error, client?: object) =>
     ({
       customers: { retrieve: async (id: string) => client ?? { id, metadata: { userId } } },
-      subscriptions: { list: async () => ({ data: abonnements }) },
+      subscriptions: {
+        list: () => ({
+          autoPagingToArray: async () => {
+            if (abonnements instanceof Error) throw abonnements;
+            return abonnements;
+          },
+        }),
+      },
     }) as unknown as Stripe;
   vi.spyOn(console, "error").mockImplementation(() => {});
 
@@ -77,7 +84,7 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
     it("crée la ligne du compte que désigne le client Stripe relu, puis la met à jour", async () => {
       const essai = 1_780_000_000;
       const s1 = stripe(A, [abo({ id: "sub_1", status: "trialing", created: 1, trial_start: essai })]);
-      expect(await synchroniserClientStripe(s1, "cus_A", () => new Date(1000))).toEqual({ issue: "ecrit" });
+      expect(await synchroniserClientStripe(s1, "cus_A", { maintenant: () => new Date(1000) })).toEqual({ issue: "ecrit" });
       expect(await ligne(A)).toMatchObject({
         stripeCustomerId: "cus_A",
         stripeSubscriptionId: "sub_1",
@@ -87,15 +94,15 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
       });
 
       const s2 = stripe(A, [abo({ id: "sub_1", status: "active", created: 1 })]);
-      expect(await synchroniserClientStripe(s2, "cus_A", () => new Date(2000))).toEqual({ issue: "ecrit" });
+      expect(await synchroniserClientStripe(s2, "cus_A", { maintenant: () => new Date(2000) })).toEqual({ issue: "ecrit" });
       // L'essai consommé le reste, même quand l'abonnement relu n'en a plus.
       expect(await ligne(A)).toMatchObject({ statut: "active", essaiUtiliseLe: new Date(essai * 1000) });
     });
 
     it("une relecture plus ancienne que la dernière écrite n'écrase rien (livraisons croisées)", async () => {
-      await synchroniserClientStripe(stripe(A, [abo({ id: "sub_1", status: "active", created: 1 })]), "cus_A", () => new Date(5000));
+      await synchroniserClientStripe(stripe(A, [abo({ id: "sub_1", status: "active", created: 1 })]), "cus_A", { maintenant: () => new Date(5000) });
       const tardive = stripe(A, [abo({ id: "sub_1", status: "past_due", created: 1 })]);
-      expect(await synchroniserClientStripe(tardive, "cus_A", () => new Date(4000))).toEqual({ issue: "inchange" });
+      expect(await synchroniserClientStripe(tardive, "cus_A", { maintenant: () => new Date(4000) })).toEqual({ issue: "inchange" });
       expect((await ligne(A))?.statut).toBe("active");
     });
 
@@ -137,6 +144,16 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
       });
       expect(await synchroniserClientStripe(s, "cus_A")).toEqual({ issue: "ecrit" });
       expect((await ligne(A))?.statut).toBe("canceled");
+    });
+
+    it("client Stripe supprimé dont la liste est refusée : l'abonnement relu depuis la notification suffit", async () => {
+      await prisma.abonnement.create({ data: { userId: A, stripeCustomerId: "cus_A", statut: "active" } });
+      const lu = abo({ id: "sub_1", status: "canceled", created: 1, metadata: { userId: A } });
+      const s = stripe(A, new Error("resource_missing"), { id: "cus_A", deleted: true });
+      expect(await synchroniserClientStripe(s, "cus_A", { abonnementLu: lu })).toEqual({ issue: "ecrit" });
+      expect((await ligne(A))?.statut).toBe("canceled");
+      // Client présent : une liste refusée est une panne, rendue à la relance.
+      await expect(synchroniserClientStripe(stripe(A, new Error("panne")), "cus_A", { abonnementLu: lu })).rejects.toThrow("panne");
     });
 
     it("compte disparu : sans effet, signalé, sans erreur que Stripe relancerait", async () => {

@@ -8,11 +8,15 @@ vi.mock("./evenements", () => ({
   marquerEchec: vi.fn(),
   oublierLesAnciens: vi.fn().mockResolvedValue(undefined),
 }));
-vi.mock("./synchronisation", () => ({ synchroniserClientStripe: vi.fn() }));
+vi.mock("./synchronisation", async (reel) => ({
+  ...(await reel<typeof import("./synchronisation")>()),
+  synchroniserClientStripe: vi.fn(),
+}));
 
 import * as evenements from "./evenements";
 import { synchroniserClientStripe } from "./synchronisation";
 import {
+  EVENEMENTS_ECOUTES,
   lireCorpsBorne,
   motifDErreur,
   traiterNotificationStripe,
@@ -132,18 +136,29 @@ describe("traiterNotificationStripe", () => {
     api.subscriptions.retrieve.mockResolvedValue({ id: "sub_1", customer: "cus_1" });
     expect(await traiterNotificationStripe(faux, notif("v1.customer.subscription.deleted", "sub_1"), "test")).toBe(200);
     expect(api.subscriptions.retrieve).toHaveBeenCalledWith("sub_1", {}, expect.objectContaining({ maxNetworkRetries: 0 }));
-    expect(synchroniserClientStripe).toHaveBeenCalledWith(faux, "cus_1");
+    // L'abonnement relu suit : seule trace du compte si le client Stripe est supprimé.
+    expect(synchroniserClientStripe).toHaveBeenCalledWith(faux, "cus_1", {
+      abonnementLu: expect.objectContaining({ id: "sub_1" }),
+    });
     expect(evenements.marquerTraite).toHaveBeenCalledWith("evt_test_1", PRISE, null);
+  });
+
+  it.each(EVENEMENTS_ECOUTES)("%s : chaque événement écouté relit son objet et synchronise", async (type) => {
+    api.subscriptions.retrieve.mockResolvedValue({ customer: "cus_1" });
+    api.checkout.sessions.retrieve.mockResolvedValue({ mode: "subscription", customer: "cus_1" });
+    api.invoices.retrieve.mockResolvedValue({ customer: "cus_1" });
+    expect(await traiterNotificationStripe(faux, notif(type, "obj_1"), "test")).toBe(200);
+    expect(synchroniserClientStripe).toHaveBeenCalledWith(faux, "cus_1", expect.anything());
   });
 
   it("facture et paiement Checkout : le client de l'objet relu", async () => {
     api.invoices.retrieve.mockResolvedValue({ customer: { id: "cus_2" } });
     await traiterNotificationStripe(faux, notif("v1.invoice.payment_failed", "in_1"), "test");
-    expect(synchroniserClientStripe).toHaveBeenLastCalledWith(faux, "cus_2");
+    expect(synchroniserClientStripe).toHaveBeenLastCalledWith(faux, "cus_2", { abonnementLu: undefined });
 
     api.checkout.sessions.retrieve.mockResolvedValue({ mode: "subscription", customer: "cus_3" });
     await traiterNotificationStripe(faux, notif("v1.checkout.session.completed", "cs_1"), "test");
-    expect(synchroniserClientStripe).toHaveBeenLastCalledWith(faux, "cus_3");
+    expect(synchroniserClientStripe).toHaveBeenLastCalledWith(faux, "cus_3", { abonnementLu: undefined });
   });
 
   it("sans client à suivre (paiement ponctuel, type non écouté) : traité sans effet, avec un motif", async () => {
@@ -180,8 +195,8 @@ describe("traiterNotificationStripe", () => {
     expect(evenements.marquerTraite).not.toHaveBeenCalled();
   });
 
-  it("le ménage ne transforme jamais un succès en échec", async () => {
-    vi.spyOn(console, "warn").mockImplementation(() => {});
+  it("le ménage ne transforme jamais un succès en échec, et son échec est rattrapé", async () => {
+    const avertir = vi.spyOn(console, "warn").mockImplementation(() => {});
     vi.mocked(evenements.oublierLesAnciens).mockRejectedValue(new Error("verrou"));
     api.invoices.retrieve.mockResolvedValue({ customer: "cus_1" });
     // Seule l'horloge avance : le ménage n'a lieu qu'une fois par heure.
@@ -190,6 +205,9 @@ describe("traiterNotificationStripe", () => {
     vi.mocked(Date.now).mockRestore();
     expect(evenements.oublierLesAnciens).toHaveBeenCalled();
     expect(evenements.marquerEchec).not.toHaveBeenCalled();
+    // Lancé après la réponse : une promesse rejetée sans `catch` peut arrêter le processus.
+    await new Promise((r) => setTimeout(r, 0));
+    expect(avertir).toHaveBeenCalledWith(expect.stringMatching(/ménage des événements en échec/));
   });
 });
 

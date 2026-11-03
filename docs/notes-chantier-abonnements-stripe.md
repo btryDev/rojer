@@ -348,6 +348,19 @@ plus une fois par heure et hors du traitement, `OPTIONS_WEBHOOK` dans
 `instanceof`, `switch` typé sur les événements écoutés. Ce qui revient aux
 lots suivants :
 
+**Seconde passe des revues du lot 2 (2026-11-03)** — sécurité : rien
+d'exploitable ; corrigé : client Stripe supprimé (l'abonnement relu depuis la
+notification suffit si la liste est refusée), toutes les pages
+d'abonnements, client et liste relus ensemble, ménage après la réponse et
+rattrapé, `creerLigne`/`mettreAJour` à la place de deux `try` imbriqués, un
+test par événement écouté. Limites connues, écrites dans le code :
+- deux relectures croisées dont la plus récente reviendrait avec l'état le
+  plus ancien laissent cet état jusqu'à l'événement suivant (Stripe en
+  envoie plusieurs par changement) ;
+- un traitement bloqué plus de 2 minutes peut être refait par une autre
+  livraison : les écritures le supportent ; **le lot 5 (rappels d'essai,
+  e-mails) devra rendre ses effets idempotents par identifiant d'événement**.
+
 **Lot 4 (parcours), en plus** : créer le client Stripe AVEC son
 `metadata.userId` dans le même appel (un événement reçu avant serait traité
 sans effet, pour de bon) ; poser aussi `subscription_data.metadata.userId`
