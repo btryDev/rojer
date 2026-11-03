@@ -56,7 +56,10 @@ et sans croire une information qui ne vient pas de Stripe.
    - Le compte se déduit de l'objet Stripe relu (`metadata.userId`, posé par
      Rojer à la création du client Stripe), jamais d'un identifiant de la
      charge utile pris tel quel — même règle que les accès sans session
-     (`auth/compte-hors-session.ts`).
+     (`auth/compte-hors-session.ts`). [2026-11-03, revues du lot 2 : ou, à
+     défaut, sur l'abonnement (`subscription_data.metadata.userId`, seul
+     encore lisible d'un client supprimé) ; une seule fonction,
+     `compteDuClientStripe`, où le multi-utilisateurs lira `compteId`.]
    - **Réception (lot 2, 2026-11-03)** : route `/api/stripe/webhook`,
      événements au format **léger** (thin), que la doc Stripe recommande pour
      une intégration neuve : la notification ne porte que le type et
@@ -65,7 +68,12 @@ et sans croire une information qui ne vient pas de Stripe.
      (400). Liste des événements à abonner : `EVENEMENTS_ECOUTES`
      (`stripe/webhook.ts`). Quel que soit l'événement, une seule voie :
      relire le client Stripe et tous ses abonnements, retenir le plus récent
-     non terminé (`synchronisation.ts`). Réponses : signature ou format
+     non terminé (`synchronisation.ts`) [2026-11-03 : celui qui paie
+     (`active`, `trialing`, `past_due`) d'abord, puis l'impayé ou suspendu,
+     puis celui qui attend son premier paiement — un abonnement neuf en
+     attente ne remplace pas celui qui paie]. Un conflit (client Stripe déjà
+     lié à un autre compte, compte disparu) ne s'écrit pas : traité sans
+     effet et signalé en erreur au journal. Réponses : signature ou format
      refusés, ou mode de l'événement différent de celui de la clé → 400 ;
      doublon → 200 sans rien refaire ; livraison déjà en cours → 409 ; échec
      → 500 (Stripe relance) ; abonnements désactivés → 503. Le traitement se

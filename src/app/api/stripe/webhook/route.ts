@@ -5,26 +5,21 @@
 
 import { configurationStripe } from "@/lib/stripe/config";
 import { clientStripe } from "@/lib/stripe/client";
-import {
-  TAILLE_MAX_NOTIFICATION,
-  traiterNotificationStripe,
-  verifierNotificationStripe,
-} from "@/lib/stripe/webhook";
+import { lireCorpsBorne, traiterNotificationStripe, verifierNotificationStripe } from "@/lib/stripe/webhook";
 
 const reponse = (status: number) => new Response(null, { status, headers: { "Cache-Control": "no-store" } });
 
 export async function POST(request: Request) {
   const config = configurationStripe();
-  const stripe = clientStripe();
-  if (!config.active || !stripe) {
+  if (!config.active) {
     console.error("stripe : notification reçue alors que les abonnements sont désactivés");
     return reponse(503);
   }
 
-  if (Number(request.headers.get("content-length") ?? 0) > TAILLE_MAX_NOTIFICATION) return reponse(413);
-  const corps = await request.text();
-  if (corps.length > TAILLE_MAX_NOTIFICATION) return reponse(413);
+  const corps = await lireCorpsBorne(request);
+  if (corps === null) return reponse(413);
 
+  const stripe = clientStripe(config);
   const verification = verifierNotificationStripe(
     stripe,
     corps,

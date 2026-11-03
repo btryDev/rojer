@@ -5,7 +5,7 @@ vi.mock("server-only", () => ({}));
 const { clientDuClientStripe } = vi.hoisted(() => ({ clientDuClientStripe: vi.fn() }));
 vi.mock("@/lib/auth/compte-hors-session", () => ({ clientDuClientStripe }));
 
-import { abonnementCourant, colonnesDe, synchroniserClientStripe } from "./synchronisation";
+import { abonnementCourant, colonnesDe, premierEssai, synchroniserClientStripe } from "./synchronisation";
 
 const abo = (o: Partial<Stripe.Subscription> & { id: string; prix?: string }) =>
   ({
@@ -32,6 +32,20 @@ describe("abonnementCourant", () => {
   it("sans abonnement vivant : le plus récent, pour enregistrer la résiliation", () => {
     const r = abonnementCourant([abo({ id: "a", status: "canceled", created: 1 }), abo({ id: "b", status: "canceled", created: 2 })]);
     expect(r.courant?.id).toBe("b");
+  });
+
+  it("un abonnement neuf en attente de paiement ne remplace pas celui qui paie", () => {
+    const r = abonnementCourant([
+      abo({ id: "paye", status: "active", created: 10 }),
+      abo({ id: "attente", status: "incomplete", created: 20 }),
+    ]);
+    expect(r).toEqual({ courant: expect.objectContaining({ id: "paye" }), plusieurs: false });
+  });
+
+  it("un état inconnu passe après celui qui paie, avant celui qui attend son paiement", () => {
+    const inconnu = abo({ id: "inconnu", status: "nouvel_etat" as Stripe.Subscription.Status, created: 30 });
+    expect(abonnementCourant([abo({ id: "paye", created: 1 }), inconnu]).courant?.id).toBe("paye");
+    expect(abonnementCourant([abo({ id: "attente", status: "incomplete", created: 40 }), inconnu]).courant?.id).toBe("inconnu");
   });
 
   it("signale deux abonnements vivants à la fois", () => {
@@ -71,22 +85,31 @@ describe("colonnesDe", () => {
   });
 });
 
-describe("synchroniserClientStripe — le compte vient du client Stripe relu", () => {
-  const stripeAvec = (client: object) =>
+describe("premierEssai", () => {
+  it("le premier essai pris, sur quelque abonnement que ce soit", () => {
+    expect(premierEssai([abo({ id: "a", trial_start: 300 }), abo({ id: "b" }), abo({ id: "c", trial_start: 200 })]))
+      .toEqual(new Date(200_000));
+    expect(premierEssai([abo({ id: "a" })])).toBeNull();
+  });
+});
+
+describe("synchroniserClientStripe — le compte vient de Stripe relu, jamais de la notification", () => {
+  const stripeAvec = (client: object, abonnements: Stripe.Subscription[] = []) =>
     ({
       customers: { retrieve: vi.fn().mockResolvedValue(client) },
-      subscriptions: { list: vi.fn() },
+      subscriptions: { list: vi.fn().mockResolvedValue({ data: abonnements }) },
     }) as unknown as Stripe;
 
-  it("client supprimé, sans compte ou au compte mal formé : sans effet, aucune écriture", async () => {
-    for (const client of [
-      { id: "cus_1", deleted: true },
-      { id: "cus_1", metadata: {} },
-      { id: "cus_1", metadata: { userId: "pas-un-uuid" } },
+  it("sans compte, au compte mal formé, ou supprimé sans abonnement qui le nomme : sans effet, aucune écriture", async () => {
+    for (const s of [
+      stripeAvec({ id: "cus_1", metadata: {} }),
+      stripeAvec({ id: "cus_1", metadata: { userId: "pas-un-uuid" } }),
+      stripeAvec({ id: "cus_1", deleted: true }),
+      // Un client supprimé n'a plus de metadata : l'abonnement fait foi,
+      // pas un userId qui traînerait sur l'objet supprimé.
+      stripeAvec({ id: "cus_1", deleted: true, metadata: { userId: "00000000-0000-0000-0000-00000000000b" } }),
     ]) {
-      const s = stripeAvec(client);
       expect(await synchroniserClientStripe(s, "cus_1")).toMatchObject({ issue: "ignore" });
-      expect(s.subscriptions.list).not.toHaveBeenCalled();
     }
     expect(clientDuClientStripe).not.toHaveBeenCalled();
   });

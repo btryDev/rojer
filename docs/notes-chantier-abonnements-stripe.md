@@ -304,6 +304,9 @@ formules (limites, modules), une page de tarifs publique, la TVA.
   facturation Stripe (SIREN, TVA, adresse) — avec l'expert-comptable.
 - **Conditions générales** d'abonnement (durée, résiliation, impayé, sort des
   données) — à rédiger par la propriétaire, à lier dans Checkout.
+- **Préversion et développement** : utiliser deux environnements de test
+  Stripe distincts (bacs à sable), sinon la destination de préversion reçoit
+  les événements créés depuis un poste (revue de sécurité du lot 2).
 - **Réglages du tableau de bord Stripe** : relances (Smart Retries), état
   après la dernière relance (`unpaid`), e-mails client (reçus, rappels
   d'essai, carte expirée), libellé de relevé court, portail.
@@ -332,6 +335,25 @@ colonnes `stripePriceId`, `finPrevueLe` (`cancel_at`), `traitementDebuteLe`,
   événements de risque (`v1.charge.dispute.created`, `v1.charge.refunded`,
   `v1.radar.early_fraud_warning.created`) avec au moins une trace et une
   alerte — rien ne s'encaisse avant.
+
+**Revues du lot 2 (2026-11-03)** — code (medium), sécurité, simplification ;
+corrigé dans le lot : abonnement retenu par rang (celui qui paie avant celui
+qui attend son paiement), essai lu sur tous les abonnements du client,
+compte disparu ou client déjà lié à un autre compte traités sans effet et
+signalés (au lieu d'un 500 relancé 3 jours ou d'une perte muette), client
+Stripe supprimé (compte lu sur l'abonnement), jeton de prise sur
+`marquerTraite`/`marquerEchec`, corps lu avec une borne en octets, ménage au
+plus une fois par heure et hors du traitement, `OPTIONS_WEBHOOK` dans
+`client.ts`, `clientStripe(config)` non nullable, erreurs Stripe par
+`instanceof`, `switch` typé sur les événements écoutés. Ce qui revient aux
+lots suivants :
+
+**Lot 4 (parcours), en plus** : créer le client Stripe AVEC son
+`metadata.userId` dans le même appel (un événement reçu avant serait traité
+sans effet, pour de bon) ; poser aussi `subscription_data.metadata.userId`
+dans la session Checkout (seule trace du compte si le client Stripe est un
+jour supprimé) ; seul le propriétaire du compte ouvre Checkout et le portail
+(proposition du chantier multi-utilisateurs, 2026-11-03).
 
 **Lot 3 (droits)** : décider explicitement le comportement de
 `droitsDuCompte` quand la configuration est inactive en production.
