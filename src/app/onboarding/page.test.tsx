@@ -22,8 +22,9 @@ vi.mock("next/navigation", () => ({ redirect: (u: string) => h.redirect(u) }));
 vi.mock("@/lib/auth/require-user", () => ({
   requireUser: async () => ({ id: "u1", email: "dirigeant@example.test" }),
 }));
-vi.mock("@/lib/auth/compte", () => ({ getOptionalCompte: async () => h.compte }));
-vi.mock("@/lib/auth/membres", () => ({ invitationsPourAdresse: async () => h.invitations }));
+vi.mock("@/lib/auth/compte", () => ({
+  aiguillageSansCompte: async () => (!h.compte && h.invitations[0] ? `/invitation/${h.invitations[0].id}` : null),
+}));
 vi.mock("@/lib/entreprises/queries", () => ({
   listerEntreprisesConnues: () => h.connues(),
 }));

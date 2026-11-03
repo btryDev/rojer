@@ -31,6 +31,17 @@ import { LONGUEUR_MIN_MOT_DE_PASSE } from "./mot-de-passe";
 const SEPT_JOURS = 60 * 60 * 24 * 7;
 const UN_JOUR = 60 * 60 * 24;
 const TRENTE_JOURS = UN_JOUR * 30;
+/**
+ * Un nom saisi par un utilisateur (personne, compte), mis dans un e-mail que
+ * Rojer envoie à un tiers : une ligne, sans lien, 80 caractères au plus —
+ * qu'un nom ne fasse pas d'une invitation Rojer un hameçonnage.
+ */
+export function nomPourEmail(brut: string): string {
+  const sansLien = brut.replace(/\S*(?:https?:\/\/|www\.)\S*/gi, "[lien retiré]");
+  const uneLigne = sansLien.replace(/[\u0000-\u001f\u007f\u2028\u2029]+/g, " ").replace(/\s+/g, " ").trim();
+  return uneLigne.length > 80 ? `${uneLigne.slice(0, 79)}…` : uneLigne;
+}
+
 /** Verrou du compte après dix seconds facteurs faux de suite (repris par le message). */
 export const VERROU_DOUBLE_AUTH_MINUTES = 15;
 
@@ -176,7 +187,7 @@ export const auth = betterAuth({
         envoyer(email, "Rojer — invitation à rejoindre un compte", [
           "Bonjour,",
           "",
-          `${inviter.user.name || inviter.user.email} vous invite à travailler sur le compte Rojer « ${organization.name} », en tant que ${libelleRole(role)}.`,
+          `${nomPourEmail(inviter.user.name || inviter.user.email)} vous invite à travailler sur le compte Rojer « ${nomPourEmail(organization.name)} », en tant que ${libelleRole(role)}.`,
           "",
           "Pour accepter, ouvrez ce lien (valable 7 jours) :",
           lienInvitation(id),

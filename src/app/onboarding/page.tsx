@@ -1,7 +1,6 @@
 import { WizardShell } from "@/components/onboarding/WizardShell";
 import { redirect } from "next/navigation";
-import { getOptionalCompte } from "@/lib/auth/compte";
-import { invitationsPourAdresse } from "@/lib/auth/membres";
+import { aiguillageSansCompte } from "@/lib/auth/compte";
 import { requireUser } from "@/lib/auth/require-user";
 import { listerEntreprisesConnues } from "@/lib/entreprises/queries";
 
@@ -26,10 +25,8 @@ export default async function OnboardingPage() {
   const user = await requireUser();
   // Une personne sans compte, invitée à en rejoindre un (ADR-054 § 5) : elle
   // voit l'invitation avant de créer un compte à elle. Refusée, elle revient ici.
-  if (user.email && !(await getOptionalCompte())) {
-    const [invitation] = await invitationsPourAdresse(user.email);
-    if (invitation) redirect(`/invitation/${invitation.id}`);
-  }
+  const aiguillage = await aiguillageSansCompte();
+  if (aiguillage) redirect(aiguillage);
   // ~~Un compte = une entreprise : le parcours ne se joue qu'une fois.~~
   // [2026-10-26 : chaque établissement passe par ce parcours. Un compte suit
   // plusieurs entreprises, une par SIREN ; un SIRET qui reprend le SIREN de

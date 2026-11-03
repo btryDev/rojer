@@ -18,6 +18,8 @@ import { droitsDe, type ContexteDroits, type Droits } from "./droits";
 export const PAGE_ABONNEMENT = "/compte/abonnement";
 /** Où une écriture refusée à un membre en lecture seule renvoie (ADR-054 § 4). */
 export const PAGE_LECTURE_SEULE = "/compte/lecture-seule";
+/** Où un geste réservé au propriétaire renvoie un autre membre. */
+export const PAGE_MEMBRES = "/compte/membres";
 
 /** `ABONNEMENT_EXIGE=oui` (espaces et casse tolérés, comme `env.ts`) : l'offre est lancée. */
 export function abonnementExige(env: Env = process.env): boolean {
@@ -59,6 +61,17 @@ export async function droitsDuCompte(db: Db, compteId: string): Promise<Droits> 
 export async function verifierRole(): Promise<void> {
   const c = await getOptionalCompte();
   if (c?.compte?.role === "lecture") redirect(PAGE_LECTURE_SEULE);
+}
+
+/**
+ * Un geste réservé au PROPRIÉTAIRE du compte (ADR-054 § 2, § 8) : l'abonnement
+ * (Checkout, portail, essai). Un membre ou un lecteur est renvoyé à la page des
+ * membres, qui le dit. À placer après `verifierSaisie`, ou seule pour un geste
+ * ouvert à un impayé.
+ */
+export async function verifierProprietaire(): Promise<void> {
+  const c = await getOptionalCompte();
+  if (c?.compte?.role !== "owner") redirect(`${PAGE_MEMBRES}?reserve=proprietaire`);
 }
 
 /**

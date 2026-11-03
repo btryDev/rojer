@@ -17,6 +17,7 @@ import { auth } from "@/lib/auth/better-auth";
 import { entetesDeSession } from "@/lib/auth/require-user";
 import { requireInvitationDeLaSession } from "@/lib/auth/scope";
 import { ROLES } from "@/lib/auth/roles";
+import { cleLimite, consommer, LIMITES, messageTropDeTentatives } from "@/lib/securite/limite-debit";
 
 export type EtatMembres = { status: "idle" | "success" | "error"; message?: string };
 
@@ -56,6 +57,11 @@ export async function inviterMembre(_prev: EtatMembres, formData: FormData): Pro
   if (compte.role !== "owner") return REFUS_PROPRIETAIRE;
   const lu = schemaInvitation.safeParse({ email: formData.get("email"), role: formData.get("role") });
   if (!lu.success) return { status: "error", message: lu.error.issues[0]?.message ?? "Formulaire invalide" };
+  // Chaque invitation est un e-mail Rojer vers un tiers : plafonnée par compte.
+  const verdict = await consommer([
+    { cle: cleLimite("invitation", "compte", compte.compteId), limite: LIMITES.invitationCompte },
+  ]);
+  if (!verdict.ok) return { status: "error", message: messageTropDeTentatives(verdict.reessayerDansSecondes) };
   try {
     await auth.api.createInvitation({
       headers: await entetesDeSession(),

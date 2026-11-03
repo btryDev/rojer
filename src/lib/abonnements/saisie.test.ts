@@ -15,7 +15,7 @@ vi.mock("@/lib/auth/compte", () => ({ getOptionalCompte }));
 vi.mock("@/lib/auth/require-user", () => ({ requireUser }));
 vi.mock("@/lib/stripe/config", () => ({ etatStripe }));
 
-import { abonnementExige, verifierRole, verifierSaisie } from "./saisie";
+import { abonnementExige, verifierProprietaire, verifierRole, verifierSaisie } from "./saisie";
 
 describe("verifierSaisie", () => {
   beforeEach(() => {
@@ -80,6 +80,22 @@ describe("verifierSaisie", () => {
     expect(requireUser).toHaveBeenCalled();
     expect(redirect).toHaveBeenCalledWith("/compte/abonnement?saisie=fermee");
     expect(findUnique).not.toHaveBeenCalled();
+  });
+});
+
+describe("verifierProprietaire (ADR-054 § 8)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("laisse passer le propriétaire, renvoie tout autre rôle à la page des membres", async () => {
+    getOptionalCompte.mockResolvedValueOnce({ compte: { compteId: "c1", role: "owner" } });
+    await expect(verifierProprietaire()).resolves.toBeUndefined();
+    for (const role of ["member", "lecture"]) {
+      getOptionalCompte.mockResolvedValueOnce({ compte: { compteId: "c1", role } });
+      await expect(verifierProprietaire()).rejects.toThrow("NEXT_REDIRECT");
+    }
+    getOptionalCompte.mockResolvedValueOnce(null);
+    await expect(verifierProprietaire()).rejects.toThrow("NEXT_REDIRECT");
+    expect(redirect).toHaveBeenCalledWith("/compte/membres?reserve=proprietaire");
   });
 });
 

@@ -74,6 +74,11 @@ ALTER TABLE "InvitationCompte" ADD CONSTRAINT "InvitationCompte_compteId_fkey" F
 -- AddForeignKey
 ALTER TABLE "InvitationCompte" ADD CONSTRAINT "InvitationCompte_inviterId_fkey" FOREIGN KEY ("inviterId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+-- Un rôle, et l'un des trois (ADR-054 § 2) : filet en base sous le refus du
+-- code (crochets du plugin, `estRole`). Pas de rôle multiple (« member,lecture »).
+ALTER TABLE "Membre" ADD CONSTRAINT "Membre_role_valide" CHECK ("role" IN ('owner', 'member', 'lecture'));
+ALTER TABLE "InvitationCompte" ADD CONSTRAINT "InvitationCompte_role_valide" CHECK ("role" IS NULL OR "role" IN ('owner', 'member', 'lecture'));
+
 -- Comme toutes les tables de `public` (migrations-rls.test.ts).
 ALTER TABLE "Compte" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "Membre" ENABLE ROW LEVEL SECURITY;

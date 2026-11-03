@@ -15,8 +15,13 @@ export const metadata = {
  * Les membres et les invitations sont lus pour le compte vérifié par
  * `requireCompte`, jamais pour un identifiant reçu.
  */
-export default async function MembresPage() {
+export default async function MembresPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ reserve?: string }>;
+}) {
   const { user, compte } = await requireCompte();
+  const { reserve } = await searchParams;
   const proprietaire = compte.role === "owner";
   const [membres, invitations] = await Promise.all([
     membresDuCompte(compte.compteId),
@@ -32,6 +37,12 @@ export default async function MembresPage() {
           Les personnes qui travaillent sur vos dossiers. Chacune voit tous les établissements du compte, selon son
           rôle. Les prestataires n&apos;en font pas partie : ils accèdent par un lien.
         </p>
+
+        {reserve === "proprietaire" && !proprietaire ? (
+          <p className="m-0 mt-6 text-[14px] leading-[1.45] text-[color:var(--board-slate-ink)]">
+            Ce geste est réservé à un propriétaire du compte : demandez-le à l&apos;un d&apos;eux.
+          </p>
+        ) : null}
 
         <section className="carte-board mt-7 px-7 py-6 sm:px-8" aria-labelledby="titre-membres">
           <h2 id="titre-membres" className="board-titre m-0 text-[22px]">

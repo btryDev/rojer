@@ -13,7 +13,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { getOptionalUser, requireUser } from "./require-user";
 import { clientBorne } from "./portee/client";
-import { appartenanceDeLaSession, compteDOnboarding, type Appartenance } from "./membres";
+import { appartenanceDeLaSession, compteDOnboarding, invitationsPourAdresse, type Appartenance } from "./membres";
 
 /**
  * L'appartenance de la personne connectée. Mémoïsée pour un rendu (`cache()`
@@ -56,6 +56,20 @@ export async function requireCompteDOnboarding(nomSiNouveau = "Mon compte") {
   const user = await requireUser();
   const compte = (await lireAppartenance(user.id)) ?? (await compteDOnboarding(user.id, nomSiNouveau));
   return { user, compte, db: portee(user.id, compte) };
+}
+
+/**
+ * L'AIGUILLAGE d'une personne connectée qui n'a encore aucun compte (ADR-054
+ * § 5) : son invitation en attente, s'il y en a une — elle rejoint ce compte au
+ * lieu d'en créer un. `null` si elle a déjà un compte, ou aucune invitation.
+ * Seule règle, lue par toute porte qui suit la connexion : l'onboarding, et
+ * l'écran d'essai (ADR-053) qui le précède.
+ */
+export async function aiguillageSansCompte(): Promise<string | null> {
+  const user = await requireUser();
+  if (!user.email || (await lireAppartenance(user.id))) return null;
+  const [invitation] = await invitationsPourAdresse(user.email);
+  return invitation ? `/invitation/${invitation.id}` : null;
 }
 
 export type Compte = Awaited<ReturnType<typeof requireCompte>>;
