@@ -64,9 +64,9 @@ règlement IGH pèsent sur l'exploitant de l'immeuble, pas sur lui.
 
 **Tout le reste se déclare et ne se refuse pas** : ICPE, expositions spécialisées
 (ATEX, DRPCE, CEM, CMR, amiante, plomb, radon, rayonnements ionisants), types
-d'ERP non instruits (CTS, GA, PS, SG, REF, EF, OA, PA, X) [2026-11-03 : et de
-nouveau J, U, R qui accueille des enfants, que le filtre du 2026-10-17 avait
-refusés ; les types acceptés dont Rojer ne suit pas les dispositions propres se
+d'ERP non instruits (CTS, GA, PS, SG, REF, EF, OA, PA, X) [2026-11-03 : s'y
+ajoutent J et U, dont les chapitres sont lus (2026-10-16) mais pas encore suivis,
+et R qui accueille des enfants, que le filtre du 2026-10-17 avait refusés ; les types acceptés dont Rojer ne suit pas les dispositions propres se
 déclarent par l'axe `type_erp` de `perimetre/couverture.ts`. Ce qui relève du
 Code du travail (ATEX, rayonnements ionisants, CMR…) est « pas encore » couvert,
 pas hors périmètre ; seul ce qui relève d'un autre code est hors périmètre]. Le critère qui a

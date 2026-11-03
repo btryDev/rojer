@@ -326,7 +326,22 @@ C'est une règle du moteur ; elle n'est pas touchée ici.
 ## Amendement du 2026-11-03 (ter) — réalignement CCH + Code du travail
 
 Décision de la propriétaire du 2026-11-03, relayée par la session de
-coordination (état des lieux : `alignement-cch-ct.html`, hors dépôt).
+coordination ; l'état des lieux du 2026-11-03 (refus, obligations d'autres
+codes, CCH et Code du travail lus mais non servis, textes non lus) est résumé
+dans cet amendement et dans `docs/couverture-declaree-du-produit.md`.
+
+**L'état des lieux, en bref** (relevé le 2026-11-03 sur `main` 1fef953a,
+référentiel `2026-10-18.1`, en exécutant le référentiel et le corpus) :
+- 204 obligations servies, dont 14 fondées sur un autre code (Code de
+  l'environnement et règlement UE pour les fluides frigorigènes et les ESP,
+  Code de la santé publique pour les légionelles et l'interdiction de fumer,
+  Code du sport) — elles restent en place pour l'instant ;
+- lus mais non servis : 79 articles du CCH (arrêté du 25 juin 1980, IGH,
+  habitation) et 43 du Code du travail, manques et « non couverts » ;
+- jamais lus : le livre IV de l'arrêté de 1980 hors PS 32, l'arrêté des
+  établissements flottants, l'essentiel de GN, du règlement IGH et de l'arrêté
+  habitation, le CCH lui-même hors cas cités, et une quarantaine de chapitres
+  de la partie 4 du Code du travail adressés à l'employeur.
 
 **La règle.** Rojer sert tout le Code de la construction et de l'habitation
 et tout le Code du travail (santé-sécurité) qui s'adressent à l'exploitant ou
