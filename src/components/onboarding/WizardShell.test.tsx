@@ -666,7 +666,7 @@ describe("filtre à l'accueil — le refus s'écrit dans le vrai parcours (revue
 });
 
 describe("un nouvel établissement d'une entreprise déjà suivie (2026-10-26)", () => {
-  const CONNUES = [{ siren: "120027016", raisonSociale: "SARL Le Comptoir", effectif: 13 }];
+  const CONNUES = [{ siren: "120027016", raisonSociale: "SARL Le Comptoir", effectif: 13, effectifHorsRojer: 0 }];
   const champ = (label: RegExp | string) => screen.getByLabelText(label) as HTMLInputElement;
 
   it("le SIRET d'un SIREN connu reprend la raison sociale et l'effectif, en lecture seule", async () => {

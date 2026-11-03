@@ -60,6 +60,27 @@ const h = vi.hoisted(() => {
   };
 });
 
+const eff = vi.hoisted(() => ({
+  accueillirSite: vi.fn(async () => {}),
+  ecrireEffectifs: vi.fn(async () => ({ entreprise: 0, site: 0 })),
+  effectifSuitLesFiches: vi.fn(async () => false),
+  recalculerEffectifEntreprise: vi.fn(async () => 0),
+  changerDeSociete: vi.fn(async () => {}),
+  regenererLaSociete: vi.fn(async () => true),
+}));
+// Le calcul de l'effectif de la société (2026-11-03) a ses propres tests
+// (`entreprises/effectif.test.ts`) : ici, on vérifie seulement qu'il est appelé.
+vi.mock("@/lib/entreprises/effectif", () => ({
+  RefusBorneEffectif: class RefusBorneEffectif extends Error {
+    constructor(message: string, readonly champ: string) { super(message); }
+  },
+  accueillirSite: eff.accueillirSite,
+  ecrireEffectifs: eff.ecrireEffectifs,
+  effectifSuitLesFiches: eff.effectifSuitLesFiches,
+  recalculerEffectifEntreprise: eff.recalculerEffectifEntreprise,
+  changerDeSociete: eff.changerDeSociete,
+  regenererLaSociete: eff.regenererLaSociete,
+}));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     // « commit » marque la fin de la transaction : la génération doit venir
@@ -185,6 +206,26 @@ describe("finaliserOnboarding — le nombre de personnes atteint la base (2026-0
       finaliserOnboarding({ status: "idle" }, formulaire()),
     ).rejects.toThrow("NEXT_REDIRECT");
     expect(ecrit()).not.toHaveProperty("personnesPresentesHabituellement");
+  });
+});
+
+describe("la somme des sites (2026-11-03)", () => {
+  it("passe l'établissement créé et l'effectif déclaré au calcul de la société", async () => {
+    await expect(
+      finaliserOnboarding({ status: "idle" }, formulaire({ effectifSurSite: "12", effectifEntreprise: "10" })),
+    ).rejects.toThrow("NEXT_REDIRECT");
+    expect(eff.accueillirSite).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: expect.any(String) }), 10);
+  });
+
+  it("la société dépasse la borne avec ce site : refus, sous l'effectif du site", async () => {
+    const { RefusBorneEffectif } = await import("@/lib/entreprises/effectif");
+    eff.accueillirSite.mockRejectedValueOnce(
+      new RefusBorneEffectif("Votre société compterait 55 salariés", "effectifSurSite"),
+    );
+    const r = await finaliserOnboarding({ status: "idle" }, formulaire({}));
+    expect(r.status === "error" && r.fieldErrors?.effectifSurSite?.[0]).toMatch(
+      /^Votre société compterait 55 salariés/,
+    );
   });
 });
 

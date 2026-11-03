@@ -8,6 +8,11 @@ import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import { salarieSchema, titreSchema } from "./schema";
 import { exclusionsDuTitre, titreParId } from "./catalogue";
+import {
+  effectifSuitLesFiches,
+  RefusBorneEffectif,
+  regenererLaSociete,
+} from "@/lib/entreprises/effectif";
 
 export type SalarieActionState =
   | { status: "idle" }
@@ -72,13 +77,28 @@ export async function creerSalarie(
     };
   }
 
-  const salarie = await db.salarie.create({
-    data: { etablissementId, ...parsed.data },
-    select: { id: true },
-  });
+  // Une fiche au-delà de l'effectif déclaré le fait monter, et la borne de
+  // Rojer s'applique à la société (2026-11-03, `effectifSuitLesFiches`).
+  let salarie: { id: string };
+  let effectifMonte = false;
+  try {
+    salarie = await db.$transaction(async (tx) => {
+      const cree = await tx.salarie.create({
+        data: { etablissementId, ...parsed.data },
+        select: { id: true },
+      });
+      effectifMonte = await effectifSuitLesFiches(tx, etablissementId);
+      return cree;
+    });
+  } catch (e) {
+    if (e instanceof RefusBorneEffectif) return { status: "error", message: e.message };
+    throw e;
+  }
 
   // Pas de régénération ici : une personne sans titre ne porte aucune
-  // échéance. C'est `declarerTitre` qui en crée.
+  // échéance. C'est `declarerTitre` qui en crée. Sauf si l'effectif a monté :
+  // il fixe les seuils de la société, sur chacun de ses sites.
+  if (effectifMonte) await regenererLaSociete(db, etablissementId);
   revalidatePath(`/etablissements/${etablissementId}/equipe`);
   return { status: "success", salarieId: salarie.id };
 }
@@ -149,15 +169,28 @@ export async function basculerActif(
   etablissementId: string,
   salarieId: string,
   actif: boolean,
-): Promise<void> {
+): Promise<{ refus: string } | null> {
   const { db } = await assertEtablissementDuCompte(etablissementId);
-  await db.salarie.updateMany({
-    where: { id: salarieId, etablissementId },
-    data: { actif },
-  });
+  // Un retour dans l'effectif est une entrée : même règle qu'une création.
+  let effectifMonte = false;
+  try {
+    await db.$transaction(async (tx) => {
+      await tx.salarie.updateMany({
+        where: { id: salarieId, etablissementId },
+        data: { actif },
+      });
+      if (actif) effectifMonte = await effectifSuitLesFiches(tx, etablissementId);
+    });
+  } catch (e) {
+    if (e instanceof RefusBorneEffectif) return { refus: e.message };
+    throw e;
+  }
   // Une sortie de l'effectif change le périmètre des échéances : le générateur
   // doit repasser.
-  await regenererEtRafraichir(etablissementId);
+  // L'effectif a monté : toute la société se recalcule, ce site compris.
+  if (effectifMonte) await regenererLaSociete(db, etablissementId);
+  else await regenererEtRafraichir(etablissementId);
+  return null;
 }
 
 export async function declarerTitre(

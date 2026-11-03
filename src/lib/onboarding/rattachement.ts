@@ -9,6 +9,8 @@ export type EntrepriseConnue = {
   siren: string;
   raisonSociale: string;
   effectif: number;
+  /** Ses salariés hors Rojer : le site qui entre en sort (`rejoindreSociete`). */
+  effectifHorsRojer: number;
 };
 
 /**
@@ -34,4 +36,4 @@ export function entrepriseRattachee(
  * corriger.
  */
 export const MESSAGE_EFFECTIF_REPRIS =
-  "Cet effectif est celui de l'entreprise que vos établissements existants déclarent : s'il a changé, corrigez-le depuis la fiche de l'un d'eux (« Mettre à jour l'effectif de l'entreprise »).";
+  "L'effectif de la société est la somme de ses établissements suivis dans Rojer et de ceux qu'il ne suit pas : s'il a changé, corrigez-le dans la page Équipe de l'un d'eux.";
