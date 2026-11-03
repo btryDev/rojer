@@ -11,8 +11,8 @@ document mis en page est `rojer-offres-abonnement-2026-11.pdf`, généré depuis
 |---|---|---|---|
 | Pour qui | Un seul site | Plusieurs sites ou plusieurs personnes | Réseaux, groupes de sociétés, expert à la demande |
 | Mensuel sans engagement | 29 € | 69 € | Sur devis (repère interne : dès ≈ 119 €/mois) |
-| Annuel (2 mois offerts) | 290 € | 690 € | Au contrat |
-| Essai gratuit | **1 mois**, sans carte bancaire | — | — |
+| Annuel (−15 %, arrondi) | 295 € | 699 € | Au contrat |
+| 1er mois offert | **oui**, en mensuel comme en annuel, sans carte bancaire | — | — |
 | Établissements | 1 | jusqu'à 5 | au-delà de 5 |
 | Utilisateurs (bientôt) | 1 | jusqu'à 5 | illimités, droits sur mesure |
 
@@ -25,7 +25,7 @@ Tous les modules sont dans toutes les offres ; Essentiel a des volumes limités 
 - **Au quota, on bloque seulement la création d'un nouvel élément.** Tout ce qui
   existe reste lisible, exportable et suivi ; le compteur repart à la date
   anniversaire ; aucune obligation ne quitte le calendrier.
-- **Fin de l'essai** : le client choisit Essentiel ou Pro ; sans choix, le
+- **Fin du mois offert** : le client choisit mensuel ou annuel, Essentiel ou Pro ; sans choix, le
   dossier passe en lecture seule, rien n'est effacé.
 - **Aucun frais de mise en service.**
 - **L'expert est un expert en sécurité de BTRY Solution** : conseil technique de
@@ -104,8 +104,8 @@ remplit les conditions (art. R. 4512-6 et R. 4512-7 CT) : voir § 3.
 |---|---|
 | Un registre seul se vend 19-29 €/mois ; trois outils spécialisés réunis, 32 à 58 € (France DUERP + Vigie + ACHOP au moins cher, DUPrev' + Securylog + ACHOP au plus cher) | Essentiel à 29 €, avec tous les modules. |
 | Hors des petits outils à un seul registre, l'engagement est la règle (12 à 36 mois) | Mensuel résiliable sur toutes les offres publiques. |
-| La remise annuelle va de 8 % (Securylog) à 20 % (DUPrev') | « 2 mois offerts », soit −17 %. |
-| Deemply et DUPrev' attirent avec une offre gratuite bridée | Un mois d'essai complet, plutôt qu'un gratuit bridé qui obligerait à cacher des obligations. |
+| La remise annuelle va de 8 % (Securylog) à 20 % (DUPrev') | −15 % sur l'annuel, au milieu de la fourchette. |
+| Deemply et DUPrev' attirent avec une offre gratuite bridée | Le 1er mois offert sur Essentiel, en mensuel comme en annuel, plutôt qu'un gratuit bridé qui obligerait à cacher des obligations. |
 | Le site supplémentaire se facture 9 à 19 €, et la cible a presque toujours un seul site | 1 site en Essentiel, jusqu'à 5 au forfait en Pro, au-delà sur devis. |
 | Deemply : 1 utilisateur en gratuit, illimités en Pro ; Securylog : plusieurs utilisateurs par site | 1 utilisateur en Essentiel, 5 en Pro : le levier de montée en gamme pour un site unique. |
 | L'humain multiplie le prix par 3 à 10 ; pour une TPE, seul DUPrev' inclut un expert (une analyse par an, DUERP seul) | Rendez-vous annuel sur tout le dossier en Pro, expert à la demande sur devis. |
@@ -124,7 +124,7 @@ clients ; Rojer n'en facture pas.
   (loi du 31 décembre 1971). À écrire dans les CGV.
 - **La capacité de l'expert** : environ 2 h par client et par an en Pro,
   préparation comprise, soit ≈ 140 € à 70 €/h (hypothèse à remplacer par le
-  coût réel de BTRY Solution). Pro laisse alors ≈ 550 €/an.
+  coût réel de BTRY Solution). Pro laisse alors ≈ 560 €/an.
 - **Le multi-utilisateur** : vendu en Pro, pas encore livré (ADR en préparation).
   Tous les membres comptent, rôle lecture seule et invitations en attente
   compris ; les prestataires invités par lien non (ADR-054, brouillon, PR #157). À la descente d'offre, aucun membre retiré, seules les
