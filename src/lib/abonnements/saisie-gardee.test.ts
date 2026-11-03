@@ -46,7 +46,7 @@ const OUVERTES_A_LA_LECTURE = new Set<string>(
       c.startsWith("lib/auth/actions.ts:") ||
       c === "lib/assistance/actions.ts:demanderAssistance" ||
       c === "lib/signatures/actions.ts:poserSignatureAvecToken" ||
-      c === "lib/signatures/actions.ts:renvoyerCodeOtp",
+      c === "lib/signatures/actions.ts:renvoyerCodeOtp" ||
       c === "lib/membres/actions.ts:quitterCompte",
   ),
 );
