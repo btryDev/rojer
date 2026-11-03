@@ -1,7 +1,8 @@
 # ADR-054 — Plusieurs personnes travaillent sur le même compte
 
-- **Statut** : **proposée**, 2026-11-03. À valider par la propriétaire avant
-  tout code.
+- **Statut** : **acceptée**, 2026-11-03 (« on peut faire ça », propriétaire,
+  après la correction du § 10). ~~Proposée~~ le même jour. Questions Q1 à Q3
+  tranchées comme recommandé.
 - **Origine** : demande de la session de coordination (2026-11-03). Deemply
   vend des utilisateurs illimités avec droits dès 490 € HT par an. Rojer n'a
   qu'un utilisateur par compte.
@@ -10,9 +11,9 @@
   l'utilisateur) et l'ADR-028 (un utilisateur peut suivre plusieurs comptes).
   **S'appuie sur** l'ADR-052 (Better Auth). Ne touche ni l'ADR-007 (accès des
   prestataires par lien), ni l'accès MCP par clé.
-- **Branche** : `cc`. Le code vient après la bascule (§ 10).
+- **Branche** : `cc`. ~~Le code vient après la bascule (§ 10).~~ [2026-11-03 : le code commence tout de suite ; la fusion dans `cc` se fait dès que les lots sont prêts, § 10.]
 - **Sort du hors-périmètre** du CLAUDE.md la ligne « Multi-utilisateurs
-  internes par entreprise », une fois l'ADR acceptée.
+  internes par entreprise » (rayée le 2026-11-03).
 
 ## Contexte
 
@@ -251,20 +252,28 @@ Accord avec les sessions « stripe » et « pricing », 2026-11-03.
 - Les gardes transversales se lancent à la main. `--changed` ne les
   déclenche pas (règle 12).
 
-### 10. Quand coder : après la bascule
+### 10. Quand coder : tout de suite, et fusionner dès que c'est prêt
 
-**Recommandé : valider l'ADR maintenant, coder après la bascule.**
+~~**Recommandé : valider l'ADR maintenant, coder après la bascule.**~~
+[2026-11-03 : recommandation retirée, sur une question de la propriétaire
+(« pourquoi attendre la bascule ? »). Ses deux arguments ne tenaient pas :
+personne n'utilise `cc`, et la vérification de l'isolation est à rejouer de
+toute façon pour ce chantier.]
 
-- La validation du 2026-10-31 (75 routes × 2 comptes, 23 écritures croisées,
-  17 mutations) est ce qui autorise la bascule. Changer la racine avant la
-  bascule l'invalide, et il faudrait tout rejouer.
-- Après la bascule, la reprise des données est mécanique, parce que chaque
-  utilisateur a exactement un compte : on crée un `Compte` et un `Membre`
-  propriétaire par utilisateur qui a une entreprise ou un abonnement, puis
-  on remplit `compteId`. Le retrait des colonnes `userId` se fait dans un
-  second déploiement (même règle que pour `Entreprise.siret`, ADR-028).
-- Ce qui ne peut pas attendre est déjà fait : le webhook Stripe déduit le
-  compte en un seul endroit (§ 8).
+- **Le code commence maintenant**, sur des branches parties de `cc`.
+- **Chaque lot se fusionne dans `cc` dès qu'il est prêt** : revues faites et
+  corrigées, CI verte. La vérification complète de l'isolation (§ 9) se
+  rejoue une fois, avant la bascule si le chantier est fini avant elle.
+- **Le chantier ne retarde pas la bascule.** Si la bascule est prête avant les
+  lots, elle part sans eux, et la migration reprend les données existantes.
+- **La migration du lot 1 vaut dans les deux cas.** Sur une base vide, elle
+  ne reprend rien. Sur une base peuplée, elle crée un `Compte` et un `Membre`
+  propriétaire pour chaque utilisateur qui a une entreprise, un abonnement ou
+  une demande d'assistance, puis remplit `compteId`. Chaque utilisateur a
+  exactement un compte aujourd'hui, donc la reprise est mécanique. Les
+  colonnes `userId` devenues inutiles se retirent dans un second déploiement
+  (même règle que pour `Entreprise.siret`, ADR-028).
+- Le webhook Stripe déduit déjà le compte en un seul endroit (§ 8).
 
 ## Lots
 
@@ -292,15 +301,17 @@ Accord avec les sessions « stripe » et « pricing », 2026-11-03.
 
 ## Questions à la propriétaire
 
-- **Q1** — Valider maintenant et coder après la bascule (§ 10) ?
-  Recommandé : oui.
+- ~~**Q1** — Valider maintenant et coder après la bascule (§ 10) ?
+  Recommandé : oui.~~ [2026-11-03 : coder maintenant, fusionner dès que
+  c'est prêt, § 10.]
 - **Q2** — Pas de restriction par établissement pour l'instant : un
   responsable de site voit tous les sites du compte. Recommandé : oui. La
   cible a presque toujours un seul site, et la restriction coûte le
-  bornage de chaque lecture imbriquée.
+  bornage de chaque lecture imbriquée. [2026-11-03 : retenu.]
 - **Q3** — Le rôle lecture seule dès le premier lot, ou seulement
   propriétaire et membre ? Recommandé : dès le premier lot. Il se ferme en
   un seul point, et il sert aux formules (un associé qui consulte).
+  [2026-11-03 : retenu.]
 
 ## Sources lues le 2026-11-03
 
