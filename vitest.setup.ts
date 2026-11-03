@@ -32,6 +32,7 @@ vi.mock("@/lib/auth/membres", () => ({
   appartenanceCourante: async (userId: string) => ({ compteId: userId, role: "owner" }),
   appartenanceDeLaSession: async (userId: string) => ({ compteId: userId, role: "owner" }),
   creerCompte: async (userId: string) => ({ compteId: userId, role: "owner" }),
+  compteDontEstProprietaire: async (userId: string) => userId,
 }));
 
 vi.mock("@/lib/auth/portee/client", async () => {

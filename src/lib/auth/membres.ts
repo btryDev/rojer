@@ -58,3 +58,13 @@ export async function creerCompte(userId: string, nom: string): Promise<Apparten
   if (!compte) throw new Error("création du compte refusée par le plugin organization");
   return { compteId: compte.id, role: "owner" };
 }
+
+/**
+ * Le compte dont la personne est l'UNIQUE propriétaire, ou `null` (aucun, ou
+ * plusieurs : on ne devine pas). Sert à relire un client Stripe créé avant
+ * l'ADR-054, qui ne désigne que son propriétaire (`metadata.userId`).
+ */
+export async function compteDontEstProprietaire(userId: string): Promise<string | null> {
+  const lignes = await prisma.membre.findMany({ where: { userId, role: "owner" }, select: { compteId: true }, take: 2 });
+  return lignes.length === 1 ? lignes[0].compteId : null;
+}

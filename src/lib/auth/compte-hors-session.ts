@@ -1,7 +1,7 @@
 import "server-only";
 // Le client borné au compte (ADR-051) pour un accès SANS session : un jeton
-// d'accès externe, une signature vérifiée publiquement (et, au lot MCP, une
-// clé MCP). Le compte est celui qui possède l'établissement que porte la
+// d'accès externe, une signature vérifiée publiquement, une clé MCP, et la
+// notification signée d'un webhook Stripe (ADR-053). Le compte est celui qui possède l'établissement que porte la
 // PREUVE déjà vérifiée — jamais un identifiant reçu de l'appelant.
 //
 // LA BORNE DE COMPTE S'AJOUTE AUX CONTRÔLES DE LA PREUVE, ELLE NE LES REMPLACE
@@ -53,4 +53,15 @@ export async function sessionStdio(
   return etab && compteId
     ? { nom: etab.raisonDisplay, db: clientBorneSur(base, { type: "compte", compteId, userId: null }) }
     : null;
+}
+
+/**
+ * Le webhook Stripe (ADR-053 § 5) : le compte est celui que désigne le client
+ * Stripe RELU par l'API (`compteDuClientStripe`), après une notification dont
+ * la signature est vérifiée — jamais un identifiant pris dans la charge utile.
+ * Personne n'agit : aucune relation vers `User` (ADR-054 § 3). Réservé à
+ * `stripe/synchronisation.ts` (`portee/imports.test.ts`).
+ */
+export function clientDuClientStripe(compteId: string): ClientBorne {
+  return clientBorne({ type: "compte", compteId, userId: null });
 }
