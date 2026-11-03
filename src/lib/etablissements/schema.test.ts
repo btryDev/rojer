@@ -206,7 +206,7 @@ const creation = {
   estHabitation: false,
 };
 describe("refus de périmètre — création seulement", () => {
-  it("refuse plus de 50 travailleurs à la création", () => {
+  it("refuse au-delà de la borne (EFFECTIF_MAX) à la création", () => {
     const res = onboardingSchema.safeParse({
       ...creation,
       effectifSurSite: 51,
@@ -217,9 +217,12 @@ describe("refus de périmètre — création seulement", () => {
     }
   });
 
-  it("accepte 50 travailleurs", () => {
+  it("accepte 49 travailleurs, refuse 50", () => {
     expect(
-      onboardingSchema.safeParse({ ...creation, effectifSurSite: 50 })
+      onboardingSchema.safeParse({ ...creation, effectifSurSite: 50 }).success,
+    ).toBe(false);
+    expect(
+      onboardingSchema.safeParse({ ...creation, effectifSurSite: 49 })
         .success,
     ).toBe(true);
   });

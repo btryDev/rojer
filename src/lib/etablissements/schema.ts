@@ -204,7 +204,12 @@ export type TypeErpQuestionLocauxSommeil =
  * `undefined`. Le chiffre appartient au périmètre du produit, pas à l'un de ses
  * parcours.
  */
-export const EFFECTIF_MAX = 50;
+//
+// ~~50~~ [2026-11-03 : 49, décision de la propriétaire — « on ne fait que du
+// moins de cinquante ». Le programme annuel de prévention (L. 4121-3-1, III,
+// 1°) est dû « supérieur ou égal à cinquante » : à 50 pile, le dossier aurait
+// été ouvert avec un manque que Rojer ne comblera pas. ADR-031 amendée.]
+export const EFFECTIF_MAX = 49;
 
 const nafRegex = /^\d{2}\.?\d{2}[A-Z]?$/;
 

@@ -163,7 +163,7 @@ export function refusAlEntree(): RefusAlEntree[] {
   if (effectif !== null) {
     refus.push({
       cle: "effectif",
-      regime: `Une structure de plus de ${EFFECTIF_MAX} travailleurs`,
+      regime: `Une structure de ${EFFECTIF_MAX + 1} travailleurs ou plus`,
       message: effectif,
       indication: `La borne compte les travailleurs, jamais le public reçu : un restaurant de huit salariés qui peut accueillir quatre cents personnes à la fois reste dans la cible. Au-delà, des obligations que cet outil ne porte pas s'ajoutent — ${nonPorte("le programme annuel de prévention des risques")}, notamment — et votre service de prévention et de santé au travail est le premier interlocuteur pour les cadrer. Un dossier déjà ouvert n'est jamais fermé s'il franchit le seuil en cours de route : il porte alors ce manque, écrit, dans la partie ci-dessous.`,
     });
@@ -182,7 +182,7 @@ export function refusAlEntree(): RefusAlEntree[] {
   if (effectifEntreprise !== null) {
     refus.push({
       cle: "effectif_entreprise",
-      regime: `Une entreprise de plus de ${EFFECTIF_MAX} salariés, tous établissements confondus`,
+      regime: `Une entreprise de ${EFFECTIF_MAX + 1} salariés ou plus, tous établissements confondus`,
       message: effectifEntreprise,
       indication: `La borne vaut pour l'entreprise comme pour chacun de ses sites : les seuils qui changent la nature des obligations se comptent sur l'entreprise. Au-delà, des obligations que cet outil ne porte pas s'ajoutent — ${nonPorte("le programme annuel de prévention des risques")}, notamment — et votre service de prévention et de santé au travail est le premier interlocuteur pour les cadrer. Un dossier déjà ouvert n'est jamais fermé si l'entreprise franchit le seuil en cours de route : il porte alors ce manque, écrit, dans la partie ci-dessous.`,
     });

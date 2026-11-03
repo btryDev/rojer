@@ -211,10 +211,10 @@ describe("un clic sur « Suivant » à l'étape 2 ne crée rien, même rendu ava
 });
 
 describe("le refus de périmètre ferme la porte avant le clic", () => {
-  it("cinquante et un salariés : « Suivant » est désactivé", async () => {
+  it("cinquante salariés : « Suivant » est désactivé", async () => {
     render(<WizardShell entreprisesConnues={[]} />);
     remplirEtape1();
-    saisir(/Travailleurs dans l'établissement/, "51");
+    saisir(/Travailleurs dans l'établissement/, "50");
     await souffler();
 
     const suivant = screen.getByRole("button", {
@@ -223,10 +223,10 @@ describe("le refus de périmètre ferme la porte avant le clic", () => {
     expect(suivant.disabled).toBe(true);
   });
 
-  it("cinquante salariés : elle reste ouverte", async () => {
+  it("quarante-neuf salariés : elle reste ouverte", async () => {
     render(<WizardShell entreprisesConnues={[]} />);
     remplirEtape1();
-    saisir(/Travailleurs dans l'établissement/, "50");
+    saisir(/Travailleurs dans l'établissement/, "49");
     await souffler();
 
     expect(

@@ -24,7 +24,7 @@ import {
 import { estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
 import type { EquipementMatching, EtablissementMatching } from "@/lib/matching";
 import { onboardingSchema } from "@/lib/onboarding/schema";
-import { CATEGORIES_ERP, TYPE_ERP } from "@/lib/etablissements/schema";
+import { CATEGORIES_ERP, EFFECTIF_MAX, TYPE_ERP } from "@/lib/etablissements/schema";
 import {
   CATEGORIES_AERATION,
   equipementSchema,
@@ -66,7 +66,13 @@ function profilsInscription(): EtablissementMatching[] {
     for (const so of plausible ? tri : [undefined]) {
       const r = onboardingSchema.safeParse({
         raisonSociale: "X", siret: "12002701600357", adresse: "1 rue A, 75001 Paris", codeNaf: "56.10A",
-        effectifSurSite: es, effectifEntreprise: ee,
+        // Un effectif au-delà de la borne n'entre pas à l'inscription, mais le
+        // dossier inscrit peut grandir : la fiche ne borne pas l'effectif
+        // (ADR-031 § 1 bis). Le profil passe la porte à la borne, puis porte
+        // l'effectif réel — c'est ce dossier-là qui doit faire naître
+        // l'obligation.
+        effectifSurSite: Math.min(es, EFFECTIF_MAX),
+        effectifEntreprise: Math.min(ee, EFFECTIF_MAX),
         estEtablissementTravail: trav, estERP: erp !== null, estIGH: igh, estHabitation: hab,
         typeErp: erp?.t, typesErpAutres: [], categorieErp: erp?.c,
         comporteLocauxSommeilPublic: form(so), manipuleMatieresR422722: form(m),
@@ -86,7 +92,7 @@ function profilsInscription(): EtablissementMatching[] {
       if (!r.success) continue;
       const d = r.data;
       out.push({
-        id: "e", effectifSurSite: d.effectifSurSite, effectifEntreprise: d.effectifEntreprise,
+        id: "e", effectifSurSite: es, effectifEntreprise: ee,
         estEtablissementTravail: d.estEtablissementTravail, estERP: d.estERP, estIGH: d.estIGH,
         estHabitation: d.estHabitation, typeErp: d.typeErp ?? null, typesErpAutres: [], categorieErp: d.categorieErp ?? null,
         // Ni l'inscription ni la fiche ne posent ces deux questions (2026-09-03).

@@ -388,7 +388,7 @@ export function StepIdentite({
               />
             </div>
 
-            {/* Le REFUS. Il ferme la porte — au-delà de cinquante travailleurs
+            {/* Le REFUS. Il ferme la porte — à partir de cinquante travailleurs
                 l'outil ne sert plus le dossier (ADR-025 § 1, ADR-031) —, donc
                 il se peint comme un refus : voile rose, encre signal, et une
                 icône, parce qu'une signalétique qui tient à la seule couleur
@@ -459,7 +459,7 @@ export function StepIdentite({
 /**
  * Le repère de lecture qui accompagne l'effectif saisi — et **rien d'autre**.
  *
- * Il portait aussi le refus au-delà de cinquante, dans les mêmes mots gris et
+ * Il portait aussi le refus au-delà de la borne, dans les mêmes mots gris et
  * la même boîte que les deux seuils informatifs. Un refus qui arrête la
  * création se lisait donc dans le registre d'un rappel, puis revenait en
  * rouge au clic, dans une seconde formulation. Le refus vit maintenant dans
