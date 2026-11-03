@@ -786,6 +786,10 @@ export function faitInventaire(
  * (L. 4121-3-1, III, 1°). C'est un seuil du TEXTE, pas de l'outil — il ne dit
  * pas ce que Rojer sert, et ne se confond donc pas avec `seuilServi`.
  *
+ * [2026-11-03 : `seuilServi` vaut 49. Sous la borne, site et entreprise sont
+ * sous cinquante : cette branche ne parle plus à aucun dossier. Elle reste
+ * pour le jour où la borne remonterait ; le dossier qui franchit cinquante
+ * lit le programme annuel dans la branche « au-delà » ci-dessous.]
  * Né le 2026-09-26 : l'axe ne parlait qu'au-dessus de `seuilServi` (50), et
  * un dossier de cinquante salariés — servi — ne lisait nulle part que le
  * programme lui était dû et que Rojer ne le produit pas.

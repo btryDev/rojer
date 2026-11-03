@@ -167,7 +167,7 @@ export function EtablissementForm({
       // GET (les champs finiraient dans l'URL et l'historique).
       method="post"
       // Envoi à la main plutôt que `action={…}` : React 19 vide un formulaire
-      // après une action, et un refus (plus de cinquante salariés…) obligeait
+      // après une action, et un refus (cinquante salariés ou plus…) obligeait
       // à tout ressaisir (contrôle visuel du 2026-10-24). La validation native
       // du navigateur passe toujours avant `submit`.
       onSubmit={(e) => {
