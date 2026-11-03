@@ -212,6 +212,10 @@ Accord avec les sessions « stripe » et « pricing », 2026-11-03.
   prestataires invités par lien ne comptent pas. La limite se pose par
   `membershipLimit` (une fonction qui lit la formule), et elle est vérifiée
   aussi à la création d'une invitation (`beforeCreateInvitation`).
+- **Les chiffres ne s'écrivent pas dans le code.** La gamme n'est pas arrêtée
+  par la propriétaire. Le plafond se lit depuis la formule de l'abonnement,
+  au même endroit que ses autres droits (`droitsDuCompte`). Changer 1 ou 5 ne
+  touche ni la logique de membres ni ses tests.
 - **Passage à une formule inférieure** : aucun membre n'est retiré
   automatiquement. Seules les nouvelles invitations sont bloquées, et tout ce
   qui existe reste lisible. C'est la règle des autres quotas de la gamme.
