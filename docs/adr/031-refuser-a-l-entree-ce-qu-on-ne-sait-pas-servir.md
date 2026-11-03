@@ -328,7 +328,7 @@ C'est une règle du moteur ; elle n'est pas touchée ici.
 Décision de la propriétaire du 2026-11-03, relayée par la session de
 coordination (état des lieux : `alignement-cch-ct.html`, hors dépôt).
 
-**La règle.** Rojer sert tout le code de la construction et de l'habitation
+**La règle.** Rojer sert tout le Code de la construction et de l'habitation
 et tout le Code du travail (santé-sécurité) qui s'adressent à l'exploitant ou
 à l'employeur, pour tous les types d'établissement. On ne refuse et on
 n'exclut plus rien parce qu'un autre code s'applique aussi (code de la santé

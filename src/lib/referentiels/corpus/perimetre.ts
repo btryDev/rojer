@@ -73,7 +73,7 @@ export const EXCLUSIONS = {
   risque_specialise: {
     libelle: "Relève d'un autre code",
     motif:
-      "Installations classées pour la protection de l'environnement (Code de l'environnement), règles sanitaires des piscines et des bains à remous, appareils de bronzage (UV) (Code de la santé publique) : leurs obligations propres relèvent d'autres codes que le code de la construction et de l'habitation et le Code du travail, que Rojer ne suit pas. Un établissement concerné n'est pas refusé pour autant.",
+      "Installations classées pour la protection de l'environnement (Code de l'environnement), règles sanitaires des piscines et des bains à remous, appareils de bronzage (UV) (Code de la santé publique) : leurs obligations propres relèvent d'autres codes que le Code de la construction et de l'habitation et le Code du travail, que Rojer ne suit pas. Un établissement concerné n'est pas refusé pour autant.",
   },
   construction: {
     libelle: "Règle de construction, pas d'exploitation",

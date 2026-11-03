@@ -131,7 +131,7 @@ export const FAMILLES_NON_GEREES: readonly FamilleNonGeree[] = [
     // spécialisés — [les six] ; il tient en revanche le suivi individuel
     // renforcé … »~~ — 2026-11-03, réalignement : ne reste ici que ce qui
     // relève d'un autre code ; la clé est gardée (parité page ↔ PDF).
-    phrase: `Rojer ne suit pas ce qui relève d'autres codes que le code de la construction et de l'habitation et le Code du travail : ${enumerer(AUTRES_CODES)}.`,
+    phrase: `Rojer ne suit pas ce qui relève d'autres codes que le Code de la construction et de l'habitation et le Code du travail : ${enumerer(AUTRES_CODES)}.`,
   },
   {
     // 2026-11-03, réalignement : ce que le Code du travail impose et que

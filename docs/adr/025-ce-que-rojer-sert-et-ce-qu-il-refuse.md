@@ -30,7 +30,7 @@ affaires cessantes.
 
 **Servi** : Code du travail, ERP, habitation. [2026-11-03, réalignement
 (ADR-031, amendement du 2026-11-03 (ter), décision de la propriétaire) : tout le
-code de la construction et de l'habitation et tout le Code du travail
+Code de la construction et de l'habitation et tout le Code du travail
 (santé-sécurité) adressés à l'exploitant ou à l'employeur, pour tous les types
 d'établissement. Les autres codes (santé publique, action sociale, environnement,
 sport…) ne sont pas servis, et ne refusent personne.]
