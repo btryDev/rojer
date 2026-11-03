@@ -51,7 +51,7 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous" }
   "src/lib/auth/membres.ts": {
     motif:
       "appartenance d'une personne à un compte (ADR-054 § 3) : relue avant de construire la portée, que le client borné ne connaît pas encore",
-    usages: ["prisma.compte.delete", "prisma.membre.findMany"],
+    usages: ["prisma.compte.delete", "prisma.invitationCompte.findMany", "prisma.membre.findMany"],
   },
   "src/lib/auth/compte-hors-session.ts": {
     motif: "accès sans session : le compte propriétaire de l'établissement d'une preuve vérifiée (jeton, signature publique, clé MCP)",

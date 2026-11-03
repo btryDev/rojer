@@ -5,13 +5,13 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { twoFactor } from "better-auth/plugins/two-factor";
 import { organization } from "better-auth/plugins/organization";
-import { ROLES_DU_PLUGIN } from "./roles";
+import { estRole, libelleRole, ROLES_DU_PLUGIN } from "./roles";
 import { createAuthMiddleware, isAPIError } from "better-auth/api";
 import { oublierAppareilsDeConfiance } from "./appareils-de-confiance";
 import { prisma } from "@/lib/prisma";
 import { motifErreur, publicAppUrl, refusUrlPublique, sendMail } from "@/lib/email";
 import { ENTETE_IP_CLIENT } from "./entete-ip";
-import { lienReinitialisation, lienVerification } from "./liens-compte";
+import { lienInvitation, lienReinitialisation, lienVerification } from "./liens-compte";
 import { LONGUEUR_MIN_MOT_DE_PASSE } from "./mot-de-passe";
 
 /**
@@ -172,6 +172,36 @@ export const auth = betterAuth({
       invitationExpiresIn: SEPT_JOURS,
       cancelPendingInvitationsOnReInvite: true,
       requireEmailVerificationOnInvitation: true,
+      sendInvitationEmail: ({ id, email, role, organization, inviter }) =>
+        envoyer(email, "Rojer — invitation à rejoindre un compte", [
+          "Bonjour,",
+          "",
+          `${inviter.user.name || inviter.user.email} vous invite à travailler sur le compte Rojer « ${organization.name} », en tant que ${libelleRole(role)}.`,
+          "",
+          "Pour accepter, ouvrez ce lien (valable 7 jours) :",
+          lienInvitation(id),
+          "",
+          `Si vous n'avez pas encore de compte Rojer, créez-le avec cette adresse : ${email}.`,
+          "Si vous ne vous attendiez pas à cette invitation, ignorez ce message.",
+        ]),
+      organizationHooks: {
+        // Un rôle, et l'un des trois (ADR-054 § 2) : le plugin accepterait
+        // « member,lecture », que `estRole` écarte ensuite sans un mot.
+        beforeCreateInvitation: async ({ invitation }) => {
+          if (!estRole(invitation.role)) throw new Error(`rôle d'invitation refusé : ${invitation.role}`);
+        },
+        beforeUpdateMemberRole: async ({ newRole }) => {
+          if (!estRole(newRole)) throw new Error(`rôle refusé : ${newRole}`);
+        },
+        // Ménage : les sessions de la personne retirée oublient ce compte. La
+        // sécurité n'en dépend pas — `requireCompte` relit `Membre`.
+        afterRemoveMember: async ({ member }) => {
+          await prisma.session.updateMany({
+            where: { userId: member.userId, compteActifId: member.organizationId },
+            data: { compteActifId: null },
+          });
+        },
+      },
       schema: {
         organization: { modelName: "compte" },
         member: { modelName: "membre", fields: { organizationId: "compteId" } },

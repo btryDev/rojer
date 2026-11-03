@@ -96,6 +96,13 @@ const h = vi.hoisted(() => {
 });
 
 vi.mock("@/lib/prisma", () => ({ prisma: h.prisma }));
+// L'invitation n'existe que pour l'adresse a@exemple.fr (ADR-054 § 5).
+vi.mock("./membres", () => ({
+  // Comme `vitest.setup.ts` : la personne simulée est propriétaire du compte qui porte son identifiant.
+  appartenanceDeLaSession: async (userId: string) => ({ compteId: userId, role: "owner" }),
+  invitationAdresseeA: async (id: string, email: string) =>
+    id === "inv-1" && email === "a@exemple.fr" ? { id, compte: "A", role: "member", invitePar: "x" } : null,
+}));
 vi.mock("./require-user", () => ({
   requireUser: h.requireUser,
   getOptionalUser: h.requireUser,
@@ -118,7 +125,11 @@ const HELPERS = helpersDAppartenance();
  * sur la requête qu'il envoie. Le retirer d'ici par son nom, et lui seul, garde le relevé
  * automatique pour tout helper ajouté demain.
  */
-const HELPERS_DE_LIGNE = HELPERS.filter((nom) => nom !== "requireLectureSqlProprietaire");
+// [2026-11-03, ADR-054] `requireInvitationDeLaSession` non plus : il borne à
+// l'ADRESSE de la session, pas au compte ; éprouvé plus bas.
+const HELPERS_DE_LIGNE = HELPERS.filter(
+  (nom) => nom !== "requireLectureSqlProprietaire" && nom !== "requireInvitationDeLaSession",
+);
 
 function helperNomme(nom: string): (id: string) => Promise<unknown> {
   return (scope as unknown as Record<string, (id: string) => Promise<unknown>>)[nom];
@@ -228,5 +239,19 @@ describe("getOptionalUserEtablissement (cookie d'établissement actif, ADR-028)"
     h.cookies.mockResolvedValue({ get: () => ({ value: "etab-du-compte-a" }) });
     const r = await scope.getOptionalUserEtablissement();
     expect(r?.id).toBe("etab-du-compte-a");
+  });
+});
+
+describe("requireInvitationDeLaSession (ADR-054 § 5)", () => {
+  it("rend l'invitation à la personne à qui elle est adressée", async () => {
+    h.requireUser.mockResolvedValue({ id: PROPRIETAIRE, email: "a@exemple.fr" });
+    expect((await scope.requireInvitationDeLaSession("inv-1")).invitation.id).toBe("inv-1");
+  });
+
+  it("répond notFound à une autre adresse, comme à une invitation inexistante", async () => {
+    h.requireUser.mockResolvedValue({ id: AUTRE, email: "b@exemple.fr" });
+    await expect(scope.requireInvitationDeLaSession("inv-1")).rejects.toSatisfy(estNotFound);
+    h.requireUser.mockResolvedValue({ id: PROPRIETAIRE, email: "a@exemple.fr" });
+    await expect(scope.requireInvitationDeLaSession("inv-inconnue")).rejects.toSatisfy(estNotFound);
   });
 });

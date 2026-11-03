@@ -86,3 +86,71 @@ export async function compteDontEstProprietaire(userId: string): Promise<string 
   const lignes = await prisma.membre.findMany({ where: { userId, role: "owner" }, select: { compteId: true }, take: 2 });
   return lignes.length === 1 ? lignes[0].compteId : null;
 }
+
+// --- Lectures de l'écran « Membres » (ADR-054 § 5, § 6) --------------------
+// Toutes prennent le compte déjà vérifié par `requireCompte` (jamais un
+// identifiant reçu), ou l'adresse de la session.
+
+export type MembreAffiche = { id: string; userId: string; nom: string; email: string; role: Role };
+
+/** Les membres du compte, le plus ancien d'abord ; un rôle inconnu n'est pas affiché. */
+export async function membresDuCompte(compteId: string): Promise<MembreAffiche[]> {
+  const lignes = await prisma.membre.findMany({
+    where: { compteId },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    select: { id: true, userId: true, role: true, user: { select: { name: true, email: true } } },
+  });
+  return lignes.flatMap((l) =>
+    estRole(l.role) ? [{ id: l.id, userId: l.userId, nom: l.user.name, email: l.user.email, role: l.role }] : [],
+  );
+}
+
+export type InvitationAffichee = { id: string; email: string; role: Role; expireLe: Date };
+
+/** Les invitations du compte encore valables. */
+export async function invitationsDuCompte(compteId: string, maintenant = new Date()): Promise<InvitationAffichee[]> {
+  const lignes = await prisma.invitationCompte.findMany({
+    where: { compteId, status: "pending", expiresAt: { gt: maintenant } },
+    orderBy: { createdAt: "asc" },
+    select: { id: true, email: true, role: true, expiresAt: true },
+  });
+  return lignes.flatMap((l) => (estRole(l.role) ? [{ id: l.id, email: l.email, role: l.role, expireLe: l.expiresAt }] : []));
+}
+
+export type InvitationRecue = { id: string; compte: string; role: Role; invitePar: string };
+
+/**
+ * Les invitations valables adressées à `email` (celle de la session, jamais
+ * une adresse reçue) : ce que la personne peut accepter.
+ */
+export async function invitationsPourAdresse(email: string, maintenant = new Date()): Promise<InvitationRecue[]> {
+  const lignes = await prisma.invitationCompte.findMany({
+    where: { email: email.toLowerCase(), status: "pending", expiresAt: { gt: maintenant } },
+    orderBy: { createdAt: "asc" },
+    select: {
+      id: true,
+      role: true,
+      compte: { select: { name: true } },
+      inviter: { select: { name: true, email: true } },
+    },
+  });
+  return lignes.flatMap((l) =>
+    estRole(l.role)
+      ? [{ id: l.id, compte: l.compte.name, role: l.role, invitePar: l.inviter.name || l.inviter.email }]
+      : [],
+  );
+}
+
+/**
+ * L'invitation `id`, si elle est adressée à `email` (celle de la session) et
+ * encore valable ; `null` sinon — une invitation adressée à un autre se lit
+ * comme une invitation qui n'existe pas.
+ */
+export async function invitationAdresseeA(
+  id: string,
+  email: string,
+  maintenant = new Date(),
+): Promise<InvitationRecue | null> {
+  const toutes = await invitationsPourAdresse(email, maintenant);
+  return toutes.find((i) => i.id === id) ?? null;
+}

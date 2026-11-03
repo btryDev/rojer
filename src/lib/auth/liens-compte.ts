@@ -14,3 +14,8 @@ export function lienVerification(token: string): string {
 export function lienReinitialisation(token: string): string {
   return `${publicAppUrl()}/auth/reinitialisation?token=${encodeURIComponent(token)}`;
 }
+
+/** L'invitation à rejoindre un compte (ADR-054 § 5). */
+export function lienInvitation(invitationId: string): string {
+  return `${publicAppUrl()}/invitation/${encodeURIComponent(invitationId)}`;
+}

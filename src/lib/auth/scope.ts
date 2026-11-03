@@ -9,6 +9,7 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { requireUser } from "./require-user";
 import { getOptionalCompte, requireCompte } from "./compte";
+import { invitationAdresseeA } from "./membres";
 import { etablissementDuRendu } from "@/lib/etablissements/queries";
 import { cache } from "react";
 
@@ -265,6 +266,19 @@ export async function requireLectureSqlProprietaire<T>(
   if (!requete.sql.includes(proprietaire.sql) || !requete.values.includes(compte.compteId))
     throw new Error("Requête SQL brute sans le prédicat propriétaire : refusée");
   return db.$queryRaw<T[]>(requete);
+}
+
+/**
+ * Une invitation à rejoindre un compte, adressée à la personne connectée et
+ * encore valable, ou 404 (ADR-054 § 5) : la même réponse pour une invitation
+ * à quelqu'un d'autre, expirée ou inexistante. Le plugin revérifie l'adresse
+ * à l'acceptation ; ceci en est la réponse lisible, avant tout geste.
+ */
+export async function requireInvitationDeLaSession(invitationId: string) {
+  const user = await requireUser();
+  const invitation = user.email ? await invitationAdresseeA(invitationId, user.email) : null;
+  if (!invitation) notFound();
+  return { user, invitation };
 }
 
 /**

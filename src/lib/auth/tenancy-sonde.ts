@@ -109,6 +109,9 @@ function relever(): string[] {
 export function etablitLAppartenance(corps: string): boolean {
   return (
     helpersDAppartenance().some((h) => new RegExp(`\\b${h}\\(`).test(corps)) ||
+    // [2026-11-03, ADR-054] `requireCompte` relit l'appartenance (`Membre`) et
+    // rend le client borné au compte : c'est la preuve d'appartenance de base.
+    /\brequireCompte\(/.test(corps) ||
     /\bportee\(/.test(corps) ||
     /\bwhere\s*:\s*\{[^}]*\bcompteId\b/.test(corps)
   );

@@ -15,6 +15,11 @@ export function estRole(v: unknown): v is Role {
   return typeof v === "string" && (ROLES as readonly string[]).includes(v);
 }
 
+/** Le rôle tel qu'on le dit à l'écran et dans un e-mail. */
+export function libelleRole(role: string): string {
+  return role === "owner" ? "propriétaire" : role === "lecture" ? "lecture seule" : "membre";
+}
+
 const ac = createAccessControl(defaultStatements);
 
 export const ROLES_DU_PLUGIN = {
