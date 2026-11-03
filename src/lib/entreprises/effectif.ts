@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import { EFFECTIF_MAX } from "@/lib/etablissements/schema";
 import {
+  contributionDuSite,
   effectifEntrepriseDesSites,
   messageRefusEffectifEntreprise,
   messageRefusEffectifSite,
@@ -74,6 +75,18 @@ async function lireSites(
     },
   });
   return { sites: e.etablissements, horsRojer: e.effectifHorsRojer, effectif: e.effectif };
+}
+
+/** Verrouille la société d'un site — avant de compter ses fiches. */
+export async function verrouillerLaSocieteDuSite(
+  tx: Prisma.TransactionClient,
+  etablissementId: string,
+): Promise<void> {
+  const { entrepriseId } = await tx.etablissement.findUniqueOrThrow({
+    where: { id: etablissementId },
+    select: { entrepriseId: true },
+  });
+  await verrouiller(tx, entrepriseId);
 }
 
 /**
@@ -174,6 +187,10 @@ export async function effectifSuitLesFiches(
   tx: Prisma.TransactionClient,
   etablissementId: string,
 ): Promise<number | null> {
+  // Sous le verrou : deux créations simultanées se comptent l'une après
+  // l'autre, sinon chacune ne verrait pas la fiche de l'autre (revue du
+  // 2026-11-03).
+  await verrouillerLaSocieteDuSite(tx, etablissementId);
   const [site, actifs] = await Promise.all([
     tx.etablissement.findUniqueOrThrow({
       where: { id: etablissementId },
@@ -206,7 +223,7 @@ export async function accueillirSite(
     select: { entrepriseId: true, effectifSurSite: true },
   });
   await verrouiller(tx, site.entrepriseId);
-  const { sites, horsRojer } = await lireSites(tx, site.entrepriseId);
+  const { sites } = await lireSites(tx, site.entrepriseId);
   if (sites.length === 1) {
     const apprentis = Math.max(0, site.effectifSurSite - effectifEntrepriseDeclare);
     await tx.etablissement.update({
@@ -222,12 +239,40 @@ export async function accueillirSite(
     });
     return;
   }
-  const total = effectifEntrepriseDesSites(sites, horsRojer);
-  const totalAvant = total - site.effectifSurSite;
+  await rejoindreSociete(tx, etablissementId);
+}
+
+/**
+ * Un site entre dans une société suivie : par le parcours d'entrée, ou parce
+ * que son SIRET le rattache à la société de son SIREN.
+ *
+ * Il n'était pas suivi par Rojer : s'il a été déclaré, ses salariés l'ont été
+ * parmi les salariés « hors Rojer » de la société. On les en retire, au plus
+ * ce qu'il y en a — sans quoi les mêmes personnes compteraient deux fois, et
+ * une société de quarante salariés qui ouvre son second site serait refusée à
+ * soixante (revue du 2026-11-03). La borne s'applique à ce qui croît.
+ */
+export async function rejoindreSociete(
+  tx: Prisma.TransactionClient,
+  etablissementId: string,
+): Promise<void> {
+  const site = await tx.etablissement.findUniqueOrThrow({
+    where: { id: etablissementId },
+    select: { entrepriseId: true, effectifSurSite: true, apprentisSurSite: true },
+  });
+  await verrouiller(tx, site.entrepriseId);
+  const { sites, horsRojer } = await lireSites(tx, site.entrepriseId);
+  const contribution = contributionDuSite(site);
+  const horsRojerApres = horsRojer - Math.min(horsRojer, contribution);
+  const total = effectifEntrepriseDesSites(sites, horsRojerApres);
+  const totalAvant = effectifEntrepriseDesSites(sites, horsRojer) - contribution;
   if (total > EFFECTIF_MAX && total > totalAvant) {
     throw new RefusBorneEffectif(messageRefusEffectifEntreprise(total), "effectifSurSite");
   }
-  await tx.entreprise.update({ where: { id: site.entrepriseId }, data: { effectif: total } });
+  await tx.entreprise.update({
+    where: { id: site.entrepriseId },
+    data: { effectif: total, effectifHorsRojer: horsRojerApres },
+  });
 }
 
 /**
@@ -238,29 +283,36 @@ export async function accueillirSite(
 export async function regenererLaSociete(
   db: Pick<Prisma.TransactionClient, "etablissement">,
   etablissementId: string,
-): Promise<void> {
+): Promise<boolean> {
   const site = await db.etablissement.findUnique({
     where: { id: etablissementId },
     select: { entrepriseId: true },
   });
-  if (!site) return;
+  if (!site) return true;
   const sites = await db.etablissement.findMany({
     where: { entrepriseId: site.entrepriseId },
     select: { id: true },
   });
+  // L'issue est rendue : un échec ne se tait pas derrière un « Enregistré »
+  // (le patron de `modifierEntreprise`).
+  let toutes = true;
   for (const s of sites) {
-    await regenererApresMutation(s.id, "entreprises/effectif");
+    if (!(await regenererApresMutation(s.id, "entreprises/effectif"))) toutes = false;
     revalidatePath(`/etablissements/${s.id}`, "layout");
   }
+  return toutes;
 }
 
-/** Un site a changé de société : celle qu'il rejoint et, si elle reste, celle qu'il quitte. */
-export async function recalculerLesDeux(
+/**
+ * Un site a changé de société (son SIRET l'a rattaché à celle de son SIREN) :
+ * il entre dans la nouvelle, borne comprise, et l'ancienne recompte ses sites
+ * si elle n'est pas partie avec lui (`supprimerEntrepriseSiVide`).
+ */
+export async function changerDeSociete(
   tx: Prisma.TransactionClient,
-  rejointe: string,
-  quittee: string,
+  etablissementId: string,
+  quittee: { id: string; supprimee: boolean },
 ): Promise<void> {
-  await recalculerEffectifEntreprise(tx, rejointe);
-  if (await tx.entreprise.findUnique({ where: { id: quittee }, select: { id: true } }))
-    await recalculerEffectifEntreprise(tx, quittee);
+  await rejoindreSociete(tx, etablissementId);
+  if (!quittee.supprimee) await recalculerEffectifEntreprise(tx, quittee.id);
 }

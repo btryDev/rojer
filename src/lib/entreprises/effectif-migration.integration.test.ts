@@ -1,8 +1,7 @@
 // LE REMPLISSAGE DE LA MIGRATION `20261103180000_effectif_par_les_sites`,
-// rejoué sur une base PEUPLÉE (2026-11-03). Il ne touche que les deux colonnes
-// neuves ; après lui, la somme des sites doit retomber sur l'effectif déclaré
-// jusqu'ici — jamais en dessous —, pour que le premier recalcul ne fasse taire
-// aucun seuil.
+// rejoué sur une base PEUPLÉE (2026-11-03). Il remplit les deux colonnes
+// neuves pour que la somme des sites retombe sur l'effectif déclaré jusqu'ici
+// — jamais en dessous —, puis écrit cette somme dans `Entreprise.effectif`.
 //
 // SAUTÉ PAR DÉFAUT : il ne tourne que si `EFFECTIF_INTEGRATION_URL` pointe une
 // base LOCALE migrée, qu'il peuple et nettoie :
@@ -79,7 +78,7 @@ describe.skipIf(!URL_BASE || !local)("migration effectif par les sites — Postg
       expect((await etat(a.id)).etablissements[0].apprentisSurSite).toBe(2);
       expect(await etat(b.id)).toMatchObject({ effectif: 40, somme: 40, effectifHorsRojer: 30 });
       // Plusieurs sites : la somme des sites l'emporte quand elle est plus haute.
-      expect(await etat(c.id)).toMatchObject({ effectif: 30, somme: 35, effectifHorsRojer: 0 });
+      expect(await etat(c.id)).toMatchObject({ effectif: 35, somme: 35, effectifHorsRojer: 0 });
       expect(await etat(d.id)).toMatchObject({ effectif: 40, somme: 40, effectifHorsRojer: 25 });
     }
   });

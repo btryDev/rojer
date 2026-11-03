@@ -187,8 +187,9 @@ export async function basculerActif(
   }
   // Une sortie de l'effectif change le périmètre des échéances : le générateur
   // doit repasser.
-  await regenererEtRafraichir(etablissementId);
+  // L'effectif a monté : toute la société se recalcule, ce site compris.
   if (effectifMonte) await regenererLaSociete(db, etablissementId);
+  else await regenererEtRafraichir(etablissementId);
   return null;
 }
 

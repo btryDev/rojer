@@ -1,7 +1,8 @@
 -- L'effectif de l'entreprise devient la somme de ses sites (2026-11-03,
 -- décision de la propriétaire ; ADR-028 et ADR-031 amendées).
 --   Entreprise.effectif = Σ (effectifSurSite − apprentisSurSite) + effectifHorsRojer
--- Purement additive : deux colonnes à défaut, aucune colonne existante réécrite.
+-- Additive pour le schéma : deux colonnes à défaut. Seule donnée existante
+-- réécrite : Entreprise.effectif, qui prend sa somme (en fin de fichier).
 
 ALTER TABLE "Etablissement" ADD COLUMN "apprentisSurSite" INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE "Entreprise" ADD COLUMN "effectifHorsRojer" INTEGER NOT NULL DEFAULT 0;
@@ -33,4 +34,16 @@ SET "effectifHorsRojer" = GREATEST(
     FROM "Etablissement" AS et
     WHERE et."entrepriseId" = en."id"
   )
+);
+
+-- Puis l'effectif de chaque société prend sa somme (revue du 2026-11-03) :
+-- sans cela, une société à plusieurs sites dont la somme dépasse le déclaré
+-- afficherait l'ancien nombre jusqu'à la première écriture, et le parcours
+-- d'entrée lirait une autre valeur que le serveur. Ne baisse jamais : par
+-- construction du remplissage, la somme vaut au moins le déclaré.
+UPDATE "Entreprise" AS en
+SET "effectif" = en."effectifHorsRojer" + (
+  SELECT COALESCE(SUM(et."effectifSurSite" - et."apprentisSurSite"), 0)
+  FROM "Etablissement" AS et
+  WHERE et."entrepriseId" = en."id"
 );

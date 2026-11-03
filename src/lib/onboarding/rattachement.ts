@@ -9,6 +9,8 @@ export type EntrepriseConnue = {
   siren: string;
   raisonSociale: string;
   effectif: number;
+  /** Ses salariés hors Rojer : le site qui entre en sort (`rejoindreSociete`). */
+  effectifHorsRojer: number;
 };
 
 /**

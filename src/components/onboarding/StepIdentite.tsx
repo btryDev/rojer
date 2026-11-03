@@ -46,11 +46,12 @@ export function StepIdentite({
         raisonSociale: r.raisonSociale,
         effectifEntreprise: String(r.effectif),
         effectifDejaSuivi: String(r.effectif),
+        effectifHorsRojerRepris: String(r.effectifHorsRojer),
       });
     } else if (rattachee) {
       // Le SIRET quitte l'entreprise reprise : ses valeurs, en lecture seule
       // jusque-là, ne sont pas celles de la société qu'on saisit maintenant.
-      update({ siret, raisonSociale: "", effectifEntreprise: "", effectifDejaSuivi: "", nomUsage: "" });
+      update({ siret, raisonSociale: "", effectifEntreprise: "", effectifDejaSuivi: "", effectifHorsRojerRepris: "", nomUsage: "" });
     } else {
       update({ siret });
     }

@@ -8,6 +8,7 @@ vi.mock("@/lib/calendrier/regeneration-sure", () => ({
 
 const { EFFECTIF_MAX } = await import("@/lib/etablissements/schema");
 const {
+  changerDeSociete,
   accueillirSite,
   ecrireEffectifs,
   effectifSuitLesFiches,
@@ -191,12 +192,35 @@ describe("accueillirSite — l'onboarding", () => {
     expect(b.ent.effectif).toBe(42);
   });
 
+  it("société suivie : le site qui entre sort des salariés hors Rojer, et ne compte pas deux fois", async () => {
+    // 40 salariés, un seul site de 20 suivi : les 20 autres sont hors Rojer.
+    // Le second site (20) entre : la société reste à 40, elle n'est pas refusée à 60.
+    const b = base({ effectif: 40, effectifHorsRojer: 20 }, [
+      { id: "a", effectifSurSite: 20, apprentisSurSite: 0 },
+      { id: "b", effectifSurSite: 20, apprentisSurSite: 0 },
+    ]);
+    await accueillirSite(b.tx, "b", 0);
+    expect(b.ent).toMatchObject({ effectif: 40, effectifHorsRojer: 0 });
+  });
+
   it("société suivie : refuse si la somme dépasse la borne", async () => {
     const b = base({ effectif: 30 }, [
       { id: "a", effectifSurSite: 30, apprentisSurSite: 0 },
       { id: "b", effectifSurSite: 25, apprentisSurSite: 0 },
     ]);
     await expect(accueillirSite(b.tx, "b", 0)).rejects.toThrow(RefusBorneEffectif);
+  });
+});
+
+describe("changerDeSociete — un SIRET rattache le site à la société de son SIREN", () => {
+  it("la borne s'applique à la société rejointe", async () => {
+    const b = base({ effectif: 40 }, [
+      { id: "a", effectifSurSite: 40, apprentisSurSite: 0 },
+      { id: "b", effectifSurSite: 30, apprentisSurSite: 0 },
+    ]);
+    await expect(
+      changerDeSociete(b.tx, "b", { id: "ancienne", supprimee: true }),
+    ).rejects.toThrow(RefusBorneEffectif);
   });
 });
 

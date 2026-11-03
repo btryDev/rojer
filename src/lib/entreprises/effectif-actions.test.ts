@@ -6,9 +6,10 @@ const h = vi.hoisted(() => {
     tx,
     db: { $transaction: async (f: (t: unknown) => unknown) => f(tx) },
     ecrireEffectifs: vi.fn(async () => ({ entreprise: 12, site: 12 })),
-    regenererLaSociete: vi.fn(async () => {}),
+    regenererLaSociete: vi.fn(async () => true),
   };
 });
+vi.mock("@/lib/calendrier/regeneration-sure", () => ({ MESSAGE_REGEN_ECHEC: "pas recalculé" }));
 vi.mock("@/lib/auth/scope", () => ({
   assertEtablissementDuCompte: async () => ({ user: { id: "u" }, db: h.db }),
 }));
@@ -20,6 +21,7 @@ vi.mock("./effectif", () => ({
   },
   ecrireEffectifs: h.ecrireEffectifs,
   regenererLaSociete: h.regenererLaSociete,
+  verrouillerLaSocieteDuSite: vi.fn(async () => {}),
 }));
 
 const { modifierEffectifs } = await import("./effectif-actions");
@@ -67,5 +69,19 @@ describe("modifierEffectifs — l'effectif se déclare dans Équipe (2026-11-03)
       "Votre société compterait 55 salariés",
     ]);
     expect(h.regenererLaSociete).not.toHaveBeenCalled();
+  });
+
+  it("un calendrier non recalculé ne se tait pas derrière « Enregistré »", async () => {
+    h.regenererLaSociete.mockResolvedValueOnce(false);
+    expect(await modifierEffectifs("etab-1", { status: "idle" }, formulaire({}))).toEqual({
+      status: "success_avec_avertissement",
+      message: "pas recalculé",
+    });
+  });
+
+  it("après un refus, rend ce qui a été saisi", async () => {
+    h.ecrireEffectifs.mockRejectedValueOnce(new RefusBorneEffectif("trop", "effectifHorsRojer"));
+    const r = await modifierEffectifs("etab-1", { status: "idle" }, formulaire({ effectifHorsRojer: "43" }));
+    expect(r.status === "error" && r.saisie?.effectifHorsRojer).toBe("43");
   });
 });

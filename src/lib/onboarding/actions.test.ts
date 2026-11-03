@@ -65,8 +65,9 @@ const eff = vi.hoisted(() => ({
   ecrireEffectifs: vi.fn(async () => ({ entreprise: 0, site: 0 })),
   effectifSuitLesFiches: vi.fn(async () => null),
   recalculerEffectifEntreprise: vi.fn(async () => 0),
-  recalculerLesDeux: vi.fn(async () => {}),
-  regenererLaSociete: vi.fn(async () => {}),
+  changerDeSociete: vi.fn(async () => {}),
+  verrouillerLaSocieteDuSite: vi.fn(async () => {}),
+  regenererLaSociete: vi.fn(async () => true),
 }));
 // Le calcul de l'effectif de la société (2026-11-03) a ses propres tests
 // (`entreprises/effectif.test.ts`) : ici, on vérifie seulement qu'il est appelé.
@@ -78,7 +79,8 @@ vi.mock("@/lib/entreprises/effectif", () => ({
   ecrireEffectifs: eff.ecrireEffectifs,
   effectifSuitLesFiches: eff.effectifSuitLesFiches,
   recalculerEffectifEntreprise: eff.recalculerEffectifEntreprise,
-  recalculerLesDeux: eff.recalculerLesDeux,
+  changerDeSociete: eff.changerDeSociete,
+  verrouillerLaSocieteDuSite: eff.verrouillerLaSocieteDuSite,
   regenererLaSociete: eff.regenererLaSociete,
 }));
 vi.mock("@/lib/prisma", () => ({
@@ -217,13 +219,13 @@ describe("la somme des sites (2026-11-03)", () => {
     expect(eff.accueillirSite).toHaveBeenCalledWith(expect.anything(), expect.any(String), 10);
   });
 
-  it("la société dépasse la borne avec ce site : refus, sous l'effectif de l'entreprise", async () => {
+  it("la société dépasse la borne avec ce site : refus, sous l'effectif du site", async () => {
     const { RefusBorneEffectif } = await import("@/lib/entreprises/effectif");
     eff.accueillirSite.mockRejectedValueOnce(
       new RefusBorneEffectif("Votre société compterait 55 salariés", "effectifSurSite"),
     );
     const r = await finaliserOnboarding({ status: "idle" }, formulaire({}));
-    expect(r.status === "error" && r.fieldErrors?.effectifEntreprise?.[0]).toMatch(
+    expect(r.status === "error" && r.fieldErrors?.effectifSurSite?.[0]).toMatch(
       /^Votre société compterait 55 salariés/,
     );
   });

@@ -34,8 +34,9 @@ const eff = vi.hoisted(() => ({
   ecrireEffectifs: vi.fn(async () => ({ entreprise: 0, site: 0 })),
   effectifSuitLesFiches: vi.fn(async () => null),
   recalculerEffectifEntreprise: vi.fn(async () => 0),
-  recalculerLesDeux: vi.fn(async () => {}),
-  regenererLaSociete: vi.fn(async () => {}),
+  changerDeSociete: vi.fn(async () => {}),
+  verrouillerLaSocieteDuSite: vi.fn(async () => {}),
+  regenererLaSociete: vi.fn(async () => true),
 }));
 // Le calcul de l'effectif de la société (2026-11-03) a ses propres tests
 // (`entreprises/effectif.test.ts`) : ici, on vérifie seulement qu'il est appelé.
@@ -47,7 +48,8 @@ vi.mock("@/lib/entreprises/effectif", () => ({
   ecrireEffectifs: eff.ecrireEffectifs,
   effectifSuitLesFiches: eff.effectifSuitLesFiches,
   recalculerEffectifEntreprise: eff.recalculerEffectifEntreprise,
-  recalculerLesDeux: eff.recalculerLesDeux,
+  changerDeSociete: eff.changerDeSociete,
+  verrouillerLaSocieteDuSite: eff.verrouillerLaSocieteDuSite,
   regenererLaSociete: eff.regenererLaSociete,
 }));
 vi.mock("@/lib/prisma", () => ({ prisma: h.prisma }));

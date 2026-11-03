@@ -36,6 +36,8 @@ export type OnboardingState = {
   // sur la somme. Vide pour une société nouvelle. Jamais posté : le serveur
   // refait la somme lui-même.
   effectifDejaSuivi: string;
+  // Ses salariés hors Rojer, dont ce site sort en entrant (vide si nouvelle).
+  effectifHorsRojerRepris: string;
 
   estEtablissementTravail: boolean;
   // `null` = pas encore répondu (2026-09-27, analyse de la réponse absente,
@@ -91,6 +93,7 @@ export const VALEURS_INITIALES: OnboardingState = {
   effectifSurSite: "",
   effectifEntreprise: "",
   effectifDejaSuivi: "",
+  effectifHorsRojerRepris: "",
   estEtablissementTravail: true,
   estERP: null,
   estIGH: null,

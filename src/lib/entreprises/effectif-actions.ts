@@ -1,7 +1,13 @@
 "use server";
 
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
-import { ecrireEffectifs, RefusBorneEffectif, regenererLaSociete } from "./effectif";
+import { MESSAGE_REGEN_ECHEC } from "@/lib/calendrier/regeneration-sure";
+import {
+  ecrireEffectifs,
+  RefusBorneEffectif,
+  regenererLaSociete,
+  verrouillerLaSocieteDuSite,
+} from "./effectif";
 import { effectifsSchema } from "./effectif-calcul";
 
 export type EffectifsActionState =
@@ -13,7 +19,9 @@ export type EffectifsActionState =
       /** Ce qui a été saisi : rendu au formulaire, que React remet à zéro. */
       saisie?: Record<ChampEffectif, string>;
     }
-  | { status: "success" };
+  | { status: "success" }
+  /** Enregistré, mais un calendrier n'a pas pu être recalculé à l'instant. */
+  | { status: "success_avec_avertissement"; message: string };
 
 type ChampEffectif = "effectifSurSite" | "apprentisSurSite" | "effectifHorsRojer";
 
@@ -48,7 +56,9 @@ export async function modifierEffectifs(
   try {
     await db.$transaction(async (tx) => {
       // L'effectif ne descend pas sous les fiches actives : une fiche est une
-      // personne. Les sorties se marquent sur les fiches.
+      // personne. Les sorties se marquent sur les fiches. Compté sous le
+      // verrou de la société, comme `effectifSuitLesFiches`.
+      await verrouillerLaSocieteDuSite(tx, etablissementId);
       const actifs = await tx.salarie.count({ where: { etablissementId, actif: true } });
       if (parsed.data.effectifSurSite < actifs) {
         throw new SousLesFiches(actifs);
@@ -68,8 +78,9 @@ export async function modifierEffectifs(
 
   // L'effectif de la société est lu par chacun de ses sites (CSE, règlement
   // intérieur) : tous se recalculent.
-  await regenererLaSociete(db, etablissementId);
-  return { status: "success" };
+  return (await regenererLaSociete(db, etablissementId))
+    ? { status: "success" }
+    : { status: "success_avec_avertissement", message: MESSAGE_REGEN_ECHEC };
 }
 
 class SousLesFiches extends Error {

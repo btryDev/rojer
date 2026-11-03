@@ -209,7 +209,8 @@ export async function finaliserOnboarding(
       return {
         status: "error",
         message: "Formulaire invalide",
-        fieldErrors: { effectifEntreprise: [`${err.message} ${MESSAGE_EFFECTIF_REPRIS}`] },
+        // Sous l'effectif du site : c'est lui que l'on peut baisser ici.
+        fieldErrors: { effectifSurSite: [`${err.message} ${MESSAGE_EFFECTIF_REPRIS}`] },
       };
     }
     throw err;

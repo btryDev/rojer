@@ -104,6 +104,11 @@ export function CarteEffectif({
         {state.status === "success" ? (
           <p className="m-0 text-[12.5px] text-[color:var(--board-green-ink)]">Enregistré.</p>
         ) : null}
+        {state.status === "success_avec_avertissement" ? (
+          <p role="status" className="m-0 text-[12.5px] text-[color:var(--board-amber-ink)]">
+            {state.message}
+          </p>
+        ) : null}
 
         <div>
           <Button variant="board" size="board" type="submit" disabled={pending}>
@@ -115,15 +120,20 @@ export function CarteEffectif({
   );
 }
 
+/** Au-delà, une seule carte dit le reste (un dossier ancien peut en porter des centaines). */
+const PLACES_AFFICHEES = 12;
+
 /**
  * Les personnes de l'effectif qui n'ont pas encore de fiche : des places,
  * pas des fiches — rien n'est créé en base tant qu'on ne remplit pas.
  */
 export function PlacesARenseigner({ nombre, href }: { nombre: number; href: string }) {
   if (nombre <= 0) return null;
+  const affichees = Math.min(nombre, PLACES_AFFICHEES);
+  const reste = nombre - affichees;
   return (
     <>
-      {Array.from({ length: nombre }, (_, i) => (
+      {Array.from({ length: reste > 0 ? affichees - 1 : affichees }, (_, i) => (
         <Link
           key={i}
           href={href}
@@ -132,6 +142,14 @@ export function PlacesARenseigner({ nombre, href }: { nombre: number; href: stri
           Personne à renseigner
         </Link>
       ))}
+      {reste > 0 ? (
+        <Link
+          href={href}
+          className="flex min-h-[96px] items-center justify-center rounded-[30px] border border-dashed border-[color:var(--board-slate-line)] px-6 py-5 text-[13px] text-[color:var(--board-slate-mid)] hover:border-[color:var(--board-slate-mid)] hover:text-[color:var(--board-ink)]"
+        >
+          {`Et ${reste + 1} autres personnes à renseigner`}
+        </Link>
+      ) : null}
     </>
   );
 }

@@ -12,7 +12,11 @@ import { assertEtablissementDuCompte, assertEtablissementOwnership } from "@/lib
 import { poserEtablissementActif } from "./etablissement-actif";
 import { sirenDuSiret } from "./siret";
 import { supprimerEntrepriseSiVide } from "@/lib/entreprises/cycle-de-vie";
-import { recalculerEffectifEntreprise, recalculerLesDeux } from "@/lib/entreprises/effectif";
+import {
+  changerDeSociete,
+  recalculerEffectifEntreprise,
+  RefusBorneEffectif,
+} from "@/lib/entreprises/effectif";
 
 /** Le refus d'un SIRET dont le SIREN n'est pas celui de l'entreprise de l'établissement. */
 function refusSiretAutreEntreprise(): EtablissementActionState {
@@ -356,9 +360,11 @@ export async function modifierEtablissement(
       });
       // L'établissement a rejoint l'entreprise de son SIREN : celle qu'il quitte part
       // si elle n'a plus d'établissement.
-      if (changeDEntreprise) await supprimerEntrepriseSiVide(tx, avant.entrepriseId);
-      // Les deux sociétés recomptent leurs sites (2026-11-03).
-      if (changeDEntreprise) await recalculerLesDeux(tx, entrepriseCible, avant.entrepriseId);
+      if (changeDEntreprise) {
+        const supprimee = await supprimerEntrepriseSiVide(tx, avant.entrepriseId);
+        // Les deux sociétés recomptent leurs sites, borne comprise (2026-11-03).
+        await changerDeSociete(tx, id, { id: avant.entrepriseId, supprimee });
+      }
       return ecrit;
     });
   } catch (e) {
@@ -367,6 +373,9 @@ export async function modifierEtablissement(
     // un nouvel enregistrement rattachera l'établissement à cette entreprise.
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
       return refusSiretAutreEntreprise();
+    }
+    if (e instanceof RefusBorneEffectif) {
+      return { status: "error", message: e.message, fieldErrors: { siret: [e.message] } };
     }
     throw e;
   }

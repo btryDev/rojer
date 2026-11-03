@@ -107,14 +107,16 @@ export function refusEffectifEntreprise(
  * La borne sur la SOMME (2026-11-03, décision de la propriétaire) : quand le
  * SIRET rattache l'établissement à une société déjà suivie, son effectif
  * s'ajoute à celui de la société. Même lecture que le serveur
- * (`entreprises/effectif.ts`) : l'établissement compte entier, ses apprentis se
- * déclarent ensuite dans Équipe.
+ * (`entreprises/effectif.ts`, `rejoindreSociete`) : l'établissement compte
+ * entier — ses apprentis se déclarent ensuite dans Équipe — et sort des
+ * salariés « hors Rojer » de la société, où il était compté.
  */
 export function refusSommeDesSites(s: OnboardingState): Blocage | null {
   const deja = s.effectifDejaSuivi.trim();
   const site = Number(s.effectifSurSite);
   if (deja === "" || !Number.isInteger(site) || site < 1) return null;
-  const total = Number(deja) + site;
+  const hors = Number(s.effectifHorsRojerRepris.trim() || "0");
+  const total = Number(deja) - Math.min(Number.isInteger(hors) ? hors : 0, site) + site;
   if (!Number.isInteger(total) || total <= EFFECTIF_MAX) return null;
   return {
     champ: "effectifSurSite",
