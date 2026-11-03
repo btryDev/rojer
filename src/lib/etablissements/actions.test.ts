@@ -133,6 +133,27 @@ const h = vi.hoisted(() => {
   };
 });
 
+const eff = vi.hoisted(() => ({
+  accueillirSite: vi.fn(async () => {}),
+  ecrireEffectifs: vi.fn(async () => ({ entreprise: 0, site: 0 })),
+  effectifSuitLesFiches: vi.fn(async () => false),
+  recalculerEffectifEntreprise: vi.fn(async () => 0),
+  changerDeSociete: vi.fn(async () => {}),
+  regenererLaSociete: vi.fn(async () => true),
+}));
+// Le calcul de l'effectif de la société (2026-11-03) a ses propres tests
+// (`entreprises/effectif.test.ts`) : ici, on vérifie seulement qu'il est appelé.
+vi.mock("@/lib/entreprises/effectif", () => ({
+  RefusBorneEffectif: class RefusBorneEffectif extends Error {
+    constructor(message: string, readonly champ: string) { super(message); }
+  },
+  accueillirSite: eff.accueillirSite,
+  ecrireEffectifs: eff.ecrireEffectifs,
+  effectifSuitLesFiches: eff.effectifSuitLesFiches,
+  recalculerEffectifEntreprise: eff.recalculerEffectifEntreprise,
+  changerDeSociete: eff.changerDeSociete,
+  regenererLaSociete: eff.regenererLaSociete,
+}));
 vi.mock("@/lib/prisma", () => ({ prisma: h.prisma }));
 vi.mock("@/lib/storage", () => ({ getStorage: () => h.stockage }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
@@ -257,14 +278,18 @@ describe("modifierEtablissement — recalcul des obligations", () => {
     expect(h.genererCalendrier).toHaveBeenCalledTimes(1);
   });
 
-  it("régénère quand l'effectif change (les seuils font basculer des obligations)", async () => {
+  // ~~régénère quand l'effectif change~~ [2026-11-03 : l'effectif se saisit
+  // dans Équipe (`entreprises/effectif-actions.ts`) ; la fiche ne l'écrit plus.]
+  it("n'écrit plus l'effectif posté sur la fiche (il se saisit dans Équipe)", async () => {
     await modifierEtablissement(
       "etab-1",
       { status: "idle" },
       formulaire({ effectifSurSite: "42" }),
     );
 
-    expect(h.genererCalendrier).toHaveBeenCalledTimes(1);
+    // L'état en base garde son effectif d'origine : rien ne l'a écrit.
+    expect(h.db.etablissement.effectifSurSite).not.toBe(42);
+    expect(h.genererCalendrier).not.toHaveBeenCalled();
   });
 
   it("ne régénère pas pour un simple changement d'adresse", async () => {

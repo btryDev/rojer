@@ -188,7 +188,10 @@ Deux questions à y intégrer :
 - **L'équipe** — demander qui travaille dans l'établissement pendant
   l'onboarding, plutôt que d'afficher une entrée « bientôt » vide dans la
   sidebar. À cadrer : ce qu'on en fait exactement (unités de travail du DUERP,
-  effectif, futur multi-utilisateurs) reste à décider.
+  ~~effectif,~~ futur multi-utilisateurs) reste à décider. [2026-11-03 : l'effectif
+  est tranché — il se déclare dans Équipe, les fiches le font monter, et les
+  personnes sans fiche s'y affichent « à renseigner » (ADR-031, amendement
+  bis).]
 - **Les modules événementiels** — poser la question une fois (réseau d'eau
   chaude collectif ? entreprises extérieures qui interviennent ?) plutôt que
   de laisser six portes ouvertes sur du vide.

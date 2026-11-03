@@ -47,19 +47,18 @@ export function EntrepriseForm({
       {/* ~~SIRET et code NAF~~ [2026-10-26 : ils appartiennent à l'établissement et se
           saisissent sur la fiche de l'établissement.] */}
 
-      <ChampBoard
-        id="effectif"
-        name="effectif"
-        label="Salariés de l'entreprise"
-        requis
-        aide="Tous établissements confondus, apprentis non compris (art. L. 1111-3). Les seuils de onze et de cinquante salariés — comité social et économique, règlement intérieur, mise à jour annuelle du document unique — se comptent sur ce nombre : tenez-le à jour quand un site s'ajoute ou grandit."
-        // La molette d'un champ nombre modifie une valeur déjà saisie sans
-        // que rien ne le signale ; la borne reste au serveur.
-        type="text"
-        inputMode="numeric"
-        defaultValue={valeursInitiales?.effectif}
-        erreur={err("effectif")}
-      />
+      {/* [2026-11-03 : l'effectif n'est plus saisi ici. Il est la somme des
+          établissements, déclarés chacun dans Équipe, et des salariés hors
+          Rojer — `entreprises/effectif.ts`.] */}
+      {valeursInitiales?.effectif !== undefined ? (
+        <p id="effectif" className="m-0 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          Salariés de la société, tous établissements, apprentis non compris :{" "}
+          <span className="font-mono tabular-nums text-[color:var(--board-ink)]">
+            {valeursInitiales.effectif}
+          </span>
+          . Ce nombre se calcule depuis la page Équipe de chaque établissement.
+        </p>
+      ) : null}
 
       <ChampBoard
         id="adresse"

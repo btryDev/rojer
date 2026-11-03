@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { useConfirmation } from "@/components/ui-kit/Confirmation";
 import {
@@ -34,24 +34,35 @@ export function BasculerEffectif({
   actif: boolean;
 }) {
   const [pending, startTransition] = useTransition();
+  // Le retour dans l'effectif peut être refusé par la borne de Rojer
+  // (2026-11-03) : le refus se dit sous le bouton.
+  const [refus, setRefus] = useState<string | null>(null);
 
   return (
-    <Button
-      variant="boardClair"
-      size="boardSm"
-      disabled={pending}
-      onClick={() =>
-        startTransition(async () => {
-          await basculerActif(etablissementId, salarieId, !actif);
-        })
-      }
-    >
-      {pending
-        ? "…"
-        : actif
-          ? "Sortie de l'effectif"
-          : "Réintégrer à l'effectif"}
-    </Button>
+    <div className="flex flex-col gap-1.5">
+      <Button
+        variant="boardClair"
+        size="boardSm"
+        disabled={pending}
+        onClick={() =>
+          startTransition(async () => {
+            const r = await basculerActif(etablissementId, salarieId, !actif);
+            setRefus(r?.refus ?? null);
+          })
+        }
+      >
+        {pending
+          ? "…"
+          : actif
+            ? "Sortie de l'effectif"
+            : "Réintégrer à l'effectif"}
+      </Button>
+      {refus ? (
+        <p role="alert" className="m-0 max-w-[320px] text-[12px] leading-[1.5] text-[color:var(--board-signal-ink)]">
+          {refus}
+        </p>
+      ) : null}
+    </div>
   );
 }
 

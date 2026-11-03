@@ -5,11 +5,13 @@ const INSEE: EntrepriseConnue = {
   siren: "120027016",
   raisonSociale: "INSEE",
   effectif: 13,
+  effectifHorsRojer: 0,
 };
 const AUTRE: EntrepriseConnue = {
   siren: "356000000",
   raisonSociale: "La Poste",
   effectif: 40,
+  effectifHorsRojer: 0,
 };
 
 describe("entrepriseRattachee", () => {

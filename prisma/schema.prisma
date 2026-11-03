@@ -48,6 +48,10 @@ model Entreprise {
   siren          String?
   raisonSociale  String
   effectif       Int
+  // Les salariés de la société dans ses établissements que Rojer ne suit
+  // pas, apprentis non compris (2026-11-03). `effectif` en est la somme avec
+  // ceux des sites suivis : `recalculerEffectifEntreprise`, seule écriture.
+  effectifHorsRojer Int @default(0)
   adresse        String
   etablissements Etablissement[]
   createdAt      DateTime        @default(now())
@@ -101,6 +105,10 @@ model Etablissement {
   // l'entreprise.
   codeNaf         String
   effectifSurSite Int
+  // Dont apprentis et contrats de professionnalisation, que L. 1111-3 (1° et
+  // 6°) écarte du calcul de l'effectif de l'entreprise (2026-11-03). Saisi
+  // dans Équipe ; `Entreprise.effectif` se calcule sans eux.
+  apprentisSurSite Int @default(0)
 
   // La photo du lieu, déposée par le dirigeant (2026-10-25) — affichée dans
   // le hero du tableau de bord à la place de l'illustration. Clé du stockage

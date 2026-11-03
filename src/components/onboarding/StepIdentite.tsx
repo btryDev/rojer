@@ -6,7 +6,7 @@ import { ChampBoard, SectionChamps } from "@/components/ui-kit";
 import { BlocCreux } from "@/components/ui-kit/fiche";
 import { evaluerScopeSecteur } from "@/lib/onboarding/scope";
 import { MESSAGE_EFFECTIF_REPRIS, entrepriseRattachee } from "@/lib/onboarding/rattachement";
-import { refusEffectif, refusEffectifEntreprise } from "./validation";
+import { refusEffectif, refusEffectifEntreprise, refusSommeDesSites } from "./validation";
 import type { StepProps } from "./types";
 
 const SUGGESTIONS_NAF = [
@@ -41,11 +41,16 @@ export function StepIdentite({
   const saisirSiret = (siret: string) => {
     const r = entrepriseRattachee(siret, entreprisesConnues);
     if (r) {
-      update({ siret, raisonSociale: r.raisonSociale, effectifEntreprise: String(r.effectif) });
+      update({
+        siret,
+        raisonSociale: r.raisonSociale,
+        effectifEntreprise: String(r.effectif),
+        societeSuivie: { effectif: r.effectif, effectifHorsRojer: r.effectifHorsRojer },
+      });
     } else if (rattachee) {
       // Le SIRET quitte l'entreprise reprise : ses valeurs, en lecture seule
       // jusque-là, ne sont pas celles de la société qu'on saisit maintenant.
-      update({ siret, raisonSociale: "", effectifEntreprise: "", nomUsage: "" });
+      update({ siret, raisonSociale: "", effectifEntreprise: "", societeSuivie: null, nomUsage: "" });
     } else {
       update({ siret });
     }
@@ -64,7 +69,9 @@ export function StepIdentite({
   // disant sous le nombre saisi que ce n'était pas le bon.
   // La même borne sur l'effectif de l'entreprise (décision du 2026-09-26,
   // ADR-031), lue en direct comme celle du site.
-  const refusEntreprise = refusEffectifEntreprise(state.effectifEntreprise);
+  // Rattaché à une société suivie, la borne se lit sur la somme : son effectif
+  // et celui de cet établissement (2026-11-03).
+  const refusEntreprise = refusEffectifEntreprise(state.effectifEntreprise) ?? refusSommeDesSites(state);
   const repere =
     refus || refusEntreprise ? null : repereEffectif(state.effectifEntreprise);
   /** L'erreur d'un champ : le refus de passage d'étape, sinon le serveur. */
@@ -137,7 +144,7 @@ export function StepIdentite({
                 className="m-0 mt-1.5 text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
               >
                 {rattachee
-                  ? `Même entreprise que vos établissements existants (SIREN ${rattachee.siren}) : sa raison sociale et son effectif sont repris, et se modifient depuis la fiche de l'entreprise.`
+                  ? `Même entreprise que vos établissements existants (SIREN ${rattachee.siren}) : sa raison sociale et son effectif sont repris. Cet établissement s'ajoute à l'effectif de la société, qui se règle ensuite dans la page Équipe.`
                   : "Le SIRET de cet établissement, 14 chiffres."}
               </p>
               {messagePour("siret") && (

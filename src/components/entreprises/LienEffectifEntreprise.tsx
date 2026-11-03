@@ -11,12 +11,16 @@ import Link from "next/link";
  * « sur la fiche de l'entreprise » — et aucun lien de l'interface ne menait à
  * `/entreprises/[id]/modifier`. Une consigne sans chemin ne se suit pas.
  */
+//
+// [2026-11-03 : l'effectif se règle dans Équipe, et celui de la société en est
+// la somme. Le chemin mène à la page Équipe d'un de ses établissements
+// (`/entreprises/[id]/effectif`).]
 export function hrefEffectifEntreprise(entrepriseId: string): string {
-  return `/entreprises/${entrepriseId}/modifier#effectif`;
+  return `/entreprises/${entrepriseId}/effectif`;
 }
 
 export const LIBELLE_LIEN_EFFECTIF_ENTREPRISE =
-  "Mettre à jour l'effectif de l'entreprise";
+  "Mettre à jour l'effectif dans Équipe";
 
 /**
  * L'effectif déclaré de l'entreprise, et le lien pour le corriger. Rendu là où
@@ -42,7 +46,7 @@ export function LienEffectifEntreprise({
     >
       {effectif !== null ? (
         <>
-          Salariés de l&apos;entreprise déclarés :{" "}
+          Salariés de la société, tous établissements :{" "}
           <span className="font-mono tabular-nums text-[color:var(--board-ink)]">
             {effectif}
           </span>

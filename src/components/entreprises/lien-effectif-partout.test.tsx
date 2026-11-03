@@ -53,8 +53,9 @@ const { phraseEffectifAConfirmer } = await import(
 );
 
 const ENTREPRISE = "ent-1";
-const HREF = `/entreprises/${ENTREPRISE}/modifier#effectif`;
-const CONSIGNE = "mettez-le à jour sur la fiche de l'entreprise";
+// [2026-11-03 : l'effectif se règle dans Équipe ; le lien y redirige.]
+const HREF = `/entreprises/${ENTREPRISE}/effectif`;
+const CONSIGNE = "mettez-le à jour dans la page Équipe";
 
 function texte(html: string): string {
   return html

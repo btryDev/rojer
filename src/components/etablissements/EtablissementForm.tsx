@@ -220,29 +220,18 @@ export function EtablissementForm({
             erreur={err("codeNaf")}
           />
 
-          <div>
-          <ChampBoard
-            id="effectifSurSite"
-            name="effectifSurSite"
-            label="Travailleurs dans l'établissement"
-            requis
-            aide="Salariés et apprentis qui y travaillent régulièrement. L'effectif de l'entreprise, sur lequel se comptent les seuils du comité social et économique, du règlement intérieur et de la mise à jour annuelle du document unique, se modifie sur la fiche de l'entreprise — lien ci-dessous."
-            // Un champ `type="number"` change de valeur à la molette, sur une
-            // saisie déjà faite et sans que rien ne le signale. Le contrôle de
-            // borne reste au serveur, où il est de toute façon rejoué.
-            type="text"
-            inputMode="numeric"
-            defaultValue={valeursInitiales.effectifSurSite}
-            erreur={err("effectifSurSite")}
-          />
-          {/* Un lien et non un champ : l'entreprise a sa propre fiche, et
-              l'effectif qu'elle porte vaut pour tous ses sites. Le rappeler
-              ici, c'est ce qui permet de le corriger quand un site s'ajoute
-              ou grandit. */}
-          <LienEffectifEntreprise
-            entrepriseId={entreprise.id}
-            effectif={entreprise.effectif}
-          />
+          {/* [2026-11-03 : l'effectif ne se saisit plus ici mais dans Équipe,
+              avec ses apprentis ; celui de la société en est la somme.] */}
+          <div className="self-end text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+            Travailleurs dans l&apos;établissement :{" "}
+            <span className="font-mono tabular-nums text-[color:var(--board-ink)]">
+              {valeursInitiales.effectifSurSite ?? 0}
+            </span>
+            .{" "}
+            <LienEffectifEntreprise
+              entrepriseId={entreprise.id}
+              effectif={entreprise.effectif}
+            />
           </div>
 
           {/* Fiche « Renseignements généraux » du registre de sécurité

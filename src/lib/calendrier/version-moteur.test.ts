@@ -570,7 +570,11 @@ const RELEVE = {
   // (`clesDuPlanDansLaLecture`). NON : la porte ne fait que refuser une clé
   // qu'aucun plan légitime ne produit, ce que la régénération écrit ne change
   // pas — empreinte recopiée, version inchangée.
-  empreinte: "7eeab099dca9f51c",
+  // ~~7eeab099dca9f51c~~ (cc) — 2026-11-03, report de l'effectif dans Équipe
+  // (main, #165) : seule la phrase de `phraseEffectifAConfirmer` change
+  // (« dans la page Équipe »). NON, affichage : empreinte recopiée, version
+  // inchangée.
+  empreinte: "2aeb9e37b187442f",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");
