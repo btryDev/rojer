@@ -126,8 +126,8 @@ clients ; Rojer n'en facture pas.
   préparation comprise, soit ≈ 140 € à 70 €/h (hypothèse à remplacer par le
   coût réel de BTRY Solution). Pro laisse alors ≈ 550 €/an.
 - **Le multi-utilisateur** : vendu en Pro, pas encore livré (ADR en préparation).
-  Tous les membres comptent, rôle lecture seule compris ; les prestataires
-  invités par lien non. À la descente d'offre, aucun membre retiré, seules les
+  Tous les membres comptent, rôle lecture seule et invitations en attente
+  compris ; les prestataires invités par lien non (ADR-054, brouillon, PR #157). À la descente d'offre, aucun membre retiré, seules les
   nouvelles invitations bloquées.
 - **À livrer avant la publication** : relances email, téléchargement des
   données, multi-utilisateur, envoi de la demande d'assistance, décompte des
