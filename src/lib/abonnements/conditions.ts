@@ -1,12 +1,11 @@
 // Les conditions générales d'utilisation et de vente (ADR-053 § 8). Une
 // version = un texte figé : la preuve d'acceptation enregistre la version et
-// l'empreinte SHA-256 du texte accepté (même culture que les signatures,
-// ADR-006). Changer le texte, c'est changer de version.
+// l'empreinte du texte accepté (`conditions-empreinte.ts`, serveur seul). Ce
+// module n'a que les données : un écran client peut l'importer. Changer le
+// texte, c'est changer de version.
 //
 // TEXTE PROVISOIRE (décision de la propriétaire du 2026-11-03) : à faire
 // relire par un juriste avant le lancement de l'offre (notes du chantier, § 6).
-
-import { createHash } from "node:crypto";
 
 export type Section = { titre: string; paragraphes: string[] };
 
@@ -42,19 +41,13 @@ export const CONDITIONS: Section[] = [
   {
     titre: "Résiliation",
     paragraphes: [
-      "L'abonnement se résilie en ligne à tout moment, depuis la page Abonnement du compte ; il prend fin au terme de la période payée.",
+      "L'abonnement se résilie en ligne à tout moment, depuis l'espace de gestion de l'abonnement accessible dans Rojer.",
     ],
   },
   {
     titre: "Données",
     paragraphes: [
-      "Les données sont hébergées dans l'Union européenne. Leur traitement est décrit dans la politique de confidentialité.",
+      "Les données sont hébergées dans l'Union européenne.",
     ],
   },
 ];
-
-/** L'empreinte du texte d'une version : ce que la preuve d'acceptation garde. */
-export function empreinteConditions(sections: Section[] = CONDITIONS, version = VERSION_CONDITIONS): string {
-  const texte = JSON.stringify({ version, sections });
-  return createHash("sha256").update(texte, "utf8").digest("hex");
-}

@@ -129,9 +129,11 @@ et sans croire une information qui ne vient pas de Stripe.
 10. **Passer au payant, c'est ajouter une carte dans le portail Stripe** :
    l'abonnement devient payant à la fin de l'essai, sans prélèvement anticipé ;
    un abonnement en pause se reprend du même portail. Le portail sert aussi à
-   résilier et à télécharger les factures (émises par Stripe). **Checkout**
-   ne sert qu'à souscrire de nouveau après une résiliation. Changer de formule
-   pendant l'essai se fait dans Rojer (le portail met fin à l'essai).
+   résilier, à télécharger les factures (émises par Stripe) et à changer de
+   formule — réglé pour garder l'essai (`subscription_update.
+   trial_update_behavior = continue_trial` ; par défaut, le portail y met
+   fin). **Checkout** ne sert qu'à souscrire de nouveau après une
+   résiliation ; Rojer le refuse tant qu'un abonnement n'est pas terminé.
 11. **Les formules vivent en TypeScript** (`abonnements/formules.ts`, comme
    les référentiels, ADR-003) : la `lookup_key` du prix Stripe → formule,
    périodicité, quotas. Les **prix** restent chez Stripe, qui les facture.

@@ -26,10 +26,12 @@ import type { MetadataRoute } from "next";
  * Toute nouvelle racine de `src/app` doit être rangée ici, d'un côté ou de
  * l'autre : `robots.test.ts` le vérifie.
  */
-// `/conditions` : les conditions générales, publiques (ADR-053 § 8).
-export const RACINES_INDEXABLES = ["/", "/login", "/signup", "/conditions"] as const;
+export const RACINES_INDEXABLES = ["/", "/login", "/signup"] as const;
 
 export const RACINES_EXCLUES = [
+  // Les conditions générales (ADR-053 § 8) : publiques, mais provisoires —
+  // à rendre indexables quand le texte relu par un juriste les remplacera.
+  "/conditions",
   // Pages publiques, à lien ou par slug.
   "/acces/",
   "/accessibilite/",

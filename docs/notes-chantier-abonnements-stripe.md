@@ -441,6 +441,26 @@ pendant l'essai, portail, Checkout avec CGU, prix lus chez Stripe et gardés
   ligne dans `onboarding/actions.ts` (trois sessions touchent ce fichier) ;
 - `metadata.compteId` sur le client et l'abonnement Stripe.
 
+**Revues de la PR A (#164, 2026-11-03)** — sécurité : rien ; corrigé : le
+changement de formule passe par le portail (réglé `continue_trial`), la
+fonction maison est retirée ; clé d'idempotence de l'essai avec la formule ;
+client Stripe avec nom, adresse, e-mails en français (factures B2B) ; prix
+écartés si leur intervalle contredit leur clé, cache seulement complet ;
+CGU : texte séparé de l'empreinte (`conditions-empreinte.ts`, réutilise
+`sha256Hex`), promesses retirées, page non indexée tant qu'elle est
+provisoire. **Pour la PR B** : clés d'idempotence dérivées du `compteId` et
+ligne `Abonnement` réservée avant l'appel ; refuser Checkout tant qu'un
+abonnement n'est pas terminé ; au webhook d'un Checkout, enregistrer la
+preuve d'acceptation (version, empreinte) ; nom et adresse du client depuis
+l'entreprise.
+
+**Réglages du tableau de bord Stripe, avant le lancement** (complète § 6) :
+URL des conditions (`/conditions`) dans les réglages publics — sans elle,
+Checkout refuse `consent_collection` ; portail : changement de formule avec
+`continue_trial`, modification de l'adresse et du numéro de TVA, résiliation
+en fin de période ; e-mails de rappel de fin d'essai (7 jours avant) ;
+produits et prix avec les `lookup_key` `rojer_<formule>_<periodicite>`.
+
 **Rappels de fin d'essai** : ceux de Stripe (réglages Billing, e-mail 7 jours
 avant, avec lien) plutôt qu'un envoi par Rojer — à activer dans le tableau
 de bord (§ 6) ; le bandeau de Rojer annonce la fin dans la dernière semaine.

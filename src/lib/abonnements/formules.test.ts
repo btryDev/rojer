@@ -7,6 +7,10 @@ describe("formules", () => {
     for (const cle of LOOKUP_KEYS) expect(lookupKey(formuleDeLookupKey(cle)!.formule, formuleDeLookupKey(cle)!.periodicite)).toBe(cle);
   });
 
+  it("Stripe ne lit que 10 lookup_keys par requête : le catalogue doit y tenir", () => {
+    expect(LOOKUP_KEYS.length).toBeLessThanOrEqual(10);
+  });
+
   it("une clé inconnue ne donne aucune formule — jamais une formule par défaut", () => {
     for (const cle of [null, undefined, "", "suivi_annuel", "rojer_surmesure_mensuel", "rojer_pro_trimestriel", "rojer_constructor_mensuel", "rojer_pro_annuel_x"]) {
       expect(formuleDeLookupKey(cle), String(cle)).toBeNull();
