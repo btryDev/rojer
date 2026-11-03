@@ -15,7 +15,7 @@ vi.mock("@/lib/auth/compte", () => ({ getOptionalCompte }));
 vi.mock("@/lib/auth/require-user", () => ({ requireUser }));
 vi.mock("@/lib/stripe/config", () => ({ etatStripe }));
 
-import { abonnementExige, verifierSaisie } from "./saisie";
+import { abonnementExige, verifierRole, verifierSaisie } from "./saisie";
 
 describe("verifierSaisie", () => {
   beforeEach(() => {
@@ -23,18 +23,41 @@ describe("verifierSaisie", () => {
     vi.unstubAllEnvs();
     getOptionalCompte.mockResolvedValue({
       user: { id: "u1" },
-      compte: { compteId: "c1", role: "proprietaire" },
+      compte: { compteId: "c1", role: "owner" },
       db: { abonnement: { findUnique } },
     });
   });
 
-  it("avant le lancement de l'offre : ne lit rien, ni session ni abonnement", async () => {
+  // ~~« ne lit rien, ni session ni abonnement »~~ [2026-11-03, ADR-054 § 4 :
+  // le rôle se lit toujours ; l'abonnement, jamais avant le lancement.]
+  it("avant le lancement de l'offre : lit le rôle, jamais l'abonnement", async () => {
     etatStripe.mockReturnValue({ active: true, mode: "test" });
     await verifierSaisie();
     vi.stubEnv("ABONNEMENT_EXIGE", "oui");
     etatStripe.mockReturnValue({ active: false, motif: null });
     await verifierSaisie();
-    expect(getOptionalCompte).not.toHaveBeenCalled();
+    expect(getOptionalCompte).toHaveBeenCalledTimes(2);
+    expect(findUnique).not.toHaveBeenCalled();
+  });
+
+  it("un membre en lecture seule est renvoyé à la page qui le dit, offre lancée ou non (ADR-054 § 4)", async () => {
+    const lecture = { user: { id: "u2" }, compte: { compteId: "c1", role: "lecture" }, db: { abonnement: { findUnique } } };
+    getOptionalCompte.mockResolvedValue(lecture);
+    await expect(verifierSaisie()).rejects.toThrow("NEXT_REDIRECT");
+    vi.stubEnv("ABONNEMENT_EXIGE", "oui");
+    etatStripe.mockReturnValue({ active: true, mode: "test" });
+    await expect(verifierSaisie()).rejects.toThrow("NEXT_REDIRECT");
+    await expect(verifierRole()).rejects.toThrow("NEXT_REDIRECT");
+    expect(redirect).toHaveBeenCalledTimes(3);
+    expect(redirect).toHaveBeenCalledWith("/compte/lecture-seule");
+    expect(findUnique).not.toHaveBeenCalled();
+  });
+
+  it("verifierRole laisse passer un membre qui saisit, et ne lit pas l'abonnement", async () => {
+    getOptionalCompte.mockResolvedValue({ user: { id: "u3" }, compte: { compteId: "c1", role: "member" }, db: { abonnement: { findUnique } } });
+    vi.stubEnv("ABONNEMENT_EXIGE", "oui");
+    etatStripe.mockReturnValue({ active: true, mode: "test" });
+    await expect(verifierRole()).resolves.toBeUndefined();
     expect(findUnique).not.toHaveBeenCalled();
   });
 

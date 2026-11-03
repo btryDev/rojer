@@ -16,6 +16,8 @@ import type { Env } from "@/lib/environnement";
 import { droitsDe, type ContexteDroits, type Droits } from "./droits";
 
 export const PAGE_ABONNEMENT = "/compte/abonnement";
+/** Où une écriture refusée à un membre en lecture seule renvoie (ADR-054 § 4). */
+export const PAGE_LECTURE_SEULE = "/compte/lecture-seule";
 
 /** `ABONNEMENT_EXIGE=oui` (espaces et casse tolérés, comme `env.ts`) : l'offre est lancée. */
 export function abonnementExige(env: Env = process.env): boolean {
@@ -49,14 +51,29 @@ export async function droitsDuCompte(db: Db, compteId: string): Promise<Droits> 
 }
 
 /**
- * La garde d'une écriture : sans effet tant que l'offre n'est pas lancée.
+ * La garde du rôle seul (ADR-054 § 4) : un membre en lecture seule est renvoyé
+ * à la page qui le dit. En tête des écritures qui restent ouvertes à un compte
+ * impayé mais pas à la lecture seule (suppressions, retrait d'un accès ou
+ * d'une page publique) ; `verifierSaisie` la contient.
+ */
+export async function verifierRole(): Promise<void> {
+  const c = await getOptionalCompte();
+  if (c?.compte?.role === "lecture") redirect(PAGE_LECTURE_SEULE);
+}
+
+/**
+ * La garde d'une écriture : le rôle d'abord, toujours (une lecture de
+ * `Membre`) ; puis l'abonnement, sans effet tant que l'offre n'est pas lancée.
  * Sans compte (personne inscrite qui n'a encore rien créé, ADR-054), pas
  * d'abonnement non plus : page de l'abonnement — et surtout pas
  * `requireCompte`, qui renverrait à l'onboarding qu'on vient de quitter.
+ * Le client borné refuse de toute façon l'écriture d'un membre en lecture
+ * seule : cette garde n'en est que la réponse lisible.
  */
 export async function verifierSaisie(): Promise<void> {
-  if (!offreLancee(contexteDroits())) return;
   const c = await getOptionalCompte();
+  if (c?.compte?.role === "lecture") redirect(PAGE_LECTURE_SEULE);
+  if (!offreLancee(contexteDroits())) return;
   if (!c) {
     await requireUser();
     redirect(`${PAGE_ABONNEMENT}?saisie=fermee`);

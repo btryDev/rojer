@@ -17,6 +17,9 @@ vi.mock("@/lib/prisma", () => ({
 vi.mock("@/lib/auth/require-user", () => ({
   requireUser: vi.fn(async () => ({ id: "user-1" })),
 }));
+// Les gardes de saisie et de rôle (ADR-053, ADR-054) ont leurs propres tests
+// (`abonnements/saisie.test.ts`) : ici, ouvertes.
+vi.mock("@/lib/abonnements/saisie", () => ({ verifierSaisie: async () => {}, verifierRole: async () => {} }));
 vi.mock("@/lib/auth/scope", () => ({
   // La garde rend aussi le client borné (ADR-051) : ici, le client simulé.
   assertEntrepriseDuCompte: async (...a: unknown[]) => ({

@@ -15,7 +15,7 @@ import {
   section3Schema,
   section4Schema,
 } from "./schema";
-import { verifierSaisie } from "@/lib/abonnements/saisie";
+import { verifierRole, verifierSaisie } from "@/lib/abonnements/saisie";
 
 export type RegistreActionState =
   | { status: "idle" }
@@ -217,6 +217,8 @@ export async function publierRegistre(
 export async function depublierRegistre(
   etablissementId: string,
 ): Promise<void> {
+  // Ouverte à un compte impayé, pas à la lecture seule (ADR-054 § 4).
+  await verifierRole();
   const { db } = await assertEtablissementDuCompte(etablissementId);
   const r = await db.registreAccessibilite.findUnique({
     where: { etablissementId },

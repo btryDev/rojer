@@ -33,7 +33,7 @@ import {
 } from "./schema";
 import { typesErpAutresPostes } from "./types-erp-affiches";
 import { refusDuFiltre, rEntre, sansReponseEnfants } from "./types-refuses";
-import { verifierSaisie } from "@/lib/abonnements/saisie";
+import { verifierRole, verifierSaisie } from "@/lib/abonnements/saisie";
 
 export type EtablissementActionState =
   | { status: "idle" }
@@ -453,6 +453,8 @@ async function compterVersionsDuerp(db: Db, etablissementId: string): Promise<nu
 export async function supprimerEtablissement(
   id: string,
 ): Promise<SuppressionResult> {
+  // Ouverte à un compte impayé (RGPD), pas à la lecture seule (ADR-054 § 4).
+  await verifierRole();
   const { db } = await assertEtablissementDuCompte(id);
 
   const etab = await db.etablissement.findUnique({
