@@ -21,7 +21,7 @@
 //   C. **Obligations légales que Rojer ne suit pas au quotidien** (ADR-042) —
 //      nommées une par une, avec le geste tiré de leurs réalisateurs
 //      (`gesteHorsQuotidien`). Le mot « audit » n'apparaît pas.
-//   D. **Ce que Rojer ne gère pas** — cinq familles, une phrase chacune
+//   D. **Ce que Rojer ne gère pas** — ~~cinq~~ six familles [2026-11-03, réalignement], une phrase chacune
 //      (`perimetre/familles-non-gerees.ts`).
 //
 // ~~Refusé à l'entrée~~ et ~~hors périmètre déclaré~~ ne sont plus sur la page

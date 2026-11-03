@@ -128,9 +128,14 @@ release (lots lancés le même jour) ; **n° 1 (gaz sans cuisine) et n° 5
    Relevé par la revue indépendante du sous-lot F (`lot/ref-f-legionelles`),
    sans lien avec ce lot ; non corrigé ici, sur décision de c6. Cause non
    instruite.
-13. **[2026-10-17, à revoir quand les premiers clients arrivent] Un établissement
+13. ~~**[2026-10-17, à revoir quand les premiers clients arrivent] Un établissement
    J, U ou spécial créé avant le filtre à l'accueil ne dit pas qu'il n'est pas
-   pris en charge** (`lot/filtre-accueil`, décision de c6). Le filtre
+   pris en charge** (`lot/filtre-accueil`, décision de c6).~~ **[2026-11-03 :
+   CLOS — le filtre est levé (réalignement, ADR-031 amendement ter, PR #172) ;
+   tout établissement J, U, spécial ou EF, ancien ou nouveau, porte le manque
+   de l'axe `type_erp` (`perimetre/couverture.ts`). Le R qui accueille des
+   enfants est accepté et ne porte pas de manque propre : les autres codes ne
+   sont pas servis.]** Le filtre
    (`src/lib/etablissements/types-refuses.ts`) refuse ces types à la création
    et à leur ENTRÉE sur la fiche ; un dossier déjà enregistré dans l'un d'eux
    s'enregistre comme avant, sans avertissement — la prod n'a que des données

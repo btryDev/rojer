@@ -149,7 +149,9 @@ describe("registre de dette — les obligations manquantes", () => {
       // `U 43`, `U 47`, `U 48`, `J 35`, `J 39`, `J 40` hors cible — seuls des
       // types que l'onboarding refuse y sont soumis. ~~`R 33`~~ reste dans la
       // cible (revue : la formation d'adultes est acceptée).
-      libre: [1, 8],
+      // [1, 8] → [9, 0] le 2026-11-03 (réalignement, ADR-031 amendée) : le
+      // filtre est levé, les huit rentrent dans la cible.
+      libre: [9, 0],
       // 9 → 6 le 2026-09-21 : les trois de la chaleur intense (`R. 4463-4`,
       // `-5`, `-7`) sont encodées sur la page « Quand ça arrive ».
       // 6 → 0 le même jour : cinq relues à la source et encodées ; la sixième,
@@ -184,7 +186,9 @@ describe("registre de dette — les obligations manquantes", () => {
       // d'`a_trancher`, hors cadre — aucune catégorie de désinfection des eaux.
       // [12, 0] → [8, 4] le 2026-10-17 (filtre à l'accueil) : les gaz
       // médicaux `J 33`, `U 62`, `U 64`, `PU 5` hors cible (types J et U refusés).
-      categorie_equipement: [8, 4],
+      // [8, 4] → [12, 0] le 2026-11-03 (réalignement, ADR-031 amendée) : le
+      // filtre est levé, les quatre rentrent dans la cible.
+      categorie_equipement: [12, 0],
       // 4 → 1 le 2026-09-27 (C45) : `R. 4227-23`, `R. 4227-24` et l'art. 8 de
       // l'arrêté du 10 septembre 2021 passent `non_couvert`, annoncés.
       // [1, 2] → [3, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : `MS 71`, arrêté 1986 art. 60.
@@ -314,7 +318,9 @@ describe("registre de dette — les obligations manquantes", () => {
     // `U 43`, `U 47`, `U 48`, `U 62`, `U 64`, `PU 5`, `PU 6` passent
     // `toucheLaCible: false` (~~`R 33`~~ reste, revue du même jour). Le total
     // ne bouge pas (37) : c'est une mesure de la cible, pas une dette réglée.
-    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(25);
+    // 25 → 37 dans la cible le 2026-11-03 (réalignement, ADR-031 amendée),
+    // mesuré en appelant : 25 + 12 — le filtre est levé, les douze reviennent.
+    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(37);
     expect(manquantes.length).toBe(37);
   });
 });

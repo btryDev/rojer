@@ -142,6 +142,7 @@ describe("la consigne « fiche de l'entreprise » porte son lien", () => {
         estERP: false,
         estIGH: false,
         estHabitation: false,
+        typesErp: [],
         typeErp: null,
         typesErpAutres: [],
         categorieErp: null,

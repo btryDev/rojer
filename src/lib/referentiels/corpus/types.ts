@@ -177,9 +177,11 @@ export type StatutArticle =
        * bureau, 5ᵉ catégorie d'ERP, cinquante salariés au plus~~ ce que
        * l'onboarding ne refuse pas : cinquante travailleurs au plus, pas d'ERP
        * en IGH (ADR-031 ; tranché par la propriétaire le 2026-10-12) ?
-       * [2026-10-18 : et, depuis le filtre à l'accueil du 2026-10-17, pas de
+       * ~~[2026-10-18 : et, depuis le filtre à l'accueil du 2026-10-17, pas de
        * type J ni U, pas d'établissement spécial PA, CTS, SG, OA, REF, GA, EF,
-       * pas de type R qui accueille des enfants — ADR-031 amendée.]
+       * pas de type R qui accueille des enfants — ADR-031 amendée.]~~
+       * [2026-11-03 : filtre levé (réalignement, ADR-031 amendée) — la cible
+       * est de nouveau la taille et l'ERP hors IGH, tous types confondus.]
        *
        * `false` ne dit pas « sans importance » : il dit ~~qu'un hôtel, un
        * immeuble d'habitation, un ERP des quatre premières catégories ou un
@@ -188,6 +190,7 @@ export type StatutArticle =
        * l'onboarding refuse. ~~Au 2026-10-12, aucune entrée n'est dans ce cas.~~
        * [2026-10-17, filtre à l'accueil : douze entrées des types J et U (et
        * PU) le sont désormais ; ~~R 33~~ est resté dans la cible (revue).]
+       * [2026-11-03 : les douze reviennent dans la cible (réalignement).]
        * Dans le doute, `true` : entre sur- et sous-compter une dette, on
        * sur-compte.
        */

@@ -28,15 +28,25 @@ affaires cessantes.
 
 ## 1. Les régimes servis
 
-**Servi** : Code du travail, ERP, habitation.
+**Servi** : Code du travail, ERP, habitation. [2026-11-03, réalignement
+(ADR-031, amendement du 2026-11-03 (ter), décision de la propriétaire) : tout le
+Code de la construction et de l'habitation et tout le Code du travail
+(santé-sécurité) adressés à l'exploitant ou à l'employeur, pour tous les types
+d'établissement. Les autres codes (santé publique, action sociale, environnement,
+sport…) ne sont pas servis, et ne refusent personne.]
 
 **Refusé à la création d'un dossier — ~~deux cas, et deux seulement~~** (arbitré en
 séance le 2026-09-01, après un premier jet beaucoup plus large)
-[2026-10-18 : deux au 2026-09-01 ; trois depuis le 2026-09-26, l'effectif de
+~~[2026-10-18 : deux au 2026-09-01 ; trois depuis le 2026-09-26, l'effectif de
 l'entreprise plafonné comme celui du site ; et depuis le 2026-10-17, le filtre
 à l'accueil refuse les types J et U, les établissements spéciaux PA, CTS, SG,
 OA, REF, GA, EF, et R qui accueille des enfants — ADR-031, amendement du
-2026-10-18] :
+2026-10-18]~~ [2026-11-03 : **trois refus**, et trois seulement — plus de
+quarante-neuf travailleurs sur le site, plus de quarante-neuf salariés dans
+l'entreprise, un ERP situé dans un IGH. Le filtre à l'accueil est levé
+(réalignement, ADR-031, amendement du 2026-11-03 (ter)) : on refuse seulement
+ce qui est hors cible par la taille ou l'IGH ; tout le reste s'accepte et se
+déclare] :
 
 1. **~~plus de cinquante~~ cinquante travailleurs ou plus** [2026-11-03 : borne à
    quarante-neuf, ADR-031, amendement du 2026-11-03 — le programme annuel est dû
@@ -54,7 +64,12 @@ règlement IGH pèsent sur l'exploitant de l'immeuble, pas sur lui.
 
 **Tout le reste se déclare et ne se refuse pas** : ICPE, expositions spécialisées
 (ATEX, DRPCE, CEM, CMR, amiante, plomb, radon, rayonnements ionisants), types
-d'ERP non instruits (CTS, GA, PS, SG, REF, EF, OA, PA, X). Le critère qui a
+d'ERP non instruits (CTS, GA, PS, SG, REF, EF, OA, PA, X) [2026-11-03 : s'y
+ajoutent J et U, dont les chapitres sont lus (2026-10-16) mais pas encore suivis,
+et R qui accueille des enfants, que le filtre du 2026-10-17 avait refusés ; les types acceptés dont Rojer ne suit pas les dispositions propres se
+déclarent par l'axe `type_erp` de `perimetre/couverture.ts`. Ce qui relève du
+Code du travail (ATEX, rayonnements ionisants, CMR…) est « pas encore » couvert,
+pas hors périmètre ; seul ce qui relève d'un autre code est hors périmètre]. Le critère qui a
 prévalu : **on refuse ce qu'on ne peut pas servir, pas ce qu'on ne couvre pas
 entièrement.** Une TPE qui manipule un agent CMR reste un employeur ordinaire
 pour tout le reste, et lui fermer la porte lui retirerait tout au motif qu'on ne
@@ -75,8 +90,11 @@ pourquoi. Un régime **servi partiellement** crée le dossier et le prévient en
 permanence, par le mécanisme de l'ADR-020, qui reste en vigueur pour tout ce qui
 n'est pas refusé.
 
-Le critère : on refuse ce que le produit ne sait pas servir **du tout** — un
-règlement entier qu'il n'a jamais lu, une exposition qu'il ne sait pas détecter.
+Le critère : on refuse ce que le produit ne sait pas servir **du tout** — ~~un
+règlement entier qu'il n'a jamais lu, une exposition qu'il ne sait pas détecter~~
+[2026-11-03, réalignement : la taille de la structure, ou un ERP situé dans un
+IGH. Un règlement pas encore lu, une exposition pas encore suivie, un autre code
+qui s'applique aussi ne refusent plus : ils se déclarent].
 On déclare ce qu'il sert **incomplètement**, parce que le dirigeant y gagne quand
 même quelque chose et qu'il est prévenu de ce qui manque.
 
