@@ -14,12 +14,9 @@ import {
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 const FICHIER = join("src", "lib", "perimetre", "familles-non-gerees.ts");
 
-// [2026-11-03, réalignement (ADR-031 amendée) : ~~cinq~~ six — les risques
-// que le Code du travail impose et que Rojer ne suit pas encore sortent des
-// « risques spécialisés », qui ne gardent que les autres codes.]
-describe("les six familles", () => {
-  it("six familles, une phrase chacune", () => {
-    expect(FAMILLES_NON_GEREES).toHaveLength(6);
+describe("les cinq familles", () => {
+  it("cinq familles, une phrase chacune", () => {
+    expect(FAMILLES_NON_GEREES).toHaveLength(5);
     for (const f of FAMILLES_NON_GEREES) {
       expect(f.phrase, f.cle).toMatch(/^Rojer ne .+\.$/);
       // Une phrase : un seul point final, hors abréviations.
@@ -98,22 +95,10 @@ describe("les six familles", () => {
   });
 
   it("ne laisse pas croire que le suivi renforcé n'est pas suivi", () => {
-    // ~~famille `risques_specialises`~~ — 2026-11-03 : la phrase du suivi
-    // renforcé est passée à la famille du Code du travail.
-    const risques = FAMILLES_NON_GEREES.find((f) => f.cle === "code_du_travail_pas_encore")!;
+    const risques = FAMILLES_NON_GEREES.find((f) => f.cle === "risques_specialises")!;
     expect(risques.phrase).toContain("le suivi individuel renforcé");
     expect(obligationsRepondantA("le suivi individuel renforcé").length).toBeGreaterThan(0);
     expect(risques.phrase).not.toMatch(/amiante|plomb|radon/i);
-  });
-
-  it("réalignement : l'autre code est dit hors périmètre, le Code du travail « pas encore » (2026-11-03)", () => {
-    const autres = FAMILLES_NON_GEREES.find((f) => f.cle === "risques_specialises")!;
-    const ct = FAMILLES_NON_GEREES.find((f) => f.cle === "code_du_travail_pas_encore")!;
-    expect(autres.phrase).toMatch(/autres codes/);
-    expect(autres.phrase).not.toMatch(/atmosphères explosives|radioprotection/);
-    expect(ct.phrase).toMatch(/pas encore/);
-    expect(ct.phrase).toMatch(/atmosphères explosives/);
-    expect(ct.phrase).toMatch(/radioprotection/);
   });
 
   it("se suffit à elle-même : aucun renvoi au document ni à une autre partie", () => {

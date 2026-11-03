@@ -56,24 +56,13 @@ export const EXCLUSIONS = {
   // écrits. Le motif s'affiche sur la page « Ce que Rojer ne couvre pas »
   // (`perimetre/exclusions.ts`) : l'ancienne rédaction est rayée ici, pas à
   // l'écran. `exclusions.test.ts` tient qu'aucun article du type X n'y est rangé.
-  // ~~libellé « Risque spécialisé hors périmètre » ; motif « ICPE soumises à
-  // autorisation, ATEX, rayonnements ionisants, piscines, bains à remous,
-  // appareils de bronzage (UV) : risques dont le traitement demande une
-  // expertise que le produit ne prétend pas porter. »~~ — 2026-11-03,
-  // réalignement CCH + Code du travail (ADR-031 amendée, décision de la
-  // propriétaire) : Rojer sert tout le CCH et tout le Code du travail
-  // adressés à l'exploitant ou à l'employeur. N'est exclu que ce qui relève
-  // d'un AUTRE code. L'ATEX et la radioprotection relèvent du Code du
-  // travail : elles quittent l'exclusion et deviennent des manques « pas
-  // encore couverts » (`perimetre/familles-non-gerees.ts`). La clé reste,
-  // pour ne pas réécrire les articles qui la citent. Revue de #172 : les
-  // dispositions des piscines au règlement de sécurité ERP (X annexe, X 1
-  // § 2, PX) sont du CCH — elles ne sont PAS ici ; seules leurs règles
-  // sanitaires (Code de la santé publique) le sont.
+  // [2026-11-03 : réécrit par #172 (« Relève d'un autre code », sans ATEX ni
+  // rayonnements ionisants), rétabli le même jour par #175 — décision de la
+  // propriétaire, ADR-031 (quater) : le référentiel validé n'est pas élargi.]
   risque_specialise: {
-    libelle: "Relève d'un autre code",
+    libelle: "Risque spécialisé hors périmètre",
     motif:
-      "Installations classées pour la protection de l'environnement (Code de l'environnement), règles sanitaires des piscines et des bains à remous, appareils de bronzage (UV) (Code de la santé publique) : leurs obligations propres relèvent d'autres codes que le Code de la construction et de l'habitation et le Code du travail, que Rojer ne suit pas. Un établissement concerné n'est pas refusé pour autant.",
+      "ICPE soumises à autorisation, ATEX, rayonnements ionisants, piscines, bains à remous, appareils de bronzage (UV) : risques dont le traitement demande une expertise que le produit ne prétend pas porter.",
   },
   construction: {
     libelle: "Règle de construction, pas d'exploitation",

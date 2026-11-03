@@ -8,7 +8,7 @@
   `src/lib/perimetre/exclusions.ts` (`refusAlEntree`, catalogue des ~~deux~~
   [2026-10-18 : trois] refus de taille et d'IGH),
   ~~`src/lib/etablissements/types-refuses.ts` (`refusDuFiltre`, le filtre à
-  l'accueil — 2026-10-18),~~ [2026-11-03 : retiré avec le filtre, réalignement]
+  l'accueil — 2026-10-18),~~ [2026-11-03 : retiré avec le filtre, ~~réalignement~~ amendement (ter)]
   `src/lib/perimetre/couverture.ts`, `src/lib/referentiels/corpus/perimetre.ts`
 - **Amende** l'ADR-020, qu'elle ne renverse pas · **Découle de** l'ADR-025
 
@@ -18,14 +18,17 @@
 > des enfants. Le critère de cette ADR ne change pas — on refuse ce qu'on ne
 > sait pas servir *du tout* — et c'est lui qui fonde ces refus. Voir
 > « Amendement du 2026-10-18 » en fin de document.~~ [2026-11-03 : amendement
-> annulé par le réalignement, ci-dessous.]
+> annulé par ~~le réalignement~~ la levée du filtre (amendements (ter) et
+> (quater)), ci-dessous.]
 
-> **Amendée le 2026-11-03 — réalignement CCH + Code du travail.** Rojer sert
-> tout le CCH et tout le Code du travail (santé-sécurité) adressés à
-> l'exploitant ou à l'employeur, pour tous les types d'établissement. **On
+> **Amendée le 2026-11-03 — ~~réalignement CCH + Code du travail~~ tous les
+> types d'ERP admis.** ~~Rojer sert tout le CCH et tout le Code du travail
+> (santé-sécurité) adressés à l'exploitant ou à l'employeur, pour tous les
+> types d'établissement.~~ [rayé le même jour, amendement (quater) : Rojer sert
+> le référentiel établi, validé par le préventeur, sans l'élargir.] **On
 > refuse seulement ce qui est hors cible par la taille ou l'IGH ; tout le reste
 > s'accepte et se déclare.** Le filtre à l'accueil du 2026-10-17 est levé. Voir
-> « Amendement du 2026-11-03 (ter) » en fin de document.
+> les amendements du 2026-11-03 (ter) et (quater) en fin de document.
 
 > **Amendée le 2026-11-03.** La borne d'effectif passe de cinquante à
 > **quarante-neuf** (`EFFECTIF_MAX = 49`), sur le site comme dans
@@ -165,7 +168,8 @@ et 102, et R. 4544-11), ~~huit~~ ~~six~~ cinq hors cadre — `docs/couverture-de
 
 ## ~~Amendement du 2026-10-18 — le filtre à l'accueil~~ [annulé le 2026-11-03]
 
-> **Annulé le 2026-11-03** par le réalignement CCH + Code du travail (voir
+> **Annulé le 2026-11-03** par ~~le réalignement CCH + Code du travail~~ la
+> levée du filtre à l'accueil [rayé le même jour, amendement (quater)] (voir
 > « Amendement du 2026-11-03 (ter) »). Le texte ci-dessous est gardé tel quel :
 > il décrit le filtre tel qu'il a vécu, du 2026-10-17 au 2026-11-03, et ne
 > décrit plus le code.
@@ -323,33 +327,32 @@ n'est plus un doute : la prudence de `effectifRetenuPourSeuil` (retenir le
 site « à confirmer » quand la société est sous le seuil) pourrait se lever.
 C'est une règle du moteur ; elle n'est pas touchée ici.
 
-## Amendement du 2026-11-03 (ter) — réalignement CCH + Code du travail
+## Amendement du 2026-11-03 (ter) — ~~réalignement CCH + Code du travail~~ le filtre à l'accueil levé [titre et règle corrigés le même jour, amendement (quater)]
 
 Décision de la propriétaire du 2026-11-03, relayée par la session de
-coordination ; l'état des lieux du 2026-11-03 (refus, obligations d'autres
+coordination ; ~~l'état des lieux du 2026-11-03 (refus, obligations d'autres
 codes, CCH et Code du travail lus mais non servis, textes non lus) est résumé
-dans cet amendement et dans `docs/couverture-declaree-du-produit.md`.
+dans cet amendement et dans `docs/couverture-declaree-du-produit.md`.~~ [2026-11-03, rayé le même jour : l'objectif « tout le CCH et tout le Code du travail » est annulé, voir l'amendement (quater)]
 
-**L'état des lieux, en bref** (relevé le 2026-11-03 sur `main` 1fef953a,
-référentiel `2026-10-18.1`, en exécutant le référentiel et le corpus) :
-- 204 obligations servies, dont 14 fondées sur un autre code (Code de
-  l'environnement et règlement UE pour les fluides frigorigènes et les ESP,
-  Code de la santé publique pour les légionelles et l'interdiction de fumer,
-  Code du sport) — elles restent en place pour l'instant ;
-- lus mais non servis : 79 articles du CCH (arrêté du 25 juin 1980, IGH,
-  habitation) et 43 du Code du travail, manques et « non couverts » ;
-- jamais lus : le livre IV de l'arrêté de 1980 hors PS 32, l'arrêté des
-  établissements flottants, l'essentiel de GN, du règlement IGH et de l'arrêté
-  habitation, le CCH lui-même hors cas cités, et une quarantaine de chapitres
-  de la partie 4 du Code du travail adressés à l'employeur.
+~~**L'état des lieux, en bref** (relevé le 2026-11-03 sur `main` 1fef953a,
+référentiel `2026-10-18.1`, en exécutant le référentiel et le corpus) : 204
+obligations servies, dont 14 fondées sur un autre code (Code de
+l'environnement et règlement UE pour les fluides frigorigènes et les ESP,
+Code de la santé publique pour les légionelles et l'interdiction de fumer,
+Code du sport) ; lus mais non servis : 79 articles du CCH (arrêté du 25 juin
+1980, IGH, habitation) et 43 du Code du travail, manques et « non couverts » ;
+jamais lus : le livre IV de l'arrêté de 1980 hors PS 32, l'arrêté des
+établissements flottants, l'essentiel de GN, du règlement IGH et de l'arrêté
+habitation, le CCH lui-même hors cas cités, et une quarantaine de chapitres de
+la partie 4 du Code du travail adressés à l'employeur.~~ [2026-11-03, rayé le même jour : l'objectif « tout le CCH et tout le Code du travail » est annulé, voir l'amendement (quater)]
 
-**La règle.** Rojer sert tout le Code de la construction et de l'habitation
+~~**La règle.** Rojer sert tout le Code de la construction et de l'habitation
 et tout le Code du travail (santé-sécurité) qui s'adressent à l'exploitant ou
 à l'employeur, pour tous les types d'établissement. On ne refuse et on
 n'exclut plus rien parce qu'un autre code s'applique aussi (code de la santé
 publique, code de l'action sociale et des familles, code de l'environnement,
 code du sport…) ou parce que le cas est particulier. Les autres codes ne sont
-pas servis, et ne refusent personne.
+pas servis, et ne refusent personne.~~ [2026-11-03, rayé le même jour : l'objectif « tout le CCH et tout le Code du travail » est annulé, voir l'amendement (quater)]
 
 **Le critère devient** : on refuse seulement ce qui est hors cible par la
 taille ou par l'IGH ; tout le reste s'accepte et se déclare. Il resserre celui
@@ -390,23 +393,50 @@ chapitre PS, non lu, est un manque à déclarer au même titre (non fait ici).
 - Les douze manques du corpus que le filtre avait sortis de la cible (J 33,
   J 35, J 39, J 40, U 41, U 43, U 47, U 48, U 62, U 64, PU 5, PU 6) y
   reviennent (`toucheLaCible: true`) ; aucun n'est encodé.
-- L'exclusion `risque_specialise` (`corpus/perimetre.ts`) devient « Relève
+- ~~L'exclusion `risque_specialise` (`corpus/perimetre.ts`) devient « Relève
   d'un autre code » : installations classées, règles sanitaires des piscines, bains à remous,
   appareils de bronzage. L'ATEX et la radioprotection, qui relèvent du Code
   du travail, en sortent : la page les dit « pas encore » suivies (famille
-  `code_du_travail_pas_encore`).
+  `code_du_travail_pas_encore`).~~ [2026-11-03 : annulé le même jour (revert de
+  811b89cb) — l'exclusion et la famille reprennent leur texte d'avant.]
 
 **Ce qui reste ouvert, écrit pour ne pas se perdre.**
-- `Arrêté 2011-12-26 annexe IV` (installations électriques temporaires, Code
+- ~~`Arrêté 2011-12-26 annexe IV` (installations électriques temporaires, Code
   du travail) est encore rangé sous `risque_specialise`, dont le nouveau motif
   ne le décrit pas ; son motif le dit. Le reclasser en manque annoncé demande
-  une adresse d'annonce : lot d'encodage du Code du travail.
-- Les autres motifs « cas particulier » du corpus ne sont pas relus ici —
+  une adresse d'annonce : lot d'encodage du Code du travail.~~ [2026-11-03 :
+  sans objet, l'exclusion a repris son motif d'avant.]
+- ~~Les autres motifs « cas particulier » du corpus ne sont pas relus ici —
   dont les piscines : `X annexe` et `X 1 § 2` (règlement de sécurité ERP, donc
   CCH) sont classés hors cadre au § 7 de `docs/couverture-declaree-du-produit.md`
   « sous l'exclusion `risque_specialise` » ; sous la règle du réalignement, ce
-  sont des manques à servir.
+  sont des manques à servir.~~ [2026-11-03 : sans objet, le référentiel n'est
+  pas élargi.]
 - Le chapitre PS (livre IV), lu pour un article sur quarante-trois, n'a pas de
   manque déclaré.
-- Les quatorze obligations du référentiel fondées sur un autre code restent
-  en place ; l'établissement sans salarié n'est pas traité.
+- ~~Les quatorze obligations du référentiel fondées sur un autre code restent
+  en place~~ [2026-11-03, sans objet — (quater) : elles font partie du
+  référentiel validé] ; l'établissement sans salarié n'est pas traité.
+
+## Amendement du 2026-11-03 (quater) — le référentiel n'est pas élargi
+
+Décision de la propriétaire du 2026-11-03, relayée par la session de
+coordination, le même jour que l'amendement (ter), qu'elle corrige :
+
+**Tous les types d'ERP sont admis (le filtre à l'accueil est levé) ; Rojer
+sert le référentiel établi, validé par le préventeur, sans l'élargir ; ce
+qu'il ne suit pas pour un type se déclare.**
+
+- Ce qui reste de l'amendement (ter) : la levée du filtre (J, U, R qui
+  accueille des enfants, établissements spéciaux, EF), le retour des douze
+  manques J et U dans la cible, et l'axe `type_erp` de
+  `perimetre/couverture.ts`, qui déclare ce que Rojer ne suit pas pour J, U,
+  les établissements spéciaux et EF. Les refus restent ceux de la taille
+  (site et entreprise) et de l'ERP en IGH.
+- Ce qui est annulé : l'objectif de servir « tout le CCH et tout le Code du
+  travail », et avec lui la réécriture de l'exclusion `risque_specialise`
+  (`corpus/perimetre.ts`) et la famille `code_du_travail_pas_encore`
+  (`perimetre/familles-non-gerees.ts`). Les deux reprennent leur texte
+  d'avant #172 : ICPE, ATEX, rayonnements ionisants, piscines, bains à remous,
+  appareils de bronzage restent hors périmètre, et rien ne les dit « pas
+  encore » suivis.
