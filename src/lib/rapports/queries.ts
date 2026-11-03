@@ -57,7 +57,7 @@ export async function listerRapportsDeLEtablissement(
   etablissementId: string,
   filtres: FiltresRegistre = {},
 ) {
-  const { user, compte, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   const rapports = await db.rapportVerification.findMany({
     where: {
       etablissementId,
@@ -155,7 +155,7 @@ export type RapportListe = Awaited<
 >[number];
 
 export async function getRapport(id: string) {
-  const { user, compte, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   return db.rapportVerification.findFirst({
     where: { id, etablissement: { entreprise: { compteId: compte.compteId } } },
     include: {
@@ -172,7 +172,7 @@ export async function getRapport(id: string) {
 }
 
 export async function listerRapportsDUneVerification(verificationId: string) {
-  const { user, compte, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   return db.rapportVerification.findMany({
     where: {
       verificationId,
@@ -188,7 +188,7 @@ export async function listerRapportsDUneVerification(verificationId: string) {
 export const compterRapportsDuDossier = cache(async function compterRapportsDuDossier(
   etablissementId: string,
 ) {
-  const { user, compte, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   return db.rapportVerification.count({
     where: { etablissementId, etablissement: { entreprise: { compteId: compte.compteId } } },
   });
@@ -196,7 +196,7 @@ export const compterRapportsDuDossier = cache(async function compterRapportsDuDo
 
 /** Tableau de bord : les derniers rapports, du plus récent au plus ancien (B6). */
 export async function listerRapportsRecents(etablissementId: string, nombre: number) {
-  const { user, compte, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   return db.rapportVerification.findMany({
     where: { etablissementId, etablissement: { entreprise: { compteId: compte.compteId } } },
     include: { verification: true },

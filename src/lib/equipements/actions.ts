@@ -100,7 +100,7 @@ async function regimeDe(db: Db, etablissementId: string): Promise<RegimeExigence
  * désormais sur le même `notFound()`.
  */
 async function appareilDuCompte(equipementId: string) {
-  const { user, compte, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   const eq = await db.equipement.findFirst({
     where: { id: equipementId, etablissement: { entreprise: { compteId: compte.compteId } } },
     select: {

@@ -67,7 +67,7 @@ export const etablissementDuRendu = cache(
 export const getEtablissement = cache(async function getEtablissement(
   id: string,
 ) {
-  const { user, compte, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   const [etab, duerp] = await Promise.all([
     etablissementDuRendu(db, id, compte.compteId),
     duerpDuRenduDuCompte(db, id, compte.compteId),
@@ -86,7 +86,7 @@ export const getEtablissement = cache(async function getEtablissement(
  */
 export const listerEtablissementsDuCompte = cache(
   async function listerEtablissementsDuCompte() {
-    const { user, compte, db } = await requireCompte();
+    const { compte, db } = await requireCompte();
     return db.etablissement.findMany({
       where: { entreprise: { compteId: compte.compteId } },
       orderBy: { createdAt: "asc" },

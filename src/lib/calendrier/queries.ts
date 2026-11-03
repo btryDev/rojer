@@ -74,7 +74,7 @@ export async function listerVerifications(
   etablissementId: string,
   filtres: FiltresCalendrier = {},
 ) {
-  const { user, compte, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   // L'horloge est capturée **au bord**, une seule fois, et n'est plus
   // relue au fil des comparaisons (ADR-011).
   const now = new Date();
@@ -241,7 +241,7 @@ async function lireLignesComptees(
   etablissementId: string,
   batimentId: string | undefined,
 ): Promise<LigneComptee[]> {
-  const { user, compte, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   const [lignes, dernieres] = await Promise.all([
     db.verification.findMany({
       where: toutesLesConditions(

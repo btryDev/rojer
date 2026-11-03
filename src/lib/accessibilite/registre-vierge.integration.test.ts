@@ -38,10 +38,11 @@ vi.mock("@/lib/auth/scope", async () => {
     assertEtablissementDuCompte: async (etablissementId: string) => {
       const e = await prisma.etablissement.findUniqueOrThrow({
         where: { id: etablissementId },
-        select: { entreprise: { select: { userId: true } } },
+        select: { entreprise: { select: { compteId: true, compte: { select: { membres: { select: { userId: true } } } } } } },
       });
-      const userId = e.entreprise.userId!;
-      return { user: { id: userId, email: null }, db: clientBorne({ type: "compte", compteId: userId, userId }) };
+      const compteId = e.entreprise.compteId!;
+      const userId = e.entreprise.compte!.membres[0].userId;
+      return { user: { id: userId, email: null }, db: clientBorne({ type: "compte", compteId, userId }) };
     },
   };
 });
@@ -54,11 +55,12 @@ describe.skipIf(!URL_BASE || !local)("registre d'accessibilité — établisseme
   }
   const { prisma } = await import("@/lib/prisma");
   const { sauverSection1, publierRegistre } = await import("./actions");
-  const { creerUtilisateurDeTest, effacerUtilisateursDeTest } = await import("@/test/utilisateur-de-test");
+  const { creerCompteDeTest, creerUtilisateurDeTest, effacerUtilisateursDeTest } = await import("@/test/utilisateur-de-test");
   const marque = `test-integration-access-${Date.now()}`;
   const entrepriseIds: string[] = [];
 
   const utilisateurs: string[] = [];
+  const comptes: string[] = [];
 
   async function etablissementVierge() {
     // Un propriétaire, comme toute entreprise en production : la garde rend le
@@ -66,9 +68,11 @@ describe.skipIf(!URL_BASE || !local)("registre d'accessibilité — établisseme
     // `User` : le compte existe avant l'entreprise.
     const userId = await creerUtilisateurDeTest(prisma);
     utilisateurs.push(userId);
+    const compteId = await creerCompteDeTest(prisma, userId);
+    comptes.push(compteId);
     const e = await prisma.entreprise.create({
       data: {
-        userId,
+        compteId,
         raisonSociale: marque,
         effectif: 3,
         adresse: "1 rue du Test, 75000 Paris",
@@ -92,6 +96,7 @@ describe.skipIf(!URL_BASE || !local)("registre d'accessibilité — établisseme
 
   afterAll(async () => {
     await prisma.entreprise.deleteMany({ where: { id: { in: entrepriseIds } } });
+    await prisma.compte.deleteMany({ where: { id: { in: comptes } } });
     await effacerUtilisateursDeTest(prisma, utilisateurs);
     await prisma.$disconnect();
   });

@@ -54,7 +54,7 @@ export async function couvertureDuDossier(
 export async function faitsDeCouverture(
   etablissementId: string,
 ): Promise<FaitsCouverture | null> {
-  const { user, compte, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   // [2026-10-14, audit Next.js H2] L'établissement, l'effectif et le code NAF
   // de son entreprise (C37 : les seuils comptés sur l'entreprise lisent le
   // sien), et le parc EN SERVICE — un équipement désactivé ne génère plus

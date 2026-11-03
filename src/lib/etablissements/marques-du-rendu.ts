@@ -25,7 +25,7 @@ export const marquesAConfirmerDuRendu = cache(
   async function marquesAConfirmerDuRendu(
     etablissementId: string,
   ): Promise<MarquesDuDossier> {
-    const { user, compte, db } = await requireCompte();
+    const { compte, db } = await requireCompte();
     // [2026-10-14, audit Next.js H2] Le passage du moteur est celui que le
     // rendu partage avec les transmissions, les états permanents et la
     // couverture (`dossier-du-rendu.ts`) : même établissement, même parc en

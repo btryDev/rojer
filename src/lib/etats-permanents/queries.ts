@@ -217,7 +217,7 @@ export async function listerEtatsPermanents(
   // l'appelle : c'est ce que `batiments/queries.ts` formule par « une lecture
   // qui ne le porte pas devient une fuite le jour où quelqu'un rend la fonction
   // publique ».
-  const { user, compte, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
 
   // Les titres des personnes actives, pour les seules lignes établies d'après
   // eux (`etabliParLesTitres`, le prédicat que lit aussi la garde de

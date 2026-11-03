@@ -58,7 +58,7 @@ export const getEtatModules = cache(async function getEtatModules(
  * partagent (plan performance, lot 1). Portée au compte dans la requête.
  */
 export const carnetDuRendu = cache(async function carnetDuRendu(etablissementId: string) {
-  const { user, compte, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   return db.carnetSanitaire.findFirst({
     where: { etablissementId, etablissement: { entreprise: { compteId: compte.compteId } } },
     select: {

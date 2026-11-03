@@ -175,7 +175,7 @@ export const lignesEvenementsDuRendu = cache(async function lignesEvenementsDuRe
   batimentId: string | null,
   urgentsSeulement: boolean,
 ) {
-  const { user, compte, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   // La borne de la plus longue fenêtre (la frise, `JOURS_APRES`) reste dans la requête : les
   // fenêtres plus courtes se coupent en mémoire, mais rien au-delà de la frise
   // n'est lu (revue du lot 1).
@@ -446,7 +446,7 @@ export async function compterObligationsParMois(
   etablissementId: string,
   annee: number = composantesCiviles(new Date()).annee,
 ): Promise<BarresAnnee> {
-  const { user, compte, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   const debut = instantCivil(annee, 1, 1);
   const fin = instantCivil(annee + 1, 1, 1);
 
@@ -536,7 +536,7 @@ export async function getModulesMatrice(
   etablissementId: string,
   estERP: boolean,
 ): Promise<ModulesMatrice> {
-  const { user, compte, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   const scope = {
     etablissementId,
   } as const;
@@ -711,7 +711,7 @@ const MAX_VERIFS_RECOS = 40;
 export const getDashboardData = cache(async function getDashboardData(
   etablissementId: string,
 ): Promise<DashboardData> {
-  const { user, compte, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   const scope = {
     etablissementId,
     etablissement: { entreprise: { compteId: compte.compteId } },

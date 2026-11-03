@@ -63,7 +63,7 @@ vi.mock("@/lib/auth/portee/client", async () => {
   const { clientBorneSimule } = await import("@/test/client-borne-simule");
   const { argumentsBornes } = await import("@/lib/auth/portee/borne");
   return {
-    clientBorne: (p: { type: "compte"; userId: string }) =>
+    clientBorne: (p: { type: "compte"; compteId: string; userId: string | null }) =>
       clientBorneSimule(h.prisma, p, argumentsBornes),
   };
 });

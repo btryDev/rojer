@@ -93,7 +93,7 @@ export async function uploadRapport(
   //    `serverActions.bodySizeLimit` (next.config).
   //    [2026-10-14, intégration avec `integration/audit-1013` : un seul appel,
   //    son `user` borne aussi la lecture de l'étape 3.]
-  const { user, compte, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
 
   // 1. Métadonnées
   const parsed = rapportMetadataSchema.safeParse({
@@ -368,7 +368,7 @@ export async function uploadRapport(
 export async function supprimerRapport(rapportId: string): Promise<void> {
   // Lu DANS le périmètre du compte, absent et étranger confondus dans le même
   // `notFound()` (audit du 2026-10-13, comme le dépôt ci-dessus).
-  const { user, compte, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   const rap = await db.rapportVerification.findFirst({
     where: { id: rapportId, etablissement: { entreprise: { compteId: compte.compteId } } },
     select: {

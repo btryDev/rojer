@@ -158,7 +158,7 @@ export async function creerPermisFeu(
  * tombent sur le même `notFound()` — celui des helpers de `auth/scope`.
  */
 async function permisDuCompte(permisFeuId: string) {
-  const { user, compte, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   const permis = await db.permisFeu.findFirst({
     where: { id: permisFeuId, etablissement: { entreprise: { compteId: compte.compteId } } },
     select: { etablissementId: true, statut: true, numero: true },

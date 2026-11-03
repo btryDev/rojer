@@ -49,7 +49,7 @@ export async function listSignaturesDesObjets(
   type Preuve = Prisma.SignatureGetPayload<{ select: typeof SELECT_PREUVE }>;
   const parObjet = new Map<string, Preuve[]>(objetIds.map((id) => [id, []]));
   if (objetIds.length === 0) return parObjet;
-  const { user, compte, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   const signatures = await db.signature.findMany({
     where: {
       objetType,

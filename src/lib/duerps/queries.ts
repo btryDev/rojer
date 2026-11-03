@@ -106,7 +106,7 @@ export const duerpDuRenduDuCompte = cache(async function duerpDuRenduDuCompte(
  * appelant ne le modifie pas.
  */
 export const getDuerp = cache(async function getDuerp(id: string) {
-  const { user, compte, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   const duerp = await db.duerp.findFirst({
     where: { id, etablissement: { entreprise: { compteId: compte.compteId } } },
     include: {
@@ -139,7 +139,7 @@ export const getDuerp = cache(async function getDuerp(id: string) {
 });
 
 export async function getUnite(id: string) {
-  const { user, compte, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   const unite = await db.uniteTravail.findFirst({
     where: {
       id,

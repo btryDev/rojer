@@ -279,7 +279,7 @@ export function reperterSansEcheance(
 export async function equipementsSansEcheance(
   etablissementId: string,
 ): Promise<Map<string, MotifSansEcheance>> {
-  const { user, compte, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   // [2026-10-14, audit Next.js H2] La lecture que le rendu partage
   // (`dossier-du-rendu.ts`) : même prédicat, même parc en service.
   const etab = await chargerEtablissementEtParc(db, etablissementId, compte.compteId);

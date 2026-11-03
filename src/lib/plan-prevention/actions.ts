@@ -255,7 +255,7 @@ export async function creerPlanPrevention(
  * `auth/tenancy-oracle.test.ts`.
  */
 async function planDuCompte(planId: string) {
-  const { user, compte, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   const plan = await db.planPrevention.findFirst({
     where: { id: planId, etablissement: { entreprise: { compteId: compte.compteId } } },
     select: {

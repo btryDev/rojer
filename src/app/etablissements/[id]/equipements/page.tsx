@@ -101,7 +101,7 @@ export default async function EquipementsPage({
   // sécurité »] partent ensemble, APRÈS la garde (`getEtablissement`
   // + `notFound`) : les bâtiments étaient lus seuls, puis le reste — aucune
   // des ~~quatre~~ cinq autres ne dépend du filtre (audit Next.js du 2026-10-14, M4).
-  const { user, compte, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   const [batiments, equipements, etatsVerifs, sansEcheance, fraicheur, dossier, ensembles] =
     await Promise.all([
       listerBatimentsDeLEtablissement(id),

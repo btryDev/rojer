@@ -4,7 +4,6 @@ import { dureeHhMm } from "@/lib/permis-feu/duree";
 import JSZip from "jszip";
 import { NextResponse } from "next/server";
 import { requireEtablissement } from "@/lib/auth/scope";
-import type { AuthedUser } from "@/lib/auth/require-user";
 import type { Db } from "@/lib/auth/compte";
 import { getStorage, type FileStorage } from "@/lib/storage";
 import { publicAppUrl, refusUrlPublique } from "@/lib/email";
@@ -119,7 +118,7 @@ export async function GET(
   const { id } = await context.params;
   // L'utilisateur, lu une fois ici, est passé aux builders (M7) : hors rendu,
   // chaque `requireUser()` est un `getUser()` réseau.
-  const { user, db, etablissement } = await requireEtablissement(id);
+  const { db, etablissement } = await requireEtablissement(id);
 
   // Une place d'export (H3, `exports/limite.ts`), tenue pendant la
   // construction — lectures, quatre rendus PDF, vérification des fichiers — et
@@ -130,7 +129,7 @@ export async function GET(
   if (liberer instanceof Response) return liberer;
   let archive: Awaited<ReturnType<typeof construireArchive>>;
   try {
-    archive = await construireArchive(db, id, etablissement, user);
+    archive = await construireArchive(db, id, etablissement);
   } finally {
     liberer();
   }
@@ -148,7 +147,6 @@ async function construireArchive(
   db: Db,
   id: string,
   etablissement: Awaited<ReturnType<typeof requireEtablissement>>["etablissement"],
-  user: AuthedUser,
 ) {
   // LA FRAÎCHEUR SE LIT AVANT TOUT LE RESTE, et elle ne répare rien.
   // Ce dossier part chez un tiers qui n'a aucun moyen de recouper ce
@@ -244,7 +242,7 @@ async function construireArchive(
 
   // ── 01 Dossier de conformité ────────────────────────────────────────
   try {
-    const data = await construireDossierConformiteData(db, id, user);
+    const data = await construireDossierConformiteData(db, id);
     if (data) {
       for (const v of data.verifsEnRetard) {
         if (v.contractuelle) echeancesContractuelles.add(v.id);

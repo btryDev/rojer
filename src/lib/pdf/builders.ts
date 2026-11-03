@@ -4,7 +4,6 @@ import { estLignePourInformation } from "@/lib/referentiels/conformite/initiativ
 import { libelleTypesErp, numeroCategorie } from "@/lib/etablissements/types-erp-affiches";
 import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
 import type { Db } from "@/lib/auth/compte";
-import type { AuthedUser } from "@/lib/auth/require-user";
 import {
   compterActions,
   compterActionsParOrigine,
@@ -569,7 +568,6 @@ function ficheDuPdf(
 export async function construireDossierConformiteData(
   db: Db,
   etablissementId: string,
-  user: AuthedUser,
 ): Promise<DossierData | null> {
   const etab = await db.etablissement.findFirst({
     where: { id: etablissementId },
