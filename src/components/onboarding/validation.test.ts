@@ -214,15 +214,15 @@ describe("étape 1 — la borne d'effectif (ADR-031)", () => {
   // schéma Zod : un dirigeant bloqué à l'étape 1 n'atteint jamais la server
   // action, et un refus qui n'arriverait qu'au submit ferait ressaisir tout
   // le formulaire.
-  it("accepte 50 salariés", () => {
-    expect(validerIdentite({ ...complet, effectifSurSite: "50" })).toBeNull();
+  it("accepte 49 salariés", () => {
+    expect(validerIdentite({ ...complet, effectifSurSite: "49" })).toBeNull();
   });
 
-  it("refuse 51 salariés en nommant la limite", () => {
+  it("refuse 50 salariés en nommant la limite", () => {
     const message = texte(
-      validerIdentite({ ...complet, effectifSurSite: "51" }),
+      validerIdentite({ ...complet, effectifSurSite: "50" }),
     );
-    expect(message).toContain("50");
+    expect(message).toContain("49");
   });
 
   it("ne regarde pas le public reçu", () => {
@@ -320,8 +320,8 @@ describe("la borne d'effectif n'est écrite qu'une fois", () => {
   });
 
   it("se tait jusqu'à la borne, et parle au-delà", () => {
-    expect(refusEffectif("50")).toBeNull();
-    expect(refusEffectif("51")?.message).toContain("50");
+    expect(refusEffectif("49")).toBeNull();
+    expect(refusEffectif("50")?.message).toContain("49");
   });
 
   it("ne se déclenche pas sur une saisie qui n'est pas un entier", () => {

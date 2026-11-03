@@ -91,7 +91,7 @@ déclencheur événementiel, hors règle. `periodicite` reste le rythme du texte
 ## Périmètre
 
 ### Utilisateurs cibles
-- Dirigeants de TPE/PME (1 à 50 salariés), non-experts en prévention
+- Dirigeants de TPE/PME (1 à ~~50~~ 49 salariés [2026-11-03, ADR-031 amendée]), non-experts en prévention
 - ~~Secteurs à faible complexité technique~~ [2026-10-16 : remplacé par les
   trois niveaux ci-dessous — la phrase laissait croire à un tri par secteur
   que l'onboarding ne fait pas.]
@@ -133,7 +133,9 @@ salariés au plus peut-elle être concernée ? » se tranche article par article
 à la lecture, pas par chapitre.
 
 - **La cible est ce que l'onboarding ne refuse pas** (décision de la
-  propriétaire du 2026-10-12, ADR-031) : au plus cinquante travailleurs, pas
+  propriétaire du 2026-10-12, ADR-031) : au plus ~~cinquante~~ [2026-11-03 :
+  quarante-neuf, `EFFECTIF_MAX = 49` — le PAPRIPACT de L. 4121-3-1 III 1°
+  est dû dès cinquante, Rojer ne le produit pas] travailleurs, pas
   d'ERP situé dans un IGH. Les catégories d'ERP 1 à 4, l'hôtel, l'habitation y
   sont : acceptés, et déclarés là où le produit ne les couvre pas. C'est sur
   cette définition que se mesure le registre de dette (`toucheLaCible`). À ne
@@ -144,7 +146,7 @@ salariés au plus peut-elle être concernée ? » se tranche article par article
 
 [2026-10-18 : la liste ci-dessous date du 2026-09-01. S'y ajoutent plus de cinquante salariés dans l'entreprise, tous établissements confondus (depuis le 2026-09-26) ; et, depuis le filtre à l'accueil du 2026-10-17 (#68, `types-refuses.ts`, `refusDuFiltre`), les ERP de type J et U, les établissements spéciaux PA, CTS, SG, OA, REF, GA, EF (PS reste accepté), et le type R qui accueille des enfants — à la création, et à la modification seulement quand un type refusé entre sur la fiche (un dossier déjà ouvert n'est pas fermé), pour le type principal comme pour les autres types ; l'annexe du PDF du référentiel les liste par `refusAlEntree`. Le critère reste : on refuse ce qu'on ne sait pas servir du tout.]
 
-1. **Plus de cinquante travailleurs.** La borne compte les salariés, jamais le
+1. **Plus de ~~cinquante~~ quarante-neuf travailleurs** [2026-11-03 : refus à partir de cinquante, sur le site comme dans l'entreprise — ADR-031 amendée]. La borne compte les salariés, jamais le
    public reçu : un restaurant de huit salariés qui sert trois cents couverts
    relève de la 3ᵉ catégorie d'ERP et reste dans la cible. Elle vaut à la
    création ; un dossier existant qui franchit le seuil garde son dossier et
@@ -651,7 +653,8 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     Santé-sécurité · Équipement et bâtiment · Documentation · Paramètres
 31. **031** — Refuser à l'entrée ce qu'on ne sait pas servir *du tout*, et
     déclarer tout le reste. Amende l'ADR-020 sans la renverser ; amendée le
-    2026-10-18 (filtre à l'accueil, #68 : J, U, établissements spéciaux, R avec enfants)
+    2026-10-18 (filtre à l'accueil, #68 : J, U, établissements spéciaux, R avec enfants),
+    puis le 2026-11-03 (borne d'effectif à 49 : pas de PAPRIPACT dans la cible)
 32. **032** — Une demande d'assureur entre par les prescriptions, et ne devient
     jamais du droit : marquage obligatoire sur les neuf surfaces qui l'affichent
 33. **033** — Le DUERP est borné à cinq unités de travail, hors « Risques
