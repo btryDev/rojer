@@ -7,17 +7,25 @@
   `src/lib/etablissements/schema.ts` (`etablissementCreationSchema`),
   `src/lib/perimetre/exclusions.ts` (`refusAlEntree`, catalogue des ~~deux~~
   [2026-10-18 : trois] refus de taille et d'IGH),
-  `src/lib/etablissements/types-refuses.ts` (`refusDuFiltre`, le filtre à
-  l'accueil — 2026-10-18),
+  ~~`src/lib/etablissements/types-refuses.ts` (`refusDuFiltre`, le filtre à
+  l'accueil — 2026-10-18),~~ [2026-11-03 : retiré avec le filtre, réalignement]
   `src/lib/perimetre/couverture.ts`, `src/lib/referentiels/corpus/perimetre.ts`
 - **Amende** l'ADR-020, qu'elle ne renverse pas · **Découle de** l'ADR-025
 
-> **Amendée le 2026-10-18.** Le filtre à l'accueil (#68, décisions de la
+> ~~**Amendée le 2026-10-18.** Le filtre à l'accueil (#68, décisions de la
 > propriétaire du 2026-10-17) refuse aussi des types d'ERP : J, U, les
 > établissements spéciaux PA, CTS, SG, OA, REF, GA, EF, et R quand il accueille
 > des enfants. Le critère de cette ADR ne change pas — on refuse ce qu'on ne
 > sait pas servir *du tout* — et c'est lui qui fonde ces refus. Voir
-> « Amendement du 2026-10-18 » en fin de document.
+> « Amendement du 2026-10-18 » en fin de document.~~ [2026-11-03 : amendement
+> annulé par le réalignement, ci-dessous.]
+
+> **Amendée le 2026-11-03 — réalignement CCH + Code du travail.** Rojer sert
+> tout le CCH et tout le Code du travail (santé-sécurité) adressés à
+> l'exploitant ou à l'employeur, pour tous les types d'établissement. **On
+> refuse seulement ce qui est hors cible par la taille ou l'IGH ; tout le reste
+> s'accepte et se déclare.** Le filtre à l'accueil du 2026-10-17 est levé. Voir
+> « Amendement du 2026-11-03 (ter) » en fin de document.
 
 > **Amendée le 2026-11-03.** La borne d'effectif passe de cinquante à
 > **quarante-neuf** (`EFFECTIF_MAX = 49`), sur le site comme dans
@@ -50,7 +58,7 @@ Le critère est la nature du manque, pas sa taille.
 | | Refus à l'entrée | Déclaration continue |
 |---|---|---|
 | **Ce qui le déclenche** | Ce que le produit ne peut pas servir **du tout** : la structure sort de sa taille, ou son régime rouvre un règlement entier jamais dépouillé | Tout le reste — un régime servi dont une partie manque |
-| **Ce qui refuse, au 2026-09-01** | ~~**Deux cas, et deux seulement**~~ [2026-10-18 : deux au 2026-09-01 ; trois depuis le 2026-09-26 (§ 1 ter) ; plus les types d'ERP du filtre à l'accueil depuis le 2026-10-17, voir « Amendement du 2026-10-18 »] : plus de cinquante travailleurs ; un ERP situé dans un immeuble de grande hauteur | ERP de 1ʳᵉ à 4ᵉ catégorie, IGH seul, ICPE, tout type d'ERP non instruit, secteur de DUERP non instruit, équipement hors référentiel, obligations suspendues au public reçu, expositions spécialisées (ATEX, amiante, plomb, radon, CMR, rayonnements ionisants) |
+| **Ce qui refuse, au 2026-09-01** | ~~**Deux cas, et deux seulement**~~ ~~[2026-10-18 : deux au 2026-09-01 ; trois depuis le 2026-09-26 (§ 1 ter) ; plus les types d'ERP du filtre à l'accueil depuis le 2026-10-17, voir « Amendement du 2026-10-18 »]~~ [2026-11-03 : deux au 2026-09-01 ; trois depuis le 2026-09-26 (§ 1 ter) ; le filtre à l'accueil du 2026-10-17 est levé — voir « Amendement du 2026-11-03 (ter) »] : plus de cinquante travailleurs ; un ERP situé dans un immeuble de grande hauteur | ERP de 1ʳᵉ à 4ᵉ catégorie, IGH seul, ICPE, tout type d'ERP non instruit, secteur de DUERP non instruit, équipement hors référentiel, obligations suspendues au public reçu, expositions spécialisées (ATEX, amiante, plomb, radon, CMR, rayonnements ionisants) |
 | **Ce que voit le dirigeant** | La création s'arrête et dit pourquoi | Le dossier vit et le prévient en permanence |
 
 **La liste des refus est courte, et elle a été raccourcie en séance.** Un premier
@@ -155,7 +163,12 @@ annoncées (GZ 13, GZ 14, AS 10, arrêté du 23 février 2018 art. 26 § 3 ; pui
 après la revue indépendante du même jour, arrêté du 31 janvier 1986 art. 78-1
 et 102, et R. 4544-11), ~~huit~~ ~~six~~ cinq hors cadre — `docs/couverture-declaree-du-produit.md` § 7 et § 8.
 
-## Amendement du 2026-10-18 — le filtre à l'accueil
+## ~~Amendement du 2026-10-18 — le filtre à l'accueil~~ [annulé le 2026-11-03]
+
+> **Annulé le 2026-11-03** par le réalignement CCH + Code du travail (voir
+> « Amendement du 2026-11-03 (ter) »). Le texte ci-dessous est gardé tel quel :
+> il décrit le filtre tel qu'il a vécu, du 2026-10-17 au 2026-11-03, et ne
+> décrit plus le code.
 
 Décisions de la propriétaire du 2026-10-17, relayées par c6
 (`propositions/maj-referentiel-constats-2026-10-17.md` § 4 et § 5, hors dépôt ;
@@ -309,3 +322,72 @@ dossier, et baisser n'est jamais refusé. Mais il ne grandit plus dans Rojer :
 n'est plus un doute : la prudence de `effectifRetenuPourSeuil` (retenir le
 site « à confirmer » quand la société est sous le seuil) pourrait se lever.
 C'est une règle du moteur ; elle n'est pas touchée ici.
+
+## Amendement du 2026-11-03 (ter) — réalignement CCH + Code du travail
+
+Décision de la propriétaire du 2026-11-03, relayée par la session de
+coordination (état des lieux : `alignement-cch-ct.html`, hors dépôt).
+
+**La règle.** Rojer sert tout le code de la construction et de l'habitation
+et tout le Code du travail (santé-sécurité) qui s'adressent à l'exploitant ou
+à l'employeur, pour tous les types d'établissement. On ne refuse et on
+n'exclut plus rien parce qu'un autre code s'applique aussi (code de la santé
+publique, code de l'action sociale et des familles, code de l'environnement,
+code du sport…) ou parce que le cas est particulier. Les autres codes ne sont
+pas servis, et ne refusent personne.
+
+**Le critère devient** : on refuse seulement ce qui est hors cible par la
+taille ou par l'IGH ; tout le reste s'accepte et se déclare. Il resserre celui
+du 2026-09-01 (« ce qu'on ne sait pas servir *du tout* ») : un type d'ERP dont
+le règlement n'est pas encore lu n'est plus un motif de refus — c'est un
+manque, comme les catégories 1 à 4 l'étaient déjà.
+
+| Refus maintenus | Levés le 2026-11-03 |
+|---|---|
+| Plus de quarante-neuf travailleurs sur le site | Type J |
+| Plus de quarante-neuf salariés dans l'entreprise | Type U |
+| ERP situé dans un immeuble de grande hauteur | Établissements spéciaux PA, CTS, SG, OA, REF, GA |
+| | Établissement flottant (EF) |
+| | Type R qui accueille des enfants — la question disparaît |
+
+La question des locaux à sommeil reste posée (J, O, U, R, REF, OA) : elle ne
+refuse personne.
+
+**Ce qui est accepté se déclare** (`perimetre/couverture.ts`, axe `type_erp`) :
+- J (catégories 1 à 4) et U (chapitre U du livre II ; articles PU du livre III
+  en 5ᵉ) : dispositions lues le 2026-10-16, pas encore suivies ;
+- PA, CTS, SG, OA, REF, GA : livre IV de l'arrêté du 25 juin 1980, non lu ;
+- EF : arrêté du 9 janvier 1990, non lu.
+PS, accepté avant le filtre et servi par PS 32, n'y entre pas : le reste du
+chapitre PS, non lu, est un manque à déclarer au même titre (non fait ici).
+
+**Ce que le code fait.**
+- `src/lib/etablissements/types-refuses.ts` est retiré : plus de
+  `refusDuFiltre`, ni de phrases de refus, ni de question sur l'accueil
+  d'enfants. Le parcours, la fiche (`modifierEtablissement`) et les deux
+  schémas n'y passent plus. Un client resté à l'ancien parcours qui poste
+  `accueilEnfants` n'est ni refusé ni écrit.
+- `refusAlEntree()` (`perimetre/exclusions.ts`) rend trois refus ; les quatre
+  sondes et les clés `type_j`, `type_u`, `etablissements_speciaux`,
+  `r_accueil_enfants` sont retirées. Une garde soumet chaque type de GN 1 à la
+  porte : aucun n'est refusé (`exclusions.test.ts`,
+  `types-acceptes.test.tsx`).
+- Les douze manques du corpus que le filtre avait sortis de la cible (J 33,
+  J 35, J 39, J 40, U 41, U 43, U 47, U 48, U 62, U 64, PU 5, PU 6) y
+  reviennent (`toucheLaCible: true`) ; aucun n'est encodé.
+- L'exclusion `risque_specialise` (`corpus/perimetre.ts`) devient « Relève
+  d'un autre code » : installations classées, piscines, bains à remous,
+  appareils de bronzage. L'ATEX et la radioprotection, qui relèvent du Code
+  du travail, en sortent : la page les dit « pas encore » suivies (famille
+  `code_du_travail_pas_encore`).
+
+**Ce qui reste ouvert, écrit pour ne pas se perdre.**
+- `Arrêté 2011-12-26 annexe IV` (installations électriques temporaires, Code
+  du travail) est encore rangé sous `risque_specialise`, dont le nouveau motif
+  ne le décrit pas ; son motif le dit. Le reclasser en manque annoncé demande
+  une adresse d'annonce : lot d'encodage du Code du travail.
+- Les autres motifs « cas particulier » du corpus ne sont pas relus ici.
+- Le chapitre PS (livre IV), lu pour un article sur quarante-trois, n'a pas de
+  manque déclaré.
+- Les quatorze obligations du référentiel fondées sur un autre code restent
+  en place ; l'établissement sans salarié n'est pas traité.
