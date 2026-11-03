@@ -14,7 +14,7 @@ import { verifierSaisie } from "@/lib/abonnements/saisie";
  * Cloisonnement : `duerpId` vient du client. Sans garde, `validerTransverses`
  * (retirée le 2026-10-12) marquait n'importe quel DUERP comme « transverses
  * répondues » et le toggle créait/supprimait des risques chez un autre client. `requireDuerp` remonte
- * jusqu'à `Entreprise.userId` et répond 404 sinon.
+ * jusqu'à `Entreprise.compteId` et répond 404 sinon.
  */
 
 /**

@@ -108,12 +108,14 @@ describe("la saisie fermée (ADR-053 § 3)", () => {
   });
 
   it("une ouverte qui ne l'est pas à la lecture seule commence par verifierRole (ADR-054 § 4)", () => {
-    const sansRole = [...OUVERTES.keys()].filter((c) => !OUVERTES_A_LA_LECTURE.has(c) && !ouvrePar(c, "verifierRole"));
+    // `verifierProprietaire` ferme aussi la lecture seule : un lecteur n'est jamais propriétaire.
+    const ferme = (c: string) => ouvrePar(c, "verifierRole") || ouvrePar(c, "verifierProprietaire");
+    const sansRole = [...OUVERTES.keys()].filter((c) => !OUVERTES_A_LA_LECTURE.has(c) && !ferme(c));
     expect(
       sansRole,
-      "Appelez `await verifierRole()` en tête de l'action, ou nommez-la dans OUVERTES_A_LA_LECTURE.",
+      "Appelez `await verifierRole()` (ou `verifierProprietaire()`) en tête de l'action, ou nommez-la dans OUVERTES_A_LA_LECTURE.",
     ).toEqual([]);
-    expect([...OUVERTES_A_LA_LECTURE].filter((c) => ouvrePar(c, "verifierRole"))).toEqual([]);
+    expect([...OUVERTES_A_LA_LECTURE].filter(ferme)).toEqual([]);
   });
 
   it("un écran qui attrape l'erreur d'une action gardée laisse repartir la redirection", () => {

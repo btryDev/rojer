@@ -1,7 +1,7 @@
 // Table de correspondance de l'isolation des comptes (ADR-051 § 1).
 //
 // Pour chaque modèle Prisma : la relation qui mène à son parent, jusqu'à
-// `Entreprise.userId` — ou le motif qui le met hors compte. Écrite une fois,
+// `Entreprise.compteId` — ou le motif qui le met hors compte. Écrite une fois,
 // ici ; `correspondance.test.ts` lit la liste des modèles dans le schéma
 // (pas une liste recopiée) et échoue si un modèle n'y est pas classé, ou si un
 // chemin ne suit pas une relation obligatoire du schéma.

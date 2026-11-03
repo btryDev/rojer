@@ -420,7 +420,7 @@ export async function compterVerifsParEquipementDeLaPage(
 /**
  * Agrège les vérifications de l'année civile courante par mois, pour les
  * barres du dashboard. Utilisé par `BarsObligations`. Scoping par user
- * via la chaîne etablissement.entreprise.userId.
+ * via la chaîne etablissement.entreprise.compteId.
  *
  * Classification (`repartirParMois`, où elle est testée) :
  *  - `couvert`  : CHAQUE rapport réalisé daté dans le mois (ADR-034) — pas

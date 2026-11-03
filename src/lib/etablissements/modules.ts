@@ -30,7 +30,7 @@ import type { SidebarModules } from "@/components/layout/sidebar-nav";
  * clés primitives, l'identifiant et le booléen. Hors rendu RSC, rien n'est
  * mémoïsé.
  *
- * ADR-005 : scope par userId via la relation entreprise.
+ * ADR-005 : scope par compte via la relation entreprise.
  */
 export const getEtatModules = cache(async function getEtatModules(
   etablissementId: string,

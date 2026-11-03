@@ -25,7 +25,7 @@ import {
  * **Dans une fonction, aucune lecture unitaire (`findUnique`, `findFirst`)
  * dont le `where` ne porte pas le compte (`userId`) ne précède le premier
  * contrôle d'appartenance.** Lire borné au compte — `etablissement: {
- * entreprise: { compteId: userId } }` dans le `where` — fait de l'absent et de
+ * entreprise: { compteId: compte.compteId } }` dans le `where` — fait de l'absent et de
  * l'étranger un seul cas ; contrôler d'abord, puis lire, aussi.
  *
  * Un contrôle d'appartenance, c'est l'appel d'un helper `require…`/`assert…`
@@ -85,7 +85,7 @@ describe("une lecture par identifiant", () => {
       "Ces fonctions lisent une ligne par son identifiant seul, PUIS vérifient " +
         "qu'elle est au compte : un id absent et un id d'un autre client n'y " +
         "répondent pas pareil — oracle d'existence. Lire borné au compte " +
-        "(`where: { id, etablissement: { entreprise: { compteId: userId } } }`, cf. " +
+        "(`where: { id, etablissement: { entreprise: { compteId: compte.compteId } } }`, cf. " +
         "`permisDuCompte`), absent et étranger tombant sur la même réponse.",
     ).toEqual([]);
   });

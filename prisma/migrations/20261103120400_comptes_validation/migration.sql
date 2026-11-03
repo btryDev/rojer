@@ -25,7 +25,11 @@ ALTER TABLE "Entreprise" VALIDATE CONSTRAINT "Entreprise_compteId_fkey";
 ALTER TABLE "Abonnement" VALIDATE CONSTRAINT "Abonnement_compteId_fkey";
 ALTER TABLE "DemandeAssistance" VALIDATE CONSTRAINT "DemandeAssistance_compteId_fkey";
 
--- Toute ligne a reçu son compte à la reprise.
+-- Toute ligne a reçu son compte à la reprise. `SET NOT NULL` relit la table
+-- sous un verrou exclusif : sans enjeu ici (`cc` n'a pas servi de production,
+-- tables à quelques lignes). Sur une table vivante et grosse, la forme sans
+-- verrou serait `CHECK (… IS NOT NULL) NOT VALID`, `VALIDATE`, puis `SET NOT
+-- NULL` (que PostgreSQL appuie alors sur la contrainte validée).
 ALTER TABLE "Abonnement" ALTER COLUMN "compteId" SET NOT NULL;
 ALTER TABLE "DemandeAssistance" ALTER COLUMN "compteId" SET NOT NULL;
 

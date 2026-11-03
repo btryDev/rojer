@@ -47,10 +47,10 @@ export async function getOptionalCompte() {
 
 /**
  * Le compte de la personne, ou un compte neuf dont elle devient propriétaire
- * si elle n'en a aucun (ADR-054 § 5). Deux portes l'appellent : l'onboarding,
- * qui nomme le compte d'après l'entreprise, et le début d'un essai (ADR-053),
- * qui vient avant l'onboarding et n'a pas encore de nom à donner — le compte
- * garde alors le nom par défaut, que rien n'affiche aujourd'hui.
+ * si elle n'en a aucun (ADR-054 § 5). L'onboarding l'appelle, et nomme le
+ * compte d'après l'entreprise ; le début d'un essai (ADR-053, lot à venir de
+ * la session « stripe ») l'appellera sans nom — le compte garde alors le nom
+ * par défaut, que rien n'affiche aujourd'hui.
  */
 export async function requireCompteDOnboarding(nomSiNouveau = "Mon compte") {
   const user = await requireUser();

@@ -8,7 +8,7 @@ import { servirFichier } from "@/lib/storage/servir";
  *
  * GET `/api/etablissements/[id]/photo`. Servie seulement si l'établissement
  * appartient au compte connecté (`requireEtablissement` remonte jusqu'à
- * `Entreprise.userId`) ; un établissement d'autrui et un établissement sans
+ * `Entreprise.compteId`) ; un établissement d'autrui et un établissement sans
  * photo répondent le même 404, sans oracle d'existence — la règle des autres
  * routes de fichiers. Jamais publique, jamais passée par l'optimiseur
  * d'images de Next (qui la demanderait sans la session).

@@ -155,6 +155,13 @@ vi.mock("@/lib/auth/compte", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/auth/compte")>()),
   getOptionalCompte: async () => ({ user: { id: "user-1" }, db: await (await import("@/test/garde-simulee")).clientDuCompteSimule() }),
 }));
+// Les gardes de saisie, de rôle et de propriétaire ont leurs tests
+// (`abonnements/saisie.test.ts`) : ici, ouvertes.
+vi.mock("@/lib/abonnements/saisie", () => ({
+  verifierSaisie: async () => {},
+  verifierRole: async () => {},
+  verifierProprietaire: async () => {},
+}));
 vi.mock("@/lib/auth/scope", () => ({
   assertEtablissementOwnership: vi.fn(async () => ({ id: "user-1" })),
   // La garde rend aussi le client borné (ADR-051) : ici, le client simulé.

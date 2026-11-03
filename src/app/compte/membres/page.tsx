@@ -1,9 +1,16 @@
 import { FilRetour } from "@/components/ui-kit/FilRetour";
 import { requireCompte } from "@/lib/auth/compte";
-import { invitationsDuCompte, membresDuCompte } from "@/lib/auth/membres";
+import { comptesDeLaPersonne, invitationsDuCompte, membresDuCompte } from "@/lib/auth/membres";
 import { libelleRole } from "@/lib/auth/roles";
 import { formaterDateLongueFr } from "@/lib/dates";
-import { AnnulationInvitation, ChoixRole, DepartDuCompte, FormulaireInvitation, RetraitMembre } from "./GestesMembres";
+import {
+  AnnulationInvitation,
+  ChoixCompte,
+  ChoixRole,
+  DepartDuCompte,
+  FormulaireInvitation,
+  RetraitMembre,
+} from "./GestesMembres";
 
 export const metadata = {
   title: "Membres du compte — Rojer",
@@ -23,9 +30,10 @@ export default async function MembresPage({
   const { user, compte } = await requireCompte();
   const { reserve } = await searchParams;
   const proprietaire = compte.role === "owner";
-  const [membres, invitations] = await Promise.all([
+  const [membres, invitations, comptes] = await Promise.all([
     membresDuCompte(compte.compteId),
     proprietaire ? invitationsDuCompte(compte.compteId) : Promise.resolve([]),
+    comptesDeLaPersonne(user.id),
   ]);
 
   return (
@@ -70,7 +78,7 @@ export default async function MembresPage({
                   {proprietaire && !moi ? (
                     <div className="flex flex-wrap items-start gap-2">
                       <ChoixRole membreId={m.id} role={m.role} />
-                      <RetraitMembre membreId={m.id} />
+                      <RetraitMembre membreId={m.id} nom={m.nom || m.email} />
                     </div>
                   ) : null}
                 </li>
@@ -116,6 +124,18 @@ export default async function MembresPage({
               </section>
             ) : null}
           </>
+        ) : null}
+
+        {comptes.length > 1 ? (
+          <section className="carte-board mt-5 px-7 py-6 sm:px-8" aria-labelledby="titre-comptes">
+            <h2 id="titre-comptes" className="board-titre m-0 text-[22px]">
+              Vos comptes
+            </h2>
+            <p className="m-0 mt-1 mb-5 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+              Vous travaillez sur plusieurs comptes Rojer. Choisissez celui dont vous voulez voir les dossiers.
+            </p>
+            <ChoixCompte comptes={comptes} actif={compte.compteId} />
+          </section>
         ) : null}
 
         <section className="carte-board mt-5 px-7 py-6 sm:px-8" aria-labelledby="titre-depart">

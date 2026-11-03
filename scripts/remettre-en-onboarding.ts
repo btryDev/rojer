@@ -52,7 +52,7 @@
  * première rédaction de ce script se trompait sur ce point : elle interrogeait
  * `auth.users`, qui n'existe pas dans la base locale. L'identité vit chez
  * Supabase, seul le dossier est ici — la seule clé commune aux deux mondes est
- * l'UUID que `Entreprise.userId` porte. Sans argument, le script liste les
+ * l'UUID que `Entreprise.compteId` porte. Sans argument, le script liste les
  * dossiers présents avec leur `userId` : c'est là qu'on lit celui qu'on veut.
  */
 

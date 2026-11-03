@@ -38,6 +38,12 @@ export class ErreurPortee extends Error {
   }
 }
 
+/**
+ * Les seules écritures permises en lecture seule, nommées une à une : la
+ * demande d'assistance (joindre l'assistance reste ouvert à tous, ADR-050).
+ */
+export const ECRITURES_DE_LA_LECTURE_SEULE: ReadonlySet<string> = new Set(["DemandeAssistance.create"]);
+
 /** Refus d'une écriture à un membre en lecture seule (ADR-054 § 4). */
 export class ErreurLectureSeule extends ErreurPortee {
   constructor(operation: string) {
@@ -412,7 +418,8 @@ export function argumentsBornes(nom: string, operation: string, args: unknown, p
   }
   // Tout ce qui n'est pas une lecture écrit, ou est refusé plus bas : en
   // lecture seule, rien ne passe (ADR-054 § 4).
-  if (portee.lectureSeule) throw new ErreurLectureSeule(`${nom}.${operation}`);
+  if (portee.lectureSeule && !ECRITURES_DE_LA_LECTURE_SEULE.has(`${nom}.${operation}`))
+    throw new ErreurLectureSeule(`${nom}.${operation}`);
   switch (operation) {
     case "delete":
     case "deleteMany":
@@ -469,4 +476,16 @@ export function argumentsBornes(nom: string, operation: string, args: unknown, p
     default:
       throw new ErreurPortee(`opération non servie : ${nom}.${operation}`);
   }
+}
+
+/**
+ * Vrai si une lecture SQL brute (le client borné, `client.ts`) peut écrire : tout ce
+ * qui n'est pas un `SELECT` (ou un `WITH`) sans instruction d'écriture. Le
+ * verrou `FOR UPDATE` d'une lecture n'écrit pas. Sert au refus de la lecture
+ * seule (ADR-054 § 4) ; ce n'est pas un analyseur, et il refuse dans le doute.
+ */
+export function sqlPeutEcrire(sql: string): boolean {
+  const sansVerrou = sql.replace(/\bFOR\s+(?:NO\s+KEY\s+)?UPDATE\b/gi, "").replace(/\bFOR\s+(?:KEY\s+)?SHARE\b/gi, "");
+  if (!/^\s*(?:SELECT|WITH)\b/i.test(sansVerrou)) return true;
+  return /\b(?:INSERT|UPDATE|DELETE|MERGE|TRUNCATE|COPY|CALL|DO)\b/i.test(sansVerrou);
 }

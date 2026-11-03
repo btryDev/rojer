@@ -47,6 +47,13 @@ vi.mock("@/lib/auth/scope", async () => {
   };
 });
 vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
+// Les gardes de saisie, de rôle et de propriétaire ont leurs tests
+// (`abonnements/saisie.test.ts`) : ici, ouvertes.
+vi.mock("@/lib/abonnements/saisie", () => ({
+  verifierSaisie: async () => {},
+  verifierRole: async () => {},
+  verifierProprietaire: async () => {},
+}));
 
 describe.skipIf(!URL_BASE || !local)("registre d'accessibilité — établissement vierge, PostgreSQL réel", async () => {
   if (URL_BASE) {
@@ -64,7 +71,7 @@ describe.skipIf(!URL_BASE || !local)("registre d'accessibilité — établisseme
 
   async function etablissementVierge() {
     // Un propriétaire, comme toute entreprise en production : la garde rend le
-    // client borné à son compte. Sur cc, `Entreprise.userId` est une clé vers
+    // client borné à son compte. Sur cc, `Entreprise.compteId` est une clé vers
     // `User` : le compte existe avant l'entreprise.
     const userId = await creerUtilisateurDeTest(prisma);
     utilisateurs.push(userId);

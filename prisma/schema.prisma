@@ -2231,7 +2231,8 @@ model DemandeAssistance {
   traiteeLe       DateTime?
   createdAt       DateTime            @default(now())
 
-  @@index([userId, createdAt])
+  // ~~@@index([userId, createdAt])~~ [2026-11-03, ADR-054 : le plafond du jour
+  // se compte par compte ; l'index de l'auteur ne servait plus.]
   @@index([compteId, createdAt])
   @@index([etablissementId])
 }

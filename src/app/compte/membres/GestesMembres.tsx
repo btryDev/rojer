@@ -1,12 +1,15 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { ChampBoard } from "@/components/ui-kit/ChampBoard";
 import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
+import { useConfirmation } from "@/components/ui-kit/Confirmation";
+import type { Role } from "@/lib/auth/roles";
 import {
   annulerInvitation,
   changerRoleMembre,
+  choisirCompte,
   inviterMembre,
   quitterCompte,
   retirerMembre,
@@ -16,7 +19,7 @@ import {
 const INITIAL: EtatMembres = { status: "idle" };
 
 /** Les rôles, dans l'ordre où on les propose (ADR-054 § 2). */
-export const CHOIX_ROLES = [
+const CHOIX_ROLES = [
   { valeur: "member", libelle: "Membre — saisit sur tous les établissements" },
   { valeur: "lecture", libelle: "Lecture seule — consulte et exporte" },
   { valeur: "owner", libelle: "Propriétaire — gère aussi les membres et l'abonnement" },
@@ -34,7 +37,7 @@ export function FormulaireInvitation() {
   const [etat, action, pending] = useActionState(inviterMembre, INITIAL);
   return (
     <form action={action} className="flex flex-col gap-5">
-      <ChampBoard id="email" name="email" type="email" label="Adresse e-mail" autoComplete="off" required />
+      <ChampBoard id="email" name="email" type="email" label="Adresse e-mail" autoComplete="off" requis />
       <div>
         <label className="label-board" htmlFor="role">
           Rôle
@@ -55,7 +58,7 @@ export function FormulaireInvitation() {
   );
 }
 
-export function ChoixRole({ membreId, role }: { membreId: string; role: string }) {
+export function ChoixRole({ membreId, role }: { membreId: string; role: Role }) {
   const [etat, action, pending] = useActionState(changerRoleMembre, INITIAL);
   return (
     <form action={action} className="flex flex-wrap items-center gap-2">
@@ -78,14 +81,30 @@ export function ChoixRole({ membreId, role }: { membreId: string; role: string }
   );
 }
 
-export function RetraitMembre({ membreId }: { membreId: string }) {
+export function RetraitMembre({ membreId, nom }: { membreId: string; nom: string }) {
   const [etat, action, pending] = useActionState(retirerMembre, INITIAL);
+  const formulaire = useRef<HTMLFormElement>(null);
+  const { demander, confirmation } = useConfirmation();
   return (
-    <form action={action}>
+    <form ref={formulaire} action={action}>
       <input type="hidden" name="membreId" value={membreId} />
-      <Button type="submit" variant="boardClair" size="boardSm" disabled={pending}>
+      <Button
+        type="button"
+        variant="boardClair"
+        size="boardSm"
+        disabled={pending}
+        onClick={() =>
+          demander({
+            titre: `Retirer ${nom} du compte ?`,
+            detail: "Son accès aux dossiers se ferme tout de suite ; ce qu'elle y a saisi reste au compte.",
+            agir: `Retirer ${nom}`,
+            alors: () => formulaire.current?.requestSubmit(),
+          })
+        }
+      >
         Retirer
       </Button>
+      {confirmation}
       <Message etat={etat} />
     </form>
   );
@@ -106,12 +125,53 @@ export function AnnulationInvitation({ invitationId }: { invitationId: string })
 
 export function DepartDuCompte() {
   const [etat, action, pending] = useActionState(quitterCompte, INITIAL);
+  const formulaire = useRef<HTMLFormElement>(null);
+  const { demander, confirmation } = useConfirmation();
   return (
-    <form action={action}>
-      <Button type="submit" variant="boardClair" size="board" disabled={pending} className="w-full">
+    <form ref={formulaire} action={action}>
+      <Button
+        type="button"
+        variant="boardClair"
+        size="board"
+        disabled={pending}
+        className="w-full"
+        onClick={() =>
+          demander({
+            titre: "Quitter ce compte ?",
+            detail: "Vous perdez l'accès à ses dossiers. Pour revenir, il faudra qu'un propriétaire vous invite de nouveau.",
+            agir: "Quitter le compte",
+            alors: () => formulaire.current?.requestSubmit(),
+          })
+        }
+      >
         Quitter ce compte
       </Button>
+      {confirmation}
       <Message etat={etat} />
+    </form>
+  );
+}
+
+export function ChoixCompte({ comptes, actif }: { comptes: { compteId: string; nom: string }[]; actif: string }) {
+  const [etat, action, pending] = useActionState(choisirCompte, INITIAL);
+  return (
+    <form action={action} className="flex flex-col gap-3">
+      <div>
+        <label className="label-board" htmlFor="compte">
+          Compte
+        </label>
+        <select id="compte" name="compte" defaultValue={actif} className="champ-board">
+          {comptes.map((c) => (
+            <option key={c.compteId} value={c.compteId}>
+              {c.nom}
+            </option>
+          ))}
+        </select>
+      </div>
+      <Message etat={etat} />
+      <Button type="submit" variant="boardClair" size="board" disabled={pending} className="w-full">
+        Travailler sur ce compte
+      </Button>
     </form>
   );
 }

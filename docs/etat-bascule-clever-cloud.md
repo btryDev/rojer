@@ -55,8 +55,11 @@ connecteur MCP OAuth de Supabase n'existe plus — garder la suppression de
   migrations, avec reprise (un compte par utilisateur existant) et arrêt
   avant le retrait de `userId` si une ligne y échappe. **Si la bascule a lieu
   avant la fusion de ce lot**, scinder la dernière migration (§ 10 de
-  l'ADR). Pas encore d'écran : invitation, lecture seule et membres viennent
-  aux lots suivants.
+  l'ADR). ~~Pas encore d'écran : invitation, lecture seule et membres viennent
+  aux lots suivants.~~ [2026-11-03 : lots 3 et 4 sur la même PR — lecture
+  seule (client borné et `verifierSaisie`), écran « Membres », invitation par
+  e-mail, choix du compte. Reste : masquer les boutons de saisie pour la
+  lecture seule, plafond de membres par formule.]
 
 ## Ce qui reste avant la bascule
 

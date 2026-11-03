@@ -151,6 +151,21 @@ export async function invitationAdresseeA(
   email: string,
   maintenant = new Date(),
 ): Promise<InvitationRecue | null> {
-  const toutes = await invitationsPourAdresse(email, maintenant);
-  return toutes.find((i) => i.id === id) ?? null;
+  const l = await prisma.invitationCompte.findFirst({
+    where: { id, email: email.toLowerCase(), status: "pending", expiresAt: { gt: maintenant } },
+    select: { id: true, role: true, compte: { select: { name: true } }, inviter: { select: { name: true, email: true } } },
+  });
+  return l && estRole(l.role) ? { id: l.id, compte: l.compte.name, role: l.role, invitePar: l.inviter.name || l.inviter.email } : null;
+}
+
+export type CompteDeLaPersonne = { compteId: string; nom: string; role: Role };
+
+/** Les comptes dont la personne est membre, le plus ancien d'abord (le choix du compte, ADR-054 § 7). */
+export async function comptesDeLaPersonne(userId: string): Promise<CompteDeLaPersonne[]> {
+  const lignes = await prisma.membre.findMany({
+    where: { userId },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    select: { compteId: true, role: true, compte: { select: { name: true } } },
+  });
+  return lignes.flatMap((l) => (estRole(l.role) ? [{ compteId: l.compteId, nom: l.compte.name, role: l.role }] : []));
 }

@@ -2,7 +2,7 @@ import "server-only";
 import { requireCompte, type Db } from "@/lib/auth/compte";
 import { cache } from "react";
 
-// ADR-005 : scope par userId via la chaîne duerp → etablissement → entreprise.
+// ADR-005 : scope par compte via la chaîne duerp → etablissement → entreprise.
 
 // Transition V2 : les relations Prisma s'appellent désormais `etablissement`
 // (au lieu de `entreprise` directe) et `actions` (au lieu de `mesures`). On

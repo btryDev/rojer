@@ -11,7 +11,7 @@ import { NOM_BATIMENT_PRINCIPAL } from "@/lib/batiments/schema";
 
 const h = vi.hoisted(() => {
   const ordre: string[] = [];
-  // Les entreprises en base, par `(userId, siren)` — la clé de l'upsert.
+  // Les entreprises en base, par `(compteId, siren)` — la clé de l'upsert.
   const entreprises = new Map<
     string,
     { id: string; raisonSociale: string; effectif: number }

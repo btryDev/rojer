@@ -11,8 +11,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { verifierRole, verifierSaisie } from "@/lib/abonnements/saisie";
+import { verifierSaisie } from "@/lib/abonnements/saisie";
 import { requireCompte } from "@/lib/auth/compte";
+import { comptesDeLaPersonne, invitationsDuCompte } from "@/lib/auth/membres";
 import { auth } from "@/lib/auth/better-auth";
 import { entetesDeSession } from "@/lib/auth/require-user";
 import { requireInvitationDeLaSession } from "@/lib/auth/scope";
@@ -23,6 +24,20 @@ export type EtatMembres = { status: "idle" | "success" | "error"; message?: stri
 
 const PAGE = "/compte/membres";
 const REFUS_PROPRIETAIRE: EtatMembres = { status: "error", message: "Seul un propriétaire du compte peut faire ce geste." };
+
+/**
+ * Le compte, si la personne en est PROPRIÉTAIRE ; sinon le refus à rendre. Un
+ * lecteur n'étant jamais propriétaire, la lecture seule est fermée du même coup.
+ * Seule l'invitation, qui ajoute une place, passe aussi par `verifierSaisie`
+ * (abonnement) : retirer, annuler, changer un rôle restent possibles à un
+ * compte impayé — ce sont des mesures de sécurité.
+ */
+async function proprietaireOuRefus(): Promise<
+  { compte: Awaited<ReturnType<typeof requireCompte>>["compte"] } | { refus: EtatMembres }
+> {
+  const { compte } = await requireCompte();
+  return compte.role === "owner" ? { compte } : { refus: REFUS_PROPRIETAIRE };
+}
 
 /** Le code d'erreur du plugin, s'il en porte un. */
 function codeDe(e: unknown): string | null {
@@ -53,8 +68,9 @@ const schemaInvitation = z.object({
 /** Inviter une personne par e-mail, avec un rôle. Propriétaire seulement. */
 export async function inviterMembre(_prev: EtatMembres, formData: FormData): Promise<EtatMembres> {
   await verifierSaisie();
-  const { compte } = await requireCompte();
-  if (compte.role !== "owner") return REFUS_PROPRIETAIRE;
+  const p = await proprietaireOuRefus();
+  if ("refus" in p) return p.refus;
+  const { compte } = p;
   const lu = schemaInvitation.safeParse({ email: formData.get("email"), role: formData.get("role") });
   if (!lu.success) return { status: "error", message: lu.error.issues[0]?.message ?? "Formulaire invalide" };
   // Chaque invitation est un e-mail Rojer vers un tiers : plafonnée par compte.
@@ -76,12 +92,14 @@ export async function inviterMembre(_prev: EtatMembres, formData: FormData): Pro
 
 /** Annuler une invitation en attente. Propriétaire seulement. */
 export async function annulerInvitation(_prev: EtatMembres, formData: FormData): Promise<EtatMembres> {
-  await verifierSaisie();
-  const { compte } = await requireCompte();
-  if (compte.role !== "owner") return REFUS_PROPRIETAIRE;
+  const p = await proprietaireOuRefus();
+  if ("refus" in p) return p.refus;
   const invitationId = String(formData.get("invitationId") ?? "");
+  // L'invitation doit être à CE compte (le plugin, lui, juge le compte de
+  // l'invitation) : la même réponse pour une invitation d'ailleurs ou inconnue.
+  if (!(await invitationsDuCompte(p.compte.compteId)).some((i) => i.id === invitationId))
+    return { status: "error", message: "Invitation introuvable." };
   try {
-    // Le plugin vérifie que l'invitation est à un compte où le demandeur a le droit d'annuler.
     await auth.api.cancelInvitation({ headers: await entetesDeSession(), body: { invitationId } });
   } catch (e) {
     return refus(e, "annuler");
@@ -91,14 +109,14 @@ export async function annulerInvitation(_prev: EtatMembres, formData: FormData):
 }
 
 /**
- * Retirer un membre. Propriétaire seulement. Ouverte à un compte impayé (une
- * mesure de sécurité), pas à la lecture seule. L'accès tombe à la requête
- * suivante de la personne retirée (`requireCompte` relit `Membre`).
+ * Retirer un membre. Propriétaire seulement. L'accès tombe à la requête
+ * suivante de la personne retirée (`requireCompte` relit `Membre`), et ses
+ * invitations en attente avec lui (crochet `afterRemoveMember`).
  */
 export async function retirerMembre(_prev: EtatMembres, formData: FormData): Promise<EtatMembres> {
-  await verifierRole();
-  const { compte } = await requireCompte();
-  if (compte.role !== "owner") return REFUS_PROPRIETAIRE;
+  const p = await proprietaireOuRefus();
+  if ("refus" in p) return p.refus;
+  const { compte } = p;
   const membreId = String(formData.get("membreId") ?? "");
   if (!membreId || membreId.includes("@")) return { status: "error", message: "Membre introuvable." };
   try {
@@ -115,9 +133,9 @@ export async function retirerMembre(_prev: EtatMembres, formData: FormData): Pro
 
 /** Changer le rôle d'un membre. Propriétaire seulement ; effet à la requête suivante. */
 export async function changerRoleMembre(_prev: EtatMembres, formData: FormData): Promise<EtatMembres> {
-  await verifierSaisie();
-  const { compte } = await requireCompte();
-  if (compte.role !== "owner") return REFUS_PROPRIETAIRE;
+  const p = await proprietaireOuRefus();
+  if ("refus" in p) return p.refus;
+  const { compte } = p;
   const membreId = String(formData.get("membreId") ?? "");
   const role = z.enum(ROLES).safeParse(formData.get("role"));
   if (!membreId || !role.success) return { status: "error", message: "Rôle invalide." };
@@ -134,14 +152,14 @@ export async function changerRoleMembre(_prev: EtatMembres, formData: FormData):
 }
 
 /** Quitter le compte (tout rôle ; le dernier propriétaire ne le peut pas). */
-export async function quitterCompte(_prev: EtatMembres): Promise<EtatMembres> {
+export async function quitterCompte(): Promise<EtatMembres> {
   const { compte } = await requireCompte();
   try {
     await auth.api.leaveOrganization({ headers: await entetesDeSession(), body: { organizationId: compte.compteId } });
   } catch (e) {
     return refus(e, "quitter");
   }
-  redirect("/");
+  redirect("/entreprises");
 }
 
 /**
@@ -157,7 +175,7 @@ export async function accepterInvitation(_prev: EtatMembres, formData: FormData)
   } catch (e) {
     return refus(e, "accepter");
   }
-  redirect("/");
+  redirect("/entreprises");
 }
 
 /** Refuser une invitation adressée à la personne connectée. */
@@ -169,5 +187,23 @@ export async function refuserInvitation(_prev: EtatMembres, formData: FormData):
   } catch (e) {
     return refus(e, "refuser");
   }
-  redirect("/");
+  redirect("/onboarding");
+}
+
+/**
+ * Travailler sur un autre de ses comptes (ADR-054 § 7). Le compte demandé doit
+ * être l'un de ceux dont la personne est membre, relus en base ; le plugin
+ * revérifie l'appartenance avant de poser le compte actif de la session.
+ */
+export async function choisirCompte(_prev: EtatMembres, formData: FormData): Promise<EtatMembres> {
+  const { user } = await requireCompte();
+  const compteId = String(formData.get("compte") ?? "");
+  if (!(await comptesDeLaPersonne(user.id)).some((c) => c.compteId === compteId))
+    return { status: "error", message: "Compte introuvable." };
+  try {
+    await auth.api.setActiveOrganization({ headers: await entetesDeSession(), body: { organizationId: compteId } });
+  } catch (e) {
+    return refus(e, "choisir_compte");
+  }
+  redirect("/entreprises");
 }

@@ -413,7 +413,7 @@ describe("grouperParMois", () => {
  *
  * `listerVerifications` avait le sien depuis toujours ; `compterEtatCalendrier`,
  * `getVerification` et `calendrierDesynchronise` ne l'avaient pas — leur
- * `entreprise: { compteId: userId }` pouvait être retiré sans qu'aucun test ne bouge,
+ * `entreprise: { compteId: compte.compteId }` pouvait être retiré sans qu'aucun test ne bouge,
  * alors que ce sont les trois lectures qui alimentent l'en-tête du calendrier,
  * la fiche d'une échéance et le déclencheur de régénération.
  *

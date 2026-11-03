@@ -170,6 +170,28 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
       expect(await prisma.batiment.count({ where: { nom: "lecture" } })).toBe(0);
     });
 
+    it("une lecture SQL brute passe ; une écriture déguisée en lecture, ou brute dans une transaction, non", async () => {
+      const db = lecture();
+      const [ligne] = await db.$queryRaw<{ n: number }[]>`SELECT 1::int AS n`;
+      expect(ligne.n).toBe(1);
+      await expect(
+        db.$queryRaw`UPDATE "Equipement" SET "libelle" = 'brut' WHERE "id" = ${a.equip.id} RETURNING "id"`,
+      ).rejects.toThrow(/lecture seule/);
+      await expect(
+        db.$transaction((tx) => tx.$executeRaw`UPDATE "Equipement" SET "libelle" = 'tx' WHERE "id" = ${a.equip.id}`),
+      ).rejects.toThrow(/lecture seule/);
+      expect((await prisma.equipement.findUniqueOrThrow({ where: { id: a.equip.id } })).libelle).toBe("TGBT");
+    });
+
+    it("la demande d'assistance reste ouverte à la lecture seule, et seulement elle", async () => {
+      const d = await lecture().demandeAssistance.create({
+        data: { compteId: A, userId: UA2, categorie: "autre", message: "question", page: "/" },
+      });
+      expect(d.compteId).toBe(A);
+      await prisma.demandeAssistance.delete({ where: { id: d.id } });
+      await expect(lecture().demandeAssistance.deleteMany({})).rejects.toThrow(/lecture seule/);
+    });
+
     it("le client d'un membre qui saisit, sur le même compte, n'est pas celui de la lecture seule", async () => {
       const saisie = clientBorne({ type: "compte", compteId: A, userId: UA2 });
       const b2 = await saisie.batiment.create({ data: { etablissementId: a.etab.id, nom: "saisie" } });

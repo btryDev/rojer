@@ -9,7 +9,7 @@ import { BandeauAbonnementDuCompte } from "@/components/abonnements/BandeauAbonn
  * Layout imbriqué pour toutes les pages d'un établissement.
  *
  * Rôles :
- *   1. Garde d'ownership (`requireEtablissement`, scopé par userId).
+ *   1. Garde d'ownership (`requireEtablissement`, scopé par compte).
  *   2. Monte la sidebar persistante sur toutes les sous-pages — la
  *      sidebar déduit l'item actif depuis le pathname (cf. AppSidebar).
  *   3. Fait le scroll container à droite pour que la sidebar reste sticky.

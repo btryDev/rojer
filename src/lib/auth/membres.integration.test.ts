@@ -91,11 +91,13 @@ describe.skipIf(!URL_BASE || !local)("appartenance au compte — PostgreSQL rée
     }
   });
 
-  it("un rôle inconnu n'ouvre rien", async () => {
+  it("un rôle inconnu ou multiple est refusé par la base elle-même", async () => {
     const u = randomUUID();
     await prisma.user.create({ data: { id: u, name: "x", email: `${u}@exemple.test` } });
-    await prisma.membre.create({ data: { compteId: A, userId: u, role: "admin" } });
     try {
+      for (const role of ["admin", "member,lecture"]) {
+        await expect(prisma.membre.create({ data: { compteId: A, userId: u, role } })).rejects.toThrow(/Membre_role_valide/);
+      }
       expect(await appartenanceCourante(u, A)).toBeNull();
     } finally {
       await effacerUtilisateursDeTest(prisma, [u]);
@@ -133,6 +135,49 @@ describe.skipIf(!URL_BASE || !local)("appartenance au compte — PostgreSQL rée
       const { db: db2 } = await requireCompte();
       await db2.etablissement.update({ where: { id: etabA }, data: { raisonDisplay: "A" } });
     } finally {
+      await prisma.membre.update({ where: { compteId_userId: { compteId: A, userId: MEMBRE } }, data: { role: "member" } });
+    }
+  });
+
+  it("la base refuse de laisser un compte sans propriétaire ; un compte supprimé emporte ses membres", async () => {
+    await expect(
+      prisma.membre.delete({ where: { compteId_userId: { compteId: A, userId: PROPRIETAIRE } } }),
+    ).rejects.toThrow(/au moins un propriétaire/);
+    await expect(
+      prisma.membre.update({ where: { compteId_userId: { compteId: A, userId: PROPRIETAIRE } }, data: { role: "member" } }),
+    ).rejects.toThrow(/au moins un propriétaire/);
+    const C = await creerCompteDeTest(prisma, ETRANGER);
+    await prisma.compte.delete({ where: { id: C } });
+    expect(await prisma.membre.count({ where: { compteId: C } })).toBe(0);
+  });
+
+  it("deux propriétaires qui se retirent l'un l'autre au même instant : un seul geste passe", async () => {
+    await prisma.membre.update({ where: { compteId_userId: { compteId: A, userId: MEMBRE } }, data: { role: "owner" } });
+    // Deux connexions, deux transactions qui se chevauchent : la première retire
+    // PROPRIETAIRE et attend ; la seconde retire MEMBRE pendant ce temps.
+    const { PrismaClient } = await import("@prisma/client");
+    const [c1, c2] = [new PrismaClient({ datasourceUrl: URL_BASE }), new PrismaClient({ datasourceUrl: URL_BASE })];
+    const attendre = (ms: number) => new Promise((r) => setTimeout(r, ms));
+    try {
+      const issues = await Promise.allSettled([
+        c1.$transaction(async (t) => {
+          await t.membre.delete({ where: { compteId_userId: { compteId: A, userId: PROPRIETAIRE } } });
+          await attendre(400);
+        }, { timeout: 5000 }),
+        (async () => {
+          await attendre(100);
+          await c2.$transaction((t) => t.membre.delete({ where: { compteId_userId: { compteId: A, userId: MEMBRE } } }), {
+            timeout: 5000,
+          });
+        })(),
+      ]);
+      expect(issues.map((i) => i.status)).toEqual(["fulfilled", "rejected"]);
+      expect(await prisma.membre.count({ where: { compteId: A, role: "owner" } })).toBe(1);
+    } finally {
+      await Promise.all([c1.$disconnect(), c2.$disconnect()]);
+      // Remise en état : PROPRIETAIRE propriétaire, MEMBRE membre.
+      if (!(await prisma.membre.findUnique({ where: { compteId_userId: { compteId: A, userId: PROPRIETAIRE } } })))
+        await prisma.membre.create({ data: { compteId: A, userId: PROPRIETAIRE, role: "owner" } });
       await prisma.membre.update({ where: { compteId_userId: { compteId: A, userId: MEMBRE } }, data: { role: "member" } });
     }
   });

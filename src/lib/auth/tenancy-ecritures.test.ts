@@ -153,7 +153,7 @@ const EXEMPTIONS = new Map<string, Exemption>([
   // ~~`creerEntreprise` et `finaliserOnboarding`, exemptées : elles fondaient
   // la racine de la tenancy~~ [2026-10-26 : la première est retirée ; la
   // seconde borne désormais par elle-même — son `upsert` cherche l'entreprise
-  // par `(userId, siren)`, l'identifiant du compte connecté en clé.]
+  // par `(compteId, siren)`, l'identifiant du compte connecté en clé.]
   [
     "lib/signatures/actions.ts:poserSignatureAvecToken",
     {

@@ -3,7 +3,7 @@ import { requireCompte, type Db } from "@/lib/auth/compte";
 import { duerpDuRenduDuCompte } from "@/lib/duerps/queries";
 import { cache } from "react";
 
-// ADR-005 : scope par userId via la relation entreprise.
+// ADR-005 : scope par compte via la relation entreprise.
 
 /**
  * L'établissement du user et son entreprise, lus UNE FOIS par rendu. `null`

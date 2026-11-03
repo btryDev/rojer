@@ -19,7 +19,7 @@ import { verifierSaisie } from "@/lib/abonnements/saisie";
  *
  * Cloisonnement : `risqueId` et `mesureId` arrivent du client. Chaque action
  * commence par `requireRisque` / `requireMesure`, qui remontent jusqu'à
- * `Entreprise.userId` et répondent 404 quand l'objet est celui d'un autre
+ * `Entreprise.compteId` et répondent 404 quand l'objet est celui d'un autre
  * client — la RLS PostgreSQL n'étant pas effective, c'est le seul rempart.
  */
 

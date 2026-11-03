@@ -72,8 +72,12 @@ compte.
 - Le compte a **au moins un propriétaire**. Il peut en avoir plusieurs, par
   exemple deux associés. Le dernier propriétaire ne peut ni partir ni être
   retiré : le plugin le refuse déjà au départ
-  (`YOU_CANNOT_LEAVE_THE_ORGANIZATION_AS_THE_ONLY_OWNER`), et notre crochet
-  `beforeRemoveMember` le refuse aussi au retrait et au changement de rôle.
+  (`YOU_CANNOT_LEAVE_THE_ORGANIZATION_AS_THE_ONLY_OWNER`), ~~et notre crochet
+  `beforeRemoveMember` le refuse aussi au retrait et au changement de rôle~~
+  [2026-11-03, lot 4 : le plugin le refuse au retrait et quand on se
+  rétrograde soi-même, mais hors transaction ; c'est la BASE qui le garantit,
+  par le déclencheur `membre_garde_un_proprietaire`, qui verrouille le compte
+  avant de compter — deux retraits simultanés n'en laissent passer qu'un].
 - Céder le compte, c'est nommer un autre propriétaire, puis partir.
 - **Pas de rôle « admin »** du plugin, et pas de droits fins.
 - **Pas de restriction à certains établissements** : un membre voit tous les
@@ -122,18 +126,24 @@ Quand la portée vaut `role: "lecture"`, **le client borné refuse toute
 le SQL brut d'écriture. Il échoue fermé, au même endroit que la borne. Une
 action oubliée ne peut donc pas écrire.
 
-- Les actions appellent `requireCompte({ ecrire: true })`. Pour un rôle
+- ~~Les actions appellent `requireCompte({ ecrire: true })`.~~ [2026-11-03,
+  lot 3 : une seule porte avec l'abonnement, `verifierSaisie()`, déjà en
+  tête de toute écriture exposée (ADR-053, `saisie-gardee.test.ts`).] Pour un rôle
   lecture seule, la réponse est un refus lisible (« Votre accès est en
   lecture seule »), avant toute requête. Le client reste le filet de
   sécurité.
 - Les écrans masquent les boutons de saisie. C'est de l'ergonomie, pas une
   protection.
-- **Une exception, nommée** : la régénération du calendrier pendant le rendu
+- ~~**Une exception, nommée** : la régénération du calendrier pendant le rendu
   (`regenererSansInvalider`, `calendrier/actions.ts`). Elle ne traduit aucune
   saisie : elle recalcule ce que les faits rendent dû, et elle s'exécute à
   l'ouverture d'un dossier. Elle reçoit un client borné au **même compte**,
   sans le verrou de lecture seule. Ce client est construit dans ce seul
-  module, et un test vérifie qu'aucun autre module ne l'appelle.
+  module, et un test vérifie qu'aucun autre module ne l'appelle.~~
+  [2026-11-03, lot 3 : inutile. La régénération LIT par le client borné et
+  ÉCRIT déjà par son client nommé (`calendrier/actions.ts`, ADR-051) ; aucune
+  autre écriture ne passe par le client borné pendant un rendu. La seule
+  exception est la demande d'assistance (`ECRITURES_DE_LA_LECTURE_SEULE`).]
 
 ### 5. L'invitation par e-mail
 
@@ -208,7 +218,9 @@ Accord avec les sessions « stripe » et « pricing », 2026-11-03.
   rabat sur `metadata.userId`, converti en « le compte dont cette personne
   est propriétaire ». Le parcours de paiement (lot 4 des abonnements) écrira
   `compteId` dès que la table `Compte` existe.
-- **Nombre d'utilisateurs par formule** (brouillon de la session « pricing »,
+- [2026-11-03 : **pas encore appliqué** — la gamme n'est pas arrêtée ; le
+  plugin garde son défaut de 100 membres. À poser quand la formule portera
+  son plafond.] **Nombre d'utilisateurs par formule** (brouillon de la session « pricing »,
   pas encore arrêté) : Essentiel 1 (le propriétaire seul), Pro 5, Sur mesure
   sans limite. Tous les membres comptent, propriétaire et lecture seule
   compris, **et les invitations en attente aussi**. Sinon, dix invitations
@@ -366,6 +378,60 @@ Corrigé :
 - **Un rôle multiple** écrit par le plugin (`member,lecture`) est écarté par
   `estRole` : le refus est sûr, l'accès se perd sans message. Nos écrans
   n'en écriront pas (lot 4).
+
+## Ce que la réalisation a précisé (lots 3 et 4, 2026-11-03, PR #159)
+
+- **Lecture seule, trois remparts.** Le client borné refuse toute écriture
+  (y compris `$executeRaw`, et un `$queryRaw` qui écrirait) ; `verifierSaisie`
+  renvoie un lecteur à `/compte/lecture-seule` ; le bandeau du dossier dit
+  l'accès en lecture seule. Les quatre écritures ouvertes à un impayé mais pas
+  à la lecture seule ouvrent par `verifierRole` ou `verifierProprietaire`
+  (`saisie-gardee.test.ts`, deux listes). **Les boutons de saisie ne sont pas
+  encore masqués** : environ 80 écrans de formulaires, lot à part.
+- **Supprimer une entreprise ou un établissement est réservé au
+  propriétaire** (`verifierProprietaire`), décision de réalisation : c'est le
+  seul geste qui efface un dossier entier. Il reste ouvert à un impayé.
+- **Gestes de l'écran Membres** : seule l'invitation, qui ajoute une place,
+  passe par la garde d'abonnement ; retirer, annuler, changer un rôle restent
+  possibles à un compte impayé. Toutes sont réservées au propriétaire, et
+  passent au plugin le compte vérifié par `requireCompte`. Retirer et quitter
+  demandent confirmation.
+- **Invitation** : un rôle, parmi les trois (crochets du plugin, et `CHECK`
+  en base) ; 20 invitations par jour et par compte ; les noms de l'e-mail sont
+  normalisés, sans lien, domaine, adresse ni retour à la ligne
+  (`nomPourEmail`). Une invitation ne vaut que tant que son auteur est
+  propriétaire : l'acceptation le relit, et ses invitations tombent quand il
+  est retiré ou rétrogradé.
+- **Aiguillage** : une personne sans compte, invitée, voit l'invitation avant
+  toute création de compte (`aiguillageSansCompte`, lu par l'onboarding et,
+  plus tard, par l'écran d'essai). Une invitation à une autre adresse répond
+  404 (`requireInvitationDeLaSession`).
+- **Choix du compte** (§ 7) : sur l'écran « Membres », pas encore dans la
+  gélule. À l'acceptation, le plugin fait du compte rejoint le compte actif.
+- **Garde « propriétaire seul »** pour l'abonnement : `verifierProprietaire`
+  (Checkout, portail, essai : lot de la session « stripe »).
+
+### Revues du 2026-11-03 (lots 3 et 4, et code de toute la branche)
+
+Corrigé, chaque fois éprouvé en le cassant :
+- un propriétaire écarté reprenait le compte par une invitation qu'il
+  s'était envoyée : l'acceptation relit l'invitant ;
+- deux propriétaires qui se retiraient l'un l'autre laissaient le compte sans
+  propriétaire : déclencheur en base, verrou du compte (le test, à deux
+  connexions, tombe sans le verrou) ;
+- un lecteur ne pouvait pas demander d'assistance ; une écriture déguisée en
+  lecture SQL n'était pas refusée ;
+- l'annulation d'une invitation n'était pas liée au compte vérifié ;
+- le marquage « calendrier périmé » échouait pour un lecteur : il passe par
+  le client nommé de la passe (empreinte du moteur recopiée, version
+  inchangée : ce que la régénération écrit ne change pas) ;
+- les tests de refus vérifient le code d'erreur du plugin ; les actions de
+  l'écran Membres ont leurs tests ;
+- commentaires et messages de garde qui conseillaient `compteId: userId`.
+
+Écrit, non corrigé : les écritures par `auth.api` (accepter, refuser,
+quitter) échappent à `ecrituresExposees` ; `clientDuProprietaire` garde son
+nom, alors qu'il rend un client borné au compte sans personne derrière.
 
 ## Ce que cette décision ne règle pas
 

@@ -77,12 +77,23 @@ describe.skipIf(!URL_BASE || !local)("membres et invitations — PostgreSQL et B
     await prisma.$disconnect();
   });
 
+  /** Le motif d'un refus : le code du plugin, sinon le message (nos crochets). */
+  async function motif(p: Promise<unknown>): Promise<string> {
+    try {
+      await p;
+    } catch (e) {
+      const corps = (e as { body?: { code?: string; message?: string } }).body;
+      return corps?.code ?? corps?.message ?? (e as Error).message;
+    }
+    throw new Error("le geste devait être refusé");
+  }
+
   const inviter = (qui: keyof typeof adresses, email: string, role: string) =>
     auth.api.createInvitation({ headers: cookies[qui], body: { email, role: role as "member", organizationId: compteA } });
 
   it("un rôle multiple ou inconnu est refusé à l'invitation", async () => {
-    await expect(inviter("a", adresses.b, "member,lecture")).rejects.toThrow();
-    await expect(inviter("a", adresses.b, "admin")).rejects.toThrow();
+    expect(await motif(inviter("a", adresses.b, "member,lecture"))).toMatch(/rôle|ROLE/i);
+    expect(await motif(inviter("a", adresses.b, "admin"))).toMatch(/rôle|ROLE/i);
     expect(await invitationsPourAdresse(adresses.b)).toEqual([]);
   });
 
@@ -95,9 +106,9 @@ describe.skipIf(!URL_BASE || !local)("membres et invitations — PostgreSQL et B
 
   it("une autre personne ne peut pas accepter l'invitation d'une autre adresse", async () => {
     const [invitation] = await invitationsPourAdresse(adresses.b);
-    await expect(
-      auth.api.acceptInvitation({ headers: cookies.c, body: { invitationId: invitation.id } }),
-    ).rejects.toThrow();
+    expect(await motif(auth.api.acceptInvitation({ headers: cookies.c, body: { invitationId: invitation.id } }))).toBe(
+      "YOU_ARE_NOT_THE_RECIPIENT_OF_THE_INVITATION",
+    );
     expect(await appartenanceCourante(ids.c, compteA)).toBeNull();
   });
 
@@ -112,26 +123,54 @@ describe.skipIf(!URL_BASE || !local)("membres et invitations — PostgreSQL et B
   });
 
   it("un membre ne peut ni inviter, ni retirer, ni changer un rôle", async () => {
-    await expect(inviter("b", adresses.c, "member")).rejects.toThrow();
+    expect(await motif(inviter("b", adresses.c, "member"))).toBe("YOU_ARE_NOT_ALLOWED_TO_INVITE_USERS_TO_THIS_ORGANIZATION");
     const proprio = await prisma.membre.findFirstOrThrow({ where: { compteId: compteA, userId: ids.a } });
-    await expect(
-      auth.api.removeMember({ headers: cookies.b, body: { memberIdOrEmail: proprio.id, organizationId: compteA } }),
-    ).rejects.toThrow();
-    await expect(
-      auth.api.updateMemberRole({ headers: cookies.b, body: { memberId: proprio.id, role: "lecture", organizationId: compteA } }),
-    ).rejects.toThrow();
+    expect(
+      await motif(auth.api.removeMember({ headers: cookies.b, body: { memberIdOrEmail: proprio.id, organizationId: compteA } })),
+    ).toMatch(/YOU_CANNOT_LEAVE_THE_ORGANIZATION_AS_THE_ONLY_OWNER|YOU_ARE_NOT_ALLOWED_TO_DELETE_THIS_MEMBER/);
+    expect(
+      await motif(
+        auth.api.updateMemberRole({ headers: cookies.b, body: { memberId: proprio.id, role: "lecture", organizationId: compteA } }),
+      ),
+    ).toBe("YOU_ARE_NOT_ALLOWED_TO_UPDATE_THIS_MEMBER");
     expect((await appartenanceCourante(ids.a, compteA))?.role).toBe("owner");
   });
 
-  it("la dernière propriétaire ne peut ni partir ni être rétrogradée à un rôle multiple", async () => {
-    await expect(
-      auth.api.leaveOrganization({ headers: cookies.a, body: { organizationId: compteA } }),
-    ).rejects.toThrow();
+  it("la dernière propriétaire ne peut ni partir, ni se rétrograder elle-même", async () => {
+    expect(await motif(auth.api.leaveOrganization({ headers: cookies.a, body: { organizationId: compteA } }))).toBe(
+      "YOU_CANNOT_LEAVE_THE_ORGANIZATION_AS_THE_ONLY_OWNER",
+    );
+    const elle = await prisma.membre.findFirstOrThrow({ where: { compteId: compteA, userId: ids.a } });
+    expect(
+      await motif(
+        auth.api.updateMemberRole({ headers: cookies.a, body: { memberId: elle.id, role: "member", organizationId: compteA } }),
+      ),
+    ).toMatch(/OWNER|propriétaire/i);
     const membre = await prisma.membre.findFirstOrThrow({ where: { compteId: compteA, userId: ids.b } });
-    await expect(
-      auth.api.updateMemberRole({ headers: cookies.a, body: { memberId: membre.id, role: "member,owner", organizationId: compteA } }),
-    ).rejects.toThrow();
+    expect(
+      await motif(
+        auth.api.updateMemberRole({ headers: cookies.a, body: { memberId: membre.id, role: "member,owner", organizationId: compteA } }),
+      ),
+    ).toMatch(/rôle|ROLE/i);
     expect((await appartenanceCourante(ids.a, compteA))?.role).toBe("owner");
+  });
+
+  it("une invitation ne vaut plus quand son auteur n'est plus propriétaire, même sans passer par le plugin", async () => {
+    // B devient propriétaire et invite C ; puis B perd le rôle (en base,
+    // sans crochet) : l'acceptation relit l'invitant et refuse.
+    const membre = await prisma.membre.findFirstOrThrow({ where: { compteId: compteA, userId: ids.b } });
+    await auth.api.updateMemberRole({ headers: cookies.a, body: { memberId: membre.id, role: "owner", organizationId: compteA } });
+    await inviter("b", adresses.c, "owner");
+    const [invitation] = await invitationsPourAdresse(adresses.c);
+    await prisma.membre.update({ where: { id: membre.id }, data: { role: "member" } });
+    expect(await motif(auth.api.acceptInvitation({ headers: cookies.c, body: { invitationId: invitation.id } }))).toMatch(
+      /plus propriétaire/,
+    );
+    expect(await appartenanceCourante(ids.c, compteA)).toBeNull();
+    // Et rétrogradé par le plugin, ses invitations en attente tombent.
+    await prisma.membre.update({ where: { id: membre.id }, data: { role: "owner" } });
+    await auth.api.updateMemberRole({ headers: cookies.a, body: { memberId: membre.id, role: "member", organizationId: compteA } });
+    expect(await invitationsPourAdresse(adresses.c)).toEqual([]);
   });
 
   it("la propriétaire passe le membre en lecture seule : son client n'écrit plus", async () => {

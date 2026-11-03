@@ -3,7 +3,7 @@
 //
 // Le plugin `organization` ne contrôle que ce qui le concerne — inviter,
 // retirer, changer un rôle —, réservé au propriétaire. La lecture seule se
-// fermera dans le client borné (ADR-054 § 4, lot 3).
+// ferme dans le client borné et dans `verifierSaisie` (ADR-054 § 4).
 
 import { createAccessControl } from "better-auth/plugins/access";
 import { defaultStatements, memberAc, ownerAc } from "better-auth/plugins/organization/access";

@@ -79,6 +79,35 @@ ALTER TABLE "InvitationCompte" ADD CONSTRAINT "InvitationCompte_inviterId_fkey" 
 ALTER TABLE "Membre" ADD CONSTRAINT "Membre_role_valide" CHECK ("role" IN ('owner', 'member', 'lecture'));
 ALTER TABLE "InvitationCompte" ADD CONSTRAINT "InvitationCompte_role_valide" CHECK ("role" IS NULL OR "role" IN ('owner', 'member', 'lecture'));
 
+-- Un compte garde au moins un propriétaire (ADR-054 § 2). Le plugin le
+-- vérifie hors transaction : deux propriétaires qui se retirent l'un l'autre au
+-- même instant le passaient tous deux. Ici, le compte est verrouillé, puis les
+-- propriétaires restants comptés : le second geste attend le premier, et il
+-- échoue. Un compte supprimé emporte ses membres sans rien garder.
+CREATE FUNCTION "membre_garde_un_proprietaire"() RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+  IF OLD."role" <> 'owner' THEN
+    RETURN NULL;
+  END IF;
+  IF TG_OP = 'UPDATE' AND NEW."role" = 'owner' AND NEW."compteId" = OLD."compteId" THEN
+    RETURN NULL;
+  END IF;
+  PERFORM 1 FROM "Compte" WHERE "id" = OLD."compteId" FOR UPDATE;
+  IF NOT FOUND THEN
+    RETURN NULL;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM "Membre" WHERE "compteId" = OLD."compteId" AND "role" = 'owner') THEN
+    RAISE EXCEPTION 'Un compte garde au moins un propriétaire (ADR-054 § 2)' USING ERRCODE = 'check_violation';
+  END IF;
+  RETURN NULL;
+END;
+$$;
+
+CREATE TRIGGER "membre_garde_un_proprietaire"
+AFTER UPDATE OR DELETE ON "Membre"
+FOR EACH ROW EXECUTE FUNCTION "membre_garde_un_proprietaire"();
+
 -- Comme toutes les tables de `public` (migrations-rls.test.ts).
 ALTER TABLE "Compte" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "Membre" ENABLE ROW LEVEL SECURITY;

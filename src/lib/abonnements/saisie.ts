@@ -59,7 +59,10 @@ export async function droitsDuCompte(db: Db, compteId: string): Promise<Droits> 
  * d'une page publique) ; `verifierSaisie` la contient.
  */
 export async function verifierRole(): Promise<void> {
-  const c = await getOptionalCompte();
+  refuserLaLecture(await getOptionalCompte());
+}
+
+function refuserLaLecture(c: Awaited<ReturnType<typeof getOptionalCompte>>): void {
   if (c?.compte?.role === "lecture") redirect(PAGE_LECTURE_SEULE);
 }
 
@@ -84,8 +87,9 @@ export async function verifierProprietaire(): Promise<void> {
  * seule : cette garde n'en est que la réponse lisible.
  */
 export async function verifierSaisie(): Promise<void> {
+  // Une seule lecture de l'appartenance : le rôle, puis l'abonnement.
   const c = await getOptionalCompte();
-  if (c?.compte?.role === "lecture") redirect(PAGE_LECTURE_SEULE);
+  refuserLaLecture(c);
   if (!offreLancee(contexteDroits())) return;
   if (!c) {
     await requireUser();

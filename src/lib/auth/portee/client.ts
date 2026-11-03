@@ -17,6 +17,7 @@ import {
   ErreurPortee,
   estLectureDIdentifiants,
   noterVus,
+  sqlPeutEcrire,
   type Portee,
 } from "./borne";
 
@@ -49,6 +50,12 @@ function etendre(base: PrismaClient, p: Portee) {
         refuserEnLecture("$executeRaw");
         return query(args);
       },
+      // Une lecture brute qui écrirait (`UPDATE … RETURNING`) est refusée en
+      // lecture seule, comme `$executeRaw` (revue de sécurité des lots 3-4).
+      async $queryRaw({ args, query }) {
+        if (portee.lectureSeule && sqlPeutEcrire(texteSql(args))) refuserEnLecture("$queryRaw");
+        return query(args);
+      },
       $allModels: {
         async $allOperations({ model, operation, args, query }) {
           const resultat = await query(argumentsBornes(model, operation, args, portee) as typeof args);
@@ -59,6 +66,15 @@ function etendre(base: PrismaClient, p: Portee) {
     },
   });
   return client as unknown as PrismaClient;
+}
+
+/** Le texte d'une requête brute, sous les formes que Prisma passe à l'extension. */
+function texteSql(args: unknown): string {
+  const a = Array.isArray(args) ? args[0] : args;
+  if (a && typeof a === "object" && "strings" in a && Array.isArray((a as { strings: unknown }).strings))
+    return ((a as { strings: string[] }).strings).join(" ? ");
+  if (a && typeof a === "object" && "sql" in a) return String((a as { sql: unknown }).sql);
+  return String(a ?? "");
 }
 
 export type ClientBorne = PrismaClient;

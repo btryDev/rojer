@@ -10,7 +10,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  *
  * Prisma est simulé, ses `findFirst` scopés ne ramènent rien (ce que produit
  * un id qui n'appartient pas au user, puisque le `where` porte
- * `entreprise.userId`). Les vrais helpers de `lib/auth/scope` sont utilisés.
+ * `entreprise.compteId`). Les vrais helpers de `lib/auth/scope` sont utilisés.
  */
 
 const { prismaMock, requireUserMock } = vi.hoisted(() => {

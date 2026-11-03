@@ -168,7 +168,7 @@ export async function requireVerification(verificationId: string) {
 /**
  * Les quatre gardes des routes de fichiers déposés (audit Next.js du
  * 2026-10-14, B6) : chacune recodait son `findFirst` d'appartenance. Même
- * prédicat que celles-ci — la chaîne complète jusqu'à `Entreprise.userId`,
+ * prédicat que celles-ci — la chaîne complète jusqu'à `Entreprise.compteId`,
  * dans la requête même — et même réponse pour une ligne inexistante et pour
  * celle d'un autre compte (404) : pas d'oracle d'existence.
  */

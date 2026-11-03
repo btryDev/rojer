@@ -43,7 +43,7 @@ import {
  *
  * Les trois formes recensées, toutes justes :
  *
- *  1. le prédicat dans le `where` — `etablissement: { entreprise: { compteId: userId } }` ;
+ *  1. le prédicat dans le `where` — `etablissement: { entreprise: { compteId: compte.compteId } }` ;
  *  2. un helper de portée qui l'encapsule — `where: { etablissementId, etablissement }`
  *     où `etablissement` vient de `portee()` (`salaries/queries.ts`) ;
  *  3. la fonction établit elle-même l'appartenance et n'emploie ensuite que
@@ -260,7 +260,7 @@ describe("les lectures exportées et les server actions qui ne font que lire", (
     expect(
       nues,
       "Ces fonctions lisent sans établir leur portée au propriétaire. Portez le " +
-        "prédicat dans la requête — `etablissement: { entreprise: { compteId: userId } }` — " +
+        "prédicat dans la requête — `etablissement: { entreprise: { compteId: compte.compteId } }` — " +
         "ou appelez un helper de `scope.ts` avant de lire. `requireUser` seul ne " +
         "suffit pas : il prouve qui appelle, pas à qui est la donnée.",
     ).toEqual([]);
@@ -293,7 +293,7 @@ describe("les lectures exportées et les server actions qui ne font que lire", (
     ).toBeLessThanOrEqual(PLAFOND_EXEMPTIONS);
   });
 
-  it("reconnaît la portée par la chaîne `etablissement: { entreprise: { compteId: userId } }`", () => {
+  it("reconnaît la portée par la chaîne `etablissement: { entreprise: { compteId: compte.compteId } }`", () => {
     // Coexistence avec les lectures bornées au compte d'une autre branche
     // (`appareilDuCompte`, `permisDuCompte`) : leur forme doit compter.
     const permisDuCompte = `async function permisDuCompte(permisFeuId) {

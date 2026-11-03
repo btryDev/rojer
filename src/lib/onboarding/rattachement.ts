@@ -16,7 +16,7 @@ export type EntrepriseConnue = {
  * `null` : SIRET incomplet, invalide, ou SIREN encore inconnu du compte.
  *
  * Module pur, lu par le parcours (préremplissage) ; le serveur refait le
- * rattachement lui-même, par `(userId, siren)`, sans rien croire du client.
+ * rattachement lui-même, par `(compteId, siren)`, sans rien croire du client.
  */
 export function entrepriseRattachee(
   saisie: string,

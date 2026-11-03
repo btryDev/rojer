@@ -249,11 +249,11 @@ describe("contraintes SQL non représentables dans schema.prisma", () => {
  * avec un message Prisma parlant de contrainte unique.
  *
  * ~~Le couple des deux assertions dit la décision entière, et c'est ce qui rend
- * le test lisible : `Etablissement.entrepriseId` NON, `Entreprise.userId` OUI.
+ * le test lisible : `Etablissement.entrepriseId` NON, `Entreprise.compteId` OUI.
  * Retirer la seconde par symétrie ferait tomber la racine de tenancy de
  * l'ADR-005.~~ [2026-10-26 : `Entreprise.userId` n'est plus unique non plus —
  * une entreprise par SIREN, plusieurs par compte. La racine de tenancy reste
- * `entreprise.userId` ; elle n'a jamais exigé l'unicité, seulement que chaque
+ * `entreprise.compteId` ; elle n'a jamais exigé l'unicité, seulement que chaque
  * `where` y remonte.]
  */
 describe("plusieurs établissements par entreprise (ADR-028)", () => {

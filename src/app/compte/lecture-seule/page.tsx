@@ -7,8 +7,8 @@ export const metadata = {
 
 /**
  * Où renvoie une modification refusée à un membre en lecture seule
- * (`verifierSaisie`, ADR-054 § 4). Les boutons de saisie sont masqués pour ce
- * rôle : on n'arrive ici que par un geste resté visible, ou un lien ancien.
+ * (`verifierSaisie`, ADR-054 § 4). Les boutons de saisie ne sont pas encore
+ * masqués pour ce rôle (lot à part) : c'est ici qu'aboutit tout geste tenté.
  */
 export default async function LectureSeulePage() {
   await requireUser();

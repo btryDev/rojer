@@ -9,7 +9,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * applicatif et repose sur ces helpers. Deux choses sont vérifiées ici :
  *
  *  1. le `where` envoyé à Prisma remonte bien la chaîne complète jusqu'à
- *     `Entreprise.userId` — un helper qui filtrerait seulement sur l'`id`
+ *     `Entreprise.compteId` — un helper qui filtrerait seulement sur l'`id`
  *     passerait tous les tests fonctionnels tout en ne cloisonnant rien ;
  *  2. quand la requête scopée ne ramène rien, le helper appelle `notFound()`
  *     et n'a donc *rien* retourné à l'appelant — on répond 404 plutôt que
@@ -173,7 +173,7 @@ describe("requireVerification", () => {
 
 describe("aucun helper n'utilise findUnique", () => {
   // `findUnique` ne sait filtrer que sur une clé unique : il ne peut pas
-  // porter la condition `entreprise.userId`. Un helper qui l'emploierait
+  // porter la condition `entreprise.compteId`. Un helper qui l'emploierait
   // aurait forcément laissé le contrôle de propriété au code appelant —
   // exactement la faille qu'on vient de fermer.
   it("les gardes passent tous par findFirst", async () => {

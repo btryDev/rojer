@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * ## Ce qui est en jeu
  *
  * Le cloisonnement entre COMPTES ne bouge pas : il repose sur
- * `Entreprise.userId`, qui reste unique, et sur les dix helpers de
+ * `Entreprise.compteId`, qui reste unique, et sur les dix helpers de
  * `auth/scope.ts`, qui ne sont pas touchés. Ce qui apparaît le 2026-09-01, c'est
  * un cloisonnement d'une autre nature, à l'intérieur d'un même compte : deux
  * dossiers qui ne doivent pas se mêler alors que **rien dans la base ne les
@@ -274,7 +274,7 @@ describe("le cookie d'établissement actif est une entrée utilisateur", () => {
   it("ne sert JAMAIS l'établissement d'un autre compte", async () => {
     // Le cookie est modifiable — c'est un en-tête de requête. Un `findUnique`
     // sur l'identifiant seul aurait ouvert le dossier du voisin à quiconque
-    // devine un cuid ; ici le `where` remonte à `entreprise.userId`, la ligne
+    // devine un cuid ; ici le `where` remonte à `entreprise.compteId`, la ligne
     // ne sort pas, et le repli joue.
     h.cookie = "etab-Z";
     const actif = await getOptionalUserEtablissement();

@@ -152,7 +152,11 @@ async function regenerer(lecteur: ClientPasse, etablissementId: string): Promise
   // inscrit la version courante du référentiel, ce qui ferait passer le
   // calendrier pour à jour alors qu'une ligne au moins n'a pas été réalignée.
   // On efface donc ce repère : la prochaine ouverture régénérera d'elle-même.
-  if (!passe.converge) await marquerCalendrierPerime(lecteur, etablissementId);
+  // Par le client brut, comme les écritures de la passe : l'établissement a été
+  // lu par `lecteur`, borné au compte — et un lecteur en lecture seule, dont
+  // le client refuse toute écriture, laisserait sinon le calendrier passer pour
+  // à jour (revue du 2026-11-03, ADR-054 § 4).
+  if (!passe.converge) await marquerCalendrierPerime(prisma, etablissementId);
 
   return passe.resultat;
 }

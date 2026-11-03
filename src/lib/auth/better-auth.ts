@@ -51,6 +51,14 @@ export function nomPourEmail(brut: string): string {
   return uneLigne.length > 80 ? `${uneLigne.slice(0, 79)}…` : uneLigne;
 }
 
+/** Les invitations en attente qu'une personne a envoyées pour un compte tombent (ADR-054 § 6). */
+async function annulerInvitationsDe(inviterId: string, compteId: string): Promise<void> {
+  await prisma.invitationCompte.updateMany({
+    where: { inviterId, compteId, status: "pending" },
+    data: { status: "canceled" },
+  });
+}
+
 /** Verrou du compte après dix seconds facteurs faux de suite (repris par le message). */
 export const VERROU_DOUBLE_AUTH_MINUTES = 15;
 
@@ -213,13 +221,29 @@ export const auth = betterAuth({
         beforeUpdateMemberRole: async ({ newRole }) => {
           if (!estRole(newRole)) throw new Error(`rôle refusé : ${newRole}`);
         },
-        // Ménage : les sessions de la personne retirée oublient ce compte. La
-        // sécurité n'en dépend pas — `requireCompte` relit `Membre`.
+        // Une invitation ne vaut que tant que son auteur est PROPRIÉTAIRE du
+        // compte (revue de sécurité des lots 3-4) : sinon un propriétaire
+        // écarté, qui se serait invité à une seconde adresse, reprendrait le
+        // compte. Le plugin ne revérifie pas l'invitant à l'acceptation.
+        beforeAcceptInvitation: async ({ invitation }) => {
+          const invitant = await prisma.membre.findUnique({
+            where: { compteId_userId: { compteId: invitation.organizationId, userId: invitation.inviterId } },
+            select: { role: true },
+          });
+          if (invitant?.role !== "owner") throw new Error("invitation dont l'auteur n'est plus propriétaire du compte");
+        },
+        // Ménage : les sessions de la personne retirée oublient ce compte, et
+        // ses invitations en attente tombent. La sécurité n'en dépend pas —
+        // `requireCompte` relit `Membre`, l'acceptation relit l'invitant.
         afterRemoveMember: async ({ member }) => {
           await prisma.session.updateMany({
             where: { userId: member.userId, compteActifId: member.organizationId },
             data: { compteActifId: null },
           });
+          await annulerInvitationsDe(member.userId, member.organizationId);
+        },
+        afterUpdateMemberRole: async ({ member }) => {
+          if (member.role !== "owner") await annulerInvitationsDe(member.userId, member.organizationId);
         },
       },
       schema: {

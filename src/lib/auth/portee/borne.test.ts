@@ -11,6 +11,7 @@ import {
   dansUnLot,
   ErreurLectureSeule,
   ErreurPortee,
+  sqlPeutEcrire,
   estLectureDIdentifiants,
   noterVus,
   type Portee,
@@ -444,5 +445,19 @@ describe("lecture seule (ADR-054 § 4)", () => {
 
   it("la même écriture passe pour un membre qui saisit", () => {
     expect(() => argumentsBornes("Equipement", "update", { where: { id: "x" }, data: { libelle: "y" } }, A)).not.toThrow();
+  });
+});
+
+describe("sqlPeutEcrire (lecture seule, $queryRaw)", () => {
+  it.each([
+    ["SELECT 1", false],
+    ["  select * from x where id = ? for update", false],
+    ["WITH a AS (SELECT 1) SELECT * FROM a", false],
+    ["UPDATE x SET a = 1 RETURNING id", true],
+    ["WITH m AS (DELETE FROM x RETURNING id) SELECT * FROM m", true],
+    ["INSERT INTO x VALUES (1) RETURNING id", true],
+    ["select 1; delete from x", true],
+  ])("%s → %s", (sql, attendu) => {
+    expect(sqlPeutEcrire(sql)).toBe(attendu);
   });
 });
