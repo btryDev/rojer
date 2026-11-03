@@ -17,6 +17,7 @@ const h = vi.hoisted(() => ({
   invitations: [{ id: "inv-a" }],
   comptes: [{ compteId: "compte-a" }, { compteId: "compte-b" }],
   consommer: vi.fn(async () => ({ ok: true })),
+  envoi: true,
 }));
 vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
 vi.mock("next/navigation", () => ({
@@ -33,6 +34,7 @@ vi.mock("@/lib/auth/membres", () => ({
   invitationsDuCompte: async () => h.invitations,
   comptesDeLaPersonne: async () => h.comptes,
 }));
+vi.mock("@/lib/email", () => ({ envoiEnService: () => h.envoi, refusUrlPublique: () => null }));
 vi.mock("@/lib/securite/limite-debit", () => ({
   consommer: h.consommer,
   cleLimite: (...p: string[]) => p.join(":"),
@@ -51,6 +53,7 @@ const fd = (o: Record<string, string>) => {
 beforeEach(() => {
   vi.clearAllMocks();
   h.compte = { compteId: "compte-a", role: "owner" };
+  h.envoi = true;
 });
 
 describe("gestes réservés au propriétaire", () => {
@@ -87,6 +90,13 @@ describe("gestes réservés au propriétaire", () => {
     expect((await actions.annulerInvitation(IDLE, fd({ invitationId: "inv-d-ailleurs" }))).status).toBe("error");
     expect(h.api.cancelInvitation).not.toHaveBeenCalled();
     expect((await actions.annulerInvitation(IDLE, fd({ invitationId: "inv-a" }))).status).toBe("success");
+  });
+
+  it("sans pilote d'e-mail, aucune invitation n'est créée, et l'écran le dit", async () => {
+    h.envoi = false;
+    const r = await actions.inviterMembre(IDLE, fd({ email: "x@exemple.fr", role: "member" }));
+    expect(r).toMatchObject({ status: "error", message: expect.stringMatching(/hors service/) });
+    expect(h.api.createInvitation).not.toHaveBeenCalled();
   });
 
   it("une invitation au-delà du plafond du jour n'est pas envoyée", async () => {

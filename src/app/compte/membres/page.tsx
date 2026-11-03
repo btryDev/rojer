@@ -94,8 +94,8 @@ export default async function MembresPage({
                 Inviter une personne
               </h2>
               <p className="m-0 mt-1 mb-5 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                Elle reçoit un lien valable 7 jours, et crée son mot de passe si elle n&apos;a pas encore de compte
-                Rojer.
+                La personne invitée a 7 jours pour accepter. Sans compte Rojer, elle crée son mot de passe en
+                ouvrant le lien de l&apos;invitation.
               </p>
               <FormulaireInvitation />
             </section>

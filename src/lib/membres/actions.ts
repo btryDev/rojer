@@ -19,6 +19,7 @@ import { entetesDeSession } from "@/lib/auth/require-user";
 import { requireInvitationDeLaSession } from "@/lib/auth/scope";
 import { ROLES } from "@/lib/auth/roles";
 import { cleLimite, consommer, LIMITES, messageTropDeTentatives } from "@/lib/securite/limite-debit";
+import { envoiEnService, refusUrlPublique } from "@/lib/email";
 
 export type EtatMembres = { status: "idle" | "success" | "error"; message?: string };
 
@@ -73,6 +74,11 @@ export async function inviterMembre(_prev: EtatMembres, formData: FormData): Pro
   const { compte } = p;
   const lu = schemaInvitation.safeParse({ email: formData.get("email"), role: formData.get("role") });
   if (!lu.success) return { status: "error", message: lu.error.issues[0]?.message ?? "Formulaire invalide" };
+  // Sans pilote d'e-mail réel (ou sans adresse publique pour le lien), aucune
+  // invitation ne partirait : on le dit avant d'en créer une (même règle que
+  // l'inscription et les liens prestataires).
+  if (refusUrlPublique() !== null || !envoiEnService())
+    return { status: "error", message: "L'envoi des invitations est momentanément hors service. Réessayez plus tard." };
   // Chaque invitation est un e-mail Rojer vers un tiers : plafonnée par compte.
   const verdict = await consommer([
     { cle: cleLimite("invitation", "compte", compte.compteId), limite: LIMITES.invitationCompte },
