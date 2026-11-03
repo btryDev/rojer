@@ -40,7 +40,7 @@ import type { Obligation, ReferenceLegale } from "../conformite/types";
 import { porteurDe, type PorteurObligation } from "../conformite/types";
 import { referencesCitees } from "../conformite/rythme-retenu";
 import { CORPUS, indexArticlesParRef } from "./index";
-import type { ArticleDepouille } from "./types";
+import type { ArticleDepouille, SourceLecture } from "./types";
 
 // -----------------------------------------------------------------------------
 // L'échelle
@@ -250,12 +250,27 @@ export function degreDeReference(
   if (!article.luLe || !article.lecture) return "sans_trace_de_lecture";
   if (article.lecture === "indirect") return "lecture_indirecte";
   if (!article.citationCle) return "lu_sans_verbatim";
-  // `api_legifrance` : verbatim recopié de l'API officielle et recomparé par
-  // le script à chaque passage — le recoupement qui manque à un relevé d'agent.
-  return article.lecture === "premiere_main" || article.lecture === "api_legifrance"
-    ? "premiere_main"
-    : "agent_verbatim";
+  return DEGRE_DE_LA_LECTURE[article.lecture];
 }
+
+/**
+ * Le degré d'une lecture verbatim, par moyen. Exhaustif : une valeur neuve de
+ * `SourceLecture` fait échouer `tsc` tant qu'elle n'est pas classée (2026-11-03,
+ * à l'ajout de `legi_dila` — elle tombait sinon en `agent_verbatim` sans bruit).
+ */
+const DEGRE_DE_LA_LECTURE: Record<
+  Exclude<SourceLecture, "indirect">,
+  "premiere_main" | "agent_verbatim"
+> = {
+  premiere_main: "premiere_main",
+  agent_verbatim: "agent_verbatim",
+  // Verbatim recopié de l'API officielle et recomparé par le script à chaque
+  // passage — le recoupement qui manque à un relevé d'agent.
+  api_legifrance: "premiere_main",
+  // Verbatim recopié du XML du jeu officiel LEGI, la base que sert l'API —
+  // aucun outil qui résume entre le texte et le relevé.
+  legi_dila: "premiere_main",
+};
 
 /** L'ancre de veille d'une référence. Exportée pour la même raison. */
 export function ancrageDeReference(

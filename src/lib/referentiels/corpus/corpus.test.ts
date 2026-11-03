@@ -11,6 +11,7 @@ import {
   referencesSansCle,
   type ArticleDepouille,
   type Corpus,
+  type SourceLecture,
 } from "./index";
 
 describe("corpus — forme des dépouillements", () => {
@@ -340,6 +341,18 @@ describe("corpus — la dette de lecture, mesurée et décroissante", () => {
 const REGLE_MODIFICATEUR_DEPUIS = "2026-09-01";
 
 /**
+ * Les lectures soumises à la règle. `legi_dila` y entre à sa création
+ * (2026-11-03) : rien n'est encore écrit sous ce moyen. `api_legifrance` n'y est
+ * pas — soixante et une de ses entrées postérieures au 2026-09-01 ne disent pas
+ * leur texte modificateur, mesuré en appelant le 2026-11-03 ; l'y faire entrer
+ * est un lot à part, pas un effet de bord.
+ */
+const LECTURES_SOUMISES_A_MODIFIE_PAR: ReadonlySet<SourceLecture> = new Set([
+  "premiere_main",
+  "legi_dila",
+]);
+
+/**
  * Les lectures de première main postérieures à la règle qui ne disent pas par
  * quel texte leur version en vigueur l'est devenue.
  *
@@ -361,7 +374,7 @@ function lecturesSansTexteModificateur(
   for (const c of corpus) {
     for (const a of c.articles) {
       if (a.statut === "non_depouille") continue;
-      if (a.lecture !== "premiere_main") continue;
+      if (!a.lecture || !LECTURES_SOUMISES_A_MODIFIE_PAR.has(a.lecture)) continue;
       if ((a.luLe ?? "") < REGLE_MODIFICATEUR_DEPUIS) continue;
       if (a.modifiePar === undefined) muettes.push(`${c.id} / ${a.ref}`);
     }
@@ -542,7 +555,8 @@ describe("corpus — d'un article modifié au texte qui l'a modifié", () => {
     ).toEqual([]);
 
     // COUCHE VOISINE, ET C'EST UNE LIMITE ASSUMÉE, PAS UN OUBLI. La règle ne
-    // vise que `premiere_main`. Les lectures d'agent — 238 des 276 articles —
+    // vise que ~~`premiere_main`~~ `LECTURES_SOUMISES_A_MODIFIE_PAR` [2026-11-03 :
+    // `premiere_main` et `legi_dila`]. Les lectures d'agent — 238 des 276 articles —
     // n'y sont pas soumises, parce qu'on ne peut pas exiger d'un dépouillement
     // déjà fait ce qu'il n'a pas relevé, et que quarante entrées du 2026-09-01
     // en `agent_verbatim` seraient rouges le jour de l'ajout sans que personne
@@ -825,7 +839,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // À évaluer : § 9 de `docs/couverture-declaree-du-produit.md`, et le
       // plan `propositions/lecture-chapitres-types-erp-2026-10-16.md`.
       // ~~"P 21"~~ — 2026-10-17, sous-lot D : retenu (personnel désigné).
-      "R 33",
+      // ~~"R 33"~~ — 2026-11-03, `lot/cch-manques-cible` : retenu (`incendie-erp-enseignement-exercices-evacuation`).
       // ~~"S 15"~~ — 2026-10-17, sous-lot D : retenu (personnel désigné).
       // 2026-10-17 (`lot/ref-a-corpus-titre-1`) : ~~"T 29"~~, ~~"T 33"~~, la
       // présence d'un personnel compétent au-delà de 200 kW ou 200 kVA —

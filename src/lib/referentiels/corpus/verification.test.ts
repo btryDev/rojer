@@ -75,6 +75,12 @@ const CAS: { attendu: CodeDegre; quoi: string; article?: ArticleDepouille }[] = 
     article: { ...COMPLET, lecture: "agent_verbatim" },
   },
   {
+    // 2026-11-03 : le jeu LEGI de la DILA, verbatim recopié du XML officiel.
+    attendu: "premiere_main",
+    quoi: "le même, relu dans le jeu LEGI de la DILA",
+    article: { ...COMPLET, lecture: "legi_dila" },
+  },
+  {
     attendu: "lu_sans_verbatim",
     quoi: "lu à la source, mais aucune citation relevée",
     article: { ...COMPLET, citationCle: undefined },
